@@ -4,6 +4,10 @@
 		[_] 0% IDEA: use pli.logictypes.DictUnion
 			[_] create a new layer on load
 			[_] save only updated layers and create a new empty layer on save
+			[_] be careful not to update other layers...
+			| this can happen when adding a new object to a tag via an .update(...) method, in-place.
+			|
+			| need to use immutable data only.
 	[_] 0% compleate the new tags module
 		[_] .relatedtags(...)
 		[_] concatinative mode or abbility to build new tagsets from selections
