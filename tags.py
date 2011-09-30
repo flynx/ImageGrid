@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111001012545'''
+__sub_version__ = '''20111001012751'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -220,8 +220,8 @@ if __name__ == '__main__':
 	from time import time
 	import cPickle as pickle
 
-##	ts = TagSet()
-	ts = TagSetWithObjectIndex()
+	ts = TagSet()
+##	ts = TagSetWithObjectIndex()
 
 
 	N = 100000
@@ -250,8 +250,8 @@ if __name__ == '__main__':
 		return ts
 
 
-	populate_tagset()
-##	ts = load_tagset()
+##	populate_tagset()
+	ts = load_tagset()
 
 	print len(ts.tags())
 	print len(ts.objects())

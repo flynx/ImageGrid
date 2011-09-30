@@ -1,7 +1,12 @@
-[_] 25% general tasks
-	[X] need unique image id
+[_] 16% general tasks
+	[_] 0% save diffs in pickle overlays...
+	| need fast and simple way to save changes to a new spot...
+		[_] 0% IDEA: use pli.logictypes.DictUnion
+			[_] create a new layer on load
+			[_] save only updated layers and create a new empty layer on save
 	[_] 0% compleate the new tags module
 		[_] .relatedtags(...)
 		[_] concatinative mode or abbility to build new tagsets from selections
 	[_] import test images and ratings
 	[_] importer based on xmpgen
+	[X] need unique image id
