@@ -1,2 +1,7 @@
-[X] 100% general tasks
+[_] 25% general tasks
 	[X] need unique image id
+	[_] 0% compleate the new tags module
+		[_] .relatedtags(...)
+		[_] concatinative mode or abbility to build new tagsets from selections
+	[_] import test images and ratings
+	[_] importer based on xmpgen

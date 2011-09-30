@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111001000000'''
+__sub_version__ = '''20111001012545'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -97,7 +97,8 @@ class TagSetWithReverseIndexMixin(AbstractTagSet):
 		res = {}
 		index = self._index
 		# XXX this is really ugly!!
-		for obj in self.objects():
+		objects = reduce(set.union, index.values())
+		for obj in objects:
 			res[obj] = set(t for t in index if obj in index[t])
 		return res
 	def _reset_reverse_index(self):
@@ -111,7 +112,7 @@ class TagSetWithReverseIndexMixin(AbstractTagSet):
 		'''
 		super(TagSetWithReverseIndexMixin, self).tag(obj, *tags)
 		# update cache...
-		if obj in self._reverse_index:
+		if obj not in self._reverse_index:
 			self._reverse_index[obj] = set()
 		self._reverse_index[obj].update(tags)
 		return self
@@ -157,7 +158,7 @@ class TagSet(TagSetWithReverseIndexMixin, BasicTagSet):
 class TagSetWithObjectIndex(object):
 	'''
 	'''
-	objutils.createonaccess('_index', BasicTagSet)
+	objutils.createonaccess('_index', TagSet)
 	objutils.createonaccess('_objects', dict)
 	objutils.createonaccess('_cache', '_build_cache', local_attr_tpl='%s_data')
 
@@ -198,10 +199,11 @@ class TagSetWithObjectIndex(object):
 	none = _proxy_op('none')
 	del _proxy_op
 
-	putils.proxymethods((
-		'tags',
-		), '_index')
-
+	def tags(self, *objs):
+		'''
+		'''
+		cache = self._cache
+		return self._index.tags(*(cache[obj] for obj in objs))
 	def objects(self):
 		return self._objects.values()
 	def getuid(self, obj):
@@ -218,14 +220,14 @@ if __name__ == '__main__':
 	from time import time
 	import cPickle as pickle
 
-	ts = TagSet()
-##	ts = TagSetWithObjectIndex()
+##	ts = TagSet()
+	ts = TagSetWithObjectIndex()
 
 
 	N = 100000
 	obj_tpl = 'image%010d'
 
-	def create_tagset():
+	def populate_tagset():
 		for i in xrange(N):
 			n = obj_tpl % i
 			ts.tag(n, 'image')
@@ -247,7 +249,9 @@ if __name__ == '__main__':
 		print 'done (%.3fs).' % (t1-t0)
 		return ts
 
-	ts = load_tagset()
+
+	populate_tagset()
+##	ts = load_tagset()
 
 	print len(ts.tags())
 	print len(ts.objects())
