@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111004190928'''
+__sub_version__ = '''20111004222341'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -220,6 +220,11 @@ class TagSetWithObjectIndex(object):
 		return self._index.tags(*(cache[obj] for obj in objs))
 	def objects(self):
 		return self._objects.values()
+
+	putils.proxymethods((
+		'relatedtags',
+		), '_index')
+
 	def getuid(self, obj):
 		'''
 		'''
@@ -230,81 +235,6 @@ class TagSetWithObjectIndex(object):
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 	pass
-
-	from time import time
-	import cPickle as pickle
-
-	ts = TagSet()
-##	ts = TagSetWithObjectIndex()
-
-
-##	N = 100000
-	N = 1000
-	obj_tpl = 'image%010d'
-
-	def populate_tagset():
-		for i in xrange(N):
-			n = obj_tpl % i
-			ts.tag(n, 'image')
-			if n.endswith('0'):
-				ts.tag(n, '0')
-			if n.endswith('5'):
-				ts.tag(n, '5')
-			if n.endswith('10'):
-				ts.tag(n, '10')
-
-	def save_tagset():
-		pickle.dump(ts, open('tags.db', 'w'))
-
-	def load_tagset():
-		print 'loading tagset...',
-		t0 = time()
-		ts = pickle.load(open('tags.db'))
-		t1 = time()
-		print 'done (%.3fs).' % (t1-t0)
-		return ts
-
-
-##	populate_tagset()
-	ts = load_tagset()
-
-	print len(ts.tags())
-	print len(ts.objects())
-	print len(ts.all('10'))
-	print len(ts.all('10', '0'))
-	print len(ts.any('10', '5'))
-	print len(ts.none('10', '5'))
-
-	print ts.tags(obj_tpl % 0)
-	print ts.tags(obj_tpl % 10)
-
-	print ts.relatedtags('image')
-	print ts.relatedtags('image', '0')
-	print ts.relatedtags('10')
-
-
-	print 'selecting (all)...',
-	t0 = time()
-	ts.all('10', '0')
-	t1 = time()
-	print 'done (%.3fs).' % (t1-t0)
-	print 'selecting (any)...',
-	t0 = time()
-	ts.any('10', '5')
-	t1 = time()
-	print 'done (%.3fs).' % (t1-t0)
-	print 'selecting (none)...',
-	t0 = time()
-	ts.none('10', '5')
-	t1 = time()
-	print 'done (%.3fs).' % (t1-t0)
-
-	print 'getting object tags...',
-	t0 = time()
-	res = ts.tags(obj_tpl % 10)
-	t1 = time()
-	print 'done (%.3fs).' % (t1-t0)
-
 
 
 
