@@ -51,6 +51,7 @@
 		[X] .relatedtags(...)
 		[_] see if we need strict and non-strict .relatedtags(...)
 		[_] concatinative mode or abbility to build new tagsets from selections
+		[_] tag chains support...
 	[_] import test images and ratings
 	[_] importer based on xmpgen
 	[X] need unique image id
