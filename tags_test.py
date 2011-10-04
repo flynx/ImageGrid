@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111004222027'''
+__sub_version__ = '''20111004231731'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -20,14 +20,14 @@ import tags
 
 TEST_DIR = 'test'
 N = 100000
-OBG_TPL = 'image%010d'
+OBJ_TPL = 'image%010d'
 
 
 #-----------------------------------------------------------------------
 #-----------------------------------------------------populate_tagset---
 def populate_tagset(ts, count=N):
 	for i in xrange(count):
-		n = OBG_TPL % i
+		n = OBJ_TPL % i
 		ts.tag(n, 'image')
 		if n.endswith('0'):
 			ts.tag(n, '0')
@@ -79,10 +79,10 @@ if __name__ == '__main__':
 		-> 89000
 
 
-	ts.tags(OBG_TPL % 0)
+	ts.tags(OBJ_TPL % 0)
 		-> set(['0', 'image'])
 
-	ts.tags(OBG_TPL % 10)
+	ts.tags(OBJ_TPL % 10)
 		-> set(['0', 'image', '10'])
 
 
@@ -100,25 +100,25 @@ if __name__ == '__main__':
 	test_code2 = '''
 
 	print 'selecting (all)...',
-	t0 = time()
-	ts.all('10', '0')
-	t1 = time()
+	!t0 = time()
+	!ts.all('10', '0')
+	!t1 = time()
 	print 'done (%.3fs).' % (t1-t0)
 	print 'selecting (any)...',
-	t0 = time()
-	ts.any('10', '5')
-	t1 = time()
+	!t0 = time()
+	!ts.any('10', '5')
+	!t1 = time()
 	print 'done (%.3fs).' % (t1-t0)
 	print 'selecting (none)...',
-	t0 = time()
-	ts.none('10', '5')
-	t1 = time()
+	!t0 = time()
+	!ts.none('10', '5')
+	!t1 = time()
 	print 'done (%.3fs).' % (t1-t0)
 
 	print 'getting object tags...',
-	t0 = time()
-	res = ts.tags(OBG_TPL % 10)
-	t1 = time()
+	!t0 = time()
+	!ts.tags(OBJ_TPL % 10)
+	!t1 = time()
 	print 'done (%.3fs).' % (t1-t0)
 	'''
 
@@ -126,14 +126,15 @@ if __name__ == '__main__':
 	logstr('''
 	ts = tags.TagSet()
 
-	populate_tagset(ts)
-	save_tagset(ts)
+##	populate_tagset(ts)
+##	save_tagset(ts)
 
 	ts = load_tagset()
 
 	''')
 
 	logstr(test_code)
+##	logstr(test_code2)
 	
 
 	logstr('''
@@ -144,6 +145,7 @@ if __name__ == '__main__':
 	''')
 
 	logstr(test_code)
+##	logstr(test_code2)
 	
 
 

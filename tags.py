@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111004222341'''
+__sub_version__ = '''20111004224346'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -169,6 +169,7 @@ class TagSet(TagSetWithRelatedTagsMixin, TagSetWithReverseIndexMixin, BasicTagSe
 
 #-----------------------------------------------------------------------
 #-----------------------------------------------TagSetWithObjectIndex---
+##!!! should this be a mixin???
 class TagSetWithObjectIndex(object):
 	'''
 	'''
