@@ -1,10 +1,17 @@
-[_] 16% general tasks
-	[_] % actions:
+[_] 11% general tasks
+	[_] 0% actions:
 		[_] import
 		[_] export/build
 		[_] list/search tags
 		[_] list/search content
-	[_] % UI
+	[_] 0% API
+		[_] 0% basic
+			[_] .import(...)
+			[_] .export(...)
+			[_] .tags(...)
+			[_] .select(...)
+		[_] 0% sync
+	[_] 0% UI
 		[_] HTML/HTML5
 		[_] QT (???)
 		[_] command-line
@@ -13,7 +20,7 @@
 			[_] ig-init
 			| create an empty archive...
 			[_] ig-clone [OPTIONS] [TAGS] URL
-			[_] % ig-sync
+			[_] 0% ig-sync
 				[_] git-like interface
 					[_] push/pull
 					[_] clean
@@ -23,9 +30,9 @@
 			[_] ig-tags [OPTIONS] [TAGS]
 			| either list all the tags or if any tags are given as input, list 
 			| related tags...
-			[_] % ig-select [OPTOINS] [TAGS]
+			[_] 0% ig-select [OPTOINS] [TAGS]
 			| list paths/ids of images tagged by tags.
-				[_] % support complex queries
+				[_] 0% support complex queries
 					[_] all (default)
 					[_] any
 					[_] none
