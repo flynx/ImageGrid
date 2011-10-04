@@ -1,4 +1,36 @@
 [_] 16% general tasks
+	[_] % actions:
+		[_] import
+		[_] export/build
+		[_] list/search tags
+		[_] list/search content
+	[_] % UI
+		[_] HTML/HTML5
+		[_] QT (???)
+		[_] command-line
+			[_] ig
+			| root script... name not final yet...
+			[_] ig-init
+			| create an empty archive...
+			[_] ig-clone [OPTIONS] [TAGS] URL
+			[_] % ig-sync
+				[_] git-like interface
+					[_] push/pull
+					[_] clean
+					[_] gc
+			[_] ig-import [OPTIONS] [TAGS] PATH
+			[_] ig-export [OPTIONS] [TAGS] PATH
+			[_] ig-tags [OPTIONS] [TAGS]
+			| either list all the tags or if any tags are given as input, list 
+			| related tags...
+			[_] % ig-select [OPTOINS] [TAGS]
+			| list paths/ids of images tagged by tags.
+				[_] % support complex queries
+					[_] all (default)
+					[_] any
+					[_] none
+			[_] ig-do ACTION [OPTIONS]
+			| same as ig-action
 	[_] 0% save diffs in pickle overlays...
 	| need fast and simple way to save changes to a new spot...
 		[_] 0% IDEA: use pli.logictypes.DictUnion
