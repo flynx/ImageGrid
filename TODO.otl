@@ -1,4 +1,4 @@
-[_] 11% general tasks
+[_] 14% general tasks
 	[_] 0% actions:
 		[_] import
 		[_] export/build
@@ -47,8 +47,9 @@
 			| this can happen when adding a new object to a tag via an .update(...) method, in-place.
 			|
 			| need to use immutable data only.
-	[_] 0% compleate the new tags module
-		[_] .relatedtags(...)
+	[_] 33% compleate the new tags module
+		[X] .relatedtags(...)
+		[_] see if we need strict and non-strict .relatedtags(...)
 		[_] concatinative mode or abbility to build new tagsets from selections
 	[_] import test images and ratings
 	[_] importer based on xmpgen

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111001012751'''
+__sub_version__ = '''20111004190928'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -145,8 +145,22 @@ class TagSetWithReverseIndexMixin(AbstractTagSet):
 		return self._reverse_index.keys()
 
 
+
+#------------------------------------------TagSetWithRelatedTagsMixin---
+class TagSetWithRelatedTagsMixin(AbstractTagSet):
+	'''
+
+	NOTE: this requires the .tags(...) method.
+	'''
+	##!!! should be two modes: strict (all) and non-strict (any)...
+	def relatedtags(self, *tags):
+		'''
+		'''
+		return self.tags(*self.all(*tags)).difference(tags)
+		
+
 #--------------------------------------------------------------TagSet---
-class TagSet(TagSetWithReverseIndexMixin, BasicTagSet):
+class TagSet(TagSetWithRelatedTagsMixin, TagSetWithReverseIndexMixin, BasicTagSet):
 	'''
 	'''
 	pass
@@ -224,7 +238,8 @@ if __name__ == '__main__':
 ##	ts = TagSetWithObjectIndex()
 
 
-	N = 100000
+##	N = 100000
+	N = 1000
 	obj_tpl = 'image%010d'
 
 	def populate_tagset():
@@ -262,6 +277,10 @@ if __name__ == '__main__':
 
 	print ts.tags(obj_tpl % 0)
 	print ts.tags(obj_tpl % 10)
+
+	print ts.relatedtags('image')
+	print ts.relatedtags('image', '0')
+	print ts.relatedtags('10')
 
 
 	print 'selecting (all)...',
