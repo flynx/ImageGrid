@@ -1,0 +1,34 @@
+Concepts
+	basic
+		item
+		| a basic element in the system.
+		| an item is represented by a URL
+		group (item)
+		| a special item that unifies several items
+		list
+		| a representation of several items
+		tag
+		| a piece of text connected with an item
+		action
+		| a user defined command or script
+	constructed
+		state (tag)
+		| a named state of an item
+		stack (group)
+		| a set of versions or states of an item
+		| a stack behaves like an item
+		collection/list
+		| a special list defined manually or with a search that is maintained in the filesystem
+		tag chain
+		| a special tag that consists of several tags
+		event
+		| a condition that can be bound to an action
+		workflow
+		| a named sequence/graph of states and transitions (actions)
+	structural
+		store
+		URL
+	
+
+.
+| vim:set spell ts=4 sw=4 :
