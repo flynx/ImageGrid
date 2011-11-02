@@ -1,4 +1,46 @@
-[_] 14% general tasks
+[_] 5% roadmap
+	[_] 12% pre-production: staging and test
+		[_] 50% test input
+			[X] clean - RAW
+			[X] rated (old) - RAW, XMP
+			[X] rated (new) - RAW, XMP, preview (RAW)
+			[_] processed (old) - RAW, XMP, PSD, preview
+			[_] processed (new) - RAW, XMP, PSD, preview, preview (RAW)
+			[_] missing previews...
+		[_] 0% setup archive
+		[_] 0% setup backup
+		[_] 0% setup testing
+			[_] stage
+			[_] create / build
+			[_] backup
+			[_] test consistency
+	[_] 11% stage I: basic workflow
+		[_] 33% import
+			[_] list files
+			[X] generate previews
+			[_] load metadata
+			[_] 0% generate tags
+				[_] data
+				[_] workflow
+			[X] populate preview metadata
+			[_] match files
+			| match and group coresponding RAW, PSD, preview and preview (RAW)
+		[_] 0% search / select
+			[_] 0% output:
+				[_] list of paths
+				[_] list of IDs
+		[_] 0% update (tags)
+	[_] 0% stage II: advanced workflow
+		[_] sync
+		| write data to previews and originals
+		[_] export
+		| copy a list of previews to a given location and maintain consistency
+	[_] 0% stage III: GUI
+
+
+
+
+[_] 13% general tasks
 	[_] 0% actions:
 		[_] import
 		[_] export/build
@@ -13,7 +55,7 @@
 		[_] 0% sync
 	[_] 0% UI
 		[_] HTML/HTML5
-		[_] QT (???)
+		[_] QT/PySide
 		[_] command-line
 			[_] ig
 			| root script... name not final yet...
@@ -47,11 +89,12 @@
 			| this can happen when adding a new object to a tag via an .update(...) method, in-place.
 			|
 			| need to use immutable data only.
-	[_] 33% compleate the new tags module
+	[_] 20% compleate the new tags module
 		[X] .relatedtags(...)
 		[_] see if we need strict and non-strict .relatedtags(...)
 		[_] concatinative mode or abbility to build new tagsets from selections
 		[_] tag chains support...
+		[_] build a new tagset from list of objects or tags...
 	[_] import test images and ratings
 	[_] importer based on xmpgen
 	[X] need unique image id
