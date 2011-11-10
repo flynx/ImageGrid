@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111110191552'''
+__sub_version__ = '''20111110193800'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -86,12 +86,13 @@ def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM):
 
 # XXX need to split duplicate named raw files and corresponding
 # 	  previews...
+# XXX we are loosing the real extension here...
 def index_by_name(file_list, types=TYPES.items()):
 	'''
 	format:
 		{
 			<name>: {
-				<ext>: [
+				<type>: [
 					<path>,
 					...
 				],
@@ -103,7 +104,7 @@ def index_by_name(file_list, types=TYPES.items()):
 	res = {}
 	for path, name, ext in file_list:
 		# normalize extension...
-		ext = types[types.index((ANY, ext))][0]
+		orig_ext, ext = ext, types[types.index((ANY, ext))][0]
 		if name not in res:
 			# create a name...
 			res[name] = {}
@@ -112,7 +113,8 @@ def index_by_name(file_list, types=TYPES.items()):
 			res[name][ext] = []
 		# general case...
 ##		res[name][ext] += [(path, name, ext)]
-		res[name][ext] += [path]
+		res[name][ext] += [(path, orig_ext)]
+##		res[name][ext] += [path]
 	return res
 
 
@@ -185,11 +187,10 @@ def split_images(index):
 			# 	- use a different strategy for files that are above
 			# 	  the subtrees...
 
-			common = split_common(raw)
+			common = split_common([r for r, e in raw])
 
 			# prepare the return structure...
 			res = []
-##			pprint(raw)
 			for path in raw:
 				##!!!
 				res += [{
@@ -198,14 +199,14 @@ def split_images(index):
 					'raw': [path],
 				}]
 			# start splitting the data...
-			for ext, paths in data.items():
+			for t, paths in data.items():
 				# skip non-type fields...
-				if ext not in TYPES:
+				if t not in TYPES:
 					continue
-				if ext == 'raw':
+				if t == 'raw':
 					continue
 				# start the work...
-				for path in paths:
+				for path, ext in paths:
 					matches = []
 					for i, c in enumerate(common):
 						# use matching path head to match targets...
@@ -213,6 +214,7 @@ def split_images(index):
 							matches += [(len(c), i)]
 					# multiple matches...
 					if len(matches) > 1:
+						# longest match wins...
 						matches.sort(key=lambda e: e[0])
 						if matches[0][0] == matches[1][0]:
 							# XXX we could try and use a different
@@ -223,17 +225,12 @@ def split_images(index):
 					if len(matches) == 1:
 						i = matches[0][1]
 						# we found a location...
-						if ext not in res[i]:
-							res[i][ext] = []
-						res[i][ext] += [path]
+						if t not in res[i]:
+							res[i][t] = []
+						res[i][t] += [(path, ext)]
 					else:
 						##!!! XXX ungrouped files...
-						print '!!!!', path, name, ext
 						raise Exception, 'still got ungrouped files...'
-
-##			print len(res)
-##			pprint(res)
-##			raise SystemExit
 
 			# yield the results...
 			for e in res:
