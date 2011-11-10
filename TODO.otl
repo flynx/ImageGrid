@@ -1,12 +1,14 @@
-[_] 5% roadmap
-	[_] 12% pre-production: staging and test
-		[_] 50% test input
+[_] 7% roadmap
+	[_] 14% pre-production: staging and test
+		[_] 57% test input
 			[X] clean - RAW
 			[X] rated (old) - RAW, XMP
 			[X] rated (new) - RAW, XMP, preview (RAW)
 			[_] processed (old) - RAW, XMP, PSD, preview
 			[_] processed (new) - RAW, XMP, PSD, preview, preview (RAW)
 			[_] missing previews...
+			[X] 100% corner cases
+				[X] duplicate files in one path...
 		[_] 0% setup archive
 		[_] 0% setup backup
 		[_] 0% setup testing
@@ -14,17 +16,20 @@
 			[_] create / build
 			[_] backup
 			[_] test consistency
-	[_] 11% stage I: basic workflow
-		[_] 33% import
-			[_] list files
-			[X] generate previews
-			[_] load metadata
-			[_] 0% generate tags
-				[_] data
-				[_] workflow
-			[X] populate preview metadata
-			[_] match files
-			| match and group coresponding RAW, PSD, preview and preview (RAW)
+	[_] 16% stage I: basic workflow
+		[_] 50% import
+			[X] list files
+			[X] group files
+			[_] build missing element list
+			| need a configurable element spec for this to be flexible...
+			[_] 50% populate list
+				[X] generate previews (missing)
+				[_] load metadata
+				[_] 0% generate tags
+					[_] data
+					[_] workflow
+				[X] populate preview metadata
+			[_] put it all together
 		[_] 0% search / select
 			[_] 0% output:
 				[_] list of paths

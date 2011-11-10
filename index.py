@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111110195217'''
+__sub_version__ = '''20111110195353'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -86,14 +86,13 @@ def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM):
 
 # XXX need to split duplicate named raw files and corresponding
 # 	  previews...
-# XXX we are loosing the real extension here...
 def index_by_name(file_list, types=TYPES.items()):
 	'''
 	format:
 		{
 			<name>: {
 				<type>: [
-					<path>,
+					(<path>, <orig-ext>),
 					...
 				],
 				...
@@ -112,9 +111,7 @@ def index_by_name(file_list, types=TYPES.items()):
 			# create an extension...
 			res[name][ext] = []
 		# general case...
-##		res[name][ext] += [(path, name, ext)]
 		res[name][ext] += [(path, orig_ext)]
-##		res[name][ext] += [path]
 	return res
 
 
