@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111110190116'''
+__sub_version__ = '''20111110191552'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -14,6 +14,8 @@ import uuid
 from itertools import izip, izip_longest
 
 from pli.logictypes import ANY, OR
+
+from pprint import pprint
 
 
 #-----------------------------------------------------------------------
@@ -187,21 +189,26 @@ def split_images(index):
 
 			# prepare the return structure...
 			res = []
+##			pprint(raw)
 			for path in raw:
 				##!!!
 				res += [{
 					'gid': uuid.uuid4(),
 					'name': name,
-##					'raw': [path],
+					'raw': [path],
 				}]
 			# start splitting the data...
 			for ext, paths in data.items():
 				# skip non-type fields...
 				if ext not in TYPES:
 					continue
+				if ext == 'raw':
+					continue
+				# start the work...
 				for path in paths:
 					matches = []
 					for i, c in enumerate(common):
+						# use matching path head to match targets...
 						if path[:len(c)] == c:
 							matches += [(len(c), i)]
 					# multiple matches...
@@ -220,13 +227,17 @@ def split_images(index):
 							res[i][ext] = []
 						res[i][ext] += [path]
 					else:
-						# XXX ungrouped...
+						##!!! XXX ungrouped files...
 						print '!!!!', path, name, ext
 						raise Exception, 'still got ungrouped files...'
 
+##			print len(res)
+##			pprint(res)
+##			raise SystemExit
+
 			# yield the results...
 			for e in res:
-				yield e['gid'], res
+				yield e['gid'], e
 		else:
 			yield uuid.uuid4(), data
 
