@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111110194845'''
+__sub_version__ = '''20111110195217'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -124,6 +124,7 @@ def index_by_name(file_list, types=TYPES.items()):
 ##!!!
 def split_common(paths):
 	'''
+	build a common path tree...
 	'''
 	# pass 1: build list of common paths (None for all differences)
 	# NOTE: we may have stray common path elements but we do
@@ -182,25 +183,10 @@ def split_images(index):
 		data['name'] = name
 		raw = data['raw']
 		if len(raw) > 1:
-			# split the images...
-			# split images via closeness to one of the raw files...
-			# XXX the simple way to split files is to remove the
-			# 	  common part of the path between two raw files and
-			# 	  then split the other files by root of the
-			# 	  subtree.
-			# 	  this will not work in one case:
-			# 	  	- at least two of the raw files are in a deeper
-			# 	  	  subtree than the other accompanying files.
-			# 	  	  in this case wa can not use the topology to
-			# 	  	  decide which is wich and need either to use
-			# 	  	  some other means or to go inside the image...
-			#
 			common = split_common([r for r, e in raw])
-
 			# prepare the return structure...
 			res = []
 			for path in raw:
-				##!!!
 				res += [{
 					'gid': str(uuid.uuid4()),
 					'name': name,
