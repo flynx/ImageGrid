@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111110195353'''
+__sub_version__ = '''20111111014115'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -21,6 +21,7 @@ from pprint import pprint
 #-----------------------------------------------------------------------
 
 CONFIG_NAME = 'test_config.json'
+##CONFIG_NAME = 'tmp_config.json'
 
 config = json.load(open(CONFIG_NAME))
 
@@ -178,7 +179,7 @@ def split_images(index):
 	for name, data in index.items():
 		# this will not let us lose the name of the image...
 		data['name'] = name
-		raw = data['raw']
+		raw = data.get('raw', [])
 		if len(raw) > 1:
 			common = split_common([r for r, e in raw])
 			# prepare the return structure...
@@ -220,8 +221,16 @@ def split_images(index):
 							res[i][t] = []
 						res[i][t] += [(path, ext)]
 					else:
-						##!!! XXX ungrouped files...
-						raise Exception, 'still got ungrouped files...'
+						# output orphan/ungrouped images...
+						# NOTE: these images can be located in a
+						# 		different place or are orgonized in a
+						# 		different way...
+						gid = str(uuid.uuid4())
+						yield gid, {
+							'gid': gid,
+							'name': name,
+							t: [(path, ext)],
+						} 
 
 			# yield the results...
 			for e in res:
