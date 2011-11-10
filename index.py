@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111110194648'''
+__sub_version__ = '''20111110194845'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -202,7 +202,7 @@ def split_images(index):
 			for path in raw:
 				##!!!
 				res += [{
-					'gid': uuid.uuid4(),
+					'gid': str(uuid.uuid4()),
 					'name': name,
 					'raw': [path],
 				}]
@@ -244,7 +244,7 @@ def split_images(index):
 			for e in res:
 				yield e['gid'], e
 		else:
-			gid = data['gid'] = uuid.uuid4()
+			gid = data['gid'] = str(uuid.uuid4())
 			yield gid, data
 
 
@@ -259,11 +259,12 @@ if __name__ == '__main__':
 
 	print len(index)
 
-	json.dump(index, file(os.path.join('test', 'filelist.json'), 'w'))
-
 	index = list(split_images(index_by_name(list_files(config['ARCHIVE_ROOT']))))
 
 	print len(index)
+
+	json.dump(index, file(os.path.join('test', 'filelist.json'), 'w'))
+
 
 
 
