@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111111014115'''
+__sub_version__ = '''20111111015101'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -221,10 +221,12 @@ def split_images(index):
 							res[i][t] = []
 						res[i][t] += [(path, ext)]
 					else:
+						##!!! we sometimes fall into here for odd reasons (use tmp_config.json)
 						# output orphan/ungrouped images...
 						# NOTE: these images can be located in a
 						# 		different place or are orgonized in a
 						# 		different way...
+##						print '%%%%%%', path, name, ext
 						gid = str(uuid.uuid4())
 						yield gid, {
 							'gid': gid,
