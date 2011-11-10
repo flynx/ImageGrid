@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111110184147'''
+__sub_version__ = '''20111110190116'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -146,8 +146,7 @@ def split_common(paths):
 				# XXX do we need to break here?
 				# XXX one way to go here is to simply ignore
 				# 	  such paths...
-				##!!! XXX we will leave a None at the end of such paths for now...
-##				del c[i]
+				del c[i]
 				continue
 			# in-place update and truncate the common path...
 			c[i] = p[i]
@@ -197,24 +196,33 @@ def split_images(index):
 				}]
 			# start splitting the data...
 			for ext, paths in data.items():
+				# skip non-type fields...
 				if ext not in TYPES:
 					continue
 				for path in paths:
-					matches = {}
+					matches = []
 					for i, c in enumerate(common):
 						if path[:len(c)] == c:
-							matches[i] = len(c)
+							matches += [(len(c), i)]
+					# multiple matches...
+					if len(matches) > 1:
+						matches.sort(key=lambda e: e[0])
+						if matches[0][0] == matches[1][0]:
+							# XXX we could try and use a different
+							# 	  strategy...
+							##!!! do a better error...
+							raise Exception, 'got two targets with same score, can\'t decide where to put the file.'
+						del matches[1:]
 					if len(matches) == 1:
-						i = matches.keys()[0]
+						i = matches[0][1]
 						# we found a location...
 						if ext not in res[i]:
 							res[i][ext] = []
 						res[i][ext] += [path]
-					elif len(matches) > 1:
-						raise Exception, 'got %s matches.' % len(matches)
 					else:
 						# XXX ungrouped...
 						print '!!!!', path, name, ext
+						raise Exception, 'still got ungrouped files...'
 
 			# yield the results...
 			for e in res:
