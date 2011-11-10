@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111110193800'''
+__sub_version__ = '''20111110194648'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -161,6 +161,21 @@ def split_common(paths):
 # images that are identically named into seporate GIDs...
 def split_images(index):
 	'''
+	This will split groups that contain multiple raw files.
+
+	Groups are split to contain one raw each.
+
+	Each image will be grouped to the raw that containse the ragest 
+	matching sub-path, starting from root.
+
+	Resulting groups will have a gid as it's key
+
+	This will fail for any files that live in a common sub-path of any
+	two or more raw files.
+
+
+	NOTE: in the case there are two raw files in one path, then we will 
+		  favor the deeper / longer mathch.
 	'''
 	for name, data in index.items():
 		# this will not let us lose the name of the image...
@@ -180,13 +195,6 @@ def split_images(index):
 			# 	  	  decide which is wich and need either to use
 			# 	  	  some other means or to go inside the image...
 			#
-			# way to do this:
-			# 	- build a subtree map -- list of paths until the
-			# 	  first unique directory
-			# 	- split files by subtree path
-			# 	- use a different strategy for files that are above
-			# 	  the subtrees...
-
 			common = split_common([r for r, e in raw])
 
 			# prepare the return structure...
@@ -236,7 +244,8 @@ def split_images(index):
 			for e in res:
 				yield e['gid'], e
 		else:
-			yield uuid.uuid4(), data
+			gid = data['gid'] = uuid.uuid4()
+			yield gid, data
 
 
 
