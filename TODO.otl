@@ -32,7 +32,8 @@
 			[_] feed the data to the tagset
 			| this step must be generic
 			|
-			| it is still unclear what steps are to be handled outside and what inside the tagset...
+			| it is still unclear what steps are to be handled outside 
+			| and what inside the tagset...
 			[_] put it all together
 		[_] 0% search / select
 			[_] 0% output:
