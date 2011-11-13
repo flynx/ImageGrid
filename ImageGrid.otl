@@ -28,6 +28,53 @@ Concepts
 	structural
 		store
 		URL
+
+structure
+	index (metadata)
+	data
+
+requirements
+	index external data (represented by URLs and groups of URLs)
+		indexing is done via tags (metadata)
+	provide generic data operations
+		search/select
+		import
+		copy/move/...
+		...
+	provide data-specific operations
+		import
+		thumbnails/previews (for images)
+		...
+	provide archive-level operations
+		clone
+		push/pull
+		commit
+		...
+	provide trivial configurability
+		data-specific actions
+		domain-specific archive actions
+
+stored data
+| the main idea behind this is to make a git like management system 
+| suited for a slightly different data, characterised as:
+	very large umbers of elements/files
+	continually increasing number of elements
+	elements rarely change (almost no diffing needed)
+	metadata is constantly changed
+	large elements
+		span more than one storage media
+	indirect as well as direct element cloning
+		copy / backup
+		preview
+		thumbnail
+	data is constantly searched or accessed
+basic requirements
+	safe originals
+
+
+
+main workflows
+	import new data
 	
 
 .
