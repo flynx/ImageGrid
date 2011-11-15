@@ -30,6 +30,12 @@ Concepts
 		URL
 
 structure
+	configuration (archive-wide)
+		general settings
+		actions
+		scripts
+		remote refs
+		clone settings
 	index (metadata)
 	data
 
