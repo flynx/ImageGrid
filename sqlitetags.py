@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111116021012'''
+__sub_version__ = '''20111116030109'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -57,12 +57,12 @@ class SQLiteTagset(tags.AbstractTagSet):
 		if not opts.get('NOCOMMIT', False):
 			db.commit()
 	##!!!
-	def untag(self, obj, *tags, **opts):
-		'''
-		'''
-		##!!!
-		if not opts.get('NOCOMMIT', False):
-			db.commit()
+##	def untag(self, obj, *tags, **opts):
+##		'''
+##		'''
+##		##!!!
+##		if not opts.get('NOCOMMIT', False):
+##			db.commit()
 
 	def any(self, *tags, **opts):
 		'''
@@ -101,6 +101,31 @@ class SQLiteTagset(tags.AbstractTagSet):
 			return gids
 		return set([ objs[gid[0]] for gid in gids ])
 
+
+	def tags(self, *objs):
+		'''
+		'''
+		db = self._db
+		objects = self._objects.items()
+		# build the query...
+		if len(objs) > 0:
+			query = ' or '.join(['object=?']*len(objs))
+			objs = [ objects[objects.index((ANY, o))][0] for o in objs ]
+			tags = db.execute('select distinct tag from tags where ' + query, objs).fetchall()
+		else:
+			tags = db.execute('select distinct tag from tags').fetchall()
+		return [ t[0] for t in tags ]
+	def objects(self, **opts):
+		'''
+		'''
+		db = self._db
+		# build the query...
+		gids = db.execute('select distinct object from tags').fetchall()
+		if opts.get('RETURN_GIDS', False):
+			return gids
+		objs = self._objects
+		return set([ objs[gid[0]] for gid in gids ])
+
 		
 
 
@@ -109,8 +134,14 @@ class SQLiteTagset(tags.AbstractTagSet):
 if __name__ == '__main__':
 
 	from pprint import pprint
+	import os
 
-	ts = SQLiteTagset('test/sqlitetags.db')
+	TEST_DB = os.path.join('test', 'sqlitetags.db')
+
+	if os.path.isfile(TEST_DB):
+		os.remove(TEST_DB)
+
+	ts = SQLiteTagset(TEST_DB)
 
 	for i in xrange(1000):
 		ts.tag(i, *str(i), NOCOMMIT=True)
@@ -119,9 +150,14 @@ if __name__ == '__main__':
 	# any number that has either 1 or 9 digits
 ##	pprint(ts.any(*'19'))
 	# any number that has only 1 and 9 digits
-	pprint(ts.all(*'19'))
+	pprint(ts.all(*'1234'))
 	# any number not containing any of 012345678 digits
 	pprint(ts.none(*'012345678'))
+
+	pprint(ts.tags())
+	pprint(ts.tags(123))
+
+	pprint(ts.objects())
 
 	
 
