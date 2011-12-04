@@ -26,8 +26,25 @@ Concepts
 		workflow
 		| a named sequence/graph of states and transitions (actions)
 	structural
-		store
 		URL
+		index
+		| contains:
+			metadata
+			item data
+				GID
+				metadata
+				GIDs of available local sub-items (thumbs, previews, ...)
+				GIDs of available remote sub-items (thumbs, previews, ...)
+				URLs (optional)
+				| URLs are only local...
+					store
+					cache
+		cache
+		store
+		clone/remote (???)
+
+
+
 
 structure
 	configuration (archive-wide)
@@ -37,7 +54,11 @@ structure
 		remote refs
 		clone settings
 	index (metadata)
+	version info
 	data
+
+
+
 
 requirements
 	index external data (represented by URLs and groups of URLs)

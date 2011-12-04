@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111111161334'''
+__sub_version__ = '''20111204203122'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -164,7 +164,7 @@ def split_images(index):
 
 	Groups are split to contain one raw each.
 
-	Each image will be grouped to the raw that containse the ragest 
+	Each image will be grouped to the raw that contains the largest 
 	matching sub-path, starting from root.
 
 	Resulting groups will have a gid as it's key
