@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111206222027'''
+__sub_version__ = '''20111207032403'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -251,15 +251,19 @@ def split_images(index):
 def save_file_index(index, path, flat_index=False, ext='.json'):
 	'''
 	'''
+	root_index = {}
 	for k, v in index.items():
 		if not flat_index:
 			d = k[:2]
 			if not os.path.exists(os.path.join(path, d)):
 				os.mkdir(os.path.join(path, d))
-			json.dump(v, file(os.path.join(path, d, k + ext), 'w'), indent=4, separators=(', ', ': '))
+			p = os.path.join(path, d, k + ext)
 		else:
-			json.dump(v, file(os.path.join(path, k + ext), 'w'), indent=4, separators=(', ', ': '))
+			p = os.path.join(path, k + ext)
+		json.dump(v, file(p, 'w'), indent=4, separators=(', ', ': '))
+		root_index[k] = p
 		print '.',
+	return root_index
 
 
 def load_file_index(path, ext='.json', pack_ext='.pack'):
@@ -404,17 +408,27 @@ if __name__ == '__main__':
 
 
 
-	save_file_index(index, os.path.join('test', 'index'), flat_index=False)
+	root_index = save_file_index(index, os.path.join('test', 'index'), flat_index=False)
+
+	##!!! this is not used in anything yet...
+	json.dump(root_index, file(os.path.join('test', 'index', 'file_index.json'), 'w'))
 
 	pack_file_index(os.path.join('test', 'index'), keep_files=False)
 
 	d = load_file_index(os.path.join('test', 'index'))
 
-	os.remove(os.path.join('test', 'index', 'index.pack'))
-
-
 
 	print len(d)
+
+	k = d.keys()[0]
+
+	i = Index(os.path.join('test', 'index'))
+
+	print len(i)
+
+	print i[k]
+
+	os.remove(os.path.join('test', 'index', 'index.pack'))
 
 
 
