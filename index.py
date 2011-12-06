@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111206220152'''
+__sub_version__ = '''20111206222027'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -270,14 +270,14 @@ def load_file_index(path, ext='.json', pack_ext='.pack'):
 		for f in files:
 			# handle single files...
 			if f.endswith(ext):
-				d[f.split('.')[0]] = json.load(file(os.path.join(p, f)))
+				d[os.path.splitext(f)[0]] = json.load(file(os.path.join(p, f)))
 			# handle packs...
 			elif f.endswith(pack_ext):
 				pack = zipfile.ZipFile(os.path.join(p, f))
 				# load elements form the pack...
 				for name in pack.namelist():
 					if name.endswith(ext):
-						d[name.split('.')[0]] = json.loads(pack.read(name))
+						d[os.path.splitext(name)[0]] = json.loads(pack.read(name))
 	return d
 
 
@@ -314,6 +314,9 @@ import pli.pattern.mixin.mapping as mapping
 
 # XXX might be good to do a path index...
 class Index(mapping.Mapping):
+	__json_ext__ = '.json'
+	__pack_ext__ = '.pack'
+
 	def __init__(self, path):
 		'''
 		'''
@@ -321,8 +324,8 @@ class Index(mapping.Mapping):
 	def __getitem__(self, name):
 		'''
 		'''
-		ext = '.json'
-		pack_ext = '.pack'
+		ext = self.__json_ext__
+		pack_ext = self.__pack_ext__
 		file_name = name + ext
 		# build probable locations...
 		locations = (
@@ -335,7 +338,9 @@ class Index(mapping.Mapping):
 			if os.path.exists(os.path.join(self._path, n)):
 				return json.load(file(os.path.join(self._path, n)))
 		# try and locate a file in a pack...
-		for p, d, files in os.walk(self.path):
+		for p, _, files in os.walk(self._path):
+			# files are searched sorted by their name...
+			files.sort()
 			for f in files:
 ##				##!!! do we need to look in odd named directories...
 ##				if f == file_name:
@@ -348,11 +353,32 @@ class Index(mapping.Mapping):
 ##	def __setitem__(self, name, value):
 ##		'''
 ##		'''
-##		pass
+##		raise NotImplementedError
 	def __delitem__(self, name):
 		'''
 		'''
-		pass
+		raise NotImplementedError
+
+	def __iter__(self):
+		'''
+		'''
+		visited = []
+		packs = []
+		ext = self.__json_ext__
+		pack_ext = self.__pack_ext__
+		for p, _, files in os.walk(self._path):
+			for f in files:
+				if f.endswith(ext) and f not in visited:
+					visited += [f]
+					yield os.path.splitext(f)[0]
+				elif f.endswith(pack_ext):
+					packs += [os.path.join(p, f)]
+		for pack in packs:
+			z = zipfile.ZipFile(pack)
+			for name in z.namelist():
+				if name not in visited:
+					visited += [name]
+					yield os.path.splitext(name)[0]
 
 
 
