@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111204203122'''
+__sub_version__ = '''20111206220152'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -9,6 +9,7 @@ __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 import os
 import json
+import zipfile
 import uuid
 
 from itertools import izip, izip_longest
@@ -244,6 +245,118 @@ def split_images(index):
 
 
 #-----------------------------------------------------------------------
+# XXX is this a good way to serialize the actual data in the fs???
+
+# NOTE: these will work with any topoloy and create a flat index...
+def save_file_index(index, path, flat_index=False, ext='.json'):
+	'''
+	'''
+	for k, v in index.items():
+		if not flat_index:
+			d = k[:2]
+			if not os.path.exists(os.path.join(path, d)):
+				os.mkdir(os.path.join(path, d))
+			json.dump(v, file(os.path.join(path, d, k + ext), 'w'), indent=4, separators=(', ', ': '))
+		else:
+			json.dump(v, file(os.path.join(path, k + ext), 'w'), indent=4, separators=(', ', ': '))
+		print '.',
+
+
+def load_file_index(path, ext='.json', pack_ext='.pack'):
+	'''
+	'''
+	d = {}
+	for p, _, files in os.walk(path):
+		for f in files:
+			# handle single files...
+			if f.endswith(ext):
+				d[f.split('.')[0]] = json.load(file(os.path.join(p, f)))
+			# handle packs...
+			elif f.endswith(pack_ext):
+				pack = zipfile.ZipFile(os.path.join(p, f))
+				# load elements form the pack...
+				for name in pack.namelist():
+					if name.endswith(ext):
+						d[name.split('.')[0]] = json.loads(pack.read(name))
+	return d
+
+
+# XXX should we remove empty dirs here???
+def pack_file_index(path, ext='.json', pack_ext='.pack', keep_files=False, keep_dirs=False):
+	'''
+
+	NOTE: if keep_files is True, keep_dirs option will be ignored.
+	'''
+	z = zipfile.ZipFile(os.path.join(path, 'index' + pack_ext), 'w', compression=zipfile.ZIP_DEFLATED)
+	for p, _, files in os.walk(path):
+		for f in files: 
+			if f.endswith(ext):
+				z.write(os.path.join(p, f), os.path.split(f)[-1])
+				if not keep_files:
+					os.remove(os.path.join(p, f))
+					# XXX this will not remove empty dirs (push one
+					#     level up for that...)
+					if not keep_dirs and p != path:
+						##!!! check if dir is empty....
+						try:
+							# NOTE: this will fail for non-empty dirs...
+							os.rmdir(os.path.join(p))
+						except:
+							pass
+	z.close()
+
+
+
+#-----------------------------------------------------------------------
+##!!! add a lazy dict-like object that reads and writes (optional) the fs...
+
+import pli.pattern.mixin.mapping as mapping
+
+# XXX might be good to do a path index...
+class Index(mapping.Mapping):
+	def __init__(self, path):
+		'''
+		'''
+		self._path = path
+	def __getitem__(self, name):
+		'''
+		'''
+		ext = '.json'
+		pack_ext = '.pack'
+		file_name = name + ext
+		# build probable locations...
+		locations = (
+				file_name,
+				# look in a directory...
+				os.path.join(name[:2], file_name),
+		)
+		# look of the file directly...
+		for n in locations:
+			if os.path.exists(os.path.join(self._path, n)):
+				return json.load(file(os.path.join(self._path, n)))
+		# try and locate a file in a pack...
+		for p, d, files in os.walk(self.path):
+			for f in files:
+##				##!!! do we need to look in odd named directories...
+##				if f == file_name:
+##					return json.load(file(os.path.join(p, file_name)))
+				if f.endswith(pack_ext):
+					z = zipfile.ZipFile(os.path.join(p, f))
+					if file_name in z.namelist():
+						return json.loads(z.read(file_name))
+		raise KeyError, name
+##	def __setitem__(self, name, value):
+##		'''
+##		'''
+##		pass
+	def __delitem__(self, name):
+		'''
+		'''
+		pass
+
+
+
+#-----------------------------------------------------------------------
 if __name__ == '__main__':
 	lst = list(list_files(config['ARCHIVE_ROOT']))
 
@@ -255,9 +368,27 @@ if __name__ == '__main__':
 
 	index = list(split_images(index_by_name(list_files(config['ARCHIVE_ROOT']))))
 
-	print len(index)
+	l = len(index)
+
+	index = dict(index)
+
+	print l, len(index)
 
 	json.dump(index, file(os.path.join('test', 'filelist.json'), 'w'))
+
+
+
+	save_file_index(index, os.path.join('test', 'index'), flat_index=False)
+
+	pack_file_index(os.path.join('test', 'index'), keep_files=False)
+
+	d = load_file_index(os.path.join('test', 'index'))
+
+	os.remove(os.path.join('test', 'index', 'index.pack'))
+
+
+
+	print len(d)
 
 
 
