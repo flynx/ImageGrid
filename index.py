@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111208164549'''
+__sub_version__ = '''20111209012407'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -308,7 +308,8 @@ def pack_file_index(path, ext='.json', pack_ext='.pack', keep_files=False, keep_
 						except:
 							pass
 	z.close()
-
+	
+##!!! get path by name helper...
 
 
 #-----------------------------------------------------------------------
@@ -385,6 +386,8 @@ class Index(mapping.Mapping):
 					yield os.path.splitext(name)[0]
 
 
+REMOVED = object()
+
 class IndexWithCache(Index):
 	'''
 	'''
@@ -396,7 +399,10 @@ class IndexWithCache(Index):
 		'''
 		'''
 		if name in self._cache:
-			return self._cache[name]
+			res = self._cache[name]
+			if res is REMOVED:
+				raise KeyError, name
+			return res
 		res = self._cache[name] = super(IndexWithCache, self).__getitem__(name)
 		return res
 	def __setitem__(self, name, value):
@@ -409,7 +415,9 @@ class IndexWithCache(Index):
 	def __delitem__(self, name):
 		'''
 		'''
-		raise NotImplementedError
+		self._cache[name] = REMOVED
+		if self.__sync__:
+			self.cache_flush(name)
 	def __iter__(self):
 		'''
 		'''
@@ -421,7 +429,10 @@ class IndexWithCache(Index):
 				yield e
 	
 	# cache management...
-	##!!! test !!!##
+	##!!! removed items will not get flushed yet...
+	# XXX to make removing elements history compatible, one way to go
+	#     is to write a specifc value to the file, thus making it
+	#     shadow the original value...
 	def cache_flush(self, *keys):
 		'''
 		'''
@@ -429,9 +440,13 @@ class IndexWithCache(Index):
 			return save_file_index(self._cache, self._path)
 		flush = {}
 		for k in keys:
+			if k is REMOVED:
+				# remove file...
+##				raise NotImplementedError
+				##!!!
+				continue
 			flush[k] = self[k]
 		return save_file_index(flush, self._path)
-
 	def cache_drop(self):
 		'''
 		'''
