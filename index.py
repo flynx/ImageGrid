@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111207032403'''
+__sub_version__ = '''20111208162058'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -315,6 +315,7 @@ def pack_file_index(path, ext='.json', pack_ext='.pack', keep_files=False, keep_
 ##!!! add a lazy dict-like object that reads and writes (optional) the fs...
 
 import pli.pattern.mixin.mapping as mapping
+import pli.objutils as objutils
 
 # XXX might be good to do a path index...
 class Index(mapping.Mapping):
@@ -354,15 +355,14 @@ class Index(mapping.Mapping):
 					if file_name in z.namelist():
 						return json.loads(z.read(file_name))
 		raise KeyError, name
-##	def __setitem__(self, name, value):
-##		'''
-##		'''
-##		raise NotImplementedError
+	def __setitem__(self, name, value):
+		'''
+		'''
+		raise NotImplementedError
 	def __delitem__(self, name):
 		'''
 		'''
 		raise NotImplementedError
-
 	def __iter__(self):
 		'''
 		'''
@@ -384,6 +384,48 @@ class Index(mapping.Mapping):
 					visited += [name]
 					yield os.path.splitext(name)[0]
 
+
+class IndexWithCache(Index):
+	'''
+	'''
+	objutils.createonaccess('_cache', dict)
+
+	def __getitem__(self, name):
+		'''
+		'''
+		if name in self._cache:
+			return self._cache[name]
+		res = self._cache[name] = super(IndexWithCache, self).__getitem__(name)
+		return res
+	def __setitem__(self, name, value):
+		'''
+		'''
+		self._cache[name] = value
+	##!!!
+	def __delitem__(self, name):
+		'''
+		'''
+		raise NotImplementedError
+	def __iter__(self):
+		'''
+		'''
+		cache = self._cache
+		for e in cache:
+			yield e
+		for e in super(IndexWithCache, self).__iter__():
+			if e not in cache:
+				yield e
+	
+	# cache management...
+	##!!! test !!!##
+	def cache_flush(self):
+		'''
+		'''
+		save_file_index(self._cahe, self._path)
+	def cache_drop(self):
+		'''
+		'''
+		del self._cache
 
 
 #-----------------------------------------------------------------------
