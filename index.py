@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111208162058'''
+__sub_version__ = '''20111208163546'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -291,7 +291,7 @@ def pack_file_index(path, ext='.json', pack_ext='.pack', keep_files=False, keep_
 
 	NOTE: if keep_files is True, keep_dirs option will be ignored.
 	'''
-	z = zipfile.ZipFile(os.path.join(path, 'index' + pack_ext), 'w', compression=zipfile.ZIP_DEFLATED)
+	z = zipfile.ZipFile(os.path.join(path, 'index' + pack_ext), 'a', compression=zipfile.ZIP_DEFLATED)
 	for p, _, files in os.walk(path):
 		for f in files: 
 			if f.endswith(ext):
@@ -421,11 +421,12 @@ class IndexWithCache(Index):
 	def cache_flush(self):
 		'''
 		'''
-		save_file_index(self._cahe, self._path)
+		save_file_index(self._cache, self._path)
 	def cache_drop(self):
 		'''
 		'''
 		del self._cache
+
 
 
 #-----------------------------------------------------------------------
@@ -452,8 +453,8 @@ if __name__ == '__main__':
 
 	root_index = save_file_index(index, os.path.join('test', 'index'), flat_index=False)
 
-	##!!! this is not used in anything yet...
-	json.dump(root_index, file(os.path.join('test', 'index', 'file_index.json'), 'w'))
+##	##!!! this is not used in anything yet...
+##	json.dump(root_index, file(os.path.join('test', 'index', 'file_index.json'), 'w'))
 
 	pack_file_index(os.path.join('test', 'index'), keep_files=False)
 
@@ -468,7 +469,17 @@ if __name__ == '__main__':
 
 	print len(i)
 
-	print i[k]
+##	print i[k]
+
+	ic = IndexWithCache(os.path.join('test', 'index'))
+
+	print ic[k]
+
+	ic['000000000000000000000000000000000'] = {}
+
+	ic.cache_flush()
+
+	pack_file_index(ic._path, keep_files=False)
 
 	os.remove(os.path.join('test', 'index', 'index.pack'))
 
