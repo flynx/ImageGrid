@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111208163546'''
+__sub_version__ = '''20111208164549'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -262,7 +262,7 @@ def save_file_index(index, path, flat_index=False, ext='.json'):
 			p = os.path.join(path, k + ext)
 		json.dump(v, file(p, 'w'), indent=4, separators=(', ', ': '))
 		root_index[k] = p
-		print '.',
+##		print '.',
 	return root_index
 
 
@@ -390,6 +390,8 @@ class IndexWithCache(Index):
 	'''
 	objutils.createonaccess('_cache', dict)
 
+	__sync__ = False
+
 	def __getitem__(self, name):
 		'''
 		'''
@@ -401,6 +403,8 @@ class IndexWithCache(Index):
 		'''
 		'''
 		self._cache[name] = value
+		if self.__sync__:
+			self.cache_flush(name)
 	##!!!
 	def __delitem__(self, name):
 		'''
@@ -418,10 +422,16 @@ class IndexWithCache(Index):
 	
 	# cache management...
 	##!!! test !!!##
-	def cache_flush(self):
+	def cache_flush(self, *keys):
 		'''
 		'''
-		save_file_index(self._cache, self._path)
+		if keys == ():
+			return save_file_index(self._cache, self._path)
+		flush = {}
+		for k in keys:
+			flush[k] = self[k]
+		return save_file_index(flush, self._path)
+
 	def cache_drop(self):
 		'''
 		'''
@@ -478,6 +488,12 @@ if __name__ == '__main__':
 	ic['000000000000000000000000000000000'] = {}
 
 	ic.cache_flush()
+
+	pack_file_index(ic._path, keep_files=False)
+
+	ic.__sync__ = True
+
+	ic['111111111111111111111111111111111'] = {}
 
 	pack_file_index(ic._path, keep_files=False)
 
