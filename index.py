@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111209012407'''
+__sub_version__ = '''20111213182632'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -248,16 +248,24 @@ def split_images(index):
 # XXX is this a good way to serialize the actual data in the fs???
 
 # NOTE: these will work with any topoloy and create a flat index...
-def save_file_index(index, path, flat_index=False, ext='.json'):
+def save_file_index(index, path, index_depth=1, ext='.json'):
 	'''
+
+	NOTE: index_depth with value greater than 2 is an overkill.
 	'''
 	root_index = {}
 	for k, v in index.items():
-		if not flat_index:
-			d = k[:2]
-			if not os.path.exists(os.path.join(path, d)):
-				os.mkdir(os.path.join(path, d))
-			p = os.path.join(path, d, k + ext)
+		if index_depth > 0:
+			d = []
+			rest = k
+			# build index path...
+			for i in xrange(index_depth):
+				d += [rest[:2]]
+				rest = rest[2:]
+				# recursive directory construction...
+				if not os.path.exists(os.path.join(path, *d)):
+					os.mkdir(os.path.join(path, *d))
+			p = os.path.join(path, *d + [k + ext])
 		else:
 			p = os.path.join(path, k + ext)
 		json.dump(v, file(p, 'w'), indent=4, separators=(', ', ': '))
@@ -310,15 +318,17 @@ def pack_file_index(path, ext='.json', pack_ext='.pack', keep_files=False, keep_
 	z.close()
 	
 ##!!! get path by name helper...
+##!!!
 
 
 #-----------------------------------------------------------------------
-##!!! add a lazy dict-like object that reads and writes (optional) the fs...
+# lazy dict-like objects that read and write (optional) the fs...
 
 import pli.pattern.mixin.mapping as mapping
 import pli.objutils as objutils
 
 # XXX might be good to do a path index...
+##!!! make this archive/file structure-agnostic...
 class Index(mapping.Mapping):
 	__json_ext__ = '.json'
 	__pack_ext__ = '.pack'
@@ -327,18 +337,31 @@ class Index(mapping.Mapping):
 		'''
 		'''
 		self._path = path
-	def __getitem__(self, name):
+	
+	# specific interface...
+	##!!! make this support different depths...
+	def __locations__(self, name):
 		'''
 		'''
 		ext = self.__json_ext__
-		pack_ext = self.__pack_ext__
-		file_name = name + ext
+		name += ext
 		# build probable locations...
-		locations = (
-				file_name,
+		return (
+				name,
 				# look in a directory...
-				os.path.join(name[:2], file_name),
+				os.path.join(name[:2], name),
+				##!!! HACK: make this dynamic...
+				os.path.join(name[:2], name[2:4], name),
 		)
+	
+	# mapping interface...
+	def __getitem__(self, name):
+		'''
+		'''
+##		ext = self.__json_ext__
+		pack_ext = self.__pack_ext__
+##		file_name = name + ext
+		locations = self.__locations__(name)
 		# look of the file directly...
 		for n in locations:
 			if os.path.exists(os.path.join(self._path, n)):
@@ -353,8 +376,9 @@ class Index(mapping.Mapping):
 ##					return json.load(file(os.path.join(p, file_name)))
 				if f.endswith(pack_ext):
 					z = zipfile.ZipFile(os.path.join(p, f))
-					if file_name in z.namelist():
-						return json.loads(z.read(file_name))
+					for n in locations:
+						if n in z.namelist():
+							return json.loads(z.read(n))
 		raise KeyError, name
 	def __setitem__(self, name, value):
 		'''
@@ -476,7 +500,7 @@ if __name__ == '__main__':
 
 
 
-	root_index = save_file_index(index, os.path.join('test', 'index'), flat_index=False)
+	root_index = save_file_index(index, os.path.join('test', 'index'), index_depth=1)
 
 ##	##!!! this is not used in anything yet...
 ##	json.dump(root_index, file(os.path.join('test', 'index', 'file_index.json'), 'w'))
@@ -514,6 +538,22 @@ if __name__ == '__main__':
 
 	os.remove(os.path.join('test', 'index', 'index.pack'))
 
+
+	TEST_20K_ITEMS = False
+
+	if TEST_20K_ITEMS:
+		print 'doing a 20k test...'
+
+		print 'loading...'
+		full = dict(json.load(file(os.path.join('test', 'filelist of 20k files.json'))))
+
+		print 'writing files...'
+		root_index = save_file_index(full, os.path.join('test', 'index'), index_depth=1)
+
+		print 'packing files...'
+		# NOTE: the initial archiving seems REALLY SLOW, but working with
+		# 		small numbers of files from the archive seems adequate...
+		pack_file_index(os.path.join('test', 'index'), keep_files=True)
 
 
 
