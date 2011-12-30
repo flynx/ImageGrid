@@ -54,9 +54,64 @@ structure
 		remote refs
 		clone settings
 	index (metadata)
+	item store (URLs)
+	local cache (previews)
 	version info
-	data
 
+
+index directory structure
+	.ig/
+		items/
+		| item store. 
+		| contains refs to original objects.
+			<item-id>.json
+			| contains refs to original data (remote)
+			...
+			<pack-id>.pack
+			...
+		meta/		XXX
+		| metadata and tag store
+		| XXX this is not final...
+			<tag-name>.json
+			...
+		cache/
+		| cache configuration and listings
+			<cache-id>/
+				<cache-id>.json
+				| contains specific cache configuration
+				| 	- query
+				| 	- generator configuration
+				| 		- image resolution
+				| 		- ...
+				| 	- output dir (default: .ig/cache/<cache-id>)
+				...
+				<image-id>.jpg
+				...
+			<item-id>.json
+			| contains refs to specific <cache-id> and location.
+			| NOTE: a single item may appear in several caches, hence a 
+			| 		single place to keep the item-specific refs and multiple 
+			| 		cache dirs.
+			...
+			<pack-id>.pack
+			...
+		config/		XXX
+		history/	XXX
+		| this directory is dependant on what VCS is used.
+		scripts/	XXX
+			actions/
+				<action-name>
+				...
+			<script-name>
+			...
+		events/		XXX
+			<event-name>/
+				<priority>.<action-name>
+				...
+			...
+	<catalogue-name>/
+	...
+	
 
 
 
