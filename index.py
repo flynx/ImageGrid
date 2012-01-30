@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20111213182632'''
+__sub_version__ = '''20120131030435'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -479,6 +479,73 @@ class IndexWithCache(Index):
 
 
 #-----------------------------------------------------------------------
+##!!! test implementation: rewrite...
+def build_image_cache(ic, min_rating, dest):
+	import pyexiv2 as metadata
+	import shutil
+	import Image
+
+	# build preview cache for 5* images...
+	for k, e in ic.items():
+		name = e.get('name', None)
+		xmps = e.get('xmp', None)
+		jpegs = e.get('jpeg', None)
+		raws = e.get('raw', None)
+
+		##!!! get tmp dir...
+		##!!!
+
+		res = {
+			'missing preview': [],
+			'missing raw': [],
+			'unrated': [],
+		}
+
+		if xmps is not None:
+			##!!! avoid manual path forming....
+			xmp_path = xmps[0][0][0] + '\\' + os.path.join(*(xmps[0][0][1:] + [name])) + '.' + xmps[0][1]
+			# get rating...
+			im = metadata.ImageMetadata(xmp_path)
+			im.read()
+			rating = im['Xmp.xmp.Rating'].value
+			##!!! cache the rating...
+			e['Rating'] = rating
+			ic[k] = e
+			if rating >= min_rating:
+				# get the jpeg...
+				if jpegs is None:
+					if raws is None:
+##							print '### can\'t find raws for %s' % name
+						res['missing raw'] += [k]
+						continue
+					raw_path = raws[0][0][0] + '\\' + os.path.join(*(raws[0][0][1:] + [name])) + '.' + raws[0][1]
+##						print '>> missing preview %s.jpg' % name
+					res['missing preview'] += [raw_path]
+					##!!! generate jpegs...
+					##!!! extract preview...
+					##!!! resize preview...
+					##!!! save preview...
+				else:
+					jpg_path = jpegs[0][0][0] + '\\' + os.path.join(*(jpegs[0][0][1:] + [name])) + '.' + jpegs[0][1]
+					# copy the jpeg to the cache...
+					print '>>> copy: %s.jpg' % name
+					##!!! HACK: manual name generation...
+					##!!! use a good id, like a timestamp...
+					shutil.copy2(jpg_path, os.path.join(dest, k + '-' + name + '.jpg'))
+		else:
+			##!!! need to detect unrated shoots...
+##			print '>> no XMP'
+			res['unrated'] += [k]
+			continue
+
+	ic.cache_flush()
+	pack_file_index(ic._path, keep_files=False)
+
+	return res
+
+
+
+#-----------------------------------------------------------------------
 if __name__ == '__main__':
 	lst = list(list_files(config['ARCHIVE_ROOT']))
 
@@ -536,6 +603,11 @@ if __name__ == '__main__':
 
 	pack_file_index(ic._path, keep_files=False)
 
+
+	##!!! revise...
+	res = build_image_cache(ic, 5, os.path.join('test', 'index', 'cache'))
+
+
 	os.remove(os.path.join('test', 'index', 'index.pack'))
 
 
@@ -554,6 +626,7 @@ if __name__ == '__main__':
 		# NOTE: the initial archiving seems REALLY SLOW, but working with
 		# 		small numbers of files from the archive seems adequate...
 		pack_file_index(os.path.join('test', 'index'), keep_files=True)
+
 
 
 
