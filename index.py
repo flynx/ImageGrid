@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120131030435'''
+__sub_version__ = '''20120202150737'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -480,11 +480,11 @@ class IndexWithCache(Index):
 
 #-----------------------------------------------------------------------
 ##!!! test implementation: rewrite...
-def build_image_cache(ic, min_rating, dest):
-	import pyexiv2 as metadata
-	import shutil
-	import Image
+import pyexiv2 as metadata
+import shutil
+import Image
 
+def build_image_cache(ic, min_rating, dest, tmp_path, preview_size=900):
 	# build preview cache for 5* images...
 	for k, e in ic.items():
 		name = e.get('name', None)
@@ -515,16 +515,36 @@ def build_image_cache(ic, min_rating, dest):
 				# get the jpeg...
 				if jpegs is None:
 					if raws is None:
-##							print '### can\'t find raws for %s' % name
+##						print '### can\'t find raws for %s' % name
 						res['missing raw'] += [k]
 						continue
 					raw_path = raws[0][0][0] + '\\' + os.path.join(*(raws[0][0][1:] + [name])) + '.' + raws[0][1]
-##						print '>> missing preview %s.jpg' % name
+##					print '>> missing preview %s.jpg' % name
 					res['missing preview'] += [raw_path]
 					##!!! generate jpegs...
-					##!!! extract preview...
-					##!!! resize preview...
-					##!!! save preview...
+					raw = metadata.ImageMetadata(raw_path)
+					raw.read()
+
+					for i, p in enumerate(raw.previews):
+						if max(p.dimensions) >= preview_size:
+							# extract preview...
+							tmp_preview_path = os.path.join(tmp_path, '%s-%s%s' % (name, i, p.extension))
+							open(tmp_preview_path, 'wb').write(p.data)
+							# resize preview...
+							orig = Image.open(tmp_preview_path)
+							scale = preview_size/float(max(*orig.size))
+							print 'generating preview...'
+							preview = orig.resize((int(orig.size[0]*scale), int(orig.size[1]*scale)), Image.ANTIALIAS)
+							# save preview...
+							print 'saving preview: %s' % name
+							preview_path = os.path.join(dest, k + '-' + name + '.jpg')
+							preview.save(preview_path)
+							# copy metadata...
+							##!!! need to write metadata to all previews...
+							preview_metadata = metadata.ImageMetadata(preview_path)
+							preview_metadata.read()
+							raw.copy(preview_metadata)
+							preview_metadata.write()
 				else:
 					jpg_path = jpegs[0][0][0] + '\\' + os.path.join(*(jpegs[0][0][1:] + [name])) + '.' + jpegs[0][1]
 					# copy the jpeg to the cache...
@@ -605,7 +625,7 @@ if __name__ == '__main__':
 
 
 	##!!! revise...
-	res = build_image_cache(ic, 5, os.path.join('test', 'index', 'cache'))
+	res = build_image_cache(ic, 5, os.path.join('test', 'index', 'cache'), os.path.join('test', 'tmp'))
 
 
 	os.remove(os.path.join('test', 'index', 'index.pack'))
