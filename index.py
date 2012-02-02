@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120202150737'''
+__sub_version__ = '''20120202193619'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -545,6 +545,13 @@ def build_image_cache(ic, min_rating, dest, tmp_path, preview_size=900):
 							preview_metadata.read()
 							raw.copy(preview_metadata)
 							preview_metadata.write()
+
+							# remove temporary files...
+							##!!! triple-check...
+							try:
+								os.remove(tmp_preview_path)
+							except:
+								pass
 				else:
 					jpg_path = jpegs[0][0][0] + '\\' + os.path.join(*(jpegs[0][0][1:] + [name])) + '.' + jpegs[0][1]
 					# copy the jpeg to the cache...
