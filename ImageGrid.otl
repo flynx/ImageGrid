@@ -1,5 +1,10 @@
 Concepts
 	basic
+		key
+		| a basic global identification mechanism.
+		| each entity in the system has a key.
+		|
+		| NOTE: a good key should be uniquely calculable from an entity.
 		item
 		| a basic element in the system.
 		| an item is represented by a URL
