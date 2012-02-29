@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120229165907'''
+__sub_version__ = '''20120229170952'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -157,12 +157,13 @@ if __name__ == '__main__':
 
 		raws = [e for e in l if e[-1] == RAW] 
 		if len(raws) > 1:
+			print 'duplicates: %s (%sx)...' % (name, len(raws)),
 			# split the group into c seporate groups...
 			# strategies:
 			# 	- path proximity (distance)
 			# 	- metadata
 			##!!!
-			print 'duplicates: %s (%sx)' % (name, len(raws))
+			print 'skipping.'
 ##			raise TypeError, 'found %s RAW files with identical names (%s).' % (len(raws), name)
 		else:
 			GID_index[GID] = {
@@ -176,7 +177,11 @@ if __name__ == '__main__':
 				'other': [e for e in l if e[-1] != OR(TIFF, PSD, JPEG, XMP, RAW)],
 			}
 	
-	print len(GID_index), GID
+
+	print GID
+	print len(GID_index), len([ e for e in lst if e[-1] == RAW])
+
+	pprint(GID_index.values()[0])
 
 
 	
