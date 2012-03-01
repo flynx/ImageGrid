@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120302014841'''
+__sub_version__ = '''20120302021211'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -20,6 +20,8 @@ import json
 import zipfile
 import uuid
 import time
+
+import pyexiv2 as metadata
 
 from itertools import izip, izip_longest
 
@@ -78,6 +80,13 @@ SUBTREE_CLASSES = {
 
 
 #-----------------------------------------------------------------------
+
+def image_gid(path):
+	i = metadata.ImageMetadata('%s.%s' % (path, raw[-1]))
+	i.read()
+	d = i['Exif.Image.DateTime'].value
+	return '%s-%s' % (d.strftime('%Y%m%d-%H%M%S'), name)
+
 
 ##!!! we will need to normalize the paths to one single scheme (either relative or absolute)...
 # XXX might need to fetch file data too...
@@ -170,18 +179,18 @@ if __name__ == '__main__':
 			# main gid criteria:
 			# 	- unique
 			# 	- calculable from the item (preferably any sub-item)
+			# 	- human-readable
 ##			GID = '%s-%s' % (uuid.uuid4().hex, name)
 			##!!! get RAW file creation date from EXIF...
-##			GID = '%s-%s' % (hex(long(time.time()*1000))[2:-1].upper(), name)
-			# GID should be human-readable...
 			# XXX to avoid further ambiguity need to encode the camera
 			# into file name, e.g. S01_1234 for SLR 01 and RO1_4321 for
 			# rangefinder 01 and finally C01 for compact 01, etc.
-			GID = '%s-%s' % (time.strftime('%Y%m%d-%H%M%S'), name)
+			GID = image_gid(os.path.join(*[config['ARCHIVE_ROOT']] + raw[0] + [raw[1]]))
 
 			GID_index[GID] = {
 				'gid': GID,
 				'name': name,
+				'imported': time.time(),
 				'RAW': raws,
 				'XMP': [e for e in l if e[-1] == XMP],
 				'JPG': [e for e in l if e[-1] == JPEG],
