@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120302021211'''
+__sub_version__ = '''20120302022717'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -81,8 +81,23 @@ SUBTREE_CLASSES = {
 
 #-----------------------------------------------------------------------
 
+# XXX need a strategy to check if two files that have the same GID are
+# 	  identical, and if so, need to destinguish them in the GID...
+# 	  might be a good idea to add a file hash
 def image_gid(path):
-	i = metadata.ImageMetadata('%s.%s' % (path, raw[-1]))
+	'''
+	Calgulate image GID.
+
+	Format:
+		<date>-<time>-<filename>
+
+	Example:
+		20110627-195706-DSC_1234	
+
+	NOTE: date and time are the date and time the image was made ('Exif.Image.DateTime')
+	NOTE: need EXIF data to generate a GID
+	'''
+	i = metadata.ImageMetadata('%s' % path)
 	i.read()
 	d = i['Exif.Image.DateTime'].value
 	return '%s-%s' % (d.strftime('%Y%m%d-%H%M%S'), name)
@@ -185,7 +200,7 @@ if __name__ == '__main__':
 			# XXX to avoid further ambiguity need to encode the camera
 			# into file name, e.g. S01_1234 for SLR 01 and RO1_4321 for
 			# rangefinder 01 and finally C01 for compact 01, etc.
-			GID = image_gid(os.path.join(*[config['ARCHIVE_ROOT']] + raw[0] + [raw[1]]))
+			GID = image_gid('%s.%s' % (os.path.join(*[config['ARCHIVE_ROOT']] + raw[0] + [raw[1]]), raw[-1]))
 
 			GID_index[GID] = {
 				'gid': GID,
