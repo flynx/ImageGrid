@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120301172257'''
+__sub_version__ = '''20120302014841'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -30,8 +30,8 @@ from pprint import pprint
 
 #-----------------------------------------------------------------------
 
-##CONFIG_NAME = 'test_config.json'
-CONFIG_NAME = 'tmp_config.json'
+CONFIG_NAME = 'test_config.json'
+##CONFIG_NAME = 'tmp_config.json'
 
 config = json.load(open(CONFIG_NAME))
 
@@ -106,14 +106,20 @@ def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, include_root_path=Fal
 
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
-##	lst = list(list_files(config['ARCHIVE_ROOT']))
-##
-##	print len(lst)
-##	pprint(lst[0])
-##
-##	json.dump(lst, file(os.path.join('test', 'flatfilelist.json'), 'w'))
 
-	lst = json.load(file(os.path.join('test', 'flatfilelist.json')))
+	FILE_LIST = os.path.join('test', 'flatfilelist.json')
+	BUILD_FILE_LIST = False if os.path.exists(FILE_LIST) else True
+
+
+	if BUILD_FILE_LIST:
+		lst = list(list_files(config['ARCHIVE_ROOT']))
+	
+		print len(lst)
+		pprint(lst[0])
+	
+		json.dump(lst, file(FILE_LIST), 'w')
+
+	lst = json.load(file(FILE_LIST))
 	print len(lst)
 
 ##	lst.sort()
@@ -166,7 +172,12 @@ if __name__ == '__main__':
 			# 	- calculable from the item (preferably any sub-item)
 ##			GID = '%s-%s' % (uuid.uuid4().hex, name)
 			##!!! get RAW file creation date from EXIF...
-			GID = '%s-%s' % (hex(long(time.time()*1000))[2:-1], name)
+##			GID = '%s-%s' % (hex(long(time.time()*1000))[2:-1].upper(), name)
+			# GID should be human-readable...
+			# XXX to avoid further ambiguity need to encode the camera
+			# into file name, e.g. S01_1234 for SLR 01 and RO1_4321 for
+			# rangefinder 01 and finally C01 for compact 01, etc.
+			GID = '%s-%s' % (time.strftime('%Y%m%d-%H%M%S'), name)
 
 			GID_index[GID] = {
 				'gid': GID,
