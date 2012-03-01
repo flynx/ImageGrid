@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120229170952'''
+__sub_version__ = '''20120301172257'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -80,6 +80,7 @@ SUBTREE_CLASSES = {
 #-----------------------------------------------------------------------
 
 ##!!! we will need to normalize the paths to one single scheme (either relative or absolute)...
+# XXX might need to fetch file data too...
 def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, include_root_path=False):
 	'''
 	yields:
@@ -145,27 +146,28 @@ if __name__ == '__main__':
 	GID_index = {}
 	for name, l in index.items():
 
-		##!!! gid construction should be a customizable function in itself...
-		# main gid criteria:
-		# 	- unique
-		# 	- calculable from the item (preferably any sub-item)
-##		GID = '%s-%s' % (uuid.uuid4().hex, name)
-		##!!! get RAW file creation date from EXIF...
-		GID = '%s-%s' % (hex(long(time.time()*1000))[2:-1], name)
-
 		l.sort()
 
 		raws = [e for e in l if e[-1] == RAW] 
-		if len(raws) > 1:
-			print 'duplicates: %s (%sx)...' % (name, len(raws)),
-			# split the group into c seporate groups...
-			# strategies:
-			# 	- path proximity (distance)
-			# 	- metadata
-			##!!!
-			print 'skipping.'
-##			raise TypeError, 'found %s RAW files with identical names (%s).' % (len(raws), name)
-		else:
+
+		for raw in raws:
+			if len(raws) > 1:
+				print 'duplicates: %s (%sx)...' % (name, len(raws)),
+				# split the group into c seporate groups...
+				# strategies:
+				# 	- path proximity (distance)
+				# 	- metadata
+				##!!!
+				print 'skipping.'
+				break
+			##!!! gid construction should be a customizable function in itself...
+			# main gid criteria:
+			# 	- unique
+			# 	- calculable from the item (preferably any sub-item)
+##			GID = '%s-%s' % (uuid.uuid4().hex, name)
+			##!!! get RAW file creation date from EXIF...
+			GID = '%s-%s' % (hex(long(time.time()*1000))[2:-1], name)
+
 			GID_index[GID] = {
 				'gid': GID,
 				'name': name,
@@ -176,6 +178,14 @@ if __name__ == '__main__':
 				'TIFF': [e for e in l if e[-1] == TIFF],
 				'other': [e for e in l if e[-1] != OR(TIFF, PSD, JPEG, XMP, RAW)],
 			}
+
+
+	##!!! TODO: archive descriptions to help index/tag items...
+
+	# NOTE: each import from an existing archive will be as follows:
+	# 			- full listing
+	# 			- find new subtrees
+	# 			- find modified items (file date diff)
 	
 
 	print GID
