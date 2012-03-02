@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120302022717'''
+__sub_version__ = '''20120302161602'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -84,35 +84,61 @@ SUBTREE_CLASSES = {
 # XXX need a strategy to check if two files that have the same GID are
 # 	  identical, and if so, need to destinguish them in the GID...
 # 	  might be a good idea to add a file hash
-def image_gid(path):
+# XXX not yet sure if this is unique enough to avoid conflicts if one
+# 	  photographer has enough cameras...
+# XXX also might be wise to add a photographer ID into here...
+def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%H%M%S'):
 	'''
 	Calgulate image GID.
 
-	Format:
-		<date>-<time>-<filename>
+	Main gid criteria:
+	 	- unique
+	 	- calculable from the item (preferably any sub-item)
+	 	- human-readable
+
+	Default format:
+		<artist>-<datetime>-<filename>
 
 	Example:
 		20110627-195706-DSC_1234	
 
+	Supported fields:
+		%(artist)s	- Exif.Image.Artist field, stripped and spaces replaced with underscores.
+		%(date)s	- Exif.Image.DateTime formated to date_format argument.
+		%(name)s	- file name.
+
 	NOTE: date and time are the date and time the image was made ('Exif.Image.DateTime')
 	NOTE: need EXIF data to generate a GID
 	'''
-	i = metadata.ImageMetadata('%s' % path)
-	i.read()
-	d = i['Exif.Image.DateTime'].value
-	return '%s-%s' % (d.strftime('%Y%m%d-%H%M%S'), name)
+	data = {
+		'name': os.path.splitext(os.path.split(path)[-1])[0]
+	}
+	# check if we need a date in the id...
+	if '%(date)s' in format:
+		i = metadata.ImageMetadata('%s' % path)
+		i.read()
+		d = i['Exif.Image.DateTime'].value
+		data['date'] = d.strftime(date_format)
+	# check if we need an artist...
+	if '%(artist)s' in format:
+		data['artist'] = i['Exif.Image.Artist'].value.strip().replace(' ', '_')
+	
+	return format % data
 
 
 ##!!! we will need to normalize the paths to one single scheme (either relative or absolute)...
 # XXX might need to fetch file data too...
-def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, include_root_path=False):
+def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, include_root_path=False, include_ctime=True):
 	'''
 	yields:
-		(<path>, <name>, <ext>),
+		(<path>, <name>, <ext>[, <ctime>]),
 	'''
-	for path, dirs, files in os.walk(root):
+	for orig_path, dirs, files in os.walk(root):
 		# XXX is this correct...
-		path = path.split(os.path.sep)
+		path = orig_path.split(os.path.sep)
+		# remove root from path...
+		if not include_root_path:
+			path = path[len(root.split(os.path.sep)):]
 		# process files...
 		for f in files:
 			name, ext = os.path.splitext(f)
@@ -120,8 +146,9 @@ def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, include_root_path=Fal
 			ext = ext[1:]
 			# filter by ext...
 			if ext == type:
-				if not include_root_path:
-					yield path[len(root.split(os.path.sep)):], name, ext
+				if include_ctime:
+					t = os.path.getctime(os.path.join(orig_path, f))
+					yield path, name, ext, t
 				else:
 					yield path, name, ext
 
@@ -141,20 +168,13 @@ if __name__ == '__main__':
 		print len(lst)
 		pprint(lst[0])
 	
-		json.dump(lst, file(FILE_LIST), 'w')
+		json.dump(lst, file(FILE_LIST, 'w'))
 
 	lst = json.load(file(FILE_LIST))
 	print len(lst)
 
-##	lst.sort()
 	# sort via name, ext, path
-	lst.sort(key=lambda e: (e[1], e[-1], e[0]))
-
-	##!!! duplicate a raw file...
-	for p, n, t in lst:
-		if t == RAW:
-			lst += [(p, n, t)]
-			break
+	lst.sort(key=lambda e: (e[1], e[2], e[0]))
 
 	# index by name (indexing preparation)...
 	# {
@@ -165,11 +185,11 @@ if __name__ == '__main__':
 	# 	...
 	# }
 	index = {}
-	for p, n, t in lst:
+	for p, n, t, c in lst:
 		if n in index:
-			index[n] += [(p, n, t)]
+			index[n] += [(p, n, t, c)]
 		else:
-			index[n] = [(p, n, t)]
+			index[n] = [(p, n, t, c)]
 
 	# index via a propper GID...
 	# split similarly named but different files...
@@ -178,7 +198,7 @@ if __name__ == '__main__':
 
 		l.sort()
 
-		raws = [e for e in l if e[-1] == RAW] 
+		raws = [e for e in l if e[2] == RAW] 
 
 		for raw in raws:
 			if len(raws) > 1:
@@ -190,28 +210,21 @@ if __name__ == '__main__':
 				##!!!
 				print 'skipping.'
 				break
-			##!!! gid construction should be a customizable function in itself...
-			# main gid criteria:
-			# 	- unique
-			# 	- calculable from the item (preferably any sub-item)
-			# 	- human-readable
-##			GID = '%s-%s' % (uuid.uuid4().hex, name)
-			##!!! get RAW file creation date from EXIF...
-			# XXX to avoid further ambiguity need to encode the camera
-			# into file name, e.g. S01_1234 for SLR 01 and RO1_4321 for
-			# rangefinder 01 and finally C01 for compact 01, etc.
-			GID = image_gid('%s.%s' % (os.path.join(*[config['ARCHIVE_ROOT']] + raw[0] + [raw[1]]), raw[-1]))
+			# get file GID...
+			GID = image_gid('%s.%s' % (os.path.join(*[config['ARCHIVE_ROOT']] + raw[0] + [raw[1]]), raw[2]))
 
 			GID_index[GID] = {
 				'gid': GID,
 				'name': name,
 				'imported': time.time(),
+				# NOTE: this might get distorted on archiving...
+				'ctime': raw[3], 
 				'RAW': raws,
-				'XMP': [e for e in l if e[-1] == XMP],
-				'JPG': [e for e in l if e[-1] == JPEG],
-				'PSD': [e for e in l if e[-1] == PSD],
-				'TIFF': [e for e in l if e[-1] == TIFF],
-				'other': [e for e in l if e[-1] != OR(TIFF, PSD, JPEG, XMP, RAW)],
+				'XMP': [e for e in l if e[2] == XMP],
+				'JPG': [e for e in l if e[2] == JPEG],
+				'PSD': [e for e in l if e[2] == PSD],
+				'TIFF': [e for e in l if e[2] == TIFF],
+				'other': [e for e in l if e[2] != OR(TIFF, PSD, JPEG, XMP, RAW)],
 			}
 
 
@@ -224,7 +237,7 @@ if __name__ == '__main__':
 	
 
 	print GID
-	print len(GID_index), len([ e for e in lst if e[-1] == RAW])
+	print len(GID_index), len([ e for e in lst if e[2] == RAW])
 
 	pprint(GID_index.values()[0])
 
