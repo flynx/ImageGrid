@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120302161602'''
+__sub_version__ = '''20120303020603'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -37,6 +37,7 @@ CONFIG_NAME = 'test_config.json'
 
 config = json.load(open(CONFIG_NAME))
 
+# XXX move this to a context-dependant module...
 RAW = OR(
 	'NEF', 'nef', 
 	'CRW', 'crw',
@@ -111,7 +112,7 @@ def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%
 	NOTE: need EXIF data to generate a GID
 	'''
 	data = {
-		'name': os.path.splitext(os.path.split(path)[-1])[0]
+		'name': os.path.splitext(os.path.split(path)[-1])[0],
 	}
 	# check if we need a date in the id...
 	if '%(date)s' in format:
@@ -151,6 +152,23 @@ def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, include_root_path=Fal
 					yield path, name, ext, t
 				else:
 					yield path, name, ext
+
+
+def common_len(a, *b):
+	'''
+	'''
+	for i, l in enumerate(izip(*(a,) + b)):
+		if len(set(l)) != 1:
+			return i
+	return len(min(*(a,) + b))
+
+
+##!!! is this meaningless?
+def path_distance(a, b):
+	'''
+	'''
+	return len(a) + len(b) - common_len(a, b)*2
+
 
 
 
@@ -194,22 +212,58 @@ if __name__ == '__main__':
 	# index via a propper GID...
 	# split similarly named but different files...
 	GID_index = {}
+	failed = []
 	for name, l in index.items():
 
 		l.sort()
 
 		raws = [e for e in l if e[2] == RAW] 
 
-		for raw in raws:
-			if len(raws) > 1:
-				print 'duplicates: %s (%sx)...' % (name, len(raws)),
-				# split the group into c seporate groups...
-				# strategies:
-				# 	- path proximity (distance)
-				# 	- metadata
-				##!!!
-				print 'skipping.'
-				break
+		# handle multiple raw files...
+		if len(raws) > 1:
+			common = common_len(*[ e[0] for e in raws ])
+
+			# NOTE: do not change the order of raws after this point
+			# 		and till the end of the loop...
+			# 		XXX revise if there is a simpler way...
+			sets = [ (r, [r]) for r in raws ]
+
+			for e in l:
+				if e[2] == RAW:
+					continue
+				# check if we are closer to other raws...
+				# NOTE: this depends on stability of order in raws
+				c_index = [(common_len(r[0], e[0]), r, i) for i, r in enumerate(raws)]
+				c, raw, i = max(*c_index)
+				if c_index.count([c, ANY, ANY]) > 1:
+					# a file is at a path junction exactly...
+					print '    !!! can\'t decide where to put %s.%s...' % (e[1], e[2])
+					##!!! try different strategies here...
+					##!!!
+					failed += [e]
+				elif c > common:
+					# found a propper location...
+					s = sets[i][1]
+					s += [e]
+					##!!! for some reason this does not work....
+##					sets[i][1] += [e]
+				else:
+					print '    !!! can\'t decide where to put %s.%s...' % (e[1], e[2])
+					##!!! try different strategies here...
+					##!!!
+					failed += [e]
+		# single raw...
+		elif len(raws) == 1:
+			sets = [(raws[0], l)]
+		# no raw files...
+		else:
+			print 'no raw file found for "%s"...' % os.path.join(name)
+			sets = []
+			##!!! need to report this in a usable way...
+			failed += l
+
+
+		for raw, l in sets:
 			# get file GID...
 			GID = image_gid('%s.%s' % (os.path.join(*[config['ARCHIVE_ROOT']] + raw[0] + [raw[1]]), raw[2]))
 
@@ -217,7 +271,9 @@ if __name__ == '__main__':
 				'gid': GID,
 				'name': name,
 				'imported': time.time(),
-				# NOTE: this might get distorted on archiving...
+				# NOTE: this might get distorted on archiving or
+				# 		copying...
+				# 		mostly intended for importing...
 				'ctime': raw[3], 
 				'RAW': raws,
 				'XMP': [e for e in l if e[2] == XMP],
@@ -235,9 +291,13 @@ if __name__ == '__main__':
 	# 			- find new subtrees
 	# 			- find modified items (file date diff)
 	
-
-	print GID
-	print len(GID_index), len([ e for e in lst if e[2] == RAW])
+	# NOTE: raws number here may be more than indexed because some raws 
+	# 		may get grouped by GID
+	print '''results:
+	indexed: %s
+	raws: %s
+	failed: %s
+	''' % (len(GID_index), len([ e for e in lst if e[2] == RAW]), len(failed))
 
 	pprint(GID_index.values()[0])
 
