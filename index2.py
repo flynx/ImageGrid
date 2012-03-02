@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120303020603'''
+__sub_version__ = '''20120303021628'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -226,7 +226,9 @@ if __name__ == '__main__':
 			# NOTE: do not change the order of raws after this point
 			# 		and till the end of the loop...
 			# 		XXX revise if there is a simpler way...
-			sets = [ (r, [r]) for r in raws ]
+			##!!! this kills code like sets[0][1] += [...]
+##			sets = [ (r, [r]) for r in raws ]
+			sets = [ [r, [r]] for r in raws ]
 
 			for e in l:
 				if e[2] == RAW:
@@ -235,18 +237,21 @@ if __name__ == '__main__':
 				# NOTE: this depends on stability of order in raws
 				c_index = [(common_len(r[0], e[0]), r, i) for i, r in enumerate(raws)]
 				c, raw, i = max(*c_index)
+				# we have two locations with identical weight...
 				if c_index.count([c, ANY, ANY]) > 1:
 					# a file is at a path junction exactly...
 					print '    !!! can\'t decide where to put %s.%s...' % (e[1], e[2])
 					##!!! try different strategies here...
 					##!!!
 					failed += [e]
+				# found a location...
 				elif c > common:
-					# found a propper location...
-					s = sets[i][1]
-					s += [e]
-					##!!! for some reason this does not work....
-##					sets[i][1] += [e]
+					# XXX hack (se below)
+##					s = sets[i][1]
+##					s += [e]
+					##!!! for some odd reason this does not work....
+					sets[i][1] += [e]
+				# file in an odd location ##!!! list these locations...
 				else:
 					print '    !!! can\'t decide where to put %s.%s...' % (e[1], e[2])
 					##!!! try different strategies here...
