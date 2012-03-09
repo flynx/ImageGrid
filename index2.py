@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120303021628'''
+__sub_version__ = '''20120309173155'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -101,7 +101,7 @@ def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%
 		<artist>-<datetime>-<filename>
 
 	Example:
-		20110627-195706-DSC_1234	
+		Alex_A.Naanou-20110627-195706-DSC_1234	
 
 	Supported fields:
 		%(artist)s	- Exif.Image.Artist field, stripped and spaces replaced with underscores.
@@ -111,6 +111,7 @@ def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%
 	NOTE: date and time are the date and time the image was made ('Exif.Image.DateTime')
 	NOTE: need EXIF data to generate a GID
 	'''
+	# get the filename...
 	data = {
 		'name': os.path.splitext(os.path.split(path)[-1])[0],
 	}
