@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120309173155'''
+__sub_version__ = '''20120310191654'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -20,14 +20,14 @@ import json
 import zipfile
 import uuid
 import time
+from pprint import pprint
+from itertools import izip, izip_longest
 
 import pyexiv2 as metadata
 
-from itertools import izip, izip_longest
-
 from pli.logictypes import ANY, OR
 
-from pprint import pprint
+from gid import image_gid
 
 
 #-----------------------------------------------------------------------
@@ -82,50 +82,6 @@ SUBTREE_CLASSES = {
 
 #-----------------------------------------------------------------------
 
-# XXX need a strategy to check if two files that have the same GID are
-# 	  identical, and if so, need to destinguish them in the GID...
-# 	  might be a good idea to add a file hash
-# XXX not yet sure if this is unique enough to avoid conflicts if one
-# 	  photographer has enough cameras...
-# XXX also might be wise to add a photographer ID into here...
-def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%H%M%S'):
-	'''
-	Calgulate image GID.
-
-	Main gid criteria:
-	 	- unique
-	 	- calculable from the item (preferably any sub-item)
-	 	- human-readable
-
-	Default format:
-		<artist>-<datetime>-<filename>
-
-	Example:
-		Alex_A.Naanou-20110627-195706-DSC_1234	
-
-	Supported fields:
-		%(artist)s	- Exif.Image.Artist field, stripped and spaces replaced with underscores.
-		%(date)s	- Exif.Image.DateTime formated to date_format argument.
-		%(name)s	- file name.
-
-	NOTE: date and time are the date and time the image was made ('Exif.Image.DateTime')
-	NOTE: need EXIF data to generate a GID
-	'''
-	# get the filename...
-	data = {
-		'name': os.path.splitext(os.path.split(path)[-1])[0],
-	}
-	# check if we need a date in the id...
-	if '%(date)s' in format:
-		i = metadata.ImageMetadata('%s' % path)
-		i.read()
-		d = i['Exif.Image.DateTime'].value
-		data['date'] = d.strftime(date_format)
-	# check if we need an artist...
-	if '%(artist)s' in format:
-		data['artist'] = i['Exif.Image.Artist'].value.strip().replace(' ', '_')
-	
-	return format % data
 
 
 ##!!! we will need to normalize the paths to one single scheme (either relative or absolute)...
@@ -171,7 +127,123 @@ def path_distance(a, b):
 	return len(a) + len(b) - common_len(a, b)*2
 
 
+def index_by_name(lst):
+	'''
+	index by file name (indexing preparation)...
 
+	format:
+	{
+		<name> : [
+			(<path>, <name>, ...),
+			...
+		],
+		...
+	}
+	'''
+	res = {}
+	# NOTE: this is to avoid side-effects...
+	lst = lst[:]
+	# sort via name, ext, path
+	lst.sort(key=lambda e: (e[1], e[2], e[0]))
+	for e in lst:
+		n = e[1]
+		if n in res:
+			res[n] += [e]
+		else:
+			res[n] = [e]
+	return res
+
+
+
+def split_by_raws(raws, lst, failed):
+	'''
+	'''
+##	raws = [e for e in lst if e[2] == RAW] 
+	common = common_len(*[ e[0] for e in raws ])
+
+	# NOTE: do not change the order of raws after this point
+	# 		and till the end of the loop...
+	# 		XXX revise if there is a simpler way...
+	##!!! this kills code like sets[0][1] += [...]
+##	sets = [ (r, [r]) for r in raws ]
+	sets = [ [r, [r]] for r in raws ]
+
+	for e in lst:
+		if e[2] == RAW:
+			continue
+		# check if we are closer to other raws...
+		# NOTE: this depends on stability of order in raws
+		c_index = [(common_len(r[0], e[0]), r, i) for i, r in enumerate(raws)]
+		c, raw, i = max(*c_index)
+		# we have two locations with identical weight...
+		if c_index.count([c, ANY, ANY]) > 1:
+			# a file is at a path junction exactly...
+			print '    !!! can\'t decide where to put %s.%s...' % (e[1], e[2])
+			##!!! try different strategies here...
+			##!!!
+			failed += [e]
+		# found a location...
+		elif c > common:
+			##!!! for some odd reason this does not work....
+			sets[i][1] += [e]
+		# file in an odd location ##!!! list these locations...
+		else:
+			print '    !!! can\'t decide where to put %s.%s...' % (e[1], e[2])
+			##!!! try different strategies here...
+			##!!!
+			failed += [e]
+##	return sets, failed
+	return sets
+
+
+def gid_index(index):
+	'''
+	'''
+	# index via a propper GID...
+	# split similarly named but different files...
+	res = {}
+	failed = []
+	for name, l in index.iteritems():
+		l.sort()
+		raws = [e for e in l if e[2] == RAW] 
+
+		# multiple raw files...
+		if len(raws) > 1:
+			# spit this into a seporate func...
+			sets = split_by_raws(raws, l, failed)
+		# single raw...
+		elif len(raws) == 1:
+			sets = [(raws[0], l)]
+		# no raw files...
+		else:
+			print 'no raw file found for "%s"...' % os.path.join(name)
+			sets = []
+			##!!! need to report this in a usable way...
+			failed += l
+
+		# add actual elements to index...
+		for raw, l in sets:
+			# get file GID...
+			GID = image_gid('%s.%s' % (os.path.join(*[config['ARCHIVE_ROOT']] + raw[0] + [raw[1]]), raw[2]))
+
+			res[GID] = {
+				'gid': GID,
+				'name': name,
+				'imported': time.time(),
+				# NOTE: this might get distorted on archiving or
+				# 		copying...
+				# 		mostly intended for importing...
+				'ctime': raw[3], 
+				##!!! make these more general...
+				'RAW': raws,
+				'XMP': [e for e in l if e[2] == XMP],
+				'JPG': [e for e in l if e[2] == JPEG],
+				'PSD': [e for e in l if e[2] == PSD],
+				'TIFF': [e for e in l if e[2] == TIFF],
+				'other': [e for e in l if e[2] != OR(TIFF, PSD, JPEG, XMP, RAW)],
+			}
+
+	return res, failed
 
 
 #-----------------------------------------------------------------------
@@ -192,102 +264,12 @@ if __name__ == '__main__':
 	lst = json.load(file(FILE_LIST))
 	print len(lst)
 
-	# sort via name, ext, path
-	lst.sort(key=lambda e: (e[1], e[2], e[0]))
 
-	# index by name (indexing preparation)...
-	# {
-	# 	<name> : [
-	# 		(<path>, <name>, <type>),
-	# 		...
-	# 	],
-	# 	...
-	# }
-	index = {}
-	for p, n, t, c in lst:
-		if n in index:
-			index[n] += [(p, n, t, c)]
-		else:
-			index[n] = [(p, n, t, c)]
-
-	# index via a propper GID...
-	# split similarly named but different files...
-	GID_index = {}
-	failed = []
-	for name, l in index.items():
-
-		l.sort()
-
-		raws = [e for e in l if e[2] == RAW] 
-
-		# handle multiple raw files...
-		if len(raws) > 1:
-			common = common_len(*[ e[0] for e in raws ])
-
-			# NOTE: do not change the order of raws after this point
-			# 		and till the end of the loop...
-			# 		XXX revise if there is a simpler way...
-			##!!! this kills code like sets[0][1] += [...]
-##			sets = [ (r, [r]) for r in raws ]
-			sets = [ [r, [r]] for r in raws ]
-
-			for e in l:
-				if e[2] == RAW:
-					continue
-				# check if we are closer to other raws...
-				# NOTE: this depends on stability of order in raws
-				c_index = [(common_len(r[0], e[0]), r, i) for i, r in enumerate(raws)]
-				c, raw, i = max(*c_index)
-				# we have two locations with identical weight...
-				if c_index.count([c, ANY, ANY]) > 1:
-					# a file is at a path junction exactly...
-					print '    !!! can\'t decide where to put %s.%s...' % (e[1], e[2])
-					##!!! try different strategies here...
-					##!!!
-					failed += [e]
-				# found a location...
-				elif c > common:
-					# XXX hack (se below)
-##					s = sets[i][1]
-##					s += [e]
-					##!!! for some odd reason this does not work....
-					sets[i][1] += [e]
-				# file in an odd location ##!!! list these locations...
-				else:
-					print '    !!! can\'t decide where to put %s.%s...' % (e[1], e[2])
-					##!!! try different strategies here...
-					##!!!
-					failed += [e]
-		# single raw...
-		elif len(raws) == 1:
-			sets = [(raws[0], l)]
-		# no raw files...
-		else:
-			print 'no raw file found for "%s"...' % os.path.join(name)
-			sets = []
-			##!!! need to report this in a usable way...
-			failed += l
+	index = index_by_name(lst)
 
 
-		for raw, l in sets:
-			# get file GID...
-			GID = image_gid('%s.%s' % (os.path.join(*[config['ARCHIVE_ROOT']] + raw[0] + [raw[1]]), raw[2]))
+	GID_index, failed = gid_index(index)
 
-			GID_index[GID] = {
-				'gid': GID,
-				'name': name,
-				'imported': time.time(),
-				# NOTE: this might get distorted on archiving or
-				# 		copying...
-				# 		mostly intended for importing...
-				'ctime': raw[3], 
-				'RAW': raws,
-				'XMP': [e for e in l if e[2] == XMP],
-				'JPG': [e for e in l if e[2] == JPEG],
-				'PSD': [e for e in l if e[2] == PSD],
-				'TIFF': [e for e in l if e[2] == TIFF],
-				'other': [e for e in l if e[2] != OR(TIFF, PSD, JPEG, XMP, RAW)],
-			}
 
 
 	##!!! TODO: archive descriptions to help index/tag items...
@@ -303,15 +285,13 @@ if __name__ == '__main__':
 	indexed: %s
 	raws: %s
 	failed: %s
-	''' % (len(GID_index), len([ e for e in lst if e[2] == RAW]), len(failed))
+	''' % (
+			len(GID_index), 
+			len([ e for e in lst if e[2] == RAW]), 
+			len(failed))
 
 	pprint(GID_index.values()[0])
 
-
-	
-
-
-	
 
 
 
