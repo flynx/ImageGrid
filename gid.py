@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120313182702'''
+__sub_version__ = '''20120313223928'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -22,7 +22,10 @@ import pyexiv2 as metadata
 # XXX not yet sure if this is unique enough to avoid conflicts if one
 # 	  photographer has enough cameras...
 # XXX also might be wise to add a photographer ID into here...
-def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%H%M%S', hash_func=sha.sha):
+def image_gid(path, format='%(artist)s-%(date)s-%(name)s', 
+		date_format='%Y%m%d-%H%M%S', 
+		default_artist='Unknown',
+		hash_func=sha.sha):
 	'''
 	Calgulate image GID.
 
@@ -53,15 +56,19 @@ def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%
 	data = {
 		'name': os.path.splitext(os.path.split(path)[-1])[0],
 	}
+	##!!! this might fail...
+	i = metadata.ImageMetadata('%s' % path)
+	i.read()
 	# check if we need a date in the id...
 	if '%(date)s' in format:
-		i = metadata.ImageMetadata('%s' % path)
-		i.read()
 		d = i['Exif.Image.DateTime'].value
 		data['date'] = d.strftime(date_format)
 	# check if we need an artist...
 	if '%(artist)s' in format:
-		data['artist'] = i['Exif.Image.Artist'].value.strip().replace(' ', '_')
+		try:
+			data['artist'] = i['Exif.Image.Artist'].value.strip().replace(' ', '_')
+		except KeyError:
+			data['artist'] = default_artist
 	
 	if hash_func is not None:
 		return hash_func(format % data).hexdigest()

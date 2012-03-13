@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120310191654'''
+__sub_version__ = '''20120313224544'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -27,13 +27,15 @@ import pyexiv2 as metadata
 
 from pli.logictypes import ANY, OR
 
+import store
 from gid import image_gid
 
 
 #-----------------------------------------------------------------------
 
-CONFIG_NAME = 'test_config.json'
+##CONFIG_NAME = 'test_config.json'
 ##CONFIG_NAME = 'tmp_config.json'
+CONFIG_NAME = 'tmp_config.json.bak'
 
 config = json.load(open(CONFIG_NAME))
 
@@ -42,12 +44,13 @@ RAW = OR(
 	'NEF', 'nef', 
 	'CRW', 'crw',
 	'CR2', 'cr2',
-	'X3F', 'x3f'
+	'X3F', 'x3f',
+	'DNG', 'dng',
 )
 
 JPEG = OR(
 	'JPG', 'jpg', 
-	'JPEG', 'jpeg'
+	'JPEG', 'jpeg',
 )
 
 PSD = OR(
@@ -196,12 +199,15 @@ def split_by_raws(raws, lst, failed):
 	return sets
 
 
-def gid_index(index):
+def gid_index(index, existing=None):
 	'''
 	'''
 	# index via a propper GID...
 	# split similarly named but different files...
-	res = {}
+	if existing is None:
+		res = {}
+	else:
+		res = existing
 	failed = []
 	for name, l in index.iteritems():
 		l.sort()
@@ -235,7 +241,7 @@ def gid_index(index):
 				# 		mostly intended for importing...
 				'ctime': raw[3], 
 				##!!! make these more general...
-				'RAW': raws,
+				'RAW': [e for e in l if e[2] == RAW],
 				'XMP': [e for e in l if e[2] == XMP],
 				'JPG': [e for e in l if e[2] == JPEG],
 				'PSD': [e for e in l if e[2] == PSD],
@@ -249,6 +255,8 @@ def gid_index(index):
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 
+	INDEX_PATH = os.path.join('test', 'index2')
+
 	FILE_LIST = os.path.join('test', 'flatfilelist.json')
 	BUILD_FILE_LIST = False if os.path.exists(FILE_LIST) else True
 
@@ -256,19 +264,25 @@ if __name__ == '__main__':
 	if BUILD_FILE_LIST:
 		lst = list(list_files(config['ARCHIVE_ROOT']))
 	
-		print len(lst)
+		print 'found files:', len(lst)
 		pprint(lst[0])
 	
 		json.dump(lst, file(FILE_LIST, 'w'))
+		print 'saved...'
 
 	lst = json.load(file(FILE_LIST))
-	print len(lst)
+	print 'loaded:', len(lst)
 
 
 	index = index_by_name(lst)
 
 
-	GID_index, failed = gid_index(index)
+##	GID_index = store.IndexWithCache(INDEX_PATH)
+	GID_index = store.Index(INDEX_PATH)
+
+	GID_index, failed = gid_index(index, GID_index)
+
+	json.dump(failed, file(os.path.join('test', 'failed-to-categorise.json'), 'w'))
 
 
 
@@ -291,6 +305,12 @@ if __name__ == '__main__':
 			len(failed))
 
 	pprint(GID_index.values()[0])
+
+	store.save_file_index(GID_index, INDEX_PATH)
+
+##	store.pack_file_index(INDEX_PATH)
+
+
 
 
 

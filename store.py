@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120313183119'''
+__sub_version__ = '''20120313211552'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -11,10 +11,14 @@ import os
 import json
 import zipfile
 
+import pli.pattern.mixin.mapping as mapping
+import pli.objutils as objutils
+
 
 #-----------------------------------------------------------------------
 # XXX is this a good way to serialize the actual data in the fs???
 
+#-----------------------------------------------------save_file_index---
 # NOTE: these will work with any topoloy and create a flat index...
 def save_file_index(index, path, index_depth=1, ext='.json'):
 	'''
@@ -42,6 +46,7 @@ def save_file_index(index, path, index_depth=1, ext='.json'):
 	return root_index
 
 
+#-----------------------------------------------------load_file_index---
 def load_file_index(path, ext='.json', pack_ext='.pack'):
 	'''
 	'''
@@ -61,12 +66,15 @@ def load_file_index(path, ext='.json', pack_ext='.pack'):
 	return d
 
 
+#-----------------------------------------------------pack_file_index---
 # XXX should we remove empty dirs here???
+##!!! this may creae duplicate files within the pack...
 def pack_file_index(path, ext='.json', pack_ext='.pack', keep_files=False, keep_dirs=False):
 	'''
 
 	NOTE: if keep_files is True, keep_dirs option will be ignored.
 	'''
+	##!!! this will not remove original entries if they exist...
 	z = zipfile.ZipFile(os.path.join(path, 'index' + pack_ext), 'a', compression=zipfile.ZIP_DEFLATED)
 	for p, _, files in os.walk(path):
 		for f in files: 
@@ -92,14 +100,15 @@ def pack_file_index(path, ext='.json', pack_ext='.pack', keep_files=False, keep_
 #-----------------------------------------------------------------------
 # lazy dict-like objects that read and write (optional) the fs...
 
-import pli.pattern.mixin.mapping as mapping
-import pli.objutils as objutils
-
+#---------------------------------------------------------------Index---
 # XXX might be good to do a path index...
 ##!!! make this archive/file structure-agnostic...
 class Index(mapping.Mapping):
+	'''
+	'''
 	__json_ext__ = '.json'
 	__pack_ext__ = '.pack'
+	__index_depth__ = 2
 
 	def __init__(self, path):
 		'''
@@ -151,7 +160,8 @@ class Index(mapping.Mapping):
 	def __setitem__(self, name, value):
 		'''
 		'''
-		raise NotImplementedError
+		save_file_index({name: value}, self._path, index_depth=self.__index_depth__)
+##		raise NotImplementedError
 	def __delitem__(self, name):
 		'''
 		'''
@@ -178,8 +188,11 @@ class Index(mapping.Mapping):
 					yield os.path.splitext(name)[0]
 
 
+
+#-----------------------------------------------------------------------
 REMOVED = object()
 
+#------------------------------------------------------IndexWithCache---
 class IndexWithCache(Index):
 	'''
 	'''
@@ -229,7 +242,7 @@ class IndexWithCache(Index):
 		'''
 		'''
 		if keys == ():
-			return save_file_index(self._cache, self._path)
+			return save_file_index(self._cache, self._path, index_depth=self.__index_depth__)
 		flush = {}
 		for k in keys:
 			if k is REMOVED:
@@ -238,7 +251,7 @@ class IndexWithCache(Index):
 				##!!!
 				continue
 			flush[k] = self[k]
-		return save_file_index(flush, self._path)
+		return save_file_index(flush, self._path, index_depth=self.__index_depth__)
 	def cache_drop(self):
 		'''
 		'''
