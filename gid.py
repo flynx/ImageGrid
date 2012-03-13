@@ -1,13 +1,15 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120310183438'''
+__sub_version__ = '''20120313182702'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
 #-----------------------------------------------------------------------
 
 import os
+import sha
+import md5
 
 import pyexiv2 as metadata
 
@@ -20,7 +22,7 @@ import pyexiv2 as metadata
 # XXX not yet sure if this is unique enough to avoid conflicts if one
 # 	  photographer has enough cameras...
 # XXX also might be wise to add a photographer ID into here...
-def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%H%M%S'):
+def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%H%M%S', hash_func=sha.sha):
 	'''
 	Calgulate image GID.
 
@@ -35,8 +37,12 @@ def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%
 	Example:
 		Alex_A.Naanou-20110627-195706-DSC_1234	
 
+	If hash_func is not None, then the function will be used to henerate 
+	a hex hash from the above string.
+
 	Supported fields:
-		%(artist)s	- Exif.Image.Artist field, stripped and spaces replaced with underscores.
+		%(artist)s	- Exif.Image.Artist field, stripped and spaces replaced
+					  with underscores.
 		%(date)s	- Exif.Image.DateTime formated to date_format argument.
 		%(name)s	- file name.
 
@@ -57,7 +63,16 @@ def image_gid(path, format='%(artist)s-%(date)s-%(name)s', date_format='%Y%m%d-%
 	if '%(artist)s' in format:
 		data['artist'] = i['Exif.Image.Artist'].value.strip().replace(' ', '_')
 	
+	if hash_func is not None:
+		return hash_func(format % data).hexdigest()
 	return format % data
+
+
+
+#-----------------------------------------------------------------------
+if __name__ == '__main__':
+	pass
+
 
 
 
