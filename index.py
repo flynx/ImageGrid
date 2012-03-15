@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120313183420'''
+__sub_version__ = '''20120315151711'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -334,7 +334,7 @@ def build_image_cache(ic, min_rating, dest, tmp_path, preview_size=900):
 			continue
 
 	ic.cache_flush()
-	store.pack_file_index(ic._path, keep_files=False)
+	store.pack(ic._path, keep_files=False)
 
 	return res
 
@@ -362,14 +362,14 @@ if __name__ == '__main__':
 
 
 
-	root_index = store.save_file_index(index, os.path.join('test', 'index'), index_depth=1)
+	root_index = store.dump(index, os.path.join('test', 'index'), index_depth=1)
 
 ##	##!!! this is not used in anything yet...
 ##	json.dump(root_index, file(os.path.join('test', 'index', 'file_index.json'), 'w'))
 
-	store.pack_file_index(os.path.join('test', 'index'), keep_files=False)
+	store.pack(os.path.join('test', 'index'), keep_files=False)
 
-	d = store.load_file_index(os.path.join('test', 'index'))
+	d = store.load(os.path.join('test', 'index'))
 
 
 	print len(d)
@@ -390,13 +390,13 @@ if __name__ == '__main__':
 
 	ic.cache_flush()
 
-	store.pack_file_index(ic._path, keep_files=False)
+	store.pack(ic._path, keep_files=False)
 
 	ic.__sync__ = True
 
 	ic['111111111111111111111111111111111'] = {}
 
-	store.pack_file_index(ic._path, keep_files=False)
+	store.pack(ic._path, keep_files=False)
 
 
 	##!!! revise...
@@ -415,12 +415,12 @@ if __name__ == '__main__':
 		full = dict(json.load(file(os.path.join('test', 'filelist of 20k files.json'))))
 
 		print 'writing files...'
-		root_index = store.save_file_index(full, os.path.join('test', 'index'), index_depth=1)
+		root_index = store.dump(full, os.path.join('test', 'index'), index_depth=1)
 
 		print 'packing files...'
 		# NOTE: the initial archiving seems REALLY SLOW, but working with
 		# 		small numbers of files from the archive seems adequate...
-		store.pack_file_index(os.path.join('test', 'index'), keep_files=True)
+		store.pack(os.path.join('test', 'index'), keep_files=True)
 
 
 

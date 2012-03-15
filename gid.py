@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120313223928'''
+__sub_version__ = '''20120315140451'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -10,6 +10,7 @@ __copyright__ = '''(c) Alex A. Naanou 2011'''
 import os
 import sha
 import md5
+import time
 
 import pyexiv2 as metadata
 
@@ -22,9 +23,11 @@ import pyexiv2 as metadata
 # XXX not yet sure if this is unique enough to avoid conflicts if one
 # 	  photographer has enough cameras...
 # XXX also might be wise to add a photographer ID into here...
-def image_gid(path, format='%(artist)s-%(date)s-%(name)s', 
+def image_gid(path, date=None, 
+		format='%(artist)s-%(date)s-%(name)s', 
 		date_format='%Y%m%d-%H%M%S', 
 		default_artist='Unknown',
+		use_ctime=False,
 		hash_func=sha.sha):
 	'''
 	Calgulate image GID.
@@ -61,8 +64,14 @@ def image_gid(path, format='%(artist)s-%(date)s-%(name)s',
 	i.read()
 	# check if we need a date in the id...
 	if '%(date)s' in format:
-		d = i['Exif.Image.DateTime'].value
-		data['date'] = d.strftime(date_format)
+		if date is not None:
+			data['date'] = time.strftime(date_format, time.gmtime(date))
+		elif use_ctime:
+			date = os.path.getctime(path)
+			data['date'] = time.strftime(date_format, time.gmtime(date))
+		else:
+			date = i['Exif.Image.DateTime'].value
+			data['date'] = date.strftime(date_format)
 	# check if we need an artist...
 	if '%(artist)s' in format:
 		try:

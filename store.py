@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120313211552'''
+__sub_version__ = '''20120315152600'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -18,12 +18,30 @@ import pli.objutils as objutils
 #-----------------------------------------------------------------------
 # XXX is this a good way to serialize the actual data in the fs???
 
-#-----------------------------------------------------save_file_index---
+#----------------------------------------------------------------dump---
 # NOTE: these will work with any topoloy and create a flat index...
-def save_file_index(index, path, index_depth=1, ext='.json'):
+# XXX should this know anything about data versions???
+def dump(index, path, index_depth=1, ext='.json'):
 	'''
+	store an index in fs store.
 
-	NOTE: index_depth with value greater than 2 is an overkill.
+	by default the structure is as follows:
+
+		key: abcdefg
+		path: ab/abcdefg	(index_depth=1)
+
+
+	index_depth sets the directory structure, if 0 a flat store is 
+	created. here is an example path for index_depth=2
+
+		path: ab/cd/abcdefg
+
+	the dict value is stored in the file in JSON format.
+
+	NOTE: this can be used with parts of a dict.
+	NOTE: existing data will be overwritten.
+	NOTE: store balancing depends on key structure.
+	NOTE: index_depth with value greater than 2 is likely an overkill.
 	'''
 	root_index = {}
 	for k, v in index.items():
@@ -42,13 +60,19 @@ def save_file_index(index, path, index_depth=1, ext='.json'):
 			p = os.path.join(path, k + ext)
 		json.dump(v, file(p, 'w'), indent=4, separators=(', ', ': '))
 		root_index[k] = p
-##		print '.',
 	return root_index
 
 
 #-----------------------------------------------------load_file_index---
-def load_file_index(path, ext='.json', pack_ext='.pack'):
+def load(path, ext='.json', pack_ext='.pack'):
 	'''
+	load data from fs store.
+
+	for data format see dump(...).
+
+	NOTE: this will load the whole data set.
+	NOTE: unpacked data shadows packed data.
+	NOTE: this does not care about topology.
 	'''
 	d = {}
 	for p, _, files in os.walk(path):
@@ -68,9 +92,13 @@ def load_file_index(path, ext='.json', pack_ext='.pack'):
 
 #-----------------------------------------------------pack_file_index---
 # XXX should we remove empty dirs here???
-##!!! this may creae duplicate files within the pack...
-def pack_file_index(path, ext='.json', pack_ext='.pack', keep_files=False, keep_dirs=False):
+# XXX this will create duplicate files within the pack
+# 	  only the last is accesible but this might cause trouble elsewhere...
+# NOTE: this should be done in the background (possible race-condition
+# 		with removing a file while it is being read)
+def pack(path, ext='.json', pack_ext='.pack', keep_files=False, keep_dirs=False):
 	'''
+	pack an fs data store.
 
 	NOTE: if keep_files is True, keep_dirs option will be ignored.
 	'''
@@ -93,8 +121,6 @@ def pack_file_index(path, ext='.json', pack_ext='.pack', keep_files=False, keep_
 							pass
 	z.close()
 	
-##!!! get path by name helper...
-##!!!
 
 
 #-----------------------------------------------------------------------
@@ -160,8 +186,7 @@ class Index(mapping.Mapping):
 	def __setitem__(self, name, value):
 		'''
 		'''
-		save_file_index({name: value}, self._path, index_depth=self.__index_depth__)
-##		raise NotImplementedError
+		dump({name: value}, self._path, index_depth=self.__index_depth__)
 	def __delitem__(self, name):
 		'''
 		'''
@@ -242,7 +267,7 @@ class IndexWithCache(Index):
 		'''
 		'''
 		if keys == ():
-			return save_file_index(self._cache, self._path, index_depth=self.__index_depth__)
+			return dump(self._cache, self._path, index_depth=self.__index_depth__)
 		flush = {}
 		for k in keys:
 			if k is REMOVED:
@@ -251,7 +276,7 @@ class IndexWithCache(Index):
 				##!!!
 				continue
 			flush[k] = self[k]
-		return save_file_index(flush, self._path, index_depth=self.__index_depth__)
+		return dump(flush, self._path, index_depth=self.__index_depth__)
 	def cache_drop(self):
 		'''
 		'''

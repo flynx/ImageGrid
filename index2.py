@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120313224544'''
+__sub_version__ = '''20120315151510'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -33,9 +33,9 @@ from gid import image_gid
 
 #-----------------------------------------------------------------------
 
-##CONFIG_NAME = 'test_config.json'
+CONFIG_NAME = 'test_config.json'
 ##CONFIG_NAME = 'tmp_config.json'
-CONFIG_NAME = 'tmp_config.json.bak'
+##CONFIG_NAME = 'tmp_config.json.bak'
 
 config = json.load(open(CONFIG_NAME))
 
@@ -87,6 +87,7 @@ SUBTREE_CLASSES = {
 
 
 
+#----------------------------------------------------------list_files---
 ##!!! we will need to normalize the paths to one single scheme (either relative or absolute)...
 # XXX might need to fetch file data too...
 def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, include_root_path=False, include_ctime=True):
@@ -114,6 +115,7 @@ def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, include_root_path=Fal
 					yield path, name, ext
 
 
+#----------------------------------------------------------common_len---
 def common_len(a, *b):
 	'''
 	'''
@@ -123,6 +125,7 @@ def common_len(a, *b):
 	return len(min(*(a,) + b))
 
 
+#-------------------------------------------------------path_distance---
 ##!!! is this meaningless?
 def path_distance(a, b):
 	'''
@@ -130,6 +133,7 @@ def path_distance(a, b):
 	return len(a) + len(b) - common_len(a, b)*2
 
 
+#-------------------------------------------------------index_by_name---
 def index_by_name(lst):
 	'''
 	index by file name (indexing preparation)...
@@ -158,6 +162,7 @@ def index_by_name(lst):
 
 
 
+#-------------------------------------------------------split_by_raws---
 def split_by_raws(raws, lst, failed):
 	'''
 	'''
@@ -199,6 +204,7 @@ def split_by_raws(raws, lst, failed):
 	return sets
 
 
+#-----------------------------------------------------------gid_index---
 def gid_index(index, existing=None):
 	'''
 	'''
@@ -250,6 +256,7 @@ def gid_index(index, existing=None):
 			}
 
 	return res, failed
+
 
 
 #-----------------------------------------------------------------------
@@ -306,11 +313,9 @@ if __name__ == '__main__':
 
 	pprint(GID_index.values()[0])
 
-	store.save_file_index(GID_index, INDEX_PATH)
+##	store.dump(GID_index, INDEX_PATH)
 
-##	store.pack_file_index(INDEX_PATH)
-
-
+	store.pack(INDEX_PATH)
 
 
 
