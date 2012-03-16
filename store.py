@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120315152600'''
+__sub_version__ = '''20120316182131'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -42,6 +42,9 @@ def dump(index, path, index_depth=1, ext='.json'):
 	NOTE: existing data will be overwritten.
 	NOTE: store balancing depends on key structure.
 	NOTE: index_depth with value greater than 2 is likely an overkill.
+	NOTE: at this point there is no support for recursive or linked data
+	      so everything will be unlinked/duplicated on dump, or in case of 
+		  a recursion, json will choke with a ValueError...
 	'''
 	root_index = {}
 	for k, v in index.items():
@@ -63,7 +66,7 @@ def dump(index, path, index_depth=1, ext='.json'):
 	return root_index
 
 
-#-----------------------------------------------------load_file_index---
+#----------------------------------------------------------------load---
 def load(path, ext='.json', pack_ext='.pack'):
 	'''
 	load data from fs store.
@@ -90,7 +93,7 @@ def load(path, ext='.json', pack_ext='.pack'):
 	return d
 
 
-#-----------------------------------------------------pack_file_index---
+#----------------------------------------------------------------pack---
 # XXX should we remove empty dirs here???
 # XXX this will create duplicate files within the pack
 # 	  only the last is accesible but this might cause trouble elsewhere...
