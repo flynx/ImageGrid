@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120315140451'''
+__sub_version__ = '''20120316225150'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -61,12 +61,16 @@ def image_gid(path, date=None,
 	}
 	##!!! this might fail...
 	i = metadata.ImageMetadata('%s' % path)
-	i.read()
+	try:
+		i.read()
+	except IOError:
+		# can't read exif...
+		i = None
 	# check if we need a date in the id...
 	if '%(date)s' in format:
 		if date is not None:
 			data['date'] = time.strftime(date_format, time.gmtime(date))
-		elif use_ctime:
+		elif use_ctime or i is None:
 			date = os.path.getctime(path)
 			data['date'] = time.strftime(date_format, time.gmtime(date))
 		else:
@@ -74,10 +78,12 @@ def image_gid(path, date=None,
 			data['date'] = date.strftime(date_format)
 	# check if we need an artist...
 	if '%(artist)s' in format:
-		try:
-			data['artist'] = i['Exif.Image.Artist'].value.strip().replace(' ', '_')
-		except KeyError:
-			data['artist'] = default_artist
+		data['artist'] = default_artist
+		if i is not None:
+			try:
+				data['artist'] = i['Exif.Image.Artist'].value.strip().replace(' ', '_')
+			except KeyError:
+				pass
 	
 	if hash_func is not None:
 		return hash_func(format % data).hexdigest()

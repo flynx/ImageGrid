@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120315151510'''
+__sub_version__ = '''20120317004325'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -33,9 +33,9 @@ from gid import image_gid
 
 #-----------------------------------------------------------------------
 
-CONFIG_NAME = 'test_config.json'
-##CONFIG_NAME = 'tmp_config.json'
-##CONFIG_NAME = 'tmp_config.json.bak'
+##CONFIG_NAME = 'hdd9_config.json'
+CONFIG_NAME = 'P7000_config.json'
+##CONFIG_NAME = 'staging_config.json'
 
 config = json.load(open(CONFIG_NAME))
 
@@ -262,9 +262,11 @@ def gid_index(index, existing=None):
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 
-	INDEX_PATH = os.path.join('test', 'index2')
+	INDEX_PATH = config.get('INDEX_ROOT', os.path.join('test', 'index2'))
 
-	FILE_LIST = os.path.join('test', 'flatfilelist.json')
+	FILE_LIST = os.path.join('test', 'flatfilelist-P7000.json')
+##	FILE_LIST = os.path.join('test', 'flatfilelist-120kfiles.json')
+##	FILE_LIST = os.path.join('test', 'flatfilelist.json')
 	BUILD_FILE_LIST = False if os.path.exists(FILE_LIST) else True
 
 
@@ -311,11 +313,12 @@ if __name__ == '__main__':
 			len([ e for e in lst if e[2] == RAW]), 
 			len(failed))
 
-	pprint(GID_index.values()[0])
+	##!!! this is really slow because it pulls ALL the data... wonder who wrote this? :)
+	pprint(GID_index.itervalues().next())
 
 ##	store.dump(GID_index, INDEX_PATH)
 
-	store.pack(INDEX_PATH)
+##	store.pack(INDEX_PATH)
 
 
 
