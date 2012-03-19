@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120316225150'''
+__sub_version__ = '''20120317005456'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -23,6 +23,8 @@ import pyexiv2 as metadata
 # XXX not yet sure if this is unique enough to avoid conflicts if one
 # 	  photographer has enough cameras...
 # XXX also might be wise to add a photographer ID into here...
+##!!! add gid info section to identify the options used to greate a gid, e.g. EXIF date vs. ctime, etc.
+##!!! do a general revision and remove leacy...
 def image_gid(path, date=None, 
 		format='%(artist)s-%(date)s-%(name)s', 
 		date_format='%Y%m%d-%H%M%S', 

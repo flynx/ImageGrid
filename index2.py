@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120317004325'''
+__sub_version__ = '''20120320010842'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -41,10 +41,16 @@ config = json.load(open(CONFIG_NAME))
 
 # XXX move this to a context-dependant module...
 RAW = OR(
+	# Nikon
 	'NEF', 'nef', 
+	# Panasonic/Leica
+	'RW2', 'rw2',
+	# Canon
 	'CRW', 'crw',
 	'CR2', 'cr2',
+	# Sigma
 	'X3F', 'x3f',
+	# Adobe/Leica
 	'DNG', 'dng',
 )
 
@@ -283,11 +289,31 @@ if __name__ == '__main__':
 	print 'loaded:', len(lst)
 
 
+	IMPORT_DIFF = False
+
+	# skip already read files...
+	if IMPORT_DIFF and not BUILD_FILE_LIST:
+		lst_cur = list(list_files(config['ARCHIVE_ROOT']))
+
+		print 'found files:', len(lst_cur)
+
+		lst_cur = [ e for e in lst_cur if e not in lst ]
+
+		print 'found new or updated files:', len(lst_cur)
+
+		lst = lst_cur
+
+		raise SystemExit
+
+
+
 	index = index_by_name(lst)
 
 
 ##	GID_index = store.IndexWithCache(INDEX_PATH)
 	GID_index = store.Index(INDEX_PATH)
+
+	##!!! only check for updates...
 
 	GID_index, failed = gid_index(index, GID_index)
 
