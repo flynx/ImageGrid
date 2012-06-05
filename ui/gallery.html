@@ -1,0 +1,192 @@
+
+<!--
+TODO:
+- basic structure
+	ribbons
+	images
+	indicators
+- basic control elements
+	touch zones / buttons
+		next
+		prev
+		shift up
+		shift down
+		promote
+		demote
+		zoom in
+		zoom out
+		toggle single image
+-->
+
+<script src="jquery.js"></script>
+<script>
+
+$(document).ready(function() {
+	$(".image").click(function(e) {
+
+		// switch classes...
+		$(this).parents().siblings().children(".image").removeClass("current-image");
+		$(this).siblings(".image").removeClass("current-image");
+
+		$(this).siblings().children(".image").removeClass("current-image");
+		$(this).parents().siblings(".ribbon").removeClass("current-ribbon");
+
+		$(this).addClass("current-image");
+		$(this).parents(".ribbon").addClass("current-ribbon");
+
+		e.preventDefault();
+
+		// move...
+		var container = $(this).parents('.container')
+		var field = $(this).parents(".field")
+		var cur_ribbon = $(this).parents('.current-ribbon')
+		var cur_image = $(this)
+
+		var container_offset = container.offset()
+		var ribbon_offset = cur_ribbon.offset()
+		var image_offset = cur_image.offset()
+
+		field.animate({
+			top: parseInt(field.css('top'))+(container_offset.top - ribbon_offset.top) + (container.innerHeight()/2 - cur_image.outerHeight()/2), 
+			left: parseInt(field.css('left'))+(container_offset.left - image_offset.left) + (container.innerWidth()/2 - cur_image.outerWidth()/2) 
+		})
+	});
+
+	// set the default position...
+	$('.current-image').click()
+});
+
+</script>
+
+<style>
+	.mock-image {
+		position: relative;
+		display: inline-block;
+		width: 100px;
+		height: 60px;
+		/*
+		margin: 10px;
+		*/
+		background: blue;
+		border: black 1px solid;
+
+	}
+
+	.container {
+		overflow: hidden;
+		width: 400px;
+		height: 400px;
+		border: gray 5px solid;
+	}
+
+	.field {
+		position: relative;
+		overflow: visible;
+		top: 0px;
+		left: -100px;
+	}
+
+	.ribbon {
+		border: black 1px solid;
+		height: 80px;
+		width: 2000px;
+		overflow: visible;
+		/*
+		text-align: center;
+		*/
+		opacity: 0.5;
+
+		-webkit-transition: all 0.5s ease;
+		-moz-transition: all 0.5s ease;
+		-o-transition: all 0.5s ease;
+		-ms-transition: all 0.5s ease;	
+		transition: all 0.5s ease;
+
+	}
+
+	.current-image {
+		background: red;
+		/*
+		width: 200px;
+		height: 120px;
+		*/
+
+		-webkit-transition: all 0.5s ease;
+		-moz-transition: all 0.5s ease;
+		-o-transition: all 0.5s ease;
+		-ms-transition: all 0.5s ease;	
+		transition: all 0.5s ease;
+
+	}
+
+	.current-ribbon {
+		background: silver;
+		/*
+		height: 140px;
+		*/
+
+		-webkit-transition: all 0.5s ease;
+		-moz-transition: all 0.5s ease;
+		-o-transition: all 0.5s ease;
+		-ms-transition: all 0.5s ease;	
+		transition: all 0.5s ease;
+
+		opacity: 1.0;
+	}
+
+	.current-ribbon .image {
+		/*
+		width: 200px;
+		height: 120px;
+		*/
+
+		-webkit-transition: all 0.5s ease;
+		-moz-transition: all 0.5s ease;
+		-o-transition: all 0.5s ease;
+		-ms-transition: all 0.5s ease;	
+		transition: all 0.5s ease;
+	}
+</style>
+
+
+<div class="container">
+	<div class="field">
+		<div class="ribbon">
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+		</div>
+		<div class="ribbon">
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+		</div>
+		<div class="ribbon current-ribbon">
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image current-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+		</div>
+		<div class="ribbon">
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+		</div>
+		<div class="ribbon">
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+		</div>
+	</div>
+</div>
+
+<!-- vim:set ts=4 sw=4 : -->
