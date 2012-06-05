@@ -16,6 +16,9 @@ TODO:
 		zoom in
 		zoom out
 		toggle single image
+
+ISSUES:
+	- jumping...
 -->
 
 <script src="jquery.js"></script>
@@ -23,6 +26,10 @@ TODO:
 
 $(document).ready(function() {
 	$(".image").click(function(e) {
+
+		if($(this).hasClass('current-image')){
+			//return true
+		}
 
 		// switch classes...
 		$(this).parents().siblings().children(".image").removeClass("current-image");
@@ -34,9 +41,6 @@ $(document).ready(function() {
 		$(this).addClass("current-image");
 		$(this).parents(".ribbon").addClass("current-ribbon");
 
-		e.preventDefault();
-
-		// move...
 		var container = $(this).parents('.container')
 		var field = $(this).parents(".field")
 		var cur_ribbon = $(this).parents('.current-ribbon')
@@ -46,15 +50,30 @@ $(document).ready(function() {
 		var ribbon_offset = cur_ribbon.offset()
 		var image_offset = cur_image.offset()
 
+		// center the current image...
 		field.animate({
-			top: parseInt(field.css('top'))+(container_offset.top - ribbon_offset.top) + (container.innerHeight()/2 - cur_image.outerHeight()/2), 
-			left: parseInt(field.css('left'))+(container_offset.left - image_offset.left) + (container.innerWidth()/2 - cur_image.outerWidth()/2) 
-		})
+				// XXX need to make these more accurate and robust...
+				// XXX this is dependant on size and is really jumpy...
+				top: (container_offset.top - ribbon_offset.top + parseInt(field.css('top'))) + (container.innerHeight() - cur_image.outerHeight())/2, 
+				left: (container_offset.left - image_offset.left + parseInt(field.css('left'))) + (container.innerWidth() - cur_image.outerWidth())/2 
+			}, 300)
+
+
+		e.preventDefault();
 	});
 
 	// set the default position...
 	$('.current-image').click()
 });
+
+function prevImage(){
+	$('.current-image').prev('.image').click()
+}
+function nextImage(){
+	$('.current-image').next('.image').click()
+}
+
+
 
 </script>
 
@@ -64,19 +83,20 @@ $(document).ready(function() {
 		display: inline-block;
 		width: 100px;
 		height: 60px;
-		/*
-		margin: 10px;
-		*/
-		background: blue;
-		border: black 1px solid;
 
+		background: blue;
+
+		-webkit-transition: all 0.5s ease;
+		-moz-transition: all 0.5s ease;
+		-o-transition: all 0.5s ease;
+		-ms-transition: all 0.5s ease;	
+		transition: all 0.5s ease;
 	}
 
 	.container {
 		overflow: hidden;
 		width: 400px;
-		height: 400px;
-		border: gray 5px solid;
+		height: 200px;
 	}
 
 	.field {
@@ -87,14 +107,16 @@ $(document).ready(function() {
 	}
 
 	.ribbon {
-		border: black 1px solid;
-		height: 80px;
+		height: 65px;
 		width: 2000px;
 		overflow: visible;
+		padding-top: 2px;
+		padding-bottom: 2px;
+		/* XXX this kills positioning... */
 		/*
 		text-align: center;
 		*/
-		opacity: 0.5;
+		opacity: 0.2;
 
 		-webkit-transition: all 0.5s ease;
 		-moz-transition: all 0.5s ease;
@@ -106,45 +128,22 @@ $(document).ready(function() {
 
 	.current-image {
 		background: red;
-		/*
-		width: 200px;
-		height: 120px;
-		*/
-
-		-webkit-transition: all 0.5s ease;
-		-moz-transition: all 0.5s ease;
-		-o-transition: all 0.5s ease;
-		-ms-transition: all 0.5s ease;	
-		transition: all 0.5s ease;
-
 	}
 
 	.current-ribbon {
-		background: silver;
-		/*
-		height: 140px;
-		*/
+		padding-top: 10px;
+		padding-bottom: 10px;
+
+		opacity: 1.0;
 
 		-webkit-transition: all 0.5s ease;
 		-moz-transition: all 0.5s ease;
 		-o-transition: all 0.5s ease;
 		-ms-transition: all 0.5s ease;	
 		transition: all 0.5s ease;
-
-		opacity: 1.0;
 	}
 
 	.current-ribbon .image {
-		/*
-		width: 200px;
-		height: 120px;
-		*/
-
-		-webkit-transition: all 0.5s ease;
-		-moz-transition: all 0.5s ease;
-		-o-transition: all 0.5s ease;
-		-ms-transition: all 0.5s ease;	
-		transition: all 0.5s ease;
 	}
 </style>
 
@@ -189,4 +188,7 @@ $(document).ready(function() {
 	</div>
 </div>
 
-<!-- vim:set ts=4 sw=4 : -->
+<button onclick="prevImage()">prev</button>
+<button onclick="nextImage()">next</button>
+
+<!-- vim:set ts=4 sw=4 nowrap : -->
