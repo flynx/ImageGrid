@@ -27,10 +27,6 @@ ISSUES:
 $(document).ready(function() {
 	$(".image").click(function(e) {
 
-		if($(this).hasClass('current-image')){
-			//return true
-		}
-
 		// switch classes...
 		$(this).parents().siblings().children(".image").removeClass("current-image");
 		$(this).siblings(".image").removeClass("current-image");
@@ -43,20 +39,24 @@ $(document).ready(function() {
 
 		var container = $(this).parents('.container')
 		var field = $(this).parents(".field")
-		var cur_ribbon = $(this).parents('.current-ribbon')
 		var cur_image = $(this)
 
 		var container_offset = container.offset()
-		var ribbon_offset = cur_ribbon.offset()
 		var image_offset = cur_image.offset()
+		var field_offset = field.offset()
 
 		// center the current image...
+		field.css({
+				left: field_offset.left - image_offset.left + (container.innerWidth() - cur_image.innerWidth())/2, 
+				top: field_offset.top - image_offset.top + (container.innerHeight() - cur_image.innerHeight())/2, 
+			})
+
+		/* XXX this is really jumpy...
 		field.animate({
-				// XXX need to make these more accurate and robust...
-				// XXX this is dependant on size and is really jumpy...
-				top: (container_offset.top - ribbon_offset.top + parseInt(field.css('top'))) + (container.innerHeight() - cur_image.outerHeight())/2, 
-				left: (container_offset.left - image_offset.left + parseInt(field.css('left'))) + (container.innerWidth() - cur_image.outerWidth())/2 
-			}, 300)
+				left: field_offset.left - image_offset.left + (container.innerWidth() - cur_image.innerWidth())/2, 
+				top: field_offset.top - image_offset.top + (container.innerHeight() - cur_image.innerHeight())/2, 
+			})
+		*/
 
 
 		e.preventDefault();
