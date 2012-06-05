@@ -72,19 +72,26 @@ function nextImage(){
 </script>
 
 <style>
-	.mock-image {
+	.image {
 		position: relative;
 		display: inline-block;
-		width: 100px;
-		height: 60px;
 
-		background: blue;
+		opacity: 0.3;
 
 		-webkit-transition: all 0.5s ease;
 		-moz-transition: all 0.5s ease;
 		-o-transition: all 0.5s ease;
 		-ms-transition: all 0.5s ease;	
 		transition: all 0.5s ease;
+
+		cursor: hand;
+	}
+
+	.mock-image {
+		width: 100px;
+		height: 60px;
+
+		background: blue;
 	}
 
 	.container {
@@ -112,10 +119,7 @@ function nextImage(){
 		overflow: visible;
 		padding-top: 2px;
 		padding-bottom: 2px;
-		/* XXX this kills positioning... */
-		/*
 		text-align: center;
-		*/
 		opacity: 0.2;
 
 		-webkit-transition: all 0.5s ease;
@@ -127,7 +131,7 @@ function nextImage(){
 	}
 
 	.current-image {
-		background: red;
+		opacity: 1.0;
 	}
 
 	.current-ribbon {
