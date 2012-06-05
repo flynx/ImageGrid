@@ -27,35 +27,32 @@ ISSUES:
 $(document).ready(function() {
 	$(".image").click(function(e) {
 
+		var cur = $(this)
+
 		// switch classes...
-		$(this).parents().siblings().children(".image").removeClass("current-image");
-		$(this).siblings(".image").removeClass("current-image");
+		cur.parents().siblings().children(".image").removeClass("current-image")
+		cur.siblings(".image").removeClass("current-image")
 
-		$(this).siblings().children(".image").removeClass("current-image");
-		$(this).parents().siblings(".ribbon").removeClass("current-ribbon");
+		cur.siblings().children(".image").removeClass("current-image")
+		cur.parents().siblings(".ribbon").removeClass("current-ribbon")
 
-		$(this).addClass("current-image");
-		$(this).parents(".ribbon").addClass("current-ribbon");
+		cur.addClass("current-image")
+		cur.parents(".ribbon").addClass("current-ribbon")
 
-		var container = $(this).parents('.container')
-		var field = $(this).parents(".field")
-		var cur_image = $(this)
+		var container = cur.parents('.container')
+		var field = cur.parents(".field")
 
-		var container_offset = container.offset()
-		var image_offset = cur_image.offset()
+		var image_offset = cur.offset()
 		var field_offset = field.offset()
 
 		// center the current image...
-		/* XXX this is really jumpy...
-		field.animate({
-		*/
 		field.css({
-				left: field_offset.left - image_offset.left + (container.innerWidth() - cur_image.innerWidth())/2, 
-				top: field_offset.top - image_offset.top + (container.innerHeight() - cur_image.innerHeight())/2 
+				left: field_offset.left - image_offset.left + (container.innerWidth() - cur.innerWidth())/2, 
+				top: field_offset.top - image_offset.top + (container.innerHeight() - cur.innerHeight())/2 
 			})
 
 
-
+		// XXX do I need this???
 		e.preventDefault();
 	});
 
@@ -101,6 +98,12 @@ function nextImage(){
 		overflow: visible;
 		top: 0px;
 		left: -100px;
+
+		-webkit-transition: all 0.5s ease;
+		-moz-transition: all 0.5s ease;
+		-o-transition: all 0.5s ease;
+		-ms-transition: all 0.5s ease;	
+		transition: all 0.5s ease;
 	}
 
 	.ribbon {
