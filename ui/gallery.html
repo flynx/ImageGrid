@@ -46,17 +46,14 @@ $(document).ready(function() {
 		var field_offset = field.offset()
 
 		// center the current image...
-		field.css({
-				left: field_offset.left - image_offset.left + (container.innerWidth() - cur_image.innerWidth())/2, 
-				top: field_offset.top - image_offset.top + (container.innerHeight() - cur_image.innerHeight())/2, 
-			})
-
 		/* XXX this is really jumpy...
 		field.animate({
-				left: field_offset.left - image_offset.left + (container.innerWidth() - cur_image.innerWidth())/2, 
-				top: field_offset.top - image_offset.top + (container.innerHeight() - cur_image.innerHeight())/2, 
-			})
 		*/
+		field.css({
+				left: field_offset.left - image_offset.left + (container.innerWidth() - cur_image.innerWidth())/2, 
+				top: field_offset.top - image_offset.top + (container.innerHeight() - cur_image.innerHeight())/2 
+			})
+
 
 
 		e.preventDefault();
