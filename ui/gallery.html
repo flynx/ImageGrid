@@ -2,20 +2,21 @@
 <!--
 TODO:
 - basic structure
-	ribbons
-	images
+	ribbons					DONE
+	images					DONE
 	indicators
 - basic control elements
 	touch zones / buttons
-		next
-		prev
-		shift up
-		shift down
-		promote
-		demote
-		zoom in
-		zoom out
-		toggle single image
+		next				DONE
+		prev				DONE
+		shift up			~		depends on image order/sorting
+		shift down			~		depends on image order/sorting
+		promote				DONE
+		demote				DONE
+		zoom in				~		need real zooming...
+		zoom out			~		need real zooming...
+		toggle single image	DONE
+- image sorting
 
 ISSUES:
 	- jumping...
@@ -25,42 +26,45 @@ ISSUES:
 <script>
 
 $(document).ready(function() {
-	$(".image").click(function(e) {
-
-		var cur = $(this)
-
-		// switch classes...
-		cur.parents().siblings().children(".image").removeClass("current-image")
-		cur.siblings(".image").removeClass("current-image")
-
-		cur.siblings().children(".image").removeClass("current-image")
-		cur.parents().siblings(".ribbon").removeClass("current-ribbon")
-
-		cur.addClass("current-image")
-		cur.parents(".ribbon").addClass("current-ribbon")
-
-
-		var container = cur.parents('.container')
-		var field = cur.parents(".field")
-
-		var image_offset = cur.offset()
-		var field_offset = field.offset()
-
-		// center the current image...
-		field.css({
-				left: field_offset.left - image_offset.left + (container.innerWidth() - cur.innerWidth())/2, 
-				top: field_offset.top - image_offset.top + (container.innerHeight() - cur.innerHeight())/2 
-			})
-
-
-		// XXX do I need this???
-		e.preventDefault();
-	});
+	// setup event handlers...
+	$(document).keydown(handleKeys)
+	$(".image").click(imageClickHandler)
 
 	// set the default position...
 	$('.current-image').click()
-	$(document).bind('keydown', handleKeys)
 });
+
+function imageClickHandler(e) {
+
+	var cur = $(this)
+
+	// switch classes...
+	cur.parents().siblings().children(".image").removeClass("current-image")
+	cur.siblings(".image").removeClass("current-image")
+
+	cur.siblings().children(".image").removeClass("current-image")
+	cur.parents().siblings(".ribbon").removeClass("current-ribbon")
+
+	cur.addClass("current-image")
+	cur.parents(".ribbon").addClass("current-ribbon")
+
+
+	var container = cur.parents('.container')
+	var field = cur.parents(".field")
+
+	var image_offset = cur.offset()
+	var field_offset = field.offset()
+
+	// center the current image...
+	field.css({
+			left: field_offset.left - image_offset.left + (container.innerWidth() - cur.innerWidth())/2, 
+			top: field_offset.top - image_offset.top + (container.innerHeight() - cur.innerHeight())/2 
+		})
+
+
+	// XXX do I need this???
+	e.preventDefault();
+}
 
 var keys = {
 	toggleHelpKeys: [72],
@@ -102,28 +106,146 @@ function toggleRibbonView(){
 	}
 }
 
+// XXX need to reposition the whole thing correctly...
+function toggleWideView(){
+	if($('.wide-view-mode').length > 0){
+		$('.wide-view-mode')
+			.removeClass('wide-view-mode')
+			.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+				// XXX does not animate...
+				$('.current-image').click()
+				return true
+			});
+		
+	} else {
+		showRibbon()
+		//$('.container')
+		$('.field')
+			.not('.wide-view-mode')
+				.addClass('wide-view-mode')
+				.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+					// XXX does not animate...
+					$('.current-image').click()
+					return true
+				});
+	}
+}
+
 // basic navigation...
 function prevImage(){
-	$('.current-image').prev('.image').click()
+	$('.current-image')
+		.prev('.image')
+			.click()
 }
 
 function nextImage(){
-	$('.current-image').next('.image').click()
+	$('.current-image')
+		.next('.image')
+			.click()
 }
 
-// XXX move to above ribbon...
+// XXX focus to above ribbon...
 
-// XXX move to below ribbon...
+// XXX focus to below ribbon...
 
 
 // create ribbon above/below helpers...
 // XXX
+function createRibbonAbove(){
+	return $('<div class="new-ribbon"></div>')
+		.insertBefore('.current-ribbon')
+		// HACK: without this, the class change below will not animate...
+		.show()
+		.addClass('ribbon')
+		.removeClass('new-ribbon')
+}
+
+function createRibbonBelow(){
+	return $('<div class="new-ribbon"></div>')
+		.insertAfter('.current-ribbon')
+		// HACK: without this, the class change below will not animate...
+		.show()
+		.addClass('ribbon')
+		.removeClass('new-ribbon')
+}
+
+// XXX sort elements correctly...
+function mergeRibbonsUp(){
+	$('.current-ribbon')
+		.prev('.ribbon')
+			.children()
+				.detach()
+				.insertAfter('.current-image')
+	$('.current-ribbon')
+		.prev('.ribbon')
+			.slideUp(function(){
+				$(this).remove()
+				$('.current-image').click()
+			})
+}
+
+// XXX sort elements correctly...
+function mergeRibbonsDown(){
+	$('.current-ribbon')
+		.next('.ribbon')
+			.children()
+				.detach()
+				.insertAfter('.current-image')
+	$('.current-ribbon')
+		.next('.ribbon')
+			.slideUp(function(){
+				$(this).remove()
+				$('.current-image').click()
+			})
+}
 
 // promote...
-// XXX
+// XXX sort elements correctly...
+// XXX do animations...
+function promoteImage(){
+	if($('.current-ribbon').next('.ribbon').length == 0){
+		createRibbonBelow()
+	}
+	// XXX sort elements correctly...
+	if($('.current-ribbon').children('.image').length == 1){
+		// XXX this adds image to the head while thebelow portion adds it to the tail...
+		mergeRibbonsDown()
+	} else {
+		img = $('.current-image')
+		if(img.next('.image').length == 0){
+			prevImage()
+		} else {
+			nextImage()
+		}
+		img
+			.detach()
+			.appendTo($('.current-ribbon').next('.ribbon'))
+	}
+}
 
 // demote...
-// XXX
+// XXX sort elements correctly...
+// XXX do animations...
+function demoteImage(){
+	if($('.current-ribbon').prev('.ribbon').length == 0){
+		createRibbonAbove()
+	}
+	// XXX sort elements correctly...
+	if($('.current-ribbon').children('.image').length == 1){
+		// XXX this adds image to the head while thebelow portion adds it to the tail...
+		mergeRibbonsUp()
+	} else {
+		img = $('.current-image')
+		if(img.next('.image').length == 0){
+			prevImage()
+		} else {
+			nextImage()
+		}
+		img
+			.detach()
+			.appendTo($('.current-ribbon').prev('.ribbon'))
+	}
+}
 
 
 
@@ -187,6 +309,15 @@ function nextImage(){
 		transition: all 0.5s ease;
 
 	}
+	.new-ribbon {
+		height: 0px;
+
+		-webkit-transition: all 0.5s ease;
+		-moz-transition: all 0.5s ease;
+		-o-transition: all 0.5s ease;
+		-ms-transition: all 0.5s ease;	
+		transition: all 0.5s ease;
+	}
 
 	.current-image {
 		opacity: 1.0;
@@ -225,6 +356,28 @@ function nextImage(){
 		opacity: 1.0;
 	}
 
+	/* wide view mode */
+
+	/* XXX not yet working correctly...
+	.wide-view-mode {
+		transform: scale(0.2,0.2);
+		-ms-transform: scale(0.2,0.2);
+		-webkit-transform: scale(0.2,0.2);
+		-o-transform: scale(0.2,0.2);
+		-moz-transform: scale(0.2,0.2);
+	}
+	*/
+	.wide-view-mode .mock-image {
+		width: 50px;
+		height: 50px;
+
+	}
+
+	.wide-view-mode .ribbon {
+		height: 60px;
+	}
+
+
 
 </style>
 
@@ -232,7 +385,6 @@ function nextImage(){
 <div class="container">
 	<div class="field">
 		<div class="ribbon">
-			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
@@ -248,12 +400,13 @@ function nextImage(){
 		<div class="ribbon current-ribbon">
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
 			<div class="image mock-image current-image"></div>
+			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 		</div>
 		<div class="ribbon">
-			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
@@ -277,6 +430,25 @@ function nextImage(){
 <button onclick="showSingle()">single</button>
 <button onclick="showRibbon()">ribbon</button>
 <button onclick="toggleRibbonView()">toggle ribbon view</button>
+
+<br><br>
+
+<button onclick="toggleWideView()">toggle wide view</button>
+
+<br><br>
+
+<button onclick="createRibbonAbove()">create ribbon above</button><br>
+<button onclick="createRibbonBelow()">create ribbon below</button>
+
+<br><br>
+
+<button onclick="mergeRibbonsUp()">merge ribbons up</button><br>
+<button onclick="mergeRibbonsDown()">merge ribbons down</button>
+
+<br><br>
+
+<button onclick="demoteImage()">demote image</button><br>
+<button onclick="promoteImage()">promote image</button>
 
 
 <!-- vim:set ts=4 sw=4 nowrap : -->
