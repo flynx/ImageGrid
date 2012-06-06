@@ -40,13 +40,23 @@ ISSUES:
 <script>
 
 $(document).ready(function() {
+	// current state...
+	if($('.current-ribbon').length == 0){
+		$('.ribbon').first().addClass('current-ribbon')
+	}
+	if($('.current-image').length == 0){
+		$('.current-ribbon').children('.image').first().addClass('current-image')
+	}
+
 	// setup event handlers...
 	$(document).keydown(handleKeys)
 	$(".image").click(handleClick)
 
+
 	// set the default position...
 	$('.current-image').click()
 });
+
 
 function handleClick(e) {
 
@@ -442,8 +452,8 @@ function demoteImage(){
 <div class="container">
 	<div class="field">
 		<!-- XXX make focusing on a first image and ribbon automatic... -->
-		<div class="ribbon current-ribbon">
-			<div class="image mock-image current-image"></div>
+		<div class="ribbon">
+			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
