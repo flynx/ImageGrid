@@ -221,6 +221,7 @@ function promoteImage(){
 			.detach()
 			.appendTo($('.current-ribbon').next('.ribbon'))
 	}
+	$('.current-image').click()
 }
 
 // demote...
@@ -245,6 +246,7 @@ function demoteImage(){
 			.detach()
 			.appendTo($('.current-ribbon').prev('.ribbon'))
 	}
+	$('.current-image').click()
 }
 
 
@@ -422,14 +424,14 @@ function demoteImage(){
 	</div>
 </div>
 
-<button onclick="prevImage()">prev</button>
-<button onclick="nextImage()">next</button>
+<button onclick="prevImage()">prev (left)</button>
+<button onclick="nextImage()">next (right)</button>
 
 <br><br>
 
 <button onclick="showSingle()">single</button>
 <button onclick="showRibbon()">ribbon</button>
-<button onclick="toggleRibbonView()">toggle ribbon view</button>
+<button onclick="toggleRibbonView()">toggle ribbon view (space)</button>
 
 <br><br>
 
@@ -447,8 +449,8 @@ function demoteImage(){
 
 <br><br>
 
-<button onclick="demoteImage()">demote image</button><br>
-<button onclick="promoteImage()">promote image</button>
+<button onclick="demoteImage()">demote image <s>(up)</s></button><br>
+<button onclick="promoteImage()">promote image <s>(down)</s></button>
 
 
 <!-- vim:set ts=4 sw=4 nowrap : -->
