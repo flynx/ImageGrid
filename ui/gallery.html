@@ -107,7 +107,7 @@ function handleKeys(event){
 			}
 		}()
 		: (fn(code, keys.toggleRibbonView) >= 0) ? toggleRibbonView()
-		: (fn(code, keys.shiftKeys) >= 0) ? true
+		: (fn(code, keys.shiftKeys) >= 0) ? false
 		// XXX
 		: (keys.helpShowOnUnknownKey) ? function(){alert(code)}()
 		: false;
@@ -417,7 +417,7 @@ function demoteImage(){
 
 <div class="container">
 	<div class="field">
-		<div class="ribbon">
+		<!--div class="ribbon">
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
@@ -429,29 +429,49 @@ function demoteImage(){
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
-		</div>
+		</div-->
+		<!-- XXX make focusing on a first image and ribbon automatic... -->
 		<div class="ribbon current-ribbon">
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
 			<div class="image mock-image current-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+		</div>
+		<!--div class="ribbon">
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
+			<div class="image mock-image"></div>
 		</div>
 		<div class="ribbon">
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
 			<div class="image mock-image"></div>
-		</div>
-		<div class="ribbon">
 			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-		</div>
+		</div-->
 	</div>
 </div>
 
@@ -485,8 +505,8 @@ function demoteImage(){
 
 <br><br>
 
-<button onclick="focusAboveRibbon()" disabled>focus above ribbon (shift-up)</button><br>
-<button onclick="focusBelowRibbon()" disabled>focus below ribbon (shift-down)</button>
+<button onclick="focusAboveRibbon()">focus above ribbon (shift-up)</button><br>
+<button onclick="focusBelowRibbon()">focus below ribbon (shift-down)</button>
 
 
 <!-- vim:set ts=4 sw=4 nowrap : -->
