@@ -60,6 +60,14 @@ $(document).ready(function() {
 	$('.current-image').click()
 });
 
+// modes...
+function showRibbon(){
+	$('.hidden').removeClass('hidden')
+}
+function showSingle(){
+	$('.field').not('.hidden').addClass('hidden')
+}
+
 // basic navigation...
 function prevImage(){
 	$('.current-image').prev('.image').click()
@@ -165,6 +173,22 @@ function nextImage(){
 
 	.current-ribbon .image {
 	}
+
+
+	/* single image theme (start everything with .hidden) */
+	.hidden .image {
+		opacity: 0.0;
+	}
+
+	.hidden .image:hover {
+		opacity: 0.5;
+	}
+
+	.hidden .current-image:hover, .hidden .current-image {
+		opacity: 1.0;
+	}
+
+
 </style>
 
 
@@ -210,5 +234,10 @@ function nextImage(){
 
 <button onclick="prevImage()">prev</button>
 <button onclick="nextImage()">next</button>
+
+<br><br>
+
+<button onclick="showSingle()">single</button>
+<button onclick="showRibbon()">ribbon</button>
 
 <!-- vim:set ts=4 sw=4 nowrap : -->
