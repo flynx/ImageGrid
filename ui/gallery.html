@@ -9,19 +9,28 @@ TODO:
 	touch zones / buttons
 		next				DONE
 		prev				DONE
-		shift up			~		depends on image order/sorting
-		shift down			~		depends on image order/sorting
+		shift up			DONE
+		shift down			DONE
 		promote				DONE
 		demote				DONE
 		zoom in				~		need real zooming...
 		zoom out			~		need real zooming...
 		toggle single image	DONE
 - image sorting
+	- will affect:
+		- promote
+		- demote
+		- shift up
+		- shift down
+		- ribbon merging
 - add promote/demote events (to attach structure editors)...
 - add real images...
 - make all the code relative to the current selection (multiple instances on a page support)
 - make this into a jquery plugin...
 - add dynamic loading and unloading for very large sets...
+
+- first stage refactoring:
+	- merge almost identical functions...
 
 ISSUES:
 	- jumping...
@@ -76,12 +85,14 @@ var keys = {
 	toggleRibbonView: [32],
 	closeKeys: [27, 88, 67],
 
+	firstKeys: [36],
+	lastKeys: [35],
 	previousKeys: [37, 80],
 	nextKeys: [39, 78],
 	promoteKeys: [40],
 	demoteKeys: [38],
 
-	shiftKeys: [16],
+	ignoreKeys: [16, 17, 18],
 
 	helpShowOnUnknownKey: true
 }
@@ -89,11 +100,16 @@ var keys = {
 function handleKeys(event){
 	var code = event.keyCode, fn = $.inArray;
 	var _ = (fn(code, keys.closeKeys) >= 0) ? function(){}()
+		: (fn(code, keys.firstKeys) >= 0) ? firstImage()
 		: (fn(code, keys.nextKeys) >= 0) ? nextImage()
 		: (fn(code, keys.previousKeys) >= 0) ? prevImage()
+		: (fn(code, keys.lastKeys) >= 0) ? lastImage()
 		: (fn(code, keys.promoteKeys) >= 0) ? function(){
 			if(event.shiftKey){
 				focusBelowRibbon()
+			} else if(event.ctrlKey){
+				createRibbonBelow()
+				promoteImage()
 			} else {
 				promoteImage()
 			}
@@ -101,12 +117,15 @@ function handleKeys(event){
 		: (fn(code, keys.demoteKeys) >= 0) ? function(){
 			if(event.shiftKey){
 				focusAboveRibbon()
+			} else if(event.ctrlKey){
+				createRibbonAbove()
+				demoteImage()
 			} else {
 				demoteImage()
 			}
 		}()
 		: (fn(code, keys.toggleRibbonView) >= 0) ? toggleRibbonView()
-		: (fn(code, keys.shiftKeys) >= 0) ? false
+		: (fn(code, keys.ignoreKeys) >= 0) ? false
 		// XXX
 		: (keys.helpShowOnUnknownKey) ? function(){alert(code)}()
 		: false;
@@ -153,6 +172,10 @@ function toggleWideView(){
 }
 
 // basic navigation...
+function firstImage(){
+	$('.current-ribbon').children('.image').first().click()
+}
+
 function prevImage(){
 	$('.current-image')
 		.prev('.image')
@@ -165,14 +188,18 @@ function nextImage(){
 			.click()
 }
 
-// XXX focus to above ribbon...
-function focusAboveRibbon(){
-	alert('not implemmented...')
+function lastImage(){
+	$('.current-ribbon').children('.image').last().click()
 }
 
-// XXX focus to below ribbon...
+// XXX select appropriate image...
+function focusAboveRibbon(){
+	$('.current-ribbon').prev('.ribbon').children('.image').first().click()
+}
+
+// XXX select appropriate image...
 function focusBelowRibbon(){
-	alert('not implemmented...')
+	$('.current-ribbon').next('.ribbon').children('.image').first().click()
 }
 
 
@@ -194,6 +221,8 @@ function createRibbonBelow(){
 		.addClass('ribbon')
 		.removeClass('new-ribbon')
 }
+
+// Modifiers...
 
 // XXX sort elements correctly...
 function mergeRibbonsUp(){
@@ -225,7 +254,6 @@ function mergeRibbonsDown(){
 			})
 }
 
-// promote...
 // XXX sort elements correctly...
 // XXX do animations...
 function promoteImage(){
@@ -250,7 +278,6 @@ function promoteImage(){
 	$('.current-image').click()
 }
 
-// demote...
 // XXX sort elements correctly...
 // XXX do animations...
 function demoteImage(){
@@ -324,7 +351,7 @@ function demoteImage(){
 	.ribbon {
 		height: 360px;
 		/* XXX make this expand dynamically */
-		width: 8000px;
+		width: 10000px;
 		overflow: visible;
 		padding-top: 2px;
 		padding-bottom: 2px;
@@ -446,8 +473,10 @@ function demoteImage(){
 	</div>
 </div>
 
+<button onclick="firstImage()">first (home)</button>
 <button onclick="prevImage()">prev (left)</button>
 <button onclick="nextImage()">next (right)</button>
+<button onclick="lastImage()">last (end)</button>
 
 <br><br>
 
@@ -472,7 +501,8 @@ function demoteImage(){
 <br><br>
 
 <button onclick="demoteImage()">demote image (up)</button><br>
-<button onclick="promoteImage()">promote image (down)</button>
+<button onclick="promoteImage()">promote image (down)</button><br>
+NOTE: ctrl-up / ctrl-down will demote / promote an image to a new empty ribbon (default if no ribbon exists)
 
 <br><br>
 
