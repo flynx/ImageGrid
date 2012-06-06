@@ -33,7 +33,8 @@ TODO:
 	- merge almost identical functions...
 
 ISSUES:
-	- jumping...
+	- jumping on focus up/down...
+	- demoting a first element (a ribbon is created) positions the field incorrectly (see demoteImage() for details)...
 -->
 
 <script src="jquery.js"></script>
@@ -214,13 +215,19 @@ function focusBelowRibbon(){
 
 
 // create ribbon above/below helpers...
+// XXX NOTE: this will shift the content downwards...
 function createRibbonAbove(){
-	return $('<div class="new-ribbon"></div>')
+	var res = $('<div class="new-ribbon"></div>')
 		.insertBefore('.current-ribbon')
 		// HACK: without this, the class change below will not animate...
 		.show()
 		.addClass('ribbon')
 		.removeClass('new-ribbon')
+	// XXX find a better way to do this...
+	$('.field').css({
+		top: $('.field').position().top - $('.current-ribbon').outerHeight()
+	})
+	return res
 }
 
 function createRibbonBelow(){
@@ -290,25 +297,31 @@ function promoteImage(){
 
 // XXX sort elements correctly...
 // XXX do animations...
+// XXX BUG: when demoting first image (new ribbon created) it gets focused...
+//		REASON: .click() gets called in several places BEFORE the animation is done...
+//		NOTE: this bog does not affect promoteImage -- adding a lower element does not affect current positioning...
 function demoteImage(){
 	if($('.current-ribbon').prev('.ribbon').length == 0){
-		createRibbonAbove()
+		var new_ribbon = createRibbonAbove()
 	}
 	// XXX sort elements correctly...
 	if($('.current-ribbon').children('.image').length == 1){
-		// XXX this adds image to the head while thebelow portion adds it to the tail...
+		// XXX this adds image to the head while the below portion adds it to the tail...
 		mergeRibbonsUp()
 	} else {
 		img = $('.current-image')
 		if(img.next('.image').length == 0){
+			// XXX in case when we've just created an empty ribbon, the click in this fires BEFORE it is fully expanded...
 			prevImage()
 		} else {
+			// XXX in case when we've just created an empty ribbon, the click in this fires BEFORE it is fully expanded...
 			nextImage()
 		}
 		img
 			.detach()
 			.appendTo($('.current-ribbon').prev('.ribbon'))
 	}
+	// XXX in case when we've just created an empty ribbon, the click in this fires BEFORE it is fully expanded...
 	$('.current-image').click()
 }
 
