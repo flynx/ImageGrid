@@ -78,6 +78,10 @@ var keys = {
 
 	previousKeys: [37, 80],
 	nextKeys: [39, 78],
+	promoteKeys: [40],
+	demoteKeys: [38],
+
+	shiftKeys: [16],
 
 	helpShowOnUnknownKey: true
 }
@@ -88,9 +92,24 @@ function handleKeys(event){
 	var _ = (fn(code, keys.closeKeys) >= 0) ? function(){}()
 		: (fn(code, keys.nextKeys) >= 0) ? nextImage()
 		: (fn(code, keys.previousKeys) >= 0) ? prevImage()
+		: (fn(code, keys.promoteKeys) >= 0) ? function(){
+			if(event.shiftKey){
+				focusBelowRibbon()
+			} else {
+				promoteImage()
+			}
+		}()
+		: (fn(code, keys.demoteKeys) >= 0) ? function(){
+			if(event.shiftKey){
+				focusAboveRibbon()
+			} else {
+				demoteImage()
+			}
+		}()
 		: (fn(code, keys.toggleRibbonView) >= 0) ? toggleRibbonView()
+		: (fn(code, keys.shiftKeys) >= 0) ? true
 		// XXX
-		: (keys.helpShowOnUnknownKey) ? function(){}()
+		: (keys.helpShowOnUnknownKey) ? function(){alert(code)}()
 		: false;
 	return false;
 }
@@ -150,8 +169,14 @@ function nextImage(){
 }
 
 // XXX focus to above ribbon...
+function focusAboveRibbon(){
+	alert('not implemmented...')
+}
 
 // XXX focus to below ribbon...
+function focusBelowRibbon(){
+	alert('not implemmented...')
+}
 
 
 // create ribbon above/below helpers...
@@ -302,7 +327,8 @@ function demoteImage(){
 
 	.ribbon {
 		height: 360px;
-		width: 5000px;
+		/* XXX make this expand correctly */
+		width: 8000px;
 		overflow: visible;
 		padding-top: 2px;
 		padding-bottom: 2px;
@@ -454,8 +480,13 @@ function demoteImage(){
 
 <br><br>
 
-<button onclick="demoteImage()">demote image <s>(up)</s></button><br>
-<button onclick="promoteImage()">promote image <s>(down)</s></button>
+<button onclick="demoteImage()">demote image (up)</button><br>
+<button onclick="promoteImage()">promote image (down)</button>
+
+<br><br>
+
+<button onclick="focusAboveRibbon()" disabled>focus above ribbon (shift-up)</button><br>
+<button onclick="focusBelowRibbon()" disabled>focus below ribbon (shift-down)</button>
 
 
 <!-- vim:set ts=4 sw=4 nowrap : -->
