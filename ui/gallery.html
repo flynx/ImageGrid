@@ -59,7 +59,33 @@ $(document).ready(function() {
 
 	// set the default position...
 	$('.current-image').click()
+	$(document).bind('keydown', handleKeys)
 });
+
+var keys = {
+	toggleHelpKeys: [72],
+	toggleRibbonView: [32],
+	closeKeys: [27, 88, 67],
+
+	previousKeys: [37, 80],
+	nextKeys: [39, 78],
+
+	helpShowOnUnknownKey: true
+}
+
+function handleKeys(event){
+	var code = event.keyCode, fn = $.inArray;
+	// XXX
+	var _ = (fn(code, keys.closeKeys) >= 0) ? function(){}()
+		: (fn(code, keys.nextKeys) >= 0) ? nextImage()
+		: (fn(code, keys.previousKeys) >= 0) ? prevImage()
+		: (fn(code, keys.toggleRibbonView) >= 0) ? toggleRibbonView()
+		// XXX
+		: (keys.helpShowOnUnknownKey) ? function(){}()
+		: false;
+	return false;
+}
+
 
 // modes...
 function showRibbon(){
@@ -67,6 +93,13 @@ function showRibbon(){
 }
 function showSingle(){
 	$('.field').not('.single-image-mode').addClass('single-image-mode')
+}
+function toggleRibbonView(){
+	if($('.single-image-mode').length > 0){
+		showRibbon()
+	} else {
+		showSingle()
+	}
 }
 
 // basic navigation...
@@ -243,6 +276,7 @@ function nextImage(){
 
 <button onclick="showSingle()">single</button>
 <button onclick="showRibbon()">ribbon</button>
+<button onclick="toggleRibbonView()">toggle ribbon view</button>
 
 
 <!-- vim:set ts=4 sw=4 nowrap : -->
