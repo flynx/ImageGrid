@@ -39,6 +39,7 @@ $(document).ready(function() {
 		cur.addClass("current-image")
 		cur.parents(".ribbon").addClass("current-ribbon")
 
+
 		var container = cur.parents('.container')
 		var field = cur.parents(".field")
 
@@ -175,7 +176,10 @@ function nextImage(){
 	}
 
 
-	/* single image theme (start everything with .single-image-mode) */
+	/* single image theme (start everything with .single-image-mode) 
+	 *
+	 * XXX need to make this touch friendly...
+	 */
 	.single-image-mode .image {
 		opacity: 0.0;
 	}
@@ -239,5 +243,6 @@ function nextImage(){
 
 <button onclick="showSingle()">single</button>
 <button onclick="showRibbon()">ribbon</button>
+
 
 <!-- vim:set ts=4 sw=4 nowrap : -->
