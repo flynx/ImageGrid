@@ -62,10 +62,10 @@ $(document).ready(function() {
 
 // modes...
 function showRibbon(){
-	$('.hidden').removeClass('hidden')
+	$('.single-image-mode').removeClass('single-image-mode')
 }
 function showSingle(){
-	$('.field').not('.hidden').addClass('hidden')
+	$('.field').not('.single-image-mode').addClass('single-image-mode')
 }
 
 // basic navigation...
@@ -175,16 +175,16 @@ function nextImage(){
 	}
 
 
-	/* single image theme (start everything with .hidden) */
-	.hidden .image {
+	/* single image theme (start everything with .single-image-mode) */
+	.single-image-mode .image {
 		opacity: 0.0;
 	}
 
-	.hidden .image:hover {
+	.single-image-mode .image:hover {
 		opacity: 0.5;
 	}
 
-	.hidden .current-image:hover, .hidden .current-image {
+	.single-image-mode .current-image:hover, .single-image-mode .current-image {
 		opacity: 1.0;
 	}
 
