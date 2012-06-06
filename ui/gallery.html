@@ -33,13 +33,13 @@ ISSUES:
 $(document).ready(function() {
 	// setup event handlers...
 	$(document).keydown(handleKeys)
-	$(".image").click(imageClickHandler)
+	$(".image").click(handleClick)
 
 	// set the default position...
 	$('.current-image').click()
 });
 
-function imageClickHandler(e) {
+function handleClick(e) {
 
 	var cur = $(this)
 
