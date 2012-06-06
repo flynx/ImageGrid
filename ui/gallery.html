@@ -106,22 +106,22 @@ function handleKeys(event){
 		: (fn(code, keys.lastKeys) >= 0) ? lastImage()
 		: (fn(code, keys.promoteKeys) >= 0) ? function(){
 			if(event.shiftKey){
-				focusBelowRibbon()
-			} else if(event.ctrlKey){
-				createRibbonBelow()
+				if(event.ctrlKey){
+					createRibbonBelow()
+				}
 				promoteImage()
 			} else {
-				promoteImage()
+				focusBelowRibbon()
 			}
 		}()
 		: (fn(code, keys.demoteKeys) >= 0) ? function(){
 			if(event.shiftKey){
-				focusAboveRibbon()
-			} else if(event.ctrlKey){
-				createRibbonAbove()
+				if(event.ctrlKey){
+					createRibbonAbove()
+				}
 				demoteImage()
 			} else {
-				demoteImage()
+				focusAboveRibbon()
 			}
 		}()
 		: (fn(code, keys.toggleRibbonView) >= 0) ? toggleRibbonView()
@@ -500,14 +500,14 @@ function demoteImage(){
 
 <br><br>
 
-<button onclick="demoteImage()">demote image (up)</button><br>
-<button onclick="promoteImage()">promote image (down)</button><br>
-NOTE: ctrl-up / ctrl-down will demote / promote an image to a new empty ribbon (default if no ribbon exists)
+<button onclick="demoteImage()">demote image (shift-up)</button><br>
+<button onclick="promoteImage()">promote image (shift-down)</button><br>
+NOTE: ctrl-shift-up / ctrl-shift-down will demote / promote an image to a new empty ribbon (the default if no ribbon exists)
 
 <br><br>
 
-<button onclick="focusAboveRibbon()">focus above ribbon (shift-up)</button><br>
-<button onclick="focusBelowRibbon()">focus below ribbon (shift-down)</button>
+<button onclick="focusAboveRibbon()">focus above ribbon (up)</button><br>
+<button onclick="focusBelowRibbon()">focus below ribbon (down)</button>
 
 
 <!-- vim:set ts=4 sw=4 nowrap : -->
