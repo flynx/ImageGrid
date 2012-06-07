@@ -82,9 +82,9 @@ function handleClick(e) {
 
 	// center the current image...
 	field.css({
-			left: field_offset.left - image_offset.left + (container.innerWidth() - cur.innerWidth())/2, 
-			top: field_offset.top - image_offset.top + (container.innerHeight() - cur.innerHeight())/2 
-		})
+		left: field_offset.left - image_offset.left + (container.innerWidth() - cur.innerWidth())/2, 
+		top: field_offset.top - image_offset.top + (container.innerHeight() - cur.innerHeight())/2 
+	})
 
 
 	// XXX do I need this???
@@ -512,8 +512,8 @@ function demoteImage(){
 
 <br><br>
 
-<button onclick="createRibbonAbove()">create ribbon above</button><br>
-<button onclick="createRibbonBelow()">create ribbon below</button>
+<button onclick="createRibbonAbove()" disabled>create ribbon above (helper)</button><br>
+<button onclick="createRibbonBelow()" disabled>create ribbon below (helper)</button>
 
 <br><br>
 
