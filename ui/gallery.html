@@ -28,6 +28,7 @@ TODO:
 - make all the code relative to the current selection (multiple instances on a page support)
 - make this into a jquery plugin...
 - add dynamic loading and unloading for very large sets...
+- gesture support...
 
 - first stage refactoring:
 	- merge almost identical functions...
@@ -38,8 +39,19 @@ ISSUES:
 -->
 
 <script src="jquery.js"></script>
+
+<!-- XXX this does not work on android... --> 
 <script src="jquery.gestures.js"></script>
+
+<!-- XXX need to figure out how to disable all the bling -->
+<!-- script src="jquery.mobile.js"></script-->
 <script>
+/*
+$(document).bind("mobileinit", function(){
+	e.preventDefault()
+});
+*/
+
 
 $(document).ready(function() {
 	// current state...
@@ -53,14 +65,27 @@ $(document).ready(function() {
 	// setup event handlers...
 	$(document)
 		.keydown(handleKeys)
+		// XXX does not work on android...
 		.gestures({eventHandler: handleGestures})
+		/* XXX jquery.mobile handlers...
+		.bind('swipeleft', function(e){
+			nextImage()
+			e.preventDefault()
+			return false
+		})
+		.bind('swiperight', function(e){
+			prevImage()
+			e.preventDefault()
+			return false
+		})
+		*/
 	$(".image").click(handleClick)
-
 
 	// set the default position...
 	$('.current-image').click()
 });
 
+// XXX jquery.gestures handler...
 function handleGestures(e){
 	switch (e){
 		case 'N':
