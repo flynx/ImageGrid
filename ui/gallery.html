@@ -38,6 +38,7 @@ ISSUES:
 -->
 
 <script src="jquery.js"></script>
+<script src="jquery.gestures.js"></script>
 <script>
 
 $(document).ready(function() {
@@ -50,13 +51,32 @@ $(document).ready(function() {
 	}
 
 	// setup event handlers...
-	$(document).keydown(handleKeys)
+	$(document)
+		.keydown(handleKeys)
+		.gestures({eventHandler: handleGestures})
 	$(".image").click(handleClick)
 
 
 	// set the default position...
 	$('.current-image').click()
 });
+
+function handleGestures(e){
+	switch (e){
+		case 'N':
+			demoteImage()
+			break
+		case 'S':
+			promoteImage()
+			break
+		case 'E':
+			prevImage()
+			break
+		case 'W':
+			nextImage()
+			break
+	}
+}
 
 
 function handleClick(e) {
