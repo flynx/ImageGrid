@@ -44,8 +44,10 @@ ISSUES:
 
 <script src="jquery.js"></script>
 
+<!-- script src="jquery.wipetouch.js"></script-->
+
 <!-- XXX this does not work on android... --> 
-<script src="jquery.gestures.js"></script>
+<!-- script src="jquery.gestures.js"></script-->
 
 <!-- XXX need to figure out how to disable all the bling -->
 <!-- script src="jquery.mobile.js"></script-->
@@ -63,9 +65,18 @@ $(document).ready(function() {
 	// setup event handlers...
 	$(document)
 		.keydown(handleKeys)
+		// XXX this is flaky and breaks some of my code...
+		/*.wipetouch({
+			wipeLeft: nextImage,
+			wipeRight: prevImage,
+			wipeUp: demoteImage,
+			wipeDown: promoteImage,
+
+			tapToClick: true
+		})*/
 		// XXX does not work on android...
-		.gestures({eventHandler: handleGestures})
-		/* XXX jquery.mobile handlers...
+		//.gestures({eventHandler: handleGestures})
+		/* XXX jquery.mobile handlers... (with this I'm getting way too much bling)
 		.bind('swipeleft', function(e){
 			nextImage()
 			e.preventDefault()
