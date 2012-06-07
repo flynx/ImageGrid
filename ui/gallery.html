@@ -33,6 +33,10 @@ TODO:
 - first stage refactoring:
 	- merge almost identical functions...
 
+- multiple groups to promote/demote
+	ways to go:
+		- promote/demote and tag
+
 ISSUES:
 	- jumping on focus up/down...
 	- demoting a first element (a ribbon is created) positions the field incorrectly (see demoteImage() for details)...
@@ -46,12 +50,6 @@ ISSUES:
 <!-- XXX need to figure out how to disable all the bling -->
 <!-- script src="jquery.mobile.js"></script-->
 <script>
-/*
-$(document).bind("mobileinit", function(){
-	e.preventDefault()
-});
-*/
-
 
 $(document).ready(function() {
 	// current state...
