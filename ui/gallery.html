@@ -125,10 +125,9 @@ function loadImages(json){
 	$('.image').remove()
 
 	for(var i = 0; i < images.length; i++){
-		$('<div class="image mock-image"></div>')
+		$('<div class="image"></div>')
 			.css({
-				background : 'url('+images[i]+') no-repeat 50% black',
-				'background-size': 'contain',
+				'background-image': 'url('+images[i]+')'
 			})
 			.click(handleClick)
 			.appendTo(ribbon)
@@ -426,7 +425,13 @@ function demoteImage(){
 <style>
 	.image {
 		position: relative;
+
+		width: 350px;
+		height: 350px;
+
 		display: inline-block;
+		background: no-repeat 50% black;
+		background-size: contain;
 
 		opacity: 0.3;
 
@@ -440,9 +445,6 @@ function demoteImage(){
 	}
 
 	.mock-image {
-		width: 350px;
-		height: 350px;
-
 		background: blue;
 	}
 
@@ -611,7 +613,7 @@ function demoteImage(){
 		-moz-transform: scale(0.2,0.2);
 	}
 	*/
-	.wide-view-mode .mock-image {
+	.wide-view-mode .image {
 		width: 50px;
 		height: 50px;
 
