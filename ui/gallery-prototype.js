@@ -123,16 +123,19 @@ function handleClick(e) {
 
 var keys = {
 	toggleHelpKeys: [72],
-	toggleRibbonView: [32],
+	toggleRibbonView: [70],
 	closeKeys: [27, 88, 67],
 
 	firstKeys: [36],
 	lastKeys: [35],
-	previousKeys: [37, 80],
-	nextKeys: [39, 78],
-	promoteKeys: [40],
-	// XXX add del (46) to demote...
-	demoteKeys: [38],
+	previousKeys: [37, 80, 188, 8],
+	nextKeys: [39, 78, 190, 32],
+	// these work with ctrl and shift modifiers...
+	downKeys: [40],
+	upKeys: [38],
+	// these work with ctrl modifier...
+	promoteKeys: [45],
+	demoteKeys: [46],
 
 	ignoreKeys: [16, 17, 18],
 
@@ -147,6 +150,18 @@ function handleKeys(event){
 		: (fn(code, keys.previousKeys) >= 0) ? prevImage()
 		: (fn(code, keys.lastKeys) >= 0) ? lastImage()
 		: (fn(code, keys.promoteKeys) >= 0) ? function(){
+			if(event.ctrlKey){
+				createRibbonBelow()
+			}
+			promoteImage()
+		}()
+		: (fn(code, keys.demoteKeys) >= 0) ? function(){
+			if(event.ctrlKey){
+				createRibbonAbove()
+			}
+			demoteImage()
+		}()
+		: (fn(code, keys.downKeys) >= 0) ? function(){
 			if(event.shiftKey){
 				if(event.ctrlKey){
 					createRibbonBelow()
@@ -156,7 +171,7 @@ function handleKeys(event){
 				focusBelowRibbon()
 			}
 		}()
-		: (fn(code, keys.demoteKeys) >= 0) ? function(){
+		: (fn(code, keys.upKeys) >= 0) ? function(){
 			if(event.shiftKey){
 				if(event.ctrlKey){
 					createRibbonAbove()
