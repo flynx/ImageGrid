@@ -29,6 +29,14 @@ TODO:
 - make this into a jquery plugin...
 - add dynamic loading and unloading for very large sets...
 - gesture support...
+- add basic actions:
+	- rotate left
+	- rotate right
+	- ...
+- add info:
+	- number of images in ribbon
+	- position in ribbon
+
 
 - first stage refactoring:
 	- merge almost identical functions...
@@ -94,6 +102,7 @@ $(document).ready(function() {
 		*/
 	$(".image").click(handleClick)
 
+	// control elements...
 	$('.next-image').click(nextImage)
 	$('.prev-image').click(prevImage)
 	$('.demote').click(demoteImage)
@@ -101,21 +110,20 @@ $(document).ready(function() {
 	$('.toggle-wide').click(toggleWideView)
 	$('.toggle-single').click(toggleRibbonView)
 
-	// set the default position...
-	$('.current-image').click()
-
 	// load images...
 	// XXX not allowed...
 	//$.getJSON('images.js', loadImages})
 	// XXX STUB
 	loadImages(image_list)
+
+	// set the default position and init...
+	$('.current-image').click()
+
 });
 
 function loadImages(json){
-	// XXX STUB
 	var images = json.images
 	var ribbon = $('.ribbon').last()
-
 
 	$('.image').remove()
 
@@ -128,7 +136,6 @@ function loadImages(json){
 			.appendTo(ribbon)
 	}
 	ribbon.children().first().click()
-
 }
 
 // XXX jquery.gestures handler...
@@ -633,32 +640,9 @@ function demoteImage(){
 	<div class="container">
 		<div class="field">
 			<div class="ribbon">
+				<!--div class="image mock-image"></div>
 				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div>
+				<div class="image mock-image"></div-->
 			</div>
 		</div>
 	</div>
