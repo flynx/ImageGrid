@@ -212,7 +212,7 @@ function showRibbon(){
 	$('.single-image-mode').removeClass('single-image-mode')
 }
 function showSingle(){
-	$('.field').not('.single-image-mode').addClass('single-image-mode')
+	$('.viewer').not('.single-image-mode').addClass('single-image-mode')
 }
 function toggleRibbonView(){
 	if($('.single-image-mode').length > 0){
@@ -235,7 +235,7 @@ function toggleWideView(){
 	} else {
 		showRibbon()
 		//$('.container')
-		$('.field')
+		$('.viewer')
 			.not('.wide-view-mode')
 				.addClass('wide-view-mode')
 				.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
@@ -442,6 +442,15 @@ function demoteImage(){
 		width: 50px;
 		background: silver;
 		float: left;
+
+		-webkit-transition: all 0.5s ease;
+		-moz-transition: all 0.5s ease;
+		-o-transition: all 0.5s ease;
+		-ms-transition: all 0.5s ease;	
+		transition: all 0.5s ease;
+	}
+	.single-image-mode .controller {
+		opacity: 0.2;
 	}
 	.promote, .next-image, .prev-image, .demote, .toggle-wide, .toggle-single {
 		text-align: center;
