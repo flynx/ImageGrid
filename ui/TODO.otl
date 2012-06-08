@@ -1,0 +1,47 @@
+basic structure
+	ribbons					DONE
+	images					DONE
+	indicators
+basic control elements
+	touch zones / buttons
+		next				DONE
+		prev				DONE
+		shift up			DONE
+		shift down			DONE
+		promote				DONE
+		demote				DONE
+		zoom in				~		need real zooming...
+		zoom out			~		need real zooming...
+		toggle single image	DONE
+image sorting
+	will affect:
+		promote
+		demote
+		shift up
+		shift down
+		ribbon merging
+add promote/demote events (to attach structure editors)...
+add real images...
+make all the code relative to the current selection (multiple instances on a page support)
+make this into a jquery plugin...
+add dynamic loading and unloading for very large sets...
+gesture support...
+add basic actions:
+	rotate left
+	rotate right
+	...
+add info:
+	number of images in ribbon
+	position in ribbon
+
+
+first stage refactoring:
+	merge almost identical functions...
+
+multiple groups to promote/demote
+	ways to go:
+		promote/demote and tag
+
+ISSUES:
+	jumping on focus up/down...
+	demoting a first element (a ribbon is created) positions the field incorrectly (see demoteImage() for details)...

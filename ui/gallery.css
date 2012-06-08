@@ -1,0 +1,199 @@
+.image {
+	position: relative;
+
+	width: 350px;
+	height: 350px;
+
+	display: inline-block;
+	background: no-repeat 50% black;
+	background-size: contain;
+
+	opacity: 0.3;
+
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+
+	cursor: hand;
+}
+
+.mock-image {
+	background: blue;
+}
+
+.demo-buttons {
+	margin: 15px
+	border: groove 2px;
+	
+	opacity: 0.2;
+
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+}
+.demo-buttons:hover {
+	opacity: 1;
+}
+
+.viewer {
+	width: 900px;
+	height: 500px;
+	border: solid blue 5px;
+	margin: 20px; 
+}
+.controller {
+	height: 500px;
+	width: 50px;
+	background: silver;
+	float: left;
+
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+}
+.single-image-mode .controller {
+	opacity: 0.2;
+}
+.promote, .next-image, .prev-image, .demote, .toggle-wide, .toggle-single {
+	text-align: center;
+	vertical-align: middle;
+	width: 100%;
+	height: 150px; 
+	background: gray;
+
+   -moz-user-select: none;
+   -webkit-user-select: none;
+   -o-user-select: none;
+   -ms-user-select: none;
+   user-select: none;
+}
+.next-image, .prev-image, .toggle-wide, .toggle-single {
+	background: silver;
+}
+.toggle-wide, .toggle-single {
+	height:50px
+}
+.promote {
+}
+.next-image {
+}
+.prev-image {
+}
+.demote {
+}
+.toggle-wide {
+}
+.toggle-single {
+}
+
+.container {
+	float: left;
+	overflow: hidden;
+	width: 800px;
+	height: 500px;
+}
+
+.field {
+	position: relative;
+	overflow: visible;
+	top: 0px;
+	left: -100px;
+
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+}
+
+.ribbon {
+	height: 360px;
+	/* XXX make this expand dynamically */
+	width: 100000px;
+	overflow: visible;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	text-align: center;
+	opacity: 0.2;
+
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+
+}
+.new-ribbon {
+	height: 0px;
+
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+}
+
+.current-image {
+	opacity: 1.0;
+}
+
+.current-ribbon {
+	padding-top: 20px;
+	padding-bottom: 20px;
+
+	opacity: 1.0;
+
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+}
+
+.current-ribbon .image {
+}
+
+
+/* single image theme (start everything with .single-image-mode) 
+ *
+ * XXX need to make this touch friendly...
+ */
+.single-image-mode .image {
+	opacity: 0.0;
+}
+
+.single-image-mode .image:hover {
+	opacity: 0.5;
+}
+
+.single-image-mode .current-image:hover, .single-image-mode .current-image {
+	opacity: 1.0;
+}
+
+
+/* wide view mode */
+
+/* XXX not yet working correctly...
+.wide-view-mode {
+	transform: scale(0.2,0.2);
+	-ms-transform: scale(0.2,0.2);
+	-webkit-transform: scale(0.2,0.2);
+	-o-transform: scale(0.2,0.2);
+	-moz-transform: scale(0.2,0.2);
+}
+*/
+.wide-view-mode .image {
+	width: 50px;
+	height: 50px;
+
+}
+
+.wide-view-mode .ribbon {
+	height: 60px;
+}
