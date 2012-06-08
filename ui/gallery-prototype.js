@@ -177,10 +177,20 @@ function handleKeys(event){
 
 // modes...
 function showRibbon(){
-	$('.single-image-mode').removeClass('single-image-mode')
+	$('.single-image-mode')
+		.removeClass('single-image-mode')
+			.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+				$('.current-image').click()
+				return true
+			});
 }
 function showSingle(){
-	$('.viewer').not('.single-image-mode').addClass('single-image-mode')
+	$('.viewer').not('.single-image-mode')
+		.addClass('single-image-mode')
+			.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+				$('.current-image').click()
+				return true
+			});
 }
 function toggleRibbonView(){
 	if($('.single-image-mode').length > 0){

@@ -58,7 +58,7 @@
 	transition: all 0.5s ease;
 }
 .single-image-mode .controller {
-	opacity: 0.2;
+	opacity: 0.8;
 }
 .promote, .next-image, .prev-image, .demote, .toggle-wide, .toggle-single {
 	text-align: center;
@@ -97,6 +97,12 @@
 	overflow: hidden;
 	width: 800px;
 	height: 500px;
+
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
 }
 
 .field {
@@ -164,16 +170,29 @@
  *
  * XXX need to make this touch friendly...
  */
+.single-image-mode .container {
+	background: gray;
+}
+
 .single-image-mode .image {
 	opacity: 0.0;
+	/* XXX need to fix animation with this... */
+	position: absolute;
+	left: 0px;
 }
 
 .single-image-mode .image:hover {
-	opacity: 0.5;
+	/*opacity: 0.5;*/
+	/* XXX need to fix animation with this... */
+	position: absolute;
+	left: 0px;
 }
 
 .single-image-mode .current-image:hover, .single-image-mode .current-image {
 	opacity: 1.0;
+	/* XXX need to fix animation with this... */
+	position: absolute;
+	left: 0px;
 }
 
 
