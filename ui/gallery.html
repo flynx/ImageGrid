@@ -47,7 +47,7 @@ ISSUES:
 <!-- script src="jquery.wipetouch.js"></script-->
 
 <!-- XXX this does not work on android... --> 
-<!-- script src="jquery.gestures.js"></script-->
+<script src="jquery.gestures.js"></script>
 
 <!-- XXX need to figure out how to disable all the bling -->
 <!-- script src="jquery.mobile.js"></script-->
@@ -65,6 +65,7 @@ $(document).ready(function() {
 	// setup event handlers...
 	$(document)
 		.keydown(handleKeys)
+	$('.viewer')
 		// XXX this is flaky and breaks some of my code...
 		/*.wipetouch({
 			wipeLeft: nextImage,
@@ -75,7 +76,7 @@ $(document).ready(function() {
 			tapToClick: true
 		})*/
 		// XXX does not work on android...
-		//.gestures({eventHandler: handleGestures})
+		.gestures({eventHandler: handleGestures})
 		/* XXX jquery.mobile handlers... (with this I'm getting way too much bling)
 		.bind('swipeleft', function(e){
 			nextImage()
@@ -89,6 +90,13 @@ $(document).ready(function() {
 		})
 		*/
 	$(".image").click(handleClick)
+
+	$('.next-image').click(nextImage)
+	$('.prev-image').click(prevImage)
+	$('.demote').click(demoteImage)
+	$('.promote').click(promoteImage)
+	$('.toggle-wide').click(toggleWideView)
+	$('.toggle-single').click(toggleRibbonView)
 
 	// set the default position...
 	$('.current-image').click()
@@ -155,6 +163,7 @@ var keys = {
 	previousKeys: [37, 80],
 	nextKeys: [39, 78],
 	promoteKeys: [40],
+	// XXX add del (46) to demote...
 	demoteKeys: [38],
 
 	ignoreKeys: [16, 17, 18],
@@ -406,7 +415,68 @@ function demoteImage(){
 		background: blue;
 	}
 
+	.demo-buttons {
+		margin: 15px
+		border: groove 2px;
+		
+		opacity: 0.2;
+
+		-webkit-transition: all 0.5s ease;
+		-moz-transition: all 0.5s ease;
+		-o-transition: all 0.5s ease;
+		-ms-transition: all 0.5s ease;	
+		transition: all 0.5s ease;
+	}
+	.demo-buttons:hover {
+		opacity: 1;
+	}
+
+	.viewer {
+		width: 900px;
+		height: 500px;
+		border: solid blue 5px;
+		margin: 20px; 
+	}
+	.controller {
+		height: 500px;
+		width: 50px;
+		background: silver;
+		float: left;
+	}
+	.promote, .next-image, .prev-image, .demote, .toggle-wide, .toggle-single {
+		text-align: center;
+		vertical-align: middle;
+		width: 100%;
+		height: 150px; 
+		background: gray;
+
+	   -moz-user-select: none;
+	   -webkit-user-select: none;
+	   -o-user-select: none;
+	   -ms-user-select: none;
+	   user-select: none;
+	}
+	.next-image, .prev-image, .toggle-wide, .toggle-single {
+		background: silver;
+	}
+	.toggle-wide, .toggle-single {
+		height:50px
+	}
+	.promote {
+	}
+	.next-image {
+	}
+	.prev-image {
+	}
+	.demote {
+	}
+	.toggle-wide {
+	}
+	.toggle-single {
+	}
+
 	.container {
+		float: left;
 		overflow: hidden;
 		width: 800px;
 		height: 500px;
@@ -516,74 +586,91 @@ function demoteImage(){
 </style>
 
 
-<div class="container">
-	<div class="field">
-		<div class="ribbon">
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
-			<div class="image mock-image"></div>
+<div class="viewer">
+	<div class="controller">
+		<div class="demote">^</div>
+		<div class="prev-image">&lt;</div>
+		<div class="promote">v</div>
+		<div class="toggle-single">[ ]</div>
+	</div>
+	<div class="container">
+		<div class="field">
+			<div class="ribbon">
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+				<div class="image mock-image"></div>
+			</div>
 		</div>
+	</div>
+	<div class="controller">
+		<div class="demote">^</div>
+		<div class="next-image">&gt;</div>
+		<div class="promote">v</div>
+		<div class="toggle-wide">+/-</div>
 	</div>
 </div>
 
-<button onclick="firstImage()">first (home)</button>
-<button onclick="prevImage()">prev (left)</button>
-<button onclick="nextImage()">next (right)</button>
-<button onclick="lastImage()">last (end)</button>
+<div class="demo-buttons">
 
-<br><br>
+	<button onclick="firstImage()">first (home)</button>
+	<button onclick="prevImage()">prev (left)</button>
+	<button onclick="nextImage()">next (right)</button>
+	<button onclick="lastImage()">last (end)</button>
 
-<button onclick="showSingle()">single</button>
-<button onclick="showRibbon()">ribbon</button>
-<button onclick="toggleRibbonView()">toggle ribbon view (space)</button>
+	<br><br>
 
-<br><br>
+	<button onclick="showSingle()">single</button>
+	<button onclick="showRibbon()">ribbon</button>
+	<button onclick="toggleRibbonView()">toggle ribbon view (space)</button>
 
-<button onclick="toggleWideView()">toggle wide view</button>
+	<br><br>
 
-<br><br>
+	<button onclick="toggleWideView()">toggle wide view</button>
 
-<button onclick="createRibbonAbove()" disabled>create ribbon above (helper)</button><br>
-<button onclick="createRibbonBelow()" disabled>create ribbon below (helper)</button>
+	<br><br>
 
-<br><br>
+	<button onclick="createRibbonAbove()" disabled>create ribbon above (helper)</button><br>
+	<button onclick="createRibbonBelow()" disabled>create ribbon below (helper)</button>
 
-<button onclick="mergeRibbonsUp()">merge ribbons up</button><br>
-<button onclick="mergeRibbonsDown()">merge ribbons down</button>
+	<br><br>
 
-<br><br>
+	<button onclick="mergeRibbonsUp()">merge ribbons up</button><br>
+	<button onclick="mergeRibbonsDown()">merge ribbons down</button>
 
-<button onclick="demoteImage()">demote image (shift-up)</button><br>
-<button onclick="promoteImage()">promote image (shift-down)</button><br>
-NOTE: ctrl-shift-up / ctrl-shift-down will demote / promote an image to a new empty ribbon (the default if no ribbon exists)
+	<br><br>
 
-<br><br>
+	<button onclick="demoteImage()">demote image (shift-up)</button><br>
+	<button onclick="promoteImage()">promote image (shift-down)</button><br>
+	NOTE: ctrl-shift-up / ctrl-shift-down will demote / promote an image to a new empty ribbon (the default if no ribbon exists)
 
-<button onclick="focusAboveRibbon()">focus above ribbon (up)</button><br>
-<button onclick="focusBelowRibbon()">focus below ribbon (down)</button>
+	<br><br>
 
+	<button onclick="focusAboveRibbon()">focus above ribbon (up)</button><br>
+	<button onclick="focusBelowRibbon()">focus below ribbon (down)</button>
+
+</div>
 
 <!-- vim:set ts=4 sw=4 nowrap : -->
