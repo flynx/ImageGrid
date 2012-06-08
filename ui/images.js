@@ -1,4 +1,4 @@
-{
+var image_list = {
 	"images":[
 		"images/350px/DSC_3501.jpg",
 		"images/350px/DSC_3503.jpg",

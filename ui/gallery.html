@@ -49,6 +49,9 @@ ISSUES:
 <!-- XXX this does not work on android... --> 
 <script src="jquery.gestures.js"></script>
 
+<!-- XXX STUB -->
+<script src="images.js"></script>
+
 <!-- XXX need to figure out how to disable all the bling -->
 <!-- script src="jquery.mobile.js"></script-->
 <script>
@@ -105,15 +108,7 @@ $(document).ready(function() {
 	// XXX not allowed...
 	//$.getJSON('images.js', loadImages})
 	// XXX STUB
-	loadImages({
-		images:[
-			'images/350px/DSC_3501.jpg',
-			'images/350px/DSC_3503.jpg',
-			'images/350px/DSC_3504.jpg',
-			'images/350px/DSC_3506.jpg',
-		]
-	})
-
+	loadImages(image_list)
 });
 
 function loadImages(json){
@@ -540,7 +535,7 @@ function demoteImage(){
 	.ribbon {
 		height: 360px;
 		/* XXX make this expand dynamically */
-		width: 10000px;
+		width: 100000px;
 		overflow: visible;
 		padding-top: 2px;
 		padding-bottom: 2px;
