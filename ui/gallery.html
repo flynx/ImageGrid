@@ -100,7 +100,42 @@ $(document).ready(function() {
 
 	// set the default position...
 	$('.current-image').click()
+
+	// load images...
+	// XXX not allowed...
+	//$.getJSON('images.js', loadImages})
+	// XXX STUB
+	loadImages({
+		images:[
+			'images/350px/DSC_3501.jpg',
+			'images/350px/DSC_3503.jpg',
+			'images/350px/DSC_3504.jpg',
+			'images/350px/DSC_3506.jpg',
+		]
+	})
+
 });
+
+function loadImages(json){
+	// XXX STUB
+	var images = json.images
+	var ribbon = $('.ribbon').last()
+
+
+	$('.image').remove()
+
+	for(var i = 0; i < images.length; i++){
+		$('<div class="image mock-image"></div>')
+			.css({
+				background : 'url('+images[i]+') no-repeat 50% black',
+				'background-size': 'contain',
+			})
+			.click(handleClick)
+			.appendTo(ribbon)
+	}
+	ribbon.children().first().click()
+
+}
 
 // XXX jquery.gestures handler...
 function handleGestures(e){
@@ -251,15 +286,11 @@ function firstImage(){
 }
 
 function prevImage(){
-	$('.current-image')
-		.prev('.image')
-			.click()
+	$('.current-image').prev('.image').click()
 }
 
 function nextImage(){
-	$('.current-image')
-		.next('.image')
-			.click()
+	$('.current-image').next('.image').click()
 }
 
 function lastImage(){
