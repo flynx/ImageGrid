@@ -1,47 +1,78 @@
 basic structure
-	ribbons					DONE
-	images					DONE
-	indicators
-basic control elements
-	touch zones / buttons
-		next				DONE
-		prev				DONE
-		shift up			DONE
-		shift down			DONE
-		promote				DONE
-		demote				DONE
-		zoom in				~		need real zooming...
-		zoom out			~		need real zooming...
-		toggle single image	DONE
-image sorting
-	will affect:
-		promote
-		demote
-		shift up
-		shift down
-		ribbon merging
-add promote/demote events (to attach structure editors)...
-add real images...
-make all the code relative to the current selection (multiple instances on a page support)
-make this into a jquery plugin...
-add dynamic loading and unloading for very large sets...
-gesture support...
-add basic actions:
-	rotate left
-	rotate right
-	...
-add info:
-	number of images in ribbon
-	position in ribbon
+	[X] ribbons	
+	[X] images
+	[_] indicators
+	| show where the images came from...
 
 
-first stage refactoring:
-	merge almost identical functions...
+[_] % basic control elements
+	[_] 77% touch zones / buttons
+		[X] next				DONE
+		[X] prev				DONE
+		[X] shift up			DONE
+		[X] shift down			DONE
+		[X] promote				DONE
+		[X] demote				DONE
+		[_] zoom in				~		need real zooming...
+		[_] zoom out			~		need real zooming...
+		[X] toggle single image	DONE
 
-multiple groups to promote/demote
-	ways to go:
-		promote/demote and tag
+[_] 11% features
+	[_] 45% views
+		[_] 40% ribbon-based view
+			[_] show all
+			| might be good to not show any images here at all, just replace them with their average color
+			[X] show map
+			[X] fit to ribbon
+			[_] fit to image (square)
+			[_] ribbon with promoted/demoted images
+			| show semi-transparent images that were demoted/promoted from current ribbon
+		[_] 50% single image view
+			[_] image fit to screen
+			[X] image fit to square
+	| show parts of upper and lower ribbons
+	[_] image zooming
+	| fast zooming to stages:
+	| 	fit
+	| 	100%
+	| 	200%
+	| 	...
+	[_] basic editing and manipulation
+	| image unchanged, data saved to json...
+		[_] crop
+		[_] rotate
 
-ISSUES:
-	jumping on focus up/down...
-	demoting a first element (a ribbon is created) positions the field incorrectly (see demoteImage() for details)...
+[_] % General ToDo
+	[_] 0% image sorting
+		[_] will affect:
+			[_] promote
+			[_] demote
+			[_] shift up
+			[_] shift down
+			[_] ribbon merging
+	[_] add promote/demote events (to attach structure editors)...
+	[X] add real images...
+	[_] make all the code relative to the current selection (multiple instances on a page support)
+	[_] make this into a jquery plugin...
+	[_] add dynamic loading and unloading for very large sets...
+	[_] gesture support...
+	[_] add basic actions:
+		[_] rotate left
+		[_] rotate right
+		[_] crop
+		...
+	[_] add info:
+		[_] number of images in ribbon
+		[_] position in ribbon
+
+
+[_] % refactoring:
+	[_] merge almost identical functions...
+
+
+[_] % ISSUES and BUGS:
+	[_] jumping on focus up/down...
+	[_] demoting a first element (a ribbon is created) positions the field incorrectly (see demoteImage() for details)...
+
+.
+| vim:set spell :
