@@ -12,16 +12,14 @@ $(document).ready(function() {
 		.keydown(handleKeys)
 	$('.viewer')
 		// XXX does not work on android... (might need to add tap event handling)
-		.gestures({eventHandler: handleGestures})
+		//.gestures({eventHandler: handleGestures})
 		// XXX this is flaky and breaks some of my code...
-		/*.wipetouch({
-			wipeLeft: nextImage,
-			wipeRight: prevImage,
-			wipeUp: demoteImage,
-			wipeDown: promoteImage,
-
-			tapToClick: true
-		})*/
+		.swipe({
+			swipeLeft: nextImage,
+			swipeRight: prevImage,
+			swipeUp: demoteImage,
+			swipeDown: promoteImage,
+		})
 		/* XXX jquery.mobile handlers... (with this I'm getting way too much bling)
 		.bind('swipeleft', function(e){
 			nextImage()
