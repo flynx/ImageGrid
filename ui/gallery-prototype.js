@@ -149,20 +149,20 @@ function handleKeys(event){
 		: (fn(code, keys.lastKeys) >= 0) ? lastImage()
 		: (fn(code, keys.promoteKeys) >= 0) ? function(){
 			if(event.ctrlKey){
-				createRibbonBelow()
+				createRibbon('next')
 			}
 			promoteImage()
 		}()
 		: (fn(code, keys.demoteKeys) >= 0) ? function(){
 			if(event.ctrlKey){
-				createRibbonAbove()
+				createRibbon('prev')
 			}
 			demoteImage()
 		}()
 		: (fn(code, keys.downKeys) >= 0) ? function(){
 			if(event.shiftKey){
 				if(event.ctrlKey){
-					createRibbonBelow()
+					createRibbon('next')
 				}
 				promoteImage()
 			} else {
@@ -172,7 +172,7 @@ function handleKeys(event){
 		: (fn(code, keys.upKeys) >= 0) ? function(){
 			if(event.shiftKey){
 				if(event.ctrlKey){
-					createRibbonAbove()
+					createRibbon('prev')
 				}
 				demoteImage()
 			} else {
@@ -265,29 +265,31 @@ function focusBelowRibbon(){
 
 
 // create ribbon above/below helpers...
-// XXX NOTE: this will shift the content downwards...
-function createRibbonAbove(){
-	var res = $('<div class="new-ribbon"></div>')
-		.insertBefore('.current-ribbon')
+function createRibbon(direction){
+	if(direction == 'next'){
+		var insert = 'insertAfter'
+	} else if(direction == 'prev') {
+		var insert = 'insertBefore'
+	} else {
+		return false
+	}
+
+	var res = $('<div class="new-ribbon"></div>')[insert]('.current-ribbon')
 		// HACK: without this, the class change below will not animate...
 		.show()
 		.addClass('ribbon')
 		.removeClass('new-ribbon')
-	// XXX find a better way to do this...
-	$('.field').css({
-		top: $('.field').position().top - $('.current-ribbon').outerHeight()
-	})
+	// XXX need to account for increased top when creating a ribbon above...
+	// 		i.e. shift the content upward...
+	/*
+	if(direction == 'prev'){
+		$('.field').css({
+			top: $('.field').position().top - $('.current-ribbon').outerHeight()
+		})
+	}*/
 	return res
 }
 
-function createRibbonBelow(){
-	return $('<div class="new-ribbon"></div>')
-		.insertAfter('.current-ribbon')
-		// HACK: without this, the class change below will not animate...
-		.show()
-		.addClass('ribbon')
-		.removeClass('new-ribbon')
-}
 
 // Modifiers...
 
@@ -307,17 +309,8 @@ function mergeRibbons(direction){
 // now the actual modifiers...
 
 function shiftImage(direction){
-	// XXX simplify this...
-	if(direction == 'prev'){
-		var createRibbon = createRibbonAbove
-	} else if (direction == 'next'){
-		var createRibbon = createRibbonBelow
-	} else {
-		return false
-	}
-
 	if($('.current-ribbon')[direction]('.ribbon').length == 0){
-		createRibbon()
+		createRibbon(direction)
 	}
 	// XXX sort elements correctly...
 	if($('.current-ribbon').children('.image').length == 1){
