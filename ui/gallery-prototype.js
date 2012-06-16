@@ -17,8 +17,8 @@ $(document).ready(function() {
 		.swipe({
 			swipeLeft: nextImage,
 			swipeRight: prevImage,
-			swipeUp: demoteImage,
-			swipeDown: promoteImage,
+			swipeUp: shiftImageUp,
+			swipeDown: shiftImageDown,
 		})
 		/* XXX jquery.mobile handlers... (with this I'm getting way too much bling)
 		.bind('swipeleft', function(e){
@@ -32,13 +32,13 @@ $(document).ready(function() {
 			return false
 		})
 		*/
-	$(".image").click(handleClick)
+	$(".image").click(handleImageClick)
 
 	// control elements...
 	$('.next-image').click(nextImage)
 	$('.prev-image').click(prevImage)
-	$('.demote').click(demoteImage)
-	$('.promote').click(promoteImage)
+	$('.demote').click(shiftImageUp)
+	$('.promote').click(shiftImageDown)
 	$('.toggle-wide').click(toggleWideView)
 	$('.toggle-single').click(toggleRibbonView)
 
@@ -50,8 +50,9 @@ $(document).ready(function() {
 
 	// set the default position and init...
 	$('.current-image').click()
-
 });
+
+
 
 function loadImages(json){
 	var images = json.images
@@ -62,20 +63,22 @@ function loadImages(json){
 	for(var i = 0; i < images.length; i++){
 		$('<div class="image"></div>')
 			.css({ 'background-image': 'url('+images[i]+')' })
-			.click(handleClick)
+			.click(handleImageClick)
 			.appendTo(ribbon)
 	}
 	ribbon.children().first().click()
 }
 
+
+
 // XXX jquery.gestures handler...
 function handleGestures(e){
 	switch (e){
 		case 'N':
-			demoteImage()
+			shiftImageUp()
 			break
 		case 'S':
-			promoteImage()
+			shiftImageDown()
 			break
 		case 'E':
 			prevImage()
@@ -87,7 +90,8 @@ function handleGestures(e){
 }
 
 
-function handleClick(e) {
+
+function handleImageClick(e) {
 
 	var cur = $(this)
 
@@ -119,6 +123,10 @@ function handleClick(e) {
 	e.preventDefault();
 }
 
+
+
+// key configuration...
+// XXX need to make this handle modifiers gracefully...
 var keys = {
 	toggleHelpKeys: [72],
 	toggleRibbonView: [70],
@@ -151,20 +159,20 @@ function handleKeys(event){
 			if(event.ctrlKey){
 				createRibbon('next')
 			}
-			promoteImage()
+			shiftImageDown()
 		}()
 		: (fn(code, keys.demoteKeys) >= 0) ? function(){
 			if(event.ctrlKey){
 				createRibbon('prev')
 			}
-			demoteImage()
+			shiftImageUp()
 		}()
 		: (fn(code, keys.downKeys) >= 0) ? function(){
 			if(event.shiftKey){
 				if(event.ctrlKey){
 					createRibbon('next')
 				}
-				promoteImage()
+				shiftImageDown()
 			} else {
 				focusBelowRibbon()
 			}
@@ -174,7 +182,7 @@ function handleKeys(event){
 				if(event.ctrlKey){
 					createRibbon('prev')
 				}
-				demoteImage()
+				shiftImageUp()
 			} else {
 				focusAboveRibbon()
 			}
@@ -186,6 +194,7 @@ function handleKeys(event){
 		: false;
 	return false;
 }
+
 
 
 // modes...
@@ -213,6 +222,9 @@ function toggleRibbonView(){
 	}
 }
 
+
+
+// XXX replace this with adequate zooming...
 // XXX need to reposition the whole thing correctly...
 function toggleWideView(){
 	if($('.wide-view-mode').length > 0){
@@ -236,33 +248,32 @@ function toggleWideView(){
 	}
 }
 
+
+
 // basic navigation...
 function firstImage(){
 	$('.current-ribbon').children('.image').first().click()
 }
-
 function prevImage(){
 	$('.current-image').prev('.image').click()
 }
-
 function nextImage(){
 	$('.current-image').next('.image').click()
 }
-
 function lastImage(){
 	$('.current-ribbon').children('.image').last().click()
 }
-
 // XXX select appropriate image...
 function focusAboveRibbon(){
 	$('.current-ribbon').prev('.ribbon').children('.image').first().click()
 }
-
 // XXX select appropriate image...
 function focusBelowRibbon(){
 	$('.current-ribbon').next('.ribbon').children('.image').first().click()
 }
 
+
+// basic actions...
 
 // create ribbon above/below helpers...
 function createRibbon(direction){
@@ -291,7 +302,6 @@ function createRibbon(direction){
 }
 
 
-// Modifiers...
 
 // XXX sort elements correctly...
 function mergeRibbons(direction){
@@ -299,6 +309,7 @@ function mergeRibbons(direction){
 			.children()
 				.detach()
 				.insertAfter('.current-image')
+	// animate...
 	$('.current-ribbon')[direction]('.ribbon')
 			.slideUp(function(){
 				$(this).remove()
@@ -306,8 +317,11 @@ function mergeRibbons(direction){
 			})
 }
 
-// now the actual modifiers...
 
+
+// Modifiers...
+
+// now the actual modifiers...
 function shiftImage(direction){
 	if($('.current-ribbon')[direction]('.ribbon').length == 0){
 		createRibbon(direction)
@@ -331,13 +345,12 @@ function shiftImage(direction){
 	$('.current-image').click()
 }
 
-function promoteImage(){
+function shiftImageDown(){
 	return shiftImage('next')
 }
-
 // XXX this has problems, when creating a new ribbon this does not settle 
 //	   into a correct spot...
-function demoteImage(){
+function shiftImageUp(){
 	return shiftImage('prev')
 }
 
