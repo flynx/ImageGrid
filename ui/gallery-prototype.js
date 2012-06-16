@@ -197,54 +197,47 @@ function handleKeys(event){
 
 
 
-// modes...
-function showRibbon(){
-	$('.single-image-mode')
-		.removeClass('single-image-mode')
+// mode switchers...
+function unsetViewerMode(mode){
+	$('.' + mode)
+		.removeClass(mode)
+			// animation...
 			.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
 				$('.current-image').click()
 				return true
 			});
 }
-function showSingle(){
-	$('.viewer').not('.single-image-mode')
-		.addClass('single-image-mode')
+function setViewerMode(mode){
+	$('.viewer').not('.' + mode)
+		.addClass(mode)
+			// animation...
 			.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
 				$('.current-image').click()
 				return true
 			});
 }
+
+
+// ribbon/single view modes...
 function toggleRibbonView(){
 	if($('.single-image-mode').length > 0){
-		showRibbon()
+		unsetViewerMode('single-image-mode')
 	} else {
-		showSingle()
+		setViewerMode('single-image-mode')
 	}
 }
 
 
 
+// wide view mode toggle...
 // XXX replace this with adequate zooming...
 // XXX need to reposition the whole thing correctly...
 function toggleWideView(){
 	if($('.wide-view-mode').length > 0){
-		$('.wide-view-mode')
-			.removeClass('wide-view-mode')
-			.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
-				$('.current-image').click()
-				return true
-			});
-		
+		unsetViewerMode('wide-view-mode')
 	} else {
-		showRibbon()
-		//$('.container')
-		$('.viewer')
-			.not('.wide-view-mode')
-				.addClass('wide-view-mode')
-				.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
-					$('.current-image').click()
-					return true
-				});
+		unsetViewerMode('single-image-mode')
+		setViewerMode('wide-view-mode')
 	}
 }
 
@@ -345,6 +338,8 @@ function shiftImage(direction){
 	$('.current-image').click()
 }
 
+
+
 function shiftImageDown(){
 	return shiftImage('next')
 }
@@ -353,5 +348,7 @@ function shiftImageDown(){
 function shiftImageUp(){
 	return shiftImage('prev')
 }
+
+
 
 // vim:set ts=4 sw=4 nowrap :
