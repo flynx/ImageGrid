@@ -179,6 +179,9 @@
 	/* XXX need to fix animation with this... */
 	position: absolute;
 	left: 0px;
+	/*
+	zoom: 120%;
+	*/
 }
 
 .single-image-mode .image:hover {
@@ -210,9 +213,15 @@
 .wide-view-mode .image {
 	width: 50px;
 	height: 50px;
+	/*
+	zoom: 10%;
+	*/
 
 }
 
 .wide-view-mode .ribbon {
 	height: 60px;
+	/*
+	zoom: 10%;
+	*/
 }

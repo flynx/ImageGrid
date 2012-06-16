@@ -11,8 +11,6 @@ $(document).ready(function() {
 	$(document)
 		.keydown(handleKeys)
 	$('.viewer')
-		// XXX does not work on android... (might need to add tap event handling)
-		//.gestures({eventHandler: handleGestures})
 		// XXX this is flaky and breaks some of my code...
 		.swipe({
 			swipeLeft: nextImage,
@@ -67,26 +65,6 @@ function loadImages(json){
 			.appendTo(ribbon)
 	}
 	ribbon.children().first().click()
-}
-
-
-
-// XXX jquery.gestures handler...
-function handleGestures(e){
-	switch (e){
-		case 'N':
-			shiftImageUp()
-			break
-		case 'S':
-			shiftImageDown()
-			break
-		case 'E':
-			prevImage()
-			break
-		case 'W':
-			nextImage()
-			break
-	}
 }
 
 
