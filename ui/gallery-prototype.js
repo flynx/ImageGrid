@@ -292,88 +292,60 @@ function createRibbonBelow(){
 // Modifiers...
 
 // XXX sort elements correctly...
-function mergeRibbonsUp(){
-	$('.current-ribbon')
-		.prev('.ribbon')
+function mergeRibbons(direction){
+	$('.current-ribbon')[direction]('.ribbon')
 			.children()
 				.detach()
 				.insertAfter('.current-image')
-	$('.current-ribbon')
-		.prev('.ribbon')
+	$('.current-ribbon')[direction]('.ribbon')
 			.slideUp(function(){
 				$(this).remove()
 				$('.current-image').click()
 			})
 }
 
-// XXX sort elements correctly...
-function mergeRibbonsDown(){
-	$('.current-ribbon')
-		.next('.ribbon')
-			.children()
-				.detach()
-				.insertAfter('.current-image')
-	$('.current-ribbon')
-		.next('.ribbon')
-			.slideUp(function(){
-				$(this).remove()
-				$('.current-image').click()
-			})
+// now the actual modifiers...
+
+function shiftImage(direction){
+	// XXX simplify this...
+	if(direction == 'prev'){
+		var createRibbon = createRibbonAbove
+	} else if (direction == 'next'){
+		var createRibbon = createRibbonBelow
+	} else {
+		return false
+	}
+
+	if($('.current-ribbon')[direction]('.ribbon').length == 0){
+		createRibbon()
+	}
+	// XXX sort elements correctly...
+	if($('.current-ribbon').children('.image').length == 1){
+		// XXX this adds image to the head while the below portion adds it to the tail...
+		mergeRibbons(direction)
+	} else {
+		img = $('.current-image')
+		if(img.next('.image').length == 0){
+			prevImage()
+		} else {
+			nextImage()
+		}
+		img
+			.detach()
+			.appendTo($('.current-ribbon')[direction]('.ribbon'))
+	}
+	// XXX this has to know aout animations...
+	$('.current-image').click()
 }
 
-// XXX sort elements correctly...
-// XXX do animations...
 function promoteImage(){
-	if($('.current-ribbon').next('.ribbon').length == 0){
-		createRibbonBelow()
-	}
-	// XXX sort elements correctly...
-	if($('.current-ribbon').children('.image').length == 1){
-		// XXX this adds image to the head while the below portion adds it to the tail...
-		mergeRibbonsDown()
-	} else {
-		img = $('.current-image')
-		if(img.next('.image').length == 0){
-			prevImage()
-		} else {
-			nextImage()
-		}
-		img
-			.detach()
-			.appendTo($('.current-ribbon').next('.ribbon'))
-	}
-	$('.current-image').click()
+	return shiftImage('next')
 }
 
-// XXX sort elements correctly...
-// XXX do animations...
-// XXX BUG: when demoting first image (new ribbon created) it gets focused...
-//		REASON: .click() gets called in several places BEFORE the animation is done...
-//		NOTE: this bog does not affect promoteImage -- adding a lower element does not affect current positioning...
+// XXX this has problems, when creating a new ribbon this does not settle 
+//	   into a correct spot...
 function demoteImage(){
-	if($('.current-ribbon').prev('.ribbon').length == 0){
-		var new_ribbon = createRibbonAbove()
-	}
-	// XXX sort elements correctly...
-	if($('.current-ribbon').children('.image').length == 1){
-		// XXX this adds image to the head while the below portion adds it to the tail...
-		mergeRibbonsUp()
-	} else {
-		img = $('.current-image')
-		if(img.next('.image').length == 0){
-			// XXX in case when we've just created an empty ribbon, the click in this fires BEFORE it is fully expanded...
-			prevImage()
-		} else {
-			// XXX in case when we've just created an empty ribbon, the click in this fires BEFORE it is fully expanded...
-			nextImage()
-		}
-		img
-			.detach()
-			.appendTo($('.current-ribbon').prev('.ribbon'))
-	}
-	// XXX in case when we've just created an empty ribbon, the click in this fires BEFORE it is fully expanded...
-	$('.current-image').click()
+	return shiftImage('prev')
 }
-
 
 // vim:set ts=4 sw=4 nowrap :
