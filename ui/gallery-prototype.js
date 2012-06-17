@@ -1,15 +1,53 @@
-$(document).ready(function() {
-	// current state...
+// XXX need a uniform way to address images (filename?)
+
+$(document).ready(setup);
+
+
+
+
+/************************************************************ Setup **/
+
+function setup(){
+	// XXX load state...
+	// initial state (default)...
+	setDefaultInitialState()
+
+	// setup event handlers...
+	setupKeyboard()
+	setupGestures()
+	setupControlElements()
+
+	// load images...
+	// XXX not allowed...
+	//$.getJSON('images.js', loadImages})
+	// XXX STUB
+	loadImages(image_list)
+
+	// set the default position and init...
+	$('.current-image').click()
+}
+
+
+
+function setDefaultInitialState(){
 	if($('.current-ribbon').length == 0){
 		$('.ribbon').first().addClass('current-ribbon')
 	}
 	if($('.current-image').length == 0){
 		$('.current-ribbon').children('.image').first().addClass('current-image')
 	}
+}
 
-	// setup event handlers...
+
+
+function setupKeyboard(){
 	$(document)
 		.keydown(handleKeys)
+}
+
+
+
+function setupGestures(){
 	$('.viewer')
 		// XXX this is flaky and breaks some of my code...
 		.swipe({
@@ -30,25 +68,22 @@ $(document).ready(function() {
 			return false
 		})
 		*/
+}
+
+
+
+function setupControlElements(){
+	// images...
 	$(".image").click(handleImageClick)
 
-	// control elements...
+	// buttons...
 	$('.next-image').click(nextImage)
 	$('.prev-image').click(prevImage)
 	$('.demote').click(shiftImageUp)
 	$('.promote').click(shiftImageDown)
 	$('.toggle-wide').click(toggleWideView)
 	$('.toggle-single').click(toggleRibbonView)
-
-	// load images...
-	// XXX not allowed...
-	//$.getJSON('images.js', loadImages})
-	// XXX STUB
-	loadImages(image_list)
-
-	// set the default position and init...
-	$('.current-image').click()
-});
+}
 
 
 
@@ -68,6 +103,9 @@ function loadImages(json){
 }
 
 
+
+
+/*************************************************** Event Handlers **/
 
 function handleImageClick(e) {
 
@@ -175,6 +213,9 @@ function handleKeys(event){
 
 
 
+
+/************************************************************ Modes **/
+
 // mode switchers...
 function unsetViewerMode(mode){
 	$('.' + mode)
@@ -194,6 +235,7 @@ function setViewerMode(mode){
 				return true
 			});
 }
+
 
 
 // ribbon/single view modes...
@@ -221,6 +263,9 @@ function toggleWideView(){
 
 
 
+
+/******************************************************* Navigation **/
+
 // basic navigation...
 function firstImage(){
 	$('.current-ribbon').children('.image').first().click()
@@ -244,6 +289,9 @@ function focusBelowRibbon(){
 }
 
 
+
+
+/********************************************************** Actions **/
 // basic actions...
 
 // create ribbon above/below helpers...
@@ -290,7 +338,7 @@ function mergeRibbons(direction){
 
 
 
-// Modifiers...
+/*************************************************** Editor Actions **/
 
 // now the actual modifiers...
 function shiftImage(direction){
