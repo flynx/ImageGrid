@@ -1,5 +1,6 @@
 // XXX need a uniform way to address images (filename?)
 
+// XXX move this into the actual html...
 $(document).ready(setup);
 
 
@@ -108,7 +109,6 @@ function loadImages(json){
 /*************************************************** Event Handlers **/
 
 function handleImageClick(e) {
-
 	var cur = $(this)
 
 	// switch classes...
@@ -164,6 +164,7 @@ var keys = {
 	helpShowOnUnknownKey: true
 }
 
+// XXX revise...
 function handleKeys(event){
 	var code = event.keyCode, fn = $.inArray;
 	var _ = (fn(code, keys.closeKeys) >= 0) ? function(){}()
@@ -293,6 +294,7 @@ function focusBelowRibbon(){
 
 /********************************************************** Actions **/
 // basic actions...
+// NOTE: below 'direction' is meant in the html sence, i.e. next/prev...
 
 // create ribbon above/below helpers...
 function createRibbon(direction){
