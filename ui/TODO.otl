@@ -1,3 +1,131 @@
+Priority work
+	[_] % Preview II
+		[_] % sorted images in ribbons
+		| and correct positioning on promote/demote
+		|
+		|	input:
+		| 	[01][02][03][04][05][06][07][08][09][10][11] ... [19][20]
+		|
+		| 		single ribbon, nothing special here.
+		|
+		|
+		|   general sort:
+		| 	         [05]      [10][11][12]  [15] [19][20] 
+		| 	[01]  [04]  [06][07][08]  [13][14]  [18]
+		| 	 [02][03]              [09]    [16][17]
+		|
+		| 	 	each strip is positioned above or below the place it was 
+		| 	 	shifted from.
+		| 	 	if there is not enough space use weights to balance the 
+		| 	 	thing.
+		|
+		|
+		|   selected [08]:
+		| 	                 [05] [10][11][12] [15] [19][20] 
+		| 	[01] [04] [06][07][[08]] [13][14] [18]
+		| 	             [02][03] [09] [16][17]
+		|
+		| 		above and below images are centered around the current 
+		| 		image as axis, the rule is that the strips left are coming 
+		| 		from the left of the axis and likewise for the right side. 
+		|
+			[_] stage I: position the promoted/demoted image correctly
+			[_] stage II: scroll ribbons correctly
+		[_] 0% correct zooming and modes
+			[_] zooming in ribbon view
+			[_] zoom presets for ribbon view
+				[_] all
+				[_] all in group
+				[_] five
+				[_] three
+				[_] one (with zooming)
+			[_] single image mode with zooming
+			| ribbons are hidden
+			[_] grid mode (mid priority)
+			[_] calendar mode (low priority)
+		[_] % fix layout and animations
+			[_] zooming
+			[_] navigation
+			[_] actions
+	[_] % Preview III
+		[_] 0% native client
+			[_] windows
+			[_] android
+			[_] MacOS (low priority)
+			[_] iOS (low priority)
+	[_] % Pre-Alpha
+		[_] % finalize UI logic
+			[_] unsorted images
+	
+
+Goals:
+	main ribbon always consistent
+	fast sorting via several simple passes
+		binary
+		| items are split into two ribbons.
+		|
+		| this can be done either by mandatorily shifting either up or 
+		| down or by restricting shifting to just one direction.
+		|
+		| this is a bit too restrictive.
+		|
+		| essentially this is a combination in the ternary approach 
+		| below as we can still shift images between levels.
+		ternary
+		| current ribbon and items are either sifted up, shifted down 
+		| relative to it or left on, unshifted.
+		|
+		| main ribbon consistency is not always obvious, especially on 
+		| partially sorted sets. e.g. while sorting part of the set where 
+		| should the unsorted part be?
+		|
+		|			sorted section
+		| 			+-------------------+
+		|
+		| 	  oooooooooooooooooooooooooooooooo
+		| 	-	oooooooooooooooooooooooooooo
+		|	>		oooooooooooooooooooooxxxxxxxxxxxxxxxxxxxxxxxxxxx... <
+		| 	+		   oooooooooooooooo
+		| 			         oooo
+		|
+		| 			         			 +----------------------------+
+		| 			         			 which level should this go to?
+		|
+		| in the illustration, the ribbon marked by ">" and "<" is where 
+		| the sorting started.
+		|
+		| there is also a question of how do we define the border between
+		| sorted and unsorted zones and when? 
+		| ...after the sort is done, and when is that?
+		|
+		| possible ways to go around this:
+		| 	before sorting select the working batch
+		| 		- adds an extra step
+		| 		- restricts later sorting
+		| 	restrict promotion over the main ribbon
+		| 		+ sorting can be refined later in the same mode
+		| 		- prevents the user to select the better images on first pass
+		| 	split the sorted and unsorted batches and never mix them
+		| 		- restricts later sorting
+		| 	main ribbon always shows all the better images (from better levels)
+		| 		o needs a way to move whole topologies up/down relative 
+		| 		  to the main ribbon...
+		| 		  one way to do this is select and shift multiple images
+		| 		  will shift the whole pyramid (with all the "worse" images in between)
+		| 		- introduces modes: sorting / viewing
+		| 		- adds a separate stage -- move the topology to a correct
+		| 		  main ribbon position
+		|
+		| Q: is this system applicable to sorting search results?
+		| A: likely yes, but the farther one gets from the main ribbon 
+		|    the more the difference can get between adjacent images.
+	images are always sortable
+	all levels always browsable
+	make all the steps except the actual sorting implicit
+	| i.e. no jumping through hoops for the human...
+	
+
+
 basic structure
 	[X] ribbons	
 	[X] images

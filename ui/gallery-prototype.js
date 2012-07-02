@@ -98,6 +98,8 @@ function loadImages(json){
 	for(var i = 0; i < images.length; i++){
 		$('<div class="image"></div>')
 			.css({ 'background-image': 'url('+images[i]+')' })
+			// set a unique id for each image...
+			.attr({'id': 'image-' + i})
 			.click(handleImageClick)
 			.appendTo(ribbon)
 	}
