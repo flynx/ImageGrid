@@ -1,6 +1,6 @@
 Priority work
-	[_] % Preview II
-		[_] % sorted images in ribbons
+	[_] 12% Preview II
+		[_] 0% sorted images in ribbons
 		| and correct positioning on promote/demote
 		|
 		|	input:
@@ -29,7 +29,7 @@ Priority work
 		| 		image as axis, the rule is that the strips left are coming 
 		| 		from the left of the axis and likewise for the right side. 
 		|
-			[_] stage I: position the promoted/demoted image correctly
+			[X] stage I: position the promoted/demoted image correctly
 			[_] stage II: scroll ribbons correctly
 		[_] 0% correct zooming and modes
 			[_] zooming in ribbon view
@@ -43,18 +43,20 @@ Priority work
 			| ribbons are hidden
 			[_] grid mode (mid priority)
 			[_] calendar mode (low priority)
-		[_] % fix layout and animations
+		[_] 0% fix layout and animations
 			[_] zooming
 			[_] navigation
 			[_] actions
-	[_] % Preview III
+	[_] 0% misc
+		[_] add sort/re-sort capability...
+	[_] 0% Preview III
 		[_] 0% native client
 			[_] windows
 			[_] android
 			[_] MacOS (low priority)
 			[_] iOS (low priority)
-	[_] % Pre-Alpha
-		[_] % finalize UI logic
+	[_] 0% Pre-Alpha
+		[_] 0% finalize UI logic
 			[_] unsorted images
 	
 
