@@ -291,7 +291,9 @@ function focusRibbon(direction){
 	var prev = getImageBefore(id, $('.current-ribbon')[direction]('.ribbon'))
 	if(prev){
 		var next = prev.next()
-		if(next.length == 0){
+		// NOTE: direction is accounted for to make the up/down shifts 
+		// 		 symmetrical in the general case...
+		if(next.length == 0 || direction == 'next'){
 			prev.click()
 		} else {
 			next.click()
@@ -314,13 +316,13 @@ function focusBelowRibbon(){
 
 // find an image object after which to position image ID...
 // used for two main tasks:
-// 	- positioning pormoted/demoted images
+// 	- positioning promoted/demoted images
 // 	- centering ribbons
 // returns:
 // 	- null		- empty ribbon or no element greater id should be first
 // 	- element
 // XXX do we need to make ids numbers for this to work?
-// XXX might be better to make this a binary search for very large sets of data
+// XXX might be better to make this binary search in very large sets of data
 function getImageBefore(id, ribbon){
 	// walk the ribbon till we find two images one with an ID less and 
 	// another greater that id...
@@ -334,6 +336,18 @@ function getImageBefore(id, ribbon){
 		prev = $(images[i])
 	}
 	return prev
+}
+
+// center a ribbon horizontally...
+// if id exists in ribbon make it the center, else center between the 
+// two images that id came from.
+function centerRibbonHorizontally(id, ribbon){
+	// XXX
+}
+
+// center the ribbon in the middle of the container vertically...
+function centerRibbonVertically(ribbon){
+	// XXX
 }
 
 
