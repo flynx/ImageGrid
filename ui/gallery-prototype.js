@@ -99,7 +99,7 @@ function loadImages(json){
 		$('<div class="image"></div>')
 			.css({ 'background-image': 'url('+images[i]+')' })
 			// set a unique id for each image...
-			.attr({'id': 'image-' + i})
+			.attr({'id': i})
 			.click(handleImageClick)
 			.appendTo(ribbon)
 	}
@@ -283,15 +283,58 @@ function nextImage(){
 function lastImage(){
 	$('.current-ribbon').children('.image').last().click()
 }
-// XXX select appropriate image...
-function focusAboveRibbon(){
-	$('.current-ribbon').prev('.ribbon').children('.image').first().click()
+
+// XXX for the above two functions to be stable we will need to jump up 
+// 		to the next and down to the prev element...
+function focusRibbon(direction){
+	var id = $('.current-image').attr('id')
+	var prev = getImageBefore(id, $('.current-ribbon')[direction]('.ribbon'))
+	if(prev){
+		var next = prev.next()
+		if(next.length == 0){
+			prev.click()
+		} else {
+			next.click()
+		}
+	} else {
+		$('.current-ribbon')[direction]('.ribbon').children('.image').first().click()
+	}
 }
-// XXX select appropriate image...
+function focusAboveRibbon(){
+	focusRibbon('prev')
+}
 function focusBelowRibbon(){
-	$('.current-ribbon').next('.ribbon').children('.image').first().click()
+	focusRibbon('next')
 }
 
+
+
+
+/********************************************************** Helpers **/
+
+// find an image object after which to position image ID...
+// used for two main tasks:
+// 	- positioning pormoted/demoted images
+// 	- centering ribbons
+// returns:
+// 	- null		- empty ribbon or no element greater id should be first
+// 	- element
+// XXX do we need to make ids numbers for this to work?
+// XXX might be better to make this a binary search for very large sets of data
+function getImageBefore(id, ribbon){
+	// walk the ribbon till we find two images one with an ID less and 
+	// another greater that id...
+	id = parseInt(id)
+	var images = ribbon.children('.image')
+	var prev
+	for(var i=0; i < images.length; i++){
+		if(parseInt($(images[i]).attr('id')) > id){
+			return prev
+		}
+		prev = $(images[i])
+	}
+	return prev
+}
 
 
 
@@ -350,9 +393,14 @@ function shiftImage(direction){
 	if($('.current-ribbon')[direction]('.ribbon').length == 0){
 		createRibbon(direction)
 	}
-	// XXX sort elements correctly...
+
+	// get previous element after which we need to put the current...
+	var prev_elem = getImageBefore(
+					$('.current-image').attr('id'), 
+					$('.current-ribbon')[direction]('.ribbon'))
+
+	// last image in ribbon, merge...
 	if($('.current-ribbon').children('.image').length == 1){
-		// XXX this adds image to the head while the below portion adds it to the tail...
 		mergeRibbons(direction)
 	} else {
 		img = $('.current-image')
@@ -361,9 +409,19 @@ function shiftImage(direction){
 		} else {
 			nextImage()
 		}
-		img
-			.detach()
-			.appendTo($('.current-ribbon')[direction]('.ribbon'))
+		// do the actual move...
+		if(prev_elem){
+			// insert element after current...
+			img
+				.detach()
+				.insertAfter(prev_elem)
+		} else {
+			// empty ribbon or fisrt element...
+			img
+				.detach()
+				.prependTo($('.current-ribbon')[direction]('.ribbon'))
+		}
+
 	}
 	// XXX this has to know aout animations...
 	$('.current-image').click()
@@ -382,4 +440,5 @@ function shiftImageUp(){
 
 
 
+/*********************************************************************/
 // vim:set ts=4 sw=4 nowrap :
