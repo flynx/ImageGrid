@@ -31,6 +31,11 @@ Priority work
 		|
 			[X] stage I: position the promoted/demoted image correctly
 			[_] stage II: scroll ribbons correctly
+			| this is simple:
+			| - center the right edge of image returned
+			|   by getImageBefore in all ribbons other than current...
+			| - center current-image in current ribbon
+			| - vertically center the current ribbon (negative margin?)
 		[_] 0% correct zooming and modes
 			[_] zooming in ribbon view
 			[_] zoom presets for ribbon view
@@ -49,6 +54,7 @@ Priority work
 			[_] actions
 	[_] 0% misc
 		[_] add sort/re-sort capability...
+		[_] make scrolling of other ribbons proportional to the gap...
 	[_] 0% Preview III
 		[_] 0% native client
 			[_] windows
