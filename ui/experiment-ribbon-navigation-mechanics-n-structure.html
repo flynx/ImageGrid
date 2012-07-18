@@ -55,8 +55,9 @@ function centerSquare(zoom){
 	// relative position to container... 
 	// XXX is there a better way to get this?
 	var t = rn * (h - mh/2)
-	//$('.container').css({'margin-top': (-t + H/zoom/2 + h/2)})
-	$('.container').css({'margin-top': (-t + H/2 + h/2)})
+	$('.container').css({
+		'margin-top': (-t + H/2 + h/2)
+	})
 
 	// horizontal...
 	alignRibbon()
@@ -90,15 +91,12 @@ function alignRibbon(square, position, zoom){
 
 	switch(position){
 		case 'before':
-			//ribbon.css({'margin-left': (-l + W/zoom/2 + w)})
 			ribbon.css({'margin-left': (-l + W/2 + w)})
 			return true
 		case 'center':
-			//ribbon.css({'margin-left': (-l + W/zoom/2 + w/2)})
 			ribbon.css({'margin-left': (-l + W/2 + w/2)})
 			return true
 		case 'after':
-			//ribbon.css({'margin-left': (-l + W/zoom/2)})
 			ribbon.css({'margin-left': (-l + W/2)})
 			return true
 	}
@@ -106,6 +104,7 @@ function alignRibbon(square, position, zoom){
 }
 
 // XXX need to fix animation jumping around... 
+// XXX try transition-origin instead of compensating by moving...
 function zoom(factor){
 	var zoom = $('.container').css('zoom')*factor 
 	var H = $('.meta-container').height()
@@ -199,8 +198,8 @@ function zoom(factor){
 
 </style>
 
-<button onclick="zoom(1.1)">+</button>
-<button onclick="zoom(0.9)">-</button>
+<button onclick="zoom(2)">+</button>
+<button onclick="zoom(0.5)">-</button>
 
 <br>
 <br>
