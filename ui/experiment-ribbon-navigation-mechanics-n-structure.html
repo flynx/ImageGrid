@@ -55,7 +55,8 @@ function centerSquare(zoom){
 	// relative position to container... 
 	// XXX is there a better way to get this?
 	var t = rn * (h - mh/2)
-	$('.container').css({'margin-top': (-t + H/zoom/2 + h/2)})
+	//$('.container').css({'margin-top': (-t + H/zoom/2 + h/2)})
+	$('.container').css({'margin-top': (-t + H/2 + h/2)})
 
 	// horizontal...
 	alignRibbon()
@@ -89,24 +90,43 @@ function alignRibbon(square, position, zoom){
 
 	switch(position){
 		case 'before':
-			ribbon.css({'margin-left': (-l + W/zoom/2 + w)})
+			//ribbon.css({'margin-left': (-l + W/zoom/2 + w)})
+			ribbon.css({'margin-left': (-l + W/2 + w)})
 			return true
 		case 'center':
-			ribbon.css({'margin-left': (-l + W/zoom/2 + w/2)})
+			//ribbon.css({'margin-left': (-l + W/zoom/2 + w/2)})
+			ribbon.css({'margin-left': (-l + W/2 + w/2)})
 			return true
 		case 'after':
-			ribbon.css({'margin-left': (-l + W/zoom/2)})
+			//ribbon.css({'margin-left': (-l + W/zoom/2)})
+			ribbon.css({'margin-left': (-l + W/2)})
 			return true
 	}
 	return false
 }
 
-// XXX need to compensate for zoom-shift (container.margin-top & ribbon.margin-left)...
+// XXX need to fix animation jumping around... 
 function zoomIn(){
-	$('.container').css({'zoom': $('.container').css('zoom') * 2})
+	var zoom = $('.container').css('zoom')*2 
+	var H = $('.meta-container').height()
+	var W = $('.meta-container').width()
+
+	$('.container').animate({
+		'zoom': zoom,
+		'top': H/2 * 1/zoom - H/2, 
+		'left': W/2 * 1/zoom - W/2, 
+	})
 }
 function zoomOut(){
-	$('.container').css({'zoom': $('.container').css('zoom') * 0.5})
+	var zoom = $('.container').css('zoom')*0.5
+	var H = $('.meta-container').height()
+	var W = $('.meta-container').width()
+
+	$('.container').animate({
+		'zoom': zoom,
+		'top': H/2 * 1/zoom - H/2, 
+		'left': W/2 * 1/zoom - W/2, 
+	})
 }
 
 
@@ -138,6 +158,9 @@ function zoomOut(){
 }
 
 .container {
+	position: relative;
+	top: 0px;
+	left: 0px;
 	/* set this to adjust the vertical position of the view... */
 	margin-top: -50px;
 
