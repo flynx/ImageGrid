@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<!--
+
+Goals:
+	- design a simple navigation system and structure
+	- make it animate correctly only via CSS
+
+
+-->
+
+<script src="jquery.js"></script>
+<script>
+
+$(document).ready(function(){
+	$('.square').click(squareClick)
+
+	$('.current.square').click()
+})
+
+
+function squareClick(){
+	// set classes...
+	$('.current').removeClass('current')
+	$(this)
+		.addClass('current')
+		.parents('.ribbon')
+			.addClass('current')
+
+	// position the container and ribbons...
+	centerSquare()
+	allignRibbons()
+}
+
+function centerSquare(){
+	var ribbons = $('.ribbon')
+	var ribbon = $('.ribbon.current')
+	var squares = ribbon.children('.square')
+
+	// vertical...
+	var H = $('.meta-container').height()
+	var h = ribbons.outerHeight(true)
+	// margin...
+	var mh = h - ribbons.outerHeight()
+	// current ribbon position (1-based)
+	var rn = ribbons.index(ribbon) + 1
+	// XXX compensating for margin error buildup... really odd!
+	//	...why is this still different for the first three ribbons?!
+	//		....sub-pixel error?
+	// relative position to container... 
+	// XXX is there a better way to get this?
+	var t = rn * (h - mh/2)
+	$('.container').css({'margin-top': -t + H/2 + h/2})
+
+	// horizontal...
+	alignRibbon()
+}
+
+function alignRibbon(square, position){
+	// default values...
+	if(position == null){
+		position = 'center'
+	}
+	if(square == null){
+		square = $('.square.current')
+	}
+
+
+	var ribbon = square.parents('.ribbon')
+	var squares = ribbon.children('.square')
+
+	var W = $('.meta-container').width()
+	var w = squares.outerWidth(true)
+	// margin...
+	// XXX do we need this?
+	var mw = w - squares.outerWidth()
+	// current square position (1-based)
+	var sn = squares.index(square) + 1
+	var l = sn * (w - mw/2)
+
+	switch(position){
+		case 'before':
+			ribbon.css({'margin-left': -l + W/2 + w})
+			return true
+		case 'center':
+			ribbon.css({'margin-left': -l + W/2 + w/2})
+			return true
+		case 'after':
+			ribbon.css({'margin-left': -l + W/2})
+			return true
+	}
+	return false
+}
+
+function alignRibbons(){
+	// XXX this is not present here as there is no notion of square
+	//     order in this experiment...
+}
+
+
+</script>
+
+<style>
+.meta-container {
+	position: relative;
+	border: solid gray 5px;
+	width: 300px;
+	height: 200px;
+	overflow: hidden;
+}
+.h-marker {
+	position: absolute;
+	border-top: solid blue 1px;
+	height: 0px;
+	width: 300px;
+	top: 100px;
+	left: 0px;
+}
+.v-marker {
+	position: absolute;
+	border-left: solid blue 1px;
+	height: 200px;
+	width: 0px;
+	top: 0px;
+	left: 150px;
+}
+
+.container {
+	/* set this to adjust the vertical position of the view... */
+	margin-top: -50px;
+
+	/* animate */
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+}
+
+.ribbon {
+	height: 50px;
+	/* HACK: need to figure out a way to avoid setting the width here... */
+	width: 1000px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+
+	/* animate */
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+}
+
+.square {
+	width: 50px;
+	height: 50px;
+	background: silver;
+	float: left;
+
+	/* animate */
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+}
+
+.current.square {
+	background: gray;
+}
+
+
+</style>
+
+<div class="meta-container">
+	<div class="container">
+		<div class="ribbon">
+			<div class="square">1</div>
+			<div class="square">2</div>
+			<div class="square">3</div>
+			<div class="square">4</div>
+			<div class="square">5</div>
+			<div class="square">6</div>
+			<div class="square">7</div>
+		</div>
+		<div class="ribbon" style="margin-left: 40px;">
+			<div class="square">1</div>
+			<div class="square">2</div>
+			<div class="square">3</div>
+			<div class="square">4</div>
+			<div class="square">5</div>
+			<div class="square">6</div>
+			<div class="square">7</div>
+		</div>
+		<div class="ribbon current">
+			<div class="square">1</div>
+			<div class="square">2</div>
+			<div class="square current">3</div>
+			<div class="square">4</div>
+			<div class="square">5</div>
+			<div class="square">6</div>
+			<div class="square">7</div>
+		</div>
+		<div class="ribbon" style="margin-left: -100px;">
+			<div class="square">1</div>
+			<div class="square">2</div>
+			<div class="square">3</div>
+			<div class="square">4</div>
+			<div class="square">5</div>
+			<div class="square">6</div>
+			<div class="square">7</div>
+		</div>
+		<div class="ribbon">
+			<div class="square">1</div>
+			<div class="square">2</div>
+			<div class="square">3</div>
+			<div class="square">4</div>
+			<div class="square">5</div>
+			<div class="square">6</div>
+			<div class="square">7</div>
+		</div>
+		<div class="ribbon">
+			<div class="square">1</div>
+			<div class="square">2</div>
+			<div class="square">3</div>
+			<div class="square">4</div>
+			<div class="square">5</div>
+			<div class="square">6</div>
+			<div class="square">7</div>
+		</div>
+		<div class="ribbon">
+			<div class="square">1</div>
+			<div class="square">2</div>
+			<div class="square">3</div>
+			<div class="square">4</div>
+			<div class="square">5</div>
+			<div class="square">6</div>
+			<div class="square">7</div>
+		</div>
+		<div class="ribbon">
+			<div class="square">1</div>
+			<div class="square">2</div>
+			<div class="square">3</div>
+			<div class="square">4</div>
+			<div class="square">5</div>
+			<div class="square">6</div>
+			<div class="square">7</div>
+		</div>
+	</div>
+	<div class="h-marker"></div>
+	<div class="v-marker"></div>
+</div>
+
+<!-- this is oddly aligned to the .squares -->
+<!--div class="toggle-animation-button">toggle animation</div-->
+
+
+</body>
+</html>
