@@ -106,23 +106,12 @@ function alignRibbon(square, position, zoom){
 }
 
 // XXX need to fix animation jumping around... 
-function zoomIn(){
-	var zoom = $('.container').css('zoom')*2 
+function zoom(factor){
+	var zoom = $('.container').css('zoom')*factor 
 	var H = $('.meta-container').height()
 	var W = $('.meta-container').width()
 
-	$('.container').animate({
-		'zoom': zoom,
-		'top': H/2 * 1/zoom - H/2, 
-		'left': W/2 * 1/zoom - W/2, 
-	})
-}
-function zoomOut(){
-	var zoom = $('.container').css('zoom')*0.5
-	var H = $('.meta-container').height()
-	var W = $('.meta-container').width()
-
-	$('.container').animate({
+	$('.container').css({
 		'zoom': zoom,
 		'top': H/2 * 1/zoom - H/2, 
 		'left': W/2 * 1/zoom - W/2, 
@@ -210,8 +199,8 @@ function zoomOut(){
 
 </style>
 
-<button onclick="zoomIn()">+</button>
-<button onclick="zoomOut()">-</button>
+<button onclick="zoom(1.1)">+</button>
+<button onclick="zoom(0.9)">-</button>
 
 <br>
 <br>
@@ -295,10 +284,6 @@ function zoomOut(){
 	<div class="h-marker"></div>
 	<div class="v-marker"></div>
 </div>
-
-<!-- this is oddly aligned to the .squares -->
-<!--div class="toggle-animation-button">toggle animation</div-->
-
 
 </body>
 </html>
