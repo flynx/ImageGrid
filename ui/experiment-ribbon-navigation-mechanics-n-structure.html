@@ -33,7 +33,11 @@ function squareClick(){
 	centerSquare()
 }
 
-function centerSquare(){
+function centerSquare(zoom){
+	// defaults...
+	if (zoom == null){
+		zoom = $('.container').css('zoom')
+	}
 	var ribbons = $('.ribbon')
 	var ribbon = $('.ribbon.current')
 	var squares = ribbon.children('.square')
@@ -51,19 +55,23 @@ function centerSquare(){
 	// relative position to container... 
 	// XXX is there a better way to get this?
 	var t = rn * (h - mh/2)
-	$('.container').css({'margin-top': -t + H/2 + h/2})
+	$('.container').css({'margin-top': (-t + H/zoom/2 + h/2)})
 
 	// horizontal...
 	alignRibbon()
 }
 
-function alignRibbon(square, position){
+function alignRibbon(square, position, zoom){
 	// default values...
 	if(position == null){
 		position = 'center'
 	}
 	if(square == null){
 		square = $('.square.current')
+	}
+	// defaults...
+	if (zoom == null){
+		zoom = $('.container').css('zoom')
 	}
 
 
@@ -81,16 +89,24 @@ function alignRibbon(square, position){
 
 	switch(position){
 		case 'before':
-			ribbon.css({'margin-left': -l + W/2 + w})
+			ribbon.css({'margin-left': (-l + W/zoom/2 + w)})
 			return true
 		case 'center':
-			ribbon.css({'margin-left': -l + W/2 + w/2})
+			ribbon.css({'margin-left': (-l + W/zoom/2 + w/2)})
 			return true
 		case 'after':
-			ribbon.css({'margin-left': -l + W/2})
+			ribbon.css({'margin-left': (-l + W/zoom/2)})
 			return true
 	}
 	return false
+}
+
+// XXX need to compensate for zoom-shift (container.margin-top & ribbon.margin-left)...
+function zoomIn(){
+	$('.container').css({'zoom': $('.container').css('zoom') * 2})
+}
+function zoomOut(){
+	$('.container').css({'zoom': $('.container').css('zoom') * 0.5})
 }
 
 
@@ -131,6 +147,8 @@ function alignRibbon(square, position){
 	-o-transition: all 0.5s ease;
 	-ms-transition: all 0.5s ease;	
 	transition: all 0.5s ease;
+
+	zoom: 1;
 }
 
 .ribbon {
@@ -168,6 +186,13 @@ function alignRibbon(square, position){
 
 
 </style>
+
+<button onclick="zoomIn()">+</button>
+<button onclick="zoomOut()">-</button>
+
+<br>
+<br>
+<br>
 
 <div class="meta-container">
 	<div class="container">
