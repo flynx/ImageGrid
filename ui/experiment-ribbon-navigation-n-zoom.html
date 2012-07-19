@@ -27,6 +27,8 @@ function containerSize(W, H){
 	var oW = $('.meta-container').width()
 	var oH = $('.meta-container').height()
 
+	var zoom = $('.container').css('zoom')
+
 	$('.meta-container').css({
 		'width': W,
 		'height': H
@@ -34,8 +36,12 @@ function containerSize(W, H){
 
 	// shift the field...
 	$('.container').css({
-		'margin-top': parseFloat($('.container').css('margin-top')) + (H-oH)/2, 
-		'margin-left': parseFloat($('.container').css('margin-left')) + (W-oW)/2
+		// compensate top/left that get changed while zooming....
+		'top': H/2 * 1/zoom - H/2, 
+		'left': W/2 * 1/zoom - W/2, 
+
+		'margin-top': (parseFloat($('.container').css('margin-top')) + (H-oH)/2), 
+		'margin-left': (parseFloat($('.container').css('margin-left')) + (W-oW)/2)
 	})
 }
 
@@ -89,6 +95,8 @@ function getCurrentVerticalOffset(square){
 		square = $('.square.current')
 	}
 
+	var zoom = $('.container').css('zoom')
+
 	var ribbons = $('.ribbon')
 	var ribbon = square.parents('.ribbon')
 	var squares = ribbon.children('.square')
@@ -116,6 +124,8 @@ function getCurrentHorizontalOffset(square){
 	if(square == null){
 		square = $('.square.current')
 	}
+
+	var zoom = $('.container').css('zoom')
 
 	var ribbon = square.parents('.ribbon')
 	var squares = ribbon.children('.square')
@@ -179,9 +189,13 @@ function alignRibbon(square, position){
 
 // XXX need to fix animation jumping around... 
 // XXX try transition-origin instead of compensating by moving...
-function zoom(factor){
+function zoomContainerBy(factor){
 	var zoom = $('.container').css('zoom')*factor 
 
+	setContainerZoom(zoom)
+}
+
+function setContainerZoom(zoom){
 	var H = $('.meta-container').height()
 	var W = $('.meta-container').width()
 
@@ -192,6 +206,31 @@ function zoom(factor){
 		'top': H/2 * 1/zoom - H/2, 
 		'left': W/2 * 1/zoom - W/2 
 	})
+}
+
+function fitImage(){
+	var H = $('.meta-container').height()
+	var W = $('.meta-container').width()
+
+	var h = $('.square.current').height()
+	var w = $('.square.current').width()
+
+	var f = Math.min(H/h, W/w)
+
+	setContainerZoom(f)
+}
+
+function fitThreeImages(){
+	var H = $('.meta-container').height()
+	var W = $('.meta-container').width()
+
+	var h = $('.square.current').height()
+	// XXX cheating, need to get three widths...
+	var w = $('.square.current').width()*3
+
+	var f = Math.min(H/h, W/w)
+
+	setContainerZoom(f)
 }
 
 </script>
@@ -291,8 +330,11 @@ function zoom(factor){
 
 </style>
 
-Zoom: <button onclick="zoom(2)">+</button>
-<button onclick="zoom(0.5)">-</button>
+Zoom: <button onclick="zoomContainerBy(2)">+</button>
+<button onclick="zoomContainerBy(0.5)">-</button>
+<button onclick="setContainerZoom(1)">Original</button>
+<button onclick="fitImage()">Image</button>
+<button onclick="fitThreeImages()">Three</button>
 
 <br>
 Size: 
