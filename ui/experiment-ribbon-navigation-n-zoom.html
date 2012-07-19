@@ -23,6 +23,15 @@ $(document).ready(function(){
 	$('.current.square').click()
 })
 
+function toggleMarkers(){
+	var marker = $('.v-marker, .h-marker')
+	if(marker.css('display') == 'none'){
+		marker.fadeIn()
+	} else {
+		marker.fadeOut()
+	}
+}
+
 function squareClick(){
 	// set classes...
 	$('.current').removeClass('current')
@@ -339,13 +348,18 @@ function fitThreeImages(){
 
 </style>
 
-Zoom: <button onclick="zoomContainerBy(2)">+</button>
+Guides:
+<button onclick="toggleMarkers()">Toggle Guides</button>
+<br>
+
+Zoom:
+<button onclick="zoomContainerBy(2)">+</button>
 <button onclick="zoomContainerBy(0.5)">-</button>
 <button onclick="setContainerZoom(1)">Original</button>
 <button onclick="fitImage()">Image</button>
 <button onclick="fitThreeImages()">Three</button>
-
 <br>
+
 Size: 
 <button onclick="containerSize($('.meta-container').width()*1.5, $('.meta-container').height()*1.5)">+</button>
 <button onclick="containerSize($('.meta-container').width()*0.75, $('.meta-container').height()*0.75)">-</button>
