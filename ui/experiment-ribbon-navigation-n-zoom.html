@@ -17,8 +17,27 @@ Goals:
 $(document).ready(function(){
 	$('.square').click(squareClick)
 
+	containerSize(300, 200)
+
 	$('.current.square').click()
 })
+
+// XXX need to make this work for % values...
+function containerSize(W, H){
+	var oW = $('.meta-container').width()
+	var oH = $('.meta-container').height()
+
+	$('.meta-container').css({
+		'width': W,
+		'height': H
+	})
+
+	// shift the field...
+	$('.container').css({
+		'margin-top': parseFloat($('.container').css('margin-top')) + (H-oH)/2, 
+		'margin-left': parseFloat($('.container').css('margin-left')) + (W-oW)/2
+	})
+}
 
 
 function squareClick(){
@@ -33,14 +52,17 @@ function squareClick(){
 	centerSquare()
 }
 
-function centerSquare(zoom){
-	// defaults...
-	if (zoom == null){
-		zoom = $('.container').css('zoom')
+// get the vertical offset of the center of square from center of meta-container
+// NOTE: this does not account for container margins
+function getCurrentVerticalOffset(square){
+	if(square == null){
+		square = $('.square.current')
 	}
 
+	var zoom = $('.container').css('zoom')
+
 	var ribbons = $('.ribbon')
-	var ribbon = $('.ribbon.current')
+	var ribbon = square.parents('.ribbon')
 	var squares = ribbon.children('.square')
 
 	// vertical...
@@ -56,26 +78,16 @@ function centerSquare(zoom){
 	// relative position to container... 
 	// XXX is there a better way to get this?
 	var t = rn * (h - mh/2)
-	$('.container').css({
-		'margin-top': (-t + H/2 + h/2)
-	})
-
-	// horizontal...
-	alignRibbon()
+	
+	return -t + H/2 + h/2
 }
 
-function alignRibbon(square, position, zoom){
-	// default values...
-	if(position == null){
-		position = 'center'
-	}
+// get the horizontal offset of the center of square from center of meta-container
+// NOTE: this does not account for container margins
+function getCurrentHorizontalOffset(square){
 	if(square == null){
 		square = $('.square.current')
 	}
-	if (zoom == null){
-		zoom = $('.container').css('zoom')
-	}
-
 
 	var ribbon = square.parents('.ribbon')
 	var squares = ribbon.children('.square')
@@ -89,15 +101,48 @@ function alignRibbon(square, position, zoom){
 	var sn = squares.index(square) + 1
 	var l = sn * (w - mw/2)
 
+	return -l + W/2 + w/2
+}
+
+function centerSquare(){
+
+	$('.container').css({
+		'margin-top': getCurrentVerticalOffset()
+	})
+
+	// horizontal...
+	alignRibbon()
+}
+
+function alignRibbon(square, position){
+	// default values...
+	if(square == null){
+		square = $('.square.current')
+	}
+	if(position == null){
+		position = 'center'
+	}
+	// account for shifted container...
+	// NOTE: this enables us to cheat and shift all the ribbons just
+	//       by changing container margin-left...
+	var cml = parseFloat($('.container').css('margin-left'))
+	if(!cml){
+		cml = 0
+	}
+	
+	var ribbon = square.parents('.ribbon')
+	var h_offset = getCurrentHorizontalOffset(square) - cml
+	var w = $('.square').outerWidth(true)
+
 	switch(position){
 		case 'before':
-			ribbon.css({'margin-left': (-l + W/2 + w)})
+			ribbon.css({'margin-left': h_offset + w/2})
 			return true
 		case 'center':
-			ribbon.css({'margin-left': (-l + W/2 + w/2)})
+			ribbon.css({'margin-left': h_offset})
 			return true
 		case 'after':
-			ribbon.css({'margin-left': (-l + W/2)})
+			ribbon.css({'margin-left': h_offset - w/2})
 			return true
 	}
 	return false
@@ -107,20 +152,30 @@ function alignRibbon(square, position, zoom){
 // XXX try transition-origin instead of compensating by moving...
 function zoom(factor){
 	var zoom = $('.container').css('zoom')*factor 
+
 	var H = $('.meta-container').height()
 	var W = $('.meta-container').width()
 
 	$('.container').css({
 		'zoom': zoom,
+		// this only shifts to account for zoom/scale change...
+		// ...we need to factor in the position of .current within the container
 		'top': H/2 * 1/zoom - H/2, 
 		'left': W/2 * 1/zoom - W/2 
 	})
 }
 
-
 </script>
 
 <style>
+.animated {
+	-webkit-transition: all 0.5s ease;
+	-moz-transition: all 0.5s ease;
+	-o-transition: all 0.5s ease;
+	-ms-transition: all 0.5s ease;	
+	transition: all 0.5s ease;
+}
+
 .meta-container {
 	position: relative;
 	border: solid gray 5px;
@@ -128,21 +183,23 @@ function zoom(factor){
 	height: 200px;
 	overflow: hidden;
 }
+
 .h-marker {
 	position: absolute;
 	border-top: solid blue 1px;
 	height: 0px;
-	width: 300px;
-	top: 100px;
+	width: 100%;
+	top: 50%;
 	left: 0px;
 }
+
 .v-marker {
 	position: absolute;
 	border-left: solid blue 1px;
-	height: 200px;
+	height: 100%;
 	width: 0px;
 	top: 0px;
-	left: 150px;
+	left: 50%;
 }
 
 .container {
@@ -205,14 +262,19 @@ function zoom(factor){
 
 </style>
 
-<button onclick="zoom(2)">+</button>
+Zoom: <button onclick="zoom(2)">+</button>
 <button onclick="zoom(0.5)">-</button>
 
 <br>
+Size: 
+<button onclick="containerSize($('.meta-container').width()*1.5, $('.meta-container').height()*1.5)">+</button>
+<button onclick="containerSize($('.meta-container').width()*0.75, $('.meta-container').height()*0.75)">-</button>
+<button onclick="containerSize(300, 200)">300x200</button>
+<button onclick="containerSize(600, 400)">600x400</button>
 <br>
 <br>
 
-<div class="meta-container">
+<div class="meta-container animated">
 	<div class="container">
 		<div class="ribbon">
 			<div class="square">1</div>
