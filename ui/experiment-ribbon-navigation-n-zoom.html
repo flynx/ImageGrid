@@ -38,6 +38,7 @@ function centerSquare(zoom){
 	if (zoom == null){
 		zoom = $('.container').css('zoom')
 	}
+
 	var ribbons = $('.ribbon')
 	var ribbon = $('.ribbon.current')
 	var squares = ribbon.children('.square')
@@ -71,7 +72,6 @@ function alignRibbon(square, position, zoom){
 	if(square == null){
 		square = $('.square.current')
 	}
-	// defaults...
 	if (zoom == null){
 		zoom = $('.container').css('zoom')
 	}
