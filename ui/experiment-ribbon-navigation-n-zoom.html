@@ -8,6 +8,7 @@ Goals:
 	- design a simple navigation system and structure
 	- make it animate correctly only via CSS
 
+XXX zoom animation is odd...
 
 -->
 
@@ -22,30 +23,6 @@ $(document).ready(function(){
 	$('.current.square').click()
 })
 
-// XXX need to make this work for % values...
-function containerSize(W, H){
-	var oW = $('.meta-container').width()
-	var oH = $('.meta-container').height()
-
-	var zoom = $('.container').css('zoom')
-
-	$('.meta-container').css({
-		'width': W,
-		'height': H
-	})
-
-	// shift the field...
-	$('.container').css({
-		// compensate top/left that get changed while zooming....
-		'top': H/2 * 1/zoom - H/2, 
-		'left': W/2 * 1/zoom - W/2, 
-
-		'margin-top': (parseFloat($('.container').css('margin-top')) + (H-oH)/2), 
-		'margin-left': (parseFloat($('.container').css('margin-left')) + (W-oW)/2)
-	})
-}
-
-
 function squareClick(){
 	// set classes...
 	$('.current').removeClass('current')
@@ -57,6 +34,8 @@ function squareClick(){
 	// position the container and ribbons...
 	centerSquare()
 }
+
+/*********************************************************************/
 
 /*
  * The folowing two functions will get the vertical and horizontal 
@@ -186,6 +165,36 @@ function alignRibbon(square, position){
 	}
 	return false
 }
+
+
+
+/*********************************************************************/
+
+// XXX need to make this work for % values...
+function containerSize(W, H){
+	var oW = $('.meta-container').width()
+	var oH = $('.meta-container').height()
+
+	var zoom = $('.container').css('zoom')
+
+	$('.meta-container').css({
+		'width': W,
+		'height': H
+	})
+
+	// shift the field...
+	$('.container').css({
+		// compensate top/left that get changed while zooming....
+		'top': H/2 * 1/zoom - H/2, 
+		'left': W/2 * 1/zoom - W/2, 
+
+		'margin-top': (parseFloat($('.container').css('margin-top')) + (H-oH)/2), 
+		'margin-left': (parseFloat($('.container').css('margin-left')) + (W-oW)/2)
+	})
+}
+
+
+/*********************************************************************/
 
 // XXX need to fix animation jumping around... 
 // XXX try transition-origin instead of compensating by moving...
