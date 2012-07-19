@@ -52,14 +52,42 @@ function squareClick(){
 	centerSquare()
 }
 
+/*
+ * The folowing two functions will get the vertical and horizontal 
+ * distance components between the pints a and A, centers of the small
+ * and large squares respectively.
+ * One of the squares is .container and the other is .meta-container, 
+ * which is small or big is not important.
+ *
+ *      +---------------+-------+
+ *      |               |       |
+ *      |               |       |
+ *      |       + a . . | . . . | . +
+ *      |       .       |       |   +- getCurrentVerticalOffset(...)
+ *      |       .   + A | . . . | . +
+ *      +---------------+       |
+ *      |       .   .           |
+ *      |       .   .           |
+ *      |       .   .           |
+ *      +-----------------------+
+ *              .   .
+ *              +-+-+
+ *                +------------------- getCurrentHorizontalOffset(...)
+ *
+ *
+ * Adding this distance to margins of one of the sqares will effectively 
+ * allign the two points.
+ *
+ * NOTE: neither function accunts for container margins.
+ *
+ */
+
 // get the vertical offset of the center of square from center of meta-container
 // NOTE: this does not account for container margins
 function getCurrentVerticalOffset(square){
 	if(square == null){
 		square = $('.square.current')
 	}
-
-	var zoom = $('.container').css('zoom')
 
 	var ribbons = $('.ribbon')
 	var ribbon = square.parents('.ribbon')
@@ -122,15 +150,16 @@ function alignRibbon(square, position){
 	if(position == null){
 		position = 'center'
 	}
-	// account for shifted container...
+
+	var ribbon = square.parents('.ribbon')
+
+	// account for margined container...
 	// NOTE: this enables us to cheat and shift all the ribbons just
 	//       by changing container margin-left...
 	var cml = parseFloat($('.container').css('margin-left'))
 	if(!cml){
 		cml = 0
 	}
-	
-	var ribbon = square.parents('.ribbon')
 	var h_offset = getCurrentHorizontalOffset(square) - cml
 	var w = $('.square').outerWidth(true)
 
