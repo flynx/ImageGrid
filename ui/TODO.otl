@@ -30,7 +30,7 @@ Priority work
 		| 		from the left of the axis and likewise for the right side. 
 		|
 			[X] stage I: position the promoted/demoted image correctly
-			[_] 0% stage II: scroll ribbons correctly
+			[_] stage II: scroll ribbons correctly
 			| this is simple:
 			| - center the right edge of image returned
 			|   by getImageBefore in all ribbons other than current...

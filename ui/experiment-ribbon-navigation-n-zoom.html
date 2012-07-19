@@ -181,6 +181,7 @@ function zoom(factor){
 	width: 50px;
 	height: 50px;
 	background: silver;
+	color: white;
 	float: left;
 
 	/* animate */
@@ -191,8 +192,14 @@ function zoom(factor){
 	transition: all 0.5s ease;
 }
 
+.image {
+	background: no-repeat 50% black;
+	background-size: contain;
+	background-image: url(images/350px/DSC_3501.jpg);
+}
+
 .current.square {
-	background: gray;
+	background-color: gray;
 }
 
 
@@ -239,7 +246,7 @@ function zoom(factor){
 			<div class="square">2</div>
 			<div class="square">3</div>
 			<div class="square">4</div>
-			<div class="square">5</div>
+			<div class="square image">5</div>
 			<div class="square">6</div>
 			<div class="square">7</div>
 		</div>
