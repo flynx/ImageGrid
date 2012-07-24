@@ -221,18 +221,6 @@
 	-moz-transform: scale(0.2,0.2);
 }
 */
-.wide-view-mode .image {
-	width: 50px;
-	height: 50px;
-	/*
-	zoom: 10%;
-	*/
-
+.wide-view-mode .field {
 }
 
-.wide-view-mode .ribbon {
-	height: 60px;
-	/*
-	zoom: 10%;
-	*/
-}

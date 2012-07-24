@@ -245,13 +245,17 @@ function toggleRibbonView(){
 
 // wide view mode toggle...
 // XXX replace this with adequate zooming...
-// XXX need to reposition the whole thing correctly...
+// XXX broken...
 function toggleWideView(){
 	if($('.wide-view-mode').length > 0){
-		unsetViewerMode('wide-view-mode')
+		setContainerZoom(0.1)
+		//$('.viewer').addClass('wide-view-more')
+		//unsetViewerMode('wide-view-mode')
 	} else {
-		unsetViewerMode('single-image-mode')
-		setViewerMode('wide-view-mode')
+		setContainerZoom(1)
+		//$('.viewer').removeClass('wide-view-more')
+		//unsetViewerMode('single-image-mode')
+		//setViewerMode('wide-view-mode')
 	}
 }
 
