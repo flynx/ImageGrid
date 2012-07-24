@@ -16,9 +16,36 @@
 <script src="images.js"></script>
 <script src="gallery-prototype.js"></script>
 
+<script src="ui.js"></script>
+
 <!--script src="gallery.js"></script-->
 
 <script>
+
+
+function setup(){
+	// XXX load state...
+	// initial state (default)...
+	setDefaultInitialState()
+
+	// setup event handlers...
+	setupKeyboard()
+	setupGestures()
+	setupControlElements()
+
+	// load images...
+	// XXX not allowed...
+	//$.getJSON('images.js', loadImages})
+	// XXX STUB
+	loadImages(image_list)
+
+	// set the default position and init...
+	$('.current.image').click()
+}
+$(document).ready(setup);
+
+
+
 </script>
 
 <style>

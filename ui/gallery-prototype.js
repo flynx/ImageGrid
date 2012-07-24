@@ -1,42 +1,12 @@
 // XXX need a uniform way to address images (filename?)
 
-// XXX move this into the actual html...
-$(document).ready(setup);
-
-
-
-
-
-/************************************************************ Setup **/
-
-function setup(){
-	// XXX load state...
-	// initial state (default)...
-	setDefaultInitialState()
-
-	// setup event handlers...
-	setupKeyboard()
-	setupGestures()
-	setupControlElements()
-
-	// load images...
-	// XXX not allowed...
-	//$.getJSON('images.js', loadImages})
-	// XXX STUB
-	loadImages(image_list)
-
-	// set the default position and init...
-	$('.current-image').click()
-}
-
-
 
 function setDefaultInitialState(){
-	if($('.current-ribbon').length == 0){
-		$('.ribbon').first().addClass('current-ribbon')
+	if($('.current.ribbon').length == 0){
+		$('.ribbon').first().addClass('current')
 	}
-	if($('.current-image').length == 0){
-		$('.current-ribbon').children('.image').first().addClass('current-image')
+	if($('.current.image').length == 0){
+		$('.current.ribbon').children('.image').first().addClass('current')
 	}
 }
 
@@ -115,14 +85,14 @@ function handleImageClick(e) {
 	var cur = $(this)
 
 	// switch classes...
-	cur.parents().siblings().children(".image").removeClass("current-image")
-	cur.siblings(".image").removeClass("current-image")
+	cur.parents().siblings().children(".image").removeClass("current")
+	cur.siblings(".image").removeClass("current")
 
-	cur.siblings().children(".image").removeClass("current-image")
-	cur.parents().siblings(".ribbon").removeClass("current-ribbon")
+	cur.siblings().children(".image").removeClass("current")
+	cur.parents().siblings(".ribbon").removeClass("current")
 
-	cur.addClass("current-image")
-	cur.parents(".ribbon").addClass("current-ribbon")
+	cur.addClass("current")
+	cur.parents(".ribbon").addClass("current")
 
 
 	var container = cur.parents('.container')
@@ -226,7 +196,7 @@ function unsetViewerMode(mode){
 		.removeClass(mode)
 			// animation...
 			.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
-				$('.current-image').click()
+				$('.current.image').click()
 				return true
 			});
 }
@@ -235,7 +205,7 @@ function setViewerMode(mode){
 		.addClass(mode)
 			// animation...
 			.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
-				$('.current-image').click()
+				$('.current.image').click()
 				return true
 			});
 }
@@ -272,23 +242,23 @@ function toggleWideView(){
 
 // basic navigation...
 function firstImage(){
-	$('.current-ribbon').children('.image').first().click()
+	$('.current.ribbon').children('.image').first().click()
 }
 function prevImage(){
-	$('.current-image').prev('.image').click()
+	$('.current.image').prev('.image').click()
 }
 function nextImage(){
-	$('.current-image').next('.image').click()
+	$('.current.image').next('.image').click()
 }
 function lastImage(){
-	$('.current-ribbon').children('.image').last().click()
+	$('.current.ribbon').children('.image').last().click()
 }
 
 // XXX for the above two functions to be stable we will need to jump up 
 // 		to the next and down to the prev element...
 function focusRibbon(direction){
-	var id = $('.current-image').attr('id')
-	var prev = getImageBefore(id, $('.current-ribbon')[direction]('.ribbon'))
+	var id = $('.current.image').attr('id')
+	var prev = getImageBefore(id, $('.current.ribbon')[direction]('.ribbon'))
 	if(prev){
 		var next = prev.next()
 		// NOTE: direction is accounted for to make the up/down shifts 
@@ -299,7 +269,7 @@ function focusRibbon(direction){
 			next.click()
 		}
 	} else {
-		$('.current-ribbon')[direction]('.ribbon').children('.image').first().click()
+		$('.current.ribbon')[direction]('.ribbon').children('.image').first().click()
 	}
 }
 function focusAboveRibbon(){
@@ -366,7 +336,7 @@ function createRibbon(direction){
 		return false
 	}
 
-	var res = $('<div class="new-ribbon"></div>')[insert]('.current-ribbon')
+	var res = $('<div class="new-ribbon"></div>')[insert]('.current.ribbon')
 		// HACK: without this, the class change below will not animate...
 		.show()
 		.addClass('ribbon')
@@ -376,7 +346,7 @@ function createRibbon(direction){
 	/*
 	if(direction == 'prev'){
 		$('.field').css({
-			top: $('.field').position().top - $('.current-ribbon').outerHeight()
+			top: $('.field').position().top - $('.current.ribbon').outerHeight()
 		})
 	}*/
 	return res
@@ -386,15 +356,15 @@ function createRibbon(direction){
 
 // XXX sort elements correctly...
 function mergeRibbons(direction){
-	$('.current-ribbon')[direction]('.ribbon')
+	$('.current.ribbon')[direction]('.ribbon')
 			.children()
 				.detach()
-				.insertAfter('.current-image')
+				.insertAfter('.current.image')
 	// animate...
-	$('.current-ribbon')[direction]('.ribbon')
+	$('.current.ribbon')[direction]('.ribbon')
 			.slideUp(function(){
 				$(this).remove()
-				$('.current-image').click()
+				$('.current.image').click()
 			})
 }
 
@@ -404,20 +374,20 @@ function mergeRibbons(direction){
 
 // now the actual modifiers...
 function shiftImage(direction){
-	if($('.current-ribbon')[direction]('.ribbon').length == 0){
+	if($('.current.ribbon')[direction]('.ribbon').length == 0){
 		createRibbon(direction)
 	}
 
 	// get previous element after which we need to put the current...
 	var prev_elem = getImageBefore(
-					$('.current-image').attr('id'), 
-					$('.current-ribbon')[direction]('.ribbon'))
+					$('.current.image').attr('id'), 
+					$('.current.ribbon')[direction]('.ribbon'))
 
 	// last image in ribbon, merge...
-	if($('.current-ribbon').children('.image').length == 1){
+	if($('.current.ribbon').children('.image').length == 1){
 		mergeRibbons(direction)
 	} else {
-		img = $('.current-image')
+		img = $('.current.image')
 		if(img.next('.image').length == 0){
 			prevImage()
 		} else {
@@ -433,12 +403,12 @@ function shiftImage(direction){
 			// empty ribbon or fisrt element...
 			img
 				.detach()
-				.prependTo($('.current-ribbon')[direction]('.ribbon'))
+				.prependTo($('.current.ribbon')[direction]('.ribbon'))
 		}
 
 	}
 	// XXX this has to know aout animations...
-	$('.current-image').click()
+	$('.current.image').click()
 }
 
 

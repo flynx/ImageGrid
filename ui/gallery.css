@@ -93,8 +93,10 @@
 }
 
 .container {
-	float: left;
+	position: relative;
 	overflow: hidden;
+
+	float: left;
 	width: 800px;
 	height: 500px;
 
@@ -145,11 +147,11 @@
 	transition: all 0.2s ease;
 }
 
-.current-image {
+.current.image {
 	opacity: 1.0;
 }
 
-.current-ribbon {
+.current.ribbon {
 	padding-top: 20px;
 	padding-bottom: 20px;
 
@@ -162,7 +164,7 @@
 	transition: all 0.2s ease;
 }
 
-.current-ribbon .image {
+.current.ribbon .image {
 }
 
 
@@ -191,7 +193,7 @@
 	left: 0px;
 }
 
-.single-image-mode .current-image:hover, .single-image-mode .current-image {
+.single-image-mode .current.image:hover, .single-image-mode .current.image {
 	opacity: 1.0;
 	/* XXX need to fix animation with this... */
 	position: absolute;
