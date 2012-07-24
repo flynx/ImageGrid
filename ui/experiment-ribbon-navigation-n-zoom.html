@@ -18,11 +18,11 @@ XXX zoom animation is odd...
 <script>
 
 $(document).ready(function(){
-	$('.square').click(squareClick)
+	$('.image').click(imageClick)
 
 	fieldSize(300, 200)
 
-	$('.current.square').click()
+	$('.current.image').click()
 })
 
 function toggleMarkers(){
@@ -34,7 +34,7 @@ function toggleMarkers(){
 	}
 }
 
-function squareClick(){
+function imageClick(){
 	// set classes...
 	$('.current').removeClass('current')
 	$(this)
@@ -115,7 +115,7 @@ function squareClick(){
 	transition: all 0.5s ease;
 }
 
-.square {
+.image {
 	width: 50px;
 	height: 50px;
 	background: silver;
@@ -130,13 +130,13 @@ function squareClick(){
 	transition: all 0.5s ease;
 }
 
-.image {
+.pic {
 	background: no-repeat 50% black;
 	background-size: contain;
 	background-image: url(images/350px/DSC_3501.jpg);
 }
 
-.current.square {
+.current.image {
 	background-color: gray;
 }
 
@@ -166,76 +166,76 @@ Size:
 <div class="container animated">
 	<div class="field">
 		<div class="ribbon">
-			<div class="square">1</div>
-			<div class="square">2</div>
-			<div class="square">3</div>
-			<div class="square">4</div>
-			<div class="square">5</div>
-			<div class="square">6</div>
-			<div class="square">7</div>
+			<div class="image">1</div>
+			<div class="image">2</div>
+			<div class="image">3</div>
+			<div class="image">4</div>
+			<div class="image">5</div>
+			<div class="image">6</div>
+			<div class="image">7</div>
 		</div>
 		<div class="ribbon" style="margin-left: 40px;">
-			<div class="square">1</div>
-			<div class="square">2</div>
-			<div class="square">3</div>
-			<div class="square">4</div>
-			<div class="square">5</div>
-			<div class="square">6</div>
-			<div class="square">7</div>
+			<div class="image">1</div>
+			<div class="image">2</div>
+			<div class="image">3</div>
+			<div class="image">4</div>
+			<div class="image">5</div>
+			<div class="image">6</div>
+			<div class="image">7</div>
 		</div>
 		<div class="ribbon current">
-			<div class="square">1</div>
-			<div class="square">2</div>
-			<div class="square current">3</div>
-			<div class="square">4</div>
-			<div class="square">5</div>
-			<div class="square">6</div>
-			<div class="square">7</div>
+			<div class="image">1</div>
+			<div class="image">2</div>
+			<div class="image current">3</div>
+			<div class="image">4</div>
+			<div class="image">5</div>
+			<div class="image">6</div>
+			<div class="image">7</div>
 		</div>
 		<div class="ribbon" style="margin-left: -100px;">
-			<div class="square">1</div>
-			<div class="square">2</div>
-			<div class="square">3</div>
-			<div class="square">4</div>
-			<div class="square image">5</div>
-			<div class="square">6</div>
-			<div class="square">7</div>
+			<div class="image">1</div>
+			<div class="image">2</div>
+			<div class="image">3</div>
+			<div class="image">4</div>
+			<div class="image pic">5</div>
+			<div class="image">6</div>
+			<div class="image">7</div>
 		</div>
 		<div class="ribbon">
-			<div class="square">1</div>
-			<div class="square">2</div>
-			<div class="square">3</div>
-			<div class="square">4</div>
-			<div class="square">5</div>
-			<div class="square">6</div>
-			<div class="square">7</div>
+			<div class="image">1</div>
+			<div class="image">2</div>
+			<div class="image">3</div>
+			<div class="image">4</div>
+			<div class="image">5</div>
+			<div class="image">6</div>
+			<div class="image">7</div>
 		</div>
 		<div class="ribbon">
-			<div class="square">1</div>
-			<div class="square">2</div>
-			<div class="square">3</div>
-			<div class="square">4</div>
-			<div class="square">5</div>
-			<div class="square">6</div>
-			<div class="square">7</div>
+			<div class="image">1</div>
+			<div class="image">2</div>
+			<div class="image">3</div>
+			<div class="image">4</div>
+			<div class="image">5</div>
+			<div class="image">6</div>
+			<div class="image">7</div>
 		</div>
 		<div class="ribbon">
-			<div class="square">1</div>
-			<div class="square">2</div>
-			<div class="square">3</div>
-			<div class="square">4</div>
-			<div class="square">5</div>
-			<div class="square">6</div>
-			<div class="square">7</div>
+			<div class="image">1</div>
+			<div class="image">2</div>
+			<div class="image">3</div>
+			<div class="image">4</div>
+			<div class="image">5</div>
+			<div class="image">6</div>
+			<div class="image">7</div>
 		</div>
 		<div class="ribbon">
-			<div class="square">1</div>
-			<div class="square">2</div>
-			<div class="square">3</div>
-			<div class="square">4</div>
-			<div class="square">5</div>
-			<div class="square">6</div>
-			<div class="square">7</div>
+			<div class="image">1</div>
+			<div class="image">2</div>
+			<div class="image">3</div>
+			<div class="image">4</div>
+			<div class="image">5</div>
+			<div class="image">6</div>
+			<div class="image">7</div>
 		</div>
 	</div>
 	<div class="h-marker"></div>

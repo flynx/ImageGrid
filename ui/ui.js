@@ -32,16 +32,16 @@
 
 // get the vertical offset of the center of square from center of container
 // NOTE: this does not account for field margins
-function getCurrentVerticalOffset(square){
-	if(square == null){
-		square = $('.square.current')
+function getCurrentVerticalOffset(image){
+	if(image == null){
+		image = $('.image.current')
 	}
 
 	var zoom = $('.field').css('zoom')
 
 	var ribbons = $('.ribbon')
-	var ribbon = square.parents('.ribbon')
-	var squares = ribbon.children('.square')
+	var ribbon = image.parents('.ribbon')
+	var images = ribbon.children('.image')
 
 	// vertical...
 	var H = $('.container').height()
@@ -62,23 +62,23 @@ function getCurrentVerticalOffset(square){
 
 // get the horizontal offset of the center of square from center of container
 // NOTE: this does not account for field margins
-function getCurrentHorizontalOffset(square){
-	if(square == null){
-		square = $('.square.current')
+function getCurrentHorizontalOffset(image){
+	if(image == null){
+		image = $('.image.current')
 	}
 
 	var zoom = $('.field').css('zoom')
 
-	var ribbon = square.parents('.ribbon')
-	var squares = ribbon.children('.square')
+	var ribbon = image.parents('.ribbon')
+	var images = ribbon.children('.image')
 
 	var W = $('.container').width()
-	var w = squares.outerWidth(true)
+	var w = images.outerWidth(true)
 	// margin...
 	// XXX do we need this?
-	var mw = w - squares.outerWidth()
+	var mw = w - images.outerWidth()
 	// current square position (1-based)
-	var sn = squares.index(square) + 1
+	var sn = images.index(image) + 1
 	var l = sn * (w - mw/2)
 
 	return -l + W/2 + w/2
@@ -94,16 +94,16 @@ function centerSquare(){
 	alignRibbon()
 }
 
-function alignRibbon(square, position){
+function alignRibbon(image, position){
 	// default values...
-	if(square == null){
-		square = $('.square.current')
+	if(image == null){
+		image = $('.image.current')
 	}
 	if(position == null){
 		position = 'center'
 	}
 
-	var ribbon = square.parents('.ribbon')
+	var ribbon = image.parents('.ribbon')
 
 	// account for margined field...
 	// NOTE: this enables us to cheat and shift all the ribbons just
@@ -112,8 +112,8 @@ function alignRibbon(square, position){
 	if(!cml){
 		cml = 0
 	}
-	var h_offset = getCurrentHorizontalOffset(square) - cml
-	var w = $('.square').outerWidth(true)
+	var h_offset = getCurrentHorizontalOffset(image) - cml
+	var w = $('.image').outerWidth(true)
 
 	switch(position){
 		case 'before':
@@ -185,8 +185,8 @@ function fitImage(){
 	var H = $('.container').height()
 	var W = $('.container').width()
 
-	var h = $('.square.current').height()
-	var w = $('.square.current').width()
+	var h = $('.image.current').height()
+	var w = $('.image.current').width()
 
 	var f = Math.min(H/h, W/w)
 
@@ -197,9 +197,9 @@ function fitThreeImages(){
 	var H = $('.container').height()
 	var W = $('.container').width()
 
-	var h = $('.square.current').height()
+	var h = $('.image.current').height()
 	// XXX cheating, need to get three widths...
-	var w = $('.square.current').width()*3
+	var w = $('.image.current').width()*3
 
 	var f = Math.min(H/h, W/w)
 

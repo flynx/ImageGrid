@@ -46,7 +46,7 @@ function setupGestures(){
 
 function setupControlElements(){
 	// images...
-	$(".image").click(handleImageClick)
+	$(".image").click(setCurrentImage)
 
 	// buttons...
 	$('.next-image').click(nextImage)
@@ -70,7 +70,7 @@ function loadImages(json){
 			.css({ 'background-image': 'url('+images[i]+')' })
 			// set a unique id for each image...
 			.attr({'id': i})
-			.click(handleImageClick)
+			.click(setCurrentImage)
 			.appendTo(ribbon)
 	}
 	ribbon.children().first().click()
@@ -80,7 +80,22 @@ function loadImages(json){
 
 
 /*************************************************** Event Handlers **/
+function setCurrentImage(){
+	// set classes...
+	$('.current').removeClass('current')
+	$(this)
+		.addClass('current')
+		.parents('.ribbon')
+			.addClass('current')
 
+	// position the field and ribbons...
+	centerSquare()
+}
+
+
+
+// XXX depricated...
+/*
 function handleImageClick(e) {
 	var cur = $(this)
 
@@ -111,6 +126,7 @@ function handleImageClick(e) {
 	// XXX do I need this???
 	e.preventDefault();
 }
+*/
 
 
 

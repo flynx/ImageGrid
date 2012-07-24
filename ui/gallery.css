@@ -1,10 +1,14 @@
 .image {
+	/* new markup... */
+	float: left;
+	/* old markup...
 	position: relative;
+	display: inline-block;
+	 */
 
 	width: 350px;
 	height: 350px;
 
-	display: inline-block;
 	background: no-repeat 50% black;
 	background-size: contain;
 
@@ -110,8 +114,11 @@
 .field {
 	position: relative;
 	overflow: visible;
+	/* XXX replace this with transform:scale(...) */
+	zoom: 1;
 	top: 0px;
-	left: -100px;
+	left: 0px;
+	margin-top: 0px;
 
 	-webkit-transition: all 0.2s ease;
 	-moz-transition: all 0.2s ease;
@@ -127,7 +134,7 @@
 	overflow: visible;
 	padding-top: 2px;
 	padding-bottom: 2px;
-	text-align: center;
+	/*text-align: center;*/
 	opacity: 0.2;
 
 	-webkit-transition: all 0.2s ease;
@@ -152,8 +159,10 @@
 }
 
 .current.ribbon {
+	/*
 	padding-top: 20px;
 	padding-bottom: 20px;
+	*/
 
 	opacity: 1.0;
 
