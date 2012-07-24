@@ -3,6 +3,7 @@
 -->
 
 <link rel="stylesheet" href="gallery.css">
+<link rel="stylesheet" href="markers.css">
 <script src="jquery.js"></script>
 
 <script src="jquery.touchSwipe.js"></script>
@@ -17,6 +18,7 @@
 <script src="gallery-prototype.js"></script>
 
 <script src="ui.js"></script>
+<script src="markers.js"></script>
 
 <!--script src="gallery.js"></script-->
 
@@ -69,6 +71,8 @@ $(document).ready(setup);
 				<div class="image mock-image"></div-->
 			</div>
 		</div>
+		<div class="h-marker"></div>
+		<div class="v-marker"></div>
 	</div>
 	<div class="controller">
 		<div class="demote">^</div>
@@ -79,6 +83,9 @@ $(document).ready(setup);
 </div>
 
 <div class="demo-buttons">
+	<button onclick="toggleMarkers()">Toggle Guides</button>
+
+	<br><br>
 
 	<button onclick="firstImage()">first (home)</button>
 	<button onclick="prevImage()">prev (left)</button>

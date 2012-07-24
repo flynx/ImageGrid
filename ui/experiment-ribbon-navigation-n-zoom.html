@@ -12,7 +12,10 @@ XXX zoom animation is odd...
 
 -->
 
+<link rel="stylesheet" href="markers.css">
+
 <script src="jquery.js"></script>
+<script src="markers.js"></script>
 <script src="ui.js"></script>
 
 <script>
@@ -24,15 +27,6 @@ $(document).ready(function(){
 
 	$('.current.image').click()
 })
-
-function toggleMarkers(){
-	var marker = $('.v-marker, .h-marker')
-	if(marker.css('display') == 'none'){
-		marker.fadeIn()
-	} else {
-		marker.fadeOut()
-	}
-}
 
 function imageClick(){
 	// set classes...
@@ -63,24 +57,6 @@ function imageClick(){
 	width: 300px;
 	height: 200px;
 	overflow: hidden;
-}
-
-.h-marker {
-	position: absolute;
-	border-top: solid blue 1px;
-	height: 0px;
-	width: 100%;
-	top: 50%;
-	left: 0px;
-}
-
-.v-marker {
-	position: absolute;
-	border-left: solid blue 1px;
-	height: 100%;
-	width: 0px;
-	top: 0px;
-	left: 50%;
 }
 
 .field {
