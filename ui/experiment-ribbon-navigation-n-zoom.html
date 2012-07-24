@@ -18,7 +18,7 @@ XXX zoom animation is odd...
 $(document).ready(function(){
 	$('.square').click(squareClick)
 
-	containerSize(300, 200)
+	fieldSize(300, 200)
 
 	$('.current.square').click()
 })
@@ -40,7 +40,7 @@ function squareClick(){
 		.parents('.ribbon')
 			.addClass('current')
 
-	// position the container and ribbons...
+	// position the field and ribbons...
 	centerSquare()
 }
 
@@ -50,7 +50,7 @@ function squareClick(){
  * The folowing two functions will get the vertical and horizontal 
  * distance components between the pints a and A, centers of the small
  * and large squares respectively.
- * One of the squares is .container and the other is .meta-container, 
+ * One of the squares is .field and the other is .container, 
  * which is small or big is not important.
  *
  *      +---------------+-------+
@@ -72,25 +72,25 @@ function squareClick(){
  * Adding this distance to margins of one of the sqares will effectively 
  * allign the two points.
  *
- * NOTE: neither function accunts for container margins.
+ * NOTE: neither function accunts for field margins.
  *
  */
 
-// get the vertical offset of the center of square from center of meta-container
-// NOTE: this does not account for container margins
+// get the vertical offset of the center of square from center of container
+// NOTE: this does not account for field margins
 function getCurrentVerticalOffset(square){
 	if(square == null){
 		square = $('.square.current')
 	}
 
-	var zoom = $('.container').css('zoom')
+	var zoom = $('.field').css('zoom')
 
 	var ribbons = $('.ribbon')
 	var ribbon = square.parents('.ribbon')
 	var squares = ribbon.children('.square')
 
 	// vertical...
-	var H = $('.meta-container').height()
+	var H = $('.container').height()
 	var h = ribbons.outerHeight(true)
 	// margin...
 	var mh = h - ribbons.outerHeight()
@@ -99,26 +99,26 @@ function getCurrentVerticalOffset(square){
 	// XXX compensating for margin error buildup... really odd!
 	//	...why is this still different for the first three ribbons?!
 	//		....sub-pixel error?
-	// relative position to container... 
+	// relative position to field... 
 	// XXX is there a better way to get this?
 	var t = rn * (h - mh/2)
 	
 	return -t + H/2 + h/2
 }
 
-// get the horizontal offset of the center of square from center of meta-container
-// NOTE: this does not account for container margins
+// get the horizontal offset of the center of square from center of container
+// NOTE: this does not account for field margins
 function getCurrentHorizontalOffset(square){
 	if(square == null){
 		square = $('.square.current')
 	}
 
-	var zoom = $('.container').css('zoom')
+	var zoom = $('.field').css('zoom')
 
 	var ribbon = square.parents('.ribbon')
 	var squares = ribbon.children('.square')
 
-	var W = $('.meta-container').width()
+	var W = $('.container').width()
 	var w = squares.outerWidth(true)
 	// margin...
 	// XXX do we need this?
@@ -132,7 +132,7 @@ function getCurrentHorizontalOffset(square){
 
 function centerSquare(){
 
-	$('.container').css({
+	$('.field').css({
 		'margin-top': getCurrentVerticalOffset()
 	})
 
@@ -151,10 +151,10 @@ function alignRibbon(square, position){
 
 	var ribbon = square.parents('.ribbon')
 
-	// account for margined container...
+	// account for margined field...
 	// NOTE: this enables us to cheat and shift all the ribbons just
-	//       by changing container margin-left...
-	var cml = parseFloat($('.container').css('margin-left'))
+	//       by changing field margin-left...
+	var cml = parseFloat($('.field').css('margin-left'))
 	if(!cml){
 		cml = 0
 	}
@@ -180,25 +180,26 @@ function alignRibbon(square, position){
 /*********************************************************************/
 
 // XXX need to make this work for % values...
-function containerSize(W, H){
-	var oW = $('.meta-container').width()
-	var oH = $('.meta-container').height()
+// XXX make this usable as an event handler for .resize(...) event...
+function fieldSize(W, H){
+	var oW = $('.container').width()
+	var oH = $('.container').height()
 
-	var zoom = $('.container').css('zoom')
+	var zoom = $('.field').css('zoom')
 
-	$('.meta-container').css({
+	$('.container').css({
 		'width': W,
 		'height': H
 	})
 
 	// shift the field...
-	$('.container').css({
+	$('.field').css({
 		// compensate top/left that get changed while zooming....
 		'top': H/2 * 1/zoom - H/2, 
 		'left': W/2 * 1/zoom - W/2, 
 
-		'margin-top': (parseFloat($('.container').css('margin-top')) + (H-oH)/2), 
-		'margin-left': (parseFloat($('.container').css('margin-left')) + (W-oW)/2)
+		'margin-top': (parseFloat($('.field').css('margin-top')) + (H-oH)/2), 
+		'margin-left': (parseFloat($('.field').css('margin-left')) + (W-oW)/2)
 	})
 }
 
@@ -208,27 +209,27 @@ function containerSize(W, H){
 // XXX need to fix animation jumping around... 
 // XXX try transition-origin instead of compensating by moving...
 function zoomContainerBy(factor){
-	var zoom = $('.container').css('zoom')*factor 
+	var zoom = $('.field').css('zoom')*factor 
 
 	setContainerZoom(zoom)
 }
 
 function setContainerZoom(zoom){
-	var H = $('.meta-container').height()
-	var W = $('.meta-container').width()
+	var H = $('.container').height()
+	var W = $('.container').width()
 
-	$('.container').css({
+	$('.field').css({
 		'zoom': zoom,
 		// this only shifts to account for zoom/scale change...
-		// ...we need to factor in the position of .current within the container
+		// ...we need to factor in the position of .current within the field
 		'top': H/2 * 1/zoom - H/2, 
 		'left': W/2 * 1/zoom - W/2 
 	})
 }
 
 function fitImage(){
-	var H = $('.meta-container').height()
-	var W = $('.meta-container').width()
+	var H = $('.container').height()
+	var W = $('.container').width()
 
 	var h = $('.square.current').height()
 	var w = $('.square.current').width()
@@ -239,8 +240,8 @@ function fitImage(){
 }
 
 function fitThreeImages(){
-	var H = $('.meta-container').height()
-	var W = $('.meta-container').width()
+	var H = $('.container').height()
+	var W = $('.container').width()
 
 	var h = $('.square.current').height()
 	// XXX cheating, need to get three widths...
@@ -262,7 +263,7 @@ function fitThreeImages(){
 	transition: all 0.5s ease;
 }
 
-.meta-container {
+.container {
 	position: relative;
 	border: solid gray 5px;
 	width: 300px;
@@ -288,7 +289,7 @@ function fitThreeImages(){
 	left: 50%;
 }
 
-.container {
+.field {
 	position: relative;
 	top: 0px;
 	left: 0px;
@@ -361,15 +362,15 @@ Zoom:
 <br>
 
 Size: 
-<button onclick="containerSize($('.meta-container').width()*1.5, $('.meta-container').height()*1.5)">+</button>
-<button onclick="containerSize($('.meta-container').width()*0.75, $('.meta-container').height()*0.75)">-</button>
-<button onclick="containerSize(300, 200)">300x200</button>
-<button onclick="containerSize(600, 400)">600x400</button>
+<button onclick="fieldSize($('.container').width()*1.5, $('.container').height()*1.5)">+</button>
+<button onclick="fieldSize($('.container').width()*0.75, $('.container').height()*0.75)">-</button>
+<button onclick="fieldSize(300, 200)">300x200</button>
+<button onclick="fieldSize(600, 400)">600x400</button>
 <br>
 <br>
 
-<div class="meta-container animated">
-	<div class="container">
+<div class="container animated">
+	<div class="field">
 		<div class="ribbon">
 			<div class="square">1</div>
 			<div class="square">2</div>
