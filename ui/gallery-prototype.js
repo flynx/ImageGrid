@@ -54,6 +54,7 @@ function setupControlElements(){
 	$('.demote').click(shiftImageUp)
 	$('.promote').click(shiftImageDown)
 	$('.toggle-wide').click(toggleWideView)
+	// XXX need to update this to real zooming...
 	$('.toggle-single').click(toggleRibbonView)
 }
 
@@ -90,6 +91,9 @@ function setCurrentImage(){
 
 	// position the field and ribbons...
 	centerSquare()
+
+	// center other ribbons relative to current image...
+	// XXX
 }
 
 

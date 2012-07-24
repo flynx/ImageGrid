@@ -85,11 +85,19 @@ $(document).ready(setup);
 	<button onclick="nextImage()">next (right)</button>
 	<button onclick="lastImage()">last (end)</button>
 
-	<br><br>
-
+	<!--br><br>
+	LEGACY:
 	<button onclick="showSingle()">single</button>
 	<button onclick="showRibbon()">ribbon</button>
 	<button onclick="toggleRibbonView()">toggle ribbon view (f)</button>
+
+	<br><br-->
+
+	<button onclick="zoomContainerBy(2)">Zoom in</button>
+	<button onclick="zoomContainerBy(0.5)">Zoom out</button>
+	<button onclick="setContainerZoom(1)">Original</button>
+	<button onclick="fitImage()">Image</button>
+	<button onclick="fitThreeImages()">Three</button>
 
 	<br><br>
 
