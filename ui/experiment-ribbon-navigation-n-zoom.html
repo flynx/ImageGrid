@@ -51,6 +51,31 @@ function imageClick(){
 	transition: all 0.5s ease;
 }
 
+.origin-marker {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 5px;
+	height: 5px;
+
+	border-top: solid blue 1px;
+	border-left: solid blue 1px;
+
+	z-index: 9999;
+}
+.origin-marker-2 {
+	position: relative;
+	top: -6px;
+	left: -6px;
+	width: 5px;
+	height: 5px;
+
+	border-bottom: solid blue 1px;
+	border-right: solid blue 1px;
+
+	z-index: 9999;
+}
+
 .container {
 	position: relative;
 	border: solid gray 5px;
@@ -73,7 +98,11 @@ function imageClick(){
 	-ms-transition: all 0.5s ease;	
 	transition: all 0.5s ease;
 
-	zoom: 1;
+	-webkit-transform: scale(1, 1);
+	-moz-transform: scale(1, 1);
+	-o-transform: scale(1, 1);
+	-ms-transform: scale(1, 1);
+	transform: scale(1, 1);
 }
 
 .ribbon {
@@ -141,6 +170,10 @@ Size:
 
 <div class="container animated">
 	<div class="field">
+		<div class="origin-marker animated">
+			<div class="origin-marker-2">
+			</div>
+		</div>
 		<div class="ribbon">
 			<div class="image">1</div>
 			<div class="image">2</div>

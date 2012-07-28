@@ -37,7 +37,8 @@ function getCurrentVerticalOffset(image){
 		image = $('.image.current')
 	}
 
-	var zoom = $('.field').css('zoom')
+	//var zoom = $('.field').css('zoom')
+	var zoom = getElementScale($('.field'))
 
 	var ribbons = $('.ribbon')
 	var ribbon = image.parents('.ribbon')
@@ -67,7 +68,8 @@ function getCurrentHorizontalOffset(image){
 		image = $('.image.current')
 	}
 
-	var zoom = $('.field').css('zoom')
+	//var zoom = $('.field').css('zoom')
+	var zoom = getElementScale($('.field'))
 
 	var ribbon = image.parents('.ribbon')
 	var images = ribbon.children('.image')
@@ -92,6 +94,8 @@ function centerSquare(){
 
 	// horizontal...
 	alignRibbon()
+
+	centerOrigin()
 }
 
 function alignRibbon(image, position){
@@ -129,6 +133,42 @@ function alignRibbon(image, position){
 	return false
 }
 
+/* Set the transform-origin to the center of the current view...
+ */
+// XXX this appears to be wrong....
+function centerOrigin(){
+	var mt = parseFloat($('.field').css('margin-top'))
+	var ml = parseFloat($('.field').css('margin-left'))
+	var cml = parseFloat($('.current.ribbon').css('margin-left'))
+
+	var t = parseFloat($('.field').css('top'))
+	var l = parseFloat($('.field').css('left'))
+	var w = $('.field').width()
+	var h = $('.field').height()
+	var W = $('.container').width()
+	var H = $('.container').height()
+
+	//var ot = mt + H/2 + t
+	//var ol = ml + W/2 + l
+	
+	var ot = -getCurrentVerticalOffset() + H/2 - t
+	var ol = -ml + W/2 - l
+
+	$('.field').css({
+		'transform-origin': ol + 'px ' + ot + 'px',
+		'-o-transform-origin': ol + 'px ' + ot + 'px',
+		'-moz-transform-origin': ol + 'px ' + ot + 'px',
+		'-webkit-transform-origin': ol + 'px ' + ot + 'px',
+		'-ms-transform-origin': ol + 'px ' + ot + 'px'
+	})
+
+	// XXX for debugging...
+	$('.origin-marker').css({
+		'top': ot,
+		'left': ol
+	})
+}
+
 
 
 /*********************************************************************/
@@ -139,7 +179,8 @@ function fieldSize(W, H){
 	var oW = $('.container').width()
 	var oH = $('.container').height()
 
-	var zoom = $('.field').css('zoom')
+	//var zoom = $('.field').css('zoom')
+	var zoom = getElementScale($('.field'))
 
 	$('.container').css({
 		'width': W,
@@ -160,10 +201,27 @@ function fieldSize(W, H){
 
 /*********************************************************************/
 
-// XXX need to fix animation jumping around... 
-// XXX try transition-origin instead of compensating by moving...
+// NOTE: this will only return a single scale/zoom value...
+function getElementScale(elem){
+	var zoom = elem.css('zoom')
+	var transform = elem.css('transform')
+	var res
+
+	// get the scale value...
+	if( (/scale\(/).test(transform) ){
+		res = (/scale\((.*),.*\)/).exec(transform)[1]
+	} else {
+		res = zoom
+	}
+	return res
+}
+// XXX
+function setElementScale(elem, scale){
+}
+
+// XXX this appears to be broken -- for some reason the current scale does not change...
 function zoomContainerBy(factor){
-	var zoom = $('.field').css('zoom')*factor 
+	var zoom = getElementScale($('.field'))*factor 
 
 	setContainerZoom(zoom)
 }
@@ -173,11 +231,11 @@ function setContainerZoom(zoom){
 	var W = $('.container').width()
 
 	$('.field').css({
-		'zoom': zoom,
-		// this only shifts to account for zoom/scale change...
-		// ...we need to factor in the position of .current within the field
-		'top': H/2 * 1/zoom - H/2, 
-		'left': W/2 * 1/zoom - W/2 
+		'transform': 'scale('+zoom+', '+zoom+')',
+		'-moz-transform': 'scale('+zoom+', '+zoom+')',
+		'-o-transform': 'scale('+zoom+', '+zoom+')',
+		'-ms-transform': 'scale('+zoom+', '+zoom+')',
+		'-webkit-transform': 'scale('+zoom+', '+zoom+')',
 	})
 }
 
