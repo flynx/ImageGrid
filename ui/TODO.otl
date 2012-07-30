@@ -1,5 +1,5 @@
 Priority work
-	[_] 15% Preview II
+	[_] 37% Preview II
 		[_] 0% sorted images in ribbons
 		| and correct positioning on promote/demote
 		|
@@ -43,29 +43,30 @@ Priority work
 					[X] zooming
 					[_] cleanup legacy workarounds
 					[_] ui.js, gallery-prototype.js either merge or revise split logic
-		[_] 0% correct zooming and modes
-			[_] zooming in ribbon view
+		[_] 23% correct zooming and modes
+			[X] zooming in ribbon view
+			[_] dragging wile zoomed to more than screen width/height...
 			[_] zoom presets for ribbon view
 				[_] all
 				[_] all in group
 				[_] five
-				[_] three
-				[_] one (with zooming)
+				[X] three
+				[X] one (with zooming)
 			[_] single image mode with zooming
 			| ribbons are hidden
 			[_] grid mode (mid priority)
 			[_] calendar mode (low priority)
-		[_] 0% fix layout and animations
-			[_] zooming
-			[_] navigation
+		[_] 66% fix layout and animations
+			[X] zooming
+			[X] navigation
 			[_] actions
 	[_] 0% misc
 		[_] add sort/re-sort capability...
 		[_] make scrolling of other ribbons proportional to the gap...
 	[_] 0% Preview III
 		[_] 0% native client
-			[_] windows
 			[_] android
+			[_] windows
 			[_] MacOS (low priority)
 			[_] iOS (low priority)
 	[_] 0% Pre-Alpha
