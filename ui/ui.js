@@ -201,19 +201,28 @@ function fieldSize(W, H){
 
 /*********************************************************************/
 
-// NOTE: this will only return a single scale/zoom value...
+// NOTE: this will only return a single scale value...
 function getElementScale(elem){
-	var zoom = elem.css('zoom')
+	//var transform = elem.css('transform')
+	var vendors = ['o', 'moz', 'ms', 'webkit']
 	var transform = elem.css('transform')
 	var res
 
-	// get the scale value...
-	if( (/scale\(/).test(transform) ){
-		res = (/scale\((.*),.*\)/).exec(transform)[1]
-	} else {
-		res = zoom
+	// go through vendor prefixes... (hate this!)
+	if(!transform || transform == 'none'){
+		for(var i in vendors){
+			transform = elem.css('-' + vendors[i] + '-transform')
+			if(transform && transform != 'none'){
+				break
+			}
+		}
 	}
-	return res
+	// no transform is set...
+	if(!transform || transform == 'none'){
+		return 1
+	}
+	// get the scale value -- first argument of scale/matrix...
+	return parseFloat((/(scale|matrix)\(([^,]*),.*\)/).exec(transform)[2])
 }
 // XXX
 function setElementScale(elem, scale){
