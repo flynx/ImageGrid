@@ -59,7 +59,6 @@ Priority work
 			[X] single image mode with zooming
 			| ribbons are hidden
 		[_] 25% cleanup UI
-			[_] stretch viewer to screen
 			[_] fix single image mode
 			| need to center the image correctly...
 			[_] 55% add screen buttons for all actions...
@@ -73,6 +72,7 @@ Priority work
 					[_] three
 					[X] wide
 					| toggle...
+			[_] stretch viewer to screen
 			[_] 0% layout
 				[_] tablet
 				| - buttons at sides
