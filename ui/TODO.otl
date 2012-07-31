@@ -1,69 +1,100 @@
 Priority work
-	[_] 37% Preview II
-		[_] 0% sorted images in ribbons
-		| and correct positioning on promote/demote
-		|
-		|	input:
-		| 	[01][02][03][04][05][06][07][08][09][10][11] ... [19][20]
-		|
-		| 		single ribbon, nothing special here.
-		|
-		|
-		|   general sort:
-		| 	         [05]      [10][11][12]  [15] [19][20] 
-		| 	[01]  [04]  [06][07][08]  [13][14]  [18]
-		| 	 [02][03]              [09]    [16][17]
-		|
-		| 	 	each strip is positioned above or below the place it was 
-		| 	 	shifted from.
-		| 	 	if there is not enough space use weights to balance the 
-		| 	 	thing.
-		|
-		|
-		|   selected [08]:
-		| 	                 [05] [10][11][12] [15] [19][20] 
-		| 	[01] [04] [06][07][[08]] [13][14] [18]
-		| 	             [02][03] [09] [16][17]
-		|
-		| 		above and below images are centered around the current 
-		| 		image as axis, the rule is that the strips left are coming 
-		| 		from the left of the axis and likewise for the right side. 
-		|
-			[X] stage I: position the promoted/demoted image correctly
-			[_] stage II: scroll ribbons correctly
+	[_] 45% Preview II
+		[_] 55% sorted images in ribbons
+			[X] 100% stage I: position the promoted/demoted image correctly
+			| and correct positioning on promote/demote
+			|
+			|	input:
+			| 	[01][02][03][04][05][06][07][08][09][10][11] ... [19][20]
+			|
+			| 		single ribbon, nothing special here.
+			|
+			|
+			|   general sort:
+			| 	         [05]      [10][11][12]  [15] [19][20] 
+			| 	[01]  [04]  [06][07][08]  [13][14]  [18]
+			| 	 [02][03]              [09]    [16][17]
+			|
+			| 	 	each strip is positioned above or below the place it was 
+			| 	 	shifted from.
+			| 	 	if there is not enough space use weights to balance the 
+			| 	 	thing.
+			|
+			|
+			|   selected [08]:
+			| 	                 [05] [10][11][12] [15] [19][20] 
+			| 	[01] [04] [06][07][[08]] [13][14] [18]
+			| 	             [02][03] [09] [16][17]
+			|
+			| 		above and below images are centered around the current 
+			| 		image as axis, the rule is that the strips left are coming 
+			| 		from the left of the axis and likewise for the right side. 
+			|
+			[_] 0% stage II: scroll ribbons correctly
 			| this is simple:
 			| - center the right edge of image returned
 			|   by getImageBefore in all ribbons other than current...
 			| - center current-image in current ribbon
 			| - vertically center the current ribbon (negative margin?)
 				[X] prototype and basic API
-				[_] 60% migrate main code to the new system
+				[X] 100% migrate main code to the new system
 					[X] basic navigation
 					[X] basic actions
 					[X] zooming
-					[_] cleanup legacy workarounds
-					[_] ui.js, gallery-prototype.js either merge or revise split logic
-		[_] 23% correct zooming and modes
+				[_] position other ribbons...
+		[_] 60% correct zooming and modes
 			[X] zooming in ribbon view
 			[_] dragging wile zoomed to more than screen width/height...
-			[_] zoom presets for ribbon view
-				[_] all
-				[_] all in group
-				[_] five
+			[X] 100% zoom presets for ribbon view
+			| other possible presets:
+			| 	- five
+			| 	- all
+			| 	- group
+			| 	- day/month
+			| 	- shoot
+			| 	- tag
+			| 	...
 				[X] three
 				[X] one (with zooming)
 			[_] single image mode with zooming
 			| ribbons are hidden
-			[_] grid mode (mid priority)
-			[_] calendar mode (low priority)
 		[_] 66% fix layout and animations
 			[X] zooming
 			[X] navigation
-			[_] actions
+			[_] 0% actions
+				[_] shifting up to new ribbon pushes the current row down...
+		[_] 0% cleanup UI
+			[_] stretch viewer to screen
+			[_] 0% layout
+				[_] tablet
+				| - buttons at sides
+				| - big, finger-friendly buttons
+				| - only horizontal (???)
+				|
+				| check if this works:
+				| @media handheld {}
+				[_] PC
+				| - no buttons (except for help and settings in corners)
+				| - keyboard
+				|
+				| @media screen {}
+				[_] web
+			[_] 0% setting screen
+				[_] basic screen
+				[_] keyboard config (low priority)
+				[_] view mode (low priority)
+			[_] 0% debug mode
+				[_] toggle cross-hair
 	[_] 0% misc
 		[_] add sort/re-sort capability...
 		[_] make scrolling of other ribbons proportional to the gap...
+		[_] 0% refactoring (low priority)
+			[_] cleanup legacy workarounds
+			[_] ui.js, gallery-prototype.js either merge or revise split logic
 	[_] 0% Preview III
+		[_] 0% view modes
+			[_] grid mode
+			[_] calendar mode
 		[_] 0% native client
 			[_] android
 			[_] windows
