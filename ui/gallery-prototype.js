@@ -104,6 +104,7 @@ function alignRibbons(){
 	for(var i in directions){
 		var ribbon = $('.current.ribbon')[directions[i]]('.ribbon')
 		if(ribbon.length == 1){
+			// XXX this is not optimal...
 			var img = getImageBefore(id, ribbon)
 			if(img != null){
 				alignRibbon(img, 'before')
@@ -355,12 +356,12 @@ function focusBelowRibbon(){
 // 	- element
 // XXX do we need to make ids numbers for this to work?
 // XXX might be better to make this binary search in very large sets of data
-function getImageBefore(id, ribbon){
+function getImageBefore_lin(id, ribbon){
 	// walk the ribbon till we find two images one with an ID less and 
 	// another greater that id...
 	id = parseInt(id)
 	var images = ribbon.children('.image')
-	var prev
+	var prev = null
 	for(var i=0; i < images.length; i++){
 		if(parseInt($(images[i]).attr('id')) > id){
 			return prev
@@ -369,6 +370,75 @@ function getImageBefore(id, ribbon){
 	}
 	return prev
 }
+
+
+// binery search for element just before the id...
+function binarySearch(id, lst, get){
+	if(get == null){
+		get = function(o){return o}
+	}
+	
+	// empty list...
+	if(lst.length == 0){
+		return null
+	}
+	
+	// current section length
+	var l = Math.round((lst.length-1)/2)
+	// current position...
+	var i = l
+
+	while(true){
+		var i_id = get(lst[i])
+		// beginning of the array...
+		if(i == 0){
+			if(id > i_id){
+				return i
+			}
+			return null
+		}
+		// we got a hit...
+		if(i_id == id){
+			return i-1
+		}
+		// we are at the end...
+		if(i == lst.length-1 && id > i_id){
+			return i
+		}
+		var ii_id = get(lst[i+1])
+		// test if id is between i and i+1...
+		if( i_id < id && id < ii_id ){
+			return i
+		}
+		// prepare for next iteration...
+		// NOTE: we saturate the values so we will never get out of bounds.
+		l = Math.round(l/2)
+		if(id < i_id){
+			// lower half...
+			i = Math.max(0, i-l)
+		} else {
+			// upper half...
+			i = Math.min(i+l, lst.length-1)
+		}
+	}
+}
+
+// wrapper around binarySearch.
+// this is here to make binarySearch simpler to test and debug...
+function getImageBefore_bin(id, ribbon){
+	var images = ribbon.children('.image') 
+	var i = binarySearch(
+					parseInt(id), 
+					images, 
+					function(o){return parseInt($(o).attr('id'))})
+	if(i == null){
+		return null
+	}
+	return $(images[i])
+}
+
+var getImageBefore = getImageBefore_bin
+
 
 // center a ribbon horizontally...
 // if id exists in ribbon make it the center, else center between the 
