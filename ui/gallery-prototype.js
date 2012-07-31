@@ -134,25 +134,35 @@ function handleImageClick(e) {
 
 
 
+var ZOOM_FACTOR = 2
+
 // key configuration...
 // XXX need to make this handle modifiers gracefully...
 var keys = {
-	toggleHelpKeys: [72],
+	toggleHelp: [72],
 	toggleRibbonView: [70],
-	closeKeys: [27, 88, 67],
+	close: [27, 88, 67],
 
-	firstKeys: [36],
-	lastKeys: [35],
-	previousKeys: [37, 80, 188, 8],
-	nextKeys: [39, 78, 190, 32],
+	// zooming...
+	zoomIn: [187],
+	zoomOut: [189],
+	// zoom presets...
+	zoomOriginal: [48],
+	fitOne: [49],
+	fitThree: [51],
+
+	first: [36],
+	last: [35],
+	previous: [37, 80, 188, 8],
+	next: [39, 78, 190, 32],
 	// these work with ctrl and shift modifiers...
-	downKeys: [40],
-	upKeys: [38],
+	down: [40],
+	up: [38],
 	// these work with ctrl modifier...
-	promoteKeys: [45],
-	demoteKeys: [46],
+	promote: [45],
+	demote: [46],
 
-	ignoreKeys: [16, 17, 18],
+	ignore: [16, 17, 18],
 
 	helpShowOnUnknownKey: true
 }
@@ -160,24 +170,24 @@ var keys = {
 // XXX revise...
 function handleKeys(event){
 	var code = event.keyCode, fn = $.inArray;
-	var _ = (fn(code, keys.closeKeys) >= 0) ? function(){}()
-		: (fn(code, keys.firstKeys) >= 0) ? firstImage()
-		: (fn(code, keys.nextKeys) >= 0) ? nextImage()
-		: (fn(code, keys.previousKeys) >= 0) ? prevImage()
-		: (fn(code, keys.lastKeys) >= 0) ? lastImage()
-		: (fn(code, keys.promoteKeys) >= 0) ? function(){
+	var _ = (fn(code, keys.close) >= 0) ? function(){}()
+		: (fn(code, keys.first) >= 0) ? firstImage()
+		: (fn(code, keys.next) >= 0) ? nextImage()
+		: (fn(code, keys.previous) >= 0) ? prevImage()
+		: (fn(code, keys.last) >= 0) ? lastImage()
+		: (fn(code, keys.promote) >= 0) ? function(){
 			if(event.ctrlKey){
 				createRibbon('next')
 			}
 			shiftImageDown()
 		}()
-		: (fn(code, keys.demoteKeys) >= 0) ? function(){
+		: (fn(code, keys.demote) >= 0) ? function(){
 			if(event.ctrlKey){
 				createRibbon('prev')
 			}
 			shiftImageUp()
 		}()
-		: (fn(code, keys.downKeys) >= 0) ? function(){
+		: (fn(code, keys.down) >= 0) ? function(){
 			if(event.shiftKey){
 				if(event.ctrlKey){
 					createRibbon('next')
@@ -187,7 +197,7 @@ function handleKeys(event){
 				focusBelowRibbon()
 			}
 		}()
-		: (fn(code, keys.upKeys) >= 0) ? function(){
+		: (fn(code, keys.up) >= 0) ? function(){
 			if(event.shiftKey){
 				if(event.ctrlKey){
 					createRibbon('prev')
@@ -197,8 +207,16 @@ function handleKeys(event){
 				focusAboveRibbon()
 			}
 		}()
+		// zooming...
+		: (fn(code, keys.zoomIn) >= 0) ? zoomContainerBy(ZOOM_FACTOR)
+		: (fn(code, keys.zoomOut) >= 0) ? zoomContainerBy(1/ZOOM_FACTOR)
+		// zoom presets...
+		: (fn(code, keys.zoomOriginal) >= 0) ? setContainerZoom(1)
+		: (fn(code, keys.fitOne) >= 0) ? fitImage()
+		: (fn(code, keys.fitThree) >= 0) ? fitThreeImages()
+
 		: (fn(code, keys.toggleRibbonView) >= 0) ? toggleRibbonView()
-		: (fn(code, keys.ignoreKeys) >= 0) ? false
+		: (fn(code, keys.ignore) >= 0) ? false
 		// XXX
 		: (keys.helpShowOnUnknownKey) ? function(){alert(code)}()
 		: false;

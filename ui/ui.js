@@ -95,7 +95,7 @@ function centerSquare(){
 	// horizontal...
 	alignRibbon()
 
-	centerOrigin()
+	centerCurrentImage()
 }
 
 function alignRibbon(image, position){
@@ -175,6 +175,7 @@ function centerOrigin(){
 
 // XXX need to make this work for % values...
 // XXX make this usable as an event handler for .resize(...) event...
+// XXX this does not account for zoom correctly...
 function fieldSize(W, H){
 	var oW = $('.container').width()
 	var oH = $('.container').height()
@@ -189,13 +190,23 @@ function fieldSize(W, H){
 
 	// shift the field...
 	$('.field').css({
-		// compensate top/left that get changed while zooming....
-		'top': H/2 * 1/zoom - H/2, 
-		'left': W/2 * 1/zoom - W/2, 
-
 		'margin-top': (parseFloat($('.field').css('margin-top')) + (H-oH)/2), 
 		'margin-left': (parseFloat($('.field').css('margin-left')) + (W-oW)/2)
 	})
+}
+
+function centerCurrentImage(){
+	$('.field')
+		.css({
+			'top': 0,
+			'left': 0
+		})
+		// do this after animations are done...
+		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", centerOrigin)
+	// this is repeated intentionally...
+	// ...needed for small shifts, while the after-animation event 
+	// is for large moves.
+	centerOrigin()
 }
 
 

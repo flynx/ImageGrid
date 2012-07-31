@@ -1,5 +1,5 @@
 Priority work
-	[_] 45% Preview II
+	[_] 39% Preview II
 		[_] 55% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -42,9 +42,8 @@ Priority work
 					[X] basic actions
 					[X] zooming
 				[_] position other ribbons...
-		[_] 60% correct zooming and modes
+		[_] 75% correct zooming and modes
 			[X] zooming in ribbon view
-			[_] dragging wile zoomed to more than screen width/height...
 			[X] 100% zoom presets for ribbon view
 			| other possible presets:
 			| 	- five
@@ -58,6 +57,11 @@ Priority work
 				[X] one (with zooming)
 			[_] single image mode with zooming
 			| ribbons are hidden
+		[_] 0% drag action...
+			[_] basic infrastructure
+			[_] center current action
+			[_] while zoomed more than the screen
+			[_] while zoomed out (ribbon view)
 		[_] 66% fix layout and animations
 			[X] zooming
 			[X] navigation
