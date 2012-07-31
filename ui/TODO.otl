@@ -1,6 +1,6 @@
 Priority work
-	[_] 44% Preview II
-		[_] 55% sorted images in ribbons
+	[_] 48% Preview II
+		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
 			|
@@ -30,19 +30,20 @@ Priority work
 			| 		image as axis, the rule is that the strips left are coming 
 			| 		from the left of the axis and likewise for the right side. 
 			|
-			[_] 0% stage II: scroll ribbons correctly
-			| this is simple:
-			| - center the right edge of image returned
-			|   by getImageBefore in all ribbons other than current...
-			| - center current-image in current ribbon
-			| - vertically center the current ribbon (negative margin?)
+			[X] 100% stage II: scroll ribbons correctly
+				| this is simple:
+				| - center the right edge of image returned
+				|   by getImageBefore in all ribbons other than current...
+				| - center current-image in current ribbon
+				| - vertically center the current ribbon (negative margin?)
 				[X] prototype and basic API
 				[X] 100% migrate main code to the new system
 					[X] basic navigation
 					[X] basic actions
 					[X] zooming
-				[_] position other ribbons...
-		[_] 75% correct zooming and modes
+				[X] position other ribbons...
+				| only prev/next for now...
+		[X] 100% correct zooming and modes
 			[X] zooming in ribbon view
 			[X] 100% zoom presets for ribbon view
 			| other possible presets:
@@ -55,7 +56,7 @@ Priority work
 			| 	...
 				[X] three
 				[X] one (with zooming)
-			[_] single image mode with zooming
+			[X] single image mode with zooming
 			| ribbons are hidden
 		[_] 25% drag action...
 			[_] basic infrastructure
@@ -69,6 +70,8 @@ Priority work
 				[_] shifting up to new ribbon pushes the current row down...
 		[_] 0% cleanup UI
 			[_] stretch viewer to screen
+			[_] fix single image mode
+			| need to center the image correctly...
 			[_] 0% layout
 				[_] tablet
 				| - buttons at sides
@@ -89,6 +92,7 @@ Priority work
 				[_] view mode (low priority)
 			[_] 0% debug mode
 				[_] toggle cross-hair
+		[_] 0% optional features...
 	[_] 0% misc
 		[_] add sort/re-sort capability...
 		[_] make scrolling of other ribbons proportional to the gap...
