@@ -1,5 +1,5 @@
 Priority work
-	[_] 52% Preview II
+	[_] 60% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -58,16 +58,6 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 25% drag/move action...
-			[_] basic infrastructure
-			[X] action: center current image
-			[_] while zoomed more than the screen
-			[_] while zoomed out (ribbon view)
-		[_] 66% fix layout and animations
-			[X] zooming
-			[X] navigation
-			[_] 0% actions
-				[_] bug: shifting up to new ribbon pushes the current row down...
 		[_] 25% cleanup UI
 			[_] stretch viewer to screen
 			[_] fix single image mode
@@ -97,13 +87,26 @@ Priority work
 				|
 				| @media screen {}
 				[_] web
+				| is this is the same as the above two? (with auto-select)
 			[_] 0% setting screen
 				[_] basic screen
 				[_] keyboard config (low priority)
 				[_] view mode (low priority)
 			[X] 100% debug mode
 				[X] toggle cross-hair
-		[_] 0% optional features...
+		[_] 66% fix layout and animations
+			[X] zooming
+			[X] navigation
+			[_] 0% actions
+				[_] bug: shifting up to new ribbon pushes the current row down...
+		[_] 12% optional features...
+			[_] 25% drag/move action...
+				[_] basic infrastructure
+				[X] action: center current image
+				[_] while zoomed more than the screen
+				[_] while zoomed out (ribbon view)
+			[_] 0% native client
+				[_] android
 	[_] 0% misc
 		[_] add sort/re-sort capability...
 		[_] make scrolling of other ribbons proportional to the gap...
