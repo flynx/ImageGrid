@@ -93,7 +93,21 @@ function setCurrentImage(){
 	centerSquare()
 
 	// center other ribbons relative to current image...
-	// XXX
+	// XXX only two ribbons are positioned at this point...
+	var id = $('.current.image').attr('id')
+	var directions = ['prev', 'next']
+	for(var i in directions){
+		var ribbon = $('.current.ribbon')[directions[i]]('.ribbon')
+		if(ribbon.length == 1){
+			var img = getImageBefore(id, ribbon)
+			if(img != null){
+				alignRibbon(img, 'before')
+			} else {
+				// there are no images before...
+				alignRibbon(ribbon.children('.image').first(), 'after')
+			}
+		}
+	}
 }
 
 
@@ -134,6 +148,7 @@ function handleImageClick(e) {
 
 
 
+// this sets the zooming factor used in manual zooming...
 var ZOOM_FACTOR = 2
 
 // key configuration...

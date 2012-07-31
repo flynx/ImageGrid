@@ -121,13 +121,13 @@ function alignRibbon(image, position){
 
 	switch(position){
 		case 'before':
-			ribbon.css({'margin-left': h_offset + w/2})
+			ribbon.css({'margin-left': h_offset - w/2})
 			return true
 		case 'center':
 			ribbon.css({'margin-left': h_offset})
 			return true
 		case 'after':
-			ribbon.css({'margin-left': h_offset - w/2})
+			ribbon.css({'margin-left': h_offset + w/2})
 			return true
 	}
 	return false
