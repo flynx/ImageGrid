@@ -1,5 +1,5 @@
 Priority work
-	[_] 48% Preview II
+	[_] 52% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -58,7 +58,7 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 25% drag action...
+		[_] 25% drag/move action...
 			[_] basic infrastructure
 			[X] action: center current image
 			[_] while zoomed more than the screen
@@ -67,11 +67,22 @@ Priority work
 			[X] zooming
 			[X] navigation
 			[_] 0% actions
-				[_] shifting up to new ribbon pushes the current row down...
-		[_] 0% cleanup UI
+				[_] bug: shifting up to new ribbon pushes the current row down...
+		[_] 25% cleanup UI
 			[_] stretch viewer to screen
 			[_] fix single image mode
 			| need to center the image correctly...
+			[_] 55% add screen buttons for all actions...
+				[X] navigation
+				[X] actions
+				[_] zooming
+				[_] 20% zoom presets
+					[_] in
+					[_] out
+					[_] single
+					[_] three
+					[X] wide
+					| toggle...
 			[_] 0% layout
 				[_] tablet
 				| - buttons at sides
@@ -90,8 +101,8 @@ Priority work
 				[_] basic screen
 				[_] keyboard config (low priority)
 				[_] view mode (low priority)
-			[_] 0% debug mode
-				[_] toggle cross-hair
+			[X] 100% debug mode
+				[X] toggle cross-hair
 		[_] 0% optional features...
 	[_] 0% misc
 		[_] add sort/re-sort capability...

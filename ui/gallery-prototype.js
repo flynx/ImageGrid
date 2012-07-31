@@ -28,18 +28,6 @@ function setupGestures(){
 			swipeUp: shiftImageUp,
 			swipeDown: shiftImageDown,
 		})
-		/* XXX jquery.mobile handlers... (with this I'm getting way too much bling)
-		.bind('swipeleft', function(e){
-			nextImage()
-			e.preventDefault()
-			return false
-		})
-		.bind('swiperight', function(e){
-			prevImage()
-			e.preventDefault()
-			return false
-		})
-		*/
 }
 
 
@@ -54,7 +42,6 @@ function setupControlElements(){
 	$('.demote').click(shiftImageUp)
 	$('.promote').click(shiftImageDown)
 	$('.toggle-wide').click(toggleWideView)
-	// XXX need to update this to real zooming...
 	$('.toggle-single').click(toggleRibbonView)
 }
 
@@ -96,15 +83,14 @@ function setCurrentImage(){
 }
 
 // center other ribbons relative to current image...
+// XXX only two ribbons are positioned at this point...
 function alignRibbons(){
-	// XXX only two ribbons are positioned at this point...
 	// XXX might be goot to move this to a more generic location...
 	var id = $('.current.image').attr('id')
 	var directions = ['prev', 'next']
 	for(var i in directions){
 		var ribbon = $('.current.ribbon')[directions[i]]('.ribbon')
 		if(ribbon.length == 1){
-			// XXX this is not optimal...
 			var img = getImageBefore(id, ribbon)
 			if(img != null){
 				alignRibbon(img, 'before')
@@ -115,42 +101,6 @@ function alignRibbons(){
 		}
 	}
 }
-
-
-
-// XXX depricated...
-/*
-function handleImageClick(e) {
-	var cur = $(this)
-
-	// switch classes...
-	cur.parents().siblings().children(".image").removeClass("current")
-	cur.siblings(".image").removeClass("current")
-
-	cur.siblings().children(".image").removeClass("current")
-	cur.parents().siblings(".ribbon").removeClass("current")
-
-	cur.addClass("current")
-	cur.parents(".ribbon").addClass("current")
-
-
-	var container = cur.parents('.container')
-	var field = cur.parents(".field")
-
-	var image_offset = cur.offset()
-	var field_offset = field.offset()
-
-	// center the current image...
-	field.css({
-		left: field_offset.left - image_offset.left + (container.innerWidth() - cur.innerWidth())/2, 
-		top: field_offset.top - image_offset.top + (container.innerHeight() - cur.innerHeight())/2 
-	})
-
-
-	// XXX do I need this???
-	e.preventDefault();
-}
-*/
 
 
 
@@ -272,6 +222,7 @@ function setViewerMode(mode){
 
 
 // ribbon/single view modes...
+// XXX CSS broken...
 function toggleRibbonView(){
 	if($('.single-image-mode').length > 0){
 		unsetViewerMode('single-image-mode')
@@ -283,18 +234,13 @@ function toggleRibbonView(){
 
 
 // wide view mode toggle...
-// XXX replace this with adequate zooming...
-// XXX broken...
 function toggleWideView(){
 	if($('.wide-view-mode').length > 0){
-		setContainerZoom(0.1)
-		//$('.viewer').addClass('wide-view-more')
-		//unsetViewerMode('wide-view-mode')
-	} else {
 		setContainerZoom(1)
-		//$('.viewer').removeClass('wide-view-more')
-		//unsetViewerMode('single-image-mode')
-		//setViewerMode('wide-view-mode')
+		$('.viewer').removeClass('wide-view-mode')
+	} else {
+		setContainerZoom(0.1)
+		$('.viewer').addClass('wide-view-mode')
 	}
 }
 
@@ -437,6 +383,7 @@ function getImageBefore_bin(id, ribbon){
 	return $(images[i])
 }
 
+// set the default search...
 var getImageBefore = getImageBefore_bin
 
 
@@ -459,6 +406,7 @@ function centerRibbonVertically(ribbon){
 // NOTE: below 'direction' is meant in the html sence, i.e. next/prev...
 
 // create ribbon above/below helpers...
+// XXX
 function createRibbon(direction){
 	if(direction == 'next'){
 		var insert = 'insertAfter'
