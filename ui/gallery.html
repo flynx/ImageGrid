@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="gallery.css">
 <link rel="stylesheet" href="markers.css">
 <script src="jquery.js"></script>
+<script src="jquery-ui-1.8.22.custom.min.js"></script>
 
 <script src="jquery.touchSwipe.js"></script>
 <!-- script src="jquery.wipetouch.js"></script-->
@@ -43,6 +44,10 @@ function setup(){
 	//$.getJSON('images.js', loadImages})
 	// XXX STUB
 	loadImages(image_list)
+
+	// setup the dragging framework...
+	// XXX make this work seamlessly with touchSwipe...
+	$('.field').draggable()
 
 	// set the default position and init...
 	$('.current.image').click()
@@ -84,6 +89,11 @@ $(document).ready(setup);
 
 <div class="demo-buttons">
 	<button onclick="toggleMarkers()">Toggle Guides</button>
+
+	<br><br>
+
+	<button onclick="centerCurrentImage()">center current</button>
+	<button onclick="centerOrigin()">center origin</button>
 
 	<br><br>
 
