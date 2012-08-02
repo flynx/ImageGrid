@@ -1,0 +1,51 @@
+
+Control scheme...
+|   device	action
+|   	mode	kb				gesture
+	tablet / phone
+		single
+		ribbon
+			focus image
+				--				tap/click
+			left image
+				left			swipe right
+			right image
+				right			swipe left
+			up image
+				up				-- (via focus)
+			down image
+				down			-- (via focus)
+			first image
+				home			--
+			last image
+				end				--
+
+			shift up
+				s-up			swipe up
+			shift down
+				s-down			swipe down
+			shift up, new ribbon
+			shift down, new ribbon
+
+			drag view
+				??				tap-drag
+
+			zoom in
+				+				pinch spread
+			zoom out
+				-				pinch closeup
+			fit one
+				1				??
+			fit three
+				3				??
+			broad view
+				??				??
+
+			toggle single image mode
+				??				??
+			toggle slideshow mode
+				??				??
+	desktop
+		
+.
+| vim:set spell :
