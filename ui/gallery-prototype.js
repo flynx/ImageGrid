@@ -118,9 +118,10 @@ var keys = {
 	zoomIn: [187],
 	zoomOut: [189],
 	// zoom presets...
-	zoomOriginal: [48],
 	fitOne: [49],
 	fitThree: [51],
+	// XXX is this relivant?
+	zoomOriginal: [48],
 
 	first: [36],
 	last: [35],
@@ -133,6 +134,12 @@ var keys = {
 	promote: [45],
 	demote: [46],
 
+	moveViewUp: [75],				//	k
+	moveViewDown: [74],				//	j
+	moveViewLeft: [72],				//	h
+	moveViewRight: [76],			//	l
+
+	// keys to be ignored...
 	ignore: [16, 17, 18],
 
 	helpShowOnUnknownKey: true
@@ -185,6 +192,12 @@ function handleKeys(event){
 		: (fn(code, keys.zoomOriginal) >= 0) ? setContainerZoom(1)
 		: (fn(code, keys.fitOne) >= 0) ? fitImage()
 		: (fn(code, keys.fitThree) >= 0) ? fitThreeImages()
+
+		// moving view...
+		: (fn(code, keys.moveViewUp) >= 0) ? moveViewUp()
+		: (fn(code, keys.moveViewDown) >= 0) ? moveViewDown()
+		: (fn(code, keys.moveViewLeft) >= 0) ? moveViewLeft()
+		: (fn(code, keys.moveViewRight) >= 0) ? moveViewRight()
 
 		: (fn(code, keys.toggleRibbonView) >= 0) ? toggleRibbonView()
 		: (fn(code, keys.ignore) >= 0) ? false
@@ -247,6 +260,30 @@ function toggleWideView(){
 
 
 
+/********************************************************* Movement **/
+
+var MOVE_DELTA = 50
+
+// XXX for some odd reason these are not liner... something to do with origin?
+function moveViewUp(){
+	var t = parseInt($('.field').css('top'))
+	$('.field').css({'top': t-(MOVE_DELTA)})
+}
+function moveViewDown(){
+	var t = parseInt($('.field').css('top'))
+	$('.field').css({'top': t+(MOVE_DELTA)})
+}
+function moveViewLeft(){
+	var l = parseInt($('.field').css('left'))
+	$('.field').css({'left': l-(MOVE_DELTA)})
+}
+function moveViewRight(){
+	var l = parseInt($('.field').css('left'))
+	$('.field').css({'left': l+(MOVE_DELTA)})
+}
+
+
+
 /******************************************************* Navigation **/
 
 // basic navigation...
@@ -262,6 +299,7 @@ function nextImage(){
 function lastImage(){
 	$('.current.ribbon').children('.image').last().click()
 }
+
 
 // XXX for the above two functions to be stable we will need to jump up 
 // 		to the next and down to the prev element...

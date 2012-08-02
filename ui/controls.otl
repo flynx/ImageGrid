@@ -14,8 +14,7 @@ Control scheme:
 |   		action
 |   			keyboard		gesture					button (tablet)		button (desktop)
 	tablet / phone / desktop
-		single
-		ribbon
+		general
 			focus image
 				--				tap/click				-					-
 			left image
@@ -23,13 +22,13 @@ Control scheme:
 			right image
 				right			swipe left				+					-
 			up image
-				up				-- (via focus image)	-					-
+				up				-- (via focus image)	??					-
 			down image
-				down			-- (via focus image)	-					-
+				down			-- (via focus image)	??					-
 			first image
-				home			--						-					-
+				home			--						??					-
 			last image
-				end				--						-					-
+				end				--						??					-
 
 			shift up
 				s-up			swipe up				+					-
@@ -41,7 +40,16 @@ Control scheme:
 				c-s-down		??						??					??
 
 			drag view
-				??				tap-drag				-					-
+				--				tap-drag				-					-
+			move view left
+				??				??						??					??
+			move view right
+				??				??						??					??
+			move view up
+				??				??						??					??
+			move view down
+				??				??						??					??
+
 			center current image
 				??				??						??					??
 
@@ -51,15 +59,20 @@ Control scheme:
 				-				pinch closeup			-					-
 			fit one
 				1				tap current image		-					-
-			fit three
-				3				??						-					-
-			broad view
-				??				??						-					-
 
 			toggle single image mode
 				??				??						-					-
 			toggle slideshow mode
 				??				??						-					-
+
+			keyboard help
+			settings
+		ribbon-specific
+			fit three
+				3				??						-					-
+			broad view
+				??				??						-					-
+		single-specific
 		
 .
 | vim:set spell :
