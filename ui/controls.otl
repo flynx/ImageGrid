@@ -1,8 +1,19 @@
-
-Control scheme...
-|   device	action
-|   	mode	kb				gesture					button (tablet)		button (desktop)
-	tablet / phone
+Design criteria:
+	organize profiles by workflow
+	minimize number of actions to do main task within a workflow 
+		target: 1:1 or less
+	minimize finger movement within a workflow 
+		target: no movement
+		| i.e. all buttons are under the relaxed position of fingers on device
+	minimize screen touching/contamination within image area 
+		target: keep screen clean
+		| i.e. buttons cover all the workflow actions
+Control scheme:
+|   device
+|   	mode	
+|   		action
+|   			keyboard		gesture					button (tablet)		button (desktop)
+	tablet / phone / desktop
 		single
 		ribbon
 			focus image
@@ -12,9 +23,9 @@ Control scheme...
 			right image
 				right			swipe left				+					-
 			up image
-				up				-- (via focus)			-					-
+				up				-- (via focus image)	-					-
 			down image
-				down			-- (via focus)			-					-
+				down			-- (via focus image)	-					-
 			first image
 				home			--						-					-
 			last image
@@ -25,17 +36,21 @@ Control scheme...
 			shift down
 				s-down			swipe down				+					-
 			shift up, new ribbon
+				c-s-up			??						??					??
 			shift down, new ribbon
+				c-s-down		??						??					??
 
 			drag view
 				??				tap-drag				-					-
+			center current image
+				??				??						??					??
 
 			zoom in
 				+				pinch spread			-					-
 			zoom out
 				-				pinch closeup			-					-
 			fit one
-				1				??						-					-
+				1				tap current image		-					-
 			fit three
 				3				??						-					-
 			broad view
@@ -45,7 +60,6 @@ Control scheme...
 				??				??						-					-
 			toggle slideshow mode
 				??				??						-					-
-	desktop
 		
 .
 | vim:set spell :
