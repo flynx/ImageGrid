@@ -1,50 +1,50 @@
 
 Control scheme...
 |   device	action
-|   	mode	kb				gesture
+|   	mode	kb				gesture					button (tablet)		button (desktop)
 	tablet / phone
 		single
 		ribbon
 			focus image
-				--				tap/click
+				--				tap/click				-					-
 			left image
-				left			swipe right
+				left			swipe right				+					-
 			right image
-				right			swipe left
+				right			swipe left				+					-
 			up image
-				up				-- (via focus)
+				up				-- (via focus)			-					-
 			down image
-				down			-- (via focus)
+				down			-- (via focus)			-					-
 			first image
-				home			--
+				home			--						-					-
 			last image
-				end				--
+				end				--						-					-
 
 			shift up
-				s-up			swipe up
+				s-up			swipe up				+					-
 			shift down
-				s-down			swipe down
+				s-down			swipe down				+					-
 			shift up, new ribbon
 			shift down, new ribbon
 
 			drag view
-				??				tap-drag
+				??				tap-drag				-					-
 
 			zoom in
-				+				pinch spread
+				+				pinch spread			-					-
 			zoom out
-				-				pinch closeup
+				-				pinch closeup			-					-
 			fit one
-				1				??
+				1				??						-					-
 			fit three
-				3				??
+				3				??						-					-
 			broad view
-				??				??
+				??				??						-					-
 
 			toggle single image mode
-				??				??
+				??				??						-					-
 			toggle slideshow mode
-				??				??
+				??				??						-					-
 	desktop
 		
 .
