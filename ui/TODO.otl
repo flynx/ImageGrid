@@ -1,5 +1,5 @@
 Priority work
-	[_] 66% Preview II
+	[_] 64% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -58,10 +58,10 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 25% UI
+		[_] 18% UI
 			[_] fix single image mode
 			| need to center the image correctly...
-			[_] 55% add screen buttons for all actions...
+			[_] 44% add screen buttons for all actions...
 				[X] navigation
 				[X] actions
 				[_] zooming
@@ -72,6 +72,9 @@ Priority work
 					[_] three
 					[X] wide
 					| toggle...
+				[_] return to current image / home (after drag)
+			[_] tap image to return from large magnification
+			[_] pinch to zoom
 			[_] stretch viewer to screen
 			[_] 0% layout
 				[_] tablet
@@ -107,7 +110,21 @@ Priority work
 				[X] while zoomed out (ribbon view)
 				[_] 0% cleanup...
 					[_] disable click events while dragging
-					[_] check compatibility with gestures
+					[_] differentiate with gestures
+					| might be nice to add a Ps-like "space-dragging" 
+					| feature to differentiate nav gestures and 
+					| dragging... 
+					| ...this may not work for tablets
+					|
+					| for tablets might be good to add a small timeout to 
+					| both gestures and dragging, small enough for things 
+					| to feel natural...
+					|
+					| another way is to start dragging anyway but if the 
+					| eventual action resembles a gesture then exec that.
+					| ...this will need careful setup of timeouts and 
+					| dynamic disabling/enabling of both drag and gestures
+					| e.g. of large zooms dragging takes priority.
 			[_] 0% native client
 				[_] android
 	[_] 0% misc
