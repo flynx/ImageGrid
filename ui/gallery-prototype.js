@@ -134,6 +134,7 @@ var keys = {
 	promote: [45],
 	demote: [46],
 
+	// XXX should these be s-up, s-down, ... ??
 	moveViewUp: [75],				//	k
 	moveViewDown: [74],				//	j
 	moveViewLeft: [72],				//	h

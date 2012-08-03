@@ -102,6 +102,7 @@ Priority work
 			[X] navigation
 			[_] 0% actions
 				[_] bug: shifting up to new ribbon pushes the current row down...
+				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
 		[_] 40% optional features...
 			[_] 80% drag/move action...
 				[X] basic infrastructure
@@ -135,6 +136,11 @@ Priority work
 			[_] cleanup legacy workarounds
 			[_] ui.js, gallery-prototype.js either merge or revise split logic
 	[_] 0% Preview III
+		[_] dynamic image/preview swap for zooming
+		| important to make 1:1 previews for all main views and zoom levels...
+		| also need to make this as device-neutral as possible...
+		[_] dynamic image loading/unloading to very large ribbons
+		| it is important to make this far enough from the curent view for the user not to notice anything...
 		[_] 0% view modes
 			[_] grid mode
 			[_] calendar mode
@@ -221,7 +227,7 @@ basic structure
 	[X] images
 	[_] indicators
 	| show where the images came from...
-
+	
 
 [_] % basic control elements
 	[_] 77% touch zones / buttons
@@ -231,25 +237,25 @@ basic structure
 		[X] shift down			DONE
 		[X] promote				DONE
 		[X] demote				DONE
-		[_] zoom in				~		need real zooming...
-		[_] zoom out			~		need real zooming...
+		[_] zoom in				~
+		[_] zoom out			~
 		[X] toggle single image	DONE
 
-[_] 11% features
-	[_] 45% views
-		[_] 40% ribbon-based view
+[_] 38% features
+	[_] 55% views
+		[_] 60% ribbon-based view
 			[_] show all
 			| might be good to not show any images here at all, just replace them with their average color
 			[X] show map
 			[X] fit to ribbon
-			[_] fit to image (square)
+			[X] fit to image (square)
 			[_] ribbon with promoted/demoted images
 			| show semi-transparent images that were demoted/promoted from current ribbon
 		[_] 50% single image view
 			[_] image fit to screen
 			[X] image fit to square
 	| show parts of upper and lower ribbons
-	[_] image zooming
+	[X] image zooming
 	| fast zooming to stages:
 	| 	fit
 	| 	100%
@@ -260,19 +266,19 @@ basic structure
 		[_] crop
 		[_] rotate
 
-[_] 20% General ToDo
-	[_] 0% image sorting
+[_] 38% General ToDo
+	[_] 80% image sorting
 		[_] will affect:
-			[_] promote
-			[_] demote
-			[_] shift up
-			[_] shift down
+			[X] promote
+			[X] demote
+			[X] shift up
+			[X] shift down
 			[_] ribbon merging
 	[_] add promote/demote events (to attach structure editors)...
 	| enable extension and use as a generic widget...
 	[X] add real images...
 	[_] make all the code relative to the current selection (multiple instances on a page support)
-	[_] add ribbon relative scrolling...
+	[X] add ribbon relative scrolling...
 	| each ribbon is positioned relative to the current selected image
 	| 	below-left: closest image to the left of the current
 	| 	bolow-right: same as above but right...
