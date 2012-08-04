@@ -75,12 +75,9 @@ Priority work
 				[X] switch (no transition)
 			[_] 0% layout
 				[_] 0% tablet
-					| - buttons at sides
-					| - big, finger-friendly buttons
-					| - only horizontal (???)
-					|
 					[_] stretch to full screen
 					| NOTE: viewer % sizes may break things...
+					[_] restrict to horizontal / do a different vertical layout
 				[_] 0% PC
 					[_] stretch to full screen
 					[_] hide buttons for keyboard actions
