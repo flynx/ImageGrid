@@ -90,6 +90,19 @@ function setCurrentImage(){
 	alignRibbons()
 }
 
+function clickAfterTransitionsDone(img){
+	if(img == null){
+		img = $('.current.image')
+	}
+
+	$('.viewer')
+		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+			img.click()
+			return true
+		})
+}
+
+
 // center other ribbons relative to current image...
 // XXX only two ribbons are positioned at this point...
 function alignRibbons(){
@@ -225,20 +238,12 @@ function handleKeys(event){
 function unsetViewerMode(mode){
 	$('.' + mode)
 		.removeClass(mode)
-			// animation...
-			.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
-				$('.current.image').click()
-				return true
-			});
+	clickAfterTransitionsDone()
 }
 function setViewerMode(mode){
 	$('.viewer').not('.' + mode)
 		.addClass(mode)
-			// animation...
-			.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
-				$('.current.image').click()
-				return true
-			});
+	clickAfterTransitionsDone()
 }
 
 
@@ -440,19 +445,6 @@ function getImageBefore_bin(id, ribbon){
 var getImageBefore = getImageBefore_bin
 
 
-// center a ribbon horizontally...
-// if id exists in ribbon make it the center, else center between the 
-// two images that id came from.
-function centerRibbonHorizontally(id, ribbon){
-	// XXX
-}
-
-// center the ribbon in the middle of the container vertically...
-function centerRibbonVertically(ribbon){
-	// XXX
-}
-
-
 
 /********************************************************** Actions **/
 // basic actions...
@@ -469,24 +461,34 @@ function createRibbon(direction){
 		return false
 	}
 
-	// XXX need to account for increased top when creating a ribbon above...
-	// 		i.e. shift the content upward...
+	// XXX adding a new ribbon above the current effectively pushes the 
+	// 		whole view down...
+	// 		...need to compensate for this!!!
+	// 		PARTIAL-FIX: still jumps around...
+	// 		...one way to try is to disable transitions temporaritly while
+	// 		adding a ribbon...
+	// XXX the problem is partly caused by clicks fiering BEFORE the 
+	// 		animation is done...
+	// 		...this can be systematically solved by adding a clickCurrent 
+	// 		function that will wait till the animations are done...
+	
+	// need to account for increased top when creating a ribbon above...
+	// i.e. shift the content upward...
 	if(direction == 'prev'){
 		$('.field').css({
 			'margin-top': parseInt($('.field').css('margin-top')) - $('.current.ribbon').outerHeight()
 		})
 	}
 
+	var res = $('<div class="ribbon"></div>')[insert]('.current.ribbon')
+	/*
 	var res = $('<div class="new-ribbon"></div>')[insert]('.current.ribbon')
 		// HACK: without this, the class change below will not animate...
 		.show()
 		.addClass('ribbon')
 		.removeClass('new-ribbon')
+	*/
 
-	// XXX adding a new ribbon above the current effectively pushes the 
-	// 		whole view down...
-	// 		...need to compensate for this!!!
-	
 	return res
 }
 
@@ -546,7 +548,8 @@ function shiftImage(direction){
 
 	}
 	// XXX this has to know about animations...
-	$('.current.image').click()
+	//$('.current.image').click()
+	clickAfterTransitionsDone()
 }
 
 
