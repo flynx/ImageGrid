@@ -1,5 +1,57 @@
 // XXX need a uniform way to address images (filename?)
+/******************************************* Setup Data and Globals **/
 
+// key configuration...
+// XXX need to make this handle modifiers gracefully...
+var keys = {
+	toggleHelp: [72],
+	toggleSingleImageMode: [70, 13],	// ???, Enter
+	close: [27, 88, 67],
+
+	// zooming...
+	zoomIn: [187],
+	zoomOut: [189],
+	// zoom presets...
+	fitOne: [49],
+	fitThree: [51],
+	// XXX is this relivant?
+	zoomOriginal: [48],
+
+	first: [36],
+	last: [35],
+	previous: [37, 80, 188, 8],
+	next: [39, 78, 190, 32],
+	// these work with ctrl and shift modifiers...
+	down: [40],
+	up: [38],
+	// these work with ctrl modifier...
+	promote: [45],
+	demote: [46],
+
+	// XXX should these be s-up, s-down, ... ??
+	moveViewUp: [75],				//	k
+	moveViewDown: [74],				//	j
+	moveViewLeft: [72],				//	h
+	moveViewRight: [76],			//	l
+
+	// keys to be ignored...
+	ignore: [16, 17, 18],
+
+	helpShowOnUnknownKey: true
+}
+
+
+// this sets the zooming factor used in manual zooming...
+var ZOOM_FACTOR = 2
+
+
+// sets the amoun of move when a key is pressed...
+var MOVE_DELTA = 50
+
+
+
+/************************************************** Setup Functions **/
+// XXX is this a correct place for these?
 
 function setDefaultInitialState(){
 	if($('.current.ribbon').length == 0){
@@ -21,12 +73,11 @@ function setupKeyboard(){
 
 function setupGestures(){
 	$('.viewer')
-		// XXX this is flaky and breaks some of my code...
 		.swipe({
 			swipeLeft: nextImage,
 			swipeRight: prevImage,
 			swipeUp: shiftImageUp,
-			swipeDown: shiftImageDown,
+			swipeDown: shiftImageDown
 		})
 }
 
@@ -76,6 +127,7 @@ function loadImages(json){
 
 
 /*************************************************** Event Handlers **/
+
 function setCurrentImage(){
 	// set classes...
 	$('.current').removeClass('current')
@@ -83,18 +135,17 @@ function setCurrentImage(){
 		.addClass('current')
 		.parents('.ribbon')
 			.addClass('current')
-
 	// position the field and ribbons...
 	centerSquare()
-
 	alignRibbons()
 }
+
+
 
 function clickAfterTransitionsDone(img){
 	if(img == null){
 		img = $('.current.image')
 	}
-
 	$('.viewer')
 		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
 			img.click()
@@ -103,8 +154,9 @@ function clickAfterTransitionsDone(img){
 }
 
 
+
 // center other ribbons relative to current image...
-// XXX only two ribbons are positioned at this point...
+// NOTE: only two ribbons are positioned at this point...
 function alignRibbons(){
 	// XXX might be good to move this to a more generic location...
 	var id = $('.current.image').attr('id')
@@ -124,48 +176,6 @@ function alignRibbons(){
 }
 
 
-
-// this sets the zooming factor used in manual zooming...
-var ZOOM_FACTOR = 2
-
-// key configuration...
-// XXX need to make this handle modifiers gracefully...
-var keys = {
-	toggleHelp: [72],
-	toggleSingleImageMode: [70, 13],	// ???, Enter
-	close: [27, 88, 67],
-
-	// zooming...
-	zoomIn: [187],
-	zoomOut: [189],
-	// zoom presets...
-	fitOne: [49],
-	fitThree: [51],
-	// XXX is this relivant?
-	zoomOriginal: [48],
-
-	first: [36],
-	last: [35],
-	previous: [37, 80, 188, 8],
-	next: [39, 78, 190, 32],
-	// these work with ctrl and shift modifiers...
-	down: [40],
-	up: [38],
-	// these work with ctrl modifier...
-	promote: [45],
-	demote: [46],
-
-	// XXX should these be s-up, s-down, ... ??
-	moveViewUp: [75],				//	k
-	moveViewDown: [74],				//	j
-	moveViewLeft: [72],				//	h
-	moveViewRight: [76],			//	l
-
-	// keys to be ignored...
-	ignore: [16, 17, 18],
-
-	helpShowOnUnknownKey: true
-}
 
 // XXX revise...
 function handleKeys(event){
@@ -240,6 +250,9 @@ function unsetViewerMode(mode){
 		.removeClass(mode)
 	clickAfterTransitionsDone()
 }
+
+
+
 function setViewerMode(mode){
 	$('.viewer').not('.' + mode)
 		.addClass(mode)
@@ -249,10 +262,10 @@ function setViewerMode(mode){
 
 
 // ribbon/single view modes...
-
+// global: stores the scale before we went into single image mode...
+// XXX HACK
 var ORIGINAL_FIELD_SCALE = 1
 
-// XXX CSS broken...
 function toggleSingleImageMode(){
 	if($('.single-image-mode').length > 0){
 		unsetViewerMode('single-image-mode')
@@ -283,9 +296,8 @@ function toggleWideView(){
 
 /********************************************************* Movement **/
 
-var MOVE_DELTA = 50
-
 // XXX for some odd reason these are not liner... something to do with origin?
+// XXX virtually identical, see of can be merged...
 function moveViewUp(){
 	var t = parseInt($('.field').css('top'))
 	$('.field').css({'top': t-(MOVE_DELTA)})
@@ -302,6 +314,7 @@ function moveViewRight(){
 	var l = parseInt($('.field').css('left'))
 	$('.field').css({'left': l+(MOVE_DELTA)})
 }
+
 
 
 
@@ -322,6 +335,7 @@ function lastImage(){
 }
 
 // XXX add skip N images back and forth handlers...
+// XXX
 
 
 function focusRibbon(direction){
@@ -389,6 +403,8 @@ function getImageBefore_lin(id, ribbon){
 
 
 // generic binery search for element just before the id...
+// NOTE: if id is in lst, this will return the element just before it.
+// NOTE: lst must be sorted.
 function binarySearch(id, lst, get){
 	if(get == null){
 		get = function(o){return o}
@@ -465,7 +481,7 @@ var getImageBefore = getImageBefore_bin
 
 // create ribbon above/below helpers...
 // XXX adding a ribbon above the current is still jumpy, need to devise 
-// 		a cleaner fix...
+// 		a cleaner way to do this...
 function createRibbon(direction){
 	if(direction == 'next'){
 		var insert = 'insertAfter'
@@ -481,10 +497,9 @@ function createRibbon(direction){
 	// 		 animation is done...
 	$('.field').addClass('unanimated')	
 	
-	// need to account for increased top when creating a ribbon above...
 	if(direction == 'prev'){
 		$('.field').css({
-			'margin-top': parseInt($('.field').css('margin-top')) - $('.current.ribbon').outerHeight()
+			'margin-top': parseInt($('.field').css('margin-top')) - $('.ribbon').outerHeight()
 		})
 	}
 	// the actual insert...
@@ -501,25 +516,17 @@ function createRibbon(direction){
 // merge current and direction ribbon...
 // NOTE: this will take all the elements from direction ribbon and add
 //       them to current
-// XXX sort elements correctly...
 // XXX this uses jquery animation...
+// XXX one way to optimise this is to add the lesser ribbon to the 
+//     greater disregarding their actual order...
 function mergeRibbons(direction){
-	/*
-	// XXX do these one by one...
-	$('.current.ribbon')[direction]('.ribbon')
-			.children()
-				.detach()
-				.insertAfter('.current.image')
-	*/
-
 	var current_ribbon = $('.current.ribbon')
 	var images = $('.current.ribbon')[direction]('.ribbon').children()
-	// XXX one way to optimise this is to add the lesser ribbon to the 
-	//     greater...
 	for(var i=0; i < images.length; i++){
-		// get previous element after which we need to put the current...
 		var image = $(images[i])
+		// get previous element after which we need to put the current...
 		var prev_elem = getImageBefore(image.attr('id'), current_ribbon)
+		// check if we need to be before the first element...
 		if(prev_elem == null){
 			image
 				.detach()
@@ -578,7 +585,6 @@ function shiftImage(direction){
 		}
 
 	}
-	// XXX this has to know about animations...
 	$('.current.image').click()
 }
 
@@ -587,8 +593,6 @@ function shiftImage(direction){
 function shiftImageDown(){
 	return shiftImage('next')
 }
-// XXX this has problems, when creating a new ribbon this does not settle 
-//	   into a correct spot...
 function shiftImageUp(){
 	return shiftImage('prev')
 }
