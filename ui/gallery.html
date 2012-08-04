@@ -61,14 +61,14 @@ $(document).ready(setup);
 <style>
 </style>
 
-<div class="viewer">
+<div class="viewer no-single-image-transitions">
 	<div class="controller">
 		<div class="screen-button demote">^</div>
 		<div class="screen-button prev-image">&lt;</div>
 		<div class="screen-button promote">v</div>
 		<div class="screen-button toggle-single">[ ]</div>
 		<div class="screen-button fit-three">ooo</div>
-		<div class="screen-button settings">settings</div>
+		<div class="screen-button settings">?</div>
 	</div>
 	<div class="container">
 		<div class="field">
@@ -92,11 +92,11 @@ $(document).ready(setup);
 </div>
 
 <div class="demo-buttons">
-	<button onclick="toggleMarkers()">Toggle Guides</button>
+	<button onclick="toggleMarkers()">Toggle Markers (m)</button>
 
 	<br><br>
 
-	<button onclick="centerCurrentImage()">center current</button>
+	<button onclick="centerCurrentImage()">center current (o)</button>
 	<button onclick="centerOrigin()">center origin</button>
 
 	<br><br>
@@ -113,10 +113,10 @@ $(document).ready(setup);
 
 	<br><br>
 
-	<button onclick="moveViewLeft()">left</button>
-	<button onclick="moveViewUp()">Up</button>
-	<button onclick="moveViewDown()">Down</button>
-	<button onclick="moveViewRight()">right</button>
+	<button onclick="moveViewLeft()">left (h)</button>
+	<button onclick="moveViewUp()">Up (k)</button>
+	<button onclick="moveViewDown()">Down (j)</button>
+	<button onclick="moveViewRight()">right (l)</button>
 
 	<!--br><br>
 	LEGACY:
@@ -138,8 +138,8 @@ $(document).ready(setup);
 
 	<br><br>
 
-	<button onclick="createRibbon('prev')">create ribbon above (helper)</button><br>
-	<button onclick="createRibbonBelow('next')">create ribbon below (helper)</button>
+	<button onclick="createRibbon('prev')" disabled>create ribbon above (helper)</button><br>
+	<button onclick="createRibbonBelow('next')" disabled>create ribbon below (helper)</button>
 
 	<br><br>
 

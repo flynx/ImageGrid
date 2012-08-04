@@ -36,6 +36,10 @@ var keys = {
 	moveViewLeft: [72],				//	h
 	moveViewRight: [76],			//	l
 
+	centerCurrentImage: [79],		//	o
+
+	toggleMarkers: [77],			//	m
+
 	// keys to be ignored...
 	ignore: [16, 17, 18],
 
@@ -232,10 +236,15 @@ function handleKeys(event){
 		: (fn(code, keys.moveViewDown) >= 0) ? moveViewDown()
 		: (fn(code, keys.moveViewLeft) >= 0) ? moveViewLeft()
 		: (fn(code, keys.moveViewRight) >= 0) ? moveViewRight()
+		: (fn(code, keys.centerCurrentImage) >= 0) ? centerCurrentImage()
 
 		: (fn(code, keys.toggleSingleImageMode) >= 0) ? toggleSingleImageMode()
 		: (fn(code, keys.toggleSingleImageModeTransitions) >= 0) ? toggleSingleImageModeTransitions()
 		: (fn(code, keys.toggleSingleImageModeWhiteBG) >= 0) ? toggleSingleImageModeWhiteBG()
+
+		// debug...
+		: (fn(code, keys.toggleMarkers) >= 0) ? toggleMarkers()
+
 		: (fn(code, keys.ignore) >= 0) ? false
 		// XXX
 		: (keys.helpShowOnUnknownKey) ? function(){alert(code)}()

@@ -78,6 +78,9 @@ Priority work
 					[_] stretch to full screen
 					| NOTE: viewer % sizes may break things...
 					[_] restrict to horizontal / do a different vertical layout
+					[_] make buttons semi-transparent and same color as bg in all modes
+					| just like single image mode...
+					[_] make bg color switching in all modes
 				[_] 0% PC
 					[_] stretch to full screen
 					[_] hide buttons for keyboard actions
