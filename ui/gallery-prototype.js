@@ -460,10 +460,12 @@ var getImageBefore = getImageBefore_bin
 
 /********************************************************** Actions **/
 // basic actions...
-// NOTE: below 'direction' is meant in the html sence, i.e. next/prev...
+// NOTE: below 'direction' argument is meant in the html sence, 
+//       i.e. next/prev...
 
 // create ribbon above/below helpers...
-// XXX
+// XXX adding a ribbon above the current is still jumpy, need to devise 
+// 		a cleaner fix...
 function createRibbon(direction){
 	if(direction == 'next'){
 		var insert = 'insertAfter'
@@ -473,48 +475,33 @@ function createRibbon(direction){
 		return false
 	}
 
-	// XXX adding a new ribbon above the current effectively pushes the 
-	// 		whole view down...
-	// 		...need to compensate for this!!!
-	// 		PARTIAL-FIX: still jumps around...
-	// 		...one way to try is to disable transitions temporaritly while
-	// 		adding a ribbon...
-	// XXX the problem is partly caused by clicks fiering BEFORE the 
-	// 		animation is done...
-	// 		...this can be systematically solved by adding a clickCurrent 
-	// 		function that will wait till the animations are done...
-	
+	// adding a new ribbon above the current effectively pushes the 
+	// whole view down, so we need to compensate for this.
+	// NOTE: the problem is partly caused by clicks fiering BEFORE the 
+	// 		 animation is done...
 	$('.field').addClass('unanimated')	
 	
-	//doWithoutTransitions($('.field'), function(){
-		// need to account for increased top when creating a ribbon above...
-		// i.e. shift the content upward...
-		if(direction == 'prev'){
-			$('.field').css({
-				'margin-top': parseInt($('.field').css('margin-top')) - $('.current.ribbon').outerHeight()
-			})
-		}
-
-		var res = $('<div class="ribbon"></div>')[insert]('.current.ribbon')
-		/*
-		var res = $('<div class="new-ribbon"></div>')[insert]('.current.ribbon')
-			// HACK: without this, the class change below will not animate...
-			.show()
-			.addClass('ribbon')
-			.removeClass('new-ribbon')
-		*/
-	//})
+	// need to account for increased top when creating a ribbon above...
+	if(direction == 'prev'){
+		$('.field').css({
+			'margin-top': parseInt($('.field').css('margin-top')) - $('.current.ribbon').outerHeight()
+		})
+	}
+	// the actual insert...
+	var res = $('<div class="ribbon"></div>')[insert]('.current.ribbon')
 	
+	// restore the animated state...
 	$('.field').removeClass('unanimated')	
 
-	//return $('.current.ribbon')['direction']('.ribbon')
 	return res
 }
 
 
 
 // XXX sort elements correctly...
+// XXX this uses jquery animation...
 function mergeRibbons(direction){
+	// XXX do these one by one...
 	$('.current.ribbon')[direction]('.ribbon')
 			.children()
 				.detach()
