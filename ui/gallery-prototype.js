@@ -37,12 +37,20 @@ function setupControlElements(){
 	$(".image").click(setCurrentImage)
 
 	// buttons...
-	$('.next-image').click(nextImage)
-	$('.prev-image').click(prevImage)
-	$('.demote').click(shiftImageUp)
-	$('.promote').click(shiftImageDown)
-	$('.toggle-wide').click(toggleWideView)
-	$('.toggle-single').click(toggleSingleImageMode)
+	$('.screen-button.next-image').click(nextImage)
+	$('.screen-button.prev-image').click(prevImage)
+	$('.screen-button.demote').click(shiftImageUp)
+	$('.screen-button.promote').click(shiftImageDown)
+
+	$('.screen-button.zoom-in').click(function(){scaleContainerBy(ZOOM_FACTOR)})
+	$('.screen-button.zoom-out').click(function(){scaleContainerBy(1/ZOOM_FACTOR)})
+
+	$('.screen-button.toggle-wide').click(toggleWideView)
+	$('.screen-button.toggle-single').click(toggleSingleImageMode)
+
+	$('.screen-button.fit-three').click(fitThreeImages)
+
+	$('.screen-button.settings').click(function(){alert('not implemented yet...')})
 }
 
 
@@ -111,7 +119,7 @@ var ZOOM_FACTOR = 2
 // XXX need to make this handle modifiers gracefully...
 var keys = {
 	toggleHelp: [72],
-	toggleSingleImageMode: [70],
+	toggleSingleImageMode: [70, 13],	// ???, Enter
 	close: [27, 88, 67],
 
 	// zooming...
@@ -256,9 +264,10 @@ function toggleSingleImageMode(){
 // wide view mode toggle...
 function toggleWideView(){
 	if($('.wide-view-mode').length > 0){
-		setContainerScale(1)
+		setContainerScale(ORIGINAL_FIELD_SCALE)
 		$('.viewer').removeClass('wide-view-mode')
 	} else {
+		ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
 		setContainerScale(0.1)
 		$('.viewer').addClass('wide-view-mode')
 	}

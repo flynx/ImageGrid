@@ -12,11 +12,6 @@
 <script src="jquery-ui-1.8.22.custom.min.js"></script>
 
 <script src="jquery.touchSwipe.js"></script>
-<!-- script src="jquery.wipetouch.js"></script-->
-<!-- XXX this does not work on android... --> 
-<!-- script src="jquery.gestures.js"></script-->
-<!-- XXX need to figure out how to disable all the bling -->
-<!-- script src="jquery.mobile.js"></script-->
 
 <!-- XXX STUB -->
 <script src="images.js"></script>
@@ -68,10 +63,12 @@ $(document).ready(setup);
 
 <div class="viewer">
 	<div class="controller">
-		<div class="demote">^</div>
-		<div class="prev-image">&lt;</div>
-		<div class="promote">v</div>
-		<div class="toggle-single">[ ]</div>
+		<div class="screen-button demote">^</div>
+		<div class="screen-button prev-image">&lt;</div>
+		<div class="screen-button promote">v</div>
+		<div class="screen-button toggle-single">[ ]</div>
+		<div class="screen-button fit-three">ooo</div>
+		<div class="screen-button settings">settings</div>
 	</div>
 	<div class="container">
 		<div class="field">
@@ -85,10 +82,12 @@ $(document).ready(setup);
 		<div class="v-marker"></div>
 	</div>
 	<div class="controller">
-		<div class="demote">^</div>
-		<div class="next-image">&gt;</div>
-		<div class="promote">v</div>
-		<div class="toggle-wide">+/-</div>
+		<div class="screen-button demote">^</div>
+		<div class="screen-button next-image">&gt;</div>
+		<div class="screen-button promote">v</div>
+		<div class="screen-button zoom-in">+</div>
+		<div class="screen-button zoom-out">-</div>
+		<div class="screen-button toggle-wide">...</div>
 	</div>
 </div>
 

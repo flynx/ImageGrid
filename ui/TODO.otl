@@ -58,21 +58,18 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 30% UI
+		[_] 33% UI
 			[X] fix single image mode
 			| need to center the image correctly...
-			[_] 46% add screen buttons for all actions...
+			[X] 100% add screen buttons for all actions...
 				[X] navigation
 				[X] actions
-				[_] zooming
-				[_] 33% zoom presets
-					[_] single
-					[_] three
+				[X] zooming
+				[X] 100% zoom presets
+					[X] single
+					[X] three
 					[X] wide
 					| toggle...
-				[_] return to current image / home (after drag)
-			[_] tap image to return from large magnification
-			[_] pinch to zoom
 			[_] stretch viewer to screen
 			[_] 0% layout
 				[_] tablet
@@ -89,6 +86,11 @@ Priority work
 				| @media screen {}
 				[_] web
 				| is this is the same as the above two? (with auto-select)
+			[_] 0% return to current image / home (after drag)
+				[_] button
+				[_] keyboard
+			[_] tap image to return from large magnification
+			[_] pinch to zoom
 			[_] 0% setting screen
 				[_] basic screen
 				[_] keyboard config (low priority)
@@ -134,6 +136,7 @@ Priority work
 			[_] cleanup legacy workarounds
 			[_] ui.js, gallery-prototype.js either merge or revise split logic
 	[_] 0% Preview III
+		[_] revise controls...
 		[_] dynamic image/preview swap for zooming
 		| important to make 1:1 previews for all main views and zoom levels...
 		| also need to make this as device-neutral as possible...

@@ -17,23 +17,31 @@ Control scheme:
 		general
 			focus image
 				--				tap/click				-					-
+
 			left image
-				left			swipe right				+					-
+				left,bksp,<,p	swipe right				+					-
 			right image
-				right			swipe left				+					-
+				right,space,>,n	swipe left				+					-
 			up image
-				up				-- (via focus image)	??					-
+				up				- (via focus image)	??					-
 			down image
-				down			-- (via focus image)	??					-
+				down			- (via focus image)	??					-
+
+			skip 10 left
+				??				-						-					-
+			skip 10 right
+				??				-						-					-
+
 			first image
-				home			--						??					-
+				home			-						??					-
 			last image
-				end				--						??					-
+				end				-						??					-
 
 			shift up
 				s-up			swipe up				+					-
 			shift down
 				s-down			swipe down				+					-
+
 			shift up, new ribbon
 				c-s-up			??						??					??
 			shift down, new ribbon
@@ -42,36 +50,38 @@ Control scheme:
 			drag view
 				--				tap-drag				-					-
 			move view left
-				??				??						??					??
+				h				-						-					-
 			move view right
-				??				??						??					??
+				l				-						-					-
 			move view up
-				??				??						??					??
+				k				-						-					-
 			move view down
-				??				??						??					??
+				j				-						-					-
 
 			center current image
 				??				??						??					??
 
 			zoom in
-				+				pinch spread			-					-
+				+				pinch spread			+					-
 			zoom out
-				-				pinch closeup			-					-
+				-				pinch closeup			+					-
 			fit one
 				1				tap current image		-					-
 
 			toggle single image mode
-				??				??						-					-
+				Enter			??						+					-
 			toggle slideshow mode
 				??				??						-					-
 
 			keyboard help
+				??				??						-					-
 			settings
+				??				??						-					-
 		ribbon-specific
 			fit three
-				3				??						-					-
+				3				??						+					-
 			broad view
-				??				??						-					-
+				??				??						+					-
 		single-specific
 		
 .

@@ -65,12 +65,15 @@
 }
 
 
-.promote, .next-image, .prev-image, .demote, .toggle-wide, .toggle-single {
+.screen-button {
 	text-align: center;
 	vertical-align: middle;
 	width: 100%;
-	height: 150px; 
+	height: 125px; 
+
+	/* coloring is temporary... */
 	background: gray;
+	color: silver;
 
 	-moz-user-select: none;
 	-webkit-user-select: none;
@@ -80,15 +83,20 @@
 }
 
 
-.next-image, .prev-image, .toggle-wide, .toggle-single {
+.next-image, .prev-image, .toggle-wide, .toggle-single, .zoom-in, .settings, .toggle-wide {
+	/* coloring is temporary... */
 	background: silver;
+	color: gray;
 }
 
 
-.toggle-wide, .toggle-single {
-	height:50px
+.toggle-single, .fit-three, .zoom-in, .zoom-out {
+	height: 50px;
 }
 
+.settings, .toggle-wide {
+	height: 25px;
+}
 
 .promote {
 }

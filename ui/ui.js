@@ -67,8 +67,6 @@ function getCurrentHorizontalOffset(image){
 		image = $('.image.current')
 	}
 
-	var scale = getElementScale($('.field'))
-
 	var ribbon = image.parents('.ribbon')
 	var images = ribbon.children('.image')
 
