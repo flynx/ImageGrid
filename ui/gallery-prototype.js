@@ -42,7 +42,7 @@ function setupControlElements(){
 	$('.demote').click(shiftImageUp)
 	$('.promote').click(shiftImageDown)
 	$('.toggle-wide').click(toggleWideView)
-	$('.toggle-single').click(toggleRibbonView)
+	$('.toggle-single').click(toggleSingleImageMode)
 }
 
 
@@ -111,7 +111,7 @@ var ZOOM_FACTOR = 2
 // XXX need to make this handle modifiers gracefully...
 var keys = {
 	toggleHelp: [72],
-	toggleRibbonView: [70],
+	toggleSingleImageMode: [70],
 	close: [27, 88, 67],
 
 	// zooming...
@@ -187,10 +187,10 @@ function handleKeys(event){
 			}
 		}()
 		// zooming...
-		: (fn(code, keys.zoomIn) >= 0) ? zoomContainerBy(ZOOM_FACTOR)
-		: (fn(code, keys.zoomOut) >= 0) ? zoomContainerBy(1/ZOOM_FACTOR)
+		: (fn(code, keys.zoomIn) >= 0) ? scaleContainerBy(ZOOM_FACTOR)
+		: (fn(code, keys.zoomOut) >= 0) ? scaleContainerBy(1/ZOOM_FACTOR)
 		// zoom presets...
-		: (fn(code, keys.zoomOriginal) >= 0) ? setContainerZoom(1)
+		: (fn(code, keys.zoomOriginal) >= 0) ? setContainerScale(1)
 		: (fn(code, keys.fitOne) >= 0) ? fitImage()
 		: (fn(code, keys.fitThree) >= 0) ? fitThreeImages()
 
@@ -200,7 +200,7 @@ function handleKeys(event){
 		: (fn(code, keys.moveViewLeft) >= 0) ? moveViewLeft()
 		: (fn(code, keys.moveViewRight) >= 0) ? moveViewRight()
 
-		: (fn(code, keys.toggleRibbonView) >= 0) ? toggleRibbonView()
+		: (fn(code, keys.toggleSingleImageMode) >= 0) ? toggleSingleImageMode()
 		: (fn(code, keys.ignore) >= 0) ? false
 		// XXX
 		: (keys.helpShowOnUnknownKey) ? function(){alert(code)}()
@@ -236,12 +236,18 @@ function setViewerMode(mode){
 
 
 // ribbon/single view modes...
+
+var ORIGINAL_FIELD_SCALE = 1
+
 // XXX CSS broken...
-function toggleRibbonView(){
+function toggleSingleImageMode(){
 	if($('.single-image-mode').length > 0){
 		unsetViewerMode('single-image-mode')
+		setContainerScale(ORIGINAL_FIELD_SCALE)
 	} else {
 		setViewerMode('single-image-mode')
+		ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
+		fitImage()
 	}
 }
 
@@ -250,10 +256,10 @@ function toggleRibbonView(){
 // wide view mode toggle...
 function toggleWideView(){
 	if($('.wide-view-mode').length > 0){
-		setContainerZoom(1)
+		setContainerScale(1)
 		$('.viewer').removeClass('wide-view-mode')
 	} else {
-		setContainerZoom(0.1)
+		setContainerScale(0.1)
 		$('.viewer').addClass('wide-view-mode')
 	}
 }

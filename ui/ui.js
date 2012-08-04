@@ -37,8 +37,7 @@ function getCurrentVerticalOffset(image){
 		image = $('.image.current')
 	}
 
-	//var zoom = $('.field').css('zoom')
-	var zoom = getElementScale($('.field'))
+	var scale = getElementScale($('.field'))
 
 	var ribbons = $('.ribbon')
 	var ribbon = image.parents('.ribbon')
@@ -68,8 +67,7 @@ function getCurrentHorizontalOffset(image){
 		image = $('.image.current')
 	}
 
-	//var zoom = $('.field').css('zoom')
-	var zoom = getElementScale($('.field'))
+	var scale = getElementScale($('.field'))
 
 	var ribbon = image.parents('.ribbon')
 	var images = ribbon.children('.image')
@@ -175,13 +173,12 @@ function centerOrigin(){
 
 // XXX need to make this work for % values...
 // XXX make this usable as an event handler for .resize(...) event...
-// XXX this does not account for zoom correctly...
+// XXX this does not account for scale correctly...
 function fieldSize(W, H){
 	var oW = $('.container').width()
 	var oH = $('.container').height()
 
-	//var zoom = $('.field').css('zoom')
-	var zoom = getElementScale($('.field'))
+	var scale = getElementScale($('.field'))
 
 	$('.container').css({
 		'width': W,
@@ -240,22 +237,22 @@ function setElementScale(elem, scale){
 }
 
 // XXX this appears to be broken -- for some reason the current scale does not change...
-function zoomContainerBy(factor){
-	var zoom = getElementScale($('.field'))*factor 
+function scaleContainerBy(factor){
+	var scale = getElementScale($('.field'))*factor 
 
-	setContainerZoom(zoom)
+	setContainerScale(scale)
 }
 
-function setContainerZoom(zoom){
+function setContainerScale(scale){
 	var H = $('.container').height()
 	var W = $('.container').width()
 
 	$('.field').css({
-		'transform': 'scale('+zoom+', '+zoom+')',
-		'-moz-transform': 'scale('+zoom+', '+zoom+')',
-		'-o-transform': 'scale('+zoom+', '+zoom+')',
-		'-ms-transform': 'scale('+zoom+', '+zoom+')',
-		'-webkit-transform': 'scale('+zoom+', '+zoom+')',
+		'transform': 'scale('+scale+', '+scale+')',
+		'-moz-transform': 'scale('+scale+', '+scale+')',
+		'-o-transform': 'scale('+scale+', '+scale+')',
+		'-ms-transform': 'scale('+scale+', '+scale+')',
+		'-webkit-transform': 'scale('+scale+', '+scale+')',
 	})
 }
 
@@ -268,7 +265,7 @@ function fitImage(){
 
 	var f = Math.min(H/h, W/w)
 
-	setContainerZoom(f)
+	setContainerScale(f)
 }
 
 function fitThreeImages(){
@@ -281,6 +278,6 @@ function fitThreeImages(){
 
 	var f = Math.min(H/h, W/w)
 
-	setContainerZoom(f)
+	setContainerScale(f)
 }
 
