@@ -352,6 +352,18 @@ function focusBelowRibbon(){
 
 /********************************************************** Helpers **/
 
+function doWithoutTransitions(obj, func){
+	obj
+		.addClass('unanimated')
+		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+			func()
+			$('.viewer')
+				.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+					obj.removeClass('unanimated')
+				})
+		})
+}
+
 // find an image object after which to position image ID...
 // used for two main tasks:
 // 	- positioning promoted/demoted images
@@ -472,23 +484,30 @@ function createRibbon(direction){
 	// 		...this can be systematically solved by adding a clickCurrent 
 	// 		function that will wait till the animations are done...
 	
-	// need to account for increased top when creating a ribbon above...
-	// i.e. shift the content upward...
-	if(direction == 'prev'){
-		$('.field').css({
-			'margin-top': parseInt($('.field').css('margin-top')) - $('.current.ribbon').outerHeight()
-		})
-	}
+	$('.field').addClass('unanimated')	
+	
+	//doWithoutTransitions($('.field'), function(){
+		// need to account for increased top when creating a ribbon above...
+		// i.e. shift the content upward...
+		if(direction == 'prev'){
+			$('.field').css({
+				'margin-top': parseInt($('.field').css('margin-top')) - $('.current.ribbon').outerHeight()
+			})
+		}
 
-	var res = $('<div class="ribbon"></div>')[insert]('.current.ribbon')
-	/*
-	var res = $('<div class="new-ribbon"></div>')[insert]('.current.ribbon')
-		// HACK: without this, the class change below will not animate...
-		.show()
-		.addClass('ribbon')
-		.removeClass('new-ribbon')
-	*/
+		var res = $('<div class="ribbon"></div>')[insert]('.current.ribbon')
+		/*
+		var res = $('<div class="new-ribbon"></div>')[insert]('.current.ribbon')
+			// HACK: without this, the class change below will not animate...
+			.show()
+			.addClass('ribbon')
+			.removeClass('new-ribbon')
+		*/
+	//})
+	
+	$('.field').removeClass('unanimated')	
 
+	//return $('.current.ribbon')['direction']('.ribbon')
 	return res
 }
 
@@ -548,8 +567,7 @@ function shiftImage(direction){
 
 	}
 	// XXX this has to know about animations...
-	//$('.current.image').click()
-	clickAfterTransitionsDone()
+	$('.current.image').click()
 }
 
 
