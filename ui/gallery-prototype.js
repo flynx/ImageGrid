@@ -4,45 +4,46 @@
 // key configuration...
 // XXX need to make this handle modifiers gracefully...
 var keys = {
-	toggleHelp: [72],
-	toggleSingleImageMode: [70, 13],	// ???, Enter
-	toggleSingleImageModeTransitions: [84],	// t
-	toggleSingleImageModeWhiteBG: [87],	// w
-	close: [27, 88, 67],
+	toggleHelp: [72],							//	???
+	toggleSingleImageMode: [70, 13],			//	???, Enter
+	toggleSingleImageModeTransitions: [84],		//	t
+	toggleSingleImageModeWhiteBG: [87],			//	w
+	close: [27, 88, 67],						//	???
 
 	// zooming...
-	zoomIn: [187],
-	zoomOut: [189],
+	zoomIn: [187],								//	+
+	zoomOut: [189],								//	-
 	// zoom presets...
-	fitOne: [49],
-	fitThree: [51],
+	fitOne: [49],								//	1
+	fitThree: [51],								//	3
 	// XXX is this relivant?
-	zoomOriginal: [48],
+	zoomOriginal: [48],							//	0
 
-	first: [36],
-	last: [35],
-	previous: [37, 80, 188, 8],
-	next: [39, 78, 190, 32],
+	first: [36],								//	Home
+	last: [35],									//	End
+	previous: [37, 80, 188, 8],					//	Left, BkSp, p, <
+	next: [39, 78, 190, 32],					//	Right, Space, n, >
 	// these work with ctrl and shift modifiers...
-	down: [40],
-	up: [38],
+	down: [40],									//	Down
+	up: [38],									//	Up
 	// these work with ctrl modifier...
-	promote: [45],
-	demote: [46],
+	promote: [45],								//	???
+	demote: [46],								//	???
 
 	// XXX should these be s-up, s-down, ... ??
-	moveViewUp: [75],				//	k
-	moveViewDown: [74],				//	j
-	moveViewLeft: [72],				//	h
-	moveViewRight: [76],			//	l
+	moveViewUp: [75],							//	k
+	moveViewDown: [74],							//	j
+	moveViewLeft: [72],							//	h
+	moveViewRight: [76],						//	l
+	
+	centerCurrentImage: [79],					//	o
 
-	centerCurrentImage: [79],		//	o
-
-	toggleMarkers: [77],			//	m
+	toggleMarkers: [77],						//	m
 
 	// keys to be ignored...
-	ignore: [16, 17, 18],
+	ignore: [16, 17, 18],						//	???, ???, ???
 
+	// print unhandled keys...
 	helpShowOnUnknownKey: true
 }
 
