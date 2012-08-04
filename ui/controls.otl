@@ -69,7 +69,9 @@ Control scheme:
 				1				tap current image		-					-
 
 			toggle single image mode
-				Enter			??						+					-
+				Enter			-						+					-
+			toggle single image mode transitions
+				a				-						+					-
 			toggle slideshow mode
 				??				??						-					-
 
