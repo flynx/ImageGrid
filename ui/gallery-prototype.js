@@ -93,7 +93,7 @@ function setCurrentImage(){
 // center other ribbons relative to current image...
 // XXX only two ribbons are positioned at this point...
 function alignRibbons(){
-	// XXX might be goot to move this to a more generic location...
+	// XXX might be good to move this to a more generic location...
 	var id = $('.current.image').attr('id')
 	var directions = ['prev', 'next']
 	for(var i in directions){
@@ -316,9 +316,9 @@ function lastImage(){
 	$('.current.ribbon').children('.image').last().click()
 }
 
+// XXX add skip N images back and forth handlers...
 
-// XXX for the above two functions to be stable we will need to jump up 
-// 		to the next and down to the prev element...
+
 function focusRibbon(direction){
 	var id = $('.current.image').attr('id')
 	var prev = getImageBefore(id, $('.current.ribbon')[direction]('.ribbon'))
@@ -355,7 +355,6 @@ function focusBelowRibbon(){
 // 	- null		- empty ribbon or no element greater id should be first
 // 	- element
 // XXX do we need to make ids numbers for this to work?
-// XXX might be better to make this binary search in very large sets of data
 function getImageBefore_lin(id, ribbon){
 	// walk the ribbon till we find two images one with an ID less and 
 	// another greater that id...
@@ -372,7 +371,7 @@ function getImageBefore_lin(id, ribbon){
 }
 
 
-// binery search for element just before the id...
+// generic binery search for element just before the id...
 function binarySearch(id, lst, get){
 	if(get == null){
 		get = function(o){return o}
@@ -470,19 +469,24 @@ function createRibbon(direction){
 		return false
 	}
 
+	// XXX need to account for increased top when creating a ribbon above...
+	// 		i.e. shift the content upward...
+	if(direction == 'prev'){
+		$('.field').css({
+			'margin-top': parseInt($('.field').css('margin-top')) - $('.current.ribbon').outerHeight()
+		})
+	}
+
 	var res = $('<div class="new-ribbon"></div>')[insert]('.current.ribbon')
 		// HACK: without this, the class change below will not animate...
 		.show()
 		.addClass('ribbon')
 		.removeClass('new-ribbon')
-	// XXX need to account for increased top when creating a ribbon above...
-	// 		i.e. shift the content upward...
-	/*
-	if(direction == 'prev'){
-		$('.field').css({
-			top: $('.field').position().top - $('.current.ribbon').outerHeight()
-		})
-	}*/
+
+	// XXX adding a new ribbon above the current effectively pushes the 
+	// 		whole view down...
+	// 		...need to compensate for this!!!
+	
 	return res
 }
 
@@ -541,7 +545,7 @@ function shiftImage(direction){
 		}
 
 	}
-	// XXX this has to know aout animations...
+	// XXX this has to know about animations...
 	$('.current.image').click()
 }
 
