@@ -6,7 +6,7 @@
 var keys = {
 	toggleHelp: [72],
 	toggleSingleImageMode: [70, 13],	// ???, Enter
-	toggleSingleImageModeTransitions: [65],	// a
+	toggleSingleImageModeTransitions: [84],	// t
 	close: [27, 88, 67],
 
 	// zooming...
