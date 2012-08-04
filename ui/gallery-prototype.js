@@ -498,14 +498,39 @@ function createRibbon(direction){
 
 
 
+// merge current and direction ribbon...
+// NOTE: this will take all the elements from direction ribbon and add
+//       them to current
 // XXX sort elements correctly...
 // XXX this uses jquery animation...
 function mergeRibbons(direction){
+	/*
 	// XXX do these one by one...
 	$('.current.ribbon')[direction]('.ribbon')
 			.children()
 				.detach()
 				.insertAfter('.current.image')
+	*/
+
+	var current_ribbon = $('.current.ribbon')
+	var images = $('.current.ribbon')[direction]('.ribbon').children()
+	// XXX one way to optimise this is to add the lesser ribbon to the 
+	//     greater...
+	for(var i=0; i < images.length; i++){
+		// get previous element after which we need to put the current...
+		var image = $(images[i])
+		var prev_elem = getImageBefore(image.attr('id'), current_ribbon)
+		if(prev_elem == null){
+			image
+				.detach()
+				.insertBefore(current_ribbon.children('.image').first())
+		} else {
+			image
+				.detach()
+				.insertAfter(prev_elem)
+		}
+	}
+
 	// animate...
 	$('.current.ribbon')[direction]('.ribbon')
 			.slideUp(function(){
