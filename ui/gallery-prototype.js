@@ -6,6 +6,7 @@
 var keys = {
 	toggleHelp: [72],
 	toggleSingleImageMode: [70, 13],	// ???, Enter
+	toggleSingleImageModeTransitions: [65],	// a
 	close: [27, 88, 67],
 
 	// zooming...
@@ -232,6 +233,7 @@ function handleKeys(event){
 		: (fn(code, keys.moveViewRight) >= 0) ? moveViewRight()
 
 		: (fn(code, keys.toggleSingleImageMode) >= 0) ? toggleSingleImageMode()
+		: (fn(code, keys.toggleSingleImageModeTransitions) >= 0) ? toggleSingleImageModeTransitions()
 		: (fn(code, keys.ignore) >= 0) ? false
 		// XXX
 		: (keys.helpShowOnUnknownKey) ? function(){alert(code)}()
@@ -544,6 +546,16 @@ function mergeRibbons(direction){
 				$(this).remove()
 				$('.current.image').click()
 			})
+}
+
+
+function toggleSingleImageModeTransitions(){
+	if( $('.no-single-image-transitions').length > 0 ){
+
+		$('.no-single-image-transitions').removeClass('no-single-image-transitions')
+	} else {
+		$('.viewer').addClass('no-single-image-transitions')
+	}
 }
 
 

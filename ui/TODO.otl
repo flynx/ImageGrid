@@ -1,5 +1,5 @@
 Priority work
-	[_] 72% Preview II
+	[_] 73% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -58,7 +58,7 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 60% UI
+		[_] 66% UI
 			[X] fix single image mode
 			| need to center the image correctly...
 			[X] 100% add screen buttons for all actions...
@@ -70,6 +70,9 @@ Priority work
 					[X] three
 					[X] wide
 					| toggle...
+			[X] 100% control single-image mode animations
+				[X] scroll
+				[X] switch (no transition)
 			[_] 0% layout
 				[_] tablet
 				| - buttons at sides
@@ -99,7 +102,7 @@ Priority work
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
 		[_] 0% native client
 			[_] android
-	[_] 10% Preview II (optional features)
+	[_] 8% Preview II (optional features)
 		[_] 80% drag/move action...
 			[X] basic infrastructure
 			[X] action: center current image
@@ -128,6 +131,7 @@ Priority work
 		[_] tap image to return from large magnification
 		[_] pinch to zoom
 		[_] slideshow...
+		[_] fade animation is single image mode...
 		[_] add sort/re-sort capability...
 		[_] make scrolling of other ribbons proportional to the gap...
 		[_] 0% refactoring (low priority)

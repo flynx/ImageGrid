@@ -9,7 +9,7 @@
 .unanimated {
 	-webkit-transition: none;
 	-moz-transition: none;
-	-o-transition: none;
+	-o-transition: all 0 ease;
 	-ms-transition: none;	
 	transition: none;
 }
