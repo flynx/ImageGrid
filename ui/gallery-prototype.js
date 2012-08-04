@@ -7,6 +7,7 @@ var keys = {
 	toggleHelp: [72],
 	toggleSingleImageMode: [70, 13],	// ???, Enter
 	toggleSingleImageModeTransitions: [84],	// t
+	toggleSingleImageModeWhiteBG: [87],	// w
 	close: [27, 88, 67],
 
 	// zooming...
@@ -234,6 +235,7 @@ function handleKeys(event){
 
 		: (fn(code, keys.toggleSingleImageMode) >= 0) ? toggleSingleImageMode()
 		: (fn(code, keys.toggleSingleImageModeTransitions) >= 0) ? toggleSingleImageModeTransitions()
+		: (fn(code, keys.toggleSingleImageModeWhiteBG) >= 0) ? toggleSingleImageModeWhiteBG()
 		: (fn(code, keys.ignore) >= 0) ? false
 		// XXX
 		: (keys.helpShowOnUnknownKey) ? function(){alert(code)}()
@@ -549,6 +551,7 @@ function mergeRibbons(direction){
 }
 
 
+
 function toggleSingleImageModeTransitions(){
 	if( $('.no-single-image-transitions').length > 0 ){
 
@@ -557,6 +560,18 @@ function toggleSingleImageModeTransitions(){
 		$('.viewer').addClass('no-single-image-transitions')
 	}
 }
+
+
+
+function toggleSingleImageModeWhiteBG(){
+	if( $('.single-image-white-bg').length > 0 ){
+
+		$('.single-image-white-bg').removeClass('single-image-white-bg')
+	} else {
+		$('.viewer').addClass('single-image-white-bg')
+	}
+}
+
 
 
 

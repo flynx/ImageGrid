@@ -42,3 +42,24 @@
 	transition: none;
 }
 
+/* white background */
+.single-image-mode.single-image-white-bg.viewer, .single-image-mode.single-image-white-bg .controller {
+	background: white;
+}
+
+
+.single-image-mode.single-image-white-bg .screen-button {
+	color: gray;
+}
+
+
+.single-image-mode.single-image-white-bg .image {
+	background-color: white;
+}
+
+.single-image-mode.single-image-white-bg .toggle-single, .single-image-mode.single-image-white-bg .zoom-in {
+	border-top: solid gray 1px;
+}
+
+
+
