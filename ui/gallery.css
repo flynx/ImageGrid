@@ -1,10 +1,5 @@
 .image {
-	/* new markup... */
 	float: left;
-	/* old markup...
-	position: relative;
-	display: inline-block;
-	 */
 
 	width: 350px;
 	height: 350px;
@@ -23,9 +18,11 @@
 	cursor: hand;
 }
 
+
 .mock-image {
 	background: blue;
 }
+
 
 .demo-buttons {
 	margin: 15px
@@ -39,9 +36,12 @@
 	-ms-transition: all 0.2s ease;	
 	transition: all 0.2s ease;
 }
+
+
 .demo-buttons:hover {
 	opacity: 1;
 }
+
 
 .viewer {
 	width: 900px;
@@ -49,6 +49,8 @@
 	border: solid blue 5px;
 	margin: 20px; 
 }
+
+
 .controller {
 	height: 500px;
 	width: 50px;
@@ -61,9 +63,8 @@
 	-ms-transition: all 0.2s ease;	
 	transition: all 0.2s ease;
 }
-.single-image-mode .controller {
-	opacity: 0.8;
-}
+
+
 .promote, .next-image, .prev-image, .demote, .toggle-wide, .toggle-single {
 	text-align: center;
 	vertical-align: middle;
@@ -71,30 +72,47 @@
 	height: 150px; 
 	background: gray;
 
-   -moz-user-select: none;
-   -webkit-user-select: none;
-   -o-user-select: none;
-   -ms-user-select: none;
-   user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-o-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
+
+
 .next-image, .prev-image, .toggle-wide, .toggle-single {
 	background: silver;
 }
+
+
 .toggle-wide, .toggle-single {
 	height:50px
 }
+
+
 .promote {
 }
+
+
 .next-image {
 }
+
+
 .prev-image {
 }
+
+
 .demote {
 }
+
+
 .toggle-wide {
 }
+
+
 .toggle-single {
 }
+
 
 .container {
 	position: relative;
@@ -111,11 +129,10 @@
 	transition: all 0.2s ease;
 }
 
+
 .field {
 	position: relative;
 	overflow: visible;
-	/* XXX replace this with transform:scale(...) */
-	zoom: 1;
 	top: 0px;
 	left: 0px;
 	margin-top: 0px;
@@ -127,6 +144,7 @@
 	transition: all 0.2s ease;
 }
 
+
 .ribbon {
 	height: 360px;
 	/* XXX make this expand dynamically */
@@ -134,8 +152,7 @@
 	overflow: visible;
 	padding-top: 2px;
 	padding-bottom: 2px;
-	/*text-align: center;*/
-	opacity: 0.2;
+	opacity: 0.5;
 
 	-webkit-transition: all 0.2s ease;
 	-moz-transition: all 0.2s ease;
@@ -144,6 +161,8 @@
 	transition: all 0.2s ease;
 
 }
+
+
 .new-ribbon {
 	height: 0px;
 
@@ -154,16 +173,13 @@
 	transition: all 0.2s ease;
 }
 
+
 .current.image {
 	opacity: 1.0;
 }
 
-.current.ribbon {
-	/*
-	padding-top: 20px;
-	padding-bottom: 20px;
-	*/
 
+.current.ribbon {
 	opacity: 1.0;
 
 	-webkit-transition: all 0.2s ease;
@@ -173,54 +189,8 @@
 	transition: all 0.2s ease;
 }
 
+
 .current.ribbon .image {
 }
 
-
-/* single image theme (start everything with .single-image-mode) 
- *
- * XXX need to make this touch friendly...
- */
-.single-image-mode .container {
-	background: gray;
-}
-
-.single-image-mode .image {
-	opacity: 0.0;
-	/* XXX need to fix animation with this... */
-	position: absolute;
-	left: 0px;
-	/*
-	zoom: 120%;
-	*/
-}
-
-.single-image-mode .image:hover {
-	/*opacity: 0.5;*/
-	/* XXX need to fix animation with this... */
-	position: absolute;
-	left: 0px;
-}
-
-.single-image-mode .current.image:hover, .single-image-mode .current.image {
-	opacity: 1.0;
-	/* XXX need to fix animation with this... */
-	position: absolute;
-	left: 0px;
-}
-
-
-/* wide view mode */
-
-/* XXX not yet working correctly...
-.wide-view-mode {
-	transform: scale(0.2,0.2);
-	-ms-transform: scale(0.2,0.2);
-	-webkit-transform: scale(0.2,0.2);
-	-o-transform: scale(0.2,0.2);
-	-moz-transform: scale(0.2,0.2);
-}
-*/
-.wide-view-mode .field {
-}
 

@@ -1,5 +1,5 @@
 Priority work
-	[_] 64% Preview II
+	[_] 67% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -58,16 +58,14 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 18% UI
-			[_] fix single image mode
+		[_] 30% UI
+			[X] fix single image mode
 			| need to center the image correctly...
-			[_] 44% add screen buttons for all actions...
+			[_] 46% add screen buttons for all actions...
 				[X] navigation
 				[X] actions
 				[_] zooming
-				[_] 20% zoom presets
-					[_] in
-					[_] out
+				[_] 33% zoom presets
 					[_] single
 					[_] three
 					[X] wide
@@ -152,6 +150,9 @@ Priority work
 	[_] 0% Pre-Alpha
 		[_] 0% finalize UI logic
 			[_] unsorted images
+	[_] 0% Alpha
+	[_] 0% Beta
+	[_] 0% 1.0
 	
 
 Goals:
@@ -219,32 +220,42 @@ Goals:
 	all levels always browsable
 	make all the steps except the actual sorting implicit
 	| i.e. no jumping through hoops for the human...
+	use the same mechanism as used for sorting, for image selection
+	| this can be used for tagging, exhibitions, ...etc.
+		context
+		| a context consists of two things:
+		| - image selection (might be a product of another context, search or selection)
+		| - a way the levels are interpreted within this context
+		|
+		| default contexts: 
+		| - full view rating context
+		|   this incorporates ALL the archive and the levels are interpreted as ratings.
+		| - selection rating context
+		|   same as full view but only part of the archive is rated
+		|   XXX this will need to be merged correctly back into the archive...
+		| - selection context
+		|   this simply takes one set of images as input and shows a subset as output.
+		|
+		| contexts are persistent, much like a catalogue.
+		|
+		| a context can be cloned and re-used.
+		|
+		| contexts can be used to mark:
+		| - shoots
+		| - subjects
+		| - exhibitions/shows
+		| - portfolios
+		| - ...
 	
 
+[[controls.otl]]
 
-basic structure
-	[X] ribbons	
-	[X] images
-	[_] indicators
-	| show where the images came from...
-	
 
-[_] % basic control elements
-	[_] 77% touch zones / buttons
-		[X] next				DONE
-		[X] prev				DONE
-		[X] shift up			DONE
-		[X] shift down			DONE
-		[X] promote				DONE
-		[X] demote				DONE
-		[_] zoom in				~
-		[_] zoom out			~
-		[X] toggle single image	DONE
 
 [_] 38% features
 	[_] 55% views
 		[_] 60% ribbon-based view
-			[_] show all
+			[_] show all (very zoomed out view)
 			| might be good to not show any images here at all, just replace them with their average color
 			[X] show map
 			[X] fit to ribbon
@@ -265,6 +276,8 @@ basic structure
 	| image unchanged, data saved to json...
 		[_] crop
 		[_] rotate
+
+
 
 [_] 38% General ToDo
 	[_] 80% image sorting
@@ -296,9 +309,6 @@ basic structure
 		[_] number of images in ribbon
 		[_] position in ribbon
 
-
-[X] 100% refactoring:
-	[X] merge almost identical functions...
 
 
 [_] % ISSUES and BUGS:
