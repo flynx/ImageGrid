@@ -74,21 +74,19 @@ Priority work
 				[X] scroll
 				[X] switch (no transition)
 			[_] 0% layout
-				[_] tablet
-				| - buttons at sides
-				| - big, finger-friendly buttons
-				| - only horizontal (???)
-				|
-				| check if this works:
-				| @media handheld {}
-				[_] PC
-				| - no buttons (except for help and settings in corners)
-				| - keyboard
-				|
-				| @media screen {}
+				[_] 0% tablet
+					| - buttons at sides
+					| - big, finger-friendly buttons
+					| - only horizontal (???)
+					|
+					[_] stretch to full screen
+					| NOTE: viewer % sizes may break things...
+				[_] 0% PC
+					[_] stretch to full screen
+					[_] hide buttons for keyboard actions
 				[_] web
 				| is this is the same as the above two? (with auto-select)
-			[_] 0% settings screen
+			[_] 0% settings/help screen
 				[_] basic screen
 				[_] keyboard config/help (low priority)
 				[_] view mode (low priority)
