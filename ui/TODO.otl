@@ -1,5 +1,5 @@
 Priority work
-	[_] 67% Preview II
+	[_] 72% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -58,7 +58,7 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 33% UI
+		[_] 60% UI
 			[X] fix single image mode
 			| need to center the image correctly...
 			[X] 100% add screen buttons for all actions...
@@ -70,7 +70,6 @@ Priority work
 					[X] three
 					[X] wide
 					| toggle...
-			[_] stretch viewer to screen
 			[_] 0% layout
 				[_] tablet
 				| - buttons at sides
@@ -86,49 +85,48 @@ Priority work
 				| @media screen {}
 				[_] web
 				| is this is the same as the above two? (with auto-select)
-			[_] 0% return to current image / home (after drag)
-				[_] button
-				[_] keyboard
-			[_] tap image to return from large magnification
-			[_] pinch to zoom
-			[_] 0% setting screen
+			[_] 0% settings screen
 				[_] basic screen
-				[_] keyboard config (low priority)
+				[_] keyboard config/help (low priority)
 				[_] view mode (low priority)
 			[X] 100% debug mode
 				[X] toggle cross-hair
-		[_] 66% fix layout and animations
+		[X] 100% fix layout and animations
 			[X] zooming
 			[X] navigation
-			[_] 0% actions
-				[_] bug: shifting up to new ribbon pushes the current row down...
+			[X] 100% actions
+				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
-		[_] 40% optional features...
-			[_] 80% drag/move action...
-				[X] basic infrastructure
-				[X] action: center current image
-				[X] while zoomed more than the screen
-				[X] while zoomed out (ribbon view)
-				[_] 0% cleanup...
-					[_] disable click events while dragging
-					[_] differentiate with gestures
-					| might be nice to add a Ps-like "space-dragging" 
-					| feature to differentiate nav gestures and 
-					| dragging... 
-					| ...this may not work for tablets
-					|
-					| for tablets might be good to add a small timeout to 
-					| both gestures and dragging, small enough for things 
-					| to feel natural...
-					|
-					| another way is to start dragging anyway but if the 
-					| eventual action resembles a gesture then exec that.
-					| ...this will need careful setup of timeouts and 
-					| dynamic disabling/enabling of both drag and gestures
-					| e.g. of large zooms dragging takes priority.
-			[_] 0% native client
-				[_] android
-	[_] 0% misc
+		[_] 0% native client
+			[_] android
+	[_] 10% Preview II (optional features)
+		[_] 80% drag/move action...
+			[X] basic infrastructure
+			[X] action: center current image
+			[X] while zoomed more than the screen
+			[X] while zoomed out (ribbon view)
+			[_] 0% cleanup...
+				[_] disable click events while dragging
+				[_] differentiate with gestures
+				| might be nice to add a Ps-like "space-dragging" 
+				| feature to differentiate nav gestures and 
+				| dragging... 
+				| ...this may not work for tablets
+				|
+				| for tablets might be good to add a small timeout to 
+				| both gestures and dragging, small enough for things 
+				| to feel natural...
+				|
+				| another way is to start dragging anyway but if the 
+				| eventual action resembles a gesture then exec that.
+				| ...this will need careful setup of timeouts and 
+				| dynamic disabling/enabling of both drag and gestures
+				| e.g. of large zooms dragging takes priority.
+		[_] 0% return to current image / home (after drag)
+			[_] button
+			[_] keyboard
+		[_] tap image to return from large magnification
+		[_] pinch to zoom
 		[_] slideshow...
 		[_] add sort/re-sort capability...
 		[_] make scrolling of other ribbons proportional to the gap...
@@ -150,6 +148,8 @@ Priority work
 			[_] windows
 			[_] MacOS (low priority)
 			[_] iOS (low priority)
+		[_] 0% bugs:
+			[_] adding a new ribbon above the current is still jumpy...
 	[_] 0% Pre-Alpha
 		[_] 0% finalize UI logic
 			[_] unsorted images
