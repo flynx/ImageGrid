@@ -8,6 +8,7 @@ var keys = {
 	toggleSingleImageMode: [70, 13],			//	???, Enter
 	toggleSingleImageModeTransitions: [84],		//	t
 	toggleBackgroundModes: [66],				//	b
+	toggleControls: [9],						// tab
 	close: [27, 88, 67],						//	???
 
 	// zooming...
@@ -115,6 +116,8 @@ function setupControlElements(){
 	$('.screen-button.toggle-single').click(toggleSingleImageMode)
 
 	$('.screen-button.fit-three').click(fitThreeImages)
+
+	$('.screen-button.show-controls').click(showControls)
 
 	$('.screen-button.settings').click(function(){alert('not implemented yet...')})
 }
@@ -251,6 +254,7 @@ function handleKeys(event){
 		: (fn(code, keys.toggleSingleImageModeTransitions) >= 0) ? toggleSingleImageModeTransitions()
 
 		: (fn(code, keys.toggleBackgroundModes) >= 0) ? toggleBackgroundModes()
+		: (fn(code, keys.toggleControls) >= 0) ? toggleControls()
 
 		// debug...
 		: (fn(code, keys.toggleMarkers) >= 0) ? toggleMarkers()
@@ -384,31 +388,38 @@ function setBackgroundMode(mode){
 
 // this will toggle through background theems: none -> dark -> black
 function toggleBackgroundModes(){
-	var mode = null
-
-	// find a mode to set...
-	for(var i = 0; i < BACKGROUND_MODES.length-1; i++){
-		// we found our mode...
-		if( $('.' + BACKGROUND_MODES[i]).length > 0 ){
-			// set the next mode in list...
-			mode = BACKGROUND_MODES[i+1]
-			$('.viewer').addClass(mode)
-			break
-		}
-	}
-	// if no set modes are found, set the default...
-	if($('.' + BACKGROUND_MODES[BACKGROUND_MODES.length-1]).length == 0){
-		$('.viewer').addClass(BACKGROUND_MODES[0])
-	// remove all other modes...
+	var mode = getBackgroundMode()
+	// default -> first
+	if(mode == null){
+		setBackgroundMode(BACKGROUND_MODES[0])
+	// last -> default...
+	} else if(mode == BACKGROUND_MODES[BACKGROUND_MODES.length-1]){
+		setBackgroundMode()
+	// next...
 	} else {
-		var cur = BACKGROUND_MODES.indexOf(mode)
-		for(var i = 0; i < BACKGROUND_MODES.length; i++){
-			if( i == cur ){
-				continue
-			}
-			mode = BACKGROUND_MODES[i]
-			$('.' + mode).removeClass(mode)
-		}
+		setBackgroundMode(BACKGROUND_MODES[BACKGROUND_MODES.indexOf(mode)+1])
+	}
+}
+
+
+
+function showControls(){
+	$('.hidden-controls').removeClass('hidden-controls')
+}
+
+
+
+function hideControls(){
+	$('.viewer').addClass('hidden-controls')
+}
+
+
+
+function toggleControls(){
+	if( $('.hidden-controls').length > 0 ){
+		showControls()
+	} else {
+		hideControls()
 	}
 }
 

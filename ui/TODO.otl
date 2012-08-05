@@ -1,5 +1,5 @@
 Priority work
-	[_] 73% Preview II
+	[_] 74% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -58,7 +58,7 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 69% UI
+		[_] 72% UI
 			[X] fix single image mode
 			| need to center the image correctly...
 			[X] 100% add screen buttons for all actions...
@@ -73,7 +73,7 @@ Priority work
 			[X] 100% control single-image mode animations
 				[X] scroll
 				[X] switch (no transition)
-			[_] 16% layout
+			[_] 33% layout
 				[_] 50% tablet
 					[_] stretch to full screen
 					| NOTE: viewer 0% sizes may break things...
@@ -82,9 +82,9 @@ Priority work
 					| just like single image mode...
 					[X] make bg color switching in all modes
 					| black, white, gray
-				[_] 0% PC
+				[_] 50% PC
 					[_] stretch to full screen
-					[_] hide buttons for keyboard actions
+					[X] hide buttons for keyboard actions
 				[_] web
 				| is this is the same as the above two? (with auto-select)
 			[_] 0% settings/help screen

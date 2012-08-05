@@ -76,6 +76,10 @@ $(document).ready(setup);
 			<small><i>loading...</i></small>
 		</td></tr></table>
 	</div>
+	<div class="controller-mini left">
+		<div class="screen-button show-controls">*</div>
+		<div class="screen-button"></div>
+	</div>
 	<div class="controller left">
 		<div class="screen-button demote">^</div>
 		<div class="screen-button prev-image">&lt;</div>
@@ -95,7 +99,10 @@ $(document).ready(setup);
 		<div class="h-marker"></div>
 		<div class="v-marker"></div>
 	</div>
-	<!-- need to keep these after -->
+	<div class="controller-mini right">
+		<div class="screen-button settings">?</div>
+		<div class="screen-button"></div>
+	</div>
 	<div class="controller right">
 		<div class="screen-button demote">^</div>
 		<div class="screen-button next-image">&gt;</div>
@@ -108,7 +115,8 @@ $(document).ready(setup);
 
 <div class="demo-buttons">
 	<button onclick="toggleMarkers()">Toggle Markers (m)</button>
-	<button onclick="toggleBackgroundModes()">toggle background mode (b)</button>
+	<button onclick="toggleBackgroundModes()">toggle background modes (b)</button>
+	<button onclick="toggleControls()">toggle screen controls (tab)</button>
 
 	<br><br>
 

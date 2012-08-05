@@ -98,11 +98,13 @@
 }
 
 
-.controller {
+.controller, .controller-mini {
 	position: absolute;
 
-	height: 500px;
+	overflow: hidden;
 	width: 50px;
+
+	height: 500px;
 
 	/* keep these on top of the normal elements but below the high 
 	 * visibility 9000+ crowd...
@@ -118,10 +120,33 @@
 	opacity: 0.5;
 }
 
+.controller-mini {
+	width: 0px;
+}
+
+.hidden-controls .controller-mini {
+	width: 25px;
+}
+
+
 .controller.left {
 	left: 0px;
 }
 .controller.right {
+	right: 0px;
+}
+
+.hidden-controls .controller.left {
+	width: 0px;
+}
+.hidden-controls .controller.right {
+	width: 0px;
+}
+
+.controller-mini.left {
+	left: 0px;
+}
+.controller-mini.right {
 	right: 0px;
 }
 
@@ -141,7 +166,8 @@
 }
 
 
-.next-image, .prev-image, .toggle-wide, .toggle-single, .zoom-in, .settings, .toggle-wide {
+.controller-mini .screen-button {
+	height: 50%;
 }
 
 
@@ -149,6 +175,7 @@
 	border-top: solid gray 1px;
 	height: 10%;
 }
+
 
 .toggle-single, .fit-three, .zoom-in, .zoom-out {
 	height: 10%;
@@ -158,39 +185,6 @@
 .settings, .toggle-wide {
 	height: 5%;
 }
-
-.promote {
-}
-
-
-.next-image {
-}
-
-
-.prev-image {
-}
-
-
-.demote {
-}
-
-
-.toggle-wide {
-}
-
-
-.toggle-single {
-}
-
-
-.zoom-in {
-}
-
-
-.zoom-out {
-}
-
-
 
 
 .container {
