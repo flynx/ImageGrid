@@ -7,7 +7,7 @@ var keys = {
 	toggleHelp: [72],							//	???
 	toggleSingleImageMode: [70, 13],			//	???, Enter
 	toggleSingleImageModeTransitions: [84],		//	t
-	toggleSingleImageModeWhiteBG: [87],			//	w
+	toggleBackgroundModes: [66],				//	b
 	close: [27, 88, 67],						//	???
 
 	// zooming...
@@ -46,6 +46,14 @@ var keys = {
 	// print unhandled keys...
 	helpShowOnUnknownKey: true
 }
+
+
+// the list of style modes...
+// these are swithched through in order by toggleBackgroundModes()
+var BACKGROUND_MODES = [
+	'dark',
+	'black'
+]
 
 
 // this sets the zooming factor used in manual zooming...
@@ -241,13 +249,15 @@ function handleKeys(event){
 
 		: (fn(code, keys.toggleSingleImageMode) >= 0) ? toggleSingleImageMode()
 		: (fn(code, keys.toggleSingleImageModeTransitions) >= 0) ? toggleSingleImageModeTransitions()
-		: (fn(code, keys.toggleSingleImageModeWhiteBG) >= 0) ? toggleSingleImageModeWhiteBG()
+
+		: (fn(code, keys.toggleBackgroundModes) >= 0) ? toggleBackgroundModes()
 
 		// debug...
 		: (fn(code, keys.toggleMarkers) >= 0) ? toggleMarkers()
 
 		: (fn(code, keys.ignore) >= 0) ? false
-		// XXX
+
+
 		: (keys.helpShowOnUnknownKey) ? function(){alert(code)}()
 		: false;
 	return false;
@@ -280,14 +290,29 @@ function setViewerMode(mode){
 // XXX HACK
 var ORIGINAL_FIELD_SCALE = 1
 
+
+// remember the default backgrounds for modes...
+// ...this effectively makes the modes independant...
+// NOTE: null represent the default value...
+// XXX HACK
+var NORMAL_MODE_BG = null 
+var SINGLE_IMAGE_MODE_BG = BACKGROUND_MODES[BACKGROUND_MODES.length-1]
+
+
 function toggleSingleImageMode(){
+	// go to normal mode...
 	if($('.single-image-mode').length > 0){
+		SINGLE_IMAGE_MODE_BG = getBackgroundMode()
 		unsetViewerMode('single-image-mode')
 		setContainerScale(ORIGINAL_FIELD_SCALE)
+		setBackgroundMode(NORMAL_MODE_BG)
+	// go to single image mode...
 	} else {
+		NORMAL_MODE_BG = getBackgroundMode()
 		setViewerMode('single-image-mode')
 		ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
 		fitImage()
+		setBackgroundMode(SINGLE_IMAGE_MODE_BG)
 	}
 }
 
@@ -302,6 +327,88 @@ function toggleWideView(){
 		ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
 		setContainerScale(0.1)
 		$('.viewer').addClass('wide-view-mode')
+	}
+}
+
+
+
+function toggleSingleImageModeTransitions(){
+	if( $('.no-single-image-transitions').length > 0 ){
+		$('.no-single-image-transitions').removeClass('no-single-image-transitions')
+	} else {
+		$('.viewer').addClass('no-single-image-transitions')
+	}
+}
+
+
+
+
+function getBackgroundMode(){
+	var mode = null
+	// find a mode to set...
+	for(var i = 0; i < BACKGROUND_MODES.length; i++){
+		// we found our mode...
+		if( $('.' + BACKGROUND_MODES[i]).length > 0 ){
+			return BACKGROUND_MODES[i]
+		}
+	}
+	return mode
+}
+
+
+
+// set the background mode
+// NOTE: passing null will set the default.
+function setBackgroundMode(mode){
+	var cur = BACKGROUND_MODES.indexOf(mode)
+
+	// invalid mode...
+	if( cur == -1 && mode != null ){
+		return null
+	}
+	// set the mode...
+	if(mode != null){
+		$('.viewer').addClass(mode)
+	}
+	// remove all others...
+	for(var i = 0; i < BACKGROUND_MODES.length; i++){
+		if( i == cur ){
+			continue
+		}
+		mode = BACKGROUND_MODES[i]
+		$('.' + mode).removeClass(mode)
+	}
+}
+
+
+
+// this will toggle through background theems: none -> dark -> black
+function toggleBackgroundModes(){
+	var mode = null
+
+	// find a mode to set...
+	for(var i = 0; i < BACKGROUND_MODES.length-1; i++){
+		// we found our mode...
+		if( $('.' + BACKGROUND_MODES[i]).length > 0 ){
+			// set the next mode in list...
+			mode = BACKGROUND_MODES[i+1]
+			$('.viewer').addClass(mode)
+			break
+		}
+	}
+	// if no set modes are found, set the default...
+	if($('.' + BACKGROUND_MODES[BACKGROUND_MODES.length-1]).length == 0){
+		$('.viewer').addClass(BACKGROUND_MODES[0])
+	// remove all other modes...
+	} else {
+		var cur = BACKGROUND_MODES.indexOf(mode)
+		for(var i = 0; i < BACKGROUND_MODES.length; i++){
+			if( i == cur ){
+				continue
+			}
+			mode = BACKGROUND_MODES[i]
+			$('.' + mode).removeClass(mode)
+		}
 	}
 }
 
@@ -558,28 +665,6 @@ function mergeRibbons(direction){
 				$(this).remove()
 				$('.current.image').click()
 			})
-}
-
-
-
-function toggleSingleImageModeTransitions(){
-	if( $('.no-single-image-transitions').length > 0 ){
-
-		$('.no-single-image-transitions').removeClass('no-single-image-transitions')
-	} else {
-		$('.viewer').addClass('no-single-image-transitions')
-	}
-}
-
-
-
-function toggleSingleImageModeWhiteBG(){
-	if( $('.single-image-white-bg').length > 0 ){
-
-		$('.single-image-white-bg').removeClass('single-image-white-bg')
-	} else {
-		$('.viewer').addClass('single-image-white-bg')
-	}
 }
 
 
