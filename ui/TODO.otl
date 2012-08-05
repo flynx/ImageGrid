@@ -76,7 +76,7 @@ Priority work
 			[_] 0% layout
 				[_] 0% tablet
 					[_] stretch to full screen
-					| NOTE: viewer % sizes may break things...
+					| NOTE: viewer 0% sizes may break things...
 					[_] restrict to horizontal / do a different vertical layout
 					[_] make buttons semi-transparent and same color as bg in all modes
 					| just like single image mode...
@@ -102,6 +102,7 @@ Priority work
 		[_] 0% native client
 			[_] android
 	[_] 8% Preview II (optional features)
+		[_] option to disable processor intensive features
 		[_] 80% drag/move action...
 			[X] basic infrastructure
 			[X] action: center current image

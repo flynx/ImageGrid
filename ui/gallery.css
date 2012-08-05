@@ -61,6 +61,7 @@
 
 
 .viewer {
+	position: relative;
 	width: 900px;
 	height: 500px;
 	border: solid blue 5px;
@@ -69,25 +70,39 @@
 
 
 .controller {
+	position: absolute;
+
 	height: 500px;
 	width: 50px;
-	float: left;
-	background: silver;
+
+	/* keep these on top of the normal elements but below the high 
+	 * visibility 9000+ crowd...
+	 */
+	z-index: 5000;
 
 	-webkit-transition: all 0.2s ease;
 	-moz-transition: all 0.2s ease;
 	-o-transition: all 0.2s ease;
 	-ms-transition: all 0.2s ease;	
 	transition: all 0.2s ease;
+
+	opacity: 0.5;
+}
+
+.controller.left {
+	left: 0px;
+}
+.controller.right {
+	right: 0px;
 }
 
 
 .screen-button {
 	text-align: center;
 	width: 100%;
-	height: 125px; 
+	height: 25%; 
 
-	color: white;
+	color: black;
 
 	-moz-user-select: none;
 	-webkit-user-select: none;
@@ -102,17 +117,17 @@
 
 
 .toggle-single, .zoom-in {
-	border-top: solid white 1px;
-	height: 50px;
+	border-top: solid gray 1px;
+	height: 10%;
 }
 
 .toggle-single, .fit-three, .zoom-in, .zoom-out {
-	height: 50px;
+	height: 10%;
 }
 
 
 .settings, .toggle-wide {
-	height: 25px;
+	height: 5%;
 }
 
 .promote {
@@ -154,8 +169,12 @@
 	overflow: hidden;
 
 	float: left;
+	width: 100%;
+	height: 100%;
+	/*
 	width: 800px;
 	height: 500px;
+	*/
 
 	-webkit-transition: all 0.2s ease;
 	-moz-transition: all 0.2s ease;

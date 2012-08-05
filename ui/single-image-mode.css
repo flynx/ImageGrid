@@ -6,12 +6,11 @@
 
 
 .single-image-mode .controller {
-	opacity: 0.5;
-	background: black;
 }
 
 
 .single-image-mode .screen-button {
+	color: white;
 }
 
 
@@ -49,7 +48,7 @@
 
 
 .single-image-mode.single-image-white-bg .screen-button {
-	color: gray;
+	color: black;
 }
 
 
@@ -59,7 +58,7 @@
 
 
 .single-image-mode.single-image-white-bg .toggle-single, .single-image-mode.single-image-white-bg .zoom-in {
-	border-top: solid gray 1px;
+	border-top: solid black 1px;
 }
 
 
