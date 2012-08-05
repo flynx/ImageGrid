@@ -58,7 +58,7 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 66% UI
+		[_] 69% UI
 			[X] fix single image mode
 			| need to center the image correctly...
 			[X] 100% add screen buttons for all actions...
@@ -73,14 +73,14 @@ Priority work
 			[X] 100% control single-image mode animations
 				[X] scroll
 				[X] switch (no transition)
-			[_] 0% layout
-				[_] 0% tablet
+			[_] 16% layout
+				[_] 50% tablet
 					[_] stretch to full screen
 					| NOTE: viewer 0% sizes may break things...
 					[_] restrict to horizontal / do a different vertical layout
-					[_] make buttons semi-transparent and same color as bg in all modes
+					[X] make buttons semi-transparent and same color as bg in all modes
 					| just like single image mode...
-					[_] make bg color switching in all modes
+					[X] make bg color switching in all modes
 					| black, white, gray
 				[_] 0% PC
 					[_] stretch to full screen

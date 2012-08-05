@@ -24,14 +24,15 @@
 	background-color: white;
 	color: gray;
 
-	/* XXX put a logo here */
-	font-weight: bold;
-	font-size: 24pt;
-
-	opacity: 0.9;
+	opacity: 1.0;
 
 	z-index: 9000;
 }
+
+.loading * {
+	color: gray;
+}
+
 
 
 .image {
@@ -283,6 +284,11 @@
 }
 
 
+.dark .loading * {
+	color: silver;
+}
+
+
 .dark .screen-button {
 	color: silver;
 }
@@ -300,6 +306,10 @@
 /* black background */
 .black.viewer, .black .loading {
 	background-color: black;
+}
+
+.black .loading * {
+	color: silver;
 }
 
 

@@ -30,6 +30,9 @@ function setup(){
 	// initial state (default)...
 	setDefaultInitialState()
 
+	// XXX
+	//setBackgroundMode('dark')
+
 	// setup event handlers...
 	setupKeyboard()
 	setupGestures()
@@ -52,7 +55,9 @@ function setup(){
 	// set the default position and init...
 	$('.current.image').click()
 
-	$('.loading').delay(200).fadeOut(400)
+	// XXX get the timing right
+	// XXX fire this when all is done, via an event...
+	$('.loading').delay(500).fadeOut(700)
 }
 $(document).ready(setup);
 
@@ -67,7 +72,8 @@ $(document).ready(setup);
 	<div class="loading">
 		<!-- XXX replace this with a background-image logo... -->
 		<table width="100%" height="100%"><tr><td align="center" valign="middle">
-			ImageGrid
+			<big><b>ImageGrid</b></big><br>
+			<small><i>loading...</i></small>
 		</td></tr></table>
 	</div>
 	<div class="controller left">
