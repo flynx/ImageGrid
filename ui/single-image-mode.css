@@ -15,6 +15,7 @@
 
 .single-image-mode .image {
 	opacity: 0.0;
+	background-color: transparent;
 }
 
 
