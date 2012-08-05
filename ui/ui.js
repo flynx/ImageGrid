@@ -131,7 +131,6 @@ function alignRibbon(image, position){
 
 /* Set the transform-origin to the center of the current view...
  */
-// XXX this appears to be wrong....
 function centerOrigin(){
 	var mt = parseFloat($('.field').css('margin-top'))
 	var ml = parseFloat($('.field').css('margin-left'))
@@ -171,7 +170,6 @@ function centerOrigin(){
 
 // XXX need to make this work for % values...
 // XXX make this usable as an event handler for .resize(...) event...
-// XXX this does not account for scale correctly...
 function fieldSize(W, H){
 	var oW = $('.container').width()
 	var oH = $('.container').height()
@@ -234,7 +232,6 @@ function getElementScale(elem){
 function setElementScale(elem, scale){
 }
 
-// XXX this appears to be broken -- for some reason the current scale does not change...
 function scaleContainerBy(factor){
 	var scale = getElementScale($('.field'))*factor 
 
@@ -271,7 +268,7 @@ function fitThreeImages(){
 	var W = $('.container').width()
 
 	var h = $('.image.current').height()
-	// XXX cheating, need to get three widths...
+	// NOTE: this is cheating, need to get actual three widths...
 	var w = $('.image.current').width()*3
 
 	var f = Math.min(H/h, W/w)

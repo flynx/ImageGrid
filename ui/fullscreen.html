@@ -1,7 +1,8 @@
-
 <!--
 -->
 
+<html>
+<head>
 <link rel="stylesheet" href="gallery.css">
 <link rel="stylesheet" href="single-image-mode.css">
 
@@ -16,11 +17,16 @@ body {
 	
 
 .viewer {
-	margin: 20px;
-	border: solid blue 5px;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	margin: 0px;
 }
 
 </style>
+
 
 <script src="jquery.js"></script>
 <script src="jquery-ui-1.8.22.custom.min.js"></script>
@@ -82,6 +88,8 @@ $(document).ready(setup);
 <style>
 </style>
 
+</head>
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
 <div class="viewer no-single-image-transitions">
 	<div class="loading">
 		<!-- XXX replace this with a background-image logo... -->
@@ -105,9 +113,6 @@ $(document).ready(setup);
 	<div class="container">
 		<div class="field">
 			<div class="ribbon">
-				<!--div class="image mock-image"></div>
-				<div class="image mock-image"></div>
-				<div class="image mock-image"></div-->
 			</div>
 		</div>
 		<div class="h-marker"></div>
@@ -127,73 +132,6 @@ $(document).ready(setup);
 	</div>
 </div>
 
-<div class="demo-buttons">
-	<button onclick="toggleMarkers()">Toggle Markers (m)</button>
-	<button onclick="toggleBackgroundModes()">toggle background modes (b)</button>
-	<button onclick="toggleControls()">toggle screen controls (tab)</button>
-
-	<br><br>
-
-	<button onclick="centerCurrentImage()">center current (o)</button>
-	<button onclick="centerOrigin()">center origin</button>
-
-	<br><br>
-
-	<button onclick="toggleSingleImageModeTransitions()">toggle single image mode transitions (t)</button>
-
-	<br><br>
-
-	<button onclick="firstImage()">first (home)</button>
-	<button onclick="prevImage()">prev (left)</button>
-	<button onclick="nextImage()">next (right)</button>
-	<button onclick="lastImage()">last (end)</button>
-
-	<br><br>
-
-	<button onclick="moveViewLeft()">left (h)</button>
-	<button onclick="moveViewUp()">Up (k)</button>
-	<button onclick="moveViewDown()">Down (j)</button>
-	<button onclick="moveViewRight()">right (l)</button>
-
-	<!--br><br>
-	LEGACY:
-	<button onclick="showSingle()">single</button>
-	<button onclick="showRibbon()">ribbon</button>
-	<button onclick="toggleRibbonView()">toggle ribbon view (f)</button-->
-
-	<br><br>
-
-	<button onclick="zoomContainerBy(2)">Zoom in (+)</button>
-	<button onclick="zoomContainerBy(0.5)">Zoom out (-)</button>
-	<button onclick="setContainerScale(1)">Original (0)</button>
-	<button onclick="fitImage()">Image (1)</button>
-	<button onclick="fitThreeImages()">Three (3)</button>
-
-	<br><br>
-
-	<button onclick="toggleWideView()">toggle wide view</button>
-
-	<br><br>
-
-	<button onclick="createRibbon('prev')" disabled>create ribbon above (helper)</button><br>
-	<button onclick="createRibbonBelow('next')" disabled>create ribbon below (helper)</button>
-
-	<br><br>
-
-	<button onclick="mergeRibbons('prev')">merge ribbons up</button><br>
-	<button onclick="mergeRibbons('next')">merge ribbons down</button>
-
-	<br><br>
-
-	<button onclick="shiftImageUp()">demote image (shift-up)</button><br>
-	<button onclick="shiftImageDown()">promote image (shift-down)</button><br>
-	NOTE: ctrl-shift-up / ctrl-shift-down will demote / promote an image to a new empty ribbon (the default if no ribbon exists)
-
-	<br><br>
-
-	<button onclick="focusAboveRibbon()">focus above ribbon (up)</button><br>
-	<button onclick="focusBelowRibbon()">focus below ribbon (down)</button>
-
-</div>
-
+</body>
+</html>
 <!-- vim:set ts=4 sw=4 nowrap : -->

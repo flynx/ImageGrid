@@ -84,8 +84,6 @@
 	position: relative;
 	width: 900px;
 	height: 500px;
-	border: solid blue 5px;
-	margin: 20px; 
 
 	background: white;
 
@@ -104,7 +102,7 @@
 	overflow: hidden;
 	width: 50px;
 
-	height: 500px;
+	height: 100%;
 
 	/* keep these on top of the normal elements but below the high 
 	 * visibility 9000+ crowd...
