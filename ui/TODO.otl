@@ -58,7 +58,7 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 80% UI
+		[_] 81% UI
 			[X] fix single image mode
 			| need to center the image correctly...
 			[X] 100% add screen buttons for all actions...
@@ -73,11 +73,10 @@ Priority work
 			[X] 100% control single-image mode animations
 				[X] scroll
 				[X] switch (no transition)
-			[_] 80% layout
-				[_] 75% tablet
+			[_] 88% layout
+				[X] 100% tablet
 					[X] stretch to full screen
 					| NOTE: viewer 0% sizes may break things...
-					[_] restrict to horizontal / do a different vertical layout
 					[X] make buttons semi-transparent and same color as bg in all modes
 					| just like single image mode...
 					[X] make bg color switching in all modes
@@ -101,8 +100,18 @@ Priority work
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
 		[_] 0% native client
-			[_] android
-	[_] 8% Preview II (optional features)
+			[_] 0% android
+				[_] a build wrapper (via PhoneGap)
+				[_] restrict layout to horizontal
+				| leave doing a different vertical layout for later versions...
+	[_] 11% Preview II (optional features)
+		[_] actual file loading
+		[_] serialization/deserialization
+		[_] display promoted/demoted images
+		| show images that were either promoted or demoted from the 
+		| current ribbon...
+		|
+		| show these images either crossed out or semi-transparent
 		[_] option to disable processor intensive features
 		[_] 80% drag/move action...
 			[X] basic infrastructure
@@ -135,10 +144,12 @@ Priority work
 		[_] fade animation is single image mode...
 		[_] add sort/re-sort capability...
 		[_] make scrolling of other ribbons proportional to the gap...
-		[_] 0% refactoring (low priority)
-			[_] cleanup legacy workarounds
+		[_] 50% refactoring (low priority)
+			[X] cleanup legacy workarounds
 			[_] ui.js, gallery-prototype.js either merge or revise split logic
 	[_] 0% Preview III
+		[_] actual file loading
+		[_] serialization/deserialization
 		[_] revise controls...
 		[_] dynamic image/preview swap for zooming
 		| important to make 1:1 previews for all main views and zoom levels...
