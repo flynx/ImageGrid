@@ -101,16 +101,16 @@ Priority work
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
 		[_] 16% native client
-			[_] 0% Android (PhoneGap)
-				[_] restrict layout to horizontal
-				| leave doing a different vertical layout for later versions...
-				[_] basic wrapper
-				| hook-in os-specific API
 			[_] 33% Windows (CEF / CEFPython)
 				[X] basic test
 				[_] basic wrapper
 				| hook-in os-specific API
 				[_] package a portable exe
+			[_] 0% Android (PhoneGap)
+				[_] restrict layout to horizontal
+				| leave doing a different vertical layout for later versions...
+				[_] basic wrapper
+				| hook-in os-specific API
 	[_] 12% Preview II (optional features)
 		[_] slideshow...
 		[_] serialization/deserialization
