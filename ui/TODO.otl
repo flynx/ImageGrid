@@ -1,5 +1,5 @@
 Priority work
-	[_] 76% Preview II
+	[_] 79% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -85,13 +85,13 @@ Priority work
 					[X] stretch to full screen
 					[_] make view correctly resizable
 					| appears to work correctly but need to click an image onResize...
+					|
+					| XXX find a way around always clicking things...
 					[X] hide buttons for keyboard actions
 				[X] web
 				| is this is the same as the above two? (with auto-select)
 			[_] 0% settings/help screen
-				[_] basic screen
-				[_] keyboard config/help (low priority)
-				[_] view mode (low priority)
+				[_] keyboard config/help
 			[X] 100% debug mode
 				[X] toggle cross-hair
 		[X] 100% fix layout and animations
@@ -100,12 +100,15 @@ Priority work
 			[X] 100% actions
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
-		[_] 0% native client
-			[_] 0% android
-				[_] a build wrapper (via PhoneGap)
+		[_] 16% native client
+			[_] 0% Android (PhoneGap)
 				[_] restrict layout to horizontal
 				| leave doing a different vertical layout for later versions...
-	[_] 11% Preview II (optional features)
+			[_] 33% Windows (CEF / CEFPython)
+				[X] basic test
+				[_] file reader
+				[_] package a portable exe
+	[_] 10% Preview II (optional features)
 		[_] actual file loading
 		[_] serialization/deserialization
 		[_] display promoted/demoted images

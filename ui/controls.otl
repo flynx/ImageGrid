@@ -27,10 +27,11 @@ Control scheme:
 			down image
 				down			- (via focus image)	??					-
 
-			skip 10 left
-				??				-						-					-
-			skip 10 right
-				??				-						-					-
+			skip N left
+			| N is screen-width of elements
+				pg-up				-						-					-
+			skip N right
+				pg-down				-						-					-
 
 			first image
 				home			-						??					-
