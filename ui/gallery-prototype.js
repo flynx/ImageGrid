@@ -76,6 +76,11 @@ function setDefaultInitialState(){
 	if($('.current.image').length == 0){
 		$('.current.ribbon').children('.image').first().addClass('current')
 	}
+	$(window).resize(function() {
+		// XXX HACK
+		$('.current.image').click()
+	})
+	
 }
 
 

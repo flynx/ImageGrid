@@ -58,7 +58,7 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 81% UI
+		[_] 83% UI
 			[X] fix single image mode
 			| need to center the image correctly...
 			[X] 100% add screen buttons for all actions...
@@ -73,7 +73,7 @@ Priority work
 			[X] 100% control single-image mode animations
 				[X] scroll
 				[X] switch (no transition)
-			[_] 88% layout
+			[X] 100% layout
 				[X] 100% tablet
 					[X] stretch to full screen
 					| NOTE: viewer 0% sizes may break things...
@@ -81,9 +81,9 @@ Priority work
 					| just like single image mode...
 					[X] make bg color switching in all modes
 					| black, white, gray
-				[_] 66% PC
+				[X] 100% PC
 					[X] stretch to full screen
-					[_] make view correctly resizable
+					[X] make view correctly resizable
 					| appears to work correctly but need to click an image onResize...
 					|
 					| XXX find a way around always clicking things...
@@ -104,11 +104,17 @@ Priority work
 			[_] 0% Android (PhoneGap)
 				[_] restrict layout to horizontal
 				| leave doing a different vertical layout for later versions...
+				[_] basic wrapper
+				| hook-in os-specific API
 			[_] 33% Windows (CEF / CEFPython)
 				[X] basic test
-				[_] file reader
+				[_] basic wrapper
+				| hook-in os-specific API
 				[_] package a portable exe
-	[_] 10% Preview II (optional features)
+	[_] 9% Preview II (optional features)
+		[_] do a redraw function
+		| this should position all the elements correctly within the 
+		| current ui state...
 		[_] actual file loading
 		[_] serialization/deserialization
 		[_] display promoted/demoted images
