@@ -84,6 +84,7 @@ Priority work
 				[_] 66% PC
 					[X] stretch to full screen
 					[_] make view correctly resizable
+					| appears to work correctly but need to click an image onResize...
 					[X] hide buttons for keyboard actions
 				[X] web
 				| is this is the same as the above two? (with auto-select)
