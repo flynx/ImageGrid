@@ -76,23 +76,19 @@ function setDefaultInitialState(){
 	if($('.current.image').length == 0){
 		$('.current.ribbon').children('.image').first().addClass('current')
 	}
+}
+
+
+function setupEvents(){
+	// resize...
 	$(window).resize(function() {
 		// XXX HACK
 		$('.current.image').click()
 	})
-	
-}
-
-
-
-function setupKeyboard(){
+	// keyboard...
 	$(document)
 		.keydown(handleKeys)
-}
-
-
-
-function setupGestures(){
+	// swipe...
 	$('.viewer')
 		.swipe({
 			swipeLeft: nextImage,
