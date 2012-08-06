@@ -59,7 +59,7 @@ Control scheme:
 				j				-						-					-
 
 			center current image
-				??				??						??					??
+				o				-						-					-
 
 			zoom in
 				+				pinch spread			+					-
@@ -74,6 +74,14 @@ Control scheme:
 				a				-						+					-
 			toggle slideshow mode
 				??				??						-					-
+			toggle buttons
+				tab				-						-					-
+			enable buttons
+				-				-						+					-
+			toggle background style
+				b				-						- (settings)		-
+			toggle markers (debug)
+				m				-						- (settings)		-
 
 			keyboard help
 				??				??						-					-
