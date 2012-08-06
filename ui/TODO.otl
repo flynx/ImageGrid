@@ -111,18 +111,16 @@ Priority work
 				[_] basic wrapper
 				| hook-in os-specific API
 				[_] package a portable exe
-	[_] 9% Preview II (optional features)
-		[_] do a redraw function
-		| this should position all the elements correctly within the 
-		| current ui state...
-		[_] actual file loading
+	[_] 12% Preview II (optional features)
+		[_] slideshow...
 		[_] serialization/deserialization
+		[_] actual file loading (Target-specific)
+		[_] fade transition in single image mode...
 		[_] display promoted/demoted images
 		| show images that were either promoted or demoted from the 
 		| current ribbon...
 		|
 		| show these images either crossed out or semi-transparent
-		[_] option to disable processor intensive features
 		[_] 80% drag/move action...
 			[X] basic infrastructure
 			[X] action: center current image
@@ -145,18 +143,24 @@ Priority work
 				| ...this will need careful setup of timeouts and 
 				| dynamic disabling/enabling of both drag and gestures
 				| e.g. of large zooms dragging takes priority.
-		[_] 0% return to current image / home (after drag)
+		[_] 50% return to current image / home (after drag)
 			[_] button
-			[_] keyboard
-		[_] tap image to return from large magnification
+			[X] keyboard
+		[_] double tap/click to zoom (a-la iPad)
+		| fit <-> actual pixels (max)
 		[_] pinch to zoom
-		[_] slideshow...
-		[_] fade animation is single image mode...
 		[_] add sort/re-sort capability...
+		[_] option to disable processor intensive features
+		| like other ribbon align...
 		[_] make scrolling of other ribbons proportional to the gap...
-		[_] 50% refactoring (low priority)
+		[_] 33% refactoring (low priority)
 			[X] cleanup legacy workarounds
 			[_] ui.js, gallery-prototype.js either merge or revise split logic
+			[_] do a redraw function
+			| this should position all the elements correctly within the 
+			| current ui state...
+			|
+			| currently all operations that alter the layout call $('.current.image').click()
 	[_] 0% Preview III
 		[_] actual file loading
 		[_] serialization/deserialization
