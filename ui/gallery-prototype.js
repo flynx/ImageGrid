@@ -97,7 +97,7 @@ function createCSSClassToggler(elem, css_class, callback_a, callback_b){
 			callback_pre(action)
 		}
 		// play with the class...
-		if(state == 'on'){
+		if(action == 'on'){
 			$(elem).addClass(css_class)
 		} else {
 			$(elem).removeClass(css_class)
