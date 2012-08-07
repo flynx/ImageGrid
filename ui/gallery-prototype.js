@@ -733,5 +733,18 @@ function shiftImageUp(){
 
 
 
+function flipRibbons(){
+	var ribbons = $('.ribbon')
+	// index of current ribbon, needed to adjust placement of everything...
+	var cur = ribbon.index($('.current.ribbon'))
+
+	// XXX would have been nice if we could do detach reverse attach or just reverse...
+
+	
+}
+
+
+
+
 /*********************************************************************/
 // vim:set ts=4 sw=4 nowrap :

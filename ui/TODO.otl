@@ -111,7 +111,8 @@ Priority work
 				| leave doing a different vertical layout for later versions...
 				[_] basic wrapper
 				| hook-in os-specific API
-	[_] 12% Preview II (optional features)
+	[_] 11% Preview II (optional features)
+		[_] flip ribbons relative to current -- reverse order
 		[_] slideshow...
 		[_] serialization/deserialization
 		[_] actual file loading (Target-specific)
