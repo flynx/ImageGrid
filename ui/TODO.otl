@@ -1,5 +1,5 @@
 Priority work
-	[_] 79% Preview II
+	[_] 84% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -100,13 +100,15 @@ Priority work
 			[X] 100% actions
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
-		[_] 16% native client
+		[_] 41% native client
 			[_] 33% Windows (CEF / CEFPython)
 				[X] basic test
 				[_] basic wrapper
 				| hook-in os-specific API
 				[_] package a portable exe
-			[_] 0% Android (PhoneGap)
+			[_] 50% Android (PhoneGap)
+				[X] basic test
+				[X] disable transitions...
 				[_] restrict layout to horizontal
 				| leave doing a different vertical layout for later versions...
 				[_] basic wrapper

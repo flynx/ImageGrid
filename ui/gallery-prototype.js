@@ -5,8 +5,9 @@
 // XXX need to make this handle modifiers gracefully...
 var keys = {
 	toggleHelp: [72],							//	???
-	toggleSingleImageMode: [70, 13],			//	???, Enter
+	toggleSingleImageMode: [70, 13],			//	f, Enter
 	toggleSingleImageModeTransitions: [84],		//	t
+	toggleTransitions: [65],					//	a
 	toggleBackgroundModes: [66],				//	b
 	toggleControls: [9],						// tab
 	close: [27, 88, 67],						//	???
@@ -66,6 +67,160 @@ var MOVE_DELTA = 50
 
 
 
+
+/********************************************************** Helpers **/
+
+
+// this will create a function that will add/remove a css_class to elem 
+// calling the callbacks before and/or after.
+// NOTE: of only one callback is given then it will be called after the 
+// 		 class change...
+// 		 a way around this is to pass an empty function as callback_b
+function createCSSClassToggler(elem, css_class, callback_a, callback_b){
+	// prepare the pre/post callbacks...
+	if(callback_b == null){
+		var callback_pre = null
+		var callback_post = callback_a
+	} else {
+		var callback_pre = callback_a
+		var callback_post = callback_b
+	}
+	return function(action){
+		if(action == null){
+			action = 'on'
+			// get current state...
+			if( $(elem).hasClass(css_class) ){
+				action = 'off'
+			}
+		}
+		if(callback_pre != null){
+			callback_pre(action)
+		}
+		// play with the class...
+		if(state == 'on'){
+			$(elem).addClass(css_class)
+		} else {
+			$(elem).removeClass(css_class)
+		}
+		if(callback_post != null){
+			callback_post(action)
+		}
+	}
+}
+
+
+// disable transitions on obj, call func then enable transitions back...
+function doWithoutTransitions(obj, func){
+	obj
+		.addClass('unanimated')
+		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+			func()
+			$('.viewer')
+				.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+					obj.removeClass('unanimated')
+				})
+		})
+}
+
+
+
+// find an image object after which to position image ID...
+// used for two main tasks:
+// 	- positioning promoted/demoted images
+// 	- centering ribbons
+// returns:
+// 	- null		- empty ribbon or no element greater id should be first
+// 	- element
+// XXX do we need to make ids numbers for this to work?
+function getImageBefore_lin(id, ribbon){
+	// walk the ribbon till we find two images one with an ID less and 
+	// another greater that id...
+	id = parseInt(id)
+	var images = ribbon.children('.image')
+	var prev = null
+	for(var i=0; i < images.length; i++){
+		if(parseInt($(images[i]).attr('id')) > id){
+			return prev
+		}
+		prev = $(images[i])
+	}
+	return prev
+}
+
+
+// generic binery search for element just before the id...
+// NOTE: if id is in lst, this will return the element just before it.
+// NOTE: lst must be sorted.
+function binarySearch(id, lst, get){
+	if(get == null){
+		get = function(o){return o}
+	}
+	
+	// empty list...
+	if(lst.length == 0){
+		return null
+	}
+	
+	// current section length
+	var l = Math.round((lst.length-1)/2)
+	// current position...
+	var i = l
+
+	while(true){
+		var i_id = get(lst[i])
+		// beginning of the array...
+		if(i == 0){
+			if(id > i_id){
+				return i
+			}
+			return null
+		}
+		// we got a hit...
+		if(i_id == id){
+			return i-1
+		}
+		// we are at the end...
+		if(i == lst.length-1 && id > i_id){
+			return i
+		}
+		var ii_id = get(lst[i+1])
+		// test if id is between i and i+1...
+		if( i_id < id && id < ii_id ){
+			return i
+		}
+		// prepare for next iteration...
+		// NOTE: we saturate the values so we will never get out of bounds.
+		l = Math.round(l/2)
+		if(id < i_id){
+			// lower half...
+			i = Math.max(0, i-l)
+		} else {
+			// upper half...
+			i = Math.min(i+l, lst.length-1)
+		}
+	}
+}
+
+// wrapper around binarySearch.
+// this is here to make binarySearch simpler to test and debug...
+function getImageBefore_bin(id, ribbon){
+	var images = ribbon.children('.image') 
+	var i = binarySearch(
+					parseInt(id), 
+					images, 
+					function(o){return parseInt($(o).attr('id'))})
+	if(i == null){
+		return null
+	}
+	return $(images[i])
+}
+
+// set the default search...
+var getImageBefore = getImageBefore_bin
+
+
+
+
 /************************************************** Setup Functions **/
 // XXX is this a correct place for these?
 
@@ -107,6 +262,7 @@ function setupControlElements(){
 	// buttons...
 	$('.screen-button.next-image').click(nextImage)
 	$('.screen-button.prev-image').click(prevImage)
+	// XXX rename classes to "shift-image-up" and "shift-image-down"...
 	$('.screen-button.demote').click(shiftImageUp)
 	$('.screen-button.promote').click(shiftImageDown)
 
@@ -253,6 +409,7 @@ function handleKeys(event){
 
 		: (fn(code, keys.toggleSingleImageMode) >= 0) ? toggleSingleImageMode()
 		: (fn(code, keys.toggleSingleImageModeTransitions) >= 0) ? toggleSingleImageModeTransitions()
+		: (fn(code, keys.toggleTransitions) >= 0) ? toggleTransitions()
 
 		: (fn(code, keys.toggleBackgroundModes) >= 0) ? toggleBackgroundModes()
 		: (fn(code, keys.toggleControls) >= 0) ? toggleControls()
@@ -273,23 +430,6 @@ function handleKeys(event){
 
 /************************************************************ Modes **/
 
-// mode switchers...
-function unsetViewerMode(mode){
-	$('.' + mode)
-		.removeClass(mode)
-	clickAfterTransitionsDone()
-}
-
-
-
-function setViewerMode(mode){
-	$('.viewer').not('.' + mode)
-		.addClass(mode)
-	clickAfterTransitionsDone()
-}
-
-
-
 // ribbon/single view modes...
 // global: stores the scale before we went into single image mode...
 // XXX HACK
@@ -303,48 +443,38 @@ var ORIGINAL_FIELD_SCALE = 1
 var NORMAL_MODE_BG = null 
 var SINGLE_IMAGE_MODE_BG = BACKGROUND_MODES[BACKGROUND_MODES.length-1]
 
-
-function toggleSingleImageMode(){
-	// go to normal mode...
-	if($('.single-image-mode').length > 0){
-		SINGLE_IMAGE_MODE_BG = getBackgroundMode()
-		unsetViewerMode('single-image-mode')
-		setContainerScale(ORIGINAL_FIELD_SCALE)
-		setBackgroundMode(NORMAL_MODE_BG)
-	// go to single image mode...
-	} else {
-		NORMAL_MODE_BG = getBackgroundMode()
-		setViewerMode('single-image-mode')
-		ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
-		fitImage()
-		setBackgroundMode(SINGLE_IMAGE_MODE_BG)
-	}
-}
-
+var toggleSingleImageMode = createCSSClassToggler('.viewer', 'single-image-mode', 
+		// pre...
+		function(action){
+			if(action == 'on'){
+				NORMAL_MODE_BG = getBackgroundMode()
+				ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
+			} else {
+				SINGLE_IMAGE_MODE_BG = getBackgroundMode()
+			}
+		},
+		// post...
+		function(action){
+			if(action == 'on'){
+				fitImage()
+				setBackgroundMode(SINGLE_IMAGE_MODE_BG)
+			} else {
+				setContainerScale(ORIGINAL_FIELD_SCALE)
+				setBackgroundMode(NORMAL_MODE_BG)
+			}
+			clickAfterTransitionsDone()
+})
 
 
 // wide view mode toggle...
-function toggleWideView(){
-	if($('.wide-view-mode').length > 0){
-		setContainerScale(ORIGINAL_FIELD_SCALE)
-		$('.viewer').removeClass('wide-view-mode')
-	} else {
+var toggleWideView = createCSSClassToggler('.viewer', 'wide-view-mode', function(action){
+	if(action == 'on'){
 		ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
 		setContainerScale(0.1)
-		$('.viewer').addClass('wide-view-mode')
-	}
-}
-
-
-
-function toggleSingleImageModeTransitions(){
-	if( $('.no-single-image-transitions').length > 0 ){
-		$('.no-single-image-transitions').removeClass('no-single-image-transitions')
 	} else {
-		$('.viewer').addClass('no-single-image-transitions')
+		setContainerScale(ORIGINAL_FIELD_SCALE)
 	}
-}
-
+}, function(){})
 
 
 
@@ -404,26 +534,17 @@ function toggleBackgroundModes(){
 
 
 
-function showControls(){
-	$('.hidden-controls').removeClass('hidden-controls')
-}
+var toggleSingleImageModeTransitions = createCSSClassToggler('.viewer', 'no-single-image-transitions')
 
 
-
-function hideControls(){
-	$('.viewer').addClass('hidden-controls')
-}
-
+var toggleControls = createCSSClassToggler('.viewer', 'hidden-controls')
+var showControls = function(){toggleControls('on')}
+var hideControls = function(){toggleControls('off')}
 
 
-function toggleControls(){
-	if( $('.hidden-controls').length > 0 ){
-		showControls()
-	} else {
-		hideControls()
-	}
-}
-
+var toggleTransitions = createCSSClassToggler('.viewer', 'transitions-enabled')
+var enableTransitions = function(){toggleTransitions('on')}
+var disableTransitions = function(){toggleTransitions('off')}
 
 
 
@@ -497,116 +618,6 @@ function focusBelowRibbon(){
 
 
 
-/********************************************************** Helpers **/
-
-function doWithoutTransitions(obj, func){
-	obj
-		.addClass('unanimated')
-		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
-			func()
-			$('.viewer')
-				.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
-					obj.removeClass('unanimated')
-				})
-		})
-}
-
-// find an image object after which to position image ID...
-// used for two main tasks:
-// 	- positioning promoted/demoted images
-// 	- centering ribbons
-// returns:
-// 	- null		- empty ribbon or no element greater id should be first
-// 	- element
-// XXX do we need to make ids numbers for this to work?
-function getImageBefore_lin(id, ribbon){
-	// walk the ribbon till we find two images one with an ID less and 
-	// another greater that id...
-	id = parseInt(id)
-	var images = ribbon.children('.image')
-	var prev = null
-	for(var i=0; i < images.length; i++){
-		if(parseInt($(images[i]).attr('id')) > id){
-			return prev
-		}
-		prev = $(images[i])
-	}
-	return prev
-}
-
-
-// generic binery search for element just before the id...
-// NOTE: if id is in lst, this will return the element just before it.
-// NOTE: lst must be sorted.
-function binarySearch(id, lst, get){
-	if(get == null){
-		get = function(o){return o}
-	}
-	
-	// empty list...
-	if(lst.length == 0){
-		return null
-	}
-	
-	// current section length
-	var l = Math.round((lst.length-1)/2)
-	// current position...
-	var i = l
-
-	while(true){
-		var i_id = get(lst[i])
-		// beginning of the array...
-		if(i == 0){
-			if(id > i_id){
-				return i
-			}
-			return null
-		}
-		// we got a hit...
-		if(i_id == id){
-			return i-1
-		}
-		// we are at the end...
-		if(i == lst.length-1 && id > i_id){
-			return i
-		}
-		var ii_id = get(lst[i+1])
-		// test if id is between i and i+1...
-		if( i_id < id && id < ii_id ){
-			return i
-		}
-		// prepare for next iteration...
-		// NOTE: we saturate the values so we will never get out of bounds.
-		l = Math.round(l/2)
-		if(id < i_id){
-			// lower half...
-			i = Math.max(0, i-l)
-		} else {
-			// upper half...
-			i = Math.min(i+l, lst.length-1)
-		}
-	}
-}
-
-// wrapper around binarySearch.
-// this is here to make binarySearch simpler to test and debug...
-function getImageBefore_bin(id, ribbon){
-	var images = ribbon.children('.image') 
-	var i = binarySearch(
-					parseInt(id), 
-					images, 
-					function(o){return parseInt($(o).attr('id'))})
-	if(i == null){
-		return null
-	}
-	return $(images[i])
-}
-
-// set the default search...
-var getImageBefore = getImageBefore_bin
-
-
-
 /********************************************************** Actions **/
 // basic actions...
 // NOTE: below 'direction' argument is meant in the html sence, 
@@ -670,7 +681,6 @@ function mergeRibbons(direction){
 				.insertAfter(prev_elem)
 		}
 	}
-
 	// animate...
 	$('.current.ribbon')[direction]('.ribbon')
 			.slideUp(function(){

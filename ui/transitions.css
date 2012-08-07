@@ -1,11 +1,3 @@
-.animated {
-	-webkit-transition: all 0.2s ease;
-	-moz-transition: all 0.2s ease;
-	-o-transition: all 0.2s ease;
-	-ms-transition: all 0.2s ease;	
-	transition: all 0.2s ease;
-}
-
 .unanimated {
 	-webkit-transition: none;
 	-moz-transition: none;
@@ -14,74 +6,19 @@
 	transition: none;
 }
 
-.image {
-	-webkit-transition: all 0.2s ease;
-	-moz-transition: all 0.2s ease;
-	-o-transition: all 0.2s ease;
-	-ms-transition: all 0.2s ease;	
-	transition: all 0.2s ease;
-}
-
-.demo-buttons {
-	-webkit-transition: all 0.2s ease;
-	-moz-transition: all 0.2s ease;
-	-o-transition: all 0.2s ease;
-	-ms-transition: all 0.2s ease;	
-	transition: all 0.2s ease;
-}
-
-.viewer {
-	/* mostly to animate the background... */
-	-webkit-transition: all 0.2s ease;
-	-moz-transition: all 0.2s ease;
-	-o-transition: all 0.2s ease;
-	-ms-transition: all 0.2s ease;	
-	transition: all 0.2s ease;
-}
-
-
-.controller, .controller-mini {
-	-webkit-transition: all 0.2s ease;
-	-moz-transition: all 0.2s ease;
-	-o-transition: all 0.2s ease;
-	-ms-transition: all 0.2s ease;	
-	transition: all 0.2s ease;
-}
-
-.container {
-	-webkit-transition: all 0.2s ease;
-	-moz-transition: all 0.2s ease;
-	-o-transition: all 0.2s ease;
-	-ms-transition: all 0.2s ease;	
-	transition: all 0.2s ease;
-}
-
-
-.field {
-	-webkit-transition: all 0.2s ease;
-	-moz-transition: all 0.2s ease;
-	-o-transition: all 0.2s ease;
-	-ms-transition: all 0.2s ease;	
-	transition: all 0.2s ease;
-}
-
-.ribbon {
-	-webkit-transition: all 0.2s ease;
-	-moz-transition: all 0.2s ease;
-	-o-transition: all 0.2s ease;
-	-ms-transition: all 0.2s ease;	
-	transition: all 0.2s ease;
-}
-
-.new-ribbon {
-	-webkit-transition: all 0.2s ease;
-	-moz-transition: all 0.2s ease;
-	-o-transition: all 0.2s ease;
-	-ms-transition: all 0.2s ease;	
-	transition: all 0.2s ease;
-}
-
-.current.ribbon {
+.animated,
+/* mostly to animate the background... */
+.transitions-enabled.viewer,
+/* now the normal stuff */
+.transitions-enabled .image, 
+.transitions-enabled .demo-buttons,
+.transitions-enabled .controller,
+.transitions-enabled .controller-mini,
+.transitions-enabled .container,
+.transitions-enabled .field,
+.transitions-enabled .ribbon, 
+.transitions-enabled .new-ribbon,
+.transitions-enabled .current.ribbon {
 	-webkit-transition: all 0.2s ease;
 	-moz-transition: all 0.2s ease;
 	-o-transition: all 0.2s ease;
