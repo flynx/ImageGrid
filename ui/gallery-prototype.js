@@ -85,6 +85,7 @@ function createCSSClassToggler(elem, css_class, callback_a, callback_b){
 		var callback_pre = callback_a
 		var callback_post = callback_b
 	}
+	// build the acual toggler function...
 	return function(action){
 		if(action == null){
 			action = 'on'
