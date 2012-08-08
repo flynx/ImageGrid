@@ -62,16 +62,12 @@ var keybindings = {
 	17:		16,
 	18:		16,
 }
-/*
+/* XXX old bindings...
 	close: [27, 88, 67],						//	???
 
 	// these work with ctrl modifier...
 	promote: [45],								//	???
 	demote: [46],								//	???
-
-
-	// print unhandled keys...
-	helpShowOnUnknownKey: true
 */
 
 // vim:set ts=4 sw=4 nowrap :
