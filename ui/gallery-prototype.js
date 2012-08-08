@@ -1,55 +1,6 @@
 // XXX need a uniform way to address images (filename?)
 /******************************************* Setup Data and Globals **/
 
-// key configuration...
-// XXX need to make this handle modifiers gracefully...
-var keys = {
-	toggleHelp: [72],							//	???
-	toggleSingleImageMode: [70, 13],			//	f, Enter
-	toggleSingleImageModeTransitions: [84],		//	t
-	toggleTransitions: [65],					//	a
-	toggleBackgroundModes: [66],				//	b
-	toggleControls: [9],						// tab
-	close: [27, 88, 67],						//	???
-
-	// zooming...
-	zoomIn: [187],								//	+
-	zoomOut: [189],								//	-
-	// zoom presets...
-	fitOne: [49],								//	1
-	fitThree: [51],								//	3
-	// XXX is this relivant?
-	zoomOriginal: [48],							//	0
-
-	first: [36],								//	Home
-	last: [35],									//	End
-	previous: [37, 80, 188, 8],					//	Left, BkSp, p, <
-	next: [39, 78, 190, 32],					//	Right, Space, n, >
-	// these work with ctrl and shift modifiers...
-	down: [40],									//	Down
-	up: [38],									//	Up
-	// these work with ctrl modifier...
-	promote: [45],								//	???
-	demote: [46],								//	???
-
-	// XXX should these be s-up, s-down, ... ??
-	moveViewUp: [75],							//	k
-	moveViewDown: [74],							//	j
-	moveViewLeft: [72],							//	h
-	moveViewRight: [76],						//	l
-	
-	centerCurrentImage: [79],					//	o
-
-	toggleMarkers: [77],						//	m
-
-	// keys to be ignored...
-	ignore: [16, 17, 18],						//	???, ???, ???
-
-	// print unhandled keys...
-	helpShowOnUnknownKey: true
-}
-
-
 // the list of style modes...
 // these are swithched through in order by toggleBackgroundModes()
 var BACKGROUND_MODES = [
@@ -243,7 +194,8 @@ function setupEvents(){
 	})
 	// keyboard...
 	$(document)
-		.keydown(handleKeys)
+		.keydown(makeKeyboardHandler(keybindings, function(k){alert(k)}))
+		//.keydown(handleKeys)
 	// swipe...
 	$('.viewer')
 		.swipe({
@@ -353,77 +305,67 @@ function alignRibbons(){
 
 
 
-// XXX revise...
-function handleKeys(event){
-	var code = event.keyCode, fn = $.inArray;
-	var _ = (fn(code, keys.close) >= 0) ? function(){}()
-		: (fn(code, keys.first) >= 0) ? firstImage()
-		: (fn(code, keys.next) >= 0) ? nextImage()
-		: (fn(code, keys.previous) >= 0) ? prevImage()
-		: (fn(code, keys.last) >= 0) ? lastImage()
-		: (fn(code, keys.promote) >= 0) ? function(){
-			if(event.ctrlKey){
-				createRibbon('next')
+// XXX we essentially need three things:
+// 		- keycodes, including modifier keys
+// 		- function
+// 		- meta information...
+/*
+ * Basic key format:
+ * 		<key-code> : <callback>,
+ * 		<key-code> : {
+ * 			default: [<callback>, <doc>],
+ *			// a modifier can be any single modifier, like shift or a 
+ *			// combination of modifers like 'ctrl+shift', given in order 
+ *			// of priority.
+ *			// supported modifiers are (in order of priority):
+ *			//	- ctrl
+ *			//	- alt
+ *			//	- shift
+ * 			<modifer>: [...]
+ * 		},
+ *		// alias...
+ * 		<key-code-a> : <key-code-b>,
+ */
+
+function makeKeyboardHandler(keybindings, unhandled){
+	if(unhandled == null){
+		unhandled = function(){return false}
+	}
+	console.log(keybindings)
+	return function(evt){
+		var key = evt.keyCode
+		// XXX ugly...
+		var modifers = evt.ctrlKey ? 'ctrl' : ''
+		modifers += evt.altKey ? (modifers != '' ? '+alt' : 'alt') : ''
+		modifers += evt.shiftKey ? (modifers != '' ? '+shift' : 'shift') : ''
+
+		var handler = keybindings[key]
+
+		// alias...
+		while (typeof(handler) == typeof(123)) {
+			handler = keybindings[handler]
+		}
+		// no handler...
+		if(handler == null){
+			return unhandled(key)
+		}
+		// complex handler...
+		if(typeof(handler) == typeof({})){
+			var callback = handler[modifers]
+			if(callback == null){
+				callback = handler['default']
 			}
-			shiftImageDown()
-		}()
-		: (fn(code, keys.demote) >= 0) ? function(){
-			if(event.ctrlKey){
-				createRibbon('prev')
+			if(callback != null){
+				callback()
+				return false
 			}
-			shiftImageUp()
-		}()
-		: (fn(code, keys.down) >= 0) ? function(){
-			if(event.shiftKey){
-				if(event.ctrlKey){
-					createRibbon('next')
-				}
-				shiftImageDown()
-			} else {
-				focusBelowRibbon()
-			}
-		}()
-		: (fn(code, keys.up) >= 0) ? function(){
-			if(event.shiftKey){
-				if(event.ctrlKey){
-					createRibbon('prev')
-				}
-				shiftImageUp()
-			} else {
-				focusAboveRibbon()
-			}
-		}()
-		// zooming...
-		: (fn(code, keys.zoomIn) >= 0) ? scaleContainerBy(ZOOM_FACTOR)
-		: (fn(code, keys.zoomOut) >= 0) ? scaleContainerBy(1/ZOOM_FACTOR)
-		// zoom presets...
-		: (fn(code, keys.zoomOriginal) >= 0) ? setContainerScale(1)
-		: (fn(code, keys.fitOne) >= 0) ? fitImage()
-		: (fn(code, keys.fitThree) >= 0) ? fitThreeImages()
-
-		// moving view...
-		: (fn(code, keys.moveViewUp) >= 0) ? moveViewUp()
-		: (fn(code, keys.moveViewDown) >= 0) ? moveViewDown()
-		: (fn(code, keys.moveViewLeft) >= 0) ? moveViewLeft()
-		: (fn(code, keys.moveViewRight) >= 0) ? moveViewRight()
-		: (fn(code, keys.centerCurrentImage) >= 0) ? centerCurrentImage()
-
-		: (fn(code, keys.toggleSingleImageMode) >= 0) ? toggleSingleImageMode()
-		: (fn(code, keys.toggleSingleImageModeTransitions) >= 0) ? toggleSingleImageModeTransitions()
-		: (fn(code, keys.toggleTransitions) >= 0) ? toggleTransitions()
-
-		: (fn(code, keys.toggleBackgroundModes) >= 0) ? toggleBackgroundModes()
-		: (fn(code, keys.toggleControls) >= 0) ? toggleControls()
-
-		// debug...
-		: (fn(code, keys.toggleMarkers) >= 0) ? toggleMarkers()
-
-		: (fn(code, keys.ignore) >= 0) ? false
-
-
-		: (keys.helpShowOnUnknownKey) ? function(){alert(code)}()
-		: false;
-	return false;
+		} else {
+			// callback...
+			handler() 
+			return false
+		}
+		return unhandled(key)
+	}
 }
 
 
@@ -443,6 +385,7 @@ var ORIGINAL_FIELD_SCALE = 1
 // XXX HACK
 var NORMAL_MODE_BG = null 
 var SINGLE_IMAGE_MODE_BG = BACKGROUND_MODES[BACKGROUND_MODES.length-1]
+
 
 var toggleSingleImageMode = createCSSClassToggler('.viewer', 'single-image-mode', 
 		// pre...
