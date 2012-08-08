@@ -1,5 +1,5 @@
 Priority work
-	[_] 84% Preview II
+	[_] 86% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -100,20 +100,18 @@ Priority work
 			[X] 100% actions
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
-		[_] 41% native client
+		[_] 49% native client
 			[_] 33% Windows (CEF / CEFPython)
 				[X] basic test
 				[_] basic wrapper
 				| hook-in os-specific API
 				[_] package a portable exe
-			[_] 50% Android (PhoneGap)
+			[_] 66% Android (PhoneGap)
 				[X] basic test
 				[X] disable transitions...
-				[_] restrict layout to horizontal
-				| leave doing a different vertical layout for later versions...
 				[_] basic wrapper
 				| hook-in os-specific API
-	[_] 11% Preview II (optional features)
+	[_] 15% Preview II (optional features)
 		[_] flip ribbons relative to current -- reverse order
 		[_] slideshow...
 		[_] serialization/deserialization
@@ -153,8 +151,9 @@ Priority work
 		| fit <-> actual pixels (max)
 		[_] pinch to zoom
 		[_] add sort/re-sort capability...
-		[_] option to disable processor intensive features
-		| like other ribbon align...
+		[_] 50% option to disable processor intensive features
+			[X] global transitions
+			[_] global opacity -- do a layout without opacity
 		[_] make scrolling of other ribbons proportional to the gap...
 		[_] 33% refactoring (low priority)
 			[X] cleanup legacy workarounds
@@ -178,6 +177,8 @@ Priority work
 			[_] calendar mode
 		[_] 0% native client
 			[_] android
+				[_] restrict layout to horizontal
+				| leave doing a different vertical layout for later versions...
 			[_] windows
 			[_] MacOS (low priority)
 			[_] iOS (low priority)
