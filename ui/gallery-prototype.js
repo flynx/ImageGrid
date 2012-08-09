@@ -290,11 +290,12 @@ function buildJSON(){
 		res.ribbons[res.ribbons.length] = ribbon
 		for(var j=0; j < images.length; j++){
 			var image = $(images[j])
-			ribbon[ribbon.length] = {
+			var id = image.attr('id')
+			ribbon[id] = {
 				// unwrap the url...
 				// XXX would be nice to make this a relative path...
 				url: /url\((.*)\)/.exec(image.css('background-image'))[1],
-				id: image.attr('id'),
+				id: id,
 			}
 		}
 	}
