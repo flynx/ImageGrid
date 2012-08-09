@@ -267,13 +267,13 @@ function loadImages(json){
 
 
 
-/*
+/* bulid a JSON object from current state...
+ *
  * format:
  * 	{
  * 		ribbons: [
- * 			0: {
+ * 			<image-id>: {
  * 				url: <image-URL>,
- * 				id: <image-id>
  * 			},				
  * 			...
  * 		]
@@ -286,7 +286,7 @@ function buildJSON(){
 	}
 	for(var i=0; i < ribbons.length; i++){
 		var images = $(ribbons[i]).children('.image')
-		var ribbon = []
+		var ribbon = {}
 		res.ribbons[res.ribbons.length] = ribbon
 		for(var j=0; j < images.length; j++){
 			var image = $(images[j])
@@ -295,7 +295,6 @@ function buildJSON(){
 				// unwrap the url...
 				// XXX would be nice to make this a relative path...
 				url: /url\((.*)\)/.exec(image.css('background-image'))[1],
-				id: id,
 			}
 		}
 	}
@@ -306,7 +305,7 @@ function buildJSON(){
 
 
 
-// XXX might be good to add images as packs here, not one by one...
+// XXX might be good to add images in packs here, not one by one...
 function loadJSON(data){
 	var ribbons = data.ribbons
 	var field = $('.field')
@@ -319,19 +318,19 @@ function loadJSON(data){
 		// create ribbon...
 		var ribbon = $('<div class="ribbon"></div>')
 			.appendTo(field)
-		for(var j=0; j < images.length; j++){
+		for(var j in images){
 			var image = $(images[j])
 			// create image...
 			$('<div class="image"></div>')
 				.css({ 'background-image': 'url('+image.attr('url')+')' })
-				// set a unique id for each image...
-				.attr({'id': image.attr('id')})
+				.attr({'id': j})
 				.click(setCurrentImage)
 				.appendTo(ribbon)
 		}
 	}
 	$('.image').first().click()
 }
+
 
 
 /*************************************************** Event Handlers **/
