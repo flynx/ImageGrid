@@ -27,6 +27,11 @@ var MOVE_DELTA = 50
 // NOTE: of only one callback is given then it will be called after the 
 // 		 class change...
 // 		 a way around this is to pass an empty function as callback_b
+// the resulting function understands the folowing arguments:
+// 	- 'on'			: switch mode on
+// 	- 'off'			: switch mode off
+// 	- '?'			: return current state ('on'|'off')
+// 	- no arguments	: toggle the state
 function createCSSClassToggler(elem, css_class, callback_a, callback_b){
 	// prepare the pre/post callbacks...
 	if(callback_b == null){
@@ -38,11 +43,17 @@ function createCSSClassToggler(elem, css_class, callback_a, callback_b){
 	}
 	// build the acual toggler function...
 	return function(action){
-		if(action == null){
+		if(action == null || action == '?'){
+			var getter = action == '?' ? true : false
 			action = 'on'
 			// get current state...
 			if( $(elem).hasClass(css_class) ){
 				action = 'off'
+			}
+			if(getter){
+				// as the above actions indicate intent and not state, 
+				// we'll need to swap the values...
+				return action == 'on' ? 'off' : 'on'
 			}
 		}
 		if(callback_pre != null){
@@ -234,6 +245,9 @@ function setupControlElements(){
 
 
 
+/**************************************************** Serialization **/
+
+
 function loadImages(json){
 	var images = json.images
 	var ribbon = $('.ribbon').last()
@@ -252,6 +266,71 @@ function loadImages(json){
 }
 
 
+
+/*
+ * format:
+ * 	{
+ * 		ribbons: [
+ * 			0: {
+ * 				url: <image-URL>,
+ * 				id: <image-id>
+ * 			},				
+ * 			...
+ * 		]
+ * 	}
+ */
+function buildJSON(){
+	var ribbons = $('.ribbon')
+	res = {
+		ribbons: []
+	}
+	for(var i=0; i < ribbons.length; i++){
+		var images = $(ribbons[i]).children('.image')
+		var ribbon = []
+		res.ribbons[res.ribbons.length] = ribbon
+		for(var j=0; j < images.length; j++){
+			var image = $(images[j])
+			ribbon[ribbon.length] = {
+				// unwrap the url...
+				// XXX would be nice to make this a relative path...
+				url: /url\((.*)\)/.exec(image.css('background-image'))[1],
+				id: image.attr('id'),
+			}
+		}
+	}
+	return res
+}
+
+// XXX add incremental or partial updates...
+
+
+
+// XXX might be good to add images as packs here, not one by one...
+function loadJSON(data){
+	var ribbons = data.ribbons
+	var field = $('.field')
+
+	// drop all old content...
+	field.children().remove()
+
+	for(var i=0; i < ribbons.length; i++){
+		var images = ribbons[i]
+		// create ribbon...
+		var ribbon = $('<div class="ribbon"></div>')
+			.appendTo(field)
+		for(var j=0; j < images.length; j++){
+			var image = $(images[j])
+			// create image...
+			$('<div class="image"></div>')
+				.css({ 'background-image': 'url('+image.attr('url')+')' })
+				// set a unique id for each image...
+				.attr({'id': image.attr('id')})
+				.click(setCurrentImage)
+				.appendTo(ribbon)
+		}
+	}
+	$('.image').first().click()
+}
 
 
 /*************************************************** Event Handlers **/
@@ -331,7 +410,6 @@ function makeKeyboardHandler(keybindings, unhandled){
 	if(unhandled == null){
 		unhandled = function(){return false}
 	}
-	console.log(keybindings)
 	return function(evt){
 		var key = evt.keyCode
 		// XXX ugly...

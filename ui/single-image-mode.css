@@ -4,7 +4,8 @@
 }
 
 
-.single-image-mode .controller, .single-image-mode .controller-mini {
+.single-image-mode .controller,
+.single-image-mode .controller-mini {
 	opacity: 0.2;
 }
 
@@ -27,13 +28,16 @@
 }
 
 
-.single-image-mode .current.image:hover, .single-image-mode .current.image {
+.single-image-mode .current.image:hover,
+.single-image-mode .current.image {
 	opacity: 1.0;
 }
 
 
 /* disabled animations */
-.single-image-mode.no-single-image-transitions .image, .single-image-mode.no-single-image-transitions .ribbon {
+/* XXX for some reason this stopped working... */
+.single-image-mode.no-single-image-transitions .image,
+.single-image-mode.no-single-image-transitions .ribbon {
 	-webkit-transition: none;
 	-moz-transition: none;
 	-o-transition: all 0 ease;
