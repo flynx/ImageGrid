@@ -1,3 +1,4 @@
+/*********************************************************************/
 var keybindings = {
 	//72: 	toggleHelp,										//	???
 	70:		toggleSingleImageMode,							//	f
@@ -62,6 +63,7 @@ var keybindings = {
 	17:		16,
 	18:		16,
 }
+
 /* XXX old bindings...
 	close: [27, 88, 67],						//	???
 
@@ -70,4 +72,5 @@ var keybindings = {
 	demote: [46],								//	???
 */
 
+/*********************************************************************/
 // vim:set ts=4 sw=4 nowrap :
