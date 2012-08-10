@@ -40,6 +40,17 @@ var MOVE_DELTA = 50
 /********************************************************** Helpers **/
 
 
+function getImageOrder(img){
+	// XXX HACK need to parseInt this because '13' is less than '2'... 
+	// 	   ...figure a way out of this!!!
+	return parseInt($(img).attr('id'))
+}
+function setImageOrder(img, order){
+	return $(img).attr({'id': order})
+}
+
+
+
 // this will create a function that will add/remove a css_class to elem 
 // calling the optional callbacks before and/or after.
 //
@@ -109,7 +120,6 @@ function doWithoutTransitions(obj, func){
 }
 
 
-
 // find an image object after which to position image ID...
 // used for two main tasks:
 // 	- positioning promoted/demoted images
@@ -118,14 +128,17 @@ function doWithoutTransitions(obj, func){
 // 	- null		- empty ribbon or no element greater id should be first
 // 	- element
 // XXX do we need to make ids numbers for this to work?
-function getImageBefore_lin(id, ribbon){
+function getImageBefore_lin(id, ribbon, get_order){
+	if(get_order == null){
+		get_order = getImageOrder
+	}
 	// walk the ribbon till we find two images one with an ID less and 
 	// another greater that id...
-	id = parseInt(id)
 	var images = ribbon.children('.image')
 	var prev = null
 	for(var i=0; i < images.length; i++){
-		if(parseInt($(images[i]).attr('id')) > id){
+		// XXX replace the id attr with a universal getter
+		if(get_order(images[i]) > id){
 			return prev
 		}
 		prev = $(images[i])
@@ -137,9 +150,9 @@ function getImageBefore_lin(id, ribbon){
 // generic binery search for element just before the id...
 // NOTE: if id is in lst, this will return the element just before it.
 // NOTE: lst must be sorted.
-function binarySearch(id, lst, get){
-	if(get == null){
-		get = function(o){return o}
+function binarySearch(id, lst, get_order){
+	if(get_order == null){
+		get_order = function(o){return o}
 	}
 	
 	// empty list...
@@ -153,7 +166,7 @@ function binarySearch(id, lst, get){
 	var i = l
 
 	while(true){
-		var i_id = get(lst[i])
+		var i_id = get_order(lst[i])
 		// beginning of the array...
 		if(i == 0){
 			if(id > i_id){
@@ -169,7 +182,7 @@ function binarySearch(id, lst, get){
 		if(i == lst.length-1 && id > i_id){
 			return i
 		}
-		var ii_id = get(lst[i+1])
+		var ii_id = get_order(lst[i+1])
 		// test if id is between i and i+1...
 		if( i_id < id && id < ii_id ){
 			return i
@@ -189,12 +202,12 @@ function binarySearch(id, lst, get){
 
 // wrapper around binarySearch.
 // this is here to make binarySearch simpler to test and debug...
-function getImageBefore_bin(id, ribbon){
+function getImageBefore_bin(id, ribbon, get_order){
+	if(get_order == null){
+		get_order = getImageOrder
+	}
 	var images = ribbon.children('.image') 
-	var i = binarySearch(
-					parseInt(id), 
-					images, 
-					function(o){return parseInt($(o).attr('id'))})
+	var i = binarySearch(id, images, get_order)
 	if(i == null){
 		return null
 	}
@@ -288,12 +301,10 @@ function loadImages(json){
 	$('.image').remove()
 
 	for(var i = 0; i < images.length; i++){
-		$('<div class="image"></div>')
-			.css({ 'background-image': 'url('+images[i]+')' })
-			// set a unique id for each image...
-			.attr({'id': i})
-			.click(handleImageClick)
-			.appendTo(ribbon)
+		setImageOrder($('<div class="image"></div>')
+			.css({ 'background-image': 'url('+images[i]+')' }), i)
+				.click(handleImageClick)
+				.appendTo(ribbon)
 	}
 	ribbon.children().first().click()
 }
@@ -312,7 +323,10 @@ function loadImages(json){
  * 		]
  * 	}
  */
-function buildJSON(){
+function buildJSON(get_order){
+	if(get_order == null){
+		get_order = getImageOrder
+	}
 	var ribbons = $('.ribbon')
 	res = {
 		ribbons: []
@@ -323,7 +337,7 @@ function buildJSON(){
 		res.ribbons[res.ribbons.length] = ribbon
 		for(var j=0; j < images.length; j++){
 			var image = $(images[j])
-			var id = image.attr('id')
+			var id = get_order(image)
 			ribbon[id] = {
 				// unwrap the url...
 				// XXX would be nice to make this a relative path...
@@ -338,6 +352,7 @@ function buildJSON(){
 
 
 
+// XXX use this instead of loadImages(...)
 // XXX might be good to add images in packs here, not one by one...
 function loadJSON(data){
 	var ribbons = data.ribbons
@@ -354,11 +369,10 @@ function loadJSON(data){
 		for(var j in images){
 			var image = $(images[j])
 			// create image...
-			$('<div class="image"></div>')
-				.css({ 'background-image': 'url('+image.attr('url')+')' })
-				.attr({'id': j})
-				.click(handleImageClick)
-				.appendTo(ribbon)
+			setImageOrder($('<div class="image"></div>')
+				.css({ 'background-image': 'url('+image.attr('url')+')' }), j)
+					.click(handleImageClick)
+					.appendTo(ribbon)
 		}
 	}
 	$('.image').first().click()
@@ -531,9 +545,12 @@ function clickAfterTransitionsDone(img){
 
 // center other ribbons relative to current image...
 // NOTE: only two ribbons are positioned at this point...
-function alignRibbons(){
+function alignRibbons(get_order){
+	if(get_order == null){
+		get_order = getImageOrder
+	}
 	// XXX might be good to move this to a more generic location...
-	var id = $('.current.image').attr('id')
+	var id = get_order($('.current.image'))
 	var directions = ['prev', 'next']
 	for(var i in directions){
 		var ribbon = $('.current.ribbon')[directions[i]]('.ribbon')
@@ -551,10 +568,6 @@ function alignRibbons(){
 
 
 
-// XXX we essentially need three things:
-// 		- keycodes, including modifier keys
-// 		- function
-// 		- meta information...
 /*
  * Basic key format:
  * 		<key-code> : <callback>,
@@ -571,8 +584,9 @@ function alignRibbons(){
  * 		},
  *		// alias...
  * 		<key-code-a> : <key-code-b>,
+ *
+ * XXX might need to add meta information to generate sensible help...
  */
-
 function makeKeyboardHandler(keybindings, unhandled){
 	if(unhandled == null){
 		unhandled = function(){return false}
@@ -643,6 +657,7 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer', 'single-image-mode'
 
 // wide view mode toggle...
 var toggleWideView = createCSSClassToggler('.viewer', 'wide-view-mode',
+		// pre...
 		function(action){
 			if(action == 'on'){
 				ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
@@ -650,7 +665,9 @@ var toggleWideView = createCSSClassToggler('.viewer', 'wide-view-mode',
 			} else {
 				setContainerScale(ORIGINAL_FIELD_SCALE)
 			}
-		}, function(){})
+		}, 
+		// post...
+		function(){})
 
 
 
@@ -842,8 +859,11 @@ var prevScreenImages = function(){ return skipScreenImages('prev') }
 
 
 
-function focusRibbon(direction){
-	var id = $('.current.image').attr('id')
+function focusRibbon(direction, get_order){
+	if(get_order == null){
+		get_order = getImageOrder
+	}
+	var id = get_order($('.current.image'))
 	var prev = getImageBefore(id, $('.current.ribbon')[direction]('.ribbon'))
 	if(prev){
 		var next = prev.next()
@@ -991,13 +1011,16 @@ function createRibbon(direction){
 // XXX this uses jquery animation...
 // XXX one way to optimise this is to add the lesser ribbon to the 
 //     greater disregarding their actual order...
-function mergeRibbons(direction){
+function mergeRibbons(direction, get_order){
+	if(get_order == null){
+		get_order = getImageOrder
+	}
 	var current_ribbon = $('.current.ribbon')
 	var images = $('.current.ribbon')[direction]('.ribbon').children()
 	for(var i=0; i < images.length; i++){
 		var image = $(images[i])
 		// get previous element after which we need to put the current...
-		var prev_elem = getImageBefore(image.attr('id'), current_ribbon)
+		var prev_elem = getImageBefore(get_order(image), current_ribbon)
 		// check if we need to be before the first element...
 		if(prev_elem == null){
 			image
@@ -1023,14 +1046,17 @@ function mergeRibbons(direction){
 /*************************************************** Editor Actions **/
 
 // now the actual modifiers...
-function shiftImage(direction){
+function shiftImage(direction, get_order){
+	if(get_order == null){
+		get_order = getImageOrder
+	}
 	if($('.current.ribbon')[direction]('.ribbon').length == 0){
 		createRibbon(direction)
 	}
 
 	// get previous element after which we need to put the current...
 	var prev_elem = getImageBefore(
-					$('.current.image').attr('id'), 
+					get_order($('.current.image')), 
 					$('.current.ribbon')[direction]('.ribbon'))
 
 	// last image in ribbon, merge...
