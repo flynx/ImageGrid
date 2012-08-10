@@ -260,7 +260,6 @@ function setupEvents(){
 	// XXX cancel clicks while dragging...
 	// XXX this does not work on android...
 	$('.field').draggable()
-
 }
 
 
@@ -275,17 +274,12 @@ function setupControlElements(){
 	// XXX rename classes to "shift-image-up" and "shift-image-down"...
 	$('.screen-button.demote').click(shiftImageUp)
 	$('.screen-button.promote').click(shiftImageDown)
-
 	$('.screen-button.zoom-in').click(function(){scaleContainerBy(ZOOM_FACTOR)})
 	$('.screen-button.zoom-out').click(function(){scaleContainerBy(1/ZOOM_FACTOR)})
-
 	$('.screen-button.toggle-wide').click(toggleWideView)
 	$('.screen-button.toggle-single').click(toggleSingleImageMode)
-
 	$('.screen-button.fit-three').click(fitThreeImages)
-
 	$('.screen-button.show-controls').click(showControls)
-
 	$('.screen-button.settings').click(function(){alert('not implemented yet...')})
 }
 
@@ -323,6 +317,7 @@ function loadImages(json){
  * 		]
  * 	}
  */
+// XXX add incremental or partial updates...
 function buildJSON(get_order){
 	if(get_order == null){
 		get_order = getImageOrder
@@ -340,15 +335,13 @@ function buildJSON(get_order){
 			var id = get_order(image)
 			ribbon[id] = {
 				// unwrap the url...
-				// XXX would be nice to make this a relative path...
+				// XXX would be nice to make this a relative path... (???)
 				url: /url\((.*)\)/.exec(image.css('background-image'))[1],
 			}
 		}
 	}
 	return res
 }
-
-// XXX add incremental or partial updates...
 
 
 
@@ -453,7 +446,6 @@ function getCurrentHorizontalOffset(image){
 	var W = $('.container').width()
 	var w = images.outerWidth(true)
 	// margin...
-	// XXX do we need this?
 	var mw = w - images.outerWidth()
 	// current square position (1-based)
 	var sn = images.index(image) + 1
@@ -465,14 +457,11 @@ function getCurrentHorizontalOffset(image){
 
 
 function centerSquare(){
-
 	$('.field').css({
 		'margin-top': getCurrentVerticalOffset()
 	})
-
 	// horizontal...
 	alignRibbon()
-
 	centerCurrentImage()
 }
 
@@ -761,9 +750,6 @@ function centerOrigin(){
 	var W = $('.container').width()
 	var H = $('.container').height()
 
-	//var ot = mt + H/2 + t
-	//var ol = ml + W/2 + l
-	
 	var ot = -getCurrentVerticalOffset() + H/2 - t
 	var ol = -ml + W/2 - l
 
@@ -1090,18 +1076,6 @@ function shiftImage(direction, get_order){
 }
 var shiftImageDown = function(){ return shiftImage('next') }
 var shiftImageUp = function(){ return shiftImage('prev') }
-
-
-
-function flipRibbons(){
-	var ribbons = $('.ribbon')
-	// index of current ribbon, needed to adjust placement of everything...
-	var cur = ribbon.index($('.current.ribbon'))
-
-	// XXX would have been nice if we could do detach reverse attach or just reverse...
-
-	
-}
 
 
 
