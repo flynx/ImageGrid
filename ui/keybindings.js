@@ -1,6 +1,7 @@
 /*********************************************************************/
+// NOTE: use String.fromCharCode(code)...
 var keybindings = {
-	//72: 	toggleHelp,										//	???
+	//191: 	toggleHelp,										//	?
 	70:		toggleSingleImageMode,							//	f
 	13:		70,												//	Enter
 	84:		toggleSingleImageModeTransitions,				//	t
@@ -72,6 +73,7 @@ var keybindings = {
 	16:		function(){},
 	17:		16,
 	18:		16,
+	20:		16,												// Caps Lock
 }
 
 /* XXX old bindings...
