@@ -58,7 +58,7 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 83% UI
+		[_] 85% UI
 			[X] fix single image mode
 			| need to center the image correctly...
 			[X] 100% add screen buttons for all actions...
@@ -90,6 +90,7 @@ Priority work
 					[X] hide buttons for keyboard actions
 				[X] web
 				| is this is the same as the above two? (with auto-select)
+			[X] add screen-width images next/prev navigation...
 			[_] 0% settings/help screen
 				[_] keyboard config/help
 			[X] 100% debug mode
@@ -111,10 +112,12 @@ Priority work
 				[X] disable transitions...
 				[_] basic wrapper
 				| hook-in os-specific API
-	[_] 15% Preview II (optional features)
+	[_] 23% Preview II (optional features)
 		[_] flip ribbons relative to current -- reverse order
 		[_] slideshow...
-		[_] serialization/deserialization
+		[_] 50% serialization/deserialization
+			[X] JSON loader/unloader
+			[_] file reader/writer
 		[_] actual file loading (Target-specific)
 		[_] fade transition in single image mode...
 		[_] display promoted/demoted images
@@ -150,22 +153,25 @@ Priority work
 		[_] double tap/click to zoom (a-la iPad)
 		| fit <-> actual pixels (max)
 		[_] pinch to zoom
-		[_] add sort/re-sort capability...
+		[_] 33% add sort/re-sort capability...
+			[X] abstract out image id
+			[_] replace id (use something else like filename)
+			[_] in-place sort ribbons
 		[_] 50% option to disable processor intensive features
 			[X] global transitions
 			[_] global opacity -- do a layout without opacity
 		[_] make scrolling of other ribbons proportional to the gap...
-		[_] 33% refactoring (low priority)
+		[_] 66% refactoring (low priority)
 			[X] cleanup legacy workarounds
-			[_] ui.js, gallery-prototype.js either merge or revise split logic
+			[X] ui.js, gallery-prototype.js either merge or revise split logic
 			[_] do a redraw function
 			| this should position all the elements correctly within the 
 			| current ui state...
 			|
 			| currently all operations that alter the layout call $('.current.image').click()
 	[_] 0% Preview III
+		[_] collection management
 		[_] actual file loading
-		[_] serialization/deserialization
 		[_] revise controls...
 		[_] dynamic image/preview swap for zooming
 		| important to make 1:1 previews for all main views and zoom levels...

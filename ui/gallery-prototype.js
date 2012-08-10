@@ -638,8 +638,8 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer', 'single-image-mode'
 			if(action == 'on'){
 				NORMAL_MODE_BG = getBackgroundMode()
 				ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
+			// do this only when coming out of single image mode...
 			} else if(toggleSingleImageMode('?') == 'on'){
-				// save only when coming out of single image mode...
 				SINGLE_IMAGE_MODE_BG = getBackgroundMode()
 			}
 		},
