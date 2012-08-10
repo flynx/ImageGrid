@@ -1,6 +1,8 @@
 // XXX need a uniform way to address images (filename?)
 /******************************************* Setup Data and Globals **/
 
+var DEBUG = true
+
 // the list of style modes...
 // these are swithched through in order by toggleBackgroundModes()
 var BACKGROUND_MODES = [
@@ -9,12 +11,28 @@ var BACKGROUND_MODES = [
 ]
 
 
+// remember the default backgrounds for modes...
+// ...this effectively makes the modes independant...
+// NOTE: null represent the default value...
+// NOTE: these will change if changed in runtime...
+var NORMAL_MODE_BG = 'dark' 
+var SINGLE_IMAGE_MODE_BG = BACKGROUND_MODES[BACKGROUND_MODES.length-1]
+
+
+// ribbon/single view modes...
+// store the scale before we went into single image mode...
+// NOTE: these will change if changed in runtime...
+var ORIGINAL_FIELD_SCALE = 1.0
+
+
 // this sets the zooming factor used in manual zooming...
 var ZOOM_FACTOR = 2
 
 
-// sets the amoun of move when a key is pressed...
+// sets the amount of move when a key is pressed...
 var MOVE_DELTA = 50
+
+
 
 
 
@@ -23,15 +41,20 @@ var MOVE_DELTA = 50
 
 
 // this will create a function that will add/remove a css_class to elem 
-// calling the callbacks before and/or after.
-// NOTE: of only one callback is given then it will be called after the 
-// 		 class change...
-// 		 a way around this is to pass an empty function as callback_b
+// calling the optional callbacks before and/or after.
+//
+// elem is a jquery compatible object; default use-case: a css selector.
+//
 // the resulting function understands the folowing arguments:
 // 	- 'on'			: switch mode on
 // 	- 'off'			: switch mode off
 // 	- '?'			: return current state ('on'|'off')
 // 	- no arguments	: toggle the state
+//
+// NOTE: of only one callback is given then it will be called after the 
+// 		 class change...
+// 		 a way around this is to pass an empty function as callback_b
+//
 function createCSSClassToggler(elem, css_class, callback_a, callback_b){
 	// prepare the pre/post callbacks...
 	if(callback_b == null){
@@ -204,9 +227,13 @@ function setupEvents(){
 		$('.current.image').click()
 	})
 	// keyboard...
-	$(document)
-		.keydown(makeKeyboardHandler(keybindings, function(k){alert(k)}))
-		//.keydown(handleKeys)
+	if(DEBUG){
+		$(document)
+			.keydown(makeKeyboardHandler(keybindings, function(k){alert(k)}))
+	} else {
+		$(document)
+			.keydown(makeKeyboardHandler(keybindings))
+	}
 	// swipe...
 	$('.viewer')
 		.swipe({
@@ -215,13 +242,19 @@ function setupEvents(){
 			swipeUp: shiftImageUp,
 			swipeDown: shiftImageDown
 		})
+	// dragging...
+	// XXX make this work seamlessly with touchSwipe...
+	// XXX cancel clicks while dragging...
+	// XXX this does not work on android...
+	$('.field').draggable()
+
 }
 
 
 
 function setupControlElements(){
 	// images...
-	$(".image").click(setCurrentImage)
+	$(".image").click(handleImageClick)
 
 	// buttons...
 	$('.screen-button.next-image').click(nextImage)
@@ -259,7 +292,7 @@ function loadImages(json){
 			.css({ 'background-image': 'url('+images[i]+')' })
 			// set a unique id for each image...
 			.attr({'id': i})
-			.click(setCurrentImage)
+			.click(handleImageClick)
 			.appendTo(ribbon)
 	}
 	ribbon.children().first().click()
@@ -324,7 +357,7 @@ function loadJSON(data){
 			$('<div class="image"></div>')
 				.css({ 'background-image': 'url('+image.attr('url')+')' })
 				.attr({'id': j})
-				.click(setCurrentImage)
+				.click(handleImageClick)
 				.appendTo(ribbon)
 		}
 	}
@@ -332,9 +365,10 @@ function loadJSON(data){
 }
 
 
+
 /*
  * The folowing two functions will get the vertical and horizontal 
- * distance components between the pints a and A, centers of the small
+ * distance components between the points a and A, centers of the small
  * and large squares respectively.
  * One of the squares is .field and the other is .container, 
  * which is small or big is not important.
@@ -382,9 +416,6 @@ function getCurrentVerticalOffset(image){
 	var mh = h - ribbons.outerHeight()
 	// current ribbon position (1-based)
 	var rn = ribbons.index(ribbon) + 1
-	// XXX compensating for margin error buildup... really odd!
-	//	...why is this still different for the first three ribbons?!
-	//		....sub-pixel error?
 	// relative position to field... 
 	// XXX is there a better way to get this?
 	var t = rn * (h - mh/2)
@@ -465,9 +496,13 @@ function alignRibbon(image, position){
 	return false
 }
 
+
+
+
 /*************************************************** Event Handlers **/
 
-function setCurrentImage(){
+// handle click for images...
+function handleImageClick(){
 	// set classes...
 	$('.current').removeClass('current')
 	$(this)
@@ -524,7 +559,7 @@ function alignRibbons(){
  * Basic key format:
  * 		<key-code> : <callback>,
  * 		<key-code> : {
- * 			default: [<callback>, <doc>],
+ * 			'default': <callback>,
  *			// a modifier can be any single modifier, like shift or a 
  *			// combination of modifers like 'ctrl+shift', given in order 
  *			// of priority.
@@ -570,7 +605,7 @@ function makeKeyboardHandler(keybindings, unhandled){
 				return false
 			}
 		} else {
-			// callback...
+			// simple callback...
 			handler() 
 			return false
 		}
@@ -583,52 +618,39 @@ function makeKeyboardHandler(keybindings, unhandled){
 
 /************************************************************ Modes **/
 
-// ribbon/single view modes...
-// global: stores the scale before we went into single image mode...
-// XXX HACK
-var _ORIGINAL_FIELD_SCALE = 1
-
-
-// remember the default backgrounds for modes...
-// ...this effectively makes the modes independant...
-// NOTE: null represent the default value...
-// XXX HACK
-var _NORMAL_MODE_BG = null 
-var _SINGLE_IMAGE_MODE_BG = BACKGROUND_MODES[BACKGROUND_MODES.length-1]
-
-
 var toggleSingleImageMode = createCSSClassToggler('.viewer', 'single-image-mode', 
 		// pre...
 		function(action){
 			if(action == 'on'){
-				_NORMAL_MODE_BG = getBackgroundMode()
-				_ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
+				NORMAL_MODE_BG = getBackgroundMode()
+				ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
 			} else {
-				_SINGLE_IMAGE_MODE_BG = getBackgroundMode()
+				SINGLE_IMAGE_MODE_BG = getBackgroundMode()
 			}
 		},
 		// post...
 		function(action){
 			if(action == 'on'){
 				fitImage()
-				setBackgroundMode(_SINGLE_IMAGE_MODE_BG)
+				setBackgroundMode(SINGLE_IMAGE_MODE_BG)
 			} else {
-				setContainerScale(_ORIGINAL_FIELD_SCALE)
-				setBackgroundMode(_NORMAL_MODE_BG)
+				setContainerScale(ORIGINAL_FIELD_SCALE)
+				setBackgroundMode(NORMAL_MODE_BG)
 			}
 			clickAfterTransitionsDone()
-})
+		})
 
 
 // wide view mode toggle...
-var toggleWideView = createCSSClassToggler('.viewer', 'wide-view-mode', function(action){
-	if(action == 'on'){
-		_ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
-		setContainerScale(0.1)
-	} else {
-		setContainerScale(_ORIGINAL_FIELD_SCALE)
-	}
-}, function(){})
+var toggleWideView = createCSSClassToggler('.viewer', 'wide-view-mode',
+		function(action){
+			if(action == 'on'){
+				ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
+				setContainerScale(0.1)
+			} else {
+				setContainerScale(ORIGINAL_FIELD_SCALE)
+			}
+		}, function(){})
 
 
 
@@ -741,7 +763,7 @@ function centerOrigin(){
 
 
 
-// XXX for some odd reason these are not liner... something to do with origin?
+// XXX these work oddly when page is scaled in maxthon... 
 // XXX virtually identical, see of can be merged...
 function moveViewUp(){
 	var t = parseInt($('.field').css('top'))
@@ -784,20 +806,40 @@ function centerCurrentImage(){
 
 // basic navigation...
 function firstImage(){
-	$('.current.ribbon').children('.image').first().click()
+	return $('.current.ribbon').children('.image').first().click()
 }
 function prevImage(){
-	$('.current.image').prev('.image').click()
+	return $('.current.image').prev('.image').click()
 }
 function nextImage(){
-	$('.current.image').next('.image').click()
+	return $('.current.image').next('.image').click()
 }
 function lastImage(){
-	$('.current.ribbon').children('.image').last().click()
+	return $('.current.ribbon').children('.image').last().click()
 }
 
-// XXX add skip N images back and forth handlers...
-// XXX
+
+
+// add skip screen images in direction...
+function skipScreenImages(direction){
+	// calculate screen width in images...
+	var W = $('.viewer').width()
+	var w = $('.current.image').width()
+	var scale = getElementScale($('.field'))
+	var n = Math.max(Math.floor(W/(w*scale))-1, 0)
+
+	var img = $('.current.image')[direction + 'All']('.image').eq(n)
+	if(img.length > 0){
+		return img.click()
+	} else if(direction == 'next'){
+		return lastImage()
+	} else if(direction == 'prev'){
+		return firstImage()
+	}
+}
+var nextScreenImages = function(){ return skipScreenImages('next') }
+var prevScreenImages = function(){ return skipScreenImages('prev') }
+
 
 
 function focusRibbon(direction){
@@ -808,20 +850,16 @@ function focusRibbon(direction){
 		// NOTE: direction is accounted for to make the up/down shifts 
 		// 		 symmetrical in the general case...
 		if(next.length == 0 || direction == 'next'){
-			prev.click()
+			return prev.click()
 		} else {
-			next.click()
+			return next.click()
 		}
 	} else {
-		$('.current.ribbon')[direction]('.ribbon').children('.image').first().click()
+		return $('.current.ribbon')[direction]('.ribbon').children('.image').first().click()
 	}
 }
-function focusAboveRibbon(){
-	focusRibbon('prev')
-}
-function focusBelowRibbon(){
-	focusRibbon('next')
-}
+var focusAboveRibbon = function(){ return focusRibbon('prev') }
+var focusBelowRibbon = function(){ return focusRibbon('next') }
 
 
 
@@ -855,7 +893,7 @@ function getElementScale(elem){
 
 
 function setElementScale(elem, scale){
-	elem.css({
+	return elem.css({
 		'transform': 'scale('+scale+', '+scale+')',
 		'-moz-transform': 'scale('+scale+', '+scale+')',
 		'-o-transform': 'scale('+scale+', '+scale+')',
@@ -867,9 +905,7 @@ function setElementScale(elem, scale){
 
 
 function scaleContainerBy(factor){
-	var scale = getElementScale($('.field'))*factor 
-
-	setContainerScale(scale)
+	return setContainerScale(getElementScale($('.field'))*factor)
 }
 
 
@@ -1019,19 +1055,11 @@ function shiftImage(direction){
 				.detach()
 				.prependTo($('.current.ribbon')[direction]('.ribbon'))
 		}
-
 	}
 	$('.current.image').click()
 }
-
-
-
-function shiftImageDown(){
-	return shiftImage('next')
-}
-function shiftImageUp(){
-	return shiftImage('prev')
-}
+var shiftImageDown = function(){ return shiftImage('next') }
+var shiftImageUp = function(){ return shiftImage('prev') }
 
 
 

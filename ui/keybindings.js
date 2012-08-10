@@ -22,11 +22,21 @@ var keybindings = {
 	36:		firstImage,										//	Home
 	35:		lastImage,										//	End
 
-	37: 	prevImage,										// 	Left
+	//37: 	prevImage,										// 	Left
+	37:	{
+		'default': prevImage,								//	Right
+		'ctrl': prevScreenImages,							//	ctrl-Right
+		'alt': prevScreenImages,							//	alt-Right
+	},
 	80: 	37, 											// 	BkSp
 	188:	37, 											//	p
 	8:		37,												//	<
-	39:		nextImage,										//	Right
+	//39:		nextImage,										//	Right
+	39:	{
+		'default': nextImage,								//	Left
+		'ctrl': nextScreenImages,							//	ctrl-Left
+		'alt': nextScreenImages,							//	alt-Left
+	},
 	32:		39,												//	Space
 	190:	39,												//	m
 	78: 	39,												//	>

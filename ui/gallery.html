@@ -48,7 +48,8 @@ function setup(){
 	setDefaultInitialState()
 
 	// XXX
-	setBackgroundMode('dark')
+	// this will set the defaults...
+	toggleSingleImageMode('off')
 	enableTransitions()
 
 	// setup event handlers...
@@ -63,11 +64,6 @@ function setup(){
 	//$.getJSON('images.js', loadImages})
 	// XXX STUB
 	loadImages(image_list)
-
-	// setup the dragging framework...
-	// XXX make this work seamlessly with touchSwipe...
-	// XXX cancel clicks while dragging...
-	$('.field').draggable()
 
 	// set the default position and init...
 	$('.current.image').click()
