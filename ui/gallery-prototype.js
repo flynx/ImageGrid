@@ -354,7 +354,10 @@ function buildJSON(get_order){
 
 // XXX use this instead of loadImages(...)
 // XXX might be good to add images in packs here, not one by one...
-function loadJSON(data){
+function loadJSON(data, set_order){
+	if(set_order == null){
+		set_order = setImageOrder
+	}
 	var ribbons = data.ribbons
 	var field = $('.field')
 
@@ -369,7 +372,7 @@ function loadJSON(data){
 		for(var j in images){
 			var image = $(images[j])
 			// create image...
-			setImageOrder($('<div class="image"></div>')
+			set_order($('<div class="image"></div>')
 				.css({ 'background-image': 'url('+image.attr('url')+')' }), j)
 					.click(handleImageClick)
 					.appendTo(ribbon)

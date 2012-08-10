@@ -113,12 +113,12 @@ Priority work
 				[_] basic wrapper
 				| hook-in os-specific API
 	[_] 23% Preview II (optional features)
-		[_] flip ribbons relative to current -- reverse order
 		[_] slideshow...
 		[_] 50% serialization/deserialization
 			[X] JSON loader/unloader
 			[_] file reader/writer
 		[_] actual file loading (Target-specific)
+		[_] flip ribbons relative to current -- reverse order
 		[_] fade transition in single image mode...
 		[_] display promoted/demoted images
 		| show images that were either promoted or demoted from the 
