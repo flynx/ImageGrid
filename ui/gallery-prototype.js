@@ -48,6 +48,7 @@ var ImageGrid = {
 	},
 }
 
+
 ImageGrid.ACTION({
 	title: 'set',
 	doc: 'Set an option\'s value, calling apropriate callbacks.',

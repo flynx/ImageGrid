@@ -1,14 +1,9 @@
 Priority work
-	[_] 83% Preview II
-		[_] 66% UI
-			[_] "hide other ribbons" mode
-			[_] "show all promoted/demoted images" mode
-			| display images below or above but in a more transparent 
-			| fashion...
-			|
-			| XXX should they be skipped on navigation?
+	[_] 85% Preview II
+		[_] 77% UI
 			[_] 0% settings/help screen
 				[_] keyboard config/help
+			[X] "hide other ribbons" mode
 			[X] fix single image mode
 			| need to center the image correctly...
 			[X] 100% add screen buttons for all actions...
@@ -126,6 +121,11 @@ Priority work
 		[_] actual file loading (Target-specific)
 		[_] flip ribbons relative to current -- reverse order
 		[_] fade transition in single image mode...
+		[_] "show all promoted/demoted images" mode
+		| display images below or above but in a more transparent 
+		| fashion...
+		|
+		| XXX should they be skipped on navigation?
 		[_] 80% drag/move action...
 			[X] basic infrastructure
 			[X] action: center current image
