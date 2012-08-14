@@ -1,5 +1,59 @@
 Priority work
 	[_] 83% Preview II
+		[_] 66% UI
+			[_] "hide other ribbons" mode
+			[_] "show all promoted/demoted images" mode
+			| display images below or above but in a more transparent 
+			| fashion...
+			|
+			| XXX should they be skipped on navigation?
+			[_] 0% settings/help screen
+				[_] keyboard config/help
+			[X] fix single image mode
+			| need to center the image correctly...
+			[X] 100% add screen buttons for all actions...
+				[X] navigation
+				[X] actions
+				[X] zooming
+				[X] 100% zoom presets
+					[X] single
+					[X] three
+					[X] wide
+					| toggle...
+			[X] 100% control single-image mode animations
+				[X] scroll
+				[X] switch (no transition)
+			[X] 100% layout
+				[X] 100% tablet
+					[X] stretch to full screen
+					| NOTE: viewer 0% sizes may break things...
+					[X] make buttons semi-transparent and same color as bg in all modes
+					| just like single image mode...
+					[X] make bg color switching in all modes
+					| black, white, gray
+				[X] 100% PC
+					[X] stretch to full screen
+					[X] make view correctly resizable
+					| appears to work correctly but need to click an image onResize...
+					|
+					| XXX find a way around always clicking things...
+					[X] hide buttons for keyboard actions
+				[X] web
+				| is this is the same as the above two? (with auto-select)
+			[X] add screen-width images next/prev navigation...
+			[X] 100% debug mode
+				[X] toggle cross-hair
+		[_] 49% native client
+			[_] 33% Windows (CEF / CEFPython)
+				[X] basic test
+				[_] basic wrapper
+				| hook-in os-specific API
+				[_] package a portable exe
+			[_] 66% Android (PhoneGap)
+				[X] basic test
+				[X] disable transitions...
+				[_] basic wrapper
+				| hook-in os-specific API
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -58,63 +112,13 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 66% UI
-			[_] "hide other ribbons" mode
-			[_] "show all promoted/demoted images" mode
-			[_] 0% settings/help screen
-				[_] keyboard config/help
-			[X] fix single image mode
-			| need to center the image correctly...
-			[X] 100% add screen buttons for all actions...
-				[X] navigation
-				[X] actions
-				[X] zooming
-				[X] 100% zoom presets
-					[X] single
-					[X] three
-					[X] wide
-					| toggle...
-			[X] 100% control single-image mode animations
-				[X] scroll
-				[X] switch (no transition)
-			[X] 100% layout
-				[X] 100% tablet
-					[X] stretch to full screen
-					| NOTE: viewer 0% sizes may break things...
-					[X] make buttons semi-transparent and same color as bg in all modes
-					| just like single image mode...
-					[X] make bg color switching in all modes
-					| black, white, gray
-				[X] 100% PC
-					[X] stretch to full screen
-					[X] make view correctly resizable
-					| appears to work correctly but need to click an image onResize...
-					|
-					| XXX find a way around always clicking things...
-					[X] hide buttons for keyboard actions
-				[X] web
-				| is this is the same as the above two? (with auto-select)
-			[X] add screen-width images next/prev navigation...
-			[X] 100% debug mode
-				[X] toggle cross-hair
 		[X] 100% fix layout and animations
 			[X] zooming
 			[X] navigation
 			[X] 100% actions
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
-		[_] 49% native client
-			[_] 33% Windows (CEF / CEFPython)
-				[X] basic test
-				[_] basic wrapper
-				| hook-in os-specific API
-				[_] package a portable exe
-			[_] 66% Android (PhoneGap)
-				[X] basic test
-				[X] disable transitions...
-				[_] basic wrapper
-				| hook-in os-specific API
-	[_] 28% Preview II (optional features)
+	[_] 30% Preview II (optional features)
 		[_] slideshow...
 		[_] 50% serialization/deserialization
 			[X] JSON loader/unloader
@@ -122,11 +126,6 @@ Priority work
 		[_] actual file loading (Target-specific)
 		[_] flip ribbons relative to current -- reverse order
 		[_] fade transition in single image mode...
-		[_] display promoted/demoted images
-		| show images that were either promoted or demoted from the 
-		| current ribbon...
-		|
-		| show these images either crossed out or semi-transparent
 		[_] 80% drag/move action...
 			[X] basic infrastructure
 			[X] action: center current image

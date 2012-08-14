@@ -685,6 +685,22 @@ var toggleWideView = createCSSClassToggler('.viewer', 'wide-view-mode',
 
 
 
+// XXX write CSS for this...
+var toggleSingleRibbonMode = createCSSClassToggler('.viewer', 'single-ribbon-mode')
+
+
+
+// XXX this can be done in two ways:
+// 		- keep all images when promoting, just add a class to them that 
+// 		  will hide them until we enable their display...
+// 		  	+ very fast to show/hide
+// 		  	- will complicate reversing ribbons allot
+// 		- add/remove these images on demand
+// 			+ a tad complicated...
+var toggleDisplayShiftedUpImages = createCSSClassToggler('.viewer', 'show-shifted-up-images')
+
+
+
 function getBackgroundMode(){
 	var mode = null
 	// find a mode to set...
