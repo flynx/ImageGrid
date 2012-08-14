@@ -114,7 +114,7 @@ Priority work
 				[X] disable transitions...
 				[_] basic wrapper
 				| hook-in os-specific API
-	[_] 25% Preview II (optional features)
+	[_] 28% Preview II (optional features)
 		[_] slideshow...
 		[_] 50% serialization/deserialization
 			[X] JSON loader/unloader
@@ -155,10 +155,11 @@ Priority work
 		[_] double tap/click to zoom (a-la iPad)
 		| fit <-> actual pixels (max)
 		[_] pinch to zoom
-		[_] 66% add sort/re-sort capability...
+		[X] 100% add sort/re-sort capability...
 			[X] abstract out image id
-			[_] replace id (use something else like filename)
-			[X] in-place sort ribbons
+			[X] replace id (use something else like filename)
+			[X] re-arrange ribbons (reverse)
+			[X] in-place sort images in ribbons
 		[_] 50% option to disable processor intensive features
 			[X] global transitions
 			[_] global opacity -- do a layout without opacity

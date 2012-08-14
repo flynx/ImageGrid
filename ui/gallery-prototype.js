@@ -1132,6 +1132,17 @@ function resortImagesVia(cmp){
 }
 
 
+// sort images py their full path...
+// XXX this should use a normalized path...
+function sortImagesByPath(){
+	resortImagesVia(function(a, b){ 
+		a = $(a).css('background-image')
+		b = $(b).css('background-image') 
+		return a > b ? 1 : a < b ? -1 : 0
+	})
+}
+
+
 // reverse the order of images in all ribbons by reversing their id attr
 // and resorting...
 // NOTE: this is like flipping the field horizontally...
