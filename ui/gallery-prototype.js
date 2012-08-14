@@ -1103,6 +1103,7 @@ var shiftImageUp = function(){ return shiftImage('prev') }
 
 
 // reverse the ribbon order...
+// NOTE: this is like flipping the field vertically...
 function reverseRibbons(){
 	var ribbons = $('.ribbon')
 	var field = $('.field')
@@ -1129,15 +1130,21 @@ function sortImages(){
 }
 
 
-
-// this will reverse the order of images in all ribbons by reversing 
-// id attr and resorting...
-function reverseImageOrder(){
+// use the cmp function to update image id's and resort...
+function resortImagesVia(cmp){
 	// reverse ID order...
-	$($('.image').get().sort(cmpImageOrder).reverse())
+	$($('.image').get().sort(cmp))
 		.each(function(i, e){$(e).attr({'id': i})})
 	// resort the images...
 	sortImages()
+}
+
+
+// reverse the order of images in all ribbons by reversing their id attr
+// and resorting...
+// NOTE: this is like flipping the field horizontally...
+function reverseImageOrder(){
+	resortImagesVia(function(a, b){return cmpImageOrder(b, a)})
 }
 
 
