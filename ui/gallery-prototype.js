@@ -18,7 +18,7 @@ var ImageGrid = {
 
 	// define an action...
 	// the two values that are obligatory are:
-	// 		name	- name of the action
+	// 		title	- name of the action
 	// 		call	- callable
 	// XXX revise...
 	ACTION: function(obj){
