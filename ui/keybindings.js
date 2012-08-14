@@ -14,8 +14,8 @@ var keybindings = {
 
 
 	// zooming...
-	187:	function(){scaleContainerBy(ZOOM_FACTOR)},		//	+
-	189:	function(){scaleContainerBy(1/ZOOM_FACTOR)},	//	-
+	187:	function(){scaleContainerBy(ImageGrid.option.ZOOM_FACTOR)},		//	+
+	189:	function(){scaleContainerBy(1/ImageGrid.option.ZOOM_FACTOR)},	//	-
 	// zoom presets...
 	48:	{
 		'default':	fitImage,								// 	0

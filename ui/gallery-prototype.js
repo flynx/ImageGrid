@@ -31,6 +31,9 @@ var ImageGrid = {
 			call[i] = obj[i]
 		}
 		this[obj.title] = call
+		if(this._type_handler[obj.type] != null){
+			this._type_handler[obj.type](obj)
+		}
 		return call
 	},
 	// define an option...
@@ -38,14 +41,35 @@ var ImageGrid = {
 		this.option[obj.name] = obj.value
 		this.option_props[obj.name] = obj
 	},
+	_type_handler: {
+		/* XXX also need to make the action change the option...
+		toggle: function(obj){
+			// XXX add an option to store the state...
+			ImageGrid.OPTION({
+				name: obj.title,
+				doc: 'Stores the state of '+obj.title+' action.',
+				value: ImageGrid[obj.title]('?'),
+				callback: function(){
+					ImageGrid[obj.title](ImageGrid.option[obj.title])
+				}
+			})
+		},
+		*/
+	},
 }
 
 ImageGrid.ACTION({
 	title: 'set',
 	doc: 'Set an option\'s value, calling apropriate callbacks.',
+	group: 'API',
 	call: function (obj){
 		for(var n in obj){
 			this.option[n] = obj[n]
+		}
+		// NOTE: this seporate so as to remove the posibility of race 
+		// 		 conditions...
+		// 		 ...thogh there is still a posibility of conflicting modes
+		for(var n in obj){
 			// call the callback if it exists...
 			if(this.option_props[n].callback != null){
 				this.option_props[n].callback()
@@ -56,6 +80,7 @@ ImageGrid.ACTION({
 ImageGrid.ACTION({
 	title: 'doc',
 	doc: 'get documentation for name.',
+	group: 'API',
 	call: function(name){
 		return {
 			action: this[name] != null ? this[name].doc : null,
