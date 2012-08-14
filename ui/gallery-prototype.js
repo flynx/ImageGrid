@@ -22,8 +22,11 @@ var ImageGrid = {
 	// 		call	- callable
 	// XXX revise...
 	ACTION: function(obj){
-		var call = obj.call
 		// add all the attrs to the function...
+		if(this._type_handler[obj.type] != null){
+			this._type_handler[obj.type](obj)
+		}
+		var call = obj.call
 		for(i in obj){
 			if(i == 'doc' && call.doc != null){
 				call.func_doc = call.doc 
@@ -31,9 +34,6 @@ var ImageGrid = {
 			call[i] = obj[i]
 		}
 		this[obj.title] = call
-		if(this._type_handler[obj.type] != null){
-			this._type_handler[obj.type](obj)
-		}
 		return call
 	},
 	// define an option...
@@ -41,20 +41,10 @@ var ImageGrid = {
 		this.option[obj.name] = obj.value
 		this.option_props[obj.name] = obj
 	},
+	TYPE: function(name, handler){
+		this._type_handler[name] = handler
+	},
 	_type_handler: {
-		/* XXX also need to make the action change the option...
-		toggle: function(obj){
-			// XXX add an option to store the state...
-			ImageGrid.OPTION({
-				name: obj.title,
-				doc: 'Stores the state of '+obj.title+' action.',
-				value: ImageGrid[obj.title]('?'),
-				callback: function(){
-					ImageGrid[obj.title](ImageGrid.option[obj.title])
-				}
-			})
-		},
-		*/
 	},
 }
 
@@ -66,9 +56,10 @@ ImageGrid.ACTION({
 		for(var n in obj){
 			this.option[n] = obj[n]
 		}
-		// NOTE: this seporate so as to remove the posibility of race 
+		// NOTE: this is separate so as to exclude the posibility of race 
 		// 		 conditions...
-		// 		 ...thogh there is still a posibility of conflicting modes
+		// 		 ...thogh there is still a posibility of conflicting 
+		// 		 modes, especially if one mode sets more modes...
 		for(var n in obj){
 			// call the callback if it exists...
 			if(this.option_props[n].callback != null){
@@ -88,6 +79,24 @@ ImageGrid.ACTION({
 			option: this.option_props[name] != null ? this.option_props[name].doc : null,
 		}
 	}
+})
+ImageGrid.TYPE('toggle', function(obj){
+	var call = obj.call
+	// wrap the call to set the option...
+	obj.call = function(action){
+		var res = call(action)
+		ImageGrid.option[obj.title] = call('?')
+		return res
+	}
+	// add an option to store the state...
+	ImageGrid.OPTION({
+		name: obj.title,
+		doc: 'Stores the state of '+obj.title+' action.',
+		value: obj.call('?'),
+		callback: function(){
+			ImageGrid[obj.title](ImageGrid.option[obj.title])
+		}
+	})
 })
 
 
