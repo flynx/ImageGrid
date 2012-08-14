@@ -1,4 +1,3 @@
-// XXX need a uniform way to address images (filename?)
 /******************************************* Setup Data and Globals **/
 
 var DEBUG = true
@@ -36,8 +35,6 @@ var MOVE_DELTA = 50
 
 
 
-
-
 /********************************************************** Helpers **/
 
 
@@ -61,6 +58,8 @@ function getImageOrder(img){
 	// 	   ...figure a way out of this!!!
 	return parseInt($(img).attr('id'))
 }
+
+
 function setImageOrder(img, order){
 	return $(img).attr({'id': order})
 }
@@ -1140,6 +1139,16 @@ function reverseImageOrder(){
 	resortImagesVia(function(a, b){return cmpImageOrder(b, a)})
 }
 
+
+// XXX group images in ribbon and merge down/up
+//
+// 		grouping will make the images in a ribbon adjacent to each 
+// 		other...
+//
+// 		the group's position will be the same as current images i.e. 
+// 		between the below/above two images...
+
+// XXX shift group/image right/left...
 
 
 

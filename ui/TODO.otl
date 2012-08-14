@@ -1,5 +1,5 @@
 Priority work
-	[_] 86% Preview II
+	[_] 83% Preview II
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -58,7 +58,11 @@ Priority work
 				[X] one (with zooming)
 			[X] single image mode with zooming
 			| ribbons are hidden
-		[_] 85% UI
+		[_] 66% UI
+			[_] "hide other ribbons" mode
+			[_] "show all promoted/demoted images" mode
+			[_] 0% settings/help screen
+				[_] keyboard config/help
 			[X] fix single image mode
 			| need to center the image correctly...
 			[X] 100% add screen buttons for all actions...
@@ -91,8 +95,6 @@ Priority work
 				[X] web
 				| is this is the same as the above two? (with auto-select)
 			[X] add screen-width images next/prev navigation...
-			[_] 0% settings/help screen
-				[_] keyboard config/help
 			[X] 100% debug mode
 				[X] toggle cross-hair
 		[X] 100% fix layout and animations
