@@ -3,6 +3,7 @@
 var keybindings = {
 	//191: 	toggleHelp,										//	?
 	70:		toggleSingleImageMode,							//	f
+	83:		toggleSingleRibbonMode,							//	s
 	13:		70,												//	Enter
 	84:		toggleSingleImageModeTransitions,				//	t
 	65:		toggleTransitions,								//	a

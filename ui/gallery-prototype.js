@@ -685,7 +685,6 @@ var toggleWideView = createCSSClassToggler('.viewer', 'wide-view-mode',
 
 
 
-// XXX write CSS for this...
 var toggleSingleRibbonMode = createCSSClassToggler('.viewer', 'single-ribbon-mode')
 
 

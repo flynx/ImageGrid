@@ -243,4 +243,13 @@
 }
 
 
+/* single ribbon mode */
+.single-ribbon-mode .ribbon {
+	opacity: 0;
+}
+
+.single-ribbon-mode .current.ribbon {
+	opacity: 1;
+}
+
 
