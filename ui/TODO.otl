@@ -198,6 +198,27 @@ Priority work
 	[_] 0% 1.0
 	
 
+[_] 33% Main workflow
+	[_] 33% image viewing
+		[X] viewer
+		[_] select source
+		[_] slideshow
+	[X] 100% ribbon sorting
+		[X] ribbon navigation
+		[X] shift image between ribbons
+	[_] 0% metadata
+		[_] tag filtering
+		[_] tag editing
+		[_] EXIF/IPTC
+	[_] 0% image/export export
+		[_] JSON
+		[_] XMP metadata
+		[_] fav dirs
+		[_] file list
+		[_] image set
+	
+
+
 Goals:
 	main ribbon always consistent
 	fast sorting via several simple passes

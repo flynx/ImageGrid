@@ -15,7 +15,8 @@ var BACKGROUND_MODES = [
 // ...this effectively makes the modes independant...
 // NOTE: null represent the default value (no class set)...
 // NOTE: these will change if changed in runtime...
-var NORMAL_MODE_BG = 'dark' 
+//var NORMAL_MODE_BG = 'dark' 
+var NORMAL_MODE_BG = null 
 var SINGLE_IMAGE_MODE_BG = 'black' 
 
 
@@ -40,6 +41,21 @@ var MOVE_DELTA = 50
 /********************************************************** Helpers **/
 
 
+jQuery.fn.reverseChildren = function(){
+	return $(this).each(function(_, e){
+		return $(e).append($(e).children().detach().get().reverse())
+	})
+}
+
+
+jQuery.fn.sortChildren = function(func){
+	return $(this).each(function(_, e){
+		return $(e).append($(e).children().detach().get().sort(func))
+	})
+}
+
+
+
 function getImageOrder(img){
 	// XXX HACK need to parseInt this because '13' is less than '2'... 
 	// 	   ...figure a way out of this!!!
@@ -48,6 +64,12 @@ function getImageOrder(img){
 function setImageOrder(img, order){
 	return $(img).attr({'id': order})
 }
+
+
+function cmpImageOrder(a, b){
+	return getImageOrder(a) - getImageOrder(b)
+}
+
 
 
 
@@ -1001,6 +1023,7 @@ function createRibbon(direction){
 // XXX this uses jquery animation...
 // XXX one way to optimise this is to add the lesser ribbon to the 
 //     greater disregarding their actual order...
+// XXX think about using $(...).sortChildren(...) / sortImages()
 function mergeRibbons(direction, get_order){
 	if(get_order == null){
 		get_order = getImageOrder
@@ -1076,6 +1099,46 @@ function shiftImage(direction, get_order){
 }
 var shiftImageDown = function(){ return shiftImage('next') }
 var shiftImageUp = function(){ return shiftImage('prev') }
+
+
+
+// reverse the ribbon order...
+function reverseRibbons(){
+	var ribbons = $('.ribbon')
+	var field = $('.field')
+	var scale = getElementScale(field)
+	// get current ribbon index...
+	var cur = ribbons.index($('.current.ribbon'))
+
+	// reverse...
+	field.reverseChildren()
+	
+	// compensate for offset cange...
+	$('.current.image').click()
+}
+
+
+
+// sort all images in all ribbons...
+// NOTE: this will only align three ribbons...
+function sortImages(){
+	$('.ribbon').sortChildren(cmpImageOrder)
+	
+	// compensate for offset cange...
+	$('.current.image').click()
+}
+
+
+
+// this will reverse the order of images in all ribbons by reversing 
+// id attr and resorting...
+function reverseImageOrder(){
+	// reverse ID order...
+	$($('.image').get().sort(cmpImageOrder).reverse())
+		.each(function(i, e){$(e).attr({'id': i})})
+	// resort the images...
+	sortImages()
+}
 
 
 
