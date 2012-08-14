@@ -12,12 +12,12 @@ XXX zoom animation is odd...
 
 -->
 
-<link rel="stylesheet" href="markers.css">
+<link rel="stylesheet" href="../markers.css">
 
-<script src="jquery.js"></script>
-<script src="jquery-ui-1.8.22.custom.min.js"></script>
-<script src="markers.js"></script>
-<script src="ui.js"></script>
+<script src="../jquery.js"></script>
+<script src="../markers.js"></script>
+<script src="../ui.js"></script>
+<script src="../gallery-prototype.js"></script>
 
 <script>
 
@@ -25,10 +25,6 @@ $(document).ready(function(){
 	$('.image').click(imageClick)
 
 	fieldSize(300, 200)
-
-	// XXX this is working but need to cancel clicks when this is going...
-	// XXX check how this interacts with guestures...
-	$('.field').draggable()
 
 	$('.current.image').click()
 })
@@ -143,7 +139,7 @@ function imageClick(){
 .pic {
 	background: no-repeat 50% black;
 	background-size: contain;
-	background-image: url(images/350px/DSC_3501.jpg);
+	background-image: url(../images/350px/DSC_3501.jpg);
 }
 
 .current.image {
@@ -158,8 +154,8 @@ Guides:
 <br>
 
 Zoom:
-<button onclick="zoomContainerBy(2)">+</button>
-<button onclick="zoomContainerBy(0.5)">-</button>
+<button onclick="scaleContainerBy(2)">+</button>
+<button onclick="scaleContainerBy(0.5)">-</button>
 <button onclick="setContainerZoom(1)">Original</button>
 <button onclick="fitImage()">Image</button>
 <button onclick="fitThreeImages()">Three</button>
