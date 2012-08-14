@@ -1,6 +1,7 @@
 /*********************************************************************/
 // NOTE: use String.fromCharCode(code)...
 var keybindings = {
+	// togglable modes and options...
 	//191: 	toggleHelp,										//	?
 	70:		toggleSingleImageMode,							//	f
 	83:		toggleSingleRibbonMode,							//	s
@@ -10,6 +11,7 @@ var keybindings = {
 	66:		toggleBackgroundModes,							//	b
 	9:		toggleControls,									//	tab
 	77:		toggleMarkers,									//	m
+
 
 	// zooming...
 	187:	function(){scaleContainerBy(ZOOM_FACTOR)},		//	+
@@ -21,10 +23,10 @@ var keybindings = {
 	},
 	51:		fitThreeImages,									//	3
 
+
+	// navigation...
 	36:		firstImage,										//	Home
 	35:		lastImage,										//	End
-
-	//37: 	prevImage,										// 	Left
 	37:	{
 		'default': prevImage,								//	Right
 		'ctrl': prevScreenImages,							//	ctrl-Right
@@ -33,7 +35,6 @@ var keybindings = {
 	80: 	37, 											// 	BkSp
 	188:	37, 											//	p
 	8:		37,												//	<
-	//39:		nextImage,										//	Right
 	39:	{
 		'default': nextImage,								//	Left
 		'ctrl': nextScreenImages,							//	ctrl-Left
@@ -42,8 +43,16 @@ var keybindings = {
 	32:		39,												//	Space
 	190:	39,												//	m
 	78: 	39,												//	>
+	// move view...
+	// XXX should these be s-up, s-down, ... ??
+	75:		moveViewUp,										//	k
+	74:		moveViewDown,									//	j
+	72:		moveViewLeft,									//	h
+	76:		moveViewRight,									//	l
+	79:		centerCurrentImage,								//	o
 
-	// these work with ctrl and shift modifiers...
+
+	// combined navigation with actions..
 	40:	{
 		'default': focusBelowRibbon,						//	Down
 		'shift': shiftImageDown,							//	shift-Down
@@ -51,7 +60,7 @@ var keybindings = {
 			createRibbon('next')
 			shiftImageDown()
 		}
-	}, //	Down
+	},
 	38: {
 		'default': focusAboveRibbon,						//	Up
 		'shift': shiftImageUp,								//	shift-Up
@@ -61,29 +70,15 @@ var keybindings = {
 		}
 	},
 
-	// XXX should these be s-up, s-down, ... ??
-	75:		moveViewUp,										//	k
-	74:		moveViewDown,									//	j
-	72:		moveViewLeft,									//	h
-	76:		moveViewRight,									//	l
 
-	79:		centerCurrentImage,								//	o
-
-	
-	// ignore the modifiers...
+	// ignore the modifiers (shift, alt, ctrl, caps)...
 	16:		function(){},
 	17:		16,
 	18:		16,
 	20:		16,												// Caps Lock
 }
 
-/* XXX old bindings...
-	close: [27, 88, 67],						//	???
 
-	// these work with ctrl modifier...
-	promote: [45],								//	???
-	demote: [46],								//	???
-*/
 
 /*********************************************************************/
 // vim:set ts=4 sw=4 nowrap :
