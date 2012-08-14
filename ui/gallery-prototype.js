@@ -1116,7 +1116,6 @@ function reverseRibbons(){
 // NOTE: this will only align three ribbons...
 function sortImages(){
 	$('.ribbon').sortChildren(cmpImageOrder)
-	
 	// compensate for offset cange...
 	$('.current.image').click()
 }
@@ -1132,6 +1131,14 @@ function resortImagesVia(cmp){
 }
 
 
+// reverse the order of images in all ribbons by reversing their id attr
+// and resorting...
+// NOTE: this is like flipping the field horizontally...
+function reverseImageOrder(){
+	resortImagesVia(function(a, b){return cmpImageOrder(b, a)})
+}
+
+
 // sort images py their full path...
 // XXX this should use a normalized path...
 function sortImagesByPath(){
@@ -1140,14 +1147,6 @@ function sortImagesByPath(){
 		b = $(b).css('background-image') 
 		return a > b ? 1 : a < b ? -1 : 0
 	})
-}
-
-
-// reverse the order of images in all ribbons by reversing their id attr
-// and resorting...
-// NOTE: this is like flipping the field horizontally...
-function reverseImageOrder(){
-	resortImagesVia(function(a, b){return cmpImageOrder(b, a)})
 }
 
 
