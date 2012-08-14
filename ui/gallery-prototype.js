@@ -1,35 +1,69 @@
 /******************************************* Actions (EXPERIMENTAL) **/
 // XXX this set of features is experimental...
 //
+// this gives us:
+// 	- namespace cleanup
+// 	- auto-generated help
+//
 // the main questions are:
 // 	- is this overcomplicating things?
-// 	- are the benefits worth it?
-// 		- namespace cleanup
-// 		- auto-generated help
+// 	- are the benefits worth the code bloat?
+//
 
 var ImageGrid = {
-	option: {}
+	// this can be serialized...
+	// NOTE: to load a serialized set of options use ImageGrid.set(options)...
+	option: {},
+	option_props: {},
+
+	// define an action...
+	// the two values that are obligatory are:
+	// 		name	- name of the action
+	// 		call	- callable
+	// XXX revise...
+	ACTION: function(obj){
+		var call = obj.call
+		// add all the attrs to the function...
+		for(i in obj){
+			if(i == 'doc' && call.doc != null){
+				call.func_doc = call.doc 
+			}
+			call[i] = obj[i]
+		}
+		this[obj.title] = call
+		return call
+	},
+	// define an option...
+	OPTION: function(obj){
+		this.option[obj.name] = obj.value
+		this.option_props[obj.name] = obj
+	},
 }
 
-// create an action...
-// the two values that are obligatory are:
-// 		name	- name of the action
-// 		call	- callable
-// XXX revise...
-function ACTION(obj){
-	var call = obj.call
-	// add all the attrs to the function...
-	for(i in obj){
-		call[i] = obj[i]
+ImageGrid.ACTION({
+	title: 'set',
+	doc: 'Set an option\'s value, calling apropriate callbacks.',
+	call: function (obj){
+		for(var n in obj){
+			this.option[n] = obj[n]
+			// call the callback if it exists...
+			if(this.option_props[n].callback != null){
+				this.option_props[n].callback()
+			}
+		}
 	}
-	ImageGrid[obj.title] = call
-	return call
-}
-
-function OPTION(obj){
-	obj.valueOf = function(){return this.value}
-	ImageGrid.option[obj.name] = obj
-}
+})
+ImageGrid.ACTION({
+	title: 'doc',
+	doc: 'get documentation for name.',
+	call: function(name){
+		return {
+			action: this[name] != null ? this[name].doc : null,
+			action_func: this[name] != null ? this[name].func_doc : null,
+			option: this.option_props[name] != null ? this.option_props[name].doc : null,
+		}
+	}
+})
 
 
 
@@ -38,46 +72,68 @@ function OPTION(obj){
 
 var DEBUG = true
 
-// the list of style modes...
-// these are swithched through in order by toggleBackgroundModes()
-/*
-var BACKGROUND_MODES = [
-	'dark',
-	'black'
-]
-*/
-// XXX is this worth it??
-OPTION({
+ImageGrid.OPTION({
 	name: 'BACKGROUND_MODES',
-	doc: 'list of available background styles.',
+	doc: 'list of available background styles.\n'+
+		'NOTE: there is also a null mode that is what is set in the '+
+		'main CSS.',
 	value: [
 		'dark',
-		'black'
+		'black',
+		// this can be removed but when given it must be last.
+		null
 	]
 })
 
+ImageGrid.OPTION({
+	name: 'NORMAL_MODE_BG',
+	value: null,
+	doc: 'Background style in normal (ribbon) mode.\n'+
+		'NOTE: This will get updated on background change in tuntime.\n'+
+		'NOTE: null represents the default style.',
+	callback: function(){
+		if(ImageGrid.toggleSingleImageMode('?') == 'off'){
+			setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
+		}
+	}
+}) 
 
-// remember the default backgrounds for modes...
-// ...this effectively makes the modes independant...
-// NOTE: null represent the default value (no class set)...
-// NOTE: these will change if changed in runtime...
-//var NORMAL_MODE_BG = 'dark' 
-var NORMAL_MODE_BG = null 
-var SINGLE_IMAGE_MODE_BG = 'black' 
+ImageGrid.OPTION({
+	name: 'SINGLE_IMAGE_MODE_BG',
+	value: 'black',
+	doc: 'Background style in single image mode.\n'+
+		'NOTE: This will get updated on background change in tuntime.\n'+
+		'NOTE: null represents the default style.',
+	callback: function(){
+		if(ImageGrid.toggleSingleImageMode('?') == 'on'){
+			setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
+		}
+	}
+}) 
 
+ImageGrid.OPTION({
+	name: 'ORIGINAL_FIELD_SCALE',
+	value: 1.0,
+	doc: 'Scale of view in image mode.\n'+
+		'NOTE: this will change if changed at runtime.',
+	callback: function(){
+		if(ImageGrid.toggleSingleImageMode('?') == 'off'){
+			setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
+		}
+	}
+})
 
-// ribbon/single view modes...
-// store the scale before we went into single image mode...
-// NOTE: these will change if changed in runtime...
-var ORIGINAL_FIELD_SCALE = 1.0
+ImageGrid.OPTION({
+	name: 'ZOOM_FACTOR',
+	value: 2,
+	doc: 'Sets the zoom factor used for a manual zooming step.'
+})
 
-
-// this sets the zooming factor used in manual zooming...
-var ZOOM_FACTOR = 2
-
-
-// sets the amount of move when a key is pressed...
-var MOVE_DELTA = 50
+ImageGrid.OPTION({
+	name: 'MOVE_DELTA',
+	value: 50,
+	doc: 'Sets the move delta in pixels for keyboard view moving.'
+})
 
 
 
@@ -147,7 +203,7 @@ function createCSSClassToggler(elem, css_class, callback_a, callback_b){
 		var callback_post = callback_b
 	}
 	// build the acual toggler function...
-	return function(action){
+	var func = function(action){
 		if(action == null || action == '?'){
 			var getter = action == '?' ? true : false
 			action = 'on'
@@ -174,6 +230,13 @@ function createCSSClassToggler(elem, css_class, callback_a, callback_b){
 			callback_post(action)
 		}
 	}
+	func.doc = 'With no arguments this will toggle between "on" and '+
+		'"off".\n'+
+		'If either "on" or "off" are given then this will switch '+
+		'to that mode.\n'+
+		'If "?" is given, this will return either "on" or "off" '+
+		'depending on the current state.'
+	return func
 }
 
 
@@ -345,8 +408,8 @@ function setupControlElements(){
 	// XXX rename classes to "shift-image-up" and "shift-image-down"...
 	$('.screen-button.demote').click(shiftImageUp)
 	$('.screen-button.promote').click(shiftImageDown)
-	$('.screen-button.zoom-in').click(function(){scaleContainerBy(ZOOM_FACTOR)})
-	$('.screen-button.zoom-out').click(function(){scaleContainerBy(1/ZOOM_FACTOR)})
+	$('.screen-button.zoom-in').click(function(){scaleContainerBy(ImageGrid.option.ZOOM_FACTOR)})
+	$('.screen-button.zoom-out').click(function(){scaleContainerBy(1/ImageGrid.option.ZOOM_FACTOR)})
 	$('.screen-button.toggle-wide').click(ImageGrid.toggleWideView)
 	$('.screen-button.toggle-single').click(ImageGrid.toggleSingleImageMode)
 	$('.screen-button.fit-three').click(fitThreeImages)
@@ -696,7 +759,7 @@ function makeKeyboardHandler(keybindings, unhandled){
 /************************************************************ Modes **/
 
 // XXX is this worth it??
-ACTION({
+ImageGrid.ACTION({
 	title: 'toggleSingleImageMode',
 	doc: 'Toggle single image mode.',
 	group: 'Modes',
@@ -705,21 +768,21 @@ ACTION({
 		// pre...
 		function(action){
 			if(action == 'on'){
-				NORMAL_MODE_BG = getBackgroundMode()
-				ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
+				ImageGrid.option.NORMAL_MODE_BG = getBackgroundMode()
+				ImageGrid.option.ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
 			// do this only when coming out of single image mode...
 			} else if(ImageGrid.toggleSingleImageMode('?') == 'on'){
-				SINGLE_IMAGE_MODE_BG = getBackgroundMode()
+				ImageGrid.option.SINGLE_IMAGE_MODE_BG = getBackgroundMode()
 			}
 		},
 		// post...
 		function(action){
 			if(action == 'on'){
 				fitImage()
-				setBackgroundMode(SINGLE_IMAGE_MODE_BG)
+				setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
 			} else {
-				setContainerScale(ORIGINAL_FIELD_SCALE)
-				setBackgroundMode(NORMAL_MODE_BG)
+				setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
+				setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
 			}
 			clickAfterTransitionsDone()
 		})
@@ -727,7 +790,7 @@ ACTION({
 
 
 // XXX is this worth it??
-ACTION({
+ImageGrid.ACTION({
 	title: 'toggleWideView',
 	doc: 'Toggle wide view mode.',
 	group: 'Modes',
@@ -736,10 +799,10 @@ ACTION({
 		// pre...
 		function(action){
 			if(action == 'on'){
-				ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
+				ImageGrid.option.ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
 				setContainerScale(0.1)
 			} else {
-				setContainerScale(ORIGINAL_FIELD_SCALE)
+				setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
 			}
 		}, 
 		// post...
@@ -748,7 +811,7 @@ ACTION({
 
 
 // XXX is this worth it??
-ACTION({
+ImageGrid.ACTION({
 	title: 'toggleSingleRibbonMode',
 	doc: 'Show/hide other ribbons.',
 	group: 'Modes',
@@ -765,7 +828,7 @@ ACTION({
 // 		- add/remove these images on demand
 // 			+ a tad complicated...
 // XXX is this worth it??
-ACTION({
+ImageGrid.ACTION({
 	title: 'toggleDisplayShiftedUpImages',
 	doc: 'Toggle display of shifted images.',
 	group: 'Modes',
@@ -777,7 +840,7 @@ ACTION({
 
 function getBackgroundMode(){
 	var mode = null
-	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES.valueOf()
+	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
 	// find a mode to set...
 	for(var i = 0; i < BACKGROUND_MODES.length; i++){
 		// we found our mode...
@@ -793,7 +856,7 @@ function getBackgroundMode(){
 // set the background mode
 // NOTE: passing null will set the default.
 function setBackgroundMode(mode){
-	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES.valueOf()
+	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
 	var cur = BACKGROUND_MODES.indexOf(mode)
 
 	// invalid mode...
@@ -818,7 +881,7 @@ function setBackgroundMode(mode){
 
 // this will toggle through background theems: none -> dark -> black
 function toggleBackgroundModes(){
-	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES.valueOf()
+	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
 	var mode = getBackgroundMode()
 	// default -> first
 	if(mode == null){
@@ -888,19 +951,19 @@ function centerOrigin(){
 // XXX virtually identical, see of can be merged...
 function moveViewUp(){
 	var t = parseInt($('.field').css('top'))
-	$('.field').css({'top': t-(MOVE_DELTA)})
+	$('.field').css({'top': t-(ImageGrid.option.MOVE_DELTA)})
 }
 function moveViewDown(){
 	var t = parseInt($('.field').css('top'))
-	$('.field').css({'top': t+(MOVE_DELTA)})
+	$('.field').css({'top': t+(ImageGrid.option.MOVE_DELTA)})
 }
 function moveViewLeft(){
 	var l = parseInt($('.field').css('left'))
-	$('.field').css({'left': l-(MOVE_DELTA)})
+	$('.field').css({'left': l-(ImageGrid.option.MOVE_DELTA)})
 }
 function moveViewRight(){
 	var l = parseInt($('.field').css('left'))
-	$('.field').css({'left': l+(MOVE_DELTA)})
+	$('.field').css({'left': l+(ImageGrid.option.MOVE_DELTA)})
 }
 
 
