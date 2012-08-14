@@ -3,8 +3,8 @@
 var keybindings = {
 	// togglable modes and options...
 	//191: 	toggleHelp,										//	?
-	70:		toggleSingleImageMode,							//	f
-	83:		toggleSingleRibbonMode,							//	s
+	70:		ImageGrid.toggleSingleImageMode,				//	f
+	83:		ImageGrid.toggleSingleRibbonMode,				//	s
 	13:		70,												//	Enter
 	84:		toggleSingleImageModeTransitions,				//	t
 	65:		toggleTransitions,								//	a

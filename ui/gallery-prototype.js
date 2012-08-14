@@ -1,13 +1,60 @@
+/******************************************* Actions (EXPERIMENTAL) **/
+// XXX this set of features is experimental...
+//
+// the main questions are:
+// 	- is this overcomplicating things?
+// 	- are the benefits worth it?
+// 		- namespace cleanup
+// 		- auto-generated help
+
+var ImageGrid = {
+	option: {}
+}
+
+// create an action...
+// the two values that are obligatory are:
+// 		name	- name of the action
+// 		call	- callable
+// XXX revise...
+function ACTION(obj){
+	var call = obj.call
+	// add all the attrs to the function...
+	for(i in obj){
+		call[i] = obj[i]
+	}
+	ImageGrid[obj.title] = call
+	return call
+}
+
+function OPTION(obj){
+	obj.valueOf = function(){return this.value}
+	ImageGrid.option[obj.name] = obj
+}
+
+
+
+
 /******************************************* Setup Data and Globals **/
 
 var DEBUG = true
 
 // the list of style modes...
 // these are swithched through in order by toggleBackgroundModes()
+/*
 var BACKGROUND_MODES = [
 	'dark',
 	'black'
 ]
+*/
+// XXX is this worth it??
+OPTION({
+	name: 'BACKGROUND_MODES',
+	doc: 'list of available background styles.',
+	value: [
+		'dark',
+		'black'
+	]
+})
 
 
 // remember the default backgrounds for modes...
@@ -35,7 +82,7 @@ var MOVE_DELTA = 50
 
 
 
-/********************************************************** Helpers **/
+/************************************************ jQuery extensions **/
 
 
 jQuery.fn.reverseChildren = function(){
@@ -45,6 +92,7 @@ jQuery.fn.reverseChildren = function(){
 }
 
 
+
 jQuery.fn.sortChildren = function(func){
 	return $(this).each(function(_, e){
 		return $(e).append($(e).children().detach().get().sort(func))
@@ -52,6 +100,9 @@ jQuery.fn.sortChildren = function(func){
 }
 
 
+
+
+/********************************************************** Helpers **/
 
 function getImageOrder(img){
 	// XXX HACK need to parseInt this because '13' is less than '2'... 
@@ -68,7 +119,6 @@ function setImageOrder(img, order){
 function cmpImageOrder(a, b){
 	return getImageOrder(a) - getImageOrder(b)
 }
-
 
 
 
@@ -297,8 +347,8 @@ function setupControlElements(){
 	$('.screen-button.promote').click(shiftImageDown)
 	$('.screen-button.zoom-in').click(function(){scaleContainerBy(ZOOM_FACTOR)})
 	$('.screen-button.zoom-out').click(function(){scaleContainerBy(1/ZOOM_FACTOR)})
-	$('.screen-button.toggle-wide').click(toggleWideView)
-	$('.screen-button.toggle-single').click(toggleSingleImageMode)
+	$('.screen-button.toggle-wide').click(ImageGrid.toggleWideView)
+	$('.screen-button.toggle-single').click(ImageGrid.toggleSingleImageMode)
 	$('.screen-button.fit-three').click(fitThreeImages)
 	$('.screen-button.show-controls').click(showControls)
 	$('.screen-button.settings').click(function(){alert('not implemented yet...')})
@@ -645,14 +695,20 @@ function makeKeyboardHandler(keybindings, unhandled){
 
 /************************************************************ Modes **/
 
-var toggleSingleImageMode = createCSSClassToggler('.viewer', 'single-image-mode', 
+// XXX is this worth it??
+ACTION({
+	title: 'toggleSingleImageMode',
+	doc: 'Toggle single image mode.',
+	group: 'Modes',
+	type: 'toggle',
+	call: createCSSClassToggler('.viewer', 'single-image-mode', 
 		// pre...
 		function(action){
 			if(action == 'on'){
 				NORMAL_MODE_BG = getBackgroundMode()
 				ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
 			// do this only when coming out of single image mode...
-			} else if(toggleSingleImageMode('?') == 'on'){
+			} else if(ImageGrid.toggleSingleImageMode('?') == 'on'){
 				SINGLE_IMAGE_MODE_BG = getBackgroundMode()
 			}
 		},
@@ -667,10 +723,16 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer', 'single-image-mode'
 			}
 			clickAfterTransitionsDone()
 		})
+})
 
 
-// wide view mode toggle...
-var toggleWideView = createCSSClassToggler('.viewer', 'wide-view-mode',
+// XXX is this worth it??
+ACTION({
+	title: 'toggleWideView',
+	doc: 'Toggle wide view mode.',
+	group: 'Modes',
+	type: 'toggle',
+	call: createCSSClassToggler('.viewer', 'wide-view-mode',
 		// pre...
 		function(action){
 			if(action == 'on'){
@@ -682,11 +744,17 @@ var toggleWideView = createCSSClassToggler('.viewer', 'wide-view-mode',
 		}, 
 		// post...
 		function(){})
+})
 
 
-
-var toggleSingleRibbonMode = createCSSClassToggler('.viewer', 'single-ribbon-mode')
-
+// XXX is this worth it??
+ACTION({
+	title: 'toggleSingleRibbonMode',
+	doc: 'Show/hide other ribbons.',
+	group: 'Modes',
+	type: 'toggle',
+	call: createCSSClassToggler('.viewer', 'single-ribbon-mode')
+})
 
 
 // XXX this can be done in two ways:
@@ -696,12 +764,20 @@ var toggleSingleRibbonMode = createCSSClassToggler('.viewer', 'single-ribbon-mod
 // 		  	- will complicate reversing ribbons allot
 // 		- add/remove these images on demand
 // 			+ a tad complicated...
-var toggleDisplayShiftedUpImages = createCSSClassToggler('.viewer', 'show-shifted-up-images')
+// XXX is this worth it??
+ACTION({
+	title: 'toggleDisplayShiftedUpImages',
+	doc: 'Toggle display of shifted images.',
+	group: 'Modes',
+	type: 'toggle',
+	call: createCSSClassToggler('.viewer', 'show-shifted-up-images')
+})
 
 
 
 function getBackgroundMode(){
 	var mode = null
+	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES.valueOf()
 	// find a mode to set...
 	for(var i = 0; i < BACKGROUND_MODES.length; i++){
 		// we found our mode...
@@ -717,6 +793,7 @@ function getBackgroundMode(){
 // set the background mode
 // NOTE: passing null will set the default.
 function setBackgroundMode(mode){
+	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES.valueOf()
 	var cur = BACKGROUND_MODES.indexOf(mode)
 
 	// invalid mode...
@@ -741,6 +818,7 @@ function setBackgroundMode(mode){
 
 // this will toggle through background theems: none -> dark -> black
 function toggleBackgroundModes(){
+	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES.valueOf()
 	var mode = getBackgroundMode()
 	// default -> first
 	if(mode == null){
