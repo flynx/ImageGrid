@@ -1105,15 +1105,8 @@ var shiftImageUp = function(){ return shiftImage('prev') }
 // reverse the ribbon order...
 // NOTE: this is like flipping the field vertically...
 function reverseRibbons(){
-	var ribbons = $('.ribbon')
-	var field = $('.field')
-	var scale = getElementScale(field)
-	// get current ribbon index...
-	var cur = ribbons.index($('.current.ribbon'))
-
 	// reverse...
-	field.reverseChildren()
-	
+	$('.field').reverseChildren()
 	// compensate for offset cange...
 	$('.current.image').click()
 }
