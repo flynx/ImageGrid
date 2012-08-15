@@ -51,7 +51,7 @@ var ImageGrid = {
 
 ImageGrid.ACTION({
 	title: 'set',
-	doc: 'Set an option\'s value, calling apropriate callbacks.',
+	doc: 'Set option(s) value(s), calling apropriate callbacks.',
 	group: 'API',
 	call: function (obj){
 		for(var n in obj){
@@ -445,10 +445,11 @@ function setupControlElements(){
 	$('.screen-button.promote').click(shiftImageDown)
 	$('.screen-button.zoom-in').click(function(){scaleContainerBy(ImageGrid.option.ZOOM_FACTOR)})
 	$('.screen-button.zoom-out').click(function(){scaleContainerBy(1/ImageGrid.option.ZOOM_FACTOR)})
-	$('.screen-button.toggle-wide').click(ImageGrid.toggleWideView)
+	// XXX
+	$('.screen-button.toggle-wide').click(function(){scaleContainerBy(0.2)})
 	$('.screen-button.toggle-single').click(ImageGrid.toggleSingleImageMode)
 	$('.screen-button.fit-three').click(fitThreeImages)
-	$('.screen-button.show-controls').click(showControls)
+	$('.screen-button.show-controls').click(function(){ImageGrid.toggleControls('on')})
 	$('.screen-button.settings').click(function(){alert('not implemented yet...')})
 }
 
@@ -826,27 +827,6 @@ ImageGrid.ACTION({
 
 // XXX is this worth it??
 ImageGrid.ACTION({
-	title: 'toggleWideView',
-	doc: 'Toggle wide view mode.',
-	group: 'Modes',
-	type: 'toggle',
-	call: createCSSClassToggler('.viewer', 'wide-view-mode',
-		// pre...
-		function(action){
-			if(action == 'on'){
-				ImageGrid.option.ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
-				setContainerScale(0.1)
-			} else {
-				setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
-			}
-		}, 
-		// post...
-		function(){})
-})
-
-
-// XXX is this worth it??
-ImageGrid.ACTION({
 	title: 'toggleSingleRibbonMode',
 	doc: 'Show/hide other ribbons.',
 	group: 'Modes',
@@ -932,17 +912,34 @@ function toggleBackgroundModes(){
 
 
 
-var toggleSingleImageModeTransitions = createCSSClassToggler('.viewer', 'no-single-image-transitions')
+//var toggleSingleImageModeTransitions = createCSSClassToggler('.viewer', 'no-single-image-transitions')
+ImageGrid.ACTION({
+	title: 'toggleSingleImageModeTransitions',
+	doc: 'Toggle transitions in single image mode.',
+	group: 'Modes',
+	type: 'toggle',
+	call: createCSSClassToggler('.viewer', 'no-single-image-transitions')
+})
 
 
-var toggleControls = createCSSClassToggler('.viewer', 'hidden-controls')
-var showControls = function(){toggleControls('on')}
-var hideControls = function(){toggleControls('off')}
+//var toggleControls = createCSSClassToggler('.viewer', 'hidden-controls')
+ImageGrid.ACTION({
+	title: 'toggleControls',
+	doc: 'Toggle UI controls.',
+	group: 'Modes',
+	type: 'toggle',
+	call: createCSSClassToggler('.viewer', 'hidden-controls')
+})
 
 
-var toggleTransitions = createCSSClassToggler('.viewer', 'transitions-enabled')
-var enableTransitions = function(){toggleTransitions('on')}
-var disableTransitions = function(){toggleTransitions('off')}
+//var toggleTransitions = createCSSClassToggler('.viewer', 'transitions-enabled')
+ImageGrid.ACTION({
+	title: 'toggleTransitions',
+	doc: 'Toggle global transitions.',
+	group: 'Modes',
+	type: 'toggle',
+	call: createCSSClassToggler('.viewer', 'transitions-enabled')
+})
 
 
 
@@ -1350,6 +1347,7 @@ function sortImagesByPath(){
 // 		between the below/above two images...
 
 // XXX shift group/image right/left...
+
 
 
 

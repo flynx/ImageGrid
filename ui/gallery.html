@@ -51,7 +51,7 @@ function setup(){
 	// XXX
 	// this will set the defaults...
 	ImageGrid.toggleSingleImageMode('off')
-	enableTransitions()
+	ImageGrid.toggleTransitions('on')
 
 	// setup event handlers...
 	setupEvents()
@@ -130,7 +130,7 @@ $(document).ready(setup);
 <div class="demo-buttons">
 	<button onclick="toggleMarkers()">Toggle Markers (m)</button>
 	<button onclick="toggleBackgroundModes()">toggle background modes (b)</button>
-	<button onclick="toggleControls()">toggle screen controls (tab)</button>
+	<button onclick="ImageGrid.toggleControls()">toggle screen controls (tab)</button>
 
 	<br><br>
 
@@ -139,7 +139,7 @@ $(document).ready(setup);
 
 	<br><br>
 
-	<button onclick="toggleSingleImageModeTransitions()">toggle single image mode transitions (t)</button>
+	<button onclick="ImageGrid.toggleSingleImageModeTransitions()">toggle single image mode transitions (t)</button>
 
 	<br><br>
 
@@ -168,10 +168,6 @@ $(document).ready(setup);
 	<button onclick="setContainerScale(1)">Original (0)</button>
 	<button onclick="fitImage()">Image (1)</button>
 	<button onclick="fitThreeImages()">Three (3)</button>
-
-	<br><br>
-
-	<button onclick="ImageGrid.toggleWideView()">toggle wide view</button>
 
 	<br><br>
 

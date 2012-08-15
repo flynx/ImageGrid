@@ -6,10 +6,10 @@ var keybindings = {
 	70:		ImageGrid.toggleSingleImageMode,				//	f
 	83:		ImageGrid.toggleSingleRibbonMode,				//	s
 	13:		70,												//	Enter
-	84:		toggleSingleImageModeTransitions,				//	t
-	65:		toggleTransitions,								//	a
+	84:		ImageGrid.toggleSingleImageModeTransitions,		//	t
+	65:		ImageGrid.toggleTransitions,					//	a
+	9:		ImageGrid.toggleControls,						//	tab
 	66:		toggleBackgroundModes,							//	b
-	9:		toggleControls,									//	tab
 	77:		toggleMarkers,									//	m
 
 
