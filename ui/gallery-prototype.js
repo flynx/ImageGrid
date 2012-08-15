@@ -71,7 +71,7 @@ ImageGrid.ACTION({
 })
 ImageGrid.ACTION({
 	title: 'doc',
-	doc: 'get documentation for name.',
+	doc: 'Get documentation for name.',
 	group: 'API',
 	call: function(name){
 		return {
@@ -99,6 +99,7 @@ ImageGrid.TYPE('toggle', function(obj){
 		}
 	})
 })
+
 
 
 
