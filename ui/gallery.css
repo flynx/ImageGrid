@@ -1,23 +1,44 @@
-.overlay {
+.overlay, .splash {
 	position: absolute;
 	top: 0px;
 	left: 0px;
 	width: 100%;
 	height: 100%;
-	overflow: auto;
-
+	z-index: 9000;
+}
+.overlay {
+	display: none;
+}
+.splash {
+	color: gray;
 	background-color: white;
+	opacity: 1.0;
+}
+.overlay .background, .overlay .content {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
 	color: gray;
 
 	opacity: 1.0;
 
-	z-index: 9000;
-
 	text-align: center:
 }
+.overlay .background {
+	background-color: white;
+	opacity: 0.5;
+	z-index: 9000;
+}
 
+.overlay .content {
+	overflow: auto;
+	opacity: 0.9;
+	z-index: 9010;
+}
 
-.overlay * {
+.overlay *, .splash * {
 	color: gray;
 }
 
@@ -29,6 +50,7 @@
 	padding: 20px;
 	margin: 5px;
 	border: solid 1px silver;
+	background-color: white;
 }
 
 .options .option {
@@ -253,14 +275,20 @@
 
 
 /* dark background */
-.dark.viewer, .dark .overlay {
+.dark.viewer, .dark .splash {
 	background-color: rgb(32, 32, 32);
 }
 
 
-.dark .overlay * {
+.dark .overlay *, .dark .splash * {
 	color: silver;
 }
+
+.dark .overlay .options, .dark .overlay .background {
+	background-color: rgb(32, 32, 32);
+}
+
+
 
 
 .dark .screen-button {
@@ -278,12 +306,16 @@
 
 
 /* black background */
-.black.viewer, .black .overlay {
+.black.viewer, .black .splash {
 	background-color: black;
 }
 
-.black .overlay * {
+.black .overlay *, .black .splash * {
 	color: silver;
+}
+
+.black .overlay .options, .black .overlay .background {
+	background-color: black;
 }
 
 

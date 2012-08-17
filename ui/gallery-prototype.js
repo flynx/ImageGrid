@@ -113,21 +113,22 @@ ImageGrid.TYPE('toggle', function(obj){
 })
 
 
+
+
 function showInOverlay(obj){
 	// clean things up...
-	$('.overlay').children().remove()
-	
-	
+	$('.overlay .content').children().remove()
 	// put it in the overlay...
-	$('.overlay').append(obj)
-	
+	$('.overlay .content').append(obj)
 	// prepare the overlay...
 	$('.overlay')
 		.one('click', function(){
 			$('.overlay')
-				.fadeOut()
-				.children()
-					.remove()
+				.fadeOut(function(){
+					$('.overlay .content')
+						.children()
+							.remove()
+				})
 		})
 		.fadeIn()
 	return obj
@@ -1026,10 +1027,10 @@ function toggleBackgroundModes(){
 
 
 
-//var toggleSingleImageModeTransitions = createCSSClassToggler('.viewer', 'no-single-image-transitions')
+// XXX for some reason this is backwords... (says 'on' when it's off ans 'off' when on)
 ImageGrid.ACTION({
 	id: 'toggleSingleImageModeTransitions',
-	title: 'Single image mode transitions',
+	title: 'Disable single image mode transitions',
 	doc: 'Toggle transitions in single image mode.',
 	group: 'Mode: Single Image',
 	type: 'toggle',
@@ -1037,7 +1038,6 @@ ImageGrid.ACTION({
 })
 
 
-//var toggleControls = createCSSClassToggler('.viewer', 'hidden-controls')
 ImageGrid.ACTION({
 	id: 'toggleControls',
 	title: 'Keyboard interface',
@@ -1048,7 +1048,6 @@ ImageGrid.ACTION({
 })
 
 
-//var toggleTransitions = createCSSClassToggler('.viewer', 'transitions-enabled')
 ImageGrid.ACTION({
 	id: 'toggleTransitions',
 	title: 'Global transitions',
