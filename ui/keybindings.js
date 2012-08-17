@@ -13,6 +13,8 @@ var keybindings = {
 	77:		toggleMarkers,									//	m
 
 
+	27:		function(){$('.overlay').click()},				//	Esc
+
 	// zooming...
 	187:	function(){scaleContainerBy(ImageGrid.option.ZOOM_FACTOR)},		//	+
 	189:	function(){scaleContainerBy(1/ImageGrid.option.ZOOM_FACTOR)},	//	-

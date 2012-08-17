@@ -113,16 +113,35 @@ ImageGrid.TYPE('toggle', function(obj){
 })
 
 
+function showInOverlay(obj){
+	// clean things up...
+	$('.overlay').children().remove()
+	
+	
+	// put it in the overlay...
+	$('.overlay').append(obj)
+	
+	// prepare the overlay...
+	$('.overlay')
+		.one('click', function(){
+			$('.overlay')
+				.fadeOut()
+				.children()
+					.remove()
+		})
+		.fadeIn()
+	return obj
+}
+
+
 // XXX use order and priority of options...
+// XXX make history work for this...
 function showSetup(){
 	var opts = ImageGrid.option
 	var opt_ps = ImageGrid.option_props
 	var groups = {}
 
-	// clean things up...
-	$('.overlay').children().remove()
 	var opts_container = $('<div class="options"/>')
-		.appendTo($('.overlay'))
 	// build options...
 	for(var n in opt_ps){
 		var disabled = false
@@ -175,15 +194,8 @@ function showSetup(){
 		e.preventDefault()
 		return false
 	})
-	// prepare the overlay...
-	$('.overlay')
-		.one('click', function(){
-			$('.overlay')
-				.fadeOut()
-				.children()
-					.remove()
-		})
-		.fadeIn()
+
+	showInOverlay(opts_container)
 }
 
 
