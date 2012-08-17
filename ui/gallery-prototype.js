@@ -1040,7 +1040,7 @@ ImageGrid.ACTION({
 //var toggleControls = createCSSClassToggler('.viewer', 'hidden-controls')
 ImageGrid.ACTION({
 	id: 'toggleControls',
-	title: 'Keyboard interface mode',
+	title: 'Keyboard interface',
 	doc: 'Toggle Touch/Keyboard UI controls.',
 	group: 'Mode: All',
 	type: 'toggle',
