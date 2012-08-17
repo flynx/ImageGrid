@@ -78,6 +78,9 @@ var keybindings = {
 	17:		16,
 	18:		16,
 	20:		16,												// Caps Lock
+
+	// refresh...
+	116:	function(){ return DEBUG?true:false }			// F5
 }
 
 

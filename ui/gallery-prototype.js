@@ -206,6 +206,7 @@ function showSetup(){
 var DEBUG = true
 //var DEBUG = false
 
+
 ImageGrid.OPTION({
 	name: 'BACKGROUND_MODES',
 	doc: 'list of available background styles.\n'+
@@ -884,13 +885,14 @@ function makeKeyboardHandler(keybindings, unhandled){
 				callback = handler['default']
 			}
 			if(callback != null){
-				callback()
-				return false
+				var res = callback()
+				return res?true:false
+
 			}
 		} else {
 			// simple callback...
-			handler() 
-			return false
+			var res = handler() 
+			return res?true:false
 		}
 		return unhandled(key)
 	}
