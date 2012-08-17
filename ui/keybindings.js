@@ -2,7 +2,7 @@
 // NOTE: use String.fromCharCode(code)...
 var keybindings = {
 	// togglable modes and options...
-	//191: 	toggleHelp,										//	?
+	191: 	showSetup,										//	?
 	70:		ImageGrid.toggleSingleImageMode,				//	f
 	83:		ImageGrid.toggleSingleRibbonMode,				//	s
 	13:		70,												//	Enter

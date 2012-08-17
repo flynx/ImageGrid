@@ -33,14 +33,19 @@ var ImageGrid = {
 			}
 			call[i] = obj[i]
 		}
-		this[obj.title] = call
+		this[obj.id] = call
 		return call
 	},
 	// define an option...
 	OPTION: function(obj){
 		this.option[obj.name] = obj.value
 		this.option_props[obj.name] = obj
+		if(this.option_groups.indexOf(obj.group) < 0 && obj.group != null){
+			this.option_groups.push(obj.group)
+			this.option_groups.sort()
+		}
 	},
+	option_groups: [],
 	TYPE: function(name, handler){
 		this._type_handler[name] = handler
 	},
@@ -50,7 +55,7 @@ var ImageGrid = {
 
 
 ImageGrid.ACTION({
-	title: 'set',
+	id: 'set',
 	doc: 'Set option(s) value(s), calling apropriate callbacks.',
 	group: 'API',
 	call: function (obj){
@@ -70,7 +75,7 @@ ImageGrid.ACTION({
 	}
 })
 ImageGrid.ACTION({
-	title: 'doc',
+	id: 'doc',
 	doc: 'Get documentation for name.',
 	group: 'API',
 	call: function(name){
@@ -84,22 +89,102 @@ ImageGrid.ACTION({
 ImageGrid.TYPE('toggle', function(obj){
 	var call = obj.call
 	// wrap the call to set the option...
+	// XXX this is context mirroring...
 	obj.call = function(action){
 		var res = call(action)
-		ImageGrid.option[obj.title] = call('?')
+		ImageGrid.option[obj.id] = call('?')
 		return res
 	}
 	// add an option to store the state...
 	ImageGrid.OPTION({
-		name: obj.title,
-		doc: 'Stores the state of '+obj.title+' action.',
+		name: obj.id,
+		title: obj.title,
+		group: obj.group,
+		display: obj.display,
+		doc: obj.doc == null ? 'Stores the state of '+obj.id+' action.' : obj.doc,
 		value: obj.call('?'),
 		callback: function(){
-			ImageGrid[obj.title](ImageGrid.option[obj.title])
+			obj.call()
+		},
+		click_handler: function(){
+			obj.call()
 		}
 	})
 })
 
+
+// XXX use order and priority of options...
+function showSetup(){
+	var opts = ImageGrid.option
+	var opt_ps = ImageGrid.option_props
+	var groups = {}
+
+	// clean things up...
+	$('.overlay').children().remove()
+	var opts_container = $('<div class="options"/>')
+		.appendTo($('.overlay'))
+	// build options...
+	for(var n in opt_ps){
+		var disabled = false
+		var opt = opt_ps[n]
+		var group = opt.group
+		// handle disabled opts...
+		if(opt.display == false){
+			if(!DEBUG){
+				continue
+			}
+			disabled = true
+		}
+		// build an option...
+		var option = $('<div class="option"/>').append($([
+			$('<div class="title"/>').text(opt.title != null ? opt.title : n)[0],
+			$('<div class="doc"/>').html(opt['doc'].replace(/\n/g, '<br>'))[0],
+			$('<div class="value"/>').text(opts[n])[0]
+		]))
+		// group things correctly...
+		if(group == null){
+			group = 'Other'
+		}
+		if(groups[group] == null){
+			groups[group] = $('<div class="group"/>')
+				.append($('<div class="title"/>').text(group))
+				.append(option)
+		} else {
+			groups[group].append(option)
+		}
+		// event handlers...
+		var handler = opt_ps[n].click_handler
+		if(disabled){
+			option.addClass('disabled')
+		} else if(handler != null){
+			option.click(handler)
+		}
+
+	}
+	// build groups...
+	for(var i = 0; i < ImageGrid.option_groups.length; i++){
+		var group_name = ImageGrid.option_groups[i]
+		opts_container.append(groups[group_name])
+	}
+	opts_container.append(groups['Other'])
+
+	opts_container.click(function(e){
+		// update the view...
+		// XXX do we need to redraw the whole thing on each click???
+		showSetup()
+		e.preventDefault()
+		return false
+	})
+	// prepare the overlay...
+	$('.overlay')
+		.one('click', function(){
+			$('.overlay')
+				.fadeOut()
+				.children()
+					.remove()
+		})
+		.fadeIn()
+}
 
 
 
@@ -107,12 +192,14 @@ ImageGrid.TYPE('toggle', function(obj){
 /******************************************* Setup Data and Globals **/
 
 var DEBUG = true
+//var DEBUG = false
 
 ImageGrid.OPTION({
 	name: 'BACKGROUND_MODES',
 	doc: 'list of available background styles.\n'+
 		'NOTE: there is also a null mode that is what is set in the '+
 		'main CSS.',
+	display: false,
 	value: [
 		'dark',
 		'black',
@@ -123,6 +210,7 @@ ImageGrid.OPTION({
 
 ImageGrid.OPTION({
 	name: 'NORMAL_MODE_BG',
+	display: false,
 	value: null,
 	doc: 'Background style in normal (ribbon) mode.\n'+
 		'NOTE: This will get updated on background change in tuntime.\n'+
@@ -136,6 +224,7 @@ ImageGrid.OPTION({
 
 ImageGrid.OPTION({
 	name: 'SINGLE_IMAGE_MODE_BG',
+	display: false,
 	value: 'black',
 	doc: 'Background style in single image mode.\n'+
 		'NOTE: This will get updated on background change in tuntime.\n'+
@@ -149,6 +238,7 @@ ImageGrid.OPTION({
 
 ImageGrid.OPTION({
 	name: 'ORIGINAL_FIELD_SCALE',
+	display: false,
 	value: 1.0,
 	doc: 'Scale of view in image mode.\n'+
 		'NOTE: this will change if changed at runtime.',
@@ -161,12 +251,16 @@ ImageGrid.OPTION({
 
 ImageGrid.OPTION({
 	name: 'ZOOM_FACTOR',
+	title: 'Zooming factor',
+	group: 'Mode: All',
 	value: 2,
 	doc: 'Sets the zoom factor used for a manual zooming step.'
 })
 
 ImageGrid.OPTION({
 	name: 'MOVE_DELTA',
+	title: 'Move step',
+	group: 'Mode: All',
 	value: 50,
 	doc: 'Sets the move delta in pixels for keyboard view moving.'
 })
@@ -451,7 +545,7 @@ function setupControlElements(){
 	$('.screen-button.toggle-single').click(ImageGrid.toggleSingleImageMode)
 	$('.screen-button.fit-three').click(fitThreeImages)
 	$('.screen-button.show-controls').click(function(){ImageGrid.toggleControls('on')})
-	$('.screen-button.settings').click(function(){alert('not implemented yet...')})
+	$('.screen-button.settings').click(showSetup)
 }
 
 
@@ -797,10 +891,12 @@ function makeKeyboardHandler(keybindings, unhandled){
 
 // XXX is this worth it??
 ImageGrid.ACTION({
-	title: 'toggleSingleImageMode',
+	id: 'toggleSingleImageMode',
+	title: 'Single image mode',
 	doc: 'Toggle single image mode.',
-	group: 'Modes',
+	group: 'Mode: Single Image',
 	type: 'toggle',
+	display: false,
 	call: createCSSClassToggler('.viewer', 'single-image-mode', 
 		// pre...
 		function(action){
@@ -828,9 +924,10 @@ ImageGrid.ACTION({
 
 // XXX is this worth it??
 ImageGrid.ACTION({
-	title: 'toggleSingleRibbonMode',
+	id: 'toggleSingleRibbonMode',
+	title: 'Single ribbon mode',
 	doc: 'Show/hide other ribbons.',
-	group: 'Modes',
+	group: 'Mode: Ribbon',
 	type: 'toggle',
 	call: createCSSClassToggler('.viewer', 'single-ribbon-mode')
 })
@@ -845,9 +942,11 @@ ImageGrid.ACTION({
 // 			+ a tad complicated...
 // XXX is this worth it??
 ImageGrid.ACTION({
-	title: 'toggleDisplayShiftedUpImages',
+	id: 'toggleDisplayShiftedUpImages',
+	title: 'Display shifted up images',
 	doc: 'Toggle display of shifted images.',
-	group: 'Modes',
+	group: 'Mode: Ribbon',
+	display: false,
 	type: 'toggle',
 	call: createCSSClassToggler('.viewer', 'show-shifted-up-images')
 })
@@ -915,9 +1014,10 @@ function toggleBackgroundModes(){
 
 //var toggleSingleImageModeTransitions = createCSSClassToggler('.viewer', 'no-single-image-transitions')
 ImageGrid.ACTION({
-	title: 'toggleSingleImageModeTransitions',
+	id: 'toggleSingleImageModeTransitions',
+	title: 'Single image mode transitions',
 	doc: 'Toggle transitions in single image mode.',
-	group: 'Modes',
+	group: 'Mode: Single Image',
 	type: 'toggle',
 	call: createCSSClassToggler('.viewer', 'no-single-image-transitions')
 })
@@ -925,9 +1025,10 @@ ImageGrid.ACTION({
 
 //var toggleControls = createCSSClassToggler('.viewer', 'hidden-controls')
 ImageGrid.ACTION({
-	title: 'toggleControls',
-	doc: 'Toggle UI controls.',
-	group: 'Modes',
+	id: 'toggleControls',
+	title: 'Keyboard interface mode',
+	doc: 'Toggle Touch/Keyboard UI controls.',
+	group: 'Mode: All',
 	type: 'toggle',
 	call: createCSSClassToggler('.viewer', 'hidden-controls')
 })
@@ -935,9 +1036,10 @@ ImageGrid.ACTION({
 
 //var toggleTransitions = createCSSClassToggler('.viewer', 'transitions-enabled')
 ImageGrid.ACTION({
-	title: 'toggleTransitions',
+	id: 'toggleTransitions',
+	title: 'Global transitions',
 	doc: 'Toggle global transitions.',
-	group: 'Modes',
+	group: 'Mode: All',
 	type: 'toggle',
 	call: createCSSClassToggler('.viewer', 'transitions-enabled')
 })

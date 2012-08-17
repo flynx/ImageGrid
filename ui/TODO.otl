@@ -1,8 +1,9 @@
 Priority work
-	[_] 85% Preview II
-		[_] 77% UI
-			[_] 0% settings/help screen
+	[_] 88% Preview II
+		[_] 93% UI
+			[_] 50% settings/help screen
 				[_] keyboard config/help
+				[X] auto-generated settings interface
 			[X] "hide other ribbons" mode
 			[X] fix single image mode
 			| need to center the image correctly...
@@ -113,7 +114,7 @@ Priority work
 			[X] 100% actions
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
-	[_] 30% Preview II (optional features)
+	[_] 28% Preview II (optional features)
 		[_] slideshow...
 		[_] 50% serialization/deserialization
 			[X] JSON loader/unloader
