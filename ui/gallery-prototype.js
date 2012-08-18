@@ -187,7 +187,6 @@ function showSetup(){
 		opts_container.append(groups[group_name])
 	}
 	opts_container.append(groups['Other'])
-
 	opts_container.click(function(e){
 		// update the view...
 		// XXX do we need to redraw the whole thing on each click???
@@ -195,7 +194,6 @@ function showSetup(){
 		e.preventDefault()
 		return false
 	})
-
 	showInOverlay(opts_container)
 }
 
@@ -904,7 +902,6 @@ function makeKeyboardHandler(keybindings, unhandled){
 
 /************************************************************ Modes **/
 
-// XXX is this worth it??
 ImageGrid.ACTION({
 	id: 'toggleSingleImageMode',
 	title: 'Single image mode',
@@ -937,7 +934,6 @@ ImageGrid.ACTION({
 })
 
 
-// XXX is this worth it??
 ImageGrid.ACTION({
 	id: 'toggleSingleRibbonMode',
 	title: 'Single ribbon mode',
@@ -955,7 +951,6 @@ ImageGrid.ACTION({
 // 		  	- will complicate reversing ribbons allot
 // 		- add/remove these images on demand
 // 			+ a tad complicated...
-// XXX is this worth it??
 ImageGrid.ACTION({
 	id: 'toggleDisplayShiftedUpImages',
 	title: 'Display shifted up images',
@@ -1040,7 +1035,7 @@ ImageGrid.ACTION({
 
 ImageGrid.ACTION({
 	id: 'toggleControls',
-	title: 'Keyboard interface',
+	title: 'Keyboard-oriented interface',
 	doc: 'Toggle Touch/Keyboard UI controls.',
 	group: 'Mode: All',
 	type: 'toggle',
