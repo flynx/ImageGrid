@@ -195,27 +195,29 @@ function toKeyName(code){
 }
 
 // XXX merge this with showSetup as they are virtually identical...
-function showKeyboardBindings(){
-	var actions = {}
+// XXX revise!!
+function showSettingUI(data, get_value, get_handler){
+	var tree = {}
 	var groups = []
+	var groups_ui = {}
 	// build the group/action structure...
-	for(var a in ImageGrid.actions){
-		var group = ImageGrid[a].group
-		if(group.indexOf(groups) == -1){
+	for(var a in data){
+		var group = data[a].group!=null?data[a].group:'Other'
+		if(groups.indexOf(group) == -1){
 			groups.push(group)
 		}
-		if(actions[group] == null){
-			actions[group] = []
+		if(tree[group] == null){
+			tree[group] = []
 		}
-		actions[group].push([
-				ImageGrid[a].title!=null?ImageGrid[a].title:a, 
+		tree[group].push([
+				data[a].title!=null?data[a].title:a, 
 				a
 		])
 	}
 	// sort things...
 	groups.sort()
-	for(var g in actions){
-		actions[g].sort(function(a, b){
+	for(var g in tree){
+		tree[g].sort(function(a, b){
 			a = a[0]
 			b = b[0]
 			return a > b ? 1 : a < b ? -1 : 0
@@ -223,40 +225,65 @@ function showKeyboardBindings(){
 	}
 	// build the HTML...
 	var ui = $('<div class="options"/>')
-	for(var g in actions){
+	for(var g in tree){
 		var group = null
-		for(var i=0; i<actions[g].length; i++){
-			// get the action object...
-			var action = ImageGrid.actions[actions[g][i][1]]
-			if(!DEBUG && action.display == false){
+		for(var i=0; i<tree[g].length; i++){
+			// get the element...
+			var elem = data[tree[g][i][1]]
+			if(!DEBUG && elem.display == false){
 				continue
 			}
 			if(group == null){
 				group = $('<div class="group"/>')
-					.append($('<div class="title"/>').text(g!=null?g:'Other'))
+					.append($('<div class="title"/>').text(g))
 			}
 			var option
 			group.append(
 				option = $('<div class="option"/>').append($([
-					$('<div class="title"/>').text(actions[g][i][0])[0],
+					$('<div class="title"/>').text(tree[g][i][0])[0],
 					$('<div class="doc"/>').html(
-						action.doc?action.doc.replace(/\n/g, '<br>'):'')[0],
+						elem.doc?elem.doc.replace(/\n/g, '<br>'):'')[0],
 					// XXX keys...
-					$('<div class="value"/>').text('KEY')[0],
+					$('<div class="value"/>').text(get_value(elem))[0],
 			])))
-			if(action.display == false){
+			if(elem.display == false){
 				option.addClass('disabled')
 			} else {
-				// XXX handler...
+				// handler...
+				var handler = get_handler(elem)
+				if(handler != null){
+					option.click(handler)
+				}
 			}
 		}
 		if(group != null){
-			ui.append(group)
+			groups_ui[g] = group
 		}
 	}
+	// put the Other group in the back...
+	var i = groups.indexOf('Other')
+	if(i != -1){
+		groups.splice(i, 1)
+		groups.push('Other')
+	}
+	// buildup the sorted groups...
+	for(var i=0; i<groups.length; i++){
+		ui.append(groups_ui[groups[i]])
+	}
+	// refresh...
+	ui.click(function(){
+		// XXX is this a good way to do a refresh?
+		showSettingUI(data, get_value, get_handler)
+	})
 	showInOverlay(ui)
 }
 
+function showKeyboardBindings(){
+	// XXX build reverse key index...
+	// XXX
+	showSettingUI(ImageGrid.actions, 
+			function(){}, 
+			function(){})}
 
 
 
@@ -335,6 +362,13 @@ ImageGrid.GROUP('Mode: All',
 		}))
 
 
+if(DEBUG){
+	ImageGrid.OPTION({
+			name: 'TEST',
+			title: 'Test the Other group mechanics',
+			value: 0,
+		})
+}
 
 
 
@@ -380,6 +414,7 @@ function cmpImageOrder(a, b){
 
 // show a jQuary opject in viewer overlay...
 function showInOverlay(obj){
+	obj.click(function(){ return false })
 	// clean things up...
 	$('.overlay .content').children().remove()
 	// put it in the overlay...
@@ -1124,62 +1159,9 @@ ImageGrid.GROUP('Mode: All',
 			doc: 'Show setup interface.',
 		},
 		function showSetup(){
-			var opts = ImageGrid.option
-			var opt_ps = ImageGrid.option_props
-			var groups = {}
-
-			var opts_container = $('<div class="options"/>')
-			// build options...
-			for(var n in opt_ps){
-				var disabled = false
-				var opt = opt_ps[n]
-				var group = opt.group
-				// handle disabled opts...
-				if(opt.display == false){
-					if(!DEBUG){
-						continue
-					}
-					disabled = true
-				}
-				// build an option...
-				var option = $('<div class="option"/>').append($([
-					$('<div class="title"/>').text(opt.title != null ? opt.title : n)[0],
-					$('<div class="doc"/>').html(opt['doc'].replace(/\n/g, '<br>'))[0],
-					$('<div class="value"/>').text(opts[n])[0]
-				]))
-				// group things correctly...
-				if(group == null){
-					group = 'Other'
-				}
-				if(groups[group] == null){
-					groups[group] = $('<div class="group"/>')
-						.append($('<div class="title"/>').text(group))
-						.append(option)
-				} else {
-					groups[group].append(option)
-				}
-				// event handlers...
-				var handler = opt_ps[n].click_handler
-				if(disabled){
-					option.addClass('disabled')
-				} else if(handler != null){
-					option.click(handler)
-				}
-			}
-			// build groups...
-			for(var i = 0; i < ImageGrid.option_groups.length; i++){
-				var group_name = ImageGrid.option_groups[i]
-				opts_container.append(groups[group_name])
-			}
-			opts_container.append(groups['Other'])
-			opts_container.click(function(e){
-				// update the view...
-				// XXX do we need to redraw the whole thing on each click???
-				ImageGrid.showSetup()
-				e.preventDefault()
-				return false
-			})
-			showInOverlay(opts_container)
+			showSettingUI(ImageGrid.option_props, 
+					function(e){return ImageGrid.option[e.name]}, 
+					function(e){return e.click_handler})
 		}))
 
 
@@ -1484,15 +1466,15 @@ ImageGrid.GROUP('Zooming',
 			ImageGrid.setContainerScale(f)
 		}),
 	// the fit N image pack, for 1 <= N <= 9
-	ImageGrid.ACTION({ title: 'Fit single image' }, function fitImage(){ImageGrid.fitNImages(1)}),
-	ImageGrid.ACTION({ title: 'Fit two images' }, function fitTwoImages(){ImageGrid.fitNImages(2)}),
-	ImageGrid.ACTION({ title: 'Fit three images' }, function fitThreeImages(){ImageGrid.fitNImages(3)}),
-	ImageGrid.ACTION({ title: 'Fit four images' }, function fitFourImages(){ImageGrid.fitNImages(4)}),
-	ImageGrid.ACTION({ title: 'Fit five images' }, function fitFiveImages(){ImageGrid.fitNImages(5)}),
-	ImageGrid.ACTION({ title: 'Fit six images' }, function fitSixImages(){ImageGrid.fitNImages(6)}),
-	ImageGrid.ACTION({ title: 'Fit seven images' }, function fitSevenImages(){ImageGrid.fitNImages(7)}),
-	ImageGrid.ACTION({ title: 'Fit eight images' }, function fitEightImages(){ImageGrid.fitNImages(8)}),
-	ImageGrid.ACTION({ title: 'Fit nine images' }, function fitNineImages(){ImageGrid.fitNImages(9)})
+	ImageGrid.ACTION({ title: 'Fit 1 image' }, function fitImage(){ImageGrid.fitNImages(1)}),
+	ImageGrid.ACTION({ title: 'Fit 2 images' }, function fitTwoImages(){ImageGrid.fitNImages(2)}),
+	ImageGrid.ACTION({ title: 'Fit 3 images' }, function fitThreeImages(){ImageGrid.fitNImages(3)}),
+	ImageGrid.ACTION({ title: 'Fit 4 images' }, function fitFourImages(){ImageGrid.fitNImages(4)}),
+	ImageGrid.ACTION({ title: 'Fit 5 images' }, function fitFiveImages(){ImageGrid.fitNImages(5)}),
+	ImageGrid.ACTION({ title: 'Fit 6 images' }, function fitSixImages(){ImageGrid.fitNImages(6)}),
+	ImageGrid.ACTION({ title: 'Fit 7 images' }, function fitSevenImages(){ImageGrid.fitNImages(7)}),
+	ImageGrid.ACTION({ title: 'Fit 8 images' }, function fitEightImages(){ImageGrid.fitNImages(8)}),
+	ImageGrid.ACTION({ title: 'Fit 9 images' }, function fitNineImages(){ImageGrid.fitNImages(9)})
 )
 
 
