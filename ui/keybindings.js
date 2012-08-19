@@ -9,11 +9,11 @@ var keybindings = {
 	84:		ImageGrid.toggleSingleImageModeTransitions,		//	t
 	65:		ImageGrid.toggleTransitions,					//	a
 	9:		ImageGrid.toggleControls,						//	tab
-	66:		toggleBackgroundModes,							//	b
+	66:		ImageGrid.toggleBackgroundModes,				//	b
 	77:		toggleMarkers,									//	m
 
 
-	27:		ImageGrid.closeOverlay(),						//	Esc	
+	27:		ImageGrid.closeOverlay,							//	Esc	
 
 	// zooming...
 	187:	ImageGrid.scaleContainerUp,						//	+

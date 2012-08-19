@@ -264,7 +264,7 @@ ImageGrid.GROUP('State',
 				'NOTE: null represents the default style.',
 			callback: function(){
 				if(ImageGrid.toggleSingleImageMode('?') == 'off'){
-					setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
+					ImageGrid.setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
 				}
 			}
 		}),
@@ -277,7 +277,7 @@ ImageGrid.GROUP('State',
 				'NOTE: null represents the default style.',
 			callback: function(){
 				if(ImageGrid.toggleSingleImageMode('?') == 'on'){
-					setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
+					ImageGrid.setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
 				}
 			}
 		}),
@@ -375,6 +375,8 @@ function showInOverlay(obj){
 
 
 
+// Return a scale value for the given element(s).
+// NOTE: this will only return a single scale value...
 function getElementScale(elem){
 	//var transform = elem.css('transform')
 	var vendors = ['o', 'moz', 'ms', 'webkit']
@@ -1006,66 +1008,68 @@ function makeKeyboardHandler(keybindings, unhandled){
 
 /************************************************ Mode & UI Actions **/
 
-function getBackgroundMode(){
-	var mode = null
-	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
-	// find a mode to set...
-	for(var i = 0; i < BACKGROUND_MODES.length; i++){
-		// we found our mode...
-		if( $('.' + BACKGROUND_MODES[i]).length > 0 ){
-			return BACKGROUND_MODES[i]
-		}
-	}
-	return mode
-}
-
-
-
-// set the background mode
-// NOTE: passing null will set the default.
-function setBackgroundMode(mode){
-	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
-	var cur = BACKGROUND_MODES.indexOf(mode)
-
-	// invalid mode...
-	if( cur == -1 && mode != null ){
-		return null
-	}
-	// set the mode...
-	if(mode != null){
-		$('.viewer').addClass(mode)
-	}
-	// remove all others...
-	for(var i = 0; i < BACKGROUND_MODES.length; i++){
-		if( i == cur ){
-			continue
-		}
-		mode = BACKGROUND_MODES[i]
-		$('.' + mode).removeClass(mode)
-	}
-}
-
-
-
-// this will toggle through background theems: none -> dark -> black
-function toggleBackgroundModes(){
-	var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
-	var mode = getBackgroundMode()
-	// default -> first
-	if(mode == null){
-		setBackgroundMode(BACKGROUND_MODES[0])
-	// last -> default...
-	} else if(mode == BACKGROUND_MODES[BACKGROUND_MODES.length-1]){
-		setBackgroundMode()
-	// next...
-	} else {
-		setBackgroundMode(BACKGROUND_MODES[BACKGROUND_MODES.indexOf(mode)+1])
-	}
-}
-
-
-
 ImageGrid.GROUP('Mode: All',
+	ImageGrid.ACTION({
+			title: 'Get the background mode',
+		},
+		function getBackgroundMode(){
+			var mode = null
+			var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
+			// find a mode to set...
+			for(var i = 0; i < BACKGROUND_MODES.length; i++){
+				// we found our mode...
+				if( $('.' + BACKGROUND_MODES[i]).length > 0 ){
+					return BACKGROUND_MODES[i]
+				}
+			}
+			return mode
+		}),
+	ImageGrid.ACTION({
+			title: 'Set the background mode',
+			doc: 'NOTE: passing null will set the default.'
+		},
+		function setBackgroundMode(mode){
+			var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
+			var cur = BACKGROUND_MODES.indexOf(mode)
+
+			// invalid mode...
+			if( cur == -1 && mode != null ){
+				return null
+			}
+			// set the mode...
+			if(mode != null){
+				$('.viewer').addClass(mode)
+			}
+			// remove all others...
+			for(var i = 0; i < BACKGROUND_MODES.length; i++){
+				if( i == cur ){
+					continue
+				}
+				mode = BACKGROUND_MODES[i]
+				$('.' + mode).removeClass(mode)
+			}
+		}),
+	ImageGrid.ACTION({
+			title: 'Toggle background modes',
+			doc: 'Toggle through background theems: none -> dark -> black\n\n'+
+				'NOTE: modes are toggled independently for single image and '+
+				'rinbon modes',
+		},
+		function toggleBackgroundModes(){
+			var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
+			var mode = ImageGrid.getBackgroundMode()
+			// default -> first
+			if(mode == null){
+				ImageGrid.setBackgroundMode(BACKGROUND_MODES[0])
+			// last -> default...
+			} else if(mode == BACKGROUND_MODES[BACKGROUND_MODES.length-1]){
+				ImageGrid.setBackgroundMode()
+			// next...
+			} else {
+				ImageGrid.setBackgroundMode(BACKGROUND_MODES[BACKGROUND_MODES.indexOf(mode)+1])
+			}
+		}),
+
 	ImageGrid.ACTION({
 			id: 'toggleControls',
 			title: 'Keyboard-oriented interface',
@@ -1080,6 +1084,11 @@ ImageGrid.GROUP('Mode: All',
 			type: 'toggle',
 		},
 		createCSSClassToggler('.viewer', 'transitions-enabled')),
+
+	ImageGrid.ACTION({
+			title: 'Close overlay'
+		},
+		function closeOverlay(){ $('.overlay').click() }),
 
 	// XXX use order and priority of options...
 	// XXX make history work for this...
@@ -1145,12 +1154,7 @@ ImageGrid.GROUP('Mode: All',
 				return false
 			})
 			showInOverlay(opts_container)
-		}),
-
-	ImageGrid.ACTION({
-			title: 'Close overlay'
-		},
-		function closeOverlay(){ $('.overlay').click() }))
+		}))
 
 
 
@@ -1166,21 +1170,21 @@ ImageGrid.GROUP('Mode: Single Image',
 			// pre...
 			function(action){
 				if(action == 'on'){
-					ImageGrid.option.NORMAL_MODE_BG = getBackgroundMode()
+					ImageGrid.option.NORMAL_MODE_BG = ImageGrid.getBackgroundMode()
 					ImageGrid.option.ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
 				// do this only when coming out of single image mode...
 				} else if(ImageGrid.toggleSingleImageMode('?') == 'on'){
-					ImageGrid.option.SINGLE_IMAGE_MODE_BG = getBackgroundMode()
+					ImageGrid.option.SINGLE_IMAGE_MODE_BG = ImageGrid.getBackgroundMode()
 				}
 			},
 			// post...
 			function(action){
 				if(action == 'on'){
 					ImageGrid.fitImage()
-					setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
+					ImageGrid.setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
 				} else {
 					ImageGrid.setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
-					setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
+					ImageGrid.setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
 				}
 				clickAfterTransitionsDone()
 			})),
@@ -1410,22 +1414,7 @@ ImageGrid.GROUP('Navigation',
 
 /********************************************************** Zooming **/
 
-
 ImageGrid.GROUP('Zooming',
-	// XXX is this an action or a helper???
-	ImageGrid.ACTION({
-			title: 'Get element scale',
-			doc: 'Return a scale value for the given element(s).\n\n'+
-				'NOTE: this will only return a single scale value...',
-		},
-		getElementScale),
-	ImageGrid.ACTION({
-			title: 'Set element scale',
-			doc: 'Set the scale value for the given element(s).'
-		},
-		setElementScale),
-
-
 	ImageGrid.ACTION({
 			title: 'Scale container by factor',
 		},
@@ -1444,7 +1433,6 @@ ImageGrid.GROUP('Zooming',
 		function scaleContainerDown(){
 			return ImageGrid.scaleContainerBy(1/ImageGrid.option.ZOOM_FACTOR)
 		}),
-
 	ImageGrid.ACTION({
 			title: 'Set container scale',
 		},
@@ -1468,7 +1456,6 @@ ImageGrid.GROUP('Zooming',
 
 			ImageGrid.setContainerScale(f)
 		}),
-
 	// the fit N image pack, for 1 <= N <= 9
 	ImageGrid.ACTION({ title: 'Fit single image' }, function fitImage(){ImageGrid.fitNImages(1)}),
 	ImageGrid.ACTION({ title: 'Fit two images' }, function fitTwoImages(){ImageGrid.fitNImages(2)}),
