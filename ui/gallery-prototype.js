@@ -244,7 +244,7 @@ var DEBUG = true
 ImageGrid.GROUP('State',
 	ImageGrid.OPTION({
 			name: 'BACKGROUND_MODES',
-			doc: 'list of available background styles.\n'+
+			doc: 'list of available background styles.\n\n'+
 				'NOTE: there is also a null mode that is what is set in the '+
 				'main CSS.',
 			display: false,
@@ -259,7 +259,7 @@ ImageGrid.GROUP('State',
 			name: 'NORMAL_MODE_BG',
 			display: false,
 			value: null,
-			doc: 'Background style in normal (ribbon) mode.\n'+
+			doc: 'Background style in normal (ribbon) mode.\n\n'+
 				'NOTE: This will get updated on background change in tuntime.\n'+
 				'NOTE: null represents the default style.',
 			callback: function(){
@@ -272,7 +272,7 @@ ImageGrid.GROUP('State',
 			name: 'SINGLE_IMAGE_MODE_BG',
 			display: false,
 			value: 'black',
-			doc: 'Background style in single image mode.\n'+
+			doc: 'Background style in single image mode.\n\n'+
 				'NOTE: This will get updated on background change in tuntime.\n'+
 				'NOTE: null represents the default style.',
 			callback: function(){
@@ -285,11 +285,11 @@ ImageGrid.GROUP('State',
 			name: 'ORIGINAL_FIELD_SCALE',
 			display: false,
 			value: 1.0,
-			doc: 'Scale of view in image mode.\n'+
+			doc: 'Scale of view in image mode.\n\n'+
 				'NOTE: this will change if changed at runtime.',
 			callback: function(){
 				if(ImageGrid.toggleSingleImageMode('?') == 'off'){
-					setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
+					ImageGrid.setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
 				}
 			}
 		}))
@@ -374,6 +374,40 @@ function showInOverlay(obj){
 }
 
 
+
+function getElementScale(elem){
+	//var transform = elem.css('transform')
+	var vendors = ['o', 'moz', 'ms', 'webkit']
+	var transform = elem.css('transform')
+	var res
+
+	// go through vendor prefixes... (hate this!)
+	if(!transform || transform == 'none'){
+		for(var i in vendors){
+			transform = elem.css('-' + vendors[i] + '-transform')
+			if(transform && transform != 'none'){
+				break
+			}
+		}
+	}
+	// no transform is set...
+	if(!transform || transform == 'none'){
+		return 1
+	}
+	// get the scale value -- first argument of scale/matrix...
+	return parseFloat((/(scale|matrix)\(([^,]*),.*\)/).exec(transform)[2])
+}
+
+
+function setElementScale(elem, scale){
+	return elem.css({
+		'transform': 'scale('+scale+', '+scale+')',
+		'-moz-transform': 'scale('+scale+', '+scale+')',
+		'-o-transform': 'scale('+scale+', '+scale+')',
+		'-ms-transform': 'scale('+scale+', '+scale+')',
+		'-webkit-transform': 'scale('+scale+', '+scale+')',
+	})
+}
 
 // this will create a function that will add/remove a css_class to elem 
 // calling the optional callbacks before and/or after.
@@ -775,12 +809,12 @@ function setupControlElements(){
 	// XXX rename classes to "shift-image-up" and "shift-image-down"...
 	$('.screen-button.demote').click(shiftImageUp)
 	$('.screen-button.promote').click(shiftImageDown)
-	$('.screen-button.zoom-in').click(function(){scaleContainerBy(ImageGrid.option.ZOOM_FACTOR)})
-	$('.screen-button.zoom-out').click(function(){scaleContainerBy(1/ImageGrid.option.ZOOM_FACTOR)})
+	$('.screen-button.zoom-in').click(ImageGrid.scaleContainerUp)
+	$('.screen-button.zoom-out').click(ImageGrid.scaleContainerDown)
 	// XXX
-	$('.screen-button.toggle-wide').click(function(){scaleContainerBy(0.2)})
+	$('.screen-button.toggle-wide').click(function(){ImageGrid.scaleContainerBy(0.2)})
 	$('.screen-button.toggle-single').click(ImageGrid.toggleSingleImageMode)
-	$('.screen-button.fit-three').click(fitThreeImages)
+	$('.screen-button.fit-three').click(ImageGrid.fitThreeImages)
 	$('.screen-button.show-controls').click(function(){ImageGrid.toggleControls('on')})
 	$('.screen-button.settings').click(ImageGrid.showSetup)
 }
@@ -877,8 +911,6 @@ function loadJSON(data, set_order){
 }
 
 
-
-/*********************************************************************/
 
 
 /*************************************************** Event Handlers **/
@@ -1033,75 +1065,6 @@ function toggleBackgroundModes(){
 
 
 
-// XXX use order and priority of options...
-// XXX make history work for this...
-// XXX should this be a toggle??
-ImageGrid.ACTION({
-	title: 'Settings',
-	doc: 'Show setup interface.',
-},
-function showSetup(){
-	var opts = ImageGrid.option
-	var opt_ps = ImageGrid.option_props
-	var groups = {}
-
-	var opts_container = $('<div class="options"/>')
-	// build options...
-	for(var n in opt_ps){
-		var disabled = false
-		var opt = opt_ps[n]
-		var group = opt.group
-		// handle disabled opts...
-		if(opt.display == false){
-			if(!DEBUG){
-				continue
-			}
-			disabled = true
-		}
-		// build an option...
-		var option = $('<div class="option"/>').append($([
-			$('<div class="title"/>').text(opt.title != null ? opt.title : n)[0],
-			$('<div class="doc"/>').html(opt['doc'].replace(/\n/g, '<br>'))[0],
-			$('<div class="value"/>').text(opts[n])[0]
-		]))
-		// group things correctly...
-		if(group == null){
-			group = 'Other'
-		}
-		if(groups[group] == null){
-			groups[group] = $('<div class="group"/>')
-				.append($('<div class="title"/>').text(group))
-				.append(option)
-		} else {
-			groups[group].append(option)
-		}
-		// event handlers...
-		var handler = opt_ps[n].click_handler
-		if(disabled){
-			option.addClass('disabled')
-		} else if(handler != null){
-			option.click(handler)
-		}
-	}
-	// build groups...
-	for(var i = 0; i < ImageGrid.option_groups.length; i++){
-		var group_name = ImageGrid.option_groups[i]
-		opts_container.append(groups[group_name])
-	}
-	opts_container.append(groups['Other'])
-	opts_container.click(function(e){
-		// update the view...
-		// XXX do we need to redraw the whole thing on each click???
-		ImageGrid.showSetup()
-		e.preventDefault()
-		return false
-	})
-	showInOverlay(opts_container)
-})
-
-
-
-
 ImageGrid.GROUP('Mode: All',
 	ImageGrid.ACTION({
 			id: 'toggleControls',
@@ -1116,8 +1079,78 @@ ImageGrid.GROUP('Mode: All',
 			doc: 'Toggle global transitions.',
 			type: 'toggle',
 		},
-		createCSSClassToggler('.viewer', 'transitions-enabled')))
+		createCSSClassToggler('.viewer', 'transitions-enabled')),
 
+	// XXX use order and priority of options...
+	// XXX make history work for this...
+	// XXX should this be a toggle??
+	ImageGrid.ACTION({
+			title: 'Settings',
+			doc: 'Show setup interface.',
+		},
+		function showSetup(){
+			var opts = ImageGrid.option
+			var opt_ps = ImageGrid.option_props
+			var groups = {}
+
+			var opts_container = $('<div class="options"/>')
+			// build options...
+			for(var n in opt_ps){
+				var disabled = false
+				var opt = opt_ps[n]
+				var group = opt.group
+				// handle disabled opts...
+				if(opt.display == false){
+					if(!DEBUG){
+						continue
+					}
+					disabled = true
+				}
+				// build an option...
+				var option = $('<div class="option"/>').append($([
+					$('<div class="title"/>').text(opt.title != null ? opt.title : n)[0],
+					$('<div class="doc"/>').html(opt['doc'].replace(/\n/g, '<br>'))[0],
+					$('<div class="value"/>').text(opts[n])[0]
+				]))
+				// group things correctly...
+				if(group == null){
+					group = 'Other'
+				}
+				if(groups[group] == null){
+					groups[group] = $('<div class="group"/>')
+						.append($('<div class="title"/>').text(group))
+						.append(option)
+				} else {
+					groups[group].append(option)
+				}
+				// event handlers...
+				var handler = opt_ps[n].click_handler
+				if(disabled){
+					option.addClass('disabled')
+				} else if(handler != null){
+					option.click(handler)
+				}
+			}
+			// build groups...
+			for(var i = 0; i < ImageGrid.option_groups.length; i++){
+				var group_name = ImageGrid.option_groups[i]
+				opts_container.append(groups[group_name])
+			}
+			opts_container.append(groups['Other'])
+			opts_container.click(function(e){
+				// update the view...
+				// XXX do we need to redraw the whole thing on each click???
+				ImageGrid.showSetup()
+				e.preventDefault()
+				return false
+			})
+			showInOverlay(opts_container)
+		}),
+
+	ImageGrid.ACTION({
+			title: 'Close overlay'
+		},
+		function closeOverlay(){ $('.overlay').click() }))
 
 
 
@@ -1143,10 +1176,10 @@ ImageGrid.GROUP('Mode: Single Image',
 			// post...
 			function(action){
 				if(action == 'on'){
-					fitImage()
+					ImageGrid.fitImage()
 					setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
 				} else {
-					setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
+					ImageGrid.setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
 					setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
 				}
 				clickAfterTransitionsDone()
@@ -1377,79 +1410,76 @@ ImageGrid.GROUP('Navigation',
 
 /********************************************************** Zooming **/
 
-// NOTE: this will only return a single scale value...
-function getElementScale(elem){
-	//var transform = elem.css('transform')
-	var vendors = ['o', 'moz', 'ms', 'webkit']
-	var transform = elem.css('transform')
-	var res
 
-	// go through vendor prefixes... (hate this!)
-	if(!transform || transform == 'none'){
-		for(var i in vendors){
-			transform = elem.css('-' + vendors[i] + '-transform')
-			if(transform && transform != 'none'){
-				break
-			}
-		}
-	}
-	// no transform is set...
-	if(!transform || transform == 'none'){
-		return 1
-	}
-	// get the scale value -- first argument of scale/matrix...
-	return parseFloat((/(scale|matrix)\(([^,]*),.*\)/).exec(transform)[2])
-}
+ImageGrid.GROUP('Zooming',
+	// XXX is this an action or a helper???
+	ImageGrid.ACTION({
+			title: 'Get element scale',
+			doc: 'Return a scale value for the given element(s).\n\n'+
+				'NOTE: this will only return a single scale value...',
+		},
+		getElementScale),
+	ImageGrid.ACTION({
+			title: 'Set element scale',
+			doc: 'Set the scale value for the given element(s).'
+		},
+		setElementScale),
 
 
+	ImageGrid.ACTION({
+			title: 'Scale container by factor',
+		},
+		function scaleContainerBy(factor){
+			return ImageGrid.setContainerScale(getElementScale($('.field'))*factor)
+		}),
+	ImageGrid.ACTION({
+			title: 'Scale container up',
+		},
+		function scaleContainerUp(){
+			return ImageGrid.scaleContainerBy(ImageGrid.option.ZOOM_FACTOR)
+		}),
+	ImageGrid.ACTION({
+			title: 'Scale container down',
+		},
+		function scaleContainerDown(){
+			return ImageGrid.scaleContainerBy(1/ImageGrid.option.ZOOM_FACTOR)
+		}),
 
-function setElementScale(elem, scale){
-	return elem.css({
-		'transform': 'scale('+scale+', '+scale+')',
-		'-moz-transform': 'scale('+scale+', '+scale+')',
-		'-o-transform': 'scale('+scale+', '+scale+')',
-		'-ms-transform': 'scale('+scale+', '+scale+')',
-		'-webkit-transform': 'scale('+scale+', '+scale+')',
-	})
-}
-
-
-
-function scaleContainerBy(factor){
-	return setContainerScale(getElementScale($('.field'))*factor)
-}
-
-
-
-function setContainerScale(scale){
-	return setElementScale($('.field'), scale)
-}
-
-
-
-function fitNImages(n){
-	var H = $('.container').height()
-	var W = $('.container').width()
-
-	var h = $('.image.current').height()
-	// NOTE: this is cheating, need to get actual three widths...
-	var w = $('.image.current').width()*n
-
-	var f = Math.min(H/h, W/w)
-
-	setContainerScale(f)
-}
+	ImageGrid.ACTION({
+			title: 'Set container scale',
+		},
+		function setContainerScale(scale){
+			return setElementScale($('.field'), scale)
+		}),
 
 
-function fitImage(){fitNImages(1)}
-function fitTwoImages(){fitNImages(2)}
-function fitThreeImages(){fitNImages(3)}
-function fitFourImages(){fitNImages(4)}
-function fitFiveImages(){fitNImages(5)}
-function fitSixImages(){fitNImages(6)}
-function fitSevenImages(){fitNImages(7)}
-function fitEightImages(){fitNImages(8)}
-function fitNineImages(){fitNImages(9)}
+	ImageGrid.ACTION({
+			title: 'Fit N images to container width/height',
+		},
+		function fitNImages(n){
+			var H = $('.container').height()
+			var W = $('.container').width()
+
+			var h = $('.image.current').height()
+			// NOTE: this is cheating, need to get actual three widths...
+			var w = $('.image.current').width()*n
+
+			var f = Math.min(H/h, W/w)
+
+			ImageGrid.setContainerScale(f)
+		}),
+
+	// the fit N image pack, for 1 <= N <= 9
+	ImageGrid.ACTION({ title: 'Fit single image' }, function fitImage(){ImageGrid.fitNImages(1)}),
+	ImageGrid.ACTION({ title: 'Fit two images' }, function fitTwoImages(){ImageGrid.fitNImages(2)}),
+	ImageGrid.ACTION({ title: 'Fit three images' }, function fitThreeImages(){ImageGrid.fitNImages(3)}),
+	ImageGrid.ACTION({ title: 'Fit four images' }, function fitFourImages(){ImageGrid.fitNImages(4)}),
+	ImageGrid.ACTION({ title: 'Fit five images' }, function fitFiveImages(){ImageGrid.fitNImages(5)}),
+	ImageGrid.ACTION({ title: 'Fit six images' }, function fitSixImages(){ImageGrid.fitNImages(6)}),
+	ImageGrid.ACTION({ title: 'Fit seven images' }, function fitSevenImages(){ImageGrid.fitNImages(7)}),
+	ImageGrid.ACTION({ title: 'Fit eight images' }, function fitEightImages(){ImageGrid.fitNImages(8)}),
+	ImageGrid.ACTION({ title: 'Fit nine images' }, function fitNineImages(){ImageGrid.fitNImages(9)})
+)
 
 
 

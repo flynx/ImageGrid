@@ -2,7 +2,7 @@
 // NOTE: use String.fromCharCode(code)...
 var keybindings = {
 	// togglable modes and options...
-	191: 	ImageGrid.showSetup,										//	?
+	191: 	ImageGrid.showSetup,							//	?
 	70:		ImageGrid.toggleSingleImageMode,				//	f
 	83:		ImageGrid.toggleSingleRibbonMode,				//	s
 	13:		70,												//	Enter
@@ -13,32 +13,26 @@ var keybindings = {
 	77:		toggleMarkers,									//	m
 
 
-	27:	[
-		// XXX make this into a real action...
-		function(){$('.overlay').click()},					//	Esc
-		'Hide overlay'
-	],
+	27:		ImageGrid.closeOverlay(),						//	Esc	
 
 	// zooming...
-	// XXX make this into a real action...
-	187:	function(){scaleContainerBy(ImageGrid.option.ZOOM_FACTOR)},		//	+
-	// XXX make this into a real action...
-	189:	function(){scaleContainerBy(1/ImageGrid.option.ZOOM_FACTOR)},	//	-
+	187:	ImageGrid.scaleContainerUp,						//	+
+	189:	ImageGrid.scaleContainerDown,					//	-
 	// zoom presets...
 	48:	{
-		'default':	fitImage,								// 	0
+		'default':	ImageGrid.fitImage,						// 	0
 		// XXX make this into a real action...
 		'ctrl':		function(){setContainerScale(1)},		//	ctrl+0
 	},
-	49:		fitImage,										//	1
-	50:		fitTwoImages,									//	2
-	51:		fitThreeImages,									//	3
-	52:		fitFourImages,									//	4
-	53:		fitFiveImages,									//	5
-	54:		fitSixImages,									//	6
-	55:		fitSevenImages,									//	7
-	56:		fitEightImages,									//	8
-	57:		fitNineImages,									//	9
+	49:		ImageGrid.fitImage,								//	1
+	50:		ImageGrid.fitTwoImages,							//	2
+	51:		ImageGrid.fitThreeImages,						//	3
+	52:		ImageGrid.fitFourImages,						//	4
+	53:		ImageGrid.fitFiveImages,						//	5
+	54:		ImageGrid.fitSixImages,							//	6
+	55:		ImageGrid.fitSevenImages,						//	7
+	56:		ImageGrid.fitEightImages,						//	8
+	57:		ImageGrid.fitNineImages,						//	9
 
 
 	// navigation...
