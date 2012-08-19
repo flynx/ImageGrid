@@ -932,8 +932,10 @@ function handleImageClick(){
 
 
 
-/*
- * Basic key format:
+// if set to false the event handlers will always return false...
+var KEYBOARD_HANDLER_PROPAGATE = false
+
+/* Basic key format:
  * 		<key-code> : <callback>,
  * 		<key-code> : {
  * 			'default': <callback>,
@@ -991,13 +993,12 @@ function makeKeyboardHandler(keybindings, unhandled){
 			}
 			if(callback != null){
 				var res = callback()
-				return res?true:false
-
+				return KEYBOARD_HANDLER_PROPAGATE&&res?true:false
 			}
 		} else {
 			// simple callback...
 			var res = handler() 
-			return res?true:false
+			return KEYBOARD_HANDLER_PROPAGATE&&res?true:false
 		}
 		return unhandled(key)
 	}
@@ -1481,7 +1482,7 @@ ImageGrid.GROUP('Ribbon manipulations',
 	// XXX adding a ribbon above the current is still jumpy, need to devise 
 	// 		a cleaner way to do this...
 	ImageGrid.ACTION({
-			title: 'Create a ribbon above/below current'
+			title: 'Create a ribbon above/below current',
 			display: false,
 		},
 		function createRibbon(direction){
@@ -1519,7 +1520,7 @@ ImageGrid.GROUP('Ribbon manipulations',
 	ImageGrid.ACTION({
 			title: 'Merge current and direction ribbon.',
 			doc: 'NOTE: this will take all the elements from direction '+
-				'ribbon and add them to current.'
+				'ribbon and add them to current.',
 			display: false,
 		},
 		function mergeRibbons(direction, get_order){
@@ -1634,7 +1635,7 @@ ImageGrid.GROUP('Image manipulation',
 	// sorting...
 	ImageGrid.ACTION({ 
 			title: 'Sort images via a different criteria',
-			doc: 'use the cmp function to update image id\'s and resort.'
+			doc: 'use the cmp function to update image id\'s and resort.',
 			display: false,
 		}, 
 		function sortImagesVia(cmp){
