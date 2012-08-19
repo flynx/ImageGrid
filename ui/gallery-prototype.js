@@ -1435,6 +1435,7 @@ ImageGrid.GROUP('Zooming',
 		}),
 	ImageGrid.ACTION({
 			title: 'Set container scale',
+			display: false,
 		},
 		function setContainerScale(scale){
 			return setElementScale($('.field'), scale)
@@ -1481,6 +1482,7 @@ ImageGrid.GROUP('Ribbon manipulations',
 	// 		a cleaner way to do this...
 	ImageGrid.ACTION({
 			title: 'Create a ribbon above/below current'
+			display: false,
 		},
 		function createRibbon(direction){
 			if(direction == 'next'){
@@ -1510,7 +1512,6 @@ ImageGrid.GROUP('Ribbon manipulations',
 
 			return res
 		}),
-
 	// XXX this uses jquery animation...
 	// XXX one way to optimise this is to add the lesser ribbon to the 
 	//     greater disregarding their actual order...
@@ -1519,6 +1520,7 @@ ImageGrid.GROUP('Ribbon manipulations',
 			title: 'Merge current and direction ribbon.',
 			doc: 'NOTE: this will take all the elements from direction '+
 				'ribbon and add them to current.'
+			display: false,
 		},
 		function mergeRibbons(direction, get_order){
 			if(get_order == null){
@@ -1567,6 +1569,7 @@ ImageGrid.GROUP('Ribbon manipulations',
 ImageGrid.GROUP('Image manipulation',
 	ImageGrid.ACTION({
 			title: 'Shift image in direction',
+			display: false,
 		},
 		function shiftImage(direction, get_order){
 			if(get_order == null){
@@ -1606,11 +1609,41 @@ ImageGrid.GROUP('Image manipulation',
 			}
 			$('.current.image').click()
 		}),
+	// shift image...
 	ImageGrid.ACTION({ title: 'Shift image up', }, 
 		function shiftImageUp(){ return ImageGrid.shiftImage('prev') }),
 	ImageGrid.ACTION({ title: 'Shift image down', }, 
 		function shiftImageDown(){ return ImageGrid.shiftImage('next') }),
+
+	// shift image to new ribbon...
+	ImageGrid.ACTION({ 
+			title: 'Shift image up to new ribbon', 
+		}, 
+		function shiftImageUpNewRibbon(){
+			ImageGrid.createRibbon('prev')
+			ImageGrid.shiftImageUp()
+		}),
+	ImageGrid.ACTION({ 
+			title: 'Shift image down to new ribbon', 
+		}, 
+		function shiftImageDownNewRibbon(){
+			ImageGrid.createRibbon('next')
+			ImageGrid.shiftImageDown()
+		}),
 			
+	// sorting...
+	ImageGrid.ACTION({ 
+			title: 'Sort images via a different criteria',
+			doc: 'use the cmp function to update image id\'s and resort.'
+			display: false,
+		}, 
+		function sortImagesVia(cmp){
+			// reverse ID order...
+			$($('.image').get().sort(cmp))
+				.each(function(i, e){$(e).attr({'id': i})})
+			// resort the images...
+			ImageGrid.sortImages()
+		}),
 	ImageGrid.ACTION({ 
 			title: 'Sort images in all ribbons',
 			doc: 'NOTE: this will only realign three ribbons.'
@@ -1619,17 +1652,6 @@ ImageGrid.GROUP('Image manipulation',
 			$('.ribbon').sortChildren(cmpImageOrder)
 			// compensate for offset cange...
 			$('.current.image').click()
-		}),
-	ImageGrid.ACTION({ 
-			title: 'Sort images via a different criteria',
-			doc: 'use the cmp function to update image id\'s and resort.'
-		}, 
-		function sortImagesVia(cmp){
-			// reverse ID order...
-			$($('.image').get().sort(cmp))
-				.each(function(i, e){$(e).attr({'id': i})})
-			// resort the images...
-			ImageGrid.sortImages()
 		}),
 	ImageGrid.ACTION({ 
 			title: 'Reverse order of images in all ribbons',

@@ -67,20 +67,12 @@ var keybindings = {
 	40:	{
 		'default': ImageGrid.focusBelowRibbon,				//	Down
 		'shift': ImageGrid.shiftImageDown,					//	shift-Down
-		// XXX make this into a real action...
-		'ctrl+shift': function(){							//	ctrl-shift-Down
-			ImageGrid.createRibbon('next')
-			ImageGrid.shiftImageDown()
-		}
+		'ctrl+shift': ImageGrid.shiftImageDownNewRibbon		//	ctrl-shift-Down
 	},
 	38: {
 		'default': ImageGrid.focusAboveRibbon,				//	Up
 		'shift': ImageGrid.shiftImageUp,					//	shift-Up
-		// XXX make this into a real action...
-		'ctrl+shift': function(){							//	ctrl-shift-Up
-			ImageGrid.createRibbon('prev')
-			ImageGrid.shiftImageUp()
-		}
+		'ctrl+shift': ImageGrid.shiftImageUpNewRibbon		//	ctrl-shift-Up
 	},
 
 
