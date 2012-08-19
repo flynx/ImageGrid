@@ -789,8 +789,8 @@ function setupEvents(){
 		.swipe({
 			swipeLeft: ImageGrid.nextImage,
 			swipeRight: ImageGrid.prevImage,
-			swipeUp: shiftImageUp,
-			swipeDown: shiftImageDown
+			swipeUp: ImageGrid.shiftImageUp,
+			swipeDown: ImageGrid.shiftImageDown
 		})
 	// dragging...
 	// XXX make this work seamlessly with touchSwipe...
@@ -809,8 +809,8 @@ function setupControlElements(){
 	$('.screen-button.next-image').click(ImageGrid.nextImage)
 	$('.screen-button.prev-image').click(ImageGrid.prevImage)
 	// XXX rename classes to "shift-image-up" and "shift-image-down"...
-	$('.screen-button.demote').click(shiftImageUp)
-	$('.screen-button.promote').click(shiftImageDown)
+	$('.screen-button.demote').click(ImageGrid.shiftImageUp)
+	$('.screen-button.promote').click(ImageGrid.shiftImageDown)
 	$('.screen-button.zoom-in').click(ImageGrid.scaleContainerUp)
 	$('.screen-button.zoom-out').click(ImageGrid.scaleContainerDown)
 	// XXX
@@ -1471,177 +1471,184 @@ ImageGrid.GROUP('Zooming',
 
 
 
-/********************************************************** Actions **/
+/*************************************************** Ribbon Actions **/
 // basic actions...
 // NOTE: below 'direction' argument is meant in the html sence, 
 //       i.e. next/prev...
 
-// create ribbon above/below helpers...
-// XXX adding a ribbon above the current is still jumpy, need to devise 
-// 		a cleaner way to do this...
-function createRibbon(direction){
-	if(direction == 'next'){
-		var insert = 'insertAfter'
-	} else if(direction == 'prev') {
-		var insert = 'insertBefore'
-	} else {
-		return false
-	}
+ImageGrid.GROUP('Ribbon manipulations',
+	// XXX adding a ribbon above the current is still jumpy, need to devise 
+	// 		a cleaner way to do this...
+	ImageGrid.ACTION({
+			title: 'Create a ribbon above/below current'
+		},
+		function createRibbon(direction){
+			if(direction == 'next'){
+				var insert = 'insertAfter'
+			} else if(direction == 'prev') {
+				var insert = 'insertBefore'
+			} else {
+				return false
+			}
 
-	// adding a new ribbon above the current effectively pushes the 
-	// whole view down, so we need to compensate for this.
-	// NOTE: the problem is partly caused by clicks fiering BEFORE the 
-	// 		 animation is done...
-	$('.field').addClass('unanimated')	
-	
-	if(direction == 'prev'){
-		$('.field').css({
-			'margin-top': parseInt($('.field').css('margin-top')) - $('.ribbon').outerHeight()
-		})
-	}
-	// the actual insert...
-	var res = $('<div class="ribbon"></div>')[insert]('.current.ribbon')
-	
-	// restore the animated state...
-	$('.field').removeClass('unanimated')	
+			// adding a new ribbon above the current effectively pushes the 
+			// whole view down, so we need to compensate for this.
+			// NOTE: the problem is partly caused by clicks fiering BEFORE the 
+			// 		 animation is done...
+			$('.field').addClass('unanimated')	
+			
+			if(direction == 'prev'){
+				$('.field').css({
+					'margin-top': parseInt($('.field').css('margin-top')) - $('.ribbon').outerHeight()
+				})
+			}
+			// the actual insert...
+			var res = $('<div class="ribbon"></div>')[insert]('.current.ribbon')
+			
+			// restore the animated state...
+			$('.field').removeClass('unanimated')	
 
-	return res
-}
+			return res
+		}),
+
+	// XXX this uses jquery animation...
+	// XXX one way to optimise this is to add the lesser ribbon to the 
+	//     greater disregarding their actual order...
+	// XXX think about using $(...).sortChildren(...) / sortImages()
+	ImageGrid.ACTION({
+			title: 'Merge current and direction ribbon.',
+			doc: 'NOTE: this will take all the elements from direction '+
+				'ribbon and add them to current.'
+		},
+		function mergeRibbons(direction, get_order){
+			if(get_order == null){
+				get_order = getImageOrder
+			}
+			var current_ribbon = $('.current.ribbon')
+			var images = $('.current.ribbon')[direction]('.ribbon').children()
+			for(var i=0; i < images.length; i++){
+				var image = $(images[i])
+				// get previous element after which we need to put the current...
+				var prev_elem = getImageBefore(get_order(image), current_ribbon)
+				// check if we need to be before the first element...
+				if(prev_elem == null){
+					image
+						.detach()
+						.insertBefore(current_ribbon.children('.image').first())
+				} else {
+					image
+						.detach()
+						.insertAfter(prev_elem)
+				}
+			}
+			// animate...
+			$('.current.ribbon')[direction]('.ribbon')
+					.slideUp(function(){
+						$(this).remove()
+						$('.current.image').click()
+					})
+		}),
+		
+	ImageGrid.ACTION({
+			title: 'Reverse ribbon order',
+			doc: 'NOTE: this is like flipping the field vertically.',
+		},
+		function reverseRibbons(){
+			// reverse...
+			$('.field').reverseChildren()
+			// compensate for offset cange...
+			$('.current.image').click()
+		}))
 
 
 
-// merge current and direction ribbon...
-// NOTE: this will take all the elements from direction ribbon and add
-//       them to current
-// XXX this uses jquery animation...
-// XXX one way to optimise this is to add the lesser ribbon to the 
-//     greater disregarding their actual order...
-// XXX think about using $(...).sortChildren(...) / sortImages()
-function mergeRibbons(direction, get_order){
-	if(get_order == null){
-		get_order = getImageOrder
-	}
-	var current_ribbon = $('.current.ribbon')
-	var images = $('.current.ribbon')[direction]('.ribbon').children()
-	for(var i=0; i < images.length; i++){
-		var image = $(images[i])
-		// get previous element after which we need to put the current...
-		var prev_elem = getImageBefore(get_order(image), current_ribbon)
-		// check if we need to be before the first element...
-		if(prev_elem == null){
-			image
-				.detach()
-				.insertBefore(current_ribbon.children('.image').first())
-		} else {
-			image
-				.detach()
-				.insertAfter(prev_elem)
-		}
-	}
-	// animate...
-	$('.current.ribbon')[direction]('.ribbon')
-			.slideUp(function(){
-				$(this).remove()
-				$('.current.image').click()
+
+/**************************************************** Image Actions **/
+ImageGrid.GROUP('Image manipulation',
+	ImageGrid.ACTION({
+			title: 'Shift image in direction',
+		},
+		function shiftImage(direction, get_order){
+			if(get_order == null){
+				get_order = getImageOrder
+			}
+			if($('.current.ribbon')[direction]('.ribbon').length == 0){
+				ImageGrid.createRibbon(direction)
+			}
+
+			// get previous element after which we need to put the current...
+			var prev_elem = getImageBefore(
+							get_order($('.current.image')), 
+							$('.current.ribbon')[direction]('.ribbon'))
+
+			// last image in ribbon, merge...
+			if($('.current.ribbon').children('.image').length == 1){
+				ImageGrid.mergeRibbons(direction)
+			} else {
+				img = $('.current.image')
+				if(img.next('.image').length == 0){
+					ImageGrid.prevImage()
+				} else {
+					ImageGrid.nextImage()
+				}
+				// do the actual move...
+				if(prev_elem){
+					// insert element after current...
+					img
+						.detach()
+						.insertAfter(prev_elem)
+				} else {
+					// empty ribbon or fisrt element...
+					img
+						.detach()
+						.prependTo($('.current.ribbon')[direction]('.ribbon'))
+				}
+			}
+			$('.current.image').click()
+		}),
+	ImageGrid.ACTION({ title: 'Shift image up', }, 
+		function shiftImageUp(){ return ImageGrid.shiftImage('prev') }),
+	ImageGrid.ACTION({ title: 'Shift image down', }, 
+		function shiftImageDown(){ return ImageGrid.shiftImage('next') }),
+			
+	ImageGrid.ACTION({ 
+			title: 'Sort images in all ribbons',
+			doc: 'NOTE: this will only realign three ribbons.'
+		}, 
+		function sortImages(){
+			$('.ribbon').sortChildren(cmpImageOrder)
+			// compensate for offset cange...
+			$('.current.image').click()
+		}),
+	ImageGrid.ACTION({ 
+			title: 'Sort images via a different criteria',
+			doc: 'use the cmp function to update image id\'s and resort.'
+		}, 
+		function sortImagesVia(cmp){
+			// reverse ID order...
+			$($('.image').get().sort(cmp))
+				.each(function(i, e){$(e).attr({'id': i})})
+			// resort the images...
+			ImageGrid.sortImages()
+		}),
+	ImageGrid.ACTION({ 
+			title: 'Reverse order of images in all ribbons',
+		}, 
+		function reverseImageOrder(){
+			// this is done by reversing their id attr
+			ImageGrid.sortImagesVia(function(a, b){return cmpImageOrder(b, a)})
+		}),
+	ImageGrid.ACTION({ 
+			title: 'Sort images by their full path',
+		}, 
+		// XXX this should use a normalized path...
+		function sortImagesByPath(){
+			ImageGrid.sortImagesVia(function(a, b){ 
+				a = $(a).css('background-image')
+				b = $(b).css('background-image') 
+				return a > b ? 1 : a < b ? -1 : 0
 			})
-}
-
-
-
-
-/*************************************************** Editor Actions **/
-
-// now the actual modifiers...
-function shiftImage(direction, get_order){
-	if(get_order == null){
-		get_order = getImageOrder
-	}
-	if($('.current.ribbon')[direction]('.ribbon').length == 0){
-		createRibbon(direction)
-	}
-
-	// get previous element after which we need to put the current...
-	var prev_elem = getImageBefore(
-					get_order($('.current.image')), 
-					$('.current.ribbon')[direction]('.ribbon'))
-
-	// last image in ribbon, merge...
-	if($('.current.ribbon').children('.image').length == 1){
-		mergeRibbons(direction)
-	} else {
-		img = $('.current.image')
-		if(img.next('.image').length == 0){
-			ImageGrid.prevImage()
-		} else {
-			ImageGrid.nextImage()
-		}
-		// do the actual move...
-		if(prev_elem){
-			// insert element after current...
-			img
-				.detach()
-				.insertAfter(prev_elem)
-		} else {
-			// empty ribbon or fisrt element...
-			img
-				.detach()
-				.prependTo($('.current.ribbon')[direction]('.ribbon'))
-		}
-	}
-	$('.current.image').click()
-}
-var shiftImageDown = function(){ return shiftImage('next') }
-var shiftImageUp = function(){ return shiftImage('prev') }
-
-
-
-// reverse the ribbon order...
-// NOTE: this is like flipping the field vertically...
-function reverseRibbons(){
-	// reverse...
-	$('.field').reverseChildren()
-	// compensate for offset cange...
-	$('.current.image').click()
-}
-
-
-
-// sort all images in all ribbons...
-// NOTE: this will only align three ribbons...
-function sortImages(){
-	$('.ribbon').sortChildren(cmpImageOrder)
-	// compensate for offset cange...
-	$('.current.image').click()
-}
-
-
-// use the cmp function to update image id's and resort...
-function resortImagesVia(cmp){
-	// reverse ID order...
-	$($('.image').get().sort(cmp))
-		.each(function(i, e){$(e).attr({'id': i})})
-	// resort the images...
-	sortImages()
-}
-
-
-// reverse the order of images in all ribbons by reversing their id attr
-// and resorting...
-// NOTE: this is like flipping the field horizontally...
-function reverseImageOrder(){
-	resortImagesVia(function(a, b){return cmpImageOrder(b, a)})
-}
-
-
-// sort images py their full path...
-// XXX this should use a normalized path...
-function sortImagesByPath(){
-	resortImagesVia(function(a, b){ 
-		a = $(a).css('background-image')
-		b = $(b).css('background-image') 
-		return a > b ? 1 : a < b ? -1 : 0
-	})
-}
+		}))
 
 
 // XXX group images in ribbon and merge down/up

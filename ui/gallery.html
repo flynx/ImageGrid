@@ -135,13 +135,13 @@ $(document).ready(setup);
 
 <div class="demo-buttons">
 	<button onclick="toggleMarkers()">Toggle Markers (m)</button>
-	<button onclick="toggleBackgroundModes()">toggle background modes (b)</button>
+	<button onclick="ImageGrid.toggleBackgroundModes()">toggle background modes (b)</button>
 	<button onclick="ImageGrid.toggleControls()">toggle screen controls (tab)</button>
 
 	<br><br>
 
-	<button onclick="centerCurrentImage()">center current (o)</button>
-	<button onclick="centerOrigin()">center origin</button>
+	<button onclick="ImageGrid.centerCurrentImage()">center current (o)</button>
+	<button onclick="ImageGrid.centerOrigin()">center origin</button>
 
 	<br><br>
 
@@ -149,17 +149,17 @@ $(document).ready(setup);
 
 	<br><br>
 
-	<button onclick="firstImage()">first (home)</button>
-	<button onclick="prevImage()">prev (left)</button>
-	<button onclick="nextImage()">next (right)</button>
-	<button onclick="lastImage()">last (end)</button>
+	<button onclick="ImageGrid.firstImage()">first (home)</button>
+	<button onclick="ImageGrid.prevImage()">prev (left)</button>
+	<button onclick="ImageGrid.nextImage()">next (right)</button>
+	<button onclick="ImageGrid.lastImage()">last (end)</button>
 
 	<br><br>
 
-	<button onclick="moveViewLeft()">left (h)</button>
-	<button onclick="moveViewUp()">Up (k)</button>
-	<button onclick="moveViewDown()">Down (j)</button>
-	<button onclick="moveViewRight()">right (l)</button>
+	<button onclick="ImageGrid.moveViewLeft()">left (h)</button>
+	<button onclick="ImageGrid.moveViewUp()">Up (k)</button>
+	<button onclick="ImageGrid.moveViewDown()">Down (j)</button>
+	<button onclick="ImageGrid.moveViewRight()">right (l)</button>
 
 	<!--br><br>
 	LEGACY:
@@ -169,21 +169,21 @@ $(document).ready(setup);
 
 	<br><br>
 
-	<button onclick="zoomContainerBy(2)">Zoom in (+)</button>
-	<button onclick="zoomContainerBy(0.5)">Zoom out (-)</button>
-	<button onclick="setContainerScale(1)">Original (0)</button>
-	<button onclick="fitImage()">Image (1)</button>
-	<button onclick="fitThreeImages()">Three (3)</button>
+	<button onclick="ImageGrid.scaleContainerUp()">Zoom in (+)</button>
+	<button onclick="ImageGrid.scaleContainerDown()">Zoom out (-)</button>
+	<button onclick="ImageGrid.setContainerScale(1)">Original (0)</button>
+	<button onclick="ImageGrid.fitImage()">Image (1)</button>
+	<button onclick="ImageGrid.fitThreeImages()">Three (3)</button>
 
 	<br><br>
 
-	<button onclick="createRibbon('prev')" disabled>create ribbon above (helper)</button><br>
-	<button onclick="createRibbonBelow('next')" disabled>create ribbon below (helper)</button>
+	<button onclick="ImageGrid.createRibbon('prev')" disabled>create ribbon above (helper)</button><br>
+	<button onclick="ImageGrid.createRibbon('next')" disabled>create ribbon below (helper)</button>
 
 	<br><br>
 
-	<button onclick="mergeRibbons('prev')">merge ribbons up</button><br>
-	<button onclick="mergeRibbons('next')">merge ribbons down</button>
+	<button onclick="ImageGrid.mergeRibbons('prev')">merge ribbons up</button><br>
+	<button onclick="ImageGrid.mergeRibbons('next')">merge ribbons down</button>
 
 	<br><br>
 
@@ -193,8 +193,8 @@ $(document).ready(setup);
 
 	<br><br>
 
-	<button onclick="focusAboveRibbon()">focus above ribbon (up)</button><br>
-	<button onclick="focusBelowRibbon()">focus below ribbon (down)</button>
+	<button onclick="ImageGrid.focusAboveRibbon()">focus above ribbon (up)</button><br>
+	<button onclick="ImageGrid.focusBelowRibbon()">focus below ribbon (down)</button>
 
 </div>
 

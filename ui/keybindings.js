@@ -66,20 +66,20 @@ var keybindings = {
 	// combined navigation with actions..
 	40:	{
 		'default': ImageGrid.focusBelowRibbon,				//	Down
-		'shift': shiftImageDown,							//	shift-Down
+		'shift': ImageGrid.shiftImageDown,					//	shift-Down
 		// XXX make this into a real action...
 		'ctrl+shift': function(){							//	ctrl-shift-Down
-			createRibbon('next')
-			shiftImageDown()
+			ImageGrid.createRibbon('next')
+			ImageGrid.shiftImageDown()
 		}
 	},
 	38: {
 		'default': ImageGrid.focusAboveRibbon,				//	Up
-		'shift': shiftImageUp,								//	shift-Up
+		'shift': ImageGrid.shiftImageUp,					//	shift-Up
 		// XXX make this into a real action...
 		'ctrl+shift': function(){							//	ctrl-shift-Up
-			createRibbon('prev')
-			shiftImageUp()
+			ImageGrid.createRibbon('prev')
+			ImageGrid.shiftImageUp()
 		}
 	},
 
