@@ -13,15 +13,23 @@
 var ImageGrid = {
 	// this can be serialized...
 	// NOTE: to load a serialized set of options use ImageGrid.set(options)...
+	actions: {},
 	option: {},
 	option_props: {},
+	option_groups: [],
 
 	// define an action...
 	// the two values that are obligatory are:
 	// 		title	- name of the action
 	// 		call	- callable
 	// XXX revise...
-	ACTION: function(obj){
+	ACTION: function(obj, func){
+		if(func != null){
+			obj = $.extend(obj, {
+				id: func.name != '' ? func.name : obj.id,
+				call: func 
+			})
+		}
 		// add all the attrs to the function...
 		if(this._type_handler[obj.type] != null){
 			this._type_handler[obj.type](obj)
@@ -34,7 +42,23 @@ var ImageGrid = {
 			call[i] = obj[i]
 		}
 		this[obj.id] = call
+		this.actions[obj.id] = call
 		return call
+	},
+	// shorthand: each argument is an action, the group of each will be set the same...
+	GROUP: function(group){
+		for(var i=1; i<arguments.length; i++){
+			var obj = arguments[i]
+			obj.group = group
+			// if we have an option for this prop then fix it's group too...
+			if(this.option_props[obj.id] != null){
+				this.option_props[obj.id].group = group
+			}
+			if(this.option_groups.indexOf(obj.group) < 0 && obj.group != null){
+				this.option_groups.push(obj.group)
+				this.option_groups.sort()
+			}
+		}
 	},
 	// define an option...
 	OPTION: function(obj){
@@ -44,8 +68,8 @@ var ImageGrid = {
 			this.option_groups.push(obj.group)
 			this.option_groups.sort()
 		}
+		return obj
 	},
-	option_groups: [],
 	TYPE: function(name, handler){
 		this._type_handler[name] = handler
 	},
@@ -53,39 +77,41 @@ var ImageGrid = {
 	},
 }
 
-
-ImageGrid.ACTION({
-	id: 'set',
-	doc: 'Set option(s) value(s), calling apropriate callbacks.',
-	group: 'API',
-	call: function (obj){
-		for(var n in obj){
-			this.option[n] = obj[n]
-		}
-		// NOTE: this is separate so as to exclude the posibility of race 
-		// 		 conditions...
-		// 		 ...thogh there is still a posibility of conflicting 
-		// 		 modes, especially if one mode sets more modes...
-		for(var n in obj){
-			// call the callback if it exists...
-			if(this.option_props[n].callback != null){
-				this.option_props[n].callback()
+// system actions and handlers...
+ImageGrid.GROUP('API',
+	ImageGrid.ACTION({
+			doc: 'Set option(s) value(s), calling apropriate callbacks.',
+			group: 'API'
+		},
+		function set(obj){
+			for(var n in obj){
+				this.option[n] = obj[n]
 			}
-		}
-	}
-})
-ImageGrid.ACTION({
-	id: 'doc',
-	doc: 'Get documentation for name.',
-	group: 'API',
-	call: function(name){
-		return {
-			action: this[name] != null ? this[name].doc : null,
-			action_func: this[name] != null ? this[name].func_doc : null,
-			option: this.option_props[name] != null ? this.option_props[name].doc : null,
-		}
-	}
-})
+			// NOTE: this is separate so as to exclude the posibility of race 
+			// 		 conditions...
+			// 		 ...thogh there is still a posibility of conflicting 
+			// 		 modes, especially if one mode sets more modes...
+			for(var n in obj){
+				// call the callback if it exists...
+				if(this.option_props[n].callback != null){
+					this.option_props[n].callback()
+				}
+			}
+		}),
+	ImageGrid.ACTION({
+			doc: 'Get documentation for name.',
+			group: 'API'
+		},
+		function doc(name){
+			return {
+				action: this[name] != null ? this[name].doc : null,
+				action_func: this[name] != null ? this[name].func_doc : null,
+				option: this.option_props[name] != null ? this.option_props[name].doc : null,
+			}
+		}))
+
+
+
 ImageGrid.TYPE('toggle', function(obj){
 	var call = obj.call
 	// wrap the call to set the option...
@@ -114,87 +140,96 @@ ImageGrid.TYPE('toggle', function(obj){
 
 
 
-
-function showInOverlay(obj){
-	// clean things up...
-	$('.overlay .content').children().remove()
-	// put it in the overlay...
-	$('.overlay .content').append(obj)
-	// prepare the overlay...
-	$('.overlay')
-		.one('click', function(){
-			$('.overlay')
-				.fadeOut(function(){
-					$('.overlay .content')
-						.children()
-							.remove()
-				})
-		})
-		.fadeIn()
-	return obj
+// XXX don't understand why am I the one who has to write this...
+var SPECIAL_KEYS = {
+	9:		'Tab',
+	13:		'Enter',
+	16:		'Shift',
+	17:		'Ctrl',
+	18:		'Alt',
+	20:		'Caps Lock',
+	27:		'Esc',
+	32:		'Space',
+	33:		'PgUp',
+	34:		'PgDown',	
+	35:		'End',
+	36:		'Home',
+	37:		'Right',
+	38:		'Up',
+	39:		'Left',
+	40:		'Down',
+	45:		'Ins',
+	46:		'Del',
+	80:		'Backspace',
+	91:		'Win',
+	93:		'Menu',
+	
+	112:	'F1',
+	113:	'F2',
+	114:	'F3',
+	115:	'F4',
+	116:	'F5',
+	117:	'F6',
+	118:	'F7',
+	119:	'F8',
+	120:	'F9',
+	121:	'F10',
+	122:	'F11',
+	123:	'F12',
 }
 
+function toKeyName(code){
+	// check for special keys...
+	var k = SPECIAL_KEYS[code]
+	if(k != null){
+		return k
+	}
+	// chars...
+	k = String.fromCharCode(code)
+	if(k != ''){
+		return k.toLowerCase()
+	}
+	return null
+}
 
-// XXX use order and priority of options...
-// XXX make history work for this...
-function showSetup(){
-	var opts = ImageGrid.option
-	var opt_ps = ImageGrid.option_props
-	var groups = {}
+function showKeyboardBindings(){
+	// XXX get all the actions...
+	// XXX get all the keys bound...
+	// XXX connect the two together, including:
+	// 		- unbound actions
+	// 		- undocumented keys
 
-	var opts_container = $('<div class="options"/>')
-	// build options...
-	for(var n in opt_ps){
-		var disabled = false
-		var opt = opt_ps[n]
-		var group = opt.group
-		// handle disabled opts...
-		if(opt.display == false){
-			if(!DEBUG){
-				continue
-			}
-			disabled = true
+
+	// build an action indexed dict (effectively reverse keybindings)...
+	var res = {}
+	for(var k in keybindings){
+		var n = [toKeyName(k)]
+		// get the action name...
+		// XXX need a name here...
+		var v = keybindings[k]
+		// alias...
+		while(typeof(v) == typeof(3)){
+			// XXX skip for now...
+			// 		...later we will need to accumolate all the keys in a list...
+			continue
 		}
-		// build an option...
-		var option = $('<div class="option"/>').append($([
-			$('<div class="title"/>').text(opt.title != null ? opt.title : n)[0],
-			$('<div class="doc"/>').html(opt['doc'].replace(/\n/g, '<br>'))[0],
-			$('<div class="value"/>').text(opts[n])[0]
-		]))
-		// group things correctly...
-		if(group == null){
-			group = 'Other'
-		}
-		if(groups[group] == null){
-			groups[group] = $('<div class="group"/>')
-				.append($('<div class="title"/>').text(group))
-				.append(option)
+		// function...
+		if(typeof(v) == typeof(function(){})){
+			// XXX title...
+			// XXX name...
+			// XXX ???
+		// Array...
+		} else if(typeof(v) == typeof([]) && v.constructor.name == 'Array'){
+			// XXX get the second arg...
+		// object...
+		} else if(typeof(v) == typeof({})){
+			// XXX get all the handlers and accumolate the keys...
+		// XXX unknown...
 		} else {
-			groups[group].append(option)
+			// XXX err...
 		}
-		// event handlers...
-		var handler = opt_ps[n].click_handler
-		if(disabled){
-			option.addClass('disabled')
-		} else if(handler != null){
-			option.click(handler)
-		}
-
 	}
-	// build groups...
-	for(var i = 0; i < ImageGrid.option_groups.length; i++){
-		var group_name = ImageGrid.option_groups[i]
-		opts_container.append(groups[group_name])
-	}
-	opts_container.append(groups['Other'])
-	opts_container.click(function(e){
-		// update the view...
-		// XXX do we need to redraw the whole thing on each click???
-		showSetup()
-		e.preventDefault()
-		return false
-	})
-	showInOverlay(opts_container)
+	var res = {}
 }
 
 
@@ -206,76 +241,74 @@ var DEBUG = true
 //var DEBUG = false
 
 
-ImageGrid.OPTION({
-	name: 'BACKGROUND_MODES',
-	doc: 'list of available background styles.\n'+
-		'NOTE: there is also a null mode that is what is set in the '+
-		'main CSS.',
-	display: false,
-	value: [
-		'dark',
-		'black',
-		// this can be removed but when given it must be last.
-		null
-	]
-})
+ImageGrid.GROUP('State',
+	ImageGrid.OPTION({
+			name: 'BACKGROUND_MODES',
+			doc: 'list of available background styles.\n'+
+				'NOTE: there is also a null mode that is what is set in the '+
+				'main CSS.',
+			display: false,
+			value: [
+				'dark',
+				'black',
+				// this can be removed but when given it must be last.
+				null
+			]
+		}),
+	ImageGrid.OPTION({
+			name: 'NORMAL_MODE_BG',
+			display: false,
+			value: null,
+			doc: 'Background style in normal (ribbon) mode.\n'+
+				'NOTE: This will get updated on background change in tuntime.\n'+
+				'NOTE: null represents the default style.',
+			callback: function(){
+				if(ImageGrid.toggleSingleImageMode('?') == 'off'){
+					setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
+				}
+			}
+		}),
+	ImageGrid.OPTION({
+			name: 'SINGLE_IMAGE_MODE_BG',
+			display: false,
+			value: 'black',
+			doc: 'Background style in single image mode.\n'+
+				'NOTE: This will get updated on background change in tuntime.\n'+
+				'NOTE: null represents the default style.',
+			callback: function(){
+				if(ImageGrid.toggleSingleImageMode('?') == 'on'){
+					setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
+				}
+			}
+		}),
+	ImageGrid.OPTION({
+			name: 'ORIGINAL_FIELD_SCALE',
+			display: false,
+			value: 1.0,
+			doc: 'Scale of view in image mode.\n'+
+				'NOTE: this will change if changed at runtime.',
+			callback: function(){
+				if(ImageGrid.toggleSingleImageMode('?') == 'off'){
+					setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
+				}
+			}
+		}))
 
-ImageGrid.OPTION({
-	name: 'NORMAL_MODE_BG',
-	display: false,
-	value: null,
-	doc: 'Background style in normal (ribbon) mode.\n'+
-		'NOTE: This will get updated on background change in tuntime.\n'+
-		'NOTE: null represents the default style.',
-	callback: function(){
-		if(ImageGrid.toggleSingleImageMode('?') == 'off'){
-			setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
-		}
-	}
-}) 
 
-ImageGrid.OPTION({
-	name: 'SINGLE_IMAGE_MODE_BG',
-	display: false,
-	value: 'black',
-	doc: 'Background style in single image mode.\n'+
-		'NOTE: This will get updated on background change in tuntime.\n'+
-		'NOTE: null represents the default style.',
-	callback: function(){
-		if(ImageGrid.toggleSingleImageMode('?') == 'on'){
-			setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
-		}
-	}
-}) 
+ImageGrid.GROUP('Mode: All',
+	ImageGrid.OPTION({
+			name: 'ZOOM_FACTOR',
+			title: 'Zooming factor',
+			value: 2,
+			doc: 'Sets the zoom factor used for a manual zooming step.'
+		}),
+	ImageGrid.OPTION({
+			name: 'MOVE_DELTA',
+			title: 'Move step',
+			value: 50,
+			doc: 'Sets the move delta in pixels for keyboard view moving.'
+		}))
 
-ImageGrid.OPTION({
-	name: 'ORIGINAL_FIELD_SCALE',
-	display: false,
-	value: 1.0,
-	doc: 'Scale of view in image mode.\n'+
-		'NOTE: this will change if changed at runtime.',
-	callback: function(){
-		if(ImageGrid.toggleSingleImageMode('?') == 'off'){
-			setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
-		}
-	}
-})
-
-ImageGrid.OPTION({
-	name: 'ZOOM_FACTOR',
-	title: 'Zooming factor',
-	group: 'Mode: All',
-	value: 2,
-	doc: 'Sets the zoom factor used for a manual zooming step.'
-})
-
-ImageGrid.OPTION({
-	name: 'MOVE_DELTA',
-	title: 'Move step',
-	group: 'Mode: All',
-	value: 50,
-	doc: 'Sets the move delta in pixels for keyboard view moving.'
-})
 
 
 
@@ -316,6 +349,28 @@ function setImageOrder(img, order){
 
 function cmpImageOrder(a, b){
 	return getImageOrder(a) - getImageOrder(b)
+}
+
+
+
+// show a jQuary opject in viewer overlay...
+function showInOverlay(obj){
+	// clean things up...
+	$('.overlay .content').children().remove()
+	// put it in the overlay...
+	$('.overlay .content').append(obj)
+	// prepare the overlay...
+	$('.overlay')
+		.one('click', function(){
+			$('.overlay')
+				.fadeOut(function(){
+					$('.overlay .content')
+						.children()
+							.remove()
+				})
+		})
+		.fadeIn()
+	return obj
 }
 
 
@@ -394,6 +449,21 @@ function doWithoutTransitions(obj, func){
 				})
 		})
 }
+
+
+
+function clickAfterTransitionsDone(img){
+	if(img == null){
+		img = $('.current.image')
+	}
+	$('.viewer')
+		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+			img.click()
+			return true
+		})
+}
+
+
 
 
 // find an image object after which to position image ID...
@@ -495,6 +565,161 @@ var getImageBefore = getImageBefore_bin
 
 
 
+/*
+ * The folowing two functions will get the vertical and horizontal 
+ * distance components between the points a and A, centers of the small
+ * and large squares respectively.
+ * One of the squares is .field and the other is .container, 
+ * which is small or big is not important.
+ *
+ *      +---------------+-------+
+ *      |               |       |
+ *      |               |       |
+ *      |       + a . . | . . . | . +
+ *      |       .       |       |   +- getCurrentVerticalOffset(...)
+ *      |       .   + A | . . . | . +
+ *      +---------------+       |
+ *      |       .   .           |
+ *      |       .   .           |
+ *      |       .   .           |
+ *      +-----------------------+
+ *              .   .
+ *              +-+-+
+ *                +------------------- getCurrentHorizontalOffset(...)
+ *
+ *
+ * Adding this distance to margins of one of the sqares will effectively 
+ * allign the two points.
+ *
+ * NOTE: neither function accunts for field margins.
+ *
+ */
+
+// get the vertical offset of the center of square from center of container
+// NOTE: this does not account for field margins
+function getCurrentVerticalOffset(image){
+	if(image == null){
+		image = $('.image.current')
+	}
+
+	var scale = getElementScale($('.field'))
+
+	var ribbons = $('.ribbon')
+	var ribbon = image.parents('.ribbon')
+	var images = ribbon.children('.image')
+
+	// vertical...
+	var H = $('.container').height()
+	var h = ribbons.outerHeight(true)
+	// margin...
+	var mh = h - ribbons.outerHeight()
+	// current ribbon position (1-based)
+	var rn = ribbons.index(ribbon) + 1
+	// relative position to field... 
+	// XXX is there a better way to get this?
+	var t = rn * (h - mh/2)
+	
+	return -t + H/2 + h/2
+}
+
+// get the horizontal offset of the center of square from center of container
+// NOTE: this does not account for field margins
+function getCurrentHorizontalOffset(image){
+	if(image == null){
+		image = $('.image.current')
+	}
+
+	var ribbon = image.parents('.ribbon')
+	var images = ribbon.children('.image')
+
+	var W = $('.container').width()
+	var w = images.outerWidth(true)
+	// margin...
+	var mw = w - images.outerWidth()
+	// current square position (1-based)
+	var sn = images.index(image) + 1
+	var l = sn * (w - mw/2)
+
+	return -l + W/2 + w/2
+}
+
+
+
+function centerSquare(){
+	$('.field').css({
+		'margin-top': getCurrentVerticalOffset()
+	})
+	// horizontal...
+	alignRibbon()
+	ImageGrid.centerCurrentImage()
+}
+
+
+
+function alignRibbon(image, position){
+	// default values...
+	if(image == null){
+		image = $('.image.current')
+	}
+	if(position == null){
+		position = 'center'
+	}
+
+	var ribbon = image.parents('.ribbon')
+
+	// account for margined field...
+	// NOTE: this enables us to cheat and shift all the ribbons just
+	//       by changing field margin-left...
+	var cml = parseFloat($('.field').css('margin-left'))
+	if(!cml){
+		cml = 0
+	}
+	var h_offset = getCurrentHorizontalOffset(image) - cml
+	var w = $('.image').outerWidth(true)
+
+	switch(position){
+		case 'before':
+			ribbon.css({'margin-left': h_offset - w/2})
+			return true
+		case 'center':
+			ribbon.css({'margin-left': h_offset})
+			return true
+		case 'after':
+			ribbon.css({'margin-left': h_offset + w/2})
+			return true
+	}
+	return false
+}
+
+
+
+// center other ribbons relative to current image...
+// NOTE: only two ribbons are positioned at this point...
+function alignRibbons(get_order){
+	if(get_order == null){
+		get_order = getImageOrder
+	}
+	// XXX might be good to move this to a more generic location...
+	var id = get_order($('.current.image'))
+	var directions = ['prev', 'next']
+	for(var i in directions){
+		var ribbon = $('.current.ribbon')[directions[i]]('.ribbon')
+		if(ribbon.length == 1){
+			var img = getImageBefore(id, ribbon)
+			if(img != null){
+				alignRibbon(img, 'before')
+			} else {
+				// there are no images before...
+				alignRibbon(ribbon.children('.image').first(), 'after')
+			}
+		}
+	}
+}
+
+
+
+
+
 
 /************************************************** Setup Functions **/
 // XXX is this a correct place for these?
@@ -526,8 +751,8 @@ function setupEvents(){
 	// swipe...
 	$('.viewer')
 		.swipe({
-			swipeLeft: nextImage,
-			swipeRight: prevImage,
+			swipeLeft: ImageGrid.nextImage,
+			swipeRight: ImageGrid.prevImage,
 			swipeUp: shiftImageUp,
 			swipeDown: shiftImageDown
 		})
@@ -545,8 +770,8 @@ function setupControlElements(){
 	$(".image").click(handleImageClick)
 
 	// buttons...
-	$('.screen-button.next-image').click(nextImage)
-	$('.screen-button.prev-image').click(prevImage)
+	$('.screen-button.next-image').click(ImageGrid.nextImage)
+	$('.screen-button.prev-image').click(ImageGrid.prevImage)
 	// XXX rename classes to "shift-image-up" and "shift-image-down"...
 	$('.screen-button.demote').click(shiftImageUp)
 	$('.screen-button.promote').click(shiftImageDown)
@@ -557,7 +782,7 @@ function setupControlElements(){
 	$('.screen-button.toggle-single').click(ImageGrid.toggleSingleImageMode)
 	$('.screen-button.fit-three').click(fitThreeImages)
 	$('.screen-button.show-controls').click(function(){ImageGrid.toggleControls('on')})
-	$('.screen-button.settings').click(showSetup)
+	$('.screen-button.settings').click(ImageGrid.showSetup)
 }
 
 
@@ -653,133 +878,7 @@ function loadJSON(data, set_order){
 
 
 
-/*
- * The folowing two functions will get the vertical and horizontal 
- * distance components between the points a and A, centers of the small
- * and large squares respectively.
- * One of the squares is .field and the other is .container, 
- * which is small or big is not important.
- *
- *      +---------------+-------+
- *      |               |       |
- *      |               |       |
- *      |       + a . . | . . . | . +
- *      |       .       |       |   +- getCurrentVerticalOffset(...)
- *      |       .   + A | . . . | . +
- *      +---------------+       |
- *      |       .   .           |
- *      |       .   .           |
- *      |       .   .           |
- *      +-----------------------+
- *              .   .
- *              +-+-+
- *                +------------------- getCurrentHorizontalOffset(...)
- *
- *
- * Adding this distance to margins of one of the sqares will effectively 
- * allign the two points.
- *
- * NOTE: neither function accunts for field margins.
- *
- */
-
-// get the vertical offset of the center of square from center of container
-// NOTE: this does not account for field margins
-function getCurrentVerticalOffset(image){
-	if(image == null){
-		image = $('.image.current')
-	}
-
-	var scale = getElementScale($('.field'))
-
-	var ribbons = $('.ribbon')
-	var ribbon = image.parents('.ribbon')
-	var images = ribbon.children('.image')
-
-	// vertical...
-	var H = $('.container').height()
-	var h = ribbons.outerHeight(true)
-	// margin...
-	var mh = h - ribbons.outerHeight()
-	// current ribbon position (1-based)
-	var rn = ribbons.index(ribbon) + 1
-	// relative position to field... 
-	// XXX is there a better way to get this?
-	var t = rn * (h - mh/2)
-	
-	return -t + H/2 + h/2
-}
-
-// get the horizontal offset of the center of square from center of container
-// NOTE: this does not account for field margins
-function getCurrentHorizontalOffset(image){
-	if(image == null){
-		image = $('.image.current')
-	}
-
-	var ribbon = image.parents('.ribbon')
-	var images = ribbon.children('.image')
-
-	var W = $('.container').width()
-	var w = images.outerWidth(true)
-	// margin...
-	var mw = w - images.outerWidth()
-	// current square position (1-based)
-	var sn = images.index(image) + 1
-	var l = sn * (w - mw/2)
-
-	return -l + W/2 + w/2
-}
-
-
-
-function centerSquare(){
-	$('.field').css({
-		'margin-top': getCurrentVerticalOffset()
-	})
-	// horizontal...
-	alignRibbon()
-	centerCurrentImage()
-}
-
-
-
-function alignRibbon(image, position){
-	// default values...
-	if(image == null){
-		image = $('.image.current')
-	}
-	if(position == null){
-		position = 'center'
-	}
-
-	var ribbon = image.parents('.ribbon')
-
-	// account for margined field...
-	// NOTE: this enables us to cheat and shift all the ribbons just
-	//       by changing field margin-left...
-	var cml = parseFloat($('.field').css('margin-left'))
-	if(!cml){
-		cml = 0
-	}
-	var h_offset = getCurrentHorizontalOffset(image) - cml
-	var w = $('.image').outerWidth(true)
-
-	switch(position){
-		case 'before':
-			ribbon.css({'margin-left': h_offset - w/2})
-			return true
-		case 'center':
-			ribbon.css({'margin-left': h_offset})
-			return true
-		case 'after':
-			ribbon.css({'margin-left': h_offset + w/2})
-			return true
-	}
-	return false
-}
-
-
+/*********************************************************************/
 
 
 /*************************************************** Event Handlers **/
@@ -799,44 +898,6 @@ function handleImageClick(){
 
 
 
-function clickAfterTransitionsDone(img){
-	if(img == null){
-		img = $('.current.image')
-	}
-	$('.viewer')
-		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
-			img.click()
-			return true
-		})
-}
-
-
-
-// center other ribbons relative to current image...
-// NOTE: only two ribbons are positioned at this point...
-function alignRibbons(get_order){
-	if(get_order == null){
-		get_order = getImageOrder
-	}
-	// XXX might be good to move this to a more generic location...
-	var id = get_order($('.current.image'))
-	var directions = ['prev', 'next']
-	for(var i in directions){
-		var ribbon = $('.current.ribbon')[directions[i]]('.ribbon')
-		if(ribbon.length == 1){
-			var img = getImageBefore(id, ribbon)
-			if(img != null){
-				alignRibbon(img, 'before')
-			} else {
-				// there are no images before...
-				alignRibbon(ribbon.children('.image').first(), 'after')
-			}
-		}
-	}
-}
-
-
-
 /*
  * Basic key format:
  * 		<key-code> : <callback>,
@@ -851,6 +912,11 @@ function alignRibbons(get_order){
  *			//	- shift
  * 			<modifer>: [...]
  * 		},
+ * 		<key-code> : [
+ *			// this can be any type of handler except for an alias...
+ * 			<handler>, 
+ * 			<doc>
+ * 		],
  *		// alias...
  * 		<key-code-a> : <key-code-b>,
  *
@@ -877,6 +943,12 @@ function makeKeyboardHandler(keybindings, unhandled){
 		if(handler == null){
 			return unhandled(key)
 		}
+		// Array, lisp style with docs...
+		// XXX for some odd reason in chrome typeof([]) == typeof({})!!!
+		if(typeof(handler) == typeof([]) && handler.constructor.name == 'Array'){
+			// we do not care about docs here, so just get the handler...
+			handler = handler[0]
+		}
 		// complex handler...
 		if(typeof(handler) == typeof({})){
 			var callback = handler[modifers]
@@ -900,68 +972,7 @@ function makeKeyboardHandler(keybindings, unhandled){
 
 
 
-/************************************************************ Modes **/
-
-ImageGrid.ACTION({
-	id: 'toggleSingleImageMode',
-	title: 'Single image mode',
-	doc: 'Toggle single image mode.',
-	group: 'Mode: Single Image',
-	type: 'toggle',
-	display: false,
-	call: createCSSClassToggler('.viewer', 'single-image-mode', 
-		// pre...
-		function(action){
-			if(action == 'on'){
-				ImageGrid.option.NORMAL_MODE_BG = getBackgroundMode()
-				ImageGrid.option.ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
-			// do this only when coming out of single image mode...
-			} else if(ImageGrid.toggleSingleImageMode('?') == 'on'){
-				ImageGrid.option.SINGLE_IMAGE_MODE_BG = getBackgroundMode()
-			}
-		},
-		// post...
-		function(action){
-			if(action == 'on'){
-				fitImage()
-				setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
-			} else {
-				setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
-				setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
-			}
-			clickAfterTransitionsDone()
-		})
-})
-
-
-ImageGrid.ACTION({
-	id: 'toggleSingleRibbonMode',
-	title: 'Single ribbon mode',
-	doc: 'Show/hide other ribbons.',
-	group: 'Mode: Ribbon',
-	type: 'toggle',
-	call: createCSSClassToggler('.viewer', 'single-ribbon-mode')
-})
-
-
-// XXX this can be done in two ways:
-// 		- keep all images when promoting, just add a class to them that 
-// 		  will hide them until we enable their display...
-// 		  	+ very fast to show/hide
-// 		  	- will complicate reversing ribbons allot
-// 		- add/remove these images on demand
-// 			+ a tad complicated...
-ImageGrid.ACTION({
-	id: 'toggleDisplayShiftedUpImages',
-	title: 'Display shifted up images',
-	doc: 'Toggle display of shifted images.',
-	group: 'Mode: Ribbon',
-	display: false,
-	type: 'toggle',
-	call: createCSSClassToggler('.viewer', 'show-shifted-up-images')
-})
-
-
+/************************************************ Mode & UI Actions **/
 
 function getBackgroundMode(){
 	var mode = null
@@ -1022,174 +1033,344 @@ function toggleBackgroundModes(){
 
 
 
-// XXX for some reason this is backwords... (says 'on' when it's off ans 'off' when on)
+// XXX use order and priority of options...
+// XXX make history work for this...
+// XXX should this be a toggle??
 ImageGrid.ACTION({
-	id: 'toggleSingleImageModeTransitions',
-	title: 'Disable single image mode transitions',
-	doc: 'Toggle transitions in single image mode.',
-	group: 'Mode: Single Image',
-	type: 'toggle',
-	call: createCSSClassToggler('.viewer', 'no-single-image-transitions')
+	title: 'Settings',
+	doc: 'Show setup interface.',
+},
+function showSetup(){
+	var opts = ImageGrid.option
+	var opt_ps = ImageGrid.option_props
+	var groups = {}
+
+	var opts_container = $('<div class="options"/>')
+	// build options...
+	for(var n in opt_ps){
+		var disabled = false
+		var opt = opt_ps[n]
+		var group = opt.group
+		// handle disabled opts...
+		if(opt.display == false){
+			if(!DEBUG){
+				continue
+			}
+			disabled = true
+		}
+		// build an option...
+		var option = $('<div class="option"/>').append($([
+			$('<div class="title"/>').text(opt.title != null ? opt.title : n)[0],
+			$('<div class="doc"/>').html(opt['doc'].replace(/\n/g, '<br>'))[0],
+			$('<div class="value"/>').text(opts[n])[0]
+		]))
+		// group things correctly...
+		if(group == null){
+			group = 'Other'
+		}
+		if(groups[group] == null){
+			groups[group] = $('<div class="group"/>')
+				.append($('<div class="title"/>').text(group))
+				.append(option)
+		} else {
+			groups[group].append(option)
+		}
+		// event handlers...
+		var handler = opt_ps[n].click_handler
+		if(disabled){
+			option.addClass('disabled')
+		} else if(handler != null){
+			option.click(handler)
+		}
+	}
+	// build groups...
+	for(var i = 0; i < ImageGrid.option_groups.length; i++){
+		var group_name = ImageGrid.option_groups[i]
+		opts_container.append(groups[group_name])
+	}
+	opts_container.append(groups['Other'])
+	opts_container.click(function(e){
+		// update the view...
+		// XXX do we need to redraw the whole thing on each click???
+		ImageGrid.showSetup()
+		e.preventDefault()
+		return false
+	})
+	showInOverlay(opts_container)
 })
 
 
-ImageGrid.ACTION({
-	id: 'toggleControls',
-	title: 'Keyboard-oriented interface',
-	doc: 'Toggle Touch/Keyboard UI controls.',
-	group: 'Mode: All',
-	type: 'toggle',
-	call: createCSSClassToggler('.viewer', 'hidden-controls')
-})
 
 
-ImageGrid.ACTION({
-	id: 'toggleTransitions',
-	title: 'Global transitions',
-	doc: 'Toggle global transitions.',
-	group: 'Mode: All',
-	type: 'toggle',
-	call: createCSSClassToggler('.viewer', 'transitions-enabled')
-})
+ImageGrid.GROUP('Mode: All',
+	ImageGrid.ACTION({
+			id: 'toggleControls',
+			title: 'Keyboard-oriented interface',
+			doc: 'Toggle Touch/Keyboard UI controls.',
+			type: 'toggle',
+		},
+		createCSSClassToggler('.viewer', 'hidden-controls')),
+	ImageGrid.ACTION({
+			id: 'toggleTransitions',
+			title: 'Global transitions',
+			doc: 'Toggle global transitions.',
+			type: 'toggle',
+		},
+		createCSSClassToggler('.viewer', 'transitions-enabled')))
+
+
+
+
+ImageGrid.GROUP('Mode: Single Image',
+	ImageGrid.ACTION({
+			id: 'toggleSingleImageMode',
+			title: 'Single image mode',
+			doc: 'Toggle single image mode.',
+			type: 'toggle',
+			display: false,
+		},
+		createCSSClassToggler('.viewer', 'single-image-mode', 
+			// pre...
+			function(action){
+				if(action == 'on'){
+					ImageGrid.option.NORMAL_MODE_BG = getBackgroundMode()
+					ImageGrid.option.ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
+				// do this only when coming out of single image mode...
+				} else if(ImageGrid.toggleSingleImageMode('?') == 'on'){
+					ImageGrid.option.SINGLE_IMAGE_MODE_BG = getBackgroundMode()
+				}
+			},
+			// post...
+			function(action){
+				if(action == 'on'){
+					fitImage()
+					setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
+				} else {
+					setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
+					setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
+				}
+				clickAfterTransitionsDone()
+			})),
+	// XXX for some reason this is backwords... (says 'on' when it's off ans 'off' when on)
+	// 		...and needs an extra click to sync with state...
+	ImageGrid.ACTION({
+			id: 'toggleSingleImageModeTransitions',
+			title: 'Disable single image mode transitions',
+			doc: 'Toggle transitions in single image mode.',
+			type: 'toggle',
+		},
+		createCSSClassToggler('.viewer', 'no-single-image-transitions')))
+
+
+
+ImageGrid.GROUP('Mode: Ribbon',
+	ImageGrid.ACTION({
+			id: 'toggleSingleRibbonMode',
+			title: 'Single ribbon mode',
+			doc: 'Show/hide other ribbons.',
+			type: 'toggle',
+		}, 
+		createCSSClassToggler('.viewer', 'single-ribbon-mode')),
+
+	// XXX this can be done in two ways:
+	// 		- keep all images when promoting, just add a class to them that 
+	// 		  will hide them until we enable their display...
+	// 		  	+ very fast to show/hide
+	// 		  	- will complicate reversing ribbons allot
+	// 		- add/remove these images on demand
+	// 			+ a tad complicated...
+	ImageGrid.ACTION({
+			id: 'toggleDisplayShiftedUpImages',
+			title: 'Display shifted up images',
+			doc: 'Toggle display of shifted images.',
+			display: false,
+			type: 'toggle',
+		},
+		createCSSClassToggler('.viewer', 'show-shifted-up-images')))
+
+
 
 
 
 /********************************************************* Movement **/
 
-/* Set the transform-origin to the center of the current view...
- */
-function centerOrigin(){
-	var mt = parseFloat($('.field').css('margin-top'))
-	var ml = parseFloat($('.field').css('margin-left'))
-	var cml = parseFloat($('.current.ribbon').css('margin-left'))
+ImageGrid.GROUP('Movement',
+	ImageGrid.ACTION({
+			title: 'Center origin',
+			doc: 'Set the transform-origin to the center of the current view.',
+			display: false,
+		},
+		function centerOrigin(){
+			var mt = parseFloat($('.field').css('margin-top'))
+			var ml = parseFloat($('.field').css('margin-left'))
+			var cml = parseFloat($('.current.ribbon').css('margin-left'))
 
-	var t = parseFloat($('.field').css('top'))
-	var l = parseFloat($('.field').css('left'))
-	var w = $('.field').width()
-	var h = $('.field').height()
-	var W = $('.container').width()
-	var H = $('.container').height()
+			var t = parseFloat($('.field').css('top'))
+			var l = parseFloat($('.field').css('left'))
+			var w = $('.field').width()
+			var h = $('.field').height()
+			var W = $('.container').width()
+			var H = $('.container').height()
 
-	var ot = -getCurrentVerticalOffset() + H/2 - t
-	var ol = -ml + W/2 - l
+			var ot = -getCurrentVerticalOffset() + H/2 - t
+			var ol = -ml + W/2 - l
 
-	$('.field').css({
-		'transform-origin': ol + 'px ' + ot + 'px',
-		'-o-transform-origin': ol + 'px ' + ot + 'px',
-		'-moz-transform-origin': ol + 'px ' + ot + 'px',
-		'-webkit-transform-origin': ol + 'px ' + ot + 'px',
-		'-ms-transform-origin': ol + 'px ' + ot + 'px'
-	})
+			$('.field').css({
+				'transform-origin': ol + 'px ' + ot + 'px',
+				'-o-transform-origin': ol + 'px ' + ot + 'px',
+				'-moz-transform-origin': ol + 'px ' + ot + 'px',
+				'-webkit-transform-origin': ol + 'px ' + ot + 'px',
+				'-ms-transform-origin': ol + 'px ' + ot + 'px'
+			})
 
-	// XXX for debugging...
-	$('.origin-marker').css({
-		'top': ot,
-		'left': ol
-	})
-}
+			// XXX for debugging...
+			$('.origin-marker').css({
+				'top': ot,
+				'left': ol
+			})
+		}),
+	// XXX these work oddly when page is scaled in maxthon... 
+	// XXX virtually identical, see of can be merged...
+	ImageGrid.ACTION({
+			title: 'Move view up',
+		},
+		function moveViewUp(){
+			var t = parseInt($('.field').css('top'))
+			$('.field').css({'top': t-(ImageGrid.option.MOVE_DELTA)})
+		}),
+	ImageGrid.ACTION({
+			title: 'Move view down',
+		},
+		function moveViewDown(){
+			var t = parseInt($('.field').css('top'))
+			$('.field').css({'top': t+(ImageGrid.option.MOVE_DELTA)})
+		}),
+	ImageGrid.ACTION({
+			title: 'Move view left',
+		},
+		function moveViewLeft(){
+			var l = parseInt($('.field').css('left'))
+			$('.field').css({'left': l-(ImageGrid.option.MOVE_DELTA)})
+		}),
+	ImageGrid.ACTION({
+			title: 'Move view right',
+		},
+		function moveViewRight(){
+			var l = parseInt($('.field').css('left'))
+			$('.field').css({'left': l+(ImageGrid.option.MOVE_DELTA)})
+		}),
 
-
-
-// XXX these work oddly when page is scaled in maxthon... 
-// XXX virtually identical, see of can be merged...
-function moveViewUp(){
-	var t = parseInt($('.field').css('top'))
-	$('.field').css({'top': t-(ImageGrid.option.MOVE_DELTA)})
-}
-function moveViewDown(){
-	var t = parseInt($('.field').css('top'))
-	$('.field').css({'top': t+(ImageGrid.option.MOVE_DELTA)})
-}
-function moveViewLeft(){
-	var l = parseInt($('.field').css('left'))
-	$('.field').css({'left': l-(ImageGrid.option.MOVE_DELTA)})
-}
-function moveViewRight(){
-	var l = parseInt($('.field').css('left'))
-	$('.field').css({'left': l+(ImageGrid.option.MOVE_DELTA)})
-}
-
-
-
-function centerCurrentImage(){
-	$('.field')
-		.css({
-			'top': 0,
-			'left': 0
-		})
-		// do this after animations are done...
-		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", centerOrigin)
-	// this is repeated intentionally...
-	// ...needed for small shifts, while the after-animation event 
-	// is for large moves.
-	centerOrigin()
-}
-
-
+	ImageGrid.ACTION({
+			title: 'Center current image',
+		},
+		function centerCurrentImage(){
+			$('.field')
+				.css({
+					'top': 0,
+					'left': 0
+				})
+				// do this after animations are done...
+				.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", ImageGrid.centerOrigin)
+			// this is repeated intentionally...
+			// ...needed for small shifts, while the after-animation event 
+			// is for large moves.
+			ImageGrid.centerOrigin()
+		}))
 
 
 
 /******************************************************* Navigation **/
 
-// basic navigation...
-function firstImage(){
-	return $('.current.ribbon').children('.image').first().click()
-}
-function prevImage(){
-	return $('.current.image').prev('.image').click()
-}
-function nextImage(){
-	return $('.current.image').next('.image').click()
-}
-function lastImage(){
-	return $('.current.ribbon').children('.image').last().click()
-}
+ImageGrid.GROUP('Navigation',
+	// basic navigation...
+	ImageGrid.ACTION({
+			title: 'Go to first image',
+		},
+		function firstImage(){
+			return $('.current.ribbon').children('.image').first().click()
+		}),
+	ImageGrid.ACTION({
+			title: 'Go to previous image',
+		},
+		function prevImage(){
+			return $('.current.image').prev('.image').click()
+		}),
+	ImageGrid.ACTION({
+			title: 'Go to next image',
+		},
+		function nextImage(){
+			return $('.current.image').next('.image').click()
+		}),
+	ImageGrid.ACTION({
+			title: 'Go to last image',
+		},
+		function lastImage(){
+			return $('.current.ribbon').children('.image').last().click()
+		}),
 
+	ImageGrid.ACTION({
+			title: 'Skip screen images',
+			doc: 'Skip screen-width images in specified direction',
+			display: false,
+		},
+		function skipScreenImages(direction){
+			// calculate screen width in images...
+			var W = $('.viewer').width()
+			var w = $('.current.image').width()
+			var scale = getElementScale($('.field'))
+			var n = Math.max(Math.floor(W/(w*scale))-1, 0)
 
+			var img = $('.current.image')[direction + 'All']('.image').eq(n)
+			if(img.length > 0){
+				return img.click()
+			} else if(direction == 'next'){
+				return ImageGrid.lastImage()
+			} else if(direction == 'prev'){
+				return ImageGrid.firstImage()
+			}
+		}),
+	ImageGrid.ACTION({
+			title: 'Skip next screen images',
+		},
+		function nextScreenImages(){ return ImageGrid.skipScreenImages('next') }),
+	ImageGrid.ACTION({
+			title: 'Skip screen images backwards',
+		},
+		function prevScreenImages(){ return ImageGrid.skipScreenImages('prev') }),
 
-// add skip screen images in direction...
-function skipScreenImages(direction){
-	// calculate screen width in images...
-	var W = $('.viewer').width()
-	var w = $('.current.image').width()
-	var scale = getElementScale($('.field'))
-	var n = Math.max(Math.floor(W/(w*scale))-1, 0)
+	ImageGrid.ACTION({
+			title: 'Focus ribbon',
+			doc: 'Focus ribbon in specified direction',
+			display: false,
+		},
+		function focusRibbon(direction, get_order){
+			if(get_order == null){
+				get_order = getImageOrder
+			}
+			var id = get_order($('.current.image'))
+			var prev = getImageBefore(id, $('.current.ribbon')[direction]('.ribbon'))
+			if(prev){
+				var next = prev.next()
+				// NOTE: direction is accounted for to make the up/down shifts 
+				// 		 symmetrical in the general case...
+				if(next.length == 0 || direction == 'next'){
+					return prev.click()
+				} else {
+					return next.click()
+				}
+			} else {
+				return $('.current.ribbon')[direction]('.ribbon').children('.image').first().click()
+			}
+		}),
+	ImageGrid.ACTION({
+			title: 'Focus ribbon above',
+		},
+		function focusAboveRibbon(){ return ImageGrid.focusRibbon('prev') }),
+	ImageGrid.ACTION({
+			title: 'Focus ribbon below',
+		},
+		function focusBelowRibbon(){ return ImageGrid.focusRibbon('next') }))
 
-	var img = $('.current.image')[direction + 'All']('.image').eq(n)
-	if(img.length > 0){
-		return img.click()
-	} else if(direction == 'next'){
-		return lastImage()
-	} else if(direction == 'prev'){
-		return firstImage()
-	}
-}
-var nextScreenImages = function(){ return skipScreenImages('next') }
-var prevScreenImages = function(){ return skipScreenImages('prev') }
-
-
-
-function focusRibbon(direction, get_order){
-	if(get_order == null){
-		get_order = getImageOrder
-	}
-	var id = get_order($('.current.image'))
-	var prev = getImageBefore(id, $('.current.ribbon')[direction]('.ribbon'))
-	if(prev){
-		var next = prev.next()
-		// NOTE: direction is accounted for to make the up/down shifts 
-		// 		 symmetrical in the general case...
-		if(next.length == 0 || direction == 'next'){
-			return prev.click()
-		} else {
-			return next.click()
-		}
-	} else {
-		return $('.current.ribbon')[direction]('.ribbon').children('.image').first().click()
-	}
-}
-var focusAboveRibbon = function(){ return focusRibbon('prev') }
-var focusBelowRibbon = function(){ return focusRibbon('next') }
 
 
 
@@ -1246,32 +1427,29 @@ function setContainerScale(scale){
 
 
 
-function fitImage(){
-	var H = $('.container').height()
-	var W = $('.container').width()
-
-	var h = $('.image.current').height()
-	var w = $('.image.current').width()
-
-	var f = Math.min(H/h, W/w)
-
-	setContainerScale(f)
-}
-
-
-
-function fitThreeImages(){
+function fitNImages(n){
 	var H = $('.container').height()
 	var W = $('.container').width()
 
 	var h = $('.image.current').height()
 	// NOTE: this is cheating, need to get actual three widths...
-	var w = $('.image.current').width()*3
+	var w = $('.image.current').width()*n
 
 	var f = Math.min(H/h, W/w)
 
 	setContainerScale(f)
 }
+
+
+function fitImage(){fitNImages(1)}
+function fitTwoImages(){fitNImages(2)}
+function fitThreeImages(){fitNImages(3)}
+function fitFourImages(){fitNImages(4)}
+function fitFiveImages(){fitNImages(5)}
+function fitSixImages(){fitNImages(6)}
+function fitSevenImages(){fitNImages(7)}
+function fitEightImages(){fitNImages(8)}
+function fitNineImages(){fitNImages(9)}
 
 
 
@@ -1376,9 +1554,9 @@ function shiftImage(direction, get_order){
 	} else {
 		img = $('.current.image')
 		if(img.next('.image').length == 0){
-			prevImage()
+			ImageGrid.prevImage()
 		} else {
-			nextImage()
+			ImageGrid.nextImage()
 		}
 		// do the actual move...
 		if(prev_elem){
