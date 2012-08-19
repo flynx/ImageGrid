@@ -142,150 +142,6 @@ ImageGrid.TYPE('toggle', function(obj){
 
 
 
-// XXX don't understand why am I the one who has to write this...
-var SPECIAL_KEYS = {
-	9:		'Tab',
-	13:		'Enter',
-	16:		'Shift',
-	17:		'Ctrl',
-	18:		'Alt',
-	20:		'Caps Lock',
-	27:		'Esc',
-	32:		'Space',
-	33:		'PgUp',
-	34:		'PgDown',	
-	35:		'End',
-	36:		'Home',
-	37:		'Right',
-	38:		'Up',
-	39:		'Left',
-	40:		'Down',
-	45:		'Ins',
-	46:		'Del',
-	80:		'Backspace',
-	91:		'Win',
-	93:		'Menu',
-	
-	112:	'F1',
-	113:	'F2',
-	114:	'F3',
-	115:	'F4',
-	116:	'F5',
-	117:	'F6',
-	118:	'F7',
-	119:	'F8',
-	120:	'F9',
-	121:	'F10',
-	122:	'F11',
-	123:	'F12',
-}
-
-function toKeyName(code){
-	// check for special keys...
-	var k = SPECIAL_KEYS[code]
-	if(k != null){
-		return k
-	}
-	// chars...
-	k = String.fromCharCode(code)
-	if(k != ''){
-		return k.toLowerCase()
-	}
-	return null
-}
-
-// XXX merge this with showSetup as they are virtually identical...
-// XXX revise!!
-function showSettingUI(data, get_value, get_handler){
-	var tree = {}
-	var groups = []
-	var groups_ui = {}
-	// build the group/action structure...
-	for(var a in data){
-		var group = data[a].group!=null?data[a].group:'Other'
-		if(groups.indexOf(group) == -1){
-			groups.push(group)
-		}
-		if(tree[group] == null){
-			tree[group] = []
-		}
-		tree[group].push([
-				data[a].title!=null?data[a].title:a, 
-				a
-		])
-	}
-	// sort things...
-	groups.sort()
-	for(var g in tree){
-		tree[g].sort(function(a, b){
-			a = a[0]
-			b = b[0]
-			return a > b ? 1 : a < b ? -1 : 0
-		})
-	}
-	// build the HTML...
-	var ui = $('<div class="options"/>')
-	for(var g in tree){
-		var group = null
-		for(var i=0; i<tree[g].length; i++){
-			// get the element...
-			var elem = data[tree[g][i][1]]
-			if(!DEBUG && elem.display == false){
-				continue
-			}
-			if(group == null){
-				group = $('<div class="group"/>')
-					.append($('<div class="title"/>').text(g))
-			}
-			var option
-			group.append(
-				option = $('<div class="option"/>').append($([
-					$('<div class="title"/>').text(tree[g][i][0])[0],
-					$('<div class="doc"/>').html(
-						elem.doc?elem.doc.replace(/\n/g, '<br>'):'')[0],
-					// XXX keys...
-					$('<div class="value"/>').text(get_value(elem))[0],
-			])))
-			if(elem.display == false){
-				option.addClass('disabled')
-			} else {
-				// handler...
-				var handler = get_handler(elem)
-				if(handler != null){
-					option.click(handler)
-				}
-			}
-		}
-		if(group != null){
-			groups_ui[g] = group
-		}
-	}
-	// put the Other group in the back...
-	var i = groups.indexOf('Other')
-	if(i != -1){
-		groups.splice(i, 1)
-		groups.push('Other')
-	}
-	// buildup the sorted groups...
-	for(var i=0; i<groups.length; i++){
-		ui.append(groups_ui[groups[i]])
-	}
-	// refresh...
-	ui.click(function(){
-		// XXX is this a good way to do a refresh?
-		showSettingUI(data, get_value, get_handler)
-	})
-	showInOverlay(ui)
-}
-
-function showKeyboardBindings(){
-	// XXX build reverse key index...
-	// XXX
-	showSettingUI(ImageGrid.actions, 
-			function(){}, 
-			function(){})}
-
-
 
 /******************************************* Setup Data and Globals **/
 
@@ -412,7 +268,64 @@ function cmpImageOrder(a, b){
 
 
 
+// NOTE: don't understand why am I the one who has to write this...
+var SPECIAL_KEYS = {
+	9:		'Tab',
+	13:		'Enter',
+	16:		'Shift',
+	17:		'Ctrl',
+	18:		'Alt',
+	20:		'Caps Lock',
+	27:		'Esc',
+	32:		'Space',
+	33:		'PgUp',
+	34:		'PgDown',	
+	35:		'End',
+	36:		'Home',
+	37:		'Right',
+	38:		'Up',
+	39:		'Left',
+	40:		'Down',
+	45:		'Ins',
+	46:		'Del',
+	80:		'Backspace',
+	91:		'Win',
+	93:		'Menu',
+	
+	112:	'F1',
+	113:	'F2',
+	114:	'F3',
+	115:	'F4',
+	116:	'F5',
+	117:	'F6',
+	118:	'F7',
+	119:	'F8',
+	120:	'F9',
+	121:	'F10',
+	122:	'F11',
+	123:	'F12',
+}
+
+// XXX some keys look really wrong...
+function toKeyName(code){
+	// check for special keys...
+	var k = SPECIAL_KEYS[code]
+	if(k != null){
+		return k
+	}
+	// chars...
+	k = String.fromCharCode(code)
+	if(k != ''){
+		return k.toLowerCase()
+	}
+	return null
+}
+
+
+
 // show a jQuary opject in viewer overlay...
+// XXX need to set .scrollTop(0) when showing different UI... 
+// 		...and not set it when the UI is the same
 function showInOverlay(obj){
 	obj.click(function(){ return false })
 	// clean things up...
@@ -431,6 +344,90 @@ function showInOverlay(obj){
 		})
 		.fadeIn()
 	return obj
+}
+
+
+
+// XXX revise!!
+function showOptionsUI(data, get_value, get_handler){
+	var tree = {}
+	var groups = []
+	var groups_ui = {}
+	// build the group/action structure...
+	for(var a in data){
+		var group = data[a].group!=null?data[a].group:'Other'
+		if(groups.indexOf(group) == -1){
+			groups.push(group)
+		}
+		if(tree[group] == null){
+			tree[group] = []
+		}
+		tree[group].push([
+				data[a].title!=null?data[a].title:a, 
+				a
+		])
+	}
+	// sort things...
+	groups.sort()
+	for(var g in tree){
+		tree[g].sort(function(a, b){
+			a = a[0]
+			b = b[0]
+			return a > b ? 1 : a < b ? -1 : 0
+		})
+	}
+	// build the HTML...
+	var ui = $('<div class="options"/>')
+	for(var g in tree){
+		var group = null
+		for(var i=0; i<tree[g].length; i++){
+			// get the element...
+			var elem = data[tree[g][i][1]]
+			if(!DEBUG && elem.display == false){
+				continue
+			}
+			if(group == null){
+				group = $('<div class="group"/>')
+					.append($('<div class="title"/>').text(g))
+			}
+			var option
+			group.append(
+				option = $('<div class="option"/>').append($([
+					$('<div class="title"/>').text(tree[g][i][0])[0],
+					$('<div class="doc"/>').html(
+						elem.doc?elem.doc.replace(/\n/g, '<br>'):'')[0],
+					$('<div class="value"/>').text(get_value(elem))[0]
+			])))
+			if(elem.display == false){
+				option.addClass('disabled')
+			} else {
+				// handler...
+				var handler = get_handler(elem)
+				if(handler != null){
+					option.click(handler)
+				}
+			}
+		}
+		if(group != null){
+			groups_ui[g] = group
+		}
+	}
+	// put the Other group in the back...
+	var i = groups.indexOf('Other')
+	if(i != -1){
+		groups.splice(i, 1)
+		groups.push('Other')
+	}
+	// buildup the sorted groups...
+	for(var i=0; i<groups.length; i++){
+		ui.append(groups_ui[groups[i]])
+	}
+	// refresh...
+	ui.click(function(){
+		// XXX is this a good way to do a refresh?
+		showOptionsUI(data, get_value, get_handler)
+	})
+	showInOverlay(ui)
 }
 
 
@@ -878,7 +875,7 @@ function setupControlElements(){
 	$('.screen-button.toggle-single').click(ImageGrid.toggleSingleImageMode)
 	$('.screen-button.fit-three').click(ImageGrid.fitThreeImages)
 	$('.screen-button.show-controls').click(function(){ImageGrid.toggleControls('on')})
-	$('.screen-button.settings').click(ImageGrid.showSetup)
+	$('.screen-button.settings').click(ImageGrid.showKeyboardBindings)
 }
 
 
@@ -1159,9 +1156,59 @@ ImageGrid.GROUP('Mode: All',
 			doc: 'Show setup interface.',
 		},
 		function showSetup(){
-			showSettingUI(ImageGrid.option_props, 
+			showOptionsUI(ImageGrid.option_props, 
 					function(e){return ImageGrid.option[e.name]}, 
 					function(e){return e.click_handler})
+		}),
+	ImageGrid.ACTION({
+			title: 'Keyboard configuration',
+			doc: 'Show keyboard configuration interface.',
+		},
+		function showKeyboardBindings(){
+			// build reverse key index...
+			var bindings = {}
+			for(var k in keybindings){
+				var id
+				var v = keybindings[k]
+
+				// alias...
+				while (typeof(v) == typeof(123)) {
+					v = keybindings[v]
+				}
+				// Array, lisp style with docs...
+				if(typeof(v) == typeof([]) && v.constructor.name == 'Array'){
+					// XXX what do we do here???
+				}
+				// function...
+				if(typeof(v) == typeof(function(){})){
+					id = v.id != null ? v.id : v.name
+				}
+				// complex handler...
+				// NOTE: this can contain several key bindings...
+				if(typeof(v) == typeof({})){
+					for(var m in v){
+						id = v[m].id != null ? v[m].id : v[m].name
+						if(bindings[id] == null){
+							bindings[id] = []
+						} 
+						bindings[id].push((m=='default'?'':m+'+') + toKeyName(k))
+					}
+					continue
+				}
+
+				if(bindings[id] == null){
+					bindings[id] = []
+				} 
+				bindings[id].push(toKeyName(k))
+			}
+			showOptionsUI(ImageGrid.actions, 
+					function(e){ 
+						return (bindings[e.id]!=null?bindings[e.id]:'None')
+									.toString()
+									.replace(/,/g, ', ') 
+					}, 
+					// XXX
+					function(e){})
 		}))
 
 
@@ -1172,7 +1219,6 @@ ImageGrid.GROUP('Mode: Single Image',
 			title: 'Single image mode',
 			doc: 'Toggle single image mode.',
 			type: 'toggle',
-			display: false,
 		},
 		createCSSClassToggler('.viewer', 'single-image-mode', 
 			// pre...
