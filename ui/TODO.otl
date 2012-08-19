@@ -1,8 +1,19 @@
 Priority work
-	[_] 88% Preview II
-		[_] 93% UI
-			[_] 50% settings/help screen
-				[_] keyboard config/help
+	[_] 89% Preview II
+		[_] 49% native client
+			[_] 33% Windows (CEF / CEFPython)
+				[X] basic test
+				[_] basic wrapper
+				| hook-in os-specific API
+				[_] package a portable exe
+			[_] 66% Android (PhoneGap)
+				[X] basic test
+				[X] disable transitions...
+				[_] basic wrapper
+				| hook-in os-specific API
+		[X] 100% UI
+			[X] 100% settings/help screen
+				[X] keyboard config/help
 				[X] auto-generated settings interface
 			[X] "hide other ribbons" mode
 			[X] fix single image mode
@@ -39,17 +50,6 @@ Priority work
 			[X] add screen-width images next/prev navigation...
 			[X] 100% debug mode
 				[X] toggle cross-hair
-		[_] 49% native client
-			[_] 33% Windows (CEF / CEFPython)
-				[X] basic test
-				[_] basic wrapper
-				| hook-in os-specific API
-				[_] package a portable exe
-			[_] 66% Android (PhoneGap)
-				[X] basic test
-				[X] disable transitions...
-				[_] basic wrapper
-				| hook-in os-specific API
 		[X] 100% sorted images in ribbons
 			[X] 100% stage I: position the promoted/demoted image correctly
 			| and correct positioning on promote/demote
@@ -115,9 +115,9 @@ Priority work
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
 	[_] 26% Preview II (optional features)
+		[_] slideshow...
 		[_] make keyboeard handler mode-aware...
 		| this is needed to disable navigation keys in setup-mode, for example...
-		[_] slideshow...
 		[_] 50% serialization/deserialization
 			[X] JSON loader/unloader
 			[_] file reader/writer
