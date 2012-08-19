@@ -81,7 +81,8 @@ var ImageGrid = {
 ImageGrid.GROUP('API',
 	ImageGrid.ACTION({
 			doc: 'Set option(s) value(s), calling apropriate callbacks.',
-			group: 'API'
+			group: 'API',
+			display: false,
 		},
 		function set(obj){
 			for(var n in obj){
@@ -100,7 +101,8 @@ ImageGrid.GROUP('API',
 		}),
 	ImageGrid.ACTION({
 			doc: 'Get documentation for name.',
-			group: 'API'
+			group: 'API',
+			display: false,
 		},
 		function doc(name){
 			return {
@@ -192,44 +194,67 @@ function toKeyName(code){
 	return null
 }
 
+// XXX merge this with showSetup as they are virtually identical...
 function showKeyboardBindings(){
-	// XXX get all the actions...
-	// XXX get all the keys bound...
-	// XXX connect the two together, including:
-	// 		- unbound actions
-	// 		- undocumented keys
-
-
-	// build an action indexed dict (effectively reverse keybindings)...
-	var res = {}
-	for(var k in keybindings){
-		var n = [toKeyName(k)]
-		// get the action name...
-		// XXX need a name here...
-		var v = keybindings[k]
-		// alias...
-		while(typeof(v) == typeof(3)){
-			// XXX skip for now...
-			// 		...later we will need to accumolate all the keys in a list...
-			continue
+	var actions = {}
+	var groups = []
+	// build the group/action structure...
+	for(var a in ImageGrid.actions){
+		var group = ImageGrid[a].group
+		if(group.indexOf(groups) == -1){
+			groups.push(group)
 		}
-		// function...
-		if(typeof(v) == typeof(function(){})){
-			// XXX title...
-			// XXX name...
-			// XXX ???
-		// Array...
-		} else if(typeof(v) == typeof([]) && v.constructor.name == 'Array'){
-			// XXX get the second arg...
-		// object...
-		} else if(typeof(v) == typeof({})){
-			// XXX get all the handlers and accumolate the keys...
-		// XXX unknown...
-		} else {
-			// XXX err...
+		if(actions[group] == null){
+			actions[group] = []
+		}
+		actions[group].push([
+				ImageGrid[a].title!=null?ImageGrid[a].title:a, 
+				a
+		])
+	}
+	// sort things...
+	groups.sort()
+	for(var g in actions){
+		actions[g].sort(function(a, b){
+			a = a[0]
+			b = b[0]
+			return a > b ? 1 : a < b ? -1 : 0
+		})
+	}
+	// build the HTML...
+	var ui = $('<div class="options"/>')
+	for(var g in actions){
+		var group = null
+		for(var i=0; i<actions[g].length; i++){
+			// get the action object...
+			var action = ImageGrid.actions[actions[g][i][1]]
+			if(!DEBUG && action.display == false){
+				continue
+			}
+			if(group == null){
+				group = $('<div class="group"/>')
+					.append($('<div class="title"/>').text(g!=null?g:'Other'))
+			}
+			var option
+			group.append(
+				option = $('<div class="option"/>').append($([
+					$('<div class="title"/>').text(actions[g][i][0])[0],
+					$('<div class="doc"/>').html(
+						action.doc?action.doc.replace(/\n/g, '<br>'):'')[0],
+					// XXX keys...
+					$('<div class="value"/>').text('KEY')[0],
+			])))
+			if(action.display == false){
+				option.addClass('disabled')
+			} else {
+				// XXX handler...
+			}
+		}
+		if(group != null){
+			ui.append(group)
 		}
 	}
-	var res = {}
+	showInOverlay(ui)
 }
 
 
@@ -1073,7 +1098,7 @@ ImageGrid.GROUP('Mode: All',
 
 	ImageGrid.ACTION({
 			id: 'toggleControls',
-			title: 'Keyboard-oriented interface',
+			title: 'Toggle keyboard-oriented interface',
 			doc: 'Toggle Touch/Keyboard UI controls.',
 			type: 'toggle',
 		},
