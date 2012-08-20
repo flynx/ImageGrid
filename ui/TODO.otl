@@ -1,5 +1,5 @@
 Priority work
-	[_] 89% Preview II
+	[_] 87% Preview II
 		[_] 49% native client
 			[_] 33% Windows (CEF / CEFPython)
 				[X] basic test
@@ -11,7 +11,16 @@ Priority work
 				[X] disable transitions...
 				[_] basic wrapper
 				| hook-in os-specific API
-		[X] 100% UI
+		[_] 88% UI
+			[_] 0% disable opacity for current ribbon
+				[_] 0% opacity for current ribbon mode
+				| automatically turned on for magnifications over 2 images 
+				| per screen....
+				[_] current image indicator
+				| this can be:
+				| 	- rectangle (not border)
+				| 	- underline
+				| 	- corner icon
 			[X] 100% settings/help screen
 				[X] keyboard config/help
 				[X] auto-generated settings interface
