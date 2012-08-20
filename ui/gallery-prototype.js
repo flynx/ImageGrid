@@ -1069,6 +1069,7 @@ function makeKeyboardHandler(keybindings, unhandled){
 ImageGrid.GROUP('Mode: All',
 	ImageGrid.ACTION({
 			title: 'Get the background mode',
+			display: false,
 		},
 		function getBackgroundMode(){
 			var mode = null
@@ -1084,7 +1085,8 @@ ImageGrid.GROUP('Mode: All',
 		}),
 	ImageGrid.ACTION({
 			title: 'Set the background mode',
-			doc: 'NOTE: passing null will set the default.'
+			doc: 'NOTE: passing null will set the default.',
+			display: false,
 		},
 		function setBackgroundMode(mode){
 			var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
@@ -1471,6 +1473,7 @@ ImageGrid.GROUP('Navigation',
 ImageGrid.GROUP('Zooming',
 	ImageGrid.ACTION({
 			title: 'Scale container by factor',
+			display: false,
 		},
 		function scaleContainerBy(factor){
 			return ImageGrid.setContainerScale(getElementScale($('.field'))*factor)
@@ -1498,6 +1501,7 @@ ImageGrid.GROUP('Zooming',
 
 	ImageGrid.ACTION({
 			title: 'Fit N images to container width/height',
+			display: false,
 		},
 		function fitNImages(n){
 			var H = $('.container').height()
@@ -1687,8 +1691,8 @@ ImageGrid.GROUP('Image manipulation',
 			
 	// sorting...
 	ImageGrid.ACTION({ 
-			title: 'Sort images via a different criteria',
-			doc: 'use the cmp function to update image id\'s and resort.',
+			title: 'Sort images via criteria',
+			doc: 'Use the cmp function to update image id\'s and resort.',
 			display: false,
 		}, 
 		function sortImagesVia(cmp){
@@ -1699,8 +1703,9 @@ ImageGrid.GROUP('Image manipulation',
 			ImageGrid.sortImages()
 		}),
 	ImageGrid.ACTION({ 
-			title: 'Sort images in all ribbons',
-			doc: 'NOTE: this will only realign three ribbons.'
+			title: 'Sort images',
+			doc: 'Sort images in all ribbons\n\n'+
+				'NOTE: this will only realign three ribbons.'
 		}, 
 		function sortImages(){
 			$('.ribbon').sortChildren(cmpImageOrder)
@@ -1708,7 +1713,8 @@ ImageGrid.GROUP('Image manipulation',
 			$('.current.image').click()
 		}),
 	ImageGrid.ACTION({ 
-			title: 'Reverse order of images in all ribbons',
+			title: 'Reverse order of images',
+			doc: 'this will reverse image order in all ribbons.',
 		}, 
 		function reverseImageOrder(){
 			// this is done by reversing their id attr
