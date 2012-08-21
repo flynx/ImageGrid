@@ -860,22 +860,22 @@ function setupEvents(){
 
 function setupControlElements(){
 	// images...
-	$(".image").click(handleImageClick)
+	$(".image").mousedown(handleImageClick)
 
 	// buttons...
-	$('.screen-button.next-image').click(ImageGrid.nextImage)
-	$('.screen-button.prev-image').click(ImageGrid.prevImage)
+	$('.screen-button.next-image').mousedown(ImageGrid.nextImage)
+	$('.screen-button.prev-image').mousedown(ImageGrid.prevImage)
 	// XXX rename classes to "shift-image-up" and "shift-image-down"...
-	$('.screen-button.demote').click(ImageGrid.shiftImageUp)
-	$('.screen-button.promote').click(ImageGrid.shiftImageDown)
-	$('.screen-button.zoom-in').click(ImageGrid.scaleContainerUp)
-	$('.screen-button.zoom-out').click(ImageGrid.scaleContainerDown)
+	$('.screen-button.demote').mousedown(ImageGrid.shiftImageUp)
+	$('.screen-button.promote').mousedown(ImageGrid.shiftImageDown)
+	$('.screen-button.zoom-in').mousedown(ImageGrid.scaleContainerUp)
+	$('.screen-button.zoom-out').mousedown(ImageGrid.scaleContainerDown)
 	// XXX
-	$('.screen-button.toggle-wide').click(function(){ImageGrid.scaleContainerBy(0.2)})
-	$('.screen-button.toggle-single').click(ImageGrid.toggleSingleImageMode)
-	$('.screen-button.fit-three').click(ImageGrid.fitThreeImages)
-	$('.screen-button.show-controls').click(function(){ImageGrid.toggleControls('on')})
-	$('.screen-button.settings').click(ImageGrid.showKeyboardBindings)
+	$('.screen-button.toggle-wide').mousedown(function(){ImageGrid.scaleContainerBy(0.2)})
+	$('.screen-button.toggle-single').mousedown(ImageGrid.toggleSingleImageMode)
+	$('.screen-button.fit-three').mousedown(ImageGrid.fitThreeImages)
+	$('.screen-button.show-controls').mousedown(function(){ImageGrid.toggleControls('on')})
+	$('.screen-button.settings').mousedown(ImageGrid.showKeyboardBindings)
 }
 
 
