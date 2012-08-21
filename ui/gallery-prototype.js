@@ -860,7 +860,8 @@ function setupEvents(){
 
 function setupControlElements(){
 	// images...
-	$(".image").mousedown(handleImageClick)
+	// NOTE: when the images are loaded, the actual handlers will be set by the loader...
+	setupImageEventHandlers($(".image"))
 
 	// buttons...
 	$('.screen-button.next-image').mousedown(ImageGrid.nextImage)
@@ -883,6 +884,30 @@ function setupControlElements(){
 /**************************************************** Serialization **/
 
 
+// setup image event handlers...
+function setupImageEventHandlers(image){
+	return (image
+			.click(handleImageClick)
+			.dblclick(function(e){
+				$(this).click()
+				ImageGrid.toggleSingleImageMode()
+			}))
+}
+
+
+
+// build an image element...
+function makeImage(url, order, set_order){
+	if(set_order == null){
+		set_order = setImageOrder
+	}
+	return (setupImageEventHandlers(
+				set_order($('<div class="image"></div>')
+					.css({ 'background-image': 'url('+url+')' }), order)))
+}
+
+
+
 function loadImages(json){
 	var images = json.images
 	var ribbon = $('.ribbon').last()
@@ -890,10 +915,8 @@ function loadImages(json){
 	$('.image').remove()
 
 	for(var i = 0; i < images.length; i++){
-		setImageOrder($('<div class="image"></div>')
-			.css({ 'background-image': 'url('+images[i]+')' }), i)
-				.click(handleImageClick)
-				.appendTo(ribbon)
+		makeImage(images[i], i)
+			.appendTo(ribbon)
 	}
 	ribbon.children().first().click()
 }
@@ -960,10 +983,8 @@ function loadJSON(data, set_order){
 		for(var j in images){
 			var image = $(images[j])
 			// create image...
-			set_order($('<div class="image"></div>')
-				.css({ 'background-image': 'url('+image.attr('url')+')' }), j)
-					.click(handleImageClick)
-					.appendTo(ribbon)
+			makeImage(image.attr('url'), j, set_order)
+				.appendTo(ribbon)
 		}
 	}
 	$('.image').first().click()
@@ -1114,19 +1135,26 @@ ImageGrid.GROUP('Mode: All',
 			doc: 'Toggle through background theems: none -> dark -> black\n\n'+
 				'NOTE: modes are toggled independently for single image and '+
 				'rinbon modes',
+			type: 'toggle',
 		},
-		function toggleBackgroundModes(){
-			var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
-			var mode = ImageGrid.getBackgroundMode()
-			// default -> first
-			if(mode == null){
-				ImageGrid.setBackgroundMode(BACKGROUND_MODES[0])
-			// last -> default...
-			} else if(mode == BACKGROUND_MODES[BACKGROUND_MODES.length-1]){
-				ImageGrid.setBackgroundMode()
-			// next...
+		function toggleBackgroundModes(action){
+			if(action == '?'){
+				return ImageGrid.getBackgroundMode()
+			} else if(action != null){
+				return ImageGrid.setBackgroundMode(action)
 			} else {
-				ImageGrid.setBackgroundMode(BACKGROUND_MODES[BACKGROUND_MODES.indexOf(mode)+1])
+				var BACKGROUND_MODES = ImageGrid.option.BACKGROUND_MODES
+				var mode = ImageGrid.getBackgroundMode()
+				// default -> first
+				if(mode == null){
+					ImageGrid.setBackgroundMode(BACKGROUND_MODES[0])
+				// last -> default...
+				} else if(mode == BACKGROUND_MODES[BACKGROUND_MODES.length-1]){
+					ImageGrid.setBackgroundMode()
+				// next...
+				} else {
+					ImageGrid.setBackgroundMode(BACKGROUND_MODES[BACKGROUND_MODES.indexOf(mode)+1])
+				}
 			}
 		}),
 
@@ -1143,13 +1171,15 @@ ImageGrid.GROUP('Mode: All',
 			doc: 'Toggle global transitions.',
 			type: 'toggle',
 		},
-		createCSSClassToggler('.viewer', 'transitions-enabled')),
+		createCSSClassToggler('.viewer', 'transitions-enabled')))
 
+
+
+ImageGrid.GROUP('Configuration and Help',
 	ImageGrid.ACTION({
 			title: 'Close overlay'
 		},
 		function closeOverlay(){ $('.overlay').click() }),
-
 	// XXX use order and priority of options...
 	// XXX make history work for this...
 	// XXX should this be a toggle??
@@ -1159,7 +1189,10 @@ ImageGrid.GROUP('Mode: All',
 		},
 		function showSetup(){
 			showOptionsUI(ImageGrid.option_props, 
-					function(e){return ImageGrid.option[e.name]}, 
+					function(e){
+						// XXX need to update a value here...
+						return ImageGrid.option[e.name]
+					}, 
 					function(e){return e.click_handler})
 		}),
 	ImageGrid.ACTION({

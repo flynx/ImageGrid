@@ -7,8 +7,8 @@ var keybindings = {
 		'ctrl':		ImageGrid.showSetup,					//	ctrl+?
 	},
 	70:		ImageGrid.toggleSingleImageMode,				//	f
-	83:		ImageGrid.toggleSingleRibbonMode,				//	s
 	13:		70,												//	Enter
+	83:		ImageGrid.toggleSingleRibbonMode,				//	s
 	84:		ImageGrid.toggleSingleImageModeTransitions,		//	t
 	65:		ImageGrid.toggleTransitions,					//	a
 	9:		ImageGrid.toggleControls,						//	tab
