@@ -123,7 +123,7 @@ Priority work
 			[X] 100% actions
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
-	[_] 24% Preview II (optional features)
+	[_] 29% Preview II (optional features)
 		[_] 0% PhoneGap + Android Issues:
 			[_] half the keyboard is not working...
 			[_] screen buttons are very laggy
@@ -173,6 +173,20 @@ Priority work
 		[_] double tap/click to zoom (a-la iPad)
 		| fit <-> actual pixels (max)
 		[_] pinch to zoom
+		[X] BUG: rendering error when current ribbon images opacity is 1...
+		| This happens when:
+		| - opcity of .current.ribbon .image is 1
+		| - there is atleast a ribbon above
+		| - the view is zoomed-out a bit ~70%
+		|
+		| the view is partially re-rendered when navigating images...
+		|
+		| since this is a browser render error, think of a way to work 
+		| around this.
+		|
+		| WORKAROUND: set the opacity to 0.9999 instead of 1 forces the 
+		| browser to re-render the whole set correctly. need to find a 
+		| better way...
 		[X] 100% add sort/re-sort capability...
 			[X] abstract out image id
 			[X] replace id (use something else like filename)

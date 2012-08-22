@@ -120,12 +120,14 @@
 
 .current-indicator {
 	display: none;
+	cursor: hand;
 }
 
 
 .opaque-current-ribbon .current-indicator {
 	display: block;
 	position: absolute;
+	z-index: 1000;
 }
 .opaque-current-ribbon .current-indicator div {
 	position: relative;
@@ -136,6 +138,8 @@
 
 	width: 100%;
 	height: 100%;
+
+	cursor: hand;
 }
 
 .opaque-current-ribbon.dot-indicator .current-indicator {
@@ -154,7 +158,10 @@
 }
 
 .opaque-current-ribbon .current.ribbon .image {
-	opacity: 1.0;
+	/* XXX this should actiually be 1.0, but that makes the webkit 
+	 * 	renderer misbehave, so this is a workaround
+	 */
+	opacity: 0.9999;
 }
 
 

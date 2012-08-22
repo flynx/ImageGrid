@@ -875,6 +875,16 @@ function setupControlElements(){
 	// NOTE: when the images are loaded, the actual handlers will be set by the loader...
 	setupImageEventHandlers($(".image"))
 
+	// make the indicator active...
+	$(".current-indicator div")
+		.click(function(){
+			$('.current.image').click()
+		})
+		.dblclick(function(){
+			ImageGrid.toggleSingleImageMode()
+		})
+	
+
 	// buttons...
 	$('.screen-button.next-image').mousedown(ImageGrid.nextImage)
 	$('.screen-button.prev-image').mousedown(ImageGrid.prevImage)
