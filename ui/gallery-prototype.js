@@ -94,10 +94,28 @@ ImageGrid.GROUP('API',
 			// 		 modes, especially if one mode sets more modes...
 			for(var n in obj){
 				// call the callback if it exists...
-				if(this.option_props[n].callback != null){
-					this.option_props[n].callback()
+				if(this.option_props[n].set != null){
+					this.option_props[n].set()
 				}
 			}
+		}),
+	ImageGrid.ACTION({
+			doc: 'Sync and update option values.\n\n'+
+					'NOTE: this is here because JS has no direct way to '+
+					'on-demand, transparently update the value of an attr. '+
+					'.valueOf() is not transparent enough.',
+			group: 'API',
+			display: false,
+		},
+		function sync(){
+			for(var n in ImageGrid.option_props){
+				if(this.option_props[n].get != null){
+					var value = this.option_props[n].get()
+					this.option_props[n].value = value
+					this.option[n] = value
+				}
+			}
+			return ImageGrid.option	
 		}),
 	ImageGrid.ACTION({
 			doc: 'Get documentation for name.',
@@ -131,8 +149,11 @@ ImageGrid.TYPE('toggle', function(obj){
 		display: obj.display,
 		doc: obj.doc == null ? 'Stores the state of '+obj.id+' action.' : obj.doc,
 		value: obj.call('?'),
-		callback: function(){
-			obj.call()
+		set: function(){
+			obj.call(ImageGrid.option[obj.id])
+		},
+		get: function(){
+			return obj.call('?')
 		},
 		click_handler: function(){
 			obj.call()
@@ -150,6 +171,17 @@ var DEBUG = true
 
 
 ImageGrid.GROUP('State',
+	ImageGrid.OPTION({
+			name: 'CURRENT_IMAGE_ID',
+			doc: '',
+			display: false,
+			set: function(){
+				$('#' + ImageGrid.option.CURRENT_IMAGE_ID).click()
+			},
+			get: function(){
+				return parseInt($('.current.image').attr('id'))
+			}
+		}),
 	ImageGrid.OPTION({
 			name: 'BACKGROUND_MODES',
 			doc: 'list of available background styles.\n\n'+
@@ -170,10 +202,16 @@ ImageGrid.GROUP('State',
 			doc: 'Background style in normal (ribbon) mode.\n\n'+
 				'NOTE: This will get updated on background change in tuntime.\n'+
 				'NOTE: null represents the default style.',
-			callback: function(){
+			set: function(){
 				if(ImageGrid.toggleSingleImageMode('?') == 'off'){
 					ImageGrid.setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
 				}
+			},
+			get: function(){
+				if(ImageGrid.toggleSingleImageMode('?') == 'on'){
+					return ImageGrid.option.NORMAL_MODE_BG
+				}
+				return ImageGrid.toggleBackgroundModes('?')
 			}
 		}),
 	ImageGrid.OPTION({
@@ -183,10 +221,16 @@ ImageGrid.GROUP('State',
 			doc: 'Background style in single image mode.\n\n'+
 				'NOTE: This will get updated on background change in tuntime.\n'+
 				'NOTE: null represents the default style.',
-			callback: function(){
+			set: function(){
 				if(ImageGrid.toggleSingleImageMode('?') == 'on'){
 					ImageGrid.setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
 				}
+			},
+			get: function(){
+				if(ImageGrid.toggleSingleImageMode('?') == 'off'){
+					return ImageGrid.option.SINGLE_IMAGE_MODE_BG
+				}
+				return ImageGrid.toggleBackgroundModes('?')
 			}
 		}),
 	ImageGrid.OPTION({
@@ -195,10 +239,16 @@ ImageGrid.GROUP('State',
 			value: 1.0,
 			doc: 'Scale of view in image mode.\n\n'+
 				'NOTE: this will change if changed at runtime.',
-			callback: function(){
+			set: function(){
 				if(ImageGrid.toggleSingleImageMode('?') == 'off'){
 					ImageGrid.setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
 				}
+			},
+			get: function(){
+				if(ImageGrid.toggleSingleImageMode('?') == 'on'){
+					return ImageGrid.option.ORIGINAL_FIELD_SCALE
+				}
+				return getElementScale($('.field'))
 			}
 		}))
 
@@ -222,6 +272,8 @@ if(DEBUG){
 	ImageGrid.OPTION({
 			name: 'TEST',
 			title: 'Test the Other group mechanics',
+			doc: 'this will not be created wone the DEBUG flag is false',
+			display: false,
 			value: 0,
 		})
 }
@@ -894,8 +946,8 @@ function setupControlElements(){
 	$('.screen-button.zoom-in').mousedown(ImageGrid.scaleContainerUp)
 	$('.screen-button.zoom-out').mousedown(ImageGrid.scaleContainerDown)
 	// XXX
-	$('.screen-button.toggle-wide').mousedown(function(){ImageGrid.scaleContainerBy(0.2)})
-	$('.screen-button.toggle-single').mousedown(ImageGrid.toggleSingleImageMode)
+	$('.screen-button.toggle-wide').mousedown(ImageGrid.fit21Images)
+	$('.screen-button.toggle-single').mousedown(function(){ImageGrid.toggleSingleImageMode()})
 	$('.screen-button.fit-three').mousedown(ImageGrid.fitThreeImages)
 	$('.screen-button.show-controls').mousedown(function(){ImageGrid.toggleControls('on')})
 	$('.screen-button.settings').mousedown(ImageGrid.showKeyboardBindings)
@@ -1595,7 +1647,8 @@ ImageGrid.GROUP('Zooming',
 	ImageGrid.ACTION({ title: 'Fit 6 images' }, function fitSixImages(){ImageGrid.fitNImages(6)}),
 	ImageGrid.ACTION({ title: 'Fit 7 images' }, function fitSevenImages(){ImageGrid.fitNImages(7)}),
 	ImageGrid.ACTION({ title: 'Fit 8 images' }, function fitEightImages(){ImageGrid.fitNImages(8)}),
-	ImageGrid.ACTION({ title: 'Fit 9 images' }, function fitNineImages(){ImageGrid.fitNImages(9)})
+	ImageGrid.ACTION({ title: 'Fit 9 images' }, function fitNineImages(){ImageGrid.fitNImages(9)}),
+	ImageGrid.ACTION({ title: 'Fit 21 images' }, function fit21Images(){ImageGrid.fitNImages(21)})
 )
 
 

@@ -6,6 +6,7 @@ var keybindings = {
 		'default':	ImageGrid.showKeyboardBindings,			//	?
 		'ctrl':		ImageGrid.showSetup,					//	ctrl+?
 	},
+	80:		ImageGrid.showSetup,							//	p
 	70:		ImageGrid.toggleSingleImageMode,				//	f
 	13:		70,												//	Enter
 	83:		ImageGrid.toggleSingleRibbonMode,				//	s
@@ -41,23 +42,23 @@ var keybindings = {
 
 	// navigation...
 	36:		ImageGrid.firstImage,							//	Home
+	219:	36,												//	[
 	35:		ImageGrid.lastImage,							//	End
+	221:	35,												//	]
 	37:	{
 		'default': ImageGrid.prevImage,						//	Right
 		'ctrl': ImageGrid.prevScreenImages,					//	ctrl-Right
 		'alt': ImageGrid.prevScreenImages,					//	alt-Right
 	},
-	80: 	37, 											// 	BkSp
-	188:	37, 											//	p
-	8:		37,												//	<
+	8: 		37, 											// 	BkSp
+	190:	37,												//	<
 	39:	{
 		'default': ImageGrid.nextImage,						//	Left
 		'ctrl': ImageGrid.nextScreenImages,					//	ctrl-Left
 		'alt': ImageGrid.nextScreenImages,					//	alt-Left
 	},
 	32:		39,												//	Space
-	190:	39,												//	m
-	78: 	39,												//	>
+	188:	39,												//	>
 	// move view...
 	// XXX should these be s-up, s-down, ... ??
 	75:		ImageGrid.moveViewUp,							//	k
