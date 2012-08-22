@@ -1,5 +1,5 @@
 Priority work
-	[_] 87% Preview II
+	[_] 89% Preview II
 		[_] 49% native client
 			[_] 33% Windows (CEF / CEFPython)
 				[X] basic test
@@ -11,12 +11,12 @@ Priority work
 				[X] disable transitions...
 				[_] basic wrapper
 				| hook-in os-specific API
-		[_] 88% UI
-			[_] 0% disable opacity for current ribbon
-				[_] 0% opacity for current ribbon mode
+		[X] 100% UI
+			[X] 100% disable opacity for current ribbon
+				[X] 1.0 opacity for current ribbon mode
 				| automatically turned on for magnifications over 2 images 
 				| per screen....
-				[_] current image indicator
+				[X] current image indicator
 				| this can be:
 				| 	- rectangle (not border)
 				| 	- underline
@@ -123,8 +123,8 @@ Priority work
 			[X] 100% actions
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
-	[_] 26% Preview II (optional features)
-		[_] % PhoneGap + Android Issues:
+	[_] 24% Preview II (optional features)
+		[_] 0% PhoneGap + Android Issues:
 			[_] half the keyboard is not working...
 			[_] screen buttons are very laggy
 			| while swipe works super fast...

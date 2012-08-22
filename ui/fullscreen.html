@@ -88,6 +88,8 @@ $(document).ready(setup);
 </head>
 <body>
 <div class="viewer no-single-image-transitions">
+
+	<!-- Splash screen -->
 	<div class="splash">
 		<!-- XXX replace this with a background-image logo... -->
 		<table width="100%" height="100%"><tr><td align="center" valign="middle">
@@ -95,12 +97,16 @@ $(document).ready(setup);
 			<small><i>loading...</i></small>
 		</td></tr></table>
 	</div>
+
+	<!-- overlay -->
 	<div class="overlay">
 		<div class="background">
 		</div>
 		<div class="content">
 		</div>
 	</div>
+
+	<!-- button bars -->
 	<div class="controller-mini left">
 		<div class="screen-button show-controls">*</div>
 		<div class="screen-button"></div>
@@ -113,8 +119,13 @@ $(document).ready(setup);
 		<div class="screen-button fit-three">ooo</div>
 		<div class="screen-button settings">?</div>
 	</div>
+
+	<!-- image container -->
 	<div class="container">
 		<div class="field">
+			<div class="current-indicator">
+				<div></div>
+			</div>
 			<div class="ribbon">
 			</div>
 		</div>

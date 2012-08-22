@@ -738,6 +738,18 @@ function getCurrentHorizontalOffset(image){
 
 
 
+// XXX some minor inacuracies...
+function centerIndicator(){
+	// XXX something odd going on with the border here...
+	var i_border = Math.abs($('.current-indicator').outerHeight() - $('.current-indicator').height())/2
+	$('.current-indicator').css({
+		'top': ($('.ribbon').index($('.current.ribbon'))) * $('.ribbon').outerHeight() - i_border, 
+		'left': ($('.viewer').outerWidth() - $('.current-indicator').outerWidth())/2,
+	})
+}
+
+
+
 function centerSquare(){
 	$('.field').css({
 		'margin-top': getCurrentVerticalOffset()
@@ -973,7 +985,7 @@ function loadJSON(data, set_order){
 	var field = $('.field')
 
 	// drop all old content...
-	field.children().remove()
+	field.children('.ribbon').remove()
 
 	for(var i=0; i < ribbons.length; i++){
 		var images = ribbons[i]
@@ -1005,6 +1017,7 @@ function handleImageClick(){
 			.addClass('current')
 	// position the field and ribbons...
 	centerSquare()
+	centerIndicator()
 	alignRibbons()
 }
 
@@ -1297,6 +1310,21 @@ ImageGrid.GROUP('Mode: Ribbon',
 			type: 'toggle',
 		}, 
 		createCSSClassToggler('.viewer', 'single-ribbon-mode')),
+	ImageGrid.ACTION({
+			id: 'toggleCurrentRibbonOpacity',
+			title: 'Current ribbon opacity',
+			doc: 'Toggle other image transparancy/opacity in current ribbon.',
+			type: 'toggle',
+		}, 
+		createCSSClassToggler('.viewer', 'opaque-current-ribbon')),
+	ImageGrid.ACTION({
+			id: 'toggleIndicatorDot',
+			title: 'Dot indicator',
+			doc: 'Toggle indicator between dot and frame modes.\n\n'+
+					'NOTE: this is visible only when the indicator is visible.',
+			type: 'toggle',
+		}, 
+		createCSSClassToggler('.viewer', 'dot-indicator')),
 
 	// XXX this can be done in two ways:
 	// 		- keep all images when promoting, just add a class to them that 

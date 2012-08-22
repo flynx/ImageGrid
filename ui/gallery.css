@@ -102,11 +102,13 @@
 }
 
 
-.image {
-	float: left;
-
+.image, .current-indicator {
 	width: 350px;
 	height: 350px;
+}
+
+.image {
+	float: left;
 
 	background: no-repeat 50% black;
 	background-size: contain;
@@ -114,6 +116,45 @@
 	opacity: 0.3;
 
 	cursor: hand;
+}
+
+.current-indicator {
+	display: none;
+}
+
+
+.opaque-current-ribbon .current-indicator {
+	display: block;
+	position: absolute;
+}
+.opaque-current-ribbon .current-indicator div {
+	position: relative;
+	border: solid gray 4px;
+
+	margin-top: -2px;
+	margin-left: -4px;
+
+	width: 100%;
+	height: 100%;
+}
+
+.opaque-current-ribbon.dot-indicator .current-indicator {
+	display: block;
+	position: absolute;
+}
+.opaque-current-ribbon.dot-indicator .current-indicator div {
+	position: absolute;
+	border: solid silver 5px;
+
+	bottom: 5px;
+	right: 5px;
+
+	width: 5px;
+	height: 5px;
+}
+
+.opaque-current-ribbon .current.ribbon .image {
+	opacity: 1.0;
 }
 
 

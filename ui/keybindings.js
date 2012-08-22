@@ -13,6 +13,7 @@ var keybindings = {
 	65:		ImageGrid.toggleTransitions,					//	a
 	9:		ImageGrid.toggleControls,						//	tab
 	66:		ImageGrid.toggleBackgroundModes,				//	b
+	73:		ImageGrid.toggleCurrentRibbonOpacity,			//	i
 	77:		toggleMarkers,									//	m
 
 
@@ -25,7 +26,7 @@ var keybindings = {
 	48:	{
 		'default':	ImageGrid.fitImage,						// 	0
 		// XXX make this into a real action...
-		'ctrl':		function(){setContainerScale(1)},		//	ctrl+0
+		'ctrl':		function(){ImageGrid.setContainerScale(1)},		//	ctrl+0
 	},
 	49:		ImageGrid.fitImage,								//	1
 	50:		ImageGrid.fitTwoImages,							//	2
