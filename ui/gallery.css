@@ -9,6 +9,14 @@
 .overlay {
 	display: none;
 }
+
+.overlay-message {
+	color: gray;
+	margin: 30px;
+	font-weight: bold;
+	font-style: italic;
+}
+
 .splash {
 	color: gray;
 	background-color: white;

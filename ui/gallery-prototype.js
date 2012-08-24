@@ -900,10 +900,10 @@ function setupEvents(){
 	// keyboard...
 	if(DEBUG){
 		$(document)
-			.keydown(makeKeyboardHandler(keybindings, function(k){alert(k)}))
+			.keydown(makeKeyboardHandler(keybindings, ignorekeys, function(k){alert(k)}))
 	} else {
 		$(document)
-			.keydown(makeKeyboardHandler(keybindings))
+			.keydown(makeKeyboardHandler(keybindings, ignorekeys))
 	}
 	// swipe...
 	$('.viewer')
@@ -1111,12 +1111,15 @@ var KEYBOARD_HANDLER_PROPAGATE = false
  *
  * XXX might need to add meta information to generate sensible help...
  */
-function makeKeyboardHandler(keybindings, unhandled){
+function makeKeyboardHandler(keybindings, ignore, unhandled){
 	if(unhandled == null){
 		unhandled = function(){return false}
 	}
 	return function(evt){
 		var key = evt.keyCode
+		if(ignore != null && ignore.indexOf(key) != -1){
+			return true
+		}
 		// XXX ugly...
 		var modifers = evt.ctrlKey ? 'ctrl' : ''
 		modifers += evt.altKey ? (modifers != '' ? '+alt' : 'alt') : ''

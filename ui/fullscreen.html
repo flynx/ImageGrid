@@ -46,6 +46,54 @@ body {
 
 <script>
 
+// XXX stub DnD handlers...
+$(document)
+	.bind('dragover', function(e){
+		e.stopPropagation()
+		e.preventDefault()
+		// XXX is there a jQuery way out of this??
+		e.originalEvent.dataTransfer.dropEffect = 'copy' // Explicitly show this is a copy.
+
+		showInOverlay($('<div class="overlay-message">Drop files anywhere on the the screen...</div>'))
+	})
+	.bind('drop', function(e){
+		e.stopPropagation()
+		e.preventDefault()
+
+		// XXX is there a jQuery way out of this??
+		var files = e.originalEvent.dataTransfer.files
+
+		// XXX should we be using the loadJSON here???
+		// XXX desperatly need image caching and preview generation...
+
+		$('.field').children('.ribbon').remove()
+		var ribbon = $('<div class="ribbon"></div>')
+			.appendTo($('.field'))
+
+		for (var i = 0, f; f = files[i]; i++) {
+
+			if (!f.type.match('image.*')) {
+				continue
+			}
+
+			var reader = new FileReader()
+			reader.onload = function(i, ribbon){
+				return function(e){
+					// XXX need to avoid data URLs here and use plain old paths...
+					ribbon.append(makeImage(e.target.result, i))
+				}
+			}(i, ribbon)
+			reader.readAsDataURL(f)
+		}
+
+		$('.image').first().click()
+
+		$('.overlay').click()
+
+
+	})
+
+
 
 function setup(){
 	// XXX load state...

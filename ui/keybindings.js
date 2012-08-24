@@ -1,5 +1,10 @@
 /*********************************************************************/
 // NOTE: use String.fromCharCode(code)...
+// list of keys to be ignored by handler...
+var ignorekeys = [
+	116,													//	F5
+	123,													//	F12
+]
 var keybindings = {
 	// togglable modes and options...
 	191: {
@@ -59,6 +64,8 @@ var keybindings = {
 	},
 	32:		39,												//	Space
 	188:	39,												//	>
+	186:	ImageGrid.prevScreenImages,						//	;
+	222:	ImageGrid.nextScreenImages,						//	'
 	// move view...
 	// XXX should these be s-up, s-down, ... ??
 	75:		ImageGrid.moveViewUp,							//	k
@@ -85,11 +92,12 @@ var keybindings = {
 	16:		function(){},
 	17:		16,
 	18:		16,
-	20:		16,												// Caps Lock
+	20:		16,												//	Caps Lock
 
 	// refresh...
 	// XXX make this into a real action...
-	116:	function(){ return DEBUG?true:false }			// F5
+	116:	function(){ return DEBUG?true:false },			//	F5
+	112:	116,											//	F12
 }
 
 

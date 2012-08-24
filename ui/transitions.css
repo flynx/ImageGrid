@@ -1,11 +1,3 @@
-.unanimated {
-	-webkit-transition: none;
-	-moz-transition: none;
-	-o-transition: all 0 ease;
-	-ms-transition: none;	
-	transition: none;
-}
-
 .animated,
 /* mostly to animate the background... */
 .transitions-enabled.viewer,
@@ -14,6 +6,7 @@
 .transitions-enabled .demo-buttons,
 .transitions-enabled .controller,
 .transitions-enabled .controller-mini,
+.transitions-enabled .current-indicator,
 .transitions-enabled .container,
 .transitions-enabled .field,
 .transitions-enabled .ribbon, 
@@ -25,3 +18,13 @@
 	-ms-transition: all 0.2s ease;	
 	transition: all 0.2s ease;
 }
+
+
+.unanimated {
+	-webkit-transition: none;
+	-moz-transition: none;
+	-o-transition: all 0 ease;
+	-ms-transition: none;	
+	transition: none;
+}
+
