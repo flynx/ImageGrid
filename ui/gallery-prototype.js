@@ -405,7 +405,6 @@ function overlayMessage(text){
 
 
 
-
 // XXX revise!!
 function showOptionsUI(data, get_value, get_handler){
 	var tree = {}
