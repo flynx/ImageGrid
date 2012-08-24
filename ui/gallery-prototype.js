@@ -374,7 +374,6 @@ function toKeyName(code){
 }
 
 
-
 // show a jQuary opject in viewer overlay...
 // XXX need to set .scrollTop(0) when showing different UI... 
 // 		...and not set it when the UI is the same
@@ -397,6 +396,13 @@ function showInOverlay(obj){
 		.fadeIn()
 	return obj
 }
+
+
+
+function overlayMessage(text){
+	return showInOverlay($('<div class="overlay-message">' +text+ '</div>'))
+}
+
 
 
 

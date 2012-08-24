@@ -46,6 +46,7 @@ body {
 
 <script>
 
+
 // XXX stub DnD handlers...
 $(document)
 	.bind('dragover', function(e){
@@ -54,7 +55,7 @@ $(document)
 		// XXX is there a jQuery way out of this??
 		e.originalEvent.dataTransfer.dropEffect = 'copy' // Explicitly show this is a copy.
 
-		showInOverlay($('<div class="overlay-message">Drop files anywhere on the the screen...</div>'))
+		overlayMessage('Drop files anywhere on the the screen...')
 	})
 	.bind('drop', function(e){
 		e.stopPropagation()
