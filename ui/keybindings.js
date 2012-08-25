@@ -30,9 +30,9 @@ var keybindings = {
 	189:	ImageGrid.scaleContainerDown,					//	-
 	// zoom presets...
 	48:	{
-		'default':	ImageGrid.fitImage,						// 	0
+		'default':	ImageGrid.centerCurrentImage,			// 	0
 		// XXX make this into a real action...
-		'ctrl':		function(){ImageGrid.setContainerScale(1)},		//	ctrl+0
+		'ctrl':		ImageGrid.fitImage,						//	ctrl+0
 	},
 	49:		ImageGrid.fitImage,								//	1
 	50:		ImageGrid.fitTwoImages,							//	2
@@ -56,14 +56,14 @@ var keybindings = {
 		'alt': ImageGrid.prevScreenImages,					//	alt-Right
 	},
 	8: 		37, 											// 	BkSp
-	190:	37,												//	<
+	188:	37,												//	<
 	39:	{
 		'default': ImageGrid.nextImage,						//	Left
 		'ctrl': ImageGrid.nextScreenImages,					//	ctrl-Left
 		'alt': ImageGrid.nextScreenImages,					//	alt-Left
 	},
 	32:		39,												//	Space
-	188:	39,												//	>
+	190:	39,												//	>
 	186:	ImageGrid.prevScreenImages,						//	;
 	222:	ImageGrid.nextScreenImages,						//	'
 	// move view...
@@ -72,7 +72,8 @@ var keybindings = {
 	74:		ImageGrid.moveViewDown,							//	j
 	72:		ImageGrid.moveViewLeft,							//	h
 	76:		ImageGrid.moveViewRight,						//	l
-	79:		ImageGrid.centerCurrentImage,					//	o
+	// XXX use this to open...
+	//79:		ImageGrid.centerCurrentImage,					//	o
 
 
 	// combined navigation with actions..

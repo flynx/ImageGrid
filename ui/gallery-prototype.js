@@ -1644,6 +1644,7 @@ ImageGrid.GROUP('Zooming',
 
 			var f = Math.min(H/h, W/w)
 
+			ImageGrid.centerCurrentImage()
 			ImageGrid.setContainerScale(f)
 		}),
 	// the fit N image pack, for 1 <= N <= 9

@@ -1,5 +1,9 @@
 Priority work
-	[_] 89% Preview II
+	[_] 74% Preview II
+		[_] 0% save state
+			[_] minomal: Local Storage
+			[_] local JSON
+			[_] CouchDB
 		[_] 49% native client
 			[_] 33% Windows (CEF / CEFPython)
 				[X] basic test
