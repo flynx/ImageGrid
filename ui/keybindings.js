@@ -1,10 +1,12 @@
 /*********************************************************************/
 // NOTE: use String.fromCharCode(code)...
-// list of keys to be ignored by handler...
+// list of keys to be ignored by handler but still handled by the browser...
 var ignorekeys = [
 	116,													//	F5
 	123,													//	F12
 ]
+
+
 var keybindings = {
 	// togglable modes and options...
 	191: {
@@ -87,6 +89,9 @@ var keybindings = {
 		'shift': ImageGrid.shiftImageUp,					//	shift-Up
 		'ctrl+shift': ImageGrid.shiftImageUpNewRibbon		//	ctrl-shift-Up
 	},
+
+	// misc actions...
+	82:		ImageGrid.reverseImageOrder,					//	r
 
 
 	// ignore the modifiers (shift, alt, ctrl, caps)...
