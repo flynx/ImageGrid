@@ -115,6 +115,9 @@ ImageGrid.GROUP('API',
 		},
 		function load(){
 			loadJSON($.jStorage.get(ImageGrid.option.KEY_NAME_STATE, {}))
+			// NOTE: we need to load the config ACTER the state as to be 
+			// 		able to set correct state-related data like current 
+			// 		image ID...
 			ImageGrid.set($.jStorage.get(ImageGrid.option.KEY_NAME_CONFIG, {}))
 		}),
 	ImageGrid.ACTION({

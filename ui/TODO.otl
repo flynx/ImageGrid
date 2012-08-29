@@ -1,12 +1,17 @@
 Priority work
-	[_] 55% Preview II
-		[_] 0% save state
-			[_] minimal: Local Storage
+	[_] 61% Preview II
+		[_] 20% save state
+			[X] minimal: Local Storage (manual)
 			| works across all targets (CEF, PhoneGap, browser)
 			[_] local JSON (file)
 			[_] CouchDB
-		[_] 0% load state
-			[_] auto: last state
+			[_] 0% autosave
+				[_] on edit
+				[_] on timer
+			[_] versions/history
+		[_] 33% load state
+			[X] load mechanics
+			[_] auto-load last state on startup
 			[_] manual
 		[_] 50% load folder
 			[X] drag'n'drop
