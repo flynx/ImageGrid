@@ -26,6 +26,7 @@ body {
 
 <script src="jquery.js"></script>
 <script src="jquery-ui-1.8.22.custom.min.js"></script>
+<script src="jstorage.js"></script>
 
 <script src="jquery.touchSwipe.js"></script>
 
@@ -64,7 +65,8 @@ function setup(){
 	// XXX not allowed...
 	//$.getJSON('images.js', loadImages})
 	// XXX STUB
-	loadImages(image_list)
+	//loadImages(image_list)
+	loadJSON(image_list)
 
 	// set the default position and init...
 	$('.current.image').click()
