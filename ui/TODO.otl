@@ -1,14 +1,16 @@
 Priority work
-	[_] 67% Preview II
-		[_] 42% save state
+	[_] 68% Preview II
+		[_] 47% save state
 			[X] minimal: Local Storage (manual)
 			| works across all targets (CEF, PhoneGap, browser)
 			[_] local JSON (file)
 			[_] CouchDB
-			[_] 0% autosave
-				[_] on edit
+			[_] 33% autosave
+				[X] on edit
+				[_] on navigate
+				| only save position to save time...
 				[_] on timer
-			[X] manual save
+			[X] manual incremental save
 			[_] manual named save
 			[X] versions/history
 		[_] 66% load state

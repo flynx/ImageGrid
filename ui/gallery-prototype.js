@@ -24,10 +24,18 @@ var ImageGrid = {
 	// 		call	- callable
 	// XXX revise...
 	ACTION: function(obj, func){
+		var base = this
+		var id = func.name != '' ? func.name : obj.id
+
 		if(func != null){
 			obj = $.extend(obj, {
-				id: func.name != '' ? func.name : obj.id,
-				call: func 
+				id: id,
+				//call: func 
+				call: function(){
+					res = func.apply(base, arguments)
+					$(document).trigger(id)
+					return res
+				}
 			})
 		}
 		// add all the attrs to the function...
@@ -99,7 +107,20 @@ ImageGrid.GROUP('API',
 				}
 			}
 		}),
+	ImageGrid.ACTION({
+			doc: 'Get documentation for name.',
+			group: 'API',
+			display: false,
+		},
+		function doc(name){
+			return {
+				action: this[name] != null ? this[name].doc : null,
+				action_func: this[name] != null ? this[name].func_doc : null,
+				option: this.option_props[name] != null ? this.option_props[name].doc : null,
+			}
+		}))
 
+ImageGrid.GROUP('State',
 	ImageGrid.ACTION({
 			doc: 'Save state to local storage',
 			group: 'API',
@@ -182,7 +203,6 @@ ImageGrid.GROUP('API',
 			history.push(cur)
 			$.jStorage.set(this.option.KEY_NAME_HISTORY, history)
 		}),
-
 	ImageGrid.ACTION({
 			doc: 'Sync and update option values.\n\n'+
 					'NOTE: this is here because JS has no direct way to '+
@@ -200,18 +220,6 @@ ImageGrid.GROUP('API',
 				}
 			}
 			return this.option	
-		}),
-	ImageGrid.ACTION({
-			doc: 'Get documentation for name.',
-			group: 'API',
-			display: false,
-		},
-		function doc(name){
-			return {
-				action: this[name] != null ? this[name].doc : null,
-				action_func: this[name] != null ? this[name].func_doc : null,
-				option: this.option_props[name] != null ? this.option_props[name].doc : null,
-			}
 		}))
 
 
@@ -221,8 +229,10 @@ ImageGrid.TYPE('toggle', function(obj){
 	// wrap the call to set the option...
 	// XXX this is context mirroring...
 	obj.call = function(action){
-		var res = call(action)
-		ImageGrid.option[obj.id] = call('?')
+		//var res = call(action)
+		var res = call.apply(ImageGrid, [action])
+		//ImageGrid.option[obj.id] = call('?')
+		ImageGrid.option[obj.id] = call.apply(ImageGrid, ['?'])
 		return res
 	}
 	// add an option to store the state...
@@ -1006,6 +1016,19 @@ function setDefaultInitialState(){
 
 
 function setupEvents(){
+	// persistence...
+	$(document)
+		// main modifier events...
+		.bind('shiftImageUp shiftImageDown reverseImageOrder '+
+				'reverseRibbons shiftImageUpNewRibbon shiftImageDownNewRibbon', 
+				ImageGrid.saveState)
+		/*
+		// XXX should this be here?
+		.bind('nextImage prevImage nextScreenImages prevScreenImages '+
+				'focusAboveRibbon focusBelowRibbon', 
+				ImageGrid.saveState)
+		*/
+
 	// resize...
 	$(window).resize(function() {
 		// XXX HACK
