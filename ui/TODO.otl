@@ -1,16 +1,23 @@
 Priority work
-	[_] 62% Preview II
-		[_] 50% load folder
-			[X] drag'n'drop
-			[_] open dilog
+	[_] 55% Preview II
+		[_] 0% save state
+			[_] minimal: Local Storage
+			| works across all targets (CEF, PhoneGap, browser)
+			[_] local JSON (file)
+			[_] CouchDB
 		[_] 0% load state
 			[_] auto: last state
 			[_] manual
-		[_] 0% save state
-			[_] minimal: Local Storage
-			| XXX does not seem to work in CEF
-			[_] local JSON (file)
-			[_] CouchDB
+		[_] 50% load folder
+			[X] drag'n'drop
+			[_] open dilog
+		[_] 0% dynamic loading of images
+			[_] sizes on zoom
+			[_] stream on navigate
+			| NOTE: here the trigger must be proximity to the view as we 
+			| 		can reach an image not just by navigating close but 
+			| 		also by scrolling/dragging to it (without changing the
+			| 		current image)...
 		[_] 49% native client
 			[_] 33% Windows (CEF / CEFPython)
 				[X] basic test

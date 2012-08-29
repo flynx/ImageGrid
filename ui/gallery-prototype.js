@@ -100,6 +100,24 @@ ImageGrid.GROUP('API',
 			}
 		}),
 	ImageGrid.ACTION({
+			doc: 'save state to local storage',
+			group: 'API',
+			display: false,
+		},
+		function save(){
+			$.jStorage.set(ImageGrid.option.KEY_NAME_CONFIG, ImageGrid.sync())
+			$.jStorage.set(ImageGrid.option.KEY_NAME_STATE, buildJSON())
+		}),
+	ImageGrid.ACTION({
+			doc: 'load state from local storage',
+			group: 'API',
+			display: false,
+		},
+		function load(){
+			loadJSON($.jStorage.get(ImageGrid.option.KEY_NAME_STATE, {}))
+			ImageGrid.set($.jStorage.get(ImageGrid.option.KEY_NAME_CONFIG, {}))
+		}),
+	ImageGrid.ACTION({
 			doc: 'Sync and update option values.\n\n'+
 					'NOTE: this is here because JS has no direct way to '+
 					'on-demand, transparently update the value of an attr. '+
@@ -171,6 +189,16 @@ var DEBUG = true
 
 
 ImageGrid.GROUP('State',
+	ImageGrid.OPTION({
+			name: 'KEY_NAME_CONFIG',
+			title: 'Name of localStorage key to store config data.',
+			value: 'ImageGrid_config',
+		}),
+	ImageGrid.OPTION({
+			name: 'KEY_NAME_STATE',
+			title: 'Name of localStorage key to store state.',
+			value: 'ImageGrid_state',
+		}),
 	ImageGrid.OPTION({
 			name: 'CURRENT_IMAGE_ID',
 			doc: '',
