@@ -99,27 +99,79 @@ ImageGrid.GROUP('API',
 				}
 			}
 		}),
+
 	ImageGrid.ACTION({
-			doc: 'save state to local storage',
+			doc: 'Save state to local storage',
 			group: 'API',
 			display: false,
 		},
-		function save(){
-			$.jStorage.set(ImageGrid.option.KEY_NAME_CONFIG, ImageGrid.sync())
-			$.jStorage.set(ImageGrid.option.KEY_NAME_STATE, buildJSON())
+		function save(name){
+			if(name == null){
+				name = ''
+				// push the last config to a new version...
+				var history = $.jStorage.get(ImageGrid.option.KEY_NAME_HISTORY, [])
+				// XXX should we add a date?
+				history.push($.jStorage.get(ImageGrid.option.KEY_NAME_STATE))
+				// remove versions beyond ImageGrid.option.VERSIONS_TO_KEEP
+				var c = history.length - ImageGrid.option.VERSIONS_TO_KEEP
+				if(c > 0){
+					history.splice(0, c)
+				}
+				$.jStorage.set(ImageGrid.option.KEY_NAME_HISTORY, history)
+			} else {
+				name = '-' + name
+			}
+			$.jStorage.set(ImageGrid.option.KEY_NAME_CONFIG+name, ImageGrid.sync())
+			$.jStorage.set(ImageGrid.option.KEY_NAME_STATE+name, buildJSON())
 		}),
 	ImageGrid.ACTION({
-			doc: 'load state from local storage',
+			doc: 'Load state from local storage',
 			group: 'API',
 			display: false,
 		},
-		function load(){
-			loadJSON($.jStorage.get(ImageGrid.option.KEY_NAME_STATE, {}))
+		function load(name){
+			if(name == null){
+				name = ''
+			} else {
+				name = '-' + name
+			}
+			loadJSON($.jStorage.get(ImageGrid.option.KEY_NAME_STATE+name, {}))
 			// NOTE: we need to load the config ACTER the state as to be 
 			// 		able to set correct state-related data like current 
 			// 		image ID...
-			ImageGrid.set($.jStorage.get(ImageGrid.option.KEY_NAME_CONFIG, {}))
+			ImageGrid.set($.jStorage.get(ImageGrid.option.KEY_NAME_CONFIG+name, {}))
 		}),
+	ImageGrid.ACTION({
+			doc: 'Revert to last verison. if n is given then revert n versions back.\n\n'+
+					'NOTE: this will push the current state to history, thus '+
+							'enabling trivial redo.\n'+
+					'NOTE: if n is greater than 1 then all the skipped steps will '+
+							'get dropped.',
+			group: 'API',
+			display: false,
+		},
+		function undo(n){
+			if(n < 1){
+				return
+			}
+			if(n == null){
+				n = 1
+			}
+			var cur = buildJSON()
+			var history = $.jStorage.get(ImageGrid.option.KEY_NAME_HISTORY, [])
+			if(history.length <= n){
+				n = history.length-1
+			}
+			// do the loading...
+			var i = history.length - n
+			loadJSON(history[i])
+			// remove the history top...
+			history.splice(i, history.length)
+			// push the prev state to enable redo...
+			history.push(cur)
+			$.jStorage.set(ImageGrid.option.KEY_NAME_HISTORY, history)
+		}),
+
 	ImageGrid.ACTION({
 			doc: 'Sync and update option values.\n\n'+
 					'NOTE: this is here because JS has no direct way to '+
@@ -196,12 +248,26 @@ ImageGrid.GROUP('State',
 			name: 'KEY_NAME_CONFIG',
 			title: 'Name of localStorage key to store config data.',
 			value: 'ImageGrid_config',
+			display: false,
 		}),
 	ImageGrid.OPTION({
 			name: 'KEY_NAME_STATE',
 			title: 'Name of localStorage key to store state.',
 			value: 'ImageGrid_state',
+			display: false,
 		}),
+	ImageGrid.OPTION({
+			name: 'KEY_NAME_HISTORY',
+			title: 'Name of localStorage key to store state history.',
+			value: 'ImageGrid_history',
+			display: false,
+		}),
+	ImageGrid.OPTION({
+			name: 'VERSIONS_TO_KEEP',
+			title: 'History depth.',
+			value: 10,
+		}),
+	/*
 	ImageGrid.OPTION({
 			name: 'CURRENT_IMAGE_ID',
 			doc: '',
@@ -213,6 +279,7 @@ ImageGrid.GROUP('State',
 				return parseInt($('.current.image').attr('id'))
 			}
 		}),
+	*/
 	ImageGrid.OPTION({
 			name: 'BACKGROUND_MODES',
 			doc: 'list of available background styles.\n\n'+
@@ -1037,6 +1104,7 @@ function loadImages(json){
  *
  * format:
  * 	{
+ * 		position: <image-id>,
  * 		ribbons: [
  * 			<image-id>: {
  * 				url: <image-URL>,
@@ -1052,6 +1120,7 @@ function buildJSON(get_order){
 	}
 	var ribbons = $('.ribbon')
 	res = {
+		position: $('.current.image').attr('id'),
 		ribbons: []
 	}
 	for(var i=0; i < ribbons.length; i++){
@@ -1097,7 +1166,11 @@ function loadJSON(data, set_order){
 				.appendTo(ribbon)
 		}
 	}
-	$('.image').first().click()
+	if(data.position != null){
+		$('#' + data.position).click()
+	} else {
+		$('.image').first().click()
+	}
 }
 
 
