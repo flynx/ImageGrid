@@ -1,6 +1,6 @@
 Priority work
-	[_] 63% Preview II
-		[_] 40% save state
+	[_] 67% Preview II
+		[_] 42% save state
 			[X] minimal: Local Storage (manual)
 			| works across all targets (CEF, PhoneGap, browser)
 			[_] local JSON (file)
@@ -8,10 +8,12 @@ Priority work
 			[_] 0% autosave
 				[_] on edit
 				[_] on timer
+			[X] manual save
+			[_] manual named save
 			[X] versions/history
-		[_] 33% load state
+		[_] 66% load state
 			[X] load mechanics
-			[_] auto-load last state on startup
+			[X] auto-load last state on startup
 			[_] manual
 		[_] 50% load folder
 			[X] drag'n'drop

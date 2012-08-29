@@ -24,6 +24,7 @@ var keybindings = {
 	73:		ImageGrid.toggleCurrentRibbonOpacity,			//	i
 	77:		toggleMarkers,									//	m
 
+	87:		ImageGrid.saveState,							//	w
 
 	27:		ImageGrid.closeOverlay,							//	Esc	
 

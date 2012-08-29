@@ -1096,17 +1096,19 @@ function makeImage(url, order, set_order){
 
 
 
-function loadImages(json){
-	var images = json.images
-	var ribbon = $('.ribbon').last()
+function loadImagesFromList(images){
+	var field = $('.field')
 
-	$('.image').remove()
+	field.children('.ribbon').remove()
+
+	var ribbon = $('<div class="ribbon"></div>')
+		.appendTo(field)
 
 	for(var i = 0; i < images.length; i++){
 		makeImage(images[i], i)
 			.appendTo(ribbon)
 	}
-	ribbon.children().first().click()
+	$('.image').first().click()
 }
 
 
@@ -1153,7 +1155,6 @@ function buildJSON(get_order){
 
 
 
-// XXX use this instead of loadImages(...)
 // XXX might be good to add images in packs here, not one by one...
 function loadJSON(data, set_order){
 	if(set_order == null){
@@ -1286,6 +1287,12 @@ function makeKeyboardHandler(keybindings, ignore, unhandled){
 /************************************************ Mode & UI Actions **/
 
 ImageGrid.GROUP('Mode: All',
+	ImageGrid.ACTION({
+			title: 'Save current state.',
+		},
+		function saveState(){
+			ImageGrid.save()
+		}),
 	ImageGrid.ACTION({
 			title: 'Get the background mode',
 			display: false,
