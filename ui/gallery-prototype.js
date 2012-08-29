@@ -105,24 +105,35 @@ ImageGrid.GROUP('API',
 			group: 'API',
 			display: false,
 		},
+		function save_config(name){
+			if(name == null){
+				name = ''
+			}
+			$.jStorage.set(this.option.KEY_NAME_CONFIG+name, this.sync())
+		}),
+	ImageGrid.ACTION({
+			doc: 'Save state to local storage',
+			group: 'API',
+			display: false,
+		},
 		function save(name){
 			if(name == null){
 				name = ''
 				// push the last config to a new version...
-				var history = $.jStorage.get(ImageGrid.option.KEY_NAME_HISTORY, [])
+				var history = $.jStorage.get(this.option.KEY_NAME_HISTORY, [])
 				// XXX should we add a date?
-				history.push($.jStorage.get(ImageGrid.option.KEY_NAME_STATE))
-				// remove versions beyond ImageGrid.option.VERSIONS_TO_KEEP
-				var c = history.length - ImageGrid.option.VERSIONS_TO_KEEP
+				history.push($.jStorage.get(this.option.KEY_NAME_STATE))
+				// remove versions beyond VERSIONS_TO_KEEP...
+				var c = history.length - this.option.VERSIONS_TO_KEEP
 				if(c > 0){
 					history.splice(0, c)
 				}
-				$.jStorage.set(ImageGrid.option.KEY_NAME_HISTORY, history)
+				$.jStorage.set(this.option.KEY_NAME_HISTORY, history)
 			} else {
 				name = '-' + name
 			}
-			$.jStorage.set(ImageGrid.option.KEY_NAME_CONFIG+name, ImageGrid.sync())
-			$.jStorage.set(ImageGrid.option.KEY_NAME_STATE+name, buildJSON())
+			this.save_config()
+			$.jStorage.set(this.option.KEY_NAME_STATE+name, buildJSON())
 		}),
 	ImageGrid.ACTION({
 			doc: 'Load state from local storage',
@@ -135,11 +146,11 @@ ImageGrid.GROUP('API',
 			} else {
 				name = '-' + name
 			}
-			loadJSON($.jStorage.get(ImageGrid.option.KEY_NAME_STATE+name, {}))
+			loadJSON($.jStorage.get(this.option.KEY_NAME_STATE+name, {}))
 			// NOTE: we need to load the config ACTER the state as to be 
 			// 		able to set correct state-related data like current 
 			// 		image ID...
-			ImageGrid.set($.jStorage.get(ImageGrid.option.KEY_NAME_CONFIG+name, {}))
+			this.set($.jStorage.get(this.option.KEY_NAME_CONFIG+name, {}))
 		}),
 	ImageGrid.ACTION({
 			doc: 'Revert to last verison. if n is given then revert n versions back.\n\n'+
@@ -158,7 +169,7 @@ ImageGrid.GROUP('API',
 				n = 1
 			}
 			var cur = buildJSON()
-			var history = $.jStorage.get(ImageGrid.option.KEY_NAME_HISTORY, [])
+			var history = $.jStorage.get(this.option.KEY_NAME_HISTORY, [])
 			if(history.length <= n){
 				n = history.length-1
 			}
@@ -169,7 +180,7 @@ ImageGrid.GROUP('API',
 			history.splice(i, history.length)
 			// push the prev state to enable redo...
 			history.push(cur)
-			$.jStorage.set(ImageGrid.option.KEY_NAME_HISTORY, history)
+			$.jStorage.set(this.option.KEY_NAME_HISTORY, history)
 		}),
 
 	ImageGrid.ACTION({
@@ -181,14 +192,14 @@ ImageGrid.GROUP('API',
 			display: false,
 		},
 		function sync(){
-			for(var n in ImageGrid.option_props){
+			for(var n in this.option_props){
 				if(this.option_props[n].get != null){
 					var value = this.option_props[n].get()
 					this.option_props[n].value = value
 					this.option[n] = value
 				}
 			}
-			return ImageGrid.option	
+			return this.option	
 		}),
 	ImageGrid.ACTION({
 			doc: 'Get documentation for name.',
