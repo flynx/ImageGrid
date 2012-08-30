@@ -161,17 +161,23 @@ ImageGrid.GROUP('State',
 			group: 'API',
 			display: false,
 		},
-		function load(name){
+		function load(name, dfl_state, dfl_config){
 			if(name == null){
 				name = ''
 			} else {
 				name = '-' + name
 			}
-			loadJSON($.jStorage.get(this.option.KEY_NAME_STATE+name, {}))
+			if(dfl_state == null){
+				dfl_state = {}
+			}
+			if(dfl_config == null){
+				dfl_config = {}
+			}
+			loadJSON($.jStorage.get(this.option.KEY_NAME_STATE+name, dfl_state))
 			// NOTE: we need to load the config ACTER the state as to be 
 			// 		able to set correct state-related data like current 
 			// 		image ID...
-			this.set($.jStorage.get(this.option.KEY_NAME_CONFIG+name, {}))
+			this.set($.jStorage.get(this.option.KEY_NAME_CONFIG+name, dfl_config))
 		}),
 	ImageGrid.ACTION({
 			doc: 'Revert to last verison. if n is given then revert n versions back.\n\n'+
@@ -289,6 +295,7 @@ ImageGrid.GROUP('State',
 			value: 10,
 		}),
 	/*
+	// XXX is this the correct way to go...
 	ImageGrid.OPTION({
 			name: 'CURRENT_IMAGE_ID',
 			doc: '',
@@ -1016,18 +1023,31 @@ function setDefaultInitialState(){
 
 
 function setupEvents(){
+	var updated = false
 	// persistence...
 	$(document)
 		// main modifier events...
 		.bind('shiftImageUp shiftImageDown reverseImageOrder '+
 				'reverseRibbons shiftImageUpNewRibbon shiftImageDownNewRibbon', 
-				ImageGrid.saveState)
+				function(){
+					updated = true
+				})
 		/*
-		// XXX should this be here?
+		// navigation events...
 		.bind('nextImage prevImage nextScreenImages prevScreenImages '+
 				'focusAboveRibbon focusBelowRibbon', 
-				ImageGrid.saveState)
+				function(){
+					updated = true
+				})
 		*/
+	// save things if updated within a minute...
+	setInterval(function(){
+			if(updated){
+				ImageGrid.saveState()
+				updated = false
+			}}, 60000)
+	// autosave every ten minutes...
+	setInterval(ImageGrid.saveState, 600000)
 
 	// resize...
 	$(window).resize(function() {
@@ -1179,11 +1199,17 @@ function buildJSON(get_order){
 
 
 // XXX might be good to add images in packs here, not one by one...
-function loadJSON(data, set_order){
+function loadJSON(data, position, set_order){
+	if(position == null){
+		position = data.position
+	}
 	if(set_order == null){
 		set_order = setImageOrder
 	}
 	var ribbons = data.ribbons
+	if(ribbons == null){
+		return
+	}
 	var field = $('.field')
 
 	// drop all old content...
@@ -1201,8 +1227,8 @@ function loadJSON(data, set_order){
 				.appendTo(ribbon)
 		}
 	}
-	if(data.position != null){
-		$('#' + data.position).click()
+	if(position != null && $('#' + position).length != 0){
+		$('#' + position).click()
 	} else {
 		$('.image').first().click()
 	}

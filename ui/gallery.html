@@ -64,9 +64,8 @@ function setup(){
 	// load images...
 	// XXX not allowed...
 	//$.getJSON('images.js', loadImages})
-	// XXX STUB
-	//loadImages(image_list)
-	loadJSON(image_list)
+
+	ImageGrid.load(null, image_list)
 
 	// set the default position and init...
 	$('.current.image').click()
