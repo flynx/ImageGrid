@@ -1041,11 +1041,12 @@ function setupEvents(){
 				})
 		*/
 	// save things if updated within a minute...
+	// XXX this gets very slow when saving a large data dump...
 	setInterval(function(){
 			if(updated){
 				ImageGrid.saveState()
 				updated = false
-			}}, 60000)
+			}}, 120000)
 	// autosave every ten minutes...
 	// XXX do we really need this?
 	//setInterval(ImageGrid.saveState, 600000)
