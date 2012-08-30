@@ -1047,7 +1047,8 @@ function setupEvents(){
 				updated = false
 			}}, 60000)
 	// autosave every ten minutes...
-	setInterval(ImageGrid.saveState, 600000)
+	// XXX do we really need this?
+	//setInterval(ImageGrid.saveState, 600000)
 
 	// resize...
 	$(window).resize(function() {
