@@ -1183,6 +1183,10 @@ function buildJSON(get_order){
 	}
 	for(var i=0; i < ribbons.length; i++){
 		var images = $(ribbons[i]).children('.image')
+		// skip empty ribbons...
+		if(images.length == 0){
+			continue
+		}
 		var ribbon = {}
 		res.ribbons[res.ribbons.length] = ribbon
 		for(var j=0; j < images.length; j++){
@@ -1219,6 +1223,10 @@ function loadJSON(data, position, set_order){
 
 	for(var i=0; i < ribbons.length; i++){
 		var images = ribbons[i]
+		// skip empty ribbons...
+		if(images.length == 0){
+			continue
+		}
 		// create ribbon...
 		var ribbon = $('<div class="ribbon"></div>')
 			.appendTo(field)
