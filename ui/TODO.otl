@@ -1,6 +1,13 @@
 Priority work
 	[_] 62% Preview II
-		[_] make shuft up/down direction-aware...
+		[_] 0% dynamic loading of images
+			[_] sizes on zoom
+			[_] stream on navigate
+			| NOTE: here the trigger must be proximity to the view as we 
+			| 		can reach an image not just by navigating close but 
+			| 		also by scrolling/dragging to it (without changing the
+			| 		current image)...
+		[_] make shift up/down direction-aware...
 		| i.e. if we are going through images in a direction select the 
 		| next image in that direction when shifting...
 		[_] 57% save state
@@ -23,14 +30,7 @@ Priority work
 			[_] manual
 		[_] 50% load folder
 			[X] drag'n'drop
-			[_] open dilog
-		[_] 0% dynamic loading of images
-			[_] sizes on zoom
-			[_] stream on navigate
-			| NOTE: here the trigger must be proximity to the view as we 
-			| 		can reach an image not just by navigating close but 
-			| 		also by scrolling/dragging to it (without changing the
-			| 		current image)...
+			[_] open dilog / browser
 		[_] 49% native client
 			[_] 33% Windows (CEF / CEFPython)
 				[X] basic test
