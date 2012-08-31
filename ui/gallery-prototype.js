@@ -1025,6 +1025,7 @@ function setDefaultInitialState(){
 function setupEvents(){
 	var updated = false
 	// persistence...
+	$(window).unload(ImageGrid.saveState)
 	$(document)
 		// main modifier events...
 		.bind('shiftImageUp shiftImageDown reverseImageOrder '+

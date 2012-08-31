@@ -1,16 +1,19 @@
 Priority work
-	[_] 68% Preview II
-		[_] 53% save state
+	[_] 62% Preview II
+		[_] make shuft up/down direction-aware...
+		| i.e. if we are going through images in a direction select the 
+		| next image in that direction when shifting...
+		[_] 57% save state
 			[X] minimal: Local Storage (manual)
 			| works across all targets (CEF, PhoneGap, browser)
 			[_] local JSON (file)
 			[_] CouchDB
-			[_] 75% autosave
+			[X] 100% autosave
 				[X] on edit
 				[X] on navigate
 				| only save position to save time...
 				[X] on timer
-				[_] on unload
+				[X] on unload
 			[X] manual incremental save
 			[_] manual named save
 			[X] versions/history
