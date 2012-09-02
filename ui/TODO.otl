@@ -3,6 +3,16 @@ Priority work
 		[_] 0% dynamic loading of images
 			[_] sizes on zoom
 			[_] stream on navigate
+			| parameters that affect loading:
+			| 	- current view size				-> image size must be closest
+			| 										above this
+			| 	- viewer width in images		-> number of widths (2-3) 
+			| 										distance is used to trigger
+			| 										loading or unloading of images
+			| 										depending on direction
+			| 										NOTE: this is done for each
+			| 											  image size in use.
+			|
 			| NOTE: here the trigger must be proximity to the view as we 
 			| 		can reach an image not just by navigating close but 
 			| 		also by scrolling/dragging to it (without changing the

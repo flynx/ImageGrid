@@ -445,7 +445,6 @@ function cmpImageOrder(a, b){
 }
 
 
-
 // NOTE: don't understand why am I the one who has to write this...
 var SPECIAL_KEYS = {
 	9:		'Tab',
@@ -503,6 +502,7 @@ function toKeyName(code){
 // show a jQuary opject in viewer overlay...
 // XXX need to set .scrollTop(0) when showing different UI... 
 // 		...and not set it when the UI is the same
+// XXX this must create it's own overlay...
 function showInOverlay(obj){
 	obj.click(function(){ return false })
 	// clean things up...
@@ -650,6 +650,19 @@ function setElementScale(elem, scale){
 		'-webkit-transform': 'scale('+scale+', '+scale+')',
 	})
 }
+
+
+// returns the width of the current image square...
+function getCurrentImageSize(){
+	return ImageGrid.getContainerScale() * $('.image').width()
+}
+
+
+// returns the number of images fitting viewer size...
+function getViewerWidthImages(){
+	return Math.floor($('.viewer').width()/getCurrentImageSize())
+}
+
 
 // this will create a function that will add/remove a css_class to elem 
 // calling the optional callbacks before and/or after.
@@ -1784,6 +1797,13 @@ ImageGrid.GROUP('Navigation',
 /********************************************************** Zooming **/
 
 ImageGrid.GROUP('Zooming',
+	ImageGrid.ACTION({
+			title: 'Get container scale',
+			display: false,
+		},
+		function getContainerScale(){
+			return getElementScale($('.field'))
+		}),
 	ImageGrid.ACTION({
 			title: 'Scale container by factor',
 			display: false,
