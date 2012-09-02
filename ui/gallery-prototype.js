@@ -754,7 +754,6 @@ function clickAfterTransitionsDone(img){
 
 
 
-
 // find an image object after which to position image ID...
 // used for two main tasks:
 // 	- positioning promoted/demoted images
@@ -780,7 +779,6 @@ function getImageBefore_lin(id, ribbon, get_order){
 	}
 	return prev
 }
-
 
 // generic binery search for element just before the id...
 // NOTE: if id is in lst, this will return the element just before it.
@@ -1041,14 +1039,14 @@ function setupEvents(){
 	$(window).unload(ImageGrid.saveState)
 	$(document)
 		// main modifier events...
-		.bind('shiftImageUp shiftImageDown reverseImageOrder '+
+		.on('shiftImageUp shiftImageDown reverseImageOrder '+
 				'reverseRibbons shiftImageUpNewRibbon shiftImageDownNewRibbon', 
 				function(){
 					updated = true
 				})
 		/*
 		// navigation events...
-		.bind('nextImage prevImage nextScreenImages prevScreenImages '+
+		.on('nextImage prevImage nextScreenImages prevScreenImages '+
 				'focusAboveRibbon focusBelowRibbon', 
 				function(){
 					updated = true
