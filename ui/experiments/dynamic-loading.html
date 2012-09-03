@@ -117,21 +117,7 @@ function makeImage(id){
 	return $('<div class="image"/>')
 			.attr({id: id})
 			.click(selectImage)
-}
-
-function updateImage(image, cur, r, index){
-	console.log(cur, r, index)
-	var id = image.attr('id')
-	if(id == cur){
-		image.addClass('current')
-	}
-	var cur_i = index.indexOf(cur)
-	if(cur_i < 0 || Math.abs(index.indexOf(id)-cur_i) > r){
-		image.addClass('unloaded')
-	} else {
-		image.removeClass('unloaded')
-	}
-	return image
+			.addClass('unloaded')
 }
 
 function loadJSON(json){
@@ -145,18 +131,35 @@ function loadJSON(json){
 	for(var i=0; i<ribbons.length; i++){
 		var images = ribbons[i]
 		var index = enumerate(images)
-		if(view_ribbons[i] == null){
-			var ribbon = $('<div class="ribbon"/>').appendTo(field)
-			for(var j in images){
-				updateImage(makeImage(j), cur_id, r, index).appendTo(ribbon)
-			}
-		} else {
-			var ribbon = $(view_ribbons[i])
-			for(var j in images){
-				updateImage(ribbon.children('#'+j), cur_id, r, index)
-			}
+		var ribbon = $('<div class="ribbon"/>').appendTo(field)
+		for(var j in images){
+			makeImage(j).appendTo(ribbon)
 		}
 	}
+	$('#'+cur_id).click()
+}
+
+function updateRibbon(img){
+	var images = img.parents('.ribbon').children('.image')
+	var r = Math.floor(LOAD/2)
+
+	var cur_i = images.index(img)
+
+	// load...
+	var loading = $([])
+	for(var i=Math.max(0, cur_i-r); i<=Math.min(images.length, cur_i+r); i++){
+		loading.push(images[i])
+		images[i] = {}
+	}
+	loading
+		.addClass('loaded')
+		.removeClass('unloaded')
+
+	// unload...
+	images.filter('.loaded').removeClass('loaded').addClass('unloaded')
+	//$('.image.loaded').not('._cur').removeClass('loaded').addClass('unloaded')
+	//images.filter('._cur').removeClass('_cur')
+	$('.image._cur').removeClass('_cur')
 }
 
 function selectImage(){
@@ -166,7 +169,8 @@ function selectImage(){
 	// update json...
 	json.position = $(this).attr('id')
 	// update visible images...
-	loadJSON(json)
+	//loadJSON(json)
+	updateRibbon($('.current.image'))
 }
 
 loadJSON(json)

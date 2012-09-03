@@ -1161,7 +1161,7 @@ function makeImage(url, order, set_order){
 		set_order = setImageOrder
 	}
 	return (setupImageEventHandlers(
-				set_order($('<div class="image"></div>')
+				set_order($('<div class="image"/>')
 					.css({ 'background-image': 'url('+url+')' }), order)))
 }
 
@@ -1270,9 +1270,9 @@ function loadJSON(data, position, set_order){
 		var ribbon = $('<div class="ribbon"></div>')
 			.appendTo(field)
 		for(var j in images){
-			var image = $(images[j])
+			var image = images[j]
 			// create image...
-			makeImage(image.attr('url'), j, set_order)
+			makeImage(image['url'], j, set_order)
 				.appendTo(ribbon)
 		}
 	}
