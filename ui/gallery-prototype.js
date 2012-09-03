@@ -1038,19 +1038,30 @@ function setupEvents(){
 	// persistence...
 	$(window).unload(ImageGrid.saveState)
 	$(document)
-		// main modifier events...
-		.on('shiftImageUp shiftImageDown reverseImageOrder '+
-				'reverseRibbons shiftImageUpNewRibbon shiftImageDownNewRibbon', 
-				function(){
-					updated = true
-				})
+		.on([
+				// main modifier events...
+				'shiftImageUp',
+				'shiftImageDown',
+				'shiftImageUpNewRibbon',
+				'shiftImageDownNewRibbon',
+				'reverseImageOrder',
+				'reverseRibbons'
+			].join(' '),
+			function(){
+				updated = true
+			})
 		/*
-		// navigation events...
-		.on('nextImage prevImage nextScreenImages prevScreenImages '+
-				'focusAboveRibbon focusBelowRibbon', 
-				function(){
-					updated = true
-				})
+		.on([
+				// navigation events...
+				'nextImage prevImage', 
+				'nextScreenImages', 
+				'prevScreenImages', 
+				'focusAboveRibbon', 
+				'focusBelowRibbon'
+			].join(' '), 
+			function(){
+				updated = true
+			})
 		*/
 	// save things if updated within a minute...
 	// XXX this gets very slow when saving a large data dump...
