@@ -1162,7 +1162,67 @@ function makeImage(url, order, set_order){
 	}
 	return (setupImageEventHandlers(
 				set_order($('<div class="image"/>')
-					.css({ 'background-image': 'url('+url+')' }), order)))
+					//.css({ 'background-image': 'url('+url+')' }), order)))
+					, order)))
+}
+
+// NOTE: this is largely independent of ImageGrid.image_data structure, 
+// 		it needs only content...
+function getURL(id){
+	var json = ImageGrid.image_data
+	var ribbons = json.ribbons
+
+	for(var i=0; i<ribbons.length; i++){
+		var ribbon = ribbons[i]
+		if(ribbon[id] != null){
+			return ribbon[id].url
+		}
+	}
+}
+
+
+
+var SCREEN_WIDTH_CACHE = 2
+
+// XXX make this update only when the threshold is passed...
+// XXX make this size aware...
+// NOTE: this is largely independent of ImageGrid.image_data...
+function updateRibbonImages(img, r){
+	var R = r*SCREEN_WIDTH_CACHE
+	var images = img.parents('.ribbon').children('.image')
+
+	/* XXX for some reason this does not work...
+	// check the threshold -- one screen-width in any direction...
+	var i = images.filter('.loaded').index(img)
+	if(i >= 0 && Math.abs(i - images.filter('.loaded').length) < r){
+		console.log('skipping...', i, images.filter('.loaded').length)
+		return
+	}
+	console.log('loading...', i, images.filter('.loaded').length)
+	*/
+
+	var cur_i = images.index(img)
+
+	// load...
+	var loading = $([])
+	for(var i=Math.max(0, cur_i-R); i<=Math.min(images.length-1, cur_i+R); i++){
+		var img = $(images[i])
+		loading.push(img[0])
+		// update only the images that are not set...
+		var bg = img.css('background-image')
+		if(bg == 'none' || bg == null){
+			img.css({ 'background-image': 'url('+getURL(img.attr('id'))+')' })
+		}
+		//img.not('.loaded').css({ 'background-image': 'url('+getURL(img.attr('id'))+')' })
+		// remove the processed images from the list...
+		images[i] = {}
+	}
+	// do the loading...
+	loading.not('.loaded')
+		.addClass('loaded')
+	// unload...
+	images.filter('.loaded').removeClass('loaded')
+		.css({ 'background-image': 'none' })
 }
 
 
@@ -1202,9 +1262,11 @@ function loadImagesFromList(images){
  */
 // XXX add incremental or partial updates...
 function buildJSON(get_order){
+	/* XXX can't return this yet as we are not updating this properly yet...
 	if(ImageGrid.image_data != null){
 		return ImageGrid.image_data
 	}
+	*/
 	if(get_order == null){
 		get_order = getImageOrder
 	}
@@ -1249,11 +1311,8 @@ function loadJSON(data, position, set_order){
 		return
 	}
 
-	/*
-	// XXX
 	// store the structure...
 	ImageGrid.image_data = data
-	*/
 
 	var field = $('.field')
 
@@ -1300,6 +1359,14 @@ function handleImageClick(){
 	centerSquare()
 	centerIndicator()
 	alignRibbons()
+	// update this and other ribbons...
+	var w = getViewerWidthImages()
+	updateRibbonImages($(this), w)
+	var ribbons = $(this).parents('.ribbon').siblings('.ribbon')
+	var id = $(this).attr('id')
+	for(var i=0; i<ribbons.length; i++){
+		updateRibbonImages(getImageBefore(id, $(ribbons[i])), w)
+	}
 }
 
 

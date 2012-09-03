@@ -116,7 +116,7 @@ function enumerate(obj, predicate){
 function makeImage(id){
 	return $('<div class="image"/>')
 			.attr({id: id})
-			.click(selectImage)
+			.mousedown(selectImage)
 			.addClass('unloaded')
 }
 
@@ -136,12 +136,11 @@ function loadJSON(json){
 			makeImage(j).appendTo(ribbon)
 		}
 	}
-	$('#'+cur_id).click()
+	$('#'+cur_id).mousedown()
 }
 
-function updateRibbon(img){
+function updateRibbonImages(img, r){
 	var images = img.parents('.ribbon').children('.image')
-	var r = Math.floor(LOAD/2)
 
 	var cur_i = images.index(img)
 
@@ -151,15 +150,13 @@ function updateRibbon(img){
 		loading.push(images[i])
 		images[i] = {}
 	}
-	loading
+	// do the loading...
+	loading.filter('.unloaded')
 		.addClass('loaded')
 		.removeClass('unloaded')
 
 	// unload...
 	images.filter('.loaded').removeClass('loaded').addClass('unloaded')
-	//$('.image.loaded').not('._cur').removeClass('loaded').addClass('unloaded')
-	//images.filter('._cur').removeClass('_cur')
-	$('.image._cur').removeClass('_cur')
 }
 
 function selectImage(){
@@ -170,7 +167,7 @@ function selectImage(){
 	json.position = $(this).attr('id')
 	// update visible images...
 	//loadJSON(json)
-	updateRibbon($('.current.image'))
+	updateRibbonImages($('.current.image'), Math.floor(LOAD/2))
 }
 
 loadJSON(json)

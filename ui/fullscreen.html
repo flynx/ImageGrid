@@ -86,6 +86,8 @@ $(document)
 					// XXX need to avoid data URLs here and use plain old paths...
 					ribbon.append(makeImage(e.target.result, i))
 					$('.image').first().click()
+					// XXX really UGLY and bad...
+					ImageGrid.image_data = buildJSON()
 				}
 			}(i, ribbon)
 			reader.readAsDataURL(f)

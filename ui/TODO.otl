@@ -1,7 +1,7 @@
 Priority work
-	[_] 62% Preview II
-		[_] 5% dynamic loading of images
-			[_] 11% stream on navigate
+	[_] 66% Preview II
+		[_] 41% dynamic loading of images
+			[_] 83% stream on navigate
 				| parameters that affect loading:
 				| 	- current view size				-> image size must be closest
 				| 										above this
@@ -16,18 +16,18 @@ Priority work
 				| 		can reach an image not just by navigating close but 
 				| 		also by scrolling/dragging to it (without changing the
 				| 		current image)...
-				[_] store structure separately from ui (mirror context)
+				[X] store structure separately from ui (mirror context)
 				| an alternative would be to store the whole thing (sans images)
 				| in DOM, but that ma get very big.
 				|
 				| storing the structure will enable us to have partial structures
 				| thus updating the structure of a very big set without the user
 				| noticing.
-				[_] 33% sync context (handle edit events)
+				[_] 50% sync context (handle edit events)
 					[X] identify action position
 					| use id...
-					[_] handle edit events
-				[_] update ui structure (handle navigate/move events)
+					[_] handle edit events XXX
+				[X] update ui structure (handle navigate/move events)
 			[_] sizes on zoom
 		[_] make shift up/down direction-aware...
 		| i.e. if we are going through images in a direction select the 
