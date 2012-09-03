@@ -18,6 +18,8 @@ var ImageGrid = {
 	option_props: {},
 	option_groups: [],
 
+	image_data: null,
+
 	// define an action...
 	// the two values that are obligatory are:
 	// 		title	- name of the action
@@ -1166,18 +1168,18 @@ function makeImage(url, order, set_order){
 
 
 function loadImagesFromList(images){
-	var field = $('.field')
-
-	field.children('.ribbon').remove()
-
-	var ribbon = $('<div class="ribbon"></div>')
-		.appendTo(field)
-
-	for(var i = 0; i < images.length; i++){
-		makeImage(images[i], i)
-			.appendTo(ribbon)
+	var json = {
+		ribbons: [
+			{}
+		]
 	}
-	$('.image').first().click()
+	var ribbon = json.ribbons[0]
+	for(var i = 0; i < images.length; i++){
+		ribbon[i] = {
+			url: images[i]
+		}
+	}
+	return loadJSON(json)
 }
 
 
@@ -1188,15 +1190,21 @@ function loadImagesFromList(images){
  * 	{
  * 		position: <image-id>,
  * 		ribbons: [
- * 			<image-id>: {
- * 				url: <image-URL>,
- * 			},				
+ * 			{
+ * 				<image-id>: {
+ * 					url: <image-URL>,
+ * 				},				
+ * 				...
+ * 			},
  * 			...
  * 		]
  * 	}
  */
 // XXX add incremental or partial updates...
 function buildJSON(get_order){
+	if(ImageGrid.image_data != null){
+		return ImageGrid.image_data
+	}
 	if(get_order == null){
 		get_order = getImageOrder
 	}
@@ -1240,6 +1248,13 @@ function loadJSON(data, position, set_order){
 	if(ribbons == null){
 		return
 	}
+
+	/*
+	// XXX
+	// store the structure...
+	ImageGrid.image_data = data
+	*/
+
 	var field = $('.field')
 
 	// drop all old content...

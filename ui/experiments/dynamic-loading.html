@@ -1,0 +1,120 @@
+<script src="../jquery.js"></script>
+
+<style>
+
+.field {
+	width: auto;
+	overflow: visible;
+}
+
+.ribbon {
+	padding: 10px;
+	height: 100px;
+
+	width: auto;
+	overflow: visible;
+	white-space: nowrap;
+	font-size: 0px;
+}
+
+.image {
+	display: inline-block;
+	height: 80px;
+	width: 80px;
+	background: silver;
+}
+
+.current.image {
+	background: gray;
+}
+
+.unloaded.image {
+	opacity: 0.5;
+}
+
+</style>
+
+
+<div class="field">
+</div>
+
+<script>
+
+// build an image element...
+function makeImage(url, order){
+	return $('<div class="image"/>').attr({id: order})
+}
+	
+var json = {
+	position: 10, 
+	ribbons:[
+		{
+			3: {},
+			4: {},
+			6: {},
+			7: {},
+			8: {},
+			10: {},
+			12: {},
+			13: {},
+			18: {},
+			19: {},
+			20: {},
+			30: {},
+			34: {},
+			37: {},
+			40: {},
+		}
+	]
+}
+
+/*
+format:
+[
+	// ribbon
+	[
+		<image-id>,
+		...
+	],
+	...
+]
+*/
+
+var LOAD = 5
+
+function loadJSON(json, index){
+	var field = $('.field')
+	var ribbons = json.ribbons
+	var current = json.position
+	var R = Math.floor(LOAD/2)
+
+	for(var i = 0; i < ribbons.length; i++){
+		var images = ribbons[i]
+
+		// index the ribbon...
+		var r_index = []
+		for(var j in images){
+			r_index.push(j)
+		}
+		r_index.sort(function(a, b){return parseInt(a)-parseInt(b)})
+
+		var ribbon = $('<div class="ribbon"/>').appendTo(field)
+		for(var j = 0; j < r_index.length; j++){
+			var cur_i = r_index.indexOf(current+"")
+			var i_index = r_index[j]
+			var image = makeImage('', i_index).appendTo(ribbon)
+			if(cur_i > 0 && Math.abs(cur_i - j) > R){
+				image.addClass('unloaded')
+			}
+			if(i_index == current){
+				image.addClass('current')
+			}
+		}
+	}
+
+}
+
+loadJSON(json)
+
+</script>
+
