@@ -1058,14 +1058,15 @@ function setupEvents(){
 			if(updated){
 				ImageGrid.saveState()
 				updated = false
-			}}, 120000)
+			}}, 
+			// check every 2 minutes...
+			2*60*1000)
 	// autosave every ten minutes...
 	// XXX do we really need this?
 	//setInterval(ImageGrid.saveState, 600000)
 
 	// resize...
 	$(window).resize(function() {
-		// XXX HACK
 		$('.current.image').click()
 	})
 	// keyboard...
