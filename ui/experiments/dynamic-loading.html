@@ -40,11 +40,6 @@
 
 <script>
 
-// build an image element...
-function makeImage(url, order){
-	return $('<div class="image"/>').attr({id: order})
-}
-	
 var json = {
 	position: 10, 
 	ribbons:[
@@ -64,54 +59,114 @@ var json = {
 			34: {},
 			37: {},
 			40: {},
+		},
+		{
+			103: {},
+			104: {},
+			106: {},
+			107: {},
+			108: {},
+			1010: {},
+			1012: {},
+			1013: {},
+			1018: {},
+			1019: {},
+			1020: {},
+			1030: {},
+			1034: {},
+			1037: {},
+			1040: {},
+		},
+		{
+			203: {},
+			204: {},
+			206: {},
+			207: {},
+			208: {},
+			2010: {},
+			2012: {},
+			2013: {},
+			2018: {},
+			2019: {},
+			2020: {},
+			2030: {},
+			2034: {},
+			2037: {},
+			2040: {},
 		}
 	]
 }
 
-/*
-format:
-[
-	// ribbon
-	[
-		<image-id>,
-		...
-	],
-	...
-]
-*/
 
 var LOAD = 5
 
-function loadJSON(json, index){
+function enumerate(obj, predicate){
+	if(predicate == null){
+		predicate = function(o, a){return true}
+	}
+	var res = []
+	for(var k in obj){
+		predicate(obj, k) && res.push(k)
+	}
+	return res
+}
+	
+
+// build an image element...
+function makeImage(id){
+	return $('<div class="image"/>')
+			.attr({id: id})
+			.click(selectImage)
+}
+
+function updateImage(image, cur, r, index){
+	console.log(cur, r, index)
+	var id = image.attr('id')
+	if(id == cur){
+		image.addClass('current')
+	}
+	var cur_i = index.indexOf(cur)
+	if(cur_i < 0 || Math.abs(index.indexOf(id)-cur_i) > r){
+		image.addClass('unloaded')
+	} else {
+		image.removeClass('unloaded')
+	}
+	return image
+}
+
+function loadJSON(json){
 	var field = $('.field')
+	var cur_id = json.position+''
 	var ribbons = json.ribbons
-	var current = json.position
-	var R = Math.floor(LOAD/2)
+	var r = Math.floor(LOAD/2)
 
-	for(var i = 0; i < ribbons.length; i++){
+	var view_ribbons = $('.ribbon')
+
+	for(var i=0; i<ribbons.length; i++){
 		var images = ribbons[i]
-
-		// index the ribbon...
-		var r_index = []
-		for(var j in images){
-			r_index.push(j)
-		}
-		r_index.sort(function(a, b){return parseInt(a)-parseInt(b)})
-
-		var ribbon = $('<div class="ribbon"/>').appendTo(field)
-		for(var j = 0; j < r_index.length; j++){
-			var cur_i = r_index.indexOf(current+"")
-			var i_index = r_index[j]
-			var image = makeImage('', i_index).appendTo(ribbon)
-			if(cur_i > 0 && Math.abs(cur_i - j) > R){
-				image.addClass('unloaded')
+		var index = enumerate(images)
+		if(view_ribbons[i] == null){
+			var ribbon = $('<div class="ribbon"/>').appendTo(field)
+			for(var j in images){
+				updateImage(makeImage(j), cur_id, r, index).appendTo(ribbon)
 			}
-			if(i_index == current){
-				image.addClass('current')
+		} else {
+			var ribbon = $(view_ribbons[i])
+			for(var j in images){
+				updateImage(ribbon.children('#'+j), cur_id, r, index)
 			}
 		}
 	}
+}
 
+function selectImage(){
+	// update view...
+	$('.current.image').removeClass('current')
+	$(this).addClass('current')
+	// update json...
+	json.position = $(this).attr('id')
+	// update visible images...
+	loadJSON(json)
 }
 
 loadJSON(json)
