@@ -1312,6 +1312,9 @@ function loadJSON(data, position, set_order, escape_urls){
 	if(ribbons == null){
 		return
 	}
+	if(escape_urls == null){
+		escape_urls = true
+	}
 
 	// store the structure...
 	ImageGrid.image_data = data
@@ -1332,14 +1335,6 @@ function loadJSON(data, position, set_order, escape_urls){
 			.appendTo(field)
 		for(var j in images){
 			var image = images[j]
-			if(escape_urls == true){
-				// escape the url ...
-				var o = /([a-zA-Z0-9]*:\/\/)(.*)/.exec(image.url)
-				if(o.length == 3){
-					image.url = o[1] + escape(o[2])
-				}
-				image.url = escape(image.url)
-			}
 			// create image...
 			makeImage(image.url, j, set_order)
 				.appendTo(ribbon)
