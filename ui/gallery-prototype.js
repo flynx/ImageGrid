@@ -1162,7 +1162,7 @@ function makeImage(url, order, set_order){
 	}
 	return (setupImageEventHandlers(
 				set_order($('<div class="image"/>')
-					//.css({ 'background-image': 'url('+url+')' }), order)))
+					//.css({ 'background-image': 'url('+url.replace(/ /g, '%20')+')' }), order)))
 					, order)))
 }
 
@@ -1175,7 +1175,12 @@ function getURL(id){
 	for(var i=0; i<ribbons.length; i++){
 		var ribbon = ribbons[i]
 		if(ribbon[id] != null){
-			return ribbon[id].url
+			// do not escape the url schema...
+			var o = /([a-zA-Z0-9]*:)(.*)/.exec(ribbon[id].url)
+			if(o.length == 3){
+				return o[1] + escape(o[2])
+			}
+			return escape(ribbon[id].url)
 		}
 	}
 }
@@ -1261,6 +1266,7 @@ function loadImagesFromList(images){
  * 	}
  */
 // XXX add incremental or partial updates...
+// XXX this will break when trying to read unloaded images...
 function buildJSON(get_order){
 	/* XXX can't return this yet as we are not updating this properly yet...
 	if(ImageGrid.image_data != null){
@@ -1282,14 +1288,15 @@ function buildJSON(get_order){
 			continue
 		}
 		var ribbon = {}
-		res.ribbons[res.ribbons.length] = ribbon
+		res.ribbons.push(ribbon)
 		for(var j=0; j < images.length; j++){
 			var image = $(images[j])
 			var id = get_order(image)
 			ribbon[id] = {
 				// unwrap the url...
 				// XXX would be nice to make this a relative path... (???)
-				url: /url\((.*)\)/.exec(image.css('background-image'))[1],
+				//url: /url\((.*)\)/.exec(image.css('background-image'))[1],
+				url: getURL(id)
 			}
 		}
 	}
