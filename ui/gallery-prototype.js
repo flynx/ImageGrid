@@ -1175,12 +1175,7 @@ function getURL(id){
 	for(var i=0; i<ribbons.length; i++){
 		var ribbon = ribbons[i]
 		if(ribbon[id] != null){
-			// do not escape the url schema...
-			var o = /([a-zA-Z0-9]*:)(.*)/.exec(ribbon[id].url)
-			if(o.length == 3){
-				return o[1] + escape(o[2])
-			}
-			return escape(ribbon[id].url)
+			return ribbon[id].url
 		}
 	}
 }
@@ -1306,7 +1301,7 @@ function buildJSON(get_order){
 
 
 // XXX might be good to add images in packs here, not one by one...
-function loadJSON(data, position, set_order){
+function loadJSON(data, position, set_order, escape_urls){
 	if(position == null){
 		position = data.position
 	}
@@ -1337,8 +1332,16 @@ function loadJSON(data, position, set_order){
 			.appendTo(field)
 		for(var j in images){
 			var image = images[j]
+			if(escape_urls == true){
+				// escape the url ...
+				var o = /([a-zA-Z0-9]*:\/\/)(.*)/.exec(image.url)
+				if(o.length == 3){
+					image.url = o[1] + escape(o[2])
+				}
+				image.url = escape(image.url)
+			}
 			// create image...
-			makeImage(image['url'], j, set_order)
+			makeImage(image.url, j, set_order)
 				.appendTo(ribbon)
 		}
 	}
