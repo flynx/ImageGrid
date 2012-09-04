@@ -1349,6 +1349,7 @@ function loadJSON(data, position, set_order){
 
 // handle click for images...
 function handleImageClick(){
+	var ribbons = $(this).parents('.ribbon').siblings('.ribbon')
 	// set classes...
 	$('.current').removeClass('current')
 	$(this)
@@ -1359,13 +1360,15 @@ function handleImageClick(){
 	centerSquare()
 	centerIndicator()
 	alignRibbons()
-	// update this and other ribbons...
+	// update this ribbon...
 	var w = getViewerWidthImages()
 	updateRibbonImages($(this), w)
-	var ribbons = $(this).parents('.ribbon').siblings('.ribbon')
+	// update other ribbons...
 	var id = $(this).attr('id')
 	for(var i=0; i<ribbons.length; i++){
-		updateRibbonImages(getImageBefore(id, $(ribbons[i])), w)
+		var img = getImageBefore(id, $(ribbons[i]))
+		// XXX revise: should we check if ribbon is empty if img is null??
+		updateRibbonImages(img?img:$(ribbons[i]).children('.image').first(), w)
 	}
 }
 
