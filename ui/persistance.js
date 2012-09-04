@@ -21,12 +21,12 @@ function loadJSONfile(path, escape_urls){
 	// XXX browser - open file dialog
 	
 	// escape the URLs...
-	var ribbons = data.ribbons	
-	for(var i=0; i<ribbons.length; i++){
-		var images = ribbons[i]
-		for(var id in images){
-			var image = images[id]
-			if(escape_urls == true){
+	if(escape_urls == true){
+		var ribbons = data.ribbons	
+		for(var i=0; i<ribbons.length; i++){
+			var images = ribbons[i]
+			for(var id in images){
+				var image = images[id]
 				// escape the url ...
 				var o = /([a-zA-Z0-9]*:)(.*)/.exec(image.url)
 				if(o.length == 3){
