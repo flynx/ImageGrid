@@ -433,7 +433,8 @@ jQuery.fn.sortChildren = function(func){
 function getImageOrder(img){
 	// XXX HACK need to parseInt this because '13' is less than '2'... 
 	// 	   ...figure a way out of this!!!
-	return parseInt($(img).attr('id'))
+	//return parseInt($(img).attr('id'))
+	return $(img).attr('id')
 }
 
 
@@ -445,6 +446,14 @@ function setImageOrder(img, order){
 function cmpImageOrder(a, b){
 	return getImageOrder(a) - getImageOrder(b)
 }
+
+
+function cmpImagePaths(a, b){ 
+	a = getURL($(a).attr('id'))
+	b = getURL($(b).attr('id'))
+	return a > b ? 1 : a < b ? -1 : 0
+}
+
 
 
 // NOTE: don't understand why am I the one who has to write this...
@@ -1383,13 +1392,14 @@ function loadJSON(data, position, set_order){
 		for(var j in images){
 			var image = images[j]
 			// update index...
-			new_images[order] = image
+			//new_images[order] = image
 			// create image...
-			makeImage(order, set_order)
+			//makeImage(order, set_order)
+			makeImage(j, set_order)
 				.appendTo(ribbon)
 			order++
 		}
-		ribbons[i] = new_images
+		//ribbons[i] = new_images
 	}
 	console.log('loaded: ', order)
 	if(position != null && $('#' + position).length != 0){
@@ -2182,11 +2192,8 @@ ImageGrid.GROUP('Image manipulation',
 			display: false,
 		}, 
 		function sortImagesVia(cmp){
-			// reverse ID order...
-			$($('.image').get().sort(cmp))
-				.each(function(i, e){e.id = i})})
-			// resort the images...
-			ImageGrid.sortImages()
+			$('.ribbon').sortChildren(cmp)
+			updateRibbonImages($('.current.image').click())
 		}),
 	ImageGrid.ACTION({ 
 			title: 'Sort images',
@@ -2194,9 +2201,12 @@ ImageGrid.GROUP('Image manipulation',
 				'NOTE: this will only realign three ribbons.'
 		}, 
 		function sortImages(){
+			/* XXX this is broken: need a good default...
 			$('.ribbon').sortChildren(cmpImageOrder)
 			// compensate for offset cange...
-			$('.current.image').click()
+			updateRibbonImages($('.current.image').click())
+			*/
+			return ImageGrid.sortImagesByPath()
 		}),
 	ImageGrid.ACTION({ 
 			title: 'Reverse order of images',
@@ -2204,18 +2214,14 @@ ImageGrid.GROUP('Image manipulation',
 		}, 
 		function reverseImageOrder(){
 			// this is done by reversing their id attr
-			ImageGrid.sortImagesVia(function(a, b){return cmpImageOrder(b, a)})
+			ImageGrid.sortImagesVia(function(a, b){return cmpImagePaths(b, a)})
 		}),
 	ImageGrid.ACTION({ 
 			title: 'Sort images by their full path',
 		}, 
 		// XXX this should use a normalized path...
 		function sortImagesByPath(){
-			ImageGrid.sortImagesVia(function(a, b){ 
-				a = getURL($(a).attr('id'))
-				b = getURL($(b).attr('id'))
-				return a > b ? 1 : a < b ? -1 : 0
-			})
+			ImageGrid.sortImagesVia(cmpImagePaths)
 		}))
 
 
