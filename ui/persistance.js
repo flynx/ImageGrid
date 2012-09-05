@@ -21,6 +21,7 @@ function loadJSONfile(path, escape_urls){
 	// XXX browser - open file dialog
 	
 	// escape the URLs...
+	// XXX need to make ths universal for all urls within the image object...
 	if(escape_urls == true){
 		var ribbons = data.ribbons	
 		for(var i=0; i<ribbons.length; i++){
