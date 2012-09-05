@@ -29,10 +29,9 @@ function loadJSONfile(path, escape_urls){
 				var image = images[id]
 				// escape the url ...
 				var o = /([a-zA-Z0-9]*:)(.*)/.exec(image.url)
-				if(o.length == 3){
+				if(o != null){
 					image.url = o[1] + escape(o[2])
 				} else {
-					console.log('no schema...')
 					image.url = escape(image.url)
 				}
 			}

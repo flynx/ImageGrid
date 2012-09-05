@@ -1065,6 +1065,17 @@ function setupEvents(){
 				updated = true
 			})
 		*/
+	// zooming...
+	$(document)
+		.on([
+				'scaleContainerUp',
+				'scaleContainerDown',
+				'fitNImages'
+			].join(' '),
+			function(e){
+				// update images on zooming...
+				updateRibbonImages($('.current.image'), true)
+			})
 	// save things if updated within a minute...
 	// XXX this gets very slow when saving a large data dump...
 	setInterval(function(){
@@ -1156,38 +1167,76 @@ function setupImageEventHandlers(image){
 
 
 // build an image element...
-function makeImage(url, order, set_order){
+function makeImage(order, set_order){
 	if(set_order == null){
 		set_order = setImageOrder
 	}
 	return (setupImageEventHandlers(
 				set_order($('<div class="image"/>')
-					//.css({ 'background-image': 'url('+url.replace(/ /g, '%20')+')' }), order)))
 					, order)))
 }
 
-// NOTE: this is largely independent of ImageGrid.image_data structure, 
-// 		it needs only content...
-function getURL(id){
+
+// NOTE: if there is not id image this will return null
+function getImageData(id){
 	var json = ImageGrid.image_data
 	var ribbons = json.ribbons
 
 	for(var i=0; i<ribbons.length; i++){
 		var ribbon = ribbons[i]
 		if(ribbon[id] != null){
-			return ribbon[id].url
+			return ribbon[id]
 		}
+	}
+}
+
+// NOTE: this is largely independent of ImageGrid.image_data structure, 
+// 		it needs only content...
+function getURL(id, size){
+	if(size == null){
+		size = 0
+	}
+	var json = ImageGrid.image_data
+	var ribbons = json.ribbons
+
+	var image = getImageData(id)
+	// select appropriate preview...
+	if(image.preview != null){
+		var sizes = []
+		var keys = []
+		var max
+		for(var s in image.preview){
+			if(max == null || max <= s){
+				max = s
+			}
+			if(parseInt(s) >= size){
+				sizes.push(parseInt(s))
+				keys.push(s)
+			}
+		}
+		// we are bigger than any preview...
+		if(sizes.length < 1){
+			return image.preview[max]
+		} else {
+			var cur_size = Math.min.apply(Math, sizes)
+			return image.preview[keys[sizes.indexOf(cur_size)]]
+		}
+	} else {
+		// legacy default...
+		return image.url
 	}
 }
 
 
 
-var SCREEN_WIDTH_CACHE = 2
+var SCREEN_WIDTH_CACHE = 4
 
 // XXX make this update only when the threshold is passed...
-// XXX make this size aware...
+// XXX update images on zoom...
 // NOTE: this is largely independent of ImageGrid.image_data...
-function updateRibbonImages(img, r){
+function updateRibbonImages(img, force){
+	var r = getViewerWidthImages()
+	var size = getCurrentImageSize()
 	var R = r*SCREEN_WIDTH_CACHE
 	var images = img.parents('.ribbon').children('.image')
 
@@ -1209,9 +1258,10 @@ function updateRibbonImages(img, r){
 		var img = $(images[i])
 		loading.push(img[0])
 		// update only the images that are not set...
+		// XXX update images on zoom...
 		var bg = img.css('background-image')
-		if(bg == 'none' || bg == null){
-			img.css({ 'background-image': 'url('+getURL(img.attr('id'))+')' })
+		if(force || bg == 'none' || bg == null){
+			img.css({ 'background-image': 'url('+getURL(img.attr('id'), size)+')' })
 		}
 		//img.not('.loaded').css({ 'background-image': 'url('+getURL(img.attr('id'))+')' })
 		// remove the processed images from the list...
@@ -1221,7 +1271,8 @@ function updateRibbonImages(img, r){
 	loading.not('.loaded')
 		.addClass('loaded')
 	// unload...
-	images.filter('.loaded').removeClass('loaded')
+	images.filter('.loaded')
+		.removeClass('loaded')
 		.css({ 'background-image': 'none' })
 }
 
@@ -1261,7 +1312,6 @@ function loadImagesFromList(images){
  * 	}
  */
 // XXX add incremental or partial updates...
-// XXX this will break when trying to read unloaded images...
 function buildJSON(get_order){
 	/* XXX can't return this yet as we are not updating this properly yet...
 	if(ImageGrid.image_data != null){
@@ -1271,6 +1321,7 @@ function buildJSON(get_order){
 	if(get_order == null){
 		get_order = getImageOrder
 	}
+	var size = getCurrentImageSize()
 	var ribbons = $('.ribbon')
 	res = {
 		position: $('.current.image').attr('id'),
@@ -1287,21 +1338,17 @@ function buildJSON(get_order){
 		for(var j=0; j < images.length; j++){
 			var image = $(images[j])
 			var id = get_order(image)
-			ribbon[id] = {
-				// unwrap the url...
-				// XXX would be nice to make this a relative path... (???)
-				//url: /url\((.*)\)/.exec(image.css('background-image'))[1],
-				url: getURL(id)
-			}
+			ribbon[id] = getImageData(id)
 		}
 	}
+	ImageGrid.image_data = res
 	return res
 }
 
 
 
 // XXX might be good to add images in packs here, not one by one...
-function loadJSON(data, position, set_order, escape_urls){
+function loadJSON(data, position, set_order){
 	if(position == null){
 		position = data.position
 	}
@@ -1312,9 +1359,6 @@ function loadJSON(data, position, set_order, escape_urls){
 	if(ribbons == null){
 		return
 	}
-	if(escape_urls == null){
-		escape_urls = true
-	}
 
 	// store the structure...
 	ImageGrid.image_data = data
@@ -1323,6 +1367,8 @@ function loadJSON(data, position, set_order, escape_urls){
 
 	// drop all old content...
 	field.children('.ribbon').remove()
+
+	var order = 0
 
 	for(var i=0; i < ribbons.length; i++){
 		var images = ribbons[i]
@@ -1333,13 +1379,19 @@ function loadJSON(data, position, set_order, escape_urls){
 		// create ribbon...
 		var ribbon = $('<div class="ribbon"></div>')
 			.appendTo(field)
+		var new_images = {}
 		for(var j in images){
 			var image = images[j]
+			// update index...
+			new_images[order] = image
 			// create image...
-			makeImage(image.url, j, set_order)
+			makeImage(order, set_order)
 				.appendTo(ribbon)
+			order++
 		}
+		ribbons[i] = new_images
 	}
+	console.log('loaded: ', order)
 	if(position != null && $('#' + position).length != 0){
 		$('#' + position).click()
 	} else {
@@ -1366,14 +1418,13 @@ function handleImageClick(){
 	centerIndicator()
 	alignRibbons()
 	// update this ribbon...
-	var w = getViewerWidthImages()
-	updateRibbonImages($(this), w)
+	updateRibbonImages($(this))
 	// update other ribbons...
 	var id = $(this).attr('id')
 	for(var i=0; i<ribbons.length; i++){
 		var img = getImageBefore(id, $(ribbons[i]))
 		// XXX revise: should we check if ribbon is empty if img is null??
-		updateRibbonImages(img?img:$(ribbons[i]).children('.image').first(), w)
+		updateRibbonImages(img?img:$(ribbons[i]).children('.image').first())
 	}
 }
 
@@ -2133,7 +2184,7 @@ ImageGrid.GROUP('Image manipulation',
 		function sortImagesVia(cmp){
 			// reverse ID order...
 			$($('.image').get().sort(cmp))
-				.each(function(i, e){$(e).attr({'id': i})})
+				.each(function(i, e){e.id = i})})
 			// resort the images...
 			ImageGrid.sortImages()
 		}),
@@ -2161,8 +2212,8 @@ ImageGrid.GROUP('Image manipulation',
 		// XXX this should use a normalized path...
 		function sortImagesByPath(){
 			ImageGrid.sortImagesVia(function(a, b){ 
-				a = $(a).css('background-image')
-				b = $(b).css('background-image') 
+				a = getURL($(a).attr('id'))
+				b = getURL($(b).attr('id'))
 				return a > b ? 1 : a < b ? -1 : 0
 			})
 		}))
