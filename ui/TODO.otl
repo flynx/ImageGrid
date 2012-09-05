@@ -1,6 +1,6 @@
 Priority work
-	[_] 66% Preview II
-		[_] 41% dynamic loading of images
+	[_] 71% Preview II
+		[_] 91% dynamic loading of images
 			[_] 83% stream on navigate
 				| parameters that affect loading:
 				| 	- current view size				-> image size must be closest
@@ -28,7 +28,8 @@ Priority work
 					| use id...
 					[_] handle edit events XXX
 				[X] update ui structure (handle navigate/move events)
-			[_] sizes on zoom
+			[X] sizes on zoom
+			| still needs work...
 		[_] make shift up/down direction-aware...
 		| i.e. if we are going through images in a direction select the 
 		| next image in that direction when shifting...
