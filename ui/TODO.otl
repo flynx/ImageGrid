@@ -1,5 +1,5 @@
 Priority work
-	[_] 71% Preview II
+	[_] 81% Preview II
 		[_] 91% dynamic loading of images
 			[_] 83% stream on navigate
 				| parameters that affect loading:
@@ -30,7 +30,7 @@ Priority work
 				[X] update ui structure (handle navigate/move events)
 			[X] sizes on zoom
 			| still needs work...
-		[_] make shift up/down direction-aware...
+		[X] make shift up/down direction-aware...
 		| i.e. if we are going through images in a direction select the 
 		| next image in that direction when shifting...
 		[_] 57% save state
@@ -177,7 +177,8 @@ Priority work
 			[X] 100% actions
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
-	[_] 40% Preview II (optional features)
+	[_] 45% Preview II (optional features)
+		[_] mark positions and jump between marks (a-la vim's "m"/"'" commands)
 		[_] 0% PhoneGap + Android Issues:
 			[_] scrolling in overlays does not work
 			[_] half the keyboard is not working...
@@ -188,10 +189,9 @@ Priority work
 		[_] slideshow...
 		[_] make keyboeard handler mode-aware...
 		| this is needed to disable navigation keys in setup-mode, for example...
-		[_] 50% serialization/deserialization
+		[X] 100% serialization/deserialization
 			[X] JSON loader/unloader
-			[_] file reader/writer
-		[_] actual file loading (Target-specific)
+			[X] file reader/writer
 		[X] flip ribbons relative to current -- reverse order
 		[_] fade transition in single image mode...
 		[_] "show all promoted/demoted images" mode
@@ -251,24 +251,20 @@ Priority work
 		[_] 50% option to disable processor intensive features
 			[X] global transitions
 			[_] global opacity -- do a layout without opacity
-		[_] make scrolling of other ribbons proportional to the gap...
-		[_] 66% refactoring (low priority)
+		[X] 100% refactoring (low priority)
 			[X] cleanup legacy workarounds
 			[X] ui.js, gallery-prototype.js either merge or revise split logic
-			[_] do a redraw function
-			| this should position all the elements correctly within the 
-			| current ui state...
-			|
-			| currently all operations that alter the layout call $('.current.image').click()
-	[_] 0% Preview III
+		[_] make scrolling of other ribbons proportional to the gap...
+	[_] 22% Preview III
 		[_] collection management
 		[_] actual file loading
 		[_] revise controls...
-		[_] dynamic image/preview swap for zooming
+		[X] dynamic image/preview swap for zooming
 		| important to make 1:1 previews for all main views and zoom levels...
 		| also need to make this as device-neutral as possible...
-		[_] dynamic image loading/unloading to very large ribbons
+		[X] dynamic image loading/unloading to very large ribbons
 		| it is important to make this far enough from the curent view for the user not to notice anything...
+		[_] dynamic structure construction and partial state (for infinite ribbons) 
 		[_] 0% view modes
 			[_] grid mode
 			[_] calendar mode

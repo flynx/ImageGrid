@@ -296,6 +296,14 @@ ImageGrid.GROUP('State',
 			title: 'History depth.',
 			value: 10,
 		}),
+	ImageGrid.OPTION({
+			name: 'LAST_MOVE_DIRECTION',
+			title: 'Direction the last move was made to',
+			doc: 'Used to naturally position the current image after '+
+					'shift up/down operations.',
+			value: 'next',
+			display: false,
+		}),
 	/*
 	// XXX is this the correct way to go...
 	ImageGrid.OPTION({
@@ -1873,12 +1881,14 @@ ImageGrid.GROUP('Navigation',
 			title: 'Go to previous image',
 		},
 		function prevImage(){
+			ImageGrid.option.LAST_MOVE_DIRECTION = 'prev'
 			return $('.current.image').prev('.image').click()
 		}),
 	ImageGrid.ACTION({
 			title: 'Go to next image',
 		},
 		function nextImage(){
+			ImageGrid.option.LAST_MOVE_DIRECTION = 'next'
 			return $('.current.image').next('.image').click()
 		}),
 	ImageGrid.ACTION({
@@ -2135,15 +2145,17 @@ ImageGrid.GROUP('Image manipulation',
 
 			// get previous element after which we need to put the current...
 			var prev_elem = getImageBefore(
-							get_order($('.current.image')), 
-							$('.current.ribbon')[direction]('.ribbon'))
+								get_order($('.current.image')), 
+								$('.current.ribbon')[direction]('.ribbon'))
 
 			// last image in ribbon, merge...
 			if($('.current.ribbon').children('.image').length == 1){
 				ImageGrid.mergeRibbons(direction)
 			} else {
 				img = $('.current.image')
-				if(img.next('.image').length == 0){
+				// XXX how will this behave if we are at the last image in ribbon???
+				if((ImageGrid.option.LAST_MOVE_DIRECTION == 'prev' && img.prev('.image').length != 0)
+						|| (ImageGrid.option.LAST_MOVE_DIRECTION == 'next' && img.next('.image').length == 0)){
 					ImageGrid.prevImage()
 				} else {
 					ImageGrid.nextImage()
