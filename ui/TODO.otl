@@ -1,7 +1,20 @@
 Priority work
-	[_] 84% Preview II
-		[_] 91% dynamic loading of images
-			[_] 83% stream on navigate
+	[_] 95% Preview II
+		[_] 58% native client
+			[_] 50% Windows (CEF / CEFPython)
+				[X] basic test
+				[_] 50% basic wrapper
+					[X] JSON reader/writer
+					[_] directory lister
+				[_] package a portable exe
+			[_] 66% Android (PhoneGap)
+				[X] basic test
+				[X] disable transitions...
+				[_] 0% basic wrapper
+					[_] JSON reader/writer
+					[_] directory lister
+		[X] 100% dynamic loading of images
+			[X] 100% stream on navigate
 				| parameters that affect loading:
 				| 	- current view size				-> image size must be closest
 				| 										above this
@@ -23,21 +36,26 @@ Priority work
 				| storing the structure will enable us to have partial structures
 				| thus updating the structure of a very big set without the user
 				| noticing.
-				[_] 50% sync context (handle edit events)
+				[X] 100% sync context (handle edit events)
 					[X] identify action position
 					| use id...
-					[_] handle edit events XXX
 				[X] update ui structure (handle navigate/move events)
 			[X] sizes on zoom
 			| still needs work...
 		[X] make shift up/down direction-aware...
 		| i.e. if we are going through images in a direction select the 
 		| next image in that direction when shifting...
-		[_] 85% save state
+		[X] 100% load state
+			[X] load mechanics
+			[X] auto-load last state on startup
+			[X] manual (console)
+			| loadJSON(loadJSONFile(...))
+		[X] 100% load folder
+			[X] drag'n'drop
+		[X] 100% save state
 			[X] minimal: Local Storage (manual)
 			| works across all targets (CEF, PhoneGap, browser)
 			[X] manual local JSON (file)
-			[_] CouchDB
 			[X] 100% autosave
 				[X] on edit
 				[X] on navigate
@@ -47,24 +65,6 @@ Priority work
 			[X] manual incremental save
 			[X] manual named save
 			[X] versions/history
-		[_] 66% load state
-			[X] load mechanics
-			[X] auto-load last state on startup
-			[_] manual
-		[_] 50% load folder
-			[X] drag'n'drop
-			[_] open dilog / browser
-		[_] 49% native client
-			[_] 33% Windows (CEF / CEFPython)
-				[X] basic test
-				[_] basic wrapper
-				| hook-in os-specific API
-				[_] package a portable exe
-			[_] 66% Android (PhoneGap)
-				[X] basic test
-				[X] disable transitions...
-				[_] basic wrapper
-				| hook-in os-specific API
 		[X] 100% UI
 			[X] 100% disable opacity for current ribbon
 				[X] 1.0 opacity for current ribbon mode
@@ -178,7 +178,9 @@ Priority work
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
 	[_] 39% Preview II (optional features)
-		[_] 14% make things modular and reusable
+		[_] undo last action (action log)
+		[_] mark positions and jump between marks (a-la vim's "m"/"'" commands)
+		[_] 14% make things modular and reusable (independent widget)
 			[X] make the keyboard handler local to selector (mode-aware)
 			[_] prefix an ID to all selectors to make their actions "local"
 			[_] avoid use of id html attr
@@ -192,10 +194,12 @@ Priority work
 			[_] organize things into "features"
 			| this will enable reuse as simple as combining only the desired 
 			| features into a final entity...
+		[_] handle edit events to update the internal state state -- sync with DOM (???)
+		| this is needed only for keeping the state in order...
+		|
+		| NOTE: this is not that important as buildJSON(...)
+		| 		already does the job correctly...
 		[_] try a coffee-script version
-		[_] make the ui into an independent widget
-		[_] undo last action (action log)
-		[_] mark positions and jump between marks (a-la vim's "m"/"'" commands)
 		[_] 0% PhoneGap + Android Issues:
 			[_] scrolling in overlays does not work
 			[_] half the keyboard is not working...
@@ -271,19 +275,25 @@ Priority work
 			[X] cleanup legacy workarounds
 			[X] ui.js, gallery-prototype.js either merge or revise split logic
 		[_] make scrolling of other ribbons proportional to the gap...
-	[_] 22% Preview III
+	[_] 3% Preview III
+		[_] infinite ribbons - dynamic structure construction and partial state
+		[_] 0% state
+			[_] 0% save state
+				[_] named manual
+				[_] CouchDB
+			[_] 0% export state
+				[_] JSON file
+				[_] directory tree
+				[_] XMP
+			[_] 0% load state
+				[_] named manual
+		[_] 25% directory browser
+			[_] browser mode/ui
+			[_] 50% import directory
+				[_] build/rebuild cache
+				[X] create JSON from cache
 		[_] collection management
-		[_] actual file loading
-		[_] revise controls...
-		[X] dynamic image/preview swap for zooming
-		| important to make 1:1 previews for all main views and zoom levels...
-		| also need to make this as device-neutral as possible...
-		[X] dynamic image loading/unloading to very large ribbons
-		| it is important to make this far enough from the curent view for the user not to notice anything...
-		[_] dynamic structure construction and partial state (for infinite ribbons) 
-		[_] 0% view modes
-			[_] grid mode
-			[_] calendar mode
+		[_] archive management
 		[_] 0% native client
 			[_] android
 				[_] restrict layout to horizontal
@@ -291,8 +301,10 @@ Priority work
 			[_] windows
 			[_] MacOS (low priority)
 			[_] iOS (low priority)
+			[_] % unified build system
 		[_] 0% bugs:
 			[_] adding a new ribbon above the current is still jumpy...
+	[_] % Preview III (optional features)
 	[_] 0% Pre-Alpha
 		[_] 0% finalize UI logic
 			[_] unsorted images
@@ -301,7 +313,7 @@ Priority work
 	[_] 0% 1.0
 	
 
-[_] 33% Main workflow
+[_] 38% Main workflow
 	[_] 33% image viewing
 		[X] viewer
 		[_] select source
@@ -317,8 +329,8 @@ Priority work
 		[_] tag filtering
 		[_] tag editing
 		[_] EXIF/IPTC
-	[_] 0% image/export export
-		[_] JSON
+	[_] 20% image/export export
+		[X] JSON
 		[_] XMP metadata
 		[_] fav dirs
 		[_] file list
