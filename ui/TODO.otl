@@ -1,5 +1,6 @@
 Priority work
-	[_] 81% Preview II
+	[_] 84% Preview II
+		[_] undo last action (action log)
 		[_] 91% dynamic loading of images
 			[_] 83% stream on navigate
 				| parameters that affect loading:
@@ -33,10 +34,10 @@ Priority work
 		[X] make shift up/down direction-aware...
 		| i.e. if we are going through images in a direction select the 
 		| next image in that direction when shifting...
-		[_] 57% save state
+		[_] 85% save state
 			[X] minimal: Local Storage (manual)
 			| works across all targets (CEF, PhoneGap, browser)
-			[_] local JSON (file)
+			[X] manual local JSON (file)
 			[_] CouchDB
 			[X] 100% autosave
 				[X] on edit
@@ -45,7 +46,7 @@ Priority work
 				[X] on timer
 				[X] on unload
 			[X] manual incremental save
-			[_] manual named save
+			[X] manual named save
 			[X] versions/history
 		[_] 66% load state
 			[X] load mechanics
