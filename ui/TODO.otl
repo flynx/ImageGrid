@@ -1,6 +1,5 @@
 Priority work
 	[_] 84% Preview II
-		[_] undo last action (action log)
 		[_] 91% dynamic loading of images
 			[_] 83% stream on navigate
 				| parameters that affect loading:
@@ -178,7 +177,24 @@ Priority work
 			[X] 100% actions
 				[X] bug: shifting up to new ribbon pushes the current row down...
 				| before starting on a fix, need to cleanup the code from old hacks and workarounds...
-	[_] 45% Preview II (optional features)
+	[_] 37% Preview II (optional features)
+		[_] 0% make things modular and reusable
+			[_] make the keyboard handler local to selector (mode-aware)
+			[_] prefix an ID to all selectors to make their actions "local"
+			[_] avoid use of id html attr
+			[_] avoid use of globals
+			| ImageGrid.XXX is a primery target...
+			[_] split as much of the work into events as possible
+			| one example is the stuff that's done on $('.current.image').click(),
+			| thinks like aligning ribbons, centering, etc.
+			[_] make sets of actions for combination via $.update(...)
+			| make things modular...
+			[_] organize things into "features"
+			| this will enable reuse as simple as combining only the desired 
+			| features into a final entity...
+		[_] try a coffee-script version
+		[_] make the ui into an independent widget
+		[_] undo last action (action log)
 		[_] mark positions and jump between marks (a-la vim's "m"/"'" commands)
 		[_] 0% PhoneGap + Android Issues:
 			[_] scrolling in overlays does not work
@@ -188,7 +204,7 @@ Priority work
 			[_] .dblclick(...) does not work...
 			[_] .dragable(...) does not work...
 		[_] slideshow...
-		[_] make keyboeard handler mode-aware...
+		[_] make keyboard handler mode-aware...
 		| this is needed to disable navigation keys in setup-mode, for example...
 		[X] 100% serialization/deserialization
 			[X] JSON loader/unloader
