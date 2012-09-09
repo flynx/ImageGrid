@@ -10,6 +10,7 @@
 // 	- are the benefits worth the code bloat?
 //
 
+
 var ImageGrid = {
 	// this can be serialized...
 	// NOTE: to load a serialized set of options use ImageGrid.set(options)...
@@ -524,6 +525,8 @@ function toKeyName(code){
 // XXX this must create it's own overlay...
 function showInOverlay(obj){
 	obj.click(function(){ return false })
+	// XXX 
+	$('.viewer').addClass('overlay-mode')
 	// clean things up...
 	$('.overlay .content').children().remove()
 	// put it in the overlay...
@@ -536,6 +539,7 @@ function showInOverlay(obj){
 					$('.overlay .content')
 						.children()
 							.remove()
+					$('.overlay-mode').removeClass('overlay-mode')
 				})
 		})
 		.fadeIn()
@@ -1113,10 +1117,10 @@ function setupEvents(){
 	// keyboard...
 	if(DEBUG){
 		$(document)
-			.keydown(makeKeyboardHandler(keybindings, ignorekeys, function(k){alert(k)}))
+			.keydown(makeKeyboardHandler(keybindings, function(k){alert(k)}))
 	} else {
 		$(document)
-			.keydown(makeKeyboardHandler(keybindings, ignorekeys))
+			.keydown(makeKeyboardHandler(keybindings))
 	}
 	// swipe...
 	$('.viewer')
@@ -1474,52 +1478,58 @@ var KEYBOARD_HANDLER_PROPAGATE = false
  *
  * XXX might need to add meta information to generate sensible help...
  */
-function makeKeyboardHandler(keybindings, ignore, unhandled){
+function makeKeyboardHandler(keybindings, unhandled){
 	if(unhandled == null){
 		unhandled = function(){return false}
 	}
 	return function(evt){
-		var key = evt.keyCode
-		if(ignore != null && ignore.indexOf(key) != -1){
-			return true
-		}
-		// XXX ugly...
-		var modifers = evt.ctrlKey ? 'ctrl' : ''
-		modifers += evt.altKey ? (modifers != '' ? '+alt' : 'alt') : ''
-		modifers += evt.shiftKey ? (modifers != '' ? '+shift' : 'shift') : ''
+		for(var mode in keybindings){
+			if($(mode).length > 0){
+				var bindings = keybindings[mode]
 
-		var handler = keybindings[key]
+				var key = evt.keyCode
+				if(bindings.ignore != null && bindings.ignore.indexOf(key) != -1){
+					return true
+				}
+				// XXX ugly...
+				var modifers = evt.ctrlKey ? 'ctrl' : ''
+				modifers += evt.altKey ? (modifers != '' ? '+alt' : 'alt') : ''
+				modifers += evt.shiftKey ? (modifers != '' ? '+shift' : 'shift') : ''
 
-		// alias...
-		while (typeof(handler) == typeof(123)) {
-			handler = keybindings[handler]
-		}
-		// no handler...
-		if(handler == null){
-			return unhandled(key)
-		}
-		// Array, lisp style with docs...
-		// XXX for some odd reason in chrome typeof([]) == typeof({})!!!
-		if(typeof(handler) == typeof([]) && handler.constructor.name == 'Array'){
-			// we do not care about docs here, so just get the handler...
-			handler = handler[0]
-		}
-		// complex handler...
-		if(typeof(handler) == typeof({})){
-			var callback = handler[modifers]
-			if(callback == null){
-				callback = handler['default']
+				var handler = bindings[key]
+
+				// alias...
+				while (typeof(handler) == typeof(123)) {
+					handler = bindings[handler]
+				}
+				// no handler...
+				if(handler == null){
+					return unhandled(key)
+				}
+				// Array, lisp style with docs...
+				// XXX for some odd reason in chrome typeof([]) == typeof({})!!!
+				if(typeof(handler) == typeof([]) && handler.constructor.name == 'Array'){
+					// we do not care about docs here, so just get the handler...
+					handler = handler[0]
+				}
+				// complex handler...
+				if(typeof(handler) == typeof({})){
+					var callback = handler[modifers]
+					if(callback == null){
+						callback = handler['default']
+					}
+					if(callback != null){
+						var res = callback()
+						return KEYBOARD_HANDLER_PROPAGATE&&res?true:false
+					}
+				} else {
+					// simple callback...
+					var res = handler() 
+					return KEYBOARD_HANDLER_PROPAGATE&&res?true:false
+				}
+				return unhandled(key)
 			}
-			if(callback != null){
-				var res = callback()
-				return KEYBOARD_HANDLER_PROPAGATE&&res?true:false
-			}
-		} else {
-			// simple callback...
-			var res = handler() 
-			return KEYBOARD_HANDLER_PROPAGATE&&res?true:false
 		}
-		return unhandled(key)
 	}
 }
 
@@ -1642,6 +1652,7 @@ ImageGrid.GROUP('Configuration and Help',
 					}, 
 					function(e){return e.click_handler})
 		}),
+	// XXX do not use global keybindings...
 	ImageGrid.ACTION({
 			title: 'Keyboard configuration',
 			doc: 'Show keyboard configuration interface.',
@@ -1649,39 +1660,52 @@ ImageGrid.GROUP('Configuration and Help',
 		function showKeyboardBindings(){
 			// build reverse key index...
 			var bindings = {}
-			for(var k in keybindings){
-				var id
-				var v = keybindings[k]
+			for(var m in keybindings){
+				var mode_bindings = keybindings[m]
 
-				// alias...
-				while (typeof(v) == typeof(123)) {
-					v = keybindings[v]
-				}
-				// Array, lisp style with docs...
-				if(typeof(v) == typeof([]) && v.constructor.name == 'Array'){
-					// XXX what do we do here???
-				}
-				// function...
-				if(typeof(v) == typeof(function(){})){
-					id = v.id != null ? v.id : v.name
-				}
-				// complex handler...
-				// NOTE: this can contain several key bindings...
-				if(typeof(v) == typeof({})){
-					for(var m in v){
-						id = v[m].id != null ? v[m].id : v[m].name
-						if(bindings[id] == null){
-							bindings[id] = []
-						} 
-						bindings[id].push((m=='default'?'':m+'+') + toKeyName(k))
+				// XXX do the doc for the mode...
+				// XXX
+
+				for(var k in mode_bindings){
+					// XXX skip doc attrs...
+					if(k == 'title' || k == 'doc' || k == 'ignore'){
+						continue
 					}
-					continue
+
+					var id
+					var v = mode_bindings[k]
+
+					// alias...
+					while (typeof(v) == typeof(123)) {
+						v = mode_bindings[v]
+					}
+					// Array, lisp style with docs...
+					if(typeof(v) == typeof([]) && v.constructor.name == 'Array'){
+						// XXX what do we do here???
+					}
+					// function...
+					if(typeof(v) == typeof(function(){})){
+						id = v.id != null ? v.id : v.name
+					}
+					// complex handler...
+					// NOTE: this can contain several key bindings...
+					if(typeof(v) == typeof({})){
+						for(var m in v){
+							id = v[m].id != null ? v[m].id : v[m].name
+							if(bindings[id] == null){
+								bindings[id] = []
+							} 
+							bindings[id].push((m=='default'?'':m+'+') + toKeyName(k))
+						}
+						continue
+					}
+
+					if(bindings[id] == null){
+						bindings[id] = []
+					} 
+					bindings[id].push(toKeyName(k))
 				}
 
-				if(bindings[id] == null){
-					bindings[id] = []
-				} 
-				bindings[id].push(toKeyName(k))
 			}
 			showOptionsUI(ImageGrid.actions, 
 					function(e){ 
