@@ -2,31 +2,11 @@
 // NOTE: use String.fromCharCode(code)...
 // list of keys to be ignored by handler but still handled by the browser...
 
-
 var keybindings = {
-	'.overlay-mode': {
-		title: 'Overlay mode',
-		doc: 'overlay mode key bindings.',
-
-		ignore: [
-			37,													//	Left
-			39,													//	Right
-			36,													//	Home
-			32,													//	Space
-			35,													//	End
-			38,													//	Up
-			40,													//	Down
-		],
-
-		27:		ImageGrid.closeOverlay,							//	Esc	
-	},
-
-
-	//'*': {
-	// everything except overlays...
-	'.viewer *:not(.overlay-mode *)': {
-		title: 'ALL',
-		doc: 'global key bindings.',
+	// global bindings...
+	'*': {
+		title: 'Global',
+		doc: '',
 
 		ignore: [
 			116,												//	F5
@@ -52,6 +32,43 @@ var keybindings = {
 		87:		ImageGrid.saveState,							//	w
 
 		27:		ImageGrid.closeOverlay,							//	Esc	
+
+		// ignore the modifiers (shift, alt, ctrl, caps)...
+		16:		function(){},
+		17:		16,
+		18:		16,
+		20:		16,												//	Caps Lock
+
+		// refresh...
+		// XXX make this into a real action...
+		116:	function(){ return DEBUG?true:false },			//	F5
+		112:	116,											//	F12
+	},
+
+
+	// overlay...
+	'.overlay-mode': {
+		title: 'Overlay mode',
+		doc: 'Overlay mode key bindings.',
+
+		ignore: [
+			33,													//	PgUp
+			34,													//	PgDown
+			37,													//	Left
+			39,													//	Right
+			36,													//	Home
+			32,													//	Space
+			35,													//	End
+			38,													//	Up
+			40,													//	Down
+		],
+	},
+
+
+	// everything except overlays...
+	'.viewer *:not(.overlay-mode *)': {
+		title: 'Ribbon and Viewer',
+		doc: '',
 
 		// zooming...
 		187:	ImageGrid.scaleContainerUp,						//	+
@@ -118,18 +135,6 @@ var keybindings = {
 
 		// misc actions...
 		82:		ImageGrid.reverseImageOrder,					//	r
-
-
-		// ignore the modifiers (shift, alt, ctrl, caps)...
-		16:		function(){},
-		17:		16,
-		18:		16,
-		20:		16,												//	Caps Lock
-
-		// refresh...
-		// XXX make this into a real action...
-		116:	function(){ return DEBUG?true:false },			//	F5
-		112:	116,											//	F12
 	}
 }
 

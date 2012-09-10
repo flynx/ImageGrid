@@ -1483,13 +1483,17 @@ function makeKeyboardHandler(keybindings, unhandled){
 		unhandled = function(){return false}
 	}
 	return function(evt){
+		var did_handling = false
+		var res = null
 		for(var mode in keybindings){
 			if($(mode).length > 0){
 				var bindings = keybindings[mode]
 
 				var key = evt.keyCode
 				if(bindings.ignore != null && bindings.ignore.indexOf(key) != -1){
-					return true
+					// return true
+					did_handling = true
+					continue
 				}
 				// XXX ugly...
 				var modifers = evt.ctrlKey ? 'ctrl' : ''
@@ -1504,7 +1508,7 @@ function makeKeyboardHandler(keybindings, unhandled){
 				}
 				// no handler...
 				if(handler == null){
-					return unhandled(key)
+					continue
 				}
 				// Array, lisp style with docs...
 				// XXX for some odd reason in chrome typeof([]) == typeof({})!!!
@@ -1519,16 +1523,24 @@ function makeKeyboardHandler(keybindings, unhandled){
 						callback = handler['default']
 					}
 					if(callback != null){
-						var res = callback()
-						return KEYBOARD_HANDLER_PROPAGATE&&res?true:false
+						res = callback()
+						did_handling = true
+						continue
 					}
 				} else {
 					// simple callback...
-					var res = handler() 
-					return KEYBOARD_HANDLER_PROPAGATE&&res?true:false
+					res = handler() 
+					did_handling = true
+					continue
 				}
-				return unhandled(key)
 			}
+		}
+		if(!did_handling){
+			// key is unhandled by any modes...
+			return unhandled(key)
+		} else {
+			// XXX should we handle multiple hits???
+			return KEYBOARD_HANDLER_PROPAGATE&&res?true:false
 		}
 	}
 }
