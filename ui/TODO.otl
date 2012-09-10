@@ -290,6 +290,7 @@ Priority work
 			[X] ui.js, gallery-prototype.js either merge or revise split logic
 		[_] make scrolling of other ribbons proportional to the gap...
 	[_] 3% Preview III
+		[_] use Caps Lock for edit mode...
 		[_] infinite ribbons - dynamic structure construction and partial state
 		[_] 0% state
 			[_] 0% save state
