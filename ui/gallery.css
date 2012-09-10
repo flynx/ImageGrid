@@ -293,7 +293,7 @@
 
 
 .field {
-	position: relative;
+	position: absolute;
 	overflow: visible;
 	top: 0px;
 	left: 0px;

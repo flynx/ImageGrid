@@ -292,6 +292,9 @@ Priority work
 	[_] 3% Preview III
 		[_] use Caps Lock for edit mode...
 		[_] infinite ribbons - dynamic structure construction and partial state
+		| one way to do this is by:
+		| 	- limiting the number of images per field
+		| 	- adding new images to new fields to the left and right of current
 		[_] 0% state
 			[_] 0% save state
 				[_] named manual
