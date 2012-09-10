@@ -1,18 +1,24 @@
 Priority work
-	[_] 95% Preview II
-		[_] 58% native client
+	[_] 93% Preview II
+		[_] 38% native client
+			[_] 0% Generic
+				[_] platform detect function
+				| should recognise all target platforms and sub-platforms (screen sizes)...
+				[_] default settings in platform-specific JSON file
+				| this file should be auto-loaded on first run -- when no
+				| other settings are present...
 			[_] 50% Windows (CEF / CEFPython)
-				[X] basic test
+				[_] package a portable exe
 				[_] 50% basic wrapper
 					[X] JSON reader/writer
 					[_] directory lister
-				[_] package a portable exe
-			[_] 66% Android (PhoneGap)
 				[X] basic test
-				[X] disable transitions...
+			[_] 66% Android (PhoneGap)
 				[_] 0% basic wrapper
 					[_] JSON reader/writer
 					[_] directory lister
+				[X] basic test
+				[X] disable transitions...
 		[X] 100% dynamic loading of images
 			[X] 100% stream on navigate
 				| parameters that affect loading:
@@ -301,10 +307,10 @@ Priority work
 			[_] windows
 			[_] MacOS (low priority)
 			[_] iOS (low priority)
-			[_] % unified build system
+			[_] 0% unified build system
 		[_] 0% bugs:
 			[_] adding a new ribbon above the current is still jumpy...
-	[_] % Preview III (optional features)
+	[_] 0% Preview III (optional features)
 	[_] 0% Pre-Alpha
 		[_] 0% finalize UI logic
 			[_] unsorted images
