@@ -1254,7 +1254,6 @@ function updateImage(img, size){
 	var id = img.attr('id')
 	var overlay = $('#'+id+' .image-overlay')
 	// create an overlay with the same image...
-	// XXX do we need to create the overlay each time???
 	overlay
 		.css({
 			'background-image': img.css('background-image'),
