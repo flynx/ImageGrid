@@ -1,5 +1,9 @@
 Priority work
-	[_] 93% Preview II
+	[_] 85% Preview II
+		[_] load higher resolution images OVER lower res to avoid "blackouts"
+		| plus, might be good to keep the low-res versions loaded...
+		|
+		| this can either be done via pre-loading or double layering...
 		[_] 38% native client
 			[_] 0% Generic
 				[_] default settings in platform-specific JSON file

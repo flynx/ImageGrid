@@ -109,7 +109,7 @@
 }
 
 
-.image, .current-indicator {
+.image, .image-overlay, .current-indicator {
 	width: 350px;
 	height: 350px;
 }
@@ -123,7 +123,18 @@
 	opacity: 0.3;
 
 	cursor: hand;
+}	
+
+.image-overlay {
+	position: absolute;
+	display: none;
+	content: '';
+	top: 0px;
+	left: 0px;
+	background: no-repeat 50% black;
+	background-size: contain;
 }
+
 
 .current-indicator {
 	display: none;

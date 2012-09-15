@@ -1194,11 +1194,12 @@ function makeImage(order, set_order){
 	}
 	return (setupImageEventHandlers(
 				set_order($('<div class="image"/>')
+				//set_order($('<div class="image"><div class="image-overlay"/></div>')
 					, order)))
 }
 
 
-// NOTE: if there is not id image this will return null
+// NOTE: if there is no id image this will return null
 function getImageData(id){
 	var json = ImageGrid.image_data
 	var ribbons = json.ribbons
@@ -1211,6 +1212,7 @@ function getImageData(id){
 	}
 }
 
+// Get a preview url of apropriate size...
 // NOTE: this is largely independent of ImageGrid.image_data structure, 
 // 		it needs only content...
 function getURL(id, size){
@@ -1248,6 +1250,26 @@ function getURL(id, size){
 	}
 }
 
+function updateImage(img, size){
+	var id = img.attr('id')
+	var overlay = $('#'+id+' .image-overlay')
+	// create an overlay with the same image...
+	// XXX do we need to create the overlay each time???
+	overlay
+		.css({
+			'background-image': img.css('background-image'),
+		})
+		.show()
+	img
+		.css({ 
+		'background-image': 'url('+getURL(id, size)+')'
+		})
+		// when the new image loads, fadeout the overlay remove it...
+		.ready(function(){
+				overlay.fadeOut()
+		})
+}
+
 
 
 var SCREEN_WIDTH_CACHE = 4
@@ -1282,7 +1304,7 @@ function updateRibbonImages(img, force){
 		// XXX update images on zoom...
 		var bg = img.css('background-image')
 		if(force || bg == 'none' || bg == null){
-			img.css({ 'background-image': 'url('+getURL(img.attr('id'), size)+')' })
+			updateImage(img, size)
 		}
 		//img.not('.loaded').css({ 'background-image': 'url('+getURL(img.attr('id'))+')' })
 		// remove the processed images from the list...
