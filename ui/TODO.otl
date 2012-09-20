@@ -1,10 +1,13 @@
 Priority work
-	[_] 85% Preview II
-		[_] load higher resolution images OVER lower res to avoid "blackouts"
-		| plus, might be good to keep the low-res versions loaded...
-		|
-		| this can either be done via pre-loading or double layering...
-		[_] 38% native client
+	[_] 84% Preview II
+		[_] 29% native client
+			[_] 0% Standalone utils
+				[_] generate cache
+				| resize images and put them into .ImageGrid.cache/<size>px directory
+				|
+				| should rebuild JSON
+				[_] generate JSON
+				| build JSON data from a directory...
 			[_] 0% Generic
 				[_] default settings in platform-specific JSON file
 				| this file should be auto-loaded on first run -- when no
@@ -31,6 +34,10 @@ Priority work
 					[_] directory lister
 				[X] basic test
 				[X] disable transitions...
+		[_] load higher resolution images OVER lower res to avoid "blackouts"
+		| plus, might be good to keep the low-res versions loaded...
+		|
+		| this can either be done via pre-loading or double layering...
 		[X] 100% dynamic loading of images
 			[X] 100% stream on navigate
 				| parameters that affect loading:

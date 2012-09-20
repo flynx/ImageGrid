@@ -115,6 +115,7 @@
 }
 
 .image {
+	position: relative;
 	display: inline-block;
 
 	background: no-repeat 50% black;

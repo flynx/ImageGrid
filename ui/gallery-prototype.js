@@ -1253,20 +1253,33 @@ function getURL(id, size){
 function updateImage(img, size){
 	var id = img.attr('id')
 	var overlay = $('#'+id+' .image-overlay')
+	var original_url = img.css('background-image')
+	var new_url = 'url('+getURL(id, size)+')'
+
+	// don't do anything if the url has not changed...
+	if(new_url != 'none' && new_url == original_url){
+		return
+	}
+
 	// create an overlay with the same image...
+	/*
 	overlay
 		.css({
-			'background-image': img.css('background-image'),
+			'background-image': original_url, 
+			'display': 'block'
 		})
-		.show()
+	*/
 	img
 		.css({ 
-		'background-image': 'url('+getURL(id, size)+')'
+		'background-image': new_url
 		})
+	/*
 		// when the new image loads, fadeout the overlay remove it...
+		// XXX this fires before the image is loaded...
 		.ready(function(){
 				overlay.fadeOut()
 		})
+	*/
 }
 
 
