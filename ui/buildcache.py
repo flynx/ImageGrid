@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120922031956'''
+__sub_version__ = '''20120922032258'''
 __copyright__ = '''(c) Alex A. Naanou 2012'''
 
 
@@ -19,6 +19,11 @@ from pli.logictypes import OR
 # 	- load config from file...
 # 	- accept a path on command-line
 # 	- default path is cwd
+# 	- support nested fav's for ribbons
+#
+# Long Term TODO:
+# 	- support processed images
+#
 #
 #-----------------------------------------------------------------------
 
