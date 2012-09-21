@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120922032258'''
+__sub_version__ = '''20120922035444'''
 __copyright__ = '''(c) Alex A. Naanou 2012'''
 
 
@@ -15,6 +15,9 @@ from pli.logictypes import OR
 
 
 #-----------------------------------------------------------------------
+# XXX fanatically cleanup and normalise paths...
+# XXX use real uuid's...
+#
 # TODO:
 # 	- load config from file...
 # 	- accept a path on command-line
@@ -37,6 +40,8 @@ config = {
 		'1080px': '.ImageGridCache/1080px/',
 		'1920px': '.ImageGridCache/1920px/',
 	},
+	'json': '.ImageGridCache/all.json',
+	'error': '.ImageGridCache/error.log',
 	'sizes': {
 		'150px': 150,
 		'350px': 350,
@@ -58,6 +63,14 @@ images = {
 IMAGE_EXT = OR(*(
 		'.jpg', '.jpeg', '.JPG', '.JPEG',
 ))
+
+ERR_LOG = '''\
+ERROR: %(error)s
+SOURCE: %(source-file)s
+TARGET: %(target-file)s
+
+
+'''
 
 
 #-----------------------------------------------------------------------
@@ -86,7 +99,6 @@ def make_cache_images(path, config=config):
 		iid, ext = os.path.splitext(name)
 		if ext != IMAGE_EXT:
 			continue
-		print '.',
 		n += 1
 		i = images['ribbons'][0][iid] = {
 			'id': iid,
@@ -102,16 +114,32 @@ def make_cache_images(path, config=config):
 			if max(*img.size) <= spec:
 				continue
 			# add image to index...
-			i['preview'][str(spec) + 'px'] = p
 			if not os.path.exists(p):
 				scale = spec/float(max(*img.size))
-				preview = img.resize((int(img.size[0]*scale), int(img.size[1]*scale)), Image.ANTIALIAS)
+				try:
+					preview = img.resize((int(img.size[0]*scale), int(img.size[1]*scale)), Image.ANTIALIAS)
+				except IOError, e:
+					print 'x',
+					err_file = os.path.join(path, config['error'])
+					if not os.path.exists(err_file):
+						err = open(err_file, 'w')
+					else:
+						err = open(err_file, 'a')
+					with err:
+						err.write(ERR_LOG % {
+								'source-file': name,
+								'target-file': p,
+								'error': e,
+						})
+					continue
 				preview.save(p)
 				##!!! metadata???
 				##!!!
+			print '.',
+			i['preview'][str(spec) + 'px'] = p
 		i['preview'][str(spec) + 'px'] = p
 	images['position'] = images['ribbons'][0].keys()[0]
-	with open(os.path.join(path, '.ImageGridCache.json'), 'w') as f:
+	with open(os.path.join(path, config['json']), 'w') as f:
 		json.dump(images, f, indent=4)
 	##!!! STUB...
 	return n
@@ -120,7 +148,8 @@ def make_cache_images(path, config=config):
 
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
-	PATH = 'images/cache-test/'
+##	PATH = 'images/cache-test/'
+	PATH = 'L:/incoming/UNSORTED/Images/fav'
 
 	import time
 
