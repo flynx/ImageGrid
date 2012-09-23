@@ -1091,11 +1091,22 @@ function setupEvents(){
 		.on([
 				'scaleContainerUp',
 				'scaleContainerDown',
-				'fitNImages'
+				'fitNImages',
+
+				'focusAboveRibbon', 
+				'focusBelowRibbon'
 			].join(' '),
 			function(e){
-				// update images on zooming...
-				updateRibbonImages($('.current.image'), true)
+				// call this after transitions are done...
+				if(ImageGrid.toggleTransitions('?') == 'on'){
+					$('.viewer')
+						.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+							updateRibbonImages($('.current.image'), true)
+						})
+				} else {
+					// update images on zooming...
+					updateRibbonImages($('.current.image'), true)
+				}
 			})
 	// save things if updated within a minute...
 	// XXX this gets very slow when saving a large data dump...

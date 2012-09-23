@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120923165255'''
+__sub_version__ = '''20120923194735'''
 __copyright__ = '''(c) Alex A. Naanou 2012'''
 
 
@@ -11,6 +11,7 @@ import os
 import Image
 import json
 import sha
+import urllib2
 
 from pli.logictypes import OR
 
@@ -78,10 +79,15 @@ CACHE_FILE_NAME = '%(guid)s - %(name)s'
 
 #-----------------------------------------------------------------------
 
+def pathjoin(*p):
+	'''
+	'''
+	return ('/'.join(p)).replace('//', '/')
+
 def log_err(path, e, source_file, target_file):
 	'''
 	'''
-	err_file = os.path.join(path, config['error'])
+	err_file = pathjoin(path, config['error'])
 	if not os.path.exists(err_file):
 		err = open(err_file, 'w')
 	else:
@@ -112,9 +118,56 @@ def build_cache_dirs(path, config=config):
 	'''
 	dirs = config['cache-structure']
 	for _, k in dirs.items():
-		p = os.path.join(path, k)
+		p = pathjoin(path, k)
 		if not os.path.exists(p):
 			os.makedirs(p)
+
+
+def build_index(path, images=None, count=None):
+	'''
+	'''
+	dirs = config['cache-structure']
+	sizes = config['sizes'] 
+	n = -1
+	if images == None:
+		images = {
+			'position': 0,
+			'ribbons': [{}],
+		}
+
+	for name in os.listdir(path):
+		# skip non-images...
+		iid, ext = os.path.splitext(name)
+		if ext != IMAGE_EXT:
+			continue
+
+		##!!! this is here for debuging...
+		n += 1
+		if count != None and n >= count:
+			break
+
+		i =  {
+			'id': iid,
+			'preview': {},
+			##!!! absolute paths???
+			'path': 'file:///' + urllib2.quote(pathjoin(path, name), safe='/:'),
+		}
+		img = Image.open(pathjoin(path, name), 'r')
+		try:
+			iid = sha.sha(img.tostring()).hexdigest()
+		except IOError, e:
+			print 'x',
+			log_err(path, e, name, '-')
+			continue
+
+		if iid in images['ribbons'][0]:
+			print '_',
+			continue
+		i['id'] = iid
+		images['ribbons'][0][iid] = i
+		print '.',
+
+	return images
 
 
 # XXX this will not overwrite existing files...
@@ -134,22 +187,28 @@ def make_cache_images(path, config=config):
 		i =  {
 			'id': iid,
 			'preview': {},
-			'original': os.path.join(path, name),
+##			'path': pathjoin(path, name),
+			##!!! absolute paths???
+			'path': 'file:///' + urllib2.quote(pathjoin(path, name), safe='/:'),
 		}
-		img = Image.open(os.path.join(path, name), 'r')
+		img = Image.open(pathjoin(path, name), 'r')
 		try:
 			iid = sha.sha(img.tostring()).hexdigest()
 		except IOError, e:
 			print 'x',
 			log_err(path, e, name, '-')
+			i['error'] = 'IOError: ' + str(e)
 			continue
 		finally:
+			# we need to know which images are dead...
 			images['ribbons'][0][iid] = i
+		i['id'] = iid
 		# add original image to struct...
-		i['preview'][str(max(*img.size)) + 'px'] = os.path.join(path, name)
+##		i['preview'][str(max(*img.size)) + 'px'] = pathjoin(path, name)
+		i['preview'][str(max(*img.size)) + 'px'] = 'file:///' + urllib2.quote(pathjoin(path, name), safe='/:')
 		# previews...
 		for k, spec in sizes.items():
-			p = os.path.join(path, dirs[k], CACHE_FILE_NAME % {'guid': iid, 'name': name})
+			p = pathjoin(path, dirs[k], CACHE_FILE_NAME % {'guid': iid, 'name': name})
 			# do not upscale images...
 			if max(*img.size) <= spec:
 				continue
@@ -164,11 +223,14 @@ def make_cache_images(path, config=config):
 			else:
 				# indicate an image skip...
 				print '_',
-			i['preview'][str(spec) + 'px'] = p
+##			i['preview'][str(spec) + 'px'] = p
+			##!!! absolute paths???
+			i['preview'][str(spec) + 'px'] = 'file:///' + urllib2.quote(p, safe='/:')
 		# put original image in cache...
-		i['preview'][str(spec) + 'px'] = p
+##		i['preview'][str(spec) + 'px'] = p
+		i['preview'][str(spec) + 'px'] = 'file:///' + urllib2.quote(p, safe='/:')
 	images['position'] = images['ribbons'][0].keys()[0]
-	with open(os.path.join(path, config['json']), 'w') as f:
+	with open(pathjoin(path, config['json']), 'w') as f:
 		json.dump(images, f, indent=4)
 	##!!! STUB...
 	return n
@@ -176,22 +238,36 @@ def make_cache_images(path, config=config):
 
 
 #-----------------------------------------------------------------------
-if __name__ == '__main__':
-##	PATH = 'images/cache-test/'
-	PATH = 'L:/incoming/UNSORTED/Images/fav'
 
+def build_local_cache(path):
+	'''
+	'''
 	import time
 
 	t0 = time.time()
 
-	build_cache_dirs(PATH)
+	build_cache_dirs(path)
 
-	n = make_cache_images(PATH)
+	n = make_cache_images(path)
 
 	t1 = time.time()
 
 	print
 	print 'Processed %s images in %s seconds.' % (n, t1-t0)
+
+
+#-----------------------------------------------------------------------
+if __name__ == '__main__':
+##	PATH = 'images/cache-test/'
+	PATH = 'L:/incoming/UNSORTED/Images/fav'
+
+	build_local_cache(PATH)
+
+##	index = build_index(PATH, count=10)
+##
+##	import IPython
+##	IPython.embed()
+
 
 
 
