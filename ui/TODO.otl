@@ -1,12 +1,12 @@
 Priority work
-	[_] 84% Preview II
-		[_] 29% native client
-			[_] 0% Standalone utils
-				[_] generate cache
+	[_] 79% Preview II
+		[_] 54% native client
+			[X] 100% Standalone utils
+				[X] generate cache
 				| resize images and put them into .ImageGrid.cache/<size>px directory
 				|
 				| should rebuild JSON
-				[_] generate JSON
+				[X] generate JSON
 				| build JSON data from a directory...
 			[_] 0% Generic
 				[_] default settings in platform-specific JSON file

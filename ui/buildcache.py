@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120922035444'''
+__sub_version__ = '''20120923165255'''
 __copyright__ = '''(c) Alex A. Naanou 2012'''
 
 
@@ -10,6 +10,7 @@ __copyright__ = '''(c) Alex A. Naanou 2012'''
 import os
 import Image
 import json
+import sha
 
 from pli.logictypes import OR
 
@@ -72,8 +73,38 @@ TARGET: %(target-file)s
 
 '''
 
+CACHE_FILE_NAME = '%(guid)s - %(name)s'
+
 
 #-----------------------------------------------------------------------
+
+def log_err(path, e, source_file, target_file):
+	'''
+	'''
+	err_file = os.path.join(path, config['error'])
+	if not os.path.exists(err_file):
+		err = open(err_file, 'w')
+	else:
+		err = open(err_file, 'a')
+	with err:
+		err.write(ERR_LOG % {
+				'source-file': source_file,
+				'target-file': target_file,
+				'error': e,
+		})
+
+# this should:
+# 	1) see if image is cached, if yes return the cached guid (if dates match)...
+# 	2) read the image file and get its guid 
+##!!!
+def get_image_guid(path, force=False):
+	'''
+	'''
+	##!!! check cache and date...
+	im = Image.open(path)
+	return sha.sha(im.tostring()).hexdigest()
+##	return sha.sha(open(path, 'r').read())
+
 
 # return list of paths ending in a pattern...
 def build_cache_dirs(path, config=config):
@@ -100,43 +131,41 @@ def make_cache_images(path, config=config):
 		if ext != IMAGE_EXT:
 			continue
 		n += 1
-		i = images['ribbons'][0][iid] = {
+		i =  {
 			'id': iid,
 			'preview': {},
+			'original': os.path.join(path, name),
 		}
-		img = Image.open(os.path.join(path, name))
+		img = Image.open(os.path.join(path, name), 'r')
+		try:
+			iid = sha.sha(img.tostring()).hexdigest()
+		except IOError, e:
+			print 'x',
+			log_err(path, e, name, '-')
+			continue
+		finally:
+			images['ribbons'][0][iid] = i
 		# add original image to struct...
 		i['preview'][str(max(*img.size)) + 'px'] = os.path.join(path, name)
 		# previews...
 		for k, spec in sizes.items():
-			p = os.path.join(path, dirs[k], name)
+			p = os.path.join(path, dirs[k], CACHE_FILE_NAME % {'guid': iid, 'name': name})
 			# do not upscale images...
 			if max(*img.size) <= spec:
 				continue
 			# add image to index...
 			if not os.path.exists(p):
 				scale = spec/float(max(*img.size))
-				try:
-					preview = img.resize((int(img.size[0]*scale), int(img.size[1]*scale)), Image.ANTIALIAS)
-				except IOError, e:
-					print 'x',
-					err_file = os.path.join(path, config['error'])
-					if not os.path.exists(err_file):
-						err = open(err_file, 'w')
-					else:
-						err = open(err_file, 'a')
-					with err:
-						err.write(ERR_LOG % {
-								'source-file': name,
-								'target-file': p,
-								'error': e,
-						})
-					continue
+				preview = img.resize((int(img.size[0]*scale), int(img.size[1]*scale)), Image.ANTIALIAS)
 				preview.save(p)
 				##!!! metadata???
 				##!!!
-			print '.',
+				print '.',
+			else:
+				# indicate an image skip...
+				print '_',
 			i['preview'][str(spec) + 'px'] = p
+		# put original image in cache...
 		i['preview'][str(spec) + 'px'] = p
 	images['position'] = images['ribbons'][0].keys()[0]
 	with open(os.path.join(path, config['json']), 'w') as f:
