@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120923233459'''
+__sub_version__ = '''20120924011938'''
 __copyright__ = '''(c) Alex A. Naanou 2012'''
 
 
@@ -171,6 +171,7 @@ def build_index(path, images=None, count=None):
 
 
 # XXX this will not overwrite existing files...
+# XXX make this destingwish absolute and relative paths...
 def make_cache_images(path, config=config):
 	'''
 	'''
@@ -256,6 +257,8 @@ def build_local_cache(path):
 
 	print
 	print 'Processed %s images in %s seconds.' % (n, t1-t0)
+
+
 
 
 #-----------------------------------------------------------------------
