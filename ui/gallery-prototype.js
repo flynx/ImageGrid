@@ -439,12 +439,27 @@ jQuery.fn.sortChildren = function(func){
 
 /********************************************************** Helpers **/
 
-function getImageOrder(img){
-	// XXX HACK need to parseInt this because '13' is less than '2'... 
-	// 	   ...figure a way out of this!!!
-	//return parseInt($(img).attr('id'))
-	return $(img).attr('id')
+function getImagePath(img){
+	var data = getImageData($(img).attr('id'))
+	if(data != null){
+		return data.path
+	}
 }
+
+function getImageDate(img){
+	var data = getImageData($(img).attr('id'))
+	if(data != null){
+		return data.ctime
+	}
+}
+
+
+function getImageId(img){
+	var id = $(img).attr('id')
+}
+
+// XXX make this an attr...
+var getImageOrder = getImagePath
 
 
 function setImageOrder(img, order){
@@ -453,13 +468,8 @@ function setImageOrder(img, order){
 
 
 function cmpImageOrder(a, b){
-	return getImageOrder(a) - getImageOrder(b)
-}
-
-
-function cmpImagePaths(a, b){ 
-	a = getURL($(a).attr('id'))
-	b = getURL($(b).attr('id'))
+	a = getImageOrder(a)
+	b = getImageOrder(b)
 	return a > b ? 1 : a < b ? -1 : 0
 }
 
@@ -789,13 +799,14 @@ function getImageBefore_lin(id, ribbon, get_order){
 	if(get_order == null){
 		get_order = getImageOrder
 	}
+	var order = get_order($('#'+id))
 	// walk the ribbon till we find two images one with an ID less and 
 	// another greater that id...
 	var images = ribbon.children('.image')
 	var prev = null
 	for(var i=0; i < images.length; i++){
 		// XXX replace the id attr with a universal getter
-		if(get_order(images[i]) > id){
+		if(get_order(images[i]) > order){
 			return prev
 		}
 		prev = $(images[i])
@@ -806,7 +817,7 @@ function getImageBefore_lin(id, ribbon, get_order){
 // generic binery search for element just before the id...
 // NOTE: if id is in lst, this will return the element just before it.
 // NOTE: lst must be sorted.
-function binarySearch(id, lst, get_order){
+function binarySearch(order, lst, get_order){
 	if(get_order == null){
 		get_order = function(o){return o}
 	}
@@ -822,31 +833,31 @@ function binarySearch(id, lst, get_order){
 	var i = l
 
 	while(true){
-		var i_id = get_order(lst[i])
+		var i_order = get_order(lst[i])
 		// beginning of the array...
 		if(i == 0){
-			if(id > i_id){
+			if(order > i_order){
 				return i
 			}
 			return null
 		}
 		// we got a hit...
-		if(i_id == id){
+		if(i_order == order){
 			return i-1
 		}
 		// we are at the end...
-		if(i == lst.length-1 && id > i_id){
+		if(i == lst.length-1 && order > i_order){
 			return i
 		}
-		var ii_id = get_order(lst[i+1])
-		// test if id is between i and i+1...
-		if( i_id < id && id < ii_id ){
+		var ii_order = get_order(lst[i+1])
+		// test if order is between i and i+1...
+		if( i_order < order && order < ii_order ){
 			return i
 		}
 		// prepare for next iteration...
 		// NOTE: we saturate the values so we will never get out of bounds.
 		l = Math.round(l/2)
-		if(id < i_id){
+		if(order < i_order){
 			// lower half...
 			i = Math.max(0, i-l)
 		} else {
@@ -862,8 +873,9 @@ function getImageBefore_bin(id, ribbon, get_order){
 	if(get_order == null){
 		get_order = getImageOrder
 	}
+	var order = get_order($('#'+id))
 	var images = ribbon.children('.image') 
-	var i = binarySearch(id, images, get_order)
+	var i = binarySearch(order, images, get_order)
 	if(i == null){
 		return null
 	}
@@ -1017,12 +1029,9 @@ function alignRibbon(image, position){
 
 // center other ribbons relative to current image...
 // NOTE: only two ribbons are positioned at this point...
-function alignRibbons(get_order){
-	if(get_order == null){
-		get_order = getImageOrder
-	}
+function alignRibbons(){
 	// XXX might be good to move this to a more generic location...
-	var id = get_order($('.current.image'))
+	var id = $('.current.image').attr('id')
 	var directions = ['prev', 'next']
 	for(var i in directions){
 		var ribbon = $('.current.ribbon')[directions[i]]('.ribbon')
@@ -1378,15 +1387,12 @@ function loadImagesFromList(images){
  * 	}
  */
 // XXX add incremental or partial updates...
-function buildJSON(get_order){
+function buildJSON(){
 	/* XXX can't return this yet as we are not updating this properly yet...
 	if(ImageGrid.image_data != null){
 		return ImageGrid.image_data
 	}
 	*/
-	if(get_order == null){
-		get_order = getImageOrder
-	}
 	var size = getCurrentImageSize()
 	var ribbons = $('.ribbon')
 	res = {
@@ -1403,8 +1409,8 @@ function buildJSON(get_order){
 		res.ribbons.push(ribbon)
 		for(var j=0; j < images.length; j++){
 			var image = $(images[j])
-			var id = get_order(image)
-			ribbon[id] = getImageData(id)
+			var data = getImageData(image.attr('id'))
+			ribbon[data.id] = data
 		}
 	}
 	ImageGrid.image_data = res
@@ -1414,6 +1420,7 @@ function buildJSON(get_order){
 
 
 // XXX might be good to add images in packs here, not one by one...
+// make this work on detached elements...
 function loadJSON(data, position, set_order){
 	if(position == null){
 		position = data.position
@@ -1430,6 +1437,10 @@ function loadJSON(data, position, set_order){
 	ImageGrid.image_data = data
 
 	var field = $('.field')
+	field.hide()
+	//var c = field.parent()
+
+	//field.detach()
 
 	// drop all old content...
 	field.children('.ribbon').remove()
@@ -1444,26 +1455,26 @@ function loadJSON(data, position, set_order){
 		}
 		// create ribbon...
 		var ribbon = $('<div class="ribbon"></div>')
-			.appendTo(field)
 		var new_images = {}
 		for(var j in images){
 			var image = images[j]
-			// update index...
-			//new_images[order] = image
-			// create image...
-			//makeImage(order, set_order)
 			makeImage(j, set_order)
 				.appendTo(ribbon)
 			order++
 		}
-		//ribbons[i] = new_images
+		ribbon.appendTo(field)
 	}
+	// sort images...
+	ImageGrid.sortImages()
 	console.log('loaded: ', order)
 	if(position != null && $('#' + position).length != 0){
 		$('#' + position).click()
 	} else {
 		$('.image').first().click()
 	}
+
+	//field.appendTo(c)
+	field.show()
 }
 
 
@@ -2014,11 +2025,8 @@ ImageGrid.GROUP('Navigation',
 			doc: 'Focus ribbon in specified direction',
 			display: false,
 		},
-		function focusRibbon(direction, get_order){
-			if(get_order == null){
-				get_order = getImageOrder
-			}
-			var id = get_order($('.current.image'))
+		function focusRibbon(direction){
+			var id = $('.current.image').attr('id')
 			var prev = getImageBefore(id, $('.current.ribbon')[direction]('.ribbon'))
 			if(prev){
 				var next = prev.next()
@@ -2167,16 +2175,13 @@ ImageGrid.GROUP('Ribbon manipulations',
 				'ribbon and add them to current.',
 			display: false,
 		},
-		function mergeRibbons(direction, get_order){
-			if(get_order == null){
-				get_order = getImageOrder
-			}
+		function mergeRibbons(direction){
 			var current_ribbon = $('.current.ribbon')
 			var images = $('.current.ribbon')[direction]('.ribbon').children()
 			for(var i=0; i < images.length; i++){
 				var image = $(images[i])
 				// get previous element after which we need to put the current...
-				var prev_elem = getImageBefore(get_order(image), current_ribbon)
+				var prev_elem = getImageBefore(image.attr('id'), current_ribbon)
 				// check if we need to be before the first element...
 				if(prev_elem == null){
 					image
@@ -2216,17 +2221,14 @@ ImageGrid.GROUP('Image manipulation',
 			title: 'Shift image in direction',
 			display: false,
 		},
-		function shiftImage(direction, get_order){
-			if(get_order == null){
-				get_order = getImageOrder
-			}
+		function shiftImage(direction){
 			if($('.current.ribbon')[direction]('.ribbon').length == 0){
 				ImageGrid.createRibbon(direction)
 			}
 
 			// get previous element after which we need to put the current...
 			var prev_elem = getImageBefore(
-								get_order($('.current.image')), 
+								$('.current.image').attr('id'), 
 								$('.current.ribbon')[direction]('.ribbon'))
 
 			// last image in ribbon, merge...
@@ -2294,12 +2296,7 @@ ImageGrid.GROUP('Image manipulation',
 				'NOTE: this will only realign three ribbons.'
 		}, 
 		function sortImages(){
-			/* XXX this is broken: need a good default...
-			$('.ribbon').sortChildren(cmpImageOrder)
-			// compensate for offset cange...
-			updateRibbonImages($('.current.image').click())
-			*/
-			return ImageGrid.sortImagesByPath()
+			ImageGrid.sortImagesVia(cmpImageOrder)
 		}),
 	ImageGrid.ACTION({ 
 			title: 'Reverse order of images',
@@ -2307,14 +2304,29 @@ ImageGrid.GROUP('Image manipulation',
 		}, 
 		function reverseImageOrder(){
 			// this is done by reversing their id attr
-			ImageGrid.sortImagesVia(function(a, b){return cmpImagePaths(b, a)})
+			ImageGrid.sortImagesVia(function(a, b){return cmpImageOrder(b, a)})
+		}),
+	ImageGrid.ACTION({ 
+			title: 'Sort images by ID',
+		}, 
+		function sortImagesById(){
+			getImageOrder = getImageId
+			ImageGrid.sortImages()
+		}),
+	ImageGrid.ACTION({ 
+			title: 'Sort images by date',
+		}, 
+		function sortImagesByDate(){
+			getImageOrder = getImageDate
+			ImageGrid.sortImages()
 		}),
 	ImageGrid.ACTION({ 
 			title: 'Sort images by their full path',
 		}, 
 		// XXX this should use a normalized path...
 		function sortImagesByPath(){
-			ImageGrid.sortImagesVia(cmpImagePaths)
+			getImageOrder = getImagePath
+			ImageGrid.sortImages()
 		}))
 
 

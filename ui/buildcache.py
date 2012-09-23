@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120923194735'''
+__sub_version__ = '''20120923233459'''
 __copyright__ = '''(c) Alex A. Naanou 2012'''
 
 
@@ -181,6 +181,7 @@ def make_cache_images(path, config=config):
 	for name in os.listdir(path):
 		# skip non-images...
 		iid, ext = os.path.splitext(name)
+		source_path = pathjoin(path, name)
 		if ext != IMAGE_EXT:
 			continue
 		n += 1
@@ -190,8 +191,9 @@ def make_cache_images(path, config=config):
 ##			'path': pathjoin(path, name),
 			##!!! absolute paths???
 			'path': 'file:///' + urllib2.quote(pathjoin(path, name), safe='/:'),
+			'ctime': os.path.getctime(source_path),
 		}
-		img = Image.open(pathjoin(path, name), 'r')
+		img = Image.open(source_path, 'r')
 		try:
 			iid = sha.sha(img.tostring()).hexdigest()
 		except IOError, e:

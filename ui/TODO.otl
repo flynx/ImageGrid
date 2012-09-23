@@ -1,13 +1,7 @@
 Priority work
-	[_] 79% Preview II
-		[_] 54% native client
-			[X] 100% Standalone utils
-				[X] generate cache
-				| resize images and put them into .ImageGrid.cache/<size>px directory
-				|
-				| should rebuild JSON
-				[X] generate JSON
-				| build JSON data from a directory...
+	[_] 87% Preview II
+		[_] 43% native client
+			[_] make cache generator accept command-line args...
 			[_] 0% Generic
 				[_] default settings in platform-specific JSON file
 				| this file should be auto-loaded on first run -- when no
@@ -34,12 +28,21 @@ Priority work
 					[_] directory lister
 				[X] basic test
 				[X] disable transitions...
-		[_] load sorted images from JSON data
+			[X] 100% Standalone utils
+				[X] generate cache
+				| resize images and put them into .ImageGrid.cache/<size>px directory
+				|
+				| should rebuild JSON
+				[X] generate JSON
+				| build JSON data from a directory...
+		[_] make loading of different resolution images smooth...
+		| can be done in several ways:
+		| 	- cache images before loading...
+		| 	- two layers...
+		| 	- always keep the lowest res image loaded...
+		[X] load sorted images from JSON data
 		| curently the sort is as in file...
-		[_] load higher resolution images OVER lower res to avoid "blackouts"
-		| plus, might be good to keep the low-res versions loaded...
-		|
-		| this can either be done via pre-loading or double layering...
+		[X] fix image ordering...
 		[X] 100% dynamic loading of images
 			[X] 100% stream on navigate
 				| parameters that affect loading:
