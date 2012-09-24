@@ -333,6 +333,23 @@ ImageGrid.GROUP('State',
 			]
 		}),
 	ImageGrid.OPTION({
+			name: 'NORMAL_MODE_INFO',
+			display: false,
+			value: null,
+			doc: 'Info display in normal mode.',
+			set: function(){
+				if(ImageGrid.toggleSingleImageMode('?') == 'off'){
+					ImageGrid.toggleInfo(ImageGrid.option.NORMAL_MODE_INFO)
+				}
+			},
+			get: function(){
+				if(ImageGrid.toggleSingleImageMode('?') == 'on'){
+					return ImageGrid.option.NORMAL_MODE_INFO
+				}
+				return ImageGrid.toggleInfo('?')
+			}
+		}),
+	ImageGrid.OPTION({
 			name: 'NORMAL_MODE_BG',
 			display: false,
 			value: null,
@@ -1051,6 +1068,31 @@ function alignRibbons(){
 
 
 
+/************************************************** Info Generators **/
+
+function currentImageNumberInRibbon(){
+	// XXX use image_data intead of DOM as the later can be loaded partially...
+	return (
+		($('.current.ribbon').children('.image').index($('.current.image'))+1) 
+		+ '/' 
+		+ $('.current.ribbon').children('.image').length)
+}
+
+function currentImagePath(){
+	if($('.current.image').length == 0){
+		return ''
+	}
+	return unescape(getImageData($('.current.image').attr('id')).path)
+}
+
+function updateInfo(){
+	$('.info .bottom-right')
+		.text(currentImageNumberInRibbon())
+
+	//$('.info .bottom-left')
+	//	.text(currentImagePath())
+}
+
 
 /************************************************** Setup Functions **/
 // XXX is this a correct place for these?
@@ -1062,6 +1104,8 @@ function setDefaultInitialState(){
 	if($('.current.image').length == 0){
 		$('.current.ribbon').children('.image').first().addClass('current')
 	}
+
+	updateInfo()
 }
 
 
@@ -1082,19 +1126,23 @@ function setupEvents(){
 			function(){
 				updated = true
 			})
-		/*
 		.on([
 				// navigation events...
 				'nextImage prevImage', 
 				'nextScreenImages', 
 				'prevScreenImages', 
 				'focusAboveRibbon', 
-				'focusBelowRibbon'
+				'focusBelowRibbon',
+				'firstImage',
+				'lastImage'
 			].join(' '), 
 			function(){
+				/*
 				updated = true
+				*/
+
+				updateInfo()
 			})
-		*/
 	// zooming...
 	$(document)
 		.on([
@@ -1682,6 +1730,12 @@ ImageGrid.GROUP('Mode: All',
 				}
 			}
 		}),
+	ImageGrid.ACTION({
+			id: 'toggleInfo',
+			title: 'Single additional information',
+			type: 'toggle',
+		}, 
+		createCSSClassToggler('.viewer', 'display-info', updateInfo)),
 
 	ImageGrid.ACTION({
 			id: 'toggleControls',
@@ -1799,6 +1853,7 @@ ImageGrid.GROUP('Mode: Single Image',
 			function(action){
 				if(action == 'on'){
 					ImageGrid.option.NORMAL_MODE_BG = ImageGrid.getBackgroundMode()
+					ImageGrid.option.NORMAL_MODE_INFO = ImageGrid.toggleInfo('?')
 					ImageGrid.option.ORIGINAL_FIELD_SCALE = getElementScale($('.field'))
 				// do this only when coming out of single image mode...
 				} else if(ImageGrid.toggleSingleImageMode('?') == 'on'){
@@ -1810,9 +1865,11 @@ ImageGrid.GROUP('Mode: Single Image',
 				if(action == 'on'){
 					ImageGrid.fitImage()
 					ImageGrid.setBackgroundMode(ImageGrid.option.SINGLE_IMAGE_MODE_BG)
+					ImageGrid.toggleInfo('off')
 				} else {
 					ImageGrid.setContainerScale(ImageGrid.option.ORIGINAL_FIELD_SCALE)
 					ImageGrid.setBackgroundMode(ImageGrid.option.NORMAL_MODE_BG)
+					ImageGrid.toggleInfo(ImageGrid.option.NORMAL_MODE_INFO)
 				}
 				clickAfterTransitionsDone()
 			})),

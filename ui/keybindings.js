@@ -27,6 +27,7 @@ var keybindings = {
 		9:		ImageGrid.toggleControls,						//	tab
 		66:		ImageGrid.toggleBackgroundModes,				//	b
 		73:		ImageGrid.toggleCurrentRibbonOpacity,			//	i
+		78:		ImageGrid.toggleInfo,							//	n
 		77:		toggleMarkers,									//	m
 
 		87:		ImageGrid.saveState,							//	w

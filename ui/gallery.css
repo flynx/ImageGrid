@@ -293,6 +293,48 @@
 	height: 5%;
 }
 
+.info {
+	display: none;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	
+	color: gray;
+
+	opacity: 0.0;
+}
+
+.display-info .info {
+	display: block;
+	opacity: 0.3;
+}
+
+.info .top-left {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	padding-left: 50px;
+}
+.info .top-right {
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	padding-right: 50px;
+}
+.info .bottom-left {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	padding-left: 50px;
+}
+.info .bottom-right {
+	position: absolute;
+	bottom: 0px;
+	right: 0px;
+	padding-right: 50px;
+}
+
+
 
 .container {
 	position: relative;
@@ -352,7 +394,7 @@
 }
 
 
-.dark .overlay *, .dark .splash * {
+.dark .overlay *, .dark .splash *, .dark .info * {
 	color: silver;
 }
 
@@ -382,7 +424,7 @@
 	background-color: black;
 }
 
-.black .overlay *, .black .splash * {
+.black .overlay *, .black .splash *, .black .info * {
 	color: silver;
 }
 

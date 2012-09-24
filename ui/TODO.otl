@@ -1,5 +1,5 @@
 Priority work
-	[_] 87% Preview II
+	[_] 88% Preview II
 		[_] 43% native client
 			[_] make cache generator accept command-line args...
 			[_] 0% Generic
@@ -43,6 +43,7 @@ Priority work
 		[X] load sorted images from JSON data
 		| curently the sort is as in file...
 		[X] fix image ordering...
+		[X] add basic image info display...
 		[X] 100% dynamic loading of images
 			[X] 100% stream on navigate
 				| parameters that affect loading:
