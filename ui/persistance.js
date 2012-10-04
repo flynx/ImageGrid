@@ -9,9 +9,9 @@
  *
  */
 
-function loadJSONfile(path, escape_urls){
+function loadJSONfile(path, dfl, escape_urls){
 	if(escape_urls == null){
-		escape_urls = true
+		escape_urls = false
 	}
 	// XXX CEF (file) - binding
 	if(CEF_loadJSON != null){
@@ -19,6 +19,10 @@ function loadJSONfile(path, escape_urls){
 	}
 	// XXX PhoneGap (file) - binding
 	// XXX browser - open file dialog
+	
+	if(data == null){
+		return dfl
+	}
 	
 	// escape the URLs...
 	// XXX need to make ths universal for all urls within the image object...

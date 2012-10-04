@@ -126,7 +126,6 @@ ImageGrid.GROUP('API',
 ImageGrid.GROUP('State',
 	ImageGrid.ACTION({
 			doc: 'Save state to local storage',
-			group: 'API',
 			display: false,
 		},
 		function save_config(name){
@@ -135,12 +134,38 @@ ImageGrid.GROUP('State',
 			}
 			$.jStorage.set(this.option.KEY_NAME_CONFIG+name, this.sync())
 		}),
+	// XXX merge this with save_localstorage...
 	ImageGrid.ACTION({
-			doc: 'Save state to local storage',
-			group: 'API',
+			doc: 'Save state to file',
 			display: false,
 		},
-		function save(name){
+		function save_file(name){
+			if(dumpJSONfile == null){
+				return false
+			}
+			if(name == null){
+				name = ''
+				// push the last config to a new version...
+				var history = loadJSONfile(this.option.FILE_NAME_HISTORY, [])
+				// XXX should we add a date?
+				history.push(loadJSONfile(this.option.FILE_NAME_STATE))
+				// remove versions beyond VERSIONS_TO_KEEP...
+				var c = history.length - this.option.VERSIONS_TO_KEEP
+				if(c > 0){
+					history.splice(0, c)
+				}
+				dumpJSONfile(this.option.FILE_NAME_HISTORY, history)
+			} else {
+				name = '-' + name
+			}
+			this.save_config()
+			dumpJSONfile(this.option.FILE_NAME_STATE+name, buildJSON())
+		}),
+	ImageGrid.ACTION({
+			doc: 'Save state to local storage',
+			display: false,
+		},
+		function save_localstorage(name){
 			if(name == null){
 				name = ''
 				// push the last config to a new version...
@@ -161,7 +186,6 @@ ImageGrid.GROUP('State',
 		}),
 	ImageGrid.ACTION({
 			doc: 'Load state from local storage',
-			group: 'API',
 			display: false,
 		},
 		function load(name, dfl_state, dfl_config){
@@ -188,7 +212,6 @@ ImageGrid.GROUP('State',
 							'enabling trivial redo.\n'+
 					'NOTE: if n is greater than 1 then all the skipped steps will '+
 							'get dropped.',
-			group: 'API',
 			display: false,
 		},
 		function undo(n){
@@ -217,7 +240,6 @@ ImageGrid.GROUP('State',
 					'NOTE: this is here because JS has no direct way to '+
 					'on-demand, transparently update the value of an attr. '+
 					'.valueOf() is not transparent enough.',
-			group: 'API',
 			display: false,
 		},
 		function sync(){
@@ -278,6 +300,18 @@ ImageGrid.GROUP('State',
 			name: 'KEY_NAME_CONFIG',
 			title: 'Name of localStorage key to store config data.',
 			value: 'ImageGrid_config',
+			display: false,
+		}),
+	ImageGrid.OPTION({
+			name: 'FILE_NAME_STATE',
+			title: 'File name to store state.',
+			value: '.ImageGrid.state',
+			display: false,
+		}),
+	ImageGrid.OPTION({
+			name: 'FILE_NAME_HISTORY',
+			title: 'File name to store state history.',
+			value: '.ImageGrid.history',
 			display: false,
 		}),
 	ImageGrid.OPTION({
@@ -1661,7 +1695,7 @@ ImageGrid.GROUP('Mode: All',
 			title: 'Save current state.',
 		},
 		function saveState(){
-			ImageGrid.save()
+			ImageGrid.save_localstorage()
 		}),
 	ImageGrid.ACTION({
 			title: 'Get the background mode',
