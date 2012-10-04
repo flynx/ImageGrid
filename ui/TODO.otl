@@ -1,5 +1,6 @@
 Priority work
-	[_] 88% Preview II
+	[_] 82% Preview II
+		[_] structure sorting to be persistent...
 		[_] 43% native client
 			[_] make cache generator accept command-line args...
 			[_] 0% Generic

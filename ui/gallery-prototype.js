@@ -1094,6 +1094,8 @@ function updateInfo(){
 }
 
 
+
+
 /************************************************** Setup Functions **/
 // XXX is this a correct place for these?
 
