@@ -50,8 +50,12 @@ function shift_ribbon_left(){
 	// correct for growth...
 	var w = 80
 	var l = parseFloat($('.field').css('left'))
+	// XXX on 20.0 chrome, getting the left coordinates will yeild a 
+	//	screen value correctd for zoom, which is different from the
+	//	value written...
+	//	e.g. writing 400px with page zoom to 80% and then getting the 
+	//	value will return 300px!!
 	$('.field').css({left: l + w*5})
-	console.log($('.field').css('left'), l, l+w*5)
 
 	// XXX this is really hackish! ...find a better way to solve this...
 	// XXX this is bad because it might depend on the speed of the device...
@@ -66,8 +70,12 @@ function shift_ribbon_right(){
 	// correct for growth...
 	var w = 80
 	var l = parseFloat($('.field').css('left'))
+	// XXX on 20.0 chrome, getting the left coordinates will yeild a 
+	//	screen value correctd for zoom, which is different from the
+	//	value written...
+	//	e.g. writing 400px with page zoom to 80% and then getting the 
+	//	value will return 300px!!
 	$('.field').css({left: l - w*5})
-	console.log($('.field').css('left'), l, l-w*5)
 
 	// XXX this is really hackish! ...find a better way to solve this...
 	// XXX this is bad because it might depend on the speed of the device...
