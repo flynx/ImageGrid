@@ -2254,7 +2254,9 @@ ImageGrid.GROUP('Ribbon manipulations',
 			var res = $('<div class="ribbon"></div>')[insert]('.current.ribbon')
 			
 			// restore the animated state...
-			$('.field').removeClass('unanimated')	
+			// XXX this is a hack...
+			setTimeout(function(){$('.field').removeClass('unanimated')}, 10)
+			//$('.field').removeClass('unanimated')	
 
 			return res
 		}),
