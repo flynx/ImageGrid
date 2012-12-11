@@ -1,7 +1,12 @@
 Priority work
-	[_] 82% Preview II
+	[_] 72% Preview II
+		[_] BUG: click does not update the image counter...
+		[_] do something sensible when no images are loaded...
+		[_] 0% split functionality into modules...
+			[_] core
+			[_] extras
 		[_] structure sorting to be persistent...
-		[_] 43% native client
+		[_] 40% native client
 			[_] make cache generator accept command-line args...
 			[_] 0% Generic
 				[_] default settings in platform-specific JSON file
@@ -23,12 +28,25 @@ Priority work
 					[X] JSON reader/writer
 					[_] directory lister
 				[X] basic test
-			[_] 66% Android (PhoneGap)
+			[_] 50% Android (PhoneGap)
 				[_] 0% basic wrapper
 					[_] JSON reader/writer
 					[_] directory lister
 				[X] basic test
 				[X] disable transitions...
+				[_] 0% bugs
+					[_] taps register as two taps
+					| possibly a tap and a click...
+					[_] sorting seems not to work correctly...
+					[_] reversing is odd...
+					[_] half the thing breaks at some point...
+					| - auto-loading of images stops
+					| - image info (counter) stops
+					| - single-image-specific settings stop working...
+					|
+					| Did we lose the globals? (would explain some of what is going on)
+					|
+					| things seem to update only on single/ribbon mode switch...
 			[X] 100% Standalone utils
 				[X] generate cache
 				| resize images and put them into .ImageGrid.cache/<size>px directory
