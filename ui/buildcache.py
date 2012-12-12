@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20121212170329'''
+__sub_version__ = '''20121212171440'''
 __copyright__ = '''(c) Alex A. Naanou 2012'''
 
 
@@ -264,16 +264,19 @@ def build_local_cache(path):
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 	from optparse import OptionParser
+
 	parser = OptionParser()
-	options, args = parser.parse_args()
 
 	##!!! need to define the path so that it shoes up in -h
+
+	options, args = parser.parse_args()
 
 	if len(args) != 1:
 		parser.print_usage()
 	else:
-		PATH = args[0]
-		build_local_cache(PATH)
+		IN_PATH = args[0]
+		IN_PATH = IN_PATH.replace('\\', '/')
+		build_local_cache(IN_PATH)
 
 
 ##	PATH = 'images/cache-test/'
