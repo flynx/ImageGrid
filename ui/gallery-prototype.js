@@ -1238,8 +1238,8 @@ function setupEvents(){
 	// XXX pinch: do gradual zooming...
 	$('.viewer')
 		.swipe({
-			pinchIn: ImageGrid.scaleContainerDown,
-			pinchOut: ImageGrid.scaleContainerUp,
+			pinchIn: ImageGrid.scaleContainerUp,
+			pinchOut: ImageGrid.scaleContainerDown,
 
 			fingers: '2'
 		})
