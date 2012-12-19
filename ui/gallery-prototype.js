@@ -1232,7 +1232,11 @@ function setupEvents(){
 			swipeLeft: ImageGrid.nextImage,
 			swipeRight: ImageGrid.prevImage,
 			swipeUp: ImageGrid.shiftImageUp,
-			swipeDown: ImageGrid.shiftImageDown
+			swipeDown: ImageGrid.shiftImageDown,
+			
+			// XXX do gradual zooming...
+			pinchIn: ImageGrid.scaleContainerDown,
+			pinchOut: ImageGrid.scaleContainerUp
 		})
 	// dragging...
 	// XXX make this work seamlessly with touchSwipe...
