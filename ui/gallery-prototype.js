@@ -1231,18 +1231,22 @@ function setupEvents(){
 		.swipe({
 			swipeLeft: ImageGrid.nextImage,
 			swipeRight: ImageGrid.prevImage,
+
 			swipeUp: ImageGrid.shiftImageUp,
 			swipeDown: ImageGrid.shiftImageDown,
 			
 			// XXX do gradual zooming...
-			pinchIn: ImageGrid.scaleContainerDown,
-			pinchOut: ImageGrid.scaleContainerUp
+			//pinchIn: ImageGrid.scaleContainerDown,
+			//pinchOut: ImageGrid.scaleContainerUp,
+
+			fingers: 'all'
 		})
+
 	// dragging...
 	// XXX make this work seamlessly with touchSwipe...
 	// XXX cancel clicks while dragging...
 	// XXX this does not work on android...
-	$('.field').draggable()
+	//$('.field').draggable()
 }
 
 
