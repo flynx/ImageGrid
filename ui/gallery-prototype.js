@@ -1234,12 +1234,14 @@ function setupEvents(){
 
 			swipeUp: ImageGrid.shiftImageUp,
 			swipeDown: ImageGrid.shiftImageDown,
-			
-			// XXX do gradual zooming...
-			//pinchIn: ImageGrid.scaleContainerDown,
-			//pinchOut: ImageGrid.scaleContainerUp,
+		})
+	// XXX pinch: do gradual zooming...
+	$('.viewer')
+		.swipe({
+			pinchIn: ImageGrid.scaleContainerDown,
+			pinchOut: ImageGrid.scaleContainerUp,
 
-			fingers: 'all'
+			fingers: '2'
 		})
 
 	// dragging...
