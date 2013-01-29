@@ -1644,6 +1644,7 @@ function makeKeyboardHandler(keybindings, unhandled){
 				var key = evt.keyCode
 				if(bindings.ignore != null && bindings.ignore.indexOf(key) != -1){
 					// return true
+					res = res == null ? true : res
 					did_handling = true
 					continue
 				}
