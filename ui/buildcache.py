@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20121212171440'''
+__sub_version__ = '''20130319144110'''
 __copyright__ = '''(c) Alex A. Naanou 2012'''
 
 
@@ -123,6 +123,16 @@ def build_cache_dirs(path, config=config):
 			os.makedirs(p)
 
 
+# image format:
+# 	{
+# 		'id': <image-id>,
+# 		'preview': {
+# 			<resolution>: <cache-path>,
+# 			...
+# 		},
+# 		'path': <image-path>
+# 	}
+#
 def build_index(path, images=None, count=None):
 	'''
 	'''

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120317005456'''
+__sub_version__ = '''20130319145754'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -32,7 +32,7 @@ def image_gid(path, date=None,
 		use_ctime=False,
 		hash_func=sha.sha):
 	'''
-	Calgulate image GID.
+	Calculate image GID.
 
 	Main gid criteria:
 	 	- unique
@@ -45,7 +45,7 @@ def image_gid(path, date=None,
 	Example:
 		Alex_A.Naanou-20110627-195706-DSC_1234	
 
-	If hash_func is not None, then the function will be used to henerate 
+	If hash_func is not None, then the function will be used to generate 
 	a hex hash from the above string.
 
 	Supported fields:

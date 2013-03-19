@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120320010842'''
+__sub_version__ = '''20130319002125'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -24,6 +24,7 @@ from pprint import pprint
 from itertools import izip, izip_longest
 
 import pyexiv2 as metadata
+import couchdb
 
 from pli.logictypes import ANY, OR
 
@@ -270,7 +271,7 @@ if __name__ == '__main__':
 
 	INDEX_PATH = config.get('INDEX_ROOT', os.path.join('test', 'index2'))
 
-	FILE_LIST = os.path.join('test', 'flatfilelist-P7000.json')
+	FILE_LIST = os.path.join('test', 'flatfilelist-P7000-new.json')
 ##	FILE_LIST = os.path.join('test', 'flatfilelist-120kfiles.json')
 ##	FILE_LIST = os.path.join('test', 'flatfilelist.json')
 	BUILD_FILE_LIST = False if os.path.exists(FILE_LIST) else True
