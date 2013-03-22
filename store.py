@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20120316182131'''
+__sub_version__ = '''20130319150549'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -168,7 +168,7 @@ class Index(mapping.Mapping):
 		pack_ext = self.__pack_ext__
 ##		file_name = name + ext
 		locations = self.__locations__(name)
-		# look of the file directly...
+		# look for the file directly...
 		for n in locations:
 			if os.path.exists(os.path.join(self._path, n)):
 				return json.load(file(os.path.join(self._path, n)))

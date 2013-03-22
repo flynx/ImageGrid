@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130319002125'''
+__sub_version__ = '''20130319151025'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -245,6 +245,7 @@ def gid_index(index, existing=None):
 			# get file GID...
 			GID = image_gid('%s.%s' % (os.path.join(*[config['ARCHIVE_ROOT']] + raw[0] + [raw[1]]), raw[2]))
 
+			##!!! normalize the image format...
 			res[GID] = {
 				'gid': GID,
 				'name': name,
