@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130322144912'''
+__sub_version__ = '''20130322155314'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -29,10 +29,6 @@ if __name__ == '__main__':
 
 	QUERY = 'PSD'
 
-	config = json.load(open(CONFIG_NAME))
-	INDEX_PATH = config.get('INDEX_ROOT', os.path.join('test', 'index2'))
-	ARCHIVE_ROOT = config.get('ARCHIVE_ROOT', '')
-
 	parser = OptionParser()
 
 	##!!! need to define the path so that it shoes up in -h
@@ -42,6 +38,10 @@ if __name__ == '__main__':
 	if len(args) != 1:
 		parser.print_usage()
 	else:
+		config = json.load(open(CONFIG_NAME))
+		INDEX_PATH = config.get('INDEX_ROOT', os.path.join('test', 'index2'))
+		ARCHIVE_ROOT = config.get('ARCHIVE_ROOT', '')
+
 		IN_PATH = args[0]
 		IN_PATH = IN_PATH.replace('\\', '/')
 
@@ -51,6 +51,7 @@ if __name__ == '__main__':
 
 		for p in index[guid][QUERY]:
 			path, name, ext, date = p
+			##!!! this is windows-only
 			print '%s\\%s.%s' % ('\\'.join([ARCHIVE_ROOT] + path), name, ext)
 
 
