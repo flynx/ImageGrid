@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130319150549'''
+__sub_version__ = '''20130325170937'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -10,6 +10,7 @@ __copyright__ = '''(c) Alex A. Naanou 2011'''
 import os
 import json
 import zipfile
+import time
 
 import pli.pattern.mixin.mapping as mapping
 import pli.objutils as objutils
@@ -67,6 +68,7 @@ def dump(index, path, index_depth=1, ext='.json'):
 
 
 #----------------------------------------------------------------load---
+##!!! make an iterator version...
 def load(path, ext='.json', pack_ext='.pack'):
 	'''
 	load data from fs store.
@@ -99,14 +101,23 @@ def load(path, ext='.json', pack_ext='.pack'):
 # 	  only the last is accesible but this might cause trouble elsewhere...
 # NOTE: this should be done in the background (possible race-condition
 # 		with removing a file while it is being read)
-def pack(path, ext='.json', pack_ext='.pack', keep_files=False, keep_dirs=False):
+def pack(path, pack_name='%(timestamp)s', ext='.json', pack_ext='.pack', 
+		keep_files=False, keep_dirs=False, date_format='%Y%m%d-%H%M%S'):
 	'''
 	pack an fs data store.
 
+	Supported fields in pack_name:
+		%(timestamp)s		- time stamp in the date_format format
+
 	NOTE: if keep_files is True, keep_dirs option will be ignored.
+	NOTE: if pack_name is static and a pack file with that name exists 
+			then the files will be added to that pack.
 	'''
+	data = {
+		'timestamp': time.strftime(date_format),
+	}
 	##!!! this will not remove original entries if they exist...
-	z = zipfile.ZipFile(os.path.join(path, 'index' + pack_ext), 'a', compression=zipfile.ZIP_DEFLATED)
+	z = zipfile.ZipFile(os.path.join(path, (pack_name % data) + pack_ext), 'a', compression=zipfile.ZIP_DEFLATED)
 	for p, _, files in os.walk(path):
 		for f in files: 
 			if f.endswith(ext):
@@ -124,6 +135,24 @@ def pack(path, ext='.json', pack_ext='.pack', keep_files=False, keep_dirs=False)
 							pass
 	z.close()
 	
+
+#-----------------------------------------------------------cleanpack---
+def cleanpack(path, pack_name='%(timestamp)s', ext='.json', pack_ext='.pack', 
+		keep_files=False, keep_dirs=False, date_format='%Y%m%d-%H%M%S'):
+	'''
+	make a clean pack, removing duplicate enteries.
+	'''
+	data = {
+		'timestamp': time.strftime(date_format),
+	}
+	name = os.path.join(path, (pack_name % data) + pack_ext)
+	##!!! this will load the whole monster to memory, need something better...
+	index = load(path)
+	z = zipfile.ZipFile(name, 'w', compression=zipfile.ZIP_DEFLATED)
+	for k, v in index.iteritems():
+		z.writestr(k + ext, json.dumps(v, indent=4, separators=(', ', ': ')))
+	z.close()
+
 
 
 #-----------------------------------------------------------------------
@@ -216,6 +245,16 @@ class Index(mapping.Mapping):
 					yield os.path.splitext(name)[0]
 
 
+#-------------------------------------------------------IndexWtihPack---
+class IndexWtihPack(object):
+	'''
+	'''
+	def pack(self):
+		'''
+		pack the index.
+		'''
+		pack(self._path)
+		
 
 #-----------------------------------------------------------------------
 REMOVED = object()
@@ -284,6 +323,22 @@ class IndexWithCache(Index):
 		'''
 		'''
 		del self._cache
+
+
+#---------------------------------------------------IndexWithSubIndex---
+##class IndexWithSubIndex(Index):
+##	'''
+##	'''
+##	def indexby(self, attr):
+##		'''
+##		'''
+##		self._sub_indexs
+##		for e in self:
+##			pass
+##	def getby(self, attr, value):
+##		'''
+##		'''
+##		pass
 
 
 

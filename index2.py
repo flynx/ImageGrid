@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130319151025'''
+__sub_version__ = '''20130326030151'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -83,6 +83,9 @@ TYPES = {
 	'xmp': XMP,
 }
 
+SKIP_DIRS = '.sys2'
+SKIP_MARKER = '.skipindexing'
+
 
 SUBTREE_CLASSES = {
 	'preview': 'preview', 
@@ -97,12 +100,22 @@ SUBTREE_CLASSES = {
 #----------------------------------------------------------list_files---
 ##!!! we will need to normalize the paths to one single scheme (either relative or absolute)...
 # XXX might need to fetch file data too...
-def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, include_root_path=False, include_ctime=True):
+def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, 
+		include_root_path=False, include_ctime=True, 
+		skip_marker=SKIP_MARKER, skip_dirs=SKIP_DIRS):
 	'''
 	yields:
 		(<path>, <name>, <ext>[, <ctime>]),
 	'''
 	for orig_path, dirs, files in os.walk(root):
+		# skip dir trees containing skip_filename...
+		if skip_marker in files:
+			del dirs[:]
+			continue
+		# skip dirs...
+		while skip_dirs in dirs:
+			dirs.remove(skip_dirs)
+
 		# XXX is this correct...
 		path = orig_path.split(os.path.sep)
 		# remove root from path...
@@ -125,6 +138,7 @@ def list_files(root, sub_trees=SUBTREE_CLASSES, type=ITEM, include_root_path=Fal
 #----------------------------------------------------------common_len---
 def common_len(a, *b):
 	'''
+	calculate the common path length.
 	'''
 	for i, l in enumerate(izip(*(a,) + b)):
 		if len(set(l)) != 1:
@@ -174,13 +188,12 @@ def split_by_raws(raws, lst, failed):
 	'''
 	'''
 ##	raws = [e for e in lst if e[2] == RAW] 
+	# top level common path...
 	common = common_len(*[ e[0] for e in raws ])
 
 	# NOTE: do not change the order of raws after this point
 	# 		and till the end of the loop...
 	# 		XXX revise if there is a simpler way...
-	##!!! this kills code like sets[0][1] += [...]
-##	sets = [ (r, [r]) for r in raws ]
 	sets = [ [r, [r]] for r in raws ]
 
 	for e in lst:
@@ -199,7 +212,6 @@ def split_by_raws(raws, lst, failed):
 			failed += [e]
 		# found a location...
 		elif c > common:
-			##!!! for some odd reason this does not work....
 			sets[i][1] += [e]
 		# file in an odd location ##!!! list these locations...
 		else:
@@ -207,14 +219,15 @@ def split_by_raws(raws, lst, failed):
 			##!!! try different strategies here...
 			##!!!
 			failed += [e]
-##	return sets, failed
 	return sets
 
 
 #-----------------------------------------------------------gid_index---
+##!!! this will rewrite existing data -- should only update...
 def gid_index(index, existing=None):
 	'''
 	'''
+	skipped = []
 	# index via a propper GID...
 	# split similarly named but different files...
 	if existing is None:
@@ -222,34 +235,41 @@ def gid_index(index, existing=None):
 	else:
 		res = existing
 	failed = []
+	im_n = 0
+	up_n = 0
+	new_n = 0
+
 	for name, l in index.iteritems():
 		l.sort()
 		raws = [e for e in l if e[2] == RAW] 
 
 		# multiple raw files...
 		if len(raws) > 1:
-			# spit this into a seporate func...
 			sets = split_by_raws(raws, l, failed)
 		# single raw...
 		elif len(raws) == 1:
 			sets = [(raws[0], l)]
 		# no raw files...
 		else:
-			print 'no raw file found for "%s"...' % os.path.join(name)
+			print (' '*78), '\rno raw file found for "%s"...' % os.path.join(name)
 			sets = []
 			##!!! need to report this in a usable way...
 			failed += l
 
 		# add actual elements to index...
 		for raw, l in sets:
+			im_n += 1
+			print 'Processing image:', im_n, 'new:', new_n, 'updated:', up_n, '\r',
+
 			# get file GID...
 			GID = image_gid('%s.%s' % (os.path.join(*[config['ARCHIVE_ROOT']] + raw[0] + [raw[1]]), raw[2]))
 
 			##!!! normalize the image format...
-			res[GID] = {
+			img = {
 				'gid': GID,
 				'name': name,
 				'imported': time.time(),
+				'updated': time.time(),
 				# NOTE: this might get distorted on archiving or
 				# 		copying...
 				# 		mostly intended for importing...
@@ -262,8 +282,30 @@ def gid_index(index, existing=None):
 				'TIFF': [e for e in l if e[2] == TIFF],
 				'other': [e for e in l if e[2] != OR(TIFF, PSD, JPEG, XMP, RAW)],
 			}
+			# add new data...
+			if GID not in res:
+				res[GID] = img
+				new_n += 1
+			# update existing...
+			else:
+				cur = res[GID]
+				updating = False
+				for k, v in img.iteritems():
+					# skip 
+					if k in ('imported', 'name', 'gid', 'ctime', 'updated'):
+						continue
+					if v != cur[k]:
+						cur[k] = v
+						updating = True
+				# do the actual update...
+				if updating:
+					cur['updated'] = time.time()
+					res[GID] = cur
+					up_n += 1
+				else:
+					skipped += [GID]
 
-	return res, failed
+	return res, failed, skipped
 
 
 
@@ -282,7 +324,7 @@ if __name__ == '__main__':
 		lst = list(list_files(config['ARCHIVE_ROOT']))
 	
 		print 'found files:', len(lst)
-		pprint(lst[0])
+##		pprint(lst[0])
 	
 		json.dump(lst, file(FILE_LIST, 'w'))
 		print 'saved...'
@@ -315,9 +357,26 @@ if __name__ == '__main__':
 ##	GID_index = store.IndexWithCache(INDEX_PATH)
 	GID_index = store.Index(INDEX_PATH)
 
-	##!!! only check for updates...
+	# a cheating waw to say if we are empty...
+	index_empty = True
+	for k in GID_index.iterkeys():
+		index_empty = False
+		break
 
-	GID_index, failed = gid_index(index, GID_index)
+	t0 = time.time()
+
+	if not index_empty:
+		print 'updating...'
+		##!!! this takes a substantially longer time initially... (about 30x longer)
+		GID_index, failed, skipped = gid_index(index, GID_index)
+	else:
+		print 'indexing...'
+		GID_index, failed, skipped = gid_index(index)
+		store.dump(GID_index, INDEX_PATH, index_depth=2)
+
+	t1 = time.time()
+
+	print 'done in:', t1-t0, 'seconds.'
 
 	json.dump(failed, file(os.path.join('test', 'failed-to-categorise.json'), 'w'))
 
@@ -336,13 +395,15 @@ if __name__ == '__main__':
 	indexed: %s
 	raws: %s
 	failed: %s
+	skipped: %s
 	''' % (
 			len(GID_index), 
 			len([ e for e in lst if e[2] == RAW]), 
-			len(failed))
+			len(failed),
+			len(skipped))
 
-	##!!! this is really slow because it pulls ALL the data... wonder who wrote this? :)
-	pprint(GID_index.itervalues().next())
+##	##!!! this is really slow because it pulls ALL the data... wonder who wrote this? :)
+##	pprint(GID_index.itervalues().next())
 
 ##	store.dump(GID_index, INDEX_PATH)
 

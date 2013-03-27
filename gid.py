@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130322142905'''
+__sub_version__ = '''20130325203750'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -52,7 +52,8 @@ def image_gid(path, date=None,
 	Supported fields:
 		%(artist)s	- Exif.Image.Artist field, stripped and spaces replaced
 					  with underscores.
-		%(date)s	- Exif.Image.DateTime formated to date_format argument.
+					  If no artist info is set this will be set to default_artist.
+		%(date)s	- Exif.Photo.DateTimeOriginal formated to date_format argument.
 		%(name)s	- file name.
 
 	NOTE: date and time are the date and time the image was made ('Exif.Image.DateTime')
@@ -77,7 +78,6 @@ def image_gid(path, date=None,
 			date = os.path.getctime(path)
 			data['date'] = time.strftime(date_format, time.gmtime(date))
 		else:
-##			date = i['Exif.Image.DateTime'].value
 			date = i['Exif.Photo.DateTimeOriginal'].value
 			data['date'] = date.strftime(date_format)
 	# check if we need an artist...
@@ -85,7 +85,10 @@ def image_gid(path, date=None,
 		data['artist'] = default_artist
 		if i is not None:
 			try:
-				data['artist'] = i['Exif.Image.Artist'].value.strip().replace(' ', '_')
+				# set the artist if in EXIF...
+				a = i['Exif.Image.Artist'].value.strip().replace(' ', '_')
+				if a != '':
+					data['artist'] = a
 			except KeyError:
 				pass
 	
