@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130410162136'''
+__sub_version__ = '''20130410201312'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -27,7 +27,7 @@ def build_dirs(data, path, rewrite=None):
 	'''
 	ribbons = data['ribbons']
 
-	depth = len(ribbons)
+	depth = len(ribbons)-1
 	fav_path = os.path.join(path, *(['fav'] * depth))
 
 	if not os.path.exists(fav_path):
@@ -86,19 +86,20 @@ if __name__ == '__main__':
 		data = json.load(file(data, 'r'))
 		err_urls = []
 		cur_p = None
+		c = s = e = 0
 
 		for status, p, img in build_dirs(data, path):
 			if cur_p != p:
 				cur_p = p
-				print
-				print 'Level:', p
+
 			if status == 'written':
-				print '.',
+				c += 1
 			elif status == 'skipped':
-				print '-',
+				s += 1
 			elif status == 'err':
-				print 'x',
+				e += 1
 				err_urls += [img['path']]
+			print 'Copied: %s, Skipped: %s, Err: %s\r' % (c, s, e),
 		print
 
 		if len(err_urls) != 0:
