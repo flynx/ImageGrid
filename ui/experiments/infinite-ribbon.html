@@ -1,0 +1,120 @@
+<html>
+
+<script src="jquery.js"></script>
+<script>
+
+function focus(elem){
+	$('.current.square').removeClass('current')
+	return $(elem).closest('.square').addClass('current')
+}
+function clickHandler(){
+	focus(this)
+}
+
+function shiftSquare(direction){
+	var cur = $('.current.square')
+	// trigger the event...
+	cur.closest('.container')
+		.trigger('shift'+direction)
+	// see if we are the last...
+	if(cur[direction]('.square').length < 1){
+		// do not move past the edge...
+		//return cur
+		// rotate...
+		return focus(cur
+			.closest('.container')
+				.children('.square')[ direction == 'next' ? 'first' : 'last' ]())
+	}
+	// shift the current element...
+	return cur
+		.removeClass('current')[direction]('.square')
+			.addClass('current')
+}
+// shift focus left/right...
+function next(){
+	return shiftSquare('next') 
+}
+function prev(){
+	return shiftSquare('prev') 
+}
+
+// these will roll the container...
+// XXX this needs a means to update the element content...
+function rollRight(){
+	$('.square').first().appendTo($('.container'))
+}
+function rollLeft(){
+	$('.square').last().prependTo($('.container'))
+}
+
+
+$(function(){
+	$('.container')
+		.on('shiftnext', rollRight)
+		.on('shiftprev', rollLeft)
+
+	$('.square')
+		.click(clickHandler)
+	
+})
+
+
+</script>
+
+<style>
+
+.container {
+	position: relative;
+	display: inline-block;
+	height: auto;
+	min-width: 0px;
+	overflow: visible;
+	white-space: nowrap;
+	font-size: 0;
+
+	background: gray;
+	padding: 10px;
+}
+
+.square {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	text-align;left;
+	width: 100px;
+	height: 100px;
+	background: silver;
+	font-size: 12pt;
+}
+
+.current.square {
+	background: red;
+}
+
+</style>
+
+<body>
+
+
+<button onclick="prev()">prev</button>
+<button onclick="next()">next</button>
+
+<div class="meta-container">
+	<div class="container">
+		<!-- BUG: when current is first hell breaks lose... -->
+		<div class="square">1</div>
+		<div class="square">2</div>
+		<div class="square current">3</div>
+		<div class="square">4</div>
+		<div class="square">5</div>
+		<div class="square">6</div>
+		<div class="square">7</div>
+	</div>
+</div>
+
+
+
+
+</body>
+<!-- vim:set ts=4 sw=4 : -->
+</html>
