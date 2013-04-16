@@ -13,6 +13,14 @@ function clickHandler(){
 
 
 
+/* Focus next/prev container element
+* 
+* This will shift focus within a container.
+* 
+* If we reach the start/end of the container, we will "warp" around it 
+* and focus an element from the other end.
+* 
+*/
 function shiftSquare(direction, n){
 	if(n == null){
 		n = 1
@@ -25,11 +33,10 @@ function shiftSquare(direction, n){
 	if(n == 0){
 		return cur
 	}
-	// see if we need to rotate...
+	// see if we need to warp arund...
 	if(cur[direction+'All']('.square').length < n){
 		var sq = cur.closest('.container').children('.square')
 		var i = sq.index(cur)
-		// rotate...
 		return focus($(sq[ direction == 'next' 
 								? (i + n) % sq.length 
 								: sq.length - (Math.abs(i - n) % sq.length) ]))
@@ -37,7 +44,7 @@ function shiftSquare(direction, n){
 	// shift the current element...
 	return focus($(cur[direction+'All']('.square')[n-1]))
 }
-// shift focus left/right...
+// shift focus left/right wrappers...
 function next(n){
 	return shiftSquare('next', n) 
 }
