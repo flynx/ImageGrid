@@ -11,47 +11,65 @@ function clickHandler(){
 	focus(this)
 }
 
-function shiftSquare(direction){
+
+
+function shiftSquare(direction, n){
+	if(n == null){
+		n = 1
+	}
 	var cur = $('.current.square')
 	// trigger the event...
 	cur.closest('.container')
-		.trigger('shift'+direction)
-	// see if we are the last...
-	if(cur[direction]('.square').length < 1){
-		// do not move past the edge...
-		//return cur
+		.trigger('shift'+direction, n)
+	// if we move to the same spot, do nothing...
+	if(n == 0){
+		return cur
+	}
+	// see if we need to rotate...
+	if(cur[direction+'All']('.square').length < n){
+		var sq = cur.closest('.container').children('.square')
+		var i = sq.index(cur)
 		// rotate...
-		return focus(cur
-			.closest('.container')
-				.children('.square')[ direction == 'next' ? 'first' : 'last' ]())
+		return focus($(sq[ direction == 'next' 
+								? (i + n) % sq.length 
+								: sq.length - (Math.abs(i - n) % sq.length) ]))
 	}
 	// shift the current element...
-	return cur
-		.removeClass('current')[direction]('.square')
-			.addClass('current')
+	return focus($(cur[direction+'All']('.square')[n-1]))
 }
 // shift focus left/right...
-function next(){
-	return shiftSquare('next') 
+function next(n){
+	return shiftSquare('next', n) 
 }
-function prev(){
-	return shiftSquare('prev') 
+function prev(n){
+	return shiftSquare('prev', n) 
 }
+
+
 
 // these will roll the container...
 // XXX this needs a means to update the element content...
-function rollRight(){
-	$('.square').first().appendTo($('.container'))
+function rollRight(n){
+	if(n == null){
+		n = 1
+	}
+	$($('.square').splice(0, n)).appendTo($('.container'))
 }
-function rollLeft(){
-	$('.square').last().prependTo($('.container'))
+function rollLeft(n){
+	if(n == null){
+		n = 1
+	}
+	var sq = $('.square')
+	var l = sq.length
+	$(sq.splice(l-n, l)).prependTo($('.container'))
 }
+
 
 
 $(function(){
 	$('.container')
-		.on('shiftnext', rollRight)
-		.on('shiftprev', rollLeft)
+		.on('shiftnext', function(evt, n){rollRight(n)})
+		.on('shiftprev', function(evt, n){rollLeft(n)})
 
 	$('.square')
 		.click(clickHandler)
@@ -96,8 +114,10 @@ $(function(){
 <body>
 
 
-<button onclick="prev()">prev</button>
-<button onclick="next()">next</button>
+<button onclick="prev(5)">&lt;&lt;</button>
+<button onclick="prev()">&lt;</button>
+<button onclick="next()">&gt;</button>
+<button onclick="next(5)">&gt;&gt;</button>
 
 <div class="meta-container">
 	<div class="container">
