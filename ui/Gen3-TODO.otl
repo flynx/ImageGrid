@@ -3,6 +3,7 @@
 	[_] migrate the infinite ribbon code
 	[_] migrate the PortableMag generic code
 	[_] write basic align code
+		
 
 
 Generation 3 UI implementation
@@ -46,7 +47,7 @@ Generation 3 UI implementation
 		| +/- 90 deg
 	UI modes
 		single ribbon
-			show images above/below in current ribbon
+			show images shifted (all / above only / below only) in current ribbon
 			show marked only
 		multiple ribbons
 			show images above/below
