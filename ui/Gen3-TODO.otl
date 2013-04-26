@@ -1,0 +1,61 @@
+[_] 0% Generation 3 current todo
+	[_] manual sort -- shift left/right	
+	[_] migrate the infinite ribbon code
+	[_] migrate the PortableMag generic code
+	[_] write basic align code
+
+
+Generation 3 UI implementation
+	Infinite ribbon (lib)
+		cyclic ribbon
+		image block generation
+		image block update
+		ribbon head/tail management
+		| must be adaptive to current user scroll speed...
+		|
+		| at least a couple of screens at current zoom level...
+	Partial save/load
+	| save only a block or changed data...
+	Adaptive preview size (lib)
+	Multible ribbon (reuse)
+	User actions
+	| see [[controls.otl]] for basic actions...
+	|
+	| additional actions:
+		toggle mark image
+		| should include a set of marking operations
+			mark between
+			| mark all images between closest marks
+			unmark set
+			mark to/from
+		show marked only in ribbon (crop selection)
+		crop image
+		| shows a red/blue rectangle around image
+		|
+		| can be:
+		| 	turned +/- 90 deg
+		| 	turned arbitrarily
+		| 	scaled with constrained proportions
+			show crop as red rectangle
+			show only cropped area
+			show crop as black veil
+		add note to image
+		| a-la flickr notes...
+		edit IPCT
+		rotate image
+		| +/- 90 deg
+	UI modes
+		single ribbon
+			show images above/below in current ribbon
+			show marked only
+		multiple ribbons
+			show images above/below
+			show marked only
+		single image
+
+TODO
+	action visual indication
+
+
+.
+| vim:set spell :

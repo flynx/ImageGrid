@@ -1,0 +1,269 @@
+<html>
+<head>
+<title>ImageGrid.Viewer</title>
+
+
+<style>
+
+.viewer {
+	position: relative;
+	width: 800px;
+	height: 600px;
+	/*overflow: hidden;*/
+	overflow: auto;
+
+	border: solid blue 1px;
+}
+
+
+.ribbon-set {
+}
+.ribbon-set:empty:after {
+	position: absolute;
+	display: block;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	content: "Empty";
+	text-align: center;
+}
+
+
+.ribbon {
+	position: relative;
+	display: block;
+	height: auto;
+	min-width: 0px;
+	overflow: visible;
+	white-space: nowrap;
+	font-size: 0;
+
+	/*
+	margin-top: 20px;
+	margin-bottom: 20px;
+	*/
+}
+.ribbon:first-child {
+	margin-top: 0px;
+}
+.ribbon:last-child {
+	margin-bottom: 0px;
+}
+/* XXX do we actually need this? */
+.current.ribbon {
+}
+
+
+.image {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	text-align;left;
+	width: 100px;
+	height: 100px;
+	font-size: 12pt;
+
+	background: black;
+	box-sizing:border-box;
+	border: solid gray 1px;
+	color: white;
+}
+.current.image {
+	background: red;
+}
+
+
+</style>
+
+
+
+<script src="jquery.js"></script>
+
+<script>
+
+/*
+
+Viewer Generation III
+
+Split the API into the following sections:
+	- main control actions
+		do main domain tasks like image and ribbon manipulation.
+	- serialization and deserialization
+		load and save data
+	- UI
+		basic align, animation and modes
+
+*/
+
+function createImage(n){
+	if(n == null){
+		if(window._n == null){
+			window._n = 0
+		}
+		n = _n
+		_n += 1
+	}
+	return $('<div order="'+n+'" class="image"/>')
+}
+function createRibbon(){
+	return $('<div class="ribbon"/>')
+}
+
+
+// NOTE: if this returns null, it means that the element is smallest in 
+//		target ribbon -- first position.
+function getImageBefore(image, ribbon){
+	image = $(image)
+	var images = $(ribbon).find('.image')
+	var order = image.attr('order')
+	var prev = null
+
+	images.each(function(){
+		if(order < $(this).attr('order')){
+			return false
+		}
+		prev = this
+	})
+
+	return prev
+}
+
+function shiftTo(image, ribbon){
+	var target = getImageBefore(image, ribbon)
+	var cur_ribbon = image.closest('.ribbon')
+
+	// insert before the first image if nothing is before the target...
+	if(target == null){
+		image.insertBefore($(ribbon).find('.image').first())
+
+	} else {
+		image.insertAfter(target)
+	}
+
+	// if removing last image out of a ribbon, remove the ribbon....
+	if(cur_ribbon.find('.image').length == 0){
+		cur_ribbon.remove()
+	}
+
+	return image
+}
+
+function shiftImage(direction, image, force_create_ribbon){
+	if(image == null){
+		// XXX need to make this context specific...
+		image = $('.current.image')
+	} else {
+		image = $(image)
+	}
+	var ribbon = image.closest('.ribbon')[direction]('.ribbon')
+
+	// need to create a new ribbon...
+	if(ribbon.length == 0 || force_create_ribbon == true){
+		ribbon = createRibbon()['insert' + (direction == 'prev' 
+												? 'Before' 
+												: 'After')](image.closest('.ribbon'))
+		ribbon.append(image)
+	} else {
+		shiftTo(image, ribbon)
+	}
+	return image
+}
+
+// short-hand methods...
+function shiftImageUp(image){
+	return shiftImage('prev', image)
+}
+function shiftImageDown(image){
+	return shiftImage('next', image)
+}
+function shiftImageUpNewRibbon(image){
+	return shiftImage('prev', image, true)
+}
+function shiftImageDownNewRibbon(image){
+	return shiftImage('next', image, true)
+}
+
+
+// TODO manual image ordering (shiftLeft/shiftRight functions)
+// XXX
+
+
+
+
+
+
+// NOTE: this is on purpose done relative...
+function clickHandler(evt){
+	var img = $(evt.target).closest('.image')
+	img.closest('.viewer').find('.current.image').removeClass('current')
+	img.addClass('current')
+}
+
+// setup...
+$(function(){
+
+	// populate the viewer...
+	var r = createRibbon()
+	var images = []
+	for(var i=0; i < 40; i++){
+		images.push(createImage().text(i)[0]) 
+	}
+	r.append($(images))
+	var rr = r.clone()
+	var rrr = r.clone()
+
+	$('.ribbon-set')
+		.append(r)
+		.append(rr)
+		.append(rrr)
+
+	// NOTE: this is global so as to not to add any extra complexity to 
+	//		the internal workings...
+	$('.viewer').click(clickHandler)
+
+
+})
+
+
+</script>
+
+</head>
+<body>
+
+<!-- This is the basic viewer structure...
+
+Unpopulated
+NOTE: there can be only .ribbon-set element.
+
+<div class="viewer">
+	<div class="ribbon-set"></div>
+</div>
+
+
+Populated
+
+<div class="viewer">
+	<div class="ribbon-set">
+		<div class="ribbon">
+			<div class="image"></div>
+			<div class="image"></div>
+		</div>
+		<div class="ribbon">
+			<div class="image"></div>
+			<div class="current image"></div>
+			<div class="image"></div>
+			<div class="image"></div>
+		</div>
+	</div>
+</div>
+-->
+
+<div class="viewer">
+	<div class="ribbon-set"></div>
+</div>
+
+
+<!-- vim:set ts=4 sw=4 spell : -->
+</body>
+</html>
