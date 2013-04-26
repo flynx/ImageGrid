@@ -189,6 +189,10 @@ function shiftImageDownNewRibbon(image){
 // XXX
 
 
+function focusImage(image){
+	image.closest('.viewer').find('.current.image').removeClass('current')
+	return image.addClass('current')
+}
 
 
 
@@ -196,8 +200,7 @@ function shiftImageDownNewRibbon(image){
 // NOTE: this is on purpose done relative...
 function clickHandler(evt){
 	var img = $(evt.target).closest('.image')
-	img.closest('.viewer').find('.current.image').removeClass('current')
-	img.addClass('current')
+	focusImage(img)
 }
 
 // setup...
