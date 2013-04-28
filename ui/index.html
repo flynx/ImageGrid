@@ -210,6 +210,7 @@ function relativeVisualPosition(outer, inner){
 
 // This appears to work well with scaling...
 // XXX make this more configurable...
+// XXX this only works for square images...
 function centerImage(image, mode){
 	if(mode == null){
 		//mode = 'css'
@@ -225,7 +226,7 @@ function centerImage(image, mode){
 
 	var ribbons = $('.ribbon-set')
 	var scale = getElementScale(ribbons)
-	// NOTE: these are scalable, this need to get normalized...
+	// NOTE: these are scalable, this needs to get normalized...
 	var w = image.outerWidth()*scale
 	var h = image.outerHeight()*scale
 
@@ -240,7 +241,7 @@ function centerImage(image, mode){
 	// do the actual work...
 	return ribbons[mode]({
 		'top': t - pos.top + (H - h)/2,
-		'left': l - pos.left + (W - h)/2
+		'left': l - pos.left + (W - w)/2
 	})
 }
 
@@ -254,8 +255,45 @@ function fitNImages(n){
 
 	var scale = Math.min(W / (size * n), H / size)
 
+	// XXX if animating, the next two likes must be animated together...
 	setElementScale($('.ribbon-set'), scale)
 	centerImage(image, 'css')
+}
+
+// XXX use CSS toggler...
+// XXX revise: does extra stuff...
+function toggleImageProportions(mode){
+	var image = $('.image')
+	var h = image.outerHeight(true)
+	var w = image.outerWidth(true)
+
+	if(mode == '?'){
+		return h != w ? 'viewer' : 'square'
+
+	// square...
+	} else if(h != w || mode == 'square'){
+		var size = Math.min(w, h)
+		image.css({
+			width: size,
+			height: size
+		})
+		centerImage(null, 'css')
+		return 'square'
+
+	// viewer size...
+	} else {
+		var viewer = $('.viewer')
+		var W = viewer.innerWidth()
+		var H = viewer.innerHeight()
+
+		if(W > H){
+			image.css('width', W * h/H)
+		} else {
+			image.css('height', H * w/W)
+		}
+		centerImage(null, 'css')
+		return 'viewer'
+	}
 }
 
 
