@@ -305,6 +305,7 @@ var getElementTransitionDuration = makeCSSVendorAttrGetter(
 
 
 
+var USE_TRANSFORM = true
 var USE_3D_TRANSFORM = true
 
 // NOTE: at this point this works only on the X axis...
