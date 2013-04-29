@@ -437,6 +437,7 @@ function lastImage(){
 
 // NOTE: if moving is 'next' these will chose the image after the current's order.
 // NOTE: if an image with the same order is found, moving argument has no effect.
+// XXX get move direction...
 function prevRibbon(moving){
 	var cur = $('.current.image')
 	// pre marked-only mode...
@@ -448,6 +449,7 @@ function prevRibbon(moving){
 	}
 	return centerImage(focusImage(target))
 }
+// XXX get move direction...
 function nextRibbon(moving){
 	var cur = $('.current.image')
 	// pre marked-only mode...
@@ -505,12 +507,14 @@ function shiftImage(direction, image, force_create_ribbon){
 }
 
 // short-hand methods...
+// XXX get move direction...
 function _shiftImageTo(image, direction, moving, force_create_ribbon){
 	if(image == null){
 		image = $('.current.image')
 	}
 
-	// account for direction...
+	// account move for direction...
+	// XXX get the value from some place more logical than the argument...
 	var a = moving == 'prev' ? 'prev' : 'next' 
 	var b = moving == 'prev' ? 'next' : 'prev' 
 	var target = image[a]('.image')
@@ -523,8 +527,6 @@ function _shiftImageTo(image, direction, moving, force_create_ribbon){
 	shiftImage(direction, image, force_create_ribbon)
 	return centerImage(focusImage(target))
 }
-// XXX these need to focus on next/prev image depending on direction...
-// XXX these are virtually identical...
 function shiftImageUp(image){
 	return _shiftImageTo(image, 'prev')
 }
@@ -689,6 +691,7 @@ Populated
 	<div class="ribbon-set"></div>
 
 
+	<!-- XXX should these be here??? -->
 	<div class="up-indicator"></div>
 	<div class="down-indicator"></div>
 </div>
