@@ -469,8 +469,8 @@ function shiftTo(image, ribbon){
 	var cur_ribbon = image.closest('.ribbon')
 
 	// insert before the first image if nothing is before the target...
-	if(target == null){
-		image.insertBefore($(ribbon).find('.image').first())
+	if(target.length == 0){
+		image.prependTo($(ribbon))
 
 	} else {
 		image.insertAfter(target)
@@ -484,7 +484,6 @@ function shiftTo(image, ribbon){
 	return image
 }
 
-// XXX this needs to account for last image in ribbon...
 function shiftImage(direction, image, force_create_ribbon){
 	if(image == null){
 		// XXX need to make this context specific...
@@ -492,14 +491,15 @@ function shiftImage(direction, image, force_create_ribbon){
 	} else {
 		image = $(image)
 	}
-	var ribbon = image.closest('.ribbon')[direction]('.ribbon')
+	var old_ribbon = image.closest('.ribbon')
+	var ribbon = old_ribbon[direction]('.ribbon')
 
 	// need to create a new ribbon...
 	if(ribbon.length == 0 || force_create_ribbon == true){
 		ribbon = createRibbon()['insert' + (direction == 'prev' 
 												? 'Before' 
-												: 'After')](image.closest('.ribbon'))
-		ribbon.append(image)
+												: 'After')](old_ribbon)
+		shiftTo(image, ribbon)
 	} else {
 		shiftTo(image, ribbon)
 	}
@@ -525,7 +525,8 @@ function _shiftImageTo(image, direction, moving, force_create_ribbon){
 	flashIndicator(direction)
 
 	shiftImage(direction, image, force_create_ribbon)
-	return centerImage(focusImage(target))
+	// XXX does this need to be animated???
+	return centerImage(focusImage(target), 'css')
 }
 function shiftImageUp(image){
 	return _shiftImageTo(image, 'prev')
