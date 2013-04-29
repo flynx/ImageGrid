@@ -41,6 +41,9 @@
 	margin-top: 20px;
 	margin-bottom: 20px;
 }
+.ribbon:empty {
+	display: none;
+}
 .ribbon:first-child {
 	margin-top: 0px;
 }
@@ -110,6 +113,29 @@
 }
 */
 
+
+.marked-only.viewer:after {
+	display: block;
+	position: absolute;
+	content: "Showing marked images only";
+	font-size: 14pt;
+	border: none;
+	color: blue;
+	width: auto;
+	height: auto;
+
+	top: 10px;
+	right: 10px;
+
+}
+.marked-only .image:not(.marked) {
+	display: none;
+}
+.marked-only .marked.image:after {
+	display: none;
+}
+
+
 </style>
 
 
@@ -136,7 +162,66 @@ Split the API into the following sections:
 */
 
 
+var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 'marked-only',
+	function(){
+		var cur = $('.current.image')
+		// current is marked...
+		if(cur.hasClass('marked')){
+			centerImage(null, 'css')
+			return
+		} 
+		// there is a marked image in this ribbon...
+		var target = getImageBefore(cur, null, true)
+		if(target.length > 0){
+			centerImage(focusImage(target), 'css')
+			return
+		}
+		// get marked image from other ribbons...
+		prevRibbon()
+		if($('.current.image').hasClass('marked')){
+			return
+		}
+		nextRibbon()
+	})
+
+
+// XXX add ability to take all marked images and open them in a separate view...
+
+
+
 var toggleImageMark = createCSSClassToggler('.current.image', 'marked')
+
+// mode can be:
+//	- 'ribbon'
+//	- 'all'
+function removeImageMarks(mode){
+	// remove marks from current ribbon (default)...
+	if(mode == 'ribbon' || mode == null){
+		return $('.current.image')
+			.closest('.ribbon')
+				.find('.marked')
+					.removeClass('marked')
+
+	// remove all marks...
+	} else if(mode == 'all'){
+		return $('.marked')
+			.removeClass('marked')
+	} 
+}
+
+function markAll(mode){
+	// remove marks from current ribbon (default)...
+	if(mode == 'ribbon' || mode == null){
+		return $('.current.image')
+			.closest('.ribbon')
+				.find('.image:not(.marked)')
+					.addClass('marked')
+
+	// remove all marks...
+	} else if(mode == 'all'){
+		return $('.image:not(.marked)').addClass('marked')
+	}
+}
 
 function invertImageMarks(){
 	return $('.current.image')
@@ -162,6 +247,13 @@ function toggleImageMarkBlock(image){
 	image.nextAll('.image').each(_convert)
 	image.prevAll('.image').each(_convert)
 	return state
+}
+
+function nextMarkedImage(){
+	// XXX
+}
+function prevMarkedImage(){
+	// XXX
 }
 
 
@@ -233,9 +325,18 @@ function createRibbon(){
 
 // NOTE: if this returns null, it means that the element is smallest in 
 //		target ribbon -- first position.
-function getImageBefore(image, ribbon){
+function getImageBefore(image, ribbon, visible_only){
 	image = $(image)
-	var images = $(ribbon).find('.image')
+	if(ribbon == null){
+		ribbon = image.closest('.ribbon')
+	}
+	// pre marked-only mode...
+	//var images = $(ribbon).find('.image')
+	if(visible_only){
+		var images = $(ribbon).find('.image:visible')
+	} else {
+		var images = $(ribbon).find('.image')
+	}
 	var order = image.attr('order')
 	var prev = null
 
@@ -254,29 +355,35 @@ function getImageBefore(image, ribbon){
 function nextImage(){
 	return centerImage(
 		focusImage(
-			$('.current.image').next('.image')))
+			//$('.current.image').next('.image')))
+			$('.current.image').next('.image:visible')))
 }
 function prevImage(){
 	return centerImage(
 		focusImage(
-			$('.current.image').prev('.image')))
+			//$('.current.image').prev('.image')))
+			$('.current.image').prev('.image:visible')))
 }
 function firstImage(){
 	return centerImage(
 		focusImage(
-			$('.current.image').closest('.ribbon').find('.image').first()))
+			//$('.current.image').closest('.ribbon').find('.image').first()))
+			$('.current.image').closest('.ribbon').find('.image:visible').first()))
 }
 function lastImage(){
 	return centerImage(
 		focusImage(
-			$('.current.image').closest('.ribbon').find('.image').last()))
+			//$('.current.image').closest('.ribbon').find('.image').last()))
+			$('.current.image').closest('.ribbon').find('.image:visible').last()))
 }
 
 // NOTE: if moving is 'next' these will chose the image after the current's order.
 // NOTE: if an image with the same order is found, moving argument has no effect.
 function prevRibbon(moving){
 	var cur = $('.current.image')
-	var target = getImageBefore(cur, cur.closest('.ribbon').prev('.ribbon'))
+	// pre marked-only mode...
+	//var target = getImageBefore(cur, cur.closest('.ribbon').prev('.ribbon'))
+	var target = getImageBefore(cur, cur.closest('.ribbon').prev('.ribbon:visible'), true)
 	if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.next('.image')
 		target = next.length > 0 ? next : target
@@ -285,7 +392,9 @@ function prevRibbon(moving){
 }
 function nextRibbon(moving){
 	var cur = $('.current.image')
-	var target = getImageBefore(cur, cur.closest('.ribbon').next('.ribbon'))
+	// pre marked-only mode...
+	//var target = getImageBefore(cur, cur.closest('.ribbon').next('.ribbon'))
+	var target = getImageBefore(cur, cur.closest('.ribbon').next('.ribbon:visible'), true)
 	if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.next('.image')
 		target = next.length > 0 ? next : target
