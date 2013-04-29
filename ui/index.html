@@ -136,6 +136,56 @@
 }
 
 
+.up-indicator,
+.down-indicator {
+	display: block;
+	position: absolute;
+	content: "";
+	top: 0px;
+	left: 50%;
+	height: 50px;
+	width: 100px;
+	margin-left: -50px;
+
+	overflow: hidden;
+
+	opacity: 0.7;
+	cursor: hand;
+}
+.up-indicator:after,
+.down-indicator:after {
+	display: inline-block;
+	position: absolute;
+	content: "";
+	width: 50px;
+	height: 50px;
+
+	bottom: -25px;
+	left: 25px;
+
+	background: blue;
+
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	transform: rotate(45deg);
+}
+.down-indicator {
+	top: auto;
+	bottom: 0px;
+}
+.down-indicator:after {
+	top: -25px;
+	bottom: auto;
+}
+/* default state */
+.up-indicator,
+.down-indicator {
+	display: none
+}
+
+
 </style>
 
 
@@ -160,6 +210,14 @@ Split the API into the following sections:
 		basic align, animation and modes
 
 */
+
+
+function flashUpIndicator(){
+	$('.up-indicator').fadeIn(200).fadeOut(200)
+}
+function flashDownIndicator(){
+	$('.down-indicator').fadeIn(200).fadeOut(200)
+}
 
 
 var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 'marked-only',
@@ -610,7 +668,12 @@ Populated
 -->
 
 <div class="viewer">
+
 	<div class="ribbon-set"></div>
+
+
+	<div class="up-indicator"></div>
+	<div class="down-indicator"></div>
 </div>
 
 
