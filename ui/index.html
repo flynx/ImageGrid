@@ -333,7 +333,7 @@ function getImageBefore(image, ribbon, visible_only){
 	// pre marked-only mode...
 	//var images = $(ribbon).find('.image')
 	if(visible_only){
-		var images = $(ribbon).find('.image:visible')
+		var images = $(ribbon).find('.image').filter(':visible')
 	} else {
 		var images = $(ribbon).find('.image')
 	}
@@ -355,26 +355,30 @@ function getImageBefore(image, ribbon, visible_only){
 function nextImage(){
 	return centerImage(
 		focusImage(
+			// pre marked-only mode...
 			//$('.current.image').next('.image')))
 			$('.current.image').next('.image:visible')))
 }
 function prevImage(){
 	return centerImage(
 		focusImage(
+			// pre marked-only mode...
 			//$('.current.image').prev('.image')))
 			$('.current.image').prev('.image:visible')))
 }
 function firstImage(){
 	return centerImage(
 		focusImage(
+			// pre marked-only mode...
 			//$('.current.image').closest('.ribbon').find('.image').first()))
-			$('.current.image').closest('.ribbon').find('.image:visible').first()))
+			$('.current.image').closest('.ribbon').find('.image').filter(':visible').first()))
 }
 function lastImage(){
 	return centerImage(
 		focusImage(
+			// pre marked-only mode...
 			//$('.current.image').closest('.ribbon').find('.image').last()))
-			$('.current.image').closest('.ribbon').find('.image:visible').last()))
+			$('.current.image').closest('.ribbon').find('.image').filter(':visible').last()))
 }
 
 // NOTE: if moving is 'next' these will chose the image after the current's order.
