@@ -138,7 +138,35 @@ Split the API into the following sections:
 
 var toggleImageMark = createCSSClassToggler('.current.image', 'marked')
 
+function invertImageMarks(){
+	return $('.current.image')
+		.closest('.ribbon')
+			.find('.image')
+				.toggleClass('marked')
+}
 
+// this will toggle marks in the current continuous section of marked 
+// or unmarked images...
+function toggleImageMarkBlock(image){
+	if(image == null){
+		image = $('.current.image')
+	}
+	// we need to invert this...
+	var state = toggleImageMark()
+	var _convert = function(){
+		if(toggleImageMark(this, '?') == state){
+			return false
+		}
+		toggleImageMark(this, state)
+	}
+	image.nextAll('.image').each(_convert)
+	image.prevAll('.image').each(_convert)
+	return state
+}
+
+
+
+// XXX should we use the createCSSClassToggler for this?
 // XXX revise: does extra stuff...
 function toggleImageProportions(mode){
 	var image = $('.image')
