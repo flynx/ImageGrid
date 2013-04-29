@@ -38,10 +38,8 @@
 	white-space: nowrap;
 	font-size: 0;
 
-	/*
 	margin-top: 20px;
 	margin-bottom: 20px;
-	*/
 }
 .ribbon:first-child {
 	margin-top: 0px;
@@ -49,10 +47,6 @@
 .ribbon:last-child {
 	margin-bottom: 0px;
 }
-/* XXX do we actually need this? */
-.current.ribbon {
-}
-
 
 .image {
 	position: relative;
@@ -72,7 +66,8 @@
 	background: red;
 }
 
-/* XXX this misbehaves... (happens with page zoom) */
+/* XXX this misbehaves... (happens with page zoom) 
+		...this is not uniform circle for some reason... */
 .marked.image:after {
 	display: block;
 	position: absolute;
@@ -80,7 +75,6 @@
 	font-size: 0pt;
 	border: none;
 
-	/* XXX this is not uniform circle for some reason... (connected with page zoom) */
 	width: 5px;
 	height: 5px;
 
@@ -121,7 +115,45 @@ Split the API into the following sections:
 var toggleImageMark = createCSSClassToggler('.current.image', 'marked')
 
 
+// XXX revise: does extra stuff...
+function toggleImageProportions(mode){
+	var image = $('.image')
+	var h = image.outerHeight(true)
+	var w = image.outerWidth(true)
 
+	if(mode == '?'){
+		return h != w ? 'viewer' : 'square'
+
+	// square...
+	} else if(h != w || mode == 'square'){
+		var size = Math.min(w, h)
+		image.css({
+			width: size,
+			height: size
+		})
+		centerImage(null, 'css')
+		return 'square'
+
+	// viewer size...
+	} else {
+		var viewer = $('.viewer')
+		var W = viewer.innerWidth()
+		var H = viewer.innerHeight()
+
+		if(W > H){
+			image.css('width', W * h/H)
+		} else {
+			image.css('height', H * w/W)
+		}
+		centerImage(null, 'css')
+		return 'viewer'
+	}
+}
+
+
+
+// NOTE: to avoid state sync problems this should clone an image if 
+//		one is available...
 function createImage(n){
 	if(n == null){
 		if(window._n == null){
@@ -130,7 +162,17 @@ function createImage(n){
 		n = _n
 		_n += 1
 	}
-	return $('<div order="'+n+'" class="image"/>')
+	var img = $('.image')
+	if(img.length > 0){
+		return img.first().clone()
+					.attr({
+						'order': n,
+						// need to strip extra classes...
+						'class': 'image'
+					})
+	} else {
+		return $('<div order="'+n+'" class="image"/>')
+	}
 }
 function createRibbon(){
 	return $('<div class="ribbon"/>')
@@ -152,8 +194,54 @@ function getImageBefore(image, ribbon){
 		prev = this
 	})
 
-	return prev
+	return $(prev)
 }
+
+
+// basic navigation actions...
+function nextImage(){
+	return centerImage(
+		focusImage(
+			$('.current.image').next('.image')))
+}
+function prevImage(){
+	return centerImage(
+		focusImage(
+			$('.current.image').prev('.image')))
+}
+function firstImage(){
+	return centerImage(
+		focusImage(
+			$('.current.image').closest('.ribbon').find('.image').first()))
+}
+function lastImage(){
+	return centerImage(
+		focusImage(
+			$('.current.image').closest('.ribbon').find('.image').last()))
+}
+
+// NOTE: if moving is 'next' these will chose the image after the current's order.
+// NOTE: if an image with the same order is found, moving argument has no effect.
+function prevRibbon(moving){
+	var cur = $('.current.image')
+	var target = getImageBefore(cur, cur.closest('.ribbon').prev('.ribbon'))
+	if(moving == 'next' && cur.attr('order') != target.attr('order')){
+		var next = target.next('.image')
+		target = next.length > 0 ? next : target
+	}
+	return centerImage(focusImage(target))
+}
+function nextRibbon(moving){
+	var cur = $('.current.image')
+	var target = getImageBefore(cur, cur.closest('.ribbon').next('.ribbon'))
+	if(moving == 'next' && cur.attr('order') != target.attr('order')){
+		var next = target.next('.image')
+		target = next.length > 0 ? next : target
+	}
+	return centerImage(focusImage(target))
+}
+
+
 
 function shiftTo(image, ribbon){
 	var target = getImageBefore(image, ribbon)
@@ -240,7 +328,7 @@ function centerImage(image, mode){
 		//mode = 'css'
 		mode = 'animate'
 	}
-	if(image == null){
+	if(image == null || image.length == 0){
 		image = $('.current.image')
 	}
 	var viewer = $('.viewer')
@@ -283,43 +371,6 @@ function fitNImages(n){
 	setElementScale($('.ribbon-set'), scale)
 	centerImage(image, 'css')
 }
-
-// XXX use CSS toggler...
-// XXX revise: does extra stuff...
-function toggleImageProportions(mode){
-	var image = $('.image')
-	var h = image.outerHeight(true)
-	var w = image.outerWidth(true)
-
-	if(mode == '?'){
-		return h != w ? 'viewer' : 'square'
-
-	// square...
-	} else if(h != w || mode == 'square'){
-		var size = Math.min(w, h)
-		image.css({
-			width: size,
-			height: size
-		})
-		centerImage(null, 'css')
-		return 'square'
-
-	// viewer size...
-	} else {
-		var viewer = $('.viewer')
-		var W = viewer.innerWidth()
-		var H = viewer.innerHeight()
-
-		if(W > H){
-			image.css('width', W * h/H)
-		} else {
-			image.css('height', H * w/W)
-		}
-		centerImage(null, 'css')
-		return 'viewer'
-	}
-}
-
 
 
 
