@@ -66,6 +66,9 @@
 // called after (post) the change is made. If two are given then the first
 // is called before the change and the second after the change.
 // The callbacks are passed the current action.
+// The callback function will have this set to the same value as the toggler
+// itself, e.g. if the toggler is called as a method, the callback's this
+// will reference the object.
 //
 // NOTE: the pre-callback will get the "intent" action, i.e. the state the
 // 		we are changing into but the changes are not yet made.
@@ -154,9 +157,11 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 			}
 		}
 
+		// NOTE: the callbacks are passed the same this as the calling 
+		// 		function, this will enable them to act as metods correctly
 		// pre callback...
 		if(callback_pre != null){
-			if(callback_pre(action) === false){
+			if(callback_pre.call(this, action) === false){
 				return
 			}
 		}
@@ -167,7 +172,7 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 		}
 		// post callback...
 		if(callback_post != null){
-			callback_post(action)
+			callback_post.call(this, action)
 		}
 
 		return action
