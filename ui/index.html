@@ -281,6 +281,10 @@ var KEYBOARD_CONFIG = {
 				}
 				*/
 			},
+		Space: {
+				default: 'Right',
+				shift: 'Left',
+			},
 
 		Home: function(){
 				firstImage()
@@ -304,6 +308,13 @@ var KEYBOARD_CONFIG = {
 		F: function(){ toggleImageProportions() },
 
 		// XXX not final, think of a better way to do this...
+		I: {
+				shift: function(){ invertImageMarks() },
+		},
+		A: {
+				shift: function(){ toggleImageMarkBlock() },
+				ctrl: function(){ markAll('ribbon') },
+			},
 		M: {
 				default: function(){ toggleImageMark() },
 				shift: function(){ toggleMarkedOnlyView() },

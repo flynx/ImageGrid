@@ -100,7 +100,12 @@ var KEYBOARD_HANDLER_PROPAGATE = true
  * 			<key-def> : <callback>,
  *
  * 			<key-def> : {
- * 				'default': <callback>,
+ *				// modifiers can either have a callback or an alias as 
+ *				// a value...
+ *				// NOTE: when the alias is resolved, the same modifiers 
+ *				//		will be applied to the final resolved handler.
+ * 				'default': <callback> | <key-def-x>,
+ *
  *				// a modifier can be any single modifier, like shift or a 
  *				// combination of modifers like 'ctrl+shift', given in order 
  *				// of priority.
@@ -171,11 +176,26 @@ function makeKeyboardHandler(keybindings, unhandled){
 				}
 
 				// alias...
-				while (typeof(handler) == typeof(123) || typeof(handler) == typeof('str')) {
+				while (typeof(handler) == typeof(123) 
+						|| typeof(handler) == typeof('str')
+						|| typeof(handler) == typeof({}) && handler.constructor.name == 'Object') {
+
+					// do the complex handler aliases...
+					if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
+						if(typeof(handler[modifers]) == typeof('str')){
+							handler = handler[modifers]
+						} else if(typeof(handler['default']) == typeof('str')){
+							handler = handler['default']
+						} else {
+							break
+						}
+					}
+
+					// simple handlers...
 					if(handler in bindings){
 						// XXX need to take care of that we can always be a number or a string...
 						handler = bindings[handler]
-					} else if(typeof(h) == typeof(1)) {
+					} else if(typeof(handler) == typeof(1)) {
 						handler = bindings[toKeyName(handler)]
 					} else {
 						handler = bindings[toKeyCode(handler)]
@@ -200,7 +220,7 @@ function makeKeyboardHandler(keybindings, unhandled){
 					handler = handler[0]
 				}
 				// complex handler...
-				if(typeof(handler) == typeof({})){
+				if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
 					var callback = handler[modifers]
 					if(callback == null){
 						callback = handler['default']

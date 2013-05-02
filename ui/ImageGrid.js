@@ -176,6 +176,7 @@ function createRibbon(){
 * Modes
 */
 
+// XXX shifting images and unmarking in this mode do not work correctly...
 var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 'marked-only',
 	function(){
 		var cur = $('.current.image')
@@ -522,6 +523,7 @@ function markAll(mode){
 	}
 }
 
+// NOTE: this only does it's work in the current ribbon...
 function invertImageMarks(){
 	return $('.current.image')
 		.closest('.ribbon')
@@ -559,8 +561,7 @@ function toggleImageMarkBlock(image){
 function clickHandler(evt){
 	var img = $(evt.target).closest('.image')
 
-	centerImage(
-		focusImage(img))
+	centerImage( focusImage(img) )
 }
 
 
