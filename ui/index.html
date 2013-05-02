@@ -208,6 +208,9 @@ Split the API into the following sections:
 	- UI
 		basic align, animation and modes
 
+
+TODO group all actions into an object, referencing the viewer...
+	...this will make this reusable multiple times.			
 */
 
 
@@ -363,6 +366,28 @@ function createImage(n){
 		return $('<div order="'+n+'" class="image"/>')
 	}
 }
+// a cache-enabled version of create image...
+// XXX do we need this???
+function createImages(need, have){
+	have = have == null ? [] : have
+
+	// we have enough elements in the cache...
+	if(have.length >= need){
+		return $(have.splice(0, need))
+
+	// need to create additional elements...
+	} else {
+		return $(have.toArray().concat(new Array(need - have.length)))
+			.map(function(i, elem){
+				if(elem != null){
+					return elem
+				}
+				return createImage()[0]
+			})
+	}
+}
+
+
 function createRibbon(){
 	return $('<div class="ribbon"/>')
 }
@@ -494,6 +519,56 @@ function centerImage(image, mode){
 		'top': t - pos.top + (H - h)/2,
 		'left': l - pos.left + (W - w)/2
 	})
+}
+
+
+
+/**********************************************************************
+* Infinite ribbon machinery
+*/
+
+// NOTE: negative left or right will contract the ribbon...
+function extendRibbon(left, right, ribbon){
+	ribbon = ribbon == null ? 
+				$('.current.image').closest('.ribbon') 
+				: $(ribbon)
+	left = left == null ? 0 : left
+	right = right == null ? 0 : right
+	var images = ribbon.children('.image')
+	var removed = []
+	var res = {
+		left: [],
+		right: []
+	}
+
+	// truncate...
+	// NOTE: we save the detached elements to reuse them on extending,
+	//		if needed...
+	if(left < 0){
+		removed = $(images.splice(0, -left)).detach()
+	}
+	if(right < 0){
+		var l = images.length
+		removed = $(images.splice(l+right, l)).detach()
+	}
+
+	// extend...
+	if (left > 0){
+		res.left = createImages(left, removed).prependTo(ribbon)
+	}
+	if (right > 0){
+		res.right = createImages(right, removed).appendTo(ribbon)
+	}
+
+	return res
+}
+
+
+// NOTE: rollRibbon(N, R) is equivalent to extendRibbon(-N, N, R)
+// NOTE: this will return a single list of relocated elements...
+function rollRibbon(n, ribbon){
+	var res = extendRibbon(-n, n, ribbon)
+	return n > 0 ? res.right : res.left
 }
 
 
