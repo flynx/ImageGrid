@@ -215,11 +215,11 @@ var KEYBOARD_CONFIG = {
 	'.viewer': {
 		Up: {
 				default: function(){ prevRibbon(DIRECTION) },
-				shift: function(){ shiftImageUp() },
+				shift: function(){ shiftImageUp(null, DIRECTION) },
 			},
 		Down: {
 				default: function(){ nextRibbon(DIRECTION) },
-				shift: function(){ shiftImageDown() },
+				shift: function(){ shiftImageDown(null, DIRECTION) },
 			},
 
 		// XXX need to cancel the animation of the prev action...
@@ -285,6 +285,14 @@ var KEYBOARD_CONFIG = {
 				default: 'Right',
 				shift: 'Left',
 			},
+		/* XXX for some reason this does not work,,,
+		// XXX for some odd reason, returning false does not cancel 
+		//		default behaviour here...
+		Backspace: {
+				default: 'Left',
+				shift: 'Right',
+			},
+		*/
 
 		Home: function(){
 				firstImage()
@@ -301,16 +309,20 @@ var KEYBOARD_CONFIG = {
 		'5': function(){ fitNImages(5) },
 		'6': function(){ fitNImages(6) },
 		'7': function(){ fitNImages(7) },
+		// XXX for some reason this also hooks the Backspace key (80)...
 		'8': function(){ fitNImages(8) },
 		'9': function(){ fitNImages(9) },
+
 
 		// XXX this is temporary, combine this with single image mode...
 		F: function(){ toggleImageProportions() },
 
+
+		// marking...
 		// XXX not final, think of a better way to do this...
 		I: {
 				shift: function(){ invertImageMarks() },
-		},
+			},
 		A: {
 				shift: function(){ toggleImageMarkBlock() },
 				ctrl: function(){ markAll('ribbon') },
@@ -319,7 +331,6 @@ var KEYBOARD_CONFIG = {
 				default: function(){ toggleImageMark() },
 				shift: function(){ toggleMarkedOnlyView() },
 			},
-
 	}
 }
 

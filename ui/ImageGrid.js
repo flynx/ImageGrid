@@ -433,16 +433,19 @@ function nextRibbon(moving, mode){
 
 
 // XXX get move direction...
-function _shiftImageTo(image, direction, moving, force_create_ribbon){
+function _shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	if(image == null){
 		image = $('.current.image')
+	}
+	if(mode == null){
+		mode = NAV_DEFAULT
 	}
 
 	// account move for direction...
 	// XXX get the value from some place more logical than the argument...
-	var a = moving == 'prev' ? 'prev' : 'next' 
-	var b = moving == 'prev' ? 'next' : 'prev' 
-	var target = image[a]('.image')
+	var a = moving == 'prev' ? 'prevAll' : 'nextAll' 
+	var b = moving == 'prev' ? 'nextAll' : 'prevAll' 
+	var target = image[a]('.image' + mode).first()
 
 	target = target.length == 0 ? image[b]() : target
 
@@ -453,17 +456,17 @@ function _shiftImageTo(image, direction, moving, force_create_ribbon){
 	// XXX does this need to be animated???
 	return centerImage(focusImage(target), 'css')
 }
-function shiftImageUp(image){
-	return _shiftImageTo(image, 'prev')
+function shiftImageUp(image, moving){
+	return _shiftImageTo(image, 'prev', moving)
 }
-function shiftImageDown(image){
+function shiftImageDown(image, moving){
 	return _shiftImageTo(image, 'next')
 }
-function shiftImageUpNewRibbon(image){
-	return _shiftImageTo(image, 'prev', true)
+function shiftImageUpNewRibbon(image, moving){
+	return _shiftImageTo(image, 'prev', moving, true)
 }
-function shiftImageDownNewRibbon(image){
-	return _shiftImageTo(image, 'prev', false)
+function shiftImageDownNewRibbon(image, moving){
+	return _shiftImageTo(image, 'prev', moving, false)
 }
 
 
