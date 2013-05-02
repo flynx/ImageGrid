@@ -198,7 +198,89 @@
 
 <script>
 
+/**********************************************************************
+* Keyboard configuration...
+*
+* XXX move this out to a separate file...
+*/
 
+var KEYBOARD_CONFIG = {
+	// general setup...
+	'.viewer': {
+		Up: {
+				default: function(){ prevRibbon() },
+				shift: function(){ shiftImageUp() },
+			},
+		Down: {
+				default: function(){ nextRibbon() },
+				shift: function(){ shiftImageDown() },
+			},
+
+		// XXX need to cancel the animation of the prev action...
+		Left: {
+				default: function(){ prevImage() },
+				// XXX prevScreenImages...
+				ctrl: function(){ 
+					console.log('NotImplemented: screen images back.')
+				},
+				shift: function(){
+					toggleImageMark()
+					prevImage()
+				},
+				// XXX mark screen images...
+				'ctrl+shift': function(){
+					console.log('NotImplemented: mark screen images back.')
+				}
+			},
+		Right: {
+				default: function(){ nextImage() },
+				// XXX nextScreenImages...
+				ctrl: function(){ 
+					console.log('NotImplemented: screen images forward.')
+				},
+				shift: function(){
+					toggleImageMark()
+					nextImage()
+				},
+				// XXX mark screen images...
+				'ctrl+shift': function(){
+					console.log('NotImplemented: mark screen images forward.')
+				}
+			},
+
+		Home: function(){
+				firstImage()
+			},
+		End: function(){
+				lastImage()
+			},
+
+		// zooming...
+		'1': function(){ fitNImages(1) },
+		'2': function(){ fitNImages(2) },
+		'3': function(){ fitNImages(3) },
+		'4': function(){ fitNImages(4) },
+		'5': function(){ fitNImages(5) },
+		'6': function(){ fitNImages(6) },
+		'7': function(){ fitNImages(7) },
+		'8': function(){ fitNImages(8) },
+		'9': function(){ fitNImages(9) },
+
+		// XXX this is temporary, combine this with single image mode...
+		F: function(){ toggleImageProportions() },
+
+		// XXX not final, think of a better way to do this...
+		M: {
+				default: function(){ toggleImageMark() },
+				shift: function(){ toggleMarkedOnlyView() },
+			},
+
+	}
+}
+
+
+
+/*********************************************************************/
 // setup...
 $(function(){
 
@@ -220,6 +302,15 @@ $(function(){
 	// NOTE: this is global so as to not to add any extra complexity to 
 	//		the internal workings...
 	$('.viewer').click(clickHandler)
+
+	$(document)
+		.keydown(makeKeyboardHandler(
+			KEYBOARD_CONFIG,
+			function(k){console.log(k)}))
+	
+
+	// XXX stub...
+	centerImage(focusImage($('.image').first()), 'css')
 
 
 })

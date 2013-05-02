@@ -49,7 +49,8 @@ function getImageBefore(image, ribbon, mode){
 		ribbon = image.closest('.ribbon')
 	}
 	var images = $(ribbon).find('.image').filter(mode)
-	var order = image.attr('order')
+	// XXX need to process/format this correctly...
+	var order = JSON.parse(image.attr('order'))
 	var prev = null
 
 	images.each(function(){
@@ -64,7 +65,7 @@ function getImageBefore(image, ribbon, mode){
 
 
 function shiftTo(image, ribbon){
-	var target = getImageBefore(image, ribbon)
+	var target = getImageBefore(image, ribbon, NAV_ALL)
 	var cur_ribbon = image.closest('.ribbon')
 
 	// insert before the first image if nothing is before the target...
@@ -176,7 +177,7 @@ var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 'marked-only',
 			return
 		} 
 		// there is a marked image in this ribbon...
-		var target = getImageBefore(cur, null, true)
+		var target = getImageBefore(cur, null)
 		if(target.length > 0){
 			centerImage(focusImage(target), 'css')
 			return
@@ -270,11 +271,17 @@ function centerImage(image, mode){
 	var l = parseFloat(ribbons.css('left'))
 	l = l ? l : 0
 
-	// do the actual work...
-	return ribbons[mode]({
+
+	var res = {
 		'top': t - pos.top + (H - h)/2,
 		'left': l - pos.left + (W - w)/2
-	})
+	}
+	// do the actual work...
+	if(mode == 'animate'){
+		return ribbons.stop().animate(res, 100, 'linear')
+	} else {
+		return ribbons.css(res)
+	}
 }
 
 
@@ -388,6 +395,8 @@ function lastImage(mode){
 // NOTE: if moving is 'next' these will chose the image after the current's order.
 // NOTE: if an image with the same order is found, moving argument has no effect.
 // XXX get move direction...
+// XXX this (getImageBefore?) does not appear to work for up when the 
+// 		first image is > than current position...
 function prevRibbon(moving, mode){
 	if(mode == null){
 		mode = NAV_DEFAULT
@@ -395,7 +404,7 @@ function prevRibbon(moving, mode){
 	var cur = $('.current.image')
 	// pre marked-only mode...
 	//var target = getImageBefore(cur, cur.closest('.ribbon').prev('.ribbon'))
-	var target = getImageBefore(cur, cur.closest('.ribbon').prevAll('.ribbon' + mode).first(), true)
+	var target = getImageBefore(cur, cur.closest('.ribbon').prevAll('.ribbon:visible').first())
 	if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.nextAll('.image' + mode).first()
 		target = next.length > 0 ? next : target
@@ -403,6 +412,8 @@ function prevRibbon(moving, mode){
 	return centerImage(focusImage(target))
 }
 // XXX get move direction...
+// XXX this (getImageBefore?) does not appear to work for up when the 
+// 		first image is > than current position...
 function nextRibbon(moving, mode){
 	if(mode == null){
 		mode = NAV_DEFAULT
@@ -410,7 +421,7 @@ function nextRibbon(moving, mode){
 	var cur = $('.current.image')
 	// pre marked-only mode...
 	//var target = getImageBefore(cur, cur.closest('.ribbon').next('.ribbon'))
-	var target = getImageBefore(cur, cur.closest('.ribbon').nextAll('.ribbon' + mode).first(), true)
+	var target = getImageBefore(cur, cur.closest('.ribbon').nextAll('.ribbon:visible').first())
 	if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.nextAll('.image' + mode).first()
 		target = next.length > 0 ? next : target
