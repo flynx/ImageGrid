@@ -204,44 +204,77 @@
 * XXX move this out to a separate file...
 */
 
+var STEPS_TO_CHANGE_DIRECTION = 2
+var _STEPS_LEFT_TO_CHANGE_DIRECTION = STEPS_TO_CHANGE_DIRECTION
+// XXX code related to this needs testing...
+var DIRECTION = 'next'
+
 var KEYBOARD_CONFIG = {
 	// general setup...
 	'.viewer': {
 		Up: {
-				default: function(){ prevRibbon() },
+				default: function(){ prevRibbon(DIRECTION) },
 				shift: function(){ shiftImageUp() },
 			},
 		Down: {
-				default: function(){ nextRibbon() },
+				default: function(){ nextRibbon(DIRECTION) },
 				shift: function(){ shiftImageDown() },
 			},
 
 		// XXX need to cancel the animation of the prev action...
 		Left: {
-				default: function(){ prevImage() },
+				default: function(){ 
+					if(DIRECTION != 'prev'){
+						_STEPS_LEFT_TO_CHANGE_DIRECTION--
+						if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
+							DIRECTION = 'prev'
+							_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+						}
+					} else {
+							_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+					}
+					prevImage() 
+				},
 				// XXX prevScreenImages...
 				ctrl: function(){ 
 					console.log('NotImplemented: screen images back.')
 				},
+				// XXX need to keep shift explicitly clear for editor...
+				/*
 				shift: function(){
 					toggleImageMark()
 					prevImage()
 				},
+				*/
 				// XXX mark screen images...
 				'ctrl+shift': function(){
 					console.log('NotImplemented: mark screen images back.')
 				}
 			},
 		Right: {
-				default: function(){ nextImage() },
+				default: function(){ 
+					if(DIRECTION != 'next'){
+						_STEPS_LEFT_TO_CHANGE_DIRECTION--
+						if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
+							DIRECTION = 'next'
+							_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+						}
+					} else {
+							_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+					}
+					nextImage() 
+				},
 				// XXX nextScreenImages...
 				ctrl: function(){ 
 					console.log('NotImplemented: screen images forward.')
 				},
+				// XXX need to keep shift explicitly clear for editor...
+				/*
 				shift: function(){
 					toggleImageMark()
 					nextImage()
 				},
+				*/
 				// XXX mark screen images...
 				'ctrl+shift': function(){
 					console.log('NotImplemented: mark screen images forward.')

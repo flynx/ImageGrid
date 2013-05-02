@@ -23,7 +23,12 @@
 */
 
 function flashIndicator(direction){
-	$(direction == 'prev' ? '.up-indicator' : '.down-indicator').fadeIn(200).fadeOut(200)
+	$(direction == 'prev' ? '.up-indicator' : '.down-indicator')
+		// NOTE: this needs to be visible in all cases and key press 
+		// 		rhythms... 
+		.show()
+		.delay(20)
+		.fadeOut(200)
 }
 
 
@@ -38,20 +43,23 @@ function getRelativeVisualPosition(outer, inner){
 }
 
 
-// NOTE: if this returns null, it means that the element is smallest in 
-//		target ribbon -- first position.
+// NOTE: if this can't find an image if an order less, it will return 
+// 		the first image in ribbon...
+// NOTE: this might return an empty target if the ribbon is empty...
+// XXX need tp make this loadable ribbon compatible -- the target may 
+// 		not be loaded...
 function getImageBefore(image, ribbon, mode){
 	if(mode == null){
 		mode = NAV_DEFAULT
 	}
-	image = $(image)
+	image = image == null ? $('.current.image') : $(image)
 	if(ribbon == null){
 		ribbon = image.closest('.ribbon')
 	}
 	var images = $(ribbon).find('.image').filter(mode)
 	// XXX need to process/format this correctly...
 	var order = JSON.parse(image.attr('order'))
-	var prev = null
+	var prev = images.first()
 
 	images.each(function(){
 		if(order < $(this).attr('order')){
@@ -395,15 +403,11 @@ function lastImage(mode){
 // NOTE: if moving is 'next' these will chose the image after the current's order.
 // NOTE: if an image with the same order is found, moving argument has no effect.
 // XXX get move direction...
-// XXX this (getImageBefore?) does not appear to work for up when the 
-// 		first image is > than current position...
 function prevRibbon(moving, mode){
 	if(mode == null){
 		mode = NAV_DEFAULT
 	}
 	var cur = $('.current.image')
-	// pre marked-only mode...
-	//var target = getImageBefore(cur, cur.closest('.ribbon').prev('.ribbon'))
 	var target = getImageBefore(cur, cur.closest('.ribbon').prevAll('.ribbon:visible').first())
 	if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.nextAll('.image' + mode).first()
@@ -412,15 +416,11 @@ function prevRibbon(moving, mode){
 	return centerImage(focusImage(target))
 }
 // XXX get move direction...
-// XXX this (getImageBefore?) does not appear to work for up when the 
-// 		first image is > than current position...
 function nextRibbon(moving, mode){
 	if(mode == null){
 		mode = NAV_DEFAULT
 	}
 	var cur = $('.current.image')
-	// pre marked-only mode...
-	//var target = getImageBefore(cur, cur.closest('.ribbon').next('.ribbon'))
 	var target = getImageBefore(cur, cur.closest('.ribbon').nextAll('.ribbon:visible').first())
 	if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.nextAll('.image' + mode).first()
