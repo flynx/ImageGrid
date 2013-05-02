@@ -35,7 +35,7 @@ var KEYBOARD_CONFIG = {
 				},
 				// XXX prevScreenImages...
 				ctrl: function(){ 
-					console.log('NotImplemented: screen images back.')
+					prevScreenImages()
 				},
 				// XXX need to keep shift explicitly clear for editor...
 				/*
@@ -64,7 +64,7 @@ var KEYBOARD_CONFIG = {
 				},
 				// XXX nextScreenImages...
 				ctrl: function(){ 
-					console.log('NotImplemented: screen images forward.')
+					nextScreenImages()
 				},
 				// XXX need to keep shift explicitly clear for editor...
 				/*

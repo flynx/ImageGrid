@@ -43,6 +43,16 @@ function getRelativeVisualPosition(outer, inner){
 }
 
 
+function getVisibleImageSize(){
+	return $('.image').outerWidth() * getElementScale($('.ribbon-set'))
+}
+
+
+function getScreenWidthInImages(){
+	return $('.viewer').innerWidth() / getVisibleImageSize()
+}
+
+
 // NOTE: if this can't find an image if an order less, it will return 
 // 		the first image in ribbon...
 // NOTE: this might return an empty target if the ribbon is empty...
@@ -368,21 +378,29 @@ var NAV_DEFAULT = NAV_VISIBLE
 
 
 // basic navigation actions...
-function nextImage(mode){
+function nextImage(n, mode){
 	if(mode == null){
 		mode = NAV_DEFAULT
 	}
+	n = n == null ? 1 : n
 	return centerImage(
 		focusImage(
-			$('.current.image').nextAll('.image' + mode).first()))
+			$('.current.image').nextAll('.image' + mode).eq(n-1)))
 }
-function prevImage(mode){
+function prevImage(n, mode){
 	if(mode == null){
 		mode = NAV_DEFAULT
 	}
+	n = n == null ? 1 : n
 	return centerImage(
 		focusImage(
-			$('.current.image').prevAll('.image' + mode).first()))
+			$('.current.image').prevAll('.image' + mode).eq(n-1)))
+}
+function nextScreenImages(mode){
+	return nextImage(Math.round(getScreenWidthInImages()), mode)
+}
+function prevScreenImages(mode){
+	return prevImage(Math.round(getScreenWidthInImages()), mode)
 }
 function firstImage(mode){
 	if(mode == null){
