@@ -81,6 +81,9 @@ var KEYBOARD_CONFIG = {
 		Space: {
 				default: 'Right',
 				shift: 'Left',
+				// screen-oriented movement...
+				ctrl: 'Right',
+				'ctrl+shift': 'Left',
 			},
 		/* XXX for some reason this does not work,,,
 		// XXX for some odd reason, returning false does not cancel 
