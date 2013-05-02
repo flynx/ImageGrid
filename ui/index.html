@@ -366,7 +366,9 @@ function createImage(n){
 		return $('<div order="'+n+'" class="image"/>')
 	}
 }
-// a cache-enabled version of create image...
+
+// This will create a set of new images, reusing a list of existing 
+// elements if given.
 // XXX do we need this???
 function createImages(need, have){
 	have = have == null ? [] : have
@@ -386,7 +388,6 @@ function createImages(need, have){
 			})
 	}
 }
-
 
 function createRibbon(){
 	return $('<div class="ribbon"/>')
@@ -527,6 +528,10 @@ function centerImage(image, mode){
 * Infinite ribbon machinery
 */
 
+// XXX need mechanics to populate the images or to connect such 
+//		functionality...
+//		...this is to be done in the loader...
+
 // NOTE: negative left or right will contract the ribbon...
 function extendRibbon(left, right, ribbon){
 	ribbon = ribbon == null ? 
@@ -564,6 +569,9 @@ function extendRibbon(left, right, ribbon){
 }
 
 
+// Roll the ribbon n positions to the left.
+//
+// NOTE: if n is negative the ribbon will be rolled right.
 // NOTE: rollRibbon(N, R) is equivalent to extendRibbon(-N, N, R)
 // NOTE: this will return a single list of relocated elements...
 function rollRibbon(n, ribbon){
@@ -609,10 +617,18 @@ function lastImage(){
 
 
 function nextMarkedImage(){
-	// XXX
+	return centerImage(
+		focusImage(
+			// pre marked-only mode...
+			//$('.current.image').next('.marked.image')))
+			$('.current.image').next('.marked.image:visible')))
 }
 function prevMarkedImage(){
-	// XXX
+	return centerImage(
+		focusImage(
+			// pre marked-only mode...
+			//$('.current.image').prev('.marked.image')))
+			$('.current.image').prev('.marked.image:visible')))
 }
 
 
