@@ -287,10 +287,12 @@ function centerImage(image, mode){
 	}
 	// do the actual work...
 	if(mode == 'animate'){
-		return ribbons.stop().animate(res, 100, 'linear')
+		ribbons.stop().animate(res, 100, 'linear')
 	} else {
-		return ribbons.css(res)
+		ribbons.css(res)
 	}
+
+	return image
 }
 
 
@@ -492,6 +494,8 @@ function fitNImages(n){
 
 // Marks...
 
+// XXX if this unmarks an image in marked-only mode no visible image is 
+// 		going to be current...
 var toggleImageMark = createCSSClassToggler('.current.image', 'marked')
 
 // mode can be:

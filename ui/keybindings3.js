@@ -6,14 +6,14 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-
-/*********************************************************************/
-
 var STEPS_TO_CHANGE_DIRECTION = 2
 var _STEPS_LEFT_TO_CHANGE_DIRECTION = STEPS_TO_CHANGE_DIRECTION
 // XXX code related to this needs testing...
 var DIRECTION = 'next'
 
+
+
+/*********************************************************************/
 
 var KEYBOARD_CONFIG = {
 	// general setup...
@@ -96,6 +96,9 @@ var KEYBOARD_CONFIG = {
 		End: function(){
 				lastImage()
 			},
+
+
+		// combined navigation and editor actions...
 		Up: {
 				default: function(){ prevRibbon(DIRECTION) },
 				shift: function(){ shiftImageUp(null, DIRECTION) },
@@ -104,7 +107,6 @@ var KEYBOARD_CONFIG = {
 				default: function(){ nextRibbon(DIRECTION) },
 				shift: function(){ shiftImageDown(null, DIRECTION) },
 			},
-
 
 
 		// zooming...
@@ -118,6 +120,7 @@ var KEYBOARD_CONFIG = {
 		// XXX for some reason this also hooks the Backspace key (80)...
 		'8': function(){ fitNImages(8) },
 		'9': function(){ fitNImages(9) },
+		// XXX bind the +/- keys...
 
 
 		// XXX this is temporary, combine this with single image mode...
@@ -128,6 +131,10 @@ var KEYBOARD_CONFIG = {
 		// marking...
 		// XXX not final, think of a better way to do this...
 		// XXX need mark navigation...
+		// XXX need marked image shift up/down actions...
+		// XXX unmarking an image in marked-only mode results in nothing
+		// 		visible focused if we unmark the first or last image in 
+		// 		the ribbon...
 		M: {
 				// NOTE: marking moves in the same direction as the last
 				//		move...
@@ -136,6 +143,9 @@ var KEYBOARD_CONFIG = {
 				// NOTE: marking does not change move direction...
 				default: function(){ 
 					toggleImageMark()
+					if($('.current.image').filter(':visible').length == 0){
+						centerImage(focusImage(getImageBefore()), 'css')
+					}
 					if(DIRECTION == 'next'){
 						nextImage()
 					} else {
@@ -145,13 +155,30 @@ var KEYBOARD_CONFIG = {
 				// same as default but in reverse direction...
 				shift: function(){
 					toggleImageMark()
+					if($('.current.image').filter(':visible').length == 0){
+						centerImage(focusImage(getImageBefore()), 'css')
+					} 
 					if(DIRECTION == 'prev'){
 						nextImage()
 					} else {
 						prevImage()
 					}
 				},
-				ctrl: function(){ toggleImageMark() },
+				ctrl: function(){ 
+					var action = toggleImageMark() 
+					// focus an image instead of the one that just vanished...
+					if(action == 'off' && toggleMarkedOnlyView('?') == 'on'){
+						if(DIRECTION == 'next'){
+							nextImage()
+						} else {
+							prevImage()
+						}
+						if($('.current.image').filter(':visible').length == 0){
+							centerImage(focusImage(getImageBefore()))
+						} 
+
+					}
+				},
 			},
 		I: {
 				ctrl: function(){ invertImageMarks() },
@@ -167,10 +194,6 @@ var KEYBOARD_CONFIG = {
 		F2: function(){ toggleMarkedOnlyView() },
 	}
 }
-
-
-
-
 
 
 
