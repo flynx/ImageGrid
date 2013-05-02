@@ -19,62 +19,6 @@
 
 
 /**********************************************************************
-* Constructors
-*/
-
-// NOTE: to avoid state sync problems this should clone an image if 
-//		one is available...
-function createImage(n){
-	if(n == null){
-		if(window._n == null){
-			window._n = 0
-		}
-		n = _n
-		_n += 1
-	}
-	var img = $('.image')
-	if(img.length > 0){
-		return img.first().clone()
-					.attr({
-						'order': n,
-						// need to strip extra classes...
-						'class': 'image'
-					})
-	} else {
-		return $('<div order="'+n+'" class="image"/>')
-	}
-}
-
-// This will create a set of new images, reusing a list of existing 
-// elements if given.
-// XXX do we need this???
-function createImages(need, have){
-	have = have == null ? [] : have
-
-	// we have enough elements in the cache...
-	if(have.length >= need){
-		return $(have.splice(0, need))
-
-	// need to create additional elements...
-	} else {
-		return $(have.toArray().concat(new Array(need - have.length)))
-			.map(function(i, elem){
-				if(elem != null){
-					return elem
-				}
-				return createImage()[0]
-			})
-	}
-}
-
-function createRibbon(){
-	return $('<div class="ribbon"/>')
-}
-
-
-
-
-/**********************************************************************
 * Helpers
 */
 
@@ -160,6 +104,62 @@ function shiftImage(direction, image, force_create_ribbon){
 	}
 	return image
 }
+
+
+
+/**********************************************************************
+* Constructors
+*/
+
+// NOTE: to avoid state sync problems this should clone an image if 
+//		one is available...
+function createImage(n){
+	if(n == null){
+		if(window._n == null){
+			window._n = 0
+		}
+		n = _n
+		_n += 1
+	}
+	var img = $('.image')
+	if(img.length > 0){
+		return img.first().clone()
+					.attr({
+						'order': n,
+						// need to strip extra classes...
+						'class': 'image'
+					})
+	} else {
+		return $('<div order="'+n+'" class="image"/>')
+	}
+}
+
+// This will create a set of new images, reusing a list of existing 
+// elements if given.
+// XXX do we need this???
+function createImages(need, have){
+	have = have == null ? [] : have
+
+	// we have enough elements in the cache...
+	if(have.length >= need){
+		return $(have.splice(0, need))
+
+	// need to create additional elements...
+	} else {
+		return $(have.toArray().concat(new Array(need - have.length)))
+			.map(function(i, elem){
+				if(elem != null){
+					return elem
+				}
+				return createImage()[0]
+			})
+	}
+}
+
+function createRibbon(){
+	return $('<div class="ribbon"/>')
+}
+
 
 
 
