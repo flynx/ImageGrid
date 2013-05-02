@@ -146,26 +146,26 @@ var KEYBOARD_CONFIG = {
 				// NOTE: marking does not change move direction...
 				default: function(){ 
 					toggleImageMark()
-					if($('.current.image').filter(':visible').length == 0){
-						centerImage(focusImage(getImageBefore()), 'css')
-					}
 					if(DIRECTION == 'next'){
 						nextImage()
 					} else {
 						prevImage()
 					}
+					if($('.current.image').filter(':visible').length == 0){
+						centerImage(focusImage(getImageBefore()))
+					}
 				},
 				// same as default but in reverse direction...
 				shift: function(){
 					toggleImageMark()
-					if($('.current.image').filter(':visible').length == 0){
-						centerImage(focusImage(getImageBefore()), 'css')
-					} 
 					if(DIRECTION == 'prev'){
 						nextImage()
 					} else {
 						prevImage()
 					}
+					if($('.current.image').filter(':visible').length == 0){
+						centerImage(focusImage(getImageBefore()))
+					} 
 				},
 				ctrl: function(){ 
 					var action = toggleImageMark() 

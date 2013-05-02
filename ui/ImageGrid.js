@@ -383,18 +383,18 @@ function nextImage(n, mode){
 		mode = NAV_DEFAULT
 	}
 	n = n == null ? 1 : n
-	return centerImage(
-		focusImage(
-			$('.current.image').nextAll('.image' + mode).eq(n-1)))
+	var target = $('.current.image').nextAll('.image' + mode)
+	target = target.length < n ?  target.last() : target.eq(n-1)
+	return centerImage(focusImage(target))
 }
 function prevImage(n, mode){
 	if(mode == null){
 		mode = NAV_DEFAULT
 	}
 	n = n == null ? 1 : n
-	return centerImage(
-		focusImage(
-			$('.current.image').prevAll('.image' + mode).eq(n-1)))
+	var target = $('.current.image').prevAll('.image' + mode)
+	target = target.length < n ? target.last() : target.eq(n-1)
+	return centerImage(focusImage(target))
 }
 function nextScreenImages(mode){
 	return nextImage(Math.round(getScreenWidthInImages()), mode)
