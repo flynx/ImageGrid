@@ -32,10 +32,12 @@ var KEYBOARD_CONFIG = {
 							_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
 					}
 					prevImage() 
+					centerRibbons()
 				},
 				// XXX prevScreenImages...
 				ctrl: function(){ 
 					prevScreenImages()
+					centerRibbons()
 				},
 				// XXX need to keep shift explicitly clear for editor...
 				/*
@@ -61,10 +63,12 @@ var KEYBOARD_CONFIG = {
 							_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
 					}
 					nextImage() 
+					centerRibbons()
 				},
 				// XXX nextScreenImages...
 				ctrl: function(){ 
 					nextScreenImages()
+					centerRibbons()
 				},
 				// XXX need to keep shift explicitly clear for editor...
 				/*
@@ -95,22 +99,42 @@ var KEYBOARD_CONFIG = {
 		*/
 		Home: function(){
 				firstImage()
+				centerRibbons()
 			},
 		End: function(){
 				lastImage()
+				centerRibbons()
 			},
 
 
 		// combined navigation and editor actions...
 		Up: {
-				default: function(){ prevRibbon(DIRECTION) },
-				shift: function(){ shiftImageUp(null, DIRECTION) },
-				'ctrl+shift': function(){ shiftImageUpNewRibbon(null, DIRECTION) },
+				default: function(){ 
+					prevRibbon(DIRECTION) 
+					centerRibbons()
+				},
+				shift: function(){ 
+					shiftImageUp(null, DIRECTION) 
+					centerRibbons()
+				},
+				'ctrl+shift': function(){
+					shiftImageUpNewRibbon(null, DIRECTION) 
+					centerRibbons()
+				},
 			},
 		Down: {
-				default: function(){ nextRibbon(DIRECTION) },
-				shift: function(){ shiftImageDown(null, DIRECTION) },
-				'ctrl+shift': function(){ shiftImageDownNewRibbon(null, DIRECTION) },
+				default: function(){
+					nextRibbon(DIRECTION) 
+					centerRibbons()
+				},
+				shift: function(){
+					shiftImageDown(null, DIRECTION) 
+					centerRibbons()
+				},
+				'ctrl+shift': function(){
+					shiftImageDownNewRibbon(null, DIRECTION) 
+					centerRibbons()
+				},
 			},
 
 
@@ -130,7 +154,10 @@ var KEYBOARD_CONFIG = {
 
 		// XXX this is temporary, combine this with single image mode...
 		// XXX this should only work on single image mode...
-		F: function(){ toggleImageProportions() },
+		F: function(){ 
+				toggleImageProportions() 
+				centerRibbons()
+			},
 
 
 		// marking...
@@ -196,7 +223,10 @@ var KEYBOARD_CONFIG = {
 				ctrl: function(){ removeImageMarks('ribbon') },
 				shift: function(){ removeImageMarks('all') },
 			},
-		F2: function(){ toggleMarkedOnlyView() },
+		F2: function(){ 
+				toggleMarkedOnlyView() 
+				centerRibbons()
+			},
 	}
 }
 

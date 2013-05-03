@@ -60,12 +60,14 @@ function getScreenWidthInImages(){
 }
 
 
+// NOTE: in strict mode this will return null if no image is before the
+// 		target...
 // NOTE: if this can't find an image if an order less, it will return 
 // 		the first image in ribbon...
 // NOTE: this might return an empty target if the ribbon is empty...
 // XXX need tp make this loadable ribbon compatible -- the target may 
 // 		not be loaded...
-function getImageBefore(image, ribbon, mode){
+function getImageBefore(image, ribbon, mode, strict){
 	if(mode == null){
 		mode = NAV_DEFAULT
 	}
@@ -76,7 +78,7 @@ function getImageBefore(image, ribbon, mode){
 	var images = $(ribbon).find('.image').filter(mode)
 	// XXX need to process/format this correctly...
 	var order = JSON.parse(image.attr('order'))
-	var prev = images.first()
+	var prev = strict ? [] : images.first()
 
 	images.each(function(){
 		if(order < $(this).attr('order')){
@@ -293,9 +295,9 @@ function centerImage(image, mode){
 
 	// zero out top/left if set to anything other than a specific number...
 	var t = parseFloat(ribbons.css('top'))
-	t = t ? t : 0
+	t = !isNaN(t) ? t : 0
 	var l = parseFloat(ribbons.css('left'))
-	l = l ? l : 0
+	l = !isNaN(l) ? l : 0
 
 
 	var res = {
@@ -310,6 +312,51 @@ function centerImage(image, mode){
 	}
 
 	return image
+}
+
+// XXX this produces errors in marked-only mode...
+function centerRibbon(ribbon, mode){
+	if(mode == null){
+		//mode = 'css'
+		mode = 'animate'
+	}
+	ribbon = $(ribbon)
+	var cur = $('.current.image')
+
+	// if centering current ribbon, just center the image...
+	if(ribbon.find('.current.image').length > 0){
+		centerImage(cur, mode)
+		return ribbon
+	}
+
+	var scale = getElementScale($('.ribbon-set'))
+	var target = getImageBefore(null, ribbon, null, true)
+
+	if(target.length > 0){
+		var dl = getRelativeVisualPosition(target, $('.current.image')).left/scale
+		var l = parseFloat(ribbon.css('left'))
+		l = !isNaN(l) ? l : 0
+		l = {left: l + dl - ($('.image').outerWidth()/2)}
+
+	} else {
+		var dl = getRelativeVisualPosition(ribbon.find('.image').filter(NAV_DEFAULT).first(), $('.current.image')).left/scale
+		var l = parseFloat(ribbon.css('left'))
+		l = !isNaN(l) ? l : 0
+		l = {left: l + dl + ($('.image').outerWidth()/2)}
+	}
+
+	if(mode == 'animate'){
+		ribbon.stop().animate(l, 100, 'linear')
+	} else {
+		ribbons.css(res)
+	}
+
+	return ribbon
+}
+
+// a shorthand...
+function centerRibbons(mode){
+	return $('.ribbon').each(function(){ centerRibbon($(this), mode) })
 }
 
 
