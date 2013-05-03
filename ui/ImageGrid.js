@@ -356,7 +356,9 @@ function centerRibbon(ribbon, mode){
 
 // a shorthand...
 function centerRibbons(mode){
-	return $('.ribbon').each(function(){ centerRibbon($(this), mode) })
+	return $('.ribbon')
+		.filter(':visible')
+		.each(function(){ centerRibbon($(this), mode) })
 }
 
 

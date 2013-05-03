@@ -34,22 +34,10 @@ var KEYBOARD_CONFIG = {
 					prevImage() 
 					centerRibbons()
 				},
-				// XXX prevScreenImages...
 				ctrl: function(){ 
 					prevScreenImages()
 					centerRibbons()
 				},
-				// XXX need to keep shift explicitly clear for editor...
-				/*
-				shift: function(){
-					toggleImageMark()
-					prevImage()
-				},
-				// XXX mark screen images...
-				'ctrl+shift': function(){
-					console.log('NotImplemented: mark screen images back.')
-				}
-				*/
 			},
 		Right: {
 				default: function(){ 
@@ -65,22 +53,10 @@ var KEYBOARD_CONFIG = {
 					nextImage() 
 					centerRibbons()
 				},
-				// XXX nextScreenImages...
 				ctrl: function(){ 
 					nextScreenImages()
 					centerRibbons()
 				},
-				// XXX need to keep shift explicitly clear for editor...
-				/*
-				shift: function(){
-					toggleImageMark()
-					nextImage()
-				},
-				// XXX mark screen images...
-				'ctrl+shift': function(){
-					console.log('NotImplemented: mark screen images forward.')
-				}
-				*/
 			},
 		Space: {
 				default: 'Right',
