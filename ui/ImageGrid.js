@@ -60,17 +60,13 @@ function getScreenWidthInImages(){
 }
 
 
-// NOTE: in strict mode this will return null if no image is before the
-// 		target...
-// NOTE: if this can't find an image if an order less, it will return 
-// 		the first image in ribbon...
+// NOTE: this will return an empty jquery object if no image is before 
+// 		the target...
 // NOTE: this might return an empty target if the ribbon is empty...
 // XXX need tp make this loadable ribbon compatible -- the target may 
 // 		not be loaded...
-function getImageBefore(image, ribbon, mode, strict){
-	if(mode == null){
-		mode = NAV_DEFAULT
-	}
+function getImageBefore(image, ribbon, mode){
+	mode = mode == null ? NAV_DEFAULT : mode
 	image = image == null ? $('.current.image') : $(image)
 	if(ribbon == null){
 		ribbon = image.closest('.ribbon')
@@ -78,7 +74,7 @@ function getImageBefore(image, ribbon, mode, strict){
 	var images = $(ribbon).find('.image').filter(mode)
 	// XXX need to process/format this correctly...
 	var order = JSON.parse(image.attr('order'))
-	var prev = strict ? [] : images.first()
+	var prev = []
 
 	images.each(function(){
 		if(order < $(this).attr('order')){
@@ -372,6 +368,8 @@ function centerImage(image, mode){
 		ribbons.css(res)
 	}
 
+	$('.viewer').trigger('centeringRibbon', [image.closest('.ribbon'), image])
+
 	return image
 }
 
@@ -409,7 +407,7 @@ function centerRibbon(ribbon, image, mode){
 	}
 
 	var scale = getElementScale($('.ribbon-set'))
-	var target = getImageBefore(null, ribbon, null, true)
+	var target = getImageBefore(null, ribbon, null)
 
 	if(target.length > 0){
 		var dl = getRelativeVisualPosition(target, image).left/scale
@@ -418,9 +416,8 @@ function centerRibbon(ribbon, image, mode){
 		l = {left: l + dl - ($('.image').outerWidth()/2)}
 
 	} else {
-		var dl = getRelativeVisualPosition(
-					ribbon.find('.image').filter(NAV_DEFAULT).first(), 
-					image).left/scale
+		target = ribbon.find('.image').filter(NAV_DEFAULT).first() 
+		var dl = getRelativeVisualPosition(target, image).left/scale
 		var l = parseFloat(ribbon.css('left'))
 		l = !isNaN(l) ? l : 0
 		l = {left: l + dl + ($('.image').outerWidth()/2)}
@@ -431,6 +428,8 @@ function centerRibbon(ribbon, image, mode){
 	} else {
 		ribbons.css(res)
 	}
+
+	$('.viewer').trigger('centeringRibbon', [ribbon, target])
 
 	// XXX should this return a ribbon or the target image???
 	return ribbon
@@ -530,18 +529,14 @@ var NAV_DEFAULT = NAV_VISIBLE
 
 // basic navigation actions...
 function nextImage(n, mode){
-	if(mode == null){
-		mode = NAV_DEFAULT
-	}
+	mode = mode == null ? NAV_DEFAULT : mode
 	n = n == null ? 1 : n
 	var target = $('.current.image').nextAll('.image' + mode)
 	target = target.length < n ?  target.last() : target.eq(n-1)
 	return centerImage(focusImage(target))
 }
 function prevImage(n, mode){
-	if(mode == null){
-		mode = NAV_DEFAULT
-	}
+	mode = mode == null ? NAV_DEFAULT : mode
 	n = n == null ? 1 : n
 	var target = $('.current.image').prevAll('.image' + mode)
 	target = target.length < n ? target.last() : target.eq(n-1)
@@ -554,17 +549,13 @@ function prevScreenImages(mode){
 	return prevImage(Math.round(getScreenWidthInImages()), mode)
 }
 function firstImage(mode){
-	if(mode == null){
-		mode = NAV_DEFAULT
-	}
+	mode = mode == null ? NAV_DEFAULT : mode
 	return centerImage(
 		focusImage(
 			$('.current.image').closest('.ribbon').find('.image').filter(mode).first()))
 }
 function lastImage(mode){
-	if(mode == null){
-		mode = NAV_DEFAULT
-	}
+	mode = mode == null ? NAV_DEFAULT : mode
 	return centerImage(
 		focusImage(
 			$('.current.image').closest('.ribbon').find('.image').filter(mode).last()))
@@ -576,11 +567,13 @@ function lastImage(mode){
 // NOTE: if an image with the same order is found, moving argument has no effect.
 // XXX get move direction...
 function prevRibbon(moving, mode){
-	if(mode == null){
-		mode = NAV_DEFAULT
-	}
+	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
 	var target = getImageBefore(cur, cur.closest('.ribbon').prevAll('.ribbon:visible').first())
+	if(target.length == 0){
+		// XXX too complex???
+		target = cur.closest('.ribbon').prevAll('.ribbon:visible').first().find('.image' + mode).first()
+	}
 	if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.nextAll('.image' + mode).first()
 		target = next.length > 0 ? next : target
@@ -589,11 +582,13 @@ function prevRibbon(moving, mode){
 }
 // XXX get move direction...
 function nextRibbon(moving, mode){
-	if(mode == null){
-		mode = NAV_DEFAULT
-	}
+	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
 	var target = getImageBefore(cur, cur.closest('.ribbon').nextAll('.ribbon:visible').first())
+	if(target.length == 0){
+		// XXX too complex???
+		target = cur.closest('.ribbon').nextAll('.ribbon:visible').first().find('.image' + mode).first()
+	}
 	if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.nextAll('.image' + mode).first()
 		target = next.length > 0 ? next : target
@@ -608,9 +603,7 @@ function _shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	if(image == null){
 		image = $('.current.image')
 	}
-	if(mode == null){
-		mode = NAV_DEFAULT
-	}
+	mode = mode == null ? NAV_DEFAULT : mode
 
 	// account move for direction...
 	// XXX get the value from some place more logical than the argument...
@@ -737,7 +730,7 @@ function toggleImageMarkBlock(image){
 function clickHandler(evt){
 	var img = $(evt.target).closest('.image')
 
-	centerImage( focusImage(img) )
+	centerImage(focusImage(img))
 }
 
 

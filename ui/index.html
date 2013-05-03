@@ -224,13 +224,45 @@ $(function(){
 
 	// NOTE: this is global so as to not to add any extra complexity to 
 	//		the internal workings...
-	$('.viewer').click(clickHandler)
+	$('.viewer')
+		.click(clickHandler)
 
 	$(document)
 		.keydown(makeKeyboardHandler(
 			KEYBOARD_CONFIG,
 			function(k){console.log(k)}))
+
+
+
+	if(false){
+		// XXX dynamic loading test...
+		// XXX this will be a stupid demo, until we get real image loading...
+		// XXX update this depending on zoom and navigation speed...
+		var LOADER_THRESHOLD = 2
+		// XXX update this depending on zoom and navigation speed...
+		var LOADER_CHUNK = LOADER_THRESHOLD * 2
+		$('.viewer')
+			.on('centeringRibbon', function(evt, ribbon, image){
+				var head = image.prevAll('.image')
+				var tail = image.nextAll('.image')
+				// NOTE: these are to be used as reference for loading/populating
+				//		rolled images...
+				var first = head.first()
+				var last = head.first()
+
+				// XXX need to expand/contract the ribbon depending on zoom and speed...
+
+				// XXX use extendRibbon, to both roll and expand/contract...
+				if(tail.length < LOADER_THRESHOLD){
+					var rolled = rollRibbon(LOADER_CHUNK, ribbon)
+				}
+				if(head.length < LOADER_THRESHOLD){
+					var rolled = rollRibbon(-LOADER_CHUNK, ribbon)
+				}
+			})
+	}
 	
+
 
 	// XXX stub...
 	centerImage(focusImage($('.image').first()), 'css')
