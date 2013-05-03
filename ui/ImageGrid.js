@@ -487,7 +487,7 @@ function _shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	var b = moving == 'prev' ? 'nextAll' : 'prevAll' 
 	var target = image[a]('.image' + mode).first()
 
-	target = target.length == 0 ? image[b]() : target
+	target = target.length == 0 ? image[b]().first() : target
 
 	// XXX should this be in here or coupled later via an event???
 	flashIndicator(direction)
