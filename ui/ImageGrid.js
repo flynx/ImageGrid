@@ -390,7 +390,7 @@ function centerImage(image, mode){
 // XXX might be good to merge this and centerImage...
 // 		...or make a generic centering function...
 //
-// XXX this produces errors in marked-only mode...
+// XXX this does not work in marked-only mode...
 function centerRibbon(ribbon, image, mode){
 	if(mode == null){
 		//mode = 'css'
@@ -407,7 +407,7 @@ function centerRibbon(ribbon, image, mode){
 	}
 
 	var scale = getElementScale($('.ribbon-set'))
-	var target = getImageBefore(null, ribbon, null)
+	var target = getImageBefore(image, ribbon, null)
 
 	if(target.length > 0){
 		var dl = getRelativeVisualPosition(target, image).left/scale
@@ -569,10 +569,13 @@ function lastImage(mode){
 function prevRibbon(moving, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
-	var target = getImageBefore(cur, cur.closest('.ribbon').prevAll('.ribbon:visible').first())
+	var target = getImageBefore(cur, 
+			cur.closest('.ribbon').prevAll('.ribbon:visible').first())
 	if(target.length == 0){
 		// XXX too complex???
-		target = cur.closest('.ribbon').prevAll('.ribbon:visible').first().find('.image' + mode).first()
+		target = cur.closest('.ribbon')
+					.prevAll('.ribbon:visible').first()
+						.find('.image' + mode).first()
 	}
 	if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.nextAll('.image' + mode).first()
@@ -584,10 +587,13 @@ function prevRibbon(moving, mode){
 function nextRibbon(moving, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
-	var target = getImageBefore(cur, cur.closest('.ribbon').nextAll('.ribbon:visible').first())
+	var target = getImageBefore(cur, 
+			cur.closest('.ribbon').nextAll('.ribbon:visible').first())
 	if(target.length == 0){
 		// XXX too complex???
-		target = cur.closest('.ribbon').nextAll('.ribbon:visible').first().find('.image' + mode).first()
+		target = cur.closest('.ribbon')
+					.nextAll('.ribbon:visible').first()
+						.find('.image' + mode).first()
 	}
 	if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.nextAll('.image' + mode).first()
@@ -731,6 +737,8 @@ function clickHandler(evt){
 	var img = $(evt.target).closest('.image')
 
 	centerImage(focusImage(img))
+
+	centerRibbons()
 }
 
 
