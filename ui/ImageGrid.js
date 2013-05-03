@@ -28,7 +28,13 @@
 
 
 function flashIndicator(direction){
-	$(direction == 'prev' ? '.up-indicator' : '.down-indicator')
+	$({
+		prev: '.up-indicator',
+		next: '.down-indicator',
+		// XXX not implemented yet...
+		start: '.start-indicator',
+		end: '.end-indicator',
+	}[direction])
 		// NOTE: this needs to be visible in all cases and key press 
 		// 		rhythms... 
 		.show()
@@ -532,14 +538,24 @@ function nextImage(n, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	n = n == null ? 1 : n
 	var target = $('.current.image').nextAll('.image' + mode)
-	target = target.length < n ?  target.last() : target.eq(n-1)
+	if(target.length < n){
+		target = target.last()
+		flashIndicator('end')
+	} else {
+		target = target.eq(n-1)
+	}
 	return centerImage(focusImage(target))
 }
 function prevImage(n, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	n = n == null ? 1 : n
 	var target = $('.current.image').prevAll('.image' + mode)
-	target = target.length < n ? target.last() : target.eq(n-1)
+	if(target.length < n){
+		target = target.last()
+		flashIndicator('start')
+	} else {
+		target = target.eq(n-1)
+	}
 	return centerImage(focusImage(target))
 }
 function nextScreenImages(mode){
@@ -548,14 +564,22 @@ function nextScreenImages(mode){
 function prevScreenImages(mode){
 	return prevImage(Math.round(getScreenWidthInImages()), mode)
 }
+// XXX revise...
 function firstImage(mode){
 	mode = mode == null ? NAV_DEFAULT : mode
+	if($('.current.image').prevAll('.image' + mode).length == 0){
+		flashIndicator('start')
+	}
 	return centerImage(
 		focusImage(
 			$('.current.image').closest('.ribbon').find('.image').filter(mode).first()))
 }
+// XXX revise...
 function lastImage(mode){
 	mode = mode == null ? NAV_DEFAULT : mode
+	if($('.current.image').nextAll('.image' + mode).length == 0){
+		flashIndicator('end')
+	}
 	return centerImage(
 		focusImage(
 			$('.current.image').closest('.ribbon').find('.image').filter(mode).last()))
