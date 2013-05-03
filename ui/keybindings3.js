@@ -105,10 +105,12 @@ var KEYBOARD_CONFIG = {
 		Up: {
 				default: function(){ prevRibbon(DIRECTION) },
 				shift: function(){ shiftImageUp(null, DIRECTION) },
+				'ctrl+shift': function(){ shiftImageUpNewRibbon(null, DIRECTION) },
 			},
 		Down: {
 				default: function(){ nextRibbon(DIRECTION) },
 				shift: function(){ shiftImageDown(null, DIRECTION) },
+				'ctrl+shift': function(){ shiftImageDownNewRibbon(null, DIRECTION) },
 			},
 
 
