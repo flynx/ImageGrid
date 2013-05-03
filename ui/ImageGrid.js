@@ -22,6 +22,11 @@
 * Helpers
 */
 
+// XXX need ribbon end indicators...
+
+// XXX might need shift left/right indicators (later)...
+
+
 function flashIndicator(direction){
 	$(direction == 'prev' ? '.up-indicator' : '.down-indicator')
 		// NOTE: this needs to be visible in all cases and key press 
@@ -43,11 +48,13 @@ function getRelativeVisualPosition(outer, inner){
 }
 
 
+// Returns the image size (width) as viewed on screen...
 function getVisibleImageSize(){
 	return $('.image').outerWidth() * getElementScale($('.ribbon-set'))
 }
 
 
+// Return the number of images that can fit to viewer width...
 function getScreenWidthInImages(){
 	return $('.viewer').innerWidth() / getVisibleImageSize()
 }
@@ -316,6 +323,7 @@ function centerImage(image, mode){
 //		...this is to be done in the loader...
 
 // NOTE: negative left or right will contract the ribbon...
+// XXX need to adjust ribbon position to compensate for ribbon shift...
 function extendRibbon(left, right, ribbon){
 	ribbon = ribbon == null ? 
 				$('.current.image').closest('.ribbon') 
@@ -346,6 +354,19 @@ function extendRibbon(left, right, ribbon){
 	}
 	if (right > 0){
 		res.right = createImages(right, removed).appendTo(ribbon)
+	}
+
+	// compensate for the truncation...
+	// XXX do we need to split this into a separate function?
+	// 		...the rest of the function if pretty generic...
+	// XXX for some odd reason this breaks in an unstable way when page
+	// 		is zoomed...
+	if(left != 0){
+		var l = parseFloat(ribbon.css('left'))
+		l = isNaN(l) ? 0 : l
+		ribbon.css({
+			left: l + (-left * parseFloat(images.outerWidth()))
+		})
 	}
 
 	return res
