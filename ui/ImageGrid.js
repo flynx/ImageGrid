@@ -269,9 +269,70 @@ function focusImage(image){
 }
 
 
+/*
+// XXX need to split this into two:
+// 		- offset calculator
+// 		- actual move
+// XXX this does not account for scale at this point...
+// XXX for this to be generic, need a uniform way to get any element scale
+// 		regardless of weather it was scaled directly or is within one or 
+// 		several scaled elements...
+function alignVia(container, elem, via, valign, halign, mode){
+	container = $(container)
+	elem = $(elem)
+	via = $(via)
+
+	valign = valign == null ? 'center' : valign
+	halign = halign == null ? 'center' : halign
+	mode = mode == null ? 'animate' : mode
+
+	var pos = getRelativeVisualPosition(container, elem)
+	var dt = pos.top
+	var dl = pos.left
+	var target = {}
+
+	var t = parseFloat(via.css('top'))
+	t = !isNaN(t) ? t : 0
+	var l = parseFloat(via.css('left'))
+	l = !isNaN(l) ? l : 0
+
+	if(valign == 'center'){
+		var H = container.innerHeight()
+		var h = elem.outerHeight()
+		target.top = t - dt + (H - h)/2,
+	} else if(valign == 'top'){
+		target.top = t - dt
+	} else if(valign == 'bottom'){
+		var h = elem.outerHeight()
+		target.top = t - dt - h
+	} 
+
+	if(halign == 'center'){
+		var W = container.innerWidth()
+		var w = elem.outerWidth()
+		target.left = l - dl + (W - w)/2
+	} else if(halign == 'left'){
+		target.left = l - dl
+	} else if(halign == 'right'){
+		var w = elem.outerWidth()
+		target.left = l - dl - w
+	} 
+
+	// do the actual work...
+	if(mode == 'animate'){
+		via.stop().animate(target, 100, 'linear')
+	} else {
+		via.css(target)
+	}
+
+	// XXX ???
+	return
+}
+*/
+
+
 // This appears to work well with scaling...
 // XXX make this more configurable...
-// XXX this only works for square images...
 function centerImage(image, mode){
 	if(mode == null){
 		//mode = 'css'
@@ -314,18 +375,36 @@ function centerImage(image, mode){
 	return image
 }
 
+
+// Center a ribbon...
+//
+// This behaves differently for different ribbons:
+// 	- ribbon containing the target (given) image
+// 		center relative to the .viewer via .ribbon-set
+// 		calls centerImage(...) directly
+// 		both top and left are used...
+// 	- any other ribbon
+// 		center relative to target (given) via the ribbon left
+// 		only left coordinate is changed...
+//
+// NOTE: image defaults to $('.current.image').
+//
+// XXX might be good to merge this and centerImage...
+// 		...or make a generic centering function...
+//
 // XXX this produces errors in marked-only mode...
-function centerRibbon(ribbon, mode){
+function centerRibbon(ribbon, image, mode){
 	if(mode == null){
 		//mode = 'css'
 		mode = 'animate'
 	}
 	ribbon = $(ribbon)
-	var cur = $('.current.image')
+	image = image == null ? $('.current.image') : $(image)
 
 	// if centering current ribbon, just center the image...
-	if(ribbon.find('.current.image').length > 0){
-		centerImage(cur, mode)
+	if(ribbon.find('.image').index(image) >= 0){
+		centerImage(image, mode)
+		// XXX should this return a ribbon or the target image???
 		return ribbon
 	}
 
@@ -333,13 +412,15 @@ function centerRibbon(ribbon, mode){
 	var target = getImageBefore(null, ribbon, null, true)
 
 	if(target.length > 0){
-		var dl = getRelativeVisualPosition(target, $('.current.image')).left/scale
+		var dl = getRelativeVisualPosition(target, image).left/scale
 		var l = parseFloat(ribbon.css('left'))
 		l = !isNaN(l) ? l : 0
 		l = {left: l + dl - ($('.image').outerWidth()/2)}
 
 	} else {
-		var dl = getRelativeVisualPosition(ribbon.find('.image').filter(NAV_DEFAULT).first(), $('.current.image')).left/scale
+		var dl = getRelativeVisualPosition(
+					ribbon.find('.image').filter(NAV_DEFAULT).first(), 
+					image).left/scale
 		var l = parseFloat(ribbon.css('left'))
 		l = !isNaN(l) ? l : 0
 		l = {left: l + dl + ($('.image').outerWidth()/2)}
@@ -351,6 +432,7 @@ function centerRibbon(ribbon, mode){
 		ribbons.css(res)
 	}
 
+	// XXX should this return a ribbon or the target image???
 	return ribbon
 }
 
@@ -358,7 +440,7 @@ function centerRibbon(ribbon, mode){
 function centerRibbons(mode){
 	return $('.ribbon')
 		.filter(':visible')
-		.each(function(){ centerRibbon($(this), mode) })
+		.each(function(){ centerRibbon($(this), null, mode) })
 }
 
 

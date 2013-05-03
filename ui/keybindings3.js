@@ -22,6 +22,7 @@ var KEYBOARD_CONFIG = {
 		// XXX need to cancel the animation of the prev action...
 		Left: {
 				default: function(){ 
+					// update direction...
 					if(DIRECTION != 'prev'){
 						_STEPS_LEFT_TO_CHANGE_DIRECTION--
 						if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
@@ -41,6 +42,7 @@ var KEYBOARD_CONFIG = {
 			},
 		Right: {
 				default: function(){ 
+					// update direction...
 					if(DIRECTION != 'next'){
 						_STEPS_LEFT_TO_CHANGE_DIRECTION--
 						if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
@@ -126,9 +128,9 @@ var KEYBOARD_CONFIG = {
 		'8': function(){ fitNImages(8) },
 		'9': function(){ fitNImages(9) },
 		// XXX bind the +/- keys...
+		// XXX
 
 
-		// XXX this is temporary, combine this with single image mode...
 		// XXX this should only work on single image mode...
 		F: function(){ 
 				toggleImageProportions() 
