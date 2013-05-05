@@ -250,8 +250,8 @@ $(function(){
 			function(k){console.log(k)}))
 
 
-	// XXX dynamic loading test...
-	// XXX this will be a stupid demo, until we get real image loading...
+	// dynamic loading...
+	// XXX move to a setup function in the lib...
 	// XXX update this depending on zoom and navigation speed...
 	var LOADER_THRESHOLD = 2
 	// XXX update this depending on zoom and navigation speed...
@@ -259,15 +259,29 @@ $(function(){
 	$('.viewer')
 		// XXX it takes several steps for adjacent ribbons to catch up...
 		.on('centeringRibbon', function(evt, ribbon, image){
-			var head = image.prevAll('.image')
-			var tail = image.nextAll('.image')
+			// check if we are in the right range...
+			var gid = getImageGID(image)
+			var r = getRibbonIndex(ribbon)
+			var img_before = getImageBefore(image, ribbon)
+			var gid_before = getGIDBefore(gid, r)
+
+			// need to load a new set of images...
+			if((img_before.length == 0 && gid_before != null) 
+					|| (getImageGID(img_before) && getImageGID(img_before) != gid_before)){
+			}
+
+			if(img_before.length == 0){
+				img_before = ribbon.find('.image').first()
+			}
+
+			var head = img_before.prevAll('.image')
+			var tail = img_before.nextAll('.image')
 			// NOTE: these are to be used as reference for loading/populating
 			//		rolled images...
 			var first = head.first()
 			var last = head.first()
 
 			// XXX need to expand/contract the ribbon depending on zoom and speed...
-
 			// XXX use extendRibbon, to both roll and expand/contract...
 			if(tail.length < LOADER_THRESHOLD){
 				var rolled = rollImages(LOADER_CHUNK, ribbon)

@@ -29,9 +29,7 @@ var DATA = {
 	],
 	// flat ordered list of images in current context...
 	// in the simplest form this is a list of GIDs.
-	order: [
-		$(new Array(100)).map(function(i){return i}).toArray()
-	],
+	order: $(new Array(100)).map(function(i){return i}).toArray(),
 	// the images object, this is indexed by image GID and contains all 
 	// the needed data...
 	images: {
@@ -84,6 +82,21 @@ function getRibbonIndex(elem){
 	return $('.ribbon').index(ribbon)
 }
 
+function getImageOrder(image){
+	image = image == null ? $('.current.image') : $(image)
+	if(image.length == 0){
+		return
+	}
+	return JSON.parse(image.attr('order'))
+}
+function getImageGID(image){
+	image = image == null ? $('.current.image') : $(image)
+	if(image.length == 0){
+		return
+	}
+	return JSON.parse(image.attr('gid'))
+}
+
 // ...tried to make this as brain-dead-stupidly-simple as possible...
 function getRelativeVisualPosition(outer, inner){
 	outer = $(outer).offset()
@@ -131,6 +144,41 @@ function getImageBefore(image, ribbon, mode){
 	})
 
 	return $(prev)
+}
+
+// same as getImageBefore, but uses gids and searches in DATA...
+// XXX check for corner cases...
+function getGIDBefore(gid, ribbon){
+	ribbon = DATA.ribbons[ribbon]
+	var order = DATA.order
+
+	var target = ribbon.indexOf(gid)
+
+	if(target >= 0){
+		return gid
+	}
+
+	target = order.indexOf(gid)
+
+	var i = ribbon.length
+
+	while(i > 1){
+		i = Math.floor(ribbon.length/2)
+
+		//console.log('>>>', target, i, order.indexOf(ribbon[i]), order.indexOf(ribbon[i+1]))
+
+		if(target >= order.indexOf(ribbon[i]) && target < order.indexOf(ribbon[i+1])){
+			return ribbon[i]
+
+		// XXX I do not understand why this works correctly, think I need some sleep...
+		} else if(target < order.indexOf(ribbon[i])){
+			ribbon = ribbon.slice(0, i)
+
+		} else {
+			ribbon = ribbon.slice(i)
+		}
+	}	
+	return null
 }
 
 
@@ -267,7 +315,7 @@ function removeRibbon(ribbon){
 
 
 /**********************************************************************
-* Constructors
+* Loaders
 */
 
 // NOTE: count can be either hegative or positive, this will idicate 
@@ -282,6 +330,7 @@ function getImageGIDs(from, count, ribbon){
 	if(count == 0){
 		return []
 	}
+	// ribbon default value...
 	if(ribbon == null){
 		$(DATA.ribbons).each(function(i, e){ 
 			if(e.indexOf(from) >= 0){ 
@@ -298,7 +347,7 @@ function getImageGIDs(from, count, ribbon){
 		return ribbon.slice(start, start + count)
 	} else {
 		var end = ribbon.indexOf(from)
-		return ribbon.slice(+count >= end ? 0 : end + count, end)
+		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count), end)
 	}
 }
 
@@ -333,15 +382,27 @@ function rollImages(n, ribbon){
 		return $([])
 	}
 	ribbon = ribbon == null ? getRibbon() : $(ribbon)
+	var images = ribbon.find('.image')
+
 	var from = n > 0 ? JSON.parse(ribbon.find('.image').last().attr('gid'))
 					: JSON.parse(ribbon.find('.image').first().attr('gid'))
 	var gids = getImageGIDs(from, n)
 	if(gids.length == 0){
 		return $([])
 	}
-	var images = rollRibbon(gids.length * (n > 0 ? 1 : -1), ribbon)
-	var size = getVisibleImageSize()
+	// truncate the results to the length of images...
+	if(n > images.length){
+		gids.reverse().splice(images.length)
+		gids.reverse()
+	} else if(Math.abs(n) > images.length){
+		gids.splice(images.length)
+	}
 
+	if(n < images.length){
+		images = rollRibbon(gids.length * (n > 0 ? 1 : -1), ribbon)
+	}
+
+	var size = getVisibleImageSize()
 	images.each(function(i, e){
 		updateImage($(e), gids[i], size)
 	})
@@ -593,7 +654,7 @@ function centerRibbon(ribbon, image, mode){
 		ribbons.css(res)
 	}
 
-	$('.viewer').trigger('centeringRibbon', [ribbon, target])
+	$('.viewer').trigger('centeringRibbon', [ribbon, image])
 
 	// XXX should this return a ribbon or the target image???
 	return ribbon
@@ -778,8 +839,7 @@ function prevRibbon(moving, mode){
 		target = getRibbon(cur)
 					.prevAll('.ribbon:visible').first()
 						.find('.image' + mode).first()
-	}
-	if(moving == 'next' && cur.attr('order') != target.attr('order')){
+	} else if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.nextAll('.image' + mode).first()
 		target = next.length > 0 ? next : target
 	}
@@ -796,10 +856,9 @@ function nextRibbon(moving, mode){
 		target = getRibbon(cur)
 					.nextAll('.ribbon:visible').first()
 						.find('.image' + mode).first()
-	}
-	if(moving == 'next' && cur.attr('order') != target.attr('order')){
-		var next = target.nextAll('.image' + mode).first()
-		target = next.length > 0 ? next : target
+	} else if(moving == 'next' && cur.attr('order') != target.attr('order')){
+			var next = target.nextAll('.image' + mode).first()
+			target = next.length > 0 ? next : target
 	}
 	return centerImage(focusImage(target))
 }
