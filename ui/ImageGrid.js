@@ -148,6 +148,7 @@ function getImageBefore(image, ribbon, mode){
 
 // same as getImageBefore, but uses gids and searches in DATA...
 // XXX check for corner cases...
+// XXX getGIDBefore(1, 1) does not work
 function getGIDBefore(gid, ribbon){
 	ribbon = DATA.ribbons[ribbon]
 	var order = DATA.order
@@ -162,10 +163,10 @@ function getGIDBefore(gid, ribbon){
 
 	var i = ribbon.length
 
-	while(i > 1){
+	while(i > 0){
 		i = Math.floor(ribbon.length/2)
 
-		//console.log('>>>', target, i, order.indexOf(ribbon[i]), order.indexOf(ribbon[i+1]))
+		console.log('>>>', target, i, order.indexOf(ribbon[i]), order.indexOf(ribbon[i+1]))
 
 		if(target >= order.indexOf(ribbon[i]) && target < order.indexOf(ribbon[i+1])){
 			return ribbon[i]
