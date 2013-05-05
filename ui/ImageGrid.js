@@ -13,9 +13,28 @@
 * 
 * TODO group all actions into an object, referencing the viewer...
 * 	...this will make this reusable multiple times.			
+* TODO wrap the actions into an object and make all queries relative to
+* 		a single root viewer...
+* 		...this will make the code reusable multiple times...
 *
 *
 **********************************************************************/
+
+// Data format...
+var DATA = {
+	// the ribbon cache...
+	// in the simplest form this is a list of lists of GIDs
+	ribbons: [
+	],
+	// flat ordered list of images in current context...
+	// in the simplest form this is a list of GIDs.
+	image_order: [
+	],
+	// the images object, this is indexed by image GID and contains all 
+	// the needed data...
+	images: {
+	}
+}
 
 
 /**********************************************************************
@@ -42,6 +61,11 @@ function flashIndicator(direction){
 		.fadeOut(200)
 }
 
+
+function getRibbon(image){
+	image = image == null ? $('.current.image') : $(image)
+	return image.closest('.ribbon')
+}
 
 // ...tried to make this as brain-dead-stupidly-simple as possible...
 function getRelativeVisualPosition(outer, inner){
@@ -75,7 +99,7 @@ function getImageBefore(image, ribbon, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	image = image == null ? $('.current.image') : $(image)
 	if(ribbon == null){
-		ribbon = image.closest('.ribbon')
+		ribbon = getRibbon(image)
 	}
 	var images = $(ribbon).find('.image').filter(mode)
 	// XXX need to process/format this correctly...
@@ -95,7 +119,7 @@ function getImageBefore(image, ribbon, mode){
 
 function shiftTo(image, ribbon){
 	var target = getImageBefore(image, ribbon, NAV_ALL)
-	var cur_ribbon = image.closest('.ribbon')
+	var cur_ribbon = getRibbon(image)
 
 	// insert before the first image if nothing is before the target...
 	if(target.length == 0){
@@ -120,7 +144,7 @@ function shiftImage(direction, image, force_create_ribbon){
 	} else {
 		image = $(image)
 	}
-	var old_ribbon = image.closest('.ribbon')
+	var old_ribbon = getRibbon(image)
 	var ribbon = old_ribbon[direction]('.ribbon')
 
 	// need to create a new ribbon...
@@ -190,6 +214,59 @@ function createRibbon(){
 	return $('<div class="ribbon"/>')
 }
 
+
+
+/**********************************************************************
+* Constructors
+*/
+
+// XXX need to specify a ribbon...
+// NOTE: count can be either hegative or positive, this will idicate 
+// 		load direction...
+// NOTE: this will not include the 'from' GID in the resulting list...
+function getImageGIDs(from, count){
+	if(count == 0){
+		return []
+	}
+	// XXX get guid list (splice/slice)...
+	//
+	return []
+}
+
+function updateImage(image, gid, size){
+	image = $(image)
+	if(gid == null){
+		gid = image.attr('gid')
+		image.attr('gid', gid)
+	}
+	size = size == null ? getVisibleImageSize() : size
+
+	// XXX
+}
+
+// NOTE: this is signature-compatible with rollRibbon...
+// NOTE: this will load data ONLY if it is available, otherwise this 
+// 		will have no effect...
+function rollImages(n, ribbon){
+	if(n == 0){
+		return $([])
+	}
+	ribbon = ribbon == null ? getRibbon() : $(ribbon)
+	var from = n > 0 ? ribbon.find('.image').last().attr('gid')
+					: ribbon.find('.image').first().attr('gid')
+	var gids = getImageGIDs(from, n)
+	if(gids.length == 0){
+		return $([])
+	}
+	var images = rollRibbon(gids.length * (n > 0 ? 1 : -1), ribbon)
+	var size = getVisibleImageSize()
+
+	images.each(function(i, e){
+		updateImage($(e), gids[i], size)
+	})
+
+	return images
+}
 
 
 
@@ -374,7 +451,7 @@ function centerImage(image, mode){
 		ribbons.css(res)
 	}
 
-	$('.viewer').trigger('centeringRibbon', [image.closest('.ribbon'), image])
+	$('.viewer').trigger('centeringRibbon', [getRibbon(image), image])
 
 	return image
 }
@@ -461,15 +538,15 @@ function centerRibbons(mode){
 // NOTE: negative left or right will contract the ribbon...
 function extendRibbon(left, right, ribbon){
 	ribbon = ribbon == null ? 
-				$('.current.image').closest('.ribbon') 
+				getRibbon()
 				: $(ribbon)
 	left = left == null ? 0 : left
 	right = right == null ? 0 : right
 	var images = ribbon.children('.image')
 	var removed = []
 	var res = {
-		left: [],
-		right: []
+		left: $([]),
+		right: $([])
 	}
 
 	// truncate...
@@ -566,23 +643,27 @@ function prevScreenImages(mode){
 }
 // XXX revise...
 function firstImage(mode){
+	$('.viewer').trigger('requestedFirstImage', [getRibbon()])
+
 	mode = mode == null ? NAV_DEFAULT : mode
 	if($('.current.image').prevAll('.image' + mode).length == 0){
 		flashIndicator('start')
 	}
 	return centerImage(
 		focusImage(
-			$('.current.image').closest('.ribbon').find('.image').filter(mode).first()))
+			getRibbon().find('.image').filter(mode).first()))
 }
 // XXX revise...
 function lastImage(mode){
+	$('.viewer').trigger('requestedLastImage', [getRibbon()])
+
 	mode = mode == null ? NAV_DEFAULT : mode
 	if($('.current.image').nextAll('.image' + mode).length == 0){
 		flashIndicator('end')
 	}
 	return centerImage(
 		focusImage(
-			$('.current.image').closest('.ribbon').find('.image').filter(mode).last()))
+			getRibbon().find('.image').filter(mode).last()))
 }
 
 
@@ -594,10 +675,10 @@ function prevRibbon(moving, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
 	var target = getImageBefore(cur, 
-			cur.closest('.ribbon').prevAll('.ribbon:visible').first())
+			getRibbon(cur).prevAll('.ribbon:visible').first())
 	if(target.length == 0){
 		// XXX too complex???
-		target = cur.closest('.ribbon')
+		target = getRibbon(cur)
 					.prevAll('.ribbon:visible').first()
 						.find('.image' + mode).first()
 	}
@@ -612,10 +693,10 @@ function nextRibbon(moving, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
 	var target = getImageBefore(cur, 
-			cur.closest('.ribbon').nextAll('.ribbon:visible').first())
+			getRibbon(cur).nextAll('.ribbon:visible').first())
 	if(target.length == 0){
 		// XXX too complex???
-		target = cur.closest('.ribbon')
+		target = getRibbon(cur)
 					.nextAll('.ribbon:visible').first()
 						.find('.image' + mode).first()
 	}
@@ -628,6 +709,7 @@ function nextRibbon(moving, mode){
 
 
 
+// XXX add a shift event here...
 // XXX get move direction...
 function _shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	if(image == null){
@@ -696,10 +778,9 @@ var toggleImageMark = createCSSClassToggler('.current.image', 'marked')
 function removeImageMarks(mode){
 	// remove marks from current ribbon (default)...
 	if(mode == 'ribbon' || mode == null){
-		return $('.current.image')
-			.closest('.ribbon')
-				.find('.marked')
-					.removeClass('marked')
+		return getRibbon()
+			.find('.marked')
+				.removeClass('marked')
 
 	// remove all marks...
 	} else if(mode == 'all'){
@@ -711,10 +792,9 @@ function removeImageMarks(mode){
 function markAll(mode){
 	// remove marks from current ribbon (default)...
 	if(mode == 'ribbon' || mode == null){
-		return $('.current.image')
-			.closest('.ribbon')
-				.find('.image:not(.marked)')
-					.addClass('marked')
+		return getRibbon()
+			.find('.image:not(.marked)')
+				.addClass('marked')
 
 	// remove all marks...
 	} else if(mode == 'all'){
@@ -724,10 +804,9 @@ function markAll(mode){
 
 // NOTE: this only does it's work in the current ribbon...
 function invertImageMarks(){
-	return $('.current.image')
-		.closest('.ribbon')
-			.find('.image')
-				.toggleClass('marked')
+	return getRibbon()
+		.find('.image')
+			.toggleClass('marked')
 }
 
 // this will toggle marks in the current continuous section of marked 

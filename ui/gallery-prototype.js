@@ -814,10 +814,10 @@ function createCSSClassToggler(elem, css_class, callback_a, callback_b){
 function doWithoutTransitions(obj, func){
 	obj
 		.addClass('unanimated')
-		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+		.one('webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend', function(){
 			func()
 			$('.viewer')
-				.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+				.one('webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend', function(){
 					obj.removeClass('unanimated')
 				})
 		})
@@ -830,7 +830,7 @@ function clickAfterTransitionsDone(img){
 		img = $('.current.image')
 	}
 	$('.viewer')
-		.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+		.one('webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend', function(){
 			img.click()
 			return true
 		})
@@ -1193,7 +1193,7 @@ function setupEvents(){
 				// call this after transitions are done...
 				if(ImageGrid.toggleTransitions('?') == 'on'){
 					$('.viewer')
-						.one("webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend", function(){
+						.one('webkitTransitionEnd oTransitionEnd msTransitionEnd transitionend', function(){
 							updateRibbonImages($('.current.image'), true)
 						})
 				} else {
@@ -1260,10 +1260,10 @@ function setupEvents(){
 function setupControlElements(){
 	// images...
 	// NOTE: when the images are loaded, the actual handlers will be set by the loader...
-	setupImageEventHandlers($(".image"))
+	setupImageEventHandlers($('.image'))
 
 	// make the indicator active...
-	$(".current-indicator div")
+	$('.current-indicator div')
 		.click(function(){
 			$('.current.image').click()
 		})
