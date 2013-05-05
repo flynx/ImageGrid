@@ -250,7 +250,6 @@ $(function(){
 			function(k){console.log(k)}))
 
 
-
 	// XXX dynamic loading test...
 	// XXX this will be a stupid demo, until we get real image loading...
 	// XXX update this depending on zoom and navigation speed...
@@ -258,6 +257,7 @@ $(function(){
 	// XXX update this depending on zoom and navigation speed...
 	var LOADER_CHUNK = LOADER_THRESHOLD * 2
 	$('.viewer')
+		// XXX it takes several steps for adjacent ribbons to catch up...
 		.on('centeringRibbon', function(evt, ribbon, image){
 			var head = image.prevAll('.image')
 			var tail = image.nextAll('.image')
@@ -268,7 +268,6 @@ $(function(){
 
 			// XXX need to expand/contract the ribbon depending on zoom and speed...
 
-			// XXX check if we have images to load in the needed directions...
 			// XXX use extendRibbon, to both roll and expand/contract...
 			if(tail.length < LOADER_THRESHOLD){
 				var rolled = rollImages(LOADER_CHUNK, ribbon)
@@ -276,6 +275,31 @@ $(function(){
 			if(head.length < LOADER_THRESHOLD){
 				var rolled = rollImages(-LOADER_CHUNK, ribbon)
 			}
+		})
+		.on('shiftedImage', function(evt, image, from, to){
+			from = getRibbonIndex(from)
+			var ribbon = to
+			to = getRibbonIndex(to)
+
+			var gid = JSON.parse(image.attr('gid'))
+
+			var index = DATA.ribbons[from].indexOf(gid)
+			var img = DATA.ribbons[from].splice(index, 1)
+
+			// XXX a bit ugly, revise...
+			index = ribbon.find('.image')
+						.index(ribbon.find('[gid='+JSON.stringify(gid)+']'))
+			DATA.ribbons[to].splice(index, 0, gid)
+		})
+		.on('createdRibbon', function(evt, index){
+			index = getRibbonIndex(index)
+
+			console.log('creating ribbon...')
+			DATA.ribbons.splice(index, 0, [])
+		})
+		.on('removedRibbon', function(evt, index){
+			console.log('removing ribbon...')
+			DATA.ribbons.splice(index, 1)
 		})
 
 

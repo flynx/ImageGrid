@@ -25,10 +25,12 @@ var DATA = {
 	// the ribbon cache...
 	// in the simplest form this is a list of lists of GIDs
 	ribbons: [
+		$(new Array(100)).map(function(i){return i}).toArray()
 	],
 	// flat ordered list of images in current context...
 	// in the simplest form this is a list of GIDs.
-	image_order: [
+	order: [
+		$(new Array(100)).map(function(i){return i}).toArray()
 	],
 	// the images object, this is indexed by image GID and contains all 
 	// the needed data...
@@ -65,6 +67,21 @@ function flashIndicator(direction){
 function getRibbon(image){
 	image = image == null ? $('.current.image') : $(image)
 	return image.closest('.ribbon')
+}
+
+// NOTE: elem is optional and if given can be an image or a ribbon...
+function getRibbonIndex(elem){
+	if(elem == null){
+		var ribbon = getRibbon()
+	} else {
+		elem = $(elem)
+		if(elem.hasClass('image')){
+			ribbon = getRibbon(elem)
+		} else {
+			ribbon = elem
+		}
+	}
+	return $('.ribbon').index(ribbon)
 }
 
 // ...tried to make this as brain-dead-stupidly-simple as possible...
@@ -107,7 +124,7 @@ function getImageBefore(image, ribbon, mode){
 	var prev = []
 
 	images.each(function(){
-		if(order < $(this).attr('order')){
+		if(order < JSON.parse($(this).attr('order'))){
 			return false
 		}
 		prev = this
@@ -129,9 +146,11 @@ function shiftTo(image, ribbon){
 		image.insertAfter(target)
 	}
 
+	$('.viewer').trigger('shiftedImage', [image, cur_ribbon, ribbon])
+
 	// if removing last image out of a ribbon, remove the ribbon....
 	if(cur_ribbon.find('.image').length == 0){
-		cur_ribbon.remove()
+		removeRibbon(cur_ribbon)
 	}
 
 	return image
@@ -149,9 +168,11 @@ function shiftImage(direction, image, force_create_ribbon){
 
 	// need to create a new ribbon...
 	if(ribbon.length == 0 || force_create_ribbon == true){
-		ribbon = createRibbon()['insert' + (direction == 'prev' 
-												? 'Before' 
-												: 'After')](old_ribbon)
+		var index = getRibbonIndex(old_ribbon)
+		index = direction == 'after' ? index + 1 : index
+
+		ribbon = createRibbon(index)
+
 		shiftTo(image, ribbon)
 	} else {
 		shiftTo(image, ribbon)
@@ -179,18 +200,20 @@ function createImage(n){
 	if(img.length > 0){
 		return img.first().clone()
 					.attr({
-						'order': n,
+						'order': JSON.stringify(n),
+						'gid': JSON.stringify(n),
 						// need to strip extra classes...
 						'class': 'image'
 					})
 	} else {
-		return $('<div order="'+n+'" class="image"/>')
+		return $('<div order="'+n+'" gid="'+n+'" class="image"/>')
 	}
 }
 
 // This will create a set of new images, reusing a list of existing 
 // elements if given.
 // XXX do we need this???
+// XXX add position...
 function createImages(need, have){
 	have = have == null ? [] : have
 
@@ -210,37 +233,95 @@ function createImages(need, have){
 	}
 }
 
-function createRibbon(){
-	return $('<div class="ribbon"/>')
+function createRibbon(index){
+	// make the ribbon...
+	var ribbon = $('<div class="ribbon"/>')
+
+	if(index == null){
+		return ribbon
+	}
+	var ribbons = $('.ribbon')
+	if(index >= ribbons.length){
+		ribbons.last().after(ribbon)
+	} else {
+		ribbons.eq(index).before(ribbon)
+	}
+
+	$('.viewer').trigger('createdRibbon', [ribbon])
+
+	return ribbon
 }
 
+// NOTE: this will pass the index where the ribbon was to the event,
+// 		rather than an actual ribbon...
+function removeRibbon(ribbon){
+	// ribbon can be an index...
+	if(typeof(ribbon) == typeof(1)){
+		ribbon = $('.ribbon').eq(ribbon)
+	}
+
+	$('.viewer').trigger('removedRibbon', [getRibbonIndex(ribbon)])
+
+	return $(ribbon).remove()
+}
 
 
 /**********************************************************************
 * Constructors
 */
 
-// XXX need to specify a ribbon...
 // NOTE: count can be either hegative or positive, this will idicate 
 // 		load direction...
 // NOTE: this will not include the 'from' GID in the resulting list...
-function getImageGIDs(from, count){
+// NOTE: this can calculate the ribbon number if an image can be only 
+// 		in one ribbon...
+// NOTE: if an image can be in more than one ribbon, one MUST suply the
+// 		correct ribbon number...
+// XXX do we need more checking???
+function getImageGIDs(from, count, ribbon){
 	if(count == 0){
 		return []
 	}
-	// XXX get guid list (splice/slice)...
-	//
-	return []
+	if(ribbon == null){
+		$(DATA.ribbons).each(function(i, e){ 
+			if(e.indexOf(from) >= 0){ 
+				ribbon = i
+				return false 
+			} 
+		})
+	}
+	// XXX checkif this is empty...
+	ribbon = DATA.ribbons[ribbon]
+
+	if(count > 0){
+		var start = ribbon.indexOf(from) + 1
+		return ribbon.slice(start, start + count)
+	} else {
+		var end = ribbon.indexOf(from)
+		return ribbon.slice(+count >= end ? 0 : end + count, end)
+	}
 }
 
 function updateImage(image, gid, size){
 	image = $(image)
 	if(gid == null){
-		gid = image.attr('gid')
-		image.attr('gid', gid)
+		gid = JSON.parse(image.attr('gid'))
+	} else {
+		image.attr('gid', JSON.stringify(gid))
 	}
 	size = size == null ? getVisibleImageSize() : size
 
+	image.attr({
+		//order: JSON.stringify(DATA.order.indexOf(gid)),
+		order: JSON.stringify(gid) 
+		// XXX update attrs 
+	})
+
+	// XXX STUB
+	image.text(gid)
+	// XXX slect best previe by size...
+	// XXX
+	// XXX update classes...
 	// XXX
 }
 
@@ -252,8 +333,8 @@ function rollImages(n, ribbon){
 		return $([])
 	}
 	ribbon = ribbon == null ? getRibbon() : $(ribbon)
-	var from = n > 0 ? ribbon.find('.image').last().attr('gid')
-					: ribbon.find('.image').first().attr('gid')
+	var from = n > 0 ? JSON.parse(ribbon.find('.image').last().attr('gid'))
+					: JSON.parse(ribbon.find('.image').first().attr('gid'))
 	var gids = getImageGIDs(from, n)
 	if(gids.length == 0){
 		return $([])
@@ -599,6 +680,22 @@ function rollRibbon(n, ribbon){
 
 
 /**********************************************************************
+* Event handlers...
+*/
+
+// NOTE: this is on purpose done relative...
+function clickHandler(evt){
+	var img = $(evt.target).closest('.image')
+
+	centerImage(focusImage(img))
+
+	centerRibbons()
+}
+
+
+
+
+/**********************************************************************
 * User actions
 */
 
@@ -708,6 +805,25 @@ function nextRibbon(moving, mode){
 }
 
 
+function fitNImages(n){
+	var image = $('.current.image')
+	var size = image.outerHeight(true)
+
+	var viewer = $('.viewer')
+	var W = viewer.innerWidth()
+	var H = viewer.innerHeight()
+
+	var scale = Math.min(W / (size * n), H / size)
+
+	// XXX if animating, the next two likes must be animated together...
+	setElementScale($('.ribbon-set'), scale)
+	centerImage(image, 'css')
+}
+
+
+
+
+/************************************************** Editor Actions ***/
 
 // XXX add a shift event here...
 // XXX get move direction...
@@ -749,24 +865,9 @@ function shiftImageDownNewRibbon(image, moving){
 // TODO manual image ordering (shiftLeft/shiftRight functions)
 // XXX
 
-function fitNImages(n){
-	var image = $('.current.image')
-	var size = image.outerHeight(true)
-
-	var viewer = $('.viewer')
-	var W = viewer.innerWidth()
-	var H = viewer.innerHeight()
-
-	var scale = Math.min(W / (size * n), H / size)
-
-	// XXX if animating, the next two likes must be animated together...
-	setElementScale($('.ribbon-set'), scale)
-	centerImage(image, 'css')
-}
 
 
-
-// Marks...
+/*********************************************************** Marks ***/
 
 // XXX if this unmarks an image in marked-only mode no visible image is 
 // 		going to be current...
@@ -826,22 +927,6 @@ function toggleImageMarkBlock(image){
 	image.nextAll('.image').each(_convert)
 	image.prevAll('.image').each(_convert)
 	return state
-}
-
-
-
-
-/**********************************************************************
-* Event handlers...
-*/
-
-// NOTE: this is on purpose done relative...
-function clickHandler(evt){
-	var img = $(evt.target).closest('.image')
-
-	centerImage(focusImage(img))
-
-	centerRibbons()
 }
 
 

@@ -78,10 +78,12 @@ var KEYBOARD_CONFIG = {
 		Home: function(){
 				firstImage()
 				centerRibbons()
+				return false
 			},
 		End: function(){
 				lastImage()
 				centerRibbons()
+				return false
 			},
 
 
