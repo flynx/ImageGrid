@@ -234,6 +234,7 @@ $(function(){
 	//var rr = r.clone()
 	//var rrr = r.clone()
 
+	// XXX use something like loadImages()...
 	$('.ribbon-set')
 		.append(r)
 		//.append(rr)
@@ -250,8 +251,11 @@ $(function(){
 			function(k){console.log(k)}))
 
 
+
 	// dynamic loading...
-	if(true){
+	DYNAMIC_LOADING = true
+
+	if(DYNAMIC_LOADING){
 		// XXX move to a setup function in the lib...
 		// XXX update this depending on zoom and navigation speed...
 		var LOADER_THRESHOLD = 2

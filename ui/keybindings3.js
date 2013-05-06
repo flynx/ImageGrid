@@ -76,42 +76,48 @@ var KEYBOARD_CONFIG = {
 			},
 		*/
 		Home: function(){
+				event.preventDefault()
 				firstImage()
 				centerRibbons()
-				return false
 			},
 		End: function(){
+				event.preventDefault()
 				lastImage()
 				centerRibbons()
-				return false
 			},
 
 
 		// combined navigation and editor actions...
 		Up: {
 				default: function(){ 
+					event.preventDefault()
 					prevRibbon(DIRECTION) 
 					centerRibbons()
 				},
 				shift: function(){ 
+					event.preventDefault()
 					shiftImageUp(null, DIRECTION) 
 					centerRibbons()
 				},
 				'ctrl+shift': function(){
+					event.preventDefault()
 					shiftImageUpNewRibbon(null, DIRECTION) 
 					centerRibbons()
 				},
 			},
 		Down: {
 				default: function(){
+					event.preventDefault()
 					nextRibbon(DIRECTION) 
 					centerRibbons()
 				},
 				shift: function(){
+					event.preventDefault()
 					shiftImageDown(null, DIRECTION) 
 					centerRibbons()
 				},
 				'ctrl+shift': function(){
+					event.preventDefault()
 					shiftImageDownNewRibbon(null, DIRECTION) 
 					centerRibbons()
 				},

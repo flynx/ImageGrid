@@ -160,6 +160,7 @@ function getImageBefore(image, ribbon, mode){
 //
 // NOTE: this is here mostly to make debuging easy...
 function isBetween(a, i, lst){
+	console.log('>>>', a, i, lst)
 	var b = lst[i]
 	var c = lst[i+1]
 	// hit...
@@ -182,6 +183,7 @@ function isBetween(a, i, lst){
 // NOTE: by default this will use isBetween as a predicate.
 // NOTE: this still depends on .indexOf(...), to disable set
 // 		disable_direct_indexing to true
+// XXX BUG this tends to fall into infinite loops...
 function binSearch(target, lst, check, return_position, disable_direct_indexing){
 	// XXX is this the correct default?
 	check = check == null ? isBetween : check
@@ -195,13 +197,16 @@ function binSearch(target, lst, check, return_position, disable_direct_indexing)
 		return lst[lst.length-1]
 	}
 	// special case: head...
-	if(check(target, 0, lst) == 0){
+	var res = check(target, 0, lst)
+	if(res == 0){
 		return lst[0]
+	} else if(res < 0){
+		// no hit...
+		return return_position ? -1 : null
 	}
 
 	var l = Math.ceil(lst.length/2)
 	var i = l
-	var res
 
 	while(l > 0){
 		l = Math.ceil(l/2)
