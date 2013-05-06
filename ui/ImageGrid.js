@@ -286,7 +286,7 @@ function shiftImage(direction, image, force_create_ribbon){
 	// need to create a new ribbon...
 	if(ribbon.length == 0 || force_create_ribbon == true){
 		var index = getRibbonIndex(old_ribbon)
-		index = direction == 'after' ? index + 1 : index
+		index = direction == 'next' ? index + 1 : index
 
 		ribbon = createRibbon(index)
 
@@ -888,6 +888,9 @@ function nextImage(n, mode){
 	var target = $('.current.image').nextAll('.image' + mode)
 	if(target.length < n){
 		target = target.last()
+		// XXX BUG this fires we hit the end of the currently loaded
+		// 		images while scrolling very fast rather than when we are
+		// 		out of images in the current ribbon...
 		flashIndicator('end')
 	} else {
 		target = target.eq(n-1)
@@ -900,6 +903,9 @@ function prevImage(n, mode){
 	var target = $('.current.image').prevAll('.image' + mode)
 	if(target.length < n){
 		target = target.last()
+		// XXX BUG this fires we hit the end of the currently loaded
+		// 		images while scrolling very fast rather than when we are
+		// 		out of images in the current ribbon...
 		flashIndicator('start')
 	} else {
 		target = target.eq(n-1)
@@ -980,6 +986,9 @@ function nextRibbon(moving, mode){
 }
 
 
+
+/********************************************************* Zooming ***/
+
 function fitNImages(n){
 	var image = $('.current.image')
 	var size = image.outerHeight(true)
@@ -996,19 +1005,21 @@ function fitNImages(n){
 }
 
 
-var MAX_SCREEN_IMAGES = 10
+var MAX_SCREEN_IMAGES = 12
+var ZOOM_SCALE = 1.2
 
-// XXX use the actual scale...
 function zoomIn(){
 	var w = getScreenWidthInImages()
 	if(w > 1){
-		fitNImages(w-1)
+		w = w / ZOOM_SCALE
+		fitNImages(w >= 1 ? w : 1)
 	}
 }
 function zoomOut(){
 	var w = getScreenWidthInImages()
 	if(w <= MAX_SCREEN_IMAGES){
-		fitNImages(w+1)
+		w = w * ZOOM_SCALE
+		fitNImages(w <= MAX_SCREEN_IMAGES ? w : MAX_SCREEN_IMAGES)
 	}
 }
 
@@ -1016,6 +1027,8 @@ function zoomOut(){
 
 /************************************************** Editor Actions ***/
 
+// XXX shifting down from the main ribbon kills the app (infinite loop?)
+// 		...appears to be a problem with creating a new ribbon below...
 function shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	if(image == null){
 		image = $('.current.image')

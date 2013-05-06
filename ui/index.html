@@ -251,85 +251,109 @@ $(function(){
 
 
 	// dynamic loading...
-	// XXX move to a setup function in the lib...
-	// XXX update this depending on zoom and navigation speed...
-	var LOADER_THRESHOLD = 2
-	// XXX update this depending on zoom and navigation speed...
-	var LOADER_CHUNK = LOADER_THRESHOLD * 2
-	$('.viewer')
-		.on('preCenteringRibbon', function(evt, ribbon, image){
-			// NOTE: we do not need to worry about centering the ribbon 
-			//		here, just ball-park-load the correct batch...
-			// check if we are in the right range...
-			var gid = getImageGID(image)
-			var r = getRibbonIndex(ribbon)
-			var img_before = getImageBefore(image, ribbon)
-			var gid_before = getGIDBefore(gid, r)
+	if(true){
+		// XXX move to a setup function in the lib...
+		// XXX update this depending on zoom and navigation speed...
+		var LOADER_THRESHOLD = 2
+		// XXX update this depending on zoom and navigation speed...
+		var LOADER_CHUNK = LOADER_THRESHOLD * 2
+		$('.viewer')
+			.on('preCenteringRibbon', function(evt, ribbon, image){
+				// NOTE: we do not need to worry about centering the ribbon 
+				//		here, just ball-park-load the correct batch...
+				// check if we are in the right range...
+				var gid = getImageGID(image)
+				var r = getRibbonIndex(ribbon)
+				var img_before = getImageBefore(image, ribbon)
+				var gid_before = getGIDBefore(gid, r)
 
-			// need to load a new set of images...
-			if((img_before.length == 0 && gid_before != null) 
-					|| (getImageGID(img_before) && getImageGID(img_before) != gid_before)){
-				// get the distance...
-				var images = ribbon.find('.image')
-				var cur = getImageGID(images.eq(Math.round(images.length/2)))
+				// need to load a new set of images...
+				if((img_before.length == 0 && gid_before != null) 
+						|| (getImageGID(img_before) && getImageGID(img_before) != gid_before)){
+					// get the distance...
+					var images = ribbon.find('.image')
+					var cur = getImageGID(images.eq(Math.round(images.length/2)))
+					var gr = DATA.ribbons[r]
+					//console.log('>>>', gr.indexOf(gid_before) - gr.indexOf(cur))
+					rollImages(gr.indexOf(gid_before) - gr.indexOf(cur), ribbon)
+				}
+			})
+			// XXX it takes several steps for adjacent ribbons to catch up...
+			.on('centeringRibbon', function(evt, ribbon, image){
+				// check if we are in the right range...
+				var gid = getImageGID(image)
+				var r = getRibbonIndex(ribbon)
+				var img_before = getImageBefore(image, ribbon)
+				var gid_before = getGIDBefore(gid, r)
+
+				if(img_before.length == 0){
+					img_before = ribbon.find('.image').first()
+				}
+
+				var head = img_before.prevAll('.image')
+				var tail = img_before.nextAll('.image')
+				// NOTE: these are to be used as reference for loading/populating
+				//		rolled images...
+				var first = head.first()
+				var last = head.first()
+
+				// XXX need to expand/contract the ribbon depending on zoom and speed...
+				// XXX use extendRibbon, to both roll and expand/contract...
+				if(tail.length < LOADER_THRESHOLD){
+					var rolled = rollImages(LOADER_CHUNK, ribbon)
+				}
+				if(head.length < LOADER_THRESHOLD){
+					var rolled = rollImages(-LOADER_CHUNK, ribbon)
+				}
+			})
+			.on('shiftedImage', function(evt, image, from, to){
+				from = getRibbonIndex(from)
+				var ribbon = to
+				to = getRibbonIndex(to)
+
+				var gid = getImageGID(image)
+
+				var index = DATA.ribbons[from].indexOf(gid)
+				var img = DATA.ribbons[from].splice(index, 1)
+
+				// XXX a bit ugly, revise...
+				index = ribbon.find('.image')
+							.index(ribbon.find('[gid='+JSON.stringify(gid)+']'))
+				DATA.ribbons[to].splice(index, 0, gid)
+			})
+			.on('createdRibbon', function(evt, index){
+				index = getRibbonIndex(index)
+
+				console.log('creating ribbon...')
+				DATA.ribbons.splice(index, 0, [])
+			})
+			.on('removedRibbon', function(evt, index){
+				console.log('removing ribbon...')
+				DATA.ribbons.splice(index, 1)
+			})
+			.on('requestedFirstImage', function(evt, ribbon){
+				var r = getRibbonIndex(ribbon)
+
+				// XXX this result in an infinite loop somewhere...
+				//var target = DATA.ribbons[r][0]
+				//
+				//loadImages(target, 30, ribbon)	
+
 				var gr = DATA.ribbons[r]
-				//console.log('>>>', gr.indexOf(gid_before) - gr.indexOf(cur))
-				rollImages(gr.indexOf(gid_before) - gr.indexOf(cur), ribbon)
-			}
-		})
-		// XXX it takes several steps for adjacent ribbons to catch up...
-		.on('centeringRibbon', function(evt, ribbon, image){
-			// check if we are in the right range...
-			var gid = getImageGID(image)
-			var r = getRibbonIndex(ribbon)
-			var img_before = getImageBefore(image, ribbon)
-			var gid_before = getGIDBefore(gid, r)
+				rollImages(-gr.length, ribbon)
+			})
+			.on('requestedLastImage', function(evt, ribbon){
+				var r = getRibbonIndex(ribbon)
 
-			if(img_before.length == 0){
-				img_before = ribbon.find('.image').first()
-			}
+				// XXX this result in an infinite loop somewhere...
+				//var target = DATA.ribbons[r][DATA.ribbons[r].length-1]
+				//
+				//loadImages(target, 30, ribbon)	
 
-			var head = img_before.prevAll('.image')
-			var tail = img_before.nextAll('.image')
-			// NOTE: these are to be used as reference for loading/populating
-			//		rolled images...
-			var first = head.first()
-			var last = head.first()
-
-			// XXX need to expand/contract the ribbon depending on zoom and speed...
-			// XXX use extendRibbon, to both roll and expand/contract...
-			if(tail.length < LOADER_THRESHOLD){
-				var rolled = rollImages(LOADER_CHUNK, ribbon)
-			}
-			if(head.length < LOADER_THRESHOLD){
-				var rolled = rollImages(-LOADER_CHUNK, ribbon)
-			}
-		})
-		.on('shiftedImage', function(evt, image, from, to){
-			from = getRibbonIndex(from)
-			var ribbon = to
-			to = getRibbonIndex(to)
-
-			var gid = JSON.parse(image.attr('gid'))
-
-			var index = DATA.ribbons[from].indexOf(gid)
-			var img = DATA.ribbons[from].splice(index, 1)
-
-			// XXX a bit ugly, revise...
-			index = ribbon.find('.image')
-						.index(ribbon.find('[gid='+JSON.stringify(gid)+']'))
-			DATA.ribbons[to].splice(index, 0, gid)
-		})
-		.on('createdRibbon', function(evt, index){
-			index = getRibbonIndex(index)
-
-			console.log('creating ribbon...')
-			DATA.ribbons.splice(index, 0, [])
-		})
-		.on('removedRibbon', function(evt, index){
-			console.log('removing ribbon...')
-			DATA.ribbons.splice(index, 1)
-		})
+				var gr = DATA.ribbons[r]
+				rollImages(gr.length, ribbon)
+			})
+	}
 
 
 
