@@ -148,7 +148,7 @@ function getImageBefore(image, ribbon, mode){
 
 // same as getImageBefore, but uses gids and searches in DATA...
 // XXX check for corner cases...
-// XXX getGIDBefore(1, 1) does not work
+// XXX getGIDBefore(1, 1) does not work...
 function getGIDBefore(gid, ribbon){
 	ribbon = DATA.ribbons[ribbon]
 	var order = DATA.order
@@ -199,6 +199,10 @@ function shiftTo(image, ribbon){
 
 	// if removing last image out of a ribbon, remove the ribbon....
 	if(cur_ribbon.find('.image').length == 0){
+		// XXX check if the ribbon outside the loaded area is empty...
+		// 		...do we need this check? it might be interresting to
+		// 		"collapse" disjoint, empty areas...
+		// 		......if so, will also need to do this in DATA...
 		removeRibbon(cur_ribbon)
 	}
 
@@ -303,6 +307,7 @@ function createRibbon(index){
 
 // NOTE: this will pass the index where the ribbon was to the event,
 // 		rather than an actual ribbon...
+// XXX check if ribbon is empty...
 function removeRibbon(ribbon){
 	// ribbon can be an index...
 	if(typeof(ribbon) == typeof(1)){
@@ -313,6 +318,74 @@ function removeRibbon(ribbon){
 
 	return $(ribbon).remove()
 }
+
+
+
+/**********************************************************************
+* Infinite ribbon machinery
+*/
+
+// NOTE: negative left or right will contract the ribbon...
+// XXX check what goes on if left/right are far more than length...
+function extendRibbon(left, right, ribbon){
+	ribbon = ribbon == null ? 
+				getRibbon()
+				: $(ribbon)
+	left = left == null ? 0 : left
+	right = right == null ? 0 : right
+	var images = ribbon.children('.image')
+	var removed = []
+	var res = {
+		left: $([]),
+		right: $([])
+	}
+
+	// truncate...
+	// NOTE: we save the detached elements to reuse them on extending,
+	//		if needed...
+	if(left < 0){
+		removed = $(images.splice(0, -left)).detach()
+	}
+	if(right < 0){
+		var l = images.length
+		removed = $(images.splice(l+right, l)).detach()
+	}
+
+	// extend...
+	if (left > 0){
+		res.left = createImages(left, removed).prependTo(ribbon)
+	}
+	if (right > 0){
+		res.right = createImages(right, removed).appendTo(ribbon)
+	}
+
+	// compensate for the truncation...
+	// XXX do we need to split this into a separate function?
+	// 		...the rest of the function if pretty generic...
+	// XXX for some odd reason this behaves erratically when the page 
+	// 		is zoomed...
+	if(left != 0){
+		var l = parseFloat(ribbon.css('left'))
+		l = isNaN(l) ? 0 : l
+		ribbon.css({
+			left: l + (-left * parseFloat(images.outerWidth()))
+		})
+	}
+
+	return res
+}
+
+
+// Roll the ribbon n positions to the left.
+//
+// NOTE: if n is negative the ribbon will be rolled right.
+// NOTE: rollRibbon(N, R) is equivalent to extendRibbon(-N, N, R)
+// NOTE: this will return a single list of relocated elements...
+function rollRibbon(n, ribbon){
+	var res = extendRibbon(-n, n, ribbon)
+	return n > 0 ? res.right : res.left
+}
+
 
 
 /**********************************************************************
@@ -369,15 +442,26 @@ function updateImage(image, gid, size){
 
 	// XXX STUB
 	image.text(gid)
-	// XXX slect best previe by size...
+	// XXX slect best preview by size...
 	// XXX
 	// XXX update classes...
 	// XXX
 }
 
+
+// load count images around a given image/gid into the given ribbon.
+//
+// NOTE: this will reload the current image elements...
+// NOTE: this is similar to extendRibbon(...) but different in interface...
+function loadImages(image, count, ribbon){
+	// XXX
+}
+
+
 // NOTE: this is signature-compatible with rollRibbon...
 // NOTE: this will load data ONLY if it is available, otherwise this 
 // 		will have no effect...
+// NOTE: this can roll past the currently loaded images (n > images.length)
 function rollImages(n, ribbon){
 	if(n == 0){
 		return $([])
@@ -667,77 +751,6 @@ function centerRibbons(mode){
 		.filter(':visible')
 		.each(function(){ centerRibbon($(this), null, mode) })
 }
-
-
-
-/**********************************************************************
-* Infinite ribbon machinery
-*/
-
-// XXX need mechanics to populate the images or to connect such 
-//		functionality...
-//		...this is to be done in the loader...
-
-// NOTE: negative left or right will contract the ribbon...
-function extendRibbon(left, right, ribbon){
-	ribbon = ribbon == null ? 
-				getRibbon()
-				: $(ribbon)
-	left = left == null ? 0 : left
-	right = right == null ? 0 : right
-	var images = ribbon.children('.image')
-	var removed = []
-	var res = {
-		left: $([]),
-		right: $([])
-	}
-
-	// truncate...
-	// NOTE: we save the detached elements to reuse them on extending,
-	//		if needed...
-	if(left < 0){
-		removed = $(images.splice(0, -left)).detach()
-	}
-	if(right < 0){
-		var l = images.length
-		removed = $(images.splice(l+right, l)).detach()
-	}
-
-	// extend...
-	if (left > 0){
-		res.left = createImages(left, removed).prependTo(ribbon)
-	}
-	if (right > 0){
-		res.right = createImages(right, removed).appendTo(ribbon)
-	}
-
-	// compensate for the truncation...
-	// XXX do we need to split this into a separate function?
-	// 		...the rest of the function if pretty generic...
-	// XXX for some odd reason this behaves erratically when the page 
-	// 		is zoomed...
-	if(left != 0){
-		var l = parseFloat(ribbon.css('left'))
-		l = isNaN(l) ? 0 : l
-		ribbon.css({
-			left: l + (-left * parseFloat(images.outerWidth()))
-		})
-	}
-
-	return res
-}
-
-
-// Roll the ribbon n positions to the left.
-//
-// NOTE: if n is negative the ribbon will be rolled right.
-// NOTE: rollRibbon(N, R) is equivalent to extendRibbon(-N, N, R)
-// NOTE: this will return a single list of relocated elements...
-function rollRibbon(n, ribbon){
-	var res = extendRibbon(-n, n, ribbon)
-	return n > 0 ? res.right : res.left
-}
-
 
 
 
