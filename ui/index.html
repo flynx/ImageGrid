@@ -256,7 +256,20 @@ $(function(){
 	var LOADER_THRESHOLD = 2
 	// XXX update this depending on zoom and navigation speed...
 	var LOADER_CHUNK = LOADER_THRESHOLD * 2
+	var IMAGES_IN_RIBBON = 30
 	$('.viewer')
+		/* XXX this is distructive...
+		.on('preCenteringRibbon', function(evt, ribbon, image){
+			// XXX load ONLY if getGIDBefore(getImageGID(image)) is not currently loaded...
+			if( ribbon
+					.find('[gid="'+getGIDBefore(getImageGID(image), 
+										getRibbonIndex(ribbon))+'"]')
+					.length > 0 ){
+				console.log('>>> Loading...')
+				loadImages(getImageGID(image), IMAGES_IN_RIBBON, ribbon)
+			}
+		})
+		*/
 		// XXX it takes several steps for adjacent ribbons to catch up...
 		.on('centeringRibbon', function(evt, ribbon, image){
 			// check if we are in the right range...
@@ -272,8 +285,12 @@ $(function(){
 				var images = ribbon.find('.image')
 				var cur = getImageGID(images.eq(Math.round(images.length/2)))
 				var gr = DATA.ribbons[r]
-				console.log('>>>', gr.indexOf(gid_before) - gr.indexOf(cur))
+				//console.log('>>>', gr.indexOf(gid_before) - gr.indexOf(cur))
 				rollImages(gr.indexOf(gid_before) - gr.indexOf(cur), ribbon)
+
+				//centerRibbon(ribbon, image)
+
+				//return
 			}
 
 			if(img_before.length == 0){

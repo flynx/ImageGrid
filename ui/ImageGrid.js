@@ -146,6 +146,60 @@ function getImageBefore(image, ribbon, mode){
 	return $(prev)
 }
 
+// XXX this gets infinite at the start and end of the list...
+function binSearch(target, lst, check){
+	// special case: target in the list directly...
+	if(check(target, lst.indexOf(target), lst) == 0){
+		return target
+	}
+	// special case: tail...
+	if(check(target, lst.length-1, lst) >= 0){
+		return lst[lst.length-1]
+	}
+	// special case: head...
+	if(check(target, 0, lst) == 0){
+		return lst[0]
+	}
+
+	var l = Math.ceil(lst.length/2)
+	var i = l
+	var res
+
+	while(l > 0){
+		l = Math.ceil(l/2)
+		res = check(target, i, lst)
+		// right branch...
+		if(res > 0){
+			i += l
+		// left branch...
+		} else if(res < 0){
+			i -= l
+		// hit...
+		} else {
+			// XXX return position or object???
+			return lst[i]
+		}
+	}
+	// no hit...
+	return null
+}
+
+function isBetween(a, i, lst){
+	var b = lst[i]
+	var c = lst[i+1]
+	// hit...
+	if(a == b || (a > b && a < c)){
+		return 0
+	// before...
+	} else if(a < b){
+		return -1
+	// later...
+	} else {
+		return 1
+	}
+}
+
+
 // same as getImageBefore, but uses gids and searches in DATA...
 // XXX check for corner cases...
 // XXX getGIDBefore(1, 1) does not work...
@@ -153,33 +207,22 @@ function getGIDBefore(gid, ribbon){
 	ribbon = DATA.ribbons[ribbon]
 	var order = DATA.order
 
-	var target = ribbon.indexOf(gid)
+	var target = order.indexOf(gid)
 
-	if(target >= 0){
-		return gid
-	}
-
-	target = order.indexOf(gid)
-
-	var i = ribbon.length
-
-	while(i > 0){
-		i = Math.floor(ribbon.length/2)
-
-		console.log('>>>', target, i, order.indexOf(ribbon[i]), order.indexOf(ribbon[i+1]))
-
-		if(target >= order.indexOf(ribbon[i]) && target < order.indexOf(ribbon[i+1])){
-			return ribbon[i]
-
-		// XXX I do not understand why this works correctly, think I need some sleep...
-		} else if(target < order.indexOf(ribbon[i])){
-			ribbon = ribbon.slice(0, i)
-
+	return binSearch(target, ribbon, function (a, i, lst){
+		var b = order.indexOf(lst[i])
+		var c = order.indexOf(lst[i+1])
+		// hit...
+		if(a == b || (a > b && a < c)){
+			return 0
+		// before...
+		} else if(a < b){
+			return -1
+		// later...
 		} else {
-			ribbon = ribbon.slice(i)
+			return 1
 		}
-	}	
-	return null
+	})
 }
 
 
@@ -453,8 +496,30 @@ function updateImage(image, gid, size){
 //
 // NOTE: this will reload the current image elements...
 // NOTE: this is similar to extendRibbon(...) but different in interface...
-function loadImages(image, count, ribbon){
-	// XXX
+function loadImages(ref_gid, count, ribbon){
+	ribbon = $(ribbon)
+	var images = ribbon.find('.image')
+	var ribbon_i = getRibbonIndex(ribbon)
+	var gid = getGIDBefore(ref_gid, ribbon_i)
+
+	// start/end points...
+	var from_i = DATA.ribbons[ribbon_i].indexOf(gid) - Math.floor(count/2)
+	from_i = from_i < 0 ? 0 : from_i
+	var from_gid = DATA.ribbons[ribbon_i][from_i]
+
+	// XXX make this load only what is needed instead of reloading everything...
+
+	var size = getVisibleImageSize()
+	var gids = getImageGIDs(from_gid, count)
+	// XXX is this the only special case???
+	if(from_gid == from_gid){
+		gids.splice(0, 0, ref_gid)
+	}
+
+	return createImages(gids.length, images.detach())
+		.each(function(i, e){
+			updateImage(e, gids[i], size)
+		}).appendTo(ribbon)
 }
 
 
@@ -644,6 +709,10 @@ function centerImage(image, mode){
 		//mode = 'css'
 		mode = 'animate'
 	}
+
+	// XXX is this the correct spot for this?
+	$('.viewer').trigger('preCenteringRibbon', [getRibbon(image), image])
+
 	if(image == null || image.length == 0){
 		image = $('.current.image')
 	}
@@ -701,6 +770,7 @@ function centerImage(image, mode){
 // 		...or make a generic centering function...
 //
 // XXX this does not work in marked-only mode...
+// XXX this needs the image to exist... should be GID compatible...
 function centerRibbon(ribbon, image, mode){
 	if(mode == null){
 		//mode = 'css'
@@ -715,6 +785,9 @@ function centerRibbon(ribbon, image, mode){
 		// XXX should this return a ribbon or the target image???
 		return ribbon
 	}
+
+	// XXX is this the correct spot for this?
+	$('.viewer').trigger('preCenteringRibbon', [ribbon, image])
 
 	var scale = getElementScale($('.ribbon-set'))
 	var target = getImageBefore(image, ribbon, null)
