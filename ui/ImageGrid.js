@@ -20,6 +20,7 @@
 *
 **********************************************************************/
 
+// XXX STUB
 // Data format...
 var DATA = {
 	// the ribbon cache...
@@ -41,8 +42,6 @@ var DATA = {
 * Helpers
 */
 
-// XXX need ribbon end indicators...
-
 // XXX might need shift left/right indicators (later)...
 
 
@@ -50,7 +49,6 @@ function flashIndicator(direction){
 	$({
 		prev: '.up-indicator',
 		next: '.down-indicator',
-		// XXX not implemented yet...
 		start: '.start-indicator',
 		end: '.end-indicator',
 	}[direction])
@@ -67,6 +65,7 @@ function getRibbon(image){
 	return image.closest('.ribbon')
 }
 
+
 // NOTE: elem is optional and if given can be an image or a ribbon...
 function getRibbonIndex(elem){
 	if(elem == null){
@@ -82,6 +81,7 @@ function getRibbonIndex(elem){
 	return $('.ribbon').index(ribbon)
 }
 
+
 function getImageOrder(image){
 	image = image == null ? $('.current.image') : $(image)
 	if(image.length == 0){
@@ -89,6 +89,8 @@ function getImageOrder(image){
 	}
 	return JSON.parse(image.attr('order'))
 }
+
+
 function getImageGID(image){
 	image = image == null ? $('.current.image') : $(image)
 	if(image.length == 0){
@@ -97,7 +99,11 @@ function getImageGID(image){
 	return JSON.parse(image.attr('gid'))
 }
 
+
+// Calculate relative position between two elements
+//
 // ...tried to make this as brain-dead-stupidly-simple as possible...
+//				...looks spectacular comparing to either gen2 or gen1 ;)
 function getRelativeVisualPosition(outer, inner){
 	outer = $(outer).offset()
 	inner = $(inner).offset()
@@ -123,8 +129,8 @@ function getScreenWidthInImages(){
 // NOTE: this will return an empty jquery object if no image is before 
 // 		the target...
 // NOTE: this might return an empty target if the ribbon is empty...
-// XXX need tp make this loadable ribbon compatible -- the target may 
-// 		not be loaded...
+// NOTE: this only "sees" the loaded images, for a full check use 
+// 		getGIDBefore(...) that will check the full data...
 function getImageBefore(image, ribbon, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	image = image == null ? $('.current.image') : $(image)
@@ -146,10 +152,42 @@ function getImageBefore(image, ribbon, mode){
 	return $(prev)
 }
 
-// XXX this gets infinite at the start and end of the list...
-function binSearch(target, lst, check){
+
+// A predicate returning:
+// 	- 0 if a is equal at position i in lst or is between i and i+1
+// 	- -1 if a is "below" position i
+// 	- +1 if a is "above" position i
+//
+// NOTE: this is here mostly to make debuging easy...
+function isBetween(a, i, lst){
+	var b = lst[i]
+	var c = lst[i+1]
+	// hit...
+	if(a == b || (a > b && a < c)){
+		return 0
+	// before...
+	} else if(a < b){
+		return -1
+	// later...
+	} else {
+		return 1
+	}
+}
+
+
+// Basic binary search implementation...
+//
+// NOTE: this will return the object by default, to return position set
+// 		return_position to true.
+// NOTE: by default this will use isBetween as a predicate.
+// NOTE: this still depends on .indexOf(...), to disable set
+// 		disable_direct_indexing to true
+function binSearch(target, lst, check, return_position, disable_direct_indexing){
+	// XXX is this the correct default?
+	check = check == null ? isBetween : check
 	// special case: target in the list directly...
-	if(check(target, lst.indexOf(target), lst) == 0){
+	if(disable_direct_indexing 
+			&& check(target, lst.indexOf(target), lst) == 0){
 		return target
 	}
 	// special case: tail...
@@ -176,33 +214,15 @@ function binSearch(target, lst, check){
 			i -= l
 		// hit...
 		} else {
-			// XXX return position or object???
-			return lst[i]
+			return return_position ? i : lst[i]
 		}
 	}
 	// no hit...
-	return null
-}
-
-function isBetween(a, i, lst){
-	var b = lst[i]
-	var c = lst[i+1]
-	// hit...
-	if(a == b || (a > b && a < c)){
-		return 0
-	// before...
-	} else if(a < b){
-		return -1
-	// later...
-	} else {
-		return 1
-	}
+	return return_position ? -1 : null
 }
 
 
-// same as getImageBefore, but uses gids and searches in DATA...
-// XXX check for corner cases...
-// XXX getGIDBefore(1, 1) does not work...
+// Same as getImageBefore, but uses gids and searches in DATA...
 function getGIDBefore(gid, ribbon){
 	ribbon = DATA.ribbons[ribbon]
 	var order = DATA.order
@@ -252,6 +272,7 @@ function shiftTo(image, ribbon){
 	return image
 }
 
+
 function shiftImage(direction, image, force_create_ribbon){
 	if(image == null){
 		// XXX need to make this context specific...
@@ -282,9 +303,10 @@ function shiftImage(direction, image, force_create_ribbon){
 * Constructors
 */
 
-// NOTE: to avoid state sync problems this should clone an image if 
-//		one is available...
-function createImage(n){
+// NOTE: unless force_create_new is set to true this will clone an 
+// 		image if one is available...
+// NOTE: this will not attach the created images.
+function createImage(n, force_create_new){
 	if(n == null){
 		if(window._n == null){
 			window._n = 0
@@ -293,7 +315,7 @@ function createImage(n){
 		_n += 1
 	}
 	var img = $('.image')
-	if(img.length > 0){
+	if(!force_create_new && img.length > 0){
 		return img.first().clone()
 					.attr({
 						'order': JSON.stringify(n),
@@ -306,10 +328,10 @@ function createImage(n){
 	}
 }
 
-// This will create a set of new images, reusing a list of existing 
-// elements if given.
-// XXX do we need this???
-// XXX add position...
+
+// Create a set of new images, reusing a list of existing elements if 
+// given.
+// NOTE: this will not attach the created images.
 function createImages(need, have){
 	have = have == null ? [] : have
 
@@ -329,8 +351,10 @@ function createImages(need, have){
 	}
 }
 
+
+// NOTE: if index is given, this will also attach the created ribbon to 
+// 		that position...
 function createRibbon(index){
-	// make the ribbon...
 	var ribbon = $('<div class="ribbon"/>')
 
 	if(index == null){
@@ -347,6 +371,7 @@ function createRibbon(index){
 
 	return ribbon
 }
+
 
 // NOTE: this will pass the index where the ribbon was to the event,
 // 		rather than an actual ribbon...
@@ -404,9 +429,7 @@ function extendRibbon(left, right, ribbon){
 
 	// compensate for the truncation...
 	// XXX do we need to split this into a separate function?
-	// 		...the rest of the function if pretty generic...
-	// XXX for some odd reason this behaves erratically when the page 
-	// 		is zoomed...
+	// 		...the rest of the function is pretty generic...
 	if(left != 0){
 		var l = parseFloat(ribbon.css('left'))
 		l = isNaN(l) ? 0 : l
@@ -435,7 +458,7 @@ function rollRibbon(n, ribbon){
 * Loaders
 */
 
-// NOTE: count can be either hegative or positive, this will idicate 
+// NOTE: count can be either negative or positive, this will indicate 
 // 		load direction...
 // NOTE: this will not include the 'from' GID in the resulting list...
 // NOTE: this can calculate the ribbon number if an image can be only 
@@ -456,7 +479,7 @@ function getImageGIDs(from, count, ribbon){
 			} 
 		})
 	}
-	// XXX checkif this is empty...
+	// XXX check if this is empty...
 	ribbon = DATA.ribbons[ribbon]
 
 	if(count > 0){
@@ -467,6 +490,7 @@ function getImageGIDs(from, count, ribbon){
 		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count), end)
 	}
 }
+
 
 function updateImage(image, gid, size){
 	image = $(image)
@@ -492,10 +516,11 @@ function updateImage(image, gid, size){
 }
 
 
-// load count images around a given image/gid into the given ribbon.
+// Load count images around a given image/gid into the given ribbon.
 //
 // NOTE: this will reload the current image elements...
 // NOTE: this is similar to extendRibbon(...) but different in interface...
+// XXX still buggy, needs more testing...
 function loadImages(ref_gid, count, ribbon){
 	ribbon = $(ribbon)
 	var images = ribbon.find('.image')
@@ -630,6 +655,7 @@ function toggleImageProportions(mode){
 }
 
 
+
 /**********************************************************************
 * Layout
 */
@@ -641,6 +667,8 @@ function focusImage(image){
 
 
 /*
+// Generic align
+//
 // XXX need to split this into two:
 // 		- offset calculator
 // 		- actual move
@@ -702,15 +730,13 @@ function alignVia(container, elem, via, valign, halign, mode){
 */
 
 
-// This appears to work well with scaling...
-// XXX make this more configurable...
+// XXX make this more configurable (centering, ...)...
 function centerImage(image, mode){
 	if(mode == null){
 		//mode = 'css'
 		mode = 'animate'
 	}
 
-	// XXX is this the correct spot for this?
 	$('.viewer').trigger('preCenteringRibbon', [getRibbon(image), image])
 
 	if(image == null || image.length == 0){
@@ -770,7 +796,7 @@ function centerImage(image, mode){
 // 		...or make a generic centering function...
 //
 // XXX this does not work in marked-only mode...
-// XXX this needs the image to exist... should be GID compatible...
+// XXX this needs the image to exist... should be GID compatible... (???)
 function centerRibbon(ribbon, image, mode){
 	if(mode == null){
 		//mode = 'css'
@@ -818,6 +844,7 @@ function centerRibbon(ribbon, image, mode){
 	return ribbon
 }
 
+
 // a shorthand...
 function centerRibbons(mode){
 	return $('.ribbon')
@@ -839,7 +866,6 @@ function clickHandler(evt){
 
 	centerRibbons()
 }
-
 
 
 
@@ -880,12 +906,16 @@ function prevImage(n, mode){
 	}
 	return centerImage(focusImage(target))
 }
+
+
 function nextScreenImages(mode){
 	return nextImage(Math.round(getScreenWidthInImages()), mode)
 }
 function prevScreenImages(mode){
 	return prevImage(Math.round(getScreenWidthInImages()), mode)
 }
+
+
 // XXX revise...
 function firstImage(mode){
 	$('.viewer').trigger('requestedFirstImage', [getRibbon()])
@@ -912,10 +942,10 @@ function lastImage(mode){
 }
 
 
-
 // NOTE: if moving is 'next' these will chose the image after the current's order.
 // NOTE: if an image with the same order is found, moving argument has no effect.
-// XXX get move direction...
+// XXX these sometimes behave wrong at the start of the ribbon depending
+// 		on direction...
 function prevRibbon(moving, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
@@ -932,7 +962,6 @@ function prevRibbon(moving, mode){
 	}
 	return centerImage(focusImage(target))
 }
-// XXX get move direction...
 function nextRibbon(moving, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
@@ -967,13 +996,27 @@ function fitNImages(n){
 }
 
 
+var MAX_SCREEN_IMAGES = 10
+
+// XXX use the actual scale...
+function zoomIn(){
+	var w = getScreenWidthInImages()
+	if(w > 1){
+		fitNImages(w-1)
+	}
+}
+function zoomOut(){
+	var w = getScreenWidthInImages()
+	if(w <= MAX_SCREEN_IMAGES){
+		fitNImages(w+1)
+	}
+}
+
 
 
 /************************************************** Editor Actions ***/
 
-// XXX add a shift event here...
-// XXX get move direction...
-function _shiftImageTo(image, direction, moving, force_create_ribbon, mode){
+function shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	if(image == null){
 		image = $('.current.image')
 	}
@@ -995,16 +1038,16 @@ function _shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	return centerImage(focusImage(target), 'css')
 }
 function shiftImageUp(image, moving){
-	return _shiftImageTo(image, 'prev', moving)
+	return shiftImageTo(image, 'prev', moving)
 }
 function shiftImageDown(image, moving){
-	return _shiftImageTo(image, 'next')
+	return shiftImageTo(image, 'next')
 }
 function shiftImageUpNewRibbon(image, moving){
-	return _shiftImageTo(image, 'prev', moving, true)
+	return shiftImageTo(image, 'prev', moving, true)
 }
 function shiftImageDownNewRibbon(image, moving){
-	return _shiftImageTo(image, 'prev', moving, false)
+	return shiftImageTo(image, 'prev', moving, false)
 }
 
 
@@ -1018,6 +1061,7 @@ function shiftImageDownNewRibbon(image, moving){
 // XXX if this unmarks an image in marked-only mode no visible image is 
 // 		going to be current...
 var toggleImageMark = createCSSClassToggler('.current.image', 'marked')
+
 
 // mode can be:
 //	- 'ribbon'
@@ -1036,6 +1080,7 @@ function removeImageMarks(mode){
 	} 
 }
 
+
 function markAll(mode){
 	// remove marks from current ribbon (default)...
 	if(mode == 'ribbon' || mode == null){
@@ -1049,6 +1094,7 @@ function markAll(mode){
 	}
 }
 
+
 // NOTE: this only does it's work in the current ribbon...
 function invertImageMarks(){
 	return getRibbon()
@@ -1056,8 +1102,9 @@ function invertImageMarks(){
 			.toggleClass('marked')
 }
 
-// this will toggle marks in the current continuous section of marked 
-// or unmarked images...
+
+// Toggle marks in the current continuous section of marked or unmarked
+// images...
 function toggleImageMarkBlock(image){
 	if(image == null){
 		image = $('.current.image')

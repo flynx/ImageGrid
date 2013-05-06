@@ -129,8 +129,9 @@ var KEYBOARD_CONFIG = {
 		// XXX for some reason this also hooks the Backspace key (80)...
 		'8': function(){ fitNImages(8) },
 		'9': function(){ fitNImages(9) },
-		// XXX bind the +/- keys...
-		// XXX
+
+		'-': function(){ zoomOut() },
+		'=': function(){ zoomIn() },
 
 
 		// XXX this should only work on single image mode...
