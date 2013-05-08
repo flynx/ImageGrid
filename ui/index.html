@@ -273,7 +273,8 @@ $(function(){
 
 				// need to load a new set of images...
 				if((img_before.length == 0 && gid_before != null) 
-						|| (getImageGID(img_before) && getImageGID(img_before) != gid_before)){
+						|| (getImageGID(img_before) 
+								&& getImageGID(img_before) != gid_before)){
 					// get the distance...
 					var images = ribbon.find('.image')
 					var cur = getImageGID(images.eq(Math.round(images.length/2)))
