@@ -131,12 +131,11 @@ function getImageBefore(image, ribbon, mode){
 		ribbon = getRibbon(image)
 	}
 	var images = $(ribbon).find('.image').filter(mode)
-	// XXX need to process/format this correctly...
-	var order = JSON.parse(image.attr('order'))
+	var order = getImageOrder(image)
 	var prev = []
 
 	images.each(function(){
-		if(order < JSON.parse($(this).attr('order'))){
+		if(order < getImageOrder($(this))){
 			return false
 		}
 		prev = this
@@ -295,6 +294,9 @@ function removeRibbon(ribbon){
 
 // NOTE: negative left or right will contract the ribbon...
 // XXX check what goes on if left/right are far more than length...
+// XXX compensating for added/removed images at the start of the ribbon 
+// 		does not work the same in every situation...
+// 		...for some reason it is correct ONLY for left == -right
 function extendRibbon(left, right, ribbon){
 	ribbon = ribbon == null ? 
 				getRibbon()
