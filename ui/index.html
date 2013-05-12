@@ -265,9 +265,9 @@ $(function(){
 	if(DYNAMIC_LOADING){
 		// XXX move to a setup function in the lib...
 		// XXX update this depending on zoom and navigation speed...
-		var LOAD_SCREENS = 2
+		LOAD_SCREENS = 2
 		// XXX update this depending on zoom and navigation speed...
-		var LOAD_THRESHOLD = 1
+		LOAD_THRESHOLD = 1
 		$('.viewer')
 			// XXX still some times does not load the needed ribbon section
 			//		on the first try...
@@ -291,6 +291,14 @@ $(function(){
 				var img_before = getImageBefore(image, ribbon)
 				var gid_before = getGIDBefore(gid, r)
 
+				// load...
+				if(gid_before == null || gid_before != getImageGID(img_before)){
+					loadImages(gid, Math.round((LOAD_SCREENS * 1.5) * getScreenWidthInImages()), ribbon)
+					// XXX compensate for the changing number of images...
+					// XXX
+				}
+
+				/*
 				// load the head of the images...
 				if(gid_before == null){
 					// NOTE: rolling to any number of positions greater than length 
@@ -306,12 +314,14 @@ $(function(){
 				// load a new set of images...
 				} else if(getImageGID(img_before) != gid_before){
 					var images = ribbon.find('.image')
-					//var cur = getImageGID(images.eq(Math.round(images.length/2)))
-					var cur = getImageGID(images.first())
+					var cur = getImageGID(images.eq(Math.round(images.length/2)))
+					//var cur = getImageGID(images.first())
 					// XXX this sometimes misses...
 					rollImages(gr.indexOf(gid_before) - gr.indexOf(cur), ribbon)
 				}
+				*/
 			})
+			/*
 			.on('centeringRibbon', function(evt, ribbon, image){
 				// check if we are in the right range...
 				var gid = getImageGID(image)
@@ -349,6 +359,7 @@ $(function(){
 					var rolled = rollImages(-frame_size, ribbon)
 				}
 			})
+			*/
 			.on('shiftedImage', function(evt, image, from, to){
 				from = getRibbonIndex(from)
 				var ribbon = to

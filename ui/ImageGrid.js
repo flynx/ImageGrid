@@ -23,6 +23,7 @@
 // XXX STUB
 // Data format...
 var DATA = {
+	current: 0,
 	// the ribbon cache...
 	// in the simplest form this is a list of lists of GIDs
 	ribbons: [
@@ -376,7 +377,7 @@ function createImage(n, force_create_new){
 // given.
 // NOTE: this will not attach the created images.
 function createImages(need, have){
-	have = have == null ? [] : have
+	have = have == null ? $([]) : $(have)
 
 	// we have enough elements in the cache...
 	if(have.length >= need){
@@ -509,7 +510,8 @@ function rollRibbon(n, ribbon){
 // NOTE: if an image can be in more than one ribbon, one MUST suply the
 // 		correct ribbon number...
 // XXX do we need more checking???
-function getImageGIDs(from, count, ribbon){
+// XXX inclusive can not be false, only null or true...
+function getImageGIDs(from, count, ribbon, inclusive){
 	if(count == 0){
 		return []
 	}
@@ -525,12 +527,16 @@ function getImageGIDs(from, count, ribbon){
 	// XXX check if this is empty...
 	ribbon = DATA.ribbons[ribbon]
 
+
 	if(count > 0){
-		var start = ribbon.indexOf(from) + 1
+		var c = inclusive == null ? 1 : 0
+		var start = ribbon.indexOf(from) + c
 		return ribbon.slice(start, start + count)
 	} else {
+		// XXX
+		var c = inclusive == null ? 0 : 1
 		var end = ribbon.indexOf(from)
-		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count), end)
+		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count + c), end + c)
 	}
 }
 
@@ -589,31 +595,68 @@ function updateImages(size){
 //
 // NOTE: this will reload the current image elements...
 // NOTE: this is similar to extendRibbon(...) but different in interface...
-// XXX still buggy, needs more testing...
 function loadImages(ref_gid, count, ribbon){
 	ribbon = $(ribbon)
 	var images = ribbon.find('.image')
 	var ribbon_i = getRibbonIndex(ribbon)
 	var gid = getGIDBefore(ref_gid, ribbon_i)
+	gid = gid == null ? DATA.ribbons[ribbon_i][0] : gid
 
 	// start/end points...
+	var l = DATA.ribbons[ribbon_i].length
 	var from_i = DATA.ribbons[ribbon_i].indexOf(gid) - Math.floor(count/2)
+	// special case: head...
 	from_i = from_i < 0 ? 0 : from_i
+	// special case: tail...
+	from_i = l - from_i < count ? l - count : from_i
 	var from_gid = DATA.ribbons[ribbon_i][from_i]
 
-	// XXX make this load only what is needed instead of reloading everything...
+	// XXX load only what is needed instead of reloading everything...
+	// XXX
 
 	var size = getVisibleImageSize()
-	var gids = getImageGIDs(from_gid, count)
-	// XXX is this the only special case???
-	if(from_gid == from_gid){
-		gids.splice(0, 0, ref_gid)
-	}
+	var gids = getImageGIDs(from_gid, count, ribbon_i, true)
 
-	return createImages(gids.length, images.detach())
-		.each(function(i, e){
-			updateImage(e, gids[i], size)
-		}).appendTo(ribbon)
+	if(count != images.length){
+		// NOTE: this avoids reattaching images that are already there...
+		extendRibbon(0, count - images.length, ribbon)
+		images = ribbon.find('.image')
+	}
+	return images.each(function(i, e){
+		updateImage(e, gids[i], size)
+	})
+}
+
+// XXX here for testing...
+function loadImagesAround(ref_gid, count, ribbon){
+	var ribbon_i = getRibbonIndex(ribbon)
+	var gid = getGIDBefore(ref_gid, ribbon_i)
+	return loadImages(ref_gid, count, ribbon).filter('[gid='+JSON.stringify(gid)+']').click()
+}
+
+
+
+function loadData(data){
+	var ribbons_set = $('.ribbon-set')
+	var current = data.current
+	// XXX will this work without any images loaded?
+	var w = getScreenWidthInImages()
+
+	$('.ribbon').remove()
+
+	// create ribbons...
+	$.each(data.ribbons, function(i, e){
+		createRibbon().appendTo(ribbons_set)
+	})
+
+	// create images...
+	$('.ribbon').each(function(i, e){
+		loadImages(current, Math.min(w * LOAD_SCREENS * 1.5, data.ribbons[i].length), $(this))
+	})
+
+	focusImage($('.image').filter('[gid='+JSON.stringify(current)+']'))
+
+	centerRibbons('css')
 }
 
 
@@ -621,7 +664,7 @@ function loadImages(ref_gid, count, ribbon){
 // NOTE: this will load data ONLY if it is available, otherwise this 
 // 		will have no effect...
 // NOTE: this can roll past the currently loaded images (n > images.length)
-function rollImages(n, ribbon){
+function rollImages(n, ribbon, extend){
 	if(n == 0){
 		return $([])
 	}
@@ -904,7 +947,7 @@ function centerRibbon(ribbon, image, mode){
 	if(mode == 'animate'){
 		ribbon.stop().animate(l, 100, 'linear')
 	} else {
-		ribbons.css(res)
+		ribbon.css(l)
 	}
 
 	$('.viewer').trigger('centeringRibbon', [ribbon, image])
