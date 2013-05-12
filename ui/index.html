@@ -224,6 +224,7 @@
 <script src="lib/keyboard.js"></script>
 
 <script src="ImageGrid.js"></script>
+<script src="ImageGrid.data.js"></script>
 <script src="keybindings3.js"></script>
 
 <script>
@@ -243,116 +244,7 @@ $(function(){
 			KEYBOARD_CONFIG,
 			function(k){console.log(k)}))
 
-	// dynamic loading...
-	DYNAMIC_LOADING = true
-
-	if(DYNAMIC_LOADING){
-		// XXX move to a setup function in the lib...
-		$('.viewer')
-			// XXX this always reloads everything...
-			// XXX this causes miss-aligns after shifting and/or zooming...
-			.on('preCenteringRibbon', function(evt, ribbon, image){
-				// NOTE: we do not need to worry about centering the ribbon 
-				//		here, just ball-park-load the correct batch...
-
-				// check if we are in the right range...
-				var gid = getImageGID(image)
-				var r = getRibbonIndex(ribbon)
-				var gr = DATA.ribbons[r]
-				var img_before = getImageBefore(image, ribbon)
-				var gid_before = getGIDBefore(gid, r)
-
-				// load...
-				if(gid_before == null || gid_before != getImageGID(img_before)){
-					loadImages(gid, Math.round((LOAD_SCREENS * 1.5) * getScreenWidthInImages()), ribbon)
-					// XXX compensate for the changing number of images...
-					// XXX
-				}
-			})
-			/*
-			// XXX BUGGY...
-			.on('centeringRibbon', function(evt, ribbon, image){
-				// check if we are in the right range...
-				var gid = getImageGID(image)
-				var r = getRibbonIndex(ribbon)
-				var img_before = getImageBefore(image, ribbon)
-				var gid_before = getGIDBefore(gid, r)
-
-				if(img_before.length == 0){
-					img_before = ribbon.find('.image').first()
-				}
-
-				var head = img_before.prevAll('.image')
-				var tail = img_before.nextAll('.image')
-
-				// get the frame size to load...
-				var screen_size = getScreenWidthInImages()
-				// NOTE: if this is greater than the number of images currently 
-				//		loaded, it might lead to odd effects...
-				//		XXX need to load additional images and keep track of the 
-				//			loaded chunk size...
-				//var frame_size = screen_size * LOAD_SCREENS
-				var frame_size = 4
-				//var threshold = screen_size * LOAD_THRESHOLD
-				var threshold = 2
-
-				// do the loading...
-				// XXX need to expand/contract the ribbon depending on zoom and speed...
-				// XXX use extendRibbon, to both roll and expand/contract...
-				if(tail.length < threshold){
-					var rolled = rollImages(frame_size, ribbon)
-				}
-				if(head.length < threshold){
-					var rolled = rollImages(-frame_size, ribbon)
-				}
-			})
-			*/
-			.on('shiftedImage', function(evt, image, from, to){
-				from = getRibbonIndex(from)
-				var ribbon = to
-				to = getRibbonIndex(to)
-
-				var gid = getImageGID(image)
-
-				var index = DATA.ribbons[from].indexOf(gid)
-				var img = DATA.ribbons[from].splice(index, 1)
-
-				// XXX a bit ugly, revise...
-				index = ribbon.find('.image')
-							.index(ribbon.find('[gid='+JSON.stringify(gid)+']'))
-				DATA.ribbons[to].splice(index, 0, gid)
-			})
-
-			.on('createdRibbon', function(evt, index){
-				index = getRibbonIndex(index)
-				DATA.ribbons.splice(index, 0, [])
-			})
-			.on('removedRibbon', function(evt, index){
-				DATA.ribbons.splice(index, 1)
-			})
-
-			.on('requestedFirstImage', function(evt, ribbon){
-				var r = getRibbonIndex(ribbon)
-				var gr = DATA.ribbons[r]
-				rollImages(-gr.length, ribbon)
-			})
-			.on('requestedLastImage', function(evt, ribbon){
-				var r = getRibbonIndex(ribbon)
-				var gr = DATA.ribbons[r]
-				rollImages(gr.length, ribbon)
-			})
-
-			// XXX do we need to make this less global?
-			.on('fittingImages', function(evt, n){
-				updateImages()
-			})
-
-			.on('focusingImage', function(evt, image){
-				DATA.current = getImageGID($(image))
-			})
-	}
-
-
+	setupDataBindings()
 
 	// XXX stub...
 	centerView(focusImage($('.image').first()), 'css')
