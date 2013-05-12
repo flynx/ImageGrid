@@ -20,6 +20,16 @@
 *
 **********************************************************************/
 
+// NOTE: NAV_ALL might not be practical...
+var NAV_ALL = '*'
+var NAV_VISIBLE = ':visible'
+var NAV_MARKED = '.marked:visible'
+var NAV_DEFAULT = NAV_VISIBLE
+
+var MAX_SCREEN_IMAGES = 12
+var ZOOM_SCALE = 1.2
+
+
 
 /**********************************************************************
 * Helpers
@@ -646,14 +656,6 @@ function clickHandler(evt){
 * User actions
 */
 
-// NOTE: NAV_ALL might not be practical...
-var NAV_ALL = '*'
-var NAV_VISIBLE = ':visible'
-var NAV_MARKED = '.marked:visible'
-
-var NAV_DEFAULT = NAV_VISIBLE
-
-
 // basic navigation actions...
 function nextImage(n, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
@@ -779,9 +781,6 @@ function fitNImages(n){
 	$('.viewer').trigger('fittingImages', [n])
 }
 
-
-var MAX_SCREEN_IMAGES = 12
-var ZOOM_SCALE = 1.2
 
 function zoomIn(){
 	var w = getScreenWidthInImages()

@@ -5,7 +5,11 @@
 **********************************************************************/
 
 //var DEBUG = DEBUG != null ? DEBUG : true
-//
+
+var LOAD_SCREENS = 2
+var LOAD_THRESHOLD = 1
+var DEFAULT_SCREEN_IMAGES = 5
+
 // XXX STUB
 // Data format...
 var DATA = {
@@ -168,11 +172,6 @@ function getGIDBefore(gid, ribbon, search){
 }
 
 
-
-/**********************************************************************
-* Loaders
-*/
-
 // NOTE: count can be either negative or positive, this will indicate 
 // 		load direction...
 // NOTE: this will not include the 'from' GID in the resulting list...
@@ -211,6 +210,11 @@ function getImageGIDs(from, count, ribbon, inclusive){
 	}
 }
 
+
+
+/**********************************************************************
+* Loaders
+*/
 
 function updateImage(image, gid, size){
 	image = $(image)
@@ -254,12 +258,12 @@ function updateImage(image, gid, size){
 		'background-image': url,
 	})
 
-
 	
 	// XXX STUB
 	//image.text(image.text() + ' ('+ s +'px)')
 
 }
+
 
 // shorthand...
 function updateImages(size){
@@ -322,42 +326,12 @@ function loadImages(ref_gid, count, ribbon){
 	})
 }
 
+
 // XXX here for testing...
 function loadImagesAround(ref_gid, count, ribbon){
 	var ribbon_i = getRibbonIndex(ribbon)
 	var gid = getGIDBefore(ref_gid, ribbon_i)
 	return loadImages(ref_gid, count, ribbon).filter('[gid='+JSON.stringify(gid)+']').click()
-}
-
-
-var LOAD_SCREENS = 2
-var LOAD_THRESHOLD = 1
-var DEFAULT_SCREEN_IMAGES = 5
-
-function loadData(data, images_per_screen){
-	var ribbons_set = $('.ribbon-set')
-	var current = data.current
-	// if no width is given, use the current or default...
-	var w = images_per_screen == null ? getScreenWidthInImages() : images_per_screen
-	w = w > MAX_SCREEN_IMAGES ? DEFAULT_SCREEN_IMAGES : w
-
-	// clear data...
-	$('.ribbon').remove()
-
-	// create ribbons...
-	$.each(data.ribbons, function(i, e){
-		createRibbon().appendTo(ribbons_set)
-	})
-
-	// create images...
-	$('.ribbon').each(function(i, e){
-		loadImages(current, Math.min(w * LOAD_SCREENS * 1.5, data.ribbons[i].length), $(this))
-	})
-
-	focusImage($('.image').filter('[gid='+JSON.stringify(current)+']'))
-
-	fitNImages(w)
-	centerRibbons('css')
 }
 
 
@@ -396,6 +370,33 @@ function rollImages(n, ribbon, extend){
 	})
 
 	return images
+}
+
+
+function loadData(data, images_per_screen){
+	var ribbons_set = $('.ribbon-set')
+	var current = data.current
+	// if no width is given, use the current or default...
+	var w = images_per_screen == null ? getScreenWidthInImages() : images_per_screen
+	w = w > MAX_SCREEN_IMAGES ? DEFAULT_SCREEN_IMAGES : w
+
+	// clear data...
+	$('.ribbon').remove()
+
+	// create ribbons...
+	$.each(data.ribbons, function(i, e){
+		createRibbon().appendTo(ribbons_set)
+	})
+
+	// create images...
+	$('.ribbon').each(function(i, e){
+		loadImages(current, Math.min(w * LOAD_SCREENS * 1.5, data.ribbons[i].length), $(this))
+	})
+
+	focusImage($('.image').filter('[gid='+JSON.stringify(current)+']'))
+
+	fitNImages(w)
+	centerRibbons('css')
 }
 
 
