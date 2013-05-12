@@ -231,21 +231,8 @@
 // setup...
 $(function(){
 
-	// populate the viewer...
-	var r = createRibbon()
-	var images = []
-	for(var i=0; i < 40; i++){
-		images.push(createImage().text(i)[0]) 
-	}
-	r.append($(images))
-	//var rr = r.clone()
-	//var rrr = r.clone()
+	loadData(DATA)
 
-	// XXX use something like loadImages()...
-	$('.ribbon-set')
-		.append(r)
-		//.append(rr)
-		//.append(rrr)
 
 	// NOTE: this is global so as to not to add any extra complexity to 
 	//		the internal workings...
@@ -264,10 +251,6 @@ $(function(){
 
 	if(DYNAMIC_LOADING){
 		// XXX move to a setup function in the lib...
-		// XXX update this depending on zoom and navigation speed...
-		LOAD_SCREENS = 2
-		// XXX update this depending on zoom and navigation speed...
-		LOAD_THRESHOLD = 1
 		$('.viewer')
 			// XXX still some times does not load the needed ribbon section
 			//		on the first try...
@@ -322,6 +305,7 @@ $(function(){
 				*/
 			})
 			/*
+			// XXX BUGGY...
 			.on('centeringRibbon', function(evt, ribbon, image){
 				// check if we are in the right range...
 				var gid = getImageGID(image)
@@ -401,6 +385,10 @@ $(function(){
 			// XXX do we need to make this less global?
 			.on('fittingImages', function(evt, n){
 				updateImages()
+			})
+
+			.on('focusingImage', function(evt, image){
+				DATA.current = getImageGID($(image))
 			})
 	}
 

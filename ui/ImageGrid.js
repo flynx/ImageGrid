@@ -635,13 +635,18 @@ function loadImagesAround(ref_gid, count, ribbon){
 }
 
 
+var LOAD_SCREENS = 2
+var LOAD_THRESHOLD = 1
+var DEFAULT_SCREEN_IMAGES = 5
 
-function loadData(data){
+function loadData(data, images_per_screen){
 	var ribbons_set = $('.ribbon-set')
 	var current = data.current
-	// XXX will this work without any images loaded?
-	var w = getScreenWidthInImages()
+	// if no width is given, use the current or default...
+	var w = images_per_screen == null ? getScreenWidthInImages() : images_per_screen
+	w = w > MAX_SCREEN_IMAGES ? DEFAULT_SCREEN_IMAGES : w
 
+	// clear data...
 	$('.ribbon').remove()
 
 	// create ribbons...
@@ -656,6 +661,7 @@ function loadData(data){
 
 	focusImage($('.image').filter('[gid='+JSON.stringify(current)+']'))
 
+	fitNImages(w)
 	centerRibbons('css')
 }
 
@@ -774,6 +780,7 @@ function toggleImageProportions(mode){
 
 function focusImage(image){
 	image.closest('.viewer').find('.current.image').removeClass('current')
+	$('.viewer').trigger('focusingImage', [image])
 	return image.addClass('current')
 }
 
