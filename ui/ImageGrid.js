@@ -187,6 +187,30 @@ function isBetween(a, i, lst){
 }
 
 
+// Basic liner search...
+function linSearch(target, lst, check, return_position, disable_direct_indexing){
+	// XXX is this the correct default?
+	check = check == null ? isBetween : check
+	// special case: target in the list directly...
+	if(disable_direct_indexing 
+			&& check(target, lst.indexOf(target), lst) == 0){
+		return target
+	}
+	// special case: tail...
+	if(check(target, lst.length-1, lst) >= 0){
+		return lst[lst.length-1]
+	}
+
+	for(var i=0; i < lst.length; i++){
+		if(check(target, i, lst) == 0){
+			return return_position ? i : lst[i]
+		}
+	}
+
+	// no hit...
+	return return_position ? -1 : null
+}
+
 // Basic binary search implementation...
 //
 // NOTE: this will return the object by default, to return position set
@@ -194,7 +218,7 @@ function isBetween(a, i, lst){
 // NOTE: by default this will use isBetween as a predicate.
 // NOTE: this still depends on .indexOf(...), to disable set
 // 		disable_direct_indexing to true
-// XXX BUG this tends to fall into infinite loops...
+// XXX BUGGY
 // XXX this is a mess, needs revision...
 function binSearch(target, lst, check, return_position, disable_direct_indexing){
 	// XXX is this the correct default?
@@ -241,13 +265,14 @@ function binSearch(target, lst, check, return_position, disable_direct_indexing)
 
 
 // Same as getImageBefore, but uses gids and searches in DATA...
-function getGIDBefore(gid, ribbon){
+function getGIDBefore(gid, ribbon, search){
+	search = search == null ? linSearch : search
 	ribbon = DATA.ribbons[ribbon]
 	var order = DATA.order
 
 	var target = order.indexOf(gid)
 
-	return binSearch(target, ribbon, function (a, i, lst){
+	return search(target, ribbon, function (a, i, lst){
 		var b = order.indexOf(lst[i])
 		var c = order.indexOf(lst[i+1])
 		// hit...

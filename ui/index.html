@@ -267,8 +267,19 @@ $(function(){
 		// XXX update this depending on zoom and navigation speed...
 		var LOAD_SCREENS = 2
 		// XXX update this depending on zoom and navigation speed...
-		var LOAD_THRESHOLD = 0.5
+		var LOAD_THRESHOLD = 1
 		$('.viewer')
+			// XXX still some times does not load the needed ribbon section
+			//		on the first try...
+			//		Example state:
+			//					0	[50]	99
+			//				.. .. .. .. .. .. ..
+			//			in this case moving between the top ribbon images
+			//			does not center the bottom ribbon right away, needs
+			//			several clicks on the current image to get there...
+			//			...also when going down from 50 lastImage() behaves
+			//			in a very odd way, going back and froth rather than 
+			//			reaching 98 right away...
 			.on('preCenteringRibbon', function(evt, ribbon, image){
 				// NOTE: we do not need to worry about centering the ribbon 
 				//		here, just ball-park-load the correct batch...
@@ -276,25 +287,28 @@ $(function(){
 				// check if we are in the right range...
 				var gid = getImageGID(image)
 				var r = getRibbonIndex(ribbon)
+				var gr = DATA.ribbons[r]
 				var img_before = getImageBefore(image, ribbon)
 				var gid_before = getGIDBefore(gid, r)
 
 				// load the head of the images...
-				if(img_before.length == 0 && gid_before == null){
-					var gr = DATA.ribbons[r]
+				if(gid_before == null){
 					// NOTE: rolling to any number of positions greater than length 
 					//		of the ribbon will set the ribbon to its start/end 
 					//		depending on the sign...
 					rollImages(-gr.length, ribbon)
 
+				// load the tail...
+				// XXX for some reason this does not work (see XXX on top of the binding)
+				} else if(gid_before == gr[gr.length-1]){
+					rollImages(gr.length, ribbon)
+
 				// load a new set of images...
-				} else if(img_before.length == 0 
-						|| (getImageGID(img_before) 
-								&& getImageGID(img_before) != gid_before)){
+				} else if(getImageGID(img_before) != gid_before){
 					var images = ribbon.find('.image')
-					// middle image...
-					var cur = getImageGID(images.eq(Math.round(images.length/2)))
-					var gr = DATA.ribbons[r]
+					//var cur = getImageGID(images.eq(Math.round(images.length/2)))
+					var cur = getImageGID(images.first())
+					// XXX this sometimes misses...
 					rollImages(gr.indexOf(gid_before) - gr.indexOf(cur), ribbon)
 				}
 			})
@@ -350,6 +364,7 @@ $(function(){
 							.index(ribbon.find('[gid='+JSON.stringify(gid)+']'))
 				DATA.ribbons[to].splice(index, 0, gid)
 			})
+
 			.on('createdRibbon', function(evt, index){
 				index = getRibbonIndex(index)
 
@@ -360,28 +375,18 @@ $(function(){
 				console.log('removing ribbon...')
 				DATA.ribbons.splice(index, 1)
 			})
+
 			.on('requestedFirstImage', function(evt, ribbon){
 				var r = getRibbonIndex(ribbon)
-
-				// XXX this result in an infinite loop somewhere...
-				//var target = DATA.ribbons[r][0]
-				//
-				//loadImages(target, 30, ribbon)	
-
 				var gr = DATA.ribbons[r]
 				rollImages(-gr.length, ribbon)
 			})
 			.on('requestedLastImage', function(evt, ribbon){
 				var r = getRibbonIndex(ribbon)
-
-				// XXX this result in an infinite loop somewhere...
-				//var target = DATA.ribbons[r][DATA.ribbons[r].length-1]
-				//
-				//loadImages(target, 30, ribbon)	
-
 				var gr = DATA.ribbons[r]
 				rollImages(gr.length, ribbon)
 			})
+
 			// XXX do we need to make this less global?
 			.on('fittingImages', function(evt, n){
 				updateImages()
