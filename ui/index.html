@@ -66,13 +66,20 @@
 	font-size: 12pt;
 	overflow: hidden;
 
-	background: black;
 	box-sizing: border-box;
-	border: solid gray 1px;
 	color: white;
+
+	background: no-repeat 50% black;
+	background-size: contain;
+	/* XXX do we need this? */
+	border: solid black 5px;
 }
 .current.image {
-	background: red;
+	background: no-repeat 50% black;
+	background-size: contain;
+
+	/* XXX remove this... */
+	border: solid red 5px;
 }
 
 /* dot mark... */
@@ -258,32 +265,39 @@ $(function(){
 	if(DYNAMIC_LOADING){
 		// XXX move to a setup function in the lib...
 		// XXX update this depending on zoom and navigation speed...
-		var LOADER_THRESHOLD = 2
+		var LOAD_SCREENS = 2
 		// XXX update this depending on zoom and navigation speed...
-		var LOADER_CHUNK = LOADER_THRESHOLD * 2
+		var LOAD_THRESHOLD = 0.5
 		$('.viewer')
 			.on('preCenteringRibbon', function(evt, ribbon, image){
 				// NOTE: we do not need to worry about centering the ribbon 
 				//		here, just ball-park-load the correct batch...
+
 				// check if we are in the right range...
 				var gid = getImageGID(image)
 				var r = getRibbonIndex(ribbon)
 				var img_before = getImageBefore(image, ribbon)
 				var gid_before = getGIDBefore(gid, r)
 
-				// need to load a new set of images...
-				if((img_before.length == 0 && gid_before != null) 
+				// load the head of the images...
+				if(img_before.length == 0 && gid_before == null){
+					var gr = DATA.ribbons[r]
+					// NOTE: rolling to any number of positions greater than length 
+					//		of the ribbon will set the ribbon to its start/end 
+					//		depending on the sign...
+					rollImages(-gr.length, ribbon)
+
+				// load a new set of images...
+				} else if(img_before.length == 0 
 						|| (getImageGID(img_before) 
 								&& getImageGID(img_before) != gid_before)){
-					// get the distance...
 					var images = ribbon.find('.image')
+					// middle image...
 					var cur = getImageGID(images.eq(Math.round(images.length/2)))
 					var gr = DATA.ribbons[r]
-					//console.log('>>>', gr.indexOf(gid_before) - gr.indexOf(cur))
 					rollImages(gr.indexOf(gid_before) - gr.indexOf(cur), ribbon)
 				}
 			})
-			// XXX it takes several steps for adjacent ribbons to catch up...
 			.on('centeringRibbon', function(evt, ribbon, image){
 				// check if we are in the right range...
 				var gid = getImageGID(image)
@@ -302,13 +316,23 @@ $(function(){
 				var first = head.first()
 				var last = head.first()
 
+				// get the frame size to load...
+				var screen_size = getScreenWidthInImages()
+				// NOTE: if this is greater than the number of images currently 
+				//		loaded, it might lead to odd effects...
+				//		XXX need to load additional images and keep track of the 
+				//			loaded chunk size...
+				var frame_size = screen_size * LOAD_SCREENS
+				var threshold = screen_size * LOAD_THRESHOLD
+
+				// do the loading...
 				// XXX need to expand/contract the ribbon depending on zoom and speed...
 				// XXX use extendRibbon, to both roll and expand/contract...
-				if(tail.length < LOADER_THRESHOLD){
-					var rolled = rollImages(LOADER_CHUNK, ribbon)
+				if(tail.length < threshold){
+					var rolled = rollImages(frame_size, ribbon)
 				}
-				if(head.length < LOADER_THRESHOLD){
-					var rolled = rollImages(-LOADER_CHUNK, ribbon)
+				if(head.length < threshold){
+					var rolled = rollImages(-frame_size, ribbon)
 				}
 			})
 			.on('shiftedImage', function(evt, image, from, to){
@@ -358,12 +382,17 @@ $(function(){
 				var gr = DATA.ribbons[r]
 				rollImages(gr.length, ribbon)
 			})
+			// XXX do we need to make this less global?
+			.on('fittingImages', function(evt, n){
+				updateImages()
+			})
 	}
 
 
 
 	// XXX stub...
 	centerImage(focusImage($('.image').first()), 'css')
+	updateImages()
 
 
 })

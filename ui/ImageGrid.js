@@ -34,6 +34,17 @@ var DATA = {
 	// the images object, this is indexed by image GID and contains all 
 	// the needed data...
 	images: {
+		// sub image, for testing load mechanics...
+		SIZE: {
+			id: 'SIZE',
+			ctime: 0,
+			path: './images/sizes/900px/SIZE.jpg',
+			preview: {
+				'150px': './images/sizes/150px/SIZE.jpg',
+				'350px': './images/sizes/350px/SIZE.jpg',
+				'900px': './images/sizes/900px/SIZE.jpg',
+			},
+		},
 	}
 }
 
@@ -184,6 +195,7 @@ function isBetween(a, i, lst){
 // NOTE: this still depends on .indexOf(...), to disable set
 // 		disable_direct_indexing to true
 // XXX BUG this tends to fall into infinite loops...
+// XXX this is a mess, needs revision...
 function binSearch(target, lst, check, return_position, disable_direct_indexing){
 	// XXX is this the correct default?
 	check = check == null ? isBetween : check
@@ -209,7 +221,8 @@ function binSearch(target, lst, check, return_position, disable_direct_indexing)
 	var i = l
 
 	while(l > 0){
-		l = Math.ceil(l/2)
+		// XXX this is a hack -- should we reach 0 using floor(..) instead?
+		l = l <= 1 ? 0 : Math.ceil(l/2)
 		res = check(target, i, lst)
 		// right branch...
 		if(res > 0){
@@ -514,10 +527,36 @@ function updateImage(image, gid, size){
 
 	// XXX STUB
 	image.text(gid)
-	// XXX slect best preview by size...
+
+	// select best preview by size...
+	var url
+	// XXX STUB, use real image GID...
+	gid = 'SIZE'
+	for(var k in DATA.images[gid].preview){
+		var s = parseInt(k)
+		if(s > size){
+			url = 'url('+ DATA.images[gid].preview[k] +')'
+			break
+		}
+	}
+	// if no preview found use the original...
+	if(url == null){
+		url = 'url('+DATA.images[gid].path+')'
+	}
+	image.css({
+		'background-image': url,
+	})
+
+	// update classes and other indicators...
 	// XXX
-	// XXX update classes...
-	// XXX
+}
+
+// shorthand...
+function updateImages(size){
+	size = size == null ? getVisibleImageSize() : size
+	return $('.image').each(function(){
+		updateImage($(this), null, size)
+	})
 }
 
 
@@ -1007,6 +1046,8 @@ function fitNImages(n){
 	// XXX if animating, the next two likes must be animated together...
 	setElementScale($('.ribbon-set'), scale)
 	centerImage(image, 'css')
+
+	$('.viewer').trigger('fittingImages', [n])
 }
 
 
