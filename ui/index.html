@@ -233,7 +233,6 @@ $(function(){
 
 	loadData(DATA)
 
-
 	// NOTE: this is global so as to not to add any extra complexity to 
 	//		the internal workings...
 	$('.viewer')
@@ -244,25 +243,14 @@ $(function(){
 			KEYBOARD_CONFIG,
 			function(k){console.log(k)}))
 
-
-
 	// dynamic loading...
 	DYNAMIC_LOADING = true
 
 	if(DYNAMIC_LOADING){
 		// XXX move to a setup function in the lib...
 		$('.viewer')
-			// XXX still some times does not load the needed ribbon section
-			//		on the first try...
-			//		Example state:
-			//					0	[50]	99
-			//				.. .. .. .. .. .. ..
-			//			in this case moving between the top ribbon images
-			//			does not center the bottom ribbon right away, needs
-			//			several clicks on the current image to get there...
-			//			...also when going down from 50 lastImage() behaves
-			//			in a very odd way, going back and froth rather than 
-			//			reaching 98 right away...
+			// XXX this always reloads everything...
+			// XXX this causes miss-aligns after shifting and/or zooming...
 			.on('preCenteringRibbon', function(evt, ribbon, image){
 				// NOTE: we do not need to worry about centering the ribbon 
 				//		here, just ball-park-load the correct batch...
@@ -280,29 +268,6 @@ $(function(){
 					// XXX compensate for the changing number of images...
 					// XXX
 				}
-
-				/*
-				// load the head of the images...
-				if(gid_before == null){
-					// NOTE: rolling to any number of positions greater than length 
-					//		of the ribbon will set the ribbon to its start/end 
-					//		depending on the sign...
-					rollImages(-gr.length, ribbon)
-
-				// load the tail...
-				// XXX for some reason this does not work (see XXX on top of the binding)
-				} else if(gid_before == gr[gr.length-1]){
-					rollImages(gr.length, ribbon)
-
-				// load a new set of images...
-				} else if(getImageGID(img_before) != gid_before){
-					var images = ribbon.find('.image')
-					var cur = getImageGID(images.eq(Math.round(images.length/2)))
-					//var cur = getImageGID(images.first())
-					// XXX this sometimes misses...
-					rollImages(gr.indexOf(gid_before) - gr.indexOf(cur), ribbon)
-				}
-				*/
 			})
 			/*
 			// XXX BUGGY...
@@ -319,10 +284,6 @@ $(function(){
 
 				var head = img_before.prevAll('.image')
 				var tail = img_before.nextAll('.image')
-				// NOTE: these are to be used as reference for loading/populating
-				//		rolled images...
-				var first = head.first()
-				var last = head.first()
 
 				// get the frame size to load...
 				var screen_size = getScreenWidthInImages()
@@ -330,8 +291,10 @@ $(function(){
 				//		loaded, it might lead to odd effects...
 				//		XXX need to load additional images and keep track of the 
 				//			loaded chunk size...
-				var frame_size = screen_size * LOAD_SCREENS
-				var threshold = screen_size * LOAD_THRESHOLD
+				//var frame_size = screen_size * LOAD_SCREENS
+				var frame_size = 4
+				//var threshold = screen_size * LOAD_THRESHOLD
+				var threshold = 2
 
 				// do the loading...
 				// XXX need to expand/contract the ribbon depending on zoom and speed...
@@ -362,12 +325,9 @@ $(function(){
 
 			.on('createdRibbon', function(evt, index){
 				index = getRibbonIndex(index)
-
-				console.log('creating ribbon...')
 				DATA.ribbons.splice(index, 0, [])
 			})
 			.on('removedRibbon', function(evt, index){
-				console.log('removing ribbon...')
 				DATA.ribbons.splice(index, 1)
 			})
 
@@ -395,7 +355,7 @@ $(function(){
 
 
 	// XXX stub...
-	centerImage(focusImage($('.image').first()), 'css')
+	centerView(focusImage($('.image').first()), 'css')
 	updateImages()
 
 

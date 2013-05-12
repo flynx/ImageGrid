@@ -45,6 +45,7 @@ var DATA = {
 				'350px': './images/sizes/350px/SIZE.jpg',
 				'900px': './images/sizes/900px/SIZE.jpg',
 			},
+			classes: '',
 		},
 	}
 }
@@ -474,11 +475,17 @@ function extendRibbon(left, right, ribbon){
 	// compensate for the truncation...
 	// XXX do we need to split this into a separate function?
 	// 		...the rest of the function is pretty generic...
+	// XXX for some reason this works correctly ONLY if left = -right
+	// 		...appears to be connected with scale, but in a really odd 
+	// 		way...
+	//var scale = getElementScale($('.ribbon-set'))
 	if(left != 0){
 		var l = parseFloat(ribbon.css('left'))
 		l = isNaN(l) ? 0 : l
+		l = l + (-left * images.outerWidth())
+		console.log('>>> compensating to:', l)
 		ribbon.css({
-			left: l + (-left * parseFloat(images.outerWidth()))
+			left: l
 		})
 	}
 
@@ -550,23 +557,28 @@ function updateImage(image, gid, size){
 	}
 	size = size == null ? getVisibleImageSize() : size
 
-	image.attr({
-		//order: JSON.stringify(DATA.order.indexOf(gid)),
-		order: JSON.stringify(gid) 
-		// XXX update attrs 
-	})
+	// update classes and other indicators...
+	image
+		.attr({
+			//order: JSON.stringify(DATA.order.indexOf(gid)),
+			order: JSON.stringify(gid) 
+			// XXX update other attrs... 
+		})
 
 	// XXX STUB
 	image.text(gid)
 
-	// select best preview by size...
-	var url
 	// XXX STUB, use real image GID...
 	gid = 'SIZE'
-	for(var k in DATA.images[gid].preview){
-		var s = parseInt(k)
+
+	var img_data = DATA.images[gid]
+
+	// select best preview by size...
+	var url, s
+	for(var k in img_data.preview){
+		s = parseInt(k)
 		if(s > size){
-			url = 'url('+ DATA.images[gid].preview[k] +')'
+			url = 'url('+ img_data.preview[k] +')'
 			break
 		}
 	}
@@ -578,8 +590,11 @@ function updateImage(image, gid, size){
 		'background-image': url,
 	})
 
-	// update classes and other indicators...
-	// XXX
+
+	
+	// XXX STUB
+	//image.text(image.text() + ' ('+ s +'px)')
+
 }
 
 // shorthand...
@@ -604,7 +619,11 @@ function loadImages(ref_gid, count, ribbon){
 
 	// start/end points...
 	var l = DATA.ribbons[ribbon_i].length
-	var from_i = DATA.ribbons[ribbon_i].indexOf(gid) - Math.floor(count/2)
+	if(l <= count){
+		var from_i = 0
+	} else {
+		var from_i = DATA.ribbons[ribbon_i].indexOf(gid) - Math.floor(count/2)
+	}
 	// special case: head...
 	from_i = from_i < 0 ? 0 : from_i
 	// special case: tail...
@@ -617,11 +636,23 @@ function loadImages(ref_gid, count, ribbon){
 	var size = getVisibleImageSize()
 	var gids = getImageGIDs(from_gid, count, ribbon_i, true)
 
-	if(count != images.length){
+	//console.log('>>>', ribbon_i, gids)
+
+	// do nothing...
+	// XXX this is still wrong, need to check what's loaded...
+	if(count > gids.length){
+		return images
+
+	} else if(count != images.length){
+		var l = images.length
+		var ext = count - l
+		var ext_l = Math.floor(ext/2)
+		var ext_r = ext - ext_l
 		// NOTE: this avoids reattaching images that are already there...
-		extendRibbon(0, count - images.length, ribbon)
+		extendRibbon(ext_l, ext_r, ribbon)
 		images = ribbon.find('.image')
 	}
+
 	return images.each(function(i, e){
 		updateImage(e, gids[i], size)
 	})
@@ -715,13 +746,13 @@ var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 'marked-only',
 		var cur = $('.current.image')
 		// current is marked...
 		if(cur.hasClass('marked')){
-			centerImage(null, 'css')
+			centerView(null, 'css')
 			return
 		} 
 		// there is a marked image in this ribbon...
 		var target = getImageBefore(cur, null)
 		if(target.length > 0){
-			centerImage(focusImage(target), 'css')
+			centerView(focusImage(target), 'css')
 			return
 		}
 		// get marked image from other ribbons...
@@ -753,7 +784,7 @@ function toggleImageProportions(mode){
 			width: size,
 			height: size
 		})
-		centerImage(null, 'css')
+		centerView(null, 'css')
 		return 'square'
 
 	// viewer size...
@@ -767,7 +798,7 @@ function toggleImageProportions(mode){
 		} else {
 			image.css('height', H * w/W)
 		}
-		centerImage(null, 'css')
+		centerView(null, 'css')
 		return 'viewer'
 	}
 }
@@ -850,13 +881,13 @@ function alignVia(container, elem, via, valign, halign, mode){
 
 
 // XXX make this more configurable (centering, ...)...
-function centerImage(image, mode){
+function centerView(image, mode){
 	if(mode == null){
 		//mode = 'css'
 		mode = 'animate'
 	}
 
-	$('.viewer').trigger('preCenteringRibbon', [getRibbon(image), image])
+	$('.viewer').trigger('preCenteringView', [getRibbon(image), image])
 
 	if(image == null || image.length == 0){
 		image = $('.current.image')
@@ -892,7 +923,7 @@ function centerImage(image, mode){
 		ribbons.css(res)
 	}
 
-	$('.viewer').trigger('centeringRibbon', [getRibbon(image), image])
+	$('.viewer').trigger('centeringView', [getRibbon(image), image])
 
 	return image
 }
@@ -901,10 +932,8 @@ function centerImage(image, mode){
 // Center a ribbon...
 //
 // This behaves differently for different ribbons:
-// 	- ribbon containing the target (given) image
-// 		center relative to the .viewer via .ribbon-set
-// 		calls centerImage(...) directly
-// 		both top and left are used...
+// 	- ribbon containing the current image
+// 		center
 // 	- any other ribbon
 // 		center relative to target (given) via the ribbon left
 // 		only left coordinate is changed...
@@ -924,31 +953,42 @@ function centerRibbon(ribbon, image, mode){
 	ribbon = $(ribbon)
 	image = image == null ? $('.current.image') : $(image)
 
+	/*
 	// if centering current ribbon, just center the image...
 	if(ribbon.find('.image').index(image) >= 0){
 		centerImage(image, mode)
 		// XXX should this return a ribbon or the target image???
 		return ribbon
 	}
+	*/
 
 	// XXX is this the correct spot for this?
 	$('.viewer').trigger('preCenteringRibbon', [ribbon, image])
 
 	var scale = getElementScale($('.ribbon-set'))
 	var target = getImageBefore(image, ribbon, null)
+	var offset = 0
+	var l = parseFloat(ribbon.css('left'))
+	l = !isNaN(l) ? l : 0
+	var w = $('.image').outerWidth()
+
+	//if(ribbon.find('.image').index(image) >= 0){
+	if(ribbon.find('.current.image').length > 0){
+		offset = w/2 
+	} 
 
 	if(target.length > 0){
 		var dl = getRelativeVisualPosition(target, image).left/scale
-		var l = parseFloat(ribbon.css('left'))
-		l = !isNaN(l) ? l : 0
-		l = {left: l + dl - ($('.image').outerWidth()/2)}
+		l = {
+			left: l + dl - (w/2) + offset
+		}
 
 	} else {
 		target = ribbon.find('.image').filter(NAV_DEFAULT).first() 
 		var dl = getRelativeVisualPosition(target, image).left/scale
-		var l = parseFloat(ribbon.css('left'))
-		l = !isNaN(l) ? l : 0
-		l = {left: l + dl + ($('.image').outerWidth()/2)}
+		l = {
+			left: l + dl + (w/2) + offset
+		}
 	}
 
 	if(mode == 'animate'){
@@ -981,7 +1021,7 @@ function centerRibbons(mode){
 function clickHandler(evt){
 	var img = $(evt.target).closest('.image')
 
-	centerImage(focusImage(img))
+	centerView(focusImage(img))
 
 	centerRibbons()
 }
@@ -1014,7 +1054,7 @@ function nextImage(n, mode){
 	} else {
 		target = target.eq(n-1)
 	}
-	return centerImage(focusImage(target))
+	return centerView(focusImage(target))
 }
 function prevImage(n, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
@@ -1029,7 +1069,7 @@ function prevImage(n, mode){
 	} else {
 		target = target.eq(n-1)
 	}
-	return centerImage(focusImage(target))
+	return centerView(focusImage(target))
 }
 
 
@@ -1049,7 +1089,7 @@ function firstImage(mode){
 	if($('.current.image').prevAll('.image' + mode).length == 0){
 		flashIndicator('start')
 	}
-	return centerImage(
+	return centerView(
 		focusImage(
 			getRibbon().find('.image').filter(mode).first()))
 }
@@ -1061,7 +1101,7 @@ function lastImage(mode){
 	if($('.current.image').nextAll('.image' + mode).length == 0){
 		flashIndicator('end')
 	}
-	return centerImage(
+	return centerView(
 		focusImage(
 			getRibbon().find('.image').filter(mode).last()))
 }
@@ -1085,7 +1125,7 @@ function prevRibbon(moving, mode){
 		var next = target.nextAll('.image' + mode).first()
 		target = next.length > 0 ? next : target
 	}
-	return centerImage(focusImage(target))
+	return centerView(focusImage(target))
 }
 function nextRibbon(moving, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
@@ -1101,7 +1141,7 @@ function nextRibbon(moving, mode){
 			var next = target.nextAll('.image' + mode).first()
 			target = next.length > 0 ? next : target
 	}
-	return centerImage(focusImage(target))
+	return centerView(focusImage(target))
 }
 
 
@@ -1120,7 +1160,7 @@ function fitNImages(n){
 
 	// XXX if animating, the next two likes must be animated together...
 	setElementScale($('.ribbon-set'), scale)
-	centerImage(image, 'css')
+	centerView(image, 'css')
 
 	$('.viewer').trigger('fittingImages', [n])
 }
@@ -1169,7 +1209,7 @@ function shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 
 	shiftImage(direction, image, force_create_ribbon)
 	// XXX does this need to be animated???
-	return centerImage(focusImage(target), 'css')
+	return centerView(focusImage(target), 'css')
 }
 function shiftImageUp(image, moving){
 	return shiftImageTo(image, 'prev', moving)
