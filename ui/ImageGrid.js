@@ -293,8 +293,11 @@ function removeRibbon(ribbon){
 */
 
 // NOTE: negative left or right will contract the ribbon...
+// NOTE: this will compensate for left position changes so as the images
+// 		that did not change will stay in the same position.
+// 		to disable this, set no_compensate_shift to true.
 // XXX check what goes on if left/right are far more than length...
-function extendRibbon(left, right, ribbon){
+function extendRibbon(left, right, ribbon, no_compensate_shift){
 	ribbon = ribbon == null ? 
 				getRibbon()
 				: $(ribbon)
@@ -327,7 +330,6 @@ function extendRibbon(left, right, ribbon){
 		res.right = createImages(right, removed).appendTo(ribbon)
 	}
 
-	// normalize position...
 	// NOTE: this is fool-proof as it's based on relative visual 
 	// 		position...
 	var position_updated = false
@@ -335,16 +337,19 @@ function extendRibbon(left, right, ribbon){
 	var scale = getElementScale($('.ribbon-set'))
 	var l = parseFloat(ribbon.css('left'))
 	l = isNaN(l) ? 0 : l
+	// compensate for positioning errors...
+	// XXX not sure where these come from, when the scale is != 0...
 	if(pre != post){
 		position_updated = true
 		l = l + (pre - post)/scale
 	}
-	if(left != 0){
+	// compensate for left shift...
+	if(!no_compensate_shift && left != 0){
 		position_updated = true
 		l -= left * images.outerWidth()
 	}
+	// write the position...
 	if(position_updated){
-		// XXX do not do this unless l is changed...
 		ribbon.css({
 			left: l,
 		})
