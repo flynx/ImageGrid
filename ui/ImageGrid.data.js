@@ -410,11 +410,12 @@ function loadData(data, images_per_screen){
 function setupDataBindings(viewer){
 	viewer = viewer == null ? $('.viewer') : viewer
 	viewer
-		// XXX this always reloads everything...
 		// XXX this causes miss-aligns after shifting and/or zooming...
 		// 		...after zooming, moving focus causes the screen to align 
 		// 		in an odd way until the next move corrects the issue...
-		// XXX this still is odd when more than one ribbon is present...
+		// XXX need to maintain the correct number of images per ribbon
+		// 		per zoom setting -- things get really odd when a ribbon 
+		// 		is smaller than it should be...
 		.on('preCenteringRibbon', function(evt, ribbon, image){
 			// NOTE: we do not need to worry about centering the ribbon 
 			//		here, just ball-park-load the correct batch...
@@ -425,16 +426,21 @@ function setupDataBindings(viewer){
 			var img_before = getImageBefore(image, ribbon)
 			var gid_before = getGIDBefore(gid, r)
 			var screen_size = getScreenWidthInImages()
+			var l = ribbon.find('.image').length
 
 			// load images if we do a long jump -- start, end or some mark 
 			// outside of currently loaded section...
-			if(gid_before == null || gid_before != getImageGID(img_before)){
+			if(gid_before == null 
+					|| gid_before != getImageGID(img_before) 
+					// also load if we run out of images in the current ribbon,
+					// likely due to shifting...
+					|| ( gr.length > l 
+						&& l < screen_size * LOAD_SCREENS)){
 				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), ribbon)
 				// XXX compensate for the changing number of images...
-
-			// roll the ribbon while we are advancing...
 			} 
 
+			// roll the ribbon while we are advancing...
 			var head = img_before.prevAll('.image')
 			var tail = img_before.nextAll('.image')
 
@@ -496,10 +502,24 @@ function setupDataBindings(viewer){
 		})
 
 
-		// XXX do we need to make this less global?
 		.on('fittingImages', function(evt, n){
+			/*
+			// load correct amount of images in each ribbon!!!
+			// XXX this changes focus...
+			// XXX n == 1 breaks this -- going past first image...
+			var screen_size = getScreenWidthInImages()
+			var gid = getImageGID()
+			$('.ribbon').each(function(){
+				var r = $(this)
+				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), r)
+			})
+			centerView(null, 'css')
+			*/
+			// update previews...
+			// XXX make this update only what needs updating...
 			updateImages()
 		})
+
 
 		.on('focusingImage', function(evt, image){
 			DATA.current = getImageGID($(image))
