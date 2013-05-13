@@ -6,9 +6,10 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-var LOAD_SCREENS = 2
+var LOAD_SCREENS = 4
 var LOAD_THRESHOLD = 1
 var DEFAULT_SCREEN_IMAGES = 5
+var MAX_SCREEN_IMAGES = 12
 
 // XXX STUB
 // Data format...
@@ -340,7 +341,7 @@ function loadImagesAround(ref_gid, count, ribbon){
 // NOTE: this will load data ONLY if it is available, otherwise this 
 // 		will have no effect...
 // NOTE: this can roll past the currently loaded images (n > images.length)
-function rollImages(n, ribbon, extend){
+function rollImages(n, ribbon, extend, no_compensate_shift){
 	if(n == 0){
 		return $([])
 	}
@@ -362,7 +363,7 @@ function rollImages(n, ribbon, extend){
 	}
 
 	if(n < images.length){
-		images = rollRibbon(gids.length * (n > 0 ? 1 : -1), ribbon)
+		images = rollRibbon(gids.length * (n > 0 ? 1 : -1), ribbon, extend, no_compensate_shift)
 	}
 
 	var size = getVisibleImageSize()
@@ -391,7 +392,7 @@ function loadData(data, images_per_screen){
 
 	// create images...
 	$('.ribbon').each(function(i, e){
-		loadImages(current, Math.min(w * LOAD_SCREENS * 1.5, data.ribbons[i].length), $(this))
+		loadImages(current, Math.min(w * LOAD_SCREENS, data.ribbons[i].length), $(this))
 	})
 
 	focusImage($('.image').filter('[gid='+JSON.stringify(current)+']'))
@@ -406,66 +407,55 @@ function loadData(data, images_per_screen){
 * Setup
 */
 
-function setupDataBindings(){
-	$('.viewer')
+function setupDataBindings(viewer){
+	viewer = viewer == null ? $('.viewer') : viewer
+	viewer
 		// XXX this always reloads everything...
 		// XXX this causes miss-aligns after shifting and/or zooming...
+		// 		...after zooming, moving focus causes the screen to align 
+		// 		in an odd way until the next move corrects the issue...
 		.on('preCenteringRibbon', function(evt, ribbon, image){
 			// NOTE: we do not need to worry about centering the ribbon 
 			//		here, just ball-park-load the correct batch...
 
-			// check if we are in the right range...
 			var gid = getImageGID(image)
 			var r = getRibbonIndex(ribbon)
 			var gr = DATA.ribbons[r]
 			var img_before = getImageBefore(image, ribbon)
 			var gid_before = getGIDBefore(gid, r)
-
-			// load...
-			if(gid_before == null || gid_before != getImageGID(img_before)){
-				loadImages(gid, Math.round((LOAD_SCREENS * 1.5) * getScreenWidthInImages()), ribbon)
-				// XXX compensate for the changing number of images...
-				// XXX
-			}
-		})
-		/*
-		// XXX BUGGY -- pissibly due to rollRibbon align issues...
-		.on('centeringRibbon', function(evt, ribbon, image){
-			// check if we are in the right range...
-			var gid = getImageGID(image)
-			var r = getRibbonIndex(ribbon)
-			var img_before = getImageBefore(image, ribbon)
-			var gid_before = getGIDBefore(gid, r)
-
-			if(img_before.length == 0){
-				img_before = ribbon.find('.image').first()
-			}
-
-			var head = img_before.prevAll('.image')
-			var tail = img_before.nextAll('.image')
-
-			// get the frame size to load...
 			var screen_size = getScreenWidthInImages()
-			// NOTE: if this is greater than the number of images currently 
-			//		loaded, it might lead to odd effects...
-			//		XXX need to load additional images and keep track of the 
-			//			loaded chunk size...
-			//var frame_size = screen_size * LOAD_SCREENS
-			var frame_size = 4
-			//var threshold = screen_size * LOAD_THRESHOLD
-			var threshold = 2
 
-			// do the loading...
-			// XXX need to expand/contract the ribbon depending on zoom and speed...
-			// XXX use extendRibbon, to both roll and expand/contract...
-			if(tail.length < threshold){
-				var rolled = rollImages(frame_size, ribbon)
-			}
-			if(head.length < threshold){
-				var rolled = rollImages(-frame_size, ribbon)
+			// load images if we do a long jump -- start, end or some mark 
+			// outside of currently loaded section...
+			if(gid_before == null || gid_before != getImageGID(img_before)){
+				loadImages(gid, Math.round((LOAD_SCREENS * 0.5) * screen_size), ribbon)
+				// XXX compensate for the changing number of images...
+
+			// roll the ribbon while we are advancing...
+			} else {
+				var head = img_before.prevAll('.image')
+				var tail = img_before.nextAll('.image')
+
+				// NOTE: if this is greater than the number of images currently 
+				//		loaded, it might lead to odd effects...
+				//		XXX need to load additional images and keep track of the 
+				//			loaded chunk size...
+				var frame_size = (screen_size * LOAD_SCREENS) / 2
+				var threshold = screen_size * LOAD_THRESHOLD
+
+				// do the loading...
+				// XXX need to expand/contract the ribbon depending on zoom and speed...
+				// XXX use extendRibbon, to both roll and expand/contract...
+				if(tail.length < threshold){
+					var rolled = rollImages(frame_size, ribbon)
+				}
+				if(head.length < threshold){
+					var rolled = rollImages(-frame_size, ribbon)
+				}
 			}
 		})
-		*/
+
+
 		.on('shiftedImage', function(evt, image, from, to){
 			from = getRibbonIndex(from)
 			var ribbon = to
@@ -482,6 +472,7 @@ function setupDataBindings(){
 			DATA.ribbons[to].splice(index, 0, gid)
 		})
 
+
 		.on('createdRibbon', function(evt, index){
 			index = getRibbonIndex(index)
 			DATA.ribbons.splice(index, 0, [])
@@ -489,6 +480,7 @@ function setupDataBindings(){
 		.on('removedRibbon', function(evt, index){
 			DATA.ribbons.splice(index, 1)
 		})
+
 
 		.on('requestedFirstImage', function(evt, ribbon){
 			var r = getRibbonIndex(ribbon)
@@ -500,6 +492,7 @@ function setupDataBindings(){
 			var gr = DATA.ribbons[r]
 			rollImages(gr.length, ribbon)
 		})
+
 
 		// XXX do we need to make this less global?
 		.on('fittingImages', function(evt, n){
