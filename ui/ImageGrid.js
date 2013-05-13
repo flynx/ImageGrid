@@ -294,9 +294,6 @@ function removeRibbon(ribbon){
 
 // NOTE: negative left or right will contract the ribbon...
 // XXX check what goes on if left/right are far more than length...
-// XXX compensating for added/removed images at the start of the ribbon 
-// 		does not work the same in every situation...
-// 		...for some reason it is correct ONLY for left == -right
 function extendRibbon(left, right, ribbon){
 	ribbon = ribbon == null ? 
 				getRibbon()
@@ -309,6 +306,7 @@ function extendRibbon(left, right, ribbon){
 		left: $([]),
 		right: $([])
 	}
+	var pre = getRelativeVisualPosition($('.viewer'), ribbon).left
 
 	// truncate...
 	// NOTE: we save the detached elements to reuse them on extending,
@@ -329,22 +327,19 @@ function extendRibbon(left, right, ribbon){
 		res.right = createImages(right, removed).appendTo(ribbon)
 	}
 
-	// compensate for the truncation...
-	// XXX do we need to split this into a separate function?
-	// 		...the rest of the function is pretty generic...
-	// XXX for some reason this works correctly ONLY if left = -right
-	// 		...appears to be connected with scale, but in a really odd 
-	// 		way...
-	//var scale = getElementScale($('.ribbon-set'))
-	if(left != 0){
+	// normalize position...
+	// NOTE: this is fool-proof as it's based on relative visual 
+	// 		position...
+	var post = getRelativeVisualPosition($('.viewer'), ribbon).left
+	if(pre != post){
+		var scale = getElementScale($('.ribbon-set'))
 		var l = parseFloat(ribbon.css('left'))
 		l = isNaN(l) ? 0 : l
-		l = l + (-left * images.outerWidth())
-		console.log('>>> compensating to:', l)
 		ribbon.css({
-			left: l
+			left: l + (pre - post)/scale,
 		})
 	}
+	// compensate for the truncation...
 
 	return res
 }
