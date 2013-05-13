@@ -414,6 +414,7 @@ function setupDataBindings(viewer){
 		// XXX this causes miss-aligns after shifting and/or zooming...
 		// 		...after zooming, moving focus causes the screen to align 
 		// 		in an odd way until the next move corrects the issue...
+		// XXX this still is odd when more than one ribbon is present...
 		.on('preCenteringRibbon', function(evt, ribbon, image){
 			// NOTE: we do not need to worry about centering the ribbon 
 			//		here, just ball-park-load the correct batch...
@@ -428,30 +429,30 @@ function setupDataBindings(viewer){
 			// load images if we do a long jump -- start, end or some mark 
 			// outside of currently loaded section...
 			if(gid_before == null || gid_before != getImageGID(img_before)){
-				loadImages(gid, Math.round((LOAD_SCREENS * 0.5) * screen_size), ribbon)
+				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), ribbon)
 				// XXX compensate for the changing number of images...
 
 			// roll the ribbon while we are advancing...
-			} else {
-				var head = img_before.prevAll('.image')
-				var tail = img_before.nextAll('.image')
+			} 
 
-				// NOTE: if this is greater than the number of images currently 
-				//		loaded, it might lead to odd effects...
-				//		XXX need to load additional images and keep track of the 
-				//			loaded chunk size...
-				var frame_size = (screen_size * LOAD_SCREENS) / 2
-				var threshold = screen_size * LOAD_THRESHOLD
+			var head = img_before.prevAll('.image')
+			var tail = img_before.nextAll('.image')
 
-				// do the loading...
-				// XXX need to expand/contract the ribbon depending on zoom and speed...
-				// XXX use extendRibbon, to both roll and expand/contract...
-				if(tail.length < threshold){
-					var rolled = rollImages(frame_size, ribbon)
-				}
-				if(head.length < threshold){
-					var rolled = rollImages(-frame_size, ribbon)
-				}
+			// NOTE: if this is greater than the number of images currently 
+			//		loaded, it might lead to odd effects...
+			//		XXX need to load additional images and keep track of the 
+			//			loaded chunk size...
+			var frame_size = (screen_size * LOAD_SCREENS) / 2
+			var threshold = screen_size * LOAD_THRESHOLD
+
+			// do the loading...
+			// XXX need to expand/contract the ribbon depending on zoom and speed...
+			// XXX use extendRibbon, to both roll and expand/contract...
+			if(tail.length < threshold){
+				var rolled = rollImages(frame_size, ribbon)
+			}
+			if(head.length < threshold){
+				var rolled = rollImages(-frame_size, ribbon)
 			}
 		})
 
@@ -462,13 +463,14 @@ function setupDataBindings(viewer){
 			to = getRibbonIndex(to)
 
 			var gid = getImageGID(image)
+			var after = getGIDBefore(gid, to)
 
+			// remove the elem from the from ribbon...
 			var index = DATA.ribbons[from].indexOf(gid)
 			var img = DATA.ribbons[from].splice(index, 1)
 
-			// XXX a bit ugly, revise...
-			index = ribbon.find('.image')
-						.index(ribbon.find('[gid='+JSON.stringify(gid)+']'))
+			// put the elem in the to ribbon...
+			index = after == null ? 0 : DATA.ribbons[to].indexOf(after) + 1
 			DATA.ribbons[to].splice(index, 0, gid)
 		})
 
