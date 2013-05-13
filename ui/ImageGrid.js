@@ -330,16 +330,25 @@ function extendRibbon(left, right, ribbon){
 	// normalize position...
 	// NOTE: this is fool-proof as it's based on relative visual 
 	// 		position...
+	var position_updated = false
 	var post = getRelativeVisualPosition($('.viewer'), ribbon).left
+	var scale = getElementScale($('.ribbon-set'))
+	var l = parseFloat(ribbon.css('left'))
+	l = isNaN(l) ? 0 : l
 	if(pre != post){
-		var scale = getElementScale($('.ribbon-set'))
-		var l = parseFloat(ribbon.css('left'))
-		l = isNaN(l) ? 0 : l
+		position_updated = true
+		l = l + (pre - post)/scale
+	}
+	if(left != 0){
+		position_updated = true
+		l -= left * images.outerWidth()
+	}
+	if(position_updated){
+		// XXX do not do this unless l is changed...
 		ribbon.css({
-			left: l + (pre - post)/scale,
+			left: l,
 		})
 	}
-	// compensate for the truncation...
 
 	return res
 }
