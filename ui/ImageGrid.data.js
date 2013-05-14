@@ -407,12 +407,23 @@ function loadData(data, images_per_screen){
 * Setup
 */
 
+// Setup event handlers for data bindings...
+//
+// This does two jobs:
+// 	- maintain DATA state
+// 		- editor actions
+// 		- focus
+// 		- marking
+// 	- maintain view consistency
+// 		- centering/moving (roll)
+// 		- shifting (expand/contract)
+// 		- zooming (expand/contract)
+//
+//
+// XXX this is causing lots of errors, rethink...
 function setupDataBindings(viewer){
 	viewer = viewer == null ? $('.viewer') : viewer
 	viewer
-		// XXX this causes miss-aligns after shifting and/or zooming...
-		// 		...after zooming, moving focus causes the screen to align 
-		// 		in an odd way until the next move corrects the issue...
 		// XXX need to maintain the correct number of images per ribbon
 		// 		per zoom setting -- things get really odd when a ribbon 
 		// 		is smaller than it should be...

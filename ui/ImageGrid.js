@@ -309,7 +309,6 @@ function extendRibbon(left, right, ribbon, no_compensate_shift){
 		left: $([]),
 		right: $([])
 	}
-	var pre = getRelativeVisualPosition($('.viewer'), ribbon).left
 
 	// truncate...
 	// NOTE: we save the detached elements to reuse them on extending,
@@ -332,24 +331,13 @@ function extendRibbon(left, right, ribbon, no_compensate_shift){
 
 	// NOTE: this is fool-proof as it's based on relative visual 
 	// 		position...
-	var position_updated = false
-	var post = getRelativeVisualPosition($('.viewer'), ribbon).left
 	var scale = getElementScale($('.ribbon-set'))
 	var l = parseFloat(ribbon.css('left'))
 	l = isNaN(l) ? 0 : l
-	// compensate for positioning errors...
-	// XXX not sure where these come from, when the scale is != 0...
-	if(pre != post){
-		position_updated = true
-		l = l + (pre - post)/scale
-	}
 	// compensate for left shift...
 	if(!no_compensate_shift && left != 0){
-		position_updated = true
 		l -= left * images.outerWidth()
-	}
-	// write the position...
-	if(position_updated){
+
 		ribbon.css({
 			left: l,
 		})

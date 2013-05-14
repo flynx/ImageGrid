@@ -22,6 +22,13 @@
 
 .ribbon-set {
 	position: absolute;
+	display: block;
+
+	/* neede for scaling/zooming to behave correctly and not shift the 
+	element, when its dimensions change... */
+	transform-origin: top left;
+	-ms-transform-origin: top left;
+	-webkit-transform-origin: top left; /* Safari and Chrome */
 }
 .ribbon-set:empty:after {
 	display: block;
@@ -231,6 +238,8 @@
 
 // setup...
 $(function(){
+
+	//setElementOrigin($('.ribbon-set'), 'top', 'left')
 
 	loadData(DATA)
 

@@ -499,11 +499,26 @@ function setElementScale(elem, scale){
 	return setElementTransform(elem, null, scale)
 }
 
+
+function setElementOrigin(elem, x, y, z){
+	x = x == null ? '50%' : x
+	y = y == null ? '50%' : y
+	z = z == null ? '0' : z
+	var value = x +' '+ y +' '+ z
+
+	return $(elem).css({
+		'transform-origin': value, 
+		'-ms-transform-origin':  value,
+		'-webkit-transform-origin':  value,
+	})
+}
+
+
 function setTransitionEasing(elem, ease){
 	if(typeof(ms) == typeof(0)){
 		ms = ms + 'ms'
 	}
-	return elem.css({
+	return $(elem).css({
 		'transition-timing-function': ease, 
 		'-moz-transition-timing-function': ease,
 		'-o-transition-timing-function': ease,
