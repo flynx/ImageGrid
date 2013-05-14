@@ -198,7 +198,6 @@ function getImageGIDs(from, count, ribbon, inclusive){
 	// XXX check if this is empty...
 	ribbon = DATA.ribbons[ribbon]
 
-
 	if(count > 0){
 		var c = inclusive == null ? 1 : 0
 		var start = ribbon.indexOf(from) + c
