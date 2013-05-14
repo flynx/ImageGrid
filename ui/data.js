@@ -245,8 +245,10 @@ function updateImage(image, gid, size){
 	}
 
 	// select best preview by size...
-	var url, s
-	var preview_size = "0px"
+	// NOTE: this will use the original if everything else is smaller...
+	var s
+	var url = 'url('+DATA.images[gid].path+')'
+	var preview_size = 'Original'
 	var p = Infinity
 	for(var k in img_data.preview){
 		s = parseInt(k)
@@ -256,14 +258,9 @@ function updateImage(image, gid, size){
 			url = 'url('+ img_data.preview[k] +')'
 		}
 	}
-	// if no preview found use the original...
-	if(url == null){
-		preview_size = 'Original'
-		url = 'url('+DATA.images[gid].path+')'
-	}
 	image.css({
-			'background-image': url,
-		})
+		'background-image': url,
+	})
 
 	window.DEBUG && image.html(DATA.order.indexOf(gid) +'<br>'+ gid +'<br>'+ preview_size)
 
@@ -419,7 +416,7 @@ function convertDataGen1(data){
 	var images = res.images
 	var order = res.order
 	var _dateSort = function(a, b){
-		return Math.round(images[a].ctime - images[b].ctime)
+		return images[b].ctime - images[a].ctime
 	}
 
 	// position...

@@ -642,10 +642,15 @@ function centerRibbon(ribbon, image, mode){
 
 
 // a shorthand...
-function centerRibbons(mode){
+function centerRibbons(mode, no_skip_current){
 	return $('.ribbon')
 		.filter(':visible')
-		.each(function(){ centerRibbon($(this), null, mode) })
+		.each(function(){ 
+			if(no_skip_current == true && $(this).find('.current.image').length > 0){
+				return
+			}
+			centerRibbon($(this), null, mode) 
+		})
 }
 
 

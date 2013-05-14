@@ -258,6 +258,7 @@ body {
 
 DEBUG = true
 
+
 // setup...
 $(function(){
 
@@ -275,7 +276,9 @@ $(function(){
 	$(document)
 		.keydown(makeKeyboardHandler(
 			KEYBOARD_CONFIG,
-			function(k){console.log(k)}))
+			function(k){
+				window.DEBUG && console.log(k)
+			}))
 
 	setupDataBindings()
 
