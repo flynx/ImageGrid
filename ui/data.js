@@ -41,6 +41,8 @@ var DATA = {
 	}
 }
 
+var MARKS = []
+
 
 
 /**********************************************************************
@@ -228,10 +230,15 @@ function updateImage(image, gid, size){
 	// update classes and other indicators...
 	image
 		.attr({
-			//order: JSON.stringify(DATA.order.indexOf(gid)),
 			order: JSON.stringify(gid) 
-			// XXX update other attrs... 
 		})
+
+	// setup marks...
+	if(MARKS.indexOf(gid) != -1){
+		image.addClass('marked')
+	} else {
+		image.removeClass('marked')
+	}
 
 	// XXX STUB
 	image.text(gid)
@@ -257,11 +264,6 @@ function updateImage(image, gid, size){
 	image.css({
 		'background-image': url,
 	})
-
-	
-	// XXX STUB
-	//image.text(image.text() + ' ('+ s +'px)')
-
 }
 
 
@@ -536,6 +538,20 @@ function setupDataBindings(viewer){
 
 		.on('focusingImage', function(evt, image){
 			DATA.current = getImageGID($(image))
+		})
+
+
+		.on('togglingMark', function(evt, img, action){
+			var gid = getImageGID(img) 
+
+			// add marked image to list...
+			if(action == 'on'){
+				MARKS.push(gid)
+
+			// remove marked image from list...
+			} else {
+				MARKS.splice(MARKS.indexOf(gid), 1)
+			}
 		})
 }
 

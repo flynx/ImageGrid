@@ -59,6 +59,20 @@ function getRibbon(image){
 }
 
 
+function getImage(gid){
+	if(e == null){
+		return $('.current.image')
+	}
+	// XXX do a proper check...
+	// gid...
+	return $('.image[gid='+ JSON.stringify(gid) +']')
+	
+	// order...
+	// XXX
+	//return $('.image[order='+ JSON.stringify(gid) +']')
+}
+
+
 // NOTE: elem is optional and if given can be an image or a ribbon...
 function getRibbonIndex(elem){
 	if(elem == null){
@@ -844,7 +858,10 @@ function shiftImageDownNewRibbon(image, moving){
 
 // XXX if this unmarks an image in marked-only mode no visible image is 
 // 		going to be current...
-var toggleImageMark = createCSSClassToggler('.current.image', 'marked')
+var toggleImageMark = createCSSClassToggler('.current.image', 'marked',
+	function(action){
+		$('.viewer').trigger('togglingMark', [$('.current.image'), action])
+	})
 
 
 // mode can be:
