@@ -10,6 +10,12 @@
 * XXX split-off styling/coloring from layout...
 */
 
+body {
+	font-family: sans-serif;
+	padding: 0px;
+	margin: 0px;
+}
+
 .viewer {
 	position: relative;
 	width: 800px;
@@ -17,6 +23,12 @@
 	overflow: hidden;
 
 	border: solid blue 1px;
+
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-o-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 
@@ -237,12 +249,21 @@
 <script src="ui.js"></script>
 <script src="keybindings3.js"></script>
 
+
+<!-- XXX STUB -->
+<script src="images.js"></script>
+
+
 <script>
+
+DEBUG = true
 
 // setup...
 $(function(){
 
 	//setElementOrigin($('.ribbon-set'), 'top', 'left')
+
+	DATA = convertDataGen1(image_list)
 
 	loadData(DATA)
 

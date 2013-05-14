@@ -11,9 +11,22 @@ var LOAD_THRESHOLD = 1
 var DEFAULT_SCREEN_IMAGES = 5
 var MAX_SCREEN_IMAGES = 12
 
+var STUB_IMAGE_DATA = {
+	id: 'SIZE',
+	ctime: 0,
+	path: './images/sizes/900px/SIZE.jpg',
+	preview: {
+		'150px': './images/sizes/150px/SIZE.jpg',
+		'350px': './images/sizes/350px/SIZE.jpg',
+		'900px': './images/sizes/900px/SIZE.jpg',
+	},
+	classes: '',
+}
+
 // XXX STUB
 // Data format...
 var DATA = {
+	varsion: '2.0',
 	current: 0,
 	// the ribbon cache...
 	// in the simplest form this is a list of lists of GIDs
@@ -25,20 +38,7 @@ var DATA = {
 	order: $(new Array(100)).map(function(i){return i}).toArray(),
 	// the images object, this is indexed by image GID and contains all 
 	// the needed data...
-	images: {
-		// sub image, for testing load mechanics...
-		SIZE: {
-			id: 'SIZE',
-			ctime: 0,
-			path: './images/sizes/900px/SIZE.jpg',
-			preview: {
-				'150px': './images/sizes/150px/SIZE.jpg',
-				'350px': './images/sizes/350px/SIZE.jpg',
-				'900px': './images/sizes/900px/SIZE.jpg',
-			},
-			classes: '',
-		},
-	}
+	images: {}
 }
 
 var MARKS = []
@@ -221,17 +221,16 @@ function getImageGIDs(from, count, ribbon, inclusive){
 function updateImage(image, gid, size){
 	image = $(image)
 	if(gid == null){
-		gid = JSON.parse(image.attr('gid'))
+		gid = getImageGID(image)
 	} else {
 		image.attr('gid', JSON.stringify(gid))
 	}
 	size = size == null ? getVisibleImageSize() : size
 
-	// update classes and other indicators...
-	image
-		.attr({
-			order: JSON.stringify(gid) 
-		})
+	// update image order...
+	image.attr({
+		order: DATA.order.indexOf(gid)
+	})
 
 	// setup marks...
 	if(MARKS.indexOf(gid) != -1){
@@ -240,30 +239,35 @@ function updateImage(image, gid, size){
 		image.removeClass('marked')
 	}
 
-	// XXX STUB
-	image.text(gid)
-
-	// XXX STUB, use real image GID...
-	gid = 'SIZE'
-
 	var img_data = DATA.images[gid]
+	if(img_data == null){
+		img_data = STUB_IMAGE_DATA
+	}
 
 	// select best preview by size...
 	var url, s
+	var preview_size = "0px"
+	var p = Infinity
 	for(var k in img_data.preview){
 		s = parseInt(k)
-		if(s > size){
+		if(s < p && s > size){
+			preview_size = k
+			p = s
 			url = 'url('+ img_data.preview[k] +')'
-			break
 		}
 	}
 	// if no preview found use the original...
 	if(url == null){
+		preview_size = 'Original'
 		url = 'url('+DATA.images[gid].path+')'
 	}
 	image.css({
-		'background-image': url,
-	})
+			'background-image': url,
+		})
+
+	window.DEBUG && image.html(DATA.order.indexOf(gid) +'<br>'+ gid +'<br>'+ preview_size)
+
+	return image
 }
 
 
@@ -334,7 +338,7 @@ function loadImages(ref_gid, count, ribbon){
 function loadImagesAround(ref_gid, count, ribbon){
 	var ribbon_i = getRibbonIndex(ribbon)
 	var gid = getGIDBefore(ref_gid, ribbon_i)
-	return loadImages(ref_gid, count, ribbon).filter('[gid='+JSON.stringify(gid)+']').click()
+	return loadImages(ref_gid, count, ribbon).filter('[gid="'+JSON.stringify(gid)+'"]').click()
 }
 
 
@@ -349,8 +353,8 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 	ribbon = ribbon == null ? getRibbon() : $(ribbon)
 	var images = ribbon.find('.image')
 
-	var from = n > 0 ? JSON.parse(ribbon.find('.image').last().attr('gid'))
-					: JSON.parse(ribbon.find('.image').first().attr('gid'))
+	var from = n > 0 ? getImageGID(ribbon.find('.image').last())
+					: getImageGID(ribbon.find('.image').first())
 	var gids = getImageGIDs(from, n)
 	if(gids.length == 0){
 		return $([])
@@ -396,10 +400,51 @@ function loadData(data, images_per_screen){
 		loadImages(current, Math.min(w * LOAD_SCREENS, data.ribbons[i].length), $(this))
 	})
 
-	focusImage($('.image').filter('[gid='+JSON.stringify(current)+']'))
+	focusImage($('.image').filter('[gid="'+JSON.stringify(current)+'"]'))
 
 	fitNImages(w)
 	centerRibbons('css')
+}
+
+
+function convertDataGen1(data){
+	var res = {
+		varsion: '2.0',
+		current: null,
+		ribbons: [],
+		order: [], 
+		images: {}
+	}
+	var ribbons = res.ribbons
+	var images = res.images
+	var order = res.order
+	var _dateSort = function(a, b){
+		return Math.round(images[a].ctime - images[b].ctime)
+	}
+
+	// position...
+	res.current = data.position
+	
+	// ribbons and images...
+	$.each(data.ribbons, function(i, input_images){
+		var ribbon = []
+		ribbons.push(ribbon)
+		for(var id in input_images){
+			var image = input_images[id]
+			ribbon.push(id)
+			order.push(id)
+			images[id] = image
+		}
+		ribbon.sort(_dateSort)
+	})
+
+	// order...
+	order.sort(_dateSort)
+
+	// XXX STUB
+	res.current = order[0]
+
+	return res
 }
 
 
