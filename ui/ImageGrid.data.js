@@ -489,6 +489,9 @@ function setupDataBindings(viewer){
 			// put the elem in the to ribbon...
 			index = after == null ? 0 : DATA.ribbons[to].indexOf(after) + 1
 			DATA.ribbons[to].splice(index, 0, gid)
+
+			// indicators...
+			flashIndicator(from < to ? 'next' : 'prev')
 		})
 
 

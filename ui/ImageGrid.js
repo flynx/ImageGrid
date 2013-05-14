@@ -292,10 +292,20 @@ function removeRibbon(ribbon){
 * Infinite ribbon machinery
 */
 
-// NOTE: negative left or right will contract the ribbon...
+// Extend the ribbon...
+//
+// This will add/remove images to/from ribbon's head and/or tail.
+//
+// NOTE: negative left or right will contract the ribbon -- remove 
+// 		elements...
 // NOTE: this will compensate for left position changes so as the images
 // 		that did not change will stay in the same position.
 // 		to disable this, set no_compensate_shift to true.
+// NOTE: for position compensation to work with scaling need to set the 
+// 		origin on the scaled element ($('.ribbon-set')) to top left 
+// 		(instead of the default 50% 50% 0) to avoid element size 
+// 		affecting it's perceived position...
+//
 // XXX check what goes on if left/right are far more than length...
 function extendRibbon(left, right, ribbon, no_compensate_shift){
 	ribbon = ribbon == null ? 
@@ -576,16 +586,6 @@ function centerRibbon(ribbon, image, mode){
 	ribbon = $(ribbon)
 	image = image == null ? $('.current.image') : $(image)
 
-	/*
-	// if centering current ribbon, just center the image...
-	if(ribbon.find('.image').index(image) >= 0){
-		centerImage(image, mode)
-		// XXX should this return a ribbon or the target image???
-		return ribbon
-	}
-	*/
-
-	// XXX is this the correct spot for this?
 	$('.viewer').trigger('preCenteringRibbon', [ribbon, image])
 
 	var scale = getElementScale($('.ribbon-set'))
@@ -662,7 +662,7 @@ function nextImage(n, mode){
 	var target = $('.current.image').nextAll('.image' + mode)
 	if(target.length < n){
 		target = target.last()
-		// XXX BUG this fires we hit the end of the currently loaded
+		// XXX this fires if we hit the end of the currently loaded
 		// 		images while scrolling very fast rather than when we are
 		// 		out of images in the current ribbon...
 		flashIndicator('end')
@@ -677,7 +677,7 @@ function prevImage(n, mode){
 	var target = $('.current.image').prevAll('.image' + mode)
 	if(target.length < n){
 		target = target.last()
-		// XXX BUG this fires we hit the end of the currently loaded
+		// XXX this fires if we hit the end of the currently loaded
 		// 		images while scrolling very fast rather than when we are
 		// 		out of images in the current ribbon...
 		flashIndicator('start')
@@ -773,7 +773,7 @@ function fitNImages(n){
 
 	var scale = Math.min(W / (size * n), H / size)
 
-	// XXX if animating, the next two likes must be animated together...
+	// NOTE: if animating, the next two likes must be animated together...
 	setElementScale($('.ribbon-set'), scale)
 	centerView(image, 'css')
 
@@ -800,8 +800,6 @@ function zoomOut(){
 
 /************************************************** Editor Actions ***/
 
-// XXX shifting down from the main ribbon kills the app (infinite loop?)
-// 		...appears to be a problem with creating a new ribbon below...
 function shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	if(image == null){
 		image = $('.current.image')
@@ -817,7 +815,7 @@ function shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	target = target.length == 0 ? image[b]().first() : target
 
 	// XXX should this be in here or coupled later via an event???
-	flashIndicator(direction)
+	//flashIndicator(direction)
 
 	shiftImage(direction, image, force_create_ribbon)
 	// XXX does this need to be animated???
