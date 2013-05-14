@@ -870,12 +870,15 @@ var toggleImageMark = createCSSClassToggler('.current.image', 'marked',
 function removeImageMarks(mode){
 	// remove marks from current ribbon (default)...
 	if(mode == 'ribbon' || mode == null){
-		return getRibbon()
+		var ribbon = getRibbon()
+		$('.viewer').trigger('removeingRibbonMarks', [ribbon])
+		return ribbon
 			.find('.marked')
 				.removeClass('marked')
 
 	// remove all marks...
 	} else if(mode == 'all'){
+		$('.viewer').trigger('removeingAllMarks')
 		return $('.marked')
 			.removeClass('marked')
 	} 
@@ -885,12 +888,14 @@ function removeImageMarks(mode){
 function markAll(mode){
 	// remove marks from current ribbon (default)...
 	if(mode == 'ribbon' || mode == null){
-		return getRibbon()
+		var ribbon = getRibbon()
+		$('.viewer').trigger('markingRibbon', [ribbon])
+		return ribbon
 			.find('.image:not(.marked)')
 				.addClass('marked')
 
-	// remove all marks...
 	} else if(mode == 'all'){
+		$('.viewer').trigger('markingAll')
 		return $('.image:not(.marked)').addClass('marked')
 	}
 }
@@ -898,7 +903,9 @@ function markAll(mode){
 
 // NOTE: this only does it's work in the current ribbon...
 function invertImageMarks(){
-	return getRibbon()
+	var ribbon = getRibbon()
+	$('.viewer').trigger('invertingMarks', [ribbon])
+	return ribbon
 		.find('.image')
 			.toggleClass('marked')
 }
@@ -906,10 +913,12 @@ function invertImageMarks(){
 
 // Toggle marks in the current continuous section of marked or unmarked
 // images...
+// XXX need to make this dynamic data compatible...
 function toggleImageMarkBlock(image){
 	if(image == null){
 		image = $('.current.image')
 	}
+	//$('.viewer').trigger('togglingImageBlockMarks', [image])
 	// we need to invert this...
 	var state = toggleImageMark()
 	var _convert = function(){

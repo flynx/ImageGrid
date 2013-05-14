@@ -541,6 +541,8 @@ function setupDataBindings(viewer){
 		})
 
 
+		// marks...
+		// XXX toggle marking a block is not yet supported...
 		.on('togglingMark', function(evt, img, action){
 			var gid = getImageGID(img) 
 
@@ -552,6 +554,39 @@ function setupDataBindings(viewer){
 			} else {
 				MARKS.splice(MARKS.indexOf(gid), 1)
 			}
+		})
+		.on('removeingRibbonMarks', function(evt, ribbon){
+			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
+				var i = MARKS.indexOf(e)
+				if(i != -1){
+					MARKS.splice(i, 1)
+				}
+			})
+		})
+		.on('removeingAllMarks', function(evt){
+			MARKS.splice(0, MARKS.length)
+		})
+		.on('markingRibbon', function(evt, ribbon){
+			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
+				var i = MARKS.indexOf(e)
+				if(i == -1){
+					MARKS.push(e)
+				}
+			})
+		})
+		.on('markingAll', function(evt){
+			MARKS.splice(0, MARKS.length)
+			MARKS.concat(DATA.order)
+		})
+		.on('invertingMarks', function(evt, ribbon){
+			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
+				var i = MARKS.indexOf(e)
+				if(i == -1){
+					MARKS.push(e)
+				} else {
+					MARKS.splice(i, 1)
+				}
+			})
 		})
 }
 

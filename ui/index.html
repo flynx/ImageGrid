@@ -24,8 +24,10 @@
 	position: absolute;
 	display: block;
 
-	/* neede for scaling/zooming to behave correctly and not shift the 
-	element, when its dimensions change... */
+	/* NOTE: this needs for scaling/zooming to behave correctly and not 
+			shift the element, when its dimensions change... 
+			...this is because .ribbon-set will both be used for scaling 
+			and aligning... */
 	transform-origin: top left;
 	-ms-transform-origin: top left;
 	-webkit-transform-origin: top left; /* Safari and Chrome */
