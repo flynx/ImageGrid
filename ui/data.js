@@ -281,18 +281,9 @@ function updateImages(size){
 //
 // NOTE: this will reload the current image elements...
 // NOTE: this is similar to extendRibbon(...) but different in interface...
-// XXX correctly align the result...
-// XXX BUG scenarion:
-// 			- load with LOAD_SCREENS = 4
-// 			- change LOAD_SCREENS to 6
-// 			- press right (next)
-// 		Expected:
-// 			- focus image #2
-// 		Actial:
-// 			- focused #6
-// 		Reason:
-// 			loadImages(...) does not care about currently loaded images 
-// 			and positions, this first image reloads as #5...
+// NOTE: load only what is needed instead of reloading everything...
+// NOTE: this will not change alignment if the current image is within 
+// 		the target range...
 function loadImages(ref_gid, count, ribbon){
 	ribbon = $(ribbon)
 	var images = ribbon.find('.image')
@@ -313,28 +304,6 @@ function loadImages(ref_gid, count, ribbon){
 	from_i = l - from_i < count ? l - count : from_i
 	var from_gid = DATA.ribbons[ribbon_i][from_i]
 
-	var size = getVisibleImageSize()
-
-	// XXX load only what is needed instead of reloading everything...
-	// XXX possible intersections:
-	//
-	// 		+------------+			- before
-	// 			+----------------+	- after
-	//
-	// 			+--------+			- before
-	// 		+--------------------+	- after
-	//
-	// 		NOTE: both cases symmetrical.
-	// 		NOTE: the ref_gid can be at any position in the after ribbon.
-	// 		
-	// 		In all cases it's a question of finding the minimal common 
-	// 		section...
-	// 		...essentially it's the first gid in both groups at the head 
-	// 		and the same for the tail...
-	// 			so, we essentially need to test the current head/tail and 
-	// 			new head tail for inclusion in the other ribbon and the 
-	// 			ones that pass are the common section's head/tail, so we
-	// 			can splice that out of the gids and simply extendRibbon(...)
 	var old_gids = getImageGIDs(getImageGID(images.first()), images.length, ribbon_i, true)
 	var gids = getImageGIDs(from_gid, count, ribbon_i, true)
 
@@ -342,7 +311,6 @@ function loadImages(ref_gid, count, ribbon){
 	var head = gids.indexOf(old_gids[0]) != -1 ? 
 						gids.indexOf(old_gids[0])
 					// check if we need to truncate...
-					// XXX needs testing...
 					: old_gids.indexOf(gids[0]) != -1 ?
 						-old_gids.indexOf(gids[0])
 					: 0
@@ -350,10 +318,11 @@ function loadImages(ref_gid, count, ribbon){
 	var tail = gids.indexOf(old_gids[old_gids.length-1]) > 0 ? 
 						gids.length - gids.indexOf(old_gids[old_gids.length-1]) - 1
 					// check if we need to truncate...
-					// XXX needs testing...
 					: old_gids.indexOf(gids[gids.length-1]) > 0 ? 
 						-(old_gids.length - old_gids.indexOf(gids[gids.length-1]) - 1)
 					: 0
+
+	var size = getVisibleImageSize()
 
 	// XXX the next section might need some simplification -- fells bulky...
 	// check if we have a common section at all / full reload...
@@ -397,7 +366,7 @@ function loadImages(ref_gid, count, ribbon){
 }
 
 
-// XXX here for testing...
+// NOTE: this is here for testing...
 function loadImagesAround(ref_gid, count, ribbon){
 	var ribbon_i = getRibbonIndex(ribbon)
 	var gid = getGIDBefore(ref_gid, ribbon_i)
