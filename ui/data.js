@@ -329,7 +329,7 @@ function loadImages(ref_gid, count, ribbon){
 	// check if we have a common section at all / full reload...
 	if(head == 0 && tail == 0){
 		if(gids.indexOf(old_gids[0]) == -1){
-			console.log('>>> (ribbon:', ribbon_i, ') FULL RELOAD --', gids.length)
+			window.DEBUG && console.log('>>> (ribbon:', ribbon_i, ') FULL RELOAD --', gids.length)
 			// XXX do we need to think about alining here???
 			extendRibbon(0, gids.length - old_gids.length, ribbon)
 			return ribbon
@@ -341,13 +341,13 @@ function loadImages(ref_gid, count, ribbon){
 		// do nothing...
 		// ...the requested section is the same as the one already loaded...
 		} else {
-			console.log('>>> (ribbon:', ribbon_i, ') NOTHING TO DO.')
+			window.DEBUG && console.log('>>> (ribbon:', ribbon_i, ') NOTHING TO DO.')
 			return images
 		}
 
 	// do a partial reload...
 	} else {
-		console.log('>>> (ribbon:', ribbon_i, ')', head, '+-('+ (old_gids.length) +')-+', tail)
+		window.DEBUG && console.log('>>> (ribbon:', ribbon_i, ')', head, '+-('+ (old_gids.length) +')-+', tail)
 		// NOTE: we do not need to do anything about alignment as 
 		// 		extendRibbon will get the correct head and tail so as to
 		// 		align everything by itself...
