@@ -338,35 +338,62 @@ function loadImages(ref_gid, count, ribbon){
 	var old_gids = getImageGIDs(getImageGID(images.first()), images.length, ribbon_i, true)
 	var gids = getImageGIDs(from_gid, count, ribbon_i, true)
 
-	// XXX need to check if there actually is any intersection at all...
-
+	// check if heads have common gid and get the diff length...
 	var head = gids.indexOf(old_gids[0]) != -1 ? 
-					gids.slice(0, gids.indexOf(old_gids[0])) 
-					: []
+						gids.indexOf(old_gids[0])
+					// check if we need to truncate...
+					// XXX needs testing...
+					: old_gids.indexOf(gids[0]) != -1 ?
+						-old_gids.indexOf(gids[0])
+					: 0
+	// check if tails have common gid and get the diff length...
 	var tail = gids.indexOf(old_gids[old_gids.length-1]) > 0 ? 
-					gids.slice(gids.indexOf(old_gids[old_gids.length-1])) 
-					: []
-	console.log('>>>', head.length, '+-('+ (gids.length - head.length - tail.length) +')-+', tail.length)
+						gids.length - gids.indexOf(old_gids[old_gids.length-1]) - 1
+					// check if we need to truncate...
+					// XXX needs testing...
+					: old_gids.indexOf(gids[gids.length-1]) > 0 ? 
+						-(old_gids.length - old_gids.indexOf(gids[gids.length-1]) - 1)
+					: 0
 
+	// XXX the next section might need some simplification -- fells bulky...
+	// check if we have a common section at all / full reload...
+	if(head == 0 && tail == 0){
+		if(gids.indexOf(old_gids[0]) == -1){
+			console.log('>>> FULL RELOAD...')
+			// XXX do we need to think about alining here???
+			extendRibbon(0, gids.length - old_gids.length, ribbon)
+			return ribbon
+				.find('.image')
+					.each(function(i, e){
+						updateImage(e, gids[i], size)
+					})
 
-	// do nothing...
-	// XXX this is still wrong, need to check what's loaded...
-	if(count > gids.length){
-		return images
+		// do nothing...
+		// ...the requested section is the same as the one already loaded...
+		} else {
+			console.log('>>> NOTHING TO DO...')
+			return images
+		}
 
-	} else if(count != images.length){
-		var l = images.length
-		var ext = count - l
-		var ext_l = Math.floor(ext/2)
-		var ext_r = ext - ext_l
-		// NOTE: this avoids reattaching images that are already there...
-		extendRibbon(ext_l, ext_r, ribbon)
-		images = ribbon.find('.image')
+	// do a partial reload...
+	} else {
+		console.log('>>>', head, '+-('+ (old_gids.length) +')-+', tail)
+		// NOTE: we do not need to do anything about alignment as 
+		// 		extendRibbon will get the correct head and tail so as to
+		// 		align everything by itself...
+		var res = extendRibbon(head, tail, ribbon)
+		
+		// NOTE: if there was no extension (i.e. head/tail <= 0) then 
+		// 		these will do nothing...
+		res.left.each(function(i, e){
+			updateImage(e, gids[i], size)
+		})
+		res.right.each(function(i, e){
+			updateImage(e, gids[i + gids.length - tail], size)
+		})
+
+		return ribbon.find('.image')
 	}
-
-	return images.each(function(i, e){
-		updateImage(e, gids[i], size)
-	})
 }
 
 
