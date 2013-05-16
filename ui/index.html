@@ -264,9 +264,12 @@ $(function(){
 
 	//setElementOrigin($('.ribbon-set'), 'top', 'left')
 
-	DATA = convertDataGen1(image_list)
-
-	loadData(DATA)
+	if('DATA' in localStorage){
+		loadLocalStorage()
+	} else {
+		DATA = convertDataGen1(image_list)
+		loadData(DATA)
+	}
 
 	// NOTE: this is global so as to not to add any extra complexity to 
 	//		the internal workings...
@@ -283,7 +286,7 @@ $(function(){
 	setupDataBindings()
 
 	// XXX stub...
-	centerView(focusImage($('.image').first()), 'css')
+	//centerView(focusImage($('.image').first()), 'css')
 	updateImages()
 
 })
