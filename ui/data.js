@@ -308,20 +308,20 @@ function loadImages(ref_gid, count, ribbon){
 	var old_gids = getImageGIDs(getImageGID(images.first()), images.length, ribbon_i, true)
 	var gids = getImageGIDs(from_gid, count, ribbon_i, true)
 
-	// check if heads have common gid and get the diff length...
-	var head = gids.indexOf(old_gids[0]) != -1 ? 
-						gids.indexOf(old_gids[0])
-					// check if we need to truncate...
-					: old_gids.indexOf(gids[0]) != -1 ?
-						-old_gids.indexOf(gids[0])
-					: 0
-	// check if tails have common gid and get the diff length...
-	var tail = gids.indexOf(old_gids[old_gids.length-1]) > 0 ? 
-						gids.length - gids.indexOf(old_gids[old_gids.length-1]) - 1
-					// check if we need to truncate...
-					: old_gids.indexOf(gids[gids.length-1]) > 0 ? 
-						-(old_gids.length - old_gids.indexOf(gids[gids.length-1]) - 1)
-					: 0
+	// check if heads have a common gid and get the diff length...
+	var i = gids.indexOf(old_gids[0])
+	var j = old_gids.indexOf(gids[0])
+	var head = i != -1 ? i 
+		// check if we need to truncate...
+		: j != -1 ? -j
+		: 0
+	// check if tails have a common gid and get the diff length...
+	i = gids.indexOf(old_gids[old_gids.length-1])
+	j = old_gids.indexOf(gids[gids.length-1])
+	var tail = i > 0 ? gids.length - i - 1
+		// check if we need to truncate...
+		: j > 0 ? -(old_gids.length - j - 1)
+		: 0
 
 	var size = getVisibleImageSize()
 
