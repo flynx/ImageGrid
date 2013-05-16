@@ -109,8 +109,11 @@ function getImageGID(image){
 
 // Calculate relative position between two elements
 //
-// ...tried to make this as brain-dead-stupidly-simple as possible...
-//				...looks spectacular comparing to either gen2 or gen1 ;)
+// NOTE: tried to make this as brain-dead-stupidly-simple as possible...
+//		...looks spectacular comparing to either gen2 or gen1 ;)
+// NOTE: if used during an animation/transition this will give the 
+// 		position at the exact frame of the animation, this might not be
+// 		the desired "final" data...
 function getRelativeVisualPosition(outer, inner){
 	outer = $(outer).offset()
 	inner = $(inner).offset()
@@ -177,7 +180,7 @@ function shiftTo(image, ribbon){
 	// if removing last image out of a ribbon, remove the ribbon....
 	if(cur_ribbon.find('.image').length == 0){
 		// XXX check if the ribbon outside the loaded area is empty...
-		// 		...do we need this check? it might be interresting to
+		// 		...do we need this check? it might be interesting to
 		// 		"collapse" disjoint, empty areas...
 		// 		......if so, will also need to do this in DATA...
 		removeRibbon(cur_ribbon)
@@ -188,12 +191,7 @@ function shiftTo(image, ribbon){
 
 
 function shiftImage(direction, image, force_create_ribbon){
-	if(image == null){
-		// XXX need to make this context specific...
-		image = $('.current.image')
-	} else {
-		image = $(image)
-	}
+	image = image == null ? $('.current.image') : $(image)
 	var old_ribbon = getRibbon(image)
 	var ribbon = old_ribbon[direction]('.ribbon')
 
@@ -222,6 +220,7 @@ function shiftImage(direction, image, force_create_ribbon){
 // NOTE: this will not attach the created images.
 function createImage(n, force_create_new){
 	if(n == null){
+		// XXX do we need this?
 		if(window._n == null){
 			window._n = 0
 		}

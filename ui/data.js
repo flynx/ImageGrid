@@ -1,6 +1,7 @@
 /**********************************************************************
 * 
 *
+* TODO move DATA to a more logical context avoiding the global vars...
 *
 **********************************************************************/
 
@@ -23,7 +24,6 @@ var STUB_IMAGE_DATA = {
 	classes: '',
 }
 
-// XXX STUB
 // Data format...
 var DATA = {
 	varsion: '2.0',
@@ -207,7 +207,6 @@ function getImageGIDs(from, count, ribbon, inclusive){
 		var start = ribbon.indexOf(from) + c
 		return ribbon.slice(start, start + count)
 	} else {
-		// XXX
 		var c = inclusive == null ? 0 : 1
 		var end = ribbon.indexOf(from)
 		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count + c), end + c)
@@ -341,22 +340,18 @@ function loadImages(ref_gid, count, ribbon){
 
 	var size = getVisibleImageSize()
 
-	// XXX the next section might need some simplification -- fells bulky...
+	// XXX the next section might need some simplification -- feels bulky...
 	// check if we have a common section at all / full reload...
 	if(head == 0 && tail == 0){
 		if(gids.indexOf(old_gids[0]) == -1){
 			window.DEBUG && console.log('>>> (ribbon:', ribbon_i, ') FULL RELOAD --', gids.length)
-			// XXX do we need to think about alining here???
 			extendRibbon(0, gids.length - old_gids.length, ribbon)
-
 			var images = ribbon
 				.find('.image')
 					.each(function(i, e){
 						updateImage(e, gids[i], size)
 					})
-
 			$('.viewer').trigger('reloadedRibbon', [ribbon])
-
 			return images
 
 
@@ -383,9 +378,7 @@ function loadImages(ref_gid, count, ribbon){
 		res.right.each(function(i, e){
 			updateImage(e, gids[i + gids.length - tail], size)
 		})
-
 		$('.viewer').trigger('updatedRibbon', [ribbon])
-
 		return ribbon.find('.image')
 	}
 }
@@ -520,11 +513,11 @@ function loadLocalStorage(attr){
 	return loadData(JSON.parse(localStorage[attr]))
 }
 
+
 function saveLocalStorage(attr){
 	attr = attr == null ? 'DATA' : attr
 	localStorage[attr] = JSON.stringify(DATA)
 }
-
 
 
 
@@ -556,13 +549,13 @@ function preCacheRibbonImages(ribbon){
 	return cache
 }
 
+
 function preCacheAllRibbons(){
 	$('.ribbon').each(function(){
 		preCacheRibbonImages($(this))
 	})
 	return IMAGE_CACHE
 }
-
 
 
 
@@ -582,8 +575,6 @@ function preCacheAllRibbons(){
 // 		- shifting (expand/contract)
 // 		- zooming (expand/contract)
 //
-//
-// XXX this is causing lots of errors, rethink...
 function setupDataBindings(viewer){
 	viewer = viewer == null ? $('.viewer') : viewer
 	viewer
@@ -619,8 +610,6 @@ function setupDataBindings(viewer){
 
 			// NOTE: if this is greater than the number of images currently 
 			//		loaded, it might lead to odd effects...
-			//		XXX need to load additional images and keep track of the 
-			//			loaded chunk size...
 			var frame_size = (screen_size * LOAD_SCREENS) / 2
 			var threshold = screen_size * LOAD_THRESHOLD
 
