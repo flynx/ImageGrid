@@ -128,8 +128,9 @@ function getVisibleImageSize(){
 
 
 // Return the number of images that can fit to viewer width...
-function getScreenWidthInImages(){
-	return $('.viewer').innerWidth() / getVisibleImageSize()
+function getScreenWidthInImages(size){
+	size = size == null ? getVisibleImageSize() : size
+	return $('.viewer').innerWidth() / size
 }
 
 
@@ -743,6 +744,8 @@ function lastImage(mode){
 
 // NOTE: if moving is 'next' these will chose the image after the current's order.
 // NOTE: if an image with the same order is found, moving argument has no effect.
+// XXX make these select the closest image instead of the one based on 
+// 		direction...
 // XXX these sometimes behave wrong at the start of the ribbon depending
 // 		on direction...
 function prevRibbon(moving, mode){

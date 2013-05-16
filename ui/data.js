@@ -43,6 +43,8 @@ var DATA = {
 
 var MARKS = []
 
+var IMAGE_CACHE = []
+
 
 
 /**********************************************************************
@@ -213,6 +215,32 @@ function getImageGIDs(from, count, ribbon, inclusive){
 }
 
 
+// Select best preview by size...
+//
+// NOTE: this will use the original if everything else is smaller...
+function getBestPreview(gid, size){
+	size = size == null ? getVisibleImageSize() : size
+	var s
+	var img_data = DATA.images[gid]
+	var url = img_data.path
+	var preview_size = 'Original'
+	var p = Infinity
+
+	for(var k in img_data.preview){
+		s = parseInt(k)
+		if(s < p && s > size){
+			preview_size = k
+			p = s
+			url = img_data.preview[k]
+		}
+	}
+	return {
+		url: url,
+		size: preview_size
+	}
+}
+
+
 
 /**********************************************************************
 * Loaders
@@ -244,25 +272,13 @@ function updateImage(image, gid, size){
 		img_data = STUB_IMAGE_DATA
 	}
 
-	// select best preview by size...
-	// NOTE: this will use the original if everything else is smaller...
-	var s
-	var url = 'url('+DATA.images[gid].path+')'
-	var preview_size = 'Original'
-	var p = Infinity
-	for(var k in img_data.preview){
-		s = parseInt(k)
-		if(s < p && s > size){
-			preview_size = k
-			p = s
-			url = 'url('+ img_data.preview[k] +')'
-		}
-	}
+	// get the url...
+	var preview = getBestPreview(gid, size)
 	image.css({
-		'background-image': url,
+		'background-image': 'url('+ preview.url +')',
 	})
 
-	window.DEBUG && image.html(DATA.order.indexOf(gid) +'<br>'+ gid +'<br>'+ preview_size)
+	window.DEBUG && image.html(DATA.order.indexOf(gid) +'<br>'+ gid +'<br>'+ preview.size)
 
 	return image
 }
@@ -332,11 +348,17 @@ function loadImages(ref_gid, count, ribbon){
 			window.DEBUG && console.log('>>> (ribbon:', ribbon_i, ') FULL RELOAD --', gids.length)
 			// XXX do we need to think about alining here???
 			extendRibbon(0, gids.length - old_gids.length, ribbon)
-			return ribbon
+
+			var images = ribbon
 				.find('.image')
 					.each(function(i, e){
 						updateImage(e, gids[i], size)
 					})
+
+			$('.viewer').trigger('reloadedRibbon', [ribbon])
+
+			return images
+
 
 		// do nothing...
 		// ...the requested section is the same as the one already loaded...
@@ -361,6 +383,8 @@ function loadImages(ref_gid, count, ribbon){
 		res.right.each(function(i, e){
 			updateImage(e, gids[i + gids.length - tail], size)
 		})
+
+		$('.viewer').trigger('updatedRibbon', [ribbon])
 
 		return ribbon.find('.image')
 	}
@@ -409,11 +433,14 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 		updateImage($(e), gids[i], size)
 	})
 
+	$('.viewer').trigger('updatedRibbon', [ribbon])
+
 	return images
 }
 
 
 function loadData(data, images_per_screen){
+	DATA = data
 	var ribbons_set = $('.ribbon-set')
 	var current = data.current
 	// if no width is given, use the current or default...
@@ -490,13 +517,50 @@ function convertDataGen1(data){
 
 function loadLocalStorage(attr){
 	attr = attr == null ? 'DATA' : attr
-	DATA = JSON.parse(localStorage[attr])
-	return loadData(DATA)
+	return loadData(JSON.parse(localStorage[attr]))
 }
 
 function saveLocalStorage(attr){
 	attr = attr == null ? 'DATA' : attr
 	localStorage[attr] = JSON.stringify(DATA)
+}
+
+
+
+
+/**********************************************************************
+* Image caching...
+*/
+
+// NOTE: this will always overwrite the previous cache set for a ribbon...
+function preCacheRibbonImages(ribbon){
+	var i = getRibbonIndex(ribbon)
+	var size = getVisibleImageSize()
+	var screen_size = getScreenWidthInImages(size)
+	var cache_frame_size = (screen_size * LOAD_SCREENS) / 2
+	var images = ribbon.find('.image')
+	var first = getImageGID(images.first())
+	var last = getImageGID(images.last())
+
+	var gids = getImageGIDs(first, -cache_frame_size)
+				.concat(getImageGIDs(last, cache_frame_size))
+
+	var cache = []
+	IMAGE_CACHE[i] = cache
+	$.each(gids, function(i, e){
+		var img = new Image()
+		img.src = getBestPreview(e, size).url
+		cache.push(img)
+	})
+
+	return cache
+}
+
+function preCacheAllRibbons(){
+	$('.ribbon').each(function(){
+		preCacheRibbonImages($(this))
+	})
+	return IMAGE_CACHE
 }
 
 
@@ -547,7 +611,6 @@ function setupDataBindings(viewer){
 					|| ( gr.length > l 
 						&& l < screen_size * LOAD_SCREENS)){
 				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), ribbon)
-				// XXX compensate for the changing number of images...
 			} 
 
 			// roll the ribbon while we are advancing...
@@ -616,10 +679,7 @@ function setupDataBindings(viewer){
 
 
 		.on('fittingImages', function(evt, n){
-			/*
 			// load correct amount of images in each ribbon!!!
-			// XXX this changes focus...
-			// XXX n == 1 breaks this -- going past first image...
 			var screen_size = getScreenWidthInImages()
 			var gid = getImageGID()
 			$('.ribbon').each(function(){
@@ -627,7 +687,7 @@ function setupDataBindings(viewer){
 				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), r)
 			})
 			centerView(null, 'css')
-			*/
+
 			// update previews...
 			// XXX make this update only what needs updating...
 			updateImages()
@@ -685,6 +745,15 @@ function setupDataBindings(viewer){
 					MARKS.splice(i, 1)
 				}
 			})
+		})
+
+
+		// caching...
+		.on('reloadedRibbon updatedRibbon', function(evt, ribbon){
+
+			window.DEBUG && console.log('>>> (ribbon:', getRibbonIndex(ribbon), ') Updating cache...')
+
+			preCacheRibbonImages(ribbon)
 		})
 }
 

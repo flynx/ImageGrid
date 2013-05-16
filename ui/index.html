@@ -267,8 +267,7 @@ $(function(){
 	if('DATA' in localStorage){
 		loadLocalStorage()
 	} else {
-		DATA = convertDataGen1(image_list)
-		loadData(DATA)
+		loadData(convertDataGen1(image_list))
 	}
 
 	// NOTE: this is global so as to not to add any extra complexity to 
