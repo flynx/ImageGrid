@@ -282,6 +282,17 @@ function updateImages(size){
 // NOTE: this will reload the current image elements...
 // NOTE: this is similar to extendRibbon(...) but different in interface...
 // XXX correctly align the result...
+// XXX BUG scenarion:
+// 			- load with LOAD_SCREENS = 4
+// 			- change LOAD_SCREENS to 6
+// 			- press right (next)
+// 		Expected:
+// 			- focus image #2
+// 		Actial:
+// 			- focused #6
+// 		Reason:
+// 			loadImages(...) does not care about currently loaded images 
+// 			and positions, this first image reloads as #5...
 function loadImages(ref_gid, count, ribbon){
 	ribbon = $(ribbon)
 	var images = ribbon.find('.image')
@@ -302,13 +313,41 @@ function loadImages(ref_gid, count, ribbon){
 	from_i = l - from_i < count ? l - count : from_i
 	var from_gid = DATA.ribbons[ribbon_i][from_i]
 
-	// XXX load only what is needed instead of reloading everything...
-	// XXX
-
 	var size = getVisibleImageSize()
+
+	// XXX load only what is needed instead of reloading everything...
+	// XXX possible intersections:
+	//
+	// 		+------------+			- before
+	// 			+----------------+	- after
+	//
+	// 			+--------+			- before
+	// 		+--------------------+	- after
+	//
+	// 		NOTE: both cases symmetrical.
+	// 		NOTE: the ref_gid can be at any position in the after ribbon.
+	// 		
+	// 		In all cases it's a question of finding the minimal common 
+	// 		section...
+	// 		...essentially it's the first gid in both groups at the head 
+	// 		and the same for the tail...
+	// 			so, we essentially need to test the current head/tail and 
+	// 			new head tail for inclusion in the other ribbon and the 
+	// 			ones that pass are the common section's head/tail, so we
+	// 			can splice that out of the gids and simply extendRibbon(...)
+	var old_gids = getImageGIDs(getImageGID(images.first()), images.length, ribbon_i, true)
 	var gids = getImageGIDs(from_gid, count, ribbon_i, true)
 
-	//console.log('>>>', ribbon_i, gids)
+	// XXX need to check if there actually is any intersection at all...
+
+	var head = gids.indexOf(old_gids[0]) != -1 ? 
+					gids.slice(0, gids.indexOf(old_gids[0])) 
+					: []
+	var tail = gids.indexOf(old_gids[old_gids.length-1]) > 0 ? 
+					gids.slice(gids.indexOf(old_gids[old_gids.length-1])) 
+					: []
+	console.log('>>>', head.length, '+-('+ (gids.length - head.length - tail.length) +')-+', tail.length)
+
 
 	// do nothing...
 	// XXX this is still wrong, need to check what's loaded...
