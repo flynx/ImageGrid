@@ -241,7 +241,7 @@ function getImageGIDs(from, count, ribbon, inclusive){
 //
 // NOTE: this will use the original if everything else is smaller...
 function getBestPreview(gid, size){
-	size = size == null ? getVisibleImageSize() : size
+	size = size == null ? getVisibleImageSize('max') : size
 	var s
 	var img_data = DATA.images[gid]
 	var url = img_data.path
@@ -275,7 +275,7 @@ function updateImage(image, gid, size){
 	} else {
 		image.attr('gid', JSON.stringify(gid))
 	}
-	size = size == null ? getVisibleImageSize() : size
+	size = size == null ? getVisibleImageSize('max') : size
 
 	// update image order...
 	image.attr({
@@ -308,7 +308,7 @@ function updateImage(image, gid, size){
 
 // shorthand...
 function updateImages(size){
-	size = size == null ? getVisibleImageSize() : size
+	size = size == null ? getVisibleImageSize('max') : size
 	return $('.image').each(function(){
 		updateImage($(this), null, size)
 	})
@@ -361,7 +361,7 @@ function loadImages(ref_gid, count, ribbon){
 		: j > 0 ? -(old_gids.length - j - 1)
 		: 0
 
-	var size = getVisibleImageSize()
+	var size = getVisibleImageSize('max')
 
 	// XXX the next section might need some simplification -- feels bulky...
 	// check if we have a common section at all / full reload...
@@ -444,7 +444,7 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 		images = rollRibbon(gids.length * (n > 0 ? 1 : -1), ribbon, extend, no_compensate_shift)
 	}
 
-	var size = getVisibleImageSize()
+	var size = getVisibleImageSize('max')
 	images.each(function(i, e){
 		updateImage($(e), gids[i], size)
 	})
@@ -565,8 +565,8 @@ function saveLocalStorageMarks(attr){
 // NOTE: this will always overwrite the previous cache set for a ribbon...
 function preCacheRibbonImages(ribbon){
 	var i = getRibbonIndex(ribbon)
-	var size = getVisibleImageSize()
-	var screen_size = getScreenWidthInImages(size)
+	var size = getVisibleImageSize('max')
+	var screen_size = getScreenWidthInImages(getVisibleImageSize())
 	var cache_frame_size = (screen_size * LOAD_SCREENS) / 2
 	var images = ribbon.find('.image')
 	var first = getImageGID(images.first())

@@ -133,11 +133,23 @@ function getRelativeVisualPosition(outer, inner){
 
 // Returns the image size (width) as viewed on screen...
 //
-// NOTE: dim can be either 'height' or 'width', this dimension will be 
-// 		used as image "diameter" (default: width)
+// dim can be:
+// 	- 'width' (default)
+// 	- 'height'
+// 	- 'min'
+// 	- 'max'
 function getVisibleImageSize(dim){
-	dim = dim != 'height' ? 'outerWidth' : 'outerHeight'
-	return $('.image')[dim]() * getElementScale($('.ribbon-set'))
+	dim = dim == null ? 'width' : dim
+	var scale = getElementScale($('.ribbon-set'))
+	if(dim == 'height'){
+		return $('.image').outerHeight() * scale
+	} else if(dim == 'width'){
+		return $('.image').outerWidth() * scale
+	} else if(dim == 'max'){
+		return Math.max($('.image').outerHeight(), $('.image').outerWidth()) * scale
+	} else if(dim == 'min'){
+		return Math.min($('.image').outerHeight(), $('.image').outerWidth()) * scale
+	}
 }
 
 
