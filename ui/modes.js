@@ -24,6 +24,13 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer',
 		})
 
 
+var toggleTheme = createCSSClassToggler('.viewer',
+		[
+			'dark',
+			'gray',
+			'light'
+		])
+
 
 
 /**********************************************************************
