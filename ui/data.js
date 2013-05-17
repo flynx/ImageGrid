@@ -273,6 +273,7 @@ function getBestPreview(gid, size){
 
 function updateImage(image, gid, size){
 	image = $(image)
+	var html = ''
 	if(gid == null){
 		gid = getImageGID(image)
 	} else {
@@ -303,7 +304,10 @@ function updateImage(image, gid, size){
 		'background-image': 'url('+ preview.url +')',
 	})
 
-	window.DEBUG && image.html(DATA.order.indexOf(gid) +'<br>'+ gid +'<br>'+ preview.size)
+	html = window.DEBUG ? 
+			DATA.order.indexOf(gid) +'<br>'+ gid +'<br>'+ preview.size 
+			: html
+	image.html(html)
 
 	return image
 }

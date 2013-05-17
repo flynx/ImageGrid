@@ -148,6 +148,8 @@ var KEYBOARD_CONFIG = {
 				centerRibbons()
 			},
 
+		B: function(){ toggleTheme() },
+
 		S: {
 				ctrl: function(){
 					saveLocalStorage()
