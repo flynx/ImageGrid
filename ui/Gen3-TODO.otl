@@ -1,27 +1,58 @@
-[_] 16% Gen 3 current todo
-	[_] 33% High priority
-		[_] 0% Undo/Redo
+[_] 17% Gen 3 current todo
+	[_] 34% High priority
+		[_] 50% Undo/Redo
+			[X] basic one step
 			[_] push/pop state stack
-		[_] 0% image load and positioning must be fool proof
+		[_] 20% mark-based operations
+			[X] crop (view only marked)
+			| used to further edit marked images...
+			[_] shift up/down
+			[_] tag
+			[_] group
+			| a group should behave as a single image but is 
+			| viewable/expandable as a ribbon...
+			|
+			| should be two types of groups:
+			| 	- strict - always as a single image
+			| 		like a set of versions, processed and processing 
+			| 		versions of the same image.
+			| 		(auto-group?)
+			| 	- loose - similar images, could be named collections
+			| 		viewed individually, but can be accessed either from 
+			| 		a list or a member image (primary).
+			[_] collection
+			| make or add to existing collection
+		[_] 33% cropping selection
+			[X] marked
+			[_] by tag/collection
+			[_] by group
+		[_] 0% grouping
+			[_] versions w. label image
+			| a set of images that is represented by one of the group
+			[_] collection
+		[_] 50% UI elements
+			[X] indicators
+			[_] image number
+			[X] stub info dialog
+			[_] detailed image info
 		[_] 0% gesture support
+			[_] up/down - shift
+			[_] left/right - navigate
 		[_] 0% CSS
 			[_] cleanup
 			[_] split themes and layout
-		[X] 100% modes
-			[X] ribbon
-			[X] single-image
 		[_] 0% themes
 			[_] light
 			[_] gray
 			[_] dark
+		[_] 0% manual ordering
 		[_] 0% tweak loader
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions
 			[_] caching config
-		[_] 33% UI elements
-			[X] indicators
-			[_] image number
-			[_] detailed image info
+		[X] 100% modes
+			[X] ribbon
+			[X] single-image
 		[X] Save/load state
 		[X] 100% action visual indication
 			[X] first/last image

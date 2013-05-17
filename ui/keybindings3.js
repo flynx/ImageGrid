@@ -217,6 +217,22 @@ var KEYBOARD_CONFIG = {
 				},
 			},
 		I: {
+				// XXX STUB -- replace with a real info window...
+				default: function(){
+					var gid = getImageGID($('.current.image'))
+					var r = getRibbonIndex(getRibbon())
+					var data = DATA.images[gid]
+					var order = DATA.order.indexOf(gid)
+					var name = data.path.split('/').pop()
+					alert('"'+ name +'"\n'+
+							'GID: '+ gid +'\n'+
+							'Path: "'+ data.path +'"\n'+
+							'Order: '+ order +'\n'+
+							'Position (ribbon): '+ DATA.ribbons[r].indexOf(gid) +
+								'/'+ DATA.ribbons[r].length +'\n'+
+							'Position (global): '+ order +'/'+ DATA.order.length +'\n'+
+							'')
+				},
 				ctrl: function(){ invertImageMarks() },
 			},
 		A: {
