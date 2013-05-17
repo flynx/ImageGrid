@@ -1,11 +1,10 @@
-[_] 17% Gen 3 current todo
-	[_] 34% High priority
-		[_] 50% Undo/Redo
-			[X] basic one step
-			[_] push/pop state stack
-		[_] 20% mark-based operations
-			[X] crop (view only marked)
-			| used to further edit marked images...
+[_] 16% Gen 3 current todo
+	[_] 33% High priority
+		[_] 6% mark-based operations
+			[_] 33% cropping selection
+				[X] marked
+				[_] by tag/collection
+				[_] by group
 			[_] shift up/down
 			[_] tag
 			[_] group
@@ -22,11 +21,10 @@
 			| 		a list or a member image (primary).
 			[_] collection
 			| make or add to existing collection
-		[_] 33% cropping selection
-			[X] marked
-			[_] by tag/collection
-			[_] by group
-		[_] 0% grouping
+		[_] 50% Undo/Redo
+			[X] basic one step
+			[_] push/pop state stack
+		[_] 0% grouping / meta-image
 			[_] versions w. label image
 			| a set of images that is represented by one of the group
 			[_] collection

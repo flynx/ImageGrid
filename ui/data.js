@@ -12,8 +12,13 @@ var LOAD_THRESHOLD = 1
 var DEFAULT_SCREEN_IMAGES = 5
 var MAX_SCREEN_IMAGES = 12
 
+// A stub image, also here for documentation...
 var STUB_IMAGE_DATA = {
 	id: 'SIZE',
+	// entity type, can be 'image', 'group'
+	type: 'image',
+	// entity state, can be 'single', 'grouped', 'hidden', ...
+	state: 'single',
 	ctime: 0,
 	path: './images/sizes/900px/SIZE.jpg',
 	preview: {
