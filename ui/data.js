@@ -591,51 +591,6 @@ function preCacheAllRibbons(){
 
 
 /**********************************************************************
-* Marking
-*/
-
-function loadMarkedOnlyData(cmp){
-	cmp = cmp == null ? imageDateCmp : cmp
-	var cur = DATA.current
-	var marked = MARKED.slice().sort(cmp)
-	ALL_DATA = DATA
-	DATA = {
-		varsion: '2.0',
-		current: null,
-		ribbons: [
-			marked
-		],
-		//order: marked.slice(),
-		order: DATA.order,
-		images: DATA.images,
-	}
-	DATA.current = getGIDBefore(cur, 0)
-	loadData(DATA)
-	toggleMarkesView('off')
-	return DATA
-}
-
-
-// XXX name this in a better way...
-function loadAllImages(){
-	DATA = ALL_DATA
-	loadData(DATA)
-	return DATA
-}
-
-
-var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 'marked-only-view',
-		function(action){
-			if(action == 'on'){
-				loadMarkedOnlyData()
-			} else {
-				loadAllImages()
-			}
-		})
-
-
-
-/**********************************************************************
 * Setup
 */
 
