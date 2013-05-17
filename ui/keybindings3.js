@@ -210,9 +210,11 @@ var KEYBOARD_CONFIG = {
 				ctrl: function(){ removeImageMarks('ribbon') },
 				shift: function(){ removeImageMarks('all') },
 			},
-		F2: function(){ 
-				toggleMarkedOnlyView() 
-				centerRibbons()
+		F2: {
+				default: function(){ toggleMarkesView() },
+				shift: function(){
+					toggleMarkedOnlyView()
+				}
 			},
 	}
 }

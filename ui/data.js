@@ -41,7 +41,7 @@ var DATA = {
 	images: {}
 }
 
-var MARKS = []
+var MARKED = []
 
 var IMAGE_CACHE = []
 
@@ -260,7 +260,7 @@ function updateImage(image, gid, size){
 	})
 
 	// setup marks...
-	if(MARKS.indexOf(gid) != -1){
+	if(MARKED.indexOf(gid) != -1){
 		image.addClass('marked')
 	} else {
 		image.removeClass('marked')
@@ -460,6 +460,12 @@ function loadData(data, images_per_screen){
 }
 
 
+// NOTE: this compares two images by gid...
+function imageDateCmp(a, b){
+	return DATA.images[b].ctime - DATA.images[a].ctime
+}
+
+
 function convertDataGen1(data){
 	var res = {
 		varsion: '2.0',
@@ -471,10 +477,6 @@ function convertDataGen1(data){
 	var ribbons = res.ribbons
 	var images = res.images
 	var order = res.order
-	var _dateSort = function(a, b){
-		return images[b].ctime - images[a].ctime
-	}
-
 	// position...
 	res.current = data.position
 	
@@ -488,11 +490,11 @@ function convertDataGen1(data){
 			order.push(id)
 			images[id] = image
 		}
-		ribbon.sort(_dateSort)
+		ribbon.sort(imageDateCmp)
 	})
 
 	// order...
-	order.sort(_dateSort)
+	order.sort(imageDateCmp)
 
 	// XXX STUB
 	res.current = order[0]
@@ -517,6 +519,19 @@ function loadLocalStorage(attr){
 function saveLocalStorage(attr){
 	attr = attr == null ? 'DATA' : attr
 	localStorage[attr] = JSON.stringify(DATA)
+}
+
+
+function loadLocalStorageMarks(attr){
+	attr = attr == null ? 'MARKED' : attr
+	MARKED = JSON.parse(localStorage[attr])
+	return loadData(DATA)
+}
+
+
+function saveLocalStorageMarks(attr){
+	attr = attr == null ? 'MARKED' : attr
+	localStorage[attr] = JSON.stringify(MARKED)
 }
 
 
@@ -556,6 +571,50 @@ function preCacheAllRibbons(){
 	})
 	return IMAGE_CACHE
 }
+
+
+
+/**********************************************************************
+* Marking
+*/
+
+function loadMarkedOnlyData(){
+	var cur = DATA.current
+	var marked = MARKED.slice().sort(imageDateCmp)
+	ALL_DATA = DATA
+	DATA = {
+		varsion: '2.0',
+		current: null,
+		ribbons: [
+			marked
+		],
+		//order: marked.slice(),
+		order: DATA.order,
+		images: DATA.images,
+	}
+	DATA.current = getGIDBefore(cur, 0)
+	loadData(DATA)
+	toggleMarkesView('off')
+	return DATA
+}
+
+
+// XXX name this in a better way...
+function loadAllImages(){
+	DATA = ALL_DATA
+	loadData(DATA)
+	return DATA
+}
+
+
+var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 'marked-only-view',
+		function(action){
+			if(action == 'on'){
+				loadMarkedOnlyData()
+			} else {
+				loadAllImages()
+			}
+		})
 
 
 
@@ -695,43 +754,43 @@ function setupDataBindings(viewer){
 
 			// add marked image to list...
 			if(action == 'on'){
-				MARKS.push(gid)
+				MARKED.push(gid)
 
 			// remove marked image from list...
 			} else {
-				MARKS.splice(MARKS.indexOf(gid), 1)
+				MARKED.splice(MARKED.indexOf(gid), 1)
 			}
 		})
 		.on('removeingRibbonMarks', function(evt, ribbon){
 			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKS.indexOf(e)
+				var i = MARKED.indexOf(e)
 				if(i != -1){
-					MARKS.splice(i, 1)
+					MARKED.splice(i, 1)
 				}
 			})
 		})
 		.on('removeingAllMarks', function(evt){
-			MARKS.splice(0, MARKS.length)
+			MARKED.splice(0, MARKED.length)
 		})
 		.on('markingRibbon', function(evt, ribbon){
 			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKS.indexOf(e)
+				var i = MARKED.indexOf(e)
 				if(i == -1){
-					MARKS.push(e)
+					MARKED.push(e)
 				}
 			})
 		})
 		.on('markingAll', function(evt){
-			MARKS.splice(0, MARKS.length)
-			MARKS.concat(DATA.order)
+			MARKED.splice(0, MARKED.length)
+			MARKED.concat(DATA.order)
 		})
 		.on('invertingMarks', function(evt, ribbon){
 			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKS.indexOf(e)
+				var i = MARKED.indexOf(e)
 				if(i == -1){
-					MARKS.push(e)
+					MARKED.push(e)
 				} else {
-					MARKS.splice(i, 1)
+					MARKED.splice(i, 1)
 				}
 			})
 		})

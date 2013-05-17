@@ -104,7 +104,7 @@ body {
 }
 
 /* dot mark... */
-.marked.image:after {
+.marks-visible.viewer .marked.image:after {
 	display: block;
 	position: absolute;
 	content: "";
@@ -147,11 +147,11 @@ body {
 */
 
 
-.marked-only.viewer:after {
+.marks-visible.viewer:after {
 	display: block;
 	position: absolute;
-	content: "Showing marked images only";
-	font-size: 14pt;
+	content: "Marks visible";
+	font-size: 11pt;
 	border: none;
 	color: blue;
 	width: auto;
@@ -161,11 +161,27 @@ body {
 	right: 10px;
 
 }
-.marked-only .image:not(.marked) {
-	display: none;
+.marked-only-view.viewer:after {
+	display: block;
+	position: absolute;
+	content: "Showing marked images only";
+	font-size: 11pt;
+	border: none;
+	color: blue;
+	width: auto;
+	height: auto;
+
+	top: 10px;
+	right: 10px;
+
 }
-.marked-only .marked.image:after {
-	display: none;
+.marked-only-view.marks-visible.viewer:after {
+	content: "Showing marked images only (marks visible)";
+}
+
+/* XXX should we use opacity??? */
+.marked-only-view.viewer:not(.marks-visible) .image:not(.marked) {
+	opacity: 0.3;
 }
 
 
@@ -269,6 +285,12 @@ $(function(){
 	} else {
 		loadData(convertDataGen1(image_list))
 	}
+
+	// XXX this will reload everything...
+	if('MARKED' in localStorage){
+		loadLocalStorageMarks()
+	}
+
 
 	// NOTE: this is global so as to not to add any extra complexity to 
 	//		the internal workings...

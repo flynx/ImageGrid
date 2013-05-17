@@ -387,30 +387,6 @@ function rollRibbon(n, ribbon, extend, no_compensate_shift){
 * Modes
 */
 
-// XXX shifting images and unmarking in this mode do not work correctly...
-var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 'marked-only',
-	function(){
-		var cur = $('.current.image')
-		// current is marked...
-		if(cur.hasClass('marked')){
-			centerView(null, 'css')
-			return
-		} 
-		// there is a marked image in this ribbon...
-		var target = getImageBefore(cur, null)
-		if(target.length > 0){
-			centerView(focusImage(target), 'css')
-			return
-		}
-		// get marked image from other ribbons...
-		prevRibbon()
-		if($('.current.image').hasClass('marked')){
-			return
-		}
-		nextRibbon()
-	})
-
-
 // XXX add ability to take all marked images and open them in a separate view...
 
 
@@ -863,10 +839,35 @@ function shiftImageDownNewRibbon(image, moving){
 
 /*********************************************************** Marks ***/
 
+// XXX shifting images and unmarking in this mode do not work correctly...
+var toggleMarkesView = createCSSClassToggler('.viewer', 'marks-visible',
+	function(){
+		var cur = $('.current.image')
+		// current is marked...
+		if(cur.hasClass('marked')){
+			centerView(null, 'css')
+			return
+		} 
+		// there is a marked image in this ribbon...
+		var target = getImageBefore(cur, null)
+		if(target.length > 0){
+			centerView(focusImage(target), 'css')
+			return
+		}
+		// get marked image from other ribbons...
+		prevRibbon()
+		if($('.current.image').hasClass('marked')){
+			return
+		}
+		nextRibbon()
+	})
+
+
 // XXX if this unmarks an image in marked-only mode no visible image is 
 // 		going to be current...
 var toggleImageMark = createCSSClassToggler('.current.image', 'marked',
 	function(action){
+		toggleMarkesView('on')
 		$('.viewer').trigger('togglingMark', [$('.current.image'), action])
 	})
 
