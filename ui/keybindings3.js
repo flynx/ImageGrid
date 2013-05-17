@@ -148,6 +148,19 @@ var KEYBOARD_CONFIG = {
 				centerRibbons()
 			},
 
+		S: {
+				ctrl: function(){
+					saveLocalStorage()
+					saveLocalStorageMarks()
+				}
+			},
+		Z: {
+				ctrl: function(){
+					loadLocalStorage()
+					loadLocalStorageMarks()
+				}
+			},
+
 
 		// marking...
 		// XXX not final, think of a better way to do this...

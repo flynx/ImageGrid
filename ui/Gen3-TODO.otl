@@ -1,17 +1,19 @@
-[_] 9% Gen 3 current todo
-	[_] 19% High priority
+[_] 16% Gen 3 current todo
+	[_] 33% High priority
+		[_] 0% Undo/Redo
+			[_] push/pop state stack
 		[_] 0% image load and positioning must be fool proof
 		[_] 0% gesture support
-		[_] 0% styles
+		[_] 0% CSS
 			[_] cleanup
 			[_] split themes and layout
+		[X] 100% modes
+			[X] ribbon
+			[X] single-image
 		[_] 0% themes
 			[_] light
 			[_] gray
 			[_] dark
-		[X] 100% action visual indication
-			[X] first/last image
-			[X] shift up/down
 		[_] 0% tweak loader
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions
@@ -20,6 +22,10 @@
 			[X] indicators
 			[_] image number
 			[_] detailed image info
+		[X] Save/load state
+		[X] 100% action visual indication
+			[X] first/last image
+			[X] shift up/down
 	[_] Low priority
 		[_] Help
 		[_] Keyboard config

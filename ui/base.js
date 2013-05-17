@@ -640,9 +640,11 @@ function centerRibbons(mode, no_skip_current){
 function clickHandler(evt){
 	var img = $(evt.target).closest('.image')
 
-	centerView(focusImage(img))
+	if(img.filter(NAV_VISIBLE).length > 0){
+		centerView(focusImage(img))
 
-	centerRibbons()
+		centerRibbons()
+	}
 }
 
 
