@@ -53,15 +53,17 @@ var IMAGE_CACHE = []
 */
 
 // NOTE: this expects gids...
-function imageDateCmp(a, b){
-	return DATA.images[b].ctime - DATA.images[a].ctime
+function imageDateCmp(a, b, data){
+	data = data == null ? DATA : data
+	return data.images[b].ctime - data.images[a].ctime
 }
 
 
 // NOTE: this expects gids...
-function imageNameCmp(a, b){
-	a = DATA.images[b].path.split('/')[-1]
-	b = DATA.images[a].path.split('/')[-1]
+function imageNameCmp(a, b, data){
+	data = data == null ? DATA : data
+	a = data.images[b].path.split('/')[-1]
+	b = data.images[a].path.split('/')[-1]
 	if(a == b){
 		return 0
 	} else if(a < b){
@@ -482,7 +484,6 @@ function loadData(data, images_per_screen){
 
 
 function convertDataGen1(data, cmp){
-	cmp = cmp == null ? imageDateCmp : cmp
 	var res = {
 		varsion: '2.0',
 		current: null,
@@ -490,9 +491,15 @@ function convertDataGen1(data, cmp){
 		order: [], 
 		images: {}
 	}
+	cmp = cmp == null ?
+			function(a, b){ 
+				return imageDateCmp(a, b, res) 
+			}
+			: cmp
 	var ribbons = res.ribbons
 	var images = res.images
 	var order = res.order
+
 	// position...
 	res.current = data.position
 	
@@ -509,7 +516,6 @@ function convertDataGen1(data, cmp){
 		ribbon.sort(cmp)
 	})
 
-	// order...
 	order.sort(cmp)
 
 	// XXX STUB

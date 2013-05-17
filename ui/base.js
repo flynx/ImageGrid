@@ -24,7 +24,14 @@
 var NAV_ALL = '*'
 var NAV_VISIBLE = ':visible'
 var NAV_MARKED = '.marked:visible'
-var NAV_DEFAULT = NAV_VISIBLE
+var NAV_DEFAULT = NAV_ALL
+
+var NAV_RIBBON_ALL = ''
+var NAV_RIBBON_VISIBLE = ':visible'
+var NAV_RIBBON_DEFAULT = NAV_RIBBON_ALL
+//var NAV_RIBBON_DEFAULT = NAV_RIBBON_VISIBLE
+
+var TRANSITION_MODE_DEFAULT = 'animate'
 
 var MAX_SCREEN_IMAGES = 12
 var ZOOM_SCALE = 1.2
@@ -456,7 +463,7 @@ function alignVia(container, elem, via, valign, halign, mode){
 
 	valign = valign == null ? 'center' : valign
 	halign = halign == null ? 'center' : halign
-	mode = mode == null ? 'animate' : mode
+	mode = mode == null ? TRANSITION_MODE_DEFAULT : mode
 
 	var pos = getRelativeVisualPosition(container, elem)
 	var dt = pos.top
@@ -505,10 +512,7 @@ function alignVia(container, elem, via, valign, halign, mode){
 
 // XXX make this more configurable (centering, ...)...
 function centerView(image, mode){
-	if(mode == null){
-		//mode = 'css'
-		mode = 'animate'
-	}
+	mode = mode == null ? TRANSITION_MODE_DEFAULT : mode
 
 	$('.viewer').trigger('preCenteringView', [getRibbon(image), image])
 
@@ -569,10 +573,7 @@ function centerView(image, mode){
 // XXX this does not work in marked-only mode...
 // XXX this needs the image to exist... should be GID compatible... (???)
 function centerRibbon(ribbon, image, mode){
-	if(mode == null){
-		//mode = 'css'
-		mode = 'animate'
-	}
+	mode = mode == null ? TRANSITION_MODE_DEFAULT : mode
 	ribbon = $(ribbon)
 	image = image == null ? $('.current.image') : $(image)
 
@@ -620,7 +621,7 @@ function centerRibbon(ribbon, image, mode){
 // a shorthand...
 function centerRibbons(mode, no_skip_current){
 	return $('.ribbon')
-		.filter(':visible')
+		.filter('*' + NAV_RIBBON_DEFAULT)
 		.each(function(){ 
 			if(no_skip_current == true && $(this).find('.current.image').length > 0){
 				return
@@ -643,6 +644,13 @@ function clickHandler(evt){
 
 	centerRibbons()
 }
+
+
+// XXX for some reason this messes up alignment for the initial view...
+function dblClickHandler(evt){
+	toggleSingleImageMode()
+}
+
 
 
 
@@ -727,11 +735,11 @@ function prevRibbon(moving, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
 	var target = getImageBefore(cur, 
-			getRibbon(cur).prevAll('.ribbon:visible').first())
+			getRibbon(cur).prevAll('.ribbon' + NAV_RIBBON_DEFAULT).first())
 	if(target.length == 0){
 		// XXX too complex???
 		target = getRibbon(cur)
-					.prevAll('.ribbon:visible').first()
+					.prevAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
 						.find('.image' + mode).first()
 	} else if(moving == 'next' && cur.attr('order') != target.attr('order')){
 		var next = target.nextAll('.image' + mode).first()
@@ -743,11 +751,11 @@ function nextRibbon(moving, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
 	var target = getImageBefore(cur, 
-			getRibbon(cur).nextAll('.ribbon:visible').first())
+			getRibbon(cur).nextAll('.ribbon' + NAV_RIBBON_DEFAULT).first())
 	if(target.length == 0){
 		// XXX too complex???
 		target = getRibbon(cur)
-					.nextAll('.ribbon:visible').first()
+					.nextAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
 						.find('.image' + mode).first()
 	} else if(moving == 'next' && cur.attr('order') != target.attr('order')){
 			var next = target.nextAll('.image' + mode).first()

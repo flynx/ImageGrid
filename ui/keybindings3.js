@@ -140,6 +140,8 @@ var KEYBOARD_CONFIG = {
 		'=': function(){ zoomIn() },
 
 
+		Enter: function(){ toggleSingleImageMode() },
+
 		// XXX this should only work on single image mode...
 		F: function(){ 
 				toggleImageProportions() 

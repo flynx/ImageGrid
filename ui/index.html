@@ -18,11 +18,12 @@ body {
 
 .viewer {
 	position: relative;
-	width: 800px;
-	height: 600px;
+	width: 100%;
+	height: 100%;
 	overflow: hidden;
 
-	border: solid blue 1px;
+	/*border: solid blue 1px;*/
+	box-sizing: border-box;
 
 	-moz-user-select: none;
 	-webkit-user-select: none;
@@ -81,7 +82,7 @@ body {
 	position: relative;
 	display: inline-block;
 	vertical-align: middle;
-	text-align;left;
+	text-align:left;
 	width: 300px;
 	height: 300px;
 	font-size: 12pt;
@@ -89,6 +90,8 @@ body {
 
 	box-sizing: border-box;
 	color: white;
+
+	text-shadow: black 0.1em 0.1em 0.4em, black 0.1em 0.1em;
 
 	background: no-repeat 50% black;
 	background-size: contain;
@@ -251,6 +254,19 @@ body {
 }
 
 
+
+.single-image-mode.viewer .image {
+	background-color: transparent;
+	border: none;
+}
+.single-image-mode.viewer .image:not(.current) {
+	/* XXX for some reason this breaks the alignment on large magnifications...
+	display: none;
+	*/
+	opacity: 0;
+}
+
+
 </style>
 
 
@@ -261,6 +277,7 @@ body {
 <script src="lib/keyboard.js"></script>
 
 <script src="base.js"></script>
+<script src="modes.js"></script>
 <script src="marks.js"></script>
 <script src="data.js"></script>
 <script src="ui.js"></script>
@@ -297,7 +314,15 @@ $(function(){
 	//		the internal workings...
 	$('.viewer')
 		.click(clickHandler)
+		// XXX for some reason this messes up alignment on initial view...
+		//.dblclick(dblClickHandler)
 
+	$(window)
+		.resize(function() {
+			// XXX should this be animated or not?
+			centerView()
+		})
+		
 	$(document)
 		.keydown(makeKeyboardHandler(
 			KEYBOARD_CONFIG,

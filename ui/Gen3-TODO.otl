@@ -1,6 +1,29 @@
-[_] 50% Gen 3 current todo
-	[_] 0% image load and positioning must be fool proof
-	[X] action visual indication
+[_] 9% Gen 3 current todo
+	[_] 19% High priority
+		[_] 0% image load and positioning must be fool proof
+		[_] 0% gesture support
+		[_] 0% styles
+			[_] cleanup
+			[_] split themes and layout
+		[_] 0% themes
+			[_] light
+			[_] gray
+			[_] dark
+		[X] 100% action visual indication
+			[X] first/last image
+			[X] shift up/down
+		[_] 0% tweak loader
+			[_] thresholds and frame size
+			[_] remove extra and repetitive actions
+			[_] caching config
+		[_] 33% UI elements
+			[X] indicators
+			[_] image number
+			[_] detailed image info
+	[_] Low priority
+		[_] Help
+		[_] Keyboard config
+		[_] general config
 		
 
 
