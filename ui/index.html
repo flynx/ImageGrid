@@ -257,16 +257,17 @@ body {
 
 .single-image-mode.viewer .image {
 	background-color: transparent;
-	border: none;
+	/* NOTE: need to keep a distance from screen borders... */
+	border: solid transparent 2px;
 }
 .single-image-mode.viewer .image:not(.current) {
 	/* XXX for some reason this breaks the alignment on large magnifications...
 	display: none;
 	*/
-	visibility: hidden;
 	/* XXX this makes images pass through the :visible filter...
 	opacity: 0;
 	*/
+	visibility: hidden;
 }
 
 

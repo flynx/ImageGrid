@@ -132,8 +132,12 @@ function getRelativeVisualPosition(outer, inner){
 
 
 // Returns the image size (width) as viewed on screen...
-function getVisibleImageSize(){
-	return $('.image').outerWidth() * getElementScale($('.ribbon-set'))
+//
+// NOTE: dim can be either 'height' or 'width', this dimension will be 
+// 		used as image "diameter" (default: width)
+function getVisibleImageSize(dim){
+	dim = dim != 'height' ? 'outerWidth' : 'outerHeight'
+	return $('.image')[dim]() * getElementScale($('.ribbon-set'))
 }
 
 
@@ -788,15 +792,17 @@ function fitNImages(n){
 }
 
 
+// NOTE: here we measure image height as width may change depending on 
+// 		proportions...
 function zoomIn(){
-	var w = getScreenWidthInImages()
+	var w = getScreenWidthInImages(getVisibleImageSize('height'))
 	if(w > 1){
 		w = w / ZOOM_SCALE
 		fitNImages(w >= 1 ? w : 1)
 	}
 }
 function zoomOut(){
-	var w = getScreenWidthInImages()
+	var w = getScreenWidthInImages(getVisibleImageSize('height'))
 	if(w <= MAX_SCREEN_IMAGES){
 		w = w * ZOOM_SCALE
 		fitNImages(w <= MAX_SCREEN_IMAGES ? w : MAX_SCREEN_IMAGES)
