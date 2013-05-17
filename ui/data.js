@@ -38,6 +38,7 @@ var DATA = {
 	order: $(new Array(100)).map(function(i){return i}).toArray(),
 	// the images object, this is indexed by image GID and contains all 
 	// the needed data...
+	// XXX should we split this out?
 	images: {}
 }
 
@@ -50,6 +51,26 @@ var IMAGE_CACHE = []
 /**********************************************************************
 * Helpers
 */
+
+// NOTE: this expects gids...
+function imageDateCmp(a, b){
+	return DATA.images[b].ctime - DATA.images[a].ctime
+}
+
+
+// NOTE: this expects gids...
+function imageNameCmp(a, b){
+	a = DATA.images[b].path.split('/')[-1]
+	b = DATA.images[a].path.split('/')[-1]
+	if(a == b){
+		return 0
+	} else if(a < b){
+		return -1
+	} else {
+		return +1
+	}
+}
+
 
 // A predicate returning:
 // 	- 0 if a is equal at position i in lst or is between i and i+1
@@ -460,13 +481,8 @@ function loadData(data, images_per_screen){
 }
 
 
-// NOTE: this compares two images by gid...
-function imageDateCmp(a, b){
-	return DATA.images[b].ctime - DATA.images[a].ctime
-}
-
-
-function convertDataGen1(data){
+function convertDataGen1(data, cmp){
+	cmp = cmp == null ? imageDateCmp : cmp
 	var res = {
 		varsion: '2.0',
 		current: null,
@@ -490,11 +506,11 @@ function convertDataGen1(data){
 			order.push(id)
 			images[id] = image
 		}
-		ribbon.sort(imageDateCmp)
+		ribbon.sort(cmp)
 	})
 
 	// order...
-	order.sort(imageDateCmp)
+	order.sort(cmp)
 
 	// XXX STUB
 	res.current = order[0]
@@ -578,9 +594,10 @@ function preCacheAllRibbons(){
 * Marking
 */
 
-function loadMarkedOnlyData(){
+function loadMarkedOnlyData(cmp){
+	cmp = cmp == null ? imageDateCmp : cmp
 	var cur = DATA.current
-	var marked = MARKED.slice().sort(imageDateCmp)
+	var marked = MARKED.slice().sort(cmp)
 	ALL_DATA = DATA
 	DATA = {
 		varsion: '2.0',
