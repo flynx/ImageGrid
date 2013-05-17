@@ -407,51 +407,6 @@ function rollRibbon(n, ribbon, extend, no_compensate_shift){
 
 
 /**********************************************************************
-* Modes
-*/
-
-// XXX add ability to take all marked images and open them in a separate view...
-
-
-// XXX should we use the createCSSClassToggler for this?
-// XXX revise: does extra stuff...
-function toggleImageProportions(mode){
-	var image = $('.image')
-	var h = image.outerHeight(true)
-	var w = image.outerWidth(true)
-
-	if(mode == '?'){
-		return h != w ? 'viewer' : 'square'
-
-	// square...
-	} else if(h != w || mode == 'square'){
-		var size = Math.min(w, h)
-		image.css({
-			width: size,
-			height: size
-		})
-		centerView(null, 'css')
-		return 'square'
-
-	// viewer size...
-	} else {
-		var viewer = $('.viewer')
-		var W = viewer.innerWidth()
-		var H = viewer.innerHeight()
-
-		if(W > H){
-			image.css('width', W * h/H)
-		} else {
-			image.css('height', H * w/W)
-		}
-		centerView(null, 'css')
-		return 'viewer'
-	}
-}
-
-
-
-/**********************************************************************
 * Layout
 */
 

@@ -9,7 +9,7 @@
 
 
 /**********************************************************************
-* Modes
+* helpers...
 */
 
 function loadMarkedOnlyData(cmp){
@@ -42,7 +42,13 @@ function loadAllImages(){
 }
 
 
-var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 'marked-only-view',
+
+/**********************************************************************
+* Modes
+*/
+
+var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 
+		'marked-only-view',
 		function(action){
 			if(action == 'on'){
 				loadMarkedOnlyData()
@@ -50,9 +56,6 @@ var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 'marked-only-view',
 				loadAllImages()
 			}
 		})
-
-
-
 
 
 // XXX shifting images and unmarking in this mode do not work correctly...
@@ -84,8 +87,6 @@ var toggleMarkesView = createCSSClassToggler('.viewer', 'marks-visible',
 * Actions
 */
 
-// XXX if this unmarks an image in marked-only mode no visible image is 
-// 		going to be current...
 var toggleImageMark = createCSSClassToggler('.current.image', 'marked',
 	function(action){
 		toggleMarkesView('on')
