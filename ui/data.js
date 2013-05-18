@@ -82,14 +82,38 @@ function imageNameCmp(a, b, data){
 }
 
 
-// A predicate returning:
+// Check if a is at position i in lst
+//
+// This will return:
+// 	- 0 if a is equal to position i
+// 	- -1 if a is less position i
+// 	- +1 if a is greater position i
+//
+// NOTE: the signature is different from the traditional cmp(a, b) so as 
+// 		to enable more complex comparisons involving adjacent elements
+// 		(see isBetween(...) for an example)
+function cmp(a, i, lst){
+	var b = lst[i]
+	if(a == b){
+		return 0
+	} else if(a < b){
+		return -1
+	} else {
+		return 1
+	}
+}
+
+
+// Check if a is at position i in lst or between positions i and i+1
+//
+// This will return:
 // 	- 0 if a is equal at position i in lst or is between i and i+1
 // 	- -1 if a is "below" position i
 // 	- +1 if a is "above" position i
 //
 // NOTE: this is here mostly to make debuging easy...
 function isBetween(a, i, lst){
-	console.log('>>>', a, i, lst)
+	//console.log('>>>', a, i, lst)
 	var b = lst[i]
 	var c = lst[i+1]
 	// hit...
