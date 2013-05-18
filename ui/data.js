@@ -607,6 +607,26 @@ function preCacheAllRibbons(){
 }
 
 
+/**********************************************************************
+* Extension API (CEF/PhoneGap/...)
+*/
+
+function loadJSONFile(path){
+	// CEF
+	if(window.CEF_loadJSON != null){
+		var json = CEF_loadJSON(path)
+		if(json.version == null){
+			json = convertDataGen1(json)
+		}
+		return loadData(json)
+
+	// PhoneGap
+	} else if(false) {
+		// XXX
+	}
+}
+
+
 
 /**********************************************************************
 * Setup
