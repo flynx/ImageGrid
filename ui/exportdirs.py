@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130410201312'''
+__sub_version__ = '''20130520030454'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -25,6 +25,21 @@ def build_dirs(data, path, rewrite=None):
 		'older'		- rewrite only older files.
 		None		- never rewrite.
 	'''
+	version = data.get('version', 'gen1')
+
+	print 'FORMAT:', version
+
+	# gen3
+	if version == '2.0':
+		images = json.load(open(data['image_file'], 'r'))
+		def get_image(gid, _):
+			return images[gid]
+
+	# gen1
+	else:
+		def get_image(gid, ribbon):
+			return ribbon[gid]
+
 	ribbons = data['ribbons']
 
 	depth = len(ribbons)-1
@@ -38,7 +53,8 @@ def build_dirs(data, path, rewrite=None):
 	for i, ribbon in enumerate(ribbons):
 		level_path = os.path.join(path, *(['fav'] * (depth - i)))
 
-		for guid, image in ribbon.items():
+		for guid in ribbon:
+			image = get_image(guid, ribbon)
 			try:
 				# XXX for some magical reason this works and url2pathname does not...
 				##!!! this will also break on utf paths...
