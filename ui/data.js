@@ -86,8 +86,8 @@ function imageNameCmp(a, b, data){
 //
 // This will return:
 // 	- 0 if a is equal to position i
-// 	- -1 if a is less position i
-// 	- +1 if a is greater position i
+// 	- -1 if a is less than position i
+// 	- +1 if a is greater than position i
 //
 // NOTE: the signature is different from the traditional cmp(a, b) so as 
 // 		to enable more complex comparisons involving adjacent elements
@@ -113,9 +113,15 @@ function cmp(a, i, lst){
 //
 // NOTE: this is here mostly to make debuging easy...
 function isBetween(a, i, lst){
-	//console.log('>>>', a, i, lst)
 	var b = lst[i]
+
+	// special case: tail...
+	if(i == lst.length-1 && a >= b){
+		return 0
+	}
+
 	var c = lst[i+1]
+	
 	// hit...
 	if(a == b || (a > b && a < c)){
 		return 0
@@ -130,18 +136,8 @@ function isBetween(a, i, lst){
 
 
 // Basic liner search...
-function linSearch(target, lst, check, return_position, disable_direct_indexing){
-	// XXX is this the correct default?
-	check = check == null ? isBetween : check
-	// special case: target in the list directly...
-	if(disable_direct_indexing 
-			&& check(target, lst.indexOf(target), lst) == 0){
-		return target
-	}
-	// special case: tail...
-	if(check(target, lst.length-1, lst) >= 0){
-		return lst[lst.length-1]
-	}
+function linSearch(target, lst, check, return_position){
+	check = check == null ? cmp : check
 
 	for(var i=0; i < lst.length; i++){
 		if(check(target, i, lst) == 0){
@@ -152,78 +148,88 @@ function linSearch(target, lst, check, return_position, disable_direct_indexing)
 	// no hit...
 	return return_position ? -1 : null
 }
+Array.prototype.linSearch = function(target, cmp){
+	return linSearch(target, this, cmp, true)
+}
 
 
 // Basic binary search implementation...
 //
 // NOTE: this will return the object by default, to return position set
 // 		return_position to true.
-// NOTE: by default this will use isBetween as a predicate.
-// NOTE: this still depends on .indexOf(...), to disable set
-// 		disable_direct_indexing to true
-// XXX BUGGY
-// XXX this is a mess, needs revision...
-function binSearch(target, lst, check, return_position, disable_direct_indexing){
-	// XXX is this the correct default?
-	check = check == null ? isBetween : check
-	// special case: target in the list directly...
-	if(disable_direct_indexing 
-			&& check(target, lst.indexOf(target), lst) == 0){
-		return target
-	}
-	// special case: tail...
-	if(check(target, lst.length-1, lst) >= 0){
-		return lst[lst.length-1]
-	}
-	// special case: head...
-	var res = check(target, 0, lst)
-	if(res == 0){
-		return lst[0]
-	} else if(res < 0){
-		// no hit...
-		return return_position ? -1 : null
-	}
+// NOTE: by default this will use cmp as a predicate.
+function binSearch(target, lst, check, return_position){
+	check = check == null ? cmp : check
+	var h = 0
+	var t = lst.length - 1
+	var m, res
 
-	var l = Math.ceil(lst.length/2)
-	var i = l
+	while(h <= t){
+		m = Math.floor((h + t)/2)
+		res = check(target, m, lst)
+		
+		// match...
+		if(res == 0){
+			return return_position ? m : lst[m]
 
-	while(l > 0){
-		// XXX this is a hack -- should we reach 0 using floor(..) instead?
-		l = l <= 1 ? 0 : Math.ceil(l/2)
-		res = check(target, i, lst)
-		// right branch...
-		if(res > 0){
-			i += l
-		// left branch...
+		// below...
 		} else if(res < 0){
-			i -= l
-		// hit...
+			t = m - 1
+
+		// above...
 		} else {
-			return return_position ? i : lst[i]
+			h = m + 1
 		}
 	}
-	// no hit...
+
+	// no result...
 	return return_position ? -1 : null
+}
+Array.prototype.binSearch = function(target, cmp){
+	return binSearch(target, this, cmp, true)
 }
 
 
+function match(f0, f1){
+	return function(){
+		var a = f0.apply(f0, arguments)
+		var b = f1.apply(f1, arguments)
+		if(a != b){
+			console.warn('Result mismatch: f0:'+a+' f1:'+b)
+		}
+		return a
+	}
+}
+
 // Same as getImageBefore, but uses gids and searches in DATA...
+//
+// NOTE: this uses it's own predicate...
 function getGIDBefore(gid, ribbon, search){
-	search = search == null ? linSearch : search
+	search = search == null ? binSearch : search
+	//search = search == null ? match(linSearch, binSearch) : search
 	ribbon = DATA.ribbons[ribbon]
 	var order = DATA.order
 
 	var target = order.indexOf(gid)
 
-	return search(target, ribbon, function (a, i, lst){
+	return search(target, ribbon, function(a, i, lst){
 		var b = order.indexOf(lst[i])
+
+		// special case: tail...
+		if(i == lst.length-1 && a >= b){
+			return 0
+		}
+
 		var c = order.indexOf(lst[i+1])
+	
 		// hit...
 		if(a == b || (a > b && a < c)){
 			return 0
+
 		// before...
 		} else if(a < b){
 			return -1
+
 		// later...
 		} else {
 			return 1
