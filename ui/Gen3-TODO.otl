@@ -1,5 +1,9 @@
-[_] 16% Gen 3 current todo
-	[_] 33% High priority
+[_] 19% Gen 3 current todo
+	[_] 38% High priority
+		[_] BUG: jumping screen images does not load the adjacent ribbons...
+		| positioning is OK but ribbons are not fully visible...
+		[X] ASAP: rewrite binSearch!! 
+		| linSearch obviously is not usable for large sets of data...
 		[_] 6% mark-based operations
 			[_] 33% cropping selection
 				[X] marked
