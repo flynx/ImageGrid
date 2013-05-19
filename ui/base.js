@@ -42,6 +42,49 @@ var ZOOM_SCALE = 1.2
 * Helpers
 */
 
+// Match the results of two functions
+//
+// If the results are not the same then print a warning.
+//
+// NOTE: this is here for testing.
+// NOTE: this expects that none of the functions will modify the 
+// 		arguments...
+// NOTE: this will return the result of the first function.
+function match2(f0, f1){
+	return function(){
+		var a = f0.apply(f0, arguments)
+		var b = f1.apply(f1, arguments)
+		if(a != b){
+			console.warn('Result mismatch: f0:'+a+' f1:'+b)
+		}
+		return a
+	}
+}
+// Same as match2 but can take an arbitrary number of functions.
+// XXX test
+function matchN(){
+	vat funcs = arguments
+	return function(){
+		var res = []
+		var err = false
+		var r
+		// call everything...
+		for(var i=0; i < funcs.lenght; i++){
+			r = f0.apply(f0, arguments)
+			// match the results...
+			if(r != res[res.length-1]){
+				err = false
+			}
+			res.push(r)
+		}
+		if(err){
+			console.warn('Not all results matched:', r)
+		}
+		return res[0]
+	}
+}
+
+
 // XXX might need shift left/right indicators (later)...
 
 

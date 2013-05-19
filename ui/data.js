@@ -136,6 +136,8 @@ function isBetween(a, i, lst){
 
 
 // Basic liner search...
+//
+// NOTE: this is here for testing reasons only...
 function linSearch(target, lst, check, return_position){
 	check = check == null ? cmp : check
 
@@ -190,23 +192,12 @@ Array.prototype.binSearch = function(target, cmp){
 }
 
 
-function match(f0, f1){
-	return function(){
-		var a = f0.apply(f0, arguments)
-		var b = f1.apply(f1, arguments)
-		if(a != b){
-			console.warn('Result mismatch: f0:'+a+' f1:'+b)
-		}
-		return a
-	}
-}
-
 // Same as getImageBefore, but uses gids and searches in DATA...
 //
 // NOTE: this uses it's own predicate...
 function getGIDBefore(gid, ribbon, search){
 	search = search == null ? binSearch : search
-	//search = search == null ? match(linSearch, binSearch) : search
+	//search = search == null ? match2(linSearch, binSearch) : search
 	ribbon = DATA.ribbons[ribbon]
 	var order = DATA.order
 
