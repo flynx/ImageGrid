@@ -7,9 +7,9 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-var LOAD_SCREENS = 4
-var LOAD_THRESHOLD = 1
-var DEFAULT_SCREEN_IMAGES = 5
+var LOAD_SCREENS = 6
+var LOAD_THRESHOLD = 2
+var DEFAULT_SCREEN_IMAGES = 4
 var MAX_SCREEN_IMAGES = 12
 
 // A stub image, also here for documentation...
@@ -69,16 +69,16 @@ var SETTINGS = {
 
 // NOTE: this expects gids...
 function imageDateCmp(a, b, data){
-	data = data == null ? DATA : data
-	return data.images[b].ctime - data.images[a].ctime
+	data = data == null ? IMAGES : data
+	return data[b].ctime - data[a].ctime
 }
 
 
 // NOTE: this expects gids...
 function imageNameCmp(a, b, data){
-	data = data == null ? DATA : data
-	a = data.images[b].path.split('/')[-1]
-	b = data.images[a].path.split('/')[-1]
+	data = data == null ? IMAGES : data
+	a = data[b].path.split('/')[-1]
+	b = data[a].path.split('/')[-1]
 	if(a == b){
 		return 0
 	} else if(a < b){
@@ -534,7 +534,7 @@ function convertDataGen1(data, cmp){
 	}
 	cmp = cmp == null ?
 			function(a, b){ 
-				return imageDateCmp(a, b, res) 
+				return imageDateCmp(a, b, res.images) 
 			}
 			: cmp
 	var ribbons = res.data.ribbons
@@ -698,10 +698,11 @@ function saveFile(name){
 	// CEF
 	if(window.CEF_dumpJSON != null){
 		if(DATA.image_file == null){
-			DATA.image_file = name + '-image.json'
+			DATA.image_file = name + '-images.json'
 		}
 		CEF_dumpJSON(DATA.image_file, IMAGES)
 		CEF_dumpJSON(name + '-data.json', DATA)
+		CEF_dumpJSON(name + '-marked.json', MARKED)
 
 	// PhoneGap
 	} else if(false) {
@@ -770,6 +771,7 @@ function setupDataBindings(viewer){
 		// XXX need to maintain the correct number of images per ribbon
 		// 		per zoom setting -- things get really odd when a ribbon 
 		// 		is smaller than it should be...
+		// XXX this does not get called on marking...
 		.on('preCenteringRibbon', function(evt, ribbon, image){
 			// NOTE: we do not need to worry about centering the ribbon 
 			//		here, just ball-park-load the correct batch...

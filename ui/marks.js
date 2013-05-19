@@ -25,10 +25,9 @@ function loadMarkedOnlyData(cmp){
 		],
 		//order: marked.slice(),
 		order: DATA.order,
-		images: DATA.images,
 	}
 	DATA.current = getGIDBefore(cur, 0)
-	loadData(DATA)
+	loadData()
 	toggleMarkesView('off')
 	return DATA
 }
@@ -37,7 +36,7 @@ function loadMarkedOnlyData(cmp){
 // XXX name this in a better way...
 function loadAllImages(){
 	DATA = ALL_DATA
-	loadData(DATA)
+	loadData()
 	return DATA
 }
 

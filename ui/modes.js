@@ -19,7 +19,7 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer',
 			} else {
 				TRANSITION_MODE_DEFAULT = 'animate'
 				toggleImageProportions('square')
-				fitNImages(5)
+				fitNImages(DEFAULT_SCREEN_IMAGES)
 			}
 		})
 

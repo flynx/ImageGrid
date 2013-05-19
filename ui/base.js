@@ -99,7 +99,7 @@ function flashIndicator(direction){
 		// 		rhythms... 
 		.show()
 		.delay(100)
-		.fadeOut(200)
+		.fadeOut(300)
 }
 
 
