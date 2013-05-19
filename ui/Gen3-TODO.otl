@@ -1,5 +1,20 @@
-[_] 19% Gen 3 current todo
-	[_] 38% High priority
+[_] 15% Gen 3 current todo
+	[_] 31% High priority
+		[_] split saving/loading into files and localStorage
+		| DATA
+		| 	- stored in localStorage
+		| 	- stored in file
+		| IMAGES
+		| 	- stored only in files (does not change)
+		|
+		[_] BUG: sometimes duplicate images get loaded...
+		| this happens when jumping back and forth on the mid ribbon until
+		| the last element shows up and then moving left until the frame
+		| around the image disappears...
+		| at this point, this will return 2:
+		|
+		| 	$('[order='+$('.current.image').attr('order')+']').length
+		|
 		[_] BUG: jumping screen images does not load the adjacent ribbons...
 		| positioning is OK but ribbons are not fully visible...
 		[X] ASAP: rewrite binSearch!! 

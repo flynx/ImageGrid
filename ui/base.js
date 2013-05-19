@@ -63,7 +63,7 @@ function match2(f0, f1){
 // Same as match2 but can take an arbitrary number of functions.
 // XXX test
 function matchN(){
-	vat funcs = arguments
+	var funcs = arguments
 	return function(){
 		var res = []
 		var err = false
@@ -98,7 +98,7 @@ function flashIndicator(direction){
 		// NOTE: this needs to be visible in all cases and key press 
 		// 		rhythms... 
 		.show()
-		.delay(20)
+		.delay(100)
 		.fadeOut(200)
 }
 

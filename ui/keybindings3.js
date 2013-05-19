@@ -152,7 +152,8 @@ var KEYBOARD_CONFIG = {
 
 		S: {
 				ctrl: function(){
-					saveLocalStorage()
+					//saveLocalStorage()
+					saveLocalStorageData()
 					saveLocalStorageMarks()
 				}
 			},
@@ -221,7 +222,7 @@ var KEYBOARD_CONFIG = {
 				default: function(){
 					var gid = getImageGID($('.current.image'))
 					var r = getRibbonIndex(getRibbon())
-					var data = DATA.images[gid]
+					var data = IMAGES[gid]
 					var order = DATA.order.indexOf(gid)
 					var name = data.path.split('/').pop()
 					alert('"'+ name +'"\n'+

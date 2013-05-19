@@ -318,10 +318,22 @@ $(function(){
 
 	//setElementOrigin($('.ribbon-set'), 'top', 'left')
 
-	if('DATA' in localStorage){
+	// we have an image file...
+	if((DATA_ATTR + '_IMAGES_FILE') in localStorage){
+		loadFileImages(localStorage[DATA_ATTR + '_IMAGES_FILE'])
+		DATA = loadLocalStorageData()
+		loadData()
+
+	// everything is in localStorage...
+	} else if('DATA' in localStorage){
 		loadLocalStorage()
+
+	// legacy default data...
 	} else {
-		loadData(convertDataGen1(image_list))
+		DATA = convertDataGen1(image_list)
+		DATA = DATA.data
+		IMAGES = DATA.images
+		loadData()
 	}
 
 	// XXX this will reload everything...

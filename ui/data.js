@@ -31,7 +31,7 @@ var STUB_IMAGE_DATA = {
 
 // Data format...
 var DATA = {
-	varsion: '2.0',
+	version: '2.0',
 	current: 0,
 	// the ribbon cache...
 	// in the simplest form this is a list of lists of GIDs
@@ -41,11 +41,18 @@ var DATA = {
 	// flat ordered list of images in current context...
 	// in the simplest form this is a list of GIDs.
 	order: $(new Array(100)).map(function(i){return i}).toArray(),
-	// the images object, this is indexed by image GID and contains all 
-	// the needed data...
-	// XXX should we split this out?
-	images: {}
+
+	// this can be used to store the filename/path of the file containing 
+	// image data...
+	image_file: null
 }
+
+// the images object, this is indexed by image GID and contains all 
+// the needed data...
+// XXX should we split this out?
+var IMAGES = {}
+
+var DATA_ATTR = 'DATA'
 
 var MARKED = []
 
@@ -272,7 +279,7 @@ function getImageGIDs(from, count, ribbon, inclusive){
 function getBestPreview(gid, size){
 	size = size == null ? getVisibleImageSize('max') : size
 	var s
-	var img_data = DATA.images[gid]
+	var img_data = IMAGES[gid]
 	var url = img_data.path
 	var preview_size = 'Original'
 	var p = Infinity
@@ -319,7 +326,7 @@ function updateImage(image, gid, size){
 		image.removeClass('marked')
 	}
 
-	var img_data = DATA.images[gid]
+	var img_data = IMAGES[gid]
 	if(img_data == null){
 		img_data = STUB_IMAGE_DATA
 	}
@@ -488,10 +495,9 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 }
 
 
-function loadData(data, images_per_screen){
-	DATA = data
+function loadData(images_per_screen){
 	var ribbons_set = $('.ribbon-set')
-	var current = data.current
+	var current = DATA.current
 	// if no width is given, use the current or default...
 	var w = images_per_screen == null ? getScreenWidthInImages() : images_per_screen
 	w = w > MAX_SCREEN_IMAGES ? DEFAULT_SCREEN_IMAGES : w
@@ -500,13 +506,13 @@ function loadData(data, images_per_screen){
 	$('.ribbon').remove()
 
 	// create ribbons...
-	$.each(data.ribbons, function(i, e){
+	$.each(DATA.ribbons, function(i, e){
 		createRibbon().appendTo(ribbons_set)
 	})
 
 	// create images...
 	$('.ribbon').each(function(i, e){
-		loadImages(current, Math.min(w * LOAD_SCREENS, data.ribbons[i].length), $(this))
+		loadImages(current, Math.min(w * LOAD_SCREENS, DATA.ribbons[i].length), $(this))
 	})
 
 	focusImage($('.image').filter('[gid="'+JSON.stringify(current)+'"]'))
@@ -518,10 +524,12 @@ function loadData(data, images_per_screen){
 
 function convertDataGen1(data, cmp){
 	var res = {
-		varsion: '2.0',
-		current: null,
-		ribbons: [],
-		order: [], 
+		data: {
+			version: '2.0',
+			current: null,
+			ribbons: [],
+			order: [], 
+		},
 		images: {}
 	}
 	cmp = cmp == null ?
@@ -529,12 +537,12 @@ function convertDataGen1(data, cmp){
 				return imageDateCmp(a, b, res) 
 			}
 			: cmp
-	var ribbons = res.ribbons
+	var ribbons = res.data.ribbons
+	var order = res.data.order
 	var images = res.images
-	var order = res.order
 
 	// position...
-	res.current = data.position
+	res.data.current = data.position
 	
 	// ribbons and images...
 	$.each(data.ribbons, function(i, input_images){
@@ -552,7 +560,7 @@ function convertDataGen1(data, cmp){
 	order.sort(cmp)
 
 	// XXX STUB
-	res.current = order[0]
+	res.data.current = order[0]
 
 	return res
 }
@@ -565,28 +573,140 @@ function convertDataGen1(data, cmp){
 * XXX should we use jStorage here?
 */
 
-function loadLocalStorage(attr){
-	attr = attr == null ? 'DATA' : attr
-	return loadData(JSON.parse(localStorage[attr]))
+function loadLocalStorageData(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	var data = localStorage[attr]
+	if(data == null){
+		data = '{}'
+	}
+	return JSON.parse(data)
 }
 
 
-function saveLocalStorage(attr){
-	attr = attr == null ? 'DATA' : attr
+function saveLocalStorageData(attr){
+	attr = attr == null ? DATA_ATTR : attr
 	localStorage[attr] = JSON.stringify(DATA)
 }
 
 
+function loadLocalStorageImages(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_IMAGES'
+	var images = localStorage[attr]
+	if(images == null){
+		images = '{}'
+	}
+	return JSON.parse(images)
+}
+
+
+function saveLocalStorageImages(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_IMAGES'
+	localStorage[attr] = JSON.stringify(IMAGES)
+}
+
+
+// generic save/load...
+function loadLocalStorage(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	DATA = loadLocalStorageData(attr)
+	IMAGES = loadLocalStorageImages(attr)
+	return loadData()
+}
+
+
+function saveLocalStorage(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	saveLocalStorageData(attr)
+	saveLocalStorageImages(attr)
+}
+
+
 function loadLocalStorageMarks(attr){
-	attr = attr == null ? 'MARKED' : attr
-	MARKED = JSON.parse(localStorage[attr])
-	return loadData(DATA)
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_MARKED'
+	var marked = localStorage[attr]
+	if(marked == null){
+		marked = '[]'
+	}
+	MARKED = JSON.parse(marked)
+	return loadData()
 }
 
 
 function saveLocalStorageMarks(attr){
-	attr = attr == null ? 'MARKED' : attr
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_MARKED'
 	localStorage[attr] = JSON.stringify(MARKED)
+}
+
+
+
+/**********************************************************************
+* Extension API (CEF/PhoneGap/...)
+*/
+
+function loadFileImages(path){
+	if(window.CEF_loadJSON != null){
+		IMAGES = CEF_loadJSON(path)
+		localStorage[DATA_ATTR + '_IMAGES_FILE'] = path
+		console.log('Loaded IMAGES...')
+		return IMAGES
+
+	} else {
+		// XXX
+	}
+}
+
+function loadFile(data_path, image_path){
+	// CEF
+	if(window.CEF_loadJSON != null){
+		var json = CEF_loadJSON(data_path)
+		console.log('Loaded DATA...')
+
+		// legacy format...
+		if(json.version == null){
+			json = convertDataGen1(json)
+			DATA = json.data
+			IMAGES = json.images
+			return loadData()
+
+		// version 2.0
+		// XXX needs a more flexible protocol...
+		} else if(json.version == '2.0') {
+			DATA = json
+			if(image_path != null){
+				loadFileImages(image_path)
+			} else if(DATA.image_file != null) {
+				loadFileImages(DATA.image_file)
+			}
+			return loadData()
+
+		} else {
+			console.error('unknown format.')
+			return
+		}
+
+	// PhoneGap
+	} else if(false) {
+		// XXX
+	}
+}
+
+function saveFile(name){
+	// CEF
+	if(window.CEF_dumpJSON != null){
+		if(DATA.image_file == null){
+			DATA.image_file = name + '-image.json'
+		}
+		CEF_dumpJSON(DATA.image_file, IMAGES)
+		CEF_dumpJSON(name + '-data.json', DATA)
+
+	// PhoneGap
+	} else if(false) {
+		// XXX
+	}
 }
 
 
@@ -626,27 +746,6 @@ function preCacheAllRibbons(){
 	})
 	return IMAGE_CACHE
 }
-
-
-/**********************************************************************
-* Extension API (CEF/PhoneGap/...)
-*/
-
-function loadJSONFile(path){
-	// CEF
-	if(window.CEF_loadJSON != null){
-		var json = CEF_loadJSON(path)
-		if(json.version == null){
-			json = convertDataGen1(json)
-		}
-		return loadData(json)
-
-	// PhoneGap
-	} else if(false) {
-		// XXX
-	}
-}
-
 
 
 /**********************************************************************
