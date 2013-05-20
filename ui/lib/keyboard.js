@@ -91,9 +91,12 @@ function toKeyCode(c){
 	return c.charCodeAt(0)
 }
 
+// documentation wrapper...
+function doc(text, func){
+	func.doc = text
+	return func
+}
 
-// if set to false the event handlers will always return false...
-var KEYBOARD_HANDLER_PROPAGATE = true
 
 /* Basic key binding format:
  *
@@ -106,6 +109,8 @@ var KEYBOARD_HANDLER_PROPAGATE = true
  *			// this defines the list of keys to ignore by the handler.
  *			// NOTE: use "*" to ignore all keys other than explicitly 
  *			// 		defined in the current section.
+ *			// NOTE: ignoring a key will stop processing it in other 
+ *			//		compatible modes.
  * 			ignore: <ignored-keys>
  *
  *			// NOTE: a callback can have a .doc attr containing 
@@ -129,7 +134,7 @@ var KEYBOARD_HANDLER_PROPAGATE = true
  * 				default: <callback> | <key-def-x>,
  *
  *				// a modifier can be any single modifier, like shift or a 
- *				// combination of modifers like 'ctrl+shift', given in order 
+ *				// combination of modifiers like 'ctrl+shift', given in order 
  *				// of priority.
  *				// supported modifiers are (in order of priority):
  *				//	- ctrl
@@ -166,29 +171,56 @@ var KEYBOARD_HANDLER_PROPAGATE = true
  * NOTE: the number keys are named with a leading hash '#' (e.g. '#8') 
  * 		to avoid conflicsts with keys that have the code with the same 
  * 		value (e.g. 'backspace' (8)).
+ * NOTE: one can use a doc(<doc-string>, <callback>) as a shorthand to assign
+ * 		a docstring to a handler.
+ * 		it will only assign .doc attr and return the original function.
+ *
+ * XXX use getKeyHandler(...)
+ * XXX need an explicit way to prioritize modes...
  */
 function makeKeyboardHandler(keybindings, unhandled){
 	if(unhandled == null){
-		//unhandled = function(){return false}
-		unhandled = function(){return KEYBOARD_HANDLER_PROPAGATE}
+		unhandled = function(){}
 	}
 	return function(evt){
 		var did_handling = false
 		var res = null
 
+		// key data...
 		var key = evt.keyCode
-		var chr = toKeyName(key)
 
-		window.DEBUG && console.log('KEY:', key, chr)
+		// normalize the modifiers...
+		var modifiers = evt.ctrlKey ? 'ctrl' : ''
+		modifiers += evt.altKey ? (modifiers != '' ? '+alt' : 'alt') : ''
+		modifiers += evt.shiftKey ? (modifiers != '' ? '+shift' : 'shift') : ''
+
+		//window.DEBUG && console.log('KEY:', key, chr, modifiers)
+
+		var handlers = getKeyHandlers(key, modifiers, keybindings)
+
+		for(var mode in handlers){
+			var handler = handlers[mode]
+			if(handler != null){
+
+				did_handling = true
+				res = handler(evt)
+
+				if(res === false){
+					break
+				}
+			}
+		}
+		if(!did_handling){
+			return unhandled(key)
+		}
+		return res
+
+		/* XXX remove this after through testing...
+		var chr = toKeyName(key)
 
 		for(var mode in keybindings){
 			if($(mode).length > 0){
 				var bindings = keybindings[mode]
-
-				// normalize the modifiers...
-				var modifers = evt.ctrlKey ? 'ctrl' : ''
-				modifers += evt.altKey ? (modifers != '' ? '+alt' : 'alt') : ''
-				modifers += evt.shiftKey ? (modifers != '' ? '+shift' : 'shift') : ''
 
 				if(chr in bindings){
 					var handler = bindings[chr]
@@ -205,8 +237,8 @@ function makeKeyboardHandler(keybindings, unhandled){
 
 					// do the complex handler aliases...
 					if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
-						if(typeof(handler[modifers]) == typeof('str')){
-							handler = handler[modifers]
+						if(typeof(handler[modifiers]) == typeof('str')){
+							handler = handler[modifiers]
 						} else if(typeof(handler['default']) == typeof('str')){
 							handler = handler['default']
 						} else {
@@ -216,7 +248,6 @@ function makeKeyboardHandler(keybindings, unhandled){
 
 					// simple handlers...
 					if(handler in bindings){
-						// XXX need to take care of that we can always be a number or a string...
 						handler = bindings[handler]
 					} else if(typeof(handler) == typeof(1)) {
 						handler = bindings[toKeyName(handler)]
@@ -228,7 +259,9 @@ function makeKeyboardHandler(keybindings, unhandled){
 				if(handler == null){
 					// if something is ignored then just breakout and stop handling...
 					if(bindings.ignore == '*' 
-							|| bindings.ignore != null && bindings.ignore.indexOf(key) != -1){
+							|| bindings.ignore != null 
+								&& (bindings.ignore.indexOf(key) != -1 
+									|| bindings.ignore.indexOf(chr) != -1)){
 						res = res == null ? true : res
 						did_handling = true
 						// ignoring a key will stop processing it...
@@ -244,24 +277,25 @@ function makeKeyboardHandler(keybindings, unhandled){
 				}
 				// complex handler...
 				if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
-					var callback = handler[modifers]
+					var callback = handler[modifiers]
 					if(callback == null){
 						callback = handler['default']
 					}
+
 					if(callback != null){
-						res = callback()
+						res = callback(evt)
 						did_handling = true
 						continue
 					}
 				} else {
 					// simple callback...
 					//res = handler(evt) 
-					res = handler() 
+					res = handler(evt) 
 					// if the handler explicitly returned false break out...
 					if(res === false){
 						// XXX is this corrent???
 						// XXX should we just break here instead of return...
-						return KEYBOARD_HANDLER_PROPAGATE ? res : null
+						return res
 					}
 					did_handling = true
 					continue
@@ -273,17 +307,131 @@ function makeKeyboardHandler(keybindings, unhandled){
 			return unhandled(key)
 		} else {
 			// XXX should we handle multiple hits???
-			return KEYBOARD_HANDLER_PROPAGATE&&res?true:false
+			return res
 		}
+		*/
 	}
 }
 
 
-// helper...
-function doc(text, func){
-	func.doc = text
-	return func
+// NOTE: if modifiers are null then this will not resolve aliases that
+// 		depend on modifiers and return a complex ahndler as-is.
+// NOTE: this will test modes and return only compatible handlers by 
+// 		default, to return all modes, set all_modes to true.
+// XXX need an explicit way to prioritize modes...
+// XXX check do we need did_handling here...
+function getKeyHandlers(key, modifiers, keybindings, all_modes){
+	var chr = null
+	var did_handling = false
+	modifiers = modifiers == null ? '' : modifiers
+
+	if(typeof(key) == typeof(123)){
+		key = key
+		chr = toKeyName(key)
+	} else {
+		chr = key
+		key = toKeyCode(key)
+	}
+
+	res = {}
+
+	for(var mode in keybindings){
+
+		// test for mode compatibility...
+		if(!all_modes && $(mode).length == 0){
+			continue
+		}
+
+		var bindings = keybindings[mode]
+
+		if(chr in bindings){
+			var handler = bindings[chr]
+		} else {
+			var handler = bindings[key]
+		}
+
+		// alias...
+		while( handler != null 
+				&& (typeof(handler) == typeof(123) 
+					|| typeof(handler) == typeof('str')
+					|| typeof(handler) == typeof({}) 
+						&& handler.constructor.name == 'Object') ){
+
+			// do the complex handler aliases...
+			if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
+				if(typeof(handler[modifiers]) == typeof('str')){
+					handler = handler[modifiers]
+				} else if(typeof(handler['default']) == typeof('str')){
+					handler = handler['default']
+				} else {
+					break
+				}
+			}
+
+			// simple handlers...
+			if(handler in bindings){
+				// XXX need to take care of that we can always be a number or a string...
+				handler = bindings[handler]
+			} else if(typeof(handler) == typeof(1)) {
+				handler = bindings[toKeyName(handler)]
+			} else {
+				handler = bindings[toKeyCode(handler)]
+			}
+		}
+
+		// no handler...
+		if(handler == null){
+			// if something is ignored then just breakout and stop handling...
+			if(bindings.ignore == '*' 
+					|| bindings.ignore != null 
+						&& (bindings.ignore.indexOf(key) != -1 
+							|| bindings.ignore.indexOf(chr) != -1)){
+				did_handling = true
+				// ignoring a key will stop processing it...
+				if(all_modes){
+					res[mode] = 'IGNORE'
+				} else {
+					break
+				}
+			}
+			continue
+		}
+
+		// Array, lisp style with docs...
+		if(typeof(handler) == typeof([]) && handler.constructor.name == 'Array'){
+			// we do not care about docs here, so just get the handler...
+			handler = handler[0]
+		}
+		// complex handler...
+		if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
+			var callback = handler[modifiers]
+			if(callback == null){
+				callback = handler['default']
+			}
+
+			if(callback != null){
+				res[mode] = callback
+
+				did_handling = true
+				continue
+			}
+		} else {
+			// simple callback...
+			res[mode] = handler
+
+			did_handling = true
+			continue
+		}
+
+		if(did_handling){
+			break
+		}
+	}
+
+	return res
 }
+
+
 
 /* Build structure ready for conversion to HTML help.
 * Structure:
@@ -299,67 +447,10 @@ function doc(text, func){
 * 	<keys-spec> 	- list of key names.
 *
 */
-function getKeyHandler(key, keybindings){
-}
-
-
-
-function buildKeyindingsHelp(keybindings){
+function buildKeybindingsHelp(keybindings){
 	var res = {}
 
-	for(var selector in keybindings){
-		var section = keybindings[selector]
-		var title = section.title == null ? selector : section.title
-		var res_sec = {
-			doc: section.doc,
-		}
-		res.title = res_sec
-
-		for(var k in section){
-			// handler...
-			var h = section[k]
-			var doc
-			var key = typeof(k) == typeof(1) ? toKeyName(k) : k
-
-			// an alias...
-			while(typeof(h) == typeof(1) || typeof(h) == typeof('s')){
-				if(h in section){
-					// XXX need to take care of that we can always be a number or a string...
-					h = section[h]
-				} else if(typeof(h) == typeof(1)) {
-					h = section[toKeyName(h)]
-				} else {
-					h = section[toKeyCode(h)]
-				}
-			}
-
-			// no handler... 
-			if(h == null){
-				doc = 'Nothing'				
-
-			// a handler with doc (array)...
-			} else if(typeof(h) == typeof([]) && handler.constructor.name == 'Array'){
-				doc = h[1]
-
-			// complex handler (object)...
-			} else if(typeof(h) == typeof({})){
-				// XXX
-				
-
-			// simple handler (function)...
-			} else {
-				doc = h.doc != null ? h.doc : h
-
-			}
-
-			// push the actual data...
-			if(doc in res_sec){
-				res_sec[doc].push(key)
-			} else {
-				res_sec[doc] = [key]
-			}
-		}
-	}
+	// XXX
 	return res
 }
 
