@@ -98,228 +98,28 @@ function doc(text, func){
 }
 
 
-/* Basic key binding format:
+/* Key handler getter
  *
- * {
- * 		<css-selector>: {
- *			// meta-data used to generate user docs/help/config
- * 			title: <text>,
- * 			doc: <text>,
+ * For doc on format see makeKeyboardHandler(...)
  *
- *			// this defines the list of keys to ignore by the handler.
- *			// NOTE: use "*" to ignore all keys other than explicitly 
- *			// 		defined in the current section.
- *			// NOTE: ignoring a key will stop processing it in other 
- *			//		compatible modes.
- * 			ignore: <ignored-keys>
- *
- *			// NOTE: a callback can have a .doc attr containing 
- *			//		documentation...
- * 			<key-def> : <callback>,
- *
- * 			<key-def> : [
- *				// this can be any type of handler except for an alias...
- * 				<handler>, 
- * 				<doc>
- * 			],
- *
- * 			<key-def> : {
- * 				// optional documentation string...
- * 				doc: <doc-string>,
- *
- *				// modifiers can either have a callback or an alias as 
- *				// a value...
- *				// NOTE: when the alias is resolved, the same modifiers 
- *				//		will be applied to the final resolved handler.
- * 				default: <callback> | <key-def-x>,
- *
- *				// a modifier can be any single modifier, like shift or a 
- *				// combination of modifiers like 'ctrl+shift', given in order 
- *				// of priority.
- *				// supported modifiers are (in order of priority):
- *				//	- ctrl
- *				//	- alt
- *				//	- shift
- * 				<modifer>: [...],
- * 				...
- * 			},
- *
- *			// alias...
- * 			<key-def-a> : <key-def-b>,
- *
- *			...
- * 		},
- *
+ * Returns:
+ * 	{
+ * 		<mode>: <handler>,
  * 		...
- * }
+ * 	}
  *
+ * NOTE: this will test modes and return only compatible handlers by 
+ * 		default, to return all modes, set all_modes to true.
+ * NOTE: unless all_modes is true, handlers after a mode that explicitly
+ * 		ignores a key will not be included.
+ * NOTE: if all_modes is true modes that explicitly ignore a key will 
+ * 		contain 'IGNORE' in place of a handler.
+ * NOTE: if a key is not handled in a mode, that mode will not be 
+ * 		present in the resulting object.
  *
- * <key-def> can be:
- * 	- explicit key code, e.g. 65
- * 	- key name, if present in _SPECIAL_KEYS, e.g. Enter
- * 	- key char (uppercase), as is returned by String.fromCharCode(...) e.g. A
- *
- *
- * NOTE: to rest what to use as <key-def> use toKeyCode(..) / toKeyName(..).
- * NOTE: all fields are optional.
- * NOTE: if a handler explicitly returns false then that will break the 
- * 		event propagation chain and exit the handler.
- * 		i.e. no other matching handlers will be called.
- * NOTE: a <css-selector> is used as a predicate to select a section to 
- * 		use. if multiple selectors match something then multiple sections 
- * 		will be resolved in order of occurrence.
- * NOTE: the number keys are named with a leading hash '#' (e.g. '#8') 
- * 		to avoid conflicsts with keys that have the code with the same 
- * 		value (e.g. 'backspace' (8)).
- * NOTE: one can use a doc(<doc-string>, <callback>) as a shorthand to assign
- * 		a docstring to a handler.
- * 		it will only assign .doc attr and return the original function.
- *
- * XXX use getKeyHandler(...)
  * XXX need an explicit way to prioritize modes...
+ * XXX check do we need did_handling here...
  */
-function makeKeyboardHandler(keybindings, unhandled){
-	if(unhandled == null){
-		unhandled = function(){}
-	}
-	return function(evt){
-		var did_handling = false
-		var res = null
-
-		// key data...
-		var key = evt.keyCode
-
-		// normalize the modifiers...
-		var modifiers = evt.ctrlKey ? 'ctrl' : ''
-		modifiers += evt.altKey ? (modifiers != '' ? '+alt' : 'alt') : ''
-		modifiers += evt.shiftKey ? (modifiers != '' ? '+shift' : 'shift') : ''
-
-		//window.DEBUG && console.log('KEY:', key, chr, modifiers)
-
-		var handlers = getKeyHandlers(key, modifiers, keybindings)
-
-		for(var mode in handlers){
-			var handler = handlers[mode]
-			if(handler != null){
-
-				did_handling = true
-				res = handler(evt)
-
-				if(res === false){
-					break
-				}
-			}
-		}
-		if(!did_handling){
-			return unhandled(key)
-		}
-		return res
-
-		/* XXX remove this after through testing...
-		var chr = toKeyName(key)
-
-		for(var mode in keybindings){
-			if($(mode).length > 0){
-				var bindings = keybindings[mode]
-
-				if(chr in bindings){
-					var handler = bindings[chr]
-				} else {
-					var handler = bindings[key]
-				}
-
-				// alias...
-				while( handler != null 
-						&& (typeof(handler) == typeof(123) 
-							|| typeof(handler) == typeof('str')
-							|| typeof(handler) == typeof({}) 
-								&& handler.constructor.name == 'Object') ){
-
-					// do the complex handler aliases...
-					if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
-						if(typeof(handler[modifiers]) == typeof('str')){
-							handler = handler[modifiers]
-						} else if(typeof(handler['default']) == typeof('str')){
-							handler = handler['default']
-						} else {
-							break
-						}
-					}
-
-					// simple handlers...
-					if(handler in bindings){
-						handler = bindings[handler]
-					} else if(typeof(handler) == typeof(1)) {
-						handler = bindings[toKeyName(handler)]
-					} else {
-						handler = bindings[toKeyCode(handler)]
-					}
-				}
-				// no handler...
-				if(handler == null){
-					// if something is ignored then just breakout and stop handling...
-					if(bindings.ignore == '*' 
-							|| bindings.ignore != null 
-								&& (bindings.ignore.indexOf(key) != -1 
-									|| bindings.ignore.indexOf(chr) != -1)){
-						res = res == null ? true : res
-						did_handling = true
-						// ignoring a key will stop processing it...
-						break
-					}
-					continue
-				}
-				// Array, lisp style with docs...
-				// XXX for some odd reason typeof([]) == typeof({})!!!
-				if(typeof(handler) == typeof([]) && handler.constructor.name == 'Array'){
-					// we do not care about docs here, so just get the handler...
-					handler = handler[0]
-				}
-				// complex handler...
-				if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
-					var callback = handler[modifiers]
-					if(callback == null){
-						callback = handler['default']
-					}
-
-					if(callback != null){
-						res = callback(evt)
-						did_handling = true
-						continue
-					}
-				} else {
-					// simple callback...
-					//res = handler(evt) 
-					res = handler(evt) 
-					// if the handler explicitly returned false break out...
-					if(res === false){
-						// XXX is this corrent???
-						// XXX should we just break here instead of return...
-						return res
-					}
-					did_handling = true
-					continue
-				}
-			}
-		}
-		if(!did_handling){
-			// key is unhandled by any modes...
-			return unhandled(key)
-		} else {
-			// XXX should we handle multiple hits???
-			return res
-		}
-		*/
-	}
-}
-
-
-// NOTE: if modifiers are null then this will not resolve aliases that
-// 		depend on modifiers and return a complex ahndler as-is.
-// NOTE: this will test modes and return only compatible handlers by 
-// 		default, to return all modes, set all_modes to true.
-// XXX need an explicit way to prioritize modes...
-// XXX check do we need did_handling here...
 function getKeyHandlers(key, modifiers, keybindings, all_modes){
 	var chr = null
 	var did_handling = false
@@ -431,6 +231,124 @@ function getKeyHandlers(key, modifiers, keybindings, all_modes){
 	return res
 }
 
+
+/* Basic key binding format:
+ *
+ * {
+ * 		<css-selector>: {
+ *			// meta-data used to generate user docs/help/config
+ * 			title: <text>,
+ * 			doc: <text>,
+ *
+ *			// this defines the list of keys to ignore by the handler.
+ *			// NOTE: use "*" to ignore all keys other than explicitly 
+ *			// 		defined in the current section.
+ *			// NOTE: ignoring a key will stop processing it in other 
+ *			//		compatible modes.
+ * 			ignore: <ignored-keys>
+ *
+ *			// NOTE: a callback can have a .doc attr containing 
+ *			//		documentation...
+ * 			<key-def> : <callback>,
+ *
+ * 			<key-def> : [
+ *				// this can be any type of handler except for an alias...
+ * 				<handler>, 
+ * 				<doc>
+ * 			],
+ *
+ * 			<key-def> : {
+ * 				// optional documentation string...
+ * 				doc: <doc-string>,
+ *
+ *				// modifiers can either have a callback or an alias as 
+ *				// a value...
+ *				// NOTE: when the alias is resolved, the same modifiers 
+ *				//		will be applied to the final resolved handler.
+ * 				default: <callback> | <key-def-x>,
+ *
+ *				// a modifier can be any single modifier, like shift or a 
+ *				// combination of modifiers like 'ctrl+shift', given in order 
+ *				// of priority.
+ *				// supported modifiers are (in order of priority):
+ *				//	- ctrl
+ *				//	- alt
+ *				//	- shift
+ * 				<modifer>: [...],
+ * 				...
+ * 			},
+ *
+ *			// alias...
+ * 			<key-def-a> : <key-def-b>,
+ *
+ *			...
+ * 		},
+ *
+ * 		...
+ * }
+ *
+ *
+ * <key-def> can be:
+ * 	- explicit key code, e.g. 65
+ * 	- key name, if present in _SPECIAL_KEYS, e.g. Enter
+ * 	- key char (uppercase), as is returned by String.fromCharCode(...) e.g. A
+ *
+ *
+ * NOTE: to rest what to use as <key-def> use toKeyCode(..) / toKeyName(..).
+ * NOTE: all fields are optional.
+ * NOTE: if a handler explicitly returns false then that will break the 
+ * 		event propagation chain and exit the handler.
+ * 		i.e. no other matching handlers will be called.
+ * NOTE: a <css-selector> is used as a predicate to select a section to 
+ * 		use. if multiple selectors match something then multiple sections 
+ * 		will be resolved in order of occurrence.
+ * NOTE: the number keys are named with a leading hash '#' (e.g. '#8') 
+ * 		to avoid conflicsts with keys that have the code with the same 
+ * 		value (e.g. 'backspace' (8)).
+ * NOTE: one can use a doc(<doc-string>, <callback>) as a shorthand to assign
+ * 		a docstring to a handler.
+ * 		it will only assign .doc attr and return the original function.
+ *
+ * XXX need an explicit way to prioritize modes...
+ */
+function makeKeyboardHandler(keybindings, unhandled){
+	if(unhandled == null){
+		unhandled = function(){}
+	}
+	return function(evt){
+		var did_handling = false
+		var res = null
+
+		// key data...
+		var key = evt.keyCode
+
+		// normalize the modifiers...
+		var modifiers = evt.ctrlKey ? 'ctrl' : ''
+		modifiers += evt.altKey ? (modifiers != '' ? '+alt' : 'alt') : ''
+		modifiers += evt.shiftKey ? (modifiers != '' ? '+shift' : 'shift') : ''
+
+		//window.DEBUG && console.log('KEY:', key, chr, modifiers)
+
+		var handlers = getKeyHandlers(key, modifiers, keybindings)
+
+		for(var mode in handlers){
+			var handler = handlers[mode]
+			if(handler != null){
+
+				did_handling = true
+				res = handler(evt)
+
+				if(res === false){
+					break
+				}
+			}
+		}
+		if(!did_handling){
+			return unhandled(key)
+		}
+		return res
+	}
+}
 
 
 /* Build structure ready for conversion to HTML help.
