@@ -25,7 +25,7 @@ var _SPECIAL_KEYS = {
 	// Special Keys...
 	9:		'Tab',		33:		'PgUp',		45:		'Ins',		
 	13:		'Enter',	34:		'PgDown',	46:		'Del',		
-	16:		'Shift',	35:		'End',		80:		'Backspace',
+	16:		'Shift',	35:		'End',		 8:		'Backspace',
 	17:		'Ctrl',		36:		'Home',		91:		'Win',		
 	18:		'Alt',		37:		'Left',		93:		'Menu',		
 	20:		'Caps Lock',38:		'Up',	 
@@ -39,8 +39,19 @@ var _SPECIAL_KEYS = {
 	115:	'F4',		119:	'F8',		123:	'F12',
 
 	// Number row..
-	49: '1',	50: '2',	51: '3',	52: '4',	53: '5',
-	54: '6', 	55: '7',	56: '8',	57: '9',	48: '0',
+	// NOTE: to avoid conflicts with keys that have a code the same as
+	// 		the value of a number key...
+	// 			Ex:
+	// 				'Backspace' (8) vs. '8' (56)
+	// 				'Tab' (9) vs. '9' (57)
+	// 		...all of the numbers start with a '#'
+	// 		this is a problem due to JS coercing the types to string
+	// 		on object attr access.
+	// 			Ex:
+	// 				o = {1: 2}
+	// 				o[1] == o['1'] == true
+	49: '#1',	50: '#2',	51: '#3',	52: '#4',	53: '#5',
+	54: '#6', 	55: '#7',	56: '#8',	57: '#9',	48: '#0',
 
 	// Punctuation...
 	// top row...
@@ -97,14 +108,25 @@ var KEYBOARD_HANDLER_PROPAGATE = true
  *			// 		defined in the current section.
  * 			ignore: <ignored-keys>
  *
+ *			// NOTE: a callback can have a .doc attr containing 
+ *			//		documentation...
  * 			<key-def> : <callback>,
  *
+ * 			<key-def> : [
+ *				// this can be any type of handler except for an alias...
+ * 				<handler>, 
+ * 				<doc>
+ * 			],
+ *
  * 			<key-def> : {
+ * 				// optional documentation string...
+ * 				doc: <doc-string>,
+ *
  *				// modifiers can either have a callback or an alias as 
  *				// a value...
  *				// NOTE: when the alias is resolved, the same modifiers 
  *				//		will be applied to the final resolved handler.
- * 				'default': <callback> | <key-def-x>,
+ * 				default: <callback> | <key-def-x>,
  *
  *				// a modifier can be any single modifier, like shift or a 
  *				// combination of modifers like 'ctrl+shift', given in order 
@@ -116,12 +138,6 @@ var KEYBOARD_HANDLER_PROPAGATE = true
  * 				<modifer>: [...],
  * 				...
  * 			},
- *
- * 			<key-def> : [
- *				// this can be any type of handler except for an alias...
- * 				<handler>, 
- * 				<doc>
- * 			],
  *
  *			// alias...
  * 			<key-def-a> : <key-def-b>,
@@ -147,8 +163,9 @@ var KEYBOARD_HANDLER_PROPAGATE = true
  * NOTE: a <css-selector> is used as a predicate to select a section to 
  * 		use. if multiple selectors match something then multiple sections 
  * 		will be resolved in order of occurrence.
- *
- * XXX might need to add meta information to generate sensible help...
+ * NOTE: the number keys are named with a leading hash '#' (e.g. '#8') 
+ * 		to avoid conflicsts with keys that have the code with the same 
+ * 		value (e.g. 'backspace' (8)).
  */
 function makeKeyboardHandler(keybindings, unhandled){
 	if(unhandled == null){
@@ -158,12 +175,16 @@ function makeKeyboardHandler(keybindings, unhandled){
 	return function(evt){
 		var did_handling = false
 		var res = null
+
+		var key = evt.keyCode
+		var chr = toKeyName(key)
+
+		window.DEBUG && console.log('KEY:', key, chr)
+
 		for(var mode in keybindings){
 			if($(mode).length > 0){
 				var bindings = keybindings[mode]
 
-				var key = evt.keyCode
-				var chr = toKeyName(evt.keyCode)
 				// normalize the modifiers...
 				var modifers = evt.ctrlKey ? 'ctrl' : ''
 				modifers += evt.altKey ? (modifers != '' ? '+alt' : 'alt') : ''
@@ -176,9 +197,11 @@ function makeKeyboardHandler(keybindings, unhandled){
 				}
 
 				// alias...
-				while (typeof(handler) == typeof(123) 
-						|| typeof(handler) == typeof('str')
-						|| typeof(handler) == typeof({}) && handler.constructor.name == 'Object') {
+				while( handler != null 
+						&& (typeof(handler) == typeof(123) 
+							|| typeof(handler) == typeof('str')
+							|| typeof(handler) == typeof({}) 
+								&& handler.constructor.name == 'Object') ){
 
 					// do the complex handler aliases...
 					if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){

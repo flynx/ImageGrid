@@ -67,14 +67,10 @@ var KEYBOARD_CONFIG = {
 				ctrl: 'Right',
 				'ctrl+shift': 'Left',
 			},
-		/* XXX for some reason this does not work,,,
-		// XXX for some odd reason, returning false does not cancel 
-		//		default behaviour here...
 		Backspace: {
 				default: 'Left',
 				shift: 'Right',
 			},
-		*/
 		Home: function(){
 				event.preventDefault()
 				firstImage()
@@ -125,16 +121,15 @@ var KEYBOARD_CONFIG = {
 
 
 		// zooming...
-		'1': function(){ fitNImages(1) },
-		'2': function(){ fitNImages(2) },
-		'3': function(){ fitNImages(3) },
-		'4': function(){ fitNImages(4) },
-		'5': function(){ fitNImages(5) },
-		'6': function(){ fitNImages(6) },
-		'7': function(){ fitNImages(7) },
-		// XXX for some reason this also hooks the Backspace key (80)...
-		'8': function(){ fitNImages(8) },
-		'9': function(){ fitNImages(9) },
+		'#1': function(){ fitNImages(1) },
+		'#2': function(){ fitNImages(2) },
+		'#3': function(){ fitNImages(3) },
+		'#4': function(){ fitNImages(4) },
+		'#5': function(){ fitNImages(5) },
+		'#6': function(){ fitNImages(6) },
+		'#7': function(){ fitNImages(7) },
+		'#8': function(){ fitNImages(8) },
+		'#9': function(){ fitNImages(9) },
 
 		'-': function(){ zoomOut() },
 		'=': function(){ zoomIn() },
