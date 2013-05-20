@@ -1,12 +1,5 @@
-[_] 15% Gen 3 current todo
-	[_] 31% High priority
-		[_] split saving/loading into files and localStorage
-		| DATA
-		| 	- stored in localStorage
-		| 	- stored in file
-		| IMAGES
-		| 	- stored only in files (does not change)
-		|
+[_] 18% Gen 3 current todo
+	[_] 37% High priority
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame
@@ -17,8 +10,6 @@
 		|
 		[_] BUG: jumping screen images does not load the adjacent ribbons...
 		| positioning is OK but ribbons are not fully visible...
-		[X] ASAP: rewrite binSearch!! 
-		| linSearch obviously is not usable for large sets of data...
 		[_] 6% mark-based operations
 			[_] 33% cropping selection
 				[X] marked
@@ -67,6 +58,15 @@
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions
 			[_] caching config
+		[X] ASAP: rewrite binSearch!! 
+		| linSearch obviously is not usable for large sets of data...
+		[X] split saving/loading into files and localStorage
+		| DATA
+		| 	- stored in localStorage
+		| 	- stored in file
+		| IMAGES
+		| 	- stored only in files (does not change)
+		|
 		[X] 100% modes
 			[X] ribbon
 			[X] single-image

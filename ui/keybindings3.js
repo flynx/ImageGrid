@@ -186,8 +186,9 @@ var KEYBOARD_CONFIG = {
 						prevImage()
 					}
 					if($('.current.image').filter(':visible').length == 0){
-						centerImage(focusImage(getImageBefore()))
+						centerView(focusImage(getImageBefore()))
 					}
+					centerRibbons()
 				},
 				// same as default but in reverse direction...
 				shift: function(){
@@ -198,23 +199,12 @@ var KEYBOARD_CONFIG = {
 						prevImage()
 					}
 					if($('.current.image').filter(':visible').length == 0){
-						centerImage(focusImage(getImageBefore()))
+						centerView(focusImage(getImageBefore()))
 					} 
+					centerRibbons()
 				},
 				ctrl: function(){ 
 					var action = toggleImageMark() 
-					// focus an image instead of the one that just vanished...
-					if(action == 'off' && toggleMarkedOnlyView('?') == 'on'){
-						if(DIRECTION == 'next'){
-							nextImage()
-						} else {
-							prevImage()
-						}
-						if($('.current.image').filter(':visible').length == 0){
-							centerImage(focusImage(getImageBefore()))
-						} 
-
-					}
 				},
 			},
 		I: {
@@ -250,6 +240,8 @@ var KEYBOARD_CONFIG = {
 					toggleMarkedOnlyView()
 				}
 			},
+
+		F4: openImage,
 	}
 }
 

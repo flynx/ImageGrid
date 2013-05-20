@@ -711,6 +711,19 @@ function saveFile(name){
 }
 
 
+function openImage(){
+	// CEF
+	if(window.CEF_dumpJSON != null){
+		// XXX if path is not present try and open the biggest preview...
+		return CEF_runSystem(IMAGES[getImageGID()].path)
+
+	// PhoneGap
+	} else if(false) {
+		// XXX
+	}
+}
+
+
 
 /**********************************************************************
 * Image caching...
@@ -747,6 +760,7 @@ function preCacheAllRibbons(){
 	})
 	return IMAGE_CACHE
 }
+
 
 
 /**********************************************************************
