@@ -88,7 +88,7 @@ var KEYBOARD_CONFIG = {
 		Up: {
 				default: function(){ 
 					event.preventDefault()
-					prevRibbon(DIRECTION) 
+					prevRibbon() 
 					centerRibbons()
 				},
 				shift: function(){ 
@@ -105,7 +105,7 @@ var KEYBOARD_CONFIG = {
 		Down: {
 				default: function(){
 					event.preventDefault()
-					nextRibbon(DIRECTION) 
+					nextRibbon() 
 					centerRibbons()
 				},
 				shift: function(){

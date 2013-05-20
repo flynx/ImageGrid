@@ -743,39 +743,39 @@ function lastImage(mode){
 
 // NOTE: if moving is 'next' these will chose the image after the current's order.
 // NOTE: if an image with the same order is found, moving argument has no effect.
-// XXX make these select the closest image instead of the one based on 
-// 		direction...
 // XXX these sometimes behave wrong at the start of the ribbon depending
 // 		on direction...
-function prevRibbon(moving, mode){
+function prevRibbon(mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
 	var target = getImageBefore(cur, 
 			getRibbon(cur).prevAll('.ribbon' + NAV_RIBBON_DEFAULT).first())
+
+	// first image...
 	if(target.length == 0){
 		// XXX too complex???
 		target = getRibbon(cur)
 					.prevAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
 						.find('.image' + mode).first()
-	} else if(moving == 'next' && cur.attr('order') != target.attr('order')){
+	
+	} else {
 		var next = target.nextAll('.image' + mode).first()
 		target = next.length > 0 ? next : target
 	}
 	return centerView(focusImage(target))
 }
-function nextRibbon(moving, mode){
+function nextRibbon(mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = $('.current.image')
 	var target = getImageBefore(cur, 
 			getRibbon(cur).nextAll('.ribbon' + NAV_RIBBON_DEFAULT).first())
+
+	// first image...
 	if(target.length == 0){
 		// XXX too complex???
 		target = getRibbon(cur)
 					.nextAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
 						.find('.image' + mode).first()
-	} else if(moving == 'next' && cur.attr('order') != target.attr('order')){
-			var next = target.nextAll('.image' + mode).first()
-			target = next.length > 0 ? next : target
 	}
 	return centerView(focusImage(target))
 }
