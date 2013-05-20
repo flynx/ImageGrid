@@ -102,28 +102,41 @@ function doc(text, func){
  *
  * For doc on format see makeKeyboardHandler(...)
  *
+ * modes can be:
+ * 	- 'any'	(default)	- Get list of all applicable handlers up until
+ * 							the first applicable ignore.
+ * 	- 'all'				- Get ALL handlers, including ignores
+ * 	- <mode>			- Get handlers for an explicit mode
+ *
+ * modifiers can be:
+ * 	- '' (default)		- No modifiers
+ * 	- '?'				- Return list of applicable modifiers per mode
+ * 	- <modifier>		- Any of 'ctrl', 'alt' or 'shift' alone or in 
+ * 							combination. 
+ * 							Combinations MUST be ordered as shown above.
+ * 							Combination elements are separated by '+'
+ * 							Ex:
+ * 								'ctrl+shift'
+ * 							NOTE: 'shift+ctrl' is wrong.
+ *
  * Returns:
  * 	{
  * 		<mode>: <handler>,
  * 		...
  * 	}
  *
- * NOTE: this will test modes and return only compatible handlers by 
- * 		default, to return all modes, set all_modes to true.
- * NOTE: unless all_modes is true, handlers after a mode that explicitly
- * 		ignores a key will not be included.
- * NOTE: if all_modes is true modes that explicitly ignore a key will 
- * 		contain 'IGNORE' in place of a handler.
  * NOTE: if a key is not handled in a mode, that mode will not be 
  * 		present in the resulting object.
+ * NOTE: this will not unwrap lisp-style (see below) handlers.
  *
  * XXX need an explicit way to prioritize modes...
  * XXX check do we need did_handling here...
  */
-function getKeyHandlers(key, modifiers, keybindings, all_modes){
+function getKeyHandlers(key, modifiers, keybindings, modes){
 	var chr = null
 	var did_handling = false
 	modifiers = modifiers == null ? '' : modifiers
+	modes = modes == null ? 'any' : modes
 
 	if(typeof(key) == typeof(123)){
 		key = key
@@ -138,7 +151,10 @@ function getKeyHandlers(key, modifiers, keybindings, all_modes){
 	for(var mode in keybindings){
 
 		// test for mode compatibility...
-		if(!all_modes && $(mode).length == 0){
+		if(modes != 'all' 
+				&& (modes != 'any' 
+					&& modes != mode 
+					|| $(mode).length == 0)){
 			continue
 		}
 
@@ -159,6 +175,10 @@ function getKeyHandlers(key, modifiers, keybindings, all_modes){
 
 			// do the complex handler aliases...
 			if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
+				// build modifier list...
+				if(modifiers == '?'){
+					break
+				}
 				if(typeof(handler[modifiers]) == typeof('str')){
 					handler = handler[modifiers]
 				} else if(typeof(handler['default']) == typeof('str')){
@@ -188,7 +208,7 @@ function getKeyHandlers(key, modifiers, keybindings, all_modes){
 							|| bindings.ignore.indexOf(chr) != -1)){
 				did_handling = true
 				// ignoring a key will stop processing it...
-				if(all_modes){
+				if(modes == 'all' || mode == modes){
 					res[mode] = 'IGNORE'
 				} else {
 					break
@@ -197,13 +217,15 @@ function getKeyHandlers(key, modifiers, keybindings, all_modes){
 			continue
 		}
 
-		// Array, lisp style with docs...
-		if(typeof(handler) == typeof([]) && handler.constructor.name == 'Array'){
-			// we do not care about docs here, so just get the handler...
-			handler = handler[0]
-		}
 		// complex handler...
 		if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
+			// build modifier list...
+			if(modifiers == '?'){
+				res[mode] = Object.keys(handler)
+				did_handling = true
+				continue
+			}
+
 			var callback = handler[modifiers]
 			if(callback == null){
 				callback = handler['default']
@@ -215,9 +237,15 @@ function getKeyHandlers(key, modifiers, keybindings, all_modes){
 				did_handling = true
 				continue
 			}
+
+		// simple callback...
 		} else {
-			// simple callback...
-			res[mode] = handler
+			// build modifier list...
+			if(modifiers == '?'){
+				res[mode] = 'none'
+			} else {
+				res[mode] = handler
+			}
 
 			did_handling = true
 			continue
@@ -258,9 +286,6 @@ function getKeyHandlers(key, modifiers, keybindings, all_modes){
  * 			],
  *
  * 			<key-def> : {
- * 				// optional documentation string...
- * 				doc: <doc-string>,
- *
  *				// modifiers can either have a callback or an alias as 
  *				// a value...
  *				// NOTE: when the alias is resolved, the same modifiers 
@@ -335,6 +360,12 @@ function makeKeyboardHandler(keybindings, unhandled){
 			var handler = handlers[mode]
 			if(handler != null){
 
+				// Array, lisp style with docs...
+				if(typeof(handler) == typeof([]) && handler.constructor.name == 'Array'){
+					// we do not care about docs here, so just get the handler...
+					handler = handler[0]
+				}
+
 				did_handling = true
 				res = handler(evt)
 
@@ -367,8 +398,19 @@ function makeKeyboardHandler(keybindings, unhandled){
 */
 function buildKeybindingsHelp(keybindings){
 	var res = {}
+	var mode, title
 
-	// XXX
+	for(var pattern in keybindings){
+		mode = modes[pattern]
+
+		title = mode.title == null ? pattern : mode.title
+		res[title] = {
+			doc: mode.doc == null ? '' : mode.doc
+		}
+
+		// XXX handlers...
+	}
+
 	return res
 }
 
