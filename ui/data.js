@@ -656,7 +656,11 @@ function loadFileImages(path, callback){
 
 			callback != null && callback()
 		})
+		.fail(function(){
+			console.error('ERROR LOADING:', path)
+		})
 }
+
 
 function loadFile(data_path, image_path, callback){
 	// CEF
@@ -695,7 +699,11 @@ function loadFile(data_path, image_path, callback){
 				return
 			}
 		})
+		.fail(function(){
+			console.error('ERROR LOADING:', data_path)
+		})
 }
+
 
 function saveFile(name){
 	// CEF
@@ -716,7 +724,7 @@ function saveFile(name){
 
 function openImage(){
 	// CEF
-	if(window.CEF_dumpJSON != null){
+	if(window.CEF_runSystem != null){
 		// XXX if path is not present try and open the biggest preview...
 		return CEF_runSystem(IMAGES[getImageGID()].path)
 
@@ -727,20 +735,18 @@ function openImage(){
 }
 
 
+// XXX need revision...
 function loadDir(path){
-	// CEF
-	if(window.CEF_loadDir != null){
-		var dir = CEF_loadDir(path)
-		IMAGES = dir.images
-		DATA = dir.data
-		MARKED = dir.marked
-		loadData()
-
-	// PhoneGap
-	} else if(false) {
-		// XXX
-	}
+	return loadFile(path +'/data.json')
+		.fail(function(){
+			loadFile(path +'/.ImageGrindCache/data.json')
+				.fail(function(){
+					// XXX load separate images...
+					// XXX
+				})
+		})
 }
+
 
 
 /**********************************************************************
