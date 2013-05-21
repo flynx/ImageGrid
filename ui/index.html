@@ -316,32 +316,6 @@ $(function(){
 
 	toggleTheme('gray')
 
-	//setElementOrigin($('.ribbon-set'), 'top', 'left')
-
-	// we have an image file...
-	if((DATA_ATTR + '_IMAGES_FILE') in localStorage){
-		loadFileImages(localStorage[DATA_ATTR + '_IMAGES_FILE'])
-		DATA = loadLocalStorageData()
-		loadData()
-
-	// everything is in localStorage...
-	} else if('DATA' in localStorage){
-		loadLocalStorage()
-
-	// legacy default data...
-	} else {
-		DATA = convertDataGen1(image_list)
-		DATA = DATA.data
-		IMAGES = DATA.images
-		loadData()
-	}
-
-	// XXX this will reload everything...
-	if('MARKED' in localStorage){
-		loadLocalStorageMarks()
-	}
-
-
 	// NOTE: this is global so as to not to add any extra complexity to 
 	//		the internal workings...
 	$('.viewer')
@@ -364,9 +338,50 @@ $(function(){
 
 	setupDataBindings()
 
-	// XXX stub...
-	//centerView(focusImage($('.image').first()), 'css')
-	updateImages()
+
+	//setElementOrigin($('.ribbon-set'), 'top', 'left')
+
+	// we have an image file...
+	if((DATA_ATTR + '_IMAGES_FILE') in localStorage){
+		loadFileImages(localStorage[DATA_ATTR + '_IMAGES_FILE'])
+			.done(function(){
+				DATA = loadLocalStorageData()
+				loadData()
+
+				// XXX this will reload everything...
+				if('MARKED' in localStorage){
+					loadLocalStorageMarks()
+				}
+
+				// XXX stub...
+				//centerView(focusImage($('.image').first()), 'css')
+				updateImages()
+			})
+
+	} else {
+		// everything is in localStorage...
+		if('DATA' in localStorage){
+			loadLocalStorage()
+
+		// legacy default data...
+		} else {
+			DATA = convertDataGen1(image_list)
+			DATA = DATA.data
+			IMAGES = DATA.images
+			loadData()
+		}
+
+		// XXX this will reload everything...
+		if('MARKED' in localStorage){
+			loadLocalStorageMarks()
+		}
+
+		// XXX stub...
+		//centerView(focusImage($('.image').first()), 'css')
+		updateImages()
+	}
+
+
 
 })
 

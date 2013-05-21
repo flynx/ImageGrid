@@ -647,51 +647,49 @@ function saveLocalStorageMarks(attr){
 * Extension API (CEF/PhoneGap/...)
 */
 
-function loadFileImages(path){
-	if(window.CEF_loadJSON != null){
-		IMAGES = CEF_loadJSON(path)
+function loadFileImages(path, callback){
+	return $.getJSON(path, function(json){
+		IMAGES = json
 		localStorage[DATA_ATTR + '_IMAGES_FILE'] = path
 		console.log('Loaded IMAGES...')
-		return IMAGES
 
-	} else {
-		// XXX
-	}
+		callback != null && callback()
+	})
 }
 
-function loadFile(data_path, image_path){
+function loadFile(data_path, image_path, callback){
 	// CEF
-	if(window.CEF_loadJSON != null){
-		var json = CEF_loadJSON(data_path)
-		console.log('Loaded DATA...')
-
+	return $.getJSON(data_path, function(json){
 		// legacy format...
 		if(json.version == null){
 			json = convertDataGen1(json)
 			DATA = json.data
 			IMAGES = json.images
-			return loadData()
+			loadData()
 
 		// version 2.0
 		// XXX needs a more flexible protocol...
 		} else if(json.version == '2.0') {
 			DATA = json
 			if(image_path != null){
-				loadFileImages(image_path)
+				loadFileImages(image_path, function(){
+					loadData()
+
+					callback != null && callback()
+				})
 			} else if(DATA.image_file != null) {
-				loadFileImages(DATA.image_file)
+				loadFileImages(DATA.image_file, function(){
+					loadData()
+
+					callback != null && callback()
+				})
 			}
-			return loadData()
 
 		} else {
 			console.error('unknown format.')
 			return
 		}
-
-	// PhoneGap
-	} else if(false) {
-		// XXX
-	}
+	})
 }
 
 function saveFile(name){

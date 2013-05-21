@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130522014220'''
+__sub_version__ = '''20130522020247'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -12,6 +12,7 @@ import Image
 import json
 import sha
 import urllib2
+import time
 
 from pli.logictypes import OR
 
@@ -72,7 +73,6 @@ TARGET: %(target-file)s
 
 #-----------------------------------------------------------------------
 # Helpers...
-
 #------------------------------------------------------------pathjoin---
 def pathjoin(*p):
 	'''
@@ -87,7 +87,7 @@ def getpath(root, path, absolute=False):
 	if absolute == True:
 		return 'file:///' + urllib2.quote(pathjoin(root, path), safe='/:')
 	else:
-		return urllib2.quote(path, safe='/')
+		return urllib2.quote(pathjoin(path), safe='/:')
 
 
 #-------------------------------------------------------------log_err---
@@ -139,10 +139,14 @@ def report_progress(img, status):
 def make_inline_report_progress(state=None):
 	if state == None:
 		state = {}
+	if 'started at' not in state:
+		state['started at'] = time.time()
+
 	def _inline_report_progress(img, status):
 		created = state.get('created', 0)
 		skipped = state.get('skipped', 0)
 		partial = state.get('partial', 0)
+
 
 		# created all previews...
 		if False not in status:
@@ -159,6 +163,8 @@ def make_inline_report_progress(state=None):
 			partial += 1
 			state['partial'] = partial
 
+		state['done at'] = time.time()
+
 		print 'Previews created: %s partial: %s skipped: %s...\r' % (created, partial, skipped),
 
 		return img
@@ -168,7 +174,6 @@ def make_inline_report_progress(state=None):
 
 #-----------------------------------------------------------------------
 # API...
-
 #----------------------------------------------------build_cache_dirs---
 def build_cache_dirs(path, config=CONFIG):
 	'''
@@ -306,7 +311,6 @@ def build_data(images, path, config=CONFIG):
 
 #-----------------------------------------------------------------------
 # High-level API...
-
 #---------------------------------------------------------build_cache---
 ##!!! DO NOT OVERWRITE EXISTING DATA...
 def build_cache(path, config=CONFIG, gid_generator=hash_gid, 
