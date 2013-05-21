@@ -568,6 +568,16 @@ String.prototype.capitalize = function(){
 }
 
 
+// XXX not sure if this has to be a utility or a method...
+Object.get = function(obj, name, dfl){
+	var val = obj[name]
+	if(val === undefined && dfl != null){
+		return dfl
+	}
+	return val
+}
+
+
 var getAnimationFrame = (window.requestAnimationFrame
 		|| window.webkitRequestAnimationFrame 
 		|| window.mozRequestAnimationFrame
@@ -576,6 +586,7 @@ var getAnimationFrame = (window.requestAnimationFrame
 		|| function(callback){ 
 			setTimeout(callback, 1000/60) 
 		})
+
 
 var cancelAnimationFrame = (window.cancelRequestAnimationFrame 
 		|| window.webkitCancelAnimationFrame 

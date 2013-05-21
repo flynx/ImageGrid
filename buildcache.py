@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130410190410'''
+__sub_version__ = '''20130521225013'''
 __copyright__ = '''(c) Alex A. Naanou 2012'''
 
 
@@ -14,6 +14,8 @@ import sha
 import urllib2
 
 from pli.logictypes import OR
+
+import gid
 
 
 #-----------------------------------------------------------------------
@@ -33,6 +35,8 @@ from pli.logictypes import OR
 #-----------------------------------------------------------------------
 
 config = {
+	'format-version': '2.0',
+
 	'cache-structure': {
 		# XXX make these as close to standard as possible and keep
 		# 	  sane distances...
@@ -42,7 +46,15 @@ config = {
 		'1080px': '.ImageGridCache/1080px/',
 		'1920px': '.ImageGridCache/1920px/',
 	},
+
+	# gen1 format...
 	'json': '.ImageGridCache/all.json',
+
+	# gen3 format...
+	'images': '.ImageGridCache/images.json',
+	'data': '.ImageGridCache/data.json',
+	'marked': '.ImageGridCache/marked.json',
+
 	'error': '.ImageGridCache/error.log',
 	'sizes': {
 		'150px': 150,
@@ -106,7 +118,6 @@ def log_err(path, e, source_file, target_file):
 def get_image_guid(path, force=False):
 	'''
 	'''
-	##!!! check cache and date...
 	im = Image.open(path)
 	return sha.sha(im.tostring()).hexdigest()
 ##	return sha.sha(open(path, 'r').read())
@@ -182,7 +193,7 @@ def build_index(path, images=None, count=None):
 
 # XXX this will not overwrite existing files...
 # XXX make this destingwish absolute and relative paths...
-def make_cache_images(path, config=config):
+def make_cache_images(path, images, config=config):
 	'''
 	'''
 	dirs = config['cache-structure']
@@ -206,6 +217,7 @@ def make_cache_images(path, config=config):
 		}
 		img = Image.open(source_path, 'r')
 		try:
+			##!!! use a real gid -- gid.image_gid(path, ...)
 			iid = sha.sha(img.tostring()).hexdigest()
 		except IOError, e:
 			print 'x',
@@ -261,7 +273,7 @@ def build_local_cache(path):
 
 	build_cache_dirs(path)
 
-	n = make_cache_images(path)
+	n = make_cache_images(path, images)
 
 	t1 = time.time()
 

@@ -724,6 +724,21 @@ function openImage(){
 }
 
 
+function loadDir(path){
+	// CEF
+	if(window.CEF_loadDir != null){
+		var dir = CEF_loadDir(path)
+		IMAGES = dir.images
+		DATA = dir.data
+		MARKED = dir.marked
+		loadData()
+
+	// PhoneGap
+	} else if(false) {
+		// XXX
+	}
+}
+
 
 /**********************************************************************
 * Image caching...
