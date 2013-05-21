@@ -648,48 +648,53 @@ function saveLocalStorageMarks(attr){
 */
 
 function loadFileImages(path, callback){
-	return $.getJSON(path, function(json){
-		IMAGES = json
-		localStorage[DATA_ATTR + '_IMAGES_FILE'] = path
-		console.log('Loaded IMAGES...')
+	return $.getJSON(path)
+		.done(function(json){
+			IMAGES = json
+			localStorage[DATA_ATTR + '_IMAGES_FILE'] = path
+			console.log('Loaded IMAGES...')
 
-		callback != null && callback()
-	})
+			callback != null && callback()
+		})
 }
 
 function loadFile(data_path, image_path, callback){
 	// CEF
-	return $.getJSON(data_path, function(json){
-		// legacy format...
-		if(json.version == null){
-			json = convertDataGen1(json)
-			DATA = json.data
-			IMAGES = json.images
-			loadData()
+	return $.getJSON(data_path)
+		.done(function(json){
+			// legacy format...
+			if(json.version == null){
+				json = convertDataGen1(json)
+				DATA = json.data
+				IMAGES = json.images
+				loadData()
 
-		// version 2.0
-		// XXX needs a more flexible protocol...
-		} else if(json.version == '2.0') {
-			DATA = json
-			if(image_path != null){
-				loadFileImages(image_path, function(){
-					loadData()
+			// version 2.0
+			// XXX needs a more flexible protocol...
+			} else if(json.version == '2.0') {
+				DATA = json
+				if(image_path != null){
+					loadFileImages(image_path)
+						.done(function(){
+							loadData()
 
-					callback != null && callback()
-				})
-			} else if(DATA.image_file != null) {
-				loadFileImages(DATA.image_file, function(){
-					loadData()
+							callback != null && callback()
+						})
+				} else if(DATA.image_file != null) {
+					loadFileImages(DATA.image_file)
+						.done(function(){
+							loadData()
 
-					callback != null && callback()
-				})
+							callback != null && callback()
+						})
+				}
+
+			// unknown format...
+			} else {
+				console.error('unknown format.')
+				return
 			}
-
-		} else {
-			console.error('unknown format.')
-			return
-		}
-	})
+		})
 }
 
 function saveFile(name){
