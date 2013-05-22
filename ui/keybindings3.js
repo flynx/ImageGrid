@@ -276,7 +276,7 @@ var KEYBOARD_CONFIG = {
 
 		F4: doc('Open image in external software', openImage),
 
-		// XXX print this in an overlay...
+		// XXX STUB print this in an overlay...
 		// '?'
 		'/': {
 				shift: doc('Show keyboard bindings',
