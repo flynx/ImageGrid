@@ -16,50 +16,71 @@ var DIRECTION = 'next'
 /*********************************************************************/
 
 var KEYBOARD_CONFIG = {
+	// single image mode only...
+	'.single-image-mode': {
+		title: 'Single image mode',
+
+		// XXX this should only work on single image mode...
+		F: doc('Toggle view proportions', 
+			function(){ 
+				toggleImageProportions() 
+				centerRibbons()
+			}),
+	},
+
 	// general setup...
 	'.viewer': {
-		ignore: [ ],
+		title: 'Global',
+
 		// Navigation...
 		// XXX need to cancel the animation of the prev action...
 		Left: {
-				default: function(){ 
-					// update direction...
-					if(DIRECTION != 'prev'){
-						_STEPS_LEFT_TO_CHANGE_DIRECTION--
-						if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
-							DIRECTION = 'prev'
-							_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+				default: doc('Previous image',
+					function(){ 
+						event.preventDefault()
+						// update direction...
+						if(DIRECTION != 'prev'){
+							_STEPS_LEFT_TO_CHANGE_DIRECTION--
+							if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
+								DIRECTION = 'prev'
+								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+							}
+						} else {
+								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
 						}
-					} else {
-							_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
-					}
-					prevImage() 
-					centerRibbons()
-				},
-				ctrl: function(){ 
-					prevScreenImages()
-					centerRibbons()
-				},
+						prevImage() 
+						centerRibbons()
+					}),
+				ctrl: doc('Previous screen',
+					function(){ 
+						event.preventDefault()
+						prevScreenImages()
+						centerRibbons()
+					}),
 			},
 		Right: {
-				default: function(){ 
-					// update direction...
-					if(DIRECTION != 'next'){
-						_STEPS_LEFT_TO_CHANGE_DIRECTION--
-						if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
-							DIRECTION = 'next'
-							_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+				default: doc('Next image',
+					function(){ 
+						event.preventDefault()
+						// update direction...
+						if(DIRECTION != 'next'){
+							_STEPS_LEFT_TO_CHANGE_DIRECTION--
+							if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
+								DIRECTION = 'next'
+								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+							}
+						} else {
+								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
 						}
-					} else {
-							_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
-					}
-					nextImage() 
-					centerRibbons()
-				},
-				ctrl: function(){ 
-					nextScreenImages()
-					centerRibbons()
-				},
+						nextImage() 
+						centerRibbons()
+					}),
+				ctrl: doc('Previous screen',
+					function(){ 
+						event.preventDefault()
+						nextScreenImages()
+						centerRibbons()
+					}),
 			},
 		Space: {
 				default: 'Right',
@@ -72,92 +93,97 @@ var KEYBOARD_CONFIG = {
 				default: 'Left',
 				shift: 'Right',
 			},
-		Home: function(){
+		Home: doc('First image', 
+			function(){
 				event.preventDefault()
 				firstImage()
 				centerRibbons()
-			},
-		End: function(){
+			}),
+		End: doc('Last image',
+			function(){
 				event.preventDefault()
 				lastImage()
 				centerRibbons()
-			},
+			}),
 
 
 		// combined navigation and editor actions...
 		Up: {
-				default: function(){ 
-					event.preventDefault()
-					prevRibbon() 
-					centerRibbons()
-				},
-				shift: function(){ 
-					event.preventDefault()
-					shiftImageUp(null, DIRECTION) 
-					centerRibbons()
-				},
-				'ctrl+shift': function(){
-					event.preventDefault()
-					shiftImageUpNewRibbon(null, DIRECTION) 
-					centerRibbons()
-				},
+				default: doc('Go to ribbon above', 
+					function(){ 
+						event.preventDefault()
+						prevRibbon() 
+						centerRibbons()
+					}),
+				shift: doc('Shift image up',
+					function(){ 
+						event.preventDefault()
+						shiftImageUp(null, DIRECTION) 
+						centerRibbons()
+					}),
+				'ctrl+shift': doc('Shift image up to empty ribbon',
+					function(){
+						event.preventDefault()
+						shiftImageUpNewRibbon(null, DIRECTION) 
+						centerRibbons()
+					}),
 			},
 		Down: {
-				default: function(){
-					event.preventDefault()
-					nextRibbon() 
-					centerRibbons()
-				},
-				shift: function(){
-					event.preventDefault()
-					shiftImageDown(null, DIRECTION) 
-					centerRibbons()
-				},
-				'ctrl+shift': function(){
-					event.preventDefault()
-					shiftImageDownNewRibbon(null, DIRECTION) 
-					centerRibbons()
-				},
+				default: doc('Go to ribbon below', 
+					function(){
+						event.preventDefault()
+						nextRibbon() 
+						centerRibbons()
+					}),
+				shift: doc('Shift image down',
+					function(){ 
+						event.preventDefault()
+						shiftImageDown(null, DIRECTION) 
+						centerRibbons()
+					}),
+				'ctrl+shift': doc('Shift image up to empty ribbon',
+					function(){
+						event.preventDefault()
+						shiftImageDownNewRibbon(null, DIRECTION) 
+						centerRibbons()
+					}),
 			},
 
 
 		// zooming...
-		'#1': function(){ fitNImages(1) },
-		'#2': function(){ fitNImages(2) },
-		'#3': function(){ fitNImages(3) },
-		'#4': function(){ fitNImages(4) },
-		'#5': function(){ fitNImages(5) },
-		'#6': function(){ fitNImages(6) },
-		'#7': function(){ fitNImages(7) },
-		'#8': function(){ fitNImages(8) },
-		'#9': function(){ fitNImages(9) },
+		'#1': doc('Fit one image', function(){ fitNImages(1) }),
+		'#2': doc('Fit two images', function(){ fitNImages(2) }),
+		'#3': doc('Fit three images', function(){ fitNImages(3) }),
+		'#4': doc('Fit four images', function(){ fitNImages(4) }),
+		'#5': doc('Fit five images', function(){ fitNImages(5) }),
+		'#6': doc('Fit six images', function(){ fitNImages(6) }),
+		'#7': doc('Fit seven images', function(){ fitNImages(7) }),
+		'#8': doc('Fit eight images', function(){ fitNImages(8) }),
+		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
 
-		'-': function(){ zoomOut() },
-		'=': function(){ zoomIn() },
+		'-': doc('Zoom in', function(){ zoomOut() }),
+		'=': doc('Zoom out', function(){ zoomIn() }),
 
 
-		Enter: function(){ toggleSingleImageMode() },
+		Enter: doc('Toggle single image view', 
+				function(){ toggleSingleImageMode() }),
 
-		// XXX this should only work on single image mode...
-		F: function(){ 
-				toggleImageProportions() 
-				centerRibbons()
-			},
-
-		B: function(){ toggleTheme() },
+		B: doc('Toggle theme', function(){ toggleTheme() }),
 
 		S: {
-				ctrl: function(){
-					//saveLocalStorage()
-					saveLocalStorageData()
-					saveLocalStorageMarks()
-				}
+				ctrl: doc('Save current state', 
+					function(){
+						//saveLocalStorage()
+						saveLocalStorageData()
+						saveLocalStorageMarks()
+					})
 			},
 		Z: {
-				ctrl: function(){
-					loadLocalStorage()
-					loadLocalStorageMarks()
-				}
+				ctrl: doc('Restore to last saved state', 
+					function(){
+						loadLocalStorage()
+						loadLocalStorageMarks()
+					})
 			},
 
 
@@ -174,70 +200,91 @@ var KEYBOARD_CONFIG = {
 				//		i.e. marking can change direction depending on where
 				//		we moved last...
 				// NOTE: marking does not change move direction...
-				default: function(){ 
-					toggleImageMark()
-					if(DIRECTION == 'next'){
-						nextImage()
-					} else {
-						prevImage()
-					}
-					if($('.current.image').filter(':visible').length == 0){
-						centerView(focusImage(getImageBefore()))
-					}
-					centerRibbons()
-				},
+				default: doc('Mark current image and advance',
+					function(){ 
+						toggleImageMark()
+						if(DIRECTION == 'next'){
+							nextImage()
+						} else {
+							prevImage()
+						}
+						if($('.current.image').filter(':visible').length == 0){
+							centerView(focusImage(getImageBefore()))
+						}
+						centerRibbons()
+					}),
 				// same as default but in reverse direction...
-				shift: function(){
-					toggleImageMark()
-					if(DIRECTION == 'prev'){
-						nextImage()
-					} else {
-						prevImage()
-					}
-					if($('.current.image').filter(':visible').length == 0){
-						centerView(focusImage(getImageBefore()))
-					} 
-					centerRibbons()
-				},
-				ctrl: function(){ 
-					var action = toggleImageMark() 
-				},
+				shift: doc('Mark current image and return',
+					function(){
+						toggleImageMark()
+						if(DIRECTION == 'prev'){
+							nextImage()
+						} else {
+							prevImage()
+						}
+						if($('.current.image').filter(':visible').length == 0){
+							centerView(focusImage(getImageBefore()))
+						} 
+						centerRibbons()
+					}),
+				ctrl: doc('Mark current image',
+					function(){ 
+						var action = toggleImageMark() 
+					}),
 			},
 		I: {
 				// XXX STUB -- replace with a real info window...
-				default: function(){
-					var gid = getImageGID($('.current.image'))
-					var r = getRibbonIndex(getRibbon())
-					var data = IMAGES[gid]
-					var order = DATA.order.indexOf(gid)
-					var name = data.path.split('/').pop()
-					alert('"'+ name +'"\n'+
-							'GID: '+ gid +'\n'+
-							'Path: "'+ data.path +'"\n'+
-							'Order: '+ order +'\n'+
-							'Position (ribbon): '+ DATA.ribbons[r].indexOf(gid) +
-								'/'+ DATA.ribbons[r].length +'\n'+
-							'Position (global): '+ order +'/'+ DATA.order.length +'\n'+
-							'')
-				},
-				ctrl: function(){ invertImageMarks() },
+				default: doc('Show current image info',
+					function(){
+						var gid = getImageGID($('.current.image'))
+						var r = getRibbonIndex(getRibbon())
+						var data = IMAGES[gid]
+						var order = DATA.order.indexOf(gid)
+						var name = data.path.split('/').pop()
+						alert('"'+ name +'"\n'+
+								'GID: '+ gid +'\n'+
+								'Path: "'+ data.path +'"\n'+
+								'Order: '+ order +'\n'+
+								'Position (ribbon): '+ DATA.ribbons[r].indexOf(gid) +
+									'/'+ DATA.ribbons[r].length +'\n'+
+								'Position (global): '+ order +'/'+ DATA.order.length +'\n'+
+								'')
+					}),
+				ctrl: doc('Invert image marks', 
+					function(){ invertImageMarks() }),
 			},
 		A: {
-				shift: function(){ toggleImageMarkBlock() },
-				ctrl: function(){ markAll('ribbon') },
+				shift: doc('Toggle marks in current contagious block', 
+					function(){ toggleImageMarkBlock() }),
+				ctrl: doc('Mark current ribbon', 
+					function(){ markAll('ribbon') }),
 			},
 		U: {
-				ctrl: function(){ removeImageMarks('ribbon') },
-				shift: function(){ removeImageMarks('all') },
+				ctrl: doc('Unmark current ribbon', 
+					function(){ removeImageMarks('ribbon') }),
+				shift: doc('Unamrk all', 
+					function(){ removeImageMarks('all') }),
 			},
 		F2: {
-				default: function(){ toggleMarkesView() },
-				shift: function(){
-					toggleMarkedOnlyView()
-				}
+				default: doc('Toggle mark visibility', 
+					function(){ toggleMarkesView() }),
+				shift: doc('Toggle marked only images view', 
+					function(){
+						toggleMarkedOnlyView()
+					})
 			},
 
-		F4: openImage,
+		F4: doc('Open image in external software', openImage),
+
+		// XXX print this in an overlay...
+		// '?'
+		'/': {
+				shift: doc('Show keyboard bindings',
+					function(){
+						var doc = buildKeybindingsHelpHTML(KEYBOARD_CONFIG)
+						alert(doc.text())
+					}),
+			}
 	}
 }
 

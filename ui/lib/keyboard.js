@@ -131,6 +131,9 @@ function doc(text, func){
  *
  * XXX need an explicit way to prioritize modes...
  * XXX check do we need did_handling here...
+ *
+ * XXX BUG explicitly given modes do ton yield results if the pattern 
+ * 		does not match...
  */
 function getKeyHandlers(key, modifiers, keybindings, modes){
 	var chr = null
@@ -151,6 +154,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes){
 	for(var mode in keybindings){
 
 		// test for mode compatibility...
+		// XXX this fails for explicitly given mode...
 		if(modes != 'all' 
 				&& (modes != 'any' 
 					&& modes != mode 
@@ -401,18 +405,89 @@ function buildKeybindingsHelp(keybindings){
 	var mode, title
 
 	for(var pattern in keybindings){
-		mode = modes[pattern]
+		mode = keybindings[pattern]
 
+		// titles and docs...
 		title = mode.title == null ? pattern : mode.title
 		res[title] = {
 			doc: mode.doc == null ? '' : mode.doc
 		}
+		section = res[title]
 
-		// XXX handlers...
+		// handlers...
+		for(var key in mode){
+			if(key == 'doc' || key == 'title' || key == 'ignore'){
+				continue
+			}
+			//var modifiers = getKeyHandlers(key, '?', keybindings, pattern)[pattern]
+			var modifiers = getKeyHandlers(key, '?', keybindings, 'all')[pattern]
+			modifiers = modifiers == 'none' || modifiers == undefined ? [''] : modifiers
+
+			for(var i=0; i < modifiers.length; i++){
+				var mod = modifiers[i]
+
+				//var handler = getKeyHandlers(key, mod, keybindings, pattern)[pattern]
+				var handler = getKeyHandlers(key, mod, keybindings, 'all')[pattern]
+
+				// standard object doc...
+				if('doc' in handler){
+					var doc = handler.doc
+
+				// lisp style...
+				} else if(typeof(handler) == typeof([]) && handler.constructor.name == 'Array'){
+					var doc = handler[1]
+
+				// no doc...
+				} else {
+					if('name' in handler && handler.name != ''){
+						var doc = handler.name
+					} else {
+						// XXX is this the right way to do this?
+						var doc = handler
+					}
+				}
+
+				// populate the section...
+				// NOTE: we need a list of keys per action...
+				if(doc in section){
+					var keys = section[doc]
+				} else {
+					var keys = []
+					section[doc] = keys
+				}
+				keys.push((mod == '' || mod == 'default') ? key : (mod +'+'+ key))
+			}
+
+		}
 	}
 
 	return res
 }
+
+function buildKeybindingsHelpHTML(keybindings){
+	var doc = buildKeybindingsHelp(keybindings)
+
+	var res = '<table class="keyboard-help">'
+	
+	for(var mode in doc){
+		if(mode == 'doc'){
+			continue
+		}
+		res += '  <tr class="section-title"><th colspan=2>' + mode + '</th></tr>\n' 
+		mode = doc[mode]
+		res += '  <tr class="section-doc"><th colspan=2>'+ mode.doc + '</th></tr>\n'
+		for(var action in mode){
+			if(action == 'doc'){
+				continue
+			}
+			res += '  <tr><td>' + mode[action].join(', ') +'</td><td>'+ action + '</td></tr>\n'
+		}
+	}
+	res += '</table>'
+
+	return $(res)
+}
+
 
 
 
