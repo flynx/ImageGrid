@@ -464,6 +464,37 @@ function buildKeybindingsHelp(keybindings){
 	return res
 }
 
+
+// Build a basic HTML table with keyboard help...
+//
+//
+//	The table will look like this:
+//
+// 		<table class="keyboard-help">
+//
+// 			<!-- section head -->
+// 			<tr class="section-title">
+// 				<th colspan=2> SECTION TITLE <th>
+// 			</tr>
+// 			<tr class="section-doc">
+// 				<td colspan=2> SECTION DESCRIPTION <td>
+// 			</tr>
+//
+// 			<!-- section keys -->
+// 			<tr>
+// 				<td> KEYS <td>
+// 				<td> ACTION DESCRIPTION <td>
+// 			</tr>
+//
+// 			...
+//
+//		</table>
+//
+// NOTE: section are not separated in any way other than the <th> element.
+// NOTE: the actual HTML is created by jQuery, so the table may get 
+// 		slightly structurally changed, i.e. a <tbody> element will be 
+// 		added etc.
+//
 function buildKeybindingsHelpHTML(keybindings){
 	var doc = buildKeybindingsHelp(keybindings)
 
@@ -473,9 +504,12 @@ function buildKeybindingsHelpHTML(keybindings){
 		if(mode == 'doc'){
 			continue
 		}
+		// section head...
 		res += '  <tr class="section-title"><th colspan=2>' + mode + '</th></tr>\n' 
 		mode = doc[mode]
-		res += '  <tr class="section-doc"><th colspan=2>'+ mode.doc + '</th></tr>\n'
+		res += '  <tr class="section-doc"><td colspan=2>'+ mode.doc + '</td></tr>\n'
+
+		// keys...
 		for(var action in mode){
 			if(action == 'doc'){
 				continue
