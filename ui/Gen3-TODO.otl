@@ -1,6 +1,11 @@
-[_] 18% Gen 3 current todo
-	[_] 37% High priority
+[_] 20% Gen 3 current todo
+	[_] 40% High priority
 		[_] ASAP: support relative paths in cache...
+		[_] ASAP: load/view un-cached directories...
+		[_] ASAP: rotate images in the viewer...
+		| This is a tad complicated by:
+		| 	- marks
+		| 	- image elem proportions that can change
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame
@@ -11,9 +16,6 @@
 		|
 		[_] BUG: jumping screen images does not load the adjacent ribbons...
 		| positioning is OK but ribbons are not fully visible...
-		[_] make focus up/down chose a closest independently of direction...
-		| navigation should be stable and moving up then down should yield 
-		| exactly the same result...
 		[_] 6% mark-based operations
 			[_] 33% cropping selection
 				[X] marked
@@ -53,15 +55,18 @@
 		[_] 0% CSS
 			[_] cleanup
 			[_] split themes and layout
-		[_] 0% themes
-			[_] light
-			[_] gray
-			[_] dark
 		[_] 0% manual ordering
 		[_] 0% tweak loader
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions
 			[_] caching config
+		[X] 100% themes
+			[X] light
+			[X] gray
+			[X] dark
+		[X] make focus up/down chose a closest independently of direction...
+		| navigation should be stable and moving up then down should yield 
+		| exactly the same result...
 		[X] ASAP: rewrite binSearch!! 
 		| linSearch obviously is not usable for large sets of data...
 		[X] split saving/loading into files and localStorage
