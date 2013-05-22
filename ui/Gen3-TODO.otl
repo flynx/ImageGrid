@@ -1,5 +1,6 @@
 [_] 18% Gen 3 current todo
 	[_] 37% High priority
+		[_] ASAP: support relative paths in cache...
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame

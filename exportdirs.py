@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130520030454'''
+__sub_version__ = '''20130522224356'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -31,7 +31,8 @@ def build_dirs(data, path, rewrite=None):
 
 	# gen3
 	if version == '2.0':
-		images = json.load(open(data['image_file'], 'r'))
+		#images = json.load(open(data['image_file'], 'r'))
+		images = json.load(urllib2.urlopen(data['image_file']))
 		def get_image(gid, _):
 			return images[gid]
 
@@ -83,7 +84,8 @@ def build_dirs(data, path, rewrite=None):
 if __name__ == '__main__':
 	from optparse import OptionParser
 
-	parser = OptionParser()
+	parser = OptionParser(
+			usage='%prog [options] DATAJSON TARGETDIR')
 
 	##!!! need to define the path so that it shoes up in -h
 

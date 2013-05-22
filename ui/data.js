@@ -711,7 +711,10 @@ function saveFile(name){
 		if(DATA.image_file == null){
 			DATA.image_file = name + '-images.json'
 		}
-		CEF_dumpJSON(DATA.image_file, IMAGES)
+		//CEF_dumpJSON(DATA.image_file, IMAGES)
+		// XXX this will overwrite the images...
+		//CEF_dumpJSON(name + '-images.json', IMAGES)
+		//DATA.image_file = name + '-images.json'
 		CEF_dumpJSON(name + '-data.json', DATA)
 		CEF_dumpJSON(name + '-marked.json', MARKED)
 
