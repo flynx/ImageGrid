@@ -106,6 +106,31 @@ body {
 	border: solid red 5px;
 }
 
+/* image turning... */
+/* NOTE: need to account for proportions after turning... */
+.image[orientation="90"] {
+	-webkit-transform: rotate(90deg);
+	-moz-transform: rotate(90deg);
+	-o-transform: rotate(90deg);
+	-ms-transform: rotate(90deg);
+	transform: rotate(90deg);
+}
+.image[orientation="180"] {
+	-webkit-transform: rotate(180deg);
+	-moz-transform: rotate(180deg);
+	-o-transform: rotate(180deg);
+	-ms-transform: rotate(180deg);
+	transform: rotate(180deg);
+}
+.image[orientation="270"] {
+	-webkit-transform: rotate(270deg);
+	-moz-transform: rotate(270deg);
+	-o-transform: rotate(270deg);
+	-ms-transform: rotate(270deg);
+	transform: rotate(270deg);
+}
+
+
 /* dot mark... */
 .marks-visible.viewer .marked.image:after {
 	display: block;
@@ -123,10 +148,22 @@ body {
 	border-radius: 50%;
 	background: blue;
 }
+.marks-visible.viewer .marked.image[orientation="90"]:after {
+	top: 5px;
+	right: 5px;
+}
+.marks-visible.viewer .marked.image[orientation="180"]:after {
+	top: 5px;
+	left: 5px;
+}
+.marks-visible.viewer .marked.image[orientation="270"]:after {
+	bottom: 5px;
+	left: 5px;
+}
 
 /* corner mark... (a-la bookmarks in PortableMag) */
 /*
-.marked.image:after {
+.marks-visible.viewer .marked.image:after {
 	display: block;
 	position: absolute;
 	content: "";
@@ -146,6 +183,18 @@ body {
 	-o-transform: rotate(45deg);
 	-ms-transform: rotate(45deg);
 	transform: rotate(45deg);
+}
+.marks-visible.viewer .marked.image[orientation="90"]:after {
+	top: -15px;
+	left: -15px;
+}
+.marks-visible.viewer .marked.image[orientation="180"]:after {
+	bottom: -15px;
+	left: -15px;
+}
+.marks-visible.viewer .marked.image[orientation="270"]:after {
+	bottom: -15px;
+	right: -15px;
 }
 */
 

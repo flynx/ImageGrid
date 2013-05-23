@@ -782,6 +782,75 @@ function nextRibbon(mode){
 
 
 
+/******************************************************** Rotating ***/
+
+var cw = {
+	null: 0,
+	0: 90,
+	90: 180,
+	180: 270,
+	270: 0,
+}
+
+var ccw = {
+	null: 0,
+	0: 270,
+	90: 0,
+	180: 90,
+	270: 180,
+}
+
+// XXX need to account for proportions...
+function rotateImage(direction, image){
+	var r_table = direction == 'Left' ? cw : ccw
+	image = image == null ? $('.current.image') : $(image)
+	image.each(function(i, e){
+		var img = $(this)
+		var o = img.attr('orientation')
+		img.attr('orientation', r_table[o])
+
+		// XXX account for proportions...
+		/*
+		//var w = image.css('width')
+		//var h = image.css('height')
+		var w = image.outerWidth()
+		var h = image.outerHeight()
+
+		if(w != h){
+			image.css({
+				width: h,
+				height: w,
+			})
+		}
+		*/
+	})
+
+	$('.viewer').trigger('rotating' + direction.capitalize(), [image])
+}
+
+
+function rotateLeft(image){
+	rotateImage('left', image)
+}
+function rotateRight(image){
+	rotateImage('right', image)
+}
+
+
+
+/******************************************************** Flipping ***/
+
+function flipVertical(image){
+	// XXX
+}
+
+
+function flipHorizontal(image){
+	// XXX
+}
+
+
+
 /********************************************************* Zooming ***/
 
 function fitNImages(n){

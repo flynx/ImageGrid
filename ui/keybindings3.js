@@ -32,7 +32,8 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	'.help-mode':{
+	// help mode...
+	'.help-mode': {
 		title: 'Help',
 		doc: 'NOTE: In this mode all other key bindings are disabled, except '+
 			'the ones explicitly defined here.',
@@ -169,6 +170,9 @@ var KEYBOARD_CONFIG = {
 						centerRibbons()
 					}),
 			},
+
+		L: doc('Rotate image left', function(){ rotateLeft() }),
+		R: doc('Rotate image left', function(){ rotateRight() }),
 
 
 		// zooming...

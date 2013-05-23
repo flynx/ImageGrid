@@ -27,6 +27,7 @@ var STUB_IMAGE_DATA = {
 		'900px': './images/sizes/900px/SIZE.jpg',
 	},
 	classes: '',
+	orientation: 0,
 }
 
 // Data format...
@@ -316,7 +317,7 @@ function updateImage(image, gid, size){
 
 	// update image order...
 	image.attr({
-		order: DATA.order.indexOf(gid)
+		order: DATA.order.indexOf(gid),
 	})
 
 	// setup marks...
@@ -333,9 +334,13 @@ function updateImage(image, gid, size){
 
 	// get the url...
 	var preview = getBestPreview(gid, size)
-	image.css({
-		'background-image': 'url('+ preview.url +')',
-	})
+	image
+		.css({
+			'background-image': 'url('+ preview.url +')',
+		})
+		.attr({
+			orientation: img_data.orientation == null ? 0 : img_data.orientation,
+		})
 
 	html = window.DEBUG ? 
 			DATA.order.indexOf(gid) +'<br>'+ gid +'<br>'+ preview.size 
@@ -917,6 +922,18 @@ function setupDataBindings(viewer){
 
 		.on('focusingImage', function(evt, image){
 			DATA.current = getImageGID($(image))
+		})
+
+		// basic image manipulation...
+		// XXX after this we need to save the images...
+		.on('rotatingLeft rotatingRight', function(evt, image){
+			$(image).each(function(i, e){
+				var img = $(this)
+				var gid = getImageGID(img) 
+				var orientation = img.attr('orientation')
+
+				IMAGES[gid].orientation = orientation
+			})
 		})
 
 
