@@ -897,13 +897,14 @@ function flipHorizontal(image){
 
 function fitNImages(n){
 	var image = $('.current.image')
-	var size = image.outerHeight(true)
+	var w = image.outerWidth(true)
+	var h = image.outerHeight(true)
 
 	var viewer = $('.viewer')
 	var W = viewer.innerWidth()
 	var H = viewer.innerHeight()
 
-	var scale = Math.min(W / (size * n), H / size)
+	var scale = Math.min(W / (w * n), H / h)
 
 	// NOTE: if animating, the next two likes must be animated together...
 	setElementScale($('.ribbon-set'), scale)
@@ -916,14 +917,16 @@ function fitNImages(n){
 // NOTE: here we measure image height as width may change depending on 
 // 		proportions...
 function zoomIn(){
-	var w = getScreenWidthInImages(getVisibleImageSize('height'))
+	//var w = getScreenWidthInImages(getVisibleImageSize('height'))
+	var w = getScreenWidthInImages()
 	if(w > 1){
 		w = w / ZOOM_SCALE
 		fitNImages(w >= 1 ? w : 1)
 	}
 }
 function zoomOut(){
-	var w = getScreenWidthInImages(getVisibleImageSize('height'))
+	//var w = getScreenWidthInImages(getVisibleImageSize('height'))
+	var w = getScreenWidthInImages()
 	if(w <= MAX_SCREEN_IMAGES){
 		w = w * ZOOM_SCALE
 		fitNImages(w <= MAX_SCREEN_IMAGES ? w : MAX_SCREEN_IMAGES)

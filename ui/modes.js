@@ -13,13 +13,39 @@
 var toggleSingleImageMode = createCSSClassToggler('.viewer', 
 		'single-image-mode',
 		function(action){
+			var w = getScreenWidthInImages()
+
+			// single image mode...
 			if(action == 'on'){
 				TRANSITION_MODE_DEFAULT = 'css'
-				fitNImages(1)
+
+				// save things...
+				SETTINGS['screen-images-ribbon-mode'] = w
+
+				// load things...
+				w = SETTINGS['screen-images-single-image-mode']
+				w = w == null ? 1 : w
+				var p = SETTINGS['single-image-mode-proportions']
+				p = p == null ? 'square' : p
+
+				// set stuff...
+				toggleImageProportions(p)
+				fitNImages(w)
+
+			// ribbon mode...
 			} else {
 				TRANSITION_MODE_DEFAULT = 'animate'
+
+				// save things...
+				SETTINGS['screen-images-single-image-mode'] = w
+				SETTINGS['single-image-mode-proportions'] = toggleImageProportions('?')
+
+				// load things...
+				w = SETTINGS['screen-images-ribbon-mode']
+				w = w == null ? DEFAULT_SCREEN_IMAGES : w
+
 				toggleImageProportions('square')
-				fitNImages(DEFAULT_SCREEN_IMAGES)
+				fitNImages(w)
 			}
 		})
 
@@ -128,6 +154,7 @@ var toggleKeyboardHelp = createCSSClassToggler('.viewer', 'help-mode overlay',
 
 			// off...
 			} else {
+				// things to cleanup...
 				var _cleanup = function(){
 					$('.keyboard-help').remove()
 					$('.viewer').removeClass('overlay')
@@ -135,11 +162,14 @@ var toggleKeyboardHelp = createCSSClassToggler('.viewer', 'help-mode overlay',
 					win.off('scroll', scroll_handler)
 				}
 
+				// animate things if we are not at the top...
 				if(body.scrollTop() > 0){
 						body
 							.animate({
 								scrollTop: 0,
 							}, _cleanup) 
+
+				// if we are at the top do things fast...
 				} else {
 					_cleanup()
 				}

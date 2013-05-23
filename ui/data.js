@@ -62,6 +62,10 @@ var MARKED = []
 var IMAGE_CACHE = []
 
 var SETTINGS = {
+	'theme': null,
+	'screen-images-ribbon-mode': null,
+	'screen-images-single-image-mode': null,
+	'single-image-mode-proportions': null,
 }
 
 

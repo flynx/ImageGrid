@@ -172,7 +172,7 @@ var KEYBOARD_CONFIG = {
 			},
 
 		L: doc('Rotate image left', function(){ rotateLeft() }),
-		R: doc('Rotate image left', function(){ rotateRight() }),
+		R: doc('Rotate image right', function(){ rotateRight() }),
 
 
 		// zooming...
@@ -265,9 +265,12 @@ var KEYBOARD_CONFIG = {
 						var gid = getImageGID($('.current.image'))
 						var r = getRibbonIndex(getRibbon())
 						var data = IMAGES[gid]
+						var orientation = data.orientation
+						orientation = orientation == null ? 0 : orientation
 						var order = DATA.order.indexOf(gid)
 						var name = data.path.split('/').pop()
 						alert('"'+ name +'"\n'+
+								'Orientation: '+ orientation +'deg\n'+
 								'GID: '+ gid +'\n'+
 								'Path: "'+ data.path +'"\n'+
 								'Order: '+ order +'\n'+
