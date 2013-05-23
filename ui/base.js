@@ -176,6 +176,9 @@ function getRelativeVisualPosition(outer, inner){
 }
 
 
+// NOTE: this is replaces by strategic outerWidth/outerHeight knowing 
+// 		about margins in a correct way...
+/*
 // Calculate relative position between two images or an image and a 
 // container
 //
@@ -220,6 +223,7 @@ function getRelativeImagePosition(a, b){
 		left: b_l - a_l
 	}
 }
+*/
 
 
 // Returns the image size (width) as viewed on screen...
@@ -234,13 +238,13 @@ function getVisibleImageSize(dim){
 	dim = dim == null ? 'width' : dim
 	var scale = getElementScale($('.ribbon-set'))
 	if(dim == 'height'){
-		return $('.image').outerHeight() * scale
+		return $('.image').outerHeight(true) * scale
 	} else if(dim == 'width'){
-		return $('.image').outerWidth() * scale
+		return $('.image').outerWidth(true) * scale
 	} else if(dim == 'max'){
-		return Math.max($('.image').outerHeight(), $('.image').outerWidth()) * scale
+		return Math.max($('.image').outerHeight(true), $('.image').outerWidth(true)) * scale
 	} else if(dim == 'min'){
-		return Math.min($('.image').outerHeight(), $('.image').outerWidth()) * scale
+		return Math.min($('.image').outerHeight(true), $('.image').outerWidth(true)) * scale
 	}
 }
 
@@ -590,11 +594,11 @@ function centerView(image, mode){
 	var ribbons = $('.ribbon-set')
 	var scale = getElementScale(ribbons)
 	// NOTE: these are scalable, this needs to get normalized...
-	var w = image.outerWidth()*scale
-	var h = image.outerHeight()*scale
+	var w = image.outerWidth(true)*scale
+	var h = image.outerHeight(true)*scale
 
-	//var pos = getRelativeVisualPosition(viewer, image)
-	var pos = getRelativeImagePosition(image)
+	var pos = getRelativeVisualPosition(viewer, image)
+	//var pos = getRelativeImagePosition(image)
 
 	// zero out top/left if set to anything other than a specific number...
 	var t = parseFloat(ribbons.css('top'))
@@ -648,7 +652,7 @@ function centerRibbon(ribbon, image, mode){
 	var offset = 0
 	var l = parseFloat(ribbon.css('left'))
 	l = !isNaN(l) ? l : 0
-	var w = $('.image').outerWidth()
+	var w = $('.image').outerWidth(true)
 
 	//if(ribbon.find('.image').index(image) >= 0){
 	if(ribbon.find('.current.image').length > 0){
@@ -656,16 +660,16 @@ function centerRibbon(ribbon, image, mode){
 	} 
 
 	if(target.length > 0){
-		//var dl = getRelativeVisualPosition(target, image).left/scale
-		var dl = getRelativeImagePosition(target, image).left/scale
+		var dl = getRelativeVisualPosition(target, image).left/scale
+		//var dl = getRelativeImagePosition(target, image).left/scale
 		l = {
 			left: l + dl - (w/2) + offset
 		}
 
 	} else {
 		target = ribbon.find('.image').filter(NAV_DEFAULT).first() 
-		//var dl = getRelativeVisualPosition(target, image).left/scale
-		var dl = getRelativeImagePosition(target, image).left/scale
+		var dl = getRelativeVisualPosition(target, image).left/scale
+		//var dl = getRelativeImagePosition(target, image).left/scale
 		l = {
 			left: l + dl + (w/2) + offset
 		}
