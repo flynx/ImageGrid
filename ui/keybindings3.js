@@ -28,8 +28,19 @@ var KEYBOARD_CONFIG = {
 			}),
 	},
 
+	'.overlay:visible':{
+		title: 'Overlay',
+		doc: 'NOTE: In this mode all other key bindings are disabled, except '+
+			'the ones explicitly defined here.',
+		ignore: '*',
+		Esc: doc('Close overlay',
+			function(){
+				$('.overlay').click()
+			}),
+	},
+
 	// general setup...
-	'.viewer': {
+	'.viewer:not(.overlay)': {
 		title: 'Global',
 
 		// Navigation...
@@ -141,7 +152,7 @@ var KEYBOARD_CONFIG = {
 						shiftImageDown(null, DIRECTION) 
 						centerRibbons()
 					}),
-				'ctrl+shift': doc('Shift image up to empty ribbon',
+				'ctrl+shift': doc('Shift image down to empty ribbon',
 					function(){
 						event.preventDefault()
 						shiftImageDownNewRibbon(null, DIRECTION) 
@@ -276,15 +287,71 @@ var KEYBOARD_CONFIG = {
 
 		F4: doc('Open image in external software', openImage),
 
-		// XXX STUB print this in an overlay...
-		// '?'
-		'/': {
-				shift: doc('Show keyboard bindings',
+		// XXX make this generic...
+		H: {
+				default: doc('Show keyboard bindings',
 					function(){
+						var body = $(document.body)
+
+						// remove helo when we scroll to the top...
+						var scroll_handler = function(){
+							if(body.scrollTop() <= 0){
+								$('.keyboard-help')
+									.remove()
+								$('.viewer')
+									.removeClass('overlay')
+								body
+									.click()
+								$(window)
+									.off('scroll', scroll_handler)
+							}
+						}
+
+						// prepare and cleanup...
+						$('.keyboard-help').remove()
+						$('.viewer').addClass('overlay')
+
+						// build the help...
 						var doc = buildKeybindingsHelpHTML(KEYBOARD_CONFIG)
-						alert(doc.text())
+							.css({
+								cursor: 'hand',
+							})
+							.appendTo(body)
+
+						// add exit by click...
+						body
+							.one('click', function(){
+								body
+									.animate({
+										scrollTop: 0,
+									}, function(){
+										$('.keyboard-help')
+											.remove()
+										$('.viewer')
+											.removeClass('overlay')
+										$(window)
+											.off('scroll', scroll_handler)
+									})
+							})
+
+						// scroll to the help...
+						// NOTE: need to set the scroll handler AFTER we 
+						// 		scroll down, or it will be more of a 
+						// 		tease than a help...
+						var t = getRelativeVisualPosition($('.viewer'), doc).top
+						body
+							.animate({
+								scrollTop: Math.abs(t) - 40,
+							}, function(){
+								$(window)
+									.on('scroll', scroll_handler)
+							})
 					}),
-			}
+			},
+		// '?'
+		'/': { 
+				shift: 'H', 
+		},
 	}
 }
 

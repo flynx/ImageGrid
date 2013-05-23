@@ -6,6 +6,7 @@
 		| This is a tad complicated by:
 		| 	- marks
 		| 	- image elem proportions that can change
+		[_] ASAP: import fav dirs...
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame

@@ -272,18 +272,76 @@ body {
 
 /* XXX this is by no means final... */
 .viewer,
-.light.viewer {
+.light.viewer,
+.light.viewer .overlay-block .background {
 	background: white;
 }
 
-.gray.viewer {
+.gray.viewer,
+.gray.viewer .overlay-block .background {
 	background: #333;
 }
 
-.dark.viewer {
+.dark.viewer,
+.dark.viewer .overlay-block .background {
 	background: #0a0a0a;
 }
 
+
+/* Overlay */
+.overlay-block {
+	display: none;
+	position: absolute:
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	width: 100%;
+}
+.viewer.overlay .overlay-block {
+	display: block;
+}
+.overlay-block .content {
+}
+.overlay-block .background {
+	position: absolute:
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	width: 100%;
+	opacity: 0.7;
+}
+
+
+/* this is for sliding stuff */
+.viewer {
+	box-shadow: 0px 0px 50px 0px silver;
+}
+
+/* help */
+.keyboard-help {
+	margin: 20px;
+}
+
+.keyboard-help .section-doc {
+	font-size: small;
+	vertical-align: top;
+	font-style: italic;
+}
+.keyboard-help th {
+	text-align: left;
+	height: 50px;
+	vertical-align: bottom;
+	border-bottom: solid gray 1px;
+}
+.keyboard-help tr:hover {
+	background: #eee;
+	vertical-align: top;
+}
+.keyboard-help tr td:first-child {
+	color: gray;
+	font-style: italic;
+	padding-right: 20px;
+}
 
 </style>
 
@@ -376,8 +434,6 @@ $(function(){
 			updateImages()
 		})
 
-
-
 })
 
 
@@ -424,6 +480,10 @@ Populated
 	<div class="down-indicator"></div>
 	<div class="start-indicator"></div>
 	<div class="end-indicator"></div>
+	<div class="overlay-block">
+		<div class="background"></div>
+		<div class="content"></div>
+	</div>
 </div>
 
 
