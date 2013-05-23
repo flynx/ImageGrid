@@ -176,6 +176,52 @@ function getRelativeVisualPosition(outer, inner){
 }
 
 
+// Calculate relative position between two images or an image and a 
+// container
+//
+// This is a version of getRelativeVisualPosition(...) but it also
+// accounts for:
+// 	- partial scale (margins)
+// 	- image rotation
+//
+// NOTE: both arguments ar optional...
+//
+// XXX this still causes a wrong inter-ribbon align...
+function getRelativeImagePosition(a, b){
+	if(b == null){
+		var b = a == null ? $('.current.image') : $(a)
+		var a = $('.viewer')
+	} else {
+		var a = a == null ? $('.current.image') : $(a)
+		var b = $(b)
+	}
+	var scale = getElementScale($('.ribbon-set'))
+
+	var a_t = a.offset()
+	var a_l = a_t.left
+	var a_t = a_t.top
+	var a_orientation = a.attr('orientation')
+	if(a_orientation == 90 || a_orientation == 270){
+		a_t += parseFloat(a.css('margin-top')) * scale
+		a_l += parseFloat(a.css('margin-left')) * scale
+	}
+
+	var b_t = b.offset()
+	var b_l = b_t.left
+	var b_t = b_t.top
+	var b_orientation = b.attr('orientation')
+	if(b_orientation == 90 || b_orientation == 270){
+		b_t += parseFloat(b.css('margin-top')) * scale
+		b_l += parseFloat(b.css('margin-left')) * scale
+	}
+
+	return {
+		top: b_t - a_t,
+		left: b_l - a_l
+	}
+}
+
+
 // Returns the image size (width) as viewed on screen...
 //
 // dim can be:
@@ -183,6 +229,7 @@ function getRelativeVisualPosition(outer, inner){
 // 	- 'height'
 // 	- 'min'
 // 	- 'max'
+//
 function getVisibleImageSize(dim){
 	dim = dim == null ? 'width' : dim
 	var scale = getElementScale($('.ribbon-set'))
@@ -546,7 +593,8 @@ function centerView(image, mode){
 	var w = image.outerWidth()*scale
 	var h = image.outerHeight()*scale
 
-	var pos = getRelativeVisualPosition(viewer, image)
+	//var pos = getRelativeVisualPosition(viewer, image)
+	var pos = getRelativeImagePosition(image)
 
 	// zero out top/left if set to anything other than a specific number...
 	var t = parseFloat(ribbons.css('top'))
@@ -608,14 +656,16 @@ function centerRibbon(ribbon, image, mode){
 	} 
 
 	if(target.length > 0){
-		var dl = getRelativeVisualPosition(target, image).left/scale
+		//var dl = getRelativeVisualPosition(target, image).left/scale
+		var dl = getRelativeImagePosition(target, image).left/scale
 		l = {
 			left: l + dl - (w/2) + offset
 		}
 
 	} else {
 		target = ribbon.find('.image').filter(NAV_DEFAULT).first() 
-		var dl = getRelativeVisualPosition(target, image).left/scale
+		//var dl = getRelativeVisualPosition(target, image).left/scale
+		var dl = getRelativeImagePosition(target, image).left/scale
 		l = {
 			left: l + dl + (w/2) + offset
 		}
@@ -820,9 +870,6 @@ function correctImageProportionsForRotation(image, direction){
 		var h = image.outerHeight()
 
 		if(w != h){
-
-			console.log('>>>', W/H, w/h )
-
 			// when the image is turned 90deg/270deg and its 
 			// proportions are the same as the screen...
 			if((o == 90 || o == 270) && Math.abs(W/H - w/h) < 0.005 ){
