@@ -950,6 +950,7 @@ function setupDataBindings(viewer){
 			})
 			centerView(null, 'css')
 
+			// update settings...
 			if(toggleSingleImageMode('?') == 'on'){
 				SETTINGS['screen-images-single-image-mode'] = n
 			} else {

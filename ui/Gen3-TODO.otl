@@ -1,15 +1,12 @@
-[_] 21% Gen 3 current todo
-	[_] 43% High priority
-		[_] ASAP: account for image rotation with screen proportions while positioning
-		| getRelativeVisualPosition(...) gives an odd position when:
-		| 	- image is rotated
-		| 	- image is screen-proportioned
+[_] 24% Gen 3 current todo
+	[_] 48% High priority
 		[_] ASAP: support relative paths in cache...
 		[_] ASAP: load/view un-cached directories...
-		[_] ASAP: import fav dirs...
-		[_] NOTE: rotating might still produce alignment errors
-		| this is due:
-		| 	- most outerWidth/outerHeight being used do not account for margins...
+		[_] import fav dirs (wo. index)...
+		[_] add ability to save/load ranges of images and the structures around them
+		| e.g.load image 100 to current ribbon -> will load 100 images
+		| for current ribbon and all the in between images from other
+		| ribbons above and below...
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame
@@ -42,7 +39,7 @@
 			[_] collection
 			| make or add to existing collection
 		[_] 50% Undo/Redo
-			[X] basic one step
+			[X] basic one step (revert to last save)
 			[_] push/pop state stack
 		[_] 0% grouping / meta-image
 			[_] versions w. label image
@@ -64,6 +61,13 @@
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions
 			[_] caching config
+		[X] ASAP: account for image rotation with screen proportions while positioning
+		| getRelativeVisualPosition(...) gives an odd position when:
+		| 	- image is rotated
+		| 	- image is screen-proportioned
+		[X] NOTE: rotating might still produce alignment errors
+		| this is due:
+		| 	- most outerWidth/outerHeight being used do not account for margins...
 		[X] ASAP: rotate images in the viewer...
 		| This is a tad complicated by:
 		| 	- marks
@@ -98,7 +102,7 @@
 		
 
 
-[_] 51% Gen 3 UI implementation
+[_] 58% Gen 3 UI implementation
 	[X] 100% Infinite ribbon (lib)
 		[X] cyclic ribbon
 		[X] image block generation
@@ -115,8 +119,7 @@
 	| see [[controls.otl]] for basic actions...
 	|
 	| additional actions:
-		[_] 0% toggle mark image
-		| should include a set of marking operations
+		[X] 100% toggle mark image
 			[X] mark between
 			| mark all images between closest marks
 			[X] mark all/none
@@ -135,16 +138,15 @@
 		[_] add note to image
 		| a-la flickr notes...
 		[_] edit IPCT
-		[_] rotate image
-		| +/- 90 deg
-	[_] 33% UI modes
+		[X] rotate image
+	[_] 66% UI modes
 		[_] 0% single ribbon
 			[_] show images shifted (all / above only / below only) in current ribbon
 			[_] show marked only
 		[X] 100% multiple ribbons
 			[X] show images above/below
 			[X] show marked only
-		[_] 0% single image
+		[X] 100% single image
 
 
 .
