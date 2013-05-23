@@ -55,7 +55,10 @@ var toggleTheme = createCSSClassToggler('.viewer',
 			'gray',
 			'dark',
 			'light'
-		])
+		],
+		function(action){
+			SETTINGS['theme'] = action
+		})
 
 
 // NOTE: this confirmsto the css toggler protocol, but is not implemented 

@@ -577,6 +577,20 @@ function convertDataGen1(data, cmp){
 }
 
 
+function loadSettings(){
+	toggleTheme(SETTINGS['theme'])
+
+	if(toggleSingleImageMode('?') == 'on'){
+		var w = SETTINGS['screen-images-single-image-mode']
+		var p = SETTINGS['single-image-mode-proportions']
+		toggleImageProportions(p)
+	} else {
+		var w = SETTINGS['screen-images-ribbon-mode']
+	}
+	fitNImages(w)
+}
+
+
 
 /**********************************************************************
 * localStorage
@@ -650,6 +664,22 @@ function saveLocalStorageMarks(attr){
 	attr = attr == null ? DATA_ATTR : attr
 	attr += '_MARKED'
 	localStorage[attr] = JSON.stringify(MARKED)
+}
+
+
+function loadLocalStorageSettings(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_SETTINGS'
+	SETTINGS = JSON.parse(localStorage[attr])
+
+	loadSettings()
+}
+
+
+function saveLocalStorageSettings(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_SETTINGS'
+	localStorage[attr] = JSON.stringify(SETTINGS)
 }
 
 
@@ -919,6 +949,12 @@ function setupDataBindings(viewer){
 				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), r)
 			})
 			centerView(null, 'css')
+
+			if(toggleSingleImageMode('?') == 'on'){
+				SETTINGS['screen-images-single-image-mode'] = n
+			} else {
+				SETTINGS['screen-images-ribbon-mode'] = n
+			}
 
 			// update previews...
 			// XXX make this update only what needs updating...

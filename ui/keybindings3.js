@@ -202,6 +202,8 @@ var KEYBOARD_CONFIG = {
 						//saveLocalStorage()
 						saveLocalStorageData()
 						saveLocalStorageMarks()
+
+						saveLocalStorageSettings()
 					})
 			},
 		Z: {
