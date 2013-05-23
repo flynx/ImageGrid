@@ -198,6 +198,7 @@ var KEYBOARD_CONFIG = {
 		S: {
 				ctrl: doc('Save current state', 
 					function(){
+						event.preventDefault()
 						//saveLocalStorage()
 						saveLocalStorageData()
 						saveLocalStorageMarks()

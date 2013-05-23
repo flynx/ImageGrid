@@ -52,6 +52,8 @@ var DATA = {
 // the needed data...
 // XXX should we split this out?
 var IMAGES = {}
+// True if images is modified and needs saving...
+var IMAGES_DIRTY = false
 
 var DATA_ATTR = 'DATA'
 
@@ -924,6 +926,7 @@ function setupDataBindings(viewer){
 			DATA.current = getImageGID($(image))
 		})
 
+
 		// basic image manipulation...
 		// XXX after this we need to save the images...
 		.on('rotatingLeft rotatingRight', function(evt, image){
@@ -933,6 +936,7 @@ function setupDataBindings(viewer){
 				var orientation = img.attr('orientation')
 
 				IMAGES[gid].orientation = orientation
+				IMAGES_DIRTY = true
 			})
 		})
 
