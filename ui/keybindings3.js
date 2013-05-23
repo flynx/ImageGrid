@@ -26,18 +26,28 @@ var KEYBOARD_CONFIG = {
 				toggleImageProportions() 
 				centerRibbons()
 			}),
+		Esc: doc('Exit single image mode', 
+				function(){ toggleSingleImageMode('off') }),
+		Q: 'Esc',
 	},
 
-	'.overlay:visible':{
-		title: 'Overlay',
+
+	'.help-mode':{
+		title: 'Help',
 		doc: 'NOTE: In this mode all other key bindings are disabled, except '+
 			'the ones explicitly defined here.',
 		ignore: '*',
-		Esc: doc('Close overlay',
-			function(){
-				$('.overlay').click()
-			}),
+
+		Esc: doc('Close help',
+			function(){ toggleKeyboardHelp('off') }),
+		H: 'Esc',
+		Q: 'Esc',
+		// '?'
+		'/': { 
+				shift: 'Esc', 
+			},
 	},
+
 
 	// general setup...
 	'.viewer:not(.overlay)': {
@@ -287,71 +297,12 @@ var KEYBOARD_CONFIG = {
 
 		F4: doc('Open image in external software', openImage),
 
-		// XXX make this generic...
-		H: {
-				default: doc('Show keyboard bindings',
-					function(){
-						var body = $(document.body)
-
-						// remove helo when we scroll to the top...
-						var scroll_handler = function(){
-							if(body.scrollTop() <= 0){
-								$('.keyboard-help')
-									.remove()
-								$('.viewer')
-									.removeClass('overlay')
-								body
-									.click()
-								$(window)
-									.off('scroll', scroll_handler)
-							}
-						}
-
-						// prepare and cleanup...
-						$('.keyboard-help').remove()
-						$('.viewer').addClass('overlay')
-
-						// build the help...
-						var doc = buildKeybindingsHelpHTML(KEYBOARD_CONFIG)
-							.css({
-								cursor: 'hand',
-							})
-							.appendTo(body)
-
-						// add exit by click...
-						body
-							.one('click', function(){
-								body
-									.animate({
-										scrollTop: 0,
-									}, function(){
-										$('.keyboard-help')
-											.remove()
-										$('.viewer')
-											.removeClass('overlay')
-										$(window)
-											.off('scroll', scroll_handler)
-									})
-							})
-
-						// scroll to the help...
-						// NOTE: need to set the scroll handler AFTER we 
-						// 		scroll down, or it will be more of a 
-						// 		tease than a help...
-						var t = getRelativeVisualPosition($('.viewer'), doc).top
-						body
-							.animate({
-								scrollTop: Math.abs(t) - 40,
-							}, function(){
-								$(window)
-									.on('scroll', scroll_handler)
-							})
-					}),
-			},
+		H: doc('Show keyboard bindings',
+			function(){ toggleKeyboardHelp() }),
 		// '?'
 		'/': { 
 				shift: 'H', 
-		},
+			},
 	}
 }
 

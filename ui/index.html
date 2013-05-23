@@ -313,15 +313,18 @@ body {
 
 
 /* this is for sliding stuff */
-.viewer {
+.viewer.help-mode {
 	box-shadow: 0px 0px 50px 0px silver;
 }
 
 /* help */
 .keyboard-help {
-	margin: 20px;
+	width: 80%;
+	margin-top: 20px;
+	margin-left: 15%;
+	margin-right: 5%;
+	margin-bottom: 100px;
 }
-
 .keyboard-help .section-doc {
 	font-size: small;
 	vertical-align: top;
@@ -341,6 +344,11 @@ body {
 	color: gray;
 	font-style: italic;
 	padding-right: 20px;
+	padding-left: 10px;
+}
+.keyboard-help .section-doc td:only-child {
+	padding-right: 0px;
+	padding-left: 0px;
 }
 
 </style>
