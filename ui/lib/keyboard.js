@@ -132,7 +132,7 @@ function doc(text, func){
  * XXX need an explicit way to prioritize modes...
  * XXX check do we need did_handling here...
  *
- * XXX BUG explicitly given modes do ton yield results if the pattern 
+ * XXX BUG explicitly given modes do not yield results if the pattern 
  * 		does not match...
  */
 function getKeyHandlers(key, modifiers, keybindings, modes){
@@ -499,7 +499,6 @@ function buildKeybindingsHelpHTML(keybindings){
 	var doc = buildKeybindingsHelp(keybindings)
 
 	var res = '<table class="keyboard-help">'
-	
 	for(var mode in doc){
 		if(mode == 'doc'){
 			continue

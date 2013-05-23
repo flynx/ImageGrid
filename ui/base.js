@@ -164,6 +164,7 @@ function getImageGID(image){
 // NOTE: if used during an animation/transition this will give the 
 // 		position at the exact frame of the animation, this might not be
 // 		the desired "final" data...
+// XXX account for rotated images...
 function getRelativeVisualPosition(outer, inner){
 	outer = $(outer).offset()
 	inner = $(inner).offset()
@@ -800,29 +801,68 @@ var ccw = {
 	270: 180,
 }
 
-// XXX need to account for proportions...
-function rotateImage(direction, image){
-	var r_table = direction == 'Left' ? cw : ccw
-	image = image == null ? $('.current.image') : $(image)
-	image.each(function(i, e){
-		var img = $(this)
-		var o = img.attr('orientation')
-		img.attr('orientation', r_table[o])
+// XXX need to make this statically stable...
+function correctImageProportionsForRotation(image, direction){
+	direction = direction == null ? 'static' : direction
+	var viewer = $('.viewer')
+	var W = viewer.innerWidth()
+	var H = viewer.innerHeight()
 
+	$(image).each(function(i, e){
+		var image = $(this)
+		var o = image.attr('orientation')
+		o = o == null ? 0 : o
 		// XXX account for proportions...
-		/*
 		//var w = image.css('width')
 		//var h = image.css('height')
 		var w = image.outerWidth()
 		var h = image.outerHeight()
 
 		if(w != h){
+
+			console.log('>>>', W/H, w/h )
+
+			// when the image is turned 90deg/270deg and its 
+			// proportions are the same as the screen...
+			if((o == 90 || o == 270) && Math.abs(W/H - w/h) < 0.005 ){
+				image.css({
+					width: h,
+					height: w,
+				})
+				image.css({
+					'margin-top': -((w - h)/2),
+					'margin-bottom': -((w - h)/2),
+					'margin-left': (w - h)/2,
+					'margin-right': (w - h)/2,
+				})
+			} else if((o == 0 || o == 180) && Math.abs(W/H - w/h) > 0.005 ){
+				image.css({
+					width: h,
+					height: w,
+				})
+				image.css({
+					'margin': '',
+				})
+			}
+
+		} else {
 			image.css({
-				width: h,
-				height: w,
+				'margin': '',
 			})
 		}
-		*/
+	})
+}
+
+function rotateImage(direction, image){
+	var r_table = direction == 'left' ? cw : ccw
+	image = image == null ? $('.current.image') : $(image)
+	image.each(function(i, e){
+		var img = $(this)
+		var o = r_table[img.attr('orientation')]
+		img.attr('orientation', o)
+
+		// account for proportions...
+		correctImageProportionsForRotation(img, direction)
 	})
 
 	$('.viewer').trigger('rotating' + direction.capitalize(), [image])

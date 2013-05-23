@@ -1,11 +1,11 @@
-[_] 20% Gen 3 current todo
-	[_] 40% High priority
+[_] 21% Gen 3 current todo
+	[_] 43% High priority
+		[_] ASAP: account for image rotation with screen proportions while positioning
+		| getRelativeVisualPosition(...) gives an odd position when:
+		| 	- image is rotated
+		| 	- image is screen-proportioned
 		[_] ASAP: support relative paths in cache...
 		[_] ASAP: load/view un-cached directories...
-		[_] ASAP: rotate images in the viewer...
-		| This is a tad complicated by:
-		| 	- marks
-		| 	- image elem proportions that can change
 		[_] ASAP: import fav dirs...
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
@@ -61,6 +61,10 @@
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions
 			[_] caching config
+		[X] ASAP: rotate images in the viewer...
+		| This is a tad complicated by:
+		| 	- marks
+		| 	- image elem proportions that can change
 		[X] 100% themes
 			[X] light
 			[X] gray

@@ -38,6 +38,7 @@ var toggleTheme = createCSSClassToggler('.viewer',
 // XXX should we use the createCSSClassToggler for this?
 // XXX revise: does extra stuff...
 function toggleImageProportions(mode){
+	// normal images...
 	var image = $('.image')
 	var h = image.outerHeight(true)
 	var w = image.outerWidth(true)
@@ -52,6 +53,10 @@ function toggleImageProportions(mode){
 			width: size,
 			height: size
 		})
+
+		// account for rotation...
+		correctImageProportionsForRotation(image)
+
 		centerView(null, 'css')
 		return 'square'
 
@@ -66,9 +71,14 @@ function toggleImageProportions(mode){
 		} else {
 			image.css('height', H * w/W)
 		}
+
+		// account for rotation...
+		correctImageProportionsForRotation(image)
+
 		centerView(null, 'css')
 		return 'viewer'
 	}
+
 }
 
 
