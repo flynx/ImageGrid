@@ -429,11 +429,11 @@ function loadImages(ref_gid, count, ribbon){
 					})
 			$('.viewer').trigger('reloadedRibbon', [ribbon])
 
-
 		// do nothing...
 		// ...the requested section is the same as the one already loaded...
 		} else {
 			window.DEBUG && console.log('>>> (ribbon:', ribbon_i, ') NOTHING TO DO.')
+			return images
 		}
 
 	// do a partial reload...
@@ -457,6 +457,7 @@ function loadImages(ref_gid, count, ribbon){
 	}
 
 	// XXX is this the right place for this?
+	// XXX this might be too global, do only the images loaded...
 	correctImageProportionsForRotation(images)
 	return images
 }
@@ -718,6 +719,8 @@ function loadFile(data_path, image_path, callback){
 				json = convertDataGen1(json)
 				DATA = json.data
 				IMAGES = json.images
+				// XXX load marked data...
+				MARKED = []
 				loadData()
 
 			// version 2.0
