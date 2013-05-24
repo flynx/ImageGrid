@@ -12,6 +12,10 @@ var LOAD_THRESHOLD = 2
 var DEFAULT_SCREEN_IMAGES = 4
 var MAX_SCREEN_IMAGES = 12
 
+// if set to true each image will have basic info written to its html 
+// title attr.
+var IMAGE_TITLE_DATA = true
+
 // A stub image, also here for documentation...
 var STUB_IMAGE_DATA = {
 	id: 'SIZE',
@@ -313,7 +317,7 @@ function getBestPreview(gid, size){
 
 function updateImage(image, gid, size){
 	image = $(image)
-	var html = ''
+	var title = ''
 	if(gid == null){
 		gid = getImageGID(image)
 	} else {
@@ -321,22 +325,11 @@ function updateImage(image, gid, size){
 	}
 	size = size == null ? getVisibleImageSize('max') : size
 
-	// update image order...
-	image.attr({
-		order: DATA.order.indexOf(gid),
-	})
-
-	// setup marks...
-	if(MARKED.indexOf(gid) != -1){
-		image.addClass('marked')
-	} else {
-		image.removeClass('marked')
-	}
-
 	var img_data = IMAGES[gid]
 	if(img_data == null){
 		img_data = STUB_IMAGE_DATA
 	}
+	var name = img_data.path.split('/').pop()
 
 	// get the url...
 	var preview = getBestPreview(gid, size)
@@ -345,13 +338,22 @@ function updateImage(image, gid, size){
 			'background-image': 'url('+ preview.url +')',
 		})
 		.attr({
+			order: DATA.order.indexOf(gid),
 			orientation: img_data.orientation == null ? 0 : img_data.orientation,
+			title: IMAGE_TITLE_DATA ? 
+				'Image: ' + name +'\n'+
+				'Order: ' + DATA.order.indexOf(gid) +'\n'+
+				'GID: '+ gid +'\n'+
+				'Preview size:'+ preview.size : '',
 		})
 
-	html = window.DEBUG ? 
-			DATA.order.indexOf(gid) +'<br>'+ gid +'<br>'+ preview.size 
-			: html
-	image.html(html)
+	// setup marks...
+	if(MARKED.indexOf(gid) != -1){
+		image.addClass('marked')
+	} else {
+		image.removeClass('marked')
+	}
+
 
 	return image
 }
@@ -426,14 +428,12 @@ function loadImages(ref_gid, count, ribbon){
 						updateImage(e, gids[i], size)
 					})
 			$('.viewer').trigger('reloadedRibbon', [ribbon])
-			return images
 
 
 		// do nothing...
 		// ...the requested section is the same as the one already loaded...
 		} else {
 			window.DEBUG && console.log('>>> (ribbon:', ribbon_i, ') NOTHING TO DO.')
-			return images
 		}
 
 	// do a partial reload...
@@ -453,8 +453,12 @@ function loadImages(ref_gid, count, ribbon){
 			updateImage(e, gids[i + gids.length - tail], size)
 		})
 		$('.viewer').trigger('updatedRibbon', [ribbon])
-		return ribbon.find('.image')
+		images = ribbon.find('.image')
 	}
+
+	// XXX is this the right place for this?
+	correctImageProportionsForRotation(images)
+	return images
 }
 
 
@@ -502,6 +506,8 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 
 	$('.viewer').trigger('updatedRibbon', [ribbon])
 
+	// XXX is this the right place for this?
+	correctImageProportionsForRotation(images)
 	return images
 }
 
@@ -884,7 +890,7 @@ function setupDataBindings(viewer){
 			// NOTE: if this is greater than the number of images currently 
 			//		loaded, it might lead to odd effects...
 			var frame_size = (screen_size * LOAD_SCREENS) / 2
-			var threshold = screen_size * LOAD_THRESHOLD
+			var threshold = Math.ceil(screen_size * LOAD_THRESHOLD)
 
 			// do the loading...
 			// XXX need to expand/contract the ribbon depending on zoom and speed...

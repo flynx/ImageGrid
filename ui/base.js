@@ -806,27 +806,39 @@ var ccw = {
 	270: 180,
 }
 
-// XXX need to make this statically stable...
-function correctImageProportionsForRotation(image, direction){
-	direction = direction == null ? 'static' : direction
+function correctImageProportionsForRotation(images){
 	var viewer = $('.viewer')
 	var W = viewer.innerWidth()
 	var H = viewer.innerHeight()
+	// NOTE: this is here because we are comparing proportions of two 
+	// 		very differently sized elements, and though the proportions 
+	// 		may be the same, the actual result may be vastly different
+	// 		due of pixel rounding...
+	// 			Real example:
+	// 				Viewer:	826x601
+	// 				Image: 413x300
+	// 					ratio 1:  W/H - w/h = -0.002290626733222556
+	// 					ratio 2: W/w - H/h = -0.0033333333333334103
+	// NOTE: this might get out of hand for close to square viewer...
+	// 		...one way to cheat out of this is to round any ratio
+	// 		close to 1 to 1.
+	// XXX find a better way out of this, avoiding floats...
+	var rounding_error = 0.007
 
-	$(image).each(function(i, e){
+	$(images).each(function(i, e){
 		var image = $(this)
+		// orientation...
 		var o = image.attr('orientation')
 		o = o == null ? 0 : o
-		// XXX account for proportions...
-		//var w = image.css('width')
-		//var h = image.css('height')
 		var w = image.outerWidth()
 		var h = image.outerHeight()
 
 		if(w != h){
+			var proportions = W/H - w/h
+
 			// when the image is turned 90deg/270deg and its 
 			// proportions are the same as the screen...
-			if((o == 90 || o == 270) && Math.abs(W/H - w/h) < 0.005 ){
+			if((o == 90 || o == 270) && Math.abs(proportions) < rounding_error ){
 				image.css({
 					width: h,
 					height: w,
@@ -837,7 +849,7 @@ function correctImageProportionsForRotation(image, direction){
 					'margin-left': (w - h)/2,
 					'margin-right': (w - h)/2,
 				})
-			} else if((o == 0 || o == 180) && Math.abs(W/H - w/h) > 0.005 ){
+			} else if((o == 0 || o == 180) && Math.abs(proportions) > rounding_error ){
 				image.css({
 					width: h,
 					height: w,
