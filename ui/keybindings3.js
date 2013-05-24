@@ -31,6 +31,14 @@ var KEYBOARD_CONFIG = {
 		Q: 'Esc',
 	},
 
+	// single image mode only...
+	'.marked-only-view:not(.single-image-mode)': {
+		title: 'Marked only view',
+
+		Esc: doc('Exit marked only view', 
+				function(){ toggleMarkedOnlyView('off') })
+	},
+
 
 	// help mode...
 	'.help-mode': {
@@ -306,6 +314,7 @@ var KEYBOARD_CONFIG = {
 			},
 
 		F4: doc('Open image in external software', openImage),
+		E: 'F4',
 
 		H: doc('Show keyboard bindings',
 			function(){ toggleKeyboardHelp() }),
