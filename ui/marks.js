@@ -12,10 +12,27 @@
 * helpers...
 */
 
-function loadMarkedOnlyData(cmp){
+// NOTE: to disable MARKED cleanout set no_cleanout_marks to true.
+// NOTE: MARKED may contain both gids that are not loaded and that do 
+// 		not exist, as there is no way to distinguish between the two 
+// 		situations the cleanup is optional...
+function loadMarkedOnlyData(cmp, no_cleanout_marks){
 	cmp = cmp == null ? imageDateCmp : cmp
 	var cur = DATA.current
 	var marked = MARKED.slice().sort(cmp)
+	// this will ignore any gid in marks that is not in IMAGES...
+	// NOTE: if IMAGES contains only part of the data loadable this will 
+	// 		be wrong...
+	if(!no_cleanout_marks){
+		for(var i=0; i < marks.length;){
+			if(marks[i] in IMAGES){
+				i++
+				continue
+			}
+			// NOTE: we do not need to advance i here...
+			marks.splice(i, 1)
+		}
+	}
 	ALL_DATA = DATA
 	DATA = {
 		varsion: '2.0',
