@@ -324,6 +324,9 @@ function normalizePath(url, base, mode){
 	mode = mode == null ? 'absolute' : mode
 	base = base == null ? BASE_URL : base
 
+	// windows path...
+	
+
 	// absolute path...
 	if(/^(file|http|https):\/\/.*$/.test(url)){
 		// check if we start with base, and remove it if so...
@@ -652,13 +655,17 @@ function loadLocalStorageData(attr){
 	if(data == null){
 		data = '{}'
 	}
-	return JSON.parse(data)
+	return {
+		data: JSON.parse(data),
+		base_url: localStorage[attr + '_BASE_URL'],
+	}
 }
 
 
 function saveLocalStorageData(attr){
 	attr = attr == null ? DATA_ATTR : attr
 	localStorage[attr] = JSON.stringify(DATA)
+	localStorage[attr + '_BASE_URL'] = BASE_URL
 }
 
 
@@ -683,7 +690,9 @@ function saveLocalStorageImages(attr){
 // generic save/load...
 function loadLocalStorage(attr){
 	attr = attr == null ? DATA_ATTR : attr
-	DATA = loadLocalStorageData(attr)
+	var d = loadLocalStorageData(attr)
+	BASE_URL = d.base_url
+	DATA = d.data
 	IMAGES = loadLocalStorageImages(attr)
 	return loadData()
 }
@@ -751,7 +760,6 @@ function loadFileImages(path, callback){
 }
 
 
-// XXX add relative path support (via. normalizePath(...))
 function loadFile(data_path, image_path, callback){
 	var base = data_path.split(CACHE_DIR)[0]
 	base = base == data_path ? '.' : base
@@ -835,11 +843,11 @@ function openImage(){
 
 // XXX need revision...
 function loadDir(path){
-	return loadFile(path +'/data.json')
+	return loadFile(BASE_URL +'/data.json')
 		.fail(function(){
-			loadFile(path +'/.ImageGrindCache/data.json')
+			loadFile(BASE_URL +'/'+ CACHE_DIR +'/data.json')
 				.fail(function(){
-					// XXX load separate images...
+					// XXX load plain images...
 					// XXX
 				})
 		})

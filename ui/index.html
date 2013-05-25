@@ -461,7 +461,9 @@ $(function(){
 	if((DATA_ATTR + '_IMAGES_FILE') in localStorage){
 		var loading = loadFileImages(localStorage[DATA_ATTR + '_IMAGES_FILE'])
 			.done(function(){
-				DATA = loadLocalStorageData()
+				var d = loadLocalStorageData()
+				DATA = d.data
+				BASE_URL = d.base_url
 				loadData()
 			})
 
