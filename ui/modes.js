@@ -107,7 +107,6 @@ function toggleImageProportions(mode){
 		centerView(null, 'css')
 		return 'viewer'
 	}
-
 }
 
 

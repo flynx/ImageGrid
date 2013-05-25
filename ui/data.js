@@ -832,7 +832,7 @@ function openImage(){
 	// CEF
 	if(window.CEF_runSystem != null){
 		// XXX if path is not present try and open the biggest preview...
-		return CEF_runSystem(IMAGES[getImageGID()].path)
+		return CEF_runSystem(normalizePath(IMAGES[getImageGID()].path, BASE_URL))
 
 	// PhoneGap
 	} else if(false) {
