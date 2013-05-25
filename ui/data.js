@@ -17,6 +17,8 @@ var MAX_SCREEN_IMAGES = 12
 // title attr.
 var IMAGE_TITLE_DATA = true
 
+var CACHE_DIR = '.ImageGridCache'
+
 // A stub image, also here for documentation...
 var STUB_IMAGE_DATA = {
 	id: 'SIZE',
@@ -374,7 +376,7 @@ function updateImage(image, gid, size){
 	var preview = getBestPreview(gid, size)
 	image
 		.css({
-			'background-image': 'url('+ preview.url +')',
+			'background-image': 'url("'+ preview.url +'")',
 		})
 		.attr({
 			order: DATA.order.indexOf(gid),
@@ -751,9 +753,12 @@ function loadFileImages(path, callback){
 
 // XXX add relative path support (via. normalizePath(...))
 function loadFile(data_path, image_path, callback){
+	var base = data_path.split(CACHE_DIR)[0]
+	base = base == data_path ? '.' : base
 	// CEF
 	return $.getJSON(data_path)
 		.done(function(json){
+			BASE_URL = base
 			// legacy format...
 			if(json.version == null){
 				json = convertDataGen1(json)
@@ -768,14 +773,14 @@ function loadFile(data_path, image_path, callback){
 			} else if(json.version == '2.0') {
 				DATA = json
 				if(image_path != null){
-					loadFileImages(image_path)
+					loadFileImages(normalizePath(image_path, base))
 						.done(function(){
 							loadData()
 
 							callback != null && callback()
 						})
 				} else if(DATA.image_file != null) {
-					loadFileImages(DATA.image_file)
+					loadFileImages(normalizePath(DATA.image_file, base))
 						.done(function(){
 							loadData()
 
