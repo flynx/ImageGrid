@@ -592,7 +592,7 @@ function centerView(image, mode){
 // XXX this needs the image to exist... should be GID compatible... (???)
 function centerRibbon(ribbon, image, mode){
 	mode = mode == null ? TRANSITION_MODE_DEFAULT : mode
-	ribbon = $(ribbon)
+	ribbon = ribbon == null ? getRibbon() : $(ribbon)
 	image = image == null ? $('.current.image') : $(image)
 
 	$('.viewer').trigger('preCenteringRibbon', [ribbon, image])
@@ -611,15 +611,15 @@ function centerRibbon(ribbon, image, mode){
 
 	if(target.length > 0){
 		var dl = getRelativeVisualPosition(target, image).left/scale
-		//var dl = getRelativeImagePosition(target, image).left/scale
 		l = {
 			left: l + dl - (w/2) + offset
 		}
 
+	// we are at the start of a ribbon -- nothing before...
 	} else {
+		// get first image in ribbon...
 		target = ribbon.find('.image').filter(NAV_DEFAULT).first() 
 		var dl = getRelativeVisualPosition(target, image).left/scale
-		//var dl = getRelativeImagePosition(target, image).left/scale
 		l = {
 			left: l + dl + (w/2) + offset
 		}
@@ -790,22 +790,6 @@ function nextRibbon(mode){
 
 /******************************************************** Rotating ***/
 
-var cw = {
-	null: 0,
-	0: 90,
-	90: 180,
-	180: 270,
-	270: 0,
-}
-
-var ccw = {
-	null: 0,
-	0: 270,
-	90: 0,
-	180: 90,
-	270: 180,
-}
-
 function correctImageProportionsForRotation(images){
 	var viewer = $('.viewer')
 	var W = viewer.innerWidth()
@@ -867,8 +851,25 @@ function correctImageProportionsForRotation(images){
 	})
 }
 
+
+var _cw = {
+	null: 0,
+	0: 90,
+	90: 180,
+	180: 270,
+	270: 0,
+}
+
+var _ccw = {
+	null: 0,
+	0: 270,
+	90: 0,
+	180: 90,
+	270: 180,
+}
+
 function rotateImage(direction, image){
-	var r_table = direction == 'left' ? cw : ccw
+	var r_table = direction == 'left' ? _cw : _ccw
 	image = image == null ? $('.current.image') : $(image)
 	image.each(function(i, e){
 		var img = $(this)

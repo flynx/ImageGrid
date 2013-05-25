@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130522224619'''
+__sub_version__ = '''20130525140732'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -345,7 +345,7 @@ def build_data(images, path, config=CONFIG):
 #---------------------------------------------------------build_cache---
 ##!!! DO NOT OVERWRITE EXISTING DATA...
 def build_cache(path, config=CONFIG, gid_generator=hash_gid, 
-		report_progress=report_progress, dry_run=False, verbosity=0):
+		report_progress=report_progress, dry_run=False, images_only=False, verbosity=0):
 	'''
 	'''
 	cache_dir = config['cache-dir']
@@ -371,7 +371,17 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 	if verbosity >= 1:
 		print
 
-	for n, d in {images_file: images, data_file: data, marked_file: marked}.items():
+	if images_only:
+		files = {
+			images_file: images,
+		}
+	else:
+		files = {
+			images_file: images, 
+			data_file: data, 
+			marked_file: marked,
+		}
+	for n, d in files.items():
 		n = os.path.join(path, n)
 		if verbosity >= 1:
 			print 'Writing: %s' % n
@@ -422,6 +432,10 @@ if __name__ == '__main__':
 
 
 	output_configuration = OptionGroup(parser, 'Output configuration')
+	output_configuration.add_option('--images-only', 
+						action='store_true',
+						default=False,
+						help='Create only images.json file, skip the rest.') 
 	output_configuration.add_option('--path-mode',
 						default='absolute' if CONFIG['absolute-path'] else 'relative',
 						help='Path generation mode (default: "%default").')
@@ -492,6 +506,7 @@ if __name__ == '__main__':
 	verbosity = options.verbosity
 	# bool...
 	dry_run = options.dry_run
+	images_only = options.images_only
 
 	# configuration stuff...
 	# write a local configuration...
@@ -534,8 +549,9 @@ if __name__ == '__main__':
 				config, 
 				hash_gid, 
 				report,
-				dry_run,
-				verbosity)
+				dry_run=dry_run,
+				images_only=images_only,
+				verbosity=verbosity)
 
 		# report results...
 		if verbosity >= 1:

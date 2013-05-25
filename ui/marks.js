@@ -24,13 +24,13 @@ function loadMarkedOnlyData(cmp, no_cleanout_marks){
 	// NOTE: if IMAGES contains only part of the data loadable this will 
 	// 		be wrong...
 	if(!no_cleanout_marks){
-		for(var i=0; i < marks.length;){
-			if(marks[i] in IMAGES){
+		for(var i=0; i < marked.length;){
+			if(marked[i] in IMAGES){
 				i++
 				continue
 			}
 			// NOTE: we do not need to advance i here...
-			marks.splice(i, 1)
+			marked.splice(i, 1)
 		}
 	}
 	ALL_DATA = DATA

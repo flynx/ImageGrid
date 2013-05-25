@@ -2,6 +2,24 @@
 	[_] 48% High priority
 		[_] BUG: aligning still sometimes gets off...
 		| ...after rotating a number of images
+		|
+		| happens when:
+		| 	- getScreenWidthInImages() < 2
+		| 	- looking through images in one direction and back, some get misaligned
+		| 		...this is stable behaviour by centerRibbon(...), 
+		| 		calling it again will not fix this.
+		| 		moving next/prev will fix the issue until it comes back again
+		| 	- affected by LOAD_SCREENS and number of images in ribbon
+		| 		current figures:
+		| 			Ribbon: 18
+		| 			Position going forward: 4
+		| 			Position going back: 1
+		| 			LOAD_SCREENS: 6
+		| 	NOTE: changing LOAD_SCREENS moves the affected positions.
+		| 	NOTE: had a similar bug where some images still kept their 
+		| 			prior sizing after recycling...
+		| 			...check if centerRibbon(...) and correctImageProportionsForRotation(...)
+		| 			are called in right sequence...
 		[_] ASAP: support relative paths in cache...
 		[_] ASAP: load/view un-cached directories...
 		[_] import fav dirs (wo. index)...

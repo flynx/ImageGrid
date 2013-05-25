@@ -8,7 +8,8 @@
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 var LOAD_SCREENS = 6
-var LOAD_THRESHOLD = 2
+//var LOAD_THRESHOLD = 2
+
 var DEFAULT_SCREEN_IMAGES = 4
 var MAX_SCREEN_IMAGES = 12
 
@@ -71,6 +72,8 @@ var SETTINGS = {
 	'screen-images-single-image-mode': null,
 	'single-image-mode-proportions': null,
 }
+
+var BASE_URL = '.'
 
 
 
@@ -287,6 +290,8 @@ function getImageGIDs(from, count, ribbon, inclusive){
 // Select best preview by size...
 //
 // NOTE: this will use the original if everything else is smaller...
+//
+// XXX make this both relative and absolute URL compatible...
 function getBestPreview(gid, size){
 	size = size == null ? getVisibleImageSize('max') : size
 	var s
@@ -304,8 +309,42 @@ function getBestPreview(gid, size){
 		}
 	}
 	return {
-		url: url,
+		//url: url,
+		url: normalizePath(url),
 		size: preview_size
+	}
+}
+
+
+// NOTE: mode can be either 'absolute' (default) or 'relative'...
+// XXX need to account for '.' base
+function normalizePath(url, base, mode){
+	mode = mode == null ? 'absolute' : mode
+	base = base == null ? BASE_URL : base
+
+	// absolute path...
+	if(/^(file|http|https):\/\/.*$/.test(url)){
+		// check if we start with base, and remove it if so...
+		if(mode == 'relative' && url.substring(0, base.length) == base){
+			url = url.substring(base.length - 1)
+			return url[0] == '/' ? url.substring(1) : url
+
+		// if it's a different path, return as-is
+		} else if(mode == 'absolute'){
+			return url
+		}
+
+	// make an absolute path...
+	} else if(mode == 'absolute') {
+		// if base ends and url starts with '.' avoid making it a '..'
+		if(base[base.length-1] == '.' && url[0] == '.'){
+			return base + url.substring(1)
+		// avoid creating '//'...
+		} else if(base[base.length-1] != '/' && url[0] != '/'){
+			return base + '/' + url
+		} else {
+			return base + url
+		}
 	}
 }
 
@@ -710,6 +749,7 @@ function loadFileImages(path, callback){
 }
 
 
+// XXX add relative path support (via. normalizePath(...))
 function loadFile(data_path, image_path, callback){
 	// CEF
 	return $.getJSON(data_path)
@@ -873,6 +913,7 @@ function setupDataBindings(viewer){
 			var img_before = getImageBefore(image, ribbon)
 			var gid_before = getGIDBefore(gid, r)
 			var screen_size = getScreenWidthInImages()
+			screen_size = screen_size < 1 ? 1 : screen_size
 			var l = ribbon.find('.image').length
 
 			// load images if we do a long jump -- start, end or some mark 
@@ -892,12 +933,22 @@ function setupDataBindings(viewer){
 
 			// NOTE: if this is greater than the number of images currently 
 			//		loaded, it might lead to odd effects...
-			var frame_size = (screen_size * LOAD_SCREENS) / 2
-			var threshold = Math.ceil(screen_size * LOAD_THRESHOLD)
+			var frame_size = Math.ceil((screen_size * LOAD_SCREENS) / 2)
+			//var threshold = Math.ceil(screen_size * LOAD_THRESHOLD)
+			var threshold = Math.floor(frame_size / 2) 
+			threshold = threshold < 1 ? 1 : threshold
 
 			// do the loading...
-			// XXX need to expand/contract the ribbon depending on zoom and speed...
+			// XXX need to expand/contract the ribbon depending on speed...
+			// 		...might also be a good idea to load smaller images 
+			// 		while scrolling really fast...
 			// XXX use extendRibbon, to both roll and expand/contract...
+			// XXX BUG: when rolling a ribbon, this will sometimes 
+			// 		misalign an image...
+			// 		...where exactly this happens in the ribbon depends on 
+			// 		its size and LOAD_SCREENS...
+			// 		NOTE: calling centerView() will fix this.
+			// 		...the problem is in centerRibbon
 			if(tail.length < threshold){
 				var rolled = rollImages(frame_size, ribbon)
 			}
