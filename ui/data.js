@@ -318,14 +318,34 @@ function getBestPreview(gid, size){
 }
 
 
+// Normalize the path...
+//
+// This will do:
+// 	- convert windows absolute paths 'X:\...' -> 'file:///X:/...'
+// 	- if mode is 'absolute':
+// 		- return absolute paths as-is
+// 		- base relative paths on base/BASE_URL, returning an absolute 
+// 			path
+// 	- if mode is relative:
+// 		- if absolute path is based on base/BASE_URL make a relative 
+// 			to base path out of it buy cutting the base out.
+// 		- return absolute paths as-is
+// 		- return relative paths as-is
+//
 // NOTE: mode can be either 'absolute' (default) or 'relative'...
+//
 // XXX need to account for '.' base
 function normalizePath(url, base, mode){
 	mode = mode == null ? 'absolute' : mode
 	base = base == null ? BASE_URL : base
 
 	// windows path...
-	
+	//	- replace all '\\' with '/'...
+	url = url.replace(/\\/g, '/')
+	//	- replace 'X:/...' with 'file:///X:/...' 
+	if(/^[A-Z]:\//.test(url)){
+		url = 'file:///' + url
+	}
 
 	// absolute path...
 	if(/^(file|http|https):\/\/.*$/.test(url)){
