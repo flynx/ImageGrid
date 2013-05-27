@@ -597,6 +597,34 @@ var cancelAnimationFrame = (window.cancelRequestAnimationFrame
 		|| clearTimeout)
 
 
+Date.prototype.getTimeStamp = function(){
+	var y = this.getFullYear()
+	var M = this.getMonth()+1
+	M = M < 10 ? '0'+M : M
+	var D = this.getDate()
+	D = D < 10 ? '0'+D : D
+	var H = this.getHours()
+	H = H < 10 ? '0'+H : H
+	var m = this.getMinutes()
+	m = m < 10 ? '0'+m : m
+
+	return ''+y+M+D+H+m
+}
+Date.prototype.setTimeStamp = function(ts){
+	this.setFullYear(ts.slice(0, 4))
+	this.setMonth(ts.slice(4, 6)*1-1)
+	this.setDate(ts.slice(6, 8))
+	this.setHours(ts.slice(8, 10))
+	this.setMinutes(ts.slice(10, 12))
+	return this
+}
+Date.timeStamp = function(){
+	return (new Date()).getTimeStamp()
+}
+Date.fromTimeStamp = function(ts){
+	return (new Date()).setTimeStamp(ts)
+}
+
 
 
 /**********************************************************************

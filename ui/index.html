@@ -458,8 +458,9 @@ $(function(){
 	//setElementOrigin($('.ribbon-set'), 'top', 'left')
 
 	// we have an image file...
-	if((DATA_ATTR + '_IMAGES_FILE') in localStorage){
-		var loading = loadFileImages(localStorage[DATA_ATTR + '_IMAGES_FILE'])
+	if((DATA_ATTR + '_BASE_URL') in localStorage){
+		BASE_URL = localStorage[DATA_ATTR + '_BASE_URL']
+		var loading = loadFileImages()
 			.done(function(){
 				var d = loadLocalStorageData()
 				DATA = d.data

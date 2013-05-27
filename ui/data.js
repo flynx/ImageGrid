@@ -57,10 +57,8 @@ var DATA = {
 
 // the images object, this is indexed by image GID and contains all 
 // the needed data...
-// XXX should we split this out?
 var IMAGES = {}
-// True if images is modified and needs saving...
-var IMAGES_DIRTY = false
+var IMAGES_UPDATED = []
 
 var DATA_ATTR = 'DATA'
 
@@ -252,15 +250,17 @@ function getGIDBefore(gid, ribbon, search){
 }
 
 
+// Get a "count" of GIDs starting with a given gid ("from")
+//
+// NOTE: this will not include the 'from' GID in the resulting list, 
+// 		unless inclusive is set to true.
 // NOTE: count can be either negative or positive, this will indicate 
 // 		load direction...
-// NOTE: this will not include the 'from' GID in the resulting list...
-// NOTE: this can calculate the ribbon number if an image can be only 
-// 		in one ribbon...
+// NOTE: this can calculate the ribbon number where the image is located.
 // NOTE: if an image can be in more than one ribbon, one MUST suply the
 // 		correct ribbon number...
+//
 // XXX do we need more checking???
-// XXX inclusive can not be false, only null or true...
 function getImageGIDs(from, count, ribbon, inclusive){
 	if(count == 0){
 		return []
@@ -292,8 +292,6 @@ function getImageGIDs(from, count, ribbon, inclusive){
 // Select best preview by size...
 //
 // NOTE: this will use the original if everything else is smaller...
-//
-// XXX make this both relative and absolute URL compatible...
 function getBestPreview(gid, size){
 	size = size == null ? getVisibleImageSize('max') : size
 	var s
@@ -311,7 +309,6 @@ function getBestPreview(gid, size){
 		}
 	}
 	return {
-		//url: url,
 		url: normalizePath(url),
 		size: preview_size
 	}
@@ -320,7 +317,7 @@ function getBestPreview(gid, size){
 
 // Normalize the path...
 //
-// This will do:
+// This will:
 // 	- convert windows absolute paths 'X:\...' -> 'file:///X:/...'
 // 	- if mode is 'absolute':
 // 		- return absolute paths as-is
@@ -333,8 +330,6 @@ function getBestPreview(gid, size){
 // 		- return relative paths as-is
 //
 // NOTE: mode can be either 'absolute' (default) or 'relative'...
-//
-// XXX need to account for '.' base
 function normalizePath(url, base, mode){
 	mode = mode == null ? 'absolute' : mode
 	base = base == null ? BASE_URL : base
@@ -347,7 +342,7 @@ function normalizePath(url, base, mode){
 		url = 'file:///' + url
 	}
 
-	// absolute path...
+	// we got absolute path...
 	if(/^(file|http|https):\/\/.*$/.test(url)){
 		// check if we start with base, and remove it if so...
 		if(mode == 'relative' && url.substring(0, base.length) == base){
@@ -371,6 +366,56 @@ function normalizePath(url, base, mode){
 			return base + url
 		}
 	}
+}
+
+
+
+/**********************************************************************
+* Format conversion
+*/
+
+// Convert legacy Gen1 data format to current Gen3 (v2.0)
+function convertDataGen1(data, cmp){
+	var res = {
+		data: {
+			version: '2.0',
+			current: null,
+			ribbons: [],
+			order: [], 
+		},
+		images: {}
+	}
+	cmp = cmp == null ?
+			function(a, b){ 
+				return imageDateCmp(a, b, res.images) 
+			}
+			: cmp
+	var ribbons = res.data.ribbons
+	var order = res.data.order
+	var images = res.images
+
+	// position...
+	res.data.current = data.position
+	
+	// ribbons and images...
+	$.each(data.ribbons, function(i, input_images){
+		var ribbon = []
+		ribbons.push(ribbon)
+		for(var id in input_images){
+			var image = input_images[id]
+			ribbon.push(id)
+			order.push(id)
+			images[id] = image
+		}
+		ribbon.sort(cmp)
+	})
+
+	order.sort(cmp)
+
+	// XXX STUB
+	res.data.current = order[0]
+
+	return res
 }
 
 
@@ -535,6 +580,8 @@ function loadImagesAround(ref_gid, count, ribbon){
 }
 
 
+// Roll ribbon and load new images in the updated section.
+//
 // NOTE: this is signature-compatible with rollRibbon...
 // NOTE: this will load data ONLY if it is available, otherwise this 
 // 		will have no effect...
@@ -604,50 +651,6 @@ function loadData(images_per_screen){
 }
 
 
-function convertDataGen1(data, cmp){
-	var res = {
-		data: {
-			version: '2.0',
-			current: null,
-			ribbons: [],
-			order: [], 
-		},
-		images: {}
-	}
-	cmp = cmp == null ?
-			function(a, b){ 
-				return imageDateCmp(a, b, res.images) 
-			}
-			: cmp
-	var ribbons = res.data.ribbons
-	var order = res.data.order
-	var images = res.images
-
-	// position...
-	res.data.current = data.position
-	
-	// ribbons and images...
-	$.each(data.ribbons, function(i, input_images){
-		var ribbon = []
-		ribbons.push(ribbon)
-		for(var id in input_images){
-			var image = input_images[id]
-			ribbon.push(id)
-			order.push(id)
-			images[id] = image
-		}
-		ribbon.sort(cmp)
-	})
-
-	order.sort(cmp)
-
-	// XXX STUB
-	res.data.current = order[0]
-
-	return res
-}
-
-
 function loadSettings(){
 	toggleTheme(SETTINGS['theme'])
 
@@ -659,218 +662,6 @@ function loadSettings(){
 		var w = SETTINGS['screen-images-ribbon-mode']
 	}
 	fitNImages(w)
-}
-
-
-
-/**********************************************************************
-* localStorage
-*
-* XXX should we use jStorage here?
-*/
-
-function loadLocalStorageData(attr){
-	attr = attr == null ? DATA_ATTR : attr
-	var data = localStorage[attr]
-	if(data == null){
-		data = '{}'
-	}
-	return {
-		data: JSON.parse(data),
-		base_url: localStorage[attr + '_BASE_URL'],
-	}
-}
-
-
-function saveLocalStorageData(attr){
-	attr = attr == null ? DATA_ATTR : attr
-	localStorage[attr] = JSON.stringify(DATA)
-	localStorage[attr + '_BASE_URL'] = BASE_URL
-}
-
-
-function loadLocalStorageImages(attr){
-	attr = attr == null ? DATA_ATTR : attr
-	attr += '_IMAGES'
-	var images = localStorage[attr]
-	if(images == null){
-		images = '{}'
-	}
-	return JSON.parse(images)
-}
-
-
-function saveLocalStorageImages(attr){
-	attr = attr == null ? DATA_ATTR : attr
-	attr += '_IMAGES'
-	localStorage[attr] = JSON.stringify(IMAGES)
-}
-
-
-// generic save/load...
-function loadLocalStorage(attr){
-	attr = attr == null ? DATA_ATTR : attr
-	var d = loadLocalStorageData(attr)
-	BASE_URL = d.base_url
-	DATA = d.data
-	IMAGES = loadLocalStorageImages(attr)
-	return loadData()
-}
-
-
-function saveLocalStorage(attr){
-	attr = attr == null ? DATA_ATTR : attr
-	saveLocalStorageData(attr)
-	saveLocalStorageImages(attr)
-}
-
-
-function loadLocalStorageMarks(attr){
-	attr = attr == null ? DATA_ATTR : attr
-	attr += '_MARKED'
-	var marked = localStorage[attr]
-	if(marked == null){
-		marked = '[]'
-	}
-	MARKED = JSON.parse(marked)
-	return loadData()
-}
-
-
-function saveLocalStorageMarks(attr){
-	attr = attr == null ? DATA_ATTR : attr
-	attr += '_MARKED'
-	localStorage[attr] = JSON.stringify(MARKED)
-}
-
-
-function loadLocalStorageSettings(attr){
-	attr = attr == null ? DATA_ATTR : attr
-	attr += '_SETTINGS'
-	SETTINGS = JSON.parse(localStorage[attr])
-
-	loadSettings()
-}
-
-
-function saveLocalStorageSettings(attr){
-	attr = attr == null ? DATA_ATTR : attr
-	attr += '_SETTINGS'
-	localStorage[attr] = JSON.stringify(SETTINGS)
-}
-
-
-
-/**********************************************************************
-* Extension API (CEF/PhoneGap/...)
-*/
-
-function loadFileImages(path, callback){
-	return $.getJSON(path)
-		.done(function(json){
-			IMAGES = json
-			localStorage[DATA_ATTR + '_IMAGES_FILE'] = path
-			console.log('Loaded IMAGES...')
-
-			callback != null && callback()
-		})
-		.fail(function(){
-			console.error('ERROR LOADING:', path)
-		})
-}
-
-
-function loadFile(data_path, image_path, callback){
-	var base = data_path.split(CACHE_DIR)[0]
-	base = base == data_path ? '.' : base
-	// CEF
-	return $.getJSON(data_path)
-		.done(function(json){
-			BASE_URL = base
-			// legacy format...
-			if(json.version == null){
-				json = convertDataGen1(json)
-				DATA = json.data
-				IMAGES = json.images
-				// XXX load marked data...
-				MARKED = []
-				loadData()
-
-			// version 2.0
-			// XXX needs a more flexible protocol...
-			} else if(json.version == '2.0') {
-				DATA = json
-				if(image_path != null){
-					loadFileImages(normalizePath(image_path, base))
-						.done(function(){
-							loadData()
-
-							callback != null && callback()
-						})
-				} else if(DATA.image_file != null) {
-					loadFileImages(normalizePath(DATA.image_file, base))
-						.done(function(){
-							loadData()
-
-							callback != null && callback()
-						})
-				}
-
-			// unknown format...
-			} else {
-				console.error('unknown format.')
-				return
-			}
-		})
-		.fail(function(){
-			console.error('ERROR LOADING:', data_path)
-		})
-}
-
-
-function saveFile(name){
-	// CEF
-	if(window.CEF_dumpJSON != null){
-		if(DATA.image_file == null){
-			DATA.image_file = name + '-images.json'
-		}
-		//CEF_dumpJSON(DATA.image_file, IMAGES)
-		// XXX this will overwrite the images...
-		//CEF_dumpJSON(name + '-images.json', IMAGES)
-		//DATA.image_file = name + '-images.json'
-		CEF_dumpJSON(name + '-data.json', DATA)
-		CEF_dumpJSON(name + '-marked.json', MARKED)
-
-	// PhoneGap
-	} else if(false) {
-		// XXX
-	}
-}
-
-
-function openImage(){
-	// CEF
-	if(window.CEF_runSystem != null){
-		// XXX if path is not present try and open the biggest preview...
-		return CEF_runSystem(normalizePath(IMAGES[getImageGID()].path, BASE_URL))
-
-	// PhoneGap
-	} else if(false) {
-		// XXX
-	}
-}
-
-
-// XXX need revision...
-function loadDir(path){
-	return loadFile(BASE_URL +'/data.json')
-		.fail(function(){
-			loadFile(BASE_URL +'/'+ CACHE_DIR +'/data.json')
-				.fail(function(){
-					// XXX load plain images...
-					// XXX
-				})
-		})
 }
 
 
@@ -909,6 +700,358 @@ function preCacheAllRibbons(){
 		preCacheRibbonImages($(this))
 	})
 	return IMAGE_CACHE
+}
+
+
+
+/**********************************************************************
+* localStorage
+*
+* XXX should we use jStorage here?
+*/
+
+function loadLocalStorageData(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	var data = localStorage[attr]
+	if(data == null){
+		data = '{}'
+	}
+	return {
+		data: JSON.parse(data),
+		base_url: localStorage[attr + '_BASE_URL'],
+	}
+}
+function saveLocalStorageData(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	localStorage[attr] = JSON.stringify(DATA)
+	localStorage[attr + '_BASE_URL'] = BASE_URL
+}
+
+
+function loadLocalStorageImages(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_IMAGES'
+	var images = localStorage[attr]
+	if(images == null){
+		images = '{}'
+	}
+	return JSON.parse(images)
+}
+function saveLocalStorageImages(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_IMAGES'
+	localStorage[attr] = JSON.stringify(IMAGES)
+}
+
+
+function loadLocalStorageMarks(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_MARKED'
+	var marked = localStorage[attr]
+	if(marked == null){
+		marked = '[]'
+	}
+	MARKED = JSON.parse(marked)
+	return loadData()
+}
+function saveLocalStorageMarks(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_MARKED'
+	localStorage[attr] = JSON.stringify(MARKED)
+}
+
+
+function loadLocalStorageSettings(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_SETTINGS'
+	SETTINGS = JSON.parse(localStorage[attr])
+
+	loadSettings()
+}
+function saveLocalStorageSettings(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	attr += '_SETTINGS'
+	localStorage[attr] = JSON.stringify(SETTINGS)
+}
+
+
+// generic save/load...
+function loadLocalStorage(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	var d = loadLocalStorageData(attr)
+	BASE_URL = d.base_url
+	DATA = d.data
+	IMAGES = loadLocalStorageImages(attr)
+	return loadData()
+}
+function saveLocalStorage(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	saveLocalStorageData(attr)
+	saveLocalStorageImages(attr)
+}
+
+
+
+/**********************************************************************
+* File storage (Extension API -- CEF/PhoneGap/...)
+*
+* XXX need to cleanup this section...
+*/
+
+// CEF
+if(window.CEF_dumpJSON != null){
+	var dumpJSON = CEF_dumpJSON
+	var listDir = CEF_listDir
+	var removeFile = CEF_removeFile
+	var runSystem = CEF_runSystem
+
+// PhoneGap
+} else if(false) {
+	// XXX
+	var dumpJSON = null 
+	var listDir = null 
+	var removeFile = null
+	var runSystem = null
+}
+
+
+function loadFileImages(path, no_load_diffs, callback){
+
+	if(window.listDir == null){
+		no_load_diffs = true
+	}
+
+	if(path == null){
+		var base = normalizePath(CACHE_DIR)
+		var path = $.map(listDir(base), function(e){ 
+			return /.*-images.json$/.test(e) ? e : null
+		}).sort().reverse()[0]
+		path = path == null ? 'images.json' : path
+
+		console.log('Loading:', path)
+
+		path = base +'/'+ path
+	
+	} else {
+		path = normalizePath(path)
+		// XXX need to account for paths without a CACHE_DIR
+		var base = path.split(CACHE_DIR)[0]
+		base += '/'+ CACHE_DIR
+	}
+
+	var diff_data = {}
+	var diff = true
+
+	// XXX what are we going to do if base == path, i.e. no cache dir???
+
+
+	// XXX no error handling if one of the diff loads fail...
+	if(!no_load_diffs){
+		var diffs = [diff_data]
+		var diffs_names = $.map(listDir(base), function(e){ 
+			return /.*-images-diff.json$/.test(e) ? e : null
+		}).sort()
+		diff = $.when.apply(null, $.map(diffs_names, function(e, i){
+					return $.getJSON(normalizePath(base +'/'+ e))
+						.done(function(data){
+							diffs[i+1] = data
+							console.log('Loaded:', e)
+						})
+				}))
+			.then(function(){
+				$.extend.apply(null, diffs)
+			})
+	} 
+
+	return $.when(diff, $.getJSON(path))
+		.done(function(_, json){
+			json = json[0]
+			$.extend(json, diff_data)
+			IMAGES = json
+
+			//localStorage[DATA_ATTR + '_IMAGES_FILE'] = path
+
+			console.log('Loaded IMAGES...')
+
+			callback != null && callback()
+		})
+		.fail(function(){
+			console.error('ERROR LOADING:', path)
+		})
+}
+
+
+// XXX make this load a default data filename...
+// XXX look into the CACHE_DIR if not explicitly given...
+function loadFileState(data_path, image_path, callback){
+	var base = data_path.split(CACHE_DIR)[0]
+	base = base == data_path ? '.' : base
+
+	return $.getJSON(data_path)
+		.done(function(json){
+			BASE_URL = base
+			// legacy format...
+			if(json.version == null){
+				json = convertDataGen1(json)
+				DATA = json.data
+				IMAGES = json.images
+				// XXX load marked data...
+				MARKED = []
+				loadData()
+
+			// version 2.0
+			// XXX needs a more flexible protocol...
+			} else if(json.version == '2.0') {
+				DATA = json
+				if(image_path != null){
+					loadFileImages(normalizePath(image_path, base))
+						.done(function(){
+							loadData()
+
+							callback != null && callback()
+						})
+				} else if(DATA.image_file != null) {
+					loadFileImages(normalizePath(DATA.image_file, base))
+						.done(function(){
+							loadData()
+
+							callback != null && callback()
+						})
+				} else {
+					loadFileImages(null)
+						.done(function(){
+							loadData()
+
+							callback != null && callback()
+						})
+				}
+
+			// unknown format...
+			} else {
+				console.error('unknown format.')
+				return
+			}
+		})
+		.fail(function(){
+			console.error('ERROR LOADING:', data_path)
+		})
+}
+
+
+// Save current images list...
+//
+// NOTE: this will save the merged images and remove the diff files...
+// NOTE: if an explicit name is given then this will not remove anything.
+// NOTE: if not explicit name is given this will save to the current 
+// 		cache dir.
+function saveFileImages(name){
+	var remove_diffs = (name == null)
+	name = name == null ? normalizePath(CACHE_DIR +'/'+ Date.timeStamp()) : name
+
+	// CEF
+	if(window.dumpJSON == null){
+		console.error('Can\'t save to file.')
+		return
+	}
+
+	// remove the diffs...
+	if(remove_diffs){
+		$.each($.map(listDir(normalizePath(CACHE_DIR)), function(e){ 
+				return /.*-images-diff.json$/.test(e) ? e : null
+			}), function(i, e){
+				console.log('removeing:', e)
+				removeFile(normalizePath(CACHE_DIR +'/'+ e))
+			})
+		IMAGES_UPDATED = []
+	}
+
+	dumpJSON(name + '-images.json', IMAGES)
+	//DATA.image_file = normalizePath(name + '-images.json', null, 'relative')
+}
+
+
+function saveFileState(name, no_normalize_path){
+	name = name == null ? Date.timeStamp() : name
+
+	if(!no_normalize_path){
+		name = normalizePath(CACHE_DIR +'/'+ name)
+
+	// write .image_file only if saving data to a non-cache dir...
+	// XXX check if this is correct...
+	} else {
+		if(DATA.image_file == null){
+			DATA.image_file = name + '-images.json'
+		}
+	}
+
+	dumpJSON(name + '-data.json', DATA)
+	dumpJSON(name + '-marked.json', MARKED)
+
+	// save the updated images...
+	if(IMAGES_UPDATED.length > 0){
+		var updated = {}
+		$.each(IMAGES_UPDATED, function(i, e){
+			updated[e] = IMAGES[e]
+		})
+		dumpJSON(name + '-images-diff.json', updated)
+		IMAGES_UPDATED = []
+	}
+}
+
+
+// Open image in an external editor/viewer
+//
+// NOTE: this will open the default editor/viewer.
+function openImage(){
+	// CEF
+	if(window.runSystem == null){
+		console.error('Can\'t run external programs.')
+		return 
+	}
+
+	// XXX if path is not present try and open the biggest preview...
+	return runSystem(normalizePath(IMAGES[getImageGID()].path, BASE_URL))
+}
+
+
+// XXX need revision...
+function loadDir(path){
+
+	if(window.CEF_listDir != null){
+		var listDir = CEF_listDir
+
+	// PhoneGap
+	} else if(false) {
+		// XXX
+		
+	} else {
+		no_load_diffs = true
+	}
+
+	path = normalizePath(path)
+
+	var files = listDir(path)
+	var data = $.map(files, function(e){ 
+		return /.*-data.json$/.test(e) ? e : null
+	}).sort().reverse()[0]
+	data = (data == null && files.indexOf('data.json') >= 0) ? 'data.json' : data
+
+	// look in the cache dir...
+	if(data == null){
+		path += '/' + CACHE_DIR
+
+		files = listDir(path)
+		data = $.map(listDir(path), function(e){ 
+			return /.*-data.json$/.test(e) ? e : null
+		}).sort().reverse()[0]
+		data = (data == null && files.indexOf('data.json') >= 0) ? 'data.json' : data
+	}
+
+	console.log('Loading:', data)
+
+	data = path + '/' + data
+
+	return loadFileState(data)
 }
 
 
@@ -1070,7 +1213,9 @@ function setupDataBindings(viewer){
 				var orientation = img.attr('orientation')
 
 				IMAGES[gid].orientation = orientation
-				IMAGES_DIRTY = true
+				if(IMAGES_UPDATED.indexOf(gid) == -1){
+					IMAGES_UPDATED.push(gid)
+				}
 			})
 		})
 
@@ -1137,4 +1282,4 @@ function setupDataBindings(viewer){
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
+* vim:set ts=4 sw=4 spell :                                                */
