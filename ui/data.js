@@ -377,11 +377,22 @@ function getBestPreview(gid, size){
 * Constructors
 */
 
+// NOTE: this depends on that the base dir contains ALL the images...
 function imagesFromUrls(lst){
 	var res = {}
 
 	$.each(lst, function(i, e){
-		var gid = 'image-' + i
+
+		// this is ugly but I'm bored so this pretty...
+		var ii = i < 10			? '0000000' + i 
+				: i < 100		? '000000' + i
+				: i < 1000		? '00000' + i
+				: i < 10000		? '0000' + i
+				: i < 100000	? '000' + i
+				: i < 1000000	? '00' + i
+				: i < 10000000	? '0' + i
+				: i
+		var gid = 'image-' + ii
 		res[gid] = {
 			id: gid,
 			type: 'image',
@@ -410,6 +421,53 @@ function dataFromImages(images){
 		order: gids.slice(),
 		image_file: null
 	}
+}
+
+
+// NOTE: this depends on listDir(...)
+// NOTE: this assumes that images contain ALL the images...
+function ribbonsFromFavDirs(path, images){
+	path = path == null ? BASE_URL : path
+	images = images == null ? IMAGES : images
+
+	// build a reverse name-gid index for fast access...
+	var index = {}
+	var name
+	for(var gid in images){
+		name = images[gid].path.split('/').pop()
+		// XXX we assume that names are unique...
+		index[name] = gid
+	}
+
+	var ribbons = []
+	// add the base row...
+	var base = Object.keys(images)
+	ribbons.push(base)
+
+	var files = listDir(path)	
+	var cur_path = path
+	while(files.indexOf('fav') >= 0){
+		cur_path += '/fav'
+		files = listDir(cur_path)
+		ribbon = []
+		// collect the images...
+		$.each(files, function(i, e){
+			var _gid = index[e]
+			var found = /.*\.(jpg|jpeg)$/i.test(e) ? ribbon.push(_gid) : false
+			// remove the found item from each of the below ribbons...
+			if(found !== false){
+				$.each(ribbons, function(i ,e){
+					e.splice(e.indexOf(_gid), 1)
+				})
+			}
+		})
+		ribbons.push(ribbon)
+	}
+
+	// remove empty ribbons...
+	ribbons = $.map(ribbons, function(e){ return e.length > 0 ? [e] : null })
+
+	return ribbons.reverse()
 }
 
 
@@ -1097,8 +1155,9 @@ function loadDir(path, raw_load){
 
 		IMAGES = imagesFromUrls(image_paths)
 		DATA = dataFromImages(IMAGES)
-		MARKED = []
 		BASE_URL = orig_path
+		DATA.ribbons = ribbonsFromFavDirs()
+		MARKED = []
 
 		loadData()
 	}
