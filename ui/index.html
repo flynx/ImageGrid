@@ -457,16 +457,12 @@ $(function(){
 
 	//setElementOrigin($('.ribbon-set'), 'top', 'left')
 
+
 	// we have an image file...
 	if((DATA_ATTR + '_BASE_URL') in localStorage){
 		BASE_URL = localStorage[DATA_ATTR + '_BASE_URL']
-		var loading = loadFileImages()
-			.done(function(){
-				var d = loadLocalStorageData()
-				DATA = d.data
-				BASE_URL = d.base_url
-				loadData()
-			})
+
+		var loading = loadDir(BASE_URL)
 
 	} else {
 		// everything is in localStorage...
@@ -485,17 +481,15 @@ $(function(){
 
 	loading
 		.done(function(){
+			console.log('Loading settings...')
+			loadLocalStorageSettings()
+
 			// XXX this will reload everything...
 			if('MARKED' in localStorage){
 				loadLocalStorageMarks()
 			}
 
-			loadLocalStorageSettings()
-
-			// XXX stub...
-			//centerView(focusImage($('.image').first()), 'css')
 			updateImages()
-
 		})
 
 })

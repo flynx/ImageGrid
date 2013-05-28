@@ -716,9 +716,11 @@ function loadLocalStorageData(attr){
 	if(data == null){
 		data = '{}'
 	}
+	var base = localStorage[attr + '_BASE_URL']
+	base = base == null ? '.' : base
 	return {
 		data: JSON.parse(data),
-		base_url: localStorage[attr + '_BASE_URL'],
+		base_url: base,
 	}
 }
 function saveLocalStorageData(attr){
@@ -815,12 +817,16 @@ if(window.CEF_dumpJSON != null){
 }
 
 
+// Load images from file
+//
+// This will also merge all diff files.
 function loadFileImages(path, no_load_diffs, callback){
 
 	if(window.listDir == null){
 		no_load_diffs = true
 	}
 
+	// find the latest images file...
 	if(path == null){
 		var base = normalizePath(CACHE_DIR)
 		var path = $.map(listDir(base), function(e){ 
@@ -836,30 +842,33 @@ function loadFileImages(path, no_load_diffs, callback){
 		path = normalizePath(path)
 		// XXX need to account for paths without a CACHE_DIR
 		var base = path.split(CACHE_DIR)[0]
+		// XXX what are we going to do if base == path, i.e. no cache dir???
 		base += '/'+ CACHE_DIR
 	}
 
 	var diff_data = {}
 	var diff = true
 
-	// XXX what are we going to do if base == path, i.e. no cache dir???
-
-
+	// collect and merge image diffs...
 	// XXX no error handling if one of the diff loads fail...
 	if(!no_load_diffs){
-		var diffs = [diff_data]
+		var diff_data = [diff_data]
 		var diffs_names = $.map(listDir(base), function(e){ 
 			return /.*-images-diff.json$/.test(e) ? e : null
 		}).sort()
 		diff = $.when.apply(null, $.map(diffs_names, function(e, i){
 					return $.getJSON(normalizePath(base +'/'+ e))
+						// XXX this is ugly, had to do it this way as .then(...)
+						// 		handlers get different argument sets depending on 
+						// 		whether we have one or more deffereds here...
 						.done(function(data){
-							diffs[i+1] = data
+							diff_data[i+1] = data
 							console.log('Loaded:', e)
 						})
 				}))
 			.then(function(){
-				$.extend.apply(null, diffs)
+				$.extend.apply(null, diff_data)
+				diff_data = diff_data[0]
 			})
 	} 
 
@@ -868,8 +877,6 @@ function loadFileImages(path, no_load_diffs, callback){
 			json = json[0]
 			$.extend(json, diff_data)
 			IMAGES = json
-
-			//localStorage[DATA_ATTR + '_IMAGES_FILE'] = path
 
 			console.log('Loaded IMAGES...')
 
@@ -883,13 +890,16 @@ function loadFileImages(path, no_load_diffs, callback){
 
 // XXX make this load a default data filename...
 // XXX look into the CACHE_DIR if not explicitly given...
-function loadFileState(data_path, image_path, callback){
+function loadFileState(data_path, callback){
 	var base = data_path.split(CACHE_DIR)[0]
 	base = base == data_path ? '.' : base
 
-	return $.getJSON(data_path)
+	var res = $.Deferred()
+
+	$.getJSON(data_path)
 		.done(function(json){
 			BASE_URL = base
+
 			// legacy format...
 			if(json.version == null){
 				json = convertDataGen1(json)
@@ -900,22 +910,15 @@ function loadFileState(data_path, image_path, callback){
 				loadData()
 
 			// version 2.0
-			// XXX needs a more flexible protocol...
 			} else if(json.version == '2.0') {
 				DATA = json
-				if(image_path != null){
-					loadFileImages(normalizePath(image_path, base))
-						.done(function(){
-							loadData()
-
-							callback != null && callback()
-						})
-				} else if(DATA.image_file != null) {
+				if(DATA.image_file != null) {
 					loadFileImages(normalizePath(DATA.image_file, base))
 						.done(function(){
 							loadData()
 
 							callback != null && callback()
+							res.resolve()
 						})
 				} else {
 					loadFileImages(null)
@@ -923,6 +926,7 @@ function loadFileState(data_path, image_path, callback){
 							loadData()
 
 							callback != null && callback()
+							res.resolve()
 						})
 				}
 
@@ -935,6 +939,8 @@ function loadFileState(data_path, image_path, callback){
 		.fail(function(){
 			console.error('ERROR LOADING:', data_path)
 		})
+
+	return res
 }
 
 
@@ -999,35 +1005,7 @@ function saveFileState(name, no_normalize_path){
 }
 
 
-// Open image in an external editor/viewer
-//
-// NOTE: this will open the default editor/viewer.
-function openImage(){
-	// CEF
-	if(window.runSystem == null){
-		console.error('Can\'t run external programs.')
-		return 
-	}
-
-	// XXX if path is not present try and open the biggest preview...
-	return runSystem(normalizePath(IMAGES[getImageGID()].path, BASE_URL))
-}
-
-
-// XXX need revision...
 function loadDir(path){
-
-	if(window.CEF_listDir != null){
-		var listDir = CEF_listDir
-
-	// PhoneGap
-	} else if(false) {
-		// XXX
-		
-	} else {
-		no_load_diffs = true
-	}
-
 	path = normalizePath(path)
 
 	var files = listDir(path)
@@ -1052,6 +1030,21 @@ function loadDir(path){
 	data = path + '/' + data
 
 	return loadFileState(data)
+}
+
+
+// Open image in an external editor/viewer
+//
+// NOTE: this will open the default editor/viewer.
+function openImage(){
+	// CEF
+	if(window.runSystem == null){
+		console.error('Can\'t run external programs.')
+		return 
+	}
+
+	// XXX if path is not present try and open the biggest preview...
+	return runSystem(normalizePath(IMAGES[getImageGID()].path, BASE_URL))
 }
 
 
