@@ -455,6 +455,47 @@ $(function(){
 	setupDataBindings()
 
 
+	/* XXX drag/drop
+	$(document)
+		.bind('dragover', function(e){
+			e.stopPropagation()
+			e.preventDefault()
+			// XXX is there a jQuery way out of this??
+			e.originalEvent.dataTransfer.dropEffect = 'copy' // Explicitly show this is a copy.
+		})
+		.bind('drop', function(e){
+			e.stopPropagation()
+			e.preventDefault()
+
+			// XXX is there a jQuery way out of this??
+			var files = e.originalEvent.dataTransfer.files
+
+			// XXX should we be using the loadJSON here???
+			// XXX desperatly need image caching and preview generation...
+
+			for (var i = 0, f; f = files[i]; i++) {
+
+				if (!f.type.match('image.*')) {
+					continue
+				}
+				console.log('FILE:', f)
+
+				var reader = new FileReader()
+				reader.onload = function(i){
+					return function(e){
+						// XXX need to avoid data URLs here and use plain old paths...
+						//ribbon.append(makeImage(e.target.result, i))
+						console.log('DROPPED')//, e.target.result)
+					}
+				}(i)
+
+				reader.readAsDataURL(f)
+				//reader.readAsText(f)
+			}
+
+		})
+		*/
+
 	//setElementOrigin($('.ribbon-set'), 'top', 'left')
 
 

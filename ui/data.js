@@ -371,6 +371,47 @@ function normalizePath(url, base, mode){
 
 
 /**********************************************************************
+* Constructors
+*/
+
+function urlList2Images(lst){
+	var res = {}
+
+	$.each(lst, function(i, e){
+		var gid = 'image-' + i
+		res[gid] = {
+			id: gid,
+			type: 'image',
+			state: 'single',
+			path: e,
+			ctime: Date.now(),
+			preview: {},
+			classes: '',
+			orientation: 0,
+		}
+	})
+
+	return res
+}
+
+
+function dataFromImages(images){
+	var gids = Object.keys(images).sort()
+
+	return {
+		version: '2.0',
+		current: gids[0],
+		ribbons: [
+			gids
+		],
+		order: gids.slice(),
+		image_file: null
+	}
+}
+
+
+
+/**********************************************************************
 * Format conversion
 */
 
@@ -990,31 +1031,73 @@ function saveFileState(name, no_normalize_path){
 }
 
 
-function loadDir(path){
+// Load a path
+//
+// This will try and to this in the following order:
+// 	1) find a data file in the given path
+// 	2) find a cache directory and a data file there
+// 	3) list the images and load them as-is
+//
+// XXX make sure that save works...
+function loadDir(path, raw_load){
 	path = normalizePath(path)
+	var orig_path = path
+	var data
 
 	var files = listDir(path)
-	var data = $.map(files, function(e){ 
-		return /.*-data.json$/.test(e) ? e : null
-	}).sort().reverse()[0]
-	data = (data == null && files.indexOf('data.json') >= 0) ? 'data.json' : data
 
-	// look in the cache dir...
-	if(data == null){
-		path += '/' + CACHE_DIR
+	if(files == null){
+		console.error('Path error:', path)
+		return
+	}
 
-		files = listDir(path)
-		data = $.map(listDir(path), function(e){ 
+	if(!raw_load){
+		data = $.map(files, function(e){ 
 			return /.*-data.json$/.test(e) ? e : null
 		}).sort().reverse()[0]
 		data = (data == null && files.indexOf('data.json') >= 0) ? 'data.json' : data
+
+		// look in the cache dir...
+		if(data == null){
+			path += '/' + CACHE_DIR
+
+			files = listDir(path)
+			if(files != null){
+				data = $.map(listDir(path), function(e){ 
+					return /.*-data.json$/.test(e) ? e : null
+				}).sort().reverse()[0]
+				data = (data == null && files.indexOf('data.json') >= 0) ? 'data.json' : data
+			}
+		}
 	}
 
-	console.log('Loading:', data)
+	// load the found data file...
+	if(data != null){
+		console.log('Loading:', data)
 
-	data = path + '/' + data
+		data = path + '/' + data
 
-	return loadFileState(data)
+		return loadFileState(data)
+
+	// load the dir as-is...
+	} else {
+		files = listDir(orig_path)
+		var image_paths = $.map(files, function(e){
+			return /.*\.(jpg|jpeg|png|gif)$/i.test(e) ? e : null
+		})
+
+		if(image_paths.length == 0){
+			console.error('No images in:', orig_path)
+			return 
+		}
+
+		IMAGES = urlList2Images(image_paths)
+		DATA = dataFromImages(IMAGES)
+		MARKED = []
+		BASE_URL = orig_path
+
+		loadData()
+	}
 }
 
 
