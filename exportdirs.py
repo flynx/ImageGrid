@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130528044626'''
+__sub_version__ = '''20130528153701'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -12,7 +12,14 @@ import shutil
 import json
 import urllib2
 
+from pli.logictypes import OR
+
 from pprint import pprint
+
+
+
+#-----------------------------------------------------------------------
+
 
 
 
@@ -32,8 +39,17 @@ def build_dirs(data, path, rewrite=None):
 
 	# gen3
 	if version == '2.0':
-		#images = json.load(open(data['image_file'], 'r'))
-		images = json.load(urllib2.urlopen(data['image_file']))
+		##!!! get base path...
+		##!!!
+		img = data['image_file']
+		# absolute path...
+		if img.startswith('file:///'):
+			images = json.load(urllib2.urlopen(data['image_file']))
+
+		# relative...
+		else:
+			images = json.load(open(os.path.join(path, data['image_file']), 'r'))
+
 		def get_image(gid, _):
 			return images[gid]
 
@@ -58,11 +74,20 @@ def build_dirs(data, path, rewrite=None):
 		for guid in ribbon:
 			image = get_image(guid, ribbon)
 			try:
-				# XXX for some magical reason this works and url2pathname does not...
-				##!!! this will also break on utf paths...
-				img = urllib2.urlopen(image['path'])
-				p = img.fp.name
-				img.close()
+				p = image['path']
+				# absolute path...
+				if img.startswith('file:///'):
+##					# XXX for some magical reason this works and url2pathname does not...
+##					##!!! this will also break on utf paths...
+##					img = urllib2.urlopen(image['path'])
+##					p = img.fp.name
+##					img.close()
+					p = urllib2.decode(p)
+					p = p.split('file:///')[-1]
+
+				# relative path...
+				else:
+					p = os.path.join(path, p)
 
 				# XXX do we need to indicate overwriting in the status?
 				if rewrite == 'force' or not os.path.exists(os.path.join(level_path, os.path.split(p)[-1])):
