@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130528153701'''
+__sub_version__ = '''20130528154208'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -25,7 +25,7 @@ from pprint import pprint
 
 #-----------------------------------------------------------------------
 #----------------------------------------------------------build_dirs---
-##!!! make this relative-path compatible...
+##!!! make this figure out the path by itself...
 def build_dirs(data, path, rewrite=None):
 	'''
 	rewrite can be:
@@ -39,8 +39,6 @@ def build_dirs(data, path, rewrite=None):
 
 	# gen3
 	if version == '2.0':
-		##!!! get base path...
-		##!!!
 		img = data['image_file']
 		# absolute path...
 		if img.startswith('file:///'):

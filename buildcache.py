@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130525140732'''
+__sub_version__ = '''20130528154633'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -13,6 +13,7 @@ import json
 import sha
 import urllib2
 import time
+from optparse import OptionParser, OptionGroup
 
 from pli.logictypes import OR
 
@@ -396,8 +397,13 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 
 
 #-----------------------------------------------------------------------
-if __name__ == '__main__':
-	from optparse import OptionParser, OptionGroup
+# Runtime...
+#--------------------------------------------------handle_commandline---
+def handle_commandline():
+	'''
+	Parse commandline args and act accordingly...
+	'''
+	res = None
 
 	parser = OptionParser(
 						usage='Usage: %prog [options] ROOT',
@@ -545,7 +551,7 @@ if __name__ == '__main__':
 			report = make_inline_report_progress(progress_state)
 
 		# do the run...
-		build_cache(IN_PATH, 
+		res = build_cache(IN_PATH, 
 				config, 
 				hash_gid, 
 				report,
@@ -558,6 +564,14 @@ if __name__ == '__main__':
 			print
 			print 'Time: %.1fm' % ((progress_state['done at'] - progress_state['started at'])/60)
 		
+	return res
+
+
+
+#-----------------------------------------------------------------------
+if __name__ == '__main__':
+
+	handle_commandline()
 
 
 
