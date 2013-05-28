@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130522224356'''
+__sub_version__ = '''20130528044626'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -18,6 +18,7 @@ from pprint import pprint
 
 #-----------------------------------------------------------------------
 #----------------------------------------------------------build_dirs---
+##!!! make this relative-path compatible...
 def build_dirs(data, path, rewrite=None):
 	'''
 	rewrite can be:
