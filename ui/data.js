@@ -91,8 +91,8 @@ function imageDateCmp(a, b, data){
 // NOTE: this expects gids...
 function imageNameCmp(a, b, data){
 	data = data == null ? IMAGES : data
-	a = data[b].path.split('/')[-1]
-	b = data[a].path.split('/')[-1]
+	a = data[b].path.split('/').pop()
+	b = data[a].path.split('/').pop()
 	if(a == b){
 		return 0
 	} else if(a < b){
@@ -101,6 +101,13 @@ function imageNameCmp(a, b, data){
 		return +1
 	}
 }
+
+function imageOrderCmp(a, b, data){
+	data = data == null ? DATA : data
+	return data.order.indexOf(a) - data.order.indexOf(b)
+}
+
+
 
 
 // Check if a is at position i in lst
@@ -426,9 +433,15 @@ function dataFromImages(images){
 
 // NOTE: this depends on listDir(...)
 // NOTE: this assumes that images contain ALL the images...
-function ribbonsFromFavDirs(path, images){
+function ribbonsFromFavDirs(path, images, cmp){
 	path = path == null ? BASE_URL : path
 	images = images == null ? IMAGES : images
+	/*cmp = cmp == null ?
+			function(a, b){ 
+				return imageDateCmp(a, b, images) 
+			}
+			: cmp
+	*/
 
 	// build a reverse name-gid index for fast access...
 	var index = {}
@@ -464,8 +477,10 @@ function ribbonsFromFavDirs(path, images){
 		ribbons.push(ribbon)
 	}
 
-	// remove empty ribbons...
-	ribbons = $.map(ribbons, function(e){ return e.length > 0 ? [e] : null })
+	// remove empty ribbons and sort the rest...
+	ribbons = $.map(ribbons, function(e){ 
+		return e.length > 0 ? [cmp == null ? e : e.sort(cmp)] : null 
+	})
 
 	return ribbons.reverse()
 }
@@ -1161,6 +1176,12 @@ function loadDir(path, raw_load){
 
 		loadData()
 	}
+}
+
+
+function updateRibbonsFromFavDirs(){
+	DATA.ribbons = ribbonsFromFavDirs(null, null, imageOrderCmp)
+	loadData()
 }
 
 
