@@ -466,13 +466,16 @@ function ribbonsFromFavDirs(path, images, cmp){
 		// collect the images...
 		$.each(files, function(i, e){
 			var _gid = index[e]
-			var found = /.*\.(jpg|jpeg)$/i.test(e) ? ribbon.push(_gid) : false
+			// filter out non-image files...
+			if(/.*\.(jpg|jpeg)$/i.test(e)){
+				ribbon.push(_gid)
+			} 
 			// remove the found item from each of the below ribbons...
-			if(found !== false){
-				$.each(ribbons, function(i ,e){
+			$.each(ribbons, function(i ,e){
+				if(e.indexOf(_gid) != -1){
 					e.splice(e.indexOf(_gid), 1)
-				})
-			}
+				}
+			})
 		})
 		ribbons.push(ribbon)
 	}
