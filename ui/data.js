@@ -821,14 +821,12 @@ if(window.CEF_dumpJSON != null){
 //
 // This will also merge all diff files.
 function loadFileImages(path, no_load_diffs, callback){
+	no_load_diffs = window.listDir == null ? true : no_load_diffs 
 
-	if(window.listDir == null){
-		no_load_diffs = true
-	}
-
-	// find the latest images file...
+	// default locations...
 	if(path == null){
 		var base = normalizePath(CACHE_DIR)
+		// find the latest images file...
 		var path = $.map(listDir(base), function(e){ 
 			return /.*-images.json$/.test(e) ? e : null
 		}).sort().reverse()[0]
@@ -838,11 +836,11 @@ function loadFileImages(path, no_load_diffs, callback){
 
 		path = base +'/'+ path
 	
+	// explicit path...
+	// XXX need to account for paths without a CACHE_DIR
 	} else {
 		path = normalizePath(path)
-		// XXX need to account for paths without a CACHE_DIR
 		var base = path.split(CACHE_DIR)[0]
-		// XXX what are we going to do if base == path, i.e. no cache dir???
 		base += '/'+ CACHE_DIR
 	}
 
@@ -872,6 +870,7 @@ function loadFileImages(path, no_load_diffs, callback){
 			})
 	} 
 
+	// load the main image file and merge the diff with it...
 	return $.when(diff, $.getJSON(path))
 		.done(function(_, json){
 			json = json[0]
@@ -888,62 +887,6 @@ function loadFileImages(path, no_load_diffs, callback){
 }
 
 
-// XXX make this load a default data filename...
-// XXX look into the CACHE_DIR if not explicitly given...
-function loadFileState(data_path, callback){
-	var base = data_path.split(CACHE_DIR)[0]
-	base = base == data_path ? '.' : base
-
-	var res = $.Deferred()
-
-	$.getJSON(data_path)
-		.done(function(json){
-			BASE_URL = base
-
-			// legacy format...
-			if(json.version == null){
-				json = convertDataGen1(json)
-				DATA = json.data
-				IMAGES = json.images
-				// XXX load marked data...
-				MARKED = []
-				loadData()
-
-			// version 2.0
-			} else if(json.version == '2.0') {
-				DATA = json
-				if(DATA.image_file != null) {
-					loadFileImages(normalizePath(DATA.image_file, base))
-						.done(function(){
-							loadData()
-
-							callback != null && callback()
-							res.resolve()
-						})
-				} else {
-					loadFileImages(null)
-						.done(function(){
-							loadData()
-
-							callback != null && callback()
-							res.resolve()
-						})
-				}
-
-			// unknown format...
-			} else {
-				console.error('unknown format.')
-				return
-			}
-		})
-		.fail(function(){
-			console.error('ERROR LOADING:', data_path)
-		})
-
-	return res
-}
-
-
 // Save current images list...
 //
 // NOTE: this will save the merged images and remove the diff files...
@@ -954,7 +897,6 @@ function saveFileImages(name){
 	var remove_diffs = (name == null)
 	name = name == null ? normalizePath(CACHE_DIR +'/'+ Date.timeStamp()) : name
 
-	// CEF
 	if(window.dumpJSON == null){
 		console.error('Can\'t save to file.')
 		return
@@ -973,6 +915,49 @@ function saveFileImages(name){
 
 	dumpJSON(name + '-images.json', IMAGES)
 	//DATA.image_file = normalizePath(name + '-images.json', null, 'relative')
+}
+
+
+function loadFileState(data_path, callback){
+	var base = data_path.split(CACHE_DIR)[0]
+	base = base == data_path ? '.' : base
+	var res = $.Deferred()
+
+	$.getJSON(data_path)
+		.done(function(json){
+			BASE_URL = base
+
+			// legacy format...
+			if(json.version == null){
+				json = convertDataGen1(json)
+				DATA = json.data
+				IMAGES = json.images
+				MARKED = []
+				loadData()
+
+			// version 2.0
+			} else if(json.version == '2.0') {
+				DATA = json
+				loadFileImages(DATA.image_file == null ?
+							normalizePath(DATA.image_file, base) 
+							: null)
+					.done(function(){
+						loadData()
+						callback != null && callback()
+						res.resolve()
+					})
+
+			// unknown format...
+			} else {
+				console.error('unknown format.')
+				return
+			}
+		})
+		.fail(function(){
+			console.error('ERROR LOADING:', data_path)
+		})
+
+	return res
 }
 
 
@@ -1037,12 +1022,10 @@ function loadDir(path){
 //
 // NOTE: this will open the default editor/viewer.
 function openImage(){
-	// CEF
 	if(window.runSystem == null){
 		console.error('Can\'t run external programs.')
 		return 
 	}
-
 	// XXX if path is not present try and open the biggest preview...
 	return runSystem(normalizePath(IMAGES[getImageGID()].path, BASE_URL))
 }

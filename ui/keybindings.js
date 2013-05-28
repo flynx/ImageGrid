@@ -1,145 +1,333 @@
+/**********************************************************************
+* 
+*
+*
+**********************************************************************/
+
+//var DEBUG = DEBUG != null ? DEBUG : true
+
+var STEPS_TO_CHANGE_DIRECTION = 2
+var _STEPS_LEFT_TO_CHANGE_DIRECTION = STEPS_TO_CHANGE_DIRECTION
+// XXX code related to this needs testing...
+var DIRECTION = 'next'
+
+
+
 /*********************************************************************/
-// NOTE: use String.fromCharCode(code)...
-// list of keys to be ignored by handler but still handled by the browser...
 
-var keybindings = {
-	// global bindings...
-	'*': {
+var KEYBOARD_CONFIG = {
+	// single image mode only...
+	'.single-image-mode': {
+		title: 'Single image mode',
+
+		// XXX this should only work on single image mode...
+		F: doc('Toggle view proportions', 
+			function(){ 
+				toggleImageProportions() 
+				centerRibbons()
+			}),
+		Esc: doc('Exit single image mode', 
+				function(){ toggleSingleImageMode('off') }),
+		Q: 'Esc',
+	},
+
+	// single image mode only...
+	'.marked-only-view:not(.single-image-mode)': {
+		title: 'Marked only view',
+
+		Esc: doc('Exit marked only view', 
+				function(){ toggleMarkedOnlyView('off') })
+	},
+
+
+	// help mode...
+	'.help-mode': {
+		title: 'Help',
+		doc: 'NOTE: In this mode all other key bindings are disabled, except '+
+			'the ones explicitly defined here.',
+		ignore: '*',
+
+		Esc: doc('Close help',
+			function(){ toggleKeyboardHelp('off') }),
+		H: 'Esc',
+		Q: 'Esc',
+		// '?'
+		'/': { 
+				shift: 'Esc', 
+			},
+	},
+
+
+	// general setup...
+	'.viewer:not(.overlay)': {
 		title: 'Global',
-		doc: '',
 
-		ignore: [
-			116,												//	F5
-			123,												//	F12
-		],
+		// Navigation...
+		// XXX need to cancel the animation of the prev action...
+		Left: {
+				default: doc('Previous image',
+					function(){ 
+						event.preventDefault()
+						// update direction...
+						if(DIRECTION != 'prev'){
+							_STEPS_LEFT_TO_CHANGE_DIRECTION--
+							if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
+								DIRECTION = 'prev'
+								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+							}
+						} else {
+								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+						}
+						prevImage() 
+						centerRibbons()
+					}),
+				ctrl: doc('Previous screen',
+					function(){ 
+						event.preventDefault()
+						prevScreenImages()
+						centerRibbons()
+					}),
+			},
+		Right: {
+				default: doc('Next image',
+					function(){ 
+						event.preventDefault()
+						// update direction...
+						if(DIRECTION != 'next'){
+							_STEPS_LEFT_TO_CHANGE_DIRECTION--
+							if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
+								DIRECTION = 'next'
+								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+							}
+						} else {
+								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+						}
+						nextImage() 
+						centerRibbons()
+					}),
+				ctrl: doc('Previous screen',
+					function(){ 
+						event.preventDefault()
+						nextScreenImages()
+						centerRibbons()
+					}),
+			},
+		Space: {
+				default: 'Right',
+				shift: 'Left',
+				// screen-oriented movement...
+				ctrl: 'Right',
+				'ctrl+shift': 'Left',
+			},
+		Backspace: {
+				default: 'Left',
+				shift: 'Right',
+			},
+		Home: doc('First image', 
+			function(){
+				event.preventDefault()
+				firstImage()
+				centerRibbons()
+			}),
+		End: doc('Last image',
+			function(){
+				event.preventDefault()
+				lastImage()
+				centerRibbons()
+			}),
 
-		// togglable modes and options...
-		191: {
-			'default':	ImageGrid.showKeyboardBindings,			//	?
-			'ctrl':		ImageGrid.showSetup,					//	ctrl+?
-		},
-		80:		ImageGrid.showSetup,							//	p
-		70:		ImageGrid.toggleSingleImageMode,				//	f
-		13:		70,												//	Enter
-		83:		ImageGrid.toggleSingleRibbonMode,				//	s
-		84:		ImageGrid.toggleSingleImageModeTransitions,		//	t
-		65:		ImageGrid.toggleTransitions,					//	a
-		9:		ImageGrid.toggleControls,						//	tab
-		66:		ImageGrid.toggleBackgroundModes,				//	b
-		73:		ImageGrid.toggleCurrentRibbonOpacity,			//	i
-		78:		ImageGrid.toggleInfo,							//	n
-		77:		toggleMarkers,									//	m
 
-		87:		ImageGrid.saveState,							//	w
+		// combined navigation and editor actions...
+		Up: {
+				default: doc('Go to ribbon above', 
+					function(){ 
+						event.preventDefault()
+						prevRibbon() 
+						centerRibbons()
+					}),
+				shift: doc('Shift image up',
+					function(){ 
+						event.preventDefault()
+						shiftImageUp(null, DIRECTION) 
+						centerRibbons()
+					}),
+				'ctrl+shift': doc('Shift image up to empty ribbon',
+					function(){
+						event.preventDefault()
+						shiftImageUpNewRibbon(null, DIRECTION) 
+						centerRibbons()
+					}),
+			},
+		Down: {
+				default: doc('Go to ribbon below', 
+					function(){
+						event.preventDefault()
+						nextRibbon() 
+						centerRibbons()
+					}),
+				shift: doc('Shift image down',
+					function(){ 
+						event.preventDefault()
+						shiftImageDown(null, DIRECTION) 
+						centerRibbons()
+					}),
+				'ctrl+shift': doc('Shift image down to empty ribbon',
+					function(){
+						event.preventDefault()
+						shiftImageDownNewRibbon(null, DIRECTION) 
+						centerRibbons()
+					}),
+			},
 
-		27:		ImageGrid.closeOverlay,							//	Esc	
+		L: doc('Rotate image left', function(){ rotateLeft() }),
+		R: doc('Rotate image right', function(){ rotateRight() }),
 
-		// ignore the modifiers (shift, alt, ctrl, caps)...
-		16:		function(){},
-		17:		16,
-		18:		16,
-		20:		16,												//	Caps Lock
-
-		// refresh...
-		// XXX make this into a real action...
-		116:	function(){ return DEBUG?true:false },			//	F5
-		112:	116,											//	F12
-	},
-
-
-	// overlay...
-	'.overlay-mode': {
-		title: 'Overlay mode',
-		doc: 'Overlay mode key bindings.',
-
-		ignore: [
-			33,													//	PgUp
-			34,													//	PgDown
-			37,													//	Left
-			39,													//	Right
-			36,													//	Home
-			32,													//	Space
-			35,													//	End
-			38,													//	Up
-			40,													//	Down
-		],
-	},
-
-
-	// everything except overlays...
-	'.viewer *:not(.overlay-mode *)': {
-		title: 'Ribbon and Viewer',
-		doc: '',
 
 		// zooming...
-		187:	ImageGrid.scaleContainerUp,						//	+
-		189:	ImageGrid.scaleContainerDown,					//	-
-		// zoom presets...
-		48:	{
-			'default':	ImageGrid.centerCurrentImage,			// 	0
-			// XXX make this into a real action...
-			'ctrl':		ImageGrid.fitImage,						//	ctrl+0
-		},
-		49:		ImageGrid.fitImage,								//	1
-		50:		ImageGrid.fitTwoImages,							//	2
-		51:		ImageGrid.fitThreeImages,						//	3
-		52:		ImageGrid.fitFourImages,						//	4
-		53:		ImageGrid.fitFiveImages,						//	5
-		54:		ImageGrid.fitSixImages,							//	6
-		55:		ImageGrid.fitSevenImages,						//	7
-		56:		ImageGrid.fitEightImages,						//	8
-		57:		ImageGrid.fitNineImages,						//	9
+		'#1': doc('Fit one image', function(){ fitNImages(1) }),
+		'#2': doc('Fit two images', function(){ fitNImages(2) }),
+		'#3': doc('Fit three images', function(){ fitNImages(3) }),
+		'#4': doc('Fit four images', function(){ fitNImages(4) }),
+		'#5': doc('Fit five images', function(){ fitNImages(5) }),
+		'#6': doc('Fit six images', function(){ fitNImages(6) }),
+		'#7': doc('Fit seven images', function(){ fitNImages(7) }),
+		'#8': doc('Fit eight images', function(){ fitNImages(8) }),
+		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
+
+		'-': doc('Zoom in', function(){ zoomOut() }),
+		'=': doc('Zoom out', function(){ zoomIn() }),
 
 
-		// navigation...
-		36:		ImageGrid.firstImage,							//	Home
-		219:	36,												//	[
-		35:		ImageGrid.lastImage,							//	End
-		221:	35,												//	]
-		37:	{
-			'default': ImageGrid.prevImage,						//	Right
-			'ctrl': ImageGrid.prevScreenImages,					//	ctrl-Right
-			'alt': ImageGrid.prevScreenImages,					//	alt-Right
-		},
-		8: 		37, 											// 	BkSp
-		188:	37,												//	<
-		39:	{
-			'default': ImageGrid.nextImage,						//	Left
-			'ctrl': ImageGrid.nextScreenImages,					//	ctrl-Left
-			'alt': ImageGrid.nextScreenImages,					//	alt-Left
-		},
-		32:		39,												//	Space
-		190:	39,												//	>
-		186:	ImageGrid.prevScreenImages,						//	;
-		222:	ImageGrid.nextScreenImages,						//	'
-		// move view...
-		// XXX should these be s-up, s-down, ... ??
-		75:		ImageGrid.moveViewUp,							//	k
-		74:		ImageGrid.moveViewDown,							//	j
-		72:		ImageGrid.moveViewLeft,							//	h
-		76:		ImageGrid.moveViewRight,						//	l
-		// XXX use this to open...
-		//79:		ImageGrid.centerCurrentImage,					//	o
+		Enter: doc('Toggle single image view', 
+				function(){ toggleSingleImageMode() }),
+
+		B: doc('Toggle theme', function(){ toggleTheme() }),
+
+		S: {
+				ctrl: doc('Save current state', 
+					function(){
+						event.preventDefault()
+						//saveLocalStorage()
+						saveLocalStorageData()
+						saveLocalStorageMarks()
+
+						saveLocalStorageSettings()
+
+						saveFileState()
+					})
+			},
+		Z: {
+				ctrl: doc('Restore to last saved state', 
+					function(){
+						loadLocalStorage()
+						loadLocalStorageMarks()
+					})
+			},
 
 
-		// combined navigation with actions..
-		38: {
-			'default': ImageGrid.focusAboveRibbon,				//	Up
-			'shift': ImageGrid.shiftImageUp,					//	shift-Up
-			'ctrl+shift': ImageGrid.shiftImageUpNewRibbon		//	ctrl-shift-Up
-		},
-		40:	{
-			'default': ImageGrid.focusBelowRibbon,				//	Down
-			'shift': ImageGrid.shiftImageDown,					//	shift-Down
-			'ctrl+shift': ImageGrid.shiftImageDownNewRibbon		//	ctrl-shift-Down
-		},
+		// marking...
+		// XXX not final, think of a better way to do this...
+		// XXX need mark navigation...
+		// XXX need marked image shift up/down actions...
+		// XXX unmarking an image in marked-only mode results in nothing
+		// 		visible focused if we unmark the first or last image in 
+		// 		the ribbon...
+		M: {
+				// NOTE: marking moves in the same direction as the last
+				//		move...
+				//		i.e. marking can change direction depending on where
+				//		we moved last...
+				// NOTE: marking does not change move direction...
+				default: doc('Mark current image and advance',
+					function(){ 
+						toggleImageMark()
+						if(DIRECTION == 'next'){
+							nextImage()
+						} else {
+							prevImage()
+						}
+						if($('.current.image').filter(':visible').length == 0){
+							centerView(focusImage(getImageBefore()))
+						}
+						centerRibbons()
+					}),
+				// same as default but in reverse direction...
+				shift: doc('Mark current image and return',
+					function(){
+						toggleImageMark()
+						if(DIRECTION == 'prev'){
+							nextImage()
+						} else {
+							prevImage()
+						}
+						if($('.current.image').filter(':visible').length == 0){
+							centerView(focusImage(getImageBefore()))
+						} 
+						centerRibbons()
+					}),
+				ctrl: doc('Mark current image',
+					function(){ 
+						var action = toggleImageMark() 
+					}),
+			},
+		I: {
+				// XXX STUB -- replace with a real info window...
+				default: doc('Show current image info',
+					function(){
+						var gid = getImageGID($('.current.image'))
+						var r = getRibbonIndex(getRibbon())
+						var data = IMAGES[gid]
+						var orientation = data.orientation
+						orientation = orientation == null ? 0 : orientation
+						var order = DATA.order.indexOf(gid)
+						var name = data.path.split('/').pop()
+						alert('"'+ name +'"\n'+
+								'Orientation: '+ orientation +'deg\n'+
+								'GID: '+ gid +'\n'+
+								'Path: "'+ data.path +'"\n'+
+								'Order: '+ order +'\n'+
+								'Position (ribbon): '+ DATA.ribbons[r].indexOf(gid) +
+									'/'+ DATA.ribbons[r].length +'\n'+
+								'Position (global): '+ order +'/'+ DATA.order.length +'\n'+
+								'')
+					}),
+				ctrl: doc('Invert image marks', 
+					function(){ invertImageMarks() }),
+			},
+		A: {
+				shift: doc('Toggle marks in current contagious block', 
+					function(){ toggleImageMarkBlock() }),
+				ctrl: doc('Mark current ribbon', 
+					function(){ markAll('ribbon') }),
+			},
+		U: {
+				ctrl: doc('Unmark current ribbon', 
+					function(){ removeImageMarks('ribbon') }),
+				shift: doc('Unamrk all', 
+					function(){ removeImageMarks('all') }),
+			},
+		F2: {
+				default: doc('Toggle mark visibility', 
+					function(){ toggleMarkesView() }),
+				shift: doc('Toggle marked only images view', 
+					function(){
+						toggleMarkedOnlyView()
+					})
+			},
 
-		// misc actions...
-		82:		ImageGrid.reverseImageOrder,					//	r
+		F4: doc('Open image in external software', openImage),
+		E: 'F4',
+
+		H: doc('Show keyboard bindings',
+			function(){ toggleKeyboardHelp() }),
+		// '?'
+		'/': { 
+				shift: 'H', 
+			},
 	}
 }
 
 
 
-/*********************************************************************/
-// vim:set ts=4 sw=4 nowrap :
+/**********************************************************************
+* vim:set ts=4 sw=4 :                                                */
