@@ -246,7 +246,7 @@ var KEYBOARD_CONFIG = {
 						} else {
 							prevImage()
 						}
-						if($('.current.image').filter(':visible').length == 0){
+						if(getImage().filter(':visible').length == 0){
 							centerView(focusImage(getImageBefore()))
 						}
 						centerRibbons()
@@ -260,7 +260,7 @@ var KEYBOARD_CONFIG = {
 						} else {
 							prevImage()
 						}
-						if($('.current.image').filter(':visible').length == 0){
+						if(getImage().filter(':visible').length == 0){
 							centerView(focusImage(getImageBefore()))
 						} 
 						centerRibbons()
@@ -274,7 +274,7 @@ var KEYBOARD_CONFIG = {
 				// XXX STUB -- replace with a real info window...
 				default: doc('Show current image info',
 					function(){
-						var gid = getImageGID($('.current.image'))
+						var gid = getImageGID(getImage())
 						var r = getRibbonIndex(getRibbon())
 						var data = IMAGES[gid]
 						var orientation = data.orientation

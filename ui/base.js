@@ -103,23 +103,51 @@ function flashIndicator(direction){
 }
 
 
-function getRibbon(image){
-	image = image == null ? $('.current.image') : $(image)
-	return image.closest('.ribbon')
+function getImage(gid){
+	var res
+	// current or first (no gid given)
+	if(gid == null){
+		res = $('.current.image')
+		return res.length == 0 ? $('.image').first() : res
+	}
+
+	// gid...
+	res = $('.image[gid='+ JSON.stringify(gid) +']')
+	if(res.length != null){
+		return res
+	}
+	
+	// order...
+	res = $('.image[order='+ JSON.stringify(gid) +']')
+	if(res.length != null){
+		return res
+	}
+
+	return null
 }
 
 
-function getImage(gid){
-	if(e == null){
-		return $('.current.image')
+function getImageOrder(image){
+	image = image == null ? getImage() : $(image)
+	if(image.length == 0){
+		return
 	}
-	// XXX do a proper check...
-	// gid...
-	return $('.image[gid='+ JSON.stringify(gid) +']')
-	
-	// order...
-	// XXX
-	//return $('.image[order='+ JSON.stringify(gid) +']')
+	return JSON.parse(image.attr('order'))
+}
+
+
+function getImageGID(image){
+	image = image == null ? getImage() : $(image)
+	if(image.length == 0){
+		return
+	}
+	return JSON.parse(image.attr('gid'))
+}
+
+
+function getRibbon(image){
+	image = image == null ? getImage() : $(image)
+	return image.closest('.ribbon')
 }
 
 
@@ -136,24 +164,6 @@ function getRibbonIndex(elem){
 		}
 	}
 	return $('.ribbon').index(ribbon)
-}
-
-
-function getImageOrder(image){
-	image = image == null ? $('.current.image') : $(image)
-	if(image.length == 0){
-		return
-	}
-	return JSON.parse(image.attr('order'))
-}
-
-
-function getImageGID(image){
-	image = image == null ? $('.current.image') : $(image)
-	if(image.length == 0){
-		return
-	}
-	return JSON.parse(image.attr('gid'))
 }
 
 
@@ -213,7 +223,7 @@ function getScreenWidthInImages(size){
 // 		getGIDBefore(...) that will check the full data...
 function getImageBefore(image, ribbon, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
-	image = image == null ? $('.current.image') : $(image)
+	image = image == null ? getImage() : $(image)
 	if(ribbon == null){
 		ribbon = getRibbon(image)
 	}
@@ -260,7 +270,7 @@ function shiftTo(image, ribbon){
 
 
 function shiftImage(direction, image, force_create_ribbon){
-	image = image == null ? $('.current.image') : $(image)
+	image = image == null ? getImage() : $(image)
 	var old_ribbon = getRibbon(image)
 	var ribbon = old_ribbon[direction]('.ribbon')
 
@@ -534,7 +544,7 @@ function centerView(image, mode){
 	$('.viewer').trigger('preCenteringView', [getRibbon(image), image])
 
 	if(image == null || image.length == 0){
-		image = $('.current.image')
+		image = getImage()
 	}
 	var viewer = $('.viewer')
 	// XXX should these be "inner"???
@@ -583,7 +593,7 @@ function centerView(image, mode){
 // 		center relative to target (given) via the ribbon left
 // 		only left coordinate is changed...
 //
-// NOTE: image defaults to $('.current.image').
+// NOTE: image defaults to getImage().
 //
 // XXX might be good to merge this and centerImage...
 // 		...or make a generic centering function...
@@ -593,7 +603,7 @@ function centerView(image, mode){
 function centerRibbon(ribbon, image, mode){
 	mode = mode == null ? TRANSITION_MODE_DEFAULT : mode
 	ribbon = ribbon == null ? getRibbon() : $(ribbon)
-	image = image == null ? $('.current.image') : $(image)
+	image = image == null ? getImage() : $(image)
 
 	$('.viewer').trigger('preCenteringRibbon', [ribbon, image])
 
@@ -684,7 +694,7 @@ function dblClickHandler(evt){
 function nextImage(n, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	n = n == null ? 1 : n
-	var target = $('.current.image').nextAll('.image' + mode)
+	var target = getImage().nextAll('.image' + mode)
 	if(target.length < n){
 		target = target.last()
 		// XXX this fires if we hit the end of the currently loaded
@@ -699,7 +709,7 @@ function nextImage(n, mode){
 function prevImage(n, mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	n = n == null ? 1 : n
-	var target = $('.current.image').prevAll('.image' + mode)
+	var target = getImage().prevAll('.image' + mode)
 	if(target.length < n){
 		target = target.last()
 		// XXX this fires if we hit the end of the currently loaded
@@ -726,7 +736,7 @@ function firstImage(mode){
 	$('.viewer').trigger('requestedFirstImage', [getRibbon()])
 
 	mode = mode == null ? NAV_DEFAULT : mode
-	if($('.current.image').prevAll('.image' + mode).length == 0){
+	if(getImage().prevAll('.image' + mode).length == 0){
 		flashIndicator('start')
 	}
 	return centerView(
@@ -738,7 +748,7 @@ function lastImage(mode){
 	$('.viewer').trigger('requestedLastImage', [getRibbon()])
 
 	mode = mode == null ? NAV_DEFAULT : mode
-	if($('.current.image').nextAll('.image' + mode).length == 0){
+	if(getImage().nextAll('.image' + mode).length == 0){
 		flashIndicator('end')
 	}
 	return centerView(
@@ -753,7 +763,7 @@ function lastImage(mode){
 // 		on direction...
 function prevRibbon(mode){
 	mode = mode == null ? NAV_DEFAULT : mode
-	var cur = $('.current.image')
+	var cur = getImage()
 	var target = getImageBefore(cur, 
 			getRibbon(cur).prevAll('.ribbon' + NAV_RIBBON_DEFAULT).first())
 
@@ -772,7 +782,7 @@ function prevRibbon(mode){
 }
 function nextRibbon(mode){
 	mode = mode == null ? NAV_DEFAULT : mode
-	var cur = $('.current.image')
+	var cur = getImage()
 	var target = getImageBefore(cur, 
 			getRibbon(cur).nextAll('.ribbon' + NAV_RIBBON_DEFAULT).first())
 
@@ -870,7 +880,7 @@ var _ccw = {
 
 function rotateImage(direction, image){
 	var r_table = direction == 'left' ? _cw : _ccw
-	image = image == null ? $('.current.image') : $(image)
+	image = image == null ? getImage() : $(image)
 	image.each(function(i, e){
 		var img = $(this)
 		var o = r_table[img.attr('orientation')]
@@ -909,7 +919,7 @@ function flipHorizontal(image){
 /********************************************************* Zooming ***/
 
 function fitNImages(n){
-	var image = $('.current.image')
+	var image = getImage()
 	var w = image.outerWidth(true)
 	var h = image.outerHeight(true)
 
@@ -952,7 +962,7 @@ function zoomOut(){
 
 function shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	if(image == null){
-		image = $('.current.image')
+		image = getImage()
 	}
 	mode = mode == null ? NAV_DEFAULT : mode
 

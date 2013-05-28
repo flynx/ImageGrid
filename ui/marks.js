@@ -77,7 +77,7 @@ var toggleMarkedOnlyView = createCSSClassToggler('.viewer',
 // XXX shifting images and unmarking in this mode do not work correctly...
 var toggleMarkesView = createCSSClassToggler('.viewer', 'marks-visible',
 	function(){
-		var cur = $('.current.image')
+		var cur = getImage()
 		// current is marked...
 		if(cur.hasClass('marked')){
 			centerView(null, 'css')
@@ -91,7 +91,7 @@ var toggleMarkesView = createCSSClassToggler('.viewer', 'marks-visible',
 		}
 		// get marked image from other ribbons...
 		prevRibbon()
-		if($('.current.image').hasClass('marked')){
+		if(getImage().hasClass('marked')){
 			return
 		}
 		nextRibbon()
@@ -106,7 +106,7 @@ var toggleMarkesView = createCSSClassToggler('.viewer', 'marks-visible',
 var toggleImageMark = createCSSClassToggler('.current.image', 'marked',
 	function(action){
 		toggleMarkesView('on')
-		$('.viewer').trigger('togglingMark', [$('.current.image'), action])
+		$('.viewer').trigger('togglingMark', [getImage(), action])
 	})
 
 
@@ -162,7 +162,7 @@ function invertImageMarks(){
 // XXX need to make this dynamic data compatible...
 function toggleImageMarkBlock(image){
 	if(image == null){
-		image = $('.current.image')
+		image = getImage()
 	}
 	//$('.viewer').trigger('togglingImageBlockMarks', [image])
 	// we need to invert this...

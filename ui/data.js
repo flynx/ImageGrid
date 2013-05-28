@@ -213,10 +213,66 @@ Array.prototype.binSearch = function(target, cmp){
 }
 
 
+// Normalize the path...
+//
+// This will:
+// 	- convert windows absolute paths 'X:\...' -> 'file:///X:/...'
+// 	- if mode is 'absolute':
+// 		- return absolute paths as-is
+// 		- base relative paths on base/BASE_URL, returning an absolute 
+// 			path
+// 	- if mode is relative:
+// 		- if absolute path is based on base/BASE_URL make a relative 
+// 			to base path out of it buy cutting the base out.
+// 		- return absolute paths as-is
+// 		- return relative paths as-is
+//
+// NOTE: mode can be either 'absolute' (default) or 'relative'...
+function normalizePath(url, base, mode){
+	mode = mode == null ? 'absolute' : mode
+	base = base == null ? BASE_URL : base
+
+	// windows path...
+	//	- replace all '\\' with '/'...
+	url = url.replace(/\\/g, '/')
+	//	- replace 'X:/...' with 'file:///X:/...' 
+	if(/^[A-Z]:\//.test(url)){
+		url = 'file:///' + url
+	}
+
+	// we got absolute path...
+	if(/^(file|http|https):\/\/.*$/.test(url)){
+		// check if we start with base, and remove it if so...
+		if(mode == 'relative' && url.substring(0, base.length) == base){
+			url = url.substring(base.length - 1)
+			return url[0] == '/' ? url.substring(1) : url
+
+		// if it's a different path, return as-is
+		} else if(mode == 'absolute'){
+			return url
+		}
+
+	// make an absolute path...
+	} else if(mode == 'absolute') {
+		// if base ends and url starts with '.' avoid making it a '..'
+		if(base[base.length-1] == '.' && url[0] == '.'){
+			return base + url.substring(1)
+		// avoid creating '//'...
+		} else if(base[base.length-1] != '/' && url[0] != '/'){
+			return base + '/' + url
+		} else {
+			return base + url
+		}
+	}
+}
+
+
 // Same as getImageBefore, but uses gids and searches in DATA...
 //
 // NOTE: this uses it's own predicate...
 function getGIDBefore(gid, ribbon, search){
+	gid = gid == null ? getImageGID() : gid
+	ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	search = search == null ? binSearch : search
 	//search = search == null ? match2(linSearch, binSearch) : search
 	ribbon = DATA.ribbons[ribbon]
@@ -293,6 +349,7 @@ function getImageGIDs(from, count, ribbon, inclusive){
 //
 // NOTE: this will use the original if everything else is smaller...
 function getBestPreview(gid, size){
+	gid = gid == null ? getImageGID(): gid
 	size = size == null ? getVisibleImageSize('max') : size
 	var s
 	var img_data = IMAGES[gid]
@@ -315,66 +372,12 @@ function getBestPreview(gid, size){
 }
 
 
-// Normalize the path...
-//
-// This will:
-// 	- convert windows absolute paths 'X:\...' -> 'file:///X:/...'
-// 	- if mode is 'absolute':
-// 		- return absolute paths as-is
-// 		- base relative paths on base/BASE_URL, returning an absolute 
-// 			path
-// 	- if mode is relative:
-// 		- if absolute path is based on base/BASE_URL make a relative 
-// 			to base path out of it buy cutting the base out.
-// 		- return absolute paths as-is
-// 		- return relative paths as-is
-//
-// NOTE: mode can be either 'absolute' (default) or 'relative'...
-function normalizePath(url, base, mode){
-	mode = mode == null ? 'absolute' : mode
-	base = base == null ? BASE_URL : base
-
-	// windows path...
-	//	- replace all '\\' with '/'...
-	url = url.replace(/\\/g, '/')
-	//	- replace 'X:/...' with 'file:///X:/...' 
-	if(/^[A-Z]:\//.test(url)){
-		url = 'file:///' + url
-	}
-
-	// we got absolute path...
-	if(/^(file|http|https):\/\/.*$/.test(url)){
-		// check if we start with base, and remove it if so...
-		if(mode == 'relative' && url.substring(0, base.length) == base){
-			url = url.substring(base.length - 1)
-			return url[0] == '/' ? url.substring(1) : url
-
-		// if it's a different path, return as-is
-		} else if(mode == 'absolute'){
-			return url
-		}
-
-	// make an absolute path...
-	} else if(mode == 'absolute') {
-		// if base ends and url starts with '.' avoid making it a '..'
-		if(base[base.length-1] == '.' && url[0] == '.'){
-			return base + url.substring(1)
-		// avoid creating '//'...
-		} else if(base[base.length-1] != '/' && url[0] != '/'){
-			return base + '/' + url
-		} else {
-			return base + url
-		}
-	}
-}
-
-
 
 /**********************************************************************
 * Constructors
 */
 
-function urlList2Images(lst){
+function imagesFromUrls(lst){
 	var res = {}
 
 	$.each(lst, function(i, e){
@@ -509,7 +512,7 @@ function updateImage(image, gid, size){
 }
 
 
-// shorthand...
+// Same as updateImage(...) but will update all images.
 function updateImages(size){
 	size = size == null ? getVisibleImageSize('max') : size
 	return $('.image').each(function(){
@@ -841,6 +844,7 @@ function saveLocalStorage(attr){
 * XXX need to cleanup this section...
 */
 
+// load the target-specific handlers...
 // CEF
 if(window.CEF_dumpJSON != null){
 	var dumpJSON = CEF_dumpJSON
@@ -1091,7 +1095,7 @@ function loadDir(path, raw_load){
 			return 
 		}
 
-		IMAGES = urlList2Images(image_paths)
+		IMAGES = imagesFromUrls(image_paths)
 		DATA = dataFromImages(IMAGES)
 		MARKED = []
 		BASE_URL = orig_path

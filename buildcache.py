@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130528154633'''
+__sub_version__ = '''20130528215723'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -13,7 +13,13 @@ import json
 import sha
 import urllib2
 import time
+import tempfile
 from optparse import OptionParser, OptionGroup
+
+try:
+	import pyexiv2 as metadata
+except:
+	metadata = None
 
 from pli.logictypes import OR
 
@@ -51,6 +57,7 @@ CONFIG = {
 		'900px': '900px/',
 		'1080px': '1080px/',
 		'1920px': '1920px/',
+		'preview': 'preview/',
 	},
 	'sizes': {
 		'150px': 150,
@@ -69,10 +76,6 @@ DATA = {
 	'image_file': None,
 }
 
-IMAGE_EXT = OR(*(
-		'.jpg', '.jpeg', '.JPG', '.JPEG',
-))
-
 ERR_LOG = '''\
 ERROR: %(error)s
 SOURCE: %(source-file)s
@@ -80,6 +83,25 @@ TARGET: %(target-file)s
 
 
 '''
+
+
+RAW = OR(
+	# Nikon
+	'NEF', 'nef', 
+	# Panasonic/Leica
+	'RW2', 'rw2',
+	# Canon
+	'CRW', 'crw',
+	'CR2', 'cr2',
+	# Sigma
+	'X3F', 'x3f',
+	# Adobe/Leica
+	'DNG', 'dng',
+)
+
+IMAGE = OR(
+	'jpg', 'jpeg', 'JPG', 'JPEG',
+)
 
 
 #-----------------------------------------------------------------------
@@ -95,6 +117,10 @@ def pathjoin(*p):
 def getpath(root, path, absolute=False):
 	'''
 	'''
+	if root in path:
+		path = path.split(root)[-1]
+		if path[0] in ('\\', '/'):
+			path = path[1:]
 	if absolute == True:
 		return 'file:///' + urllib2.quote(pathjoin(root, path), safe='/:')
 	else:
@@ -217,24 +243,52 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 
 	for name in os.listdir(path):
 		fname, ext = os.path.splitext(name)
+		ext = ext[1:]
 
-		if ext != IMAGE_EXT:
+		# extract raw preview...
+		# XXX this is really slow, need a better way to do this...
+		if ext == RAW and metadata != None:
+			source_path = pathjoin(path, name)
+			raw = metadata.ImageMetadata(source_path)
+			raw.read()
+			##!!! can there be no previews?
+			# get the biggest preview...
+			preview = raw.previews[0]
+			for p in raw.previews:
+				if max(preview.dimensions) < max(p.dimensions):
+					preview = p
+
+			source_path = pathjoin(path, CONFIG['cache-dir'], CONFIG['cache-structure']['preview'], fname + '.jpg')
+
+			with open(source_path, 'w+b') as p:
+				p.write(preview.data)
+			
+			# copy metadata...
+			preview = metadata.ImageMetadata(source_path)
+			preview.read()
+			raw.copy(preview)
+			preview.write()
+
+		# normal images...
+		elif ext == IMAGE:
+			source_path = pathjoin(path, name)
+
+		# skip other files...
+		else:
 			continue
-
-		source_path = pathjoin(path, name)
 
 		img =  {
 			'id': gid_generator(source_path),
 			'name': name,
 			'type': 'image',
 			'state': 'single',
-			'path': getpath(path, name, absolute_path),
-			'ctime': os.path.getctime(source_path),
+			'path': getpath(path, source_path, absolute_path),
+			'ctime': os.path.getctime(pathjoin(path, name)),
 			'preview': {},
 		}
 
 		if verbosity >= 2:
-			print (' '*72) + '\rProcessing image: %s' % getpath(path, name, absolute_path)
+			print (' '*72) + '\rProcessing image: %s' % getpath(path, source_path, absolute_path)
 
 
 		yield img
@@ -281,7 +335,7 @@ def build_previews(image, path=None, config=CONFIG, dry_run=True, verbosity=0):
 			continue
 
 		# build the two paths: relative and full...
-		n = pathjoin(cache_dir, dirs[k], cache_name % {'guid': gid, 'name': img_name})
+		n = pathjoin(cache_dir, dirs[k], cache_name % {'guid': gid, 'name': name + '.jpg'})
 		p = pathjoin(path, n)
 
 		# do not upscale images...
