@@ -15,7 +15,7 @@ var MAX_SCREEN_IMAGES = 12
 
 // if set to true each image will have basic info written to its html 
 // title attr.
-var IMAGE_TITLE_DATA = true
+var IMAGE_INFO = true
 
 var CACHE_DIR = '.ImageGridCache'
 
@@ -390,7 +390,7 @@ function imagesFromUrls(lst){
 
 	$.each(lst, function(i, e){
 
-		// this is ugly but I'm bored so this pretty...
+		// this is ugly but I'm bored so this is pretty...
 		var ii = i < 10			? '0000000' + i 
 				: i < 100		? '000000' + i
 				: i < 1000		? '00000' + i
@@ -436,12 +436,6 @@ function dataFromImages(images){
 function ribbonsFromFavDirs(path, images, cmp){
 	path = path == null ? BASE_URL : path
 	images = images == null ? IMAGES : images
-	/*cmp = cmp == null ?
-			function(a, b){ 
-				return imageDateCmp(a, b, images) 
-			}
-			: cmp
-	*/
 
 	// build a reverse name-gid index for fast access...
 	var index = {}
@@ -554,13 +548,14 @@ function updateImage(image, gid, size){
 	}
 	size = size == null ? getVisibleImageSize('max') : size
 
+	// get the image data...
 	var img_data = IMAGES[gid]
 	if(img_data == null){
 		img_data = STUB_IMAGE_DATA
 	}
 	var name = img_data.path.split('/').pop()
 
-	// get the url...
+	// preview...
 	var preview = getBestPreview(gid, size)
 	image
 		.css({
@@ -569,20 +564,33 @@ function updateImage(image, gid, size){
 		.attr({
 			order: DATA.order.indexOf(gid),
 			orientation: img_data.orientation == null ? 0 : img_data.orientation,
-			title: IMAGE_TITLE_DATA ? 
-				'Image: ' + name +'\n'+
-				'Order: ' + DATA.order.indexOf(gid) +'\n'+
-				'GID: '+ gid +'\n'+
-				'Preview size:'+ preview.size : '',
 		})
 
-	// setup marks...
+	// image info...
+	if(IMAGE_INFO){
+		var info = image.find('.info')
+		if(info.length == 0){
+			info = $('<div/>')
+				.addClass('info')
+				.appendTo(image)
+		}
+		info.html(
+			'Image: ' + name +
+			'<br>Order: ' + DATA.order.indexOf(gid) +
+			'<br>GID: '+ gid +
+			(window.DEBUG ? '<br>Preview size:'+ preview.size : '') +
+			''
+		)
+	} else {
+		image.find('.info').remove()
+	}
+
+	// marks...
 	if(MARKED.indexOf(gid) != -1){
 		image.addClass('marked')
 	} else {
 		image.removeClass('marked')
 	}
-
 
 	return image
 }

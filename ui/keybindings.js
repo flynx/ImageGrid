@@ -16,6 +16,29 @@ var DIRECTION = 'next'
 /*********************************************************************/
 
 var KEYBOARD_CONFIG = {
+	// help mode...
+	// NOTE: need to keep all info modes before the rest so as to give 
+	// 		their bindings priority...
+	'.help-mode': {
+		title: 'Help',
+		doc: 'NOTE: In this mode all other key bindings are disabled, except '+
+			'the ones explicitly defined here.',
+		ignore: '*',
+
+		Esc: doc('Close help',
+			function(){ 
+				toggleKeyboardHelp('off') 
+				return false
+			}),
+		H: 'Esc',
+		Q: 'Esc',
+		// '?'
+		'/': { 
+				shift: 'Esc', 
+			},
+	},
+
+
 	// single image mode only...
 	'.single-image-mode': {
 		title: 'Single image mode',
@@ -27,34 +50,23 @@ var KEYBOARD_CONFIG = {
 				centerRibbons()
 			}),
 		Esc: doc('Exit single image mode', 
-				function(){ toggleSingleImageMode('off') }),
+				function(){ 
+					toggleSingleImageMode('off') 
+					return false
+				}),
 		Q: 'Esc',
 	},
+
 
 	// single image mode only...
 	'.marked-only-view:not(.single-image-mode)': {
 		title: 'Marked only view',
 
 		Esc: doc('Exit marked only view', 
-				function(){ toggleMarkedOnlyView('off') })
-	},
-
-
-	// help mode...
-	'.help-mode': {
-		title: 'Help',
-		doc: 'NOTE: In this mode all other key bindings are disabled, except '+
-			'the ones explicitly defined here.',
-		ignore: '*',
-
-		Esc: doc('Close help',
-			function(){ toggleKeyboardHelp('off') }),
-		H: 'Esc',
-		Q: 'Esc',
-		// '?'
-		'/': { 
-				shift: 'Esc', 
-			},
+				function(){ 
+					toggleMarkedOnlyView('off') 
+					return false
+				})
 	},
 
 
@@ -291,6 +303,9 @@ var KEYBOARD_CONFIG = {
 								'Position (global): '+ order +'/'+ DATA.order.length +'\n'+
 								'')
 					}),
+				// XXX group this with other info stuff into a single on/off toggle...
+				shift: doc('Toggle image info visibility (on hover)',
+					function(){ toggleImageInfo() }),
 				ctrl: doc('Invert image marks', 
 					function(){ invertImageMarks() }),
 			},
