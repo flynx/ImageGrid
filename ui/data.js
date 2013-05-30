@@ -566,25 +566,6 @@ function updateImage(image, gid, size){
 			orientation: img_data.orientation == null ? 0 : img_data.orientation,
 		})
 
-	// image info...
-	if(IMAGE_INFO){
-		var info = image.find('.info')
-		if(info.length == 0){
-			info = $('<div/>')
-				.addClass('info')
-				.appendTo(image)
-		}
-		info.html(
-			'Image: ' + name +
-			'<br>Order: ' + DATA.order.indexOf(gid) +
-			'<br>GID: '+ gid +
-			(window.DEBUG ? '<br>Preview size:'+ preview.size : '') +
-			''
-		)
-	} else {
-		image.find('.info').remove()
-	}
-
 	// marks...
 	if(MARKED.indexOf(gid) != -1){
 		image.addClass('marked')
@@ -1215,8 +1196,9 @@ function openImage(){
 * Actions
 */
 
-// XXX show date...
-function updateImageInfo(image){
+// XXX do we need a full rewrite here, or will it be better to just fill
+// 		the slots...
+function updateGlobalImageInfo(image){
 	image = image == null ? getImage() : $(image)
 
 	var gid = getImageGID(image)
@@ -1239,10 +1221,15 @@ function updateImageInfo(image){
 
 	meta = meta.join(', ') 
 	meta = meta != '' ? '( '+ meta +' )' : ''
+
+	var elem = $('.global-image-info')
+	if(elem.length == 0){
+		elem = $('<div class="global-image-info"/>')
+	}
  
-	return updateInfo(
+	return updateInfo(elem,
 			// path...
-			'<span class="expanding-text">'+
+			'<span class="expanding-text path">'+
 				'<span class="shown">'+
 					data.path.split('/').pop() +
 				'</span>'+
@@ -1252,7 +1239,7 @@ function updateImageInfo(image){
 			'</span> '+ 
 
 			// metadata...
-			'<span class="secondary expanding-text">'+
+			'<span class="secondary expanding-text metadata">'+
 				meta + ' GID:'+
 				// XXX do we need to display a short gid?
 				//gid +
@@ -1267,15 +1254,46 @@ function updateImageInfo(image){
 			'</span> '+
 
 			// date...
-			'<span class="secondary expanding-text">'+
+			'<span class="secondary expanding-text date">'+
 				'<span class="shown">TS:' + date.toShortDate() + '</span>'+
 				'<span class="hidden"><b>' + date.toString() + '</b></span>'+
 			'</span>'+
 
 			// position...
-			'<span class="float-right">('+ 
+			'<span class="float-right position">('+ 
 				(DATA.ribbons[r].indexOf(gid)+1) +'/'+ DATA.ribbons[r].length +
 			')<span/>')
+}
+
+
+function updateInlineImageInfo(image){
+	image = image == null ? getImage() : $(image)
+
+	var gid = getImageGID(image)
+	var r = getRibbonIndex(getRibbon(image))
+	var data = IMAGES[gid]
+	var date = new Date(data.ctime * 1000)
+
+	var orientation = data.orientation
+	orientation = orientation == null ? 0 : orientation
+
+	var elem = $('.inline-image-info')
+	if(elem.length == 0){
+		elem = $('<div class="inline-image-info"/>')
+	}
+
+	return updateInfo(elem,
+			// name...
+			data.path.split('/').pop() +'<br>'+
+
+			// date...
+			'<span class="secondary expanding-text date">'+
+				//date.toShortDate() +
+				'<span class="shown">' + date.toShortDate() + '</span>'+
+				'<span class="hidden"><b>' + date.toString() + '</b></span>'+
+			'</span>'+
+			'',
+			image)
 }
 
 
@@ -1427,7 +1445,7 @@ function setupDataBindings(viewer){
 			image = $(image)
 			DATA.current = getImageGID(image)
 
-			updateImageInfo(image)
+			updateGlobalImageInfo(image)
 		})
 
 
@@ -1445,7 +1463,7 @@ function setupDataBindings(viewer){
 				}
 			})
 
-			updateImageInfo(image)
+			updateGlobalImageInfo(image)
 		})
 
 
@@ -1463,7 +1481,7 @@ function setupDataBindings(viewer){
 				MARKED.splice(MARKED.indexOf(gid), 1)
 			}
 
-			updateImageInfo(img)
+			updateGlobalImageInfo(img)
 		})
 		.on('removeingRibbonMarks', function(evt, ribbon){
 			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){

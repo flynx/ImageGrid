@@ -299,43 +299,31 @@ function shiftImage(direction, image, force_create_ribbon){
 // just fill that.
 //
 // XXX revise...
-function updateInfo(elem, target, info, force_new){
+function updateInfo(elem, data, target){
 	var viewer = $('.viewer')
 	target = target == null ? viewer : $(target)
+	elem = elem == null ? $('.overlay-info') : $(elem)
 
-	if(target.hasClass('overlay-info')){
-		info = target
-
-	} else if(info == null) {
-		var info = $('.overlay-info')
-		if(force_new || info.length == 0){
-			info = $('<div/>')
-				//.click(function(){ hideInfo(info) })
-				.appendTo(viewer)
-		}
-
-		info
-			//.attr({
-				//class: '',
-				//style: '',
-			//})
-			.addClass('overlay-info')
-			.appendTo(target)
+	if(elem.length == 0){
+		elem = $('<div/>')
 	}
 
-	info
+	elem
+		.addClass('overlay-info')
 		.html('')
 
-	if(typeof(elem) == typeof('abc')){
-		info.html(elem)
+	if(typeof(data) == typeof('abc')){
+		elem.html(data)
 	} else {
-		info.append(elem)
+		elem.append(data)
 	}
 
-	return info 
+	return elem 
+		.appendTo(target)
 }
-function showInfo(elem){
+function showInfo(elem, data, target){
 	elem = elem == null ? $('.overlay-info') : elem
+	elem = data == null ? elem : updateInfo(elem, data, traget)
 	return elem.fadeIn()
 }
 function hideInfo(elem){

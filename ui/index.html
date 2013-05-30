@@ -246,7 +246,7 @@ body {
 
 
 /* Image info */
-.image .info {
+.image .inline-image-info {
 	display: none;
 
 	position: absolute;
@@ -261,17 +261,18 @@ body {
 	-ms-user-select: auto;
 	user-select: auto;
 }
-.image .info::selection {
+.image .inline-image-info::selection {
 	color: white;
 	background: red;
 }
-.image-info-visible.viewer .image:hover .info {
+.image-info-visible.viewer .global-image-info,
+.image-info-visible.viewer .image:hover .inline-image-info {
 	display: block;
 }
-.single-image-mode.viewer .image .info {
+.single-image-mode.viewer .image:hover .inline-image-info {
 	display: none;
 }
-.image[orientation="90"] .info {
+.image[orientation="90"] .inline-image-info {
 	top: auto;
 	left: 100%;
 
@@ -285,7 +286,7 @@ body {
 	-ms-transform: rotate(-90deg);
 	transform: rotate(-90deg);
 }
-.image[orientation="180"] .info {
+.image[orientation="180"] .inline-image-info {
 	top: 0px;
 	bottom: auto;
 
@@ -295,7 +296,7 @@ body {
 	-ms-transform: rotate(180deg);
 	transform: rotate(180deg);
 }
-.image[orientation="270"] .info {
+.image[orientation="270"] .inline-image-info {
 	top: auto;
 	left: auto;
 	right: 100%;
@@ -310,6 +311,7 @@ body {
 	-ms-transform: rotate(90deg);
 	transform: rotate(90deg);
 }
+
 .overlay-info {
 	display: none;
 	position: absolute;
@@ -345,9 +347,6 @@ body {
 .overlay-info ::selection {
 	color: white;
 	background: red;
-}
-.image-info-visible.viewer .overlay-info {
-	display: block;
 }
 
 
@@ -579,6 +578,18 @@ $(function(){
 			function(k){
 				window.DEBUG && console.log(k)
 			}))
+		.on('mouseover', function(evt){
+				var img = $(evt.target).closest('.image')
+				if(img.length > 0){
+					if(IMAGE_INFO){
+						if(img.find('.inline-image-info:visible').length == 0){
+							updateInlineImageInfo(img)
+						}
+					} else {
+						img.find('.inline-image-info').remove()
+					}
+				}
+			})
 
 	setupDataBindings()
 
