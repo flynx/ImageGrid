@@ -1,5 +1,5 @@
 Roadmap
-	[_] 42% Pre-Alpha - limited preview
+	[_] 44% Pre-Alpha - limited preview
 		[_] 75% navigation
 			[X] image next/prev
 			[X] ribbon next/prev
@@ -53,7 +53,7 @@ Roadmap
 				[X] load
 				[_] save
 				[_] update
-		[_] 28% UI
+		[_] 36% UI
 			[_] 40% modes
 				[_] cropped mode
 				| show only selected images
@@ -61,21 +61,21 @@ Roadmap
 				[_] slideshow (single image)
 				[X] ribbon
 				[_] single ribbon
-			[_] 16% other
+			[_] 33% other
 				[_] load/open
 				[_] select saved set
 				[X] keyboard help
 				[_] general help
 				[_] settings
-				[_] image info
+				[X] image info
 	[_] 0% Alpha - limited preview
 	[_] 0% Beta - public?
 	[_] 0% 1.0 - public
 	
 
 
-[_] 22% Gen 3 current todo
-	[_] 45% High priority
+[_] 23% Gen 3 current todo
+	[_] 46% High priority
 		[_] BUG: aligning still sometimes gets off...
 		| ...after rotating a number of images
 		|
@@ -149,9 +149,9 @@ Roadmap
 			[_] versions w. label image
 			| a set of images that is represented by one of the group
 			[_] collection
-		[_] 50% UI elements
+		[_] 75% UI elements
 			[X] indicators
-			[_] image number
+			[X] image info
 			[X] stub info dialog
 			[_] detailed image info
 		[_] 0% gesture support
