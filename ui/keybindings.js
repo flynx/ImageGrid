@@ -61,7 +61,7 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// single image mode only...
+	// single image mode...
 	//
 	'.single-image-mode': {
 		title: 'Single image mode',
@@ -81,7 +81,7 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// single image mode only...
+	// marked only ribbon mode...
 	//
 	'.marked-only-view:not(.single-image-mode)': {
 		title: 'Marked only view',
@@ -99,6 +99,7 @@ var KEYBOARD_CONFIG = {
 	//
 	'.viewer:not(.overlay)': {
 		title: 'Global',
+		doc: 'These key bindings work in most other modes.',
 
 		// Navigation...
 		// XXX need to cancel the animation of the prev action...
