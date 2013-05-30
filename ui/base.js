@@ -194,6 +194,8 @@ function getRelativeVisualPosition(outer, inner){
 // 	- 'min'
 // 	- 'max'
 //
+// NOTE: we do not need to worry about rotation here as the size change is 
+// 		compensated with margins...
 function getVisibleImageSize(dim){
 	dim = dim == null ? 'width' : dim
 	var scale = getElementScale($('.ribbon-set'))
@@ -286,6 +288,59 @@ function shiftImage(direction, image, force_create_ribbon){
 		shiftTo(image, ribbon)
 	}
 	return image
+}
+
+
+// align can be:
+// 	- top
+// 	- bottom
+//
+// If target is an existing info container (class: overlay-info) then 
+// just fill that.
+//
+// XXX revise...
+function updateInfo(elem, target, info, force_new){
+	var viewer = $('.viewer')
+	target = target == null ? viewer : $(target)
+
+	if(target.hasClass('overlay-info')){
+		info = target
+
+	} else if(info == null) {
+		var info = $('.overlay-info')
+		if(force_new || info.length == 0){
+			info = $('<div/>')
+				//.click(function(){ hideInfo(info) })
+				.appendTo(viewer)
+		}
+
+		info
+			//.attr({
+				//class: '',
+				//style: '',
+			//})
+			.addClass('overlay-info')
+			.appendTo(target)
+	}
+
+	info
+		.html('')
+
+	if(typeof(elem) == typeof('abc')){
+		info.html(elem)
+	} else {
+		info.append(elem)
+	}
+
+	return info 
+}
+function showInfo(elem){
+	elem = elem == null ? $('.overlay-info') : elem
+	return elem.fadeIn()
+}
+function hideInfo(elem){
+	elem = elem == null ? $('.overlay-info') : elem
+	return elem.fadeOut()
 }
 
 

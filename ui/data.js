@@ -14,8 +14,7 @@ var DEFAULT_SCREEN_IMAGES = 4
 var MAX_SCREEN_IMAGES = 12
 
 // if set to true each image will have basic info written to its html 
-// title attr.
-var IMAGE_INFO = true
+var IMAGE_INFO = false
 
 var CACHE_DIR = '.ImageGridCache'
 
@@ -71,6 +70,7 @@ var SETTINGS = {
 	'screen-images-ribbon-mode': null,
 	'screen-images-single-image-mode': null,
 	'single-image-mode-proportions': null,
+	'image-info-ribbon-mode': 'off',
 }
 
 var BASE_URL = '.'
@@ -788,6 +788,7 @@ function loadSettings(){
 		toggleImageProportions(p)
 	} else {
 		var w = SETTINGS['screen-images-ribbon-mode']
+		toggleImageInfo(SETTINGS['image-info-ribbon-mode'] == 'on' ? 'on' : 'off')
 	}
 	fitNImages(w)
 }
@@ -1211,6 +1212,73 @@ function openImage(){
 
 
 /**********************************************************************
+* Actions
+*/
+
+// XXX show date...
+function updateImageInfo(image){
+	image = image == null ? getImage() : $(image)
+
+	var gid = getImageGID(image)
+	var r = getRibbonIndex(getRibbon(image))
+	var data = IMAGES[gid]
+	var date = new Date(data.ctime * 1000)
+
+	var meta = []
+
+	image.hasClass('marked') ? meta.push(
+			'<span class="shown">M</span>'+
+			'<span class="hidden"><b>M</b>arked</span>') : ''
+
+	var orientation = data.orientation
+	orientation = orientation == null ? 0 : orientation
+	orientation != 0 ? meta.push(
+			'<span class="shown">R</span>'+
+			'<span class="hidden"><b>R</b>otated: '+orientation+'&deg;CW</span>') : ''
+
+
+	meta = meta.join(', ') 
+	meta = meta != '' ? '( '+ meta +' )' : ''
+ 
+	return updateInfo(
+			// path...
+			'<span class="expanding-text">'+
+				'<span class="shown">'+
+					data.path.split('/').pop() +
+				'</span>'+
+				'<span class="hidden" style="position:absolute; background: black; padding: 3px; top: 0px; left: 0px; width: 100%; height: 100%">'+
+					normalizePath(data.path) +
+				'</span>'+ 
+			'</span> '+ 
+
+			// metadata...
+			'<span class="secondary expanding-text">'+
+				meta + ' GID:'+
+				// XXX do we need to display a short gid?
+				//gid +
+				'<span class="shown">'+ 
+					gid.slice(gid.length-6) +
+				'</span>'+
+				'<span class="hidden"> '+
+					gid.slice(0, gid.length-6) +'<b>'+ gid.slice(gid.length-6) +'</b>'+
+				'</span>'+
+			'</span> '+
+
+			// date...
+			'<span class="secondary expanding-text">'+
+				'<span class="shown">TS:' + date.toShortDate() + '</span>'+
+				'<span class="hidden"><b>' + date.toString() + '</b></span>'+
+			'</span>'+
+
+			// position...
+			'<span class="float-right">('+ 
+				(DATA.ribbons[r].indexOf(gid)+1) +'/'+ DATA.ribbons[r].length +
+			')<span/>')
+}
+
+
+
+/**********************************************************************
 * Setup
 */
 
@@ -1354,7 +1422,10 @@ function setupDataBindings(viewer){
 
 
 		.on('focusingImage', function(evt, image){
-			DATA.current = getImageGID($(image))
+			image = $(image)
+			DATA.current = getImageGID(image)
+
+			updateImageInfo(image)
 		})
 
 
@@ -1371,6 +1442,8 @@ function setupDataBindings(viewer){
 					IMAGES_UPDATED.push(gid)
 				}
 			})
+
+			updateImageInfo(image)
 		})
 
 
@@ -1387,6 +1460,8 @@ function setupDataBindings(viewer){
 			} else {
 				MARKED.splice(MARKED.indexOf(gid), 1)
 			}
+
+			updateImageInfo(img)
 		})
 		.on('removeingRibbonMarks', function(evt, ribbon){
 			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){

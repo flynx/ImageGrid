@@ -597,6 +597,19 @@ var cancelAnimationFrame = (window.cancelRequestAnimationFrame
 		|| clearTimeout)
 
 
+Date.prototype.toShortDate = function(){
+	var y = this.getFullYear()
+	var M = this.getMonth()+1
+	M = M < 10 ? '0'+M : M
+	var D = this.getDate()
+	D = D < 10 ? '0'+D : D
+	var H = this.getHours()
+	H = H < 10 ? '0'+H : H
+	var m = this.getMinutes()
+	m = m < 10 ? '0'+m : m
+
+	return ''+y+'-'+M+'-'+D+' '+H+':'+m
+}
 Date.prototype.getTimeStamp = function(){
 	var y = this.getFullYear()
 	var M = this.getMonth()+1

@@ -66,7 +66,8 @@ var KEYBOARD_CONFIG = {
 				function(){ 
 					toggleMarkedOnlyView('off') 
 					return false
-				})
+				}),
+		Q: 'Esc',
 	},
 
 
@@ -283,8 +284,11 @@ var KEYBOARD_CONFIG = {
 					}),
 			},
 		I: {
+				// XXX group this with other info stuff into a single on/off toggle...
+				default: doc('Toggle image info visibility (on hover)',
+					function(){ toggleImageInfo() }),
 				// XXX STUB -- replace with a real info window...
-				default: doc('Show current image info',
+				shift: doc('Show current image info',
 					function(){
 						var gid = getImageGID(getImage())
 						var r = getRibbonIndex(getRibbon())
@@ -303,9 +307,6 @@ var KEYBOARD_CONFIG = {
 								'Position (global): '+ order +'/'+ DATA.order.length +'\n'+
 								'')
 					}),
-				// XXX group this with other info stuff into a single on/off toggle...
-				shift: doc('Toggle image info visibility (on hover)',
-					function(){ toggleImageInfo() }),
 				ctrl: doc('Invert image marks', 
 					function(){ invertImageMarks() }),
 			},

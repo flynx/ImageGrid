@@ -310,6 +310,45 @@ body {
 	-ms-transform: rotate(90deg);
 	transform: rotate(90deg);
 }
+.overlay-info {
+	display: none;
+	position: absolute;
+
+	bottom: 0px;
+	left: 0px;
+	width: 100%;
+	padding: 2px;
+	padding-left: 10px;
+	padding-right: 10px;
+	box-sizing: border-box;
+
+	background: black;
+	color: white;
+
+	opacity: 0.6;
+
+	-moz-user-select: auto;
+	-webkit-user-select: auto;
+	-o-user-select: auto;
+	-ms-user-select: auto;
+	user-select: auto;
+}
+.overlay-info .float-right {
+	float: right;
+}
+.overlay-info .secondary {
+	font-style: italic;
+	font-size: small;
+	color: silver;
+}
+.overlay-info::selection,
+.overlay-info ::selection {
+	color: white;
+	background: red;
+}
+.image-info-visible.viewer .overlay-info {
+	display: block;
+}
 
 
 
@@ -475,6 +514,20 @@ body {
 	padding-right: 0px;
 	padding-left: 0px;
 }
+
+
+/* utility */
+.expanding-text .hidden {
+	display: none;
+}
+.expanding-text:hover .shown {
+	display: none;
+}
+.expanding-text:hover .hidden {
+	display: inline;
+}
+
+
 
 </style>
 

@@ -21,6 +21,7 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer',
 
 				// save things...
 				SETTINGS['screen-images-ribbon-mode'] = w
+				SETTINGS['image-info-ribbon-mode'] = toggleImageInfo('?')
 
 				// load things...
 				w = SETTINGS['screen-images-single-image-mode']
@@ -31,6 +32,7 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer',
 				// set stuff...
 				toggleImageProportions(p)
 				fitNImages(w)
+				toggleImageInfo('off')
 
 			// ribbon mode...
 			} else {
@@ -46,6 +48,9 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer',
 
 				toggleImageProportions('square')
 				fitNImages(w)
+				var i = SETTINGS['image-info-ribbon-mode'] == 'on' ? 'on' : 'off'
+				toggleImageInfo(i)
+				SETTINGS['image-info-ribbon-mode'] = i
 			}
 		})
 
