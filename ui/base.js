@@ -291,14 +291,14 @@ function shiftImage(direction, image, force_create_ribbon){
 }
 
 
+// Update an info element
+//
 // align can be:
 // 	- top
 // 	- bottom
 //
 // If target is an existing info container (class: overlay-info) then 
 // just fill that.
-//
-// XXX revise...
 function updateInfo(elem, data, target){
 	var viewer = $('.viewer')
 	target = target == null ? viewer : $(target)
@@ -329,6 +329,64 @@ function showInfo(elem, data, target){
 function hideInfo(elem){
 	elem = elem == null ? $('.overlay-info') : elem
 	return elem.fadeOut()
+}
+
+
+// Update status message
+//
+// NOTE: this will update message content and return it as-is, things 
+// 		like showing the message are to be done manually...
+// 		see: showStatus(...) and showErrorStatus(...) for a higher level
+// 		API...
+// NOTE: in addition to showing user status, this will also log the 
+// 		satus to browser console...
+// NOTE: the message will be logged to console via either console.log(...)
+// 		or console.error(...), if the message starts with "Error".
+// NOTE: if message is null, then just return the status element...
+//
+// XXX add abbility to append and clear status...
+function updateStatus(message){
+
+	var elem = $('.global-status')
+	if(elem.length == 0){
+		elem = $('<div class="global-status"/>')
+	}
+	if(message == null){
+		return elem
+	}
+
+	if(arguments.length > 1){
+		message = Array.apply(Array, arguments).join(' ')
+	}
+
+	if(typeof(message) == typeof('s') && /^error.*/i.test(message)){
+		console.error.apply(console, arguments)
+	} else {
+		console.log.apply(console, arguments)
+	}
+
+	return updateInfo(elem, message)
+}
+
+
+// Same as updateInfo(...) but will aslo show and animate-close the message
+function showStatus(message){
+	return updateStatus(message)
+		.stop()
+		.show()
+		.delay(500)
+		.fadeOut(800)
+}
+
+
+// Same as showStatus(...) but will always add 'Error: ' to the start 
+// of the message
+//
+// NOTE: this will show the message but will not hide it.
+function showErrorStatus(message){
+	return updateStatus('Error:' + message)
+		.stop()
+		.show()
 }
 
 

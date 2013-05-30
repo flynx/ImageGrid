@@ -1202,43 +1202,6 @@ function openImage(){
 * Info & status...
 */
 
-// NOTE: if message is null, then just return the status element...
-function updateStatus(message){
-
-	var elem = $('.global-status')
-	if(elem.length == 0){
-		elem = $('<div class="global-status"/>')
-	}
-	if(message == null){
-		return elem
-	}
-
-	if(arguments.length > 1){
-		message = Array.apply(Array, arguments).join(' ')
-	}
-
-	if(typeof(message) == typeof('s') && /^error.*/i.test(message)){
-		console.error.apply(console, arguments)
-	} else {
-		console.log.apply(console, arguments)
-	}
-
-	return updateInfo(elem, message)
-}
-function showStatus(message){
-	return updateStatus(message)
-		.stop()
-		.show()
-		.delay(500)
-		.fadeOut(800)
-}
-function showErrorStatus(message){
-	return updateStatus('Error:' + message)
-		.stop()
-		.show()
-}
-
-
 // XXX do we need a full rewrite here, or will it be better to just fill
 // 		the slots...
 function updateGlobalImageInfo(image){
