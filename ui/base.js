@@ -321,11 +321,15 @@ function updateInfo(elem, data, target){
 	return elem 
 		.appendTo(target)
 }
+
+
 function showInfo(elem, data, target){
 	elem = elem == null ? $('.overlay-info') : elem
 	elem = data == null ? elem : updateInfo(elem, data, traget)
 	return elem.fadeIn()
 }
+
+
 function hideInfo(elem){
 	elem = elem == null ? $('.overlay-info') : elem
 	return elem.fadeOut()
@@ -355,14 +359,14 @@ function updateStatus(message){
 		return elem
 	}
 
-	if(arguments.length > 1){
-		message = Array.apply(Array, arguments).join(' ')
-	}
-
 	if(typeof(message) == typeof('s') && /^error.*/i.test(message)){
 		console.error.apply(console, arguments)
 	} else {
 		console.log.apply(console, arguments)
+	}
+
+	if(arguments.length > 1){
+		message = Array.apply(Array, arguments).join(' ')
 	}
 
 	return updateInfo(elem, message)
@@ -371,7 +375,7 @@ function updateStatus(message){
 
 // Same as updateInfo(...) but will aslo show and animate-close the message
 function showStatus(message){
-	return updateStatus(message)
+	return updateStatus.apply(null, arguments)
 		.stop()
 		.show()
 		.delay(500)
@@ -384,9 +388,21 @@ function showStatus(message){
 //
 // NOTE: this will show the message but will not hide it.
 function showErrorStatus(message){
-	return updateStatus('Error:' + message)
+	message = Array.apply(Array, arguments)
+	message.splice(0, 0, 'Error:')
+	return updateStatus.apply(null, message)
 		.stop()
 		.show()
+}
+
+
+// shorthand methods...
+function hideStatus(){
+	// yes, this indeed looks funny ;)
+	return showStatus()
+}
+function getStatus(){
+	return updateStatus()
 }
 
 
