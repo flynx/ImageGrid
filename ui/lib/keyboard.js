@@ -131,12 +131,19 @@ function doc(text, func){
  * 								'ctrl+shift'
  * 							NOTE: 'shift+ctrl' is wrong.
  *
+ * This will also resolve several shifted keys by name, for example:
+ * 'shift-/' is the same as '?', and either can be used, but the shorter 
+ * direct notation has priority (see _SHIFT_KEYS for supported keys).
+ *
+ *
  * Returns:
  * 	{
  * 		<mode>: <handler>,
  * 		...
  * 	}
  *
+ *
+ * NOTE: it is not possible to do a shift-? as it is already shifted.
  * NOTE: if a key is not handled in a mode, that mode will not be 
  * 		present in the resulting object.
  * NOTE: this will not unwrap lisp-style (see below) handlers.
@@ -149,6 +156,7 @@ function doc(text, func){
  */
 function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 	var chr = null
+	var s_chr = null
 	var did_handling = false
 	modifiers = modifiers == null ? '' : modifiers
 	modes = modes == null ? 'any' : modes
@@ -162,11 +170,10 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 		key = toKeyCode(key)
 	}
 
-	/* XXX this is not done yet...
-	if(shifted_keys != false && key in shifted_keys){
-		key = shifted_keys[key]
+	// XXX this is not done yet...
+	if(shifted_keys != false && /shift/i.test(modifiers)){
+		var s_chr = shifted_keys[chr]
 	}
-	*/
 
 	res = {}
 
@@ -183,7 +190,11 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 
 		var bindings = keybindings[mode]
 
-		if(chr in bindings){
+		if(s_chr != null && s_chr in bindings){
+			var handler = bindings[s_chr]
+			chr = s_chr
+			modifiers = modifiers.replace(/\+?shift/i, '') 
+		} else if(chr in bindings){
 			var handler = bindings[chr]
 		} else {
 			var handler = bindings[key]

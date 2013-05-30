@@ -57,10 +57,7 @@ var KEYBOARD_CONFIG = {
 			}),
 		H: 'Esc',
 		Q: 'Esc',
-		// '?'
-		'/': { 
-				shift: 'Esc', 
-			},
+		'?': 'Esc',
 	},
 
 
@@ -378,12 +375,27 @@ var KEYBOARD_CONFIG = {
 		F4: doc('Open image in external software', openImage),
 		E: 'F4',
 
-		H: doc('Show keyboard bindings',
+		'?': doc('Show keyboard bindings',
 			function(){ toggleKeyboardHelp() }),
-		// '?'
-		'/': { 
-				shift: 'H', 
-			},
+		H: '?',
+
+
+		/* testing the shift-key feature...
+		'~': {
+			default: function(){ alert('~') },
+			// this is inaccessible...
+			shift: function(){ alert('shift-~') },
+			ctrl: function(){ alert('ctrl-~') },
+			'ctrl+alt': function(){ alert('ctrl-alt-~') },
+		},
+		'`': {
+			default: function(){ alert('`') },
+			// this is also not accessible as it is shadowed by '''...
+			shift: function(){ alert('shift-`') },
+			ctrl: function(){ alert('ctrl-`') },
+			'ctrl+alt': function(){ alert('ctrl-alt-`') },
+		},
+		*/
 	}
 }
 
