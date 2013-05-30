@@ -943,7 +943,7 @@ function loadFileImages(path, no_load_diffs, callback){
 		}).sort().reverse()[0]
 		path = path == null ? 'images.json' : path
 
-		console.log('Loading:', path)
+		updateStatus('Loading: ' + path)
 
 		path = base +'/'+ path
 	
@@ -972,7 +972,7 @@ function loadFileImages(path, no_load_diffs, callback){
 						// 		whether we have one or more deffereds here...
 						.done(function(data){
 							diff_data[i+1] = data
-							console.log('Loaded:', e)
+							updateStatus('Loaded:', e)
 						})
 				}))
 			.then(function(){
@@ -988,12 +988,12 @@ function loadFileImages(path, no_load_diffs, callback){
 			$.extend(json, diff_data)
 			IMAGES = json
 
-			console.log('Loaded IMAGES...')
+			updateStatus('Loaded images...')
 
 			callback != null && callback()
 		})
 		.fail(function(){
-			console.error('ERROR LOADING:', path)
+			updateErrorStatus('Loading: ' + path)
 		})
 }
 
@@ -1009,7 +1009,7 @@ function saveFileImages(name){
 	name = name == null ? normalizePath(CACHE_DIR +'/'+ Date.timeStamp()) : name
 
 	if(window.dumpJSON == null){
-		console.error('Can\'t save to file.')
+		updateErrorStatus('Can\'t save to file.')
 		return
 	}
 
@@ -1018,7 +1018,7 @@ function saveFileImages(name){
 		$.each($.map(listDir(normalizePath(CACHE_DIR)), function(e){ 
 				return /.*-images-diff.json$/.test(e) ? e : null
 			}), function(i, e){
-				console.log('removeing:', e)
+				updateStatus('removeing:', e)
 				removeFile(normalizePath(CACHE_DIR +'/'+ e))
 			})
 		IMAGES_UPDATED = []
@@ -1060,12 +1060,12 @@ function loadFileState(data_path, callback){
 
 			// unknown format...
 			} else {
-				console.error('unknown format.')
+				updateStatus('Unknown format.')
 				return
 			}
 		})
 		.fail(function(){
-			console.error('ERROR LOADING:', data_path)
+			updateErrorStatus('Loading:', data_path)
 		})
 
 	return res
@@ -1114,10 +1114,12 @@ function loadDir(path, raw_load){
 	var orig_path = path
 	var data
 
+	updateStatus('Loading...').show()
+
 	var files = listDir(path)
 
 	if(files == null){
-		console.error('Path error:', path)
+		updateErrorStatus('Path: ' + path)
 		return
 	}
 
@@ -1143,11 +1145,14 @@ function loadDir(path, raw_load){
 
 	// load the found data file...
 	if(data != null){
-		console.log('Loading:', data)
+		updateStatus('Loading: ', data)
 
 		data = path + '/' + data
 
 		return loadFileState(data)
+			.always(function(){
+				showStatus('Done.')
+			})
 
 	// load the dir as-is...
 	} else {
@@ -1157,7 +1162,7 @@ function loadDir(path, raw_load){
 		})
 
 		if(image_paths.length == 0){
-			console.error('No images in:', orig_path)
+			updateErrorStatus('No images in:', orig_path)
 			return 
 		}
 
@@ -1168,6 +1173,7 @@ function loadDir(path, raw_load){
 		MARKED = []
 
 		loadData()
+		showStatus('Done.')
 	}
 }
 
@@ -1183,7 +1189,7 @@ function updateRibbonsFromFavDirs(){
 // NOTE: this will open the default editor/viewer.
 function openImage(){
 	if(window.runSystem == null){
-		console.error('Can\'t run external programs.')
+		updateErrorStatus('Can\'t run external programs.')
 		return 
 	}
 	// XXX if path is not present try and open the biggest preview...
@@ -1193,13 +1199,61 @@ function openImage(){
 
 
 /**********************************************************************
-* Actions
+* Info & status...
 */
+
+// NOTE: if message is null, then just return the status element...
+function updateStatus(message){
+
+	var elem = $('.global-status')
+	if(elem.length == 0){
+		elem = $('<div class="global-status"/>')
+	}
+	if(message == null){
+		return elem
+	}
+
+	if(arguments.length > 1){
+		message = Array.apply(Array, arguments).join(' ')
+	}
+
+	if(typeof(message) == typeof('s') && /^error.*/i.test(message)){
+		console.error.apply(console, arguments)
+	} else {
+		console.log.apply(console, arguments)
+	}
+
+	return updateInfo(elem, message)
+}
+function showStatus(message){
+	return updateStatus(message)
+		.stop()
+		.show()
+		.delay(500)
+		.fadeOut(800)
+}
+function showErrorStatus(message){
+	return updateStatus('Error:' + message)
+		.stop()
+		.show()
+}
+
 
 // XXX do we need a full rewrite here, or will it be better to just fill
 // 		the slots...
 function updateGlobalImageInfo(image){
 	image = image == null ? getImage() : $(image)
+	image = image.length == 0 ? getImage() : image
+
+	var elem = $('.global-image-info')
+	if(elem.length == 0){
+		elem = $('<div class="global-image-info"/>')
+	}
+
+	// no image no update...
+	if(image.length == 0){
+		return elem
+	}
 
 	var gid = getImageGID(image)
 	var r = getRibbonIndex(getRibbon(image))
@@ -1222,11 +1276,6 @@ function updateGlobalImageInfo(image){
 	meta = meta.join(', ') 
 	meta = meta != '' ? '( '+ meta +' )' : ''
 
-	var elem = $('.global-image-info')
-	if(elem.length == 0){
-		elem = $('<div class="global-image-info"/>')
-	}
- 
 	return updateInfo(elem,
 			// path...
 			'<span class="expanding-text path">'+
@@ -1268,6 +1317,18 @@ function updateGlobalImageInfo(image){
 
 function updateInlineImageInfo(image){
 	image = image == null ? getImage() : $(image)
+	image = image.length == 0 ? getImage() : image
+
+	var elem = $('.inline-image-info')
+	if(elem.length == 0){
+		elem = $('<div class="inline-image-info"/>')
+	}
+
+	// no image no update...
+	if(image.length == 0){
+		return elem
+	}
+
 
 	var gid = getImageGID(image)
 	var r = getRibbonIndex(getRibbon(image))
@@ -1276,11 +1337,6 @@ function updateInlineImageInfo(image){
 
 	var orientation = data.orientation
 	orientation = orientation == null ? 0 : orientation
-
-	var elem = $('.inline-image-info')
-	if(elem.length == 0){
-		elem = $('<div class="inline-image-info"/>')
-	}
 
 	return updateInfo(elem,
 			// name...
@@ -1294,6 +1350,16 @@ function updateInlineImageInfo(image){
 			'</span>'+
 			'',
 			image)
+}
+
+
+function inlineImageInfoHoverHandler(evt){
+	var img = $(evt.target).closest('.image')
+	if(img.length > 0){
+		if(img.find('.inline-image-info:visible').length == 0){
+			updateInlineImageInfo(img)
+		}
+	}
 }
 
 

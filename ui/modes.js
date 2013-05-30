@@ -69,6 +69,20 @@ var toggleTheme = createCSSClassToggler('.viewer',
 var toggleImageInfo = createCSSClassToggler('.viewer', '.image-info-visible')
 
 
+var toggleInlineImageInfo = createCSSClassToggler('.viewer', 
+		'.image-info-inline-visible',
+		function(action){
+			if(action == 'on'){
+				$(document)
+					.on('mouseover', inlineImageInfoHoverHandler)
+			} else {
+				$(document)
+					.off('mouseover', inlineImageInfoHoverHandler)
+					$('.inline-image-info').remove()
+			}
+		})
+
+
 // NOTE: this confirmsto the css toggler protocol, but is not implemented 
 // 		via createCSSClassToggler as we do not need to set any classes,
 // 		al least at this point...

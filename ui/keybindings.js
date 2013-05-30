@@ -16,7 +16,32 @@ var DIRECTION = 'next'
 /*********************************************************************/
 
 var KEYBOARD_CONFIG = {
+	// info overlay...
+	//
+	// NOTE: this is here to prevent selecting images while trying to 
+	// 		select info text...
+	'.overlay-info:hover': {
+		title: 'Info overlay',
+		doc: 'NOTE: when the cursor is over the info overlay one can use '+
+			'Ctrl-A and Ctrl-D for info text selection, without affecting '+
+			'image selection/marks.',
+		ignore: [ 'A' ],
+		A: {
+			// NOTE: this is here only for documentation...
+			ctrl: doc('Select all'),
+		},
+		D: {
+			ctrl: doc('Clear selection', 
+				function(){
+					document.getSelection().empty()
+					return false
+				})
+		}
+	},
+
+
 	// help mode...
+	//
 	// NOTE: need to keep all info modes before the rest so as to give 
 	// 		their bindings priority...
 	'.help-mode': {
@@ -40,6 +65,7 @@ var KEYBOARD_CONFIG = {
 
 
 	// single image mode only...
+	//
 	'.single-image-mode': {
 		title: 'Single image mode',
 
@@ -59,6 +85,7 @@ var KEYBOARD_CONFIG = {
 
 
 	// single image mode only...
+	//
 	'.marked-only-view:not(.single-image-mode)': {
 		title: 'Marked only view',
 
@@ -72,6 +99,7 @@ var KEYBOARD_CONFIG = {
 
 
 	// general setup...
+	//
 	'.viewer:not(.overlay)': {
 		title: 'Global',
 
@@ -285,7 +313,7 @@ var KEYBOARD_CONFIG = {
 			},
 		I: {
 				// XXX group this with other info stuff into a single on/off toggle...
-				default: doc('Toggle image info visibility (on hover)',
+				default: doc('Toggle image info display',
 					function(){ toggleImageInfo() }),
 				// XXX STUB -- replace with a real info window...
 				shift: doc('Show current image info',
@@ -307,14 +335,30 @@ var KEYBOARD_CONFIG = {
 								'Position (global): '+ order +'/'+ DATA.order.length +'\n'+
 								'')
 					}),
+				alt: doc('Toggle inline image info display',
+					function(){
+						toggleInlineImageInfo()
+					}),
+
+				// marking...
 				ctrl: doc('Invert image marks', 
 					function(){ invertImageMarks() }),
 			},
 		A: {
-				shift: doc('Toggle marks in current contagious block', 
-					function(){ toggleImageMarkBlock() }),
+			  	// XXX does not yet work with DATA (???)
+				//shift: doc('Toggle marks in current contagious block', 
+				//	function(){ toggleImageMarkBlock() }),
+
 				ctrl: doc('Mark current ribbon', 
 					function(){ markAll('ribbon') }),
+				'ctrl+shift': doc('Mark all images', 
+					function(){ markAll('all') }),
+			},
+		D: {
+				ctrl: doc('Unmark current ribbon', 
+					function(){ removeImageMarks('ribbon') }),
+				'ctrl+shift': doc('Unmark all images', 
+					function(){ removeImageMarks('all') }),
 			},
 		U: {
 				ctrl: doc('Unmark current ribbon', 

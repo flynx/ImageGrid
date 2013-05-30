@@ -254,7 +254,8 @@ body {
 	width: 100%;
 	background: black;
 	opacity: 0.7;
-
+}
+.image .inline-image-info:hover {
 	-moz-user-select: auto;
 	-webkit-user-select: auto;
 	-o-user-select: auto;
@@ -328,7 +329,8 @@ body {
 	color: white;
 
 	opacity: 0.6;
-
+}
+.overlay-info:hover {
 	-moz-user-select: auto;
 	-webkit-user-select: auto;
 	-o-user-select: auto;
@@ -526,6 +528,11 @@ body {
 	display: inline;
 }
 
+.global-status {
+	opacity: 1;
+	z-index: 1000;
+}
+
 
 
 </style>
@@ -578,18 +585,6 @@ $(function(){
 			function(k){
 				window.DEBUG && console.log(k)
 			}))
-		.on('mouseover', function(evt){
-				var img = $(evt.target).closest('.image')
-				if(img.length > 0){
-					if(IMAGE_INFO){
-						if(img.find('.inline-image-info:visible').length == 0){
-							updateInlineImageInfo(img)
-						}
-					} else {
-						img.find('.inline-image-info').remove()
-					}
-				}
-			})
 
 	setupDataBindings()
 

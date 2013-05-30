@@ -62,6 +62,17 @@ var _SPECIAL_KEYS = {
 	188: ',',	190: '.',	191: '/',
 }
 
+var _SHIFT_KEYS = {
+	'`': '~',	'-': '_',	'=':'+',
+
+	1: '!',		2: '@',		3: '#',		4: '$',		5: '%',
+	6:'^',		7:'&',		8: '*',		9: '(',		0: ')',	
+
+	'[': '{',		']': '}i',		'\\': '|',
+	';': ':',		'\'': '"',
+	',': '<',		'.': '>',		'/': '?'
+}
+
 var _KEY_CODES = {}
 for(var k in _SPECIAL_KEYS){
 	_KEY_CODES[_SPECIAL_KEYS[k]] = k
@@ -93,6 +104,7 @@ function toKeyCode(c){
 
 // documentation wrapper...
 function doc(text, func){
+	func = func == null ? function(){return true}: func
 	func.doc = text
 	return func
 }
@@ -135,11 +147,12 @@ function doc(text, func){
  * XXX BUG explicitly given modes do not yield results if the pattern 
  * 		does not match...
  */
-function getKeyHandlers(key, modifiers, keybindings, modes){
+function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 	var chr = null
 	var did_handling = false
 	modifiers = modifiers == null ? '' : modifiers
 	modes = modes == null ? 'any' : modes
+	shifted_keys = shifted_keys == null ? _SHIFT_KEYS : shifted_keys
 
 	if(typeof(key) == typeof(123)){
 		key = key
@@ -148,6 +161,12 @@ function getKeyHandlers(key, modifiers, keybindings, modes){
 		chr = key
 		key = toKeyCode(key)
 	}
+
+	/* XXX this is not done yet...
+	if(shifted_keys != false && key in shifted_keys){
+		key = shifted_keys[key]
+	}
+	*/
 
 	res = {}
 
@@ -400,7 +419,8 @@ function makeKeyboardHandler(keybindings, unhandled){
 * 	<keys-spec> 	- list of key names.
 *
 */
-function buildKeybindingsHelp(keybindings){
+function buildKeybindingsHelp(keybindings, shifted_keys){
+	shifted_keys = shifted_keys == null ? _SHIFT_KEYS : shifted_keys
 	var res = {}
 	var mode, title
 
@@ -455,6 +475,13 @@ function buildKeybindingsHelp(keybindings){
 					var keys = []
 					section[doc] = keys
 				}
+
+				// translate shifted keys...
+				if(shifted_keys != false && mod == 'shift' && key in shifted_keys){
+					mod = ''
+					key = shifted_keys[key]
+				}
+
 				keys.push((mod == '' || mod == 'default') ? key : (mod +'+'+ key))
 			}
 
