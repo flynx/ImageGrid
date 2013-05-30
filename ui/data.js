@@ -1260,7 +1260,9 @@ function updateImageInfo(image){
 					gid.slice(gid.length-6) +
 				'</span>'+
 				'<span class="hidden"> '+
-					gid.slice(0, gid.length-6) +'<b>'+ gid.slice(gid.length-6) +'</b>'+
+					(gid.length >= 6 ? 
+					 	(gid.slice(0, gid.length-6) +'<b>'+ gid.slice(gid.length-6) +'</b>') 
+						: gid)+
 				'</span>'+
 			'</span> '+
 
