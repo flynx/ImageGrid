@@ -5,14 +5,14 @@ Roadmap
 			[X] ribbon next/prev
 			[X] screen next/prev
 			[_] marks next/prev
-		[_] 28% editing
+		[_] 26% editing
 			[_] 0% ribbon
 				[_] merge up/down
 				[_] flatten
 				[_] sort
-			[_] 66% image
+			[_] 57% image
 				[X] shift up/down
-				shift left/right
+				[_] shift left/right
 				[X] mark/unmark (selection)
 				[X] rotate left/right
 				[_] crop

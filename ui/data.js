@@ -7,14 +7,12 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var DATA_ATTR = 'DATA'
+
 var LOAD_SCREENS = 6
-//var LOAD_THRESHOLD = 2
 
 var DEFAULT_SCREEN_IMAGES = 4
 var MAX_SCREEN_IMAGES = 12
-
-// if set to true each image will have basic info written to its html 
-var IMAGE_INFO = false
 
 var CACHE_DIR = '.ImageGridCache'
 
@@ -59,11 +57,7 @@ var DATA = {
 var IMAGES = {}
 var IMAGES_UPDATED = []
 
-var DATA_ATTR = 'DATA'
-
 var MARKED = []
-
-var IMAGE_CACHE = []
 
 var SETTINGS = {
 	'theme': null,
@@ -75,24 +69,127 @@ var SETTINGS = {
 
 var BASE_URL = '.'
 
+var IMAGE_CACHE = []
+
 
 
 /**********************************************************************
 * Helpers
 */
 
-// NOTE: this expects gids...
-function imageDateCmp(a, b, data){
-	data = data == null ? IMAGES : data
-	return data[b].ctime - data[a].ctime
+function makeDistanceCmp(start, get){
+	if(get == null){
+		return function(a, b){
+			return Math.abs(start - a) - Math.abs(start - b)
+		}
+	} else {
+		start = get(start)
+		return function(a, b){
+			return Math.abs(start - get(a)) - Math.abs(start - get(b))
+		}
+	}
+}
+
+
+// Make a cmp function to compare two gids by distance from gid.
+/*
+function makeImageGIDDistanceCmp(gid, order){
+	order = order == null ? DATA.order : order
+	var i = order.indexOf(gid)
+	return function(a, b){
+		return (Math.abs(i - order.indexOf(a)) 
+				- Math.abs(i - order.indexOf(b)))
+	}
+}
+*/
+function makeImageGIDDistanceCmp(gid, get, order){
+	order = order == null ? DATA.order : order
+	return makeDistanceCmp(gid, get == null ? 
+			function(a){
+				return order.indexOf(a) 
+			}
+			: function(a){
+				return order.indexOf(get(a))
+			})
+}
+
+
+// NOTE: essentially this is a 2D distance compatison from gid...
+//
+// XXX make this faster...
+function makeImageRibbonDistanceCmp(gid, get, data, images){
+	data = data == null ? DATA : data
+	images = images == null ? IMAGES : images
+
+	// make a cmp index...
+	var ribbons = $.map(DATA.ribbons, function(r, i){ 
+		// sort each ribbon by distance from closest gid...
+		//return [r.slice().sort(makeImageGIDDistanceCmp(getGIDBefore(gid, i)))] 
+		return [r.slice().sort(makeImageGIDDistanceCmp(gid))] 
+	})
+	var gids = $.map(ribbons, function(e){ return [e[0]] })
+	var ri = gids.indexOf(gid)
+
+	function _getRibbon(gid){
+		for(var i=0; i < ribbons.length; i++){
+			if(ribbons[i].indexOf(gid) >= 0){
+				return ribbons[i]
+			}
+		}
+	}
+
+	function _getDistance(a){
+		var r = _getRibbon(a)
+		var x = r.indexOf(a)
+		var y = Math.abs(gids.indexOf(r[0]) - ri)
+
+		// NOTE: this is cheating...
+		//return x + y
+		// calculate real distance...
+		return Math.sqrt(x*x + y*y)
+	}
+
+	if(get == null){
+		return function(a, b){
+			return _getDistance(a) - _getDistance(b)
+		}
+	} else {
+		return function(a, b){
+			return _getDistance(get(a)) - _getDistance(get(b))
+		}
+	}
+}
+
+
+function cmp(a, b, get){
+	if(get == null){
+		return a - b
+	}
+	return get(a) - get(b)
 }
 
 
 // NOTE: this expects gids...
-function imageNameCmp(a, b, data){
+function imageDateCmp(a, b, get, data){
 	data = data == null ? IMAGES : data
-	a = data[b].path.split('/').pop()
-	b = data[a].path.split('/').pop()
+	if(get == null){
+		return data[b].ctime - data[a].ctime
+	} else {
+		return data[get(b)].ctime - data[get(a)].ctime
+	}
+}
+
+
+// NOTE: this expects gids...
+function imageNameCmp(a, b, get, data){
+	data = data == null ? IMAGES : data
+	if(get == null){
+		a = data[b].path.split('/').pop()
+		b = data[a].path.split('/').pop()
+	} else {
+		a = data[get(b)].path.split('/').pop()
+		b = data[get(a)].path.split('/').pop()
+	}
 	if(a == b){
 		return 0
 	} else if(a < b){
@@ -102,12 +199,16 @@ function imageNameCmp(a, b, data){
 	}
 }
 
-function imageOrderCmp(a, b, data){
+
+// NOTE: this expects gids...
+function imageOrderCmp(a, b, get, data){
 	data = data == null ? DATA : data
-	return data.order.indexOf(a) - data.order.indexOf(b)
+	if(get == null){
+		return data.order.indexOf(a) - data.order.indexOf(b)
+	} else {
+		return data.order.indexOf(get(a)) - data.order.indexOf(get(b))
+	}
 }
-
-
 
 
 // Check if a is at position i in lst
@@ -117,10 +218,10 @@ function imageOrderCmp(a, b, data){
 // 	- -1 if a is less than position i
 // 	- +1 if a is greater than position i
 //
-// NOTE: the signature is different from the traditional cmp(a, b) so as 
+// NOTE: the signature is different from the traditional lcmp(a, b) so as 
 // 		to enable more complex comparisons involving adjacent elements
 // 		(see isBetween(...) for an example)
-function cmp(a, i, lst){
+function lcmp(a, i, lst){
 	var b = lst[i]
 	if(a == b){
 		return 0
@@ -167,7 +268,7 @@ function isBetween(a, i, lst){
 //
 // NOTE: this is here for testing reasons only...
 function linSearch(target, lst, check, return_position){
-	check = check == null ? cmp : check
+	check = check == null ? lcmp : check
 
 	for(var i=0; i < lst.length; i++){
 		if(check(target, i, lst) == 0){
@@ -189,7 +290,7 @@ Array.prototype.linSearch = function(target, cmp){
 // 		return_position to true.
 // NOTE: by default this will use cmp as a predicate.
 function binSearch(target, lst, check, return_position){
-	check = check == null ? cmp : check
+	check = check == null ? lcmp : check
 	var h = 0
 	var t = lst.length - 1
 	var m, res
@@ -313,7 +414,7 @@ function getGIDBefore(gid, ribbon, search){
 }
 
 
-// Get a "count" of GIDs starting with a given gid ("from")
+// Get "count" of GIDs starting with a given gid ("from")
 //
 // NOTE: this will not include the 'from' GID in the resulting list, 
 // 		unless inclusive is set to true.
@@ -577,12 +678,51 @@ function updateImage(image, gid, size){
 }
 
 
+var UPDATE_SORT_ENABLED = false
+var UPDATE_SYNC = true
+
 // Same as updateImage(...) but will update all images.
-function updateImages(size){
-	size = size == null ? getVisibleImageSize('max') : size
-	return $('.image').each(function(){
-		updateImage($(this), null, size)
-	})
+//
+// NOTE: this will prioritize images by distance from current image...
+//
+// XXX need to run this in the background...
+function updateImages(size, cmp){
+	var deferred = $.Deferred()
+
+	function _worker(){
+		size = size == null ? getVisibleImageSize('max') : size
+
+		// sorted run...
+		if(UPDATE_SORT_ENABLED && cmp != false){
+			cmp = cmp == null ? 
+					makeImageGIDDistanceCmp(getImageGID(), getImageGID) 
+					// XXX this is more correct but is slow...
+					//makeImageRibbonDistanceCmp(getImageGID(), getImageGID) 
+				: cmp
+			deferred.resolve($('.image')
+				// sort images by distance from current, so as to update what 
+				// the user is looking at first...
+				.sort(cmp)
+				.each(function(){
+					updateImage($(this), null, size)
+				}))
+
+		// do a fast run w.o. sorting images...
+		} else {
+			deferred.resolve($('.image')
+				.each(function(){
+					updateImage($(this), null, size)
+				}))
+		}
+	}
+
+	if(UPDATE_SYNC){
+		_worker()
+	} else {
+		setTimeout(_worker, 0)
+	}
+
+	return deferred
 }
 
 
@@ -781,6 +921,7 @@ function loadSettings(){
 */
 
 // NOTE: this will always overwrite the previous cache set for a ribbon...
+// XXX sort images in cache by closeness to current image...
 function preCacheRibbonImages(ribbon){
 	var i = getRibbonIndex(ribbon)
 	var size = getVisibleImageSize('max')
@@ -792,6 +933,8 @@ function preCacheRibbonImages(ribbon){
 
 	var gids = getImageGIDs(first, -cache_frame_size)
 				.concat(getImageGIDs(last, cache_frame_size))
+
+	// XXX sort gids...
 
 	var cache = []
 	IMAGE_CACHE[i] = cache
@@ -1381,7 +1524,6 @@ function setupDataBindings(viewer){
 			// NOTE: if this is greater than the number of images currently 
 			//		loaded, it might lead to odd effects...
 			var frame_size = Math.ceil((screen_size * LOAD_SCREENS) / 2)
-			//var threshold = Math.ceil(screen_size * LOAD_THRESHOLD)
 			var threshold = Math.floor(frame_size / 2) 
 			threshold = threshold < 1 ? 1 : threshold
 
@@ -1465,7 +1607,6 @@ function setupDataBindings(viewer){
 			}
 
 			// update previews...
-			// XXX make this update only what needs updating...
 			updateImages()
 		})
 
@@ -1473,26 +1614,23 @@ function setupDataBindings(viewer){
 		.on('focusingImage', function(evt, image){
 			image = $(image)
 			DATA.current = getImageGID(image)
-
-			updateGlobalImageInfo(image)
 		})
 
 
 		// basic image manipulation...
-		// XXX after this we need to save the images...
 		.on('rotatingLeft rotatingRight', function(evt, image){
 			$(image).each(function(i, e){
 				var img = $(this)
 				var gid = getImageGID(img) 
 				var orientation = img.attr('orientation')
 
+				// change the image orientation status and add to 
+				// updated list...
 				IMAGES[gid].orientation = orientation
 				if(IMAGES_UPDATED.indexOf(gid) == -1){
 					IMAGES_UPDATED.push(gid)
 				}
 			})
-
-			updateGlobalImageInfo(image)
 		})
 
 
@@ -1509,8 +1647,6 @@ function setupDataBindings(viewer){
 			} else {
 				MARKED.splice(MARKED.indexOf(gid), 1)
 			}
-
-			updateGlobalImageInfo(img)
 		})
 		.on('removeingRibbonMarks', function(evt, ribbon){
 			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
@@ -1554,10 +1690,31 @@ function setupDataBindings(viewer){
 
 			preCacheRibbonImages(ribbon)
 		})
+
+		// info...
+		.on([
+				'focusingImage',
+				'rotatingLeft',
+				'rotateingRight',
+				'togglingMark'
+			].join(' '), 
+			function(evt, image){
+				updateGlobalImageInfo($(image))
+			})
+		.on([
+				'removeingAllMarks',
+				'removeingRibbonMarks',
+				'markingAll',
+				'markingRibbon',
+				'invertingMarks'
+			].join(' '), 
+			function(){
+				updateGlobalImageInfo()
+			})
 }
 
 
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 spell :                                                */
+* vim:set ts=4 sw=4 spell :                                          */

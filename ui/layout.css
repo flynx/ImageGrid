@@ -8,6 +8,8 @@ body {
 	margin: 0px;
 }
 
+
+
 /********************************************************** Viewer ***/
 .viewer {
 	position: relative;
@@ -24,6 +26,7 @@ body {
 	-ms-user-select: none;
 	user-select: none;
 }
+
 
 
 /****************************************************** Ribbon set ***/
@@ -48,6 +51,7 @@ body {
 	content: "Empty";
 	text-align: center;
 }
+
 
 
 /********************************************************** Ribbon ***/
@@ -344,6 +348,8 @@ body {
 	color: white;
 	background: red;
 }
+
+
 
 /*************************************************** Global status ***/
 .global-status {

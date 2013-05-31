@@ -117,17 +117,18 @@ function removeImageMarks(mode){
 	// remove marks from current ribbon (default)...
 	if(mode == 'ribbon' || mode == null){
 		var ribbon = getRibbon()
-		$('.viewer').trigger('removeingRibbonMarks', [ribbon])
-		return ribbon
+		var res = ribbon
 			.find('.marked')
 				.removeClass('marked')
+		$('.viewer').trigger('removeingRibbonMarks', [ribbon])
 
 	// remove all marks...
 	} else if(mode == 'all'){
-		$('.viewer').trigger('removeingAllMarks')
-		return $('.marked')
+		var res = $('.marked')
 			.removeClass('marked')
+		$('.viewer').trigger('removeingAllMarks')
 	} 
+	return res
 }
 
 
@@ -135,25 +136,27 @@ function markAll(mode){
 	// remove marks from current ribbon (default)...
 	if(mode == 'ribbon' || mode == null){
 		var ribbon = getRibbon()
-		$('.viewer').trigger('markingRibbon', [ribbon])
-		return ribbon
+		var res = ribbon
 			.find('.image:not(.marked)')
 				.addClass('marked')
+		$('.viewer').trigger('markingRibbon', [ribbon])
 
 	} else if(mode == 'all'){
+		var res = $('.image:not(.marked)').addClass('marked')
 		$('.viewer').trigger('markingAll')
-		return $('.image:not(.marked)').addClass('marked')
 	}
+	return res
 }
 
 
 // NOTE: this only does it's work in the current ribbon...
 function invertImageMarks(){
 	var ribbon = getRibbon()
-	$('.viewer').trigger('invertingMarks', [ribbon])
-	return ribbon
+	var res = ribbon
 		.find('.image')
 			.toggleClass('marked')
+	$('.viewer').trigger('invertingMarks', [ribbon])
+	return res
 }
 
 
