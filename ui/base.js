@@ -398,7 +398,8 @@ function showErrorStatus(message){
 
 // shorthand methods...
 function hideStatus(){
-	// yes, this indeed looks funny ;)
+	// yes, this indeed looks funny -- to hide a status you need to show
+	// it without any arguments... ;)
 	return showStatus()
 }
 function getStatus(){
