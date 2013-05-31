@@ -1,3 +1,6 @@
+/**********************************************************************
+* 
+**********************************************************************/
 
 body {
 	font-family: sans-serif;
@@ -5,6 +8,7 @@ body {
 	margin: 0px;
 }
 
+/********************************************************** Viewer ***/
 .viewer {
 	position: relative;
 	width: 100%;
@@ -22,6 +26,7 @@ body {
 }
 
 
+/****************************************************** Ribbon set ***/
 .ribbon-set {
 	position: absolute;
 	display: block;
@@ -45,7 +50,7 @@ body {
 }
 
 
-
+/********************************************************** Ribbon ***/
 .ribbon {
 	position: relative;
 	display: block;
@@ -70,6 +75,7 @@ body {
 
 
 
+/*********************************************************** Image ***/
 .image {
 	position: relative;
 	display: inline-block;
@@ -99,7 +105,6 @@ body {
 }
 
 
-
 /* image turning... */
 /* NOTE: need to account for proportions after turning... */
 .image[orientation="90"] {
@@ -126,7 +131,7 @@ body {
 
 
 
-/* dot mark... */
+/***************************************************** Image marks ***/
 .marks-visible.viewer .marked.image:after {
 	display: block;
 	position: absolute;
@@ -234,7 +239,7 @@ body {
 
 
 
-/* Image info */
+/****************************************************** Image info ***/
 .image .inline-image-info {
 	display: none;
 
@@ -340,8 +345,16 @@ body {
 	background: red;
 }
 
+/*************************************************** Global status ***/
+.global-status {
+	display: block;
+	opacity: 1;
+	z-index: 1000;
+}
 
 
+
+/****************************************************** Indicators ***/
 .up-indicator,
 .down-indicator,
 .start-indicator,
@@ -409,6 +422,7 @@ body {
 
 
 
+/********************************************** Mode: single image ***/
 .single-image-mode.viewer .image {
 	background-color: transparent;
 	/* NOTE: need to keep a distance from screen borders... */
@@ -424,6 +438,9 @@ body {
 	visibility: hidden;
 }
 
+
+
+/********************************************************** Themes ***/
 /* XXX this is by no means final... */
 .viewer,
 .light.viewer,
@@ -442,7 +459,8 @@ body {
 }
 
 
-/* Overlay */
+
+/********************************************************* Overlay ***/
 .overlay-block {
 	display: none;
 	position: absolute:
@@ -466,6 +484,8 @@ body {
 }
 
 
+
+/************************************************************ Help ***/
 /* this is for sliding stuff */
 .viewer.help-mode {
 	box-shadow: 0px 0px 50px 0px silver;
@@ -506,7 +526,8 @@ body {
 }
 
 
-/* utility */
+
+/********************************************************* utility ***/
 .expanding-text .hidden {
 	display: none;
 }
@@ -517,11 +538,7 @@ body {
 	display: inline;
 }
 
-.global-status {
-	display: block;
-	opacity: 1;
-	z-index: 1000;
-}
 
 
 
+/*********************************************************************/
