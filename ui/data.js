@@ -642,10 +642,19 @@ function convertDataGen1(data, cmp){
 function updateImage(image, gid, size){
 	image = $(image)
 	var title = ''
-	if(gid == null){
+	var oldgid = getImageGID(image)
+
+	if(oldgid == gid || gid == null){
 		gid = getImageGID(image)
+
 	} else {
-		image.attr('gid', JSON.stringify(gid))
+		image
+			.attr('gid', JSON.stringify(gid))
+			.css({
+				// clear the old preview...
+				// XXX set a now loading animation here...
+				'background-image': 'none',
+			})
 	}
 	size = size == null ? getVisibleImageSize('max') : size
 
@@ -658,10 +667,21 @@ function updateImage(image, gid, size){
 
 	// preview...
 	var preview = getBestPreview(gid, size)
+
+	// pre-cache...
+	// NOTE: make images load without a blackout..
+	var img = new Image()
+	img.src = preview.url
+	img.onload = function(){
+		image.css({
+				'background-image': 'url("'+ preview.url +'")',
+			})
+	}
+
 	image
-		.css({
-			'background-image': 'url("'+ preview.url +'")',
-		})
+		//.css({
+		//	'background-image': 'url("'+ preview.url +'")',
+		//})
 		.attr({
 			order: DATA.order.indexOf(gid),
 			orientation: img_data.orientation == null ? 0 : img_data.orientation,
@@ -679,7 +699,7 @@ function updateImage(image, gid, size){
 
 
 var UPDATE_SORT_ENABLED = false
-var UPDATE_SYNC = true
+var UPDATE_SYNC = false
 
 // Same as updateImage(...) but will update all images.
 //
@@ -724,6 +744,16 @@ function updateImages(size, cmp){
 
 	return deferred
 }
+
+/*
+function updateImages(size){
+	size = size == null ? getVisibleImageSize('max') : size
+	return $('.image')
+		.each(function(){
+			updateImage($(this), null, size)
+		})
+}
+*/
 
 
 // Load count images around a given image/gid into the given ribbon.
