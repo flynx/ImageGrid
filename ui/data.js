@@ -699,7 +699,8 @@ function updateImage(image, gid, size){
 
 
 var UPDATE_SORT_ENABLED = false
-var UPDATE_SYNC = false
+// XXX for some reason the sync version appears to work faster...
+var UPDATE_SYNC = true
 
 // Same as updateImage(...) but will update all images.
 //
@@ -745,7 +746,7 @@ function updateImages(size, cmp){
 	return deferred
 }
 
-/*
+/* XXX for some very odd reason this is slower that the monster above...
 function updateImages(size){
 	size = size == null ? getVisibleImageSize('max') : size
 	return $('.image')
