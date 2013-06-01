@@ -7,7 +7,7 @@
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 var CURSOR_SHOW_THRESHOLD = 10
-var CURSOR_HIDE_TIMEOUT = 2000
+var CURSOR_HIDE_TIMEOUT = 1000
 
 
 
@@ -20,27 +20,32 @@ function autoHideCursor(elem){
 	elem = $(elem)
 	elem
 		.on('mousemove', function(evt){
-			_cursor_pos = window._cursor_pos == null || elem.css('cursor') == 'auto' ?
+			var cursor = elem.css('cursor')
+
+			_cursor_pos = window._cursor_pos == null || cursor != 'none' ?
 						[evt.clientX, evt.clientY] 
 					: _cursor_pos
 
-			if(Math.abs(evt.clientX - _cursor_pos[0]) > CURSOR_SHOW_THRESHOLD 
-					|| Math.abs(evt.clientY - _cursor_pos[1]) > CURSOR_SHOW_THRESHOLD){
+			// cursor visible -- extend visibility...
+			if(cursor != 'none'){
 
 				if(window._cursor_timeout != null){
 					clearTimeout(_cursor_timeout)
-					_cursor_timeout = null
 				}
+				_cursor_timeout = setTimeout(function(){
+						if(Math.abs(evt.clientX - _cursor_pos[0]) < CURSOR_SHOW_THRESHOLD 
+								|| Math.abs(evt.clientY - _cursor_pos[1]) < CURSOR_SHOW_THRESHOLD){
+
+							elem.css('cursor', 'none')
+						}
+					}, CURSOR_HIDE_TIMEOUT)
+
+
+			// cursor hidden -- if outside the threshold, show...
+			} else if(Math.abs(evt.clientX - _cursor_pos[0]) > CURSOR_SHOW_THRESHOLD 
+				|| Math.abs(evt.clientY - _cursor_pos[1]) > CURSOR_SHOW_THRESHOLD){
 
 				elem.css('cursor', '')
-
-			} else {
-				_cursor_timeout = setTimeout(function(){
-					if(Math.abs(evt.clientX - _cursor_pos[0]) < CURSOR_SHOW_THRESHOLD 
-							|| Math.abs(evt.clientY - _cursor_pos[1]) < CURSOR_SHOW_THRESHOLD){
-						elem.css('cursor', 'none')
-					}
-				}, CURSOR_HIDE_TIMEOUT)
 			}
 		})
 		.click(function(evt){
