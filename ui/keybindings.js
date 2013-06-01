@@ -46,8 +46,9 @@ var KEYBOARD_CONFIG = {
 	// 		their bindings priority...
 	'.help-mode': {
 		title: 'Help',
-		doc: 'NOTE: In this mode all other key bindings are disabled, except '+
-			'the ones explicitly defined here.',
+		doc: 'To enter this mode press <b>H</b> or <b>?</b>.<br>'+
+			'NOTE: In this mode all other key bindings are disabled, '+
+			'except the ones explicitly defined here.',
 		ignore: '*',
 
 		Esc: doc('Close help',
@@ -65,10 +66,19 @@ var KEYBOARD_CONFIG = {
 	//
 	'.slideshow-mode': {
 		title: 'Slideshow mode',
+		doc: 'To enter this mode press <b>S</b>.',
 
+		// XXX think about what else to disable here...
 		ignore: [
-			'Up', 'Down', 'Enter',
+			'Up', 'Down', 'Enter', 'R', 'L',
 			],
+
+		L: doc('Toggle slideshow looping',
+				function(){
+					SLIDESHOW_LOOP = SLIDESHOW_LOOP ? false : true
+					showStatus('Slideshow: looping', SLIDESHOW_LOOP ? 'enabled...' : 'disabled...')
+					return false
+				}),
 
 		Esc: doc('Exit/stop slideshow', 
 				function(){ 
@@ -84,6 +94,7 @@ var KEYBOARD_CONFIG = {
 	//
 	'.single-image-mode': {
 		title: 'Single image mode',
+		doc: 'To toggle between this and ribbon modes press <b>Enter</b>.',
 
 		// XXX this should only work on single image mode...
 		F: doc('Toggle view proportions', 
@@ -104,6 +115,7 @@ var KEYBOARD_CONFIG = {
 	//
 	'.marked-only-view:not(.single-image-mode)': {
 		title: 'Marked only view',
+		doc: 'To toggle this mode press <b>shift-F2</b>.',
 
 		Esc: doc('Exit marked only view', 
 				function(){ 

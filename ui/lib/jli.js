@@ -162,6 +162,7 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 		// pre callback...
 		if(callback_pre != null){
 			if(callback_pre.call(this, action) === false){
+				// XXX should we return action here???
 				return
 			}
 		}

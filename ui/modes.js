@@ -13,6 +13,12 @@
 var toggleSingleImageMode = createCSSClassToggler('.viewer', 
 		'single-image-mode',
 		function(action){
+			// prevent reiniting...
+			if(action == toggleSingleImageMode('?')){
+				return false
+			}
+		},
+		function(action){
 			var w = getScreenWidthInImages()
 
 			// single image mode...
@@ -59,10 +65,10 @@ var SLIDESHOW_INTERVAL = 3000
 var SLIDESHOW_LOOP = true
 var SLIDESHOW_DIRECTION = 'next'
 
-// TODO account for ribbon start/end (loop or stop slideshow)
 // TODO transitions...
 // TODO a real setup UI (instead of prompt)
-var toggleSlideShowMode = createCSSClassToggler('.viewer', '.slideshow-mode',
+var toggleSlideShowMode = createCSSClassToggler('.viewer', 
+		'.slideshow-mode',
 		function(action){
 			if(action == 'on'){
 				updateStatus('Slideshow...').show()
@@ -80,7 +86,7 @@ var toggleSlideShowMode = createCSSClassToggler('.viewer', '.slideshow-mode',
 
 				SLIDESHOW_INTERVAL = isNaN(interval) ? 3000 : interval*1000
 
-				showStatus('Slideshow: starting...')
+				showStatus('Slideshow: starting', SLIDESHOW_LOOP ? 'looped...' : 'unlooped...')
 
 				toggleSingleImageMode('on')
 				_slideshow_timer = setInterval(function(){
