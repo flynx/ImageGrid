@@ -22,10 +22,16 @@ var KEYBOARD_CONFIG = {
 	// 		select info text...
 	'.overlay-info:hover': {
 		title: 'Info overlay',
-		doc: 'NOTE: when the cursor is over the info overlay one can use '+
+		doc: 'Displayed on bottom of the screen if enabled (toggle with '+
+			'<b>I</b>) and/or inline, at bottom of and image when cursor '+
+			'is over it (only in ribbon mode, toggle with <b>alt-I</b>)<p>'+
+
+			'<p>NOTE: when the cursor is over the info overlay one can use '+
 			'Ctrl-A and Ctrl-D for info text selection, without affecting '+
 			'image selection/marks.',
+
 		ignore: [ 'A' ],
+
 		A: {
 			// NOTE: this is here only for documentation...
 			ctrl: doc('Select all'),
@@ -46,9 +52,11 @@ var KEYBOARD_CONFIG = {
 	// 		their bindings priority...
 	'.help-mode': {
 		title: 'Help',
-		doc: 'To enter this mode press <b>H</b> or <b>?</b>.<br>'+
-			'NOTE: In this mode all other key bindings are disabled, '+
+		doc: 'To enter this mode press <b>H</b> or <b>?</b>.'+
+
+			'<p>NOTE: In this mode all other key bindings are disabled, '+
 			'except the ones explicitly defined here.',
+
 		ignore: '*',
 
 		Esc: doc('Close help',
@@ -74,17 +82,22 @@ var KEYBOARD_CONFIG = {
 			],
 
 		L: doc('Toggle slideshow looping',
-				function(){
-					SLIDESHOW_LOOP = SLIDESHOW_LOOP ? false : true
-					showStatus('Slideshow: looping', SLIDESHOW_LOOP ? 'enabled...' : 'disabled...')
-					return false
-				}),
-
+			function(){
+				SLIDESHOW_LOOP = SLIDESHOW_LOOP ? false : true
+				showStatus('Slideshow: looping', SLIDESHOW_LOOP ? 'enabled...' : 'disabled...')
+				return false
+			}),
+		R: doc('Reverse slideshow direction',
+			function(){
+				SLIDESHOW_DIRECTION = SLIDESHOW_DIRECTION == 'next' ? 'prev' : 'next'
+				showStatus('Slideshow: direction:', SLIDESHOW_DIRECTION + '...')
+				return false
+			}),
 		Esc: doc('Exit/stop slideshow', 
-				function(){ 
-					toggleSlideShowMode('off') 
-					return false
-				}),
+			function(){ 
+				toggleSlideShowMode('off') 
+				return false
+			}),
 		S: 'Esc',
 		Q: 'Esc',
 	},
@@ -99,7 +112,8 @@ var KEYBOARD_CONFIG = {
 		// XXX this should only work on single image mode...
 		F: doc('Toggle view proportions', 
 			function(){ 
-				toggleImageProportions() 
+				var mode = toggleImageProportions() 
+				showStatus('Fitting image to:', mode + '...')
 				centerRibbons()
 			}),
 		Esc: doc('Exit single image mode', 
@@ -132,6 +146,20 @@ var KEYBOARD_CONFIG = {
 		title: 'Global',
 		doc: 'These key bindings work in most other modes.',
 
+		// Aliases...
+		'.next-screen': doc('Next screen',
+				function(){ 
+					event.preventDefault()
+					nextScreenImages()
+					centerRibbons()
+				}),
+		'.prev-screen': doc('Previous screen',
+				function(){ 
+					event.preventDefault()
+					prevScreenImages()
+					centerRibbons()
+				}),
+
 		// Navigation...
 		// XXX need to cancel the animation of the prev action...
 		Left: {
@@ -151,12 +179,7 @@ var KEYBOARD_CONFIG = {
 						prevImage() 
 						centerRibbons()
 					}),
-				ctrl: doc('Previous screen',
-					function(){ 
-						event.preventDefault()
-						prevScreenImages()
-						centerRibbons()
-					}),
+				ctrl: '.prev-screen',
 			},
 		Right: {
 				default: doc('Next image',
@@ -175,23 +198,23 @@ var KEYBOARD_CONFIG = {
 						nextImage() 
 						centerRibbons()
 					}),
-				ctrl: doc('Previous screen',
-					function(){ 
-						event.preventDefault()
-						nextScreenImages()
-						centerRibbons()
-					}),
+				ctrl: '.next-screen',
 			},
+
 		Space: {
 				default: 'Right',
 				shift: 'Left',
 				// screen-oriented movement...
 				ctrl: 'Right',
-				'ctrl+shift': 'Left',
+				'ctrl+shift': '.prev-screen',
 			},
 		Backspace: {
 				default: 'Left',
 				shift: 'Right',
+				// screen-oriented movement...
+				ctrl: 'Left',
+				// XXX this does not work...
+				'ctrl+shift': '.next-screen',
 			},
 		Home: doc('First image', 
 			function(){

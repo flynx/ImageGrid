@@ -121,6 +121,7 @@ var toggleTheme = createCSSClassToggler('.viewer',
 			'dark',
 			'light'
 		],
+		// XXX does this get called for default state (gray)???
 		function(action){
 			SETTINGS['theme'] = action
 		})
@@ -165,6 +166,7 @@ function toggleImageProportions(mode){
 
 	// square...
 	} else if(h != w || mode == 'square'){
+		mode = 'square'
 		var size = Math.min(w, h)
 		image.css({
 			width: size,
@@ -175,10 +177,10 @@ function toggleImageProportions(mode){
 		correctImageProportionsForRotation(image)
 
 		centerView(null, 'css')
-		return 'square'
 
 	// viewer size...
 	} else {
+		mode = 'viewer'
 		var viewer = $('.viewer')
 		var W = viewer.innerWidth()
 		var H = viewer.innerHeight()
@@ -193,8 +195,9 @@ function toggleImageProportions(mode){
 		correctImageProportionsForRotation(image)
 
 		centerView(null, 'css')
-		return 'viewer'
 	}
+
+	return 'mode'
 }
 
 
