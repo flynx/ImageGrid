@@ -105,9 +105,6 @@ $(function(){
 		})
 		*/
 
-	//setElementOrigin($('.ribbon-set'), 'top', 'left')
-
-
 	// we have an image file...
 	if((DATA_ATTR + '_BASE_URL') in localStorage){
 		BASE_URL = localStorage[DATA_ATTR + '_BASE_URL']
@@ -131,7 +128,7 @@ $(function(){
 
 	loading
 		.done(function(){
-			console.log('Loading settings...')
+			showStatus('Loading settings...')
 			loadLocalStorageSettings()
 
 			// XXX this will reload everything...

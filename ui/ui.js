@@ -6,7 +6,7 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-var CURSOR_SHOW_THRESHOLD = 10
+var CURSOR_SHOW_THRESHOLD = 20
 var CURSOR_HIDE_TIMEOUT = 1000
 
 
