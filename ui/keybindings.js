@@ -61,6 +61,25 @@ var KEYBOARD_CONFIG = {
 	},
 
 
+	// slideshow mode...
+	//
+	'.slideshow-mode': {
+		title: 'Slideshow mode',
+
+		ignore: [
+			'Up', 'Down', 'Enter',
+			],
+
+		Esc: doc('Exit/stop slideshow', 
+				function(){ 
+					toggleSlideShowMode('off') 
+					return false
+				}),
+		S: 'Esc',
+		Q: 'Esc',
+	},
+
+
 	// single image mode...
 	//
 	'.single-image-mode': {
@@ -243,6 +262,8 @@ var KEYBOARD_CONFIG = {
 		B: doc('Toggle theme', function(){ toggleTheme() }),
 
 		S: {
+				default: doc('Start slideshow', 
+					function(){ toggleSlideShowMode('on') }),
 				ctrl: doc('Save current state', 
 					function(){
 						event.preventDefault()

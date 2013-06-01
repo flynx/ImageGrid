@@ -55,6 +55,60 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer',
 		})
 
 
+var SLIDESHOW_INTERVAL = 3000
+var SLIDESHOW_LOOP = true
+var SLIDESHOW_DIRECTION = 'next'
+
+// TODO account for ribbon start/end (loop or stop slideshow)
+// TODO transitions...
+// TODO a real setup UI (instead of prompt)
+var toggleSlideShowMode = createCSSClassToggler('.viewer', '.slideshow-mode',
+		function(action){
+			if(action == 'on'){
+				updateStatus('Slideshow...').show()
+
+				// interval from user...
+				// XXX make this a real UI...
+				var interval = prompt('Slideshow interval (sec):', SLIDESHOW_INTERVAL/1000)
+
+				// user cancelled...
+				if(interval == null){
+					showStatus('Slideshow: cencelled...')
+					toggleSlideShowMode('off')
+					return 
+				}
+
+				SLIDESHOW_INTERVAL = isNaN(interval) ? 3000 : interval*1000
+
+				showStatus('Slideshow: starting...')
+
+				toggleSingleImageMode('on')
+				_slideshow_timer = setInterval(function(){
+					var cur = getImage()
+					// advance the image...
+					var next = SLIDESHOW_DIRECTION == 'next' ? nextImage() : prevImage()
+
+					// handle slideshow end...
+					if(getImageGID(cur) == getImageGID(next)){
+						if(SLIDESHOW_LOOP){
+							SLIDESHOW_DIRECTION == 'next' ? firstImage() : lastImage()
+						} else {
+							toggleSlideShowMode('off')
+							return 
+						}
+					}
+
+					// center and trigger load events...
+					centerRibbon()
+				}, SLIDESHOW_INTERVAL)
+
+			} else {
+				window._slideshow_timer != null && clearInterval(_slideshow_timer)
+				showStatus('Slideshow: stopped...')
+			}
+		})
+
+
 var toggleTheme = createCSSClassToggler('.viewer',
 		[
 			'gray',
