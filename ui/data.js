@@ -189,11 +189,11 @@ function imageDateCmp(a, b, get, data){
 function imageNameCmp(a, b, get, data){
 	data = data == null ? IMAGES : data
 	if(get == null){
-		a = data[b].path.split('/').pop()
-		b = data[a].path.split('/').pop()
+		a = data[a].path.split('/').pop()
+		b = data[b].path.split('/').pop()
 	} else {
-		a = data[get(b)].path.split('/').pop()
-		b = data[get(a)].path.split('/').pop()
+		a = data[get(a)].path.split('/').pop()
+		b = data[get(b)].path.split('/').pop()
 	}
 	if(a == b){
 		return 0
@@ -482,6 +482,18 @@ function getBestPreview(gid, size){
 		url: normalizePath(url),
 		size: preview_size
 	}
+}
+
+
+// Resort the ribbons by DATA.order and re-render...
+//
+// NOTE: due to how the format is structured, to sort the images one 
+// 		only needs to sort DATA.order and call this.
+function updateRibbonOrder(){
+	for(var i=0; i < DATA.ribbons.length; i++){
+		DATA.ribbons[i].sort(imageOrderCmp)
+	}
+	loadData()
 }
 
 
@@ -953,15 +965,32 @@ function loadSettings(){
 * Actions...
 */
 
-// XXX revise...
-function reverseImages(){
+function reverseImageOrder(){
 	DATA.order.reverse()
-	for(var i=0; i < DATA.ribbons.length; i++){
-		DATA.ribbons[i].reverse()
-	}
-	loadData()
+	updateRibbonOrder()
 }
 
+
+// NOTE: using imageOrderCmp as a cmp function here will yield odd 
+// 		results -- in-place sorting a list based on relative element 
+// 		positions within itself is fun ;)
+function sortImages(cmp, reverse){
+	cmp = cmp == null ? imageDateCmp : cmp
+	DATA.order.sort(cmp)
+	if(reverse){
+		DATA.order.reverse()
+	}
+	updateRibbonOrder()
+}
+
+
+// shirt-hands...
+function sortImagesByDate(reverse){
+	return sortImages(reverse)
+}
+function sortImagesByName(reverse){
+	return sortImages(imageNameCmp, reverse)
+}
 
 
 

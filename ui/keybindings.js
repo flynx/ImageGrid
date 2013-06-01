@@ -276,7 +276,7 @@ var KEYBOARD_CONFIG = {
 				default: doc('Rotate image right', 
 					function(){ rotateRight() }),
 				ctrl: doc('Reverse image order', 
-					function(){ reverseImages() }),
+					function(){ reverseImageOrder() }),
 			},
 
 
