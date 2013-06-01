@@ -351,8 +351,14 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  * 	- explicit key code, e.g. 65
  * 	- key name, if present in _SPECIAL_KEYS, e.g. Enter
  * 	- key char (uppercase), as is returned by String.fromCharCode(...) e.g. A
+ * 	- action -- any arbitrary string (recommended to start with a '.').
  *
  *
+ * NOTE: actions,the last case, are for alias referencing, it will never 
+ * 		match a real key, but will get resolved in alias searches.
+ * NOTE: it is recommended to start actions with a '.' to prevent them
+ * 		from being included as keys in the generated docs.
+ * 		see: buildKeybindingsHelp(...)
  * NOTE: to rest what to use as <key-def> use toKeyCode(..) / toKeyName(..).
  * NOTE: all fields are optional.
  * NOTE: if a handler explicitly returns false then that will break the 
@@ -429,6 +435,9 @@ function makeKeyboardHandler(keybindings, unhandled){
 *
 * 	<keys-spec> 	- list of key names.
 *
+*
+* NOTE: this will not add keys (key names) that start with a '.', these 
+* 		are actions, intended for aliasing.
 */
 function buildKeybindingsHelp(keybindings, shifted_keys){
 	shifted_keys = shifted_keys == null ? _SHIFT_KEYS : shifted_keys
@@ -493,7 +502,10 @@ function buildKeybindingsHelp(keybindings, shifted_keys){
 					key = shifted_keys[key]
 				}
 
-				keys.push((mod == '' || mod == 'default') ? key : (mod +'+'+ key))
+				// skip keys that start with a dot...
+				if(!/\..+/.test(key)){
+					keys.push((mod == '' || mod == 'default') ? key : (mod +'+'+ key))
+				}
 			}
 
 		}
