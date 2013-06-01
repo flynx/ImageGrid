@@ -950,6 +950,22 @@ function loadSettings(){
 
 
 /**********************************************************************
+* Actions...
+*/
+
+// XXX revise...
+function reverseImages(){
+	DATA.order.reverse()
+	for(var i=0; i < DATA.ribbons.length; i++){
+		DATA.ribbons[i].reverse()
+	}
+	loadData()
+}
+
+
+
+
+/**********************************************************************
 * Image caching...
 */
 

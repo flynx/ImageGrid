@@ -272,7 +272,12 @@ var KEYBOARD_CONFIG = {
 			},
 
 		L: doc('Rotate image left', function(){ rotateLeft() }),
-		R: doc('Rotate image right', function(){ rotateRight() }),
+		R: {
+				default: doc('Rotate image right', 
+					function(){ rotateRight() }),
+				ctrl: doc('Reverse image order', 
+					function(){ reverseImages() }),
+			},
 
 
 		// zooming...

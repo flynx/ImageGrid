@@ -74,8 +74,8 @@ Roadmap
 	
 
 
-[_] 22% Gen 3 current todo
-	[_] 45% High priority
+[_] 23% Gen 3 current todo
+	[_] 46% High priority
 		[_] BUG: aligning still sometimes gets off...
 		| ...after rotating a number of images
 		|
@@ -110,18 +110,18 @@ Roadmap
 		| positioning is OK but ribbons are not fully visible...
 		[_] ASAP: test on Android...
 		[_] empty view (no data) usable...
-		[_] propper system init (start w.o. any data)
-		[_] revise reporting scheme...
-		| showStatus(...) should be called uniformly, either at the source 
-		| or a specific reporting layer...
+		[_] proper system init (start w.o. any data)
 		[_] tweak image pre-caching size -- keep as many images cached as possible.
 		| might be good to always cache the smaller previews so as to make things
 		| look faster...
+		[_] image sorting (date/name/...)
+		[_] 50% Undo/Redo
+			[X] basic one step (revert to last save)
+			[_] push/pop state stack
 		[_] single ribbon mode
 		| should this have up/down navigation?
 		|
 		| something like showGidsAsRibbon(gids) would be generic and logical...
-		[_] image sorting (reverse/date/name/...)
 		[_] add ability to save/load ranges of images and the structures around them
 		| e.g.load image 100 to current ribbon -> will load 100 images
 		| for current ribbon and all the in between images from other
@@ -149,9 +149,6 @@ Roadmap
 			| 		a list or a member image (primary).
 			[_] collection
 			| make or add to existing collection
-		[_] 50% Undo/Redo
-			[X] basic one step (revert to last save)
-			[_] push/pop state stack
 		[_] 0% grouping / meta-image
 			[_] versions w. label image
 			| a set of images that is represented by one of the group
@@ -167,11 +164,15 @@ Roadmap
 		[_] 0% CSS
 			[_] cleanup
 			[_] split themes and layout
+		[_] revise reporting scheme...
+		| showStatus(...) should be called uniformly, either at the source 
+		| or a specific reporting layer...
 		[_] 0% manual ordering
 		[_] 0% tweak loader
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions
 			[_] caching config
+		[X] reverse ribbons...
 		[X] slideshow mode...
 		[X] default STUB image...
 		| or a loading animation..
