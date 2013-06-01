@@ -50,21 +50,18 @@ var KEYBOARD_CONFIG = {
 	//
 	// NOTE: need to keep all info modes before the rest so as to give 
 	// 		their bindings priority...
-	'.help-mode': {
-		title: 'Help',
-		doc: 'To enter this mode press <b>H</b> or <b>?</b>.'+
-
-			'<p>NOTE: In this mode all other key bindings are disabled, '+
+	'.drawer-mode': {
+		title: 'Drawer modes',
+		doc: 'NOTE: In this mode all other key bindings are disabled, '+
 			'except the ones explicitly defined here.',
 
 		ignore: '*',
 
-		Esc: doc('Close help',
+		Esc: doc('Close drawer',
 			function(){ 
 				toggleKeyboardHelp('off') 
 				return false
 			}),
-		H: 'Esc',
 		Q: 'Esc',
 		'?': 'Esc',
 	},
@@ -438,8 +435,13 @@ var KEYBOARD_CONFIG = {
 
 		'?': doc('Show keyboard bindings',
 			function(){ toggleKeyboardHelp() }),
-		H: '?',
 
+		F1: doc('Show help',
+			function(){ toggleHelp() }),
+		H: 'F1',
+
+		P: doc('Show options',
+			function(){ toggleOptionsUI() }),
 
 		/* testing the shift-key feature...
 		'~': {

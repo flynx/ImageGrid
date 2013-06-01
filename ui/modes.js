@@ -7,7 +7,106 @@
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 
-/*********************************************************************/
+
+
+/**********************************************************************
+* Utils...
+*/
+
+// NOTE: this expects a certain structure, this it is not generic...
+function makeDrawerToggler(contentRenderer, root, element_class, mode_class){
+	var toggler = createCSSClassToggler(root, mode_class + ' drawer-mode overlay',
+			function(action){
+				// XXX
+				var body = $(document.body)
+				var win = $(window)
+
+				// on...
+				if(action == 'on'){
+					// remove helo when we scroll to the top...
+					var scroll_handler = function(){
+						if(body.scrollTop() <= 0){
+							toggler('off')
+						}
+					}
+
+					// prepare and cleanup...
+					$(element_class).remove()
+					$(root).addClass('overlay')
+
+					// build the help...
+					var doc = contentRenderer()
+						.addClass(element_class.replace('.', ' '))
+						.on('click', function(){
+							event.stopImmediatePropagation()
+							return false
+						})
+						.css({
+							cursor: 'auto',
+						})
+						// XXX depends on body...
+						.appendTo(body)
+
+					// add exit by click...
+					// XXX depends on body...
+					body
+						.one('click', function(){
+							toggler('off')
+						})
+						.css({
+							cursor: 'hand',
+						})
+
+					// scroll to the help...
+					// NOTE: need to set the scroll handler AFTER we 
+					// 		scroll down, or it will be more of a 
+					// 		tease than a help...
+					var t = getRelativeVisualPosition($(root), doc).top
+					body
+						.animate({
+							scrollTop: Math.abs(t) - 40,
+						}, function(){
+							// XXX depends on window...
+							win
+								.on('scroll', scroll_handler)
+						})
+
+				// off...
+				} else {
+					// things to cleanup...
+					var _cleanup = function(){
+						$(element_class).remove()
+						$(root).removeClass('overlay')
+						// XXX depends on body...
+						body.click()
+						win.off('scroll', scroll_handler)
+					}
+
+					// animate things if we are not at the top...
+					if(body.scrollTop() > 0){
+							// XXX depends on body...
+							body
+								.css({
+									cursor: '',
+								})
+								.animate({
+									scrollTop: 0,
+								}, _cleanup) 
+
+					// if we are at the top do things fast...
+					} else {
+						_cleanup()
+					}
+				}
+			})
+	return toggler
+}
+
+
+
+/**********************************************************************
+* Modes
+*/
 
 // XXX make this save and restore settings...
 var toggleSingleImageMode = createCSSClassToggler('.viewer', 
@@ -201,6 +300,8 @@ function toggleImageProportions(mode){
 }
 
 
+/*
+// XXX make this generic, so as to add other UI renderers...
 var toggleKeyboardHelp = createCSSClassToggler('.viewer', 'help-mode overlay',
 		function(action){
 			var body = $(document.body)
@@ -278,6 +379,35 @@ var toggleKeyboardHelp = createCSSClassToggler('.viewer', 'help-mode overlay',
 				}
 			}
 		})
+*/
+
+
+
+var toggleHelp = makeDrawerToggler(
+		function(){
+			return $('<h1>Help</h1>')
+		}, 
+		'.viewer', 
+		'.general-help', 
+		'general-help-mode')
+
+
+var toggleKeyboardHelp = makeDrawerToggler(
+		function(){
+			return buildKeybindingsHelpHTML(KEYBOARD_CONFIG)
+		}, 
+		'.viewer', 
+		'.keyboard-help', 
+		'keyboard-help-mode')
+
+
+var toggleOptionsUI = makeDrawerToggler(
+		function(){
+			return $('<h1>Options</h1>')
+		}, 
+		'.viewer', 
+		'.options-ui', 
+		'options-mode')
 
 
 
