@@ -147,13 +147,13 @@ var KEYBOARD_CONFIG = {
 		doc: 'These key bindings work in most other modes.',
 
 		// Actions...
-		'.next-screen': doc('Next screen',
+		'next-screen': doc('Next screen',
 				function(){ 
 					event.preventDefault()
 					nextScreenImages()
 					centerRibbons()
 				}),
-		'.prev-screen': doc('Previous screen',
+		'prev-screen': doc('Previous screen',
 				function(){ 
 					event.preventDefault()
 					prevScreenImages()
@@ -179,7 +179,7 @@ var KEYBOARD_CONFIG = {
 						prevImage() 
 						centerRibbons()
 					}),
-				ctrl: '.prev-screen',
+				ctrl: 'prev-screen',
 			},
 		Right: {
 				default: doc('Next image',
@@ -198,7 +198,7 @@ var KEYBOARD_CONFIG = {
 						nextImage() 
 						centerRibbons()
 					}),
-				ctrl: '.next-screen',
+				ctrl: 'next-screen',
 			},
 
 		Space: {
@@ -206,14 +206,14 @@ var KEYBOARD_CONFIG = {
 				shift: 'Left',
 				// screen-oriented movement...
 				ctrl: 'Right',
-				'ctrl+shift': '.prev-screen',
+				'ctrl+shift': 'prev-screen',
 			},
 		Backspace: {
 				default: 'Left',
 				shift: 'Right',
 				// screen-oriented movement...
 				ctrl: 'Left',
-				'ctrl+shift': '.next-screen',
+				'ctrl+shift': 'next-screen',
 			},
 		Home: doc('First image', 
 			function(){

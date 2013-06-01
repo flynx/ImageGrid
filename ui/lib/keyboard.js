@@ -68,7 +68,7 @@ var _SHIFT_KEYS = {
 	1: '!',		2: '@',		3: '#',		4: '$',		5: '%',
 	6:'^',		7:'&',		8: '*',		9: '(',		0: ')',	
 
-	'[': '{',		']': '}i',		'\\': '|',
+	'[': '{',		']': '}',		'\\': '|',
 	';': ':',		'\'': '"',
 	',': '<',		'.': '>',		'/': '?'
 }
@@ -351,14 +351,11 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  * 	- explicit key code, e.g. 65
  * 	- key name, if present in _SPECIAL_KEYS, e.g. Enter
  * 	- key char (uppercase), as is returned by String.fromCharCode(...) e.g. A
- * 	- action -- any arbitrary string (recommended to start with a '.').
+ * 	- action -- any arbitrary string that is not in the above categories.
  *
  *
- * NOTE: actions,the last case, are for alias referencing, it will never 
- * 		match a real key, but will get resolved in alias searches.
- * NOTE: it is recommended to start actions with a '.' to prevent them
- * 		from being included as keys in the generated docs.
- * 		see: buildKeybindingsHelp(...)
+ * NOTE: actions,the last case, are used for alias referencing, they will
+ * 		never match a real key, but will get resolved in alias searches.
  * NOTE: to rest what to use as <key-def> use toKeyCode(..) / toKeyName(..).
  * NOTE: all fields are optional.
  * NOTE: if a handler explicitly returns false then that will break the 
@@ -375,6 +372,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  * 		it will only assign .doc attr and return the original function.
  *
  * XXX need an explicit way to prioritize modes...
+ * XXX will aliases get resolved if they are in a different mode??
  */
 function makeKeyboardHandler(keybindings, unhandled){
 	if(unhandled == null){
@@ -436,8 +434,7 @@ function makeKeyboardHandler(keybindings, unhandled){
 * 	<keys-spec> 	- list of key names.
 *
 *
-* NOTE: this will not add keys (key names) that start with a '.', these 
-* 		are actions, intended for aliasing.
+* NOTE: this will not add keys (key names) that are not explicit key names.
 */
 function buildKeybindingsHelp(keybindings, shifted_keys){
 	shifted_keys = shifted_keys == null ? _SHIFT_KEYS : shifted_keys
@@ -502,10 +499,14 @@ function buildKeybindingsHelp(keybindings, shifted_keys){
 					key = shifted_keys[key]
 				}
 
-				// skip keys that start with a dot...
-				if(!/\..+/.test(key)){
-					keys.push((mod == '' || mod == 'default') ? key : (mod +'+'+ key))
+				// skip anything that is not a key...
+				//if(key.length > 1 && (!(key in _KEY_CODES) || /\..+/.test(key))){
+				if(key.length > 1 && !(key in _KEY_CODES)){
+					console.log('### skipping:', key)
+					continue
 				}
+
+				keys.push((mod == '' || mod == 'default') ? key : (mod +'+'+ key))
 			}
 
 		}
