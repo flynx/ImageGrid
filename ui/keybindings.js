@@ -146,7 +146,7 @@ var KEYBOARD_CONFIG = {
 		title: 'Global',
 		doc: 'These key bindings work in most other modes.',
 
-		// Aliases...
+		// Actions...
 		'.next-screen': doc('Next screen',
 				function(){ 
 					event.preventDefault()
@@ -213,7 +213,6 @@ var KEYBOARD_CONFIG = {
 				shift: 'Right',
 				// screen-oriented movement...
 				ctrl: 'Left',
-				// XXX this does not work...
 				'ctrl+shift': '.next-screen',
 			},
 		Home: doc('First image', 

@@ -221,8 +221,12 @@ var toggleKeyboardHelp = createCSSClassToggler('.viewer', 'help-mode overlay',
 
 				// build the help...
 				var doc = buildKeybindingsHelpHTML(KEYBOARD_CONFIG)
+					.on('click', function(){
+						event.stopImmediatePropagation()
+						return false
+					})
 					.css({
-						cursor: 'hand',
+						cursor: 'auto',
 					})
 					.appendTo(body)
 
@@ -230,6 +234,9 @@ var toggleKeyboardHelp = createCSSClassToggler('.viewer', 'help-mode overlay',
 				body
 					.one('click', function(){
 						toggleKeyboardHelp('off')
+					})
+					.css({
+						cursor: 'hand',
 					})
 
 				// scroll to the help...
@@ -258,6 +265,9 @@ var toggleKeyboardHelp = createCSSClassToggler('.viewer', 'help-mode overlay',
 				// animate things if we are not at the top...
 				if(body.scrollTop() > 0){
 						body
+							.css({
+								cursor: '',
+							})
 							.animate({
 								scrollTop: 0,
 							}, _cleanup) 
