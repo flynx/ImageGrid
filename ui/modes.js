@@ -66,7 +66,13 @@ var toggleTheme = createCSSClassToggler('.viewer',
 		})
 
 
-var toggleImageInfo = createCSSClassToggler('.viewer', '.image-info-visible')
+var toggleImageInfo = createCSSClassToggler('.viewer',
+		'.image-info-visible',
+		function(action){
+			if(toggleSingleImageMode('?') == 'off'){
+				SETTINGS['image-info-ribbon-mode'] = action
+			}
+		})
 
 
 var toggleInlineImageInfo = createCSSClassToggler('.viewer', 

@@ -35,8 +35,11 @@
 
 // setup...
 $(function(){
-
+	// defaults...
 	toggleTheme('gray')
+	toggleImageInfo('on')
+
+	autoHideCursor($('.viewer'))
 
 	// NOTE: this is global so as to not to add any extra complexity to 
 	//		the internal workings...
@@ -44,10 +47,6 @@ $(function(){
 		.click(clickHandler)
 		// XXX for some reason this messes up alignment on initial view...
 		//.dblclick(dblClickHandler)
-
-
-	autoHideCursor($('.viewer'))
-
 
 	$(window)
 		.resize(function() {
