@@ -71,6 +71,20 @@ var BASE_URL = '.'
 
 var IMAGE_CACHE = []
 
+/*
+var UI_IMAGE_CACHE = []
+$.each([
+	'images/loding.gif',
+	'images/loding-90deg.gif',
+	'images/loding-180deg.gif',
+	'images/loding-270deg.gif'
+], function(i, e){ 
+	var img = new Image()
+	img.src = e
+	UI_IMAGE_CACHE.push(img)
+})
+*/
+
 
 
 /**********************************************************************
@@ -92,16 +106,6 @@ function makeDistanceCmp(start, get){
 
 
 // Make a cmp function to compare two gids by distance from gid.
-/*
-function makeImageGIDDistanceCmp(gid, order){
-	order = order == null ? DATA.order : order
-	var i = order.indexOf(gid)
-	return function(a, b){
-		return (Math.abs(i - order.indexOf(a)) 
-				- Math.abs(i - order.indexOf(b)))
-	}
-}
-*/
 function makeImageGIDDistanceCmp(gid, get, order){
 	order = order == null ? DATA.order : order
 	return makeDistanceCmp(gid, get == null ? 
@@ -117,6 +121,7 @@ function makeImageGIDDistanceCmp(gid, get, order){
 // NOTE: essentially this is a 2D distance compatison from gid...
 //
 // XXX make this faster...
+// XXX this is fun, but do we actually need this?
 function makeImageRibbonDistanceCmp(gid, get, data, images){
 	data = data == null ? DATA : data
 	images = images == null ? IMAGES : images
@@ -375,7 +380,7 @@ function normalizePath(url, base, mode){
 }
 
 
-// Same as getImageBefore, but uses gids and searches in DATA...
+// Same as getImageBefore(...), but uses gids and searches in DATA...
 //
 // NOTE: this uses it's own predicate...
 function getGIDBefore(gid, ribbon, search){
@@ -652,8 +657,7 @@ function updateImage(image, gid, size){
 			.attr('gid', JSON.stringify(gid))
 			.css({
 				// clear the old preview...
-				// XXX set a now loading animation here...
-				'background-image': 'none',
+				'background-image': '',
 			})
 	}
 	size = size == null ? getVisibleImageSize('max') : size
@@ -668,20 +672,18 @@ function updateImage(image, gid, size){
 	// preview...
 	var preview = getBestPreview(gid, size)
 
-	// pre-cache...
+	// pre-cache and load image...
 	// NOTE: make images load without a blackout..
 	var img = new Image()
-	img.src = preview.url
 	img.onload = function(){
 		image.css({
 				'background-image': 'url("'+ preview.url +'")',
 			})
 	}
+	img.src = preview.url
 
+	// main attrs...
 	image
-		//.css({
-		//	'background-image': 'url("'+ preview.url +'")',
-		//})
 		.attr({
 			order: DATA.order.indexOf(gid),
 			orientation: img_data.orientation == null ? 0 : img_data.orientation,
@@ -700,7 +702,7 @@ function updateImage(image, gid, size){
 
 var UPDATE_SORT_ENABLED = false
 // XXX for some reason the sync version appears to work faster...
-var UPDATE_SYNC = true
+var UPDATE_SYNC = false
 
 // Same as updateImage(...) but will update all images.
 //
@@ -952,7 +954,9 @@ function loadSettings(){
 */
 
 // NOTE: this will always overwrite the previous cache set for a ribbon...
-// XXX sort images in cache by closeness to current image...
+// NOTE: it appears that sorting images by priority before loading them
+// 		to cache has little or no affect on the order they are 
+// 		loaded/rendered...
 function preCacheRibbonImages(ribbon){
 	var i = getRibbonIndex(ribbon)
 	var size = getVisibleImageSize('max')
@@ -964,8 +968,6 @@ function preCacheRibbonImages(ribbon){
 
 	var gids = getImageGIDs(first, -cache_frame_size)
 				.concat(getImageGIDs(last, cache_frame_size))
-
-	// XXX sort gids...
 
 	var cache = []
 	IMAGE_CACHE[i] = cache
@@ -1167,7 +1169,7 @@ function loadFileImages(path, no_load_diffs, callback){
 			callback != null && callback()
 		})
 		.fail(function(){
-			updateErrorStatus('Loading: ' + path)
+			showErrorStatus('Loading: ' + path)
 		})
 }
 
@@ -1183,7 +1185,7 @@ function saveFileImages(name){
 	name = name == null ? normalizePath(CACHE_DIR +'/'+ Date.timeStamp()) : name
 
 	if(window.dumpJSON == null){
-		updateErrorStatus('Can\'t save to file.')
+		showErrorStatus('Can\'t save to file.')
 		return
 	}
 
@@ -1239,7 +1241,7 @@ function loadFileState(data_path, callback){
 			}
 		})
 		.fail(function(){
-			updateErrorStatus('Loading:', data_path)
+			showErrorStatus('Loading:', data_path)
 		})
 
 	return res
@@ -1293,7 +1295,7 @@ function loadDir(path, raw_load){
 	var files = listDir(path)
 
 	if(files == null){
-		updateErrorStatus('Path: ' + path)
+		showErrorStatus('Path: ' + path)
 		return
 	}
 
@@ -1336,7 +1338,7 @@ function loadDir(path, raw_load){
 		})
 
 		if(image_paths.length == 0){
-			updateErrorStatus('No images in:', orig_path)
+			showErrorStatus('No images in:', orig_path)
 			return 
 		}
 
@@ -1363,7 +1365,7 @@ function updateRibbonsFromFavDirs(){
 // NOTE: this will open the default editor/viewer.
 function openImage(){
 	if(window.runSystem == null){
-		updateErrorStatus('Can\'t run external programs.')
+		showErrorStatus('Can\'t run external programs.')
 		return 
 	}
 	// XXX if path is not present try and open the biggest preview...

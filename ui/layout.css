@@ -134,6 +134,24 @@ body {
 }
 
 
+/* default backgrounds */
+/* XXX not sure if we need these... */
+/*
+.image {
+	background-image: url(images/loading.gif);
+}
+.image[orientation="90"] {
+	background-image: url(images/loading-90deg.gif);
+}
+.image[orientation="180"] {
+	background-image: url(images/loading-180deg.gif);
+}
+.image[orientation="270"] {
+	background-image: url(images/loading-270deg.gif);
+}
+*/
+
+
 
 /***************************************************** Image marks ***/
 .marks-visible.viewer .marked.image:after {
