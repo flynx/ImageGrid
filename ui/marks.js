@@ -17,7 +17,7 @@
 // 		not exist, as there is no way to distinguish between the two 
 // 		situations the cleanup is optional...
 function loadMarkedOnlyData(cmp, no_cleanout_marks){
-	cmp = cmp == null ? imageDateCmp : cmp
+	cmp = cmp == null ? imageOrderCmp : cmp
 	var cur = DATA.current
 	var marked = MARKED.slice().sort(cmp)
 	// this will ignore any gid in marks that is not in IMAGES...
