@@ -84,8 +84,8 @@ Roadmap
 	
 
 
-[_] 24% Gen 3 current todo
-	[_] 49% High priority
+[_] 25% Gen 3 current todo
+	[_] 50% High priority
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame
@@ -123,11 +123,11 @@ Roadmap
 		[_] ASAP: test on Android...
 		[_] empty view (no data) usable...
 		[_] proper system init (start w.o. any data)
-		[_] 58% image sorting (date/name/...)
-			[_] 66% sort by:
+		[_] 75% image sorting (date/name/...)
+			[X] 100% sort by:
 				[X] date
 				[X] name
-				[_] manual shift left/right/position
+				[X] manual shift left/right/position
 				| position shift is mark and shift here..
 			[_] 50% Sort ui
 				[X] reverse
@@ -135,22 +135,12 @@ Roadmap
 		[_] 50% Undo/Redo
 			[X] basic one step (revert to last save)
 			[_] push/pop state stack
-		[_] single ribbon mode
-		| should this have up/down navigation?
-		|
-		| something like showGidsAsRibbon(gids) would be generic and logical...
-		[_] add ability to save/load ranges of images and the structures around them
-		| e.g.load image 100 to current ribbon -> will load 100 images
-		| for current ribbon and all the in between images from other
-		| ribbons above and below...
-		[_] build cache in background...
-		| this must be done while updating IMAGES live...
-		[_] 6% mark-based operations
+		[_] 26% mark-based operations
 			[_] 33% cropping selection
 				[X] marked
 				[_] by tag/collection
 				[_] by group
-			[_] shift up/down
+			[X] shift up/down
 			[_] tag
 			[_] group
 			| a group should behave as a single image but is 
@@ -166,6 +156,16 @@ Roadmap
 			| 		a list or a member image (primary).
 			[_] collection
 			| make or add to existing collection
+		[_] single ribbon mode
+		| should this have up/down navigation?
+		|
+		| something like showGidsAsRibbon(gids) would be generic and logical...
+		[_] add ability to save/load ranges of images and the structures around them
+		| e.g.load image 100 to current ribbon -> will load 100 images
+		| for current ribbon and all the in between images from other
+		| ribbons above and below...
+		[_] build cache in background...
+		| this must be done while updating IMAGES live...
 		[_] 0% grouping / meta-image
 			[_] versions w. label image
 			| a set of images that is represented by one of the group

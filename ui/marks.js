@@ -182,6 +182,78 @@ function toggleImageMarkBlock(image){
 }
 
 
+// XXX need to account for empty ribbons...
+function shiftMarkedImages(direction, mode, new_ribbon){
+	mode = mode == null ? 'ribbon' : mode
+	var cur = getRibbonIndex()
+
+	// ribbon only...
+	if(mode == 'ribbon'){
+		var ribbon = DATA.ribbons[cur]
+		// remove all the marked images form current ribbon...
+		var marked = $.map(MARKED, function(e){
+			var i = ribbon.indexOf(e)
+			if(i >= 0){
+				ribbon.splice(i, 1)
+				return e
+			}
+			return null
+		})
+
+	// shift all marked images...
+	} else {
+		var marked = MARKED.slice()
+		// remove all the marked images form all the ribbons...
+		$.each(DATA.ribbons, function(ribbon){
+			$.each(marked, function(e){
+				var i = ribbon.indexOf(e)
+				i >= 0 ? ribbon.splice(i, 1) : null
+			})
+		})
+	}
+
+	// if we are at the top or bottom ribbons we need to create a new 
+	// ribbon regardless...
+	if((cur == 0 && direction == 'prev') 
+			|| (cur == DATA.ribbons.length-1 && direction == 'next')){
+		new_ribbon = true
+	}
+
+	// add marked to new ribbon...
+	if(new_ribbon){
+		cur += direction == 'next' ? 1 : 0
+		DATA.ribbons.splice(cur, 0, marked)
+	
+	// add marked to existing ribbon...
+	} else {
+		cur += direction == 'next' ? 1 : -1
+		DATA.ribbons[cur] = DATA.ribbons[cur].concat(marked).sort(cmp)
+	}
+	
+	// remove empty ribbons...
+	DATA.ribbons = DATA.ribbons.filter(function(e){ return e.length > 0 ? true : false })
+
+	updateRibbonOrder()
+}
+function shiftMarkedImagesUp(mode, new_ribbon){
+	return shiftMarkedImages('prev', mode, new_ribbon)
+}
+function shiftMarkedImagesDown(mode, new_ribbon){
+	return shiftMarkedImages('next', mode, new_ribbon)
+}
+
+
+// XXX these are ribbon wise only (???)
+// XXX this on first step this must pack all marked images
+function horizontalShiftMarkedImages(direction){
+}
+function shiftMarkedImagesLeft(){
+	return shiftMarkedImages('prev')
+}
+function shiftMarkedImagesRight(){
+	return shiftMarkedImages('next')
+}
+
 
 
 /**********************************************************************
