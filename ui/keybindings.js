@@ -8,8 +8,31 @@
 
 var STEPS_TO_CHANGE_DIRECTION = 2
 var _STEPS_LEFT_TO_CHANGE_DIRECTION = STEPS_TO_CHANGE_DIRECTION
-// XXX code related to this needs testing...
 var DIRECTION = 'next'
+
+
+
+/*********************************************************************/
+
+function updateDirection(direction){
+	if(DIRECTION != direction){
+		_STEPS_LEFT_TO_CHANGE_DIRECTION--
+		if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
+			DIRECTION = direction
+			_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+		}
+	} else {
+			_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+	}
+}
+
+function directionImage(reverse){
+	if(DIRECTION == (reverse ? 'prev' : 'next')){
+		nextImage()
+	} else {
+		prevImage()
+	}
+}
 
 
 
@@ -106,7 +129,6 @@ var KEYBOARD_CONFIG = {
 		title: 'Single image mode',
 		doc: 'To toggle between this and ribbon modes press <b>Enter</b>.',
 
-		// XXX this should only work on single image mode...
 		F: doc('Toggle view proportions', 
 			function(){ 
 				var mode = toggleImageProportions() 
@@ -158,6 +180,14 @@ var KEYBOARD_CONFIG = {
 				}),
 
 
+		// Help and info...
+		'?': doc('Show keyboard bindings',
+			function(){ toggleKeyboardHelp() }),
+
+		F1: doc('Show help',
+			function(){ toggleHelp() }),
+		H: 'F1',
+
 		// Basics...
 		// XXX STUB: use a real path browser...
 		O: doc('Open a directory path',
@@ -178,15 +208,7 @@ var KEYBOARD_CONFIG = {
 					function(){ 
 						event.preventDefault()
 						// update direction...
-						if(DIRECTION != 'prev'){
-							_STEPS_LEFT_TO_CHANGE_DIRECTION--
-							if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
-								DIRECTION = 'prev'
-								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
-							}
-						} else {
-								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
-						}
+						updateDirection('prev')
 						prevImage() 
 						centerRibbons()
 					}),
@@ -197,15 +219,7 @@ var KEYBOARD_CONFIG = {
 					function(){ 
 						event.preventDefault()
 						// update direction...
-						if(DIRECTION != 'next'){
-							_STEPS_LEFT_TO_CHANGE_DIRECTION--
-							if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
-								DIRECTION = 'next'
-								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
-							}
-						} else {
-								_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
-						}
+						updateDirection('next')
 						nextImage() 
 						centerRibbons()
 					}),
@@ -354,11 +368,7 @@ var KEYBOARD_CONFIG = {
 				default: doc('Mark current image and advance',
 					function(){ 
 						toggleImageMark()
-						if(DIRECTION == 'next'){
-							nextImage()
-						} else {
-							prevImage()
-						}
+						directionImage()
 						if(getImage().filter(':visible').length == 0){
 							centerView(focusImage(getImageBefore()))
 						}
@@ -368,11 +378,7 @@ var KEYBOARD_CONFIG = {
 				shift: doc('Mark current image and return',
 					function(){
 						toggleImageMark()
-						if(DIRECTION == 'prev'){
-							nextImage()
-						} else {
-							prevImage()
-						}
+						directionImage(true)
 						if(getImage().filter(':visible').length == 0){
 							centerView(focusImage(getImageBefore()))
 						} 
@@ -382,10 +388,8 @@ var KEYBOARD_CONFIG = {
 			},
 		Ins: doc('Mark current image', function(){ toggleImageMark() }),
 		I: {
-				// XXX group this with other info stuff into a single on/off toggle...
 				default: doc('Toggle image info display',
 					function(){ toggleImageInfo() }),
-				// XXX STUB -- replace with a real info window...
 				shift: doc('Show current image info',
 					function(){ toggleImageInfoDrawer() }),
 				alt: doc('Toggle inline image info display',
@@ -431,13 +435,6 @@ var KEYBOARD_CONFIG = {
 		F4: doc('Open image in external software', openImage),
 		E: 'F4',
 
-
-		'?': doc('Show keyboard bindings',
-			function(){ toggleKeyboardHelp() }),
-
-		F1: doc('Show help',
-			function(){ toggleHelp() }),
-		H: 'F1',
 
 		P: doc('Show options',
 			function(){ toggleOptionsUI() }),
