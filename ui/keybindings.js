@@ -157,6 +157,20 @@ var KEYBOARD_CONFIG = {
 					centerRibbons()
 				}),
 
+
+		// Basics...
+		// XXX STUB: use a real path browser...
+		O: doc('Open a directory path',
+			function(){
+				var path = prompt('Path to open', BASE_URL)
+				if(path == null){
+					return
+				}
+				path = path.trim()
+				loadDir(path)
+			}),
+
+
 		// Navigation...
 		// XXX need to cancel the animation of the prev action...
 		Left: {
@@ -416,6 +430,7 @@ var KEYBOARD_CONFIG = {
 		F4: doc('Open image in external software', openImage),
 		E: 'F4',
 
+
 		'?': doc('Show keyboard bindings',
 			function(){ toggleKeyboardHelp() }),
 
@@ -425,6 +440,8 @@ var KEYBOARD_CONFIG = {
 
 		P: doc('Show options',
 			function(){ toggleOptionsUI() }),
+
+
 
 		/* testing the shift-key feature...
 		'~': {
