@@ -305,11 +305,10 @@ var KEYBOARD_CONFIG = {
 						shiftImageUpNewRibbon(null, DIRECTION) 
 						centerRibbons()
 					}),
-
-				// XXX
 				alt: doc('Shift marked images up',
 					function(){
-						// XXX
+						toggleMarkesView('on')
+						shiftMarkedImagesUp()
 					}),
 				'alt+shift': doc('Shift marked images up to empty ribbon',
 					function(){
@@ -335,11 +334,10 @@ var KEYBOARD_CONFIG = {
 						shiftImageDownNewRibbon(null, DIRECTION) 
 						centerRibbons()
 					}),
-
-				// XXX
 				alt: doc('Shift marked images down',
 					function(){
-						// XXX
+						toggleMarkesView('on')
+						shiftMarkedImagesDown()
 					}),
 				'alt+shift': doc('Shift marked images down to empty ribbon',
 					function(){
