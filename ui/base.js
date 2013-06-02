@@ -311,6 +311,7 @@ function updateInfo(elem, data, target){
 	elem
 		.addClass('overlay-info')
 		.html('')
+		.off()
 
 	if(typeof(data) == typeof('abc')){
 		elem.html(data)
@@ -391,6 +392,7 @@ function showErrorStatus(message){
 	message = Array.apply(Array, arguments)
 	message.splice(0, 0, 'Error:')
 	return updateStatus.apply(null, message)
+		.one('click', function(){ $(this).fadeOut() })
 		.stop()
 		.show()
 }

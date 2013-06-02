@@ -21,7 +21,9 @@
 <script src="modes.js"></script>
 <script src="marks.js"></script>
 <script src="data.js"></script>
+<script src="info.js"></script>
 <script src="ui.js"></script>
+<script src="setup.js"></script>
 <script src="keybindings.js"></script>
 
 
@@ -121,7 +123,7 @@ $(function(){
 			DATA = convertDataGen1(image_list)
 			DATA = DATA.data
 			IMAGES = DATA.images
-			loadData()
+			reloadViewer()
 		}
 		var loading = $.Deferred().resolve()
 	}

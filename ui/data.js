@@ -37,15 +37,17 @@ var STUB_IMAGE_DATA = {
 // Data format...
 var DATA = {
 	version: '2.0',
-	current: 0,
+
+	// current position, GID...
+	current: null,
+
 	// the ribbon cache...
 	// in the simplest form this is a list of lists of GIDs
-	ribbons: [
-		$(new Array(100)).map(function(i){return i}).toArray()
-	],
+	ribbons: [],
+
 	// flat ordered list of images in current context...
 	// in the simplest form this is a list of GIDs.
-	order: $(new Array(100)).map(function(i){return i}).toArray(),
+	order: [],
 
 	// this can be used to store the filename/path of the file containing 
 	// image data...
@@ -55,6 +57,7 @@ var DATA = {
 // the images object, this is indexed by image GID and contains all 
 // the needed data...
 var IMAGES = {}
+// list of image GIDs that have been updated...
 var IMAGES_UPDATED = []
 
 var MARKED = []
@@ -493,7 +496,7 @@ function updateRibbonOrder(){
 	for(var i=0; i < DATA.ribbons.length; i++){
 		DATA.ribbons[i].sort(imageOrderCmp)
 	}
-	loadData()
+	reloadViewer()
 }
 
 
@@ -509,7 +512,7 @@ function imagesFromUrls(lst){
 	$.each(lst, function(i, e){
 
 		// this is ugly but I'm bored so this is pretty...
-		var ii = i < 10			? '0000000' + i 
+		var ii =  i < 10		? '0000000' + i 
 				: i < 100		? '000000' + i
 				: i < 1000		? '00000' + i
 				: i < 10000		? '0000' + i
@@ -866,12 +869,14 @@ function loadImages(ref_gid, count, ribbon){
 }
 
 
+/*
 // NOTE: this is here for testing...
 function loadImagesAround(ref_gid, count, ribbon){
 	var ribbon_i = getRibbonIndex(ribbon)
 	var gid = getGIDBefore(ref_gid, ribbon_i)
 	return loadImages(ref_gid, count, ribbon).filter('[gid="'+JSON.stringify(gid)+'"]').click()
 }
+*/
 
 
 // Roll ribbon and load new images in the updated section.
@@ -918,7 +923,7 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 }
 
 
-function loadData(images_per_screen){
+function reloadViewer(images_per_screen){
 	var ribbons_set = $('.ribbon-set')
 	var current = DATA.current
 	// if no width is given, use the current or default...
@@ -957,39 +962,6 @@ function loadSettings(){
 		toggleImageInfo(SETTINGS['image-info-ribbon-mode'] == 'on' ? 'on' : 'off')
 	}
 	fitNImages(w)
-}
-
-
-
-/**********************************************************************
-* Actions...
-*/
-
-function reverseImageOrder(){
-	DATA.order.reverse()
-	updateRibbonOrder()
-}
-
-
-// NOTE: using imageOrderCmp as a cmp function here will yield odd 
-// 		results -- in-place sorting a list based on relative element 
-// 		positions within itself is fun ;)
-function sortImages(cmp, reverse){
-	cmp = cmp == null ? imageDateCmp : cmp
-	DATA.order.sort(cmp)
-	if(reverse){
-		DATA.order.reverse()
-	}
-	updateRibbonOrder()
-}
-
-
-// shirt-hands...
-function sortImagesByDate(reverse){
-	return sortImages(reverse)
-}
-function sortImagesByName(reverse){
-	return sortImages(imageNameCmp, reverse)
 }
 
 
@@ -1085,7 +1057,7 @@ function loadLocalStorageMarks(attr){
 		marked = '[]'
 	}
 	MARKED = JSON.parse(marked)
-	return loadData()
+	return reloadViewer()
 }
 function saveLocalStorageMarks(attr){
 	attr = attr == null ? DATA_ATTR : attr
@@ -1115,7 +1087,7 @@ function loadLocalStorage(attr){
 	BASE_URL = d.base_url
 	DATA = d.data
 	IMAGES = loadLocalStorageImages(attr)
-	return loadData()
+	return reloadViewer()
 }
 function saveLocalStorage(attr){
 	attr = attr == null ? DATA_ATTR : attr
@@ -1138,14 +1110,6 @@ if(window.CEF_dumpJSON != null){
 	var listDir = CEF_listDir
 	var removeFile = CEF_removeFile
 	var runSystem = CEF_runSystem
-
-// PhoneGap
-} else if(false) {
-	// XXX
-	var dumpJSON = null 
-	var listDir = null 
-	var removeFile = null
-	var runSystem = null
 }
 
 
@@ -1265,7 +1229,7 @@ function loadFileState(data_path, callback){
 				DATA = json.data
 				IMAGES = json.images
 				MARKED = []
-				loadData()
+				reloadViewer()
 
 			// version 2.0
 			} else if(json.version == '2.0') {
@@ -1274,7 +1238,7 @@ function loadFileState(data_path, callback){
 							normalizePath(DATA.image_file, base) 
 							: null)
 					.done(function(){
-						loadData()
+						reloadViewer()
 						callback != null && callback()
 						res.resolve()
 					})
@@ -1393,7 +1357,7 @@ function loadDir(path, raw_load){
 		DATA.ribbons = ribbonsFromFavDirs()
 		MARKED = []
 
-		loadData()
+		reloadViewer()
 		showStatus('Done.')
 	}
 }
@@ -1401,7 +1365,7 @@ function loadDir(path, raw_load){
 
 function updateRibbonsFromFavDirs(){
 	DATA.ribbons = ribbonsFromFavDirs(null, null, imageOrderCmp)
-	loadData()
+	reloadViewer()
 }
 
 
@@ -1420,377 +1384,35 @@ function openImage(){
 
 
 /**********************************************************************
-* Info & status...
+* Actions...
 */
 
-// XXX do we need a full rewrite here, or will it be better to just fill
-// 		the slots...
-function updateGlobalImageInfo(image){
-	image = image == null ? getImage() : $(image)
-	image = image.length == 0 ? getImage() : image
-
-	var elem = $('.global-image-info')
-	if(elem.length == 0){
-		elem = $('<div class="global-image-info"/>')
-	}
-
-	// no image no update...
-	if(image.length == 0){
-		return elem
-	}
-
-	var gid = getImageGID(image)
-	var r = getRibbonIndex(getRibbon(image))
-	var data = IMAGES[gid]
-	var date = new Date(data.ctime * 1000)
-
-	var meta = []
-
-	image.hasClass('marked') ? meta.push(
-			'<span class="shown">M</span>'+
-			'<span class="hidden"><b>M</b>arked</span>') : ''
-
-	var orientation = data.orientation
-	orientation = orientation == null ? 0 : orientation
-	orientation != 0 ? meta.push(
-			'<span class="shown">R</span>'+
-			'<span class="hidden"><b>R</b>otated: '+orientation+'&deg;CW</span>') : ''
-
-
-	meta = meta.join(', ') 
-	meta = meta != '' ? '( '+ meta +' )' : ''
-
-	return updateInfo(elem,
-			// path...
-			'<span class="expanding-text path">'+
-				'<span class="shown">'+
-					data.path.split('/').pop() +
-				'</span>'+
-				'<span class="hidden" style="position:absolute; background: black; padding: 3px; top: 0px; left: 0px; width: 100%; height: 100%">'+
-					normalizePath(data.path) +
-				'</span>'+ 
-			'</span> '+ 
-
-			// metadata...
-			'<span class="secondary expanding-text metadata">'+
-				meta + ' GID:'+
-				// XXX do we need to display a short gid?
-				//gid +
-				'<span class="shown">'+ 
-					gid.slice(gid.length-6) +
-				'</span>'+
-				'<span class="hidden"> '+
-					(gid.length >= 6 ? 
-					 	(gid.slice(0, gid.length-6) +'<b>'+ gid.slice(gid.length-6) +'</b>') 
-						: gid)+
-				'</span>'+
-			'</span> '+
-
-			// date...
-			'<span class="secondary expanding-text date">'+
-				'<span class="shown">TS:' + date.toShortDate() + '</span>'+
-				'<span class="hidden"><b>' + date.toString() + '</b></span>'+
-			'</span>'+
-
-			// position...
-			'<span class="float-right position">('+ 
-				(DATA.ribbons[r].indexOf(gid)+1) +'/'+ DATA.ribbons[r].length +
-			')<span/>')
+function reverseImageOrder(){
+	DATA.order.reverse()
+	updateRibbonOrder()
 }
 
 
-function updateInlineImageInfo(image){
-	image = image == null ? getImage() : $(image)
-	image = image.length == 0 ? getImage() : image
-
-	var elem = $('.inline-image-info')
-	if(elem.length == 0){
-		elem = $('<div class="inline-image-info"/>')
+// NOTE: using imageOrderCmp as a cmp function here will yield odd 
+// 		results -- in-place sorting a list based on relative element 
+// 		positions within itself is fun ;)
+function sortImages(cmp, reverse){
+	cmp = cmp == null ? imageDateCmp : cmp
+	DATA.order.sort(cmp)
+	if(reverse){
+		DATA.order.reverse()
 	}
-
-	// no image no update...
-	if(image.length == 0){
-		return elem
-	}
-
-
-	var gid = getImageGID(image)
-	var r = getRibbonIndex(getRibbon(image))
-	var data = IMAGES[gid]
-	var date = new Date(data.ctime * 1000)
-
-	var orientation = data.orientation
-	orientation = orientation == null ? 0 : orientation
-
-	return updateInfo(elem,
-			// name...
-			data.path.split('/').pop() +'<br>'+
-
-			// date...
-			'<span class="secondary expanding-text date">'+
-				//date.toShortDate() +
-				'<span class="shown">' + date.toShortDate() + '</span>'+
-				'<span class="hidden"><b>' + date.toString() + '</b></span>'+
-			'</span>'+
-			'',
-			image)
+	updateRibbonOrder()
 }
 
 
-function inlineImageInfoHoverHandler(evt){
-	var img = $(evt.target).closest('.image')
-	if(img.length > 0){
-		if(img.find('.inline-image-info:visible').length == 0){
-			updateInlineImageInfo(img)
-		}
-	}
+// shirt-hands...
+function sortImagesByDate(reverse){
+	return sortImages(reverse)
 }
-
-
-
-/**********************************************************************
-* Setup
-*/
-
-// Setup event handlers for data bindings...
-//
-// This does two jobs:
-// 	- maintain DATA state
-// 		- editor actions
-// 		- focus
-// 		- marking
-// 	- maintain view consistency
-// 		- centering/moving (roll)
-// 		- shifting (expand/contract)
-// 		- zooming (expand/contract)
-//
-function setupDataBindings(viewer){
-	viewer = viewer == null ? $('.viewer') : viewer
-	viewer
-		// XXX need to maintain the correct number of images per ribbon
-		// 		per zoom setting -- things get really odd when a ribbon 
-		// 		is smaller than it should be...
-		// XXX this does not get called on marking...
-		.on('preCenteringRibbon', function(evt, ribbon, image){
-			// NOTE: we do not need to worry about centering the ribbon 
-			//		here, just ball-park-load the correct batch...
-
-			var gid = getImageGID(image)
-			var r = getRibbonIndex(ribbon)
-			var gr = DATA.ribbons[r]
-			var img_before = getImageBefore(image, ribbon)
-			var gid_before = getGIDBefore(gid, r)
-			var screen_size = getScreenWidthInImages()
-			screen_size = screen_size < 1 ? 1 : screen_size
-			var l = ribbon.find('.image').length
-
-			// load images if we do a long jump -- start, end or some mark 
-			// outside of currently loaded section...
-			if(gid_before == null 
-					|| gid_before != getImageGID(img_before) 
-					// also load if we run out of images in the current ribbon,
-					// likely due to shifting...
-					|| ( gr.length > l 
-						&& l < screen_size * LOAD_SCREENS)){
-				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), ribbon)
-			} 
-
-			// roll the ribbon while we are advancing...
-			var head = img_before.prevAll('.image')
-			var tail = img_before.nextAll('.image')
-
-			// NOTE: if this is greater than the number of images currently 
-			//		loaded, it might lead to odd effects...
-			var frame_size = Math.ceil((screen_size * LOAD_SCREENS) / 2)
-			var threshold = Math.floor(frame_size / 2) 
-			threshold = threshold < 1 ? 1 : threshold
-
-			// do the loading...
-			// XXX need to expand/contract the ribbon depending on speed...
-			// 		...might also be a good idea to load smaller images 
-			// 		while scrolling really fast...
-			// XXX use extendRibbon, to both roll and expand/contract...
-			// XXX BUG: when rolling a ribbon, this will sometimes 
-			// 		misalign an image...
-			// 		...where exactly this happens in the ribbon depends on 
-			// 		its size and LOAD_SCREENS...
-			// 		NOTE: calling centerView() will fix this.
-			// 		...the problem is in centerRibbon
-			if(tail.length < threshold){
-				var rolled = rollImages(frame_size, ribbon)
-			}
-			if(head.length < threshold){
-				var rolled = rollImages(-frame_size, ribbon)
-			}
-		})
-
-
-		.on('shiftedImage', function(evt, image, from, to){
-			from = getRibbonIndex(from)
-			var ribbon = to
-			to = getRibbonIndex(to)
-
-			var gid = getImageGID(image)
-			var after = getGIDBefore(gid, to)
-
-			// remove the elem from the from ribbon...
-			var index = DATA.ribbons[from].indexOf(gid)
-			var img = DATA.ribbons[from].splice(index, 1)
-
-			// put the elem in the to ribbon...
-			index = after == null ? 0 : DATA.ribbons[to].indexOf(after) + 1
-			DATA.ribbons[to].splice(index, 0, gid)
-
-			// indicators...
-			flashIndicator(from < to ? 'next' : 'prev')
-		})
-
-
-		.on('createdRibbon', function(evt, index){
-			index = getRibbonIndex(index)
-			DATA.ribbons.splice(index, 0, [])
-		})
-		.on('removedRibbon', function(evt, index){
-			DATA.ribbons.splice(index, 1)
-		})
-
-
-		.on('requestedFirstImage', function(evt, ribbon){
-			var r = getRibbonIndex(ribbon)
-			var gr = DATA.ribbons[r]
-			rollImages(-gr.length, ribbon)
-		})
-		.on('requestedLastImage', function(evt, ribbon){
-			var r = getRibbonIndex(ribbon)
-			var gr = DATA.ribbons[r]
-			rollImages(gr.length, ribbon)
-		})
-
-
-		.on('fittingImages', function(evt, n){
-			// load correct amount of images in each ribbon!!!
-			var screen_size = getScreenWidthInImages()
-			var gid = getImageGID()
-			$('.ribbon').each(function(){
-				var r = $(this)
-				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), r)
-			})
-			centerView(null, 'css')
-
-			// update settings...
-			if(toggleSingleImageMode('?') == 'on'){
-				SETTINGS['screen-images-single-image-mode'] = n
-			} else {
-				SETTINGS['screen-images-ribbon-mode'] = n
-			}
-
-			// update previews...
-			updateImages()
-		})
-
-
-		.on('focusingImage', function(evt, image){
-			image = $(image)
-			DATA.current = getImageGID(image)
-		})
-
-
-		// basic image manipulation...
-		.on('rotatingLeft rotatingRight', function(evt, image){
-			$(image).each(function(i, e){
-				var img = $(this)
-				var gid = getImageGID(img) 
-				var orientation = img.attr('orientation')
-
-				// change the image orientation status and add to 
-				// updated list...
-				IMAGES[gid].orientation = orientation
-				if(IMAGES_UPDATED.indexOf(gid) == -1){
-					IMAGES_UPDATED.push(gid)
-				}
-			})
-		})
-
-
-		// marks...
-		// XXX toggle marking a block is not yet supported...
-		.on('togglingMark', function(evt, img, action){
-			var gid = getImageGID(img) 
-
-			// add marked image to list...
-			if(action == 'on'){
-				MARKED.push(gid)
-
-			// remove marked image from list...
-			} else {
-				MARKED.splice(MARKED.indexOf(gid), 1)
-			}
-		})
-		.on('removeingRibbonMarks', function(evt, ribbon){
-			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKED.indexOf(e)
-				if(i != -1){
-					MARKED.splice(i, 1)
-				}
-			})
-		})
-		.on('removeingAllMarks', function(evt){
-			MARKED.splice(0, MARKED.length)
-		})
-		.on('markingRibbon', function(evt, ribbon){
-			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKED.indexOf(e)
-				if(i == -1){
-					MARKED.push(e)
-				}
-			})
-		})
-		.on('markingAll', function(evt){
-			MARKED.splice(0, MARKED.length)
-			MARKED.concat(DATA.order)
-		})
-		.on('invertingMarks', function(evt, ribbon){
-			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKED.indexOf(e)
-				if(i == -1){
-					MARKED.push(e)
-				} else {
-					MARKED.splice(i, 1)
-				}
-			})
-		})
-
-
-		// caching...
-		.on('reloadedRibbon updatedRibbon', function(evt, ribbon){
-
-			window.DEBUG && console.log('>>> (ribbon:', getRibbonIndex(ribbon), ') Updating cache...')
-
-			preCacheRibbonImages(ribbon)
-		})
-
-		// info...
-		.on([
-				'focusingImage',
-				'rotatingLeft',
-				'rotateingRight',
-				'togglingMark'
-			].join(' '), 
-			function(evt, image){
-				updateGlobalImageInfo($(image))
-			})
-		.on([
-				'removeingAllMarks',
-				'removeingRibbonMarks',
-				'markingAll',
-				'markingRibbon',
-				'invertingMarks'
-			].join(' '), 
-			function(){
-				updateGlobalImageInfo()
-			})
+function sortImagesByName(reverse){
+	return sortImages(imageNameCmp, reverse)
 }
-
 
 
 

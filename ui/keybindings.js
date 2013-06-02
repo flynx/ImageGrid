@@ -287,7 +287,10 @@ var KEYBOARD_CONFIG = {
 				default: doc('Rotate image right', 
 					function(){ rotateRight() }),
 				ctrl: doc('Reverse image order', 
-					function(){ reverseImageOrder() }),
+					function(){ 
+						event.preventDefault()
+						reverseImageOrder() 
+					}),
 			},
 
 
@@ -375,11 +378,9 @@ var KEYBOARD_CONFIG = {
 						} 
 						centerRibbons()
 					}),
-				ctrl: doc('Mark current image',
-					function(){ 
-						var action = toggleImageMark() 
-					}),
+				ctrl: 'Ins',
 			},
+		Ins: doc('Mark current image', function(){ toggleImageMark() }),
 		I: {
 				// XXX group this with other info stuff into a single on/off toggle...
 				default: doc('Toggle image info display',

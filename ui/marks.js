@@ -44,7 +44,7 @@ function loadMarkedOnlyData(cmp, no_cleanout_marks){
 		order: DATA.order,
 	}
 	DATA.current = getGIDBefore(cur, 0)
-	loadData()
+	reloadViewer()
 	toggleMarkesView('off')
 	return DATA
 }
@@ -53,7 +53,7 @@ function loadMarkedOnlyData(cmp, no_cleanout_marks){
 // XXX name this in a better way...
 function loadAllImages(){
 	DATA = ALL_DATA
-	loadData()
+	reloadViewer()
 	return DATA
 }
 
