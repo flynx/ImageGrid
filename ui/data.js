@@ -1141,7 +1141,7 @@ function loadFileImages(path, no_load_diffs, callback){
 		}).sort().reverse()[0]
 		path = path == null ? 'images.json' : path
 
-		updateStatus('Loading: ' + path)
+		updateStatus('Loading:', path)
 
 		path = base +'/'+ path
 	
@@ -1344,7 +1344,7 @@ function loadDir(path, raw_load){
 
 	// load the found data file...
 	if(data != null){
-		updateStatus('Loading: ', data)
+		updateStatus('Loading:', data)
 
 		data = path + '/' + data
 
