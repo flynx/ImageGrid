@@ -1,6 +1,8 @@
 Roadmap
-	[_] 43% Pre-Alpha - limited preview
-		[_] 46% UI
+	[_] 40% Pre-Alpha - limited preview
+		[_] 31% UI
+			[_] 0% Tablet-specific
+				[_] screen buttons
 			[_] 60% modes
 				[_] cropped mode
 				| show only selected images
@@ -84,8 +86,8 @@ Roadmap
 	
 
 
-[_] 25% Gen 3 current todo
-	[_] 50% High priority
+[_] 24% Gen 3 current todo
+	[_] 49% High priority
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame
@@ -121,6 +123,8 @@ Roadmap
 		[_] BUG: changing window size in single image modes messes things up...
 		| until we cycle to ribbon mode and back...
 		[_] ASAP: test on Android...
+		[_] 0% Tablet UI
+			[_] screen buttons
 		[_] empty view (no data) usable...
 		[_] proper system init (start w.o. any data)
 		[_] 75% image sorting (date/name/...)
