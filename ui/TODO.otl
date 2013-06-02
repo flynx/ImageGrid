@@ -74,8 +74,8 @@ Roadmap
 	
 
 
-[_] 23% Gen 3 current todo
-	[_] 46% High priority
+[_] 24% Gen 3 current todo
+	[_] 49% High priority
 		[_] BUG: aligning still sometimes gets off...
 		| ...after rotating a number of images
 		|
@@ -111,10 +111,15 @@ Roadmap
 		[_] ASAP: test on Android...
 		[_] empty view (no data) usable...
 		[_] proper system init (start w.o. any data)
-		[_] tweak image pre-caching size -- keep as many images cached as possible.
-		| might be good to always cache the smaller previews so as to make things
-		| look faster...
-		[_] image sorting (date/name/...)
+		[_] 58% image sorting (date/name/...)
+			[_] 66% sort by:
+				[X] date
+				[X] name
+				[_] manual shift left/right/position
+				| position shift is mark and shift here..
+			[_] 50% Sort ui
+				[X] reverse
+				[_] select sort method
 		[_] 50% Undo/Redo
 			[X] basic one step (revert to last save)
 			[_] push/pop state stack
@@ -164,10 +169,12 @@ Roadmap
 		[_] 0% CSS
 			[_] cleanup
 			[_] split themes and layout
+		[_] tweak image pre-caching size -- keep as many images cached as possible.
+		| might be good to always cache the smaller previews so as to make things
+		| look faster...
 		[_] revise reporting scheme...
 		| showStatus(...) should be called uniformly, either at the source 
 		| or a specific reporting layer...
-		[_] 0% manual ordering
 		[_] 0% tweak loader
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions

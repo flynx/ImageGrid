@@ -302,6 +302,8 @@ function toggleImageProportions(mode){
 
 var toggleHelp = makeDrawerToggler(
 		function(){
+			// XXX populate...
+			// 		...load from file.
 			return $('<h1>Help</h1>')
 		}, 
 		'.viewer', 
@@ -320,6 +322,7 @@ var toggleKeyboardHelp = makeDrawerToggler(
 
 var toggleOptionsUI = makeDrawerToggler(
 		function(){
+			// XXX populate...
 			return $('<h1>Options</h1>')
 		}, 
 		'.viewer', 
