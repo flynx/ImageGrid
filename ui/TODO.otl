@@ -1,5 +1,5 @@
 Roadmap
-	[_] 41% Pre-Alpha - limited preview
+	[_] 43% Pre-Alpha - limited preview
 		[_] 46% UI
 			[_] 60% modes
 				[_] cropped mode
@@ -20,14 +20,14 @@ Roadmap
 			[X] ribbon next/prev
 			[X] screen next/prev
 			[_] marks next/prev
-		[_] 34% editing
+		[_] 41% editing
 			[_] 33% ribbon
 				[_] merge up/down
 				[_] flatten
 				[X] sort
-			[_] 57% image
+			[_] 71% image
 				[X] shift up/down
-				[_] shift left/right
+				[X] shift left/right
 				[X] mark/unmark (selection)
 				[X] rotate left/right
 				[_] crop
@@ -35,10 +35,10 @@ Roadmap
 					[_] tag
 					[_] note
 				[X] open with external software
-			[_] 14% marked (selected) set
+			[_] 28% marked (selected) set
 				[X] crop (marked only mode)
 				[_] tag
-				[_] shift up/down
+				[X] shift up/down
 				[_] shift left/right
 				[_] group
 				[_] note
