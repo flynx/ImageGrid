@@ -1,5 +1,5 @@
 Roadmap
-	[_] 48% Pre-Alpha - limited preview
+	[_] 41% Pre-Alpha - limited preview
 		[_] 46% UI
 			[_] 60% modes
 				[_] cropped mode
@@ -68,6 +68,16 @@ Roadmap
 				[X] load
 				[_] save
 				[_] update
+		[_] 14% build targets
+			[X] 100% Windows
+				[X] CEF (Python/...)
+				[X] AppJS
+			[_] MacOS X (AppJS)
+			[_] Android (PhoneGap)
+			[_] iOS (PhoneGap)
+			[_] Windows 8 (Native?)
+			[_] Linux (AppJS)
+			[_] Windows Phone 8 (PhoneGap/Native)
 	[_] 0% Alpha - limited preview
 	[_] 0% Beta - public?
 	[_] 0% 1.0 - public
@@ -76,28 +86,6 @@ Roadmap
 
 [_] 24% Gen 3 current todo
 	[_] 49% High priority
-		[_] BUG: aligning still sometimes gets off...
-		| ...after rotating a number of images
-		|
-		| happens when:
-		| 	- getScreenWidthInImages() < 2
-		| 	- looking through images in one direction and back, some get misaligned
-		| 		...this is stable behaviour by centerRibbon(...), 
-		| 		calling it again will not fix this.
-		| 		moving next/prev will fix the issue until it comes back again
-		| 	- affected by LOAD_SCREENS and number of images in ribbon
-		| 		current figures:
-		| 			Ribbon: 18
-		| 			Position going forward: 4
-		| 			Position going back: 1
-		| 			LOAD_SCREENS: 6
-		| 	NOTE: changing LOAD_SCREENS moves the affected positions.
-		| 	NOTE: had a similar bug where some images still kept their 
-		| 			prior sizing after recycling...
-		| 			...check if centerRibbon(...) and correctImageProportionsForRotation(...)
-		| 			are called in right sequence...
-		[_] BUG: changing window size in single image modes messes things up...
-		| until we cycle to ribbon mode and back...
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame
@@ -106,8 +94,32 @@ Roadmap
 		|
 		| 	$('[order='+$('.current.image').attr('order')+']').length
 		|
+			[_] BUG: aligning still sometimes gets off...
+			| ...after rotating a number of images
+			|
+			| XXX this is likely a side effect of loading duplicates...
+			|
+			| happens when:
+			| 	- getScreenWidthInImages() < 2
+			| 	- looking through images in one direction and back, some get misaligned
+			| 		...this is stable behaviour by centerRibbon(...), 
+			| 		calling it again will not fix this.
+			| 		moving next/prev will fix the issue until it comes back again
+			| 	- affected by LOAD_SCREENS and number of images in ribbon
+			| 		current figures:
+			| 			Ribbon: 18
+			| 			Position going forward: 4
+			| 			Position going back: 1
+			| 			LOAD_SCREENS: 6
+			| 	NOTE: changing LOAD_SCREENS moves the affected positions.
+			| 	NOTE: had a similar bug where some images still kept their 
+			| 			prior sizing after recycling...
+			| 			...check if centerRibbon(...) and correctImageProportionsForRotation(...)
+			| 			are called in right sequence...
 		[_] BUG: jumping screen images does not load the adjacent ribbons...
 		| positioning is OK but ribbons are not fully visible...
+		[_] BUG: changing window size in single image modes messes things up...
+		| until we cycle to ribbon mode and back...
 		[_] ASAP: test on Android...
 		[_] empty view (no data) usable...
 		[_] proper system init (start w.o. any data)
