@@ -372,24 +372,7 @@ var KEYBOARD_CONFIG = {
 					function(){ toggleImageInfo() }),
 				// XXX STUB -- replace with a real info window...
 				shift: doc('Show current image info',
-					function(){
-						var gid = getImageGID(getImage())
-						var r = getRibbonIndex(getRibbon())
-						var data = IMAGES[gid]
-						var orientation = data.orientation
-						orientation = orientation == null ? 0 : orientation
-						var order = DATA.order.indexOf(gid)
-						var name = data.path.split('/').pop()
-						alert('"'+ name +'"\n'+
-								'Orientation: '+ orientation +'deg\n'+
-								'GID: '+ gid +'\n'+
-								'Path: "'+ data.path +'"\n'+
-								'Order: '+ order +'\n'+
-								'Position (ribbon): '+ DATA.ribbons[r].indexOf(gid) +
-									'/'+ DATA.ribbons[r].length +'\n'+
-								'Position (global): '+ order +'/'+ DATA.order.length +'\n'+
-								'')
-					}),
+					function(){ toggleImageInfoDrawer() }),
 				alt: doc('Toggle inline image info display',
 					function(){
 						toggleInlineImageInfo()

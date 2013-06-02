@@ -14,8 +14,10 @@
 */
 
 // NOTE: this expects a certain structure, this it is not generic...
-function makeDrawerToggler(contentRenderer, root, element_class, mode_class){
-	var toggler = createCSSClassToggler(root, mode_class + ' drawer-mode overlay',
+//function makeDrawerToggler(contentRenderer, root, element_class, mode_class){
+function makeDrawerToggler(contentRenderer, root){
+	var element_class = '.drawer-block'
+	var toggler = createCSSClassToggler(root, 'drawer-mode overlay',
 			function(action){
 				// XXX
 				var body = $(document.body)
@@ -305,30 +307,46 @@ var toggleHelp = makeDrawerToggler(
 			// XXX populate...
 			// 		...load from file.
 			return $('<h1>Help</h1>')
-		}, 
-		'.viewer', 
-		'.general-help', 
-		'general-help-mode')
+		}, '.viewer')
 
 
 var toggleKeyboardHelp = makeDrawerToggler(
 		function(){
 			return buildKeybindingsHelpHTML(KEYBOARD_CONFIG)
-		}, 
-		'.viewer', 
-		'.keyboard-help', 
-		'keyboard-help-mode')
+		}, '.viewer')
 
 
 var toggleOptionsUI = makeDrawerToggler(
 		function(){
 			// XXX populate...
 			return $('<h1>Options</h1>')
-		}, 
-		'.viewer', 
-		'.options-ui', 
-		'options-mode')
+		}, '.viewer')
 
+
+// XXX needs styling and cleanup...
+// XXX add a preview...
+var toggleImageInfoDrawer = makeDrawerToggler(
+		function(){
+			var gid = getImageGID(getImage())
+			var r = getRibbonIndex(getRibbon())
+			var data = IMAGES[gid]
+			var orientation = data.orientation
+			orientation = orientation == null ? 0 : orientation
+			var order = DATA.order.indexOf(gid)
+			var name = data.path.split('/').pop()
+
+			return $('<div>'+
+					'<h1>"'+ name +'"</h1>'+
+
+					'Orientation: '+ orientation +'deg<br>'+
+					'GID: '+ gid +'<br>'+
+					'Path: "'+ data.path +'"<br>'+
+					'Order: '+ order +'<br>'+
+					'Position (ribbon): '+ (DATA.ribbons[r].indexOf(gid)+1) +
+						'/'+ DATA.ribbons[r].length +'<br>'+
+					'Position (global): '+ (order+1) +'/'+ DATA.order.length +'<br>'+
+				'</div>')
+		}, '.viewer')
 
 
 
