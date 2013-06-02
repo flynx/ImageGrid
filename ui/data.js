@@ -88,6 +88,10 @@ $.each([
 })
 */
 
+var UPDATE_SORT_ENABLED = false
+// XXX for some reason the sync version appears to work faster...
+var UPDATE_SYNC = false
+
 
 
 /**********************************************************************
@@ -492,11 +496,13 @@ function getBestPreview(gid, size){
 //
 // NOTE: due to how the format is structured, to sort the images one 
 // 		only needs to sort DATA.order and call this.
-function updateRibbonOrder(){
+function updateRibbonOrder(no_reload_viewer){
 	for(var i=0; i < DATA.ribbons.length; i++){
 		DATA.ribbons[i].sort(imageOrderCmp)
 	}
-	reloadViewer()
+	if(!no_reload_viewer){
+		reloadViewer()
+	}
 }
 
 
@@ -505,6 +511,8 @@ function updateRibbonOrder(){
 * Constructors
 */
 
+// Construct an IMAGES object from list of urls.
+//
 // NOTE: this depends on that the base dir contains ALL the images...
 function imagesFromUrls(lst){
 	var res = {}
@@ -537,6 +545,9 @@ function imagesFromUrls(lst){
 }
 
 
+// Construct a DATA object from a list of images
+//
+// NOTE: this will create a single ribbon...
 function dataFromImages(images){
 	var gids = Object.keys(images).sort()
 
@@ -552,6 +563,8 @@ function dataFromImages(images){
 }
 
 
+// Construct a ribbons hierarchy from the fav dirs structure
+//
 // NOTE: this depends on listDir(...)
 // NOTE: this assumes that images contain ALL the images...
 function ribbonsFromFavDirs(path, images, cmp){
@@ -659,6 +672,7 @@ function convertDataGen1(data, cmp){
 * Loaders
 */
 
+// Update an image element
 function updateImage(image, gid, size){
 	image = $(image)
 	var title = ''
@@ -715,10 +729,6 @@ function updateImage(image, gid, size){
 }
 
 
-var UPDATE_SORT_ENABLED = false
-// XXX for some reason the sync version appears to work faster...
-var UPDATE_SYNC = false
-
 // Same as updateImage(...) but will update all images.
 //
 // NOTE: this will prioritize images by distance from current image...
@@ -762,6 +772,7 @@ function updateImages(size, cmp){
 
 	return deferred
 }
+
 
 /* XXX for some very odd reason this is slower that the monster above...
 function updateImages(size){
@@ -923,6 +934,7 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 }
 
 
+// Reload the viewer using the current DATA and IMAGES objects
 function reloadViewer(images_per_screen){
 	var ribbons_set = $('.ribbon-set')
 	var current = DATA.current
@@ -950,6 +962,7 @@ function reloadViewer(images_per_screen){
 }
 
 
+// Apply the current SETTINGS to current viewer
 function loadSettings(){
 	toggleTheme(SETTINGS['theme'])
 
@@ -1293,6 +1306,7 @@ function saveFileState(name, no_normalize_path){
 // 	2) find a cache directory and a data file there
 // 	3) list the images and load them as-is
 //
+// XXX this will not load the marks file...
 // XXX make sure that save works...
 function loadDir(path, raw_load){
 	path = normalizePath(path)
@@ -1304,7 +1318,7 @@ function loadDir(path, raw_load){
 	var files = listDir(path)
 
 	if(files == null){
-		showErrorStatus('Path: ' + path)
+		showErrorStatus('No files in path: ' + path)
 		return
 	}
 
@@ -1333,6 +1347,10 @@ function loadDir(path, raw_load){
 		updateStatus('Loading: ', data)
 
 		data = path + '/' + data
+
+		// marks...
+		// XXX see if there's a marks file...
+		MARKED = []
 
 		return loadFileState(data)
 			.always(function(){
@@ -1369,6 +1387,11 @@ function updateRibbonsFromFavDirs(){
 }
 
 
+
+/**********************************************************************
+* Actions...
+*/
+
 // Open image in an external editor/viewer
 //
 // NOTE: this will open the default editor/viewer.
@@ -1381,11 +1404,6 @@ function openImage(){
 	return runSystem(normalizePath(IMAGES[getImageGID()].path, BASE_URL))
 }
 
-
-
-/**********************************************************************
-* Actions...
-*/
 
 function reverseImageOrder(){
 	DATA.order.reverse()
@@ -1406,12 +1424,60 @@ function sortImages(cmp, reverse){
 }
 
 
-// shirt-hands...
+// shorthands...
 function sortImagesByDate(reverse){
 	return sortImages(reverse)
 }
 function sortImagesByName(reverse){
 	return sortImages(imageNameCmp, reverse)
+}
+
+
+// shifting images...
+// NOTE: this a bit more complicated than simply shifting an image 
+// 		left/right the DATA.order, we have to put it before or after
+// 		the prev/next image...
+function horizontalShiftImage(image, direction){
+	image = image == null ? getImage() : $(image)
+	var gid = getImageGID(image)
+	var r = getRibbonIndex(image)
+	var ri = DATA.ribbons[r].indexOf(gid)
+
+	// the image we are going to move relative to...
+	var target = DATA.ribbons[r][ri + (direction == 'next' ? 1 : -1)]
+	// we can hit the end or start of the ribbon...
+	if(target == null){
+		return image
+	}
+
+	var order = DATA.order
+	var i = order.indexOf(gid)
+	if(i == 0){
+		return image
+	}
+	var j = order.indexOf(target)
+	j += (direction == 'next' ? 1 : 0)
+
+	order.splice(i, 1)
+	order.splice(j, 0, gid)
+
+
+	// just update the ribbons, no reloading needed...
+	updateRibbonOrder(true)
+
+	// shift the images...
+	getImage(target)[direction == 'prev' ? 'before' : 'after'](image)
+
+	// update stuff that changed, mainly order...
+	updateImages()
+
+	return image
+}
+function shiftImageLeft(image){
+	return horizontalShiftImage(image, 'prev')
+}
+function shiftImageRight(image){
+	return horizontalShiftImage(image, 'next')
 }
 
 

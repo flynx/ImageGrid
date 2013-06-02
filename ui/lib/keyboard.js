@@ -500,9 +500,7 @@ function buildKeybindingsHelp(keybindings, shifted_keys){
 				}
 
 				// skip anything that is not a key...
-				//if(key.length > 1 && (!(key in _KEY_CODES) || /\..+/.test(key))){
 				if(key.length > 1 && !(key in _KEY_CODES)){
-					console.log('### skipping:', key)
 					continue
 				}
 

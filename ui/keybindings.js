@@ -163,30 +163,11 @@ var KEYBOARD_CONFIG = {
 	//
 	'.viewer:not(.overlay)': {
 		title: 'Global',
-		doc: 'These key bindings work in most other modes.',
-
-		// Actions...
-		'next-screen': doc('Next screen',
-				function(){ 
-					event.preventDefault()
-					nextScreenImages()
-					centerRibbons()
-				}),
-		'prev-screen': doc('Previous screen',
-				function(){ 
-					event.preventDefault()
-					prevScreenImages()
-					centerRibbons()
-				}),
-
-
-		// Help and info...
-		'?': doc('Show keyboard bindings',
-			function(){ toggleKeyboardHelp() }),
-
-		F1: doc('Show help',
-			function(){ toggleHelp() }),
-		H: 'F1',
+		doc: 'These key bindings work in most other modes.'+
+			'<p>NOTE: shifting markid images from different ribbons will '+
+			'perform the operations on ALL marked images but relative '+
+			'the the current ribbon. i.e. some images might get promoted,'+
+			'others demoted while some will not change position.',
 
 		// Basics...
 		// XXX STUB: use a real path browser...
@@ -213,6 +194,25 @@ var KEYBOARD_CONFIG = {
 						centerRibbons()
 					}),
 				ctrl: 'prev-screen',
+				alt: doc('Shift image left', 
+					function(){ 
+						event.preventDefault()
+						shiftImageLeft() 
+						centerView(null, 'css')
+						// XXX for some odd reason centerRibbons does 
+						// 		something really odd here...
+						//centerRibbons()
+						// XXX HACK...
+						// XXX this still gets misaligned sometimes but this
+						// 		is likely due to one of the align bugs 
+						if(window._center_ribbon_delay != null){
+							clearTimeout(_center_ribbon_delay)
+						}
+						_center_ribbon_delay = setTimeout(
+							function(){ 
+								centerRibbons() 
+							}, 300)
+					}),
 			},
 		Right: {
 				default: doc('Next image',
@@ -224,8 +224,39 @@ var KEYBOARD_CONFIG = {
 						centerRibbons()
 					}),
 				ctrl: 'next-screen',
+				alt: doc('Shift image right', 
+					function(){ 
+						event.preventDefault()
+						shiftImageRight() 
+						centerView(null, 'css')
+						// XXX for some odd reason centerRibbons does 
+						// 		something really odd here...
+						//centerRibbons()
+						// XXX HACK...
+						// XXX this still gets misaligned sometimes but this
+						// 		is likely due to one of the align bugs 
+						// 		(see: TODO.otl)
+						if(window._center_ribbon_delay != null){
+							clearTimeout(_center_ribbon_delay)
+						}
+						_center_ribbon_delay = setTimeout(
+							function(){ 
+								centerRibbons() 
+							}, 300)
+					}),
 			},
-
+		'prev-screen': doc('Previous screen',
+				function(){ 
+					event.preventDefault()
+					prevScreenImages()
+					centerRibbons()
+				}),
+		'next-screen': doc('Next screen',
+				function(){ 
+					event.preventDefault()
+					nextScreenImages()
+					centerRibbons()
+				}),
 		Space: {
 				default: 'Right',
 				shift: 'Left',
@@ -274,6 +305,16 @@ var KEYBOARD_CONFIG = {
 						shiftImageUpNewRibbon(null, DIRECTION) 
 						centerRibbons()
 					}),
+
+				// XXX
+				alt: doc('Shift marked images up',
+					function(){
+						// XXX
+					}),
+				'alt+shift': doc('Shift marked images up to empty ribbon',
+					function(){
+						// XXX
+					}),
 			},
 		Down: {
 				default: doc('Go to ribbon below', 
@@ -293,6 +334,16 @@ var KEYBOARD_CONFIG = {
 						event.preventDefault()
 						shiftImageDownNewRibbon(null, DIRECTION) 
 						centerRibbons()
+					}),
+
+				// XXX
+				alt: doc('Shift marked images down',
+					function(){
+						// XXX
+					}),
+				'alt+shift': doc('Shift marked images down to empty ribbon',
+					function(){
+						// XXX
 					}),
 			},
 
@@ -439,6 +490,18 @@ var KEYBOARD_CONFIG = {
 		P: doc('Show options',
 			function(){ toggleOptionsUI() }),
 
+		// NOTE: this is handled by the wrapper at this point, so we do 
+		// 		not have to do anything here...
+		F11: doc('Toggle full screen mode'),
+
+
+		// Help and info...
+		'?': doc('Show keyboard bindings',
+			function(){ toggleKeyboardHelp() }),
+
+		F1: doc('Show help',
+			function(){ toggleHelp() }),
+		H: 'F1',
 
 
 		/* testing the shift-key feature...

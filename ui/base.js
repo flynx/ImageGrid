@@ -111,18 +111,20 @@ function getImage(gid){
 		return res.length == 0 ? $('.image').first() : res
 	}
 
+	// order...
+	if(typeof(gid) == typeof(1)){
+		res = $('.image[order="'+ JSON.stringify(gid) +'"]')
+		if(res.length != null){
+			return res
+		}
+	}
+
 	// gid...
-	res = $('.image[gid='+ JSON.stringify(gid) +']')
+	res = $('.image[gid="'+ JSON.stringify(gid) +'"]')
 	if(res.length != null){
 		return res
 	}
 	
-	// order...
-	res = $('.image[order='+ JSON.stringify(gid) +']')
-	if(res.length != null){
-		return res
-	}
-
 	return null
 }
 
