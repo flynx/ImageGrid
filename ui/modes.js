@@ -164,6 +164,8 @@ var toggleSingleImageMode = createCSSClassToggler(
 				var i = SETTINGS['image-info-ribbon-mode'] == 'on' ? 'on' : 'off'
 				toggleImageInfo(i)
 				SETTINGS['image-info-ribbon-mode'] = i
+
+				centerRibbons()
 			}
 		})
 
