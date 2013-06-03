@@ -51,10 +51,7 @@ $(function(){
 		//.dblclick(dblClickHandler)
 
 	$(window)
-		// XXX in single image mode this still causes problems...
-		//		this can be resolved by cycling to ribbon mode and back...
 		.resize(function() {
-
 			toggleImageProportions('!')
 			centerView()
 		})
@@ -137,6 +134,7 @@ $(function(){
 			loadLocalStorageSettings()
 
 			// XXX this will reload everything...
+			// XXX this might load the wrong marks (not sure)...
 			if('MARKED' in localStorage){
 				loadLocalStorageMarks()
 			}

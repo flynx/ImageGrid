@@ -99,11 +99,11 @@ Roadmap
 		|
 		| 	$('[order='+$('.current.image').attr('order')+']').length
 		|
-		[_] ASAP: test on Android...
+		[_] usable empty view -- w.o. data...
+		[_] single image mode transition (alpha-blend/fade/none)
 		[_] 0% Tablet UI
 			[_] screen buttons
-		[_] usable empty view -- w.o. data...
-		[_] proper system init (start w.o. any data)
+		[_] ASAP: test on Android...
 		[_] 75% image sorting (date/name/...)
 			[X] 100% sort by:
 				[X] date
