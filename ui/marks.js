@@ -52,7 +52,11 @@ function loadMarkedOnlyData(cmp, no_cleanout_marks){
 
 // XXX name this in a better way...
 function loadAllImages(){
+	var cur = DATA.current
 	DATA = ALL_DATA
+	// NOTE: if we do not do this the user will lose context every time
+	// 		returning from marks only view...
+	DATA.current = cur
 	reloadViewer()
 	return DATA
 }
@@ -246,6 +250,7 @@ function shiftMarkedImagesDown(mode, new_ribbon){
 // XXX these are ribbon wise only (???)
 // XXX this on first step this must pack all marked images
 function horizontalShiftMarkedImages(direction){
+	// XXX
 }
 function shiftMarkedImagesLeft(){
 	return shiftMarkedImages('prev')
