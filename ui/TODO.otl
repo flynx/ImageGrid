@@ -90,7 +90,7 @@ Roadmap
 
 
 [_] 27% Gen 3 current todo
-	[_] 54% High priority
+	[_] 55% High priority
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame
@@ -99,21 +99,6 @@ Roadmap
 		|
 		| 	$('[order='+$('.current.image').attr('order')+']').length
 		|
-		[_] BUG: jumping screen images does not load the adjacent ribbons...
-		| positioning is OK but ribbons are not fully visible...
-		[_] BUG: shifting ribbon left sometimes results in wrong order...
-		| i.e. an image with order 12 before image with order 11
-		|
-		| Example:
-		| 	- default image set
-		| 	- move first image 2 positions right
-		|
-		| Resulting state:
-		| 	- current image order: 12
-		| 	- next image order: 11
-		| 	- prev image order: 10
-		|
-		| This is stably reproducible.
 		[_] ASAP: test on Android...
 		[_] 0% Tablet UI
 			[_] screen buttons
@@ -187,8 +172,23 @@ Roadmap
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions
 			[_] caching config
+		[_] BUG: jumping screen images does not load the adjacent ribbons...
+		| positioning is OK but ribbons are not fully visible...
 		[_] BUG: BASE_URL seems to gain a new trailing '/' on each save...
 		| low priority as this does not affect anything...
+		[X] BUG: shifting ribbon left sometimes results in wrong order...
+		| i.e. an image with order 12 before image with order 11
+		|
+		| Example:
+		| 	- default image set
+		| 	- move first image 2 positions right
+		|
+		| Resulting state:
+		| 	- current image order: 12
+		| 	- next image order: 11
+		| 	- prev image order: 10
+		|
+		| This is stably reproducible.
 		[X] BUG: changing window size (F11) in single image modes messes things up...
 		| some images are of different sizes (newly loaded) and aligned in a wrong way...
 		|
