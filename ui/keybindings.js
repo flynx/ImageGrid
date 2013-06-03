@@ -160,6 +160,61 @@ var KEYBOARD_CONFIG = {
 	},
 
 
+	// ribbon mode only...
+	//
+	'.viewer:not(.overlay):not(.single-image-mode)': {
+		title: 'Ribbon mode',
+
+		Left: {
+				alt: doc('Shift image left', 
+					function(){ 
+						event.preventDefault()
+						shiftImageLeft() 
+						centerView(null, 'css')
+						// XXX for some odd reason centerRibbons does 
+						// 		something really odd here...
+						//centerRibbons()
+						// XXX HACK...
+						// XXX this still gets misaligned sometimes but this
+						// 		is likely due to one of the align bugs 
+						if(window._center_ribbon_delay != null){
+							clearTimeout(_center_ribbon_delay)
+						}
+						_center_ribbon_delay = setTimeout(
+							function(){ 
+								centerRibbons() 
+							}, 300)
+
+						return false
+					}),
+			},
+		Right: {
+				alt: doc('Shift image right', 
+					function(){ 
+						event.preventDefault()
+						shiftImageRight() 
+						centerView(null, 'css')
+						// XXX for some odd reason centerRibbons does 
+						// 		something really odd here...
+						//centerRibbons()
+						// XXX HACK...
+						// XXX this still gets misaligned sometimes but this
+						// 		is likely due to one of the align bugs 
+						// 		(see: TODO.otl)
+						if(window._center_ribbon_delay != null){
+							clearTimeout(_center_ribbon_delay)
+						}
+						_center_ribbon_delay = setTimeout(
+							function(){ 
+								centerRibbons() 
+							}, 300)
+
+						return false
+					}),
+			},
+	},
+
+
 	// general setup...
 	//
 	'.viewer:not(.overlay)': {
@@ -196,25 +251,6 @@ var KEYBOARD_CONFIG = {
 						centerRibbons()
 					}),
 				ctrl: 'prev-screen',
-				alt: doc('Shift image left', 
-					function(){ 
-						event.preventDefault()
-						shiftImageLeft() 
-						centerView(null, 'css')
-						// XXX for some odd reason centerRibbons does 
-						// 		something really odd here...
-						//centerRibbons()
-						// XXX HACK...
-						// XXX this still gets misaligned sometimes but this
-						// 		is likely due to one of the align bugs 
-						if(window._center_ribbon_delay != null){
-							clearTimeout(_center_ribbon_delay)
-						}
-						_center_ribbon_delay = setTimeout(
-							function(){ 
-								centerRibbons() 
-							}, 300)
-					}),
 			},
 		Right: {
 				default: doc('Next image',
@@ -226,26 +262,6 @@ var KEYBOARD_CONFIG = {
 						centerRibbons()
 					}),
 				ctrl: 'next-screen',
-				alt: doc('Shift image right', 
-					function(){ 
-						event.preventDefault()
-						shiftImageRight() 
-						centerView(null, 'css')
-						// XXX for some odd reason centerRibbons does 
-						// 		something really odd here...
-						//centerRibbons()
-						// XXX HACK...
-						// XXX this still gets misaligned sometimes but this
-						// 		is likely due to one of the align bugs 
-						// 		(see: TODO.otl)
-						if(window._center_ribbon_delay != null){
-							clearTimeout(_center_ribbon_delay)
-						}
-						_center_ribbon_delay = setTimeout(
-							function(){ 
-								centerRibbons() 
-							}, 300)
-					}),
 			},
 		'prev-screen': doc('Previous screen',
 				function(){ 

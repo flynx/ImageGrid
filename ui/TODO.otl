@@ -89,8 +89,8 @@ Roadmap
 	
 
 
-[_] 25% Gen 3 current todo
-	[_] 51% High priority
+[_] 27% Gen 3 current todo
+	[_] 54% High priority
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame
@@ -99,46 +99,21 @@ Roadmap
 		|
 		| 	$('[order='+$('.current.image').attr('order')+']').length
 		|
-		[_] BUG: aligning still sometimes gets off...
-		| ...after rotating a number of images
-		|
-		| XXX this is likely a side effect of loading duplicates...
-		|
-		| happens when:
-		| 	- getScreenWidthInImages() < 2
-		| 	- looking through images in one direction and back, some get misaligned
-		| 		...this is stable behaviour by centerRibbon(...), 
-		| 		calling it again will not fix this.
-		| 		moving next/prev will fix the issue until it comes back again
-		| 	- affected by LOAD_SCREENS and number of images in ribbon
-		| 		current figures:
-		| 			Ribbon: 18
-		| 			Position going forward: 4
-		| 			Position going back: 1
-		| 			LOAD_SCREENS: 6
-		| 	NOTE: changing LOAD_SCREENS moves the affected positions.
-		| 	NOTE: had a similar bug where some images still kept their 
-		| 			prior sizing after recycling...
-		| 			...check if centerRibbon(...) and correctImageProportionsForRotation(...)
-		| 			are called in right sequence...
-		[X] BUG: changing window size (F11) in single image modes messes things up...
-		| some images are of different sizes (newly loaded) and aligned in a wrong way...
-		|
-		| appears not to affect square-fit view...
-		|
-		| until we cycle to ribbon mode and back...
-		| 
-		| Q: does this trigger the on-resize event???
-		| A: no, not connected...
-		|
-		| possible that this is connected with the align/load bug...
-		|
-		| appears to be a state leak, this affects:
-		| 	- correctImageProportionsForRotation(image) -- mis-alignes images
-		| 	  while after cycling single image mode, behaves correctly...
-		| 	- affects finNImages(...) -- uses old size of viewer...
 		[_] BUG: jumping screen images does not load the adjacent ribbons...
 		| positioning is OK but ribbons are not fully visible...
+		[_] BUG: shifting ribbon left sometimes results in wrong order...
+		| i.e. an image with order 12 before image with order 11
+		|
+		| Example:
+		| 	- default image set
+		| 	- move first image 2 positions right
+		|
+		| Resulting state:
+		| 	- current image order: 12
+		| 	- next image order: 11
+		| 	- prev image order: 10
+		|
+		| This is stably reproducible.
 		[_] ASAP: test on Android...
 		[_] 0% Tablet UI
 			[_] screen buttons
@@ -214,6 +189,42 @@ Roadmap
 			[_] caching config
 		[_] BUG: BASE_URL seems to gain a new trailing '/' on each save...
 		| low priority as this does not affect anything...
+		[X] BUG: changing window size (F11) in single image modes messes things up...
+		| some images are of different sizes (newly loaded) and aligned in a wrong way...
+		|
+		| appears not to affect square-fit view...
+		|
+		| until we cycle to ribbon mode and back...
+		| 
+		| Q: does this trigger the on-resize event???
+		| A: no, not connected...
+		|
+		| possible that this is connected with the align/load bug...
+		|
+		| appears to be a state leak, this affects:
+		| 	- correctImageProportionsForRotation(image) -- mis-alignes images
+		| 	  while after cycling single image mode, behaves correctly...
+		| 	- affects finNImages(...) -- uses old size of viewer...
+		[X] BUG: aligning still sometimes gets off...
+		| ...after rotating a number of images
+		|
+		| happens when:
+		| 	- getScreenWidthInImages() < 2
+		| 	- looking through images in one direction and back, some get misaligned
+		| 		...this is stable behaviour by centerRibbon(...), 
+		| 		calling it again will not fix this.
+		| 		moving next/prev will fix the issue until it comes back again
+		| 	- affected by LOAD_SCREENS and number of images in ribbon
+		| 		current figures:
+		| 			Ribbon: 18
+		| 			Position going forward: 4
+		| 			Position going back: 1
+		| 			LOAD_SCREENS: 6
+		| 	NOTE: changing LOAD_SCREENS moves the affected positions.
+		| 	NOTE: had a similar bug where some images still kept their 
+		| 			prior sizing after recycling...
+		| 			...check if centerRibbon(...) and correctImageProportionsForRotation(...)
+		| 			are called in right sequence...
 		[X] BUG: keyboard.js, some combinations resolve problems...
 		| in current help shows E, F4, alt-F4 as "Open image in ..."
 		| 	- E and F4 work OK

@@ -1475,22 +1475,23 @@ function horizontalShiftImage(image, direction){
 
 	// the image we are going to move relative to...
 	var target = DATA.ribbons[r][ri + (direction == 'next' ? 1 : -1)]
+
 	// we can hit the end or start of the ribbon...
 	if(target == null){
 		return image
 	}
 
-	var order = DATA.order
-	var i = order.indexOf(gid)
-	if(i == 0){
-		return image
-	}
-	var j = order.indexOf(target)
-	j += (direction == 'next' ? 1 : 0)
-
-	order.splice(i, 1)
-	order.splice(j, 0, gid)
-
+	// update the order...
+	// NOTE: this is a critical section and must be done as fast as possible,
+	// 		this is why we are using the memory to first do the work and 
+	// 		then push it in...
+	// NOTE: in a race condition this may still overwrite the order someone
+	// 		else is working on, the data will be consistent...
+	var order = DATA.order.slice()
+	order.splice(order.indexOf(gid), 1)
+	order.splice(order.indexOf(target) + (direction == 'next'? 1 : 0), 0, gid)
+	// do the dirty work...
+	DATA.order.splice.apply(DATA.order, [0, DATA.order.length].concat(order))
 
 	// just update the ribbons, no reloading needed...
 	updateRibbonOrder(true)
