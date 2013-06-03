@@ -26,6 +26,7 @@ function updateDirection(direction){
 	}
 }
 
+
 function directionImage(reverse){
 	if(DIRECTION == (reverse ? 'prev' : 'next')){
 		nextImage()

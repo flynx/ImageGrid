@@ -1,5 +1,5 @@
 Roadmap
-	[_] 40% Pre-Alpha - limited preview
+	[_] 41% Pre-Alpha - limited preview
 		[_] 31% UI
 			[_] 0% Tablet-specific
 				[_] screen buttons
@@ -22,9 +22,12 @@ Roadmap
 			[X] ribbon next/prev
 			[X] screen next/prev
 			[_] marks next/prev
-		[_] 41% editing
-			[_] 33% ribbon
-				[_] merge up/down
+		[_] 49% editing
+			[_] 66% ribbon
+				[X] merge up/down
+				| via. marking... 
+				|
+				| still thinking if this is the right way...
 				[_] flatten
 				[X] sort
 			[_] 71% image
@@ -195,6 +198,8 @@ Roadmap
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions
 			[_] caching config
+		[_] BUG: BASE_URL seems to gain a new trailing '/' on each save...
+		| low priority as this does not affect anything...
 		[X] reverse ribbons...
 		[X] slideshow mode...
 		[X] default STUB image...
