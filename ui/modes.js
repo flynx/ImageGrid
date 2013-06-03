@@ -314,7 +314,7 @@ var toggleImageProportions = createCSSClassToggler('.viewer',
 			var w = image.outerWidth(true)
 
 			// viewer proportions...
-			if(action == 'fit-image-to-viewer'){
+			if(action == 'fit-viewer'){
 				var viewer = $('.viewer')
 				var W = viewer.innerWidth()
 				var H = viewer.innerHeight()

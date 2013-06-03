@@ -482,8 +482,11 @@ var KEYBOARD_CONFIG = {
 					})
 			},
 
-		F4: doc('Open image in external software', openImage),
-		E: 'F4',
+		E: doc('Open image in external software', openImage),
+		F4: {
+				default: 'E',
+				alt: doc('Close viewer'),
+			},
 
 
 		P: doc('Show options',

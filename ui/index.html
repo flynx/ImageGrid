@@ -52,10 +52,8 @@ $(function(){
 
 	$(window)
 		.resize(function() {
-			// XXX should this be animated or not?
+			correctImageProportionsForRotation('.images')
 			centerView()
-
-			// XXX problems in single image mode after hitting F11...
 		})
 		
 	$(document)
