@@ -213,8 +213,12 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 				if(modifiers == '?'){
 					break
 				}
-				if(typeof(handler[modifiers]) == typeof('str')){
-					handler = handler[modifiers]
+				if(modifiers in handler){
+					if(typeof(handler[modifiers]) == typeof('str')){
+						handler = handler[modifiers]
+					} else {
+						break
+					}
 				} else if(typeof(handler['default']) == typeof('str')){
 					handler = handler['default']
 				} else {
