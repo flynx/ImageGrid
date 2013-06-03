@@ -951,6 +951,7 @@ function correctImageProportionsForRotation(images){
 		var w = image.outerWidth()
 		var h = image.outerHeight()
 
+		// non-square image...
 		if(w != h){
 			var proportions = W/H - w/h
 
@@ -977,6 +978,7 @@ function correctImageProportionsForRotation(images){
 				})
 			}
 
+		// square image...
 		} else {
 			image.css({
 				'margin': '',

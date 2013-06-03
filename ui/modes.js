@@ -153,7 +153,7 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer',
 				w = SETTINGS['screen-images-ribbon-mode']
 				w = w == null ? DEFAULT_SCREEN_IMAGES : w
 
-				toggleImageProportions('square')
+				toggleImageProportions('fit-square')
 				fitNImages(w)
 				var i = SETTINGS['image-info-ribbon-mode'] == 'on' ? 'on' : 'off'
 				toggleImageInfo(i)
@@ -256,6 +256,7 @@ var toggleInlineImageInfo = createCSSClassToggler('.viewer',
 // 		al least at this point...
 // XXX should we use the createCSSClassToggler for this?
 // XXX revise: does extra stuff...
+/*
 function toggleImageProportions(mode){
 	// normal images...
 	var image = $('.image')
@@ -298,8 +299,49 @@ function toggleImageProportions(mode){
 		centerView(null, 'css')
 	}
 
-	return 'mode'
+	return mode
 }
+*/
+
+var toggleImageProportions = createCSSClassToggler('.viewer',
+		[
+			'fit-square',
+			'fit-viewer'
+		],
+		function(action){
+			var image = $('.image')
+			var h = image.outerHeight(true)
+			var w = image.outerWidth(true)
+
+			// viewer proportions...
+			if(action == 'fit-image-to-viewer'){
+				var viewer = $('.viewer')
+				var W = viewer.innerWidth()
+				var H = viewer.innerHeight()
+
+				if(W > H){
+					image.css('width', W * h/H)
+				} else {
+					image.css('height', H * w/W)
+				}
+
+				// account for rotation...
+				correctImageProportionsForRotation(image)
+				centerView(null, 'css')
+
+			// square proportions...
+			} else {
+				var size = Math.min(w, h)
+				image.css({
+					width: size,
+					height: size
+				})
+
+				// account for rotation...
+				correctImageProportionsForRotation(image)
+				centerView(null, 'css')
+			}
+		})
 
 
 var toggleHelp = makeDrawerToggler(
