@@ -924,26 +924,17 @@ function nextRibbon(mode){
 
 /******************************************************** Rotating ***/
 
+// Compensate for viewer proportioned and rotated images.
+//
+// NOTE: this is not neede for square image blocks.
 function correctImageProportionsForRotation(images){
 	var viewer = $('.viewer')
 	var W = viewer.innerWidth()
 	var H = viewer.innerHeight()
-	// NOTE: this is here because we are comparing proportions of two 
-	// 		very differently sized elements, and though the proportions 
-	// 		may be the same, the actual result may be vastly different
-	// 		due of pixel rounding...
-	// 			Real example:
-	// 				Viewer:	826x601
-	// 				Image: 413x300
-	// 					ratio 1:  W/H - w/h = -0.002290626733222556
-	// 					ratio 2: W/w - H/h = -0.0033333333333334103
-	// NOTE: this might get out of hand for close to square viewer...
-	// 		...one way to cheat out of this is to round any ratio
-	// 		close to 1 to 1.
-	// XXX find a better way out of this, avoiding floats...
-	var rounding_error = 0.007
 
-	$(images).each(function(i, e){
+	var viewer_p = W > H ? 'landscape' : 'portrait'
+
+	return $(images).each(function(i, e){
 		var image = $(this)
 		// orientation...
 		var o = image.attr('orientation')
@@ -953,11 +944,12 @@ function correctImageProportionsForRotation(images){
 
 		// non-square image...
 		if(w != h){
-			var proportions = W/H - w/h
+
+			var image_p = w > h ? 'landscape' : 'portrait'
 
 			// when the image is turned 90deg/270deg and its 
 			// proportions are the same as the screen...
-			if((o == 90 || o == 270) && Math.abs(proportions) < rounding_error ){
+			if((o == 90 || o == 270) && image_p == viewer_p){
 				image.css({
 					width: h,
 					height: w,
@@ -968,7 +960,8 @@ function correctImageProportionsForRotation(images){
 					'margin-left': (w - h)/2,
 					'margin-right': (w - h)/2,
 				})
-			} else if((o == 0 || o == 180) && Math.abs(proportions) > rounding_error ){
+
+			} else if((o == 0 || o == 180) && image_p != viewer_p){
 				image.css({
 					width: h,
 					height: w,
@@ -1053,13 +1046,16 @@ function fitNImages(n){
 	var W = viewer.innerWidth()
 	var H = viewer.innerHeight()
 
+	// XXX this may not work correctly for portrait proportioned viewers...
 	var scale = Math.min(W / (w * n), H / h)
 
 	// NOTE: if animating, the next two likes must be animated together...
 	setElementScale($('.ribbon-set'), scale)
 	centerView(image, 'css')
 
-	$('.viewer').trigger('fittingImages', [n])
+	viewer.trigger('fittingImages', [n])
+
+	return scale
 }
 
 

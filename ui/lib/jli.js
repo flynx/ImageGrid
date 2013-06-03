@@ -33,11 +33,13 @@
 // 	- <index>		: 0 for 'off' and 1 for 'on' (see below)
 // 	- 'on'			: switch mode on -- add class
 // 	- 'off'			: switch mode off -- remove class
+// 	- '!'			: reload current state, same as toggler(toggler('?'))
 // 	- '?'			: return current state ('on'|'off')
 //
 // In forms 2 and 3, if class_list is a list of strings, the <action> can be:
 //  - <index>		: explicitly set the state to index in class_list
 //  - <class-name>	: explicitly set a class from the list
+// 	- '!'			: reload current state, same as toggler(toggler('?'))
 // 	- '?'			: return current state ('on'|'off')
 // 
 // In the third form the <target> is a jquery-compatible object.
@@ -122,7 +124,7 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 			}
 		}
 		// we need to get the current state...
-		if(action == null || action == '?'){
+		if(action == null || action == '?' || action == '!'){
 			// get current state...
 			var cur = 'none'
 			for(var i=0; i < class_list.length; i++){
@@ -134,6 +136,11 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 			// just asking for info...
 			if(action == '?'){
 				return bool_action ? (cur == 'none' ? 'off' : 'on') : cur
+			}
+
+			// force reload of current state...
+			if(action == '!'){
+				action = bool_action ? (cur == 'none' ? 'off' : 'on') : cur
 			}
 
 		// invalid action...
@@ -163,7 +170,8 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 		if(callback_pre != null){
 			if(callback_pre.call(this, action) === false){
 				// XXX should we return action here???
-				return
+				//return
+				return action
 			}
 		}
 		// update the element...

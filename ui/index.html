@@ -54,7 +54,8 @@ $(function(){
 		// XXX in single image mode this still causes problems...
 		//		this can be resolved by cycling to ribbon mode and back...
 		.resize(function() {
-			correctImageProportionsForRotation('.images')
+
+			toggleImageProportions('!')
 			centerView()
 		})
 		

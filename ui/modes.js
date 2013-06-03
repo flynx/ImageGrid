@@ -159,7 +159,7 @@ var toggleSingleImageMode = createCSSClassToggler(
 				w = SETTINGS['screen-images-ribbon-mode']
 				w = w == null ? DEFAULT_SCREEN_IMAGES : w
 
-				toggleImageProportions('fit-square')
+				toggleImageProportions('none')
 				fitNImages(w)
 				var i = SETTINGS['image-info-ribbon-mode'] == 'on' ? 'on' : 'off'
 				toggleImageInfo(i)
@@ -260,7 +260,7 @@ var toggleInlineImageInfo = createCSSClassToggler(
 var toggleImageProportions = createCSSClassToggler(
 		'.viewer',
 		[
-			'fit-square',
+			'none',
 			'fit-viewer'
 		],
 		function(action){
