@@ -179,6 +179,8 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 
 	for(var mode in keybindings){
 
+		//console.log('>>>', mode)
+
 		// test for mode compatibility...
 		// XXX this fails for explicitly given mode...
 		if(modes != 'all' 
@@ -223,7 +225,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 					handler = handler['default']
 				} else {
 					break
-				}
+				} 
 			}
 
 			// simple handlers...
@@ -254,6 +256,8 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 			}
 			continue
 		}
+
+		//console.log('<<<', mode, did_handling)
 
 		// complex handler...
 		if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
@@ -289,7 +293,8 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 			continue
 		}
 
-		if(did_handling){
+		if(modes != 'all' && did_handling){
+			//console.log('!!!!', mode)
 			break
 		}
 	}

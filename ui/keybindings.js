@@ -162,6 +162,7 @@ var KEYBOARD_CONFIG = {
 
 	// ribbon mode only...
 	//
+	// XXX this breaks getKeyHandlers(...) when modes argument is given...
 	'.viewer:not(.overlay):not(.single-image-mode)': {
 		title: 'Ribbon mode',
 
