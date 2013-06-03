@@ -18,38 +18,68 @@ var CACHE_DIR = '.ImageGridCache'
 
 // A stub image, also here for documentation...
 var STUB_IMAGE_DATA = {
+	// Entity GID...
 	id: 'SIZE',
-	// entity type, can be 'image', 'group'
+
+	// Entity type
+	// can be:
+	// 	- 'image'
+	// 	- 'group'
 	type: 'image',
-	// entity state, can be 'single', 'grouped', 'hidden', ...
+
+	// Entity state
+	// can be:
+	// 	- 'single'
+	// 	- 'grouped'
+	// 	- 'hidden'
+	// 	- ...
 	state: 'single',
+
+	// Creation time...
 	ctime: 0,
+
+	// Original path...
 	path: './images/sizes/900px/SIZE.jpg',
+
+	// Previews...
+	// NOTE: the actual values depend on specific image and can be
+	// 		any size...
 	preview: {
 		'150px': './images/sizes/150px/SIZE.jpg',
 		'350px': './images/sizes/350px/SIZE.jpg',
 		'900px': './images/sizes/900px/SIZE.jpg',
 	},
+
+	// Classes
+	// XXX currently unused...
 	classes: '',
+
+	// Image orientation
+	// can be:
+	// 	- 0 (default)	- load as-is
+	// 	- 90			- rotate 90deg CW
+	// 	- 180			- rotate 180deg CW
+	// 	- 270			- rotate 270deg CW (90deg CCW)
 	orientation: 0,
 }
 
 // Data format...
 var DATA = {
+	// Format version...
 	version: '2.0',
 
-	// current position, GID...
+	// Current position, GID...
 	current: null,
 
-	// the ribbon cache...
+	// The ribbon cache...
 	// in the simplest form this is a list of lists of GIDs
 	ribbons: [],
 
-	// flat ordered list of images in current context...
+	// Flat ordered list of images in current context...
 	// in the simplest form this is a list of GIDs.
 	order: [],
 
-	// this can be used to store the filename/path of the file containing 
+	// This can be used to store the filename/path of the file containing 
 	// image data...
 	image_file: null
 }

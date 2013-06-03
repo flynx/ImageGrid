@@ -51,6 +51,8 @@ $(function(){
 		//.dblclick(dblClickHandler)
 
 	$(window)
+		// XXX in single image mode this still causes problems...
+		//		this can be resolved by cycling to ribbon mode and back...
 		.resize(function() {
 			correctImageProportionsForRotation('.images')
 			centerView()

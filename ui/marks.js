@@ -67,7 +67,8 @@ function loadAllImages(){
 * Modes
 */
 
-var toggleMarkedOnlyView = createCSSClassToggler('.viewer', 
+var toggleMarkedOnlyView = createCSSClassToggler(
+		'.viewer', 
 		'marked-only-view',
 		function(action){
 			if(action == 'on'){
@@ -79,7 +80,9 @@ var toggleMarkedOnlyView = createCSSClassToggler('.viewer',
 
 
 // XXX shifting images and unmarking in this mode do not work correctly...
-var toggleMarkesView = createCSSClassToggler('.viewer', 'marks-visible',
+var toggleMarkesView = createCSSClassToggler(
+	'.viewer', 
+	'marks-visible',
 	function(){
 		var cur = getImage()
 		// current is marked...
@@ -107,7 +110,9 @@ var toggleMarkesView = createCSSClassToggler('.viewer', 'marks-visible',
 * Actions
 */
 
-var toggleImageMark = createCSSClassToggler('.current.image', 'marked',
+var toggleImageMark = createCSSClassToggler(
+	'.current.image', 
+	'marked',
 	function(action){
 		toggleMarkesView('on')
 		$('.viewer').trigger('togglingMark', [getImage(), action])

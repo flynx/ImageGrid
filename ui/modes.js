@@ -6,6 +6,9 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var SLIDESHOW_INTERVAL = 3000
+var SLIDESHOW_LOOP = true
+var SLIDESHOW_DIRECTION = 'next'
 
 
 
@@ -17,7 +20,9 @@
 //function makeDrawerToggler(contentRenderer, root, element_class, mode_class){
 function makeDrawerToggler(contentRenderer, root){
 	var element_class = '.drawer-block'
-	var toggler = createCSSClassToggler(root, 'drawer-mode overlay',
+	var toggler = createCSSClassToggler(
+			root, 
+			'drawer-mode overlay',
 			function(action){
 				// XXX
 				var body = $(document.body)
@@ -111,7 +116,8 @@ function makeDrawerToggler(contentRenderer, root){
 */
 
 // XXX make this save and restore settings...
-var toggleSingleImageMode = createCSSClassToggler('.viewer', 
+var toggleSingleImageMode = createCSSClassToggler(
+		'.viewer', 
 		'single-image-mode',
 		function(action){
 			// prevent reiniting...
@@ -162,13 +168,10 @@ var toggleSingleImageMode = createCSSClassToggler('.viewer',
 		})
 
 
-var SLIDESHOW_INTERVAL = 3000
-var SLIDESHOW_LOOP = true
-var SLIDESHOW_DIRECTION = 'next'
-
 // TODO transitions...
 // TODO a real setup UI (instead of prompt)
-var toggleSlideShowMode = createCSSClassToggler('.viewer', 
+var toggleSlideShowMode = createCSSClassToggler(
+		'.viewer', 
 		'.slideshow-mode',
 		function(action){
 			if(action == 'on'){
@@ -216,7 +219,8 @@ var toggleSlideShowMode = createCSSClassToggler('.viewer',
 		})
 
 
-var toggleTheme = createCSSClassToggler('.viewer',
+var toggleTheme = createCSSClassToggler(
+		'.viewer',
 		[
 			'gray',
 			'dark',
@@ -228,7 +232,8 @@ var toggleTheme = createCSSClassToggler('.viewer',
 		})
 
 
-var toggleImageInfo = createCSSClassToggler('.viewer',
+var toggleImageInfo = createCSSClassToggler(
+		'.viewer',
 		'.image-info-visible',
 		function(action){
 			if(toggleSingleImageMode('?') == 'off'){
@@ -237,7 +242,8 @@ var toggleImageInfo = createCSSClassToggler('.viewer',
 		})
 
 
-var toggleInlineImageInfo = createCSSClassToggler('.viewer', 
+var toggleInlineImageInfo = createCSSClassToggler(
+		'.viewer', 
 		'.image-info-inline-visible',
 		function(action){
 			if(action == 'on'){
@@ -251,7 +257,8 @@ var toggleInlineImageInfo = createCSSClassToggler('.viewer',
 		})
 
 
-var toggleImageProportions = createCSSClassToggler('.viewer',
+var toggleImageProportions = createCSSClassToggler(
+		'.viewer',
 		[
 			'fit-square',
 			'fit-viewer'

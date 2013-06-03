@@ -48,7 +48,7 @@ var KEYBOARD_CONFIG = {
 		title: 'Info overlay',
 		doc: 'Displayed on bottom of the screen if enabled (toggle with '+
 			'<b>I</b>) and/or inline, at bottom of and image when cursor '+
-			'is over it (only in ribbon mode, toggle with <b>alt-I</b>)<p>'+
+			'is over it (only in ribbon mode, toggle with <b>alt-I</b>)'+
 
 			'<p>NOTE: when the cursor is over the info overlay one can use '+
 			'Ctrl-A and Ctrl-D for info text selection, without affecting '+
@@ -165,6 +165,7 @@ var KEYBOARD_CONFIG = {
 	'.viewer:not(.overlay)': {
 		title: 'Global',
 		doc: 'These key bindings work in most other modes.'+
+
 			'<p>NOTE: shifting markid images from different ribbons will '+
 			'perform the operations on ALL marked images but relative '+
 			'the the current ribbon. i.e. some images might get promoted,'+
