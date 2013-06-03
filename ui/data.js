@@ -260,11 +260,12 @@ function imageOrderCmp(a, b, get, data){
 // 	- -1 if a is less than position i
 // 	- +1 if a is greater than position i
 //
-// NOTE: the signature is different from the traditional lcmp(a, b) so as 
+// NOTE: the signature is different from the traditional cmp(a, b) so as 
 // 		to enable more complex comparisons involving adjacent elements
 // 		(see isBetween(...) for an example)
-function lcmp(a, i, lst){
-	var b = lst[i]
+function lcmp(a, i, lst, get){
+	var b = get == null ? lst[i] : get(lst[i])
+
 	if(a == b){
 		return 0
 	} else if(a < b){
@@ -282,9 +283,9 @@ function lcmp(a, i, lst){
 // 	- -1 if a is "below" position i
 // 	- +1 if a is "above" position i
 //
-// NOTE: this is here mostly to make debuging easy...
-function isBetween(a, i, lst){
-	var b = lst[i]
+// NOTE: this is here mostly to make debugging easy...
+function isBetween(a, i, lst, get){
+	var b = get == null ? lst[i] : get(lst[i])
 
 	// special case: tail...
 	if(i == lst.length-1 && a >= b){
@@ -306,14 +307,15 @@ function isBetween(a, i, lst){
 }
 
 
+/*
 // Basic liner search...
 //
 // NOTE: this is here for testing reasons only...
-function linSearch(target, lst, check, return_position){
+function linSearch(target, lst, check, return_position, get){
 	check = check == null ? lcmp : check
 
 	for(var i=0; i < lst.length; i++){
-		if(check(target, i, lst) == 0){
+		if(check(target, i, lst, get) == 0){
 			return return_position ? i : lst[i]
 		}
 	}
@@ -321,9 +323,10 @@ function linSearch(target, lst, check, return_position){
 	// no hit...
 	return return_position ? -1 : null
 }
-Array.prototype.linSearch = function(target, cmp){
-	return linSearch(target, this, cmp, true)
+Array.prototype.linSearch = function(target, cmp, get){
+	return linSearch(target, this, cmp, true, get)
 }
+*/
 
 
 // Basic binary search implementation...
@@ -331,7 +334,7 @@ Array.prototype.linSearch = function(target, cmp){
 // NOTE: this will return the object by default, to return position set
 // 		return_position to true.
 // NOTE: by default this will use cmp as a predicate.
-function binSearch(target, lst, check, return_position){
+function binSearch(target, lst, check, return_position, get){
 	check = check == null ? lcmp : check
 	var h = 0
 	var t = lst.length - 1
@@ -339,7 +342,7 @@ function binSearch(target, lst, check, return_position){
 
 	while(h <= t){
 		m = Math.floor((h + t)/2)
-		res = check(target, m, lst)
+		res = check(target, m, lst, get)
 		
 		// match...
 		if(res == 0){
@@ -358,8 +361,8 @@ function binSearch(target, lst, check, return_position){
 	// no result...
 	return return_position ? -1 : null
 }
-Array.prototype.binSearch = function(target, cmp){
-	return binSearch(target, this, cmp, true)
+Array.prototype.binSearch = function(target, cmp, get){
+	return binSearch(target, this, cmp, true, get)
 }
 
 
