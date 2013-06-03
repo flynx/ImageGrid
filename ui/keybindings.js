@@ -482,6 +482,7 @@ var KEYBOARD_CONFIG = {
 					})
 			},
 
+
 		E: doc('Open image in external software', openImage),
 		F4: {
 				default: 'E',

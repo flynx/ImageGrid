@@ -251,58 +251,6 @@ var toggleInlineImageInfo = createCSSClassToggler('.viewer',
 		})
 
 
-// NOTE: this confirmsto the css toggler protocol, but is not implemented 
-// 		via createCSSClassToggler as we do not need to set any classes,
-// 		al least at this point...
-// XXX should we use the createCSSClassToggler for this?
-// XXX revise: does extra stuff...
-/*
-function toggleImageProportions(mode){
-	// normal images...
-	var image = $('.image')
-	var h = image.outerHeight(true)
-	var w = image.outerWidth(true)
-
-	if(mode == '?'){
-		return h != w ? 'viewer' : 'square'
-
-	// square...
-	} else if(h != w || mode == 'square'){
-		mode = 'square'
-		var size = Math.min(w, h)
-		image.css({
-			width: size,
-			height: size
-		})
-
-		// account for rotation...
-		correctImageProportionsForRotation(image)
-
-		centerView(null, 'css')
-
-	// viewer size...
-	} else {
-		mode = 'viewer'
-		var viewer = $('.viewer')
-		var W = viewer.innerWidth()
-		var H = viewer.innerHeight()
-
-		if(W > H){
-			image.css('width', W * h/H)
-		} else {
-			image.css('height', H * w/W)
-		}
-
-		// account for rotation...
-		correctImageProportionsForRotation(image)
-
-		centerView(null, 'css')
-	}
-
-	return mode
-}
-*/
-
 var toggleImageProportions = createCSSClassToggler('.viewer',
 		[
 			'fit-square',
