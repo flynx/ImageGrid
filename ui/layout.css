@@ -216,8 +216,7 @@ body {
   transform: rotate(270deg) scaleY(-1) scaleX(-1);
 }
 /* default backgrounds */
-/* XXX not sure if we need these... */
-/*
+/* XXX not sure if we need these... 
 .image {
 	background-image: url(images/loading.gif);
 }
