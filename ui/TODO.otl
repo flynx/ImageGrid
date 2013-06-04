@@ -105,32 +105,6 @@ Roadmap
 		| 	jumping to end from start of ribbon
 		[_] usable empty view -- w.o. data...
 		[_] single image mode transition (alpha-blend/fade/none)
-		[_] make the marks in single image mode show in corner of viewer, not image
-		| and think of a uniform indicator position...
-		|
-		| 	+---------------------------+
-		| 	|					   oooo	| <-- global indicators
-		| 	|							|		(all modes)
-		| 	|							|
-		| 	|							|
-		| 	|							|
-		| 	|							|
-		| 	|							|
-		| 	|							|
-		| 	|							|
-		| 	|					   oooo	| <-- context indicators
-		| 	+---------------------------+		(single image mode)
-		|
-		| make global indicators semi-transparent in single-image-mode, so as to 
-		| indicate their lesser priority than context/image indicators...
-		|
-		| keep image indicators within the image square for ribbon mode...
-		|
-		| possible indicator styles:
-		| 	- letter, expand on hover
-		| 	- colored circle -- show text of same color under or to the side on hover
-		|
-		| might bee nice too use both styles, one for images one for global...
 		[_] 0% Tablet UI
 			[_] screen buttons
 		[_] ASAP: test on Android...
@@ -207,6 +181,32 @@ Roadmap
 		[_] BUG: BASE_URL seems to gain a new trailing '/' on each save...
 		| low priority as this does not affect anything...
 		[_] start/stop gif animations...
+		[X] make the marks in single image mode show in corner of viewer, not image
+		| and think of a uniform indicator position...
+		|
+		| 	+---------------------------+
+		| 	|					   oooo	| <-- global indicators
+		| 	|							|		(all modes)
+		| 	|							|
+		| 	|							|
+		| 	|							|
+		| 	|							|
+		| 	|							|
+		| 	|							|
+		| 	|							|
+		| 	|					   oooo	| <-- context indicators
+		| 	+---------------------------+		(single image mode)
+		|
+		| make global indicators semi-transparent in single-image-mode, so as to 
+		| indicate their lesser priority than context/image indicators...
+		|
+		| keep image indicators within the image square for ribbon mode...
+		|
+		| possible indicator styles:
+		| 	- letter, expand on hover
+		| 	- colored circle -- show text of same color under or to the side on hover
+		|
+		| might bee nice too use both styles, one for images one for global...
 		[X] BUG: shifting ribbon left sometimes results in wrong order...
 		| i.e. an image with order 12 before image with order 11
 		|
