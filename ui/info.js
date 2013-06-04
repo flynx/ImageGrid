@@ -42,8 +42,14 @@ function updateGlobalImageInfo(image){
 			'<span class="shown">R</span>'+
 			'<span class="hidden"><b>R</b>otated: '+orientation+'&deg;CW</span>') : ''
 
-	// XXX
-	//var flip = data.flip
+	var flip = data.flipped
+	flip != null ? meta.push(
+				'<span class="shown">F</span>'+
+				'<span class="hidden"><b>F</b>lipped: '+
+					//flip.map(function(e){ return e[0].capitalize() }).join(', ')+
+					flip.map(function(e){ return e.capitalize() }).join(', ')+
+				'</span>') 
+			: ''
 
 
 	meta = meta.join(', ') 
@@ -70,9 +76,12 @@ function updateGlobalImageInfo(image){
 
 			// metadata...
 			'<span class="secondary expanding-text metadata">'+
-				meta + ' GID:'+
+				meta +
+			'</span> '+
+			'<span class="secondary expanding-text metadata">'+
 				// XXX do we need to display a short gid?
 				//gid +
+				'GID:'+
 				'<span class="shown">'+ 
 					gid.slice(gid.length-6) +
 				'</span>'+

@@ -567,6 +567,9 @@ body {
   padding-left: 10px;
   padding-right: 10px;
   box-sizing: border-box;
+  white-space: nowrap;
+  /*overflow: hidden;*/
+
   background: black;
   color: white;
   opacity: 0.6;
