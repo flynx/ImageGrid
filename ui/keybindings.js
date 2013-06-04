@@ -374,6 +374,8 @@ var KEYBOARD_CONFIG = {
 						reverseImageOrder() 
 					}),
 			},
+		H: doc('Flip image horizontally', function(){ flipHorizontal() }),
+		V: doc('Flip image vertically', function(){ flipVertical() }),
 
 
 		// zooming...
@@ -522,7 +524,6 @@ var KEYBOARD_CONFIG = {
 
 		F1: doc('Show help',
 			function(){ toggleHelp() }),
-		H: 'F1',
 
 
 		/* testing the shift-key feature...
