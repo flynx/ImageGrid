@@ -404,6 +404,7 @@ body {
   transform: rotate(90deg) scaleY(1) scaleX(1);
 }
 /* compensate for flipping... */
+/* XXX START: I hate this code, will think if a better way to do this... */
 .image:not([orientation="90"])[flipped*="horizontal"] .inline-image-info {
   -webkit-transform: rotate(0deg) scaleY(1) scaleX(-1);
   -moz-transform: rotate(0deg) scaleY(1) scaleX(-1);
@@ -555,6 +556,7 @@ body {
   -ms-transform: rotate(90deg) scaleY(-1) scaleX(-1);
   transform: rotate(90deg) scaleY(-1) scaleX(-1);
 }
+/* XXX END */
 .overlay-info {
   display: none;
   position: absolute;
