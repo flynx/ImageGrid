@@ -1,15 +1,15 @@
 
-TARGET=layout.css
+%.css: %.less
+	lessc $< > $@
 
-LESS_FILE=layout.less
+CSS_FILES := $(patsubst %.less,%.css,$(wildcard *.less))
 
-$(TARGET): $(LESS_FILE)
-	lessc $(LESS_FILE) > $(TARGET)
+# make this search for all *.less files...
+TARGET= layout.css
+
+
+
+all: $(CSS_FILES)
 
 clean:
-	rm -f $(TARGET)
-
-# Makefile dependencies...
-$(OBJ): Makefile
-$(TARGET): Makefile
-
+	@rm -f $(TARGET)
