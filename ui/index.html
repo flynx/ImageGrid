@@ -41,6 +41,8 @@ $(function(){
 	toggleTheme('gray')
 	toggleImageInfo('on')
 
+	setupIndicators()
+
 	autoHideCursor($('.viewer'))
 
 	// NOTE: this is global so as to not to add any extra complexity to 
@@ -188,6 +190,7 @@ Populated
 	<div class="down-indicator"></div>
 	<div class="start-indicator"></div>
 	<div class="end-indicator"></div>
+
 	<div class="overlay-block">
 		<div class="background"></div>
 		<div class="content"></div>

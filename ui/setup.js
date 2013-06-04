@@ -8,6 +8,26 @@
 * Setup
 */
 
+function setupIndicators(){
+	showGlobalIndicator(
+			'marks-visible', 
+			'Marks visible (F2)')
+		.css('cursor', 'hand')
+		.click(function(){ toggleMarkesView() })
+	showGlobalIndicator(
+			'marked-only-visible', 
+			'Marked only images visible (alt-F2)')
+		.css('cursor', 'hand')
+		.click(function(){ toggleMarkedOnlyView() })
+
+	showContextIndicator(
+			'current-image-marked', 
+			'Image is marked (Ins/M)')
+		.css('cursor', 'hand')
+		.click(function(){ toggleImageMark() })
+}
+
+
 // Setup event handlers for data bindings...
 //
 // This does two jobs:
@@ -245,6 +265,18 @@ function setupDataBindings(viewer){
 			function(){
 				updateGlobalImageInfo()
 			})
+
+		// mark indicator...
+		// XXX make this generic and handle any of the available marks...
+		.on('focusingImage togglingMark', function(evt, image){
+			image = image.length == 0 ? getImage() : image
+			var indicator = $('.context-mode-indicators .current-image-marked')
+			if(image.hasClass('marked')){
+				indicator.addClass('shown')
+			} else {
+				indicator.removeClass('shown')
+			}
+		})
 }
 
 

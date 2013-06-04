@@ -183,6 +183,11 @@ body {
 	left: 5px;
 }
 
+/* XXX make the marks position relative to viewer or gidden compleatly */
+.marks-visible.single-image-mode.viewer .marked.image:after {
+	display: none;
+}
+
 /* corner mark... (a-la bookmarks in PortableMag) */
 /*
 .marks-visible.viewer .marked.image:after {
@@ -221,6 +226,8 @@ body {
 */
 
 
+/*.marks-visible.viewer:not(.single-image-mode):after {*/
+/*
 .marks-visible.viewer:after {
 	display: block;
 	position: absolute;
@@ -253,6 +260,7 @@ body {
 .marked-only-view.marks-visible.viewer:after {
 	background: blue;
 }
+*/
 
 /* XXX should we use opacity??? */
 .marked-only-view.viewer:not(.marks-visible) .image:not(.marked) {
@@ -442,6 +450,107 @@ body {
 .start-indicator,
 .end-indicator {
 	display: none;
+}
+
+
+/* these are generic containers for indicators */
+.global-mode-indicators {
+	position: absolute;
+	top: 15px;
+	right: 15px;
+	height: 20px;
+	width: auto;
+
+	font-size: small;
+}
+.global-mode-indicators>* {
+	margin-left: 10px;
+}
+.global-mode-indicators .circle {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+}
+/* hide indicators in single image mode */
+.single-image-mode.viewer .global-mode-indicators {
+	opacity: 0.5;
+}
+.light.single-image-mode.viewer .global-mode-indicators {
+	opacity: 0.1;
+}
+.dark.single-image-mode.viewer .global-mode-indicators {
+	opacity: 0.6;
+}
+.single-image-mode.viewer .global-mode-indicators:hover {
+	opacity: 1;
+}
+
+/* context indicators */
+.context-mode-indicators {
+	position: absolute;
+	right: 15px;
+	bottom: 15px;
+	height: 20px;
+	width: auto;
+
+	font-size: small;
+}
+.context-mode-indicators>* {
+	margin-left: 10px;
+}
+.context-mode-indicators .circle {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+}
+
+
+/* actual indicators */
+/* marks... */
+.global-mode-indicators .marked-only-visible,
+.global-mode-indicators .marks-visible,
+.context-mode-indicators .current-image-marked {
+	display: none;
+	color: blue;
+}
+.global-mode-indicators .marked-only-visible .shown,
+.global-mode-indicators .marks-visible .shown,
+.context-mode-indicators .current-image-marked .shown {
+	display: none;
+}
+.global-mode-indicators .marked-only-visible:after,
+.global-mode-indicators .marks-visible:after,
+.context-mode-indicators .current-image-marked:after {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	content: "";
+	background-color: blue;
+	border: solid 2px blue;
+	margin-left: 5px;
+}
+.marks-visible.viewer .global-mode-indicators .marks-visible {
+	display: inline-block;
+}
+.marked-only-view.viewer .global-mode-indicators .marks-visible {
+	display: none;
+}
+.marked-only-view.viewer .global-mode-indicators .marked-only-visible {
+	display: inline-block;
+}
+.marked-only-view.viewer:not(.marks-visible) .global-mode-indicators .marked-only-visible:after {
+	background-color: transparent;
+}
+/* image mark in single image mode... */
+.context-mode-indicators .current-image-marked {
+	display: none;
+	color: blue;
+}
+.single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked.shown {
+	display: inline-block;
 }
 
 

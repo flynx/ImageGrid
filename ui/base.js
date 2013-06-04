@@ -413,6 +413,37 @@ function getStatus(){
 }
 
 
+function makeIndicator(text){
+	return $('<span class="expanding-text">'+
+				'<span class="hidden">'+ text +'</span>'+
+				'<span class="shown">'+ text[0] +'</span>'+
+			'</span>')
+}
+
+function showGlobalIndicator(cls, text){
+	var c = $('.global-mode-indicators')
+	if(c.length == 0){
+		c = $('<div>')
+			.addClass('global-mode-indicators')
+			.appendTo($('.viewer'))
+	}
+	return makeIndicator(text)
+			.addClass(cls)
+			.appendTo(c)
+}
+function showContextIndicator(cls, text){
+	var c = $('.context-mode-indicators')
+	if(c.length == 0){
+		c = $('<div>')
+			.addClass('context-mode-indicators')
+			.appendTo($('.viewer'))
+	}
+	return makeIndicator(text)
+			.addClass(cls)
+			.appendTo(c)
+}
+
+
 
 /**********************************************************************
 * Constructors
