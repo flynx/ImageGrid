@@ -1,0 +1,731 @@
+/**********************************************************************
+* 
+**********************************************************************/
+
+body {
+	font-family: sans-serif;
+	padding: 0px;
+	margin: 0px;
+}
+
+
+
+/********************************************************** Viewer ***/
+.viewer {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+
+	/*border: solid blue 1px;*/
+	box-sizing: border-box;
+
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-o-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+
+
+/****************************************************** Ribbon set ***/
+.ribbon-set {
+	position: absolute;
+	display: block;
+
+	/* NOTE: this needs for scaling/zooming to behave correctly and not 
+			shift the element, when its dimensions change... 
+			...this is because .ribbon-set will both be used for scaling 
+			and aligning... */
+	transform-origin: top left;
+	-ms-transform-origin: top left;
+	-webkit-transform-origin: top left; /* Safari and Chrome */
+}
+.ribbon-set:empty:after {
+	display: block;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	content: "Empty";
+	text-align: center;
+}
+
+
+
+/********************************************************** Ribbon ***/
+.ribbon {
+	position: relative;
+	display: block;
+	height: auto;
+	min-width: 0px;
+	overflow: visible;
+	white-space: nowrap;
+	font-size: 0;
+
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+.ribbon:empty {
+	display: none;
+}
+.ribbon:first-child {
+	margin-top: 0px;
+}
+.ribbon:last-child {
+	margin-bottom: 0px;
+}
+
+
+
+/*********************************************************** Image ***/
+.image {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	text-align:left;
+	width: 300px;
+	height: 300px;
+	font-size: 12pt;
+	overflow: hidden;
+
+	box-sizing: border-box;
+	color: white;
+
+	text-shadow: black 0.1em 0.1em 0.4em, black 0.1em 0.1em;
+
+	background: no-repeat 50% black;
+	background-size: contain;
+	/* XXX do we need this? */
+	border: solid black 5px;
+}
+.current.image {
+	background: no-repeat 50% black;
+	background-size: contain;
+
+	/* XXX remove this... */
+	border: solid red 5px;
+}
+
+.rotate (@deg) {
+	-webkit-transform: rotate(@deg);
+	-moz-transform: rotate(@deg);
+	-o-transform: rotate(@deg);
+	-ms-transform: rotate(@deg);
+	transform: rotate(@deg);
+}
+
+/* image turning... */
+/* NOTE: need to account for proportions after turning... */
+.image[orientation="90"] {
+	.rotate(90deg);
+}
+.image[orientation="180"] {
+	-webkit-transform: rotate(180deg);
+	-moz-transform: rotate(180deg);
+	-o-transform: rotate(180deg);
+	-ms-transform: rotate(180deg);
+	transform: rotate(180deg);
+}
+.image[orientation="270"] {
+	-webkit-transform: rotate(270deg);
+	-moz-transform: rotate(270deg);
+	-o-transform: rotate(270deg);
+	-ms-transform: rotate(270deg);
+	transform: rotate(270deg);
+}
+
+
+/* Flipped vertically only... */
+/* NOTE: wee need to do all possible combinations here as we can't 
+ 	combine different parts of a transform attr from different 
+ 	classes */
+.image[flipped*="vertical"] {
+        -moz-transform: scaleY(-1);
+        -o-transform: scaleY(-1);
+        -webkit-transform: scaleY(-1);
+        -ms-transform: scaleY(-1);
+        transform: scaleY(-1);
+}
+.image[orientation="90"][flipped="vertical"] {
+}
+.image[orientation="180"][flipped="vertical"] {
+}
+.image[orientation="270"][flipped="vertical"] {
+}
+
+
+/* Flipped horizontally only... */
+.image[flipped*="horizontal"] {
+        -moz-transform: scaleX(-1);
+        -o-transform: scaleX(-1);
+        -webkit-transform: scaleX(-1);
+        -ms-transform: scaleX(-1);
+        transform: scaleX(-1);
+}
+.image[orientation="90"][flipped="horizontal"] {
+}
+.image[orientation="180"][flipped="horizontal"] {
+}
+.image[orientation="270"][flipped="horizontal"] {
+}
+
+/* Flipped vertically only... */
+.image[flipped*="vertical"][flipped*="horizontal"] {
+        -moz-transform: scaleX(-1) scaleY(-1);
+        -o-transform: scaleX(-1) scaleY(-1);
+        -webkit-transform: scaleX(-1) scaleY(-1);
+        -ms-transform: scaleX(-1) scaleY(-1);
+        transform: scaleX(-1) scaleY(-1);
+}
+.image[orientation="90"][flipped*="vertical"][flipped*="horizontal"] {
+}
+.image[orientation="180"][flipped*="vertical"][flipped*="horizontal"] {
+}
+.image[orientation="270"][flipped*="vertical"][flipped*="horizontal"] {
+}
+
+
+/* default backgrounds */
+/* XXX not sure if we need these... */
+/*
+.image {
+	background-image: url(images/loading.gif);
+}
+.image[orientation="90"] {
+	background-image: url(images/loading-90deg.gif);
+}
+.image[orientation="180"] {
+	background-image: url(images/loading-180deg.gif);
+}
+.image[orientation="270"] {
+	background-image: url(images/loading-270deg.gif);
+}
+*/
+
+
+
+/***************************************************** Image marks ***/
+.marks-visible.viewer .marked.image:after {
+	display: block;
+	position: absolute;
+	content: "";
+	font-size: 0pt;
+	border: none;
+
+	width: 15px;
+	height: 15px;
+
+	bottom: 5px;
+	right: 5px;
+
+	border-radius: 50%;
+	background: blue;
+}
+.marks-visible.viewer .marked.image[orientation="90"]:after {
+	top: 5px;
+	right: 5px;
+}
+.marks-visible.viewer .marked.image[orientation="180"]:after {
+	top: 5px;
+	left: 5px;
+}
+.marks-visible.viewer .marked.image[orientation="270"]:after {
+	bottom: 5px;
+	left: 5px;
+}
+
+/* XXX make the marks position relative to viewer or gidden compleatly */
+.marks-visible.single-image-mode.viewer .marked.image:after {
+	display: none;
+}
+
+/* corner mark... (a-la bookmarks in PortableMag) */
+/*
+.marks-visible.viewer .marked.image:after {
+	display: block;
+	position: absolute;
+	content: "";
+	font-size: 0pt;
+	border: none;
+
+	width: 30px;
+	height: 30px;
+
+	top: -15px;
+	right: -15px;
+
+	background: blue;
+
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	transform: rotate(45deg);
+}
+.marks-visible.viewer .marked.image[orientation="90"]:after {
+	top: -15px;
+	left: -15px;
+}
+.marks-visible.viewer .marked.image[orientation="180"]:after {
+	bottom: -15px;
+	left: -15px;
+}
+.marks-visible.viewer .marked.image[orientation="270"]:after {
+	bottom: -15px;
+	right: -15px;
+}
+*/
+
+
+/*.marks-visible.viewer:not(.single-image-mode):after {*/
+/*
+.marks-visible.viewer:after {
+	display: block;
+	position: absolute;
+	content: "";
+	font-size: 0pt;
+
+	top: 10px;
+	right: 10px;
+	width: 10px;
+	height: 10px;
+
+	border: solid 2px blue;
+	border-radius: 50%;
+	background: blue;
+}
+.marked-only-view.viewer:after {
+	display: block;
+	position: absolute;
+	content: "";
+	font-size: 0pt;
+	top: 10px;
+	right: 10px;
+	width: 10px;
+	height: 10px;
+
+	border: solid 2px blue;
+	border-radius: 50%;
+	background: transparent;
+}
+.marked-only-view.marks-visible.viewer:after {
+	background: blue;
+}
+*/
+
+/* XXX should we use opacity??? */
+.marked-only-view.viewer:not(.marks-visible) .image:not(.marked) {
+	opacity: 0.3;
+}
+
+
+
+/****************************************************** Image info ***/
+.image .inline-image-info {
+	display: none;
+
+	position: absolute;
+	bottom: 0px;
+	width: 100%;
+	background: black;
+	opacity: 0.7;
+}
+.image .inline-image-info:hover {
+	-moz-user-select: auto;
+	-webkit-user-select: auto;
+	-o-user-select: auto;
+	-ms-user-select: auto;
+	user-select: auto;
+}
+.image .inline-image-info::selection {
+	color: white;
+	background: red;
+}
+.image-info-visible.viewer .global-image-info,
+.image-info-visible.viewer .image:hover .inline-image-info {
+	display: block;
+}
+.single-image-mode.viewer .image:hover .inline-image-info {
+	display: none;
+}
+.image[orientation="90"] .inline-image-info {
+	top: auto;
+	left: 100%;
+
+	-ms-transform-origin: bottom left;
+	-webkit-transform-origin: bottom left;
+	transform-origin: bottom left;
+
+	-webkit-transform: rotate(-90deg);
+	-moz-transform: rotate(-90deg);
+	-o-transform: rotate(-90deg);
+	-ms-transform: rotate(-90deg);
+	transform: rotate(-90deg);
+}
+.image[orientation="180"] .inline-image-info {
+	top: 0px;
+	bottom: auto;
+
+	-webkit-transform: rotate(180deg);
+	-moz-transform: rotate(180deg);
+	-o-transform: rotate(180deg);
+	-ms-transform: rotate(180deg);
+	transform: rotate(180deg);
+}
+.image[orientation="270"] .inline-image-info {
+	top: auto;
+	left: auto;
+	right: 100%;
+
+	-ms-transform-origin: bottom right;
+	-webkit-transform-origin: bottom right;
+	transform-origin: bottom right;
+
+	-webkit-transform: rotate(90deg);
+	-moz-transform: rotate(90deg);
+	-o-transform: rotate(90deg);
+	-ms-transform: rotate(90deg);
+	transform: rotate(90deg);
+}
+
+.overlay-info {
+	display: none;
+	position: absolute;
+
+	bottom: 0px;
+	left: 0px;
+	width: 100%;
+	padding: 2px;
+	padding-left: 10px;
+	padding-right: 10px;
+	box-sizing: border-box;
+
+	background: black;
+	color: white;
+
+	opacity: 0.6;
+}
+.overlay-info:hover {
+	-moz-user-select: auto;
+	-webkit-user-select: auto;
+	-o-user-select: auto;
+	-ms-user-select: auto;
+	user-select: auto;
+}
+.overlay-info .float-right {
+	float: right;
+}
+.overlay-info .secondary {
+	font-style: italic;
+	font-size: small;
+	color: silver;
+}
+.overlay-info::selection,
+.overlay-info ::selection {
+	color: white;
+	background: red;
+}
+
+
+
+/*************************************************** Global status ***/
+.global-status {
+	display: block;
+	opacity: 1;
+	z-index: 1000;
+}
+
+
+
+/****************************************************** Indicators ***/
+.up-indicator,
+.down-indicator,
+.start-indicator,
+.end-indicator {
+	display: block;
+	position: absolute;
+	content: "";
+	top: 0px;
+	left: 50%;
+	height: 50px;
+	width: 100px;
+	margin-left: -50px;
+
+	overflow: hidden;
+
+	cursor: hand;
+}
+.up-indicator:after,
+.down-indicator:after {
+	display: inline-block;
+	position: absolute;
+	content: "";
+	width: 50px;
+	height: 50px;
+
+	bottom: -25px;
+	left: 25px;
+
+	background: yellow;
+
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	transform: rotate(45deg);
+}
+.down-indicator {
+	top: auto;
+	bottom: 0px;
+}
+.down-indicator:after {
+	top: -25px;
+	bottom: auto;
+}
+.start-indicator,
+.end-indicator {
+	left: 0px;
+	width: 10px;
+	height: 100%;
+	margin: 0px;
+
+	background: yellow;
+}
+.end-indicator {
+	left: auto;
+	right: 0px;
+}
+/* default state */
+.up-indicator,
+.down-indicator,
+.start-indicator,
+.end-indicator {
+	display: none;
+}
+
+
+/* these are generic containers for indicators */
+.global-mode-indicators {
+	position: absolute;
+	top: 15px;
+	right: 15px;
+	height: 20px;
+	width: auto;
+
+	font-size: small;
+}
+.global-mode-indicators>* {
+	margin-left: 10px;
+}
+.global-mode-indicators .circle {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+}
+/* hide indicators in single image mode */
+.single-image-mode.viewer .global-mode-indicators {
+	opacity: 0.5;
+}
+.light.single-image-mode.viewer .global-mode-indicators {
+	opacity: 0.1;
+}
+.dark.single-image-mode.viewer .global-mode-indicators {
+	opacity: 0.6;
+}
+.single-image-mode.viewer .global-mode-indicators:hover {
+	opacity: 1;
+}
+
+/* context indicators */
+.context-mode-indicators {
+	position: absolute;
+	right: 15px;
+	bottom: 15px;
+	height: 20px;
+	width: auto;
+
+	font-size: small;
+}
+.context-mode-indicators>* {
+	margin-left: 10px;
+}
+.context-mode-indicators .circle {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+}
+
+
+/* actual indicators */
+/* marks... */
+.global-mode-indicators .marked-only-visible,
+.global-mode-indicators .marks-visible,
+.context-mode-indicators .current-image-marked {
+	display: none;
+	color: blue;
+}
+.global-mode-indicators .marked-only-visible .shown,
+.global-mode-indicators .marks-visible .shown,
+.context-mode-indicators .current-image-marked .shown {
+	display: none;
+}
+.global-mode-indicators .marked-only-visible:after,
+.global-mode-indicators .marks-visible:after,
+.context-mode-indicators .current-image-marked:after {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	content: "";
+	background-color: blue;
+	border: solid 2px blue;
+	margin-left: 5px;
+}
+.marks-visible.viewer .global-mode-indicators .marks-visible {
+	display: inline-block;
+}
+.marked-only-view.viewer .global-mode-indicators .marks-visible {
+	display: none;
+}
+.marked-only-view.viewer .global-mode-indicators .marked-only-visible {
+	display: inline-block;
+}
+.marked-only-view.viewer:not(.marks-visible) .global-mode-indicators .marked-only-visible:after {
+	background-color: transparent;
+}
+/* image mark in single image mode... */
+.context-mode-indicators .current-image-marked {
+	display: none;
+	color: blue;
+}
+.single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked.shown {
+	display: inline-block;
+}
+
+
+
+/********************************************** Mode: single image ***/
+.single-image-mode.viewer .image {
+	background-color: transparent;
+	/* NOTE: need to keep a distance from screen borders... */
+	border: solid transparent 2px;
+}
+.single-image-mode.viewer .image:not(.current) {
+	/* XXX for some reason this breaks the alignment on large magnifications...
+	display: none;
+	*/
+	/* XXX this makes images pass through the :visible filter...
+	opacity: 0;
+	*/
+	visibility: hidden;
+}
+
+
+
+/********************************************************** Themes ***/
+/* XXX this is by no means final... */
+.viewer,
+.light.viewer,
+.light.viewer .overlay-block .background {
+	background: white;
+}
+
+.gray.viewer,
+.gray.viewer .overlay-block .background {
+	background: #333;
+}
+
+.dark.viewer,
+.dark.viewer .overlay-block .background {
+	background: #0a0a0a;
+}
+
+
+
+/********************************************************* Overlay ***/
+.overlay-block {
+	display: none;
+	position: absolute:
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	width: 100%;
+}
+.viewer.overlay .overlay-block {
+	display: block;
+}
+.overlay-block .content {
+}
+.overlay-block .background {
+	position: absolute:
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	width: 100%;
+	opacity: 0.7;
+}
+
+
+
+/************************************************************ Help ***/
+/* this is for sliding stuff */
+.viewer.drawer-mode {
+	box-shadow: 0px 0px 50px 0px silver;
+}
+
+/* help */
+.keyboard-help {
+	width: 80%;
+	margin-top: 20px;
+	margin-left: 15%;
+	margin-right: 5%;
+	margin-bottom: 100px;
+}
+.keyboard-help .section-doc {
+	font-size: small;
+	vertical-align: top;
+	font-style: italic;
+}
+.keyboard-help th {
+	text-align: left;
+	height: 50px;
+	vertical-align: bottom;
+	border-bottom: solid gray 1px;
+}
+.keyboard-help tr:hover {
+	background: #eee;
+	vertical-align: top;
+}
+.keyboard-help tr td:first-child {
+	color: gray;
+	font-style: italic;
+	padding-right: 20px;
+	padding-left: 10px;
+}
+.keyboard-help .section-doc td:only-child {
+	padding-right: 0px;
+	padding-left: 0px;
+}
+
+
+
+/********************************************************* utility ***/
+.expanding-text .hidden {
+	display: none;
+}
+.expanding-text:hover .shown {
+	display: none;
+}
+.expanding-text:hover .hidden {
+	display: inline;
+}
+
+
+
+
+/**********************************************************************
+* vim:set spell ft=css :                                             */
