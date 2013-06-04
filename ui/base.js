@@ -917,13 +917,9 @@ function setImageFlipState(image, state){
 	return image
 }
 
-// XXX not yet implemented...
-// 		...mostly because it will conflict with turning and require a
-// 		very tightly woven with rotation code, both JS and CSS...
-// 		i.e. requiring two sets of rotation styles, one for flipped 
-// 		and another for horizontally flipped image.
-// 		...at least flipping will not affect the square/viewer aspect 
-// 		ratio of images.
+// direction can be:
+// 	- 'vertical'
+// 	- 'horizontal'
 function flipImage(direction, image){
 	image = image == null ? getImage() : $(image)
 	image.each(function(i, e){

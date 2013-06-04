@@ -55,12 +55,24 @@ var STUB_IMAGE_DATA = {
 	classes: '',
 
 	// Image orientation
+	//
 	// can be:
 	// 	- 0 (default)	- load as-is
 	// 	- 90			- rotate 90deg CW
 	// 	- 180			- rotate 180deg CW
 	// 	- 270			- rotate 270deg CW (90deg CCW)
 	orientation: 0,
+
+	// Image flip state
+	//
+	// can be:
+	// 	- null/undefined
+	// 	- array
+	//
+	// can contain:
+	// 	- 'vertical'
+	// 	- 'horizontal'
+	flipped: null,
 }
 
 // Data format...
@@ -750,6 +762,11 @@ function updateImage(image, gid, size){
 			order: DATA.order.indexOf(gid),
 			orientation: img_data.orientation == null ? 0 : img_data.orientation,
 		})
+
+	// flip...
+	if(img_data.flipped != null){
+		setImageFlipState(image, img_data.flipped)
+	}
 
 	// marks...
 	if(MARKED.indexOf(gid) != -1){

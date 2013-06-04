@@ -42,6 +42,9 @@ function updateGlobalImageInfo(image){
 			'<span class="shown">R</span>'+
 			'<span class="hidden"><b>R</b>otated: '+orientation+'&deg;CW</span>') : ''
 
+	// XXX
+	//var flip = data.flip
+
 
 	meta = meta.join(', ') 
 	meta = meta != '' ? '( '+ meta +' )' : ''
