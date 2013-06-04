@@ -16,7 +16,7 @@ function setupIndicators(){
 		.click(function(){ toggleMarkesView() })
 	showGlobalIndicator(
 			'marked-only-visible', 
-			'Marked only images visible (alt-F2)')
+			'Marked only images visible (shift-F2)')
 		.css('cursor', 'hand')
 		.click(function(){ toggleMarkedOnlyView() })
 

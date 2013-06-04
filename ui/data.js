@@ -1425,6 +1425,8 @@ function updateRibbonsFromFavDirs(){
 * Actions...
 */
 
+/******************************************************** Extension **/
+
 // Open image in an external editor/viewer
 //
 // NOTE: this will open the default editor/viewer.
@@ -1437,6 +1439,9 @@ function openImage(){
 	return runSystem(normalizePath(IMAGES[getImageGID()].path, BASE_URL))
 }
 
+
+
+/********************************************************** Sorting **/
 
 function reverseImageOrder(){
 	DATA.order.reverse()
@@ -1465,6 +1470,9 @@ function sortImagesByName(reverse){
 	return sortImages(imageNameCmp, reverse)
 }
 
+
+
+/*************************************************** Manual sorting **/
 
 // Ordering images...
 // NOTE: this a bit more complicated than simply shifting an image 

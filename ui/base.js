@@ -877,27 +877,79 @@ function rotateImage(direction, image){
 	})
 
 	$('.viewer').trigger('rotating' + direction.capitalize(), [image])
+
+	return image
 }
 
 
 function rotateLeft(image){
-	rotateImage('left', image)
+	return rotateImage('left', image)
 }
 function rotateRight(image){
-	rotateImage('right', image)
+	return rotateImage('right', image)
 }
 
 
 
 /******************************************************** Flipping ***/
 
-function flipVertical(image){
-	// XXX
+function getImageFlipState(image){
+	image = image == null ? getImage() : $(image)
+	var state = image.attr('flipped')
+
+	if(state == null){
+		return []
+	}
+
+	state = state.split(',').map(function(e){ return e.trim() })
+
+	return state
+}
+function setImageFlipState(image, state){
+	image = image == null ? getImage() : $(image)
+	
+	if(state.length == 0){
+		image.removeAttr('flipped')
+	} else if(state != null){
+		image.attr('flipped', state.join(', '))
+	}
+
+	return image
+}
+
+// XXX not yet implemented...
+// 		...mostly because it will conflict with turning and require a
+// 		very tightly woven with rotation code, both JS and CSS...
+// 		i.e. requiring two sets of rotation styles, one for flipped 
+// 		and another for horizontally flipped image.
+// 		...at least flipping will not affect the square/viewer aspect 
+// 		ratio of images.
+function flipImage(direction, image){
+	image = image == null ? getImage() : $(image)
+	image.each(function(i, e){
+		var img = $(this)
+		var state = getImageFlipState(img)
+		var i = state.indexOf(direction)
+
+		if(i >= 0){
+			state.splice(i, 1)
+		} else {
+			state.push(direction)
+		}
+		setImageFlipState(image, state)
+	})
+
+	$('.viewer').trigger('flipping' + direction.capitalize(), [image])
+
+	return image
 }
 
 
+function flipVertical(image){
+	return flipImage('vertical')
+}
 function flipHorizontal(image){
-	// XXX
+	return flipImage('horizontal')
 }
 
 

@@ -175,9 +175,15 @@ function updateStatus(message){
 
 
 // Same as updateInfo(...) but will aslo show and animate-close the message
+//
+// XXX the next call will not reset the animation of the previous, rather 
+// 		it will pause it and rezume...
+// 		...not sure if this is correct.
 function showStatus(message){
 	return updateStatus.apply(null, arguments)
-		.stop()
+		//.stop()
+		.stop(true, false)
+		//.finish()
 		.show()
 		.delay(500)
 		.fadeOut(800)
@@ -193,7 +199,9 @@ function showErrorStatus(message){
 	message.splice(0, 0, 'Error:')
 	return updateStatus.apply(null, message)
 		.one('click', function(){ $(this).fadeOut() })
-		.stop()
+		//.stop()
+		.stop(true, false)
+		//.finish()
 		.show()
 }
 
