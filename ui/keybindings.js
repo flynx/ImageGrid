@@ -47,7 +47,7 @@ var KEYBOARD_CONFIG = {
 	'.overlay-info:hover': {
 		title: 'Info overlay',
 		doc: 'Displayed on bottom of the screen if enabled (toggle with '+
-			'<b>I</b>) and/or inline, at bottom of and image when cursor '+
+			'<b>I</b>) and/or inline, at bottom of an image when cursor '+
 			'is over it (only in ribbon mode, toggle with <b>alt-I</b>)'+
 
 			'<p>NOTE: when the cursor is over the info overlay one can use '+
@@ -77,7 +77,7 @@ var KEYBOARD_CONFIG = {
 	'.drawer-mode': {
 		title: 'Drawer modes',
 		doc: 'NOTE: In this mode all other key bindings are disabled, '+
-			'except the ones explicitly defined here.',
+			'except app defaults and the ones explicitly defined here.',
 
 		ignore: '*',
 
@@ -222,10 +222,10 @@ var KEYBOARD_CONFIG = {
 		title: 'Global',
 		doc: 'These key bindings work in most other modes.'+
 
-			'<p>NOTE: shifting markid images from different ribbons will '+
+			'<p>NOTE: shifting all marked images from different ribbons will '+
 			'perform the operations on ALL marked images but relative '+
-			'the the current ribbon. i.e. some images might get promoted,'+
-			'others demoted while some will not change position.',
+			'the the current ribbon. i.e. some images might get promoted, '+
+			'others demoted while some will not change position. ',
 
 		// Basics...
 		// XXX STUB: use a real path browser...
