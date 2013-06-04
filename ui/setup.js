@@ -103,7 +103,7 @@ function setupDataBindings(viewer){
 
 		.on('shiftedImage', function(evt, image, from, to){
 			from = getRibbonIndex(from)
-			var ribbon = to
+			//var ribbon = to
 			to = getRibbonIndex(to)
 
 			var gid = getImageGID(image)

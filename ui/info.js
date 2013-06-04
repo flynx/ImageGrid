@@ -121,7 +121,7 @@ function updateInlineImageInfo(image){
 
 
 	var gid = getImageGID(image)
-	var r = getRibbonIndex(getRibbon(image))
+	//var r = getRibbonIndex(getRibbon(image))
 	var data = IMAGES[gid]
 	var date = new Date(data.ctime * 1000)
 

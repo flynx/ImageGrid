@@ -425,7 +425,7 @@ function extendRibbon(left, right, ribbon, no_compensate_shift){
 
 	// NOTE: this is fool-proof as it's based on relative visual 
 	// 		position...
-	var scale = getElementScale($('.ribbon-set'))
+	//var scale = getElementScale($('.ribbon-set'))
 	var l = parseFloat(ribbon.css('left'))
 	l = isNaN(l) ? 0 : l
 	// compensate for left shift...

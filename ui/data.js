@@ -724,7 +724,6 @@ function convertDataGen1(data, cmp){
 // 		may leak to newly loaded images...
 function updateImage(image, gid, size){
 	image = $(image)
-	var title = ''
 	var oldgid = getImageGID(image)
 
 	if(oldgid == gid || gid == null){
@@ -745,7 +744,7 @@ function updateImage(image, gid, size){
 	if(img_data == null){
 		img_data = STUB_IMAGE_DATA
 	}
-	var name = img_data.path.split('/').pop()
+	//var name = img_data.path.split('/').pop()
 
 	// preview...
 	var preview = getBestPreview(gid, size)
