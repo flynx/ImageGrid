@@ -718,6 +718,10 @@ function convertDataGen1(data, cmp){
 */
 
 // Update an image element
+//
+// NOTE: care must be taken to reset ALL attributes an image can have,
+// 		a common bug if this is not done correctly, is that some settings
+// 		may leak to newly loaded images...
 function updateImage(image, gid, size){
 	image = $(image)
 	var title = ''
@@ -1030,6 +1034,11 @@ function loadSettings(){
 /**********************************************************************
 * Image caching...
 */
+
+// TODO add global cache...
+// 		- manage cache by number and preview size...
+// 		- keep in biggish...
+
 
 // NOTE: this will always overwrite the previous cache set for a ribbon...
 // NOTE: it appears that sorting images by priority before loading them
