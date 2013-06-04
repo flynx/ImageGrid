@@ -764,9 +764,7 @@ function updateImage(image, gid, size){
 		})
 
 	// flip...
-	if(img_data.flipped != null){
-		setImageFlipState(image, img_data.flipped)
-	}
+	setImageFlipState(image, img_data.flipped == null ? [] : img_data.flipped)
 
 	// marks...
 	if(MARKED.indexOf(gid) != -1){

@@ -192,9 +192,20 @@ function setupDataBindings(viewer){
 				var gid = getImageGID(img) 
 				var flip = getImageFlipState(img)
 
-				// change the image orientation status and add to 
-				// updated list...
 				IMAGES[gid].flipped = flip
+				if(IMAGES_UPDATED.indexOf(gid) == -1){
+					IMAGES_UPDATED.push(gid)
+				}
+			})
+		})
+		.on('resetToOriginalImage', function(evt, image){
+			$(image).each(function(i, e){
+				var img = $(this)
+				var gid = getImageGID(img) 
+
+				IMAGES[gid].flipped = null
+				IMAGES[gid].orientation = 0
+
 				if(IMAGES_UPDATED.indexOf(gid) == -1){
 					IMAGES_UPDATED.push(gid)
 				}

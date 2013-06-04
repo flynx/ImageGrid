@@ -864,6 +864,9 @@ var _ccw = {
 	270: 180,
 }
 
+// NOTE: this works only on loaded images, if something more global is
+// 		needed, then one should write a GID based version (data.js)
+// 		XXX do we need a GID based version?
 function rotateImage(direction, image){
 	var r_table = direction == 'left' ? _cw : _ccw
 	image = image == null ? getImage() : $(image)
@@ -920,6 +923,10 @@ function setImageFlipState(image, state){
 // direction can be:
 // 	- 'vertical'
 // 	- 'horizontal'
+//
+// NOTE: this works only on loaded images, if something more global is
+// 		needed, then one should write a GID based version (data.js)
+// 		XXX do we need a GID based version?
 function flipImage(direction, image){
 	image = image == null ? getImage() : $(image)
 	image.each(function(i, e){
@@ -946,6 +953,25 @@ function flipVertical(image){
 }
 function flipHorizontal(image){
 	return flipImage('horizontal')
+}
+
+
+
+/***************************************************** Image reset ***/
+
+// NOTE: this works only on loaded images, if something more global is
+// 		needed, then one should write a GID based version (data.js)
+// 		XXX do we need a GID based version?
+function resetToOriginalImage(image){
+	image = image == null ? getImage() : $(image)
+
+	image.each(function(i, e){
+		$(e).removeAttr('flipped orientation')
+	})
+
+	$('.viewer').trigger('resetToOriginalImage' + direction.capitalize(), [image])
+	
+	return image
 }
 
 

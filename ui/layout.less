@@ -39,6 +39,18 @@
 
 
 
+/********************************************************* utility ***/
+.expanding-text .hidden {
+	display: none;
+}
+.expanding-text:hover .shown {
+	display: none;
+}
+.expanding-text:hover .hidden {
+	display: inline;
+}
+
+
 /*********************************************************************/
 
 
@@ -311,42 +323,6 @@ body {
 */
 
 
-/*.marks-visible.viewer:not(.single-image-mode):after {*/
-/*
-.marks-visible.viewer:after {
-	display: block;
-	position: absolute;
-	content: "";
-	font-size: 0pt;
-
-	top: 10px;
-	right: 10px;
-	width: 10px;
-	height: 10px;
-
-	border: solid 2px blue;
-	border-radius: 50%;
-	background: blue;
-}
-.marked-only-view.viewer:after {
-	display: block;
-	position: absolute;
-	content: "";
-	font-size: 0pt;
-	top: 10px;
-	right: 10px;
-	width: 10px;
-	height: 10px;
-
-	border: solid 2px blue;
-	border-radius: 50%;
-	background: transparent;
-}
-.marked-only-view.marks-visible.viewer:after {
-	background: blue;
-}
-*/
-
 /* XXX should we use opacity??? */
 .marked-only-view.viewer:not(.marks-visible) .image:not(.marked) {
 	opacity: 0.3;
@@ -608,6 +584,7 @@ body {
 	width: auto;
 
 	font-size: small;
+	vertical-align: center;
 }
 .global-mode-indicators>* {
 	margin-left: 10px;
@@ -641,6 +618,7 @@ body {
 	width: auto;
 
 	font-size: small;
+	vertical-align: center;
 }
 .context-mode-indicators>* {
 	margin-left: 10px;
@@ -660,6 +638,8 @@ body {
 .context-mode-indicators .current-image-marked {
 	display: none;
 	color: blue;
+	height: 20px;
+	vertical-align: center;
 }
 .global-mode-indicators .marked-only-visible .shown,
 .global-mode-indicators .marks-visible .shown,
@@ -670,13 +650,16 @@ body {
 .global-mode-indicators .marks-visible:after,
 .context-mode-indicators .current-image-marked:after {
 	display: inline-block;
-	width: 10px;
-	height: 10px;
+	width: 6px;
+	height: 6px;
 	border-radius: 50%;
 	content: "";
 	background-color: blue;
 	border: solid 2px blue;
 	margin-left: 5px;
+
+	margin-top: 3px;
+	top: 50%;
 }
 .marks-visible.viewer .global-mode-indicators .marks-visible {
 	display: inline-block;
@@ -803,20 +786,6 @@ body {
 	padding-right: 0px;
 	padding-left: 0px;
 }
-
-
-
-/********************************************************* utility ***/
-.expanding-text .hidden {
-	display: none;
-}
-.expanding-text:hover .shown {
-	display: none;
-}
-.expanding-text:hover .hidden {
-	display: inline;
-}
-
 
 
 
