@@ -381,26 +381,25 @@ body {
 .image[orientation="90"] .inline-image-info {
 	top: auto;
 	left: 100%;
-
 	.origin(bottom, left);
 	.rotate(-90deg);
 }
 .image[orientation="180"] .inline-image-info {
 	top: 0px;
 	bottom: auto;
-
 	.rotate(180deg);
 }
 .image[orientation="270"] .inline-image-info {
 	top: auto;
 	left: auto;
 	right: 100%;
-
 	.origin(bottom, right);
 	.rotate(90deg);
 }
 
+
 /* compensate for flipping... */
+/* XXX START: I hate this code, will think if a better way to do this... */
 .image:not([orientation="90"])[flipped*="horizontal"] .inline-image-info {
 	.flipped-horizontally;
 }
@@ -409,7 +408,6 @@ body {
 	bottom: 100%;
 	left: -100%;
 	right: auto;
-
 	.origin(bottom, right);
 	.transform(90deg, -1, 1);
 }
@@ -418,7 +416,6 @@ body {
 	bottom: 100%;
 	left: 0px;
 	right: auto;
-
 	.origin(bottom, right);
 	.transform(180deg, -1, 1);
 
@@ -428,11 +425,9 @@ body {
 	bottom: 0px;
 	left: 0px;
 	right: auto;
-
 	.origin(bottom, right);
 	.transform(270deg, -1, 1);
 }
-
 
 .image[flipped*="vertical"] .inline-image-info {
 	top: 0px;
@@ -444,7 +439,6 @@ body {
 	bottom: 100%;
 	left: 100%;
 	right: auto;
-
 	.origin(bottom, left);
 	.transform(-270deg, 1, -1);
 }
@@ -453,7 +447,6 @@ body {
 	bottom: 0px;
 	left: -100%;
 	right: auto;
-
 	.origin(bottom, right);
 	.transform(180deg, 1, -1);
 }
@@ -462,11 +455,9 @@ body {
 	bottom: 100%;
 	left: -100%;
 	right: auto;
-
 	.origin(bottom, right);
 	.transform(270deg, 1, -1);
 }
-
 
 .image[flipped*="vertical"][flipped*="horizontal"] .inline-image-info {
 	top: 0px;
@@ -478,7 +469,6 @@ body {
 	bottom: 0px;
 	left: -100%;
 	right: auto;
-
 	.origin(bottom, right);
 	.transform(-90deg, -1, -1);
 }
@@ -487,7 +477,6 @@ body {
 	bottom: 0px;
 	left: auto;
 	right: auto;
-
 	.origin(bottom, right);
 	.transform(180deg, -1, -1);
 }
@@ -496,12 +485,10 @@ body {
 	bottom: 100%;
 	left: auto;
 	right: auto;
-
 	.origin(bottom, right);
 	.transform(90deg, -1, -1);
 }
-
-
+/* XXX END */
 
 
 .overlay-info {

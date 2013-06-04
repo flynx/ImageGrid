@@ -374,8 +374,26 @@ var KEYBOARD_CONFIG = {
 						reverseImageOrder() 
 					}),
 			},
-		H: doc('Flip image horizontally', function(){ flipHorizontal() }),
-		V: doc('Flip image vertically', function(){ flipVertical() }),
+		H: doc('Flip image horizontally', 
+			function(){ 
+				var o = getImage().attr('orientation')
+				// need to rotate relative to user, not relative to image...
+				if(o == 90 || o == 270){
+				   flipVertical() 
+				} else {
+					flipHorizontal() 
+				}
+			}),
+		V: doc('Flip image vertically', 
+			function(){ 
+				var o = getImage().attr('orientation')
+				// need to rotate relative to user, not relative to image...
+				if(o == 90 || o == 270){
+					flipHorizontal() 
+				} else {
+					flipVertical() 
+				}
+			}),
 
 
 		// zooming...
