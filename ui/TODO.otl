@@ -22,7 +22,7 @@ Roadmap
 			[X] ribbon next/prev
 			[X] screen next/prev
 			[_] marks next/prev
-		[_] 49% editing
+		[_] 50% editing
 			[_] 66% ribbon
 				[X] merge up/down
 				| via. marking... 
@@ -30,11 +30,12 @@ Roadmap
 				| still thinking if this is the right way...
 				[_] flatten
 				[X] sort
-			[_] 71% image
+			[_] 75% image
 				[X] shift up/down
 				[X] shift left/right
 				[X] mark/unmark (selection)
 				[X] rotate left/right
+				[X] flip H/V
 				[_] crop
 				[_] 0% metadata
 					[_] tag
@@ -91,6 +92,9 @@ Roadmap
 
 [_] 27% Gen 3 current todo
 	[_] 55% High priority
+		[_] usable empty view -- w.o. data...
+		[_] 0% Tablet UI
+			[_] screen buttons
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame
@@ -103,11 +107,8 @@ Roadmap
 		| 	ribbon length: ~42
 		| 	screen width: 4
 		| 	jumping to end from start of ribbon
-		[_] usable empty view -- w.o. data...
-		[_] single image mode transition (alpha-blend/fade/none)
-		[_] 0% Tablet UI
-			[_] screen buttons
 		[_] ASAP: test on Android...
+		[_] single image mode transition (alpha-blend/fade/none)
 		[_] 75% image sorting (date/name/...)
 			[X] 100% sort by:
 				[X] date
