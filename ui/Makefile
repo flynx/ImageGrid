@@ -23,6 +23,8 @@ CSS_FILES := $(patsubst %.less,%.css,$(wildcard *.less))
 # get files to minify...
 JS_FILES := $(patsubst %.js,%.min.js,$(wildcard *.js))
 
+LOGS := *.log
+
 
 
 all: css
@@ -44,5 +46,4 @@ phonegap-remote: css minify
 
 
 clean:
-	@rm -f $(CSS_FILES)
-	@rm -f $(JS_FILES)
+	@rm -f $(CSS_FILES) $(JS_FILES) $(LOGS)
