@@ -91,8 +91,35 @@ Roadmap
 
 
 [_] 27% Gen 3 current todo
-	[_] 55% High priority
+	[_] 54% High priority
 		[_] usable empty view -- w.o. data...
+		[_] 0% keyboard.js
+			[_] multiple key handler...
+			| handle multiple key presses...
+			|
+			| one way to do this:
+			| 	- a generic handler with timeout
+			| 		- if key N pressed before timeout kandle it's action
+			| 		- if timeout handle default action
+			|
+			| Q: how do we organize the config for this?
+			| 	a) <key-spec> syntax, some thing like 'A, B'
+			| 	b) complex handler with keys (in addition to modifiers)
+			|
+			[_] 0% online config editor API...
+				[_] onKey(<key-spec>, handler[, mode])
+				| <key-spec> should be something simple like a string
+				|
+				| Examples that should work:
+				| 	'Enter'
+				| 	'alt-F4'
+				|
+				| NOTE: with current config structure this is not that 
+				| 		trivial
+				[_] offKey(<key-spec>[, mode])
+				[_] introspection
+				| this is partially done already, need a simpler API for 
+				| the user...
 		[_] 0% Tablet UI
 			[_] screen buttons
 		[_] BUG: sometimes duplicate images get loaded...
