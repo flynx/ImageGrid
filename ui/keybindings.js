@@ -160,6 +160,19 @@ var KEYBOARD_CONFIG = {
 	},
 
 
+	// visible marks...
+	//
+	'.marks-visible': {
+		title: 'Visible marks',
+
+		Esc: doc('Hide marks', 
+				function(){ 
+					toggleMarkesView('off')
+					return false
+				}),
+	},
+
+
 	// ribbon mode only...
 	//
 	// XXX this breaks getKeyHandlers(...) when modes argument is given...

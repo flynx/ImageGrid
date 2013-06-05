@@ -83,9 +83,9 @@ body {
 	display: block;
 
 	/* NOTE: this needs for scaling/zooming to behave correctly and not 
-			shift the element, when its dimensions change... 
-			...this is because .ribbon-set will both be used for scaling 
-			and aligning... */
+		shift the element, when its dimensions change... 
+		...this is because .ribbon-set will both be used for scaling 
+		and aligning... */
 	.origin(top, left);
 }
 .ribbon-set:empty:after {
@@ -199,7 +199,7 @@ body {
 	.transform(270deg, -1)
 }
 
-/* Flipped vertically only... */
+/* Flipped vertically and horizontally... */
 .image[flipped*="vertical"][flipped*="horizontal"] {
 	.transform(0deg, -1, -1)
 }
@@ -234,6 +234,9 @@ body {
 
 /***************************************************** Image marks ***/
 
+@mark-offset: 5px;
+@mark-size: 15px;
+
 .marks-visible.viewer .marked.image:after {
 	display: block;
 	position: absolute;
@@ -241,13 +244,13 @@ body {
 	font-size: 0pt;
 	border: none;
 
-	width: 15px;
-	height: 15px;
+	width: @mark-size;
+	height: @mark-size;
 
 	top: auto;
-	bottom: 5px;
+	bottom: @mark-offset;
 	left: auto;
-	right: 5px;
+	right: @mark-offset;
 
 	border-radius: 50%;
 	background: blue;
@@ -257,19 +260,19 @@ body {
 .marks-visible.viewer .marked.image[orientation="0"][flipped*="vertical"]:after,
 .marks-visible.viewer .marked.image[orientation="180"][flipped="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="90"]:not([flipped]):after {
-	top: 5px;
+	top: @mark-offset;
 	bottom: auto:
 	left: auto;
-	right: 5px;
+	right: @mark-offset;
 }
 .marks-visible.viewer .marked.image:not([orientation])[flipped*="vertical"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="0"][flipped*="vertical"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="270"][flipped="vertical"]:after,
 .marks-visible.viewer .marked.image[orientation="90"][flipped="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="180"]:not([flipped]):after {
-	top: 5px;
+	top: @mark-offset;
 	bottom: auto;
-	left: 5px;
+	left: @mark-offset;
 	right: auto;
 }
 .marks-visible.viewer .marked.image[orientation="90"][flipped*="vertical"][flipped*="horizontal"]:after,
@@ -278,8 +281,8 @@ body {
 .marks-visible.viewer .marked.image[orientation="0"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="270"]:not([flipped]):after {
 	top: auto;
-	bottom: 5px;
-	left: 5px;
+	bottom: @mark-offset;
+	left: @mark-offset;
 	right: auto;
 }
 
@@ -288,8 +291,11 @@ body {
 	display: none;
 }
 
-/* corner mark... (a-la bookmarks in PortableMag) */
+/* corner mark... (a-la bookmarks in PortableMag) 
+ * XXX account for flipping... */
 /*
+@mark-offset: -15px;
+
 .marks-visible.viewer .marked.image:after {
 	display: block;
 	position: absolute;
@@ -300,24 +306,24 @@ body {
 	width: 30px;
 	height: 30px;
 
-	top: -15px;
-	right: -15px;
+	top: @mark-offset;
+	right: @mark-offset;
 
 	background: blue;
 
 	.rotate(45deg)
 }
 .marks-visible.viewer .marked.image[orientation="90"]:after {
-	top: -15px;
-	left: -15px;
+	top: @mark-offset;
+	left: @mark-offset;
 }
 .marks-visible.viewer .marked.image[orientation="180"]:after {
-	bottom: -15px;
-	left: -15px;
+	bottom: @mark-offset;
+	left: @mark-offset;
 }
 .marks-visible.viewer .marked.image[orientation="270"]:after {
-	bottom: -15px;
-	right: -15px;
+	bottom: @mark-offset;
+	right: @mark-offset;
 }
 */
 
@@ -750,6 +756,8 @@ body {
 
 
 /************************************************************ Help ***/
+
+/* XXX make this more generic, and not just for the keyboard... */
 
 /* this is for sliding stuff */
 .viewer.drawer-mode {
