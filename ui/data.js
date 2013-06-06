@@ -1196,7 +1196,7 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 	
 	// can't find diffs if can't list dirs...
 	if(window.listDir == null && (pattern != null || diff_pattern != null)){
-		res.notify('unsupported', 'directory listing.')
+		res.notify('Unsupported', 'directory listing.')
 		return res.reject('listDir unsupported.')
 	}
 
@@ -1223,10 +1223,11 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 					return $.getJSON(path +'/'+ e)
 						.done(function(data){
 							diff_data[i+1] = data
-							res.notify('loaded', e)
+							res.notify('Loaded', e)
 						})
 						.fail(function(){
-							res.notify('load_error', e)
+							// XXX should we kill the load here???
+							res.notify('Loading', e, 'Error')
 						})
 				}))
 			// NOTE: .then(...) handlers get different signature args 
@@ -1242,18 +1243,18 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 		.done(function(_, json){
 			json = json[0]
 
-			res.notify('loaded', file)
+			res.notify('Loaded', file)
 
 			// merge diffs...
 			if(Object.keys(diff_data).length != 0){
 				$.extend(json, diff_data)
-				res.notify('merged')
+				res.notify('Merged')
 			}
 
 			res.resolve(json)
 		})
 		.fail(function(){
-			res.notify('load_error', file)
+			res.notify('Loading', file, 'Error')
 
 			return res.reject(file)
 		})
@@ -1264,37 +1265,41 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 
 function statusNotify(prefix, loader){
 	return loader
-		.progress(function(a, b, c){
-			if(c != null){
-				prefix = prefix +' '+ a
-				var action = b
-				var data = c
-			} else {
-				var action = a
-				var data = b
+		.progress(function(){
+			var args = Array.apply(null, arguments)
+			args.splice(0, 0, prefix)
+			if(args.indexOf('Error') >= 0){
+				args.pop()
+				return showErrorStatus(args.join(': '))
 			}
+			return showStatus(args.join(': '))
+		})
+}
 
-			({
-				load: function(data){ 
-					showStatus(prefix, 'Loading:', data) 
-				},
-				loaded: function(data){ 
-					showStatus(prefix, 'Loaded:', data) 
-				},
-				merged: function(data){ 
-					showStatus(prefix, 'Merging:', 'Done.') 
-				},
-				load_error: function(data){ 
-					showErrorStatus(prefix, 'Loading:', data) 
-				},
-				unsupported: function(data){ 
-					showErrorStatus(prefix, 'Unsupported:', data) 
-				},
-			})[action](data)
+
+// XXX do we need other actions here???
+function bubbleProgress(prefix, from, to, only_progress){
+	from
+		.progress(function(){ 
+			var args = Array.apply(null, arguments)
+			prefix != null && args.splice(0, 0, prefix)
+			to.notify.apply(to, args) 
 		})
-		.done(function(){
-			showStatus(prefix, 'Done.')
-		})
+
+	if(only_progress == null){
+		from
+			.done(function(){
+				var args = Array.apply(null, arguments)
+				to.resolve.apply(to, args) 
+			})
+			.fail(function(){
+				var args = Array.apply(null, arguments)
+				prefix != null && args.splice(0, 0, prefix)
+				to.reject.apply(to, args) 
+			})
+	}
+
+	return from
 }
 
 
@@ -1311,7 +1316,7 @@ if(window.CEF_dumpJSON != null){
 // Load images from file
 //
 // This will also merge all diff files.
-function loadFileImages(path, no_load_diffs, callback){
+function loadFileImages(path, no_load_diffs){
 	no_load_diffs = window.listDir == null ? true : no_load_diffs 
 
 	var res = $.Deferred()
@@ -1337,18 +1342,10 @@ function loadFileImages(path, no_load_diffs, callback){
 				RegExp(path.split(base)[0]))
 	}
 
-	loader
-		// XXX find a good way to propagate...
-		.progress(function(action, data){ 
-			res.notify('Images:', action, data) 
-		})
-		.done(function(data){
-			res.resolve(data)
-		})
+	bubbleProgress('Images', loader, res)
 
 	res.done(function(images){
 		IMAGES = images
-		callback != null ? callback() : null
 	})
 
 	return res
@@ -1387,14 +1384,14 @@ function saveFileImages(name){
 }
 
 
-function loadFileMarks(path, callback){
+function loadFileMarks(path){
+	var res = $.Deferred()
 	// default locations...
 	if(path == null){
 		var base = normalizePath(CACHE_DIR)
-		var res = statusNotify('Marks:',
-			loadLatestFile(base, 
+		var loader = loadLatestFile(base, 
 				MARKED_FILE_DEFAULT, 
-				MARKED_FILE_PATTERN))
+				MARKED_FILE_PATTERN)
 	
 	// explicit path...
 	// XXX need to account for paths without a CACHE_DIR
@@ -1404,15 +1401,15 @@ function loadFileMarks(path, callback){
 		base += '/'+ CACHE_DIR
 
 		// XXX is this correct???
-		var res = statusNotify('Marks:',
-			loadLatestFile(base, 
+		var loader = loadLatestFile(base, 
 				path.split(base)[0], 
-				RegExp(path.split(base)[0])))
+				RegExp(path.split(base)[0]))
 	}
+
+	bubbleProgress('Marks', loader, res)
 
 	res.done(function(images){
 		MARKED = images
-		callback != null ? callback() : null
 	})
 
 	return res
@@ -1438,10 +1435,10 @@ function loadFileState(path){
 
 	var res = $.Deferred()
 
-	statusNotify('Data:', 
+	bubbleProgress('Data',
 			loadLatestFile(path, 
 				DATA_FILE_DEFAULT, 
-				DATA_FILE_PATTERN))
+				DATA_FILE_PATTERN), res, true)
 		.done(function(json){
 			BASE_URL = base
 
@@ -1457,14 +1454,15 @@ function loadFileState(path){
 			// version 2.0
 			} else if(json.version == '2.0') {
 				DATA = json
-				$.when(
-						// XXX load config...
-						// load images...
-						loadFileImages(DATA.image_file == null ?
-								normalizePath(DATA.image_file, base) 
-								: null),
-						// load marks if available...
-						loadFileMarks())
+				bubbleProgress('Data',
+						$.when(
+								// XXX load config...
+								// load images...
+								loadFileImages(DATA.image_file == null ?
+										normalizePath(DATA.image_file, base) 
+										: null),
+								// load marks if available...
+								loadFileMarks()), res, true)
 					.done(function(){
 						reloadViewer()
 						res.resolve()
@@ -1474,10 +1472,9 @@ function loadFileState(path){
 			} else {
 				res.reject('unknown format.')
 			}
-
 		})
 		.fail(function(){
-			res.reject('load_error', path)
+			res.reject('Loading', path, 'Error')
 		})
 
 	return res
@@ -1524,21 +1521,21 @@ function loadRawDir(path){
 	})
 
 	if(image_paths.length == 0){
-		//showErrorStatus('No images in:', path)
-		res.notify('load_error', path)
+		// no images in path...
+		res.notify('Load', path, 'Error')
 		return res.reject()
 	}
 
 	BASE_URL = path
 
 	IMAGES = imagesFromUrls(image_paths)
-	res.notify('loaded', 'images.')
+	res.notify('Loaded', 'Images.')
 
 	DATA = dataFromImages(IMAGES)
-	res.notify('loaded', 'data.')
+	res.notify('Loaded', 'Data.')
 
 	DATA.ribbons = ribbonsFromFavDirs()
-	res.notify('loaded', 'fav dirs.')
+	res.notify('Loaded', 'Fav dirs.')
 
 	MARKED = []
 
@@ -1585,22 +1582,13 @@ function loadDir(path){
 		path = path +'/'+ CACHE_DIR
 	}
 
-	statusNotify('Dir:', loadFileState(path))
-		//.progress(function(action, data){
-		//	res.notify(action, data)
-		//})
+	bubbleProgress('Dir:', 
+			loadFileState(path), res, true)
 		.done(function(){
 			res.resolve()
 		})
 		.fail(function(){
-			statusNotify('Raw dir:', loadRawDir(orig_path))
-				.done(function(){
-					res.resolve()
-				})
-				.fail(function(){
-					res.reject()
-				})
-				
+			bubbleProgress('Raw dir:', loadRawDir(orig_path), res)
 		})
 
 	return res
