@@ -1188,18 +1188,18 @@ function saveLocalStorage(attr){
 * XXX need to cleanup this section...
 */
 
-// XXX needs testing...
-// XXX use a config object instead of positional arguments...
-function loadLatestFile(path, dfl, pattern, diff_pattern, report){
+function loadLatestFile(path, dfl, pattern, diff_pattern){
 	dfl = dfl == null ? path.split(/[\/\\]/).pop() : dfl
 	path = path == dfl ? '.' : path
+
+	var error
 
 	var res = $.Deferred()
 	
 	// can't find diffs if can't list dirs...
 	if(window.listDir == null && (pattern != null || diff_pattern != null)){
-		report && showErrorStatus(report, 'no directory listing support.')
-		return res.reject()
+		res.notify('unsupported', 'directory listing.')
+		return res.reject('listDir unsupported.')
 	}
 
 	// find the latest...
@@ -1209,17 +1209,12 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, report){
 			return pattern.test(e) ? e : null
 		}).sort().reverse()[0]
 	}
-	file = file == null ? dfl : file
-
-	report && showStatus(report, 'Loading:', file)
-
-	file = path +'/'+ file
+	var file = file == null ? dfl : file
 	
 	var diff_data = {}
 	var diff = true
 
 	// collect and merge diffs...
-	// XXX no error handling if one of the diff loads fail...
 	if(diff_pattern != null){
 		diff_pattern = RegExp(diff_pattern)
 		var diff_data = [diff_data]
@@ -1228,14 +1223,16 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, report){
 		}).sort()
 		diff = $.when.apply(null, $.map(diffs_names, function(e, i){
 					return $.getJSON(path +'/'+ e)
-						// XXX this is ugly, had to do it this way as .then(...)
-						// 		handlers get different argument sets depending on 
-						// 		whether we have one or more deffereds here...
 						.done(function(data){
 							diff_data[i+1] = data
-							report && showStatus(report, 'Loaded:', e)
+							res.notify('loaded', e)
+						})
+						.fail(function(){
+							res.notify('load_error', e)
 						})
 				}))
+			// NOTE: .then(...) handlers get different signature args 
+			// 		depending on the number of arguments to .when(...)...
 			.then(function(){
 				$.extend.apply(null, diff_data)
 				diff_data = diff_data[0]
@@ -1243,25 +1240,54 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, report){
 	} 
 
 	// load the main file and merge the diff with it...
-	$.when(diff, $.getJSON(file))
+	$.when(diff, $.getJSON(path +'/'+ file))
 		.done(function(_, json){
 			json = json[0]
+
+			res.notify('loaded', file)
 
 			// merge diffs...
 			if(Object.keys(diff_data).length != 0){
 				$.extend(json, diff_data)
-				report && showStatus(report, 'Merged diffs...')
+				res.notify('merged')
 			}
 
 			res.resolve(json)
-
-			report && showStatus(report, 'Done.')
 		})
 		.fail(function(){
-			report && showErrorStatus(report, 'Loading: ' + file)
-			return res.reject()
+			res.notify('load_error', file)
+
+			return res.reject(file)
 		})
+
 	return res
+}
+
+
+function statusNotify(prefix, loader){
+	return loader
+		.progress(function(action, data){
+			({
+				load: function(data){ 
+					showStatus(prefix, 'Loading:', data) 
+				},
+				loaded: function(data){ 
+					showStatus(prefix, 'Loaded:', data) 
+				},
+				merged: function(data){ 
+					showStatus(prefix, 'Merging:', 'Done.') 
+				},
+				load_error: function(data){ 
+					showErrorStatus(prefix, 'Loading:', data) 
+				},
+				unsupported: function(data){ 
+					showErrorStatus(prefix, 'Unsupported:', data) 
+				},
+			})[action](data)
+		})
+		.done(function(){
+			showStatus(prefix, 'Done.')
+		})
 }
 
 
@@ -1284,7 +1310,11 @@ function loadFileImages(path, no_load_diffs, callback){
 	// default locations...
 	if(path == null){
 		var base = normalizePath(CACHE_DIR)
-		var res = loadLatestFile(base, IMAGES_FILE_DEFAULT, IMAGES_FILE_PATTERN, IMAGES_DIFF_FILE_PATTERN, 'Images:')
+		var res = statusNotify('Images:', 
+			loadLatestFile(base, 
+				IMAGES_FILE_DEFAULT, 
+				IMAGES_FILE_PATTERN, 
+				IMAGES_DIFF_FILE_PATTERN))
 	
 	// explicit path...
 	// XXX need to account for paths without a CACHE_DIR
@@ -1294,7 +1324,10 @@ function loadFileImages(path, no_load_diffs, callback){
 		base += '/'+ CACHE_DIR
 
 		// XXX is this correct???
-		var res = loadLatestFile(base, path.split(base)[0], RegExp(path.split(base)[0]), null, 'Images:')
+		var res = statusNotify('Images:', 
+			loadLatestFile(base, 
+				path.split(base)[0], 
+				RegExp(path.split(base)[0])))
 	}
 
 	res.done(function(images){
@@ -1304,8 +1337,6 @@ function loadFileImages(path, no_load_diffs, callback){
 
 	return res
 }
-
-
 // Save current images list...
 //
 // NOTE: this will save the merged images and remove the diff files...
@@ -1342,7 +1373,10 @@ function loadFileMarks(path, callback){
 	// default locations...
 	if(path == null){
 		var base = normalizePath(CACHE_DIR)
-		var res = loadLatestFile(base, MARKED_FILE_DEFAULT, MARKED_FILE_PATTERN, null, 'Marks:')
+		var res = statusNotify('Marks:',
+			loadLatestFile(base, 
+				MARKED_FILE_DEFAULT, 
+				MARKED_FILE_PATTERN))
 	
 	// explicit path...
 	// XXX need to account for paths without a CACHE_DIR
@@ -1352,7 +1386,10 @@ function loadFileMarks(path, callback){
 		base += '/'+ CACHE_DIR
 
 		// XXX is this correct???
-		var res = loadLatestFile(base, path.split(base)[0], RegExp(path.split(base)[0]), 'Marks:')
+		var res = statusNotify('Marks:',
+			loadLatestFile(base, 
+				path.split(base)[0], 
+				RegExp(path.split(base)[0])))
 	}
 
 	res.done(function(images){
@@ -1362,15 +1399,31 @@ function loadFileMarks(path, callback){
 
 	return res
 }
-// XXX save marks...
+function saveFileMarks(name){
+	name = name == null ? normalizePath(CACHE_DIR +'/'+ Date.timeStamp()) : name
+
+	dumpJSON(name + '-marked.json', MARKED)
+}
 
 
-function loadFileState(data_path, callback){
-	var base = data_path.split(CACHE_DIR)[0]
-	base = base == data_path ? '.' : base
+// XXX add support for explicit filenames...
+function loadFileState(path){
+	// XXX explicit data file path...
+	if(/\.json$/i.test(path)){
+		// XXX at this 
+		var base = path.split(CACHE_DIR)[0]
+		base = base == path ? '.' : base
+	} else {
+		var base = path.split(CACHE_DIR)[0]
+		base = base == path ? '.' : base
+	}
+
 	var res = $.Deferred()
 
-	$.getJSON(data_path)
+	statusNotify('Data:', 
+			loadLatestFile(path, 
+				DATA_FILE_DEFAULT, 
+				DATA_FILE_PATTERN))
 		.done(function(json){
 			BASE_URL = base
 
@@ -1381,38 +1434,36 @@ function loadFileState(data_path, callback){
 				IMAGES = json.images
 				MARKED = []
 				reloadViewer()
+				res.resolve()
 
 			// version 2.0
 			} else if(json.version == '2.0') {
 				DATA = json
 				$.when(
-					// load images...
-					loadFileImages(DATA.image_file == null ?
-							normalizePath(DATA.image_file, base) 
-							: null),
-					// load marks if available...
-					// XXX do we need to do this???
-					loadFileMarks())
-						.done(function(){
-							reloadViewer()
-							callback != null && callback()
-							res.resolve()
-						})
+						// XXX load config...
+						// load images...
+						loadFileImages(DATA.image_file == null ?
+								normalizePath(DATA.image_file, base) 
+								: null),
+						// load marks if available...
+						loadFileMarks())
+					.done(function(){
+						reloadViewer()
+						res.resolve()
+					})
 
 			// unknown format...
 			} else {
-				showStatus('Unknown format.')
-				return
+				res.reject('unknown format.')
 			}
+
 		})
 		.fail(function(){
-			showErrorStatus('Loading:', data_path)
+			res.reject('load_error', path)
 		})
 
 	return res
 }
-
-
 function saveFileState(name, no_normalize_path){
 	name = name == null ? Date.timeStamp() : name
 
@@ -1429,7 +1480,7 @@ function saveFileState(name, no_normalize_path){
 
 	dumpJSON(name + '-data.json', DATA)
 	// XXX do we need to do this???
-	dumpJSON(name + '-marked.json', MARKED)
+	saveFileMarks(name)
 
 	// save the updated images...
 	if(IMAGES_UPDATED.length > 0){
@@ -1456,78 +1507,84 @@ function saveFileState(name, no_normalize_path){
 //
 // XXX this will not load the marks file...
 // XXX make sure that save works...
-// XXX might be good to split this into loadFileData and loadDir...
-// XXX use loadLatestFile(...)...
-function loadDir(path, raw_load){
+function loadDir(path){
 	path = normalizePath(path)
 	var orig_path = path
 	var data
 
+	var res = $.Deferred()
+
 	showStatus('Loading:', path)
+	res.notify('load', path)
 
 	var files = listDir(path)
 
 	if(files == null){
-		showErrorStatus('No files in path: ' + path)
-		return
+		//showErrorStatus('No files in path: ' + path)
+		res.notify('load_error', path)
+		return res.reject()
 	}
 
-	if(!raw_load){
-		data = $.map(files, function(e){ 
-			return DATA_FILE_PATTERN.test(e) ? e : null
-		}).sort().reverse()[0]
-		data = (data == null && files.indexOf(DATA_FILE_DEFAULT) >= 0) ? DATA_FILE_DEFAULT : data
-
-		// look in the cache dir...
-		if(data == null){
-			path += '/' + CACHE_DIR
-
-			files = listDir(path)
-			if(files != null){
-				data = $.map(listDir(path), function(e){ 
-					return DATA_FILE_PATTERN.test(e) ? e : null
-				}).sort().reverse()[0]
-				data = (data == null && files.indexOf(DATA_FILE_DEFAULT) >= 0) ? DATA_FILE_DEFAULT : data
-			}
-		}
+	if(files.indexOf(CACHE_DIR) >= 0){
+		path = path +'/'+ CACHE_DIR
 	}
 
-	// load the found data file...
-	if(data != null){
-		showStatus('Loading:', data)
-
-		data = path + '/' + data
-
-		// marks...
-		// XXX see if there's a marks file...
-		MARKED = []
-
-		return loadFileState(data)
-			.always(function(){
-				showStatus('Done.')
-			})
-
-	// load the dir as-is...
-	} else {
-		files = listDir(orig_path)
-		var image_paths = $.map(files, function(e){
-			return IMAGE_PATTERN.test(e) ? e : null
+	statusNotify('Dir:', loadFileState(path))
+		//.progress(function(action, data){
+		//	res.notify(action, data)
+		//})
+		.done(function(){
+			res.resolve()
+		})
+		.fail(function(){
+			statusNotify('Raw dir:', loadRawDir(orig_path))
+				.done(function(){
+					res.resolve()
+				})
+				.fail(function(){
+					res.reject()
+				})
+				
 		})
 
-		if(image_paths.length == 0){
-			showErrorStatus('No images in:', orig_path)
-			return 
-		}
+	return res
+}
 
-		IMAGES = imagesFromUrls(image_paths)
-		DATA = dataFromImages(IMAGES)
-		BASE_URL = orig_path
-		DATA.ribbons = ribbonsFromFavDirs()
-		MARKED = []
 
-		reloadViewer()
-		showStatus('Done.')
+// XXX check if we need to pass down sorting settings to the generators...
+function loadRawDir(path){
+	var files = listDir(path)
+
+	var res = $.Deferred()
+
+	var image_paths = $.map(files, function(e){
+		return IMAGE_PATTERN.test(e) ? e : null
+	})
+
+	if(image_paths.length == 0){
+		//showErrorStatus('No images in:', path)
+		res.notify('load_error', path)
+		return res.reject()
 	}
+
+	BASE_URL = path
+
+	IMAGES = imagesFromUrls(image_paths)
+	res.notify('loaded', 'images.')
+
+	DATA = dataFromImages(IMAGES)
+	res.notify('loaded', 'data.')
+
+	DATA.ribbons = ribbonsFromFavDirs()
+	res.notify('loaded', 'fav dirs.')
+
+	MARKED = []
+
+	sortImagesByDate()
+
+	reloadViewer()
+
+	return res.resolve()
 }
 
 

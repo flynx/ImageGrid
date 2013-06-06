@@ -161,6 +161,7 @@ Roadmap
 		| 	ribbon length: ~42
 		| 	screen width: 4
 		| 	jumping to end from start of ribbon
+		[_] side-by side view...
 		[_] ASAP: test on Android...
 		[_] single image mode transition (alpha-blend/fade/none)
 		[_] 75% image sorting (date/name/...)
