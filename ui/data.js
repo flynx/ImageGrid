@@ -1192,8 +1192,6 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 	dfl = dfl == null ? path.split(/[\/\\]/).pop() : dfl
 	path = path == dfl ? '.' : path
 
-	var error
-
 	var res = $.Deferred()
 	
 	// can't find diffs if can't list dirs...
@@ -1266,7 +1264,16 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 
 function statusNotify(prefix, loader){
 	return loader
-		.progress(function(action, data){
+		.progress(function(a, b, c){
+			if(c != null){
+				prefix = prefix +' '+ a
+				var action = b
+				var data = c
+			} else {
+				var action = a
+				var data = b
+			}
+
 			({
 				load: function(data){ 
 					showStatus(prefix, 'Loading:', data) 
@@ -1307,14 +1314,15 @@ if(window.CEF_dumpJSON != null){
 function loadFileImages(path, no_load_diffs, callback){
 	no_load_diffs = window.listDir == null ? true : no_load_diffs 
 
+	var res = $.Deferred()
+
 	// default locations...
 	if(path == null){
-		var base = normalizePath(CACHE_DIR)
-		var res = statusNotify('Images:', 
-			loadLatestFile(base, 
+		var base = normalizePath(CACHE_DIR) 
+		var loader = loadLatestFile(base, 
 				IMAGES_FILE_DEFAULT, 
 				IMAGES_FILE_PATTERN, 
-				IMAGES_DIFF_FILE_PATTERN))
+				IMAGES_DIFF_FILE_PATTERN)
 	
 	// explicit path...
 	// XXX need to account for paths without a CACHE_DIR
@@ -1324,11 +1332,19 @@ function loadFileImages(path, no_load_diffs, callback){
 		base += '/'+ CACHE_DIR
 
 		// XXX is this correct???
-		var res = statusNotify('Images:', 
-			loadLatestFile(base, 
+		var loader = loadLatestFile(base, 
 				path.split(base)[0], 
-				RegExp(path.split(base)[0])))
+				RegExp(path.split(base)[0]))
 	}
+
+	loader
+		// XXX find a good way to propagate...
+		.progress(function(action, data){ 
+			res.notify('Images:', action, data) 
+		})
+		.done(function(data){
+			res.resolve(data)
+		})
 
 	res.done(function(images){
 		IMAGES = images
@@ -1337,6 +1353,8 @@ function loadFileImages(path, no_load_diffs, callback){
 
 	return res
 }
+
+
 // Save current images list...
 //
 // NOTE: this will save the merged images and remove the diff files...
@@ -1494,6 +1512,44 @@ function saveFileState(name, no_normalize_path){
 }
 
 
+
+// XXX check if we need to pass down sorting settings to the generators...
+function loadRawDir(path){
+	var files = listDir(path)
+
+	var res = $.Deferred()
+
+	var image_paths = $.map(files, function(e){
+		return IMAGE_PATTERN.test(e) ? e : null
+	})
+
+	if(image_paths.length == 0){
+		//showErrorStatus('No images in:', path)
+		res.notify('load_error', path)
+		return res.reject()
+	}
+
+	BASE_URL = path
+
+	IMAGES = imagesFromUrls(image_paths)
+	res.notify('loaded', 'images.')
+
+	DATA = dataFromImages(IMAGES)
+	res.notify('loaded', 'data.')
+
+	DATA.ribbons = ribbonsFromFavDirs()
+	res.notify('loaded', 'fav dirs.')
+
+	MARKED = []
+
+	sortImagesByDate()
+
+	reloadViewer()
+
+	return res.resolve()
+}
+
+
 // Load a path
 //
 // This will try and to this in the following order:
@@ -1548,43 +1604,6 @@ function loadDir(path){
 		})
 
 	return res
-}
-
-
-// XXX check if we need to pass down sorting settings to the generators...
-function loadRawDir(path){
-	var files = listDir(path)
-
-	var res = $.Deferred()
-
-	var image_paths = $.map(files, function(e){
-		return IMAGE_PATTERN.test(e) ? e : null
-	})
-
-	if(image_paths.length == 0){
-		//showErrorStatus('No images in:', path)
-		res.notify('load_error', path)
-		return res.reject()
-	}
-
-	BASE_URL = path
-
-	IMAGES = imagesFromUrls(image_paths)
-	res.notify('loaded', 'images.')
-
-	DATA = dataFromImages(IMAGES)
-	res.notify('loaded', 'data.')
-
-	DATA.ribbons = ribbonsFromFavDirs()
-	res.notify('loaded', 'fav dirs.')
-
-	MARKED = []
-
-	sortImagesByDate()
-
-	reloadViewer()
-
-	return res.resolve()
 }
 
 
