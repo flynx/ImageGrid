@@ -116,6 +116,22 @@ var BASE_URL = '.'
 
 var IMAGE_CACHE = []
 
+
+// XXX make these usable for both saving and loading...
+// XXX get these from config...
+var IMAGES_FILE_DEFAULT = 'images.json'
+var IMAGES_FILE_PATTERN = /^[0-9]*-images.json$/
+var IMAGES_DIFF_FILE_PATTERN = /^[0-9]*-images-diff.json$/
+
+var MARKED_FILE_DEFAULT = 'marked.json'
+var MARKED_FILE_PATTERN = /^[0-9]*-marked.json$/
+
+var DATA_FILE_DEFAULT = 'data.json'
+var DATA_FILE_PATTERN = /^[0-9]*-data.json$/
+
+var IMAGE_PATTERN = /.*\.(jpg|jpeg|png|gif)$/i
+
+
 /*
 var UI_IMAGE_CACHE = []
 $.each([
@@ -1170,8 +1186,84 @@ function saveLocalStorage(attr){
 * File storage (Extension API -- CEF/PhoneGap/...)
 *
 * XXX need to cleanup this section...
-* XXX do a generic find latest and load it function....
 */
+
+// XXX needs testing...
+// XXX use a config object instead of positional arguments...
+function loadLatestFile(path, dfl, pattern, diff_pattern, report){
+	dfl = dfl == null ? path.split(/[\/\\]/).pop() : dfl
+	path = path == dfl ? '.' : path
+
+	var res = $.Deferred()
+	
+	// can't find diffs if can't list dirs...
+	if(window.listDir == null && (pattern != null || diff_pattern != null)){
+		report && showErrorStatus(report, 'no directory listing support.')
+		return res.reject()
+	}
+
+	// find the latest...
+	if(pattern != null){
+		pattern = RegExp(pattern)
+		var file = $.map(listDir(path), function(e){ 
+			return pattern.test(e) ? e : null
+		}).sort().reverse()[0]
+	}
+	file = file == null ? dfl : file
+
+	report && showStatus(report, 'Loading:', file)
+
+	file = path +'/'+ file
+	
+	var diff_data = {}
+	var diff = true
+
+	// collect and merge diffs...
+	// XXX no error handling if one of the diff loads fail...
+	if(diff_pattern != null){
+		diff_pattern = RegExp(diff_pattern)
+		var diff_data = [diff_data]
+		var diffs_names = $.map(listDir(path), function(e){ 
+			return diff_pattern.test(e) ? e : null
+		}).sort()
+		diff = $.when.apply(null, $.map(diffs_names, function(e, i){
+					return $.getJSON(path +'/'+ e)
+						// XXX this is ugly, had to do it this way as .then(...)
+						// 		handlers get different argument sets depending on 
+						// 		whether we have one or more deffereds here...
+						.done(function(data){
+							diff_data[i+1] = data
+							report && showStatus(report, 'Loaded:', e)
+						})
+				}))
+			.then(function(){
+				$.extend.apply(null, diff_data)
+				diff_data = diff_data[0]
+			})
+	} 
+
+	// load the main file and merge the diff with it...
+	$.when(diff, $.getJSON(file))
+		.done(function(_, json){
+			json = json[0]
+
+			// merge diffs...
+			if(Object.keys(diff_data).length != 0){
+				$.extend(json, diff_data)
+				report && showStatus(report, 'Merged diffs...')
+			}
+
+			res.resolve(json)
+
+			report && showStatus(report, 'Done.')
+		})
+		.fail(function(){
+			report && showErrorStatus(report, 'Loading: ' + file)
+			return res.reject()
+		})
+	return res
+}
+
 
 // load the target-specific handlers...
 // CEF
@@ -1192,15 +1284,7 @@ function loadFileImages(path, no_load_diffs, callback){
 	// default locations...
 	if(path == null){
 		var base = normalizePath(CACHE_DIR)
-		// find the latest images file...
-		var path = $.map(listDir(base), function(e){ 
-			return /.*-images.json$/.test(e) ? e : null
-		}).sort().reverse()[0]
-		path = path == null ? 'images.json' : path
-
-		showStatus('Loading:', path)
-
-		path = base +'/'+ path
+		var res = loadLatestFile(base, IMAGES_FILE_DEFAULT, IMAGES_FILE_PATTERN, IMAGES_DIFF_FILE_PATTERN, 'Images:')
 	
 	// explicit path...
 	// XXX need to account for paths without a CACHE_DIR
@@ -1208,53 +1292,17 @@ function loadFileImages(path, no_load_diffs, callback){
 		path = normalizePath(path)
 		var base = path.split(CACHE_DIR)[0]
 		base += '/'+ CACHE_DIR
+
+		// XXX is this correct???
+		var res = loadLatestFile(base, path.split(base)[0], RegExp(path.split(base)[0]), null, 'Images:')
 	}
 
-	var diff_data = {}
-	var diff = true
+	res.done(function(images){
+		IMAGES = images
+		callback != null ? callback() : null
+	})
 
-	// collect and merge image diffs...
-	// XXX no error handling if one of the diff loads fail...
-	if(!no_load_diffs){
-		var diff_data = [diff_data]
-		var diffs_names = $.map(listDir(base), function(e){ 
-			return /.*-images-diff.json$/.test(e) ? e : null
-		}).sort()
-		diff = $.when.apply(null, $.map(diffs_names, function(e, i){
-					return $.getJSON(normalizePath(base +'/'+ e))
-						// XXX this is ugly, had to do it this way as .then(...)
-						// 		handlers get different argument sets depending on 
-						// 		whether we have one or more deffereds here...
-						.done(function(data){
-							diff_data[i+1] = data
-							showStatus('Loaded:', e)
-						})
-				}))
-			.then(function(){
-				$.extend.apply(null, diff_data)
-				diff_data = diff_data[0]
-			})
-	} 
-
-	// load the main image file and merge the diff with it...
-	return $.when(diff, $.getJSON(path))
-		.done(function(_, json){
-			json = json[0]
-
-			// merge diffs...
-			if(Object.keys(diff_data).length != 0){
-				$.extend(json, diff_data)
-				showStatus('Merged images diffs...')
-			}
-
-			IMAGES = json
-			showStatus('Loaded images...')
-
-			callback != null && callback()
-		})
-		.fail(function(){
-			showErrorStatus('Loading: ' + path)
-		})
+	return res
 }
 
 
@@ -1276,7 +1324,7 @@ function saveFileImages(name){
 	// remove the diffs...
 	if(remove_diffs){
 		$.each($.map(listDir(normalizePath(CACHE_DIR)), function(e){ 
-				return /.*-images-diff.json$/.test(e) ? e : null
+				return IMAGES_DIFF_FILE_PATTERN.test(e) ? e : null
 			}), function(i, e){
 				showStatus('removeing:', e)
 				removeFile(normalizePath(CACHE_DIR +'/'+ e))
@@ -1284,6 +1332,7 @@ function saveFileImages(name){
 		IMAGES_UPDATED = []
 	}
 
+	// XXX use the pattern...
 	dumpJSON(name + '-images.json', IMAGES)
 	//DATA.image_file = normalizePath(name + '-images.json', null, 'relative')
 }
@@ -1293,21 +1342,7 @@ function loadFileMarks(path, callback){
 	// default locations...
 	if(path == null){
 		var base = normalizePath(CACHE_DIR)
-		// find the latest images file...
-		var files = listDir(base)
-		var path = $.map(files, function(e){ 
-			return /.*-marked.json$/.test(e) ? e : null
-		}).sort().reverse()[0]
-		path = path == null ? 'marked.json' : path
-
-		if(files.indexOf(path) < 0){
-			showStatus('No marks found...')
-			return $.Deferred().resolve()
-		}
-
-		showStatus('Loading:', path)
-
-		path = base +'/'+ path
+		var res = loadLatestFile(base, MARKED_FILE_DEFAULT, MARKED_FILE_PATTERN, null, 'Marks:')
 	
 	// explicit path...
 	// XXX need to account for paths without a CACHE_DIR
@@ -1315,20 +1350,17 @@ function loadFileMarks(path, callback){
 		path = normalizePath(path)
 		var base = path.split(CACHE_DIR)[0]
 		base += '/'+ CACHE_DIR
+
+		// XXX is this correct???
+		var res = loadLatestFile(base, path.split(base)[0], RegExp(path.split(base)[0]), 'Marks:')
 	}
 
-	// load the main image file and merge the diff with it...
-	return $.getJSON(path)
-		.done(function(json){
-			MARKED = json
+	res.done(function(images){
+		MARKED = images
+		callback != null ? callback() : null
+	})
 
-			showStatus('Loaded marks...')
-
-			callback != null && callback()
-		})
-		.fail(function(){
-			showErrorStatus('Loading: ' + path)
-		})
+	return res
 }
 // XXX save marks...
 
@@ -1416,11 +1448,16 @@ function saveFileState(name, no_normalize_path){
 // This will try and to this in the following order:
 // 	1) find a data file in the given path
 // 	2) find a cache directory and a data file there
+// 		- load newest [.*-]images.json
+// 		- load all [.*-]images-diff.json and merge with images
+// 		- load newest [.*-]data.json
+// 		- load newest [.*-]marked.json
 // 	3) list the images and load them as-is
 //
 // XXX this will not load the marks file...
 // XXX make sure that save works...
 // XXX might be good to split this into loadFileData and loadDir...
+// XXX use loadLatestFile(...)...
 function loadDir(path, raw_load){
 	path = normalizePath(path)
 	var orig_path = path
@@ -1437,9 +1474,9 @@ function loadDir(path, raw_load){
 
 	if(!raw_load){
 		data = $.map(files, function(e){ 
-			return /.*-data.json$/.test(e) ? e : null
+			return DATA_FILE_PATTERN.test(e) ? e : null
 		}).sort().reverse()[0]
-		data = (data == null && files.indexOf('data.json') >= 0) ? 'data.json' : data
+		data = (data == null && files.indexOf(DATA_FILE_DEFAULT) >= 0) ? DATA_FILE_DEFAULT : data
 
 		// look in the cache dir...
 		if(data == null){
@@ -1448,9 +1485,9 @@ function loadDir(path, raw_load){
 			files = listDir(path)
 			if(files != null){
 				data = $.map(listDir(path), function(e){ 
-					return /.*-data.json$/.test(e) ? e : null
+					return DATA_FILE_PATTERN.test(e) ? e : null
 				}).sort().reverse()[0]
-				data = (data == null && files.indexOf('data.json') >= 0) ? 'data.json' : data
+				data = (data == null && files.indexOf(DATA_FILE_DEFAULT) >= 0) ? DATA_FILE_DEFAULT : data
 			}
 		}
 	}
@@ -1474,7 +1511,7 @@ function loadDir(path, raw_load){
 	} else {
 		files = listDir(orig_path)
 		var image_paths = $.map(files, function(e){
-			return /.*\.(jpg|jpeg|png|gif)$/i.test(e) ? e : null
+			return IMAGE_PATTERN.test(e) ? e : null
 		})
 
 		if(image_paths.length == 0){

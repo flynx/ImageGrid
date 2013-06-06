@@ -95,6 +95,9 @@ Roadmap
 		[_] usable empty view -- w.o. data...
 		[_] 0% Tablet UI
 			[_] screen buttons
+		[_] save settings to config.json
+		[_] Q: do we need seporate theme settings?
+		| ...for ribbon and single-image modes?
 		[_] editable list of external commands...
 		| to add things like exportdirs.py etc.
 		[_] workflow editor (external app?)...
