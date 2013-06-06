@@ -1188,6 +1188,93 @@ function saveLocalStorage(attr){
 * XXX need to cleanup this section...
 */
 
+// load the target-specific handlers...
+// CEF
+if(window.CEF_dumpJSON != null){
+	var dumpJSON = CEF_dumpJSON
+	var listDir = CEF_listDir
+	var removeFile = CEF_removeFile
+	var runSystem = CEF_runSystem
+}
+
+
+
+/********************************************************* Helpers ***/
+
+// Report deferred progress
+//
+// This uses showStatus(...) and showErrorStatus(...) to report actions.
+//
+// Will use showErrorStatus(...) iff "Error" is the last argument of the
+// progress/notify action, removing it (string 'Error') from the arguments.
+//
+// Will return the original deferred.
+function statusNotify(prefix, loader){
+	if(loader == null){
+		loader = prefix
+		prefix = null
+	}
+	return loader
+		.progress(function(){
+			var args = Array.apply(null, arguments)
+			if(prefix != null && prefix != ''){
+				args.splice(0, 0, prefix)
+			}
+			if(args.indexOf('Error') >= 0){
+				args.pop()
+				return showErrorStatus(args.join(': '))
+			}
+			return showStatus(args.join(': '))
+		})
+}
+
+
+// Bubble up actions in the deferred chain
+//
+// Will chain progress/notify and if only_progress is not set, also
+// done/resolve and fail/reject from "from" to "to" deferred objects.
+//
+// Will add prefix to the list of arguments of progress/notify and
+// fail/reject (if not disabled), unless it is set to null.
+//
+// Will return "from" object.
+function bubbleProgress(prefix, from, to, only_progress){
+	from
+		.progress(function(){ 
+			var args = Array.apply(null, arguments)
+			prefix != null && args.splice(0, 0, prefix)
+			to.notify.apply(to, args) 
+		})
+
+	if(only_progress == null){
+		from
+			.done(function(){
+				var args = Array.apply(null, arguments)
+				to.resolve.apply(to, args) 
+			})
+			.fail(function(){
+				var args = Array.apply(null, arguments)
+				prefix != null && args.splice(0, 0, prefix)
+				to.reject.apply(to, args) 
+			})
+	}
+
+	return from
+}
+
+
+// Semi-generic deferred file loader
+//
+// if pattern is given, then search for the latest (ordered last) file 
+// and load that.
+// else load the dfl file.
+//
+// if diff_pattern is given, then merge all matching files in order 
+// (first to last) with the loaded "main" file
+//
+// NOTE: if neither of dfl, pattern or diff_pattern are given, then this
+// 		is essentially the same as $.getJSON(...)
+// NOTE: this needs listDir(...) to search for latest versions of files.
 function loadLatestFile(path, dfl, pattern, diff_pattern){
 	dfl = dfl == null ? path.split(/[\/\\]/).pop() : dfl
 	path = path == dfl ? '.' : path
@@ -1263,61 +1350,8 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 }
 
 
-function statusNotify(prefix, loader){
-	if(loader == null){
-		loader = prefix
-		prefix = null
-	}
-	return loader
-		.progress(function(){
-			var args = Array.apply(null, arguments)
-			if(prefix != null && prefix != ''){
-				args.splice(0, 0, prefix)
-			}
-			if(args.indexOf('Error') >= 0){
-				args.pop()
-				return showErrorStatus(args.join(': '))
-			}
-			return showStatus(args.join(': '))
-		})
-}
 
-
-// XXX do we need other actions here???
-function bubbleProgress(prefix, from, to, only_progress){
-	from
-		.progress(function(){ 
-			var args = Array.apply(null, arguments)
-			prefix != null && args.splice(0, 0, prefix)
-			to.notify.apply(to, args) 
-		})
-
-	if(only_progress == null){
-		from
-			.done(function(){
-				var args = Array.apply(null, arguments)
-				to.resolve.apply(to, args) 
-			})
-			.fail(function(){
-				var args = Array.apply(null, arguments)
-				prefix != null && args.splice(0, 0, prefix)
-				to.reject.apply(to, args) 
-			})
-	}
-
-	return from
-}
-
-
-// load the target-specific handlers...
-// CEF
-if(window.CEF_dumpJSON != null){
-	var dumpJSON = CEF_dumpJSON
-	var listDir = CEF_listDir
-	var removeFile = CEF_removeFile
-	var runSystem = CEF_runSystem
-}
-
+/*********************************************************************/
 
 // Load images from file
 //
@@ -1358,12 +1392,13 @@ function loadFileImages(path, no_load_diffs){
 }
 
 
-// Save current images list...
+// Save current images list to file
 //
-// NOTE: this will save the merged images and remove the diff files...
+// If not name is given this will merge all the diffs and save a "clean"
+// (full) images.json file. Also removing the diff files.
+//
 // NOTE: if an explicit name is given then this will not remove anything.
-// NOTE: if not explicit name is given this will save to the current 
-// 		cache dir.
+// NOTE: this will uses CACHE_DIR as the location if no name is given.
 function saveFileImages(name){
 	var remove_diffs = (name == null)
 	name = name == null ? normalizePath(CACHE_DIR +'/'+ Date.timeStamp()) : name
@@ -1390,6 +1425,7 @@ function saveFileImages(name){
 }
 
 
+// Load image marks form file
 function loadFileMarks(path){
 	var res = $.Deferred()
 	// default locations...
@@ -1420,6 +1456,9 @@ function loadFileMarks(path){
 
 	return res
 }
+
+
+// Save image marks to file
 function saveFileMarks(name){
 	name = name == null ? normalizePath(CACHE_DIR +'/'+ Date.timeStamp()) : name
 
@@ -1427,6 +1466,8 @@ function saveFileMarks(name){
 }
 
 
+// Load images, ribbons and marks from cache
+//
 // XXX add support for explicit filenames...
 function loadFileState(path, prefix){
 	prefix = prefix == null ? 'Data' : prefix
@@ -1490,6 +1531,12 @@ function loadFileState(path, prefix){
 
 	return res
 }
+
+
+// Save, ribbons and marks to cache
+//
+// NOTE: this will NOT save images, that operation must be explicitly 
+// 		performed by saveFileImages(...)
 function saveFileState(name, no_normalize_path){
 	name = name == null ? Date.timeStamp() : name
 
@@ -1520,9 +1567,13 @@ function saveFileState(name, no_normalize_path){
 }
 
 
-
+// Load a directory as-is
+//
 // XXX check if we need to pass down sorting settings to the generators...
-function loadRawDir(path){
+function loadRawDir(path, prefix){
+	prefix = prefix == null ? 'Data' : prefix
+	prefix = prefix === false ? null : prefix
+
 	var files = listDir(path)
 
 	var res = $.Deferred()
@@ -1533,24 +1584,22 @@ function loadRawDir(path){
 
 	if(image_paths.length == 0){
 		// no images in path...
-		res.notify('Load', path, 'Error')
+		res.notify(prefix, 'Load', path, 'Error')
 		return res.reject()
 	}
 
 	BASE_URL = path
 
 	IMAGES = imagesFromUrls(image_paths)
-	res.notify('Loaded', 'Images.')
+	res.notify(prefix, 'Loaded', 'Images.')
 
 	DATA = dataFromImages(IMAGES)
-	res.notify('Loaded', 'Data.')
+	res.notify(prefix, 'Loaded', 'Data.')
 
-	DATA.ribbons = ribbonsFromFavDirs()
-	res.notify('Loaded', 'Fav dirs.')
+	updateRibbonsFromFavDirs()
+	res.notify(prefix, 'Loaded', 'Fav dirs.')
 
 	MARKED = []
-
-	sortImagesByDate()
 
 	reloadViewer()
 
@@ -1560,17 +1609,12 @@ function loadRawDir(path){
 
 // Load a path
 //
-// This will try and to this in the following order:
-// 	1) find a data file in the given path
-// 	2) find a cache directory and a data file there
-// 		- load newest [.*-]images.json
-// 		- load all [.*-]images-diff.json and merge with images
-// 		- load newest [.*-]data.json
-// 		- load newest [.*-]marked.json
-// 	3) list the images and load them as-is
+// This will try and do one of the following in order:
+// 	1) look for a cache and load it,
+// 	2) load data from within the directory
+// 	3) load a directory as-is
+// 		load fav dirs
 //
-// XXX this will not load the marks file...
-// XXX make sure that save works...
 function loadDir(path, prefix){
 	prefix = prefix == null ? 'Data' : prefix
 	prefix = prefix === false ? null : prefix
@@ -1591,6 +1635,7 @@ function loadDir(path, prefix){
 		return res.reject()
 	}
 
+	// see if there is a cache...
 	if(files.indexOf(CACHE_DIR) >= 0){
 		path = path +'/'+ CACHE_DIR
 	}
@@ -1608,9 +1653,12 @@ function loadDir(path, prefix){
 }
 
 
+// Load ribbon structure from fav directory tree
+//
 // XXX loads duplicate images....
 function updateRibbonsFromFavDirs(){
 	DATA.ribbons = ribbonsFromFavDirs(null, null, imageOrderCmp)
+	sortImagesByDate()
 	reloadViewer()
 }
 
