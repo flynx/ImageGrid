@@ -95,6 +95,30 @@ Roadmap
 		[_] usable empty view -- w.o. data...
 		[_] 0% Tablet UI
 			[_] screen buttons
+		[_] editable list of external commands...
+		| to add things like exportdirs.py etc.
+		[_] workflow editor (external app?)...
+		| edit sequence of actions and events...
+		|
+		| Example:	
+		| 	- on mount volume name X
+		| 		-> make previews
+		| 		-> make cache
+		| 		-> import to index
+		| 		-> run Viewer
+		| 	- on Viewer data change
+		| 		-> run exportdirs.py
+		| 	- on tweak 
+		| 		-> run Irfan view
+		| 	- on edit
+		| 		-> run Photoshop
+		| 	- on PSD created
+		| 		-> make preview
+		| 		-> add to index
+		| 		-> group with preview
+		| 	...
+		|
+		|
 		[_] 0% keyboard.js
 			[_] multiple key handler...
 			| handle multiple key presses...
