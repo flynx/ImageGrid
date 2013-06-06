@@ -2,6 +2,16 @@
 * 
 **********************************************************************/
 
+/******************************************************** Settings ***/
+
+@ribbon-mark-offset: 5px;
+
+@ribbon-mark-size: 10px;
+
+@single-image-indicator-size: 10px;
+
+
+
 /********************************************************** Mixins ***/
 
 .user-select (@mode: auto) {
@@ -72,7 +82,7 @@ body {
 	/*border: solid blue 1px;*/
 	box-sizing: border-box;
 
-	.user-select;
+	.user-select(none);
 }
 
 
@@ -234,9 +244,6 @@ body {
 
 /***************************************************** Image marks ***/
 
-@mark-offset: 5px;
-@mark-size: 15px;
-
 .marks-visible.viewer .marked.image:after {
 	display: block;
 	position: absolute;
@@ -244,13 +251,13 @@ body {
 	font-size: 0pt;
 	border: none;
 
-	width: @mark-size;
-	height: @mark-size;
+	width: @ribbon-mark-size;
+	height: @ribbon-mark-size;
 
 	top: auto;
-	bottom: @mark-offset;
+	bottom: @ribbon-mark-offset;
 	left: auto;
-	right: @mark-offset;
+	right: @ribbon-mark-offset;
 
 	border-radius: 50%;
 	background: blue;
@@ -260,19 +267,19 @@ body {
 .marks-visible.viewer .marked.image[orientation="0"][flipped*="vertical"]:after,
 .marks-visible.viewer .marked.image[orientation="180"][flipped="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="90"]:not([flipped]):after {
-	top: @mark-offset;
+	top: @ribbon-mark-offset;
 	bottom: auto:
 	left: auto;
-	right: @mark-offset;
+	right: @ribbon-mark-offset;
 }
 .marks-visible.viewer .marked.image:not([orientation])[flipped*="vertical"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="0"][flipped*="vertical"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="270"][flipped="vertical"]:after,
 .marks-visible.viewer .marked.image[orientation="90"][flipped="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="180"]:not([flipped]):after {
-	top: @mark-offset;
+	top: @ribbon-mark-offset;
 	bottom: auto;
-	left: @mark-offset;
+	left: @ribbon-mark-offset;
 	right: auto;
 }
 .marks-visible.viewer .marked.image[orientation="90"][flipped*="vertical"][flipped*="horizontal"]:after,
@@ -281,8 +288,8 @@ body {
 .marks-visible.viewer .marked.image[orientation="0"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="270"]:not([flipped]):after {
 	top: auto;
-	bottom: @mark-offset;
-	left: @mark-offset;
+	bottom: @ribbon-mark-offset;
+	left: @ribbon-mark-offset;
 	right: auto;
 }
 
@@ -294,7 +301,7 @@ body {
 /* corner mark... (a-la bookmarks in PortableMag) 
  * XXX account for flipping... */
 /*
-@mark-offset: -15px;
+@ribbon-mark-offset: -15px;
 
 .marks-visible.viewer .marked.image:after {
 	display: block;
@@ -306,24 +313,24 @@ body {
 	width: 30px;
 	height: 30px;
 
-	top: @mark-offset;
-	right: @mark-offset;
+	top: @ribbon-mark-offset;
+	right: @ribbon-mark-offset;
 
 	background: blue;
 
 	.rotate(45deg)
 }
 .marks-visible.viewer .marked.image[orientation="90"]:after {
-	top: @mark-offset;
-	left: @mark-offset;
+	top: @ribbon-mark-offset;
+	left: @ribbon-mark-offset;
 }
 .marks-visible.viewer .marked.image[orientation="180"]:after {
-	bottom: @mark-offset;
-	left: @mark-offset;
+	bottom: @ribbon-mark-offset;
+	left: @ribbon-mark-offset;
 }
 .marks-visible.viewer .marked.image[orientation="270"]:after {
-	bottom: @mark-offset;
-	right: @mark-offset;
+	bottom: @ribbon-mark-offset;
+	right: @ribbon-mark-offset;
 }
 */
 
@@ -594,10 +601,11 @@ body {
 .global-mode-indicators>* {
 	margin-left: 10px;
 }
-.global-mode-indicators .circle {
+.global-mode-indicators .circle,
+.context-mode-indicators .circle {
 	display: inline-block;
-	width: 10px;
-	height: 10px;
+	width: @single-image-indicator-size;
+	height: @single-image-indicator-size;
 	border-radius: 50%;
 }
 /* hide indicators in single image mode */
@@ -627,12 +635,6 @@ body {
 }
 .context-mode-indicators>* {
 	margin-left: 10px;
-}
-.context-mode-indicators .circle {
-	display: inline-block;
-	width: 10px;
-	height: 10px;
-	border-radius: 50%;
 }
 
 

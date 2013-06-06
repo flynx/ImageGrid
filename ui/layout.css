@@ -1,6 +1,7 @@
 /**********************************************************************
 * 
 **********************************************************************/
+/******************************************************** Settings ***/
 /********************************************************** Mixins ***/
 /********************************************************* utility ***/
 .expanding-text .hidden {
@@ -27,11 +28,11 @@ body {
   /*border: solid blue 1px;*/
 
   box-sizing: border-box;
-  -moz-user-select: auto;
-  -webkit-user-select: auto;
-  -o-user-select: auto;
-  -ms-user-select: auto;
-  user-select: auto;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -o-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 /****************************************************** Ribbon set ***/
 .ribbon-set {
@@ -237,8 +238,8 @@ body {
   content: "";
   font-size: 0pt;
   border: none;
-  width: 15px;
-  height: 15px;
+  width: 10px;
+  height: 10px;
   top: auto;
   bottom: 5px;
   left: auto;
@@ -283,7 +284,7 @@ body {
 /* corner mark... (a-la bookmarks in PortableMag) 
  * XXX account for flipping... */
 /*
-@mark-offset: -15px;
+@ribbon-mark-offset: -15px;
 
 .marks-visible.viewer .marked.image:after {
 	display: block;
@@ -295,24 +296,24 @@ body {
 	width: 30px;
 	height: 30px;
 
-	top: @mark-offset;
-	right: @mark-offset;
+	top: @ribbon-mark-offset;
+	right: @ribbon-mark-offset;
 
 	background: blue;
 
 	.rotate(45deg)
 }
 .marks-visible.viewer .marked.image[orientation="90"]:after {
-	top: @mark-offset;
-	left: @mark-offset;
+	top: @ribbon-mark-offset;
+	left: @ribbon-mark-offset;
 }
 .marks-visible.viewer .marked.image[orientation="180"]:after {
-	bottom: @mark-offset;
-	left: @mark-offset;
+	bottom: @ribbon-mark-offset;
+	left: @ribbon-mark-offset;
 }
 .marks-visible.viewer .marked.image[orientation="270"]:after {
-	bottom: @mark-offset;
-	right: @mark-offset;
+	bottom: @ribbon-mark-offset;
+	right: @ribbon-mark-offset;
 }
 */
 /* XXX should we use opacity??? */
@@ -646,7 +647,8 @@ body {
 .global-mode-indicators > * {
   margin-left: 10px;
 }
-.global-mode-indicators .circle {
+.global-mode-indicators .circle,
+.context-mode-indicators .circle {
   display: inline-block;
   width: 10px;
   height: 10px;
@@ -677,12 +679,6 @@ body {
 }
 .context-mode-indicators > * {
   margin-left: 10px;
-}
-.context-mode-indicators .circle {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
 }
 /* actual indicators */
 /* marks... */

@@ -93,6 +93,8 @@ Roadmap
 [_] 27% Gen 3 current todo
 	[_] 54% High priority
 		[_] usable empty view -- w.o. data...
+		[_] 0% Tablet UI
+			[_] screen buttons
 		[_] 0% keyboard.js
 			[_] multiple key handler...
 			| handle multiple key presses...
@@ -120,8 +122,6 @@ Roadmap
 				[_] introspection
 				| this is partially done already, need a simpler API for 
 				| the user...
-		[_] 0% Tablet UI
-			[_] screen buttons
 		[_] BUG: sometimes duplicate images get loaded...
 		| this happens when jumping back and forth on the mid ribbon until
 		| the last element shows up and then moving left until the frame
