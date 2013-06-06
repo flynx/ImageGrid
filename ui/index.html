@@ -74,7 +74,7 @@ less = {
 
 //DEBUG = true
 
-var SCROLLER_ENABLED = false
+var SCROLLER_ENABLED = true
 
 // setup...
 $(function(){
@@ -97,7 +97,7 @@ $(function(){
 				// XXX does not seem to work...
 				//multiClickTimeout: 100,
 
-				transitionDuration: 100,
+				transitionDuration: 0,
 				transitionEasing: 'liner',
 			})
 			.start()
@@ -107,6 +107,26 @@ $(function(){
 			//.on('doubleClick', dblClickHandler)
 			.on('longClick', dblClickHandler)
 			//.on('longClick', function(){ toggleImageMark() })
+
+			.on('swipeLeft', function(){
+				updateDirection('prev')
+				prevImage() 
+				centerRibbons()
+			})
+			.on('swipeRight', function(){
+				updateDirection('next')
+				nextImage() 
+				centerRibbons()
+			})
+			.on('swipeUp', function(){
+				prevRibbon() 
+				centerRibbons()
+			})
+			.on('swipeDown', function(){
+				nextRibbon() 
+				centerRibbons()
+			})
+
 
 	} else {
 		// NOTE: this is global so as to not to add any extra complexity to 
