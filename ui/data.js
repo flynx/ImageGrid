@@ -1170,6 +1170,7 @@ function saveLocalStorage(attr){
 * File storage (Extension API -- CEF/PhoneGap/...)
 *
 * XXX need to cleanup this section...
+* XXX do a generic find latest and load it function....
 */
 
 // load the target-specific handlers...
@@ -1197,7 +1198,7 @@ function loadFileImages(path, no_load_diffs, callback){
 		}).sort().reverse()[0]
 		path = path == null ? 'images.json' : path
 
-		updateStatus('Loading:', path)
+		showStatus('Loading:', path)
 
 		path = base +'/'+ path
 	
@@ -1226,7 +1227,7 @@ function loadFileImages(path, no_load_diffs, callback){
 						// 		whether we have one or more deffereds here...
 						.done(function(data){
 							diff_data[i+1] = data
-							updateStatus('Loaded:', e)
+							showStatus('Loaded:', e)
 						})
 				}))
 			.then(function(){
@@ -1239,10 +1240,15 @@ function loadFileImages(path, no_load_diffs, callback){
 	return $.when(diff, $.getJSON(path))
 		.done(function(_, json){
 			json = json[0]
-			$.extend(json, diff_data)
-			IMAGES = json
 
-			updateStatus('Loaded images...')
+			// merge diffs...
+			if(Object.keys(diff_data).length != 0){
+				$.extend(json, diff_data)
+				showStatus('Merged images diffs...')
+			}
+
+			IMAGES = json
+			showStatus('Loaded images...')
 
 			callback != null && callback()
 		})
@@ -1272,7 +1278,7 @@ function saveFileImages(name){
 		$.each($.map(listDir(normalizePath(CACHE_DIR)), function(e){ 
 				return /.*-images-diff.json$/.test(e) ? e : null
 			}), function(i, e){
-				updateStatus('removeing:', e)
+				showStatus('removeing:', e)
 				removeFile(normalizePath(CACHE_DIR +'/'+ e))
 			})
 		IMAGES_UPDATED = []
@@ -1281,6 +1287,50 @@ function saveFileImages(name){
 	dumpJSON(name + '-images.json', IMAGES)
 	//DATA.image_file = normalizePath(name + '-images.json', null, 'relative')
 }
+
+
+function loadFileMarks(path, callback){
+	// default locations...
+	if(path == null){
+		var base = normalizePath(CACHE_DIR)
+		// find the latest images file...
+		var files = listDir(base)
+		var path = $.map(files, function(e){ 
+			return /.*-marked.json$/.test(e) ? e : null
+		}).sort().reverse()[0]
+		path = path == null ? 'marked.json' : path
+
+		if(files.indexOf(path) < 0){
+			showStatus('No marks found...')
+			return $.Deferred().resolve()
+		}
+
+		showStatus('Loading:', path)
+
+		path = base +'/'+ path
+	
+	// explicit path...
+	// XXX need to account for paths without a CACHE_DIR
+	} else {
+		path = normalizePath(path)
+		var base = path.split(CACHE_DIR)[0]
+		base += '/'+ CACHE_DIR
+	}
+
+	// load the main image file and merge the diff with it...
+	return $.getJSON(path)
+		.done(function(json){
+			MARKED = json
+
+			showStatus('Loaded marks...')
+
+			callback != null && callback()
+		})
+		.fail(function(){
+			showErrorStatus('Loading: ' + path)
+		})
+}
+// XXX save marks...
 
 
 function loadFileState(data_path, callback){
@@ -1303,18 +1353,23 @@ function loadFileState(data_path, callback){
 			// version 2.0
 			} else if(json.version == '2.0') {
 				DATA = json
-				loadFileImages(DATA.image_file == null ?
+				$.when(
+					// load images...
+					loadFileImages(DATA.image_file == null ?
 							normalizePath(DATA.image_file, base) 
-							: null)
-					.done(function(){
-						reloadViewer()
-						callback != null && callback()
-						res.resolve()
-					})
+							: null),
+					// load marks if available...
+					// XXX do we need to do this???
+					loadFileMarks())
+						.done(function(){
+							reloadViewer()
+							callback != null && callback()
+							res.resolve()
+						})
 
 			// unknown format...
 			} else {
-				updateStatus('Unknown format.')
+				showStatus('Unknown format.')
 				return
 			}
 		})
@@ -1341,6 +1396,7 @@ function saveFileState(name, no_normalize_path){
 	}
 
 	dumpJSON(name + '-data.json', DATA)
+	// XXX do we need to do this???
 	dumpJSON(name + '-marked.json', MARKED)
 
 	// save the updated images...
@@ -1364,12 +1420,13 @@ function saveFileState(name, no_normalize_path){
 //
 // XXX this will not load the marks file...
 // XXX make sure that save works...
+// XXX might be good to split this into loadFileData and loadDir...
 function loadDir(path, raw_load){
 	path = normalizePath(path)
 	var orig_path = path
 	var data
 
-	updateStatus('Loading...').show()
+	showStatus('Loading:', path)
 
 	var files = listDir(path)
 
@@ -1400,7 +1457,7 @@ function loadDir(path, raw_load){
 
 	// load the found data file...
 	if(data != null){
-		updateStatus('Loading:', data)
+		showStatus('Loading:', data)
 
 		data = path + '/' + data
 
@@ -1437,6 +1494,7 @@ function loadDir(path, raw_load){
 }
 
 
+// XXX loads duplicate images....
 function updateRibbonsFromFavDirs(){
 	DATA.ribbons = ribbonsFromFavDirs(null, null, imageOrderCmp)
 	reloadViewer()
