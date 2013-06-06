@@ -1264,10 +1264,16 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 
 
 function statusNotify(prefix, loader){
+	if(loader == null){
+		loader = prefix
+		prefix = null
+	}
 	return loader
 		.progress(function(){
 			var args = Array.apply(null, arguments)
-			args.splice(0, 0, prefix)
+			if(prefix != null && prefix != ''){
+				args.splice(0, 0, prefix)
+			}
 			if(args.indexOf('Error') >= 0){
 				args.pop()
 				return showErrorStatus(args.join(': '))
@@ -1422,7 +1428,10 @@ function saveFileMarks(name){
 
 
 // XXX add support for explicit filenames...
-function loadFileState(path){
+function loadFileState(path, prefix){
+	prefix = prefix == null ? 'Data' : prefix
+	prefix = prefix === false ? null : prefix
+
 	// XXX explicit data file path...
 	if(/\.json$/i.test(path)){
 		// XXX at this 
@@ -1435,7 +1444,7 @@ function loadFileState(path){
 
 	var res = $.Deferred()
 
-	bubbleProgress('Data',
+	bubbleProgress(prefix,
 			loadLatestFile(path, 
 				DATA_FILE_DEFAULT, 
 				DATA_FILE_PATTERN), res, true)
@@ -1454,19 +1463,21 @@ function loadFileState(path){
 			// version 2.0
 			} else if(json.version == '2.0') {
 				DATA = json
-				bubbleProgress('Data',
-						$.when(
-								// XXX load config...
-								// load images...
-								loadFileImages(DATA.image_file == null ?
-										normalizePath(DATA.image_file, base) 
-										: null),
-								// load marks if available...
-								loadFileMarks()), res, true)
+				$.when(
+						// XXX load config...
+						// load images...
+						bubbleProgress(prefix,
+							loadFileImages(DATA.image_file == null ?
+									normalizePath(DATA.image_file, base) 
+									: null), res, true),
+						// load marks if available...
+						bubbleProgress(prefix,
+							loadFileMarks(), res, true))
 					.done(function(){
 						reloadViewer()
 						res.resolve()
 					})
+					// XXX fail???
 
 			// unknown format...
 			} else {
@@ -1560,15 +1571,17 @@ function loadRawDir(path){
 //
 // XXX this will not load the marks file...
 // XXX make sure that save works...
-function loadDir(path){
+function loadDir(path, prefix){
+	prefix = prefix == null ? 'Data' : prefix
+	prefix = prefix === false ? null : prefix
+
 	path = normalizePath(path)
 	var orig_path = path
 	var data
 
 	var res = $.Deferred()
 
-	showStatus('Loading:', path)
-	res.notify('load', path)
+	res.notify(prefix, 'Loading', path)
 
 	var files = listDir(path)
 
@@ -1582,13 +1595,13 @@ function loadDir(path){
 		path = path +'/'+ CACHE_DIR
 	}
 
-	bubbleProgress('Dir:', 
-			loadFileState(path), res, true)
+	bubbleProgress(prefix, 
+			loadFileState(path, false), res, true)
 		.done(function(){
 			res.resolve()
 		})
 		.fail(function(){
-			bubbleProgress('Raw dir:', loadRawDir(orig_path), res)
+			bubbleProgress('Raw directory', loadRawDir(orig_path), res)
 		})
 
 	return res

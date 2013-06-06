@@ -149,7 +149,7 @@ $(function(){
 	if((DATA_ATTR + '_BASE_URL') in localStorage){
 		BASE_URL = localStorage[DATA_ATTR + '_BASE_URL']
 
-		var loading = loadDir(BASE_URL)
+		var loading = statusNotify(loadDir(BASE_URL))
 
 	} else {
 		// everything is in localStorage...

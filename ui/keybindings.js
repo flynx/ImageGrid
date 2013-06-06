@@ -249,7 +249,7 @@ var KEYBOARD_CONFIG = {
 					return
 				}
 				path = path.trim()
-				loadDir(path)
+				statusNotify(loadDir(path))
 			}),
 
 
