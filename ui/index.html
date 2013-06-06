@@ -52,6 +52,7 @@ less = {
 
 <script src="lib/jli.js"></script>
 <script src="lib/keyboard.js"></script>
+<script src="lib/scroller.js"></script>
 
 <script src="base.js"></script>
 <script src="modes.js"></script>
@@ -73,6 +74,8 @@ less = {
 
 //DEBUG = true
 
+var SCROLLER_ENABLED = false
+
 // setup...
 $(function(){
 	// defaults...
@@ -83,12 +86,36 @@ $(function(){
 
 	autoHideCursor($('.viewer'))
 
-	// NOTE: this is global so as to not to add any extra complexity to 
-	//		the internal workings...
-	$('.viewer')
-		.click(clickHandler)
-		// XXX for some reason this messes up alignment on initial view...
-		//.dblclick(dblClickHandler)
+	// XXX still buggy...
+	if(SCROLLER_ENABLED){
+		var scroller = makeScrollHandler($('.viewer'), {
+				//vScroll: false,
+				//hScroll: false,
+				scrollDisabled: true,
+
+				//enableMultiClicks: true,
+				// XXX does not seem to work...
+				//multiClickTimeout: 100,
+
+				transitionDuration: 100,
+				transitionEasing: 'liner',
+			})
+			.start()
+
+		$('.viewer')
+			.on('shortClick', function(){ clickHandler(event) })
+			//.on('doubleClick', dblClickHandler)
+			.on('longClick', dblClickHandler)
+			//.on('longClick', function(){ toggleImageMark() })
+
+	} else {
+		// NOTE: this is global so as to not to add any extra complexity to 
+		//		the internal workings...
+		$('.viewer')
+			// XXX this messes things up...
+			//.dblclick(dblClickHandler)
+			.click(clickHandler)
+	}
 
 	$(window)
 		.resize(function() {

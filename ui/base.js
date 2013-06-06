@@ -163,8 +163,6 @@ function getRibbonIndex(elem){
 // NOTE: if used during an animation/transition this will give the 
 // 		position at the exact frame of the animation, this might not be
 // 		the desired "final" data...
-// XXX account for rotated images...
-// 		need to keep this generic but still account for rotation...
 function getRelativeVisualPosition(outer, inner){
 	outer = $(outer).offset()
 	inner = $(inner).offset()
@@ -669,9 +667,12 @@ function clickHandler(evt){
 }
 
 
-// XXX for some reason this messes up alignment for the initial view...
+// XXX this does not work correctly because it also generates two clicks,
+// 		and this messes things up...
 function dblClickHandler(evt){
+	//setTimeout(toggleSingleImageMode, 100)
 	toggleSingleImageMode()
+	return false
 }
 
 
