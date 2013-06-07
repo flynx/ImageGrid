@@ -466,42 +466,32 @@ var KEYBOARD_CONFIG = {
 				//		i.e. marking can change direction depending on where
 				//		we moved last...
 				// NOTE: marking does not change move direction...
+				// XXX  should this toggle or set mark to on?
 				default: doc('Mark current image and advance',
 					function(){ 
-						toggleImageMark()
+						toggleImageMark('on')
 						directionImage()
-						if(getImage().filter(':visible').length == 0){
-							centerView(focusImage(getImageBefore()))
-						}
+						// XXX do we need this???
+						//if(getImage().filter(':visible').length == 0){
+						//	centerView(focusImage(getImageBefore()))
+						//}
 						centerRibbons()
 					}),
 				// same as default but in reverse direction...
 				shift: doc('Mark current image and return',
 					function(){
-						toggleImageMark()
+						toggleImageMark('on')
 						directionImage(true)
-						if(getImage().filter(':visible').length == 0){
-							centerView(focusImage(getImageBefore()))
-						} 
+						// XXX do we need this???
+						//if(getImage().filter(':visible').length == 0){
+						//	centerView(focusImage(getImageBefore()))
+						//} 
 						centerRibbons()
 					}),
-				ctrl: 'Ins',
 			},
-		Ins: doc('Mark current image', function(){ toggleImageMark() }),
-		I: {
-				default: doc('Toggle image info display',
-					function(){ toggleImageInfo() }),
-				shift: doc('Show current image info',
-					function(){ toggleImageInfoDrawer() }),
-				alt: doc('Toggle inline image info display',
-					function(){
-						toggleInlineImageInfo()
-					}),
-
-				// marking...
-				ctrl: doc('Invert image marks', 
-					function(){ invertImageMarks() }),
-			},
+		Ins: doc('Toggle mark on current image', function(){ toggleImageMark() }),
+		'invert-marks': doc('Invert image marks', 
+			function(){ invertImageMarks() }),
 		A: {
 			  	// XXX does not yet work with DATA (???)
 				//shift: doc('Toggle marks in current contagious block', 
@@ -519,15 +509,19 @@ var KEYBOARD_CONFIG = {
 					function(){ removeImageMarks('all') }),
 			},
 		U: {
+				default: doc('Unmark current image',
+					function(){ toggleImageMark('off') }), 
 				ctrl: doc('Unmark current ribbon', 
 					function(){ removeImageMarks('ribbon') }),
 				shift: doc('Unamrk all', 
 					function(){ removeImageMarks('all') }),
 			},
+
+
 		F2: {
 				default: doc('Toggle mark visibility', 
 					function(){ toggleMarkesView() }),
-				shift: 'F3', 
+				//shift: 'F3', 
 			},
 		F3: doc('Toggle marked only images view', 
 			function(){
@@ -536,12 +530,27 @@ var KEYBOARD_CONFIG = {
 
 
 		E: doc('Open image in external software', openImage),
+		// XXX make F4 a default editor and E a default viewer...
 		F4: {
 				default: 'E',
 				alt: doc('Close viewer'),
 			},
 
 
+		// info...
+		I: {
+				default: doc('Toggle image info display',
+					function(){ toggleImageInfo() }),
+				shift: doc('Show current image info',
+					function(){ toggleImageInfoDrawer() }),
+				alt: doc('Toggle inline image info display',
+					function(){
+						toggleInlineImageInfo()
+					}),
+
+				// marking...
+				ctrl: 'invert-marks',
+			},
 		P: doc('Show options',
 			function(){ toggleOptionsUI() }),
 
