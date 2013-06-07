@@ -16,13 +16,13 @@ function setupIndicators(){
 		.click(function(){ toggleMarkesView() })
 	showGlobalIndicator(
 			'marked-only-visible', 
-			'Marked only images visible (shift-F2)')
+			'Marked only images visible (F3)')
 		.css('cursor', 'hand')
 		.click(function(){ toggleMarkedOnlyView() })
 
 	showContextIndicator(
 			'current-image-marked', 
-			'Image is marked (Ins/M)')
+			'Image is marked (Ins)')
 		.css('cursor', 'hand')
 		.click(function(){ toggleImageMark() })
 }
