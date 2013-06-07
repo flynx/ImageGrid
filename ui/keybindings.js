@@ -436,12 +436,18 @@ var KEYBOARD_CONFIG = {
 					function(){
 						event.preventDefault()
 						//saveLocalStorage()
+						showStatusQ('Saving: localStorage: Data.')
 						saveLocalStorageData()
+						showStatusQ('Saving: localStorage: Marks.')
 						saveLocalStorageMarks()
 
+						showStatusQ('Saving: localStorage: Settings.')
 						saveLocalStorageSettings()
 
+						showStatusQ('Saving: File: State.')
 						saveFileState()
+
+						showStatusQ('Saving: Done.')
 					})
 			},
 		Z: {

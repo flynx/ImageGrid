@@ -34,7 +34,8 @@ if(window.CEF_dumpJSON != null){
 // progress/notify action, removing it (string 'Error') from the arguments.
 //
 // Will return the original deferred.
-function statusNotify(prefix, loader){
+function statusNotify(prefix, loader, not_queued){
+	var report = not_queued == true ? showStatus : showStatusQ
 	if(loader == null){
 		loader = prefix
 		prefix = null
@@ -49,7 +50,7 @@ function statusNotify(prefix, loader){
 				args.pop()
 				return showErrorStatus(args.join(': '))
 			}
-			return showStatus(args.join(': '))
+			return report(args.join(': '))
 		})
 }
 
@@ -238,7 +239,7 @@ function saveFileImages(name){
 		$.each($.map(listDir(normalizePath(CACHE_DIR)), function(e){ 
 				return IMAGES_DIFF_FILE_PATTERN.test(e) ? e : null
 			}), function(i, e){
-				showStatus('removeing:', e)
+				showStatusQ('removeing:', e)
 				removeFile(normalizePath(CACHE_DIR +'/'+ e))
 			})
 		IMAGES_UPDATED = []

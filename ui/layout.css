@@ -635,12 +635,31 @@ body {
   display: none;
 }
 /* these are generic containers for indicators */
-.global-mode-indicators {
+.global-mode-indicators,
+.context-mode-indicators {
   position: absolute;
-  top: 15px;
-  right: 15px;
   height: 20px;
   width: auto;
+  min-width: 300px;
+  text-align: right;
+  color: transparent;
+}
+.global-mode-indicators {
+  top: 15px;
+  right: 15px;
+}
+.global-mode-indicators .mode-tip,
+.context-mode-indicators .mode-tip {
+  opacity: 0.5;
+}
+.global-mode-indicators:hover,
+.context-mode-indicators:hover {
+  color: silver;
+  font-weight: bold;
+  font-size: large;
+}
+.global-mode-indicators > *,
+.context-mode-indicators > * {
   font-size: small;
   vertical-align: center;
 }
@@ -669,13 +688,8 @@ body {
 }
 /* context indicators */
 .context-mode-indicators {
-  position: absolute;
   right: 15px;
   bottom: 15px;
-  height: 20px;
-  width: auto;
-  font-size: small;
-  vertical-align: center;
 }
 .context-mode-indicators > * {
   margin-left: 10px;

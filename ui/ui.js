@@ -9,6 +9,10 @@
 var CURSOR_SHOW_THRESHOLD = 20
 var CURSOR_HIDE_TIMEOUT = 1000
 
+var STATUS_QUEUE = []
+var STATUS_QUEUE_TIME = 200
+
+
 
 
 /*********************************************************************/
@@ -190,6 +194,46 @@ function showStatus(message){
 }
 
 
+// Same as showStatus(...) but queue the message so as to display it for
+// a meaningful amount of time...
+//
+//	- This will print the first message right away.
+//	- Each consecutive message if STATUS_QUEUE_TIME has not passed yet 
+//		will get queued.
+//	- Once the STATUS_QUEUE_TIME has passed the next message is reported 
+// 		and so on until the queue is empty.
+//
+// NOTE: for very a fast and large sequence of messages the reporting 
+// 		may (will) take longer (significantly) than the actual "job"...
+// NOTE: this will delay the logging also...
+function showStatusQ(message){
+	if(STATUS_QUEUE.length == 0){
+
+		// end marker...
+		STATUS_QUEUE.push(0)
+
+		showStatus.apply(null, arguments)
+
+		function _printer(){
+			// if queue is empty we have nothing to do...
+			if(STATUS_QUEUE.length == 1){
+				STATUS_QUEUE.pop()
+				return
+			}
+			// if not empty show a status and repeat...
+			showStatus.apply(null, STATUS_QUEUE.pop())
+			setTimeout(_printer, STATUS_QUEUE_TIME)
+		}
+
+		setTimeout(_printer, STATUS_QUEUE_TIME)
+
+	// queue not empty...
+	} else {
+		STATUS_QUEUE.splice(1, 0, Array.apply(Array, arguments))
+	}
+}
+
+
 // Same as showStatus(...) but will always add 'Error: ' to the start 
 // of the message
 //
@@ -230,6 +274,7 @@ function showGlobalIndicator(cls, text){
 	if(c.length == 0){
 		c = $('<div>')
 			.addClass('global-mode-indicators')
+			.append('<span class="mode-tip">Global status:</span>')
 			.appendTo($('.viewer'))
 	}
 	return makeIndicator(text)
@@ -241,6 +286,7 @@ function showContextIndicator(cls, text){
 	if(c.length == 0){
 		c = $('<div>')
 			.addClass('context-mode-indicators')
+			.append('<span class="mode-tip">Context status:</span>')
 			.appendTo($('.viewer'))
 	}
 	return makeIndicator(text)

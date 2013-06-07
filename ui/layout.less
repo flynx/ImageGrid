@@ -588,16 +588,39 @@ body {
 
 
 /* these are generic containers for indicators */
-.global-mode-indicators {
+.global-mode-indicators,
+.context-mode-indicators {
 	position: absolute;
-	top: 15px;
-	right: 15px;
 	height: 20px;
 	width: auto;
+	min-width: 300px;
+	text-align: right;
 
+	color: transparent;
+}
+
+.global-mode-indicators {
+	top: 15px;
+	right: 15px;
+}
+
+.global-mode-indicators .mode-tip,
+.context-mode-indicators .mode-tip {
+	opacity: 0.5;
+}
+
+.global-mode-indicators:hover,
+.context-mode-indicators:hover {
+	color: gray;
+	font-weight: bold;
+}
+
+.global-mode-indicators > *,
+.context-mode-indicators > * {
 	font-size: small;
 	vertical-align: center;
 }
+
 .global-mode-indicators>* {
 	margin-left: 10px;
 }
@@ -608,6 +631,7 @@ body {
 	height: @single-image-indicator-size;
 	border-radius: 50%;
 }
+
 /* hide indicators in single image mode */
 .single-image-mode.viewer .global-mode-indicators {
 	opacity: 0.5;
@@ -624,14 +648,9 @@ body {
 
 /* context indicators */
 .context-mode-indicators {
-	position: absolute;
 	right: 15px;
 	bottom: 15px;
-	height: 20px;
-	width: auto;
 
-	font-size: small;
-	vertical-align: center;
 }
 .context-mode-indicators>* {
 	margin-left: 10px;
