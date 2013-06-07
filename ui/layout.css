@@ -579,7 +579,9 @@ body {
 .up-indicator,
 .down-indicator,
 .start-indicator,
-.end-indicator {
+.end-indicator,
+.top-indicator,
+.bottom-indicator {
   display: block;
   position: absolute;
   content: "";
@@ -627,11 +629,25 @@ body {
   left: auto;
   right: 0px;
 }
+.top-indicator,
+.bottom-indicator {
+  left: 0px;
+  height: 10px;
+  width: 100%;
+  margin: 0px;
+  background: yellow;
+}
+.bottom-indicator {
+  top: auto;
+  bottom: 0px;
+}
 /* default state */
 .up-indicator,
 .down-indicator,
 .start-indicator,
-.end-indicator {
+.end-indicator,
+.top-indicator,
+.bottom-indicator {
   display: none;
 }
 /* these are generic containers for indicators */
@@ -645,25 +661,28 @@ body {
   color: transparent;
 }
 .global-mode-indicators {
-  top: 15px;
-  right: 15px;
+  top: 20px;
+  right: 20px;
+}
+.context-mode-indicators {
+  right: 20px;
+  bottom: 20px;
 }
 .global-mode-indicators .mode-tip,
 .context-mode-indicators .mode-tip {
+  display: none;
   opacity: 0.5;
-}
-.global-mode-indicators:hover,
-.context-mode-indicators:hover {
-  color: silver;
   font-weight: bold;
-  font-size: large;
+  color: gray;
+}
+.global-mode-indicators:hover .mode-tip,
+.context-mode-indicators:hover .mode-tip {
+  display: inline-block;
 }
 .global-mode-indicators > *,
 .context-mode-indicators > * {
   font-size: small;
   vertical-align: center;
-}
-.global-mode-indicators > * {
   margin-left: 10px;
 }
 .global-mode-indicators .circle,
@@ -685,14 +704,6 @@ body {
 }
 .single-image-mode.viewer .global-mode-indicators:hover {
   opacity: 1;
-}
-/* context indicators */
-.context-mode-indicators {
-  right: 15px;
-  bottom: 15px;
-}
-.context-mode-indicators > * {
-  margin-left: 10px;
 }
 /* actual indicators */
 /* marks... */

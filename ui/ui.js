@@ -72,10 +72,14 @@ function autoHideCursor(elem){
 
 function flashIndicator(direction){
 	var cls = {
+		// shift up/down...
 		prev: '.up-indicator',
 		next: '.down-indicator',
+		// hit start/end/top/bottom...
 		start: '.start-indicator',
 		end: '.end-indicator',
+		top: '.top-indicator',
+		bottom: '.bottom-indicator',
 	}[direction]
 
 	var indicator = $(cls)
@@ -263,7 +267,7 @@ function getStatus(){
 
 // XXX move to ui.js?
 function makeIndicator(text){
-	return $('<span class="expanding-text">'+
+	return $('<span class="indicator expanding-text">'+
 				'<span class="hidden">'+ text +'</span>'+
 				'<span class="shown">'+ text[0] +'</span>'+
 			'</span>')
@@ -274,7 +278,7 @@ function showGlobalIndicator(cls, text){
 	if(c.length == 0){
 		c = $('<div>')
 			.addClass('global-mode-indicators')
-			.append('<span class="mode-tip">Global status:</span>')
+			.append('<span class="mode-tip">Global status</span>')
 			.appendTo($('.viewer'))
 	}
 	return makeIndicator(text)
@@ -286,7 +290,7 @@ function showContextIndicator(cls, text){
 	if(c.length == 0){
 		c = $('<div>')
 			.addClass('context-mode-indicators')
-			.append('<span class="mode-tip">Context status:</span>')
+			.append('<span class="mode-tip">Context status</span>')
 			.appendTo($('.viewer'))
 	}
 	return makeIndicator(text)

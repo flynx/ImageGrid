@@ -753,20 +753,19 @@ function lastImage(mode){
 
 // NOTE: if moving is 'next' these will chose the image after the current's order.
 // NOTE: if an image with the same order is found, moving argument has no effect.
-// XXX these sometimes behave wrong at the start of the ribbon depending
-// 		on direction...
 function prevRibbon(mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = getImage()
-	var target = getImageBefore(cur, 
-			getRibbon(cur).prevAll('.ribbon' + NAV_RIBBON_DEFAULT).first())
+	var target_ribbon = getRibbon(cur).prevAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
+	var target = getImageBefore(cur, target_ribbon)
+
+	if(target_ribbon.length == 0){
+		flashIndicator('top')
+	}
 
 	// first image...
 	if(target.length == 0){
-		// XXX too complex???
-		target = getRibbon(cur)
-					.prevAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
-						.find('.image' + mode).first()
+		target = target_ribbon.find('.image' + mode).first()
 	
 	} else {
 		var next = target.nextAll('.image' + mode).first()
@@ -777,15 +776,16 @@ function prevRibbon(mode){
 function nextRibbon(mode){
 	mode = mode == null ? NAV_DEFAULT : mode
 	var cur = getImage()
-	var target = getImageBefore(cur, 
-			getRibbon(cur).nextAll('.ribbon' + NAV_RIBBON_DEFAULT).first())
+	var target_ribbon = getRibbon(cur).nextAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
+	var target = getImageBefore(cur, target_ribbon)
+
+	if(target_ribbon.length == 0){
+		flashIndicator('bottom')
+	}
 
 	// first image...
 	if(target.length == 0){
-		// XXX too complex???
-		target = getRibbon(cur)
-					.nextAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
-						.find('.image' + mode).first()
+		target = target_ribbon.find('.image' + mode).first()
 	}
 	return centerView(focusImage(target))
 }
