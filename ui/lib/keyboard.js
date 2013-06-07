@@ -62,6 +62,7 @@ var _SPECIAL_KEYS = {
 	188: ',',	190: '.',	191: '/',
 }
 
+
 var _SHIFT_KEYS = {
 	'`': '~',	'-': '_',	'=':'+',
 
@@ -73,6 +74,8 @@ var _SHIFT_KEYS = {
 	',': '<',		'.': '>',		'/': '?'
 }
 
+
+// build a reverse map of _SPECIAL_KEYS
 var _KEY_CODES = {}
 for(var k in _SPECIAL_KEYS){
 	_KEY_CODES[_SPECIAL_KEYS[k]] = k
@@ -95,12 +98,14 @@ function toKeyName(code){
 	return null
 }
 
+
 function toKeyCode(c){
 	if(c in _KEY_CODES){
 		return _KEY_CODES[c]
 	}
 	return c.charCodeAt(0)
 }
+
 
 // documentation wrapper...
 function doc(text, func){
@@ -147,8 +152,10 @@ function doc(text, func){
  * NOTE: if a key is not handled in a mode, that mode will not be 
  * 		present in the resulting object.
  * NOTE: this will not unwrap lisp-style (see below) handlers.
+ * NOTE: modes are prioritized by order of occurrence.
  *
- * XXX need an explicit way to prioritize modes...
+ * XXX need an explicit way to prioritize modes, avoiding object attr 
+ * 		ordering...
  * XXX check do we need did_handling here...
  *
  * XXX BUG explicitly given modes do not yield results if the pattern 
@@ -425,6 +432,7 @@ function makeKeyboardHandler(keybindings, unhandled){
 
 
 /* Build structure ready for conversion to HTML help.
+* 
 * Structure:
 * 	{
 * 		<section-title>: {
@@ -520,7 +528,6 @@ function buildKeybindingsHelp(keybindings, shifted_keys){
 
 // Build a basic HTML table with keyboard help...
 //
-//
 //	The table will look like this:
 //
 // 		<table class="keyboard-help">
@@ -574,6 +581,13 @@ function buildKeybindingsHelpHTML(keybindings){
 	return $(res)
 }
 
+
+
+/**********************************************************************
+* Key binding editor...
+*/
+
+// XXX
 
 
 

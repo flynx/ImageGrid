@@ -527,6 +527,7 @@ function alignVia(container, elem, via, valign, halign, mode){
 
 
 // XXX make this more configurable (centering, ...)...
+// XXX do a version using setElementTransform(...)
 function centerView(image, mode){
 	mode = mode == null ? TRANSITION_MODE_DEFAULT : mode
 
@@ -589,6 +590,7 @@ function centerView(image, mode){
 //
 // XXX this does not work in marked-only mode...
 // XXX this needs the image to exist... should be GID compatible... (???)
+// XXX do a version using setElementTransform(...)
 function centerRibbon(ribbon, image, mode){
 	mode = mode == null ? TRANSITION_MODE_DEFAULT : mode
 	ribbon = ribbon == null ? getRibbon() : $(ribbon)

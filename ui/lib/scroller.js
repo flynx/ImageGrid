@@ -2,6 +2,7 @@
 * 
 * General Swipe/Scroll handler lib 
 *
+* TODO a demo page to show/test the features...
 *
 **********************************************************************/
 
@@ -113,7 +114,8 @@ function makeScrollHandler(root, config){
 			}
 		}
 		*/
-		scrolled = $(root.children()[0])
+		//scrolled = $(root.children()[0])
+		scrolled = root.children().first()
 		setTransitionDuration(scrolled, 0)
 		// XXX these two are redundant...
 		scrolling = true

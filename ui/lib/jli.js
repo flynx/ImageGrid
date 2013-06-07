@@ -536,6 +536,7 @@ function setTransitionEasing(elem, ease){
 	})
 }
 
+
 function setTransitionDuration(elem, ms){
 	if(typeof(ms) == typeof(0)){
 		ms = ms + 'ms'
@@ -548,7 +549,6 @@ function setTransitionDuration(elem, ms){
 		'-webkit-transition-duration': ms
 	})
 }
-
 
 
 

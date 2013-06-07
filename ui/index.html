@@ -86,15 +86,23 @@ $(function(){
 
 	autoHideCursor($('.viewer'))
 
-	// XXX still buggy...
 	if(SCROLLER_ENABLED){
 		var scroller = makeScrollHandler($('.viewer'), {
+				// XXX after click and initial move the screen jumps 
+				//		(both x and y), margins, left vs. translate?
+				//
+				//		the problem is in centerView(...), seems scroller.js
+				//		seems to not know where the element is after it does
+				//		it's job, so the jump is scroller resetting the 
+				//		position...
 				scrollDisabled: true,
 
 				//enableMultiClicks: true,
 				// XXX does not seem to work...
 				//multiClickTimeout: 100,
 
+				// it's either this or disable the jQuery animation...
+				// ...have to benchmark to see which is better...
 				transitionDuration: 0,
 				transitionEasing: 'liner',
 			})
@@ -102,9 +110,9 @@ $(function(){
 
 		$('.viewer')
 			.on('shortClick', function(){ clickHandler(event) })
+			// XXX for some reason this is broken...
 			//.on('doubleClick', dblClickHandler)
 			.on('longClick', dblClickHandler)
-			//.on('longClick', function(){ toggleImageMark() })
 
 			.on('swipeLeft', function(){
 				updateDirection('prev')
