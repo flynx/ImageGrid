@@ -527,11 +527,12 @@ var KEYBOARD_CONFIG = {
 		F2: {
 				default: doc('Toggle mark visibility', 
 					function(){ toggleMarkesView() }),
-				shift: doc('Toggle marked only images view', 
-					function(){
-						toggleMarkedOnlyView()
-					})
+				shift: 'F3', 
 			},
+		F3: doc('Toggle marked only images view', 
+			function(){
+				toggleMarkedOnlyView()
+			}),
 
 
 		E: doc('Open image in external software', openImage),
