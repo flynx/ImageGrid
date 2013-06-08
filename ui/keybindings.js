@@ -564,11 +564,6 @@ var KEYBOARD_CONFIG = {
 		// 		not have to do anything here...
 		F11: doc('Toggle full screen mode', function(){ toggleFullscreenMode() }),
 
-		// XXX DEBUG MODE...
-		F12: doc('Show devTools', function(){ showDevTools() }),
-		F5: doc('Reload app', function(){ reload() }),
-
-
 		// Help and info...
 		'?': doc('Show keyboard bindings',
 			function(){ toggleKeyboardHelp() }),
@@ -576,6 +571,11 @@ var KEYBOARD_CONFIG = {
 		F1: doc('Show help',
 			function(){ toggleHelp() }),
 
+
+		// XXX DEBUG MODE...
+		// 		...remove these in production...
+		F12: doc('Show devTools', function(){ showDevTools() }),
+		F5: doc('Reload app', function(){ reload() }),
 
 		/* testing the shift-key feature...
 		'~': {

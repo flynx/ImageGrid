@@ -37,7 +37,7 @@ LOGS := *.log
 BUILD_DIR=build
 
 
-all: css
+all: dev
 
 
 css: $(CSS_FILES)
