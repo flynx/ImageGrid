@@ -20,25 +20,27 @@ var STATUS_QUEUE_TIME = 200
 // XXX revise...
 // NOTE: to catch the click event correctly while the cursor is hidden
 //		this must be the first to get the event...
+// NOTE: this uses element.data to store the timer and cursor position...
 function autoHideCursor(elem){
 	elem = $(elem)
+	var data = elem.data()
 	elem
 		.on('mousemove', function(evt){
 			var cursor = elem.css('cursor')
 
-			_cursor_pos = window._cursor_pos == null || cursor != 'none' ?
+			data._cursor_pos = data._cursor_pos == null || cursor != 'none' ?
 						[evt.clientX, evt.clientY] 
-					: _cursor_pos
+					: data._cursor_pos
 
 			// cursor visible -- extend visibility...
 			if(cursor != 'none'){
 
-				if(window._cursor_timeout != null){
-					clearTimeout(_cursor_timeout)
+				if(data._cursor_timeout != null){
+					clearTimeout(data._cursor_timeout)
 				}
-				_cursor_timeout = setTimeout(function(){
-						if(Math.abs(evt.clientX - _cursor_pos[0]) < CURSOR_SHOW_THRESHOLD 
-								|| Math.abs(evt.clientY - _cursor_pos[1]) < CURSOR_SHOW_THRESHOLD){
+				data._cursor_timeout = setTimeout(function(){
+						if(Math.abs(evt.clientX - data._cursor_pos[0]) < CURSOR_SHOW_THRESHOLD 
+								|| Math.abs(evt.clientY - data._cursor_pos[1]) < CURSOR_SHOW_THRESHOLD){
 
 							elem.css('cursor', 'none')
 						}
@@ -46,8 +48,8 @@ function autoHideCursor(elem){
 
 
 			// cursor hidden -- if outside the threshold, show...
-			} else if(Math.abs(evt.clientX - _cursor_pos[0]) > CURSOR_SHOW_THRESHOLD 
-				|| Math.abs(evt.clientY - _cursor_pos[1]) > CURSOR_SHOW_THRESHOLD){
+			} else if(Math.abs(evt.clientX - data._cursor_pos[0]) > CURSOR_SHOW_THRESHOLD 
+				|| Math.abs(evt.clientY - data._cursor_pos[1]) > CURSOR_SHOW_THRESHOLD){
 
 				elem.css('cursor', '')
 			}
@@ -57,9 +59,9 @@ function autoHideCursor(elem){
 				//event.stopImmediatePropagation()
 				//event.preventDefault()
 
-				if(window._cursor_timeout != null){
-					clearTimeout(_cursor_timeout)
-					_cursor_timeout = null
+				if(data._cursor_timeout != null){
+					clearTimeout(data._cursor_timeout)
+					data._cursor_timeout = null
 				}
 
 				elem.css('cursor', '')
@@ -68,6 +70,20 @@ function autoHideCursor(elem){
 		})
 	return elem
 }
+
+
+/*
+// XXX does not work...
+// 		...does not show the cursor without moving it...
+function showCursor(elem){
+	elem = $(elem)
+	var data = elem.data()
+	if(data._cursor_timeout != null){
+		clearTimeout(data._cursor_timeout)
+	}
+	elem.css('cursor', '')
+}
+*/
 
 
 function flashIndicator(direction){

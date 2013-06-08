@@ -171,6 +171,7 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 //
 // NOTE: this depends on listDir(...)
 // NOTE: this assumes that images contain ALL the images...
+// NOTE: this assumes that all file names are unique...
 function ribbonsFromFavDirs(path, images, cmp){
 	path = path == null ? getBaseURL() : path
 	images = images == null ? IMAGES : images
@@ -198,16 +199,20 @@ function ribbonsFromFavDirs(path, images, cmp){
 		// collect the images...
 		$.each(files, function(i, e){
 			var _gid = index[e]
-			// filter out non-image files...
-			if(/.*\.(jpg|jpeg)$/i.test(e)){
-				ribbon.push(_gid)
-			} 
+			// skip files not in index...
+			// NOTE: we do not need to filter the files by name as we 
+			// 		trust the index...
+			if(_gid == null){
+				return 
+			}
 			// remove the found item from each of the below ribbons...
 			$.each(ribbons, function(i ,e){
 				if(e.indexOf(_gid) != -1){
 					e.splice(e.indexOf(_gid), 1)
 				}
 			})
+
+			ribbon.push(_gid)
 		})
 		ribbons.push(ribbon)
 	}
