@@ -59,16 +59,20 @@ if(window.CEF_dumpJSON != null){
 			// XXX will this work on Mac???
 			path = path.replace(fp, '')
 		}
-		return proc.exec(path)
+		return proc.exec('"'+path+'"', function(error, stdout, stderr){
+			if(error != null){
+				console.error(stderr)
+			}
+		})
 	}
 
-	// XXX use a real toggler...
 	window.toggleFullscreenMode = createCSSClassToggler(
 			document.body, 
 			'.full-screen-mode',
 			function(action){
 				gui.Window.get().toggleFullscreen()
 			})
+
 	window.closeWindow = function(){
 		gui.Window.get().close()
 	}
