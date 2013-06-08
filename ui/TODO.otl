@@ -90,8 +90,8 @@ Roadmap
 	
 
 
-[_] 27% Gen 3 current todo
-	[_] 54% High priority
+[_] 24% Gen 3 current todo
+	[_] 49% High priority
 		[_] usable empty view -- w.o. data...
 		[_] 0% Tablet UI
 			[_] screen buttons
@@ -163,6 +163,7 @@ Roadmap
 		| 	jumping to end from start of ribbon
 		[_] side-by side view...
 		[_] ASAP: test on Android...
+		[X] build for windows (node-webkit)
 		[_] single image mode transition (alpha-blend/fade/none)
 		[_] 75% image sorting (date/name/...)
 			[X] 100% sort by:

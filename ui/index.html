@@ -80,9 +80,19 @@ var SCROLLER_ENABLED = true
 
 // setup...
 $(function(){
+	// NOTE: keep this as early as possible...
+	$(document)
+		.keydown(makeKeyboardHandler(
+			KEYBOARD_CONFIG,
+			function(k){
+				window.DEBUG && console.log(k)
+			}))
+
 	// defaults...
 	toggleTheme('gray')
 	toggleImageInfo('on')
+	// XXX this needs at least an image loaded...
+	//toggleImageProportions('fit-viewer')
 
 	setupIndicators()
 	autoHideCursor($('.viewer'))
@@ -107,6 +117,12 @@ $(function(){
 				// ...have to benchmark to see which is better...
 				transitionDuration: 0,
 				transitionEasing: 'liner',
+
+				// keep selectable elements selectable...
+				ignoreElements: '.noScroll, '+
+					'.image .inline-image-info, '+
+					'.overlay-info, '+
+					'',
 			})
 			.start()
 
@@ -153,13 +169,6 @@ $(function(){
 			centerView()
 		})
 		
-	$(document)
-		.keydown(makeKeyboardHandler(
-			KEYBOARD_CONFIG,
-			function(k){
-				window.DEBUG && console.log(k)
-			}))
-
 	setupDataBindings()
 
 

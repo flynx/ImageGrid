@@ -10,6 +10,7 @@
 .expanding-text:hover .shown {
   display: none;
 }
+.expanding-text .shown,
 .expanding-text:hover .hidden {
   display: inline;
 }
