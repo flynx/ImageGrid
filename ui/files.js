@@ -251,6 +251,14 @@ function loadFileImages(path, no_load_diffs){
 				IMAGES_FILE_PATTERN, 
 				IMAGES_DIFF_FILE_PATTERN)
 	
+	// explicit base dir...
+	} else if(!/\.json$/i.test(path)) {
+		var base = normalizePath(path +'/'+ CACHE_DIR) 
+		var loader = loadLatestFile(base, 
+				IMAGES_FILE_DEFAULT, 
+				IMAGES_FILE_PATTERN, 
+				IMAGES_DIFF_FILE_PATTERN)
+
 	// explicit path...
 	} else {
 		var loader = loadLatestFile(normalizePath(path))
@@ -382,9 +390,10 @@ function loadFileState(path, prefix){
 						// XXX load config...
 						// load images...
 						bubbleProgress(prefix,
-							loadFileImages(DATA.image_file != null ?
-									normalizePath(DATA.image_file, base) 
-									: null), res, true),
+							loadFileImages(base), res, true),
+							//loadFileImages(DATA.image_file != null ?
+							//		normalizePath(DATA.image_file, base) 
+							//		: null), res, true),
 						// load marks if available...
 						bubbleProgress(prefix,
 							loadFileMarks(), res, true))
