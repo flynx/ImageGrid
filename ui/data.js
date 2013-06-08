@@ -113,6 +113,8 @@ var SETTINGS = {
 }
 
 var BASE_URL = '.'
+var BASE_URL_HISTORY = []
+var BASE_URL_LIMIT = 10
 
 var IMAGE_CACHE = []
 
@@ -394,6 +396,19 @@ Array.prototype.binSearch = function(target, cmp, get){
 }
 
 
+// Base URL interface...
+//
+// NOTE: changing a base URL will trigger a baseURLChanged event...
+function setBaseURL(url){
+	var old_url = BASE_URL
+	BASE_URL = url
+	$('.viewer').trigger('baseURLChanged', [old_url, url])
+}
+function getBaseURL(){
+	return BASE_URL
+}
+
+
 // Normalize the path...
 //
 // This will:
@@ -411,7 +426,7 @@ Array.prototype.binSearch = function(target, cmp, get){
 // NOTE: mode can be either 'absolute' (default) or 'relative'...
 function normalizePath(url, base, mode){
 	mode = mode == null ? 'absolute' : mode
-	base = base == null ? BASE_URL : base
+	base = base == null ? getBaseURL() : base
 
 	// windows path...
 	//	- replace all '\\' with '/'...
@@ -621,60 +636,6 @@ function dataFromImages(images){
 		order: gids.slice(),
 		image_file: null
 	}
-}
-
-
-// Construct a ribbons hierarchy from the fav dirs structure
-//
-// NOTE: this depends on listDir(...)
-// NOTE: this assumes that images contain ALL the images...
-function ribbonsFromFavDirs(path, images, cmp){
-	path = path == null ? BASE_URL : path
-	images = images == null ? IMAGES : images
-
-	// build a reverse name-gid index for fast access...
-	var index = {}
-	var name
-	for(var gid in images){
-		name = images[gid].path.split('/').pop()
-		// XXX we assume that names are unique...
-		index[name] = gid
-	}
-
-	var ribbons = []
-	// add the base row...
-	var base = Object.keys(images)
-	ribbons.push(base)
-
-	var files = listDir(path)	
-	var cur_path = path
-	while(files.indexOf('fav') >= 0){
-		cur_path += '/fav'
-		files = listDir(cur_path)
-		ribbon = []
-		// collect the images...
-		$.each(files, function(i, e){
-			var _gid = index[e]
-			// filter out non-image files...
-			if(/.*\.(jpg|jpeg)$/i.test(e)){
-				ribbon.push(_gid)
-			} 
-			// remove the found item from each of the below ribbons...
-			$.each(ribbons, function(i ,e){
-				if(e.indexOf(_gid) != -1){
-					e.splice(e.indexOf(_gid), 1)
-				}
-			})
-		})
-		ribbons.push(ribbon)
-	}
-
-	// remove empty ribbons and sort the rest...
-	ribbons = $.map(ribbons, function(e){ 
-		return e.length > 0 ? [cmp == null ? e : e.sort(cmp)] : null 
-	})
-
-	return ribbons.reverse()
 }
 
 
@@ -1093,6 +1054,30 @@ function preCacheAllRibbons(){
 
 
 /**********************************************************************
+* URL history...
+*/
+
+function setupBaseURLHistory(){
+	$('.viewer')
+		.on('baseURLChanged', function(evt, old_url, new_url){
+			BASE_URL_HISTORY.splice(0, 0, old_url)
+
+			// truncate the history if needed...
+			if(BASE_URL_HISTORY.length > BASE_URL_LIMIT){
+				BASE_URL_HISTORY.splice(BASE_URL_LIMIT, BASE_URL_HISTORY.length)
+			}
+		})
+}
+
+// XXX...
+function getNextLocation(){
+}
+function getPrevLocation(){
+}
+
+
+
+/**********************************************************************
 * Actions...
 */
 
@@ -1107,7 +1092,7 @@ function openImage(){
 		return 
 	}
 	// XXX if path is not present try and open the biggest preview...
-	return runSystem(normalizePath(IMAGES[getImageGID()].path, BASE_URL))
+	return runSystem(normalizePath(IMAGES[getImageGID()].path, getBaseURL()))
 }
 
 

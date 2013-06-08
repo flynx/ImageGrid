@@ -13,6 +13,26 @@
 * XXX should we use jStorage here?
 */
 
+function loadLocalStorageBaseURL(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	setBaseURL(localStorage[attr + '_BASE_URL'])
+}
+function saveLocalStorageBaseURL(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	localStorage[attr + '_BASE_URL'] = getBaseURL()
+}
+
+
+function loadLocalStorageBaseURLHistory(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	BASE_URL_HISTORY = JSON.parse(localStorage[attr + '_BASE_URL_HISTORY'])
+}
+function saveLocalStorageBaseURLHistory(attr){
+	attr = attr == null ? DATA_ATTR : attr
+	localStorage[attr + '_BASE_URL_HISTORY'] = JSON.stringify(BASE_URL_HISTORY)
+}
+
+
 function loadLocalStorageData(attr){
 	attr = attr == null ? DATA_ATTR : attr
 	var data = localStorage[attr]
@@ -29,7 +49,7 @@ function loadLocalStorageData(attr){
 function saveLocalStorageData(attr){
 	attr = attr == null ? DATA_ATTR : attr
 	localStorage[attr] = JSON.stringify(DATA)
-	localStorage[attr + '_BASE_URL'] = BASE_URL
+	saveLocalStorageBaseURL(attr)
 }
 
 
@@ -84,7 +104,7 @@ function saveLocalStorageSettings(attr){
 function loadLocalStorage(attr){
 	attr = attr == null ? DATA_ATTR : attr
 	var d = loadLocalStorageData(attr)
-	BASE_URL = d.base_url
+	setBaseURL(d.base_url)
 	DATA = d.data
 	IMAGES = loadLocalStorageImages(attr)
 	return reloadViewer()

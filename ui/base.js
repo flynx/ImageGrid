@@ -1025,6 +1025,8 @@ function zoomOut(){
 
 
 /************************************************** Editor Actions ***/
+// NOTE: for shiftImageRight/shiftImageLeft see data.js, as they depend
+// 		on data ordering...
 
 function shiftImageTo(image, direction, moving, force_create_ribbon, mode){
 	if(image == null){
@@ -1059,11 +1061,6 @@ function shiftImageUpNewRibbon(image, moving){
 function shiftImageDownNewRibbon(image, moving){
 	return shiftImageTo(image, 'prev', moving, false)
 }
-
-
-// TODO manual image ordering (shiftLeft/shiftRight functions)
-// XXX
-
 
 
 

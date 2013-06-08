@@ -60,6 +60,10 @@ dev: css
 	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
 	chmod +x *.{exe,dll}
 
+dev-targets:
+	mkdir -p targets/node-webkit
+	wget 
+
 
 # build targets...
 

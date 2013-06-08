@@ -304,6 +304,11 @@ function setupDataBindings(viewer){
 				indicator.removeClass('shown')
 			}
 		})
+
+		.on('baseURLChanged', function(evt, url){
+			saveLocalStorageBaseURL()
+			saveLocalStorageBaseURLHistory()
+		})
 }
 
 

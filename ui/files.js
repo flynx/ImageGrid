@@ -167,6 +167,60 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 }
 
 
+// Construct a ribbons hierarchy from the fav dirs structure
+//
+// NOTE: this depends on listDir(...)
+// NOTE: this assumes that images contain ALL the images...
+function ribbonsFromFavDirs(path, images, cmp){
+	path = path == null ? getBaseURL() : path
+	images = images == null ? IMAGES : images
+
+	// build a reverse name-gid index for fast access...
+	var index = {}
+	var name
+	for(var gid in images){
+		name = images[gid].path.split('/').pop()
+		// XXX we assume that names are unique...
+		index[name] = gid
+	}
+
+	var ribbons = []
+	// add the base row...
+	var base = Object.keys(images)
+	ribbons.push(base)
+
+	var files = listDir(path)	
+	var cur_path = path
+	while(files.indexOf('fav') >= 0){
+		cur_path += '/fav'
+		files = listDir(cur_path)
+		ribbon = []
+		// collect the images...
+		$.each(files, function(i, e){
+			var _gid = index[e]
+			// filter out non-image files...
+			if(/.*\.(jpg|jpeg)$/i.test(e)){
+				ribbon.push(_gid)
+			} 
+			// remove the found item from each of the below ribbons...
+			$.each(ribbons, function(i ,e){
+				if(e.indexOf(_gid) != -1){
+					e.splice(e.indexOf(_gid), 1)
+				}
+			})
+		})
+		ribbons.push(ribbon)
+	}
+
+	// remove empty ribbons and sort the rest...
+	ribbons = $.map(ribbons, function(e){ 
+		return e.length > 0 ? [cmp == null ? e : e.sort(cmp)] : null 
+	})
+
+	return ribbons.reverse()
+}
+
+
 
 /*********************************************************************/
 
@@ -307,7 +361,7 @@ function loadFileState(path, prefix){
 				DATA_FILE_DEFAULT, 
 				DATA_FILE_PATTERN), res, true)
 		.done(function(json){
-			BASE_URL = base
+			setBaseURL(base)
 
 			// legacy format...
 			if(json.version == null){
@@ -325,7 +379,7 @@ function loadFileState(path, prefix){
 						// XXX load config...
 						// load images...
 						bubbleProgress(prefix,
-							loadFileImages(DATA.image_file == null ?
+							loadFileImages(DATA.image_file != null ?
 									normalizePath(DATA.image_file, base) 
 									: null), res, true),
 						// load marks if available...
@@ -405,7 +459,7 @@ function loadRawDir(path, prefix){
 		return res.reject()
 	}
 
-	BASE_URL = path
+	setBaseURL(path)
 
 	IMAGES = imagesFromUrls(image_paths)
 	res.notify(prefix, 'Loaded', 'Images.')
