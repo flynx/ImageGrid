@@ -72,6 +72,86 @@ body {
 
 
 
+/************************************************************** UI ***/
+
+.title-bar {
+	display: block;
+	position: fixed;
+	content: "";
+
+	top: 0px;
+	left: 0px;
+	height: 20px;
+	width: 100%;
+
+	color: white;
+	background: black;
+
+	overflow: hidden;
+
+	opacity: 0;
+
+	z-index: 10000;
+
+	/* node-webkit */
+	-webkit-app-region: drag;
+}
+.title-bar:hover {
+	opacity: 1;
+}
+
+.title-bar .title {
+	display: inline-block;
+	float: left;
+
+	height: 20px;
+	width: auto;
+
+	color: white;
+	background: transparent;
+
+	font-size: 11px;
+	font-style: italic;
+	font-weight: bold;
+
+	vertical-align: middle;
+	text-align: left;
+
+	margin: 2px;
+	margin-left: 10px;
+}
+
+.title-bar .button {
+	display: inline-block;
+	float: right;
+
+	width: 20px;
+	height: 20px;
+
+	color: white;
+	background: transparent;
+
+	font-size: 18px;
+	vertical-align: middle;
+
+	/* node-webkit */
+	-webkit-app-region: no-drag;
+}
+.title-bar .button:hover {
+	cursor: hand;
+}
+
+.title-bar .close:hover {
+	color: red;
+}
+
+/*
+.full-screen-mode .title-bar {
+	display: none;
+}
+*/
+
+
 /********************************************************** Viewer ***/
 .viewer {
 	position: relative;

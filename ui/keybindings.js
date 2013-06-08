@@ -539,7 +539,7 @@ var KEYBOARD_CONFIG = {
 		// XXX make F4 a default editor and E a default viewer...
 		F4: {
 				default: 'E',
-				alt: doc('Close viewer'),
+				alt: doc('Close viewer', function(){ closeWindow() }),
 			},
 
 
@@ -562,7 +562,11 @@ var KEYBOARD_CONFIG = {
 
 		// NOTE: this is handled by the wrapper at this point, so we do 
 		// 		not have to do anything here...
-		F11: doc('Toggle full screen mode'),
+		F11: doc('Toggle full screen mode', function(){ toggleFullscreenMode() }),
+
+		// XXX DEBUG MODE...
+		F12: doc('Show devTools', function(){ showDevTools() }),
+		F5: doc('Reload app', function(){ reload() }),
 
 
 		// Help and info...

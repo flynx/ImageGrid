@@ -7,15 +7,6 @@
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 
-// load the target-specific handlers...
-// CEF
-if(window.CEF_dumpJSON != null){
-	var dumpJSON = CEF_dumpJSON
-	var listDir = CEF_listDir
-	var removeFile = CEF_removeFile
-	var runSystem = CEF_runSystem
-}
-
 
 /**********************************************************************
 * File storage (Extension API -- CEF/PhoneGap/...)
