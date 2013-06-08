@@ -93,11 +93,17 @@ function bubbleProgress(prefix, from, to, only_progress){
 // 		is essentially the same as $.getJSON(...)
 // NOTE: this needs listDir(...) to search for latest versions of files.
 function loadLatestFile(path, dfl, pattern, diff_pattern){
-	dfl = dfl == null ? path.split(/[\/\\]/).pop() : dfl
-	path = path == dfl ? '.' : path
+	var pparts = path.split(/[\/\\]/)
+	dfl = dfl == null ? pparts.pop() : dfl
+	//path = path == dfl ? '.' : path
+	path = pparts.join('/')
 
 	var res = $.Deferred()
 	
+	if(dfl == ''){
+		return res.reject()
+	}
+
 	// can't find diffs if can't list dirs...
 	if(window.listDir == null && (pattern != null || diff_pattern != null)){
 		res.notify('Unsupported', 'directory listing.')
@@ -246,16 +252,8 @@ function loadFileImages(path, no_load_diffs){
 				IMAGES_DIFF_FILE_PATTERN)
 	
 	// explicit path...
-	// XXX need to account for paths without a CACHE_DIR
 	} else {
-		path = normalizePath(path)
-		var base = path.split(CACHE_DIR)[0]
-		base += '/'+ CACHE_DIR
-
-		// XXX is this correct???
-		var loader = loadLatestFile(base, 
-				path.split(base)[0], 
-				RegExp(path.split(base)[0]))
+		var loader = loadLatestFile(normalizePath(path))
 	}
 
 	bubbleProgress('Images', loader, res)

@@ -1,5 +1,5 @@
 Roadmap
-	[_] 41% Pre-Alpha - limited preview
+	[_] 43% Pre-Alpha - limited preview
 		[_] 31% UI
 			[_] 0% Tablet-specific
 				[_] screen buttons
@@ -53,16 +53,16 @@ Roadmap
 				[X] marked
 				[_] tag
 				[_] date
-		[_] 39% storage and loading
+		[_] 45% storage and loading
 			[_] 75% ImageGrid cache
 				[X] generate
 				[X] load
 				[X] save
 				[_] update
 				| needs revision...
-			[_] 25% fav tree
+			[_] 50% fav tree
 				[X] generate
-				[_] load
+				[X] load
 				[_] save
 				[_] update
 			[_] 25% xmp files
@@ -77,12 +77,12 @@ Roadmap
 		[_] 14% build targets
 			[X] 100% Windows
 				[X] CEF (Python/...)
-				[X] AppJS
-			[_] MacOS X (AppJS)
+				[X] node-webkit
+			[_] MacOS X (node-webkit)
 			[_] Android (PhoneGap)
 			[_] iOS (PhoneGap)
 			[_] Windows 8 (Native?)
-			[_] Linux (AppJS)
+			[_] Linux (node-webkit)
 			[_] Windows Phone 8 (PhoneGap/Native)
 	[_] 0% Alpha - limited preview
 	[_] 0% Beta - public?
@@ -92,11 +92,12 @@ Roadmap
 
 [_] 24% Gen 3 current todo
 	[_] 49% High priority
+		[_] ASAP: directory selector UI...
 		[_] usable empty view -- w.o. data...
 		[_] 0% Tablet UI
 			[_] screen buttons
 		[_] save settings to config.json
-		[_] Q: do we need seporate theme settings?
+		[_] Q: do we need separate theme settings?
 		| ...for ribbon and single-image modes?
 		[_] editable list of external commands...
 		| to add things like exportdirs.py etc.
