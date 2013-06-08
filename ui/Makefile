@@ -52,6 +52,13 @@ app_zip: css build_dir
 	zip -r $(BUILD_DIR)/app.zip $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) $(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR)
 
 
+# dev env...
+
+dev: css
+	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
+	chmod +x *.{exe,dll}
+
+
 # build targets...
 
 # node-webkit win32
@@ -68,9 +75,17 @@ phonegap-remote: css minify
 
 
 
-clean:
-	rm -f $(CSS_FILES) $(JS_MIN_FILES) $(LOGS)
+# cleanup...
+
+clean-dev:
+	rm -rf *.exe *.dll *.pak
+
+clean-build:
 	rm -rf $(BUILD_DIR)
 
+clean: clean-build
+	rm -f $(CSS_FILES) $(JS_MIN_FILES) $(LOGS)
+
+clean-all: clean clean-dev
 
 
