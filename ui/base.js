@@ -981,7 +981,7 @@ function resetToOriginalImage(image){
 
 /********************************************************* Zooming ***/
 
-function fitNImages(n){
+function fitNImages(n, fixed_proportions){
 	var image = getImage()
 	var w = image.outerWidth(true)
 	var h = image.outerHeight(true)

@@ -3,6 +3,13 @@
 *
 **********************************************************************/
 
+// A threshold after which the image block ratio will be changed to 
+// 'fit-viewer' in single image mode...
+//
+// NOTE: if null this feature will be disabled.
+var PROPORTIONS_RATIO_THRESHOLD = 1.5
+
+
 
 /**********************************************************************
 * Setup
@@ -158,6 +165,25 @@ function setupDataBindings(viewer){
 				SETTINGS['screen-images-single-image-mode'] = n
 			} else {
 				SETTINGS['screen-images-ribbon-mode'] = n
+			}
+
+			// update proportions...
+			if(window.PROPORTIONS_RATIO_THRESHOLD != null 
+					&& toggleSingleImageMode('?') == 'on'){
+				var viewer = $('.viewer')
+				//var w = getVisibleImageSize('width')
+				var h = getVisibleImageSize('height')
+				//var W = viewer.innerWidth()
+				var H = viewer.innerHeight()
+
+				//var m = Math.min(W/w, H/h)
+				var m = H/h
+
+				if(m < PROPORTIONS_RATIO_THRESHOLD){
+					toggleImageProportions('fit-viewer')
+				} else {
+					toggleImageProportions('none')
+				}
 			}
 
 			// update previews...

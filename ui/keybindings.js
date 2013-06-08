@@ -130,12 +130,14 @@ var KEYBOARD_CONFIG = {
 		title: 'Single image mode',
 		doc: 'To toggle between this and ribbon modes press <b>Enter</b>.',
 
+		/*
 		F: doc('Toggle view proportions', 
 			function(){ 
 				var mode = toggleImageProportions() 
 				showStatus('Fitting image to:', mode + '...')
 				centerRibbons()
 			}),
+		*/
 		Esc: doc('Exit single image mode', 
 				function(){ 
 					toggleSingleImageMode('off') 
@@ -226,6 +228,18 @@ var KEYBOARD_CONFIG = {
 						return false
 					}),
 			},
+
+		// zooming...
+		'#1': doc('Fit one image', function(){ fitNImages(1) }),
+		'#2': doc('Fit two images', function(){ fitNImages(2) }),
+		'#3': doc('Fit three images', function(){ fitNImages(3) }),
+		'#4': doc('Fit four images', function(){ fitNImages(4) }),
+		'#5': doc('Fit five images', function(){ fitNImages(5) }),
+		'#6': doc('Fit six images', function(){ fitNImages(6) }),
+		'#7': doc('Fit seven images', function(){ fitNImages(7) }),
+		'#8': doc('Fit eight images', function(){ fitNImages(8) }),
+		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
+
 	},
 
 
@@ -410,16 +424,6 @@ var KEYBOARD_CONFIG = {
 
 
 		// zooming...
-		'#1': doc('Fit one image', function(){ fitNImages(1) }),
-		'#2': doc('Fit two images', function(){ fitNImages(2) }),
-		'#3': doc('Fit three images', function(){ fitNImages(3) }),
-		'#4': doc('Fit four images', function(){ fitNImages(4) }),
-		'#5': doc('Fit five images', function(){ fitNImages(5) }),
-		'#6': doc('Fit six images', function(){ fitNImages(6) }),
-		'#7': doc('Fit seven images', function(){ fitNImages(7) }),
-		'#8': doc('Fit eight images', function(){ fitNImages(8) }),
-		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
-
 		'-': doc('Zoom in', function(){ zoomOut() }),
 		'=': doc('Zoom out', function(){ zoomIn() }),
 

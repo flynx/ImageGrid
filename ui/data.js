@@ -996,8 +996,10 @@ function loadSettings(){
 
 	if(toggleSingleImageMode('?') == 'on'){
 		var w = SETTINGS['screen-images-single-image-mode']
-		var p = SETTINGS['single-image-mode-proportions']
-		toggleImageProportions(p)
+		if(window.PROPORTIONS_RATIO_THRESHOLD == null){
+			var p = SETTINGS['single-image-mode-proportions']
+			toggleImageProportions(p)
+		}
 	} else {
 		var w = SETTINGS['screen-images-ribbon-mode']
 		toggleImageInfo(SETTINGS['image-info-ribbon-mode'] == 'on' ? 'on' : 'off')
