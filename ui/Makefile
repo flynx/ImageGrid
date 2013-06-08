@@ -6,6 +6,10 @@
 #	- PhoneGap-remote
 #	  push and api call to fetch and rebuild
 #	- PhoneGap-local XXX
+#
+
+APP_NAME=ImageGrid.Viewer
+
 
 # process LESS files to CSS...
 %.css: %.less
@@ -15,8 +19,6 @@
 %.min.js: %.js
 	uglifyjs $< -c -o $@
 
-
-APP_NAME=ImageGrid.Viewer
 
 # get all the .less files to process...
 CSS_FILES := $(patsubst %.less,%.css,$(wildcard *.less))
