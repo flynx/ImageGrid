@@ -104,6 +104,7 @@ function saveLocalStorageSettings(attr){
 function loadLocalStorage(attr){
 	attr = attr == null ? DATA_ATTR : attr
 	var d = loadLocalStorageData(attr)
+	loadLocalStorageBaseURLHistory(attr)
 	setBaseURL(d.base_url)
 	DATA = d.data
 	IMAGES = loadLocalStorageImages(attr)
@@ -113,6 +114,7 @@ function saveLocalStorage(attr){
 	attr = attr == null ? DATA_ATTR : attr
 	saveLocalStorageData(attr)
 	saveLocalStorageImages(attr)
+	saveLocalStorageBaseURLHistory()
 }
 
 

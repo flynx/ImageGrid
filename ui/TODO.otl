@@ -90,8 +90,11 @@ Roadmap
 	
 
 
-[_] 24% Gen 3 current todo
-	[_] 49% High priority
+[_] 26% Gen 3 current todo
+	[_] 53% High priority
+		BUG: scaling is again broken with rotated images
+		| - rotate an image
+		| - scale it to 1 (press 1)
 		[_] ASAP: directory selector UI...
 		[_] usable empty view -- w.o. data...
 		[_] 0% Tablet UI
@@ -218,9 +221,6 @@ Roadmap
 			[X] image info
 			[X] stub info dialog
 			[_] detailed image info
-		[_] 0% gesture support
-			[_] up/down - shift
-			[_] left/right - navigate
 		[_] 0% CSS
 			[_] cleanup
 			[_] split themes and layout
@@ -236,9 +236,11 @@ Roadmap
 			[_] caching config
 		[_] BUG: jumping screen images does not load the adjacent ribbons...
 		| positioning is OK but ribbons are not fully visible...
-		[_] BUG: BASE_URL seems to gain a new trailing '/' on each save...
+		[X] BUG: BASE_URL seems to gain a new trailing '/' on each save...
 		| low priority as this does not affect anything...
-		[_] start/stop gif animations...
+		[X] 100% gesture support
+			[X] up/down - navigate
+			[X] left/right - navigate
 		[X] make the marks in single image mode show in corner of viewer, not image
 		| and think of a uniform indicator position...
 		|

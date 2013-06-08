@@ -149,7 +149,6 @@ function setupDataBindings(viewer){
 			rollImages(gr.length, ribbon)
 		})
 
-
 		.on('fittingImages', function(evt, n){
 			// load correct amount of images in each ribbon!!!
 			var screen_size = getScreenWidthInImages()
@@ -168,16 +167,18 @@ function setupDataBindings(viewer){
 			}
 
 			// update proportions...
+			// XXX for some magical reason this is stable for un-rotated 
+			// 		images and does mad things for rotate 90/270 images...
+			//		...the only thing that is 	
 			if(window.PROPORTIONS_RATIO_THRESHOLD != null 
 					&& toggleSingleImageMode('?') == 'on'){
-				var viewer = $('.viewer')
-				//var w = getVisibleImageSize('width')
-				var h = getVisibleImageSize('height')
-				//var W = viewer.innerWidth()
-				var H = viewer.innerHeight()
 
-				//var m = Math.min(W/w, H/h)
-				var m = H/h
+				var h = getVisibleImageSize('height')
+				var w = getVisibleImageSize('width')
+				var H = $('.viewer').innerHeight()
+				var W = $('.viewer').innerWidth()
+
+				var m = Math.min(W/w, H/h)
 
 				if(m < PROPORTIONS_RATIO_THRESHOLD){
 					toggleImageProportions('fit-viewer')

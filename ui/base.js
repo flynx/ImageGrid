@@ -982,11 +982,14 @@ function resetToOriginalImage(image){
 /********************************************************* Zooming ***/
 
 function fitNImages(n, fixed_proportions){
+	var viewer = $('.viewer')
+
+	viewer.trigger('preFittingImages', [n])
+
 	var image = getImage()
 	var w = image.outerWidth(true)
 	var h = image.outerHeight(true)
 
-	var viewer = $('.viewer')
 	var W = viewer.innerWidth()
 	var H = viewer.innerHeight()
 

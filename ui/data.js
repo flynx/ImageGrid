@@ -401,6 +401,7 @@ Array.prototype.binSearch = function(target, cmp, get){
 // NOTE: changing a base URL will trigger a baseURLChanged event...
 function setBaseURL(url){
 	var old_url = BASE_URL
+	url = url.replace(/\/*$/, '/')
 	BASE_URL = url
 	$('.viewer').trigger('baseURLChanged', [old_url, url])
 }

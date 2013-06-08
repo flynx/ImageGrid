@@ -120,7 +120,7 @@ var toggleSingleImageMode = createCSSClassToggler(
 		'.viewer', 
 		'single-image-mode',
 		function(action){
-			// prevent reiniting...
+			// prevent reentering...
 			if(action == toggleSingleImageMode('?')){
 				return false
 			}
@@ -266,11 +266,20 @@ var toggleImageProportions = createCSSClassToggler(
 			'fit-viewer'
 		],
 		function(action){
+			// prevent reentering...
+			if(action == toggleImageProportions('?')){
+				return false
+			}
+		},
+		function(action){
 			var image = $('.image')
 			var h = image.outerHeight(true)
 			var w = image.outerWidth(true)
 
 			// viewer proportions...
+			// XXX going into here twice for a rotated 90/270 image will 
+			// 		set it back to square...
+			// 		...can't even begin to imagine what can affect this!
 			if(action == 'fit-viewer'){
 				var viewer = $('.viewer')
 				var W = viewer.innerWidth()

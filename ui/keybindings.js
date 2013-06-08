@@ -424,6 +424,8 @@ var KEYBOARD_CONFIG = {
 
 
 		// zooming...
+		'#1': doc('Fit image', function(){ fitNImages(1) }),
+
 		'-': doc('Zoom in', function(){ zoomOut() }),
 		'=': doc('Zoom out', function(){ zoomIn() }),
 
