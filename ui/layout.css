@@ -848,6 +848,23 @@ body {
 .dark.viewer .overlay-block .background {
   background: #0a0a0a;
 }
+.large.marks-visible.viewer:not(.single-image-mode) .current.image {
+  border-width: 3px;
+}
+.large.marks-visible.viewer:not(.single-image-mode) .marked.image:after {
+  -webkit-transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
+  -moz-transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
+  -o-transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
+  -ms-transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
+  transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
+}
+.small.marks-visible.viewer:not(.single-image-mode) .marked.image:after {
+  -webkit-transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
+  -moz-transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
+  -o-transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
+  -ms-transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
+  transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
+}
 /********************************************************* Overlay ***/
 .overlay-block {
   display: none;

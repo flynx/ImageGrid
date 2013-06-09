@@ -37,6 +37,9 @@
 	-ms-transform: rotate(@deg) scaleY(@scaleY) scaleX(@scaleX);
 	transform: rotate(@deg) scaleY(@scaleY) scaleX(@scaleX);
 }
+.scale (@scale) {
+	.transform(0deg, @scale, @scale)
+}
 .rotate (@deg) {
 	.transform(@deg)
 }
@@ -840,6 +843,18 @@ body {
 .dark.viewer,
 .dark.viewer .overlay-block .background {
 	background: #0a0a0a;
+}
+
+
+.large.marks-visible.viewer:not(.single-image-mode) .current.image {
+	border-width: 3px;
+}
+.large.marks-visible.viewer:not(.single-image-mode) .marked.image:after {
+	.scale(0.7);
+}
+
+.small.marks-visible.viewer:not(.single-image-mode) .marked.image:after {
+	.scale(1.8);
 }
 
 

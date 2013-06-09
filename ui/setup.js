@@ -187,6 +187,22 @@ function setupDataBindings(viewer){
 				}
 			}
 
+			// update size classes...
+			// XXX make thresholds global...
+			if(n <= 2.5){
+				$('.viewer')
+					.removeClass('small')
+					.addClass('large')
+			} else if (n >= 6) {
+				$('.viewer')
+					.addClass('small')
+					.removeClass('large')
+			} else {
+				$('.viewer')
+					.removeClass('small')
+					.removeClass('large')
+			}
+
 			// update previews...
 			updateImages()
 		})
