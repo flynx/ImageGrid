@@ -315,6 +315,68 @@ function showContextIndicator(cls, text){
 }
 
 
+function getOverlay(root){
+	root = $(root)
+	var overlay = root.find('.overlay-block')
+	if(overlay.length == 0){
+		return $('<div class="overlay-block">'+
+					'<div class="background"/>'+
+					'<div class="content"/>'+
+				'</div>').appendTo(root)
+	}
+	return overlay
+}
+
+
+function showInOverlay(root, data){
+	root = $(root)
+
+	var overlay = getOverlay(root)
+	
+
+	if(data != null){
+		var container = $('<table width="100%" height="100%"><tr><td align="center" valign="center">'+
+								'<div class="dialog"/>'+
+							'</td></tr></table>')
+		var dialog = container.find('.dialog')
+
+		//overlay.find('.background')
+		//	.click(function(){ hideOverlay(root) })
+
+		dialog
+			.append(data)
+			.click(function(){ event.stopPropagation() })
+		overlay.find('.content')
+			.click(function(){ hideOverlay(root) })
+			.append(container)
+	}
+
+	root.addClass('overlay')
+
+	return overlay
+}
+
+
+function hideOverlay(root){
+	root.removeClass('overlay')
+	root.find('.overlay-block').remove()
+}
+
+
+function alert(){
+	// XXX use CSS!!!
+	return showInOverlay($('.viewer'), $('<span/>')
+		.text(Array.apply(null, arguments).join(' ')))
+}
+
+/*
+function prompt(){
+}
+
+function confirm(){
+}
+*/
+
 
 /*********************************************************************/
 // vim:set ts=4 sw=4 nowrap :

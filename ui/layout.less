@@ -872,17 +872,44 @@ body {
 .viewer.overlay .overlay-block {
 	display: block;
 }
-.overlay-block .content {
-}
+.overlay-block .content,
 .overlay-block .background {
-	position: absolute:
-	top: 0px;
+	/* XXX for some magical reason position and top are overwritten 
+		with 'static' and 'auto' values respectively */
+	position: absolute !important;
+	top: 0px !important;
 	left: 0px;
 	height: 100%;
 	width: 100%;
-	opacity: 0.7;
-
 	cursor: auto;
+
+	opacity: 0.9;
+}
+.overlay-block .content,
+.overlay-block .content table {
+	background: transparent;
+}
+.overlay-block .background {
+	opacity: 0.7;
+}
+
+
+.overlay-block .dialog {
+	display: inline-block;
+
+	min-height: 50px;
+	min-width: 300px;
+
+	color: white;
+	border: solid silver 1px;
+	border-radius: 3px;
+	background: gray;
+
+	padding: 20px;
+
+	vertical-align: center;
+
+	box-shadow: 0px 5px 50px 0px black;
 }
 
 
