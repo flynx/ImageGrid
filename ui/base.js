@@ -962,6 +962,11 @@ function flipHorizontal(image){
 
 /***************************************************** Image reset ***/
 
+// Reset to original image state.
+//
+// This will remove flip and rotation data from an image and show it 
+// as-is.
+//
 // NOTE: this works only on loaded images, if something more global is
 // 		needed, then one should write a GID based version (data.js)
 // 		XXX do we need a GID based version?
@@ -981,6 +986,12 @@ function resetToOriginalImage(image){
 
 /********************************************************* Zooming ***/
 
+// NOTE: n can be a float win obvious meaning -- 1.5 means fit one and 
+// 		a half images...
+// NOTE: fixed_proportions if true will make this set the size using the 
+// 		image square, disregarding actual proportions.
+// NOTE: fixed_proportions may result in and image bleading off screen.
+// 		XXX needs more testing...
 function fitNImages(n, fixed_proportions){
 	var viewer = $('.viewer')
 
@@ -992,6 +1003,7 @@ function fitNImages(n, fixed_proportions){
 
 	// XXX needs testing -- might be wrong for fit-viewer + different 
 	// 		viewer proportions...
+	// 		...an exceptionally wide image might blead off screen...
 	if(fixed_proportions){
 		w = Math.min(w, h)
 		h = w
