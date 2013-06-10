@@ -39,7 +39,7 @@ function makeDrawerToggler(contentRenderer, root){
 
 					// prepare and cleanup...
 					$(element_class).remove()
-					$(root).addClass('overlay')
+					showInOverlay($(root))
 
 					// build the help...
 					var doc = contentRenderer()
@@ -83,7 +83,7 @@ function makeDrawerToggler(contentRenderer, root){
 					// things to cleanup...
 					var _cleanup = function(){
 						$(element_class).remove()
-						$(root).removeClass('overlay')
+						hideOverlay($(root))
 						// XXX depends on body...
 						body.click()
 						win.off('scroll', scroll_handler)
@@ -179,50 +179,43 @@ var toggleSlideShowMode = createCSSClassToggler(
 			if(action == 'on'){
 				updateStatus('Slideshow...').show()
 
-				// XXX is this the correct way to go???
-				$('.viewer').addClass('overlay')
-
 				// interval from user...
-				// XXX make this a real UI...
-				var interval = prompt('Slideshow interval (sec):', SLIDESHOW_INTERVAL/1000)
+				//var interval = prompt('Slideshow interval (sec):', SLIDESHOW_INTERVAL/1000)
+				prompt('Slideshow interval (sec):', SLIDESHOW_INTERVAL/1000)
+					.done(function(interval){
+						interval = parseFloat(interval)
 
-				// user cancelled...
-				if(interval == null){
-					showStatus('Slideshow: cencelled...')
-					toggleSlideShowMode('off')
+						SLIDESHOW_INTERVAL = isNaN(interval) ? 3000 : interval*1000
 
-					// XXX is this the correct way to go???
-					$('.viewer').removeClass('overlay')
+						showStatus('Slideshow: starting', SLIDESHOW_LOOP ? 'looped...' : 'unlooped...')
+					
+						// XXX is this the correct way to go???
+						hideOverlay($('.viewer'))
 
-					return 
-				}
+						toggleSingleImageMode('on')
+						_slideshow_timer = setInterval(function(){
+							var cur = getImage()
+							// advance the image...
+							var next = SLIDESHOW_DIRECTION == 'next' ? nextImage() : prevImage()
 
-				SLIDESHOW_INTERVAL = isNaN(interval) ? 3000 : interval*1000
+							// handle slideshow end...
+							if(getImageGID(cur) == getImageGID(next)){
+								if(SLIDESHOW_LOOP){
+									SLIDESHOW_DIRECTION == 'next' ? firstImage() : lastImage()
+								} else {
+									toggleSlideShowMode('off')
+									return 
+								}
+							}
 
-				showStatus('Slideshow: starting', SLIDESHOW_LOOP ? 'looped...' : 'unlooped...')
-			
-				// XXX is this the correct way to go???
-				$('.viewer').removeClass('overlay')
-
-				toggleSingleImageMode('on')
-				_slideshow_timer = setInterval(function(){
-					var cur = getImage()
-					// advance the image...
-					var next = SLIDESHOW_DIRECTION == 'next' ? nextImage() : prevImage()
-
-					// handle slideshow end...
-					if(getImageGID(cur) == getImageGID(next)){
-						if(SLIDESHOW_LOOP){
-							SLIDESHOW_DIRECTION == 'next' ? firstImage() : lastImage()
-						} else {
-							toggleSlideShowMode('off')
-							return 
-						}
-					}
-
-					// center and trigger load events...
-					centerRibbon()
-				}, SLIDESHOW_INTERVAL)
+							// center and trigger load events...
+							centerRibbon()
+						}, SLIDESHOW_INTERVAL)
+					})
+					// user cancelled...
+					.fail(function(){
+						toggleSlideShowMode('off')
+					})
 
 			} else {
 				window._slideshow_timer != null && clearInterval(_slideshow_timer)

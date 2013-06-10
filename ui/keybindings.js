@@ -69,6 +69,23 @@ var KEYBOARD_CONFIG = {
 		}
 	},
 
+	// dialogs...
+	//
+	'.viewer.overlay .overlay-block.dialog': {
+		title: 'Dialog',
+
+		Enter: doc('Accept dialog',
+			function(){
+				getOverlay($('.viewer')).trigger('accept')
+			}),
+		Esc: doc('Close dialog', 
+			function(){ 
+				hideOverlay($('.viewer')) 
+				return false
+			}),
+	},
+
+
 
 	// help mode...
 	//

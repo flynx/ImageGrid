@@ -315,6 +315,11 @@ function showContextIndicator(cls, text){
 }
 
 
+
+/**********************************************************************
+* Modal dialogs...
+*/
+
 function getOverlay(root){
 	root = $(root)
 	var overlay = root.find('.overlay-block')
@@ -345,9 +350,14 @@ function showInOverlay(root, data){
 
 		dialog
 			.append(data)
-			.click(function(){ event.stopPropagation() })
+			.one('click', function(){ 
+				event.stopPropagation() 
+			})
 		overlay.find('.content')
-			.click(function(){ hideOverlay(root) })
+			.on('click', function(){ 
+				overlay.trigger('close')
+				hideOverlay(root) 
+			})
 			.append(container)
 	}
 
@@ -359,23 +369,70 @@ function showInOverlay(root, data){
 
 function hideOverlay(root){
 	root.removeClass('overlay')
-	root.find('.overlay-block').remove()
+	root.find('.overlay-block')
+		.trigger('close')
+		.remove()
 }
 
+
+
+/************************************************ Standard dialogs ***/
 
 function alert(){
-	// XXX use CSS!!!
-	return showInOverlay($('.viewer'), $('<span/>')
-		.text(Array.apply(null, arguments).join(' ')))
+	var res = $.Deferred()
+	showInOverlay($('.viewer'), $('<span/>')
+			.text(Array.apply(null, arguments).join(' ')))
+		.addClass('alert dialog')
+		.on('close accept', function(){ 
+			res.resolve() 
+		})
+	return res
 }
+
+
+function prompt(message, dfl){
+	var root = $('.viewer')
+	var res = $.Deferred()
+
+	var form = $('<div>'+
+				'<div class="text"/>'+
+				'<input type="text" tabindex=1/>'+
+				'<button tabindex=2>Done</button>'+
+			'</div>')
+	form.find('.text')
+		.text(message)
+	var overlay = showInOverlay(root, form)
+		.addClass('prompt dialog')
+		.on('close', function(){ 
+			res.reject() 
+		})
+		.on('accept', function(){
+			res.resolve(form.find('input').attr('value')) 
+			hideOverlay(root)
+		})
+
+	form.find('button')
+		.click(function(){
+			overlay.trigger('accept')
+		})
+
+	var input = form.find('input')
+
+	input
+		.focus()
+	setTimeout(function(){ 
+		input.attr('value', dfl == null ? '' : dfl)
+	}, 100)
+
+	return res
+}
+
 
 /*
-function prompt(){
-}
-
 function confirm(){
 }
 */
+
 
 
 /*********************************************************************/
