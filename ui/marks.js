@@ -46,6 +46,9 @@ function loadMarkedOnlyData(cmp, no_cleanout_marks){
 	DATA.current = getGIDBefore(cur, 0)
 	reloadViewer()
 	toggleMarkesView('off')
+	// XXX FIX: for some reason not all previews get updated to the 
+	// 		right size...
+	updateImages()
 	return DATA
 }
 
@@ -58,6 +61,9 @@ function loadAllImages(){
 	// 		returning from marks only view...
 	DATA.current = cur
 	reloadViewer()
+	// XXX FIX: for some reason not all previews get updated to the 
+	// 		right size...
+	updateImages()
 	return DATA
 }
 

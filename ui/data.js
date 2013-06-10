@@ -426,8 +426,9 @@ function getBaseURL(){
 //
 // NOTE: mode can be either 'absolute' (default) or 'relative'...
 function normalizePath(url, base, mode){
-	mode = mode == null ? 'absolute' : mode
 	base = base == null ? getBaseURL() : base
+	//mode = /^\./.test(base) && mode == null ? 'relative' : null
+	mode = mode == null ? 'absolute' : mode
 
 	// windows path...
 	//	- replace all '\\' with '/'...

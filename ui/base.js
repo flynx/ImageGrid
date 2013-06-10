@@ -990,6 +990,13 @@ function fitNImages(n, fixed_proportions){
 	var w = image.outerWidth(true)
 	var h = image.outerHeight(true)
 
+	// XXX needs testing -- might be wrong for fit-viewer + different 
+	// 		viewer proportions...
+	if(fixed_proportions){
+		w = Math.min(w, h)
+		h = w
+	}
+
 	var W = viewer.innerWidth()
 	var H = viewer.innerHeight()
 
