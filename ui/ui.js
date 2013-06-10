@@ -350,13 +350,16 @@ function showInOverlay(root, data){
 
 		dialog
 			.append(data)
-			.one('click', function(){ 
+			.on('click', function(){ 
 				event.stopPropagation() 
 			})
 		overlay.find('.content')
 			.on('click', function(){ 
 				overlay.trigger('close')
 				hideOverlay(root) 
+			})
+			.on('close accept', function(){
+				//hideOverlay(root) 
 			})
 			.append(container)
 	}
@@ -378,10 +381,11 @@ function hideOverlay(root){
 
 /************************************************ Standard dialogs ***/
 
+var _alert = alert
 function alert(){
 	var res = $.Deferred()
 	showInOverlay($('.viewer'), $('<span/>')
-			.text(Array.apply(null, arguments).join(' ')))
+			.html(Array.apply(null, arguments).join(' ')))
 		.addClass('alert dialog')
 		.on('close accept', function(){ 
 			res.resolve() 
@@ -390,17 +394,18 @@ function alert(){
 }
 
 
-function prompt(message, dfl){
+var _prompt = prompt
+function prompt(message, dfl, btn){
+	btn = btn == null ? 'OK' : btn
 	var root = $('.viewer')
 	var res = $.Deferred()
 
 	var form = $('<div>'+
-				'<div class="text"/>'+
+				'<div class="text">'+message+'</div>'+
 				'<input type="text" tabindex=1/>'+
-				'<button tabindex=2>Done</button>'+
+				'<button tabindex=2>'+btn+'</button>'+
 			'</div>')
-	form.find('.text')
-		.text(message)
+
 	var overlay = showInOverlay(root, form)
 		.addClass('prompt dialog')
 		.on('close', function(){ 
@@ -408,7 +413,6 @@ function prompt(message, dfl){
 		})
 		.on('accept', function(){
 			res.resolve(form.find('input').attr('value')) 
-			hideOverlay(root)
 		})
 
 	form.find('button')
@@ -421,7 +425,9 @@ function prompt(message, dfl){
 	input
 		.focus()
 	setTimeout(function(){ 
-		input.attr('value', dfl == null ? '' : dfl)
+		input
+			.attr('value', dfl == null ? '' : dfl)
+			.select()
 	}, 100)
 
 	return res
@@ -434,6 +440,35 @@ function confirm(){
 */
 
 
+/************************************************ Specific dialogs ***/
 
-/*********************************************************************/
-// vim:set ts=4 sw=4 nowrap :
+function showImageInfo(){
+	var gid = getImageGID(getImage())
+	var r = getRibbonIndex(getRibbon())
+	var data = IMAGES[gid]
+	var orientation = data.orientation
+	orientation = orientation == null ? 0 : orientation
+	var flipped = data.flipped
+	flipped = flipped == null ? '' : ', flipped '+flipped+'ly'
+	var order = DATA.order.indexOf(gid)
+	var name = data.path.split('/').pop()
+
+	alert('<div>'+
+			'<h2>"'+ name +'"</h2>'+
+
+			'<table>'+
+				'<tr><td>GID: </td><td>'+ gid +'</td></tr>'+
+				'<tr><td>Path: </td><td>"'+ data.path +'"</td></tr>'+
+				'<tr><td>Orientation: </td><td>'+ orientation +'&deg;'+flipped+'</td></tr>'+
+				'<tr><td>Order: </td><td>'+ order +'</td></tr>'+
+				'<tr><td>Position (ribbon): </td><td>'+ (DATA.ribbons[r].indexOf(gid)+1) +
+					'/'+ DATA.ribbons[r].length +'</td></tr>'+
+				'<tr><td>Position (global): </td><td>'+ (order+1) +'/'+ DATA.order.length +'</td></tr>'+
+			'</table>'+
+		'</div>')
+}
+
+
+
+/**********************************************************************
+* vim:set ts=4 sw=4 nowrap :										 */

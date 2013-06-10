@@ -80,6 +80,7 @@ var KEYBOARD_CONFIG = {
 			}),
 		Esc: doc('Close dialog', 
 			function(){ 
+				//getOverlay($('.viewer')).trigger('close')
 				hideOverlay($('.viewer')) 
 				return false
 			}),
@@ -573,7 +574,10 @@ var KEYBOARD_CONFIG = {
 				default: doc('Toggle image info display',
 					function(){ toggleImageInfo() }),
 				shift: doc('Show current image info',
-					function(){ toggleImageInfoDrawer() }),
+					function(){ 
+						showImageInfo()
+						//toggleImageInfoDrawer() 
+					}),
 				alt: doc('Toggle inline image info display',
 					function(){
 						toggleInlineImageInfo()

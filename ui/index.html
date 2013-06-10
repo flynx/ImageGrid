@@ -222,7 +222,8 @@ $(function(){
 	*/
 
 	// we have an image file...
-	if((DATA_ATTR + '_BASE_URL') in localStorage){
+	if((DATA_ATTR + '_BASE_URL') in localStorage
+			&& !/.[\/\\]*/.test(localStorage[DATA_ATTR + '_BASE_URL'])){
 		BASE_URL = localStorage[DATA_ATTR + '_BASE_URL']
 
 		var loading = statusNotify(loadDir(BASE_URL))

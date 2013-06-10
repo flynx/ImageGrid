@@ -74,6 +74,15 @@ body {
 	margin: 0px;
 }
 
+input,
+button {
+	border: solid silver 1px;
+	border-radius: 3px;
+}
+button:hover {
+	box-shadow: 0px 0px 7px 0px black;
+}
+
 
 
 /************************************************************** UI ***/
@@ -834,15 +843,34 @@ body {
 .light.viewer .overlay-block .background {
 	background: white;
 }
+.light.viewer .overlay-block .dialog {
+}
+.light.viewer .overlay-block:hover .background:after {
+	color: black;
+}
 
 .gray.viewer,
 .gray.viewer .overlay-block .background {
 	background: #333;
 }
+.gray.viewer .overlay-block .dialog {
+	background: #555;
+}
+.light.viewer .overlay-block:hover .background:after {
+	color: silver;
+	opacity: 0.4;
+}
 
 .dark.viewer,
 .dark.viewer .overlay-block .background {
 	background: #0a0a0a;
+}
+.dark.viewer .overlay-block .dialog {
+	background: #333;
+}
+.light.viewer .overlay-block:hover .background:after {
+	color: gray;
+	opacity: 0.4;
 }
 
 
@@ -893,6 +921,20 @@ body {
 	opacity: 0.7;
 }
 
+.overlay-block:hover .background:after {
+	display: inline-block;
+	position: absolute;
+	content: 'Click background to close.';
+	height: auto;
+	width: auto;
+	bottom: 20px;
+	right: 20px;
+
+	color: white;
+
+	opacity: 0.7;
+}
+
 
 .overlay-block .dialog {
 	display: inline-block;
@@ -910,6 +952,22 @@ body {
 	vertical-align: center;
 
 	box-shadow: 0px 5px 50px 0px black;
+}
+
+/* tables in dialogs... */
+
+.overlay-block .dialog table {
+	color: white;
+	font-size: small;
+
+	.user-select(auto);
+}
+.overlay-block .dialog table tr td:first-child {
+	text-align: right;
+	font-weight: bold;
+}
+.overlay-block .dialog table tr td:last-child {
+	color: silver;
 }
 
 
