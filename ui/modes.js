@@ -179,6 +179,9 @@ var toggleSlideShowMode = createCSSClassToggler(
 			if(action == 'on'){
 				updateStatus('Slideshow...').show()
 
+				// XXX is this the correct way to go???
+				$('.viewer').addClass('overlay')
+
 				// interval from user...
 				// XXX make this a real UI...
 				var interval = prompt('Slideshow interval (sec):', SLIDESHOW_INTERVAL/1000)
@@ -187,12 +190,19 @@ var toggleSlideShowMode = createCSSClassToggler(
 				if(interval == null){
 					showStatus('Slideshow: cencelled...')
 					toggleSlideShowMode('off')
+
+					// XXX is this the correct way to go???
+					$('.viewer').removeClass('overlay')
+
 					return 
 				}
 
 				SLIDESHOW_INTERVAL = isNaN(interval) ? 3000 : interval*1000
 
 				showStatus('Slideshow: starting', SLIDESHOW_LOOP ? 'looped...' : 'unlooped...')
+			
+				// XXX is this the correct way to go???
+				$('.viewer').removeClass('overlay')
 
 				toggleSingleImageMode('on')
 				_slideshow_timer = setInterval(function(){

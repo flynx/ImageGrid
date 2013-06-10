@@ -339,6 +339,10 @@ function makeScrollHandler(root, config){
 						.on('mouseup', endMoveHandler) 
 				}
 			}
+
+			// setup transitions...
+			this.resetTransitions()
+
 			return this
 		},
 		// XXX test...
@@ -366,6 +370,8 @@ function makeScrollHandler(root, config){
 			var scrolled = this.root.children().first()
 			setTransitionDuration(scrolled, this.options.transitionDuration)
 			setTransitionEasing(scrolled, this.options.transitionEasing)
+
+			return this
 		}
 	}
 

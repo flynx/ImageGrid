@@ -648,6 +648,32 @@ Date.fromTimeStamp = function(ts){
 }
 
 
+function logCalls(func, logger){
+	var that = this
+	var _func = function(){
+		logger(func, arguments)
+		return func.apply(that, arguments)
+	}
+	_func.name = func.name
+	return _func
+}
+
+
+function assyncCall(func){
+	var that = this
+	var _func = function(){
+		var res = $.Deferred()
+		setTimeout(function(){
+			res.resolve(func.apply(that, arguments))
+		}, 0)
+		return res
+	}
+	_func.name = func.name
+	return _func
+}
+
+
+
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */

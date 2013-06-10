@@ -77,6 +77,11 @@ less = {
 //DEBUG = true
 
 var SCROLLER_ENABLED = true
+var SCROLLER_ANIMATE_DURATION = 100
+// XXX scroller transitions not yet ready...
+//		...need to disable transitions on some actions (where we 
+//		explicitly say 'css')
+//var TRANSITION_MODE_DEFAULT = 'css'
 
 // setup...
 $(function(){
@@ -99,7 +104,7 @@ $(function(){
 
 
 	if(SCROLLER_ENABLED){
-		var scroller = makeScrollHandler($('.viewer'), {
+		SCROLLER = makeScrollHandler($('.viewer'), {
 				// XXX after click and initial move the screen jumps 
 				//		(both x and y), margins, left vs. translate?
 				//
@@ -115,7 +120,9 @@ $(function(){
 
 				// it's either this or disable the jQuery animation...
 				// ...have to benchmark to see which is better...
-				transitionDuration: 0,
+				// XXX BUG: if transition is set to non-0 then it initializes
+				//		only after an action, e.g. a click...
+				transitionDuration: TRANSITION_MODE_DEFAULT == 'animate' ? 0 : SCROLLER_ANIMATE_DURATION,
 				transitionEasing: 'liner',
 
 				// keep selectable elements selectable...
@@ -124,7 +131,6 @@ $(function(){
 					'.overlay-info, '+
 					'',
 			})
-			.start()
 
 		$('.viewer')
 			.on('shortClick', function(){ clickHandler(event) })
@@ -247,6 +253,8 @@ $(function(){
 			}
 
 			updateImages()
+
+			SCROLLER.start()
 		})
 
 })

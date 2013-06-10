@@ -31,6 +31,9 @@ var NAV_RIBBON_VISIBLE = ':visible'
 var NAV_RIBBON_DEFAULT = NAV_RIBBON_ALL
 //var NAV_RIBBON_DEFAULT = NAV_RIBBON_VISIBLE
 
+// can be:
+// 	- animate
+// 	- css
 var TRANSITION_MODE_DEFAULT = 'animate'
 
 var MAX_SCREEN_IMAGES = 12
