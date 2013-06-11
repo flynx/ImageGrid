@@ -214,7 +214,7 @@ function setupDataBindings(viewer){
 
 			if(window.setWindowTitle != null){
 				// XXX do we need to hide the extension...
-				setWindowTitle(IMAGES[getImageGID(image)].path.split('/').pop()
+				setWindowTitle(IMAGES[getImageGID(image)].path.split('/').pop())
 					//.split(/\.(jpg|jpeg|png|gif)$/)[0])
 			}
 		})
