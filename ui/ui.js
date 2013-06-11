@@ -418,6 +418,7 @@ function prompt(message, dfl, btn){
 	form.find('button')
 		.click(function(){
 			overlay.trigger('accept')
+			hideOverlay(root)
 		})
 
 	var input = form.find('input')

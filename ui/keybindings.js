@@ -77,6 +77,7 @@ var KEYBOARD_CONFIG = {
 		Enter: doc('Accept dialog',
 			function(){
 				getOverlay($('.viewer')).trigger('accept')
+				hideOverlay($('.viewer')) 
 			}),
 		Esc: doc('Close dialog', 
 			function(){ 
@@ -276,12 +277,11 @@ var KEYBOARD_CONFIG = {
 		// XXX STUB: use a real path browser...
 		O: doc('Open a directory path',
 			function(){
-				var path = prompt('Path to open', BASE_URL)
-				if(path == null){
-					return
-				}
-				path = path.trim()
-				statusNotify(loadDir(path))
+				prompt('Path to open', BASE_URL)
+					.done(function(path){
+						path = path.trim()
+						statusNotify(loadDir(path))
+					})
 			}),
 
 
