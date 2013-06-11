@@ -7,6 +7,8 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var APP_NAME = 'ImageGrid.Viewer'
+
 var DATA_ATTR = 'DATA'
 
 var LOAD_SCREENS = 6

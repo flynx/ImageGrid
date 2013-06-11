@@ -82,6 +82,11 @@ if(window.CEF_dumpJSON != null){
 	window.reload = function(){
 		gui.Window.get().reload()
 	}
+	window.setWindowTitle = function(text){
+		var title = text +' - '+ APP_NAME
+		gui.Window.get().title = title
+		$('.title-bar .title').text(title)
+	}
 
 	// load UI stuff...
 	$(function(){

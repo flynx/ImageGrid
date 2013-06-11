@@ -211,6 +211,10 @@ function setupDataBindings(viewer){
 		.on('focusingImage', function(evt, image){
 			image = $(image)
 			DATA.current = getImageGID(image)
+
+			if(window.setWindowTitle != null){
+				setWindowTitle(IMAGES[getImageGID(image)].path.split('/').pop())
+			}
 		})
 
 
