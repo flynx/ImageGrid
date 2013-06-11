@@ -1,6 +1,6 @@
 Roadmap
 	[_] 43% Pre-Alpha - limited preview
-		[_] 31% UI
+		[_] 34% UI
 			[_] 0% Tablet-specific
 				[_] screen buttons
 			[_] 60% modes
@@ -10,8 +10,9 @@ Roadmap
 				[X] slideshow (single image)
 				[X] ribbon
 				[_] single ribbon
-			[_] 33% other
-				[_] load/open
+			[_] 42% other
+				[X] load/open
+				[_] browse for location (open)
 				[_] select saved set
 				[X] keyboard help
 				[_] general help
@@ -90,11 +91,13 @@ Roadmap
 	
 
 
-[_] 26% Gen 3 current todo
-	[_] 53% High priority
-		BUG: scaling is again broken with rotated images
-		| - rotate an image
-		| - scale it to 1 (press 1)
+[_] 27% Gen 3 current todo
+	[_] 54% High priority
+		[_] 50% basic dialogs
+			[X] alert
+			[X] prompt
+			[_] confirm
+			[_] select from list
 		[_] ASAP: directory selector UI...
 		[_] usable empty view -- w.o. data...
 		[_] 0% Tablet UI
@@ -165,9 +168,7 @@ Roadmap
 		| 	ribbon length: ~42
 		| 	screen width: 4
 		| 	jumping to end from start of ribbon
-		[_] side-by side view...
 		[_] ASAP: test on Android...
-		[X] build for windows (node-webkit)
 		[_] single image mode transition (alpha-blend/fade/none)
 		[_] 75% image sorting (date/name/...)
 			[X] 100% sort by:
@@ -216,11 +217,6 @@ Roadmap
 			[_] versions w. label image
 			| a set of images that is represented by one of the group
 			[_] collection
-		[_] 75% UI elements
-			[X] indicators
-			[X] image info
-			[X] stub info dialog
-			[_] detailed image info
 		[_] 0% CSS
 			[_] cleanup
 			[_] split themes and layout
@@ -234,8 +230,18 @@ Roadmap
 			[_] thresholds and frame size
 			[_] remove extra and repetitive actions
 			[_] caching config
+		[_] side-by side view...
 		[_] BUG: jumping screen images does not load the adjacent ribbons...
 		| positioning is OK but ribbons are not fully visible...
+		[X] 100% UI elements
+			[X] indicators
+			[X] image info
+			[X] stub info dialog
+			[X] detailed image info
+		[X] build for windows (node-webkit)
+		[X] BUG: scaling is again broken with rotated images
+		| - rotate an image
+		| - scale it to 1 (press 1)
 		[X] BUG: BASE_URL seems to gain a new trailing '/' on each save...
 		| low priority as this does not affect anything...
 		[X] 100% gesture support
