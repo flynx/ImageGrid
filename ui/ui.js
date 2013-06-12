@@ -453,8 +453,8 @@ var FIELD_TYPES = {
 		test: function(val){
 			return typeof(val) == typeof('abc')
 		},
-		set: function(field){
-			$(field).find('.value').attr('value', this.default) 
+		set: function(field, value){
+			$(field).find('.value').attr('value', value) 
 		},
 		get: function(field){ 
 			return $(field).find('.value').attr('value') 
@@ -479,7 +479,7 @@ var FIELD_TYPES = {
 			}
 		},
 		get: function(field){ 
-			return $(field).find('.value').attr('value') 
+			return $(field).find('.value').attr('checked') == 'checked'
 		},
 	},
 }
@@ -491,6 +491,7 @@ var FIELD_TYPES = {
 //		// simple field...
 //		<field-description>: <default-value>,
 //
+//		// XXX not yet implemented outside of FIELD_TYPES...
 //		<field-description>: {
 //			type: <type-name>,
 //			text: <field-description>,
@@ -516,14 +517,17 @@ var FIELD_TYPES = {
 // 	string		- textarea
 // 	array		- dropdown
 //
+// XXX add form testing...
+// XXX add undefined field handling/reporting...
 // XXX find a better name...
-function promptPlus(message, config, btn){
+function promptPlus(message, config, btn, cls){
+	cls = cls == null ? '' : cls
 	var form = $('<div class="form"/>')
 	var data = {}
 	var res = $.Deferred()
 
-	// XXX handle message and btn...
-	// XXX
+	// handle message and btn...
+	form.append($('<div class="text">'+message+'</div>'))
 
 	// build the form...
 	for(var t in config){
@@ -536,14 +540,18 @@ function promptPlus(message, config, btn){
 				html.find('.text').text(t)
 				field.set(html, config[t])
 
-				html.on('resolve', function(){
-					data[t] = field.get(html)
-				})
+				// NOTE: this is here to isolate t and field.get values...
+				// 		...is there a better way???
+				var _ = (function(title, getter){
+					html.on('resolve', function(evt, e){
+						data[title] = getter(e)
+					})
+				})(t, field.get)
 
 				form.append(html)
 
 				did_handling = true
-				continue
+				break
 			}
 		}
 
@@ -554,13 +562,17 @@ function promptPlus(message, config, btn){
 		}
 	}
 
+	// add button...
+	var button = $('<button class="accept">'+btn+'</button>')
+	form.append(button)
+
 	var root = $('.viewer')
 	
-	showInOverlay(root, form)
-		.addClass('prompt dialog')
+	var overlay = showInOverlay(root, form)
+		.addClass('dialog ' + cls)
 		.on('accept', function(){
 			form.find('.field').each(function(_, e){
-				$(e).trigger('resolve')
+				$(e).trigger('resolve', [$(e)])
 			})
 
 			// XXX test if all required stuff is filled...
@@ -570,8 +582,12 @@ function promptPlus(message, config, btn){
 		})
 		.on('close', function(){
 			res.reject()
-			hideOverlay(root)
+
 		})
+
+	button.click(function(){
+		overlay.trigger('accept')
+	})
 
 	return res
 }
