@@ -441,6 +441,80 @@ function confirm(){
 */
 
 
+var FIELD_TYPES = {
+	text: {
+		type: 'text',
+		text: null,
+		default: '',
+		html: '<div class="field">'+
+				'<span class="text"></span>'+
+				'<input type="text" class="value">'+
+			'</div>',
+		setter: function(field){
+			$(field).find('.value').attr('value', this.default) 
+		},
+		getter: function(field){ 
+			return $(field).find('.value').attr('value') 
+		},
+	},	
+	bool: {
+		type: 'text',
+		text: null,
+		default: false,
+		html: '<div class="field">'+
+				'<input type="checkbox" class="value">'+
+				'<span class="text"></span>'+
+			'</div>',
+		setter: function(field){
+			if(this.default){
+				$(field).find('.value').attr('checked', '') 
+			} else {
+				$(field).find('.value').removeAttr('checked') 
+			}
+		},
+		getter: function(field){ 
+			return $(field).find('.value').attr('value') 
+		},
+	},
+}
+
+// Show a complex dialog
+//
+// config format:
+//	{
+//		// simple field...
+//		<field-description>: <default-value>,
+//
+//		<field-description>: {
+//			type: <type-name>,
+//			text: <field-description>,
+//			default: <default-value>,
+//
+//			// field code...
+//			// NOTE: class names "text" and "value" get their text 
+//			//		replaced with values set in text and default fields 
+//			//		respectively...
+//			html: <html>,
+//
+//			// used on dialog creation to init default value...
+//			setter: <value-setter>,
+//
+//			// used on dialog submit to get the field value...
+//			getter: <value-getter>,
+//		},
+//		...
+//	}	
+//
+// field's default value determines it's type:
+// 	bool		- checkbox
+// 	string		- textarea
+// 	array		- dropdown
+//
+// XXX find a better name...
+function promptPlus(message, config, btn){
+}
+
+
 /************************************************ Specific dialogs ***/
 
 function showImageInfo(){
