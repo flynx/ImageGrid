@@ -446,33 +446,39 @@ var FIELD_TYPES = {
 		type: 'text',
 		text: null,
 		default: '',
-		html: '<div class="field">'+
+		html: '<div class="field checkbox">'+
 				'<span class="text"></span>'+
 				'<input type="text" class="value">'+
 			'</div>',
-		setter: function(field){
+		test: function(val){
+			return typeof(val) == typeof('abc')
+		},
+		set: function(field){
 			$(field).find('.value').attr('value', this.default) 
 		},
-		getter: function(field){ 
+		get: function(field){ 
 			return $(field).find('.value').attr('value') 
 		},
 	},	
 	bool: {
-		type: 'text',
+		type: 'bool',
 		text: null,
 		default: false,
-		html: '<div class="field">'+
+		html: '<div class="field string">'+
 				'<input type="checkbox" class="value">'+
 				'<span class="text"></span>'+
 			'</div>',
-		setter: function(field){
-			if(this.default){
+		test: function(val){
+			return val === true || val === false
+		},
+		set: function(field, value){
+			if(value){
 				$(field).find('.value').attr('checked', '') 
 			} else {
 				$(field).find('.value').removeAttr('checked') 
 			}
 		},
-		getter: function(field){ 
+		get: function(field){ 
 			return $(field).find('.value').attr('value') 
 		},
 	},
@@ -512,6 +518,62 @@ var FIELD_TYPES = {
 //
 // XXX find a better name...
 function promptPlus(message, config, btn){
+	var form = $('<div class="form"/>')
+	var data = {}
+	var res = $.Deferred()
+
+	// XXX handle message and btn...
+	// XXX
+
+	// build the form...
+	for(var t in config){
+		var did_handling = false
+		for(var f in FIELD_TYPES){
+			if(FIELD_TYPES[f].test(config[t])){
+				var field = FIELD_TYPES[f]
+				var html = $(field.html)
+
+				html.find('.text').text(t)
+				field.set(html, config[t])
+
+				html.on('resolve', function(){
+					data[t] = field.get(html)
+				})
+
+				form.append(html)
+
+				did_handling = true
+				continue
+			}
+		}
+
+		// handle unresolved fields...
+		if(!did_handling){
+			// XXX skipping field...
+			// XXX
+		}
+	}
+
+	var root = $('.viewer')
+	
+	showInOverlay(root, form)
+		.addClass('prompt dialog')
+		.on('accept', function(){
+			form.find('.field').each(function(_, e){
+				$(e).trigger('resolve')
+			})
+
+			// XXX test if all required stuff is filled...
+			res.resolve(data)
+
+			hideOverlay(root)
+		})
+		.on('close', function(){
+			res.reject()
+			hideOverlay(root)
+		})
+
+	return res
 }
 
 
