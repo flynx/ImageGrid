@@ -181,11 +181,21 @@ var toggleSlideShowMode = createCSSClassToggler(
 
 				// interval from user...
 				//var interval = prompt('Slideshow interval (sec):', SLIDESHOW_INTERVAL/1000)
-				prompt('Slideshow interval (sec):', SLIDESHOW_INTERVAL/1000)
-					.done(function(interval){
-						interval = parseFloat(interval)
+				formDialog($('.viewer'), 'Slideshow', {
+						'Interval:': (SLIDESHOW_INTERVAL/1000) + 'sec',
+						'Looping:': SLIDESHOW_LOOP ? true : false,
+						'Reverse direction:': SLIDESHOW_DIRECTION == 'prev' ? true : false
+				}, 'Start')
+					.done(function(data){
+						var interval = parseFloat(data['Interval:'])
+						var looping = data['Looping:']
+						var reverse = data['Reverse direction:']
 
 						SLIDESHOW_INTERVAL = isNaN(interval) ? 3000 : interval*1000
+						SLIDESHOW_LOOP = looping
+						SLIDESHOW_DIRECTION = reverse == true ? 'prev' : 'next'
+
+						console.log('>>>', data)
 
 						showStatus('Slideshow: starting', SLIDESHOW_LOOP ? 'looped...' : 'unlooped...')
 					
@@ -220,6 +230,7 @@ var toggleSlideShowMode = createCSSClassToggler(
 			} else {
 				window._slideshow_timer != null && clearInterval(_slideshow_timer)
 				showStatus('Slideshow: stopped...')
+				hideOverlay($('.viewer'))
 			}
 		})
 

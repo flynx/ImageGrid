@@ -73,6 +73,7 @@ var KEYBOARD_CONFIG = {
 	//
 	'.viewer.overlay .overlay-block.dialog': {
 		title: 'Dialog',
+		ignore: '*',
 
 		Enter: doc('Accept dialog',
 			function(){

@@ -383,7 +383,7 @@ var FIELD_TYPES = {
 		type: 'text',
 		text: null,
 		default: '',
-		html: '<div class="field checkbox">'+
+		html: '<div class="field string">'+
 				'<span class="text"></span>'+
 				'<input type="text" class="value">'+
 			'</div>',
@@ -401,7 +401,7 @@ var FIELD_TYPES = {
 		type: 'bool',
 		text: null,
 		default: false,
-		html: '<div class="field string">'+
+		html: '<div class="field checkbox">'+
 				'<input type="checkbox" class="value">'+
 				'<span class="text"></span>'+
 			'</div>',
@@ -528,7 +528,7 @@ function formDialog(root, message, config, btn, cls){
 	})
 
 	setTimeout(function(){ 
-		form.find('.field').first()
+		form.find('.field input').first()
 			.focus()
 			.select()
 	}, 100)
