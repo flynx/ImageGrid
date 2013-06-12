@@ -378,69 +378,6 @@ function hideOverlay(root){
 }
 
 
-
-/************************************************ Standard dialogs ***/
-
-var _alert = alert
-function alert(){
-	var res = $.Deferred()
-	showInOverlay($('.viewer'), $('<span/>')
-			.html(Array.apply(null, arguments).join(' ')))
-		.addClass('alert dialog')
-		.on('close accept', function(){ 
-			res.resolve() 
-		})
-	return res
-}
-
-
-var _prompt = prompt
-function prompt(message, dfl, btn){
-	btn = btn == null ? 'OK' : btn
-	var root = $('.viewer')
-	var res = $.Deferred()
-
-	var form = $('<div>'+
-				'<div class="text">'+message+'</div>'+
-				'<input type="text" tabindex=1/>'+
-				'<button tabindex=2>'+btn+'</button>'+
-			'</div>')
-
-	var overlay = showInOverlay(root, form)
-		.addClass('prompt dialog')
-		.on('close', function(){ 
-			res.reject() 
-		})
-		.on('accept', function(){
-			res.resolve(form.find('input').attr('value')) 
-		})
-
-	form.find('button')
-		.click(function(){
-			overlay.trigger('accept')
-			hideOverlay(root)
-		})
-
-	var input = form.find('input')
-
-	input
-		.focus()
-	setTimeout(function(){ 
-		input
-			.attr('value', dfl == null ? '' : dfl)
-			.select()
-	}, 100)
-
-	return res
-}
-
-
-/*
-function confirm(){
-}
-*/
-
-
 var FIELD_TYPES = {
 	text: {
 		type: 'text',
@@ -519,9 +456,11 @@ var FIELD_TYPES = {
 //
 // XXX add form testing...
 // XXX add undefined field handling/reporting...
-// XXX find a better name...
-function promptPlus(message, config, btn, cls){
+// XXX revise...
+function formDialog(root, message, config, btn, cls){
 	cls = cls == null ? '' : cls
+	root = root == null ? $('.viewer') : root
+
 	var form = $('<div class="form"/>')
 	var data = {}
 	var res = $.Deferred()
@@ -557,6 +496,7 @@ function promptPlus(message, config, btn, cls){
 
 		// handle unresolved fields...
 		if(!did_handling){
+			console.warn('formDialog: not all fields understood.')
 			// XXX skipping field...
 			// XXX
 		}
@@ -566,8 +506,6 @@ function promptPlus(message, config, btn, cls){
 	var button = $('<button class="accept">'+btn+'</button>')
 	form.append(button)
 
-	var root = $('.viewer')
-	
 	var overlay = showInOverlay(root, form)
 		.addClass('dialog ' + cls)
 		.on('accept', function(){
@@ -589,8 +527,41 @@ function promptPlus(message, config, btn, cls){
 		overlay.trigger('accept')
 	})
 
+	setTimeout(function(){ 
+		form.find('.field').first()
+			.focus()
+			.select()
+	}, 100)
+
 	return res
 }
+
+
+/************************************************ Standard dialogs ***/
+
+var _alert = alert
+function alert(){
+	var message = Array.apply(null, arguments).join(' ')
+	return formDialog(null, message, {}, 'OK', 'alert')
+}
+
+
+var _prompt = prompt
+function prompt(message, dfl, btn){
+	btn = btn == null ? 'OK' : btn
+	var res = $.Deferred()
+	formDialog(null, message, {'': ''+(dfl == null ? '' : dfl)}, 'OK', 'alert')
+		.done(function(data){ res.resolve(data['']) })
+		.fail(function(){ res.reject() })
+	return res
+}
+
+
+/*
+function confirm(){
+}
+*/
+
 
 
 /************************************************ Specific dialogs ***/

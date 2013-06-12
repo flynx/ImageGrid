@@ -460,8 +460,9 @@ function rollRibbon(n, ribbon, extend, no_compensate_shift){
 
 function focusImage(image){
 	image.closest('.viewer').find('.current.image').removeClass('current')
+	image.addClass('current')
 	$('.viewer').trigger('focusingImage', [image])
-	return image.addClass('current')
+	return image
 }
 
 
@@ -694,6 +695,7 @@ function nextImage(n, mode){
 	var target = getImage().nextAll('.image' + mode)
 	if(target.length < n){
 		target = target.last()
+		target = target.length == 0 ? getImage() : target
 		// XXX this fires if we hit the end of the currently loaded
 		// 		images while scrolling very fast rather than when we are
 		// 		out of images in the current ribbon...
@@ -709,6 +711,7 @@ function prevImage(n, mode){
 	var target = getImage().prevAll('.image' + mode)
 	if(target.length < n){
 		target = target.last()
+		target = target.length == 0 ? getImage() : target
 		// XXX this fires if we hit the end of the currently loaded
 		// 		images while scrolling very fast rather than when we are
 		// 		out of images in the current ribbon...
@@ -762,17 +765,19 @@ function prevRibbon(mode){
 	var target_ribbon = getRibbon(cur).prevAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
 	var target = getImageBefore(cur, target_ribbon)
 
+	// no ribbon above...
 	if(target_ribbon.length == 0){
 		flashIndicator('top')
-	}
-
-	// first image...
-	if(target.length == 0){
-		target = target_ribbon.find('.image' + mode).first()
-	
+		target = getImage()
 	} else {
-		var next = target.nextAll('.image' + mode).first()
-		target = next.length > 0 ? next : target
+		// first image...
+		if(target.length == 0){
+			target = target_ribbon.find('.image' + mode).first()
+		
+		} else {
+			var next = target.nextAll('.image' + mode).first()
+			target = next.length > 0 ? next : target
+		}
 	}
 	return centerView(focusImage(target))
 }
@@ -782,14 +787,17 @@ function nextRibbon(mode){
 	var target_ribbon = getRibbon(cur).nextAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
 	var target = getImageBefore(cur, target_ribbon)
 
+	// no ribbon below...
 	if(target_ribbon.length == 0){
 		flashIndicator('bottom')
+		target = getImage()
+	} else {
+		// first image...
+		if(target.length == 0){
+			target = target_ribbon.find('.image' + mode).first()
+		}
 	}
 
-	// first image...
-	if(target.length == 0){
-		target = target_ribbon.find('.image' + mode).first()
-	}
 	return centerView(focusImage(target))
 }
 
