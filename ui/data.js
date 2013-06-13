@@ -16,7 +16,8 @@ var LOAD_SCREENS = 6
 var DEFAULT_SCREEN_IMAGES = 4
 var MAX_SCREEN_IMAGES = 12
 
-var CACHE_DIR = '.ImageGridCache'
+var CACHE_DIR = '.ImageGrid'
+var CACHE_DIR_VAR = '${CACHE_DIR}'
 
 // A stub image, also here for documentation...
 var STUB_IMAGE_DATA = {
@@ -434,6 +435,8 @@ function normalizePath(url, base, mode){
 	//mode = /^\./.test(base) && mode == null ? 'relative' : null
 	mode = mode == null ? 'absolute' : mode
 
+	res = ''
+
 	// windows path...
 	//	- replace all '\\' with '/'...
 	url = url.replace(/\\/g, '/')
@@ -447,25 +450,33 @@ function normalizePath(url, base, mode){
 		// check if we start with base, and remove it if so...
 		if(mode == 'relative' && url.substring(0, base.length) == base){
 			url = url.substring(base.length - 1)
-			return url[0] == '/' ? url.substring(1) : url
+			res = url[0] == '/' ? url.substring(1) : url
 
 		// if it's a different path, return as-is
 		} else if(mode == 'absolute'){
-			return url
+			res = url
 		}
 
 	// make an absolute path...
 	} else if(mode == 'absolute') {
 		// if base ends and url starts with '.' avoid making it a '..'
 		if(base[base.length-1] == '.' && url[0] == '.'){
-			return base + url.substring(1)
+			res = base + url.substring(1)
 		// avoid creating '//'...
 		} else if(base[base.length-1] != '/' && url[0] != '/'){
-			return base + '/' + url
+			res = base + '/' + url
 		} else {
-			return base + url
+			res = base + url
 		}
 	}
+
+	// get the actual path...
+	res = res.replace('${CACHE_DIR}', CACHE_DIR)
+
+	// XXX legacy support...
+	res = res.replace('.ImageGridCache', CACHE_DIR)
+
+	return res
 }
 
 

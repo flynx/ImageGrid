@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130528215723'''
+__sub_version__ = '''20130613200255'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -40,7 +40,7 @@ CONFIG = {
 	'cache-image-name': '%(guid)s - %(name)s',
 
 	# the rest of the paths will be relative to this...
-	'cache-dir': '.ImageGridCache',
+	'cache-dir': '.ImageGrid',
 
 	'images': 'images.json',
 	'data': 'data.json',

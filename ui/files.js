@@ -245,7 +245,7 @@ function loadFileImages(path, no_load_diffs){
 
 	// default locations...
 	if(path == null){
-		var base = normalizePath(CACHE_DIR) 
+		var base = normalizePath(CACHE_DIR_VAR) 
 		var loader = loadLatestFile(base, 
 				IMAGES_FILE_DEFAULT, 
 				IMAGES_FILE_PATTERN, 
@@ -253,7 +253,7 @@ function loadFileImages(path, no_load_diffs){
 	
 	// explicit base dir...
 	} else if(!/\.json$/i.test(path)) {
-		var base = normalizePath(path +'/'+ CACHE_DIR) 
+		var base = normalizePath(path +'/'+ CACHE_DIR_VAR) 
 		var loader = loadLatestFile(base, 
 				IMAGES_FILE_DEFAULT, 
 				IMAGES_FILE_PATTERN, 
@@ -283,7 +283,7 @@ function loadFileImages(path, no_load_diffs){
 // NOTE: this will uses CACHE_DIR as the location if no name is given.
 function saveFileImages(name){
 	var remove_diffs = (name == null)
-	name = name == null ? normalizePath(CACHE_DIR +'/'+ Date.timeStamp()) : name
+	name = name == null ? normalizePath(CACHE_DIR_VAR +'/'+ Date.timeStamp()) : name
 
 	if(window.dumpJSON == null){
 		showErrorStatus('Can\'t save to file.')
@@ -292,11 +292,11 @@ function saveFileImages(name){
 
 	// remove the diffs...
 	if(remove_diffs){
-		$.each($.map(listDir(normalizePath(CACHE_DIR)), function(e){ 
+		$.each($.map(listDir(normalizePath(CACHE_DIR_VAR)), function(e){ 
 				return IMAGES_DIFF_FILE_PATTERN.test(e) ? e : null
 			}), function(i, e){
 				showStatusQ('removeing:', e)
-				removeFile(normalizePath(CACHE_DIR +'/'+ e))
+				removeFile(normalizePath(CACHE_DIR_VAR +'/'+ e))
 			})
 		IMAGES_UPDATED = []
 	}
@@ -312,7 +312,7 @@ function loadFileMarks(path){
 	var res = $.Deferred()
 	// default locations...
 	if(path == null){
-		var base = normalizePath(CACHE_DIR)
+		var base = normalizePath(CACHE_DIR_VAR)
 		var loader = loadLatestFile(base, 
 				MARKED_FILE_DEFAULT, 
 				MARKED_FILE_PATTERN)
@@ -322,7 +322,8 @@ function loadFileMarks(path){
 	} else {
 		path = normalizePath(path)
 		var base = path.split(CACHE_DIR)[0]
-		base += '/'+ CACHE_DIR
+		//base = normalizePath(path +'/'+ CACHE_DIR_VAR)
+		base = path +'/'+ CACHE_DIR
 
 		// XXX is this correct???
 		var loader = loadLatestFile(base, 
@@ -342,7 +343,7 @@ function loadFileMarks(path){
 
 // Save image marks to file
 function saveFileMarks(name){
-	name = name == null ? normalizePath(CACHE_DIR +'/'+ Date.timeStamp()) : name
+	name = name == null ? normalizePath(CACHE_DIR_VAR +'/'+ Date.timeStamp()) : name
 
 	dumpJSON(name + '-marked.json', MARKED)
 }
@@ -424,7 +425,7 @@ function saveFileState(name, no_normalize_path){
 	name = name == null ? Date.timeStamp() : name
 
 	if(!no_normalize_path){
-		name = normalizePath(CACHE_DIR +'/'+ name)
+		name = normalizePath(CACHE_DIR_VAR +'/'+ name)
 
 	// write .image_file only if saving data to a non-cache dir...
 	// XXX check if this is correct...
