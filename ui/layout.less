@@ -191,14 +191,29 @@ button:hover {
 		and aligning... */
 	.origin(top, left);
 }
-.ribbon-set:empty:after {
-	display: block;
-	top: 0px;
-	left: 0px;
+
+/* empty ribbon set... */
+.ribbon-set:empty {
 	width: 100%;
 	height: 100%;
-	content: "Empty";
+}
+.ribbon-set:empty:after {
+	display: block;
+	position: absolute;
+	content: "No files loaded, press 'O' to load.";
+
+	top: 50%;
+	left: 0px;
+	width: 100%;
+	height: 20px;
+	margin-top: -10px;
+
 	text-align: center;
+	vertical-align: center;
+
+	font-size: 20px;
+	color: silver;
+	opacity: 0.9;
 }
 
 
@@ -847,6 +862,9 @@ button:hover {
 }
 .light.viewer .overlay-block:hover .background:after {
 	color: black;
+}
+.light.viewer .ribbon-set:empty:after {
+	color: gray;
 }
 
 .gray.viewer,

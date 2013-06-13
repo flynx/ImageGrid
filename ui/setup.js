@@ -50,6 +50,18 @@ function setupIndicators(){
 function setupDataBindings(viewer){
 	viewer = viewer == null ? $('.viewer') : viewer
 	viewer
+		.click(function(){
+			if($('.ribbon').length == 0){
+				// XXX use the real action (the same as the keyboard handler)...
+				// browser version...
+				var getter = window.listDir != null ? getDir : prompt
+				getter('Path to open', BASE_URL)
+					.done(function(path){
+						path = path.trim()
+						statusNotify(loadDir(path))
+					})
+			}
+		})
 		// XXX need to maintain the correct number of images per ribbon
 		// 		per zoom setting -- things get really odd when a ribbon 
 		// 		is smaller than it should be...

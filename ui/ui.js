@@ -468,7 +468,6 @@ var FIELD_TYPES = {
 				.attr('nwworkingdir', value.ndir)
 				.change(function(){
 					var p = file[0].files
-					console.log('mooo!!!', p[0])
 					if(p.length != 0){
 						field.find('.path').val(p[0].path)
 					}
