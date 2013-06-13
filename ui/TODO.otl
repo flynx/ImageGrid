@@ -91,15 +91,15 @@ Roadmap
 	
 
 
-[_] 27% Gen 3 current todo
-	[_] 54% High priority
-		[_] 50% basic dialogs
+[_] 29% Gen 3 current todo
+	[_] 58% High priority
+		[_] 60% basic dialogs
 			[X] alert
 			[X] prompt
 			[_] confirm
+			[X] open directory (native)
 			[_] select from list
-		[_] ASAP: directory selector UI...
-		[_] usable empty view -- w.o. data...
+		[X] usable empty view -- w.o. data...
 		[_] 0% Tablet UI
 			[_] screen buttons
 		[_] save settings to config.json
@@ -169,7 +169,6 @@ Roadmap
 		| 	screen width: 4
 		| 	jumping to end from start of ribbon
 		[_] ASAP: test on Android...
-		[_] single image mode transition (alpha-blend/fade/none)
 		[_] 75% image sorting (date/name/...)
 			[X] 100% sort by:
 				[X] date
@@ -213,6 +212,7 @@ Roadmap
 		| ribbons above and below...
 		[_] build cache in background...
 		| this must be done while updating IMAGES live...
+		[_] single image mode transition (alpha-blend/fade/none)
 		[_] 0% grouping / meta-image
 			[_] versions w. label image
 			| a set of images that is represented by one of the group
