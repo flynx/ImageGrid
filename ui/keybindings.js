@@ -465,6 +465,7 @@ var KEYBOARD_CONFIG = {
 					function(){
 						event.preventDefault()
 						//saveLocalStorage()
+
 						showStatusQ('Saving: localStorage: Data.')
 						saveLocalStorageData()
 						showStatusQ('Saving: localStorage: Marks.')
@@ -473,6 +474,12 @@ var KEYBOARD_CONFIG = {
 						showStatusQ('Saving: localStorage: Settings.')
 						saveLocalStorageSettings()
 
+						if(IMAGES_CREATED){
+							showStatusQ('Saving: File: Images.')
+							dumpJSON(normalizePath(CACHE_DIR +'/'+ IMAGES_FILE_DEFAULT), IMAGES)
+							//saveFileImages()
+							IMAGES_CREATED = false
+						}
 						showStatusQ('Saving: File: State.')
 						saveFileState()
 

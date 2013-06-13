@@ -420,6 +420,7 @@ var FIELD_TYPES = {
 		},
 	},
 
+	// NOTE: this will not work without node-webkit...
 	dir: {
 		type: 'dir',
 		text: null,
@@ -443,7 +444,7 @@ var FIELD_TYPES = {
 			return f[0].path
 		},
 	},
-
+	// NOTE: this will not work without node-webkit...
 	ndir: {
 		type: 'ndir',
 		text: null,
@@ -489,38 +490,24 @@ var FIELD_TYPES = {
 	},
 }
 
-// Show a complex dialog
+// Show a complex form dialog
+//
+// This will build a form and collect it's data on "accept" specified by
+// the config object...
 //
 // config format:
 //	{
 //		// simple field...
 //		<field-description>: <default-value>,
 //
-//		// XXX not yet implemented outside of FIELD_TYPES...
-//		<field-description>: {
-//			type: <type-name>,
-//			text: <field-description>,
-//			default: <default-value>,
-//
-//			// field code...
-//			// NOTE: class names "text" and "value" get their text 
-//			//		replaced with values set in text and default fields 
-//			//		respectively...
-//			html: <html>,
-//
-//			// used on dialog creation to init default value...
-//			setter: <value-setter>,
-//
-//			// used on dialog submit to get the field value...
-//			getter: <value-getter>,
-//		},
 //		...
 //	}	
 //
 // field's default value determines it's type:
 // 	bool		- checkbox
 // 	string		- textarea
-// 	array		- dropdown
+//
+// see FIELD_TYPES for supported field types.
 //
 // XXX add form testing...
 // XXX add undefined field handling/reporting...
@@ -606,6 +593,7 @@ function formDialog(root, message, config, btn, cls){
 }
 
 
+
 /************************************************ Standard dialogs ***/
 
 var _alert = alert
@@ -632,6 +620,7 @@ function confirm(){
 */
 
 
+// NOTE: this will not work without node-webkit...
 function getDir(message, dfl, btn){
 	btn = btn == null ? 'OK' : btn
 	dfl = dfl == null ? '' : dfl

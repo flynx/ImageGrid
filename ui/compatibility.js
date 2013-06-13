@@ -45,6 +45,15 @@ if(window.CEF_dumpJSON != null){
 			// XXX will this work on Mac???
 			path = path.replace(fp, '')
 		}
+		var dirs = path.split(/[\\\/]/)
+		dirs.pop()
+		dirs = dirs.join('/')
+		// build path...
+		if(!fs.existsSync(dirs)){
+			console.log('making:', dirs, path)
+			// XXX NOTE: this will not make more than one dir...
+			fs.mkdirSync(dirs)
+		}
 		return fs.writeFileSync(path, JSON.stringify(data), encoding='utf8')
 	}
 	window.removeFile = function(path){
@@ -96,6 +105,9 @@ if(window.CEF_dumpJSON != null){
 			.append($('<div class="button close" onclick="closeWindow()">&times;</div>'))
 			.appendTo($('body'))
 	})
+
+
+
 
 // PhoneGap
 } else if(false){

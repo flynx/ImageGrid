@@ -498,9 +498,13 @@ function loadRawDir(path, prefix){
 // 	3) load a directory as-is
 // 		load fav dirs
 //
+// NOTE: this will create an images.json file in cache on opening an 
+// 		un-cached dir (XXX is this correct???)
 function loadDir(path, prefix){
 	prefix = prefix == null ? 'Data' : prefix
 	prefix = prefix === false ? null : prefix
+
+	IMAGES_CREATED = false
 
 	path = normalizePath(path)
 	var orig_path = path
@@ -530,6 +534,9 @@ function loadDir(path, prefix){
 		})
 		.fail(function(){
 			bubbleProgress('Raw directory', loadRawDir(orig_path), res)
+				.done(function(){
+					IMAGES_CREATED = true
+				})
 		})
 
 	return res

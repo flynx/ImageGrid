@@ -104,6 +104,8 @@ var IMAGES = {}
 // list of image GIDs that have been updated...
 var IMAGES_UPDATED = []
 
+var IMAGES_CREATED = false
+
 var MARKED = []
 
 var SETTINGS = {
