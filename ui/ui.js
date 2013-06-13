@@ -419,6 +419,75 @@ var FIELD_TYPES = {
 			return $(field).find('.value').attr('checked') == 'checked'
 		},
 	},
+
+	dir: {
+		type: 'dir',
+		text: null,
+		default: false,
+		html: '<div class="field checkbox">'+
+				'<span class="text"></span>'+
+				'<input type="file" class="value" nwdirectory />'+
+			'</div>',
+		// format: {dir: <default-path>}
+		test: function(val){
+			return typeof(val) == typeof({}) && 'dir' in val
+		},
+		set: function(field, value){
+			field.find('.value').attr('nwworkingdir', value.dir)
+		},
+		get: function(field){ 
+			var f = $(field).find('.value')[0].files
+			if(f.length == 0){
+				return ''
+			}
+			return f[0].path
+		},
+	},
+
+	ndir: {
+		type: 'ndir',
+		text: null,
+		default: false,
+		html: '<div class="field dir">'+
+				'<span class="text"></span>'+
+				'<input type="text" class="path"/>'+
+				'<button class="browse">Browse</button>'+
+			'</div>',
+		// format: {dir: <default-path>}
+		test: function(val){
+			return typeof(val) == typeof({}) && 'ndir' in val
+		},
+		set: function(field, value){
+			var that = this
+
+			// NOTE: we are attaching the file browser to body to avoid 
+			// 		click events on it closing the dialog...
+			// 		...for some reason stopPropagation(...) does not do 
+			// 		the job...
+			var file = $('<input type="file" class="value" nwdirectory/>')
+				.attr('nwworkingdir', value.ndir)
+				.change(function(){
+					var p = file[0].files
+					console.log('mooo!!!', p[0])
+					if(p.length != 0){
+						field.find('.path').val(p[0].path)
+					}
+					file.detach()
+				})
+				.hide()
+			field.find('.path').val(value.ndir)
+
+			field.find('.browse').click(function(){
+				file
+					.appendTo($('body'))
+					.click()
+			})
+
+		},
+		get: function(field){ 
+			return field.find('.path').val()
+		},
+	},
 }
 
 // Show a complex dialog
@@ -459,6 +528,7 @@ var FIELD_TYPES = {
 // XXX revise...
 function formDialog(root, message, config, btn, cls){
 	cls = cls == null ? '' : cls
+	btn = btn == null ? 'OK' : btn
 	root = root == null ? $('.viewer') : root
 
 	var form = $('<div class="form"/>')
@@ -550,7 +620,7 @@ var _prompt = prompt
 function prompt(message, dfl, btn){
 	btn = btn == null ? 'OK' : btn
 	var res = $.Deferred()
-	formDialog(null, message, {'': ''+(dfl == null ? '' : dfl)}, 'OK', 'alert')
+	formDialog(null, message, {'': ''+(dfl == null ? '' : dfl)}, btn, 'prompt')
 		.done(function(data){ res.resolve(data['']) })
 		.fail(function(){ res.reject() })
 	return res
@@ -561,6 +631,19 @@ function prompt(message, dfl, btn){
 function confirm(){
 }
 */
+
+
+function getDir(message, dfl, btn){
+	btn = btn == null ? 'OK' : btn
+	dfl = dfl == null ? '' : dfl
+	var res = $.Deferred()
+
+	formDialog(null, message, {'': {ndir: dfl}}, btn, 'getDir')
+		.done(function(data){ res.resolve(data['']) })
+		.fail(function(){ res.reject() })
+
+	return res
+}
 
 
 
