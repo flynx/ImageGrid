@@ -741,28 +741,23 @@ function updateImage(image, gid, size){
 	//var name = img_data.path.split('/').pop()
 
 	// preview...
-	//var preview = getBestPreview(gid, size)
-	// NOTE: this appears to fix a problem of wrong references in the closure...
+	// NOTE: pre-caching the url directly instead of referencing it from
+	// 		the result object (preview.url) appears to fix a problem of
+	// 		wrong references in the closure of the .onload callback below,
+	// 		that sometimes (can't reproduce in a simpler setting) resulted 
+	// 		in wrong images loading...
 	var p_url = getBestPreview(gid, size).url
 
-	// XXX added to investigate a problem of sometimes this loading the 
-	// 		wrong image...
-	//image.data().loading = preview.url
-
 	// pre-cache and load image...
-	// NOTE: make images load without a blackout..
+	// NOTE: this will make images load without a blackout...
 	var img = new Image()
 	img.onload = function(){
-		// XXX for some reason this is not always the same as image.data().loading!!!
-		// XXX for some reason adding this line makes the problem allot less common!
-		//image.data().loaded = preview.url
-
 		image.css({
-				//'background-image': 'url("'+ preview.url +'")',
 				'background-image': 'url("'+ p_url +'")',
 			})
 	}
-	//img.src = preview.url
+	// NOTE: this better be after the .onload declaration as in some cases
+	// 		we can get a cached image load "too fast"...
 	img.src = p_url
 
 	// main attrs...
