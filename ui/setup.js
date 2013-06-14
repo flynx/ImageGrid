@@ -86,7 +86,9 @@ function setupDataBindings(viewer){
 					// also load if we run out of images in the current ribbon,
 					// likely due to shifting...
 					|| ( gr.length > l 
-						&& l < screen_size * LOAD_SCREENS)){
+						&& l < Math.round(screen_size * LOAD_SCREENS))){
+				// XXX in some cases this makes the current ribbon align 
+				// 		in a wrong way...
 				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), ribbon)
 			} 
 

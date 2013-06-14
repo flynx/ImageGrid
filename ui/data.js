@@ -716,6 +716,7 @@ function convertDataGen1(data, cmp){
 // NOTE: care must be taken to reset ALL attributes an image can have,
 // 		a common bug if this is not done correctly, is that some settings
 // 		may leak to newly loaded images...
+// XXX do a pre-caching framework...
 function updateImage(image, gid, size){
 	image = $(image)
 	var oldgid = getImageGID(image)
@@ -750,14 +751,23 @@ function updateImage(image, gid, size){
 
 	// pre-cache and load image...
 	// NOTE: this will make images load without a blackout...
+	// XXX add a cache of the form:
+	// 			{
+	// 				[<gid>, <size>]: Image,
+	// 				...
+	// 			}
+	// 		- sort by use...
+	// 		- limit length...
+	//
+	// 		...might also be a good idea to split cache to sizes and have
+	// 		different  but as limits for different sizes, but as sizes 
+	// 		can differ between images this is not trivial...
 	var img = new Image()
 	img.onload = function(){
 		image.css({
 				'background-image': 'url("'+ image.data().loading +'")',
 			})
 	}
-	// NOTE: this better be after the .onload declaration as in some cases
-	// 		we can get a cached image load "too fast"...
 	img.src = p_url
 
 	// main attrs...

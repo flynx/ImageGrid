@@ -431,7 +431,7 @@ function extendRibbon(left, right, ribbon, no_compensate_shift){
 	l = isNaN(l) ? 0 : l
 	// compensate for left shift...
 	if(!no_compensate_shift && left != 0){
-		l -= left * images.outerWidth()
+		l -= left * images.outerWidth(true)
 
 		ribbon.css({
 			left: l,
