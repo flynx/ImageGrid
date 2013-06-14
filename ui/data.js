@@ -721,7 +721,7 @@ function updateImage(image, gid, size){
 	var oldgid = getImageGID(image)
 
 	if(oldgid == gid || gid == null){
-		gid = getImageGID(image)
+		gid = oldgid
 
 	} else {
 		image
@@ -741,17 +741,29 @@ function updateImage(image, gid, size){
 	//var name = img_data.path.split('/').pop()
 
 	// preview...
-	var preview = getBestPreview(gid, size)
+	//var preview = getBestPreview(gid, size)
+	// NOTE: this appears to fix a problem of wrong references in the closure...
+	var p_url = getBestPreview(gid, size).url
+
+	// XXX added to investigate a problem of sometimes this loading the 
+	// 		wrong image...
+	//image.data().loading = preview.url
 
 	// pre-cache and load image...
 	// NOTE: make images load without a blackout..
 	var img = new Image()
 	img.onload = function(){
+		// XXX for some reason this is not always the same as image.data().loading!!!
+		// XXX for some reason adding this line makes the problem allot less common!
+		//image.data().loaded = preview.url
+
 		image.css({
-				'background-image': 'url("'+ preview.url +'")',
+				//'background-image': 'url("'+ preview.url +'")',
+				'background-image': 'url("'+ p_url +'")',
 			})
 	}
-	img.src = preview.url
+	//img.src = preview.url
+	img.src = p_url
 
 	// main attrs...
 	image

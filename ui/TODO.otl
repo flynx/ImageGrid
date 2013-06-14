@@ -109,17 +109,27 @@ Roadmap
 		| 	- wrong resolution preview is loaded
 		| 		when coming out of single-image-mode after moving to a 
 		| 		different position (so as ribbons go reloaded)
+		|
 		| 	- previews do not get replaced at all, e.g. everything 
 		| 		behaves correctly (order, etc.) but the previews are 
 		| 		from wrong (ones before re-attaching) images
 		| 		(this I can't repeat at this point)
+		|
+		| 		Example:
+		|	 		URL: "file:///L:/mnt/P7000 (photo)/PHOTOS/Last week of September 2011/"
+		|	 		going through the previews in the top row forward and backward
+		|	 		watch the ribbon below -- on the way back everything is aligned
+		|	 		correctly but the images are different.
+		|	 		also, there are times when the ribbon below is partially loaded 
+		|	 		or at it's edge when there are other images...
+		|	 		NOTE: calling updateImages() will load the correct previews.
+		|
 		[_] 60% basic dialogs
+			[_] select from list
 			[X] alert
 			[X] prompt
 			[_] confirm
 			[X] open directory (native)
-			[_] select from list
-		[X] usable empty view -- w.o. data...
 		[_] 0% Tablet UI
 			[_] screen buttons
 		[_] save settings to config.json
@@ -251,8 +261,7 @@ Roadmap
 			[_] remove extra and repetitive actions
 			[_] caching config
 		[_] side-by side view...
-		[_] BUG: jumping screen images does not load the adjacent ribbons...
-		| positioning is OK but ribbons are not fully visible...
+		[X] usable empty view -- w.o. data...
 		[X] 100% UI elements
 			[X] indicators
 			[X] image info
