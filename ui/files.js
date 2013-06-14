@@ -89,6 +89,9 @@ function bubbleProgress(prefix, from, to, only_progress){
 // if diff_pattern is given, then merge all matching files in order 
 // (first to last) with the loaded "main" file
 //
+// NOTE: this expects a file to be JSON.
+// NOTE: if diffs are available this expects the file to contain an object,
+// 		and will extend that object.
 // NOTE: if neither of dfl, pattern or diff_pattern are given, then this
 // 		is essentially the same as $.getJSON(...)
 // NOTE: this needs listDir(...) to search for latest versions of files.
@@ -280,7 +283,7 @@ function loadFileImages(path, no_load_diffs){
 // (full) images.json file. Also removing the diff files.
 //
 // NOTE: if an explicit name is given then this will not remove anything.
-// NOTE: this will uses CACHE_DIR as the location if no name is given.
+// NOTE: this will use CACHE_DIR as the location if no name is given.
 function saveFileImages(name){
 	var remove_diffs = (name == null)
 	name = name == null ? normalizePath(CACHE_DIR_VAR +'/'+ Date.timeStamp()) : name
@@ -476,6 +479,7 @@ function loadRawDir(path, prefix){
 
 	IMAGES = imagesFromUrls(image_paths)
 	res.notify(prefix, 'Loaded', 'Images.')
+	IMAGES_CREATED = true
 
 	DATA = dataFromImages(IMAGES)
 	res.notify(prefix, 'Loaded', 'Data.')
@@ -535,9 +539,6 @@ function loadDir(path, prefix){
 		})
 		.fail(function(){
 			bubbleProgress('Raw directory', loadRawDir(orig_path), res)
-				.done(function(){
-					IMAGES_CREATED = true
-				})
 		})
 
 	return res

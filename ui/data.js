@@ -1037,7 +1037,7 @@ function loadSettings(){
 
 // NOTE: this will always overwrite the previous cache set for a ribbon...
 // NOTE: it appears that sorting images by priority before loading them
-// 		to cache has little or no affect on the order they are 
+// 		to cache has little or no effect on the order they are 
 // 		loaded/rendered...
 function preCacheRibbonImages(ribbon){
 	var i = getRibbonIndex(ribbon)

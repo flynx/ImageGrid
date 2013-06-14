@@ -137,6 +137,7 @@ button:hover {
   font-weight: bold;
   color: silver;
   opacity: 0.9;
+  cursor: hand;
 }
 .ribbon-set:empty:after {
   content: "Press 'O' to load, 'F1' for help or '?' for keyboard mappings.";
