@@ -738,7 +738,6 @@ function updateImage(image, gid, size){
 	if(img_data == null){
 		img_data = STUB_IMAGE_DATA
 	}
-	//var name = img_data.path.split('/').pop()
 
 	// preview...
 	// NOTE: pre-caching the url directly instead of referencing it from
@@ -747,13 +746,15 @@ function updateImage(image, gid, size){
 	// 		that sometimes (can't reproduce in a simpler setting) resulted 
 	// 		in wrong images loading...
 	var p_url = getBestPreview(gid, size).url
+	image.data().loading = p_url
 
 	// pre-cache and load image...
 	// NOTE: this will make images load without a blackout...
 	var img = new Image()
 	img.onload = function(){
 		image.css({
-				'background-image': 'url("'+ p_url +'")',
+				//'background-image': 'url("'+ p_url +'")',
+				'background-image': 'url("'+ image.data().loading +'")',
 			})
 	}
 	// NOTE: this better be after the .onload declaration as in some cases
