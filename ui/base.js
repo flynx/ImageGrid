@@ -497,23 +497,23 @@ function alignVia(container, elem, via, valign, halign, mode){
 
 	if(valign == 'center'){
 		var H = container.innerHeight()
-		var h = elem.outerHeight()
+		var h = elem.outerHeight(true)
 		target.top = t - dt + (H - h)/2,
 	} else if(valign == 'top'){
 		target.top = t - dt
 	} else if(valign == 'bottom'){
-		var h = elem.outerHeight()
+		var h = elem.outerHeight(true)
 		target.top = t - dt - h
 	} 
 
 	if(halign == 'center'){
 		var W = container.innerWidth()
-		var w = elem.outerWidth()
+		var w = elem.outerWidth(true)
 		target.left = l - dl + (W - w)/2
 	} else if(halign == 'left'){
 		target.left = l - dl
 	} else if(halign == 'right'){
-		var w = elem.outerWidth()
+		var w = elem.outerWidth(true)
 		target.left = l - dl - w
 	} 
 

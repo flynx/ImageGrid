@@ -479,6 +479,8 @@ var FIELD_TYPES = {
 
 			field.find('.browse').click(function(){
 				file
+					// load user input path...
+					.attr('nwworkingdir', field.find('.path').val())
 					.appendTo($('body'))
 					.click()
 			})
