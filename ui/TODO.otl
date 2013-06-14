@@ -104,26 +104,23 @@ Roadmap
 		| misaligned, at "max" #2 and #5 are affected...
 		|
 		| centerView() fixes this, but only for the current image...
-		[_] BUG: sometimes the previews are not updated...
-		| there seams to be two cases:
-		| 	- wrong resolution preview is loaded
-		| 		when coming out of single-image-mode after moving to a 
-		| 		different position (so as ribbons go reloaded)
-		|
-		| 	- previews do not get replaced at all, e.g. everything 
-		| 		behaves correctly (order, etc.) but the previews are 
-		| 		from wrong (ones before re-attaching) images
-		| 		(this I can't repeat at this point)
-		|
-		| 		Example:
-		|	 		URL: "file:///L:/mnt/P7000 (photo)/PHOTOS/Last week of September 2011/"
-		|	 		going through the previews in the top row forward and backward
-		|	 		watch the ribbon below -- on the way back everything is aligned
-		|	 		correctly but the images are different.
-		|	 		also, there are times when the ribbon below is partially loaded 
-		|	 		or at it's edge when there are other images...
-		|	 		NOTE: calling updateImages() will load the correct previews.
-		|
+		[_] % BUG: sometimes the previews are not updated...
+			[_] wrong resolution preview is loaded
+			| when coming out of single-image-mode after moving to a 
+			| different position (so as ribbons go reloaded)
+			[_] previews do not get replaced at all, e.g. everything 
+			| behaves correctly (order, etc.) but the previews are 
+			| from wrong (ones before re-attaching) images
+			| (this I can't repeat at this point)
+			|
+			| Example:
+			|	URL: "file:///L:/mnt/P7000 (photo)/PHOTOS/Last week of September 2011/"
+			|	going through the previews in the top row forward and backward
+			|	watch the ribbon below -- on the way back everything is aligned
+			|	correctly but the images are different.
+			|	also, there are times when the ribbon below is partially loaded 
+			|	or at it's edge when there are other images...
+			|	NOTE: calling updateImages() will load the correct previews.
 		[_] 60% basic dialogs
 			[_] select from list
 			[X] alert
