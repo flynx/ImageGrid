@@ -740,12 +740,12 @@ function updateImage(image, gid, size){
 	}
 
 	// preview...
-	// NOTE: pre-caching the url directly instead of referencing it from
-	// 		the result object (preview.url) appears to fix a problem of
-	// 		wrong references in the closure of the .onload callback below,
-	// 		that sometimes (can't reproduce in a simpler setting) resulted 
-	// 		in wrong images loading...
 	var p_url = getBestPreview(gid, size).url
+	// NOTE: due to the fact that loading/caching the image might be at 
+	// 		a different pace than calling updateImage(...) and .onload
+	// 		events may trigger in any sequence, we need to update the
+	// 		url in a persistent way so as to load the last call's image
+	// 		regardless of actual handler call sequence...
 	image.data().loading = p_url
 
 	// pre-cache and load image...
@@ -753,7 +753,6 @@ function updateImage(image, gid, size){
 	var img = new Image()
 	img.onload = function(){
 		image.css({
-				//'background-image': 'url("'+ p_url +'")',
 				'background-image': 'url("'+ image.data().loading +'")',
 			})
 	}
