@@ -1042,6 +1042,10 @@ function loadSettings(){
 }
 
 
+// Crop view to only given gids
+//
+// Returns the original DATA object.
+//
 // XXX make keep_ribbons option work...
 function cropDataToGIDs(gids, keep_ribbons){
 	var cur = DATA.current

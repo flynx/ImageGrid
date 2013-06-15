@@ -150,13 +150,13 @@ $(function(){
 				centerRibbons()
 			})
 			.on('swipeUp', function(){
-				prevRibbon() 
-				//shiftImageUp(null, DIRECTION) 
+				//prevRibbon() 
+				shiftImageDown(null, DIRECTION) 
 				centerRibbons()
 			})
 			.on('swipeDown', function(){
-				nextRibbon() 
-				//shiftImageDown(null, DIRECTION) 
+				//nextRibbon() 
+				shiftImageUp(null, DIRECTION) 
 				centerRibbons()
 			})
 
@@ -247,13 +247,11 @@ $(function(){
 	loading
 		.done(function(){
 			showStatus('Loading settings...')
-			loadLocalStorageSettings()
+			DATA_ATTR + '_SETTINGS' in localStorage && loadLocalStorageSettings()
 
 			// XXX this will reload everything...
 			// XXX this might load the wrong marks (not sure)...
-			if('MARKED' in localStorage){
-				loadLocalStorageMarks()
-			}
+			DATA_ATTR + '_MARKED' in localStorage && loadLocalStorageMarks()
 
 			updateImages()
 
