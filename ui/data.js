@@ -674,7 +674,7 @@ function convertDataGen1(data, cmp){
 	}
 	cmp = cmp == null ?
 			function(a, b){ 
-				return imageDateCmp(a, b, res.images) 
+				return imageDateCmp(a, b, null, res.images) 
 			}
 			: cmp
 	var ribbons = res.data.ribbons

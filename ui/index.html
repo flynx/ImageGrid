@@ -237,8 +237,8 @@ $(function(){
 		// legacy default data...
 		} else {
 			DATA = convertDataGen1(image_list)
-			DATA = DATA.data
 			IMAGES = DATA.images
+			DATA = DATA.data
 			reloadViewer()
 		}
 		var loading = $.Deferred().resolve()
