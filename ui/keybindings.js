@@ -149,14 +149,6 @@ var KEYBOARD_CONFIG = {
 		title: 'Single image mode',
 		doc: 'To toggle between this and ribbon modes press <b>Enter</b>.',
 
-		/*
-		F: doc('Toggle view proportions', 
-			function(){ 
-				var mode = toggleImageProportions() 
-				showStatus('Fitting image to:', mode + '...')
-				centerRibbons()
-			}),
-		*/
 		Esc: doc('Exit single image mode', 
 				function(){ 
 					toggleSingleImageMode('off') 
@@ -168,13 +160,15 @@ var KEYBOARD_CONFIG = {
 
 	// marked only ribbon mode...
 	//
-	'.marked-only-view:not(.single-image-mode)': {
-		title: 'Marked only view',
-		doc: 'To toggle this mode press <b>shift-F2</b>.',
+	'.single-ribbon-mode:not(.single-image-mode), .marked-only-view:not(.single-image-mode)': {
+		title: 'Marked only and single ribbon views',
+		doc: 'To show marked-only images press <b>shift-F2</b> and for single ribbon mode press <b>F3</b>.',
 
-		Esc: doc('Exit marked only view', 
+		Esc: doc('Exit mode', 
 				function(){ 
+					// add something like uncrop here...
 					toggleMarkedOnlyView('off') 
+					toggleSingleRibbonMode('off') 
 					return false
 				}),
 		Q: 'Esc',
@@ -540,13 +534,22 @@ var KEYBOARD_CONFIG = {
 				//	function(){ toggleImageMarkBlock() }),
 
 				ctrl: doc('Mark current ribbon', 
-					function(){ markAll('ribbon') }),
+					function(){ 
+						toggleMarkesView('on')
+						markAll('ribbon') 
+					}),
 				'ctrl+shift': doc('Mark all images', 
-					function(){ markAll('all') }),
+					function(){ 
+						toggleMarkesView('on')
+						markAll('all') 
+					}),
 			},
 		D: {
 				ctrl: doc('Unmark current ribbon', 
-					function(){ removeImageMarks('ribbon') }),
+					function(){ 
+						event.preventDefault()
+						removeImageMarks('ribbon') 
+					}),
 				'ctrl+shift': doc('Unmark all images', 
 					function(){ removeImageMarks('all') }),
 			},
@@ -563,13 +566,17 @@ var KEYBOARD_CONFIG = {
 		F2: {
 				default: doc('Toggle mark visibility', 
 					function(){ toggleMarkesView() }),
-				//shift: 'F3', 
+				shift: doc('Toggle marked only images view', 
+					function(){
+						toggleMarkedOnlyView()
+					}),
 			},
-		F3: doc('Toggle marked only images view', 
-			function(){
-				toggleMarkedOnlyView()
-			}),
 
+		F3: doc('Toggle single ribbon view (EXPERIMENTAL)', 
+			function(){
+				event.preventDefault()
+				toggleSingleRibbonMode()
+			}),
 
 		E: doc('Open image in external software', openImage),
 		// XXX make F4 a default editor and E a default viewer...

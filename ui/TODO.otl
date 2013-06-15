@@ -93,18 +93,19 @@ Roadmap
 
 [_] 29% Gen 3 current todo
 	[_] 58% High priority
-		% Priority tasks
-			full archive index
-				ribbon separation
+		[_] % Priority tasks
+			[_] full archive index
+				[_] segmented loading of images and data
+				[_] ribbon separation
 				| split ribbon into manageable chunks
 				|
 				| this can be done naturally by:
 				| 	- date
 				| 	- event
 				|	- tag
-				index and group ALL files in an archive
-				import metadata
-				real GIDs
+				[_] index and group ALL files in an archive
+				[_] import metadata
+				[_] real GIDs
 		[_] BUG: align problems are back...
 		| default data set (browser/images.js) same images #4 (going 
 		| from right) & #5 (going from left) of 18 in the first ribbon 

@@ -171,7 +171,7 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 			if(callback_pre.call(this, action) === false){
 				// XXX should we return action here???
 				//return
-				return action
+				return func('?')
 			}
 		}
 		// update the element...

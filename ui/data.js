@@ -1042,6 +1042,27 @@ function loadSettings(){
 }
 
 
+// XXX make keep_ribbons option work...
+function cropDataToGIDs(gids, keep_ribbons){
+	var cur = DATA.current
+	var old_data = DATA
+	DATA = {
+		varsion: '2.0',
+		current: null,
+		ribbons: [
+			gids
+		],
+		order: DATA.order.slice(),
+	}
+	DATA.current = getGIDBefore(cur, 0)
+
+	reloadViewer()
+	updateImages()
+
+	return old_data
+}
+
+
 
 /**********************************************************************
 * Image caching...

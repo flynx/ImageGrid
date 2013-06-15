@@ -33,22 +33,9 @@ function loadMarkedOnlyData(cmp, no_cleanout_marks){
 			marked.splice(i, 1)
 		}
 	}
-	ALL_DATA = DATA
-	DATA = {
-		varsion: '2.0',
-		current: null,
-		ribbons: [
-			marked
-		],
-		//order: marked.slice(),
-		order: DATA.order,
-	}
-	DATA.current = getGIDBefore(cur, 0)
-	reloadViewer()
-	toggleMarkesView('off')
-	// XXX FIX: for some reason not all previews get updated to the 
-	// 		right size...
-	updateImages()
+
+	ALL_DATA = cropDataToGIDs(marked)
+
 	return DATA
 }
 
@@ -75,7 +62,14 @@ function loadAllImages(){
 
 var toggleMarkedOnlyView = createCSSClassToggler(
 		'.viewer', 
-		'marked-only-view',
+		'marked-only-view cropped-mode',
+		function(action){
+			// prevent reentering...
+			if(action == 'on' && $('.viewer').hasClass('cropped-mode')
+					|| action == toggleMarkedOnlyView('?')){
+				return false
+			}
+		},
 		function(action){
 			if(action == 'on'){
 				loadMarkedOnlyData()

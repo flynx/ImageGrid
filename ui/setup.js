@@ -17,13 +17,18 @@ var PROPORTIONS_RATIO_THRESHOLD = 1.5
 
 function setupIndicators(){
 	showGlobalIndicator(
+			'single-ribbon-mode', 
+			'Single ribbon mode (F3)')
+		.css('cursor', 'hand')
+		.click(function(){ toggleSingleRibbonMode() })
+	showGlobalIndicator(
 			'marks-visible', 
 			'Marks visible (F2)')
 		.css('cursor', 'hand')
 		.click(function(){ toggleMarkesView() })
 	showGlobalIndicator(
 			'marked-only-visible', 
-			'Marked only images visible (F3)')
+			'Marked only images visible (shift-F2)')
 		.css('cursor', 'hand')
 		.click(function(){ toggleMarkedOnlyView() })
 
@@ -283,7 +288,7 @@ function setupDataBindings(viewer){
 
 			// add marked image to list...
 			if(action == 'on'){
-				MARKED.push(gid)
+				 MARKED.indexOf(gid) == -1 && MARKED.push(gid)
 
 			// remove marked image from list...
 			} else {

@@ -14,6 +14,50 @@
 .expanding-text:hover .hidden {
   display: inline;
 }
+[tooltip-top] {
+  position: relative;
+  text-decoration: none;
+}
+[tooltip-top]:after {
+  content: attr(tooltip-top);
+  position: absolute;
+  bottom: 130%;
+  left: 20%;
+  background: #ffcb66;
+  padding: 5px 15px;
+  color: black;
+  border-radius: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  -webkit-transition: all 0.4s ease;
+  -moz-transition: all 0.4s ease;
+  transition: all 0.4s ease;
+}
+[tooltip-top]:before {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-top: 20px solid #ffcb66;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  -webkit-transition: all 0.4s ease;
+  -moz-transition: all 0.4s ease;
+  transition: all 0.4s ease;
+  opacity: 0;
+  left: 30%;
+  bottom: 90%;
+}
+[tooltip-top]:hover:after {
+  bottom: 100%;
+}
+[tooltip-top]:hover:before {
+  bottom: 70%;
+}
+[tooltip-top]:hover:after,
+[tooltip-top]:hover:before {
+  opacity: 1;
+}
 /*********************************************************************/
 body {
   font-family: sans-serif;
@@ -321,6 +365,17 @@ button:hover {
 	background-image: url(images/loading-270deg.gif);
 }
 */
+/* separator test */
+.image.red + .image:not(.red):before {
+  display: inline-block;
+  position: relative;
+  content: "";
+  top: 0px;
+  left: -50px;
+  width: 100px;
+  height: 100%;
+  background-color: yellow;
+}
 /***************************************************** Image marks ***/
 .marks-visible.viewer .marked.image:after {
   display: block;
@@ -795,15 +850,18 @@ button:hover {
 .single-image-mode.viewer .global-mode-indicators:hover {
   opacity: 1;
 }
+.global-mode-indicators .indicator,
+.context-mode-indicators .indicator {
+  display: none;
+  height: 20px;
+  vertical-align: center;
+}
 /* actual indicators */
 /* marks... */
 .global-mode-indicators .marked-only-visible,
 .global-mode-indicators .marks-visible,
 .context-mode-indicators .current-image-marked {
-  display: none;
   color: blue;
-  height: 20px;
-  vertical-align: center;
 }
 .global-mode-indicators .marked-only-visible .shown,
 .global-mode-indicators .marks-visible .shown,
@@ -824,6 +882,11 @@ button:hover {
   margin-top: 3px;
   top: 50%;
 }
+.global-mode-indicators .marked-only-visible:after,
+.global-mode-indicators .marks-visible:after,
+.context-mode-indicators .current-image-marked:after {
+  color: blue;
+}
 .marks-visible.viewer .global-mode-indicators .marks-visible {
   display: inline-block;
 }
@@ -842,6 +905,10 @@ button:hover {
   color: blue;
 }
 .single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked.shown {
+  display: inline-block;
+}
+.single-ribbon-mode.viewer .global-mode-indicators .single-ribbon-mode {
+  color: gray;
   display: inline-block;
 }
 /********************************************** Mode: single image ***/

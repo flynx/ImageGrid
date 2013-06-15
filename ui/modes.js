@@ -170,6 +170,29 @@ var toggleSingleImageMode = createCSSClassToggler(
 		})
 
 
+// XXX make this not conflict with marked-only-mode, better yet, make them
+// 		one single mode...
+var toggleSingleRibbonMode = createCSSClassToggler(
+		'.viewer',
+		'single-ribbon-mode cropped-mode',
+		function(action){
+			// prevent reentering...
+			if(action == 'on' && $('.viewer').hasClass('cropped-mode')
+					|| action == toggleSingleRibbonMode('?')){
+				return false
+			}
+		},
+		function(action){
+			if(action == 'on'){
+				ALL_DATA = cropDataToGIDs(DATA.ribbons[getRibbonIndex()].slice())
+			} else {
+				DATA = ALL_DATA
+				reloadViewer()
+				updateImages()
+			}
+		})
+
+
 // TODO transitions...
 // TODO a real setup UI (instead of prompt)
 var toggleSlideShowMode = createCSSClassToggler(
