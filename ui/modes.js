@@ -186,7 +186,9 @@ var toggleSingleRibbonMode = createCSSClassToggler(
 			if(action == 'on'){
 				ALL_DATA = cropDataToGIDs(DATA.ribbons[getRibbonIndex()].slice())
 			} else {
+				var cur = DATA.current
 				DATA = ALL_DATA
+				DATA.current = cur
 				reloadViewer()
 				updateImages()
 			}
