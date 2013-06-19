@@ -73,6 +73,9 @@ var KEYBOARD_CONFIG = {
 	//
 	'.viewer.overlay .overlay-block.dialog': {
 		title: 'Dialog',
+		doc: 'NOTE: to <i>close</i> a dialog, in addition to the keyaboard '+
+			'shortcuts, one can also click anywhere outside the dialog.',
+
 		ignore: '*',
 
 		Enter: doc('Accept dialog',
@@ -603,8 +606,17 @@ var KEYBOARD_CONFIG = {
 				// marking...
 				ctrl: 'invert-marks',
 			},
-		P: doc('Show options',
-			function(){ toggleOptionsUI() }),
+		P: {
+				default: doc('Show options',
+					function(){ toggleOptionsUI() }),
+				ctrl: doc('Print keyboard help',
+					function(){
+						toggleKeyboardHelp('on')
+						// NOTE: on chrome this is blocking...
+						print()
+						toggleKeyboardHelp('off')
+					}),
+			},
 
 		// NOTE: this is handled by the wrapper at this point, so we do 
 		// 		not have to do anything here...
