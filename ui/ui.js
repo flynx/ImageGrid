@@ -511,6 +511,9 @@ var FIELD_TYPES = {
 //
 // see FIELD_TYPES for supported field types.
 //
+// NOTE: if btn is set to false explicitly then no button will be 
+// 		rendered in the form dialog.
+//
 // XXX add form testing...
 // XXX add undefined field handling/reporting...
 // XXX revise...
@@ -561,8 +564,10 @@ function formDialog(root, message, config, btn, cls){
 	}
 
 	// add button...
-	var button = $('<button class="accept">'+btn+'</button>')
-	form.append(button)
+	if(btn !== false){
+		var button = $('<button class="accept">'+btn+'</button>')
+		form.append(button)
+	}
 
 	var overlay = showInOverlay(root, form)
 		.addClass('dialog ' + cls)
@@ -601,7 +606,8 @@ function formDialog(root, message, config, btn, cls){
 var _alert = alert
 function alert(){
 	var message = Array.apply(null, arguments).join(' ')
-	return formDialog(null, String(message), {}, 'OK', 'alert')
+	//return formDialog(null, String(message), {}, 'OK', 'alert')
+	return formDialog(null, String(message), {}, false, 'alert')
 }
 
 

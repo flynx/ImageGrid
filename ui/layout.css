@@ -147,6 +147,12 @@ button:hover {
   -ms-user-select: none;
   user-select: none;
 }
+/* XXX this is a stub for printing help/docs... */
+@media print {
+  .viewer {
+    display: none;
+  }
+}
 /****************************************************** Ribbon set ***/
 .ribbon-set {
   position: absolute;
