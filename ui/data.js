@@ -1044,8 +1044,6 @@ function loadSettings(){
 
 // Crop view to only given gids
 //
-// Returns the original DATA object.
-//
 // XXX make keep_ribbons option work...
 function cropDataToGIDs(gids, keep_ribbons){
 	var cur = DATA.current
@@ -1058,7 +1056,9 @@ function cropDataToGIDs(gids, keep_ribbons){
 		],
 		order: DATA.order.slice(),
 	}
-	DATA.current = getGIDBefore(cur, 0)
+	cur = getGIDBefore(cur, 0)
+	cur = cur == null ? gids[0] : cur
+	DATA.current = cur 
 
 	reloadViewer()
 	updateImages()

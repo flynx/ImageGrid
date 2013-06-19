@@ -254,7 +254,7 @@ var toggleSlideShowMode = createCSSClassToggler(
 
 			} else {
 				window._slideshow_timer != null && clearInterval(_slideshow_timer)
-				showStatus('Slideshow: stopped...')
+				showStatus('Slideshow: stopped.')
 				hideOverlay($('.viewer'))
 			}
 		})
