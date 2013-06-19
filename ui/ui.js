@@ -601,7 +601,7 @@ function formDialog(root, message, config, btn, cls){
 var _alert = alert
 function alert(){
 	var message = Array.apply(null, arguments).join(' ')
-	return formDialog(null, message, {}, 'OK', 'alert')
+	return formDialog(null, String(message), {}, 'OK', 'alert')
 }
 
 

@@ -106,6 +106,26 @@ Roadmap
 				[_] index and group ALL files in an archive
 				[_] import metadata
 				[_] real GIDs
+		[_] BUG: jumping in ribbon sometimes does not load the ribbon correctly...
+		| Example 1:
+		| 	first ribbon in (loaded atfirst image):
+		|	 "file:///L:/mnt/hdd13 (photo)/NTFS1/media/img/my/work/- 20130616Y.001/DCIM/preview (RAW)/"
+		|	jumping to the end will result in an inconsistent view:
+		|		- ribbon not loaded at the correct spot
+		|		- wrong image is .current
+		|
+		| Example 2:
+		| 	load same data at same position as in #1
+		| 		- shift-F2 to marked-only view
+		| 		- go to end of ribbon (any means work)
+		| 		- shift-F2 or Esc out of marked-only mode
+		| 	this will result in a state very similar (if not identical) to
+		| 	example #1...
+		|
+		|
+		| NOTE: jumping back and forth several times will make this problem
+		| 		go away...
+		| 		Q: could this be initial load/state error?
 		[_] BUG: align problems are back...
 		| default data set (browser/images.js) same images #4 (going 
 		| from right) & #5 (going from left) of 18 in the first ribbon 
