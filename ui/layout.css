@@ -243,6 +243,21 @@ button:hover {
 
   border: solid red 5px;
 }
+/* single image mode transitions */
+/* XXX still buggy and not too needed...
+.single-image-mode.viewer .image {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+
+	opacity: 0;
+
+	.transition(opacity);
+}
+.single-image-mode.viewer .current.image {
+	opacity: 1;
+}
+*/
 /* image turning... */
 /* NOTE: need to account for proportions after turning... */
 .image[orientation="90"] {

@@ -108,8 +108,9 @@ Roadmap
 				[_] real GIDs
 		[_] BUG: jumping in ribbon sometimes does not load the ribbon correctly...
 		| Example 1:
-		| 	first ribbon in (loaded atfirst image):
+		| 	first ribbon in (loaded at first image):
 		|	 "file:///L:/mnt/hdd13 (photo)/NTFS1/media/img/my/work/- 20130616Y.001/DCIM/preview (RAW)/"
+		|	 "F:\work\ImageGrid\cur\ImageGrid\src\ui\BUGS\ribbon loading error\"
 		|	jumping to the end will result in an inconsistent view:
 		|		- ribbon not loaded at the correct spot
 		|		- wrong image is .current
