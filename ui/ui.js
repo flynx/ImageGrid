@@ -658,6 +658,8 @@ function exportPreviews(dfl){
 				data['Image name pattern'], 
 				data['Fav directory name'])
 
+			showStatusQ('Exporting data...')
+
 			res.resolve(data[''])
 		})
 		.fail(function(){ res.reject() })
