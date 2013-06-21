@@ -26,6 +26,7 @@ if(window.CEF_dumpJSON != null){
 	console.log('node-webkit mode: loading...')
 
 	var fs = require('fs')
+	var fse = require('fs.extra')
 	var proc = require('child_process')
 	var gui = require('nw.gui')
 
@@ -60,12 +61,12 @@ if(window.CEF_dumpJSON != null){
 		// XXX make dirs...
 		if(!fs.existsSync(path)){
 			console.log('making:', path)
-			// XXX NOTE: this will not make more than one dir...
-			fs.mkdirSync(path)
+			fse.mkdirRecursiveSync(path)
 		}
 
 		if(!fs.existsSync(dst)){
-			fs.linkSync(src, dst)
+			// NOTE: this is not sync...
+			return fse.copy(src, dst)
 		}
 	}
 	window.dumpJSON = function(path, data){
@@ -78,9 +79,8 @@ if(window.CEF_dumpJSON != null){
 		dirs = dirs.join('/')
 		// build path...
 		if(!fs.existsSync(dirs)){
-			console.log('making:', dirs, path)
-			// XXX NOTE: this will not make more than one dir...
-			fs.mkdirSync(dirs)
+			console.log('making:', path)
+			fse.mkdirRecursiveSync(path)
 		}
 		return fs.writeFileSync(path, JSON.stringify(data), encoding='utf8')
 	}

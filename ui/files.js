@@ -557,11 +557,11 @@ function updateRibbonsFromFavDirs(){
 
 // Export current state to directory...
 //
-// NOTE: if size is null, the original image will be copied...
 function exportTo(path, im_name, dir_name, size){
 	path = path == null ? BASE_URL : path
 	im_name = im_name == null ? '%f' : im_name
 	dir_name = dir_name == null ? 'fav' : dir_name
+	size = size == null ? 1000 : size
 
 	var base_path = path
 	path = normalizePath(path)
@@ -598,8 +598,7 @@ function exportTo(path, im_name, dir_name, size){
 
 			dest = path +'/'+ dest
 
-			// XXX link...
-			//console.log('>>>', dest)
+			// copy... 
 			copyFile(src, dest)
 		}
 
