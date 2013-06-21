@@ -612,6 +612,7 @@ function imagesFromUrls(lst){
 
 	$.each(lst, function(i, e){
 
+		/*
 		// this is ugly but I'm bored so this is pretty...
 		var ii =  i < 10		? '0000000' + i 
 				: i < 100		? '000000' + i
@@ -621,6 +622,9 @@ function imagesFromUrls(lst){
 				: i < 1000000	? '00' + i
 				: i < 10000000	? '0' + i
 				: i
+		*/
+		i = i+''
+		var ii = ('00000000' + i).slice(i.length)
 		var gid = 'image-' + ii
 		res[gid] = {
 			id: gid,
