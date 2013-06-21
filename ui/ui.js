@@ -653,7 +653,10 @@ function exportPreviews(dfl){
 		'Destination': {ndir: dfl},
 	}, 'OK', 'exportPreviews')
 		.done(function(data){
-			exportTo(data['Destination'], data['Image name pattern'], data['Fav directory name'])
+			exportTo(
+				data['Destination'], 
+				data['Image name pattern'], 
+				data['Fav directory name'])
 
 			res.resolve(data[''])
 		})
