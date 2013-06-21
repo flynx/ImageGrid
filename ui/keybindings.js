@@ -484,26 +484,7 @@ var KEYBOARD_CONFIG = {
 					}),
 				'ctrl+shift': doc('Export',
 					function(){
-						// XXX a dialog with alternatives...
-						// 		Export modes:
-						// 			- source:
-						// 				- all (default)
-						// 				- current ribbon only
-						// 				- marked only (can be combined with current ribbon)
-						// 			- structure
-						// 				- flat
-						// 				- fav dirs
-						// 			- naming
-						// 				- fav dir name (default: fav)
-						// 				- image file name (default: %f)
-						// 					(add several presets like %f for filename,
-						// 					%(tag) for metadata tag values, etc.)
-						// 			- common metadata
-						// 				- comment
-						// 				- ...
-						// 			- destination
-						// 				- ndir with current path as default
-						// 				- dir to create (default: "")
+						exportPreviews()
 					}), 
 			},
 		Z: {

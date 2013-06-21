@@ -642,6 +642,27 @@ function getDir(message, dfl, btn){
 }
 
 
+// XXX do reporting...
+function exportPreviews(dfl){
+	dfl = dfl == null ? BASE_URL : dfl
+	var res = $.Deferred()
+
+	formDialog(null, 'Export previews', {
+		'Image name pattern': '%f',
+		'Fav directory name': 'fav',
+		'Destination': {ndir: dfl},
+	}, 'OK', 'exportPreviews')
+		.done(function(data){
+			exportTo(data['Destination'], data['Image name pattern'], data['Fav directory name'])
+
+			res.resolve(data[''])
+		})
+		.fail(function(){ res.reject() })
+
+	return res
+}
+
+
 
 /************************************************ Specific dialogs ***/
 

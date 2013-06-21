@@ -38,6 +38,7 @@ JS_MIN_FILES := $(patsubst %.js,%.min.js,$(wildcard *.js))
 
 LOGS := *.log
 
+NODE_DIR=node_modules
 BUILD_DIR=build
 WIN_BUILD_DIR=build/Win32
 MAC_BUILD_DIR=build/MacOSX
@@ -67,6 +68,8 @@ minify: $(JS_MIN_FILES)
 # build dependencies...
 # XXX can make auto-create directories???
 
+$(NODE_DIR):
+	mkdir -p $(NODE_DIR)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 $(WIN_BUILD_DIR):
@@ -82,13 +85,16 @@ $(DIST_DIR):
 	mkdir -p $(DIST_DIR)
 
 
-$(APP_ZIP): $(CSS_FILES) $(BUILD_DIR)
-	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) $(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR)
+$(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) node-deps
+	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) $(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(NODE_DIR)
 
 
 
 #**********************************************************************
 # dev env...
+
+node-deps:
+	npm install fs.extra
 
 dev: $(CSS_FILES)
 	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
