@@ -555,6 +555,59 @@ function updateRibbonsFromFavDirs(){
 }
 
 
+// Export current state to directory...
+//
+// NOTE: if size is null, the original image will be copied...
+function exportTo(path, im_name, dir_name, size){
+	path = path == null ? BASE_URL : path
+	im_name = im_name == null ? '%f' : im_name
+	dir_name = dir_name == null ? 'fav' : dir_name
+
+	var base_path = path
+	path = normalizePath(path)
+
+	var order = DATA.order
+	var z = (('10e' + (order.length + '').length) * 1 + '').slice(2)
+
+	// go through ribbons...
+	for(var i=DATA.ribbons.length-1; i >= 0; i--){
+		var ribbon = DATA.ribbons[i]
+		// go through images...
+		for(var j=0; j < ribbon.length; j++){
+			var gid = ribbon[j]
+			// get correct preview...
+			var src = getBestPreview(gid, size).url
+			var orig = IMAGES[gid].path.split('/').pop()
+
+			// form image name...
+			var dest = im_name
+			// full filename...
+			dest = dest.replace('%f', orig)
+			// file name w.o. ext...
+			dest = dest.replace('%n', orig.split('.')[0])
+			// ext...
+			dest = dest.replace('%e', src.split('.').pop())
+			// gid...
+			dest = dest.replace('%gid', gid)
+			dest = dest.replace('%g', gid.slice(34))
+			// order...
+			var o = order.indexOf(gid) + ''
+			dest = dest.replace('%i', (z + o).slice(o.length))
+			// XXX Metadata...
+			// XXX
+
+			dest = path +'/'+ dest
+
+			// XXX link...
+			//console.log('>>>', dest)
+			copyFile(src, dest)
+		}
+
+		path = normalizePath(path +'/'+ dir_name)
+	}
+}
+
+
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */

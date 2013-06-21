@@ -40,6 +40,34 @@ if(window.CEF_dumpJSON != null){
 		}
 		return fs.readdirSync(path)
 	}
+	// XXX make this work across fs...
+	// XXX this will not overwrite...
+	window.copyFile = function(src, dst){
+		if(fp.test(src)){
+			// XXX will this work on Mac???
+			src = src.replace(fp, '')
+		}
+		if(fp.test(dst)){
+			// XXX will this work on Mac???
+			dst = dst.replace(fp, '')
+		}
+
+		var path = dst.split('/')
+		path.pop()
+		path = path.join('/')
+
+
+		// XXX make dirs...
+		if(!fs.existsSync(path)){
+			console.log('making:', path)
+			// XXX NOTE: this will not make more than one dir...
+			fs.mkdirSync(path)
+		}
+
+		if(!fs.existsSync(dst)){
+			fs.linkSync(src, dst)
+		}
+	}
 	window.dumpJSON = function(path, data){
 		if(fp.test(path)){
 			// XXX will this work on Mac???
