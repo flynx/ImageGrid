@@ -647,6 +647,8 @@ function exportPreviews(dfl){
 	dfl = dfl == null ? BASE_URL : dfl
 	var res = $.Deferred()
 
+	updateStatus('Export...').show()
+
 	formDialog(null, 'Export previews', {
 		'Image name pattern': '%f',
 		'Fav directory name': 'fav',
@@ -658,13 +660,36 @@ function exportPreviews(dfl){
 				data['Image name pattern'], 
 				data['Fav directory name'])
 
-			showStatusQ('Exporting data...')
+			// XXX do real reporting...
+			showStatusQ('Copying data...')
 
 			res.resolve(data[''])
 		})
-		.fail(function(){ res.reject() })
+		.fail(function(){ 
+			showStatusQ('Export: canceled.')
+
+			res.reject() 
+		})
 
 	return res
+}
+
+
+function loadDirectory(dfl){
+	dfl = dfl == null ? BASE_URL : dfl
+	// browser version...
+	var getter = window.listDir != null ? getDir : prompt
+
+	updateStatus('Open...').show()
+
+	getter('Path to open', dfl)
+		.done(function(path){
+			path = path.trim()
+			statusNotify(loadDir(path))
+		})
+		.fail(function(){
+			showStatusQ('Open: canceled.')
+		})
 }
 
 

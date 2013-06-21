@@ -274,14 +274,7 @@ var KEYBOARD_CONFIG = {
 		// XXX STUB: use a real path browser...
 		O: doc('Open a directory path',
 			function(){
-				// browser version...
-				var getter = window.listDir != null ? getDir : prompt
-
-				getter('Path to open', BASE_URL)
-					.done(function(path){
-						path = path.trim()
-						statusNotify(loadDir(path))
-					})
+				loadDirectory()
 			}),
 
 
