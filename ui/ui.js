@@ -684,6 +684,10 @@ function loadDirectory(dfl){
 
 	getter('Path to open', dfl)
 		.done(function(path){
+			// reset the modes...
+			toggleSingleImageMode('off')
+			toggleSingleRibbonMode('off')
+
 			path = path.trim()
 			statusNotify(loadDir(path))
 		})
