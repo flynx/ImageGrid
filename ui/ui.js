@@ -728,6 +728,7 @@ function loadDirectoryDialog(dfl){
 			// reset the modes...
 			toggleSingleImageMode('off')
 			toggleSingleRibbonMode('off')
+			toggleMarkedOnlyView('off')
 
 			path = path.trim()
 			statusNotify(loadDir(path))

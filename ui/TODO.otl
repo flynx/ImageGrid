@@ -106,6 +106,8 @@ Roadmap
 				[_] index and group ALL files in an archive
 				[_] import metadata
 				[_] real GIDs
+		[_] BUG: sometimes loading a raw directory stops at "error loading data.json"
+		| and some times it does not err..
 		[_] BUG: jumping in ribbon sometimes does not load the ribbon correctly...
 		| Example 1:
 		| 	first ribbon in (loaded at first image):
