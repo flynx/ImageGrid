@@ -274,7 +274,7 @@ var KEYBOARD_CONFIG = {
 		// XXX STUB: use a real path browser...
 		O: doc('Open a directory path',
 			function(){
-				loadDirectory()
+				loadDirectoryDialog()
 			}),
 
 
@@ -451,6 +451,10 @@ var KEYBOARD_CONFIG = {
 		S: {
 				default: doc('Start slideshow', 
 					function(){ toggleSlideShowMode('on') }),
+				shift: doc('Sort images',
+					function(){
+						sortImagesDialog()
+					}),
 				ctrl: doc('Save current state', 
 					function(){
 						event.preventDefault()
@@ -477,7 +481,7 @@ var KEYBOARD_CONFIG = {
 					}),
 				'ctrl+shift': doc('Export',
 					function(){
-						exportPreviews()
+						exportPreviewsDialog()
 					}), 
 			},
 		Z: {

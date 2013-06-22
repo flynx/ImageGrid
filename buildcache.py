@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130613200255'''
+__sub_version__ = '''20130622165505'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -329,7 +329,11 @@ def build_previews(image, path=None, config=CONFIG, dry_run=True, verbosity=0):
 	image['preview'][str(max(*img.size)) + 'px'] = img_path
 
 	# previews...
-	for k, spec in sizes.items():
+	preview = None
+	# NOTE: do the big previews first...
+	s = sizes.items()
+	s.sort(lambda a, b: cmp(b[1], a[1]))
+	for k, spec in s:
 
 		if k in image['preview'].keys():
 			continue
@@ -344,6 +348,11 @@ def build_previews(image, path=None, config=CONFIG, dry_run=True, verbosity=0):
 
 		# add image to index...
 		if not os.path.exists(p):
+			# use the preview to speed things up...
+			# NOTE: this will degrade the quality of previews after
+			# 		several resizes...
+##			if preview != None:
+##				img = preview
 			scale = spec/float(max(*img.size))
 			preview = img.resize((int(img.size[0]*scale), int(img.size[1]*scale)), Image.ANTIALIAS)
 

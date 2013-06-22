@@ -490,6 +490,43 @@ var FIELD_TYPES = {
 			return field.find('.path').val()
 		},
 	},
+
+	choice: {
+		type: 'choice',
+		text: null,
+		default: false,
+		html: '<div class="field choice">'+
+				'<span class="text"></span>'+
+				'<div class="item">'+
+					'<input type="radio" class="value"/>'+
+					'<span class="item-text"></span>'+
+				'</div>'+
+			'</div>',
+		// format: ['a', 'b', 'c', ...]
+		test: function(val){
+			return typeof(val) == typeof([]) && val.constructor.name == 'Array'
+		},
+		set: function(field, value){
+			var t = field.find('.text').text()
+			var item = field.find('.item').last()
+			for(var i=0; i < value.length; i++){
+				item.find('.value')
+					.val(value[i])
+				item.find('.item-text')
+					.text(value[i])
+				item.appendTo(field)
+
+				item = item.clone()
+			}
+			field.find('.value')
+				.attr('name', t)
+				.first()
+					.attr('checked', '')
+		},
+		get: function(field){ 
+			return $(field).find('.value:checked').val()
+		},
+	},
 }
 
 // Show a complex form dialog
@@ -642,8 +679,11 @@ function getDir(message, dfl, btn){
 }
 
 
+
+/***************************************** Domain-specific dialogs ***/
+
 // XXX do reporting...
-function exportPreviews(dfl){
+function exportPreviewsDialog(dfl){
 	dfl = dfl == null ? BASE_URL : dfl
 	var res = $.Deferred()
 
@@ -653,7 +693,7 @@ function exportPreviews(dfl){
 		'Image name pattern': '%f',
 		'Fav directory name': 'fav',
 		'Destination': {ndir: dfl},
-	}, 'OK', 'exportPreviews')
+	}, 'OK', 'exportPreviewsDialog')
 		.done(function(data){
 			exportTo(
 				data['Destination'], 
@@ -675,7 +715,7 @@ function exportPreviews(dfl){
 }
 
 
-function loadDirectory(dfl){
+function loadDirectoryDialog(dfl){
 	dfl = dfl == null ? BASE_URL : dfl
 	// browser version...
 	var getter = window.listDir != null ? getDir : prompt
@@ -697,8 +737,45 @@ function loadDirectory(dfl){
 }
 
 
+function sortImagesDialog(message){
+	updateStatus('Sort...').show()
 
-/************************************************ Specific dialogs ***/
+	message = message == null ? 'Sort images by:' : message
+	cfg = {}
+	cfg[message] = [
+		'Date (ascending)', 
+		'Name (ascending)', 
+		'Date (decending)', 
+		'Name (decending)', 
+	]
+
+	formDialog(null, '', 
+			cfg,
+			'OK', 
+			'sortImagesDialog')
+		.done(function(res){
+			res = res[message]
+
+			if(/Date/.test(res)){
+				var method = sortImagesByDate
+			} else {
+				var method = sortImagesByName
+			}
+			if(/\(ascending\)/.test(res)){
+				var reverse = null
+			} else {
+				var reverse = true
+			}
+
+			showStatusQ('Sorting by: '+res+'...')
+
+			method(reverse)
+		})
+		.fail(function(){
+			showStatusQ('Sort: canceled.')
+		})
+}
+
 
 function showImageInfo(){
 	var gid = getImageGID(getImage())
