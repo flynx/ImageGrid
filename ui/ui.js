@@ -402,8 +402,8 @@ var FIELD_TYPES = {
 		text: null,
 		default: false,
 		html: '<div class="field checkbox">'+
-				'<input type="checkbox" class="value">'+
-				'<span class="text"></span>'+
+				'<label><input type="checkbox" class="value">'+
+				'<span class="text"></span></label>'+
 			'</div>',
 		test: function(val){
 			return val === true || val === false
@@ -497,10 +497,10 @@ var FIELD_TYPES = {
 		default: false,
 		html: '<div class="field choice">'+
 				'<span class="text"></span>'+
-				'<div class="item">'+
+				'<div class="item"><label>'+
 					'<input type="radio" class="value"/>'+
 					'<span class="item-text"></span>'+
-				'</div>'+
+				'</label></div>'+
 			'</div>',
 		// format: ['a', 'b', 'c', ...]
 		test: function(val){
@@ -508,6 +508,7 @@ var FIELD_TYPES = {
 		},
 		set: function(field, value){
 			var t = field.find('.text').text()
+			t = t == '' ? Math.random()+'' : t
 			var item = field.find('.item').last()
 			for(var i=0; i < value.length; i++){
 				item.find('.value')
@@ -738,15 +739,17 @@ function loadDirectoryDialog(dfl){
 
 
 function sortImagesDialog(message){
+
 	updateStatus('Sort...').show()
 
 	message = message == null ? 'Sort images by:' : message
+
 	cfg = {}
 	cfg[message] = [
 		'Date (ascending)', 
 		'Name (ascending)', 
 		'Date (decending)', 
-		'Name (decending)', 
+		'Name (decending)'
 	]
 
 	formDialog(null, '', 
