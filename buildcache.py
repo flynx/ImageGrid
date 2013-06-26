@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130622165505'''
+__sub_version__ = '''20130626175935'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -63,8 +63,8 @@ CONFIG = {
 		'150px': 150,
 		'350px': 350,
 		'900px': 900,
-		'1080px': 1080,
-		'1920px': 1920,
+##		'1080px': 1080,
+##		'1920px': 1920,
 	}
 }
 
@@ -316,7 +316,8 @@ def build_previews(image, path=None, config=CONFIG, dry_run=True, verbosity=0):
 	img_path = image['path']
 
 	if absolute_path == False:
-		source_path = os.path.join(path, img_path)
+##		source_path = os.path.join(path, img_path)
+		source_path = os.path.join(path, urllib2.url2pathname(img_path))
 	else:
 		# XXX is this the best way???
 		o = urllib2.urlopen(img_path)
@@ -348,16 +349,15 @@ def build_previews(image, path=None, config=CONFIG, dry_run=True, verbosity=0):
 
 		# add image to index...
 		if not os.path.exists(p):
-			# use the preview to speed things up...
-			# NOTE: this will degrade the quality of previews after
-			# 		several resizes...
-##			if preview != None:
-##				img = preview
 			scale = spec/float(max(*img.size))
 			preview = img.resize((int(img.size[0]*scale), int(img.size[1]*scale)), Image.ANTIALIAS)
 
 			if not dry_run:
-				preview.save(p)
+				preview.save(p, quality=80)
+				# use the preview to speed things up...
+				# NOTE: this will degrade the quality of previews after
+				# 		several resizes...
+				img = Image.open(p, 'r')
 			else:
 				preview.close()
 
