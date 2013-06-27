@@ -684,13 +684,21 @@ function getDir(message, dfl, btn){
 /***************************************** Domain-specific dialogs ***/
 
 // XXX do reporting...
-function exportPreviewsDialog(dfl){
+function exportPreviewsDialog(state, dfl){
 	dfl = dfl == null ? BASE_URL : dfl
+
+	// XXX make this more generic...
+	if(state == null){
+		state = toggleMarkedOnlyView('?') == 'on' ? 'marked images' : state
+		state = toggleSingleRibbonMode('?') == 'on' ? 'current ribbon' : state
+		state = state == null ? 'all images' : state
+	}
+
 	var res = $.Deferred()
 
 	updateStatus('Export...').show()
 
-	formDialog(null, 'Export previews', {
+	formDialog(null, '<b>Export source:</b> '+ state +'.', {
 		'Image name pattern': '%f',
 		'Fav directory name': 'fav',
 		'Destination': {ndir: dfl},
