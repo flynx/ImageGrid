@@ -5,7 +5,9 @@ ARCHIVE_ROOT="./20130501Y.001 - can be sfely deleted (2)"
 
 METADATA_DIR="metadata"
 RAW_PREVIEW_DIR="hi-res (RAW)"
+PROCESSED_PREVIEW_DIR="preview"
 
+PROCESSED_PREVIEW_NAME="%-:1d/${PROCESSED_PREVIEW_DIR}/%f.jpg"
 PREVIEW_NAME="%-:1d/${RAW_PREVIEW_DIR}/%f.jpg"
 JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 
@@ -16,10 +18,13 @@ JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 # XXX do we need to rotate the images using exif data here???
 # XXX need to prevent overwriting of unchanged exif data...
 #	when file exists??
+# XXX add PSD metadata extraction...
+# XXX keep file dates...
 
 exiftool -if '$jpgfromraw' -b -jpgfromraw -w "$PREVIEW_NAME" \
 	-execute -if '$previewimage' -b -previewimage -w "$PREVIEW_NAME" \
-	-execute -tagsfromfile @ -srcfile "$PREVIEW_NAME" -overwrite_original \
+	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ -srcfile "$PREVIEW_NAME" -overwrite_original \
+	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ -srcfile "$PROCESSED_PREVIEW_NAME" -overwrite_original \
 	-execute -j -w "$JSON_NAME" \
 	-common_args --ext jpg -r "$ARCHIVE_ROOT" -progress
 
