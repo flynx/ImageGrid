@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ARCHIVE_ROOT="./20130501Y.001 - can be sfely deleted (2)"
+ARCHIVE_ROOT="."
 
 
 METADATA_DIR="metadata"
@@ -12,6 +12,11 @@ PREVIEW_NAME="%-:1d/${RAW_PREVIEW_DIR}/%f.jpg"
 JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 
 
+# TODO do a version of this using exiv2...
+#	- to be more flexible...
+#	- check speed...
+#	- give the user more options...
+#
 
 # XXX need to also copy jpg originals to the preview dir (things that 
 #	were shot in jpeg in-camera)...
@@ -19,12 +24,14 @@ JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 # XXX need to prevent overwriting of unchanged exif data...
 #	when file exists??
 # XXX add PSD metadata extraction...
+#	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ \
+#		-srcfile "$PROCESSED_PREVIEW_NAME" -overwrite_original \
 # XXX keep file dates...
 
 exiftool -if '$jpgfromraw' -b -jpgfromraw -w "$PREVIEW_NAME" \
 	-execute -if '$previewimage' -b -previewimage -w "$PREVIEW_NAME" \
-	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ -srcfile "$PREVIEW_NAME" -overwrite_original \
-	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ -srcfile "$PROCESSED_PREVIEW_NAME" -overwrite_original \
+	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ \
+		-srcfile "$PREVIEW_NAME" -overwrite_original \
 	-execute -j -w "$JSON_NAME" \
 	-common_args --ext jpg -r "$ARCHIVE_ROOT" -progress
 
@@ -33,7 +40,7 @@ SIZE=900
 
 COMPRESSION=90
 
-PATH=$PATH:`pwd`/vips-dev-7.32.0/bin/
+PATH=$PATH:/mnt/d/Program\ Files/vips/bin/
 
 # makepreview SIZE IN OUT
 makepreview(){
@@ -70,10 +77,14 @@ makepreview(){
 
 
 # XXX use find...
-for FROM in "${ARCHIVE_ROOT}"/DCIM/hi-res\ \(RAW\)/*jpg ; do
+
+cd "${ARCHIVE_ROOT}"
+
+for FROM in */DCIM/hi-res\ \(RAW\)/*jpg ; do
 	TO="${FROM/hi-res\ /preview }"
 
 	# XXX do different-sized previews...
-	makepreview "$SIZE" "$FROM" "$TO"
+	makepreview "$SIZE" "./$FROM" "$TO"
 done
 
+# vim:set nowrap nospell :

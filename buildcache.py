@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130626175935'''
+__sub_version__ = '''20130629041032'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -241,6 +241,8 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 	'''
 	absolute_path = config['absolute-path']
 
+	orientation = None
+
 	for name in os.listdir(path):
 		fname, ext = os.path.splitext(name)
 		ext = ext[1:]
@@ -251,6 +253,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 			source_path = pathjoin(path, name)
 			raw = metadata.ImageMetadata(source_path)
 			raw.read()
+			orientation = raw['Exif.Image.Orientation']
 			##!!! can there be no previews?
 			# get the biggest preview...
 			preview = raw.previews[0]
@@ -272,6 +275,12 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 		# normal images...
 		elif ext == IMAGE:
 			source_path = pathjoin(path, name)
+			meta = metadata.ImageMetadata(source_path)
+			meta.read()
+			if 'Exif.Image.Orientation' in meta:
+				orientation = meta['Exif.Image.Orientation'].value
+			else:
+				orientation = 0
 
 		# skip other files...
 		else:
@@ -282,6 +291,26 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 			'name': name,
 			'type': 'image',
 			'state': 'single',
+			'orientation': {
+					1: 0,
+					2: 0,
+					3: 180,
+					4: 0,
+					5: 90,
+					6: 90,
+					7: 90, 
+					8: 270,
+				}[orientation],
+			'flipped': {
+					1: None,
+					2: ['horizontal'],
+					3: None,
+					4: ['vertical'],
+					5: ['vertical'],
+					6: None,
+					7: ['horizontal'],
+					8: None,
+				}[orientation],
 			'path': getpath(path, source_path, absolute_path),
 			'ctime': os.path.getctime(pathjoin(path, name)),
 			'preview': {},
