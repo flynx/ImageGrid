@@ -212,17 +212,35 @@ var toggleSlideShowMode = createCSSClassToggler(
 						'Reverse direction': SLIDESHOW_DIRECTION == 'prev' ? true : false
 				}, 'Start')
 					.done(function(data){
-						var interval = parseFloat(data['Interval'])
 						var looping = data['Looping']
 						var reverse = data['Reverse direction']
 
-						SLIDESHOW_INTERVAL = isNaN(interval) ? 3000 : interval*1000
 						SLIDESHOW_LOOP = looping
 						SLIDESHOW_DIRECTION = reverse == true ? 'prev' : 'next'
 
-						console.log('>>>', data)
+						// parse interval...
+						var interval_raw = data['Interval']
+						// units...
+						var M = 1000
+						if(/ms|msec|milsec|millisecond[s]/i.test(interval_raw)){
+							M = 1
+						} else if(/(s|sec|second[s])/i.test(interval_raw)){
+							M = 1000
+						} else if(/m|min|minute[s]/i.test(interval_raw)){
+							M = 1000*60
+						}
+						// fractions...
+						if(/[0-9]+\/[0-9]+/.test(interval_raw)){
+							var parts = interval_raw.split('/')
+							var interval = parseFloat(parts[0]) / parseFloat(parts[1])
+						} else {
+							var interval = parseFloat(interval_raw)
+						}
+						SLIDESHOW_INTERVAL = isNaN(interval) ? 3000 : interval*M
 
-						showStatus('Slideshow: starting', SLIDESHOW_LOOP ? 'looped...' : 'unlooped...')
+						console.log('>>>', data, interval)
+
+						showStatus('Slideshow: starting:', SLIDESHOW_INTERVAL/1000 +'sec,', SLIDESHOW_LOOP ? 'looped...' : 'unlooped...')
 					
 						// XXX is this the correct way to go???
 						hideOverlay($('.viewer'))
