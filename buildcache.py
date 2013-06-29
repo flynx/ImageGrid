@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130629041032'''
+__sub_version__ = '''20130629042157'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -30,6 +30,7 @@ import gid
 
 CONFIG = {
 	'absolute-path': False,
+	'ignore-orientation': False,
 
 	# this can be:
 	# 	- original (default)
@@ -241,7 +242,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 	'''
 	absolute_path = config['absolute-path']
 
-	orientation = None
+	orientation = 0
 
 	for name in os.listdir(path):
 		fname, ext = os.path.splitext(name)
@@ -272,15 +273,19 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 			raw.copy(preview)
 			preview.write()
 
+			if not config['ignore-orientation']:
+				if 'Exif.Image.Orientation' in raw:
+					orientation = raw['Exif.Image.Orientation'].value
+
 		# normal images...
 		elif ext == IMAGE:
 			source_path = pathjoin(path, name)
-			meta = metadata.ImageMetadata(source_path)
-			meta.read()
-			if 'Exif.Image.Orientation' in meta:
-				orientation = meta['Exif.Image.Orientation'].value
-			else:
-				orientation = 0
+
+			if not config['ignore-orientation']:
+				meta = metadata.ImageMetadata(source_path)
+				meta.read()
+				if 'Exif.Image.Orientation' in meta:
+					orientation = meta['Exif.Image.Orientation'].value
 
 		# skip other files...
 		else:
@@ -534,6 +539,11 @@ def handle_commandline():
 						action='store_true',
 						default=False,
 						help='Create only images.json file, skip the rest.') 
+	output_configuration.add_option('--ignore-orientation', 
+						action='store_true',
+						default=False,
+						help='Ignore EXIF orientation data -- when previews '
+							'are already in correct orientation.') 
 	output_configuration.add_option('--path-mode',
 						default='absolute' if CONFIG['absolute-path'] else 'relative',
 						help='Path generation mode (default: "%default").')
@@ -599,6 +609,7 @@ def handle_commandline():
 	config.update({
 			'gid-source': options.gid_source,
 			'absolute-path': options.path_mode == 'absolute',
+			'ignore-orientation': options.ignore_orientation,
 			})
 	# a value from 0 through 2...
 	verbosity = options.verbosity
