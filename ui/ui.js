@@ -718,16 +718,28 @@ function exportPreviewsDialog(state, dfl){
 
 	updateStatus('Export...').show()
 
-	formDialog(null, '<b>Export source:</b> '+ state +'.', {
-		'Image name pattern | %f - full filename \n%n - filename \n%e - extension \n%gid - log gid \n%g - short gid \n%i - order': '%f',
-		'Fav directory name': 'fav',
-		'Destination': {ndir: dfl},
-	}, 'OK', 'exportPreviewsDialog')
+	// NOTE: we are not defining the object in-place here because some 
+	// 		keys become unreadable with JS syntax preventing us from 
+	// 		splitting the key into several lines...
+	var cfg = {}
+	cfg['Image name pattern | '+
+			'%f - full filename\n'+
+			'%n - filename\n'+
+			'%e - extension\n'+
+			'%gid - log gid\n'+
+			'%g - short gid\n'+
+			'%i - order'] = '%f'
+	cfg['Fav directory name'] = 'fav'
+	cfg['Destination'] = {ndir: dfl}
+
+	var keys = Object.keys(cfg)
+
+	formDialog(null, '<b>Export source:</b> '+ state +'.', cfg, 'OK', 'exportPreviewsDialog')
 		.done(function(data){
 			exportTo(
-				data['Destination'], 
-				data['Image name pattern'], 
-				data['Fav directory name'])
+				normalizePath(data[keys[2]]), 
+				data[keys[0]], 
+				data[keys[1]])
 
 			// XXX do real reporting...
 			showStatusQ('Copying data...')
@@ -758,7 +770,7 @@ function loadDirectoryDialog(dfl){
 			toggleSingleRibbonMode('off')
 			toggleMarkedOnlyView('off')
 
-			path = path.trim()
+			path = normalizePath(path.trim())
 			statusNotify(loadDir(path))
 		})
 		.fail(function(){

@@ -44,6 +44,7 @@ if(window.CEF_dumpJSON != null){
 	// XXX make this work across fs...
 	// XXX this will not overwrite...
 	window.copyFile = function(src, dst){
+		var deferred = $.Deferred()
 		if(fp.test(src)){
 			// XXX will this work on Mac???
 			src = src.replace(fp, '')
@@ -58,7 +59,7 @@ if(window.CEF_dumpJSON != null){
 		path = path.join('/')
 
 
-		// XXX make dirs...
+		// make dirs...
 		if(!fs.existsSync(path)){
 			console.log('making:', path)
 			fse.mkdirRecursiveSync(path)
@@ -66,8 +67,17 @@ if(window.CEF_dumpJSON != null){
 
 		if(!fs.existsSync(dst)){
 			// NOTE: this is not sync...
-			return fse.copy(src, dst)
+			fse.copy(src, dst, function(err){
+				if(err){
+					deferred.reject(err)
+				} else {
+					deferred.resolve()
+				}
+			})
+			return deferred
 		}
+		deferred.notify(dst, 'exists')
+		return deferred.resolve()
 	}
 	window.dumpJSON = function(path, data){
 		if(fp.test(path)){

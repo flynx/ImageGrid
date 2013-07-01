@@ -563,6 +563,9 @@ function exportTo(path, im_name, dir_name, size){
 	dir_name = dir_name == null ? 'fav' : dir_name
 	size = size == null ? 1000 : size
 
+	// starting point...
+	//var deferred = $.Deferred().resolve()
+
 	var base_path = path
 	path = normalizePath(path)
 
