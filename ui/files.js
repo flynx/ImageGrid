@@ -557,6 +557,9 @@ function updateRibbonsFromFavDirs(){
 
 // Export current state to directory...
 //
+// XXX this copies the files in parallel, make it sync and sequential...
+// 		...reason is simple, if we stop the copy we need to end up with 
+// 		part of the files copied full rather than all partially...
 function exportTo(path, im_name, dir_name, size){
 	path = path == null ? BASE_URL : path
 	im_name = im_name == null ? '%f' : im_name
@@ -570,7 +573,16 @@ function exportTo(path, im_name, dir_name, size){
 	path = normalizePath(path)
 
 	var order = DATA.order
-	var z = (('10e' + (order.length + '').length) * 1 + '').slice(2)
+	var Z = (('10e' + (order.length + '').length) * 1 + '').slice(2)
+
+	// mainly used for file naming, gives us ability to number images 
+	// in the current selection...
+	var selection = []
+	$.each(DATA.ribbons, function(_, e){
+		selection = selection.concat(e)
+	})
+	selection.sort(imageOrderCmp)
+	var z = (('10e' + (selection.length + '').length) * 1 + '').slice(2)
 
 	// go through ribbons...
 	for(var i=DATA.ribbons.length-1; i >= 0; i--){
@@ -593,8 +605,11 @@ function exportTo(path, im_name, dir_name, size){
 			// gid...
 			dest = dest.replace('%gid', gid)
 			dest = dest.replace('%g', gid.slice(34))
-			// order...
+			// global order...
 			var o = order.indexOf(gid) + ''
+			dest = dest.replace('%I', (Z + o).slice(o.length))
+			// 
+			var o = selection.indexOf(gid) + ''
 			dest = dest.replace('%i', (z + o).slice(o.length))
 			// XXX Metadata...
 			// XXX

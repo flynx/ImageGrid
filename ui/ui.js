@@ -728,7 +728,8 @@ function exportPreviewsDialog(state, dfl){
 			'%e - extension\n'+
 			'%gid - log gid\n'+
 			'%g - short gid\n'+
-			'%i - order'] = '%f'
+			'%I - global order\n'+
+			'%i - current selection order'] = '%f'
 	cfg['Fav directory name'] = 'fav'
 	cfg['Destination'] = {ndir: dfl}
 
