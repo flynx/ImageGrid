@@ -125,8 +125,12 @@ if(window.CEF_dumpJSON != null){
 		$('.title-bar .title').text(title)
 	}
 
-	// vips preview generation...
-	// XXX make this queuable...
+	// preview generation...
+	//
+	// NOTE: this will add already existing previews to IMAGES[gid]...
+	//
+	// XXX make this not just vips-specific...
+	// XXX path handling is a mess...
 	window.makeImagePreviews = function(gid, sizes){
 
 		var img = IMAGES[gid]
@@ -149,8 +153,8 @@ if(window.CEF_dumpJSON != null){
 		}
 
 		// build usable local path (without 'file:///')...
-		var path = normalizePath(CACHE_DIR)
-		path = path.replace(fp, '')
+		var cache_path = normalizePath(CACHE_DIR)
+		cache_path = cache_path.replace(fp, '')
 
 		// get cur image size...
 		var size_getter = $.Deferred()
@@ -162,7 +166,8 @@ if(window.CEF_dumpJSON != null){
 		
 		for(var i=0; i < sizes.length; i++){
 			var size = sizes[i]
-			var target_path = [ path, size+'px' ].join('/')
+			// XXX get this from config...
+			var target_path = [ cache_path, size+'px' ].join('/')
 
 			var deferred = $.Deferred()
 			previews.push(deferred)
@@ -179,8 +184,18 @@ if(window.CEF_dumpJSON != null){
 
 					// skip previews larger than cur image...
 					if(fs.existsSync(target_path +'/'+ name) || source_size <= size){
+						// see if we know about the preview...
+						if(img.preview == null || !((size+'px') in img.preview)){
+							var preview_path = [target_path, name].join('/')
+							// add the preview to the image object...
+							img.preview[size+'px'] = './' + CACHE_DIR +'/'+ preview_path.split(CACHE_DIR).pop()
+							// mark image dirty...
+							if(IMAGES_UPDATED.indexOf(gid) < 0){
+								IMAGES_UPDATED.push(gid)
+							}
+						}
 						//console.log('>>> Preview:', name, '('+size+'): Skipped.')
-						deferred.notify(gid, size, 'skipped')
+						deferred.notify(gid, size, 'exists')
 						return deferred.resolve()
 					}
 
@@ -191,6 +206,7 @@ if(window.CEF_dumpJSON != null){
 						var preview_path = [target_path, name].join('/')
 						var factor = source_size / size
 
+						// XXX make this compatible with other image processors...
 						var cmd = 'vips im_shrink "$IN" "$OUT:$COMPRESSION" $FACTOR $FACTOR'
 							.replace(/\$IN/g, source.replace(fp, ''))
 							.replace(/\$OUT/g, preview_path)
