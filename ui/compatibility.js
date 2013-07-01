@@ -127,7 +127,7 @@ if(window.CEF_dumpJSON != null){
 
 	// vips preview generation...
 	// XXX make this queuable...
-	window.makeImagePreviews = function(gid){
+	window.makeImagePreviews = function(gid, sizes){
 
 		var img = IMAGES[gid]
 		var source = normalizePath(img.path)
@@ -136,18 +136,23 @@ if(window.CEF_dumpJSON != null){
 
 		var previews = []
 
-		// XXX get real sizes from config...
-		var sizes = [
-				150,
-				350,
-				900
-			]
+		// prepare the sizes we are going to be working with...
+		if(sizes == null){
+			// XXX get real sizes from config...
+			var sizes = [
+					150,
+					350,
+					900
+				]
+		} else if(typeof(sizes) == typeof(123)){
+			sizes = [ sizes ]
+		}
 
-		// XXX take this from config...
+		// build usable local path (without 'file:///')...
 		var path = normalizePath(CACHE_DIR)
 		path = path.replace(fp, '')
 
-		// XXX get cur image size...
+		// get cur image size...
 		var size_getter = $.Deferred()
 		var _i = new Image()
 		_i.onload = function(){
@@ -162,21 +167,24 @@ if(window.CEF_dumpJSON != null){
 			var deferred = $.Deferred()
 			previews.push(deferred)
 
-			// NOTE: for some magical reason writing this like this:
+			// NOTE: for some magical reason writing this like:
 			// 		(function(...){
 			// 			...
 			// 		}(...))
-			// 		produces a "undefined is not a function" in except the 
-			// 		first invocation...
+			// 		produces a "undefined is not a function" in part of the
+			// 		invocations, usually the later ones...
 			var _f = function(size, target_path, deferred){
+				// wait for current image size if needed...
 				size_getter.done(function(source_size){
 
 					// skip previews larger than cur image...
 					if(fs.existsSync(target_path +'/'+ name) || source_size <= size){
-						console.log('>>> Preview:', name, '('+size+'): Skipped.')
+						//console.log('>>> Preview:', name, '('+size+'): Skipped.')
+						deferred.notify(gid, size, 'skipped')
 						return deferred.resolve()
 					}
 
+					// create the directory then go to its content...
 					// XXX check for errors...
 					fse.mkdirRecursive(target_path, function(err){
 
@@ -191,24 +199,23 @@ if(window.CEF_dumpJSON != null){
 
 						proc.exec(cmd, function(error, stdout, stderr){
 							if(error != null){
-								console.error('>>> Error: preview:', stderr)
+								//console.error('>>> Error: preview:', stderr)
+								deferred.notify(gid, size, 'error', stderr)
 								deferred.reject()
 
 							} else {
-
-								console.log('>>> Preview:', name, '('+size+'): Done.')
-
+								//console.log('>>> Preview:', name, '('+size+'): Done.')
+								deferred.notify(gid, size, 'done')
+								// update the image structure...
 								if(!('preview' in img)){
 									img.preview = {}
 								}
-
 								img.preview[size+'px'] = './' + CACHE_DIR +'/'+ preview_path.split(CACHE_DIR).pop()
-
 								// mark image dirty...
 								if(IMAGES_UPDATED.indexOf(gid) < 0){
 									IMAGES_UPDATED.push(gid)
 								}
-
+								// we are done...
 								deferred.resolve()
 							}
 						})
@@ -223,9 +230,17 @@ if(window.CEF_dumpJSON != null){
 		return $.when.apply(null, previews)
 	}
 
-	// XXX is this robust enough???
 	window._PREVIW_CREATE_QUEUE = null
-	window.makeImagesPreviewsQ = function(gids){
+	// XXX is this robust enough???
+	// 		of one deferred hangs or breaks without finalizing this will 
+	// 		stall the whole queue...
+	// 		...need a way to jumpstart it again...
+	// XXX check if we are leaking the tail...
+	// XXX test progress...
+	// NOTE: this will remove the old deferred if it us resolved, thus
+	// 		clearing the "log" of previous operations, unless keep_log
+	// 		is set to true...
+	window.makeImagesPreviewsQ = function(gids, keep_log){
 		var previews = []
 
 		$.each(gids, function(i, e){
@@ -233,9 +248,10 @@ if(window.CEF_dumpJSON != null){
 
 			var last = previews[previews.length-1]
 
-			// first in this set...
+			// first in this set -- attach to the queue...
 			if(last == null){
-				if(_PREVIW_CREATE_QUEUE == null){
+				if(_PREVIW_CREATE_QUEUE == null
+						|| (!keep_log && _PREVIW_CREATE_QUEUE.state() == 'resolved')){
 					// if nothing in queue, start at once...
 					last = $.Deferred().resolve()
 				} else {
@@ -246,6 +262,9 @@ if(window.CEF_dumpJSON != null){
 			// append to deffered queue...
 			last.always(function(){
 				makeImagePreviews(e)
+					.progress(function(state){
+						deferred.notify(state)
+					})
 					.always(function(){
 						deferred.resolve()
 					})
