@@ -14,12 +14,16 @@
 .expanding-text:hover .hidden {
   display: inline;
 }
-[tooltip-top] {
+/* XXX cleanup and style... 
+ 	- make the arrow exact (like in .tooltip-right)
+	- need to align correctly for really narrow elements...
+*/
+[tooltip] {
   position: relative;
   text-decoration: none;
 }
-[tooltip-top]:after {
-  content: attr(tooltip-top);
+[tooltip]:after {
+  content: attr(tooltip);
   position: absolute;
   bottom: 130%;
   left: 20%;
@@ -27,13 +31,15 @@
   padding: 5px 15px;
   color: black;
   border-radius: 10px;
-  white-space: nowrap;
+  white-space: pre;
+  text-align: left;
+  font-size: 10px;
   opacity: 0;
   -webkit-transition: all 0.4s ease;
   -moz-transition: all 0.4s ease;
   transition: all 0.4s ease;
 }
-[tooltip-top]:before {
+[tooltip]:before {
   content: "";
   position: absolute;
   width: 0;
@@ -48,15 +54,40 @@
   left: 30%;
   bottom: 90%;
 }
-[tooltip-top]:hover:after {
+[tooltip]:hover:after {
   bottom: 100%;
 }
-[tooltip-top]:hover:before {
+[tooltip]:hover:before {
   bottom: 70%;
 }
-[tooltip-top]:hover:after,
-[tooltip-top]:hover:before {
+[tooltip]:hover:after,
+[tooltip]:hover:before {
   opacity: 1;
+}
+.tooltip-right[tooltip]:after {
+  bottom: auto;
+  top: -50%;
+  left: 15px;
+}
+.tooltip-right[tooltip]:before {
+  border-left: none;
+  border-right: 5px solid #ffcb66;
+  border-bottom: 5px solid transparent;
+  border-top: 5px solid transparent;
+  bottom: auto;
+  left: 10px;
+  top: 25%;
+}
+.tooltip-right[tooltip]:hover:after {
+  bottom: auto;
+}
+.tooltip-right[tooltip]:hover:before {
+  bottom: auto;
+}
+/* XXX might be good to move this to forms... */
+.tooltip-icon {
+  font-size: small;
+  opacity: 0.9;
 }
 /*********************************************************************/
 body {

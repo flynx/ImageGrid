@@ -103,28 +103,6 @@ if(window.CEF_dumpJSON != null){
 		})
 	}
 
-	window.toggleFullscreenMode = createCSSClassToggler(
-			document.body, 
-			'.full-screen-mode',
-			function(action){
-				gui.Window.get().toggleFullscreen()
-			})
-
-	window.closeWindow = function(){
-		gui.Window.get().close()
-	}
-	window.showDevTools = function(){
-		gui.Window.get().showDevTools()
-	}
-	window.reload = function(){
-		gui.Window.get().reload()
-	}
-	window.setWindowTitle = function(text){
-		var title = text +' - '+ APP_NAME
-		gui.Window.get().title = title
-		$('.title-bar .title').text(title)
-	}
-
 	// preview generation...
 	//
 	// NOTE: this will add already existing previews to IMAGES[gid]...
@@ -253,6 +231,7 @@ if(window.CEF_dumpJSON != null){
 	// 		...need a way to jumpstart it again...
 	// XXX check if we are leaking the tail...
 	// XXX test progress...
+	// 		...gets collected but the structure is a tad too complex...
 	// NOTE: this will remove the old deferred if it us resolved, thus
 	// 		clearing the "log" of previous operations, unless keep_log
 	// 		is set to true...
@@ -291,6 +270,29 @@ if(window.CEF_dumpJSON != null){
 
 		_PREVIW_CREATE_QUEUE = $.when.apply(null, previews)
 		return _PREVIW_CREATE_QUEUE
+	}
+
+	// UI-specific...
+	window.toggleFullscreenMode = createCSSClassToggler(
+			document.body, 
+			'.full-screen-mode',
+			function(action){
+				gui.Window.get().toggleFullscreen()
+			})
+
+	window.closeWindow = function(){
+		gui.Window.get().close()
+	}
+	window.showDevTools = function(){
+		gui.Window.get().showDevTools()
+	}
+	window.reload = function(){
+		gui.Window.get().reload()
+	}
+	window.setWindowTitle = function(text){
+		var title = text +' - '+ APP_NAME
+		gui.Window.get().title = title
+		$('.title-bar .title').text(title)
 	}
 
 	// load UI stuff...

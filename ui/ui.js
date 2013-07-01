@@ -543,6 +543,11 @@ var FIELD_TYPES = {
 //		...
 //	}	
 //
+// <field-description> and split in two with a "|" the section before will
+// show as the field text and the text after as the tooltip.
+// Example:
+// 		"field text | field tooltip..."
+//
 // field's default value determines it's type:
 // 	bool		- checkbox
 // 	string		- textarea
@@ -551,6 +556,8 @@ var FIELD_TYPES = {
 //
 // NOTE: if btn is set to false explicitly then no button will be 
 // 		rendered in the form dialog.
+// NOTE: to include a literal "|" in <field-description> just escape it
+// 		like this: "\|"
 //
 // XXX add form testing...
 // XXX add undefined field handling/reporting...
@@ -575,7 +582,20 @@ function formDialog(root, message, config, btn, cls){
 				var field = FIELD_TYPES[f]
 				var html = $(field.html)
 
-				html.find('.text').text(t)
+				// get the tooltip...
+				if(/[^\\]\|/.test(t)){
+					var tip = t.split(/\s*\|\s*/)
+					text = tip[0]
+					tip = tip[1]
+					$('<span class="tooltip-icon tooltip-right">?</span>')
+						.attr('tooltip', tip)
+						.appendTo(html)
+				// cleanup...
+				} else {
+					text = t.replace(/\\\|/g, '|')
+				}
+				// setup text and data...
+				html.find('.text').text(text)
 				field.set(html, config[t])
 
 				// NOTE: this is here to isolate t and field.get values...
@@ -699,7 +719,7 @@ function exportPreviewsDialog(state, dfl){
 	updateStatus('Export...').show()
 
 	formDialog(null, '<b>Export source:</b> '+ state +'.', {
-		'Image name pattern': '%f',
+		'Image name pattern | %f - full filename \n%n - filename \n%e - extension \n%gid - log gid \n%g - short gid \n%i - order': '%f',
 		'Fav directory name': 'fav',
 		'Destination': {ndir: dfl},
 	}, 'OK', 'exportPreviewsDialog')
