@@ -50,13 +50,13 @@ makepreview(){
 	OUT="$3"
 
 	# create preview dir if it does not already exist...
-	DIR="`dirname \"${OUT}\"`"
-	if ! [ -e "$DIR" ] ; then
-		mkdir -p "$DIR"
+	DIR="`dirname \"./${OUT}\"`"
+	if ! [ -e "./$DIR" ] ; then
+		mkdir -p "./$DIR"
 	fi
 
 	# create previews...
-	if ! [ -e "${OUT}" ] ; then
+	if ! [ -e "./${OUT}" ] ; then
 
 		# get source size...
 		W=$(vips im_header_int width "$IN")
@@ -71,7 +71,7 @@ makepreview(){
 
 		echo "($FACTOR): ${OUT}:${COMPRESSION}"
 
-		vips im_shrink "$IN" "${OUT}:${COMPRESSION}" $FACTOR $FACTOR 2> /dev/null
+		vips im_shrink "./$IN" "./${OUT}:${COMPRESSION}" $FACTOR $FACTOR 2> /dev/null
 	fi
 }
 
@@ -84,7 +84,7 @@ for FROM in */DCIM/hi-res\ \(RAW\)/*jpg ; do
 	TO="${FROM/hi-res\ /preview }"
 
 	# XXX do different-sized previews...
-	makepreview "$SIZE" "./$FROM" "$TO"
+	makepreview "$SIZE" "./$FROM" "./$TO"
 done
 
 # vim:set nowrap nospell :
