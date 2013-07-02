@@ -1,6 +1,12 @@
 #!/bin/bash
 
-ARCHIVE_ROOT="."
+if [ $1 ] ; then
+	ARCHIVE_ROOT="$1"
+else
+	ARCHIVE_ROOT="."
+fi
+
+echo "Doing: \"$ARCHIVE_ROOT\""
 
 
 METADATA_DIR="metadata"
@@ -40,6 +46,7 @@ SIZE=900
 
 COMPRESSION=90
 
+# XXX remove this in production...
 PATH=$PATH:/mnt/d/Program\ Files/vips/bin/
 
 # makepreview SIZE IN OUT
