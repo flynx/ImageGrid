@@ -20,17 +20,6 @@
 *
 **********************************************************************/
 
-// NOTE: NAV_ALL might not be practical...
-var NAV_ALL = '*'
-var NAV_VISIBLE = ':visible'
-var NAV_MARKED = '.marked:visible'
-var NAV_DEFAULT = NAV_ALL
-
-var NAV_RIBBON_ALL = ''
-var NAV_RIBBON_VISIBLE = ':visible'
-var NAV_RIBBON_DEFAULT = NAV_RIBBON_ALL
-//var NAV_RIBBON_DEFAULT = NAV_RIBBON_VISIBLE
-
 // can be:
 // 	- animate
 // 	- css
@@ -213,13 +202,12 @@ function getScreenWidthInImages(size){
 // NOTE: this might return an empty target if the ribbon is empty...
 // NOTE: this only "sees" the loaded images, for a full check use 
 // 		getGIDBefore(...) that will check the full data...
-function getImageBefore(image, ribbon, mode){
-	mode = mode == null ? NAV_DEFAULT : mode
+function getImageBefore(image, ribbon){
 	image = image == null ? getImage() : $(image)
 	if(ribbon == null){
 		ribbon = getRibbon(image)
 	}
-	var images = $(ribbon).find('.image').filter(mode)
+	var images = $(ribbon).find('.image')
 	var order = getImageOrder(image)
 	var prev = []
 
@@ -235,7 +223,7 @@ function getImageBefore(image, ribbon, mode){
 
 
 function shiftTo(image, ribbon){
-	var target = getImageBefore(image, ribbon, NAV_ALL)
+	var target = getImageBefore(image, ribbon)
 	var cur_ribbon = getRibbon(image)
 
 	// insert before the first image if nothing is before the target...
@@ -623,7 +611,7 @@ function centerRibbon(ribbon, image, mode){
 	// we are at the start of a ribbon -- nothing before...
 	} else {
 		// get first image in ribbon...
-		target = ribbon.find('.image').filter(NAV_DEFAULT).first() 
+		target = ribbon.find('.image').first() 
 		var dl = getRelativeVisualPosition(target, image).left/scale
 		l = {
 			left: l + dl + (w/2) + offset
@@ -646,7 +634,6 @@ function centerRibbon(ribbon, image, mode){
 // a shorthand...
 function centerRibbons(mode, no_skip_current){
 	return $('.ribbon')
-		.filter('*' + NAV_RIBBON_DEFAULT)
 		.each(function(){ 
 			if(no_skip_current == true && $(this).find('.current.image').length > 0){
 				return
@@ -665,7 +652,7 @@ function centerRibbons(mode, no_skip_current){
 function clickHandler(evt){
 	var img = $(evt.target).closest('.image')
 
-	if(img.filter(NAV_VISIBLE).length > 0){
+	if(img.length > 0){
 		centerView(focusImage(img))
 
 		centerRibbons()
@@ -689,10 +676,9 @@ function dblClickHandler(evt){
 */
 
 // basic navigation actions...
-function nextImage(n, mode){
-	mode = mode == null ? NAV_DEFAULT : mode
+function nextImage(n){
 	n = n == null ? 1 : n
-	var target = getImage().nextAll('.image' + mode)
+	var target = getImage().nextAll('.image')
 	if(target.length < n){
 		target = target.last()
 		target = target.length == 0 ? getImage() : target
@@ -705,10 +691,9 @@ function nextImage(n, mode){
 	}
 	return centerView(focusImage(target))
 }
-function prevImage(n, mode){
-	mode = mode == null ? NAV_DEFAULT : mode
+function prevImage(n){
 	n = n == null ? 1 : n
-	var target = getImage().prevAll('.image' + mode)
+	var target = getImage().prevAll('.image')
 	if(target.length < n){
 		target = target.last()
 		target = target.length == 0 ? getImage() : target
@@ -723,46 +708,43 @@ function prevImage(n, mode){
 }
 
 
-function nextScreenImages(mode){
-	return nextImage(Math.round(getScreenWidthInImages()), mode)
+function nextScreenImages(){
+	return nextImage(Math.round(getScreenWidthInImages()))
 }
-function prevScreenImages(mode){
-	return prevImage(Math.round(getScreenWidthInImages()), mode)
+function prevScreenImages(){
+	return prevImage(Math.round(getScreenWidthInImages()))
 }
 
 
 // XXX revise...
-function firstImage(mode){
+function firstImage(){
 	$('.viewer').trigger('requestedFirstImage', [getRibbon()])
 
-	mode = mode == null ? NAV_DEFAULT : mode
-	if(getImage().prevAll('.image' + mode).length == 0){
+	if(getImage().prevAll('.image').length == 0){
 		flashIndicator('start')
 	}
 	return centerView(
 		focusImage(
-			getRibbon().find('.image').filter(mode).first()))
+			getRibbon().find('.image').first()))
 }
 // XXX revise...
-function lastImage(mode){
+function lastImage(){
 	$('.viewer').trigger('requestedLastImage', [getRibbon()])
 
-	mode = mode == null ? NAV_DEFAULT : mode
-	if(getImage().nextAll('.image' + mode).length == 0){
+	if(getImage().nextAll('.image').length == 0){
 		flashIndicator('end')
 	}
 	return centerView(
 		focusImage(
-			getRibbon().find('.image').filter(mode).last()))
+			getRibbon().find('.image').last()))
 }
 
 
 // NOTE: if moving is 'next' these will chose the image after the current's order.
 // NOTE: if an image with the same order is found, moving argument has no effect.
-function prevRibbon(mode){
-	mode = mode == null ? NAV_DEFAULT : mode
+function prevRibbon(){
 	var cur = getImage()
-	var target_ribbon = getRibbon(cur).prevAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
+	var target_ribbon = getRibbon(cur).prevAll('.ribbon').first()
 	var target = getImageBefore(cur, target_ribbon)
 
 	// no ribbon above...
@@ -772,19 +754,18 @@ function prevRibbon(mode){
 	} else {
 		// first image...
 		if(target.length == 0){
-			target = target_ribbon.find('.image' + mode).first()
+			target = target_ribbon.find('.image').first()
 		
 		} else {
-			var next = target.nextAll('.image' + mode).first()
+			var next = target.nextAll('.image').first()
 			target = next.length > 0 ? next : target
 		}
 	}
 	return centerView(focusImage(target))
 }
-function nextRibbon(mode){
-	mode = mode == null ? NAV_DEFAULT : mode
+function nextRibbon(){
 	var cur = getImage()
-	var target_ribbon = getRibbon(cur).nextAll('.ribbon' + NAV_RIBBON_DEFAULT).first()
+	var target_ribbon = getRibbon(cur).nextAll('.ribbon').first()
 	var target = getImageBefore(cur, target_ribbon)
 
 	// no ribbon below...
@@ -794,7 +775,7 @@ function nextRibbon(mode){
 	} else {
 		// first image...
 		if(target.length == 0){
-			target = target_ribbon.find('.image' + mode).first()
+			target = target_ribbon.find('.image').first()
 		}
 	}
 
@@ -1061,17 +1042,16 @@ function zoomOut(){
 // NOTE: for shiftImageRight/shiftImageLeft see data.js, as they depend
 // 		on data ordering...
 
-function shiftImageTo(image, direction, moving, force_create_ribbon, mode){
+function shiftImageTo(image, direction, moving, force_create_ribbon){
 	if(image == null){
 		image = getImage()
 	}
-	mode = mode == null ? NAV_DEFAULT : mode
 
 	// account move for direction...
 	// XXX get the value from some place more logical than the argument...
 	var a = moving == 'prev' ? 'prevAll' : 'nextAll' 
 	var b = moving == 'prev' ? 'nextAll' : 'prevAll' 
-	var target = image[a]('.image' + mode).first()
+	var target = image[a]('.image').first()
 
 	target = target.length == 0 ? image[b]().first() : target
 
