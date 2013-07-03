@@ -88,6 +88,8 @@ $(DIST_DIR):
 $(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) node-deps
 	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) $(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(NODE_DIR)
 
+zip: $(APP_ZIP)
+
 
 
 #**********************************************************************
