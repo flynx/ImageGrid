@@ -92,8 +92,8 @@ Roadmap
 
 
 [_] 29% Gen 3 current todo
-	[_] 58% High priority
-		[_] % Priority tasks
+	[_] 59% High priority
+		[_] 0% Priority tasks
 			[_] full archive index
 				[_] segmented loading of images and data
 				[_] ribbon separation
@@ -173,6 +173,8 @@ Roadmap
 			|
 			| Apparently fixed by storing the preview URL in image.data(), this 
 			| is slower but avoids problems with multiple updates and races...
+		[_] editable list of external commands...
+		| to add things like exportdirs.py etc.
 		[_] 60% basic dialogs
 			[_] select from list
 			[X] alert
@@ -184,8 +186,6 @@ Roadmap
 		[_] save settings to config.json
 		[_] Q: do we need separate theme settings?
 		| ...for ribbon and single-image modes?
-		[_] editable list of external commands...
-		| to add things like exportdirs.py etc.
 		[_] workflow editor (external app?)...
 		| edit sequence of actions and events...
 		|
@@ -248,21 +248,13 @@ Roadmap
 		| 	screen width: 4
 		| 	jumping to end from start of ribbon
 		[_] ASAP: test on Android...
-		[_] 75% image sorting (date/name/...)
-			[X] 100% sort by:
-				[X] date
-				[X] name
-				[X] manual shift left/right/position
-				| position shift is mark and shift here..
-			[_] 50% Sort ui
-				[X] reverse
-				[_] select sort method
 		[_] 50% Undo/Redo
 			[X] basic one step (revert to last save)
 			[_] push/pop state stack
-		[_] 26% mark-based operations
-			[_] 33% cropping selection
+		[_] 30% mark-based operations
+			[_] 50% cropping selection
 				[X] marked
+				[X] ribbon
 				[_] by tag/collection
 				[_] by group
 			[X] shift up/down
@@ -281,16 +273,10 @@ Roadmap
 			| 		a list or a member image (primary).
 			[_] collection
 			| make or add to existing collection
-		[_] single ribbon mode
-		| should this have up/down navigation?
-		|
-		| something like showGidsAsRibbon(gids) would be generic and logical...
 		[_] add ability to save/load ranges of images and the structures around them
 		| e.g.load image 100 to current ribbon -> will load 100 images
 		| for current ribbon and all the in between images from other
 		| ribbons above and below...
-		[_] build cache in background...
-		| this must be done while updating IMAGES live...
 		[_] single image mode transition (alpha-blend/fade/none)
 		[_] 0% grouping / meta-image
 			[_] versions w. label image
@@ -310,6 +296,27 @@ Roadmap
 			[_] remove extra and repetitive actions
 			[_] caching config
 		[_] side-by side view...
+		[X] single ribbon mode
+		| should this have up/down navigation?
+		|
+		| something like showGidsAsRibbon(gids) would be generic and logical...
+		[X] build cache in background...
+		| this must be done while updating IMAGES live...
+		[X] 100% dialog constructor
+			[X] widget: text
+			[X] widget: bool
+			[X] widget: choice
+			[X] widget: dir/ndir
+			| browser native (dir) and custom (ndir) directory selector...
+		[X] 100% image sorting (date/name/...)
+			[X] 100% sort by:
+				[X] date
+				[X] name
+				[X] manual shift left/right/position
+				| position shift is mark and shift here..
+			[X] 100% Sort ui
+				[X] reverse
+				[X] select sort method
 		[X] usable empty view -- w.o. data...
 		[X] 100% UI elements
 			[X] indicators
