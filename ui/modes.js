@@ -133,11 +133,11 @@ var toggleSingleImageMode = createCSSClassToggler(
 				TRANSITION_MODE_DEFAULT = 'css'
 
 				// save things...
-				SETTINGS['screen-images-ribbon-mode'] = w
-				SETTINGS['image-info-ribbon-mode'] = toggleImageInfo('?')
+				SETTINGS['ribbon-mode-screen-images'] = w
+				SETTINGS['ribbon-mode-image-info'] = toggleImageInfo('?')
 
 				// load things...
-				w = SETTINGS['screen-images-single-image-mode']
+				w = SETTINGS['single-image-mode-screen-images']
 				w = w == null ? 1 : w
 				var p = SETTINGS['single-image-mode-proportions']
 				p = p == null ? 'square' : p
@@ -152,18 +152,18 @@ var toggleSingleImageMode = createCSSClassToggler(
 				TRANSITION_MODE_DEFAULT = 'animate'
 
 				// save things...
-				SETTINGS['screen-images-single-image-mode'] = w
+				SETTINGS['single-image-mode-screen-images'] = w
 				SETTINGS['single-image-mode-proportions'] = toggleImageProportions('?')
 
 				// load things...
-				w = SETTINGS['screen-images-ribbon-mode']
+				w = SETTINGS['ribbon-mode-screen-images']
 				w = w == null ? DEFAULT_SCREEN_IMAGES : w
 
 				toggleImageProportions('none')
 				fitNImages(w)
-				var i = SETTINGS['image-info-ribbon-mode'] == 'on' ? 'on' : 'off'
+				var i = SETTINGS['ribbon-mode-image-info'] == 'on' ? 'on' : 'off'
 				toggleImageInfo(i)
-				SETTINGS['image-info-ribbon-mode'] = i
+				SETTINGS['ribbon-mode-image-info'] = i
 
 				centerRibbons()
 			}
@@ -287,7 +287,7 @@ var toggleTheme = createCSSClassToggler(
 		],
 		// XXX does this get called for default state (gray)???
 		function(action){
-			SETTINGS['theme'] = action
+			SETTINGS['global-theme'] = action
 		})
 
 
@@ -296,7 +296,7 @@ var toggleImageInfo = createCSSClassToggler(
 		'.image-info-visible',
 		function(action){
 			if(toggleSingleImageMode('?') == 'off'){
-				SETTINGS['image-info-ribbon-mode'] = action
+				SETTINGS['ribbon-mode-image-info'] = action
 			}
 		})
 

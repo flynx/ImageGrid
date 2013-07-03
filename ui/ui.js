@@ -584,6 +584,7 @@ function formDialog(root, message, config, btn, cls){
 
 				// get the tooltip...
 				if(/[^\\]\|/.test(t)){
+					// XXX do we need to cut the spaces off here???
 					var tip = t.split(/\s*\|\s*/)
 					text = tip[0]
 					tip = tip[1]
@@ -660,6 +661,12 @@ function formDialog(root, message, config, btn, cls){
 
 
 /************************************************ Standard dialogs ***/
+// NOTE: these return a deferred that will reflect the state of the 
+// 		dialog, and the progress of the operations that it riggers...
+//
+// XXX might be a good idea to be able to block the ui (overlay + progress
+// 		bar?) until some long/critical operations finish, to prevent the
+// 		user from breaking things while the ui is inconsistent...
 
 var _alert = alert
 function alert(){
@@ -742,15 +749,12 @@ function exportPreviewsDialog(state, dfl){
 				normalizePath(data[keys[2]]), 
 				data[keys[0]], 
 				data[keys[1]])
-
 			// XXX do real reporting...
 			showStatusQ('Copying data...')
-
 			res.resolve(data[''])
 		})
 		.fail(function(){ 
 			showStatusQ('Export: canceled.')
-
 			res.reject() 
 		})
 

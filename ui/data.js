@@ -109,12 +109,13 @@ var IMAGES_CREATED = false
 
 var MARKED = []
 
+// NOTE: these are named: <mode>-<feature>
 var SETTINGS = {
-	'theme': null,
-	'screen-images-ribbon-mode': null,
-	'screen-images-single-image-mode': null,
+	'global-theme': null,
+	'ribbon-mode-screen-images': null,
+	'single-image-mode-screen-images': null,
 	'single-image-mode-proportions': null,
-	'image-info-ribbon-mode': 'off',
+	'ribbon-mode-image-info': 'off',
 }
 
 var BASE_URL = '.'
@@ -1030,17 +1031,17 @@ function reloadViewer(images_per_screen){
 
 // Apply the current SETTINGS to current viewer
 function loadSettings(){
-	toggleTheme(SETTINGS['theme'])
+	toggleTheme(SETTINGS['global-theme'])
 
 	if(toggleSingleImageMode('?') == 'on'){
-		var w = SETTINGS['screen-images-single-image-mode']
+		var w = SETTINGS['single-image-mode-screen-images']
 		if(window.PROPORTIONS_RATIO_THRESHOLD == null){
 			var p = SETTINGS['single-image-mode-proportions']
 			toggleImageProportions(p)
 		}
 	} else {
-		var w = SETTINGS['screen-images-ribbon-mode']
-		toggleImageInfo(SETTINGS['image-info-ribbon-mode'] == 'on' ? 'on' : 'off')
+		var w = SETTINGS['ribbon-mode-screen-images']
+		toggleImageInfo(SETTINGS['ribbon-mode-image-info'] == 'on' ? 'on' : 'off')
 	}
 	fitNImages(w)
 }

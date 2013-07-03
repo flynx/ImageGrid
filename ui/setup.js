@@ -180,9 +180,9 @@ function setupDataBindings(viewer){
 
 			// update settings...
 			if(toggleSingleImageMode('?') == 'on'){
-				SETTINGS['screen-images-single-image-mode'] = n
+				SETTINGS['single-image-mode-screen-images'] = n
 			} else {
-				SETTINGS['screen-images-ribbon-mode'] = n
+				SETTINGS['ribbon-mode-screen-images'] = n
 			}
 
 			// update proportions...
