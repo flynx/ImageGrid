@@ -759,20 +759,36 @@ function exportPreviewsDialog(state, dfl){
 
 function loadDirectoryDialog(dfl){
 	dfl = dfl == null ? BASE_URL : dfl
-	// browser version...
-	var getter = window.listDir != null ? getDir : prompt
 
 	updateStatus('Open...').show()
 
-	getter('Path to open', dfl)
-		.done(function(path){
+	formDialog(null, 'Path to open', {
+		'': {ndir: dfl},
+		'Precess previews': false,
+	}, 'OK', 'getDir')
+	//getter('Path to open', dfl)
+	//	.done(function(path){
+		.done(function(data){
+			var path = data['']
+			var process_previews = data['Precess previews']
 			// reset the modes...
 			toggleSingleImageMode('off')
 			toggleSingleRibbonMode('off')
 			toggleMarkedOnlyView('off')
 
 			path = normalizePath(path.trim())
+
 			statusNotify(loadDir(path))
+				.done(function(){
+					// XXX do we need to test anything else here???
+					if(!process_previews){ 
+						showStatusQ('Previews: processing started...')
+						makeImagesPreviewsQ(DATA.order) 
+							.done(function(){ 
+								showStatusQ('Previews: processing done.')
+							})
+					}
+				})
 		})
 		.fail(function(){
 			showStatusQ('Open: canceled.')
