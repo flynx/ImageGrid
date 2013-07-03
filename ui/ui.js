@@ -708,6 +708,7 @@ function exportPreviewsDialog(state, dfl){
 	dfl = dfl == null ? BASE_URL : dfl
 
 	// XXX make this more generic...
+	// tell the user what state are we exporting...
 	if(state == null){
 		state = toggleMarkedOnlyView('?') == 'on' ? 'marked images' : state
 		state = toggleSingleRibbonMode('?') == 'on' ? 'current ribbon' : state
@@ -735,7 +736,7 @@ function exportPreviewsDialog(state, dfl){
 
 	var keys = Object.keys(cfg)
 
-	formDialog(null, '<b>Export source:</b> '+ state +'.', cfg, 'OK', 'exportPreviewsDialog')
+	formDialog(null, '<b>Export:</b> '+ state +'.', cfg, 'OK', 'exportPreviewsDialog')
 		.done(function(data){
 			exportTo(
 				normalizePath(data[keys[2]]), 
