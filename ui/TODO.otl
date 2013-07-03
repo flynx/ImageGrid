@@ -106,6 +106,9 @@ Roadmap
 				[_] index and group ALL files in an archive
 				[_] import metadata
 				[_] real GIDs
+		[_] BUG: shifting last image out of a ribbon misaligns the current ribbon
+		| i.e. the prev ribbon was deleted and the new focused ribbon
+		| is aligned as if it was not current...
 		[_] BUG: sometimes loading a raw directory stops at "error loading data.json"
 		| and some times it does not err..
 		[_] BUG: jumping in ribbon sometimes does not load the ribbon correctly...
