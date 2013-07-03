@@ -765,24 +765,22 @@ function loadDirectoryDialog(dfl){
 	formDialog(null, 'Path to open', {
 		'': {ndir: dfl},
 		'Precess previews': false,
-	}, 'OK', 'getDir')
-	//getter('Path to open', dfl)
-	//	.done(function(path){
+	}, 'OK', 'loadDirectoryDialog')
 		.done(function(data){
-			var path = data['']
+			var path = normalizePath(data[''].trim())
 			var process_previews = data['Precess previews']
+
 			// reset the modes...
 			toggleSingleImageMode('off')
 			toggleSingleRibbonMode('off')
 			toggleMarkedOnlyView('off')
 
-			path = normalizePath(path.trim())
-
+			// do the loading...
 			statusNotify(loadDir(path))
 				.done(function(){
-					// XXX do we need to test anything else here???
 					if(!process_previews){ 
 						showStatusQ('Previews: processing started...')
+						// generate/attach previews...
 						makeImagesPreviewsQ(DATA.order) 
 							.done(function(){ 
 								showStatusQ('Previews: processing done.')
