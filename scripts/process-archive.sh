@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $1 ] ; then
+if [ "$1" ] ; then
 	ARCHIVE_ROOT="$1"
 else
 	ARCHIVE_ROOT="."
@@ -34,12 +34,12 @@ JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 #		-srcfile "$PROCESSED_PREVIEW_NAME" -overwrite_original \
 # XXX keep file dates...
 
-exiftool -if '$jpgfromraw' -b -jpgfromraw -w "$PREVIEW_NAME" \
-	-execute -if '$previewimage' -b -previewimage -w "$PREVIEW_NAME" \
-	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ \
-		-srcfile "$PREVIEW_NAME" -overwrite_original \
-	-execute -j -w "$JSON_NAME" \
-	-common_args --ext jpg -r "$ARCHIVE_ROOT" -progress
+##exiftool -if '$jpgfromraw' -b -jpgfromraw -w "$PREVIEW_NAME" \
+##	-execute -if '$previewimage' -b -previewimage -w "$PREVIEW_NAME" \
+##	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ \
+##		-srcfile "$PREVIEW_NAME" -overwrite_original \
+##	-execute -j -w "$JSON_NAME" \
+##	-common_args --ext jpg -r "./$ARCHIVE_ROOT" -progress
 
 
 SIZE=900
@@ -85,13 +85,24 @@ makepreview(){
 
 # XXX use find...
 
-cd "${ARCHIVE_ROOT}"
+cd "./${ARCHIVE_ROOT}"
 
-for FROM in */DCIM/hi-res\ \(RAW\)/*jpg ; do
-	TO="${FROM/hi-res\ /preview }"
+# XXX this is ugly but it works...
+if [[ $ARCHIVE_ROOT == "." ]] ; then
+	for FROM in */DCIM/hi-res\ \(RAW\)/*jpg ; do
+		TO="${FROM/hi-res\ /preview }"
 
-	# XXX do different-sized previews...
-	makepreview "$SIZE" "./$FROM" "./$TO"
-done
+		# XXX do different-sized previews...
+		makepreview "$SIZE" "./$FROM" "./$TO"
+	done
+else
+	for FROM in ./DCIM/hi-res\ \(RAW\)/*jpg ; do
+		TO="${FROM/hi-res\ /preview }"
+
+		# XXX do different-sized previews...
+		makepreview "$SIZE" "./$FROM" "./$TO"
+	done
+fi
+
 
 # vim:set nowrap nospell :
