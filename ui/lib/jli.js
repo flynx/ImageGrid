@@ -616,10 +616,12 @@ Date.prototype.toShortDate = function(){
 	H = H < 10 ? '0'+H : H
 	var m = this.getMinutes()
 	m = m < 10 ? '0'+m : m
+	var s = this.getSeconds()
+	s = s < 10 ? '0'+s : s
 
-	return ''+y+'-'+M+'-'+D+' '+H+':'+m
+	return ''+y+'-'+M+'-'+D+' '+H+':'+m+':'+s
 }
-Date.prototype.getTimeStamp = function(){
+Date.prototype.getTimeStamp = function(no_seconds){
 	var y = this.getFullYear()
 	var M = this.getMonth()+1
 	M = M < 10 ? '0'+M : M
@@ -629,8 +631,10 @@ Date.prototype.getTimeStamp = function(){
 	H = H < 10 ? '0'+H : H
 	var m = this.getMinutes()
 	m = m < 10 ? '0'+m : m
+	var s = this.getSeconds()
+	s = s < 10 ? '0'+s : s
 
-	return ''+y+M+D+H+m
+	return ''+y+M+D+H+m+s
 }
 Date.prototype.setTimeStamp = function(ts){
 	this.setFullYear(ts.slice(0, 4))
@@ -638,6 +642,7 @@ Date.prototype.setTimeStamp = function(ts){
 	this.setDate(ts.slice(6, 8))
 	this.setHours(ts.slice(8, 10))
 	this.setMinutes(ts.slice(10, 12))
+	this.setSeconds(ts.slice(12, 14))
 	return this
 }
 Date.timeStamp = function(){

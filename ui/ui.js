@@ -379,6 +379,8 @@ function hideOverlay(root){
 
 
 var FIELD_TYPES = {
+	// format: 
+	// 		string
 	text: {
 		type: 'text',
 		text: null,
@@ -397,6 +399,9 @@ var FIELD_TYPES = {
 			return $(field).find('.value').attr('value') 
 		},
 	},	
+
+	// format: 
+	// 		true | false
 	bool: {
 		type: 'bool',
 		text: null,
@@ -421,6 +426,8 @@ var FIELD_TYPES = {
 	},
 
 	// NOTE: this will not work without node-webkit...
+	// format: 
+	// 		{ dir: <default-path> }
 	dir: {
 		type: 'dir',
 		text: null,
@@ -429,7 +436,6 @@ var FIELD_TYPES = {
 				'<span class="text"></span>'+
 				'<input type="file" class="value" nwdirectory />'+
 			'</div>',
-		// format: {dir: <default-path>}
 		test: function(val){
 			return typeof(val) == typeof({}) && 'dir' in val
 		},
@@ -444,7 +450,10 @@ var FIELD_TYPES = {
 			return f[0].path
 		},
 	},
+
 	// NOTE: this will not work without node-webkit...
+	// format: 
+	// 		{ dir: <default-path> }
 	ndir: {
 		type: 'ndir',
 		text: null,
@@ -454,7 +463,6 @@ var FIELD_TYPES = {
 				'<input type="text" class="path"/>'+
 				'<button class="browse">Browse</button>'+
 			'</div>',
-		// format: {dir: <default-path>}
 		test: function(val){
 			return typeof(val) == typeof({}) && 'ndir' in val
 		},
@@ -491,6 +499,8 @@ var FIELD_TYPES = {
 		},
 	},
 
+	// format: 
+	// 		['a', 'b', 'c', ...]
 	choice: {
 		type: 'choice',
 		text: null,
@@ -502,7 +512,6 @@ var FIELD_TYPES = {
 					'<span class="item-text"></span>'+
 				'</label></div>'+
 			'</div>',
-		// format: ['a', 'b', 'c', ...]
 		test: function(val){
 			return typeof(val) == typeof([]) && val.constructor.name == 'Array'
 		},
@@ -526,6 +535,40 @@ var FIELD_TYPES = {
 		},
 		get: function(field){ 
 			return $(field).find('.value:checked').val()
+		},
+	},
+
+	// NOTE: a button can have state...
+	// format: 
+	// 	{ 
+	// 		// click event handler...
+	// 		button: <function>, 
+	// 		// optional, button text (default 'OK')...
+	// 		text: <button-label>,
+	// 		// optional, initial state setup...
+	// 		default: <function>,
+	// 	}
+	button: {
+		type: 'button',
+		text: null,
+		default: false,
+		html: '<div class="field button">'+
+				'<span class="text"></span>'+
+				'<button class="button"></button>'+
+			'</div>',
+		test: function(val){
+			return 'button' in val
+		},
+		set: function(field, value){
+			var btn = $(field).find('button')
+				.click(value.button)
+				.html(value.text == null ? 'OK' : value.text)
+			if('default' in value){
+				value.default(btn)
+			}
+		},
+		get: function(field){ 
+			return $(field).attr('state')
 		},
 	},
 }

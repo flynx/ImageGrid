@@ -28,6 +28,8 @@ if(window.CEF_dumpJSON != null){
 	var fs = require('fs')
 	var fse = require('fs.extra')
 	var proc = require('child_process')
+	var crypto = require('crypto')
+	//var exif = require('exif2')
 	var gui = require('nw.gui')
 
 	var fp = /file:\/\/\//
@@ -281,6 +283,32 @@ if(window.CEF_dumpJSON != null){
 		_PREVIW_CREATE_QUEUE = $.when.apply(null, previews)
 		return _PREVIW_CREATE_QUEUE
 	}
+
+	// XXX should this be sync???
+	// XXX we are cheating here right now...
+	/*
+	window.makeImageGID = function(path, make_text_gid){
+
+		// XXX get exif...
+
+		var artist =
+		// format: "20130102-122315"
+		var date = 
+		var name = path.split(/[\\\/]/).pop()
+
+		var text_gid = artist +'-'+ date +'-'+ name
+
+		if(make_text_gid){
+			return text_gid
+		}
+
+		var h = crypto.createHash('sha1')
+		h.update(text_gid)
+		var hex_gid = h.digest('hex')
+
+		return hex_gid
+	}
+	*/
 
 	// UI-specific...
 	window.toggleFullscreenMode = createCSSClassToggler(
