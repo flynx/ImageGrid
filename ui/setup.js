@@ -40,6 +40,19 @@ function setupIndicators(){
 }
 
 
+function updateContextIndicators(image){
+	image = image == null ? getImage() : $(image)
+	
+	// marked...
+	var indicator = $('.context-mode-indicators .current-image-marked')
+	if(image.hasClass('marked')){
+		indicator.addClass('shown')
+	} else {
+		indicator.removeClass('shown')
+	}
+}
+
+
 // Setup event handlers for data bindings...
 //
 // This does two jobs:
@@ -334,11 +347,18 @@ function setupDataBindings(viewer){
 		// info...
 		.on([
 				'focusingImage',
+				'togglingMark'
+			].join(' '),
+			function(evt, image){
+				image = $(image)
+				updateGlobalImageInfo(image)
+				updateContextIndicators(image)
+			})
+		.on([
 				'rotatingLeft',
 				'rotateingRight',
 				'flippingVertical',
-				'flippingHorizontal',
-				'togglingMark'
+				'flippingHorizontal'
 			].join(' '), 
 			function(evt, image){
 				updateGlobalImageInfo($(image))
@@ -352,19 +372,9 @@ function setupDataBindings(viewer){
 			].join(' '), 
 			function(){
 				updateGlobalImageInfo()
+				updateContextIndicators()
 			})
 
-		// mark indicator...
-		// XXX make this generic and handle any of the available marks...
-		.on('focusingImage togglingMark', function(evt, image){
-			image = image.length == 0 ? getImage() : image
-			var indicator = $('.context-mode-indicators .current-image-marked')
-			if(image.hasClass('marked')){
-				indicator.addClass('shown')
-			} else {
-				indicator.removeClass('shown')
-			}
-		})
 
 		.on('baseURLChanged', function(evt, url){
 			saveLocalStorageBaseURL()
