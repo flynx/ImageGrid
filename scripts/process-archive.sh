@@ -34,12 +34,12 @@ JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 #		-srcfile "$PROCESSED_PREVIEW_NAME" -overwrite_original \
 # XXX keep file dates...
 
-##exiftool -if '$jpgfromraw' -b -jpgfromraw -w "$PREVIEW_NAME" \
-##	-execute -if '$previewimage' -b -previewimage -w "$PREVIEW_NAME" \
-##	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ \
-##		-srcfile "$PREVIEW_NAME" -overwrite_original \
-##	-execute -j -w "$JSON_NAME" \
-##	-common_args --ext jpg -r "./$ARCHIVE_ROOT" -progress
+exiftool -if '$jpgfromraw' -b -jpgfromraw -w "$PREVIEW_NAME" \
+	-execute -if '$previewimage' -b -previewimage -w "$PREVIEW_NAME" \
+	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ \
+		-srcfile "$PREVIEW_NAME" -overwrite_original \
+	-execute -j -w "$JSON_NAME" \
+	-common_args --ext jpg -r "./$ARCHIVE_ROOT" -progress
 
 
 SIZE=900
