@@ -812,7 +812,7 @@ function loadDirectoryDialog(dfl){
 
 	formDialog(null, 'Path to open', {
 		'': {ndir: dfl},
-		'Precess previews': false,
+		'Precess previews': true,
 	}, 'OK', 'loadDirectoryDialog')
 		.done(function(data){
 			var path = normalizePath(data[''].trim())
@@ -826,7 +826,7 @@ function loadDirectoryDialog(dfl){
 			// do the loading...
 			statusNotify(loadDir(path))
 				.done(function(){
-					if(!process_previews){ 
+					if(process_previews){ 
 						showStatusQ('Previews: processing started...')
 						// generate/attach previews...
 						makeImagesPreviewsQ(DATA.order) 

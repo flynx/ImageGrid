@@ -285,7 +285,6 @@ if(window.CEF_dumpJSON != null){
 	}
 
 	// XXX should this be sync???
-	// XXX we are cheating here right now...
 	/*
 	window.makeImageGID = function(path, make_text_gid){
 
@@ -294,7 +293,7 @@ if(window.CEF_dumpJSON != null){
 		var artist =
 		// format: "20130102-122315"
 		var date = 
-		var name = path.split(/[\\\/]/).pop()
+		var name = path.split(/[\\\/]/).pop().split('.')[0]
 
 		var text_gid = artist +'-'+ date +'-'+ name
 
