@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130705205545'''
+__sub_version__ = '''20130706023530'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -290,6 +290,9 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 		# skip other files...
 		else:
 			continue
+
+		if orientation not in range(0, 9):
+			orientation = 0
 
 		img =  {
 			'id': gid_generator(source_path),
