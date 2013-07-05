@@ -106,7 +106,6 @@ Roadmap
 				[_] index and group ALL files in an archive
 				[_] import metadata
 				[_] real GIDs
-		[_] BUG: context status does not get updated on Ctrl-D
 		[_] BUG: shifting last image out of a ribbon misaligns the current ribbon
 		| i.e. the prev ribbon was deleted and the new focused ribbon
 		| is aligned as if it was not current...
@@ -300,6 +299,7 @@ Roadmap
 			[_] remove extra and repetitive actions
 			[_] caching config
 		[_] side-by side view...
+		[X] BUG: context status does not get updated on Ctrl-D
 		[X] single ribbon mode
 		| should this have up/down navigation?
 		|

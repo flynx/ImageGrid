@@ -53,6 +53,7 @@ function updateContextIndicators(image){
 }
 
 
+
 // Setup event handlers for data bindings...
 //
 // This does two jobs:
