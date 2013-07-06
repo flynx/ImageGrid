@@ -777,6 +777,7 @@ function exportPreviewsDialog(state, dfl){
 			'%f - full filename\n'+
 			'%n - filename\n'+
 			'%e - extension\n'+
+			'%m - marked status ("m"/"")\n'+
 			'%gid - log gid\n'+
 			'%g - short gid\n'+
 			'%I - global order\n'+
