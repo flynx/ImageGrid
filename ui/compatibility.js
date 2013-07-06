@@ -6,6 +6,16 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+// XXX move this to the config...
+var PREVIEW_SIZES = [
+	// NOTE: this is first so as to prevent the hi-res from loading...
+	// XXX this is best to be screen sized or just a little bigger...
+	1280,
+	150,
+	350,
+	900
+]
+
 
 /*********************************************************************/
 
@@ -132,12 +142,7 @@ if(window.CEF_dumpJSON != null){
 
 		// prepare the sizes we are going to be working with...
 		if(sizes == null){
-			// XXX get real sizes from config...
-			var sizes = [
-					150,
-					350,
-					900
-				]
+			sizes = PREVIEW_SIZES
 		} else if(typeof(sizes) == typeof(123)){
 			sizes = [ sizes ]
 		}

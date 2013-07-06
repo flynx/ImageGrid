@@ -381,6 +381,7 @@ function hideOverlay(root){
 var FIELD_TYPES = {
 	// format: 
 	// 		string
+	// XXX add datalist option...
 	text: {
 		type: 'text',
 		text: null,
@@ -454,6 +455,7 @@ var FIELD_TYPES = {
 	// NOTE: this will not work without node-webkit...
 	// format: 
 	// 		{ dir: <default-path> }
+	// XXX add datalist option...
 	ndir: {
 		type: 'ndir',
 		text: null,
@@ -755,6 +757,7 @@ function getDir(message, dfl, btn){
 
 // XXX do reporting...
 // XXX would be nice to save settings...
+// 		...might be good to use datalist...
 function exportPreviewsDialog(state, dfl){
 	dfl = dfl == null ? BASE_URL : dfl
 
