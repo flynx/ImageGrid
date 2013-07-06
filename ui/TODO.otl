@@ -1,19 +1,19 @@
 Roadmap
-	[_] 43% Pre-Alpha - limited preview
-		[_] 34% UI
+	[_] 50% Pre-Alpha - limited preview
+		[_] 50% UI
 			[_] 0% Tablet-specific
 				[_] screen buttons
-			[_] 60% modes
+			[_] 80% modes
 				[_] cropped mode
 				| show only selected images
 				[X] single image
 				[X] slideshow (single image)
 				[X] ribbon
-				[_] single ribbon
-			[_] 42% other
+				[X] single ribbon
+			[_] 71% other
 				[X] load/open
-				[_] browse for location (open)
-				[_] select saved set
+				[X] browse for location (open)
+				[X] select saved set
 				[X] keyboard help
 				[_] general help
 				[_] settings
@@ -23,7 +23,7 @@ Roadmap
 			[X] ribbon next/prev
 			[X] screen next/prev
 			[_] marks next/prev
-		[_] 50% editing
+		[_] 54% editing
 			[_] 66% ribbon
 				[X] merge up/down
 				| via. marking... 
@@ -42,38 +42,39 @@ Roadmap
 					[_] tag
 					[_] note
 				[X] open with external software
-			[_] 28% marked (selected) set
+			[_] 42% marked (selected) set
 				[X] crop (marked only mode)
 				[_] tag
 				[X] shift up/down
 				[_] shift left/right
 				[_] group
 				[_] note
-				[_] save as set
+				[X] save as set
 			[_] 33% crop selection via
 				[X] marked
 				[_] tag
 				[_] date
-		[_] 45% storage and loading
+		[_] 60% storage and loading
 			[_] 75% ImageGrid cache
 				[X] generate
 				[X] load
 				[X] save
 				[_] update
 				| needs revision...
-			[_] 50% fav tree
+			[_] 75% fav tree
 				[X] generate
 				[X] load
-				[_] save
+				[X] save
 				[_] update
+				| at this time images are added to the tree but not removed...
 			[_] 25% xmp files
 				[X] generate
 				[_] load
 				[_] save
 				[_] update
-			[_] 33% raw directory tree
+			[_] 66% raw directory tree
 				[X] load
-				[_] save
+				[X] save
 				[_] update
 		[_] 14% build targets
 			[X] 100% Windows

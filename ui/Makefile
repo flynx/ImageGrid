@@ -101,6 +101,7 @@ node-deps:
 
 dev: $(CSS_FILES)
 	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
+	rm -f nwsnapshot.exe
 	chmod +x *.{exe,dll}
 
 #dev-targets:
