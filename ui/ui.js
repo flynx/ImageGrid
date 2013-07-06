@@ -754,6 +754,7 @@ function getDir(message, dfl, btn){
 /***************************************** Domain-specific dialogs ***/
 
 // XXX do reporting...
+// XXX would be nice to save settings...
 function exportPreviewsDialog(state, dfl){
 	dfl = dfl == null ? BASE_URL : dfl
 
@@ -776,8 +777,8 @@ function exportPreviewsDialog(state, dfl){
 	cfg['Image name pattern | '+
 			'%f - full filename\n'+
 			'%n - filename\n'+
-			'%e - extension\n'+
-			'%m - marked status ("m"/"")\n'+
+			'%e - extension (with leading dot)\n'+
+			'%(abc)m - if marked insert "abc"\n'+
 			'%gid - log gid\n'+
 			'%g - short gid\n'+
 			'%I - global order\n'+
