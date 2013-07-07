@@ -107,6 +107,13 @@ Roadmap
 				[_] index and group ALL files in an archive
 				[_] import metadata
 				[_] real GIDs
+		[_] % Thumbnail generation strategies
+			[_] extract existing raw thumbnails
+			[_] make a preview just bigger than the screen first
+			| ...to prevent loading the high-res
+			|
+			| this should be done BEFORE loading the image -- pre-load phase...
+			[_] prioritize making thumbs for the ribbon (~350px) 
 		[_] BUG: shifting last image out of a ribbon misaligns the current ribbon
 		| i.e. the prev ribbon was deleted and the new focused ribbon
 		| is aligned as if it was not current...

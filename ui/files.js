@@ -465,6 +465,7 @@ function loadRawDir(path, prefix){
 
 	var res = $.Deferred()
 
+	// filter images...
 	var image_paths = $.map(files, function(e){
 		return IMAGE_PATTERN.test(e) ? e : null
 	})
@@ -480,6 +481,9 @@ function loadRawDir(path, prefix){
 	IMAGES = imagesFromUrls(image_paths)
 	res.notify(prefix, 'Loaded', 'Images.')
 	IMAGES_CREATED = true
+
+	// XXX need to make basic previews (screen-size-ish and ribbon-size-ish)...
+	// XXX
 
 	DATA = dataFromImages(IMAGES)
 	res.notify(prefix, 'Loaded', 'Data.')

@@ -172,9 +172,9 @@ $(function(){
 			DATA_ATTR + '_SETTINGS' in localStorage && loadLocalStorageSettings()
 
 			// XXX this will reload everything...
-			(MARKED.length == 0 
+			MARKED.length == 0 
 				&& DATA_ATTR + '_MARKED' in localStorage 
-				&& loadLocalStorageMarks())
+				&& loadLocalStorageMarks()
 
 			updateImages()
 

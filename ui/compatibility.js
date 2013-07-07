@@ -129,6 +129,14 @@ if(window.CEF_dumpJSON != null){
 	//
 	// NOTE: this will add already existing previews to IMAGES[gid]...
 	//
+	// XXX possible modes:
+	// 		- fast 
+	// 			make previews using nearest rscale (factor=1)
+	// 		- optimized
+	// 			use closest rscale and minimal factor
+	// 		- best
+	// 			only use scale factor (rscale=1)
+	// XXX get image size without loading the image...
 	// XXX make this not just vips-specific...
 	// XXX path handling is a mess...
 	window.makeImagePreviews = function(gid, sizes){
@@ -153,11 +161,35 @@ if(window.CEF_dumpJSON != null){
 
 		// get cur image size...
 		var size_getter = $.Deferred()
+
+		var width_getter = $.Deferred()
+		var cmd = 'vips im_header_int width "$IN"'
+			.replace(/\$IN/g, source.replace(fp, ''))
+		proc.exec(cmd, function(error, stdout, stderr){
+			width_getter.resolve(parseInt(stdout))
+		})
+
+		var height_getter = $.Deferred()
+		var cmd = 'vips im_header_int height "$IN"'
+			.replace(/\$IN/g, source.replace(fp, ''))
+		proc.exec(cmd, function(error, stdout, stderr){
+			height_getter.resolve(parseInt(stdout))
+		})
+
+		$.when(width_getter, height_getter)
+			.done(function(w, h){
+				size_getter.resolve(Math.max(w, h))
+			})
+
+		/*
+		// XXX this may get REALLY SLOW for BIG images...
+		var size_getter = $.Deferred()
 		var _i = new Image()
 		_i.onload = function(){
 			size_getter.resolve(Math.max(parseInt(this.width), parseInt(this.height)))
 		} 
 		_i.src = source
+		*/
 		
 		for(var i=0; i < sizes.length; i++){
 			var size = sizes[i]
@@ -200,9 +232,12 @@ if(window.CEF_dumpJSON != null){
 
 						var preview_path = [target_path, name].join('/')
 						var factor = source_size / size
+						// this can be 1, 2, 4 or 8...
+						var rscale = 1
 
 						// XXX make this compatible with other image processors...
-						var cmd = 'vips im_shrink "$IN" "$OUT:$COMPRESSION" $FACTOR $FACTOR'
+						var cmd = 'vips im_shrink "$IN:$RSCALE" "$OUT:$COMPRESSION" $FACTOR $FACTOR'
+							.replace(/\$RSCALE/g, rscale)
 							.replace(/\$IN/g, source.replace(fp, ''))
 							.replace(/\$OUT/g, preview_path)
 							.replace(/\$COMPRESSION/g, compression)
