@@ -482,9 +482,6 @@ function loadRawDir(path, prefix){
 	res.notify(prefix, 'Loaded', 'Images.')
 	IMAGES_CREATED = true
 
-	// XXX need to make basic previews (screen-size-ish and ribbon-size-ish)...
-	// XXX
-
 	DATA = dataFromImages(IMAGES)
 	res.notify(prefix, 'Loaded', 'Data.')
 
@@ -494,6 +491,10 @@ function loadRawDir(path, prefix){
 	MARKED = []
 
 	reloadViewer()
+
+	// XXX is this the correct place for this???
+	updateImagesOrientationQ()
+	//makeImagesPreviewsQ()
 
 	return res.resolve()
 }
@@ -643,8 +644,17 @@ function updateImageOrientation(gid, no_update_loaded){
 
 	return getImageOrientation(normalizePath(img.path))
 		.done(function(o){
+			var o_o = img.orientation
+			var o_f = img.flipped
+
 			img.orientation = o.orientation
 			img.flipped = o.flipped
+
+			// mark image dirty...
+			if((o_o != o.orientation || o_f != o.flipped ) 
+					&& IMAGES_UPDATED.indexOf(gid) < 0){
+				IMAGES_UPDATED.push(gid)
+			}
 
 			// update loaded images...
 			if(!no_update_loaded){
