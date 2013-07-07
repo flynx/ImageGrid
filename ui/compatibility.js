@@ -127,19 +127,31 @@ if(window.CEF_dumpJSON != null){
 
 	// preview generation...
 	//
-	// NOTE: this will add already existing previews to IMAGES[gid]...
-	//
-	// XXX possible modes:
-	// 		- fast 
-	// 			make previews using nearest rscale (factor=1)
+	// possible modes:
 	// 		- optimized
 	// 			use closest rscale and minimal factor
+	// 			previews might get artifacts associated with small scale factors
+	// 			0.55x time
 	// 		- best
 	// 			only use scale factor (rscale=1)
+	// 			1x time (fixed set of previews: 1280, 150, 350, 900)
+	// 		- fast 
+	// 			make previews using nearest rscale (factor is rounded)
+	// 			will produce inexact sizes
+	// 			0.42x time
+	// 		- rscale
+	// 			only use rscale (factor=1)
+	// 			produces only fixed size previews
+	// 			0.32x time
+	//
+	// NOTE: rscale should be used for exactly tuned preview sizes...
+	// NOTE: this will add already existing previews to IMAGES[gid]...
+	//
 	// XXX get image size without loading the image...
 	// XXX make this not just vips-specific...
 	// XXX path handling is a mess...
-	window.makeImagePreviews = function(gid, sizes){
+	window.makeImagePreviews = function(gid, sizes, mode){
+		mode = mode == null ? 'optimized' : mode
 
 		var img = IMAGES[gid]
 		var source = normalizePath(img.path)
@@ -166,14 +178,13 @@ if(window.CEF_dumpJSON != null){
 		var cmd = 'vips im_header_int width "$IN"'
 			.replace(/\$IN/g, source.replace(fp, ''))
 		proc.exec(cmd, function(error, stdout, stderr){
-			width_getter.resolve(parseInt(stdout))
+			width_getter.resolve(parseInt(stdout.trim()))
 		})
-
 		var height_getter = $.Deferred()
 		var cmd = 'vips im_header_int height "$IN"'
 			.replace(/\$IN/g, source.replace(fp, ''))
 		proc.exec(cmd, function(error, stdout, stderr){
-			height_getter.resolve(parseInt(stdout))
+			height_getter.resolve(parseInt(stdout.trim()))
 		})
 
 		$.when(width_getter, height_getter)
@@ -181,16 +192,7 @@ if(window.CEF_dumpJSON != null){
 				size_getter.resolve(Math.max(w, h))
 			})
 
-		/*
-		// XXX this may get REALLY SLOW for BIG images...
-		var size_getter = $.Deferred()
-		var _i = new Image()
-		_i.onload = function(){
-			size_getter.resolve(Math.max(parseInt(this.width), parseInt(this.height)))
-		} 
-		_i.src = source
-		*/
-		
+
 		for(var i=0; i < sizes.length; i++){
 			var size = sizes[i]
 			// XXX get this from config...
@@ -235,6 +237,22 @@ if(window.CEF_dumpJSON != null){
 						// this can be 1, 2, 4 or 8...
 						var rscale = 1
 
+						// speed things up with read-scaling and rounding the scale factor...
+						if(mode == 'fast' || mode == 'optimized' || mode == 'rscale'){
+							while(rscale < 8){
+								if(rscale*2 >= factor){
+									break
+								}
+								rscale *= 2
+							}
+							factor = factor / rscale
+						}
+						if(mode == 'fast'){
+							factor = Math.round(factor)
+						} else if(mode == 'rscale'){
+							factor = 1
+						}
+
 						// XXX make this compatible with other image processors...
 						var cmd = 'vips im_shrink "$IN:$RSCALE" "$OUT:$COMPRESSION" $FACTOR $FACTOR'
 							.replace(/\$RSCALE/g, rscale)
@@ -243,6 +261,8 @@ if(window.CEF_dumpJSON != null){
 							.replace(/\$COMPRESSION/g, compression)
 							.replace(/\$FACTOR/g, factor)
 
+						console.log(cmd)
+
 						proc.exec(cmd, function(error, stdout, stderr){
 							if(error != null){
 								//console.error('>>> Error: preview:', stderr)
@@ -250,6 +270,7 @@ if(window.CEF_dumpJSON != null){
 								deferred.reject()
 
 							} else {
+								// XXX use real size of the preview generated (???)
 								//console.log('>>> Preview:', name, '('+size+'): Done.')
 								deferred.notify(gid, size, 'done')
 								// update the image structure...
@@ -287,7 +308,7 @@ if(window.CEF_dumpJSON != null){
 	// NOTE: this will remove the old deferred if it us resolved, thus
 	// 		clearing the "log" of previous operations, unless keep_log
 	// 		is set to true...
-	window.makeImagesPreviewsQ = function(gids, keep_log){
+	window.makeImagesPreviewsQ = function(gids, keep_log, mode){
 		var previews = []
 
 		$.each(gids, function(i, e){
@@ -308,7 +329,7 @@ if(window.CEF_dumpJSON != null){
 
 			// append to deffered queue...
 			last.always(function(){
-				makeImagePreviews(e)
+				makeImagePreviews(e, null, mode)
 					.progress(function(state){
 						deferred.notify(state)
 					})
