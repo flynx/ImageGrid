@@ -634,5 +634,68 @@ function exportTo(path, im_name, dir_name, size){
 
 
 
+/*********************************************************************/
+
+// XXX this depends on getImageOrientation(...)
+function updateImageOrientation(gid, no_update_loaded){
+	gid = gid == null ? getImageGID() : gid
+	var img = IMAGES[gid]
+
+	return getImageOrientation(normalizePath(img.path))
+		.done(function(o){
+			img.orientation = o.orientation
+			img.flipped = o.flipped
+
+			// update loaded images...
+			if(!no_update_loaded){
+				var o = getImage(gid)
+				if(o.length > 0){
+					updateImage(o)
+				}
+			}
+		})
+}
+
+
+function updateImagesOrientation(gids, no_update_loaded){
+	gids = gids == null ? getClosestGIDs() : gids
+	var res = []
+
+	$.each(gids, function(_, gid){
+		res.push(updateImageOrientation(gid, no_update_loaded))
+	})
+
+	return $.when.apply(null, res)
+}
+
+
+// queued version of updateImagesOrientation(...)
+function updateImagesOrientationQ(gids, no_update_loaded){
+	gids = gids == null ? getClosestGIDs() : gids
+	var res = []
+
+	if(window.getImageOrientation == null){
+		return
+	}
+
+	var last = $.Deferred().resolve()
+
+	$.each(gids, function(_, gid){
+		var cur = $.Deferred()
+		last.done(function(){
+			last = updateImageOrientation(gid, no_update_loaded)
+				.done(function(o){
+					cur.resolve()
+				})
+		})
+
+		res.push(cur)
+	})
+
+	return $.when.apply(null, res)
+}
+
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */

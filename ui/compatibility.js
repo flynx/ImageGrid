@@ -125,6 +125,54 @@ if(window.CEF_dumpJSON != null){
 		})
 	}
 
+	// XXX this uses vips...
+	// XXX handle errors...
+	// NOTE: source can be either gid or a path...
+	window._getImageSize = function(dimension, source){
+		if(source in IMAGES){
+			var img = IMAGES[gid]
+			var source = normalizePath(img.path)
+		}
+		var getter = $.Deferred()
+		if(dimension == 'max' || dimension == 'min'){
+			$.when(
+					_getImageSize('width', source), 
+					_getImageSize('height', source))
+				.done(function(w, h){
+					getter.resolve(Math[dimension](w, h))
+				})
+
+		} else if(dimension == 'width' || dimension == 'height') {
+			var cmd = 'vips im_header_int $DIM "$IN"'
+				.replace(/\$IN/g, source.replace(fp, ''))
+				.replace(/\$DIM/g, dimension)
+			proc.exec(cmd, function(error, stdout, stderr){
+				getter.resolve(parseInt(stdout.trim()))
+			})
+
+		} else {
+			// wrong dimension...
+			return getter.reject('unknown dimension:' + dimension)
+		}
+
+		return getter
+	}
+
+	// NOTE: source can be either gid or a path...
+	window.getImageOrientation = function(source){
+		if(source in IMAGES){
+			var img = IMAGES[source]
+			var source = normalizePath(img.path)
+		}
+		var getter = $.Deferred()
+		var cmd = 'vips im_header_string exif-ifd0-Orientation "$IN"'
+			.replace(/\$IN/g, source.replace(fp, ''))
+		proc.exec(cmd, function(error, stdout, stderr){
+			getter.resolve(orientationExif2ImageGrid(parseInt(stdout.trim())))
+		})
+		return getter
+	}
+
 	// preview generation...
 	//
 	// possible modes:
@@ -147,10 +195,9 @@ if(window.CEF_dumpJSON != null){
 	// NOTE: rscale should be used for exactly tuned preview sizes...
 	// NOTE: this will add already existing previews to IMAGES[gid]...
 	//
-	// XXX get image size without loading the image...
 	// XXX make this not just vips-specific...
 	// XXX path handling is a mess...
-	window.makeImagePreviews = function(gid, sizes, mode){
+	window.makeImagePreviews = function(gid, sizes, mode, no_update_loaded){
 		mode = mode == null ? 'optimized' : mode
 
 		var img = IMAGES[gid]
@@ -172,26 +219,7 @@ if(window.CEF_dumpJSON != null){
 		cache_path = cache_path.replace(fp, '')
 
 		// get cur image size...
-		var size_getter = $.Deferred()
-
-		var width_getter = $.Deferred()
-		var cmd = 'vips im_header_int width "$IN"'
-			.replace(/\$IN/g, source.replace(fp, ''))
-		proc.exec(cmd, function(error, stdout, stderr){
-			width_getter.resolve(parseInt(stdout.trim()))
-		})
-		var height_getter = $.Deferred()
-		var cmd = 'vips im_header_int height "$IN"'
-			.replace(/\$IN/g, source.replace(fp, ''))
-		proc.exec(cmd, function(error, stdout, stderr){
-			height_getter.resolve(parseInt(stdout.trim()))
-		})
-
-		$.when(width_getter, height_getter)
-			.done(function(w, h){
-				size_getter.resolve(Math.max(w, h))
-			})
-
+		var size_getter = _getImageSize('max', source)
 
 		for(var i=0; i < sizes.length; i++){
 			var size = sizes[i]
@@ -207,7 +235,7 @@ if(window.CEF_dumpJSON != null){
 			// 		}(...))
 			// 		produces a "undefined is not a function" in part of the
 			// 		invocations, usually the later ones...
-			var _f = function(size, target_path, deferred){
+			[function(size, target_path, deferred){
 				// wait for current image size if needed...
 				size_getter.done(function(source_size){
 
@@ -255,8 +283,8 @@ if(window.CEF_dumpJSON != null){
 
 						// XXX make this compatible with other image processors...
 						var cmd = 'vips im_shrink "$IN:$RSCALE" "$OUT:$COMPRESSION" $FACTOR $FACTOR'
-							.replace(/\$RSCALE/g, rscale)
 							.replace(/\$IN/g, source.replace(fp, ''))
+							.replace(/\$RSCALE/g, rscale)
 							.replace(/\$OUT/g, preview_path)
 							.replace(/\$COMPRESSION/g, compression)
 							.replace(/\$FACTOR/g, factor)
@@ -288,16 +316,38 @@ if(window.CEF_dumpJSON != null){
 						})
 					})
 				})
-			}
-			// NOTE: wrapping this in a closure saves the specific data that would
-			// 		otherwise be overwritten by the next loop iteration...
-			_f(size, target_path, deferred)
+			}(size, target_path, deferred)]
 		}
 
-		return $.when.apply(null, previews)
+		var res = $.when.apply(null, previews)
+
+		// update loaded images...
+		if(!no_update_loaded){
+			res.done(function(){
+				var o = getImage(gid)
+				if(o.length > 0){
+					updateImage(o)
+				}
+			})
+		}
+
+		return res
+	}
+
+	// XXX needs more testing...
+	// 		- for some reason this is a bit slower than the queued version
+	// 			...in spite of being managed by node.js
+	// 		- will this be faster on SMP/multi-core?
+	window.makeImagesPreviews = function(gids, sizes, mode){
+		gids = gids == null ? getClosestGIDs() : gids
+		return $.when.apply(null, gids.map(function(gid){
+			return makeImagePreviews(gid, sizes, mode)
+		}))
 	}
 
 	window._PREVIW_CREATE_QUEUE = null
+	// Queued version of makeImagesPreviews(...)
+	//
 	// XXX is this robust enough???
 	// 		of one deferred hangs or breaks without finalizing this will 
 	// 		stall the whole queue...
@@ -308,7 +358,8 @@ if(window.CEF_dumpJSON != null){
 	// NOTE: this will remove the old deferred if it us resolved, thus
 	// 		clearing the "log" of previous operations, unless keep_log
 	// 		is set to true...
-	window.makeImagesPreviewsQ = function(gids, keep_log, mode){
+	window.makeImagesPreviewsQ = function(gids, sizes, mode, keep_log){
+		gids = gids == null ? getClosestGIDs() : gids
 		var previews = []
 
 		$.each(gids, function(i, e){
@@ -329,7 +380,7 @@ if(window.CEF_dumpJSON != null){
 
 			// append to deffered queue...
 			last.always(function(){
-				makeImagePreviews(e, null, mode)
+				makeImagePreviews(e, sizes, mode)
 					.progress(function(state){
 						deferred.notify(state)
 					})

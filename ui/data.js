@@ -191,7 +191,7 @@ function makeImageGIDDistanceCmp(gid, get, order){
 }
 
 
-// NOTE: essentially this is a 2D distance compatison from gid...
+// NOTE: essentially this is a 2D distance comparison from gid...
 //
 // XXX make this faster...
 // XXX this is fun, but do we actually need this?
@@ -402,6 +402,35 @@ Array.prototype.binSearch = function(target, cmp, get){
 }
 
 
+// Orientation transaltion...
+function orientationExif2ImageGrid(orientation){
+	return {
+		orientation: {
+			0: 0,
+			1: 0,
+			2: 0,
+			3: 180,
+			4: 0,
+			5: 90,
+			6: 90,
+			7: 90, 
+			8: 270,
+		}[orientation],
+		flipped: {
+			0: null,
+			1: null,
+			2: ['horizontal'],
+			3: null,
+			4: ['vertical'],
+			5: ['vertical'],
+			6: null,
+			7: ['horizontal'],
+			8: null,
+		}[orientation]
+	}
+}
+
+
 // Base URL interface...
 //
 // NOTE: changing a base URL will trigger a baseURLChanged event...
@@ -410,6 +439,7 @@ function setBaseURL(url){
 	url = url.replace(/\/*$/, '/')
 	BASE_URL = url
 	$('.viewer').trigger('baseURLChanged', [old_url, url])
+	return url
 }
 function getBaseURL(){
 	return BASE_URL
@@ -600,6 +630,16 @@ function updateRibbonOrder(no_reload_viewer){
 }
 
 
+// get list of gids sorted by proximity to current gid
+//
+// NOTE: the distance used is the actual 2D distance...
+function getClosestGIDs(gid){
+	gid = gid == null ? getImageGID() : gid
+	//return DATA.order.slice().sort(makeImageGIDDistanceCmp(gid))
+	return DATA.order.slice().sort(makeImageRibbonDistanceCmp(gid))
+}
+
+
 
 /**********************************************************************
 * Constructors
@@ -608,6 +648,8 @@ function updateRibbonOrder(no_reload_viewer){
 // Construct an IMAGES object from list of urls.
 //
 // NOTE: this depends on that the base dir contains ALL the images...
+// NOTE: if base is not given, this will not read image to get 
+// 		orientation data...
 function imagesFromUrls(lst){
 	var res = {}
 
