@@ -38,7 +38,7 @@ if(window.CEF_dumpJSON != null){
 	var fs = require('fs')
 	var fse = require('fs.extra')
 	var proc = require('child_process')
-	var crypto = require('crypto')
+	var node_crypto = require('crypto')
 	//var exif = require('exif2')
 	var gui = require('nw.gui')
 
@@ -126,14 +126,41 @@ if(window.CEF_dumpJSON != null){
 	}
 
 	// XXX this uses vips...
+	window.getVipsField = function(field, source){
+		if(source in IMAGES){
+			var img = IMAGES[source]
+			var source = normalizePath(img.path)
+		}
+		var getter = $.Deferred()
+		var cmd = 'vips im_header_string "$FIELD" "$IN"'
+			.replace(/\$IN/g, source.replace(fp, ''))
+			.replace(/\$FIELD/g, field)
+		proc.exec(cmd, function(error, stdout, stderr){
+			getter.resolve(stdout.trim())
+		})
+		return getter
+	}
+
+	// NOTE: source can be either gid or a path...
+	window.getImageOrientation = function(source){
+		var getter = $.Deferred()
+		getVipsField('exif-ifd0-Orientation', source)
+			.done(function(o){
+				getter.resolve(orientationExif2ImageGrid(parseInt(o)))
+			})
+		return getter
+	}
+
 	// XXX handle errors...
 	// NOTE: source can be either gid or a path...
 	window._getImageSize = function(dimension, source){
 		if(source in IMAGES){
-			var img = IMAGES[gid]
+			var img = IMAGES[source]
 			var source = normalizePath(img.path)
 		}
 		var getter = $.Deferred()
+
+		// get max/min dimension...
 		if(dimension == 'max' || dimension == 'min'){
 			$.when(
 					_getImageSize('width', source), 
@@ -142,34 +169,18 @@ if(window.CEF_dumpJSON != null){
 					getter.resolve(Math[dimension](w, h))
 				})
 
+		// get dimension...
 		} else if(dimension == 'width' || dimension == 'height') {
-			var cmd = 'vips im_header_int $DIM "$IN"'
-				.replace(/\$IN/g, source.replace(fp, ''))
-				.replace(/\$DIM/g, dimension)
-			proc.exec(cmd, function(error, stdout, stderr){
-				getter.resolve(parseInt(stdout.trim()))
-			})
+			getVipsField(dimension, source)
+				.done(function(res){
+					getter.resolve(parseInt(res))
+				})
 
+		// wrong dimension...
 		} else {
-			// wrong dimension...
 			return getter.reject('unknown dimension:' + dimension)
 		}
 
-		return getter
-	}
-
-	// NOTE: source can be either gid or a path...
-	window.getImageOrientation = function(source){
-		if(source in IMAGES){
-			var img = IMAGES[source]
-			var source = normalizePath(img.path)
-		}
-		var getter = $.Deferred()
-		var cmd = 'vips im_header_string exif-ifd0-Orientation "$IN"'
-			.replace(/\$IN/g, source.replace(fp, ''))
-		proc.exec(cmd, function(error, stdout, stderr){
-			getter.resolve(orientationExif2ImageGrid(parseInt(stdout.trim())))
-		})
 		return getter
 	}
 
@@ -200,8 +211,8 @@ if(window.CEF_dumpJSON != null){
 	//
 	// XXX make this not just vips-specific...
 	// XXX path handling is a mess...
+	// XXX looks a bit too complex for what it is -- revise!
 	window.makeImagePreviews = function(gid, sizes, mode, no_update_loaded){
-		//mode = mode == null ? 'optimized' : mode
 		mode = mode == null ? 'fast_f' : mode
 
 		var img = IMAGES[gid]
@@ -233,12 +244,6 @@ if(window.CEF_dumpJSON != null){
 			var deferred = $.Deferred()
 			previews.push(deferred)
 
-			// NOTE: for some magical reason writing this like:
-			// 		(function(...){
-			// 			...
-			// 		}(...))
-			// 		produces a "undefined is not a function" in part of the
-			// 		invocations, usually the later ones...
 			[function(size, target_path, deferred){
 				// wait for current image size if needed...
 				size_getter.done(function(source_size){
@@ -293,7 +298,6 @@ if(window.CEF_dumpJSON != null){
 							factor = 1
 						}
 
-						// XXX make this compatible with other image processors...
 						var cmd = 'vips im_shrink "$IN:$RSCALE" "$OUT:$COMPRESSION" $FACTOR $FACTOR'
 							.replace(/\$IN/g, source.replace(fp, ''))
 							.replace(/\$RSCALE/g, rscale)
@@ -301,7 +305,7 @@ if(window.CEF_dumpJSON != null){
 							.replace(/\$COMPRESSION/g, compression)
 							.replace(/\$FACTOR/g, factor)
 
-						console.log(cmd)
+						//console.log(cmd)
 
 						proc.exec(cmd, function(error, stdout, stderr){
 							if(error != null){
@@ -367,6 +371,8 @@ if(window.CEF_dumpJSON != null){
 	// XXX check if we are leaking the tail...
 	// XXX test progress...
 	// 		...gets collected but the structure is a tad too complex...
+	// 		- should we make it flat???
+	//		- do we need all that data????
 	// NOTE: this will remove the old deferred if it us resolved, thus
 	// 		clearing the "log" of previous operations, unless keep_log
 	// 		is set to true...
@@ -409,30 +415,47 @@ if(window.CEF_dumpJSON != null){
 		return _PREVIW_CREATE_QUEUE
 	}
 
-	// XXX should this be sync???
-	/*
-	window.makeImageGID = function(path, make_text_gid){
-
-		// XXX get exif...
-
-		var artist =
-		// format: "20130102-122315"
-		var date = 
-		var name = path.split(/[\\\/]/).pop().split('.')[0]
-
-		var text_gid = artist +'-'+ date +'-'+ name
-
-		if(make_text_gid){
-			return text_gid
+	window.makeImageGID = function(source, make_text_gid){
+		if(source in IMAGES){
+			var img = IMAGES[source]
+			var source = normalizePath(img.path)
 		}
+		var getter = $.Deferred()
 
-		var h = crypto.createHash('sha1')
-		h.update(text_gid)
-		var hex_gid = h.digest('hex')
+		$.when(
+				getVipsField('exif-ifd0-Artist', source),
+				getVipsField('exif-ifd0-Date and Time', source))
+			.done(function(artist, date){
+				artist = artist
+					.replace(/\([^)]*\)/, '')
+					.trim()
+				artist = artist == '' ? 'Unknown' : artist
+				// format: "20130102-122315"
+				// XXX if not set, get ctime...
+				date = date
+					.replace(/\([^)]*\)/, '')
+					.trim()
+					.replace(/:/g, '')
+					.replace(/ /g, '-')
+				var name = source.split(/[\\\/]/).pop().split('.')[0]
 
-		return hex_gid
+				var text_gid = artist +'-'+ date +'-'+ name
+
+				// text gid...
+				if(make_text_gid){
+					getter.resolve(text_gid)
+
+				// hex gid...
+				} else {
+					var h = node_crypto.createHash('sha1')
+					h.update(text_gid)
+					var hex_gid = h.digest('hex')
+
+					getter.resolve(hex_gid)
+				}
+			})
+		return getter
 	}
-	*/
 
 	// UI-specific...
 	window.toggleFullscreenMode = createCSSClassToggler(
@@ -441,7 +464,6 @@ if(window.CEF_dumpJSON != null){
 			function(action){
 				gui.Window.get().toggleFullscreen()
 			})
-
 	window.closeWindow = function(){
 		gui.Window.get().close()
 	}

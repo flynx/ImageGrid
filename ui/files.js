@@ -494,26 +494,29 @@ function loadRawDir(path, no_preview_processing, prefix){
 
 	reloadViewer()
 
-	// XXX is this the correct place for this???
+	// read orientation form files...
 	res.notify(prefix, 'Loading', 'Images orientation.')
 	var o = updateImagesOrientationQ()
 		.done(function(){
 			res.notify(prefix, 'Loaded', 'Images orientation.')
 		})
 
+	// load/generate previews...
 	if(!no_preview_processing){
 		res.notify(prefix, 'Loading/Generating', 'Previews.')
 		var p = makeImagesPreviewsQ()
 			.done(function(){
 				res.notify(prefix, 'Loaded', 'Previews.')
 			})
+
 	} else {
 		var p = 0
 	}
 
-	// XXX we are not waiting for previews and orientation...
+	// NOTE: we are not waiting for previews and orientation...
 	return res.resolve()
-	/*
+
+	/* XXX do we need to make everyone wait for previews and orientation???
 	$.when(o, p).done(function(){
 		res.resolve()
 	})
