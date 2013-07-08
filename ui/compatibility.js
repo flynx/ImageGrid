@@ -179,18 +179,21 @@ if(window.CEF_dumpJSON != null){
 	// 		- optimized
 	// 			use closest rscale and minimal factor
 	// 			previews might get artifacts associated with small scale factors
-	// 			0.55x time
+	// 			0.5x time
 	// 		- best
 	// 			only use scale factor (rscale=1)
 	// 			1x time (fixed set of previews: 1280, 150, 350, 900)
-	// 		- fast 
+	// 		- fast_r 
 	// 			make previews using nearest rscale (factor is rounded)
-	// 			will produce inexact sizes
-	// 			0.42x time
+	// 			will produce inexact preview sizes
+	// 			0.4x time
+	// 		- fast_f
+	// 			same as fast_r but factor is floored rather than rounded
+	// 			will priduce previews the same size or larger than requested
 	// 		- rscale
 	// 			only use rscale (factor=1)
 	// 			produces only fixed size previews
-	// 			0.32x time
+	// 			0.3x time
 	//
 	// NOTE: rscale should be used for exactly tuned preview sizes...
 	// NOTE: this will add already existing previews to IMAGES[gid]...
@@ -198,7 +201,8 @@ if(window.CEF_dumpJSON != null){
 	// XXX make this not just vips-specific...
 	// XXX path handling is a mess...
 	window.makeImagePreviews = function(gid, sizes, mode, no_update_loaded){
-		mode = mode == null ? 'optimized' : mode
+		//mode = mode == null ? 'optimized' : mode
+		mode = mode == null ? 'fast_f' : mode
 
 		var img = IMAGES[gid]
 		var source = normalizePath(img.path)
@@ -266,7 +270,7 @@ if(window.CEF_dumpJSON != null){
 						var rscale = 1
 
 						// speed things up with read-scaling and rounding the scale factor...
-						if(mode == 'fast' || mode == 'optimized' || mode == 'rscale'){
+						if(['fast_r', 'fast_f', 'optimized', 'rscale'].indexOf(mode) >= 0){
 							while(rscale < 8){
 								if(rscale*2 >= factor){
 									break
@@ -275,8 +279,16 @@ if(window.CEF_dumpJSON != null){
 							}
 							factor = factor / rscale
 						}
-						if(mode == 'fast'){
-							factor = Math.round(factor)
+						// factor processing...
+						if(mode == 'fast_r'){
+							factor = Math.max(Math.round(factor), 1)
+
+						} else if(mode == 'fast_f'){
+							// NOTE: .floor(...) will make the images larger than
+							// 		the requested size, this will avaoid scale-up
+							// 		artifacts...
+							factor = Math.max(Math.floor(factor), 1)
+
 						} else if(mode == 'rscale'){
 							factor = 1
 						}
