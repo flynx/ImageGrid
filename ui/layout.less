@@ -126,10 +126,17 @@
 [tooltip]:hover:before {
 	opacity: 1;
 }
+/* make this above everything else... 
+* XXX not sure if this is the best way...
+*/
+[tooltip]:hover {
+	z-index: 1000;
+}
 
 .tooltip-right[tooltip] {
 }
 .tooltip-right[tooltip]:after {
+	min-height: 30px;
 	bottom: auto;
 	top: -50%;
 	left: 15px;

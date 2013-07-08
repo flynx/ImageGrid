@@ -92,8 +92,8 @@ Roadmap
 	
 
 
-[_] 29% Gen 3 current todo
-	[_] 59% High priority
+[_] 28% Gen 3 current todo
+	[_] 57% High priority
 		[_] 0% Priority tasks
 			[_] full archive index
 				[_] segmented loading of images and data
@@ -114,6 +114,10 @@ Roadmap
 			[X] pass 2: generate normal previews
 			[_] extract existing raw thumbnails/previews (for RAW files)
 		[_] add option to export either original or preview (exportDialog)
+		[_] add min-height to tooltips
+		| one line tooltip-right get messed-up...
+		[X] make tooltip balloons on top of everything else...
+		| currently a tooltip balloon is bellow the next tooltip...
 		[_] BUG: shifting last image out of a ribbon misaligns the current ribbon
 		| i.e. the prev ribbon was deleted and the new focused ribbon
 		| is aligned as if it was not current...

@@ -845,7 +845,10 @@ function exportPreviewsDialog(state, dfl){
 		select: ['Original image'].concat(PREVIEW_SIZES.slice().sort()),
 		default: 1
 	}
-	cfg['Destination'] = {ndir: dfl}
+	cfg['Destination | '+
+			'Relative paths are supported.\n\n'+
+			'NOTE: All paths are relative to the curent\n'+
+			'directory.'] = {ndir: dfl}
 
 	var keys = Object.keys(cfg)
 
