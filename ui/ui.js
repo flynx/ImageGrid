@@ -836,7 +836,12 @@ function exportPreviewsDialog(state, dfl){
 	cfg['Fav directory name'] = 'fav'
 	cfg['Size | '+
 			'The selected size is aproximate, the actual\n'+
-			'preview will be copied from cache.'] = {
+			'preview will be copied from cache.\n\n'+
+			'NOTE: if not all previews are yet generated,\n'+
+			'this will save the available previews, not all\n'+
+			'of which may be of the right size, if this\n'+
+			'happens wait till all the previews are done\n'+
+			'and export again.'] = {
 		select: ['Original image'].concat(PREVIEW_SIZES.slice().sort()),
 		default: 1
 	}

@@ -81,6 +81,7 @@
 	text-decoration: none;
 }
 [tooltip]:after {
+	display: none;
 	content: attr(tooltip);
 	position: absolute;
 	bottom: 130%;
@@ -98,6 +99,7 @@
 	transition: all 0.4s ease;
 }
 [tooltip]:before {
+	display: none;
 	content: "";
 	position: absolute;
 	width: 0;
@@ -113,9 +115,11 @@
 	bottom: 90%;
 }
 [tooltip]:hover:after {
+	display: block;
 	bottom: 100%;
 }
 [tooltip]:hover:before {
+	display: block;
 	bottom: 70%;
 }
 [tooltip]:hover:after, 
@@ -131,12 +135,12 @@
 	left: 15px;
 }
 .tooltip-right[tooltip]:before {
-	border-left: none;
+	border-left: 5px solid transparent;
 	border-right: 5px solid #ffcb66;
 	border-bottom: 5px solid transparent;
 	border-top: 5px solid transparent;
 	bottom: auto;
-	left: 10px;
+	left: 5px;
 	top: 25%;
 }
 .tooltip-right[tooltip]:hover:after {
