@@ -151,8 +151,8 @@ if(window.CEF_dumpJSON != null){
 		return getter
 	}
 
-	// XXX handle errors...
 	// NOTE: source can be either gid or a path...
+	// XXX handle errors...
 	window._getImageSize = function(dimension, source){
 		if(source in IMAGES){
 			var img = IMAGES[source]

@@ -92,8 +92,8 @@ Roadmap
 	
 
 
-[_] 28% Gen 3 current todo
-	[_] 57% High priority
+[_] 30% Gen 3 current todo
+	[_] 61% High priority
 		[_] 0% Priority tasks
 			[_] full archive index
 				[_] segmented loading of images and data
@@ -113,8 +113,8 @@ Roadmap
 				[_] ~1 screen - for single image mode
 			[X] pass 2: generate normal previews
 			[_] extract existing raw thumbnails/previews (for RAW files)
-		[_] add option to export either original or preview (exportDialog)
-		[_] add min-height to tooltips
+		[X] add option to export either original or preview (exportDialog)
+		[X] add min-height to tooltips
 		| one line tooltip-right get messed-up...
 		[X] make tooltip balloons on top of everything else...
 		| currently a tooltip balloon is bellow the next tooltip...
@@ -190,12 +190,6 @@ Roadmap
 			| is slower but avoids problems with multiple updates and races...
 		[_] editable list of external commands...
 		| to add things like exportdirs.py etc.
-		[_] 60% basic dialogs
-			[_] select from list
-			[X] alert
-			[X] prompt
-			[_] confirm
-			[X] open directory (native)
 		[_] 0% Tablet UI
 			[_] screen buttons
 		[_] save settings to config.json
@@ -311,6 +305,11 @@ Roadmap
 			[_] remove extra and repetitive actions
 			[_] caching config
 		[_] side-by side view...
+		[X] 100% basic dialogs
+			[X] select from list
+			[X] alert
+			[X] prompt
+			[X] open directory (native)
 		[X] BUG: context status does not get updated on Ctrl-D
 		[X] single ribbon mode
 		| should this have up/down navigation?
