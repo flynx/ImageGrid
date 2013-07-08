@@ -540,6 +540,53 @@ var FIELD_TYPES = {
 		},
 	},
 
+	// format: 
+	// 	{ 
+	// 		select: ['a', 'b', 'c', ...] 
+	// 		// default option (optional)...
+	// 		default: <number> | <text>
+	// 	}
+	select: {
+		type: 'select',
+		text: null,
+		default: false,
+		html: '<div class="field choice">'+
+				'<span class="text"></span>'+
+				'<select>'+
+					'<option class="option"></option>'+
+				'</select>'+
+			'</div>',
+		test: function(val){
+			return 'select' in val
+		},
+		set: function(field, value){
+			var t = field.find('.text').text()
+			var item = field.find('.option').last()
+			var select = field.find('select')
+			for(var i=0; i < value.select.length; i++){
+				item
+					.text(value.select[i])
+					.val(value.select[i])
+				item.appendTo(select)
+
+				item = item.clone()
+			}
+			if(value.default != null){
+				if(typeof(value.default) == typeof(123)){
+					field.find('.option')
+						.eq(value.default)
+							.attr('selected', '')
+				} else {
+					field.find('.option[value="'+ value.default +'"]')
+						.attr('selected', '')
+				}
+			}
+		},
+		get: function(field){ 
+			return $(field).find('.option:selected').val()
+		},
+	},
+
 	// NOTE: a button can have state...
 	// format: 
 	// 	{ 
@@ -787,16 +834,25 @@ function exportPreviewsDialog(state, dfl){
 			'%I - global order\n'+
 			'%i - current selection order'] = '%f'
 	cfg['Fav directory name'] = 'fav'
+	cfg['Size | '+
+			'The selected size is aproximate, the actual\n'+
+			'preview will be copied from cache.'] = {
+		select: ['Original image'].concat(PREVIEW_SIZES.slice().sort()),
+		default: 1
+	}
 	cfg['Destination'] = {ndir: dfl}
 
 	var keys = Object.keys(cfg)
 
 	formDialog(null, '<b>Export:</b> '+ state +'.', cfg, 'OK', 'exportPreviewsDialog')
 		.done(function(data){
+			var s = data[keys[2]]
+			s = s == 'Original image' ? Math.max.apply(null, PREVIEW_SIZES)*2 : parseInt(s)-5
 			exportTo(
-				normalizePath(data[keys[2]]), 
+				normalizePath(data[keys[3]]), 
 				data[keys[0]], 
-				data[keys[1]])
+				data[keys[1]],
+				s)
 			// XXX do real reporting...
 			showStatusQ('Copying data...')
 			res.resolve(data[''])
