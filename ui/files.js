@@ -457,7 +457,7 @@ function saveFileState(name, no_normalize_path){
 // Load a directory as-is
 //
 // XXX check if we need to pass down sorting settings to the generators...
-function loadRawDir(path, prefix){
+function loadRawDir(path, no_preview_processing, prefix){
 	prefix = prefix == null ? 'Data' : prefix
 	prefix = prefix === false ? null : prefix
 
@@ -485,7 +485,9 @@ function loadRawDir(path, prefix){
 	DATA = dataFromImages(IMAGES)
 	res.notify(prefix, 'Loaded', 'Data.')
 
-	updateRibbonsFromFavDirs()
+	// XXX this will reload viewer...
+	//updateRibbonsFromFavDirs()
+	DATA.ribbons = ribbonsFromFavDirs(null, null, imageOrderCmp)
 	res.notify(prefix, 'Loaded', 'Fav dirs.')
 
 	MARKED = []
@@ -493,10 +495,30 @@ function loadRawDir(path, prefix){
 	reloadViewer()
 
 	// XXX is this the correct place for this???
-	updateImagesOrientationQ()
-	//makeImagesPreviewsQ()
+	res.notify(prefix, 'Loading', 'Images orientation.')
+	var o = updateImagesOrientationQ()
+		.done(function(){
+			res.notify(prefix, 'Loaded', 'Images orientation.')
+		})
 
+	if(!no_preview_processing){
+		res.notify(prefix, 'Loading/Generating', 'Previews.')
+		var p = makeImagesPreviewsQ()
+			.done(function(){
+				res.notify(prefix, 'Loaded', 'Previews.')
+			})
+	} else {
+		var p = 0
+	}
+
+	// XXX we are not waiting for previews and orientation...
 	return res.resolve()
+	/*
+	$.when(o, p).done(function(){
+		res.resolve()
+	})
+	return res
+	*/
 }
 
 
@@ -510,7 +532,7 @@ function loadRawDir(path, prefix){
 //
 // NOTE: this will create an images.json file in cache on opening an 
 // 		un-cached dir (XXX is this correct???)
-function loadDir(path, prefix){
+function loadDir(path, no_preview_processing, prefix){
 	prefix = prefix == null ? 'Data' : prefix
 	prefix = prefix === false ? null : prefix
 
@@ -543,7 +565,7 @@ function loadDir(path, prefix){
 			res.resolve()
 		})
 		.fail(function(){
-			bubbleProgress('Raw directory', loadRawDir(orig_path), res)
+			bubbleProgress('Raw directory', loadRawDir(orig_path, no_preview_processing), res)
 		})
 
 	return res
@@ -637,6 +659,8 @@ function exportTo(path, im_name, dir_name, size){
 
 /*********************************************************************/
 
+// NOTE: this will overwrite current image orientation...
+//
 // XXX this depends on getImageOrientation(...)
 function updateImageOrientation(gid, no_update_loaded){
 	gid = gid == null ? getImageGID() : gid
@@ -680,13 +704,11 @@ function updateImagesOrientation(gids, no_update_loaded){
 
 
 // queued version of updateImagesOrientation(...)
+//
+// XXX need a way to cancel this...
 function updateImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
 	var res = []
-
-	if(window.getImageOrientation == null){
-		return
-	}
 
 	var last = $.Deferred().resolve()
 

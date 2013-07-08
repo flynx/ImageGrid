@@ -829,7 +829,8 @@ function loadDirectoryDialog(dfl){
 			toggleMarkedOnlyView('off')
 
 			// do the loading...
-			statusNotify(loadDir(path))
+			statusNotify(loadDir(path, !process_previews))
+				/*
 				.done(function(){
 					if(process_previews){ 
 						showStatusQ('Previews: processing started...')
@@ -840,6 +841,7 @@ function loadDirectoryDialog(dfl){
 							})
 					}
 				})
+				*/
 		})
 		.fail(function(){
 			showStatusQ('Open: canceled.')

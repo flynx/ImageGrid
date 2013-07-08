@@ -358,6 +358,7 @@ if(window.CEF_dumpJSON != null){
 	// NOTE: this will remove the old deferred if it us resolved, thus
 	// 		clearing the "log" of previous operations, unless keep_log
 	// 		is set to true...
+	// XXX need a way to cancel this...
 	window.makeImagesPreviewsQ = function(gids, sizes, mode, keep_log){
 		gids = gids == null ? getClosestGIDs() : gids
 		var previews = []
