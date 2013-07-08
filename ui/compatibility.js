@@ -364,6 +364,7 @@ if(window.CEF_dumpJSON != null){
 	window._PREVIW_CREATE_QUEUE = null
 	// Queued version of makeImagesPreviews(...)
 	//
+	// XXX make a generic deferred queue...
 	// XXX is this robust enough???
 	// 		of one deferred hangs or breaks without finalizing this will 
 	// 		stall the whole queue...
