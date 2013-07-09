@@ -678,6 +678,24 @@ function assyncCall(func){
 }
 
 
+/*
+function chainDeferreds(deferred, after){
+	after = after == null ? $.Deferred.resolve() : after
+
+	$.each(deferred, function(_, d){
+		var cur = $.Deferred()
+		after.done(function(){
+			d()
+				.done(function(){ cur.resolve() })
+				.fail(function(){ cur.reject() })
+		})
+		after = cur
+	})
+
+	return after
+}
+*/
+
 
 
 /**********************************************************************

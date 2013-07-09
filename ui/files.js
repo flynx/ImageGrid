@@ -683,7 +683,7 @@ function updateImageOrientation(gid, no_update_loaded){
 				IMAGES_UPDATED.push(gid)
 			}
 
-			// update loaded images...
+			// update image if loaded...
 			if(!no_update_loaded){
 				var o = getImage(gid)
 				if(o.length > 0){
@@ -708,26 +708,32 @@ function updateImagesOrientation(gids, no_update_loaded){
 
 // queued version of updateImagesOrientation(...)
 //
+// NOTE: this will ignore errors.
+//
 // XXX need a way to cancel this...
+// 		- one way is to .reject(...) any of the still pending elements,
+// 		  but there appears no way of getting the list out of when...
 function updateImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
-	var res = []
+	//var res = []
 
 	var last = $.Deferred().resolve()
 
 	$.each(gids, function(_, gid){
 		var cur = $.Deferred()
 		last.done(function(){
-			last = updateImageOrientation(gid, no_update_loaded)
-				.done(function(o){
-					cur.resolve()
-				})
+			updateImageOrientation(gid, no_update_loaded)
+				.done(function(o){ cur.resolve(o) })
+				.fail(function(){ cur.resolve('fail') })
 		})
 
-		res.push(cur)
+		last = cur
+		//res.push(cur)
 	})
 
-	return $.when.apply(null, res)
+	// NOTE: .when(...) is used to add more introspecitve feedback...
+	//return $.when.apply(null, res)
+	return last
 }
 
 

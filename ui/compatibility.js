@@ -427,10 +427,12 @@ if(window.CEF_dumpJSON != null){
 				getVipsField('exif-ifd0-Artist', source),
 				getVipsField('exif-ifd0-Date and Time', source))
 			.done(function(artist, date){
+				// Artist...
 				artist = artist
 					.replace(/\([^)]*\)/, '')
 					.trim()
 				artist = artist == '' ? 'Unknown' : artist
+				// Date...
 				// format: "20130102-122315"
 				// XXX if not set, get ctime...
 				date = date
@@ -438,6 +440,7 @@ if(window.CEF_dumpJSON != null){
 					.trim()
 					.replace(/:/g, '')
 					.replace(/ /g, '-')
+				// File name...
 				var name = source.split(/[\\\/]/).pop().split('.')[0]
 
 				var text_gid = artist +'-'+ date +'-'+ name
@@ -454,6 +457,10 @@ if(window.CEF_dumpJSON != null){
 
 					getter.resolve(hex_gid)
 				}
+			})
+			// XXX handle arrors in a more informative way...
+			.fail(function(){
+				getter.reject()
 			})
 		return getter
 	}
@@ -491,7 +498,6 @@ if(window.CEF_dumpJSON != null){
 
 
 
-
 // PhoneGap
 } else if(false){
 
@@ -503,6 +509,8 @@ if(window.CEF_dumpJSON != null){
 	window.closeWindow = function(){}
 	window.showDevTools = function(){}
 	window.reload = function(){}
+
+
 
 // Bare Chrome...
 } else {

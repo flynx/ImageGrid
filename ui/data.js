@@ -139,21 +139,6 @@ var DATA_FILE_PATTERN = /^[0-9]*-data.json$/
 
 var IMAGE_PATTERN = /.*\.(jpg|jpeg|png|gif)$/i
 
-
-/*
-var UI_IMAGE_CACHE = []
-$.each([
-	'images/loding.gif',
-	'images/loding-90deg.gif',
-	'images/loding-180deg.gif',
-	'images/loding-270deg.gif'
-], function(i, e){ 
-	var img = new Image()
-	img.src = e
-	UI_IMAGE_CACHE.push(img)
-})
-*/
-
 var UPDATE_SORT_ENABLED = false
 // XXX for some reason the sync version appears to work faster...
 var UPDATE_SYNC = false
