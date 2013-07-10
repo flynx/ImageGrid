@@ -678,9 +678,11 @@ function assyncCall(func){
 }
 
 
+// XXX needs more docs...
+// XXX needs a better public inteface...
 function makeDeferredsQ(){
 
-	var first = $.Deferred().resolve()
+	var first = $.Deferred()
 	var last = first
 
 	// this is used for two things:
@@ -690,12 +692,15 @@ function makeDeferredsQ(){
 	// XXX do we need to make this resumable??
 	var monitor = $.Deferred()
 
-	monitor.kill = function(){
-		this.resolve()
-	}
-
+	// Add a worker to queue...
+	//
+	// NOTE: .enqueue(...) accepts a worker and any number of the arguments
+	// 		to be passed to the worker when it's its turn.
+	// NOTE: the worker must porduce a deffered/promice.
 	monitor.enqueue = function(deffered){
 		var cur = $.Deferred()
+		var args = Array.apply(null, arguments).slice(1)
+
 		last.done(function(){
 
 			// see if we are killed...
@@ -706,23 +711,31 @@ function makeDeferredsQ(){
 			}
 
 			// do the work...
-			deffered.apply(null, Array.apply(null, arguments).slice(1))
+			deffered.apply(null, args)
 				.done(function(o){ 
 					cur.resolve(o) 
-					monitor.notify('done')
 				})
 				.fail(function(){ 
 					cur.resolve('fail') 
-					monitor.notify('fail')
 				})
 		})
 
 		last = cur
+
+		return cur
 	}
 
+	// Start the work...
 	monitor.start = function(){
 		first.resolve()
+		return this
 	}
+	// Kill the queue...
+	monitor.kill = function(){
+		this.resolve()
+		return this
+	}
+
 
 	return monitor
 }

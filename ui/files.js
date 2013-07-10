@@ -709,57 +709,28 @@ function updateImagesOrientation(gids, no_update_loaded){
 // queued version of updateImagesOrientation(...)
 //
 // NOTE: this will ignore errors.
-//
-// XXX need a way to cancel this...
-// 		- one way is to .reject(...) any of the still pending elements,
-// 		  but there appears no way of getting the list out of when...
-//
 function updateImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
 
-	var last = $.Deferred().resolve()
-
-	// this is used for two things:
-	// 	- report progress
-	// 	- kill the queue if needed...
-	// XXX make this a deferred-like cleanly rather than bu monkey patching...
-	// XXX do we need to make this resumable??
-	var monitor = $.Deferred()
-	monitor.killed = false
-	monitor.kill = function(){
-		this.killed = true
-	}
+	var queue = makeDeferredsQ().start()
+	var last = null
 
 	$.each(gids, function(_, gid){
-		var cur = $.Deferred()
+		last = queue.enqueue(updateImageOrientation, gid, no_update_loaded)
+			.done(function(o){ queue.notify(gid, 'done') })
+			.fail(function(){ queue.notify(gid, 'fail') })
+	})
+
+	if(last != null){
+		// auto-stop the queue...
+		// NOTE: this is mostly for the saik of reporting...
+		// XXX do we need to auto-stop this???
 		last.done(function(){
-			// see if we are killed...
-			if(monitor.killed == true){
-				monitor.notify('killed')
-				monitor.resolve()
-				// this will kill the queue as we continue only on success...
-				cur.reject() 
-				return
-			}
-			// do the work...
-			updateImageOrientation(gid, no_update_loaded)
-				.done(function(o){ 
-					cur.resolve(o) 
-					monitor.notify('done', gid)
-				})
-				.fail(function(){ 
-					cur.resolve('fail') 
-					monitor.notify('fail', gid)
-				})
+			queue.resolve()
 		})
+	}
 
-		last = cur
-	})
-
-	last.done(function(){
-		monitor.resolve()
-	})
-	return monitor
+	return queue
 }
 
 
