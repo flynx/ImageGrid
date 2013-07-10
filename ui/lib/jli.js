@@ -712,26 +712,22 @@ function makeDeferredsQ(first){
 
 	var last = first
 
-	// this is used for two things:
-	// 	- report progress
-	// 	- kill the queue if needed...
-	// XXX make this a deferred-like cleanly rather than bu monkey patching...
-	// XXX do we need to make this resumable??
-	var monitor = $.Deferred()
+	// XXX make this a deferred-like cleanly, rather than by monkey patching...
+	var queue = $.Deferred()
 
 	// Add a worker to queue...
 	//
 	// NOTE: .enqueue(...) accepts a worker and any number of the arguments
 	// 		to be passed to the worker when it's its turn.
 	// NOTE: the worker must porduce a deffered/promice.
-	monitor.enqueue = function(deffered){
+	queue.enqueue = function(deffered){
 		var cur = $.Deferred()
 		var args = Array.apply(null, arguments).slice(1)
 
 		last.done(function(){
 
 			// see if we are killed...
-			if(monitor.state() == 'resolved'){
+			if(queue.state() == 'resolved'){
 				// this will kill the queue as we continue only on success...
 				cur.reject() 
 				return
@@ -753,25 +749,28 @@ function makeDeferredsQ(first){
 	}
 
 	// Start the work...
-	monitor.start = function(){
+	queue.start = function(){
 		first.resolve()
 		return this
 	}
+
 	// Kill the queue...
-	monitor.kill = function(){
+	queue.kill = function(){
 		this.resolve()
 		return this
 	}
+
+	// Report work state...
 	// XXX make this a propper state, or integrate into the deferred in 
 	// 		a more natural way...
-	monitor.isWorking = function(){
-		if(monitor.state() != 'resolved' && last.state() != 'resolved'){
+	queue.isWorking = function(){
+		if(queue.state() != 'resolved' && last.state() != 'resolved'){
 			return true
 		}
 		return false
 	}
 
-	return monitor
+	return queue
 }
 
 
