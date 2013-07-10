@@ -678,11 +678,38 @@ function assyncCall(func){
 }
 
 
-// XXX needs more docs...
-// XXX needs a better public inteface...
-function makeDeferredsQ(){
+// Deferred worker queue
+//
+// This will either create a new queue or attach to the tail of an 
+// existing queue (deferred) if given.
+//
+// This will return a deferred object with several extensions:
+//
+// 		.enqueue(worker, ...)
+// 			Add a worker to the queue.
+// 			A worker is executed when the previous worker is resolved.
+// 			A worker must return a deferred.
+//
+// 		.start()
+// 			Start the first worker.
+//
+// 		.kill()
+// 			Stop the queue, preventing any new workers from starting.
+// 			NOTE: this will not kill the currently running worker.
+//
+// 		.isWorking()
+// 			will return true if there is at least one worker still not
+// 			resolved, false otherwise.
+// 			NOTE: if the queue is killed, this will always return false.
+//
+//
+// NOTE: one queue is guaranteed to work in a sequence, to run several 
+// 		pipelines in parallel use two or more queues.
+// NOTE: running queues in parallel depends on the actual context in
+// 		use (browser/node.js/...).
+function makeDeferredsQ(first){
+	first = first == null ? $.Deferred() : first
 
-	var first = $.Deferred()
 	var last = first
 
 	// this is used for two things:
@@ -735,7 +762,14 @@ function makeDeferredsQ(){
 		this.resolve()
 		return this
 	}
-
+	// XXX make this a propper state, or integrate into the deferred in 
+	// 		a more natural way...
+	monitor.isWorking = function(){
+		if(monitor.state() != 'resolved' && last.state() != 'resolved'){
+			return true
+		}
+		return false
+	}
 
 	return monitor
 }

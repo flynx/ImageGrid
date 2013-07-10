@@ -364,56 +364,28 @@ if(window.CEF_dumpJSON != null){
 	window._PREVIW_CREATE_QUEUE = null
 	// Queued version of makeImagesPreviews(...)
 	//
-	// XXX make a generic deferred queue...
-	// XXX is this robust enough???
-	// 		of one deferred hangs or breaks without finalizing this will 
-	// 		stall the whole queue...
-	// 		...need a way to jumpstart it again...
 	// XXX check if we are leaking the tail...
-	// XXX test progress...
-	// 		...gets collected but the structure is a tad too complex...
-	// 		- should we make it flat???
-	//		- do we need all that data????
 	// NOTE: this will remove the old deferred if it us resolved, thus
 	// 		clearing the "log" of previous operations, unless keep_log
 	// 		is set to true...
-	// XXX need a way to cancel this...
-	window.makeImagesPreviewsQ = function(gids, sizes, mode, keep_log){
+	window.makeImagesPreviewsQ = function(gids, sizes, mode){
 		gids = gids == null ? getClosestGIDs() : gids
-		var previews = []
 
-		$.each(gids, function(i, e){
-			var deferred = $.Deferred()
+		// attach the the previous queue...
+		if(_PREVIW_CREATE_QUEUE == null){
+			var queue = makeDeferredsQ()
+			_PREVIW_CREATE_QUEUE = queue.start()
+		} else {
+			var queue = _PREVIW_CREATE_QUEUE
+		}
 
-			var last = previews[previews.length-1]
-
-			// first in this set -- attach to the queue...
-			if(last == null){
-				if(_PREVIW_CREATE_QUEUE == null
-						|| (!keep_log && _PREVIW_CREATE_QUEUE.state() == 'resolved')){
-					// if nothing in queue, start at once...
-					last = $.Deferred().resolve()
-				} else {
-					last = _PREVIW_CREATE_QUEUE
-				}
-			}
-
-			// append to deffered queue...
-			last.always(function(){
-				makeImagePreviews(e, sizes, mode)
-					.progress(function(state){
-						deferred.notify(state)
-					})
-					.always(function(){
-						deferred.resolve()
-					})
-			})
-
-			previews.push(deferred)
+		$.each(gids, function(_, gid){
+			queue.enqueue(makeImagePreviews, gid, sizes, mode)
+				//.progress(function(state){ queue.notify(state) })
+				.always(function(){ queue.notify(gid, 'done') })
 		})
 
-		_PREVIW_CREATE_QUEUE = $.when.apply(null, previews)
-		return _PREVIW_CREATE_QUEUE
+		return queue
 	}
 
 	window.makeImageGID = function(source, make_text_gid){
