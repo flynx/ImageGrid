@@ -713,18 +713,40 @@ function updateImagesOrientation(gids, no_update_loaded){
 // XXX need a way to cancel this...
 // 		- one way is to .reject(...) any of the still pending elements,
 // 		  but there appears no way of getting the list out of when...
+//
 function updateImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
 	//var res = []
 
 	var last = $.Deferred().resolve()
 
+	// this is used for two things:
+	// 	- report progress
+	// 	- kill the queue if needed...
+	var monitor = $.Deferred()
+	monitor.killed = false
+	monitor.kill = function(){
+		this.killed = true
+	}
+
 	$.each(gids, function(_, gid){
 		var cur = $.Deferred()
 		last.done(function(){
+			if(monitor.killed == true){
+				monitor.notify('killed')
+				monitor.resolve()
+				cur.reject() 
+				return
+			}
 			updateImageOrientation(gid, no_update_loaded)
-				.done(function(o){ cur.resolve(o) })
-				.fail(function(){ cur.resolve('fail') })
+				.done(function(o){ 
+					cur.resolve(o) 
+					monitor.notify('done', gid)
+				})
+				.fail(function(){ 
+					cur.resolve('fail') 
+					monitor.notify('fail', gid)
+				})
 		})
 
 		last = cur
@@ -733,7 +755,11 @@ function updateImagesOrientationQ(gids, no_update_loaded){
 
 	// NOTE: .when(...) is used to add more introspecitve feedback...
 	//return $.when.apply(null, res)
-	return last
+	// return last
+	last.done(function(){
+		monitor.resolve()
+	})
+	return monitor
 }
 
 
