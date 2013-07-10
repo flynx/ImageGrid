@@ -678,23 +678,54 @@ function assyncCall(func){
 }
 
 
-/*
-function chainDeferreds(deferred, after){
-	after = after == null ? $.Deferred.resolve() : after
+function makeDeferredsQ(){
 
-	$.each(deferred, function(_, d){
+	var first = $.Deferred().resolve()
+	var last = first
+
+	// this is used for two things:
+	// 	- report progress
+	// 	- kill the queue if needed...
+	// XXX make this a deferred-like cleanly rather than bu monkey patching...
+	// XXX do we need to make this resumable??
+	var monitor = $.Deferred()
+
+	monitor.kill = function(){
+		this.resolve()
+	}
+
+	monitor.enqueue = function(deffered){
 		var cur = $.Deferred()
-		after.done(function(){
-			d()
-				.done(function(){ cur.resolve() })
-				.fail(function(){ cur.reject() })
-		})
-		after = cur
-	})
+		last.done(function(){
 
-	return after
+			// see if we are killed...
+			if(monitor.state() == 'resolved'){
+				// this will kill the queue as we continue only on success...
+				cur.reject() 
+				return
+			}
+
+			// do the work...
+			deffered.apply(null, Array.apply(null, arguments).slice(1))
+				.done(function(o){ 
+					cur.resolve(o) 
+					monitor.notify('done')
+				})
+				.fail(function(){ 
+					cur.resolve('fail') 
+					monitor.notify('fail')
+				})
+		})
+
+		last = cur
+	}
+
+	monitor.start = function(){
+		first.resolve()
+	}
+
+	return monitor
 }
-*/
 
 
 

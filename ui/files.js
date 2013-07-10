@@ -716,13 +716,14 @@ function updateImagesOrientation(gids, no_update_loaded){
 //
 function updateImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
-	//var res = []
 
 	var last = $.Deferred().resolve()
 
 	// this is used for two things:
 	// 	- report progress
 	// 	- kill the queue if needed...
+	// XXX make this a deferred-like cleanly rather than bu monkey patching...
+	// XXX do we need to make this resumable??
 	var monitor = $.Deferred()
 	monitor.killed = false
 	monitor.kill = function(){
@@ -732,12 +733,15 @@ function updateImagesOrientationQ(gids, no_update_loaded){
 	$.each(gids, function(_, gid){
 		var cur = $.Deferred()
 		last.done(function(){
+			// see if we are killed...
 			if(monitor.killed == true){
 				monitor.notify('killed')
 				monitor.resolve()
+				// this will kill the queue as we continue only on success...
 				cur.reject() 
 				return
 			}
+			// do the work...
 			updateImageOrientation(gid, no_update_loaded)
 				.done(function(o){ 
 					cur.resolve(o) 
@@ -750,12 +754,8 @@ function updateImagesOrientationQ(gids, no_update_loaded){
 		})
 
 		last = cur
-		//res.push(cur)
 	})
 
-	// NOTE: .when(...) is used to add more introspecitve feedback...
-	//return $.when.apply(null, res)
-	// return last
 	last.done(function(){
 		monitor.resolve()
 	})
