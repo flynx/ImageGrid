@@ -184,6 +184,8 @@ if(window.CEF_dumpJSON != null){
 		return getter
 	}
 
+	// XXX API to add to $PATH...
+
 	// preview generation...
 	//
 	// possible modes:
