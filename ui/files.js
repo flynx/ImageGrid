@@ -708,22 +708,23 @@ function updateImagesOrientation(gids, no_update_loaded){
 
 // queued version of updateImagesOrientation(...)
 //
-// NOTE: this will ignore errors.
+// XXX do we need to auto-stop this???
 function updateImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
 
 	var queue = makeDeferredsQ().start()
 	var last = null
 
+	// attach workers to queue...
 	$.each(gids, function(_, gid){
 		last = queue.enqueue(updateImageOrientation, gid, no_update_loaded)
-			.done(function(o){ queue.notify(gid, 'done') })
+			.done(function(){ queue.notify(gid, 'done') })
 			.fail(function(){ queue.notify(gid, 'fail') })
 	})
 
+	// auto-stop the queue...
 	if(last != null){
-		// auto-stop the queue...
-		// NOTE: this is mostly for the saik of reporting...
+		// NOTE: this is mostly for reporting...
 		// XXX do we need to auto-stop this???
 		last.done(function(){
 			queue.resolve()

@@ -570,6 +570,114 @@ jQuery.fn.sortChildren = function(func){
 
 
 
+/************************************************** Deferred utils ***/
+
+// Deferred worker queue
+//
+// This will either create a new queue or attach to the tail of an 
+// existing queue (deferred) if given.
+//
+// This will return a deferred object with several extensions:
+//
+// 		.enqueue(worker, ...)
+// 			Add a worker to the queue.
+// 			A worker is triggered by the previous worker in queue 
+// 			getting resolved. 
+// 			NOTE: A worker must return a deferred.
+// 			NOTE: all the arguments to this except for the first (the 
+// 				worker itself) will be passed to the worker when it is 
+// 				called.
+//
+// 		.start()
+// 			Start the first worker.
+//
+// 		.kill()
+// 			Stop the queue, preventing any new workers from starting.
+// 			NOTE: this will not kill the currently running worker.
+// 			NOTE: after killing a queue it can not be restarted.
+//
+// 		.isWorking()
+// 			will return true if there is at least one worker still not
+// 			resolved, false otherwise.
+// 			NOTE: if the queue is killed, this will always return false.
+//
+//
+// NOTE: the queue is not started by default.
+// NOTE: one queue is guaranteed to work in a sequence, to run several 
+// 		pipelines in parallel use two or more queues.
+// NOTE: running queues in parallel depends on the actual context in
+// 		use (browser/node.js/...).
+//
+// XXX should this be restartable???
+// XXX check if this leaks used nodes...
+function makeDeferredsQ(first){
+	first = first == null ? $.Deferred() : first
+
+	var last = first
+
+	// XXX make this a deferred-like cleanly, rather than by monkey patching...
+	var queue = $.Deferred()
+
+	// Add a worker to queue...
+	//
+	// NOTE: .enqueue(...) accepts a worker and any number of the arguments
+	// 		to be passed to the worker when it's its turn.
+	// NOTE: the worker must porduce a deffered/promice.
+	queue.enqueue = function(deffered){
+		var cur = $.Deferred()
+		var args = Array.apply(null, arguments).slice(1)
+
+		last.done(function(){
+
+			// see if we are killed...
+			if(queue.state() == 'resolved'){
+				// this will kill the queue as we continue only on success...
+				cur.reject() 
+				return
+			}
+
+			// do the work...
+			deffered.apply(null, args)
+				.done(function(o){ 
+					cur.resolve(o) 
+				})
+				.fail(function(){ 
+					cur.resolve('fail') 
+				})
+		})
+
+		last = cur
+
+		return cur
+	}
+
+	// Start the work...
+	queue.start = function(){
+		first.resolve()
+		return this
+	}
+
+	// Kill the queue...
+	queue.kill = function(){
+		this.resolve()
+		return this
+	}
+
+	// Report work state...
+	// XXX make this a propper state, or integrate into the deferred in 
+	// 		a more natural way...
+	queue.isWorking = function(){
+		if(queue.state() != 'resolved' && last.state() != 'resolved'){
+			return true
+		}
+		return false
+	}
+
+	return queue
+}
+
+
+
 /**************************************************** JS utilities ***/
 
 String.prototype.capitalize = function(){
@@ -675,102 +783,6 @@ function assyncCall(func){
 	}
 	_func.name = func.name
 	return _func
-}
-
-
-// Deferred worker queue
-//
-// This will either create a new queue or attach to the tail of an 
-// existing queue (deferred) if given.
-//
-// This will return a deferred object with several extensions:
-//
-// 		.enqueue(worker, ...)
-// 			Add a worker to the queue.
-// 			A worker is executed when the previous worker is resolved.
-// 			A worker must return a deferred.
-//
-// 		.start()
-// 			Start the first worker.
-//
-// 		.kill()
-// 			Stop the queue, preventing any new workers from starting.
-// 			NOTE: this will not kill the currently running worker.
-//
-// 		.isWorking()
-// 			will return true if there is at least one worker still not
-// 			resolved, false otherwise.
-// 			NOTE: if the queue is killed, this will always return false.
-//
-//
-// NOTE: one queue is guaranteed to work in a sequence, to run several 
-// 		pipelines in parallel use two or more queues.
-// NOTE: running queues in parallel depends on the actual context in
-// 		use (browser/node.js/...).
-function makeDeferredsQ(first){
-	first = first == null ? $.Deferred() : first
-
-	var last = first
-
-	// XXX make this a deferred-like cleanly, rather than by monkey patching...
-	var queue = $.Deferred()
-
-	// Add a worker to queue...
-	//
-	// NOTE: .enqueue(...) accepts a worker and any number of the arguments
-	// 		to be passed to the worker when it's its turn.
-	// NOTE: the worker must porduce a deffered/promice.
-	queue.enqueue = function(deffered){
-		var cur = $.Deferred()
-		var args = Array.apply(null, arguments).slice(1)
-
-		last.done(function(){
-
-			// see if we are killed...
-			if(queue.state() == 'resolved'){
-				// this will kill the queue as we continue only on success...
-				cur.reject() 
-				return
-			}
-
-			// do the work...
-			deffered.apply(null, args)
-				.done(function(o){ 
-					cur.resolve(o) 
-				})
-				.fail(function(){ 
-					cur.resolve('fail') 
-				})
-		})
-
-		last = cur
-
-		return cur
-	}
-
-	// Start the work...
-	queue.start = function(){
-		first.resolve()
-		return this
-	}
-
-	// Kill the queue...
-	queue.kill = function(){
-		this.resolve()
-		return this
-	}
-
-	// Report work state...
-	// XXX make this a propper state, or integrate into the deferred in 
-	// 		a more natural way...
-	queue.isWorking = function(){
-		if(queue.state() != 'resolved' && last.state() != 'resolved'){
-			return true
-		}
-		return false
-	}
-
-	return queue
 }
 
 

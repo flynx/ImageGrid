@@ -362,12 +362,8 @@ if(window.CEF_dumpJSON != null){
 	}
 
 	window._PREVIW_CREATE_QUEUE = null
+	
 	// Queued version of makeImagesPreviews(...)
-	//
-	// XXX check if we are leaking the tail...
-	// NOTE: this will remove the old deferred if it us resolved, thus
-	// 		clearing the "log" of previous operations, unless keep_log
-	// 		is set to true...
 	window.makeImagesPreviewsQ = function(gids, sizes, mode){
 		gids = gids == null ? getClosestGIDs() : gids
 
@@ -379,8 +375,10 @@ if(window.CEF_dumpJSON != null){
 			var queue = _PREVIW_CREATE_QUEUE
 		}
 
+		// attach the workers to the queue...
 		$.each(gids, function(_, gid){
 			queue.enqueue(makeImagePreviews, gid, sizes, mode)
+				// XXX do we need to report seporate previews???
 				//.progress(function(state){ queue.notify(state) })
 				.always(function(){ queue.notify(gid, 'done') })
 		})
