@@ -1,5 +1,5 @@
 Roadmap
-	[_] 50% Pre-Alpha - limited preview
+	[_] 58% Pre-Alpha - limited preview
 		[_] 50% UI
 			[_] 0% Tablet-specific
 				[_] screen buttons
@@ -22,7 +22,8 @@ Roadmap
 			[X] image next/prev
 			[X] ribbon next/prev
 			[X] screen next/prev
-			[_] marks next/prev
+			[_] marks next/prev (???)
+		[X] slideshow
 		[_] 54% editing
 			[_] 66% ribbon
 				[X] merge up/down
