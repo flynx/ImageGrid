@@ -44,6 +44,11 @@ if(window.CEF_dumpJSON != null){
 
 	var fp = /file:\/\/\//
 
+
+	// paths to included utils...
+	process.env.PATH += ';' + process.cwd() + '/vips/bin'
+
+
 	// Things ImageGrid needs...
 	// XXX do we need assync versions??
 	window.listDir = function(path){
