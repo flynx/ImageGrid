@@ -35,43 +35,39 @@ if(window.CEF_dumpJSON != null){
 
 	console.log('node-webkit mode: loading...')
 
+	var path = require('path')
 	var fs = require('fs')
 	var fse = require('fs.extra')
 	var proc = require('child_process')
 	var node_crypto = require('crypto')
+
 	//var exif = require('exif2')
+
 	var gui = require('nw.gui')
 
-	var fp = /file:\/\/\//
+
+	window.osPath = function(p){
+		return path.normalize(p.replace(/file:\/\/\//, ''))
+	}
 
 
 	// paths to included utils...
-	process.env.PATH += ';' + process.cwd() + '/vips/bin'
+	process.env.PATH += ';' + path.normalize(process.cwd() + '/vips/bin')
 
 
 	// Things ImageGrid needs...
 	// XXX do we need assync versions??
 	window.listDir = function(path){
-		if(fp.test(path)){
-			// XXX will this work on Mac???
-			path = path.replace(fp, '')
-		}
-		return fs.readdirSync(path)
+		return fs.readdirSync(osPath(path))
 	}
 	// XXX make this work across fs...
 	// XXX this will not overwrite...
 	window.copyFile = function(src, dst){
 		var deferred = $.Deferred()
-		if(fp.test(src)){
-			// XXX will this work on Mac???
-			src = src.replace(fp, '')
-		}
-		if(fp.test(dst)){
-			// XXX will this work on Mac???
-			dst = dst.replace(fp, '')
-		}
+		src = osPath(src)
+		dst = osPath(dst)
 
-		var path = dst.split('/')
+		var path = dst.split(/[\\\/]/)
 		path.pop()
 		path = path.join('/')
 
@@ -97,10 +93,7 @@ if(window.CEF_dumpJSON != null){
 		return deferred.resolve()
 	}
 	window.dumpJSON = function(path, data){
-		if(fp.test(path)){
-			// XXX will this work on Mac???
-			path = path.replace(fp, '')
-		}
+		path = osPath(path)
 		var dirs = path.split(/[\\\/]/)
 		dirs.pop()
 		dirs = dirs.join('/')
@@ -112,18 +105,10 @@ if(window.CEF_dumpJSON != null){
 		return fs.writeFileSync(path, JSON.stringify(data), encoding='utf8')
 	}
 	window.removeFile = function(path){
-		if(fp.test(path)){
-			// XXX will this work on Mac???
-			path = path.replace(fp, '')
-		}
-		return fs.unlinkSync(path)
+		return fs.unlinkSync(osPath(path))
 	}
 	window.runSystem = function(path){
-		if(fp.test(path)){
-			// XXX will this work on Mac???
-			path = path.replace(fp, '')
-		}
-		return proc.exec('"'+path+'"', function(error, stdout, stderr){
+		return proc.exec('"'+osPath(path)+'"', function(error, stdout, stderr){
 			if(error != null){
 				console.error(stderr)
 			}
@@ -138,7 +123,7 @@ if(window.CEF_dumpJSON != null){
 		}
 		var getter = $.Deferred()
 		var cmd = 'vips im_header_string "$FIELD" "$IN"'
-			.replace(/\$IN/g, source.replace(fp, ''))
+			.replace(/\$IN/g, osPath(source))
 			.replace(/\$FIELD/g, field)
 		proc.exec(cmd, function(error, stdout, stderr){
 			getter.resolve(stdout.trim())
@@ -224,7 +209,7 @@ if(window.CEF_dumpJSON != null){
 
 		var img = IMAGES[gid]
 		var source = normalizePath(img.path)
-		var name = gid +' - '+ source.split('/').pop()
+		var name = gid +' - '+ source.split(/[\\\/]/).pop()
 		var compression = 90
 
 		var previews = []
@@ -238,7 +223,7 @@ if(window.CEF_dumpJSON != null){
 
 		// build usable local path (without 'file:///')...
 		var cache_path = normalizePath(CACHE_DIR)
-		cache_path = cache_path.replace(fp, '')
+		cache_path = osPath(cache_path)
 
 		// get cur image size...
 		var size_getter = _getImageSize('max', source)
@@ -306,7 +291,7 @@ if(window.CEF_dumpJSON != null){
 						}
 
 						var cmd = 'vips im_shrink "$IN:$RSCALE" "$OUT:$COMPRESSION" $FACTOR $FACTOR'
-							.replace(/\$IN/g, source.replace(fp, ''))
+							.replace(/\$IN/g, osPath(source))
 							.replace(/\$RSCALE/g, rscale)
 							.replace(/\$OUT/g, preview_path)
 							.replace(/\$COMPRESSION/g, compression)
