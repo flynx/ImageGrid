@@ -731,15 +731,6 @@ function updateImagesOrientationQ(gids, no_update_loaded){
 			.fail(function(){ queue.notify(gid, 'fail') })
 	})
 
-	// auto-stop the queue...
-	if(last != null){
-		// NOTE: this is mostly for reporting...
-		// XXX do we need to auto-stop this???
-		last.done(function(){
-			queue.resolve()
-		})
-	}
-
 	return queue
 }
 

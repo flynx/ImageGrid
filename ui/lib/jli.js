@@ -696,8 +696,9 @@ function makeDeferredsQ(first){
 	*/
 
 	// Report work state...
-	// XXX make this a propper state, or integrate into the deferred in 
+	// XXX make this a proper state, or integrate into the deferred in 
 	// 		a more natural way...
+	// 		...need a way to bind to this state change...
 	queue.isWorking = function(){
 		if(queue.state() != 'resolved' && last.state() != 'resolved'){
 			return true
