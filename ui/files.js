@@ -539,6 +539,11 @@ function loadDir(path, no_preview_processing, prefix){
 	prefix = prefix == null ? 'Data' : prefix
 	prefix = prefix === false ? null : prefix
 
+	// stop all workers running on current image set before we 
+	// move to the next...
+	// XXX is this the correct sopot for this???
+	killAllWorkers()
+
 	IMAGES_CREATED = false
 
 	path = normalizePath(path)
@@ -669,6 +674,10 @@ function updateImageOrientation(gid, no_update_loaded){
 	gid = gid == null ? getImageGID() : gid
 	var img = IMAGES[gid]
 
+	if(img == null){
+		return
+	}
+
 	return getImageOrientation(normalizePath(img.path))
 		.done(function(o){
 			var o_o = img.orientation
@@ -712,7 +721,15 @@ function updateImagesOrientation(gids, no_update_loaded){
 function updateImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
 
-	var queue = makeDeferredsQ().start()
+	//var queue = makeDeferredsQ().start()
+	// attach the the previous queue...
+	if(WORKERS.image_orientation_reader == null){
+		var queue = makeDeferredsQ()
+		WORKERS.image_orientation_reader = queue.start()
+	} else {
+		var queue = WORKERS.image_orientation_reader
+	}
+
 	var last = null
 
 	// attach workers to queue...

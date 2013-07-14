@@ -143,6 +143,9 @@ var UPDATE_SORT_ENABLED = false
 // XXX for some reason the sync version appears to work faster...
 var UPDATE_SYNC = false
 
+// object to register all the worker queues...
+var WORKERS = {}
+
 
 
 /**********************************************************************
@@ -1174,7 +1177,19 @@ function getPrevLocation(){
 * Actions...
 */
 
-/******************************************************** Extension **/
+/********************************************************* Workers ***/
+
+function killAllWorkers(){
+	for(var k in WORKERS){
+		console.log('Worker: Stopping:', k)
+		WORKERS[k].kill()
+	}
+	WORKERS = {}
+}
+
+
+
+/******************************************************* Extension ***/
 
 // Open image in an external editor/viewer
 //
@@ -1196,7 +1211,7 @@ function openImageWith(prog){
 
 
 
-/********************************************************** Sorting **/
+/********************************************************* Sorting ***/
 
 function reverseImageOrder(){
 	DATA.order.reverse()
@@ -1227,7 +1242,7 @@ function sortImagesByName(reverse){
 
 
 
-/*************************************************** Manual sorting **/
+/************************************************** Manual sorting ***/
 
 // Ordering images...
 // NOTE: this a bit more complicated than simply shifting an image 

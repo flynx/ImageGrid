@@ -357,18 +357,16 @@ if(window.CEF_dumpJSON != null){
 		}))
 	}
 
-	window._PREVIW_CREATE_QUEUE = null
-	
 	// Queued version of makeImagesPreviews(...)
 	window.makeImagesPreviewsQ = function(gids, sizes, mode){
 		gids = gids == null ? getClosestGIDs() : gids
 
 		// attach the the previous queue...
-		if(_PREVIW_CREATE_QUEUE == null){
+		if(WORKERS.preview_generator == null){
 			var queue = makeDeferredsQ()
-			_PREVIW_CREATE_QUEUE = queue.start()
+			WORKERS.preview_generator = queue.start()
 		} else {
-			var queue = _PREVIW_CREATE_QUEUE
+			var queue = WORKERS.preview_generator
 		}
 
 		// attach the workers to the queue...

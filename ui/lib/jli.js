@@ -594,7 +594,7 @@ jQuery.fn.sortChildren = function(func){
 // 		.kill()
 // 			Stop the queue, preventing any new workers from starting.
 // 			NOTE: this will not kill the currently running worker.
-// 			NOTE: after killing a queue it can not be restarted.
+// 			NOTE: after a queue is killed it can not be restarted.
 //
 // 		.isWorking()
 // 			will return true if there is at least one worker still not
@@ -623,27 +623,41 @@ function makeDeferredsQ(first){
 	// NOTE: .enqueue(...) accepts a worker and any number of the arguments
 	// 		to be passed to the worker when it's its turn.
 	// NOTE: the worker must porduce a deffered/promice.
-	queue.enqueue = function(deffered){
+	queue.enqueue = function(worker){
 		var cur = $.Deferred()
 		var args = Array.apply(null, arguments).slice(1)
 
-		last.done(function(){
-
-			// see if we are killed...
-			if(queue.state() == 'resolved'){
-				// this will kill the queue as we continue only on success...
-				cur.reject() 
-				return
-			}
-
-			// do the work...
-			deffered.apply(null, args)
+		function run(){
+			return worker.apply(null, args)
 				.done(function(o){ 
 					cur.resolve(o) 
 				})
 				.fail(function(){ 
 					cur.resolve('fail') 
 				})
+		}
+
+		last.done(function(){
+
+			// XXX one way to stop and resume the queue execution is:
+			// 		1) add a "suspended" state
+			// 		2) in the "suspended" state bind the worker start to 
+			// 			.resume(...)
+			if(queue.state() == 'suspended'){
+				queue.resumed(function(){
+					run()
+				})
+
+			// if we are killed drop the work...
+			} else if(queue.state() == 'resolved'){
+				// this will kill the queue as we continue only on success...
+				cur.reject() 
+				return
+
+			// do the work now...
+			} else {
+				run()
+			}
 		})
 
 		last = cur
@@ -662,6 +676,24 @@ function makeDeferredsQ(first){
 		this.resolve()
 		return this
 	}
+
+	/* XXX suspend interface...
+	// XXX change the state...
+	queue.suspend = function(){
+		// XXX 
+		return this
+	}
+	// XXX change the state...
+	queue.resume = function(){
+		// XXX 
+		return this
+	}
+	// XXX change the state...
+	queue.resumed = function(){
+		// XXX 
+		return this
+	}
+	*/
 
 	// Report work state...
 	// XXX make this a propper state, or integrate into the deferred in 
