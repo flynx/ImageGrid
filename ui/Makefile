@@ -97,7 +97,7 @@ zip: $(APP_ZIP)
 
 node-deps:
 	npm install fs.extra
-	npm install exif
+#	npm install exif
 
 dev: $(CSS_FILES)
 	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .

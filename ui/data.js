@@ -1203,7 +1203,9 @@ function getWorkerQueue(name, no_auto_start){
 // kill all worker queues...
 function killAllWorkers(){
 	for(var k in WORKERS){
-		console.log('Worker: Stopping:', k)
+		if(WORKERS[k].isWorking()){
+			console.log('Worker: Stopped:', k)
+		}
 		WORKERS[k].kill()
 	}
 	WORKERS = {}
