@@ -80,8 +80,16 @@ var KEYBOARD_CONFIG = {
 
 		Enter: doc('Accept dialog',
 			function(){
-				getOverlay($('.viewer')).trigger('accept')
-				hideOverlay($('.viewer')) 
+				var f = $(':focus')
+				// trigger the default button action...
+				if(/button/i.test(f[0].tagName) || f.attr('type') == 'button'){
+					return true
+
+				// accept the dialog...
+				} else {
+					getOverlay($('.viewer')).trigger('accept')
+					hideOverlay($('.viewer')) 
+				}
 			}),
 		Esc: doc('Close dialog', 
 			function(){ 

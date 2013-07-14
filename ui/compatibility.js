@@ -47,12 +47,16 @@ if(window.CEF_dumpJSON != null){
 
 
 	window.osPath = function(p){
-		return path.normalize(p.replace(/file:\/\/\//, ''))
+		return path
+			.normalize(p.replace(/file:\/\/\//, ''))
+	}
+	window.execPathPush = function(p){
+		process.env.PATH += ';' + path.normalize(process.cwd() + '/' + p)
 	}
 
 
 	// paths to included utils...
-	process.env.PATH += ';' + path.normalize(process.cwd() + '/vips/bin')
+	execPathPush('./vips/bin')
 
 
 	// Things ImageGrid needs...
