@@ -717,18 +717,10 @@ function updateImagesOrientation(gids, no_update_loaded){
 
 // queued version of updateImagesOrientation(...)
 //
-// XXX do we need to auto-stop this???
 function updateImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
 
-	//var queue = makeDeferredsQ().start()
-	// attach the the previous queue...
-	if(WORKERS.image_orientation_reader == null){
-		var queue = makeDeferredsQ()
-		WORKERS.image_orientation_reader = queue.start()
-	} else {
-		var queue = WORKERS.image_orientation_reader
-	}
+	var queue = getWorkerQueue('image_orientation_reader')
 
 	var last = null
 

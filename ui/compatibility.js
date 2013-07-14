@@ -361,13 +361,7 @@ if(window.CEF_dumpJSON != null){
 	window.makeImagesPreviewsQ = function(gids, sizes, mode){
 		gids = gids == null ? getClosestGIDs() : gids
 
-		// attach the the previous queue...
-		if(WORKERS.preview_generator == null){
-			var queue = makeDeferredsQ()
-			WORKERS.preview_generator = queue.start()
-		} else {
-			var queue = WORKERS.preview_generator
-		}
+		var queue = getWorkerQueue('preview_generator')
 
 		// attach the workers to the queue...
 		$.each(gids, function(_, gid){

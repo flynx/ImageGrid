@@ -1179,6 +1179,25 @@ function getPrevLocation(){
 
 /********************************************************* Workers ***/
 
+// get/create a named worker queue...
+//
+function getWorkerQueue(name, no_auto_start){
+	// attach the the previous queue...
+	if(WORKERS[name] == null){
+		var queue = makeDeferredsQ()
+		WORKERS[name] = queue
+		if(!no_auto_start){
+			queue.start()
+		}
+	} else {
+		var queue = WORKERS[name]
+	}
+	return queue
+}
+
+
+// kill all worker queues...
+//
 function killAllWorkers(){
 	for(var k in WORKERS){
 		console.log('Worker: Stopping:', k)
