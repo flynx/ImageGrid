@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.1.12'''
-__sub_version__ = '''20130714220348'''
+__sub_version__ = '''20130714221612'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -68,22 +68,27 @@ setup(
 
 	entry_points = {
 		'console_scripts': [
-			'buildcache = buildcache:handle_commandline'
+			'buildcache = buildcache:handle_commandline',
+			'gid = gid:handle_commandline',
 		],
 	},
 	
 	# py2exe stuff...
 	options = {"py2exe": {
-					'compressed': 1,
-##					'optimize': 2,
-					'bundle_files': 2,
-##					'packages': 'encodings',
-					'excludes': [] if INCLUDE_GPL_LIBS_IN_EXE else [
-						# NOTE: we do not want to distribute any incompatible-licensed code...
-						'pyexiv2',
-					]
-					}},
-	console = ['buildcache.py'],
+		'compressed': 1,
+##		'optimize': 2,
+		'bundle_files': 2,
+##		'packages': 'encodings',
+		'excludes': [] if INCLUDE_GPL_LIBS_IN_EXE else [
+			# NOTE: we do not want to distribute any incompatible-licensed code...
+			'pyexiv2',
+		]
+	}},
+
+	console = [
+		'buildcache.py',
+		'gid.py',
+	],
 	)
 
 

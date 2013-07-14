@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130325203750'''
+__sub_version__ = '''20130714221105'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -98,8 +98,8 @@ def image_gid(path, date=None,
 
 
 
-#-----------------------------------------------------------------------
-if __name__ == '__main__':
+#--------------------------------------------------handle_commandline---
+def handle_commandline():
 	from optparse import OptionParser
 
 	parser = OptionParser()
@@ -140,6 +140,11 @@ if __name__ == '__main__':
 			print image_gid(IN_PATH, hash_func=lambda s: base64.encodestring(s).strip())
 		else:
 			print image_gid(IN_PATH)
+
+
+#-----------------------------------------------------------------------
+if __name__ == '__main__':
+	handle_commandline()
 
 
 
