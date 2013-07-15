@@ -119,7 +119,11 @@ win32: $(APP_ZIP) $(WIN_BUILD_DIR)
 	cat $(APP_ZIP) >> $(WIN_BUILD_DIR)/nw.exe
 	mv $(WIN_BUILD_DIR)/nw.exe $(WIN_BUILD_DIR)/$(APP_NAME).exe
 	chmod +x $(WIN_BUILD_DIR)/*.{exe,dll}
+
 win32-dist: win32 $(DIST_DIR)
+	# XXX include vips...
+	# XXX build and include gid, buldcache...
+	# XXX include scripts/utils...
 	zip -rj $(WIN_DIST_ZIP) $(WIN_BUILD_DIR)
 
 
