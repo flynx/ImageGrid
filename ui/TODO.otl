@@ -95,6 +95,12 @@ Roadmap
 
 [_] 30% Gen 3 current todo
 	[_] 61% High priority
+		[_] BUG: when creating previews for small-ish pics the original is not used
+		| after updating the image...
+		|
+		| e.g. for a 900px image, 150px and 350px images are created and
+		| the 350px is used in full screen.
+		[_] BUG: sometimes images.json folder is created...
 		[_] 0% Priority tasks
 			[_] full archive index
 				[_] segmented loading of images and data
