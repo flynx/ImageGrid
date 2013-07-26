@@ -244,8 +244,8 @@ if(window.CEF_dumpJSON != null){
 				// wait for current image size if needed...
 				size_getter.done(function(source_size){
 
-					// skip previews larger than cur image...
-					if(fs.existsSync(target_path +'/'+ name) || source_size <= size){
+					// handle existing previews...
+					if(fs.existsSync(target_path +'/'+ name)){
 						// see if we know about the preview...
 						if(img.preview == null || !((size+'px') in img.preview)){
 							var preview_path = [target_path, name].join('/')
@@ -256,8 +256,14 @@ if(window.CEF_dumpJSON != null){
 								IMAGES_UPDATED.push(gid)
 							}
 						}
-						//console.log('>>> Preview:', name, '('+size+'): Skipped.')
+						//console.log('>>> Preview:', name, '('+size+'): Exists.')
 						deferred.notify(gid, size, 'exists')
+						return deferred.resolve()
+
+					// skip previews larger than cur image...
+					} else if(source_size <= size){
+						//console.log('>>> Preview:', name, '('+size+'): Skipped.')
+						deferred.notify(gid, size, 'skipped')
 						return deferred.resolve()
 					}
 
