@@ -95,11 +95,8 @@ Roadmap
 
 [_] 30% Gen 3 current todo
 	[_] 61% High priority
-		[_] BUG: when creating previews for small-ish pics the original is not used
-		| after updating the image...
-		|
-		| e.g. for a 900px image, 150px and 350px images are created and
-		| the 350px is used in full screen.
+		[_] add indicator to ribbon up/down navigation in full screen...
+		| this might be a number or some kind of animation...
 		[_] BUG: sometimes images.json folder is created...
 		[_] 0% Priority tasks
 			[_] full archive index
@@ -114,22 +111,9 @@ Roadmap
 				[_] index and group ALL files in an archive
 				[_] import metadata
 				[_] real GIDs
-		[_] 33% Thumbnail generation strategies
-			[_] 0% pass 1: generate really fast previews
-				[_] ~1/3 screen - for ribbon
-				[_] ~1 screen - for single image mode
-			[X] pass 2: generate normal previews
-			[_] extract existing raw thumbnails/previews (for RAW files)
-		[X] add option to export either original or preview (exportDialog)
-		[X] add min-height to tooltips
-		| one line tooltip-right get messed-up...
-		[X] make tooltip balloons on top of everything else...
-		| currently a tooltip balloon is bellow the next tooltip...
 		[_] BUG: shifting last image out of a ribbon misaligns the current ribbon
 		| i.e. the prev ribbon was deleted and the new focused ribbon
 		| is aligned as if it was not current...
-		[_] BUG: sometimes loading a raw directory stops at "error loading data.json"
-		| and some times it does not err..
 		[_] BUG: jumping in ribbon sometimes does not load the ribbon correctly...
 		| Example 1:
 		| 	first ribbon in (loaded at first image):
@@ -151,6 +135,14 @@ Roadmap
 		| NOTE: jumping back and forth several times will make this problem
 		| 		go away...
 		| 		Q: could this be initial load/state error?
+		[_] 33% Thumbnail generation strategies
+			[_] 0% pass 1: generate really fast previews
+				[_] ~1/3 screen - for ribbon
+				[_] ~1 screen - for single image mode
+			[X] pass 2: generate normal previews
+			[_] extract existing raw thumbnails/previews (for RAW files)
+		[_] BUG: sometimes loading a raw directory stops at "error loading data.json"
+		| and some times it does not err..
 		[_] BUG: align problems are back...
 		| default data set (browser/images.js) same images #4 (going 
 		| from right) & #5 (going from left) of 18 in the first ribbon 
@@ -162,39 +154,6 @@ Roadmap
 		| misaligned, at "max" #2 and #5 are affected...
 		|
 		| centerView() fixes this, but only for the current image...
-		[_] 50% BUG: sometimes the previews are not updated...
-			[_] wrong resolution preview is loaded
-			| when coming out of single-image-mode after moving to a 
-			| different position (so as ribbons go reloaded)
-			[X] previews do not get replaced at all, e.g. everything 
-			| behaves correctly (order, etc.) but the previews are 
-			| from wrong (ones before re-attaching) images
-			| (this I can't repeat at this point)
-			|
-			| Example:
-			|	URL: "file:///L:/mnt/P7000 (photo)/PHOTOS/Last week of September 2011/"
-			|	going through the previews in the top row forward and backward
-			|	watch the ribbon below -- on the way back everything is aligned
-			|	correctly but the images are different.
-			|	also, there are times when the ribbon below is partially loaded 
-			|	or at it's edge when there are other images...
-			|	NOTE: calling updateImages() will load the correct previews.
-			|
-			| The mechanics of this bug:
-			| 	- sometimes the .onload handler gets the right image ref in 
-			| 	  the closue but a wrong p_url, how can this happen I do not
-			| 	  know.
-			| 	- slowing down the browser appears to make this happen 
-			| 	  less often, is this a race condition?
-			|
-			| Might be caused by fast sequential updating/reloading of an image:
-			| 	- call the updateImage(...) in order several times
-			| 	- cache .onload events get called in order of images loading 
-			| 	  not in order of updateImage(...) calls...
-			| (this cause is not confirmed)
-			|
-			| Apparently fixed by storing the preview URL in image.data(), this 
-			| is slower but avoids problems with multiple updates and races...
 		[_] editable list of external commands...
 		| to add things like exportdirs.py etc.
 		[_] 0% Tablet UI
@@ -289,6 +248,7 @@ Roadmap
 			| 		a list or a member image (primary).
 			[_] collection
 			| make or add to existing collection
+		[_] check if preview loaded, else load a different preview...
 		[_] add ability to save/load ranges of images and the structures around them
 		| e.g.load image 100 to current ribbon -> will load 100 images
 		| for current ribbon and all the in between images from other
@@ -312,6 +272,49 @@ Roadmap
 			[_] remove extra and repetitive actions
 			[_] caching config
 		[_] side-by side view...
+		[X] 100% BUG: sometimes the previews are not updated...
+			[X] wrong resolution preview is loaded
+			| when coming out of single-image-mode after moving to a 
+			| different position (so as ribbons go reloaded)
+			[X] previews do not get replaced at all, e.g. everything 
+			| behaves correctly (order, etc.) but the previews are 
+			| from wrong (ones before re-attaching) images
+			| (this I can't repeat at this point)
+			|
+			| Example:
+			|	URL: "file:///L:/mnt/P7000 (photo)/PHOTOS/Last week of September 2011/"
+			|	going through the previews in the top row forward and backward
+			|	watch the ribbon below -- on the way back everything is aligned
+			|	correctly but the images are different.
+			|	also, there are times when the ribbon below is partially loaded 
+			|	or at it's edge when there are other images...
+			|	NOTE: calling updateImages() will load the correct previews.
+			|
+			| The mechanics of this bug:
+			| 	- sometimes the .onload handler gets the right image ref in 
+			| 	  the closue but a wrong p_url, how can this happen I do not
+			| 	  know.
+			| 	- slowing down the browser appears to make this happen 
+			| 	  less often, is this a race condition?
+			|
+			| Might be caused by fast sequential updating/reloading of an image:
+			| 	- call the updateImage(...) in order several times
+			| 	- cache .onload events get called in order of images loading 
+			| 	  not in order of updateImage(...) calls...
+			| (this cause is not confirmed)
+			|
+			| Apparently fixed by storing the preview URL in image.data(), this 
+			| is slower but avoids problems with multiple updates and races...
+		[X] make tooltip balloons on top of everything else...
+		| currently a tooltip balloon is bellow the next tooltip...
+		[X] add min-height to tooltips
+		| one line tooltip-right get messed-up...
+		[X] add option to export either original or preview (exportDialog)
+		[X] BUG: when creating previews for small-ish pics the original is not used
+		| after updating the image...
+		|
+		| e.g. for a 900px image, 150px and 350px images are created and
+		| the 350px is used in full screen.
 		[X] 100% basic dialogs
 			[X] select from list
 			[X] alert

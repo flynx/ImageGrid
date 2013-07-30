@@ -600,13 +600,13 @@ var KEYBOARD_CONFIG = {
 
 		// info...
 		I: {
-				default: doc('Toggle image info display',
-					function(){ toggleImageInfo() }),
-				shift: doc('Show current image info',
+				default: doc('Show current image info',
 					function(){ 
 						showImageInfo()
 						//toggleImageInfoDrawer() 
 					}),
+				shift: doc('Toggle image info display',
+					function(){ toggleImageInfo() }),
 				alt: doc('Toggle inline image info display',
 					function(){
 						toggleInlineImageInfo()
