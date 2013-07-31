@@ -483,6 +483,10 @@ var FIELD_TYPES = {
 						field.find('.path').val(p[0].path)
 					}
 					file.detach()
+					// focus+select the path...
+					// NOTE: this is here to enable fast select-open 
+					// 		keyboard cycle (tab, enter, <select path>, 
+					// 		enter, enter)...
 					field.find('.path')
 						.focus()
 						.select()
