@@ -483,6 +483,9 @@ var FIELD_TYPES = {
 						field.find('.path').val(p[0].path)
 					}
 					file.detach()
+					field.find('.path')
+						.focus()
+						.select()
 				})
 				.hide()
 			field.find('.path').val(value.ndir)
