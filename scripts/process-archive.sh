@@ -95,12 +95,28 @@ if [[ $ARCHIVE_ROOT == "." ]] ; then
 		# XXX do different-sized previews...
 		makepreview "$SIZE" "./$FROM" "./$TO"
 	done
+
+	# pre-build cache...
+	for p in */DCIM/preview\ \(RAW\)/ ; do
+		if ! [ -e "./$p" ] ; then
+			continue
+		fi
+		buildcache "./$p"
+	done
 else
 	for FROM in ./DCIM/hi-res\ \(RAW\)/*jpg ; do
 		TO="${FROM/hi-res\ /preview }"
 
 		# XXX do different-sized previews...
 		makepreview "$SIZE" "./$FROM" "./$TO"
+	done
+
+	# pre-build cache...
+	for p in ./DCIM/preview\ \(RAW\)/ ; do
+		if ! [ -e "./$p" ] ; then
+			continue
+		fi
+		buildcache "./$p"
 	done
 fi
 

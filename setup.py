@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.1.12'''
-__sub_version__ = '''20130714221612'''
+__sub_version__ = '''20130801195557'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -64,7 +64,10 @@ setup(
 	include_package_data = True,
 
 	packages = [],
-	py_modules = ['buildcache'],
+	py_modules = [
+		'buildcache',
+		'gid',
+	],
 
 	entry_points = {
 		'console_scripts': [
