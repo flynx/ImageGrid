@@ -522,6 +522,12 @@ button:hover {
 
 	border-radius: 50%;
 	background: blue;
+
+	/* make the mark stand out if it is over an image with similar 
+	color/density */
+	box-shadow: 0px 0px 7px 0px black;
+	/*border: solid 1px white;*/
+	/*border: solid 1px black;*/
 }
 .marks-visible.viewer .marked.image[orientation="270"][flipped*="vertical"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image:not([orientation])[flipped*="vertical"]:after,
