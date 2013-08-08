@@ -438,7 +438,7 @@ function saveFileState(name, no_normalize_path){
 		}
 	}
 
-	dumpJSON(name + '-data.json', DATA)
+	dumpJSON(name + '-data.json', getAllData())
 	// XXX do we need to do this???
 	saveFileMarks(name)
 

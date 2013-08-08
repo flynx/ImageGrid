@@ -109,6 +109,8 @@ var IMAGES_CREATED = false
 
 var MARKED = []
 
+var CROP_STACK = []
+
 // NOTE: these are named: <mode>-<feature>
 var SETTINGS = {
 	'global-theme': null,
@@ -1077,31 +1079,6 @@ function loadSettings(){
 }
 
 
-// Crop view to only given gids
-//
-// XXX make keep_ribbons option work...
-function cropDataToGIDs(gids, keep_ribbons){
-	var cur = DATA.current
-	var old_data = DATA
-	DATA = {
-		varsion: '2.0',
-		current: null,
-		ribbons: [
-			gids
-		],
-		order: DATA.order.slice(),
-	}
-	cur = getGIDBefore(cur, 0)
-	cur = cur == null ? gids[0] : cur
-	DATA.current = cur 
-
-	reloadViewer()
-	updateImages()
-
-	return old_data
-}
-
-
 
 /**********************************************************************
 * Image caching...
@@ -1176,6 +1153,98 @@ function getPrevLocation(){
 /**********************************************************************
 * Actions...
 */
+
+/******************************************************* Crop Data ***/
+
+function isViewCropped(){
+	return !(CROP_STACK.length == 0)
+}
+
+
+function getAllData(){
+	if(!isViewCropped()){
+		return DATA
+	} else {
+		return CROP_STACK[0]
+	}
+}
+
+
+// XXX make keep_ribbons option work...
+function makeCroppedData(gids, keep_ribbons){
+	var cur = DATA.current
+	var old_data = DATA
+	var res = {
+		varsion: '2.0',
+		current: null,
+		ribbons: [],
+		order: DATA.order.slice(),
+	}
+
+	// flat single ribbon crop...
+	if(!keep_ribbons){
+		res.ribbons[0] = gids
+
+	// keep the ribbon structure...
+	} else {
+		$.each(DATA.ribbons, function(_, e){
+			e = e.filter(function(ee){ return gids.indexOf(ee) >= 0 })
+			// skip empty ribbons...
+			if(e.length != 0){
+				res.ribbons.push(e)
+			}
+		})
+	}
+
+	cur = getGIDBefore(cur, 0)
+	cur = cur == null ? gids[0] : cur
+	res.current = cur 
+
+	return res
+}
+
+
+function cropDataTo(gids, keep_ribbons){
+	var prev_state = DATA
+
+	CROP_STACK.push(prev_state)
+	DATA = makeCroppedData(gids, keep_ribbons)
+
+	reloadViewer()
+	updateImages()
+
+	return prev_state
+}
+
+
+function uncropData(){
+	if(!isViewCropped()){
+		return DATA
+	}
+	var prev_state = DATA
+
+	DATA = CROP_STACK.pop()
+
+	reloadViewer()
+	updateImages()
+
+	return prev_state
+}
+
+
+function showAllData(){
+	var prev_state = DATA
+
+	DATA = getAllData()
+	CROP_STACK = []
+
+	reloadViewer()
+	updateImages()
+
+	return prev_state
+}
+
+
 
 /********************************************************* Workers ***/
 

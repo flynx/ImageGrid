@@ -16,7 +16,7 @@
 // NOTE: MARKED may contain both gids that are not loaded and that do 
 // 		not exist, as there is no way to distinguish between the two 
 // 		situations the cleanup is optional...
-function loadMarkedOnlyData(cmp, no_cleanout_marks){
+function cropMarkedImages(cmp, no_cleanout_marks){
 	cmp = cmp == null ? imageOrderCmp : cmp
 	var cur = DATA.current
 	var marked = MARKED.slice().sort(cmp)
@@ -34,23 +34,8 @@ function loadMarkedOnlyData(cmp, no_cleanout_marks){
 		}
 	}
 
-	ALL_DATA = cropDataToGIDs(marked)
+	ALL_DATA = cropDataTo(marked)
 
-	return DATA
-}
-
-
-// XXX name this in a better way...
-function loadAllImages(){
-	var cur = DATA.current
-	DATA = ALL_DATA
-	// NOTE: if we do not do this the user will lose context every time
-	// 		returning from marks only view...
-	DATA.current = cur
-	reloadViewer()
-	// XXX FIX: for some reason not all previews get updated to the 
-	// 		right size...
-	updateImages()
 	return DATA
 }
 
@@ -72,9 +57,9 @@ var toggleMarkedOnlyView = createCSSClassToggler(
 		},
 		function(action){
 			if(action == 'on'){
-				loadMarkedOnlyData()
+				cropMarkedImages()
 			} else {
-				loadAllImages()
+				uncropData()
 			}
 		})
 
