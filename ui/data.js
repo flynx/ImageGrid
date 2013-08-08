@@ -1157,7 +1157,7 @@ function getPrevLocation(){
 /******************************************************* Crop Data ***/
 
 function isViewCropped(){
-	return !(CROP_STACK.length == 0)
+	return CROP_STACK.length != 0
 }
 
 
@@ -1170,10 +1170,9 @@ function getAllData(){
 }
 
 
-// XXX make keep_ribbons option work...
+// NOTE: this will not update .current state...
+// XXX should this set the .current to anything but null or the first elem???
 function makeCroppedData(gids, keep_ribbons){
-	var cur = DATA.current
-	var old_data = DATA
 	var res = {
 		varsion: '2.0',
 		current: null,
@@ -1196,19 +1195,20 @@ function makeCroppedData(gids, keep_ribbons){
 		})
 	}
 
-	cur = getGIDBefore(cur, 0)
-	cur = cur == null ? gids[0] : cur
-	res.current = cur 
-
 	return res
 }
 
 
 function cropDataTo(gids, keep_ribbons){
 	var prev_state = DATA
+	var cur = DATA.current
 
 	CROP_STACK.push(prev_state)
 	DATA = makeCroppedData(gids, keep_ribbons)
+
+	cur = getGIDBefore(cur)
+	cur = cur == null ? gids[0] : cur
+	DATA.current = cur 
 
 	reloadViewer()
 	updateImages()
@@ -1242,9 +1242,16 @@ function uncropData(){
 
 function showAllData(){
 	var prev_state = DATA
+	var cur = DATA.current
 
 	DATA = getAllData()
 	CROP_STACK = []
+
+	// XXX do we need to check if this exists???
+	// 		...in theory, as long as there are no global destructive 
+	// 		operations, no.
+	// keep the current position...
+	DATA.current = cur
 
 	reloadViewer()
 	updateImages()

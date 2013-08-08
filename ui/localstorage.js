@@ -48,7 +48,11 @@ function loadLocalStorageData(attr){
 }
 function saveLocalStorageData(attr){
 	attr = attr == null ? DATA_ATTR : attr
-	localStorage[attr] = JSON.stringify(getAllData())
+
+	var data = getAllData()
+	data.current = DATA.current
+
+	localStorage[attr] = JSON.stringify(data)
 	saveLocalStorageBaseURL(attr)
 }
 
