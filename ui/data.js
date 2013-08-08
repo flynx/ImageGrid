@@ -1222,8 +1222,16 @@ function uncropData(){
 		return DATA
 	}
 	var prev_state = DATA
+	var cur = DATA.current
 
 	DATA = CROP_STACK.pop()
+
+	// check if cur exists in data being loaded...
+	if($.map(DATA.ribbons, 
+			function(e, i){ return e.indexOf(cur) >= 0 }).indexOf(true) >= 0){
+		// keep the current position...
+		DATA.current = cur
+	}
 
 	reloadViewer()
 	updateImages()

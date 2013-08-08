@@ -20,21 +20,21 @@ function cropMarkedImages(cmp, no_cleanout_marks){
 	cmp = cmp == null ? imageOrderCmp : cmp
 	var cur = DATA.current
 	var marked = MARKED.slice().sort(cmp)
-	// this will ignore any gid in marks that is not in IMAGES...
-	// NOTE: if IMAGES contains only part of the data loadable this will 
-	// 		be wrong...
+
 	if(!no_cleanout_marks){
-		for(var i=0; i < marked.length;){
-			if(marked[i] in IMAGES){
-				i++
-				continue
-			}
-			// NOTE: we do not need to advance i here...
-			marked.splice(i, 1)
-		}
+		// build all loaded images cache...
+		var loaded = []
+		$.each(DATA.ribbons, function(i, e){ loaded = loaded.concat(e) })
+
+		// ignore any gid in marks that is not in IMAGES...
+		// NOTE: if IMAGES contains only part of the data loadable this will 
+		// 		be wrong...
+		var marked = marked.filter(function(e){ 
+			return e in IMAGES && loaded.indexOf(e) >= 0 
+		})
 	}
 
-	ALL_DATA = cropDataTo(marked)
+	cropDataTo(marked)
 
 	return DATA
 }
@@ -45,6 +45,7 @@ function cropMarkedImages(cmp, no_cleanout_marks){
 * Modes
 */
 
+// XXX is this a mode???
 var toggleMarkedOnlyView = createCSSClassToggler(
 		'.viewer', 
 		'marked-only-view cropped-mode',

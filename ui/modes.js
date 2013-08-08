@@ -172,6 +172,7 @@ var toggleSingleImageMode = createCSSClassToggler(
 
 // XXX make this not conflict with marked-only-mode, better yet, make them
 // 		one single mode...
+// XXX is this a mode???
 var toggleSingleRibbonMode = createCSSClassToggler(
 		'.viewer',
 		'single-ribbon-mode cropped-mode',
