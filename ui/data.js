@@ -551,11 +551,16 @@ function getGIDBefore(gid, ribbon, search){
 // 		correct ribbon number...
 //
 // XXX do we need more checking???
+// XXX Race condition: when this is called while DATA is not yet fully 
+// 		loaded (old data), the from gid will not be present in 
+// 		DATA.ribbons...
 function getImageGIDs(from, count, ribbon, inclusive){
 	if(count == 0){
 		return []
 	}
 	// ribbon default value...
+	// XXX Race condition: if DATA is not yet loaded this can return 
+	// 		ribbon == null...
 	if(ribbon == null){
 		$(DATA.ribbons).each(function(i, e){ 
 			if(e.indexOf(from) >= 0){ 
