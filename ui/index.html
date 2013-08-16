@@ -34,7 +34,7 @@
 
 
 <!-- XXX STUB -->
-<script src="images.js"></script>
+<!--script src="images.js"></script-->
 
 
 <script>
@@ -143,7 +143,7 @@ $(function(){
 
 	// XXX do we need drag'n'drop here???
 
-	// we have an image file...
+	// we have an image.json file...
 	if((DATA_ATTR + '_BASE_URL') in localStorage
 			&& !/^\.[\/\\]*/.test(localStorage[DATA_ATTR + '_BASE_URL'])){
 
@@ -156,12 +156,14 @@ $(function(){
 		if('DATA' in localStorage){
 			loadLocalStorage()
 
+		/* XXX do we need this anymore???
 		// legacy default data...
 		} else {
 			DATA = convertDataGen1(image_list)
 			IMAGES = DATA.images
 			DATA = DATA.data
 			reloadViewer()
+		*/
 		}
 		var loading = $.Deferred().resolve()
 	}
