@@ -154,6 +154,26 @@ var WORKERS = {}
 * Helpers
 */
 
+// Zip concatenate lists from each argument.
+//
+// NOTE: this will skip null values.
+function concatZip(){
+	var res = []
+	$.each(arguments, function(i, lst){
+		$.each(lst, function(j, e){
+			if(e != null){
+				if(res[j] == null){
+					res[j] = e
+				} else {
+					res[j] = res[j].concat(e)
+				}
+			}
+		})
+	})
+	return res
+}
+
+
 function makeDistanceCmp(start, get){
 	if(get == null){
 		return function(a, b){
@@ -392,7 +412,7 @@ Array.prototype.binSearch = function(target, cmp, get){
 }
 
 
-// Orientation transaltion...
+// Orientation translation...
 function orientationExif2ImageGrid(orientation){
 	return {
 		orientation: {
@@ -695,6 +715,46 @@ function dataFromImages(images){
 		order: gids.slice(),
 		image_file: null
 	}
+}
+
+
+// Merge two data objects
+//
+//
+//	(A)							(B)
+//		oooooooooo		-+-
+//	oooooooooooooooooo	 + shift
+//	  oooooooooooooo	-+-			ooooooooooo
+//	oooooooooooooooooo			ooooooooooooooooo
+//								 ooooooooooooooo
+//
+// Negative shift moves (A) up while positive moves it down relative to (B)
+// In the diagram above the shift is -2
+//
+function mergeData(data_a, data_b, shift){
+	// pad the head of the shifted array...
+	var a = data_a.ribbons
+	var b = data_b.ribbons
+	if(shift > 0){
+		a = new Array(shift).concat(a)
+	} else if(shift < 0) {
+		b = new Array(Math.abs(shift)).concat(b)
+	}
+	
+	return {
+		version: '2.0',
+		// XXX should we set this here???
+		current: null,
+		ribbons: concatZip(a, b),
+		// XXX should we sort this???
+		order: data_a.order.concat(data_b.order),
+		image_file: null
+	}
+}
+
+
+function splitDataAt(gid, data){
+	// XXX
 }
 
 
