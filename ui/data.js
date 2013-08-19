@@ -731,10 +731,12 @@ function dataFromImages(images){
 // Negative shift moves (A) up while positive moves it down relative to (B)
 // In the diagram above the shift is -2
 //
+// XXX add ability to resort the data...
+// 		...should this be here???
 function mergeData(data_a, data_b, shift){
-	// pad the head of the shifted array...
 	var a = data_a.ribbons
 	var b = data_b.ribbons
+	// pad the head of the shifted array...
 	if(shift > 0){
 		a = new Array(shift).concat(a)
 	} else if(shift < 0) {
@@ -753,7 +755,8 @@ function mergeData(data_a, data_b, shift){
 }
 
 
-function splitDataAt(gid, data){
+// XXX signature: splitData(data, gid1[, gid2[, ...]])
+function splitData(data, gid){
 	// XXX
 }
 
