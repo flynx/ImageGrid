@@ -737,7 +737,11 @@ function dataFromImages(images){
 // 		will be normalized to, or are equivalent to:
 // 			4	5	7	0	5	5
 // 		(we add abs max shift |-5| to each element, to align top to 0)
+// NOTE: this will not set .current
+// NOTE: there should not be any gid collisions between data sets.
 //
+// XXX should we try and resolve gid collisions here??
+// 		...don't think so...
 // XXX should we check the version???
 // XXX needs testing...
 function mergeData(a, b){
