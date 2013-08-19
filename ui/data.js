@@ -738,36 +738,43 @@ function dataFromImages(images){
 // 			4	5	7	0	5	5
 // 		(we add abs max shift |-5| to each element, to align top to 0)
 //
-// XXX check version???
+// XXX should we check the version???
+// XXX needs testing...
 function mergeData(a, b){
 	var order = []
 	var ribbon_sets = []
 	var shifts = []
-	var min = 0
+	var shift = 0
 
-	// build ribbon sets and shift bounds...
+	// prepare the data...
+	// build the ribbon_set, shifts, accumulate order and set shift bounds...
 	$.each(arguments, function(_, d){
 		if(typeof(d) == typeof([]) && d.constructor.name == 'Array'){
+			// process the shift...
 			var s = d[0]
-			d = d[1]
 			shifts.push(s)
 			// NOTE: min shift (max negative shift) is needed so as to 
 			// 		calculate the actual padding per each aligned ribbon
 			// 		set in the resulting structure...
-			min = Math.min(s, min)
+			shift = Math.min(s, shift)
+			// get the actual data...
+			d = d[1]
 
 		} else {
+			// default shift...
 			shifts.push(0)
 		}
 		ribbon_sets.push(d.ribbons)
 		order = order.concat(d.order)
 	})
-	var shift = Math.abs(min)
+	shift = Math.abs(shift)
 
-	// normalize ribbons...
+	// normalize ribbon_set...
 	// NOTE: this will shift the ribbons to the required alignment...
 	$.each(shifts, function(i, s){
-		ribbon_sets[i] = new Array(shift + s).concat(ribbon_sets[i])
+		if(shift + s != 0){
+			ribbon_sets[i] = new Array(shift + s).concat(ribbon_sets[i])
+		}
 	})
 
 	return {
