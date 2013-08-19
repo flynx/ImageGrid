@@ -718,38 +718,63 @@ function dataFromImages(images){
 }
 
 
-// Merge two data objects
+// Merge two or more data objects
 //
+// Each data object can be:
+// 	- straight data object
+// 	- array with ribbon shift at position 0 and the data at 1.
 //
-//	(A)							(B)
-//		oooooooooo		-+-
-//	oooooooooooooooooo	 + shift
-//	  oooooooooooooo	-+-			ooooooooooo
-//	oooooooooooooooooo			ooooooooooooooooo
-//								 ooooooooooooooo
+// The shift can be either positive or negative value. Positive shift 
+// will shift the ribbons down (add padding to the top), while negative 
+// will shift the ribbons up.
 //
-// Negative shift moves (A) up while positive moves it down relative to (B)
-// In the diagram above the shift is -2
+// NOTE: if no shift is given it will default to 0, i.e. align by top 
+// 		ribbon.
+// NOTE: shifting one set of ribbons up (negative shift) is the same as
+// 		shifting every other set down by the same amount down (positive).
+// 		e.g. these shifts:
+// 			-1	0	2	-5	0	0
+// 		will be normalized to, or are equivalent to:
+// 			4	5	7	0	5	5
+// 		(we add abs max shift |-5| to each element, to align top to 0)
 //
-// XXX add ability to resort the data...
-// 		...should this be here???
-function mergeData(data_a, data_b, shift){
-	var a = data_a.ribbons
-	var b = data_b.ribbons
-	// pad the head of the shifted array...
-	if(shift > 0){
-		a = new Array(shift).concat(a)
-	} else if(shift < 0) {
-		b = new Array(Math.abs(shift)).concat(b)
-	}
-	
+// XXX check version???
+function mergeData(a, b){
+	var order = []
+	var ribbon_sets = []
+	var shifts = []
+	var min = 0
+
+	// build ribbon sets and shift bounds...
+	$.each(arguments, function(_, d){
+		if(typeof(d) == typeof([]) && d.constructor.name == 'Array'){
+			var s = d[0]
+			d = d[1]
+			shifts.push(s)
+			// NOTE: min shift (max negative shift) is needed so as to 
+			// 		calculate the actual padding per each aligned ribbon
+			// 		set in the resulting structure...
+			min = Math.min(s, min)
+
+		} else {
+			shifts.push(0)
+		}
+		ribbon_sets.push(d.ribbons)
+		order = order.concat(d.order)
+	})
+	var shift = Math.abs(min)
+
+	// normalize ribbons...
+	// NOTE: this will shift the ribbons to the required alignment...
+	$.each(shifts, function(i, s){
+		ribbon_sets[i] = new Array(shift + s).concat(ribbon_sets[i])
+	})
+
 	return {
 		version: '2.0',
-		// XXX should we set this here???
 		current: null,
-		ribbons: concatZip(a, b),
-		// XXX should we sort this???
-		order: data_a.order.concat(data_b.order),
+		ribbons: concatZip.apply(null, ribbon_sets),
+		order: order, 
 		image_file: null
 	}
 }
