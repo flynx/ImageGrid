@@ -743,7 +743,7 @@ function dataFromImages(images){
 //
 // XXX should we try and resolve gid collisions here??
 // 		...don't think so...
-// XXX should we check the version???
+// XXX should we check the data version???
 // XXX needs testing...
 function mergeData(a, b){
 	var order = []
@@ -792,7 +792,22 @@ function mergeData(a, b){
 }
 
 
-// XXX signature: splitData(data, gid1[, gid2[, ...]])
+// Split the given data at gid1[, gid2[, ...]]
+//
+// This will return a list of data objects, each containing gids that 
+// are later than gidN and earlier or the same as gidN+1, preserving the
+// ribbon structure.
+//
+// NOTE: if a given object does not contain any gid in ribbon N then that
+// 		ribbon will be represented by an empty list.
+// NOTE: the above makes the data objects not compatible with anything that 
+// 		expects the ribbon to have at least one gid.
+// NOTE: this takes one or more gids.
+// NOTE: this will not set .current fields.
+// NOTE: this is the opposite of mergeData():
+// 			mergeData(splitData(data, ...)) == data
+// 		with the exception of .current
+// 
 // XXX this is a bit brain-dead at the moment...
 // XXX do we need to check if supplied gids exist in data???
 function splitData(data, gid1){
