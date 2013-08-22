@@ -794,6 +794,7 @@ function mergeData(a, b){
 
 // XXX signature: splitData(data, gid1[, gid2[, ...]])
 // XXX this is a bit brain-dead at the moment...
+// XXX do we need to check if supplied gids exist in data???
 function splitData(data, gid1){
 	var gids = []
 	var res = []
@@ -838,7 +839,7 @@ function splitData(data, gid1){
 			res[j].ribbons.push(r.slice(prev, cur))
 		}
 		// tail section...
-		res[j+1].ribbons.push(r.slice(cur))
+		res[j].ribbons.push(r.slice(cur))
 	}
 
 	return res
