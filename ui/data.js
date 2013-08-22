@@ -807,6 +807,8 @@ function mergeData(a, b){
 // NOTE: this is the opposite of mergeData():
 // 			mergeData(splitData(data, ...)) == data
 // 		with the exception of .current
+// NOTE: this will ALWAYS return n+1 sections for n gids, even though 
+// 		some of them may be empty...
 // 
 // XXX this is a bit brain-dead at the moment...
 // XXX do we need to check if supplied gids exist in data???
@@ -891,8 +893,29 @@ function splitData(data, gid1){
 //			    |oooooooooooooooooooooooo|
 //
 //
-function alignDataToRibbon(ribbon){
-	// XXX
+// NOTE: this will return a new data object.
+//
+function alignDataToRibbon(ribbon, data){
+	data = data == null ? DATA : data
+
+	// get the ribbon above...
+	var r = data.ribbons[ribbon-1]
+
+	var start = r[0]
+	var end = r[r.length-1]
+	// NOTE: this can be null/undefined if we are looking at the last 
+	// 		element...
+	end = data.order[data.order.indexOf(end)+1]
+
+	// NOTE: will this always return 3 sections (see docs)...
+	var sections = splitData(data, start, end)
+
+	// prepare to align...
+	sections[1] = [ ribbon, sections[1] ]
+	
+	var res = mergeData.apply(null, sections)
+	res.current = data.current
+	return res
 }
 
 
