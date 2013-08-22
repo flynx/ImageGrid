@@ -861,6 +861,41 @@ function splitData(data, gid1){
 }
 
 
+//
+//	1) Locate bounds...
+//
+//					|	oooooooooooo	|
+//		...ooooooooo|ooooooooooooooooooo|ooooooooooooooooo... < current
+//			oooo|oooooooooooooooooooooooo|ooooooo
+//
+//		The sections are split by precedence relative to the first and 
+//		last elements of the ribbon above the current...
+//		i.e. the first section contains all the elements less than the 
+//		first, the third is greater than the last, and the mid-section 
+//		contains all elements that are in-between (inclusive).
+//
+//
+//	2) Split and realign sections...
+//
+//		...ooooooooo|   oooooooooooo    |ooooooooooooooooo... < current
+//			oooo|    ooooooooooooooooooo |ooooooo
+//			    |oooooooooooooooooooooooo|
+//
+//		The central section is shifted down (dropped), by 1 in this case.
+//
+//
+//	3) Merge...
+//
+//		...ooooooooo|oooooooooooo|oooooooooooooooooooooooo... < current
+//			oooo|ooooooooooooooooooo|ooooooo
+//			    |oooooooooooooooooooooooo|
+//
+//
+function alignDataToRibbon(ribbon){
+	// XXX
+}
+
+
 
 /**********************************************************************
 * Format conversion
