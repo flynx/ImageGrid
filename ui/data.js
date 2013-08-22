@@ -524,13 +524,14 @@ function normalizePath(url, base, mode){
 // Same as getImageBefore(...), but uses gids and searches in DATA...
 //
 // NOTE: this uses it's own predicate...
-function getGIDBefore(gid, ribbon, search){
+function getGIDBefore(gid, ribbon, search, data){
 	gid = gid == null ? getImageGID() : gid
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	search = search == null ? binSearch : search
+	data = data == null ? DATA : data
 	//search = search == null ? match2(linSearch, binSearch) : search
-	ribbon = DATA.ribbons[ribbon]
-	var order = DATA.order
+	ribbon = data.ribbons[ribbon]
+	var order = data.order
 
 	var target = order.indexOf(gid)
 
@@ -792,8 +793,55 @@ function mergeData(a, b){
 
 
 // XXX signature: splitData(data, gid1[, gid2[, ...]])
-function splitData(data, gid){
-	// XXX
+// XXX this is a bit brain-dead at the moment...
+function splitData(data, gid1){
+	var gids = []
+	var res = []
+	var cur = 0
+
+	// build the resulting data objects...
+	// XXX revise...
+	for(var i=1; i<arguments.length; i++){
+		var prev = cur
+		cur = data.order.indexOf(arguments[i])
+		gids.push(arguments[i])
+
+		res.push({
+			version: '2.0',
+			current: null,
+			ribbons: [], 
+			order: data.order.slice(prev, cur), 
+			image_file: null
+		})
+	}
+	// tail section...
+	res.push({
+		version: '2.0',
+		current: null,
+		ribbons: [], 
+		order: data.order.slice(cur), 
+		image_file: null
+	})
+
+	// split the ribbons...
+	for(var i=0; i<data.ribbons.length; i++){
+		var r = data.ribbons[i]
+		var cur = 0
+
+		// get all split positions...
+		// XXX revise...
+		for(var j=0; j<gids.length; j++){
+			var prev = cur
+			var cur = r.indexOf(getGIDBefore(gids[j], i, null, data)) + 1
+
+			// split and save the section to the corresponding data object...
+			res[j].ribbons.push(r.slice(prev, cur))
+		}
+		// tail section...
+		res[j+1].ribbons.push(r.slice(cur))
+	}
+
+	return res
 }
 
 
