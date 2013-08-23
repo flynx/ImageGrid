@@ -592,8 +592,13 @@ function getImageGIDs(from, count, ribbon, inclusive){
 	}
 	ribbon = DATA.ribbons[ribbon]
 
-	// ribbon this is empty...
-	if(ribbon.length == 0){
+	// ribbon this is empty or non-existant...
+	// XXX need to check when can we get a ribbon == undefined case...
+	// 		...race?
+	//if(ribbon == null){
+	//	// XXX
+	//}
+	if(ribbon == null || ribbon.length == 0){
 		return []
 	}
 	if(count > 0){
