@@ -903,7 +903,13 @@ function splitData(data, gid1){
 //
 // NOTE: this will return a new data object.
 //
+// XXX should ribbon default to getRibbonIndex()???
+// 		...or should we add a "base ribbon" concept???
+// XXX figure out a way to accomplish one of (in order of preference):
+// 		- auto-call this and make it expected and transparent to the user
+// 		- manually called in *obvious* situations...
 function alignDataToRibbon(ribbon, data){
+	//ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	data = data == null ? DATA : data
 
 	// get the ribbon above...
@@ -921,6 +927,56 @@ function alignDataToRibbon(ribbon, data){
 	// prepare to align...
 	sections[1] = [ ribbon, sections[1] ]
 	
+	var res = mergeData.apply(null, sections)
+	res.current = data.current
+
+	// clean out empty ribbons from head and tail...
+	while(res.ribbons[0].length == 0){
+		res.ribbons.splice(0, 1)
+	}
+	while(res.ribbons[res.ribbons.length-1].length == 0){
+		res.ribbons.pop()
+	}
+
+	return res
+}
+
+
+// XXX
+//
+//	1) X is the current image...
+//
+// 				oooooo|oooo
+// 			oooooooooo|Xoooooooooo
+// 		oooooooooooooo|oooooooooooooooo
+//
+//
+//	2) shiftRibbons(X, n) with positive n
+//
+// 				oooooo|
+// 			oooooooooo|oooo
+// 		oooooooooooooo|Xoooooooooo
+// 					  |oooooooooooooooo
+//
+//
+//	3) shiftRibbons(X, n) with negative n
+//
+// 					  |oooo
+// 				oooooo|Xoooooooooo
+// 			oooooooooo|oooooooooooooooo
+// 		oooooooooooooo|
+//
+// XXX needs testing...
+// XXX should this modify the view in place (and reload?)???
+function shiftRibbonsBy(n, gid, data){
+	gid = gid == null ? getImageGID() : gid
+	data = data == null ? DATA : data
+
+	var sections = splitData(data, gid)
+
+	// prepare to align...
+	sections[1] = [ n, sections[1] ]
+
 	var res = mergeData.apply(null, sections)
 	res.current = data.current
 
