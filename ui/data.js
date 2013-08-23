@@ -590,9 +590,12 @@ function getImageGIDs(from, count, ribbon, inclusive){
 			} 
 		})
 	}
-	// XXX check if this is empty...
 	ribbon = DATA.ribbons[ribbon]
 
+	// ribbon this is empty...
+	if(ribbon.length == 0){
+		return []
+	}
 	if(count > 0){
 		var c = inclusive == null ? 1 : 0
 		var start = ribbon.indexOf(from) + c
@@ -850,7 +853,12 @@ function splitData(data, gid1){
 		// XXX revise...
 		for(var j=0; j<gids.length; j++){
 			var prev = cur
-			var cur = r.indexOf(getGIDBefore(gids[j], i, null, data)) + 1
+			var gid = getGIDBefore(gids[j], i, null, data)
+			if(gid == gids[j]){
+				var cur = r.indexOf(gid)
+			} else {
+				var cur = r.indexOf(gid) + 1
+			}
 
 			// split and save the section to the corresponding data object...
 			res[j].ribbons.push(r.slice(prev, cur))
@@ -915,6 +923,15 @@ function alignDataToRibbon(ribbon, data){
 	
 	var res = mergeData.apply(null, sections)
 	res.current = data.current
+
+	// clean out empty ribbons from head and tail...
+	while(res.ribbons[0].length == 0){
+		res.ribbons.splice(0, 1)
+	}
+	while(res.ribbons[res.ribbons.length-1].length == 0){
+		res.ribbons.pop()
+	}
+
 	return res
 }
 
