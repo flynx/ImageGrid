@@ -872,10 +872,12 @@ function splitData(data, gid1){
 
 
 //
-//	1) Locate bounds...
+//
+// Illustration of operation:
+//	1) Initial state, locate bounds...
 //
 //					|	oooooooooooo	|
-//		...ooooooooo|ooooooooooooooooooo|ooooooooooooooooo... < current
+//		...ooooooooo|ooooooooooooooooooo|ooooooooooooooooo... < base
 //			oooo|oooooooooooooooooooooooo|ooooooo
 //
 //		The sections are split by precedence relative to the first and 
@@ -887,7 +889,7 @@ function splitData(data, gid1){
 //
 //	2) Split and realign sections...
 //
-//		...ooooooooo|   oooooooooooo    |ooooooooooooooooo... < current
+//		...ooooooooo|   oooooooooooo    |ooooooooooooooooo... < base
 //			oooo|    ooooooooooooooooooo |ooooooo
 //			    |oooooooooooooooooooooooo|
 //
@@ -896,7 +898,7 @@ function splitData(data, gid1){
 //
 //	3) Merge...
 //
-//		...ooooooooo|oooooooooooo|oooooooooooooooooooooooo... < current
+//		...ooooooooo|oooooooooooo|oooooooooooooooooooooooo... < base
 //			oooo|ooooooooooooooooooo|ooooooo
 //			    |oooooooooooooooooooooooo|
 //
@@ -942,16 +944,17 @@ function alignDataToRibbon(ribbon, data){
 }
 
 
-// XXX
+// Shift a section of ribbons n positions.
 //
-//	1) X is the current image...
+// Illustration of operation:
+//	1) Initial state, X is the current image...
 //
 // 				oooooo|oooo
 // 			oooooooooo|Xoooooooooo
 // 		oooooooooooooo|oooooooooooooooo
 //
 //
-//	2) shiftRibbons(X, n) with positive n
+//	2) shiftRibbons(X, n) with positive n (shift down)
 //
 // 				oooooo|
 // 			oooooooooo|oooo
@@ -959,15 +962,18 @@ function alignDataToRibbon(ribbon, data){
 // 					  |oooooooooooooooo
 //
 //
-//	3) shiftRibbons(X, n) with negative n
+//	3) shiftRibbons(X, n) with negative n (shift up)
 //
 // 					  |oooo
 // 				oooooo|Xoooooooooo
 // 			oooooooooo|oooooooooooooooo
 // 		oooooooooooooo|
 //
+//
 // XXX needs testing...
 // XXX should this modify the view in place (and reload?)???
+// XXX this and alignDataToRibbon(...) share a lot of code, split into 
+// 		two generations...
 function shiftRibbonsBy(n, gid, data){
 	gid = gid == null ? getImageGID() : gid
 	data = data == null ? DATA : data
