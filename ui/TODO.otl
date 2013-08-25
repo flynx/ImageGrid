@@ -547,7 +547,7 @@ Roadmap
 		
 
 
-[_] 58% Gen 3 UI implementation
+[_] 60% Gen 3 UI implementation
 	[X] 100% Infinite ribbon (lib)
 		[X] cyclic ribbon
 		[X] image block generation
@@ -583,11 +583,14 @@ Roadmap
 		[_] add note to image
 		| a-la flickr notes...
 		[_] edit IPCT
+		[_] add/edit tags (set of images)
+		[_] add/edit tags (single image)
 		[X] rotate image
-	[_] 66% UI modes
-		[_] 0% single ribbon
+	[_] 88% UI modes
+		[_] 66% single ribbon
+			[X] show marked only
+			[X] show current ribbon
 			[_] show images shifted (all / above only / below only) in current ribbon
-			[_] show marked only
 		[X] 100% multiple ribbons
 			[X] show images above/below
 			[X] show marked only
