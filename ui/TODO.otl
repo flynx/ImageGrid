@@ -93,8 +93,43 @@ Roadmap
 	
 
 
-[_] 29% Gen 3 current todo
-	[_] 58% High priority
+[_] 27% Gen 3 current todo
+	[_] 55% High priority
+		[_] 33% mormalize ribbons -- top-align sorted chunks
+			[X] basic mechanics
+			| splitData(...)
+			| mergeData(...)
+			| alignDataToRibbon(...)
+			| shiftRibbonBy(...)
+			[_] manual invoke mechanics
+			[_] auto-invoke mechanics
+		[_] update data set...
+		| - add new images to the set
+		| - update changed images
+		[_] merge data sets...
+		| combine two or more separate data.json and images.json sets...
+		|
+		| this can be done in two ways:
+		| 	- live
+		| 		the view jumps between sets and saves the changes to its 
+		| 		origin set.
+		| 		some operations like shifting left/right would be difficult
+		| 	- full merge (preferred)
+		| 		save a new data set.
+		| 		not different to single data set.
+		| 		will eventually need fragmenting...
+		[_] fragmenting of data/images/marks support...
+		| split data into chunks...
+		|
+		| need a simple way to split chunks to:
+		| 	1) make the scheme as simple as possible
+		| 	2) make things fast -- minimal read/write/cache
+		| 	3) try not to depend on sort order
+		|
+		| a possible simple way out of this is to use a DB
+		| 	- CouchDB
+		| 	- SQL
+		| 	- file-db
 		[_] BUG CLASS: everything should work with empty ribbons...
 		| currently some code breaks when seeing an empty ribbon...
 		[_] BUG: jumping in ribbon sometimes does not load the ribbon correctly...
