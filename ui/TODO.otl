@@ -94,39 +94,17 @@ Roadmap
 
 
 [_] 29% Gen 3 current todo
-	[_] 59% High priority
+	[_] 58% High priority
 		[_] BUG CLASS: everything should work with empty ribbons...
 		| currently some code breaks when seeing an empty ribbon...
-		[_] add indicator to ribbon up/down navigation in full screen...
-		| this might be a number or some kind of animation...
-		[_] BUG: sometimes opening a dir (open dialog) does not do anything...
-		| Uncaught TypeError: Cannot call method 'indexOf' of undefined -- data.js:576
-		[_] BUG: sometimes images.json folder is created...
-		[_] rework the marks.js/modes.js to enable multi-level cropping...
-		[_] 0% Priority tasks
-			[_] full archive index
-				[_] segmented loading of images and data
-				[_] ribbon separation
-				| split ribbon into manageable chunks
-				|
-				| this can be done naturally by:
-				| 	- date
-				| 	- event
-				|	- tag
-				[_] index and group ALL files in an archive
-				[_] import metadata
-				[_] real GIDs
-		[_] BUG: shifting last image out of a ribbon misaligns the current ribbon
-		| i.e. the prev ribbon was deleted and the new focused ribbon
-		| is aligned as if it was not current...
 		[_] BUG: jumping in ribbon sometimes does not load the ribbon correctly...
 		| Example 1:
 		| 	first ribbon in (loaded at first image):
-		|	 "file:///L:/mnt/hdd13 (photo)/NTFS1/media/img/my/work/- 20130616Y.001/DCIM/preview (RAW)/"
 		|	 "F:\work\ImageGrid\cur\ImageGrid\src\ui\BUGS\ribbon loading error\"
 		|	jumping to the end will result in an inconsistent view:
-		|		- ribbon not loaded at the correct spot
+		|		- ribbon not aligned at the correct spot
 		|		- wrong image is .current
+		|		- part of the images appear to be loaded but misaligned...
 		|
 		| Example 2:
 		| 	load same data at same position as in #1
@@ -140,14 +118,34 @@ Roadmap
 		| NOTE: jumping back and forth several times will make this problem
 		| 		go away...
 		| 		Q: could this be initial load/state error?
-		[_] 33% Thumbnail generation strategies
-			[_] 0% pass 1: generate really fast previews
-				[_] ~1/3 screen - for ribbon
-				[_] ~1 screen - for single image mode
-			[X] pass 2: generate normal previews
-			[_] extract existing raw thumbnails/previews (for RAW files)
+		[_] BUG: sometimes duplicate images get loaded...
+		| this happens when jumping back and forth on the mid ribbon until
+		| the last element shows up and then moving left until the frame
+		| around the image disappears...
+		| at this point, this will return 2:
+		|
+		| 	$('[order='+$('.current.image').attr('order')+']').length
+		|
+		| happens when:
+		| 	ribbon length: ~42
+		| 	screen width: 4
+		| 	jumping to end from start of ribbon
+		|
+		| Example 1:
+		| 	1) first ribbon in (loaded at first image):
+		|	 "F:\work\ImageGrid\cur\ImageGrid\src\ui\BUGS\ribbon loading error\"
+		|	2) ctrl-end (error state in "jumping ribbon .." bug)
+		|	3) left/right (next/prev image)
+		|	now the last portion of the ribbon is loaded twice
+		[_] BUG: shifting last image out of a ribbon misaligns the current ribbon
+		| i.e. the prev ribbon was deleted and the new focused ribbon
+		| is aligned as if it was not current...
+		[_] BUG: sometimes opening a dir (open dialog) does not do anything...
+		| Uncaught TypeError: Cannot call method 'indexOf' of undefined -- data.js:576
 		[_] BUG: sometimes loading a raw directory stops at "error loading data.json"
 		| and some times it does not err..
+		|
+		| Q: did not see this for some time, is this resolved???
 		[_] BUG: align problems are back...
 		| default data set (browser/images.js) same images #4 (going 
 		| from right) & #5 (going from left) of 18 in the first ribbon 
@@ -159,6 +157,29 @@ Roadmap
 		| misaligned, at "max" #2 and #5 are affected...
 		|
 		| centerView() fixes this, but only for the current image...
+		[_] BUG: sometimes images.json folder is created...
+		| can't repeat this yet, and seen only once...
+		[_] add indicator to ribbon up/down navigation in full screen...
+		| this might be a number or some kind of animation...
+		[_] rework the marks.js/modes.js to enable multi-level ribbon cropping...
+		[_] 0% full archive index
+			[_] segmented loading of images and data
+			[_] ribbon separation
+			| split ribbon into manageable chunks
+			|
+			| this can be done naturally by:
+			| 	- date
+			| 	- event
+			|	- tag
+			[_] index and group ALL files in an archive
+			[_] import metadata
+			[_] real GIDs
+		[_] 33% Thumbnail generation strategies
+			[_] 0% pass 1: generate really fast previews
+				[_] ~1/3 screen - for ribbon
+				[_] ~1 screen - for single image mode
+			[X] pass 2: generate normal previews
+			[_] extract existing raw thumbnails/previews (for RAW files)
 		[_] editable list of external commands...
 		| to add things like exportdirs.py etc.
 		[_] 0% Tablet UI
@@ -215,18 +236,6 @@ Roadmap
 				[_] introspection
 				| this is partially done already, need a simpler API for 
 				| the user...
-		[_] BUG: sometimes duplicate images get loaded...
-		| this happens when jumping back and forth on the mid ribbon until
-		| the last element shows up and then moving left until the frame
-		| around the image disappears...
-		| at this point, this will return 2:
-		|
-		| 	$('[order='+$('.current.image').attr('order')+']').length
-		|
-		| happens when:
-		| 	ribbon length: ~42
-		| 	screen width: 4
-		| 	jumping to end from start of ribbon
 		[_] ASAP: test on Android...
 		[_] 50% Undo/Redo
 			[X] basic one step (revert to last save)
