@@ -93,8 +93,8 @@ Roadmap
 	
 
 
-[_] 27% Gen 3 current todo
-	[_] 55% High priority
+[_] 28% Gen 3 current todo
+	[_] 56% High priority
 		[_] 33% mormalize ribbons -- top-align sorted chunks
 			[X] basic mechanics
 			| splitData(...)
@@ -102,6 +102,9 @@ Roadmap
 			| alignDataToRibbon(...)
 			| shiftRibbonBy(...)
 			[_] manual invoke mechanics
+			| ctrl-s is a good candidate
+			|
+			| NOTE: might need a good preview to make this understandable...
 			[_] auto-invoke mechanics
 		[_] update data set...
 		| - add new images to the set
@@ -321,6 +324,7 @@ Roadmap
 			[_] remove extra and repetitive actions
 			[_] caching config
 		[_] side-by side view...
+		[X] BUG: scaling #2 in single image mode fits image to screen on wide screens
 		[X] BUG: cropping in cropped mode will not save the whole data...
 		[X] 100% BUG: sometimes the previews are not updated...
 			[X] wrong resolution preview is loaded

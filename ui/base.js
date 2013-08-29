@@ -983,8 +983,7 @@ function resetToOriginalImage(image){
 // NOTE: fixed_proportions if true will make this set the size using the 
 // 		image square, disregarding actual proportions.
 // NOTE: fixed_proportions may result in and image bleading off screen.
-// 		XXX needs more testing...
-function fitNImages(n, fixed_proportions){
+function fitNImages(n, fixed_proportions, no_strict_fit){
 	var viewer = $('.viewer')
 
 	viewer.trigger('preFittingImages', [n])
@@ -1004,10 +1003,17 @@ function fitNImages(n, fixed_proportions){
 	var W = viewer.innerWidth()
 	var H = viewer.innerHeight()
 
-	// XXX this may not work correctly for portrait proportioned viewers...
 	var scale = Math.min(W / (w * n), H / h)
 
-	// NOTE: if animating, the next two likes must be animated together...
+	// special case: unless fitting one image to screen, do not fill the
+	// whole height...
+	// NOTE: we do not need to check width as it's already used for 
+	// 		scaling...
+	if(!no_strict_fit && n != 1 && h*scale == H){
+		scale *= 0.8
+	}
+
+	// NOTE: if animating, the next two lines must be animated together...
 	setElementScale($('.ribbon-set'), scale)
 	centerView(image, 'css')
 
@@ -1017,10 +1023,7 @@ function fitNImages(n, fixed_proportions){
 }
 
 
-// NOTE: here we measure image height as width may change depending on 
-// 		proportions...
 function zoomIn(){
-	//var w = getScreenWidthInImages(getVisibleImageSize('height'))
 	var w = getScreenWidthInImages()
 	if(w > 1){
 		w = w / ZOOM_SCALE
@@ -1028,7 +1031,6 @@ function zoomIn(){
 	}
 }
 function zoomOut(){
-	//var w = getScreenWidthInImages(getVisibleImageSize('height'))
 	var w = getScreenWidthInImages()
 	if(w <= MAX_SCREEN_IMAGES){
 		w = w * ZOOM_SCALE

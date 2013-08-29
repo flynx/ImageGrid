@@ -444,6 +444,7 @@ var KEYBOARD_CONFIG = {
 
 		// zooming...
 		'#1': doc('Fit image to screen', function(){ fitNImages(1) }),
+		// XXX this will do different stuff for different proportioned screens...
 		'#2': doc('Show big image', function(){ fitNImages(1.5, true) }),
 		'#3': doc('Show small image', function(){ fitNImages(3, true) }),
 
