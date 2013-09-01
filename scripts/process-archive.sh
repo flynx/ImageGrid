@@ -1,6 +1,67 @@
 #!/bin/bash
 
-if [ "$1" ] ; then
+# HACK: this is here to avoid using windows find...
+PATH=/bin:$PATH
+
+printhelp(){
+	echo Usage: $0 [ARGUMENTS] [ARCHIVE_ROOT]
+	echo
+	echo Arguments:
+	echo	-h --help	- print this help and exit.
+	echo	--common-previews PATH
+	echo			- build a single preview set at PATH.
+	echo
+	echo	--skip-archive	- skip creating archive structure \(exiftool\).
+	echo	--skip-previews	- skip creating previews \(vips\).
+	echo	--skip-cache	- skip creating cache \(buildcache\).
+	echo	--skip-all	- same as setting all of the above.
+	echo
+	echo NOTE: common preview path is relative to ARCHIVE_ROOT.
+	echo
+}
+
+# process args...
+while true ; do
+	case $1 in
+		-h|--help)
+			printhelp
+			exit
+			;;
+
+		--common-previews)
+			COMMON_PREVIEWS="${2}/preview (RAW)"
+			shift
+			shift
+			;;
+
+		--skip-archive)
+			SKIP_ARCHIVE=yes
+			echo skipping making archive...
+			shift
+			;;
+		--skip-previews)
+			SKIP_PREVIEWS=yes
+			echo skipping making previews...
+			shift
+			;;
+		--skip-cache)
+			SKIP_CACHE=yes
+			echo skipping making cache...
+			shift
+			;;
+		--skip-all)
+			SKIP_ARCHIVE=yes
+			echo skipping making archive...
+			SKIP_PREVIEWS=yes
+			echo skipping making previews...
+			SKIP_CACHE=yes
+			echo skipping making cache...
+			shift
+			;;
+	esac
+done
+
+if [ -z "$1" ] ; then
 	ARCHIVE_ROOT="$1"
 else
 	ARCHIVE_ROOT="."
@@ -26,7 +87,6 @@ JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 
 # XXX need to also copy jpg originals to the preview dir (things that 
 #	were shot in jpeg in-camera)...
-# XXX do we need to rotate the images using exif data here???
 # XXX need to prevent overwriting of unchanged exif data...
 #	when file exists??
 # XXX add PSD metadata extraction...
@@ -34,12 +94,14 @@ JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 #		-srcfile "$PROCESSED_PREVIEW_NAME" -overwrite_original \
 # XXX keep file dates...
 
-exiftool -if '$jpgfromraw' -b -jpgfromraw -w "$PREVIEW_NAME" \
-	-execute -if '$previewimage' -b -previewimage -w "$PREVIEW_NAME" \
-	-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ \
-		-srcfile "$PREVIEW_NAME" -overwrite_original \
-	-execute -j -w "$JSON_NAME" \
-	-common_args --ext jpg -r "./$ARCHIVE_ROOT" -progress
+if [ -z $SKIP_ARCHIVE ] ; then
+	exiftool -if '$jpgfromraw' -b -jpgfromraw -w "$PREVIEW_NAME" \
+		-execute -if '$previewimage' -b -previewimage -w "$PREVIEW_NAME" \
+		-execute '-FileModifyDate<DateTimeOriginal' -tagsfromfile @ \
+			-srcfile "$PREVIEW_NAME" -overwrite_original \
+		-execute -j -w "$JSON_NAME" \
+		-common_args --ext jpg -r "./$ARCHIVE_ROOT" -progress
+fi
 
 
 SIZE=900
@@ -49,12 +111,48 @@ COMPRESSION=90
 # XXX remove this in production...
 PATH=$PATH:/mnt/d/Program\ Files/vips/bin/
 
-# makepreview SIZE IN OUT
+
+
+# makepreview SIZE IN [OUT [SIZE [COMPRESSION]]]
+# 
+# NOTE: SIZE and COMPRESSION will be set as follows (in order of priority):
+#	- explicit argument
+#	- global env var, if set
+#	- hardcoded default value
+#
+# XXX cahnge global var names to be less generic...
 makepreview(){
 
+	# arguments...
 	SIZE="$1"
 	IN="$2"
-	OUT="$3"
+	# output dir...
+	if [ -z $OUT ] ; then
+		# default...
+		# XXX is this correct??? (not generic enough...)
+		OUT="${IN/hi-res\ /preview }"
+	else
+		OUT="$3"
+	fi
+	# size...
+	if [ -z $4 ] ; then
+		if [ -z $SIZE ] ; then
+			# default...
+			SIZE=900
+		fi
+	else
+		SIZE=$4
+	fi
+	# compression...
+	if [ -z $5 ] ; then
+		if [ -z $COMPRESSION ] ; then
+			# default...
+			COMPRESSION=90
+		fi
+	else
+		COMPRESSION=$5
+	fi
+
 
 	# create preview dir if it does not already exist...
 	DIR="`dirname \"./${OUT}\"`"
@@ -79,46 +177,43 @@ makepreview(){
 		echo "($FACTOR): ${OUT}:${COMPRESSION}"
 
 		vips im_shrink "./$IN" "./${OUT}:${COMPRESSION}" $FACTOR $FACTOR 2> /dev/null
+
+		touch -c -r "./$IN" "./${OUT}"
+
+	else
+		echo "File already exists: ${OUT}"
 	fi
 }
 
-
-# XXX use find...
+export SIZE COMPRESSION
+export -f makepreview 
 
 cd "./${ARCHIVE_ROOT}"
 
-# XXX this is ugly but it works...
-if [[ $ARCHIVE_ROOT == "." ]] ; then
-	for FROM in */DCIM/hi-res\ \(RAW\)/*jpg ; do
-		TO="${FROM/hi-res\ /preview }"
 
-		# XXX do different-sized previews...
-		makepreview "$SIZE" "./$FROM" "./$TO"
-	done
 
-	# pre-build cache...
-	for p in */DCIM/preview\ \(RAW\)/ ; do
-		if ! [ -e "./$p" ] ; then
-			continue
-		fi
-		buildcache "./$p"
-	done
-else
-	for FROM in ./DCIM/hi-res\ \(RAW\)/*jpg ; do
-		TO="${FROM/hi-res\ /preview }"
-
-		# XXX do different-sized previews...
-		makepreview "$SIZE" "./$FROM" "./$TO"
-	done
-
-	# pre-build cache...
-	for p in ./DCIM/preview\ \(RAW\)/ ; do
-		if ! [ -e "./$p" ] ; then
-			continue
-		fi
-		buildcache "./$p"
-	done
+# make previews...
+if [ -z $SKIP_PREVIEWS ] ; then
+	find . -path '*hi-res (RAW)/*.jpg' -exec bash -c 'makepreview "$SIZE" "{}"' \;
 fi
+
+
+
+# collect previews to one location...
+if ! [ -z $COMMON_PREVIEWS ] ; then
+	if ! [ -e "./$COMMON_PREVIEWS" ] ; then
+		mkdir -p "./$COMMON_PREVIEWS"
+	fi
+	find . -type d -name 'preview (RAW)' -exec mv "./\{}" "$COMMON_PREVIEWS" \;
+fi
+
+
+
+# build cache...
+if [ -z $SKIP_CACHE ] ; then
+	find . -type d -name 'preview (RAW)' -exec buildcache "./\{}" \;
+fi
+
 
 
 # vim:set nowrap nospell :
