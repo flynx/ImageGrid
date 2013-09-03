@@ -1,22 +1,27 @@
 #!/bin/bash
 
+# TODO make this runnable from anywhere...
+#	- prepend paths with './' only if local/relative
+
 # HACK: this is here to avoid using windows find...
 PATH=/bin:$PATH
 
 printhelp(){
-	echo Usage: $0 [ARGUMENTS] [ARCHIVE_ROOT]
+	echo "Usage: `basename $0` [ARGUMENTS] [ARCHIVE_ROOT]"
 	echo
-	echo Arguments:
-	echo	-h --help	- print this help and exit.
-	echo	--common-previews PATH
-	echo			- build a single preview set at PATH.
+	echo "Arguments:"
+	echo "	-h --help	- print this help and exit."
+	echo "	--common-previews PATH"
+	echo "			- build a single preview set at PATH."
 	echo
-	echo	--skip-archive	- skip creating archive structure \(exiftool\).
-	echo	--skip-previews	- skip creating previews \(vips\).
-	echo	--skip-cache	- skip creating cache \(buildcache\).
-	echo	--skip-all	- same as setting all of the above.
+	echo "	--skip-archive	- skip creating archive structure (use: exiftool)."
+	echo "	--skip-previews	- skip creating previews (use: vips)."
+	echo "	--skip-cache	- skip creating cache (use: buildcache)."
+	echo "	--skip-all	- same as setting all of the above."
 	echo
-	echo NOTE: common preview path is relative to ARCHIVE_ROOT.
+	echo "NOTE: common preview path is relative to ARCHIVE_ROOT."
+	echo "NOTE: if no arguments are passed then this will process all directories"
+	echo "	in current location."
 	echo
 }
 
