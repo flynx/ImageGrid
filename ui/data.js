@@ -727,6 +727,26 @@ function dataFromImages(images){
 }
 
 
+// Clean out empty ribbons...
+//
+function dropEmptyRibbons(data){
+	data = data == null ? DATA : data
+
+	var ribbons = data.ribbons
+
+	var i = 0
+	while(i < ribbons.length){
+		if(ribbons[i].length == 0){
+			ribbons.splice(i, 1)
+		} else {
+			i++
+		}
+	}
+
+	return data
+}
+
+
 // Merge two or more data objects
 //
 // Each data object can be:
@@ -919,11 +939,17 @@ function alignDataToRibbon(ribbon, data){
 	//ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	data = data == null ? DATA : data
 
-	// get the ribbon above...
-	var r = data.ribbons[ribbon-1]
-
+	// get the first and last elements of the ribbon-set above the base 
+	// ribbon...
+	var r = []
+	for(var i=0; i < ribbon; i++){
+		r.push(data.ribbons[i][0])
+		r.push(data.ribbons[i][data.ribbons[i].length-1])
+	}
+	r.sort(function(a, b){return imageOrderCmp(a, b, null, data)})
 	var start = r[0]
 	var end = r[r.length-1]
+
 	// NOTE: this can be null/undefined if we are looking at the last 
 	// 		element...
 	end = data.order[data.order.indexOf(end)+1]
@@ -937,13 +963,7 @@ function alignDataToRibbon(ribbon, data){
 	var res = mergeData.apply(null, sections)
 	res.current = data.current
 
-	// clean out empty ribbons from head and tail...
-	while(res.ribbons[0].length == 0){
-		res.ribbons.splice(0, 1)
-	}
-	while(res.ribbons[res.ribbons.length-1].length == 0){
-		res.ribbons.pop()
-	}
+	dropEmptyRibbons(res)
 
 	return res
 }
@@ -991,13 +1011,7 @@ function shiftRibbonsBy(n, gid, data){
 	var res = mergeData.apply(null, sections)
 	res.current = data.current
 
-	// clean out empty ribbons from head and tail...
-	while(res.ribbons[0].length == 0){
-		res.ribbons.splice(0, 1)
-	}
-	while(res.ribbons[res.ribbons.length-1].length == 0){
-		res.ribbons.pop()
-	}
+	dropEmptyRibbons(res)
 
 	return res
 }

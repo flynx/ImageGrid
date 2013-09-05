@@ -635,6 +635,10 @@ function centerRibbon(ribbon, image, mode){
 function centerRibbons(mode, no_skip_current){
 	return $('.ribbon')
 		.each(function(){ 
+//			// skip empty ribbons...
+//			if($(this).find('.image').length == 0){
+//				return
+//			}
 			if(no_skip_current == true && $(this).find('.current.image').length > 0){
 				return
 			}

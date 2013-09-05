@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130707233437'''
+__sub_version__ = '''20130903200809'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -672,7 +672,8 @@ def handle_commandline():
 			print
 			print 'Time: %.1fm' % ((progress_state['done at'] - progress_state['started at'])/60)
 		
-	return res
+##	# XXX this makes the script spit out res to stdout...
+##	return res
 
 
 
