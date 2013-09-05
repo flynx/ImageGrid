@@ -930,13 +930,16 @@ function splitData(data, gid1){
 //
 // NOTE: this will return a new data object.
 //
-// XXX should ribbon default to getRibbonIndex()???
-// 		...or should we add a "base ribbon" concept???
+// XXX the ends of the data set will always get messed up...
+// XXX for this to be "smart" we need to introduce a concept of a 
+// 		"base ribbon" (default ribbon to align to) and supporting API...
 // XXX figure out a way to accomplish one of (in order of preference):
 // 		- auto-call this and make it expected and transparent to the user
 // 		- manually called in *obvious* situations...
+//
+// XXX BUG: if ribbon is 0 this will duplicate the first image in first 
+//		ribbon...
 function alignDataToRibbon(ribbon, data){
-	//ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	data = data == null ? DATA : data
 
 	// get the first and last elements of the ribbon-set above the base 
@@ -949,7 +952,7 @@ function alignDataToRibbon(ribbon, data){
 	r.sort(function(a, b){return imageOrderCmp(a, b, null, data)})
 	var start = r[0]
 	var end = r[r.length-1]
-
+	// get the gid after the end...
 	// NOTE: this can be null/undefined if we are looking at the last 
 	// 		element...
 	end = data.order[data.order.indexOf(end)+1]
