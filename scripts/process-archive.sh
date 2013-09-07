@@ -63,13 +63,16 @@ while true ; do
 			echo skipping making cache...
 			shift
 			;;
+		*)
+			break
+			;;
 	esac
 done
 
 if [ -z "$1" ] ; then
-	ARCHIVE_ROOT="$1"
-else
 	ARCHIVE_ROOT="."
+else
+	ARCHIVE_ROOT="$1"
 fi
 
 echo "Doing: \"$ARCHIVE_ROOT\""
