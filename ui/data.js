@@ -896,11 +896,22 @@ function splitData(data, gid1){
 }
 
 
+// Align a section of data to the base ribbon.
+//
+// The data will be "cut" vertically from start gid (inclusive) up until
+// end the gid (non-inclusive), if given.
+//
+// If neither start and/or end gids are given then the ribbons above the
+// base ribbon will be used to set the start and end.
+//
+// This will return a new data object, without modifying the original.
 //
 //
 // Illustration of operation:
 //	1) Initial state, locate bounds...
 //
+//			start ---+					 +--- end
+//					 v					 v
 //					|	oooooooooooo	|
 //		...ooooooooo|ooooooooooooooooooo|ooooooooooooooooo... < base
 //			oooo|oooooooooooooooooooooooo|ooooooo
@@ -928,9 +939,15 @@ function splitData(data, gid1){
 //			    |oooooooooooooooooooooooo|
 //
 //
-// NOTE: this will return a new data object.
+// NOTE: the ends of the set may get "messed up" unless explicitly marked.
+// 		...the first/last several images in the base ribbon (if present)
+// 		will get shifted to the top.
+// NOTE: setting the start/end to the first/last images of the set will 
+// 		effectively just change the base ribbon w.o. affecting any data.
+// 		XXX test this!!!
+// 		XXX does this require a faster short path (special case)?
 //
-// XXX the ends of the data set will always get messed up...
+//
 // XXX for this to be "smart" we need to introduce a concept of a 
 // 		"base ribbon" (default ribbon to align to) and supporting API...
 // XXX figure out a way to accomplish one of (in order of preference):
@@ -939,29 +956,34 @@ function splitData(data, gid1){
 //
 // XXX BUG: if ribbon is 0 this will duplicate the first image in first 
 //		ribbon...
-function alignDataToRibbon(ribbon, data){
+function alignDataToRibbon(base_ribbon, data, start, end){
 	data = data == null ? DATA : data
 
 	// get the first and last elements of the ribbon-set above the base 
 	// ribbon...
-	var r = []
-	for(var i=0; i < ribbon; i++){
-		r.push(data.ribbons[i][0])
-		r.push(data.ribbons[i][data.ribbons[i].length-1])
+	if(start == null || end == null){
+		var r = []
+		for(var i=0; i < base_ribbon; i++){
+			r.push(data.ribbons[i][0])
+			r.push(data.ribbons[i][data.ribbons[i].length-1])
+		}
+		r.sort(function(a, b){return imageOrderCmp(a, b, null, data)})
 	}
-	r.sort(function(a, b){return imageOrderCmp(a, b, null, data)})
-	var start = r[0]
-	var end = r[r.length-1]
-	// get the gid after the end...
-	// NOTE: this can be null/undefined if we are looking at the last 
-	// 		element...
-	end = data.order[data.order.indexOf(end)+1]
+	start = start == null ? r[0] : start
+	if(end == null){
+		end = r[r.length-1]
+		// get the gid after the end...
+		// NOTE: this can be null/undefined if we are looking at the last 
+		// 		element...
+		end = data.order[data.order.indexOf(end)+1]
+	}
 
-	// NOTE: will this always return 3 sections (see docs)...
+	// NOTE: will this always return 3 sections (see docs), even if 
+	// 		start and/or end are null...
 	var sections = splitData(data, start, end)
 
 	// prepare to align...
-	sections[1] = [ ribbon, sections[1] ]
+	sections[1] = [ base_ribbon, sections[1] ]
 	
 	var res = mergeData.apply(null, sections)
 	res.current = data.current
