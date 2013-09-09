@@ -616,6 +616,8 @@ var KEYBOARD_CONFIG = {
 				// marking...
 				ctrl: 'invert-marks',
 			},
+		// XXX this is not permanent...
+		C: doc('Edit image comment', imageCommentDialog),
 		P: {
 				default: doc('Show options',
 					function(){ toggleOptionsUI() }),

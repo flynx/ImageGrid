@@ -382,6 +382,7 @@ var FIELD_TYPES = {
 	// format: 
 	// 		string
 	// XXX add datalist option...
+	// XXX make this textarea compatible...
 	text: {
 		type: 'text',
 		text: null,
@@ -962,6 +963,7 @@ function sortImagesDialog(message){
 }
 
 
+// XXX get EXIF...
 function showImageInfo(){
 	var gid = getImageGID(getImage())
 	var r = getRibbonIndex(getRibbon())
@@ -972,6 +974,8 @@ function showImageInfo(){
 	flipped = flipped == null ? '' : ', flipped '+flipped+'ly'
 	var order = DATA.order.indexOf(gid)
 	var name = data.path.split('/').pop()
+	var comment = data.comment
+	comment = comment == null ? '' : comment
 
 	alert('<div>'+
 			'<h2>"'+ name +'"</h2>'+
@@ -984,8 +988,34 @@ function showImageInfo(){
 				'<tr><td>Position (ribbon): </td><td>'+ (DATA.ribbons[r].indexOf(gid)+1) +
 					'/'+ DATA.ribbons[r].length +'</td></tr>'+
 				'<tr><td>Position (global): </td><td>'+ (order+1) +'/'+ DATA.order.length +'</td></tr>'+
+				'<tr><td colspan="2"><hr></td></tr>'+
+				'<tr><td>Comment: </td><td class="comment">'+ comment +'</td></tr>'+
 			'</table>'+
 		'</div>')
+}
+
+
+// XXX use a text area instead of a text field...
+function imageCommentDialog(){
+	var gid = getImageGID()
+	var data = IMAGES[gid]
+	var name = data.path.split('/').pop().split('.')[0]
+	var comment = data.comment
+	comment = comment == null ? '' : comment
+
+	return formDialog(null, name +' Comment:', 
+			{'': comment},
+			'Save', 
+			'imageCommentDialog')
+		.done(function(res){
+			comment = res['']
+			if(comment.trim() == ''){
+				delete data.comment
+			} else {
+				data.comment = comment
+			}
+			IMAGES_UPDATED.push(gid)
+		})
 }
 
 
