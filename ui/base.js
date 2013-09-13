@@ -765,7 +765,9 @@ function prevRibbon(){
 			target = next.length > 0 ? next : target
 		}
 	}
-	return centerView(focusImage(target))
+	var res = centerView(focusImage(target))
+	$('.viewer').trigger('focusedPrevRibbon', [getRibbonIndex()])
+	return res
 }
 function nextRibbon(){
 	var cur = getImage()
@@ -783,7 +785,9 @@ function nextRibbon(){
 		}
 	}
 
-	return centerView(focusImage(target))
+	var res = centerView(focusImage(target))
+	$('.viewer').trigger('focusedNextRibbon', [getRibbonIndex()])
+	return res
 }
 
 

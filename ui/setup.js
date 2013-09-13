@@ -346,6 +346,19 @@ function setupDataBindings(viewer){
 		})
 
 		// info...
+		.on('focusingImage',
+			function(){
+				showRibbonIndicator()
+			})
+		.on([
+				'focusedNextRibbon',
+				'focusedPrevRibbon'
+			].join(' '),
+			function(){
+				if(toggleSingleImageMode('?') == 'on'){
+					flashRibbonIndicator()
+				}
+			})
 		.on([
 				'focusingImage',
 				'togglingMark'

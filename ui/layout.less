@@ -1004,6 +1004,35 @@ button:hover {
 }
 
 
+.ribbon-indicator {
+	display: none;
+	position: absolute;
+	top: 10px;
+	left: 15px;
+
+	color: white;
+	font-size: 42px;
+	font-weight: bold;
+	font-style: italic;
+	text-shadow: black 0.1em 0.1em 0.6em;
+
+	opacity: 0.1;
+}
+.flashing-ribbon-indicator {
+	display: inline-block;
+}
+.single-image-mode.marks-visible.viewer .ribbon-indicator {
+	display: inline-block;
+}
+.ribbon-indicator:hover:after {
+	display: inline-block;
+	content: "ribbon number";
+	font-size: 14px;
+
+	opacity: 0.8;
+}
+
+
 
 /********************************************** Mode: single image ***/
 
@@ -1041,6 +1070,18 @@ button:hover {
 .light.viewer .ribbon-set:empty:after {
 	color: gray;
 }
+.light.viewer .ribbon-indicator {
+	color: silver;
+	text-shadow: none;
+
+	opacity: 0.3;
+}
+.light.viewer .ribbon-indicator:hover:after {
+	color: gray;
+	text-shadow: none;
+
+	opacity: 0.8;
+}
 
 .gray.viewer,
 .gray.viewer .overlay-block .background {
@@ -1049,7 +1090,7 @@ button:hover {
 .gray.viewer .overlay-block .dialog {
 	background: #555;
 }
-.light.viewer .overlay-block:hover .background:after {
+.gray.viewer .overlay-block:hover .background:after {
 	color: silver;
 	opacity: 0.4;
 }
@@ -1061,10 +1102,17 @@ button:hover {
 .dark.viewer .overlay-block .dialog {
 	background: #333;
 }
-.light.viewer .overlay-block:hover .background:after {
+.dark.viewer .overlay-block:hover .background:after {
 	color: gray;
 	opacity: 0.4;
 }
+.dark.viewer .ribbon-indicator {
+	opacity: 0.2;
+}
+.dark.viewer .ribbon-indicator:hover:after {
+	opacity: 0.8;
+}
+
 
 
 .large.viewer:not(.single-image-mode) .current.image {

@@ -115,6 +115,46 @@ function flashIndicator(direction){
 }
 
 
+function showRibbonIndicator(){
+	var cls = '.ribbon-indicator'
+	var indicator = $(cls)
+
+	if(indicator.length == 0){
+		indicator = $('<div>')
+			.addClass(cls.replace('.', ''))
+			.appendTo($('.viewer'))
+	}
+
+	var r = getRibbonIndex()
+
+	// get the base ribbon...
+	// XXX add a real base ribbon index...
+	var base = 0
+
+	var r =  r == base ? r+'*' : r
+	return indicator.text(r)
+}
+
+function flashRibbonIndicator(){
+	var indicator = showRibbonIndicator()
+	var cls = '.flashing-ribbon-indicator'
+
+	var flashing_indicator = $(cls)
+
+	if(flashing_indicator.length == 0){
+		flashing_indicator = indicator
+			.clone()
+			.addClass(cls.replace('.', ''))
+			.appendTo($('.viewer'))
+	}
+
+	return flashing_indicator
+		.show()
+		.delay(100)
+		.fadeOut(300)
+}
+
+
 // Update an info element
 //
 // align can be:
@@ -775,7 +815,6 @@ function formDialog(root, message, config, btn, cls){
 var _alert = alert
 function alert(){
 	var message = Array.apply(null, arguments).join(' ')
-	//return formDialog(null, String(message), {}, 'OK', 'alert')
 	return formDialog(null, String(message), {}, false, 'alert')
 }
 
@@ -987,6 +1026,8 @@ function showImageInfo(){
 				'<h2>"'+ name +'"</h2>'+
 
 				'<table>'+
+					// basic info...
+					'<tr><td colspan="2"><hr></td></tr>'+
 					'<tr><td>GID: </td><td>'+ gid +'</td></tr>'+
 					'<tr><td>Path: </td><td>"'+ data.path +'"</td></tr>'+
 					'<tr><td>Orientation: </td><td>'+ orientation +'&deg;'+flipped+'</td></tr>'+
@@ -1005,18 +1046,21 @@ function showImageInfo(){
 			'</div>'),
 			// NOTE: without a save button, there will be no way to accept the 
 			// 		form on a touch-only device...
-			{}, 'Save', 'showImageInfoDialog')
+			{}, 'OK', 'showImageInfoDialog')
 
 		// save the form data...
 		.done(function(_, form){
 			// comment...
-			var comment = form.find('.comment').html().replace(/<br>/ig, '\n')
-			if(comment.trim() == ''){
-				delete data.comment
-			} else {
-				data.comment = comment
+			var ncomment = form.find('.comment').html()
+			if(ncomment != comment){
+				ncomment = ncomment.replace(/<br>/ig, '\n')
+				if(ncomment.trim() == ''){
+					delete data.comment
+				} else {
+					data.comment = ncomment
+				}
+				IMAGES_UPDATED.push(gid)
 			}
-			IMAGES_UPDATED.push(gid)
 
 			// XXX tags...
 			// XXX
