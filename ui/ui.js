@@ -115,6 +115,7 @@ function flashIndicator(direction){
 }
 
 
+// XXX need to get the real base ribbon....
 function showRibbonIndicator(){
 	var cls = '.ribbon-indicator'
 	var indicator = $(cls)
@@ -150,8 +151,8 @@ function flashRibbonIndicator(){
 
 	return flashing_indicator
 		.show()
-		.delay(100)
-		.fadeOut(300)
+		.delay(200)
+		.fadeOut(500)
 }
 
 

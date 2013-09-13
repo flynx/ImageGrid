@@ -1535,6 +1535,8 @@ function getAllData(){
 
 
 // NOTE: this will not update .current state...
+// NOTE: when keep_ribbons is set, this may generate empty ribbons...
+//
 // XXX should this set the .current to anything but null or the first elem???
 function makeCroppedData(gids, keep_ribbons){
 	var res = {
@@ -1563,14 +1565,17 @@ function makeCroppedData(gids, keep_ribbons){
 }
 
 
+// NOTE: if keep_ribbons is not set this will ALWAYS build a single ribbon
+// 		data-set...
 function cropDataTo(gids, keep_ribbons){
 	var prev_state = DATA
 	var cur = DATA.current
+	var r = getRibbonIndex()
 
 	CROP_STACK.push(prev_state)
 	DATA = makeCroppedData(gids, keep_ribbons)
 
-	cur = getGIDBefore(cur)
+	cur = getGIDBefore(cur, keep_ribbons ? r : 0)
 	cur = cur == null ? gids[0] : cur
 	DATA.current = cur 
 
