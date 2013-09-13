@@ -521,14 +521,29 @@ function normalizePath(url, base, mode){
 }
 
 
+// like getRibbonIndex but get the index only via DATA...
+function getDataRibbonIndex(gid, data){
+	gid = gid == null ? getImageGID() : gid
+	data = data == null ? DATA : data
+
+	for(var i=0; i < data.ribbons.length; i++){
+		if(data.ribbons[i].indexOf(gid) >= 0){
+			return i
+		}
+	}
+	return -1
+}
+
 // Same as getImageBefore(...), but uses gids and searches in DATA...
 //
 // NOTE: this uses it's own predicate...
 function getGIDBefore(gid, ribbon, search, data){
 	gid = gid == null ? getImageGID() : gid
-	ribbon = ribbon == null ? getRibbonIndex() : ribbon
-	search = search == null ? binSearch : search
 	data = data == null ? DATA : data
+	// XXX get a ribbon without getting into DOM...
+	// 		...dependency leek...
+	ribbon = ribbon == null ? getDataRibbonIndex(gid, data) : ribbon
+	search = search == null ? binSearch : search
 	//search = search == null ? match2(linSearch, binSearch) : search
 	ribbon = data.ribbons[ribbon]
 	var order = data.order

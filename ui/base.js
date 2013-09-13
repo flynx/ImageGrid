@@ -132,6 +132,7 @@ function getRibbon(image){
 }
 
 
+// XXX make this not depend on DOM... a-la getImageBefore vs. getGIDBefore
 // NOTE: elem is optional and if given can be an image or a ribbon...
 function getRibbonIndex(elem){
 	if(elem == null){
