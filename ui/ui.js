@@ -967,7 +967,7 @@ function sortImagesDialog(message){
 }
 
 
-// XXX get EXIF...
+// XXX get EXIF, IPTC...
 function showImageInfo(){
 	var gid = getImageGID(getImage())
 	var r = getRibbonIndex(getRibbon())
@@ -982,8 +982,8 @@ function showImageInfo(){
 	comment = comment == null ? '' : comment
 	comment = comment.replace(/\n/g, '<br>')
 
-	// make this something other than alert...
-	alert('<div>'+
+	return formDialog(null,
+			('<div>'+
 				'<h2>"'+ name +'"</h2>'+
 
 				'<table>'+
@@ -1001,17 +1001,25 @@ function showImageInfo(){
 					// 		add per editable and global dialog max-height and overflow
 					'<tr><td>Comment: </td><td class="comment" contenteditable>'+ comment +'</td></tr>'+
 				'</table>'+
-			'</div>')
-		.done(function(_, form){
-			//var comment = $('.dialog .comment').html().replace(/<br>/ig, '\n')
-			var comment = form.find('.comment').html().replace(/<br>/ig, '\n')
+				'<br>'+
+			'</div>'),
+			// NOTE: without a save button, there will be no way to accept the 
+			// 		form on a touch-only device...
+			{}, 'Save', 'showImageInfoDialog')
 
+		// save the form data...
+		.done(function(_, form){
+			// comment...
+			var comment = form.find('.comment').html().replace(/<br>/ig, '\n')
 			if(comment.trim() == ''){
 				delete data.comment
 			} else {
 				data.comment = comment
 			}
 			IMAGES_UPDATED.push(gid)
+
+			// XXX tags...
+			// XXX
 		})
 }
 
