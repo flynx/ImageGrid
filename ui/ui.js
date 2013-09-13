@@ -738,7 +738,7 @@ function formDialog(root, message, config, btn, cls){
 			})
 
 			// XXX test if all required stuff is filled...
-			res.resolve(data)
+			res.resolve(data, form)
 
 			hideOverlay(root)
 		})
@@ -997,14 +997,14 @@ function showImageInfo(){
 
 					// editable fields...
 					'<tr><td colspan="2"><hr></td></tr>'+
-					// XXX this expanding to a too big size will not scroll...
+					// XXX this expanding to a too big size will mess up the screen...
 					// 		add per editable and global dialog max-height and overflow
 					'<tr><td>Comment: </td><td class="comment" contenteditable>'+ comment +'</td></tr>'+
 				'</table>'+
 			'</div>')
-		// XXX hanck???
-		.done(function(){
-			var comment = $('.dialog .comment').html().replace(/<br>/ig, '\n')
+		.done(function(_, form){
+			//var comment = $('.dialog .comment').html().replace(/<br>/ig, '\n')
+			var comment = form.find('.comment').html().replace(/<br>/ig, '\n')
 
 			if(comment.trim() == ''){
 				delete data.comment
