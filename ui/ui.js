@@ -726,6 +726,8 @@ function formDialog(root, message, config, btn, cls){
 	if(btn !== false){
 		var button = $('<button class="accept">'+btn+'</button>')
 		form.append(button)
+	} else {
+		var button = null
 	}
 
 	var overlay = showInOverlay(root, form)
@@ -745,9 +747,11 @@ function formDialog(root, message, config, btn, cls){
 
 		})
 
-	button.click(function(){
-		overlay.trigger('accept')
-	})
+	if(button != null){
+		button.click(function(){
+			overlay.trigger('accept')
+		})
+	}
 
 	setTimeout(function(){ 
 		form.find('.field input').first()
@@ -976,22 +980,39 @@ function showImageInfo(){
 	var name = data.path.split('/').pop()
 	var comment = data.comment
 	comment = comment == null ? '' : comment
+	comment = comment.replace(/\n/g, '<br>')
 
+	// make this something other than alert...
 	alert('<div>'+
-			'<h2>"'+ name +'"</h2>'+
+				'<h2>"'+ name +'"</h2>'+
 
-			'<table>'+
-				'<tr><td>GID: </td><td>'+ gid +'</td></tr>'+
-				'<tr><td>Path: </td><td>"'+ data.path +'"</td></tr>'+
-				'<tr><td>Orientation: </td><td>'+ orientation +'&deg;'+flipped+'</td></tr>'+
-				'<tr><td>Order: </td><td>'+ order +'</td></tr>'+
-				'<tr><td>Position (ribbon): </td><td>'+ (DATA.ribbons[r].indexOf(gid)+1) +
-					'/'+ DATA.ribbons[r].length +'</td></tr>'+
-				'<tr><td>Position (global): </td><td>'+ (order+1) +'/'+ DATA.order.length +'</td></tr>'+
-				'<tr><td colspan="2"><hr></td></tr>'+
-				'<tr><td>Comment: </td><td class="comment">'+ comment +'</td></tr>'+
-			'</table>'+
-		'</div>')
+				'<table>'+
+					'<tr><td>GID: </td><td>'+ gid +'</td></tr>'+
+					'<tr><td>Path: </td><td>"'+ data.path +'"</td></tr>'+
+					'<tr><td>Orientation: </td><td>'+ orientation +'&deg;'+flipped+'</td></tr>'+
+					'<tr><td>Order: </td><td>'+ order +'</td></tr>'+
+					'<tr><td>Position (ribbon): </td><td>'+ (DATA.ribbons[r].indexOf(gid)+1) +
+						'/'+ DATA.ribbons[r].length +'</td></tr>'+
+					'<tr><td>Position (global): </td><td>'+ (order+1) +'/'+ DATA.order.length +'</td></tr>'+
+
+					// editable fields...
+					'<tr><td colspan="2"><hr></td></tr>'+
+					// XXX this expanding to a too big size will not scroll...
+					// 		add per editable and global dialog max-height and overflow
+					'<tr><td>Comment: </td><td class="comment" contenteditable>'+ comment +'</td></tr>'+
+				'</table>'+
+			'</div>')
+		// XXX hanck???
+		.done(function(){
+			var comment = $('.dialog .comment').html().replace(/<br>/ig, '\n')
+
+			if(comment.trim() == ''){
+				delete data.comment
+			} else {
+				data.comment = comment
+			}
+			IMAGES_UPDATED.push(gid)
+		})
 }
 
 

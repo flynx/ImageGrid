@@ -78,19 +78,28 @@ var KEYBOARD_CONFIG = {
 
 		ignore: '*',
 
-		Enter: doc('Accept dialog',
-			function(){
-				var f = $(':focus')
-				// trigger the default button action...
-				if(/button/i.test(f[0].tagName) || f.attr('type') == 'button'){
-					return true
+		'insert-return': doc('Insert return'),
 
-				// accept the dialog...
-				} else {
-					getOverlay($('.viewer')).trigger('accept')
-					hideOverlay($('.viewer')) 
-				}
-			}),
+		Enter: {
+				default: doc('Accept dialog',
+					function(){
+						var f = $(':focus')
+						
+						// trigger the default button action...
+						if(f.length > 0 
+								&& (/button/i.test(f[0].tagName) 
+									|| f.attr('type') == 'button')){
+							return true
+
+						// accept the dialog...
+						} else {
+							getOverlay($('.viewer')).trigger('accept')
+							hideOverlay($('.viewer')) 
+						}
+					}),
+				shift: 'insert-return',
+				//ctrl: 'insert-return',
+			},
 		Esc: doc('Close dialog', 
 			function(){ 
 				//getOverlay($('.viewer')).trigger('close')
@@ -616,8 +625,6 @@ var KEYBOARD_CONFIG = {
 				// marking...
 				ctrl: 'invert-marks',
 			},
-		// XXX this is not permanent...
-		C: doc('Edit image comment', imageCommentDialog),
 		P: {
 				default: doc('Show options',
 					function(){ toggleOptionsUI() }),
