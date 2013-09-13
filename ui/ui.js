@@ -1016,30 +1016,6 @@ function showImageInfo(){
 }
 
 
-// XXX use a text area instead of a text field...
-function imageCommentDialog(){
-	var gid = getImageGID()
-	var data = IMAGES[gid]
-	var name = data.path.split('/').pop().split('.')[0]
-	var comment = data.comment
-	comment = comment == null ? '' : comment
-
-	return formDialog(null, name +' Comment:', 
-			{'': comment},
-			'Save', 
-			'imageCommentDialog')
-		.done(function(res){
-			comment = res['']
-			if(comment.trim() == ''){
-				delete data.comment
-			} else {
-				data.comment = comment
-			}
-			IMAGES_UPDATED.push(gid)
-		})
-}
-
-
 
 /**********************************************************************
 * vim:set ts=4 sw=4 nowrap :										 */
