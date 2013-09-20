@@ -53,7 +53,7 @@ var toggleMarkedOnlyView = createCSSClassToggler(
 			// prevent mixing marked-only and single-ribbon modes...
 			// XXX is there a more generic way to do this???
 			// 		..without including direct mode dependencies?
-			if(action == 'on' && toggleSingleImageMode('?') == 'on'){
+			if(action == 'on' && toggleSingleRibbonMode('?') == 'on'){
 				return false
 			}
 		},
