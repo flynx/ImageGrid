@@ -187,8 +187,6 @@ var toggleSingleRibbonMode = createCSSClassToggler(
 		},
 		function(action){
 			if(action == 'on'){
-				// XXX do nothing if there is no change...
-				// XXX
 				cropDataTo(DATA.ribbons[getRibbonIndex()].slice())
 			} else {
 				//uncropData()

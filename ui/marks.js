@@ -59,8 +59,6 @@ var toggleMarkedOnlyView = createCSSClassToggler(
 		},
 		function(action){
 			if(action == 'on'){
-				// XXX do nothing if there is no change...
-				// XXX
 				cropMarkedImages()
 			} else {
 				//uncropData()

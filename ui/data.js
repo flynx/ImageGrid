@@ -1572,8 +1572,16 @@ function cropDataTo(gids, keep_ribbons){
 	var cur = DATA.current
 	var r = getRibbonIndex()
 
+	var new_data = makeCroppedData(gids, keep_ribbons)
+
+	// do nothing if there is no change...
+	// XXX is there a better way to compare states???
+	if(JSON.stringify(DATA.ribbons) == JSON.stringify(new_data.ribbons)){
+		return DATA
+	}
+
 	CROP_STACK.push(prev_state)
-	DATA = makeCroppedData(gids, keep_ribbons)
+	DATA = new_data
 
 	cur = getGIDBefore(cur, keep_ribbons ? r : 0)
 	cur = cur == null ? gids[0] : cur
