@@ -150,9 +150,13 @@ function flashRibbonIndicator(){
 	}
 
 	return flashing_indicator
+//		.stop()
+//		.show()
+//		.delay(200)
+//		.fadeOut(500)
 		.show()
-		.delay(200)
-		.fadeOut(500)
+		.delay(100)
+		.fadeOut(300)
 }
 
 

@@ -50,17 +50,21 @@ var toggleMarkedOnlyView = createCSSClassToggler(
 		'.viewer', 
 		'marked-only-view cropped-mode',
 		function(action){
-			// prevent reentering...
-			if(action == 'on' && $('.viewer').hasClass('cropped-mode')
-					|| action == toggleMarkedOnlyView('?')){
+			//// prevent reentering...
+			//if(action == 'on' && $('.viewer').hasClass('cropped-mode')
+			//		|| action == toggleMarkedOnlyView('?')){
+			if(action == 'on' && toggleSingleImageMode('?') == 'on'){
 				return false
 			}
 		},
 		function(action){
 			if(action == 'on'){
+				// XXX do nothing if there is no change...
+				// XXX
 				cropMarkedImages()
 			} else {
-				uncropData()
+				//uncropData()
+				showAllData()
 			}
 		})
 

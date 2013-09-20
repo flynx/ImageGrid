@@ -1613,17 +1613,19 @@ function showAllData(){
 	var prev_state = DATA
 	var cur = DATA.current
 
-	DATA = getAllData()
-	CROP_STACK = []
+	if(CROP_STACK.length != 0){
+		DATA = getAllData()
+		CROP_STACK = []
 
-	// XXX do we need to check if this exists???
-	// 		...in theory, as long as there are no global destructive 
-	// 		operations, no.
-	// keep the current position...
-	DATA.current = cur
+		// XXX do we need to check if this exists???
+		// 		...in theory, as long as there are no global destructive 
+		// 		operations, no.
+		// keep the current position...
+		DATA.current = cur
 
-	reloadViewer()
-	updateImages()
+		reloadViewer()
+		updateImages()
+	}
 
 	return prev_state
 }

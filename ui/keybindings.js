@@ -184,13 +184,19 @@ var KEYBOARD_CONFIG = {
 		title: 'Marked only and single ribbon views',
 		doc: 'To show marked-only images press <b>shift-F2</b> and for single ribbon mode press <b>F3</b>.',
 
-		Esc: doc('Exit mode', 
-				function(){ 
-					// add something like uncrop here...
-					toggleMarkedOnlyView('off') 
-					toggleSingleRibbonMode('off') 
-					return false
-				}),
+		Esc: {
+				default: doc('Uncrop to last state', 
+					function(){ 
+						uncropLastState()
+						return false
+					}),
+				shift: doc('Exit crop mode', 
+					function(){ 
+						toggleMarkedOnlyView('off') 
+						toggleSingleRibbonMode('off') 
+						return false
+					}),
+			},
 		Q: 'Esc',
 	},
 
@@ -588,16 +594,16 @@ var KEYBOARD_CONFIG = {
 		F2: {
 				default: doc('Toggle mark visibility', 
 					function(){ toggleMarkesView() }),
-				shift: doc('Toggle marked only images view', 
+				shift: doc('Crop marked only images', 
 					function(){
-						toggleMarkedOnlyView()
+						toggleMarkedOnlyView('on')
 					}),
 			},
 
-		F3: doc('Toggle single ribbon view (EXPERIMENTAL)', 
+		F3: doc('Crop single ribbon', 
 			function(){
 				event.preventDefault()
-				toggleSingleRibbonMode()
+				toggleSingleRibbonMode('on')
 			}),
 
 		E: doc('Open image in external software', openImage),

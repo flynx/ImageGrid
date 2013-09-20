@@ -1182,6 +1182,12 @@ button:hover {
 
 	min-height: 50px;
 	min-width: 300px;
+	/* XXX for some reason this is not sized correctly... */
+	max-height: 90%;
+	max-width: 90%;
+
+	/* XXX this needs to be lower priority than max-height... */
+	/*overflow-y: auto;*/
 
 	color: white;
 	border: solid silver 1px;

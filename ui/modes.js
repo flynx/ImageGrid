@@ -177,19 +177,42 @@ var toggleSingleRibbonMode = createCSSClassToggler(
 		'.viewer',
 		'single-ribbon-mode cropped-mode',
 		function(action){
-			// prevent reentering...
-			if(action == 'on' && $('.viewer').hasClass('cropped-mode')
-					|| action == toggleSingleRibbonMode('?')){
+			//// prevent reentering...
+			//if(action == 'on' && $('.viewer').hasClass('cropped-mode')
+			//		|| action == toggleSingleRibbonMode('?')){
+			// prevent mixing marked-only and single-ribbon modes...
+			if(action == 'on' && toggleMarkedOnlyView('?') == 'on'){
 				return false
 			}
 		},
 		function(action){
 			if(action == 'on'){
+				// XXX do nothing if there is no change...
+				// XXX
 				cropDataTo(DATA.ribbons[getRibbonIndex()].slice())
 			} else {
-				uncropData()
+				//uncropData()
+				showAllData()
 			}
 		})
+
+
+function uncropLastState(){
+	if(toggleSingleRibbonMode('?') == 'off' 
+			&& toggleMarkedOnlyView('?') == 'off'){
+		return
+	}
+
+	// exit cropped mode...
+	if(CROP_STACK.length == 1){
+		toggleSingleRibbonMode('off')
+		toggleMarkedOnlyView('off')
+
+	// ucrop one state...
+	} else {
+		uncropData()
+	}
+}
 
 
 // TODO transitions...
