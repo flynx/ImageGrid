@@ -50,18 +50,18 @@ var toggleMarkedOnlyView = createCSSClassToggler(
 		'.viewer', 
 		'marked-only-view cropped-mode',
 		function(action){
-			//// prevent reentering...
-			//if(action == 'on' && $('.viewer').hasClass('cropped-mode')
-			//		|| action == toggleMarkedOnlyView('?')){
+			// prevent mixing marked-only and single-ribbon modes...
+			// XXX is there a more generic way to do this???
+			// 		..without including direct mode dependencies?
 			if(action == 'on' && toggleSingleImageMode('?') == 'on'){
 				return false
 			}
 		},
 		function(action){
 			if(action == 'on'){
+				// XXX do we need to keep ribbons here???
 				cropMarkedImages()
 			} else {
-				//uncropData()
 				showAllData()
 			}
 		})
