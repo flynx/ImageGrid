@@ -60,8 +60,10 @@ var toggleMarkedOnlyView = createCSSClassToggler(
 		function(action){
 			if(action == 'on'){
 				// XXX do we need to keep ribbons here???
+				showStatusQ('Cropping marked images...')
 				cropMarkedImages()
 			} else {
+				showStatusQ('Uncropping to all data...')
 				showAllData()
 			}
 		})

@@ -186,8 +186,10 @@ var toggleSingleRibbonMode = createCSSClassToggler(
 		},
 		function(action){
 			if(action == 'on'){
+				showStatusQ('Cropping current ribbon...')
 				cropDataTo(DATA.ribbons[getRibbonIndex()].slice())
 			} else {
+				showStatusQ('Uncropping to all data...')
 				showAllData()
 			}
 		})
@@ -206,6 +208,7 @@ function uncropLastState(){
 
 	// ucrop one state...
 	} else {
+		showStatusQ('Uncropping...')
 		uncropData()
 	}
 }
