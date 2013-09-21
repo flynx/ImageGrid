@@ -173,45 +173,11 @@ var toggleSingleImageMode = createCSSClassToggler(
 // XXX make this not conflict with marked-only-mode, better yet, make them
 // 		one single mode...
 // XXX is this a mode???
-var toggleSingleRibbonMode = createCSSClassToggler(
-		'.viewer',
-		'single-ribbon-mode cropped-mode',
-		function(action){
-			// prevent mixing marked-only and single-ribbon modes...
-			if(action == 'on' 
-					&& $('.viewer').hasClass('cropped-mode') 
-					&& toggleSingleRibbonMode('?') != 'on'){
-				return false
-			}
-		},
-		function(action){
-			if(action == 'on'){
-				showStatusQ('Cropping current ribbon...')
+var toggleSingleRibbonMode = makeCropModeToggler(
+		'single-ribbon-mode',
+		function(){
 				cropDataTo(DATA.ribbons[getRibbonIndex()].slice())
-			} else {
-				showStatusQ('Uncropping to all data...')
-				showAllData()
-			}
 		})
-
-
-function uncropLastState(){
-	if(toggleSingleRibbonMode('?') == 'off' 
-			&& toggleMarkedOnlyView('?') == 'off'){
-		return
-	}
-
-	// exit cropped mode...
-	if(CROP_STACK.length == 1){
-		toggleSingleRibbonMode('off')
-		toggleMarkedOnlyView('off')
-
-	// ucrop one state...
-	} else {
-		showStatusQ('Uncropping...')
-		uncropData()
-	}
-}
 
 
 // TODO transitions...

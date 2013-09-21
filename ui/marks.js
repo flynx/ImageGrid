@@ -46,27 +46,9 @@ function cropMarkedImages(cmp, no_cleanout_marks){
 */
 
 // XXX is this a mode???
-var toggleMarkedOnlyView = createCSSClassToggler(
-		'.viewer', 
-		'marked-only-view cropped-mode',
-		function(action){
-			// prevent mixing marked-only and single-ribbon modes...
-			if(action == 'on' 
-					&& $('.viewer').hasClass('cropped-mode') 
-					&& toggleMarkedOnlyView('?') != 'on'){
-				return false
-			}
-		},
-		function(action){
-			if(action == 'on'){
-				// XXX do we need to keep ribbons here???
-				showStatusQ('Cropping marked images...')
-				cropMarkedImages()
-			} else {
-				showStatusQ('Uncropping to all data...')
-				showAllData()
-			}
-		})
+var toggleMarkedOnlyView = makeCropModeToggler(
+		'marked-only-view',
+		cropMarkedImages)
 
 
 // XXX shifting images and unmarking in this mode do not work correctly...

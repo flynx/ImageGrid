@@ -111,6 +111,8 @@ var MARKED = []
 
 var CROP_STACK = []
 
+var CROP_MODES = []
+
 // NOTE: these are named: <mode>-<feature>
 var SETTINGS = {
 	'global-theme': null,
@@ -1636,6 +1638,60 @@ function showAllData(){
 	}
 
 	return prev_state
+}
+
+
+// Helpers for making crop modes and using crop...
+
+// Make a generic crop mode toggler
+//
+// NOTE: This will add the toggler to CROP_MODES, for use by 
+// 		uncropLastState(...)
+function makeCropModeToggler(cls, crop){
+	var res = createCSSClassToggler(
+			'.viewer',
+			cls + ' cropped-mode',
+			function(action){
+				// prevent mixing marked-only and single-ribbon modes...
+				if(action == 'on' 
+						&& $('.viewer').hasClass('cropped-mode') 
+						&& res('?') != 'on'){
+					return false
+				}
+			},
+			function(action){
+				if(action == 'on'){
+					showStatusQ('Cropping current ribbon...')
+					crop()
+				} else {
+					showStatusQ('Uncropping to all data...')
+					showAllData()
+				}
+			})
+	CROP_MODES.push(res)
+	return res
+}
+
+
+// Uncrop to last state and there is no states to uncrop then exit 
+// cropped mode.
+//
+// NOTE: this will exit all crop modes when uncropping the last step.
+function uncropLastState(){
+	// do nothing if we aren't in a crop mode...
+	if(!$('.viewer').hasClass('cropped-mode')){
+		return
+	}
+
+	// exit cropped all modes...
+	if(CROP_STACK.length == 1){
+		$.each(CROP_MODES, function(_, e){ e('off') })
+
+	// ucrop one state...
+	} else {
+		showStatusQ('Uncropping...')
+		uncropData()
+	}
 }
 
 
