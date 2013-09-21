@@ -1647,14 +1647,17 @@ function showAllData(){
 //
 // NOTE: This will add the toggler to CROP_MODES, for use by 
 // 		uncropLastState(...)
+// NOTE: crop modes are exclusive -- it is not possible to enter one crop
+// 		mode from a different crop mode
 function makeCropModeToggler(cls, crop){
 	var res = createCSSClassToggler(
 			'.viewer',
-			cls + ' cropped-mode',
+			//cls + ' cropped-mode',
+			cls,
 			function(action){
 				// prevent mixing marked-only and single-ribbon modes...
 				if(action == 'on' 
-						&& $('.viewer').hasClass('cropped-mode') 
+						&& isViewCropped()
 						&& res('?') != 'on'){
 					return false
 				}
@@ -1679,7 +1682,7 @@ function makeCropModeToggler(cls, crop){
 // NOTE: this will exit all crop modes when uncropping the last step.
 function uncropLastState(){
 	// do nothing if we aren't in a crop mode...
-	if(!$('.viewer').hasClass('cropped-mode')){
+	if(!isViewCropped()){
 		return
 	}
 
