@@ -279,6 +279,22 @@ var KEYBOARD_CONFIG = {
 		'#8': doc('Fit eight images', function(){ fitNImages(8) }),
 		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
 
+		// cropping...
+		F2: {
+				shift: doc('Crop marked only images', 
+					function(){
+						toggleMarkedOnlyView('on')
+						// prevent the default from the main mode from 
+						// getting called...
+						return false
+					}),
+			},
+
+		F3: doc('Crop single ribbon', 
+			function(){
+				event.preventDefault()
+				toggleSingleRibbonMode('on')
+			}),
 	},
 
 
@@ -591,6 +607,13 @@ var KEYBOARD_CONFIG = {
 			},
 
 
+		F2: doc('Toggle mark visibility', 
+				function(){ toggleMarkesView() }),
+		// XXX should we be able to toggle crop modes from single image mode???
+		// 		...if yes, then remove the F2 & F3 definitions form ribbon
+		// 		mode...
+		// 		one way to go is to exit single-image-mode on s-f2 or f3...
+		/*
 		F2: {
 				default: doc('Toggle mark visibility', 
 					function(){ toggleMarkesView() }),
@@ -605,6 +628,7 @@ var KEYBOARD_CONFIG = {
 				event.preventDefault()
 				toggleSingleRibbonMode('on')
 			}),
+		*/
 
 		E: doc('Open image in external software', openImage),
 		// XXX make F4 a default editor and E a default viewer...
