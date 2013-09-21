@@ -367,11 +367,13 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  *
  * NOTE: actions,the last case, are used for alias referencing, they will
  * 		never match a real key, but will get resolved in alias searches.
- * NOTE: to rest what to use as <key-def> use toKeyCode(..) / toKeyName(..).
+ * NOTE: to test what to use as <key-def> use toKeyCode(..) / toKeyName(..).
  * NOTE: all fields are optional.
  * NOTE: if a handler explicitly returns false then that will break the 
  * 		event propagation chain and exit the handler.
  * 		i.e. no other matching handlers will be called.
+ * NOTE: if more than one match is found all matching handlers will be 
+ * 		called in sequence until one returns false explicitly.
  * NOTE: a <css-selector> is used as a predicate to select a section to 
  * 		use. if multiple selectors match something then multiple sections 
  * 		will be resolved in order of occurrence.
