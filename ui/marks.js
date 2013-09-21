@@ -51,9 +51,9 @@ var toggleMarkedOnlyView = createCSSClassToggler(
 		'marked-only-view cropped-mode',
 		function(action){
 			// prevent mixing marked-only and single-ribbon modes...
-			// XXX is there a more generic way to do this???
-			// 		..without including direct mode dependencies?
-			if(action == 'on' && toggleSingleRibbonMode('?') == 'on'){
+			if(action == 'on' 
+					&& $('.viewer').hasClass('cropped-mode') 
+					&& toggleMarkedOnlyView('?') != 'on'){
 				return false
 			}
 		},
