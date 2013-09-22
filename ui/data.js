@@ -1782,9 +1782,97 @@ function sortImages(cmp, reverse){
 function sortImagesByDate(reverse){
 	return sortImages(reverse)
 }
-function sortImagesByName(reverse){
+function sortImagesByFileName(reverse){
 	return sortImages(imageNameCmp, reverse)
 }
+
+
+// Sort images while taking into account name sequence overflows
+//
+// A name sequence overflow is when file name sequence overflows over
+// *9999 and then resets to *0001...
+//
+// For this to be applicable:
+// 	- filenames must comply with /....[0-9]{4}/
+// 	- the total number of files in sequence is < 10K
+// 		XXX a simplification...
+// 			there could be more than 10K images but then we will need to
+// 			either take dates or folder names into account...
+// 	- the lowest filename in set must be near seq 0001
+// 	- the highest filename in set must be near seq 9999
+// 	- there must be a gap somewhere in the set
+// 		this gap size is roughly close to 10K - N where N is the total 
+// 		number of files in set
+// 		XXX a simplification...
+//
+// NOTE: this will cut at the largest gap between sequence numbers.
+//
+// XXX it's also a good idea to write an image serial number sort...
+// XXX is this overcomplicated???
+function sortImagesByNameWithSeqOverflow(reverse, proximity){
+	proximity = proximity == null ? 10 : proximity
+
+	// sort and check names...
+	// NOTE: we do not usually have a filename seq 0000...
+	if(DATA.order.length < 9999){
+		var pattern = /....[0-9]{4}[a-z]?(\....[.])?/
+		var need_to_fix = true
+
+		function cmp(a, b){
+			// check filename compliance...
+			var aa = pattern.test(IMAGES[a].path.split('/').pop())
+			var bb = pattern.test(IMAGES[b].path.split('/').pop())
+			if(need_to_fix && !aa && !bb){
+				need_to_fix = false
+			}
+			return imageNameCmp(a, b)
+		}
+		function getSeq(gid){
+			return parseInt(IMAGES[gid].path.split('/').pop().slice(4))
+		}
+
+	// revert to normal sort my name...
+	} else {
+		return sortImagesByName(reverse)
+	}
+
+	DATA.order.sort(cmp)
+
+	if(need_to_fix 
+			// check if first and last are close to 0001 and 9999 resp.
+			&& getSeq(DATA.order[0]) <= proximity
+			&& getSeq(DATA.order[DATA.order.length-1]) >= 9999-proximity){
+
+		console.log('fixing...')
+
+		// find the largest gap position...
+		var pos = null
+		var gap = 0
+		for(var i=1; i<DATA.order.length; i++){
+			var n_gap = Math.max(getSeq(DATA.order[i])-getSeq(DATA.order[i-1]), gap)
+			if(n_gap != gap){
+				pos = i
+				gap = n_gap
+			}
+		}
+
+		// splice...
+		if(gap > proximity){
+			DATA.order = DATA.order.splice(pos).concat(DATA.order)
+		}
+	}
+
+	if(reverse){
+		DATA.order.reverse()
+	}
+
+	updateRibbonOrder()
+}
+
+
+// Set the default filename sort...
+// XXX is this the correct way to do this???
+var sortImagesByName = sortImagesByNameWithSeqOverflow
 
 
 
