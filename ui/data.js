@@ -1787,7 +1787,7 @@ function sortImagesByFileName(reverse){
 }
 
 
-// Sort images while taking into account name sequence overflows
+// Sort images by name while taking into account sequence overflows
 //
 // A name sequence overflow is when file name sequence overflows over
 // *9999 and then resets to *0001...
@@ -1805,14 +1805,21 @@ function sortImagesByFileName(reverse){
 // 		number of files in set
 // 		XXX a simplification...
 //
+// NOTE: if any of the above conditions is not applicable this will
+// 		essentially revert to sortImagesByFileName(...)
 // NOTE: this will cut at the largest gap between sequence numbers.
 //
 // XXX it's also a good idea to write an image serial number sort...
 // XXX is this overcomplicated???
+//
+// NOTE: I like this piece if code, if it works correctly no one will 
+// 		ever know it's here, if we replace it with the thee line dumb
+// 		sortImagesByFileName(...) then things get "annoying" every 10K 
+// 		images :)
 function sortImagesByNameWithSeqOverflow(reverse, proximity){
 	proximity = proximity == null ? 10 : proximity
 
-	// sort and check names...
+	// prepare to sort and check names...
 	// NOTE: we do not usually have a filename seq 0000...
 	if(DATA.order.length < 9999){
 		var pattern = /....[0-9]{4}[a-z]?(\....[.])?/
@@ -1832,8 +1839,9 @@ function sortImagesByNameWithSeqOverflow(reverse, proximity){
 		}
 
 	// revert to normal sort my name...
+	// XXX this is not needed but will make things faster...
 	} else {
-		return sortImagesByName(reverse)
+		return sortImagesByFileName(reverse)
 	}
 
 	DATA.order.sort(cmp)
@@ -1842,9 +1850,6 @@ function sortImagesByNameWithSeqOverflow(reverse, proximity){
 			// check if first and last are close to 0001 and 9999 resp.
 			&& getSeq(DATA.order[0]) <= proximity
 			&& getSeq(DATA.order[DATA.order.length-1]) >= 9999-proximity){
-
-		console.log('fixing...')
-
 		// find the largest gap position...
 		var pos = null
 		var gap = 0
@@ -1855,13 +1860,11 @@ function sortImagesByNameWithSeqOverflow(reverse, proximity){
 				gap = n_gap
 			}
 		}
-
-		// splice...
+		// split and rearrange the order chunks...
 		if(gap > proximity){
 			DATA.order = DATA.order.splice(pos).concat(DATA.order)
 		}
 	}
-
 	if(reverse){
 		DATA.order.reverse()
 	}
