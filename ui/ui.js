@@ -969,29 +969,29 @@ function loadDirectoryDialog(dfl){
 }
 
 
-function sortImagesDialog(message){
+function sortImagesDialog(){
 
 	updateStatus('Sort...').show()
 
-	//message = message == null ? 'Sort images by: | By default in ascending order.' : message
-	message = message == null ? 'Sort images by:' : message
+	var alg = 'Sort images by (ascending):'
+	var rev = 'Reverse order'
 
 	cfg = {}
-	cfg[message] = [
+	cfg[alg] = [
 		'Date', 
 		'Sequence number', 
 		'Sequence number with overflow', 
 		'File name' 
 	]
-	cfg['Descending'] = false
+	cfg[rev] = false
 
 	formDialog(null, '', 
 			cfg,
 			'OK', 
 			'sortImagesDialog')
 		.done(function(res){
-			var reverse = res['Descending']
-			res = res[message]
+			var reverse = res[rev]
+			res = res[alg]
 
 			if(/Date/i.test(res)){
 				var method = sortImagesByDate
