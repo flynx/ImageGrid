@@ -262,24 +262,23 @@ function cmp(a, b, get){
 // NOTE: this expects gids...
 function imageDateCmp(a, b, get, data){
 	data = data == null ? IMAGES : data
-	if(get == null){
-		return data[b].ctime - data[a].ctime
-	} else {
-		return data[get(b)].ctime - data[get(a)].ctime
+	if(get != null){
+		a = get(a)
+		b = get(b)
 	}
+	return data[b].ctime - data[a].ctime
 }
 
 
 // NOTE: this expects gids...
 function imageNameCmp(a, b, get, data){
 	data = data == null ? IMAGES : data
-	if(get == null){
-		a = data[a].path.split('/').pop()
-		b = data[b].path.split('/').pop()
-	} else {
-		a = data[get(a)].path.split('/').pop()
-		b = data[get(b)].path.split('/').pop()
+	if(get != null){
+		a = get(a)
+		b = get(b)
 	}
+	a = data[a].path.split('/').pop()
+	b = data[b].path.split('/').pop()
 	if(a == b){
 		return 0
 	} else if(a < b){
@@ -290,14 +289,87 @@ function imageNameCmp(a, b, get, data){
 }
 
 
+// Get the first sequence of numbers in the file name...
+function getImageNameSeq(gid, data){
+	data = data == null ? IMAGES : data
+	var n = data[gid].path.split('/').pop()
+	var r = /([0-9]+)/m.exec(n)
+	return r == null ? n : parseInt(r[1])
+}
+
+// Get the first sequence of numbers in the file name but only if it is
+// at the filename start...
+function getImageNameLeadingSeq(gid, data){
+	data = data == null ? IMAGES : data
+	var n = data[gid].path.split('/').pop()
+	var r = /^([0-9]+)/g.exec(n)
+	return r == null ? n : parseInt(r[1])
+}
+
+
+// Compare images by sequence number (in filename) or by filename
+//
+// Examples:
+// 	"1 file name", "012-file", "file 123 name", "DSC_1234"
+//
+// NOTE: if there are more than one sequence numbers in a filename then
+// 		only the first is considered.
+// NOTE: images with sequence number always precede images with plain 
+// 		filenames...
+function imageSeqOrNameCmp(a, b, get, data, get_seq){
+	data = data == null ? IMAGES : data
+	get_seq = get_seq == null ? getImageNameSeq : get_seq
+	if(get != null){
+		a = get(a)
+		b = get(b)
+	}
+
+	var aa = get_seq(a, data)
+	var bb = get_seq(b, data)
+
+	// special case: seq, name
+	if(typeof(aa) == typeof(123) && typeof(bb) == typeof('str')){ return -1 }
+	// special case: name, seq
+	if(typeof(aa) == typeof('str') && typeof(bb) == typeof(123)){ return +1 }
+
+	// get the names if there are no sequence numbers...
+	// NOTE: at this point both a and b are either numbers or NaN's...
+	a = isNaN(aa) ? data[a].path.split('/').pop() : aa
+	b = isNaN(bb) ? data[b].path.split('/').pop() : bb
+
+	// do the actual comparison
+	if(a == b){
+		return 0
+	} else if(a < b){
+		return -1
+	} else {
+		return +1
+	}
+}
+
+// Sort images XP-style
+//
+// This will consider sequence numbers if they are at the start of the 
+// filename.
+// 
+// Examples:
+// 	"1 file name", "012-file"
+//
+// NOTE: images with sequence number always precede images with plain 
+// 		filenames...
+function imageXPStyleFileNameCmp(a, b, get, data){
+	return imageSeqOrNameCmp(a, b, get, data, getImageNameLeadingSeq)
+}
+
+
 // NOTE: this expects gids...
 function imageOrderCmp(a, b, get, data){
 	data = data == null ? DATA : data
-	if(get == null){
-		return data.order.indexOf(a) - data.order.indexOf(b)
-	} else {
-		return data.order.indexOf(get(a)) - data.order.indexOf(get(b))
+	if(get != null){
+		a = get(a)
+		b = get(b)
 	}
+	return data.order.indexOf(a) - data.order.indexOf(b)
 }
 
 
@@ -1785,6 +1857,12 @@ function sortImagesByDate(reverse){
 function sortImagesByFileName(reverse){
 	return sortImages(imageNameCmp, reverse)
 }
+function sortImagesByFileSeqOrName(reverse){
+	return sortImages(imageSeqOrNameCmp, reverse)
+}
+function sortImagesByFileNameXPStyle(reverse){
+	return sortImages(imageXPStyleFileNameCmp, reverse)
+}
 
 
 // Sort images by name while taking into account sequence overflows
@@ -1793,7 +1871,9 @@ function sortImagesByFileName(reverse){
 // *9999 and then resets to *0001...
 //
 // For this to be applicable:
-// 	- filenames must comply with /....[0-9]{4}/
+// 	- ALL filenames must contain a sequence number
+// 		XXX do we need to make this more strict?
+// 			...for example make name.split(<seq>) equal for all files
 // 	- the total number of files in sequence is < 10K
 // 		XXX a simplification...
 // 			there could be more than 10K images but then we will need to
@@ -1805,10 +1885,12 @@ function sortImagesByFileName(reverse){
 // 		number of files in set
 // 		XXX a simplification...
 //
+// NOTE: at this pint the gap size must be above proximity*10
 // NOTE: if any of the above conditions is not applicable this will
-// 		essentially revert to sortImagesByFileName(...)
+// 		essentially revert to sortImagesByFileSeqOrName(...)
 // NOTE: this will cut at the largest gap between sequence numbers.
 //
+// XXX it would be a good idea to account for folder name sequencing...
 // XXX it's also a good idea to write an image serial number sort...
 // XXX is this overcomplicated???
 //
@@ -1816,54 +1898,50 @@ function sortImagesByFileName(reverse){
 // 		ever know it's here, if we replace it with the thee line dumb
 // 		sortImagesByFileName(...) then things get "annoying" every 10K 
 // 		images :)
-function sortImagesByNameWithSeqOverflow(reverse, proximity){
+function sortImagesByFileNameSeqWithOverflow(reverse, proximity){
 	proximity = proximity == null ? 10 : proximity
 
 	// prepare to sort and check names...
 	// NOTE: we do not usually have a filename seq 0000...
 	if(DATA.order.length < 9999){
-		var pattern = /....[0-9]{4}[a-z]?(\....[.])?/
 		var need_to_fix = true
 
 		function cmp(a, b){
 			if(need_to_fix){
-				// check filename compliance...
-				var aa = pattern.test(IMAGES[a].path.split('/').pop())
-				var bb = pattern.test(IMAGES[b].path.split('/').pop())
-				if(!aa && !bb){
+				if(typeof(getImageNameSeq(a)) == typeof('str') 
+						|| typeof(getImageNameSeq(b)) == typeof('str')){
 					need_to_fix = false
 				}
 			}
-			return imageNameCmp(a, b)
-		}
-		function getSeq(gid){
-			return parseInt(IMAGES[gid].path.split('/').pop().slice(4))
+			return imageSeqOrNameCmp(a, b)
 		}
 
 	// revert to normal sort my name...
-	// XXX this is not needed but will make things faster...
 	} else {
+		// XXX make this more cleaver -- split the set into 10K chunks and
+		// 		sort the chunks too...
 		return sortImagesByFileName(reverse)
 	}
 
 	DATA.order.sort(cmp)
 
+	// find and fix the gap...
 	if(need_to_fix 
 			// check if first and last are close to 0001 and 9999 resp.
-			&& getSeq(DATA.order[0]) <= proximity
-			&& getSeq(DATA.order[DATA.order.length-1]) >= 9999-proximity){
+			&& getImageNameSeq(DATA.order[0]) <= proximity
+			&& getImageNameSeq(DATA.order[DATA.order.length-1]) >= 9999-proximity){
 		// find the largest gap position...
 		var pos = null
 		var gap = 0
 		for(var i=1; i<DATA.order.length; i++){
-			var n_gap = Math.max(getSeq(DATA.order[i])-getSeq(DATA.order[i-1]), gap)
+			var n_gap = Math.max(getImageNameSeq(DATA.order[i])-getImageNameSeq(DATA.order[i-1]), gap)
 			if(n_gap != gap){
 				pos = i
 				gap = n_gap
 			}
 		}
 		// split and rearrange the order chunks...
-		if(gap > proximity){
+		if(gap > proximity*10){
 			DATA.order = DATA.order.splice(pos).concat(DATA.order)
 		}
 	}
@@ -1873,11 +1951,6 @@ function sortImagesByNameWithSeqOverflow(reverse, proximity){
 
 	updateRibbonOrder()
 }
-
-
-// Set the default filename sort...
-// XXX is this the correct way to do this???
-var sortImagesByName = sortImagesByNameWithSeqOverflow
 
 
 

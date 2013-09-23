@@ -978,9 +978,16 @@ function sortImagesDialog(message){
 	cfg = {}
 	cfg[message] = [
 		'Date (ascending)', 
-		'Name (ascending)', 
-		'Date (decending)', 
-		'Name (decending)'
+		'Date (descending)', 
+
+		'Sequence number (ascending)', 
+		'Sequence number (descending)',
+
+		'Sequence number with overflow (ascending)', 
+		'Sequence number with overflow (descending)',
+
+		'File name (ascending)', 
+		'File name (descending)'
 	]
 
 	formDialog(null, '', 
@@ -990,10 +997,20 @@ function sortImagesDialog(message){
 		.done(function(res){
 			res = res[message]
 
-			if(/Date/.test(res)){
+			if(/Date/i.test(res)){
 				var method = sortImagesByDate
+
+			} else if(/File name/i.test(res)){
+				var method = sortImagesByFileNameXPStyle
+
+			} else if(/Sequence/i.test(res) && !/with overflow/.test(res)){
+				var method = sortImagesByFileSeqOrName
+
+			} else if(/Sequence/i.test(res) && /with overflow/.test(res)){
+				var method = sortImagesByFileNameSeqWithOverflow
+
 			} else {
-				var method = sortImagesByName
+				var method = sortImagesByFileName
 			}
 			if(/\(ascending\)/.test(res)){
 				var reverse = null

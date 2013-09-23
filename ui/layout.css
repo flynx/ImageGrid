@@ -1173,6 +1173,9 @@ button:hover {
 .overlay-block .dialog table tr td:last-child {
   color: silver;
 }
+.overlay-block .dialog .choice .item {
+  text-align: left;
+}
 /************************************************************ Help ***/
 /* XXX make this more generic, and not just for the keyboard... */
 /* this is for sliding stuff */
