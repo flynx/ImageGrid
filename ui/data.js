@@ -128,7 +128,6 @@ var BASE_URL_LIMIT = 10
 
 var IMAGE_CACHE = []
 
-
 // XXX make these usable for both saving and loading...
 // XXX get these from config...
 var IMAGES_FILE_DEFAULT = 'images.json'
@@ -149,6 +148,11 @@ var UPDATE_SYNC = false
 
 // object to register all the worker queues...
 var WORKERS = {}
+
+// Used in sortImagesByFileNameSeqWithOverflow
+var PROXIMITY = 30
+var CHECK_1ST_PROXIMITY = false
+var OVERFLOW_GAP = PROXIMITY * 5
 
 
 
@@ -1885,7 +1889,11 @@ function sortImagesByFileNameXPStyle(reverse){
 // 		number of files in set
 // 		XXX a simplification...
 //
-// NOTE: at this pint the gap size must be above proximity*10
+// The gap size must be above overflow_gap, and if it is set to false 
+// then no limit is used (default: OVERFLOW_GAP).
+// If check_1st is false then also check the lowest sequence number
+// for proximity to 0001 (default: CHECK_1ST_PROXIMITY).
+//
 // NOTE: if any of the above conditions is not applicable this will
 // 		essentially revert to sortImagesByFileSeqOrName(...)
 // NOTE: this will cut at the largest gap between sequence numbers.
@@ -1898,8 +1906,10 @@ function sortImagesByFileNameXPStyle(reverse){
 // 		ever know it's here, if we replace it with the thee line dumb
 // 		sortImagesByFileName(...) then things get "annoying" every 10K 
 // 		images :)
-function sortImagesByFileNameSeqWithOverflow(reverse, proximity){
-	proximity = proximity == null ? 10 : proximity
+function sortImagesByFileNameSeqWithOverflow(reverse, proximity, overflow_gap, check_1st){
+	proximity = proximity == null ? PROXIMITY : proximity
+	overflow_gap = overflow_gap == null ? OVERFLOW_GAP : overflow_gap
+	check_1st = check_1st == null ? CHECK_1ST_PROXIMITY : check_1st
 
 	// prepare to sort and check names...
 	// NOTE: we do not usually have a filename seq 0000...
@@ -1928,7 +1938,7 @@ function sortImagesByFileNameSeqWithOverflow(reverse, proximity){
 	// find and fix the gap...
 	if(need_to_fix 
 			// check if first and last are close to 0001 and 9999 resp.
-			&& getImageNameSeq(DATA.order[0]) <= proximity
+			&& (!check_1st || getImageNameSeq(DATA.order[0]) <= proximity)
 			&& getImageNameSeq(DATA.order[DATA.order.length-1]) >= 9999-proximity){
 		// find the largest gap position...
 		var pos = null
@@ -1941,7 +1951,7 @@ function sortImagesByFileNameSeqWithOverflow(reverse, proximity){
 			}
 		}
 		// split and rearrange the order chunks...
-		if(gap > proximity*10){
+		if(overflow_gap === false || gap > overflow_gap){
 			DATA.order = DATA.order.splice(pos).concat(DATA.order)
 		}
 	}
