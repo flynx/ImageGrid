@@ -1826,11 +1826,13 @@ function sortImagesByNameWithSeqOverflow(reverse, proximity){
 		var need_to_fix = true
 
 		function cmp(a, b){
-			// check filename compliance...
-			var aa = pattern.test(IMAGES[a].path.split('/').pop())
-			var bb = pattern.test(IMAGES[b].path.split('/').pop())
-			if(need_to_fix && !aa && !bb){
-				need_to_fix = false
+			if(need_to_fix){
+				// check filename compliance...
+				var aa = pattern.test(IMAGES[a].path.split('/').pop())
+				var bb = pattern.test(IMAGES[b].path.split('/').pop())
+				if(!aa && !bb){
+					need_to_fix = false
+				}
 			}
 			return imageNameCmp(a, b)
 		}
