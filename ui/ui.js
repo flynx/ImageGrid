@@ -973,28 +973,24 @@ function sortImagesDialog(message){
 
 	updateStatus('Sort...').show()
 
+	//message = message == null ? 'Sort images by: | By default in ascending order.' : message
 	message = message == null ? 'Sort images by:' : message
 
 	cfg = {}
 	cfg[message] = [
-		'Date (ascending)', 
-		'Date (descending)', 
-
-		'Sequence number (ascending)', 
-		'Sequence number (descending)',
-
-		'Sequence number with overflow (ascending)', 
-		'Sequence number with overflow (descending)',
-
-		'File name (ascending)', 
-		'File name (descending)'
+		'Date', 
+		'Sequence number', 
+		'Sequence number with overflow', 
+		'File name' 
 	]
+	cfg['Descending'] = false
 
 	formDialog(null, '', 
 			cfg,
 			'OK', 
 			'sortImagesDialog')
 		.done(function(res){
+			var reverse = res['Descending']
 			res = res[message]
 
 			if(/Date/i.test(res)){
@@ -1011,11 +1007,6 @@ function sortImagesDialog(message){
 
 			} else {
 				var method = sortImagesByFileName
-			}
-			if(/\(ascending\)/.test(res)){
-				var reverse = null
-			} else {
-				var reverse = true
 			}
 
 			showStatusQ('Sorting by: '+res+'...')
