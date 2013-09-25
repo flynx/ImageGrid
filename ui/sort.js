@@ -12,7 +12,159 @@ var OVERFLOW_GAP = PROXIMITY * 5
 
 
 
-/********************************************************* Sorting ***/
+/**********************************************************************
+* Helpers
+*/
+
+// create a generic distance comparison function
+//
+// NOTE: both distances are measured from a fixed point (start)...
+function makeDistanceCmp(start, get){
+	if(get == null){
+		return function(a, b){
+			return Math.abs(start - a) - Math.abs(start - b)
+		}
+	} else {
+		start = get(start)
+		return function(a, b){
+			return Math.abs(start - get(a)) - Math.abs(start - get(b))
+		}
+	}
+}
+
+
+// Make a cmp function to compare two gids by distance from gid.
+//
+// NOTE: this calculates the distance in a flat sequence...
+function makeGIDDistanceCmp(gid, get, data){
+	return function(a, b){
+		return getGIDDistance(gid, a, get, data) - getGIDDistance(gid, b, get, data)
+	}
+}
+
+
+// 2D distance from a specified gid comparison...
+//
+// XXX make this faster...
+// XXX this is fun, but do we actually need this?
+function makeGIDRibbonDistanceCmp(gid, get, data){
+	data = data == null ? DATA : data
+
+	var _getDistance = makeGIDRibbonDistanceGetter(gid)
+
+	if(get == null){
+		return function(a, b){
+			return _getDistance(a) - _getDistance(b)
+		}
+	} else {
+		return function(a, b){
+			return _getDistance(get(a)) - _getDistance(get(b))
+		}
+	}
+}
+
+
+// NOTE: this expects gids...
+function imageDateCmp(a, b, get, data){
+	data = data == null ? IMAGES : data
+	if(get != null){
+		a = get(a)
+		b = get(b)
+	}
+	return data[b].ctime - data[a].ctime
+}
+
+
+// NOTE: this expects gids...
+function imageNameCmp(a, b, get, data){
+	data = data == null ? IMAGES : data
+	if(get != null){
+		a = get(a)
+		b = get(b)
+	}
+	a = data[a].path.split('/').pop()
+	b = data[b].path.split('/').pop()
+	if(a == b){
+		return 0
+	} else if(a < b){
+		return -1
+	} else {
+		return +1
+	}
+}
+
+
+// Compare images by sequence number (in filename) or by filename
+//
+// Examples:
+// 	"1 file name", "012-file", "file 123 name", "DSC_1234"
+//
+// NOTE: if there are more than one sequence numbers in a filename then
+// 		only the first is considered.
+// NOTE: images with sequence number always precede images with plain 
+// 		filenames...
+function imageSeqOrNameCmp(a, b, get, data, get_seq){
+	data = data == null ? IMAGES : data
+	get_seq = get_seq == null ? getImageNameSeq : get_seq
+	if(get != null){
+		a = get(a)
+		b = get(b)
+	}
+
+	var aa = get_seq(a, data)
+	var bb = get_seq(b, data)
+
+	// special case: seq, name
+	if(typeof(aa) == typeof(123) && typeof(bb) == typeof('str')){ return -1 }
+	// special case: name, seq
+	if(typeof(aa) == typeof('str') && typeof(bb) == typeof(123)){ return +1 }
+
+	// get the names if there are no sequence numbers...
+	// NOTE: at this point both a and b are either numbers or NaN's...
+	a = isNaN(aa) ? data[a].path.split('/').pop() : aa
+	b = isNaN(bb) ? data[b].path.split('/').pop() : bb
+
+	// do the actual comparison
+	if(a == b){
+		return 0
+	} else if(a < b){
+		return -1
+	} else {
+		return +1
+	}
+}
+
+
+// Compate images by name XP-style
+//
+// This will consider sequence numbers if they are at the start of the 
+// filename.
+// 
+// Examples:
+// 	"1 file name", "012-file"
+//
+// NOTE: images with sequence number always precede images with plain 
+// 		filenames...
+function imageXPStyleFileNameCmp(a, b, get, data){
+	return imageSeqOrNameCmp(a, b, get, data, getImageNameLeadingSeq)
+}
+
+
+// Get list of gids sorted by proximity to current gid
+//
+// NOTE: the distance used is the actual 2D distance...
+function getClosestGIDs(gid){
+	gid = gid == null ? getImageGID() : gid
+	//return DATA.order.slice().sort(makeGIDDistanceCmp(gid))
+	return DATA.order.slice().sort(makeGIDRibbonDistanceCmp(gid))
+}
+
+
+
+
+/**********************************************************************
+* Actions
+*/
 
 function reverseImageOrder(){
 	DATA.order.reverse()

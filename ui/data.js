@@ -172,119 +172,6 @@ function concatZip(){
 }
 
 
-function makeDistanceCmp(start, get){
-	if(get == null){
-		return function(a, b){
-			return Math.abs(start - a) - Math.abs(start - b)
-		}
-	} else {
-		start = get(start)
-		return function(a, b){
-			return Math.abs(start - get(a)) - Math.abs(start - get(b))
-		}
-	}
-}
-
-
-// Make a cmp function to compare two gids by distance from gid.
-function makeImageGIDDistanceCmp(gid, get, order){
-	order = order == null ? DATA.order : order
-	return makeDistanceCmp(gid, get == null ? 
-			function(a){
-				return order.indexOf(a) 
-			}
-			: function(a){
-				return order.indexOf(get(a))
-			})
-}
-
-
-// NOTE: essentially this is a 2D distance comparison from gid...
-//
-// XXX make this faster...
-// XXX this is fun, but do we actually need this?
-function makeImageRibbonDistanceCmp(gid, get, data, images){
-	data = data == null ? DATA : data
-	images = images == null ? IMAGES : images
-
-	// make a cmp index...
-	var ribbons = $.map(DATA.ribbons, function(r, i){ 
-		// sort each ribbon by distance from closest gid...
-		//return [r.slice().sort(makeImageGIDDistanceCmp(getGIDBefore(gid, i)))] 
-		return [r.slice().sort(makeImageGIDDistanceCmp(gid))] 
-	})
-	var gids = $.map(ribbons, function(e){ return [e[0]] })
-	var ri = gids.indexOf(gid)
-
-	function _getRibbon(gid){
-		for(var i=0; i < ribbons.length; i++){
-			if(ribbons[i].indexOf(gid) >= 0){
-				return ribbons[i]
-			}
-		}
-	}
-
-	function _getDistance(a){
-		var r = _getRibbon(a)
-		var x = r.indexOf(a)
-		var y = Math.abs(gids.indexOf(r[0]) - ri)
-
-		// NOTE: this is cheating...
-		//return x + y
-		// calculate real distance...
-		return Math.sqrt(x*x + y*y)
-	}
-
-	if(get == null){
-		return function(a, b){
-			return _getDistance(a) - _getDistance(b)
-		}
-	} else {
-		return function(a, b){
-			return _getDistance(get(a)) - _getDistance(get(b))
-		}
-	}
-}
-
-
-function cmp(a, b, get){
-	if(get == null){
-		return a - b
-	}
-	return get(a) - get(b)
-}
-
-
-// NOTE: this expects gids...
-function imageDateCmp(a, b, get, data){
-	data = data == null ? IMAGES : data
-	if(get != null){
-		a = get(a)
-		b = get(b)
-	}
-	return data[b].ctime - data[a].ctime
-}
-
-
-// NOTE: this expects gids...
-function imageNameCmp(a, b, get, data){
-	data = data == null ? IMAGES : data
-	if(get != null){
-		a = get(a)
-		b = get(b)
-	}
-	a = data[a].path.split('/').pop()
-	b = data[b].path.split('/').pop()
-	if(a == b){
-		return 0
-	} else if(a < b){
-		return -1
-	} else {
-		return +1
-	}
-}
-
-
 // Get the first sequence of numbers in the file name...
 function getImageNameSeq(gid, data){
 	data = data == null ? IMAGES : data
@@ -292,6 +179,7 @@ function getImageNameSeq(gid, data){
 	var r = /([0-9]+)/m.exec(n)
 	return r == null ? n : parseInt(r[1])
 }
+
 
 // Get the first sequence of numbers in the file name but only if it is
 // at the filename start...
@@ -303,62 +191,69 @@ function getImageNameLeadingSeq(gid, data){
 }
 
 
-// Compare images by sequence number (in filename) or by filename
-//
-// Examples:
-// 	"1 file name", "012-file", "file 123 name", "DSC_1234"
-//
-// NOTE: if there are more than one sequence numbers in a filename then
-// 		only the first is considered.
-// NOTE: images with sequence number always precede images with plain 
-// 		filenames...
-function imageSeqOrNameCmp(a, b, get, data, get_seq){
-	data = data == null ? IMAGES : data
-	get_seq = get_seq == null ? getImageNameSeq : get_seq
+function getGIDDistance(a, b, get, data){
+	data = data == null ? DATA : data
+	var order = data.order
 	if(get != null){
 		a = get(a)
 		b = get(b)
 	}
+	a = order.indexOf(a)
+	b = order.indexOf(b)
+	return Math.abs(a - b)
+}
 
-	var aa = get_seq(a, data)
-	var bb = get_seq(b, data)
 
-	// special case: seq, name
-	if(typeof(aa) == typeof(123) && typeof(bb) == typeof('str')){ return -1 }
-	// special case: name, seq
-	if(typeof(aa) == typeof('str') && typeof(bb) == typeof(123)){ return +1 }
+// NOTE: this is a constructor to cache the generated index as it is 
+// 		quite slow to construct, but needs to be current...
+function makeGIDRibbonDistanceGetter(gid, data){
+	data = data == null ? DATA : data
 
-	// get the names if there are no sequence numbers...
-	// NOTE: at this point both a and b are either numbers or NaN's...
-	a = isNaN(aa) ? data[a].path.split('/').pop() : aa
-	b = isNaN(bb) ? data[b].path.split('/').pop() : bb
+	// make a cmp index...
+	var ribbons = $.map(DATA.ribbons, function(r, i){ 
+		// sort each ribbon by distance from closest gid...
+		//return [r.slice().sort(makeGIDDistanceCmp(getGIDBefore(gid, i)))] 
+		return [r.slice().sort(makeGIDDistanceCmp(gid))] 
+	})
+	var gids = $.map(ribbons, function(e){ return [e[0]] })
+	var ri = gids.indexOf(gid)
 
-	// do the actual comparison
-	if(a == b){
-		return 0
-	} else if(a < b){
-		return -1
-	} else {
-		return +1
+	// the basic calculator...
+	return function(gid){
+		var r = ribbons[getGIDRibbonIndex(gid, {ribbons: ribbons})]
+		var x = r.indexOf(gid)
+		var y = Math.abs(gids.indexOf(r[0]) - ri)
+
+		// calculate real distance...
+		return Math.sqrt(x*x + y*y)
 	}
 }
 
-// Sort images XP-style
+
+// Get distance between two gids taking into account ribbons...
 //
-// This will consider sequence numbers if they are at the start of the 
-// filename.
-// 
-// Examples:
-// 	"1 file name", "012-file"
+// This is essentially a 2D distance between two gids in data.
 //
-// NOTE: images with sequence number always precede images with plain 
-// 		filenames...
-function imageXPStyleFileNameCmp(a, b, get, data){
-	return imageSeqOrNameCmp(a, b, get, data, getImageNameLeadingSeq)
+// NOTE: to get lots of distances from a specific image use 
+// 		makeGIDDistanceCmp(...) for faster results...
+function getGIDRibbonDistance(a, b, data){
+	return makeDistanceFromGIDGetter(a, data)(b)
+} 
+
+
+
+function cmp(a, b, get){
+	if(get == null){
+		return a - b
+	}
+	return get(a) - get(b)
 }
 
 
+// Generic ordering via DATA.order
+//
 // NOTE: this expects gids...
+// NOTE: this is not in sort.js because it is a generic base sort method
 function imageOrderCmp(a, b, get, data){
 	data = data == null ? DATA : data
 	if(get != null){
@@ -482,127 +377,21 @@ Array.prototype.binSearch = function(target, cmp, get){
 }
 
 
-// Orientation translation...
-function orientationExif2ImageGrid(orientation){
-	return {
-		orientation: {
-			0: 0,
-			1: 0,
-			2: 0,
-			3: 180,
-			4: 0,
-			5: 90,
-			6: 90,
-			7: 90, 
-			8: 270,
-		}[orientation],
-		flipped: {
-			0: null,
-			1: null,
-			2: ['horizontal'],
-			3: null,
-			4: ['vertical'],
-			5: ['vertical'],
-			6: null,
-			7: ['horizontal'],
-			8: null,
-		}[orientation]
-	}
-}
-
-
-// Base URL interface...
-//
-// NOTE: changing a base URL will trigger a baseURLChanged event...
-function setBaseURL(url){
-	var old_url = BASE_URL
-	url = url.replace(/\/*$/, '/')
-	BASE_URL = url
-	$('.viewer').trigger('baseURLChanged', [old_url, url])
-	return url
-}
-function getBaseURL(){
-	return BASE_URL
-}
-
-
-// Normalize the path...
-//
-// This will:
-// 	- convert windows absolute paths 'X:\...' -> 'file:///X:/...'
-// 	- if mode is 'absolute':
-// 		- return absolute paths as-is
-// 		- base relative paths on base/BASE_URL, returning an absolute 
-// 			path
-// 	- if mode is relative:
-// 		- if absolute path is based on base/BASE_URL make a relative 
-// 			to base path out of it buy cutting the base out.
-// 		- return absolute paths as-is
-// 		- return relative paths as-is
-//
-// NOTE: mode can be either 'absolute' (default) or 'relative'...
-function normalizePath(url, base, mode){
-	base = base == null ? getBaseURL() : base
-	//mode = /^\./.test(base) && mode == null ? 'relative' : null
-	mode = mode == null ? 'absolute' : mode
-
-	res = ''
-
-	// windows path...
-	//	- replace all '\\' with '/'...
-	url = url.replace(/\\/g, '/')
-	//	- replace 'X:/...' with 'file:///X:/...' 
-	if(/^[A-Z]:\//.test(url)){
-		url = 'file:///' + url
-	}
-
-	// we got absolute path...
-	if(/^(file|http|https):\/\/.*$/.test(url)){
-		// check if we start with base, and remove it if so...
-		if(mode == 'relative' && url.substring(0, base.length) == base){
-			url = url.substring(base.length - 1)
-			res = url[0] == '/' ? url.substring(1) : url
-
-		// if it's a different path, return as-is
-		} else if(mode == 'absolute'){
-			res = url
-		}
-
-	// make an absolute path...
-	} else if(mode == 'absolute') {
-		// if base ends and url starts with '.' avoid making it a '..'
-		if(base[base.length-1] == '.' && url[0] == '.'){
-			res = base + url.substring(1)
-		// avoid creating '//'...
-		} else if(base[base.length-1] != '/' && url[0] != '/'){
-			res = base + '/' + url
-		} else {
-			res = base + url
-		}
-	}
-
-	// get the actual path...
-	res = res.replace('${CACHE_DIR}', CACHE_DIR)
-
-	// XXX legacy support...
-	res = res.replace('.ImageGridCache', CACHE_DIR)
-
-	return res
-}
-
-
 // like getRibbonIndex but get the index only via DATA...
-function getDataRibbonIndex(gid, data){
+function getGIDRibbonIndex(gid, data){
 	gid = gid == null ? getImageGID() : gid
 	data = data == null ? DATA : data
 
-	for(var i=0; i < data.ribbons.length; i++){
-		if(data.ribbons[i].indexOf(gid) >= 0){
+	var ribbons = data.ribbons
+
+	for(var i=0; i < ribbons.length; i++){
+		if(ribbons[i].indexOf(gid) >= 0){
 			return i
 		}
 	}
 	return -1
 }
+
 
 // Same as getImageBefore(...), but uses gids and searches in DATA...
 //
@@ -612,7 +401,7 @@ function getGIDBefore(gid, ribbon, search, data){
 	data = data == null ? DATA : data
 	// XXX get a ribbon without getting into DOM...
 	// 		...dependency leek...
-	ribbon = ribbon == null ? getDataRibbonIndex(gid, data) : ribbon
+	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
 	search = search == null ? binSearch : search
 	//search = search == null ? match2(linSearch, binSearch) : search
 	ribbon = data.ribbons[ribbon]
@@ -698,6 +487,86 @@ function getImageGIDs(from, count, ribbon, inclusive){
 }
 
 
+// Base URL interface...
+//
+// NOTE: changing a base URL will trigger a baseURLChanged event...
+function getBaseURL(){
+	return BASE_URL
+}
+function setBaseURL(url){
+	var old_url = BASE_URL
+	url = url.replace(/\/*$/, '/')
+	BASE_URL = url
+	$('.viewer').trigger('baseURLChanged', [old_url, url])
+	return url
+}
+
+
+// Normalize the path...
+//
+// This will:
+// 	- convert windows absolute paths 'X:\...' -> 'file:///X:/...'
+// 	- if mode is 'absolute':
+// 		- return absolute paths as-is
+// 		- base relative paths on base/BASE_URL, returning an absolute 
+// 			path
+// 	- if mode is relative:
+// 		- if absolute path is based on base/BASE_URL make a relative 
+// 			to base path out of it buy cutting the base out.
+// 		- return absolute paths as-is
+// 		- return relative paths as-is
+//
+// NOTE: mode can be either 'absolute' (default) or 'relative'...
+function normalizePath(url, base, mode){
+	base = base == null ? getBaseURL() : base
+	//mode = /^\./.test(base) && mode == null ? 'relative' : null
+	mode = mode == null ? 'absolute' : mode
+
+	res = ''
+
+	// windows path...
+	//	- replace all '\\' with '/'...
+	url = url.replace(/\\/g, '/')
+	//	- replace 'X:/...' with 'file:///X:/...' 
+	if(/^[A-Z]:\//.test(url)){
+		url = 'file:///' + url
+	}
+
+	// we got absolute path...
+	if(/^(file|http|https):\/\/.*$/.test(url)){
+		// check if we start with base, and remove it if so...
+		if(mode == 'relative' && url.substring(0, base.length) == base){
+			url = url.substring(base.length - 1)
+			res = url[0] == '/' ? url.substring(1) : url
+
+		// if it's a different path, return as-is
+		} else if(mode == 'absolute'){
+			res = url
+		}
+
+	// make an absolute path...
+	} else if(mode == 'absolute') {
+		// if base ends and url starts with '.' avoid making it a '..'
+		if(base[base.length-1] == '.' && url[0] == '.'){
+			res = base + url.substring(1)
+		// avoid creating '//'...
+		} else if(base[base.length-1] != '/' && url[0] != '/'){
+			res = base + '/' + url
+		} else {
+			res = base + url
+		}
+	}
+
+	// get the actual path...
+	res = res.replace('${CACHE_DIR}', CACHE_DIR)
+
+	// XXX legacy support...
+	res = res.replace('.ImageGridCache', CACHE_DIR)
+
+	return res
+}
+
+
 // Select best preview by size...
 //
 // NOTE: this will use the original if everything else is smaller...
@@ -725,27 +594,32 @@ function getBestPreview(gid, size){
 }
 
 
-// Resort the ribbons by DATA.order and re-render...
-//
-// NOTE: due to how the format is structured, to sort the images one 
-// 		only needs to sort DATA.order and call this.
-function updateRibbonOrder(no_reload_viewer){
-	for(var i=0; i < DATA.ribbons.length; i++){
-		DATA.ribbons[i].sort(imageOrderCmp)
+// Orientation translation...
+function orientationExif2ImageGrid(orientation){
+	return {
+		orientation: {
+			0: 0,
+			1: 0,
+			2: 0,
+			3: 180,
+			4: 0,
+			5: 90,
+			6: 90,
+			7: 90, 
+			8: 270,
+		}[orientation],
+		flipped: {
+			0: null,
+			1: null,
+			2: ['horizontal'],
+			3: null,
+			4: ['vertical'],
+			5: ['vertical'],
+			6: null,
+			7: ['horizontal'],
+			8: null,
+		}[orientation]
 	}
-	if(!no_reload_viewer){
-		reloadViewer()
-	}
-}
-
-
-// get list of gids sorted by proximity to current gid
-//
-// NOTE: the distance used is the actual 2D distance...
-function getClosestGIDs(gid){
-	gid = gid == null ? getImageGID() : gid
-	//return DATA.order.slice().sort(makeImageGIDDistanceCmp(gid))
-	return DATA.order.slice().sort(makeImageRibbonDistanceCmp(gid))
 }
 
 
@@ -1276,9 +1150,9 @@ function updateImages(size, cmp){
 		// sorted run...
 		if(UPDATE_SORT_ENABLED && cmp != false){
 			cmp = cmp == null ? 
-					makeImageGIDDistanceCmp(getImageGID(), getImageGID) 
+					makeGIDDistanceCmp(getImageGID(), getImageGID) 
 					// XXX this is more correct but is slow...
-					//makeImageRibbonDistanceCmp(getImageGID(), getImageGID) 
+					//makeGIDRibbonDistanceCmp(getImageGID(), getImageGID) 
 				: cmp
 			deferred.resolve($('.image')
 				// sort images by distance from current, so as to update what 
@@ -1587,6 +1461,21 @@ function getPrevLocation(){
 /**********************************************************************
 * Actions...
 */
+
+// Sort the ribbons by DATA.order and re-render...
+//
+// NOTE: due to how the format is structured, to sort the images one 
+// 		only needs to sort DATA.order and call this.
+function updateRibbonOrder(no_reload_viewer){
+	for(var i=0; i < DATA.ribbons.length; i++){
+		DATA.ribbons[i].sort(imageOrderCmp)
+	}
+	if(!no_reload_viewer){
+		reloadViewer()
+	}
+}
+
+
 
 /******************************************************* Extension ***/
 
