@@ -115,7 +115,6 @@ function flashIndicator(direction){
 }
 
 
-// XXX need to get the real base ribbon....
 function showRibbonIndicator(){
 	var cls = '.ribbon-indicator'
 	var indicator = $(cls)
@@ -129,12 +128,12 @@ function showRibbonIndicator(){
 	var r = getRibbonIndex()
 
 	// get the base ribbon...
-	// XXX add a real base ribbon index...
-	var base = 0
+	var base = getBaseRibbonIndex()
 
 	var r =  r == base ? r+'*' : r
 	return indicator.text(r)
 }
+
 
 function flashRibbonIndicator(){
 	var indicator = showRibbonIndicator()
@@ -889,7 +888,7 @@ function exportPreviewsDialog(state, dfl){
 			'%g - short gid\n'+
 			'%I - global order\n'+
 			'%i - current selection order'] = '%f'
-	cfg['Fav directory name'] = 'fav'
+	cfg['Level directory name'] = 'fav'
 	cfg['Size | '+
 			'The selected size is aproximate, the actual\n'+
 			'preview will be copied from cache.\n\n'+

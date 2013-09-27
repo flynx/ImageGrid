@@ -204,8 +204,18 @@ function getGIDDistance(a, b, get, data){
 }
 
 
-// NOTE: this is a constructor to cache the generated index as it is 
-// 		quite slow to construct, but needs to be current...
+// Construct 2D distance from gid getter
+//
+// The distance dimensions are:
+// 	- ribbons
+// 	- gids within a ribbon
+//
+// This is a constructor to cache the generated index as it is quite 
+// slow to construct, but needs to be current...
+//
+// NOTE: this is very similar in effect to getGIDDistance(...) but will
+// 		also account for ribbons...
+// NOTE: see getGIDRibbonDistance(...) for usage example...
 function makeGIDRibbonDistanceGetter(gid, data){
 	data = data == null ? DATA : data
 
@@ -250,8 +260,10 @@ function cmp(a, b, get){
 }
 
 
-// Generic ordering via DATA.order
+// Generic image ordering comparison via DATA.order
 //
+// NOTE: see updateRibbonORder(...) for a general view on image sorting
+// 		and re-sorting mechanics.
 // NOTE: this expects gids...
 // NOTE: this is not in sort.js because it is a generic base sort method
 function imageOrderCmp(a, b, get, data){
@@ -374,6 +386,57 @@ function binSearch(target, lst, check, return_position, get){
 }
 Array.prototype.binSearch = function(target, cmp, get){
 	return binSearch(target, this, cmp, true, get)
+}
+
+
+// Base ribbon index interface...
+//
+// XXX we need a persistent way to store this index
+//
+// 		- DATA.base_ribbon 
+// 			- need to be kept in sync all the time (for shift)
+// 			+ simple and obvious for a data format
+//
+// 		- DATA.ribbons[n].base = true
+// 			+ persistent and no sync required
+// 			- not storable directly via JSON.stringify(...)
+//
+// 		- do not persistently store the base ribbon unless explicitly 
+// 		  required, and set it to 0 on each load/reload
+// 		  	~ will need to decide what to do on each save/exit:
+// 		  		- align ribbons to top (base = 0)
+// 		  		- save "in-progress" state as-is (base > 0)
+// 		  		- reset base (base = 0)
+// 		  this is a good idea if we have fine grained auto-save and 
+// 		  a Ctrl-S triggers a major save, possibly requiring a user 
+// 		  comment (a-la VCS)
+//
+// 		- treat ribbons in the same way as images, with a GID...
+// 			- format change (v3.0)
+// 			~ rewrite everything that accesses DATA.ribbons
+// 			  this is not that critical as the changes are simple in 
+// 			  most cases...
+// 			+ ribbons are a first class object and can be treated as 
+// 			  such...
+// 			  	- more natural ribbon operations: grouping, combining, ...
+// 			  	- ribbon tagging
+// 			  	- a ribbon can be treated as an entity, thus simplifying
+// 			  	  work on collections...
+// 			- added complexity
+//
+// XXX this is a stub...
+function getBaseRibbonIndex(){
+
+	// XXX
+
+	return 0
+}
+function setBaseRibbonIndex(n){
+	n = n == null ? 0 : n
+
+	// XXX
+
+	return n
 }
 
 
@@ -625,7 +688,7 @@ function orientationExif2ImageGrid(orientation){
 
 
 /**********************************************************************
-* Constructors
+* Constructors and general data manipulation
 */
 
 // Construct an IMAGES object from list of urls.
@@ -912,10 +975,9 @@ function splitData(data, gid1){
 // XXX figure out a way to accomplish one of (in order of preference):
 // 		- auto-call this and make it expected and transparent to the user
 // 		- manually called in *obvious* situations...
-//
-// XXX BUG: if ribbon is 0 this will duplicate the first image in first 
-//		ribbon...
 function alignDataToRibbon(base_ribbon, data, start, end){
+	// XXX get base ribbon...
+	base_ribbon = base_ribbon == null ? getBaseRibbonIndex() : base_ribbon
 	data = data == null ? DATA : data
 
 	// get the first and last elements of the ribbon-set above the base 
@@ -1464,8 +1526,17 @@ function getPrevLocation(){
 
 // Sort the ribbons by DATA.order and re-render...
 //
+// This is the main way to sort images:
+// 	- sort DATA.order
+// 	- call updateRibbonOrder() that will:
+// 		- sort all the ribbons in DATA
+// 		- trigger reloadViewer() to render the new state
+//
+// No direct sorting is required.
+//
 // NOTE: due to how the format is structured, to sort the images one 
 // 		only needs to sort DATA.order and call this.
+// NOTE: if no_reload_viewer is true, then no re-rendering is triggered.
 function updateRibbonOrder(no_reload_viewer){
 	for(var i=0; i < DATA.ribbons.length; i++){
 		DATA.ribbons[i].sort(imageOrderCmp)
