@@ -128,9 +128,10 @@ win32-dist: win32 $(DIST_DIR)
 	zip -r $(WIN_DIST_ZIP) $(WIN_BUILD_DIR)
 
 
-osx: $(APP_ZIP) $(MAC_BUILD_DIR)
+osx: $(APP_ZIP) $(MAC_BUILD_DIR) Info.plist
 	unzip -u $(wildcard targets/node-webkit/node-webkit-*-osx-ia32.zip) -d $(MAC_BUILD_DIR)
 	cp $(APP_ZIP) $(MAC_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
+	cp Info.plist $(MAC_BUILD_DIR)/node-webkit.app/Contents/
 	mv $(MAC_BUILD_DIR)/node-webkit.app $(MAC_BUILD_DIR)/$(APP_NAME).app
 
 
