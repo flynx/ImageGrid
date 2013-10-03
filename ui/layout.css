@@ -531,7 +531,9 @@ button:hover {
 	bottom: @ribbon-mark-offset;
 	right: @ribbon-mark-offset;
 }
-*/
+/
+
+
 /* XXX should we use opacity??? */
 .marked-only-view.viewer:not(.marks-visible) .image:not(.marked) {
   opacity: 0.3;
