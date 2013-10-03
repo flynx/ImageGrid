@@ -102,7 +102,7 @@ node-deps:
 
 dev: $(CSS_FILES)
 	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
-	rm -f nwsnapshot.exe
+	rm -f nwsnapshot.exe credits.html
 	chmod +x *.{exe,dll}
 
 #dev-targets:
@@ -128,11 +128,16 @@ win32-dist: win32 $(DIST_DIR)
 	zip -r $(WIN_DIST_ZIP) $(WIN_BUILD_DIR)
 
 
+# XXX BUG: rebuilding without cleaning will mess up folders...
 osx: $(APP_ZIP) $(MAC_BUILD_DIR) Info.plist
 	unzip -u $(wildcard targets/node-webkit/node-webkit-*-osx-ia32.zip) -d $(MAC_BUILD_DIR)
 	cp $(APP_ZIP) $(MAC_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
-	cp Info.plist $(MAC_BUILD_DIR)/node-webkit.app/Contents/
-	mv $(MAC_BUILD_DIR)/node-webkit.app $(MAC_BUILD_DIR)/$(APP_NAME).app
+	# XXX there is something wrong with the updated Info.plist, need to investigate...
+	##cp Info.plist $(MAC_BUILD_DIR)/node-webkit.app/Contents/
+	##mv $(MAC_BUILD_DIR)/node-webkit.app $(MAC_BUILD_DIR)/$(APP_NAME).app
+	# XXX TODO: add real credits...
+	rm -f $(MAC_BUILD_DIR)/nwsnapshot \
+		$(MAC_BUILD_DIR)/credits.html
 
 
 osx-dist: osx $(DIST_DIR)
