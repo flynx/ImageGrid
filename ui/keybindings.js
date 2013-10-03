@@ -40,6 +40,21 @@ function directionImage(reverse){
 /*********************************************************************/
 
 var KEYBOARD_CONFIG = {
+	// Global bindings...
+	'*': {
+		title: 'Global bindings',
+
+		F4: {
+			alt: doc('Close viewer', 
+				function(){ 
+					closeWindow() 
+					return false
+				}),
+		},
+		F5: doc('Reload viewer', function(){ reload() }),
+		F12: doc('Show devTools', function(){ showDevTools() }),
+	},
+
 	// info overlay...
 	//
 	// NOTE: this is here to prevent selecting images while trying to 
@@ -68,6 +83,7 @@ var KEYBOARD_CONFIG = {
 				})
 		}
 	},
+
 
 	// dialogs...
 	//
@@ -107,7 +123,6 @@ var KEYBOARD_CONFIG = {
 				return false
 			}),
 	},
-
 
 
 	// help mode...
@@ -301,8 +316,8 @@ var KEYBOARD_CONFIG = {
 	// general setup...
 	//
 	'.viewer:not(.overlay)': {
-		title: 'Global',
-		doc: 'These key bindings work in most other modes.'+
+		title: 'Viewer',
+		doc: 'These key bindings work in most other viewer modes.'+
 
 			'<p>NOTE: shifting all marked images from different ribbons will '+
 			'perform the operations on ALL marked images but relative '+
@@ -632,11 +647,7 @@ var KEYBOARD_CONFIG = {
 
 		E: doc('Open image in external software', openImage),
 		// XXX make F4 a default editor and E a default viewer...
-		F4: {
-				default: 'E',
-				alt: doc('Close viewer', function(){ closeWindow() }),
-			},
-
+		F4: 'E',
 
 		// info...
 		I: {
@@ -681,8 +692,8 @@ var KEYBOARD_CONFIG = {
 
 		// XXX DEBUG MODE...
 		// 		...remove these in production...
-		F12: doc('Show devTools', function(){ showDevTools() }),
-		F5: doc('Reload app', function(){ reload() }),
+		//F12: doc('Show devTools', function(){ showDevTools() }),
+		//F5: doc('Reload app', function(){ reload() }),
 
 		/* testing the shift-key feature...
 		'~': {
