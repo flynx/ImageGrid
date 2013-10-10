@@ -166,9 +166,12 @@ linux-x64: $(APP_ZIP) $(LINUX_X64_BUILD_DIR)
 	cat $(APP_ZIP) >> $(LINUX_X64_BUILD_DIR)/nw
 	mv $(LINUX_X64_BUILD_DIR)/nw $(LINUX_X64_BUILD_DIR)/$(APP_NAME)
 	chmod +x $(LINUX_X64_BUILD_DIR)/*
+	rm -f $(LINUX_X64_BUILD_DIR)/nwsnapshot \
+		$(LINUX_X64_BUILD_DIR)/credits.html
 
-# XXX
 linux-x64-dist: linux-x64 $(DIST_DIR)
+	# XXX use tar -czf ...
+	zip -r $(LINUX_X64_BUILD_DIR) $(LINUX_X64_BUILD_DIR)
 
 
 
