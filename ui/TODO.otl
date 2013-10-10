@@ -93,8 +93,34 @@ Roadmap
 	
 
 
-[_] 29% Gen 3 current todo
-	[_] 58% High priority
+[_] 27% Gen 3 current todo
+	[_] 55% High priority
+		[_] 0% add data updating to buildcache
+			[_] --no-update
+			| update by default
+			[_] --base-ribbon=N
+			| default N=0
+			[_] --reset-gids
+			| replace gids in data.json and images.json
+		[_] 0% plugins:
+			[_] 0% directory selector
+				[_] path(s) to use as source
+				| to list sub-dirs under...
+				| e.g. /mnt/l/mnt/* (photo)/*/media/img/my/*
+				|
+				| editable in plugin config
+				[_] .ImageGrid.metadata
+				| store/get:
+				| 	- sup-path to index
+				| 	- title
+				| 	- directory taggs and meta info
+				| 	- ...
+		[_] might be good to split some current functionality into plugins
+		| this mostly concerns non-core and not portable stuff like:
+		| 	- loadDirectoryDialog(...)
+		| 	- vips index generator
+		| 	- metadata readers (exiv2, exiftool, vips)
+		| 	- viewer/editor runner
 		[_] 33% mormalize ribbons -- top-align sorted chunks
 			[X] basic mechanics
 			| splitData(...)
