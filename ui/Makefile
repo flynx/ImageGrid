@@ -93,7 +93,8 @@ $(DIST_DIR):
 
 
 $(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) node-deps
-	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) $(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(NODE_DIR)
+	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) \
+		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(NODE_DIR)
 
 zip: $(APP_ZIP)
 
@@ -122,7 +123,8 @@ dev: $(CSS_FILES)
 
 # node-webkit win32
 win32: $(APP_ZIP) $(WIN_BUILD_DIR)
-	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d $(WIN_BUILD_DIR)
+	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) \
+		-d $(WIN_BUILD_DIR)
 	cat $(APP_ZIP) >> $(WIN_BUILD_DIR)/nw.exe
 	mv $(WIN_BUILD_DIR)/nw.exe $(WIN_BUILD_DIR)/$(APP_NAME).exe
 	chmod +x $(WIN_BUILD_DIR)/*.{exe,dll}
@@ -138,7 +140,8 @@ win32-dist: win32 $(DIST_DIR)
 # node-webkit mac
 # XXX BUG: rebuilding without cleaning will mess up folders...
 osx: $(APP_ZIP) $(MAC_BUILD_DIR) Info.plist
-	unzip -u $(wildcard targets/node-webkit/node-webkit-*-osx-ia32.zip) -d $(MAC_BUILD_DIR)
+	unzip -u $(wildcard targets/node-webkit/node-webkit-*-osx-ia32.zip) \
+		-d $(MAC_BUILD_DIR)
 	cp $(APP_ZIP) $(MAC_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
 	# XXX not sure if this is needed...
 	chmod +x $(MAC_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
@@ -157,10 +160,16 @@ osx-dist: osx $(DIST_DIR)
 
 # node-webkit linux x64
 linux-x64: $(APP_ZIP) $(LINUX_X64_BUILD_DIR)
-	tar --strip-components 1 -xzf $(wildcard targets/node-webkit/node-webkit-*-linux-x64.tar.gz) -C $(LINUX_X64_BUILD_DIR)
+	tar --strip-components 1 \
+		-xzf $(wildcard targets/node-webkit/node-webkit-*-linux-x64.tar.gz) \
+		-C $(LINUX_X64_BUILD_DIR)
 	cat $(APP_ZIP) >> $(LINUX_X64_BUILD_DIR)/nw
 	mv $(LINUX_X64_BUILD_DIR)/nw $(LINUX_X64_BUILD_DIR)/$(APP_NAME)
 	chmod +x $(LINUX_X64_BUILD_DIR)/*
+
+# XXX
+linux-x64-dist: linux-x64 $(DIST_DIR)
+
 
 
 # XXX android...
