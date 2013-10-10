@@ -102,6 +102,8 @@ Roadmap
 			| default N=0
 			[_] --reset-gids
 			| replace gids in data.json and images.json
+		[_] add data updating to viewer...
+		| make this separate from ribbonsFromFavDirs(...)
 		[_] 0% plugins:
 			[_] 0% directory selector
 				[_] path(s) to use as source
