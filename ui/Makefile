@@ -42,6 +42,8 @@ NODE_DIR=node_modules
 BUILD_DIR=build
 WIN_BUILD_DIR=build/Win32
 MAC_BUILD_DIR=build/MacOSX
+LINUX_IA32_BUILD_DIR=build/Linux-ia32
+LINUX_X64_BUILD_DIR=build/Linux-x64
 ANDROID_BUILD_DIR=build/Android
 IOS_BUILD_DIR=build/iOS
 
@@ -77,6 +79,10 @@ $(WIN_BUILD_DIR):
 	mkdir -p $(WIN_BUILD_DIR)
 $(MAC_BUILD_DIR):
 	mkdir -p $(MAC_BUILD_DIR)
+$(LINUX_IA32_BUILD_DIR):
+	mkdir -p $(LINUX_IA32_BUILD_DIR)
+$(LINUX_X64_BUILD_DIR):
+	mkdir -p $(LINUX_X64_BUILD_DIR)
 $(ANDROID_BUILD_DIR):
 	mkdir -p $(ANDROID_BUILD_DIR)
 $(IOS_BUILD_DIR):
@@ -128,10 +134,14 @@ win32-dist: win32 $(DIST_DIR)
 	zip -r $(WIN_DIST_ZIP) $(WIN_BUILD_DIR)
 
 
+
+# node-webkit mac
 # XXX BUG: rebuilding without cleaning will mess up folders...
 osx: $(APP_ZIP) $(MAC_BUILD_DIR) Info.plist
 	unzip -u $(wildcard targets/node-webkit/node-webkit-*-osx-ia32.zip) -d $(MAC_BUILD_DIR)
 	cp $(APP_ZIP) $(MAC_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
+	# XXX not sure if this is needed...
+	chmod +x $(MAC_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
 	# XXX there is something wrong with the updated Info.plist, need to investigate...
 	##cp Info.plist $(MAC_BUILD_DIR)/node-webkit.app/Contents/
 	##mv $(MAC_BUILD_DIR)/node-webkit.app $(MAC_BUILD_DIR)/$(APP_NAME).app
@@ -142,6 +152,15 @@ osx: $(APP_ZIP) $(MAC_BUILD_DIR) Info.plist
 
 osx-dist: osx $(DIST_DIR)
 	zip -r $(MAC_DIST_ZIP) $(MAC_BUILD_DIR)
+
+
+
+# node-webkit linux x64
+linux-x64: $(APP_ZIP) $(LINUX_X64_BUILD_DIR)
+	tar --strip-components 1 -xzf $(wildcard targets/node-webkit/node-webkit-*-linux-x64.tar.gz) -C $(LINUX_X64_BUILD_DIR)
+	cat $(APP_ZIP) >> $(LINUX_X64_BUILD_DIR)/nw
+	mv $(LINUX_X64_BUILD_DIR)/nw $(LINUX_X64_BUILD_DIR)/$(APP_NAME)
+	chmod +x $(LINUX_X64_BUILD_DIR)/*
 
 
 # XXX android...
