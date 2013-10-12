@@ -1,5 +1,14 @@
 Roadmap
-	[_] 58% Pre-Alpha - limited preview
+	[_] 59% Pre-Alpha - limited preview
+		[_] 50% Supported formats
+			[X] jpeg
+			[_] RAW
+		[_] 33% Usecases
+			[_] view unprepared dir (read-only / tmp-cache / mem-cache)
+			| XXX initially lags for hi-res images...
+			[_] view unprepared dir (cache in background)
+			| XXX initially lags for hi-res images...
+			[X] view prepared dir
 		[_] 50% UI
 			[_] 0% Tablet-specific
 				[_] screen buttons
@@ -24,7 +33,7 @@ Roadmap
 			[X] screen next/prev
 			[_] marks next/prev (???)
 		[X] slideshow
-		[_] 54% editing
+		[_] 55% editing
 			[_] 66% ribbon
 				[X] merge up/down
 				| via. marking... 
@@ -32,16 +41,16 @@ Roadmap
 				| still thinking if this is the right way...
 				[_] flatten
 				[X] sort
-			[_] 75% image
+			[_] 81% image
 				[X] shift up/down
 				[X] shift left/right
 				[X] mark/unmark (selection)
 				[X] rotate left/right
 				[X] flip H/V
 				[_] crop
-				[_] 0% metadata
+				[_] 50% metadata
 					[_] tag
-					[_] note
+					[X] note
 				[X] open with external software
 			[_] 42% marked (selected) set
 				[X] crop (marked only mode)
@@ -70,6 +79,9 @@ Roadmap
 				| at this time images are added to the tree but not removed...
 			[_] 25% xmp files
 				[X] generate
+				| xmpgen + fav tree
+				|
+				| XXX make this native
 				[_] load
 				[_] save
 				[_] update
@@ -77,15 +89,17 @@ Roadmap
 				[X] load
 				[X] save
 				[_] update
-		[_] 14% build targets
+		[_] 50% build targets
 			[X] 100% Windows
 				[X] CEF (Python/...)
 				[X] node-webkit
-			[_] MacOS X (node-webkit)
+			[X] MacOS X (node-webkit)
+			| needs more work...
 			[_] Android (PhoneGap)
 			[_] iOS (PhoneGap)
 			[_] Windows 8 (Native?)
-			[_] Linux (node-webkit)
+			[X] Linux ia32 (node-webkit)
+			[X] Linux x64 (node-webkit)
 			[_] Windows Phone 8 (PhoneGap/Native)
 	[_] 0% Alpha - limited preview
 	[_] 0% Beta - public?
@@ -105,6 +119,12 @@ Roadmap
 		[_] add data updating to viewer...
 		| make this separate from ribbonsFromFavDirs(...)
 		[_] 0% plugins:
+			[_] might be good to split some current functionality into plugins
+			| this mostly concerns non-core and not portable stuff like:
+			| 	- loadDirectoryDialog(...)
+			| 	- vips index generator
+			| 	- metadata readers (exiv2, exiftool, vips)
+			| 	- viewer/editor runner
 			[_] 0% directory selector
 				[_] path(s) to use as source
 				| to list sub-dirs under...
@@ -117,12 +137,6 @@ Roadmap
 				| 	- title
 				| 	- directory taggs and meta info
 				| 	- ...
-		[_] might be good to split some current functionality into plugins
-		| this mostly concerns non-core and not portable stuff like:
-		| 	- loadDirectoryDialog(...)
-		| 	- vips index generator
-		| 	- metadata readers (exiv2, exiftool, vips)
-		| 	- viewer/editor runner
 		[_] 33% mormalize ribbons -- top-align sorted chunks
 			[X] basic mechanics
 			| splitData(...)
@@ -134,7 +148,7 @@ Roadmap
 			|
 			| NOTE: might need a good preview to make this understandable...
 			[_] auto-invoke mechanics
-		[_] BUG: when loading and a dir does not exist, opening a dir raises an error
+		[_] BUG: when loading and a non-existing dir, opening a new dir raises an error
 		| i.e. the open dialog does not close, while the images are loaded...
 		[_] update data set...
 		| - add new images to the set
@@ -583,7 +597,7 @@ Roadmap
 		
 
 
-[_] 60% Gen 3 UI implementation
+[_] 61% Gen 3 UI implementation
 	[X] 100% Infinite ribbon (lib)
 		[X] cyclic ribbon
 		[X] image block generation
@@ -616,7 +630,7 @@ Roadmap
 			[_] show crop as red rectangle
 			[_] show only cropped area
 			[_] show crop as black veil
-		[_] add note to image
+		[X] add note to image
 		| a-la flickr notes...
 		[_] edit IPCT
 		[_] add/edit tags (set of images)
