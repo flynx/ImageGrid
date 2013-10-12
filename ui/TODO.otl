@@ -109,16 +109,31 @@ Roadmap
 
 
 [_] 27% Gen 3 current todo
-	[_] 55% High priority
+	[_] 54% High priority
+		[_] would be good to unify buildcache and viewer to use the save code...
+		| rewrite buildcache in js?
 		[_] 0% add data updating to buildcache
 			[_] --no-update
-			| update by default
+			| force create new data-set, backup old data 
+			| default: update
+			|
+			| find and add new images to images.json and data.json
+			| should be added as updates, i.e. 201310101445-data.json
+			| and 201310101445-images-diff.json
+			|
+			| add new images to base ribbon
+			|
+			| NOTE: fav dirs are ignored by buildcache
 			[_] --base-ribbon=N
-			| default N=0
+			| default N=0 i.e. top ribbon
 			[_] --reset-gids
 			| replace gids in data.json and images.json
 		[_] add data updating to viewer...
 		| make this separate from ribbonsFromFavDirs(...)
+		|
+		| might be good to make this semi-manual:
+		| 	- notify user of "directory updated, load new data?"
+		| 	- ctrl-r reload and load new data
 		[_] 0% plugins:
 			[_] might be good to split some current functionality into plugins
 			| this mostly concerns non-core and not portable stuff like:
