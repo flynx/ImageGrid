@@ -120,6 +120,7 @@ dev: $(CSS_FILES)
 
 #**********************************************************************
 # build targets...
+# XXX most of the code here is duplicated, find a way to reuse sections...
 
 # node-webkit win32
 win32: $(APP_ZIP) $(WIN_BUILD_DIR)
@@ -158,7 +159,24 @@ osx-dist: osx $(DIST_DIR)
 
 
 
-# node-webkit linux x64
+# node-webkit linux-ia32
+linux-ia32: $(APP_ZIP) $(LINUX_IA32_BUILD_DIR)
+	tar --strip-components 1 \
+		-xzf $(wildcard targets/node-webkit/node-webkit-*-linux-ia32.tar.gz) \
+		-C $(LINUX_IA32_BUILD_DIR)
+	cat $(APP_ZIP) >> $(LINUX_IA32_BUILD_DIR)/nw
+	mv $(LINUX_IA32_BUILD_DIR)/nw $(LINUX_IA32_BUILD_DIR)/$(APP_NAME)
+	chmod +x $(LINUX_IA32_BUILD_DIR)/*
+	rm -f $(LINUX_IA32_BUILD_DIR)/nwsnapshot \
+		$(LINUX_IA32_BUILD_DIR)/credits.html
+
+linux-ia32-dist: linux-ia32 $(DIST_DIR)
+	# XXX use tar -czf ...
+	zip -r $(LINUX_IA32_BUILD_DIR) $(LINUX_IA32_BUILD_DIR)
+
+
+
+# node-webkit linux-x64
 linux-x64: $(APP_ZIP) $(LINUX_X64_BUILD_DIR)
 	tar --strip-components 1 \
 		-xzf $(wildcard targets/node-webkit/node-webkit-*-linux-x64.tar.gz) \
