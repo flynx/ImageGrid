@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131014182003'''
+__sub_version__ = '''20131014184410'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -176,7 +176,7 @@ def report_progress(img, status):
 	# created some previews...
 	else:
 		print 'p',
-	return img
+	return img, status
 
 
 #-----------------------------------------make_inline_report_progress---
@@ -211,7 +211,7 @@ def make_inline_report_progress(state=None):
 
 		print 'Previews created: %s partial: %s skipped: %s...\r' % (created, partial, skipped),
 
-		return img
+		return img, status
 	return _inline_report_progress
 
 
@@ -591,7 +591,7 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 	##!!! get all updated images...
 	data, images, marked = build_data(
 			(report_progress(
-					*build_previews(img, path, config, dry_run=dry_run, verbosity=verbosity))
+					*build_previews(img, path, config, dry_run=dry_run, verbosity=verbosity))[0]
 				for img in build_images(path, config, gid_generator, verbosity=verbosity)),
 			path, config)
 
@@ -606,7 +606,7 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 	# if there is no difference in images then no data updates need to
 	# be done...
 	if len(new_images) > 0:
-		# add only new images...
+		# add new images...
 		new_images = dict( (k, images[k]) for k in new_images)
 		##!!! add updated images...
 		for k in updated_images:
