@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131014163613'''
+__sub_version__ = '''20131014181354'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -217,7 +217,7 @@ def make_inline_report_progress(state=None):
 
 #----------------------------------------------------------mergediffs---
 ##!!! this is generic, move to pli?
-def mergediffs(path, base, isdiff, merge, dfl, cmp=None):
+def mergediffs(path, base, isdiff, merge, dfl, cmp=None, verbosity=0):
 	'''
 	load the base file and merge in all the diff files in order.
 	'''
@@ -249,7 +249,7 @@ def mergediffs(path, base, isdiff, merge, dfl, cmp=None):
 
 #----------------------------------------------------------loadlatest---
 ##!!! this is generic, move to pli?
-def loadlatest(path, isversion, isbase, load, dfl, cmp=None):
+def loadlatest(path, isversion, isbase, load, dfl, cmp=None, verbosity=0):
 	'''
 	load latest version of the file.
 
@@ -288,40 +288,43 @@ def loadlatest(path, isversion, isbase, load, dfl, cmp=None):
 #-----------------------------------------------------------------------
 # API...
 #-----------------------------------------------------------getimages---
-def getimages(config=CONFIG):
+def getimages(path, config=CONFIG, verbosity=0):
 	'''
 	'''
 	return mergediffs(
-			config['cache-dir'], 
+			pathjoin(path, config['cache-dir']), 
 			config['images'], 
 			# XXX avoid hardcoded sufexes...
 			lambda n: n.endswith('-images-diff.json'), 
-			lambda data, path: (data.update(json.load(open(path))), data)[-1]
-			{})
+			lambda data, path: (data.update(json.load(open(path))), data)[-1],
+			{},
+			verbosity=verbosity)
 
 
 #-------------------------------------------------------------getdata---
-def getdata(config=CONFIG):
+def getdata(path, config=CONFIG, verbosity=0):
 	'''
 	'''
 	return loadlatest(
-			config['cache-dir'],
+			pathjoin(path, config['cache-dir']), 
 			lambda n: n.endswith(config['data']),
 			lambda n: n == config['data'],
 			lambda path: json.load(open(path)),
-			{})
+			{},
+			verbosity=verbosity)
 
 
 #-----------------------------------------------------------getmarked---
-def getmarked(config=CONFIG):
+def getmarked(path, config=CONFIG, verbosity=0):
 	'''
 	'''
 	return loadlatest(
-			config['cache-dir'],
+			pathjoin(path, config['cache-dir']), 
 			lambda n: n.endswith(config['marked']),
 			lambda n: n == config['marked'],
 			lambda path: json.load(open(path)),
-			[])
+			[],
+			verbosity=verbosity)
 
 
 #----------------------------------------------------build_cache_dirs---
@@ -510,7 +513,8 @@ def build_previews(image, path=None, config=CONFIG, dry_run=True, verbosity=0):
 				# 		several resizes...
 				img = Image.open(p, 'r')
 			else:
-				preview.close()
+				del preview
+##				preview.close()
 
 			##!!! metadata???
 
@@ -535,7 +539,7 @@ def build_data(images, path, config=CONFIG):
 	'''
 	'''
 	images_index = {}
-	marked = []
+	marked = None
 	data = DATA.copy()
 	ribbon = []
 
@@ -564,7 +568,6 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 	'''
 	cache_dir = config['cache-dir']
 	absolute_path = config['absolute-path']
-	overwrite = config['overwrite']
 	base_ribbon = config['base-ribbon']
 
 	build_cache_dirs(path, config, dry_run, verbosity)
@@ -578,40 +581,53 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 
 	# load the json files if they exist....
 	files = {
-		images_file: getimages(config), 
-		data_file: getdata(config), 
-		marked_file: getmarked(config),
+		images_file: getimages(path, config, verbosity=verbosity), 
+		data_file: getdata(path, config, verbosity=verbosity), 
+		marked_file: getmarked(path, config, verbosity=verbosity),
 	}
-	images = {} if files[images_file] == None else files[images_file]
+	_images = {} if files[images_file] == None else files[images_file]
 
 	# build the data...
+	##!!! get all updated images...
 	data, images, marked = build_data(
 			(report_progress(
 					*build_previews(img, path, config, dry_run=dry_run, verbosity=verbosity))
 				for img in build_images(path, config, gid_generator, verbosity=verbosity)),
-					if overwrite or img['id'] not in images), 
 			path, config)
 
+	##!!! do we still need this???
 	data['image_file'] = getpath(path, images_file, absolute_path)
 
-	# update filenames if we are updating...
-	d = time.strftime('%Y%m%d%H%M')
-	if files[images_file] != {}:
-		images_file = config['images-diff'] % {'date': d}
-	if files[data_file] != {}:
-		data_file = config['data-diff'] % {'date': d}
-		# build full image index...
-		_images_index = files[images_file]
-		_images_index.update(images)
-		# update ribbons...
-		new, data = data.ribbons[0], files[data_file]
-		data.ribbons[base_ribbon] += new
-		data.ribbons[base_ribbon].sort(
-				lambda a, b: 
-					cmp(_images_index[b]['ctime'], _images_index[a]['ctime']))
+	# get the new images...
+	new_images = set(images).difference(_images)
+
+	##!!! list all updated images...
+
+	# if there is no difference in images then no data updates need to
+	# be done...
+	if len(new_images) > 0:
+		# add only new images...
+		images = dict( (k, images[k]) for k in new_images )
+		# update filenames if we are updating...
+		d = time.strftime('%Y%m%d%H%M')
+		if files[images_file] != {}:
+			images_file = pathjoin(cache_dir, config['images-diff'] % {'date': d})
+		if files[data_file] != {}:
+			# build full image index...
+			_images.update(images)
+			# update ribbons...
+			new, data = data['ribbons'][0], files[data_file]
+			data['ribbons'][base_ribbon] += new
+			data['ribbons'][base_ribbon].sort(
+					lambda a, b: 
+						cmp(_images[b]['ctime'], _images[a]['ctime']))
+			data_file = pathjoin(cache_dir, config['data-diff'] % {'date': d})
+	else:
+		images = None
+
 	# update marks only if the new marks are not empty...
-	if files[marked_file] != [] and marked != []:
-		marked_file = config['marked-diff'] % {'date': d}
+	if files[marked_file] != [] and marked != None:
+		marked_file = pathjoin(cache_dir, config['marked-diff'] % {'date': d})
 
 	if verbosity >= 1:
 		print
@@ -628,6 +644,9 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 		}
 	# write files...
 	for n, d in files.items():
+		# skip stuff...
+		if d == None:
+			continue
 		n = os.path.join(path, n)
 		if verbosity >= 1:
 			print 'Writing: %s' % n
@@ -683,10 +702,6 @@ def handle_commandline():
 
 
 	output_configuration = OptionGroup(parser, 'Output configuration')
-	output_configuration.add_option('--overwrite', 
-						action='store_true',
-						default=False,
-						help='If set overwrite existing data.') 
 	output_configuration.add_option('--images-only', 
 						action='store_true',
 						default=False,
@@ -765,6 +780,7 @@ def handle_commandline():
 			'gid-source': options.gid_source,
 			'absolute-path': options.path_mode == 'absolute',
 			'ignore-orientation': options.ignore_orientation,
+			'base-ribbon': options.base_ribbon,
 			})
 	# a value from 0 through 2...
 	verbosity = options.verbosity

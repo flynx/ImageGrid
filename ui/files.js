@@ -89,13 +89,16 @@ function bubbleProgress(prefix, from, to, only_progress){
 // if diff_pattern is given, then merge all matching files in order 
 // (first to last) with the loaded "main" file
 //
+// if default_data is then not finding a file will not fail, instead the
+// default_data will be the resolved data.
+//
 // NOTE: this expects a file to be JSON.
 // NOTE: if diffs are available this expects the file to contain an object,
 // 		and will extend that object.
 // NOTE: if neither of dfl, pattern or diff_pattern are given, then this
 // 		is essentially the same as $.getJSON(...)
 // NOTE: this needs listDir(...) to search for latest versions of files.
-function loadLatestFile(path, dfl, pattern, diff_pattern){
+function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 	var pparts = path.split(/[\/\\]/)
 	dfl = dfl == null ? pparts.pop() : dfl
 	//path = path == dfl ? '.' : path
@@ -169,7 +172,11 @@ function loadLatestFile(path, dfl, pattern, diff_pattern){
 		.fail(function(){
 			res.notify('Loading', file, 'Error')
 
-			return res.reject(file)
+			if(default_data != null){
+				return res.resolve(default_data)
+			} else {
+				return res.reject(file)
+			}
 		})
 
 	return res
@@ -311,6 +318,8 @@ function saveFileImages(name){
 
 
 // Load image marks form file
+//
+// NOTE: if no marks are found then set them to []
 function loadFileMarks(path){
 	var res = $.Deferred()
 	// default locations...
@@ -318,7 +327,9 @@ function loadFileMarks(path){
 		var base = normalizePath(CACHE_DIR_VAR)
 		var loader = loadLatestFile(base, 
 				MARKED_FILE_DEFAULT, 
-				MARKED_FILE_PATTERN)
+				MARKED_FILE_PATTERN,
+				null,
+				[])
 	
 	// explicit path...
 	// XXX need to account for paths without a CACHE_DIR
@@ -331,13 +342,15 @@ function loadFileMarks(path){
 		// XXX is this correct???
 		var loader = loadLatestFile(base, 
 				path.split(base)[0], 
-				RegExp(path.split(base)[0]))
+				RegExp(path.split(base)[0]),
+				null,
+				[])
 	}
 
 	bubbleProgress('Marks', loader, res)
 
-	res.done(function(images){
-		MARKED = images
+	res.done(function(images){ 
+		MARKED = images 
 	})
 
 	return res

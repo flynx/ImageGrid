@@ -176,10 +176,12 @@ $(function(){
 			showStatus('Loading settings...')
 			DATA_ATTR + '_SETTINGS' in localStorage && loadLocalStorageSettings()
 
+			/* XXX do we need this???
 			// XXX this will reload everything...
 			MARKED.length == 0 
 				&& DATA_ATTR + '_MARKED' in localStorage 
 				&& loadLocalStorageMarks()
+			*/
 
 			updateImages()
 
