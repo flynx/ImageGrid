@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20130903200809'''
+__sub_version__ = '''20131014163613'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -38,6 +38,8 @@ CONFIG = {
 	# 	- metadata
 	'gid-source': 'original',
 
+	'base-ribbon': 0,
+
 	'cache-image-name': '%(guid)s - %(name)s',
 
 	# the rest of the paths will be relative to this...
@@ -46,6 +48,10 @@ CONFIG = {
 	'images': 'images.json',
 	'data': 'data.json',
 	'marked': 'marked.json',
+
+	'images-diff': '%(date)s-images-diff.json',
+	'data-diff': '%(date)s-data.json',
+	'marked-diff': '%(date)s-marked.json',
 
 	'config': 'ImageGrid.cfg',
 	'error': 'error.log',
@@ -209,9 +215,115 @@ def make_inline_report_progress(state=None):
 	return _inline_report_progress
 
 
+#----------------------------------------------------------mergediffs---
+##!!! this is generic, move to pli?
+def mergediffs(path, base, isdiff, merge, dfl, cmp=None):
+	'''
+	load the base file and merge in all the diff files in order.
+	'''
+	res = dfl
+	# if no cache dir...
+	if not os.path.exists(path):
+		return res
+	# base images file...
+	target = pathjoin(path, base)
+	if os.path.exists(target):
+		if verbosity >= 1:
+			print 'Loading: %s' % target
+		merge(res, target)
+	# apply diff files...
+	files = os.listdir(path)
+	if cmp == None:
+		files.sort()
+	else:
+		files.sort(cmp)
+	for n in files:
+		if isdiff(n):
+			target = pathjoin(path, n)
+			# XXX is this the correct way???
+			if verbosity >= 1:
+				print 'Loading: %s' % target
+			merge(res, target)
+	return res
+
+
+#----------------------------------------------------------loadlatest---
+##!!! this is generic, move to pli?
+def loadlatest(path, isversion, isbase, load, dfl, cmp=None):
+	'''
+	load latest version of the file.
+
+	NOTE: the base file will always be loaded last, if it exists and no
+		other versions are found.
+	'''
+	data = dfl
+	base = None
+	# if no cache dir...
+	if not os.path.exists(path):
+		return data
+	files = os.listdir(path)
+	if cmp == None:
+		files.sort()
+		files.reverse()
+	else:
+		files.sort(cmp)
+	for n in files:
+		if isbase(n):
+			base = pathjoin(path, n)
+			continue
+		if isversion(n):
+			target = pathjoin(path, n)
+			# XXX is this the correct way???
+			if verbosity >= 1:
+				print 'Loading: %s' % target
+			return load(target)
+	if base != None:
+		# XXX is this the correct way???
+		if verbosity >= 1:
+			print 'Loading: %s' % base
+		return load(base)
+	return data
+
 
 #-----------------------------------------------------------------------
 # API...
+#-----------------------------------------------------------getimages---
+def getimages(config=CONFIG):
+	'''
+	'''
+	return mergediffs(
+			config['cache-dir'], 
+			config['images'], 
+			# XXX avoid hardcoded sufexes...
+			lambda n: n.endswith('-images-diff.json'), 
+			lambda data, path: (data.update(json.load(open(path))), data)[-1]
+			{})
+
+
+#-------------------------------------------------------------getdata---
+def getdata(config=CONFIG):
+	'''
+	'''
+	return loadlatest(
+			config['cache-dir'],
+			lambda n: n.endswith(config['data']),
+			lambda n: n == config['data'],
+			lambda path: json.load(open(path)),
+			{})
+
+
+#-----------------------------------------------------------getmarked---
+def getmarked(config=CONFIG):
+	'''
+	'''
+	return loadlatest(
+			config['cache-dir'],
+			lambda n: n.endswith(config['marked']),
+			lambda n: n == config['marked'],
+			lambda path: json.load(open(path)),
+			[])
+
+
 #----------------------------------------------------build_cache_dirs---
 def build_cache_dirs(path, config=CONFIG, dry_run=False, verbosity=0):
 	'''
@@ -446,30 +558,60 @@ def build_data(images, path, config=CONFIG):
 #-----------------------------------------------------------------------
 # High-level API...
 #---------------------------------------------------------build_cache---
-##!!! DO NOT OVERWRITE EXISTING DATA...
 def build_cache(path, config=CONFIG, gid_generator=hash_gid, 
 		report_progress=report_progress, dry_run=False, images_only=False, verbosity=0):
 	'''
 	'''
 	cache_dir = config['cache-dir']
 	absolute_path = config['absolute-path']
+	overwrite = config['overwrite']
+	base_ribbon = config['base-ribbon']
 
 	build_cache_dirs(path, config, dry_run, verbosity)
 
 	if report_progress == None:
 		report_progress = lambda a, b: a
 
-	data, images, marked = build_data(
-			(report_progress(
-					*build_previews(img, path, config, dry_run=dry_run, verbosity=verbosity))
-				for img in build_images(path, config, gid_generator, verbosity=verbosity)), 
-			path, config)
-
 	images_file = pathjoin(cache_dir, config['images'])
 	data_file = pathjoin(cache_dir, config['data'])
 	marked_file = pathjoin(cache_dir, config['marked'])
 
+	# load the json files if they exist....
+	files = {
+		images_file: getimages(config), 
+		data_file: getdata(config), 
+		marked_file: getmarked(config),
+	}
+	images = {} if files[images_file] == None else files[images_file]
+
+	# build the data...
+	data, images, marked = build_data(
+			(report_progress(
+					*build_previews(img, path, config, dry_run=dry_run, verbosity=verbosity))
+				for img in build_images(path, config, gid_generator, verbosity=verbosity)),
+					if overwrite or img['id'] not in images), 
+			path, config)
+
 	data['image_file'] = getpath(path, images_file, absolute_path)
+
+	# update filenames if we are updating...
+	d = time.strftime('%Y%m%d%H%M')
+	if files[images_file] != {}:
+		images_file = config['images-diff'] % {'date': d}
+	if files[data_file] != {}:
+		data_file = config['data-diff'] % {'date': d}
+		# build full image index...
+		_images_index = files[images_file]
+		_images_index.update(images)
+		# update ribbons...
+		new, data = data.ribbons[0], files[data_file]
+		data.ribbons[base_ribbon] += new
+		data.ribbons[base_ribbon].sort(
+				lambda a, b: 
+					cmp(_images_index[b]['ctime'], _images_index[a]['ctime']))
+	# update marks only if the new marks are not empty...
+	if files[marked_file] != [] and marked != []:
+		marked_file = config['marked-diff'] % {'date': d}
 
 	if verbosity >= 1:
 		print
@@ -484,6 +626,7 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 			data_file: data, 
 			marked_file: marked,
 		}
+	# write files...
 	for n, d in files.items():
 		n = os.path.join(path, n)
 		if verbosity >= 1:
@@ -540,6 +683,10 @@ def handle_commandline():
 
 
 	output_configuration = OptionGroup(parser, 'Output configuration')
+	output_configuration.add_option('--overwrite', 
+						action='store_true',
+						default=False,
+						help='If set overwrite existing data.') 
 	output_configuration.add_option('--images-only', 
 						action='store_true',
 						default=False,
@@ -555,6 +702,9 @@ def handle_commandline():
 	output_configuration.add_option('--gid-source',
 						default=CONFIG['gid-source'],
 						help='Source used for GID generation (default: "%default").')
+	output_configuration.add_option('--base-ribbon',
+						default=CONFIG['base-ribbon'],
+						help='Base ribbon number (default: "%default").')
 	parser.add_option_group(output_configuration)
 
 
