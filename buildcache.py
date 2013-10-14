@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131014184410'''
+__sub_version__ = '''20131015025118'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -553,7 +553,7 @@ def build_data(images, path, config=CONFIG):
 
 	data['ribbons'] = [ribbon]
 	data['order'] = ribbon[:]
-	data['current'] = ribbon[0]
+	data['current'] = ribbon[0] if len(ribbon) > 0 else None
 
 	return data, images_index, marked
 
@@ -565,6 +565,8 @@ def build_data(images, path, config=CONFIG):
 def build_cache(path, config=CONFIG, gid_generator=hash_gid, 
 		report_progress=report_progress, dry_run=False, images_only=False, verbosity=0):
 	'''
+
+	NOTE: when updating existing cache, this will re-sort the images.
 	'''
 	cache_dir = config['cache-dir']
 	absolute_path = config['absolute-path']
@@ -573,7 +575,7 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 	build_cache_dirs(path, config, dry_run, verbosity)
 
 	if report_progress == None:
-		report_progress = lambda a, b: a
+		report_progress = lambda a, b: a, b
 
 	images_file = pathjoin(cache_dir, config['images'])
 	data_file = pathjoin(cache_dir, config['data'])
@@ -588,11 +590,16 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 	_images = {} if files[images_file] == None else files[images_file]
 
 	# build the data...
-	##!!! get all updated images...
 	data, images, marked = build_data(
-			(report_progress(
-					*build_previews(img, path, config, dry_run=dry_run, verbosity=verbosity))[0]
-				for img in build_images(path, config, gid_generator, verbosity=verbosity)),
+			(i for i, status in (report_progress(
+						*build_previews(img, path, config, dry_run=dry_run, verbosity=verbosity))
+					for img in build_images(path, config, gid_generator, verbosity=verbosity))
+				# get the image if at least one preview got updated,
+				# the image did not exist in index before or its
+				# previews changed... 
+				if True in status 
+						or i['id'] not in _images 
+						or i['preview'] != _images[i['id']]['preview']),
 			path, config)
 
 	##!!! do we still need this???
@@ -600,18 +607,16 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 
 	# get the new images...
 	new_images = set(images).difference(_images)
-	##!!!
-	updated_images = []
+	updated_images = set(images).difference(new_images)
 
 	# if there is no difference in images then no data updates need to
 	# be done...
 	if len(new_images) > 0:
 		# add new images...
 		new_images = dict( (k, images[k]) for k in new_images)
-		##!!! add updated images...
 		for k in updated_images:
 			img = new_images[k] = _images[k]
-			img['previews'].update(images[k]['previews'])
+			img['preview'].update(images[k]['preview'])
 		images = new_images
 
 		# update filenames if we are updating...
@@ -627,9 +632,15 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 			data['ribbons'][base_ribbon].sort(
 					lambda a, b: 
 						cmp(_images[b]['ctime'], _images[a]['ctime']))
+			# update and resort order...
+			data['order'] = _images.keys()
+			data['order'].sort(
+					lambda a, b: 
+						cmp(_images[b]['ctime'], _images[a]['ctime']))
 			data_file = pathjoin(cache_dir, config['data-diff'] % {'date': d})
 	else:
 		images = None
+		data = None
 
 	# update marks only if the new marks are not empty...
 	if files[marked_file] != [] and marked != None:
