@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131014181354'''
+__sub_version__ = '''20131014182003'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -600,14 +600,20 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 
 	# get the new images...
 	new_images = set(images).difference(_images)
-
-	##!!! list all updated images...
+	##!!!
+	updated_images = []
 
 	# if there is no difference in images then no data updates need to
 	# be done...
 	if len(new_images) > 0:
 		# add only new images...
-		images = dict( (k, images[k]) for k in new_images )
+		new_images = dict( (k, images[k]) for k in new_images)
+		##!!! add updated images...
+		for k in updated_images:
+			img = new_images[k] = _images[k]
+			img['previews'].update(images[k]['previews'])
+		images = new_images
+
 		# update filenames if we are updating...
 		d = time.strftime('%Y%m%d%H%M')
 		if files[images_file] != {}:
