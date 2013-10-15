@@ -260,6 +260,7 @@ button:hover {
   margin-bottom: 0px;
 }
 /*********************************************************** Image ***/
+.marker,
 .image {
   position: relative;
   display: inline-block;
@@ -284,6 +285,40 @@ button:hover {
   /* XXX remove this... */
 
   border: solid red 5px;
+}
+.marker {
+  width: 50px;
+  border: none;
+  background: no-repeat 50% transparent;
+  background-color: transparent;
+  color: white;
+}
+.marker:after {
+  display: block;
+  position: absolute;
+  content: "marker";
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  overflow: visible;
+  width: 200px;
+  height: 32px;
+  top: 50%;
+  margin-top: -16px;
+  left: 50%;
+  margin-left: -100px;
+  -webkit-transform-origin: center center;
+  -ms-transform-origin: center center;
+  transform-origin: center center;
+  -webkit-transform: rotate(270deg) scaleY(1) scaleX(1);
+  -moz-transform: rotate(270deg) scaleY(1) scaleX(1);
+  -o-transform: rotate(270deg) scaleY(1) scaleX(1);
+  -ms-transform: rotate(270deg) scaleY(1) scaleX(1);
+  transform: rotate(270deg) scaleY(1) scaleX(1);
+  opacity: 0.5;
+}
+.single-image-mode.viewer .marker {
+  display: none;
 }
 /* single image mode transitions */
 /* XXX still buggy and not too needed...
@@ -429,17 +464,26 @@ button:hover {
 }
 */
 /* separator test */
-.image.red + .image:not(.red):before {
-  display: inline-block;
-  position: relative;
-  content: "";
-  top: 0px;
-  left: -50px;
-  width: 100px;
-  height: 100%;
-  background-color: yellow;
+/*
+.image.red+.image:not(.red):before {
+	display: inline-block;
+	position: relative;
+	content: "";
+	top:0px;
+	left: -50px;
+	width: 100px;
+	height: 100%;
+
+	background-color: yellow;
 }
+*/
 /***************************************************** Image marks ***/
+/*
+.marks-visible.single-image-mode.viewer .marker {
+	display: inline-block;
+	opacity: 0.5;
+}
+*/
 .marks-visible.viewer .marked.image:after {
   display: block;
   position: absolute;

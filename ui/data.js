@@ -1548,6 +1548,23 @@ function updateRibbonOrder(no_reload_viewer){
 
 
 
+// Action wrapper of alignDataToRibbon(...)
+//
+// Align ribbons to the current ribbon.
+//
+// XXX need to change the default to base ribbon for production...
+function alignRibbons(ribbon){
+	console.warn('alignRibbons(): not yet ready for production use!')
+	// XXX remove this line for production....
+	ribbon = ribbon == null ? getRibbonIndex() : ribbon
+
+	DATA = alignDataToRibbon(ribbon)
+
+	reloadViewer()
+}
+
+
+
 /******************************************************* Extension ***/
 
 // Open image in an external editor/viewer
@@ -1566,6 +1583,22 @@ function openImage(){
 // XXX
 function openImageWith(prog){
 	// XXX
+}
+
+
+
+/**********************************************************************
+* Experimental 
+*/
+
+// The idea here is to add markers as first-class image-like elements...
+//
+// 	+ can be ordered
+// 	- re-sorting via metadata will mess things up
+//
+// XXX this is not persistent...
+function appendMarker(){
+	return $('<div class="marker"/>').insertAfter(getImage())
 }
 
 

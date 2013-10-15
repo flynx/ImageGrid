@@ -365,6 +365,7 @@ button:hover {
 
 
 /*********************************************************** Image ***/
+.marker,
 .image {
 	position: relative;
 	display: inline-block;
@@ -391,6 +392,38 @@ button:hover {
 
 	/* XXX remove this... */
 	border: solid red 5px;
+}
+
+.marker {
+	width: 50px;
+	border: none;
+	background: no-repeat 50% transparent;
+	background-color: transparent;
+	color: white;
+}
+.marker:after {
+	display: block;
+	position: absolute;
+	content: "marker";
+	font-size: 32px;
+	font-weight: bold;
+	text-align: center;
+	overflow: visible;
+
+	width: 200px;
+	height: 32px;
+	top: 50%;
+	margin-top: -16px;
+	left: 50%;
+	margin-left: -100px;
+
+	.origin(center, center);
+	.rotate(270deg);
+
+	opacity: 0.5;
+}
+.single-image-mode.viewer .marker {
+	display: none;
 }
 
 
@@ -489,6 +522,7 @@ button:hover {
 
 
 /* separator test */
+/*
 .image.red+.image:not(.red):before {
 	display: inline-block;
 	position: relative;
@@ -500,10 +534,18 @@ button:hover {
 
 	background-color: yellow;
 }
+*/
 
 
 
 /***************************************************** Image marks ***/
+
+/*
+.marks-visible.single-image-mode.viewer .marker {
+	display: inline-block;
+	opacity: 0.5;
+}
+*/
 
 .marks-visible.viewer .marked.image:after {
 	display: block;
@@ -564,6 +606,7 @@ button:hover {
 .marks-visible.single-image-mode.viewer .marked.image:after {
 	display: none;
 }
+
 
 /* corner mark... (a-la bookmarks in PortableMag) 
  * XXX account for flipping... */
