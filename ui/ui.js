@@ -325,7 +325,6 @@ function getStatus(){
 }
 
 
-// XXX move to ui.js?
 function makeIndicator(text){
 	return $('<span class="indicator expanding-text">'+
 				'<span class="hidden">'+ text +'</span>'+

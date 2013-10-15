@@ -59,7 +59,7 @@ function updateGlobalImageInfo(image){
 			// path...
 			'<span class="expanding-text path">'+
 				'<span class="shown">'+
-					data.path.split('/').pop() +
+					unescape(data.path.split('/').pop()) +
 				'</span>'+
 				'<span class="hidden" '+
 						'style="position:absolute;'+

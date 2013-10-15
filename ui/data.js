@@ -580,10 +580,12 @@ function setBaseURL(url){
 // 		- return relative paths as-is
 //
 // NOTE: mode can be either 'absolute' (default) or 'relative'...
-function normalizePath(url, base, mode){
+function normalizePath(url, base, mode, do_unescape){
 	base = base == null ? getBaseURL() : base
 	//mode = /^\./.test(base) && mode == null ? 'relative' : null
 	mode = mode == null ? 'absolute' : mode
+	// XXX is this the correct default?
+	do_unescape = do_unescape == null ? true : do_unescape
 
 	res = ''
 
@@ -626,7 +628,11 @@ function normalizePath(url, base, mode){
 	// XXX legacy support...
 	res = res.replace('.ImageGridCache', CACHE_DIR)
 
-	return res
+	if(do_unescape){
+		return unescape(res)
+	} else {
+		return res
+	}
 }
 
 
@@ -1545,7 +1551,6 @@ function updateRibbonOrder(no_reload_viewer){
 		reloadViewer()
 	}
 }
-
 
 
 // Action wrapper of alignDataToRibbon(...)
