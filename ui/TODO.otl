@@ -109,12 +109,15 @@ Roadmap
 
 
 [_] 27% Gen 3 current todo
-	[_] 54% High priority
+	[_] 55% High priority
+		[_] Q: how do we mark unsorted sections in base ribbon after aligning?
+		| - there is a big gap in the ribbon below, but it's not visible...
+		| - can we "mark" big gaps? ...what's the threshold of "big"?
 		[_] do we need to store marks in localstorage???
-		[_] would be good to unify buildcache and viewer to use the save code...
+		[_] would be good to unify buildcache and viewer to use the same code...
 		| rewrite buildcache in js?
-		[_] 0% add data updating to buildcache
-			[_] --no-update
+		[_] 66% add data updating to buildcache
+			[X] non-destructive updates...
 			| force create new data-set, backup old data 
 			| default: update
 			|
@@ -125,7 +128,7 @@ Roadmap
 			| add new images to base ribbon
 			|
 			| NOTE: fav dirs are ignored by buildcache
-			[_] --base-ribbon=N
+			[X] --base-ribbon=N
 			| default N=0 i.e. top ribbon
 			[_] --reset-gids
 			| replace gids in data.json and images.json
