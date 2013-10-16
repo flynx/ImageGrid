@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131017013601'''
+__sub_version__ = '''20131017015122'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -354,7 +354,7 @@ def build_cache_dirs(path, config=CONFIG, dry_run=False, verbosity=0):
 
 
 #--------------------------------------------------------build_images---
-def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
+def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, verbosity=0):
 	'''
 	Build image structures update images.json in cache.
 	'''
@@ -365,7 +365,12 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 	orientation = 0
 
 	# build a file-list...
+	##!!! should this be split out into a seporate function???
 	filelist = pathjoin(path, cache_dir, config['filelist'])
+	# NOTE: we do not need to filter anything here as all the filtering
+	# 		will anyway happen later on...
+	# 		...in addition to that the filtering rules may change
+	# 		between runs.
 	files = os.listdir(path)
 	# remove the already scanned files (the ones in the filelist)...
 	if not full_scan and os.path.exists(filelist):
@@ -373,18 +378,21 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 			print 'Loading: %s' % filelist
 		with open(filelist) as f:
 			old_files = json.load(f)
-		files = set(files).difference(old_files)
+		files = list(set(files).difference(old_files))
+		files.sort()
 		if len(files) > 0:
 			if verbosity >= 1:
 				print 'Writing: %s' % filelist
-			with open(filelist, 'w') as f:
-				json.dump(files, f, indent=4)
+			if not dry_run:
+				with open(filelist, 'w') as f:
+					json.dump(files, f, indent=4)
 	# just write the list...
 	else:
 		if verbosity >= 1:
 			print 'Writing: %s' % filelist
-		with open(filelist, 'w') as f:
-			json.dump(files, f, indent=4)
+		if not dry_run:
+			with open(filelist, 'w') as f:
+				json.dump(files, f, indent=4)
 
 	for name in files:
 		fname, ext = os.path.splitext(name)
@@ -620,7 +628,7 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 	data, images, marked = build_data(
 			(i for i, status in (report_progress(
 						*build_previews(img, path, config, dry_run=dry_run, verbosity=verbosity))
-					for img in build_images(path, config, gid_generator, verbosity=verbosity))
+					for img in build_images(path, config, gid_generator, dry_run=dry_run, verbosity=verbosity))
 				# get the image if at least one preview got updated,
 				# the image did not exist in index before or its
 				# previews changed... 
