@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131015025118'''
+__sub_version__ = '''20131017013601'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -32,6 +32,8 @@ CONFIG = {
 	'absolute-path': False,
 	'ignore-orientation': False,
 
+	'full-scan': False,
+
 	# this can be:
 	# 	- original (default)
 	# 	- preview size
@@ -48,6 +50,7 @@ CONFIG = {
 	'images': 'images.json',
 	'data': 'data.json',
 	'marked': 'marked.json',
+	'filelist': 'filelist.json',
 
 	'images-diff': '%(date)s-images-diff.json',
 	'data-diff': '%(date)s-data.json',
@@ -184,7 +187,7 @@ def make_inline_report_progress(state=None):
 	if state == None:
 		state = {}
 	if 'started at' not in state:
-		state['started at'] = time.time()
+		state['done at'] = state['started at'] = time.time()
 
 	def _inline_report_progress(img, status):
 		created = state.get('created', 0)
@@ -356,10 +359,34 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 	Build image structures update images.json in cache.
 	'''
 	absolute_path = config['absolute-path']
+	full_scan = config['full-scan']
+	cache_dir = config['cache-dir']
 
 	orientation = 0
 
-	for name in os.listdir(path):
+	# build a file-list...
+	filelist = pathjoin(path, cache_dir, config['filelist'])
+	files = os.listdir(path)
+	# remove the already scanned files (the ones in the filelist)...
+	if not full_scan and os.path.exists(filelist):
+		if verbosity >= 1:
+			print 'Loading: %s' % filelist
+		with open(filelist) as f:
+			old_files = json.load(f)
+		files = set(files).difference(old_files)
+		if len(files) > 0:
+			if verbosity >= 1:
+				print 'Writing: %s' % filelist
+			with open(filelist, 'w') as f:
+				json.dump(files, f, indent=4)
+	# just write the list...
+	else:
+		if verbosity >= 1:
+			print 'Writing: %s' % filelist
+		with open(filelist, 'w') as f:
+			json.dump(files, f, indent=4)
+
+	for name in files:
 		fname, ext = os.path.splitext(name)
 		ext = ext[1:]
 
@@ -377,7 +404,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, verbosity=0):
 				if max(preview.dimensions) < max(p.dimensions):
 					preview = p
 
-			source_path = pathjoin(path, CONFIG['cache-dir'], CONFIG['cache-structure']['preview'], fname + '.jpg')
+			source_path = pathjoin(path, cache_dir, CONFIG['cache-structure']['preview'], fname + '.jpg')
 
 			with open(source_path, 'w+b') as p:
 				p.write(preview.data)
@@ -723,6 +750,10 @@ def handle_commandline():
 						action='store_true',
 						default=False,
 						help='Create only images.json file, skip the rest.') 
+	output_configuration.add_option('--full-scan', 
+						action='store_true',
+						default=False,
+						help='Do a full scan, ignoring existing file-lists.') 
 	output_configuration.add_option('--ignore-orientation', 
 						action='store_true',
 						default=False,
@@ -797,7 +828,8 @@ def handle_commandline():
 			'gid-source': options.gid_source,
 			'absolute-path': options.path_mode == 'absolute',
 			'ignore-orientation': options.ignore_orientation,
-			'base-ribbon': options.base_ribbon,
+			'base-ribbon': int(options.base_ribbon),
+			'full-scan': options.full_scan,
 			})
 	# a value from 0 through 2...
 	verbosity = options.verbosity
