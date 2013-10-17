@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131017015122'''
+__sub_version__ = '''20131018000820'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -378,6 +378,8 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 			print 'Loading: %s' % filelist
 		with open(filelist) as f:
 			old_files = json.load(f)
+		cur_files = files[:]
+		# strip the processed files...
 		files = list(set(files).difference(old_files))
 		files.sort()
 		if len(files) > 0:
@@ -385,7 +387,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 				print 'Writing: %s' % filelist
 			if not dry_run:
 				with open(filelist, 'w') as f:
-					json.dump(files, f, indent=4)
+					json.dump(cur_files, f, indent=4)
 	# just write the list...
 	else:
 		if verbosity >= 1:
