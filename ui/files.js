@@ -196,7 +196,7 @@ function ribbonsFromFavDirs(path, images, cmp){
 	var index = {}
 	var name
 	for(var gid in images){
-		name = images[gid].path.split('/').pop()
+		name = getImageFileName(gid)
 		// XXX we assume that names are unique...
 		index[name] = gid
 	}
@@ -643,7 +643,7 @@ function exportTo(path, im_name, dir_name, size){
 			var gid = ribbon[j]
 			// get correct preview...
 			var src = getBestPreview(gid, size).url
-			var orig = IMAGES[gid].path.split('/').pop()
+			var orig = getImageFileName(gid)
 
 			// XXX might be a good idea to combine this with docs as a 
 			// 		single mechanism...

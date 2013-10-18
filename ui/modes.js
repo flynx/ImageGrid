@@ -383,7 +383,7 @@ var toggleImageInfoDrawer = makeDrawerToggler(
 			var orientation = data.orientation
 			orientation = orientation == null ? 0 : orientation
 			var order = DATA.order.indexOf(gid)
-			var name = data.path.split('/').pop()
+			var name = getImageFileName(gid)
 
 			return $('<div>'+
 					'<h1>"'+ name +'"</h1>'+

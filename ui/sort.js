@@ -82,8 +82,8 @@ function imageNameCmp(a, b, get, data){
 		a = get(a)
 		b = get(b)
 	}
-	a = data[a].path.split('/').pop()
-	b = data[b].path.split('/').pop()
+	a = getImageFileName(a, data)
+	b = getImageFileName(b, data)
 	if(a == b){
 		return 0
 	} else if(a < b){
@@ -121,8 +121,8 @@ function imageSeqOrNameCmp(a, b, get, data, get_seq){
 
 	// get the names if there are no sequence numbers...
 	// NOTE: at this point both a and b are either numbers or NaN's...
-	a = isNaN(aa) ? data[a].path.split('/').pop() : aa
-	b = isNaN(bb) ? data[b].path.split('/').pop() : bb
+	a = isNaN(aa) ? getImageFileName(a, data) : aa
+	b = isNaN(bb) ? getImageFileName(b, data) : bb
 
 	// do the actual comparison
 	if(a == b){

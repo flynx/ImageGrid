@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131018000820'''
+__sub_version__ = '''20131018001840'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -365,7 +365,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 	orientation = 0
 
 	# build a file-list...
-	##!!! should this be split out into a seporate function???
+	# XXX should this be split out into a seporate function???
 	filelist = pathjoin(path, cache_dir, config['filelist'])
 	# NOTE: we do not need to filter anything here as all the filtering
 	# 		will anyway happen later on...

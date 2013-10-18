@@ -59,7 +59,7 @@ function updateGlobalImageInfo(image){
 			// path...
 			'<span class="expanding-text path">'+
 				'<span class="shown">'+
-					unescape(data.path.split('/').pop()) +
+					getImageFileName(gid) +
 				'</span>'+
 				'<span class="hidden" '+
 						'style="position:absolute;'+
@@ -130,7 +130,7 @@ function updateInlineImageInfo(image){
 
 	return updateInfo(elem,
 			// name...
-			data.path.split('/').pop() +'<br>'+
+			getImageFileName(gid) +'<br>'+
 
 			// date...
 			'<span class="secondary expanding-text date">'+

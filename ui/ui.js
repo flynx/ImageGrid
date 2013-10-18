@@ -1027,7 +1027,7 @@ function showImageInfo(){
 	var flipped = data.flipped
 	flipped = flipped == null ? '' : ', flipped '+flipped+'ly'
 	var order = DATA.order.indexOf(gid)
-	var name = data.path.split('/').pop()
+	var name = getImageFileName(gid)
 	var comment = data.comment
 	comment = comment == null ? '' : comment
 	comment = comment.replace(/\n/g, '<br>')
@@ -1040,7 +1040,7 @@ function showImageInfo(){
 					// basic info...
 					'<tr><td colspan="2"><hr></td></tr>'+
 					'<tr><td>GID: </td><td>'+ gid +'</td></tr>'+
-					'<tr><td>Path: </td><td>"'+ data.path +'"</td></tr>'+
+					'<tr><td>Path: </td><td>"'+ unescape(data.path) +'"</td></tr>'+
 					'<tr><td>Orientation: </td><td>'+ orientation +'&deg;'+flipped+'</td></tr>'+
 					'<tr><td>Order: </td><td>'+ order +'</td></tr>'+
 					'<tr><td>Position (ribbon): </td><td>'+ (DATA.ribbons[r].indexOf(gid)+1) +

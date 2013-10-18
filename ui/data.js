@@ -172,10 +172,23 @@ function concatZip(){
 }
 
 
+function getImageFileName(gid, images, do_unescape){
+	gid = gid == null ? getImageGID() : gid
+	images = images == null ? IMAGES : images
+	do_unescape = do_unescape == null ? true : do_unescape
+
+	if(do_unescape){
+		return unescape(images[gid].path.split('/').pop())
+	} else {
+		return images[gid].path.split('/').pop()
+	}
+}
+
+
 // Get the first sequence of numbers in the file name...
 function getImageNameSeq(gid, data){
 	data = data == null ? IMAGES : data
-	var n = data[gid].path.split('/').pop()
+	var n = getImageFileName(gid, data)
 	var r = /([0-9]+)/m.exec(n)
 	return r == null ? n : parseInt(r[1])
 }
@@ -185,7 +198,7 @@ function getImageNameSeq(gid, data){
 // at the filename start...
 function getImageNameLeadingSeq(gid, data){
 	data = data == null ? IMAGES : data
-	var n = data[gid].path.split('/').pop()
+	var n = getImageFileName(gid, data)
 	var r = /^([0-9]+)/g.exec(n)
 	return r == null ? n : parseInt(r[1])
 }
