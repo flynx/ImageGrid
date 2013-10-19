@@ -672,7 +672,16 @@ function exportTo(path, im_name, dir_name, size){
 			dest = path +'/'+ dest
 
 			// copy... 
-			copyFile(src, dest)
+			// NOTE: the sad smily face here is here for JS compatibility ;)
+			;(function(src, dest){
+				copyFile(src, dest)
+					.done(function(){
+						console.log(src, 'done.')
+					})
+					.fail(function(err){
+						console.warn(src, 'err:', err)
+					})
+			})(src, dest)
 		}
 
 		path = normalizePath(path +'/'+ dir_name)
