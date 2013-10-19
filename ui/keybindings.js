@@ -43,6 +43,8 @@ var KEYBOARD_CONFIG = {
 	// Global bindings...
 	'*': {
 		title: 'Global bindings',
+		doc: 'NOTE: binding priority is the same as the order of sections '+
+			'on this page.',
 
 		F4: {
 			alt: doc('Close viewer', 
@@ -63,7 +65,7 @@ var KEYBOARD_CONFIG = {
 		title: 'Info overlay',
 		doc: 'Displayed on bottom of the screen if enabled (toggle with '+
 			'<b>I</b>) and/or inline, at bottom of an image when cursor '+
-			'is over it (only in ribbon mode, toggle with <b>alt-I</b>)'+
+			'is over it (only in ribbon view, toggle with <b>alt-I</b>)'+
 
 			'<p>NOTE: when the cursor is over the info overlay one can use '+
 			'Ctrl-A and Ctrl-D for info text selection, without affecting '+
@@ -125,13 +127,13 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// help mode...
+	// help view...
 	//
 	// NOTE: need to keep all info modes before the rest so as to give 
 	// 		their bindings priority...
 	'.drawer-mode': {
-		title: 'Drawer modes',
-		doc: 'NOTE: In this mode all other key bindings are disabled, '+
+		title: 'Drawer views',
+		doc: 'NOTE: In this view all other key bindings are disabled, '+
 			'except app defaults and the ones explicitly defined here.',
 
 		ignore: '*',
@@ -145,11 +147,11 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// slideshow mode...
+	// slideshow view...
 	//
 	'.slideshow-mode': {
-		title: 'Slideshow mode',
-		doc: 'To enter this mode press <b>S</b>.',
+		title: 'Slideshow view',
+		doc: 'To enter this view press <b>S</b>.',
 
 		// XXX think about what else to disable here...
 		ignore: [
@@ -178,13 +180,13 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// single image mode...
+	// single image view...
 	//
 	'.single-image-mode': {
-		title: 'Single image mode',
-		doc: 'To toggle between this and ribbon modes press <b>Enter</b>.',
+		title: 'Single image view',
+		doc: 'To toggle between this and ribbon view press <b>Enter</b>.',
 
-		Esc: doc('Exit single image mode', 
+		Esc: doc('Exit single image view', 
 				function(){ 
 					toggleSingleImageMode('off') 
 					return false
@@ -193,11 +195,13 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// marked only ribbon mode...
+	// crop views...
 	//
 	'.single-ribbon-mode:not(.single-image-mode), .marked-only-view:not(.single-image-mode)': {
-		title: 'Marked only and single ribbon views',
-		doc: 'To show marked-only images press <b>shift-F2</b> and for single ribbon mode press <b>F3</b>.',
+		title: 'Cropped ribbon views',
+		doc: 'To crop marked images press <b>shift-F2</b> and for '+
+			'single ribbon crop view press <b>F3</b>.'+
+			'<p>NOTE: toggling crop views is only possible from ribbon view.',
 
 		Esc: {
 				default: doc('Uncrop to last state', 
@@ -205,7 +209,7 @@ var KEYBOARD_CONFIG = {
 						uncropLastState()
 						return false
 					}),
-				shift: doc('Exit crop mode', 
+				shift: doc('Exit crop view', 
 					function(){ 
 						toggleMarkedOnlyView('off') 
 						toggleSingleRibbonMode('off') 
@@ -218,6 +222,9 @@ var KEYBOARD_CONFIG = {
 
 	// visible marks...
 	//
+	/* XXX does this work???
+	 * 		...appears to be overtaken by every Esc definition before,
+	 * 		and every single one of them returns false...
 	'.marks-visible': {
 		title: 'Visible marks',
 
@@ -227,13 +234,14 @@ var KEYBOARD_CONFIG = {
 					return false
 				}),
 	},
+	*/
 
 
-	// ribbon mode only...
+	// ribbon view only...
 	//
 	// XXX this breaks getKeyHandlers(...) when modes argument is given...
 	'.viewer:not(.overlay):not(.single-image-mode)': {
-		title: 'Ribbon mode',
+		title: 'Ribbon view',
 
 		Left: {
 				alt: doc('Shift image left', 
@@ -317,7 +325,7 @@ var KEYBOARD_CONFIG = {
 	//
 	'.viewer:not(.overlay)': {
 		title: 'Viewer',
-		doc: 'These key bindings work in most other viewer modes.'+
+		doc: 'These key bindings work in most other viewer views.'+
 
 			'<p>NOTE: shifting all marked images from different ribbons will '+
 			'perform the operations on ALL marked images but relative '+
@@ -680,7 +688,7 @@ var KEYBOARD_CONFIG = {
 
 		// NOTE: this is handled by the wrapper at this point, so we do 
 		// 		not have to do anything here...
-		F11: doc('Toggle full screen mode', function(){ toggleFullscreenMode() }),
+		F11: doc('Toggle full screen view', function(){ toggleFullscreenMode() }),
 
 		// Help and info...
 		'?': doc('Show keyboard bindings',
