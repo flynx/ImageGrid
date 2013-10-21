@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131018001840'''
+__sub_version__ = '''20131021154045'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -33,6 +33,7 @@ CONFIG = {
 	'ignore-orientation': False,
 
 	'full-scan': False,
+	'force-ascii': False,
 
 	# this can be:
 	# 	- original (default)
@@ -143,9 +144,9 @@ def log_err(path, e, source_file, target_file):
 	'''
 	err_file = pathjoin(path, CONFIG['error'])
 	if not os.path.exists(err_file):
-		err = open(err_file, 'w')
+		err = file(err_file, 'w')
 	else:
-		err = open(err_file, 'a')
+		err = file(err_file, 'a')
 	with err:
 		err.write(ERR_LOG % {
 				'source-file': source_file,
@@ -299,7 +300,7 @@ def getimages(path, config=CONFIG, verbosity=0):
 			config['images'], 
 			# XXX avoid hardcoded sufexes...
 			lambda n: n.endswith('-images-diff.json'), 
-			lambda data, path: (data.update(json.load(open(path))), data)[-1],
+			lambda data, path: (data.update(json.load(file(path))), data)[-1],
 			{},
 			verbosity=verbosity)
 
@@ -312,7 +313,7 @@ def getdata(path, config=CONFIG, verbosity=0):
 			pathjoin(path, config['cache-dir']), 
 			lambda n: n.endswith(config['data']),
 			lambda n: n == config['data'],
-			lambda path: json.load(open(path)),
+			lambda path: json.load(file(path)),
 			{},
 			verbosity=verbosity)
 
@@ -325,7 +326,7 @@ def getmarked(path, config=CONFIG, verbosity=0):
 			pathjoin(path, config['cache-dir']), 
 			lambda n: n.endswith(config['marked']),
 			lambda n: n == config['marked'],
-			lambda path: json.load(open(path)),
+			lambda path: json.load(file(path)),
 			[],
 			verbosity=verbosity)
 
@@ -376,7 +377,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 	if not full_scan and os.path.exists(filelist):
 		if verbosity >= 1:
 			print 'Loading: %s' % filelist
-		with open(filelist) as f:
+		with file(filelist) as f:
 			old_files = json.load(f)
 		cur_files = files[:]
 		# strip the processed files...
@@ -386,15 +387,15 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 			if verbosity >= 1:
 				print 'Writing: %s' % filelist
 			if not dry_run:
-				with open(filelist, 'w') as f:
-					json.dump(cur_files, f, indent=4)
+				with file(filelist, 'w') as f:
+					json.dump(cur_files, f, indent=4, ensure_ascii=config['force-ascii'])
 	# just write the list...
 	else:
 		if verbosity >= 1:
 			print 'Writing: %s' % filelist
 		if not dry_run:
-			with open(filelist, 'w') as f:
-				json.dump(files, f, indent=4)
+			with file(filelist, 'w') as f:
+				json.dump(files, f, indent=4, ensure_ascii=config['force-ascii'])
 
 	for name in files:
 		fname, ext = os.path.splitext(name)
@@ -416,7 +417,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 
 			source_path = pathjoin(path, cache_dir, CONFIG['cache-structure']['preview'], fname + '.jpg')
 
-			with open(source_path, 'w+b') as p:
+			with file(source_path, 'w+b') as p:
 				p.write(preview.data)
 			
 			# copy metadata...
@@ -706,8 +707,8 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 			print 'Writing: %s' % n
 		if not dry_run:
 			##!!! DO NOT OVERWRITE EXISTING DATA...
-			with open(n, 'w') as f:
-				json.dump(d, f, indent=4)
+			with file(n, 'w') as f:
+				json.dump(d, f, indent=4, ensure_ascii=config['force-ascii'])
 
 	return data
 
@@ -778,6 +779,11 @@ def handle_commandline():
 	output_configuration.add_option('--base-ribbon',
 						default=CONFIG['base-ribbon'],
 						help='Base ribbon number (default: "%default").')
+	output_configuration.add_option('--force-ascii', 
+						action='store_true',
+						default=False,
+						help='Force all json configs to be written in ASCII, '
+							'this will fail if non-ASCII filenames are encountered.') 
 	parser.add_option_group(output_configuration)
 
 
@@ -826,11 +832,11 @@ def handle_commandline():
 	config_name = options.config_file
 	# local to script...
 	if os.path.exists(config_name):
-		with open(config_name) as f:
+		with file(config_name) as f:
 			config.update(json.load(f))
 	# local to target...
 	if os.path.exists(os.path.join(IN_PATH, config_name)):
-		with open(os.path.join(IN_PATH, config_name)) as f:
+		with file(os.path.join(IN_PATH, config_name)) as f:
 			config.update(json.load(f))
 
 	# update config according to set args...
@@ -840,6 +846,7 @@ def handle_commandline():
 			'ignore-orientation': options.ignore_orientation,
 			'base-ribbon': int(options.base_ribbon),
 			'full-scan': options.full_scan,
+			'force-ascii': options.force_ascii,
 			})
 	# a value from 0 through 2...
 	verbosity = options.verbosity
@@ -851,7 +858,7 @@ def handle_commandline():
 	# write a local configuration...
 	if options.config_save_local:
 		with file(os.path.join(IN_PATH, config_name), 'w') as f:
-			f.write(json.dumps(config, sort_keys=True, indent=4))
+			f.write(json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii']))
 
 	# print configuration data...
 	if True in (options.config_defaults_print, options.config_print):
@@ -865,12 +872,12 @@ def handle_commandline():
 		if options.config_print:
 			if print_prefix:
 				print 'Current Configuration:'
-			print json.dumps(config, sort_keys=True, indent=4)
+			print json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii'])
 			print
 		if options.config_defaults_print:
 			if print_prefix:
 				print 'Default Configuration:'
-			print json.dumps(CONFIG, sort_keys=True, indent=4)
+			print json.dumps(CONFIG, sort_keys=True, indent=4, ensure_ascii=config['force-ascii'])
 			print
 
 	# do the actual work...
