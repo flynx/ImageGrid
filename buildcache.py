@@ -1,7 +1,8 @@
+# -*- coding:utf-8 -*-
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131021154045'''
+__sub_version__ = '''20131023030800'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -16,6 +17,9 @@ import time
 import tempfile
 from optparse import OptionParser, OptionGroup
 
+# XXX hack...
+from io import open
+
 try:
 	import pyexiv2 as metadata
 except:
@@ -27,6 +31,10 @@ import gid
 
 
 #-----------------------------------------------------------------------
+
+##!!! I Hate Python for this!
+##!!! ...there seems no good way to get this...
+DEFAULT_ENCODING = 'cp1251'
 
 CONFIG = {
 	'absolute-path': False,
@@ -117,6 +125,26 @@ IMAGE = OR(
 
 #-----------------------------------------------------------------------
 # Helpers...
+
+##!!! I hate python in everything that concerns encodings....
+RESERVED_URL_CHARS = '%;/?:@&=+$, '
+RESERVED_URL_TRANSLATION = dict([(RESERVED_URL_CHARS[i], '%'+e) 
+		for i, e 
+		# get the propper encodings...
+		in enumerate(urllib2.quote(RESERVED_URL_CHARS).split('%'))])
+def quote(s, safe=''):
+	for k, v in RESERVED_URL_TRANSLATION.items():
+		if k in safe:
+			continue
+		s = s.replace(k, v)
+	return s
+def unquote(s):
+	for k, v in RESERVED_URL_TRANSLATION.items():
+		s = s.replace(v, k)
+	return s
+
+
+
 #------------------------------------------------------------pathjoin---
 def pathjoin(*p):
 	'''
@@ -133,9 +161,13 @@ def getpath(root, path, absolute=False):
 		if path[0] in ('\\', '/'):
 			path = path[1:]
 	if absolute == True:
-		return 'file:///' + urllib2.quote(pathjoin(root, path), safe='/:')
+##		##!!! urllib2/urllib quote breaks on unicode...
+##		return 'file:///' + urllib2.quote(pathjoin(root, path), safe='/:')
+		return 'file:///' + quote(pathjoin(root, path), safe='/:')
 	else:
-		return urllib2.quote(pathjoin(path), safe='/:')
+##		##!!! urllib2/urllib quote breaks on unicode...
+##		return urllib2.quote(pathjoin(path), safe='/:')
+		return quote(pathjoin(path), safe='/:')
 
 
 #-------------------------------------------------------------log_err---
@@ -144,9 +176,9 @@ def log_err(path, e, source_file, target_file):
 	'''
 	err_file = pathjoin(path, CONFIG['error'])
 	if not os.path.exists(err_file):
-		err = file(err_file, 'w')
+		err = open(err_file, 'w')
 	else:
-		err = file(err_file, 'a')
+		err = open(err_file, 'a')
 	with err:
 		err.write(ERR_LOG % {
 				'source-file': source_file,
@@ -300,7 +332,7 @@ def getimages(path, config=CONFIG, verbosity=0):
 			config['images'], 
 			# XXX avoid hardcoded sufexes...
 			lambda n: n.endswith('-images-diff.json'), 
-			lambda data, path: (data.update(json.load(file(path))), data)[-1],
+			lambda data, path: (data.update(json.load(open(path))), data)[-1],
 			{},
 			verbosity=verbosity)
 
@@ -313,7 +345,7 @@ def getdata(path, config=CONFIG, verbosity=0):
 			pathjoin(path, config['cache-dir']), 
 			lambda n: n.endswith(config['data']),
 			lambda n: n == config['data'],
-			lambda path: json.load(file(path)),
+			lambda path: json.load(open(path)),
 			{},
 			verbosity=verbosity)
 
@@ -326,7 +358,7 @@ def getmarked(path, config=CONFIG, verbosity=0):
 			pathjoin(path, config['cache-dir']), 
 			lambda n: n.endswith(config['marked']),
 			lambda n: n == config['marked'],
-			lambda path: json.load(file(path)),
+			lambda path: json.load(open(path)),
 			[],
 			verbosity=verbosity)
 
@@ -377,7 +409,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 	if not full_scan and os.path.exists(filelist):
 		if verbosity >= 1:
 			print 'Loading: %s' % filelist
-		with file(filelist) as f:
+		with open(filelist) as f:
 			old_files = json.load(f)
 		cur_files = files[:]
 		# strip the processed files...
@@ -387,15 +419,27 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 			if verbosity >= 1:
 				print 'Writing: %s' % filelist
 			if not dry_run:
-				with file(filelist, 'w') as f:
-					json.dump(cur_files, f, indent=4, ensure_ascii=config['force-ascii'])
+				with open(filelist, 'w', encoding='utf-8') as f:
+##					##!!! json.dump writes some "strings" as unicode and some as str
+##					##!!! this breaks fp.write(...)...
+##					json.dump(cur_files, f, indent=4, ensure_ascii=config['force-ascii'])
+					s = json.dumps(cur_files, f, indent=4, ensure_ascii=config['force-ascii'])
+					if type(s) != unicode:
+						s = s.decode(DEFAULT_ENCODING)
+					f.write(s)
 	# just write the list...
 	else:
 		if verbosity >= 1:
 			print 'Writing: %s' % filelist
 		if not dry_run:
-			with file(filelist, 'w') as f:
-				json.dump(files, f, indent=4, ensure_ascii=config['force-ascii'])
+			with open(filelist, 'w', encoding='utf-8') as f:
+##				##!!! json.dump writes some "strings" as unicode and some as str
+##				##!!! this breaks fp.write(...)...
+##				json.dump(files, f, indent=4, ensure_ascii=config['force-ascii'])
+				s = json.dumps(files, f, indent=4, ensure_ascii=config['force-ascii'])
+				if type(s) != unicode:
+					s = s.decode(DEFAULT_ENCODING)
+				f.write(s)
 
 	for name in files:
 		fname, ext = os.path.splitext(name)
@@ -417,7 +461,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 
 			source_path = pathjoin(path, cache_dir, CONFIG['cache-structure']['preview'], fname + '.jpg')
 
-			with file(source_path, 'w+b') as p:
+			with open(source_path, 'w+b') as p:
 				p.write(preview.data)
 			
 			# copy metadata...
@@ -707,8 +751,14 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 			print 'Writing: %s' % n
 		if not dry_run:
 			##!!! DO NOT OVERWRITE EXISTING DATA...
-			with file(n, 'w') as f:
-				json.dump(d, f, indent=4, ensure_ascii=config['force-ascii'])
+			with open(n, 'w', encoding='utf-8') as f:
+##				##!!! json.dump writes some "strings" as unicode and some as str
+##				##!!! this breaks fp.write(...)...
+##				json.dump(d, f, indent=4, ensure_ascii=config['force-ascii'])
+				s = json.dumps(d, f, indent=4, ensure_ascii=config['force-ascii'])
+				if type(s) != unicode:
+					s = s.decode(DEFAULT_ENCODING)
+				f.write(s)
 
 	return data
 
@@ -820,10 +870,13 @@ def handle_commandline():
 
 	# prepare the path...
 	if len(args) < 1:
-		IN_PATH = '.'
+		IN_PATH = u'.'
 	else:
 		IN_PATH = args[0]
 		IN_PATH = IN_PATH.replace('\\', '/')
+		##!!! need to convert this ut utf-8...
+		if type(IN_PATH) != unicode:
+			IN_PATH = IN_PATH.decode(DEFAULT_ENCODING)
 
 	config = {}
 	config.update(CONFIG)
@@ -832,11 +885,11 @@ def handle_commandline():
 	config_name = options.config_file
 	# local to script...
 	if os.path.exists(config_name):
-		with file(config_name) as f:
+		with open(config_name) as f:
 			config.update(json.load(f))
 	# local to target...
 	if os.path.exists(os.path.join(IN_PATH, config_name)):
-		with file(os.path.join(IN_PATH, config_name)) as f:
+		with open(os.path.join(IN_PATH, config_name)) as f:
 			config.update(json.load(f))
 
 	# update config according to set args...
@@ -857,8 +910,14 @@ def handle_commandline():
 	# configuration stuff...
 	# write a local configuration...
 	if options.config_save_local:
-		with file(os.path.join(IN_PATH, config_name), 'w') as f:
-			f.write(json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii']))
+		with open(os.path.join(IN_PATH, config_name), 'w', encoding='utf-8') as f:
+##			##!!! json.dump writes some "strings" as unicode and some as str
+##			##!!! this breaks fp.write(...)...
+##			f.write(json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii']))
+			s = json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii'])
+			if type(s) != unicode:
+				s = s.decode(DEFAULT_ENCODING)
+			f.write(s)
 
 	# print configuration data...
 	if True in (options.config_defaults_print, options.config_print):
@@ -917,4 +976,4 @@ if __name__ == '__main__':
 
 
 #=======================================================================
-#                                            vim:set ts=4 sw=4 nowrap :
+#                             vim:set ts=4 sw=4 nowrap encoding=utf-8 :
