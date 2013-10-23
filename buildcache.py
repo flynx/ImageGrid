@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131023030800'''
+__sub_version__ = '''20131023173117'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -419,12 +419,13 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 			if verbosity >= 1:
 				print 'Writing: %s' % filelist
 			if not dry_run:
-				with open(filelist, 'w', encoding='utf-8') as f:
+				with open(filelist, 'w', 
+						encoding='ascii' if config['force-ascii'] else 'utf-8') as f:
 ##					##!!! json.dump writes some "strings" as unicode and some as str
 ##					##!!! this breaks fp.write(...)...
 ##					json.dump(cur_files, f, indent=4, ensure_ascii=config['force-ascii'])
 					s = json.dumps(cur_files, f, indent=4, ensure_ascii=config['force-ascii'])
-					if type(s) != unicode:
+					if not config['force-ascii'] and type(s) != unicode:
 						s = s.decode(DEFAULT_ENCODING)
 					f.write(s)
 	# just write the list...
@@ -432,12 +433,13 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 		if verbosity >= 1:
 			print 'Writing: %s' % filelist
 		if not dry_run:
-			with open(filelist, 'w', encoding='utf-8') as f:
+			with open(filelist, 'w', 
+					encoding='ascii' if config['force-ascii'] else 'utf-8') as f:
 ##				##!!! json.dump writes some "strings" as unicode and some as str
 ##				##!!! this breaks fp.write(...)...
 ##				json.dump(files, f, indent=4, ensure_ascii=config['force-ascii'])
 				s = json.dumps(files, f, indent=4, ensure_ascii=config['force-ascii'])
-				if type(s) != unicode:
+				if not config['force-ascii'] and type(s) != unicode:
 					s = s.decode(DEFAULT_ENCODING)
 				f.write(s)
 
@@ -751,12 +753,13 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 			print 'Writing: %s' % n
 		if not dry_run:
 			##!!! DO NOT OVERWRITE EXISTING DATA...
-			with open(n, 'w', encoding='utf-8') as f:
+			with open(n, 'w', 
+					encoding='ascii' if config['force-ascii'] else 'utf-8') as f:
 ##				##!!! json.dump writes some "strings" as unicode and some as str
 ##				##!!! this breaks fp.write(...)...
 ##				json.dump(d, f, indent=4, ensure_ascii=config['force-ascii'])
 				s = json.dumps(d, f, indent=4, ensure_ascii=config['force-ascii'])
-				if type(s) != unicode:
+				if not config['force-ascii'] and type(s) != unicode:
 					s = s.decode(DEFAULT_ENCODING)
 				f.write(s)
 
@@ -868,6 +871,9 @@ def handle_commandline():
 ##		parser.print_usage()
 ##		raise SystemExit
 
+	config = {}
+	config.update(CONFIG)
+
 	# prepare the path...
 	if len(args) < 1:
 		IN_PATH = u'.'
@@ -875,11 +881,9 @@ def handle_commandline():
 		IN_PATH = args[0]
 		IN_PATH = IN_PATH.replace('\\', '/')
 		##!!! need to convert this ut utf-8...
-		if type(IN_PATH) != unicode:
+		if not options.force_ascii and type(IN_PATH) != unicode:
 			IN_PATH = IN_PATH.decode(DEFAULT_ENCODING)
 
-	config = {}
-	config.update(CONFIG)
 
 	# load configuration files..
 	config_name = options.config_file
@@ -901,6 +905,7 @@ def handle_commandline():
 			'full-scan': options.full_scan,
 			'force-ascii': options.force_ascii,
 			})
+
 	# a value from 0 through 2...
 	verbosity = options.verbosity
 	# bool...
@@ -910,12 +915,13 @@ def handle_commandline():
 	# configuration stuff...
 	# write a local configuration...
 	if options.config_save_local:
-		with open(os.path.join(IN_PATH, config_name), 'w', encoding='utf-8') as f:
+		with open(os.path.join(IN_PATH, config_name), 'w', 
+				encoding='ascii' if config['force-ascii'] else 'utf-8') as f:
 ##			##!!! json.dump writes some "strings" as unicode and some as str
 ##			##!!! this breaks fp.write(...)...
 ##			f.write(json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii']))
 			s = json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii'])
-			if type(s) != unicode:
+			if not config['force-ascii'] and type(s) != unicode:
 				s = s.decode(DEFAULT_ENCODING)
 			f.write(s)
 
@@ -976,4 +982,4 @@ if __name__ == '__main__':
 
 
 #=======================================================================
-#                             vim:set ts=4 sw=4 nowrap encoding=utf-8 :
+#                                            vim:set ts=4 sw=4 nowrap :
