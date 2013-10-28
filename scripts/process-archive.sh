@@ -207,19 +207,19 @@ fi
 
 
 
+# build cache...
+if [ -z $SKIP_CACHE ] ; then
+	find . -type d -name 'preview (RAW)' -exec buildcache "{}" \;
+fi
+
+
+
 # collect previews to one location...
 if ! [ -z $COMMON_PREVIEWS ] ; then
 	if ! [ -e "./$COMMON_PREVIEWS" ] ; then
 		mkdir -p "./$COMMON_PREVIEWS"
 	fi
 	find . -type d -name 'preview (RAW)' -exec mv "{}" "./$COMMON_PREVIEWS" \;
-fi
-
-
-
-# build cache...
-if [ -z $SKIP_CACHE ] ; then
-	find . -type d -name 'preview (RAW)' -exec buildcache "{}" \;
 fi
 
 
