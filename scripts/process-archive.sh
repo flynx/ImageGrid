@@ -202,7 +202,23 @@ cd "./${ARCHIVE_ROOT}"
 
 # make previews...
 if [ -z $SKIP_PREVIEWS ] ; then
+
+	#export TOTAL=$(find . -type d -name 'hi-res (RAW)' -exec ls "{}" \; | wc -l)
+	# XXX do not know how to pass and modify a var...
+	#export CUR=1
+
 	find . -path '*hi-res (RAW)/*.jpg' -exec bash -c 'makepreview "$SIZE" "{}"' \;
+fi
+
+
+
+# collect previews to one location...
+# XXX test!!!
+if ! [ -z $COMMON_PREVIEWS ] ; then
+	if ! [ -e "./$COMMON_PREVIEWS" ] ; then
+		mkdir -p "./$COMMON_PREVIEWS"
+	fi
+	find . -type d -name 'preview (RAW)' -exec mv "{}" "./$COMMON_PREVIEWS" \;
 fi
 
 
@@ -210,16 +226,6 @@ fi
 # build cache...
 if [ -z $SKIP_CACHE ] ; then
 	find . -type d -name 'preview (RAW)' -exec buildcache "{}" \;
-fi
-
-
-
-# collect previews to one location...
-if ! [ -z $COMMON_PREVIEWS ] ; then
-	if ! [ -e "./$COMMON_PREVIEWS" ] ; then
-		mkdir -p "./$COMMON_PREVIEWS"
-	fi
-	find . -type d -name 'preview (RAW)' -exec mv "{}" "./$COMMON_PREVIEWS" \;
 fi
 
 
