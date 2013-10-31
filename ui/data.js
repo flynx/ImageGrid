@@ -1620,6 +1620,22 @@ function appendMarker(){
 }
 
 
+// NOTE: if cmp is explicitly false then no sorting will be done.
+function loadRibbonsFromPath(path, cmp, reverse){
+	path = path == null ? BASE_URL : path
+	path = normalizePath(path)
+	cmp = cmp == null ? imageDateCmp : cmp
+
+	DATA.ribbons = ribbonsFromFavDirs(path)
+
+	if(cmp != false){
+		sortImages(cmp, reverse)
+	} else {
+		reloadViewer()
+	}
+}
+
+
 
 /**********************************************************************
 * vim:set ts=4 sw=4 spell :                                          */

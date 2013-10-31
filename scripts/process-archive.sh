@@ -34,7 +34,7 @@ while true ; do
 			;;
 
 		--common-previews)
-			COMMON_PREVIEWS="${2}/preview (RAW)"
+			COMMON_PREVIEWS="${2}"
 			shift
 			shift
 			;;
@@ -214,18 +214,26 @@ fi
 
 # collect previews to one location...
 # XXX test!!!
-if ! [ -z $COMMON_PREVIEWS ] ; then
+if ! [ -z "$COMMON_PREVIEWS" ] ; then
 	if ! [ -e "./$COMMON_PREVIEWS" ] ; then
 		mkdir -p "./$COMMON_PREVIEWS"
 	fi
-	find . -type d -name 'preview (RAW)' -exec mv "{}" "./$COMMON_PREVIEWS" \;
+	find . -type d \
+		-name 'preview (RAW)' \
+		-print \
+		-exec cp -rl "{}" "./$COMMON_PREVIEWS" \; 
+		#-exec rm -rf "./$d" 
 fi
 
 
 
 # build cache...
 if [ -z $SKIP_CACHE ] ; then
-	find . -type d -name 'preview (RAW)' -exec buildcache "{}" \;
+	if ! [ -z "$COMMON_PREVIEWS" ] && [ -e "./$COMMON_PREVIEWS/preview (RAW)" ] ; then
+		buildcache "./$COMMON_PREVIEWS/preview (RAW)"
+	else
+		find . -type d -name 'preview (RAW)' -exec buildcache "{}" \;
+	fi
 fi
 
 
