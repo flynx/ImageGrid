@@ -188,9 +188,10 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 // NOTE: this depends on listDir(...)
 // NOTE: this assumes that images contain ALL the images...
 // NOTE: this assumes that all file names are unique...
-function ribbonsFromFavDirs(path, images, cmp){
+function ribbonsFromFavDirs(path, images, cmp, dir_name){
 	path = path == null ? getBaseURL() : path
 	images = images == null ? IMAGES : images
+	dir_name = dir_name == null ? 'fav' : dir_name
 
 	// build a reverse name-gid index for fast access...
 	var index = {}
@@ -208,8 +209,8 @@ function ribbonsFromFavDirs(path, images, cmp){
 
 	var files = listDir(path)	
 	var cur_path = path
-	while(files.indexOf('fav') >= 0){
-		cur_path += '/fav'
+	while(files.indexOf(dir_name) >= 0){
+		cur_path += '/' + dir_name
 		files = listDir(cur_path)
 		ribbon = []
 		// collect the images...

@@ -1621,18 +1621,23 @@ function appendMarker(){
 
 
 // NOTE: if cmp is explicitly false then no sorting will be done.
-function loadRibbonsFromPath(path, cmp, reverse){
+function loadRibbonsFromPath(path, cmp, reverse, dir_name){
 	path = path == null ? BASE_URL : path
 	path = normalizePath(path)
 	cmp = cmp == null ? imageDateCmp : cmp
 
-	DATA.ribbons = ribbonsFromFavDirs(path)
+	// NOTE: we explicitly sort later, this makes no difference 
+	// 		speed-wise, but will make the code simpler...
+	DATA.ribbons = ribbonsFromFavDirs(path, null, null, dir_name)
 
+	// do the sort...
 	if(cmp != false){
 		sortImages(cmp, reverse)
 	} else {
 		reloadViewer()
 	}
+
+	return DATA
 }
 
 
