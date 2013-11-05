@@ -66,6 +66,7 @@ if(window.CEF_dumpJSON != null){
 	}
 	// XXX make this work across fs...
 	// XXX this will not overwrite...
+	// XXX set ctime to the same value as the original...
 	window.copyFile = function(src, dst){
 		var deferred = $.Deferred()
 		src = osPath(src)
@@ -74,7 +75,6 @@ if(window.CEF_dumpJSON != null){
 		var path = dst.split(/[\\\/]/)
 		path.pop()
 		path = path.join('/')
-
 
 		// make dirs...
 		if(!fs.existsSync(path)){
@@ -380,7 +380,22 @@ if(window.CEF_dumpJSON != null){
 		return queue
 	}
 
-	window.makeImageGID = function(source, make_text_gid){
+	// format: "20130102-122315"
+	window.getEXIFDate = function(source){
+		var getter = $.Deferred()
+		getVipsField('exif-ifd0-Date and Time', source)
+			.done(function(date){
+				getter.resolve(date
+					// remove substrings in braces...
+					.replace(/\([^)]*\)/, '')
+					.trim()
+					.replace(/:/g, '')
+					.replace(/ /g, '-'))
+			})
+		return getter
+	}
+
+	window.getEXIFGID = function(source, make_text_gid){
 		if(source in IMAGES){
 			var img = IMAGES[source]
 			var source = normalizePath(img.path)
@@ -389,21 +404,19 @@ if(window.CEF_dumpJSON != null){
 
 		$.when(
 				getVipsField('exif-ifd0-Artist', source),
-				getVipsField('exif-ifd0-Date and Time', source))
+				getEXIFDate(source))
 			.done(function(artist, date){
 				// Artist...
 				artist = artist
+					// remove substrings in braces...
 					.replace(/\([^)]*\)/, '')
 					.trim()
 				artist = artist == '' ? 'Unknown' : artist
+
 				// Date...
-				// format: "20130102-122315"
 				// XXX if not set, get ctime...
-				date = date
-					.replace(/\([^)]*\)/, '')
-					.trim()
-					.replace(/:/g, '')
-					.replace(/ /g, '-')
+				// XXX
+
 				// File name...
 				var name = source.split(/[\\\/]/).pop().split('.')[0]
 

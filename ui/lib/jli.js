@@ -778,6 +778,7 @@ Date.prototype.getTimeStamp = function(no_seconds){
 	return ''+y+M+D+H+m+s
 }
 Date.prototype.setTimeStamp = function(ts){
+	ts = ts.replace(/[^0-9]*/g, '')
 	this.setFullYear(ts.slice(0, 4))
 	this.setMonth(ts.slice(4, 6)*1-1)
 	this.setDate(ts.slice(6, 8))

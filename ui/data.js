@@ -715,7 +715,10 @@ function orientationExif2ImageGrid(orientation){
 // NOTE: this depends on that the base dir contains ALL the images...
 // NOTE: if base is not given, this will not read image to get 
 // 		orientation data...
-function imagesFromUrls(lst){
+function imagesFromUrls(lst, ctime_getter){
+	ctime_getter = (ctime_getter == null 
+			? function(){ return Date.now()/1000 } 
+			: ctime_getter)
 	var res = {}
 
 	$.each(lst, function(i, e){
@@ -739,7 +742,7 @@ function imagesFromUrls(lst){
 			type: 'image',
 			state: 'single',
 			path: e,
-			ctime: Date.now(),
+			ctime: ctime_getter(e),
 			preview: {},
 			classes: '',
 			orientation: 0,
@@ -1606,7 +1609,7 @@ function openImageWith(prog){
 
 
 /**********************************************************************
-* Experimental 
+* Experimental & utility
 */
 
 // The idea here is to add markers as first-class image-like elements...
@@ -1638,6 +1641,85 @@ function loadRibbonsFromPath(path, cmp, reverse, dir_name){
 	}
 
 	return DATA
+}
+
+
+function readImageDate(gid, images){
+	images = images == null ? IMAGES : images
+	var img = images[gid]
+	return getEXIFDate(normalizePath(img.path))
+		.done(function(date){
+			img.ctime = Date.fromTimeStamp(date).getTime()/1000
+		})
+}
+function readImagesDates(images){
+	images = images == null ? IMAGES : images
+
+	return $.when.apply(null, $.map(images, function(_, gid){
+		return readImageDate(gid, images)
+	}))
+}
+function readImagesDatesQ(images){
+	images = images == null ? IMAGES : images
+
+	var queue = getWorkerQueue('date_reader')
+
+	$.each(images, function(gid, img){
+		queue.enqueue(readImageDate, gid, images)
+			.always(function(){ queue.notify(gid, 'done') })
+	})
+
+	return queue
+}
+
+
+function updateImageGID(gid, images, data){
+	images = images == null ? IMAGES : images
+	var img = images[gid]
+	return getEXIFGID(normalizePath(img.path))
+		.done(function(gid){
+			img.id = gid
+			// images...
+			images[gid] = images[key]
+			delete images[key]
+
+			// data...
+			if(data != null){
+				// replace current...
+				if(data.current == key){
+					data.current = gid
+				}
+				// replace in order...
+				data.order[data.order.indexOf(key)] = gid
+				// replace in ribbons...
+				for(var i=0; i < data.ribbons; i++){
+					var r = data.ribbons[i]
+					var k = r.indexOf(key)
+					if(k >= 0){
+						r[k] = gid
+					}
+				}
+			}
+		})
+}
+function updateImagesGIDs(images, data){
+	images = images == null ? IMAGES : images
+
+	return $.when.apply(null, $.map(images, function(_, key){
+		return updateImageGID(key, images, data)
+	}))
+}
+function updateImagesGIDsQ(images, data){
+	images = images == null ? IMAGES : images
+
+	var queue = getWorkerQueue('gid_updater')
+
+	$.each(images, function(_, key){
+		queue.enqueue(updateImageGID, key, images, data)
+			.always(function(){ queue.notify(key, 'done') })
+	})
+
+	return queue
 }
 
 
