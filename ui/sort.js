@@ -71,7 +71,16 @@ function imageDateCmp(a, b, get, data){
 		a = get(a)
 		b = get(b)
 	}
-	return data[b].ctime - data[a].ctime
+	b = data[b].ctime
+	a = data[a].ctime
+
+	if(a == b){
+		return 0
+	} else if(a < b){
+		return -1
+	} else {
+		return +1
+	}
 }
 
 
@@ -187,7 +196,7 @@ function sortImages(cmp, reverse){
 
 // shorthands...
 function sortImagesByDate(reverse){
-	return sortImages(reverse)
+	return sortImages(imageDateCmp, reverse)
 }
 function sortImagesByFileName(reverse){
 	return sortImages(imageNameCmp, reverse)
