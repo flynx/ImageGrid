@@ -939,9 +939,11 @@ function exportPreviewsDialog(state, dfl){
 			size = size == 'Original image' ? Math.max.apply(null, PREVIEW_SIZES)*2 : parseInt(size)-5
 
 			// do the actual exporting...
+			// full state...
 			if(state != 'current image'){
 				exportImagesTo(path, name, dir, size)
 
+			// single image...
 			} else {
 				exportImageTo(getImageGID(), path, name, size)
 			}
