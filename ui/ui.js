@@ -899,11 +899,15 @@ function exportPreviewsDialog(state, dfl){
 				'%e - extension (with leading dot)\n'+
 				'%(abc)m - if marked insert "abc"\n'+
 				'%gid - log gid\n'+
-				'%g - short gid'] = '%f'
+				'%g - short gid\n'+
+				'\n'+
+				'NOTE: %i and %I are not supported for single\n'+
+				'image exporting.'] = '%f'
 	}
 	cfg['Size | '+
 			'The selected size is aproximate, the actual\n'+
-			'preview will be copied from cache.\n\n'+
+			'preview will be copied from cache.\n'+
+			'\n'+
 			'NOTE: if not all previews are yet generated,\n'+
 			'this will save the available previews, not all\n'+
 			'of which may be of the right size, if this\n'+
