@@ -1657,6 +1657,9 @@ function readImagesDates(images){
 
 	return $.when.apply(null, $.map(images, function(_, gid){
 		return readImageDate(gid, images)
+			.done(function(){
+				IMAGES_UPDATED.push(gid)
+			})
 	}))
 }
 function readImagesDatesQ(images){
@@ -1666,13 +1669,17 @@ function readImagesDatesQ(images){
 
 	$.each(images, function(gid, img){
 		queue.enqueue(readImageDate, gid, images)
-			.always(function(){ queue.notify(gid, 'done') })
+			.always(function(){ 
+				IMAGES_UPDATED.push(gid)
+				queue.notify(gid, 'done') 
+			})
 	})
 
 	return queue
 }
 
 
+// XXX after running this we need to re-save the images...
 function updateImageGID(gid, images, data){
 	images = images == null ? IMAGES : images
 	var img = images[gid]

@@ -607,12 +607,55 @@ function updateRibbonsFromFavDirs(){
 }
 
 
+function exportImageTo(gid, path, im_name, size){
+	path = path == null ? BASE_URL : path
+	im_name = im_name == null ? '%f' : im_name
+	size = size == null ? 1000 : size
+
+	// get correct preview...
+	var src = getBestPreview(gid, size).url
+	var orig = getImageFileName(gid)
+
+	// XXX might be a good idea to combine this with docs as a 
+	// 		single mechanism...
+	// form image name...
+	var dest = im_name
+	// full filename...
+	dest = dest.replace('%f', orig)
+	// file name w.o. ext...
+	dest = dest.replace('%n', orig.split('.')[0])
+	// ext...
+	dest = dest.replace('%e', '.'+src.split('.').pop())
+	// marked status...
+	dest = dest.replace(/%\(([^)]*)\)m/, MARKED.indexOf(gid) >= 0 ? '$1' : '')
+	// gid...
+	dest = dest.replace('%gid', gid)
+	dest = dest.replace('%g', gid.slice(34))
+	// XXX Metadata...
+	// XXX
+
+	dest = path +'/'+ dest
+
+	// copy... 
+	// NOTE: the sad smily face here is here for JS compatibility ;)
+	;(function(src, dest){
+		copyFile(src, dest)
+			.done(function(){
+				console.log(src, 'done.')
+			})
+			.fail(function(err){
+				console.warn(src, 'err:', err)
+			})
+	})(src, dest)
+}
+
+
 // Export current state to directory...
 //
 // XXX this copies the files in parallel, make it sync and sequential...
 // 		...reason is simple, if we stop the copy we need to end up with 
 // 		part of the files copied full rather than all partially...
-function exportTo(path, im_name, dir_name, size){
+function exportImagesTo(path, im_name, dir_name, size){
 	path = path == null ? BASE_URL : path
 	im_name = im_name == null ? '%f' : im_name
 	dir_name = dir_name == null ? 'fav' : dir_name
@@ -642,47 +685,17 @@ function exportTo(path, im_name, dir_name, size){
 		// go through images...
 		for(var j=0; j < ribbon.length; j++){
 			var gid = ribbon[j]
-			// get correct preview...
-			var src = getBestPreview(gid, size).url
-			var orig = getImageFileName(gid)
 
-			// XXX might be a good idea to combine this with docs as a 
-			// 		single mechanism...
-			// form image name...
+			// do global naming...
 			var dest = im_name
-			// full filename...
-			dest = dest.replace('%f', orig)
-			// file name w.o. ext...
-			dest = dest.replace('%n', orig.split('.')[0])
-			// ext...
-			dest = dest.replace('%e', '.'+src.split('.').pop())
-			// marked status...
-			dest = dest.replace(/%\(([^)]*)\)m/, MARKED.indexOf(gid) >= 0 ? '$1' : '')
-			// gid...
-			dest = dest.replace('%gid', gid)
-			dest = dest.replace('%g', gid.slice(34))
 			// global order...
 			var o = order.indexOf(gid) + ''
 			dest = dest.replace('%I', (Z + o).slice(o.length))
 			// current order...
 			var o = selection.indexOf(gid) + ''
 			dest = dest.replace('%i', (z + o).slice(o.length))
-			// XXX Metadata...
-			// XXX
 
-			dest = path +'/'+ dest
-
-			// copy... 
-			// NOTE: the sad smily face here is here for JS compatibility ;)
-			;(function(src, dest){
-				copyFile(src, dest)
-					.done(function(){
-						console.log(src, 'done.')
-					})
-					.fail(function(err){
-						console.warn(src, 'err:', err)
-					})
-			})(src, dest)
+			exportImageTo(gid, path, dest, size)
 		}
 
 		path = normalizePath(path +'/'+ dir_name)

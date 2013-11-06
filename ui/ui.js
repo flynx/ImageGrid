@@ -867,6 +867,7 @@ function exportPreviewsDialog(state, dfl){
 	if(state == null){
 		state = toggleMarkedOnlyView('?') == 'on' ? 'marked images' : state
 		state = toggleSingleRibbonMode('?') == 'on' ? 'current ribbon' : state
+		state = toggleSingleImageMode('?') == 'on' ? 'current image' : state
 		state = state == null ? 'all images' : state
 	}
 
@@ -878,16 +879,28 @@ function exportPreviewsDialog(state, dfl){
 	// 		keys become unreadable with JS syntax preventing us from 
 	// 		splitting the key into several lines...
 	var cfg = {}
-	cfg['Image name pattern | '+
-			'%f - full filename\n'+
-			'%n - filename\n'+
-			'%e - extension (with leading dot)\n'+
-			'%(abc)m - if marked insert "abc"\n'+
-			'%gid - log gid\n'+
-			'%g - short gid\n'+
-			'%I - global order\n'+
-			'%i - current selection order'] = '%f'
-	cfg['Level directory name'] = 'fav'
+	// multiple images...
+	if(state != 'current image'){
+		cfg['Image name pattern | '+
+				'%f - full filename\n'+
+				'%n - filename\n'+
+				'%e - extension (with leading dot)\n'+
+				'%(abc)m - if marked insert "abc"\n'+
+				'%gid - log gid\n'+
+				'%g - short gid\n'+
+				'%I - global order\n'+
+				'%i - current selection order'] = '%f'
+		cfg['Level directory name'] = 'fav'
+	// single image...
+	} else {
+		cfg['Image name pattern | '+
+				'%f - full filename\n'+
+				'%n - filename\n'+
+				'%e - extension (with leading dot)\n'+
+				'%(abc)m - if marked insert "abc"\n'+
+				'%gid - log gid\n'+
+				'%g - short gid'] = '%f'
+	}
 	cfg['Size | '+
 			'The selected size is aproximate, the actual\n'+
 			'preview will be copied from cache.\n\n'+
@@ -908,13 +921,27 @@ function exportPreviewsDialog(state, dfl){
 
 	formDialog(null, '<b>Export:</b> '+ state +'.', cfg, 'OK', 'exportPreviewsDialog')
 		.done(function(data){
-			var s = data[keys[2]]
-			s = s == 'Original image' ? Math.max.apply(null, PREVIEW_SIZES)*2 : parseInt(s)-5
-			exportTo(
-				normalizePath(data[keys[3]]), 
-				data[keys[0]], 
-				data[keys[1]],
-				s)
+			// get the form data...
+			var name = data[keys[0]]
+			if(state != 'current image'){
+				var size = data[keys[2]]
+				var path = normalizePath(data[keys[3]]) 
+				var dir = data[keys[1]]
+
+			} else {
+				var size = data[keys[1]]
+				var path = normalizePath(data[keys[2]])
+			}
+			size = size == 'Original image' ? Math.max.apply(null, PREVIEW_SIZES)*2 : parseInt(size)-5
+
+			// do the actual exporting...
+			if(state != 'current image'){
+				exportImagesTo(path, name, dir, size)
+
+			} else {
+				exportImageTo(getImageGID(), path, name, size)
+			}
+
 			// XXX do real reporting...
 			showStatusQ('Copying data...')
 			res.resolve(data[''])
@@ -1028,6 +1055,7 @@ function showImageInfo(){
 	flipped = flipped == null ? '' : ', flipped '+flipped+'ly'
 	var order = DATA.order.indexOf(gid)
 	var name = getImageFileName(gid)
+	var date = new Date(data.ctime * 1000)
 	var comment = data.comment
 	comment = comment == null ? '' : comment
 	comment = comment.replace(/\n/g, '<br>')
@@ -1040,6 +1068,7 @@ function showImageInfo(){
 					// basic info...
 					'<tr><td colspan="2"><hr></td></tr>'+
 					'<tr><td>GID: </td><td>'+ gid +'</td></tr>'+
+					'<tr><td>Date: </td><td>'+ date +'</td></tr>'+
 					'<tr><td>Path: </td><td>"'+ unescape(data.path) +'"</td></tr>'+
 					'<tr><td>Orientation: </td><td>'+ orientation +'&deg;'+flipped+'</td></tr>'+
 					'<tr><td>Order: </td><td>'+ order +'</td></tr>'+
