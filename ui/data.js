@@ -370,6 +370,7 @@ Array.prototype.linSearch = function(target, cmp, get){
 // NOTE: this will return the object by default, to return position set
 // 		return_position to true.
 // NOTE: by default this will use cmp as a predicate.
+// NOTE: this expects lst to be sorted in a check-compatible way...
 function binSearch(target, lst, check, return_position, get){
 	check = check == null ? lcmp : check
 	var h = 0
@@ -471,6 +472,11 @@ function getGIDRibbonIndex(gid, data){
 
 // Same as getImageBefore(...), but uses gids and searches in DATA...
 //
+// Return:
+// 	null	- no image is before gid
+// 	gid		- the image before
+//
+// NOTE: if gid is present in the searched ribbon this will return it.
 // NOTE: this uses it's own predicate...
 function getGIDBefore(gid, ribbon, search, data){
 	gid = gid == null ? getImageGID() : gid
@@ -1679,7 +1685,9 @@ function readImagesDatesQ(images){
 }
 
 
-// XXX after running this we need to re-save the images...
+// XXX deleting images is not sported, we need to explicitly re-save...
+// XXX need to reload the viewer...
+// XXX not tested...
 function updateImageGID(gid, images, data){
 	images = images == null ? IMAGES : images
 	var img = images[gid]
@@ -1689,6 +1697,7 @@ function updateImageGID(gid, images, data){
 			// images...
 			images[gid] = images[key]
 			delete images[key]
+			IMAGES_UPDATED.push(gid)
 
 			// data...
 			if(data != null){

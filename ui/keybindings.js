@@ -53,8 +53,29 @@ var KEYBOARD_CONFIG = {
 					return false
 				}),
 		},
-		F5: doc('Reload viewer', function(){ reload() }),
-		F12: doc('Show devTools', function(){ showDevTools() }),
+		F5: doc('Reload viewer', 
+			function(){ 
+				reload() 
+				return false
+			}),
+		F12: doc('Show devTools', 
+			function(){ 
+				showDevTools() 
+				return false
+			}),
+		// NOTE: these are for systems where F** keys are not available 
+		// 		or do other stuff...
+		R: {
+			'ctrl': doc('Reload viewer', 
+				function(){ 
+					reloadViewer() 
+					return false
+				}),
+			'ctrl+shift': 'F5',
+		},
+		P: {
+			'ctrl+shift': 'F12',
+		},
 	},
 
 	// info overlay...
@@ -303,6 +324,7 @@ var KEYBOARD_CONFIG = {
 		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
 
 		// cropping...
+		// XXX add a non FXX key for macs...
 		F2: {
 				shift: doc('Crop marked only images', 
 					function(){
@@ -313,6 +335,7 @@ var KEYBOARD_CONFIG = {
 					}),
 			},
 
+		// XXX add a non FXX key for macs...
 		F3: doc('Crop single ribbon', 
 			function(){
 				event.preventDefault()
@@ -630,6 +653,7 @@ var KEYBOARD_CONFIG = {
 			},
 
 
+		// XXX add a non FXX key for macs...
 		F2: doc('Toggle mark visibility', 
 				function(){ toggleMarkesView() }),
 		// XXX should we be able to toggle crop modes from single image mode???
@@ -689,11 +713,13 @@ var KEYBOARD_CONFIG = {
 		// NOTE: this is handled by the wrapper at this point, so we do 
 		// 		not have to do anything here...
 		F11: doc('Toggle full screen view', function(){ toggleFullscreenMode() }),
+		F: 'F11',
 
 		// Help and info...
 		'?': doc('Show keyboard bindings',
 			function(){ toggleKeyboardHelp() }),
 
+		// XXX add a non FXX key for macs...
 		F1: doc('Show help',
 			function(){ toggleHelp() }),
 
