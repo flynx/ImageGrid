@@ -76,6 +76,14 @@ var KEYBOARD_CONFIG = {
 		P: {
 			'ctrl+shift': 'F12',
 		},
+
+		// NOTE: this is handled by the wrapper at this point, so we do 
+		// 		not have to do anything here...
+		F11: doc('Toggle full screen view', function(){ toggleFullscreenMode() }),
+		F: {
+			ctrl: 'F11',
+		},
+
 	},
 
 	// info overlay...
@@ -709,11 +717,6 @@ var KEYBOARD_CONFIG = {
 						toggleKeyboardHelp('off')
 					}),
 			},
-
-		// NOTE: this is handled by the wrapper at this point, so we do 
-		// 		not have to do anything here...
-		F11: doc('Toggle full screen view', function(){ toggleFullscreenMode() }),
-		F: 'F11',
 
 		// Help and info...
 		'?': doc('Show keyboard bindings',
