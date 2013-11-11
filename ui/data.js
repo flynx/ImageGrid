@@ -615,6 +615,11 @@ function normalizePath(url, base, mode, do_unescape){
 	if(/^[A-Z]:\//.test(url)){
 		url = 'file:///' + url
 	}
+	// UN*X/OSX path...
+	if(url[0] == '/'){
+		// XXX test exactly how many slashes to we need, two or three?
+		url = 'file://' + url
+	}
 
 	// we got absolute path...
 	if(/^(file|http|https):\/\/.*$/.test(url)){

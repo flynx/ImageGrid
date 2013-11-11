@@ -66,7 +66,7 @@ var KEYBOARD_CONFIG = {
 		// NOTE: these are for systems where F** keys are not available 
 		// 		or do other stuff...
 		R: {
-			'ctrl': doc('Reload viewer', 
+			'ctrl+alt': doc('Reload viewer', 
 				function(){ 
 					reloadViewer() 
 					return false
