@@ -492,6 +492,8 @@ function makeKeyboardHandler(keybindings, unhandled){
 *
 * NOTE: this will not add keys (key names) that are not explicit key names.
 */
+// XXX do we need to normalize/pre-process keybindings???
+// 		- might be a good idea to normalize the <modifiers>...
 function buildKeybindingsHelp(keybindings, shifted_keys){
 	shifted_keys = shifted_keys == null ? _SHIFT_KEYS : shifted_keys
 	var res = {}

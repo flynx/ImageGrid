@@ -110,6 +110,8 @@ Roadmap
 
 [_] 27% Gen 3 current todo
 	[_] 55% High priority
+		[_] BUG: when loading and a non-existing dir, opening a new dir raises an error
+		| i.e. the open dialog does not close, while the images are loaded...
 		[_] Q: how do we mark unsorted sections in base ribbon after aligning?
 		| - there is a big gap in the ribbon below, but it's not visible...
 		| - can we "mark" big gaps? ...what's the threshold of "big"?
@@ -130,7 +132,10 @@ Roadmap
 		[_] do we need to store marks in localstorage???
 		[_] would be good to unify buildcache and viewer to use the same code...
 		| rewrite buildcache in js?
-		[_] 50% add data updating to buildcache
+		|
+		| XXX this will need code reorganization to support node.js' require(...)
+		| 		mechanics...
+		[_] 75% add data updating to buildcache
 			[X] non-destructive updates...
 			| force create new data-set, backup old data 
 			| default: update
@@ -146,8 +151,8 @@ Roadmap
 			| default N=0 i.e. top ribbon
 			[_] --reset-gids
 			| replace gids in data.json and images.json
-			[_] fast update by default
-			| - store a file-list in a .ImageGrid.list file
+			[X] fast update by default
+			| - store a file-list in .ImageGrid/filelist.json
 			| - make a pedantic update (current) optional via
 			|   	--force-full-scan
 		[_] add data updating to viewer...
@@ -186,8 +191,6 @@ Roadmap
 			|
 			| NOTE: might need a good preview to make this understandable...
 			[_] auto-invoke mechanics
-		[_] BUG: when loading and a non-existing dir, opening a new dir raises an error
-		| i.e. the open dialog does not close, while the images are loaded...
 		[_] update data set...
 		| - add new images to the set
 		| - update changed images
