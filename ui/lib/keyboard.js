@@ -115,6 +115,39 @@ function doc(text, func){
 }
 
 
+// Build or normalize a modifier string. 
+//
+// Acceptable argument sets:
+// 	- none				-> ""
+// 	- true, false, true	-> "ctrl+shift"
+// 	- true, false		-> "ctrl"
+// 	- [true, false]		-> "ctrl"
+// 	- 'alt+shift'		-> "alt+shift"
+// 	- 'shift - alt'		-> "alt+shift"
+//
+function normalizeModifiers(c, a, s){
+		if(c != null && c.constructor.name == 'Array'){
+			a = c[1]
+			s = c[2]
+			c = c[0]
+		}
+		if(typeof(c) == typeof('str')){
+			var modifiers = c
+		} else {
+			var modifiers = (c ? 'ctrl' : '') 
+				+ (a ? ' alt' : '') 
+				+ (s ? ' shift' : '')
+		}
+
+		// build the dormalized modifier string...
+		var res = /ctrl/i.test(modifiers) ? 'ctrl' : ''
+		res += /alt/i.test(modifiers) ? (res != '' ? '+alt' : 'alt') : ''
+		res += /shift/i.test(modifiers) ? (res != '' ? '+shift' : 'shift') : ''
+
+		return res
+}
+
+
 /* Key handler getter
  *
  * For doc on format see makeKeyboardHandler(...)
@@ -135,6 +168,8 @@ function doc(text, func){
  * 							Ex:
  * 								'ctrl+shift'
  * 							NOTE: 'shift+ctrl' is wrong.
+ * 							NOTE: normalizeModifiers(...) can be used as
+ * 								a reference, if in doubt.
  *
  * This will also resolve several shifted keys by name, for example:
  * 'shift-/' is the same as '?', and either can be used, but the shorter 
@@ -153,6 +188,8 @@ function doc(text, func){
  * 		present in the resulting object.
  * NOTE: this will not unwrap lisp-style (see below) handlers.
  * NOTE: modes are prioritized by order of occurrence.
+ * NOTE: modifiers can be a list of three bools...
+ * 		(see: normalizeModifiers(...) for further information)
  *
  * XXX need an explicit way to prioritize modes, avoiding object attr 
  * 		ordering...
@@ -166,6 +203,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 	var s_chr = null
 	var did_handling = false
 	modifiers = modifiers == null ? '' : modifiers
+	modifiers = modifiers != '?' ? normalizeModifiers(modifiers) : modifiers
 	modes = modes == null ? 'any' : modes
 	shifted_keys = shifted_keys == null ? _SHIFT_KEYS : shifted_keys
 
@@ -342,12 +380,14 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  * 				default: <callback> | <key-def-x>,
  *
  *				// a modifier can be any single modifier, like shift or a 
- *				// combination of modifiers like 'ctrl+shift', given in order 
+ *				// combination of modifiers like 'ctrl+shift', in order 
  *				// of priority.
- *				// supported modifiers are (in order of priority):
+ *				// supported modifiers, ordered by priority, are:
  *				//	- ctrl
  *				//	- alt
  *				//	- shift
+ *				// NOTE: if in doubt use normalizeModifiers(..) as a 
+ *				//		reference...
  * 				<modifer>: [...],
  * 				...
  * 			},
@@ -402,10 +442,8 @@ function makeKeyboardHandler(keybindings, unhandled){
 		// key data...
 		var key = evt.keyCode
 
-		// normalize the modifiers...
-		var modifiers = evt.ctrlKey ? 'ctrl' : ''
-		modifiers += evt.altKey ? (modifiers != '' ? '+alt' : 'alt') : ''
-		modifiers += evt.shiftKey ? (modifiers != '' ? '+shift' : 'shift') : ''
+		// get modifiers...
+		var modifiers = [evt.ctrlKey, evt.altKey, evt.shiftKey]
 
 		//window.DEBUG && console.log('KEY:', key, chr, modifiers)
 
