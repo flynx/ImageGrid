@@ -42,6 +42,7 @@ NODE_DIR=node_modules
 BUILD_DIR=build
 WIN_BUILD_DIR=build/Win32
 MAC_BUILD_DIR=build/MacOSX
+MAC_10_6_BUILD_DIR=build/MacOSX-10.6
 LINUX_IA32_BUILD_DIR=build/Linux-ia32
 LINUX_X64_BUILD_DIR=build/Linux-x64
 ANDROID_BUILD_DIR=build/Android
@@ -52,6 +53,7 @@ DIST_DIR=dist
 # XXX add version
 WIN_DIST_ZIP=$(DIST_DIR)/$(APP_NAME)-win32.zip
 MAC_DIST_ZIP=$(DIST_DIR)/$(APP_NAME)-osx.zip
+MAC_10_6_DIST_ZIP=$(DIST_DIR)/$(APP_NAME)-osx10.6.zip
 
 
 APP_ZIP=$(BUILD_DIR)/app.zip
@@ -79,6 +81,8 @@ $(WIN_BUILD_DIR):
 	mkdir -p $(WIN_BUILD_DIR)
 $(MAC_BUILD_DIR):
 	mkdir -p $(MAC_BUILD_DIR)
+$(MAC_10_6_BUILD_DIR):
+	mkdir -p $(MAC_10_6_BUILD_DIR)
 $(LINUX_IA32_BUILD_DIR):
 	mkdir -p $(LINUX_IA32_BUILD_DIR)
 $(LINUX_X64_BUILD_DIR):
@@ -129,6 +133,8 @@ win32: $(APP_ZIP) $(WIN_BUILD_DIR)
 	cat $(APP_ZIP) >> $(WIN_BUILD_DIR)/nw.exe
 	mv $(WIN_BUILD_DIR)/nw.exe $(WIN_BUILD_DIR)/$(APP_NAME).exe
 	chmod +x $(WIN_BUILD_DIR)/*.{exe,dll}
+	rm -f $(MAC_BUILD_DIR)/nwsnapshot.exe \
+		$(MAC_BUILD_DIR)/credits.html
 
 win32-dist: win32 $(DIST_DIR)
 	# XXX include vips...
@@ -140,6 +146,7 @@ win32-dist: win32 $(DIST_DIR)
 
 # node-webkit mac
 # XXX BUG: rebuilding without cleaning will mess up folders...
+# XXX this is for 10.7+
 osx: $(APP_ZIP) $(MAC_BUILD_DIR) Info.plist
 	unzip -u $(wildcard targets/node-webkit/node-webkit-*-osx-ia32.zip) \
 		-d $(MAC_BUILD_DIR)
@@ -147,15 +154,34 @@ osx: $(APP_ZIP) $(MAC_BUILD_DIR) Info.plist
 	# XXX not sure if this is needed...
 	chmod +x $(MAC_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
 	# XXX there is something wrong with the updated Info.plist, need to investigate...
-	##cp Info.plist $(MAC_BUILD_DIR)/node-webkit.app/Contents/
-	##mv $(MAC_BUILD_DIR)/node-webkit.app $(MAC_BUILD_DIR)/$(APP_NAME).app
+	cp Info.plist $(MAC_BUILD_DIR)/node-webkit.app/Contents/
+	mv $(MAC_BUILD_DIR)/node-webkit.app $(MAC_BUILD_DIR)/$(APP_NAME).app
 	# XXX TODO: add real credits...
 	rm -f $(MAC_BUILD_DIR)/nwsnapshot \
 		$(MAC_BUILD_DIR)/credits.html
 
+# XXX this is almost identical to osx...
+# XXX BUG: rebuilding without cleaning will mess up folders...
+osx10.6: $(APP_ZIP) $(MAC_10_6_BUILD_DIR) Info.plist
+	unzip -u $(wildcard targets/node-webkit/node-webkit-*-osx10.6-ia32.zip) \
+		-d $(MAC_10_6_BUILD_DIR)
+	cp $(APP_ZIP) $(MAC_10_6_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
+	# XXX not sure if this is needed...
+	chmod +x $(MAC_10_6_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
+	# XXX there is something wrong with the updated Info.plist, need to investigate...
+	cp Info.plist $(MAC_10_6_BUILD_DIR)/node-webkit.app/Contents/
+	mv $(MAC_10_6_BUILD_DIR)/node-webkit.app $(MAC_10_6_BUILD_DIR)/$(APP_NAME).app
+	# XXX TODO: add real credits...
+	rm -f $(MAC_10_6_BUILD_DIR)/nwsnapshot \
+		$(MAC_10_6_BUILD_DIR)/credits.html
+
+
 
 osx-dist: osx $(DIST_DIR)
 	zip -r $(MAC_DIST_ZIP) $(MAC_BUILD_DIR)
+
+osx10.6-dist: osx $(DIST_DIR)
+	zip -r $(MAC_10_6_DIST_ZIP) $(MAC_10_6_BUILD_DIR)
 
 
 
