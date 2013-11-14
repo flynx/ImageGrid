@@ -375,12 +375,13 @@ function removeRibbon(ribbon){
 // NOTE: this will compensate for left position changes so as the images
 // 		that did not change will stay in the same position.
 // 		to disable this, set no_compensate_shift to true.
+//
 // NOTE: for position compensation to work with scaling need to set the 
 // 		origin on the scaled element ($('.ribbon-set')) to top left 
 // 		(instead of the default 50% 50% 0) to avoid element size 
 // 		affecting it's perceived position...
-//
-// XXX check what goes on if left/right are far more than length...
+// NOTE: this will remove everything out of a ribbon if left/right are 
+// 		more than the length of the ribbon...
 function extendRibbon(left, right, ribbon, no_compensate_shift){
 	ribbon = ribbon == null ? 
 				getRibbon()
@@ -388,6 +389,12 @@ function extendRibbon(left, right, ribbon, no_compensate_shift){
 	left = left == null ? 0 : left
 	right = right == null ? 0 : right
 	var images = ribbon.children('.image')
+
+	// total length of the result...
+	var len = left + right + images.length
+	len = len < 0 ? 0 : len
+	var cur_len = images.length
+
 	var removed = []
 	var res = {
 		left: $([]),
@@ -398,21 +405,31 @@ function extendRibbon(left, right, ribbon, no_compensate_shift){
 	// NOTE: we save the detached elements to reuse them on extending,
 	//		if needed...
 	if(left < 0){
-		removed = $(images.splice(0, -left)).detach()
+		//removed = $(images.splice(0, -left)).detach()
+		removed = $(removed.concat($(images.splice(0, -left)).detach().toArray()))
 	}
 	if(right < 0){
 		var l = images.length
-		removed = $(images.splice(l+right, l)).detach()
+		//removed = $(images.splice(l+right, l)).detach()
+		removed = $(removed.concat($(images.splice(l+right, l)).detach().toArray()))
 	}
+	// calculate the maximum number of new elements left to create...
+	cur_len -= removed.length
+	len -= cur_len
 
 	// extend...
+	// XXX do we need to balance the len between left/right...
+	// 		...likely no.
 	if (left > 0){
+		left = left > len ? len : left
 		res.left = createImages(left, removed).prependTo(ribbon)
 	}
 	if (right > 0){
+		right = right > len ? len : right
 		res.right = createImages(right, removed).appendTo(ribbon)
 	}
 
+	// compensate the position...
 	// NOTE: this is fool-proof as it's based on relative visual 
 	// 		position...
 	//var scale = getElementScale($('.ribbon-set'))
