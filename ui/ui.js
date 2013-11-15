@@ -1050,6 +1050,52 @@ function sortImagesDialog(){
 }
 
 
+function cropImagesDialog(){
+
+	updateStatus('Crop...').show()
+
+	var alg = 'Crop:|'+
+		'Use Esc and Shift-Esc to exit crop modes.'+
+		'\n\n'+
+		'NOTE: currently mixing crop modes is not supported,\n'+
+		'thus, if you are in a particular crop mode, you can\n'+
+		'only use that mode to crop again.\n'+
+		'...This restriction will be removed later.'
+
+	cfg = {}
+	cfg[alg] = [
+		'Marked images', 
+		'Current ribbon', 
+		'Current ribbon and above'
+	]
+
+	formDialog(null, '', 
+			cfg,
+			'OK', 
+			'cropImagesDialog')
+		.done(function(res){
+			res = res[alg]
+
+			if(/Marked/i.test(res)){
+				var method = toggleMarkedOnlyView
+
+			} else if(/Current ribbon/i.test(res)){
+				var method = toggleSingleRibbonMode
+
+			} else if(/Current ribbon and above/i.test(res)){
+				var method = toggleCurrenAndAboveRibbonsMode
+			}
+
+			showStatusQ('Cropped: '+res+'...')
+
+			method('on')
+		})
+		.fail(function(){
+			showStatusQ('Crop: canceled.')
+		})
+}
+
+
 // XXX get EXIF, IPTC...
 function showImageInfo(){
 	var gid = getImageGID(getImage())

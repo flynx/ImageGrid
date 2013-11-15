@@ -689,6 +689,8 @@ var KEYBOARD_CONFIG = {
 		// XXX make F4 a default editor and E a default viewer...
 		F4: 'E',
 
+		C: doc('Show crop dialog', cropImagesDialog),
+
 		// info...
 		I: {
 				default: doc('Show current image info',
