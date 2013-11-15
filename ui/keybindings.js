@@ -332,6 +332,8 @@ var KEYBOARD_CONFIG = {
 		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
 
 		// cropping...
+		C: doc('Show data crop dialog', cropImagesDialog),
+
 		// XXX add a non FXX key for macs...
 		F2: {
 				shift: doc('Crop marked only images', 
@@ -688,8 +690,6 @@ var KEYBOARD_CONFIG = {
 		E: doc('Open image in external software', openImage),
 		// XXX make F4 a default editor and E a default viewer...
 		F4: 'E',
-
-		C: doc('Show crop dialog', cropImagesDialog),
 
 		// info...
 		I: {
