@@ -1055,15 +1055,11 @@ function cropImagesDialog(){
 	updateStatus('Crop...').show()
 
 	var alg = 'Crop:|'+
-		'Use Esc and Shift-Esc to exit crop modes.'+
-		'\n\n'+
-		'NOTE: currently mixing crop modes is not supported,\n'+
-		'thus, if you are in a particular crop mode, you can\n'+
-		'only use that mode to crop again.\n'+
-		'...This restriction will be removed later.'
+		'Use Esc and Shift-Esc to exit crop modes.'
 
 	cfg = {}
 	cfg[alg] = [
+		'Marked images (single ribbon)', 
 		'Marked images', 
 		'Current ribbon', 
 		'Current ribbon and above'
@@ -1076,8 +1072,11 @@ function cropImagesDialog(){
 		.done(function(res){
 			res = res[alg]
 
-			if(/Marked/i.test(res)){
+			if(/Marked.*single ribbon/i.test(res)){
 				var method = toggleMarkedOnlyView
+
+			} else if(/Marked/i.test(res)){
+				var method = toggleMarkedOnlyWithRibbonsView
 
 			} else if(/Current ribbon/i.test(res)){
 				var method = toggleSingleRibbonMode

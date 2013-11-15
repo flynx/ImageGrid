@@ -180,6 +180,24 @@ var toggleSingleRibbonMode = makeCropModeToggler(
 		})
 
 
+var toggleCurrenAndAboveRibbonsMode = makeCropModeToggler(
+		'current-and-above-ribbons-mode',
+		function(){
+				var gids = []
+				var c = getRibbonIndex()
+				var ribbons = DATA.ribbons
+
+				// merge the ribbons...
+				for(var i=0; i <= c; i++){
+					gids = gids.concat(ribbons[i])
+				}
+				gids.sort(imageOrderCmp)
+
+				// do the crop...
+				cropDataTo(gids)
+		})
+
+
 // TODO transitions...
 // TODO a real setup UI (instead of prompt)
 var toggleSlideShowMode = createCSSClassToggler(

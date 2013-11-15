@@ -16,25 +16,12 @@
 // NOTE: MARKED may contain both gids that are not loaded and that do 
 // 		not exist, as there is no way to distinguish between the two 
 // 		situations the cleanup is optional...
-function cropMarkedImages(cmp, no_cleanout_marks){
+function cropMarkedImages(cmp, keep_ribbons, no_cleanout_marks){
 	cmp = cmp == null ? imageOrderCmp : cmp
 	var cur = DATA.current
 	var marked = MARKED.slice().sort(cmp)
 
-	if(!no_cleanout_marks){
-		// build all loaded images cache...
-		var loaded = []
-		$.each(DATA.ribbons, function(i, e){ loaded = loaded.concat(e) })
-
-		// ignore any gid in marks that is not in IMAGES...
-		// NOTE: if IMAGES contains only part of the data loadable this will 
-		// 		be wrong...
-		var marked = marked.filter(function(e){ 
-			return e in IMAGES && loaded.indexOf(e) >= 0 
-		})
-	}
-
-	cropDataTo(marked)
+	cropDataTo(marked, keep_ribbons, no_cleanout_marks)
 
 	return DATA
 }
@@ -49,6 +36,13 @@ function cropMarkedImages(cmp, no_cleanout_marks){
 var toggleMarkedOnlyView = makeCropModeToggler(
 		'marked-only-view',
 		cropMarkedImages)
+
+
+var toggleMarkedOnlyWithRibbonsView = makeCropModeToggler(
+		'marked-only-view',
+		function(){
+			cropMarkedImages(null, true)
+		})
 
 
 // XXX shifting images and unmarking in this mode do not work correctly...

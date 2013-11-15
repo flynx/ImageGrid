@@ -28,14 +28,30 @@ function getAllData(){
 
 // NOTE: this will not update .current state...
 // NOTE: when keep_ribbons is set, this may generate empty ribbons...
+// NOTE: this requieres all data to be present, if currently viewing 
+// 		server-side data, then cropping is a server-side operation...
+// 		XXX another way to go here is to save the crop method and take 
+// 			it into account when loading new sections of data...
 //
 // XXX should this set the .current to anything but null or the first elem???
-function makeCroppedData(gids, keep_ribbons){
+function makeCroppedData(gids, keep_ribbons, keep_unloaded_gids){
 	var res = {
 		varsion: '2.0',
 		current: null,
 		ribbons: [],
 		order: DATA.order.slice(),
+	}
+
+	// remove any gid that is not in IMAGES or is not loaded...
+	if(!keep_unloaded_gids){
+		var loaded = []
+		$.each(DATA.ribbons, function(i, e){ loaded = loaded.concat(e) })
+
+		// NOTE: if IMAGES contains only part of the data loadable this will 
+		// 		be wrong...
+		gids = gids.filter(function(e){ 
+			return e in IMAGES && loaded.indexOf(e) >= 0 
+		})
 	}
 
 	// flat single ribbon crop...
@@ -59,12 +75,12 @@ function makeCroppedData(gids, keep_ribbons){
 
 // NOTE: if keep_ribbons is not set this will ALWAYS build a single ribbon
 // 		data-set...
-function cropDataTo(gids, keep_ribbons){
+function cropDataTo(gids, keep_ribbons, keep_unloaded_gids){
 	var prev_state = DATA
 	var cur = DATA.current
 	var r = getRibbonIndex()
 
-	var new_data = makeCroppedData(gids, keep_ribbons)
+	var new_data = makeCroppedData(gids, keep_ribbons, keep_unloaded_gids)
 
 	// do nothing if there is no change...
 	// XXX is there a better way to compare states???
@@ -139,11 +155,14 @@ function showAllData(){
 // 		uncropLastState(...)
 // NOTE: crop modes are exclusive -- it is not possible to enter one crop
 // 		mode from a different crop mode
+//
+// XXX add "exclusive" crop option -- prevent other crop modes to enter...
 function makeCropModeToggler(cls, crop){
 	var res = createCSSClassToggler(
 			'.viewer',
 			//cls + ' cropped-mode',
 			cls,
+			/* XXX make this an option...
 			function(action){
 				// prevent mixing marked-only and single-ribbon modes...
 				if(action == 'on' 
@@ -152,6 +171,7 @@ function makeCropModeToggler(cls, crop){
 					return false
 				}
 			},
+			*/
 			function(action){
 				if(action == 'on'){
 					showStatusQ('Cropping current ribbon...')
