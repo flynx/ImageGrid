@@ -406,12 +406,12 @@ function extendRibbon(left, right, ribbon, no_compensate_shift){
 	//		if needed...
 	if(left < 0){
 		//removed = $(images.splice(0, -left)).detach()
-		removed = $(removed.concat($(images.splice(0, -left)).detach().toArray()))
+		removed = removed.concat($(images.splice(0, -left)).detach().toArray())
 	}
 	if(right < 0){
 		var l = images.length
 		//removed = $(images.splice(l+right, l)).detach()
-		removed = $(removed.concat($(images.splice(l+right, l)).detach().toArray()))
+		removed = removed.concat($(images.splice(l+right, l)).detach().toArray())
 	}
 	// calculate the maximum number of new elements left to create...
 	cur_len -= removed.length
