@@ -1054,13 +1054,16 @@ function cropImagesDialog(){
 
 	updateStatus('Crop...').show()
 
-	var alg = 'Crop:|'+
-		'Use Esc and Shift-Esc to exit crop modes.'
+	var alg = 'Crop: |'+
+		'Use Esc and Shift-Esc to exit crop modes.'+
+		'\n\n'+
+		'NOTE: all drop modes will produce a single ribbon unless\n'+
+		'otherwise stated.'
 
 	cfg = {}
 	cfg[alg] = [
-		'Marked images (single ribbon)', 
 		'Marked images', 
+		'Marked images (keep ribbons)', 
 		'Current ribbon', 
 		'Current ribbon and above'
 	]
@@ -1072,11 +1075,12 @@ function cropImagesDialog(){
 		.done(function(res){
 			res = res[alg]
 
-			if(/Marked.*single ribbon/i.test(res)){
-				var method = toggleMarkedOnlyView
+			// NOTE: this must be before the "simpler" text version...
+			if(/Marked.*keep ribbons/i.test(res)){
+				var method = toggleMarkedOnlyWithRibbonsView
 
 			} else if(/Marked/i.test(res)){
-				var method = toggleMarkedOnlyWithRibbonsView
+				var method = toggleMarkedOnlyView
 
 			} else if(/Current ribbon/i.test(res)){
 				var method = toggleSingleRibbonMode
