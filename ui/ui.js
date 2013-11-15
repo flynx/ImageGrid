@@ -1057,7 +1057,7 @@ function cropImagesDialog(){
 	var alg = 'Crop: |'+
 		'Use Esc and Shift-Esc to exit crop modes.'+
 		'\n\n'+
-		'NOTE: all drop modes will produce a single ribbon unless\n'+
+		'NOTE: all crop modes will produce a single ribbon unless\n'+
 		'otherwise stated.'
 
 	cfg = {}
