@@ -198,8 +198,10 @@ function makeCurrenAndAboveModeToggler(name, keep_ribbons){
 				cropDataTo(gids, keep_ribbons)
 		})
 }
-var toggleCurrenAndAboveRibbonMode = makeCurrenAndAboveModeToggler('current-and-above-ribbon-mode')
-var toggleCurrenAndAboveRibbonsMode = makeCurrenAndAboveModeToggler('current-and-above-ribbons-mode', true)
+var toggleCurrenAndAboveRibbonMode = makeCurrenAndAboveModeToggler(
+		'current-and-above-ribbon-mode')
+var toggleCurrenAndAboveRibbonsMode = makeCurrenAndAboveModeToggler(
+		'current-and-above-ribbons-mode', true)
 
 
 // TODO transitions...
