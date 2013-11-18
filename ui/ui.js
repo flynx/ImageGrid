@@ -1065,7 +1065,8 @@ function cropImagesDialog(){
 		'Marked images', 
 		'Marked images (keep ribbons)', 
 		'Current ribbon', 
-		'Current ribbon and above'
+		'Current ribbon and above',
+		'Current ribbon and above (keep ribbons)'
 	]
 
 	formDialog(null, '', 
@@ -1075,18 +1076,21 @@ function cropImagesDialog(){
 		.done(function(res){
 			res = res[alg]
 
-			// NOTE: this must be before the "simpler" text version...
+			// NOTE: these must be in order of least-specific last...
 			if(/Marked.*keep ribbons/i.test(res)){
 				var method = toggleMarkedOnlyWithRibbonsView
 
 			} else if(/Marked/i.test(res)){
 				var method = toggleMarkedOnlyView
 
-			} else if(/Current ribbon/i.test(res)){
-				var method = toggleSingleRibbonMode
+			} else if(/Current ribbon and above.*keep ribbons/i.test(res)){
+				var method = toggleCurrenAndAboveRibbonsMode
 
 			} else if(/Current ribbon and above/i.test(res)){
-				var method = toggleCurrenAndAboveRibbonsMode
+				var method = toggleCurrenAndAboveRibbonMode
+
+			} else if(/Current ribbon/i.test(res)){
+				var method = toggleSingleRibbonMode
 			}
 
 			showStatusQ('Cropped: '+res+'...')

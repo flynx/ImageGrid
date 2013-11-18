@@ -180,8 +180,9 @@ var toggleSingleRibbonMode = makeCropModeToggler(
 		})
 
 
-var toggleCurrenAndAboveRibbonsMode = makeCropModeToggler(
-		'current-and-above-ribbons-mode',
+function makeCurrenAndAboveModeToggler(name, keep_ribbons){
+	return makeCropModeToggler(
+		name,
 		function(){
 				var gids = []
 				var c = getRibbonIndex()
@@ -194,8 +195,11 @@ var toggleCurrenAndAboveRibbonsMode = makeCropModeToggler(
 				gids.sort(imageOrderCmp)
 
 				// do the crop...
-				cropDataTo(gids)
+				cropDataTo(gids, keep_ribbons)
 		})
+}
+var toggleCurrenAndAboveRibbonMode = makeCurrenAndAboveModeToggler('current-and-above-ribbon-mode')
+var toggleCurrenAndAboveRibbonsMode = makeCurrenAndAboveModeToggler('current-and-above-ribbons-mode', true)
 
 
 // TODO transitions...
