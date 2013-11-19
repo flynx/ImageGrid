@@ -101,7 +101,8 @@ function setupDataBindings(viewer){
 						&& l < Math.round(screen_size * LOAD_SCREENS))){
 				// XXX in some cases this makes the current ribbon align 
 				// 		in a wrong way...
-				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), ribbon)
+				//loadImages(gid, Math.round(screen_size * LOAD_SCREENS), ribbon)
+				loadImagesAround(Math.round(screen_size * LOAD_SCREENS), gid, ribbon)
 			} 
 
 			// roll the ribbon while we are advancing...
@@ -181,7 +182,8 @@ function setupDataBindings(viewer){
 			var gid = getImageGID()
 			$('.ribbon').each(function(){
 				var r = $(this)
-				loadImages(gid, Math.round(screen_size * LOAD_SCREENS), r)
+				//loadImages(gid, Math.round(screen_size * LOAD_SCREENS), r)
+				loadImagesAround(Math.round(screen_size * LOAD_SCREENS), gid, r)
 			})
 			centerView(null, 'css')
 

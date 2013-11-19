@@ -1324,11 +1324,23 @@ function getGIDsAround(count, gid, ribbon, data){
 }
 
 
-// NOTE: this expects that bot arrays cleanly intersect each other only 
+// NOTE: this expects that both arrays cleanly intersect each other only 
 // 		once...
 function getCommonSubArrayOffsets(L1, L2){
 	var res = {}
 
+	// defaults for if one of the lists is empty...
+	if(L1.length == 0){
+		res.left = -(L2.length)
+		res.right = 0
+		return res
+	} else if(L2.length == 0){
+		res.left = L1.length 
+		res.right = 0
+		return res
+	}
+
+	// head...
 	var n = L1[0]
 	var o = L2[0]
 	var a = L2.indexOf(n)
@@ -1337,6 +1349,7 @@ function getCommonSubArrayOffsets(L1, L2){
 			: b >= 0 ? b 
 			: null
 
+	// tail...
 	n = L1[L1.length-1]
 	o = L2[L2.length-1]
 	a = L2.indexOf(n)
@@ -1366,16 +1379,17 @@ function getCommonSubArray(L1, L2){
 }
 
 
-function loadImagesAgound(count, gid, ribbon, data){
+function loadImagesAround(count, gid, ribbon, data){
 	// default values...
 	data = data == null ? DATA : data
 	gid = gid == null ? getImageGID() : gid
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
+	ribbon = typeof(ribbon) != typeof(123) ? getRibbonIndex(ribbon) : ribbon
 	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
 
 	gid = data.ribbons[ribbon].indexOf(gid) < 0 ? getGIDBefore(gid, ribbon, null, data) : gid
 
-	var ribbon_elem = getRibbon(getImage(gid)) 
+	var ribbon_elem = getRibbon(ribbon)
 
 	var old_ribbon = ribbon_elem
 		.find('.image')
@@ -1394,23 +1408,24 @@ function loadImagesAgound(count, gid, ribbon, data){
 		return ribbon_elem.find('.image')
 	}
 
-	// NOTE: of at least one of left or right is null then there might 
+	// NOTE: if at least one of left or right is null then there might 
 	// 		be an error loading the ribbons...
 	if(left == null || right == null){
 		// XXX this code is temporary...
-		console.log('something is wrong with loaded ribbons...')
+		console.warn('something is wrong with loaded ribbons...')
 		left = null
 		right = null
 	}
 	// if no common sections reload all...
+	// XXX this path is wrong...
 	if(left == null && right == null){
-		var r = (old_ribbon.length - count)/2
+		var r = (count - old_ribbon.length)/2
 		extendRibbon(Math.floor(r), Math.ceil(r), ribbon_elem)
 		// XXX this will get all the current images, not the resulting ones...
 		var images = ribbon_elem.find('.image')
 		var res = {
 			left: images,
-			right: []
+			right: $([])
 		}
 
 	} else {
@@ -1434,6 +1449,10 @@ function loadImagesAgound(count, gid, ribbon, data){
 		updated += 1
 	})
 
+	if(updated > 0){
+		$('.viewer').trigger('updatedRibbon', [ribbon_elem])
+	}
+
 	// XXX is this the right place for this?
 	// XXX this might be too global, do only the images loaded...
 	correctImageProportionsForRotation(images)
@@ -1441,6 +1460,7 @@ function loadImagesAgound(count, gid, ribbon, data){
 }
 
 
+/*
 // Load count images around a given image/gid into the given ribbon.
 //
 // NOTE: this will reload the current image elements...
@@ -1448,6 +1468,9 @@ function loadImagesAgound(count, gid, ribbon, data){
 // NOTE: load only what is needed instead of reloading everything...
 // NOTE: this will not change alignment if the current image is within 
 // 		the target range...
+//
+// XXX for some magical (unknown) reason this returns BEFORE all the 
+// 		elements this creates actually exist (async)...
 function loadImages(ref_gid, count, ribbon){
 	ribbon = $(ribbon)
 	var images = ribbon.find('.image')
@@ -1534,6 +1557,7 @@ function loadImages(ref_gid, count, ribbon){
 	correctImageProportionsForRotation(images)
 	return images
 }
+*/
 
 
 /*
@@ -1609,7 +1633,8 @@ function reloadViewer(images_per_screen){
 
 	// create images...
 	$('.ribbon').each(function(i, e){
-		loadImages(current, Math.min(w * LOAD_SCREENS, DATA.ribbons[i].length), $(this))
+		//loadImages(current, Math.min(w * LOAD_SCREENS, DATA.ribbons[i].length), $(this))
+		loadImagesAround(Math.round(w * LOAD_SCREENS), current, i)
 	})
 
 	// XXX this may occur BEFORE the image is created...

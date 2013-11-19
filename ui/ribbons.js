@@ -126,9 +126,24 @@ function getImageGID(image){
 }
 
 
-function getRibbon(image){
-	image = image == null ? getImage() : $(image)
-	return image.closest('.ribbon')
+function getRibbon(a){
+	a = a == null ? getImage() : a
+
+	// a is an index...
+	if(typeof(a) == typeof(123)){
+		return $($('.ribbon')[a])
+
+	// a is a gid...
+	} else if(typeof(a) == typeof('str')){
+		a = getImage(a)
+
+	// a was an elem...
+	} else {
+		a = $(a)
+	}
+
+	// a is an element...
+	return a.closest('.ribbon')
 }
 
 
