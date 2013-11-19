@@ -1341,19 +1341,15 @@ function getCommonSubArrayOffsets(L1, L2){
 	}
 
 	// head...
-	var n = L1[0]
-	var o = L2[0]
-	var a = L2.indexOf(n)
-	var b = L1.indexOf(o)
+	var a = L2.indexOf(L1[0])
+	var b = L1.indexOf(L2[0])
 	res.left = a >= 0 ? -a 
 			: b >= 0 ? b 
 			: null
 
 	// tail...
-	n = L1[L1.length-1]
-	o = L2[L2.length-1]
-	a = L2.indexOf(n)
-	b = L1.indexOf(o)
+	a = L2.indexOf(L1[L1.length-1])
+	b = L1.indexOf(L2[L2.length-1])
 	res.right = a >= 0 ? -(L2.length - a - 1)
 			: b >= 0 ? L1.length - b - 1
 			: null
@@ -1387,6 +1383,8 @@ function loadImagesAround(count, gid, ribbon, data){
 	ribbon = typeof(ribbon) != typeof(123) ? getRibbonIndex(ribbon) : ribbon
 	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
 
+	console.log('Loading ribbon #'+ribbon+'...')
+
 	gid = data.ribbons[ribbon].indexOf(gid) < 0 ? getGIDBefore(gid, ribbon, null, data) : gid
 
 	var ribbon_elem = getRibbon(ribbon)
@@ -1408,45 +1406,65 @@ function loadImagesAround(count, gid, ribbon, data){
 		return ribbon_elem.find('.image')
 	}
 
+	/*
+	// XXX this means something is REALLY wrong...
 	// NOTE: if at least one of left or right is null then there might 
 	// 		be an error loading the ribbons...
 	if(left == null || right == null){
 		// XXX this code is temporary...
-		console.warn('something is wrong with loaded ribbons...')
+		console.warn('Something is wrong with loaded ribbon #'+ribbon+', reloading...')
 		left = null
 		right = null
 	}
-	// if no common sections reload all...
-	// XXX this path is wrong...
-	if(left == null && right == null){
-		var r = (count - old_ribbon.length)/2
-		extendRibbon(Math.floor(r), Math.ceil(r), ribbon_elem)
-		// XXX this will get all the current images, not the resulting ones...
+	*/
+	// XXX this section is WRONG...
+	// no common sections, do a full reload...
+	//if(left == null && right == null){
+	if(left == null || right == null){
+		console.warn('Something is wrong with loaded ribbon #'+ribbon+', reloading...')
+
+		var n = new_ribbon.indexOf(gid)
+		var o = old_ribbon.indexOf(gid)
+		// NOTE: if we are going to the start, gid can not be preset in new ribbon...
+		n = n < 0 ? 0 : n
+		// NOTE: the target gid might not exist in the old ribbon...
+		o = o < 0 ? 0 : o
+
+		// calculate the offset...
+		left = o - n
+		// XXX do we need to subtract 1 here???
+		right = new_ribbon.length - left
+
+		console.log('>>>>', n, '---', left, right, '-- count:', count, 'L:', new_ribbon.length)
+
+		extendRibbon(left, right, ribbon_elem)
+
+		// NOTE: we are doing a complete reload...
 		var images = ribbon_elem.find('.image')
 		var res = {
 			left: images,
 			right: $([])
 		}
 
+	// partial reload...
 	} else {
+		var res = extendRibbon(left, right, ribbon_elem)
 		// XXX this will get all the current images, not the resulting ones...
 		var images = ribbon_elem.find('.image')
-		var res = extendRibbon(left, right, ribbon_elem)
 	}
 
-	// update the images...
+	var updated = 0
 	var size = getVisibleImageSize('max')
 
-	var updated = 0
-
+	// update the images...
 	res.left.each(function(i, e){
 		updateImage(e, new_ribbon[i], size)
-		updated += 1
+		updated++
 	})
 	var l = res.right.length
 	res.right.each(function(i, e){
 		updateImage(e, new_ribbon[new_ribbon.length-l+i], size)
-		updated += 1
+		updated++
 	})
 
 	if(updated > 0){
@@ -1501,6 +1519,7 @@ function loadImages(ref_gid, count, ribbon){
 	var head = i != -1 ? i 
 		// check if we need to truncate...
 		: j != -1 ? -j
+		// XXX why is the default zero???
 		: 0
 	// check if tails have a common gid and get the diff length...
 	i = gids.indexOf(old_gids[old_gids.length-1])
@@ -1508,6 +1527,7 @@ function loadImages(ref_gid, count, ribbon){
 	var tail = i > 0 ? gids.length - i - 1
 		// check if we need to truncate...
 		: j > 0 ? -(old_gids.length - j - 1)
+		// XXX why is the default zero???
 		: 0
 
 	var size = getVisibleImageSize('max')
