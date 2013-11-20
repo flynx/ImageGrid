@@ -1417,7 +1417,7 @@ function loadImagesAround(count, gid, ribbon, data){
 		right = null
 	}
 	*/
-	// XXX this section is WRONG...
+	// XXX might be magic but now this appears to work!!!
 	// no common sections, do a full reload...
 	//if(left == null && right == null){
 	if(left == null || right == null){
@@ -1432,10 +1432,7 @@ function loadImagesAround(count, gid, ribbon, data){
 
 		// calculate the offset...
 		left = o - n
-		// XXX do we need to subtract 1 here???
-		right = new_ribbon.length - left
-
-		console.log('>>>>', n, '---', left, right, '-- count:', count, 'L:', new_ribbon.length)
+		right = new_ribbon.length - old_ribbon.length - left
 
 		extendRibbon(left, right, ribbon_elem)
 
