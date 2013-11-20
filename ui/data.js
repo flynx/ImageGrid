@@ -1383,8 +1383,6 @@ function loadImagesAround(count, gid, ribbon, data){
 	ribbon = typeof(ribbon) != typeof(123) ? getRibbonIndex(ribbon) : ribbon
 	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
 
-	console.log('Loading ribbon #'+ribbon+'...')
-
 	gid = data.ribbons[ribbon].indexOf(gid) < 0 ? getGIDBefore(gid, ribbon, null, data) : gid
 
 	var ribbon_elem = getRibbon(ribbon)
@@ -1406,6 +1404,8 @@ function loadImagesAround(count, gid, ribbon, data){
 		return ribbon_elem.find('.image')
 	}
 
+	var size = getVisibleImageSize('max')
+
 	/*
 	// XXX this means something is REALLY wrong...
 	// NOTE: if at least one of left or right is null then there might 
@@ -1418,51 +1418,55 @@ function loadImagesAround(count, gid, ribbon, data){
 	}
 	*/
 	// XXX might be magic but now this appears to work!!!
+	// XXX this still is quite buggy!!
 	// no common sections, do a full reload...
 	//if(left == null && right == null){
 	if(left == null || right == null){
-		console.warn('Something is wrong with loaded ribbon #'+ribbon+', reloading...')
+		console.warn('Ribbon #'+ribbon+', reloading...')
 
 		var n = new_ribbon.indexOf(gid)
 		var o = old_ribbon.indexOf(gid)
-		// NOTE: if we are going to the start, gid can not be preset in new ribbon...
-		n = n < 0 ? 0 : n
-		// NOTE: the target gid might not exist in the old ribbon...
-		o = o < 0 ? 0 : o
+		o = o < 0 ? n : o
 
-		// calculate the offset...
-		left = o - n
-		right = new_ribbon.length - old_ribbon.length - left
+		var left = n - o
+		var right = (new_ribbon.length - old_ribbon.length) - left
+
+		console.log('>>>', left, right, 
+				//'--- images:', ribbon_elem.find('.image').length,
+				'new:', new_ribbon.length,
+				'@', n,
+				'old:', old_ribbon.length,
+				'@', o)
 
 		extendRibbon(left, right, ribbon_elem)
 
-		// NOTE: we are doing a complete reload...
-		var images = ribbon_elem.find('.image')
-		var res = {
-			left: images,
-			right: $([])
-		}
+		ribbon_elem.find('.image')
+			.each(function(i, e){
+				updateImage(e, new_ribbon[i], size)
+			})
+		var updated = new_ribbon.length
 
 	// partial reload...
 	} else {
+		console.warn('Ribbon #'+ribbon+', updating...')
+
 		var res = extendRibbon(left, right, ribbon_elem)
 		// XXX this will get all the current images, not the resulting ones...
 		var images = ribbon_elem.find('.image')
+
+		var updated = 0
+
+		// update the images...
+		res.left.each(function(i, e){
+			updateImage(e, new_ribbon[i], size)
+			updated++
+		})
+		var l = res.right.length
+		res.right.each(function(i, e){
+			updateImage(e, new_ribbon[new_ribbon.length-l+i], size)
+			updated++
+		})
 	}
-
-	var updated = 0
-	var size = getVisibleImageSize('max')
-
-	// update the images...
-	res.left.each(function(i, e){
-		updateImage(e, new_ribbon[i], size)
-		updated++
-	})
-	var l = res.right.length
-	res.right.each(function(i, e){
-		updateImage(e, new_ribbon[new_ribbon.length-l+i], size)
-		updated++
-	})
 
 	if(updated > 0){
 		$('.viewer').trigger('updatedRibbon', [ribbon_elem])
