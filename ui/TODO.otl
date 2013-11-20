@@ -108,8 +108,13 @@ Roadmap
 	
 
 
-[_] 27% Gen 3 current todo
-	[_] 54% High priority
+[_] 28% Gen 3 current todo
+	[_] 56% High priority
+		[_] BUG: @ 9 image width, jumping to end of ribbon length 39 messes up loading...
+		| problem likely in loadImagesAround(...)
+		|
+		| ribbon length 178 also ends up messing things up, while 68 and
+		| 69 pose no problems...
 		[_] BUG CLASS (ASAP!): race conditions due to browser rendering lag...
 		| this happens when updating/adding lots of elements:
 		| 
@@ -118,63 +123,63 @@ Roadmap
 		|
 		| one of the side-effects is that the updates or added elements
 		| do not yet exist when the code is done and returned.
-			[_] BUG: reloadViewer(...) loses image focus...
-			| ...if the image is not near ribbon start.
-			|
-			| This is due to the fact that we are trying to focus an image
-			| before the DOM is ready...
-			|
-			| To fix:
-			| 	- make focusImage(...) in reload viewer run AFTER all the 
-			| 	  images are created...
-			|
-			| XXX this is the cause for several other bugs...
-			[_] BUG: sometimes duplicate images get loaded...
-			| this happens when jumping back and forth on the mid ribbon until
-			| the last element shows up and then moving left until the frame
-			| around the image disappears...
-			| at this point, this will return 2:
-			|
-			| 	$('[order='+$('.current.image').attr('order')+']').length
-			|
-			| happens when:
-			| 	ribbon length: ~42
-			| 	screen width: 4
-			| 	jumping to end from start of ribbon
-			|
-			| Example 1:
-			| 	1) first ribbon in (loaded at first image):
-			|	 "F:\work\ImageGrid\cur\ImageGrid\src\ui\BUGS\ribbon loading error\"
-			|	2) ctrl-end (error state in "jumping ribbon .." bug)
-			|	3) left/right (next/prev image)
-			|	now the last portion of the ribbon is loaded twice
-			|
-			| XXX possibly related to 
-			|		 BUG CLASS (ASAP!): race conditions due to browser rendering lag...
-			[_] BUG: jumping in ribbon sometimes does not load the ribbon correctly...
-			| Example 1:
-			| 	first ribbon in (loaded at first image):
-			|	 "F:\work\ImageGrid\cur\ImageGrid\src\ui\BUGS\ribbon loading error\"
-			|	jumping to the end will result in an inconsistent view:
-			|		- ribbon not aligned at the correct spot
-			|		- wrong image is .current
-			|		- part of the images appear to be loaded but misaligned...
-			|
-			| Example 2:
-			| 	load same data at same position as in #1
-			| 		- shift-F2 to marked-only view
-			| 		- go to end of ribbon (any means work)
-			| 		- shift-F2 or Esc out of marked-only mode
-			| 	this will result in a state very similar (if not identical) to
-			| 	example #1...
-			|
-			|
-			| NOTE: jumping back and forth several times will make this problem
-			| 		go away...
-			| 		Q: could this be initial load/state error?
-			|
-			| XXX possibly related to 
-			|		 BUG CLASS (ASAP!): race conditions due to browser rendering lag...
+		[X] BUG: reloadViewer(...) loses image focus...
+		| ...if the image is not near ribbon start.
+		|
+		| This is due to the fact that we are trying to focus an image
+		| before the DOM is ready...
+		|
+		| To fix:
+		| 	- make focusImage(...) in reload viewer run AFTER all the 
+		| 	  images are created...
+		|
+		| XXX this is the cause for several other bugs...
+		[X] BUG: sometimes duplicate images get loaded...
+		| this happens when jumping back and forth on the mid ribbon until
+		| the last element shows up and then moving left until the frame
+		| around the image disappears...
+		| at this point, this will return 2:
+		|
+		| 	$('[order='+$('.current.image').attr('order')+']').length
+		|
+		| happens when:
+		| 	ribbon length: ~42
+		| 	screen width: 4
+		| 	jumping to end from start of ribbon
+		|
+		| Example 1:
+		| 	1) first ribbon in (loaded at first image):
+		|	 "F:\work\ImageGrid\cur\ImageGrid\src\ui\BUGS\ribbon loading error\"
+		|	2) ctrl-end (error state in "jumping ribbon .." bug)
+		|	3) left/right (next/prev image)
+		|	now the last portion of the ribbon is loaded twice
+		|
+		| XXX possibly related to 
+		|		 BUG CLASS (ASAP!): race conditions due to browser rendering lag...
+		[_] BUG: jumping in ribbon sometimes does not load the ribbon correctly...
+		| Example 1:
+		| 	first ribbon in (loaded at first image):
+		|	 "F:\work\ImageGrid\cur\ImageGrid\src\ui\BUGS\ribbon loading error\"
+		|	jumping to the end will result in an inconsistent view:
+		|		- ribbon not aligned at the correct spot
+		|		- wrong image is .current
+		|		- part of the images appear to be loaded but misaligned...
+		|
+		| Example 2:
+		| 	load same data at same position as in #1
+		| 		- shift-F2 to marked-only view
+		| 		- go to end of ribbon (any means work)
+		| 		- shift-F2 or Esc out of marked-only mode
+		| 	this will result in a state very similar (if not identical) to
+		| 	example #1...
+		|
+		|
+		| NOTE: jumping back and forth several times will make this problem
+		| 		go away...
+		| 		Q: could this be initial load/state error?
+		|
+		| XXX possibly related to 
+		|		 BUG CLASS (ASAP!): race conditions due to browser rendering lag...
 		[_] OSX: add alternatives to function buttons...
 		[_] BUG: OSX: unable to load absolute paths...
 		[_] BUG: when loading and a non-existing dir, opening a new dir raises an error
