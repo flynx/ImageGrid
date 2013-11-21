@@ -923,7 +923,7 @@ function exportPreviewsDialog(state, dfl){
 
 	var keys = Object.keys(cfg)
 
-	formDialog(null, '<b>Export:</b> '+ state +'.', cfg, 'OK', 'exportPreviewsDialog')
+	formDialog(null, 'Export: <b>'+ state +'</b>.', cfg, 'OK', 'exportPreviewsDialog')
 		.done(function(data){
 			// get the form data...
 			var name = data[keys[0]]

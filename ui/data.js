@@ -1418,28 +1418,28 @@ function loadImagesAround(count, gid, ribbon, data){
 	}
 	*/
 	// XXX might be magic but now this appears to work!!!
-	// XXX this still is quite buggy!!
 	// no common sections, do a full reload...
 	//if(left == null && right == null){
 	if(left == null || right == null){
-		console.warn('Ribbon #'+ribbon+', reloading...')
+		console.log('Ribbon #'+ribbon+', reloading...')
 
 		var n = new_ribbon.indexOf(gid)
 		var o = old_ribbon.indexOf(gid)
 		o = o < 0 ? n : o
 
+		// calculate offsets...
 		var left = n - o
 		var right = (new_ribbon.length - old_ribbon.length) - left
 
-		console.log('>>>', left, right, 
-				//'--- images:', ribbon_elem.find('.image').length,
-				'new:', new_ribbon.length,
-				'@', n,
+		console.log('   >>>', left, right, '---',
 				'old:', old_ribbon.length,
-				'@', o)
+				'@', o,
+				'new:', new_ribbon.length,
+				'@', n)
 
 		extendRibbon(left, right, ribbon_elem)
 
+		// update the images...
 		ribbon_elem.find('.image')
 			.each(function(i, e){
 				updateImage(e, new_ribbon[i], size)
@@ -1447,8 +1447,15 @@ function loadImagesAround(count, gid, ribbon, data){
 		var updated = new_ribbon.length
 
 	// partial reload...
+	// XXX buggy...
+	// 		see: BUG: @ 9 image width, jumping to end of ribbon length 39 messes up loading...
 	} else {
-		console.warn('Ribbon #'+ribbon+', updating...')
+		console.log('Ribbon #'+ribbon+', updating...')
+		console.log('   >>>', left, right, '---', 
+				'old:', old_ribbon.length,
+				'@', old_ribbon.indexOf(gid),
+				'new:', new_ribbon.length,
+				'@', new_ribbon.indexOf(gid))
 
 		var res = extendRibbon(left, right, ribbon_elem)
 		// XXX this will get all the current images, not the resulting ones...
