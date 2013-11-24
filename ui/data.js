@@ -1335,6 +1335,9 @@ function getGIDsAround(count, gid, ribbon, data){
 
 // NOTE: this expects that both arrays cleanly intersect each other only 
 // 		once...
+// XXX this sometimes returns a null and a value which seems to be 
+// 		impossible...
+// 		...this does not affect anything, but still need to investigate...
 function getCommonSubArrayOffsets(L1, L2){
 	var res = {}
 
@@ -1391,7 +1394,7 @@ function loadImagesAround(count, gid, ribbon, data){
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	ribbon = typeof(ribbon) != typeof(123) ? getRibbonIndex(ribbon) : ribbon
 	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
-
+	// get a gid that exists in the current ribbon...
 	gid = data.ribbons[ribbon].indexOf(gid) < 0 ? getGIDBefore(gid, ribbon, null, data) : gid
 
 	var ribbon_elem = getRibbon(ribbon)
@@ -1415,23 +1418,10 @@ function loadImagesAround(count, gid, ribbon, data){
 
 	var size = getVisibleImageSize('max')
 
-	/*
-	// XXX this means something is REALLY wrong...
-	// NOTE: if at least one of left or right is null then there might 
-	// 		be an error loading the ribbons...
-	if(left == null || right == null){
-		// XXX this code is temporary...
-		console.warn('Something is wrong with loaded ribbon #'+ribbon+', reloading...')
-		left = null
-		right = null
-	}
-	*/
-	// XXX might be magic but now this appears to work!!!
 	// no common sections, do a full reload...
-	//if(left == null && right == null){
+	// XXX NOTE: we use || instead of && here to compensate for an oddity
+	// 		in getCommonSubArrayOffsets(...), see it for further details... 
 	if(left == null || right == null){
-		//console.log('Ribbon #'+ribbon+', reloading...')
-
 		var n = new_ribbon.indexOf(gid)
 		var o = old_ribbon.indexOf(gid)
 		o = o < 0 ? n : o
@@ -1439,14 +1429,6 @@ function loadImagesAround(count, gid, ribbon, data){
 		// calculate offsets...
 		var left = n - o
 		var right = (new_ribbon.length - old_ribbon.length) - left
-
-		/*
-		console.log('   >>>', left, right, '---',
-				'old:', old_ribbon.length,
-				'@', o,
-				'new:', new_ribbon.length,
-				'@', n)
-		*/
 
 		extendRibbon(left, right, ribbon_elem)
 
@@ -1458,24 +1440,10 @@ function loadImagesAround(count, gid, ribbon, data){
 		var updated = new_ribbon.length
 
 	// partial reload...
-	// XXX buggy...
-	// 		see: BUG: @ 9 image width, jumping to end of ribbon length 39 messes up loading...
 	} else {
-		/*
-		console.log('Ribbon #'+ribbon+', updating...')
-		console.log('   >>>', left, right, '---', 
-				'old:', old_ribbon.length,
-				'@', old_ribbon.indexOf(gid),
-				'new:', new_ribbon.length,
-				'@', new_ribbon.indexOf(gid))
-		*/
-
 		var res = extendRibbon(left, right, ribbon_elem)
 		// XXX this will get all the current images, not the resulting ones...
 		var images = ribbon_elem.find('.image')
-
-		//console.log('   >>> images:', images.length, 'res:', res.left.length, res.right.length)
-
 		var updated = 0
 
 		// update the images...
@@ -1512,6 +1480,7 @@ function loadImagesAround(count, gid, ribbon, data){
 //
 // XXX for some magical (unknown) reason this returns BEFORE all the 
 // 		elements this creates actually exist (async)...
+// 		...this causes race conditions...
 function loadImages(ref_gid, count, ribbon){
 	ribbon = $(ribbon)
 	var images = ribbon.find('.image')
