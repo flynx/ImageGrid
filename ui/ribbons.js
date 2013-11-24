@@ -757,6 +757,7 @@ function prevScreenImages(){
 function firstImage(){
 	$('.viewer').trigger('requestedFirstImage', [getRibbon()])
 
+	// if we are already there, flash the indicator...
 	if(getImage().prevAll('.image').length == 0){
 		flashIndicator('start')
 	}
@@ -768,6 +769,7 @@ function firstImage(){
 function lastImage(){
 	$('.viewer').trigger('requestedLastImage', [getRibbon()])
 
+	// if we are already there, flash the indicator...
 	if(getImage().nextAll('.image').length == 0){
 		flashIndicator('end')
 	}

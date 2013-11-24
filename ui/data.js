@@ -1180,6 +1180,15 @@ function updateImage(image, gid, size){
 		img_data = STUB_IMAGE_DATA
 	}
 
+	/*
+	// set the current class...
+	if(gid == DATA.current){
+		image.addClass('current')
+	} else {
+		image.removeClass('current')
+	}
+	*/
+
 	// preview...
 	var p_url = getBestPreview(gid, size).url
 	// NOTE: due to the fact that loading/caching the image might be at 
@@ -1421,7 +1430,7 @@ function loadImagesAround(count, gid, ribbon, data){
 	// no common sections, do a full reload...
 	//if(left == null && right == null){
 	if(left == null || right == null){
-		console.log('Ribbon #'+ribbon+', reloading...')
+		//console.log('Ribbon #'+ribbon+', reloading...')
 
 		var n = new_ribbon.indexOf(gid)
 		var o = old_ribbon.indexOf(gid)
@@ -1431,11 +1440,13 @@ function loadImagesAround(count, gid, ribbon, data){
 		var left = n - o
 		var right = (new_ribbon.length - old_ribbon.length) - left
 
+		/*
 		console.log('   >>>', left, right, '---',
 				'old:', old_ribbon.length,
 				'@', o,
 				'new:', new_ribbon.length,
 				'@', n)
+		*/
 
 		extendRibbon(left, right, ribbon_elem)
 
@@ -1450,16 +1461,20 @@ function loadImagesAround(count, gid, ribbon, data){
 	// XXX buggy...
 	// 		see: BUG: @ 9 image width, jumping to end of ribbon length 39 messes up loading...
 	} else {
+		/*
 		console.log('Ribbon #'+ribbon+', updating...')
 		console.log('   >>>', left, right, '---', 
 				'old:', old_ribbon.length,
 				'@', old_ribbon.indexOf(gid),
 				'new:', new_ribbon.length,
 				'@', new_ribbon.indexOf(gid))
+		*/
 
 		var res = extendRibbon(left, right, ribbon_elem)
 		// XXX this will get all the current images, not the resulting ones...
 		var images = ribbon_elem.find('.image')
+
+		//console.log('   >>> images:', images.length, 'res:', res.left.length, res.right.length)
 
 		var updated = 0
 
@@ -1617,16 +1632,18 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 	if(gids.length == 0){
 		return $([])
 	}
+	var l = gids.length
 	// truncate the results to the length of images...
-	if(n > images.length){
+	if(n > 0 && l > images.length){
 		gids.reverse().splice(images.length)
 		gids.reverse()
-	} else if(Math.abs(n) > images.length){
+	} else if(l > images.length){
 		gids.splice(images.length)
 	}
+	l = gids.length
 
-	if(n < images.length){
-		images = rollRibbon(gids.length * (n > 0 ? 1 : -1), ribbon, extend, no_compensate_shift)
+	if(l < images.length){
+		images = rollRibbon(l * (n > 0 ? 1 : -1), ribbon, extend, no_compensate_shift)
 	}
 
 	var size = getVisibleImageSize('max')
