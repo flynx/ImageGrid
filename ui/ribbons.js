@@ -480,6 +480,8 @@ function rollRibbon(n, ribbon, extend, no_compensate_shift){
 */
 
 function focusImage(image){
+	image = typeof(image) == typeof('str') ? getImage(image) : image
+
 	image.closest('.viewer').find('.current.image').removeClass('current')
 	image.addClass('current')
 	$('.viewer').trigger('focusingImage', [image])

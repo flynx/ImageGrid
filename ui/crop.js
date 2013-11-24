@@ -78,7 +78,7 @@ function makeCroppedData(gids, keep_ribbons, keep_unloaded_gids){
 function cropDataTo(gids, keep_ribbons, keep_unloaded_gids){
 	var prev_state = DATA
 	var cur = DATA.current
-	var r = getRibbonIndex()
+	var r = keep_ribbons ? getRibbonIndex() : 0
 
 	var new_data = makeCroppedData(gids, keep_ribbons, keep_unloaded_gids)
 
@@ -91,8 +91,8 @@ function cropDataTo(gids, keep_ribbons, keep_unloaded_gids){
 	CROP_STACK.push(prev_state)
 	DATA = new_data
 
-	cur = getGIDBefore(cur, keep_ribbons ? r : 0)
-	cur = cur == null ? gids[0] : cur
+	cur = getGIDBefore(cur, r)
+	cur = cur == null ? DATA.ribbons[r][0] : cur
 	DATA.current = cur 
 
 	reloadViewer()

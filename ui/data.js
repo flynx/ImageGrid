@@ -1387,15 +1387,16 @@ function getCommonSubArray(L1, L2){
 }
 
 
+// Load count images around a given image/gid into the given ribbon.
+//
 function loadImagesAround(count, gid, ribbon, data){
 	// default values...
 	data = data == null ? DATA : data
-	gid = gid == null ? getImageGID() : gid
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	ribbon = typeof(ribbon) != typeof(123) ? getRibbonIndex(ribbon) : ribbon
 	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
 	// get a gid that exists in the current ribbon...
-	gid = data.ribbons[ribbon].indexOf(gid) < 0 ? getGIDBefore(gid, ribbon, null, data) : gid
+	gid = getGIDBefore(gid, ribbon, null, data)
 
 	var ribbon_elem = getRibbon(ribbon)
 
@@ -1655,7 +1656,7 @@ function reloadViewer(images_per_screen){
 	// 		...if the image is not loaded the focusingImage event handlers
 	// 		will mess things up...
 	// XXX need to call these when and only when current image is loaded...
-	focusImage($('.image').filter('[gid="'+JSON.stringify(current)+'"]'))
+	focusImage(getImage(current))
 
 	fitNImages(w)
 	centerRibbons('css')
