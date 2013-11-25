@@ -1261,7 +1261,7 @@ function updateImages(size){
 // XXX Race condition: when this is called while DATA is not yet fully 
 // 		loaded (old data), the from gid will not be present in 
 // 		DATA.ribbons...
-function getGIDsAfter(from, count, ribbon, inclusive){
+function getGIDsAfter(count, from, ribbon, inclusive){
 	if(count == 0){
 		return []
 	}
@@ -1490,7 +1490,7 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 
 	var from = n > 0 ? getImageGID(ribbon.find('.image').last())
 					: getImageGID(ribbon.find('.image').first())
-	var gids = getGIDsAfter(from, n, r)
+	var gids = getGIDsAfter(n, from, r)
 	if(gids.length == 0){
 		return $([])
 	}
@@ -1588,8 +1588,8 @@ function preCacheRibbonImages(ribbon){
 	var first = getImageGID(images.first())
 	var last = getImageGID(images.last())
 
-	var gids = getGIDsAfter(first, -cache_frame_size)
-				.concat(getGIDsAfter(last, cache_frame_size))
+	var gids = getGIDsAfter(-cache_frame_size, first)
+				.concat(getGIDsAfter(cache_frame_size, last))
 
 	var cache = []
 	IMAGE_CACHE[i] = cache
