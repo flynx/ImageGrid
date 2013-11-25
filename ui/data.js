@@ -517,58 +517,6 @@ function getGIDBefore(gid, ribbon, search, data){
 }
 
 
-// Get "count" of GIDs starting with a given gid ("from")
-//
-// NOTE: this will not include the 'from' GID in the resulting list, 
-// 		unless inclusive is set to true.
-// NOTE: count can be either negative or positive, this will indicate 
-// 		load direction...
-// NOTE: this can calculate the ribbon number where the image is located.
-// NOTE: if an image can be in more than one ribbon, one MUST suply the
-// 		correct ribbon number...
-//
-// XXX do we need more checking???
-// XXX Race condition: when this is called while DATA is not yet fully 
-// 		loaded (old data), the from gid will not be present in 
-// 		DATA.ribbons...
-function getImageGIDs(from, count, ribbon, inclusive){
-	if(count == 0){
-		return []
-	}
-	// ribbon default value...
-	// XXX Race condition: if DATA is not yet loaded this can return 
-	// 		ribbon == null...
-	if(ribbon == null){
-		$(DATA.ribbons).each(function(i, e){ 
-			if(e.indexOf(from) >= 0){ 
-				ribbon = i
-				return false 
-			} 
-		})
-	}
-	ribbon = DATA.ribbons[ribbon]
-
-	// ribbon this is empty or non-existant...
-	// XXX need to check when can we get a ribbon == undefined case...
-	// 		...race?
-	//if(ribbon == null){
-	//	// XXX
-	//}
-	if(ribbon == null || ribbon.length == 0){
-		return []
-	}
-	if(count > 0){
-		var c = inclusive == null ? 1 : 0
-		var start = ribbon.indexOf(from) + c
-		return ribbon.slice(start, start + count)
-	} else {
-		var c = inclusive == null ? 0 : 1
-		var end = ribbon.indexOf(from)
-		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count + c), end + c)
-	}
-}
-
-
 // Base URL interface...
 //
 // NOTE: changing a base URL will trigger a baseURLChanged event...
@@ -1298,6 +1246,59 @@ function updateImages(size){
 }
 */
 
+
+// Get "count" of GIDs starting with a given gid ("from")
+//
+// NOTE: this will not include the 'from' GID in the resulting list, 
+// 		unless inclusive is set to true.
+// NOTE: count can be either negative or positive, this will indicate 
+// 		load direction...
+// NOTE: this can calculate the ribbon number where the image is located.
+// NOTE: if an image can be in more than one ribbon, one MUST suply the
+// 		correct ribbon number...
+//
+// XXX do we need more checking???
+// XXX Race condition: when this is called while DATA is not yet fully 
+// 		loaded (old data), the from gid will not be present in 
+// 		DATA.ribbons...
+function getGIDsAfter(from, count, ribbon, inclusive){
+	if(count == 0){
+		return []
+	}
+	// ribbon default value...
+	// XXX Race condition: if DATA is not yet loaded this can return 
+	// 		ribbon == null...
+	if(ribbon == null){
+		$(DATA.ribbons).each(function(i, e){ 
+			if(e.indexOf(from) >= 0){ 
+				ribbon = i
+				return false 
+			} 
+		})
+	}
+	ribbon = DATA.ribbons[ribbon]
+
+	// ribbon this is empty or non-existant...
+	// XXX need to check when can we get a ribbon == undefined case...
+	// 		...race?
+	//if(ribbon == null){
+	//	// XXX
+	//}
+	if(ribbon == null || ribbon.length == 0){
+		return []
+	}
+	if(count > 0){
+		var c = inclusive == null ? 1 : 0
+		var start = ribbon.indexOf(from) + c
+		return ribbon.slice(start, start + count)
+	} else {
+		var c = inclusive == null ? 0 : 1
+		var end = ribbon.indexOf(from)
+		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count + c), end + c)
+	}
+}
+
+
 // Get a sub-ribbon of count elements around a given gid
 //
 //	+- ribbon	   count
@@ -1489,7 +1490,7 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 
 	var from = n > 0 ? getImageGID(ribbon.find('.image').last())
 					: getImageGID(ribbon.find('.image').first())
-	var gids = getImageGIDs(from, n, r)
+	var gids = getGIDsAfter(from, n, r)
 	if(gids.length == 0){
 		return $([])
 	}
@@ -1587,8 +1588,8 @@ function preCacheRibbonImages(ribbon){
 	var first = getImageGID(images.first())
 	var last = getImageGID(images.last())
 
-	var gids = getImageGIDs(first, -cache_frame_size)
-				.concat(getImageGIDs(last, cache_frame_size))
+	var gids = getGIDsAfter(first, -cache_frame_size)
+				.concat(getGIDsAfter(last, cache_frame_size))
 
 	var cache = []
 	IMAGE_CACHE[i] = cache
