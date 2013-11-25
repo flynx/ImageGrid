@@ -1288,7 +1288,7 @@ function updateImages(size, cmp){
 }
 
 
-/* XXX for some very odd reason this is slower that the monster above...
+/* XXX for some very odd reason this is slower than the monster above...
 function updateImages(size){
 	size = size == null ? getVisibleImageSize('max') : size
 	return $('.image')
@@ -1519,7 +1519,6 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 
 
 // Reload the viewer using the current DATA and IMAGES objects
-// XXX race condition...
 function reloadViewer(images_per_screen){
 	var ribbons_set = $('.ribbon-set')
 	var current = DATA.current
@@ -1540,10 +1539,6 @@ function reloadViewer(images_per_screen){
 		loadImagesAround(Math.round(w * LOAD_SCREENS), current, i)
 	})
 
-	// XXX this may occur BEFORE the image is created...
-	// 		...if the image is not loaded the focusingImage event handlers
-	// 		will mess things up...
-	// XXX need to call these when and only when current image is loaded...
 	focusImage(getImage(current))
 
 	fitNImages(w)
