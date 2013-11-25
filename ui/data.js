@@ -1423,6 +1423,7 @@ function loadImagesAround(count, gid, ribbon, data){
 	// XXX NOTE: we use || instead of && here to compensate for an oddity
 	// 		in getCommonSubArrayOffsets(...), see it for further details... 
 	if(left == null || right == null){
+		console.log('>>> Ribbon ', ribbon, 'reloading...')
 		var n = new_ribbon.indexOf(gid)
 		var o = old_ribbon.indexOf(gid)
 		o = o < 0 ? n : o
@@ -1442,6 +1443,9 @@ function loadImagesAround(count, gid, ribbon, data){
 
 	// partial reload...
 	} else {
+		console.log('>>> Ribbon ', ribbon, 'updating...')
+		console.log('    left:', left,
+						'right:', right)
 		var res = extendRibbon(left, right, ribbon_elem)
 		// XXX this will get all the current images, not the resulting ones...
 		var images = ribbon_elem.find('.image')
@@ -1593,12 +1597,16 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 	if(n == 0){
 		return $([])
 	}
-	ribbon = ribbon == null ? getRibbon() : $(ribbon)
+	var r = typeof(ribbon) == typeof(123) ? ribbon : null
+	ribbon = ribbon == null ? getRibbon() 
+		: r != null ? getRibbon(ribbon)
+		: $(ribbon)
+	var r = r == null ? getRibbonIndex(ribbon) : r
 	var images = ribbon.find('.image')
 
 	var from = n > 0 ? getImageGID(ribbon.find('.image').last())
 					: getImageGID(ribbon.find('.image').first())
-	var gids = getImageGIDs(from, n)
+	var gids = getImageGIDs(from, n, r)
 	if(gids.length == 0){
 		return $([])
 	}

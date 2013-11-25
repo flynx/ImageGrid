@@ -108,8 +108,39 @@ Roadmap
 	
 
 
-[_] 30% Gen 3 current todo
-	[_] 60% High priority
+[_] 29% Gen 3 current todo
+	[_] 59% High priority
+		[_] 30% mark-based operations
+			[_] 50% cropping selection
+				[X] marked
+				[X] ribbon
+				[_] by tag/collection
+				[_] by group
+			[X] shift up/down
+			[_] tag
+			[_] group
+			| a group should behave as a single image but is 
+			| viewable/expandable as a ribbon...
+			|
+			| should be two types of groups:
+			| 	- strict - always as a single image
+			| 		like a set of versions, processed and processing 
+			| 		versions of the same image.
+			| 		(auto-group?)
+			| 	- loose - similar images, could be named collections
+			| 		viewed individually, but can be accessed either from 
+			| 		a list or a member image (primary).
+			[_] collection
+			| make or add to existing collection
+		[_] 0% grouping / meta-image
+			[_] versions w. label image
+			| a set of images that is represented by one of the group
+			[_] collection
+		[_] editable list of external commands...
+		| to add things like exportdirs.py etc.
+		[_] Export data...
+		| same as export dirs but also include .ImageGrid/ dir with current
+		| data and images...
 		[_] OSX: add alternatives to function buttons...
 		[_] BUG: OSX: unable to load absolute paths...
 		[_] BUG: when loading a non-existing dir, opening a new dir raises an error
@@ -184,7 +215,7 @@ Roadmap
 				| 	- title
 				| 	- directory taggs and meta info
 				| 	- ...
-		[_] 33% mormalize ribbons -- top-align sorted chunks
+		[_] 33% normalize ribbons -- top-align sorted chunks
 			[X] basic mechanics
 			| splitData(...)
 			| mergeData(...)
@@ -222,11 +253,18 @@ Roadmap
 		| 	- CouchDB
 		| 	- SQL
 		| 	- file-db
+			[_] add ability to save/load ranges of images and the structures around them
+			| e.g.load image 100 to current ribbon -> will load 100 images
+			| for current ribbon and all the in between images from other
+			| ribbons above and below...
 		[_] BUG CLASS: everything should work with empty ribbons...
 		| currently some code breaks when seeing an empty ribbon...
 		[_] BUG: shifting last image out of a ribbon misaligns the current ribbon
 		| i.e. the prev ribbon was deleted and the new focused ribbon
 		| is aligned as if it was not current...
+		|
+		| this is due to a race condition -- the alignment is done BEFORE 
+		| the current image is set...
 		[_] BUG: sometimes loading a raw directory stops at "error loading data.json"
 		| and some times it does not err..
 		|
@@ -245,14 +283,12 @@ Roadmap
 			[_] index and group ALL files in an archive
 			[_] import metadata
 			[_] real GIDs
-		[_] 33% Thumbnail generation strategies
+		[_] 33% FAST thumbnail generation strategies
 			[_] 0% pass 1: generate really fast previews
 				[_] ~1/3 screen - for ribbon
 				[_] ~1 screen - for single image mode
 			[X] pass 2: generate normal previews
 			[_] extract existing raw thumbnails/previews (for RAW files)
-		[_] editable list of external commands...
-		| to add things like exportdirs.py etc.
 		[_] 0% Tablet UI
 			[_] screen buttons
 		[_] save settings to config.json
@@ -311,38 +347,8 @@ Roadmap
 		[_] 50% Undo/Redo
 			[X] basic one step (revert to last save)
 			[_] push/pop state stack
-		[_] 30% mark-based operations
-			[_] 50% cropping selection
-				[X] marked
-				[X] ribbon
-				[_] by tag/collection
-				[_] by group
-			[X] shift up/down
-			[_] tag
-			[_] group
-			| a group should behave as a single image but is 
-			| viewable/expandable as a ribbon...
-			|
-			| should be two types of groups:
-			| 	- strict - always as a single image
-			| 		like a set of versions, processed and processing 
-			| 		versions of the same image.
-			| 		(auto-group?)
-			| 	- loose - similar images, could be named collections
-			| 		viewed individually, but can be accessed either from 
-			| 		a list or a member image (primary).
-			[_] collection
-			| make or add to existing collection
 		[_] check if preview loaded, else load a different preview...
-		[_] add ability to save/load ranges of images and the structures around them
-		| e.g.load image 100 to current ribbon -> will load 100 images
-		| for current ribbon and all the in between images from other
-		| ribbons above and below...
 		[_] single image mode transition (alpha-blend/fade/none)
-		[_] 0% grouping / meta-image
-			[_] versions w. label image
-			| a set of images that is represented by one of the group
-			[_] collection
 		[_] 0% CSS
 			[_] cleanup
 			[_] split themes and layout
@@ -686,7 +692,7 @@ Roadmap
 		
 
 
-[_] 61% Gen 3 UI implementation
+[_] 74% Gen 3 UI implementation
 	[X] 100% Infinite ribbon (lib)
 		[X] cyclic ribbon
 		[X] image block generation
@@ -699,10 +705,10 @@ Roadmap
 	| save only a block or changed data...
 	[X] Adaptive preview size (lib)
 	[X] Multiple ribbon (reuse)
-	[_] 0% User actions
-	| see [[controls.otl]] for basic actions...
-	|
-	| additional actions:
+	[_] 44% User actions
+		| see [[controls.otl]] for basic actions...
+		|
+		| additional actions:
 		[X] 100% toggle mark image
 			[X] mark between
 			| mark all images between closest marks
@@ -725,11 +731,11 @@ Roadmap
 		[_] add/edit tags (set of images)
 		[_] add/edit tags (single image)
 		[X] rotate image
-	[_] 88% UI modes
-		[_] 66% single ribbon
+	[X] 100% UI modes
+		[X] 100% single ribbon
 			[X] show marked only
 			[X] show current ribbon
-			[_] show images shifted (all / above only / below only) in current ribbon
+			[X] show images shifted (all / above only / below only) in current ribbon
 		[X] 100% multiple ribbons
 			[X] show images above/below
 			[X] show marked only

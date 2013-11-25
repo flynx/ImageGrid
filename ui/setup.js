@@ -101,34 +101,35 @@ function setupDataBindings(viewer){
 						&& l < Math.round(screen_size * LOAD_SCREENS))){
 				//loadImages(gid, Math.round(screen_size * LOAD_SCREENS), ribbon)
 				loadImagesAround(Math.round(screen_size * LOAD_SCREENS), gid, ribbon)
-			} 
 
 			// roll the ribbon while we are advancing...
-			var head = img_before.prevAll('.image')
-			var tail = img_before.nextAll('.image')
+			} else { 
+				var head = img_before.prevAll('.image')
+				var tail = img_before.nextAll('.image')
 
-			// NOTE: if this is greater than the number of images currently 
-			//		loaded, it might lead to odd effects...
-			var frame_size = Math.ceil((screen_size * LOAD_SCREENS) / 2)
-			var threshold = Math.floor(frame_size / 2) 
-			threshold = threshold < 1 ? 1 : threshold
+				// NOTE: if this is greater than the number of images currently 
+				//		loaded, it might lead to odd effects...
+				var frame_size = Math.ceil((screen_size * LOAD_SCREENS) / 2)
+				var threshold = Math.floor(frame_size / 2) 
+				threshold = threshold < 1 ? 1 : threshold
 
-			// do the loading...
-			// XXX need to expand/contract the ribbon depending on speed...
-			// 		...might also be a good idea to load smaller images 
-			// 		while scrolling really fast...
-			// XXX use extendRibbon, to both roll and expand/contract...
-			// XXX BUG: when rolling a ribbon, this will sometimes 
-			// 		misalign an image...
-			// 		...where exactly this happens in the ribbon depends on 
-			// 		its size and LOAD_SCREENS...
-			// 		NOTE: calling centerView() will fix this.
-			// 		...the problem is in centerRibbon
-			if(tail.length < threshold){
-				var rolled = rollImages(frame_size, ribbon)
-			}
-			if(head.length < threshold){
-				var rolled = rollImages(-frame_size, ribbon)
+				// do the loading...
+				// XXX need to expand/contract the ribbon depending on speed...
+				// 		...might also be a good idea to load smaller images 
+				// 		while scrolling really fast...
+				// XXX use extendRibbon, to both roll and expand/contract...
+				// XXX BUG: when rolling a ribbon, this will sometimes 
+				// 		misalign an image...
+				// 		...where exactly this happens in the ribbon depends on 
+				// 		its size and LOAD_SCREENS...
+				// 		NOTE: calling centerView() will fix this.
+				// 		...the problem is in centerRibbon
+				if(tail.length < threshold){
+					var rolled = rollImages(frame_size, ribbon)
+				}
+				if(head.length < threshold){
+					var rolled = rollImages(-frame_size, ribbon)
+				}
 			}
 		})
 
