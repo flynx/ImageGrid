@@ -468,8 +468,12 @@ function extendRibbon(left, right, ribbon, no_compensate_shift){
 // NOTE: if n is negative the ribbon will be rolled right.
 // NOTE: rollRibbon(N, R) is equivalent to extendRibbon(-N, N, R)
 // NOTE: this will return a single list of relocated elements...
+// NOTE: if extend is non-zero the extension will happen ONLY in the 
+// 		direction of the roll...
 function rollRibbon(n, ribbon, extend, no_compensate_shift){
-	var res = extendRibbon(-n, n, ribbon, no_compensate_shift)
+	var l = extend == null || n >= 0 ? 0 : extend
+	var r = extend == null || n < 0 ? 0 : extend 
+	var res = extendRibbon(-n-l, n+r, ribbon, no_compensate_shift)
 	return n > 0 ? res.right : res.left
 }
 
