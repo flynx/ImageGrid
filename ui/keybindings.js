@@ -385,6 +385,9 @@ var KEYBOARD_CONFIG = {
 						centerRibbons()
 					}),
 				ctrl: 'prev-screen',
+
+				// XXX button not final...
+				'ctrl+shift': doc('Previous URL in history', loadURLHistoryPrev ),
 			},
 		Right: {
 				default: doc('Next image',
@@ -396,6 +399,9 @@ var KEYBOARD_CONFIG = {
 						centerRibbons()
 					}),
 				ctrl: 'next-screen',
+
+				// XXX button not final...
+				'ctrl+shift': doc('Next URL in history', loadURLHistoryNext ),
 			},
 		'prev-screen': doc('Previous screen',
 				function(){ 

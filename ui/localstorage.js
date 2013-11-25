@@ -26,6 +26,7 @@ function saveLocalStorageBaseURL(attr){
 function loadLocalStorageBaseURLHistory(attr){
 	attr = attr == null ? DATA_ATTR : attr
 	BASE_URL_HISTORY = JSON.parse(localStorage[attr + '_BASE_URL_HISTORY'])
+	return BASE_URL_HISTORY
 }
 function saveLocalStorageBaseURLHistory(attr){
 	attr = attr == null ? DATA_ATTR : attr

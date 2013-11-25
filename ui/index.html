@@ -150,6 +150,8 @@ $(function(){
 	if((DATA_ATTR + '_BASE_URL') in localStorage
 			&& !/^\.[\/\\]*/.test(localStorage[DATA_ATTR + '_BASE_URL'])){
 
+		loadLocalStorageBaseURLHistory(DATA_ATTR)
+
 		BASE_URL = localStorage[DATA_ATTR + '_BASE_URL']
 
 		var loading = statusNotify(loadDir(BASE_URL))

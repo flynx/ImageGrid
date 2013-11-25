@@ -1619,13 +1619,28 @@ function preCacheAllRibbons(){
 function setupBaseURLHistory(){
 	$('.viewer')
 		.on('baseURLChanged', function(evt, old_url, new_url){
+			var updated = false
+
+			// store the old and new urls in history unless they already
+			// exist...
 			if(BASE_URL_HISTORY.indexOf(old_url) < 0){
 				BASE_URL_HISTORY.splice(0, 0, old_url)
+				updated = true
+			}
+			if(BASE_URL_HISTORY.indexOf(new_url) < 0){
+				BASE_URL_HISTORY.splice(0, 0, new_url)
+				updated = true
+			}
 
-				// truncate the history if needed...
-				if(BASE_URL_HISTORY.length > BASE_URL_LIMIT){
-					BASE_URL_HISTORY.splice(BASE_URL_LIMIT, BASE_URL_HISTORY.length)
-				}
+			// truncate the history if needed...
+			if(BASE_URL_HISTORY.length > BASE_URL_LIMIT){
+				BASE_URL_HISTORY.splice(BASE_URL_LIMIT, BASE_URL_HISTORY.length)
+				updated = true
+			}
+
+			// XXX is this the right place for this???
+			if(updated){
+				saveLocalStorageBaseURLHistory()	
 			}
 		})
 }
@@ -1634,11 +1649,11 @@ function getURLHistoryPosition(){
 	return BASE_URL_HISTORY.indexOf(BASE_URL)
 }
 function getURLHistoryNext(){
-	var res = BASE_URL_HISTORY[ getURLHistoryPosition() + 1]
+	var res = BASE_URL_HISTORY[ getURLHistoryPosition() - 1]
 	return res == null ? BASE_URL : res
 }
 function getURLHistoryPrev(){
-	var res = BASE_URL_HISTORY[ getURLHistoryPosition() - 1 ]
+	var res = BASE_URL_HISTORY[ getURLHistoryPosition() + 1 ]
 	return res == null ? BASE_URL : res
 }
 
