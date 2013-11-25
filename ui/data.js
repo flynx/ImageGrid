@@ -1619,7 +1619,9 @@ function preCacheAllRibbons(){
 function setupBaseURLHistory(){
 	$('.viewer')
 		.on('baseURLChanged', function(evt, old_url, new_url){
-			BASE_URL_HISTORY.splice(0, 0, old_url)
+			if(BASE_URL_HISTORY.indexOf(old_url) < 0){
+				BASE_URL_HISTORY.splice(0, 0, old_url)
+			}
 
 			// truncate the history if needed...
 			if(BASE_URL_HISTORY.length > BASE_URL_LIMIT){
@@ -1628,10 +1630,23 @@ function setupBaseURLHistory(){
 		})
 }
 
-// XXX...
-function getNextLocation(){
+function getURLHistoryPosition(){
+	return BASE_URL_HISTORY.indexOf(BASE_URL)
 }
-function getPrevLocation(){
+function getURLHistoryNext(){
+	var res = BASE_URL_HISTORY[ getURLHistoryPosition() + 1]
+	return res == null ? BASE_URL : res
+}
+function getURLHistoryPrev(){
+	var res = BASE_URL_HISTORY[ getURLHistoryPosition() - 1 ]
+	return res == null ? BASE_URL : res
+}
+
+function loadURLHistoryNext(){
+	statusNotify(loadDir(getURLHistoryNext()))
+}
+function loadURLHistoryPrev(){
+	statusNotify(loadDir(getURLHistoryPrev()))
 }
 
 
