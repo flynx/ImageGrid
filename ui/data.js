@@ -1423,7 +1423,6 @@ function loadImagesAround(count, gid, ribbon, data){
 	// XXX NOTE: we use || instead of && here to compensate for an oddity
 	// 		in getCommonSubArrayOffsets(...), see it for further details... 
 	if(left == null || right == null){
-		console.log('>>> Ribbon ', ribbon, 'reloading...')
 		var n = new_ribbon.indexOf(gid)
 		var o = old_ribbon.indexOf(gid)
 		o = o < 0 ? n : o
@@ -1443,9 +1442,6 @@ function loadImagesAround(count, gid, ribbon, data){
 
 	// partial reload...
 	} else {
-		console.log('>>> Ribbon ', ribbon, 'updating...')
-		console.log('    left:', left,
-						'right:', right)
 		var res = extendRibbon(left, right, ribbon_elem)
 		// XXX this will get all the current images, not the resulting ones...
 		var images = ribbon_elem.find('.image')
