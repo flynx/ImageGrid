@@ -1668,6 +1668,7 @@ function pushURLHistory(url){
 
 	BASE_URL_HISTORY.splice(0, 0, url)
 
+	// XXX is this the right place for this???
 	saveLocalStorageBaseURLHistory()	
 
 	return url
@@ -1687,6 +1688,7 @@ function getURLHistoryPrev(){
 }
 
 
+// NOTE: this will not affect history url order...
 function makeURLHistoryLoader(get, end_msg){
 	return function(){
 		var url = get()
