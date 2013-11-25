@@ -1229,14 +1229,15 @@ function updateImage(image, gid, size){
 	// flip...
 	setImageFlipState(image, img_data.flipped == null ? [] : img_data.flipped)
 
+	// NOTE: this only has effect on non-square image blocks...
+	correctImageProportionsForRotation(image)
+
 	// marks...
 	if(MARKED.indexOf(gid) != -1){
 		image.addClass('marked')
 	} else {
 		image.removeClass('marked')
 	}
-
-	correctImageProportionsForRotation(image)
 
 	return image
 }
@@ -1465,9 +1466,6 @@ function loadImagesAround(count, gid, ribbon, data){
 		$('.viewer').trigger('updatedRibbon', [ribbon_elem])
 	}
 
-	// XXX is this the right place for this?
-	// XXX this might be too global, do only the images loaded...
-	//correctImageProportionsForRotation(images)
 	return images
 }
 
@@ -1516,8 +1514,6 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 
 	$('.viewer').trigger('updatedRibbon', [ribbon])
 
-	// XXX is this the right place for this?
-	//correctImageProportionsForRotation(images)
 	return images
 }
 
@@ -1541,7 +1537,6 @@ function reloadViewer(images_per_screen){
 
 	// create images...
 	$('.ribbon').each(function(i, e){
-		//loadImages(current, Math.min(w * LOAD_SCREENS, DATA.ribbons[i].length), $(this))
 		loadImagesAround(Math.round(w * LOAD_SCREENS), current, i)
 	})
 

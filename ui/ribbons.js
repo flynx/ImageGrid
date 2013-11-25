@@ -837,7 +837,11 @@ function nextRibbon(){
 
 // Compensate for viewer proportioned and rotated images.
 //
-// NOTE: this is not neede for square image blocks.
+// This will set the margins so as to make the rotated image offset the
+// same space as it is occupying visually...
+//
+// NOTE: this is not needed for square image blocks.
+// NOTE: if an image block is square, this will remove the margins.
 function correctImageProportionsForRotation(images){
 	var viewer = $('.viewer')
 	var W = viewer.innerWidth()
