@@ -1654,6 +1654,7 @@ function setupBaseURLHistory(){
 		})
 }
 
+
 function getURLHistoryPosition(){
 	return BASE_URL_HISTORY.indexOf(BASE_URL)
 }
@@ -1666,12 +1667,18 @@ function getURLHistoryPrev(){
 	return res == null ? BASE_URL : res
 }
 
-function loadURLHistoryNext(){
-	statusNotify(loadDir(getURLHistoryNext()))
+
+function makeURLHistoryLoader(get){
+	return function(){
+		var url = get()
+		if(url != BASE_URL){
+			statusNotify(loadDir(url))
+		}
+		return url
+	}
 }
-function loadURLHistoryPrev(){
-	statusNotify(loadDir(getURLHistoryPrev()))
-}
+var loadURLHistoryNext = makeURLHistoryLoader(getURLHistoryNext)
+var loadURLHistoryPrev = makeURLHistoryLoader(getURLHistoryPrev)
 
 
 
