@@ -1261,22 +1261,28 @@ function updateImages(size){
 // XXX Race condition: when this is called while DATA is not yet fully 
 // 		loaded (old data), the from gid will not be present in 
 // 		DATA.ribbons...
-function getGIDsAfter(count, from, ribbon, inclusive){
+function getGIDsAfter(count, gid, ribbon, inclusive, data){
 	if(count == 0){
 		return []
 	}
+	// default values...
+	gid = gid == null ? getImageGID() : gid
+	data = data == null ? DATA : data
+	ribbon = ribbon == null ? getRibbonIndex() : ribbon
+	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
+
 	// ribbon default value...
 	// XXX Race condition: if DATA is not yet loaded this can return 
 	// 		ribbon == null...
 	if(ribbon == null){
-		$(DATA.ribbons).each(function(i, e){ 
-			if(e.indexOf(from) >= 0){ 
+		$(data.ribbons).each(function(i, e){ 
+			if(e.indexOf(gid) >= 0){ 
 				ribbon = i
 				return false 
 			} 
 		})
 	}
-	ribbon = DATA.ribbons[ribbon]
+	ribbon = data.ribbons[ribbon]
 
 	// ribbon this is empty or non-existant...
 	// XXX need to check when can we get a ribbon == undefined case...
@@ -1289,11 +1295,11 @@ function getGIDsAfter(count, from, ribbon, inclusive){
 	}
 	if(count > 0){
 		var c = inclusive == null ? 1 : 0
-		var start = ribbon.indexOf(from) + c
+		var start = ribbon.indexOf(gid) + c
 		return ribbon.slice(start, start + count)
 	} else {
 		var c = inclusive == null ? 0 : 1
-		var end = ribbon.indexOf(from)
+		var end = ribbon.indexOf(gid)
 		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count + c), end + c)
 	}
 }
@@ -1313,6 +1319,9 @@ function getGIDsAfter(count, from, ribbon, inclusive){
 // NOTE: skipping gid and ribbon while passing data may not work correctly...
 // NOTE: count represents section diameter...
 function getGIDsAround(count, gid, ribbon, data){
+	if(count == 0){
+		return []
+	}
 	// default values...
 	data = data == null ? DATA : data
 	gid = gid == null ? getImageGID() : gid
