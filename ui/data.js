@@ -1621,11 +1621,11 @@ function setupBaseURLHistory(){
 		.on('baseURLChanged', function(evt, old_url, new_url){
 			if(BASE_URL_HISTORY.indexOf(old_url) < 0){
 				BASE_URL_HISTORY.splice(0, 0, old_url)
-			}
 
-			// truncate the history if needed...
-			if(BASE_URL_HISTORY.length > BASE_URL_LIMIT){
-				BASE_URL_HISTORY.splice(BASE_URL_LIMIT, BASE_URL_HISTORY.length)
+				// truncate the history if needed...
+				if(BASE_URL_HISTORY.length > BASE_URL_LIMIT){
+					BASE_URL_HISTORY.splice(BASE_URL_LIMIT, BASE_URL_HISTORY.length)
+				}
 			}
 		})
 }
