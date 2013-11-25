@@ -123,8 +123,6 @@ var SETTINGS = {
 }
 
 var BASE_URL = '.'
-var BASE_URL_HISTORY = []
-var BASE_URL_LIMIT = 10
 
 var IMAGE_CACHE = []
 
@@ -1618,90 +1616,6 @@ function preCacheAllRibbons(){
 	})
 	return IMAGE_CACHE
 }
-
-
-
-/**********************************************************************
-* URL history...
-*/
-
-function setupBaseURLHistory(){
-	$('.viewer')
-		.on('baseURLChanged', function(evt, old_url, new_url){
-			var updated = false
-
-			// store the old and new urls in history unless they already
-			// exist...
-			if(BASE_URL_HISTORY.indexOf(old_url) < 0){
-				BASE_URL_HISTORY.splice(0, 0, old_url)
-				updated = true
-			}
-			if(BASE_URL_HISTORY.indexOf(new_url) < 0){
-				BASE_URL_HISTORY.splice(0, 0, new_url)
-				updated = true
-			}
-
-			// truncate the history if needed...
-			if(BASE_URL_HISTORY.length > BASE_URL_LIMIT){
-				BASE_URL_HISTORY.splice(BASE_URL_LIMIT, BASE_URL_HISTORY.length)
-				updated = true
-			}
-
-			// XXX is this the right place for this???
-			if(updated){
-				saveLocalStorageBaseURLHistory()	
-			}
-		})
-}
-
-
-// Push a url to top of history...
-//
-// NOTE: this does not care if a url exists or not, all other instances 
-// 		will get removed...
-function pushURLHistory(url){
-	url = url == null ? BASE_URL : url
-
-	while(BASE_URL_HISTORY.indexOf(url) >= 0){
-		BASE_URL_HISTORY.splice(BASE_URL_HISTORY.indexOf(url), 1)
-	}
-
-	BASE_URL_HISTORY.splice(0, 0, url)
-
-	// XXX is this the right place for this???
-	saveLocalStorageBaseURLHistory()	
-
-	return url
-}
-
-
-function getURLHistoryPosition(){
-	return BASE_URL_HISTORY.indexOf(BASE_URL)
-}
-function getURLHistoryNext(){
-	var res = BASE_URL_HISTORY[ getURLHistoryPosition() - 1]
-	return res == null ? BASE_URL : res
-}
-function getURLHistoryPrev(){
-	var res = BASE_URL_HISTORY[ getURLHistoryPosition() + 1 ]
-	return res == null ? BASE_URL : res
-}
-
-
-// NOTE: this will not affect history url order...
-function makeURLHistoryLoader(get, end_msg){
-	return function(){
-		var url = get()
-		if(url != BASE_URL){
-			statusNotify(loadDir(url))
-		} else {
-			showStatusQ('History: '+ end_msg +'...')
-		}
-		return url
-	}
-}
-var loadURLHistoryNext = makeURLHistoryLoader(getURLHistoryNext, 'at last URL')
-var loadURLHistoryPrev = makeURLHistoryLoader(getURLHistoryPrev, 'at first URL')
 
 
 
