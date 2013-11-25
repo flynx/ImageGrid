@@ -108,8 +108,8 @@ Roadmap
 	
 
 
-[_] 29% Gen 3 current todo
-	[_] 59% High priority
+[_] 30% Gen 3 current todo
+	[_] 60% High priority
 		[_] 30% mark-based operations
 			[_] 50% cropping selection
 				[X] marked
@@ -363,6 +363,8 @@ Roadmap
 			[_] remove extra and repetitive actions
 			[_] caching config
 		[_] side-by side view...
+		[X] BUG: ribbons above and below are still sometimes loaded incorrectly
+		| likely due to trying to align 
 		[X] BUG: cropping in single image mode will change image scale...
 		| likely a problem with reloadViewer(...)
 		[X] BUG: align problems are back...

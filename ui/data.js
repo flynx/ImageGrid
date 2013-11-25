@@ -1236,6 +1236,8 @@ function updateImage(image, gid, size){
 		image.removeClass('marked')
 	}
 
+	correctImageProportionsForRotation(image)
+
 	return image
 }
 
@@ -1465,7 +1467,7 @@ function loadImagesAround(count, gid, ribbon, data){
 
 	// XXX is this the right place for this?
 	// XXX this might be too global, do only the images loaded...
-	correctImageProportionsForRotation(images)
+	//correctImageProportionsForRotation(images)
 	return images
 }
 
@@ -1515,7 +1517,7 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 	$('.viewer').trigger('updatedRibbon', [ribbon])
 
 	// XXX is this the right place for this?
-	correctImageProportionsForRotation(images)
+	//correctImageProportionsForRotation(images)
 	return images
 }
 
