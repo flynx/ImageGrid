@@ -993,6 +993,10 @@ function loadDirectoryDialog(dfl){
 					}
 				})
 				*/
+				.done(function(){
+					// XXX is this the right place for this???
+					pushURLHistory(BASE_URL)
+				})
 		})
 		.fail(function(){
 			showStatusQ('Open: canceled.')

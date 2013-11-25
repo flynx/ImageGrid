@@ -1655,6 +1655,25 @@ function setupBaseURLHistory(){
 }
 
 
+// Push a url to top of history...
+//
+// NOTE: this does not care if a url exists or not, all other instances 
+// 		will get removed...
+function pushURLHistory(url){
+	url = url == null ? BASE_URL : url
+
+	while(BASE_URL_HISTORY.indexOf(url) >= 0){
+		BASE_URL_HISTORY.splice(BASE_URL_HISTORY.indexOf(url), 1)
+	}
+
+	BASE_URL_HISTORY.splice(0, 0, url)
+
+	saveLocalStorageBaseURLHistory()	
+
+	return url
+}
+
+
 function getURLHistoryPosition(){
 	return BASE_URL_HISTORY.indexOf(BASE_URL)
 }
@@ -1668,17 +1687,19 @@ function getURLHistoryPrev(){
 }
 
 
-function makeURLHistoryLoader(get){
+function makeURLHistoryLoader(get, end_msg){
 	return function(){
 		var url = get()
 		if(url != BASE_URL){
 			statusNotify(loadDir(url))
+		} else {
+			showStatusQ('History: '+ end_msg +'...')
 		}
 		return url
 	}
 }
-var loadURLHistoryNext = makeURLHistoryLoader(getURLHistoryNext)
-var loadURLHistoryPrev = makeURLHistoryLoader(getURLHistoryPrev)
+var loadURLHistoryNext = makeURLHistoryLoader(getURLHistoryNext, 'at last URL')
+var loadURLHistoryPrev = makeURLHistoryLoader(getURLHistoryPrev, 'at first URL')
 
 
 
