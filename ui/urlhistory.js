@@ -115,6 +115,62 @@ var loadURLHistoryNext = makeURLHistoryLoader(getURLHistoryNext, 'at last URL')
 var loadURLHistoryPrev = makeURLHistoryLoader(getURLHistoryPrev, 'at first URL')
 
 
+// NOTE: this can accept either path or history index...
+// NOTE: this will not reload an already loaded url...
+function loadURLHistoryAt(a){
+	a = a < 0 ? BASE_URL_HISTORY + a : a
+	var url = typeof(a) == typeof(123) ? Math.min(a < 0 ? 0 : a, BASE_URL_HISTORY.length-1) : a
+	if(url != BASE_URL){
+		statusNotify(loadDir(url))
+	}
+	return url
+}
+
+
+
+/**********************************************************************
+* Dialogs...
+*/
+
+function recentlyOpenedDialog(){
+
+	updateStatus('Recently opened...').show()
+
+	var dict = {}
+	var title = '<b>Recently opened:</b>'
+
+	var cfg = {}
+	cfg[title] = BASE_URL_HISTORY.map(function(e){
+		if(e == BASE_URL){
+			var ee = e.italics()
+			dict[ee] = e
+			return ee + ' | default'
+		}
+		dict[e] = e
+		return e
+	})
+
+	formDialog(null, '', 
+			cfg,
+			'OK', 
+			'recentlyOpenedDialog')
+		.done(function(res){
+			res = dict[res[title]]
+
+			loadURLHistoryAt(res)
+
+			if(res == BASE_URL){
+				showStatusQ('Already at: '+res+'...')
+			} else {
+				showStatusQ('Opening: '+res+'...')
+			}
+		})
+		.fail(function(){
+			showStatusQ('Keeping current...')
+		})
+}
+
+
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */

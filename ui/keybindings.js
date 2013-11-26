@@ -53,7 +53,7 @@ var KEYBOARD_CONFIG = {
 					return false
 				}),
 		},
-		F5: doc('Reload viewer', 
+		F5: doc('Full reload viewer', 
 			function(){ 
 				reload() 
 				return false
@@ -228,8 +228,9 @@ var KEYBOARD_CONFIG = {
 	//
 	'.single-ribbon-mode:not(.single-image-mode), .marked-only-view:not(.single-image-mode)': {
 		title: 'Cropped ribbon views',
-		doc: 'To crop marked images press <b>shift-F2</b> and for '+
-			'single ribbon crop view press <b>F3</b>.'+
+		doc: 'To crop marked images press <b>shift-F2</b> for '+
+			'single ribbon crop view press <b>F3</b> and to open the crop '+
+			'dialog for more options press <b>C</b>.'+
 			'<p>NOTE: toggling crop views is only possible from ribbon view.',
 
 		Esc: {
@@ -332,7 +333,7 @@ var KEYBOARD_CONFIG = {
 		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
 
 		// cropping...
-		C: doc('Show data crop dialog', cropImagesDialog),
+		C: doc('Show ribbon crop dialog', cropImagesDialog),
 
 		// XXX add a non FXX key for macs...
 		F2: {
@@ -513,16 +514,22 @@ var KEYBOARD_CONFIG = {
 						reverseImageOrder() 
 					}),
 			},
-		H: doc('Flip image horizontally', 
-			function(){ 
-				var o = getImage().attr('orientation')
-				// need to rotate relative to user, not relative to image...
-				if(o == 90 || o == 270){
-				   flipVertical() 
-				} else {
-					flipHorizontal() 
-				}
-			}),
+		H: {
+			   default: doc('Flip image horizontally', 
+					function(){ 
+						var o = getImage().attr('orientation')
+						// need to rotate relative to user, not relative to image...
+						if(o == 90 || o == 270){
+						   flipVertical() 
+						} else {
+							flipHorizontal() 
+						}
+					}),
+				ctrl: doc('Show recently opend urls',
+					function(){
+						recentlyOpenedDialog()
+					}),
+		   },
 		V: doc('Flip image vertically', 
 			function(){ 
 				var o = getImage().attr('orientation')

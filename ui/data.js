@@ -1126,7 +1126,7 @@ function updateImage(image, gid, size){
 		img_data = STUB_IMAGE_DATA
 	}
 
-	/*
+	/* XXX does not seem to be needing this...
 	// set the current class...
 	if(gid == DATA.current){
 		image.addClass('current')

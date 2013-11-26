@@ -554,6 +554,9 @@ var FIELD_TYPES = {
 
 	// format: 
 	// 		['a', 'b', 'c', ...]
+	//
+	// an item can be of the folowing format:
+	// 		<text> ['|' 'default' ]
 	choice: {
 		type: 'choice',
 		text: null,
@@ -569,22 +572,43 @@ var FIELD_TYPES = {
 			return typeof(val) == typeof([]) && val.constructor.name == 'Array'
 		},
 		set: function(field, value){
-			var t = field.find('.text').text()
+			var t = field.find('.text').html()
 			t = t == '' ? Math.random()+'' : t
 			var item = field.find('.item').last()
 			for(var i=0; i < value.length; i++){
-				item.find('.value')
-					.val(value[i])
+				var txt = value[i]
+
+				// get options...
+				var opts = txt.split(/\|/g)
+				txt = opts[0].trim()
+				opts = opts
+					.slice(1)
+					.map(function(e){ return e.trim() })
+
+				var val = item.find('.value')
+				val.val(txt)
+
+				// set checked state...
+				if(opts.indexOf('default') >= 0){
+					val.prop('checked', true)
+					opts.splice(opts.indexOf('default'), 1)
+				} else {
+					val.prop('checked', false)
+				}
+
 				item.find('.item-text')
-					.text(value[i])
+					.html(txt)
 				item.appendTo(field)
 
 				item = item.clone()
 			}
-			field.find('.value')
+			var values = field.find('.value')
 				.attr('name', t)
-				.first()
-					.attr('checked', '')
+			// set the default...
+			if(values.filter(':checked').length == 0){
+				values.first()
+					.prop('checked', true)
+			}
 		},
 		get: function(field){ 
 			return $(field).find('.value:checked').val()
@@ -739,7 +763,7 @@ function formDialog(root, message, config, btn, cls){
 					text = t.replace(/\\\|/g, '|')
 				}
 				// setup text and data...
-				html.find('.text').text(text)
+				html.find('.text').html(text)
 				field.set(html, config[t])
 
 				// NOTE: this is here to isolate t and field.get values...
@@ -797,9 +821,13 @@ function formDialog(root, message, config, btn, cls){
 	}
 
 	setTimeout(function(){ 
-		form.find('.field input').first()
-			.focus()
-			.select()
+		var e = form.find('.field input:checked')
+		if(e.length > 0){
+			e.focus()
+		} else {
+			form.find('.field input').first()
+				.focus()
+		}
 	}, 100)
 
 	return res
