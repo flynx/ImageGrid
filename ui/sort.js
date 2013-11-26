@@ -370,8 +370,8 @@ function sortImagesDialog(){
 
 	updateStatus('Sort...').show()
 
-	var alg = 'Sort images by (ascending):'
-	var rev = 'Reverse order'
+	var alg = 'Sort images by:'
+	var rev = 'Descending | Default sort order is ascending.'
 
 	cfg = {}
 	cfg[alg] = [
