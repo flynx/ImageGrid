@@ -137,7 +137,9 @@ function recentlyOpenedDialog(){
 	updateStatus('Recently opened...').show()
 
 	var dict = {}
-	var title = '<b>Recently opened:</b>'
+	var title = '<b>Recently opened:</b> | '+
+		'Shortcuts ctrl-shift-Left and ctrl-shift-Right can be used\n'+
+		'to move through this list from ribbon view.'
 
 	var cfg = {}
 	cfg[title] = BASE_URL_HISTORY.map(function(e){

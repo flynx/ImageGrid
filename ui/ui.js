@@ -579,31 +579,27 @@ var FIELD_TYPES = {
 			t = t == '' ? Math.random()+'' : t
 			var item = field.find('.item').last()
 			for(var i=0; i < value.length; i++){
-				var txt = value[i]
-
 				// get options...
-				var opts = txt.split(/\|/g)
-				txt = opts[0].trim()
-				opts = opts
-					.slice(1)
+				var opts = value[i]
+					.split(/\|/g)
 					.map(function(e){ return e.trim() })
 
 				var val = item.find('.value')
-				val.val(txt)
+				val.val(opts[0])
 
 				// set checked state...
-				if(opts.indexOf('default') >= 0){
+				if(opts.slice(1).indexOf('default') >= 0){
 					val.prop('checked', true)
 					opts.splice(opts.indexOf('default'), 1)
 				} else {
 					val.prop('checked', false)
 				}
 
-				txt = item.find('.item-text')
-					.html(txt)
+				var txt = item.find('.item-text')
+					.html(opts[0])
 				
 				// tooltip...
-				if(opts.length > 0){
+				if(opts.length > 1){
 					$('<span class="tooltip-icon tooltip-right"> *</span>')
 						.attr('tooltip', opts.pop())
 						.appendTo(txt)
@@ -834,16 +830,20 @@ function formDialog(root, message, config, btn, cls){
 	// NOTE: if first element is a radio button set, focus the checked
 	//		element, else focus the first input...
 	form.ready(function(){ 
-		var elem = form.find('.field input').first()
-		if(elem.attr('type') == 'radio'){
-			form.find('.field input:checked')
-				.focus()
-				.select()
-		} else {
-			elem
-				.focus()
-				.select()
-		}
+		// NOTE: we are using a timeout to avoid the user input that opened
+		// 		the dialog to end up in the first field...
+		setTimeout(function(){
+			var elem = form.find('.field input').first()
+			if(elem.attr('type') == 'radio'){
+				form.find('.field input:checked')
+					.focus()
+					.select()
+			} else {
+				elem
+					.focus()
+					.select()
+			}
+		}, 100)
 	})
 
 	return res
