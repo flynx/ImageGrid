@@ -141,13 +141,17 @@ function recentlyOpenedDialog(){
 
 	var cfg = {}
 	cfg[title] = BASE_URL_HISTORY.map(function(e){
+		// cleanup the urls...
+		var ee = e.replace('file:///', '')
+
+		// mark the current path...
 		if(e == BASE_URL){
-			var ee = e.italics()
+			ee = ee.italics()
 			dict[ee] = e
-			return ee + ' | default'
+			return ee + ' | default | Currently loaded data.'
 		}
-		dict[e] = e
-		return e
+		dict[ee] = e
+		return ee
 	})
 
 	formDialog(null, '', 

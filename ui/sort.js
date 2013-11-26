@@ -362,6 +362,58 @@ function shiftImageRight(image){
 
 
 
+/**********************************************************************
+* Dialogs...
+*/
+
+function sortImagesDialog(){
+
+	updateStatus('Sort...').show()
+
+	var alg = 'Sort images by (ascending):'
+	var rev = 'Reverse order'
+
+	cfg = {}
+	cfg[alg] = [
+		'Date', 
+		'Sequence number', 
+		'Sequence number with overflow', 
+		'File name' 
+	]
+	cfg[rev] = false
+
+	formDialog(null, '', 
+			cfg,
+			'OK', 
+			'sortImagesDialog')
+		.done(function(res){
+			var reverse = res[rev]
+			res = res[alg]
+
+			if(/Date/i.test(res)){
+				var method = sortImagesByDate
+
+			} else if(/File name/i.test(res)){
+				var method = sortImagesByFileNameXPStyle
+
+			} else if(/Sequence/i.test(res) && !/with overflow/.test(res)){
+				var method = sortImagesByFileSeqOrName
+
+			} else if(/Sequence/i.test(res) && /with overflow/.test(res)){
+				var method = sortImagesByFileNameSeqWithOverflow
+
+			} else {
+				var method = sortImagesByFileName
+			}
+
+			showStatusQ('Sorting by: '+res+'...')
+
+			method(reverse)
+		})
+		.fail(function(){
+			showStatusQ('Sort: canceled.')
+		})
+}
 
 
 

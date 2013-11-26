@@ -208,6 +208,63 @@ function uncropLastState(){
 }
 
 
+/**********************************************************************
+* Dialogs... 
+*/
+
+function cropImagesDialog(){
+
+	updateStatus('Crop...').show()
+
+	var alg = 'Crop ribbons: |'+
+		'Use Esc and Shift-Esc to exit crop modes.'+
+		'\n\n'+
+		'NOTE: all crop modes will produce a single ribbon unless\n'+
+		'otherwise stated.'
+
+	cfg = {}
+	cfg[alg] = [
+		'Marked images', 
+		'Marked images (keep ribbons)', 
+		'Current ribbon', 
+		'Current ribbon and above | Will merge the images into a single ribbon.',
+		'Current ribbon and above (keep ribbons)'
+	]
+
+	formDialog(null, '', 
+			cfg,
+			'OK', 
+			'cropImagesDialog')
+		.done(function(res){
+			res = res[alg]
+
+			// NOTE: these must be in order of least-specific last...
+			if(/Marked.*keep ribbons/i.test(res)){
+				var method = toggleMarkedOnlyWithRibbonsView
+
+			} else if(/Marked/i.test(res)){
+				var method = toggleMarkedOnlyView
+
+			} else if(/Current ribbon and above.*keep ribbons/i.test(res)){
+				var method = toggleCurrenAndAboveRibbonsMode
+
+			} else if(/Current ribbon and above/i.test(res)){
+				var method = toggleCurrenAndAboveRibbonMode
+
+			} else if(/Current ribbon/i.test(res)){
+				var method = toggleSingleRibbonMode
+			}
+
+			showStatusQ('Cropped: '+res+'...')
+
+			method('on')
+		})
+		.fail(function(){
+			showStatusQ('Crop: canceled.')
+		})
+}
+
+
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */

@@ -556,7 +556,10 @@ var FIELD_TYPES = {
 	// 		['a', 'b', 'c', ...]
 	//
 	// an item can be of the folowing format:
-	// 		<text> ['|' 'default' ]
+	// 		<text> ['|' 'default' ] [ '|' <tool-tip> ]
+	//
+	// NOTE: only one 'default' item should be present.
+	// NOTE: if no defaults are set, then the first item is checked.
 	choice: {
 		type: 'choice',
 		text: null,
@@ -596,8 +599,16 @@ var FIELD_TYPES = {
 					val.prop('checked', false)
 				}
 
-				item.find('.item-text')
+				txt = item.find('.item-text')
 					.html(txt)
+				
+				// tooltip...
+				if(opts.length > 0){
+					$('<span class="tooltip-icon tooltip-right"> *</span>')
+						.attr('tooltip', opts.pop())
+						.appendTo(txt)
+				}
+
 				item.appendTo(field)
 
 				item = item.clone()
@@ -728,7 +739,6 @@ var FIELD_TYPES = {
 //
 // XXX add form testing...
 // XXX add undefined field handling/reporting...
-// XXX revise...
 function formDialog(root, message, config, btn, cls){
 	cls = cls == null ? '' : cls
 	btn = btn == null ? 'OK' : btn
@@ -755,7 +765,7 @@ function formDialog(root, message, config, btn, cls){
 					var tip = t.split(/\s*\|\s*/)
 					text = tip[0]
 					tip = tip[1]
-					$('<span class="tooltip-icon tooltip-right">?</span>')
+					$('<span class="tooltip-icon tooltip-right"> *</span>')
 						.attr('tooltip', tip)
 						.appendTo(html)
 				// cleanup...
@@ -820,15 +830,21 @@ function formDialog(root, message, config, btn, cls){
 		})
 	}
 
-	setTimeout(function(){ 
-		var e = form.find('.field input:checked')
-		if(e.length > 0){
-			e.focus()
-		} else {
-			form.find('.field input').first()
+	// focus an element...
+	// NOTE: if first element is a radio button set, focus the checked
+	//		element, else focus the first input...
+	form.ready(function(){ 
+		var elem = form.find('.field input').first()
+		if(elem.attr('type') == 'radio'){
+			form.find('.field input:checked')
 				.focus()
+				.select()
+		} else {
+			elem
+				.focus()
+				.select()
 		}
-	}, 100)
+	})
 
 	return res
 }
@@ -893,9 +909,8 @@ function exportPreviewsDialog(state, dfl){
 	// XXX make this more generic...
 	// tell the user what state are we exporting...
 	if(state == null){
-		state = toggleMarkedOnlyView('?') == 'on' ? 'marked images' : state
-		state = toggleSingleRibbonMode('?') == 'on' ? 'current ribbon' : state
 		state = toggleSingleImageMode('?') == 'on' ? 'current image' : state
+		state = state == null && isViewCropped() ? 'current cropped view' : state
 		state = state == null ? 'all images' : state
 	}
 
@@ -1028,109 +1043,6 @@ function loadDirectoryDialog(dfl){
 		})
 		.fail(function(){
 			showStatusQ('Open: canceled.')
-		})
-}
-
-
-function sortImagesDialog(){
-
-	updateStatus('Sort...').show()
-
-	var alg = 'Sort images by (ascending):'
-	var rev = 'Reverse order'
-
-	cfg = {}
-	cfg[alg] = [
-		'Date', 
-		'Sequence number', 
-		'Sequence number with overflow', 
-		'File name' 
-	]
-	cfg[rev] = false
-
-	formDialog(null, '', 
-			cfg,
-			'OK', 
-			'sortImagesDialog')
-		.done(function(res){
-			var reverse = res[rev]
-			res = res[alg]
-
-			if(/Date/i.test(res)){
-				var method = sortImagesByDate
-
-			} else if(/File name/i.test(res)){
-				var method = sortImagesByFileNameXPStyle
-
-			} else if(/Sequence/i.test(res) && !/with overflow/.test(res)){
-				var method = sortImagesByFileSeqOrName
-
-			} else if(/Sequence/i.test(res) && /with overflow/.test(res)){
-				var method = sortImagesByFileNameSeqWithOverflow
-
-			} else {
-				var method = sortImagesByFileName
-			}
-
-			showStatusQ('Sorting by: '+res+'...')
-
-			method(reverse)
-		})
-		.fail(function(){
-			showStatusQ('Sort: canceled.')
-		})
-}
-
-
-function cropImagesDialog(){
-
-	updateStatus('Crop...').show()
-
-	var alg = 'Crop: |'+
-		'Use Esc and Shift-Esc to exit crop modes.'+
-		'\n\n'+
-		'NOTE: all crop modes will produce a single ribbon unless\n'+
-		'otherwise stated.'
-
-	cfg = {}
-	cfg[alg] = [
-		'Marked images', 
-		'Marked images (keep ribbons)', 
-		'Current ribbon', 
-		'Current ribbon and above',
-		'Current ribbon and above (keep ribbons)'
-	]
-
-	formDialog(null, '', 
-			cfg,
-			'OK', 
-			'cropImagesDialog')
-		.done(function(res){
-			res = res[alg]
-
-			// NOTE: these must be in order of least-specific last...
-			if(/Marked.*keep ribbons/i.test(res)){
-				var method = toggleMarkedOnlyWithRibbonsView
-
-			} else if(/Marked/i.test(res)){
-				var method = toggleMarkedOnlyView
-
-			} else if(/Current ribbon and above.*keep ribbons/i.test(res)){
-				var method = toggleCurrenAndAboveRibbonsMode
-
-			} else if(/Current ribbon and above/i.test(res)){
-				var method = toggleCurrenAndAboveRibbonMode
-
-			} else if(/Current ribbon/i.test(res)){
-				var method = toggleSingleRibbonMode
-			}
-
-			showStatusQ('Cropped: '+res+'...')
-
-			method('on')
-		})
-		.fail(function(){
-			showStatusQ('Crop: canceled.')
 		})
 }
 
