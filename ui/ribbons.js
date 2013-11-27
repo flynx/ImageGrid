@@ -1127,7 +1127,7 @@ function shiftImageUpNewRibbon(image, moving){
 	return shiftImageTo(image, 'prev', moving, true)
 }
 function shiftImageDownNewRibbon(image, moving){
-	return shiftImageTo(image, 'prev', moving, false)
+	return shiftImageTo(image, 'next', moving, true)
 }
 
 
