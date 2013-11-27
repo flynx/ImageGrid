@@ -363,6 +363,43 @@ function showContextIndicator(cls, text){
 * Modal dialogs...
 */
 
+/********************************************************* Helpers ***/
+
+// Set element text and tooltip
+//
+// NOTE: when text is a list, we will only use the first and the last 
+// 		elements...
+// NOTE: if tip_elem is not given then both the text and tip will be set
+// 		on text_elem
+//
+// XXX add support for quoted '|'...
+function setTextWithTooltip(text, text_elem, tip_elem){
+	text_elem = $(text_elem)
+	tip_elem = tip_elem == null ? text_elem : tip_elem
+
+	if(typeof(text) != typeof('str')){
+		tip = text
+	} else {
+		var tip = text.split(/\s*\|\s*/)
+	}
+
+	// set elemnt text...
+	text_elem
+		.html(tip[0])
+
+	// do the tooltip...
+	tip = tip.slice(1)
+	tip = tip[tip.length-1]
+	if(tip != null && tip.trim().length > 0){
+		$('<span class="tooltip-icon tooltip-right"> *</span>')
+			.attr('tooltip', tip)
+			.appendTo(tip_elem)
+	}
+
+	return text_elem
+}
+
+
 function getOverlay(root){
 	root = $(root)
 	var overlay = root.find('.overlay-block')
@@ -595,15 +632,7 @@ var FIELD_TYPES = {
 					val.prop('checked', false)
 				}
 
-				var txt = item.find('.item-text')
-					.html(opts[0])
-				
-				// tooltip...
-				if(opts.length > 1){
-					$('<span class="tooltip-icon tooltip-right"> *</span>')
-						.attr('tooltip', opts.pop())
-						.appendTo(txt)
-				}
+				setTextWithTooltip(opts, item.find('.item-text'))
 
 				item.appendTo(field)
 
@@ -745,7 +774,10 @@ function formDialog(root, message, config, btn, cls){
 	var res = $.Deferred()
 
 	// handle message and btn...
-	form.append($('<div class="text">'+message+'</div>'))
+	if(message.trim().length > 0){
+		setTextWithTooltip(message, $('<div class="text"/>'))
+			.appendTo(form)
+	}
 
 	// build the form...
 	for(var t in config){
@@ -755,21 +787,8 @@ function formDialog(root, message, config, btn, cls){
 				var field = FIELD_TYPES[f]
 				var html = $(field.html)
 
-				// get the tooltip...
-				if(/[^\\]\|/.test(t)){
-					// XXX do we need to cut the spaces off here???
-					var tip = t.split(/\s*\|\s*/)
-					text = tip[0]
-					tip = tip[1]
-					$('<span class="tooltip-icon tooltip-right"> *</span>')
-						.attr('tooltip', tip)
-						.appendTo(html)
-				// cleanup...
-				} else {
-					text = t.replace(/\\\|/g, '|')
-				}
 				// setup text and data...
-				html.find('.text').html(text)
+				setTextWithTooltip(t, html.find('.text'), html)
 				field.set(html, config[t])
 
 				// NOTE: this is here to isolate t and field.get values...
@@ -1009,7 +1028,7 @@ function loadDirectoryDialog(dfl){
 
 	updateStatus('Open...').show()
 
-	formDialog(null, 'Path to open', {
+	formDialog(null, 'Path to open | To see list of previously loaded urls press ctrl-H.', {
 		'': {ndir: dfl},
 		'Precess previews': true,
 	}, 'OK', 'loadDirectoryDialog')
