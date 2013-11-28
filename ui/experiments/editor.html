@@ -20,6 +20,7 @@ input[type=range] {
 }
 input[type=range]:after {
 	content: attr(value);
+	color: black;
 }
 div > span:first-child {
 	display: inline-block;
@@ -65,7 +66,7 @@ function loadSliderState(){
 	// set the saved values...
 	while(state.length > 0){
 		var e = $('#'+state.pop())
-			.val(state.pop())
+			.val(parseFloat(state.pop()))
 	}
 
 }
@@ -110,7 +111,7 @@ function clearStates(){
 			</div>
 			<div>
 				<span>Hue:</span>
-				<input type="range" id="hue-rotate" onchange="updateFilter($('#image'), this.id, (this.valueAsNumber-180)+'deg');" value="180" step="1" min="0" max="360" default="180">
+				<input type="range" id="hue-rotate" onchange="updateFilter($('#image'), this.id, this.valueAsNumber+'deg');" value="0" step="1" min="-180" max="180" default="0">
 				<button class="reset" onclick="resetPrevRange(this)">x</button>
 			</div>
 			<div>
