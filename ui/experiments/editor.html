@@ -18,6 +18,9 @@ summary {
 input[type=range] {
 	width: 300px;
 }
+input[type=range]:after {
+	content: attr(value);
+}
 div > span:first-child {
 	display: inline-block;
 	width: 100px;
@@ -47,6 +50,7 @@ function resetPrevRange(e){
 		.change()
 }
 
+// XXX this does not set hue correctly...
 function loadSliderState(){
 	var state = $('#image')
 		.css('-webkit-filter')
@@ -60,7 +64,7 @@ function loadSliderState(){
 	})
 	// set the saved values...
 	while(state.length > 0){
-		$('#'+state.pop())
+		var e = $('#'+state.pop())
 			.val(state.pop())
 	}
 
@@ -86,7 +90,7 @@ function clearStates(){
 <body>
 	<img id="image" src="image.jpg">
 
-	<details>
+	<details open>
 		<summary>Controls</summary>
 		<div>
 			<div>
