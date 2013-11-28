@@ -1,0 +1,142 @@
+<html>
+<style>
+
+button,
+details {
+	border: solid 1px gray;
+	border-radius: 4px;
+	margin: 1px;
+	background: white;
+}
+details > div {
+	margin: 10px;
+}
+summary {
+	padding-left: 3px;
+	background: #ddd;
+}
+input[type=range] {
+	width: 300px;
+}
+div > span:first-child {
+	display: inline-block;
+	width: 100px;
+}
+
+</style>
+<script src="jquery.js"></script>
+<script>
+
+function updateFilter(e, f, v){
+	var state = e
+		.css('-webkit-filter')
+	state = state == 'none' ? '' : state + ' '
+	state = state.replace(RegExp(f+'\\s*\\([^\\)]*\\)'), '')
+	state += f+'('+v+')'
+
+	e.css({
+		'-webkit-filter': state,
+		'filter': state
+	})
+	return v
+}
+
+function resetPrevRange(e){
+	e = $(e).prev('input[type=range]')
+	e.val(e.attr('default'))
+		.change()
+}
+
+function loadSliderState(){
+	var state = $('#image')
+		.css('-webkit-filter')
+		.split(/\s*\(\s*|\s*\)\s*/g)
+		.reverse()
+		.slice(1)
+	// reset sliders do defaults...
+	$('input[type=range]').each(function(i, e){
+		e = $(e)
+		e.val(e.attr('default'))
+	})
+	// set the saved values...
+	while(state.length > 0){
+		$('#'+state.pop())
+			.val(state.pop())
+	}
+
+}
+function saveState(){
+	var l = $('.state').length
+	var state = $('#image').css('-webkit-filter')
+	$('<button></button>')
+		.text(l)
+		.addClass('state '+l)
+		.attr('state', state)
+		.click(function(){
+			$('#image').css('-webkit-filter', state)
+			loadSliderState()
+		})
+		.appendTo($('.states'))
+}
+function clearStates(){
+	$('.state').remove()
+}
+
+</script>
+<body>
+	<img id="image" src="image.jpg">
+
+	<details>
+		<summary>Controls</summary>
+		<div>
+			<div>
+				<span>Brightness:</span>
+				<input type="range" id="brightness" onchange="updateFilter($('#image'), this.id, this.valueAsNumber);" value="1" step="0.1" min="0" max="10" list="0" default="1">
+				<button class="reset" onclick="resetPrevRange(this)">x</button>
+			</div>
+			<div>
+				<span>Contrast:</span>
+				<input type="range" id="contrast" onchange="updateFilter($('#image'), this.id, this.valueAsNumber);" value="1" step="0.1" min="0" max="10" default="1">
+				<button class="reset" onclick="resetPrevRange(this)">x</button>
+			</div>
+			<div>
+				<span>Saturation:</span>
+				<input type="range" id="saturate" onchange="updateFilter($('#image'), this.id, this.valueAsNumber);" value="1" step="0.1" min="0" max="10" default="1">
+				<button class="reset" onclick="resetPrevRange(this)">x</button>
+			</div>
+			<div>
+				<span>Hue:</span>
+				<input type="range" id="hue-rotate" onchange="updateFilter($('#image'), this.id, (this.valueAsNumber-180)+'deg');" value="180" step="1" min="0" max="360" default="180">
+				<button class="reset" onclick="resetPrevRange(this)">x</button>
+			</div>
+			<div>
+				<span>Invert:</span>
+				<input type="range" id="invert" onchange="updateFilter($('#image'), this.id, this.valueAsNumber);" value="0" step="0.01" min="0" max="1" default="0">
+				<button class="reset" onclick="resetPrevRange(this)">x</button>
+			</div>
+			<div>
+				<span>Grayscale:</span>
+				<input type="range" id="grayscale" onchange="updateFilter($('#image'), this.id, this.valueAsNumber);" value="0" step="0.01" min="0" max="1" default="0">
+				<button class="reset" onclick="resetPrevRange(this)">x</button>
+			</div>
+			<div>
+				<span>Sepia:</span>
+				<input type="range" id="sepia" onchange="updateFilter($('#image'), this.id, this.valueAsNumber);" value="0" step="0.01" min="0" max="1" default="0">
+				<button class="reset" onclick="resetPrevRange(this)">x</button>
+			</div>
+			<button onclick="$('.reset').click()">Reset all</button>
+		</div>
+	</details>
+
+	<details>
+		<summary>States</summary>
+		<div>
+			<div class="states">
+			</div>
+			<button onclick="saveState()">Save</button>
+			<button onclick="clearStates()">Clear</button>
+		</div>
+	</details>
+
+</body>
+</html>
