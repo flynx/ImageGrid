@@ -1151,6 +1151,23 @@ button:hover {
 .viewer.overlay .overlay-block {
   display: block;
 }
+/* XXX this is experimental... */
+.viewer.overlay .ribbon-set {
+  /* XXX blur makes things slow with transparency... */
+
+  -webkit-filter: /*blur(2px)*/ grayscale(0.5);
+  filter: /*blur(2px)*/ grayscale(0.5);
+  /*
+	-webkit-animation-name: testAnim;
+	-webkit-animation-duration: .2s;
+	-webkit-animation-iteration-count: 1;
+	-webkit-animation-direction: alternate;
+	-webkit-animation-timing-function: ease-out;
+	-webkit-animation-fill-mode: forwards;
+	-webkit-animation-delay: 0s;
+	*/
+
+}
 .overlay-block .content,
 .overlay-block .background {
   /* XXX for some magical reason position and top are overwritten 
