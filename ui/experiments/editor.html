@@ -8,6 +8,9 @@ details {
 	margin: 1px;
 	background: white;
 }
+details {
+	width: 500px;
+}
 details > div {
 	margin: 10px;
 }
@@ -18,10 +21,12 @@ summary {
 input[type=range] {
 	width: 300px;
 }
+/* XXX this is not live...
 input[type=range]:after {
 	content: attr(value);
 	color: black;
 }
+*/
 div > span:first-child {
 	display: inline-block;
 	width: 100px;
@@ -44,6 +49,14 @@ input[type='range']::-webkit-slider-thumb {
 	border-radius: 50%;
 }
 
+.value {
+	display: inline-block;
+	width: 40px;
+	text-align: right;
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
 
 
 </style>
@@ -51,17 +64,35 @@ input[type='range']::-webkit-slider-thumb {
 <script>
 
 function updateFilter(e, f, v){
+	e = $(e)
 	var state = e
 		.css('-webkit-filter')
 	state = state == 'none' ? '' : state + ' '
-	state = state.replace(RegExp(f+'\\s*\\([^\\)]*\\)'), '')
-	state += f+'('+v+')'
+	//state = state.replace(RegExp(f+'\\s*\\([^\\)]*\\)'), '')
+	//state += f+'('+v+')'
+	if(RegExp(f).test(state)){
+		state = state.replace(RegExp(f+'\\s*\\([^\\)]*\\)'), f+'('+v+')')
+	} else {
+		state += f+'('+v+')'
+	}
 
 	e.css({
 		'-webkit-filter': state,
 		'filter': state
 	})
 	return v
+}
+function resetFilter(e, f){
+	e = $(e)
+	var state = e
+		.css('-webkit-filter')
+	state = state == 'none' ? '' : state + ' '
+	state = state.replace(RegExp(f+'\\s*\\([^\\)]*\\)'), '').trim()
+	e.css({
+		'-webkit-filter': state,
+		'filter': state
+	})
+	return e
 }
 
 function resetPrevRange(e){
@@ -91,8 +122,9 @@ function loadSliderState(){
 			e.val(parseFloat(state.pop()))
 		}
 	}
-
 }
+
+
 function saveState(){
 	var l = $('.state').length
 	var state = $('#image').css('-webkit-filter')
@@ -110,7 +142,42 @@ function clearStates(){
 	$('.state').remove()
 }
 
-function makeRange(){
+function makeAbsRange(text, filter, target, min, max, dfl, step, tran, normalize){
+	tran = tran == null ? function(v){return v} : tran
+	normalize = normalize == null ? false : true
+	var elem = $('<div class="range"></div>')
+	$('<span class="title"/>')
+		.html(text)
+		.appendTo(elem)
+	var range = $('<input type="range">')
+		.attr({
+			id: filter,
+			min: min,
+			max: max,
+			step: step,
+			default: dfl,
+		})
+		.prop('normalize', normalize)
+		.val(dfl)
+		.change(function(){
+			var val = this.valueAsNumber
+			value.text(val)
+			updateFilter(target, this.id, tran(val))
+		})
+		.appendTo(elem)
+	var value = $('<span class="value"/>')
+		.html(dfl)
+		.appendTo(elem)
+	$('<button class="reset">x</button>')
+		.click(function(){
+			range.val(dfl).change()
+			resetFilter(target, filter)
+		})
+		.appendTo(elem)
+	return elem
+}
+function makeLogRange(text, filter, target){
+	return makeAbsRange(text, filter, target, -100, 100, 0, 0.1, r2v, true)
 }
 
 var C = 43.47
@@ -123,54 +190,38 @@ function v2r(v){
 	return Math.log(v)*C
 }
 
+$(function(){
+	$('.controls')
+		.append(makeLogRange('Brightness:', 'brightness', '#image'))
+		.append(makeLogRange('Contrast:', 'contrast', '#image'))
+		.append(makeLogRange('Saturation:', 'saturate', '#image'))
+		.append(makeAbsRange('Hue:', 'hue-rotate', '#image', -180, 180, 0, 0.5, function(v){ return v+'deg' }))
+		.append($('<hr>'))
+		.append(makeAbsRange('Grayscale:', 'grayscale', '#image', 0, 1, 0, 0.01))
+		.append($('<hr>'))
+		.append(makeAbsRange('Invert:', 'invert', '#image', 0, 1, 0, 0.01))
+		.append(makeAbsRange('Sepia:', 'sepia', '#image', 0, 1, 0, 0.01))
+		.append($('<hr>'))
+
+		.append($('<button onclick="$(\'.reset\').click()">Reset all</button>'))
+		.append($('<hr>'))
+
+		.append($('<div>NOTE: at this point order of operations is '+
+			'sometimes segnificant -- might be good to treat the filters '+
+			'as layers -- se Adobe CSS filter factory </div>'))
+})
+
 </script>
 <body>
 	<img id="image" src="image.jpg">
 
 	<details open>
 		<summary>Controls</summary>
-		<div>
-			<div>
-				<span>Brightness:</span>
-				<input type="range" id="brightness" onchange="updateFilter($('#image'), this.id, r2v(this.valueAsNumber));" value="0" step="0.01" min="-100" max="100" normalize default="0">
-				<!--input type="range" id="brightness" onchange="updateFilter($('#image'), this.id, this.valueAsNumber);" value="1" step="0.001" min="0" max="10" list="0" default="1"-->
-				<button class="reset" onclick="resetPrevRange(this)">x</button>
-			</div>
-			<div>
-				<span>Contrast:</span>
-				<input type="range" id="contrast" onchange="updateFilter($('#image'), this.id, r2v(this.valueAsNumber));" value="0" step="0.01" min="-100" max="100" normalize default="0">
-				<button class="reset" onclick="resetPrevRange(this)">x</button>
-			</div>
-			<div>
-				<span>Saturation:</span>
-				<input type="range" id="saturate" onchange="updateFilter($('#image'), this.id, r2v(this.valueAsNumber));" value="0" step="0.01" min="-100" max="100" normalize default="0">
-				<button class="reset" onclick="resetPrevRange(this)">x</button>
-			</div>
-			<div>
-				<span>Hue:</span>
-				<input type="range" id="hue-rotate" onchange="updateFilter($('#image'), this.id, this.valueAsNumber+'deg');" value="0" step="0.5" min="-180" max="180" default="0">
-				<button class="reset" onclick="resetPrevRange(this)">x</button>
-			</div>
-			<div>
-				<span>Invert:</span>
-				<input type="range" id="invert" onchange="updateFilter($('#image'), this.id, this.valueAsNumber);" value="0" step="0.01" min="0" max="1" default="0">
-				<button class="reset" onclick="resetPrevRange(this)">x</button>
-			</div>
-			<div>
-				<span>Grayscale:</span>
-				<input type="range" id="grayscale" onchange="updateFilter($('#image'), this.id, this.valueAsNumber);" value="0" step="0.01" min="0" max="1" default="0">
-				<button class="reset" onclick="resetPrevRange(this)">x</button>
-			</div>
-			<div>
-				<span>Sepia:</span>
-				<input type="range" id="sepia" onchange="updateFilter($('#image'), this.id, this.valueAsNumber);" value="0" step="0.01" min="0" max="1" default="0">
-				<button class="reset" onclick="resetPrevRange(this)">x</button>
-			</div>
-			<button onclick="$('.reset').click()">Reset all</button>
+		<div class="controls">
 		</div>
 	</details>
 
-	<details>
+	<details open>
 		<summary>Snapshots</summary>
 		<div>
 			<div class="states">
