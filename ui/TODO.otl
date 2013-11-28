@@ -112,6 +112,84 @@ Roadmap
 	[_] 60% High priority
 		[_] BUG: OSX: unable to load absolute paths...
 		[_] OSX: add alternatives to function buttons...
+		[_] Feature: basic editor...
+		| use CSS3 filters to edit and save edit values for:
+		| 	- brightness
+		| 	- contrast
+		| 	- saturation
+		| 	- hue
+		| 	- grayscale
+		| 	- sepia
+		| 	- invert
+		| 	- blur
+		|
+		| save settings and load them on a per preview basis...
+		|
+		| see: http://html5-demos.appspot.com/static/css/filters/index.html
+		|
+		| For UI use a left/right pane to "hold" the sliders...
+		[_] UI: Panes...
+		|
+		| 	+-----+---------------+-----+
+		| 	|	  |				  |		|
+		| 	|	  |				  |		|
+		| 	|	  |	+-----------+ |		|
+		| 	|	  |	|			| |	  <---- Pane
+		| 	|	  |	|	Image	| |		|
+		| 	|	  |	|			| |		|
+		| 	|	  |	+-----------+ |		|
+		| 	|	  |				  |		|
+		| 	|	  |				  |		|
+		| 	+-----+---------------+-----+
+		|
+		|		  +---------------+
+		|			Viewer
+		|
+		|
+		| NOTE: panes should be outside the viewer, so as not to overlap
+		| 		with the image...
+		| NOTE: we can also try and use top and bottom panes, but that 
+		| 		might over-complicate things...
+		[_] UI: touch controls / toolbars...
+		|
+		| 	+-+-----------------------+-+
+		| 	| |    				  	  | |
+		| 	| |    				  	  | |
+		| 	| |    	+-----------+ 	  | |
+		| 	| |    	|			| 	  |<--- Button bar
+		| 	| |    	|	Image	| 	  | |
+		| 	| |    	|			| 	  | |
+		| 	| |    	+-----------+ 	  | |
+		| 	| |    				  	  | |
+		| 	| |    				  	  | |
+		| 	+-+-----------------------+-+
+		|
+		|
+		| Basic layout:
+		| 		Left bar			Right bar
+		| 			help				config		+ low priority
+		|
+		| 			up					up			+
+		| 			prev				next		| main controls
+		| 			down				down		+  (under thumbs)
+		|
+		|											+
+		| 			...					...			| misc controls
+		|											+
+		|
+		| Things to have in buttons:
+		| 	- navigation
+		| 	- shift
+		| 	- crop select / exit crop
+		| 	- modes
+		| 		- slideshow
+		| 		- image/ribbon toggle
+		| 	- zoom
+		| 	- tags/metadata editor toggle
+		| 	- image editor toggle
+		| 	- open/history/...
+		| 	- sort
+		| 	- export
 		[_] 30% mark-based operations
 			[_] 50% cropping selection
 				[X] marked
