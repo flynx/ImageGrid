@@ -27,6 +27,25 @@ div > span:first-child {
 	width: 100px;
 }
 
+/* range syling... */
+input[type='range'] {
+	-webkit-appearance: none !important;
+	background: silver;
+	height: 4px;
+	border: solid 1px gray;
+	border-radius: 2px;
+}
+input[type='range']::-webkit-slider-thumb {
+	-webkit-appearance: none !important;
+	background: white;
+	height: 15px;
+	width: 15px;
+	border: solid 1px gray;
+	border-radius: 50%;
+}
+
+
+
 </style>
 <script src="jquery.js"></script>
 <script>
