@@ -1,121 +1,140 @@
 <html>
 <style>
 
-button,
-details {
-	border: solid 1px gray;
-	border-radius: 4px;
-	margin: 1px;
-	background: white;
-}
-details {
+.panel {
 	display: inline-block;
 	width: 508px;
 	min-width: 500px;
+	border: solid 2px silver;
+	border-radius: 4px;
+
+	background: white;
+	box-shadow: 5px 5px 30px -5px rgba(0, 0, 0, 0.5);
+	opacity: 0.95;
+
 	overflow: visible;
 }
-.panel {
-	box-shadow: 5px 5px 30px -5px rgba(0,0,0,0.5);
-	opacity: 0.95;
+.panel summary {
+	padding-left: 3px;
+	/*background: #ddd;*/
+	background: silver
 }
-.close-panel {
+.panel summary::-webkit-details-marker {
+	color: gray;
+}
+.panel .close-button {
 	display: inline-block;
 	position: absolute;
 	right: 5px;
 	cursor: hand;
 }
-.close-panel:hover {
-	color: black;
+.panel .close-button:hover {
 	font-weight: bold;
-	text-shadow: 1px 1px 2px 0px rgba(0,0,0,0.5);
+	color: red;
+	text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.5);
 }
-details details {
+.panel button,
+.panel details {
+	margin: 1px;
+	border: solid 1px gray;
+	border-radius: 4px;
+	/* needed for dragging */
+	background: white;
+}
+.panel details {
 	width: 500px;
 	margin: 3px;
 	border: solid 1px silver;
 	box-shadow: none;
 }
-details > div {
+.panel details summary {
+	background: #ddd;
+	/*
+	background: white;
+	box-shadow: 0px 0px 50px -5px rgba(0, 0, 0, 0.4);
+	*/
+}
+.panel .sub-panel-content {
 	margin: 10px;
 }
-summary {
-	padding-left: 3px;
+
+.panel button:active {
 	background: silver;
-}
-details details summary {
-	background: #ddd;
-}
-input[type=range] {
-	width: 300px;
-}
-button:active {
-	background: silver;
-}
-button.reset {
-	border: solid 1px silver;
-}
-button.reset:hover {
-	border: solid 1px gray;
-}
-/*
-button.state:focus {
-	background: silver;
-}
-*/
-/* XXX this is not live...
-input[type=range]:after {
-	content: attr(value);
-	color: black;
-}
-*/
-div > span:first-child {
-	display: inline-block;
-	width: 100px;
 }
 
-/* range syling... */
-input[type='range'] {
+
+/* main controls */
+.panel .control .title {
+	display: inline-block;
+	width: 100px;
+	/*margin-right: -80px;*/
+	cursor: move;
+}
+.panel .control .slider {
 	-webkit-appearance: none !important;
-	background: silver;
+	width: 300px;
 	height: 4px;
 	border: solid 1px gray;
 	border-radius: 2px;
+	background: silver;
 }
-input[type='range']::-webkit-slider-thumb {
+.panel .control .slider::-webkit-slider-thumb {
 	-webkit-appearance: none !important;
-	background: white;
 	height: 15px;
 	width: 15px;
 	border: solid 1px gray;
 	border-radius: 50%;
+	background: white;
+	box-shadow: 1px 1px 10px 0px rgba(0, 0, 0, 0.3);
 }
-
-.value {
+.panel .control .value {
 	-webkit-appearance: none !important;
 	display: inline-block;
 	width: 40px;
 	text-align: right;
 	margin-left: 5px;
 	margin-right: 5px;
-	background: white;
 	border: none;
 	border-radius: 2px;
+	background: transparent;
 }
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
+.panel .control input::-webkit-outer-spin-button,
+.panel .control input::-webkit-inner-spin-button {
 	-webkit-appearance: none !important;
 }
-
-
-.title {
-	cursor: move;
+.panel .control .reset {
+	visibility: hidden;
+	border: none;
 }
+.panel .control:hover button.reset {
+	visibility: visible;
+}
+.panel .control .reset:hover {
+	border: solid 1px silver;
+}
+
+
+/* Snapshots */
+.panel .state {
+	display: inline-block;
+	border: solid 1px gray;
+	border-radius: 4px;
+	margin: 1px;
+	padding-left: 5px;
+	padding-right: 5px;
+	background: white;
+}
+.panel .states {
+	min-height: 30px;
+}
+
 
 
 </style>
 <script src="jquery.js"></script>
 <script src="jquery-ui.js"></script>
 <script>
+/*********************************************************************/
 
 // XXX this exists in jli, remove when not needed...
 jQuery.fn.sortChildren = function(func){
@@ -125,6 +144,8 @@ jQuery.fn.sortChildren = function(func){
 }
 
 
+
+/*********************************************************************/
 
 // XXX make this add new filters in the correct position...
 function updateFilter(e, f, v, order){
@@ -228,11 +249,12 @@ var DEFAULT_FILTER_ORDER = [
 ]
 
 function saveState(target){
-	var l = $('.state').length
+	var l = $('.state').last().text()
+	l = l == '' ? 0 : parseInt(l)+1
 	var state = $(target).css('-webkit-filter')
-	$('<button></button>')
+	$('<div/>')
 		.text(l)
-		.addClass('state '+l)
+		.addClass('state')
 		.attr({
 			state: state,
 			sliders: getSliderOrder().join(' ')
@@ -243,6 +265,10 @@ function saveState(target){
 			sortFilterSliders($(this).attr('sliders').split(' '))
 		})
 		.appendTo($('.states'))
+		.draggable({ 
+			revert: 'invalid',
+			revertDuration: 200,
+		})
 }
 function clearStates(){
 	$('.state').remove()
@@ -264,7 +290,7 @@ function makeAbsRange(text, filter, target, min, max, dfl, step, translate, norm
 	$('<span class="title"/>')
 		.html(text)
 		.appendTo(elem)
-	var range = $('<input type="range">')
+	var range = $('<input class="slider" type="range">')
 		.attr({
 			filter: filter,
 			min: min,
@@ -324,7 +350,7 @@ function makeControls(target){
 		})
 		.append($('<summary>Edit</summary>')
 			.append($('<span/>')
-				.addClass('close-panel')
+				.addClass('close-button')
 				.click(function(){
 					$(this).parents('.panel').hide()
 					return false
@@ -336,19 +362,20 @@ function makeControls(target){
 		})
 
 	// wrapper for sub-panels...
-	var content = $('<span class="content">')
+	var content = $('<span class="panel-content">')
 		.sortable({
 			forcePlaceholderSize: true,
 			start: function(e, ui){
 				 ui.placeholder.height(ui.helper.outerHeight());
 			},
+			opacity: 0.5,
 		})
 		.appendTo(panel)
 
 	// filters...
 	$('<details open/>')
 		.append($('<summary>Filters</summary>'))
-		.append($('<div/>')
+		.append($('<div class="sub-panel-content"/>')
 			.append($('<div class="filter-list"/>')
 				.append(makeLogRange('Brightness:', 'brightness', target))
 				.append(makeLogRange('Contrast:', 'contrast', target))
@@ -380,23 +407,34 @@ function makeControls(target){
 					$('.reset').click()
 					sortFilterSliders(DEFAULT_FILTER_ORDER)
 				})))
-			//.append($('<hr>'))
-			//.append($('<div>NOTE: order of filters is segnificant, use '+
-			//	'dragging to arrange them as needed.</div>')))
 		.appendTo(content)
 
 	// snapshots...
 	$('<details open/>')
 		.append($('<summary>Snapshots</summary>'))
-		.append($('<div/>')
+		.append($('<div class="sub-panel-content"/>')
 			.append($('<div class="states"/>'))
 			.append($('<hr>'))
 			.append($('<button/>')
 				.click(function(){ saveState(target) })
 				.text('Save'))
 			.append($('<button/>')
+				.addClass('remove-state-drop-target')
 				.click(function(){ clearStates() })
-				.text('Clear')))
+				.text('Clear')
+				.droppable({
+					accept: '.state',
+					activate: function(e, ui){
+						$(this).text('Delete')
+					},
+					deactivate: function(e, ui){
+						$(this).text('Clear')
+					},
+					drop: function(e, ui){
+						ui.helper.remove()
+					}
+					
+				})))
 		.appendTo(content)
 
 	return panel
@@ -405,6 +443,7 @@ function makeControls(target){
 function reloadControls(target){
 	clearStates()
 	var state = loadSliderState(target)
+
 	// nothing set -- default sort...
 	if(state == 'none'){
 		sortFilterSliders(DEFAULT_FILTER_ORDER)
@@ -417,6 +456,10 @@ function reloadControls(target){
 	saveState(target)
 }
 
+
+
+/*********************************************************************/
+// setup...
 $(function(){
 	var target = '#image'
 
@@ -424,14 +467,17 @@ $(function(){
 
 	$('body').append(panel)
 
+	reloadControls(target)
+
 	$(target)
 		.click(function(){
 			panel.show()
 		})
-
-	saveState(target)
 })
 
+
+
+/*********************************************************************/
 </script>
 <body>
 	<img id="image" src="image.jpg" >
