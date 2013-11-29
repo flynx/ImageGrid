@@ -14,10 +14,26 @@ details {
 	min-width: 500px;
 	overflow: visible;
 }
+.panel {
+	box-shadow: 5px 5px 30px -5px rgba(0,0,0,0.5);
+	opacity: 0.95;
+}
+.close-panel {
+	display: inline-block;
+	position: absolute;
+	right: 5px;
+	cursor: hand;
+}
+.close-panel:hover {
+	color: black;
+	font-weight: bold;
+	text-shadow: 1px 1px 2px 0px rgba(0,0,0,0.5);
+}
 details details {
 	width: 500px;
 	margin: 3px;
 	border: solid 1px silver;
+	box-shadow: none;
 }
 details > div {
 	margin: 10px;
@@ -91,28 +107,41 @@ input::-webkit-inner-spin-button {
 }
 
 
+.title {
+	cursor: move;
+}
+
 
 </style>
 <script src="jquery.js"></script>
 <script src="jquery-ui.js"></script>
 <script>
 
-function updateFilter(e, f, v){
+// XXX this exists in jli, remove when not needed...
+jQuery.fn.sortChildren = function(func){
+	return $(this).each(function(_, e){
+		return $(e).append($(e).children().detach().get().sort(func))
+	})
+}
+
+
+
+// XXX make this add new filters in the correct position...
+function updateFilter(e, f, v, order){
 	e = $(e)
 	var state = e
 		.css('-webkit-filter')
 	state = state == 'none' ? '' : state + ' '
-	//state = state.replace(RegExp(f+'\\s*\\([^\\)]*\\)'), '')
-	//state += f+'('+v+')'
+	// update existing filter...
 	if(RegExp(f).test(state)){
 		state = state.replace(RegExp(f+'\\s*\\([^\\)]*\\)'), f+'('+v+')')
+	// add new filter...
 	} else {
 		state += f+'('+v+')'
+		state = sortFilterStr(state, order)
 	}
-
 	e.css({
 		'-webkit-filter': state,
-		'filter': state
 	})
 	return v
 }
@@ -124,10 +153,37 @@ function resetFilter(e, f){
 	state = state.replace(RegExp(f+'\\s*\\([^\\)]*\\)'), '').trim()
 	e.css({
 		'-webkit-filter': state,
-		'filter': state
 	})
 	return e
 }
+function sortFilterStr(state, order){
+	order = order == null ? getSliderOrder() : order
+	state = state.split(/\s+/)
+	state.sort(function(a, b){
+		a = order.indexOf(a.replace(/\(.*/, ''))
+		b = order.indexOf(b.replace(/\(.*/, ''))
+		return a - b
+	})
+	return state.join(' ')
+}
+function getSliderOrder(){
+	return $('.filter-list').sortable('toArray')
+}
+// NOTE: this will return only the set filters...
+function getFilterOrder(target){
+	return $(target)
+		.css('-webkit-filter')
+		.split(/\s*\([^\)]*\)\s*/g)
+		.slice(0, -1)
+}
+function sortFilterSliders(order){
+	return $('.filter-list').sortChildren(function(a, b){
+		a = order.indexOf(a.id)
+		b = order.indexOf(b.id)
+		return a - b
+	})
+}
+
 
 function resetPrevRange(e){
 	e = $(e).prev('input[type=range]')
@@ -135,29 +191,41 @@ function resetPrevRange(e){
 		.change()
 }
 
-// XXX this does not set hue correctly...
+// XXX order the sliders...
 function loadSliderState(target){
-	var state = $(target)
+	var res = $(target)
 		.css('-webkit-filter')
+	var state = res
 		.split(/\s*\(\s*|\s*\)\s*/g)
 		.reverse()
 		.slice(1)
 	// reset sliders do defaults...
 	$('input[type=range]').each(function(i, e){
 		e = $(e)
-		e.val(e.attr('default'))
+		e.val(e.attr('default')).change()
 	})
 	// set the saved values...
 	while(state.length > 0){
-		var e = $('#'+state.pop())
+		// XXX avoid using ids...
+		var e = $('[filter='+state.pop()+']')
 		if(e.prop('normalize')){
-			e.val(v2r(parseFloat(state.pop())))
+			e.val(v2r(parseFloat(state.pop()))).change()
 		} else {
-			e.val(parseFloat(state.pop()))
+			e.val(parseFloat(state.pop())).change()
 		}
 	}
+	return res
 }
 
+var DEFAULT_FILTER_ORDER = [
+	'brightness',
+	'contrast',
+	'saturate',
+	'hue-rotate',
+	'grayscale',
+	'invert',
+	'sepia'
+]
 
 function saveState(target){
 	var l = $('.state').length
@@ -165,15 +233,21 @@ function saveState(target){
 	$('<button></button>')
 		.text(l)
 		.addClass('state '+l)
-		.attr('state', state)
+		.attr({
+			state: state,
+			sliders: getSliderOrder().join(' ')
+		})
+		// load state...
 		.click(function(){
 			loadSliderState($(target).css('-webkit-filter', state))
+			sortFilterSliders($(this).attr('sliders').split(' '))
 		})
 		.appendTo($('.states'))
 }
 function clearStates(){
 	$('.state').remove()
 }
+
 
 function makeAbsRange(text, filter, target, min, max, dfl, step, translate, normalize){
 	min = min == null ? 0 : min
@@ -183,13 +257,16 @@ function makeAbsRange(text, filter, target, min, max, dfl, step, translate, norm
 	translate = translate == null ? function(v){return v} : translate
 	normalize = normalize == null ? false : true
 
-	var elem = $('<div class="range"></div>')
+	var elem = $('<div class="control range"></div>')
+		.attr({
+			id: filter,
+		})
 	$('<span class="title"/>')
 		.html(text)
 		.appendTo(elem)
 	var range = $('<input type="range">')
 		.attr({
-			id: filter,
+			filter: filter,
 			min: min,
 			max: max,
 			step: step,
@@ -200,7 +277,7 @@ function makeAbsRange(text, filter, target, min, max, dfl, step, translate, norm
 		.change(function(){
 			var val = this.valueAsNumber
 			value.val(val)
-			updateFilter(target, this.id, translate(val))
+			updateFilter(target, filter, translate(val))
 		})
 		.appendTo(elem)
 	var value = $('<input type="number" class="value"/>')
@@ -211,10 +288,10 @@ function makeAbsRange(text, filter, target, min, max, dfl, step, translate, norm
 		})
 		.val(dfl)
 		.change(function(){
-			range.val($(this).val())
+			range.val($(this).val()).change()
 		})
 		.appendTo(elem)
-	$('<button class="reset">x</button>')
+	$('<button class="reset">&times;</button>')
 		.click(function(){
 			range.val(dfl).change()
 			resetFilter(target, filter)
@@ -237,34 +314,78 @@ function v2r(v){
 }
 
 function makeControls(target){
+	// tool panel...
 	var panel = $('<details open/>')
 		.addClass('panel')
 		.css({
 			position: 'absolute',
+			top: '100px',
+			left: '100px',
 		})
-		.append($('<summary>Edit</summary>'))
-		.draggable()
+		.append($('<summary>Edit</summary>')
+			.append($('<span/>')
+				.addClass('close-panel')
+				.click(function(){
+					$(this).parents('.panel').hide()
+					return false
+				})
+				.html('&times;')))
+		.draggable({
+			containment: $('body'),
+			scroll: false,
+		})
 
-	$('<details open/>')
-		.append($('<summary>Controls</summary>'))
-		.append($('<div/>')
-			.append(makeLogRange('Brightness:', 'brightness', target))
-			.append(makeLogRange('Contrast:', 'contrast', target))
-			.append(makeLogRange('Saturation:', 'saturate', target))
-			.append(makeAbsRange('Hue:', 'hue-rotate', target, -180, 180, 0, 0.5, function(v){ return v+'deg' }))
-			.append($('<hr>'))
-			.append(makeAbsRange('Grayscale:', 'grayscale', target))
-			.append($('<hr>'))
-			.append(makeAbsRange('Invert:', 'invert', target))
-			.append(makeAbsRange('Sepia:', 'sepia', target))
-			.append($('<hr>'))
-			.append($('<button onclick="$(\'.reset\').click()">Reset all</button>'))
-			.append($('<hr>'))
-			.append($('<div>NOTE: at this point order of operations is '+
-				'sometimes segnificant -- might be good to treat the filters '+
-				'as layers -- se Adobe CSS filter factory </div>')))
+	// wrapper for sub-panels...
+	var content = $('<span class="content">')
+		.sortable({
+			forcePlaceholderSize: true,
+			start: function(e, ui){
+				 ui.placeholder.height(ui.helper.outerHeight());
+			},
+		})
 		.appendTo(panel)
 
+	// filters...
+	$('<details open/>')
+		.append($('<summary>Filters</summary>'))
+		.append($('<div/>')
+			.append($('<div class="filter-list"/>')
+				.append(makeLogRange('Brightness:', 'brightness', target))
+				.append(makeLogRange('Contrast:', 'contrast', target))
+				.append(makeLogRange('Saturation:', 'saturate', target))
+				.append(makeAbsRange('Hue:', 'hue-rotate', target, -180, 180, 0, 0.5, function(v){ return v+'deg' }))
+				.append(makeAbsRange('Grayscale:', 'grayscale', target))
+				.append(makeAbsRange('Invert:', 'invert', target))
+				.append(makeAbsRange('Sepia:', 'sepia', target))
+				.sortable({
+					axis: 'y',
+				})
+				.on('sortstop', function(){
+					// update image filter order...
+					var img = $(target)
+					img.css('-webkit-filter', sortFilterStr(img.css('-webkit-filter')))
+				}))
+			.append($('<hr>'))
+			.append('Reset: ')
+			.append($('<button>Values</button>')
+				.click(function(){
+					$('.reset').click()
+				}))
+			.append($('<button>Order</button>')
+				.click(function(){
+					sortFilterSliders(DEFAULT_FILTER_ORDER)
+				}))
+			.append($('<button>All</button>')
+				.click(function(){
+					$('.reset').click()
+					sortFilterSliders(DEFAULT_FILTER_ORDER)
+				})))
+			//.append($('<hr>'))
+			//.append($('<div>NOTE: order of filters is segnificant, use '+
+			//	'dragging to arrange them as needed.</div>')))
+		.appendTo(content)
+
+	// snapshots...
 	$('<details open/>')
 		.append($('<summary>Snapshots</summary>'))
 		.append($('<div/>')
@@ -276,39 +397,44 @@ function makeControls(target){
 			.append($('<button/>')
 				.click(function(){ clearStates() })
 				.text('Clear')))
-		.appendTo(panel)
+		.appendTo(content)
 
 	return panel
+}
+
+function reloadControls(target){
+	clearStates()
+	var state = loadSliderState(target)
+	// nothing set -- default sort...
+	if(state == 'none'){
+		sortFilterSliders(DEFAULT_FILTER_ORDER)
+
+	// load existing sort state...
+	} else {
+		sortFilterSliders(getFilterOrder(target).concat(DEFAULT_FILTER_ORDER))
+	}
+	// make a snapshot...
+	saveState(target)
 }
 
 $(function(){
 	var target = '#image'
 
-	$('body').append(makeControls(target))
+	var panel = makeControls(target).hide()
+
+	$('body').append(panel)
+
+	$(target)
+		.click(function(){
+			panel.show()
+		})
 
 	saveState(target)
-
 })
 
 </script>
 <body>
-	<img id="image" src="image.jpg">
-
-	<!--details open>
-		<summary>Controls</summary>
-		<div class="controls">
-		</div>
-	</details>
-
-	<details open>
-		<summary>Snapshots</summary>
-		<div>
-			<div class="states">
-			</div>
-			<button onclick="saveState('#image')">Save</button>
-			<button onclick="clearStates()">Clear</button>
-		</div>
-	</details-->
-
+	<img id="image" src="image.jpg" >
+	<p>click image to show editor panel...</p>
 </body>
 </html>
