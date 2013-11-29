@@ -50,12 +50,28 @@ input[type='range']::-webkit-slider-thumb {
 }
 
 .value {
+	-webkit-appearance: none !important;
 	display: inline-block;
 	width: 40px;
 	text-align: right;
 	margin-left: 5px;
 	margin-right: 5px;
+	background: white;
+	border: none;
+	border-radius: 2px;
 }
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	-webkit-appearance: none !important;
+	/*
+	display: inline-block;
+	background: white;
+	border-radius: 2px;
+	border: solid 1px gray;
+	width: 10px;
+	*/
+}
+
 
 
 
@@ -161,12 +177,20 @@ function makeAbsRange(text, filter, target, min, max, dfl, step, tran, normalize
 		.val(dfl)
 		.change(function(){
 			var val = this.valueAsNumber
-			value.text(val)
+			value.val(val)
 			updateFilter(target, this.id, tran(val))
 		})
 		.appendTo(elem)
-	var value = $('<span class="value"/>')
-		.html(dfl)
+	var value = $('<input type="number" class="value"/>')
+		.attr({
+			min: min,
+			max: max,
+			step: step,
+		})
+		.val(dfl)
+		.change(function(){
+			range.val($(this).val())
+		})
 		.appendTo(elem)
 	$('<button class="reset">x</button>')
 		.click(function(){
@@ -209,6 +233,8 @@ $(function(){
 		.append($('<div>NOTE: at this point order of operations is '+
 			'sometimes segnificant -- might be good to treat the filters '+
 			'as layers -- se Adobe CSS filter factory </div>'))
+
+		saveState()
 })
 
 </script>
