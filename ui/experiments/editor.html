@@ -9,18 +9,43 @@ details {
 	background: white;
 }
 details {
+	display: inline-block;
+	width: 508px;
+	min-width: 500px;
+	overflow: visible;
+}
+details details {
 	width: 500px;
+	margin: 3px;
+	border: solid 1px silver;
 }
 details > div {
 	margin: 10px;
 }
 summary {
 	padding-left: 3px;
+	background: silver;
+}
+details details summary {
 	background: #ddd;
 }
 input[type=range] {
 	width: 300px;
 }
+button:active {
+	background: silver;
+}
+button.reset {
+	border: solid 1px silver;
+}
+button.reset:hover {
+	border: solid 1px gray;
+}
+/*
+button.state:focus {
+	background: silver;
+}
+*/
 /* XXX this is not live...
 input[type=range]:after {
 	content: attr(value);
@@ -63,20 +88,13 @@ input[type='range']::-webkit-slider-thumb {
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
 	-webkit-appearance: none !important;
-	/*
-	display: inline-block;
-	background: white;
-	border-radius: 2px;
-	border: solid 1px gray;
-	width: 10px;
-	*/
 }
-
 
 
 
 </style>
 <script src="jquery.js"></script>
+<script src="jquery-ui.js"></script>
 <script>
 
 function updateFilter(e, f, v){
@@ -118,8 +136,8 @@ function resetPrevRange(e){
 }
 
 // XXX this does not set hue correctly...
-function loadSliderState(){
-	var state = $('#image')
+function loadSliderState(target){
+	var state = $(target)
 		.css('-webkit-filter')
 		.split(/\s*\(\s*|\s*\)\s*/g)
 		.reverse()
@@ -141,16 +159,15 @@ function loadSliderState(){
 }
 
 
-function saveState(){
+function saveState(target){
 	var l = $('.state').length
-	var state = $('#image').css('-webkit-filter')
+	var state = $(target).css('-webkit-filter')
 	$('<button></button>')
 		.text(l)
 		.addClass('state '+l)
 		.attr('state', state)
 		.click(function(){
-			$('#image').css('-webkit-filter', state)
-			loadSliderState()
+			loadSliderState($(target).css('-webkit-filter', state))
 		})
 		.appendTo($('.states'))
 }
@@ -158,9 +175,14 @@ function clearStates(){
 	$('.state').remove()
 }
 
-function makeAbsRange(text, filter, target, min, max, dfl, step, tran, normalize){
-	tran = tran == null ? function(v){return v} : tran
+function makeAbsRange(text, filter, target, min, max, dfl, step, translate, normalize){
+	min = min == null ? 0 : min
+	max = max == null ? 1 : max
+	dfl = dfl == null ? min : dfl
+	step = step == null ? 0.01 : step
+	translate = translate == null ? function(v){return v} : translate
 	normalize = normalize == null ? false : true
+
 	var elem = $('<div class="range"></div>')
 	$('<span class="title"/>')
 		.html(text)
@@ -178,7 +200,7 @@ function makeAbsRange(text, filter, target, min, max, dfl, step, tran, normalize
 		.change(function(){
 			var val = this.valueAsNumber
 			value.val(val)
-			updateFilter(target, this.id, tran(val))
+			updateFilter(target, this.id, translate(val))
 		})
 		.appendTo(elem)
 	var value = $('<input type="number" class="value"/>')
@@ -214,34 +236,65 @@ function v2r(v){
 	return Math.log(v)*C
 }
 
+function makeControls(target){
+	var panel = $('<details open/>')
+		.addClass('panel')
+		.css({
+			position: 'absolute',
+		})
+		.append($('<summary>Edit</summary>'))
+		.draggable()
+
+	$('<details open/>')
+		.append($('<summary>Controls</summary>'))
+		.append($('<div/>')
+			.append(makeLogRange('Brightness:', 'brightness', target))
+			.append(makeLogRange('Contrast:', 'contrast', target))
+			.append(makeLogRange('Saturation:', 'saturate', target))
+			.append(makeAbsRange('Hue:', 'hue-rotate', target, -180, 180, 0, 0.5, function(v){ return v+'deg' }))
+			.append($('<hr>'))
+			.append(makeAbsRange('Grayscale:', 'grayscale', target))
+			.append($('<hr>'))
+			.append(makeAbsRange('Invert:', 'invert', target))
+			.append(makeAbsRange('Sepia:', 'sepia', target))
+			.append($('<hr>'))
+			.append($('<button onclick="$(\'.reset\').click()">Reset all</button>'))
+			.append($('<hr>'))
+			.append($('<div>NOTE: at this point order of operations is '+
+				'sometimes segnificant -- might be good to treat the filters '+
+				'as layers -- se Adobe CSS filter factory </div>')))
+		.appendTo(panel)
+
+	$('<details open/>')
+		.append($('<summary>Snapshots</summary>'))
+		.append($('<div/>')
+			.append($('<div class="states"/>'))
+			.append($('<hr>'))
+			.append($('<button/>')
+				.click(function(){ saveState(target) })
+				.text('Save'))
+			.append($('<button/>')
+				.click(function(){ clearStates() })
+				.text('Clear')))
+		.appendTo(panel)
+
+	return panel
+}
+
 $(function(){
-	$('.controls')
-		.append(makeLogRange('Brightness:', 'brightness', '#image'))
-		.append(makeLogRange('Contrast:', 'contrast', '#image'))
-		.append(makeLogRange('Saturation:', 'saturate', '#image'))
-		.append(makeAbsRange('Hue:', 'hue-rotate', '#image', -180, 180, 0, 0.5, function(v){ return v+'deg' }))
-		.append($('<hr>'))
-		.append(makeAbsRange('Grayscale:', 'grayscale', '#image', 0, 1, 0, 0.01))
-		.append($('<hr>'))
-		.append(makeAbsRange('Invert:', 'invert', '#image', 0, 1, 0, 0.01))
-		.append(makeAbsRange('Sepia:', 'sepia', '#image', 0, 1, 0, 0.01))
-		.append($('<hr>'))
+	var target = '#image'
 
-		.append($('<button onclick="$(\'.reset\').click()">Reset all</button>'))
-		.append($('<hr>'))
+	$('body').append(makeControls(target))
 
-		.append($('<div>NOTE: at this point order of operations is '+
-			'sometimes segnificant -- might be good to treat the filters '+
-			'as layers -- se Adobe CSS filter factory </div>'))
+	saveState(target)
 
-		saveState()
 })
 
 </script>
 <body>
 	<img id="image" src="image.jpg">
 
-	<details open>
+	<!--details open>
 		<summary>Controls</summary>
 		<div class="controls">
 		</div>
@@ -252,10 +305,10 @@ $(function(){
 		<div>
 			<div class="states">
 			</div>
-			<button onclick="saveState()">Save</button>
+			<button onclick="saveState('#image')">Save</button>
 			<button onclick="clearStates()">Clear</button>
 		</div>
-	</details>
+	</details-->
 
 </body>
 </html>
