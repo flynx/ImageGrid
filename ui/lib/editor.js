@@ -4,6 +4,7 @@
 **********************************************************************/
 
 var DEFAULT_FILTER_ORDER = [
+//	'gamma',
 	'brightness',
 	'contrast',
 	'saturate',
@@ -235,7 +236,7 @@ function makeLogRange(text, filter, target){
 }
 
 
-function makeControls(target){
+function makeEditorControls(target){
 	// tool panel...
 	var panel = $('<details open/>')
 		.addClass('panel')
@@ -274,6 +275,7 @@ function makeControls(target){
 		.append($('<summary>Filters</summary>'))
 		.append($('<div class="sub-panel-content"/>')
 			.append($('<div class="filter-list"/>')
+				//.append(makeLogRange('Gamma:', 'gamma', target))
 				.append(makeLogRange('Brightness:', 'brightness', target))
 				.append(makeLogRange('Contrast:', 'contrast', target))
 				.append(makeLogRange('Saturation:', 'saturate', target))
