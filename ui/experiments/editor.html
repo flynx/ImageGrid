@@ -21,6 +21,17 @@ body.gray {
 <script src="editor.js"></script>
 <script>
 
+// XXX this exists in jli, remove when not needed...
+jQuery.fn.sortChildren = function(func){
+	return $(this).each(function(_, e){
+		return $(e).append($(e).children().detach().get().sort(func))
+	})
+}
+
+
+
+/*********************************************************************/
+
 
 function toggleThemes(){
 	var b = $('body')

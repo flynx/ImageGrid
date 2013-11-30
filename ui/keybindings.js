@@ -700,7 +700,31 @@ var KEYBOARD_CONFIG = {
 			}),
 		*/
 
-		E: doc('Open image in external software', openImage),
+		E: {
+				default: doc('Open image in external software', openImage),
+				ctrl: doc('Open preview editor panel (Experimental)',
+					function(){
+						if($('.panel').length == 0){
+							$('.viewer')
+								.append(makeControls('.current.image')
+									.addClass('noScroll'))
+								.on('focusingImage', function(){
+									if($('.panel').css('display') != 'none'){
+										reloadControls('.current.image')
+									}
+								})
+							reloadControls('.current.image')
+						} else {
+							var ed = $('.panel')
+							if(ed.css('display') == 'none'){
+								reloadControls('.current.image')
+								ed.show()
+							} else {
+								ed.hide()
+							}
+						}
+					}),
+			},
 		// XXX make F4 a default editor and E a default viewer...
 		F4: 'E',
 
