@@ -146,11 +146,11 @@
 
 
 /* dark theme */
-
 .dark .panel {
 	border: solid 2px #333;
 	background: black;
 	color: silver;
+	box-shadow: 3px 3px 30px 0px rgba(0, 0, 0, 0.5);
 }
 .dark .panel summary {
 	background: #333;
@@ -163,7 +163,7 @@
 .dark .panel details {
 	border: solid 1px #333;
 	/* needed for dragging */
-	background: black;
+	background: #080808;
 	color: #888;
 }
 .dark .panel details {
@@ -186,6 +186,7 @@
 .dark .panel .control .slider::-webkit-slider-thumb {
 	border: solid 2px #aaa;
 	background: black;
+	box-shadow: 1px 1px 10px 0px rgba(0, 0, 0, 0.5);
 }
 .dark .panel .control.at-default .slider::-webkit-slider-thumb {
 	border: solid 1px gray;
@@ -203,9 +204,80 @@
 	border: none;
 	border-top: solid 1px #333;
 }
+/* local stuff */
+
+body.dark {
+	background: black;
+	color: silver;
+}
 
 
 
+/* gray theme */
+
+.gray .panel {
+	border: solid 2px #444;
+	background: #333;
+	color: silver;
+	box-shadow: 3px 3px 30px 0px rgba(0, 0, 0, 0.5);
+}
+.gray .panel summary {
+	background: #444;
+}
+.gray .panel summary::-webkit-details-marker {
+	color: #555;
+}
+.gray .panel button,
+.gray .panel .state,
+.gray .panel details {
+	border: solid 1px #444;
+	/* needed for dragging */
+	background: #333;
+	color: #888;
+}
+.gray .panel details {
+	border: solid 1px #454545;
+}
+.gray .panel details summary {
+	background: #444;
+	color: silver;
+}
+.gray .panel .state:active,
+.gray .panel button:active {
+	background: #444;
+}
+.gray .panel .control .slider {
+	border: solid 1px #555;
+	background: #222;
+}
+.gray .panel .control.at-default .slider {
+}
+.gray .panel .control .slider::-webkit-slider-thumb {
+	border: solid 2px #aaa;
+	background: #333;
+}
+.gray .panel .control.at-default .slider::-webkit-slider-thumb {
+	border: solid 1px gray;
+	opacity: 0.5;
+}
+.gray .panel .control .value {
+	border: none;
+	background: transparent;
+	color: gray;
+}
+.gray .panel .control .reset:hover {
+	border: solid 1px #333;
+}
+.gray .panel hr {
+	border: none;
+	border-top: solid 1px #444;
+}
+/* local stuff */
+
+body.gray {
+	background: #333;
+	color: silver;
+}
 
 
 </style>
@@ -450,6 +522,7 @@ function makeControls(target){
 			forcePlaceholderSize: true,
 			start: function(e, ui){
 				 ui.placeholder.height(ui.helper.outerHeight());
+				 ui.placeholder.width(ui.helper.outerWidth());
 			},
 			opacity: 0.5,
 		})
@@ -556,6 +629,7 @@ $(function(){
 		.click(function(){
 			panel.show()
 		})
+
 })
 
 
@@ -564,6 +638,6 @@ $(function(){
 </script>
 <body>
 	<img id="image" src="image.jpg" >
-	<p>click image to show editor panel...</p>
+	<p>click image to show editor panel and <a href="javascript:$('body').toggleClass('gray')">here</a> to toggle theme...</p>
 </body>
 </html>
