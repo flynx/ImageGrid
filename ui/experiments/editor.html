@@ -6,6 +6,8 @@
 	min-width: 200px;
 	max-width: 450px;
 
+	font-size: 12px;
+
 	border: solid 2px silver;
 	border-radius: 4px;
 
@@ -37,7 +39,8 @@
 .panel details,
 .panel .state {
 	margin: 1px;
-	border: solid 1px gray;
+	font-size: 11px;
+	border: solid 1px #aaa;
 	border-radius: 4px;
 	/* needed for dragging */
 	background: white;
@@ -70,24 +73,25 @@
 }
 .panel .control .title {
 	display: inline-block;
-	width: 80px;
+	width: 60px;
 	cursor: move;
 }
 .panel .control .slider {
 	-webkit-appearance: none !important;
-	width: 200px;
-	height: 4px;
-	border: solid 1px gray;
+	width: 150px;
+	height: 3px;
+	border: solid 1px #ccc;
 	border-radius: 2px;
-	background: silver;
+	background: white;
 }
 .panel .control.at-default .slider {
 }
 .panel .control .slider::-webkit-slider-thumb {
 	-webkit-appearance: none !important;
-	height: 15px;
-	width: 15px;
-	border: solid 1px gray;
+	height: 13px;
+	width: 13px;
+	/*border: solid 1px gray;*/
+	border: solid 2px #aaa;
 	border-radius: 50%;
 	background: white;
 	box-shadow: 1px 1px 10px 0px rgba(0, 0, 0, 0.3);
@@ -98,8 +102,9 @@
 .panel .control .value {
 	-webkit-appearance: none !important;
 	display: inline-block;
-	width: 40px;
+	width: 25px;
 	text-align: right;
+	font-size: 11px;
 	margin-left: 5px;
 	margin-right: 5px;
 	border: none;
@@ -175,7 +180,7 @@
 }
 .dark .panel .state:active,
 .dark .panel button:active {
-	background: #555;
+	background: #222;
 }
 .dark .panel .control .slider {
 	border: solid 1px #555;
@@ -207,7 +212,7 @@
 /* local stuff */
 
 body.dark {
-	background: black;
+	background: #0a0a0a;
 	color: silver;
 }
 
@@ -266,7 +271,7 @@ body.dark {
 	color: gray;
 }
 .gray .panel .control .reset:hover {
-	border: solid 1px #333;
+	border: solid 1px #444;
 }
 .gray .panel hr {
 	border: none;
@@ -615,6 +620,21 @@ function reloadControls(target){
 
 
 /*********************************************************************/
+
+
+function toggleThemes(){
+	var b = $('body')
+	if(b.hasClass('gray')){
+		b.removeClass('gray')
+		b.addClass('dark')
+	} else if(b.hasClass('dark')){
+		b.removeClass('dark')
+	} else {
+		b.addClass('gray')
+	}
+}
+
+
 // setup...
 $(function(){
 	var target = '#image'
@@ -638,6 +658,6 @@ $(function(){
 </script>
 <body>
 	<img id="image" src="image.jpg" >
-	<p>click image to show editor panel and <a href="javascript:$('body').toggleClass('gray')">here</a> to toggle theme...</p>
+	<p>click image to show editor panel and <a href="javascript:toggleThemes()">here</a> to toggle theme...</p>
 </body>
 </html>
