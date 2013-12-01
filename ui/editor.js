@@ -21,6 +21,12 @@ var toggleEditor = createCSSClassToggler(
 					$('.viewer')
 						.append(makeEditorControls('.current.image')
 							.addClass('noScroll')
+							.css({
+								// prevent the editor from moving under 
+								// the title bar, that will prevent us from
+								// ever moving it away or closing it...
+								'margin-top': '20px',
+							})
 							// make clicks on unfocusable elements remove focus...
 							.click(function(){
 								if(event.target != $('.panel :focus')[0]){
