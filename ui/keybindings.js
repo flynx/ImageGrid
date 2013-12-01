@@ -118,7 +118,7 @@ var KEYBOARD_CONFIG = {
 
 	// dialogs...
 	//
-	'.viewer.overlay .overlay-block.dialog': {
+	'.viewer.overlay .overlay-block.dialog, .panel :focus': {
 		title: 'Dialog',
 		doc: 'NOTE: to <i>close</i> a dialog, in addition to the keyaboard '+
 			'shortcuts, one can also click anywhere outside the dialog.',
@@ -128,18 +128,26 @@ var KEYBOARD_CONFIG = {
 		'insert-return': doc('Insert return'),
 
 		Enter: {
-				default: doc('Accept dialog',
+				default: doc('Accept dialog / input',
 					function(){
 						var f = $(':focus')
 						
 						// trigger the default button action...
 						if(f.length > 0 
-								&& (/button/i.test(f[0].tagName) 
-									|| f.attr('type') == 'button')){
-							return true
+								&& (/button|summary/i.test(f[0].tagName) 
+									|| /button|checkbox/i.test(f.attr('type')))){
+							f.click()
+							// prevent the key from propagating to the viewer...
+							return false
+
+						// accept the input...
+						} else if(toggleEditor('?') == 'on'){
+							f.blur()
+							// prevent the key from propagating to the viewer...
+							return false
 
 						// accept the dialog...
-						} else {
+						} else if(isOverlayVisible('.viewer')) {
 							getOverlay($('.viewer')).trigger('accept')
 							hideOverlay($('.viewer')) 
 						}
@@ -149,9 +157,19 @@ var KEYBOARD_CONFIG = {
 			},
 		Esc: doc('Close dialog', 
 			function(){ 
-				//getOverlay($('.viewer')).trigger('close')
-				hideOverlay($('.viewer')) 
-				return false
+				if(isOverlayVisible('.viewer')){
+					//getOverlay($('.viewer')).trigger('close')
+					hideOverlay($('.viewer')) 
+					return false
+
+				} else if(toggleEditor('?') == 'on'){
+					var f = $(':focus')
+					if(f.length > 0){
+						f.blur()
+					} else {
+						toggleEditor('off')
+					}
+				}
 			}),
 	},
 
@@ -703,7 +721,8 @@ var KEYBOARD_CONFIG = {
 		E: {
 				default: doc('Open image in external software', openImage),
 				// XXX Experimental
-				ctrl: doc('Open preview editor panel (Experimental)', setupEditor),
+				ctrl: doc('Open preview editor panel (Experimental)', 
+					function(){ toggleEditor() }),
 			},
 		// XXX make F4 a default editor and E a default viewer...
 		F4: 'E',

@@ -9,39 +9,41 @@
 
 /*********************************************************************/
 
-// ImageGrid-specific editor setup...
-function setupEditor(){
-	// build the editor...
-	if($('.panel').length == 0){
-		$('.viewer')
-			.append(makeEditorControls('.current.image')
-				.addClass('noScroll'))
+var toggleEditor = createCSSClassToggler('.viewer', '.editor-visible',
+		function(action){
+			var ed = $('.panel')
 
-			// setup the event to update the editor...
-			.on('focusingImage', function(){
-				if($('.panel').css('display') != 'none'){
-					reloadControls('.current.image')
+			if(action == 'on'){
+				// create the editor if this is first init...
+				if(ed.length == 0){
+					$('.viewer')
+						.append(makeEditorControls('.current.image')
+							.addClass('noScroll')
+							// make clicks on unfocusable elements remove focus...
+							.click(function(){
+								if(event.target != $('.panel :focus')[0]){
+									$('.panel :focus').blur()
+								}
+							}))
+
+						// setup the event to update the editor...
+						.on('focusingImage', function(){
+							if(toggleEditor('?') == 'on'){
+								reloadControls('.current.image')
+							}
+						})
+				// show the editor...
+				} else {
+					ed.show()
 				}
-			})
+				// update the state...
+				reloadControls('.current.image')
 
-		reloadControls('.current.image')
-
-	// toggle the editor...
-	// XXX do we need a real mode for this?
-	} else {
-		var ed = $('.panel')
-
-		// show...
-		if(ed.css('display') == 'none'){
-			reloadControls('.current.image')
-			ed.show()
-
-		// hide...
-		} else {
-			ed.hide()
-		}
-	}
-}
+			// hide...
+			} else {
+				ed.hide()
+			}
+		})
 
 
 

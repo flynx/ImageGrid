@@ -457,6 +457,10 @@ function hideOverlay(root){
 		.remove()
 }
 
+function isOverlayVisible(root){
+	return getOverlay(root).css('display') != 'none'
+}
+
 
 var FIELD_TYPES = {
 	// format: 
