@@ -932,9 +932,23 @@ function exportPreviewsDialog(state, dfl){
 	// XXX make this more generic...
 	// tell the user what state are we exporting...
 	if(state == null){
+		var imgs = 0
+		// NOTE: we are not using order or image count as these sets may
+		// 		be larger that the current crop...
+		DATA.ribbons.map(function(e){
+			imgs += e.length
+		})
 		state = toggleSingleImageMode('?') == 'on' ? 'current image' : state
-		state = state == null && isViewCropped() ? 'current cropped view' : state
-		state = state == null ? 'all images' : state
+		state = state == null && isViewCropped() ? 
+			'cropped view: '+
+				imgs+' images in '+
+				DATA.ribbons.length+' ribbons' 
+			: state
+		state = state == null ?
+			'all: '+
+				imgs+' images in '+
+				DATA.ribbons.length+' ribbons' 
+			: state
 	}
 
 	var res = $.Deferred()
