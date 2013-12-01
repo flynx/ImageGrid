@@ -9,7 +9,9 @@
 
 /*********************************************************************/
 
-var toggleEditor = createCSSClassToggler('.viewer', '.editor-visible',
+var toggleEditor = createCSSClassToggler(
+		'.viewer', 
+		'.editor-visible',
 		function(action){
 			var ed = $('.panel')
 
@@ -25,7 +27,6 @@ var toggleEditor = createCSSClassToggler('.viewer', '.editor-visible',
 									$('.panel :focus').blur()
 								}
 							}))
-
 						// setup the event to update the editor...
 						.on('focusingImage', function(){
 							if(toggleEditor('?') == 'on'){

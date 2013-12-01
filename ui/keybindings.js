@@ -118,6 +118,8 @@ var KEYBOARD_CONFIG = {
 
 	// dialogs...
 	//
+	// NOTE: editor effects are not documented, but should be obvious...
+	// 		XXX is this the case?
 	'.viewer.overlay .overlay-block.dialog, .panel :focus': {
 		title: 'Dialog',
 		doc: 'NOTE: to <i>close</i> a dialog, in addition to the keyaboard '+
@@ -128,11 +130,12 @@ var KEYBOARD_CONFIG = {
 		'insert-return': doc('Insert return'),
 
 		Enter: {
-				default: doc('Accept dialog / input',
+				default: doc('Accept dialog',
 					function(){
 						var f = $(':focus')
 						
-						// trigger the default button action...
+						// trigger the default button/summary action...
+						// NOTE: for some reason checkboxes in dialogs do not work (not a biggie)...
 						if(f.length > 0 
 								&& (/button|summary/i.test(f[0].tagName) 
 									|| /button|checkbox/i.test(f.attr('type')))){
@@ -140,7 +143,7 @@ var KEYBOARD_CONFIG = {
 							// prevent the key from propagating to the viewer...
 							return false
 
-						// accept the input...
+						// accept the input -- e.g. remove focus from it...
 						} else if(toggleEditor('?') == 'on'){
 							f.blur()
 							// prevent the key from propagating to the viewer...
@@ -157,18 +160,15 @@ var KEYBOARD_CONFIG = {
 			},
 		Esc: doc('Close dialog', 
 			function(){ 
+				// hide the overlay...
 				if(isOverlayVisible('.viewer')){
 					//getOverlay($('.viewer')).trigger('close')
 					hideOverlay($('.viewer')) 
 					return false
 
+				// blur focused element, if nothing focused close...
 				} else if(toggleEditor('?') == 'on'){
-					var f = $(':focus')
-					if(f.length > 0){
-						f.blur()
-					} else {
-						toggleEditor('off')
-					}
+					$(':focus').blur()
 				}
 			}),
 	},
