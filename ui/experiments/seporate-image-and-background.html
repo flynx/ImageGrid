@@ -138,8 +138,69 @@
 }
 
 
+/*********************************************************************/
+
+.mark {
+	display: inline-block;
+	position: relative;
+	width: 300px;
+	height: 300px;
+	margin-left: -300px;
+	left: 0px;
+	box-sizing: border-box;	
+	vertical-align: middle;
+}
+
+.current + .mark {
+	border: solid red 5px;
+}
+
+.mark.blue,
+.mark.red,
+.mark.yellow {
+	width: 25px;
+	margin-left: -25px;
+	border: none;
+}
+.mark.blue:after,
+.mark.red:after,
+.mark.yellow:after {
+	display: block;
+	position: absolute;
+	content: "";
+	font-size: 0pt;
+	border: none;
+
+	width: 15px;
+	height: 15px;
+
+	top: auto;
+	bottom: 10px;
+	left: auto;
+	right: 10px;
+
+	border-radius: 50%;
+}
+.mark.blue:after {
+	background: blue;
+}
+.mark.red {
+	left: -17px;
+	width: 25px;
+}
+.mark.red:after {
+	background: red;
+}
+.mark.yellow {
+	left: -34px;
+	width: 25px;
+}
+.mark.yellow:after {
+	background: yellow;
+}
 
 </style>
+<script src="jquery.js"></script>
 
 <body>
 	The current structure...
@@ -171,5 +232,20 @@
 	<!-- XXX this shows that we will still need margin-patching and resizing when rotating...
 	<div class="image3" style="width: 400px;"><div style="background-image: url(image.jpg)"></div></div><br>
 	<div class="image3" style="width: 400px;"><div style="background-image: url(image.jpg); -webkit-transform: rotate(90deg)"></div></div-->
+
+	<hr>
+
+	Keep the images on one level and marks outside, after the image...<br>
+	<div class="ribbon">
+		<div id="0" class="image2" style="background-image: url(image.jpg)"></div>
+		<div class="mark red"></div>
+
+		<div id="1" class="current image2" style="background-image: url(image.jpg)"></div>
+		<div class="mark"></div>
+		<div class="mark blue"></div>
+		<div class="mark red"></div>
+		<div class="mark yellow"></div>
+	</div>
+
 </body>
 </html>

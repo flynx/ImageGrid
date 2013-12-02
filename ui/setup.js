@@ -83,22 +83,39 @@ function setupDataBindings(viewer){
 				updateCurrentMarker()
 			})
 
+		// NOTE: we do not need to worry about explicit centering the ribbon 
+		//		here, just ball-park-load the correct batch...
 		// XXX need to maintain the correct number of images per ribbon
 		// 		per zoom setting -- things get really odd when a ribbon 
 		// 		is smaller than it should be...
 		// XXX this does not get called on marking...
 		.on('preCenteringRibbon', function(evt, ribbon, image){
-			// NOTE: we do not need to worry about centering the ribbon 
-			//		here, just ball-park-load the correct batch...
+			var r = getRibbonIndex(ribbon)
+
+			// skip all but the curent ribbon in single image view...
+			if(toggleSingleImageMode('?') == 'on' && r != getRibbonIndex()){
+				return 
+			}
 
 			var gid = getImageGID(image)
-			var r = getRibbonIndex(ribbon)
 			var gr = DATA.ribbons[r]
 			var img_before = getImageBefore(image, ribbon)
 			var gid_before = getGIDBefore(gid, r)
 			var screen_size = getScreenWidthInImages()
 			screen_size = screen_size < 1 ? 1 : screen_size
 			var l = ribbon.find('.image').length
+
+			// skip the whole thing if the ribbon is not visible -- outside
+			// of viewer are...
+			var viewer = $('.viewer')
+			var H = viewer.height()
+			var h = getImage().height()
+			var t = getRelativeVisualPosition(viewer, ribbon).top 
+			// XXX also check for visibility...
+			if( t+h <= 0 || t >= H ){
+				//console.log('#### skipping align of ribbon:', r)
+				return
+			}
 
 			// load images if we do a long jump -- start, end or some mark 
 			// outside of currently loaded section...
@@ -181,10 +198,29 @@ function setupDataBindings(viewer){
 			// load correct amount of images in each ribbon!!!
 			var screen_size = getScreenWidthInImages()
 			var gid = getImageGID()
+
+			/* XXX used to skip ribbons that are not visible... (see bellow)
+			var viewer = $('.viewer')
+			var H = viewer.height()
+			var h = getImage().height()
+			*/
+
+			// update and align ribbons...
 			$('.ribbon').each(function(){
 				var r = $(this)
+				/* XXX skip ribbons that are not visible...
+				 * 		causes misaligns and misloads on zoom-in...
+				// NOTE: we factor in the scale difference to predict 
+				// 		ribbon position in the new view...
+				var t = getRelativeVisualPosition(viewer, r).top * (n/screen_size)
+				if( t+h <= 0 || t >= H ){
+					console.log('#### skipping align of ribbon:', getRibbonIndex(r))
+					return
+				}
+				*/
 				loadImagesAround(Math.round(screen_size * LOAD_SCREENS), gid, r)
 			})
+
 			centerView(null, 'css')
 
 			// update settings...

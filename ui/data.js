@@ -144,6 +144,10 @@ var UPDATE_SORT_ENABLED = false
 // XXX for some reason the sync version appears to work faster...
 var UPDATE_SYNC = false
 
+// if this is true image previews will be loaded synchronously by 
+// default...
+var SYNC_IMG_LOADER = false
+
 
 
 /**********************************************************************
@@ -1097,8 +1101,23 @@ function convertDataGen1(data, cmp){
 * Loaders
 */
 
+function updateImageIndicators(gid, image){
+	gid = gid == null ? getImageGID() : gid
+	image = image == null ? getImage() : $(image)
+
+	// marks...
+	if(MARKED.indexOf(gid) != -1){
+		image.addClass('marked')
+	} else {
+		image.removeClass('marked')
+	}
+
+	return image
+}
+
+
 // helper...
-function _loadImageURL(image, url){
+function _loadImagePreviewURL(image, url){
 	// pre-cache and load image...
 	// NOTE: this will make images load without a blackout...
 	var img = new Image()
@@ -1110,9 +1129,6 @@ function _loadImageURL(image, url){
 	img.src = url
 	return img
 }
-
-
-var SYNC_IMG_LOADER = true
 
 
 // Update an image element
@@ -1158,21 +1174,21 @@ function updateImage(image, gid, size, sync){
 	var p_url = getBestPreview(gid, size).url
 	// sync load...
 	if(sync){
-		_loadImageURL(image, p_url)
+		_loadImagePreviewURL(image, p_url)
 
 	// async load...
 	} else {
 		// NOTE: storing the url in .data() makes the image load the 
-		// 		last preview and in a case when we
-		// 		manage to call updateImage(...) on the same element 
-		// 		multiple times before the previews get loaded...
+		// 		last requested preview and in a case when we manage to 
+		// 		call updateImage(...) on the same element multiple times 
+		// 		before the previews get loaded...
 		// 		...setting the data().loading is sync while loading an 
-		// 		image is not and if several loads are done in sequence
+		// 		image is not, and if several loads are done in sequence
 		// 		there is no guarantee that they will happen in the same
 		// 		order as requested...
 		image.data().loading = p_url
 		setTimeout(function(){ 
-			_loadImageURL(image, image.data().loading)
+			_loadImagePreviewURL(image, image.data().loading)
 		}, 0)
 	}
 
@@ -1192,12 +1208,8 @@ function updateImage(image, gid, size, sync){
 	// NOTE: this only has effect on non-square image blocks...
 	correctImageProportionsForRotation(image)
 
-	// marks...
-	if(MARKED.indexOf(gid) != -1){
-		image.addClass('marked')
-	} else {
-		image.removeClass('marked')
-	}
+	// marks and other indicators...
+	updateImageIndicators(gid, image)
 
 	return image
 }
