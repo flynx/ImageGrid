@@ -22,7 +22,7 @@
 	/* XXX do we need this? */
 	border: solid black 5px;
 
-	/*-webkit-filter: invert(1);*/
+	-webkit-filter: invert(1);
 }
 .current.image {
 	background: no-repeat 50% black;
@@ -151,8 +151,14 @@
 	vertical-align: middle;
 }
 
-.current + .mark {
+/* this is a placeholder -- I'm to lazy to make a real floating element 
+ * to indicate selection... */
+.current+.mark {
 	border: solid red 5px;
+}
+
+.mark.select {
+	border: dotted blue 5px;
 }
 
 .mark.blue,
@@ -232,6 +238,10 @@
 	<hr>
 
 	Keep the images on one level and marks outside, after the image...<br>
+	+ one tag per UI element<br>
+	+ generic and extensible<br>
+	- a little bit more complicated mark manipulation during image shifting
+	  &ndash; potential orphaned or misplaces marks...<br>
 	<div class="ribbon">
 		<div id="0" class="image2" style="background-image: url(image.jpg)"></div>
 		<div class="mark red"></div>
@@ -241,6 +251,9 @@
 		<div class="mark blue" title="blue"></div>
 		<div class="mark red" title="red"></div>
 		<div class="mark yellow" title="yellow"></div>
+
+		<div id="2" class="image2" style="background-image: url(image.jpg)"></div>
+		<div class="mark select"></div>
 	</div>
 
 </body>
