@@ -1163,7 +1163,7 @@ function updateImage(image, gid, size, sync){
 	// async load...
 	} else {
 		// NOTE: storing the url in .data() makes the image load the 
-		// 		last preview and last preview only in the case that we
+		// 		last preview and in a case when we
 		// 		manage to call updateImage(...) on the same element 
 		// 		multiple times before the previews get loaded...
 		// 		...setting the data().loading is sync while loading an 

@@ -98,6 +98,47 @@
 
 /*********************************************************************/
 
+.image3 div,
+.image3 {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	text-align:left;
+	width: 300px;
+	height: 300px;
+	font-size: 12pt;
+	overflow: hidden;
+
+	box-sizing: border-box;
+	color: white;
+	background: black;
+
+	text-shadow: black 0.1em 0.1em 0.4em, black 0.1em 0.1em;
+
+	border: solid black 5px;
+}
+.image3 div {
+	position: absolute;
+
+	width: 100%;
+	height: 100%;
+
+	background: no-repeat 50% transparent;
+	background-size: contain;
+	border: none;
+
+	-webkit-filter: invert(1);
+}
+.current.image3 {
+	background: no-repeat 50% black;
+	background-size: contain;
+
+	/* XXX remove this... */
+	border: solid red 5px;
+}
+
+
+
 </style>
 
 <body>
@@ -114,5 +155,21 @@
 		<div class="image2" style="background-image: url(image.jpg)"></div>
 		<div class="current image2" style="background-image: url(image.jpg)"></div>
 	</div>
+
+	<hr>
+
+	Add a seporate bg tag<br>
+	- this effectively doubles the number of tags used for a ribbon...<br>
+	+ the only API that needs changing is what deals with previews and filters<br>
+	+ will simplify different image indicator CSS<br>
+	<s>+ will remove LOTS of code dealing with scaling, sizing and rotation...</s> this will not change!<br>
+	<div class="ribbon">
+		<div class="image3"><div style="background-image: url(image.jpg)"></div></div>
+		<div class="current image3"><div style="background-image: url(image.jpg)"></div></div>
+	</div>
+	<br>
+	<!-- XXX this shows that we will still need margin-patching and resizing when rotating...
+	<div class="image3" style="width: 400px;"><div style="background-image: url(image.jpg)"></div></div><br>
+	<div class="image3" style="width: 400px;"><div style="background-image: url(image.jpg); -webkit-transform: rotate(90deg)"></div></div-->
 </body>
 </html>
