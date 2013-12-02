@@ -158,8 +158,8 @@
 .mark.blue,
 .mark.red,
 .mark.yellow {
-	width: 25px;
-	margin-left: -25px;
+	width: 0px;
+	margin-left: 0px;
 	border: none;
 }
 .mark.blue:after,
@@ -181,21 +181,17 @@
 
 	border-radius: 50%;
 }
+
 .mark.blue:after {
+	left: -25px;
 	background: blue;
 }
-.mark.red {
-	left: -17px;
-	width: 25px;
-}
 .mark.red:after {
+	left: -42px;
 	background: red;
 }
-.mark.yellow {
-	left: -34px;
-	width: 25px;
-}
 .mark.yellow:after {
+	left: -59px;
 	background: yellow;
 }
 
@@ -242,9 +238,9 @@
 
 		<div id="1" class="current image2" style="background-image: url(image.jpg)"></div>
 		<div class="mark"></div>
-		<div class="mark blue"></div>
-		<div class="mark red"></div>
-		<div class="mark yellow"></div>
+		<div class="mark blue" title="blue"></div>
+		<div class="mark red" title="red"></div>
+		<div class="mark yellow" title="yellow"></div>
 	</div>
 
 </body>
