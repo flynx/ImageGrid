@@ -1097,13 +1097,32 @@ function convertDataGen1(data, cmp){
 * Loaders
 */
 
+// helper...
+function _loadImageURL(image, url){
+	// pre-cache and load image...
+	// NOTE: this will make images load without a blackout...
+	var img = new Image()
+	img.onload = function(){
+		image.css({
+				'background-image': 'url("'+ url +'")',
+			})
+	}
+	img.src = url
+	return img
+}
+
+
+var SYNC_IMG_LOADER = true
+
+
 // Update an image element
 //
 // NOTE: care must be taken to reset ALL attributes an image can have,
 // 		a common bug if this is not done correctly, is that some settings
 // 		may leak to newly loaded images...
 // XXX do a pre-caching framework...
-function updateImage(image, gid, size){
+function updateImage(image, gid, size, sync){
+	sync = sync == null ? SYNC_IMG_LOADER : sync
 	image = $(image)
 	var oldgid = getImageGID(image)
 
@@ -1137,33 +1156,25 @@ function updateImage(image, gid, size){
 
 	// preview...
 	var p_url = getBestPreview(gid, size).url
-	// NOTE: due to the fact that loading/caching the image might be at 
-	// 		a different pace than calling updateImage(...) and .onload
-	// 		events may trigger in any sequence, we need to update the
-	// 		url in a persistent way so as to load the last call's image
-	// 		regardless of actual handler call sequence...
-	image.data().loading = p_url
+	// sync load...
+	if(sync){
+		_loadImageURL(image, p_url)
 
-	// pre-cache and load image...
-	// NOTE: this will make images load without a blackout...
-	// XXX add a cache of the form:
-	// 			{
-	// 				[<gid>, <size>]: Image,
-	// 				...
-	// 			}
-	// 		- sort by use...
-	// 		- limit length...
-	//
-	// 		...might also be a good idea to split cache to sizes and have
-	// 		different  but as limits for different sizes, but as sizes 
-	// 		can differ between images this is not trivial...
-	var img = new Image()
-	img.onload = function(){
-		image.css({
-				'background-image': 'url("'+ image.data().loading +'")',
-			})
+	// async load...
+	} else {
+		// NOTE: storing the url in .data() makes the image load the 
+		// 		last preview and last preview only in the case that we
+		// 		manage to call updateImage(...) on the same element 
+		// 		multiple times before the previews get loaded...
+		// 		...setting the data().loading is sync while loading an 
+		// 		image is not and if several loads are done in sequence
+		// 		there is no guarantee that they will happen in the same
+		// 		order as requested...
+		image.data().loading = p_url
+		setTimeout(function(){ 
+			_loadImageURL(image, image.data().loading)
+		}, 0)
 	}
-	img.src = p_url
 
 	// main attrs...
 	image
@@ -1184,6 +1195,9 @@ function updateImage(image, gid, size){
 	} else {
 		image.removeClass('marked')
 	}
+
+	// XXX load filter settings...
+	// XXX
 
 	return image
 }
