@@ -74,6 +74,15 @@ function setupDataBindings(viewer){
 				loadDirectoryDialog()
 			}
 		})
+
+		.on([
+				'focusingImage',
+				'fittingImages'
+			].join(' '), 
+			function(){
+				updateCurrentMarker()
+			})
+
 		// XXX need to maintain the correct number of images per ribbon
 		// 		per zoom setting -- things get really odd when a ribbon 
 		// 		is smaller than it should be...

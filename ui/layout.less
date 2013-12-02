@@ -343,14 +343,22 @@ button:hover {
 .ribbon {
 	position: relative;
 	display: block;
+	/* XXX BUG: setting this will mess up new ribbon creation....
+	display: inline-block;*/
 	height: auto;
 	min-width: 0px;
 	overflow: visible;
 	white-space: nowrap;
 	font-size: 0;
 
-	margin-top: 20px;
-	margin-bottom: 20px;
+	float: left;
+	clear: both;
+
+	/* XXX not still sure about this... */
+	background: black;
+
+	margin-top: 10px;
+	margin-bottom: 10px;
 }
 .ribbon:empty {
 	display: none;
@@ -366,6 +374,7 @@ button:hover {
 
 /*********************************************************** Image ***/
 .marker,
+.current-marker,
 .image {
 	position: relative;
 	display: inline-block;
@@ -381,17 +390,21 @@ button:hover {
 
 	text-shadow: black 0.1em 0.1em 0.4em, black 0.1em 0.1em;
 
-	background: no-repeat 50% black;
+	background: no-repeat 50% transparent;
 	background-size: contain;
-	/* XXX do we need this? */
-	border: solid black 5px;
+	border: solid 5px transparent;
 }
+/*
 .current.image {
-	background: no-repeat 50% black;
-	background-size: contain;
+	border: solid 5px red;
+}
+*/
 
-	/* XXX remove this... */
-	border: solid red 5px;
+.current-marker {
+	position: absolute;
+	border: solid 5px red;
+	background: none;
+	z-index: 100;
 }
 
 .marker {
@@ -653,7 +666,7 @@ button:hover {
 
 
 /****************************************************** Image info ***/
-.image .inline-image-info {
+.inline-image-info {
 	display: none;
 
 	position: absolute;
@@ -661,18 +674,23 @@ button:hover {
 	width: 100%;
 	background: black;
 	opacity: 0.7;
+
+	overflow: hidden;
+	white-space: nowrap;
 }
-.image .inline-image-info:hover {
+.inline-image-info:hover {
 	.user-select(auto);
 }
-.image .inline-image-info::selection {
+.inline-image-info::selection {
 	color: white;
 	background: red;
 }
 .image-info-visible.viewer .global-image-info,
+.image-info-visible.viewer .current-marker:hover .inline-image-info,
 .image-info-visible.viewer .image:hover .inline-image-info {
 	display: block;
 }
+.single-image-mode.viewer .current-marker:hover .inline-image-info,
 .single-image-mode.viewer .image:hover .inline-image-info {
 	display: none;
 }
@@ -1079,6 +1097,12 @@ button:hover {
 
 /********************************************** Mode: single image ***/
 
+.single-image-mode.viewer .ribbon {
+	background-color: transparent;
+}
+.single-image-mode.viewer .current-marker {
+	display: none;
+}
 .single-image-mode.viewer .image {
 	background-color: transparent;
 	/* NOTE: need to keep a distance from screen borders... */

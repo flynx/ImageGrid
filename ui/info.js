@@ -105,9 +105,10 @@ function updateGlobalImageInfo(image){
 }
 
 
-function updateInlineImageInfo(image){
+function updateInlineImageInfo(image, target){
 	image = image == null ? getImage() : $(image)
 	image = image.length == 0 ? getImage() : image
+	target = target == null ? image : target
 
 	var elem = $('.inline-image-info')
 	if(elem.length == 0){
@@ -139,15 +140,21 @@ function updateInlineImageInfo(image){
 				'<span class="hidden"><b>' + date.toString() + '</b></span>'+
 			'</span>'+
 			'',
-			image)
+			target)
 }
 
 
 function inlineImageInfoHoverHandler(evt){
-	var img = $(evt.target).closest('.image')
+	if($(evt.target).hasClass('current-marker')){
+		var img = getImage()
+		var target = $('.current-marker')
+	} else {
+		var img = $(evt.target).closest('.image')
+		var target = img
+	}
 	if(img.length > 0){
-		if(img.find('.inline-image-info:visible').length == 0){
-			updateInlineImageInfo(img)
+		if(target.find('.inline-image-info:visible').length == 0){
+			updateInlineImageInfo(img, target)
 		}
 	}
 }

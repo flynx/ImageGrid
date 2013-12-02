@@ -85,6 +85,34 @@ function showCursor(elem){
 }
 */
 
+function showCurrentMarker(){
+	return $('<div/>')
+		.addClass('current-marker')
+		.css({
+			opacity: '0',
+			top: '0px',
+			left: '0px',
+		})
+		.appendTo($('.ribbon-set'))
+		.animate({
+			'opacity': 1
+		}, 500)
+		.mouseover(function(){
+			$('.current.image')
+		})
+}
+
+function updateCurrentMarker(){
+	var scale = getElementScale($('.ribbon-set'))
+	var marker = $('.current-marker')
+	marker = marker.length == 0 ? showCurrentMarker() : marker 
+	var d = getRelativeVisualPosition(marker, $('.current.image'))
+	return marker.css({
+		top: parseFloat(marker.css('top')) + d.top/scale,
+		left: parseFloat(marker.css('left')) + d.left/scale,
+	})
+}
+
 
 function flashIndicator(direction){
 	var cls = {
