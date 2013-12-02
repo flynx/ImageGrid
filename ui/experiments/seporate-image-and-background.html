@@ -167,6 +167,7 @@
 	width: 0px;
 	margin-left: 0px;
 	border: none;
+	box-sizing: border-box;
 }
 .mark.blue:after,
 .mark.red:after,
@@ -185,19 +186,21 @@
 	left: auto;
 	right: 10px;
 
+	box-sizing: border-box;
 	border-radius: 50%;
 }
 
 .mark.blue:after {
 	left: -25px;
-	background: blue;
+	border: solid 3px blue;
 }
 .mark.red:after {
-	left: -42px;
+	left: -44px;
 	background: red;
+	border-radius: 50%;
 }
 .mark.yellow:after {
-	left: -59px;
+	left: -67px;
 	background: yellow;
 }
 
@@ -205,23 +208,31 @@
 <script src="jquery.js"></script>
 
 <body>
-	The current structure...
+	<details>
+	<summary>
+		The current structure... (not current anymore)
+	</summary>
 	<div>
 		<div class="image" style="background-image: url(image.jpg)"></div>
 		<div class="current image" style="background-image: url(image.jpg)"></div>
 	</div>
 
-	<hr>
+	</details>
 
-	Image bg transparent while the ribbon's bg is black...<br>
+	<details>
+	<summary>
+		Image bg transparent while the ribbon's bg is black...
+	</summary>
 	<div class="ribbon">
 		<div class="image2" style="background-image: url(image.jpg)"></div>
 		<div class="current image2" style="background-image: url(image.jpg)"></div>
 	</div>
+	</details>
 
-	<hr>
-
-	Add a seporate bg tag<br>
+	<details>
+	<summary>
+		Add a seporate bg tag (rejected)
+	</summary>
 	- this effectively doubles the number of tags used for a ribbon...<br>
 	+ the only API that needs changing is what deals with previews and filters<br>
 	+ will simplify different image indicator CSS<br>
@@ -235,10 +246,13 @@
 	<div class="image3" style="width: 400px;"><div style="background-image: url(image.jpg)"></div></div><br>
 	<div class="image3" style="width: 400px;"><div style="background-image: url(image.jpg); -webkit-transform: rotate(90deg)"></div></div-->
 
-	<hr>
+	</details>
 
-	Keep the images on one level and marks outside, after the image...<br>
-	+ one tag per UI element<br>
+	<details open>
+	<summary>
+		Keep the images on one level and marks outside, after the image...
+	</summary>
+	+ one tag per UI element, or if we make things a bit more comlicated, up to 3 per tag (self, before and after)<br>
 	+ generic and extensible<br>
 	- a little bit more complicated mark manipulation during image shifting
 	  &ndash; potential orphaned or misplaces marks...<br>
@@ -255,6 +269,7 @@
 		<div id="2" class="image2" style="background-image: url(image.jpg)"></div>
 		<div class="mark select"></div>
 	</div>
+	</details>
 
 </body>
 </html>
