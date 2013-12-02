@@ -236,6 +236,7 @@ function makeLogRange(text, filter, target){
 }
 
 
+// XXX add panel update events to help save settings...
 function makeEditorControls(target){
 	// tool panel...
 	var panel = $('<details open/>')

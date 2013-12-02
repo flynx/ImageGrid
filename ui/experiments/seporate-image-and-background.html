@@ -1,0 +1,91 @@
+<html>
+
+<style>
+
+.image {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	text-align:left;
+	width: 300px;
+	height: 300px;
+	font-size: 12pt;
+	overflow: hidden;
+
+	box-sizing: border-box;
+	color: white;
+
+	text-shadow: black 0.1em 0.1em 0.4em, black 0.1em 0.1em;
+
+	background: no-repeat 50% black;
+	background-size: contain;
+	/* XXX do we need this? */
+	border: solid black 5px;
+
+	/*-webkit-filter: invert(1);*/
+}
+.current.image {
+	background: no-repeat 50% black;
+	background-size: contain;
+
+	/* XXX remove this... */
+	border: solid red 5px;
+}
+
+/*********************************************************************/
+
+
+.image2:before,
+.image2 {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	text-align:left;
+	font-size: 12pt;
+	overflow: visible;
+
+	color: white;
+}
+.image2 {
+	width: 290px;
+	height: 290px;
+	background: no-repeat 50% transparent;
+	background-size: contain;
+	margin: 5px;
+
+	-webkit-filter: invert(1);
+}
+
+.ribbon {
+	display: inline-block;
+	background: black;
+}
+
+.current.image2:before {
+	position: relative;
+	content: "";
+	top: -5px;
+	left: -5px;
+	width: 100%;
+	height: 100%;
+
+	/* XXX this is affected by the filter... */
+	border: solid 5px red;
+}
+
+/*********************************************************************/
+
+</style>
+
+<body>
+	<div class="image" style="background-image: url(image.jpg)"></div>
+	<div class="current image" style="background-image: url(image.jpg)"></div>
+
+	<hr>
+
+	<div class="ribbon">
+		<div class="image2" style="background-image: url(image.jpg)"></div>
+		<div class="current image2" style="background-image: url(image.jpg)"></div>
+	</div>
+</body>
+</html>

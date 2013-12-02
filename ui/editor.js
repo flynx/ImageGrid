@@ -30,6 +30,8 @@ var toggleEditor = createCSSClassToggler(
 								top: '50px',
 								left: '5px',
 							})
+							// XXX add handlers for saving data to images...
+							// XXX
 							// make clicks on unfocusable elements remove focus...
 							.click(function(){
 								if(event.target != $('.panel :focus')[0]){
@@ -39,6 +41,8 @@ var toggleEditor = createCSSClassToggler(
 						// setup the event to update the editor...
 						.on('focusingImage', function(){
 							if(toggleEditor('?') == 'on'){
+								// XXX save previous settings if changes...
+								// XXX
 								reloadControls('.current.image')
 							}
 						})

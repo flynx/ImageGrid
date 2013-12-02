@@ -1186,6 +1186,9 @@ function updateImage(image, gid, size, sync){
 	// flip...
 	setImageFlipState(image, img_data.flipped == null ? [] : img_data.flipped)
 
+	// XXX filter settings...
+	// XXX
+
 	// NOTE: this only has effect on non-square image blocks...
 	correctImageProportionsForRotation(image)
 
@@ -1195,9 +1198,6 @@ function updateImage(image, gid, size, sync){
 	} else {
 		image.removeClass('marked')
 	}
-
-	// XXX load filter settings...
-	// XXX
 
 	return image
 }
