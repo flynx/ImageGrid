@@ -305,6 +305,12 @@ function makeControls(target){
 					$('.reset').click()
 					sortFilterSliders(DEFAULT_FILTER_ORDER)
 				})))
+		/* XXX needs more work...
+		.draggable({
+			connectToSortable: '.panel-content',
+			revert: 'invalid',
+		})
+		*/
 		.appendTo(content)
 
 	// snapshots...

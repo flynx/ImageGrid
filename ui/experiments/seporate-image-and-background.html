@@ -168,6 +168,7 @@
 	margin-left: 0px;
 	border: none;
 	box-sizing: border-box;
+
 }
 .mark.blue:after,
 .mark.red:after,
@@ -185,6 +186,9 @@
 	bottom: 10px;
 	left: auto;
 	right: 10px;
+
+	/*box-shadow: 2px 2px 8px 0px rgba(0,0,0,0.7);*/
+	box-shadow: 2px 2px 20px -2px rgba(0,0,0,0.7);
 
 	box-sizing: border-box;
 	border-radius: 50%;
@@ -252,7 +256,7 @@
 	<summary>
 		Keep the images on one level and marks outside, after the image...
 	</summary>
-	+ one tag per UI element, or if we make things a bit more comlicated, up to 3 per tag (self, before and after)<br>
+	+ one tag per UI element and only if that element is present (no dot, no tag), or if we make things a bit more comlicated, up to 3 per tag (self, before and after)<br>
 	+ generic and extensible<br>
 	- a little bit more complicated mark manipulation during image shifting
 	  &ndash; potential orphaned or misplaces marks...<br>
