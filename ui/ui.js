@@ -458,8 +458,8 @@ function showInOverlay(root, data){
 
 		dialog
 			.append(data)
-			.on('click', function(){ 
-				event.stopPropagation() 
+			.on('click', function(evt){ 
+				evt.stopPropagation() 
 			})
 		overlay.find('.content')
 			.on('click', function(){ 

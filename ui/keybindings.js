@@ -133,7 +133,7 @@ var KEYBOARD_CONFIG = {
 				default: doc('Accept dialog',
 					function(){
 						var f = $(':focus')
-						
+
 						// trigger the default button/summary action...
 						// NOTE: for some reason checkboxes in dialogs do not work (not a biggie)...
 						if(f.length > 0 
