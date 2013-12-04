@@ -94,6 +94,7 @@ function setupDataBindings(viewer){
 
 			// skip all but the curent ribbon in single image view...
 			if(toggleSingleImageMode('?') == 'on' && r != getRibbonIndex()){
+				console.log('>>>> skipping ribbon:', r)
 				return 
 			}
 

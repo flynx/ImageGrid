@@ -313,6 +313,7 @@ var KEYBOARD_CONFIG = {
 
 						return false
 					}),
+				ctrl: 'prev-screen',
 			},
 		Right: {
 				alt: doc('Shift image right', 
@@ -337,6 +338,29 @@ var KEYBOARD_CONFIG = {
 
 						return false
 					}),
+				ctrl: 'next-screen',
+			},
+		'prev-screen': doc('Previous screen',
+				function(){ 
+					event.preventDefault()
+					prevScreenImages()
+					centerRibbons()
+				}),
+		'next-screen': doc('Next screen',
+				function(){ 
+					event.preventDefault()
+					nextScreenImages()
+					centerRibbons()
+				}),
+		Space: {
+				// screen-oriented movement...
+				ctrl: 'Right',
+				'ctrl+shift': 'prev-screen',
+			},
+		Backspace: {
+				// screen-oriented movement...
+				ctrl: 'Left',
+				'ctrl+shift': 'next-screen',
 			},
 
 		// zooming...
@@ -403,7 +427,6 @@ var KEYBOARD_CONFIG = {
 						prevImage() 
 						centerRibbons()
 					}),
-				ctrl: 'prev-screen',
 
 				// XXX button not final...
 				'ctrl+shift': doc('Previous URL in history', loadURLHistoryPrev ),
@@ -417,36 +440,17 @@ var KEYBOARD_CONFIG = {
 						nextImage() 
 						centerRibbons()
 					}),
-				ctrl: 'next-screen',
 
 				// XXX button not final...
 				'ctrl+shift': doc('Next URL in history', loadURLHistoryNext ),
 			},
-		'prev-screen': doc('Previous screen',
-				function(){ 
-					event.preventDefault()
-					prevScreenImages()
-					centerRibbons()
-				}),
-		'next-screen': doc('Next screen',
-				function(){ 
-					event.preventDefault()
-					nextScreenImages()
-					centerRibbons()
-				}),
 		Space: {
 				default: 'Right',
 				shift: 'Left',
-				// screen-oriented movement...
-				ctrl: 'Right',
-				'ctrl+shift': 'prev-screen',
 			},
 		Backspace: {
 				default: 'Left',
 				shift: 'Right',
-				// screen-oriented movement...
-				ctrl: 'Left',
-				'ctrl+shift': 'next-screen',
 			},
 		Home: doc('First image', 
 			function(){
