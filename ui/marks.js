@@ -105,15 +105,14 @@ var toggleMarkesView = createCSSClassToggler(
 var toggleImageMark = createCSSClassToggler(
 	'.current.image', 
 	'marked',
-	function(action){
+	function(action, elem){
 		toggleMarkesView('on')
-		// XXX
 		if(action == 'on'){
-			_addMark('selected')
+			_addMark('selected', getImageGID(elem), elem)
 		} else {
-			_removeMark('selected')
+			_removeMark('selected', getImageGID(elem), elem)
 		}
-		$('.viewer').trigger('togglingMark', [getImage(), action])
+		$('.viewer').trigger('togglingMark', [elem, action])
 	})
 
 
@@ -126,13 +125,17 @@ function removeImageMarks(mode){
 		var ribbon = getRibbon()
 		var res = ribbon
 			.find('.marked')
-				.removeClass('marked')
+				.each(function(){
+					toggleImageMark(this, 'off')
+				})
 		$('.viewer').trigger('removeingRibbonMarks', [ribbon])
 
 	// remove all marks...
 	} else if(mode == 'all'){
 		var res = $('.marked')
-			.removeClass('marked')
+			.each(function(){
+				toggleImageMark(this, 'off')
+			})
 		$('.viewer').trigger('removeingAllMarks')
 	} 
 	return res
@@ -140,16 +143,22 @@ function removeImageMarks(mode){
 
 
 function markAll(mode){
-	// remove marks from current ribbon (default)...
+	// current ribbon (default)...
 	if(mode == 'ribbon' || mode == null){
 		var ribbon = getRibbon()
 		var res = ribbon
 			.find('.image:not(.marked)')
-				.addClass('marked')
+				.each(function(){
+					toggleImageMark(this, 'on')
+				})
 		$('.viewer').trigger('markingRibbon', [ribbon])
 
+	// mark everything...
 	} else if(mode == 'all'){
-		var res = $('.image:not(.marked)').addClass('marked')
+		var res = $('.image:not(.marked)')
+			.each(function(){
+				toggleImageMark(this, 'on')
+			})
 		$('.viewer').trigger('markingAll')
 	}
 	return res
@@ -161,7 +170,9 @@ function invertImageMarks(){
 	var ribbon = getRibbon()
 	var res = ribbon
 		.find('.image')
-			.toggleClass('marked')
+			.each(function(){
+				toggleImageMark(this, 'next')
+			})
 	$('.viewer').trigger('invertingMarks', [ribbon])
 	return res
 }
@@ -179,6 +190,7 @@ function toggleImageMarkBlock(image){
 	var state = toggleImageMark()
 	var _convert = function(){
 		if(toggleImageMark(this, '?') == state){
+			// stop the iteration...
 			return false
 		}
 		toggleImageMark(this, state)
@@ -262,6 +274,76 @@ function shiftMarkedImagesRight(){
 	return shiftMarkedImages('next')
 }
 
+
+
+/**********************************************************************
+* Dialogs... 
+*/
+
+function markImagesDialog(){
+
+	updateStatus('Mark...').show()
+
+	var alg = 'Mark images: |'+
+		'Use Esc and Shift-Esc to exit crop modes.'+
+		'\n\n'+
+		'NOTE: all crop modes will produce a single ribbon unless\n'+
+		'otherwise stated.'
+
+	var cur = toggleImageMark('?') == 'on' ? 'Unmark' : 'Mark'
+
+	cfg = {}
+	cfg[alg] = [
+		cur + ' current image',
+		cur + ' current block | '+
+			'A block is a set of similarly marked images\n'+
+			'to the left and right of the current image,\n'+
+			'up until the closest images marked differently',
+		'Invert marks in current ribbon',
+		'Mark all in current ribbon',
+		'Unmark all in current ribbon',
+		'Unmark all images'
+	]
+
+	formDialog(null, '', 
+			cfg,
+			'OK', 
+			'markImagesDialog')
+		.done(function(res){
+			res = res[alg]
+
+			// NOTE: these must be in order of least-specific last...
+			if(/current image/.test(res)){
+				toggleImageMark()
+				var msg = (cur + ' image').toLowerCase()
+
+			} else if(/current block/.test(res)){
+				toggleImageMarkBlock()
+				var msg = 'toggled block marks'
+
+			} else if(/Invert/.test(res)){
+				invertImageMarks()
+				var msg = 'inverted ribbon marks'
+
+			} else if(/Mark all/.test(res)){
+				markAll()
+				var msg = 'marked ribbon'
+
+			} else if(/Unmark all in/.test(res)){
+				removeImageMarks('ribbon')
+				var msg = 'unmarked ribbon'
+
+			} else if(/Unmark all images/.test(res)){
+				removeImageMarks('all')
+				var msg = 'unmarked all'
+			}
+
+			showStatusQ('Mark: '+msg+'...')
+		})
+		.fail(function(){
+			showStatusQ('Marking: canceled.')
+		})
+}
 
 
 /**********************************************************************

@@ -94,7 +94,6 @@ function setupDataBindings(viewer){
 
 			// skip all but the curent ribbon in single image view...
 			if(toggleSingleImageMode('?') == 'on' && r != getRibbonIndex()){
-				console.log('>>>> skipping ribbon:', r)
 				return 
 			}
 
@@ -114,7 +113,6 @@ function setupDataBindings(viewer){
 			var t = getRelativeVisualPosition(viewer, ribbon).top 
 			// XXX also check for visibility...
 			if( t+h <= 0 || t >= H ){
-				//console.log('#### skipping align of ribbon:', r)
 				return
 			}
 

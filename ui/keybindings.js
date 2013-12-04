@@ -169,6 +169,7 @@ var KEYBOARD_CONFIG = {
 				// blur focused element, if nothing focused close...
 				} else if(toggleEditor('?') == 'on'){
 					$(':focus').blur()
+					return false
 				}
 			}),
 	},
@@ -659,6 +660,7 @@ var KEYBOARD_CONFIG = {
 						//} 
 						centerRibbons()
 					}),
+				ctrl: doc('Show mark dialog', function(){ markImagesDialog() }),
 			},
 		Ins: doc('Toggle mark on current image', function(){ toggleImageMark() }),
 		'invert-marks': doc('Invert image marks', 

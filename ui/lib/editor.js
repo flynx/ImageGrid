@@ -100,6 +100,11 @@ function sortFilterSliders(order){
 // Load state of sliders from target...
 //
 function loadSliderState(target){
+	// break the feedback loop that if present will write the state 
+	// back...
+	var filters = $('.filter-list input[type=range]')
+		.prop('disabled', true)
+
 	var res = $(target)
 		.css('-webkit-filter')
 	var state = res
@@ -113,7 +118,6 @@ function loadSliderState(target){
 	})
 	// set the saved values...
 	while(state.length > 0){
-		// XXX avoid using ids...
 		var e = $('[filter='+state.pop()+']')
 		if(e.prop('normalize')){
 			e.val(v2r(parseFloat(state.pop()))).change()
@@ -121,6 +125,9 @@ function loadSliderState(target){
 			e.val(parseFloat(state.pop())).change()
 		}
 	}
+
+	filters
+		.prop('disabled', false)
 	return res
 }
 
@@ -191,6 +198,7 @@ function makeAbsRange(text, filter, target, min, max, dfl, step, translate, norm
 	$('<span class="title"/>')
 		.html(text)
 		.appendTo(elem)
+	// NOTE: the range element is the main "writer"...
 	var range = $('<input class="slider" type="range">')
 		.attr({
 			filter: filter,
@@ -204,7 +212,9 @@ function makeAbsRange(text, filter, target, min, max, dfl, step, translate, norm
 		.change(function(){
 			var val = this.valueAsNumber
 			value.val(val)
-			updateFilter(target, filter, translate(val))
+			if(!elem.prop('disabled') && !$(this).prop('disabled')){
+				updateFilter(target, filter, translate(val))
+			}
 			if(parseFloat(val) == dfl){
 				elem.addClass('at-default')
 			} else {
@@ -236,21 +246,25 @@ function makeLogRange(text, filter, target){
 }
 
 
-// XXX add panel update events to help save settings...
-function makeEditorControls(target){
+function makePanel(title, open){
+	title = title == null ? '&nbsp;' : title
+
 	// tool panel...
-	var panel = $('<details open/>')
+	var panel = $('<details/>')
+		.prop('open', open == null ? true : open)
 		.addClass('panel')
 		.css({
 			position: 'absolute',
 			top: '100px',
 			left: '100px',
 		})
-		.append($('<summary>Edit</summary>')
+		.append($('<summary>'+title+'</summary>')
 			.append($('<span/>')
 				.addClass('close-button')
 				.click(function(){
-					$(this).parents('.panel').hide()
+					panel
+						.trigger('panelClosing')
+						.hide()
 					return false
 				})
 				.html('&times;')))
@@ -270,11 +284,33 @@ function makeEditorControls(target){
 			opacity: 0.7,
 		})
 		.appendTo(panel)
+	return panel
+}
 
-	// filters...
-	$('<details open/>')
-		.append($('<summary>Filters</summary>'))
-		.append($('<div class="sub-panel-content"/>')
+
+function makeSubPanel(title, open, parent){
+	title = title == null ? '&nbsp;' : title
+
+	var sub_panel = $('<details/>')
+		.prop('open', open == null ? true : open)
+		.append($('<summary>'+title+'</summary>'))
+		.append($('<div class="sub-panel-content"/>'))
+
+	if(parent != null){
+		if(parent.hasClass('panel-content')){
+			sub_panel.appendTo(parent)
+		} else {
+			sub_panel.appendTo(parent.find('.panel-content'))
+		}
+	}
+
+	return sub_panel
+}
+
+
+function makeFilterPanel(parent, target){
+	return makeSubPanel('Filters', true, parent)
+		.find('.sub-panel-content')
 			.append($('<div class="filter-list"/>')
 				//.append(makeLogRange('Gamma:', 'gamma', target))
 				.append(makeLogRange('Brightness:', 'brightness', target))
@@ -307,13 +343,12 @@ function makeEditorControls(target){
 				.click(function(){
 					$('.reset').click()
 					sortFilterSliders(DEFAULT_FILTER_ORDER)
-				})))
-		.appendTo(content)
+				}))
+}
 
-	// snapshots...
-	$('<details open/>')
-		.append($('<summary>Snapshots</summary>'))
-		.append($('<div class="sub-panel-content"/>')
+function makeSnapshotsPanel(parent, target){
+	return makeSubPanel('Snapshots', true, parent)
+		.find('.sub-panel-content')
 			.append($('<div class="states"/>'))
 			.append($('<hr>'))
 			.append($('<button/>')
@@ -335,8 +370,20 @@ function makeEditorControls(target){
 						ui.helper.remove()
 					}
 					
-				})))
-		.appendTo(content)
+				}))
+}
+
+
+// XXX add panel update events to help save settings...
+function makeEditorControls(target){
+
+	var panel = makePanel()
+
+	// filters...
+	makeFilterPanel(panel, target)
+
+	// snapshots...
+	makeSnapshotsPanel(panel, target)
 
 	return panel
 }

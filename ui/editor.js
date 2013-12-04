@@ -33,6 +33,9 @@ var toggleEditor = createCSSClassToggler(
 							// XXX add handlers for saving data to images...
 							// XXX
 							// make clicks on unfocusable elements remove focus...
+							.on('panelClosing', function(){
+								toggleEditor('off')
+							})
 							.click(function(){
 								if(event.target != $('.panel :focus')[0]){
 									$('.panel :focus').blur()
@@ -50,6 +53,7 @@ var toggleEditor = createCSSClassToggler(
 				} else {
 					ed.show()
 				}
+
 				// update the state...
 				reloadControls('.current.image')
 
