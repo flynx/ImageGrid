@@ -41,14 +41,17 @@
 //  - <class-name>	: explicitly set a class from the list
 // 	- '!'			: reload current state, same as toggler(toggler('?'))
 // 	- '?'			: return current state ('on'|'off')
-// 
+//
+//
 // In the third form the <target> is a jquery-compatible object.
 //
 // In all forms this will return the current state string or null if the
 // action argument given is invalid.
 //
+// NOTE: action '?' is handled internally and not passed to the callbacks.
 // NOTE: there is a special action 'next', passing it will have the same
-// 		effect as not passing any action.
+// 		effect as not passing any action -- we will change to the next 
+// 		state.
 // NOTE: if it is needed to apply this to an explicit target but with 
 // 		no explicit action, just pass 'next' as the second argument.
 // NOTE: a special class name 'none' means no class is set, if it is present 
@@ -60,17 +63,23 @@
 // 		a way around this is to pass an empty function as callback_b
 // NOTE: leading dots in class names in class_list are optional. 
 // 		this is due to several times I've repeated the same mistake of 
-// 		forgetting to write the classes without leading dots, this now 
-// 		will normalize the class list...
+// 		forgetting to write the classes without leading dots, the class 
+// 		list is not normalized...
 //
 //
 // This also takes one or two callbacks. If only one is given then it is
 // called after (post) the change is made. If two are given then the first
 // is called before the change and the second after the change.
-// The callbacks are passed the current action.
+//
+// The callbacks are passed two arguments:
+// 	- <action>		: the state we are going in
+// 	- <target>		: the target element or the element passed to the 
+// 					  toggler
+// 
+//
 // The callback function will have 'this' set to the same value as the 
 // toggler itself, e.g. if the toggler is called as a method, the 
-// callback's 'this' will reference the object.
+// callback's 'this' will reference it's parent object.
 //
 // NOTE: the pre-callback will get the "intent" action, i.e. the state the
 // 		we are changing into but the changes are not yet made.
@@ -168,7 +177,7 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 		// 		function, this will enable them to act as metods correctly
 		// pre callback...
 		if(callback_pre != null){
-			if(callback_pre.call(this, action) === false){
+			if(callback_pre.call(this, action, e) === false){
 				// XXX should we return action here???
 				//return
 				return func('?')
@@ -181,7 +190,7 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 		}
 		// post callback...
 		if(callback_post != null){
-			callback_post.call(this, action)
+			callback_post.call(this, action, e)
 		}
 
 		return action
@@ -325,7 +334,8 @@ var USE_3D_TRANSFORM = true
 // NOTE: at this point this works only on the X axis...
 function setElementTransform(elem, offset, scale, duration){
 	elem = $(elem)
-	var t3d = USE_3D_TRANSFORM ? 'translateZ(0px)' : ''
+	//var t3d = USE_3D_TRANSFORM ? 'translateZ(0px)' : ''
+	var t3d = USE_3D_TRANSFORM ? 'translate3d(0,0,0)' : ''
 
 	if(offset == null){
 		offset = getElementShift(elem)
