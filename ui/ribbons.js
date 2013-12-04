@@ -126,6 +126,22 @@ function getImageGID(image){
 }
 
 
+// Get marks associated with image...
+//
+// img can be:
+// 	- literal gid
+// 	- image
+// 	- null -- assume current image
+//
+// NOTE: this does not understand selectors as arguments...
+function getImageMarks(img){
+	gid = typeof(img) == typeof('str') ? img : null
+	gid = gid == null ? getImageGID(img) : gid
+
+	return $('.mark.'+gid)
+}
+
+
 function getRibbon(a){
 	a = a == null ? getImage() : a
 
@@ -241,14 +257,23 @@ function getImageBefore(image, ribbon){
 function shiftTo(image, ribbon){
 	var target = getImageBefore(image, ribbon)
 	var cur_ribbon = getRibbon(image)
+	var marks = getImageMarks(image)
 
 	// insert before the first image if nothing is before the target...
 	if(target.length == 0){
 		image.prependTo($(ribbon))
 
 	} else {
-		image.insertAfter(target)
+		var target_marks = getImageMarks(target).last()
+		image.insertAfter(
+				// if target has marks, insert after them...
+				target_marks.length > 0 
+					? target_marks 
+					: target)
 	}
+
+	// move the marks...
+	image.after(marks)
 
 	$('.viewer').trigger('shiftedImage', [image, cur_ribbon, ribbon])
 
@@ -312,7 +337,13 @@ function createImage(n, force_create_new){
 						'class': 'image'
 					})
 	} else {
-		return $('<div order="'+n+'" gid="'+n+'" class="image"/>')
+		return $('<div/>')
+			.attr({
+				order: n,
+				gid: JSON.stringify(n),
+				// need to strip extra classes...
+				'class': 'image',
+			})
 	}
 }
 
@@ -398,9 +429,7 @@ function removeRibbon(ribbon){
 // NOTE: this will remove everything out of a ribbon if left/right are 
 // 		more than the length of the ribbon...
 function extendRibbon(left, right, ribbon, no_compensate_shift){
-	ribbon = ribbon == null ? 
-				getRibbon()
-				: $(ribbon)
+	ribbon = ribbon == null ?  getRibbon() : $(ribbon)
 	left = left == null ? 0 : left
 	right = right == null ? 0 : right
 	var images = ribbon.children('.image')
@@ -420,12 +449,10 @@ function extendRibbon(left, right, ribbon, no_compensate_shift){
 	// NOTE: we save the detached elements to reuse them on extending,
 	//		if needed...
 	if(left < 0){
-		//removed = $(images.splice(0, -left)).detach()
 		removed = removed.concat($(images.splice(0, -left)).detach().toArray())
 	}
 	if(right < 0){
 		var l = images.length
-		//removed = $(images.splice(l+right, l)).detach()
 		removed = removed.concat($(images.splice(l+right, l)).detach().toArray())
 	}
 	// calculate the maximum number of new elements left to create...
@@ -443,6 +470,11 @@ function extendRibbon(left, right, ribbon, no_compensate_shift){
 		right = right > len ? len : right
 		res.right = createImages(right, removed).appendTo(ribbon)
 	}
+
+	// cleanup...
+	$(removed).each(function(){
+		getImageMarks($(this)).remove()
+	})
 
 	// compensate the position...
 	// NOTE: this is fool-proof as it's based on relative visual 

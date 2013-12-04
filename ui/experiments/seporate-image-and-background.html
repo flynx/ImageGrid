@@ -161,6 +161,7 @@
 	border: dotted blue 5px;
 }
 
+.mark.tagged,
 .mark.blue,
 .mark.red,
 .mark.yellow {
@@ -168,8 +169,8 @@
 	margin-left: 0px;
 	border: none;
 	box-sizing: border-box;
-
 }
+.mark.tagged:after,
 .mark.blue:after,
 .mark.red:after,
 .mark.yellow:after {
@@ -194,6 +195,16 @@
 	border-radius: 50%;
 }
 
+.mark.tagged:after {
+	box-shadow: none;
+	text-shadow: black 0.1em 0.1em 0.4em, black 0.1em 0.1em;
+	font-size: 10pt;
+	vertical-align: middle;
+	text-align: center;
+	content: "T";
+	color: white;
+	background: none;
+}
 .mark.blue:after {
 	left: -25px;
 	border: solid 3px blue;
@@ -206,6 +217,23 @@
 .mark.yellow:after {
 	left: -67px;
 	background: yellow;
+}
+
+.ccw270,
+.cw90 {
+	-webkit-transform: rotate(90deg);
+}
+.ccw180,
+.cw180 {
+	-webkit-transform: rotate(180deg);
+}
+.ccw90,
+.cw270 {
+	-webkit-transform: rotate(270deg);
+}
+.ccw0,
+.cw0 {
+	-webkit-transform: rotate(0deg);
 }
 
 </style>
@@ -264,7 +292,7 @@
 		<div id="0" class="image2" style="background-image: url(image.jpg)"></div>
 		<div class="mark red"></div>
 
-		<div id="1" class="current image2" style="background-image: url(image.jpg)"></div>
+		<div id="1" class="current image2 cw180" style="background-image: url(image.jpg)"></div>
 		<div class="mark"></div>
 		<div class="mark blue" title="blue"></div>
 		<div class="mark red" title="red"></div>
@@ -272,6 +300,7 @@
 
 		<div id="2" class="image2" style="background-image: url(image.jpg)"></div>
 		<div class="mark select"></div>
+		<div class="mark tagged" title="tagged"></div>
 	</div>
 	</details>
 

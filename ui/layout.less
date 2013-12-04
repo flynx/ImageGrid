@@ -4,6 +4,8 @@
 
 /******************************************************** Settings ***/
 
+@image-tile-size: 300px;
+
 @ribbon-mark-offset: 5px;
 
 @ribbon-mark-size: 10px;
@@ -318,7 +320,7 @@ button:hover {
 	margin-top: -20px;
 
 	text-align: center;
-	vertical-align: center;
+	vertical-align: middle;
 
 	font-size: 18px;
 	font-weight: bold;
@@ -375,13 +377,14 @@ button:hover {
 /*********************************************************** Image ***/
 .marker,
 .current-marker,
+.mark,
 .image {
 	position: relative;
 	display: inline-block;
 	vertical-align: middle;
 	text-align:left;
-	width: 300px;
-	height: 300px;
+	width: @image-tile-size;
+	height: @image-tile-size;
 	font-size: 12pt;
 	overflow: hidden;
 
@@ -560,6 +563,7 @@ button:hover {
 }
 */
 
+/*
 .marks-visible.viewer .marked.image:after {
 	display: block;
 	position: absolute;
@@ -578,11 +582,7 @@ button:hover {
 	border-radius: 50%;
 	background: blue;
 
-	/* make the mark stand out if it is over an image with similar 
-	color/density */
 	box-shadow: 0px 0px 7px 0px black;
-	/*border: solid 1px white;*/
-	/*border: solid 1px black;*/
 }
 .marks-visible.viewer .marked.image[orientation="270"][flipped*="vertical"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image:not([orientation])[flipped*="vertical"]:after,
@@ -590,7 +590,7 @@ button:hover {
 .marks-visible.viewer .marked.image[orientation="180"][flipped="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="90"]:not([flipped]):after {
 	top: @ribbon-mark-offset;
-	bottom: auto:
+	bottom: auto;
 	left: auto;
 	right: @ribbon-mark-offset;
 }
@@ -614,11 +614,14 @@ button:hover {
 	left: @ribbon-mark-offset;
 	right: auto;
 }
+*/
 
 /* NOTE: we use a different mark representation for single image mode... */
+/*
 .marks-visible.single-image-mode.viewer .marked.image:after {
 	display: none;
 }
+*/
 
 
 /* corner mark... (a-la bookmarks in PortableMag) 
@@ -655,12 +658,58 @@ button:hover {
 	bottom: @ribbon-mark-offset;
 	right: @ribbon-mark-offset;
 }
-/
 
 
-/* XXX should we use opacity??? */
 .marked-only-view.viewer:not(.marks-visible) .image:not(.marked) {
 	opacity: 0.3;
+}
+*/
+
+
+
+/* new gen marks... */
+
+.mark {
+	/* this fully covers the image to simplify positioning of actual marks */
+	margin-left: -@image-tile-size;
+	border: none;
+}
+.viewer:not(.marks-visible) .mark {
+	display: none;
+}
+
+.mark.selected {
+	width: 0px;
+	margin-left: 0px;
+	border: none;
+	overflow: visible;
+}
+.mark.selected:after {
+	display: block;
+	position: absolute;
+	content: "";
+	font-size: 0pt;
+	border: none;
+
+	width: 5px;
+	height: 5px;
+
+	top: auto;
+	bottom: 10px;
+	left: auto;
+	right: 10px;
+
+	box-shadow: 2px 2px 20px -2px rgba(0,0,0,0.7);
+
+	box-sizing: border-box;
+	border-radius: 50%;
+
+
+	background: blue;
+	left: -15;
+}
+.marks-visible.single-image-mode.viewer .mark:after {
+	display: none;
 }
 
 
@@ -941,7 +990,7 @@ button:hover {
 	position: absolute;
 	height: 20px;
 	width: auto;
-	min-width: 300px;
+	min-width: @image-tile-size;
 	text-align: right;
 
 	color: transparent;
@@ -971,7 +1020,7 @@ button:hover {
 .global-mode-indicators > *,
 .context-mode-indicators > * {
 	font-size: small;
-	vertical-align: center;
+	vertical-align: middle;
 	margin-left: 10px;
 }
 
@@ -1001,7 +1050,7 @@ button:hover {
 .context-mode-indicators .indicator {
 	display: none;
 	height: 20px;
-	vertical-align: center;
+	vertical-align: middle;
 }
 
 
@@ -1182,13 +1231,15 @@ button:hover {
 
 
 
-.large.viewer:not(.single-image-mode) .current.image {
-	border-width: 3px;
+.large.viewer:not(.single-image-mode) .current-marker {
+	border-width: 2px;
 }
+.large.viewer:not(.single-image-mode) .mark:after,
 .large.viewer:not(.single-image-mode) .marked.image:after {
 	.scale(0.7);
 }
 
+.small.viewer:not(.single-image-mode) .mark:after,
 .small.viewer:not(.single-image-mode) .marked.image:after {
 	.scale(1.8);
 }
@@ -1199,7 +1250,7 @@ button:hover {
 
 .overlay-block {
 	display: none;
-	position: absolute:
+	position: absolute;
 	top: 0px;
 	left: 0px;
 	height: 100%;
@@ -1280,7 +1331,7 @@ button:hover {
 
 	padding: 20px;
 
-	vertical-align: center;
+	vertical-align: middle;
 
 	box-shadow: 0px 5px 50px 0px black;
 }

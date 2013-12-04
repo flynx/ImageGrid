@@ -1101,6 +1101,7 @@ function convertDataGen1(data, cmp){
 * Loaders
 */
 
+
 function updateImageIndicators(gid, image){
 	gid = gid == null ? getImageGID() : gid
 	image = image == null ? getImage() : $(image)
@@ -1108,8 +1109,12 @@ function updateImageIndicators(gid, image){
 	// marks...
 	if(MARKED.indexOf(gid) != -1){
 		image.addClass('marked')
+		// XXX
+		_addMark('selected', gid, image)
 	} else {
 		image.removeClass('marked')
+		// XXX
+		_removeMark('selected', gid, image)
 	}
 
 	return image
@@ -1138,14 +1143,19 @@ function _loadImagePreviewURL(image, url){
 // 		may leak to newly loaded images...
 // XXX do a pre-caching framework...
 function updateImage(image, gid, size, sync){
+	image = image == null ? getImage() : $(image)
 	sync = sync == null ? SYNC_IMG_LOADER : sync
-	image = $(image)
 	var oldgid = getImageGID(image)
 
 	if(oldgid == gid || gid == null){
 		gid = oldgid
 
 	} else {
+		// remove old marks...
+		if(typeof(oldgid) == typeof('str')){
+			getImageMarks(oldgid).remove()
+		}
+		// reset gid...
 		image
 			.attr('gid', JSON.stringify(gid))
 			.css({

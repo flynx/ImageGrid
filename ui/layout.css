@@ -224,7 +224,7 @@ button:hover {
   height: 20px;
   margin-top: -20px;
   text-align: center;
-  vertical-align: center;
+  vertical-align: middle;
   font-size: 18px;
   font-weight: bold;
   color: silver;
@@ -270,6 +270,7 @@ button:hover {
 /*********************************************************** Image ***/
 .marker,
 .current-marker,
+.mark,
 .image {
   position: relative;
   display: inline-block;
@@ -495,63 +496,64 @@ button:hover {
 	opacity: 0.5;
 }
 */
+/*
 .marks-visible.viewer .marked.image:after {
-  display: block;
-  position: absolute;
-  content: "";
-  font-size: 0pt;
-  border: none;
-  width: 10px;
-  height: 10px;
-  top: auto;
-  bottom: 5px;
-  left: auto;
-  right: 5px;
-  border-radius: 50%;
-  background: blue;
-  /* make the mark stand out if it is over an image with similar 
-	color/density */
+	display: block;
+	position: absolute;
+	content: "";
+	font-size: 0pt;
+	border: none;
 
-  box-shadow: 0px 0px 7px 0px black;
-  /*border: solid 1px white;*/
+	width: @ribbon-mark-size;
+	height: @ribbon-mark-size;
 
-  /*border: solid 1px black;*/
+	top: auto;
+	bottom: @ribbon-mark-offset;
+	left: auto;
+	right: @ribbon-mark-offset;
 
+	border-radius: 50%;
+	background: blue;
+
+	box-shadow: 0px 0px 7px 0px black;
 }
 .marks-visible.viewer .marked.image[orientation="270"][flipped*="vertical"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image:not([orientation])[flipped*="vertical"]:after,
 .marks-visible.viewer .marked.image[orientation="0"][flipped*="vertical"]:after,
 .marks-visible.viewer .marked.image[orientation="180"][flipped="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="90"]:not([flipped]):after {
-  top: 5px;
-  bottom: auto:
+	top: @ribbon-mark-offset;
+	bottom: auto;
 	left: auto;
-  right: 5px;
+	right: @ribbon-mark-offset;
 }
 .marks-visible.viewer .marked.image:not([orientation])[flipped*="vertical"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="0"][flipped*="vertical"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="270"][flipped="vertical"]:after,
 .marks-visible.viewer .marked.image[orientation="90"][flipped="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="180"]:not([flipped]):after {
-  top: 5px;
-  bottom: auto;
-  left: 5px;
-  right: auto;
+	top: @ribbon-mark-offset;
+	bottom: auto;
+	left: @ribbon-mark-offset;
+	right: auto;
 }
 .marks-visible.viewer .marked.image[orientation="90"][flipped*="vertical"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="180"][flipped="vertical"]:after,
 .marks-visible.viewer .marked.image:not([orientation])[flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="0"][flipped*="horizontal"]:after,
 .marks-visible.viewer .marked.image[orientation="270"]:not([flipped]):after {
-  top: auto;
-  bottom: 5px;
-  left: 5px;
-  right: auto;
+	top: auto;
+	bottom: @ribbon-mark-offset;
+	left: @ribbon-mark-offset;
+	right: auto;
 }
+*/
 /* NOTE: we use a different mark representation for single image mode... */
+/*
 .marks-visible.single-image-mode.viewer .marked.image:after {
-  display: none;
+	display: none;
 }
+*/
 /* corner mark... (a-la bookmarks in PortableMag) 
  * XXX account for flipping... */
 /*
@@ -586,12 +588,48 @@ button:hover {
 	bottom: @ribbon-mark-offset;
 	right: @ribbon-mark-offset;
 }
-/
 
 
-/* XXX should we use opacity??? */
 .marked-only-view.viewer:not(.marks-visible) .image:not(.marked) {
-  opacity: 0.3;
+	opacity: 0.3;
+}
+*/
+/* new gen marks... */
+.mark {
+  /* this fully covers the image to simplify positioning of actual marks */
+
+  margin-left: -300px;
+  border: none;
+}
+.viewer:not(.marks-visible) .mark {
+  display: none;
+}
+.mark.selected {
+  width: 0px;
+  margin-left: 0px;
+  border: none;
+  overflow: visible;
+}
+.mark.selected:after {
+  display: block;
+  position: absolute;
+  content: "";
+  font-size: 0pt;
+  border: none;
+  width: 5px;
+  height: 5px;
+  top: auto;
+  bottom: 10px;
+  left: auto;
+  right: 10px;
+  box-shadow: 2px 2px 20px -2px rgba(0, 0, 0, 0.7);
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: blue;
+  left: -15;
+}
+.marks-visible.single-image-mode.viewer .mark:after {
+  display: none;
 }
 /****************************************************** Image info ***/
 .inline-image-info {
@@ -959,7 +997,7 @@ button:hover {
 .global-mode-indicators > *,
 .context-mode-indicators > * {
   font-size: small;
-  vertical-align: center;
+  vertical-align: middle;
   margin-left: 10px;
 }
 .global-mode-indicators .circle,
@@ -986,7 +1024,7 @@ button:hover {
 .context-mode-indicators .indicator {
   display: none;
   height: 20px;
-  vertical-align: center;
+  vertical-align: middle;
 }
 /* actual indicators */
 /* marks... */
@@ -1143,9 +1181,10 @@ button:hover {
 .dark.viewer .ribbon-indicator:hover:after {
   opacity: 0.8;
 }
-.large.viewer:not(.single-image-mode) .current.image {
-  border-width: 3px;
+.large.viewer:not(.single-image-mode) .current-marker {
+  border-width: 2px;
 }
+.large.viewer:not(.single-image-mode) .mark:after,
 .large.viewer:not(.single-image-mode) .marked.image:after {
   -webkit-transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
   -moz-transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
@@ -1153,6 +1192,7 @@ button:hover {
   -ms-transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
   transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
 }
+.small.viewer:not(.single-image-mode) .mark:after,
 .small.viewer:not(.single-image-mode) .marked.image:after {
   -webkit-transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
   -moz-transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
@@ -1163,8 +1203,8 @@ button:hover {
 /********************************************************* Overlay ***/
 .overlay-block {
   display: none;
-  position: absolute:
-	top: 0px;
+  position: absolute;
+  top: 0px;
   left: 0px;
   height: 100%;
   width: 100%;
@@ -1237,7 +1277,7 @@ button:hover {
   border-radius: 3px;
   background: gray;
   padding: 20px;
-  vertical-align: center;
+  vertical-align: middle;
   box-shadow: 0px 5px 50px 0px black;
 }
 /* tables in dialogs... */

@@ -12,6 +12,32 @@
 * helpers...
 */
 
+function _addMark(cls, gid, image){
+	gid = gid == null ? getImageGID() : gid
+	image = image == null ? getImage() : $(image)
+
+	var mark = $('.mark.'+cls+'.'+gid)
+
+	if(mark.length == 0){
+		mark = $('<div class="mark selected"/>')
+			.addClass(gid)
+			.insertAfter(image)
+	} 
+	return mark
+}
+function _removeMark(cls, gid, image){
+	gid = gid == null ? getImageGID() : gid
+	image = image == null ? getImage() : $(image)
+
+	var mark = $('.mark.'+cls+'.'+gid)
+
+	if(mark.length != 0){
+		mark.detach()
+	}
+	return mark
+}
+
+
 // NOTE: to disable MARKED cleanout set no_cleanout_marks to true.
 // NOTE: MARKED may contain both gids that are not loaded and that do 
 // 		not exist, as there is no way to distinguish between the two 
@@ -81,6 +107,12 @@ var toggleImageMark = createCSSClassToggler(
 	'marked',
 	function(action){
 		toggleMarkesView('on')
+		// XXX
+		if(action == 'on'){
+			_addMark('selected')
+		} else {
+			_removeMark('selected')
+		}
 		$('.viewer').trigger('togglingMark', [getImage(), action])
 	})
 
