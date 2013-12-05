@@ -29,6 +29,7 @@ CSS_FILES := $(patsubst %.less,%.css,$(wildcard *.less))
 
 LIB_DIR=lib
 EXT_LIB_DIR=ext-lib
+CSS_DIR=css
 NW_PROJECT_FILE=package.json
 JS_FILES := $(wildcard *.js)
 HTML_FILES := $(wildcard *.html)
@@ -98,7 +99,8 @@ $(DIST_DIR):
 
 $(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) node-deps
 	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) \
-		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(NODE_DIR)
+		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(CSS_DIR) \
+		$(NODE_DIR)
 
 zip: $(APP_ZIP)
 
