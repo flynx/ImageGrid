@@ -284,11 +284,7 @@ function markImagesDialog(){
 
 	updateStatus('Mark...').show()
 
-	var alg = 'Mark images: |'+
-		'Use Esc and Shift-Esc to exit crop modes.'+
-		'\n\n'+
-		'NOTE: all crop modes will produce a single ribbon unless\n'+
-		'otherwise stated.'
+	var alg = 'Mark images:'
 
 	var cur = toggleImageMark('?') == 'on' ? 'Unmark' : 'Mark'
 
