@@ -18,6 +18,18 @@ var BASE_URL_LIMIT = 10
 * URL history...
 */
 
+// XXX this depends on fs.existsSync(...)
+function pruneBaseURLHistory(){
+	if(window.fs == null){
+		return BASE_URL_HISTORY
+	}
+	BASE_URL_HISTORY = BASE_URL_HISTORY.filter(function(e){
+		return fs.existsSync(osPath(e))
+	})
+	return BASE_URL_HISTORY
+}
+
+
 // Setup history event handlers...
 //
 // NOTE: this will save history state to localStorage...
@@ -25,6 +37,8 @@ function setupBaseURLHistory(){
 	$('.viewer')
 		.on('baseURLChanged', function(evt, old_url, new_url){
 			var updated = false
+
+			pruneBaseURLHistory()
 
 			// store the old and new urls in history unless they already
 			// exist...
@@ -102,6 +116,7 @@ function getURLHistoryPrev(){
 // NOTE: this will not affect history url order...
 function makeURLHistoryLoader(get, end_msg){
 	return function(){
+		pruneBaseURLHistory()
 		var url = get()
 		if(url != BASE_URL){
 			statusNotify(loadDir(url))
@@ -118,7 +133,8 @@ var loadURLHistoryPrev = makeURLHistoryLoader(getURLHistoryPrev, 'at first URL')
 // NOTE: this can accept either path or history index...
 // NOTE: this will not reload an already loaded url...
 function loadURLHistoryAt(a){
-	a = a < 0 ? BASE_URL_HISTORY + a : a
+	pruneBaseURLHistory()
+	a = a < 0 ? BASE_URL_HISTORY.length + a : a
 	var url = typeof(a) == typeof(123) ? Math.min(a < 0 ? 0 : a, BASE_URL_HISTORY.length-1) : a
 	if(url != BASE_URL){
 		statusNotify(loadDir(url))

@@ -58,7 +58,6 @@ if(window.CEF_dumpJSON != null){
 	// paths to included utils...
 	execPathPush('./vips/bin')
 
-
 	// Things ImageGrid needs...
 	// XXX do we need assync versions??
 	window.listDir = function(path){
