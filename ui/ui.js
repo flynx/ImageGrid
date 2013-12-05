@@ -491,6 +491,55 @@ function isOverlayVisible(root){
 
 
 var FIELD_TYPES = {
+	// a simple hr...
+	//
+	// format:
+	// 		'---'
+	// 		Three or more '-'s
+	hr: {
+		type: 'hr',
+		text: null,
+		default: false,
+		html: '<hr>',
+		test: function(val){
+			return /\-\-\-+/.test(val)
+		},
+	},
+	// a simple br...
+	//
+	// format:
+	// 		'   '
+	// 		Three or more spaces
+	br: {
+		type: 'br',
+		text: null,
+		default: false,
+		html: '<br>',
+		test: function(val){
+			return /\s\s\s+/.test(val)
+		},
+	},
+	// format:
+	// 	{
+	// 		html: <html-block>
+	// 	}
+	html: {
+		type: 'html',
+		text: null,
+		default: false,
+		html: '<div class="html-block"/>',
+		test: function(val){
+			return val.html != null
+		},
+		set: function(field, value){
+			if(typeof(value.html) == typeof('str')){
+				field.html(value.html)
+			} else {
+				field.append(value.html)
+			}
+		},
+	},
+
 	// format: 
 	// 		string
 	// XXX add datalist option...
@@ -625,7 +674,7 @@ var FIELD_TYPES = {
 	// 		['a', 'b', 'c', ...]
 	//
 	// an item can be of the folowing format:
-	// 		<text> ['|' 'default' ] [ '|' <tool-tip> ]
+	// 		<text> ['|' 'default' | 'disabled' ] [ '|' <tool-tip> ]
 	//
 	// NOTE: only one 'default' item should be present.
 	// NOTE: if no defaults are set, then the first item is checked.
@@ -662,6 +711,16 @@ var FIELD_TYPES = {
 					opts.splice(opts.indexOf('default'), 1)
 				} else {
 					val.prop('checked', false)
+				}
+
+				// set disabled state...
+				if(opts.slice(1).indexOf('disabled') >= 0){
+					val.prop('disabled', true)
+					opts.splice(opts.indexOf('disabled'), 1)
+					item.addClass('disabled')
+				} else {
+					val.prop('disabled', false)
+					item.removeClass('disabled')
 				}
 
 				setTextWithTooltip(opts, item.find('.item-text'))
@@ -763,6 +822,7 @@ var FIELD_TYPES = {
 			return $(field).attr('state')
 		},
 	},
+
 }
 
 // Show a complex form dialog
@@ -821,15 +881,20 @@ function formDialog(root, message, config, btn, cls){
 
 				// setup text and data...
 				setTextWithTooltip(t, html.find('.text'), html)
-				field.set(html, config[t])
 
-				// NOTE: this is here to isolate t and field.get values...
-				// 		...is there a better way???
-				var _ = (function(title, getter){
-					html.on('resolve', function(evt, e){
-						data[title] = getter(e)
-					})
-				})(t, field.get)
+				if(field.set != null){
+					field.set(html, config[t])
+				}
+
+				if(field.get != null){
+					// NOTE: this is here to isolate t and field.get values...
+					// 		...is there a better way???
+					var _ = (function(title, getter){
+						html.on('resolve', function(evt, e){
+							data[title] = getter(e)
+						})
+					})(t, field.get)
+				}
 
 				form.append(html)
 
@@ -932,6 +997,17 @@ function prompt(message, dfl, btn){
 function confirm(){
 }
 */
+
+
+function detailedAlert(text, description, button){
+	return formDialog(null, '', {'': {
+		html: $('<details/>')
+			.append($('<summary/>')
+				.html(text))
+			.append($('<span/>')
+				.html(description))
+	}}, button == null ? false : button, 'detailed-alert')
+}
 
 
 // NOTE: this will not work without node-webkit...

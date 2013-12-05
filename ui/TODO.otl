@@ -108,33 +108,13 @@ Roadmap
 	
 
 
-[_] 30% Gen 3 current todo
-	[_] 60% High priority
-		[_] BUG: editor also affects the image background and border...
-		| to view just set invert to 1
-		| 	- background turns white...
-		| 	- red border turns blue...
-		|
-		| need to either compensate or figure out a way to work around 
-		| this without adding ne tags...
+[_] 29% Gen 3 current todo
+	[_] 59% High priority
+		[_] BUG: basic editor causes images to blur up 
+		| ...if at least one filter is applied, appears to only affect 
+		| scaled images.
 		[_] BUG: OSX: unable to load absolute paths...
 		[_] OSX: add alternatives to function buttons...
-		[_] Feature: basic editor...
-		| use CSS3 filters to edit and save edit values for:
-		| 	- brightness
-		| 	- contrast
-		| 	- saturation
-		| 	- hue
-		| 	- grayscale
-		| 	- sepia
-		| 	- invert
-		| 	- blur
-		|
-		| save settings and load them on a per preview basis...
-		|
-		| see: http://html5-demos.appspot.com/static/css/filters/index.html
-		|
-		| For UI use a left/right pane to "hold" the sliders...
 		[_] UI: Panes...
 		|
 		| 	+-----+---------------+-----+
@@ -450,6 +430,35 @@ Roadmap
 		[_] side-by side view...
 		[_] Simplify tool-tip structure in dialogs...
 		| might also bee good to unify tool-tips across the app...
+		[X] devise a better strategy to pruneBaseURLHistory(..)...
+		| currently it will remove anything that does not exist.
+		|
+		| consider:
+		|	- push non-existing to back
+		|	- mark non-existing and show as disabled 
+		[X] Feature: basic editor...
+		| use CSS3 filters to edit and save edit values for:
+		| 	- brightness
+		| 	- contrast
+		| 	- saturation
+		| 	- hue
+		| 	- grayscale
+		| 	- sepia
+		| 	- invert
+		| 	- blur
+		|
+		| save settings and load them on a per preview basis...
+		|
+		| see: http://html5-demos.appspot.com/static/css/filters/index.html
+		|
+		| For UI use a left/right pane to "hold" the sliders...
+		[X] BUG: editor also affects the image background and border...
+		| to view just set invert to 1
+		| 	- background turns white...
+		| 	- red border turns blue...
+		|
+		| need to either compensate or figure out a way to work around 
+		| this without adding ne tags...
 		[X] URL history...
 		[X] BUG: ribbons above and below are still sometimes loaded incorrectly
 		| likely due to trying to align 

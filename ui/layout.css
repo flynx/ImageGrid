@@ -1214,16 +1214,11 @@ button:hover {
 }
 /* XXX this is experimental... */
 .viewer.overlay .ribbon-set {
-	/* XXX blur makes things slow with transparency... */
+  /* XXX blur makes things slow with transparency... */
 
-	/*
-	-webkit-filter: blur(2px);
-	filter: blur(2px);
-	*/
-	-webkit-filter: grayscale(0.5);
-	filter: grayscale(0.5);
-
-	/*
+  -webkit-filter: /*blur(2px)*/ grayscale(0.5);
+  filter: /*blur(2px)*/ grayscale(0.5);
+  /*
 	-webkit-animation-name: testAnim;
 	-webkit-animation-duration: .2s;
 	-webkit-animation-iteration-count: 1;
@@ -1329,6 +1324,9 @@ button:hover {
 .light.viewer .field.choice :checked ~ span {
   color: white;
   background: silver;
+}
+.field .disabled-text {
+  opacity: 0.5;
 }
 /************************************************************ Help ***/
 /* XXX make this more generic, and not just for the keyboard... */
