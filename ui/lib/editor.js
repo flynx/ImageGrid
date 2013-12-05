@@ -262,6 +262,7 @@ function makePanel(title, open, editable_title){
 			.attr({
 				contenteditable: editable_title == null ? 'false' : 'true',
 			})
+			// XXX add a '+' button to create a new panel...
 			.append($('<span/>')
 				.addClass('close-button')
 				.click(function(){
@@ -274,18 +275,45 @@ function makePanel(title, open, editable_title){
 		.draggable({
 			containment: 'parent',
 			scroll: false,
+			// XXX this makes things quite a bit slower...
+			stack: '.panel',
 		})
+
+	var _outside = false
 
 	// wrapper for sub-panels...
 	var content = $('<span class="panel-content">')
 		.sortable({
 			forcePlaceholderSize: true,
-			start: function(e, ui){
-				 ui.placeholder.height(ui.helper.outerHeight());
-				 ui.placeholder.width(ui.helper.outerWidth());
-			},
 			opacity: 0.7,
 			connectWith: '.panel-content',
+			zIndex: 9999,
+
+			start: function(e, ui){
+				_outside = false
+				ui.placeholder.height(ui.helper.outerHeight());
+				ui.placeholder.width(ui.helper.outerWidth());
+			},
+			// XXX this is not done...
+			// create a new panel when dropping outside of curent panel...
+			stop: function(e, ui){
+				// do this only when dropping putside the panel...
+				if(_outside){
+					makePanel()
+						// XXX adjust this to scale...
+						.css(ui.position)
+						.appendTo(panel.parent())
+						.find('.panel-content')
+							.append(ui.item)
+				}
+			},
+			// XXX are these the correct events???
+			over: function(e, ui){
+				_outside = false
+			},
+			out: function(e, ui){
+				_outside = true
+			},
 		})
 		.appendTo(panel)
 	return panel
