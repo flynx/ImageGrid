@@ -21,7 +21,6 @@ var toggleEditor = createCSSClassToggler(
 					$('.viewer')
 						.append(makeEditorControls('.current.image')
 							//.draggable('option', 'snap', '.viewer')
-							.addClass('noScroll')
 							.css({
 								// prevent the editor from moving under 
 								// the title bar, that will prevent us from

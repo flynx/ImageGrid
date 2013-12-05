@@ -246,19 +246,22 @@ function makeLogRange(text, filter, target){
 }
 
 
-function makePanel(title, open){
+function makePanel(title, open, editable_title){
 	title = title == null ? '&nbsp;' : title
 
 	// tool panel...
 	var panel = $('<details/>')
 		.prop('open', open == null ? true : open)
-		.addClass('panel')
+		.addClass('panel noScroll')
 		.css({
 			position: 'absolute',
 			top: '100px',
 			left: '100px',
 		})
 		.append($('<summary>'+title+'</summary>')
+			.attr({
+				contenteditable: editable_title == null ? 'false' : 'true',
+			})
 			.append($('<span/>')
 				.addClass('close-button')
 				.click(function(){
@@ -282,6 +285,7 @@ function makePanel(title, open){
 				 ui.placeholder.width(ui.helper.outerWidth());
 			},
 			opacity: 0.7,
+			connectWith: '.panel-content',
 		})
 		.appendTo(panel)
 	return panel
@@ -292,6 +296,7 @@ function makeSubPanel(title, open, parent){
 	title = title == null ? '&nbsp;' : title
 
 	var sub_panel = $('<details/>')
+		.addClass('sub-panel noScroll')
 		.prop('open', open == null ? true : open)
 		.append($('<summary>'+title+'</summary>'))
 		.append($('<div class="sub-panel-content"/>'))
