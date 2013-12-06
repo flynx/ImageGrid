@@ -144,6 +144,9 @@ function setupDataBindings(viewer){
 				// head at threshold - roll <-
 				} else if(!at_start && head < threshold){
 					var rolled = rollImages(-roll_frame_size, ribbon)
+
+				} else {
+					console.log('>>> skipping:', r)
 				}
 
 			// we jumped, load new set...

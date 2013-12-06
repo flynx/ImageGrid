@@ -110,6 +110,17 @@ Roadmap
 
 [_] 29% Gen 3 current todo
 	[_] 58% High priority
+		[_] BUG: Something is causing previews to reload...
+		| procedure:
+		| 	- moving left/right in one ribbon
+		| 	- adjacent ribbon is not moving
+		|
+		| effect:
+		| 	- previews get reloaded
+		|
+		| expected:
+		| 	- all unmoving ribbons remain static
+		|
 		[_] Polish: on LOCAL actions do ALL the loading in background...
 		| make the lags completely even...
 		[_] check image caching strategy and thresholds....
