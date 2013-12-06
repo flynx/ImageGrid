@@ -85,7 +85,6 @@ function setupDataBindings(viewer){
 
 		// NOTE: we do not need to worry about explicit centering the ribbon 
 		//		here, just ball-park-load the correct batch...
-		// XXX this does not get called on marking...
 		.on('preCenteringRibbon', function(evt, ribbon, image){
 			var r = getRibbonIndex(ribbon)
 
@@ -94,40 +93,44 @@ function setupDataBindings(viewer){
 				return 
 			}
 
-			// skip the whole thing if the ribbon is not visible -- outside
-			// of viewer are...
-			var viewer = $('.viewer')
-			var H = viewer.height()
-			var h = getImage().height()
-			var t = getRelativeVisualPosition(viewer, ribbon).top 
+			// skip the whole thing if the ribbon is not visible, i.e. outside
+			// of viewer area...
+			// NOTE: we are accounting for position relative to image... 
+			// NOTE: we do not need to account for image height because 
+			// 		of origin and vertical-align... (check)
 			// XXX also check for visibility...
-			if( t+h <= 0 || t >= H ){
+			var R = $('.viewer').height()/2
+			var d = Math.abs(getRelativeVisualPosition(image, ribbon).top)
+			if( d >= R ){
 				return
 			}
 
 			// prepare for loading...
 			var gid = getImageGID(image)
 			var gr = DATA.ribbons[r]
-			var img_before = getImageBefore(image, ribbon)
+
 			var gid_before = getGIDBefore(gid, r)
+			var img_before = gid_before == null 
+				? ribbon.find('.image').first() 
+				: getImageBefore(image, ribbon)
+			gid_before = gid_before == null ? gr[0] : gid_before
 
 			var screen_size = getScreenWidthInImages()
 			screen_size = screen_size < 1 ? 1 : screen_size
 			var load_frame_size = Math.round(screen_size * LOAD_SCREENS)
 
 			// either current image is loaded or we are at head...
-			if(gid_before != null 
-					&& gid_before == getImageGID(img_before)){
-				var head = img_before.prevAll('.image').length
-				var tail = img_before.nextAll('.image').length
-				var l = ribbon.find('.image').length
-				var index = gr.indexOf(gid)
-				var at_start = index < threshold
-				var at_end = (gr.length-1 - index) < threshold
-
+			if(gid_before == getImageGID(img_before)){
 				var roll_frame_size = Math.ceil(load_frame_size / 3)
 				var threshold = Math.floor(load_frame_size / 4) 
 				threshold = threshold < 1 ? 1 : threshold
+
+				var head = img_before.prevAll('.image').length
+				var tail = img_before.nextAll('.image').length
+				var l = ribbon.find('.image').length
+				var index = gr.indexOf(gid_before)
+				var at_start = index < threshold
+				var at_end = (gr.length-1 - index) < threshold
 
 				// less images than expected - extend ribbon...
 				if(l < load_frame_size){
@@ -184,11 +187,13 @@ function setupDataBindings(viewer){
 		.on('requestedFirstImage', function(evt, ribbon){
 			var r = getRibbonIndex(ribbon)
 			var gr = DATA.ribbons[r]
+			console.log('!!!!! rolling to first:', r)
 			rollImages(-gr.length, ribbon)
 		})
 		.on('requestedLastImage', function(evt, ribbon){
 			var r = getRibbonIndex(ribbon)
 			var gr = DATA.ribbons[r]
+			console.log('!!!!! rolling to last:', r)
 			rollImages(gr.length, ribbon)
 		})
 
@@ -230,9 +235,6 @@ function setupDataBindings(viewer){
 			}
 
 			// update proportions...
-			// XXX for some magical reason this is stable for un-rotated 
-			// 		images and does mad things for rotate 90/270 images...
-			//		...the only thing that is 	
 			if(window.PROPORTIONS_RATIO_THRESHOLD != null 
 					&& toggleSingleImageMode('?') == 'on'){
 
