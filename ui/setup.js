@@ -115,8 +115,9 @@ function setupDataBindings(viewer){
 			screen_size = screen_size < 1 ? 1 : screen_size
 			var load_frame_size = Math.round(screen_size * LOAD_SCREENS)
 
-			// current image IS loaded...
-			if(gid_before == getImageGID(img_before)){
+			// either current image is loaded or we are at head...
+			if(gid_before != null 
+					&& gid_before == getImageGID(img_before)){
 				var head = img_before.prevAll('.image').length
 				var tail = img_before.nextAll('.image').length
 				var l = ribbon.find('.image').length
