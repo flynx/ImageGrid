@@ -110,21 +110,23 @@ function setupDataBindings(viewer){
 			var gr = DATA.ribbons[r]
 			var img_before = getImageBefore(image, ribbon)
 			var gid_before = getGIDBefore(gid, r)
+
 			var screen_size = getScreenWidthInImages()
 			screen_size = screen_size < 1 ? 1 : screen_size
 			var load_frame_size = Math.round(screen_size * LOAD_SCREENS)
-			var roll_frame_size = Math.ceil(load_frame_size / 3)
-			var threshold = Math.floor(load_frame_size / 4) 
-			threshold = threshold < 1 ? 1 : threshold
-			var index = gr.indexOf(gid)
-			var at_start = index < threshold
-			var at_end = (gr.length-1 - index) < threshold
 
-			// current image is loaded...
+			// current image IS loaded...
 			if(gid_before == getImageGID(img_before)){
 				var head = img_before.prevAll('.image').length
 				var tail = img_before.nextAll('.image').length
 				var l = ribbon.find('.image').length
+				var index = gr.indexOf(gid)
+				var at_start = index < threshold
+				var at_end = (gr.length-1 - index) < threshold
+
+				var roll_frame_size = Math.ceil(load_frame_size / 3)
+				var threshold = Math.floor(load_frame_size / 4) 
+				threshold = threshold < 1 ? 1 : threshold
 
 				// less images than expected - extend ribbon...
 				if(l < load_frame_size){
