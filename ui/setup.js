@@ -98,7 +98,7 @@ function setupDataBindings(viewer){
 			// NOTE: we are accounting for position relative to image... 
 			// NOTE: we do not need to account for image height because 
 			// 		of origin and vertical-align... (check)
-			// XXX also check for visibility...
+			// XXX also check for visibility... (???)
 			var R = $('.viewer').height()/2
 			var d = Math.abs(getRelativeVisualPosition(image, ribbon).top)
 			if( d >= R ){
@@ -190,13 +190,11 @@ function setupDataBindings(viewer){
 		.on('requestedFirstImage', function(evt, ribbon){
 			var r = getRibbonIndex(ribbon)
 			var gr = DATA.ribbons[r]
-			console.log('!!!!! rolling to first:', r)
 			rollImages(-gr.length, ribbon)
 		})
 		.on('requestedLastImage', function(evt, ribbon){
 			var r = getRibbonIndex(ribbon)
 			var gr = DATA.ribbons[r]
-			console.log('!!!!! rolling to last:', r)
 			rollImages(gr.length, ribbon)
 		})
 

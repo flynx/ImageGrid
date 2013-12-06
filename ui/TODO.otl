@@ -116,7 +116,7 @@ Roadmap
 		| 	- adjacent ribbon is not moving
 		|
 		| effect:
-		| 	- previews get reloaded
+		| 	- previews get reloaded/redrawn
 		|
 		| expected:
 		| 	- all unmoving ribbons remain static
