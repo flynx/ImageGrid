@@ -85,9 +85,6 @@ function setupDataBindings(viewer){
 
 		// NOTE: we do not need to worry about explicit centering the ribbon 
 		//		here, just ball-park-load the correct batch...
-		// XXX need to maintain the correct number of images per ribbon
-		// 		per zoom setting -- things get really odd when a ribbon 
-		// 		is smaller than it should be...
 		// XXX this does not get called on marking...
 		.on('preCenteringRibbon', function(evt, ribbon, image){
 			var r = getRibbonIndex(ribbon)
@@ -96,14 +93,6 @@ function setupDataBindings(viewer){
 			if(toggleSingleImageMode('?') == 'on' && r != getRibbonIndex()){
 				return 
 			}
-
-			var gid = getImageGID(image)
-			var gr = DATA.ribbons[r]
-			var img_before = getImageBefore(image, ribbon)
-			var gid_before = getGIDBefore(gid, r)
-			var screen_size = getScreenWidthInImages()
-			screen_size = screen_size < 1 ? 1 : screen_size
-			var l = ribbon.find('.image').length
 
 			// skip the whole thing if the ribbon is not visible -- outside
 			// of viewer are...
@@ -116,38 +105,45 @@ function setupDataBindings(viewer){
 				return
 			}
 
-			// load images if we do a long jump -- start, end or some mark 
-			// outside of currently loaded section...
-			if(gid_before == null 
-					|| gid_before != getImageGID(img_before) 
-					// also load if we run out of images in the current ribbon,
-					// likely due to shifting...
-					|| ( gr.length > l 
-						&& l < Math.round(screen_size * LOAD_SCREENS))){
-				loadImagesAround(Math.round(screen_size * LOAD_SCREENS), gid, ribbon)
+			// prepare for loading...
+			var gid = getImageGID(image)
+			var gr = DATA.ribbons[r]
+			var img_before = getImageBefore(image, ribbon)
+			var gid_before = getGIDBefore(gid, r)
+			var screen_size = getScreenWidthInImages()
+			screen_size = screen_size < 1 ? 1 : screen_size
+			var load_frame_size = Math.round(screen_size * LOAD_SCREENS)
+			var roll_frame_size = Math.ceil(load_frame_size / 3)
+			var threshold = Math.floor(load_frame_size / 4) 
+			threshold = threshold < 1 ? 1 : threshold
+			var index = gr.indexOf(gid)
+			var at_start = index < threshold
+			var at_end = (gr.length-1 - index) < threshold
 
-			// roll the ribbon while we are advancing...
-			} else { 
-				var head = img_before.prevAll('.image')
-				var tail = img_before.nextAll('.image')
+			// current image is loaded...
+			if(gid_before == getImageGID(img_before)){
+				var head = img_before.prevAll('.image').length
+				var tail = img_before.nextAll('.image').length
+				var l = ribbon.find('.image').length
 
-				// NOTE: if this is greater than the number of images currently 
-				//		loaded, it might lead to odd effects...
-				var frame_size = Math.ceil((screen_size * LOAD_SCREENS) / 2)
-				var threshold = Math.floor(frame_size / 2) 
-				threshold = threshold < 1 ? 1 : threshold
+				// less images than expected - extend ribbon...
+				if(l < load_frame_size){
+					// NOTE: we are forcing the count of images...
+					loadImagesAround(load_frame_size, gid, ribbon, null, true)
 
-				// do the loading...
-				// XXX need to expand/contract the ribbon depending on speed...
-				// 		...might also be a good idea to load smaller images 
-				// 		while scrolling really fast...
-				// XXX use extendRibbon, to both roll and expand/contract...
-				if(tail.length < threshold){
-					var rolled = rollImages(frame_size, ribbon)
+				// tail at threshold - roll ->
+				} else if(!at_end && tail < threshold){
+					var rolled = rollImages(roll_frame_size, ribbon)
+
+				// head at threshold - roll <-
+				} else if(!at_start && head < threshold){
+					var rolled = rollImages(-roll_frame_size, ribbon)
 				}
-				if(head.length < threshold){
-					var rolled = rollImages(-frame_size, ribbon)
-				}
+
+			// we jumped, load new set...
+			} else {
+				// NOTE: we are forcing the count of images...
+				loadImagesAround(load_frame_size, gid, ribbon, null, true)
 			}
 		})
 
@@ -194,6 +190,7 @@ function setupDataBindings(viewer){
 		})
 
 		.on('fittingImages', function(evt, n){
+			console.log('!!!! fittingImages')
 			// load correct amount of images in each ribbon!!!
 			var screen_size = getScreenWidthInImages()
 			var gid = getImageGID()
@@ -217,7 +214,7 @@ function setupDataBindings(viewer){
 					return
 				}
 				*/
-				loadImagesAround(Math.round(screen_size * LOAD_SCREENS), gid, r)
+				loadImagesAround(Math.round(screen_size * LOAD_SCREENS), gid, r, null, true)
 			})
 
 			centerView(null, 'css')

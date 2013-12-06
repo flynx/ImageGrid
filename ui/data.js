@@ -1350,9 +1350,30 @@ function getGIDsAfter(count, gid, ribbon, inclusive, data){
 // If gid does not exist in the requested ribbon then getGIDBefore() is
 // used to get an appropriate alternative gid.
 //
+// If gid is less than count/2 to ribbon head/tail, then less than count
+// gids will be returned
+//
+//	   count
+//  |<------>|
+// 	   oXoooooooooooooooo	->	___oXoooo
+// 		^
+// 	   gid
+//
+//
+// Setting force_count will make this always return count images, even 
+// at the start and end of the ribbon.
+//
+//		  count
+//	   |<------>|
+// 	   oXoooooooooooooooo	->	oXooooooo
+// 		^
+// 	   gid
+//
+// Otherwise this will return less.
+//
 // NOTE: skipping gid and ribbon while passing data may not work correctly...
 // NOTE: count represents section diameter...
-function getGIDsAround(count, gid, ribbon, data){
+function getGIDsAround(count, gid, ribbon, data, force_count){
 	if(count == 0){
 		return []
 	}
@@ -1360,6 +1381,7 @@ function getGIDsAround(count, gid, ribbon, data){
 	data = data == null ? DATA : data
 	gid = gid == null ? getImageGID() : gid
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
+	// XXX is this out of context here???
 	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
 
 	var ribbon_data = data.ribbons[ribbon]
@@ -1374,6 +1396,17 @@ function getGIDsAround(count, gid, ribbon, data){
 
 	var end = i + Math.ceil(count/2)
 	end = end > ribbon_data.length ? ribbon_data.length : end
+
+	// force count by extending the ribbon at the opposite end...
+	if(force_count && ribbon_data.length > count){
+		var d = count - (end - start)
+
+		start = end >= ribbon_data.length ? start - d  : start
+		start = start < 0 ? 0 : start
+
+		end = start <= 0 ? end + d : end
+		end = end > ribbon_data.length ? ribbon_data.length : end
+	}
 
 	// get the actual data...
 	return ribbon_data.slice(start, end)
@@ -1436,7 +1469,7 @@ function getCommonSubArray(L1, L2){
 
 // Load count images around a given image/gid into the given ribbon.
 //
-function loadImagesAround(count, gid, ribbon, data){
+function loadImagesAround(count, gid, ribbon, data, force_count){
 	// default values...
 	data = data == null ? DATA : data
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
@@ -1451,7 +1484,7 @@ function loadImagesAround(count, gid, ribbon, data){
 		.find('.image')
 		.map(function(_, e){ return getImageGID(e) })
 		.toArray()
-	var new_ribbon = getGIDsAround(count, gid, ribbon, data)
+	var new_ribbon = getGIDsAround(count, gid, ribbon, data, force_count)
 
 	// get the common sub-ribbon...
 	// NOTE: we are only interested in continuous sub-ribbons...
@@ -1622,27 +1655,34 @@ function loadSettings(){
 // NOTE: it appears that sorting images by priority before loading them
 // 		to cache has little or no effect on the order they are 
 // 		loaded/rendered...
+// NOTE: this is not meant to be a real cache, rather a que for the OS and
+// 		backend/webkit on what's next...
 function preCacheRibbonImages(ribbon){
-	var i = getRibbonIndex(ribbon)
-	var size = getVisibleImageSize('max')
-	var screen_size = getScreenWidthInImages(getVisibleImageSize())
-	var cache_frame_size = (screen_size * LOAD_SCREENS) / 2
-	var images = ribbon.find('.image')
-	var first = getImageGID(images.first())
-	var last = getImageGID(images.last())
+	var deferred = $.Deferred()
+	setTimeout(function(){
+		var i = getRibbonIndex(ribbon)
+		var size = getVisibleImageSize('max')
+		var screen_size = getScreenWidthInImages(getVisibleImageSize())
+		// XXX
+		var cache_frame_size = (screen_size * LOAD_SCREENS) / 2
+		var images = ribbon.find('.image')
+		var first = getImageGID(images.first())
+		var last = getImageGID(images.last())
 
-	var gids = getGIDsAfter(-cache_frame_size, first)
-				.concat(getGIDsAfter(cache_frame_size, last))
+		var gids = getGIDsAfter(-cache_frame_size, first)
+					.concat(getGIDsAfter(cache_frame_size, last))
 
-	var cache = []
-	IMAGE_CACHE[i] = cache
-	$.each(gids, function(i, e){
-		var img = new Image()
-		img.src = getBestPreview(e, size).url
-		cache.push(img)
-	})
+		var cache = []
+		IMAGE_CACHE[i] = cache
+		$.each(gids, function(i, e){
+			var img = new Image()
+			img.src = getBestPreview(e, size).url
+			cache.push(img)
+		})
 
-	return cache
+		deferred.resolve(cache)
+	}, 0)
+	return deferred
 }
 
 
