@@ -85,6 +85,8 @@ function setupDataBindings(viewer){
 
 		// NOTE: we do not need to worry about explicit centering the ribbon 
 		//		here, just ball-park-load the correct batch...
+		// NOTE: if we decide to hide ribbons, uncomment the visibility 
+		// 		test down in the code...
 		.on('preCenteringRibbon', function(evt, ribbon, image){
 			var r = getRibbonIndex(ribbon)
 
@@ -98,18 +100,32 @@ function setupDataBindings(viewer){
 			// NOTE: we are accounting for position relative to image... 
 			// NOTE: we do not need to account for image height because 
 			// 		of origin and vertical-align... (check)
-			// XXX also check for visibility... (???)
 			var R = $('.viewer').height()/2
 			var d = Math.abs(getRelativeVisualPosition(image, ribbon).top)
 			if( d >= R ){
 				return
 			}
 
+			/* NOTE: this is commented out as it is not really needed now
+			 * 		uncomment if a need arises...
+			// skip ribbons that are not visible or are not displayed...
+			// NOTE: we do not make an attempt to test each and every 
+			// 		way a ribbon can be hidden...
+			if(ribbon.css('visibility') == 'hidden' 
+					|| ribbon.css('display') == 'none'
+					|| ribbon.css('opacity') == 0){
+				return
+			}
+			*/
+
 			// prepare for loading...
 			var gid = getImageGID(image)
 			var gr = DATA.ribbons[r]
 
+			// NOTE: this can return null in certain cases (see docs)
 			var gid_before = getGIDBefore(gid, r)
+			// we'll set the image to the first if the align target is 
+			// before it...
 			var img_before = gid_before == null 
 				? ribbon.find('.image').first() 
 				: getImageBefore(image, ribbon)
@@ -119,10 +135,10 @@ function setupDataBindings(viewer){
 			screen_size = screen_size < 1 ? 1 : screen_size
 			var load_frame_size = Math.round(screen_size * LOAD_SCREENS)
 
-			// either current image is loaded or we are at head...
+			// target image is loaded...
 			if(gid_before == getImageGID(img_before)){
-				var roll_frame_size = Math.ceil(load_frame_size / 3)
-				var threshold = Math.floor(load_frame_size / 4) 
+				var roll_frame_size = Math.ceil(load_frame_size * ROLL_FRAME)
+				var threshold = Math.floor(load_frame_size * LOAD_THRESHOLD) 
 				threshold = threshold < 1 ? 1 : threshold
 
 				var head = img_before.prevAll('.image').length

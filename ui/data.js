@@ -15,7 +15,21 @@ var APP_NAME = 'ImageGrid.Viewer'
 
 var DATA_ATTR = 'DATA'
 
+// Loader configuration...
+//
+//		LOAD_SCREENS	
+// 	|<---------------------->|
+// 	ooooooooooooXooooooooooooo
+// 					 |<----->|<------------>|
+// 						^	   ROLL_FRAME			  
+// 		LOAD_THRESHOLD -+
+//
+// number of screens to keep loaded...
 var LOAD_SCREENS = 6
+// size of the frame to load relative to LOAD_SCREENS
+var ROLL_FRAME = 1/3
+// the threshold size relative to LOAD_SCREENS
+var LOAD_THRESHOLD = 1/4
 
 var DEFAULT_SCREEN_IMAGES = 4
 var MAX_SCREEN_IMAGES = 12
