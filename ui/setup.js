@@ -161,8 +161,8 @@ function setupDataBindings(viewer){
 				} else if(!at_start && head < threshold){
 					var rolled = rollImages(-roll_frame_size, ribbon)
 
-				} else {
-					console.log('>>> skipping:', r)
+				//} else {
+				//	console.log('>>> skipping:', r)
 				}
 
 			// we jumped, load new set...
@@ -215,7 +215,7 @@ function setupDataBindings(viewer){
 		})
 
 		.on('fittingImages', function(evt, n){
-			console.log('!!!! fittingImages')
+			//console.log('!!!! fittingImages')
 			// load correct amount of images in each ribbon!!!
 			var screen_size = getScreenWidthInImages()
 			var gid = getImageGID()
