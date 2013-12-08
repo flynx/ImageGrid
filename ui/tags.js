@@ -25,11 +25,16 @@ function buildTagsFromImages(images){
 /*********************************************************************/
 
 function addTag(tags, gid, tagset, images){
-	tags = typeof(tag) == typeof('str') ? [ tags ] : tag
+	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
 	gid = gid == null ? getImageGID() : gid
 	tagset = tagset == null ? TAGS : tagset
 	images = images == null ? IMAGES : images
-	
+
+	var img = images[gid]
+	if(img.tags == null){
+		img.tags = []
+	}
+
 	// add tags to tagset...
 	tags.map(function(tag){
 		var set = tagset[tag]
@@ -37,13 +42,15 @@ function addTag(tags, gid, tagset, images){
 			set = []
 			tagset[tag] = set
 		}
-		set.push(tag)
-		set.sort()
-	})
+		if(set.indexOf(tag) < 0){
+			set.push(tag)
+			set.sort()
+		}
 
-	// add tag to image...
-	var img = images[gid]
-	img.tags = img.tags == null ? tags : img.tags.concat(tags)
+		if(img.tags.indexOf(tag) < 0){
+			img.tags.push(tag)
+		}
+	})
 
 	// XXX hardcoded and not customizable...
 	IMAGES_UPDATED.push(gid)
@@ -51,7 +58,7 @@ function addTag(tags, gid, tagset, images){
 
 
 function removeTag(tags, gid, tagset, images){
-	tags = typeof(tag) == typeof('str') ? [ tags ] : tag
+	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
 	gid = gid == null ? getImageGID() : gid
 	tagset = tagset == null ? TAGS : tagset
 	images = images == null ? IMAGES : images
@@ -63,9 +70,10 @@ function removeTag(tags, gid, tagset, images){
 	tags.map(function(tag){
 		var set = tagset[tag]
 		if(set != null && set.indexOf(tag) >= 0){
-			updated = true
-
 			set.splice(set.indexOf(tag), 1)
+		}
+		if(img.tags != null && img.tags.indexOf(tag) >= 0){
+			updated = true
 			img.tags.splice(img.tags.indexOf(tag), 1)
 
 			// clear the tags...
@@ -116,10 +124,11 @@ function selectByTags(tags, tagset){
 }
 
 
-function getTags(){
+function getTags(gid){
 }
 
 
+// XXX don't remember the semantics...
 function getRelatedTags(){
 }
 

@@ -1203,6 +1203,8 @@ function showImageInfo(){
 	var comment = data.comment
 	comment = comment == null ? '' : comment
 	comment = comment.replace(/\n/g, '<br>')
+	var tags = data.tags
+	tags = tags == null ? '' : tags.join(', ')
 
 	return formDialog(null,
 			('<div>'+
@@ -1225,6 +1227,7 @@ function showImageInfo(){
 					// XXX this expanding to a too big size will mess up the screen...
 					// 		add per editable and global dialog max-height and overflow
 					'<tr><td>Comment: </td><td class="comment" contenteditable>'+ comment +'</td></tr>'+
+					'<tr><td>Tags: </td><td class="tags" contenteditable>'+ tags +'</td></tr>'+
 				'</table>'+
 				'<br>'+
 			'</div>'),
@@ -1246,8 +1249,23 @@ function showImageInfo(){
 				IMAGES_UPDATED.push(gid)
 			}
 
-			// XXX tags...
-			// XXX
+			// tags...
+			var ntags = form.find('.tags').text().trim()
+			if(ntags != tags){
+				ntags = ntags.split(/\s*,\s*/)
+
+				// remove...
+				var rtags = []
+				data.tags.map(function(tag){
+					if(ntags.indexOf(tag) < 0){
+						rtags.push(tag)
+					}
+				})
+				removeTag(rtags, gid)
+
+				// add...
+				addTag(ntags, gid)
+			}
 		})
 }
 
