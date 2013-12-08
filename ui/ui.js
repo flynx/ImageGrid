@@ -1254,17 +1254,7 @@ function showImageInfo(){
 			if(ntags != tags){
 				ntags = ntags.split(/\s*,\s*/)
 
-				// remove...
-				var rtags = []
-				data.tags.map(function(tag){
-					if(ntags.indexOf(tag) < 0){
-						rtags.push(tag)
-					}
-				})
-				removeTag(rtags, gid)
-
-				// add...
-				addTag(ntags, gid)
+				updateTags(ntags, gid)
 			}
 		})
 }
