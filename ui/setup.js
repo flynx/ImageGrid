@@ -95,30 +95,6 @@ function setupDataBindings(viewer){
 				return 
 			}
 
-			/* NOTE: this is not really needed as we are skipping this stuff 
-			// 		in centerRibbons(...)
-			// skip the whole thing if the ribbon is not visible, i.e. outside
-			// of viewer area...
-			var R = $('.viewer').height()/2
-			var h = image.height()
-			var d = Math.abs(getRelativeVisualPosition(image, ribbon).top)
-			if( d - h/2 >= R ){
-				return
-			}
-			*/
-
-			/* NOTE: this is commented out as it is not really needed now
-			 * 		uncomment if a need arises...
-			// skip ribbons that are not visible or are not displayed...
-			// NOTE: we do not make an attempt to test each and every 
-			// 		way a ribbon can be hidden...
-			if(ribbon.css('visibility') == 'hidden' 
-					|| ribbon.css('display') == 'none'
-					|| ribbon.css('opacity') == 0){
-				return
-			}
-			*/
-
 			// prepare for loading...
 			var gid = getImageGID(image)
 			var gr = DATA.ribbons[r]
