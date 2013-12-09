@@ -16,11 +16,6 @@ function makePanel(title, open, editable_title){
 	var panel = $('<details/>')
 		.prop('open', open == null ? true : open)
 		.addClass('panel noScroll')
-		.css({
-			position: 'absolute',
-			top: '100px',
-			left: '100px',
-		})
 		.append($('<summary>'+title+'</summary>')
 			.attr({
 				contenteditable: editable_title == null ? 'false' : 'true',
@@ -102,8 +97,6 @@ function makeSubPanel(title, open, parent){
 
 	return sub_panel
 }
-
-
 
 
 
