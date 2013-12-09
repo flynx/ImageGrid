@@ -18,13 +18,30 @@ TAGS = {
 
 /*********************************************************************/
 
-function buildTagsFromImages(images){
+function buildTagsFromImages(images, tagset){
+	tagset = tagset == null ? TAGS : tagset
+	images = images == null ? IMAGES : images
+
+	for(gid in images){
+		var tags = images[gid].tags
+		if(tags == null){
+			continue
+		}
+		tags.map(function(tag){
+			if(tagset[tag] == null){
+				tagset[tag] = []
+			}
+			tagset[tag].push(gid)
+		})
+	}
 }
+
 
 // XXX
 function normalizeTag(tag){
 	return tag.trim()
 }
+
 
 
 /*********************************************************************/
@@ -137,19 +154,25 @@ function updateTags(tags, gid, tagset, images){
 // this implements the AND selector...
 // NOTE: do not like this algorithm as it can get O(n^2)-ish
 function selectByTags(tags, tagset){
+	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
+	tagset = tagset == null ? TAGS : tagset
+
 	var subtagset = []
 	var res = []
 
 	// populate the subtagset...
 	tags.map(function(tag){
+		if(tagset[tag] == null){
+			return
+		}
 		subtagset.push(tagset[tag])
 	})
 	subtagset.sort(function(a, b){ 
-		return a.length - b.length 
+		return b.length - a.length 
 	})
 
 	// set the res to the shortest subset...
-	var cur = subtagset.pop().splice()
+	var cur = subtagset.pop().slice()
 
 	// filter out the result...
 	cur.map(function(gid){
