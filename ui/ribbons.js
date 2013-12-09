@@ -703,17 +703,38 @@ function centerRibbon(ribbon, image, mode){
 
 
 // a shorthand...
-function centerRibbons(mode, no_skip_current){
+function centerRibbons(mode, no_skip_current, no_skip_hidden){
+	var R = $('.viewer').height()/2
+	var cur = getImage()
+	var h = cur.height()
+
 	return $('.ribbon')
 		.each(function(){ 
+			var ribbon = $(this)
+
 //			// skip empty ribbons...
 //			if($(this).find('.image').length == 0){
 //				return
 //			}
-			if(no_skip_current == true && $(this).find('.current.image').length > 0){
+
+			// skip ribbon containing current image...
+			if(no_skip_current == true && ribbon.find('.current.image').length > 0){
 				return
 			}
-			centerRibbon($(this), null, mode) 
+
+			// skip ribbons outside of the viewer...
+			// NOTE: we are accounting for position relative to image... 
+			// NOTE: we need to factor in image height as the distance is 
+			// 		between cleanly ribbon centers will mean that half 
+			// 		hidden ribbons will not get updated...
+			if(no_skip_hidden != true){
+				var d = Math.abs(getRelativeVisualPosition(cur, ribbon).top)
+				if( d - h/2 >= R ){
+					return
+				}
+			}
+
+			centerRibbon(ribbon, null, mode) 
 		})
 }
 

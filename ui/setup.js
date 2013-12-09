@@ -95,16 +95,17 @@ function setupDataBindings(viewer){
 				return 
 			}
 
+			/* NOTE: this is not really needed as we are skipping this stuff 
+			// 		in centerRibbons(...)
 			// skip the whole thing if the ribbon is not visible, i.e. outside
 			// of viewer area...
-			// NOTE: we are accounting for position relative to image... 
-			// NOTE: we do not need to account for image height because 
-			// 		of origin and vertical-align... (check)
 			var R = $('.viewer').height()/2
+			var h = image.height()
 			var d = Math.abs(getRelativeVisualPosition(image, ribbon).top)
-			if( d >= R ){
+			if( d - h/2 >= R ){
 				return
 			}
+			*/
 
 			/* NOTE: this is commented out as it is not really needed now
 			 * 		uncomment if a need arises...
