@@ -38,6 +38,22 @@ function _removeMark(cls, gid, image){
 }
 
 
+function makeMarkToggler(img_class, mark_class, evt_name){
+	return createCSSClassToggler(
+		'.current.image', 
+		img_class,
+		function(action, elem){
+			toggleMarkesView('on')
+			if(action == 'on'){
+				_addMark(mark_class, getImageGID(elem), elem)
+			} else {
+				_removeMark(mark_class, getImageGID(elem), elem)
+			}
+			$('.viewer').trigger(evt_name, [elem, action])
+		})
+}
+
+
 // NOTE: to disable MARKED cleanout set no_cleanout_marks to true.
 // NOTE: MARKED may contain both gids that are not loaded and that do 
 // 		not exist, as there is no way to distinguish between the two 
@@ -102,18 +118,8 @@ var toggleMarkesView = createCSSClassToggler(
 * Actions
 */
 
-var toggleImageMark = createCSSClassToggler(
-	'.current.image', 
-	'marked',
-	function(action, elem){
-		toggleMarkesView('on')
-		if(action == 'on'){
-			_addMark('selected', getImageGID(elem), elem)
-		} else {
-			_removeMark('selected', getImageGID(elem), elem)
-		}
-		$('.viewer').trigger('togglingMark', [elem, action])
-	})
+
+var toggleImageMark = makeMarkToggler('marked', 'selected', 'togglingMark')
 
 
 // mode can be:

@@ -1,0 +1,43 @@
+<html>
+
+<link rel="stylesheet" type="text/css" href="../css/editor.css">
+
+<script src="../ext-lib/jquery.js"></script>
+<script src="../ext-lib/jquery-ui.js"></script>
+<script src="../lib/panels.js"></script>
+<script src="../lib/editor.js"></script>
+
+<script>
+
+$(function(){
+
+	var panel = makePanel('Test Panel A', true)
+
+
+	makeSubPanel('Test Sub Panel A', true, panel)
+		.find('.content')
+			.html('<h1>Panel A</h1>')
+
+	makeSubPanel('Test Sub Panel B', true, panel)
+		.find('.content')
+			.html('<h2>Panel B</h2>')
+
+	makeSubPanel('Test Sub Panel C', true, panel)
+		.find('.content')
+			.html('<h3>Panel C</h3>')
+
+
+	$('body')
+		.append(panel)	
+		//.append(makePanel('Test Panel B', true))
+		//.append(makePanel('Test Panel C', true))
+
+})
+
+</script>
+
+<body>
+
+</body>
+</html>
+<!-- vim:set ts=4 sw=4 : -->
