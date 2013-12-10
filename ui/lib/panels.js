@@ -25,7 +25,7 @@ function makePanel(title, open, editable_title, remove_on_empty){
 				.click(function(){
 					panel
 						.trigger('panelClosing')
-						.hide()
+						.remove()
 					return false
 				})
 				.html('&times;')))
@@ -65,19 +65,22 @@ function makePanel(title, open, editable_title, remove_on_empty){
 				console.log('stop (outside: '+_outside+')')
 				// do this only when dropping outside the panel...
 				if(_outside){
-					makePanel()
+					var new_panel = makePanel()
 						// XXX adjust this to scale...
 						// XXX adjust this to parent offset...
 						.css(ui.offset)
 						.appendTo(panel.parent())
-						.find('.panel-content')
+					new_panel.find('.panel-content')
 							.append(ui.item)
 					_outside = false
+					panel.trigger('newPanel', [new_panel])
 				}
 
 				// remove the panel when it runs out of sub-panels...
 				if(remove_on_empty && panel.find('.sub-panel').length == 0){
-					panel.remove()
+					panel
+						.trigger('panelClosing')
+						.remove()
 				}
 			},
 			// XXX are these the correct events???

@@ -9,6 +9,25 @@
 
 /*********************************************************************/
 
+function _setupPanel(panel){
+	return panel
+		.on('panelClosing', function(){
+			if($('.panel').length <= 1){
+				toggleEditor('off')
+			}
+		})
+		.on('newPanel', function(evt, panel){
+			_setupPanel(panel)
+		})
+		// make clicks on unfocusable elements remove focus...
+		.click(function(){
+			if(event.target != $('.panel :focus')[0]){
+				$('.panel :focus').blur()
+			}
+		})
+}
+
+
 var toggleEditor = createCSSClassToggler(
 		'.viewer', 
 		'.editor-visible',
@@ -19,7 +38,7 @@ var toggleEditor = createCSSClassToggler(
 				// create the editor if this is first init...
 				if(ed.length == 0){
 					$('.viewer')
-						.append(makeEditorControls('.current.image')
+						.append(_setupPanel(makeEditorControls('.current.image'))
 							//.draggable('option', 'snap', '.viewer')
 							.css({
 								// prevent the editor from moving under 
@@ -28,18 +47,9 @@ var toggleEditor = createCSSClassToggler(
 								'margin-top': '20px',
 								top: '50px',
 								left: '5px',
-							})
+							}))
 							// XXX add handlers for saving data to images...
 							// XXX
-							// make clicks on unfocusable elements remove focus...
-							.on('panelClosing', function(){
-								toggleEditor('off')
-							})
-							.click(function(){
-								if(event.target != $('.panel :focus')[0]){
-									$('.panel :focus').blur()
-								}
-							}))
 						// setup the event to update the editor...
 						.on('focusingImage', function(){
 							if(toggleEditor('?') == 'on'){
@@ -58,7 +68,7 @@ var toggleEditor = createCSSClassToggler(
 
 			// hide...
 			} else {
-				ed.hide()
+				ed.remove()
 			}
 		})
 
