@@ -102,7 +102,7 @@ function setupDataBindings(viewer){
 			// NOTE: this can return null in certain cases (see docs)
 			var gid_before = getGIDBefore(gid, r)
 			// we'll set the image to the first if the align target is 
-			// before it...
+			// before it (i.e. gid_before is null)...
 			var img_before = gid_before == null 
 				? ribbon.find('.image').first() 
 				: getImageBefore(image, ribbon)

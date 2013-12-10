@@ -247,7 +247,7 @@ function makeLogRange(text, filter, target){
 
 
 function makeFilterPanel(parent, target){
-	return makeSubPanel('Filters', true, parent)
+	return makeSubPanel('Edit: Filters', true, parent)
 		.find('.sub-panel-content')
 			.append($('<div class="filter-list"/>')
 				//.append(makeLogRange('Gamma:', 'gamma', target))
@@ -285,7 +285,7 @@ function makeFilterPanel(parent, target){
 }
 
 function makeSnapshotsPanel(parent, target){
-	return makeSubPanel('Snapshots', true, parent)
+	return makeSubPanel('Edit: Snapshots', true, parent)
 		.find('.sub-panel-content')
 			.append($('<div class="states"/>'))
 			.append($('<hr>'))

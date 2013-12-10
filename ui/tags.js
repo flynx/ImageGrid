@@ -192,12 +192,16 @@ function selectByTags(tags, tagset){
 
 
 function getTags(gid){
+	// XXX should we do any more checking here?
+	return IMAGES[gid].tags
 }
 
 
+/*
 // XXX don't remember the semantics...
 function getRelatedTags(){
 }
+*/
 
 
 
