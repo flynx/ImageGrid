@@ -8,11 +8,17 @@
 
 
 /*********************************************************************/
+// XXX these are a bit too general... 
+// 		...the editor needs to speak in terms of the editor only...
+// 		right now the editor mode depends on presence of panels and not
+// 		the editor itself...
 
 function _setupPanel(panel){
 	return panel
 		.on('panelClosing', function(){
 			if($('.panel').length <= 1){
+				// XXX when not only the editor is using the panels, this
+				// 		is not the correct way to go...
 				toggleEditor('off')
 			}
 		})
@@ -32,6 +38,8 @@ var toggleEditor = createCSSClassToggler(
 		'.viewer', 
 		'.editor-visible',
 		function(action){
+			// XXX when not only the editor is using the panels, this
+			// 		is not the correct way to go...
 			var ed = $('.panel')
 
 			if(action == 'on'){

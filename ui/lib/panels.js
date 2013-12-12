@@ -9,7 +9,7 @@
 
 /*********************************************************************/
 
-function makePanel(title, open, editable_title, remove_on_empty){
+function makePanel(title, open, editable_title, keep_empty){
 	title = title == null ? '&nbsp;' : title
 
 	// tool panel...
@@ -43,7 +43,6 @@ function makePanel(title, open, editable_title, remove_on_empty){
 			position: 'absolute',
 		})
 
-	var _outside = false
 
 	// wrapper for sub-panels...
 	var content = $('<span class="panel-content content">')
@@ -51,20 +50,16 @@ function makePanel(title, open, editable_title, remove_on_empty){
 			forcePlaceholderSize: true,
 			opacity: 0.7,
 			connectWith: '.panel-content',
-			zIndex: 9999,
 
 			start: function(e, ui){
-				console.log('start (outside: '+_outside+')')
-				_outside = false
+				ui.item.data('isoutside', false)
 				ui.placeholder.height(ui.helper.outerHeight());
 				ui.placeholder.width(ui.helper.outerWidth());
 			},
-			// XXX this is not done...
 			// create a new panel when dropping outside of curent panel...
-			stop: function(e, ui){
-				console.log('stop (outside: '+_outside+')')
+			beforeStop: function(e, ui){
 				// do this only when dropping outside the panel...
-				if(_outside){
+				if(ui.item.data('isoutside')){
 					var new_panel = makePanel()
 						// XXX adjust this to scale...
 						// XXX adjust this to parent offset...
@@ -72,25 +67,30 @@ function makePanel(title, open, editable_title, remove_on_empty){
 						.appendTo(panel.parent())
 					new_panel.find('.panel-content')
 							.append(ui.item)
-					_outside = false
 					panel.trigger('newPanel', [new_panel])
 				}
 
 				// remove the panel when it runs out of sub-panels...
-				if(remove_on_empty && panel.find('.sub-panel').length == 0){
+				if(!keep_empty && panel.find('.sub-panel').length == 0){
 					panel
 						.trigger('panelClosing')
 						.remove()
 				}
+
+				ui.item.data('isoutside', false)
 			},
-			// XXX are these the correct events???
+			receive: function(e, ui){
+				console.log('receive')
+				ui.item.data('isoutside', false)
+			},
 			over: function(e, ui){
 				console.log('over')
-				_outside = false
+				ui.item.data('isoutside', false)
 			},
+			// XXX this is triggered when the sorted object is dropped...
 			out: function(e, ui){
 				console.log('out')
-				_outside = true
+				ui.item.data('isoutside', true)
 			},
 		})
 		.appendTo(panel)
