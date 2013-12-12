@@ -578,7 +578,14 @@ var KEYBOARD_CONFIG = {
 		Enter: doc('Toggle single image view', 
 				function(){ toggleSingleImageMode() }),
 
-		B: doc('Toggle theme', function(){ toggleTheme() }),
+		B: {
+				default: doc('Toggle theme', 
+					function(){ toggleTheme() }),
+				ctrl: doc('Toggle bookmark', 
+					function(){ toggleBookmark() }),
+			},
+		'[': doc('Previous bookmarked image', prevBookmark),
+		']': doc('Next bookmarked image', nextBookmark),
 
 		S: {
 				default: doc('Start slideshow', 

@@ -318,51 +318,76 @@ function saveFileImages(name){
 }
 
 
+function makeBasicLoader(title, file_dfl, file_pattern, finalize){
+	return function(path){
+		var res = $.Deferred()
+		// default locations...
+		if(path == null){
+			var base = normalizePath(CACHE_DIR_VAR)
+			var loader = loadLatestFile(base, 
+					file_dfl, 
+					file_pattern,
+					null,
+					[])
+		
+		// explicit path...
+		// XXX need to account for paths without a CACHE_DIR
+		} else {
+			path = normalizePath(path)
+			var base = path.split(CACHE_DIR)[0]
+			//base = normalizePath(path +'/'+ CACHE_DIR_VAR)
+			base = path +'/'+ CACHE_DIR
+
+			// XXX is this correct???
+			var loader = loadLatestFile(base, 
+					path.split(base)[0], 
+					RegExp(path.split(base)[0]),
+					null,
+					[])
+		}
+
+		bubbleProgress(title, loader, res)
+
+		res.done(finalize)
+
+		return res
+	}
+}
+
 // Load image marks form file
 //
 // NOTE: if no marks are found then set them to []
-function loadFileMarks(path){
-	var res = $.Deferred()
-	// default locations...
-	if(path == null){
-		var base = normalizePath(CACHE_DIR_VAR)
-		var loader = loadLatestFile(base, 
-				MARKED_FILE_DEFAULT, 
-				MARKED_FILE_PATTERN,
-				null,
-				[])
-	
-	// explicit path...
-	// XXX need to account for paths without a CACHE_DIR
-	} else {
-		path = normalizePath(path)
-		var base = path.split(CACHE_DIR)[0]
-		//base = normalizePath(path +'/'+ CACHE_DIR_VAR)
-		base = path +'/'+ CACHE_DIR
-
-		// XXX is this correct???
-		var loader = loadLatestFile(base, 
-				path.split(base)[0], 
-				RegExp(path.split(base)[0]),
-				null,
-				[])
-	}
-
-	bubbleProgress('Marks', loader, res)
-
-	res.done(function(images){ 
-		MARKED = images 
-	})
-
-	return res
-}
+var loadFileMarks = makeBasicLoader(
+		'Marks', 
+		MARKED_FILE_DEFAULT, 
+		MARKED_FILE_PATTERN, 
+		function(data){ 
+			MARKED = data
+		})
 
 
 // Save image marks to file
 function saveFileMarks(name){
 	name = name == null ? normalizePath(CACHE_DIR_VAR +'/'+ Date.timeStamp()) : name
 
-	dumpJSON(name + '-marked.json', MARKED)
+	dumpJSON(name + '-' + MARKED_FILE_DEFAULT, MARKED)
+}
+
+
+var loadFileBookmarks = makeBasicLoader(
+		'Bookmarks', 
+		BOOKMARKS_FILE_DEFAULT, 
+		BOOKMARKS_FILE_PATTERN, 
+		function(data){ 
+			BOOKMARKS = data[0] == null ? [] : data[0]
+			BOOKMARKS_DATA = data[1] == null ? {} : data[1]
+		})
+
+
+function saveFileBookmarks(name){
+	name = name == null ? normalizePath(CACHE_DIR_VAR +'/'+ Date.timeStamp()) : name
+
+	dumpJSON(name + '-' + BOOKMARKS_FILE_DEFAULT, [BOOKMARKS, BOOKMARKS_DATA])
 }
 
 
@@ -414,7 +439,9 @@ function loadFileState(path, prefix){
 							//		: null), res, true),
 						// load marks if available...
 						bubbleProgress(prefix,
-							loadFileMarks(), res, true))
+							loadFileMarks(), res, true),
+						bubbleProgress(prefix,
+							loadFileBookmarks(), res, true))
 					.done(function(){
 						reloadViewer()
 						res.resolve()
@@ -458,6 +485,7 @@ function saveFileState(name, no_normalize_path){
 	dumpJSON(name + '-data.json', data)
 	// XXX do we need to do this???
 	saveFileMarks(name)
+	saveFileBookmarks(name)
 
 	// save the updated images...
 	if(IMAGES_UPDATED.length > 0){

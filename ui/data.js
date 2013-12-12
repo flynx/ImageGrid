@@ -146,9 +146,6 @@ var IMAGES_FILE_DEFAULT = 'images.json'
 var IMAGES_FILE_PATTERN = /^[0-9]*-images.json$/
 var IMAGES_DIFF_FILE_PATTERN = /^[0-9]*-images-diff.json$/
 
-var MARKED_FILE_DEFAULT = 'marked.json'
-var MARKED_FILE_PATTERN = /^[0-9]*-marked.json$/
-
 var DATA_FILE_DEFAULT = 'data.json'
 var DATA_FILE_PATTERN = /^[0-9]*-data.json$/
 
@@ -169,6 +166,8 @@ var SYNC_IMG_LOADER = false
 // 	setupBinding(viewer) -> viewer
 //
 var SETUP_BINDINGS = []
+
+var IMAGE_UPDATERS = []
 
 
 
@@ -508,9 +507,12 @@ function getGIDBefore(gid, ribbon, search, data){
 	// XXX get a ribbon without getting into DOM...
 	// 		...dependency leek...
 	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
-	search = search == null ? binSearch : search
-	//search = search == null ? match2(linSearch, binSearch) : search
 	ribbon = typeof(ribbon) == typeof(123) ? data.ribbons[ribbon] : ribbon
+	// get the current ribbon if gid is not in any of the loaded 
+	// ribbons (crop mode)...
+	ribbon = ribbon == null ? data.ribbons[getGIDRibbonIndex(null, data)] : ribbon
+	//search = search == null ? match2(linSearch, binSearch) : search
+	search = search == null ? binSearch : search
 	var order = data.order
 
 	var target = order.indexOf(gid)
@@ -1128,16 +1130,9 @@ function updateImageIndicators(gid, image){
 	gid = gid == null ? getImageGID() : gid
 	image = image == null ? getImage() : $(image)
 
-	// marks...
-	if(MARKED.indexOf(gid) != -1){
-		image.addClass('marked')
-		// XXX
-		_addMark('selected', gid, image)
-	} else {
-		image.removeClass('marked')
-		// XXX
-		_removeMark('selected', gid, image)
-	}
+	IMAGE_UPDATERS.forEach(function(update){
+		update(gid, image)
+	})
 
 	return image
 }
@@ -1732,6 +1727,7 @@ function showImage(gid){
 
 	// target is already loaded...
 	} else {
+		// XXX this does not load images correctly at times...
 		centerView(focusImage(img))
 		centerRibbons()
 	}

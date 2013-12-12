@@ -6,6 +6,9 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var MARKED_FILE_DEFAULT = 'marked.json'
+var MARKED_FILE_PATTERN = /^[0-9]*-marked.json$/
+
 
 
 /**********************************************************************
@@ -19,8 +22,9 @@ function _addMark(cls, gid, image){
 	var mark = $('.mark.'+cls+'.'+gid)
 
 	if(mark.length == 0){
-		mark = $('<div class="mark selected"/>')
+		mark = $('<div class="mark"/>')
 			.addClass(gid)
+			.addClass(cls)
 			.insertAfter(image)
 	} 
 	return mark
@@ -74,6 +78,34 @@ function makeMarkToggler(img_class, mark_class, evt_name){
 			$('.viewer').trigger(evt_name, [elem, action])
 		})
 }
+
+
+function makeMarkUpdater(img_class, mark_class, test){
+	return function(gid, image){
+		// marks...
+		if(test(gid)){
+			image.addClass(img_class)
+			_addMark(mark_class, gid, image)
+		} else {
+			image.removeClass(img_class)
+			_removeMark(mark_class, gid, image)
+		}
+		return image
+	}
+}
+
+
+/**********************************************************************
+* Basic marks...
+*/
+
+var updateSelectedImageMark = makeMarkUpdater(
+		'marked',
+		'selected', 
+		function(gid){ 
+			return MARKED.indexOf(gid) > -1 
+		})
+IMAGE_UPDATERS.push(updateSelectedImageMark)
 
 
 // NOTE: to disable MARKED cleanout set no_cleanout_marks to true.

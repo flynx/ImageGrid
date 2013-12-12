@@ -604,12 +604,14 @@ button:hover {
 .viewer:not(.marks-visible) .mark {
   display: none;
 }
+.mark.bookmark,
 .mark.selected {
   width: 0px;
   margin-left: 0px;
   border: none;
   overflow: visible;
 }
+.mark.bookmark:after,
 .mark.selected:after {
   display: block;
   position: absolute;
@@ -630,6 +632,10 @@ button:hover {
 }
 .marks-visible.single-image-mode.viewer .mark:after {
   display: none;
+}
+.mark.bookmark:after {
+  background: yellow;
+  left: -25;
 }
 /****************************************************** Image info ***/
 .inline-image-info {
