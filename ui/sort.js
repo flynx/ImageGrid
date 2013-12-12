@@ -191,6 +191,7 @@ function sortImages(cmp, reverse){
 		DATA.order.reverse()
 	}
 	updateRibbonOrder()
+	$('.viewer').trigger('sortedImages', [cmp])
 }
 
 

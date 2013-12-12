@@ -68,6 +68,11 @@ function updateContextIndicators(image){
 //
 function setupDataBindings(viewer){
 	viewer = viewer == null ? $('.viewer') : viewer
+
+	SETUP_BINDINGS.forEach(function(setup){
+		setup(viewer)
+	})
+
 	viewer
 		.click(function(){
 			if($('.ribbon').length == 0){
@@ -316,55 +321,6 @@ function setupDataBindings(viewer){
 
 				if(IMAGES_UPDATED.indexOf(gid) == -1){
 					IMAGES_UPDATED.push(gid)
-				}
-			})
-		})
-
-
-		// marks...
-		// XXX toggle marking a block is not yet supported...
-		.on('togglingMark', function(evt, img, action){
-			var gid = getImageGID(img) 
-
-			// add marked image to list...
-			if(action == 'on'){
-				 MARKED.indexOf(gid) == -1 && MARKED.push(gid)
-
-			// remove marked image from list...
-			} else {
-				MARKED.splice(MARKED.indexOf(gid), 1)
-			}
-		})
-		.on('removeingRibbonMarks', function(evt, ribbon){
-			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKED.indexOf(e)
-				if(i != -1){
-					MARKED.splice(i, 1)
-				}
-			})
-		})
-		.on('removeingAllMarks', function(evt){
-			MARKED.splice(0, MARKED.length)
-		})
-		.on('markingRibbon', function(evt, ribbon){
-			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKED.indexOf(e)
-				if(i == -1){
-					MARKED.push(e)
-				}
-			})
-		})
-		.on('markingAll', function(evt){
-			MARKED.splice(0, MARKED.length)
-			MARKED.concat(DATA.order)
-		})
-		.on('invertingMarks', function(evt, ribbon){
-			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKED.indexOf(e)
-				if(i == -1){
-					MARKED.push(e)
-				} else {
-					MARKED.splice(i, 1)
 				}
 			})
 		})

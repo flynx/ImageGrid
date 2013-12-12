@@ -38,6 +38,28 @@ function _removeMark(cls, gid, image){
 }
 
 
+// Make a mark toggler
+//
+// The toggler will:
+// 	- toggle img_class on the target image
+// 	- add/remove a mark element after the image
+// 	- toggle mark_class on the mark element
+// 	- trigger the evt_name on the viewer passing it:
+// 		- target image
+// 		- action ('on' on 'off')
+//
+// The actual toggler is built with createCSSClassToggler(..), see its
+// docs for protocol descrittion.
+//
+// The resulting toggled, by default, marks the current image 
+// (.current.image), but can be passed a different image as first 
+// argument.
+//
+// NOTE: when passing an alternative image as an argument, the second 
+// 		argument MUST also be passed. it can be one of:
+// 			- 'on'		: force create mark
+// 			- 'off'		: force remove mark
+// 			- 'next'	: toggle next state (default)
 function makeMarkToggler(img_class, mark_class, evt_name){
 	return createCSSClassToggler(
 		'.current.image', 
@@ -346,6 +368,63 @@ function markImagesDialog(){
 			showStatusQ('Marking: canceled.')
 		})
 }
+
+
+/*********************************************************************/
+
+function setupMarks(viewer){
+	console.log('Marks: setup...')
+	return viewer
+		// marks...
+		// XXX toggle marking a block is not yet supported...
+		.on('togglingMark', function(evt, img, action){
+			var gid = getImageGID(img) 
+
+			// add marked image to list...
+			if(action == 'on'){
+				MARKED.indexOf(gid) == -1 && MARKED.push(gid)
+
+			// remove marked image from list...
+			} else {
+				MARKED.splice(MARKED.indexOf(gid), 1)
+			}
+		})
+		.on('removeingRibbonMarks', function(evt, ribbon){
+			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
+				var i = MARKED.indexOf(e)
+				if(i != -1){
+					MARKED.splice(i, 1)
+				}
+			})
+		})
+		.on('removeingAllMarks', function(evt){
+			MARKED.splice(0, MARKED.length)
+		})
+		.on('markingRibbon', function(evt, ribbon){
+			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
+				var i = MARKED.indexOf(e)
+				if(i == -1){
+					MARKED.push(e)
+				}
+			})
+		})
+		.on('markingAll', function(evt){
+			MARKED.splice(0, MARKED.length)
+			MARKED.concat(DATA.order)
+		})
+		.on('invertingMarks', function(evt, ribbon){
+			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
+				var i = MARKED.indexOf(e)
+				if(i == -1){
+					MARKED.push(e)
+				} else {
+					MARKED.splice(i, 1)
+				}
+			})
+		})
+}
+SETUP_BINDINGS.push(setupMarks)
+
 
 
 /**********************************************************************

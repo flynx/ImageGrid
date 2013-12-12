@@ -163,6 +163,14 @@ var UPDATE_SYNC = false
 var SYNC_IMG_LOADER = false
 
 
+// list of functions to setup different bindings
+//
+// each function must be of the form:
+// 	setupBinding(viewer) -> viewer
+//
+var SETUP_BINDINGS = []
+
+
 
 /**********************************************************************
 * Helpers
@@ -502,7 +510,7 @@ function getGIDBefore(gid, ribbon, search, data){
 	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
 	search = search == null ? binSearch : search
 	//search = search == null ? match2(linSearch, binSearch) : search
-	ribbon = data.ribbons[ribbon]
+	ribbon = typeof(ribbon) == typeof(123) ? data.ribbons[ribbon] : ribbon
 	var order = data.order
 
 	var target = order.indexOf(gid)
@@ -1712,6 +1720,24 @@ function preCacheAllRibbons(){
 /**********************************************************************
 * Actions...
 */
+
+function showImage(gid){
+	var img = getImage(gid)
+
+	// target image not loaded...
+	if(img.length == 0){
+		DATA.current = gid
+		reloadViewer()
+		img = getImage(gid)
+
+	// target is already loaded...
+	} else {
+		centerView(focusImage(img))
+		centerRibbons()
+	}
+	return img
+}
+
 
 // Sort the ribbons by DATA.order and re-render...
 //
