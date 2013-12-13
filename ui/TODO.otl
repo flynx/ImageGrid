@@ -108,18 +108,59 @@ Roadmap
 	
 
 
-[_] 29% Gen 3 current todo
-	[_] 58% High priority
+[_] 28% Gen 3 current todo
+	[_] 56% High priority
+		[_] 66% Bookmarks
+			[X] toggle
+			[X] save/load
+			[X] 100% navigate
+				[X] next/prev
+			[X] crop
+			[_] global
+			[_] 0% metadata
+				[_] comment
+				[_] tags
+		[_] 25% Panels
+			[_] bookmarks
+			[_] info
+				[_] general info
+				[_] comment
+			[_] tags
+				[_] tree
+				[_] cloud
+				[_] search
+			[X] editor
+				[X] filters
+				[X] snapshots
+		[_] BUG: showImage(..) does not load the ribbons correctly...
+		|
+		| Procedure:
+		| 	Load ribbon with ~28 images @ 4 images per screen width:
+		|	lastImage()
+		|	showImage(getImageGID(getRibbon().find('.image').first()))
+		| or:
+		| 	Load ribbon with ~28 images @ 4 images per screen width:
+		|	firstImage()
+		|	showImage(getImageGID(getRibbon().find('.image').last()))
+		|
+		| Expected:
+		| 	- ribbon loaded and fills screen
+		|
+		| Effect:
+		| 	- ribbon not loaded after current image
+		| 	- reloadViewer() loads the state correctly
+		|
 		[_] BUG: Something is causing previews to reload...
-		| procedure:
+		|
+		| Procedure:
 		| 	- moving left/right in one ribbon
 		| 	- adjacent ribbon is not moving
 		|
-		| effect:
-		| 	- previews get reloaded/redrawn
-		|
-		| expected:
+		| Expected:
 		| 	- all unmoving ribbons remain static
+		|
+		| Effect:
+		| 	- previews get reloaded/redrawn
 		|
 		[_] Polish: on LOCAL actions do ALL the loading in background...
 		| make the lags completely even...
@@ -447,6 +488,19 @@ Roadmap
 		[_] side-by side view...
 		[_] Simplify tool-tip structure in dialogs...
 		| might also bee good to unify tool-tips across the app...
+		[X] BUG: history dialog is focused on a disabled field...
+		| Procedure:
+		| 	- open a dir
+		| 	- rename dir
+		| 	- ctrl-H
+		|
+		| Expected:
+		| 	- current dir disabled and current
+		| 	- first enabled field focused/checked
+		|
+		| Result:
+		| 	- current dir is both focused/checked and disabled
+		|
 		[X] devise a better strategy to pruneBaseURLHistory(..)...
 		| currently it will remove anything that does not exist.
 		|
