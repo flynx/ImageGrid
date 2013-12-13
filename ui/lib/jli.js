@@ -65,6 +65,10 @@
 // 		this is due to several times I've repeated the same mistake of 
 // 		forgetting to write the classes without leading dots, the class 
 // 		list is not normalized...
+// NOTE: the toggler can be passed a non-jquery object, but then only an
+// 		explicit state is supported as the second argument, the reason 
+// 		being that we can not determain the current state without a propper
+// 		.hasClass(..) test...
 //
 //
 // This also takes one or two callbacks. If only one is given then it is

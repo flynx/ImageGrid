@@ -19,6 +19,11 @@ function _addMark(cls, gid, image){
 	gid = gid == null ? getImageGID() : gid
 	image = image == null ? getImage() : $(image)
 
+	// no image is loaded...
+	if(image.length == 0){
+		return
+	}
+
 	var mark = $('.mark.'+cls+'.'+gid)
 
 	if(mark.length == 0){
@@ -32,6 +37,11 @@ function _addMark(cls, gid, image){
 function _removeMark(cls, gid, image){
 	gid = gid == null ? getImageGID() : gid
 	image = image == null ? getImage() : $(image)
+
+	// no image is loaded...
+	if(image.length == 0){
+		return
+	}
 
 	var mark = $('.mark.'+cls+'.'+gid)
 
@@ -64,18 +74,35 @@ function _removeMark(cls, gid, image){
 // 			- 'on'		: force create mark
 // 			- 'off'		: force remove mark
 // 			- 'next'	: toggle next state (default)
+// NOTE: when passing this a gid, the 'next' action is not supported
 function makeMarkToggler(img_class, mark_class, evt_name){
 	return createCSSClassToggler(
 		'.current.image', 
 		img_class,
 		function(action, elem){
 			toggleMarkesView('on')
-			if(action == 'on'){
-				_addMark(mark_class, getImageGID(elem), elem)
+
+			// we got a gid...
+			if(elem.length == 0 && elem.selector in IMAGES){
+				var gid = elem.selector
+				elem = getImage(gid)
+				elem = elem.length == 0 ? null : elem
+
+			// we are given an image...
 			} else {
-				_removeMark(mark_class, getImageGID(elem), elem)
+				var gid = getImageGID(elem)
 			}
-			$('.viewer').trigger(evt_name, [elem, action])
+
+			// do this only of the image is loaded...
+			if(elem != null){
+				if(action == 'on'){
+					_addMark(mark_class, gid, elem)
+				} else {
+					_removeMark(mark_class, gid, elem)
+				}
+			}
+
+			$('.viewer').trigger(evt_name, [gid, action])
 		})
 }
 
@@ -241,22 +268,32 @@ function invertImageMarks(){
 // Toggle marks in the current continuous section of marked or unmarked
 // images...
 // XXX need to make this dynamic data compatible...
+// XXX this will mark the block ONLY IF it is loaded!!!
 function toggleImageMarkBlock(image){
 	if(image == null){
 		image = getImage()
 	}
-	//$('.viewer').trigger('togglingImageBlockMarks', [image])
+	var found = [false, false]
 	// we need to invert this...
 	var state = toggleImageMark()
-	var _convert = function(){
-		if(toggleImageMark(this, '?') == state){
-			// stop the iteration...
-			return false
+	var _convert = function(i){
+		return function(){
+			if(toggleImageMark(this, '?') == state){
+				// we found the end...
+				// NOTE: this will not be set if we reached the end of 
+				// 		the ribbon or the end of the loaded images...
+				found[i] = true
+				// stop the iteration...
+				return false
+			}
+			toggleImageMark(this, state)
 		}
-		toggleImageMark(this, state)
 	}
-	image.nextAll('.image').each(_convert)
-	image.prevAll('.image').each(_convert)
+	image.nextAll('.image').each(_convert(1))
+	image.prevAll('.image').each(_convert(0))
+
+	$('.viewer').trigger('togglingImageBlockMarks', [image, state, found])
+
 	return state
 }
 
@@ -408,10 +445,7 @@ function setupMarks(viewer){
 	console.log('Marks: setup...')
 	return viewer
 		// marks...
-		// XXX toggle marking a block is not yet supported...
-		.on('togglingMark', function(evt, img, action){
-			var gid = getImageGID(img) 
-
+		.on('togglingMark', function(evt, gid, action){
 			// add marked image to list...
 			if(action == 'on'){
 				MARKED.indexOf(gid) == -1 && MARKED.push(gid)
@@ -419,6 +453,44 @@ function setupMarks(viewer){
 			// remove marked image from list...
 			} else {
 				MARKED.splice(MARKED.indexOf(gid), 1)
+			}
+		})
+		.on('togglingImageBlockMarks', function(evt, img, state, found){
+			var gid = getImageGID(img)
+			var ribbon = DATA.ribbons[getRibbonIndex(img)]
+			var i = ribbon.indexOf(gid)
+
+			state = state == 'off' ? false : true
+
+			var _convert = function(_, e){
+				if(skipping && (MARKED.indexOf(e) >= 0) == state){
+					return
+				}
+				skipping = false
+				if((MARKED.indexOf(e) >= 0) == state){
+					return false
+				}
+				// do the toggle...
+				if(state){
+					MARKED.push(e)
+				} else {
+					MARKED.splice(MARKED.indexOf(e), 1)
+				}
+			}
+
+			// go left...
+			if(!found[0]){
+				var skipping = true
+				var left = ribbon.slice(0, i)
+				left.reverse()
+				$.each(left, _convert)
+			}
+
+			// go right...
+			if(!found[1]){
+				var skipping = true
+				var right = ribbon.slice(i)
+				$.each(right, _convert)
 			}
 		})
 		.on('removeingRibbonMarks', function(evt, ribbon){

@@ -167,6 +167,11 @@ var SYNC_IMG_LOADER = false
 //
 var SETUP_BINDINGS = []
 
+// list of function that update image state...
+//
+// each function must be of the form:
+// 	updateImage(gid, image) -> image
+//
 var IMAGE_UPDATERS = []
 
 
