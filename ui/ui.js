@@ -732,8 +732,8 @@ var FIELD_TYPES = {
 			var values = field.find('.value')
 				.attr('name', t)
 			// set the default...
-			if(values.filter(':checked').length == 0){
-				values.first()
+			if(values.filter(':checked:not([disabled])').length == 0){
+				values.filter(':not([disabled])').first()
 					.prop('checked', true)
 			}
 		},

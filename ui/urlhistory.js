@@ -185,16 +185,22 @@ function recentlyOpenedDialog(){
 	cfg[title] = BASE_URL_HISTORY.map(function(e){
 		// cleanup the urls...
 		var ee = e.replace('file:///', '')
+		var disabled = not_available.indexOf(e) >= 0
 
 		// mark disabled...
-		if(not_available.indexOf(e) >= 0){
+		if(disabled){
 			ee = '<span class="disabled-text">'+ee+'</span>'
-			dict[ee] = e
-			return ee + ' | disabled | Not available.'
-		}
+			if(e == BASE_URL){
+				dict[ee] = e
+				return ee + ' | disabled | Currently loaded, path not available.'
+
+			} else {
+				dict[ee] = e
+				return ee + ' | disabled | Not available.'
+			}
 
 		// mark the current path...
-		if(e == BASE_URL){
+		} else if(e == BASE_URL){
 			ee = ee.italics()
 			dict[ee] = e
 			return ee + ' | default | Currently loaded data.'
