@@ -226,6 +226,8 @@ function cropImagesDialog(){
 	cfg[alg] = [
 		'Marked images', 
 		'Marked images (keep ribbons)', 
+		'Bookmarked images', 
+		'Bookmarked images (keep ribbons)', 
 		'Current ribbon', 
 		'Current ribbon and above | Will merge the images into a single ribbon.',
 		'Current ribbon and above (keep ribbons)'
@@ -239,19 +241,25 @@ function cropImagesDialog(){
 			res = res[alg]
 
 			// NOTE: these must be in order of least-specific last...
-			if(/Marked.*keep ribbons/i.test(res)){
+			if(/Marked.*keep ribbons/.test(res)){
 				var method = toggleMarkedOnlyWithRibbonsView
 
-			} else if(/Marked/i.test(res)){
+			} else if(/Marked/.test(res)){
 				var method = toggleMarkedOnlyView
 
-			} else if(/Current ribbon and above.*keep ribbons/i.test(res)){
+			} else if(/Bookmarked.*keep ribbons/i.test(res)){
+				var method = toggleBookmarkedOnlyWithRibbonsView
+
+			} else if(/Bookmarked/.test(res)){
+				var method = toggleBookmarkedOnlyView
+
+			} else if(/Current ribbon and above.*keep ribbons/.test(res)){
 				var method = toggleCurrenAndAboveRibbonsMode
 
-			} else if(/Current ribbon and above/i.test(res)){
+			} else if(/Current ribbon and above/.test(res)){
 				var method = toggleCurrenAndAboveRibbonMode
 
-			} else if(/Current ribbon/i.test(res)){
+			} else if(/Current ribbon/.test(res)){
 				var method = toggleSingleRibbonMode
 			}
 
