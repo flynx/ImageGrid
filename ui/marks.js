@@ -107,6 +107,10 @@ function makeMarkToggler(img_class, mark_class, evt_name){
 }
 
 
+// generate an image updater function...
+//
+// the resulting function will update image mark state by adding or 
+// removing the mark the specific mark object.
 function makeMarkUpdater(img_class, mark_class, test){
 	return function(gid, image){
 		// marks...
