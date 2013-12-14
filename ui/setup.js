@@ -33,10 +33,16 @@ function setupIndicators(){
 		.click(function(){ toggleMarkedOnlyView() })
 
 	showContextIndicator(
+			'current-image-bookmarked', 
+			'Image is bookmarked (ctrl-B)')
+		.css('cursor', 'hand')
+		.click(function(){ toggleBookmark() })
+
+	showContextIndicator(
 			'current-image-marked', 
 			'Image is marked (Ins)')
 		.css('cursor', 'hand')
-		.click(function(){ toggleImageMark() })
+		.click(function(){ toggleMark() })
 }
 
 
@@ -46,6 +52,13 @@ function updateContextIndicators(image){
 	// marked...
 	var indicator = $('.context-mode-indicators .current-image-marked')
 	if(image.hasClass('marked')){
+		indicator.addClass('shown')
+	} else {
+		indicator.removeClass('shown')
+	}
+
+	indicator = $('.context-mode-indicators .current-image-bookmarked')
+	if(image.hasClass('bookmarked')){
 		indicator.addClass('shown')
 	} else {
 		indicator.removeClass('shown')
@@ -360,6 +373,7 @@ function setupDataBindings(viewer){
 		.on([
 				'focusingImage',
 				'togglingMark',
+				'togglingBookmark',
 				'removeingAllMarks',
 				'removeingRibbonMarks',
 				'markingAll',

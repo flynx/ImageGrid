@@ -1068,13 +1068,18 @@ button:hover {
 .context-mode-indicators .current-image-marked {
 	color: blue;
 }
+.context-mode-indicators .current-image-bookmarked {
+	color: yellow;
+}
 .global-mode-indicators .marked-only-visible .shown,
 .global-mode-indicators .marks-visible .shown,
+.context-mode-indicators .current-image-bookmarked .shown,
 .context-mode-indicators .current-image-marked .shown {
 	display: none;
 }
 .global-mode-indicators .marked-only-visible:after,
 .global-mode-indicators .marks-visible:after,
+.context-mode-indicators .current-image-bookmarked:after,
 .context-mode-indicators .current-image-marked:after {
 	display: inline-block;
 	width: 6px;
@@ -1093,6 +1098,11 @@ button:hover {
 .context-mode-indicators .current-image-marked:after {
 	color: blue;
 }
+.context-mode-indicators .current-image-bookmarked:after {
+	color: yellow;
+	background-color: yellow;
+	border: solid 2px yellow;
+}
 .marks-visible.viewer .global-mode-indicators .marks-visible {
 	display: inline-block;
 }
@@ -1106,10 +1116,11 @@ button:hover {
 	background-color: transparent;
 }
 /* image mark in single image mode... */
+.context-mode-indicators .current-image-bookmarked,
 .context-mode-indicators .current-image-marked {
 	display: none;
-	color: blue;
 }
+.single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-bookmarked.shown,
 .single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked.shown {
 	display: inline-block;
 }

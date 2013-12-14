@@ -204,7 +204,7 @@ var toggleMarkesView = createCSSClassToggler(
 */
 
 
-var toggleImageMark = makeMarkToggler('marked', 'selected', 'togglingMark')
+var toggleMark = makeMarkToggler('marked', 'selected', 'togglingMark')
 
 
 // mode can be:
@@ -217,7 +217,7 @@ function removeImageMarks(mode){
 		var res = ribbon
 			.find('.marked')
 				.each(function(){
-					toggleImageMark(this, 'off')
+					toggleMark(this, 'off')
 				})
 		$('.viewer').trigger('removeingRibbonMarks', [ribbon])
 
@@ -225,7 +225,7 @@ function removeImageMarks(mode){
 	} else if(mode == 'all'){
 		var res = $('.marked')
 			.each(function(){
-				toggleImageMark(this, 'off')
+				toggleMark(this, 'off')
 			})
 		$('.viewer').trigger('removeingAllMarks')
 	} 
@@ -240,7 +240,7 @@ function markAll(mode){
 		var res = ribbon
 			.find('.image:not(.marked)')
 				.each(function(){
-					toggleImageMark(this, 'on')
+					toggleMark(this, 'on')
 				})
 		$('.viewer').trigger('markingRibbon', [ribbon])
 
@@ -248,7 +248,7 @@ function markAll(mode){
 	} else if(mode == 'all'){
 		var res = $('.image:not(.marked)')
 			.each(function(){
-				toggleImageMark(this, 'on')
+				toggleMark(this, 'on')
 			})
 		$('.viewer').trigger('markingAll')
 	}
@@ -262,7 +262,7 @@ function invertImageMarks(){
 	var res = ribbon
 		.find('.image')
 			.each(function(){
-				toggleImageMark(this, 'next')
+				toggleMark(this, 'next')
 			})
 	$('.viewer').trigger('invertingMarks', [ribbon])
 	return res
@@ -273,16 +273,16 @@ function invertImageMarks(){
 // images...
 // XXX need to make this dynamic data compatible...
 // XXX this will mark the block ONLY IF it is loaded!!!
-function toggleImageMarkBlock(image){
+function toggleMarkBlock(image){
 	if(image == null){
 		image = getImage()
 	}
 	var found = [false, false]
 	// we need to invert this...
-	var state = toggleImageMark()
+	var state = toggleMark()
 	var _convert = function(i){
 		return function(){
-			if(toggleImageMark(this, '?') == state){
+			if(toggleMark(this, '?') == state){
 				// we found the end...
 				// NOTE: this will not be set if we reached the end of 
 				// 		the ribbon or the end of the loaded images...
@@ -290,7 +290,7 @@ function toggleImageMarkBlock(image){
 				// stop the iteration...
 				return false
 			}
-			toggleImageMark(this, state)
+			toggleMark(this, state)
 		}
 	}
 	image.nextAll('.image').each(_convert(1))
@@ -387,7 +387,7 @@ function markImagesDialog(){
 
 	var alg = 'Mark images:'
 
-	var cur = toggleImageMark('?') == 'on' ? 'Unmark' : 'Mark'
+	var cur = toggleMark('?') == 'on' ? 'Unmark' : 'Mark'
 
 	cfg = {}
 	cfg[alg] = [
@@ -411,11 +411,11 @@ function markImagesDialog(){
 
 			// NOTE: these must be in order of least-specific last...
 			if(/current image/.test(res)){
-				toggleImageMark()
+				toggleMark()
 				var msg = (cur + ' image').toLowerCase()
 
 			} else if(/current block/.test(res)){
-				toggleImageMarkBlock()
+				toggleMarkBlock()
 				var msg = 'toggled block marks'
 
 			} else if(/Invert/.test(res)){

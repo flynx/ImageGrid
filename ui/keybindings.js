@@ -648,7 +648,7 @@ var KEYBOARD_CONFIG = {
 				// XXX  should this toggle or set mark to on?
 				default: doc('Mark current image and advance',
 					function(){ 
-						toggleImageMark('on')
+						toggleMark('on')
 						directionImage()
 						// XXX do we need this???
 						//if(getImage().filter(':visible').length == 0){
@@ -659,7 +659,7 @@ var KEYBOARD_CONFIG = {
 				// same as default but in reverse direction...
 				shift: doc('Mark current image and return',
 					function(){
-						toggleImageMark('on')
+						toggleMark('on')
 						directionImage(true)
 						// XXX do we need this???
 						//if(getImage().filter(':visible').length == 0){
@@ -669,13 +669,13 @@ var KEYBOARD_CONFIG = {
 					}),
 				ctrl: doc('Show mark dialog', function(){ markImagesDialog() }),
 			},
-		Ins: doc('Toggle mark on current image', function(){ toggleImageMark() }),
+		Ins: doc('Toggle mark on current image', function(){ toggleMark() }),
 		'invert-marks': doc('Invert image marks', 
 			function(){ invertImageMarks() }),
 		A: {
 			  	// XXX does not yet work with DATA (???)
 				//shift: doc('Toggle marks in current contagious block', 
-				//	function(){ toggleImageMarkBlock() }),
+				//	function(){ toggleMarkBlock() }),
 
 				ctrl: doc('Mark current ribbon', 
 					function(){ 
@@ -699,7 +699,7 @@ var KEYBOARD_CONFIG = {
 			},
 		U: {
 				default: doc('Unmark current image',
-					function(){ toggleImageMark('off') }), 
+					function(){ toggleMark('off') }), 
 				ctrl: doc('Unmark current ribbon', 
 					function(){ removeImageMarks('ribbon') }),
 				shift: doc('Unamrk all', 
