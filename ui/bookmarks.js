@@ -156,7 +156,36 @@ function prevBookmark(){
 
 
 
-/*********************************************************************/
+/**********************************************************************
+* Files...
+*/
+
+var loadFileBookmarks = makeFileLoader(
+		'Bookmarks', 
+		BOOKMARKS_FILE_DEFAULT, 
+		BOOKMARKS_FILE_PATTERN, 
+		function(data){ 
+			BOOKMARKS = data[0] == null ? [] : data[0]
+			BOOKMARKS_DATA = data[1] == null ? {} : data[1]
+		})
+FILE_LOADERS.push(loadFileBookmarks)
+
+
+var saveFileBookmarks = makeFileSaver(
+		BOOKMARKS_FILE_DEFAULT, 
+		function(){ 
+			return [
+				BOOKMARKS, 
+				BOOKMARKS_DATA
+			] 
+		})
+FILE_SAVERS.push(saveFileBookmarks)
+
+
+
+/**********************************************************************
+* Setup...
+*/
 
 // setup event handlers for the bookmark framework...
 //

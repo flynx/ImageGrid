@@ -443,7 +443,38 @@ function markImagesDialog(){
 }
 
 
-/*********************************************************************/
+
+/**********************************************************************
+* Files...
+*/
+
+// Load image marks form file
+//
+// NOTE: if no marks are found then set them to []
+var loadFileMarks = makeFileLoader(
+		'Marks', 
+		MARKED_FILE_DEFAULT, 
+		MARKED_FILE_PATTERN, 
+		function(data){ 
+			MARKED = data
+		})
+FILE_LOADERS.push(loadFileMarks)
+
+
+// Save image marks to file
+var saveFileMarks = makeFileSaver(
+		MARKED_FILE_DEFAULT, 
+		function(){ 
+			return MARKED 
+		})
+FILE_SAVERS.push(saveFileMarks)
+
+
+
+/**********************************************************************
+* Setup...
+*/
+
 
 function setupMarks(viewer){
 	console.log('Marks: setup...')
