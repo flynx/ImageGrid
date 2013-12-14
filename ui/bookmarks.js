@@ -198,7 +198,7 @@ function setupBookmarks(viewer){
 	// XXX make this viewer specific...
 	showContextIndicator(
 			'current-image-bookmarked', 
-			'Image is bookmarked (ctrl-B)')
+			'Bookmarked (ctrl-B)')
 		.click(function(){ toggleBookmark() })
 
 	return viewer

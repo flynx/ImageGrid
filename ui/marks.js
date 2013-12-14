@@ -492,7 +492,7 @@ function setupMarks(viewer){
 		.click(function(){ toggleMarkedOnlyView() })
 	showContextIndicator(
 			'current-image-marked', 
-			'Image is marked (Ins)')
+			'Marked (Ins)')
 		.click(function(){ toggleMark() })
 
 	return viewer
