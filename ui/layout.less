@@ -1118,14 +1118,28 @@ button:hover {
 	background-color: transparent;
 }
 /* image mark in single image mode... */
-.context-mode-indicators .current-image-bookmarked,
-.context-mode-indicators .current-image-marked {
-	display: none;
+.single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-bookmarked,
+.single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked {
+	/*display: none;*/
+	display: inline-block;
+
+	opacity: 0.3;
 }
 .single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-bookmarked.shown,
 .single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked.shown {
 	display: inline-block;
+
+	opacity: 1;
 }
+.single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-bookmarked:not(.shown):after,
+.single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked:not(.shown):after {
+	background-color: transparent;
+}
+.single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-bookmarked:not(.shown):hover,
+.single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked:not(.shown):hover {
+	opacity: 0.8;
+}
+
 
 
 .single-ribbon-mode.viewer .global-mode-indicators .single-ribbon-mode {
