@@ -498,6 +498,14 @@ function getGIDRibbonIndex(gid, data){
 }
 
 
+// like getImageOrder(..) but use DATA...
+function getGIDOrder(gid){
+	gid = gid == null ? getImageGID() : gid
+	gid = typeof(gid) == typeof('str') ? gid : getImageGID(gid)
+	return DATA.order.indexOf(gid)
+}
+
+
 // Same as getImageBefore(...), but uses gids and searches in DATA...
 //
 // Return:

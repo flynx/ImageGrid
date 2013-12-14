@@ -98,63 +98,24 @@ var toggleBookmark = makeMarkToggler(
 		'togglingBookmark')
 
 
-// focus previous bookmark...
+// focus next bookmark...
 //
-function nextBookmark(){
-	if(BOOKMARKS.length == 0){
-		flashIndicator('end')
-		return getImage()
-	}
-	var cur = getImageGID()
-	var next = getBookmarkedGIDBefore(cur)
-	var i = BOOKMARKS.indexOf(next)+1
-
-	// we are before the first loaded bookmark, find the first...
-	while((next == cur || next == null) && i < BOOKMARKS.length){
-		next = BOOKMARKS[i]
-		next = getBookmarkedGIDBefore(next)
-		i++
-	}
-
-	// did not find any loaded bookmarks after...
-	if(i >= BOOKMARKS.length && (next == null || next == cur)){
-		flashIndicator('end')
-		return getImage(cur)
-	}
-
-	return showImage(next)
-}
+// NOTE: this will not jump to bookmarks on other ribbons...
+//
+// XXX make a generic next/prev marked function...
+var nextBookmark = makeNextFromListAction(
+		getBookmarkedGIDBefore, 
+		function(){ return BOOKMARKS })
 
 
 // focus previous bookmark...
 //
-function prevBookmark(){
-	if(BOOKMARKS.length == 0){
-		flashIndicator('start')
-		return getImage(cur)
-	}
-	var cur = getImageGID()
-	var prev = getBookmarkedGIDBefore(cur)
-
-	// nothing bookmarked before us...
-	if(prev == null){
-		flashIndicator('start')
-		return getImage(cur)
-	}
-
-	// current image is bookmarked, get the bookmark before it...
-	if(prev == cur){
-		prev = BOOKMARKS[BOOKMARKS.indexOf(prev)-1]
-		prev = prev != null ? getBookmarkedGIDBefore(prev) : prev
-		// no loaded (crop mode?) bookmark before us...
-		if(prev == null){
-			flashIndicator('start')
-			return getImage(cur)
-		}
-	}
-
-	return showImage(prev)
-}
+// NOTE: this will not jump to bookmarks on other ribbons...
+//
+// XXX make a generic next/prev marked function...
+var prevBookmark = makePrevFromListAction(
+		getBookmarkedGIDBefore, 
+		function(){ return BOOKMARKS })
 
 
 

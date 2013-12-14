@@ -128,6 +128,74 @@ function makeMarkUpdater(img_class, mark_class, test){
 }
 
 
+function makeNextFromListAction(get_closest, get_list){
+	return function(){
+		var list = get_list()
+		if(list.length == 0){
+			flashIndicator('end')
+			return getImage()
+		}
+		var cur = getImageGID()
+		var o = getGIDOrder(cur)
+		var next = get_closest(cur)
+		var i = list.indexOf(next)+1
+
+		// we are before the first loaded bookmark, find the first...
+		while((next == cur 
+					|| next == null 
+					|| getGIDOrder(next) < o) 
+				&& i < list.length){
+			next = list[i]
+			next = get_closest(next)
+			i++
+		}
+
+		// did not find any loaded bookmarks after...
+		if(i >= list.length 
+				&& (next == null 
+					|| next == cur 
+					|| getGIDOrder(next) < o)){
+			flashIndicator('end')
+			return getImage(cur)
+		}
+
+		return showImage(next)
+	}
+}
+
+
+function makePrevFromListAction(get_closest, get_list){
+	return function(){
+		var list = get_list()
+		if(list.length == 0){
+			flashIndicator('start')
+			return getImage(cur)
+		}
+		var cur = getImageGID()
+		var prev = get_closest(cur)
+
+		// nothing bookmarked before us...
+		if(prev == null){
+			flashIndicator('start')
+			return getImage(cur)
+		}
+
+		// current image is bookmarked, get the bookmark before it...
+		if(prev == cur){
+			prev = list[list.indexOf(prev)-1]
+			prev = prev != null ? get_closest(prev) : prev
+			// no loaded (crop mode?) bookmark before us...
+			if(prev == null){
+				flashIndicator('start')
+				return getImage(cur)
+			}
+		}
+
+		return showImage(prev)
+	}
+}
+
+
 /**********************************************************************
 * Basic marks...
 */
