@@ -1038,9 +1038,11 @@ button:hover {
 .global-mode-indicators .marks-visible,
 .context-mode-indicators .current-image-marked {
   color: blue;
+  cursor: hand;
 }
 .context-mode-indicators .current-image-bookmarked {
   color: yellow;
+  cursor: hand;
 }
 .global-mode-indicators .marked-only-visible .shown,
 .global-mode-indicators .marks-visible .shown,

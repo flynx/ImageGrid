@@ -9,6 +9,7 @@
 // NOTE: if null this feature will be disabled.
 var PROPORTIONS_RATIO_THRESHOLD = 1.5
 
+var CONTEXT_INDICATOR_UPDATERS = []
 
 
 /**********************************************************************
@@ -21,28 +22,20 @@ function setupIndicators(){
 			'Single ribbon mode (F3)')
 		.css('cursor', 'hand')
 		.click(function(){ toggleSingleRibbonMode() })
-	showGlobalIndicator(
-			'marks-visible', 
-			'Marks visible (F2)')
-		.css('cursor', 'hand')
-		.click(function(){ toggleMarkesView() })
-	showGlobalIndicator(
-			'marked-only-visible', 
-			'Marked only images visible (shift-F2)')
-		.css('cursor', 'hand')
-		.click(function(){ toggleMarkedOnlyView() })
+}
 
-	showContextIndicator(
-			'current-image-bookmarked', 
-			'Image is bookmarked (ctrl-B)')
-		.css('cursor', 'hand')
-		.click(function(){ toggleBookmark() })
 
-	showContextIndicator(
-			'current-image-marked', 
-			'Image is marked (Ins)')
-		.css('cursor', 'hand')
-		.click(function(){ toggleMark() })
+function makeContextIndicatorUpdater(image_class){
+	var _updater = function(image){
+		var indicator = $('.context-mode-indicators .current-image-'+image_class)
+		if(image.hasClass(image_class)){
+			indicator.addClass('shown')
+		} else {
+			indicator.removeClass('shown')
+		}
+	}
+	CONTEXT_INDICATOR_UPDATERS.push(_updater)
+	return _updater
 }
 
 
@@ -50,19 +43,9 @@ function updateContextIndicators(image){
 	image = image == null ? getImage() : $(image)
 
 	// marked...
-	var indicator = $('.context-mode-indicators .current-image-marked')
-	if(image.hasClass('marked')){
-		indicator.addClass('shown')
-	} else {
-		indicator.removeClass('shown')
-	}
-
-	indicator = $('.context-mode-indicators .current-image-bookmarked')
-	if(image.hasClass('bookmarked')){
-		indicator.addClass('shown')
-	} else {
-		indicator.removeClass('shown')
-	}
+	CONTEXT_INDICATOR_UPDATERS.map(function(update){
+		update(image)
+	})	
 }
 
 

@@ -11,12 +11,10 @@ var BOOKMARKS= []
 //
 // NOTE: elements are added here only when some data is set, use 
 // 		BOOKMARKS, as the main structure.
-var BOOKMARKS_DATA = {
-}
+var BOOKMARKS_DATA = {}
 
 var BOOKMARKS_FILE_DEFAULT = 'bookmarked.json'
 var BOOKMARKS_FILE_PATTERN = /^[0-9]*-bookmarked.json$/
-
 
 
 
@@ -24,6 +22,11 @@ var BOOKMARKS_FILE_PATTERN = /^[0-9]*-bookmarked.json$/
 * Helpers
 */
 
+// This is the same as getGIDBefore(..) but will return the currently 
+// loaded and bookmarked image before current.
+//
+// for exact protocol see: getGIDBefore(..)
+//
 // XXX argument processing...
 function getBookmarkedGIDBefore(gid){
 	if(BOOKMARKS.length == 0){
@@ -64,7 +67,6 @@ var updateBookmarkedImageMark = makeMarkUpdater(
 		function(gid){ 
 			return BOOKMARKS.indexOf(gid) > -1 
 		})
-IMAGE_UPDATERS.push(updateBookmarkedImageMark)
 
 
 
@@ -168,7 +170,6 @@ var loadFileBookmarks = makeFileLoader(
 			BOOKMARKS = data[0] == null ? [] : data[0]
 			BOOKMARKS_DATA = data[1] == null ? {} : data[1]
 		})
-FILE_LOADERS.push(loadFileBookmarks)
 
 
 var saveFileBookmarks = makeFileSaver(
@@ -179,7 +180,6 @@ var saveFileBookmarks = makeFileSaver(
 				BOOKMARKS_DATA
 			] 
 		})
-FILE_SAVERS.push(saveFileBookmarks)
 
 
 
@@ -191,6 +191,16 @@ FILE_SAVERS.push(saveFileBookmarks)
 //
 function setupBookmarks(viewer){
 	console.log('Bookmarks: setup...')
+
+	// XXX make this viewer specific...
+	makeContextIndicatorUpdater('bookmarked')
+
+	// XXX make this viewer specific...
+	showContextIndicator(
+			'current-image-bookmarked', 
+			'Image is bookmarked (ctrl-B)')
+		.click(function(){ toggleBookmark() })
+
 	return viewer
 		.on('togglingBookmark', function(evt, gid, action){
 			// add a bookmark...

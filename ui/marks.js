@@ -112,7 +112,7 @@ function makeMarkToggler(img_class, mark_class, evt_name){
 // the resulting function will update image mark state by adding or 
 // removing the mark the specific mark object.
 function makeMarkUpdater(img_class, mark_class, test){
-	return function(gid, image){
+	var _updater = function(gid, image){
 		// marks...
 		if(test(gid)){
 			image.addClass(img_class)
@@ -123,6 +123,8 @@ function makeMarkUpdater(img_class, mark_class, test){
 		}
 		return image
 	}
+	IMAGE_UPDATERS.push(_updater)
+	return _updater
 }
 
 
@@ -136,7 +138,6 @@ var updateSelectedImageMark = makeMarkUpdater(
 		function(gid){ 
 			return MARKED.indexOf(gid) > -1 
 		})
-IMAGE_UPDATERS.push(updateSelectedImageMark)
 
 
 // NOTE: to disable MARKED cleanout set no_cleanout_marks to true.
@@ -458,7 +459,6 @@ var loadFileMarks = makeFileLoader(
 		function(data){ 
 			MARKED = data
 		})
-FILE_LOADERS.push(loadFileMarks)
 
 
 // Save image marks to file
@@ -467,7 +467,6 @@ var saveFileMarks = makeFileSaver(
 		function(){ 
 			return MARKED 
 		})
-FILE_SAVERS.push(saveFileMarks)
 
 
 
@@ -478,6 +477,24 @@ FILE_SAVERS.push(saveFileMarks)
 
 function setupMarks(viewer){
 	console.log('Marks: setup...')
+
+	// XXX make this viewer specific...
+	makeContextIndicatorUpdater('marked')
+
+	// XXX make these viewer specific...
+	showGlobalIndicator(
+			'marks-visible', 
+			'Marks visible (F2)')
+		.click(function(){ toggleMarkesView() })
+	showGlobalIndicator(
+			'marked-only-visible', 
+			'Marked only images visible (shift-F2)')
+		.click(function(){ toggleMarkedOnlyView() })
+	showContextIndicator(
+			'current-image-marked', 
+			'Image is marked (Ins)')
+		.click(function(){ toggleMark() })
+
 	return viewer
 		// marks...
 		.on('togglingMark', function(evt, gid, action){

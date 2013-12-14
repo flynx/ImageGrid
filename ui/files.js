@@ -186,8 +186,8 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 }
 
 
-function makeFileLoader(title, file_dfl, file_pattern, data_set){
-	return function(path){
+function makeFileLoader(title, file_dfl, file_pattern, data_set, skip_reg){
+	var _loader = function(path){
 		var res = $.Deferred()
 		// default locations...
 		if(path == null){
@@ -220,17 +220,21 @@ function makeFileLoader(title, file_dfl, file_pattern, data_set){
 
 		return res
 	}
+	!skip_reg && FILE_LOADERS.push(_loader)
+	return _loader
 }
 // XXX make this check for updates -- no need to re-save if nothing 
 // 		changed...
-function makeFileSaver(file_dfl, data_get){
-	return function(name){
+function makeFileSaver(file_dfl, data_get, skip_reg){
+	var _saver = function(name){
 		name = name == null 
 			? normalizePath(CACHE_DIR_VAR +'/'+ Date.timeStamp()) 
 			: name
 
 		dumpJSON(name + '-' + file_dfl, data_get())
 	}
+	!skip_reg && FILE_SAVERS.push(_saver)
+	return _saver
 }
 
 
