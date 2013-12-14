@@ -290,9 +290,7 @@ function setupDataBindings(viewer){
 				// change the image orientation status and add to 
 				// updated list...
 				IMAGES[gid].orientation = orientation
-				if(IMAGES_UPDATED.indexOf(gid) == -1){
-					IMAGES_UPDATED.push(gid)
-				}
+				imageUpdated(gid)
 			})
 		})
 		.on('flippingVertical flippingHorizontal', function(evt, image){
@@ -302,9 +300,7 @@ function setupDataBindings(viewer){
 				var flip = getImageFlipState(img)
 
 				IMAGES[gid].flipped = flip
-				if(IMAGES_UPDATED.indexOf(gid) == -1){
-					IMAGES_UPDATED.push(gid)
-				}
+				imageUpdated(gid)
 			})
 		})
 		.on('resetToOriginalImage', function(evt, image){
@@ -315,9 +311,7 @@ function setupDataBindings(viewer){
 				IMAGES[gid].flipped = null
 				IMAGES[gid].orientation = 0
 
-				if(IMAGES_UPDATED.indexOf(gid) == -1){
-					IMAGES_UPDATED.push(gid)
-				}
+				imageUpdated(gid)
 			})
 		})
 

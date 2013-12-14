@@ -695,6 +695,16 @@ function orientationExif2ImageGrid(orientation){
 }
 
 
+// mark an image as updated...
+//
+function imageUpdated(gid){
+	gid = gid == null ? getImageGID(): gid
+	if(IMAGES_UPDATED.indexOf(gid) == -1){
+		IMAGES_UPDATED.push(gid)
+	}
+}
+
+
 
 /**********************************************************************
 * Constructors and general data manipulation

@@ -1246,7 +1246,7 @@ function showImageInfo(){
 				} else {
 					data.comment = ncomment
 				}
-				IMAGES_UPDATED.push(gid)
+				imageUpdated(gid)
 			}
 
 			// tags...

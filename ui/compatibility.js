@@ -251,9 +251,7 @@ if(window.CEF_dumpJSON != null){
 							// add the preview to the image object...
 							img.preview[size+'px'] = './' + CACHE_DIR +'/'+ preview_path.split(CACHE_DIR).pop()
 							// mark image dirty...
-							if(IMAGES_UPDATED.indexOf(gid) < 0){
-								IMAGES_UPDATED.push(gid)
-							}
+							imageUpdated(gid)
 						}
 						//console.log('>>> Preview:', name, '('+size+'): Exists.')
 						deferred.notify(gid, size, 'exists')
@@ -324,9 +322,7 @@ if(window.CEF_dumpJSON != null){
 								}
 								img.preview[size+'px'] = './' + CACHE_DIR +'/'+ preview_path.split(CACHE_DIR).pop()
 								// mark image dirty...
-								if(IMAGES_UPDATED.indexOf(gid) < 0){
-									IMAGES_UPDATED.push(gid)
-								}
+								imageUpdated(gid)
 								// we are done...
 								deferred.resolve()
 							}

@@ -753,9 +753,8 @@ function readImageOrientation(gid, no_update_loaded){
 			img.flipped = o.flipped
 
 			// mark image dirty...
-			if((o_o != o.orientation || o_f != o.flipped ) 
-					&& IMAGES_UPDATED.indexOf(gid) < 0){
-				IMAGES_UPDATED.push(gid)
+			if(o_o != o.orientation || o_f != o.flipped){
+				imageUpdated(gid)
 			}
 
 			// update image if loaded...
@@ -811,7 +810,7 @@ function readImagesDates(images){
 	return $.when.apply(null, $.map(images, function(_, gid){
 		return readImageDate(gid, images)
 			.done(function(){
-				IMAGES_UPDATED.push(gid)
+				imageUpdated(gid)
 			})
 	}))
 }
@@ -823,7 +822,7 @@ function readImagesDatesQ(images){
 	$.each(images, function(gid, img){
 		queue.enqueue(readImageDate, gid, images)
 			.always(function(){ 
-				IMAGES_UPDATED.push(gid)
+				imageUpdated(gid)
 				queue.notify(gid, 'done') 
 			})
 	})
@@ -844,7 +843,7 @@ function updateImageGID(gid, images, data){
 			// images...
 			images[gid] = images[key]
 			delete images[key]
-			IMAGES_UPDATED.push(gid)
+			imageUpdated(gid)
 
 			// data...
 			if(data != null){

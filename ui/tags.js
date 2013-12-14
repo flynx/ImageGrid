@@ -10,9 +10,7 @@
 // 		...
 // 	}
 //
-TAGS = {
-
-}
+var TAGS = {}
 
 
 
@@ -72,8 +70,8 @@ function addTag(tags, gid, tagset, images){
 			set = []
 			tagset[tag] = set
 		}
-		if(set.indexOf(tag) < 0){
-			set.push(tag)
+		if(set.indexOf(gid) < 0){
+			set.push(gid)
 			set.sort()
 		}
 
@@ -84,8 +82,7 @@ function addTag(tags, gid, tagset, images){
 
 	if(updated){
 		img.tags = img_tags
-		// XXX hardcoded and not customizable...
-		IMAGES_UPDATED.push(gid)
+		imageUpdated(gid)
 	}
 }
 
@@ -121,8 +118,7 @@ function removeTag(tags, gid, tagset, images){
 	}
 
 	if(updated){
-		// XXX hardcoded and not customizable...
-		IMAGES_UPDATED.push(gid)
+		imageUpdated(gid)
 	}
 }
 
@@ -202,6 +198,49 @@ function getTags(gid){
 function getRelatedTags(){
 }
 */
+
+/*********************************************************************/
+
+function tagMarked(tags){
+	MARKED.forEach(function(gid){
+		addTag(tags, gid)
+	})
+	return MARKED
+}
+function untagMarked(tags){
+	MARKED.forEach(function(gid){
+		removeTag(tags, gid)
+	})
+	return MARKED
+}
+
+
+function markTagged(tags){
+	MARKED = selectByTags(tags)
+	updateImages()
+	return MARKED
+}
+function unmarkTagged(tags){
+	var set = selectByTags(tags)
+	set.forEach(function(gid){
+		var i = MARKED.indexOf(gid)
+		if(i > -1){
+			MARKED.splice(i, 1)
+		}
+	})
+	updateImages()
+	return set
+}
+
+
+function cropTagged(tags, cmp, keep_ribbons, keep_unloaded_gids){
+	cmp = cmp == null ? imageOrderCmp : cmp
+	var set = selectByTags(tags).sort(cmp)
+
+	cropDataTo(set, keep_ribbons, keep_unloaded_gids)
+
+	return DATA
+}
 
 
 

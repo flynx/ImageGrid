@@ -144,12 +144,11 @@ var updateSelectedImageMark = makeMarkUpdater(
 // NOTE: MARKED may contain both gids that are not loaded and that do 
 // 		not exist, as there is no way to distinguish between the two 
 // 		situations the cleanup is optional...
-function cropMarkedImages(cmp, keep_ribbons, no_cleanout_marks){
+function cropMarkedImages(cmp, keep_ribbons, keep_unloaded_gids){
 	cmp = cmp == null ? imageOrderCmp : cmp
-	var cur = DATA.current
 	var marked = MARKED.slice().sort(cmp)
 
-	cropDataTo(marked, keep_ribbons, no_cleanout_marks)
+	cropDataTo(marked, keep_ribbons, keep_unloaded_gids)
 
 	return DATA
 }

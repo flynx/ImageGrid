@@ -53,8 +53,8 @@ function getBookmarkedGIDBefore(gid){
 
 /*********************************************************************/
 
-function cropBookmarkedImages(cmp, keep_ribbons, no_cleanout_marks){
-	cropDataTo(BOOKMARKS.slice(), keep_ribbons, no_cleanout_marks)
+function cropBookmarkedImages(cmp, keep_ribbons, keep_unloaded_gids){
+	cropDataTo(BOOKMARKS.slice(), keep_ribbons, keep_unloaded_gids)
 
 	return DATA
 }
