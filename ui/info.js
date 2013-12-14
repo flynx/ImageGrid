@@ -32,6 +32,10 @@ function updateGlobalImageInfo(image){
 
 	var meta = []
 
+	image.hasClass('bookmarked') ? meta.push(
+			'<span class="shown">B</span>'+
+			'<span class="hidden"><b>B</b>ookmarked</span>') : ''
+
 	image.hasClass('marked') ? meta.push(
 			'<span class="shown">M</span>'+
 			'<span class="hidden"><b>M</b>arked</span>') : ''

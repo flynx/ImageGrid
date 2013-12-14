@@ -83,19 +83,6 @@ function bubbleProgress(prefix, from, to, only_progress){
 }
 
 
-function runFileLoaders(prefix, res){
-	return $.when.apply(null, FILE_LOADERS.map(function(load){
-		return bubbleProgress(prefix, load(), res, true)
-	}))
-}
-// XXX do we need bubbleProgress(..) here???
-function runFileSavers(name){
-	FILE_SAVERS.map(function(save){
-		return save(name)
-	})
-}
-
-
 // Semi-generic deferred file loader
 //
 // if pattern is given, then search for the latest (ordered last) file 
@@ -234,8 +221,8 @@ function makeFileLoader(title, file_dfl, file_pattern, data_set){
 		return res
 	}
 }
-
-
+// XXX make this check for updates -- no need to re-save if nothing 
+// 		changed...
 function makeFileSaver(file_dfl, data_get){
 	return function(name){
 		name = name == null 
@@ -244,6 +231,19 @@ function makeFileSaver(file_dfl, data_get){
 
 		dumpJSON(name + '-' + file_dfl, data_get())
 	}
+}
+
+
+function runFileLoaders(prefix, res){
+	return $.when.apply(null, FILE_LOADERS.map(function(load){
+		return bubbleProgress(prefix, load(), res, true)
+	}))
+}
+// XXX do we need bubbleProgress(..) here???
+function runFileSavers(name){
+	FILE_SAVERS.map(function(save){
+		return save(name)
+	})
 }
 
 
@@ -354,7 +354,7 @@ function loadFileImages(path, no_load_diffs){
 
 // Save current images list to file
 //
-// If not name is given this will merge all the diffs and save a "clean"
+// If no name is given this will merge all the diffs and save a "clean"
 // (full) images.json file. Also removing the diff files.
 //
 // NOTE: if an explicit name is given then this will not remove anything.
@@ -385,7 +385,7 @@ function saveFileImages(name){
 }
 
 
-// Load images, ribbons and marks from cache
+// Load images, ribbons and run registered load callbacks...
 //
 // XXX add support for explicit filenames...
 function loadFileState(path, prefix){
@@ -431,14 +431,8 @@ function loadFileState(path, prefix){
 							//loadFileImages(DATA.image_file != null ?
 							//		normalizePath(DATA.image_file, base) 
 							//		: null), res, true),
-						// load marks if available...
+						// run registered loaders...
 						runFileLoaders(prefix, res))
-						/*
-						bubbleProgress(prefix,
-							loadFileMarks(), res, true),
-						bubbleProgress(prefix,
-							loadFileBookmarks(), res, true))
-						*/
 					.done(function(){
 						reloadViewer()
 						res.resolve()
@@ -458,7 +452,7 @@ function loadFileState(path, prefix){
 }
 
 
-// Save, ribbons and marks to cache
+// Save, ribbons and run registered save callbacks...
 //
 // NOTE: this will NOT save images, that operation must be explicitly 
 // 		performed by saveFileImages(...)
@@ -480,8 +474,6 @@ function saveFileState(name, no_normalize_path){
 	data.current = DATA.current
 
 	dumpJSON(name + '-data.json', data)
-	// XXX do we need to do this???
-	runFileSavers(name)
 
 	// save the updated images...
 	if(IMAGES_UPDATED.length > 0){
@@ -492,6 +484,8 @@ function saveFileState(name, no_normalize_path){
 		dumpJSON(name + '-images-diff.json', updated)
 		IMAGES_UPDATED = []
 	}
+
+	runFileSavers(name)
 }
 
 
@@ -536,10 +530,13 @@ function loadRawDir(path, no_preview_processing, prefix){
 	reloadViewer()
 
 	// read orientation form files...
-	res.notify(prefix, 'Loading', 'Images orientation.')
-	var o = updateImagesOrientationQ()
+	res.notify(prefix, 'Loading', 'Images metadata.')
+	var o = $.when(
+			readImagesOrientationQ(),
+			readImagesDatesQ()
+		)
 		.done(function(){
-			res.notify(prefix, 'Loaded', 'Images orientation.')
+			res.notify(prefix, 'Loaded', 'Images metadata.')
 		})
 
 	// load/generate previews...
@@ -728,12 +725,14 @@ function exportImagesTo(path, im_name, dir_name, size){
 
 
 
-/*********************************************************************/
+/**********************************************************************
+* Metadata readers...
+*/
 
 // NOTE: this will overwrite current image orientation...
 //
 // XXX this depends on getImageOrientation(...)
-function updateImageOrientation(gid, no_update_loaded){
+function readImageOrientation(gid, no_update_loaded){
 	gid = gid == null ? getImageGID() : gid
 	var img = IMAGES[gid]
 
@@ -764,23 +763,19 @@ function updateImageOrientation(gid, no_update_loaded){
 			}
 		})
 }
-
-
-function updateImagesOrientation(gids, no_update_loaded){
+function readImagesOrientation(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
 	var res = []
 
 	$.each(gids, function(_, gid){
-		res.push(updateImageOrientation(gid, no_update_loaded))
+		res.push(readImageOrientation(gid, no_update_loaded))
 	})
 
 	return $.when.apply(null, res)
 }
-
-
-// queued version of updateImagesOrientation(...)
+// queued version of readImagesOrientation(...)
 //
-function updateImagesOrientationQ(gids, no_update_loaded){
+function readImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
 
 	var queue = getWorkerQueue('image_orientation_reader')
@@ -789,9 +784,98 @@ function updateImagesOrientationQ(gids, no_update_loaded){
 
 	// attach workers to queue...
 	$.each(gids, function(_, gid){
-		last = queue.enqueue(updateImageOrientation, gid, no_update_loaded)
+		last = queue.enqueue(readImageOrientation, gid, no_update_loaded)
 			.done(function(){ queue.notify(gid, 'done') })
 			.fail(function(){ queue.notify(gid, 'fail') })
+	})
+
+	return queue
+}
+
+
+function readImageDate(gid, images){
+	images = images == null ? IMAGES : images
+	var img = images[gid]
+	return getEXIFDate(normalizePath(img.path))
+		.done(function(date){
+			img.ctime = Date.fromTimeStamp(date).getTime()/1000
+		})
+}
+function readImagesDates(images){
+	images = images == null ? IMAGES : images
+
+	return $.when.apply(null, $.map(images, function(_, gid){
+		return readImageDate(gid, images)
+			.done(function(){
+				IMAGES_UPDATED.push(gid)
+			})
+	}))
+}
+function readImagesDatesQ(images){
+	images = images == null ? IMAGES : images
+
+	var queue = getWorkerQueue('date_reader')
+
+	$.each(images, function(gid, img){
+		queue.enqueue(readImageDate, gid, images)
+			.always(function(){ 
+				IMAGES_UPDATED.push(gid)
+				queue.notify(gid, 'done') 
+			})
+	})
+
+	return queue
+}
+
+
+// XXX deleting images is not sported, we need to explicitly re-save...
+// XXX need to reload the viewer...
+// XXX not tested...
+function updateImageGID(gid, images, data){
+	images = images == null ? IMAGES : images
+	var img = images[gid]
+	return getEXIFGID(normalizePath(img.path))
+		.done(function(gid){
+			img.id = gid
+			// images...
+			images[gid] = images[key]
+			delete images[key]
+			IMAGES_UPDATED.push(gid)
+
+			// data...
+			if(data != null){
+				// replace current...
+				if(data.current == key){
+					data.current = gid
+				}
+				// replace in order...
+				data.order[data.order.indexOf(key)] = gid
+				// replace in ribbons...
+				for(var i=0; i < data.ribbons; i++){
+					var r = data.ribbons[i]
+					var k = r.indexOf(key)
+					if(k >= 0){
+						r[k] = gid
+					}
+				}
+			}
+		})
+}
+function updateImagesGIDs(images, data){
+	images = images == null ? IMAGES : images
+
+	return $.when.apply(null, $.map(images, function(_, key){
+		return updateImageGID(key, images, data)
+	}))
+}
+function updateImagesGIDsQ(images, data){
+	images = images == null ? IMAGES : images
+
+	var queue = getWorkerQueue('gid_updater')
+
+	$.each(images, function(_, key){
+		queue.enqueue(updateImageGID, key, images, data)
+			.always(function(){ queue.notify(key, 'done') })
 	})
 
 	return queue

@@ -42,7 +42,7 @@ function setupIndicators(){
 
 function updateContextIndicators(image){
 	image = image == null ? getImage() : $(image)
-	
+
 	// marked...
 	var indicator = $('.context-mode-indicators .current-image-marked')
 	if(image.hasClass('marked')){
@@ -349,15 +349,6 @@ function setupDataBindings(viewer){
 				}
 			})
 		.on([
-				'focusingImage',
-				'togglingMark'
-			].join(' '),
-			function(evt, image){
-				image = $(image)
-				updateGlobalImageInfo(image)
-				updateContextIndicators(image)
-			})
-		.on([
 				'rotatingLeft',
 				'rotateingRight',
 				'flippingVertical',
@@ -367,6 +358,8 @@ function setupDataBindings(viewer){
 				updateGlobalImageInfo($(image))
 			})
 		.on([
+				'focusingImage',
+				'togglingMark',
 				'removeingAllMarks',
 				'removeingRibbonMarks',
 				'markingAll',

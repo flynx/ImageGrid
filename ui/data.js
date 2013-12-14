@@ -1806,17 +1806,6 @@ function openImageWith(prog){
 * Experimental & utility
 */
 
-// The idea here is to add markers as first-class image-like elements...
-//
-// 	+ can be ordered
-// 	- re-sorting via metadata will mess things up
-//
-// XXX this is not persistent...
-function appendMarker(){
-	return $('<div class="marker"/>').insertAfter(getImage())
-}
-
-
 // NOTE: if cmp is explicitly false then no sorting will be done.
 function loadRibbonsFromPath(path, cmp, reverse, dir_name){
 	path = path == null ? BASE_URL : path
@@ -1835,95 +1824,6 @@ function loadRibbonsFromPath(path, cmp, reverse, dir_name){
 	}
 
 	return DATA
-}
-
-
-function readImageDate(gid, images){
-	images = images == null ? IMAGES : images
-	var img = images[gid]
-	return getEXIFDate(normalizePath(img.path))
-		.done(function(date){
-			img.ctime = Date.fromTimeStamp(date).getTime()/1000
-		})
-}
-function readImagesDates(images){
-	images = images == null ? IMAGES : images
-
-	return $.when.apply(null, $.map(images, function(_, gid){
-		return readImageDate(gid, images)
-			.done(function(){
-				IMAGES_UPDATED.push(gid)
-			})
-	}))
-}
-function readImagesDatesQ(images){
-	images = images == null ? IMAGES : images
-
-	var queue = getWorkerQueue('date_reader')
-
-	$.each(images, function(gid, img){
-		queue.enqueue(readImageDate, gid, images)
-			.always(function(){ 
-				IMAGES_UPDATED.push(gid)
-				queue.notify(gid, 'done') 
-			})
-	})
-
-	return queue
-}
-
-
-// XXX deleting images is not sported, we need to explicitly re-save...
-// XXX need to reload the viewer...
-// XXX not tested...
-function updateImageGID(gid, images, data){
-	images = images == null ? IMAGES : images
-	var img = images[gid]
-	return getEXIFGID(normalizePath(img.path))
-		.done(function(gid){
-			img.id = gid
-			// images...
-			images[gid] = images[key]
-			delete images[key]
-			IMAGES_UPDATED.push(gid)
-
-			// data...
-			if(data != null){
-				// replace current...
-				if(data.current == key){
-					data.current = gid
-				}
-				// replace in order...
-				data.order[data.order.indexOf(key)] = gid
-				// replace in ribbons...
-				for(var i=0; i < data.ribbons; i++){
-					var r = data.ribbons[i]
-					var k = r.indexOf(key)
-					if(k >= 0){
-						r[k] = gid
-					}
-				}
-			}
-		})
-}
-function updateImagesGIDs(images, data){
-	images = images == null ? IMAGES : images
-
-	return $.when.apply(null, $.map(images, function(_, key){
-		return updateImageGID(key, images, data)
-	}))
-}
-function updateImagesGIDsQ(images, data){
-	images = images == null ? IMAGES : images
-
-	var queue = getWorkerQueue('gid_updater')
-
-	$.each(images, function(_, key){
-		queue.enqueue(updateImageGID, key, images, data)
-			.always(function(){ queue.notify(key, 'done') })
-	})
-
-	return queue
 }
 
 
