@@ -42,7 +42,15 @@ function normalizeTag(tag){
 
 
 
-/*********************************************************************/
+/**********************************************************************
+* Actions...
+*/
+
+function getTags(gid){
+	// XXX should we do any more checking here?
+	return IMAGES[gid].tags
+}
+
 
 function addTag(tags, gid, tagset, images){
 	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
@@ -123,6 +131,11 @@ function removeTag(tags, gid, tagset, images){
 }
 
 
+// Update the tags of an image to the given list of tags...
+//
+// The resulting tag set of the image will exactly match the given list.
+//
+// NOTE: this will potentially both add and remove tags...
 function updateTags(tags, gid, tagset, images){
 	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
 	gid = gid == null ? getImageGID() : gid
@@ -148,6 +161,7 @@ function updateTags(tags, gid, tagset, images){
 
 
 // this implements the AND selector...
+//
 // NOTE: do not like this algorithm as it can get O(n^2)-ish
 function selectByTags(tags, tagset){
 	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
@@ -187,33 +201,60 @@ function selectByTags(tags, tagset){
 }
 
 
-function getTags(gid){
-	// XXX should we do any more checking here?
-	return IMAGES[gid].tags
-}
-
-
 /*
 // XXX don't remember the semantics...
 function getRelatedTags(){
 }
 */
 
+
+
 /*********************************************************************/
 
-function tagMarked(tags){
-	MARKED.forEach(function(gid){
+function tagList(list, tags){
+	list.forEach(function(gid){
 		addTag(tags, gid)
 	})
-	return MARKED
+	return list
 }
-function untagMarked(tags){
-	MARKED.forEach(function(gid){
+function untagList(list, tags){
+	list.forEach(function(gid){
 		removeTag(tags, gid)
 	})
-	return MARKED
+	return list
+}
+// same as tagList(..), but will also remove the tags form gids no in 
+// list...
+function tagOnlyList(list, tags){
+	selectByTags(tags).forEach(function(gid){
+		if(list.indexOf(gid) < 0){
+			removeTag(tags, gid)
+		}
+	})
+	return tagList(list, tags)
 }
 
+
+// tag manipulation of ribbon images...
+function tagRibbon(tags){ return tagList(getRibbonGIDs(), tags) }
+function untagRibbon(tags){ return untagList(getRibbonGIDs(), tags) }
+function tagOnlyRibbon(tags){ return tagOnlyList(getRibbonGIDs(), tags) }
+
+// tag manipulation of marked images...
+function tagMarked(tags){ return tagList(MARKED, tags) }
+function untagMarked(tags){ return untagList(MARKED, tags) }
+function tagOnlyMarked(tags){ return tagOnlyList(MARKED, tags) }
+
+// tag manipulation of bookmarked images...
+function tagBookmarked(tags){ return tagList(BOOKMARKED, tags) }
+function untagBookmarked(tags){ return untagList(BOOKMARKED, tags) }
+function tagOnlyBookmarked(tags){ return tagOnlyList(BOOKMARKED, tags) }
+
+
+
+/*********************************************************************/
+
+// marking of tagged images...
 
 function markTagged(tags){
 	MARKED = selectByTags(tags)
@@ -232,6 +273,10 @@ function unmarkTagged(tags){
 	return set
 }
 
+
+/*********************************************************************/
+
+// cropping of tagged images...
 
 function cropTagged(tags, cmp, keep_ribbons, keep_unloaded_gids){
 	cmp = cmp == null ? imageOrderCmp : cmp
