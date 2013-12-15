@@ -483,6 +483,7 @@ function setBaseRibbonIndex(n){
 
 
 // like getRibbonIndex but get the index only via DATA...
+//
 function getGIDRibbonIndex(gid, data){
 	gid = gid == null ? getImageGID() : gid
 	data = data == null ? DATA : data
@@ -498,7 +499,19 @@ function getGIDRibbonIndex(gid, data){
 }
 
 
+// get a list of gids in ribbon...
+//
+function getRibbonGIDs(a, data){
+	data = data == null ? DATA : data
+	if(typeof(a) == typeof(123)){
+		return data.ribbons[a].slice()
+	}
+	return data.ribbons[getGIDRibbonIndex(a, data)].slice()
+}
+
+
 // like getImageOrder(..) but use DATA...
+//
 function getGIDOrder(gid){
 	gid = gid == null ? getImageGID() : gid
 	gid = typeof(gid) == typeof('str') ? gid : getImageGID(gid)
@@ -709,6 +722,97 @@ function imageUpdated(gid){
 	gid = gid == null ? getImageGID(): gid
 	if(IMAGES_UPDATED.indexOf(gid) == -1){
 		IMAGES_UPDATED.push(gid)
+	}
+}
+
+
+// Make a next/prev image action
+//
+// Arguments:
+// 	get_closest		: get the closest gid loaded, like getGIDBefore(..)
+// 	get_list		: gid list getter, like getRibbonGIDs(..)
+//
+// NOTE: makeNextFromListAction(getGIDBefore, getRibbonGIDs) will generate 
+// 		an action (almost) identical to nextImage()...
+// 		Key differences:
+// 			- nextImage(..) uses DOM to get the next image which is simpler
+// 			- nextImage(..) accepts and offset argument
+//
+// XXX not sure if we need the offset argument here... 
+// 		a-la nextImage(n) / prevImage(n)
+// XXX Q: is it cheaper to make a cached list that will contain only 
+// 		loaded gids? 
+// 		(i.e. filter it first and then get the needed gid rather 
+// 		iterating...)
+function makeNextFromListAction(get_closest, get_list){
+	get_closest = get_closest == null ? getGIDBefore : get_closest
+	get_list = get_list == null ? getRibbonGIDs : get_list
+
+	return function(){
+		var list = get_list()
+		if(list.length == 0){
+			flashIndicator('end')
+			return getImage()
+		}
+		var cur = getImageGID()
+		var o = getGIDOrder(cur)
+		var next = get_closest(cur)
+		var i = list.indexOf(next)+1
+
+		// we are before the first loaded bookmark, find the first...
+		while((next == cur 
+					|| next == null 
+					|| getGIDOrder(next) < o) 
+				&& i < list.length){
+			next = list[i]
+			next = get_closest(next)
+			i++
+		}
+
+		// did not find any loaded bookmarks after...
+		if(i >= list.length 
+				&& (next == null 
+					|| next == cur 
+					|| getGIDOrder(next) < o)){
+			flashIndicator('end')
+			return getImage(cur)
+		}
+
+		return showImage(next)
+	}
+}
+// see makeNextFromListAction(..) above for documentation...
+function makePrevFromListAction(get_closest, get_list){
+	get_closest = get_closest == null ? getGIDBefore : get_closest
+	get_list = get_list == null ? getRibbonGIDs : get_list
+
+	return function(){
+		var list = get_list()
+		if(list.length == 0){
+			flashIndicator('start')
+			return getImage(cur)
+		}
+		var cur = getImageGID()
+		var prev = get_closest(cur)
+
+		// nothing bookmarked before us...
+		if(prev == null){
+			flashIndicator('start')
+			return getImage(cur)
+		}
+
+		// current image is bookmarked, get the bookmark before it...
+		if(prev == cur){
+			prev = list[list.indexOf(prev)-1]
+			prev = prev != null ? get_closest(prev) : prev
+			// no loaded (crop mode?) bookmark before us...
+			if(prev == null){
+				flashIndicator('start')
+				return getImage(cur)
+			}
+		}
+
+		return showImage(prev)
 	}
 }
 
@@ -1795,6 +1899,26 @@ function alignRibbons(ribbon){
 
 	reloadViewer()
 }
+
+
+// Focus next/prev image in order...
+//
+// This differs form nextImage/prevImage in that these are not 
+// restricted to the current ribbon, and will hop up and down as 
+// needed...
+//
+// NOTE: we need getGIDBefore here to account for possible cropped 
+// 		ribbons...
+var nextImageInOrder = makeNextFromListAction(
+		getGIDBefore, 
+		function(){ 
+			return DATA.order
+		})
+var prevImageInOrder = makePrevFromListAction(
+		getGIDBefore, 
+		function(){ 
+			return DATA.order
+		})
 
 
 
