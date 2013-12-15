@@ -350,6 +350,9 @@ function loadFileImages(path, no_load_diffs){
 
 	res.done(function(images){
 		IMAGES = images
+
+		// XXX is this the correct spot to do this???
+		$('.viewer').trigger('imagesLoaded')
 	})
 
 	return res
@@ -615,7 +618,8 @@ function loadDir(path, no_preview_processing, prefix){
 			res.resolve()
 		})
 		.fail(function(){
-			bubbleProgress('Raw directory', loadRawDir(orig_path, no_preview_processing), res)
+			bubbleProgress('Raw directory', 
+				loadRawDir(orig_path, no_preview_processing), res)
 		})
 
 	return res

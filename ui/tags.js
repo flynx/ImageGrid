@@ -290,4 +290,24 @@ function cropTagged(tags, cmp, keep_ribbons, keep_unloaded_gids){
 
 
 /**********************************************************************
+* Setup...
+*/
+
+function setupTags(viewer){
+	console.log('Tags: setup...')
+
+	viewer
+		.on('imagesLoaded', function(){
+			TAGS = []
+			showStatusQ('Tags: building index...')
+			// XXX should this be sync???
+			buildTagsFromImages()
+			showStatusQ('Tags: building index: done.')
+		})
+
+}
+SETUP_BINDINGS.push(setupTags)
+
+
+/**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
