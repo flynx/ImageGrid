@@ -3,9 +3,6 @@
 * Data API and Data DOM connections...
 *
 * TODO move DATA to a more logical context avoiding the global vars...
-* TODO try and split this into:
-* 		- data.js -- pure DATA API
-* 		- data-ribbons.js -- DATA and Ribbon API mashup...
 *
 **********************************************************************/
 
@@ -470,8 +467,25 @@ function binSearch(target, lst, check, return_position, get){
 	// no result...
 	return return_position ? -1 : null
 }
+/* XXX do we actually need to patch Array???
 Array.prototype.binSearch = function(target, cmp, get){
 	return binSearch(target, this, cmp, true, get)
+}
+*/
+
+
+// Base URL interface...
+//
+// NOTE: changing a base URL will trigger a baseURLChanged event...
+function getBaseURL(){
+	return BASE_URL
+}
+function setBaseURL(url){
+	var old_url = BASE_URL
+	url = url.replace(/\/*$/, '/')
+	BASE_URL = url
+	$('.viewer').trigger('baseURLChanged', [old_url, url])
+	return url
 }
 
 
@@ -514,6 +528,7 @@ Array.prototype.binSearch = function(target, cmp, get){
 function getBaseRibbonIndex(){
 
 	// XXX
+	console.warn('Base ribbon API is still a stub...')
 
 	return 0
 }
@@ -521,6 +536,7 @@ function setBaseRibbonIndex(n){
 	n = n == null ? 0 : n
 
 	// XXX
+	console.warn('Base ribbon API is still a stub...')
 
 	return n
 }
@@ -615,11 +631,16 @@ function getGIDBefore(gid, ribbon, search, data){
 
 // Get "count" of GIDs starting with a given gid ("from")
 //
-// NOTE: this will not include the 'from' GID in the resulting list, 
-// 		unless inclusive is set to true.
-// NOTE: count can be either negative or positive, this will indicate 
-// 		load direction...
-// NOTE: this can calculate the ribbon number where the image is located.
+// count can be either negative or positive, this will indicate load 
+// direction:
+// 	count > 0	- load to left to right
+// 	count < 0	- load to right to left
+//
+// from GID will not get included in the resulting list unless inclusive
+// is set to true.
+//
+// NOTE: if no ribbon is given this will use the ribbon number where the
+// 		from image is located.
 // NOTE: if an image can be in more than one ribbon, one MUST suply the
 // 		correct ribbon number...
 //
@@ -667,7 +688,7 @@ function getGIDsAfter(count, gid, ribbon, inclusive, data){
 //
 //	+- ribbon	   count
 //	v			|<------>|
-// 	ooooooooooooooooXoooooooooooooooo	->	ooooXoooo
+// 	...oooooooooooooXooooooooooooo...	->	ooooXoooo
 // 					^
 // 				   gid
 //
@@ -679,7 +700,7 @@ function getGIDsAfter(count, gid, ribbon, inclusive, data){
 //
 //	   count
 //  |<------>|
-// 	   oXoooooooooooooooo	->	___oXoooo
+// 	   oXooooooooooooo...	->	___oXoooo
 // 		^
 // 	   gid
 //
@@ -689,7 +710,7 @@ function getGIDsAfter(count, gid, ribbon, inclusive, data){
 //
 //		  count
 //	   |<------>|
-// 	   oXoooooooooooooooo	->	oXooooooo
+// 	   oXooooooooooooo...	->	oXooooooo
 // 		^
 // 	   gid
 //
@@ -739,8 +760,7 @@ function getGIDsAround(count, gid, ribbon, data, force_count){
 
 // NOTE: this expects that both arrays cleanly intersect each other only 
 // 		once...
-// XXX this sometimes returns a null and a value which seems to be 
-// 		impossible...
+// XXX this sometimes returns a null + value, which should be impossible...
 // 		...this does not affect anything, but still need to investigate...
 function getCommonSubArrayOffsets(L1, L2){
 	var res = {}
@@ -776,6 +796,7 @@ function getCommonSubArrayOffsets(L1, L2){
 
 // NOTE: this expects that bot arrays cleanly intersect each other only 
 // 		once...
+// 		see getCommonSubArrayOffsets(..) for more info...
 function getCommonSubArray(L1, L2){
 	var res = getCommonSubArrayOffsets(L1, L2)
 	var left = res.left
@@ -788,21 +809,6 @@ function getCommonSubArray(L1, L2){
 	//a = L1.slice(Math.max(0, left), L1.length - Math.max(right, 0))
 	//b = L2.slice(Math.max(0, -left), L2.length - Math.max(-right, 0))
 	return L1.slice(Math.max(0, left), L1.length - Math.max(right, 0))
-}
-
-
-// Base URL interface...
-//
-// NOTE: changing a base URL will trigger a baseURLChanged event...
-function getBaseURL(){
-	return BASE_URL
-}
-function setBaseURL(url){
-	var old_url = BASE_URL
-	url = url.replace(/\/*$/, '/')
-	BASE_URL = url
-	$('.viewer').trigger('baseURLChanged', [old_url, url])
-	return url
 }
 
 
@@ -959,7 +965,7 @@ function imageUpdated(gid){
 // 		an action (almost) identical to nextImage()...
 // 		Key differences:
 // 			- nextImage(..) uses DOM to get the next image which is simpler
-// 			- nextImage(..) accepts and offset argument
+// 			- nextImage(..) accepts an offset argument
 //
 // XXX not sure if we need the offset argument here... 
 // 		a-la nextImage(n) / prevImage(n)
@@ -1004,6 +1010,8 @@ function makeNextFromListAction(get_closest, get_list){
 		return showImage(next)
 	}
 }
+
+
 // see makeNextFromListAction(..) above for documentation...
 function makePrevFromListAction(get_closest, get_list){
 	get_closest = get_closest == null ? getGIDBefore : get_closest
@@ -1088,7 +1096,7 @@ function imagesFromUrls(lst, ctime_getter){
 }
 
 
-// Construct a DATA object from a list of images
+// Construct a DATA object from a dict of images
 //
 // NOTE: this will create a single ribbon...
 function dataFromImages(images){
@@ -1425,6 +1433,9 @@ function shiftRibbonsBy(n, gid, data){
 * Loaders
 */
 
+// Run all the image update functions registered in IMAGE_UPDATERS, on 
+// an image...
+//
 function updateImageIndicators(gid, image){
 	gid = gid == null ? getImageGID() : gid
 	image = image == null ? getImage() : $(image)
@@ -1457,7 +1468,6 @@ function _loadImagePreviewURL(image, url){
 // NOTE: care must be taken to reset ALL attributes an image can have,
 // 		a common bug if this is not done correctly, is that some settings
 // 		may leak to newly loaded images...
-// XXX do a pre-caching framework...
 function updateImage(image, gid, size, sync){
 	image = image == null ? getImage() : $(image)
 	sync = sync == null ? CONFIG.load_img_sync : sync
@@ -1498,6 +1508,7 @@ function updateImage(image, gid, size, sync){
 
 	// preview...
 	var p_url = getBestPreview(gid, size).url
+
 	// sync load...
 	if(sync){
 		_loadImagePreviewURL(image, p_url)
@@ -1538,7 +1549,7 @@ function updateImage(image, gid, size, sync){
 }
 
 
-// Same as updateImage(...) but will update all images.
+// Same as updateImage(...) but will update all loaded images.
 //
 // NOTE: this will prioritize images by distance from current image...
 //
@@ -1583,19 +1594,10 @@ function updateImages(size, cmp){
 }
 
 
-/* XXX for some very odd reason this is slower than the monster above...
-function updateImages(size){
-	size = size == null ? getVisibleImageSize('max') : size
-	return $('.image')
-		.each(function(){
-			updateImage($(this), null, size)
-		})
-}
-*/
-
-
 // Load count images around a given image/gid into the given ribbon.
 //
+// This is similar to getGIDsAround(..) but will load images into the 
+// viewer...
 function loadImagesAround(count, gid, ribbon, data, force_count){
 	// default values...
 	data = data == null ? DATA : data
