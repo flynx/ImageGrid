@@ -1448,18 +1448,10 @@ function getGIDsAfter(count, gid, ribbon, inclusive, data){
 	data = data == null ? DATA : data
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
+	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
 
-	// ribbon default value...
-	// XXX Race condition: if DATA is not yet loaded this can return 
-	// 		ribbon == null...
-	if(ribbon == null){
-		$(data.ribbons).each(function(i, e){ 
-			if(e.indexOf(gid) >= 0){ 
-				ribbon = i
-				return false 
-			} 
-		})
-	}
+	// get a local gid...
+	gid = data.ribbons[ribbon].indexOf(gid) < 0 ? getGIDBefore(gid, ribbon) : gid
 	ribbon = data.ribbons[ribbon]
 
 	// ribbon this is empty or non-existant...
@@ -1478,9 +1470,6 @@ function getGIDsAfter(count, gid, ribbon, inclusive, data){
 	} else {
 		var c = inclusive == null ? 0 : 1
 		var end = ribbon.indexOf(gid)
-		// avoid -1 value that will wrap around the tail and load the 
-		// whole ribbon...
-		end = end < 0 ? 0 : end
 		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count + c), end + c)
 	}
 }
@@ -1804,6 +1793,8 @@ function loadSettings(){
 // 		loaded/rendered...
 // NOTE: this is not meant to be a real cache, rather a que for the OS and
 // 		backend/webkit on what's next...
+//
+// XXX this appears to actually make things slower and laggy...
 function preCacheRibbonImages(ribbon){
 	var deferred = $.Deferred()
 	setTimeout(function(){
