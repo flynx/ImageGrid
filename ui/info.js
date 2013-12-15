@@ -165,5 +165,53 @@ function inlineImageInfoHoverHandler(evt){
 
 
 
+/*********************************************************************/
+function setupInfo(viewer){
+	console.log('Info: setup...')
+
+	return viewer
+		// info...
+		.on('focusingImage',
+			function(){
+				showRibbonIndicator()
+			})
+		.on([
+				'focusedNextRibbon',
+				'focusedPrevRibbon'
+			].join(' '),
+			function(){
+				if(toggleSingleImageMode('?') == 'on'){
+					flashRibbonIndicator()
+				}
+			})
+		.on([
+				'rotatingLeft',
+				'rotateingRight',
+				'flippingVertical',
+				'flippingHorizontal'
+			].join(' '), 
+			function(evt, image){
+				updateGlobalImageInfo($(image))
+			})
+		.on([
+				'focusingImage',
+				'togglingMark',
+				'togglingBookmark',
+				'removeingAllMarks',
+				'removeingRibbonMarks',
+				'markingAll',
+				'markingRibbon',
+				'invertingMarks'
+			].join(' '), 
+			function(){
+				updateGlobalImageInfo()
+				updateContextIndicators()
+			})
+
+
+}
+SETUP_BINDINGS.push(setupInfo)
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 spell nowrap :                                   */

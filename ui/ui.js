@@ -1261,5 +1261,29 @@ function showImageInfo(){
 
 
 
+/*********************************************************************/
+
+function setupUI(viewer){
+	console.log('UI: setup...')
+
+	return viewer
+		.click(function(){
+			if($('.ribbon').length == 0){
+				loadDirectoryDialog()
+			}
+		})
+		.on([
+				'focusingImage',
+				'fittingImages'
+			].join(' '), 
+			function(){
+				updateCurrentMarker()
+			})
+
+}
+SETUP_BINDINGS.push(setupUI)
+
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 nowrap :										 */

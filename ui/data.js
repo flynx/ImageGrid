@@ -138,8 +138,6 @@ var SETTINGS = {
 
 var BASE_URL = '.'
 
-var IMAGE_CACHE = []
-
 // XXX make these usable for both saving and loading...
 // XXX get these from config...
 var IMAGES_FILE_DEFAULT = 'images.json'
@@ -159,13 +157,6 @@ var UPDATE_SYNC = false
 // default...
 var SYNC_IMG_LOADER = false
 
-
-// list of functions to setup different bindings
-//
-// each function must be of the form:
-// 	setupBinding(viewer) -> viewer
-//
-var SETUP_BINDINGS = []
 
 // list of function that update image state...
 //
@@ -1779,61 +1770,6 @@ function loadSettings(){
 
 
 /**********************************************************************
-* Image caching...
-*/
-
-// TODO add global cache...
-// 		- manage cache by number and preview size...
-// 		- keep in biggish...
-
-
-// NOTE: this will always overwrite the previous cache set for a ribbon...
-// NOTE: it appears that sorting images by priority before loading them
-// 		to cache has little or no effect on the order they are 
-// 		loaded/rendered...
-// NOTE: this is not meant to be a real cache, rather a que for the OS and
-// 		backend/webkit on what's next...
-//
-// XXX this appears to actually make things slower and laggy...
-function preCacheRibbonImages(ribbon){
-	var deferred = $.Deferred()
-	setTimeout(function(){
-		var i = getRibbonIndex(ribbon)
-		var size = getVisibleImageSize('max')
-		var screen_size = getScreenWidthInImages(getVisibleImageSize())
-		// XXX needs tuning...
-		var cache_frame_size = (screen_size * LOAD_SCREENS)
-		var images = ribbon.find('.image')
-		var first = getImageGID(images.first())
-		var last = getImageGID(images.last())
-
-		var gids = getGIDsAfter(-cache_frame_size, first, i)
-					.concat(getGIDsAfter(cache_frame_size, last, i))
-
-		var cache = []
-		IMAGE_CACHE[i] = cache
-		$.each(gids, function(i, e){
-			var img = new Image()
-			img.src = getBestPreview(e, size).url
-			cache.push(img)
-		})
-
-		deferred.resolve(cache)
-	}, 0)
-	return deferred
-}
-
-
-function preCacheAllRibbons(){
-	$('.ribbon').each(function(){
-		preCacheRibbonImages($(this))
-	})
-	return IMAGE_CACHE
-}
-
-
-
-/**********************************************************************
 * Actions...
 */
 
@@ -1961,6 +1897,253 @@ function loadRibbonsFromPath(path, cmp, reverse, dir_name){
 
 	return DATA
 }
+
+
+
+/*********************************************************************/
+
+function setupData(viewer){
+	console.log('Data: setup...')
+
+	return viewer
+		// NOTE: we do not need to worry about explicit centering the ribbon 
+		//		here, just ball-park-load the correct batch...
+		// NOTE: if we decide to hide ribbons, uncomment the visibility 
+		// 		test down in the code...
+		.on('preCenteringRibbon', function(evt, ribbon, image){
+			var r = getRibbonIndex(ribbon)
+
+			// skip all but the curent ribbon in single image view...
+			if(toggleSingleImageMode('?') == 'on' && r != getRibbonIndex()){
+				return 
+			}
+
+			// prepare for loading...
+			var gid = getImageGID(image)
+			var gr = DATA.ribbons[r]
+
+			// NOTE: this can return null in certain cases (see docs)
+			var gid_before = getGIDBefore(gid, r)
+			// we'll set the image to the first if the align target is 
+			// before it (i.e. gid_before is null)...
+			var img_before = gid_before == null 
+				? ribbon.find('.image').first() 
+				: getImageBefore(image, ribbon)
+			gid_before = gid_before == null ? gr[0] : gid_before
+
+			var screen_size = getScreenWidthInImages()
+			screen_size = screen_size < 1 ? 1 : screen_size
+			var load_frame_size = Math.round(screen_size * LOAD_SCREENS)
+
+			// target image is loaded...
+			if(gid_before == getImageGID(img_before)){
+				var roll_frame_size = Math.ceil(load_frame_size * ROLL_FRAME)
+				var threshold = Math.floor(load_frame_size * LOAD_THRESHOLD) 
+				threshold = threshold < 1 ? 1 : threshold
+
+				var head = img_before.prevAll('.image').length
+				var tail = img_before.nextAll('.image').length
+				var l = ribbon.find('.image').length
+				var index = gr.indexOf(gid_before)
+				var at_start = index < threshold
+				var at_end = (gr.length-1 - index) < threshold
+
+				// less images than expected - extend ribbon...
+				if(l < load_frame_size){
+					// NOTE: we are forcing the count of images...
+					loadImagesAround(load_frame_size, gid, ribbon, null, true)
+
+				// tail at threshold - roll ->
+				} else if(!at_end && tail < threshold){
+					var rolled = rollImages(roll_frame_size, ribbon)
+
+				// head at threshold - roll <-
+				} else if(!at_start && head < threshold){
+					var rolled = rollImages(-roll_frame_size, ribbon)
+
+				//} else {
+				//	console.log('>>> skipping:', r)
+				}
+
+			// we jumped, load new set...
+			} else {
+				// NOTE: we are forcing the count of images...
+				loadImagesAround(load_frame_size, gid, ribbon, null, true)
+			}
+		})
+
+
+		.on('shiftedImage', function(evt, image, from, to){
+			from = getRibbonIndex(from)
+			//var ribbon = to
+			to = getRibbonIndex(to)
+
+			var gid = getImageGID(image)
+			var after = getGIDBefore(gid, to)
+
+			// remove the elem from the from ribbon...
+			var index = DATA.ribbons[from].indexOf(gid)
+			var img = DATA.ribbons[from].splice(index, 1)
+
+			// put the elem in the to ribbon...
+			index = after == null ? 0 : DATA.ribbons[to].indexOf(after) + 1
+			DATA.ribbons[to].splice(index, 0, gid)
+
+			// indicators...
+			flashIndicator(from < to ? 'next' : 'prev')
+		})
+
+
+		.on('createdRibbon', function(evt, index){
+			index = getRibbonIndex(index)
+			DATA.ribbons.splice(index, 0, [])
+		})
+		.on('removedRibbon', function(evt, index){
+			DATA.ribbons.splice(index, 1)
+		})
+
+
+		.on('requestedFirstImage', function(evt, ribbon){
+			var r = getRibbonIndex(ribbon)
+			var gr = DATA.ribbons[r]
+			rollImages(-gr.length, ribbon)
+		})
+		.on('requestedLastImage', function(evt, ribbon){
+			var r = getRibbonIndex(ribbon)
+			var gr = DATA.ribbons[r]
+			rollImages(gr.length, ribbon)
+		})
+
+		.on('fittingImages', function(evt, n){
+			//console.log('!!!! fittingImages')
+			// load correct amount of images in each ribbon!!!
+			var screen_size = getScreenWidthInImages()
+			var gid = getImageGID()
+
+			/* XXX used to skip ribbons that are not visible... (see bellow)
+			var viewer = $('.viewer')
+			var H = viewer.height()
+			var h = getImage().height()
+			*/
+
+			// update and align ribbons...
+			$('.ribbon').each(function(){
+				var r = $(this)
+				/* XXX skip ribbons that are not visible...
+				 * 		causes misaligns and misloads on zoom-in...
+				// NOTE: we factor in the scale difference to predict 
+				// 		ribbon position in the new view...
+				var t = getRelativeVisualPosition(viewer, r).top * (n/screen_size)
+				if( t+h <= 0 || t >= H ){
+					console.log('#### skipping align of ribbon:', getRibbonIndex(r))
+					return
+				}
+				*/
+				loadImagesAround(Math.round(screen_size * LOAD_SCREENS), gid, r, null, true)
+			})
+
+			centerView(null, 'css')
+
+			// update settings...
+			if(toggleSingleImageMode('?') == 'on'){
+				SETTINGS['single-image-mode-screen-images'] = n
+			} else {
+				SETTINGS['ribbon-mode-screen-images'] = n
+			}
+
+			// update proportions...
+			if(window.PROPORTIONS_RATIO_THRESHOLD != null 
+					&& toggleSingleImageMode('?') == 'on'){
+
+				var h = getVisibleImageSize('height')
+				var w = getVisibleImageSize('width')
+				var H = $('.viewer').innerHeight()
+				var W = $('.viewer').innerWidth()
+
+				var m = Math.min(W/w, H/h)
+
+				if(m < PROPORTIONS_RATIO_THRESHOLD){
+					toggleImageProportions('fit-viewer')
+				} else {
+					toggleImageProportions('none')
+				}
+			}
+
+			// update size classes...
+			// XXX make thresholds global...
+			if(n <= 2.5){
+				$('.viewer')
+					.removeClass('small')
+					.addClass('large')
+			} else if (n >= 6) {
+				$('.viewer')
+					.addClass('small')
+					.removeClass('large')
+			} else {
+				$('.viewer')
+					.removeClass('small')
+					.removeClass('large')
+			}
+
+			// update previews...
+			updateImages()
+		})
+
+
+		.on('focusingImage', function(evt, image){
+			image = $(image)
+			DATA.current = getImageGID(image)
+
+			if(window.setWindowTitle != null){
+				// XXX do we need to hide the extension...
+				setWindowTitle(getImageFileName())
+					//.split(/\.(jpg|jpeg|png|gif)$/)[0])
+			}
+		})
+
+
+		// basic image manipulation...
+		.on('rotatingLeft rotatingRight', function(evt, image){
+			$(image).each(function(i, e){
+				var img = $(this)
+				var gid = getImageGID(img) 
+				var orientation = img.attr('orientation')
+
+				// change the image orientation status and add to 
+				// updated list...
+				IMAGES[gid].orientation = orientation
+				imageUpdated(gid)
+			})
+		})
+		.on('flippingVertical flippingHorizontal', function(evt, image){
+			$(image).each(function(i, e){
+				var img = $(this)
+				var gid = getImageGID(img) 
+				var flip = getImageFlipState(img)
+
+				IMAGES[gid].flipped = flip
+				imageUpdated(gid)
+			})
+		})
+		.on('resetToOriginalImage', function(evt, image){
+			$(image).each(function(i, e){
+				var img = $(this)
+				var gid = getImageGID(img) 
+
+				IMAGES[gid].flipped = null
+				IMAGES[gid].orientation = 0
+
+				imageUpdated(gid)
+			})
+		})
+
+
+		.on('baseURLChanged', function(evt, url){
+			saveLocalStorageBaseURL()
+			saveLocalStorageBaseURLHistory()
+		})
+}
+SETUP_BINDINGS.push(setupData)
 
 
 
