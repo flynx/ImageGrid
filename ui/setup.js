@@ -317,12 +317,14 @@ function setupDataBindings(viewer){
 
 
 		// caching...
+		/* XXX this appears to actually make things slower...
 		.on('reloadedRibbon updatedRibbon', function(evt, ribbon){
 
 			window.DEBUG && console.log('>>> (ribbon:', getRibbonIndex(ribbon), ') Updating cache...')
 
 			preCacheRibbonImages(ribbon)
 		})
+		*/
 
 		// info...
 		.on('focusingImage',

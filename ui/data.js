@@ -1478,6 +1478,9 @@ function getGIDsAfter(count, gid, ribbon, inclusive, data){
 	} else {
 		var c = inclusive == null ? 0 : 1
 		var end = ribbon.indexOf(gid)
+		// avoid -1 value that will wrap around the tail and load the 
+		// whole ribbon...
+		end = end < 0 ? 0 : end
 		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count + c), end + c)
 	}
 }
@@ -1807,14 +1810,14 @@ function preCacheRibbonImages(ribbon){
 		var i = getRibbonIndex(ribbon)
 		var size = getVisibleImageSize('max')
 		var screen_size = getScreenWidthInImages(getVisibleImageSize())
-		// XXX
-		var cache_frame_size = (screen_size * LOAD_SCREENS) / 2
+		// XXX needs tuning...
+		var cache_frame_size = (screen_size * LOAD_SCREENS)
 		var images = ribbon.find('.image')
 		var first = getImageGID(images.first())
 		var last = getImageGID(images.last())
 
-		var gids = getGIDsAfter(-cache_frame_size, first)
-					.concat(getGIDsAfter(cache_frame_size, last))
+		var gids = getGIDsAfter(-cache_frame_size, first, i)
+					.concat(getGIDsAfter(cache_frame_size, last, i))
 
 		var cache = []
 		IMAGE_CACHE[i] = cache
