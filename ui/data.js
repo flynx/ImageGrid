@@ -567,6 +567,184 @@ function getGIDBefore(gid, ribbon, search, data){
 }
 
 
+// Get "count" of GIDs starting with a given gid ("from")
+//
+// NOTE: this will not include the 'from' GID in the resulting list, 
+// 		unless inclusive is set to true.
+// NOTE: count can be either negative or positive, this will indicate 
+// 		load direction...
+// NOTE: this can calculate the ribbon number where the image is located.
+// NOTE: if an image can be in more than one ribbon, one MUST suply the
+// 		correct ribbon number...
+//
+// XXX do we need more checking???
+// XXX Race condition: when this is called while DATA is not yet fully 
+// 		loaded (old data), the from gid will not be present in 
+// 		DATA.ribbons...
+function getGIDsAfter(count, gid, ribbon, inclusive, data){
+	if(count == 0){
+		return []
+	}
+	// default values...
+	gid = gid == null ? getImageGID() : gid
+	data = data == null ? DATA : data
+	ribbon = ribbon == null ? getRibbonIndex() : ribbon
+	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
+	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
+
+	// get a local gid...
+	gid = data.ribbons[ribbon].indexOf(gid) < 0 ? getGIDBefore(gid, ribbon) : gid
+	ribbon = data.ribbons[ribbon]
+
+	// ribbon this is empty or non-existant...
+	// XXX need to check when can we get a ribbon == undefined case...
+	// 		...race?
+	//if(ribbon == null){
+	//	// XXX
+	//}
+	if(ribbon == null || ribbon.length == 0){
+		return []
+	}
+	if(count > 0){
+		var c = inclusive == null ? 1 : 0
+		var start = ribbon.indexOf(gid) + c
+		return ribbon.slice(start, start + count)
+	} else {
+		var c = inclusive == null ? 0 : 1
+		var end = ribbon.indexOf(gid)
+		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count + c), end + c)
+	}
+}
+
+
+// Get a sub-ribbon of count elements around a given gid
+//
+//	+- ribbon	   count
+//	v			|<------>|
+// 	ooooooooooooooooXoooooooooooooooo	->	ooooXoooo
+// 					^
+// 				   gid
+//
+// If gid does not exist in the requested ribbon then getGIDBefore() is
+// used to get an appropriate alternative gid.
+//
+// If gid is less than count/2 to ribbon head/tail, then less than count
+// gids will be returned
+//
+//	   count
+//  |<------>|
+// 	   oXoooooooooooooooo	->	___oXoooo
+// 		^
+// 	   gid
+//
+//
+// Setting force_count will make this always return count images, even 
+// at the start and end of the ribbon.
+//
+//		  count
+//	   |<------>|
+// 	   oXoooooooooooooooo	->	oXooooooo
+// 		^
+// 	   gid
+//
+// Otherwise this will return less.
+//
+// NOTE: skipping gid and ribbon while passing data may not work correctly...
+// NOTE: count represents section diameter...
+function getGIDsAround(count, gid, ribbon, data, force_count){
+	if(count == 0){
+		return []
+	}
+	// default values...
+	data = data == null ? DATA : data
+	gid = gid == null ? getImageGID() : gid
+	ribbon = ribbon == null ? getRibbonIndex() : ribbon
+	// XXX is this out of context here???
+	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
+
+	var ribbon_data = data.ribbons[ribbon]
+	// get a gid that's in the current ribbon...
+	gid = ribbon_data.indexOf(gid) < 0 ? getGIDBefore(gid, ribbon, null, data) : gid
+
+	// calculate the bounds...
+	var i = ribbon_data.indexOf(gid)
+
+	var start = i - Math.floor(count/2)
+	start = start < 0 ? 0 : start
+
+	var end = i + Math.ceil(count/2)
+	end = end > ribbon_data.length ? ribbon_data.length : end
+
+	// force count by extending the ribbon at the opposite end...
+	if(force_count && ribbon_data.length > count){
+		var d = count - (end - start)
+
+		start = end >= ribbon_data.length ? start - d  : start
+		start = start < 0 ? 0 : start
+
+		end = start <= 0 ? end + d : end
+		end = end > ribbon_data.length ? ribbon_data.length : end
+	}
+
+	// get the actual data...
+	return ribbon_data.slice(start, end)
+}
+
+
+// NOTE: this expects that both arrays cleanly intersect each other only 
+// 		once...
+// XXX this sometimes returns a null and a value which seems to be 
+// 		impossible...
+// 		...this does not affect anything, but still need to investigate...
+function getCommonSubArrayOffsets(L1, L2){
+	var res = {}
+
+	// defaults for if one of the lists is empty...
+	if(L1.length == 0){
+		res.left = -(L2.length)
+		res.right = 0
+		return res
+	} else if(L2.length == 0){
+		res.left = L1.length 
+		res.right = 0
+		return res
+	}
+
+	// head...
+	var a = L2.indexOf(L1[0])
+	var b = L1.indexOf(L2[0])
+	res.left = a >= 0 ? -a 
+			: b >= 0 ? b 
+			: null
+
+	// tail...
+	a = L2.indexOf(L1[L1.length-1])
+	b = L1.indexOf(L2[L2.length-1])
+	res.right = a >= 0 ? -(L2.length - a - 1)
+			: b >= 0 ? L1.length - b - 1
+			: null
+
+	return res
+}
+
+
+// NOTE: this expects that bot arrays cleanly intersect each other only 
+// 		once...
+function getCommonSubArray(L1, L2){
+	var res = getCommonSubArrayOffsets(L1, L2)
+	var left = res.left
+	var right = res.right
+
+	if(left == null && right == null){
+		return []
+	}
+
+	//a = L1.slice(Math.max(0, left), L1.length - Math.max(right, 0))
+	//b = L2.slice(Math.max(0, -left), L2.length - Math.max(-right, 0))
+	return L1.slice(Math.max(0, left), L1.length - Math.max(right, 0))
+}
+
+
 // Base URL interface...
 //
 // NOTE: changing a base URL will trigger a baseURLChanged event...
@@ -1197,59 +1375,8 @@ function shiftRibbonsBy(n, gid, data){
 
 
 /**********************************************************************
-* Format conversion
-*/
-
-// Convert legacy Gen1 data format to current Gen3 (v2.0)
-function convertDataGen1(data, cmp){
-	var res = {
-		data: {
-			version: '2.0',
-			current: null,
-			ribbons: [],
-			order: [], 
-		},
-		images: {}
-	}
-	cmp = cmp == null ?
-			function(a, b){ 
-				return imageDateCmp(a, b, null, res.images) 
-			}
-			: cmp
-	var ribbons = res.data.ribbons
-	var order = res.data.order
-	var images = res.images
-
-	// position...
-	res.data.current = data.position
-	
-	// ribbons and images...
-	$.each(data.ribbons, function(i, input_images){
-		var ribbon = []
-		ribbons.push(ribbon)
-		for(var id in input_images){
-			var image = input_images[id]
-			ribbon.push(id)
-			order.push(id)
-			images[id] = image
-		}
-		ribbon.sort(cmp)
-	})
-
-	order.sort(cmp)
-
-	// XXX STUB
-	res.data.current = order[0]
-
-	return res
-}
-
-
-
-/**********************************************************************
 * Loaders
 */
-
 
 function updateImageIndicators(gid, image){
 	gid = gid == null ? getImageGID() : gid
@@ -1354,9 +1481,6 @@ function updateImage(image, gid, size, sync){
 	// flip...
 	setImageFlipState(image, img_data.flipped == null ? [] : img_data.flipped)
 
-	// XXX filter settings...
-	// XXX
-
 	// NOTE: this only has effect on non-square image blocks...
 	correctImageProportionsForRotation(image)
 
@@ -1421,184 +1545,6 @@ function updateImages(size){
 		})
 }
 */
-
-
-// Get "count" of GIDs starting with a given gid ("from")
-//
-// NOTE: this will not include the 'from' GID in the resulting list, 
-// 		unless inclusive is set to true.
-// NOTE: count can be either negative or positive, this will indicate 
-// 		load direction...
-// NOTE: this can calculate the ribbon number where the image is located.
-// NOTE: if an image can be in more than one ribbon, one MUST suply the
-// 		correct ribbon number...
-//
-// XXX do we need more checking???
-// XXX Race condition: when this is called while DATA is not yet fully 
-// 		loaded (old data), the from gid will not be present in 
-// 		DATA.ribbons...
-function getGIDsAfter(count, gid, ribbon, inclusive, data){
-	if(count == 0){
-		return []
-	}
-	// default values...
-	gid = gid == null ? getImageGID() : gid
-	data = data == null ? DATA : data
-	ribbon = ribbon == null ? getRibbonIndex() : ribbon
-	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
-	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
-
-	// get a local gid...
-	gid = data.ribbons[ribbon].indexOf(gid) < 0 ? getGIDBefore(gid, ribbon) : gid
-	ribbon = data.ribbons[ribbon]
-
-	// ribbon this is empty or non-existant...
-	// XXX need to check when can we get a ribbon == undefined case...
-	// 		...race?
-	//if(ribbon == null){
-	//	// XXX
-	//}
-	if(ribbon == null || ribbon.length == 0){
-		return []
-	}
-	if(count > 0){
-		var c = inclusive == null ? 1 : 0
-		var start = ribbon.indexOf(gid) + c
-		return ribbon.slice(start, start + count)
-	} else {
-		var c = inclusive == null ? 0 : 1
-		var end = ribbon.indexOf(gid)
-		return ribbon.slice((Math.abs(count) >= end ? 0 : end + count + c), end + c)
-	}
-}
-
-
-// Get a sub-ribbon of count elements around a given gid
-//
-//	+- ribbon	   count
-//	v			|<------>|
-// 	ooooooooooooooooXoooooooooooooooo	->	ooooXoooo
-// 					^
-// 				   gid
-//
-// If gid does not exist in the requested ribbon then getGIDBefore() is
-// used to get an appropriate alternative gid.
-//
-// If gid is less than count/2 to ribbon head/tail, then less than count
-// gids will be returned
-//
-//	   count
-//  |<------>|
-// 	   oXoooooooooooooooo	->	___oXoooo
-// 		^
-// 	   gid
-//
-//
-// Setting force_count will make this always return count images, even 
-// at the start and end of the ribbon.
-//
-//		  count
-//	   |<------>|
-// 	   oXoooooooooooooooo	->	oXooooooo
-// 		^
-// 	   gid
-//
-// Otherwise this will return less.
-//
-// NOTE: skipping gid and ribbon while passing data may not work correctly...
-// NOTE: count represents section diameter...
-function getGIDsAround(count, gid, ribbon, data, force_count){
-	if(count == 0){
-		return []
-	}
-	// default values...
-	data = data == null ? DATA : data
-	gid = gid == null ? getImageGID() : gid
-	ribbon = ribbon == null ? getRibbonIndex() : ribbon
-	// XXX is this out of context here???
-	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
-
-	var ribbon_data = data.ribbons[ribbon]
-	// get a gid that's in the current ribbon...
-	gid = ribbon_data.indexOf(gid) < 0 ? getGIDBefore(gid, ribbon, null, data) : gid
-
-	// calculate the bounds...
-	var i = ribbon_data.indexOf(gid)
-
-	var start = i - Math.floor(count/2)
-	start = start < 0 ? 0 : start
-
-	var end = i + Math.ceil(count/2)
-	end = end > ribbon_data.length ? ribbon_data.length : end
-
-	// force count by extending the ribbon at the opposite end...
-	if(force_count && ribbon_data.length > count){
-		var d = count - (end - start)
-
-		start = end >= ribbon_data.length ? start - d  : start
-		start = start < 0 ? 0 : start
-
-		end = start <= 0 ? end + d : end
-		end = end > ribbon_data.length ? ribbon_data.length : end
-	}
-
-	// get the actual data...
-	return ribbon_data.slice(start, end)
-}
-
-
-// NOTE: this expects that both arrays cleanly intersect each other only 
-// 		once...
-// XXX this sometimes returns a null and a value which seems to be 
-// 		impossible...
-// 		...this does not affect anything, but still need to investigate...
-function getCommonSubArrayOffsets(L1, L2){
-	var res = {}
-
-	// defaults for if one of the lists is empty...
-	if(L1.length == 0){
-		res.left = -(L2.length)
-		res.right = 0
-		return res
-	} else if(L2.length == 0){
-		res.left = L1.length 
-		res.right = 0
-		return res
-	}
-
-	// head...
-	var a = L2.indexOf(L1[0])
-	var b = L1.indexOf(L2[0])
-	res.left = a >= 0 ? -a 
-			: b >= 0 ? b 
-			: null
-
-	// tail...
-	a = L2.indexOf(L1[L1.length-1])
-	b = L1.indexOf(L2[L2.length-1])
-	res.right = a >= 0 ? -(L2.length - a - 1)
-			: b >= 0 ? L1.length - b - 1
-			: null
-
-	return res
-}
-
-
-// NOTE: this expects that bot arrays cleanly intersect each other only 
-// 		once...
-function getCommonSubArray(L1, L2){
-	var res = getCommonSubArrayOffsets(L1, L2)
-	var left = res.left
-	var right = res.right
-
-	if(left == null && right == null){
-		return []
-	}
-
-	//a = L1.slice(Math.max(0, left), L1.length - Math.max(right, 0))
-	//b = L2.slice(Math.max(0, -left), L2.length - Math.max(-right, 0))
-	return L1.slice(Math.max(0, left), L1.length - Math.max(right, 0))
-}
 
 
 // Load count images around a given image/gid into the given ribbon.
@@ -1822,22 +1768,6 @@ function updateRibbonOrder(no_reload_viewer){
 }
 
 
-// Action wrapper of alignDataToRibbon(...)
-//
-// Align ribbons to the current ribbon.
-//
-// XXX need to change the default to base ribbon for production...
-function alignRibbons(ribbon){
-	console.warn('alignRibbons(): not yet ready for production use!')
-	// XXX remove this line for production....
-	ribbon = ribbon == null ? getRibbonIndex() : ribbon
-
-	DATA = alignDataToRibbon(ribbon)
-
-	reloadViewer()
-}
-
-
 // Focus next/prev image in order...
 //
 // This differs form nextImage/prevImage in that these are not 
@@ -1856,6 +1786,22 @@ var prevImageInOrder = makePrevFromListAction(
 		function(){ 
 			return DATA.order
 		})
+
+
+// Action wrapper of alignDataToRibbon(...)
+//
+// Align ribbons to the current ribbon.
+//
+// XXX need to change the default to base ribbon for production...
+function alignRibbons(ribbon){
+	console.warn('alignRibbons(): not yet ready for production use!')
+	// XXX remove this line for production....
+	ribbon = ribbon == null ? getRibbonIndex() : ribbon
+
+	DATA = alignDataToRibbon(ribbon)
+
+	reloadViewer()
+}
 
 
 
