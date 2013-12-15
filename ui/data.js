@@ -629,6 +629,46 @@ function getGIDBefore(gid, ribbon, search, data){
 }
 
 
+// Construct a function similar to getGIDBefore(..) that will get the 
+// closest gid from a list...
+//
+// for exact protocol see: getGIDBefore(..)
+//
+// NOTE: this will consider only loaded images...
+// NOTE: this needs the list sorted in the same order as the ribbons 
+// 		i.e. via DATA.order...
+// NOTE: passing a ribbon number or setting restrict_to_ribbon to true 
+// 		will restrict the search to a specific ribbon only...
+function makeGIDBeforeGetterFromList(get_list, restrict_to_ribbon){
+	return function(gid, ribbon){
+		ribbon = ribbon == null && restrict_to_ribbon == true 
+			? getGIDRibbonIndex(gid) 
+			: ribbon
+		var list = get_list()
+		if(list.length == 0){
+			return null
+		}
+		console.log('>>>>', ribbon)
+		gid = gid == null ? getImageGID(null, ribbon) : gid
+		var prev
+
+		// need to account for cropping here...
+		// skip until we find a match from the list...
+		do {
+			prev = getGIDBefore(gid, list)
+			gid = getGIDBefore(prev, ribbon)
+		} while(prev != gid && prev != null)
+
+		// nothing found before current image...
+		if(prev == null){
+			return prev
+		}
+
+		return prev
+	}
+}
+
+
 // Get "count" of GIDs starting with a given gid ("from")
 //
 // count can be either negative or positive, this will indicate load 
@@ -966,6 +1006,8 @@ function imageUpdated(gid){
 // 		Key differences:
 // 			- nextImage(..) uses DOM to get the next image which is simpler
 // 			- nextImage(..) accepts an offset argument
+// NOTE: passing a ribbon number or setting restrict_to_ribbon to true 
+// 		will restrict the search to a specific ribbon only...
 //
 // XXX not sure if we need the offset argument here... 
 // 		a-la nextImage(n) / prevImage(n)
@@ -973,19 +1015,22 @@ function imageUpdated(gid){
 // 		loaded gids? 
 // 		(i.e. filter it first and then get the needed gid rather 
 // 		iterating...)
-function makeNextFromListAction(get_closest, get_list){
+function makeNextFromListAction(get_closest, get_list, restrict_to_ribbon){
 	get_closest = get_closest == null ? getGIDBefore : get_closest
 	get_list = get_list == null ? getRibbonGIDs : get_list
 
-	return function(){
+	return function(ribbon){
 		var list = get_list()
 		if(list.length == 0){
 			flashIndicator('end')
 			return getImage()
 		}
 		var cur = getImageGID()
+		ribbon = ribbon == null && restrict_to_ribbon == true 
+			? getGIDRibbonIndex(cur) 
+			: ribbon
 		var o = getGIDOrder(cur)
-		var next = get_closest(cur)
+		var next = get_closest(cur, ribbon)
 		var i = list.indexOf(next)+1
 
 		// we are before the first loaded bookmark, find the first...
@@ -994,7 +1039,7 @@ function makeNextFromListAction(get_closest, get_list){
 					|| getGIDOrder(next) < o) 
 				&& i < list.length){
 			next = list[i]
-			next = get_closest(next)
+			next = get_closest(next, ribbon)
 			i++
 		}
 
@@ -1013,18 +1058,21 @@ function makeNextFromListAction(get_closest, get_list){
 
 
 // see makeNextFromListAction(..) above for documentation...
-function makePrevFromListAction(get_closest, get_list){
+function makePrevFromListAction(get_closest, get_list, restrict_to_ribbon){
 	get_closest = get_closest == null ? getGIDBefore : get_closest
 	get_list = get_list == null ? getRibbonGIDs : get_list
 
-	return function(){
+	return function(ribbon){
 		var list = get_list()
 		if(list.length == 0){
 			flashIndicator('start')
 			return getImage(cur)
 		}
 		var cur = getImageGID()
-		var prev = get_closest(cur)
+		ribbon = ribbon == null && restrict_to_ribbon == true 
+			? getGIDRibbonIndex(cur) 
+			: ribbon
+		var prev = get_closest(cur, ribbon)
 
 		// nothing bookmarked before us...
 		if(prev == null){
@@ -1035,7 +1083,7 @@ function makePrevFromListAction(get_closest, get_list){
 		// current image is bookmarked, get the bookmark before it...
 		if(prev == cur){
 			prev = list[list.indexOf(prev)-1]
-			prev = prev != null ? get_closest(prev) : prev
+			prev = prev != null ? get_closest(prev, ribbon) : prev
 			// no loaded (crop mode?) bookmark before us...
 			if(prev == null){
 				flashIndicator('start')

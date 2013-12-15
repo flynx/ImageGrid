@@ -22,32 +22,10 @@ var BOOKMARKS_FILE_PATTERN = /^[0-9]*-bookmarked.json$/
 * Helpers
 */
 
-// This is the same as getGIDBefore(..) but will return the currently 
-// loaded and bookmarked image before current.
-//
-// for exact protocol see: getGIDBefore(..)
-//
-// XXX argument processing...
-function getBookmarkedGIDBefore(gid){
-	if(BOOKMARKS.length == 0){
-		return null
-	}
-	gid = gid == null ? getImageGID() : gid
-	var prev
-
-	// need to account for cropping here...
-	do {
-		prev = getGIDBefore(gid, BOOKMARKS)
-		gid = getGIDBefore(prev)
-	} while(prev != gid && prev != null)
-
-	// no bookmarks before current image...
-	if(prev == null){
-		return prev
-	}
-
-	return prev
-}
+var getBookmarkedGIDBefore = makeGIDBeforeGetterFromList(
+		function(){ 
+			return BOOKMARKS 
+		})
 
 
 
@@ -101,18 +79,9 @@ var toggleBookmark = makeMarkToggler(
 // focus next bookmark...
 //
 // NOTE: this will not jump to bookmarks on other ribbons...
-//
-// XXX make a generic next/prev marked function...
 var nextBookmark = makeNextFromListAction(
 		getBookmarkedGIDBefore, 
 		function(){ return BOOKMARKS })
-
-
-// focus previous bookmark...
-//
-// NOTE: this will not jump to bookmarks on other ribbons...
-//
-// XXX make a generic next/prev marked function...
 var prevBookmark = makePrevFromListAction(
 		getBookmarkedGIDBefore, 
 		function(){ return BOOKMARKS })

@@ -54,6 +54,12 @@ function _removeMark(cls, gid, image){
 }
 
 
+var getMarkedGIDBefore = makeGIDBeforeGetterFromList(
+		function(){ 
+			return MARKED 
+		})
+
+
 // Make a mark toggler
 //
 // The toggler will:
@@ -378,6 +384,20 @@ function shiftMarkedImagesRight(){
 }
 
 
+// focus next/prev mark...
+//
+// NOTE: these will not jump to marks on other ribbons... to prevent this
+// 		add true as the final argument (see restrict_to_ribbon argument 
+// 		of makeNextFromListAction(..) for more info)
+var nextMark = makeNextFromListAction(
+		getMarkedGIDBefore, 
+		function(){ return MARKED })
+var prevMark = makePrevFromListAction(
+		getMarkedGIDBefore, 
+		function(){ return MARKED })
+
+
+
 
 /**********************************************************************
 * Dialogs... 
@@ -501,7 +521,10 @@ function setupMarks(viewer){
 		.on('togglingMark', function(evt, gid, action){
 			// add marked image to list...
 			if(action == 'on'){
-				MARKED.indexOf(gid) == -1 && MARKED.push(gid)
+				if(MARKED.indexOf(gid) == -1){
+					MARKED.push(gid)
+					MARKED.sort(imageOrderCmp)
+				} 
 
 			// remove marked image from list...
 			} else {
@@ -526,6 +549,7 @@ function setupMarks(viewer){
 				// do the toggle...
 				if(state){
 					MARKED.push(e)
+					MARKED.sort(imageOrderCmp)
 				} else {
 					MARKED.splice(MARKED.indexOf(e), 1)
 				}
@@ -562,6 +586,7 @@ function setupMarks(viewer){
 				var i = MARKED.indexOf(e)
 				if(i == -1){
 					MARKED.push(e)
+					MARKED.sort(imageOrderCmp)
 				}
 			})
 		})
@@ -574,6 +599,7 @@ function setupMarks(viewer){
 				var i = MARKED.indexOf(e)
 				if(i == -1){
 					MARKED.push(e)
+					MARKED.sort(imageOrderCmp)
 				} else {
 					MARKED.splice(i, 1)
 				}

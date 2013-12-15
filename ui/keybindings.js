@@ -584,8 +584,10 @@ var KEYBOARD_CONFIG = {
 				ctrl: doc('Toggle bookmark', 
 					function(){ toggleBookmark() }),
 			},
-		'[': doc('Previous bookmarked image', prevBookmark),
-		']': doc('Next bookmarked image', nextBookmark),
+		'[': doc('Previous bookmarked image', 
+				function(){ prevBookmark() }),
+		']': doc('Next bookmarked image', 
+				function(){ nextBookmark() }),
 
 		S: {
 				default: doc('Start slideshow', 

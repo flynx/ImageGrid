@@ -4,6 +4,10 @@
 *
 **********************************************************************/
 
+// Tag index
+//
+// This can be constructed from tags in IMAGES with buildTagsFromImages(..)
+//
 // format:
 // 	{
 // 		tag: [ gid, ... ],
@@ -312,6 +316,7 @@ function setupTags(viewer){
 
 }
 SETUP_BINDINGS.push(setupTags)
+
 
 
 /**********************************************************************
