@@ -299,10 +299,15 @@ function setupTags(viewer){
 	viewer
 		.on('imagesLoaded', function(){
 			TAGS = []
-			showStatusQ('Tags: building index...')
+
+			showStatusQ('Tags: Index: building...')
+
 			// XXX should this be sync???
+			var t0 = Date.now()
 			buildTagsFromImages()
-			showStatusQ('Tags: building index: done.')
+			var t1 = Date.now()
+
+			showStatusQ('Tags: Index: done ('+( t1 - t0 )+'ms).')
 		})
 
 }

@@ -110,6 +110,13 @@ Roadmap
 
 [_] 28% Gen 3 current todo
 	[_] 56% High priority
+		[_] BUG: appear to be leaking memory on very large sets of images (>8K)
+		| don't remember it before, so it might be due to the new 
+		| loadImagesAround(..)
+		|
+		| Another place to check is pre-caching...
+		|
+		| Ran a test session -- we appear to never invalidate cache...
 		[_] 66% Bookmarks
 			[X] toggle
 			[X] save/load
