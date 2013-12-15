@@ -6,6 +6,10 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+// Flag indicating a new image file was constructed...
+// XXX do we need this?
+var IMAGES_CREATED = false
+
 // XXX make these usable for both saving and loading...
 // XXX get these from config...
 var IMAGES_FILE_DEFAULT = 'images.json'

@@ -11,6 +11,7 @@
 
 
 var CONFIG = {
+	// Application name...
 	app_name: 'ImageGrid.Viewer',
 
 	// Loader configuration...
@@ -31,15 +32,16 @@ var CONFIG = {
 	roll_frame: 1/3,
 	// the threshold size relative to LOAD_SCREENS
 	load_threshold: 1/4,
+
 	// A threshold after which the image block ratio will be changed form 
 	// 1x1 to 'fit-viewer' in single image mode...
 	//
 	// NOTE: if null this feature will be disabled.
 	proportions_ratio_threshold: 1.5,
 
-	// ribbon scale limits and defaults...
-	default_screen_images: 4,
+	// ribbon scaling limits and defaults...
 	max_screen_images: 12,
+	default_screen_images: 4,
 	zoom_step_scale: 1.2,
 
 	// localStorage prefix...
@@ -50,20 +52,20 @@ var CONFIG = {
 	cache_dir_var: '${CACHE_DIR}',
 
 
-	// if true updateImages(..) will sort the images before updating, so as
+	// If true updateImages(..) will sort the images before updating, so as
 	// to make the visible images update first...
 	//
 	// XXX appears to have little effect...
 	update_sort_enabled: false,
 
-	// if set then the actual updating will be done in parallel. this is to 
+	// If set then the actual updating will be done in parallel. This is to 
 	// make actions that lead to an update have less latency...
 	//
 	// XXX for some reason the sync version appears to work faster...
 	update_sync: false,
-	// if this is true image previews will be loaded synchronously by 
-	// default...
-	sync_img_loader: false,
+
+	// If this is true image previews will be loaded synchronously...
+	load_img_sync: false,
 
 }
 
@@ -78,18 +80,51 @@ var UI_STATE = {
 }
 
 
+
+/**********************************************************************
+* Global state... 
+*/
+
+// Data format...
+var DATA = {
+	// Format version...
+	version: '2.0',
+
+	// Current position, GID...
+	current: null,
+
+	// The ribbon cache...
+	// in the simplest form this is a list of lists of GIDs
+	ribbons: [],
+
+	// Flat ordered list of images in current context...
+	// in the simplest form this is a list of GIDs.
+	//
+	// NOTE: this may contain more gids than are currently loaded to 
+	// 		the ribbons...
+	order: [],
+
+	// This can be used to store the filename/path of the file containing 
+	// image data...
+	//
+	// This is optional.
+	image_file: null
+}
+
 // A stub image, also here for documentation...
 var STUB_IMAGE_DATA = {
 	// Entity GID...
-	id: 'SIZE',
+	id: 'STUB-GID',
 
 	// Entity type
+	//
 	// can be:
 	// 	- 'image'
 	// 	- 'group'
 	type: 'image',
 
 	// Entity state
+	//
 	// can be:
 	// 	- 'single'
 	// 	- 'grouped'
@@ -116,16 +151,20 @@ var STUB_IMAGE_DATA = {
 	// XXX currently unused...
 	classes: '',
 
-	// Image orientation
+	// Image orientation (optional)
 	//
 	// can be:
-	// 	- 0 (default)	- load as-is
-	// 	- 90			- rotate 90deg CW
-	// 	- 180			- rotate 180deg CW
-	// 	- 270			- rotate 270deg CW (90deg CCW)
+	// 	- null/undefined	- same as 0
+	// 	- 0 (default)		- load as-is
+	// 	- 90				- rotate 90deg CW
+	// 	- 180				- rotate 180deg CW
+	// 	- 270				- rotate 270deg CW (90deg CCW)
+	//
+	// NOTE: use orientationExif2ImageGrid(..) to convert from EXIF 
+	// 		orientation format to ImageGrid format...
 	orientation: 0,
 
-	// Image flip state
+	// Image flip state (optional)
 	//
 	// can be:
 	// 	- null/undefined
@@ -134,43 +173,43 @@ var STUB_IMAGE_DATA = {
 	// can contain:
 	// 	- 'vertical'
 	// 	- 'horizontal'
+	//
+	// NOTE: use orientationExif2ImageGrid(..) to convert from EXIF 
+	// 		orientation format to ImageGrid format...
 	flipped: null,
+
+	// Image comment (optional)
+	//
+	// can be:
+	// 	- null/undefined
+	// 	- string
+	comment: null,
+
+	// List of image tags (optional)
+	//
+	// can be:
+	// 	- null/undefined
+	// 	- array
+	tags: null,
 }
 
-// Data format...
-var DATA = {
-	// Format version...
-	version: '2.0',
-
-	// Current position, GID...
-	current: null,
-
-	// The ribbon cache...
-	// in the simplest form this is a list of lists of GIDs
-	ribbons: [],
-
-	// Flat ordered list of images in current context...
-	// in the simplest form this is a list of GIDs.
-	order: [],
-
-	// This can be used to store the filename/path of the file containing 
-	// image data...
-	image_file: null
-}
-
-// the images object, this is indexed by image GID and contains all 
+// The images object, this is indexed by image GID and contains all 
 // the needed data...
+//
+// format:
+// 	{
+// 		<gid>: <image>,
+// 		...
+// 	}
+//
+// NOTE: see STUB_IMAGE_DATA for image format description...
 var IMAGES = {}
 // list of image GIDs that have been updated...
 var IMAGES_UPDATED = []
 
-// Flag indicating a new image file was constructed...
-// XXX do we need this?
-var IMAGES_CREATED = false
-
 var BASE_URL = '.'
 
-// list of function that update image state...
+// List of function that update image state...
 //
 // these are called by updateImage(..) after the image is created.
 //
@@ -872,6 +911,7 @@ function getBestPreview(gid, size){
 
 // Orientation translation...
 function orientationExif2ImageGrid(orientation){
+	orientation = orientation == null ? 0 : orientation
 	return {
 		orientation: {
 			0: 0,
@@ -1420,7 +1460,7 @@ function _loadImagePreviewURL(image, url){
 // XXX do a pre-caching framework...
 function updateImage(image, gid, size, sync){
 	image = image == null ? getImage() : $(image)
-	sync = sync == null ? CONFIG.sync_img_loader : sync
+	sync = sync == null ? CONFIG.load_img_sync : sync
 	var oldgid = getImageGID(image)
 
 	if(oldgid == gid || gid == null){
