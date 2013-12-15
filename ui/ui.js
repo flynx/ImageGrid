@@ -12,6 +12,8 @@ var CURSOR_HIDE_TIMEOUT = 1000
 var STATUS_QUEUE = []
 var STATUS_QUEUE_TIME = 200
 
+var CONTEXT_INDICATOR_UPDATERS = []
+
 
 
 
@@ -84,6 +86,39 @@ function showCursor(elem){
 	elem.css('cursor', '')
 }
 */
+
+
+function setupIndicators(){
+	showGlobalIndicator(
+			'single-ribbon-mode', 
+			'Single ribbon mode (F3)')
+		.css('cursor', 'hand')
+		.click(function(){ toggleSingleRibbonMode() })
+}
+
+
+function makeContextIndicatorUpdater(image_class){
+	var _updater = function(image){
+		var indicator = $('.context-mode-indicators .current-image-'+image_class)
+		if(image.hasClass(image_class)){
+			indicator.addClass('shown')
+		} else {
+			indicator.removeClass('shown')
+		}
+	}
+	CONTEXT_INDICATOR_UPDATERS.push(_updater)
+	return _updater
+}
+
+
+function updateContextIndicators(image){
+	image = image == null ? getImage() : $(image)
+
+	CONTEXT_INDICATOR_UPDATERS.map(function(update){
+		update(image)
+	})	
+}
+
 
 function showCurrentMarker(){
 	return $('<div/>')
@@ -1265,6 +1300,8 @@ function showImageInfo(){
 
 function setupUI(viewer){
 	console.log('UI: setup...')
+
+	setupIndicators()
 
 	return viewer
 		.click(function(){

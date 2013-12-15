@@ -34,6 +34,13 @@ var LOAD_THRESHOLD = 1/4
 var DEFAULT_SCREEN_IMAGES = 4
 var MAX_SCREEN_IMAGES = 12
 
+// A threshold after which the image block ratio will be changed to 
+// 'fit-viewer' in single image mode...
+//
+// NOTE: if null this feature will be disabled.
+var PROPORTIONS_RATIO_THRESHOLD = 1.5
+
+
 var CACHE_DIR = '.ImageGrid'
 var CACHE_DIR_VAR = '${CACHE_DIR}'
 
@@ -1900,8 +1907,22 @@ function loadRibbonsFromPath(path, cmp, reverse, dir_name){
 
 
 
-/*********************************************************************/
+/**********************************************************************
+* Setup...
+*/
 
+// Setup event handlers for data bindings...
+//
+// This does two jobs:
+// 	- maintain DATA state
+// 		- editor actions
+// 		- focus
+// 		- marking
+// 	- maintain view consistency
+// 		- centering/moving (roll)
+// 		- shifting (expand/contract)
+// 		- zooming (expand/contract)
+//
 function setupData(viewer){
 	console.log('Data: setup...')
 
