@@ -9,40 +9,74 @@
 *
 **********************************************************************/
 
-//var DEBUG = DEBUG != null ? DEBUG : true
 
-var APP_NAME = 'ImageGrid.Viewer'
+var CONFIG = {
+	app_name: 'ImageGrid.Viewer',
 
-var DATA_ATTR = 'DATA'
+	// Loader configuration...
+	//
+	//		load_screens	
+	// 	|<---------------------->|
+	// 	ooooooooooooXooooooooooooo
+	// 					 |<----->|<------------>|
+	// 						^	   roll_frame			  
+	// 		load_threshold -+
+	//
+	// number of screens to keep loaded...
+	//
+	// NOTE: a "screen" is the number of images that can fit one screen
+	// 		width, as returned by getScreenWidthInImages(..)
+	load_screens: 6,
+	// size of the frame to load relative to LOAD_SCREENS
+	roll_frame: 1/3,
+	// the threshold size relative to LOAD_SCREENS
+	load_threshold: 1/4,
+	// A threshold after which the image block ratio will be changed form 
+	// 1x1 to 'fit-viewer' in single image mode...
+	//
+	// NOTE: if null this feature will be disabled.
+	proportions_ratio_threshold: 1.5,
 
-// Loader configuration...
-//
-//		LOAD_SCREENS	
-// 	|<---------------------->|
-// 	ooooooooooooXooooooooooooo
-// 					 |<----->|<------------>|
-// 						^	   ROLL_FRAME			  
-// 		LOAD_THRESHOLD -+
-//
-// number of screens to keep loaded...
-var LOAD_SCREENS = 6
-// size of the frame to load relative to LOAD_SCREENS
-var ROLL_FRAME = 1/3
-// the threshold size relative to LOAD_SCREENS
-var LOAD_THRESHOLD = 1/4
+	// ribbon scale limits and defaults...
+	default_screen_images: 4,
+	max_screen_images: 12,
+	zoom_step_scale: 1.2,
 
-var DEFAULT_SCREEN_IMAGES = 4
-var MAX_SCREEN_IMAGES = 12
+	// localStorage prefix...
+	data_attr: 'DATA',
 
-// A threshold after which the image block ratio will be changed to 
-// 'fit-viewer' in single image mode...
-//
-// NOTE: if null this feature will be disabled.
-var PROPORTIONS_RATIO_THRESHOLD = 1.5
+	// file cache settings...
+	cache_dir: '.ImageGrid',
+	cache_dir_var: '${CACHE_DIR}',
 
 
-var CACHE_DIR = '.ImageGrid'
-var CACHE_DIR_VAR = '${CACHE_DIR}'
+	// if true updateImages(..) will sort the images before updating, so as
+	// to make the visible images update first...
+	//
+	// XXX appears to have little effect...
+	update_sort_enabled: false,
+
+	// if set then the actual updating will be done in parallel. this is to 
+	// make actions that lead to an update have less latency...
+	//
+	// XXX for some reason the sync version appears to work faster...
+	update_sync: false,
+	// if this is true image previews will be loaded synchronously by 
+	// default...
+	sync_img_loader: false,
+
+}
+
+// User interface state...
+// NOTE: these are named: <mode>-<feature>
+var UI_STATE = {
+	'global-theme': null,
+	'ribbon-mode-screen-images': null,
+	'single-image-mode-screen-images': null,
+	'single-image-mode-proportions': null,
+	'ribbon-mode-image-info': 'off',
+}
+
 
 // A stub image, also here for documentation...
 var STUB_IMAGE_DATA = {
@@ -130,42 +164,15 @@ var IMAGES = {}
 // list of image GIDs that have been updated...
 var IMAGES_UPDATED = []
 
+// Flag indicating a new image file was constructed...
+// XXX do we need this?
 var IMAGES_CREATED = false
-
-var MARKED = []
-
-// NOTE: these are named: <mode>-<feature>
-var SETTINGS = {
-	'global-theme': null,
-	'ribbon-mode-screen-images': null,
-	'single-image-mode-screen-images': null,
-	'single-image-mode-proportions': null,
-	'ribbon-mode-image-info': 'off',
-}
 
 var BASE_URL = '.'
 
-// XXX make these usable for both saving and loading...
-// XXX get these from config...
-var IMAGES_FILE_DEFAULT = 'images.json'
-var IMAGES_FILE_PATTERN = /^[0-9]*-images.json$/
-var IMAGES_DIFF_FILE_PATTERN = /^[0-9]*-images-diff.json$/
-
-var DATA_FILE_DEFAULT = 'data.json'
-var DATA_FILE_PATTERN = /^[0-9]*-data.json$/
-
-var IMAGE_PATTERN = /.*\.(jpg|jpeg|png|gif)$/i
-
-var UPDATE_SORT_ENABLED = false
-// XXX for some reason the sync version appears to work faster...
-var UPDATE_SYNC = false
-
-// if this is true image previews will be loaded synchronously by 
-// default...
-var SYNC_IMG_LOADER = false
-
-
 // list of function that update image state...
+//
+// these are called by updateImage(..) after the image is created.
 //
 // each function must be of the form:
 // 	updateImage(gid, image) -> image
@@ -589,7 +596,7 @@ function getGIDsAfter(count, gid, ribbon, inclusive, data){
 	gid = gid == null ? getImageGID() : gid
 	data = data == null ? DATA : data
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
-	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
+	count = count == null ? Math.round(CONFIG.load_screens * getScreenWidthInImages()) : count
 	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
 
 	// get a local gid...
@@ -660,7 +667,7 @@ function getGIDsAround(count, gid, ribbon, data, force_count){
 	gid = gid == null ? getImageGID() : gid
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	// XXX is this out of context here???
-	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
+	count = count == null ? Math.round(CONFIG.load_screens * getScreenWidthInImages()) : count
 
 	var ribbon_data = data.ribbons[ribbon]
 	// get a gid that's in the current ribbon...
@@ -823,10 +830,10 @@ function normalizePath(url, base, mode, do_unescape){
 	}
 
 	// get the actual path...
-	res = res.replace('${CACHE_DIR}', CACHE_DIR)
+	res = res.replace(CONFIG.cache_dir_var, CONFIG.cache_dir)
 
 	// XXX legacy support...
-	res = res.replace('.ImageGridCache', CACHE_DIR)
+	res = res.replace('.ImageGridCache', CONFIG.cache_dir)
 
 	if(do_unescape){
 		return unescape(res)
@@ -1413,7 +1420,7 @@ function _loadImagePreviewURL(image, url){
 // XXX do a pre-caching framework...
 function updateImage(image, gid, size, sync){
 	image = image == null ? getImage() : $(image)
-	sync = sync == null ? SYNC_IMG_LOADER : sync
+	sync = sync == null ? CONFIG.sync_img_loader : sync
 	var oldgid = getImageGID(image)
 
 	if(oldgid == gid || gid == null){
@@ -1503,7 +1510,7 @@ function updateImages(size, cmp){
 		size = size == null ? getVisibleImageSize('max') : size
 
 		// sorted run...
-		if(UPDATE_SORT_ENABLED && cmp != false){
+		if(CONFIG.update_sort_enabled && cmp != false){
 			cmp = cmp == null ? 
 					makeGIDDistanceCmp(getImageGID(), getImageGID) 
 					// XXX this is more correct but is slow...
@@ -1526,7 +1533,7 @@ function updateImages(size, cmp){
 		}
 	}
 
-	if(UPDATE_SYNC){
+	if(CONFIG.update_sync){
 		_worker()
 	} else {
 		setTimeout(_worker, 0)
@@ -1554,7 +1561,7 @@ function loadImagesAround(count, gid, ribbon, data, force_count){
 	data = data == null ? DATA : data
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	ribbon = typeof(ribbon) != typeof(123) ? getRibbonIndex(ribbon) : ribbon
-	count = count == null ? Math.round(LOAD_SCREENS * getScreenWidthInImages()) : count
+	count = count == null ? Math.round(CONFIG.load_screens * getScreenWidthInImages()) : count
 	// get a gid that exists in the current ribbon...
 	gid = getGIDBefore(gid, ribbon, null, data)
 
@@ -1681,7 +1688,7 @@ function reloadViewer(images_per_screen){
 	var current = DATA.current
 	// if no width is given, use the current or default...
 	var w = images_per_screen == null ? getScreenWidthInImages() : images_per_screen
-	w = w > MAX_SCREEN_IMAGES ? DEFAULT_SCREEN_IMAGES : w
+	w = w > CONFIG.max_screen_images ? CONFIG.default_screen_images : w
 
 	// clear data...
 	$('.ribbon').remove()
@@ -1693,7 +1700,7 @@ function reloadViewer(images_per_screen){
 
 	// create images...
 	$('.ribbon').each(function(i, e){
-		loadImagesAround(Math.round(w * LOAD_SCREENS), current, i)
+		loadImagesAround(Math.round(w * CONFIG.load_screens), current, i)
 	})
 
 	focusImage(getImage(current))
@@ -1703,19 +1710,19 @@ function reloadViewer(images_per_screen){
 }
 
 
-// Apply the current SETTINGS to current viewer
+// Apply the current UI_STATE to current viewer
 function loadSettings(){
-	toggleTheme(SETTINGS['global-theme'])
+	toggleTheme(UI_STATE['global-theme'])
 
 	if(toggleSingleImageMode('?') == 'on'){
-		var w = SETTINGS['single-image-mode-screen-images']
-		if(window.PROPORTIONS_RATIO_THRESHOLD == null){
-			var p = SETTINGS['single-image-mode-proportions']
+		var w = UI_STATE['single-image-mode-screen-images']
+		if(CONFIG.proportions_ratio_threshold == null){
+			var p = UI_STATE['single-image-mode-proportions']
 			toggleImageProportions(p)
 		}
 	} else {
-		var w = SETTINGS['ribbon-mode-screen-images']
-		toggleImageInfo(SETTINGS['ribbon-mode-image-info'] == 'on' ? 'on' : 'off')
+		var w = UI_STATE['ribbon-mode-screen-images']
+		toggleImageInfo(UI_STATE['ribbon-mode-image-info'] == 'on' ? 'on' : 'off')
 	}
 	fitNImages(w)
 }
@@ -1900,12 +1907,12 @@ function setupData(viewer){
 
 			var screen_size = getScreenWidthInImages()
 			screen_size = screen_size < 1 ? 1 : screen_size
-			var load_frame_size = Math.round(screen_size * LOAD_SCREENS)
+			var load_frame_size = Math.round(screen_size * CONFIG.load_screens)
 
 			// target image is loaded...
 			if(gid_before == getImageGID(img_before)){
-				var roll_frame_size = Math.ceil(load_frame_size * ROLL_FRAME)
-				var threshold = Math.floor(load_frame_size * LOAD_THRESHOLD) 
+				var roll_frame_size = Math.ceil(load_frame_size * CONFIG.roll_frame)
+				var threshold = Math.floor(load_frame_size * CONFIG.load_threshold) 
 				threshold = threshold < 1 ? 1 : threshold
 
 				var head = img_before.prevAll('.image').length
@@ -1939,7 +1946,6 @@ function setupData(viewer){
 			}
 		})
 
-
 		.on('shiftedImage', function(evt, image, from, to){
 			from = getRibbonIndex(from)
 			//var ribbon = to
@@ -1960,7 +1966,6 @@ function setupData(viewer){
 			flashIndicator(from < to ? 'next' : 'prev')
 		})
 
-
 		.on('createdRibbon', function(evt, index){
 			index = getRibbonIndex(index)
 			DATA.ribbons.splice(index, 0, [])
@@ -1968,7 +1973,6 @@ function setupData(viewer){
 		.on('removedRibbon', function(evt, index){
 			DATA.ribbons.splice(index, 1)
 		})
-
 
 		.on('requestedFirstImage', function(evt, ribbon){
 			var r = getRibbonIndex(ribbon)
@@ -2006,20 +2010,20 @@ function setupData(viewer){
 					return
 				}
 				*/
-				loadImagesAround(Math.round(screen_size * LOAD_SCREENS), gid, r, null, true)
+				loadImagesAround(Math.round(screen_size * CONFIG.load_screens), gid, r, null, true)
 			})
 
 			centerView(null, 'css')
 
 			// update settings...
 			if(toggleSingleImageMode('?') == 'on'){
-				SETTINGS['single-image-mode-screen-images'] = n
+				UI_STATE['single-image-mode-screen-images'] = n
 			} else {
-				SETTINGS['ribbon-mode-screen-images'] = n
+				UI_STATE['ribbon-mode-screen-images'] = n
 			}
 
 			// update proportions...
-			if(window.PROPORTIONS_RATIO_THRESHOLD != null 
+			if(CONFIG.proportions_ratio_threshold != null 
 					&& toggleSingleImageMode('?') == 'on'){
 
 				var h = getVisibleImageSize('height')
@@ -2029,7 +2033,7 @@ function setupData(viewer){
 
 				var m = Math.min(W/w, H/h)
 
-				if(m < PROPORTIONS_RATIO_THRESHOLD){
+				if(m < CONFIG.proportions_ratio_threshold){
 					toggleImageProportions('fit-viewer')
 				} else {
 					toggleImageProportions('none')
@@ -2056,18 +2060,17 @@ function setupData(viewer){
 			updateImages()
 		})
 
-
 		.on('focusingImage', function(evt, image){
 			image = $(image)
 			DATA.current = getImageGID(image)
 
+			// XXX should this be here???
 			if(window.setWindowTitle != null){
 				// XXX do we need to hide the extension...
 				setWindowTitle(getImageFileName())
 					//.split(/\.(jpg|jpeg|png|gif)$/)[0])
 			}
 		})
-
 
 		// basic image manipulation...
 		.on('rotatingLeft rotatingRight', function(evt, image){
@@ -2103,7 +2106,6 @@ function setupData(viewer){
 				imageUpdated(gid)
 			})
 		})
-
 
 		.on('baseURLChanged', function(evt, url){
 			saveLocalStorageBaseURL()

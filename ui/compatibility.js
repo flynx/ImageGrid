@@ -210,6 +210,8 @@ if(window.CEF_dumpJSON != null){
 	window.makeImagePreviews = function(gid, sizes, mode, no_update_loaded){
 		mode = mode == null ? 'fast_f' : mode
 
+		var cache_dir = CONFIG.cache_dir
+
 		var img = IMAGES[gid]
 		var source = normalizePath(img.path)
 		var name = gid +' - '+ source.split(/[\\\/]/).pop()
@@ -225,7 +227,7 @@ if(window.CEF_dumpJSON != null){
 		}
 
 		// build usable local path (without 'file:///')...
-		var cache_path = normalizePath(CACHE_DIR)
+		var cache_path = normalizePath(cache_dir)
 		cache_path = osPath(cache_path)
 
 		// get cur image size...
@@ -249,7 +251,7 @@ if(window.CEF_dumpJSON != null){
 						if(img.preview == null || !((size+'px') in img.preview)){
 							var preview_path = [target_path, name].join('/')
 							// add the preview to the image object...
-							img.preview[size+'px'] = './' + CACHE_DIR +'/'+ preview_path.split(CACHE_DIR).pop()
+							img.preview[size+'px'] = './' + cache_dir +'/'+ preview_path.split(cache_dir).pop()
 							// mark image dirty...
 							imageUpdated(gid)
 						}
@@ -320,7 +322,7 @@ if(window.CEF_dumpJSON != null){
 								if(!('preview' in img)){
 									img.preview = {}
 								}
-								img.preview[size+'px'] = './' + CACHE_DIR +'/'+ preview_path.split(CACHE_DIR).pop()
+								img.preview[size+'px'] = './' + cache_dir +'/'+ preview_path.split(cache_dir).pop()
 								// mark image dirty...
 								imageUpdated(gid)
 								// we are done...
@@ -454,7 +456,7 @@ if(window.CEF_dumpJSON != null){
 		gui.Window.get().reload()
 	}
 	window.setWindowTitle = function(text){
-		var title = text +' - '+ APP_NAME
+		var title = text +' - '+ CONFIG.app_name
 		gui.Window.get().title = title
 		$('.title-bar .title').text(title)
 	}

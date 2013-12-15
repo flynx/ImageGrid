@@ -156,13 +156,15 @@ $(function(){
 
 	// XXX do we need drag'n'drop here???
 
+	var data_attr = CONFIG.data_attr
+
 	// we have an image.json file...
-	if((DATA_ATTR + '_BASE_URL') in localStorage
-			&& !/^\.[\/\\]*/.test(localStorage[DATA_ATTR + '_BASE_URL'])){
+	if((data_attr + '_BASE_URL') in localStorage
+			&& !/^\.[\/\\]*/.test(localStorage[data_attr + '_BASE_URL'])){
 
-		loadLocalStorageBaseURLHistory(DATA_ATTR)
+		loadLocalStorageBaseURLHistory(data_attr)
 
-		BASE_URL = localStorage[DATA_ATTR + '_BASE_URL']
+		BASE_URL = localStorage[data_attr + '_BASE_URL']
 
 		var loading = statusNotify(loadDir(BASE_URL))
 
@@ -186,12 +188,12 @@ $(function(){
 	loading
 		.done(function(){
 			showStatus('Loading settings...')
-			DATA_ATTR + '_SETTINGS' in localStorage && loadLocalStorageSettings()
+			data_attr + '_SETTINGS' in localStorage && loadLocalStorageSettings()
 
 			/* XXX do we need this???
 			// XXX this will reload everything...
 			MARKED.length == 0 
-				&& DATA_ATTR + '_MARKED' in localStorage 
+				&& data_attr + '_MARKED' in localStorage 
 				&& loadLocalStorageMarks()
 			*/
 

@@ -14,28 +14,28 @@
 */
 
 function loadLocalStorageBaseURL(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	setBaseURL(localStorage[attr + '_BASE_URL'])
 }
 function saveLocalStorageBaseURL(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	localStorage[attr + '_BASE_URL'] = getBaseURL()
 }
 
 
 function loadLocalStorageBaseURLHistory(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	BASE_URL_HISTORY = JSON.parse(localStorage[attr + '_BASE_URL_HISTORY'])
 	return BASE_URL_HISTORY
 }
 function saveLocalStorageBaseURLHistory(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	localStorage[attr + '_BASE_URL_HISTORY'] = JSON.stringify(BASE_URL_HISTORY)
 }
 
 
 function loadLocalStorageData(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	var data = localStorage[attr]
 	if(data == null){
 		data = '{}'
@@ -48,7 +48,7 @@ function loadLocalStorageData(attr){
 	}
 }
 function saveLocalStorageData(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 
 	var data = getAllData()
 	data.current = DATA.current
@@ -59,7 +59,7 @@ function saveLocalStorageData(attr){
 
 
 function loadLocalStorageImages(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	attr += '_IMAGES'
 	var images = localStorage[attr]
 	if(images == null){
@@ -68,14 +68,14 @@ function loadLocalStorageImages(attr){
 	return JSON.parse(images)
 }
 function saveLocalStorageImages(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	attr += '_IMAGES'
 	localStorage[attr] = JSON.stringify(IMAGES)
 }
 
 
 function loadLocalStorageMarks(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	attr += '_MARKED'
 	var marked = localStorage[attr]
 	if(marked == null){
@@ -85,29 +85,29 @@ function loadLocalStorageMarks(attr){
 	return reloadViewer()
 }
 function saveLocalStorageMarks(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	attr += '_MARKED'
 	localStorage[attr] = JSON.stringify(MARKED)
 }
 
 
 function loadLocalStorageSettings(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	attr += '_SETTINGS'
-	SETTINGS = JSON.parse(localStorage[attr])
+	UI_STATE = JSON.parse(localStorage[attr])
 
 	loadSettings()
 }
 function saveLocalStorageSettings(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	attr += '_SETTINGS'
-	localStorage[attr] = JSON.stringify(SETTINGS)
+	localStorage[attr] = JSON.stringify(UI_STATE)
 }
 
 
 // generic save/load...
 function loadLocalStorage(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	var d = loadLocalStorageData(attr)
 	loadLocalStorageBaseURLHistory(attr)
 	setBaseURL(d.base_url)
@@ -116,7 +116,7 @@ function loadLocalStorage(attr){
 	return reloadViewer()
 }
 function saveLocalStorage(attr){
-	attr = attr == null ? DATA_ATTR : attr
+	attr = attr == null ? CONFIG.data_attr : attr
 	saveLocalStorageData(attr)
 	saveLocalStorageImages(attr)
 	saveLocalStorageBaseURLHistory()

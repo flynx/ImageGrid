@@ -6,6 +6,8 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var MARKED = []
+
 var MARKED_FILE_DEFAULT = 'marked.json'
 var MARKED_FILE_PATTERN = /^[0-9]*-marked.json$/
 

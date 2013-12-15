@@ -6,6 +6,18 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+// XXX make these usable for both saving and loading...
+// XXX get these from config...
+var IMAGES_FILE_DEFAULT = 'images.json'
+var IMAGES_FILE_PATTERN = /^[0-9]*-images.json$/
+var IMAGES_DIFF_FILE_PATTERN = /^[0-9]*-images-diff.json$/
+
+var DATA_FILE_DEFAULT = 'data.json'
+var DATA_FILE_PATTERN = /^[0-9]*-data.json$/
+
+var IMAGE_PATTERN = /.*\.(jpg|jpeg|png|gif)$/i
+
+
 var FILE_LOADERS = []
 var FILE_SAVERS = []
 
@@ -191,7 +203,7 @@ function makeFileLoader(title, file_dfl, file_pattern, data_set, skip_reg){
 		var res = $.Deferred()
 		// default locations...
 		if(path == null){
-			var base = normalizePath(CACHE_DIR_VAR)
+			var base = normalizePath(CONFIG.cache_dir_var)
 			var loader = loadLatestFile(base, 
 					file_dfl, 
 					file_pattern,
@@ -199,12 +211,12 @@ function makeFileLoader(title, file_dfl, file_pattern, data_set, skip_reg){
 					[])
 		
 		// explicit path...
-		// XXX need to account for paths without a CACHE_DIR
+		// XXX need to account for paths without a CONFIG.cache_dir
 		} else {
 			path = normalizePath(path)
-			var base = path.split(CACHE_DIR)[0]
-			//base = normalizePath(path +'/'+ CACHE_DIR_VAR)
-			base = path +'/'+ CACHE_DIR
+			var base = path.split(CONFIG.cache_dir)[0]
+			//base = normalizePath(path +'/'+ CONFIG.cache_dir_var)
+			base = path +'/'+ CONFIG.cache_dir
 
 			// XXX is this correct???
 			var loader = loadLatestFile(base, 
@@ -228,7 +240,7 @@ function makeFileLoader(title, file_dfl, file_pattern, data_set, skip_reg){
 function makeFileSaver(file_dfl, data_get, skip_reg){
 	var _saver = function(name){
 		name = name == null 
-			? normalizePath(CACHE_DIR_VAR +'/'+ Date.timeStamp()) 
+			? normalizePath(CONFIG.cache_dir_var +'/'+ Date.timeStamp()) 
 			: name
 
 		dumpJSON(name + '-' + file_dfl, data_get())
@@ -327,7 +339,7 @@ function loadFileImages(path, no_load_diffs){
 
 	// default locations...
 	if(path == null){
-		var base = normalizePath(CACHE_DIR_VAR) 
+		var base = normalizePath(CONFIG.cache_dir_var) 
 		var loader = loadLatestFile(base, 
 				IMAGES_FILE_DEFAULT, 
 				IMAGES_FILE_PATTERN, 
@@ -335,7 +347,7 @@ function loadFileImages(path, no_load_diffs){
 	
 	// explicit base dir...
 	} else if(!/\.json$/i.test(path)) {
-		var base = normalizePath(path +'/'+ CACHE_DIR_VAR) 
+		var base = normalizePath(path +'/'+ CONFIG.cache_dir_var) 
 		var loader = loadLatestFile(base, 
 				IMAGES_FILE_DEFAULT, 
 				IMAGES_FILE_PATTERN, 
@@ -365,10 +377,10 @@ function loadFileImages(path, no_load_diffs){
 // (full) images.json file. Also removing the diff files.
 //
 // NOTE: if an explicit name is given then this will not remove anything.
-// NOTE: this will use CACHE_DIR as the location if no name is given.
+// NOTE: this will use CONFIG.cache_dir as the location if no name is given.
 function saveFileImages(name){
 	var remove_diffs = (name == null)
-	name = name == null ? normalizePath(CACHE_DIR_VAR +'/'+ Date.timeStamp()) : name
+	name = name == null ? normalizePath(CONFIG.cache_dir_var +'/'+ Date.timeStamp()) : name
 
 	if(window.dumpJSON == null){
 		showErrorStatus('Can\'t save to file.')
@@ -377,11 +389,11 @@ function saveFileImages(name){
 
 	// remove the diffs...
 	if(remove_diffs){
-		$.each($.map(listDir(normalizePath(CACHE_DIR_VAR)), function(e){ 
+		$.each($.map(listDir(normalizePath(CONFIG.cache_dir_var)), function(e){ 
 				return IMAGES_DIFF_FILE_PATTERN.test(e) ? e : null
 			}), function(i, e){
 				showStatusQ('removeing:', e)
-				removeFile(normalizePath(CACHE_DIR_VAR +'/'+ e))
+				removeFile(normalizePath(CONFIG.cache_dir_var +'/'+ e))
 			})
 		IMAGES_UPDATED = []
 	}
@@ -402,10 +414,10 @@ function loadFileState(path, prefix){
 	// XXX explicit data file path...
 	if(/\.json$/i.test(path)){
 		// XXX at this 
-		var base = path.split(CACHE_DIR)[0]
+		var base = path.split(CONFIG.cache_dir)[0]
 		base = base == path ? '.' : base
 	} else {
-		var base = path.split(CACHE_DIR)[0]
+		var base = path.split(CONFIG.cache_dir)[0]
 		base = base == path ? '.' : base
 	}
 
@@ -467,7 +479,7 @@ function saveFileState(name, no_normalize_path){
 	name = name == null ? Date.timeStamp() : name
 
 	if(!no_normalize_path){
-		name = normalizePath(CACHE_DIR_VAR +'/'+ name)
+		name = normalizePath(CONFIG.cache_dir_var +'/'+ name)
 
 	// write .image_file only if saving data to a non-cache dir...
 	// XXX check if this is correct...
@@ -608,8 +620,8 @@ function loadDir(path, no_preview_processing, prefix){
 	}
 
 	// see if there is a cache...
-	if(files.indexOf(CACHE_DIR) >= 0){
-		path = path +'/'+ CACHE_DIR
+	if(files.indexOf(CONFIG.cache_dir) >= 0){
+		path = path +'/'+ CONFIG.cache_dir
 	}
 
 	bubbleProgress(prefix, 

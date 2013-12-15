@@ -133,13 +133,13 @@ var toggleSingleImageMode = createCSSClassToggler(
 				TRANSITION_MODE_DEFAULT = 'css'
 
 				// save things...
-				SETTINGS['ribbon-mode-screen-images'] = w
-				SETTINGS['ribbon-mode-image-info'] = toggleImageInfo('?')
+				UI_STATE['ribbon-mode-screen-images'] = w
+				UI_STATE['ribbon-mode-image-info'] = toggleImageInfo('?')
 
 				// load things...
-				w = SETTINGS['single-image-mode-screen-images']
+				w = UI_STATE['single-image-mode-screen-images']
 				w = w == null ? 1 : w
-				var p = SETTINGS['single-image-mode-proportions']
+				var p = UI_STATE['single-image-mode-proportions']
 				p = p == null ? 'square' : p
 
 				// set stuff...
@@ -152,18 +152,18 @@ var toggleSingleImageMode = createCSSClassToggler(
 				TRANSITION_MODE_DEFAULT = 'animate'
 
 				// save things...
-				SETTINGS['single-image-mode-screen-images'] = w
-				SETTINGS['single-image-mode-proportions'] = toggleImageProportions('?')
+				UI_STATE['single-image-mode-screen-images'] = w
+				UI_STATE['single-image-mode-proportions'] = toggleImageProportions('?')
 
 				// load things...
-				w = SETTINGS['ribbon-mode-screen-images']
-				w = w == null ? DEFAULT_SCREEN_IMAGES : w
+				w = UI_STATE['ribbon-mode-screen-images']
+				w = w == null ? CONFIG.default_screen_images : w
 
 				toggleImageProportions('none')
 				fitNImages(w)
-				var i = SETTINGS['ribbon-mode-image-info'] == 'on' ? 'on' : 'off'
+				var i = UI_STATE['ribbon-mode-image-info'] == 'on' ? 'on' : 'off'
 				toggleImageInfo(i)
-				SETTINGS['ribbon-mode-image-info'] = i
+				UI_STATE['ribbon-mode-image-info'] = i
 
 				centerRibbons()
 			}
@@ -296,7 +296,7 @@ var toggleTheme = createCSSClassToggler(
 		],
 		// XXX does this get called for default state (gray)???
 		function(action){
-			SETTINGS['global-theme'] = action
+			UI_STATE['global-theme'] = action
 		})
 
 
@@ -305,7 +305,7 @@ var toggleImageInfo = createCSSClassToggler(
 		'.image-info-visible',
 		function(action){
 			if(toggleSingleImageMode('?') == 'off'){
-				SETTINGS['ribbon-mode-image-info'] = action
+				UI_STATE['ribbon-mode-image-info'] = action
 			}
 		})
 

@@ -32,7 +32,7 @@ function preCacheRibbonImages(ribbon){
 		var size = getVisibleImageSize('max')
 		var screen_size = getScreenWidthInImages(getVisibleImageSize())
 		// XXX needs tuning...
-		var cache_frame_size = (screen_size * LOAD_SCREENS)
+		var cache_frame_size = (screen_size * CONFIG.load_screens)
 		var images = ribbon.find('.image')
 		var first = getImageGID(images.first())
 		var last = getImageGID(images.last())

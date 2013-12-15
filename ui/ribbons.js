@@ -20,13 +20,15 @@
 *
 **********************************************************************/
 
+var CONFIG = {
+	max_screen_images: 12,
+	zoom_step_scale: 1.2,
+}
+
 // can be:
 // 	- animate
 // 	- css
 var TRANSITION_MODE_DEFAULT = 'animate'
-
-var MAX_SCREEN_IMAGES = 12
-var ZOOM_SCALE = 1.2
 
 
 
@@ -1145,15 +1147,15 @@ function fitNImages(n, fixed_proportions, no_strict_fit){
 function zoomIn(){
 	var w = getScreenWidthInImages()
 	if(w > 1){
-		w = w / ZOOM_SCALE
+		w = w / CONFIG.zoom_step_scale
 		fitNImages(w >= 1 ? w : 1)
 	}
 }
 function zoomOut(){
 	var w = getScreenWidthInImages()
-	if(w <= MAX_SCREEN_IMAGES){
-		w = w * ZOOM_SCALE
-		fitNImages(w <= MAX_SCREEN_IMAGES ? w : MAX_SCREEN_IMAGES)
+	if(w <= CONFIG.max_screen_images){
+		w = w * CONFIG.zoom_step_scale
+		fitNImages(w <= CONFIG.max_screen_images ? w : CONFIG.max_screen_images)
 	}
 }
 
