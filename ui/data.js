@@ -1011,10 +1011,6 @@ function imageUpdated(gid){
 //
 // XXX not sure if we need the offset argument here... 
 // 		a-la nextImage(n) / prevImage(n)
-// XXX Q: is it cheaper to make a cached list that will contain only 
-// 		loaded gids? 
-// 		(i.e. filter it first and then get the needed gid rather 
-// 		iterating...)
 function makeNextFromListAction(get_closest, get_list, restrict_to_ribbon){
 	get_closest = get_closest == null ? getGIDBefore : get_closest
 	get_list = get_list == null ? getRibbonGIDs : get_list
@@ -1415,6 +1411,9 @@ function alignDataToRibbon(base_ribbon, data, start, end){
 	// NOTE: will this always return 3 sections (see docs), even if 
 	// 		start and/or end are null...
 	var sections = splitData(data, start, end)
+
+	// XXX not sure if this is correct yet...
+	$('.viewer').trigger('aligningRibbonsSection', [base_ribbon, sections[1].slice()])
 
 	// prepare to align...
 	sections[1] = [ base_ribbon, sections[1] ]
