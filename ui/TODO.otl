@@ -131,7 +131,7 @@ Roadmap
 			[_] 0% metadata
 				[_] comment
 				[_] tags
-		[_] 90% tags
+		[X] 100% tags
 			[X] add
 			[X] remove
 			[X] update
@@ -142,10 +142,6 @@ Roadmap
 			[X] bookmarked (list) operations
 			[X] mark/unmark tagged
 			[X] crop
-			[_] 0% panels
-				[_] cloud
-				[_] tree
-				[_] tag set editor
 		[_] 66% unsorted image state handling (tag?)
 			[X] remove tag on shift
 			[X] remove tag on alignToRibbon(..)
@@ -200,6 +196,11 @@ Roadmap
 		[_] BUG: basic editor causes images to blur up 
 		| ...if at least one filter is applied, appears to only affect 
 		| scaled images.
+		|
+		| Possible cause: actual dom size (300px) forces the image to
+		| 		re-render (to 300px and then resized up) on filter 
+		| 		application...
+		| 		Test this by making the image bigger...
 		[_] BUG: opening a dir form history sometimes loads wrong size previews
 		| this happens in part of the view and a refresh, reload or image
 		| update (updateImages()) fixes the issue...

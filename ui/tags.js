@@ -321,6 +321,8 @@ function setupTags(viewer){
 SETUP_BINDINGS.push(setupTags)
 
 
+// Setup the unsorted image state managers...
+//
 function setupUnsortedTagHandler(viewer){
 	console.log('Tags: "'+UNSORTED_TAG+'" tag handling: setup...')
 
