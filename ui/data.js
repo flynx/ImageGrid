@@ -528,7 +528,7 @@ function setBaseURL(url){
 function getBaseRibbonIndex(){
 
 	// XXX
-	console.warn('Base ribbon API is still a stub...')
+	//console.warn('Base ribbon API is still a stub...')
 
 	return 0
 }
@@ -536,7 +536,7 @@ function setBaseRibbonIndex(n){
 	n = n == null ? 0 : n
 
 	// XXX
-	console.warn('Base ribbon API is still a stub...')
+	//console.warn('Base ribbon API is still a stub...')
 
 	return n
 }

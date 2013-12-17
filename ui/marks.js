@@ -314,6 +314,7 @@ function toggleMarkBlock(image){
 function shiftMarkedImages(direction, mode, new_ribbon){
 	mode = mode == null ? 'ribbon' : mode
 	var cur = getRibbonIndex()
+	var orig_ribbon = cur
 
 	// ribbon only...
 	if(mode == 'ribbon'){
@@ -362,6 +363,8 @@ function shiftMarkedImages(direction, mode, new_ribbon){
 	DATA.ribbons = DATA.ribbons.filter(function(e){ return e.length > 0 ? true : false })
 
 	updateRibbonOrder()
+
+	$('.viewer').trigger('shiftedImages', [marked, orig_ribbon, cur])
 }
 function shiftMarkedImagesUp(mode, new_ribbon){
 	return shiftMarkedImages('prev', mode, new_ribbon)

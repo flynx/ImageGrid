@@ -4,6 +4,9 @@
 *
 **********************************************************************/
 
+// NOTE: if this is set to null the feature will be disabled...
+var UNSORTED_TAG = 'unsorted'
+
 // Tag index
 //
 // This can be constructed from tags in IMAGES with buildTagsFromImages(..)
@@ -300,7 +303,7 @@ function cropTagged(tags, cmp, keep_ribbons, keep_unloaded_gids){
 function setupTags(viewer){
 	console.log('Tags: setup...')
 
-	viewer
+	return viewer
 		.on('imagesLoaded', function(){
 			TAGS = []
 
@@ -313,12 +316,33 @@ function setupTags(viewer){
 
 			showStatusQ('Tags: Index: done ('+( t1 - t0 )+'ms).')
 		})
-		.on('aligningRibbonsSection', function(base, gids){
-			untagList(gids, 'unsorted')
-		})
 
 }
 SETUP_BINDINGS.push(setupTags)
+
+
+function setupUnsortedTagHandler(viewer){
+	console.log('Tags: "'+UNSORTED_TAG+'" tag handling: setup...')
+
+	return viewer
+		// unsorted tag handling...
+		.on('shiftedImage', function(evt, img){
+			if(UNSORTED_TAG != null){
+				removeTag(UNSORTED_TAG, getImageGID(img))
+			}
+		})
+		.on('shiftedImages', function(evt, gids){
+			if(UNSORTED_TAG != null){
+				untagList(gids, UNSORTED_TAG)
+			}
+		})
+		.on('aligningRibbonsSection', function(evt, base, gids){
+			if(UNSORTED_TAG != null){
+				untagList(gids, UNSORTED_TAG)
+			}
+		})
+}
+SETUP_BINDINGS.push(setupUnsortedTagHandler)
 
 
 
