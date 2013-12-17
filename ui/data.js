@@ -660,7 +660,6 @@ function makeGIDBeforeGetterFromList(get_list, restrict_to_ribbon){
 		if(list.length == 0){
 			return null
 		}
-		console.log('>>>>', ribbon)
 		gid = gid == null ? getImageGID(null, ribbon) : gid
 		var prev
 
@@ -2100,6 +2099,17 @@ function setupData(viewer){
 			rollImages(gr.length, ribbon)
 		})
 
+		.on('preFittingImages', function(evt, n){
+			// update proportions...
+			if(CONFIG.proportions_ratio_threshold != null 
+					&& toggleSingleImageMode('?') == 'on'){
+				if(n <= CONFIG.proportions_ratio_threshold){
+					toggleImageProportions('fit-viewer')
+				} else {
+					toggleImageProportions('none')
+				}
+			}
+		})
 		.on('fittingImages', function(evt, n){
 			//console.log('!!!! fittingImages')
 			// load correct amount of images in each ribbon!!!
@@ -2135,24 +2145,6 @@ function setupData(viewer){
 				UI_STATE['single-image-mode-screen-images'] = n
 			} else {
 				UI_STATE['ribbon-mode-screen-images'] = n
-			}
-
-			// update proportions...
-			if(CONFIG.proportions_ratio_threshold != null 
-					&& toggleSingleImageMode('?') == 'on'){
-
-				var h = getVisibleImageSize('height')
-				var w = getVisibleImageSize('width')
-				var H = $('.viewer').innerHeight()
-				var W = $('.viewer').innerWidth()
-
-				var m = Math.min(W/w, H/h)
-
-				if(m < CONFIG.proportions_ratio_threshold){
-					toggleImageProportions('fit-viewer')
-				} else {
-					toggleImageProportions('none')
-				}
 			}
 
 			// update size classes...

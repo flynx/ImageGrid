@@ -325,18 +325,57 @@ var toggleInlineImageInfo = createCSSClassToggler(
 		})
 
 
+function setImageProportions(image, mode){
+	var h = image.outerHeight(true)
+	var w = image.outerWidth(true)
+	mode = mode == null ? toggleImageProportions('?') : 'square'
+	mode = mode == 'fit-viewer' ? 'viewer' : 'squzre' 
+
+	if(mode == 'viewer'){
+		var viewer = $('.viewer')
+		var W = viewer.innerWidth()
+		var H = viewer.innerHeight()
+
+		if(W > H){
+			image.css('width', W * h/H)
+		} else {
+			image.css('height', H * w/W)
+		}
+
+		// account for rotation...
+		correctImageProportionsForRotation(image)
+		centerView(null, 'css')
+
+	} else {
+		var size = Math.min(w, h)
+		image.css({
+			width: size,
+			height: size
+		})
+
+		// account for rotation...
+		correctImageProportionsForRotation(image)
+		centerView(null, 'css')
+	}
+
+	return image
+}
+
+
 var toggleImageProportions = createCSSClassToggler(
 		'.viewer',
 		[
 			'none',
 			'fit-viewer'
 		],
+		/* XXX do we need this???
 		function(action){
 			// prevent reentering...
 			if(action == toggleImageProportions('?')){
 				return false
 			}
 		},
+		*/
 		function(action){
 			var image = $('.image')
 			var h = image.outerHeight(true)
@@ -345,16 +384,22 @@ var toggleImageProportions = createCSSClassToggler(
 			// viewer proportions...
 			// XXX going into here twice for a rotated 90/270 image will 
 			// 		set it back to square...
-			// 		...can't even begin to imagine what can affect this!
+			// 		XXX can't reproduce this error...
 			if(action == 'fit-viewer'){
 				var viewer = $('.viewer')
 				var W = viewer.innerWidth()
 				var H = viewer.innerHeight()
 
 				if(W > H){
-					image.css('width', W * h/H)
+					image.css({
+						width: W * h/H,
+						height: '',
+					})
 				} else {
-					image.css('height', H * w/W)
+					image.css({
+						width: '',
+						height: H * w/W,
+					})
 				}
 
 				// account for rotation...

@@ -108,8 +108,34 @@ Roadmap
 	
 
 
-[_] 28% Gen 3 current todo
-	[_] 57% High priority
+[_] 29% Gen 3 current todo
+	[_] 58% High priority
+		[_] BUG: zooming vertical images in single image view results in size jumping...
+		| Reason:
+		| 	This is due to the proportion ratio changing in one step...
+		|
+		| Solution:
+		| 	Make the proportion transition smoothly, at least in two zoom-steps
+		[X] BUG: jumping more than one image in single image view messes up scale...
+		|
+		| Procedure:
+		| 	- load: file:///L:/mnt/hdd13 (photo)/NTFS2/media/img/my/work/- 20131122Y.001/DCIM/preview (RAW)/
+		| 	- go to single image mode
+		| 	- press 2
+		| 	- go to end
+		| 	- press [ until a long jump between vertical and horizontal pics
+		|
+		| Effect:
+		| 	- the size of the images will change
+		|
+		| Solution:
+		| 	moved the proportions mode switch to preFittingImages handler
+		|
+		| Side-effect:
+		| 	vertical images, in horizontal viewer, and vice-versa jump 
+		| 	in size a bit when zooming past the threshold...
+		| 	the amount of "jump" depends on viewer proportions vs. image
+		| 	proportions...
 		[X] BUG: appear to be leaking memory on very large sets of images (>8K)
 		| don't remember it before, so it might be due to the new 
 		| loadImagesAround(..)
@@ -266,11 +292,11 @@ Roadmap
 		| 	- open/history/...
 		| 	- sort
 		| 	- export
-		[_] 50% mark-based operations
-			[_] 50% cropping selection
+		[_] 55% mark-based operations
+			[_] 75% cropping selection
 				[X] marked
 				[X] ribbon
-				[_] by tag/collection
+				[X] by tag/collection
 				[_] by group
 			[X] shift up/down
 			[X] tag

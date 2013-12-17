@@ -225,8 +225,8 @@ function getVisibleImageSize(dim){
 
 
 // Return the number of images that can fit to viewer width...
-function getScreenWidthInImages(size){
-	size = size == null ? getVisibleImageSize() : size
+function getScreenWidthInImages(size, dim){
+	size = size == null ? getVisibleImageSize(dim) : size
 	return $('.viewer').innerWidth() / size
 }
 
