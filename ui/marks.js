@@ -66,8 +66,11 @@ var getMarkedGIDBefore = makeGIDBeforeGetterFromList(
 // 	- toggle img_class on the target image
 // 	- add/remove a mark element after the image
 // 	- toggle mark_class on the mark element
+// 	- call the callback, if defined, passing it:
+// 		- gid
+// 		- action ('on' on 'off')
 // 	- trigger the evt_name on the viewer passing it:
-// 		- target image
+// 		- gid
 // 		- action ('on' on 'off')
 //
 // The actual toggler is built with createCSSClassToggler(..), see its
@@ -83,6 +86,8 @@ var getMarkedGIDBefore = makeGIDBeforeGetterFromList(
 // 			- 'off'		: force remove mark
 // 			- 'next'	: toggle next state (default)
 // NOTE: when passing this a gid, the 'next' action is not supported
+//
+// XXX do we need a pre-callback here???
 function makeMarkToggler(img_class, mark_class, evt_name, callback){
 	return createCSSClassToggler(
 		'.current.image', 
@@ -110,7 +115,9 @@ function makeMarkToggler(img_class, mark_class, evt_name, callback){
 				}
 			}
 
-			callback(gid, action)
+			if(callback != null){
+				callback(gid, action)
+			}
 
 			$('.viewer').trigger(evt_name, [gid, action])
 		})
@@ -136,6 +143,7 @@ function makeMarkUpdater(img_class, mark_class, test){
 	IMAGE_UPDATERS.push(_updater)
 	return _updater
 }
+
 
 
 /**********************************************************************
