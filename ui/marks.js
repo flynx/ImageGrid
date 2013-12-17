@@ -377,10 +377,10 @@ function horizontalShiftMarkedImages(direction){
 	// XXX
 }
 function shiftMarkedImagesLeft(){
-	return shiftMarkedImages('prev')
+	return horizontalShiftMarkedImages('prev')
 }
 function shiftMarkedImagesRight(){
-	return shiftMarkedImages('next')
+	return horizontalShiftMarkedImages('next')
 }
 
 

@@ -1412,8 +1412,14 @@ function alignDataToRibbon(base_ribbon, data, start, end){
 	// 		start and/or end are null...
 	var sections = splitData(data, start, end)
 
+	// prepare for and fire the event...
 	// XXX not sure if this is correct yet...
-	$('.viewer').trigger('aligningRibbonsSection', [base_ribbon, sections[1].slice()])
+	var gids = []
+	sections[1].forEach(function(ribbon){
+		gids = gids.concat(ribbon)
+	})
+	// XXX do we need sections[1] passed here?
+	$('.viewer').trigger('aligningRibbonsSection', [base_ribbon, gids, sections[1]])
 
 	// prepare to align...
 	sections[1] = [ base_ribbon, sections[1] ]

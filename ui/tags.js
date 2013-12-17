@@ -313,6 +313,9 @@ function setupTags(viewer){
 
 			showStatusQ('Tags: Index: done ('+( t1 - t0 )+'ms).')
 		})
+		.on('aligningRibbonsSection', function(base, gids){
+			untagList(gids, 'unsorted')
+		})
 
 }
 SETUP_BINDINGS.push(setupTags)
