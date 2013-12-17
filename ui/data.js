@@ -570,6 +570,18 @@ function getRibbonGIDs(a, data){
 }
 
 
+// get all the currently loaded gids...
+//
+function getLoadedGIDs(data){
+	data = data == null ? DATA : data
+	var res = []
+	data.ribbons.forEach(function(r){
+		res = res.concat(r)
+	})
+	return res
+}
+
+
 // like getImageOrder(..) but use DATA...
 //
 function getGIDOrder(gid){
@@ -1604,36 +1616,44 @@ function updateImage(image, gid, size, sync){
 
 // Same as updateImage(...) but will update all loaded images.
 //
+// If list is passed this will update only the images in the list. The
+// list can contain either gids or image elements.
+//
 // NOTE: this will prioritize images by distance from current image...
 //
 // XXX need to run this in the background...
-function updateImages(size, cmp){
+function updateImages(list, size, cmp){
 	var deferred = $.Deferred()
 
 	function _worker(){
+		list = list == null ? $('.image') : $(list)
 		size = size == null ? getVisibleImageSize('max') : size
+
+		function _update(_, e){
+			var img = typeof(e) == typeof('str') ? getImage(e) : $(e)
+			if(img.length > 0){
+				updateImage(img, null, size)
+			}
+		}
 
 		// sorted run...
 		if(CONFIG.update_sort_enabled && cmp != false){
 			cmp = cmp == null ? 
-					makeGIDDistanceCmp(getImageGID(), getImageGID) 
+					makeGIDDistanceCmp(getImageGID(), function(e){ 
+						return typeof(e) == typeof('str') ? e : getImageGID(e) 
+					}) 
 					// XXX this is more correct but is slow...
 					//makeGIDRibbonDistanceCmp(getImageGID(), getImageGID) 
 				: cmp
-			deferred.resolve($('.image')
+			deferred.resolve(list
 				// sort images by distance from current, so as to update what 
 				// the user is looking at first...
 				.sort(cmp)
-				.each(function(){
-					updateImage($(this), null, size)
-				}))
+				.map(_update))
 
 		// do a fast run w.o. sorting images...
 		} else {
-			deferred.resolve($('.image')
-				.each(function(){
-					updateImage($(this), null, size)
-				}))
+			deferred.resolve(list.map(_update))
 		}
 	}
 

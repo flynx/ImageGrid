@@ -83,7 +83,7 @@ var getMarkedGIDBefore = makeGIDBeforeGetterFromList(
 // 			- 'off'		: force remove mark
 // 			- 'next'	: toggle next state (default)
 // NOTE: when passing this a gid, the 'next' action is not supported
-function makeMarkToggler(img_class, mark_class, evt_name){
+function makeMarkToggler(img_class, mark_class, evt_name, callback){
 	return createCSSClassToggler(
 		'.current.image', 
 		img_class,
@@ -109,6 +109,8 @@ function makeMarkToggler(img_class, mark_class, evt_name){
 					_removeMark(mark_class, gid, elem)
 				}
 			}
+
+			callback(gid, action)
 
 			$('.viewer').trigger(evt_name, [gid, action])
 		})
@@ -212,68 +214,115 @@ var toggleMarkesView = createCSSClassToggler(
 */
 
 
-var toggleMark = makeMarkToggler('marked', 'selected', 'togglingMark')
+var toggleMark = makeMarkToggler(
+		'marked', 
+		'selected', 
+		'togglingMark',
+		function(gid, action){
+			// add marked image to list...
+			if(action == 'on'){
+				if(MARKED.indexOf(gid) == -1){
+					MARKED.push(gid)
+					MARKED.sort(imageOrderCmp)
+				} 
 
+			// remove marked image from list...
+			} else {
+				MARKED.splice(MARKED.indexOf(gid), 1)
+			}
+		})
+
+
+
+function toggleAllMarks(action, mode){
+	action = action == null ? toggleMark('?') : action
+	mode = mode == null ? 'ribbon' : mode
+
+	var updated = []
+
+	if(action == 'on'){
+		var _update = function(e){
+			if(MARKED.indexOf(e) < 0){
+				MARKED.push(e)
+				updated.push(e)
+			}
+		}
+	} else {
+		var _update = function(e){
+			var i = MARKED.indexOf(e)
+			if(i >= 0){
+				MARKED.splice(i, 1)
+				updated.push(e)
+			}
+		}
+	}
+
+	// marks from current ribbon (default)...
+	if(mode == 'ribbon'){
+		var res = getRibbonGIDs()
+
+	// all marks...
+	} else if(mode == 'all'){
+		var res = getLoadedGIDs()
+	} 
+
+	res.forEach(_update)
+
+	if(action == 'on'){
+		MARKED.sort(imageOrderCmp)
+	}
+
+	updateImages(updated)
+
+	$('.viewer').trigger('togglingMarks', [updated, action])
+
+	return res
+}
 
 // mode can be:
 //	- 'ribbon'
 //	- 'all'
 function removeImageMarks(mode){
-	// remove marks from current ribbon (default)...
-	if(mode == 'ribbon' || mode == null){
-		var ribbon = getRibbon()
-		var res = ribbon
-			.find('.marked')
-				.each(function(){
-					toggleMark(this, 'off')
-				})
-		$('.viewer').trigger('removeingRibbonMarks', [ribbon])
-
-	// remove all marks...
-	} else if(mode == 'all'){
-		var res = $('.marked')
-			.each(function(){
-				toggleMark(this, 'off')
-			})
-		$('.viewer').trigger('removeingAllMarks')
-	} 
+	mode = mode == null ? 'ribbon' : mode
+	var res = toggleAllMarks('off', mode)
+	$('.viewer').trigger('removingMarks', [res, mode])
 	return res
 }
 
 
 function markAll(mode){
-	// current ribbon (default)...
-	if(mode == 'ribbon' || mode == null){
-		var ribbon = getRibbon()
-		var res = ribbon
-			.find('.image:not(.marked)')
-				.each(function(){
-					toggleMark(this, 'on')
-				})
-		$('.viewer').trigger('markingRibbon', [ribbon])
-
-	// mark everything...
-	} else if(mode == 'all'){
-		var res = $('.image:not(.marked)')
-			.each(function(){
-				toggleMark(this, 'on')
-			})
-		$('.viewer').trigger('markingAll')
-	}
+	mode = mode == null ? 'ribbon' : mode
+	var res = toggleAllMarks('on', mode)
+	$('.viewer').trigger('addingMarks', [res, mode])
 	return res
 }
 
 
 // NOTE: this only does it's work in the current ribbon...
 function invertImageMarks(){
-	var ribbon = getRibbon()
-	var res = ribbon
-		.find('.image')
-			.each(function(){
-				toggleMark(this, 'next')
-			})
-	$('.viewer').trigger('invertingMarks', [ribbon])
-	return res
+	var ribbon = getRibbonGIDs()
+	var on = []
+	var off = []
+
+	$.each(ribbon, function(_, e){
+		var i = MARKED.indexOf(e)
+		if(i == -1){
+			on.push(e)
+			MARKED.push(e)
+			MARKED.sort(imageOrderCmp)
+		} else {
+			off.push(e)
+			MARKED.splice(i, 1)
+		}
+	})
+	updateImages(ribbon)
+
+	$('.viewer')
+		.trigger('invertingMarks', [ribbon])
+		.trigger('togglingMarks', [on, 'on'])
+		.trigger('togglingMarks', [off, 'off'])
+
+	return on.concat(off)
 }
 
 
@@ -282,29 +331,48 @@ function invertImageMarks(){
 // XXX need to make this dynamic data compatible...
 // XXX this will mark the block ONLY IF it is loaded!!!
 function toggleMarkBlock(image){
-	if(image == null){
-		image = getImage()
-	}
-	var found = [false, false]
-	// we need to invert this...
-	var state = toggleMark()
-	var _convert = function(i){
-		return function(){
-			if(toggleMark(this, '?') == state){
-				// we found the end...
-				// NOTE: this will not be set if we reached the end of 
-				// 		the ribbon or the end of the loaded images...
-				found[i] = true
-				// stop the iteration...
-				return false
-			}
-			toggleMark(this, state)
-		}
-	}
-	image.nextAll('.image').each(_convert(1))
-	image.prevAll('.image').each(_convert(0))
+	image = image == null ? getImage() : image
+	var gid = typeof(image) == typeof('str') ? image : getImageGID(image)
+	image = typeof(image) == typeof('str') ? getImage(gid) : image
 
-	$('.viewer').trigger('togglingImageBlockMarks', [image, state, found])
+	var state = toggleMark(image, 'next') == 'off' ? false : true
+
+	var ribbon = DATA.ribbons[getRibbonIndex(image)]
+	var i = ribbon.indexOf(gid)
+
+	var updated = [gid]
+
+	var _convert = function(_, e){
+		// break if state differs from current...
+		if((MARKED.indexOf(e) >= 0) == state){
+			return false
+		}
+		// do the toggle...
+		if(state){
+			MARKED.push(e)
+		} else {
+			MARKED.splice(MARKED.indexOf(e), 1)
+		}
+		updated.push(e)
+	}
+
+	// go left...
+	var left = ribbon.slice(0, i)
+	left.reverse()
+	$.each(left, _convert)
+
+	// go right...
+	var right = ribbon.slice(i+1)
+	$.each(right, _convert)
+
+	updateImages(updated)
+	if(state){
+		MARKED.sort(imageOrderCmp)
+	}
+
+	$('.viewer')
+		.trigger('togglingImageBlockMarks', [image, updated, state])
+		.trigger('togglingMarks', [updated, state ? 'on' : 'off'])
 
 	return state
 }
@@ -424,6 +492,7 @@ function markImagesDialog(){
 		'Invert marks in current ribbon',
 		'Mark all in current ribbon',
 		'Unmark all in current ribbon',
+		'Mark all images',
 		'Unmark all images'
 	]
 
@@ -446,6 +515,10 @@ function markImagesDialog(){
 			} else if(/Invert/.test(res)){
 				invertImageMarks()
 				var msg = 'inverted ribbon marks'
+
+			} else if(/Mark all.*current ribbon/.test(res)){
+				markAll()
+				var msg = 'marked ribbon'
 
 			} else if(/Mark all/.test(res)){
 				markAll()
@@ -520,92 +593,10 @@ function setupMarks(viewer){
 		.click(function(){ toggleMark() })
 
 	return viewer
-		// marks...
-		.on('togglingMark', function(evt, gid, action){
-			// add marked image to list...
-			if(action == 'on'){
-				if(MARKED.indexOf(gid) == -1){
-					MARKED.push(gid)
-					MARKED.sort(imageOrderCmp)
-				} 
-
-			// remove marked image from list...
-			} else {
-				MARKED.splice(MARKED.indexOf(gid), 1)
-			}
-		})
-		.on('togglingImageBlockMarks', function(evt, img, state, found){
-			var gid = getImageGID(img)
-			var ribbon = DATA.ribbons[getRibbonIndex(img)]
-			var i = ribbon.indexOf(gid)
-
-			state = state == 'off' ? false : true
-
-			var _convert = function(_, e){
-				if(skipping && (MARKED.indexOf(e) >= 0) == state){
-					return
-				}
-				skipping = false
-				if((MARKED.indexOf(e) >= 0) == state){
-					return false
-				}
-				// do the toggle...
-				if(state){
-					MARKED.push(e)
-					MARKED.sort(imageOrderCmp)
-				} else {
-					MARKED.splice(MARKED.indexOf(e), 1)
-				}
-			}
-
-			// go left...
-			if(!found[0]){
-				var skipping = true
-				var left = ribbon.slice(0, i)
-				left.reverse()
-				$.each(left, _convert)
-			}
-
-			// go right...
-			if(!found[1]){
-				var skipping = true
-				var right = ribbon.slice(i)
-				$.each(right, _convert)
-			}
-		})
-		.on('removeingRibbonMarks', function(evt, ribbon){
-			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKED.indexOf(e)
-				if(i != -1){
-					MARKED.splice(i, 1)
-				}
-			})
-		})
-		.on('removeingAllMarks', function(evt){
-			MARKED.splice(0, MARKED.length)
-		})
-		.on('markingRibbon', function(evt, ribbon){
-			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKED.indexOf(e)
-				if(i == -1){
-					MARKED.push(e)
-					MARKED.sort(imageOrderCmp)
-				}
-			})
-		})
-		.on('markingAll', function(evt){
-			MARKED.splice(0, MARKED.length)
-			MARKED.concat(DATA.order)
-		})
-		.on('invertingMarks', function(evt, ribbon){
-			$.each(DATA.ribbons[getRibbonIndex(ribbon)], function(_, e){
-				var i = MARKED.indexOf(e)
-				if(i == -1){
-					MARKED.push(e)
-					MARKED.sort(imageOrderCmp)
-				} else {
-					MARKED.splice(i, 1)
-				}
+		// XXX do we actually need this???
+		.on('togglingMarks', function(evt, lst, action){
+			lst.forEach(function(gid){
+				viewer.trigger('togglingMark', [gid, action])
 			})
 		})
 }

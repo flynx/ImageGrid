@@ -73,7 +73,24 @@ var toggleBookmarkedOnlyWithRibbonsView = makeCropModeToggler(
 var toggleBookmark = makeMarkToggler(
 		'bookmarked', 
 		'bookmark', 
-		'togglingBookmark')
+		'togglingBookmark',
+		function(gid, action){
+			// add a bookmark...
+			if(action == 'on'){
+				if(BOOKMARKS.indexOf(gid) == -1){
+					BOOKMARKS.push(gid)
+					// XXX is this too expensive???
+					// 		...a way to avoid sorting is to:
+					// 			BOOKMARKS.splice(
+					// 				getGIDBefore(gid, BOOKMARKS)+1, 0, gid)
+					BOOKMARKS.sort(imageOrderCmp)
+				}
+
+			// remove a bookmark...
+			} else {
+				BOOKMARKS.splice(BOOKMARKS.indexOf(gid), 1)
+			}
+		})
 
 
 // focus next bookmark...
@@ -132,23 +149,6 @@ function setupBookmarks(viewer){
 		.click(function(){ toggleBookmark() })
 
 	return viewer
-		.on('togglingBookmark', function(evt, gid, action){
-			// add a bookmark...
-			if(action == 'on'){
-				if(BOOKMARKS.indexOf(gid) == -1){
-					BOOKMARKS.push(gid)
-					// XXX is this too expensive???
-					// 		...a way to avoid sorting is to:
-					// 			BOOKMARKS.splice(
-					// 				getGIDBefore(gid, BOOKMARKS)+1, 0, gid)
-					BOOKMARKS.sort(imageOrderCmp)
-				}
-
-			// remove a bookmark...
-			} else {
-				BOOKMARKS.splice(BOOKMARKS.indexOf(gid), 1)
-			}
-		})
 		.on('sortedImages', function(){
 			BOOKMARKS.sort(imageOrderCmp)
 		})
