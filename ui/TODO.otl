@@ -109,14 +109,18 @@ Roadmap
 
 
 [_] 28% Gen 3 current todo
-	[_] 56% High priority
-		[_] BUG: appear to be leaking memory on very large sets of images (>8K)
+	[_] 57% High priority
+		[X] BUG: appear to be leaking memory on very large sets of images (>8K)
 		| don't remember it before, so it might be due to the new 
 		| loadImagesAround(..)
 		|
 		| Another place to check is pre-caching...
 		|
 		| Ran a test session -- we appear to never invalidate cache...
+		|
+		| Actual Cause: range check bug in getGIDsAfter(..) that caused
+		| 		wrapping around 0 and caching of all images in the ribbon
+		| 		by preCacheRibbonImages(..)...
 		[_] 66% Bookmarks
 			[X] toggle
 			[X] save/load
@@ -127,6 +131,25 @@ Roadmap
 			[_] 0% metadata
 				[_] comment
 				[_] tags
+		[_] 90% tags
+			[X] add
+			[X] remove
+			[X] update
+			[X] select
+			[X] list operations
+			[X] ribbon (list) operations
+			[X] marked (list) operations
+			[X] bookmarked (list) operations
+			[X] mark/unmark tagged
+			[X] crop
+			[_] 0% panels
+				[_] cloud
+				[_] tree
+				[_] tag set editor
+		[_] 66% unsorted image state handling (tag?)
+			[X] remove tag on shift
+			[X] remove tag on alignToRibbon(..)
+			[_] add tag on index (buildcache)
 		[_] 25% Panels
 			[_] bookmarks
 			[_] info
@@ -242,14 +265,14 @@ Roadmap
 		| 	- open/history/...
 		| 	- sort
 		| 	- export
-		[_] 30% mark-based operations
+		[_] 50% mark-based operations
 			[_] 50% cropping selection
 				[X] marked
 				[X] ribbon
 				[_] by tag/collection
 				[_] by group
 			[X] shift up/down
-			[_] tag
+			[X] tag
 			[_] group
 			| a group should behave as a single image but is 
 			| viewable/expandable as a ribbon...
