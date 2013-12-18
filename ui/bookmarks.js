@@ -78,12 +78,15 @@ var toggleBookmark = makeMarkToggler(
 			// add a bookmark...
 			if(action == 'on'){
 				if(BOOKMARKS.indexOf(gid) == -1){
+					/*
 					BOOKMARKS.push(gid)
 					// XXX is this too expensive???
 					// 		...a way to avoid sorting is to:
 					// 			BOOKMARKS.splice(
 					// 				getGIDBefore(gid, BOOKMARKS)+1, 0, gid)
 					BOOKMARKS.sort(imageOrderCmp)
+					*/
+					insertGIDToPosition(gid, BOOKMARKS)
 				}
 
 			// remove a bookmark...

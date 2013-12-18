@@ -600,6 +600,30 @@ function getGIDOrder(gid){
 }
 
 
+// Insert gid to it's position on list...
+//
+// This saves us from very expensive large list sorting via imageOrderCmp
+//
+// These are equivalent:
+//
+// 		insertGIDToPosition(gid, MARKED)
+//
+// 	and
+//
+// 		MARKED.push(gid)
+// 		MARKED.sort(imageOrderCmp)
+//
+// NOTE: this positions the element via DATA.order.
+function insertGIDToPosition(gid, lst, data){
+	data = data == null ? DATA : data
+	gid = gid == null ? getImageGID() : gid
+	var i = lst.indexOf(getGIDBefore(gid, lst, data))
+	i = i == null ? 0 : i+1
+	lst.splice(i, 0, gid)
+	return i
+}
+
+
 // Same as getImageBefore(...), but uses gids and searches in DATA...
 //
 // Return:
@@ -608,7 +632,7 @@ function getGIDOrder(gid){
 //
 // NOTE: if gid is present in the searched ribbon this will return it.
 // NOTE: this uses it's own predicate...
-function getGIDBefore(gid, ribbon, search, data){
+function getGIDBefore(gid, ribbon, data, search){
 	gid = gid == null ? getImageGID() : gid
 	data = data == null ? DATA : data
 	// XXX get a ribbon without getting into DOM...
@@ -791,7 +815,7 @@ function getGIDsAround(count, gid, ribbon, data, force_count){
 
 	var ribbon_data = data.ribbons[ribbon]
 	// get a gid that's in the current ribbon...
-	gid = ribbon_data.indexOf(gid) < 0 ? getGIDBefore(gid, ribbon, null, data) : gid
+	gid = ribbon_data.indexOf(gid) < 0 ? getGIDBefore(gid, ribbon, data) : gid
 
 	// calculate the bounds...
 	var i = ribbon_data.indexOf(gid)
@@ -1329,7 +1353,7 @@ function splitData(data, gid1){
 		// XXX revise...
 		for(var j=0; j<gids.length; j++){
 			var prev = cur
-			var gid = getGIDBefore(gids[j], i, null, data)
+			var gid = getGIDBefore(gids[j], i, data)
 			if(gid == gids[j]){
 				var cur = r.indexOf(gid)
 			} else {
@@ -1686,7 +1710,7 @@ function loadImagesAround(count, gid, ribbon, data, force_count){
 	ribbon = typeof(ribbon) != typeof(123) ? getRibbonIndex(ribbon) : ribbon
 	count = count == null ? Math.round(CONFIG.load_screens * getScreenWidthInImages()) : count
 	// get a gid that exists in the current ribbon...
-	gid = getGIDBefore(gid, ribbon, null, data)
+	gid = getGIDBefore(gid, ribbon, data)
 
 	var ribbon_elem = getRibbon(ribbon)
 

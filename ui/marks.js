@@ -221,7 +221,6 @@ var toggleMarkesView = createCSSClassToggler(
 * Actions
 */
 
-
 var toggleMark = makeMarkToggler(
 		'marked', 
 		'selected', 
@@ -230,8 +229,7 @@ var toggleMark = makeMarkToggler(
 			// add marked image to list...
 			if(action == 'on'){
 				if(MARKED.indexOf(gid) == -1){
-					MARKED.push(gid)
-					MARKED.sort(imageOrderCmp)
+					insertGIDToPosition(gid, MARKED)
 				} 
 
 			// remove marked image from list...
@@ -251,7 +249,7 @@ function toggleAllMarks(action, mode){
 	if(action == 'on'){
 		var _update = function(e){
 			if(MARKED.indexOf(e) < 0){
-				MARKED.push(e)
+				insertGIDToPosition(e, MARKED)
 				updated.push(e)
 			}
 		}
@@ -275,10 +273,6 @@ function toggleAllMarks(action, mode){
 	} 
 
 	res.forEach(_update)
-
-	if(action == 'on'){
-		MARKED.sort(imageOrderCmp)
-	}
 
 	updateImages(updated)
 
@@ -316,8 +310,7 @@ function invertImageMarks(){
 		var i = MARKED.indexOf(e)
 		if(i == -1){
 			on.push(e)
-			MARKED.push(e)
-			MARKED.sort(imageOrderCmp)
+			insertGIDToPosition(e, MARKED)
 		} else {
 			off.push(e)
 			MARKED.splice(i, 1)
@@ -355,7 +348,7 @@ function toggleMarkBlock(image){
 		}
 		// do the toggle...
 		if(state){
-			MARKED.push(e)
+			insertGIDToPosition(e, MARKED)
 		} else {
 			MARKED.splice(MARKED.indexOf(e), 1)
 		}
@@ -372,9 +365,6 @@ function toggleMarkBlock(image){
 	$.each(right, _convert)
 
 	updateImages(updated)
-	if(state){
-		MARKED.sort(imageOrderCmp)
-	}
 
 	$('.viewer')
 		.trigger('togglingImageBlockMarks', [image, updated, state])
