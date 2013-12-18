@@ -603,6 +603,7 @@ function getGIDOrder(gid){
 // Insert gid to it's position on list...
 //
 // This saves us from very expensive large list sorting via imageOrderCmp
+// Will return element index.
 //
 // These are equivalent:
 //
@@ -614,12 +615,15 @@ function getGIDOrder(gid){
 // 		MARKED.sort(imageOrderCmp)
 //
 // NOTE: this positions the element via DATA.order.
-function insertGIDToPosition(gid, lst, data){
+// NOTE: this requires the list to be sorted.
+function insertGIDToPosition(gid, list, data){
 	data = data == null ? DATA : data
 	gid = gid == null ? getImageGID() : gid
-	var i = lst.indexOf(getGIDBefore(gid, lst, data))
+
+	var i = list.indexOf(getGIDBefore(gid, list, data))
 	i = i == null ? 0 : i+1
-	lst.splice(i, 0, gid)
+	list.splice(i, 0, gid)
+
 	return i
 }
 
