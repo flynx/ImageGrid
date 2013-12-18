@@ -68,15 +68,15 @@ var getMarkedGIDBefore = makeGIDBeforeGetterFromList(
 // 	- toggle mark_class on the mark element
 // 	- call the callback, if defined, passing it:
 // 		- gid
-// 		- action ('on' on 'off')
+// 		- action ('on' or 'off')
 // 	- trigger the evt_name on the viewer passing it:
 // 		- gid
-// 		- action ('on' on 'off')
+// 		- action ('on' or 'off')
 //
 // The actual toggler is built with createCSSClassToggler(..), see its
 // docs for protocol descrittion.
 //
-// The resulting toggled, by default, marks the current image 
+// The resulting toggler, by default, marks the current image 
 // (.current.image), but can be passed a different image as first 
 // argument.
 //
@@ -147,7 +147,7 @@ function makeMarkUpdater(img_class, mark_class, test){
 
 
 /**********************************************************************
-* Basic marks...
+* 
 */
 
 var updateSelectedImageMark = makeMarkUpdater(
@@ -336,8 +336,6 @@ function invertImageMarks(){
 
 // Toggle marks in the current continuous section of marked or unmarked
 // images...
-// XXX need to make this dynamic data compatible...
-// XXX this will mark the block ONLY IF it is loaded!!!
 function toggleMarkBlock(image){
 	image = image == null ? getImage() : image
 	var gid = typeof(image) == typeof('str') ? image : getImageGID(image)
