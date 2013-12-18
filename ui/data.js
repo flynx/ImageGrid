@@ -551,10 +551,20 @@ function setBaseRibbonIndex(n){
 }
 
 
-// like getRibbonIndex but get the index only via DATA...
+// Like getRibbonIndex but works only via DATA...
 //
+// gid can be:
+// 	- null		- get current image
+// 	- gid
+// 	- image
+//
+// NOTE: this will return -1 if gid is not found, this can be due to a 
+// 		crop being loaded with just part of the available gids or simply
+// 		because of an invalid argument.
 function getGIDRibbonIndex(gid, data){
-	gid = gid == null ? getImageGID() : gid
+	gid = gid == null ? getImageGID() 
+		: typeof(gid) != typeof('str') ? getImageGID(gid)
+		: gid
 	data = data == null ? DATA : data
 
 	var ribbons = data.ribbons
@@ -568,8 +578,13 @@ function getGIDRibbonIndex(gid, data){
 }
 
 
-// get a list of gids in ribbon...
+// Get a list of gids in ribbon...
 //
+// The ribbon can be given as:
+// 	- null		- get current ribbon
+// 	- number	- ribbon index
+// 	- gid
+// 	- image
 function getRibbonGIDs(a, data){
 	data = data == null ? DATA : data
 	if(typeof(a) == typeof(123)){
@@ -579,7 +594,7 @@ function getRibbonGIDs(a, data){
 }
 
 
-// get all the currently loaded gids...
+// Get all the currently loaded gids...
 //
 function getLoadedGIDs(data){
 	data = data == null ? DATA : data
@@ -591,7 +606,7 @@ function getLoadedGIDs(data){
 }
 
 
-// like getImageOrder(..) but use DATA...
+// Like getImageOrder(..) but use DATA...
 //
 function getGIDOrder(gid){
 	gid = gid == null ? getImageGID() : gid
@@ -639,18 +654,21 @@ function insertGIDToPosition(gid, list, data){
 function getGIDBefore(gid, ribbon, data, search){
 	gid = gid == null ? getImageGID() : gid
 	data = data == null ? DATA : data
+	var order = data.order
+	var target = order.indexOf(gid)
+
 	// XXX get a ribbon without getting into DOM...
 	// 		...dependency leek...
+	// NOTE: these assignments are intentionally separated and cascaded
+	// 		as they depend on each other's results...
 	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
 	ribbon = typeof(ribbon) == typeof(123) ? data.ribbons[ribbon] : ribbon
 	// get the current ribbon if gid is not in any of the loaded 
 	// ribbons (crop mode)...
 	ribbon = ribbon == null ? data.ribbons[getGIDRibbonIndex(null, data)] : ribbon
+
 	//search = search == null ? match2(linSearch, binSearch) : search
 	search = search == null ? binSearch : search
-	var order = data.order
-
-	var target = order.indexOf(gid)
 
 	return search(target, ribbon, function(a, i, lst){
 		var b = order.indexOf(lst[i])
@@ -687,7 +705,7 @@ function getGIDBefore(gid, ribbon, data, search){
 // NOTE: this needs the list sorted in the same order as the ribbons 
 // 		i.e. via DATA.order...
 // NOTE: passing a ribbon number or setting restrict_to_ribbon to true 
-// 		will restrict the search to a specific ribbon only...
+// 		will restrict the search to a specific ribbon only by default...
 function makeGIDBeforeGetterFromList(get_list, restrict_to_ribbon){
 	return function(gid, ribbon){
 		ribbon = ribbon == null && restrict_to_ribbon == true 
@@ -743,12 +761,16 @@ function getGIDsAfter(count, gid, ribbon, inclusive, data){
 	// default values...
 	gid = gid == null ? getImageGID() : gid
 	data = data == null ? DATA : data
-	ribbon = ribbon == null ? getRibbonIndex() : ribbon
-	count = count == null ? Math.round(CONFIG.load_screens * getScreenWidthInImages()) : count
+	//ribbon = ribbon == null ? getRibbonIndex() : ribbon
 	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
+	count = count == null 
+			? Math.round(CONFIG.load_screens * getScreenWidthInImages()) 
+			: count
 
 	// get a local gid...
-	gid = data.ribbons[ribbon].indexOf(gid) < 0 ? getGIDBefore(gid, ribbon) : gid
+	gid = data.ribbons[ribbon].indexOf(gid) < 0 
+			? getGIDBefore(gid, ribbon) 
+			: gid
 	ribbon = data.ribbons[ribbon]
 
 	// ribbon this is empty or non-existant...
@@ -813,13 +835,18 @@ function getGIDsAround(count, gid, ribbon, data, force_count){
 	// default values...
 	data = data == null ? DATA : data
 	gid = gid == null ? getImageGID() : gid
-	ribbon = ribbon == null ? getRibbonIndex() : ribbon
+	//ribbon = ribbon == null ? getRibbonIndex() : ribbon
+	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
 	// XXX is this out of context here???
-	count = count == null ? Math.round(CONFIG.load_screens * getScreenWidthInImages()) : count
+	count = count == null 
+			? Math.round(CONFIG.load_screens * getScreenWidthInImages()) 
+			: count
 
 	var ribbon_data = data.ribbons[ribbon]
 	// get a gid that's in the current ribbon...
-	gid = ribbon_data.indexOf(gid) < 0 ? getGIDBefore(gid, ribbon, data) : gid
+	gid = ribbon_data.indexOf(gid) < 0 
+			? getGIDBefore(gid, ribbon, data) 
+			: gid
 
 	// calculate the bounds...
 	var i = ribbon_data.indexOf(gid)
@@ -827,8 +854,7 @@ function getGIDsAround(count, gid, ribbon, data, force_count){
 	var start = i - Math.floor(count/2)
 	start = start < 0 ? 0 : start
 
-	var end = i + Math.ceil(count/2)
-	end = end > ribbon_data.length ? ribbon_data.length : end
+	var end = Math.min(i + Math.ceil(count/2), ribbon_data.length)
 
 	// force count by extending the ribbon at the opposite end...
 	if(force_count && ribbon_data.length > count){
@@ -846,8 +872,44 @@ function getGIDsAround(count, gid, ribbon, data, force_count){
 }
 
 
-// NOTE: this expects that both arrays cleanly intersect each other only 
-// 		once...
+// Get offsets of from array ends to the common section...
+//
+// The offsets are calculated relative to the first array, i.e. they 
+// represent how the second array (L2) must be expanded (positive 
+// offset) or contracted (negative offset) from each side, to produce 
+// the first (L1).
+//
+// Note that the directions are not left/right, but rather inward 
+// (contraction, negative) and outward (expansion, positive), Notice the
+// offset arrow directions in the illustrations below...
+//
+//
+// Examples:
+//
+// 		L1:			oooooooooooooooooooo
+// 		L2:					ooooooooooooooooooooooooo
+// 					<-------			<------------
+// 		Offset:		  left					right
+// 						(+)					  (-)
+//
+//
+// 		L1:					oooooooooooo
+// 		L2:			ooooooooooooooooooooooooooooooooo
+// 					------->			<------------
+// 		Offset:		  left					right
+// 						(-)					  (-)
+//
+//
+// 		L1:			ooooooooooooooooooooooooooooooooo
+// 		L2:					oooooooooooo
+// 					<-------			------------>
+// 		Offset:		  left					right
+// 						(+)					  (+)
+//
+//
+// NOTE: this expects that both arrays to cleanly intersect each other
+// 		only once...
+//
 // XXX this sometimes returns a null + value, which should be impossible...
 // 		...this does not affect anything, but still need to investigate...
 function getCommonSubArrayOffsets(L1, L2){
@@ -882,9 +944,12 @@ function getCommonSubArrayOffsets(L1, L2){
 }
 
 
+// Return a common sub array of two arrays...
+//
+// See getCommonSubArrayOffsets(..) for more info...
+//
 // NOTE: this expects that bot arrays cleanly intersect each other only 
 // 		once...
-// 		see getCommonSubArrayOffsets(..) for more info...
 function getCommonSubArray(L1, L2){
 	var res = getCommonSubArrayOffsets(L1, L2)
 	var left = res.left
@@ -978,6 +1043,8 @@ function normalizePath(url, base, mode, do_unescape){
 
 // Select best preview by size...
 //
+// If size is not given, this will use the current size.
+//
 // NOTE: this will use the original if everything else is smaller...
 function getBestPreview(gid, size){
 	gid = gid == null ? getImageGID(): gid
@@ -1003,7 +1070,26 @@ function getBestPreview(gid, size){
 }
 
 
-// Orientation translation...
+// Translate orientation from EXIF to ImageGrid format...
+//
+// In EXIF both the flip and rotation are encoded as a combination in a
+// single byte where as in ImageGrid they are represented by separate
+// values.
+//
+// 		EXIF		rotation	flip
+// 		0			-			-
+// 		1			-			-
+// 		2			-			horizontal
+// 		3			180			-
+// 		4			-			vertical
+// 		5			90			vertical
+// 		6			90			-
+// 		7			90			horizontal
+// 		8			270			-
+//
+// NOTE: some EXIF values are ignored...
+// NOTE: some combinations are redundant, like: horizontal + vertical 
+// 		flip is the same as 180 rotation...
 function orientationExif2ImageGrid(orientation){
 	orientation = orientation == null ? 0 : orientation
 	return {
