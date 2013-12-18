@@ -140,11 +140,17 @@ function showCurrentMarker(){
 function updateCurrentMarker(){
 	var scale = getElementScale($('.ribbon-set'))
 	var marker = $('.current-marker')
+	var cur = $('.current.image')
+	var w = cur.outerWidth(true)
+	var h = cur.outerHeight(true)
 	marker = marker.length == 0 ? showCurrentMarker() : marker 
-	var d = getRelativeVisualPosition(marker, $('.current.image'))
+	var d = getRelativeVisualPosition(marker, cur)
 	return marker.css({
 		top: parseFloat(marker.css('top')) + d.top/scale,
 		left: parseFloat(marker.css('left')) + d.left/scale,
+		// keep size same as the image...
+		width: w,
+		height: h,
 	})
 }
 
@@ -1311,7 +1317,8 @@ function setupUI(viewer){
 		})
 		.on([
 				'focusingImage',
-				'fittingImages'
+				'fittingImages',
+				//'updatingImageProportions',
 			].join(' '), 
 			function(){
 				updateCurrentMarker()

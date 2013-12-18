@@ -1388,13 +1388,18 @@ function mergeData(a, b){
 // Split the given data at gid1[, gid2[, ...]]
 //
 // This will return a list of data objects, each containing gids that 
-// are later than gidN and earlier or the same as gidN+1, preserving the
-// ribbon structure.
+// are strictly later than gid N and earlier or the same as gidN +1, 
+// preserving the ribbon structure.
 //
+// NOTE: the given gids do not need to be in the same ribbon.
 // NOTE: if a given object does not contain any gid in ribbon N then that
 // 		ribbon will be represented by an empty list.
 // NOTE: the above makes the data objects not compatible with anything that 
 // 		expects the ribbon to have at least one gid.
+// 		This is intentional, as this approach preserves relative ribbon
+// 		structure.
+// 		It is recommended to dropEmptyRibbons(..) before actual use of 
+// 		the resulting data.
 // NOTE: this takes one or more gids.
 // NOTE: this will not set .current fields.
 // NOTE: this is the opposite of mergeData():
@@ -1473,7 +1478,7 @@ function splitData(data, gid1){
 //
 //
 // Illustration of operation:
-//	1) Initial state, locate bounds...
+//	1) Initial state, of no start or end given, locate bounds...
 //
 //			start ---+					 +--- end
 //					 v					 v
@@ -1741,9 +1746,10 @@ function updateImage(image, gid, size, sync){
 // If list is passed this will update only the images in the list. The
 // list can contain either gids or image elements.
 //
-// NOTE: this will prioritize images by distance from current image...
+// If CONFIG.update_sort_enabled is set, this will prioritize images by
+// distance from current image, loading the closest images first...
 //
-// XXX need to run this in the background...
+// If CONFIG.update_sync is set, this will run asynchronously.
 function updateImages(list, size, cmp){
 	var deferred = $.Deferred()
 
@@ -1824,7 +1830,7 @@ function loadImagesAround(count, gid, ribbon, data, force_count){
 	var size = getVisibleImageSize('max')
 
 	// no common sections, do a full reload...
-	// XXX NOTE: we use || instead of && here to compensate for an oddity
+	// NOTE: we use || instead of && here to compensate for an oddity
 	// 		in getCommonSubArrayOffsets(...), see it for further details... 
 	if(left == null || right == null){
 		var n = new_ribbon.indexOf(gid)
@@ -1920,20 +1926,25 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 
 
 // Reload the viewer using the current DATA and IMAGES objects
-function reloadViewer(images_per_screen){
+//
+// NOTE: setting reuse_current_structure will not destroy ribbon 
+// 		structure and do a fast reload
+function reloadViewer(reuse_current_structure, images_per_screen){
 	var ribbons_set = $('.ribbon-set')
 	var current = DATA.current
 	// if no width is given, use the current or default...
 	var w = images_per_screen == null ? getScreenWidthInImages() : images_per_screen
 	w = w > CONFIG.max_screen_images ? CONFIG.default_screen_images : w
 
-	// clear data...
-	$('.ribbon').remove()
+	if(!reuse_current_structure){
+		// clear data...
+		$('.ribbon').remove()
 
-	// create ribbons...
-	$.each(DATA.ribbons, function(i, e){
-		createRibbon().appendTo(ribbons_set)
-	})
+		// create ribbons...
+		$.each(DATA.ribbons, function(i, e){
+			createRibbon().appendTo(ribbons_set)
+		})
+	}
 
 	// create images...
 	$('.ribbon').each(function(i, e){
@@ -1948,6 +1959,7 @@ function reloadViewer(images_per_screen){
 
 
 // Apply the current UI_STATE to current viewer
+//
 function loadSettings(){
 	toggleTheme(UI_STATE['global-theme'])
 
@@ -1966,16 +1978,19 @@ function loadSettings(){
 * Actions...
 */
 
+// load an image and its context...
+//
+// XXX partial loading is still buggy, see TODO.otl
 function showImage(gid){
 	var img = getImage(gid)
 
-	// target image not loaded...
+	// full reload - target image not loaded...
 	if(img.length == 0){
 		DATA.current = gid
-		reloadViewer()
+		reloadViewer(true)
 		img = getImage(gid)
 
-	// target is already loaded...
+	// partial reload - target is already loaded...
 	} else {
 		// XXX this does not load images correctly at times...
 		centerView(focusImage(img))
@@ -2003,7 +2018,7 @@ function updateRibbonOrder(no_reload_viewer){
 		DATA.ribbons[i].sort(imageOrderCmp)
 	}
 	if(!no_reload_viewer){
-		reloadViewer()
+		reloadViewer(true)
 	}
 }
 
@@ -2040,7 +2055,7 @@ function alignRibbons(ribbon){
 
 	DATA = alignDataToRibbon(ribbon)
 
-	reloadViewer()
+	reloadViewer(false)
 }
 
 
@@ -2085,7 +2100,7 @@ function loadRibbonsFromPath(path, cmp, reverse, dir_name){
 	if(cmp != false){
 		sortImages(cmp, reverse)
 	} else {
-		reloadViewer()
+		reloadViewer(false)
 	}
 
 	return DATA
@@ -2230,7 +2245,7 @@ function setupData(viewer){
 				if(n <= threshold){
 					toggleImageProportions('fit-viewer', null, n)
 
-				} else {
+				} else if(toggleImageProportions('?') != 'none') {
 					toggleImageProportions('none')
 				}
 			}

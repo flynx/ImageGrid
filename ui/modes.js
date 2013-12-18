@@ -421,6 +421,8 @@ var toggleImageProportions = createCSSClassToggler(
 				correctImageProportionsForRotation(image)
 				centerView(null, 'css')
 			}
+
+			viewer.trigger('updatingImageProportions')
 		})
 
 
