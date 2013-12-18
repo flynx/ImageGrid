@@ -123,6 +123,7 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 			var e = a
 			var action = b == 'next' ? null : b
 		}
+		var args = args2array(arguments).slice(2)
 		e = $(e)
 		// option number...
 		if(typeof(action) == typeof(1)){
@@ -181,7 +182,7 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 		// 		function, this will enable them to act as metods correctly
 		// pre callback...
 		if(callback_pre != null){
-			if(callback_pre.call(this, action, e) === false){
+			if(callback_pre.apply(this, [action, e].concat(args)) === false){
 				// XXX should we return action here???
 				//return
 				return func('?')
@@ -194,7 +195,7 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 		}
 		// post callback...
 		if(callback_post != null){
-			callback_post.call(this, action, e)
+			callback_post.apply(this, [action, e].concat(args))
 		}
 
 		return action
@@ -739,6 +740,12 @@ Object.get = function(obj, name, dfl){
 		return dfl
 	}
 	return val
+}
+
+
+// convert JS arguments to Array...
+function args2array(args){
+	return Array.apply(null, args)
 }
 
 

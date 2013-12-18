@@ -110,32 +110,13 @@ Roadmap
 
 [_] 29% Gen 3 current todo
 	[_] 58% High priority
-		[_] BUG: zooming vertical images in single image view results in size jumping...
-		| Reason:
-		| 	This is due to the proportion ratio changing in one step...
+		[_] BUG: in single image mode shifting first image up to new ribbon errs...
+		| error location/reason:
+		| 	getImageGid(..) got something odd in the image gid attribute...
 		|
-		| Solution:
-		| 	Make the proportion transition smoothly, at least in two zoom-steps
-		[X] BUG: jumping more than one image in single image view messes up scale...
+		| Race condition??
 		|
-		| Procedure:
-		| 	- load: file:///L:/mnt/hdd13 (photo)/NTFS2/media/img/my/work/- 20131122Y.001/DCIM/preview (RAW)/
-		| 	- go to single image mode
-		| 	- press 2
-		| 	- go to end
-		| 	- press [ until a long jump between vertical and horizontal pics
-		|
-		| Effect:
-		| 	- the size of the images will change
-		|
-		| Solution:
-		| 	moved the proportions mode switch to preFittingImages handler
-		|
-		| Side-effect:
-		| 	vertical images, in horizontal viewer, and vice-versa jump 
-		| 	in size a bit when zooming past the threshold...
-		| 	the amount of "jump" depends on viewer proportions vs. image
-		| 	proportions...
+		| Can't reproduce this...
 		[X] BUG: appear to be leaking memory on very large sets of images (>8K)
 		| don't remember it before, so it might be due to the new 
 		| loadImagesAround(..)
@@ -545,6 +526,32 @@ Roadmap
 		[_] side-by side view...
 		[_] Simplify tool-tip structure in dialogs...
 		| might also bee good to unify tool-tips across the app...
+		[X] BUG: zooming vertical images in single image view results in size jumping...
+		| Reason:
+		| 	This is due to the proportion ratio changing in one step...
+		|
+		| Solution:
+		| 	Make the proportion transition smoothly, at least in two zoom-steps
+		[X] BUG: jumping more than one image in single image view messes up scale...
+		|
+		| Procedure:
+		| 	- load: file:///L:/mnt/hdd13 (photo)/NTFS2/media/img/my/work/- 20131122Y.001/DCIM/preview (RAW)/
+		| 	- go to single image mode
+		| 	- press 2
+		| 	- go to end
+		| 	- press [ until a long jump between vertical and horizontal pics
+		|
+		| Effect:
+		| 	- the size of the images will change
+		|
+		| Solution:
+		| 	moved the proportions mode switch to preFittingImages handler
+		|
+		| Side-effect:
+		| 	vertical images, in horizontal viewer, and vice-versa jump 
+		| 	in size a bit when zooming past the threshold...
+		| 	the amount of "jump" depends on viewer proportions vs. image
+		| 	proportions...
 		[X] BUG: history dialog is focused on a disabled field...
 		| Procedure:
 		| 	- open a dir

@@ -374,6 +374,7 @@ var KEYBOARD_CONFIG = {
 		'#7': doc('Fit seven images', function(){ fitNImages(7) }),
 		'#8': doc('Fit eight images', function(){ fitNImages(8) }),
 		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
+		'#0': doc('Fit nine images', function(){ fitNImages(CONFIG.max_screen_images) }),
 
 		// cropping...
 		C: doc('Show ribbon crop dialog', cropImagesDialog),
@@ -567,9 +568,8 @@ var KEYBOARD_CONFIG = {
 
 		// zooming...
 		'#1': doc('Fit image to screen', function(){ fitNImages(1) }),
-		// XXX this will do different stuff for different proportioned screens...
-		'#2': doc('Show big image', function(){ fitNImages(1.5, true) }),
-		'#3': doc('Show small image', function(){ fitNImages(3, true) }),
+		'#2': doc('Show big image', function(){ fitNImages(1.125) }),
+		'#3': doc('Show small image', function(){ fitNImages(3) }),
 
 		'-': doc('Zoom in', function(){ zoomOut() }),
 		'=': doc('Zoom out', function(){ zoomIn() }),

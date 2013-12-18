@@ -139,11 +139,8 @@ var toggleSingleImageMode = createCSSClassToggler(
 				// load things...
 				w = UI_STATE['single-image-mode-screen-images']
 				w = w == null ? 1 : w
-				var p = UI_STATE['single-image-mode-proportions']
-				p = p == null ? 'square' : p
 
 				// set stuff...
-				toggleImageProportions(p)
 				fitNImages(w)
 				toggleImageInfo('off')
 
@@ -153,13 +150,11 @@ var toggleSingleImageMode = createCSSClassToggler(
 
 				// save things...
 				UI_STATE['single-image-mode-screen-images'] = w
-				UI_STATE['single-image-mode-proportions'] = toggleImageProportions('?')
 
 				// load things...
 				w = UI_STATE['ribbon-mode-screen-images']
 				w = w == null ? CONFIG.default_screen_images : w
 
-				toggleImageProportions('none')
 				fitNImages(w)
 				var i = UI_STATE['ribbon-mode-image-info'] == 'on' ? 'on' : 'off'
 				toggleImageInfo(i)
@@ -362,43 +357,88 @@ function setImageProportions(image, mode){
 }
 
 
+// Toggle image container proportions mode
+//
+// Available modes:
+// 	- none			: square proportions
+// 	- fit-viewer	: calculate proportions
+//
+// If CONFIG.proportions_ratio_threshold is null or if ignore_thresholds,
+// is set, this willsimply switch between square and viewer proportions.
+//
+// If CONFIG.proportions_ratio_threshold is set to a list of two values,
+// this will use the screen width in images (S) to calculate the 
+// proportions:
+// 			S < min 		: viewer proportions
+// 			S > max			: square proportions
+// 			min > S < max	: transitional, proportions between 
+// 								square and viewer...
+//
+// NOTE: if n is not passed, getScreenWidthInImages() will be used...
+// NOTE: if ignore_thresholds is set or the threshold is not a list, this
+// 		will ignore the threshold...
+//
+// XXX is this the right place to calculate proportions??? (revise)
 var toggleImageProportions = createCSSClassToggler(
 		'.viewer',
 		[
 			'none',
 			'fit-viewer'
 		],
-		/* XXX do we need this???
-		function(action){
-			// prevent reentering...
-			if(action == toggleImageProportions('?')){
-				return false
-			}
-		},
-		*/
-		function(action){
+		function(action, viewer, n, ignore_thresholds){
 			var image = $('.image')
-			var h = image.outerHeight(true)
-			var w = image.outerWidth(true)
-
 			// viewer proportions...
-			// XXX going into here twice for a rotated 90/270 image will 
-			// 		set it back to square...
-			// 		XXX can't reproduce this error...
 			if(action == 'fit-viewer'){
-				var viewer = $('.viewer')
+				// NOTE: we care about n only in fit-viewer mode...
+				n = n == null ? getScreenWidthInImages() : n
+				var threshold = CONFIG.proportions_ratio_threshold
+
+				// image proportions between square and viewer indicator...
+				//
+				// must be between 0 and 1:
+				// 	- 1 is square proportions
+				// 	- 0 is viewer proportions
+				var c = 0
+
+				// calculate c...
+				if(!ignore_thresholds 
+						&& (threshold != null 
+							|| threshold.length == 2)){
+					var min = Math.min.apply(null, threshold)
+					var max = Math.max.apply(null, threshold)
+					var c = (n - min) / (max - min)
+					c = c < 0 ? 0 
+						: c > 1 ? 1 
+						: c
+				}
+
 				var W = viewer.innerWidth()
 				var H = viewer.innerHeight()
 
+				// landscape viewer...
 				if(W > H){
+					var h = image.outerHeight(true)
+					var scale = h/H
+					var tw = W * scale
+					var d = tw - h
+
 					image.css({
-						width: W * h/H,
+						//width: W * scale,
+						width: tw - (d * c),
 						height: '',
 					})
+
+				// portrait viewer...
 				} else {
+					var w = image.outerWidth(true)
+					var scale = w/W
+					var th = H * scale
+					var d = th - w
+
 					image.css({
 						width: '',
-						height: H * w/W,
+						//height: H * scale,
+						height: th - d * c,
 					})
 				}
 
@@ -407,11 +447,11 @@ var toggleImageProportions = createCSSClassToggler(
 				centerView(null, 'css')
 
 			// square proportions...
+			// NOTE: this will reset the size to default (defined in CSS)
 			} else {
-				var size = Math.min(w, h)
 				image.css({
-					width: size,
-					height: size
+					width: '',
+					height: ''
 				})
 
 				// account for rotation...

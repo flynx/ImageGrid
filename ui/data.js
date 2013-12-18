@@ -33,8 +33,18 @@ var CONFIG = {
 	// A threshold after which the image block ratio will be changed form 
 	// 1x1 to 'fit-viewer' in single image mode...
 	//
-	// NOTE: if null this feature will be disabled.
-	proportions_ratio_threshold: 1.5,
+	// this can be:
+	// 	- null					: feature disabled
+	// 	- number				: discrete threshold
+	// 	- array of 2 numbers	: two thresholds, in between the 
+	// 								image proportions will transition 
+	// 								gradually form square to screen
+	//
+	// NOTE: the array format, threshold order is not important.
+	proportions_ratio_threshold: [ 
+		1.2, 
+		2.5 
+	],
 
 	// ribbon scaling limits and defaults...
 	max_screen_images: 12,
@@ -72,7 +82,6 @@ var UI_STATE = {
 	'global-theme': null,
 	'ribbon-mode-screen-images': null,
 	'single-image-mode-screen-images': null,
-	'single-image-mode-proportions': null,
 	'ribbon-mode-image-info': 'off',
 }
 
@@ -1830,10 +1839,6 @@ function loadSettings(){
 
 	if(toggleSingleImageMode('?') == 'on'){
 		var w = UI_STATE['single-image-mode-screen-images']
-		if(CONFIG.proportions_ratio_threshold == null){
-			var p = UI_STATE['single-image-mode-proportions']
-			toggleImageProportions(p)
-		}
 	} else {
 		var w = UI_STATE['ribbon-mode-screen-images']
 		toggleImageInfo(UI_STATE['ribbon-mode-image-info'] == 'on' ? 'on' : 'off')
@@ -2100,14 +2105,25 @@ function setupData(viewer){
 		})
 
 		.on('preFittingImages', function(evt, n){
-			// update proportions...
-			if(CONFIG.proportions_ratio_threshold != null 
-					&& toggleSingleImageMode('?') == 'on'){
-				if(n <= CONFIG.proportions_ratio_threshold){
-					toggleImageProportions('fit-viewer')
+			var ribbon_mode = (toggleSingleImageMode('?') == 'off')
+			var threshold = CONFIG.proportions_ratio_threshold
+			threshold = (threshold != null && threshold.length != null)
+					? Math.max.apply(null, threshold) 
+					: threshold
+
+			// single image mode: update proportions...
+			if(!ribbon_mode && threshold != null){
+				if(n <= threshold){
+					toggleImageProportions('fit-viewer', null, n)
+
 				} else {
 					toggleImageProportions('none')
 				}
+			}
+
+			// ribbon mode: set square proportions...
+			if(ribbon_mode && toggleImageProportions('?') != 'none'){
+				toggleImageProportions('none')
 			}
 		})
 		.on('fittingImages', function(evt, n){
