@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131026130132'''
+__sub_version__ = '''20131219053320'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -50,6 +50,9 @@ CONFIG = {
 	'gid-source': 'original',
 
 	'base-ribbon': 0,
+	'tags': [
+		'unsorted',
+	],
 
 	'cache-image-name': '%(guid)s - %(name)s',
 
@@ -498,6 +501,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 			'name': name,
 			'type': 'image',
 			'state': 'single',
+			'tags': config.get('tags', []),
 			'orientation': {
 					0: 0,
 					1: 0,
@@ -647,7 +651,8 @@ def build_data(images, path, config=CONFIG):
 # High-level API...
 #---------------------------------------------------------build_cache---
 def build_cache(path, config=CONFIG, gid_generator=hash_gid, 
-		report_progress=report_progress, dry_run=False, images_only=False, verbosity=0):
+		report_progress=report_progress, dry_run=False, images_only=False, 
+		verbosity=0):
 	'''
 
 	NOTE: when updating existing cache, this will re-sort the images.
@@ -832,6 +837,16 @@ def handle_commandline():
 	output_configuration.add_option('--base-ribbon',
 						default=CONFIG['base-ribbon'],
 						help='Base ribbon number (default: "%default").')
+	output_configuration.add_option('-t', '--tag',
+						action='append',
+						default=CONFIG['tags'][:],
+						help='add tag to each image (default: %default).',
+						metavar='TAG')
+	output_configuration.add_option('--notag',
+						action='append',
+						default=[],
+						help='do not add tag to images (default: %default).',
+						metavar='TAG')
 	output_configuration.add_option('--force-ascii', 
 						action='store_true',
 						default=False,
@@ -905,6 +920,9 @@ def handle_commandline():
 			'full-scan': options.full_scan,
 			'force-ascii': options.force_ascii,
 			})
+
+	# build the tags...
+	tags = config['tags'] = list(set(options.tag + config['tags']).difference(options.notag))
 
 	# a value from 0 through 2...
 	verbosity = options.verbosity

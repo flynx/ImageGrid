@@ -13,12 +13,12 @@ var CONFIG = {
 
 	// Loader configuration...
 	//
-	//		load_screens	
-	// 	|<---------------------->|
-	// 	ooooooooooooXooooooooooooo
-	// 					 |<----->|<------------>|
-	// 						^	   roll_frame			  
-	// 		load_threshold -+
+	//						load_screens	
+	// 					|<---------------------->|
+	// 		ribbon:		ooooooooooooXooooooooooooo
+	// 									 |<----->|<------------>|
+	// 										^	   roll_frame			  
+	// 						load_threshold -+
 	//
 	// number of screens to keep loaded...
 	//
@@ -33,14 +33,28 @@ var CONFIG = {
 	// A threshold after which the image block ratio will be changed form 
 	// 1x1 to 'fit-viewer' in single image mode...
 	//
-	// this can be:
+	// This can be:
 	// 	- null					: feature disabled
 	// 	- number				: discrete threshold
 	// 	- array of 2 numbers	: two thresholds, in between the 
 	// 								image proportions will transition 
 	// 								gradually form square to screen
 	//
+	// When using array threshold, the gap between top and bottom must 
+	// be at least a couple of zoom_step_scale's.
+	//
 	// NOTE: the array format, threshold order is not important.
+	// NOTE: setting this to an integer may have a side-effect of making
+	// 		zooming of images win opposite proportions to the viewer 
+	// 		behave oddly on the threshold...
+	// 		...usually looking line the image getting a bit smaller for
+	// 		a step while zooming in, or the opposite, this is normal.
+	// NOTE: array of two integers produces a barely noticeable 
+	// 		side-effect of zooming being a bit uneven between the 
+	// 		threshold values.
+	// 		this is due to the same reasons as for "jumping zoom" 
+	// 		described above, and will be less noticeable the larger the
+	// 		gap between thresholds.
 	proportions_ratio_threshold: [ 
 		1.2, 
 		2.5 
