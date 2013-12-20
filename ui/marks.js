@@ -162,9 +162,8 @@ var updateSelectedImageMark = makeMarkUpdater(
 // NOTE: MARKED may contain both gids that are not loaded and that do 
 // 		not exist, as there is no way to distinguish between the two 
 // 		situations the cleanup is optional...
-function cropMarkedImages(cmp, keep_ribbons, keep_unloaded_gids){
-	cmp = cmp == null ? imageOrderCmp : cmp
-	var marked = MARKED.slice().sort(cmp)
+function cropMarkedImages(keep_ribbons, keep_unloaded_gids){
+	var marked = MARKED.slice()//.sort(imageOrderCmp)
 
 	cropDataTo(marked, keep_ribbons, keep_unloaded_gids)
 
@@ -186,7 +185,7 @@ var toggleMarkedOnlyView = makeCropModeToggler(
 var toggleMarkedOnlyWithRibbonsView = makeCropModeToggler(
 		'marked-only-view',
 		function(){
-			cropMarkedImages(null, true)
+			cropMarkedImages(true)
 		})
 
 
@@ -550,8 +549,23 @@ var loadFileMarks = makeFileLoader(
 		MARKED_FILE_DEFAULT, 
 		MARKED_FILE_PATTERN, 
 		function(data){ 
+			// for version below 2.1, sort MARKED and update to 2.1...
+			if(DATA.version == '2.0'){
+				setTimeout(function(){
+					var t0 = Date.now()
+					data.sort(imageOrderCmp)
+					var t1 = Date.now()
+
+					// XXX is this the correct way to do this???
+					DATA.version = DATA_VERSION
+
+					console.warn('Marks: sort: done ('+( t1 - t0 )+'ms) -- resave the data.')
+				}, 0)
+			}
+			// set the MARKED...
 			MARKED = data
-		})
+		},
+		'marksLoaded')
 
 
 // Save image marks to file

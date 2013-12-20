@@ -202,7 +202,7 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 }
 
 
-function makeFileLoader(title, file_dfl, file_pattern, data_set, skip_reg){
+function makeFileLoader(title, file_dfl, file_pattern, set_data, evt_name, skip_reg){
 	var _loader = function(path){
 		var res = $.Deferred()
 		// default locations...
@@ -232,7 +232,11 @@ function makeFileLoader(title, file_dfl, file_pattern, data_set, skip_reg){
 
 		bubbleProgress(title, loader, res)
 
-		res.done(data_set)
+		res.done(set_data)
+
+		if(evt_name != null){
+			res.done(function(){ $('.viewer').trigger(evt_name) })
+		}
 
 		return res
 	}
@@ -241,13 +245,13 @@ function makeFileLoader(title, file_dfl, file_pattern, data_set, skip_reg){
 }
 // XXX make this check for updates -- no need to re-save if nothing 
 // 		changed...
-function makeFileSaver(file_dfl, data_get, skip_reg){
+function makeFileSaver(file_dfl, get_data, skip_reg){
 	var _saver = function(name){
 		name = name == null 
 			? normalizePath(CONFIG.cache_dir_var +'/'+ Date.timeStamp()) 
 			: name
 
-		dumpJSON(name + '-' + file_dfl, data_get())
+		dumpJSON(name + '-' + file_dfl, get_data())
 	}
 	!skip_reg && FILE_SAVERS.push(_saver)
 	return _saver
@@ -443,8 +447,8 @@ function loadFileState(path, prefix){
 				reloadViewer()
 				res.resolve()
 
-			// version 2.0
-			} else if(json.version == '2.0') {
+			// version 2.*
+			} else if(/2\.[0-9*]/.test(json.version)) {
 				DATA = json
 				$.when(
 						// XXX load config...
@@ -457,6 +461,7 @@ function loadFileState(path, prefix){
 						// run registered loaders...
 						runFileLoaders(prefix, res))
 					.done(function(){
+						$('.viewer').trigger('fileStateLoaded')
 						reloadViewer()
 						res.resolve()
 					})

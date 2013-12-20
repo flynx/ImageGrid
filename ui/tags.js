@@ -48,7 +48,8 @@ function buildTagsFromImages(tagset, images){
 }
 
 
-// XXX
+// XXX think I need to do something a-la fickr-style normalization here...
+// XXX also need to remember the original notation...
 function normalizeTag(tag){
 	return tag.trim()
 }
@@ -176,7 +177,9 @@ function updateTags(tags, gid, tagset, images){
 // this implements the AND selector...
 //
 // NOTE: do not like this algorithm as it can get O(n^2)-ish
-function selectByTags(tags, tagset){
+// NOTE: unless no_sort is set, this will sort the resulted gids in the
+// 		same order as DATA.order...
+function selectByTags(tags, no_sort, tagset){
 	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
 	tagset = tagset == null ? TAGS : tagset
 
@@ -190,6 +193,7 @@ function selectByTags(tags, tagset){
 		}
 		subtagset.push(tagset[tag])
 	})
+	// sort by length...
 	subtagset.sort(function(a, b){ 
 		return b.length - a.length 
 	})
@@ -206,7 +210,7 @@ function selectByTags(tags, tagset){
 			}
 		}
 		if(gid != null){
-			res.push(gid)
+			no_sort ? res.push(gid) : insertGIDToPosition(gid, res)
 		}
 	})
 
@@ -238,8 +242,9 @@ function untagList(list, tags){
 }
 // same as tagList(..), but will also remove the tags form gids no in 
 // list...
-function tagOnlyList(list, tags){
-	selectByTags(tags).forEach(function(gid){
+function tagOnlyList(list, tags, no_sort){
+	no_sort = no_sort == null ? true : false
+	selectByTags(tags, no_sort).forEach(function(gid){
 		if(list.indexOf(gid) < 0){
 			removeTag(tags, gid)
 		}
@@ -275,7 +280,7 @@ function markTagged(tags){
 	return MARKED
 }
 function unmarkTagged(tags){
-	var set = selectByTags(tags)
+	var set = selectByTags(tags, false)
 	set.forEach(function(gid){
 		var i = MARKED.indexOf(gid)
 		if(i > -1){
@@ -291,9 +296,8 @@ function unmarkTagged(tags){
 
 // cropping of tagged images...
 
-function cropTagged(tags, cmp, keep_ribbons, keep_unloaded_gids){
-	cmp = cmp == null ? imageOrderCmp : cmp
-	var set = selectByTags(tags).sort(cmp)
+function cropTagged(tags, keep_ribbons, keep_unloaded_gids){
+	var set = selectByTags(tags)
 
 	cropDataTo(set, keep_ribbons, keep_unloaded_gids)
 

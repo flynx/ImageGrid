@@ -6,6 +6,24 @@
 *
 **********************************************************************/
 
+// Format version...
+//
+// version format:
+// 	<major>.<minor>
+//
+// Major version change mean a significant incompatibility.
+//
+// Minor version changes mean some detail changed and can be handled
+// by it's specific handler seamlessly.
+//
+// Changes:
+// 	2.0 	- completely and incompatible new format
+// 			- use convertDataGen1(..) to update old data
+// 	2.1		- MARKED now maintained sorted
+// 			- will auto-update on loading marks to 2.1 of 2.1 data, will
+// 			  need a re-save
+var DATA_VERSION = '2.1'
+
 
 var CONFIG = {
 	// Application name...
@@ -107,8 +125,8 @@ var UI_STATE = {
 
 // Data format...
 var DATA = {
-	// Format version...
-	version: '2.0',
+	// see DATA_VERSION for description...
+	version: DATA_VERSION,
 
 	// Current position, GID...
 	current: null,
@@ -1295,7 +1313,7 @@ function dataFromImages(images){
 	var gids = Object.keys(images).sort()
 
 	return {
-		version: '2.0',
+		version: DATA_VERSION,
 		current: gids[0],
 		ribbons: [
 			gids
@@ -1390,7 +1408,7 @@ function mergeData(a, b){
 	})
 
 	return {
-		version: '2.0',
+		version: DATA_VERSION,
 		current: null,
 		ribbons: concatZip.apply(null, ribbon_sets),
 		order: order, 
@@ -1437,7 +1455,7 @@ function splitData(data, gid1){
 		gids.push(arguments[i])
 
 		res.push({
-			version: '2.0',
+			version: DATA_VERSION,
 			current: null,
 			ribbons: [], 
 			order: data.order.slice(prev, cur), 
@@ -1446,7 +1464,7 @@ function splitData(data, gid1){
 	}
 	// tail section...
 	res.push({
-		version: '2.0',
+		version: DATA_VERSION,
 		current: null,
 		ribbons: [], 
 		order: data.order.slice(cur), 

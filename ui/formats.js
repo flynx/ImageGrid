@@ -9,11 +9,11 @@
 
 /*********************************************************************/
 
-// Convert legacy Gen1 data format to current Gen3 (v2.0)
+// Convert legacy Gen1 data format to current Gen3 (v2.0+)
 function convertDataGen1(data, cmp){
 	var res = {
 		data: {
-			version: '2.0',
+			version: DATA_VERSION,
 			current: null,
 			ribbons: [],
 			order: [], 
