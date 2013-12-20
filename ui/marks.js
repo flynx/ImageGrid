@@ -549,11 +549,14 @@ var loadFileMarks = makeFileLoader(
 		MARKED_FILE_DEFAULT, 
 		MARKED_FILE_PATTERN, 
 		function(data){ 
+			// set the MARKED...
+			MARKED = data
+
 			// for version below 2.1, sort MARKED and update to 2.1...
 			if(DATA.version == '2.0'){
 				setTimeout(function(){
 					var t0 = Date.now()
-					data.sort(imageOrderCmp)
+					MARKED.sort(imageOrderCmp)
 					var t1 = Date.now()
 
 					// XXX is this the correct way to do this???
@@ -562,8 +565,6 @@ var loadFileMarks = makeFileLoader(
 					console.warn('Marks: sort: done ('+( t1 - t0 )+'ms) -- resave the data.')
 				}, 0)
 			}
-			// set the MARKED...
-			MARKED = data
 		},
 		'marksLoaded')
 
