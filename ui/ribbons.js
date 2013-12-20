@@ -820,10 +820,10 @@ function prevImage(n){
 
 
 function nextScreenImages(){
-	return nextImage(Math.round(getScreenWidthInImages()))
+	return nextImage(Math.floor(getScreenWidthInImages())-1)
 }
 function prevScreenImages(){
-	return prevImage(Math.round(getScreenWidthInImages()))
+	return prevImage(Math.floor(getScreenWidthInImages())-1)
 }
 
 
