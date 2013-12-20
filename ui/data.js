@@ -1216,7 +1216,7 @@ function makeNextFromListAction(get_closest, get_list, restrict_to_ribbon){
 		var next = get_closest(cur, ribbon)
 		var i = list.indexOf(next)+1
 
-		// we are before the first loaded bookmark, find the first...
+		// we are before the first loaded elem, find the first...
 		while((next == cur 
 					|| next == null 
 					|| getGIDOrder(next) < o) 
@@ -1226,7 +1226,7 @@ function makeNextFromListAction(get_closest, get_list, restrict_to_ribbon){
 			i++
 		}
 
-		// did not find any loaded bookmarks after...
+		// did not find any loaded elems after...
 		if(i >= list.length 
 				&& (next == null 
 					|| next == cur 

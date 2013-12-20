@@ -93,8 +93,9 @@ function addTag(tags, gid, tagset, images){
 			tagset[tag] = set
 		}
 		if(set.indexOf(gid) < 0){
-			set.push(gid)
-			set.sort()
+			//set.push(gid)
+			//set.sort()
+			insertGIDToPosition(gid, set)
 		}
 
 		if(img_tags.indexOf(tag) < 0){
@@ -183,8 +184,17 @@ function selectByTags(tags, no_sort, tagset){
 	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
 	tagset = tagset == null ? TAGS : tagset
 
-	var subtagset = []
+	// special case: a single tag...
+	if(tags.length == 1){
+		var loaded = getLoadedGIDs()
+		return tagset[tags[0]].filter(function(gid){
+			// skip unloaded gids...
+			return loaded.indexOf(gid) >= 0
+		})
+	}
+
 	var res = []
+	var subtagset = []
 
 	// populate the subtagset...
 	tags.map(function(tag){
@@ -290,6 +300,31 @@ function unmarkTagged(tags){
 	updateImages()
 	return set
 }
+
+
+/*********************************************************************/
+
+// XXX this is a bit brain-dead and slow, but should be good for testing...
+function _listTagsAtGaps(tags){
+	var order = DATA.order
+	var list = selectByTags(tags)
+	var res = []
+
+	list.forEach(function(gid){
+		var i = order.indexOf(gid)
+
+		// add the current gid to the result iff one or both gids 
+		// adjacent to it are not in the list...
+		if(list.indexOf(order[i-1]) < 0 
+				|| list.indexOf(order[i+1]) < 0){
+			res.push(gid)
+		}
+	})
+
+	return res
+}
+
+
 
 
 /*********************************************************************/
