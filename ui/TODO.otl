@@ -108,8 +108,8 @@ Roadmap
 	
 
 
-[_] 29% Gen 3 current todo
-	[_] 58% High priority
+[_] 28% Gen 3 current todo
+	[_] 57% High priority
 		[_] Need visual indicators for long operations...
 		[_] BUG: (phantom) in single image mode shifting first image up to new ribbon errs...
 		| error location/reason:
@@ -150,10 +150,10 @@ Roadmap
 			[X] bookmarked (list) operations
 			[X] mark/unmark tagged
 			[X] crop
-		[_] 66% unsorted image state handling (tag?)
+		[X] 100% unsorted image state handling (tag?)
 			[X] remove tag on shift
 			[X] remove tag on alignToRibbon(..)
-			[_] add tag on index (buildcache)
+			[X] add tag on index (buildcache)
 		[_] 25% Panels
 			[_] bookmarks
 			[_] info
