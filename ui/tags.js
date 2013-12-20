@@ -23,22 +23,28 @@ var TAGS = {}
 
 /*********************************************************************/
 
-function buildTagsFromImages(images, tagset){
+function buildTagsFromImages(tagset, images){
 	tagset = tagset == null ? TAGS : tagset
 	images = images == null ? IMAGES : images
 
-	for(gid in images){
+	for(var gid in images){
 		var tags = images[gid].tags
-		if(tags == null){
+		// no tags in this image...
+		if(tags == null || tags.length == 0){
 			continue
 		}
-		tags.map(function(tag){
+		tags.forEach(function(tag){
+			// first time we see this tag...
 			if(tagset[tag] == null){
 				tagset[tag] = []
 			}
-			tagset[tag].push(gid)
+			// only update if not tagged...
+			if(tagset[tag].indexOf(gid) < 0){
+				tagset[tag].push(gid)
+			}
 		})
 	}
+	return tagset
 }
 
 
@@ -305,7 +311,7 @@ function setupTags(viewer){
 
 	return viewer
 		.on('imagesLoaded', function(){
-			TAGS = []
+			TAGS = {}
 
 			showStatusQ('Tags: Index: building...')
 

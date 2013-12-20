@@ -1568,7 +1568,7 @@ function alignDataToRibbon(base_ribbon, data, start, end){
 	// prepare for and fire the event...
 	// XXX not sure if this is correct yet...
 	var gids = []
-	sections[1].forEach(function(ribbon){
+	sections[1].ribbons.forEach(function(ribbon){
 		gids = gids.concat(ribbon)
 	})
 	// XXX do we need sections[1] passed here?
