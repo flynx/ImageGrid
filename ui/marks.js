@@ -6,6 +6,7 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+// NOTE: this must be sorted in the same order as DATA.order
 var MARKED = []
 
 var MARKED_FILE_DEFAULT = 'marked.json'
@@ -562,7 +563,7 @@ var loadFileMarks = makeFileLoader(
 					// XXX is this the correct way to do this???
 					DATA.version = DATA_VERSION
 
-					console.warn('Marks: sort: done ('+( t1 - t0 )+'ms) -- resave the data.')
+					console.warn('Marks: sort: done ('+( t1 - t0 )+'ms) -- re-save the data.')
 				}, 0)
 			}
 		},

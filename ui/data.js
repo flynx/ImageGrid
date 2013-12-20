@@ -14,14 +14,35 @@
 // Major version change mean a significant incompatibility.
 //
 // Minor version changes mean some detail changed and can be handled
-// by it's specific handler seamlessly.
+// by it's specific handler seamlessly. Backwards compatible.
+//
+//
+// For more info see:
+// 	DATA			- main data
+// 	IMAGES			- image data
+// 	MARKED			- marks data
+// 	BOOKMARKS		- bookmarks data
+// 	BOOKMARKS_DATA	- bookmarks metadata
+//
 //
 // Changes:
-// 	2.0 	- completely and incompatible new format
-// 			- use convertDataGen1(..) to update old data
-// 	2.1		- MARKED now maintained sorted
-// 			- will auto-update on loading marks to 2.1 of 2.1 data, will
-// 			  need a re-save
+// 	none - Gen1 data format, mostly experimental,
+// 			- has no explicit version set,
+// 			- not used for real data.
+// 	2.0 - Gen3 data format, still experimental,
+// 			- completely and incompatibly new structure,
+// 			- use convertDataGen1(..) to convert Gen1 to 2.0 
+// 			- auto-convert form gen1 on load...
+// 			- used for my archive, not public,
+// 	2.1 - Minor update to format spec,	
+// 			- MARKED now maintained sorted, live,
+// 			- will auto-sort marks on load of 2.0 data and change 
+// 			  data version to 2.1, will need a re-save,
+//
+// NOTE: Gen1 and Gen3 refer to code generations rather than data format
+// 		iterations, Gen2 is skipped here as it is a different project 
+// 		(PortableMag) mostly built on the same code base as 
+// 		ImageGrid.Viewer
 var DATA_VERSION = '2.1'
 
 
