@@ -390,42 +390,46 @@ function listTagsAtGapsFrom(tags, gids){
 }
 
 
-// XXX these are still slow -- there is no need to re-index the whole 
-// 		data on each jump...
-function nextGapEdge(tags, gids){
-	var res = getGIDAfter(getImageGID(), listTagsAtGapsFrom(tags, gids))
+// XXX this is a bit buggy...
+function getGapEdge(direction, tag, gids){
+	var get = direction == 'next' ? getGIDAfter : getGIDBefore
 
-	if(res == null){
-		flashIndicator('end')
-		return getImage()
-	}
-	return showImage(res)
-}
-function prevGapEdge(tags, gids){
+	gids = gids == null ? getRibbonGIDs() : gids
 	var cur = getImageGID()
-	var targets = listTagsAtGapsFrom(tags, gids)
+	var tagged = TAGS[tag]
 
-	// drop the current elem if it's in the list...
-	var i = targets.indexOf(cur)
-	if(i >= 0){
-		targets.splice(i, 1)
+
+	// current is tagged -- skip till first untagged (not inclusive)...
+	if(getTags(cur).indexOf(tag) >= 0){
+		var i = gids.indexOf(cur)
+		// get last in tag block...
+		while(gids[i] != null && tagged.indexOf(gids[i]) >= 0){ 
+			i += direction == 'next' ? 1 : -1
+		}
+		var res = gids[i]
+
+	// current is not tagged -- get closest tagged (inclusive)...
+	} else {
+		var res = get(cur, tagged)
 	}
 
-	var res = getGIDBefore(cur, targets)
-
 	if(res == null){
-		flashIndicator('start')
+		flashIndicator(direction == 'next' ? 'end' : 'start')
 		return getImage()
 	}
 	return showImage(res)
 }
-
-
-function nextUnsortedSection(){
-	return nextGapEdge('unsorted')
+function nextGapEdge(tag, gids){
+	return getGapEdge('next', tag, gids)
 }
-function prevUnsortedSection(){
-	return prevGapEdge('unsorted')
+function prevGapEdge(tag, gids){
+	return getGapEdge('prev', tag, gids)
+}
+function nextUnsortedSection(gids){
+	return getGapEdge('next', 'unsorted', gids)
+}
+function prevUnsortedSection(gids){
+	return getGapEdge('prev', 'unsorted', gids)
 }
 
 
@@ -455,12 +459,12 @@ var loadFileTags = makeFileLoader(
 		TAGS_FILE_DEFAULT, 
 		TAGS_FILE_PATTERN, 
 		function(data){ 
-			TAGS = data
+			TAGS = data.length != null ? {} : data
 		})
 
 
 // Save image marks to file
-var saveFileMarks = makeFileSaver(
+var saveFileTags = makeFileSaver(
 		TAGS_FILE_DEFAULT, 
 		function(){ 
 			return TAGS 
@@ -488,7 +492,6 @@ function setupTags(viewer){
 
 			showStatusQ('Tags: Index: done ('+( t1 - t0 )+'ms).')
 		})
-
 }
 //SETUP_BINDINGS.push(setupTags)
 
