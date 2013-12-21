@@ -390,21 +390,26 @@ function listTagsAtGapsFrom(tags, gids){
 }
 
 
-// XXX this is a bit buggy...
 function getGapEdge(direction, tag, gids){
 	var get = direction == 'next' ? getGIDAfter : getGIDBefore
 
 	gids = gids == null ? getRibbonGIDs() : gids
-	var cur = getImageGID()
 	var tagged = TAGS[tag]
+	var cur = getImageGID()
+	var step = direction == 'next' ? 1 : -1
 
+	// get the next element...
+	cur = gids[gids.indexOf(cur) + step]
 
 	// current is tagged -- skip till first untagged (not inclusive)...
-	if(getTags(cur).indexOf(tag) >= 0){
+	if(getTags(cur) != null && getTags(cur).indexOf(tag) >= 0){
+		// skip the current...
 		var i = gids.indexOf(cur)
 		// get last in tag block...
-		while(gids[i] != null && tagged.indexOf(gids[i]) >= 0){ 
-			i += direction == 'next' ? 1 : -1
+		while(i >= 0 && i < gids.length 
+				// lookahead -- we...
+				&& tagged.indexOf(gids[i+step]) >= 0){ 
+			i += step
 		}
 		var res = gids[i]
 
@@ -493,7 +498,7 @@ function setupTags(viewer){
 			showStatusQ('Tags: Index: done ('+( t1 - t0 )+'ms).')
 		})
 }
-//SETUP_BINDINGS.push(setupTags)
+SETUP_BINDINGS.push(setupTags)
 
 
 // Setup the unsorted image state managers...
