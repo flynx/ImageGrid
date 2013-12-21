@@ -647,8 +647,32 @@ function getRibbonGIDs(a, data){
 }
 
 
+// Test if a gid is loaded...
+//
+function isGIDLoaded(gid, data){
+	data = data == null ? DATA : data
+	var ribbons = data.ribbons
+	for(var i=0; i<ribbons.length; i++){
+		if(ribbons[i].indexOf(gid) >= 0){
+			return true
+		}
+	}
+	return false
+}
+
+
+// Get all the available gids...
+//
+// NOTE: this will not copy the order...
+// NOTE: when this is passed a data object it will return the order...
+function getAllGids(data){
+	return data == null ? DATA.order : data.order
+}
+
+
 // Get all the currently loaded gids...
 //
+// NOTE: this will return an unsorted list of gids...
 function getLoadedGIDs(data){
 	data = data == null ? DATA : data
 	var res = []
@@ -746,6 +770,27 @@ function getGIDBefore(gid, ribbon, data, search){
 			return 1
 		}
 	})
+}
+
+
+// Get a gid directly adjacent to gid...
+//
+// This will return null if there are no other gids loaded after.
+//
+// If gid is not in the giver ribbon this will first find the gid before
+// and return the gid after that.
+//
+function getGIDAfter(gid, ribbon, data, search){
+	gid = gid == null ? getImageGID() : gid
+	data = data == null ? DATA : data
+
+	var cur = getGIDBefore(gid, ribbon, data, search)
+
+	ribbon = ribbon == null ? getGIDRibbonIndex(gid, data) : ribbon
+	ribbon = typeof(ribbon) == typeof(123) ? data.ribbons[ribbon] : ribbon
+	ribbon = ribbon == null ? data.ribbons[getGIDRibbonIndex(null, data)] : ribbon
+
+	return ribbon[ribbon.indexOf(cur)+1]
 }
 
 

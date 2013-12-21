@@ -175,22 +175,27 @@ function updateTags(tags, gid, tagset, images){
 }
 
 
-// this implements the AND selector...
+/**********************************************************************
+* Selectors...
+*/
+
+// Select gids tagged by ALL given tags...
 //
-// NOTE: do not like this algorithm as it can get O(n^2)-ish
-// NOTE: unless no_sort is set, this will sort the resulted gids in the
-// 		same order as DATA.order...
-function selectByTags(tags, no_sort, tagset){
+function tagSelectAND(tags, from, no_sort, tagset){
 	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
 	tagset = tagset == null ? TAGS : tagset
+	from = from == null ? getLoadedGIDs() : from
 
 	// special case: a single tag...
+	// NOTE: this is significantly faster.
 	if(tags.length == 1){
-		var loaded = getLoadedGIDs()
-		return tagset[tags[0]].filter(function(gid){
-			// skip unloaded gids...
-			return loaded.indexOf(gid) >= 0
-		})
+		var res = tagset[tags[0]]
+		return res == null 
+			? [] 
+			: res.filter(function(gid){
+				// skip unloaded from...
+				return from.indexOf(gid) >= 0
+			})
 	}
 
 	var res = []
@@ -199,32 +204,70 @@ function selectByTags(tags, no_sort, tagset){
 	// populate the subtagset...
 	tags.map(function(tag){
 		if(tagset[tag] == null){
-			return
+			subtagset = false
+			return false
 		}
 		subtagset.push(tagset[tag])
 	})
-	// sort by length...
+	// if at least one tag is invalid, we'll find nothing...
+	if(subtagset == false){
+		return []
+	}
+	// sort index by length...
 	subtagset.sort(function(a, b){ 
 		return b.length - a.length 
 	})
 
-	// set the res to the shortest subset...
+	// start with the shortest subset...
 	var cur = subtagset.pop().slice()
 
 	// filter out the result...
 	cur.map(function(gid){
-		for(var i=0; i<subtagset.length; i++){
+		for(var i=0; i < subtagset.length; i++){
 			if(subtagset[i].indexOf(gid) < 0){
 				gid = null
 				break
 			}
 		}
-		if(gid != null){
+		// populate res...
+		if(gid != null && from.indexOf(gid) >= 0){
 			no_sort ? res.push(gid) : insertGIDToPosition(gid, res)
 		}
 	})
 
 	return res
+}
+
+
+// select gids untagged by ALL of the given tags...
+//
+function tagSelectNOT(tags, from, tagset){
+	var remove = tagSelectAND(tags, from, false, tagset)
+	// keep the elements that DO NOT exist in remove...
+	return from.filter(function(e){
+		return remove.indexOf(e) < 0
+	})
+}
+
+
+// Select gids tagged by ANY of the given tags...
+//
+function tagSelectOR(tags, from, no_sort, tagset){
+	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
+	tagset = tagset == null ? TAGS : tagset
+	from = from == null ? getLoadedGIDs() : from
+
+	var all = []
+
+	tags.forEach(function(tag){
+		tag = tagset[tag]
+		tag = tag == null ? [] : tag
+		all = all.concat(tag)
+	})
+
+	return from.filter(function(e){
+		return all.indexOf(e) >= 0
+	})
 }
 
 
@@ -254,11 +297,12 @@ function untagList(list, tags){
 // list...
 function tagOnlyList(list, tags, no_sort){
 	no_sort = no_sort == null ? true : false
-	selectByTags(tags, no_sort).forEach(function(gid){
-		if(list.indexOf(gid) < 0){
-			removeTag(tags, gid)
-		}
-	})
+	tagSelectAND(tags, null, no_sort)
+		.forEach(function(gid){
+			if(list.indexOf(gid) < 0){
+				removeTag(tags, gid)
+			}
+		})
 	return tagList(list, tags)
 }
 
@@ -285,12 +329,12 @@ function tagOnlyBookmarked(tags){ return tagOnlyList(BOOKMARKED, tags) }
 // marking of tagged images...
 
 function markTagged(tags){
-	MARKED = selectByTags(tags)
+	MARKED = tagSelectAND(tags)
 	updateImages()
 	return MARKED
 }
 function unmarkTagged(tags){
-	var set = selectByTags(tags, false)
+	var set = tagSelectAND(tags, null, false)
 	set.forEach(function(gid){
 		var i = MARKED.indexOf(gid)
 		if(i > -1){
@@ -304,19 +348,23 @@ function unmarkTagged(tags){
 
 /*********************************************************************/
 
-// XXX this is a bit brain-dead and slow, but should be good for testing...
-function _listTagsAtGaps(tags){
-	var order = DATA.order
-	var list = selectByTags(tags)
+// Tag image that are not neighbored by an image tagged with the same 
+// tags from at least one side.
+//
+// Essentially this will list tag block borders.
+//
+function listTagsAtGapsFrom(tags, gids){
+	gids = gids == null ? getLoadedGIDs() : gids
+	var list = tagSelectAND(tags, gids)
 	var res = []
 
 	list.forEach(function(gid){
-		var i = order.indexOf(gid)
+		var i = gids.indexOf(gid)
 
 		// add the current gid to the result iff one or both gids 
 		// adjacent to it are not in the list...
-		if(list.indexOf(order[i-1]) < 0 
-				|| list.indexOf(order[i+1]) < 0){
+		if(list.indexOf(gids[i-1]) < 0 
+				|| list.indexOf(gids[i+1]) < 0){
 			res.push(gid)
 		}
 	})
@@ -332,7 +380,7 @@ function _listTagsAtGaps(tags){
 // cropping of tagged images...
 
 function cropTagged(tags, keep_ribbons, keep_unloaded_gids){
-	var set = selectByTags(tags)
+	var set = tagSelectAND(tags)
 
 	cropDataTo(set, keep_ribbons, keep_unloaded_gids)
 
@@ -368,23 +416,25 @@ SETUP_BINDINGS.push(setupTags)
 
 // Setup the unsorted image state managers...
 //
+// Unsorted tags are removed by shifting or by aligning, but only in 
+// uncropped mode...
 function setupUnsortedTagHandler(viewer){
 	console.log('Tags: "'+UNSORTED_TAG+'" tag handling: setup...')
 
 	return viewer
 		// unsorted tag handling...
 		.on('shiftedImage', function(evt, img){
-			if(UNSORTED_TAG != null){
+			if(UNSORTED_TAG != null && !isViewCropped()){
 				removeTag(UNSORTED_TAG, getImageGID(img))
 			}
 		})
 		.on('shiftedImages', function(evt, gids){
-			if(UNSORTED_TAG != null){
+			if(UNSORTED_TAG != null && !isViewCropped()){
 				untagList(gids, UNSORTED_TAG)
 			}
 		})
 		.on('aligningRibbonsSection', function(evt, base, gids){
-			if(UNSORTED_TAG != null){
+			if(UNSORTED_TAG != null && !isViewCropped()){
 				untagList(gids, UNSORTED_TAG)
 			}
 		})
