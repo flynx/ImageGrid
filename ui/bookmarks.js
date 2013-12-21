@@ -147,7 +147,7 @@ function setupBookmarks(viewer){
 
 	return viewer
 		.on('sortedImages', function(){
-			BOOKMARKS.sort(imageOrderCmp)
+			BOOKMARKS = fastSortGIDsByOrder(BOOKMARKS)
 		})
 }
 SETUP_BINDINGS.push(setupBookmarks)

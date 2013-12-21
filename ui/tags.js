@@ -20,12 +20,18 @@ var UNSORTED_TAG = 'unsorted'
 var TAGS = {}
 
 
+var TAGS_FILE_DEFAULT = 'tags.json'
+var TAGS_FILE_PATTERN = /^[0-9]*-tags.json$/
+
+
 
 /*********************************************************************/
 
 function buildTagsFromImages(tagset, images){
 	tagset = tagset == null ? TAGS : tagset
 	images = images == null ? IMAGES : images
+
+	var order = DATA.order
 
 	for(var gid in images){
 		var tags = images[gid].tags
@@ -40,10 +46,19 @@ function buildTagsFromImages(tagset, images){
 			}
 			// only update if not tagged...
 			if(tagset[tag].indexOf(gid) < 0){
-				tagset[tag].push(gid)
+				// NOTE: this is cheating, but it's ~5x faster than 
+				// 		insertGIDToPosition(..) but still 10^2 slower 
+				// 		than .push(..) (unsorted tags)
+				tagset[tag][order.indexOf(gid)] = gid
 			}
 		})
 	}
+
+	// cleanup...
+	for(var tag in tagset){
+		tagset[tag] = tagset[tag].filter(function(e){ return e != null })
+	}
+
 	return tagset
 }
 
@@ -93,8 +108,6 @@ function addTag(tags, gid, tagset, images){
 			tagset[tag] = set
 		}
 		if(set.indexOf(gid) < 0){
-			//set.push(gid)
-			//set.sort()
 			insertGIDToPosition(gid, set)
 		}
 
@@ -193,7 +206,7 @@ function tagSelectAND(tags, from, no_sort, tagset){
 		return res == null 
 			? [] 
 			: res.filter(function(gid){
-				// skip unloaded from...
+				// skip unloaded...
 				return from.indexOf(gid) >= 0
 			})
 	}
@@ -231,9 +244,14 @@ function tagSelectAND(tags, from, no_sort, tagset){
 		}
 		// populate res...
 		if(gid != null && from.indexOf(gid) >= 0){
-			no_sort ? res.push(gid) : insertGIDToPosition(gid, res)
+			//no_sort == true ? res.push(gid) : insertGIDToPosition(gid, res)
+			res.push(gid)
 		}
 	})
+
+	if(!no_sort){
+		fastSortGIDsByOrder(res)
+	}
 
 	return res
 }
@@ -271,15 +289,10 @@ function tagSelectOR(tags, from, no_sort, tagset){
 }
 
 
-/*
-// XXX don't remember the semantics...
-function getRelatedTags(){
-}
+
+/**********************************************************************
+* List oriented tag operations...
 */
-
-
-
-/*********************************************************************/
 
 function tagList(list, tags){
 	list.forEach(function(gid){
@@ -353,18 +366,22 @@ function unmarkTagged(tags){
 //
 // Essentially this will list tag block borders.
 //
+// NOTE: this will consider each gids's ribbon context rather than the 
+// 		straight order context...
+// XXX this is slow...
 function listTagsAtGapsFrom(tags, gids){
 	gids = gids == null ? getLoadedGIDs() : gids
 	var list = tagSelectAND(tags, gids)
 	var res = []
 
 	list.forEach(function(gid){
-		var i = gids.indexOf(gid)
+		var ribbon = DATA.ribbons[getGIDRibbonIndex(gid)]
+		var i = ribbon.indexOf(gid)
 
 		// add the current gid to the result iff one or both gids 
 		// adjacent to it are not in the list...
-		if(list.indexOf(gids[i-1]) < 0 
-				|| list.indexOf(gids[i+1]) < 0){
+		if(list.indexOf(ribbon[i-1]) < 0 
+				|| list.indexOf(ribbon[i+1]) < 0){
 			res.push(gid)
 		}
 	})
@@ -372,6 +389,44 @@ function listTagsAtGapsFrom(tags, gids){
 	return res
 }
 
+
+// XXX these are still slow -- there is no need to re-index the whole 
+// 		data on each jump...
+function nextGapEdge(tags, gids){
+	var res = getGIDAfter(getImageGID(), listTagsAtGapsFrom(tags, gids))
+
+	if(res == null){
+		flashIndicator('end')
+		return getImage()
+	}
+	return showImage(res)
+}
+function prevGapEdge(tags, gids){
+	var cur = getImageGID()
+	var targets = listTagsAtGapsFrom(tags, gids)
+
+	// drop the current elem if it's in the list...
+	var i = targets.indexOf(cur)
+	if(i >= 0){
+		targets.splice(i, 1)
+	}
+
+	var res = getGIDBefore(cur, targets)
+
+	if(res == null){
+		flashIndicator('start')
+		return getImage()
+	}
+	return showImage(res)
+}
+
+
+function nextUnsortedSection(){
+	return nextGapEdge('unsorted')
+}
+function prevUnsortedSection(){
+	return prevGapEdge('unsorted')
+}
 
 
 
@@ -386,6 +441,30 @@ function cropTagged(tags, keep_ribbons, keep_unloaded_gids){
 
 	return DATA
 }
+
+
+
+/**********************************************************************
+* Files...
+*/
+
+// XXX need to detect if we loaded the tags and if so not call
+// 		buildTagsFromImages(..)...
+var loadFileTags = makeFileLoader(
+		'Tags', 
+		TAGS_FILE_DEFAULT, 
+		TAGS_FILE_PATTERN, 
+		function(data){ 
+			TAGS = data
+		})
+
+
+// Save image marks to file
+var saveFileMarks = makeFileSaver(
+		TAGS_FILE_DEFAULT, 
+		function(){ 
+			return TAGS 
+		})
 
 
 
@@ -411,7 +490,7 @@ function setupTags(viewer){
 		})
 
 }
-SETUP_BINDINGS.push(setupTags)
+//SETUP_BINDINGS.push(setupTags)
 
 
 // Setup the unsorted image state managers...

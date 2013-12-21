@@ -164,7 +164,7 @@ var updateSelectedImageMark = makeMarkUpdater(
 // 		not exist, as there is no way to distinguish between the two 
 // 		situations the cleanup is optional...
 function cropMarkedImages(keep_ribbons, keep_unloaded_gids){
-	var marked = MARKED.slice()//.sort(imageOrderCmp)
+	var marked = MARKED.slice()
 
 	cropDataTo(marked, keep_ribbons, keep_unloaded_gids)
 
@@ -249,7 +249,8 @@ function toggleAllMarks(action, mode){
 	if(action == 'on'){
 		var _update = function(e){
 			if(MARKED.indexOf(e) < 0){
-				insertGIDToPosition(e, MARKED)
+				//insertGIDToPosition(e, MARKED)
+				MARKED.push(e)
 				updated.push(e)
 			}
 		}
@@ -273,6 +274,8 @@ function toggleAllMarks(action, mode){
 	} 
 
 	res.forEach(_update)
+
+	MARKED = fastSortGIDsByOrder(MARKED)
 
 	updateImages(updated)
 
@@ -310,12 +313,14 @@ function invertImageMarks(){
 		var i = MARKED.indexOf(e)
 		if(i == -1){
 			on.push(e)
-			insertGIDToPosition(e, MARKED)
+			MARKED.push(e)
+			//insertGIDToPosition(e, MARKED)
 		} else {
 			off.push(e)
 			MARKED.splice(i, 1)
 		}
 	})
+	MARKED = fastSortGIDsByOrder(MARKED)
 	updateImages(ribbon)
 
 	$('.viewer')
@@ -348,7 +353,8 @@ function toggleMarkBlock(image){
 		}
 		// do the toggle...
 		if(state){
-			insertGIDToPosition(e, MARKED)
+			//insertGIDToPosition(e, MARKED)
+			MARKED.push(e)
 		} else {
 			MARKED.splice(MARKED.indexOf(e), 1)
 		}
@@ -363,6 +369,8 @@ function toggleMarkBlock(image){
 	// go right...
 	var right = ribbon.slice(i+1)
 	$.each(right, _convert)
+
+	MARKED = fastSortGIDsByOrder(MARKED)
 
 	updateImages(updated)
 
@@ -396,7 +404,7 @@ function shiftMarkedImages(direction, mode, new_ribbon){
 	// shift all marked images...
 	} else {
 		var marked = MARKED.slice()
-		// remove all the marked images form all the ribbons...
+		// remove all the marked images form all other ribbons...
 		$.each(DATA.ribbons, function(ribbon){
 			$.each(marked, function(e){
 				var i = ribbon.indexOf(e)
@@ -420,7 +428,7 @@ function shiftMarkedImages(direction, mode, new_ribbon){
 	// add marked to existing ribbon...
 	} else {
 		cur += direction == 'next' ? 1 : -1
-		DATA.ribbons[cur] = DATA.ribbons[cur].concat(marked).sort(cmp)
+		DATA.ribbons[cur] = fastSortGIDsByOrder(DATA.ribbons[cur].concat(marked))
 	}
 	
 	// remove empty ribbons...
@@ -557,7 +565,7 @@ var loadFileMarks = makeFileLoader(
 			if(DATA.version == '2.0'){
 				setTimeout(function(){
 					var t0 = Date.now()
-					MARKED.sort(imageOrderCmp)
+					MARKED = fastSortGIDsByOrder(MARKED)
 					var t1 = Date.now()
 
 					// XXX is this the correct way to do this???

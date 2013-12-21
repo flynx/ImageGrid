@@ -177,7 +177,10 @@ function getClosestGIDs(gid){
 
 function reverseImageOrder(){
 	DATA.order.reverse()
-	updateRibbonOrder()
+	DATA.ribbons.forEach(function(r){
+		r.reverse()
+	})
+	reloadViewer(true)
 }
 
 

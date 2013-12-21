@@ -536,6 +536,54 @@ Array.prototype.binSearch = function(target, cmp, get){
 */
 
 
+// This is a cheating fast sort...
+//
+// By cheating we might use more memory -- this is both not in-place 
+// and may use quite a bit of memory...
+//
+// The gain is that this is SIGNIFICANTLY faster than using 
+// .sort(imageOrderCmp)...
+//
+// The complexity here is O(N) where N is DATA.order.length rather than
+// gids.length vs. O(n nog n) for the .sort(..), but the processing overhead 
+// is significantly smaller...
+//
+// Here are a couple of test runs:
+//
+//		var t0 = Date.now()
+//		getRibbonGIDs()
+//			.slice(0, 2000)
+//			.sort(imageOrderCmp)
+//		console.log('T:', Date.now()-t0)
+//		>>> T: 4126
+// 
+//		var t0 = Date.now()
+//		fastSortGIDsByOrder(
+//			getRibbonGIDs()
+//				.slice(0,2000))
+//		console.log('T:', Date.now()-t0)
+//		>>> T: 171
+//
+// On the down side, this has some memory overhead -- ~ N - n * ref
+//
+function fastSortGIDsByOrder(gids, data){
+	data = data == null ? DATA : data
+
+	var order = data.order
+	var res = []
+
+	// insert the gids to their order positions...
+	gids.forEach(function(gid){
+		res[order.indexOf(gid)] = gid
+	})
+
+	// clear out the nulls...
+	return res.filter(function(e){
+		return e != null
+	})
+}
+
+
 // Base URL interface...
 //
 // NOTE: changing a base URL will trigger a baseURLChanged event...
@@ -638,12 +686,16 @@ function getGIDRibbonIndex(gid, data){
 // 	- number	- ribbon index
 // 	- gid
 // 	- image
-function getRibbonGIDs(a, data){
+function getRibbonGIDs(a, no_clone, data){
 	data = data == null ? DATA : data
 	if(typeof(a) == typeof(123)){
 		return data.ribbons[a].slice()
 	}
-	return data.ribbons[getGIDRibbonIndex(a, data)].slice()
+	var res = data.ribbons[getGIDRibbonIndex(a, data)]
+	if(no_clone){
+		return res
+	}
+	return res.slice()
 }
 
 
@@ -1286,6 +1338,10 @@ function makeNextFromListAction(get_closest, get_list, restrict_to_ribbon){
 
 
 // see makeNextFromListAction(..) above for documentation...
+//
+// XXX try a new technique:
+// 		- before calling getImageBefore(..) remove the curent gid form 
+// 		  target list...
 function makePrevFromListAction(get_closest, get_list, restrict_to_ribbon){
 	get_closest = get_closest == null ? getGIDBefore : get_closest
 	get_list = get_list == null ? getRibbonGIDs : get_list
@@ -2113,7 +2169,8 @@ function showImage(gid){
 // NOTE: if no_reload_viewer is true, then no re-rendering is triggered.
 function updateRibbonOrder(no_reload_viewer){
 	for(var i=0; i < DATA.ribbons.length; i++){
-		DATA.ribbons[i].sort(imageOrderCmp)
+		//DATA.ribbons[i].sort(imageOrderCmp)
+		DATA.ribbons[i] = fastSortGIDsByOrder(DATA.ribbons[i])
 	}
 	if(!no_reload_viewer){
 		reloadViewer(true)

@@ -588,6 +588,10 @@ var KEYBOARD_CONFIG = {
 				function(){ prevBookmark() }),
 		']': doc('Next bookmarked image', 
 				function(){ nextBookmark() }),
+		'{': doc('Previous unsorted section edge', 
+				function(){ prevUnsortedSection() }),
+		'}': doc('Next unsorted section edge', 
+				function(){ nextUnsortedSection() }),
 
 		S: {
 				default: doc('Start slideshow', 
