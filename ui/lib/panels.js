@@ -50,19 +50,31 @@ function makePanel(title, open, editable_title, keep_empty){
 			forcePlaceholderSize: true,
 			opacity: 0.7,
 			connectWith: '.panel-content',
+			zIndex: 9999,
 
 			start: function(e, ui){
+				console.log('start')
 				ui.item.data('isoutside', false)
 				ui.placeholder.height(ui.helper.outerHeight());
 				ui.placeholder.width(ui.helper.outerWidth());
 			},
 			// create a new panel when dropping outside of curent panel...
 			beforeStop: function(e, ui){
+				console.log('stop')
+				var c = 0
+
 				// do this only when dropping outside the panel...
-				if(ui.item.data('isoutside')){
+				if(ui.item.data('isoutside')
+						// prevent draggingout the last panel...
+						// NOTE: 2 because we are taking into account 
+						// 		the placeholders...
+						&& panel.find('.sub-panel').length > 2){
+					c = 1
+					// compensate for removed item which is still in the
+					// panel when we count it...
+					// ...this is likely to the fact that we jquery-ui did
+					// not cleanup yet
 					var new_panel = makePanel()
-						// XXX adjust this to scale...
-						// XXX adjust this to parent offset...
 						.css(ui.offset)
 						.appendTo(panel.parent())
 					new_panel.find('.panel-content')
@@ -71,7 +83,7 @@ function makePanel(title, open, editable_title, keep_empty){
 				}
 
 				// remove the panel when it runs out of sub-panels...
-				if(!keep_empty && panel.find('.sub-panel').length == 0){
+				if(!keep_empty && panel.find('.sub-panel').length-c <= 0){
 					panel
 						.trigger('panelClosing')
 						.remove()
@@ -79,15 +91,10 @@ function makePanel(title, open, editable_title, keep_empty){
 
 				ui.item.data('isoutside', false)
 			},
-			receive: function(e, ui){
-				console.log('receive')
-				ui.item.data('isoutside', false)
-			},
 			over: function(e, ui){
 				console.log('over')
 				ui.item.data('isoutside', false)
 			},
-			// XXX this is triggered when the sorted object is dropped...
 			out: function(e, ui){
 				console.log('out')
 				ui.item.data('isoutside', true)

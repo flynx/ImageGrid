@@ -2,6 +2,22 @@
 
 <link rel="stylesheet" type="text/css" href="../css/editor.css">
 
+<style>
+
+.docked-panels {
+	background: gray;
+	width: 100%;
+	height: 100%;
+}
+
+.viewer {
+	background: white;
+	width: 100%;
+	height: 100%;
+}
+
+</style>
+
 <script src="../ext-lib/jquery.js"></script>
 <script src="../ext-lib/jquery-ui.js"></script>
 <script src="../lib/panels.js"></script>
@@ -12,6 +28,10 @@
 $(function(){
 
 	var panel = makePanel('Test Panel A', true)
+		.css({
+			top: 50,
+			left: 50,
+		})
 
 
 	makeSubPanel('Test Sub Panel A', true, panel)
@@ -26,17 +46,31 @@ $(function(){
 		.find('.content')
 			.html('<h3>Panel C</h3>')
 
+	/*
+	$('.docked-panels')
+		.sortable({
+			cancel: '.viewer',
+			connectWith: '.panel-content',
+		})
+	*/
+
 
 	$('body')
 		.append(panel)	
 		//.append(makePanel('Test Panel B', true))
 		//.append(makePanel('Test Panel C', true))
+			
 
 })
 
 </script>
 
 <body>
+
+<div class="docked-panels panel-content">
+	<div class="viewer">
+	</div>
+</div>
 
 </body>
 </html>

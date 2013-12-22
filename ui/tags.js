@@ -486,6 +486,7 @@ function setupTags(viewer){
 
 	return viewer
 		.on('imagesLoaded', function(){
+			// XXX need to detect if tags have been loaded...
 			TAGS = {}
 
 			showStatusQ('Tags: Index: building...')
@@ -498,7 +499,7 @@ function setupTags(viewer){
 			showStatusQ('Tags: Index: done ('+( t1 - t0 )+'ms).')
 		})
 }
-SETUP_BINDINGS.push(setupTags)
+//SETUP_BINDINGS.push(setupTags)
 
 
 // Setup the unsorted image state managers...
