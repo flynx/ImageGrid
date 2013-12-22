@@ -45,6 +45,11 @@ function makePanel(title, open, editable_title, keep_empty){
 
 
 	// wrapper for sub-panels...
+	// XXX dragging out, into another panel and back out behaves oddly:
+	// 		should:
+	// 			either revert or create a new panel
+	// 		does:
+	// 			drops to last placeholder
 	var content = $('<span class="panel-content content">')
 		.sortable({
 			forcePlaceholderSize: true,
@@ -53,14 +58,14 @@ function makePanel(title, open, editable_title, keep_empty){
 			zIndex: 9999,
 
 			start: function(e, ui){
-				console.log('start')
+				//console.log('start')
 				ui.item.data('isoutside', false)
 				ui.placeholder.height(ui.helper.outerHeight());
 				ui.placeholder.width(ui.helper.outerWidth());
 			},
 			// create a new panel when dropping outside of curent panel...
 			beforeStop: function(e, ui){
-				console.log('stop')
+				//console.log('stop')
 				var c = 0
 
 				// do this only when dropping outside the panel...
@@ -92,11 +97,11 @@ function makePanel(title, open, editable_title, keep_empty){
 				ui.item.data('isoutside', false)
 			},
 			over: function(e, ui){
-				console.log('over')
+				//console.log('over')
 				ui.item.data('isoutside', false)
 			},
 			out: function(e, ui){
-				console.log('out')
+				//console.log('out')
 				ui.item.data('isoutside', true)
 			},
 		})
