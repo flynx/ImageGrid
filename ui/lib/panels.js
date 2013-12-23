@@ -62,6 +62,7 @@ function makePanel(title, open, editable_title, keep_empty){
 				ui.item.data('isoutside', false)
 				ui.placeholder.height(ui.helper.outerHeight());
 				ui.placeholder.width(ui.helper.outerWidth());
+
 			},
 			// create a new panel when dropping outside of curent panel...
 			beforeStop: function(e, ui){
@@ -128,6 +129,58 @@ function makeSubPanel(title, open, parent){
 	}
 
 	return sub_panel
+}
+
+
+
+// side can be:
+// 	- left
+// 	- right
+function makeSidePanel(side){
+	var panel = $('<div/>')
+		.addClass('side-panel panel-content ' + side)
+		.sortable({
+			forcePlaceholderSize: true,
+			opacity: 0.7,
+			connectWith: '.panel-content',
+			zIndex: 9999,
+
+			start: function(e, ui){
+				//console.log('start')
+				ui.item.data('isoutside', false)
+				ui.placeholder.height(ui.helper.outerHeight());
+				ui.placeholder.width(ui.helper.outerWidth());
+			},
+			// create a new panel when dropping outside of curent panel...
+			beforeStop: function(e, ui){
+				//console.log('stop')
+
+				// do this only when dropping outside the panel...
+				if(ui.item.data('isoutside')){
+					// compensate for removed item which is still in the
+					// panel when we count it...
+					// ...this is likely to the fact that we jquery-ui did
+					// not cleanup yet
+					var new_panel = makePanel()
+						.css(ui.offset)
+						.appendTo(panel.parent())
+					new_panel.find('.panel-content')
+							.append(ui.item)
+					panel.trigger('newPanel', [new_panel])
+				}
+
+				ui.item.data('isoutside', false)
+			},
+			over: function(e, ui){
+				//console.log('over')
+				ui.item.data('isoutside', false)
+			},
+			out: function(e, ui){
+				//console.log('out')
+				ui.item.data('isoutside', true)
+			},
+		})
+	return panel
 }
 
 

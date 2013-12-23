@@ -4,6 +4,18 @@
 
 <style>
 
+body.dark {
+	background: #0a0a0a;
+	color: silver;
+}
+
+
+body.gray {
+	background: #333;
+	color: silver;
+}
+
+
 </style>
 
 <script src="../ext-lib/jquery.js"></script>
@@ -12,6 +24,18 @@
 <script src="../lib/editor.js"></script>
 
 <script>
+
+function toggleThemes(){
+	var b = $('body')
+	if(b.hasClass('gray')){
+		b.removeClass('gray')
+		b.addClass('dark')
+	} else if(b.hasClass('dark')){
+		b.removeClass('dark')
+	} else {
+		b.addClass('gray')
+	}
+}
 
 $(function(){
 
@@ -40,6 +64,7 @@ $(function(){
 		.append(panel)	
 		//.append(makePanel('Test Panel B', true))
 		//.append(makePanel('Test Panel C', true))
+		.append(makeSidePanel('left'))
 			
 
 })
@@ -47,6 +72,7 @@ $(function(){
 </script>
 
 <body>
+	<p>click image to show editor panel and <a href="javascript:toggleThemes()">here</a> to toggle theme...</p>
 
 </body>
 </html>

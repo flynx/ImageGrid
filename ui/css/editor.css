@@ -38,8 +38,8 @@
 	display: block;
 	min-height: 30px;
 }
+.sub-panel,
 .panel button,
-.panel details,
 .panel .state {
 	margin: 1px;
 	font-size: 11px;
@@ -48,25 +48,44 @@
 	/* needed for dragging */
 	background: white;
 }
-.panel details {
+.sub-panel {
 	margin: 3px;
 	border: solid 1px silver;
 	box-shadow: none;
 }
-.panel details summary {
+.sub-panel summary {
 	background: #ddd;
 	/*
 	background: white;
 	box-shadow: 0px 0px 50px -5px rgba(0, 0, 0, 0.4);
 	*/
 }
-.panel .sub-panel-content {
+.sub-panel .sub-panel-content {
 	margin: 10px;
 }
 
 .panel button:active,
 .panel .state:active {
 	background: silver;
+}
+
+.side-panel {
+	position: absolute;
+	top: 0px;
+	height: 100%;
+	bottom: 0px;
+	min-width: 10px;
+
+	background: gray;
+	box-shadow: 5px 5px 30px -5px rgba(0, 0, 0, 0.5);
+}
+.side-panel.left {
+	left: 0px;
+	border-right: solid 1px black;
+}
+.side-panel.right {
+	right: 0px;
+	border-left: solid 1px black;
 }
 
 
@@ -168,16 +187,16 @@
 }
 .dark .panel button,
 .dark .panel .state,
-.dark .panel details {
+.dark .sub-panel {
 	border: solid 1px #333;
 	/* needed for dragging */
 	background: #080808;
 	color: #888;
 }
-.dark .panel details {
+.dark .sub-panel {
 	border: solid 1px #333;
 }
-.dark .panel details summary {
+.dark .sub-panel summary {
 	background: #333;
 	color: silver;
 }
@@ -212,6 +231,18 @@
 	border: none;
 	border-top: solid 1px #333;
 }
+.dark .side-panel {
+	background: black;
+	box-shadow: 3px 3px 30px 0px rgba(0, 0, 0, 0.5);
+}
+.dark .side-panel.left {
+	border-right: solid 1px #333;
+}
+.dark .side-panel.right {
+	border-left: solid 1px #333;
+}
+
+
 
 
 /* gray theme */
@@ -230,16 +261,16 @@
 }
 .gray .panel button,
 .gray .panel .state,
-.gray .panel details {
+.gray .sub-panel {
 	border: solid 1px #444;
 	/* needed for dragging */
 	background: #333;
 	color: #888;
 }
-.gray .panel details {
+.gray .sub-panel {
 	border: solid 1px #454545;
 }
-.gray .panel details summary {
+.gray .sub-panel summary {
 	background: #444;
 	color: silver;
 }
@@ -272,5 +303,15 @@
 .gray .panel hr {
 	border: none;
 	border-top: solid 1px #444;
+}
+.gray .side-panel {
+	background: #333;
+	box-shadow: 3px 3px 30px 0px rgba(0, 0, 0, 0.5);
+}
+.gray .side-panel.left {
+	border-right: solid 1px #444;
+}
+.gray .side-panel.right {
+	border-left: solid 1px #444;
 }
 
