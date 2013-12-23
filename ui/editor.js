@@ -16,7 +16,7 @@
 function _setupPanel(panel){
 	return panel
 		.on('panelClosing', function(){
-			if($('.panel').length <= 1){
+			if($('.sub-panel').length <= 1){
 				// XXX when not only the editor is using the panels, this
 				// 		is not the correct way to go...
 				toggleEditor('off')
@@ -40,12 +40,14 @@ var toggleEditor = createCSSClassToggler(
 		function(action){
 			// XXX when not only the editor is using the panels, this
 			// 		is not the correct way to go...
-			var ed = $('.panel')
+			var ed = $('.panel, .side-panel')
 
 			if(action == 'on'){
 				// create the editor if this is first init...
 				if(ed.length == 0){
 					$('.viewer')
+						.append(makeSidePanel('left'))
+						.append(makeSidePanel('right'))
 						.append(_setupPanel(makeEditorControls('.current.image'))
 							//.draggable('option', 'snap', '.viewer')
 							.css({
