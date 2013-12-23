@@ -37,6 +37,16 @@ function toggleThemes(){
 	}
 }
 
+function toggleAutoHide(){
+	var elem = $('.side-panel')
+	if(elem.attr('autohide') == 'off'){
+		elem.attr('autohide', 'on')
+	} else {
+		elem.attr('autohide', 'off')
+	}
+	return false
+}
+
 $(function(){
 
 	var panel = makePanel('Test Panel A', true)
@@ -72,7 +82,7 @@ $(function(){
 </script>
 
 <body>
-	<p>click image to show editor panel and <a href="javascript:toggleThemes()">here</a> to toggle theme...</p>
+	<p>click <a href="javascript:toggleAutoHide()">here to toggle panel autohide</a> and <a href="javascript:toggleThemes()">here to toggle theme...</a></p>
 
 </body>
 </html>

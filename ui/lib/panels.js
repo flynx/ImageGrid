@@ -10,7 +10,7 @@
 /*********************************************************************/
 
 function makePanel(title, open, editable_title, keep_empty){
-	title = title == null ? '&nbsp;' : title
+	title = title == null || title.trim() == '' ? '&nbsp;' : title
 
 	// tool panel...
 	var panel = $('<details/>')
@@ -33,6 +33,7 @@ function makePanel(title, open, editable_title, keep_empty){
 			containment: 'parent',
 			scroll: false,
 			// XXX this makes things quite a bit slower...
+			//stack: '.panel, .sub-panel',
 			stack: '.panel',
 			//snap: ".panel", 
 			//snapMode: "outer",
@@ -43,13 +44,13 @@ function makePanel(title, open, editable_title, keep_empty){
 			position: 'absolute',
 		})
 
-
 	// wrapper for sub-panels...
 	// XXX dragging out, into another panel and back out behaves oddly:
 	// 		should:
 	// 			either revert or create a new panel
 	// 		does:
 	// 			drops to last placeholder
+	// XXX the helper should be above all other panels...
 	var content = $('<span class="panel-content content">')
 		.sortable({
 			forcePlaceholderSize: true,
@@ -58,15 +59,23 @@ function makePanel(title, open, editable_title, keep_empty){
 			zIndex: 9999,
 
 			start: function(e, ui){
-				//console.log('start')
 				ui.item.data('isoutside', false)
-				ui.placeholder.height(ui.helper.outerHeight());
-				ui.placeholder.width(ui.helper.outerWidth());
-
+				ui.placeholder
+					.height(ui.helper.outerHeight())
+					.width(ui.helper.outerWidth())
+				// show all hidden panels...
+				$('.side-panel').each(function(){
+					var p = $(this)
+					if(p.attr('autohide') == 'on'){
+						p.attr('autohide', 'off')
+						p.data('autohide', true)
+					} else {
+						p.data('autohide', false)
+					}
+				})
 			},
 			// create a new panel when dropping outside of curent panel...
 			beforeStop: function(e, ui){
-				//console.log('stop')
 				var c = 0
 
 				// do this only when dropping outside the panel...
@@ -75,11 +84,11 @@ function makePanel(title, open, editable_title, keep_empty){
 						// NOTE: 2 because we are taking into account 
 						// 		the placeholders...
 						&& panel.find('.sub-panel').length > 2){
-					c = 1
 					// compensate for removed item which is still in the
 					// panel when we count it...
 					// ...this is likely to the fact that we jquery-ui did
 					// not cleanup yet
+					c = 1
 					var new_panel = makePanel()
 						.css(ui.offset)
 						.appendTo(panel.parent())
@@ -95,14 +104,20 @@ function makePanel(title, open, editable_title, keep_empty){
 						.remove()
 				}
 
+				// reset the auto-hide of the side panels...
+				$('.side-panel').each(function(){
+					var p = $(this)
+					if(p.data('autohide')){
+						p.attr('autohide', 'on')
+					}
+				})
+
 				ui.item.data('isoutside', false)
 			},
 			over: function(e, ui){
-				//console.log('over')
 				ui.item.data('isoutside', false)
 			},
 			out: function(e, ui){
-				//console.log('out')
 				ui.item.data('isoutside', true)
 			},
 		})
@@ -111,8 +126,85 @@ function makePanel(title, open, editable_title, keep_empty){
 }
 
 
+// side can be:
+// 	- left
+// 	- right
+// XXX in part this is exactly the same as makePanel
+function makeSidePanel(side){
+	var panel = $('.side-panel.'+side)
+	// only one panel from each side can exist...
+	if(panel.length != 0){
+		return panel
+	}
+	panel = $('<div/>')
+		.addClass('side-panel panel-content ' + side)
+		.sortable({
+			forcePlaceholderSize: true,
+			opacity: 0.7,
+			connectWith: '.panel-content',
+			zIndex: 9999,
+
+			start: function(e, ui){
+				ui.item.data('isoutside', false)
+				ui.placeholder
+					.height(ui.helper.outerHeight())
+					.width(ui.helper.outerWidth())
+				// show all hidden panels...
+				$('.side-panel').each(function(){
+					var p = $(this)
+					if(p.attr('autohide') == 'on'){
+						p.attr('autohide', 'off')
+						p.data('autohide', true)
+					} else {
+						p.data('autohide', false)
+					}
+				})
+			},
+			// create a new panel when dropping outside of curent panel...
+			beforeStop: function(e, ui){
+				// do this only when dropping outside the panel...
+				if(ui.item.data('isoutside')){
+					var new_panel = makePanel()
+						.css(ui.offset)
+						.appendTo(panel.parent())
+					new_panel.find('.panel-content')
+							.append(ui.item)
+					panel.trigger('newPanel', [new_panel])
+				}
+
+				// reset the auto-hide of the side panels...
+				$('.side-panel').each(function(){
+					var p = $(this)
+					if(p.data('autohide')){
+						p.attr('autohide', 'on')
+					}
+				})
+
+				ui.item.data('isoutside', false)
+			},
+			over: function(e, ui){
+				ui.item.data('isoutside', false)
+			},
+			out: function(e, ui){
+				ui.item.data('isoutside', true)
+			},
+		})
+		.dblclick(function(e){
+			var elem = $(this)
+			if(elem.attr('autohide') == 'off'){
+				elem.attr('autohide', 'on')
+			} else {
+				elem.attr('autohide', 'off')
+			}
+			return false
+		})
+		.attr('autohide', 'off')
+	return panel
+}
+
+
 function makeSubPanel(title, open, parent){
-	title = title == null ? '&nbsp;' : title
+	title = title == null || title.trim() == '' ? '&nbsp;' : title
 
 	var sub_panel = $('<details/>')
 		.addClass('sub-panel noScroll')
@@ -129,58 +221,6 @@ function makeSubPanel(title, open, parent){
 	}
 
 	return sub_panel
-}
-
-
-
-// side can be:
-// 	- left
-// 	- right
-function makeSidePanel(side){
-	var panel = $('<div/>')
-		.addClass('side-panel panel-content ' + side)
-		.sortable({
-			forcePlaceholderSize: true,
-			opacity: 0.7,
-			connectWith: '.panel-content',
-			zIndex: 9999,
-
-			start: function(e, ui){
-				//console.log('start')
-				ui.item.data('isoutside', false)
-				ui.placeholder.height(ui.helper.outerHeight());
-				ui.placeholder.width(ui.helper.outerWidth());
-			},
-			// create a new panel when dropping outside of curent panel...
-			beforeStop: function(e, ui){
-				//console.log('stop')
-
-				// do this only when dropping outside the panel...
-				if(ui.item.data('isoutside')){
-					// compensate for removed item which is still in the
-					// panel when we count it...
-					// ...this is likely to the fact that we jquery-ui did
-					// not cleanup yet
-					var new_panel = makePanel()
-						.css(ui.offset)
-						.appendTo(panel.parent())
-					new_panel.find('.panel-content')
-							.append(ui.item)
-					panel.trigger('newPanel', [new_panel])
-				}
-
-				ui.item.data('isoutside', false)
-			},
-			over: function(e, ui){
-				//console.log('over')
-				ui.item.data('isoutside', false)
-			},
-			out: function(e, ui){
-				//console.log('out')
-				ui.item.data('isoutside', true)
-			},
-		})
-	return panel
 }
 
 
