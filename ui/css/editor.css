@@ -76,29 +76,30 @@
 	bottom: 0px;
 	min-width: 10px;
 
-	background: gray;
-	box-shadow: 5px 5px 30px -5px rgba(0, 0, 0, 0.5);
+	background: white;
+
+	box-shadow: 5px 5px 30px -5px rgba(0, 0, 0, 0.3);
 }
 .side-panel.left {
 	left: 0px;
-	border-right: solid 1px black;
+	border-right: solid 1px silver;
 }
 .side-panel.right {
 	right: 0px;
-	border-left: solid 1px black;
+	border-left: solid 1px silver;
 }
 
 
 /* main controls */
-.panel .control {
+.sub-panel .control {
 	white-space:nowrap;
 }
-.panel .control .title {
+.sub-panel .control .title {
 	display: inline-block;
 	width: 60px;
 	cursor: move;
 }
-.panel .control .slider {
+.sub-panel .control .slider {
 	-webkit-appearance: none !important;
 	width: 150px;
 	height: 3px;
@@ -106,9 +107,9 @@
 	border-radius: 2px;
 	background: white;
 }
-.panel .control.at-default .slider {
+.sub-panel .control.at-default .slider {
 }
-.panel .control .slider::-webkit-slider-thumb {
+.sub-panel .control .slider::-webkit-slider-thumb {
 	-webkit-appearance: none !important;
 	height: 13px;
 	width: 13px;
@@ -118,10 +119,10 @@
 	background: white;
 	box-shadow: 1px 1px 10px 0px rgba(0, 0, 0, 0.3);
 }
-.panel .control.at-default .slider::-webkit-slider-thumb {
+.sub-panel .control.at-default .slider::-webkit-slider-thumb {
 	opacity: 0.5;
 }
-.panel .control .value {
+.sub-panel .control .value {
 	-webkit-appearance: none !important;
 	display: inline-block;
 	width: 25px;
@@ -133,39 +134,39 @@
 	border-radius: 2px;
 	background: transparent;
 }
-.panel .control input::-webkit-outer-spin-button,
-.panel .control input::-webkit-inner-spin-button {
+.sub-panel .control input::-webkit-outer-spin-button,
+.sub-panel .control input::-webkit-inner-spin-button {
 	-webkit-appearance: none !important;
 }
-.panel .control .reset {
+.sub-panel .control .reset {
 	visibility: hidden;
 	border: solid 1px transparent;
 }
-.panel .control:hover button.reset {
+.sub-panel .control:hover button.reset {
 	visibility: visible;
 }
-.panel .control .reset:hover {
+.sub-panel .control .reset:hover {
 	border: solid 1px silver;
 }
 
 
 /* Snapshots */
-.panel .state {
+.sub-panel .state {
 	display: inline-block;
 	margin: 1px;
 	padding-left: 5px;
 	padding-right: 5px;
 }
-.panel .state.ui-draggable-dragging {
+.sub-panel .state.ui-draggable-dragging {
 	box-shadow: 2px 2px 10px -2px rgba(0, 0, 0, 0.4);
 }
-.panel .states {
+.sub-panel .states {
 	min-height: 30px;
 }
 
 
 /* misc */
-.panel hr {
+.sub-panel hr {
 	border: none;
 	border-top: solid 1px silver;
 }
@@ -185,8 +186,8 @@
 .dark .panel summary::-webkit-details-marker {
 	color: #555;
 }
-.dark .panel button,
-.dark .panel .state,
+.dark .sub-panel button,
+.dark .sub-panel .state,
 .dark .sub-panel {
 	border: solid 1px #333;
 	/* needed for dragging */
@@ -200,34 +201,34 @@
 	background: #333;
 	color: silver;
 }
-.dark .panel .state:active,
-.dark .panel button:active {
+.dark .sub-panel .state:active,
+.dark .sub-panel button:active {
 	background: #222;
 }
-.dark .panel .control .slider {
+.dark .sub-panel .control .slider {
 	border: solid 1px #555;
 	background: black;
 }
-.dark .panel .control.at-default .slider {
+.dark .sub-panel .control.at-default .slider {
 }
-.dark .panel .control .slider::-webkit-slider-thumb {
+.dark .sub-panel .control .slider::-webkit-slider-thumb {
 	border: solid 2px #aaa;
 	background: black;
 	box-shadow: 1px 1px 10px 0px rgba(0, 0, 0, 0.5);
 }
-.dark .panel .control.at-default .slider::-webkit-slider-thumb {
+.dark .sub-panel .control.at-default .slider::-webkit-slider-thumb {
 	border: solid 1px gray;
 	opacity: 0.5;
 }
-.dark .panel .control .value {
+.dark .sub-panel .control .value {
 	border: none;
 	background: transparent;
 	color: gray;
 }
-.dark .panel .control .reset:hover {
+.dark .sub-panel .control .reset:hover {
 	border: solid 1px #333;
 }
-.dark .panel hr {
+.dark .sub-panel hr {
 	border: none;
 	border-top: solid 1px #333;
 }
@@ -259,8 +260,8 @@
 .gray .panel summary::-webkit-details-marker {
 	color: #555;
 }
-.gray .panel button,
-.gray .panel .state,
+.gray .sub-panel button,
+.gray .sub-panel .state,
 .gray .sub-panel {
 	border: solid 1px #444;
 	/* needed for dragging */
@@ -274,33 +275,33 @@
 	background: #444;
 	color: silver;
 }
-.gray .panel .state:active,
-.gray .panel button:active {
+.gray .sub-panel .state:active,
+.gray .sub-panel button:active {
 	background: #444;
 }
-.gray .panel .control .slider {
+.gray .sub-panel .control .slider {
 	border: solid 1px #555;
 	background: #222;
 }
-.gray .panel .control.at-default .slider {
+.gray .sub-panel .control.at-default .slider {
 }
-.gray .panel .control .slider::-webkit-slider-thumb {
+.gray .sub-panel .control .slider::-webkit-slider-thumb {
 	border: solid 2px #aaa;
 	background: #333;
 }
-.gray .panel .control.at-default .slider::-webkit-slider-thumb {
+.gray .sub-panel .control.at-default .slider::-webkit-slider-thumb {
 	border: solid 1px gray;
 	opacity: 0.5;
 }
-.gray .panel .control .value {
+.gray .sub-panel .control .value {
 	border: none;
 	background: transparent;
 	color: gray;
 }
-.gray .panel .control .reset:hover {
+.gray .sub-panel .control .reset:hover {
 	border: solid 1px #444;
 }
-.gray .panel hr {
+.gray .sub-panel hr {
 	border: none;
 	border-top: solid 1px #444;
 }
