@@ -212,28 +212,32 @@ Roadmap
 		[_] BUG: opening a dir form history sometimes loads wrong size previews
 		| this happens in part of the view and a refresh, reload or image
 		| update (updateImages()) fixes the issue...
-		[_] UI: Panes...
-		|
-		| 	+-----+---------------+-----+
-		| 	|	  |				  |		|
-		| 	|	  |				  |		|
-		| 	|	  |	+-----------+ |		|
-		| 	|	  |	|			| |	  <---- Pane
-		| 	|	  |	|	Image	| |		|
-		| 	|	  |	|			| |		|
-		| 	|	  |	+-----------+ |		|
-		| 	|	  |				  |		|
-		| 	|	  |				  |		|
-		| 	+-----+---------------+-----+
-		|
-		|		  +---------------+
-		|			Viewer
-		|
-		|
-		| NOTE: panes should be outside the viewer, so as not to overlap
-		| 		with the image...
-		| NOTE: we can also try and use top and bottom panes, but that 
-		| 		might over-complicate things...
+		[_] 50% UI: side-panels...
+			|
+			| 	+-----+---------------+-----+
+			| 	|	  |				  |		|
+			| 	|	  |				  |		|
+			| 	|	  |	+-----------+ |		|
+			| 	|	  |	|			| |	  <---- side-panel
+			| 	|	  |	|	Image	| |		|
+			| 	|	  |	|			| |		|
+			| 	|	  |	+-----------+ |		|
+			| 	|	  |				  |		|
+			| 	|	  |				  |		|
+			| 	+-----+---------------+-----+
+			|
+			|		  +---------------+
+			|			Viewer
+			|
+			|
+			| NOTE: panes should be outside the viewer, so as not to overlap
+			| 		with the image...
+			| NOTE: we can also try and use top and bottom panes, but that 
+			| 		might over-complicate things...
+			[X] construct
+			[X] style
+			[_] lock/pin
+			[_] autohide
 		[_] UI: touch controls / toolbars...
 		|
 		| 	+-+-----------------------+-+
