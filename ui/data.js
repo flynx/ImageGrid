@@ -42,11 +42,12 @@
 // 			- now DATA.current is saved separately in current.json
 // 			  loading is done from current.json and if not found from
 // 			  data.json
+// 			- data, marks, bookmarks, tags are now saved only if updated
 //
 // NOTE: Gen1 and Gen3 refer to code generations rather than data format
 // 		iterations, Gen2 is skipped here as it is a different project 
-// 		(PortableMag) mostly built on the same code base as 
-// 		ImageGrid.Viewer
+// 		(PortableMag) started on the same code base as ImageGrid.Viewer
+// 		generation 1 and advanced from there...
 var DATA_VERSION = '2.2'
 
 
