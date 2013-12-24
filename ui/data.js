@@ -39,10 +39,12 @@
 // 			- will auto-sort marks on load of 2.0 data and change 
 // 			  data version to 2.1, will need a re-save,
 // 	2.2 - Minor update to how data is handled and saved
-// 			- now DATA.current is saved separately in current.json
+// 			- now DATA.current is saved separately in current.json,
 // 			  loading is done from current.json and if not found from
-// 			  data.json
+// 			  data.json.
+// 			  the file is optional.
 // 			- data, marks, bookmarks, tags are now saved only if updated
+//
 //
 // NOTE: Gen1 and Gen3 refer to code generations rather than data format
 // 		iterations, Gen2 is skipped here as it is a different project 
@@ -2215,6 +2217,8 @@ function alignRibbons(ribbon){
 
 	DATA = alignDataToRibbon(ribbon)
 
+	dataUpdated()
+
 	$('.viewer').trigger('ribbonsAligned', [ribbon])
 
 	reloadViewer(false)
@@ -2258,6 +2262,8 @@ function loadRibbonsFromPath(path, cmp, reverse, dir_name){
 	// 		speed-wise, but will make the code simpler...
 	DATA.ribbons = ribbonsFromFavDirs(path, null, null, dir_name)
 
+	dataUpdated()
+
 	// do the sort...
 	if(cmp != false){
 		sortImages(cmp, reverse)
@@ -2300,9 +2306,6 @@ function setupData(viewer){
 			'shiftedImage',
 			'createdRibbon',
 			'removedRibbon',
-			// data.js API...
-			'ribbonsAligned',
-			'ribbonsLoadedFromPath',
 		].join(' '), function(){
 			dataUpdated()
 		})

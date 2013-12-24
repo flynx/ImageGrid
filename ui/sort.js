@@ -180,8 +180,10 @@ function reverseImageOrder(){
 	DATA.ribbons.forEach(function(r){
 		r.reverse()
 	})
-	reloadViewer(true)
-	$('.viewer').trigger('reversedImageOrder', [cmp])
+	reloadViewer()
+	dataUpdated()
+
+	$('.viewer').trigger('reversedImageOrder')
 }
 
 
@@ -195,6 +197,8 @@ function sortImages(cmp, reverse){
 		DATA.order.reverse()
 	}
 	updateRibbonOrder()
+	dataUpdated()
+
 	$('.viewer').trigger('sortedImages', [cmp])
 }
 
@@ -311,6 +315,8 @@ function sortImagesByFileNameSeqWithOverflow(reverse, proximity, overflow_gap, c
 	}
 
 	updateRibbonOrder()
+	dataUpdated()
+	
 	$('.viewer').trigger('sortedImagesByFileNameSeqWithOverflow')
 }
 
@@ -356,6 +362,8 @@ function horizontalShiftImage(image, direction){
 
 	// update stuff that changed, mainly order...
 	updateImages()
+	dataUpdated()
+
 	$('.viewer').trigger('horizontalSiftedImage', [gid, direction])
 
 	return image
@@ -421,26 +429,6 @@ function sortImagesDialog(){
 			showStatusQ('Sort: canceled.')
 		})
 }
-
-
-/*********************************************************************/
-
-function setupSorting(viewer){
-	console.log('Sorting: setup...')
-
-	return viewer
-		// NOTE: manual data manipulation will dataUpdated() called 
-		// 		manually...
-		.on([
-			'reversedImageOrder',
-			'sortedImages',
-			'sortedImagesByFileNameSeqWithOverflow',
-			'horizontalSiftedImage'
-		].join(' '), function(){
-			dataUpdated()
-		})
-}
-SETUP_BINDINGS.push(setupSorting)
 
 
 
