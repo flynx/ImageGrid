@@ -59,6 +59,8 @@ function buildTagsFromImages(tagset, images){
 		tagset[tag] = tagset[tag].filter(function(e){ return e != null })
 	}
 
+	tagsUpdated()
+
 	return tagset
 }
 
@@ -119,6 +121,7 @@ function addTag(tags, gid, tagset, images){
 	if(updated){
 		img.tags = img_tags
 		imageUpdated(gid)
+		tagsUpdated()
 	}
 }
 
@@ -155,6 +158,7 @@ function removeTag(tags, gid, tagset, images){
 
 	if(updated){
 		imageUpdated(gid)
+		tagsUpdated()
 	}
 }
 
@@ -344,6 +348,7 @@ function tagOnlyBookmarked(tags){ return tagOnlyList(BOOKMARKED, tags) }
 function markTagged(tags){
 	MARKED = tagSelectAND(tags)
 	updateImages()
+	marksUpdated()
 	return MARKED
 }
 function unmarkTagged(tags){
@@ -355,6 +360,7 @@ function unmarkTagged(tags){
 		}
 	})
 	updateImages()
+	marksUpdated()
 	return set
 }
 
@@ -470,10 +476,16 @@ var loadFileTags = makeFileLoader(
 
 // Save image marks to file
 var saveFileTags = makeFileSaver(
+		'Tags',
 		TAGS_FILE_DEFAULT, 
 		function(){ 
 			return TAGS 
 		})
+
+
+function tagsUpdated(){
+	fileUpdated('Tags')
+}
 
 
 

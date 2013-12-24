@@ -23,7 +23,8 @@ var IMAGE_PATTERN = /.*\.(jpg|jpeg|png|gif)$/i
 
 
 var FILE_LOADERS = []
-var FILE_SAVERS = []
+var FILE_SAVERS = {}
+var FILES_UPDATED = []
 
 
 
@@ -245,7 +246,7 @@ function makeFileLoader(title, file_dfl, file_pattern, set_data, evt_name, skip_
 }
 // XXX make this check for updates -- no need to re-save if nothing 
 // 		changed...
-function makeFileSaver(file_dfl, get_data, skip_reg){
+function makeFileSaver(title, file_dfl, get_data, skip_reg){
 	var _saver = function(name){
 		name = name == null 
 			? normalizePath(CONFIG.cache_dir_var +'/'+ Date.timeStamp()) 
@@ -253,8 +254,18 @@ function makeFileSaver(file_dfl, get_data, skip_reg){
 
 		dumpJSON(name + '-' + file_dfl, get_data())
 	}
-	!skip_reg && FILE_SAVERS.push(_saver)
+	if(!skip_reg){
+		FILE_SAVERS[title] = _saver
+	}
 	return _saver
+}
+
+
+// mark file type as updated...
+function fileUpdated(name){
+	if(FILES_UPDATED.indexOf(name) < 0 && name in FILE_SAVERS){
+		FILES_UPDATED.push(name)
+	}
 }
 
 
@@ -263,11 +274,17 @@ function runFileLoaders(prefix, res){
 		return bubbleProgress(prefix, load(), res, true)
 	}))
 }
+// NOTE: if all is set, this will force save everything...
 // XXX do we need bubbleProgress(..) here???
-function runFileSavers(name){
-	FILE_SAVERS.map(function(save){
-		return save(name)
-	})
+function runFileSavers(name, all){
+	var updated = FILES_UPDATED
+	FILES_UPDATED = []
+	for(var n in FILE_SAVERS){
+		if(all || updated.indexOf(n) >= 0){
+			showStatusQ('Saving: File:', n)
+			FILE_SAVERS[n](name)
+		}
+	}
 }
 
 

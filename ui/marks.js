@@ -236,6 +236,8 @@ var toggleMark = makeMarkToggler(
 			} else {
 				MARKED.splice(MARKED.indexOf(gid), 1)
 			}
+
+			marksUpdated()
 		})
 
 
@@ -280,6 +282,8 @@ function toggleAllMarks(action, mode){
 	updateImages(updated)
 
 	$('.viewer').trigger('togglingMarks', [updated, action])
+
+	marksUpdated()
 
 	return res
 }
@@ -327,6 +331,8 @@ function invertImageMarks(){
 		.trigger('invertingMarks', [ribbon])
 		.trigger('togglingMarks', [on, 'on'])
 		.trigger('togglingMarks', [off, 'off'])
+
+	marksUpdated()
 
 	return on.concat(off)
 }
@@ -377,6 +383,8 @@ function toggleMarkBlock(image){
 	$('.viewer')
 		.trigger('togglingImageBlockMarks', [image, updated, state])
 		.trigger('togglingMarks', [updated, state ? 'on' : 'off'])
+
+	marksUpdated()
 
 	return state
 }
@@ -580,10 +588,16 @@ var loadFileMarks = makeFileLoader(
 
 // Save image marks to file
 var saveFileMarks = makeFileSaver(
+		'Marks',
 		MARKED_FILE_DEFAULT, 
 		function(){ 
 			return MARKED 
 		})
+
+
+function marksUpdated(){
+	fileUpdated('Marks')
+}
 
 
 

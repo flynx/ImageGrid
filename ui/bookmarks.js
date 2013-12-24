@@ -87,12 +87,13 @@ var toggleBookmark = makeMarkToggler(
 			} else {
 				BOOKMARKS.splice(BOOKMARKS.indexOf(gid), 1)
 			}
+
+			bookmarksUpdated()
 		})
 
 
-// focus next bookmark...
+// focus next/prev bookmark...
 //
-// NOTE: this will not jump to bookmarks on other ribbons...
 var nextBookmark = makeNextFromListAction(
 		getBookmarkedGIDBefore, 
 		function(){ return BOOKMARKS })
@@ -117,6 +118,7 @@ var loadFileBookmarks = makeFileLoader(
 
 
 var saveFileBookmarks = makeFileSaver(
+		'Bookmarks',
 		BOOKMARKS_FILE_DEFAULT, 
 		function(){ 
 			return [
@@ -124,6 +126,11 @@ var saveFileBookmarks = makeFileSaver(
 				BOOKMARKS_DATA
 			] 
 		})
+
+
+function bookmarksUpdated(){
+	fileUpdated('Bookmarks')
+}
 
 
 
