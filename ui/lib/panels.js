@@ -130,7 +130,8 @@ function makePanel(title, open, editable_title, keep_empty){
 // 	- left
 // 	- right
 // XXX in part this is exactly the same as makePanel
-function makeSidePanel(side){
+function makeSidePanel(side, autohide){
+	autohide = autohide == null ? 'on' : 'off'
 	var panel = $('.side-panel.'+side)
 	// only one panel from each side can exist...
 	if(panel.length != 0){
@@ -198,7 +199,7 @@ function makeSidePanel(side){
 			}
 			return false
 		})
-		.attr('autohide', 'off')
+		.attr('autohide', autohide)
 	return panel
 }
 

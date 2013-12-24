@@ -108,9 +108,9 @@ Roadmap
 	
 
 
-[_] 28% Gen 3 current todo
-	[_] 57% High priority
-		[_] Need visual indicators for long operations...
+[_] 32% Gen 3 current todo
+	[_] 64% High priority
+		[_] ASAP: Need visual indicators for long operations...
 		[_] BUG: (phantom) in single image mode shifting first image up to new ribbon errs...
 		| error location/reason:
 		| 	getImageGid(..) got something odd in the image gid attribute...
@@ -118,17 +118,6 @@ Roadmap
 		| Race condition??
 		|
 		| Can't reproduce this... need to test on a faster machine...
-		[X] BUG: appear to be leaking memory on very large sets of images (>8K)
-		| don't remember it before, so it might be due to the new 
-		| loadImagesAround(..)
-		|
-		| Another place to check is pre-caching...
-		|
-		| Ran a test session -- we appear to never invalidate cache...
-		|
-		| Actual Cause: range check bug in getGIDsAfter(..) that caused
-		| 		wrapping around 0 and caching of all images in the ribbon
-		| 		by preCacheRibbonImages(..)...
 		[_] 66% Bookmarks
 			[X] toggle
 			[X] save/load
@@ -153,7 +142,7 @@ Roadmap
 		[X] 100% unsorted image state handling (tag?)
 			[X] remove tag on shift
 			[X] remove tag on alignToRibbon(..)
-			[X] add tag on index (buildcache)
+			[X] add tag for new images (buildcache)
 		[_] 25% Panels
 			[_] bookmarks
 			[_] info
@@ -196,23 +185,46 @@ Roadmap
 		| Effect:
 		| 	- previews get reloaded/redrawn
 		|
-		[_] Polish: on LOCAL actions do ALL the loading in background...
-		| make the lags completely even...
-		[_] check image caching strategy and thresholds....
 		[_] BUG: OSX: unable to load absolute paths...
 		[_] OSX: add alternatives to function buttons...
-		[_] BUG: basic editor causes images to blur up 
+		[_] 33% normalize ribbons -- top-align sorted chunks
+			[X] basic mechanics
+			| splitData(...)
+			| mergeData(...)
+			| alignDataToRibbon(...)
+			| shiftRibbonBy(...)
+			[_] manual invoke mechanics
+			| ctrl-s is a good candidate
+			|
+			| NOTE: might need a good preview to make this understandable...
+			[_] auto-invoke mechanics
+		[_] 33% FAST thumbnail generation strategies
+			[_] 0% pass 1: generate really fast previews
+				[_] ~1/3 screen - for ribbon
+				[_] ~1 screen - for single image mode
+			[X] pass 2: generate normal previews
+			[_] extract existing raw thumbnails/previews (for RAW files)
+		[_] EXTERNAL BUG: Chrome: CSS filters degrade scaled images. 
 		| ...if at least one filter is applied, appears to only affect 
 		| scaled images.
 		|
-		| Possible cause: actual dom size (300px) forces the image to
-		| 		re-render (to 300px and then resized up) on filter 
-		| 		application...
-		| 		Test this by making the image bigger...
+		| Actual cause:
+		| 	Bug in Blink-CSS-filters (BUG#329091) causing filters to 
+		| 	mess up scaled (via CSS transforms) images.
+		| 	Filed at:
+		| 		https://code.google.com/p/chromium/issues/detail?id=329091&thanks=329091&ts=1387246111
+		|
+		| Status:
+		| 	Waiting for feedback...
+		|
+		| Workaround:
+		| 	Make image size similar to screen size, in the best case 
+		| 	scenario dynamic (too complex for what it gives), in the 
+		| 	worse, just big enough.
 		[_] BUG: opening a dir form history sometimes loads wrong size previews
 		| this happens in part of the view and a refresh, reload or image
 		| update (updateImages()) fixes the issue...
-		[_] 50% UI: side-panels...
+		[X] 100% UI: side-panels...
 			|
 			| 	+-----+---------------+-----+
 			| 	|	  |				  |		|
@@ -236,8 +248,8 @@ Roadmap
 			| 		might over-complicate things...
 			[X] construct
 			[X] style
-			[_] lock/pin
-			[_] autohide
+			[X] lock/pin
+			[X] autohide
 		[_] UI: touch controls / toolbars...
 		|
 		| 	+-+-----------------------+-+
@@ -278,32 +290,6 @@ Roadmap
 		| 	- open/history/...
 		| 	- sort
 		| 	- export
-		[_] 55% mark-based operations
-			[_] 75% cropping selection
-				[X] marked
-				[X] ribbon
-				[X] by tag/collection
-				[_] by group
-			[X] shift up/down
-			[X] tag
-			[_] group
-			| a group should behave as a single image but is 
-			| viewable/expandable as a ribbon...
-			|
-			| should be two types of groups:
-			| 	- strict - always as a single image
-			| 		like a set of versions, processed and processing 
-			| 		versions of the same image.
-			| 		(auto-group?)
-			| 	- loose - similar images, could be named collections
-			| 		viewed individually, but can be accessed either from 
-			| 		a list or a member image (primary).
-			[_] collection
-			| make or add to existing collection
-		[_] 0% grouping / meta-image
-			[_] versions w. label image
-			| a set of images that is represented by one of the group
-			[_] collection
 		[_] editable list of external commands...
 		| to add things like exportdirs.py etc.
 		[_] Export data...
@@ -313,7 +299,7 @@ Roadmap
 		| i.e. the open dialog does not close, while the images are loaded...
 		[_] BUG: sometimes opening a dir (open dialog) does not do anything...
 		| Uncaught TypeError: Cannot call method 'indexOf' of undefined -- data.js:576
-		[_] Q: how do we mark unsorted sections in base ribbon after aligning?
+		[X] Q: how do we mark unsorted sections in base ribbon after aligning?
 		| - there is a big gap in the ribbon below, but it's not visible...
 		| - can we "mark" big gaps? ...what's the threshold of "big"?
 		|
@@ -330,7 +316,17 @@ Roadmap
 		| 			- ...
 		| 		Added complexity
 		| 	- manual bookmarking
-		[_] do we need to store marks in localstorage???
+		|
+		| Approach used:
+		| 	- tag all new images with 'unsorted'
+		| 	- remove tag on:
+		| 		- shift up/down (i.e. on sort)
+		| 		- align to ribbon
+		| 		  this will remove the tag form images that were not 
+		| 		  shifted.
+		|
+		| NOTE: with this approach effectively the base ribbon is the one,
+		| 		and the only one, that contains 'unsorted' images.
 		[_] would be good to unify buildcache and viewer to use the same code...
 		| rewrite buildcache in js?
 		|
@@ -350,7 +346,7 @@ Roadmap
 			| NOTE: fav dirs are ignored by buildcache
 			[X] --base-ribbon=N
 			| default N=0 i.e. top ribbon
-			[_] --reset-gids
+			[_] --reset-gids (???)
 			| replace gids in data.json and images.json
 			[X] fast update by default
 			| - store a file-list in .ImageGrid/filelist.json
@@ -362,36 +358,14 @@ Roadmap
 		| might be good to make this semi-manual:
 		| 	- notify user of "directory updated, load new data?"
 		| 	- ctrl-r reload and load new data
-		[_] 0% plugins:
-			[_] might be good to split some current functionality into plugins
-			| this mostly concerns non-core and not portable stuff like:
-			| 	- loadDirectoryDialog(...)
-			| 	- vips index generator
-			| 	- metadata readers (exiv2, exiftool, vips)
-			| 	- viewer/editor runner
-			[_] 0% directory selector
-				[_] path(s) to use as source
-				| to list sub-dirs under...
-				| e.g. /mnt/l/mnt/* (photo)/*/media/img/my/*
-				|
-				| editable in plugin config
-				[_] .ImageGrid.metadata
-				| store/get:
-				| 	- sup-path to index
-				| 	- title
-				| 	- directory taggs and meta info
-				| 	- ...
-		[_] 33% normalize ribbons -- top-align sorted chunks
-			[X] basic mechanics
-			| splitData(...)
-			| mergeData(...)
-			| alignDataToRibbon(...)
-			| shiftRibbonBy(...)
-			[_] manual invoke mechanics
-			| ctrl-s is a good candidate
-			|
-			| NOTE: might need a good preview to make this understandable...
-			[_] auto-invoke mechanics
+		[_] 66% plugins -- isolate functionality:
+			[X] register setup/init function...
+			| a module can register setup function...
+			[X] register image update functions...
+			[_] isolate context key bindings...
+			| essentially this may consist of:
+			| 	injecting new config
+			| 	shadowing 
 		[_] update data set...
 		| - add new images to the set
 		| - update changed images
@@ -425,12 +399,6 @@ Roadmap
 			| ribbons above and below...
 		[_] BUG CLASS: everything should work with empty ribbons...
 		| currently some code breaks when seeing an empty ribbon...
-		[_] BUG: shifting last image out of a ribbon misaligns the current ribbon
-		| i.e. the prev ribbon was deleted and the new focused ribbon
-		| is aligned as if it was not current...
-		|
-		| this is due to a race condition -- the alignment is done BEFORE 
-		| the current image is set...
 		[_] BUG: sometimes loading a raw directory stops at "error loading data.json"
 		| and some times it does not err..
 		|
@@ -449,39 +417,9 @@ Roadmap
 			[_] index and group ALL files in an archive
 			[_] import metadata
 			[_] real GIDs
-		[_] 33% FAST thumbnail generation strategies
-			[_] 0% pass 1: generate really fast previews
-				[_] ~1/3 screen - for ribbon
-				[_] ~1 screen - for single image mode
-			[X] pass 2: generate normal previews
-			[_] extract existing raw thumbnails/previews (for RAW files)
-		[_] 0% Tablet UI
-			[_] screen buttons
 		[_] save settings to config.json
 		[_] Q: do we need separate theme settings?
 		| ...for ribbon and single-image modes?
-		[_] workflow editor (external app?)...
-		| edit sequence of actions and events...
-		|
-		| Example:	
-		| 	- on mount volume name X
-		| 		-> make previews
-		| 		-> make cache
-		| 		-> import to index
-		| 		-> run Viewer
-		| 	- on Viewer data change
-		| 		-> run exportdirs.py
-		| 	- on tweak 
-		| 		-> run Irfan view
-		| 	- on edit
-		| 		-> run Photoshop
-		| 	- on PSD created
-		| 		-> make preview
-		| 		-> add to index
-		| 		-> group with preview
-		| 	...
-		|
-		|
 		[_] 0% keyboard.js
 			[_] multiple key handler...
 			| handle multiple key presses...
@@ -513,24 +451,64 @@ Roadmap
 		[_] 50% Undo/Redo
 			[X] basic one step (revert to last save)
 			[_] push/pop state stack
-		[_] check if preview loaded, else load a different preview...
 		[_] single image mode transition (alpha-blend/fade/none)
-		[_] 0% CSS
-			[_] cleanup
-			[_] split themes and layout
-		[_] tweak image pre-caching size -- keep as many images cached as possible.
-		| might be good to always cache the smaller previews so as to make things
-		| look faster...
 		[_] revise reporting scheme...
 		| showStatus(...) should be called uniformly, either at the source 
 		| or a specific reporting layer...
-		[_] 0% tweak loader
-			[_] thresholds and frame size
-			[_] remove extra and repetitive actions
-			[_] caching config
 		[_] side-by side view...
 		[_] Simplify tool-tip structure in dialogs...
 		| might also bee good to unify tool-tips across the app...
+		[_] 55% mark-based operations
+			[_] 75% cropping selection
+				[X] marked
+				[X] ribbon
+				[X] by tag/collection
+				[_] by group
+			[X] shift up/down
+			[X] tag
+			[_] group
+			| a group should behave as a single image but is 
+			| viewable/expandable as a ribbon...
+			|
+			| should be two types of groups:
+			| 	- strict - always as a single image
+			| 		like a set of versions, processed and processing 
+			| 		versions of the same image.
+			| 		(auto-group?)
+			| 	- loose - similar images, could be named collections
+			| 		viewed individually, but can be accessed either from 
+			| 		a list or a member image (primary).
+			[_] collection
+			| make or add to existing collection
+		[_] 0% grouping / meta-image
+			[_] versions w. label image
+			| a set of images that is represented by one of the group
+			[_] collection
+		[_] 0% CSS
+			[_] cleanup
+			[_] split themes and layout
+		[_] workflow editor (external app?)...
+		| edit sequence of actions and events...
+		|
+		| Example:	
+		| 	- on mount volume name X
+		| 		-> make previews
+		| 		-> make cache
+		| 		-> import to index
+		| 		-> run Viewer
+		| 	- on Viewer data change
+		| 		-> run exportdirs.py
+		| 	- on tweak 
+		| 		-> run Irfan view
+		| 	- on edit
+		| 		-> run Photoshop
+		| 	- on PSD created
+		| 		-> make preview
+		| 		-> add to index
+		| 		-> group with preview
+		| 	...
+		|
+		|
 		[_] BUG (low priority): dragging a sub-panel, over and out again is odd..
 		| i.e. if the placeholder moves...
 		|
@@ -540,6 +518,23 @@ Roadmap
 		| Actual:
 		| 	drops to last placeholder
 		|
+		[X] BUG: appear to be leaking memory on very large sets of images (>8K)
+		| don't remember it before, so it might be due to the new 
+		| loadImagesAround(..)
+		|
+		| Another place to check is pre-caching...
+		|
+		| Ran a test session -- we appear to never invalidate cache...
+		|
+		| Actual Cause: range check bug in getGIDsAfter(..) that caused
+		| 		wrapping around 0 and caching of all images in the ribbon
+		| 		by preCacheRibbonImages(..)...
+		[X] BUG: shifting last image out of a ribbon misaligns the current ribbon
+		| i.e. the prev ribbon was deleted and the new focused ribbon
+		| is aligned as if it was not current...
+		|
+		| this is due to a race condition -- the alignment is done BEFORE 
+		| the current image is set...
 		[X] BUG: zooming vertical images in single image view results in size jumping...
 		| Reason:
 		| 	This is due to the proportion ratio changing in one step...
