@@ -272,6 +272,7 @@ function fileUpdated(name){
 
 
 function runFileLoaders(prefix, res){
+	FILES_UPDATED = []
 	return $.when.apply(null, FILE_LOADERS.map(function(load){
 		return bubbleProgress(prefix, load(), res, true)
 	}))
@@ -408,6 +409,7 @@ function loadFileImages(path, no_load_diffs){
 
 	res.done(function(images){
 		IMAGES = images
+		IMAGES_UPDATED = []
 
 		// XXX is this the correct spot to do this???
 		$('.viewer').trigger('imagesLoaded')
