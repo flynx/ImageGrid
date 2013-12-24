@@ -38,12 +38,16 @@
 // 			- MARKED now maintained sorted, live,
 // 			- will auto-sort marks on load of 2.0 data and change 
 // 			  data version to 2.1, will need a re-save,
+// 	2.2 - Minor update to how data is handled and saved
+// 			- now DATA.current is saved separately in current.json
+// 			  loading is done from current.json and if not found from
+// 			  data.json
 //
 // NOTE: Gen1 and Gen3 refer to code generations rather than data format
 // 		iterations, Gen2 is skipped here as it is a different project 
 // 		(PortableMag) mostly built on the same code base as 
 // 		ImageGrid.Viewer
-var DATA_VERSION = '2.1'
+var DATA_VERSION = '2.2'
 
 
 var CONFIG = {

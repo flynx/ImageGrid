@@ -486,12 +486,13 @@ function loadFileState(path, prefix){
 				res.resolve()
 
 			// version 2.*
-			} else if(/2\.[0-9*]/.test(json.version)) {
+			} else if(/2\.[0-9]*/.test(json.version)) {
 				DATA = json
 				$.when(
 						// XXX load config...
 
 						// load current position...
+						// added on 2.2
 						bubbleProgress(prefix,
 								loadLatestFile(path, 
 									CURRENT_FILE,
@@ -508,6 +509,8 @@ function loadFileState(path, prefix){
 							//		normalizePath(DATA.image_file, base) 
 							//		: null), res, true),
 						// run registered loaders...
+						// added on 2.1
+						// XXX bubbleProgress???
 						runFileLoaders(prefix, res))
 					.done(function(){
 						$('.viewer').trigger('fileStateLoaded')
