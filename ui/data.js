@@ -2210,6 +2210,8 @@ function alignRibbons(ribbon){
 
 	DATA = alignDataToRibbon(ribbon)
 
+	$('.viewer').trigger('ribbonsAligned', [ribbon])
+
 	reloadViewer(false)
 }
 
@@ -2258,6 +2260,8 @@ function loadRibbonsFromPath(path, cmp, reverse, dir_name){
 		reloadViewer(false)
 	}
 
+	$('.viewer').trigger('ribbonsLoadedFromPath', [path])
+
 	return DATA
 }
 
@@ -2283,6 +2287,21 @@ function setupData(viewer){
 	console.log('Data: setup...')
 
 	return viewer
+		// mark data updated...
+		// NOTE: manual data manipulation will dataUpdated() called 
+		// 		manually...
+		.on([
+			// ribbons.js API...
+			'shiftedImage',
+			'createdRibbon',
+			'removedRibbon',
+			// data.js API...
+			'ribbonsAligned',
+			'ribbonsLoadedFromPath',
+		].join(' '), function(){
+			dataUpdated()
+		})
+
 		// NOTE: we do not need to worry about explicit centering the ribbon 
 		//		here, just ball-park-load the correct batch...
 		// NOTE: if we decide to hide ribbons, uncomment the visibility 

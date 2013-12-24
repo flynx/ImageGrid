@@ -19,6 +19,8 @@ var IMAGES_DIFF_FILE_PATTERN = /^[0-9]*-images-diff.json$/
 var DATA_FILE_DEFAULT = 'data.json'
 var DATA_FILE_PATTERN = /^[0-9]*-data.json$/
 
+var CURRENT_FILE = 'current.json'
+
 var IMAGE_PATTERN = /.*\.(jpg|jpeg|png|gif)$/i
 
 
@@ -290,6 +292,25 @@ function runFileSavers(name, all){
 
 
 /*********************************************************************/
+// XXX should this be here or in data.js???
+
+var saveFileData = makeFileSaver(
+		'Data',
+		DATA_FILE_DEFAULT, 
+		function(){ 
+			var data = getAllData()
+			data.current = DATA.current
+			return data
+		})
+
+
+function dataUpdated(){
+	fileUpdated('Data')
+}
+
+
+
+/*********************************************************************/
 
 // Construct a ribbons hierarchy from the fav dirs structure
 //
@@ -469,6 +490,17 @@ function loadFileState(path, prefix){
 				DATA = json
 				$.when(
 						// XXX load config...
+
+						// load current position...
+						bubbleProgress(prefix,
+								loadLatestFile(path, 
+									CURRENT_FILE,
+									null,
+									null,
+									DATA.current), res, true)
+							.done(function(cur){
+								DATA.current = cur
+							}),
 						// load images...
 						bubbleProgress(prefix,
 							loadFileImages(base), res, true),
@@ -505,7 +537,8 @@ function saveFileState(name, no_normalize_path){
 	name = name == null ? Date.timeStamp() : name
 
 	if(!no_normalize_path){
-		name = normalizePath(CONFIG.cache_dir_var +'/'+ name)
+		var path = normalizePath(CONFIG.cache_dir_var)
+		name = normalizePath(path +'/'+ name)
 
 	// write .image_file only if saving data to a non-cache dir...
 	// XXX check if this is correct...
@@ -515,10 +548,15 @@ function saveFileState(name, no_normalize_path){
 		}
 	}
 
+	/*
 	var data = getAllData()
 	data.current = DATA.current
 
 	dumpJSON(name + '-data.json', data)
+	*/
+
+	// allways update the current position...
+	dumpJSON(path + '/current.json', DATA.current)
 
 	// save the updated images...
 	if(IMAGES_UPDATED.length > 0){
@@ -530,6 +568,7 @@ function saveFileState(name, no_normalize_path){
 		IMAGES_UPDATED = []
 	}
 
+	// save the rest of the data...
 	runFileSavers(name)
 }
 
