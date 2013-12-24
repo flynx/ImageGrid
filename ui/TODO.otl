@@ -1,5 +1,5 @@
 Roadmap
-	[_] 61% Pre-Alpha - limited preview
+	[_] 64% Pre-Alpha - limited preview
 		[_] 50% Supported formats
 			[X] jpeg
 			[_] RAW
@@ -26,11 +26,11 @@ Roadmap
 				[_] general help
 				[_] settings
 				[X] image info
-		[_] 75% navigation
+		[X] 100% navigation
 			[X] image next/prev
 			[X] ribbon next/prev
 			[X] screen next/prev
-			[_] marks next/prev (???)
+			[X] bookmarks next/prev
 		[X] slideshow
 		[_] 71% editing
 			[X] 100% ribbon
@@ -204,6 +204,22 @@ Roadmap
 				[_] ~1 screen - for single image mode
 			[X] pass 2: generate normal previews
 			[_] extract existing raw thumbnails/previews (for RAW files)
+		[_] BUG: closing editor panel breaks next/prev image in single image mode
+		| caused by editor action breaking and affecting image move...
+		|
+		| Procedure:
+		| 	- Enter		- single image mode
+		| 	- ctrl-e	- open editor
+		| 	- close editor panel (destroy editor sub-panels)
+		| 	- left or right
+		|
+		| This will produce an error in editor functionality that will break
+		| image loading...
+		|
+		| NOTE: not fixing this right away as the way panel infrastructure 
+		| 		is connected to the system needs a rewrite that will likely
+		| 		fix this and other connected bugs...
+		|
 		[_] EXTERNAL BUG: Chrome: CSS filters degrade scaled images. 
 		| ...if at least one filter is applied, appears to only affect 
 		| scaled images.
