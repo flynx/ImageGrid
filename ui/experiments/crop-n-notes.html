@@ -22,6 +22,8 @@
 	width: 5px;
 	height: 5px;
 
+	/* XXX attr does not work here... */
+	/*border: solid 2px attr(color);*/
 	border: solid 2px red;
 	border-radius: 50%;
 }
@@ -73,6 +75,21 @@
 }
 
 
+.bg-crop {
+	position: absolute;
+	width: 300px;
+	height: 300px;
+	top: 300px;
+	left: 100px;
+
+	border: solid 5px blue;
+
+	/* XXX fragments do not yet work... */
+	/*background: image('image.jpg#xywh=10,30,60,20');*/
+	background: url('image.jpg#xywh=10,30,60,20');
+}
+
+
 </style>
 
 <script src="../ext-lib/jquery.js"></script>
@@ -101,7 +118,10 @@ $(function(){
 <body>
 
 	<div class="single-resize" title="Crop"></div>
-	<div class="remark" note="note text..."></div>
+	<div class="remark" color="red" note="note text..."></div>
+
+
+	<!--div class="bg-crop"></div-->
 
 </body>
 </html>
