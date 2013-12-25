@@ -111,13 +111,34 @@ Roadmap
 [_] 32% Gen 3 current todo
 	[_] 64% High priority
 		[_] ASAP: Need visual indicators for long operations...
-		[_] BUG: (phantom) in single image mode shifting first image up to new ribbon errs...
-		| error location/reason:
-		| 	getImageGid(..) got something odd in the image gid attribute...
+		[X] BUG: shifting around images in very short ribbons produces lots of errors
+		| Procedure:
+		| 	- crop a ribbon of two-three images
+		| 	- start shifting
 		|
-		| Race condition??
+		| Problems:
+		| 	- wrong alignment
+		| 	- sometimes by shifting an image up the focus shifts to the 
+		| 	  upper ribbon
 		|
-		| Can't reproduce this... need to test on a faster machine...
+		| The direct cause of the problem:
+		| 	- errors:
+		| 		- SyntaxError - likely the JSON parser in getImageGID()
+		| 		- TypeError - property of null
+		|
+		| Likely causes:
+		| 	- we access images BEFORE they are initialized properly...
+		|
+		| Solution strategy:
+		| 	- make aligning independent of DOM state where possible...
+		| 	- make parts of the code wait for updates to finish...
+		|
+		|
+		| Actual case:
+		| 	- this was not a problem with race conditions...
+		| 	- essentially all this took is a careful look at event and 
+		| 	  action ordering, and a forgotten filter...
+		| 	  (filtering for images is a possible bug class)
 		[_] 66% Bookmarks
 			[X] toggle
 			[X] save/load

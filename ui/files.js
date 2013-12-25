@@ -305,8 +305,11 @@ var saveFileData = makeFileSaver(
 		})
 
 
+// NOTE: this will set the updated flag ONLY of out of cropped mode...
 function dataUpdated(){
-	fileUpdated('Data')
+	if(!isViewCropped()){
+		fileUpdated('Data')
+	}
 }
 
 

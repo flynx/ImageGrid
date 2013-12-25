@@ -128,7 +128,7 @@ function getImageGID(image){
 }
 
 
-// Get marks associated with image...
+// Get mark elements associated with image...
 //
 // img can be:
 // 	- literal gid
@@ -256,6 +256,9 @@ function getImageBefore(image, ribbon){
 }
 
 
+// NOTE: this just shifts the image, it does not care about either 
+// 		aligning nor focus...
+// NOTE: the shiftedImage event is fired BEFORE any ribbons are removed...
 function shiftTo(image, ribbon){
 	var target = getImageBefore(image, ribbon)
 	var cur_ribbon = getRibbon(image)
@@ -265,6 +268,9 @@ function shiftTo(image, ribbon){
 	if(target.length == 0){
 		image.prependTo($(ribbon))
 
+	// insert the image...
+	// NOTE: we need to take care to insert the image not just after the
+	// 		target, but also after the target's marks...
 	} else {
 		var target_marks = getImageMarks(target).last()
 		image.insertAfter(
@@ -277,6 +283,7 @@ function shiftTo(image, ribbon){
 	// move the marks...
 	image.after(marks)
 
+	// NOTE: this is intentionally fired BEFORE removing a ribbon...
 	$('.viewer').trigger('shiftedImage', [image, cur_ribbon, ribbon])
 
 	// if removing last image out of a ribbon, remove the ribbon....
@@ -1176,13 +1183,10 @@ function shiftImageTo(image, direction, moving, force_create_ribbon){
 	var b = moving == 'prev' ? 'nextAll' : 'prevAll' 
 	var target = image[a]('.image').first()
 
-	target = target.length == 0 ? image[b]().first() : target
-
-	// XXX should this be in here or coupled later via an event???
-	//flashIndicator(direction)
+	target = target.length == 0 ? image[b]('.image').first() : target
 
 	shiftImage(direction, image, force_create_ribbon)
-	// XXX does this need to be animated???
+
 	return centerView(focusImage(target), 'css')
 }
 function shiftImageUp(image, moving){

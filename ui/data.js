@@ -2380,7 +2380,6 @@ function setupData(viewer){
 			from = getRibbonIndex(from)
 			//var ribbon = to
 			to = getRibbonIndex(to)
-
 			var gid = getImageGID(image)
 			var after = getGIDBefore(gid, to)
 
