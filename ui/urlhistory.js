@@ -10,7 +10,7 @@
 /*********************************************************************/
 
 var BASE_URL_HISTORY = []
-var BASE_URL_LIMIT = 10
+var BASE_URL_LIMIT = 15
 
 
 
