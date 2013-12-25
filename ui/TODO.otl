@@ -111,34 +111,6 @@ Roadmap
 [_] 32% Gen 3 current todo
 	[_] 64% High priority
 		[_] ASAP: Need visual indicators for long operations...
-		[X] BUG: shifting around images in very short ribbons produces lots of errors
-		| Procedure:
-		| 	- crop a ribbon of two-three images
-		| 	- start shifting
-		|
-		| Problems:
-		| 	- wrong alignment
-		| 	- sometimes by shifting an image up the focus shifts to the 
-		| 	  upper ribbon
-		|
-		| The direct cause of the problem:
-		| 	- errors:
-		| 		- SyntaxError - likely the JSON parser in getImageGID()
-		| 		- TypeError - property of null
-		|
-		| Likely causes:
-		| 	- we access images BEFORE they are initialized properly...
-		|
-		| Solution strategy:
-		| 	- make aligning independent of DOM state where possible...
-		| 	- make parts of the code wait for updates to finish...
-		|
-		|
-		| Actual case:
-		| 	- this was not a problem with race conditions...
-		| 	- essentially all this took is a careful look at event and 
-		| 	  action ordering, and a forgotten filter...
-		| 	  (filtering for images is a possible bug class)
 		[_] 66% Bookmarks
 			[X] toggle
 			[X] save/load
@@ -555,6 +527,34 @@ Roadmap
 		| Actual:
 		| 	drops to last placeholder
 		|
+		[X] BUG: shifting around images in very short ribbons produces lots of errors
+		| Procedure:
+		| 	- crop a ribbon of two-three images
+		| 	- start shifting
+		|
+		| Problems:
+		| 	- wrong alignment
+		| 	- sometimes by shifting an image up the focus shifts to the 
+		| 	  upper ribbon
+		|
+		| The direct cause of the problem:
+		| 	- errors:
+		| 		- SyntaxError - likely the JSON parser in getImageGID()
+		| 		- TypeError - property of null
+		|
+		| Likely causes:
+		| 	- we access images BEFORE they are initialized properly...
+		|
+		| Solution strategy:
+		| 	- make aligning independent of DOM state where possible...
+		| 	- make parts of the code wait for updates to finish...
+		|
+		|
+		| Actual case:
+		| 	- this was not a problem with race conditions...
+		| 	- essentially all this took is a careful look at event and 
+		| 	  action ordering, and a forgotten filter...
+		| 	  (filtering for images is a possible bug class)
 		[X] BUG: appear to be leaking memory on very large sets of images (>8K)
 		| don't remember it before, so it might be due to the new 
 		| loadImagesAround(..)
