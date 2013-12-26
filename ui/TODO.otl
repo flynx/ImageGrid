@@ -111,43 +111,58 @@ Roadmap
 [_] 32% Gen 3 current todo
 	[_] 64% High priority
 		[_] ASAP: Need visual indicators for long operations...
-		[_] 66% Bookmarks
-			[X] toggle
-			[X] save/load
-			[X] 100% navigate
-				[X] next/prev
-			[X] crop
-			[_] global
-			[_] 0% metadata
-				[_] comment
+		[_] 66% tags
+			[X] local tags
+			[_] global tag list
+			[X] 100% actions
+				[X] add
+				[X] remove
+				[X] update
+				[X] select
+				[X] list operations
+				[X] ribbon (list) operations
+				[X] marked (list) operations
+				[X] bookmarked (list) operations
+				[X] mark/unmark tagged
+				[X] crop
+		[_] 16% Panels
+			[_] 0% mechanics
+				[_] serialization -- save/load panel state
+				[_] sub-panel-oriented actions / key bindings
+				| open a sub panel should:
+				| 	- if it does not exist create it and create a parent panel
+				| 	- if it exists, show it (open all parents)
+				[_] data handlers work only if a panel is loaded/visible/open
+				| and not break stuff when it's closed (as is now)...
+				[_] show hide all panels (TAB key)
+			[_] 33% new panels
+				[_] info
+					[_] general info
+					[_] EXIF
+					[_] IPCT / comment
 				[_] tags
-		[X] 100% tags
-			[X] add
-			[X] remove
-			[X] update
-			[X] select
-			[X] list operations
-			[X] ribbon (list) operations
-			[X] marked (list) operations
-			[X] bookmarked (list) operations
-			[X] mark/unmark tagged
-			[X] crop
-		[X] 100% unsorted image state handling (tag?)
-			[X] remove tag on shift
-			[X] remove tag on alignToRibbon(..)
-			[X] add tag for new images (buildcache)
-		[_] 25% Panels
-			[_] bookmarks
-			[_] info
-				[_] general info
-				[_] comment
-			[_] tags
-				[_] tree
-				[_] cloud
-				[_] search
-			[X] editor
-				[X] filters
-				[X] snapshots
+					[_] cloud
+					[_] search
+					[_] tree
+				[X] editor
+					[X] filters
+					[X] snapshots
+		[_] BUG: closing editor panel breaks next/prev image in single image mode
+		| caused by editor action breaking and affecting image move...
+		|
+		| Procedure:
+		| 	- Enter		- single image mode
+		| 	- ctrl-e	- open editor
+		| 	- close editor panel (destroy editor sub-panels)
+		| 	- left or right
+		|
+		| This will produce an error in editor functionality that will break
+		| image loading...
+		|
+		| NOTE: not fixing this right away as the way panel infrastructure 
+		| 		is connected to the system needs a rewrite that will likely
+		| 		fix this and other connected bugs...
+		|
 		[_] BUG: showImage(..) does not load the ribbons correctly...
 		|
 		| Procedure:
@@ -166,21 +181,9 @@ Roadmap
 		| 	- ribbon not loaded after current image
 		| 	- reloadViewer() loads the state correctly
 		|
-		[_] BUG: Something is causing previews to reload...
-		|
-		| Procedure:
-		| 	- moving left/right in one ribbon
-		| 	- adjacent ribbon is not moving
-		|
-		| Expected:
-		| 	- all unmoving ribbons remain static
-		|
-		| Effect:
-		| 	- previews get reloaded/redrawn
-		|
 		[_] BUG: OSX: unable to load absolute paths...
 		[_] OSX: add alternatives to function buttons...
-		[_] 33% normalize ribbons -- top-align sorted chunks
+		[_] 50% normalize ribbons -- top-align sorted chunks
 			[X] basic mechanics
 			| splitData(...)
 			| mergeData(...)
@@ -190,29 +193,17 @@ Roadmap
 			| ctrl-s is a good candidate
 			|
 			| NOTE: might need a good preview to make this understandable...
-			[_] auto-invoke mechanics
+			[_] auto-invoke mechanics (???)
+			[X] 100% 'unsorted' tag mechanics...
+				[X] remove tag on shift
+				[X] remove tag on alignToRibbon(..)
+				[X] add tag for new images (buildcache)
 		[_] 33% FAST thumbnail generation strategies
 			[_] 0% pass 1: generate really fast previews
 				[_] ~1/3 screen - for ribbon
 				[_] ~1 screen - for single image mode
 			[X] pass 2: generate normal previews
 			[_] extract existing raw thumbnails/previews (for RAW files)
-		[_] BUG: closing editor panel breaks next/prev image in single image mode
-		| caused by editor action breaking and affecting image move...
-		|
-		| Procedure:
-		| 	- Enter		- single image mode
-		| 	- ctrl-e	- open editor
-		| 	- close editor panel (destroy editor sub-panels)
-		| 	- left or right
-		|
-		| This will produce an error in editor functionality that will break
-		| image loading...
-		|
-		| NOTE: not fixing this right away as the way panel infrastructure 
-		| 		is connected to the system needs a rewrite that will likely
-		| 		fix this and other connected bugs...
-		|
 		[_] EXTERNAL BUG: Chrome: CSS filters degrade scaled images. 
 		| ...if at least one filter is applied, appears to only affect 
 		| scaled images.
@@ -230,35 +221,31 @@ Roadmap
 		| 	Make image size similar to screen size, in the best case 
 		| 	scenario dynamic (too complex for what it gives), in the 
 		| 	worse, just big enough.
+		[_] 66% Bookmarks
+			[X] toggle
+			[X] save/load
+			[X] 100% navigate
+				[X] next/prev
+			[X] crop
+			[_] global
+			[_] 0% metadata
+				[_] comment
+				[_] tags
 		[_] BUG: opening a dir form history sometimes loads wrong size previews
 		| this happens in part of the view and a refresh, reload or image
 		| update (updateImages()) fixes the issue...
-		[X] 100% UI: side-panels...
-			|
-			| 	+-----+---------------+-----+
-			| 	|	  |				  |		|
-			| 	|	  |				  |		|
-			| 	|	  |	+-----------+ |		|
-			| 	|	  |	|			| |	  <---- side-panel
-			| 	|	  |	|	Image	| |		|
-			| 	|	  |	|			| |		|
-			| 	|	  |	+-----------+ |		|
-			| 	|	  |				  |		|
-			| 	|	  |				  |		|
-			| 	+-----+---------------+-----+
-			|
-			|		  +---------------+
-			|			Viewer
-			|
-			|
-			| NOTE: panes should be outside the viewer, so as not to overlap
-			| 		with the image...
-			| NOTE: we can also try and use top and bottom panes, but that 
-			| 		might over-complicate things...
-			[X] construct
-			[X] style
-			[X] lock/pin
-			[X] autohide
+		[_] BUG: Something is causing previews to reload...
+		|
+		| Procedure:
+		| 	- moving left/right in one ribbon
+		| 	- adjacent ribbon is not moving
+		|
+		| Expected:
+		| 	- all unmoving ribbons remain static
+		|
+		| Effect:
+		| 	- previews get reloaded/redrawn
+		|
 		[_] UI: touch controls / toolbars...
 		|
 		| 	+-+-----------------------+-+
@@ -308,34 +295,6 @@ Roadmap
 		| i.e. the open dialog does not close, while the images are loaded...
 		[_] BUG: sometimes opening a dir (open dialog) does not do anything...
 		| Uncaught TypeError: Cannot call method 'indexOf' of undefined -- data.js:576
-		[X] Q: how do we mark unsorted sections in base ribbon after aligning?
-		| - there is a big gap in the ribbon below, but it's not visible...
-		| - can we "mark" big gaps? ...what's the threshold of "big"?
-		|
-		| Possible approaches:
-		| 	- do not mark
-		| 		In theory the base ribbon is always "final", thus marking and 
-		| 		sorted/unsorted categories are un-needed complexity.
-		| 		This plays well with the "auto-align" mechanics...
-		| 		This may play well with bookmarking...
-		| 	- sorted/unsorted images marking (viewed/unviewed)
-		| 		This can be done in several ways:
-		| 			- track viewing
-		| 			- anything in the aligned group is "sorted"
-		| 			- ...
-		| 		Added complexity
-		| 	- manual bookmarking
-		|
-		| Approach used:
-		| 	- tag all new images with 'unsorted'
-		| 	- remove tag on:
-		| 		- shift up/down (i.e. on sort)
-		| 		- align to ribbon
-		| 		  this will remove the tag form images that were not 
-		| 		  shifted.
-		|
-		| NOTE: with this approach effectively the base ribbon is the one,
-		| 		and the only one, that contains 'unsorted' images.
 		[_] would be good to unify buildcache and viewer to use the same code...
 		| rewrite buildcache in js?
 		|
@@ -456,11 +415,9 @@ Roadmap
 				[_] introspection
 				| this is partially done already, need a simpler API for 
 				| the user...
-		[_] ASAP: test on Android...
 		[_] 50% Undo/Redo
 			[X] basic one step (revert to last save)
 			[_] push/pop state stack
-		[_] single image mode transition (alpha-blend/fade/none)
 		[_] revise reporting scheme...
 		| showStatus(...) should be called uniformly, either at the source 
 		| or a specific reporting layer...
@@ -527,6 +484,61 @@ Roadmap
 		| Actual:
 		| 	drops to last placeholder
 		|
+		[_] single image mode transition (alpha-blend/fade/none)
+		[X] Q: how do we mark unsorted sections in base ribbon after aligning?
+		| - there is a big gap in the ribbon below, but it's not visible...
+		| - can we "mark" big gaps? ...what's the threshold of "big"?
+		|
+		| Possible approaches:
+		| 	- do not mark
+		| 		In theory the base ribbon is always "final", thus marking and 
+		| 		sorted/unsorted categories are un-needed complexity.
+		| 		This plays well with the "auto-align" mechanics...
+		| 		This may play well with bookmarking...
+		| 	- sorted/unsorted images marking (viewed/unviewed)
+		| 		This can be done in several ways:
+		| 			- track viewing
+		| 			- anything in the aligned group is "sorted"
+		| 			- ...
+		| 		Added complexity
+		| 	- manual bookmarking
+		|
+		| Approach used:
+		| 	- tag all new images with 'unsorted'
+		| 	- remove tag on:
+		| 		- shift up/down (i.e. on sort)
+		| 		- align to ribbon
+		| 		  this will remove the tag form images that were not 
+		| 		  shifted.
+		|
+		| NOTE: with this approach effectively the base ribbon is the one,
+		| 		and the only one, that contains 'unsorted' images.
+		[X] 100% UI: side-panels...
+			|
+			| 	+-----+---------------+-----+
+			| 	|	  |				  |		|
+			| 	|	  |				  |		|
+			| 	|	  |	+-----------+ |		|
+			| 	|	  |	|			| |	  <---- side-panel
+			| 	|	  |	|	Image	| |		|
+			| 	|	  |	|			| |		|
+			| 	|	  |	+-----------+ |		|
+			| 	|	  |				  |		|
+			| 	|	  |				  |		|
+			| 	+-----+---------------+-----+
+			|
+			|		  +---------------+
+			|			Viewer
+			|
+			|
+			| NOTE: panes should be outside the viewer, so as not to overlap
+			| 		with the image...
+			| NOTE: we can also try and use top and bottom panes, but that 
+			| 		might over-complicate things...
+			[X] construct
+			[X] style
+			[X] lock/pin
+			[X] autohide
 		[X] BUG: shifting around images in very short ribbons produces lots of errors
 		| Procedure:
 		| 	- crop a ribbon of two-three images
