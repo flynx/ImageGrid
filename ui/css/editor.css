@@ -103,13 +103,18 @@
 }
 .side-panel:not(:empty):hover:after {
 	position: absolute;
-	display: inline;
+	display: inline-block;
 	content: "Double click to toggle auto-hide (now: " attr(autohide) ")";
-	font-size: 10px;
 	color: gray;
-	margin: 5px;
+
+	font-size: 10px;
+	padding: 5px;
 	bottom: 0px;
+
 	opacity: 0.5;
+}
+.side-panel.right:not(:empty):after {
+	right: 0px;
 }
 .side-panel:not(:empty)[autohide=off],
 .side-panel[autohide=on]:not(:empty):hover {

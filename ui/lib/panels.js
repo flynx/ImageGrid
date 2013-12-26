@@ -22,21 +22,6 @@ var PANEL_HELPER_HIDE_DELAY_NO_ROOT = 100
 // - start monitoring where we are dragged to...
 // - open hidden side panels...
 function _startSortHandler(e, ui){
-	// make the sorted element on top of everything...
-	// NOTE: showing and hiding the helper for 100ms here prevents it 
-	// 		from blinking in the upper-left corner of the screen which 
-	// 		is more distracting...
-	// 		XXX find a better way to do this...
-	(PANEL_ROOT == null 
-		? ui.item.parents('.panel, .side-panel').first().parent()
-		: $(PANEL_ROOT))
-		.append(ui.helper.css('display', 'none'))
-	setTimeout(function(){
-		ui.helper.css('display', '')
-	}, PANEL_ROOT == null 
-		? PANEL_HELPER_HIDE_DELAY_NO_ROOT
-		: PANEL_HELPER_HIDE_DELAY)
-
 	ui.item.data('isoutside', false)
 	ui.placeholder
 		.height(ui.helper.outerHeight())
@@ -44,6 +29,9 @@ function _startSortHandler(e, ui){
 	// show all hidden panels...
 	$('.side-panel').each(function(){
 		var p = $(this)
+		if(p.find('.sub-panel').length == 0){
+			p.css('min-width', '50px')
+		}
 		if(p.attr('autohide') == 'on'){
 			p.attr('autohide', 'off')
 			p.data('autohide', true)
@@ -51,6 +39,48 @@ function _startSortHandler(e, ui){
 			p.data('autohide', false)
 		}
 	})
+}
+
+
+// reset the auto-hide of the side panels...
+function _resetSidePanels(){
+	$('.side-panel').each(function(){
+		var p = $(this)
+		p.css('min-width', '')
+		if(p.data('autohide')){
+			p.attr('autohide', 'on')
+		}
+	})
+}
+
+
+function _prepareHelper(evt, elem){
+	var offset = elem.offset()
+	var w = elem.width()
+	var h = elem.height()
+	var root = elem.parents('.panel, .side-panel').first().parent()
+	elem
+		.detach()
+		.css({
+			position: 'absolute',
+			width: w,
+			height: h,
+		})
+		.offset(offset)
+		.appendTo(root)
+	return elem
+}
+
+
+function _resetSortedElem(elem){
+	return elem
+		.css({
+			position: '',
+			width: '',
+			height: '',
+			top: '',
+			left: ''
+		})
 }
 
 
@@ -117,8 +147,8 @@ function makePanel(title, open, keep_empty, close_button){
 			//snapMode: "outer",
 		})
 		.css({
-			// for some reason this is overwritten by jquery-ui to 'relative'...
-			//position: '',
+			// NOTE: for some reason this is overwritten by jquery-ui to 
+			//		'relative' if it's not set explicitly...
 			position: 'absolute',
 		})
 
@@ -127,9 +157,11 @@ function makePanel(title, open, keep_empty, close_button){
 		.sortable({
 			// general settings...
 			forcePlaceholderSize: true,
+			forceHelperSize: true,
 			opacity: 0.7,
 			connectWith: '.panel-content',
 
+			helper: _prepareHelper,
 			start: _startSortHandler,
 
 			// - create a new panel when dropping outside of curent panel...
@@ -157,21 +189,19 @@ function makePanel(title, open, keep_empty, close_button){
 					// XXX need to trigger sub-panel's 'closing' event...
 					closePanel(panel, true)
 				}
-
-				// reset the auto-hide of the side panels...
-				$('.side-panel').each(function(){
-					var p = $(this)
-					if(p.data('autohide')){
-						p.attr('autohide', 'on')
-					}
-				})
-
-				ui.item.data('isoutside', false)
+				_resetSidePanels()
+				_resetSortedElem(ui.item)
+					.data('isoutside', false)
 			},
 
 			over: function(e, ui){
 				ui.item.data('isoutside', false)
-				ui.placeholder.show()
+				ui.placeholder
+					//.height(ui.helper.outerHeight())
+					// NOTE: for some reason width does not allways get
+					// 		set by jquery-ui...
+					.width(ui.helper.outerWidth())
+					.show()
 			},
 			out: function(e, ui){
 				ui.item.data('isoutside', true)
@@ -213,6 +243,7 @@ function makeSidePanel(side, autohide){
 			opacity: 0.7,
 			connectWith: '.panel-content',
 
+			helper: _prepareHelper,
 			start: _startSortHandler,
 
 			// - create a new panel when dropping outside of curent panel...
@@ -222,21 +253,19 @@ function makeSidePanel(side, autohide){
 				if(ui.item.data('isoutside')){
 					wrapWithPanel(ui.item, panel.parent(), ui.offset)
 				}
-
-				// reset the auto-hide of the side panels...
-				$('.side-panel').each(function(){
-					var p = $(this)
-					if(p.data('autohide')){
-						p.attr('autohide', 'on')
-					}
-				})
-
-				ui.item.data('isoutside', false)
+				_resetSidePanels()
+				_resetSortedElem(ui.item)
+					.data('isoutside', false)
 			},
 
 			over: function(e, ui){
 				ui.item.data('isoutside', false)
-				ui.placeholder.show()
+				ui.placeholder
+					//.height(ui.helper.outerHeight())
+					// NOTE: for some reason width does not allways get
+					// 		set by jquery-ui...
+					.width(ui.helper.outerWidth())
+					.show()
 			},
 			out: function(e, ui){
 				ui.item.data('isoutside', true)
