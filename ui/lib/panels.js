@@ -69,7 +69,9 @@ function wrapWithPanel(panel, parent, offset){
 // close the panel and fire close events on it and all sub-panels...
 //
 function closePanel(panel, skip_sub_panel_events){
-	skip_sub_panel_events = skip_sub_panel_events == null ? false : true
+	skip_sub_panel_events = skip_sub_panel_events == null 
+		? false 
+		: skip_sub_panel_events
 	if(!skip_sub_panel_events){
 		panel.find('.sub-panel')
 			.trigger('panelClosing')
@@ -246,14 +248,25 @@ function makeSidePanel(side, autohide){
 }
 
 
-function makeSubPanel(title, open, parent){
+//function makeSubPanel(title, open, parent, content_resizable){
+function makeSubPanel(title, content, parent, open, content_resizable){
 	title = title == null || title.trim() == '' ? '&nbsp;' : title
 
+	open = open == null ? true : open
+	content_resizable = content_resizable == null 
+		? false 
+		: content_resizable
+
+	var content_elem = $('<div class="sub-panel-content content"/>')
+	if(content != null){
+		content_elem
+			.append(content)
+	}
 	var sub_panel = $('<details/>')
 		.addClass('sub-panel noScroll')
-		.prop('open', open == null ? true : open)
+		.prop('open', open)
 		.append($('<summary>'+title+'</summary>'))
-		.append($('<div class="sub-panel-content content"/>'))
+		.append(content_elem)
 
 	if(parent != null){
 		if(parent.hasClass('panel-content')){
@@ -261,6 +274,20 @@ function makeSubPanel(title, open, parent){
 		} else {
 			sub_panel.appendTo(parent.find('.panel-content'))
 		}
+	}
+
+	if(content_resizable){
+		// NOTE: we are wrapping the content into a div so as to make 
+		// 		the fact that the panel is resizable completely 
+		// 		transparent for the user -- no need to be aware of the 
+		// 		sizing elements, etc.
+		content_elem.wrap($('<div>')).parent()
+			.resizable({
+				handles: 's',
+			})
+			.css({
+				overflow: 'hidden',
+			})
 	}
 
 	return sub_panel

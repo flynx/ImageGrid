@@ -44,7 +44,8 @@
 }
 .panel .panel-content {
 	display: block;
-	min-height: 30px;
+
+	min-height: 15px;
 }
 .sub-panel,
 .panel button,
@@ -70,7 +71,8 @@
 	*/
 }
 .sub-panel .sub-panel-content {
-	margin: 10px;
+	margin-left: 10px;
+	margin-right: 10px;
 }
 
 .panel button:active,

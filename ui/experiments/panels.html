@@ -1,5 +1,6 @@
 <html>
 
+<link rel="stylesheet" href="../css/ui-lightness/jquery-ui.css">
 <link rel="stylesheet" type="text/css" href="../css/editor.css">
 
 <style>
@@ -14,7 +15,6 @@ body.gray {
 	background: #333;
 	color: silver;
 }
-
 
 </style>
 
@@ -56,18 +56,11 @@ $(function(){
 		})
 
 
-	makeSubPanel('Test Sub Panel A', true, panel)
-		.find('.content')
-			.html('<h1>Panel A</h1>')
+	makeSubPanel('Test Sub Panel A', $('<h1>Panel A</h1>'), panel, true, true)
 
-	makeSubPanel('Test Sub Panel B', true, panel)
-		.find('.content')
-			.html('<h2>Panel B</h2>')
+	makeSubPanel('Test Sub Panel B', $('<h2>Panel B</h2>'), panel, true)
 
-	makeSubPanel('Test Sub Panel C', true, panel)
-		.find('.content')
-			.html('<h3>Panel C</h3>')
-
+	makeSubPanel('Test Sub Panel C', $('<h3>Panel C</h3>'), panel, false)
 
 
 	$('body')
