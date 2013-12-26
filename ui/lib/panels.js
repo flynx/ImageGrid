@@ -325,5 +325,49 @@ function makeSubPanel(title, content, parent, open, content_resizable){
 
 
 
+/*********************************************************************/
+
+function getPanelState(){
+	var res = []
+
+	var _getPanel = function(){
+		var panel = $(this)
+		var offset = panel.offset()
+		var sub_panels = panel.find('.sub-panel')
+
+		res.push({
+			type: (panel.hasClass('panel') ? 'panel'
+					: panel.hasClass('side-panel') 
+						&& panel.hasClass('left') ? 'side-panel-left'
+					: panel.hasClass('side-panel') 
+						&& panel.hasClass('right') ? 'side-panel-right'
+					: null),
+
+			top: offset.top,
+			left: offset.left,
+
+			open: panel.prop('open') ? true : false,
+			autohide: panel.attr('autohide'),
+
+			content: sub_panels.map(function(){
+				var p = $(this)
+				return {
+					title: p.find('summary').text(),
+				}
+			}).toArray(),
+		})
+	}
+
+	$('.panel, .side-panel').each(_getPanel)
+
+	return res
+}
+
+
+function setPanelState(){
+}
+
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
