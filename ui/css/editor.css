@@ -22,11 +22,13 @@
 	-o-user-select: none;
 	user-select: none; 
 }
-.panel summary {
+.panel summary,
+.sub-panel summary {
 	padding-left: 3px;
 	background: silver
 }
-.panel summary::-webkit-details-marker {
+.panel summary::-webkit-details-marker,
+.sub-panel summary::-webkit-details-marker {
 	color: gray;
 }
 .panel .close-button {
@@ -218,7 +220,8 @@
 .dark .panel summary {
 	background: #333;
 }
-.dark .panel summary::-webkit-details-marker {
+.dark .panel summary::-webkit-details-marker,
+.dark .sub-panel summary::-webkit-details-marker {
 	color: #555;
 }
 .dark .sub-panel button,
@@ -295,7 +298,8 @@
 .gray .panel summary {
 	background: #444;
 }
-.gray .panel summary::-webkit-details-marker {
+.gray .panel summary::-webkit-details-marker,
+.gray .sub-panel summary::-webkit-details-marker {
 	color: #555;
 }
 .gray .sub-panel button,
