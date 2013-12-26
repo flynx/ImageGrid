@@ -248,9 +248,10 @@ function makeSidePanel(side, autohide){
 }
 
 
-//function makeSubPanel(title, open, parent, content_resizable){
+// NOTE: if parent is not given this will create a new panel...
 function makeSubPanel(title, content, parent, open, content_resizable){
 	title = title == null || title.trim() == '' ? '&nbsp;' : title
+	parent = parent == null ? makePanel() : parent
 
 	open = open == null ? true : open
 	content_resizable = content_resizable == null 

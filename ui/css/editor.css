@@ -48,8 +48,8 @@
 	min-height: 15px;
 }
 .sub-panel,
-.panel button,
-.panel .state {
+.sub-panel button,
+.sub-panel .state {
 	margin: 1px;
 	font-size: 11px;
 	border: solid 1px #aaa;
@@ -71,12 +71,15 @@
 	*/
 }
 .sub-panel .sub-panel-content {
+	margin: 10px;
+	/*
 	margin-left: 10px;
 	margin-right: 10px;
+	*/
 }
 
-.panel button:active,
-.panel .state:active {
+.sub-panel button:active,
+.sub-panel .state:active {
 	background: silver;
 }
 

@@ -246,9 +246,14 @@ function makeLogRange(text, filter, target){
 }
 
 
-function makeFilterPanel(parent, target){
-	return makeSubPanel('Edit: Filters', true, parent)
-		.find('.sub-panel-content')
+
+/**********************************************************************
+* Panels...
+*/
+
+function makeFilterPanel(parent, target, open){
+	return makeSubPanel('Edit: Filters', 
+		$('<div>')
 			.append($('<div class="filter-list"/>')
 				//.append(makeLogRange('Gamma:', 'gamma', target))
 				.append(makeLogRange('Brightness:', 'brightness', target))
@@ -268,7 +273,7 @@ function makeFilterPanel(parent, target){
 					img.css('-webkit-filter', sortFilterStr(img.css('-webkit-filter')))
 				}))
 			.append($('<hr>'))
-			.append('Reset: ')
+			.append('<span>Reset: <span>')
 			.append($('<button>Values</button>')
 				.click(function(){
 					$('.reset').click()
@@ -282,11 +287,13 @@ function makeFilterPanel(parent, target){
 					$('.reset').click()
 					sortFilterSliders(DEFAULT_FILTER_ORDER)
 				}))
+			.children(),
+		parent, open)
 }
 
-function makeSnapshotsPanel(parent, target){
-	return makeSubPanel('Edit: Snapshots', true, parent)
-		.find('.sub-panel-content')
+function makeSnapshotsPanel(parent, target, open){
+	return makeSubPanel('Edit: Snapshots', 
+		$('<div>')
 			.append($('<div class="states"/>'))
 			.append($('<hr>'))
 			.append($('<button/>')
@@ -309,6 +316,8 @@ function makeSnapshotsPanel(parent, target){
 					}
 					
 				}))
+			.children(),
+		parent, open)
 }
 
 
