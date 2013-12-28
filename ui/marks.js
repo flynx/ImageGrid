@@ -399,7 +399,9 @@ function shiftMarkedImages(direction, mode, new_ribbon){
 	// ribbon only...
 	if(mode == 'ribbon'){
 		var ribbon = DATA.ribbons[cur]
-		// remove all the marked images form current ribbon...
+		// remove all the marked images form the current ribbon...
+		// NOTE: this builds a list of marked images ONLY in current 
+		// 		ribbon...
 		var marked = $.map(MARKED, function(e){
 			var i = ribbon.indexOf(e)
 			if(i >= 0){
@@ -439,10 +441,9 @@ function shiftMarkedImages(direction, mode, new_ribbon){
 		DATA.ribbons[cur] = fastSortGIDsByOrder(DATA.ribbons[cur].concat(marked))
 	}
 	
-	// remove empty ribbons...
-	DATA.ribbons = DATA.ribbons.filter(function(e){ return e.length > 0 ? true : false })
-
-	updateRibbonOrder()
+	// remove empty ribbons and reload...
+	dropEmptyRibbons()
+	reloadViewer()
 
 	$('.viewer').trigger('shiftedImages', [marked, orig_ribbon, cur])
 }

@@ -381,7 +381,7 @@ function createImages(need, have){
 
 
 // NOTE: if index is given, this will also attach the created ribbon to 
-// 		that position...
+// 		that position and trigger the event...
 function createRibbon(index){
 	var ribbon = $('<div class="ribbon"/>')
 

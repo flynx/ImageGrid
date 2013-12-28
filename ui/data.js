@@ -1137,6 +1137,8 @@ function getCommonSubArray(L1, L2){
 // 		- return relative paths as-is
 //
 // NOTE: mode can be either 'absolute' (default) or 'relative'...
+//
+// XXX use encodeURI if it's available...
 function normalizePath(url, base, mode, do_unescape){
 	base = base == null ? getBaseURL() : base
 	//mode = /^\./.test(base) && mode == null ? 'relative' : null
@@ -1453,7 +1455,7 @@ function dataFromImages(images){
 }
 
 
-// Clean out empty ribbons...
+// Clean out empty ribbons from data...
 //
 function dropEmptyRibbons(data){
 	data = data == null ? DATA : data
@@ -1862,24 +1864,27 @@ function updateImage(image, gid, size, sync){
 	// preview...
 	var p_url = getBestPreview(gid, size).url
 
-	// sync load...
-	if(sync){
-		_loadImagePreviewURL(image, p_url)
+	// update the preview only if it's different...
+	if(image.css('background-image').indexOf(encodeURI(p_url)) < 0){
+		// sync load...
+		if(sync){
+			_loadImagePreviewURL(image, p_url)
 
-	// async load...
-	} else {
-		// NOTE: storing the url in .data() makes the image load the 
-		// 		last requested preview and in a case when we manage to 
-		// 		call updateImage(...) on the same element multiple times 
-		// 		before the previews get loaded...
-		// 		...setting the data().loading is sync while loading an 
-		// 		image is not, and if several loads are done in sequence
-		// 		there is no guarantee that they will happen in the same
-		// 		order as requested...
-		image.data().loading = p_url
-		setTimeout(function(){ 
-			_loadImagePreviewURL(image, image.data().loading)
-		}, 0)
+		// async load...
+		} else {
+			// NOTE: storing the url in .data() makes the image load the 
+			// 		last requested preview and in a case when we manage to 
+			// 		call updateImage(...) on the same element multiple times 
+			// 		before the previews get loaded...
+			// 		...setting the data().loading is sync while loading an 
+			// 		image is not, and if several loads are done in sequence
+			// 		there is no guarantee that they will happen in the same
+			// 		order as requested...
+			image.data().loading = p_url
+			setTimeout(function(){ 
+				_loadImagePreviewURL(image, image.data().loading)
+			}, 0)
+		}
 	}
 
 	// main attrs...
@@ -1960,7 +1965,7 @@ function updateImages(list, size, cmp){
 //
 // This is similar to getGIDsAround(..) but will load images into the 
 // viewer...
-function loadImagesAround(count, gid, ribbon, data, force_count){
+function loadImagesAround(count, gid, ribbon, data, force_count, ignore_common_sections){
 	// default values...
 	data = data == null ? DATA : data
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
@@ -1977,15 +1982,22 @@ function loadImagesAround(count, gid, ribbon, data, force_count){
 		.toArray()
 	var new_ribbon = getGIDsAround(count, gid, ribbon, data, force_count)
 
-	// get the common sub-ribbon...
-	// NOTE: we are only interested in continuous sub-ribbons...
-	var res = getCommonSubArrayOffsets(new_ribbon, old_ribbon)
-	var left = res.left
-	var right = res.right
+	// do a full reload...
+	if(ignore_common_sections){
+		var left = null
+		var right = null
 
-	// special case: nothing to do...
-	if(left == 0 && right == 0){
-		return ribbon_elem.find('.image')
+	// get the common sub-ribbon...
+	} else {
+		// NOTE: we are only interested in continuous sub-ribbons...
+		var res = getCommonSubArrayOffsets(new_ribbon, old_ribbon)
+		var left = res.left
+		var right = res.right
+
+		// special case: nothing to do...
+		if(left == 0 && right == 0){
+			return ribbon_elem.find('.image')
+		}
 	}
 
 	var size = getVisibleImageSize('max')
@@ -2086,10 +2098,30 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 }
 
 
+/*
+// Remove images that do not belong in the ribbons they are in...
+//
+function removeStrayImages(){
+	$('.ribbon').each(function(i){
+		var ribbon = DATA.ribbons[i]
+		$(this).find('.image').map(function(){
+			var gid = getImageGID(this)
+			if(ribbon.indexOf(gid) < 0){
+				getImageMarks(gid).remove()
+				return this
+			}
+		}).remove()
+	})
+}
+*/
+
+
 // Reload the viewer using the current DATA and IMAGES objects
 //
 // NOTE: setting reuse_current_structure will not destroy ribbon 
 // 		structure and do a fast reload
+// NOTE: if the order of images has changed, reuse_current_structure must 
+// 		be null or false, otherwise this will not produce a correct result.
 function reloadViewer(reuse_current_structure, images_per_screen){
 	var ribbons_set = $('.ribbon-set')
 	var current = DATA.current
@@ -2097,6 +2129,7 @@ function reloadViewer(reuse_current_structure, images_per_screen){
 	var w = images_per_screen == null ? getScreenWidthInImages() : images_per_screen
 	w = w > CONFIG.max_screen_images ? CONFIG.default_screen_images : w
 
+	// reset data structure...
 	if(!reuse_current_structure){
 		// clear data...
 		$('.ribbon').remove()
