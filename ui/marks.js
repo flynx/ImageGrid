@@ -577,9 +577,11 @@ var loadFileMarks = makeFileLoader(
 					var t0 = Date.now()
 					MARKED = fastSortGIDsByOrder(MARKED)
 					var t1 = Date.now()
+					marksUpdated()
 
 					// XXX is this the correct way to do this???
 					DATA.version = DATA_VERSION
+					dataUpdated()
 
 					console.warn('Marks: sort: done ('+( t1 - t0 )+'ms) -- re-save the data.')
 				}, 0)

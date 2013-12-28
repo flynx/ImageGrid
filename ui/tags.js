@@ -463,21 +463,21 @@ function cropTagged(tags, keep_ribbons, keep_unloaded_gids){
 * Files...
 */
 
-// XXX need to detect if we loaded the tags and if so not call
-// 		buildTagsFromImages(..)...
 var loadFileTags = makeFileLoader(
 		'Tags', 
 		TAGS_FILE_DEFAULT, 
 		TAGS_FILE_PATTERN, 
 		false,
 		function(data){ 
-			//TAGS = data.length != null ? {} : data
+			// no tags loaded -- rebuild...
 			if(data === false){
 				var t0 = Date.now()
 				buildTagsFromImages()
 				var t1 = Date.now()
 
 				console.warn('Tags: build tags.json: done ('+( t1 - t0 )+'ms) -- re-save the data.')
+
+			// load the tags...
 			} else {
 				TAGS = data
 			}
