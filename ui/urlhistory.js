@@ -10,7 +10,8 @@
 /*********************************************************************/
 
 var BASE_URL_HISTORY = []
-var BASE_URL_LIMIT = 15
+var BASE_URL_HISTORY_LIMIT = 50
+var BASE_URL_HISTORY_DIALOG_LIMIT = 15
 
 
 
@@ -62,8 +63,8 @@ function setupBaseURLHistory(){
 			}
 
 			// truncate the history if needed...
-			if(BASE_URL_HISTORY.length > BASE_URL_LIMIT){
-				BASE_URL_HISTORY.splice(BASE_URL_LIMIT, BASE_URL_HISTORY.length)
+			if(BASE_URL_HISTORY.length > BASE_URL_HISTORY_LIMIT){
+				BASE_URL_HISTORY.splice(BASE_URL_HISTORY_LIMIT, BASE_URL_HISTORY.length)
 				updated = true
 			}
 
@@ -182,7 +183,12 @@ function recentlyOpenedDialog(){
 	var not_available = getNonExistingBaseURLs()
 
 	var cfg = {}
-	cfg[title] = BASE_URL_HISTORY.map(function(e){
+	var c = 0
+	cfg[title] = $.map(BASE_URL_HISTORY, function(e){
+		c += 1
+		if(c > BASE_URL_HISTORY_DIALOG_LIMIT){
+			return
+		}
 		// cleanup the urls...
 		var ee = e.replace('file:///', '')
 		var disabled = not_available.indexOf(e) >= 0
