@@ -469,8 +469,18 @@ var loadFileTags = makeFileLoader(
 		'Tags', 
 		TAGS_FILE_DEFAULT, 
 		TAGS_FILE_PATTERN, 
+		false,
 		function(data){ 
-			TAGS = data.length != null ? {} : data
+			//TAGS = data.length != null ? {} : data
+			if(data === false){
+				var t0 = Date.now()
+				buildTagsFromImages()
+				var t1 = Date.now()
+
+				console.warn('Tags: build tags.json: done ('+( t1 - t0 )+'ms) -- re-save the data.')
+			} else {
+				TAGS = data
+			}
 		})
 
 

@@ -205,7 +205,7 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 }
 
 
-function makeFileLoader(title, file_dfl, file_pattern, set_data, evt_name, skip_reg){
+function makeFileLoader(title, file_dfl, file_pattern, default_data, set_data, error, evt_name, skip_reg){
 	var _loader = function(path){
 		var res = $.Deferred()
 		// default locations...
@@ -215,7 +215,7 @@ function makeFileLoader(title, file_dfl, file_pattern, set_data, evt_name, skip_
 					file_dfl, 
 					file_pattern,
 					null,
-					[])
+					default_data)
 		
 		// explicit path...
 		// XXX need to account for paths without a CONFIG.cache_dir
@@ -230,13 +230,16 @@ function makeFileLoader(title, file_dfl, file_pattern, set_data, evt_name, skip_
 					path.split(base)[0], 
 					RegExp(path.split(base)[0]),
 					null,
-					[])
+					default_data)
 		}
 
 		bubbleProgress(title, loader, res)
 
 		res.done(set_data)
 
+		if(error != null){
+			res.fail(error)
+		}
 		if(evt_name != null){
 			res.done(function(){ $('.viewer').trigger(evt_name) })
 		}

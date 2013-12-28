@@ -566,6 +566,7 @@ var loadFileMarks = makeFileLoader(
 		'Marks', 
 		MARKED_FILE_DEFAULT, 
 		MARKED_FILE_PATTERN, 
+		[],
 		function(data){ 
 			// set the MARKED...
 			MARKED = data

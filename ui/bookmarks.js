@@ -111,9 +111,10 @@ var loadFileBookmarks = makeFileLoader(
 		'Bookmarks', 
 		BOOKMARKS_FILE_DEFAULT, 
 		BOOKMARKS_FILE_PATTERN, 
+		[[], {}],
 		function(data){ 
-			BOOKMARKS = data[0] == null ? [] : data[0]
-			BOOKMARKS_DATA = data[1] == null ? {} : data[1]
+			BOOKMARKS = data[0]
+			BOOKMARKS_DATA = data[1]
 		})
 
 
