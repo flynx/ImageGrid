@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131228075624'''
+__sub_version__ = '''20131228083526'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -652,6 +652,8 @@ def build_data(images, path, config=CONFIG):
 		images_index[gid] = image
 		ribbon += [gid]
 
+	# remove duplicate gids...
+	ribbon = list(set(ribbon))
 	ribbon.sort(lambda a, b: cmp(images_index[b]['ctime'], images_index[a]['ctime']))
 
 	data['ribbons'] = [ribbon]
@@ -734,16 +736,23 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 			_images.update(images)
 			# update ribbons...
 			new, data = data['ribbons'][0], files[data_file]
-			data['ribbons'][base_ribbon] += new
-			data['ribbons'][base_ribbon].sort(
-					lambda a, b: 
-						cmp(_images[b]['ctime'], _images[a]['ctime']))
-			# update and resort order...
-			data['order'] = _images.keys()
-			data['order'].sort(
-					lambda a, b: 
-						cmp(_images[b]['ctime'], _images[a]['ctime']))
-			data_file = pathjoin(cache_dir, config['data-diff'] % {'date': d})
+			l = len(data['ribbons'][base_ribbon])
+			data['ribbons'][base_ribbon] = list(set(data['ribbons'][base_ribbon] + new))
+
+			# if length did not change then nothing new is found...
+			if l == len(data['ribbons'][base_ribbon]):
+				data = None
+
+			else:
+				data['ribbons'][base_ribbon].sort(
+						lambda a, b: 
+							cmp(_images[b]['ctime'], _images[a]['ctime']))
+				# update and resort order...
+				data['order'] = _images.keys()
+				data['order'].sort(
+						lambda a, b: 
+							cmp(_images[b]['ctime'], _images[a]['ctime']))
+				data_file = pathjoin(cache_dir, config['data-diff'] % {'date': d})
 	else:
 		images = None
 		data = None
@@ -753,22 +762,31 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 		marked_file = pathjoin(cache_dir, config['marked-diff'] % {'date': d})
 
 	# buld the tags...
-	# XXX do we need to sort the tags???
-	if images != None and config['tags'] != files[tags_file]:
+	if images != None and config['tags'] != []:
 		tags = files[tags_file]
-		order = data['order']
+		if tags != {}:
+			tags_file = pathjoin(cache_dir, config['tags-diff'] % {'date': d})
+		if data == None:
+			order = files[data_file]['order']
+		else:
+			order = data['order']
 		new_gids = images.keys()
 		new_tags = dict([ (tag, new_gids) for tag in config['tags'] ])
+		no_change = 0
 		for t, l in new_tags.items():
 			if t in tags:
 				# merge the tagged gids...
-				l = tags[t] = list(set(tags[t] + l))
+				l = list(set(tags[t] + l))
+				if len(tags[t]) == len(l):
+					no_change += 1
+					continue
+				tags[t] = l
 			else:
 				tags[t] = l
 			# sort...
 			l.sort(lambda a, b: cmp(order.index(a), order.index(b)))
-		if files[tags_file] != {}:
-			tags_file = pathjoin(cache_dir, config['tags-diff'] % {'date': d})
+		if no_change == len(new_tags):
+			tags = None
 	else:
 		tags = None
 
