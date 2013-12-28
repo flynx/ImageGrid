@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131219053320'''
+__sub_version__ = '''20131228075624'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -62,11 +62,13 @@ CONFIG = {
 	'images': 'images.json',
 	'data': 'data.json',
 	'marked': 'marked.json',
+	'tagscache': 'tags.json',
 	'filelist': 'filelist.json',
 
 	'images-diff': '%(date)s-images-diff.json',
 	'data-diff': '%(date)s-data.json',
 	'marked-diff': '%(date)s-marked.json',
+	'tags-diff': '%(date)s-tags.json',
 
 	'config': 'ImageGrid.cfg',
 	'error': 'error.log',
@@ -363,6 +365,19 @@ def getmarked(path, config=CONFIG, verbosity=0):
 			lambda n: n == config['marked'],
 			lambda path: json.load(open(path)),
 			[],
+			verbosity=verbosity)
+
+
+#-------------------------------------------------------------gettags---
+def gettags(path, config=CONFIG, verbosity=0):
+	'''
+	'''
+	return loadlatest(
+			pathjoin(path, config['cache-dir']), 
+			lambda n: n.endswith(config['tagscache']),
+			lambda n: n == config['tagscache'],
+			lambda path: json.load(open(path)),
+			{},
 			verbosity=verbosity)
 
 
@@ -669,12 +684,14 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 	images_file = pathjoin(cache_dir, config['images'])
 	data_file = pathjoin(cache_dir, config['data'])
 	marked_file = pathjoin(cache_dir, config['marked'])
+	tags_file = pathjoin(cache_dir, config['tagscache'])
 
 	# load the json files if they exist....
 	files = {
 		images_file: getimages(path, config, verbosity=verbosity), 
 		data_file: getdata(path, config, verbosity=verbosity), 
 		marked_file: getmarked(path, config, verbosity=verbosity),
+		tags_file: gettags(path, config, verbosity=verbosity),
 	}
 	_images = {} if files[images_file] == None else files[images_file]
 
@@ -735,6 +752,26 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 	if files[marked_file] != [] and marked != None:
 		marked_file = pathjoin(cache_dir, config['marked-diff'] % {'date': d})
 
+	# buld the tags...
+	# XXX do we need to sort the tags???
+	if images != None and config['tags'] != files[tags_file]:
+		tags = files[tags_file]
+		order = data['order']
+		new_gids = images.keys()
+		new_tags = dict([ (tag, new_gids) for tag in config['tags'] ])
+		for t, l in new_tags.items():
+			if t in tags:
+				# merge the tagged gids...
+				l = tags[t] = list(set(tags[t] + l))
+			else:
+				tags[t] = l
+			# sort...
+			l.sort(lambda a, b: cmp(order.index(a), order.index(b)))
+		if files[tags_file] != {}:
+			tags_file = pathjoin(cache_dir, config['tags-diff'] % {'date': d})
+	else:
+		tags = None
+
 	if verbosity >= 1:
 		print
 
@@ -747,6 +784,7 @@ def build_cache(path, config=CONFIG, gid_generator=hash_gid,
 			images_file: images, 
 			data_file: data, 
 			marked_file: marked,
+			tags_file: tags,
 		}
 	# write files...
 	for n, d in files.items():

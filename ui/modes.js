@@ -242,8 +242,6 @@ var toggleSlideShowMode = createCSSClassToggler(
 						}
 						SLIDESHOW_INTERVAL = isNaN(interval) ? 3000 : interval*M
 
-						console.log('>>>', data, interval)
-
 						showStatus('Slideshow: starting:', SLIDESHOW_INTERVAL/1000 +'sec,', SLIDESHOW_LOOP ? 'looped...' : 'unlooped...')
 					
 						// XXX is this the correct way to go???

@@ -1826,15 +1826,17 @@ function _loadImagePreviewURL(image, url){
 function updateImage(image, gid, size, sync){
 	image = image == null ? getImage() : $(image)
 	sync = sync == null ? CONFIG.load_img_sync : sync
-	var oldgid = getImageGID(image)
+	var old_gid = getImageGID(image)
 
-	if(oldgid == gid || gid == null){
-		gid = oldgid
+	// same image -- update...
+	if(old_gid == gid || gid == null){
+		gid = old_gid
 
+	// reuse for different image -- reconstruct...
 	} else {
 		// remove old marks...
-		if(typeof(oldgid) == typeof('str')){
-			getImageMarks(oldgid).remove()
+		if(typeof(old_gid) == typeof('str')){
+			getImageMarks(old_gid).remove()
 		}
 		// reset gid...
 		image
@@ -1864,8 +1866,10 @@ function updateImage(image, gid, size, sync){
 	// preview...
 	var p_url = getBestPreview(gid, size).url
 
-	// update the preview only if it's different...
-	if(image.css('background-image').indexOf(encodeURI(p_url)) < 0){
+	// update the preview if it's a new image or...
+	if(old_gid != gid 
+			// the new preview (purl) is different to current...
+			|| image.css('background-image').indexOf(encodeURI(p_url)) < 0){
 		// sync load...
 		if(sync){
 			_loadImagePreviewURL(image, p_url)
