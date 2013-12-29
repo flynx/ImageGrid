@@ -71,9 +71,9 @@ var CONFIG = {
 	// NOTE: a "screen" is the number of images that can fit one screen
 	// 		width, as returned by getScreenWidthInImages(..)
 	load_screens: 6,
-	// size of the frame to load relative to LOAD_SCREENS
+	// Size of the frame to load relative to load_screens
 	roll_frame: 1/3,
-	// the threshold size relative to LOAD_SCREENS
+	// The threshold size relative to load_screens
 	load_threshold: 1/4,
 
 	// A threshold after which the image block ratio will be changed form 
@@ -86,8 +86,10 @@ var CONFIG = {
 	// 								image proportions will transition 
 	// 								gradually form square to screen
 	//
+	//
 	// When using array threshold, the gap between top and bottom must 
-	// be at least a couple of zoom_step_scale's.
+	// be at least a couple of zoom_step_scale's to ensure a smooth 
+	// transition over at least several zoom steps.
 	//
 	// NOTE: the array format, threshold order is not important.
 	// NOTE: setting this to an integer may have a side-effect of making
@@ -106,10 +108,14 @@ var CONFIG = {
 		2.5 
 	],
 
+	// The scale applied on each zoom step.
+	//
+	// NOTE: The value should be >1 or zooming will be reversed.
+	zoom_step_scale: 1.2,
+
 	// ribbon scaling limits and defaults...
 	max_screen_images: 12,
 	default_screen_images: 4,
-	zoom_step_scale: 1.2,
 
 	// localStorage prefix...
 	data_attr: 'DATA',
