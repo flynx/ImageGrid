@@ -279,7 +279,7 @@ var KEYBOARD_CONFIG = {
 
 		Esc: doc('Hide marks', 
 				function(){ 
-					toggleMarkesView('off')
+					toggleMarksView('off')
 					return false
 				}),
 	},
@@ -490,7 +490,7 @@ var KEYBOARD_CONFIG = {
 					}),
 				alt: doc('Shift marked images up',
 					function(){
-						toggleMarkesView('on')
+						toggleMarksView('on')
 						shiftMarkedImagesUp()
 					}),
 				'alt+shift': doc('Shift marked images up to empty ribbon',
@@ -519,7 +519,7 @@ var KEYBOARD_CONFIG = {
 					}),
 				alt: doc('Shift marked images down',
 					function(){
-						toggleMarkesView('on')
+						toggleMarksView('on')
 						shiftMarkedImagesDown()
 					}),
 				'alt+shift': doc('Shift marked images down to empty ribbon',
@@ -685,12 +685,12 @@ var KEYBOARD_CONFIG = {
 
 				ctrl: doc('Mark current ribbon', 
 					function(){ 
-						toggleMarkesView('on')
+						toggleMarksView('on')
 						markAll('ribbon') 
 					}),
 				'ctrl+shift': doc('Mark all images', 
 					function(){ 
-						toggleMarkesView('on')
+						toggleMarksView('on')
 						markAll('all') 
 					}),
 			},
@@ -715,7 +715,7 @@ var KEYBOARD_CONFIG = {
 
 		// XXX add a non FXX key for macs...
 		F2: doc('Toggle mark visibility', 
-				function(){ toggleMarkesView() }),
+				function(){ toggleMarksView() }),
 		// XXX should we be able to toggle crop modes from single image mode???
 		// 		...if yes, then remove the F2 & F3 definitions form ribbon
 		// 		mode...
@@ -723,7 +723,7 @@ var KEYBOARD_CONFIG = {
 		/*
 		F2: {
 				default: doc('Toggle mark visibility', 
-					function(){ toggleMarkesView() }),
+					function(){ toggleMarksView() }),
 				shift: doc('Crop marked only images', 
 					function(){
 						toggleMarkedOnlyView('on')

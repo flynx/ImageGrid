@@ -87,14 +87,12 @@ var getMarkedGIDBefore = makeGIDBeforeGetterFromList(
 // 			- 'off'		: force remove mark
 // 			- 'next'	: toggle next state (default)
 // NOTE: when passing this a gid, the 'next' action is not supported
-//
-// XXX do we need a pre-callback here???
 function makeMarkToggler(img_class, mark_class, evt_name, callback){
 	return createCSSClassToggler(
 		'.current.image', 
 		img_class,
 		function(action, elem){
-			toggleMarkesView('on')
+			toggleMarksView('on')
 
 			// we got a gid...
 			if(elem.length == 0 && elem.selector in IMAGES){
@@ -125,7 +123,7 @@ function makeMarkToggler(img_class, mark_class, evt_name, callback){
 }
 
 
-// generate an image updater function...
+// Generate an image updater function...
 //
 // the resulting function will update image mark state by adding or 
 // removing the mark the specific mark object.
@@ -191,7 +189,7 @@ var toggleMarkedOnlyWithRibbonsView = makeCropModeToggler(
 
 
 // XXX shifting images and unmarking in this mode do not work correctly...
-var toggleMarkesView = createCSSClassToggler(
+var toggleMarksView = createCSSClassToggler(
 	'.viewer', 
 	'marks-visible',
 	function(){
@@ -468,7 +466,7 @@ function shiftMarkedImagesRight(){
 }
 
 
-// focus next/prev mark...
+// Focus next/prev mark...
 //
 // NOTE: these will not jump to marks on other ribbons... to prevent this
 // 		add true as the final argument (see restrict_to_ribbon argument 
@@ -579,7 +577,6 @@ var loadFileMarks = makeFileLoader(
 					var t1 = Date.now()
 					marksUpdated()
 
-					// XXX is this the correct way to do this???
 					DATA.version = DATA_VERSION
 					dataUpdated()
 
@@ -620,7 +617,7 @@ function setupMarks(viewer){
 	showGlobalIndicator(
 			'marks-visible', 
 			'Marks visible (F2)')
-		.click(function(){ toggleMarkesView() })
+		.click(function(){ toggleMarksView() })
 	showGlobalIndicator(
 			'marked-only-visible', 
 			'Marked only images visible (shift-F2)')
