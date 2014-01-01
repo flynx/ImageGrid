@@ -57,6 +57,16 @@ var CONFIG = {
 	// Application name...
 	app_name: 'ImageGrid.Viewer',
 
+	// Navigation...
+	//
+	// The number of moves after which the default direction will be 
+	// changed...
+	//
+	// This affects:
+	// 	- default direction to focus after current image is shifted
+	// 	- default direction of the slideshow
+	steps_to_change_direction: 2,
+	
 	// Loader configuration...
 	//
 	//						load_screens	

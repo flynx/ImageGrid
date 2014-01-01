@@ -33,8 +33,14 @@ function _addMark(cls, gid, image){
 		mark = $('<div class="mark"/>')
 			.addClass(gid)
 			.addClass(cls)
-			.insertAfter(image)
+			//.insertAfter(image)
 	} 
+
+	// make sure the mark is explicitly after the image...
+	// XXX think of an eficient way to test if we need to re-insert...
+	mark
+		.insertAfter(image)
+
 	return mark
 }
 function _removeMark(cls, gid, image){

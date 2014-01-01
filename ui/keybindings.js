@@ -6,8 +6,7 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-var STEPS_TO_CHANGE_DIRECTION = 2
-var _STEPS_LEFT_TO_CHANGE_DIRECTION = STEPS_TO_CHANGE_DIRECTION
+var _STEPS_LEFT_TO_CHANGE_DIRECTION = CONFIG.steps_to_change_direction
 var DIRECTION = 'next'
 
 
@@ -19,10 +18,10 @@ function updateDirection(direction){
 		_STEPS_LEFT_TO_CHANGE_DIRECTION--
 		if(_STEPS_LEFT_TO_CHANGE_DIRECTION == 0){
 			DIRECTION = direction
-			_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+			_STEPS_LEFT_TO_CHANGE_DIRECTION = CONFIG.steps_to_change_direction
 		}
 	} else {
-			_STEPS_LEFT_TO_CHANGE_DIRECTION = 2
+			_STEPS_LEFT_TO_CHANGE_DIRECTION = CONFIG.steps_to_change_direction
 	}
 }
 
@@ -293,17 +292,19 @@ var KEYBOARD_CONFIG = {
 		title: 'Ribbon view',
 
 		Left: {
+				// XXX revise...
 				alt: doc('Shift image left', 
 					function(){ 
 						event.preventDefault()
 						shiftImageLeft() 
 						centerView(null, 'css')
 						// XXX for some odd reason centerRibbons does 
-						// 		something really odd here...
+						// 		something really odd here -- images get to
+						// 		correct positions but the align is totally 
+						// 		wrong...
+						// 		...race condition???
 						//centerRibbons()
 						// XXX HACK...
-						// XXX this still gets misaligned sometimes but this
-						// 		is likely due to one of the align bugs 
 						if(window._center_ribbon_delay != null){
 							clearTimeout(_center_ribbon_delay)
 						}
@@ -317,18 +318,19 @@ var KEYBOARD_CONFIG = {
 				ctrl: 'prev-screen',
 			},
 		Right: {
+				// XXX revise...
 				alt: doc('Shift image right', 
 					function(){ 
 						event.preventDefault()
 						shiftImageRight() 
 						centerView(null, 'css')
 						// XXX for some odd reason centerRibbons does 
-						// 		something really odd here...
+						// 		something really odd here -- images get to
+						// 		correct positions but the align is totally 
+						// 		wrong...
+						// 		...race condition???
 						//centerRibbons()
 						// XXX HACK...
-						// XXX this still gets misaligned sometimes but this
-						// 		is likely due to one of the align bugs 
-						// 		(see: TODO.otl)
 						if(window._center_ribbon_delay != null){
 							clearTimeout(_center_ribbon_delay)
 						}

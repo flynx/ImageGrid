@@ -1169,7 +1169,7 @@ function zoomOut(){
 
 
 /************************************************** Editor Actions ***/
-// NOTE: for shiftImageRight/shiftImageLeft see data.js, as they depend
+// NOTE: for shiftImageRight/shiftImageLeft see sort.js, as they depend
 // 		on data ordering...
 
 function shiftImageTo(image, direction, moving, force_create_ribbon){
