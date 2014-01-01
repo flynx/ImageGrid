@@ -1304,6 +1304,22 @@ function showImageInfo(){
 
 /*********************************************************************/
 
+// XXX need a propper:
+// 		- update mechanics...
+// 		- save mechanics
+function makeCommentPanel(panel){
+	return makeSubPanel(
+			'Info: Comment', 
+			$('Comment: <div class="comment" contenteditable/>'),
+			panel, 
+			true, 
+			true)
+}
+
+
+
+/*********************************************************************/
+
 function setupUI(viewer){
 	console.log('UI: setup...')
 
