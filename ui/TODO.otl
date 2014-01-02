@@ -110,6 +110,7 @@ Roadmap
 
 [_] 32% Gen 3 current todo
 	[_] 64% High priority
+		[_] buildcache: add option to control image sort...
 		[_] ASAP: Need visual indicators for long operations...
 		[_] 66% tags
 			[X] local tags
