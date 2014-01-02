@@ -146,6 +146,8 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 		}).sort().reverse()[0]
 	}
 	var file = file == null ? dfl : file
+	var base_date = file.split('-')[0]
+	base_date = base_date == file ? '' : base_date
 	
 	var diff_data = {}
 	var diff = true
@@ -155,7 +157,8 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 		diff_pattern = RegExp(diff_pattern)
 		var diff_data = [diff_data]
 		var diffs_names = $.map(listDir(path), function(e){ 
-			return diff_pattern.test(e) ? e : null
+			//return diff_pattern.test(e) ? e : null
+			return diff_pattern.test(e) && e.split('-')[0] >= base_date ? e : null
 		}).sort()
 		diff = $.when.apply(null, $.map(diffs_names, function(e, i){
 					return $.getJSON(path +'/'+ e)

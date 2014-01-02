@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20140102074435'''
+__sub_version__ = '''20140102083502'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -269,16 +269,19 @@ def mergediffs(path, base, isdiff, merge, dfl,
 		return res
 	# base images file...
 	if get_latest_base:
-		res.update(loadlatest(
+		base_file, data = loadlatest(
 				path, 
 				isversion if isversion != None else lambda n: n.endswith(base),
 				lambda n: n == base,
 				load if load != None else lambda path: json.load(open(path)),
 				{},
 				cmp,
-				verbosity=verbosity))
+				verbosity=verbosity)
+		res.update(data)
+		base_date = os.path.basename(base_file).split('-')[0]
 	else:
 		target = pathjoin(path, base)
+		base_date = ''
 		if os.path.exists(target):
 			if verbosity >= 1:
 				print 'Loading: %s' % target
@@ -290,7 +293,8 @@ def mergediffs(path, base, isdiff, merge, dfl,
 	else:
 		files.sort(cmp)
 	for n in files:
-		if isdiff(n):
+		# skip non-diffs and diffs older than base...
+		if isdiff(n) and n.split('-')[0] >= base_date:
 			target = pathjoin(path, n)
 			# XXX is this the correct way???
 			if verbosity >= 1:
@@ -312,7 +316,7 @@ def loadlatest(path, isversion, isbase, load, dfl, cmp=None, verbosity=0):
 	base = None
 	# if no cache dir...
 	if not os.path.exists(path):
-		return data
+		return path, data
 	files = os.listdir(path)
 	if cmp == None:
 		files.sort()
@@ -328,13 +332,13 @@ def loadlatest(path, isversion, isbase, load, dfl, cmp=None, verbosity=0):
 			# XXX is this the correct way???
 			if verbosity >= 1:
 				print 'Loading: %s' % target
-			return load(target)
+			return target, load(target)
 	if base != None:
 		# XXX is this the correct way???
 		if verbosity >= 1:
 			print 'Loading: %s' % base
-		return load(base)
-	return data
+		return base, load(base)
+	return 'default', data
 
 
 
@@ -364,7 +368,7 @@ def getdata(path, config=CONFIG, verbosity=0):
 			lambda n: n == config['data'],
 			lambda path: json.load(open(path)),
 			{},
-			verbosity=verbosity)
+			verbosity=verbosity)[-1]
 
 
 #-----------------------------------------------------------getmarked---
@@ -377,7 +381,7 @@ def getmarked(path, config=CONFIG, verbosity=0):
 			lambda n: n == config['marked'],
 			lambda path: json.load(open(path)),
 			[],
-			verbosity=verbosity)
+			verbosity=verbosity)[-1]
 
 
 #-------------------------------------------------------------gettags---
@@ -390,7 +394,7 @@ def gettags(path, config=CONFIG, verbosity=0):
 			lambda n: n == config['tagscache'],
 			lambda path: json.load(open(path)),
 			{},
-			verbosity=verbosity)
+			verbosity=verbosity)[-1]
 
 
 #----------------------------------------------------build_cache_dirs---
