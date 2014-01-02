@@ -376,7 +376,7 @@ var KEYBOARD_CONFIG = {
 		'#7': doc('Fit seven images', function(){ fitNImages(7) }),
 		'#8': doc('Fit eight images', function(){ fitNImages(8) }),
 		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
-		'#0': doc('Fit nine images', function(){ fitNImages(CONFIG.max_screen_images) }),
+		'#0': doc('Fit maximum images', function(){ fitNImages(CONFIG.max_screen_images) }),
 
 		// cropping...
 		C: doc('Show ribbon crop dialog', cropImagesDialog),
@@ -510,7 +510,7 @@ var KEYBOARD_CONFIG = {
 						shiftImageUp(null, DIRECTION) 
 						centerRibbons()
 					}),
-				'ctrl+shift': doc('Shift image up to empty ribbon',
+				'ctrl+shift': doc('Shift image up to new ribbon',
 					function(){
 						event.preventDefault()
 						shiftImageUpNewRibbon(null, DIRECTION) 
@@ -521,7 +521,7 @@ var KEYBOARD_CONFIG = {
 						toggleMarksView('on')
 						shiftMarkedImagesUp()
 					}),
-				'alt+shift': doc('Shift marked images up to empty ribbon',
+				'alt+shift': doc('Shift marked images up to new ribbon',
 					function(){
 						// XXX
 					}),
@@ -539,7 +539,7 @@ var KEYBOARD_CONFIG = {
 						shiftImageDown(null, DIRECTION) 
 						centerRibbons()
 					}),
-				'ctrl+shift': doc('Shift image down to empty ribbon',
+				'ctrl+shift': doc('Shift image down to new ribbon',
 					function(){
 						event.preventDefault()
 						shiftImageDownNewRibbon(null, DIRECTION) 
@@ -550,7 +550,7 @@ var KEYBOARD_CONFIG = {
 						toggleMarksView('on')
 						shiftMarkedImagesDown()
 					}),
-				'alt+shift': doc('Shift marked images down to empty ribbon',
+				'alt+shift': doc('Shift marked images down to new ribbon',
 					function(){
 						// XXX
 					}),
