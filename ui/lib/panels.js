@@ -120,9 +120,10 @@ function closePanel(panel, skip_sub_panel_events){
 // 			either revert or create a new panel
 // 		does:
 // 			drops to last placeholder
-function makePanel(title, open, keep_empty, close_button){
+function makePanel(title, parent, open, keep_empty, close_button){
 	title = title == null || title.trim() == '' ? '&nbsp;' : title
 	close_button = close_button == null ? true : false
+	parent = parent == null ? $(PANEL_ROOT) : parent
 
 	// the outer panel...
 	var panel = $('<details/>')
@@ -210,6 +211,10 @@ function makePanel(title, open, keep_empty, close_button){
 		})
 		.appendTo(panel)
 
+	if(parent != false){
+		panel.appendTo(parent)
+	}
+
 	return panel
 }
 
@@ -218,8 +223,9 @@ function makePanel(title, open, keep_empty, close_button){
 // 	- left
 // 	- right
 // XXX in part this is exactly the same as makePanel
-function makeSidePanel(side, autohide){
+function makeSidePanel(side, parent, autohide){
 	autohide = autohide == null ? 'on' : 'off'
+	parent = parent == null ? $(PANEL_ROOT) : parent
 	var panel = $('.side-panel.'+side)
 	// only one panel from each side can exist...
 	if(panel.length != 0){
@@ -272,6 +278,10 @@ function makeSidePanel(side, autohide){
 				ui.placeholder.hide()
 			},
 		})
+
+	if(parent != false){
+		panel.appendTo(parent)
+	}
 
 	return panel
 }
