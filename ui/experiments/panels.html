@@ -53,7 +53,9 @@ function toggleAutoHide(){
 
 $(function(){
 
+	toggleThemes()
 	PANEL_ROOT = 'body'
+
 
 	makeSidePanel('left')
 	makeSidePanel('right')
@@ -63,19 +65,19 @@ $(function(){
 			top: 50,
 			left: 50,
 		})
-
-
 	makeSubPanel('Test Sub Panel A', $('<h1>Panel A</h1>'), panel, true, true)
-
 	makeSubPanel('Test Sub Panel B', $('<h2>Panel B</h2>'), panel, true)
-
 	makeSubPanel('Test Sub Panel C', $('<h3>Panel C</h3>'), panel, false)
 
 	makeFilterPanel(panel, '.moo')
-
 	makeSnapshotsPanel(panel, '.moo')
 
 	makeSubPanel('Test Sub Panel D', $('<h2>Panel D</h2>'))
+		.parents('.panel')
+			.css({
+				top: 100,
+				left: 400,
+			})
 
 })
 
