@@ -469,6 +469,32 @@ var KEYBOARD_CONFIG = {
 				centerRibbons()
 			}),
 
+		// bookmark navigation...
+		'[': doc('Previous bookmarked image', 
+				function(){ prevBookmark() }),
+		']': doc('Next bookmarked image', 
+				function(){ nextBookmark() }),
+
+		// marked/unmarked navigation...
+		',': {
+				default: doc('Previous marked image', 
+					function(){ prevMark() }),
+				shift: doc('Previous unmarked image',
+					function(){ prevUnmarked() }),
+			},
+		'.': {
+				default: doc('Next marked image', 
+					function(){ nextMark() }),
+				shift: doc('Next unmarked image',
+					function(){ nextUnmarked() }),
+			},
+
+		// sorted section navigation...
+		'{': doc('Previous unsorted section edge', 
+				function(){ prevUnsortedSection() }),
+		'}': doc('Next unsorted section edge', 
+				function(){ nextUnsortedSection() }),
+
 
 		// combined navigation and editor actions...
 		Up: {
@@ -586,26 +612,6 @@ var KEYBOARD_CONFIG = {
 				ctrl: doc('Toggle bookmark', 
 					function(){ toggleBookmark() }),
 			},
-		'[': doc('Previous bookmarked image', 
-				function(){ prevBookmark() }),
-		']': doc('Next bookmarked image', 
-				function(){ nextBookmark() }),
-		',': {
-				default: doc('Previous marked image', 
-					function(){ prevMark() }),
-				shift: doc('Previous unmarked image',
-					function(){ prevUnmarked() }),
-			},
-		'.': {
-				default: doc('Next marked image', 
-					function(){ nextMark() }),
-				shift: doc('Next unmarked image',
-					function(){ nextUnmarked() }),
-			},
-		'{': doc('Previous unsorted section edge', 
-				function(){ prevUnsortedSection() }),
-		'}': doc('Next unsorted section edge', 
-				function(){ nextUnsortedSection() }),
 
 		S: {
 				default: doc('Start slideshow', 

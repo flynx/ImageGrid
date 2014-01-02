@@ -400,7 +400,7 @@ function getGapEdge(direction, tag, gids){
 	var get = direction == 'next' ? getGIDAfter : getGIDBefore
 
 	gids = gids == null ? getRibbonGIDs() : gids
-	var tagged = TAGS[tag]
+	var tagged = TAGS[tag].filter(function(e){ return gids.indexOf(e) >= 0 })
 	var cur = getImageGID()
 	var step = direction == 'next' ? 1 : -1
 
