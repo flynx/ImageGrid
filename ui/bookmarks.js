@@ -131,6 +131,7 @@ var saveFileBookmarks = makeFileSaver(
 
 function bookmarksUpdated(){
 	fileUpdated('Bookmarks')
+	$('.viewer').trigger('bookmarksUpdated')
 }
 
 

@@ -312,6 +312,7 @@ var saveFileData = makeFileSaver(
 function dataUpdated(){
 	if(!isViewCropped()){
 		fileUpdated('Data')
+		$('.viewer').trigger('dataUpdated')
 	}
 }
 

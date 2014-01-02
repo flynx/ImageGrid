@@ -13,6 +13,10 @@ var MARKED_FILE_DEFAULT = 'marked.json'
 var MARKED_FILE_PATTERN = /^[0-9]*-marked.json$/
 
 
+// NOTE: if this is set to null, caching will be disabled...
+var _UNMARKED_CACHE = {}
+
+
 
 /**********************************************************************
 * helpers...
@@ -61,10 +65,59 @@ function _removeMark(cls, gid, image){
 }
 
 
+// Invalidate unmarked image cache...
+//
+function invalidateMarksCache(){
+	if(_UNMARKED_CACHE != null){
+		_UNMARKED_CACHE = {}
+	}
+}
+
+
+// Get list of unmarked images...
+//
+// mode can be:
+// 	- 'ribbon'
+// 	- 'all'
+// 	- number			- ribbon index
+// 	- null				- same as all
+function getUnmarked(mode){
+	mode = mode == null ? 'all' : mode
+	var gids = mode == 'all' ? getLoadedGIDs() 
+		: typeof(mode) == typeof(123) ? getRibbonGIDs(mode)
+		: getRibbonGIDs()
+	mode = mode == 'ribbon' ? getRibbonIndex() : mode
+
+	// get the cached set...
+	if(_UNMARKED_CACHE != null && mode in _UNMARKED_CACHE){
+		return _UNMARKED_CACHE[mode]
+	}
+
+	// calculate the set...
+	var res = gids.filter(function(e){
+		// keep only unmarked...
+		return MARKED.indexOf(e) < 0
+	})
+	if(_UNMARKED_CACHE != null){
+		_UNMARKED_CACHE[mode] = res
+	}
+
+	return res
+}
+
+
 var getMarkedGIDBefore = makeGIDBeforeGetterFromList(
 		function(){ 
 			return MARKED 
 		})
+
+
+// NOTE: this is not too fast as it will filter the marked images...
+// NOTE: this is restricted to current ribbon...
+var getUnmarkedGIDBefore = makeGIDBeforeGetterFromList(
+		function(ribbon){ 
+			return getUnmarked(ribbon)
+		}, true)
 
 
 // Make a mark toggler
@@ -485,6 +538,17 @@ var prevMark = makePrevFromListAction(
 		function(){ return MARKED })
 
 
+var nextUnmarked = makeNextFromListAction(
+		getUnmarkedGIDBefore, 
+		function(ribbon){ 
+			return getUnmarked(ribbon == null ? 'ribbon' : ribbon) 
+		})
+var prevUnmarked = makePrevFromListAction(
+		getUnmarkedGIDBefore, 
+		function(ribbon){ 
+			return getUnmarked(ribbon == null ? 'ribbon' : ribbon) 
+		})
+
 
 
 /**********************************************************************
@@ -604,6 +668,8 @@ var saveFileMarks = makeFileSaver(
 
 function marksUpdated(){
 	fileUpdated('Marks')
+	invalidateMarksCache()
+	$('.viewer').trigger('marksUpdated')
 }
 
 
@@ -639,6 +705,9 @@ function setupMarks(viewer){
 			lst.forEach(function(gid){
 				viewer.trigger('togglingMark', [gid, action])
 			})
+		})
+		.on('baseURLChanged', function(){
+			invalidateMarksCache()
 		})
 }
 SETUP_BINDINGS.push(setupMarks)

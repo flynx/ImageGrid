@@ -884,7 +884,7 @@ function makeGIDBeforeGetterFromList(get_list, restrict_to_ribbon){
 		ribbon = ribbon == null && restrict_to_ribbon == true 
 			? getGIDRibbonIndex(gid) 
 			: ribbon
-		var list = get_list()
+		var list = get_list(ribbon)
 		if(list.length == 0){
 			return null
 		}
@@ -1325,7 +1325,7 @@ function makeNextFromListAction(get_closest, get_list, restrict_to_ribbon){
 	get_list = get_list == null ? getRibbonGIDs : get_list
 
 	return function(ribbon){
-		var list = get_list()
+		var list = get_list(ribbon)
 		if(list.length == 0){
 			flashIndicator('end')
 			return getImage()

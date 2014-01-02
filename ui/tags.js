@@ -495,6 +495,7 @@ var saveFileTags = makeFileSaver(
 
 function tagsUpdated(){
 	fileUpdated('Tags')
+	$('.viewer').trigger('tagsUpdated')
 }
 
 

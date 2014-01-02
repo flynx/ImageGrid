@@ -590,6 +590,18 @@ var KEYBOARD_CONFIG = {
 				function(){ prevBookmark() }),
 		']': doc('Next bookmarked image', 
 				function(){ nextBookmark() }),
+		',': {
+				default: doc('Previous marked image', 
+					function(){ prevMark() }),
+				shift: doc('Previous unmarked image',
+					function(){ prevUnmarked() }),
+			},
+		'.': {
+				default: doc('Next marked image', 
+					function(){ nextMark() }),
+				shift: doc('Next unmarked image',
+					function(){ nextUnmarked() }),
+			},
 		'{': doc('Previous unsorted section edge', 
 				function(){ prevUnsortedSection() }),
 		'}': doc('Next unsorted section edge', 
