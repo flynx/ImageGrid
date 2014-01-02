@@ -2263,9 +2263,9 @@ var prevImageInOrder = makePrevFromListAction(
 // Align ribbons to the current ribbon.
 //
 // XXX need to change the default to base ribbon for production...
+// XXX need to check if this will remove 'unsorted' tags or not (tags.js)...
 function alignRibbons(ribbon){
 	console.warn('alignRibbons(): not yet ready for production use!')
-	// XXX remove this line for production....
 	ribbon = ribbon == null ? getRibbonIndex() : ribbon
 
 	DATA = alignDataToRibbon(ribbon)
