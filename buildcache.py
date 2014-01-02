@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20131228083526'''
+__sub_version__ = '''20140102074435'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -258,7 +258,8 @@ def make_inline_report_progress(state=None):
 
 #----------------------------------------------------------mergediffs---
 ##!!! this is generic, move to pli?
-def mergediffs(path, base, isdiff, merge, dfl, cmp=None, verbosity=0):
+def mergediffs(path, base, isdiff, merge, dfl, 
+		get_latest_base=True, isversion=None, load=None, cmp=None, verbosity=0):
 	'''
 	load the base file and merge in all the diff files in order.
 	'''
@@ -267,11 +268,21 @@ def mergediffs(path, base, isdiff, merge, dfl, cmp=None, verbosity=0):
 	if not os.path.exists(path):
 		return res
 	# base images file...
-	target = pathjoin(path, base)
-	if os.path.exists(target):
-		if verbosity >= 1:
-			print 'Loading: %s' % target
-		merge(res, target)
+	if get_latest_base:
+		res.update(loadlatest(
+				path, 
+				isversion if isversion != None else lambda n: n.endswith(base),
+				lambda n: n == base,
+				load if load != None else lambda path: json.load(open(path)),
+				{},
+				cmp,
+				verbosity=verbosity))
+	else:
+		target = pathjoin(path, base)
+		if os.path.exists(target):
+			if verbosity >= 1:
+				print 'Loading: %s' % target
+			merge(res, target)
 	# apply diff files...
 	files = os.listdir(path)
 	if cmp == None:
@@ -324,6 +335,7 @@ def loadlatest(path, isversion, isbase, load, dfl, cmp=None, verbosity=0):
 			print 'Loading: %s' % base
 		return load(base)
 	return data
+
 
 
 #-----------------------------------------------------------------------
