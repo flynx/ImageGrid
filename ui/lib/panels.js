@@ -98,14 +98,9 @@ function wrapWithPanel(panel, parent, offset){
 
 // close the panel and fire close events on it and all sub-panels...
 //
-function closePanel(panel, skip_sub_panel_events){
-	skip_sub_panel_events = skip_sub_panel_events == null 
-		? false 
-		: skip_sub_panel_events
-	if(!skip_sub_panel_events){
-		panel.find('.sub-panel')
-			.trigger('panelClosing')
-	}
+function closePanel(panel){
+	panel.find('.sub-panel')
+		.trigger('panelClosing')
 	panel
 		.trigger('panelClosing')
 		.remove()
@@ -288,6 +283,7 @@ function makeSidePanel(side, parent, autohide){
 
 
 // NOTE: if parent is not given this will create a new panel...
+// NOTE: title must be unique...
 function makeSubPanel(title, content, parent, open, content_resizable){
 	title = title == null || title.trim() == '' ? '&nbsp;' : title
 	parent = parent == null ? makePanel() : parent
@@ -298,6 +294,7 @@ function makeSubPanel(title, content, parent, open, content_resizable){
 		: content_resizable
 
 	var content_elem = $('<div class="sub-panel-content content"/>')
+		.attr('id', title)
 	if(content != null){
 		content_elem
 			.append(content)
@@ -331,6 +328,44 @@ function makeSubPanel(title, content, parent, open, content_resizable){
 	}
 
 	return sub_panel
+}
+
+
+
+/**********************************************************************
+* High level interface...
+*/
+
+var PANELS = {
+}
+
+
+// NOTE: this will search an element by title, so if it is not unique 
+// 		an existing element will be returned...
+function buildPanelController(title, content_builder, setup){
+
+	var controller = function(parent){
+		// 1) search for panel and return it if it exists...
+		var panel = $('[id="'+ title +'"]')
+
+		// 2) if no panel exists, create it
+		// 		- content_builder() must return panel content
+		if(panel.length == 0){
+			parent = parent == null ? $(PANEL_ROOT) : parent
+
+			panel = makeSubPanel(title, content_builder, false)
+				.attr('id', title)
+			setup(panel)
+
+			panel.appendTo(parent)
+		}
+
+		return panel
+	}
+
+	PANELS[title] = controller
+
+	return controller
 }
 
 
@@ -374,7 +409,8 @@ function getPanelState(){
 }
 
 
-function setPanelState(){
+function setPanelState(data){
+	// XXX
 }
 
 
