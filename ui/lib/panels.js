@@ -461,11 +461,11 @@ function makePanelController(title, content_builder, panel_setup, content_resiza
 
 		// 2) if no panel exists, create it
 		// 		- content_builder() must return panel content
+		// XXX need to get saved coordinates...
 		if(panel.length == 0){
 			panel = makeSubPanel(title, content_builder(), parent, open, content_resizable)
 				.attr('id', title)
 
-			// XXX should this be before or after the append???
 			panel_setup(panel)
 
 			// trigger the open event...
