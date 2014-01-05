@@ -69,6 +69,7 @@ $(function(){
 	makeSubPanel('Test Sub Panel B', $('<h2>Panel B</h2>'), panel, true)
 	makeSubPanel('Test Sub Panel C', $('<h3>Panel C</h3>'), panel, false)
 
+
 	makeFilterPanel(panel, '.moo')
 	makeSnapshotsPanel(panel, '.moo')
 
@@ -78,6 +79,18 @@ $(function(){
 				top: 100,
 				left: 400,
 			})
+
+
+	makePanelController('Test Sub Panel E',
+		function(){
+			return $('<h1>Panel E</h1>')
+		},
+		function(panel){
+			panel
+				.on('panelOpening', function(){ console.log('>>> opening!') })
+				.on('panelClosing', function(){ console.log('>>> closing!') })
+		},
+		true)
 
 })
 
