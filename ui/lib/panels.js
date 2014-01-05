@@ -126,7 +126,7 @@ function openPanel(panel){
 	if(panel.length == 0){
 		if(title in PANELS){
 			var builder = PANELS[title]
-			panel = builder(null, true)
+			panel = builder({ open: true })
 		}
 
 	// show/open the panel and all it's parents...
@@ -188,6 +188,8 @@ function removePanel(panel){
 // 			either revert or create a new panel
 // 		does:
 // 			drops to last placeholder
+// XXX need to stop this triggering panelClosing event when the last 
+// 		panel is dragged out or when the panel is dragged...
 function makePanel(title, parent, open, keep_empty, close_button){
 	title = title == null || title.trim() == '' ? '&nbsp;' : title
 	close_button = close_button == null ? true : false
@@ -455,7 +457,11 @@ function makeSubPanel(title, content, parent, open, content_resizable){
 // 		an existing element will be returned...
 function makePanelController(title, content_builder, panel_setup, content_resizable){
 
-	var controller = function(parent, open){
+	var controller = function(state){
+		state = state == null ? {} : state
+		var parent = state.parent
+		var open = state.open
+
 		// 1) search for panel and return it if it exists...
 		var panel = getPanel(title)
 
@@ -483,6 +489,8 @@ function makePanelController(title, content_builder, panel_setup, content_resiza
 				closePanel(panel)
 			}
 		}
+
+		// XXX set panel position, size, ...
 
 		return panel
 	}
