@@ -84,6 +84,13 @@ function _resetSortedElem(elem){
 }
 
 
+function isPanelVisible(panel){
+	return panel.prop('open')
+			&& (panel.parents('.panel').prop('open')
+				|| panel.parents('.side-panel').width() > 20)
+}
+
+
 // wrap a sub-panel with a new panel...
 // 
 function wrapWithPanel(panel, parent, offset){
@@ -98,11 +105,17 @@ function wrapWithPanel(panel, parent, offset){
 
 // close the panel and fire close events on it and all sub-panels...
 //
+// XXX do we need a panelRemoved event???
+// 		...and a symmetrical panelCreated??
 function closePanel(panel){
-	panel.find('.sub-panel')
-		.trigger('panelClosing')
+	panel.find('.sub-panel').each(function(){
+		var p = $(this)
+		if(p.prop('open')){
+			p.trigger('panelClosing', p)
+		}
+	})
 	panel
-		.trigger('panelClosing')
+		.trigger('panelClosing', panel)
 		.remove()
 }
 
@@ -124,7 +137,7 @@ function makePanel(title, parent, open, keep_empty, close_button){
 	var panel = $('<details/>')
 		.prop('open', open == null ? true : open)
 		.addClass('panel noScroll')
-		.append(close_button
+		.append((close_button
 			? $('<summary>'+title+'</summary>')
 				.append($('<span/>')
 					.addClass('close-button')
@@ -134,6 +147,22 @@ function makePanel(title, parent, open, keep_empty, close_button){
 					})
 					.html('&times;'))
 			: $('<summary>'+title+'</summary>'))
+				// XXX also do this on enter...
+				// XXX
+				.click(function(){
+					if(!panel.prop('open')){
+						var evt = 'panelOpening'
+					} else {
+						var evt = 'panelClosing'
+					}
+					panel.trigger(evt, panel)
+					panel.find('.sub-panel').each(function(){
+						var sub_panel = $(this)
+						if(sub_panel.prop('open')){
+							sub_panel.trigger(evt, sub_panel)
+						}
+					})
+				}))
 		.draggable({
 			containment: 'parent',
 			scroll: false,
@@ -210,6 +239,9 @@ function makePanel(title, parent, open, keep_empty, close_button){
 		panel.appendTo(parent)
 	}
 
+	// NOTE: no need to call the panelOpening event here as at this point
+	// 		no one had the chance to bind a handler...
+
 	return panel
 }
 
@@ -217,7 +249,9 @@ function makePanel(title, parent, open, keep_empty, close_button){
 // side can be:
 // 	- left
 // 	- right
+//
 // XXX in part this is exactly the same as makePanel
+// XXX need to trigger open/close sub panel events...
 function makeSidePanel(side, parent, autohide){
 	autohide = autohide == null ? 'on' : 'off'
 	parent = parent == null ? $(PANEL_ROOT) : parent
@@ -229,6 +263,8 @@ function makeSidePanel(side, parent, autohide){
 	panel = $('<div/>')
 		.addClass('side-panel panel-content ' + side)
 		.attr('autohide', autohide)
+		// XXX trigger open/close events on hide/show..
+		// XXX
 		// toggle auto-hide...
 		.dblclick(function(e){
 			var elem = $(this)
@@ -278,6 +314,9 @@ function makeSidePanel(side, parent, autohide){
 		panel.appendTo(parent)
 	}
 
+	// NOTE: no need to call the panelOpening event here as at this point
+	// 		no one had the chance to bind a handler...
+
 	return panel
 }
 
@@ -302,7 +341,16 @@ function makeSubPanel(title, content, parent, open, content_resizable){
 	var sub_panel = $('<details/>')
 		.addClass('sub-panel noScroll')
 		.prop('open', open)
-		.append($('<summary>'+title+'</summary>'))
+		.append($('<summary>'+title+'</summary>')
+			// XXX also do this on enter...
+			// XXX
+			.click(function(){
+				if(!sub_panel.prop('open')){
+					sub_panel.trigger('panelOpening', sub_panel)
+				} else {
+					sub_panel.trigger('panelClosing', sub_panel)
+				}
+			}))
 		.append(content_elem)
 
 	if(parent != null){
@@ -327,6 +375,9 @@ function makeSubPanel(title, content, parent, open, content_resizable){
 			})
 	}
 
+	// NOTE: no need to call the panelOpening event here as at this point
+	// 		no one had the chance to bind a handler...
+
 	return sub_panel
 }
 
@@ -340,11 +391,16 @@ var PANELS = {
 }
 
 
+//
+//	content_builder()	- should build and setup panel content
+//	panel_setup(panel)	- should register panel open/close event 
+//							handlers
+//
 // NOTE: this will search an element by title, so if it is not unique 
 // 		an existing element will be returned...
-function buildPanelController(title, content_builder, setup){
+function buildPanelController(title, content_builder, panel_setup){
 
-	var controller = function(parent){
+	var builder = function(parent){
 		// 1) search for panel and return it if it exists...
 		var panel = $('[id="'+ title +'"]')
 
@@ -353,19 +409,26 @@ function buildPanelController(title, content_builder, setup){
 		if(panel.length == 0){
 			parent = parent == null ? $(PANEL_ROOT) : parent
 
-			panel = makeSubPanel(title, content_builder, false)
+			panel = makeSubPanel(title, content_builder(), false)
 				.attr('id', title)
-			setup(panel)
 
 			panel.appendTo(parent)
+
+			// XXX should this be before or after the append???
+			panel_setup(panel)
+
+			// trigger the open event...
+			if(isPanelVisible(panel)){
+				panel.trigger('panelOpening', panel)
+			}
 		}
 
 		return panel
 	}
 
-	PANELS[title] = controller
+	PANELS[title] = builder
 
-	return controller
+	return builder
 }
 
 
