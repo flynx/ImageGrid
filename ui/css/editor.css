@@ -31,16 +31,30 @@
 .sub-panel summary::-webkit-details-marker {
 	color: gray;
 }
-.panel .close-button {
+.panel .close-button,
+.sub-panel .close-button {
 	display: inline-block;
 	position: absolute;
 	right: 5px;
 	cursor: hand;
+	opacity: 0.5;
 }
-.panel .close-button:hover {
+.panel .close-button:hover,
+.sub-panel .close-button:hover {
 	font-weight: bold;
 	color: red;
 	text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.5);
+}
+.sub-panel .close-button {
+	right: 8px;
+}
+.panel .close-button,
+.sub-panel .close-button {
+	visibility: hidden;
+}
+.panel:hover>summary .close-button,
+.sub-panel:hover .close-button {
+	visibility: visible;
 }
 .panel .panel-content {
 	display: block;

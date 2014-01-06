@@ -199,6 +199,12 @@ function makePanel(title, parent, open, keep_empty, close_button){
 	var panel = $('<details/>')
 		.prop('open', open == null ? true : open)
 		.addClass('panel noScroll')
+		.on('subPanelRemoved', function(){
+			// remove the panel when it runs out of sub-panels...
+			if(!keep_empty && panel.find('.sub-panel').length <= 0){
+				removePanel(panel, true)
+			}
+		})
 		.append((close_button
 			? $('<summary>'+title+'</summary>')
 				.append($('<span/>')
@@ -254,7 +260,7 @@ function makePanel(title, parent, open, keep_empty, close_button){
 			// - create a new panel when dropping outside of curent panel...
 			// - remove empty panels...
 			beforeStop: function(e, ui){
-				var c = 0
+				//var c = 0
 
 				// do this only when dropping outside the panel...
 				//if(ui.placeholder.css('display') == 'none'
@@ -267,14 +273,17 @@ function makePanel(title, parent, open, keep_empty, close_button){
 					// panel when we count it...
 					// ...this is likely to the fact that we jquery-ui did
 					// not cleanup yet
-					c = 1
+					//c = 1
 					wrapWithPanel(ui.item, panel.parent(), ui.offset)
 				}
 
 				// remove the panel when it runs out of sub-panels...
-				if(!keep_empty && panel.find('.sub-panel').length-c <= 0){
-					removePanel(panel, true)
-				}
+				//if(!keep_empty && panel.find('.sub-panel').length-c <= 0){
+				//	removePanel(panel, true)
+				//}
+
+				panel.trigger('subPanelRemoved')
+
 				_resetSidePanels()
 				_resetSortedElem(ui.item)
 					.data('isoutside', false)
@@ -387,7 +396,7 @@ function makeSidePanel(side, parent, autohide){
 function makeSubPanel(title, content, parent, open, content_resizable, close_button){
 	title = title == null || title.trim() == '' ? '&nbsp;' : title
 	parent = parent == null ? makePanel() : parent
-	close_button = close_button == null ? false : close_button
+	close_button = close_button == null ? true : close_button
 
 	open = open == null ? true : open
 	content_resizable = content_resizable == null 
@@ -408,7 +417,12 @@ function makeSubPanel(title, content, parent, open, content_resizable, close_but
 				.append($('<span/>')
 					.addClass('close-button')
 					.click(function(){
-						removePanel(panel)
+						var parent = sub_panel.parents('.panel').first()
+						removePanel(sub_panel)
+						// XXX need to notify the parent...
+						// 		...so as to enable it to remove itself 
+						// 		if no sub-panels left...
+						parent.trigger('subPanelRemoved')
 						return false
 					})
 					.html('&times;'))
