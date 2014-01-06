@@ -192,8 +192,8 @@ function removePanel(panel){
 // 		panel is dragged out or when the panel is dragged...
 function makePanel(title, parent, open, keep_empty, close_button){
 	title = title == null || title.trim() == '' ? '&nbsp;' : title
-	close_button = close_button == null ? true : false
 	parent = parent == null ? $(PANEL_ROOT) : parent
+	close_button = close_button == null ? true : close_button
 
 	// the outer panel...
 	var panel = $('<details/>')
@@ -384,9 +384,10 @@ function makeSidePanel(side, parent, autohide){
 
 // NOTE: if parent is not given this will create a new panel...
 // NOTE: title must be unique...
-function makeSubPanel(title, content, parent, open, content_resizable){
+function makeSubPanel(title, content, parent, open, content_resizable, close_button){
 	title = title == null || title.trim() == '' ? '&nbsp;' : title
 	parent = parent == null ? makePanel() : parent
+	close_button = close_button == null ? false : close_button
 
 	open = open == null ? true : open
 	content_resizable = content_resizable == null 
@@ -402,7 +403,16 @@ function makeSubPanel(title, content, parent, open, content_resizable){
 		.attr('id', title)
 		.addClass('sub-panel noScroll')
 		.prop('open', open)
-		.append($('<summary>'+title+'</summary>')
+		.append((close_button
+			? $('<summary>'+title+'</summary>')
+				.append($('<span/>')
+					.addClass('close-button')
+					.click(function(){
+						removePanel(panel)
+						return false
+					})
+					.html('&times;'))
+			: $('<summary>'+title+'</summary>'))
 			// XXX also do this on enter...
 			// XXX
 			.click(function(){
@@ -467,7 +477,6 @@ function makePanelController(title, content_builder, panel_setup, content_resiza
 
 		// 2) if no panel exists, create it
 		// 		- content_builder() must return panel content
-		// XXX need to get saved coordinates...
 		if(panel.length == 0){
 			panel = makeSubPanel(title, content_builder(), parent, open, content_resizable)
 				.attr('id', title)
