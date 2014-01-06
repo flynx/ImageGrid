@@ -260,27 +260,14 @@ function makePanel(title, parent, open, keep_empty, close_button){
 			// - create a new panel when dropping outside of curent panel...
 			// - remove empty panels...
 			beforeStop: function(e, ui){
-				//var c = 0
-
 				// do this only when dropping outside the panel...
-				//if(ui.placeholder.css('display') == 'none'
 				if(ui.item.data('isoutside')
 						// prevent draggingout the last panel...
 						// NOTE: 2 because we are taking into account 
 						// 		the placeholders...
 						&& panel.find('.sub-panel').length > 2){
-					// compensate for removed item which is still in the
-					// panel when we count it...
-					// ...this is likely to the fact that we jquery-ui did
-					// not cleanup yet
-					//c = 1
 					wrapWithPanel(ui.item, panel.parent(), ui.offset)
 				}
-
-				// remove the panel when it runs out of sub-panels...
-				//if(!keep_empty && panel.find('.sub-panel').length-c <= 0){
-				//	removePanel(panel, true)
-				//}
 
 				panel.trigger('subPanelRemoved')
 
@@ -419,9 +406,7 @@ function makeSubPanel(title, content, parent, open, content_resizable, close_but
 					.click(function(){
 						var parent = sub_panel.parents('.panel').first()
 						removePanel(sub_panel)
-						// XXX need to notify the parent...
-						// 		...so as to enable it to remove itself 
-						// 		if no sub-panels left...
+						// notify the parent panel of removal...
 						parent.trigger('subPanelRemoved')
 						return false
 					})
