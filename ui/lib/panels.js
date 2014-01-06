@@ -26,8 +26,10 @@ var PANELS = {
 
 // - start monitoring where we are dragged to...
 // - open hidden side panels...
+// XXX store number of panels we started with...
 function _startSortHandler(e, ui){
 	ui.item.data('isoutside', false)
+	ui.item.data('sub-panels-before', $(this).find('.sub-panel').length)
 	ui.placeholder
 		.height(ui.helper.outerHeight())
 		.width(ui.helper.outerWidth())
@@ -269,6 +271,14 @@ function makePanel(title, parent, open, keep_empty, close_button){
 					wrapWithPanel(ui.item, panel.parent(), ui.offset)
 				}
 
+				/* XXX this does not work right...
+				if(ui.item.data('sub-panels-before') < panel.find('.sub-panel').length){
+					console.log('!!!!')
+					panel.trigger('subPanelRemoved')
+				}
+				*/
+				// XXX need to trigger this ONLY of a panel was removed...
+				// 		...check if number of panels changed...
 				panel.trigger('subPanelRemoved')
 
 				_resetSidePanels()
