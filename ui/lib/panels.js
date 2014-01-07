@@ -36,6 +36,14 @@ var PANELS = {}
 var PANEL_STATE = {}
 
 
+/*
+// This can be:
+// 	- hide
+// 	- remove
+var PANEL_CLOSE_METHOD = 'hide'
+*/
+
+
 
 /**********************************************************************
 * Helpers...
@@ -158,7 +166,7 @@ function makePanel(title, parent, open, keep_empty, close_button){
 		// 		be accessed from different contexts...
 		.on('subPanelsUpdated', function(){
 			// remove the panel when it runs out of sub-panels...
-			if(!keep_empty && panel.find('.sub-panel').length <= 0){
+			if(!keep_empty && panel.find('.sub-panel:visible').length <= 0){
 				removePanel(panel, true)
 			}
 		})
@@ -444,8 +452,10 @@ function openPanel(panel){
 		open = isPanelVisible(panel)
 		// show panels...
 		panel
+			.css('display', '')
 			.prop('open', true)
 			.parents('.panel')
+				.css('display', '')
 				.prop('open', true)
 		// show side panels...
 		panel
@@ -481,7 +491,7 @@ function closePanel(panel){
 	panel = typeof(panel) == typeof('str')
 		? getPanel(panel)
 		: panel
-	panel.find('.sub-panel').each(function(){
+	panel.find('.sub-panel:visible').each(function(){
 		var p = $(this)
 		if(p.prop('open')){
 			p.trigger('panelClosing', p)
@@ -500,8 +510,17 @@ function removePanel(panel){
 	panel = typeof(panel) == typeof('str')
 		? getPanel(panel)
 		: panel
+	/*
+	if(PANEL_CLOSE_METHOD == 'hide'){
+		return closePanel(panel)
+			.hide()
+	} else {
+		return closePanel(panel)
+			.remove()
+	}
+	*/
 	return closePanel(panel)
-		.remove()
+		.hide()
 }
 
 
