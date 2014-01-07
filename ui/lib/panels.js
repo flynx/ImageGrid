@@ -417,6 +417,7 @@ function makeSubPanel(title, content, parent, open, content_resizable, close_but
 // XXX this should take the state into consideration while opening panels
 // 		and open panels in specific parents and locations, maybe even with
 // 		other neighbor panels...
+// XXX update panel state...
 function openPanel(panel){
 	var title = typeof(panel) == typeof('str') ? panel : null
 	panel = typeof(panel) == typeof('str')
@@ -451,11 +452,19 @@ function openPanel(panel){
 }
 
 
+// XXX
+// XXX update panel state...
+function openPanels(){
+	// XXX
+}
+
+
 // Close the panel...
 //
 // NOTE: this does not care if it's a panel or sub-panel...
 // XXX do we need a panelRemoved event???
 // 		...and a symmetrical panelCreated??
+// XXX update panel state...
 function closePanel(panel){
 	panel = typeof(panel) == typeof('str')
 		? getPanel(panel)
@@ -474,6 +483,7 @@ function closePanel(panel){
 
 // Remove the panel after firing close events on it and all sub-panels...
 //
+// XXX update panel state...
 function removePanel(panel){
 	panel = typeof(panel) == typeof('str')
 		? getPanel(panel)
