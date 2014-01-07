@@ -201,7 +201,9 @@ function makePanel(title, parent, open, keep_empty, close_button){
 	var panel = $('<details/>')
 		.prop('open', open == null ? true : open)
 		.addClass('panel noScroll')
-		.on('subPanelRemoved', function(){
+		// NOTE: this is split into a separate event so as to be able to
+		// 		be accessed from different contexts...
+		.on('subPanelsUpdated', function(){
 			// remove the panel when it runs out of sub-panels...
 			if(!keep_empty && panel.find('.sub-panel').length <= 0){
 				removePanel(panel, true)
@@ -271,15 +273,7 @@ function makePanel(title, parent, open, keep_empty, close_button){
 					wrapWithPanel(ui.item, panel.parent(), ui.offset)
 				}
 
-				/* XXX this does not work right...
-				if(ui.item.data('sub-panels-before') < panel.find('.sub-panel').length){
-					console.log('!!!!')
-					panel.trigger('subPanelRemoved')
-				}
-				*/
-				// XXX need to trigger this ONLY of a panel was removed...
-				// 		...check if number of panels changed...
-				panel.trigger('subPanelRemoved')
+				panel.trigger('subPanelsUpdated')
 
 				_resetSidePanels()
 				_resetSortedElem(ui.item)
@@ -416,8 +410,8 @@ function makeSubPanel(title, content, parent, open, content_resizable, close_but
 					.click(function(){
 						var parent = sub_panel.parents('.panel').first()
 						removePanel(sub_panel)
-						// notify the parent panel of removal...
-						parent.trigger('subPanelRemoved')
+						// notify the parent context update...
+						parent.trigger('subPanelsUpdated')
 						return false
 					})
 					.html('&times;'))
