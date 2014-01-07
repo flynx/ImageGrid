@@ -110,7 +110,24 @@ Roadmap
 
 [_] 31% Gen 3 current todo
 	[_] 63% High priority
-		[_] 41% Panels:
+		[_] BUG: panels: open/close events get triggered on panel drag/sort...
+		[_] buildcache: add option to control image sort...
+		[_] ASAP: Need visual indicators for long operations...
+		[_] 66% tags
+			[X] local tags
+			[_] global tag list
+			[X] 100% actions
+				[X] add
+				[X] remove
+				[X] update
+				[X] select
+				[X] list operations
+				[X] ribbon (list) operations
+				[X] marked (list) operations
+				[X] bookmarked (list) operations
+				[X] mark/unmark tagged
+				[X] crop
+		[_] 33% Panels
 			[X] 100% panel constructors
 				[X] panel
 				[X] side-panel
@@ -131,24 +148,6 @@ Roadmap
 				| remove a panel
 			[_] open panel dialog
 			| list all registered panels...
-		[_] BUG: panels: open/close events get triggered on panel drag/sort...
-		[_] buildcache: add option to control image sort...
-		[_] ASAP: Need visual indicators for long operations...
-		[_] 66% tags
-			[X] local tags
-			[_] global tag list
-			[X] 100% actions
-				[X] add
-				[X] remove
-				[X] update
-				[X] select
-				[X] list operations
-				[X] ribbon (list) operations
-				[X] marked (list) operations
-				[X] bookmarked (list) operations
-				[X] mark/unmark tagged
-				[X] crop
-		[_] 16% Panels
 			[_] 0% mechanics
 				[_] serialization -- save/load panel state
 				[_] sub-panel-oriented actions / key bindings
