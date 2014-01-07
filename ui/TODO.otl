@@ -110,7 +110,7 @@ Roadmap
 
 [_] 31% Gen 3 current todo
 	[_] 63% High priority
-		[_] 52% Panels:
+		[_] 41% Panels:
 			[X] 100% panel constructors
 				[X] panel
 				[X] side-panel
@@ -118,10 +118,10 @@ Roadmap
 			[_] 0% panel state
 				[_] track panel state
 				[_] use panel state for defaults when opening panels
-			[_] 58% actions
-				[_] 33% openPanel
+			[_] 66% actions
+				[_] 66% openPanel
 					[X] if panel is not loaded load it
-					[_] if a panel is not open, open it and all parents
+					[X] if a panel is not open, open it and all parents
 					| XXX need to open auto-hidden side panels...
 					[_] focus panel (???)
 				[_] openPanels
@@ -129,6 +129,8 @@ Roadmap
 				| collapse a panel...
 				[X] removePanel
 				| remove a panel
+			[_] open panel dialog
+			| list all registered panels...
 		[_] BUG: panels: open/close events get triggered on panel drag/sort...
 		[_] buildcache: add option to control image sort...
 		[_] ASAP: Need visual indicators for long operations...
