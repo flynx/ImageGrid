@@ -289,6 +289,12 @@ function makeSidePanel(side, parent, autohide){
 			}
 			return false
 		})
+		// hide temporarily opened side-panels...
+		.mouseout(function(){
+			// XXX jQuery bug: this does not work...
+			//panel.prop('open', false)
+			panel.attr('open', null)
+		})
 		.sortable({
 			forcePlaceholderSize: true,
 			opacity: 0.7,
@@ -436,11 +442,17 @@ function openPanel(panel){
 	// show/open the panel and all it's parents...
 	} else {
 		open = isPanelVisible(panel)
+		// show panels...
 		panel
 			.prop('open', true)
 			.parents('.panel')
 				.prop('open', true)
-			// XXX show side panels too...
+		// show side panels...
+		panel
+			.parents('.side-panel').first()
+				// XXX jQuery bug: this does not work...
+				//.prop('open', true)
+				.attr('open', 'yes')
 	}
 
 	// if the panel was not open trigger the event...

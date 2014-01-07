@@ -130,6 +130,7 @@
 .side-panel.right:not(:empty):after {
 	right: 0px;
 }
+.side-panel[open],
 .side-panel:not(:empty)[autohide=off],
 .side-panel[autohide=on]:not(:empty):hover {
 	min-width: 200px;
@@ -146,6 +147,7 @@
 .side-panel[autohide=on] .sub-panel {
 	display: none;
 }
+.side-panel[open] .sub-panel,
 .side-panel[autohide=on]:hover .sub-panel {
 	display: block;
 }
