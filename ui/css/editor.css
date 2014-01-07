@@ -77,6 +77,9 @@
 	border: solid 1px silver;
 	box-shadow: none;
 }
+.sub-panel.blink {
+	box-shadow: 0px 0px 10px 0px rgba(255,0,0,1) 
+}
 .sub-panel summary {
 	background: #ddd;
 	/*
@@ -261,6 +264,9 @@
 .dark .sub-panel {
 	border: solid 1px #333;
 }
+.dark .sub-panel.blink {
+	box-shadow: 0px 0px 10px 0px rgba(255,255,0,1) 
+}
 .dark .sub-panel summary {
 	background: #333;
 	color: silver;
@@ -338,6 +344,9 @@
 }
 .gray .sub-panel {
 	border: solid 1px #454545;
+}
+.gray .sub-panel.blink {
+	box-shadow: 0px 0px 10px 0px rgba(255,255,0,1) 
 }
 .gray .sub-panel summary {
 	background: #444;

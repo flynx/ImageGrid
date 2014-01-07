@@ -127,7 +127,7 @@ Roadmap
 				[X] bookmarked (list) operations
 				[X] mark/unmark tagged
 				[X] crop
-		[_] 33% Panels
+		[_] 34% Panels
 			[X] 100% panel constructors
 				[X] panel
 				[X] side-panel
@@ -135,12 +135,12 @@ Roadmap
 			[_] 0% panel state
 				[_] track panel state
 				[_] use panel state for defaults when opening panels
-			[_] 66% actions
-				[_] 66% openPanel
+			[_] 75% actions
+				[X] 100% openPanel
 					[X] if panel is not loaded load it
 					[X] if a panel is not open, open it and all parents
 					| XXX need to open auto-hidden side panels...
-					[_] focus panel (???)
+					[X] blink panel
 				[_] openPanels
 				[X] closePanel
 				| collapse a panel...

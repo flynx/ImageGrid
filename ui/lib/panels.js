@@ -141,6 +141,16 @@ function getPanel(title){
 }
 
 
+function blinkPanel(panel){
+	panel
+		.addClass('blink')
+	setTimeout(function(){
+		panel.removeClass('blink')
+	}, 170)
+	return panel
+}
+
+
 
 /**********************************************************************
 * Constructors...
@@ -470,7 +480,10 @@ function openPanel(panel){
 		panel.trigger('panelOpening', panel)
 	}
 
-	return panel
+	//return panel
+	// XXX should we be blinking here???
+	// 		...is this the right context for this???
+	return blinkPanel(panel)
 }
 
 
