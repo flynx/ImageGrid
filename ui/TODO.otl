@@ -237,7 +237,8 @@ Roadmap
 		| 		https://code.google.com/p/chromium/issues/detail?id=329091&thanks=329091&ts=1387246111
 		|
 		| Status:
-		| 	Waiting for feedback...
+		| 	- Waiting for feedback...
+		| 	- got a "Wont Fix" status, still negotiating...
 		|
 		| Workaround:
 		| 	Make image size similar to screen size, in the best case 
