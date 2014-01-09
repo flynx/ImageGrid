@@ -48,7 +48,10 @@ var toggleEditor = createCSSClassToggler(
 					$('.viewer')
 						.append(makeSidePanel('left'))
 						.append(makeSidePanel('right'))
-						.append(_setupPanel(makeEditorControls('.current.image'))
+						.append(_setupPanel(openGroupedPanels([
+									'Edit: Filters',
+									'Edit: Snapshots'
+								]))
 							//.draggable('option', 'snap', '.viewer')
 							.css({
 								// prevent the editor from moving under 
@@ -58,16 +61,8 @@ var toggleEditor = createCSSClassToggler(
 								top: '50px',
 								left: '5px',
 							}))
-							// XXX add handlers for saving data to images...
-							// XXX
-						// setup the event to update the editor...
-						.on('focusingImage', function(){
-							if(toggleEditor('?') == 'on'){
-								// XXX save previous settings if changes...
-								// XXX
-								reloadControls('.current.image')
-							}
-						})
+						// XXX add handlers for saving data to images...
+						// XXX
 				// show the editor...
 				} else {
 					ed.show()

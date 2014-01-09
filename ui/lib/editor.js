@@ -248,92 +248,120 @@ function makeLogRange(text, filter, target){
 
 
 /**********************************************************************
+* Constructors...
+*/
+
+function buildFilterUI(target){
+	return $('<div>')
+		.append($('<div class="filter-list"/>')
+			//.append(makeLogRange('Gamma:', 'gamma', target))
+			.append(makeLogRange('Brightness:', 'brightness', target))
+			.append(makeLogRange('Contrast:', 'contrast', target))
+			.append(makeLogRange('Saturation:', 'saturate', target))
+			.append(makeAbsRange('Hue:', 'hue-rotate', target, 
+					-180, 180, 0, 0.5, function(v){ return v+'deg' }))
+			.append(makeAbsRange('Grayscale:', 'grayscale', target))
+			.append(makeAbsRange('Invert:', 'invert', target))
+			.append(makeAbsRange('Sepia:', 'sepia', target))
+			.sortable({
+				axis: 'y',
+			})
+			.on('sortstop', function(){
+				// update image filter order...
+				var img = $(target)
+				img.css('-webkit-filter', sortFilterStr(img.css('-webkit-filter')))
+			}))
+		.append($('<hr>'))
+		.append('<span>Reset: <span>')
+		.append($('<button>Values</button>')
+			.click(function(){
+				$('.reset').click()
+			}))
+		.append($('<button>Order</button>')
+			.click(function(){
+				sortFilterSliders(DEFAULT_FILTER_ORDER)
+			}))
+		.append($('<button>All</button>')
+			.click(function(){
+				$('.reset').click()
+				sortFilterSliders(DEFAULT_FILTER_ORDER)
+			}))
+		.children()
+}
+
+
+function buildSnapshotsUI(target){
+	return $('<div>')
+		.append($('<div class="states"/>'))
+		.append($('<hr>'))
+		.append($('<button/>')
+			.click(function(){ saveSnapshot(target) })
+			.text('Save'))
+		.append($('<button/>')
+			.addClass('remove-state-drop-target')
+			.click(function(){ clearSnapshots() })
+			.text('Clear')
+			.droppable({
+				accept: '.state',
+				activate: function(e, ui){
+					$(this).text('Delete')
+				},
+				deactivate: function(e, ui){
+					$(this).text('Clear')
+				},
+				drop: function(e, ui){
+					ui.helper.remove()
+				}
+				
+			}))
+		.children()
+}
+
+
+
+/**********************************************************************
 * Panels...
 */
 
-function makeFilterPanel(parent, target, open){
-	return makeSubPanel('Edit: Filters', 
-		$('<div>')
-			.append($('<div class="filter-list"/>')
-				//.append(makeLogRange('Gamma:', 'gamma', target))
-				.append(makeLogRange('Brightness:', 'brightness', target))
-				.append(makeLogRange('Contrast:', 'contrast', target))
-				.append(makeLogRange('Saturation:', 'saturate', target))
-				.append(makeAbsRange('Hue:', 'hue-rotate', target, 
-						-180, 180, 0, 0.5, function(v){ return v+'deg' }))
-				.append(makeAbsRange('Grayscale:', 'grayscale', target))
-				.append(makeAbsRange('Invert:', 'invert', target))
-				.append(makeAbsRange('Sepia:', 'sepia', target))
-				.sortable({
-					axis: 'y',
-				})
-				.on('sortstop', function(){
-					// update image filter order...
-					var img = $(target)
-					img.css('-webkit-filter', sortFilterStr(img.css('-webkit-filter')))
-				}))
-			.append($('<hr>'))
-			.append('<span>Reset: <span>')
-			.append($('<button>Values</button>')
-				.click(function(){
-					$('.reset').click()
-				}))
-			.append($('<button>Order</button>')
-				.click(function(){
-					sortFilterSliders(DEFAULT_FILTER_ORDER)
-				}))
-			.append($('<button>All</button>')
-				.click(function(){
-					$('.reset').click()
-					sortFilterSliders(DEFAULT_FILTER_ORDER)
-				}))
-			.children(),
-		parent, open)
-}
-
-function makeSnapshotsPanel(parent, target, open){
-	return makeSubPanel('Edit: Snapshots', 
-		$('<div>')
-			.append($('<div class="states"/>'))
-			.append($('<hr>'))
-			.append($('<button/>')
-				.click(function(){ saveSnapshot(target) })
-				.text('Save'))
-			.append($('<button/>')
-				.addClass('remove-state-drop-target')
-				.click(function(){ clearSnapshots() })
-				.text('Clear')
-				.droppable({
-					accept: '.state',
-					activate: function(e, ui){
-						$(this).text('Delete')
-					},
-					deactivate: function(e, ui){
-						$(this).text('Clear')
-					},
-					drop: function(e, ui){
-						ui.helper.remove()
-					}
-					
-				}))
-			.children(),
-		parent, open)
-}
+Panel('Edit: Filters',
+	// build UI...
+	function(){
+		// XXX hardcoded target is not good...
+		return buildFilterUI('.current.image')
+	},
+	// setup...
+	function(panel){
+		var _editorUpdateor = function(){
+			reloadControls('.current.image')
+		}
+		panel
+			.on('panelOpening', function(){ 
+				// register updater...
+				$('.viewer')
+					.on('focusingImage', _editorUpdateor)
+				// update the editor state in case the target changed...
+				_editorUpdateor()
+			})
+			.on('panelClosing', function(){ 
+				// unregister updater...
+				$('.viewer')
+					.off('focusingImage', _editorUpdateor)
+			})
+	},
+	true)
 
 
-// XXX add panel update events to help save settings...
-function makeEditorControls(target){
-
-	var panel = makePanel()
-
-	// filters...
-	makeFilterPanel(panel, target)
-
-	// snapshots...
-	makeSnapshotsPanel(panel, target)
-
-	return panel
-}
+Panel('Edit: Snapshots',
+	// build UI...
+	function(){
+		// XXX hardcoded target is not good...
+		return buildSnapshotsUI('.current.image')
+	},
+	// setup...
+	function(panel){
+		// XXX
+	},
+	true)
 
 
 
