@@ -489,10 +489,12 @@ function openPanel(panel, parent, no_blink){
 }
 
 
-// open a set of sub-panels in one panel...
+// Open a set of sub-panels in one parent panel...
 //
 // returns the parent panel.
 //
+// NOTE: if parent is given and already exists then this will append the
+// 		new panels to it...
 // NOTE: this will not re-group already opened panels...
 function openGroupedPanels(panels, parent){
 	panels = typeof(panels) == typeof('str') ? [panels] : panels

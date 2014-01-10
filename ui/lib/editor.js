@@ -331,9 +331,12 @@ Panel('Edit: Filters',
 	},
 	// setup...
 	function(panel){
+		// NOTE: we need to have this in the namespace so as to be able
+		// 		to both register and drop event handlers...
 		var _editorUpdateor = function(){
 			reloadControls('.current.image')
 		}
+
 		panel
 			.on('panelOpening', function(){ 
 				// register updater...
@@ -347,6 +350,28 @@ Panel('Edit: Filters',
 				$('.viewer')
 					.off('focusingImage', _editorUpdateor)
 			})
+
+		/* 
+		// XXX a different approach...
+		// XXX not yet sure which approach is better...
+		// XXX this has one draw back -- the handler is allways there...
+		// 		...depending on how fast isPanelVisible(..) is, this might
+		// 		not be a problem, especially if the panel is also allways 
+		// 		there...
+		var _editorUpdateor = function(){
+			if(isPanelVisible(panel)){
+				reloadControls('.current.image')
+			}
+		}
+		$('.viewer')
+			.on('focusingImage', _editorUpdateor)
+
+		panel
+			.on('panelOpening', function(){ 
+				// update the editor state in case the target changed...
+				_editorUpdateor()
+			})
+		*/
 	},
 	true)
 
