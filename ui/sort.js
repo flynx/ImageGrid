@@ -159,23 +159,32 @@ function imageXPStyleFileNameCmp(a, b, get, data){
 }
 
 
-function chainCmp(a, b, cmp_chain, get, data){
-	var res
-	for(var i=0; i < cmp_chain.length; i++){
-		res = cmp_chain[i](a, b, get, data)
-		if(res != 0){
-			return res
+// Generate a cmp function that will use all the cmp's in cmp_chain in 
+// sequence if the previous returns 0 (equal).
+//
+function chainCmp(cmp_chain){
+	return function(a, b, get, data){
+		var res
+		for(var i=0; i < cmp_chain.length; i++){
+			res = cmp_chain[i](a, b, get, data)
+			if(res != 0){
+				return res
+			}
 		}
+		return res
 	}
-	return res
 }
 
 
-function imageDateOrSeqOrNameCmp(a, b, get, data){
-	return chainCmp(a, b, [
-				imageDateCmp,
-				imageSeqOrNameCmp
-			], get, data)
+// Sort action generator...
+//
+function sortVia(cmp){
+	if(cmp.constructor.name == 'Array'){
+		cmp = chainCmp(cmp)
+	}
+	return function(reverse){
+		return sortImages(cmp, reverse)
+	}
 }
 
 
@@ -224,21 +233,15 @@ function sortImages(cmp, reverse){
 
 
 // shorthands...
-function sortImagesByDate(reverse){
-	return sortImages(imageDateCmp, reverse)
-}
-function sortImagesByDateOrSeqOrName(reverse){
-	return sortImages(imageDateOrSeqOrNameCmp, reverse)
-}
-function sortImagesByFileName(reverse){
-	return sortImages(imageNameCmp, reverse)
-}
-function sortImagesByFileSeqOrName(reverse){
-	return sortImages(imageSeqOrNameCmp, reverse)
-}
-function sortImagesByFileNameXPStyle(reverse){
-	return sortImages(imageXPStyleFileNameCmp, reverse)
-}
+var sortImagesByDate = sortVia(imageDateCmp)
+var sortImagesByFileName = sortVia(imageNameCmp)
+var sortImagesByFileSeqOrName = sortVia(imageSeqOrNameCmp)
+var sortImagesByFileNameXPStyle = sortVia(imageXPStyleFileNameCmp)
+
+var sortImagesByDateOrSeqOrName = sortVia(chainCmp([
+		imageDateCmp,
+		imageSeqOrNameCmp
+	]))
 
 
 // Sort images by name while taking into account sequence overflows
@@ -413,8 +416,8 @@ function sortImagesDialog(){
 
 	cfg = {}
 	cfg[alg] = [
-		'Date'+
-			'| fall back to file sequence then\n'+
+		'Date |'+
+			'fall back to file sequence then\n'+
 			'file name when the earlier is equal.', 
 		'Sequence number', 
 		'Sequence number with overflow', 
