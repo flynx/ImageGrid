@@ -109,7 +109,22 @@ Roadmap
 
 
 [_] 31% Gen 3 current todo
-	[_] 63% High priority
+	[_] 62% High priority
+		[_] BUG: sorting breaks when at or near the end of a ribbon...
+		|
+		| Procedure:
+		| 	- go to end of a ribbon
+		| 	- shift-s 
+		| 		- select a sort method
+		| 		- click "OK"
+		|
+		| NOTE: this will not break of sorting will not change the order of
+		| 		visible images...
+		| 		thus, if this the above procedure does not break do one of:
+		| 			- ctrl-r (reverse) before sorting
+		| 			- check "Descending" in the sort dialog
+		| NOTE: this breaks because current the current image is not 
+		| 		yet loaded/created when reloadViewer(..) tries to focus it...
 		[_] BUG: panels: open/close events get triggered on panel drag/sort...
 		[_] buildcache: add option to control image sort...
 		[_] ASAP: Need visual indicators for long operations...
@@ -254,6 +269,17 @@ Roadmap
 			[_] 0% metadata
 				[_] comment
 				[_] tags
+		[_] BUG: sorting mis-aligns ribbons in some cases...
+		| Example:
+		| 				 oooo...	--[reverse]->	   ...oooo
+		| 		...oooo[o]oooo...					...oooo[o]oooo...
+		|
+		| 		Should be:
+		| 				 oooo...	--[reverse]->	 ...oooo
+		| 		...oooo[o]oooo...					...oooo[o]oooo...
+		|
+		| 	The above can happen when, for example, sorting the images via data
+		| 	and then sorting them in the same way with reverse checked...
 		[_] BUG: opening a dir form history sometimes loads wrong size previews
 		| this happens in part of the view and a refresh, reload or image
 		| update (updateImages()) fixes the issue...

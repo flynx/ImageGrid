@@ -179,9 +179,6 @@ function chainCmp(cmp_chain){
 // Sort action generator...
 //
 function sortVia(cmp){
-	if(cmp.constructor.name == 'Array'){
-		cmp = chainCmp(cmp)
-	}
 	return function(reverse){
 		return sortImages(cmp, reverse)
 	}
@@ -216,11 +213,17 @@ function reverseImageOrder(){
 }
 
 
+// Sort images...
+//
+// NOTE: cmp can be a list of cmp functions, in this case they will be 
+// 		chained (see: chainCmp(..) for more details)
 // NOTE: using imageOrderCmp as a cmp function here will yield odd 
 // 		results -- in-place sorting a list based on relative element 
 // 		positions within itself is fun ;)
 function sortImages(cmp, reverse){
 	cmp = cmp == null ? imageDateCmp : cmp
+	cmp = cmp.constructor.name == 'Array' ? chainCmp(cmp) : cmp
+
 	DATA.order.sort(cmp)
 	if(reverse){
 		DATA.order.reverse()
@@ -237,11 +240,10 @@ var sortImagesByDate = sortVia(imageDateCmp)
 var sortImagesByFileName = sortVia(imageNameCmp)
 var sortImagesByFileSeqOrName = sortVia(imageSeqOrNameCmp)
 var sortImagesByFileNameXPStyle = sortVia(imageXPStyleFileNameCmp)
-
-var sortImagesByDateOrSeqOrName = sortVia(chainCmp([
+var sortImagesByDateOrSeqOrName = sortVia([
 		imageDateCmp,
 		imageSeqOrNameCmp
-	]))
+	])
 
 
 // Sort images by name while taking into account sequence overflows
@@ -390,7 +392,7 @@ function horizontalShiftImage(image, direction){
 	updateImages()
 	dataUpdated()
 
-	$('.viewer').trigger('horizontalSiftedImage', [gid, direction])
+	$('.viewer').trigger('horizontalShiftedImage', [gid, direction])
 
 	return image
 }
@@ -434,7 +436,6 @@ function sortImagesDialog(){
 			res = res[alg]
 
 			if(/Date/i.test(res)){
-				//var method = sortImagesByDate
 				var method = sortImagesByDateOrSeqOrName
 
 			} else if(/File name/i.test(res)){

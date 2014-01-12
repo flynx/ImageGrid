@@ -2165,7 +2165,8 @@ function reloadViewer(reuse_current_structure, images_per_screen){
 		loadImagesAround(Math.round(w * CONFIG.load_screens), current, i)
 	})
 
-	focusImage(getImage(current))
+	// XXX this sometimes is called BEFORE the current image is done loading...
+	focusImage(current)
 
 	fitNImages(w)
 	centerRibbons('css')

@@ -1335,7 +1335,7 @@ function setupUI(viewer){
 				'focusingImage',
 				'fittingImages',
 				//'updatingImageProportions',
-				'horizontalSiftedImage',
+				'horizontalShiftedImage',
 			].join(' '), 
 			function(){
 				updateCurrentMarker()
