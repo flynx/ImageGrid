@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20140102083502'''
+__sub_version__ = '''20140112165326'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -527,6 +527,7 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 		if orientation not in range(0, 9):
 			orientation = 0
 
+		p = pathjoin(path, name)
 		img =  {
 			'id': gid_generator(source_path),
 			'name': name,
@@ -556,7 +557,10 @@ def build_images(path, config=CONFIG, gid_generator=hash_gid, dry_run=False, ver
 					8: None,
 				}[orientation],
 			'path': getpath(path, source_path, absolute_path),
-			'ctime': os.path.getctime(pathjoin(path, name)),
+			'ctime': min(
+				# to compensate for touch updating mtime by default...
+				os.path.getmtime(p),
+				os.path.getctime(p)),
 			'preview': {},
 		}
 

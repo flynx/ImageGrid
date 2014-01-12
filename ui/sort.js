@@ -159,6 +159,26 @@ function imageXPStyleFileNameCmp(a, b, get, data){
 }
 
 
+function chainCmp(a, b, cmp_chain, get, data){
+	var res
+	for(var i=0; i < cmp_chain.length; i++){
+		res = cmp_chain[i](a, b, get, data)
+		if(res != 0){
+			return res
+		}
+	}
+	return res
+}
+
+
+function imageDateOrSeqOrNameCmp(a, b, get, data){
+	return chainCmp(a, b, [
+				imageDateCmp,
+				imageSeqOrNameCmp
+			], get, data)
+}
+
+
 // Get list of gids sorted by proximity to current gid
 //
 // NOTE: the distance used is the actual 2D distance...
@@ -206,6 +226,9 @@ function sortImages(cmp, reverse){
 // shorthands...
 function sortImagesByDate(reverse){
 	return sortImages(imageDateCmp, reverse)
+}
+function sortImagesByDateOrSeqOrName(reverse){
+	return sortImages(imageDateOrSeqOrNameCmp, reverse)
 }
 function sortImagesByFileName(reverse){
 	return sortImages(imageNameCmp, reverse)
@@ -390,7 +413,7 @@ function sortImagesDialog(){
 
 	cfg = {}
 	cfg[alg] = [
-		'Date', 
+		'Date | this will fall back to file sequence and file name.', 
 		'Sequence number', 
 		'Sequence number with overflow', 
 		'File name' 
@@ -406,7 +429,8 @@ function sortImagesDialog(){
 			res = res[alg]
 
 			if(/Date/i.test(res)){
-				var method = sortImagesByDate
+				//var method = sortImagesByDate
+				var method = sortImagesByDateOrSeqOrName
 
 			} else if(/File name/i.test(res)){
 				var method = sortImagesByFileNameXPStyle
