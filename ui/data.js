@@ -427,6 +427,23 @@ function cmp(a, b, get){
 }
 
 
+// Generate a cmp function that will use all the cmp's in cmp_chain in 
+// sequence if the previous returns 0 (equal).
+//
+function chainCmp(cmp_chain){
+	return function(a, b, get, data){
+		var res
+		for(var i=0; i < cmp_chain.length; i++){
+			res = cmp_chain[i](a, b, get, data)
+			if(res != 0){
+				return res
+			}
+		}
+		return res
+	}
+}
+
+
 // Generic image ordering comparison via DATA.order
 //
 // NOTE: see updateRibbonORder(...) for a general view on image sorting

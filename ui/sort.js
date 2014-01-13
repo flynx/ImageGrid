@@ -159,23 +159,6 @@ function imageXPStyleFileNameCmp(a, b, get, data){
 }
 
 
-// Generate a cmp function that will use all the cmp's in cmp_chain in 
-// sequence if the previous returns 0 (equal).
-//
-function chainCmp(cmp_chain){
-	return function(a, b, get, data){
-		var res
-		for(var i=0; i < cmp_chain.length; i++){
-			res = cmp_chain[i](a, b, get, data)
-			if(res != 0){
-				return res
-			}
-		}
-		return res
-	}
-}
-
-
 // Sort action generator...
 //
 function sortVia(cmp){
