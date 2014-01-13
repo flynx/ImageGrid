@@ -808,7 +808,7 @@ var FIELD_TYPES = {
 			var select = field.find('select')
 			for(var i=0; i < value.select.length; i++){
 				item
-					.text(value.select[i])
+					.html(value.select[i])
 					.val(value.select[i])
 				item.appendTo(select)
 

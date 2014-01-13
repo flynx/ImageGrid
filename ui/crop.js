@@ -273,6 +273,135 @@ function cropImagesDialog(){
 }
 
 
+function filterImagesDialog(){
+	updateStatus('Filter...').show()
+
+	cfg = {}
+	cfg['sep0'] = '---'
+	cfg['Name'] = ''
+	cfg['Path |'
+			+'this applies to the non-common\n'
+			+'part of the relative path.'] = ''
+	cfg['Comment'] = ''
+	cfg['Tags |'
+			+'an image will match if at least\n'
+			+'one tag matches'] = ''
+	// XXX date...
+	cfg['Rotated'] = {select: [
+		'',
+		'no',
+		'90&deg; or 270&deg;',
+		'0&deg; or 180&deg;',
+		'90&deg; only',
+		'180&deg; only',
+		'270&deg; only'
+	]}
+	cfg['Flipped'] = {select: [
+		'',
+		'no',
+		'vertical',
+		'horizontal'
+	]}
+	cfg['sep1'] = '---'
+	cfg['Marked'] = {select: [
+		'',
+		'yes',
+		'no'
+	]}
+	cfg['Bookmarked'] = {select: [
+		'',
+		'yes',
+		'no'
+	]}
+	cfg['sep2'] = '---'
+	cfg['Keep ribbons'] = false
+
+	formDialog(null, 
+			'Filter images | NOTE: all filter text fields\n'
+							+'support regular expressions.',
+			cfg,
+			'OK', 
+			'filterImagesDialog')
+		.done(function(res){
+			var gids
+
+			showStatusQ('Filtering...')
+
+			// XXX date...
+
+			var filter = {}
+			// build the filter...
+			for(var field in res){
+				if(/^Name/.test(field) && res[field].trim() != ''){
+					filter['name'] = res[field]
+
+				} else if(/^Path/.test(field) && res[field].trim() != ''){
+					filter['path'] = res[field]
+
+				} else if(/^Comment/.test(field) && res[field].trim() != ''){
+					filter['comment'] = res[field]
+
+				} else if(/^Tags/.test(field) && res[field].trim() != ''){
+					filter['tags'] = res[field]
+
+				} else if(/^Rotated/.test(field) && res[field].trim() != ''){
+					if(res[field] == 'no'){
+						filter['orientation'] = '^0$|undefined|null'
+					} else if(/or/.test(res[field])){
+						filter['orientation'] = res[field]
+							.split('or')
+							.map(function(e){
+								e = parseInt(e)
+								if(e == 0){
+									return '^0$|undefined|null'
+								}
+								return e
+							})
+							.join('|')
+					} else {
+						filter['orientation'] = RegExp(parseInt(res[field]))
+					}
+
+				} else if(/^Flipped/.test(field) && res[field].trim() != ''){
+					if(res[field] == 'no'){
+						filter['flipped'] = 'undefined|null'
+					} else {
+						filter['flipped'] = res[field]
+					}
+
+				} else if(/^Bookmarked/.test(field) && res[field].trim() != ''){
+					if(res[field] == 'yes'){
+						gids = getBookmarked(gids)
+					} else {
+						gids = getUnbookmarked(gids)
+					}
+
+				} else if(/^Marked/.test(field) && res[field].trim() != ''){
+					if(res[field] == 'yes'){
+						gids = getMarked(gids)
+					} else {
+						gids = getUnmarked(gids)
+					}
+				}
+			}
+
+			var keep_ribbons = res['Keep ribbons']
+
+			gids = filterGIDs(filter, gids)
+
+			if(gids.length > 0){
+				cropDataTo(gids, keep_ribbons)
+			} else {
+				showStatusQ('Filter: nothing matched.')
+			}
+		})
+		.fail(function(){
+			showStatusQ('Filter: canceled.')
+		})
+}
+
+
+
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */

@@ -78,7 +78,10 @@ var KEYBOARD_CONFIG = {
 
 		// NOTE: this is handled by the wrapper at this point, so we do 
 		// 		not have to do anything here...
-		F11: doc('Toggle full screen view', function(){ toggleFullscreenMode() }),
+		F11: doc('Toggle full screen view', function(){ 
+				toggleFullscreenMode() 
+				return false
+			}),
 		F: {
 			ctrl: 'F11',
 		},
@@ -380,6 +383,7 @@ var KEYBOARD_CONFIG = {
 
 		// cropping...
 		C: doc('Show ribbon crop dialog', cropImagesDialog),
+		F: doc('Filter images', filterImagesDialog),
 
 		// XXX add a non FXX key for macs...
 		F2: {

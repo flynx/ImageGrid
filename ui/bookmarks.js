@@ -7,7 +7,7 @@
 // list of bookmarked gids...
 //
 // NOTE: this must be sorted in the same order as DATA.order
-var BOOKMARKS= [] 
+var BOOKMARKS = [] 
 
 // bookmark data
 //
@@ -23,6 +23,9 @@ var BOOKMARKS_FILE_PATTERN = /^[0-9]*-bookmarked.json$/
 /**********************************************************************
 * Helpers
 */
+
+var getBookmarked = makeMarkedLister(function(){ return BOOKMARKS })
+var getUnbookmarked = makeUnmarkedLister(function(){ return BOOKMARKS }) 
 
 var getBookmarkedGIDBefore = makeGIDBeforeGetterFromList(
 		function(){ 

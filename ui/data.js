@@ -748,12 +748,17 @@ function getAllGids(data){
 // Get all the currently loaded gids...
 //
 // NOTE: this will return an unsorted list of gids...
-function getLoadedGIDs(data){
+function getLoadedGIDs(gids, data){
 	data = data == null ? DATA : data
 	var res = []
 	data.ribbons.forEach(function(r){
 		res = res.concat(r)
 	})
+	if(gids != null){
+		return gids.filter(function(e){
+			return res.indexOf(e) >= 0
+		})
+	}
 	return res
 }
 
@@ -1402,6 +1407,47 @@ function makePrevFromListAction(get_closest, get_list, restrict_to_ribbon){
 
 		return showImage(prev)
 	}
+}
+
+
+// XXX also need a date filter -- separate function?
+function filterGIDs(filter, gids, data, images){
+	images = images == null ? IMAGES : images
+	gids = gids == null ? getLoadedGIDs(null, data) : gids
+
+	// normalize filter...
+	for(var k in filter){
+		if(typeof(filter[k]) == typeof('str')){
+			filter[k] = RegExp(filter[k])
+		}
+	}
+
+	var res = gids.filter(function(gid){
+		var img = images[gid]
+		for(var k in filter){
+			// if key does not exist we have no match...
+			if(!(k in img)){
+				return false
+			}
+
+			var f = filter[k]
+			var val = img[k]
+			val = typeof(val) == typeof('str') ? val.trim() : val
+
+			// value is a list, check items, at least one needs to match...
+			if(val.constructor.name == 'Array'
+					&& val.filter(function(e){ return f.test(e) }).length < 1){
+				return false
+				
+			// check the whole value...
+			} else if(!f.test(val)){
+				return false
+			}
+		}
+		return true
+	})
+
+	return res
 }
 
 

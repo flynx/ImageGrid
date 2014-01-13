@@ -74,36 +74,68 @@ function invalidateMarksCache(){
 }
 
 
-// Get list of unmarked images...
+function makeMarkedLister(get_marked){
+	return function(mode){
+		var marked = get_marked()
+		mode = mode == null ? 'all' : mode
+		var gids = mode == 'all' ? getLoadedGIDs(marked) 
+			: mode.constructor.name == 'Array' ? getLoadedGIDs(mode)
+			: typeof(mode) == typeof(123) ? getRibbonGIDs(mode)
+			: getRibbonGIDs()
+
+		if(mode == 'all'){
+			return gids
+		}
+		return gids.filter(function(e){
+			return marked.indexOf(e) >= 0
+		})
+	}
+}
+
+
+// Make lister of unmarked images...
 //
 // mode can be:
 // 	- 'ribbon'
 // 	- 'all'
 // 	- number			- ribbon index
+// 	- list				- list of gids used as source
 // 	- null				- same as all
-function getUnmarked(mode){
-	mode = mode == null ? 'all' : mode
-	var gids = mode == 'all' ? getLoadedGIDs() 
-		: typeof(mode) == typeof(123) ? getRibbonGIDs(mode)
-		: getRibbonGIDs()
-	mode = mode == 'ribbon' ? getRibbonIndex() : mode
+function makeUnmarkedLister(get_marked, get_cache){
+	return function(mode){
+		var marked = get_marked()
+		var cache = get_cache != null ? get_cache() : null
 
-	// get the cached set...
-	if(_UNMARKED_CACHE != null && mode in _UNMARKED_CACHE){
-		return _UNMARKED_CACHE[mode]
+		mode = mode == null ? 'all' : mode
+		var gids = mode == 'all' ? getLoadedGIDs() 
+			: mode.constructor.name == 'Array' ? getLoadedGIDs(mode)
+			: typeof(mode) == typeof(123) ? getRibbonGIDs(mode)
+			: getRibbonGIDs()
+		mode = mode == 'ribbon' ? getRibbonIndex() : mode
+
+		// get the cached set...
+		if(cache != null && mode in cache){
+			return cache[mode]
+		}
+
+		// calculate the set...
+		var res = gids.filter(function(e){
+			// keep only unmarked...
+			return marked.indexOf(e) < 0
+		})
+		if(cache != null && typeof(mode) == typeof(123)){
+			cache[mode] = res
+		}
+
+		return res
 	}
-
-	// calculate the set...
-	var res = gids.filter(function(e){
-		// keep only unmarked...
-		return MARKED.indexOf(e) < 0
-	})
-	if(_UNMARKED_CACHE != null){
-		_UNMARKED_CACHE[mode] = res
-	}
-
-	return res
 }
+
+
+var getMarked = makeMarkedLister(function(){ return MARKED })
+var getUnmarked = makeUnmarkedLister(
+		function(){ return MARKED }, 
+		function(){ return _UNMARKED_CACHE })
 
 
 var getMarkedGIDBefore = makeGIDBeforeGetterFromList(

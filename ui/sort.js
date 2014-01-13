@@ -418,9 +418,9 @@ function sortImagesDialog(){
 
 	cfg = {}
 	cfg[alg] = [
-		'Date |'+
-			'fall back to file sequence then\n'+
-			'file name when the earlier is equal.', 
+		'Date |'
+			+'fall back to file sequence then\n'
+			+'file name when the earlier is equal.', 
 		'Sequence number', 
 		'Sequence number with overflow', 
 		'File name' 
