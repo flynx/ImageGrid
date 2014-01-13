@@ -738,6 +738,10 @@ function setupMarks(viewer){
 				viewer.trigger('togglingMark', [gid, action])
 			})
 		})
+		.on('sortedImages', function(){
+			MARKED = fastSortGIDsByOrder(MARKED)
+			marksUpdated()
+		})
 		.on('baseURLChanged', function(){
 			invalidateMarksCache()
 		})

@@ -531,6 +531,12 @@ function setupUnsortedTagHandler(viewer){
 				untagList(gids, UNSORTED_TAG)
 			}
 		})
+		.on('sortedImages', function(){
+			for(var tag in TAGS){
+				TAGS[tag] = fastSortGIDsByOrder(TAGS[tag])
+			}
+			tagsUpdated()
+		})
 }
 SETUP_BINDINGS.push(setupUnsortedTagHandler)
 
