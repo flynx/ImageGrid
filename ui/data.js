@@ -709,12 +709,22 @@ function getGIDRibbonIndex(gid, data){
 // 	- number	- ribbon index
 // 	- gid
 // 	- image
+// 	- list		- return only images in ribbon
+//
+// XXX we should be able to pass both a ribbon number and a list of 
+// 		gids to filter...
 function getRibbonGIDs(a, no_clone, data){
 	data = data == null ? DATA : data
 	if(typeof(a) == typeof(123)){
-		return data.ribbons[a].slice()
+		var res = data.ribbons[a]
+	} else {
+		var res = data.ribbons[getGIDRibbonIndex(a.constructor.name != 'Array' ? a : null, data)]
 	}
-	var res = data.ribbons[getGIDRibbonIndex(a, data)]
+	if(a.constructor.name = 'Array'){
+		res = res.filter(function(e){ 
+			return a.indexOf(e) >= 0 
+		})
+	}
 	if(no_clone){
 		return res
 	}

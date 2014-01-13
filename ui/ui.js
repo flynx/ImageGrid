@@ -1262,6 +1262,11 @@ function showImageInfo(){
 					'<tr><td>Position (ribbon): </td><td>'+ (DATA.ribbons[r].indexOf(gid)+1) +
 						'/'+ DATA.ribbons[r].length +'</td></tr>'+
 					'<tr><td>Position (global): </td><td>'+ (order+1) +'/'+ DATA.order.length +'</td></tr>'+
+					'<tr><td>Sorted: </td><td>'+ 
+						//(((DATA.order.length-tagSelectAND('unsorted', DATA.order).length)/DATA.order.length)*100+'').split('.')[0] +
+						//(((DATA.order.length-tagSelectAND('unsorted').length)/DATA.order.length)*100+'').split('.')[0] +
+						(((DATA.order.length-TAGS['unsorted'].length)/DATA.order.length)*100+'').split('.')[0] +
+					'%</td></tr>'+
 
 					// editable fields...
 					'<tr><td colspan="2"><hr></td></tr>'+

@@ -155,7 +155,7 @@ function removeTag(tags, gid, tagset, images){
 	})
 
 	// clear the tags...
-	if(updated && img.tags.length == 0){
+	if(updated && img.tags != null && img.tags.length == 0){
 		delete img.tags
 	}
 

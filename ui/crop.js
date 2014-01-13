@@ -314,6 +314,10 @@ function filterImagesDialog(){
 		'no'
 	]}
 	cfg['sep2'] = '---'
+	cfg['Ribbon'] = {select: [
+		'all',
+		'current only'
+	]}
 	cfg['Keep ribbons'] = false
 
 	formDialog(null, 
@@ -385,6 +389,11 @@ function filterImagesDialog(){
 						gids = getMarked(gids)
 					} else {
 						gids = getUnmarked(gids)
+					}
+
+				} else if(/^Ribbon/.test(field) && res[field].trim() != 'all'){
+					if(res[field] == 'current only'){
+						gids = getRibbonGIDs(gids)
 					}
 				}
 			}

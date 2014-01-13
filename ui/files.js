@@ -436,8 +436,9 @@ function loadFileImages(path, no_load_diffs){
 //
 // NOTE: if an explicit name is given then this will not remove anything.
 // NOTE: this will use CONFIG.cache_dir as the location if no name is given.
-function saveFileImages(name){
-	var remove_diffs = (name == null)
+function saveFileImages(name, remove_diffs){
+	//remove_diffs = remove_diffs == null ? (name == null) : remove_diffs
+	remove_diffs = remove_diffs == null ? false : remove_diffs
 	name = name == null ? normalizePath(CONFIG.cache_dir_var +'/'+ Date.timeStamp()) : name
 
 	if(window.dumpJSON == null){
