@@ -1263,9 +1263,9 @@ function showImageInfo(){
 						'/'+ DATA.ribbons[r].length +'</td></tr>'+
 					'<tr><td>Position (global): </td><td>'+ (order+1) +'/'+ DATA.order.length +'</td></tr>'+
 					'<tr><td>Sorted: </td><td>'+ 
-						//(((DATA.order.length-tagSelectAND('unsorted', DATA.order).length)/DATA.order.length)*100+'').split('.')[0] +
-						//(((DATA.order.length-tagSelectAND('unsorted').length)/DATA.order.length)*100+'').split('.')[0] +
-						(((DATA.order.length-TAGS['unsorted'].length)/DATA.order.length)*100+'').split('.')[0] +
+						//Math.round(((DATA.order.length-tagSelectAND('unsorted', DATA.order).length)/DATA.order.length)*100+'') +
+						//Math.round(((DATA.order.length-tagSelectAND('unsorted').length)/DATA.order.length)*100+'') +
+						Math.round(((DATA.order.length-TAGS['unsorted'].length)/DATA.order.length)*100+'') +
 					'%</td></tr>'+
 
 					// editable fields...
