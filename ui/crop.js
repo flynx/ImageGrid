@@ -280,11 +280,11 @@ function filterImagesDialog(){
 	cfg['sep0'] = '---'
 	cfg['Name'] = ''
 	cfg['Path |'
-			+'this applies to the non-common\n'
-			+'part of the relative path.'] = ''
+			+'This applies to the non-common\n'
+			+'part of the relative path only.'] = ''
 	cfg['Comment'] = ''
 	cfg['Tags |'
-			+'an image will match if at least\n'
+			+'An image will match if at least\n'
 			+'one tag matches'] = ''
 	// XXX date...
 	cfg['Rotated'] = {select: [
@@ -317,8 +317,12 @@ function filterImagesDialog(){
 	cfg['Keep ribbons'] = false
 
 	formDialog(null, 
-			'Filter images | NOTE: all filter text fields\n'
-							+'support regular expressions.',
+			'Filter images |'
+				+'All filter text fields support\n'
+				+'regular expressions.\n'
+				+'\n'
+				+'Only non-empty fields are used\n'
+				+'for filtering.',
 			cfg,
 			'OK', 
 			'filterImagesDialog')
@@ -399,7 +403,6 @@ function filterImagesDialog(){
 			showStatusQ('Filter: canceled.')
 		})
 }
-
 
 
 
