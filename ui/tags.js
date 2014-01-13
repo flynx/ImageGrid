@@ -27,10 +27,10 @@ var TAGS_FILE_PATTERN = /^[0-9]*-tags.json$/
 
 /*********************************************************************/
 
-function buildTagsFromImages(tagset, images){
-	tagset = tagset == null ? TAGS : tagset
+function buildTagsFromImages(images){
 	images = images == null ? IMAGES : images
 
+	var tagset = {}
 	var order = DATA.order
 
 	for(var gid in images){
@@ -59,6 +59,7 @@ function buildTagsFromImages(tagset, images){
 		tagset[tag] = tagset[tag].filter(function(e){ return e != null })
 	}
 
+	TAGS = tagset
 	tagsUpdated()
 
 	return tagset
@@ -139,12 +140,14 @@ function removeTag(tags, gid, tagset, images){
 	var updated = false
 	var img = images[gid]
 
-	// remove tags to tagset...
 	tags.map(function(tag){
 		var set = tagset[tag]
-		if(set != null && set.indexOf(tag) >= 0){
+		// remove tags from tagset...
+		if(set != null && set.indexOf(gid) >= 0){
+			updated = true
 			set.splice(set.indexOf(tag), 1)
 		}
+		// remove tags from image...
 		if(img.tags != null && img.tags.indexOf(tag) >= 0){
 			updated = true
 			img.tags.splice(img.tags.indexOf(tag), 1)
@@ -335,9 +338,9 @@ function untagMarked(tags){ return untagList(MARKED, tags) }
 function tagOnlyMarked(tags){ return tagOnlyList(MARKED, tags) }
 
 // tag manipulation of bookmarked images...
-function tagBookmarked(tags){ return tagList(BOOKMARKED, tags) }
-function untagBookmarked(tags){ return untagList(BOOKMARKED, tags) }
-function tagOnlyBookmarked(tags){ return tagOnlyList(BOOKMARKED, tags) }
+function tagBookmarked(tags){ return tagList(BOOKMARKS, tags) }
+function untagBookmarked(tags){ return untagList(BOOKMARKS, tags) }
+function tagOnlyBookmarked(tags){ return tagOnlyList(BOOKMARKS, tags) }
 
 
 
@@ -503,27 +506,6 @@ function tagsUpdated(){
 /**********************************************************************
 * Setup...
 */
-
-function setupTags(viewer){
-	console.log('Tags: setup...')
-
-	return viewer
-		.on('imagesLoaded', function(){
-			// XXX need to detect if tags have been loaded...
-			TAGS = {}
-
-			showStatusQ('Tags: Index: building...')
-
-			// XXX should this be sync???
-			var t0 = Date.now()
-			buildTagsFromImages()
-			var t1 = Date.now()
-
-			showStatusQ('Tags: Index: done ('+( t1 - t0 )+'ms).')
-		})
-}
-//SETUP_BINDINGS.push(setupTags)
-
 
 // Setup the unsorted image state managers...
 //
