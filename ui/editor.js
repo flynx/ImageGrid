@@ -6,6 +6,8 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var PANEL_ROOT = '.viewer'
+
 
 /*********************************************************************/
 // XXX these are a bit too general... 
@@ -76,6 +78,44 @@ var toggleEditor = createCSSClassToggler(
 				ed.remove()
 			}
 		})
+
+
+
+/**********************************************************************
+* Dialogs...
+*/
+
+function panelListDialog(){
+	updateStatus('Open panel...').show()
+
+	cfg = {}
+	// XXX indicate open panels...
+	cfg['Open panel'] = Object.keys(PANELS).map(function(e){
+		if(getPanel(e).length > 0){
+			return e + ' (open)'
+		}
+		return e
+	})
+
+	formDialog(null, '', 
+			cfg,
+			'OK', 
+			'panelListDialog')
+		.done(function(res){
+
+			var panel = res['Open panel'].split(' (open)')[0]
+
+			// toggle panel visibility on...
+			// XXX 
+
+			openPanel(panel)
+
+			showStatusQ('Opening panel: '+panel+'...')
+		})
+		.fail(function(){
+			showStatusQ('Opening panel: canceled.')
+		})
+}
 
 
 

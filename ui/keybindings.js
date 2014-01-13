@@ -788,8 +788,14 @@ var KEYBOARD_CONFIG = {
 				ctrl: 'invert-marks',
 			},
 		P: {
-				default: doc('Show options',
-					function(){ toggleOptionsUI() }),
+				default: doc('Show panel list',
+					function(){ 
+						panelListDialog()
+					}),
+				shift: doc('Show options',
+					function(){ 
+						toggleOptionsUI() 
+					}),
 				ctrl: doc('Print keyboard help',
 					function(){
 						toggleKeyboardHelp('on')

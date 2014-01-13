@@ -163,7 +163,7 @@ Roadmap
 				[X] bookmarked (list) operations
 				[X] mark/unmark tagged
 				[X] crop
-		[_] 34% Panels
+		[_] 51% Panels
 			[X] 100% panel constructors
 				[X] panel
 				[X] side-panel
@@ -182,7 +182,7 @@ Roadmap
 				| collapse a panel...
 				[X] removePanel
 				| remove a panel
-			[_] open panel dialog
+			[X] open panel dialog
 			| list all registered panels...
 			[_] 0% mechanics
 				[_] serialization -- save/load panel state
