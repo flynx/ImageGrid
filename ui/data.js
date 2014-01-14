@@ -1491,11 +1491,16 @@ function makePrevFromListAction(get_closest, get_list, restrict_to_ribbon){
 //
 // XXX also need a date filter -- separate function?
 // XXX need a number filter with support of advanced comparisons...
+// XXX add functions as patterns...
 function filterGIDs(filter, gids, data, images){
 	images = images == null ? IMAGES : images
 	gids = gids == null ? getLoadedGIDs(null, data) : gids
 
 	// normalize filter...
+	// 	in format:
+	// 		<attr>: <pattern>
+	// 	out format:
+	// 		<attr>: [ <regexp>, <expected-match-result> ]
 	for(var k in filter){
 		if(typeof(filter[k]) == typeof('str')){
 			if(filter[k][0] == '!'){

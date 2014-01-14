@@ -325,7 +325,7 @@ function filterImagesDialog(){
 				+'All filter text fields support\n'
 				+'regular expressions.\n'
 				+'\n'
-				+'Adding a "!" to any text filter\n'
+				+'Prepending a "!" to any text filter\n'
 				+'will negate it, selecting unmatching\n'
 				+'images only.\n'
 				+'\n'
