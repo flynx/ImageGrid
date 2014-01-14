@@ -721,32 +721,47 @@ function getGIDRibbonIndex(gid, data){
 
 // Get a list of gids in ribbon...
 //
-// The ribbon can be given as:
-// 	- null		- get current ribbon
-// 	- number	- ribbon index
-// 	- gid
-// 	- image
-// 	- list		- return only images in ribbon
+// Possible signatures:
 //
-// XXX we should be able to pass both a ribbon number and a list of 
-// 		gids to filter...
-function getRibbonGIDs(a, no_clone, data){
+// 	getRibbonGIDs([<image>[, <no-clone>]])
+// 		find a ribbon with <image> and return its gids
+// 		<image> can be anything than getGIDRibbonIndex(..) accepts.
+// 		if <image> is omitted then current ribbon is assumed.
+// 		<no-clone> if true will prevent the result from being cloned, use
+// 		with caution.
+//
+// 	getRibbonGIDs(<gids>[, <ribbon-index>])
+// 		<gids> is list of gids.
+// 		return a filtered list of gids, containing only gids from target 
+// 		ribbon.
+// 		<ribbon-index> is getGIDRibbonIndex(..) compatible value or number,
+// 		if it is not given, then current ribbon is used.
+//
+function getRibbonGIDs(a, b, data){
 	data = data == null ? DATA : data
+
+	// a is ribbon number...
 	if(typeof(a) == typeof(123)){
 		var res = data.ribbons[a]
-	} else {
-		var res = data.ribbons[getGIDRibbonIndex(
-				(a != null && a.constructor.name != 'Array') 
-					? a 
-					: null,
-				data)]
-	}
-	if(a != null && a.constructor.name == 'Array'){
-		res = res.filter(function(e){ 
-			return a.indexOf(e) >= 0 
+
+	// a is list of gids, b if given is ribbon number...
+	} else if(a != null && a.constructor.name == 'Array'){
+		// b is a number...
+		if(typeof(b) == typeof(123)){
+			var res = data.ribbons[b]
+		// b is an getGIDRibbonIndex(..) compatible...
+		} else {
+			var res = data.ribbons[getGIDRibbonIndex(b, data)]
+		}
+		res = a.filter(function(e){ 
+			return res.indexOf(e) >= 0 
 		})
+
+	// a is an getGIDRibbonIndex(..) compatible...
+	} else {
+		var res = data.ribbons[getGIDRibbonIndex(a, data)]
 	}
-	if(no_clone){
+	if(b){
 		return res
 	}
 	return res.slice()
