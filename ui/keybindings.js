@@ -369,6 +369,15 @@ var KEYBOARD_CONFIG = {
 				'ctrl+shift': 'next-screen',
 			},
 
+		// align to base ribbon...
+		// XXX base ribbon concept is not yet fully defined...
+		Down: {
+				'ctrl+alt': doc('Align sorted section to current ribbon (EXPERIMENTAL)',
+					function(){
+						alignRibbons()
+					}),
+			},
+
 		// zooming...
 		'#1': doc('Fit one image', function(){ fitNImages(1) }),
 		'#2': doc('Fit two images', function(){ fitNImages(2) }),

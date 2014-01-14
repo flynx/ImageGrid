@@ -1474,6 +1474,13 @@ function makePrevFromListAction(get_closest, get_list, restrict_to_ribbon){
 // 	- if image attribute value is a list, the pattern must match at 
 // 		least one element of the list (OR)
 //
+// A filter can be negated by prepending with '!', this will change the
+// matching rules:
+// 	- an attribute is non-existent
+// 	- an attribute does not match the filter
+// 	- if image attribute value is a list, the pattern must not match any
+// 		of the elements (AND)
+//
 // If gids is passed, it will be used as the source, otherwise 
 // getLoadedGIDs(..) will be used to produce a list of gids.
 //
@@ -1491,29 +1498,38 @@ function filterGIDs(filter, gids, data, images){
 	// normalize filter...
 	for(var k in filter){
 		if(typeof(filter[k]) == typeof('str')){
-			filter[k] = RegExp(filter[k])
+			if(filter[k][0] == '!'){
+				filter[k] = [ RegExp(filter[k].slice(1)), false ]
+			} else {
+				filter[k] = [ RegExp(filter[k]), true ]
+			}
+		} else {
+			filter[k] = [ RegExp(filter[k]), true ]
 		}
 	}
 
 	var res = gids.filter(function(gid){
 		var img = images[gid]
 		for(var k in filter){
-			// if key does not exist we have no match...
-			if(!(k in img)){
-				return false
+			var f = filter[k]
+			var exp = f[1]
+			f = f[0]
+			var val = img[k]
+
+			// if key does not exist...
+			if(val == null){
+				return exp ? false : true
 			}
 
-			var f = filter[k]
-			var val = img[k]
 			val = typeof(val) == typeof('str') ? val.trim() : val
 
 			// value is a list, check items, at least one needs to match...
 			if(val.constructor.name == 'Array'
-					&& val.filter(function(e){ return f.test(e) }).length < 1){
+					&& val.filter(function(e){ return f.test(e) == exp }).length < 1){
 				return false
 				
 			// check the whole value...
-			} else if(!f.test(val)){
+			} else if(f.test(val) != exp){
 				return false
 			}
 		}
