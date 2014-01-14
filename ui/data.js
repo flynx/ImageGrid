@@ -1518,7 +1518,10 @@ function filterGIDs(filter, gids, data, images){
 
 			// if key does not exist...
 			if(val == null){
-				return exp ? false : true
+				if(exp == false){
+					continue
+				}
+				return false
 			}
 
 			val = typeof(val) == typeof('str') ? val.trim() : val
