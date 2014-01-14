@@ -735,9 +735,13 @@ function getRibbonGIDs(a, no_clone, data){
 	if(typeof(a) == typeof(123)){
 		var res = data.ribbons[a]
 	} else {
-		var res = data.ribbons[getGIDRibbonIndex(a.constructor.name != 'Array' ? a : null, data)]
+		var res = data.ribbons[getGIDRibbonIndex(
+				(a != null && a.constructor.name != 'Array') 
+					? a 
+					: null,
+				data)]
 	}
-	if(a.constructor.name = 'Array'){
+	if(a != null && a.constructor.name == 'Array'){
 		res = res.filter(function(e){ 
 			return a.indexOf(e) >= 0 
 		})
@@ -1284,6 +1288,7 @@ function getBestPreview(gid, size){
 // values.
 //
 // 		EXIF		rotation	flip
+// 		-----------------------------------
 // 		0			-			-
 // 		1			-			-
 // 		2			-			horizontal
@@ -1326,7 +1331,7 @@ function orientationExif2ImageGrid(orientation){
 }
 
 
-// mark an image as updated...
+// Mark an image as updated...
 //
 function imageUpdated(gid){
 	gid = gid == null ? getImageGID(): gid
@@ -1437,7 +1442,33 @@ function makePrevFromListAction(get_closest, get_list, restrict_to_ribbon){
 }
 
 
+// Filter gids via image attribute patterns...
+//
+// Filter format:
+// 	{
+// 		<attribute>: <pattern>,
+// 		...
+// 	}
+//
+// The pattern can be a string or a regular expression. The string value 
+// is converted to a regular expression as-is.
+//
+// Matching rules:
+// 	- a specified attribute must exist
+// 	- the pattern must match image attribute value
+// 	- if image attribute value is a list, the pattern must match at 
+// 		least one element of the list (OR)
+//
+// If gids is passed, it will be used as the source, otherwise 
+// getLoadedGIDs(..) will be used to produce a list of gids.
+//
+// NOTE: the data argument is used only when no gids are supplied 
+// 		explicitly, otherwise it is ignored.
+// NOTE: this works only with string or convertible to string values, 
+// 		thus, numeric and/or date comparisons are not supported...
+//
 // XXX also need a date filter -- separate function?
+// XXX need a number filter with support of advanced comparisons...
 function filterGIDs(filter, gids, data, images){
 	images = images == null ? IMAGES : images
 	gids = gids == null ? getLoadedGIDs(null, data) : gids
@@ -2189,24 +2220,6 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 
 	return images
 }
-
-
-/*
-// Remove images that do not belong in the ribbons they are in...
-//
-function removeStrayImages(){
-	$('.ribbon').each(function(i){
-		var ribbon = DATA.ribbons[i]
-		$(this).find('.image').map(function(){
-			var gid = getImageGID(this)
-			if(ribbon.indexOf(gid) < 0){
-				getImageMarks(gid).remove()
-				return this
-			}
-		}).remove()
-	})
-}
-*/
 
 
 // Reload the viewer using the current DATA and IMAGES objects

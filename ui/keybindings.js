@@ -652,6 +652,14 @@ var KEYBOARD_CONFIG = {
 					function(){
 						exportPreviewsDialog()
 					}), 
+				// NOTE: this will not delete anything, just merge all the diffs 
+				// 		into a single, redundent images.json.
+				// 		this will make loading faster...
+				'ctrl+alt': doc('Compact image data.',
+					function(){
+						showStatusQ('Merging: images diffs.')
+						saveFileImages()
+					}),
 			},
 		Z: {
 				ctrl: doc('Restore to last saved state', 
