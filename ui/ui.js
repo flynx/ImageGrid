@@ -1111,6 +1111,7 @@ function exportPreviewsDialog(state, dfl){
 				'%n - filename\n'+
 				'%e - extension (with leading dot)\n'+
 				'%(abc)m - if marked insert "abc"\n'+
+				'%(abc)b - if bookmarked insert "abc"\n'+
 				'%gid - log gid\n'+
 				'%g - short gid\n'+
 				'%I - global order\n'+
@@ -1123,6 +1124,7 @@ function exportPreviewsDialog(state, dfl){
 				'%n - filename\n'+
 				'%e - extension (with leading dot)\n'+
 				'%(abc)m - if marked insert "abc"\n'+
+				'%(abc)b - if bookmarked insert "abc"\n'+
 				'%gid - log gid\n'+
 				'%g - short gid\n'+
 				'\n'+
