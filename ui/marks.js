@@ -235,6 +235,30 @@ function makeMarkUpdater(img_class, mark_class, test){
 }
 
 
+// NOTE: this supports only shifts by one position...
+function shiftGIDToOrderInList(gid, direction, list){
+	var gid_o = DATA.order.indexOf(gid)
+	var gid_m = list.indexOf(gid)
+
+	var a_m = gid_m + (direction == 'next' ? 1 : -1)
+	if(a_m < 0 || a_m >= list.length){
+		return false
+	}
+	var a_gid = list[a_m]
+	var a_o = DATA.order.indexOf(a_gid)
+
+	// if relative positions of cur and adjacent gids in list 
+	// are different to that in DATA.order, then replace the gids
+	// in list...
+	if(sign(a_m - gid_m) != sign(a_o - gid_o)){
+		list[a_m] = gid
+		list[gid_m] = a_gid
+		return true
+	}
+	return false
+}
+
+
 
 /**********************************************************************
 * 
@@ -741,6 +765,11 @@ function setupMarks(viewer){
 		.on('sortedImages', function(){
 			MARKED = fastSortGIDsByOrder(MARKED)
 			marksUpdated()
+		})
+		.on('horizontalShiftedImage', function(evt, gid, direction){
+			if(shiftGIDToOrderInList(gid, direction, MARKED)){
+				marksUpdated()
+			}
 		})
 		.on('baseURLChanged', function(){
 			invalidateMarksCache()

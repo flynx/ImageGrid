@@ -162,6 +162,11 @@ function setupBookmarks(viewer){
 			BOOKMARKS = fastSortGIDsByOrder(BOOKMARKS)
 			bookmarksUpdated()
 		})
+		.on('horizontalShiftedImage', function(evt, gid, direction){
+			if(shiftGIDToOrderInList(gid, direction, BOOKMARKS)){
+				bookmarksUpdated()
+			}
+		})
 }
 SETUP_BINDINGS.push(setupBookmarks)
 

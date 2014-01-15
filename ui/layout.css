@@ -1230,11 +1230,11 @@ button:hover {
 }
 .small.viewer:not(.single-image-mode) .mark:after,
 .small.viewer:not(.single-image-mode) .marked.image:after {
-  -webkit-transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
-  -moz-transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
-  -o-transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
-  -ms-transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
-  transform: rotate(0deg) scaleY(1.8) scaleX(1.8);
+  -webkit-transform: rotate(0deg) scaleY(1.5) scaleX(1.5);
+  -moz-transform: rotate(0deg) scaleY(1.5) scaleX(1.5);
+  -o-transform: rotate(0deg) scaleY(1.5) scaleX(1.5);
+  -ms-transform: rotate(0deg) scaleY(1.5) scaleX(1.5);
+  transform: rotate(0deg) scaleY(1.5) scaleX(1.5);
 }
 /********************************************************* Overlay ***/
 .overlay-block {

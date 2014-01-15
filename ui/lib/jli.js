@@ -728,6 +728,12 @@ function makeDeferredsQ(first){
 
 /**************************************************** JS utilities ***/
 
+// return 1, -1, or 0 depending on sign of x
+function sign(x){
+	return (x > 0) - (x < 0)
+}
+
+
 String.prototype.capitalize = function(){
 	return this[0].toUpperCase() + this.slice(1)
 }

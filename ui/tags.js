@@ -537,6 +537,17 @@ function setupUnsortedTagHandler(viewer){
 			}
 			tagsUpdated()
 		})
+		.on('horizontalShiftedImage', function(evt, gid, direction){
+			var updated = false
+			for(var tag in TAGS){
+				if(TAGS[tag].indexOf(gid) >= 0){
+					updated = shiftGIDToOrderInList(gid, direction, TAGS[tag])
+				}
+			}
+			if(updated){
+				tagsUpdated()
+			}
+		})
 }
 SETUP_BINDINGS.push(setupUnsortedTagHandler)
 
