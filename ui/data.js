@@ -123,9 +123,14 @@ var CONFIG = {
 	// NOTE: The value should be >1 or zooming will be reversed.
 	zoom_step_scale: 1.2,
 
-	// ribbon scaling limits and defaults...
+	// ribbon scaling limits and defaults (pixels)...
+	// ~10 images per screen @ 1024x768
 	min_image_size: 100,
-	default_screen_images: 4,
+	// ~4 images per screen @ 1024x768
+	default_image_size: 250,
+
+	single_image_scale_2: 1.125,
+	single_image_scale_3: 3,
 
 	// localStorage prefix...
 	data_attr: 'DATA',
@@ -2272,7 +2277,9 @@ function reloadViewer(reuse_current_structure, images_per_screen){
 	var current = DATA.current
 	// if no width is given, use the current or default...
 	var w = images_per_screen == null ? getScreenWidthInImages() : images_per_screen
-	w = w > getScreenWidthInImages(CONFIG.min_image_size) ? CONFIG.default_screen_images : w
+	w = w > getScreenWidthInImages(CONFIG.min_image_size) 
+		? getScreenWidthInImages(CONFIG.default_image_size) 
+		: w
 
 	// reset data structure...
 	if(!reuse_current_structure){

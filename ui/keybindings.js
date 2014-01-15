@@ -609,8 +609,8 @@ var KEYBOARD_CONFIG = {
 
 		// zooming...
 		'#1': doc('Fit image to screen', function(){ fitNImages(1) }),
-		'#2': doc('Show big image', function(){ fitNImages(1.125) }),
-		'#3': doc('Show small image', function(){ fitNImages(3) }),
+		'#2': doc('Show big image', function(){ fitNImages(CONFIG.single_image_scale_2) }),
+		'#3': doc('Show small image', function(){ fitNImages(CONFIG.single_image_scale_3) }),
 
 		'-': doc('Zoom in', function(){ zoomOut() }),
 		'=': doc('Zoom out', function(){ zoomIn() }),

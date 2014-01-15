@@ -153,7 +153,9 @@ var toggleSingleImageMode = createCSSClassToggler(
 
 				// load things...
 				w = UI_STATE['ribbon-mode-screen-images']
-				w = w == null ? CONFIG.default_screen_images : w
+				w = w == null 
+					? getScreenWidthInImages(CONFIG.default_image_size) 
+					: w
 
 				fitNImages(w)
 				var i = UI_STATE['ribbon-mode-image-info'] == 'on' ? 'on' : 'off'
