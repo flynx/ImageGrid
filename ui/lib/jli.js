@@ -728,6 +728,39 @@ function makeDeferredsQ(first){
 
 /**************************************************** JS utilities ***/
 
+
+// Get screen dpi...
+//
+// This will calculate the value and save it to screen.dpi
+//
+// if force is true this will re-calculate the value.
+//
+// NOTE: this needs the body loaded to work...
+// NOTE: this may depend on page zoom...
+// NOTE: yes, this is a hack, but since we have no other reliable way to
+// 		do this...
+function getDPI(force){
+	if(screen.dpi == null || force){
+		var e = $('<div id="inch">')
+			.css({
+				position: 'absolute',
+				width: '1in',
+				left: '-100%',
+				top: '-100%'
+			})
+			.appendTo($('body'))
+		var res = e.width()
+		e.remove()
+		screen.dpi = res
+		return res	
+	} else {
+		return screen.dpi
+	}
+}
+// XXX is this correct???
+$(getDPI)
+
+
 // return 1, -1, or 0 depending on sign of x
 function sign(x){
 	return (x > 0) - (x < 0)
