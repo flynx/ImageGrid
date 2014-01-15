@@ -21,7 +21,7 @@
 **********************************************************************/
 
 var CONFIG = {
-	max_screen_images: 12,
+	min_image_size: 100,
 	zoom_step_scale: 1.2,
 }
 
@@ -1160,9 +1160,10 @@ function zoomIn(){
 }
 function zoomOut(){
 	var w = getScreenWidthInImages()
-	if(w <= CONFIG.max_screen_images){
+	var max = getScreenWidthInImages(CONFIG.min_image_size)
+	if(w <= max){
 		w = w * CONFIG.zoom_step_scale
-		fitNImages(w <= CONFIG.max_screen_images ? w : CONFIG.max_screen_images)
+		fitNImages(w <= max ? w : max)
 	}
 }
 

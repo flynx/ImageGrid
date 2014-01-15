@@ -388,7 +388,7 @@ var KEYBOARD_CONFIG = {
 		'#7': doc('Fit seven images', function(){ fitNImages(7) }),
 		'#8': doc('Fit eight images', function(){ fitNImages(8) }),
 		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
-		'#0': doc('Fit maximum images', function(){ fitNImages(CONFIG.max_screen_images) }),
+		'#0': doc('Fit maximum images', function(){ fitNImages(getScreenWidthInImages(CONFIG.min_image_size)) }),
 
 		// cropping...
 		C: doc('Show ribbon crop dialog', cropImagesDialog),

@@ -124,7 +124,7 @@ var CONFIG = {
 	zoom_step_scale: 1.2,
 
 	// ribbon scaling limits and defaults...
-	max_screen_images: 12,
+	min_image_size: 100,
 	default_screen_images: 4,
 
 	// localStorage prefix...
@@ -2272,7 +2272,7 @@ function reloadViewer(reuse_current_structure, images_per_screen){
 	var current = DATA.current
 	// if no width is given, use the current or default...
 	var w = images_per_screen == null ? getScreenWidthInImages() : images_per_screen
-	w = w > CONFIG.max_screen_images ? CONFIG.default_screen_images : w
+	w = w > getScreenWidthInImages(CONFIG.min_image_size) ? CONFIG.default_screen_images : w
 
 	// reset data structure...
 	if(!reuse_current_structure){

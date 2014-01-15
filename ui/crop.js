@@ -378,7 +378,7 @@ function filterImagesDialog(){
 				} else if(/^Flipped/.test(field) && res[field].trim() != ''){
 					if(res[field] == 'no'){
 						filter['flipped'] = 'undefined|null'
-					if(res[field] == 'any'){
+					} else if(res[field] == 'any'){
 						filter['flipped'] = '.*'
 					} else {
 						filter['flipped'] = res[field]
