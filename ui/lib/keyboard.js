@@ -222,7 +222,14 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 
 	res = {}
 
-	for(var mode in keybindings){
+	for(var title in keybindings){
+
+		// older version compatibility...
+		if(keybindings[title].pattern != null){
+			var mode = keybindings[title].pattern
+		} else {
+			var mode = title
+		}
 
 		// check if we need to skip this mode...
 		if( !(modes == 'all'
@@ -237,7 +244,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 			continue
 		}
 
-		var bindings = keybindings[mode]
+		var bindings = keybindings[title]
 
 		if(s_chr != null && s_chr in bindings){
 			var handler = bindings[s_chr]
@@ -350,10 +357,9 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 /* Basic key binding format:
  *
  * {
- * 		<css-selector>: {
- *			// meta-data used to generate user docs/help/config
- * 			title: <text>,
+ * 		<title>: {
  * 			doc: <text>,
+ * 			pattern: <css-selector>,
  *
  *			// this defines the list of keys to ignore by the handler.
  *			// NOTE: use "*" to ignore all keys other than explicitly 
@@ -396,6 +402,13 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  * 			<key-def-a> : <key-def-b>,
  *
  *			...
+ * 		},
+ *
+ *		// legacy format, still supported... (deprecated)
+ * 		<css-selector>: {
+ *			// meta-data used to generate user docs/help/config
+ * 			title: <text>,
+ * 			...
  * 		},
  *
  * 		...
@@ -499,11 +512,18 @@ function buildKeybindingsHelp(keybindings, shifted_keys){
 	var res = {}
 	var mode, title
 
-	for(var pattern in keybindings){
-		mode = keybindings[pattern]
+	for(var title in keybindings){
+		mode = keybindings[title]
 
-		// titles and docs...
-		title = mode.title == null ? pattern : mode.title
+		// older version compatibility...
+		if(keybindings[title].pattern != null){
+			var pattern = keybindings[title].pattern
+		} else {
+			var pattern = title
+			// titles and docs...
+			var title = mode.title == null ? pattern : mode.title
+		}
+
 		res[title] = {
 			doc: mode.doc == null ? '' : mode.doc
 		}
@@ -511,17 +531,15 @@ function buildKeybindingsHelp(keybindings, shifted_keys){
 
 		// handlers...
 		for(var key in mode){
-			if(key == 'doc' || key == 'title' || key == 'ignore'){
+			if(key == 'doc' || key == 'title' || key == 'ignore' || key == 'pattern'){
 				continue
 			}
-			//var modifiers = getKeyHandlers(key, '?', keybindings, pattern)[pattern]
 			var modifiers = getKeyHandlers(key, '?', keybindings, 'all')[pattern]
 			modifiers = modifiers == 'none' || modifiers == undefined ? [''] : modifiers
 
 			for(var i=0; i < modifiers.length; i++){
 				var mod = modifiers[i]
 
-				//var handler = getKeyHandlers(key, mod, keybindings, pattern)[pattern]
 				var handler = getKeyHandlers(key, mod, keybindings, 'all')[pattern]
 
 				// standard object doc...

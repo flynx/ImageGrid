@@ -39,11 +39,10 @@ function directionImage(reverse){
 /*********************************************************************/
 
 var KEYBOARD_CONFIG = {
-	// Global bindings...
-	'*': {
-		title: 'Global bindings',
+	'Global bindings': {
 		doc: 'NOTE: binding priority is the same as the order of sections '+
 			'on this page.',
+		pattern: '*',
 
 		F4: {
 			alt: doc('Close viewer', 
@@ -92,8 +91,7 @@ var KEYBOARD_CONFIG = {
 	//
 	// NOTE: this is here to prevent selecting images while trying to 
 	// 		select info text...
-	'.overlay-info:hover': {
-		title: 'Info overlay',
+	'Info overlay': {
 		doc: 'Displayed on bottom of the screen if enabled (toggle with '+
 			'<b>I</b>) and/or inline, at bottom of an image when cursor '+
 			'is over it (only in ribbon view, toggle with <b>alt-I</b>)'+
@@ -101,6 +99,7 @@ var KEYBOARD_CONFIG = {
 			'<p>NOTE: when the cursor is over the info overlay one can use '+
 			'Ctrl-A and Ctrl-D for info text selection, without affecting '+
 			'image selection/marks.',
+		pattern: '.overlay-info:hover',
 
 		ignore: [ 'A' ],
 
@@ -122,10 +121,11 @@ var KEYBOARD_CONFIG = {
 	//
 	// NOTE: editor effects are not documented, but should be obvious...
 	// 		XXX is this the case?
-	'.viewer.overlay .overlay-block.dialog, .panel :focus': {
-		title: 'Dialog',
+	'Dialog': {
 		doc: 'NOTE: to <i>close</i> a dialog, in addition to the keyaboard '+
 			'shortcuts, one can also click anywhere outside the dialog.',
+		pattern: '.viewer.overlay .overlay-block.dialog, '
+			+'.panel :focus',
 
 		ignore: '*',
 
@@ -181,10 +181,10 @@ var KEYBOARD_CONFIG = {
 	//
 	// NOTE: need to keep all info modes before the rest so as to give 
 	// 		their bindings priority...
-	'.drawer-mode': {
-		title: 'Drawer views',
+	'Drawer views': {
 		doc: 'NOTE: In this view all other key bindings are disabled, '+
 			'except app defaults and the ones explicitly defined here.',
+		pattern: '.drawer-mode',
 
 		ignore: '*',
 
@@ -199,9 +199,9 @@ var KEYBOARD_CONFIG = {
 
 	// slideshow view...
 	//
-	'.slideshow-mode': {
-		title: 'Slideshow view',
+	'Slideshow view': {
 		doc: 'To enter this view press <b>S</b>.',
+		pattern: '.slideshow-mode',
 
 		// XXX think about what else to disable here...
 		ignore: [
@@ -232,9 +232,9 @@ var KEYBOARD_CONFIG = {
 
 	// single image view...
 	//
-	'.single-image-mode': {
-		title: 'Single image view',
+	'Single image view': {
 		doc: 'To toggle between this and ribbon view press <b>Enter</b>.',
+		pattern: '.single-image-mode',
 
 		Esc: doc('Exit single image view', 
 				function(){ 
@@ -247,12 +247,13 @@ var KEYBOARD_CONFIG = {
 
 	// crop views...
 	//
-	'.single-ribbon-mode:not(.single-image-mode), .marked-only-view:not(.single-image-mode)': {
-		title: 'Cropped ribbon views',
+	'Cropped ribbon views': {
 		doc: 'To crop marked images press <b>shift-F2</b> for '+
 			'single ribbon crop view press <b>F3</b> and to open the crop '+
 			'dialog for more options press <b>C</b>.'+
 			'<p>NOTE: toggling crop views is only possible from ribbon view.',
+		pattern: '.single-ribbon-mode:not(.single-image-mode), '
+			+'.marked-only-view:not(.single-image-mode)',
 
 		Esc: {
 				default: doc('Uncrop to last state', 
@@ -291,8 +292,8 @@ var KEYBOARD_CONFIG = {
 	// ribbon view only...
 	//
 	// XXX this breaks getKeyHandlers(...) when modes argument is given...
-	'.viewer:not(.overlay):not(.single-image-mode)': {
-		title: 'Ribbon view',
+	'Ribbon view': {
+		pattern: '.viewer:not(.overlay):not(.single-image-mode)',
 
 		Left: {
 				// XXX revise...
@@ -416,14 +417,14 @@ var KEYBOARD_CONFIG = {
 
 	// general setup...
 	//
-	'.viewer:not(.overlay)': {
-		title: 'Viewer',
+	'Viewer': {
 		doc: 'These key bindings work in most other viewer views.'+
 
 			'<p>NOTE: shifting all marked images from different ribbons will '+
 			'perform the operations on ALL marked images but relative '+
 			'the the current ribbon. i.e. some images might get promoted, '+
 			'others demoted while some will not change position. ',
+		pattern: '.viewer:not(.overlay)',
 
 		// Basics...
 		// XXX STUB: use a real path browser...
