@@ -124,13 +124,14 @@ var CONFIG = {
 	zoom_step_scale: 1.2,
 
 	// ribbon scaling limits and defaults (pixels)...
+	// XXX need to make these depend on dpi...
 	// ~10 images per screen @ 1024x768
 	min_image_size: 100,
 	// ~4 images per screen @ 1024x768
 	default_image_size: 250,
 
-	single_image_scale_2: 1.125,
-	single_image_scale_3: 3,
+	single_image_view_scale_2: 1.125,
+	single_image_view_scale_3: 3,
 
 	// localStorage prefix...
 	data_attr: 'DATA',

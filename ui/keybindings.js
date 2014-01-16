@@ -9,6 +9,7 @@
 var _STEPS_LEFT_TO_CHANGE_DIRECTION = CONFIG.steps_to_change_direction
 var DIRECTION = 'next'
 
+var ACTIONS = {}
 
 
 /*********************************************************************/
@@ -34,6 +35,19 @@ function directionImage(reverse){
 	}
 }
 
+
+// XXX this is experimental...
+// 		...not sure yet how to go about this...
+function Action(text, func){
+	func = func == null ? function(){return true}: func
+	func.doc = text
+
+	ACTIONS[text.split('\n')[0].trim()] = func
+
+	return func
+}
+
+doc = Action
 
 
 /*********************************************************************/
@@ -87,8 +101,6 @@ var KEYBOARD_CONFIG = {
 
 	},
 
-	// info overlay...
-	//
 	// NOTE: this is here to prevent selecting images while trying to 
 	// 		select info text...
 	'Info overlay': {
@@ -117,8 +129,6 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// dialogs...
-	//
 	// NOTE: editor effects are not documented, but should be obvious...
 	// 		XXX is this the case?
 	'Dialog': {
@@ -177,8 +187,6 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// help view...
-	//
 	// NOTE: need to keep all info modes before the rest so as to give 
 	// 		their bindings priority...
 	'Drawer views': {
@@ -197,8 +205,6 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// slideshow view...
-	//
 	'Slideshow view': {
 		doc: 'To enter this view press <b>S</b>.',
 		pattern: '.slideshow-mode',
@@ -230,8 +236,6 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// single image view...
-	//
 	'Single image view': {
 		doc: 'To toggle between this and ribbon view press <b>Enter</b>.',
 		pattern: '.single-image-mode',
@@ -245,8 +249,6 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// crop views...
-	//
 	'Cropped ribbon views': {
 		doc: 'To crop marked images press <b>shift-F2</b> for '+
 			'single ribbon crop view press <b>F3</b> and to open the crop '+
@@ -289,8 +291,7 @@ var KEYBOARD_CONFIG = {
 	*/
 
 
-	// ribbon view only...
-	//
+	// NOTE: these bindings apply ONLY to ribbon view...
 	// XXX this breaks getKeyHandlers(...) when modes argument is given...
 	'Ribbon view': {
 		pattern: '.viewer:not(.overlay):not(.single-image-mode)',
@@ -415,7 +416,7 @@ var KEYBOARD_CONFIG = {
 	},
 
 
-	// general setup...
+	// general bindings...
 	//
 	'Viewer': {
 		doc: 'These key bindings work in most other viewer views.'+
@@ -597,21 +598,27 @@ var KEYBOARD_CONFIG = {
 					}),
 		   },
 		V: doc('Flip image vertically', 
-			function(){ 
-				var o = getImage().attr('orientation')
-				// need to rotate relative to user, not relative to image...
-				if(o == 90 || o == 270){
-					flipHorizontal() 
-				} else {
-					flipVertical() 
-				}
-			}),
+				function(){ 
+					var o = getImage().attr('orientation')
+					// need to rotate relative to user, not relative to image...
+					if(o == 90 || o == 270){
+						flipHorizontal() 
+					} else {
+						flipVertical() 
+					}
+				}),
 
 
 		// zooming...
 		'#1': doc('Fit image to screen', function(){ fitNImages(1) }),
-		'#2': doc('Show big image', function(){ fitNImages(CONFIG.single_image_scale_2) }),
-		'#3': doc('Show small image', function(){ fitNImages(CONFIG.single_image_scale_3) }),
+		'#2': doc('Show big image', 
+				function(){ 
+					fitNImages(CONFIG.single_image_view_scale_2) 
+				}),
+		'#3': doc('Show small image', 
+				function(){ 
+					fitNImages(CONFIG.single_image_view_scale_3) 
+				}),
 
 		'-': doc('Zoom in', function(){ zoomOut() }),
 		'=': doc('Zoom out', function(){ zoomIn() }),

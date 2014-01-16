@@ -1104,29 +1104,23 @@ function exportPreviewsDialog(state, dfl){
 	// 		keys become unreadable with JS syntax preventing us from 
 	// 		splitting the key into several lines...
 	var cfg = {}
+	var img_pattern = 'Image name pattern | '+
+		'%f - full filename (same as %n%e)\n'+
+		'%n - filename\n'+
+		'%e - extension (with leading dot)\n'+
+		'%(abc)m - if marked insert "abc"\n'+
+		'%(abc)b - if bookmarked insert "abc"\n'+
+		'%gid - long gid\n'+
+		'%g - short gid\n'
 	// multiple images...
 	if(state != 'current image'){
-		cfg['Image name pattern | '+
-				'%f - full filename\n'+
-				'%n - filename\n'+
-				'%e - extension (with leading dot)\n'+
-				'%(abc)m - if marked insert "abc"\n'+
-				'%(abc)b - if bookmarked insert "abc"\n'+
-				'%gid - log gid\n'+
-				'%g - short gid\n'+
+		cfg[img_pattern +
 				'%I - global order\n'+
 				'%i - current selection order'] = '%f'
 		cfg['Level directory name'] = 'fav'
 	// single image...
 	} else {
-		cfg['Image name pattern | '+
-				'%f - full filename\n'+
-				'%n - filename\n'+
-				'%e - extension (with leading dot)\n'+
-				'%(abc)m - if marked insert "abc"\n'+
-				'%(abc)b - if bookmarked insert "abc"\n'+
-				'%gid - log gid\n'+
-				'%g - short gid\n'+
+		cfg[img_pattern +
 				'\n'+
 				'NOTE: %i and %I are not supported for single\n'+
 				'image exporting.'] = '%f'
