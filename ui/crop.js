@@ -35,6 +35,7 @@ function getAllData(){
 //
 // XXX should this set the .current to anything but null or the first elem???
 function makeCroppedData(gids, keep_ribbons, keep_unloaded_gids){
+	gids = fastSortGIDsByOrder(gids)
 	var res = {
 		varsion: DATA_VERSION,
 		current: null,

@@ -110,6 +110,22 @@ Roadmap
 
 [_] 31% Gen 3 current todo
 	[_] 62% High priority
+		[_] Might be a good idea to use sparse arrays for things like marks...
+		| eliminate:	
+		| 	- need for keeping things sorted all the time
+		| 	- speed-up access -- everything has the same index
+		| 	- speed-up modification -- just mirror all the operations
+		| 	- searching in more than one place
+		|
+		| introduce:
+		| 	- memory overhead - each array is always N elements
+		| 	- conversion on import, export and crop
+		| 		need to clear / insert all the nulls
+		|
+		| candidates:
+		| 	- marks
+		| 	- bookmarks
+		| 	- tags
 		[_] BUG: sorting breaks when at or near the end of a ribbon...
 		|
 		| Race condition...

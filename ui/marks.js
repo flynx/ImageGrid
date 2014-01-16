@@ -101,6 +101,8 @@ function makeMarkedLister(get_marked){
 // 	- number			- ribbon index
 // 	- list				- list of gids used as source
 // 	- null				- same as all
+//
+// XXX with sparce lists this is trivial: get all the null indexes...
 function makeUnmarkedLister(get_marked, get_cache){
 	return function(mode){
 		var marked = get_marked()
@@ -138,9 +140,10 @@ var getUnmarked = makeUnmarkedLister(
 		function(){ return _UNMARKED_CACHE })
 
 
+// XXX make this undefined tolerant -- sparse list compatibility...
 var getMarkedGIDBefore = makeGIDBeforeGetterFromList(
 		function(){ 
-			return MARKED 
+			return compactSparceList(MARKED)
 		})
 
 
@@ -347,12 +350,12 @@ var toggleMark = makeMarkToggler(
 			// add marked image to list...
 			if(action == 'on'){
 				if(MARKED.indexOf(gid) == -1){
-					insertGIDToPosition(gid, MARKED)
+					MARKED[DATA.order.indexOf(gid)] = gid
 				} 
 
 			// remove marked image from list...
 			} else {
-				MARKED.splice(MARKED.indexOf(gid), 1)
+				delete MARKED[MARKED.indexOf(gid)]
 			}
 
 			marksUpdated()
@@ -360,7 +363,7 @@ var toggleMark = makeMarkToggler(
 
 
 
-function toggleAllMarks(action, mode){
+function setAllMarks(action, mode){
 	action = action == null ? toggleMark('?') : action
 	mode = mode == null ? 'ribbon' : mode
 
@@ -369,8 +372,7 @@ function toggleAllMarks(action, mode){
 	if(action == 'on'){
 		var _update = function(e){
 			if(MARKED.indexOf(e) < 0){
-				//insertGIDToPosition(e, MARKED)
-				MARKED.push(e)
+				MARKED[DATA.order.indexOf(e)] = e
 				updated.push(e)
 			}
 		}
@@ -378,7 +380,7 @@ function toggleAllMarks(action, mode){
 		var _update = function(e){
 			var i = MARKED.indexOf(e)
 			if(i >= 0){
-				MARKED.splice(i, 1)
+				delete MARKED[i]
 				updated.push(e)
 			}
 		}
@@ -395,8 +397,6 @@ function toggleAllMarks(action, mode){
 
 	res.forEach(_update)
 
-	MARKED = fastSortGIDsByOrder(MARKED)
-
 	updateImages(updated)
 
 	$('.viewer').trigger('togglingMarks', [updated, action])
@@ -411,7 +411,7 @@ function toggleAllMarks(action, mode){
 //	- 'all'
 function removeImageMarks(mode){
 	mode = mode == null ? 'ribbon' : mode
-	var res = toggleAllMarks('off', mode)
+	var res = setAllMarks('off', mode)
 	$('.viewer').trigger('removingMarks', [res, mode])
 	return res
 }
@@ -419,7 +419,7 @@ function removeImageMarks(mode){
 
 function markAll(mode){
 	mode = mode == null ? 'ribbon' : mode
-	var res = toggleAllMarks('on', mode)
+	var res = setAllMarks('on', mode)
 	$('.viewer').trigger('addingMarks', [res, mode])
 	return res
 }
@@ -435,14 +435,12 @@ function invertImageMarks(){
 		var i = MARKED.indexOf(e)
 		if(i == -1){
 			on.push(e)
-			MARKED.push(e)
-			//insertGIDToPosition(e, MARKED)
+			MARKED[DATA.order.indexOf(e)] = e
 		} else {
 			off.push(e)
-			MARKED.splice(i, 1)
+			delete MARKED[i]
 		}
 	})
-	MARKED = fastSortGIDsByOrder(MARKED)
 	updateImages(ribbon)
 
 	$('.viewer')
@@ -477,10 +475,9 @@ function toggleMarkBlock(image){
 		}
 		// do the toggle...
 		if(state){
-			//insertGIDToPosition(e, MARKED)
-			MARKED.push(e)
+			MARKED[DATA.order.indexOf(e)] = e
 		} else {
-			MARKED.splice(MARKED.indexOf(e), 1)
+			delete MARKED[MARKED.indexOf(e)]
 		}
 		updated.push(e)
 	}
@@ -493,8 +490,6 @@ function toggleMarkBlock(image){
 	// go right...
 	var right = ribbon.slice(i+1)
 	$.each(right, _convert)
-
-	MARKED = fastSortGIDsByOrder(MARKED)
 
 	updateImages(updated)
 
@@ -593,10 +588,10 @@ function shiftMarkedImagesRight(){
 // 		of makeNextFromListAction(..) for more info)
 var nextMark = makeNextFromListAction(
 		getMarkedGIDBefore, 
-		function(){ return MARKED })
+		function(){ return compactSparceList(MARKED) })
 var prevMark = makePrevFromListAction(
 		getMarkedGIDBefore, 
-		function(){ return MARKED })
+		function(){ return compactSparceList(MARKED) })
 
 
 var nextUnmarked = makeNextFromListAction(
@@ -697,23 +692,7 @@ var loadFileMarks = makeFileLoader(
 		MARKED_FILE_PATTERN, 
 		[],
 		function(data){ 
-			// set the MARKED...
-			MARKED = data
-
-			// for version below 2.1, sort MARKED and update to 2.1...
-			if(DATA.version == '2.0'){
-				setTimeout(function(){
-					var t0 = Date.now()
-					MARKED = fastSortGIDsByOrder(MARKED)
-					var t1 = Date.now()
-					marksUpdated()
-
-					DATA.version = DATA_VERSION
-					dataUpdated()
-
-					console.warn('Marks: sort: done ('+( t1 - t0 )+'ms) -- re-save the data.')
-				}, 0)
-			}
+			MARKED = makeSparceGIDList(data)
 		},
 		'marksLoaded')
 
@@ -723,7 +702,7 @@ var saveFileMarks = makeFileSaver(
 		'Marks',
 		MARKED_FILE_DEFAULT, 
 		function(){ 
-			return MARKED 
+			return compactSparceList(MARKED)
 		})
 
 
@@ -768,11 +747,20 @@ function setupMarks(viewer){
 			})
 		})
 		.on('sortedImages', function(){
-			MARKED = fastSortGIDsByOrder(MARKED)
+			MARKED = makeSparceGIDList(MARKED)
 			marksUpdated()
 		})
 		.on('horizontalShiftedImage', function(evt, gid, direction){
-			if(shiftGIDToOrderInList(gid, direction, MARKED)){
+			var n = DATA.order.indexOf(gid)
+			var o = MARKED.indexOf(gid)
+
+			// move the marked gid...
+			MARKED.splice(o, 1)
+			MARKED.splice(n, 0, gid)
+
+			// test if there are any marked images between n and o...
+			var shift = compactSparceList(MARKED.slice(Math.min(n, o)+1, Math.max(n, o)))
+			if(shift.length > 0){
 				marksUpdated()
 			}
 		})

@@ -23,6 +23,7 @@
 // 	MARKED			- marks data
 // 	BOOKMARKS		- bookmarks data
 // 	BOOKMARKS_DATA	- bookmarks metadata
+// 	TAGS			- tag data
 //
 //
 // Changes:
@@ -574,6 +575,36 @@ function binSearch(target, lst, check, return_position, get){
 }
 
 
+// Make a sparse gid list...
+//
+// NOTE: the resulting list will always be sorted...
+// NOTE: this will skip all elements not in order
+function makeSparceGIDList(gids, data){
+	data = data == null ? DATA : data
+	var order = data.order
+	var res = []
+
+	gids.forEach(function(e){
+		var i = order.indexOf(e)
+		if(i < 0){
+			return
+		}
+		res[i] = e
+	})
+
+	return res
+}
+
+
+// Remove all the undefined's form a sparse list...
+//
+function compactSparceList(lst){
+	return lst.filter(function(e){
+		return e !== undefined
+	})
+}
+
+
 // This is a cheating fast sort...
 //
 // By cheating we might use more memory -- this is both not in-place 
@@ -605,20 +636,7 @@ function binSearch(target, lst, check, return_position, get){
 // On the down side, this has some memory overhead -- ~ N - n * ref
 //
 function fastSortGIDsByOrder(gids, data){
-	data = data == null ? DATA : data
-
-	var order = data.order
-	var res = []
-
-	// insert the gids to their order positions...
-	gids.forEach(function(gid){
-		res[order.indexOf(gid)] = gid
-	})
-
-	// clear out the nulls...
-	return res.filter(function(e){
-		return e != null
-	})
+	return compactSparceList(makeSparceGIDList(gids, data))
 }
 
 
@@ -794,7 +812,7 @@ function getAllGids(data){
 // NOTE: this will return an unsorted list of gids...
 // NOTE: this will sort the result unless either no_sort is true or gids
 // 		is not given...
-function getLoadedGIDs(gids, data, no_sort){
+function getLoadedGIDs(gids, data){
 	data = data == null ? DATA : data
 	var res = []
 	data.ribbons.forEach(function(r){
@@ -802,11 +820,8 @@ function getLoadedGIDs(gids, data, no_sort){
 	})
 	if(gids != null){
 		return gids.filter(function(e){
-			return res.indexOf(e) >= 0
+			return e == null ? false : (res.indexOf(e) >= 0)
 		})
-	}
-	if(!no_sort){
-		res = fastSortGIDsByOrder(res)
 	}
 	return res
 }
@@ -857,6 +872,8 @@ function insertGIDToPosition(gid, list, data){
 //
 // NOTE: if gid is present in the searched ribbon this will return it.
 // NOTE: this uses it's own predicate...
+//
+// XXX make this undefined tolerant -- sparse list compatibility...
 function getGIDBefore(gid, ribbon, data, search){
 	gid = gid == null ? getImageGID() : gid
 	data = data == null ? DATA : data
@@ -2360,7 +2377,6 @@ function showImage(gid){
 // NOTE: if no_reload_viewer is true, then no re-rendering is triggered.
 function updateRibbonOrder(no_reload_viewer){
 	for(var i=0; i < DATA.ribbons.length; i++){
-		//DATA.ribbons[i].sort(imageOrderCmp)
 		DATA.ribbons[i] = fastSortGIDsByOrder(DATA.ribbons[i])
 	}
 	if(!no_reload_viewer){
