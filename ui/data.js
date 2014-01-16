@@ -577,12 +577,14 @@ function binSearch(target, lst, check, return_position, get){
 
 // Make a sparse gid list...
 //
+// if target is given this will merge gids into target...
+//
 // NOTE: the resulting list will always be sorted...
 // NOTE: this will skip all elements not in order
-function makeSparceGIDList(gids, data){
+function populateSparceGIDList(gids, target, data){
 	data = data == null ? DATA : data
 	var order = data.order
-	var res = []
+	var res = target == null ? [] : target
 
 	gids.forEach(function(e){
 		var i = order.indexOf(e)
@@ -599,9 +601,11 @@ function makeSparceGIDList(gids, data){
 // Remove all the undefined's form a sparse list...
 //
 function compactSparceList(lst){
-	return lst.filter(function(e){
-		return e !== undefined
-	})
+	// XXX is it normal that .filter(..) skips undefined values?
+	return lst.filter(function(){ return true })
+	//return lst.filter(function(e){
+	//	return e !== undefined
+	//})
 }
 
 
@@ -636,7 +640,7 @@ function compactSparceList(lst){
 // On the down side, this has some memory overhead -- ~ N - n * ref
 //
 function fastSortGIDsByOrder(gids, data){
-	return compactSparceList(makeSparceGIDList(gids, data))
+	return compactSparceList(populateSparceGIDList(gids, data))
 }
 
 

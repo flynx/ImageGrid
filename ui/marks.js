@@ -139,6 +139,29 @@ var getUnmarked = makeUnmarkedLister(
 		function(){ return MARKED }, 
 		function(){ return _UNMARKED_CACHE })
 
+// these two are about 3 orders of magnitude faster than the above...
+// ...which is better I do not yet know...
+function getUnmarked_s0(){
+	var order = DATA.order
+	var res = []
+	for(var i=0; i < order.length; i++){
+		if(MARKED[i] == null){
+			res.push(order[i])
+		}
+	}
+	//return res
+	return getLoadedGIDs(res)
+}
+function getUnmarked_s1(){
+	var res = DATA.order.slice()
+	// XXX is it normal that .map() and .forEach() skip undefined values?
+	MARKED.map(function(e, i){
+		delete res[i]
+	})
+	//return compactSparceList(res)
+	return getLoadedGIDs(compactSparceList(res))
+}
+
 
 // XXX make this undefined tolerant -- sparse list compatibility...
 var getMarkedGIDBefore = makeGIDBeforeGetterFromList(
@@ -692,7 +715,7 @@ var loadFileMarks = makeFileLoader(
 		MARKED_FILE_PATTERN, 
 		[],
 		function(data){ 
-			MARKED = makeSparceGIDList(data)
+			MARKED = populateSparceGIDList(data)
 		},
 		'marksLoaded')
 
@@ -747,7 +770,7 @@ function setupMarks(viewer){
 			})
 		})
 		.on('sortedImages', function(){
-			MARKED = makeSparceGIDList(MARKED)
+			MARKED = populateSparceGIDList(MARKED)
 			marksUpdated()
 		})
 		.on('horizontalShiftedImage', function(evt, gid, direction){
