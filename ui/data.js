@@ -536,9 +536,6 @@ function linSearch(target, lst, check, return_position, get){
 	// no hit...
 	return return_position ? -1 : null
 }
-Array.prototype.linSearch = function(target, cmp, get){
-	return linSearch(target, this, cmp, true, get)
-}
 */
 
 
@@ -575,11 +572,6 @@ function binSearch(target, lst, check, return_position, get){
 	// no result...
 	return return_position ? -1 : null
 }
-/* XXX do we actually need to patch Array???
-Array.prototype.binSearch = function(target, cmp, get){
-	return binSearch(target, this, cmp, true, get)
-}
-*/
 
 
 // This is a cheating fast sort...
@@ -800,7 +792,9 @@ function getAllGids(data){
 // Get all the currently loaded gids...
 //
 // NOTE: this will return an unsorted list of gids...
-function getLoadedGIDs(gids, data){
+// NOTE: this will sort the result unless either no_sort is true or gids
+// 		is not given...
+function getLoadedGIDs(gids, data, no_sort){
 	data = data == null ? DATA : data
 	var res = []
 	data.ribbons.forEach(function(r){
@@ -810,6 +804,9 @@ function getLoadedGIDs(gids, data){
 		return gids.filter(function(e){
 			return res.indexOf(e) >= 0
 		})
+	}
+	if(!no_sort){
+		res = fastSortGIDsByOrder(res)
 	}
 	return res
 }

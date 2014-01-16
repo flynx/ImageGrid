@@ -236,6 +236,11 @@ function makeMarkUpdater(img_class, mark_class, test){
 
 
 // NOTE: this supports only shifts by one position...
+// XXX this is similar to insertGIDToPosition(..) do we need both?
+// 		...this one is a special case and insertGIDToPosition(..) is 
+// 		general, the later uses search to find the position, here we 
+// 		know the aproximate location, the question is if this speedup
+// 		is worth the effort of maintaining a special case function...
 function shiftGIDToOrderInList(gid, direction, list){
 	var gid_o = DATA.order.indexOf(gid)
 	var gid_m = list.indexOf(gid)

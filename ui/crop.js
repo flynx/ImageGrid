@@ -277,6 +277,12 @@ function filterImagesDialog(){
 	updateStatus('Filter...').show()
 
 	cfg = {}
+	cfg['GID |'
+			+'Use gid or gid tail part to find an\n'
+			+'image.\n'
+			+'\n'
+			+'NOTE: use of at least 6 characters is\n'
+			+'recommended.'] = ''
 	cfg['sep0'] = '---'
 	cfg['Name'] = ''
 	cfg['Path |'
@@ -345,7 +351,11 @@ function filterImagesDialog(){
 			var filter = {}
 			// build the filter...
 			for(var field in res){
-				if(/^Name/.test(field) && res[field].trim() != ''){
+				// this will search for gid or gid part at the end of a gid...
+				if(/^GID/.test(field) && res[field].trim() != ''){
+					filter['id'] = res[field] + '$'
+
+				} else if(/^Name/.test(field) && res[field].trim() != ''){
 					filter['name'] = res[field]
 
 				} else if(/^Path/.test(field) && res[field].trim() != ''){
