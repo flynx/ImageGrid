@@ -289,6 +289,22 @@ function shiftGIDToOrderInList(gid, direction, list){
 	}
 	return false
 }
+// a sparse version of shiftGIDToOrderInList(..)...
+function shiftGIDInSparseList(gid, list){
+	var n = DATA.order.indexOf(gid)
+	var o = list.indexOf(gid)
+
+	// move the marked gid...
+	list.splice(o, 1)
+	list.splice(n, 0, gid)
+
+	// test if there are any marked images between n and o...
+	var shift = compactSparceList(list.slice(Math.min(n, o)+1, Math.max(n, o)))
+	if(shift.length > 0){
+		return true
+	}
+	return false
+}
 
 
 
@@ -775,16 +791,7 @@ function setupMarks(viewer){
 			marksUpdated()
 		})
 		.on('horizontalShiftedImage', function(evt, gid, direction){
-			var n = DATA.order.indexOf(gid)
-			var o = MARKED.indexOf(gid)
-
-			// move the marked gid...
-			MARKED.splice(o, 1)
-			MARKED.splice(n, 0, gid)
-
-			// test if there are any marked images between n and o...
-			var shift = compactSparceList(MARKED.slice(Math.min(n, o)+1, Math.max(n, o)))
-			if(shift.length > 0){
+			if(shiftGIDInSparseList(gid, MARKED)){
 				marksUpdated()
 			}
 		})

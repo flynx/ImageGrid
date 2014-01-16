@@ -165,17 +165,8 @@ function setupBookmarks(viewer){
 			bookmarksUpdated()
 		})
 		.on('horizontalShiftedImage', function(evt, gid, direction){
-			var n = DATA.order.indexOf(gid)
-			var o = BOOKMARKS.indexOf(gid)
-
-			// move the marked gid...
-			BOOKMARKS.splice(o, 1)
-			BOOKMARKS.splice(n, 0, gid)
-
-			// test if there are any marked images between n and o...
-			var shift = compactSparceList(BOOKMARKS.slice(Math.min(n, o)+1, Math.max(n, o)))
-			if(shift.length > 0){
-				marksUpdated()
+			if(shiftGIDInSparseList(gid, BOOKMARKS)){
+				bookmarksUpdated()
 			}
 		})
 }
