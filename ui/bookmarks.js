@@ -25,11 +25,11 @@ var BOOKMARKS_FILE_PATTERN = /^[0-9]*-bookmarked.json$/
 */
 
 var getBookmarked = makeMarkedLister(function(){ return BOOKMARKS })
-var getUnbookmarked = makeUnmarkedLister(function(){ return BOOKMARKS }) 
+var getUnbookmarked = makeUnmarkedSparseLister(function(){ return BOOKMARKS }) 
 
 var getBookmarkedGIDBefore = makeGIDBeforeGetterFromList(
 		function(){ 
-			return BOOKMARKS 
+			return compactSparceList(BOOKMARKS)
 		})
 
 
@@ -83,12 +83,14 @@ var toggleBookmark = makeMarkToggler(
 			// add a bookmark...
 			if(action == 'on'){
 				if(BOOKMARKS.indexOf(gid) == -1){
-					insertGIDToPosition(gid, BOOKMARKS)
+					//insertGIDToPosition(gid, BOOKMARKS)
+					BOOKMARKS[DATA.order.indexOf(gid)] = gid
 				}
 
 			// remove a bookmark...
 			} else {
-				BOOKMARKS.splice(BOOKMARKS.indexOf(gid), 1)
+				//BOOKMARKS.splice(BOOKMARKS.indexOf(gid), 1)
+				delete BOOKMARKED[BOOKMARKED.indexOf(gid)]
 			}
 
 			bookmarksUpdated()
@@ -99,10 +101,10 @@ var toggleBookmark = makeMarkToggler(
 //
 var nextBookmark = makeNextFromListAction(
 		getBookmarkedGIDBefore, 
-		function(){ return BOOKMARKS })
+		function(){ return compactSparceList(BOOKMARKS) })
 var prevBookmark = makePrevFromListAction(
 		getBookmarkedGIDBefore, 
-		function(){ return BOOKMARKS })
+		function(){ return compactSparceList(BOOKMARKS) })
 
 
 
@@ -116,7 +118,7 @@ var loadFileBookmarks = makeFileLoader(
 		BOOKMARKS_FILE_PATTERN, 
 		[[], {}],
 		function(data){ 
-			BOOKMARKS = data[0]
+			BOOKMARKS = populateSparceGIDList(data[0])
 			BOOKMARKS_DATA = data[1]
 		})
 
@@ -126,7 +128,7 @@ var saveFileBookmarks = makeFileSaver(
 		BOOKMARKS_FILE_DEFAULT, 
 		function(){ 
 			return [
-				BOOKMARKS, 
+				compactSparceList(BOOKMARKS), 
 				BOOKMARKS_DATA
 			] 
 		})
@@ -159,12 +161,21 @@ function setupBookmarks(viewer){
 
 	return viewer
 		.on('sortedImages', function(){
-			BOOKMARKS = fastSortGIDsByOrder(BOOKMARKS)
+			BOOKMARKS = populateSparceGIDList(BOOKMARKS)
 			bookmarksUpdated()
 		})
 		.on('horizontalShiftedImage', function(evt, gid, direction){
-			if(shiftGIDToOrderInList(gid, direction, BOOKMARKS)){
-				bookmarksUpdated()
+			var n = DATA.order.indexOf(gid)
+			var o = BOOKMARKS.indexOf(gid)
+
+			// move the marked gid...
+			BOOKMARKS.splice(o, 1)
+			BOOKMARKS.splice(n, 0, gid)
+
+			// test if there are any marked images between n and o...
+			var shift = compactSparceList(BOOKMARKS.slice(Math.min(n, o)+1, Math.max(n, o)))
+			if(shift.length > 0){
+				marksUpdated()
 			}
 		})
 }

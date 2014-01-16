@@ -78,17 +78,10 @@ function makeMarkedLister(get_marked){
 	return function(mode){
 		var marked = get_marked()
 		mode = mode == null ? 'all' : mode
-		var gids = mode == 'all' ? getLoadedGIDs(marked) 
+		return mode == 'all' ? getLoadedGIDs(marked) 
 			: mode.constructor.name == 'Array' ? getLoadedGIDs(mode)
-			: typeof(mode) == typeof(123) ? getRibbonGIDs(mode)
-			: getRibbonGIDs()
-
-		if(mode == 'all'){
-			return gids
-		}
-		return gids.filter(function(e){
-			return marked.indexOf(e) >= 0
-		})
+			: typeof(mode) == typeof(123) ? getRibbonGIDs(marked, mode)
+			: getRibbonGIDs(marked)
 	}
 }
 
@@ -105,62 +98,70 @@ function makeMarkedLister(get_marked){
 // XXX with sparce lists this is trivial: get all the null indexes...
 function makeUnmarkedLister(get_marked, get_cache){
 	return function(mode){
+		mode = mode == null ? 'all' : mode
+
 		var marked = get_marked()
 		var cache = get_cache != null ? get_cache() : null
 
-		mode = mode == null ? 'all' : mode
 		var gids = mode == 'all' ? getLoadedGIDs() 
 			: mode.constructor.name == 'Array' ? getLoadedGIDs(mode)
-			: typeof(mode) == typeof(123) ? getRibbonGIDs(mode)
-			: getRibbonGIDs()
-		mode = mode == 'ribbon' ? getRibbonIndex() : mode
-
-		// get the cached set...
-		if(cache != null && mode in cache){
-			return cache[mode]
-		}
+			: typeof(mode) == typeof(123) ? getRibbonGIDs(marked, mode)
+			: getRibbonGIDs(marked)
 
 		// calculate the set...
 		var res = gids.filter(function(e){
 			// keep only unmarked...
 			return marked.indexOf(e) < 0
 		})
-		if(cache != null && typeof(mode) == typeof(123)){
-			cache[mode] = res
-		}
 
 		return res
+	}
+}
+// NOTE: this is about an order of magnitude faster than the non-sparse
+// 		version...
+function makeUnmarkedSparseLister(get_marked, get_cache){
+	// mode can be:
+	// 	- null			- default, same as 'all'
+	// 	- 'all'			- process all loases gids
+	// 	- 'ribbon'		- process curent ribbon
+	// 	- number		- ribbon index
+	// 	- Array			- list of gids
+	return function(mode){
+		mode = mode == null ? 'all' : mode
+
+		var marked = get_marked()
+		//var cache = get_cache != null ? get_cache() : null
+
+		var res = mode == 'all' ? 
+				DATA.order.slice()
+			: mode == 'ribbon' ? 
+				populateSparceGIDList(getRibbonGIDs())
+			: typeof(mode) == typeof(123) ? 
+				populateSparceGIDList(getRibbonGIDs(mode))
+			: mode
+
+		// for ribbon modes, remove non-ribbon marks...
+		if(mode == 'ribbon'){
+			marked = getRibbonGIDs(marked)
+		} else if(typeof(mode) == typeof(123)){
+			marked = getRibbonGIDs(marked, mode)
+			mode = 'ribbon'
+		}
+
+		// negate the list...
+		marked.forEach(function(e, i){
+			delete res[i]
+		})
+
+		return getLoadedGIDs(compactSparceList(res))
 	}
 }
 
 
 var getMarked = makeMarkedLister(function(){ return MARKED })
-var getUnmarked = makeUnmarkedLister(
+var getUnmarked = makeUnmarkedSparseLister(
 		function(){ return MARKED }, 
 		function(){ return _UNMARKED_CACHE })
-
-// these two are about 3 orders of magnitude faster than the above...
-// ...which is better I do not yet know...
-function getUnmarked_s0(){
-	var order = DATA.order
-	var res = []
-	for(var i=0; i < order.length; i++){
-		if(MARKED[i] == null){
-			res.push(order[i])
-		}
-	}
-	//return res
-	return getLoadedGIDs(res)
-}
-function getUnmarked_s1(){
-	var res = DATA.order.slice()
-	// XXX is it normal that .map() and .forEach() skip undefined values?
-	MARKED.map(function(e, i){
-		delete res[i]
-	})
-	//return compactSparceList(res)
-	return getLoadedGIDs(compactSparceList(res))
-}
 
 
 // XXX make this undefined tolerant -- sparse list compatibility...
