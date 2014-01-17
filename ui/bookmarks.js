@@ -6,7 +6,8 @@
 
 // list of bookmarked gids...
 //
-// NOTE: this must be sorted in the same order as DATA.order
+// NOTE: this is a sparse list, see marks.js MARKED for more info and
+// 		motivation...
 var BOOKMARKS = [] 
 
 // bookmark data

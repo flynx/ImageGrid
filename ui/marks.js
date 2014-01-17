@@ -6,7 +6,21 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-// NOTE: this must be sorted in the same order as DATA.order
+// NOTE: this is a sparse list, i.e. all elements are in the same 
+// 		position as they are in DATA.order, and the unmarked elements
+// 		are undefined.
+// 		This is done because:
+// 			- it drasticly simplifies adding, removing and access as 
+// 				there is no searching and checking involved, just insert
+// 				to the same spot as in order and you are safe.
+// 			- trivial sorting
+// 			- less maintenance and sync
+// 		The tradeoff being:
+// 			- more memory usage
+// 			- load/save conversion to keep the json	data "packed".
+// NOTE: it would appear that JS is designed with sparse lists in mind:
+// 		- all iterators (map, filter, forEach, ..) skip undefined values
+// 		- really fast
 var MARKED = []
 
 var MARKED_FILE_DEFAULT = 'marked.json'

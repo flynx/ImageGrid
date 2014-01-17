@@ -17,6 +17,8 @@ var UNSORTED_TAG = 'unsorted'
 // 		...
 // 	}
 //
+// NOTE: unlike MARKED and BOOKMARKS the gid lists here are not sparse.
+// XXX do we need to make this sparse??
 var TAGS = {}
 
 
