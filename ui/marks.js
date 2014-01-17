@@ -27,10 +27,6 @@ var MARKED_FILE_DEFAULT = 'marked.json'
 var MARKED_FILE_PATTERN = /^[0-9]*-marked.json$/
 
 
-// NOTE: if this is set to null, caching will be disabled...
-var _UNMARKED_CACHE = {}
-
-
 
 /**********************************************************************
 * helpers...
@@ -79,15 +75,6 @@ function _removeMark(cls, gid, image){
 }
 
 
-// Invalidate unmarked image cache...
-//
-function invalidateMarksCache(){
-	if(_UNMARKED_CACHE != null){
-		_UNMARKED_CACHE = {}
-	}
-}
-
-
 function makeMarkedLister(get_marked){
 	return function(mode){
 		var marked = get_marked()
@@ -102,20 +89,17 @@ function makeMarkedLister(get_marked){
 
 // Make lister of unmarked images...
 //
-// mode can be:
-// 	- 'ribbon'
-// 	- 'all'
-// 	- number			- ribbon index
-// 	- list				- list of gids used as source
-// 	- null				- same as all
-//
-// XXX with sparce lists this is trivial: get all the null indexes...
-function makeUnmarkedLister(get_marked, get_cache){
+// The resulting function can take one argument (mode) which can be:
+// 	- null			- default, same as 'all'
+// 	- 'all'			- process all loaded gids
+// 	- 'ribbon'		- process curent ribbon
+// 	- number		- ribbon index to process
+// 	- Array			- list of gids to filter
+function makeUnmarkedLister(get_marked){
 	return function(mode){
 		mode = mode == null ? 'all' : mode
 
 		var marked = get_marked()
-		var cache = get_cache != null ? get_cache() : null
 
 		var gids = mode == 'all' ? getLoadedGIDs() 
 			: mode.constructor.name == 'Array' ? getLoadedGIDs(mode)
@@ -131,20 +115,17 @@ function makeUnmarkedLister(get_marked, get_cache){
 		return res
 	}
 }
+
+
+// The same as makeUnmarkedLister(..) but designed for sparse lists...
+//
 // NOTE: this is about an order of magnitude faster than the non-sparse
 // 		version...
-function makeUnmarkedSparseLister(get_marked, get_cache){
-	// mode can be:
-	// 	- null			- default, same as 'all'
-	// 	- 'all'			- process all loases gids
-	// 	- 'ribbon'		- process curent ribbon
-	// 	- number		- ribbon index
-	// 	- Array			- list of gids
+function makeUnmarkedSparseLister(get_marked){
 	return function(mode){
 		mode = mode == null ? 'all' : mode
 
 		var marked = get_marked()
-		//var cache = get_cache != null ? get_cache() : null
 
 		var res = mode == 'all' ? 
 				DATA.order.slice()
@@ -173,9 +154,7 @@ function makeUnmarkedSparseLister(get_marked, get_cache){
 
 
 var getMarked = makeMarkedLister(function(){ return MARKED })
-var getUnmarked = makeUnmarkedSparseLister(
-		function(){ return MARKED }, 
-		function(){ return _UNMARKED_CACHE })
+var getUnmarked = makeUnmarkedSparseLister(function(){ return MARKED })
 
 
 // XXX make this undefined tolerant -- sparse list compatibility...
@@ -762,7 +741,6 @@ var saveFileMarks = makeFileSaver(
 
 function marksUpdated(){
 	fileUpdated('Marks')
-	invalidateMarksCache()
 	$('.viewer').trigger('marksUpdated')
 }
 
@@ -808,9 +786,6 @@ function setupMarks(viewer){
 			if(shiftGIDInSparseList(gid, MARKED)){
 				marksUpdated()
 			}
-		})
-		.on('baseURLChanged', function(){
-			invalidateMarksCache()
 		})
 }
 SETUP_BINDINGS.push(setupMarks)
