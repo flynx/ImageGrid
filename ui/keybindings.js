@@ -42,7 +42,13 @@ function Action(text, func){
 	func = func == null ? function(){return true}: func
 	func.doc = text
 
-	ACTIONS[text.split('\n')[0].trim()] = func
+	var name = text.split('\n')[0].trim()
+
+	if(name in ACTIONS){
+		console.warn('Action: "'+name+'" is defined more than once.')
+	}
+
+	ACTIONS[name] = func
 
 	return func
 }
@@ -743,20 +749,20 @@ var KEYBOARD_CONFIG = {
 						markAll('all') 
 					}),
 			},
+		'unmark-ribbon': doc('Unmark current ribbon', 
+				function(){ 
+					event.preventDefault()
+					removeImageMarks('ribbon') 
+				}),
 		D: {
-				ctrl: doc('Unmark current ribbon', 
-					function(){ 
-						event.preventDefault()
-						removeImageMarks('ribbon') 
-					}),
+				ctrl: 'unmark-ribbon',
 				'ctrl+shift': doc('Unmark all images', 
 					function(){ removeImageMarks('all') }),
 			},
 		U: {
 				default: doc('Unmark current image',
 					function(){ toggleMark('off') }), 
-				ctrl: doc('Unmark current ribbon', 
-					function(){ removeImageMarks('ribbon') }),
+				ctrl: 'unmark-ribbon',
 				shift: doc('Unamrk all', 
 					function(){ removeImageMarks('all') }),
 			},
