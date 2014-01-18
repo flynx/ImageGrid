@@ -311,6 +311,7 @@ var KEYBOARD_CONFIG = {
 	// XXX this breaks getKeyHandlers(...) when modes argument is given...
 	'Ribbon view': {
 		pattern: '.viewer:not(.overlay):not(.single-image-mode)',
+		ignore: [ '#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9', '#0' ],
 
 		Left: {
 				// XXX revise...
@@ -397,16 +398,16 @@ var KEYBOARD_CONFIG = {
 			},
 
 		// zooming...
-		'#1': doc('Fit one image', function(){ return !fitNImages(1) }),
-		'#2': doc('Fit two images', function(){ return !fitNImages(2) }),
-		'#3': doc('Fit three images', function(){ return !fitNImages(3) }),
-		'#4': doc('Fit four images', function(){ return !fitNImages(4) }),
-		'#5': doc('Fit five images', function(){ return !fitNImages(5) }),
-		'#6': doc('Fit six images', function(){ return !fitNImages(6) }),
-		'#7': doc('Fit seven images', function(){ return !fitNImages(7) }),
-		'#8': doc('Fit eight images', function(){ return !fitNImages(8) }),
-		'#9': doc('Fit nine images', function(){ return !fitNImages(9) }),
-		'#0': doc('Fit maximum images', function(){ return !fitNImages(getScreenWidthInImages(CONFIG.min_image_size)) }),
+		'#1': doc('Fit one image', function(){ fitNImages(1) }),
+		'#2': doc('Fit two images', function(){ fitNImages(2) }),
+		'#3': doc('Fit three images', function(){ fitNImages(3) }),
+		'#4': doc('Fit four images', function(){ fitNImages(4) }),
+		'#5': doc('Fit five images', function(){ fitNImages(5) }),
+		'#6': doc('Fit six images', function(){ fitNImages(6) }),
+		'#7': doc('Fit seven images', function(){ fitNImages(7) }),
+		'#8': doc('Fit eight images', function(){ fitNImages(8) }),
+		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
+		'#0': doc('Fit maximum images', function(){ fitNImages(getScreenWidthInImages(CONFIG.min_image_size)) }),
 
 		// cropping...
 		C: doc('Show ribbon crop dialog', cropImagesDialog),

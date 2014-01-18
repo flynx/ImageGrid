@@ -249,17 +249,11 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 	for(var title in keybindings){
 
 		// If a key is ignored then look no further...
-		/*
-		if(did_ignore && modes != 'all'){
-			break
-		}
-		*/
 		if(did_ignore){
 			if(modes != 'all'){
 				break
 			} else {
 				did_ignore = false
-				// XXX do we actually need this???
 				if(modifiers != '?' && res[mode] != 'IGNORE'){
 					res[mode] = [ res[mode], 'IGNORE NEXT']
 				}
