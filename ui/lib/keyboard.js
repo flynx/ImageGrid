@@ -208,6 +208,8 @@ function normalizeModifiers(c, a, s){
  * 						  		in normal modes...
  *
  *
+ * NOTE: adding a key to the ignore list has the same effect as returning
+ * 		false form it's handler in the same context.
  * NOTE: it is not possible to do a shift-? as it is already shifted.
  * NOTE: if a key is not handled in a mode, that mode will not be 
  * 		present in the resulting object.
@@ -462,6 +464,8 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  * 	- action -- any arbitrary string that is not in the above categories.
  *
  *
+ * NOTE: adding a key to the ignore list has the same effect as returning
+ * 		false form it's handler in the same context.
  * NOTE: actions,the last case, are used for alias referencing, they will
  * 		never match a real key, but will get resolved in alias searches.
  * NOTE: to test what to use as <key-def> use toKeyCode(..) / toKeyName(..).
@@ -477,8 +481,8 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  * NOTE: the number keys are named with a leading hash '#' (e.g. '#8') 
  * 		to avoid conflicsts with keys that have the code with the same 
  * 		value (e.g. 'backspace' (8)).
- * NOTE: one can use a doc(<doc-string>, <callback>) as a shorthand to assign
- * 		a docstring to a handler.
+ * NOTE: one can use a doc(<doc-string>, <callback>) as a shorthand to 
+ * 		assign a docstring to a handler.
  * 		it will only assign .doc attr and return the original function.
  *
  * XXX need an explicit way to prioritize modes...
