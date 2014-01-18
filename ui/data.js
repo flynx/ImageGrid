@@ -45,13 +45,23 @@
 // 			  data.json.
 // 			  the file is optional.
 // 			- data, marks, bookmarks, tags are now saved only if updated
+// 	2.3 - Minor update to sorting restrictions
+// 			- now MARKED and BOOKMARKS do not need to be sorted 
+// 			  explicitly in json, they are now sorted as a side-effect 
+// 			  of being sparse.
+// 			  This negates some restrictions posed in 2.1, including 
+// 			  conversion of 2.0 data.
+// 			  NOTE: TAGS gid sets are still compact lists, thus are 
+// 			  		actively maintained sorted.
+// 			  		...still thinking of whether making them sparse will 
+// 			  		take up too much memory.
 //
 //
 // NOTE: Gen1 and Gen3 refer to code generations rather than data format
 // 		iterations, Gen2 is skipped here as it is a different project 
 // 		(PortableMag) started on the same code base as ImageGrid.Viewer
 // 		generation 1 and advanced from there...
-var DATA_VERSION = '2.2'
+var DATA_VERSION = '2.3'
 
 
 var CONFIG = {
@@ -751,9 +761,9 @@ function getGIDRibbonIndex(gid, data){
 // 		with caution.
 //
 // 	getRibbonGIDs(<gids>[, <ribbon-index>])
-// 		<gids> is list of gids.
 // 		return a filtered list of gids, containing only gids from target 
 // 		ribbon.
+// 		<gids> is list of gids.
 // 		<ribbon-index> is getGIDRibbonIndex(..) compatible value or number,
 // 		if it is not given, then current ribbon is used.
 //
@@ -777,7 +787,7 @@ function getRibbonGIDs(a, b, data){
 			return res.indexOf(e) >= 0 
 		})
 
-	// a is an getGIDRibbonIndex(..) compatible...
+	// a is a gid/image/... (getGIDRibbonIndex(..) compatible value)
 	} else {
 		var res = data.ribbons[getGIDRibbonIndex(a, data)]
 	}
