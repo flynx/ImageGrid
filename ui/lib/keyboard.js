@@ -673,10 +673,30 @@ function buildKeybindingsHelpHTML(keybindings){
 
 // Build HTML for a single key definition...
 //
+// Format if combining sections (default):
+// 		<span class="key-doc">
+// 			<span class="doc"> DOC </span>
+// 			<span class="keys"> KEYS </span>
+// 		</span>
+//
+// Format if not combining sections:
+// 		<span class="key-doc">
+// 			<span class="doc"> DOC </span>
+// 			<span class="section">
+// 				<span class="name"> MODE NAME </span>
+// 				<span class="keys"> KEYS </span>
+// 			</span>
+// 			...
+// 		</span>
+//
 // XXX not yet sure if we are handling the sections correctly...
 function getKeysByDocHTML(doc, help, combine_sections){
+	combine_sections = combine_sections == null ? true : combine_sections
+
 	var spec = getKeysByDoc(doc, help)
 	var res = '<span class="key-doc">'
+
+	res += '<span class="doc">'+ doc +'</span>'
 	
 	var keys = []
 
@@ -685,7 +705,7 @@ function getKeysByDocHTML(doc, help, combine_sections){
 			keys = spec[section].join(', ')
 			res += '<span class="section">'
 					+'<span class="name">'+ section +'</span>'
-					+'<span class="key">'+ keys +'</span>'
+					+'<span class="keys">'+ keys +'</span>'
 				+'</span>'
 		} else {
 			keys = keys.concat(spec[section])
@@ -693,8 +713,7 @@ function getKeysByDocHTML(doc, help, combine_sections){
 	}
 
 	if(combine_sections){
-		res += '<span class="doc">'+ doc +'</span>'
-			+'<span class="key">'+ keys.join(', ') +'</span>'
+		res += '<span class="keys">'+ keys.join(', ') +'</span>'
 	}
 
 	return res + '</span>'
