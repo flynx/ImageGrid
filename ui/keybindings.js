@@ -39,7 +39,8 @@ function directionImage(reverse){
 // XXX this is experimental...
 // 		...not sure yet how to go about this...
 function Action(text, func){
-	func = func == null ? function(){return true}: func
+	var not_action = func === false ? true : false
+	func = !func ? function(){return true}: func
 	func.doc = text
 
 	var name = text.split('\n')[0].trim()
@@ -48,12 +49,17 @@ function Action(text, func){
 		console.warn('Action: "'+name+'" is defined more than once.')
 	}
 
-	ACTIONS[name] = func
+	if(!not_action){
+		ACTIONS[name] = func
+	}
 
 	return func
 }
 
-doc = Action
+
+var _doc = doc
+var doc = Action
+
 
 
 /*********************************************************************/
@@ -119,17 +125,21 @@ var KEYBOARD_CONFIG = {
 			'image selection/marks.',
 		pattern: '.overlay-info:hover',
 
-		ignore: [ 'A' ],
+		ignore: [ 'A', 'C', 'D' ],
 
+		// NOTE: these are here only for documentation...
 		A: {
-			// NOTE: this is here only for documentation...
-			ctrl: doc('Select all'),
+			ctrl: doc('Select all', false),
 		},
+		C: {
+			ctrl: doc('Copy selection', false)
+		},
+
 		D: {
 			ctrl: doc('Clear selection', 
 				function(){
+					console.log('!!!')
 					document.getSelection().empty()
-					return false
 				})
 		}
 	},
@@ -145,7 +155,7 @@ var KEYBOARD_CONFIG = {
 
 		ignore: '*',
 
-		'insert-return': doc('Insert return'),
+		'insert-return': doc('Insert return', false),
 
 		Enter: {
 				default: doc('Accept dialog',
@@ -387,16 +397,16 @@ var KEYBOARD_CONFIG = {
 			},
 
 		// zooming...
-		'#1': doc('Fit one image', function(){ fitNImages(1) }),
-		'#2': doc('Fit two images', function(){ fitNImages(2) }),
-		'#3': doc('Fit three images', function(){ fitNImages(3) }),
-		'#4': doc('Fit four images', function(){ fitNImages(4) }),
-		'#5': doc('Fit five images', function(){ fitNImages(5) }),
-		'#6': doc('Fit six images', function(){ fitNImages(6) }),
-		'#7': doc('Fit seven images', function(){ fitNImages(7) }),
-		'#8': doc('Fit eight images', function(){ fitNImages(8) }),
-		'#9': doc('Fit nine images', function(){ fitNImages(9) }),
-		'#0': doc('Fit maximum images', function(){ fitNImages(getScreenWidthInImages(CONFIG.min_image_size)) }),
+		'#1': doc('Fit one image', function(){ return !fitNImages(1) }),
+		'#2': doc('Fit two images', function(){ return !fitNImages(2) }),
+		'#3': doc('Fit three images', function(){ return !fitNImages(3) }),
+		'#4': doc('Fit four images', function(){ return !fitNImages(4) }),
+		'#5': doc('Fit five images', function(){ return !fitNImages(5) }),
+		'#6': doc('Fit six images', function(){ return !fitNImages(6) }),
+		'#7': doc('Fit seven images', function(){ return !fitNImages(7) }),
+		'#8': doc('Fit eight images', function(){ return !fitNImages(8) }),
+		'#9': doc('Fit nine images', function(){ return !fitNImages(9) }),
+		'#0': doc('Fit maximum images', function(){ return !fitNImages(getScreenWidthInImages(CONFIG.min_image_size)) }),
 
 		// cropping...
 		C: doc('Show ribbon crop dialog', cropImagesDialog),
@@ -866,6 +876,10 @@ var KEYBOARD_CONFIG = {
 			'ctrl+alt': function(){ alert('ctrl-alt-`') },
 		},
 		*/
+	},
+
+	'.image': {
+		'#1': doc('mooo!')
 	}
 }
 

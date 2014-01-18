@@ -10,6 +10,17 @@
 
 /*********************************************************************/
 
+// Attributes to be ignored my the key handler...
+//
+// These are used for system tasks.
+var KEYBOARD_SYSTEM_ATTRS = [
+	'doc',
+	'title',
+	'ignore',
+	'pattern'
+]
+
+
 // Neither _SPECIAL_KEYS nor _KEY_CODES are meant for direct access, use
 // toKeyName(<code>) and toKeyCode(<name>) for a more uniform access.
 //
@@ -109,7 +120,7 @@ function toKeyCode(c){
 
 // documentation wrapper...
 function doc(text, func){
-	func = func == null ? function(){return true}: func
+	func = !func ? function(){return true}: func
 	func.doc = text
 	return func
 }
@@ -152,12 +163,6 @@ function normalizeModifiers(c, a, s){
  *
  * For doc on format see makeKeyboardHandler(...)
  *
- * modes can be:
- * 	- 'any'	(default)	- Get list of all applicable handlers up until
- * 							the first applicable ignore.
- * 	- 'all'				- Get ALL handlers, including ignores
- * 	- <mode>			- Get handlers for an explicit mode
- *
  * modifiers can be:
  * 	- '' (default)		- No modifiers
  * 	- '?'				- Return list of applicable modifiers per mode
@@ -171,6 +176,13 @@ function normalizeModifiers(c, a, s){
  * 							NOTE: normalizeModifiers(...) can be used as
  * 								a reference, if in doubt.
  *
+ * modes can be:
+ * 	- 'any'	(default)	- Get list of all applicable handlers up until
+ * 							the first applicable ignore.
+ * 	- 'all'				- Get ALL handlers, including ignores
+ * 	- <mode>			- Get handlers for an explicit mode
+ *
+ *
  * This will also resolve several shifted keys by name, for example:
  * 'shift-/' is the same as '?', and either can be used, but the shorter 
  * direct notation has priority (see _SHIFT_KEYS for supported keys).
@@ -183,6 +195,19 @@ function normalizeModifiers(c, a, s){
  * 	}
  *
  *
+ * <handler> can be:
+ * 	- <function>		- handler
+ * 	- [<doc>, <function>]
+ * 						- lisp-style handler
+ * 	- 'IGNORE'			- if mode is 'all' and key is in .ignore
+ * 	- [<function>, 'IGNORE NEXT']
+ * 						- if mode is 'all' and the key is both in .ignore
+ * 						  and a handler is defined in the current section
+ * 						  NOTE: in this case if this mode matches, all
+ * 						  		the subsequent handlers will get ignored
+ * 						  		in normal modes...
+ *
+ *
  * NOTE: it is not possible to do a shift-? as it is already shifted.
  * NOTE: if a key is not handled in a mode, that mode will not be 
  * 		present in the resulting object.
@@ -191,17 +216,16 @@ function normalizeModifiers(c, a, s){
  * NOTE: modifiers can be a list of three bools...
  * 		(see: normalizeModifiers(...) for further information)
  *
- * XXX need an explicit way to prioritize modes, avoiding object attr 
- * 		ordering...
  * XXX check do we need did_handling here...
- *
  * XXX BUG explicitly given modes do not yield results if the pattern 
  * 		does not match...
  */
 function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 	var chr = null
 	var s_chr = null
+	// XXX I do not understand why this is here...
 	var did_handling = false
+	var did_ignore = false
 	modifiers = modifiers == null ? '' : modifiers
 	modifiers = modifiers != '?' ? normalizeModifiers(modifiers) : modifiers
 	modes = modes == null ? 'any' : modes
@@ -224,6 +248,24 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 
 	for(var title in keybindings){
 
+		// If a key is ignored then look no further...
+		/*
+		if(did_ignore && modes != 'all'){
+			break
+		}
+		*/
+		if(did_ignore){
+			if(modes != 'all'){
+				break
+			} else {
+				did_ignore = false
+				// XXX do we actually need this???
+				if(modifiers != '?' && res[mode] != 'IGNORE'){
+					res[mode] = [ res[mode], 'IGNORE NEXT']
+				}
+			}
+		}
+
 		// older version compatibility...
 		if(keybindings[title].pattern != null){
 			var mode = keybindings[title].pattern
@@ -237,7 +279,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 			|| modes == mode
 			// 'any' means we need to check the mode...
 			|| (modes == 'any'
-				// '*' allways matches...
+				// '*' always matches...
 				&& mode == '*'
 				// match the mode...
 				|| $(mode).length != 0))){
@@ -257,6 +299,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 		}
 
 		// alias...
+		// XXX should this be before after or combined with ignore handling...
 		while( handler != null 
 				&& (typeof(handler) == typeof(123) 
 					|| typeof(handler) == typeof('str')
@@ -293,21 +336,24 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 			}
 		}
 
+		// if something is ignored then just breakout and stop handling...
+		if(bindings.ignore == '*' 
+				|| bindings.ignore != null 
+					&& (bindings.ignore.indexOf(key) != -1 
+						|| bindings.ignore.indexOf(chr) != -1)){
+			did_handling = true
+			// ignoring a key will stop processing it...
+			if(modes == 'all' || mode == modes){
+				// NOTE: if a handler is defined in this section, this 
+				// 		will be overwritten...
+				// XXX need to add the handler to this if it's defined...
+				res[mode] = 'IGNORE'
+			}
+			did_ignore = true
+		}
+
 		// no handler...
 		if(handler == null){
-			// if something is ignored then just breakout and stop handling...
-			if(bindings.ignore == '*' 
-					|| bindings.ignore != null 
-						&& (bindings.ignore.indexOf(key) != -1 
-							|| bindings.ignore.indexOf(chr) != -1)){
-				did_handling = true
-				// ignoring a key will stop processing it...
-				if(modes == 'all' || mode == modes){
-					res[mode] = 'IGNORE'
-				} else {
-					break
-				}
-			}
 			continue
 		}
 
@@ -531,7 +577,7 @@ function buildKeybindingsHelp(keybindings, shifted_keys){
 
 		// handlers...
 		for(var key in mode){
-			if(key == 'doc' || key == 'title' || key == 'ignore' || key == 'pattern'){
+			if(KEYBOARD_SYSTEM_ATTRS.indexOf(key) >= 0){
 				continue
 			}
 			var modifiers = getKeyHandlers(key, '?', keybindings, 'all')[pattern]
@@ -542,12 +588,16 @@ function buildKeybindingsHelp(keybindings, shifted_keys){
 
 				var handler = getKeyHandlers(key, mod, keybindings, 'all')[pattern]
 
+				if(handler.constructor.name == 'Array' && handler[1] == 'IGNORE NEXT'){
+					handler = handler[0]
+				}
+
 				// standard object doc...
 				if('doc' in handler){
 					var doc = handler.doc
 
 				// lisp style...
-				} else if(typeof(handler) == typeof([]) && handler.constructor.name == 'Array'){
+				} else if(handler.constructor.name == 'Array'){
 					var doc = handler[1]
 
 				// no doc...
