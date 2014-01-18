@@ -84,14 +84,12 @@ var toggleBookmark = makeMarkToggler(
 			// add a bookmark...
 			if(action == 'on'){
 				if(BOOKMARKS.indexOf(gid) == -1){
-					//insertGIDToPosition(gid, BOOKMARKS)
 					BOOKMARKS[DATA.order.indexOf(gid)] = gid
 				}
 
 			// remove a bookmark...
 			} else {
-				//BOOKMARKS.splice(BOOKMARKS.indexOf(gid), 1)
-				delete BOOKMARKED[BOOKMARKED.indexOf(gid)]
+				delete BOOKMARKS[BOOKMARKS.indexOf(gid)]
 			}
 
 			bookmarksUpdated()

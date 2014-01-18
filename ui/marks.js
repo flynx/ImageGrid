@@ -121,6 +121,9 @@ function makeUnmarkedLister(get_marked){
 //
 // NOTE: this is about an order of magnitude faster than the non-sparse
 // 		version...
+//
+// XXX if this gets used often, add caching -- this may get quite slow
+// 		for very large image sets...
 function makeUnmarkedSparseLister(get_marked){
 	return function(mode){
 		mode = mode == null ? 'all' : mode
