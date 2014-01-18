@@ -720,6 +720,20 @@ function getKeysByDocHTML(doc, help, combine_sections){
 }
 
 
+// Update key definitions...
+//
+// NOTE: this does not support multiple sections...
+function updateHTMLKeyDoc(help, root){
+	root = root == null ? $('body') : root
+	return root.find('.key-doc').each(function(i, e){
+		e = $(e)
+		var doc = e.find('.doc')
+		var keys = $(getKeysByDocHTML(doc.html(), help)).find('.keys')
+		e.find('.keys').html(keys.html())
+	})
+}
+
+
 
 /**********************************************************************
 * Key binding editor...
