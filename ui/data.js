@@ -54,7 +54,7 @@
 // 			  NOTE: TAGS gid sets are still compact lists, thus are 
 // 			  		actively maintained sorted.
 // 			  		...still thinking of whether making them sparse will 
-// 			  		take up too much memory.
+// 			  		take up too much memory, and is it worth the work...
 //
 //
 // NOTE: Gen1 and Gen3 refer to code generations rather than data format
