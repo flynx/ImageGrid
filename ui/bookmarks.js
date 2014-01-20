@@ -96,6 +96,12 @@ var toggleBookmark = makeMarkToggler(
 		})
 
 
+// Remove all bookmarks...
+//
+// mode can be:
+//	- 'ribbon' (default)
+//	- 'all'
+//
 function removeAllBookmarks(mode){
 	mode = mode == null ? 'ribbon' : mode
 	var res = setAllMarks('off', mode, BOOKMARKS, toggleBookmark)
@@ -107,7 +113,7 @@ function removeAllBookmarks(mode){
 }
 
 
-// focus next/prev bookmark...
+// Focus next/prev bookmark...
 //
 var nextBookmark = makeNextFromListAction(
 		getBookmarkedGIDBefore, 

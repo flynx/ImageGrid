@@ -449,39 +449,52 @@ function markAllImagesTo(action, mode){
 }
 
 
+// Mark/Unmark images...
+//
 // mode can be:
-//	- 'ribbon'
+//	- 'ribbon' (default)
 //	- 'all'
+//
 function unmarkAll(mode){ markAllImagesTo('off', mode) }
 function markAll(mode){ markAllImagesTo('on', mode) }
 
 
-// NOTE: this only does it's work in the current ribbon...
-function invertImageMarks(){
-	var ribbon = getRibbonGIDs()
+// Invert marks on images...
+//
+// mode can be:
+//	- 'ribbon' (default)
+//	- 'all'
+//
+function invertImageMarks(mode, gids){
+	mode = mode == null ? 'ribbon' : mode
+	gids = gids != null ? gids 
+			: mode == 'ribbon' ? getRibbonGIDs()
+			: getLoadedGIDs()
+
 	var on = []
 	var off = []
+	var order = DATA.order
 
-	$.each(ribbon, function(_, e){
-		var i = MARKED.indexOf(e)
-		if(i == -1){
+	$.each(gids, function(_, e){
+		var i = order.indexOf(e)
+		if(MARKED[i] === undefined){
 			on.push(e)
-			MARKED[DATA.order.indexOf(e)] = e
+			MARKED[i] = e
 		} else {
 			off.push(e)
 			delete MARKED[i]
 		}
 	})
-	updateImages(ribbon)
+	updateImages(gids)
 
 	$('.viewer')
-		.trigger('invertingMarks', [ribbon])
+		.trigger('invertingMarks', [gids])
 		.trigger('togglingMarks', [on, 'on'])
 		.trigger('togglingMarks', [off, 'off'])
 
 	marksUpdated()
 
-	return on.concat(off)
+	return gids
 }
 
 
@@ -498,6 +511,7 @@ function toggleMarkBlock(image){
 	var i = ribbon.indexOf(gid)
 
 	var updated = [gid]
+	var order = DATA.order
 
 	var _convert = function(_, e){
 		// break if state differs from current...
@@ -506,7 +520,7 @@ function toggleMarkBlock(image){
 		}
 		// do the toggle...
 		if(state){
-			MARKED[DATA.order.indexOf(e)] = e
+			MARKED[order.indexOf(e)] = e
 		} else {
 			delete MARKED[MARKED.indexOf(e)]
 		}
@@ -658,6 +672,7 @@ function markImagesDialog(){
 			'to the left and right of the current image,\n'+
 			'up until the closest images marked differently',
 		'Invert marks in current ribbon',
+		'Invert all marks',
 		'Mark all in current ribbon',
 		'Unmark all in current ribbon',
 		'Mark all images',
@@ -680,9 +695,13 @@ function markImagesDialog(){
 				toggleMarkBlock()
 				var msg = 'toggled block marks'
 
-			} else if(/Invert/.test(res)){
+			} else if(/Invert .* ribbon/.test(res)){
 				invertImageMarks()
 				var msg = 'inverted ribbon marks'
+
+			} else if(/Invert all/.test(res)){
+				invertImageMarks('all')
+				var msg = 'inverted all marks'
 
 			} else if(/Mark all.*current ribbon/.test(res)){
 				markAll('ribbon')
