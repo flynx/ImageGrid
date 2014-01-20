@@ -760,22 +760,25 @@ var KEYBOARD_CONFIG = {
 						markAll('all') 
 					}),
 			},
+
 		'unmark-ribbon': doc('Unmark current ribbon', 
 				function(){ 
 					event.preventDefault()
-					removeImageMarks('ribbon') 
+					unmarkAll('ribbon') 
 				}),
+		'unmark-all': doc('Unmark all images', 
+				function(){ unmarkAll('all') }),
+
 		D: {
 				ctrl: 'unmark-ribbon',
-				'ctrl+shift': doc('Unmark all images', 
-					function(){ removeImageMarks('all') }),
+				'ctrl+shift': 'unmark-all', 
+		
 			},
 		U: {
 				default: doc('Unmark current image',
 					function(){ toggleMark('off') }), 
 				ctrl: 'unmark-ribbon',
-				shift: doc('Unamrk all', 
-					function(){ removeImageMarks('all') }),
+				shift: 'unmark-all',
 			},
 
 

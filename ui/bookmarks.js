@@ -96,6 +96,17 @@ var toggleBookmark = makeMarkToggler(
 		})
 
 
+function removeAllBookmarks(mode){
+	mode = mode == null ? 'ribbon' : mode
+	var res = setAllMarks('off', mode, BOOKMARKS, toggleBookmark)
+	$('.viewer')
+		.trigger('togglingBookmarks', [res, 'off'])
+		.trigger('removingBookmarks', [res, mode])
+	bookmarksUpdated()
+	return res
+}
+
+
 // focus next/prev bookmark...
 //
 var nextBookmark = makeNextFromListAction(

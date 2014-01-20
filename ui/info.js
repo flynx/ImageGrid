@@ -195,7 +195,7 @@ function setupInfo(viewer){
 			})
 		.on([
 				'focusingImage',
-				'togglingMark',
+				'togglingMarks',
 				'togglingBookmark',
 				'removeingAllMarks',
 				'removeingRibbonMarks',

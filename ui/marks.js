@@ -302,6 +302,47 @@ function shiftGIDInSparseList(gid, list){
 }
 
 
+// NOTE: this is sparse-only...
+function setAllMarks(action, mode, list, toggler){
+	action = action == null ? toggler('?') : action
+	mode = mode == null ? 'ribbon' : mode
+
+	var updated = []
+
+	if(action == 'on'){
+		var _update = function(e){
+			if(list.indexOf(e) < 0){
+				list[DATA.order.indexOf(e)] = e
+				updated.push(e)
+			}
+		}
+	} else {
+		var _update = function(e){
+			var i = list.indexOf(e)
+			if(i >= 0){
+				delete list[i]
+				updated.push(e)
+			}
+		}
+	}
+
+	// marks from current ribbon (default)...
+	if(mode == 'ribbon'){
+		var res = getRibbonGIDs()
+
+	// all marks...
+	} else if(mode == 'all'){
+		var res = getLoadedGIDs()
+	} 
+
+	res.forEach(_update)
+
+	updateImages(updated)
+
+	return res
+}
+
+
 
 /**********************************************************************
 * 
@@ -380,7 +421,7 @@ var toggleMarksView = createCSSClassToggler(
 var toggleMark = makeMarkToggler(
 		'marked', 
 		'selected', 
-		'togglingMark',
+		'togglingMarks',
 		function(gid, action){
 			// add marked image to list...
 			if(action == 'on'){
@@ -397,67 +438,22 @@ var toggleMark = makeMarkToggler(
 		})
 
 
-
-function setAllMarks(action, mode){
-	action = action == null ? toggleMark('?') : action
+function markAllImagesTo(action, mode){
 	mode = mode == null ? 'ribbon' : mode
-
-	var updated = []
-
-	if(action == 'on'){
-		var _update = function(e){
-			if(MARKED.indexOf(e) < 0){
-				MARKED[DATA.order.indexOf(e)] = e
-				updated.push(e)
-			}
-		}
-	} else {
-		var _update = function(e){
-			var i = MARKED.indexOf(e)
-			if(i >= 0){
-				delete MARKED[i]
-				updated.push(e)
-			}
-		}
-	}
-
-	// marks from current ribbon (default)...
-	if(mode == 'ribbon'){
-		var res = getRibbonGIDs()
-
-	// all marks...
-	} else if(mode == 'all'){
-		var res = getLoadedGIDs()
-	} 
-
-	res.forEach(_update)
-
-	updateImages(updated)
-
-	$('.viewer').trigger('togglingMarks', [updated, action])
-
+	var res = setAllMarks(action, mode, MARKED, toggleMark)
+	$('.viewer')
+		.trigger('togglingMarks', [res, action])
+		.trigger('removingMarks', [res, mode])
 	marksUpdated()
-
 	return res
 }
+
 
 // mode can be:
 //	- 'ribbon'
 //	- 'all'
-function removeImageMarks(mode){
-	mode = mode == null ? 'ribbon' : mode
-	var res = setAllMarks('off', mode)
-	$('.viewer').trigger('removingMarks', [res, mode])
-	return res
-}
-
-
-function markAll(mode){
-	mode = mode == null ? 'ribbon' : mode
-	var res = setAllMarks('on', mode)
-	$('.viewer').trigger('addingMarks', [res, mode])
-	return res
-}
+function unmarkAll(mode){ markAllImagesTo('off', mode) }
+function markAll(mode){ markAllImagesTo('on', mode) }
 
 
 // NOTE: this only does it's work in the current ribbon...
@@ -689,19 +685,19 @@ function markImagesDialog(){
 				var msg = 'inverted ribbon marks'
 
 			} else if(/Mark all.*current ribbon/.test(res)){
-				markAll()
+				markAll('ribbon')
 				var msg = 'marked ribbon'
 
 			} else if(/Mark all/.test(res)){
-				markAll()
-				var msg = 'marked ribbon'
+				markAll('all')
+				var msg = 'marked all'
 
 			} else if(/Unmark all in/.test(res)){
-				removeImageMarks('ribbon')
+				unmarkAll('ribbon')
 				var msg = 'unmarked ribbon'
 
 			} else if(/Unmark all images/.test(res)){
-				removeImageMarks('all')
+				unmarkAll('all')
 				var msg = 'unmarked all'
 			}
 
@@ -775,11 +771,6 @@ function setupMarks(viewer){
 
 	return viewer
 		// XXX do we actually need this???
-		.on('togglingMarks', function(evt, lst, action){
-			lst.forEach(function(gid){
-				viewer.trigger('togglingMark', [gid, action])
-			})
-		})
 		.on('sortedImages', function(){
 			MARKED = populateSparceGIDList(MARKED)
 			marksUpdated()
