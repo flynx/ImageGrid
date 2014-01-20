@@ -22,9 +22,6 @@
 // 		- really fast
 var MARKED = []
 
-var MARKED_FILE_DEFAULT = 'marked.json'
-var MARKED_FILE_PATTERN = /^[0-9]*-marked.json$/
-
 
 
 /**********************************************************************
@@ -51,8 +48,7 @@ function _addMark(cls, gid, image){
 
 	// make sure the mark is explicitly after the image...
 	// XXX think of an eficient way to test if we need to re-insert...
-	mark
-		.insertAfter(image)
+	mark.insertAfter(image)
 
 	return mark
 }
@@ -159,7 +155,6 @@ var getMarked = makeMarkedLister(function(){ return MARKED })
 var getUnmarked = makeUnmarkedSparseLister(function(){ return MARKED })
 
 
-// XXX make this undefined tolerant -- sparse list compatibility...
 var getMarkedGIDBefore = makeGIDBeforeGetterFromList(
 		function(){ 
 			return compactSparceList(MARKED)
@@ -361,10 +356,7 @@ var updateSelectedImageMark = makeMarkUpdater(
 // 		not exist, as there is no way to distinguish between the two 
 // 		situations the cleanup is optional...
 function cropMarkedImages(keep_ribbons, keep_unloaded_gids){
-	var marked = MARKED.slice()
-
-	cropDataTo(marked, keep_ribbons, keep_unloaded_gids)
-
+	cropDataTo(MARKED, keep_ribbons, keep_unloaded_gids)
 	return DATA
 }
 
@@ -387,7 +379,6 @@ var toggleMarkedOnlyWithRibbonsView = makeCropModeToggler(
 		})
 
 
-// XXX shifting images and unmarking in this mode do not work correctly...
 var toggleMarksView = createCSSClassToggler(
 	'.viewer', 
 	'marks-visible',
@@ -455,8 +446,8 @@ function markAllImagesTo(action, mode){
 //	- 'ribbon' (default)
 //	- 'all'
 //
-function unmarkAll(mode){ markAllImagesTo('off', mode) }
 function markAll(mode){ markAllImagesTo('on', mode) }
+function unmarkAll(mode){ markAllImagesTo('off', mode) }
 
 
 // Invert marks on images...
@@ -613,6 +604,7 @@ function shiftMarkedImagesDown(mode, new_ribbon){
 }
 
 
+/*
 // XXX these are ribbon wise only (???)
 // XXX this on first step this must pack all marked images
 function horizontalShiftMarkedImages(direction){
@@ -624,9 +616,10 @@ function shiftMarkedImagesLeft(){
 function shiftMarkedImagesRight(){
 	return horizontalShiftMarkedImages('next')
 }
+*/
 
 
-// Focus next/prev mark...
+// Focus next/prev marked image...
 //
 // NOTE: these will not jump to marks on other ribbons... to prevent this
 // 		add true as the final argument (see restrict_to_ribbon argument 
@@ -639,6 +632,8 @@ var prevMark = makePrevFromListAction(
 		function(){ return compactSparceList(MARKED) })
 
 
+// Focus next/prev unmarked image..
+//
 var nextUnmarked = makeNextFromListAction(
 		getUnmarkedGIDBefore, 
 		function(ribbon){ 
@@ -738,8 +733,7 @@ function markImagesDialog(){
 // NOTE: if no marks are found then set them to []
 var loadFileMarks = makeFileLoader(
 		'Marks', 
-		MARKED_FILE_DEFAULT, 
-		MARKED_FILE_PATTERN, 
+		CONFIG.marked_file, 
 		[],
 		function(data){ 
 			MARKED = populateSparceGIDList(data)
@@ -750,7 +744,7 @@ var loadFileMarks = makeFileLoader(
 // Save image marks to file
 var saveFileMarks = makeFileSaver(
 		'Marks',
-		MARKED_FILE_DEFAULT, 
+		CONFIG.marked_file, 
 		function(){ 
 			return compactSparceList(MARKED)
 		})
@@ -789,7 +783,6 @@ function setupMarks(viewer){
 		.click(function(){ toggleMark() })
 
 	return viewer
-		// XXX do we actually need this???
 		.on('sortedImages', function(){
 			MARKED = populateSparceGIDList(MARKED)
 			marksUpdated()

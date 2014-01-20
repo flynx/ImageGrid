@@ -74,6 +74,10 @@ function makeCroppedData(gids, keep_ribbons, keep_unloaded_gids){
 }
 
 
+// Crop data to given gids and set viewer state...
+//
+// Returns original state
+//
 // NOTE: if keep_ribbons is not set this will ALWAYS build a single ribbon
 // 		data-set...
 function cropDataTo(gids, keep_ribbons, keep_unloaded_gids){

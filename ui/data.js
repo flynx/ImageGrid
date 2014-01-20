@@ -68,6 +68,32 @@ var CONFIG = {
 	// Application name...
 	app_name: 'ImageGrid.Viewer',
 
+
+	// Filenames and patterns...
+	// file cache settings...
+	cache_dir: '.ImageGrid',
+	cache_dir_var: '${CACHE_DIR}',
+
+	// extension to be used for JSON files...
+	json_ext: 'json',
+	// diff filename suffix...
+	diff_suffix: 'diff',
+
+	// filename patterns...
+	base_file_pattern: '${BASE}.${EXT}',
+	file_pattern: '${DATE}-${BASE}.${EXT}',
+	diff_file_pattern: '${DATE}-${BASE}-${DIFF_SUFIX}.${EXT}',
+
+	// filename bases...
+	// XXX should these be here???
+	images_file: 'images',
+	data_file: 'data',
+	current_file: 'current',
+	marked_file: 'marked',
+	bookmarks_file: 'bookmarked',
+	tags_file: 'tags',
+
+
 	// Navigation...
 	//
 	// The number of moves after which the default direction will be 
@@ -146,11 +172,6 @@ var CONFIG = {
 
 	// localStorage prefix...
 	data_attr: 'DATA',
-
-	// file cache settings...
-	cache_dir: '.ImageGrid',
-	cache_dir_var: '${CACHE_DIR}',
-
 
 	// If true updateImages(..) will sort the images before updating, so as
 	// to make the visible images update first...
@@ -646,6 +667,7 @@ function compactSparceList(lst){
 //		console.log('T:', Date.now()-t0)
 //		>>> T: 171
 //
+// NOTE: this has no side-effects on the original gids list...
 function fastSortGIDsByOrder(gids, data){
 	return compactSparceList(populateSparceGIDList(gids, data))
 }

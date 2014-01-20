@@ -196,7 +196,7 @@ function setupInfo(viewer){
 		.on([
 				'focusingImage',
 				'togglingMarks',
-				'togglingBookmark',
+				'togglingBookmarks',
 				'removeingAllMarks',
 				'removeingRibbonMarks',
 				'markingAll',

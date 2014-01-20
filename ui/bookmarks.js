@@ -16,9 +16,6 @@ var BOOKMARKS = []
 // 		BOOKMARKS, as the main structure.
 var BOOKMARKS_DATA = {}
 
-var BOOKMARKS_FILE_DEFAULT = 'bookmarked.json'
-var BOOKMARKS_FILE_PATTERN = /^[0-9]*-bookmarked.json$/
-
 
 
 /**********************************************************************
@@ -38,8 +35,7 @@ var getBookmarkedGIDBefore = makeGIDBeforeGetterFromList(
 /*********************************************************************/
 
 function cropBookmarkedImages(cmp, keep_ribbons, keep_unloaded_gids){
-	cropDataTo(BOOKMARKS.slice(), keep_ribbons, keep_unloaded_gids)
-
+	cropDataTo(BOOKMARKS, keep_ribbons, keep_unloaded_gids)
 	return DATA
 }
 
@@ -79,7 +75,7 @@ var toggleBookmarkedOnlyWithRibbonsView = makeCropModeToggler(
 var toggleBookmark = makeMarkToggler(
 		'bookmarked', 
 		'bookmark', 
-		'togglingBookmark',
+		'togglingBookmarks',
 		function(gid, action){
 			// add a bookmark...
 			if(action == 'on'){
@@ -130,8 +126,7 @@ var prevBookmark = makePrevFromListAction(
 
 var loadFileBookmarks = makeFileLoader(
 		'Bookmarks', 
-		BOOKMARKS_FILE_DEFAULT, 
-		BOOKMARKS_FILE_PATTERN, 
+		CONFIG.bookmarks_file, 
 		[[], {}],
 		function(data){ 
 			BOOKMARKS = populateSparceGIDList(data[0])
@@ -141,7 +136,7 @@ var loadFileBookmarks = makeFileLoader(
 
 var saveFileBookmarks = makeFileSaver(
 		'Bookmarks',
-		BOOKMARKS_FILE_DEFAULT, 
+		CONFIG.bookmarks_file, 
 		function(){ 
 			return [
 				compactSparceList(BOOKMARKS), 

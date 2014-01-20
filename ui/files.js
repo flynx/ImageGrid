@@ -10,19 +10,7 @@
 // XXX do we need this?
 var IMAGES_CREATED = false
 
-// XXX make these usable for both saving and loading...
-// XXX get these from config...
-var IMAGES_FILE_DEFAULT = 'images.json'
-var IMAGES_FILE_PATTERN = /^[0-9]*-images.json$/
-var IMAGES_DIFF_FILE_PATTERN = /^[0-9]*-images-diff.json$/
-
-var DATA_FILE_DEFAULT = 'data.json'
-var DATA_FILE_PATTERN = /^[0-9]*-data.json$/
-
-var CURRENT_FILE = 'current.json'
-
 var IMAGE_PATTERN = /.*\.(jpg|jpeg|png|gif)$/i
-
 
 var FILE_LOADERS = []
 var FILE_SAVERS = {}
@@ -38,6 +26,44 @@ var FILES_UPDATED = []
 
 
 /********************************************************* Helpers ***/
+
+function makeBaseFilename(base, date, ext){
+	ext = ext == null ? CONFIG.json_ext : ext
+
+	if(date == null){
+		return CONFIG.base_file_pattern
+			.replace('${BASE}', base)
+			.replace('${EXT}', ext)
+	}
+	return date +'-'+ name +'.'+ ext
+}
+function makeFilename(base, date, ext){
+	date = date == null ? Date.timeStamp() : date
+	ext = ext == null ? CONFIG.json_ext : ext
+
+	return CONFIG.file_pattern
+			.replace('${DATE}', date)
+			.replace('${BASE}', base)
+			.replace('${EXT}', ext)
+}
+function makeFilenamePattern(base, ext){
+	return RegExp(makeFilename(base, '^[0-9]*', ext)+'$')
+}
+function makeDiffFilename(base, date, diff, ext){
+	date = date == null ? Date.timeStamp() : date
+	diff = diff == null ? CONFIG.diff_suffix : diff
+	ext = ext == null ? CONFIG.json_ext : ext
+
+	return CONFIG.diff_file_pattern
+			.replace('${DATE}', date)
+			.replace('${BASE}', base)
+			.replace('${DIFF_SUFIX}', diff)
+			.replace('${EXT}', ext)
+}
+function makeDiffFilePattern(base, diff, ext){
+	return RegExp(makeDiffFilename(base, '^[0-9]*', ext)+'$')
+}
+
 
 // Report deferred progress
 //
@@ -208,35 +234,48 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 }
 
 
-function makeFileLoader(title, file_dfl, file_pattern, default_data, set_data, error, evt_name, skip_reg){
+// XXX needs revision and testing...
+function loadFile(title, path, file_dfl, file_pattern, default_data){
+	var res = $.Deferred()
+	// default locations...
+	if(path == null){
+		var base = normalizePath(CONFIG.cache_dir_var)
+		var loader = loadLatestFile(base, 
+				file_dfl, 
+				file_pattern,
+				null,
+				default_data)
+	
+	// explicit path...
+	// XXX need to account for paths without a CONFIG.cache_dir
+	} else {
+		path = normalizePath(path)
+		var base = path.split(CONFIG.cache_dir)[0]
+		//base = normalizePath(path +'/'+ CONFIG.cache_dir_var)
+		base = path +'/'+ CONFIG.cache_dir
+
+		// XXX is this correct???
+		var loader = loadLatestFile(base, 
+				path.split(base)[0], 
+				RegExp(path.split(base)[0]),
+				null,
+				default_data)
+	}
+
+	bubbleProgress(title, loader, res)
+
+	return res
+}
+
+
+function makeFileLoader(title, base, default_data, set_data, error, evt_name, skip_reg){
 	var _loader = function(path){
-		var res = $.Deferred()
-		// default locations...
-		if(path == null){
-			var base = normalizePath(CONFIG.cache_dir_var)
-			var loader = loadLatestFile(base, 
-					file_dfl, 
-					file_pattern,
-					null,
-					default_data)
-		
-		// explicit path...
-		// XXX need to account for paths without a CONFIG.cache_dir
-		} else {
-			path = normalizePath(path)
-			var base = path.split(CONFIG.cache_dir)[0]
-			//base = normalizePath(path +'/'+ CONFIG.cache_dir_var)
-			base = path +'/'+ CONFIG.cache_dir
-
-			// XXX is this correct???
-			var loader = loadLatestFile(base, 
-					path.split(base)[0], 
-					RegExp(path.split(base)[0]),
-					null,
-					default_data)
-		}
-
-		bubbleProgress(title, loader, res)
+		var res = loadFile(
+				title, 
+				path, 
+				makeBaseFilename(base), 
+				makeFilenamePattern(base), 
+				default_data)
 
 		res.done(set_data)
 
@@ -246,7 +285,6 @@ function makeFileLoader(title, file_dfl, file_pattern, default_data, set_data, e
 		if(evt_name != null){
 			res.done(function(){ $('.viewer').trigger(evt_name) })
 		}
-
 		return res
 	}
 	!skip_reg && FILE_LOADERS.push(_loader)
@@ -255,12 +293,12 @@ function makeFileLoader(title, file_dfl, file_pattern, default_data, set_data, e
 // XXX make this check for updates -- no need to re-save if nothing 
 // 		changed...
 function makeFileSaver(title, file_dfl, get_data, skip_reg){
-	var _saver = function(name){
-		name = name == null 
-			? normalizePath(CONFIG.cache_dir_var +'/'+ Date.timeStamp()) 
-			: name
+	var _saver = function(path, date){
+		path = path == null 
+			? normalizePath(CONFIG.cache_dir_var +'/'+ makeFilename(file_dfl, date)) 
+			: path
 
-		dumpJSON(name + '-' + file_dfl, get_data())
+		dumpJSON(path, get_data())
 	}
 	if(!skip_reg){
 		FILE_SAVERS[title] = _saver
@@ -285,13 +323,13 @@ function runFileLoaders(prefix, res){
 }
 // NOTE: if all is set, this will force save everything...
 // XXX do we need bubbleProgress(..) here???
-function runFileSavers(name, all){
+function runFileSavers(path, date, all){
 	var updated = FILES_UPDATED
 	FILES_UPDATED = []
 	for(var n in FILE_SAVERS){
 		if(all || updated.indexOf(n) >= 0){
 			showStatusQ('Saving: File:', n)
-			FILE_SAVERS[n](name)
+			FILE_SAVERS[n](path, date)
 		}
 	}
 }
@@ -303,7 +341,7 @@ function runFileSavers(name, all){
 
 var saveFileData = makeFileSaver(
 		'Data',
-		DATA_FILE_DEFAULT, 
+		CONFIG.data_file, 
 		function(){ 
 			var data = getAllData()
 			data.current = DATA.current
@@ -398,17 +436,17 @@ function loadFileImages(path, no_load_diffs){
 	if(path == null){
 		var base = normalizePath(CONFIG.cache_dir_var) 
 		var loader = loadLatestFile(base, 
-				IMAGES_FILE_DEFAULT, 
-				IMAGES_FILE_PATTERN, 
-				IMAGES_DIFF_FILE_PATTERN)
+				makeBaseFilename(CONFIG.images_file), 
+				makeFilenamePattern(CONFIG.images_file), 
+				makeDiffFilePattern(CONFIG.images_file))
 	
 	// explicit base dir...
 	} else if(!/\.json$/i.test(path)) {
 		var base = normalizePath(path +'/'+ CONFIG.cache_dir_var) 
 		var loader = loadLatestFile(base, 
-				IMAGES_FILE_DEFAULT, 
-				IMAGES_FILE_PATTERN, 
-				IMAGES_DIFF_FILE_PATTERN)
+				makeBaseFilename(CONFIG.images_file), 
+				makeFilenamePattern(CONFIG.images_file), 
+				makeDiffFilePattern(CONFIG.images_file))
 
 	// explicit path...
 	} else {
@@ -420,6 +458,7 @@ function loadFileImages(path, no_load_diffs){
 	res.done(function(images){
 		IMAGES = images
 		IMAGES_UPDATED = []
+		IMAGES_CREATED = false
 
 		// XXX is this the correct spot to do this???
 		$('.viewer').trigger('imagesLoaded')
@@ -434,12 +473,10 @@ function loadFileImages(path, no_load_diffs){
 // If no name is given this will merge all the diffs and save a "clean"
 // (full) images.json file. Also removing the diff files.
 //
-// NOTE: if an explicit name is given then this will not remove anything.
 // NOTE: this will use CONFIG.cache_dir as the location if no name is given.
-function saveFileImages(name, remove_diffs){
-	//remove_diffs = remove_diffs == null ? (name == null) : remove_diffs
+function saveFileImages(name, date, remove_diffs){
 	remove_diffs = remove_diffs == null ? false : remove_diffs
-	name = name == null ? normalizePath(CONFIG.cache_dir_var +'/'+ Date.timeStamp()) : name
+	name = name == null ? normalizePath(CONFIG.cache_dir_var +'/'+ makeFilename(CONFIG.images_file, date)) : name
 
 	if(window.dumpJSON == null){
 		showErrorStatus('Can\'t save to file.')
@@ -448,18 +485,36 @@ function saveFileImages(name, remove_diffs){
 
 	// remove the diffs...
 	if(remove_diffs){
+		var diff_pattern = makeDiffFilePattern(CONFIG.images_file) 
 		$.each($.map(listDir(normalizePath(CONFIG.cache_dir_var)), function(e){ 
-				return IMAGES_DIFF_FILE_PATTERN.test(e) ? e : null
+				return diff_pattern.test(e) ? e : null
 			}), function(i, e){
-				showStatusQ('removeing:', e)
+				showStatusQ('Removeing:', e)
 				removeFile(normalizePath(CONFIG.cache_dir_var +'/'+ e))
 			})
-		IMAGES_UPDATED = []
 	}
 
 	// XXX use the pattern...
-	dumpJSON(name + '-images.json', IMAGES)
-	//DATA.image_file = normalizePath(name + '-images.json', null, 'relative')
+	dumpJSON(name, IMAGES)
+
+	IMAGES_UPDATED = []
+	IMAGES_CREATED = false
+}
+
+
+function saveFileImagesDiff(name, date){
+	var path = normalizePath(CONFIG.cache_dir_var)
+	name = name == null 
+		? normalizePath(path +'/'+ makeDiffFilename(CONFIG.images_file, date)) 
+		: name
+
+	var updated = {}
+	$.each(IMAGES_UPDATED, function(i, e){
+		updated[e] = IMAGES[e]
+	})
+
+	dumpJSON(name, updated)
+	IMAGES_UPDATED = []
 }
 
 
@@ -484,8 +539,8 @@ function loadFileState(path, prefix){
 
 	bubbleProgress(prefix,
 			loadLatestFile(path, 
-				DATA_FILE_DEFAULT, 
-				DATA_FILE_PATTERN), res, true)
+				makeBaseFilename(CONFIG.data_file), 
+				makeFilenamePattern(CONFIG.data_file)), res, true)
 		.done(function(json){
 			setBaseURL(base)
 
@@ -508,7 +563,7 @@ function loadFileState(path, prefix){
 						// added on 2.2
 						bubbleProgress(prefix,
 								loadLatestFile(path, 
-									CURRENT_FILE,
+									makeBaseFilename(CONFIG.current_file),
 									null,
 									null,
 									DATA.current), res, true)
@@ -549,43 +604,34 @@ function loadFileState(path, prefix){
 //
 // NOTE: this will NOT save images, that operation must be explicitly 
 // 		performed by saveFileImages(...)
+//
+// XXX do propper reporting...
+// XXX check if name is needed and how it works...
 function saveFileState(name, no_normalize_path){
-	name = name == null ? Date.timeStamp() : name
+	var date = Date.timeStamp()
 
 	if(!no_normalize_path){
 		var path = normalizePath(CONFIG.cache_dir_var)
-		name = normalizePath(path +'/'+ name)
-
-	// write .image_file only if saving data to a non-cache dir...
-	// XXX check if this is correct...
-	} else {
-		if(DATA.image_file == null){
-			DATA.image_file = name + '-images.json'
-		}
 	}
 
-	/*
-	var data = getAllData()
-	data.current = DATA.current
-
-	dumpJSON(name + '-data.json', data)
-	*/
-
+	var cur_file = makeBaseFilename(CONFIG.current_file)
+	showStatusQ('Saving: File:', cur_file)
 	// allways update the current position...
-	dumpJSON(path + '/current.json', DATA.current)
+	dumpJSON(path +'/'+ cur_file, DATA.current)
+
+	// save created images...
+	if(IMAGES_CREATED){
+		showStatusQ('Saving: File: Images.')
+		saveFileImages(name, date)
 
 	// save the updated images...
-	if(IMAGES_UPDATED.length > 0){
-		var updated = {}
-		$.each(IMAGES_UPDATED, function(i, e){
-			updated[e] = IMAGES[e]
-		})
-		dumpJSON(name + '-images-diff.json', updated)
-		IMAGES_UPDATED = []
+	} else if(IMAGES_UPDATED.length > 0){
+		showStatusQ('Saving: File: Images diff.')
+		saveFileImagesDiff(name, date)
 	}
 
 	// save the rest of the data...
-	runFileSavers(name)
+	runFileSavers(name, date)
 }
 
 
@@ -679,7 +725,7 @@ function loadDir(path, no_preview_processing, prefix){
 
 	// stop all workers running on current image set before we 
 	// move to the next...
-	// XXX is this the correct sopot for this???
+	// XXX is this the correct spot for this???
 	killAllWorkers()
 
 	IMAGES_CREATED = false
@@ -755,8 +801,6 @@ function exportImageTo(gid, path, im_name, size){
 	// gid...
 	dest = dest.replace('%gid', gid)
 	dest = dest.replace('%g', gid.slice(34))
-	// XXX Metadata...
-	// XXX
 
 	dest = path +'/'+ dest
 

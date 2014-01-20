@@ -22,10 +22,6 @@ var UNSORTED_TAG = 'unsorted'
 var TAGS = {}
 
 
-var TAGS_FILE_DEFAULT = 'tags.json'
-var TAGS_FILE_PATTERN = /^[0-9]*-tags.json$/
-
-
 
 /*********************************************************************/
 
@@ -470,8 +466,7 @@ function cropTagged(tags, keep_ribbons, keep_unloaded_gids){
 
 var loadFileTags = makeFileLoader(
 		'Tags', 
-		TAGS_FILE_DEFAULT, 
-		TAGS_FILE_PATTERN, 
+		CONFIG.tags_file, 
 		false,
 		function(data){ 
 			// no tags loaded -- rebuild...
@@ -492,7 +487,7 @@ var loadFileTags = makeFileLoader(
 // Save image marks to file
 var saveFileTags = makeFileSaver(
 		'Tags',
-		TAGS_FILE_DEFAULT, 
+		CONFIG.tags_file, 
 		function(){ 
 			return TAGS 
 		})
