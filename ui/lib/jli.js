@@ -725,6 +725,103 @@ function makeDeferredsQ(first){
 }
 
 
+// XXX should this be an object or a factory???
+function makeDefferedPool(size){
+	var pool = {
+		pool: [],
+		size: size,
+		queue: [],
+	}
+
+	pool._done_handlers = []
+
+	pool._run = function(obj, func, args){
+		var that = this
+		var pool = this.pool
+		var pool_size = this.size
+		var queue = this.queue
+		var run = this._run
+
+		// run an element from the queue...
+		var worker = func.apply(obj, args)
+			.always(function(){
+				// prepare to remove self from pool...
+				var i = pool.indexOf(worker)
+
+				// shrink the pool if it's overfilled...
+				if(pool.length > pool_size){
+					// remove self...
+					pool.splice(i, 1)
+					return
+				}
+
+				// get the next queue item...
+				var next = queue.splice(0, 1)[0]
+
+				// run the next worker if it exists...
+				if(next != null){
+					// replace self with next worker...
+					pool[i] = run.apply(that, next)
+
+				// nothing in queue...
+				} else {
+					// remove self...
+					pool.splice(i, 1)
+
+					// empty queue and empty pool mean we are done...
+					if(pool.length == 0){
+						that._done()
+					}
+				}
+
+				// keep the pool full...
+				that._fill()
+			})
+			.fial(function(){
+				// XXX
+			})
+
+		return worker
+	}
+	pool._fill = function(){
+		var that = this
+		var pool = this.pool
+		var pool_size = this.size
+		var run = this._run
+		var res = []
+
+		if(pool.length < pool_size && this.queue.length > 0){
+			res = this.queue.splice(0, pool_size - pool.length)
+				.forEach(function(e){
+					pool.push = run.apply(that, e)
+				})
+		}
+
+		return res
+	}
+	pool._done(){
+		var that = this
+		this._done_handlers.forEach(function(func){
+			func(that)
+		})
+	}
+
+	// public methods...
+	pool.enqueue = function(obj, func, args){
+		// add worker to queue...
+		this.queue.push([obj, func, args])
+
+		// start work if we have not already...
+		this._fill()
+	}
+	pool.done = function(func){
+		this._done_handlers.push(func)
+	}
+
+	return pool
+}
+
+
 
 /**************************************************** JS utilities ***/
 
