@@ -27,15 +27,12 @@ var FILES_UPDATED = []
 
 /********************************************************* Helpers ***/
 
-function makeBaseFilename(base, date, ext){
+function makeBaseFilename(base, ext){
 	ext = ext == null ? CONFIG.json_ext : ext
 
-	if(date == null){
-		return CONFIG.base_file_pattern
-			.replace('${BASE}', base)
-			.replace('${EXT}', ext)
-	}
-	return date +'-'+ name +'.'+ ext
+	return CONFIG.base_file_pattern
+		.replace('${BASE}', base)
+		.replace('${EXT}', ext)
 }
 function makeFilename(base, date, ext){
 	date = date == null ? Date.timeStamp() : date
@@ -49,6 +46,7 @@ function makeFilename(base, date, ext){
 function makeFilenamePattern(base, ext){
 	return RegExp(makeFilename(base, '^[0-9]*', ext)+'$')
 }
+
 function makeDiffFilename(base, date, diff, ext){
 	date = date == null ? Date.timeStamp() : date
 	diff = diff == null ? CONFIG.diff_suffix : diff
@@ -234,50 +232,43 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 }
 
 
-// XXX needs revision and testing...
-function loadFile(title, path, file_dfl, file_pattern, default_data){
-	var res = $.Deferred()
-	// default locations...
-	if(path == null){
-		var base = normalizePath(CONFIG.cache_dir_var)
-		var loader = loadLatestFile(base, 
-				file_dfl, 
-				file_pattern,
-				null,
-				default_data)
-	
-	// explicit path...
-	// XXX need to account for paths without a CONFIG.cache_dir
-	} else {
-		path = normalizePath(path)
-		var base = path.split(CONFIG.cache_dir)[0]
-		//base = normalizePath(path +'/'+ CONFIG.cache_dir_var)
-		base = path +'/'+ CONFIG.cache_dir
-
-		// XXX is this correct???
-		var loader = loadLatestFile(base, 
-				path.split(base)[0], 
-				RegExp(path.split(base)[0]),
-				null,
-				default_data)
-	}
-
-	bubbleProgress(title, loader, res)
-
-	return res
-}
-
-
-function makeFileLoader(title, base, default_data, set_data, error, evt_name, skip_reg){
+// NOTE: config change to name will not affect this...
+function makeFileLoader(title, name, default_data, set_data, error, evt_name, skip_reg){
 	var _loader = function(path){
-		var res = loadFile(
-				title, 
-				path, 
-				makeBaseFilename(base), 
-				makeFilenamePattern(base), 
-				default_data)
+		var res = $.Deferred()
+
+		// NOTE: these are static!!
+		var file_dfl = makeBaseFilename(name)
+		var file_pattern = makeFilenamePattern(name)
+
+		// default locations...
+		if(path == null){
+			var base = normalizePath(CONFIG.cache_dir_var)
+			var loader = loadLatestFile(base, 
+					file_dfl, 
+					file_pattern,
+					null,
+					default_data)
+		
+		// explicit path...
+		// XXX need to account for paths without a CONFIG.cache_dir
+		} else {
+			path = normalizePath(path)
+			var base = path.split(CONFIG.cache_dir)[0]
+			//base = normalizePath(path +'/'+ CONFIG.cache_dir_var)
+			base = path +'/'+ CONFIG.cache_dir
+
+			// XXX is this correct???
+			var loader = loadLatestFile(base, 
+					path.split(base)[0], 
+					RegExp(path.split(base)[0]),
+					null,
+					default_data)
+		}
 
 		res.done(set_data)
+
+		bubbleProgress(title, loader, res)
 
 		if(error != null){
 			res.fail(error)
@@ -290,6 +281,8 @@ function makeFileLoader(title, base, default_data, set_data, error, evt_name, sk
 	!skip_reg && FILE_LOADERS.push(_loader)
 	return _loader
 }
+
+
 // XXX make this check for updates -- no need to re-save if nothing 
 // 		changed...
 function makeFileSaver(title, file_dfl, get_data, skip_reg){
@@ -321,6 +314,8 @@ function runFileLoaders(prefix, res){
 		return bubbleProgress(prefix, load(), res, true)
 	}))
 }
+
+
 // NOTE: if all is set, this will force save everything...
 // XXX do we need bubbleProgress(..) here???
 function runFileSavers(path, date, all){
@@ -494,7 +489,6 @@ function saveFileImages(name, date, remove_diffs){
 			})
 	}
 
-	// XXX use the pattern...
 	dumpJSON(name, IMAGES)
 
 	IMAGES_UPDATED = []
@@ -514,6 +508,7 @@ function saveFileImagesDiff(name, date){
 	})
 
 	dumpJSON(name, updated)
+
 	IMAGES_UPDATED = []
 }
 
@@ -806,8 +801,8 @@ function exportImageTo(gid, path, im_name, size){
 
 	// copy... 
 	// NOTE: the sad smily face here is here for JS compatibility ;)
-	;(function(src, dest){
-		copyFile(src, dest)
+	return (function(src, dest){
+		return copyFile(src, dest)
 			.done(function(){
 				console.log(src, 'done.')
 			})
@@ -847,6 +842,10 @@ function exportImagesTo(path, im_name, dir_name, size){
 	selection.sort(imageOrderCmp)
 	var z = (('10e' + (selection.length + '').length) * 1 + '').slice(2)
 
+	var queue = []
+	var pool = []
+	var pool_size = 10
+
 	// go through ribbons...
 	for(var i=DATA.ribbons.length-1; i >= 0; i--){
 		var ribbon = DATA.ribbons[i]
@@ -863,11 +862,16 @@ function exportImagesTo(path, im_name, dir_name, size){
 			var o = selection.indexOf(gid) + ''
 			dest = dest.replace('%i', (z + o).slice(o.length))
 
-			exportImageTo(gid, path, dest, size)
+			queue.push([gid, path, dest, size])
 		}
 
 		path = normalizePath(path +'/'+ dir_name)
 	}
+
+	// XXX pool this...
+	queue.forEach(function(e){
+		exportImageTo.apply(null, e)
+	})
 }
 
 
