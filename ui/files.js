@@ -842,7 +842,13 @@ function exportImagesTo(path, im_name, dir_name, size){
 	selection.sort(imageOrderCmp)
 	var z = (('10e' + (selection.length + '').length) * 1 + '').slice(2)
 
-	var queue = []
+	var res = $.Deferred()
+	var pool_size = 100
+	var pool = makeDefferedPool(pool_size)
+		.depleted(function(){
+			showStatusQ('Export: done.')
+			res.resolve()
+		})
 
 	// go through ribbons...
 	for(var i=DATA.ribbons.length-1; i >= 0; i--){
@@ -860,67 +866,12 @@ function exportImagesTo(path, im_name, dir_name, size){
 			var o = selection.indexOf(gid) + ''
 			dest = dest.replace('%i', (z + o).slice(o.length))
 
-			queue.push([gid, path, dest, size])
+			pool.enqueue(null, exportImageTo, [gid, path, dest, size])
 		}
 
 		path = normalizePath(path +'/'+ dir_name)
 	}
 
-	/*
-	var res = []
-	// XXX pool this...
-	queue.forEach(function(e){
-		res.push(exportImageTo.apply(null, e))
-	})
-
-	return $.when.apply(null, res)
-		.done(function(){
-			showStatusQ('Export: done.')
-		})
-	*/
-
-	// XXX make this generic...
-	var pool = []
-	var pool_size = 100
-	var res = $.Deferred()
-
-	var enqueue = function(e){
-		if(e == null){
-			return
-		}
-		var worker = exportImageTo.apply(null, e)
-			.done(function(){
-				// prepare remove self from pool...
-				var i = pool.indexOf(worker)
-
-				// get the next queue item...
-				var next = queue.splice(0, 1)[0]
-
-				// enqueue the next worker if it exists...
-				if(next != null){
-					// replace self with next worker...
-					pool[i] = enqueue(next)
-
-				// nothing in queue...
-				} else {
-					// remove self...
-					pool.splice(i, 1)
-
-					// empty queue and empty pool mean we are done...
-					if(pool.length == 0){
-						showStatusQ('Export: done.')
-						res.resolve()
-					}
-				}
-			})
-			.fail(function(){
-				var i = pool.indexOf(worker)
-				// remove self...
-				pool.splice(i, 1)
-			})
-		return worker
-	}
-	pool = queue.splice(0, pool_size).map(enqueue)
 	return res
 }
 

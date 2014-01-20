@@ -733,7 +733,7 @@ function makeDefferedPool(size){
 		queue: [],
 	}
 
-	pool._done_handlers = []
+	pool._deplete_handlers = []
 
 	pool._run = function(obj, func, args){
 		var that = this
@@ -770,7 +770,7 @@ function makeDefferedPool(size){
 
 					// empty queue and empty pool mean we are done...
 					if(pool.length == 0){
-						that._done()
+						that._deplete()
 					}
 				}
 
@@ -799,7 +799,7 @@ function makeDefferedPool(size){
 
 		return res
 	}
-	pool._done(){
+	pool._deplete(){
 		var that = this
 		this._done_handlers.forEach(function(func){
 			func(that)
@@ -814,8 +814,9 @@ function makeDefferedPool(size){
 		// start work if we have not already...
 		this._fill()
 	}
-	pool.done = function(func){
-		this._done_handlers.push(func)
+	// This is called after the pool is populated and depleted...
+	pool.depleted = function(func){
+		this._deplete_handlers.push(func)
 	}
 
 	return pool
