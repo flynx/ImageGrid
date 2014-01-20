@@ -16,7 +16,6 @@
 // 			- trivial sorting
 // 			- less maintenance and sync
 // 		The tradeoff being:
-// 			- more memory usage
 // 			- load/save conversion to keep the json	data "packed".
 // NOTE: it would appear that JS is designed with sparse lists in mind:
 // 		- all iterators (map, filter, forEach, ..) skip undefined values

@@ -611,11 +611,9 @@ function populateSparceGIDList(gids, target, data){
 // Remove all the undefined's form a sparse list...
 //
 function compactSparceList(lst){
-	// XXX is it normal that .filter(..) skips undefined values?
+	// NOTE: JS arrays are sparse, so all the iterators will return only
+	// 		the actually existing items...
 	return lst.filter(function(){ return true })
-	//return lst.filter(function(e){
-	//	return e !== undefined
-	//})
 }
 
 
@@ -646,8 +644,6 @@ function compactSparceList(lst){
 //				.slice(0,2000))
 //		console.log('T:', Date.now()-t0)
 //		>>> T: 171
-//
-// On the down side, this has some memory overhead -- ~ N - n * ref
 //
 function fastSortGIDsByOrder(gids, data){
 	return compactSparceList(populateSparceGIDList(gids, data))
