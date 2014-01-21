@@ -322,6 +322,7 @@ var getElementScale = makeCSSVendorAttrGetter(
 			return parseFloat((/(scale|matrix)\(([^),]*)\)/).exec(data)[2])
 		})
 
+
 var getElementShift = makeCSSVendorAttrGetter(
 		'transform',
 		{left: 0, top: 0},
@@ -338,7 +339,6 @@ var getElementTransitionDuration = makeCSSVendorAttrGetter(
 		'transitionDuration', 
 		DEFAULT_TRANSITION_DURATION, 
 		parseInt)
-
 
 
 // NOTE: at this point this works only on the X axis...
@@ -512,6 +512,7 @@ function animateElementTo(elem, to, duration, easing, speed, use_transitions){
 		animate()
 	}
 }
+
 
 function stopAnimation(elem){
 	if(elem.next_frame){

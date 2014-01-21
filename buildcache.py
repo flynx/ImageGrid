@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20140112165326'''
+__sub_version__ = '''20140121064724'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
@@ -859,7 +859,7 @@ def handle_commandline():
 	res = None
 
 	parser = OptionParser(
-						usage='Usage: %prog [options] ROOT',
+						usage='Usage: %prog [options] DIRS',
 						version='%prog ' + __version__,
 						epilog='Notes: This script is still experimental. '
 							'GID source default will change to "metadata" '
@@ -949,7 +949,7 @@ def handle_commandline():
 						default=False,
 						help='Save current configuration at the root location. '
 							'this is a shorthand for: '
-							'%prog ... --config-print > ROOT/CONFIG; %prog')
+							'%prog ... --config-print > DIR/CONFIG; %prog')
 	parser.add_option_group(configuration)
 
 	
@@ -967,101 +967,114 @@ def handle_commandline():
 
 	# prepare the path...
 	if len(args) < 1:
-		IN_PATH = u'.'
-	else:
-		IN_PATH = args[0]
+		args = [u'.']
+
+	times = []
+
+	##!!! move all that is not needed in the loop to outside the loop...
+	for IN_PATH in args:
+
+		if len(times) > 0:
+			print
+
 		IN_PATH = IN_PATH.replace('\\', '/')
 		##!!! need to convert this ut utf-8...
 		if not options.force_ascii and type(IN_PATH) != unicode:
 			IN_PATH = IN_PATH.decode(DEFAULT_ENCODING)
 
 
-	# load configuration files..
-	config_name = options.config_file
-	# local to script...
-	if os.path.exists(config_name):
-		with open(config_name) as f:
-			config.update(json.load(f))
-	# local to target...
-	if os.path.exists(os.path.join(IN_PATH, config_name)):
-		with open(os.path.join(IN_PATH, config_name)) as f:
-			config.update(json.load(f))
+		# load configuration files..
+		config_name = options.config_file
+		# local to script...
+		if os.path.exists(config_name):
+			with open(config_name) as f:
+				config.update(json.load(f))
+		# local to target...
+		if os.path.exists(os.path.join(IN_PATH, config_name)):
+			with open(os.path.join(IN_PATH, config_name)) as f:
+				config.update(json.load(f))
 
-	# update config according to set args...
-	config.update({
-			'gid-source': options.gid_source,
-			'absolute-path': options.path_mode == 'absolute',
-			'ignore-orientation': options.ignore_orientation,
-			'base-ribbon': int(options.base_ribbon),
-			'full-scan': options.full_scan,
-			'force-ascii': options.force_ascii,
-			})
+		# update config according to set args...
+		config.update({
+				'gid-source': options.gid_source,
+				'absolute-path': options.path_mode == 'absolute',
+				'ignore-orientation': options.ignore_orientation,
+				'base-ribbon': int(options.base_ribbon),
+				'full-scan': options.full_scan,
+				'force-ascii': options.force_ascii,
+				})
 
-	# build the tags...
-	tags = config['tags'] = list(set(options.tag + config['tags']).difference(options.notag))
+		# build the tags...
+		tags = config['tags'] = list(set(options.tag + config['tags']).difference(options.notag))
 
-	# a value from 0 through 2...
-	verbosity = options.verbosity
-	# bool...
-	dry_run = options.dry_run
-	images_only = options.images_only
+		# a value from 0 through 2...
+		verbosity = options.verbosity
+		# bool...
+		dry_run = options.dry_run
+		images_only = options.images_only
 
-	# configuration stuff...
-	# write a local configuration...
-	if options.config_save_local:
-		with open(os.path.join(IN_PATH, config_name), 'w', 
-				encoding='ascii' if config['force-ascii'] else 'utf-8') as f:
-##			##!!! json.dump writes some "strings" as unicode and some as str
-##			##!!! this breaks fp.write(...)...
-##			f.write(json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii']))
-			s = json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii'])
-			if not config['force-ascii'] and type(s) != unicode:
-				s = s.decode(DEFAULT_ENCODING)
-			f.write(s)
+		# configuration stuff...
+		# write a local configuration...
+		if options.config_save_local:
+			with open(os.path.join(IN_PATH, config_name), 'w', 
+					encoding='ascii' if config['force-ascii'] else 'utf-8') as f:
+	##			##!!! json.dump writes some "strings" as unicode and some as str
+	##			##!!! this breaks fp.write(...)...
+	##			f.write(json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii']))
+				s = json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii'])
+				if not config['force-ascii'] and type(s) != unicode:
+					s = s.decode(DEFAULT_ENCODING)
+				f.write(s)
 
-	# print configuration data...
-	if True in (options.config_defaults_print, options.config_print):
+		# print configuration data...
+		if True in (options.config_defaults_print, options.config_print):
 
-		# see if we need to print a prefix...
-		print_prefix = False
-		if len([ s for  s in  (options.config_defaults_print, options.config_print) if s]) > 1:
-			print_prefix = True
+			# see if we need to print a prefix...
+			print_prefix = False
+			if len([ s for  s in  (options.config_defaults_print, options.config_print) if s]) > 1:
+				print_prefix = True
 
-		# do the prinitng...
-		if options.config_print:
-			if print_prefix:
-				print 'Current Configuration:'
-			print json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii'])
-			print
-		if options.config_defaults_print:
-			if print_prefix:
-				print 'Default Configuration:'
-			print json.dumps(CONFIG, sort_keys=True, indent=4, ensure_ascii=config['force-ascii'])
-			print
+			# do the prinitng...
+			if options.config_print:
+				if print_prefix:
+					print 'Current Configuration:'
+				print json.dumps(config, sort_keys=True, indent=4, ensure_ascii=config['force-ascii'])
+				print
+			if options.config_defaults_print:
+				if print_prefix:
+					print 'Default Configuration:'
+				print json.dumps(CONFIG, sort_keys=True, indent=4, ensure_ascii=config['force-ascii'])
+				print
 
-	# do the actual work...
-	# NOTE: we are not using verbosity 2 at this point...
-	else:
-		progress_state = {}
+		# do the actual work...
+		# NOTE: we are not using verbosity 2 at this point...
+		else:
+			progress_state = {}
 
-		if verbosity == 0:
-			report = None
-		elif verbosity >= 1:
-			report = make_inline_report_progress(progress_state)
+			if verbosity == 0:
+				report = None
+			elif verbosity >= 1:
+				report = make_inline_report_progress(progress_state)
 
-		# do the run...
-		res = build_cache(IN_PATH, 
-				config, 
-				hash_gid, 
-				report,
-				dry_run=dry_run,
-				images_only=images_only,
-				verbosity=verbosity)
+			# do the run...
+			res = build_cache(IN_PATH, 
+					config, 
+					hash_gid, 
+					report,
+					dry_run=dry_run,
+					images_only=images_only,
+					verbosity=verbosity)
 
-		# report results...
-		if verbosity >= 1:
-			print
-			print 'Time: %.1fm' % ((progress_state['done at'] - progress_state['started at'])/60)
+			# report results...
+			if verbosity >= 1:
+				times += [(progress_state['done at'] - progress_state['started at'])/60]
+				print
+				print 'Time: %.1fm' % (times[-1],)
+
+	# report results...
+	if verbosity >= 1 and len(times) > 1:
+		print
+		print 'Total time: %.1fm' % (sum(times),)
 		
 ##	# XXX this makes the script spit out res to stdout...
 ##	return res
