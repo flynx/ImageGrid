@@ -730,35 +730,39 @@ function makeDeferredsQ(first){
 
 // Deferred worker pool...
 //
+// 		makeDefferedPool([size][, paused]) -> pool
+//
+//
 // This will create and return a pooled queue of deferred workers.
 //
 // Public interface:
 //
-// 		.enqueue(obj, func, args)
+// 		.enqueue(obj, func, args) -> pool
 // 			Add a worker to queue.
-// 			If the pool is empty this will run the worker right away.
-// 			If the pool is full the worker is added to queue (FILO) and
-// 			run as it's turn arrives.
+// 			If the pool is not filled and not paused, this will run the
+// 			worker right away.
+// 			If the pool is full the worker is added to queue (FIFO) and
+// 			ran in its turn.
 //
-// 		.dropQueue()
+// 		.pause() -> pool
+// 			Pause the queue.
+// 			NOTE: this also has a second form: .pause(func), see below.
+//
+// 		.resume() -> pool
+// 			Restart the queue.
+//
+// 		.dropQueue() -> pool
 // 			Drop the queued workers.
 // 			NOTE: this will not stop the already running workers.
 //
-// 		.pause()
-// 			Pause the queue.
-//
-// 		.pause(func)
-// 			Register a pause handler.
-// 			This handler is called after the last worker finishes when 
-// 			the queue is paused.
-//
-// 		.resume()
-// 			Restart the queue.
-//
-// 		.isRunning()
+// 		.isRunning() -> bool
 // 			Test if any workers are running in the pool.
+// 			NOTE: this will return false ONLY when the pool is empty.
 //
-// 		.progress(func)
+//
+// Handler/callback registration:
+//
+// 		.progress(func) -> pool
 // 			Register a progress handler.
 // 			The handler is called after each worker is done and will get
 // 			passed:
@@ -768,7 +772,7 @@ function makeDeferredsQ(first){
 // 			NOTE: the total number of workers can change as new workers
 // 					are added or the queue is cleared...
 // 			
-// 		.fail(func)
+// 		.fail(func) -> pool
 // 			Register a worker fail handler.
 // 			The handler is called when a worker goes into the fail state.
 // 			This will get passed:
@@ -777,7 +781,12 @@ function makeDeferredsQ(first){
 // 				- workers total count
 // 			NOTE: this will not stop the execution of other handlers.
 //
-// 		.depleted(func)
+// 		.pause(func) -> pool
+// 			Register a pause handler.
+// 			This handler is called after the last worker finishes when 
+// 			the queue is paused.
+//
+// 		.depleted(func) -> pool
 // 			Register a depleted pool handler.
 // 			The handler will get called when the queue and pool are empty
 // 			(depleted) and the last worker is done.
@@ -907,8 +916,10 @@ function makeDefferedPool(size, paused){
 	// Drop the queued workers...
 	//
 	// NOTE: this will not stop the running workers...
+	// XXX should this return the pool or the dropped queue???
 	Pool.dropQueue = function(){
 		this.queue.splice(0, this.queue.length)
+		return this
 	}
 
 	Pool.isRunning = function(){
@@ -930,7 +941,9 @@ function makeDefferedPool(size, paused){
 		}
 		return this
 	}
+
 	// XXX do we need a resume callback???
+	// XXX test...
 	Pool.resume = function(){
 		this._paused = false
 		this._fill()
