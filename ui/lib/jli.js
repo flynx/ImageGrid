@@ -640,7 +640,7 @@ function makeDeferredsQ(first){
 	//
 	// NOTE: .enqueue(...) accepts a worker and any number of the arguments
 	// 		to be passed to the worker when it's its turn.
-	// NOTE: the worker must porduce a deffered/promice.
+	// NOTE: the worker must porduce a deferred/promice.
 	queue.enqueue = function(worker){
 		var cur = $.Deferred()
 		var args = Array.apply(null, arguments).slice(1)
@@ -730,14 +730,14 @@ function makeDeferredsQ(first){
 
 // Deferred worker pool...
 //
-// 		makeDefferedPool([size][, paused]) -> pool
+// 		makeDeferredPool([size][, paused]) -> pool
 //
 //
 // This will create and return a pooled queue of deferred workers.
 //
 // Public interface:
 //
-// 		.enqueue(obj, func, args) -> pool
+// 		.enqueue(obj, func, args) -> deferred
 // 			Add a worker to queue.
 // 			If the pool is not filled and not paused, this will run the
 // 			worker right away.
@@ -793,7 +793,7 @@ function makeDeferredsQ(first){
 //
 //
 // XXX should this be an object or a factory???
-function makeDefferedPool(size, paused){
+function makeDeferredPool(size, paused){
 	size = size == null ? POOL_SIZE : size
 	size = size < 0 ? 1 
 		: size > 512 ? 512
@@ -813,7 +813,7 @@ function makeDefferedPool(size, paused){
 		_paused: paused,
 	}
 
-	Pool._run = function(obj, func, args){
+	Pool._run = function(deferred, func, args){
 		var that = this
 		var pool = this.pool
 		var pool_size = this.size
@@ -821,13 +821,13 @@ function makeDefferedPool(size, paused){
 		var run = this._run
 
 		// run an element from the queue...
-		var worker = func.apply(obj, args)
+		var worker = func.apply(null, args)
 			.always(function(){
 				// prepare to remove self from pool...
 				var i = pool.indexOf(worker)
 
 				Pool._progress_handlers.forEach(function(func){
-					func(that, pool.length - pool.len(), pool.length + queue.length)
+					func(worker, pool.length - pool.len(), pool.length + queue.length)
 				})
 
 				// remove self from queue...
@@ -875,6 +875,13 @@ function makeDefferedPool(size, paused){
 				Pool._fail_handlers.forEach(function(func){
 					func(that, pool.length - pool.len(), pool.length + queue.length)
 				})
+				deferred.reject.apply(deferred, arguments)
+			})
+			.progress(function(){
+				deferred.notify.apply(deferred, arguments)
+			})
+			.done(function(){
+				deferred.resolve.apply(deferred, arguments)
 			})
 
 		this.pool.push(worker)
@@ -904,13 +911,17 @@ function makeDefferedPool(size, paused){
 
 	// Add a worker to queue...
 	//
-	Pool.enqueue = function(obj, func, args){
+	Pool.enqueue = function(func){
+		var deferred = $.Deferred()
+
 		// add worker to queue...
-		this.queue.push([obj, func, args])
+		this.queue.push([deferred, func, args2array(arguments).slice(1)])
 
 		// start work if we have not already...
 		this._fill()
-		return this
+
+		//return this
+		return deferred
 	}
 
 	// Drop the queued workers...

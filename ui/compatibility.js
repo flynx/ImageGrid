@@ -368,7 +368,7 @@ if(window.CEF_dumpJSON != null){
 
 		// attach the workers to the queue...
 		$.each(gids, function(_, gid){
-			queue.enqueue(makeImagePreviews, gid, sizes, mode)
+			queue.enqueue(null, makeImagePreviews, gid, sizes, mode)
 				// XXX do we need to report seporate previews???
 				//.progress(function(state){ queue.notify(state) })
 				.always(function(){ queue.notify(gid, 'done') })

@@ -843,7 +843,8 @@ function exportImagesTo(path, im_name, dir_name, size){
 	selection.sort(imageOrderCmp)
 	var z = (('10e' + (selection.length + '').length) * 1 + '').slice(2)
 
-	var pool = makeDefferedPool()
+	// use an external pool...
+	var pool = makeDeferredPool()
 		.depleted(function(){
 			showStatusQ('Export: done.')
 			res.resolve()
@@ -865,7 +866,7 @@ function exportImagesTo(path, im_name, dir_name, size){
 			var o = selection.indexOf(gid) + ''
 			dest = dest.replace('%i', (z + o).slice(o.length))
 
-			pool.enqueue(null, exportImageTo, [gid, path, dest, size])
+			pool.enqueue(exportImageTo, gid, path, dest, size)
 		}
 
 		path = normalizePath(path +'/'+ dir_name)
@@ -935,8 +936,6 @@ function readImagesOrientationQ(gids, no_update_loaded){
 	// attach workers to queue...
 	$.each(gids, function(_, gid){
 		last = queue.enqueue(readImageOrientation, gid, no_update_loaded)
-			.done(function(){ queue.notify(gid, 'done') })
-			.fail(function(){ queue.notify(gid, 'fail') })
 	})
 
 	return queue
@@ -970,7 +969,7 @@ function readImagesDatesQ(images){
 		queue.enqueue(readImageDate, gid, images)
 			.always(function(){ 
 				imageUpdated(gid)
-				queue.notify(gid, 'done') 
+				//queue.notify(gid, 'done') 
 			})
 	})
 
@@ -1025,7 +1024,9 @@ function updateImagesGIDsQ(images, data){
 
 	$.each(images, function(_, key){
 		queue.enqueue(updateImageGID, key, images, data)
-			.always(function(){ queue.notify(key, 'done') })
+			.always(function(){ 
+				//queue.notify(key, 'done') 
+			})
 	})
 
 	return queue

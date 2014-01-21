@@ -15,16 +15,16 @@ var WORKERS = {}
 /********************************************************* Workers ***/
 
 // get/create a named worker queue...
-function getWorkerQueue(name, no_auto_start){
+//
+// XXX rename this to task-related.... (???)
+function getWorkerQueue(name, pool_size, no_auto_start){
+	// XXX 1 is the default for compatibility...
+	pool_size = pool_size == null ? 1 : pool_size
 
 	// create a new worker queue...
 	if(WORKERS[name] == null){
-		var queue = makeDeferredsQ()
+		var queue = makeDeferredPool(pool_size, no_auto_start)
 		WORKERS[name] = queue
-		// start if needed...
-		if(!no_auto_start){
-			queue.start()
-		}
 
 	// return existing worker queue...
 	} else {
@@ -38,15 +38,21 @@ function getWorkerQueue(name, no_auto_start){
 // kill all worker queues...
 function killAllWorkers(){
 	for(var k in WORKERS){
-		if(WORKERS[k].isWorking()){
+		if(WORKERS[k].isRunning()){
 			console.log('Worker: Stopped:', k)
 		}
-		WORKERS[k].kill()
+		WORKERS[k].dropQueue()
 	}
 	WORKERS = {}
 }
 
 
 
+/*********************************************************************/
+
+
+
+
+  
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
