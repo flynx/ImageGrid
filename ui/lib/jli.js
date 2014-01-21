@@ -727,6 +727,47 @@ function makeDeferredsQ(first){
 }
 
 
+// Deferred worker pool...
+//
+// This will create and return a pooled queue of deferred workers.
+//
+// Public interface:
+//
+// 		.enqueue(obj, func, args)
+// 			Add a worker to queue.
+// 			If the pool is empty this will run the worker right away.
+// 			If the pool is full the worker is added to queue (FILO) and
+// 			run as it's turn arrives.
+//
+// 		.dropQueue()
+// 			Drop the queued workers.
+// 			NOTE: this will not stop the already running workers.
+//
+// 		.progress(func)
+// 			Register a progress handler.
+// 			The handler is called after each worker is done and will get
+// 			passed:
+// 				- pool
+// 				- workers done count
+// 				- workers total count
+// 			NOTE: the total number of workers can change as new workers
+// 					are added or the queue is cleared...
+// 			
+// 		.fail(func)
+// 			Register a worker fail handler.
+// 			The handler is called when a worker goes into the fail state.
+// 			This will get passed:
+// 				- pool
+// 				- workers done count
+// 				- workers total count
+// 			NOTE: this will not stop the execution of other handlers.
+//
+// 		.depleted(func)
+// 			Register a depleted pool handler.
+// 			The handler will get called when the queue and pool are empty
+// 			(depleted) and the last worker is done.
+//
+//
 // XXX should this be an object or a factory???
 function makeDefferedPool(size){
 	size = size == null ? POOL_SIZE : size
@@ -736,15 +777,13 @@ function makeDefferedPool(size){
 
 	var Pool = {
 		pool: [],
-		size: size,
 		queue: [],
-	}
+		size: size,
 
-	var len = function(){
-		return Pool.pool.filter(function(){ return true }).length
+		_deplete_handlers: [],
+		_progress_handlers: [],
+		_fail_handlers: [],
 	}
-
-	Pool._deplete_handlers = []
 
 	Pool._run = function(obj, func, args){
 		var that = this
@@ -759,39 +798,45 @@ function makeDefferedPool(size){
 				// prepare to remove self from pool...
 				var i = pool.indexOf(worker)
 
+				Pool._progress_handlers.forEach(function(func){
+					func(that, pool.length - pool.len(), pool.length + queue.length)
+				})
+
+				// remove self from queue...
+				delete pool[i]
+
 				// shrink the pool if it's overfilled...
-				if(len(pool) > pool_size){
+				// i.e. do not pop another worker and let the "thread" die.
+				if(pool.len() > pool_size){
 					// remove self...
-					delete pool[i]
 					return
 				}
 
-				// get the next queue item...
+				// get the next queued worker...
 				var next = queue.splice(0, 1)[0]
 
 				// run the next worker if it exists...
 				if(next != null){
-					// replace self with next worker...
 					run.apply(that, next)
-					delete pool[i]
 
-				// nothing in queue...
-				} else {
-					// remove self...
-					delete pool[i]
-
-					// empty queue AND empty pool mean we are done...
-					if(len(pool) == 0){
-						that._deplete()
-					}
+				// empty queue AND empty pool mean we are done...
+				} else if(pool.len() == 0){
+					// NOTE: potential race condition -- something can be
+					// 		pushed to pool just before it's "compacted"...
+					pool.length = 0
+				
+					that._deplete_handlers.forEach(function(func){
+						func(that)
+					})
 				}
 
 				// keep the pool full...
 				that._fill()
 			})
 			.fail(function(){
-				// XXX
-				//queue.splice(0, queue.length)
+				Pool._fail_handlers.forEach(function(func){
+					func(that, pool.length - pool.len(), pool.length + queue.length)
+				})
 			})
 
 		this.pool.push(worker)
@@ -802,7 +847,7 @@ function makeDefferedPool(size){
 		var that = this
 		var pool_size = this.size
 		var run = this._run
-		var l = len(this.pool)
+		var l = this.pool.len()
 
 		if(l < pool_size && this.queue.length > 0){
 			this.queue.splice(0, pool_size - l)
@@ -813,15 +858,12 @@ function makeDefferedPool(size){
 
 		return this
 	}
-	Pool._deplete = function(){
-		var that = this
-		this._deplete_handlers.forEach(function(func){
-			func(that)
-		})
-		return this
-	}
 
-	// public methods...
+
+	// Public methods...
+
+	// Add a worker to queue...
+	//
 	Pool.enqueue = function(obj, func, args){
 		// add worker to queue...
 		this.queue.push([obj, func, args])
@@ -830,11 +872,52 @@ function makeDefferedPool(size){
 		this._fill()
 		return this
 	}
-	// This is called after the pool is populated and depleted...
+
+	// Drop the queued workers...
+	//
+	// NOTE: this will not stop the running workers...
+	Pool.dropQueue = function(){
+		this.queue.splice(0, this.queue.length)
+	}
+
+
+	// Register a queue depleted handler...
+	//
+	// This occurs when a populated queue is depleted and the last worker
+	// is done.
+	//
+	// NOTE: this is similar to jQuery.Deferred().done(..) but differs in
+	// 		that the pool can fill up and get depleted more than once, 
+	// 		thus, the handlers may get called more than once per pool 
+	// 		life...
+	// NOTE: it is recommended to fill the queue faster than the workers
+	// 		finish, as this may get called after last worker is done and
+	// 		the next is queued...
 	Pool.depleted = function(func){
 		this._deplete_handlers.push(func)
 		return this
 	}
+
+	// Register queue progress handler...
+	//
+	// This occurs after each worker is done.
+	//
+	// handler will be passed:
+	// 	- the pool object
+	// 	- workers done
+	// 	- total workers (done + queued)
+	Pool.progress = function(func){
+		this._progress_handlers.push(func)
+		return this
+	}
+
+	// Register worker fail handler...
+	//
+	Pool.fail = function(func){
+		this._fail_handlers.push(func)
+		return this
+	}
+
 
 	return Pool
 }
@@ -895,6 +978,12 @@ Object.get = function(obj, name, dfl){
 	}
 	return val
 }
+
+// like .length but for sparse arrays will return the element count...
+Array.prototype.len = function(){
+	return this.filter(function(){ return true }).length
+}
+
 
 
 // convert JS arguments to Array...

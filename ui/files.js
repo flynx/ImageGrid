@@ -848,7 +848,6 @@ function exportImagesTo(path, im_name, dir_name, size){
 			showStatusQ('Export: done.')
 			res.resolve()
 		})
-	window.Pool = pool
 
 	// go through ribbons...
 	for(var i=DATA.ribbons.length-1; i >= 0; i--){
