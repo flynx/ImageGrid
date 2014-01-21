@@ -744,7 +744,19 @@ function makeDeferredsQ(first){
 // 			Drop the queued workers.
 // 			NOTE: this will not stop the already running workers.
 //
+// 		.pause()
+// 			Pause the queue.
+//
+// 		.pause(func)
+// 			Register a pause handler.
+// 			This handler is called after the last worker finishes when 
+// 			the queue is paused.
+//
+// 		.resume()
+// 			Restart the queue.
+//
 // 		.isRunning()
+// 			Test if any workers are running in the pool.
 //
 // 		.progress(func)
 // 			Register a progress handler.
@@ -772,11 +784,12 @@ function makeDeferredsQ(first){
 //
 //
 // XXX should this be an object or a factory???
-function makeDefferedPool(size){
+function makeDefferedPool(size, paused){
 	size = size == null ? POOL_SIZE : size
 	size = size < 0 ? 1 
 		: size > 512 ? 512
 		: size
+	paused = paused == null ? false : paused
 
 	var Pool = {
 		pool: [],
@@ -785,7 +798,10 @@ function makeDefferedPool(size){
 
 		_deplete_handlers: [],
 		_progress_handlers: [],
+		_pause_handlers: [],
 		_fail_handlers: [],
+
+		_paused: paused,
 	}
 
 	Pool._run = function(obj, func, args){
@@ -812,6 +828,16 @@ function makeDefferedPool(size){
 				// i.e. do not pop another worker and let the "thread" die.
 				if(pool.len() > pool_size){
 					// remove self...
+					return
+				}
+				// pause the queue -- do not do anything else...
+				if(that._paused == true){
+					// if pool is empty fire the pause event...
+					if(pool.len() == 0){
+						Pool._pause_handlers.forEach(function(func){
+							func(that)
+						})
+					}
 					return
 				}
 
@@ -852,7 +878,9 @@ function makeDefferedPool(size){
 		var run = this._run
 		var l = this.pool.len()
 
-		if(l < pool_size && this.queue.length > 0){
+		if(this._paused != true 
+				&& l < pool_size 
+				&& this.queue.length > 0){
 			this.queue.splice(0, pool_size - l)
 				.forEach(function(e){
 					run.apply(that, e)
@@ -887,6 +915,27 @@ function makeDefferedPool(size){
 		return this.pool.len() > 0
 	}
 
+	// NOTE: this will not directly cause .isRunning() to return false 
+	// 		as this will not directly spot all workers, it will just 
+	// 		pause the queue and the workers that have already started
+	// 		will keep running until they are done, and only when the 
+	// 		pool is empty will the .isRunning() return false.
+	//
+	// XXX test...
+	Pool.pause = function(func){
+		if(func == null){
+			this._paused = true
+		} else {
+			this._pause_handlers.push(func)
+		}
+		return this
+	}
+	// XXX do we need a resume callback???
+	Pool.resume = function(){
+		this._paused = false
+		this._fill()
+		return this
+	}
 
 	// Register a queue depleted handler...
 	//
