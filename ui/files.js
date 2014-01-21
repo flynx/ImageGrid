@@ -843,12 +843,12 @@ function exportImagesTo(path, im_name, dir_name, size){
 	var z = (('10e' + (selection.length + '').length) * 1 + '').slice(2)
 
 	var res = $.Deferred()
-	var pool_size = 100
-	var pool = makeDefferedPool(pool_size)
+	var pool = makeDefferedPool()
 		.depleted(function(){
 			showStatusQ('Export: done.')
 			res.resolve()
 		})
+	window.Pool = pool
 
 	// go through ribbons...
 	for(var i=DATA.ribbons.length-1; i >= 0; i--){
@@ -866,6 +866,7 @@ function exportImagesTo(path, im_name, dir_name, size){
 			var o = selection.indexOf(gid) + ''
 			dest = dest.replace('%i', (z + o).slice(o.length))
 
+			//exportImageTo(gid, path, dest, size)
 			pool.enqueue(null, exportImageTo, [gid, path, dest, size])
 		}
 

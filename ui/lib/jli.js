@@ -9,6 +9,8 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var POOL_SIZE = 64
+
 
 
 /*********************************************************************/
@@ -727,15 +729,24 @@ function makeDeferredsQ(first){
 
 // XXX should this be an object or a factory???
 function makeDefferedPool(size){
-	var pool = {
+	size = size == null ? POOL_SIZE : size
+	size = size < 0 ? 1 
+		: size > 512 ? 512
+		: size
+
+	var Pool = {
 		pool: [],
 		size: size,
 		queue: [],
 	}
 
-	pool._deplete_handlers = []
+	var len = function(){
+		return Pool.pool.filter(function(){ return true }).length
+	}
 
-	pool._run = function(obj, func, args){
+	Pool._deplete_handlers = []
+
+	Pool._run = function(obj, func, args){
 		var that = this
 		var pool = this.pool
 		var pool_size = this.size
@@ -749,9 +760,9 @@ function makeDefferedPool(size){
 				var i = pool.indexOf(worker)
 
 				// shrink the pool if it's overfilled...
-				if(pool.length > pool_size){
+				if(len(pool) > pool_size){
 					// remove self...
-					pool.splice(i, 1)
+					delete pool[i]
 					return
 				}
 
@@ -761,15 +772,16 @@ function makeDefferedPool(size){
 				// run the next worker if it exists...
 				if(next != null){
 					// replace self with next worker...
-					pool[i] = run.apply(that, next)
+					run.apply(that, next)
+					delete pool[i]
 
 				// nothing in queue...
 				} else {
 					// remove self...
-					pool.splice(i, 1)
+					delete pool[i]
 
-					// empty queue and empty pool mean we are done...
-					if(pool.length == 0){
+					// empty queue AND empty pool mean we are done...
+					if(len(pool) == 0){
 						that._deplete()
 					}
 				}
@@ -777,49 +789,54 @@ function makeDefferedPool(size){
 				// keep the pool full...
 				that._fill()
 			})
-			.fial(function(){
+			.fail(function(){
 				// XXX
+				//queue.splice(0, queue.length)
 			})
+
+		this.pool.push(worker)
 
 		return worker
 	}
-	pool._fill = function(){
+	Pool._fill = function(){
 		var that = this
-		var pool = this.pool
 		var pool_size = this.size
 		var run = this._run
-		var res = []
+		var l = len(this.pool)
 
-		if(pool.length < pool_size && this.queue.length > 0){
-			res = this.queue.splice(0, pool_size - pool.length)
+		if(l < pool_size && this.queue.length > 0){
+			this.queue.splice(0, pool_size - l)
 				.forEach(function(e){
-					pool.push = run.apply(that, e)
+					run.apply(that, e)
 				})
 		}
 
-		return res
+		return this
 	}
-	pool._deplete(){
+	Pool._deplete = function(){
 		var that = this
-		this._done_handlers.forEach(function(func){
+		this._deplete_handlers.forEach(function(func){
 			func(that)
 		})
+		return this
 	}
 
 	// public methods...
-	pool.enqueue = function(obj, func, args){
+	Pool.enqueue = function(obj, func, args){
 		// add worker to queue...
 		this.queue.push([obj, func, args])
 
 		// start work if we have not already...
 		this._fill()
+		return this
 	}
 	// This is called after the pool is populated and depleted...
-	pool.depleted = function(func){
+	Pool.depleted = function(func){
 		this._deplete_handlers.push(func)
+		return this
 	}
 
-	return pool
+	return Pool
 }
 
 
