@@ -11,6 +11,14 @@
 
 var POOL_SIZE = 64
 
+var DEFAULT_TRANSITION_DURATION = 200
+
+// XXX this affects only the innertial part, not setCurrentPage...
+var USE_TRANSITIONS_FOR_ANIMATION = false
+
+var USE_TRANSFORM = true
+var USE_3D_TRANSFORM = true
+
 
 
 /*********************************************************************/
@@ -326,17 +334,12 @@ var getElementShift = makeCSSVendorAttrGetter(
 		})
 
 
-var DEFAULT_TRANSITION_DURATION = 200
-
 var getElementTransitionDuration = makeCSSVendorAttrGetter(
 		'transitionDuration', 
 		DEFAULT_TRANSITION_DURATION, 
 		parseInt)
 
 
-
-var USE_TRANSFORM = true
-var USE_3D_TRANSFORM = true
 
 // NOTE: at this point this works only on the X axis...
 function setElementTransform(elem, offset, scale, duration){
@@ -397,9 +400,6 @@ function setElementTransform(elem, offset, scale, duration){
 	return elem
 }
 
-
-// XXX this affects only the innertial part, not setCurrentPage...
-var USE_TRANSITIONS_FOR_ANIMATION = false
 
 // XXX make this a drop-in replacement for setElementTransform...
 // XXX cleanup, still flacky...
@@ -462,12 +462,12 @@ function animateElementTo(elem, to, duration, easing, speed, use_transitions){
 			}
 
 			// do an intermediate step...
-			// XXX do propper easing...
+			// XXX do proper easing...
 			// XXX sometimes results in jumping around...
 			// 		...result of jumping over the to position...
 			if(speed != null){
 
-				// XXX the folowing two blocks are the same...
+				// XXX the following two blocks are the same...
 				// XXX looks a bit too complex, revise...
 				if(Math.abs(dist.top) >= 1){
 					dy = ((t - start) * speed.y)
@@ -498,7 +498,7 @@ function animateElementTo(elem, to, duration, easing, speed, use_transitions){
 					}
 				}
 
-			// XXX this is a staright forward linear function...
+			// XXX this is a straight forward linear function...
 			} else {
 				var r = (t - start) / duration
 				cur.top = Math.round(from.top + (dist.top * r))
@@ -743,6 +743,8 @@ function makeDeferredsQ(first){
 // 			Drop the queued workers.
 // 			NOTE: this will not stop the already running workers.
 //
+// 		.isRunning()
+//
 // 		.progress(func)
 // 			Register a progress handler.
 // 			The handler is called after each worker is done and will get
@@ -880,6 +882,10 @@ function makeDefferedPool(size){
 		this.queue.splice(0, this.queue.length)
 	}
 
+	Pool.isRunning = function(){
+		return this.pool.len() > 0
+	}
+
 
 	// Register a queue depleted handler...
 	//
@@ -979,11 +985,11 @@ Object.get = function(obj, name, dfl){
 	return val
 }
 
+
 // like .length but for sparse arrays will return the element count...
 Array.prototype.len = function(){
 	return this.filter(function(){ return true }).length
 }
-
 
 
 // convert JS arguments to Array...

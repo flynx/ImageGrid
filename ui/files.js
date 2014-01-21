@@ -804,9 +804,11 @@ function exportImageTo(gid, path, im_name, size){
 	return (function(src, dest){
 		return copyFile(src, dest)
 			.done(function(){
+				// XXX do we actually need this???
 				console.log(src, 'done.')
 			})
 			.fail(function(err){
+				// XXX do we actually need this???
 				console.warn(src, 'err:', err)
 			})
 	})(src, dest)
@@ -824,8 +826,7 @@ function exportImagesTo(path, im_name, dir_name, size){
 	dir_name = dir_name == null ? 'fav' : dir_name
 	size = size == null ? 1000 : size
 
-	// starting point...
-	//var deferred = $.Deferred().resolve()
+	var res = $.Deferred()
 
 	var base_path = path
 	path = normalizePath(path)
@@ -842,7 +843,6 @@ function exportImagesTo(path, im_name, dir_name, size){
 	selection.sort(imageOrderCmp)
 	var z = (('10e' + (selection.length + '').length) * 1 + '').slice(2)
 
-	var res = $.Deferred()
 	var pool = makeDefferedPool()
 		.depleted(function(){
 			showStatusQ('Export: done.')
@@ -865,7 +865,6 @@ function exportImagesTo(path, im_name, dir_name, size){
 			var o = selection.indexOf(gid) + ''
 			dest = dest.replace('%i', (z + o).slice(o.length))
 
-			//exportImageTo(gid, path, dest, size)
 			pool.enqueue(null, exportImageTo, [gid, path, dest, size])
 		}
 
