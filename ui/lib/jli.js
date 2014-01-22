@@ -675,6 +675,15 @@ function makeDeferredPool(size, paused){
 		_paused: paused,
 	}
 
+	// Run a worker...
+	//
+	// This will:
+	// 	- create and add a worker to the pool, which will:
+	// 		- run an element from the queue
+	// 		- remove self from pool
+	// 		- if the pool is not full, create another worker (call 
+	// 		  ._run(..)) else exit
+	// 		- call ._fill() to replenish the pool
 	Pool._run = function(deferred, func, args){
 		var that = this
 		var pool = this.pool
@@ -750,6 +759,9 @@ function makeDeferredPool(size, paused){
 
 		return worker
 	}
+
+	// Fill the pool...
+	//
 	Pool._fill = function(){
 		var that = this
 		var pool_size = this.size
