@@ -82,11 +82,18 @@ function getWorkerQueue(name, pool_size, no_auto_start, no_progress){
 
 // Kill all worker queues...
 //
-// Returns a deffered object that will get resolved when all workers are
+// Returns a deffered that will get resolved when all workers are 
 // actually stopped...
+//
+// NOTE: this will not stop the already started tasks, just drop all 
+// 		worker queues, thus it may take some time for workers to 
+// 		actually stop...
+// NOTE: if no workers are loaded or all are already done, the deferred
+// 		returned will be resolved...
 function killAllWorkers(){
 	var res = $.Deferred()
 	var w = []
+
 	Object.keys(WORKERS).forEach(function(k){
 		if(WORKERS[k].isRunning()){
 			var wd = $.Deferred()
@@ -102,6 +109,7 @@ function killAllWorkers(){
 	})
 	WORKERS = {}
 
+	// resolve the deferred as soon as ALL the workers are done...
 	$.when.apply(null, w)
 		.done(function(){
 			console.log('Worker: All workers stopped.')
