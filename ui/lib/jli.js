@@ -653,12 +653,22 @@ jQuery.fn.sortChildren = function(func){
 //
 //
 // XXX should this be an object or a factory???
+// XXX add a clean handler removal scheme (a-la jQuery event on/off)
 function makeDeferredPool(size, paused){
 	size = size == null ? POOL_SIZE : size
 	size = size < 0 ? 1 
 		: size > 512 ? 512
 		: size
 	paused = paused == null ? false : paused
+
+	var event_names = [
+		'deplete',
+		'progress',
+		'pause',
+		// XXX
+		//'resume',
+		'fail',
+	]
 
 	var Pool = {
 		pool: [],
@@ -831,6 +841,17 @@ function makeDeferredPool(size, paused){
 	Pool.resume = function(){
 		this._paused = false
 		this._fill()
+		return this
+	}
+
+
+	// Generic event handlers...
+	Pool.on = function(evt, handler){
+		// XXX
+		return this
+	}
+	Pool.off = function(evt, handler){
+		// XXX
 		return this
 	}
 
