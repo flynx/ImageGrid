@@ -1235,6 +1235,13 @@ progress:not(value)::-webkit-progress-bar {
 
 .progress-container {
 	position: absolute;
+	top: 20px;
+	margin: 5px;
+	padding: 2px;
+}
+.progress-container:hover {
+	border-radius: 5px;
+	background: rgba(0,0,0,0.8);
 }
 .progress-container:empty {
 	display: none;
@@ -1243,6 +1250,20 @@ progress:not(value)::-webkit-progress-bar {
 	color: silver;
 	font-size: 10px;
 	margin: 10px;
+}
+.progress-bar .close {
+	display: none;
+}
+.progress-bar:hover .close {
+	position: absolute;
+	display: inline-block;
+	right: 10px;
+}
+.progress-bar .close:hover {
+	position: absolute;
+	display: inline-block;
+	color: red;
+	cursor: hand;
 }
 .progress-bar progress {
 	display: block;

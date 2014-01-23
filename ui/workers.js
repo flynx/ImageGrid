@@ -23,15 +23,32 @@ function getWorkerQueue(name, pool_size, no_auto_start, no_progress){
 
 	// XXX experimental -- STUB...
 	if(!no_progress){
+		// widget container...
 		var container = $('.progress-container')
 		if(container.length == 0){
 			container = $('<div class="progress-container"/>')
 				.appendTo($('.viewer'))
 		}
+		// the progress bar widget...
 		var progress = $('<div class="progress-bar">'+name+'</div>')
 			.appendTo(container)
+		// progress state...
 		var progress_state = $('<span class="state"/>')
 			.appendTo(progress)
+		// the close button...
+		$('<span class="close">&times;</span>')
+			.click(function(){
+				$(this).remove()
+				WORKERS[name]
+					.dropQueue()
+					/*
+					.depleted(function(){
+						delete WORKERS[name]
+					})
+					*/
+			})
+			.appendTo(progress)
+
 		var progress_bar = $('<progress id="'+name+'"/>')
 			.appendTo(progress)
 
