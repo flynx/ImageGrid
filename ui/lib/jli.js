@@ -672,7 +672,6 @@ jQuery.fn.sortChildren = function(func){
 // 				.on('deplete', func) -> pool
 //
 // XXX should this be an object or a factory???
-// XXX add a clean handler removal scheme (a-la jQuery event on/off)
 function makeDeferredPool(size, paused){
 	size = size == null ? POOL_SIZE : size
 	size = size < 0 ? 1 

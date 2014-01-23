@@ -14,13 +14,7 @@ var WORKERS = {}
 
 /**************************************************** Progress bar ***/
 
-// NOTE: if the progress widget gets removed without removing the worker
-// 		this will result in dangling handlers for the previous widget...
-// 		i.e. handlers that still reverence the original widget...
-//
-// XXX add a clean removal scheme...
-// XXX should this have a pause button???
-function makeWorkerProgressBar(name, worker, parent){
+function getWorkerProgressFloatingContainer(parent){
 	parent = parent == null ? $('.viewer') : parent
 
 	// widget container...
@@ -30,9 +24,24 @@ function makeWorkerProgressBar(name, worker, parent){
 			.appendTo(parent)
 	}
 
+	return container
+}
+
+// NOTE: if the progress widget gets removed without removing the worker
+// 		this will result in dangling handlers for the previous widget...
+// 		i.e. handlers that still reverence the original widget...
+//
+// XXX add a clean removal scheme...
+// XXX should this have a pause button???
+function getWorkerProgressBar(name, worker, container){
+	container = container == null 
+		? getWorkerProgressFloatingContainer() 
+		: container
+
 	var widget = $('.progress-bar[name="'+name+'"]')
 
 	// a progress bar already exists, reset it and return...
+	// XXX should we re-bind the event handlers here???
 	if(widget.length > 0){
 		widget
 			.css('display', '')
@@ -109,7 +118,7 @@ function getWorkerQueue(name, pool_size, no_auto_start, no_progress){
 	}
 
 	if(!no_progress){
-		makeWorkerProgressBar(name, queue)
+		getWorkerProgressBar(name, queue)
 	}
 
 	return queue
