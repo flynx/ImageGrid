@@ -667,7 +667,7 @@ function makeDeferredPool(size, paused){
 		'pause',
 		// XXX
 		//'resume',
-		'fail',
+		'fail'
 	]
 
 	var Pool = {

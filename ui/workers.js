@@ -41,7 +41,7 @@ function makeWorkerProgressBar(name, worker, parent){
 		widget.find('progress')
 			.attr({
 				value: '',
-				max: ''
+				max: '',
 			})
 		return worker
 	}
