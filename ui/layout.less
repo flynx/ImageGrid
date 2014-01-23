@@ -1238,9 +1238,10 @@ progress:not(value)::-webkit-progress-bar {
 	top: 20px;
 	margin: 5px;
 	padding: 2px;
+	border-radius: 5px;
+	background: rgba(0,0,0,0.1);
 }
 .progress-container:hover {
-	border-radius: 5px;
 	background: rgba(0,0,0,0.8);
 }
 .progress-container:empty {
@@ -1325,6 +1326,18 @@ progress:not(value)::-webkit-progress-bar {
 	text-shadow: none;
 
 	opacity: 0.8;
+}
+.light.viewer progress::-webkit-progress-bar {
+	border: solid 1px silver;
+}
+.light.viewer .progress-container {
+	background: rgba(0,0,0,0.05);
+}
+.light.viewer .progress-container:hover {
+	background: rgba(0,0,0,0.5);
+}
+.light.viewer .progress-bar {
+	color: silver;
 }
 
 .gray.viewer,

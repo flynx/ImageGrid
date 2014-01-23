@@ -622,7 +622,15 @@ jQuery.fn.sortChildren = function(func){
 // 			NOTE: this will return false ONLY when the pool is empty.
 //
 //
-// Handler/callback registration:
+// Event handler/callback registration:
+//
+// 		.on(evt, func) -> pool
+// 			Register a handler (func) for an event (evt).
+//
+// 		.off(evt[, func]) -> pool
+// 			Remove a handler (func) form and event (evt).
+// 			NOTE: if func is omitted, remove all handlers from the given
+// 					event...
 //
 // 		.progress(func) -> pool
 // 			Register a progress handler.
@@ -630,6 +638,8 @@ jQuery.fn.sortChildren = function(func){
 // 			passed:
 // 				- workers done count
 // 				- workers total count
+// 			Short hand for:
+// 				.on('progress', func) -> pool
 // 			NOTE: the total number of workers can change as new workers
 // 					are added or the queue is cleared...
 // 			
@@ -639,18 +649,27 @@ jQuery.fn.sortChildren = function(func){
 // 			This will get passed:
 // 				- workers done count
 // 				- workers total count
+// 			Short hand for:
+// 				.on('fail', func) -> pool
 // 			NOTE: this will not stop the execution of other handlers.
 //
 // 		.pause(func) -> pool
 // 			Register a pause handler.
 // 			This handler is called after the last worker finishes when 
 // 			the queue is paused.
+// 			Short hand for:
+// 				.on('progress', func) -> pool
+//
+// 		.resume(func) -> pool
+// 			Short hand for:
+// 				.on('resume', func) -> pool
 //
 // 		.depleted(func) -> pool
 // 			Register a depleted pool handler.
 // 			The handler will get called when the queue and pool are empty
 // 			(depleted) and the last worker is done.
-//
+// 			Short hand for:
+// 				.on('deplete', func) -> pool
 //
 // XXX should this be an object or a factory???
 // XXX add a clean handler removal scheme (a-la jQuery event on/off)
@@ -661,24 +680,19 @@ function makeDeferredPool(size, paused){
 		: size
 	paused = paused == null ? false : paused
 
-	var event_names = [
-		'deplete',
-		'progress',
-		'pause',
-		// XXX
-		//'resume',
-		'fail'
-	]
 
 	var Pool = {
 		pool: [],
 		queue: [],
 		size: size,
 
-		_deplete_handlers: [],
-		_progress_handlers: [],
-		_pause_handlers: [],
-		_fail_handlers: [],
+		_event_handlers: {
+			'deplete': [],
+			'progress': [],
+			'pause': [],
+			'resume': [],
+			'fail': []
+		},
 
 		_paused: paused,
 	}
@@ -705,7 +719,7 @@ function makeDeferredPool(size, paused){
 				// prepare to remove self from pool...
 				var i = pool.indexOf(worker)
 
-				Pool._progress_handlers.forEach(function(func){
+				Pool._event_handlers['progress'].forEach(function(func){
 					func(pool.length - pool.len(), pool.length + queue.length)
 				})
 
@@ -722,7 +736,7 @@ function makeDeferredPool(size, paused){
 				if(that._paused == true){
 					// if pool is empty fire the pause event...
 					if(pool.len() == 0){
-						Pool._pause_handlers.forEach(function(func){
+						Pool._event_handlers['pause'].forEach(function(func){
 							func()
 						})
 					}
@@ -743,7 +757,7 @@ function makeDeferredPool(size, paused){
 					// 		pushed to pool just before it's "compacted"...
 					pool.length = 0
 				
-					that._deplete_handlers.forEach(function(func){
+					that._event_handlers['deplete'].forEach(function(func){
 						func(l)
 					})
 				}
@@ -752,7 +766,7 @@ function makeDeferredPool(size, paused){
 				that._fill()
 			})
 			.fail(function(){
-				Pool._fail_handlers.forEach(function(func){
+				Pool._event_handlers['fail'].forEach(function(func){
 					func(pool.length - pool.len(), pool.length + queue.length)
 				})
 				deferred.reject.apply(deferred, arguments)
@@ -831,27 +845,37 @@ function makeDeferredPool(size, paused){
 		if(func == null){
 			this._paused = true
 		} else {
-			this._pause_handlers.push(func)
+			this.on('pause', func)
 		}
 		return this
 	}
 
-	// XXX do we need a resume callback???
 	// XXX test...
-	Pool.resume = function(){
-		this._paused = false
-		this._fill()
+	Pool.resume = function(func){
+		if(func == null){
+			this._paused = false
+			this._event_handlers['resume'].forEach(function(f){ f() })
+			this._fill()
+		} else {
+			this.on('resume', func)
+		}
 		return this
 	}
 
 
 	// Generic event handlers...
 	Pool.on = function(evt, handler){
-		// XXX
+		this._event_handlers[evt].push(handler)
 		return this
 	}
+	// NOTE: if this is not given a handler, it will clear all handlers 
+	// 		from the given event...
 	Pool.off = function(evt, handler){
-		// XXX
+		if(handler != null){
+			this._event_handlers[evt].splice(this._event_handlers[evt].indexOf(handler), 1)
+		} else {
+			this._event_handlers[evt] = []
+		}
 		return this
 	}
 
@@ -868,8 +892,7 @@ function makeDeferredPool(size, paused){
 	// 		finish, as this may get called after last worker is done and
 	// 		the next is queued...
 	Pool.depleted = function(func){
-		this._deplete_handlers.push(func)
-		return this
+		return this.on('deplete', func)
 	}
 
 	// Register queue progress handler...
@@ -881,15 +904,13 @@ function makeDeferredPool(size, paused){
 	// 	- workers done
 	// 	- total workers (done + queued)
 	Pool.progress = function(func){
-		this._progress_handlers.push(func)
-		return this
+		return this.on('progress', func)
 	}
 
 	// Register worker fail handler...
 	//
 	Pool.fail = function(func){
-		this._fail_handlers.push(func)
-		return this
+		return this.on('fail', func)
 	}
 
 
