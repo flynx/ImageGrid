@@ -364,14 +364,14 @@ if(window.CEF_dumpJSON != null){
 	window.makeImagesPreviewsQ = function(gids, sizes, mode){
 		gids = gids == null ? getClosestGIDs() : gids
 
-		var queue = getWorkerQueue('preview_generator')
+		var queue = getWorkerQueue('Generate previews', 4)
 
 		// attach the workers to the queue...
 		$.each(gids, function(_, gid){
-			queue.enqueue(null, makeImagePreviews, gid, sizes, mode)
+			queue.enqueue(makeImagePreviews, gid, sizes, mode)
 				// XXX do we need to report seporate previews???
 				//.progress(function(state){ queue.notify(state) })
-				.always(function(){ queue.notify(gid, 'done') })
+				.always(function(){ console.log(gid, 'done') })
 		})
 
 		return queue

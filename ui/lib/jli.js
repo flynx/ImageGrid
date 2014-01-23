@@ -628,7 +628,6 @@ jQuery.fn.sortChildren = function(func){
 // 			Register a progress handler.
 // 			The handler is called after each worker is done and will get
 // 			passed:
-// 				- pool
 // 				- workers done count
 // 				- workers total count
 // 			NOTE: the total number of workers can change as new workers
@@ -638,7 +637,6 @@ jQuery.fn.sortChildren = function(func){
 // 			Register a worker fail handler.
 // 			The handler is called when a worker goes into the fail state.
 // 			This will get passed:
-// 				- pool
 // 				- workers done count
 // 				- workers total count
 // 			NOTE: this will not stop the execution of other handlers.
@@ -698,7 +696,7 @@ function makeDeferredPool(size, paused){
 				var i = pool.indexOf(worker)
 
 				Pool._progress_handlers.forEach(function(func){
-					func(worker, pool.length - pool.len(), pool.length + queue.length)
+					func(pool.length - pool.len(), pool.length + queue.length)
 				})
 
 				// remove self from queue...
@@ -715,7 +713,7 @@ function makeDeferredPool(size, paused){
 					// if pool is empty fire the pause event...
 					if(pool.len() == 0){
 						Pool._pause_handlers.forEach(function(func){
-							func(that)
+							func()
 						})
 					}
 					return
@@ -730,12 +728,13 @@ function makeDeferredPool(size, paused){
 
 				// empty queue AND empty pool mean we are done...
 				} else if(pool.len() == 0){
+					var l = pool.length
 					// NOTE: potential race condition -- something can be
 					// 		pushed to pool just before it's "compacted"...
 					pool.length = 0
 				
 					that._deplete_handlers.forEach(function(func){
-						func(that)
+						func(l)
 					})
 				}
 
@@ -744,7 +743,7 @@ function makeDeferredPool(size, paused){
 			})
 			.fail(function(){
 				Pool._fail_handlers.forEach(function(func){
-					func(that, pool.length - pool.len(), pool.length + queue.length)
+					func(pool.length - pool.len(), pool.length + queue.length)
 				})
 				deferred.reject.apply(deferred, arguments)
 			})

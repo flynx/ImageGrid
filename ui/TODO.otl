@@ -109,23 +109,7 @@ Roadmap
 
 
 [_] 31% Gen 3 current todo
-	[_] 62% High priority
-		[_] Might be a good idea to use sparse arrays for things like marks...
-		| eliminate:	
-		| 	- need for keeping things sorted all the time
-		| 	- speed-up access -- everything has the same index
-		| 	- speed-up modification -- just mirror all the operations
-		| 	- searching in more than one place
-		|
-		| introduce:
-		| 	- memory overhead - each array is always N elements
-		| 	- conversion on import, export and crop
-		| 		need to clear / insert all the nulls
-		|
-		| candidates:
-		| 	- marks
-		| 	- bookmarks
-		| 	- tags
+	[_] 63% High priority
 		[_] BUG: sorting breaks when at or near the end of a ribbon...
 		|
 		| Race condition...
@@ -148,6 +132,8 @@ Roadmap
 		| 	because there is nothing wrong with sorting itself, just the
 		| 	UI, the resulting state can be fixed by simply reloading the 
 		| 	viewer (reloadViewer(true) or ctrl-alt-r)
+		| 
+		| NOTE: appears to affect beginning of the ribbon too...
 		[_] BUG: sorting mis-aligns ribbons in some cases...
 		| Example:
 		| 				 oooo...	--[reverse]->	   ...oooo
@@ -560,6 +546,21 @@ Roadmap
 		| 	drops to last placeholder
 		|
 		[_] single image mode transition (alpha-blend/fade/none)
+		[X] Might be a good idea to use sparse arrays for things like marks...
+		| eliminate:	
+		| 	- need for keeping things sorted all the time
+		| 	- speed-up access -- everything has the same index
+		| 	- speed-up modification -- just mirror all the operations
+		| 	- searching in more than one place
+		|
+		| introduce:
+		| 	- conversion on import, export and crop
+		| 		need to clear / insert all the nulls
+		|
+		| candidates:
+		| 	- marks
+		| 	- bookmarks
+		| 	- tags
 		[X] crop/filter/search dialog...
 		| make a number of fields each accepting a filter -- string/regexp
 		[X] Q: how do we mark unsorted sections in base ribbon after aligning?

@@ -79,7 +79,10 @@ var KEYBOARD_CONFIG = {
 		},
 		F5: doc('Full reload viewer', 
 			function(){ 
-				reload() 
+				killAllWorkers()
+					.done(function(){
+						reload() 
+					})
 				return false
 			}),
 		F12: doc('Show devTools', 

@@ -684,7 +684,7 @@ function loadRawDir(path, no_preview_processing, prefix){
 	if(!no_preview_processing){
 		res.notify(prefix, 'Loading/Generating', 'Previews.')
 		var p = makeImagesPreviewsQ()
-			.done(function(){
+			.depleted(function(){
 				res.notify(prefix, 'Loaded', 'Previews.')
 			})
 
@@ -844,7 +844,8 @@ function exportImagesTo(path, im_name, dir_name, size){
 	var z = (('10e' + (selection.length + '').length) * 1 + '').slice(2)
 
 	// use an external pool...
-	var pool = makeDeferredPool()
+	//var pool = makeDeferredPool()
+	var pool = getWorkerQueue('Export previews', 64)
 		.depleted(function(){
 			showStatusQ('Export: done.')
 			res.resolve()
@@ -929,7 +930,7 @@ function readImagesOrientation(gids, no_update_loaded){
 function readImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
 
-	var queue = getWorkerQueue('image_orientation_reader')
+	var queue = getWorkerQueue('Read images orientation', 4)
 
 	var last = null
 
@@ -963,7 +964,7 @@ function readImagesDates(images){
 function readImagesDatesQ(images){
 	images = images == null ? IMAGES : images
 
-	var queue = getWorkerQueue('date_reader')
+	var queue = getWorkerQueue('Read images dates', 4)
 
 	$.each(images, function(gid, img){
 		queue.enqueue(readImageDate, gid, images)
@@ -1020,7 +1021,7 @@ function updateImagesGIDs(images, data){
 function updateImagesGIDsQ(images, data){
 	images = images == null ? IMAGES : images
 
-	var queue = getWorkerQueue('gid_updater')
+	var queue = getWorkerQueue('Update GIDs', 4)
 
 	$.each(images, function(_, key){
 		queue.enqueue(updateImageGID, key, images, data)
