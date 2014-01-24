@@ -118,7 +118,6 @@ if(window.CEF_dumpJSON != null){
 		})
 	}
 
-	USE_EXEC = false
 	// XXX this uses vips...
 	window.getVipsField = function(field, source){
 		if(source in IMAGES){
@@ -127,28 +126,23 @@ if(window.CEF_dumpJSON != null){
 		}
 		var getter = $.Deferred()
 
-		// exec...
-		if(USE_EXEC){
-			var cmd = 'vips im_header_string "$FIELD" "$IN"'
-				.replace(/\$IN/g, osPath(source))
-				.replace(/\$FIELD/g, field)
-			proc.exec(cmd, function(error, stdout, stderr){
-				getter.resolve(stdout.trim())
+		var data = ''
+		var p = proc.spawn('vips', ['im_header_string', field, osPath(source)])
+		p.stdout.on('data', function(d){
+				data += d.toString()
+			})
+		p.stdout.on('end', function(){
+				getter.resolve(data.trim())
 			})
 
-		// spawn...
-		// NOTE: this should have significantly less overhead than running a shell...
-		} else {
-			var p = proc.spawn('vips', ['im_header_string', field, osPath(source)])
-			p.stdout.on('data', function(data){
-					getter.resolve(data.toString().trim())
-				})
-			/*
-			p.on('close', function(code){
-					getter.resolve(code)
-				})
-			*/
-		}
+		/* XXX do we need these???
+		p.on('error', function(code){
+				// XXX
+			})
+		p.on('close', function(code){
+				getter.resolve(data)
+			})
+		*/
 
 		return getter
 	}
@@ -318,6 +312,46 @@ if(window.CEF_dumpJSON != null){
 							factor = 1
 						}
 
+						var p = proc.spawn('vips', [
+								'im_shrink',
+								osPath(source) +':'+ rscale,
+								preview_path +':'+ compression,
+								factor,
+								factor
+							])
+						// XXX is this the correct wat to deal with errors???
+						var error = ''
+						p.stderr.on('data', function(data){
+							error += data.toString()
+						})
+						//p.stderr.on('end', function(data){
+						//})
+						p.on('close', function(code){
+							// error...
+							if(code != 0){
+								deferred.notify(gid, size, 'error', error)
+								deferred.reject()
+
+							// ok...
+							} else {
+								// NOTE: the size of the real preview 
+								// 		generated might different from 
+								// 		the target size...
+								deferred.notify(gid, size, 'done')
+								// update the image structure...
+								if(!('preview' in img)){
+									img.preview = {}
+								}
+								img.preview[size+'px'] = './' + cache_dir +'/'+ preview_path.split(cache_dir).pop()
+								// mark image dirty...
+								imageUpdated(gid)
+								// we are done...
+								deferred.resolve()
+							}
+						})
+
+
+						/*
 						var cmd = 'vips im_shrink "$IN:$RSCALE" "$OUT:$COMPRESSION" $FACTOR $FACTOR'
 							.replace(/\$IN/g, osPath(source))
 							.replace(/\$RSCALE/g, rscale)
@@ -348,6 +382,7 @@ if(window.CEF_dumpJSON != null){
 								deferred.resolve()
 							}
 						})
+						*/
 					})
 				})
 			}(size, target_path, deferred)]
