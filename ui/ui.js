@@ -557,27 +557,22 @@ function getProgressBar(name){
 
 /******************************************* Event trigger helpers ***/
 
+function triggerProgressBarEvent(name, evt, args){
+	var widget = typeof(name) == typeof('str') 
+		? getProgressBar(name) 
+		: name
+	return widget.trigger(evt, args)
+}
+
+
 function resetProgressBar(name){
-	var widget = typeof(name) == typeof('str') 
-		? getProgressBar(name) 
-		: name
-	return widget.trigger('progressReset')
+	return triggerProgressBarEvent(name, 'progressReset')
 }
-
-
 function updateProgressBar(name, done, total){
-	var widget = typeof(name) == typeof('str') 
-		? getProgressBar(name) 
-		: name
-	return widget.trigger('progressUpdate', [done, total])
+	return triggerProgressBarEvent(name, 'progressUpdate', [done, total])
 }
-
-
 function closeProgressBar(name){
-	var widget = typeof(name) == typeof('str') 
-		? getProgressBar(name) 
-		: name
-	return widget.trigger('progressClose')
+	return triggerProgressBarEvent(name, 'progressClose')
 }
 
 
