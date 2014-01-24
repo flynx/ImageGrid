@@ -14,6 +14,10 @@ var STATUS_QUEUE_TIME = 200
 
 var CONTEXT_INDICATOR_UPDATERS = []
 
+// this can be:
+// 	- 'floating'
+// 	- 'panel'
+var PROGRESS_WIDGET_CONTAINER = 'floating'
 
 
 
@@ -424,6 +428,139 @@ function showContextIndicator(cls, text){
 	return makeIndicator(text)
 			.addClass(cls)
 			.appendTo(c)
+}
+
+
+
+/**********************************************************************
+* Progress bar...
+*/
+
+// Make or get progress bar container...
+// mode can be:
+// 	- null			- default
+// 	- 'floating'
+// 	- 'panel'
+function getProgressContainer(mode, parent){
+	parent = parent == null ? $('.viewer') : parent
+	mode = mode == null ? PROGRESS_WIDGET_CONTAINER : mode
+
+	if(mode == 'floating'){
+		// widget container...
+		var container = parent.find('.progress-container')
+		if(container.length == 0){
+			container = $('<div class="progress-container"/>')
+				.appendTo(parent)
+		}
+	} else {
+		var container = getPanel('Progress')
+		if(container.length == 0){
+			container = makeSubPanel('Progress')
+				.addClass('.progress-container')
+		}
+
+		container = container.find('.content')
+	}
+
+	return container
+}
+
+
+// Make or get progress bar by name...
+//
+function progressBar(name, container){
+	container = container == null 
+		? getProgressContainer() 
+		: container
+
+	var widget = getProgressBar(name)
+
+	// a progress bar already exists, reset it and return...
+	// XXX should we re-bind the event handlers here???
+	if(widget.length > 0){
+		return widget.trigger('progressReset')
+	}
+
+	// fields we'll need to update...
+	var state = $('<span class="progress-details"/>')
+	var bar = $('<progress/>')
+
+	// the progress bar widget...
+	var widget = $('<div class="progress-bar" name="'+name+'">'+name+'</div>')
+		// progress state...
+		.append(state)
+		// the close button...
+		.append($('<span class="close">&times;</span>')
+			.click(function(){
+				$(this).trigger('progressClose')
+			}))
+		.append(bar)
+		.appendTo(container)
+		.on('progressUpdate', function(evt, done, total){
+			done = done == null ? bar.attr('value') : done
+			total = total == null ? bar.attr('max') : total
+			bar.attr({
+				value: done,
+				max: total
+			})
+			state.text(' ('+done+' of '+total+')')
+		})
+		.on('progressDone', function(evt, done){
+			done = done == null ? bar.attr('value') : done
+			bar.attr('value', done)
+			state.text(' (done)')
+			widget.find('.close').hide()
+
+			setTimeout(function(){
+				widget.hide()
+			}, 1500)
+		})
+		.on('progressReset', function(){
+			widget
+				.css('display', '')
+				.find('.close')
+					.css('display', '')
+			state.text('')
+			bar.attr({
+				value: '',
+				max: '',
+			})
+		})
+
+	bar = $(bar[0])
+	state = $(state[0])
+	widget = $(widget[0])
+
+	return widget
+}
+
+
+function getProgressBar(name){
+	return $('.progress-bar[name="'+name+'"]')
+}
+
+
+function resetProgressBar(name){
+	var widget = typeof(name) == typeof('str') 
+		? getProgressBar(name) 
+		: name
+	return widget.trigger('progressReset')
+}
+
+
+function updateProgressBar(name, done, total){
+	var widget = typeof(name) == typeof('str') 
+		? getProgressBar(name) 
+		: name
+	return widget.trigger('progressUpdate', [done, total])
+}
+
+
+function closeProgressBar(name){
+	var widget = typeof(name) == typeof('str') 
+		? getProgressBar(name) 
+		: name
+	return widget.trigger('progressClose')
 }
 
 

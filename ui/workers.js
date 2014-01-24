@@ -10,39 +10,9 @@
 // object to register all the worker queues...
 var WORKERS = {}
 
-var PROGRESS_WIDGET_CONTAINER = 'floating'
-
 
 
 /**************************************************** Progress bar ***/
-
-// mode can be:
-// 	- null			- default
-// 	- 'floating'
-// 	- 'panel'
-function getWorkerProgressFloatingContainer(mode, parent){
-	parent = parent == null ? $('.viewer') : parent
-	mode = mode == null ? PROGRESS_WIDGET_CONTAINER : mode
-
-	if(mode == 'floating'){
-		// widget container...
-		var container = parent.find('.progress-container')
-		if(container.length == 0){
-			container = $('<div class="progress-container"/>')
-				.appendTo(parent)
-		}
-	} else {
-		var container = getPanel('Progress')
-		if(container.length == 0){
-			container = makeSubPanel('Progress')
-				.addClass('.progress-container')
-		}
-
-		container = container.find('.content')
-	}
-
-	return container
-}
 
 // NOTE: if the progress widget gets removed without removing the worker
 // 		this will result in dangling handlers for the previous widget...
@@ -53,64 +23,27 @@ function getWorkerProgressFloatingContainer(mode, parent){
 // XXX make this understand deferred workers...
 function getWorkerProgressBar(name, worker, container){
 	container = container == null 
-		? getWorkerProgressFloatingContainer() 
+		? getProgressContainer() 
 		: container
 
-	var widget = $('.progress-bar[name="'+name+'"]')
+	var widget = getProgressBar(name)
 
-	// a progress bar already exists, reset it and return...
-	// XXX should we re-bind the event handlers here???
-	if(widget.length > 0){
-		widget
-			.css('display', '')
-			.find('.close')
-				.css('display', '')
-		widget.find('progress')
-			.attr({
-				value: '',
-				max: '',
+	if(widget.length == 0){
+		widget = progressBar(name, container)
+			.on('progressClose', function(){
+				WORKERS[name].dropQueue()
 			})
-		return worker
+
+		worker
+			.progress(function(done, total){
+				widget.trigger('progressUpdate', [done, total])
+			})
+			.depleted(function(done){
+				widget.trigger('progressDone', [done])
+			})
+	} else {
+		resetProgressBar(widget)
 	}
-
-	// fields we'll need to update...
-	var state = $('<span class="state"/>')
-	var bar = $('<progress/>')
-
-	// the progress bar widget...
-	var widget = $('<div class="progress-bar" name="'+name+'">'+name+'</div>')
-		// progress state...
-		.append(state)
-		// the close button...
-		.append($('<span class="close">&times;</span>')
-			.click(function(){
-				$(this).hide()
-				WORKERS[name]
-					.dropQueue()
-			}))
-		.append(bar)
-		.appendTo(container)
-
-	// re get the fields...
-	bar = $(bar[0])
-	state = $(state[0])
-
-	worker
-		.progress(function(done, total){
-			bar.attr({
-				value: done,
-				max: total
-			})
-			state.text(' ('+done+' of '+total+')')
-		})
-		.depleted(function(done){
-			bar.attr('value', done)
-			state.text(' (done)')
-
-			setTimeout(function(){
-				widget.hide()
-			}, 1500)
-		})
 
 	return worker
 }
