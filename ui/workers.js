@@ -10,18 +10,35 @@
 // object to register all the worker queues...
 var WORKERS = {}
 
+var PROGRESS_WIDGET_CONTAINER = 'floating'
+
 
 
 /**************************************************** Progress bar ***/
 
-function getWorkerProgressFloatingContainer(parent){
+// mode can be:
+// 	- null			- default
+// 	- 'floating'
+// 	- 'panel'
+function getWorkerProgressFloatingContainer(mode, parent){
 	parent = parent == null ? $('.viewer') : parent
+	mode = mode == null ? PROGRESS_WIDGET_CONTAINER : mode
 
-	// widget container...
-	var container = parent.find('.progress-container')
-	if(container.length == 0){
-		container = $('<div class="progress-container"/>')
-			.appendTo(parent)
+	if(mode == 'floating'){
+		// widget container...
+		var container = parent.find('.progress-container')
+		if(container.length == 0){
+			container = $('<div class="progress-container"/>')
+				.appendTo(parent)
+		}
+	} else {
+		var container = getPanel('Progress')
+		if(container.length == 0){
+			container = makeSubPanel('Progress')
+				.addClass('.progress-container')
+		}
+
+		container = container.find('.content')
 	}
 
 	return container
@@ -104,7 +121,7 @@ function getWorkerProgressBar(name, worker, container){
 // get/create a named worker queue...
 //
 // XXX rename this to something task-related.... (???)
-function getWorkerQueue(name, pool_size, no_auto_start, no_progress){
+function getWorkerQueue(name, pool_size, container, no_auto_start, no_progress){
 	pool_size = pool_size == null ? 1 : pool_size
 
 	// create a new worker queue...
@@ -118,7 +135,7 @@ function getWorkerQueue(name, pool_size, no_auto_start, no_progress){
 	}
 
 	if(!no_progress){
-		getWorkerProgressBar(name, queue)
+		getWorkerProgressBar(name, queue, container)
 	}
 
 	return queue
