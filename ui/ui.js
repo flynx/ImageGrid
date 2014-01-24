@@ -439,6 +439,7 @@ function showContextIndicator(cls, text){
 */
 
 // Make or get progress bar container...
+//
 // mode can be:
 // 	- null			- default
 // 	- 'floating'
@@ -469,6 +470,40 @@ function getProgressContainer(mode, parent){
 
 
 // Make or get progress bar by name...
+//
+// Events:
+// 	- progressUpdate
+// 		Triggered by user to update progress bar state.
+//
+// 		takes two arguments:
+// 			done	- the number of done tasks
+// 			total	- the total number of tasks
+//
+// 		Usage:
+// 			widget.trigger('progressUpdate', [done, total])
+// 			
+// 		Shorthand:
+// 			updateProgressBar(name, done[, total])
+//
+// 	- progressClose
+// 		Triggered by the close button.
+//		By default triggers the progressDone event.
+//
+// 		Shorthand:
+// 			closeProgressBar(name)
+//
+// 	- progressDone
+// 		Triggered by user or progressClose handler.
+// 		Set the progress bar to done state and hide after hide_timeout.
+//
+// 	- progressReset
+// 		Triggered by user or progressBar(..) if the progress bar already 
+// 		exists and is hidden (display: none).
+// 		Reset the progress bar to it's initial (indeterminite) state 
+// 		and show it.
+//
+// 		Shorthand:
+// 			resetProgressBar(name)
 //
 function progressBar(name, container, close, hide_timeout){
 	container = container == null 
