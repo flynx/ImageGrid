@@ -18,6 +18,8 @@ var CONTEXT_INDICATOR_UPDATERS = []
 // 	- 'floating'
 // 	- 'panel'
 var PROGRESS_WIDGET_CONTAINER = 'floating'
+// can be between 0 and 3000
+var PROGRESS_HIDE_TIMEOUT = 1500
 
 
 
@@ -468,16 +470,24 @@ function getProgressContainer(mode, parent){
 
 // Make or get progress bar by name...
 //
-function progressBar(name, container){
+function progressBar(name, container, close, hide_timeout){
 	container = container == null 
 		? getProgressContainer() 
 		: container
+	close = close === undefined 
+		? function(){ 
+			$(this).trigger('progressDone') } 
+		: close
+	hide_timeout = hide_timeout == null ? PROGRESS_HIDE_TIMEOUT 
+		: hide_timeout < 0 ? 0
+		: hide_timeout > 3000 ? 3000
+		: hide_timeout
 
 	var widget = getProgressBar(name)
 
 	// a progress bar already exists, reset it and return...
 	// XXX should we re-bind the event handlers here???
-	if(widget.length > 0){
+	if(widget.length > 0 && widget.css('display') == 'none'){
 		return widget.trigger('progressReset')
 	}
 
@@ -513,7 +523,7 @@ function progressBar(name, container){
 
 			setTimeout(function(){
 				widget.hide()
-			}, 1500)
+			}, hide_timeout)
 		})
 		.on('progressReset', function(){
 			widget
@@ -527,6 +537,10 @@ function progressBar(name, container){
 			})
 		})
 
+	if(close != null){
+		widget.on('progressClose', close)
+	}
+
 	bar = $(bar[0])
 	state = $(state[0])
 	widget = $(widget[0])
@@ -539,6 +553,9 @@ function getProgressBar(name){
 	return $('.progress-bar[name="'+name+'"]')
 }
 
+
+
+/******************************************* Event trigger helpers ***/
 
 function resetProgressBar(name){
 	var widget = typeof(name) == typeof('str') 

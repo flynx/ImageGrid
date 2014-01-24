@@ -29,10 +29,12 @@ function getWorkerProgressBar(name, worker, container){
 	var widget = getProgressBar(name)
 
 	if(widget.length == 0){
-		widget = progressBar(name, container)
-			.on('progressClose', function(){
+		widget = progressBar(
+			name, 
+			container,
+			function(){
 				WORKERS[name].dropQueue()
-			})
+			}) 
 
 		worker
 			.progress(function(done, total){
