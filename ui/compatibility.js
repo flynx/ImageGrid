@@ -349,40 +349,6 @@ if(window.CEF_dumpJSON != null){
 								deferred.resolve()
 							}
 						})
-
-
-						/*
-						var cmd = 'vips im_shrink "$IN:$RSCALE" "$OUT:$COMPRESSION" $FACTOR $FACTOR'
-							.replace(/\$IN/g, osPath(source))
-							.replace(/\$RSCALE/g, rscale)
-							.replace(/\$OUT/g, preview_path)
-							.replace(/\$COMPRESSION/g, compression)
-							.replace(/\$FACTOR/g, factor)
-
-						//console.log(cmd)
-
-						proc.exec(cmd, function(error, stdout, stderr){
-							if(error != null){
-								//console.error('>>> Error: preview:', stderr)
-								deferred.notify(gid, size, 'error', stderr)
-								deferred.reject()
-
-							} else {
-								// XXX use real size of the preview generated (???)
-								//console.log('>>> Preview:', name, '('+size+'): Done.')
-								deferred.notify(gid, size, 'done')
-								// update the image structure...
-								if(!('preview' in img)){
-									img.preview = {}
-								}
-								img.preview[size+'px'] = './' + cache_dir +'/'+ preview_path.split(cache_dir).pop()
-								// mark image dirty...
-								imageUpdated(gid)
-								// we are done...
-								deferred.resolve()
-							}
-						})
-						*/
 					})
 				})
 			}(size, target_path, deferred)]

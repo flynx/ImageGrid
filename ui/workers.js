@@ -50,6 +50,7 @@ function getWorkerProgressFloatingContainer(mode, parent){
 //
 // XXX add a clean removal scheme...
 // XXX should this have a pause button???
+// XXX make this understand deferred workers...
 function getWorkerProgressBar(name, worker, container){
 	container = container == null 
 		? getWorkerProgressFloatingContainer() 
