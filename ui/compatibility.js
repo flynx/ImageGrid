@@ -118,6 +118,7 @@ if(window.CEF_dumpJSON != null){
 		})
 	}
 
+	USE_EXEC = false
 	// XXX this uses vips...
 	window.getVipsField = function(field, source){
 		if(source in IMAGES){
@@ -125,12 +126,30 @@ if(window.CEF_dumpJSON != null){
 			var source = normalizePath(img.path)
 		}
 		var getter = $.Deferred()
-		var cmd = 'vips im_header_string "$FIELD" "$IN"'
-			.replace(/\$IN/g, osPath(source))
-			.replace(/\$FIELD/g, field)
-		proc.exec(cmd, function(error, stdout, stderr){
-			getter.resolve(stdout.trim())
-		})
+
+		// exec...
+		if(USE_EXEC){
+			var cmd = 'vips im_header_string "$FIELD" "$IN"'
+				.replace(/\$IN/g, osPath(source))
+				.replace(/\$FIELD/g, field)
+			proc.exec(cmd, function(error, stdout, stderr){
+				getter.resolve(stdout.trim())
+			})
+
+		// spawn...
+		// NOTE: this should have significantly less overhead than running a shell...
+		} else {
+			var p = proc.spawn('vips', ['im_header_string', field, osPath(source)])
+			p.stdout.on('data', function(data){
+					getter.resolve(data.toString().trim())
+				})
+			/*
+			p.on('close', function(code){
+					getter.resolve(code)
+				})
+			*/
+		}
+
 		return getter
 	}
 
