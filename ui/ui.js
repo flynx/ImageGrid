@@ -472,7 +472,7 @@ function getProgressContainer(mode, parent){
 // Make or get progress bar by name...
 //
 // Events:
-// 	- progressUpdate
+// 	- progressUpdate (done, total)
 // 		Triggered by user to update progress bar state.
 //
 // 		takes two arguments:

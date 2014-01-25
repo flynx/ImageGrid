@@ -79,7 +79,20 @@ function statusNotify(prefix, loader, not_queued){
 	}
 	return loader
 		.progress(function(){
-			var args = Array.apply(null, arguments)
+			var args = args2array(arguments)
+
+			var getter = args[args.length-1]
+			if(getter != null && getter.isResolved != null){
+				args.pop()
+					.done(function(){
+						report(args.join(': '))
+					})
+					.fail(function(){
+						// XXX
+					})
+				return
+			}
+
 			if(prefix != null && prefix != ''){
 				args.splice(0, 0, prefix)
 			}
@@ -102,21 +115,23 @@ function statusNotify(prefix, loader, not_queued){
 //
 // Will return "from" object.
 function bubbleProgress(prefix, from, to, only_progress){
+	only_progress = only_progress == null ? false : only_progress
+
 	from
 		.progress(function(){ 
-			var args = Array.apply(null, arguments)
+			var args = args2array(arguments)
 			prefix != null && args.splice(0, 0, prefix)
 			to.notify.apply(to, args) 
 		})
 
-	if(only_progress == null){
+	if(!only_progress){
 		from
 			.done(function(){
-				var args = Array.apply(null, arguments)
+				var args = args2array(arguments)
 				to.resolve.apply(to, args) 
 			})
 			.fail(function(){
-				var args = Array.apply(null, arguments)
+				var args = args2array(arguments)
 				prefix != null && args.splice(0, 0, prefix)
 				to.reject.apply(to, args) 
 			})
@@ -150,16 +165,15 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 	//path = path == dfl ? '.' : path
 	path = pparts.join('/')
 
-	var res = $.Deferred()
+	var tracker = $.Deferred()
 	
 	if(dfl == ''){
-		return res.reject()
+		return tracker.reject()
 	}
 
 	// can't find diffs if can't list dirs...
 	if(window.listDir == null && (pattern != null || diff_pattern != null)){
-		res.notify('Unsupported', 'directory listing.')
-		return res.reject('listDir unsupported.')
+		return tracker.reject('listDir unsupported.')
 	}
 
 	// find the latest...
@@ -181,20 +195,27 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 		diff_pattern = RegExp(diff_pattern)
 		var diff_data = [diff_data]
 		var diffs_names = $.map(listDir(path), function(e){ 
-			//return diff_pattern.test(e) ? e : null
 			return diff_pattern.test(e) && e.split('-')[0] >= base_date ? e : null
 		}).sort()
 		diff = $.when.apply(null, $.map(diffs_names, function(e, i){
-					return $.getJSON(path +'/'+ e)
+					var getter = $.getJSON(path +'/'+ e)
 						.done(function(data){
+							// NOTE: we are not using push here so as to
+							// 		keep the sort order...
 							diff_data[i+1] = data
-							res.notify('Loaded', e)
 						})
-						.fail(function(){
-							// XXX should we kill the load here???
-							res.notify('Loading', e, 'Error')
+						// XXX this is a hack...
+						.always(function(){
+							tracker.notify(e, getter)
 						})
+					/*
+					// XXX the problem here is if we miss this, then there
+					// 		is no chance to get it back...
+					tracker.notify(e, getter)
+					*/
+					return getter
 				}))
+			// merge the diffs...
 			// NOTE: .then(...) handlers get different signature args 
 			// 		depending on the number of arguments to .when(...)...
 			.then(function(){
@@ -204,31 +225,30 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 	} 
 
 	// load the main file and merge the diff with it...
-	$.when(diff, $.getJSON(path +'/'+ file))
+	var getter = $.getJSON(path +'/'+ file)
+		.always(function(){
+			tracker.notify(file, getter)
+		})
+	$.when(diff, getter)
 		.done(function(_, json){
 			json = json[0]
-
-			res.notify('Loaded', file)
 
 			// merge diffs...
 			if(Object.keys(diff_data).length != 0){
 				$.extend(json, diff_data)
-				res.notify('Merged')
 			}
 
-			res.resolve(json)
+			tracker.resolve(json)
 		})
 		.fail(function(){
-			res.notify('Loading', file, 'Error')
-
 			if(default_data != null){
-				return res.resolve(default_data)
+				tracker.resolve(default_data)
 			} else {
-				return res.reject(file)
+				tracker.reject()
 			}
 		})
 
-	return res
+	return tracker
 }
 
 
