@@ -72,6 +72,7 @@ function makeDiffFilePattern(base, diff, ext){
 //
 // Will return the original deferred.
 function statusNotify(prefix, loader, not_queued){
+	not_queued = not_queued == null ? true : not_queued
 	var report = not_queued == true ? showStatus : showStatusQ
 	if(loader == null){
 		loader = prefix
@@ -88,7 +89,7 @@ function statusNotify(prefix, loader, not_queued){
 						report(args.join(': '))
 					})
 					.fail(function(){
-						// XXX
+						showErrorStatus(args.join(': '))
 					})
 				return
 			}
@@ -101,6 +102,39 @@ function statusNotify(prefix, loader, not_queued){
 				return showErrorStatus(args.join(': '))
 			}
 			return report(args.join(': '))
+		})
+}
+
+
+// XXX
+function statusProgress(msg, loader){
+	var progress = progressBar(msg)
+	var total = 0
+	var done = 0
+
+	return loader
+		.done(function(){
+			// XXX why does this close the progress bar right away???
+			closeProgressBar(progress)
+		})
+		.progress(function(){
+			var args = args2array(arguments)
+			var getter = args[args.length-1]
+			total += 1
+
+			// the getter is a deferred...
+			if(getter != null && getter.isResolved != null){
+				args.pop()
+					.always(function(){
+						done += 1
+						updateProgressBar(progress, done, total)
+					})
+
+			// no getter...
+			} else {
+				done += 1
+				updateProgressBar(progress, done, total)
+			}
 		})
 }
 
@@ -204,7 +238,9 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 							// 		keep the sort order...
 							diff_data[i+1] = data
 						})
-						// XXX this is a hack...
+						// XXX need to notify as early as possible but doing
+						// 		it outside this (see below) will notify BEFORE
+						// 		anyone's listening...
 						.always(function(){
 							tracker.notify(e, getter)
 						})
@@ -213,6 +249,7 @@ function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
 					// 		is no chance to get it back...
 					tracker.notify(e, getter)
 					*/
+
 					return getter
 				}))
 			// merge the diffs...
