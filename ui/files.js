@@ -175,7 +175,7 @@ function bubbleProgress(prefix, from, to, only_progress){
 }
 
 
-// Semi-generic deferred file loader
+// Semi-generic deferred JSON file loader
 //
 // if pattern is given, then search for the latest (ordered last) file 
 // and load that.
@@ -187,13 +187,12 @@ function bubbleProgress(prefix, from, to, only_progress){
 // if default_data is then not finding a file will not fail, instead the
 // default_data will be the resolved data.
 //
-// NOTE: this expects a file to be JSON.
 // NOTE: if diffs are available this expects the file to contain an object,
-// 		and will extend that object.
+// 		and will extend ($.extend(..)) that object.
 // NOTE: if neither of dfl, pattern or diff_pattern are given, then this
 // 		is essentially the same as $.getJSON(...)
 // NOTE: this needs listDir(...) to search for latest versions of files.
-function loadLatestFile(path, dfl, pattern, diff_pattern, default_data){
+function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data){
 	var pparts = path.split(/[\/\\]/)
 	dfl = dfl == null ? pparts.pop() : dfl
 	//path = path == dfl ? '.' : path
@@ -301,7 +300,7 @@ function makeFileLoader(title, name, default_data, set_data, error, evt_name, sk
 		// default locations...
 		if(path == null){
 			var base = normalizePath(CONFIG.cache_dir_var)
-			var loader = loadLatestFile(base, 
+			var loader = loadLatestJSONFile(base, 
 					file_dfl, 
 					file_pattern,
 					null,
@@ -316,7 +315,7 @@ function makeFileLoader(title, name, default_data, set_data, error, evt_name, sk
 			base = path +'/'+ CONFIG.cache_dir
 
 			// XXX is this correct???
-			var loader = loadLatestFile(base, 
+			var loader = loadLatestJSONFile(base, 
 					path.split(base)[0], 
 					RegExp(path.split(base)[0]),
 					null,
@@ -487,7 +486,7 @@ function loadFileImages(path, no_load_diffs){
 	// default locations...
 	if(path == null){
 		var base = normalizePath(CONFIG.cache_dir_var) 
-		var loader = loadLatestFile(base, 
+		var loader = loadLatestJSONFile(base, 
 				makeBaseFilename(CONFIG.images_file), 
 				makeFilenamePattern(CONFIG.images_file), 
 				makeDiffFilePattern(CONFIG.images_file))
@@ -495,14 +494,14 @@ function loadFileImages(path, no_load_diffs){
 	// explicit base dir...
 	} else if(!/\.json$/i.test(path)) {
 		var base = normalizePath(path +'/'+ CONFIG.cache_dir_var) 
-		var loader = loadLatestFile(base, 
+		var loader = loadLatestJSONFile(base, 
 				makeBaseFilename(CONFIG.images_file), 
 				makeFilenamePattern(CONFIG.images_file), 
 				makeDiffFilePattern(CONFIG.images_file))
 
 	// explicit path...
 	} else {
-		var loader = loadLatestFile(normalizePath(path))
+		var loader = loadLatestJSONFile(normalizePath(path))
 	}
 
 	bubbleProgress('Images', loader, res)
@@ -590,7 +589,7 @@ function loadFileState(path, prefix){
 	var res = $.Deferred()
 
 	bubbleProgress(prefix,
-			loadLatestFile(path, 
+			loadLatestJSONFile(path, 
 				makeBaseFilename(CONFIG.data_file), 
 				makeFilenamePattern(CONFIG.data_file)), res, true)
 		.done(function(json){
@@ -614,7 +613,7 @@ function loadFileState(path, prefix){
 						// load current position...
 						// added on 2.2
 						bubbleProgress(prefix,
-								loadLatestFile(path, 
+								loadLatestJSONFile(path, 
 									makeBaseFilename(CONFIG.current_file),
 									null,
 									null,
