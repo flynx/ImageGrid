@@ -110,6 +110,19 @@ Roadmap
 
 [_] 32% Gen 3 current todo
 	[_] 64% High priority
+		[_] BUG: sorting (dialog) will mess up the order...
+		| Procedure:
+		| 	- shift-s + sort in a way that changes the order
+		| 	- move next till the spot where the order changed
+		|		-- the next/prev action will jump around...
+		|
+		| probably due to a bug in reloading...
+		|
+		| NOTE: sorting is done correctly...
+		|
+		| Workaround:
+		| 	- sort, save, then F5
+		| 	
 		[_] BUG: sorting breaks when at or near the end of a ribbon...
 		|
 		| Race condition...
