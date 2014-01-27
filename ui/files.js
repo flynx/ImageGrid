@@ -209,10 +209,13 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data){
 		return tracker.reject('listDir unsupported.')
 	}
 
+	var file_list = null
+
 	// find the latest...
 	if(pattern != null){
+		file_list = listDir(path)
 		pattern = RegExp(pattern)
-		var file = $.map(listDir(path), function(e){ 
+		var file = $.map(file_list, function(e){ 
 			return pattern.test(e) ? e : null
 		}).sort().reverse()[0]
 	}
@@ -225,9 +228,10 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data){
 
 	// collect and merge diffs...
 	if(diff_pattern != null){
+		file_list = file_list == null ? listDir(path) : file_list
 		diff_pattern = RegExp(diff_pattern)
 		var diff_data = [diff_data]
-		var diffs_names = $.map(listDir(path), function(e){ 
+		var diffs_names = $.map(file_list, function(e){ 
 			return diff_pattern.test(e) && e.split('-')[0] >= base_date ? e : null
 		}).sort()
 		diff = $.when.apply(null, $.map(diffs_names, function(e, i){
