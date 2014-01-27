@@ -685,12 +685,13 @@ function makeDeferredPool(size, paused){
 		queue: [],
 		size: size,
 
+		// XXX do we need to hide or expose them and use their API???
 		_event_handlers: {
-			'deplete': [],
-			'progress': [],
-			'pause': [],
-			'resume': [],
-			'fail': []
+			deplete: $.Callbacks(),
+			progress: $.Callbacks(),
+			pause: $.Callbacks(),
+			resume: $.Callbacks(),
+			fail: $.Callbacks()
 		},
 
 		_paused: paused,
@@ -718,9 +719,7 @@ function makeDeferredPool(size, paused){
 				// prepare to remove self from pool...
 				var i = pool.indexOf(worker)
 
-				Pool._event_handlers['progress'].forEach(function(func){
-					func(pool.length - pool.len(), pool.length + queue.length)
-				})
+				Pool._event_handlers.progress.fire(pool.length - pool.len(), pool.length + queue.length)
 
 				// remove self from queue...
 				delete pool[i]
@@ -735,9 +734,7 @@ function makeDeferredPool(size, paused){
 				if(that._paused == true){
 					// if pool is empty fire the pause event...
 					if(pool.len() == 0){
-						Pool._event_handlers['pause'].forEach(function(func){
-							func()
-						})
+						Pool._event_handlers.pause.fire()
 					}
 					return
 				}
@@ -756,18 +753,14 @@ function makeDeferredPool(size, paused){
 					// 		pushed to pool just before it's "compacted"...
 					pool.length = 0
 				
-					that._event_handlers['deplete'].forEach(function(func){
-						func(l)
-					})
+					that._event_handlers.deplete.fire(l)
 				}
 
 				// keep the pool full...
 				that._fill()
 			})
 			.fail(function(){
-				Pool._event_handlers['fail'].forEach(function(func){
-					func(pool.length - pool.len(), pool.length + queue.length)
-				})
+				Pool._event_handlers.fail.fire(pool.length - pool.len(), pool.length + queue.length)
 				deferred.reject.apply(deferred, arguments)
 			})
 			.progress(function(){
@@ -864,16 +857,16 @@ function makeDeferredPool(size, paused){
 
 	// Generic event handlers...
 	Pool.on = function(evt, handler){
-		this._event_handlers[evt].push(handler)
+		this._event_handlers[evt].add(handler)
 		return this
 	}
 	// NOTE: if this is not given a handler, it will clear all handlers 
 	// 		from the given event...
 	Pool.off = function(evt, handler){
 		if(handler != null){
-			this._event_handlers[evt].splice(this._event_handlers[evt].indexOf(handler), 1)
+			this._event_handlers[evt].remove(handler)
 		} else {
-			this._event_handlers[evt] = []
+			this._event_handlers[evt].empty()
 		}
 		return this
 	}
