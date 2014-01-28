@@ -2181,6 +2181,8 @@ function updateImages(list, size, cmp){
 //
 // This is similar to getGIDsAround(..) but will load images into the 
 // viewer...
+//
+// XXX make a smarter common section handling...
 function loadImagesAround(count, gid, ribbon, data, force_count, ignore_common_sections){
 	// default values...
 	data = data == null ? DATA : data
@@ -2320,6 +2322,9 @@ function rollImages(n, ribbon, extend, no_compensate_shift){
 // 		structure and do a fast reload
 // NOTE: if the order of images has changed, reuse_current_structure must 
 // 		be null or false, otherwise this will not produce a correct result.
+//
+// XXX reuse_current_structure will not work correctly until loadImagesAround(..)
+// 		ignores section content...
 function reloadViewer(reuse_current_structure, images_per_screen){
 	var ribbons_set = $('.ribbon-set')
 	var current = DATA.current
@@ -2413,7 +2418,7 @@ function updateRibbonOrder(no_reload_viewer){
 		DATA.ribbons[i] = fastSortGIDsByOrder(DATA.ribbons[i])
 	}
 	if(!no_reload_viewer){
-		reloadViewer(true)
+		reloadViewer(false)
 	}
 }
 

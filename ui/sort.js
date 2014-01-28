@@ -360,9 +360,12 @@ function horizontalShiftImage(image, direction){
 	// NOTE: in a race condition this may still overwrite the order someone
 	// 		else is working on, the data will be consistent...
 	var order = DATA.order.slice()
-	order.splice(order.indexOf(gid), 1)
+	var from = order.indexOf(gid)
+	order.splice(from, 1)
 	order.splice(order.indexOf(target) + (direction == 'next'? 1 : 0), 0, gid)
+	var to = order.indexOf(gid)
 	// do the dirty work...
+	// ...replace the order with the new order...
 	DATA.order.splice.apply(DATA.order, [0, DATA.order.length].concat(order))
 
 	// just update the ribbons, no reloading needed...
@@ -375,7 +378,7 @@ function horizontalShiftImage(image, direction){
 	updateImages()
 	dataUpdated()
 
-	$('.viewer').trigger('horizontalShiftedImage', [gid, direction])
+	$('.viewer').trigger('horizontalShiftedImage', [gid, direction, from, to])
 
 	return image
 }

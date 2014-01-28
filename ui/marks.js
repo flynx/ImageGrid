@@ -279,21 +279,31 @@ function shiftGIDToOrderInList(gid, direction, list){
 	}
 	return false
 }
+
+
 // a sparse version of shiftGIDToOrderInList(..)...
-function shiftGIDInSparseList(gid, list){
-	var n = DATA.order.indexOf(gid)
-	var o = list.indexOf(gid)
+//
+// returns true if list is updated....
+function shiftGIDInSparseList(gid, from, to, list){
+	if(list[from] == null && list[to] == null){
+		return false
+	}
+
+	var cleanup = list.indexOf(gid) < 0
 
 	// move the marked gid...
-	list.splice(o, 1)
-	list.splice(n, 0, gid)
+	list.splice(from, 1)
+	list.splice(to, 0, gid)
 
-	// test if there are any marked images between n and o...
-	var shift = compactSparceList(list.slice(Math.min(n, o)+1, Math.max(n, o)))
-	if(shift.length > 0){
-		return true
+	// if gid was never in list, we must remove leave things as we got 
+	// them, and remove it again...
+	// NOTE: essentially, we are using gid as a marker, as we can't 
+	// 		.splice(..) an undefined into a list...
+	if(cleanup){
+		delete list[to]
 	}
-	return false
+
+	return true
 }
 
 
@@ -787,8 +797,8 @@ function setupMarks(viewer){
 			MARKED = populateSparceGIDList(MARKED)
 			marksUpdated()
 		})
-		.on('horizontalShiftedImage', function(evt, gid, direction){
-			if(shiftGIDInSparseList(gid, MARKED)){
+		.on('horizontalShiftedImage', function(evt, gid, direction, from, to){
+			if(shiftGIDInSparseList(gid, from, to, MARKED)){
 				marksUpdated()
 			}
 		})

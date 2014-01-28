@@ -109,8 +109,9 @@ Roadmap
 
 
 [_] 32% Gen 3 current todo
-	[_] 64% High priority
-		[_] BUG: sorting (dialog) will mess up the order...
+	[_] 65% High priority
+		[_] make buildcache sort images via data AND file name...
+		[X] BUG: sorting (dialog) will mess up the order...
 		| Procedure:
 		| 	- shift-s + sort in a way that changes the order
 		| 	- move next till the spot where the order changed
@@ -123,7 +124,7 @@ Roadmap
 		| Workaround:
 		| 	- sort, save, then F5
 		| 	
-		[_] BUG: sorting breaks when at or near the end of a ribbon...
+		[X] BUG: sorting breaks when at or near the end of a ribbon...
 		|
 		| Race condition...
 		|
@@ -560,6 +561,7 @@ Roadmap
 		| 	drops to last placeholder
 		|
 		[_] single image mode transition (alpha-blend/fade/none)
+		[X] BUG: shifting image left/right marks and bookmarks it...
 		[X] Might be a good idea to use sparse arrays for things like marks...
 		| eliminate:	
 		| 	- need for keeping things sorted all the time

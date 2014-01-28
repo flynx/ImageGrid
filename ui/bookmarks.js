@@ -175,8 +175,8 @@ function setupBookmarks(viewer){
 			BOOKMARKS = populateSparceGIDList(BOOKMARKS)
 			bookmarksUpdated()
 		})
-		.on('horizontalShiftedImage', function(evt, gid, direction){
-			if(shiftGIDInSparseList(gid, BOOKMARKS)){
+		.on('horizontalShiftedImage', function(evt, gid, direction, from, to){
+			if(shiftGIDInSparseList(gid, from, to, BOOKMARKS)){
 				bookmarksUpdated()
 			}
 		})
