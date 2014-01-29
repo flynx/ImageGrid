@@ -621,6 +621,12 @@ jQuery.fn.sortChildren = function(func){
 // 			Test if any workers are running in the pool.
 // 			NOTE: this will return false ONLY when the pool is empty.
 //
+// 		.isPaused() -> bool
+// 			Test if pool is in a paused state.
+// 			NOTE: some workers may sill be finishing up so if you want
+// 					to test whether any workers are still running use
+// 					.isRunning()
+//
 //
 // Event handler/callback registration:
 //
@@ -822,10 +828,6 @@ function makeDeferredPool(size, paused){
 		return this
 	}
 
-	Pool.isRunning = function(){
-		return this.pool.len() > 0
-	}
-
 	// NOTE: this will not directly cause .isRunning() to return false 
 	// 		as this will not directly spot all workers, it will just 
 	// 		pause the queue and the workers that have already started
@@ -852,6 +854,13 @@ function makeDeferredPool(size, paused){
 			this.on('resume', func)
 		}
 		return this
+	}
+
+	Pool.isPaused = function(){
+		return this._paused
+	}
+	Pool.isRunning = function(){
+		return this.pool.len() > 0
 	}
 
 

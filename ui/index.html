@@ -168,7 +168,10 @@ $(function(){
 		BASE_URL = localStorage[data_attr + '_BASE_URL']
 
 		//var loading = statusNotify(loadDir(BASE_URL))
-		var loading = statusProgress('Loading', statusNotify(loadDir(BASE_URL)))
+
+		//var loading = statusProgress('Loading', statusNotify(loadDir(BASE_URL)))
+
+		var loading = statusNotify(loadDir(BASE_URL))
 
 	} else {
 		// everything is in localStorage...

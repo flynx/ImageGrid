@@ -285,18 +285,23 @@ function shiftGIDToOrderInList(gid, direction, list){
 //
 // returns true if list is updated....
 function shiftGIDInSparseList(gid, from, to, list){
-	if(list[from] == null && list[to] == null){
+	// XXX do we need this???
+	if(list[from] == null 
+			&& list[to] == null 
+			// NOTE: if there is something between 'from' and 'to' it must 
+			// 		be shifted...
+			&& compactSparceList(list.slice(from, to)).length == 0){
 		return false
 	}
 
+	// if gid was never in list, we must it and remove leave things as 
+	// we got them, and remove it again...
 	var cleanup = list.indexOf(gid) < 0
 
 	// move the marked gid...
 	list.splice(from, 1)
 	list.splice(to, 0, gid)
 
-	// if gid was never in list, we must remove leave things as we got 
-	// them, and remove it again...
 	// NOTE: essentially, we are using gid as a marker, as we can't 
 	// 		.splice(..) an undefined into a list...
 	if(cleanup){

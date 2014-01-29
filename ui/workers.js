@@ -113,7 +113,8 @@ function killAllWorkers(){
 		.done(function(){
 			console.log('Worker: All workers stopped.')
 			res.resolve()
-			$('.progress-bar').remove()
+			// XXX do we need this???
+			//$('.progress-bar').remove()
 		})
 
 	return res

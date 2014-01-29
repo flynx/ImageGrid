@@ -107,12 +107,14 @@ function statusNotify(prefix, loader, not_queued){
 
 
 // XXX
-function statusProgress(msg, loader){
+function statusProgress(msg, tracker){
+	tracker = tracker == null ? $.Deferred() : null
+
 	var progress = progressBar(msg)
 	var total = 0
 	var done = 0
 
-	return loader
+	return tracker
 		.done(function(){
 			// XXX why does this close the progress bar right away???
 			closeProgressBar(progress)
@@ -133,8 +135,9 @@ function statusProgress(msg, loader){
 			// no getter...
 			} else {
 				done += 1
-				updateProgressBar(progress, done, total)
 			}
+
+			updateProgressBar(progress, done, total)
 		})
 }
 
@@ -192,21 +195,21 @@ function bubbleProgress(prefix, from, to, only_progress){
 // NOTE: if neither of dfl, pattern or diff_pattern are given, then this
 // 		is essentially the same as $.getJSON(...)
 // NOTE: this needs listDir(...) to search for latest versions of files.
-function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data){
+function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data, tracker){
 	var pparts = path.split(/[\/\\]/)
 	dfl = dfl == null ? pparts.pop() : dfl
 	//path = path == dfl ? '.' : path
 	path = pparts.join('/')
 
-	var tracker = $.Deferred()
+	var res = $.Deferred()
 	
 	if(dfl == ''){
-		return tracker.reject()
+		return res.reject()
 	}
 
 	// can't find diffs if can't list dirs...
 	if(window.listDir == null && (pattern != null || diff_pattern != null)){
-		return tracker.reject('listDir unsupported.')
+		return res.reject('listDir unsupported.')
 	}
 
 	var file_list = null
@@ -245,13 +248,11 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data){
 						// 		it outside this (see below) will notify BEFORE
 						// 		anyone's listening...
 						.always(function(){
-							tracker.notify(e, getter)
+							res.notify(e, getter)
 						})
-					/*
 					// XXX the problem here is if we miss this, then there
 					// 		is no chance to get it back...
-					tracker.notify(e, getter)
-					*/
+					tracker != null && tracker.notify(e, getter)
 
 					return getter
 				}))
@@ -267,7 +268,8 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data){
 	// load the main file and merge the diff with it...
 	var getter = $.getJSON(path +'/'+ file)
 		.always(function(){
-			tracker.notify(file, getter)
+			tracker != null && tracker.notify(file, getter)
+			res.notify(file, getter)
 		})
 	$.when(diff, getter)
 		.done(function(_, json){
@@ -278,23 +280,23 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data){
 				$.extend(json, diff_data)
 			}
 
-			tracker.resolve(json)
+			res.resolve(json)
 		})
 		.fail(function(){
 			if(default_data != null){
-				tracker.resolve(default_data)
+				res.resolve(default_data)
 			} else {
-				tracker.reject()
+				res.reject()
 			}
 		})
 
-	return tracker
+	return res
 }
 
 
 // NOTE: config change to name will not affect this...
 function makeFileLoader(title, name, default_data, set_data, error, evt_name, skip_reg){
-	var _loader = function(path){
+	var _loader = function(path, tracker){
 		var res = $.Deferred()
 
 		// NOTE: these are static!!
@@ -308,7 +310,8 @@ function makeFileLoader(title, name, default_data, set_data, error, evt_name, sk
 					file_dfl, 
 					file_pattern,
 					null,
-					default_data)
+					default_data,
+					tracker)
 		
 		// explicit path...
 		// XXX need to account for paths without a CONFIG.cache_dir
@@ -323,7 +326,8 @@ function makeFileLoader(title, name, default_data, set_data, error, evt_name, sk
 					path.split(base)[0], 
 					RegExp(path.split(base)[0]),
 					null,
-					default_data)
+					default_data,
+					tracker)
 		}
 
 		res.done(set_data)
@@ -482,7 +486,7 @@ function ribbonsFromFavDirs(path, images, cmp, dir_name){
 // Load images from file
 //
 // This will also merge all diff files.
-function loadFileImages(path, no_load_diffs){
+function loadFileImages(path, tracker, no_load_diffs){
 	no_load_diffs = window.listDir == null ? true : no_load_diffs 
 
 	var res = $.Deferred()
@@ -493,7 +497,9 @@ function loadFileImages(path, no_load_diffs){
 		var loader = loadLatestJSONFile(base, 
 				makeBaseFilename(CONFIG.images_file), 
 				makeFilenamePattern(CONFIG.images_file), 
-				makeDiffFilePattern(CONFIG.images_file))
+				makeDiffFilePattern(CONFIG.images_file),
+				null,
+				tracker)
 	
 	// explicit base dir...
 	} else if(!/\.json$/i.test(path)) {
@@ -501,11 +507,13 @@ function loadFileImages(path, no_load_diffs){
 		var loader = loadLatestJSONFile(base, 
 				makeBaseFilename(CONFIG.images_file), 
 				makeFilenamePattern(CONFIG.images_file), 
-				makeDiffFilePattern(CONFIG.images_file))
+				makeDiffFilePattern(CONFIG.images_file),
+				null,
+				tracker)
 
 	// explicit path...
 	} else {
-		var loader = loadLatestJSONFile(normalizePath(path))
+		var loader = loadLatestJSONFile(normalizePath(path), null, null, null, null, tracker)
 	}
 
 	bubbleProgress('Images', loader, res)
@@ -576,7 +584,7 @@ function saveFileImagesDiff(name, date){
 // Load images, ribbons and run registered load callbacks...
 //
 // XXX add support for explicit filenames...
-function loadFileState(path, prefix){
+function loadFileState(path, prefix, tracker){
 	prefix = prefix == null ? 'Data' : prefix
 	prefix = prefix === false ? null : prefix
 
@@ -595,7 +603,12 @@ function loadFileState(path, prefix){
 	bubbleProgress(prefix,
 			loadLatestJSONFile(path, 
 				makeBaseFilename(CONFIG.data_file), 
-				makeFilenamePattern(CONFIG.data_file)), res, true)
+				makeFilenamePattern(CONFIG.data_file),
+				null,
+				null,
+				tracker), 
+			res, 
+			true)
 		.done(function(json){
 			setBaseURL(base)
 
@@ -621,13 +634,16 @@ function loadFileState(path, prefix){
 									makeBaseFilename(CONFIG.current_file),
 									null,
 									null,
-									DATA.current), res, true)
+									DATA.current,
+									tracker), 
+								res, 
+								true)
 							.done(function(cur){
 								DATA.current = cur
 							}),
 						// load images...
 						bubbleProgress(prefix,
-							loadFileImages(base), res, true),
+							loadFileImages(base, tracker), res, true),
 							//loadFileImages(DATA.image_file != null ?
 							//		normalizePath(DATA.image_file, base) 
 							//		: null), res, true),
@@ -774,9 +790,23 @@ function loadRawDir(path, no_preview_processing, prefix){
 //
 // NOTE: this will create an images.json file in cache on opening an 
 // 		un-cached dir (XXX is this correct???)
-function loadDir(path, no_preview_processing, prefix){
+// NOTE: if tracker === false no tracker will get created...
+function loadDir(path, no_preview_processing, prefix, tracker){
 	prefix = prefix == null ? 'Data' : prefix
 	prefix = prefix === false ? null : prefix
+
+	var res = $.Deferred()
+
+	if(tracker == null){
+		var tracker = statusProgress('Loading')
+		// XXX is this the right way to go???
+		res.done(function(){
+			tracker.resolve()
+		})
+	}
+	if(tracker == false){
+		tracker == null
+	}
 
 	// stop all workers running on current image set before we 
 	// move to the next...
@@ -788,8 +818,6 @@ function loadDir(path, no_preview_processing, prefix){
 	path = normalizePath(path)
 	var orig_path = path
 	var data
-
-	var res = $.Deferred()
 
 	res.notify(prefix, 'Loading', path)
 
@@ -807,7 +835,7 @@ function loadDir(path, no_preview_processing, prefix){
 	}
 
 	bubbleProgress(prefix, 
-			loadFileState(path, false), res, true)
+			loadFileState(path, false, tracker), res, true)
 		.done(function(){
 			res.resolve()
 		})
