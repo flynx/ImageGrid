@@ -80,7 +80,7 @@ function statusNotify(prefix, loader, not_queued){
 	}
 	return loader
 		.progress(function(){
-			var args = args2array(arguments)
+			var args = $.makeArray(arguments)
 
 			var getter = args[args.length-1]
 			if(getter != null && getter.isResolved != null){
@@ -120,7 +120,7 @@ function statusProgress(msg, tracker){
 			closeProgressBar(progress)
 		})
 		.progress(function(){
-			var args = args2array(arguments)
+			var args = $.makeArray(arguments)
 			var getter = args[args.length-1]
 			total += 1
 
@@ -156,7 +156,7 @@ function bubbleProgress(prefix, from, to, only_progress){
 
 	from
 		.progress(function(){ 
-			var args = args2array(arguments)
+			var args = $.makeArray(arguments)
 			prefix != null && args.splice(0, 0, prefix)
 			to.notify.apply(to, args) 
 		})
@@ -164,11 +164,11 @@ function bubbleProgress(prefix, from, to, only_progress){
 	if(!only_progress){
 		from
 			.done(function(){
-				var args = args2array(arguments)
+				var args = $.makeArray(arguments)
 				to.resolve.apply(to, args) 
 			})
 			.fail(function(){
-				var args = args2array(arguments)
+				var args = $.makeArray(arguments)
 				prefix != null && args.splice(0, 0, prefix)
 				to.reject.apply(to, args) 
 			})
@@ -244,14 +244,10 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data, trac
 							// 		keep the sort order...
 							diff_data[i+1] = data
 						})
-						// XXX need to notify as early as possible but doing
-						// 		it outside this (see below) will notify BEFORE
-						// 		anyone's listening...
 						.always(function(){
 							res.notify(e, getter)
 						})
-					// XXX the problem here is if we miss this, then there
-					// 		is no chance to get it back...
+
 					tracker != null && tracker.notify(e, getter)
 
 					return getter
@@ -268,8 +264,8 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data, trac
 	// load the main file and merge the diff with it...
 	var getter = $.getJSON(path +'/'+ file)
 		.always(function(){
-			tracker != null && tracker.notify(file, getter)
 			res.notify(file, getter)
+			tracker != null && tracker.notify(file, getter)
 		})
 	$.when(diff, getter)
 		.done(function(_, json){
