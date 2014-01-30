@@ -253,6 +253,9 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data, trac
 	// find the latest...
 	if(pattern != null){
 		file_list = listDir(path)
+		if(file_list == null){
+			return res.reject()
+		}
 		pattern = RegExp(pattern)
 		var file = $.map(file_list, function(e){ 
 			return pattern.test(e) ? e : null
@@ -268,6 +271,9 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data, trac
 	// collect and merge diffs...
 	if(diff_pattern != null){
 		file_list = file_list == null ? listDir(path) : file_list
+		if(file_list == null){
+			return res.reject()
+		}
 		diff_pattern = RegExp(diff_pattern)
 		var diff_data = [diff_data]
 		var diffs_names = $.map(file_list, function(e){ 
@@ -418,7 +424,6 @@ function makeFileLoader(title, name, default_data, set_data, error, evt_name, sk
 		return res
 	}
 	if(!skip_reg){ 
-		console.log('!!!!!!', title, skip_reg)
 		FILE_LOADERS.push(_loader)
 	}
 	return _loader
@@ -442,7 +447,8 @@ function makeFileSaver(title, file_dfl, get_data, skip_reg){
 }
 
 
-// mark file type as updated...
+// Mark file type as updated...
+//
 function fileUpdated(name){
 	if(FILES_UPDATED.indexOf(name) < 0 && name in FILE_SAVERS){
 		FILES_UPDATED.push(name)
@@ -450,10 +456,11 @@ function fileUpdated(name){
 }
 
 
-function runFileLoaders(prefix, res, tracker){
+// NOTE: this will bubble progress to next automatically...
+function runFileLoaders(prefix, next, tracker){
 	FILES_UPDATED = []
 	return $.when.apply(null, FILE_LOADERS.map(function(load){
-		return bubbleProgress(prefix, load(null, tracker), res, true)
+		return bubbleProgress(prefix, load(null, tracker), next, true)
 	}))
 }
 
@@ -478,6 +485,9 @@ function runFileSavers(path, date, all){
 
 // NOTE: this is not registered in file loaders as it needs to be called
 // 		explicitly before anything else is loaded...
+// NOTE: after v2.2 this will not load the current position as it's stored
+// 		in a separate file (current.json), see: loadFileState(..) for 
+// 		details...
 var loadFileData = makeFileLoader(
 		'Data', 
 		CONFIG.data_file, 
@@ -497,6 +507,7 @@ var loadFileData = makeFileLoader(
 		},
 		null,
 		null,
+		// stop from registering in FILE_LOADERS...
 		true)
 
 
@@ -639,6 +650,8 @@ function loadFileState(path, prefix, tracker){
 
 	var res = $.Deferred()
 
+	// XXX load config...
+
 	bubbleProgress(prefix,
 			loadFileData(path, tracker),
 			res, 
@@ -646,9 +659,8 @@ function loadFileState(path, prefix, tracker){
 		.done(function(json){
 			setBaseURL(base)
 
+			// load the rest of the files...
 			$.when(
-					// XXX load config...
-
 					// load current position...
 					// added on 2.2
 					bubbleProgress(prefix,
@@ -663,12 +675,13 @@ function loadFileState(path, prefix, tracker){
 						.done(function(cur){
 							DATA.current = cur
 						}),
+
 					// load images...
 					bubbleProgress(prefix,
 						loadFileImages(base, tracker), res, true),
+
 					// run registered loaders...
 					// added on 2.1
-					// XXX bubbleProgress???
 					runFileLoaders(prefix, res, tracker))
 				.done(function(){
 					$('.viewer').trigger('fileStateLoaded')

@@ -61,6 +61,9 @@ if(window.CEF_dumpJSON != null){
 	// Things ImageGrid needs...
 	// XXX do we need assync versions??
 	window.listDir = function(path){
+		if(!fs.existsSync(osPath(path))){
+			return null
+		}
 		return fs.readdirSync(osPath(path))
 	}
 	// XXX make this work across fs...
