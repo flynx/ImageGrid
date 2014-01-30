@@ -437,5 +437,18 @@ function filterImagesDialog(){
 
 
 
+/*********************************************************************/
+
+function setupCrop(viewer){
+	return viewer
+		// reset the crop stack when loading something...
+		.on('fileStateLoaded', function(){
+			CROP_STACK = []
+		})
+}
+SETUP_BINDINGS.push(setupCrop)
+
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
