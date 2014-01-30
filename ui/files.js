@@ -108,27 +108,36 @@ function statusNotify(prefix, loader, not_queued){
 
 // Report progress status via a progress bar...
 //
-// This will connect to a tracker (Deferred) and report progress based 
-// on progress notifications on the tracker object.
-//
 // 		<msg> (5 of 500)					x
 // 		|============>----------------------|
 //
 //
-// msg is the message displayed on the progress bar.
+// The tracker is optional, if not given a generic deferred object will
+// be created and used.
+//
+// If close_button is false, no close button will be dosplayed, hidden 
+// by default.
+//
+// Returns the tracker object.
+//
+// The progress is read of the tracker (Deferred) and reported based 
+// on progress notifications on it.
 //
 // Two types of notification are supported:
 // 	- deferred
 // 		the .progress(..) handler will receive a deferred as a last 
 // 		argument, this will in turn do two things:
-// 			1) increment the max value of the progress bar
+// 			1) increment the max value of the progress bar in place
 // 			2) when the defered is done, increment the value of the 
 // 				progress bar
 // 	- simple
 // 		increment both max and value of the progress bar
 //
-// The progress bar will go into a "done" state if the tracker is 
-// explicitly resolved.
+// The progress bar will go into a "done" state and close if the 
+// tracker deferred is explicitly resolved.
+//
+//
+// See: progressBar(..) for more details on the actual widget.
 //
 // NOTE: closing the progress bar will not do anything...
 function statusProgress(msg, tracker, close_button){
@@ -141,7 +150,7 @@ function statusProgress(msg, tracker, close_button){
 
 	return tracker
 		.done(function(){
-			// XXX why does this close the progress bar right away???
+			// XXX for some reason this does not allways display "done"
 			closeProgressBar(progress)
 		})
 		.progress(function(){
@@ -207,14 +216,14 @@ function bubbleProgress(prefix, from, to, only_progress){
 
 // Semi-generic deferred JSON file loader
 //
-// if pattern is given, then search for the latest (ordered last) file 
+// If pattern is given, then search for the latest (ordered last) file 
 // and load that.
 // else load the dfl file.
 //
-// if diff_pattern is given, then merge all matching files in order 
+// If diff_pattern is given, then merge all matching files in order 
 // (first to last) with the loaded "main" file
 //
-// if default_data is then not finding a file will not fail, instead the
+// If default_data is then not finding a file will not fail, instead the
 // default_data will be the resolved data.
 //
 // NOTE: if diffs are available this expects the file to contain an object,
@@ -317,6 +326,34 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data, trac
 }
 
 
+
+/**********************************************************************
+* File serialization framework...
+*/
+
+// Construct a JSON file loader...
+//
+// This will:
+// 	- create configured file loader
+// 	- register the loader in the FILE_LOADERS collection, unless 
+// 		skip_reg is true
+//
+// The loader will:
+// 	- get all the config data from CONFIG,
+// 	- load the file name from cache dir (see: loadLatestJSONFile(..)),
+// 	- if file does not exist use default_data
+// 	- call set_data to setup read data,
+// 	- trigger the evt_name event on the viewer when done,
+// 	- on load error call error function if given,
+// 	- report progress (see: bubbleProgress(..))
+//
+//
+// Also see:
+// 	makeFileSaver(..)
+// 	runFileLoaders(..)
+// 	runFileSavers(..)
+// 	fileUpdated(..)
+//
 // NOTE: config change to name will not affect this...
 function makeFileLoader(title, name, default_data, set_data, error, evt_name, skip_reg){
 	var _loader = function(path, tracker){
