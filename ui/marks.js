@@ -753,6 +753,7 @@ var loadFileMarks = makeFileLoader(
 		function(data){ 
 			MARKED = populateSparceGIDList(data)
 		},
+		null,
 		'marksLoaded')
 
 

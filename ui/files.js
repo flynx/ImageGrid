@@ -329,6 +329,24 @@ function loadLatestJSONFile(path, dfl, pattern, diff_pattern, default_data, trac
 
 /**********************************************************************
 * File serialization framework...
+*
+* This helps us define:
+* 	- named data type loader -- makeFileLoader(..)
+* 		- support different file versions -- load latest
+* 		- support a specific directory structure and centralized 
+* 			configuration
+* 	- named data type saver -- makeFileSaver(..)
+* 		- save a version
+* 		- support a specific directory structure and centralized 
+* 			configuration
+* 	- a way to mark named data type as modified -- fileUpdated(..)
+* 	- a way to load all registered data types -- runFileLoaders(..)
+* 	- a way to save modified data types -- runFileSavers(..)
+*
+* NOTE: saving/loading a diff is done manually, see:
+* 		- saveFileImages(..)
+* 		- saveFileImagesDiff(..)
+* 		- loadFileImages(..)
 */
 
 // Construct a JSON file loader...
@@ -374,17 +392,14 @@ function makeFileLoader(title, name, default_data, set_data, error, evt_name, sk
 					tracker)
 		
 		// explicit path...
-		// XXX need to account for paths without a CONFIG.cache_dir
 		} else {
 			path = normalizePath(path)
 			var base = path.split(CONFIG.cache_dir)[0]
-			//base = normalizePath(path +'/'+ CONFIG.cache_dir_var)
-			base = path +'/'+ CONFIG.cache_dir
+			base = base +'/'+ CONFIG.cache_dir
 
-			// XXX is this correct???
 			var loader = loadLatestJSONFile(base, 
-					path.split(base)[0], 
-					RegExp(path.split(base)[0]),
+					file_dfl, 
+					file_pattern,
 					null,
 					default_data,
 					tracker)
@@ -402,7 +417,10 @@ function makeFileLoader(title, name, default_data, set_data, error, evt_name, sk
 		}
 		return res
 	}
-	!skip_reg && FILE_LOADERS.push(_loader)
+	if(!skip_reg){ 
+		console.log('!!!!!!', title, skip_reg)
+		FILE_LOADERS.push(_loader)
+	}
 	return _loader
 }
 
@@ -432,10 +450,10 @@ function fileUpdated(name){
 }
 
 
-function runFileLoaders(prefix, res){
+function runFileLoaders(prefix, res, tracker){
 	FILES_UPDATED = []
 	return $.when.apply(null, FILE_LOADERS.map(function(load){
-		return bubbleProgress(prefix, load(), res, true)
+		return bubbleProgress(prefix, load(null, tracker), res, true)
 	}))
 }
 
@@ -455,8 +473,32 @@ function runFileSavers(path, date, all){
 
 
 
-/*********************************************************************/
+/************************************************************ Data ***/
 // XXX should this be here or in data.js???
+
+// NOTE: this is not registered in file loaders as it needs to be called
+// 		explicitly before anything else is loaded...
+var loadFileData = makeFileLoader(
+		'Data', 
+		CONFIG.data_file, 
+		null,
+		function(data){ 
+			// legacy format...
+			if(data.version == null){
+				json = convertDataGen1(data)
+				DATA = data.data
+				IMAGES = data.images
+				MARKED = []
+
+			// version 2.*
+			} else if(/2\.[0-9]*/.test(data.version)) {
+				DATA = data
+			}
+		},
+		null,
+		null,
+		true)
+
 
 var saveFileData = makeFileSaver(
 		'Data',
@@ -478,70 +520,7 @@ function dataUpdated(){
 
 
 
-/*********************************************************************/
-
-// Construct a ribbons hierarchy from the fav dirs structure
-//
-// NOTE: this depends on listDir(...)
-// NOTE: this assumes that images contain ALL the images...
-// NOTE: this assumes that all file names are unique...
-function ribbonsFromFavDirs(path, images, cmp, dir_name){
-	path = path == null ? getBaseURL() : path
-	images = images == null ? IMAGES : images
-	dir_name = dir_name == null ? 'fav' : dir_name
-
-	// build a reverse name-gid index for fast access...
-	var index = {}
-	var name
-	for(var gid in images){
-		name = getImageFileName(gid)
-		// XXX we assume that names are unique...
-		index[name] = gid
-	}
-
-	var ribbons = []
-	// add the base row...
-	var base = Object.keys(images)
-	ribbons.push(base)
-
-	var files = listDir(path)	
-	var cur_path = path
-	while(files.indexOf(dir_name) >= 0){
-		cur_path += '/' + dir_name
-		files = listDir(cur_path)
-		ribbon = []
-		// collect the images...
-		$.each(files, function(i, e){
-			var _gid = index[e]
-			// skip files not in index...
-			// NOTE: we do not need to filter the files by name as we 
-			// 		trust the index...
-			if(_gid == null){
-				return 
-			}
-			// remove the found item from each of the below ribbons...
-			$.each(ribbons, function(i ,e){
-				if(e.indexOf(_gid) != -1){
-					e.splice(e.indexOf(_gid), 1)
-				}
-			})
-
-			ribbon.push(_gid)
-		})
-		ribbons.push(ribbon)
-	}
-
-	// remove empty ribbons and sort the rest...
-	ribbons = $.map(ribbons, function(e){ 
-		return e.length > 0 ? [cmp == null ? e : e.sort(cmp)] : null 
-	})
-
-	return ribbons.reverse()
-}
-
-
-
-/*********************************************************************/
+/********************************************************** Images ***/
 
 // Load images from file
 //
@@ -593,34 +572,29 @@ function loadFileImages(path, tracker, no_load_diffs){
 
 // Save current images list to file
 //
-// If no name is given this will merge all the diffs and save a "clean"
-// (full) images.json file. Also removing the diff files.
-//
-// NOTE: this will use CONFIG.cache_dir as the location if no name is given.
-function saveFileImages(name, date, remove_diffs){
-	remove_diffs = remove_diffs == null ? false : remove_diffs
-	name = name == null ? normalizePath(CONFIG.cache_dir_var +'/'+ makeFilename(CONFIG.images_file, date)) : name
+var saveFileImages = makeFileSaver(
+		'Images',
+		CONFIG.images_file, 
+		function(){ 
+			IMAGES_UPDATED = []
+			IMAGES_CREATED = false
+			return IMAGES
+		},
+		true)
 
-	if(window.dumpJSON == null){
-		showErrorStatus('Can\'t save to file.')
-		return
-	}
 
-	// remove the diffs...
-	if(remove_diffs){
-		var diff_pattern = makeDiffFilePattern(CONFIG.images_file) 
-		$.each($.map(listDir(normalizePath(CONFIG.cache_dir_var)), function(e){ 
-				return diff_pattern.test(e) ? e : null
-			}), function(i, e){
-				showStatusQ('Removeing:', e)
-				removeFile(normalizePath(CONFIG.cache_dir_var +'/'+ e))
-			})
-	}
+function saveFileImagesAndRemoveDiffs(){
+	// save...
+	saveFileImages()
 
-	dumpJSON(name, IMAGES)
-
-	IMAGES_UPDATED = []
-	IMAGES_CREATED = false
+	// remove...
+	var diff_pattern = makeDiffFilePattern(CONFIG.images_file) 
+	$.each($.map(listDir(normalizePath(CONFIG.cache_dir_var)), function(e){ 
+			return diff_pattern.test(e) ? e : null
+		}), function(i, e){
+			showStatusQ('Removeing:', e)
+			removeFile(normalizePath(CONFIG.cache_dir_var +'/'+ e))
+		})
 }
 
 
@@ -640,6 +614,11 @@ function saveFileImagesDiff(name, date){
 	IMAGES_UPDATED = []
 }
 
+
+
+/**********************************************************************
+* Global loaders/savers
+*/
 
 // Load images, ribbons and run registered load callbacks...
 //
@@ -661,67 +640,42 @@ function loadFileState(path, prefix, tracker){
 	var res = $.Deferred()
 
 	bubbleProgress(prefix,
-			loadLatestJSONFile(path, 
-				makeBaseFilename(CONFIG.data_file), 
-				makeFilenamePattern(CONFIG.data_file),
-				null,
-				null,
-				tracker), 
+			loadFileData(path, tracker),
 			res, 
 			true)
 		.done(function(json){
 			setBaseURL(base)
 
-			// legacy format...
-			if(json.version == null){
-				json = convertDataGen1(json)
-				DATA = json.data
-				IMAGES = json.images
-				MARKED = []
-				reloadViewer()
-				res.resolve()
+			$.when(
+					// XXX load config...
 
-			// version 2.*
-			} else if(/2\.[0-9]*/.test(json.version)) {
-				DATA = json
-				$.when(
-						// XXX load config...
-
-						// load current position...
-						// added on 2.2
-						bubbleProgress(prefix,
-								loadLatestJSONFile(path, 
-									makeBaseFilename(CONFIG.current_file),
-									null,
-									null,
-									DATA.current,
-									tracker), 
-								res, 
-								true)
-							.done(function(cur){
-								DATA.current = cur
-							}),
-						// load images...
-						bubbleProgress(prefix,
-							loadFileImages(base, tracker), res, true),
-							//loadFileImages(DATA.image_file != null ?
-							//		normalizePath(DATA.image_file, base) 
-							//		: null), res, true),
-						// run registered loaders...
-						// added on 2.1
-						// XXX bubbleProgress???
-						runFileLoaders(prefix, res))
-					.done(function(){
-						$('.viewer').trigger('fileStateLoaded')
-						reloadViewer()
-						res.resolve()
-					})
-					// XXX fail???
-
-			// unknown format...
-			} else {
-				res.reject('unknown format.')
-			}
+					// load current position...
+					// added on 2.2
+					bubbleProgress(prefix,
+							loadLatestJSONFile(path, 
+								makeBaseFilename(CONFIG.current_file),
+								null,
+								null,
+								DATA.current,
+								tracker), 
+							res, 
+							true)
+						.done(function(cur){
+							DATA.current = cur
+						}),
+					// load images...
+					bubbleProgress(prefix,
+						loadFileImages(base, tracker), res, true),
+					// run registered loaders...
+					// added on 2.1
+					// XXX bubbleProgress???
+					runFileLoaders(prefix, res, tracker))
+				.done(function(){
+					$('.viewer').trigger('fileStateLoaded')
+					reloadViewer()
+					res.resolve()
+				})
+				// XXX fail???
 		})
 		.fail(function(){
 			res.reject('Loading', path, 'Error')
@@ -905,6 +859,66 @@ function loadDir(path, no_preview_processing, prefix, tracker){
 		})
 
 	return res
+}
+
+
+// Construct a ribbons hierarchy from the fav dirs structure
+//
+// NOTE: this depends on listDir(...)
+// NOTE: this assumes that images contain ALL the images...
+// NOTE: this assumes that all file names are unique...
+function ribbonsFromFavDirs(path, images, cmp, dir_name){
+	path = path == null ? getBaseURL() : path
+	images = images == null ? IMAGES : images
+	dir_name = dir_name == null ? 'fav' : dir_name
+
+	// build a reverse name-gid index for fast access...
+	var index = {}
+	var name
+	for(var gid in images){
+		name = getImageFileName(gid)
+		// XXX we assume that names are unique...
+		index[name] = gid
+	}
+
+	var ribbons = []
+	// add the base row...
+	var base = Object.keys(images)
+	ribbons.push(base)
+
+	var files = listDir(path)	
+	var cur_path = path
+	while(files.indexOf(dir_name) >= 0){
+		cur_path += '/' + dir_name
+		files = listDir(cur_path)
+		ribbon = []
+		// collect the images...
+		$.each(files, function(i, e){
+			var _gid = index[e]
+			// skip files not in index...
+			// NOTE: we do not need to filter the files by name as we 
+			// 		trust the index...
+			if(_gid == null){
+				return 
+			}
+			// remove the found item from each of the below ribbons...
+			$.each(ribbons, function(i ,e){
+				if(e.indexOf(_gid) != -1){
+					e.splice(e.indexOf(_gid), 1)
+				}
+			})
+
+			ribbon.push(_gid)
+		})
+		ribbons.push(ribbon)
+	}
+
+	// remove empty ribbons and sort the rest...
+	ribbons = $.map(ribbons, function(e){ 
+		return e.length > 0 ? [cmp == null ? e : e.sort(cmp)] : null 
+	})
+
+	return ribbons.reverse()
 }
 
 
