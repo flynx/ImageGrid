@@ -111,57 +111,6 @@ Roadmap
 [_] 32% Gen 3 current todo
 	[_] 65% High priority
 		[_] make buildcache sort images via data AND file name...
-		[X] BUG: sorting (dialog) will mess up the order...
-		| Procedure:
-		| 	- shift-s + sort in a way that changes the order
-		| 	- move next till the spot where the order changed
-		|		-- the next/prev action will jump around...
-		|
-		| probably due to a bug in reloading...
-		|
-		| NOTE: sorting is done correctly...
-		|
-		| Workaround:
-		| 	- sort, save, then F5
-		| 	
-		[X] BUG: sorting breaks when at or near the end of a ribbon...
-		|
-		| Race condition...
-		|
-		| Procedure:
-		| 	- go to end of a ribbon
-		| 	- shift-s 
-		| 		- select a sort method
-		| 		- click "OK"
-		|
-		| NOTE: this will not break of sorting will not change the order of
-		| 		visible images...
-		| 		thus, if this the above procedure does not break do one of:
-		| 			- ctrl-r (reverse) before sorting
-		| 			- check "Descending" in the sort dialog
-		| NOTE: this breaks because current the current image is not 
-		| 		yet loaded/created when reloadViewer(..) tries to focus it...
-		|
-		| Temporary workaround:
-		| 	because there is nothing wrong with sorting itself, just the
-		| 	UI, the resulting state can be fixed by simply reloading the 
-		| 	viewer (reloadViewer(true) or ctrl-alt-r)
-		| 
-		| NOTE: appears to affect beginning of the ribbon too...
-		[X] BUG: sorting mis-aligns ribbons in some cases...
-		| Example:
-		| 				 oooo...	--[reverse]->	   ...oooo
-		| 		...oooo[o]oooo...					...oooo[o]oooo...
-		|
-		| 		Should be:
-		| 				 oooo...	--[reverse]->	 ...oooo
-		| 		...oooo[o]oooo...					...oooo[o]oooo...
-		|
-		| 	The above can happen when, for example, sorting the images via data
-		| 	and then sorting them in the same way with reverse checked...
-		|
-		| XXX is this related to?
-		|	BUG: sorting breaks when at or near the end of a ribbon...
 		[_] BUG: panels: open/close events get triggered on panel drag/sort...
 		[_] buildcache: add option to control image sort...
 		[X] buildcache: add ability to process multiple dirs...
@@ -561,6 +510,57 @@ Roadmap
 		| 	drops to last placeholder
 		|
 		[_] single image mode transition (alpha-blend/fade/none)
+		[X] BUG: sorting (dialog) will mess up the order...
+		| Procedure:
+		| 	- shift-s + sort in a way that changes the order
+		| 	- move next till the spot where the order changed
+		|		-- the next/prev action will jump around...
+		|
+		| probably due to a bug in reloading...
+		|
+		| NOTE: sorting is done correctly...
+		|
+		| Workaround:
+		| 	- sort, save, then F5
+		| 	
+		[X] BUG: sorting breaks when at or near the end of a ribbon...
+		|
+		| Race condition...
+		|
+		| Procedure:
+		| 	- go to end of a ribbon
+		| 	- shift-s 
+		| 		- select a sort method
+		| 		- click "OK"
+		|
+		| NOTE: this will not break of sorting will not change the order of
+		| 		visible images...
+		| 		thus, if this the above procedure does not break do one of:
+		| 			- ctrl-r (reverse) before sorting
+		| 			- check "Descending" in the sort dialog
+		| NOTE: this breaks because current the current image is not 
+		| 		yet loaded/created when reloadViewer(..) tries to focus it...
+		|
+		| Temporary workaround:
+		| 	because there is nothing wrong with sorting itself, just the
+		| 	UI, the resulting state can be fixed by simply reloading the 
+		| 	viewer (reloadViewer(true) or ctrl-alt-r)
+		| 
+		| NOTE: appears to affect beginning of the ribbon too...
+		[X] BUG: sorting mis-aligns ribbons in some cases...
+		| Example:
+		| 				 oooo...	--[reverse]->	   ...oooo
+		| 		...oooo[o]oooo...					...oooo[o]oooo...
+		|
+		| 		Should be:
+		| 				 oooo...	--[reverse]->	 ...oooo
+		| 		...oooo[o]oooo...					...oooo[o]oooo...
+		|
+		| 	The above can happen when, for example, sorting the images via data
+		| 	and then sorting them in the same way with reverse checked...
+		|
+		| XXX is this related to?
+		|	BUG: sorting breaks when at or near the end of a ribbon...
 		[X] BUG: shifting image left/right marks and bookmarks it...
 		[X] Might be a good idea to use sparse arrays for things like marks...
 		| eliminate:	

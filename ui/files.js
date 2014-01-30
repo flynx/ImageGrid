@@ -144,6 +144,8 @@ function statusProgress(msg, tracker){
 
 // Bubble up actions in the deferred chain
 //
+// i.e. proxy them form one deferred (from) to the next (to)...
+//
 // Will chain progress/notify and if only_progress is not set, also
 // done/resolve and fail/reject from "from" to "to" deferred objects.
 //
