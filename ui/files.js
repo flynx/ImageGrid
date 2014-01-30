@@ -106,11 +106,36 @@ function statusNotify(prefix, loader, not_queued){
 }
 
 
-// XXX
-function statusProgress(msg, tracker){
+// Report progress status via a progress bar...
+//
+// This will connect to a tracker (Deferred) and report progress based 
+// on progress notifications on the tracker object.
+//
+// 		<msg> (5 of 500)					x
+// 		|============>----------------------|
+//
+//
+// msg is the message displayed on the progress bar.
+//
+// Two types of notification are supported:
+// 	- deferred
+// 		the .progress(..) handler will receive a deferred as a last 
+// 		argument, this will in turn do two things:
+// 			1) increment the max value of the progress bar
+// 			2) when the defered is done, increment the value of the 
+// 				progress bar
+// 	- simple
+// 		increment both max and value of the progress bar
+//
+// The progress bar will go into a "done" state if the tracker is 
+// explicitly resolved.
+//
+// NOTE: closing the progress bar will not do anything...
+function statusProgress(msg, tracker, close_button){
 	tracker = tracker == null ? $.Deferred() : null
+	close_button = close_button == null ? false : close_button
 
-	var progress = progressBar(msg)
+	var progress = progressBar(msg, null, close_button)
 	var total = 0
 	var done = 0
 

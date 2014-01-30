@@ -472,6 +472,8 @@ function getProgressContainer(mode, parent){
 
 // Make or get progress bar by name...
 //
+// Setting close to false will disable the close button...
+//
 // Events:
 // 	- progressUpdate (done, total)
 // 		Triggered by user to update progress bar state.
@@ -535,11 +537,15 @@ function progressBar(name, container, close, hide_timeout){
 	var widget = $('<div class="progress-bar" name="'+name+'">'+name+'</div>')
 		// progress state...
 		.append(state)
-		// the close button...
-		.append($('<span class="close">&times;</span>')
-			.click(function(){
-				$(this).trigger('progressClose')
-			}))
+	// the close button...
+	if(close !== false){
+		widget
+			.append($('<span class="close">&times;</span>')
+				.click(function(){
+					$(this).trigger('progressClose')
+				}))
+	}
+	widget
 		.append(bar)
 		.appendTo(container)
 		.on('progressUpdate', function(evt, done, total){
@@ -573,7 +579,11 @@ function progressBar(name, container, close, hide_timeout){
 			})
 		})
 
-	if(close != null){
+	if(close === false){
+		widget.on('progressClose', function(){
+			widget.trigger('progressDone') 
+		})
+	} else if(close != null){
 		widget.on('progressClose', close)
 	}
 
