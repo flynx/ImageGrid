@@ -256,6 +256,10 @@ Roadmap
 			[_] 0% metadata
 				[_] comment
 				[_] tags
+		[_] add universal set of events to viewer...
+		| viewerLoaded
+		| viewerClosing
+		| ...
 		[_] BUG: opening a dir form history sometimes loads wrong size previews
 		| this happens in part of the view and a refresh, reload or image
 		| update (updateImages()) fixes the issue...
