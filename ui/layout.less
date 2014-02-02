@@ -1114,15 +1114,6 @@ button:hover {
 .marks-visible.viewer .global-mode-indicators .marks-visible {
 	display: inline-block;
 }
-.marked-only-view.viewer .global-mode-indicators .marks-visible {
-	display: none;
-}
-.marked-only-view.viewer .global-mode-indicators .marked-only-visible {
-	display: inline-block;
-}
-.marked-only-view.viewer:not(.marks-visible) .global-mode-indicators .marked-only-visible:after {
-	background-color: transparent;
-}
 /* image mark in single image mode... */
 .single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-bookmarked,
 .single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked {
@@ -1150,7 +1141,7 @@ button:hover {
 
 
 
-.cropped-view.viewer .global-mode-indicators .cropped-view {
+.cropped-view.marks-visible.viewer .global-mode-indicators .cropped-view {
 	color: gray;
 	display: inline-block;
 }

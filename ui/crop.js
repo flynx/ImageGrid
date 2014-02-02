@@ -164,12 +164,11 @@ function showAllData(){
 
 // Make a generic crop mode toggler
 //
-// NOTE: crop modes are exclusive -- it is not possible to enter one crop
-// 		mode from a different crop mode
+// NOTE: cls is optional...
 function makeCropModeToggler(crop){
 	var res = createCSSClassToggler(
 			'.viewer',
-			'.cropped-view',
+			'cropped-view',
 			function(action){
 				if(action == 'on'){
 					showStatusQ('Cropping ribbons...')

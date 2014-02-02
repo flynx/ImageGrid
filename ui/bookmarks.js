@@ -54,12 +54,10 @@ var updateBookmarkedImageMark = makeMarkUpdater(
 // XXX not sure that these should be modes...
 
 var toggleBookmarkedOnlyView = makeCropModeToggler(
-		'bookmarked-only-view',
 		cropBookmarkedImages)
 
 
 var toggleBookmarkedOnlyWithRibbonsView = makeCropModeToggler(
-		'bookmarked-only-view',
 		function(){
 			cropBookmarkedImages(null, true)
 		})

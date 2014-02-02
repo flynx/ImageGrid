@@ -383,12 +383,10 @@ function cropMarkedImages(keep_ribbons, keep_unloaded_gids){
 
 // XXX is this a mode???
 var toggleMarkedOnlyView = makeCropModeToggler(
-		'marked-only-view',
 		cropMarkedImages)
 
 
 var toggleMarkedOnlyWithRibbonsView = makeCropModeToggler(
-		'marked-only-view',
 		function(){
 			cropMarkedImages(true)
 		})
