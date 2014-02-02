@@ -167,40 +167,6 @@ var toggleSingleImageMode = createCSSClassToggler(
 		})
 
 
-// XXX make this not conflict with marked-only-mode, better yet, make them
-// 		one single mode...
-// XXX is this a mode???
-var toggleSingleRibbonMode = makeCropModeToggler(
-		'single-ribbon-mode',
-		function(){
-				cropDataTo(getRibbonGIDs())
-		})
-
-
-function makeCurrenAndAboveModeToggler(name, keep_ribbons){
-	return makeCropModeToggler(
-		name,
-		function(){
-				var gids = []
-				var c = getRibbonIndex()
-				var ribbons = DATA.ribbons
-
-				// merge the ribbons...
-				for(var i=0; i <= c; i++){
-					gids = gids.concat(ribbons[i])
-				}
-				gids.sort(imageOrderCmp)
-
-				// do the crop...
-				cropDataTo(gids, keep_ribbons)
-		})
-}
-var toggleCurrenAndAboveRibbonMode = makeCurrenAndAboveModeToggler(
-		'current-and-above-ribbon-mode')
-var toggleCurrenAndAboveRibbonsMode = makeCurrenAndAboveModeToggler(
-		'current-and-above-ribbons-mode', true)
-
-
 // TODO transitions...
 // TODO a real setup UI (instead of prompt)
 var toggleSlideShowMode = createCSSClassToggler(
