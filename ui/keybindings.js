@@ -273,13 +273,12 @@ var KEYBOARD_CONFIG = {
 			'single ribbon crop view press <b>F3</b> and to open the crop '+
 			'dialog for more options press <b>C</b>.'+
 			'<p>NOTE: toggling crop views is only possible from ribbon view.',
-		pattern: '.single-ribbon-mode:not(.single-image-mode), '
-			+'.marked-only-view:not(.single-image-mode)',
+		pattern: '.cropped-view:not(.single-image-mode)',
 
 		Esc: {
 				default: doc('Uncrop to last state', 
 					function(){ 
-						uncropLastState()
+						uncropData()
 						return false
 					}),
 				shift: doc('Exit crop view', 

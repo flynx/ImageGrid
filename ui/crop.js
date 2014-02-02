@@ -100,6 +100,8 @@ function cropDataTo(gids, keep_ribbons, keep_unloaded_gids){
 	cur = cur == null ? DATA.ribbons[r][0] : cur
 	DATA.current = cur 
 
+	$('.viewer').addClass('cropped-view')
+
 	reloadViewer()
 	updateImages()
 
@@ -123,6 +125,10 @@ function uncropData(){
 		DATA.current = cur
 	}
 
+	if(!isViewCropped()){
+		$('.viewer').removeClass('cropped-view')
+	}
+
 	reloadViewer()
 	updateImages()
 
@@ -144,6 +150,8 @@ function showAllData(){
 		// keep the current position...
 		DATA.current = cur
 
+		$('.viewer').removeClass('cropped-view')
+
 		reloadViewer()
 		updateImages()
 	}
@@ -156,60 +164,22 @@ function showAllData(){
 
 // Make a generic crop mode toggler
 //
-// NOTE: This will add the toggler to CROP_MODES, for use by 
-// 		uncropLastState(...)
 // NOTE: crop modes are exclusive -- it is not possible to enter one crop
 // 		mode from a different crop mode
-//
-// XXX add "exclusive" crop option -- prevent other crop modes to enter...
-function makeCropModeToggler(cls, crop){
+function makeCropModeToggler(crop){
 	var res = createCSSClassToggler(
 			'.viewer',
-			//cls + ' cropped-mode',
-			cls,
-			/* XXX make this an option...
-			function(action){
-				// prevent mixing marked-only and single-ribbon modes...
-				if(action == 'on' 
-						&& isViewCropped()
-						&& res('?') != 'on'){
-					return false
-				}
-			},
-			*/
+			'.cropped-view',
 			function(action){
 				if(action == 'on'){
-					showStatusQ('Cropping current ribbon...')
+					showStatusQ('Cropping ribbons...')
 					crop()
 				} else {
-					showStatusQ('Uncropping to all data...')
+					showStatusQ('Uncropping all...')
 					showAllData()
 				}
 			})
-	CROP_MODES.push(res)
 	return res
-}
-
-
-// Uncrop to last state and there is no states to uncrop then exit 
-// cropped mode.
-//
-// NOTE: this will exit all crop modes when uncropping the last step.
-function uncropLastState(){
-	// do nothing if we aren't in a crop mode...
-	if(!isViewCropped()){
-		return
-	}
-
-	// exit cropped all modes...
-	if(CROP_STACK.length == 1){
-		$.each(CROP_MODES, function(_, e){ e('off') })
-
-	// ucrop one state...
-	} else {
-		showStatusQ('Uncropping...')
-		uncropData()
-	}
 }
 
 
@@ -222,15 +192,13 @@ function uncropLastState(){
 // 		one single mode...
 // XXX is this a mode???
 var toggleSingleRibbonMode = makeCropModeToggler(
-		'single-ribbon-mode',
 		function(){
 				cropDataTo(getRibbonGIDs())
 		})
 
 
-function makeCurrenAndAboveModeToggler(name, keep_ribbons){
+function makeCurrenAndAboveModeToggler(keep_ribbons){
 	return makeCropModeToggler(
-		name,
 		function(){
 				var gids = []
 				var c = getRibbonIndex()
@@ -246,10 +214,8 @@ function makeCurrenAndAboveModeToggler(name, keep_ribbons){
 				cropDataTo(gids, keep_ribbons)
 		})
 }
-var toggleCurrenAndAboveRibbonMode = makeCurrenAndAboveModeToggler(
-		'current-and-above-ribbon-mode')
-var toggleCurrenAndAboveRibbonsMode = makeCurrenAndAboveModeToggler(
-		'current-and-above-ribbons-mode', true)
+var toggleCurrenAndAboveRibbonMode = makeCurrenAndAboveModeToggler()
+var toggleCurrenAndAboveRibbonsMode = makeCurrenAndAboveModeToggler(true)
 
 
 

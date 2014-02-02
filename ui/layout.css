@@ -1113,7 +1113,7 @@ button:hover {
 .single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked:not(.shown):hover {
   opacity: 0.8;
 }
-.single-ribbon-mode.viewer .global-mode-indicators .single-ribbon-mode {
+.cropped-view.viewer .global-mode-indicators .cropped-view {
   color: gray;
   display: inline-block;
 }

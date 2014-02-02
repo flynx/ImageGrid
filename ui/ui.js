@@ -97,10 +97,10 @@ function showCursor(elem){
 
 function setupIndicators(){
 	showGlobalIndicator(
-			'single-ribbon-mode', 
-			'Single ribbon mode (F3)')
+			'cropped-view', 
+			'Cropped view (shift-F2/F3/C/F)')
 		.css('cursor', 'hand')
-		.click(function(){ toggleSingleRibbonMode() })
+		.click(function(){ uncropData() })
 }
 
 
