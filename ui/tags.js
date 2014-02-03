@@ -558,6 +558,18 @@ function setupUnsortedTagHandler(viewer){
 				tagsUpdated()
 			}
 		})
+		.on('updatedImageGID', function(evt, was, is){
+			var updated = false
+			for(var tag in TAGS){
+				var i = TAGS[tag].indexOf(was)
+				if(i >= 0){
+					TAGS[tag][i] = is
+				}
+			}
+			if(updated){
+				tagsUpdated()
+			}
+		})
 }
 SETUP_BINDINGS.push(setupUnsortedTagHandler)
 

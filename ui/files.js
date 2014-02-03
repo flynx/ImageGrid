@@ -1158,11 +1158,6 @@ function readImagesDatesQ(images){
 }
 
 
-// XXX deleting images is not sported, we need to explicitly re-save...
-// XXX need to reload the viewer...
-// XXX not tested...
-// XXX need to also replace in MARKED, BOOKMARKS, ...
-// 		...and make it systematic...
 function updateImageGID(gid, images, data){
 	gid = gid == null ? getImageGID() : gid
 	images = images == null ? IMAGES : images
@@ -1204,6 +1199,8 @@ function updateImageGID(gid, images, data){
 			if(i.length > 0){
 				updateImage(i, gid)
 			}
+
+			$('.viewer').trigger('updatedImageGID', [key, gid])
 		})
 }
 function updateImagesGIDs(images, data){

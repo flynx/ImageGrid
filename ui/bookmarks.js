@@ -178,6 +178,13 @@ function setupBookmarks(viewer){
 				bookmarksUpdated()
 			}
 		})
+		.on('updatedImageGID', function(evt, was, is){
+			var i = BOOKMARKS.indexOf(was)
+			if(i >= 0){
+				BOOKMARKS[i] = is
+				bookmarksUpdated()
+			}
+		})
 }
 SETUP_BINDINGS.push(setupBookmarks)
 

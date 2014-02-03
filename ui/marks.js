@@ -804,6 +804,13 @@ function setupMarks(viewer){
 				marksUpdated()
 			}
 		})
+		.on('updatedImageGID', function(evt, was, is){
+			var i = MARKED.indexOf(was)
+			if(i >= 0){
+				MARKED[i] = is
+				marksUpdated()
+			}
+		})
 }
 SETUP_BINDINGS.push(setupMarks)
 
