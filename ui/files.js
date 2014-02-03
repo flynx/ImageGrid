@@ -1200,11 +1200,13 @@ function updateImageGID(gid, images, data){
 function updateImagesGIDs(images, data){
 	images = images == null ? IMAGES : images
 
-	return $.when.apply(null, $.map(images, function(_, key){
+	var res = $.when.apply(null, $.map(images, function(_, key){
 		return updateImageGID(key, images, data)
 	}))
 
 	IMAGES_CREATED = true
+
+	return res
 }
 function updateImagesGIDsQ(images, data){
 	images = images == null ? IMAGES : images
