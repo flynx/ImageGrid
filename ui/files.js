@@ -757,10 +757,11 @@ function loadRawDir(path, no_preview_processing, prefix){
 	setBaseURL(path)
 
 	IMAGES = imagesFromUrls(image_paths)
-	res.notify(prefix, 'Loaded', 'Images.')
 	IMAGES_CREATED = true
+	res.notify(prefix, 'Loaded', 'Images.')
 
 	DATA = dataFromImages(IMAGES)
+	dataUpdated()
 	res.notify(prefix, 'Loaded', 'Data.')
 
 	// XXX this will reload viewer...
@@ -776,7 +777,11 @@ function loadRawDir(path, no_preview_processing, prefix){
 	res.notify(prefix, 'Loading', 'Images metadata.')
 	var o = $.when(
 			readImagesOrientationQ(),
-			readImagesDatesQ()
+			readImagesDatesQ(),
+			// XXX this is still experimental...
+			// 		...not sure if this will not cause race conditions with
+			// 		the other readers...
+			updateImagesGIDsQ()
 		)
 		.done(function(){
 			res.notify(prefix, 'Loaded', 'Images metadata.')
@@ -941,6 +946,7 @@ function updateRibbonsFromFavDirs(){
 	DATA.ribbons = ribbonsFromFavDirs(null, null, imageOrderCmp)
 	sortImagesByDate()
 	reloadViewer()
+	dataUpdated()
 }
 
 
@@ -1155,12 +1161,19 @@ function readImagesDatesQ(images){
 // XXX deleting images is not sported, we need to explicitly re-save...
 // XXX need to reload the viewer...
 // XXX not tested...
+// XXX need to also replace in MARKED, BOOKMARKS, ...
+// 		...and make it systematic...
 function updateImageGID(gid, images, data){
+	gid = gid == null ? getImageGID() : gid
 	images = images == null ? IMAGES : images
+	data = data == null ? DATA : data
 	var img = images[gid]
+	var key = gid
+
 	return getEXIFGID(normalizePath(img.path))
 		.done(function(gid){
 			img.id = gid
+
 			// images...
 			images[gid] = images[key]
 			delete images[key]
@@ -1175,13 +1188,21 @@ function updateImageGID(gid, images, data){
 				// replace in order...
 				data.order[data.order.indexOf(key)] = gid
 				// replace in ribbons...
-				for(var i=0; i < data.ribbons; i++){
+				for(var i=0; i < data.ribbons.length; i++){
 					var r = data.ribbons[i]
 					var k = r.indexOf(key)
 					if(k >= 0){
 						r[k] = gid
 					}
 				}
+
+				dataUpdated()
+			}
+
+			// update the actual image...
+			var i = getImage(key)
+			if(i.length > 0){
+				updateImage(i, gid)
 			}
 		})
 }
@@ -1197,12 +1218,14 @@ function updateImagesGIDsQ(images, data){
 
 	var queue = getWorkerQueue('Update GIDs', 4)
 
-	$.each(images, function(_, key){
+	$.each(images, function(key){
 		queue.enqueue(updateImageGID, key, images, data)
 			.always(function(){ 
 				//queue.notify(key, 'done') 
 			})
 	})
+
+	IMAGES_CREATED = true
 
 	return queue
 }
