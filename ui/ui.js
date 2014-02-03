@@ -263,8 +263,10 @@ function updateInfo(elem, data, target){
 		elem.append(data)
 	}
 
-	return elem 
+	elem 
 		.appendTo(target)
+
+	return elem
 }
 
 
@@ -381,6 +383,7 @@ function showStatusQ(message){
 function showErrorStatus(message){
 	message = Array.apply(Array, arguments)
 	message.splice(0, 0, 'Error:')
+	//return showStatusQ.apply(null, message)
 	return updateStatus.apply(null, message)
 		.one('click', function(){ $(this).fadeOut() })
 		//.stop()

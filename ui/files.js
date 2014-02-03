@@ -1129,6 +1129,7 @@ function readImageDate(gid, images){
 	return getEXIFDate(normalizePath(img.path))
 		.done(function(date){
 			img.ctime = Date.fromTimeStamp(date).getTime()/1000
+			imageUpdated(gid)
 		})
 }
 function readImagesDates(images){
@@ -1136,9 +1137,6 @@ function readImagesDates(images){
 
 	return $.when.apply(null, $.map(images, function(_, gid){
 		return readImageDate(gid, images)
-			.done(function(){
-				imageUpdated(gid)
-			})
 	}))
 }
 function readImagesDatesQ(images){
@@ -1148,10 +1146,6 @@ function readImagesDatesQ(images){
 
 	$.each(images, function(gid, img){
 		queue.enqueue(readImageDate, gid, images)
-			.always(function(){ 
-				imageUpdated(gid)
-				//queue.notify(gid, 'done') 
-			})
 	})
 
 	return queue
@@ -1209,6 +1203,8 @@ function updateImagesGIDs(images, data){
 	return $.when.apply(null, $.map(images, function(_, key){
 		return updateImageGID(key, images, data)
 	}))
+
+	IMAGES_CREATED = true
 }
 function updateImagesGIDsQ(images, data){
 	images = images == null ? IMAGES : images
@@ -1217,9 +1213,6 @@ function updateImagesGIDsQ(images, data){
 
 	$.each(images, function(key){
 		queue.enqueue(updateImageGID, key, images, data)
-			.always(function(){ 
-				//queue.notify(key, 'done') 
-			})
 	})
 
 	IMAGES_CREATED = true
