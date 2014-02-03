@@ -501,6 +501,19 @@ function tagsUpdated(){
 
 
 /**********************************************************************
+* Dialogs/panels...
+*/
+
+// XXX add tags to:
+// 		- loaded images
+// 		- marked images
+function batchTagImagesDialog(){
+	// XXX
+}
+
+
+
+/**********************************************************************
 * Setup...
 */
 

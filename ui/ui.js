@@ -836,6 +836,8 @@ function showImageInfo(){
 
 				'<table>'+
 					// basic info...
+					// XXX BUG: something here breaks when self-generated data is 
+					// 		currently open -- .length of undefined...
 					'<tr><td colspan="2"><hr></td></tr>'+
 					'<tr><td>GID: </td><td>'+ gid +'</td></tr>'+
 					'<tr><td>Date: </td><td>'+ date +'</td></tr>'+

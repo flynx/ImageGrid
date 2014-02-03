@@ -7,7 +7,6 @@
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 // Flag indicating a new image file was constructed...
-// XXX do we need this?
 var IMAGES_CREATED = false
 
 var IMAGE_PATTERN = /.*\.(jpg|jpeg|png|gif)$/i
