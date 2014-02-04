@@ -804,6 +804,7 @@ function setupMarks(viewer){
 				marksUpdated()
 			}
 		})
+		// when the gid is swapped update the cache...
 		.on('updatedImageGID', function(evt, was, is){
 			var i = MARKED.indexOf(was)
 			if(i >= 0){

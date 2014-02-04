@@ -401,6 +401,184 @@ function setElementTransform(elem, offset, scale, duration){
 }
 
 
+// Run a function controllably in an animation frame
+//
+// NOTE: we do not need to make this run several callbacks as the 
+// 		browser already does this and will do the loop faster...
+function animationFrameRunner(func){
+	var next
+	var _nop = function(){ return this }
+	var frame
+
+	if(this === window){
+		self = new animationFrameRunner
+	} else {
+		self = this
+	}
+
+	self.func = func
+
+	var _tick = function(){
+		func(Date.now())
+		frame = getAnimationFrame(next)
+	}
+
+	// main user interface...
+	var start = function(){
+		next = _tick
+		this.start = _nop
+		this.stop = stop
+
+		// start things up...
+		// NOTE: we are not calling _tick here directly to avoid stray,
+		// 		off-frame call to func...
+		frame = getAnimationFrame(next)
+
+		return this
+	}
+	var stop = function(){
+		if(frame != null){
+			cancelAnimationFrame(frame)
+			frame = null
+		}
+		next = _nop
+		this.start = start
+		this.stop = _nop 
+		return this
+	}
+
+	// setup the ticker in stopped state...
+	stop.call(self)
+
+	return self
+}
+
+
+/*
+// NOTE: this is exclusive, e.g. all other animations set with this will
+// 		be stopped on call...
+// XXX for some reason this is slower that animateElementTo(..) on iPad...
+function animateElementTo2(elem, to, duration, easing, speed, use_transitions){
+	use_transitions = use_transitions != null ? 
+							use_transitions 
+							: USE_TRANSITIONS_FOR_ANIMATION
+	// use transition for animation...
+	if(use_transitions){
+		setTransitionEasing(elem, easing)
+		duration == null && setTransitionDuration(elem, duration)
+		setElementTransform(elem, to)
+		return
+	}
+
+	to = typeof(to) == typeof(1) ? {
+			left: to,
+			top: 0,
+		} : to
+	speed = typeof(speed) == typeof(2) ? {
+			x: speed,
+			y: 0,
+		} : speed
+	duration = duration == null ? getElementTransitionDuration(elem) : duration
+
+	// stop other animations...
+	var runner = elem.data('animating')
+	if(runner != null){
+		runner.stop()
+	}
+
+	// setup context...
+	var start = Date.now()
+	var then = start + duration
+	var from = getElementShift(elem)
+
+	// do var caching...
+	var to_top = to.top
+	var to_left = to.left
+	var from_top = from.top
+	var from_left = from.left
+	var cur_top = from_top
+	var cur_left = from_left
+	var dist_top = to_top - from_top
+	var dist_left = to_left - from_left
+	if(speed != null){
+		var speed_x = speed.x
+		var speed_y = speed.y
+	}
+
+	elem.animating = true
+
+	var runner = animationFrameRunner(function(t){
+		// end of the animation...
+		if(t >= then){
+			setElementTransform(elem, to)
+			runner.stop()
+			return
+		}
+		// animation stopped...
+		if(!elem.animating){
+			setElementTransform(elem, cur)
+			runner.stop()
+			return
+		}
+
+		// calculate target position for current step...
+		if(speed != null){
+			// NOTE: these are inlined here for speed...
+			if(Math.abs(dist_top) >= 1){
+				dy = ((t - start) * speed_y)
+				if(Math.abs(dist_top) > Math.abs(dy)){
+					dist_top -= dy
+					cur_top = Math.round(cur_top + dy)
+					// normalize...
+					cur_top = Math.abs(dist_top) <= 1 ? to_top : cur_top
+					// calc speed for next step...
+					speed_y = dist_top / (duration - (t - start))
+				} else {
+					cur_top = to_top
+				}
+			}
+			if(Math.abs(dist_left) >= 1){
+				dx = ((t - start) * speed_x)
+				if(Math.abs(dist_left) > Math.abs(dx)){
+					dist_left -= dx
+					cur_left = Math.round(cur_left + dx)
+					// normalize...
+					cur_left = Math.abs(dist_left) <= 1 ? to_left : cur_left
+					// calc speed for next step...
+					speed_x = dist_left / (duration - (t - start))
+				} else {
+					cur_left = to_left
+				}
+			}
+
+		// liner speed...
+		} else {
+			var r = (t - start) / duration
+			cur_top = Math.round(from_top + (dist_top * r))
+			cur_left = Math.round(from_left + (dist_left * r)) 
+		}
+
+		// do the actual move...
+		setElementTransform(elem, {
+			top: cur_top, 
+			left: cur_left
+		})
+	})
+
+	elem.data('animating', runner)
+	return runner.start()
+}
+
+
+function stopAnimation2(elem){
+	var runner = elem.data('animating')
+	if(runner != null){
+		runner.stop()
+	}
+}
+*/
+
+
 // XXX make this a drop-in replacement for setElementTransform...
 // XXX cleanup, still flacky...
 function animateElementTo(elem, to, duration, easing, speed, use_transitions){
@@ -446,9 +624,16 @@ function animateElementTo(elem, to, duration, easing, speed, use_transitions){
 			top: to.top - from.top,
 			left: to.left - from.left,
 		}
+
+		// XXX are we using this...
 		elem.animating = true
+		elem.next_frame = null
 
 		function animate(){
+			// prevent running animations till next call of animateElementTo(..)
+			if(elem.next_frame === false){
+				return
+			}
 			var t = Date.now()
 			// end of the animation...
 			if(t >= then){
@@ -461,14 +646,10 @@ function animateElementTo(elem, to, duration, easing, speed, use_transitions){
 				return
 			}
 
-			// do an intermediate step...
-			// XXX do proper easing...
-			// XXX sometimes results in jumping around...
-			// 		...result of jumping over the to position...
+			// animate a step with speed...
 			if(speed != null){
-
-				// XXX the following two blocks are the same...
-				// XXX looks a bit too complex, revise...
+				// NOTE: these are almost identical, they are inlined 
+				// 		for speed...
 				if(Math.abs(dist.top) >= 1){
 					dy = ((t - start) * speed.y)
 					if(Math.abs(dist.top) > Math.abs(dy)){
@@ -482,8 +663,6 @@ function animateElementTo(elem, to, duration, easing, speed, use_transitions){
 						cur.top = to.top
 					}
 				}
-
-				// XXX looks a bit too complex, revise...
 				if(Math.abs(dist.left) >= 1){
 					dx = ((t - start) * speed.x)
 					if(Math.abs(dist.left) > Math.abs(dx)){
@@ -498,7 +677,7 @@ function animateElementTo(elem, to, duration, easing, speed, use_transitions){
 					}
 				}
 
-			// XXX this is a straight forward linear function...
+			// liner animate...
 			} else {
 				var r = (t - start) / duration
 				cur.top = Math.round(from.top + (dist.top * r))
@@ -517,8 +696,14 @@ function animateElementTo(elem, to, duration, easing, speed, use_transitions){
 function stopAnimation(elem){
 	if(elem.next_frame){
 		cancelAnimationFrame(elem.next_frame)
+		elem.next_frame = false
+		return
 	}
 }
+
+// XXX for some odd reason the 2'nd gen. animation is jittery...
+//animateElementTo = animateElementTo2
+//stopAnimation = stopAnimation2
 
 
 // XXX account for other transitions...

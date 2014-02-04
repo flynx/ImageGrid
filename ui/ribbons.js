@@ -915,10 +915,11 @@ function nextRibbon(){
 //
 // NOTE: this is not needed for square image blocks.
 // NOTE: if an image block is square, this will remove the margins.
-function correctImageProportionsForRotation(images){
-	var viewer = $('.viewer')
-	var W = viewer.innerWidth()
-	var H = viewer.innerHeight()
+function correctImageProportionsForRotation(images, container){
+	container = container == null ? $('.viewer') : container
+
+	var W = container.innerWidth()
+	var H = container.innerHeight()
 
 	var viewer_p = W > H ? 'landscape' : 'portrait'
 

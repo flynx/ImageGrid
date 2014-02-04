@@ -371,10 +371,6 @@ var toggleImageProportions = createCSSClassToggler(
 					})
 				}
 
-				// account for rotation...
-				correctImageProportionsForRotation(image)
-				centerView(null, 'css')
-
 			// square proportions...
 			// NOTE: this will reset the size to default (defined in CSS)
 			} else {
@@ -382,11 +378,11 @@ var toggleImageProportions = createCSSClassToggler(
 					width: '',
 					height: ''
 				})
-
-				// account for rotation...
-				correctImageProportionsForRotation(image)
-				centerView(null, 'css')
 			}
+
+			// account for rotation...
+			correctImageProportionsForRotation(image)
+			centerView(null, 'css')
 
 			viewer.trigger('updatingImageProportions')
 		})
@@ -437,6 +433,77 @@ var toggleImageInfoDrawer = makeDrawerToggler(
 					'Position (global): '+ (order+1) +'/'+ DATA.order.length +'<br>'+
 				'</div>')
 		}, '.viewer')
+
+
+
+/**********************************************************************
+* Experimental...
+*/
+
+function getImageProportions(gid){
+	gid = gid == null ? getImageGID() : gid
+	var o = IMAGES[gid].orientation
+	o = o == null ? 0 : o
+
+	var res = $.Deferred()
+
+	var i = new Image()
+	i.onload = function(){
+		if(o == 0 || o == 180){
+			var w = i.width/i.height
+		} else {
+			var w = i.height/i.width
+		}
+		res.resolve(w)
+	}
+	i.src = getBestPreview(gid).url
+
+	return res
+}
+
+
+function _fitImageToRibbonHeight(gid, image){
+	setTimeout(function(){
+		getImageProportions(gid).done(function(r){
+			var h = image.height()
+			image.css({
+				width: h * r,
+			})
+			correctImageProportionsForRotation(image, image)
+		})
+	}, 0)
+	return image
+}
+
+
+// XXX this does not work yet + I'm not sure if we need it...
+var toggleRibbonImageProportions = createCSSClassToggler(
+		'.viewer',
+		[
+			'none',
+			'ribbon-image-proportions'
+		],
+		function(action){
+			var image = $('.image')
+
+			if(action == 'ribbon-image-proportions'){
+				// register the updater...
+				IMAGE_UPDATERS.push(_fitImageToRibbonHeight)
+				updateImages()
+
+			} else {
+				// unregister the updater...
+				IMAGE_UPDATERS.splice(IMAGE_UPDATERS.indexOf(_fitImageToRibbonHeight), 1)
+				image.css({
+					width: '',
+					height: ''
+				})
+				// account for rotation...
+				correctImageProportionsForRotation(image)
+			}
+
+			centerView(null, 'css')
+		})
 
 
 

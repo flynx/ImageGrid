@@ -558,6 +558,7 @@ function setupUnsortedTagHandler(viewer){
 				tagsUpdated()
 			}
 		})
+		// when the gid is swapped update the cache...
 		.on('updatedImageGID', function(evt, was, is){
 			var updated = false
 			for(var tag in TAGS){
