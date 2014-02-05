@@ -773,41 +773,40 @@ function loadRawDir(path, no_preview_processing, prefix){
 
 	reloadViewer()
 
-	// read orientation form files...
-	res.notify(prefix, 'Loading', 'Images metadata.')
-	var o = $.when(
-			readImagesOrientationQ(),
-			readImagesDatesQ(),
-			// XXX this is still experimental...
-			// 		...not sure if this will not cause race conditions with
-			// 		the other readers...
-			updateImagesGIDsQ()
-		)
-		.done(function(){
-			res.notify(prefix, 'Loaded', 'Images metadata.')
-		})
+	var _run = function(func){
+		var res = $.Deferred()
+		func()
+			.done(function(){ 
+				res.resolve() 
+			})
+		return res
+	}
 
 	// load/generate previews...
 	if(!no_preview_processing){
-		res.notify(prefix, 'Loading/Generating', 'Previews.')
-		var p = makeImagesPreviewsQ()
-			.depleted(function(){
-				res.notify(prefix, 'Loaded', 'Previews.')
-			})
-
+		var p = _run(makeImagesPreviewsQ)
 	} else {
-		var p = 0
+		var p = $.Deferred().resolve()
 	}
+
+	// read orientation form files...
+	res.notify(prefix, 'Loading', 'Images metadata.')
+	var o = $.when(
+			p,
+			_run(readImagesOrientationQ),
+			_run(readImagesDatesQ),
+			// XXX this is still experimental...
+			// 		...not sure if this will not cause race conditions with
+			// 		the other readers...
+			_run(updateImagesGIDsQ)
+		)
+		.done(function(){
+			res.notify(prefix, 'Loaded', 'Images metadata.')
+			//updateImagesGIDsQ()
+		})
 
 	// NOTE: we are not waiting for previews and orientation...
 	return res.resolve()
-
-	/* XXX do we need to make everyone wait for previews and orientation???
-	$.when(o, p).done(function(){
-		res.resolve()
-	})
-	return res
-	*/
 }
 
 
@@ -1161,6 +1160,10 @@ function updateImageGID(gid, images, data){
 
 	return getEXIFGID(normalizePath(img.path))
 		.done(function(gid){
+			if(gid == img.id){
+				return
+			}
+
 			img.id = gid
 
 			// images...
