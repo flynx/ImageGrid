@@ -998,7 +998,7 @@ function rotateImage(direction, image){
 		img.attr('orientation', o)
 
 		// account for proportions...
-		correctImageProportionsForRotation(img, direction)
+		correctImageProportionsForRotation(img)
 	})
 
 	$('.viewer').trigger('rotating' + direction.capitalize(), [image])
