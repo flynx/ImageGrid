@@ -349,7 +349,8 @@ function setAllMarks(action, mode, list, toggler){
 
 	updateImages(updated)
 
-	return res
+	//return res
+	return updated
 }
 
 

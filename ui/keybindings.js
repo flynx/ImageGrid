@@ -651,6 +651,8 @@ var KEYBOARD_CONFIG = {
 					function(){ toggleTheme() }),
 				ctrl: doc('Toggle bookmark', 
 					function(){ toggleBookmark() }),
+				'ctrl+shift': doc('Remove all bookmarks',
+					function(){ removeAllBookmarks() }),
 			},
 
 		S: {
