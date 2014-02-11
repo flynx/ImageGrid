@@ -628,14 +628,14 @@ button:hover {
   box-sizing: border-box;
   border-radius: 50%;
   background: blue;
-  left: -15;
+  left: -25;
 }
 .marks-visible.single-image-mode.viewer .mark:after {
   display: none;
 }
 .mark.bookmark:after {
   background: yellow;
-  left: -25;
+  left: -15;
 }
 /****************************************************** Image info ***/
 .inline-image-info {
