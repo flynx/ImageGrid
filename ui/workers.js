@@ -34,7 +34,9 @@ function getWorkerProgressBar(name, worker, container){
 			container,
 			function(){
 				WORKERS[name].dropQueue()
-			}) 
+			},
+			null,
+			true) 
 
 		worker
 			.progress(function(done, total){
@@ -57,7 +59,7 @@ function getWorkerProgressBar(name, worker, container){
 // get/create a named worker queue...
 //
 // XXX rename this to something task-related.... (???)
-function getWorkerQueue(name, pool_size, container, no_auto_start, no_progress){
+function getWorkerQueue(name, pool_size, container, no_auto_start, no_progress, auto_clear){
 	pool_size = pool_size == null ? 1 : pool_size
 
 	// create a new worker queue...

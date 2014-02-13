@@ -511,7 +511,7 @@ function getProgressContainer(mode, parent){
 // 		Shorthand:
 // 			resetProgressBar(name)
 //
-function progressBar(name, container, close, hide_timeout){
+function progressBar(name, container, close, hide_timeout, auto_remove){
 	container = container == null 
 		? getProgressContainer() 
 		: container
@@ -523,6 +523,7 @@ function progressBar(name, container, close, hide_timeout){
 		: hide_timeout < 0 ? 0
 		: hide_timeout > 3000 ? 3000
 		: hide_timeout
+	auto_remove = auto_remove == null ? true : auto_remove
 
 	var widget = getProgressBar(name)
 
@@ -568,6 +569,10 @@ function progressBar(name, container, close, hide_timeout){
 
 			setTimeout(function(){
 				widget.hide()
+
+				if(auto_remove){
+					widget.remove()
+				}
 			}, hide_timeout)
 		})
 		.on('progressReset', function(){
