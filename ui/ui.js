@@ -570,6 +570,8 @@ function progressBar(name, container, close, hide_timeout, auto_remove){
 			setTimeout(function(){
 				widget.hide()
 
+				// XXX this is not a good way to go... 
+				// 		need a clean way to reset...
 				if(auto_remove){
 					widget.remove()
 				}

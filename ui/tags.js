@@ -202,7 +202,7 @@ function updateTags(tags, gid, tagset, images){
 function tagSelectAND(tags, from, no_sort, tagset){
 	tags = typeof(tags) == typeof('str') ? [ tags ] : tags
 	tagset = tagset == null ? TAGS : tagset
-	from = from == null ? getLoadedGIDs() : from
+	from = from == null ? getLoadedGIDs() : getLoadedGIDs(from)
 
 	// special case: a single tag...
 	// NOTE: this is significantly faster.
@@ -300,15 +300,19 @@ function tagSelectOR(tags, from, no_sort, tagset){
 */
 
 function tagList(list, tags){
-	list.forEach(function(gid){
-		addTag(tags, gid)
-	})
+	list = getLoadedGIDs(list)
+	list
+		.forEach(function(gid){
+			addTag(tags, gid)
+		})
 	return list
 }
 function untagList(list, tags){
-	list.forEach(function(gid){
-		removeTag(tags, gid)
-	})
+	list = getLoadedGIDs(list)
+	list
+		.forEach(function(gid){
+			removeTag(tags, gid)
+		})
 	return list
 }
 // same as tagList(..), but will also remove the tags form gids no in 
