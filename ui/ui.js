@@ -496,7 +496,7 @@ function getProgressContainer(mode, parent){
 //		By default triggers the progressDone event.
 //
 // 		Shorthand:
-// 			closeProgressBar(name)
+// 			closeProgressBar(name[, msg])
 //
 // 	- progressDone
 // 		Triggered by user or progressClose handler.
@@ -561,10 +561,11 @@ function progressBar(name, container, close, hide_timeout, auto_remove){
 			})
 			state.text(' ('+done+' of '+total+')')
 		})
-		.on('progressDone', function(evt, done){
+		.on('progressDone', function(evt, done, msg){
 			done = done == null ? bar.attr('value') : done
+			msg = msg == null ? 'done' : msg
 			bar.attr('value', done)
-			state.text(' (done)')
+			state.text(' ('+msg+')')
 			widget.find('.close').hide()
 
 			setTimeout(function(){
@@ -590,8 +591,12 @@ function progressBar(name, container, close, hide_timeout, auto_remove){
 		})
 
 	if(close === false){
-		widget.on('progressClose', function(){
-			widget.trigger('progressDone') 
+		widget.on('progressClose', function(evt, msg){
+			if(msg != null){
+				widget.trigger('progressDone', [null, msg]) 
+			} else {
+				widget.trigger('progressDone') 
+			}
 		})
 	} else if(close != null){
 		widget.on('progressClose', close)
@@ -627,7 +632,10 @@ function resetProgressBar(name){
 function updateProgressBar(name, done, total){
 	return triggerProgressBarEvent(name, 'progressUpdate', [done, total])
 }
-function closeProgressBar(name){
+function closeProgressBar(name, msg){
+	if(msg != null){
+		return triggerProgressBarEvent(name, 'progressClose', [msg])
+	}	
 	return triggerProgressBarEvent(name, 'progressClose')
 }
 

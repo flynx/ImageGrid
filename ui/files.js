@@ -147,10 +147,14 @@ function statusProgress(msg, tracker, close_button){
 	var total = 0
 	var done = 0
 
+	// XXX do we need a fail handler here???
 	return tracker
 		.done(function(){
 			// XXX for some reason this does not allways display "done"
 			closeProgressBar(progress)
+		})
+		.fail(function(){
+			closeProgressBar(progress, 'error')
 		})
 		.progress(function(){
 			var args = $.makeArray(arguments)
@@ -830,9 +834,13 @@ function loadDir(path, no_preview_processing, prefix, tracker){
 	if(tracker == null){
 		var tracker = statusProgress('Loading')
 		// XXX is this the right way to go???
-		res.done(function(){
-			tracker.resolve()
-		})
+		res
+			.done(function(){
+				tracker.resolve()
+			})
+			.fail(function(){
+				tracker.reject()
+			})
 	}
 	if(tracker == false){
 		tracker == null
