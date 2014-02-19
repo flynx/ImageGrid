@@ -110,6 +110,43 @@ Roadmap
 
 [_] 32% Gen 3 current todo
 	[_] 65% High priority
+		[_] BUG: chrome 32 / nw 0.9.1: flicker on preview swap...
+		| an image get's repainted black and only then the new preview 
+		| is loaded, this is barely noticeable for one image but slows 
+		| things down for a set...
+		|
+		| appears to be related to load thread organization as for multiple
+		| images they get reloaded in blocks...
+		|
+		| can't reproduce on a simple example, yet...
+		| can't narrow it down to either Blink or node-webkit...
+		|
+		|
+		| to reproduce:
+		| 	- load a set of images
+		| 		enough to fill screen width with a couple of ribbons 
+		| 		at least, the more the better
+		| 	- press 0 in ribbon mode
+		| 	- use updateImages(null, 1000) and updateImages(null, 100)
+		| 		to switch preview sizes
+		|
+		| expected (as in <0.9.1):
+		| 	- seamless and barely noticeable change
+		|
+		| getting:
+		| 	- images unloaded then loaded in blocks
+		| 		flicker: image -> black-bg -> image
+		| 		also, this is slower
+		|
+		|
+		| temporary fix: stick with nw0.8.4 
+		| 	it's is both faster and does not exhibit the bug.
+		|
+		| mid-term strategy:
+		| 	- investigate, if cause found file a bug report and/or fix 
+		| 		depending on origin
+		| 	- do not spend too much resources (low to mid priority) until
+		| 		new nw version comes out...
 		[_] BUG: info dialog breaks when using a self-generated data...
 		| Procedure:
 		| 	- open: file:///L:/mnt/hdd13 (photo)/NTFS2/media/img/my/work/- 20140203Y.001 - Gordosevich opening, Kiril,/DCIM/preview (RAW)/Gordosevich-opening-select/
