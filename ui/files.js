@@ -987,7 +987,6 @@ function exportImageTo(gid, path, im_name, size){
 	dest = path +'/'+ dest
 
 	// copy... 
-	// NOTE: the sad smily face here is here for JS compatibility ;)
 	return (function(src, dest){
 		return copyFile(src, dest)
 			.done(function(){
@@ -1038,6 +1037,8 @@ function exportImagesTo(path, im_name, dir_name, size){
 			res.resolve()
 		})
 
+	pool.filling()
+
 	// go through ribbons...
 	for(var i=DATA.ribbons.length-1; i >= 0; i--){
 		var ribbon = DATA.ribbons[i]
@@ -1059,6 +1060,8 @@ function exportImagesTo(path, im_name, dir_name, size){
 
 		path = normalizePath(path +'/'+ dir_name)
 	}
+
+	pool.doneFilling()
 
 	return res
 }

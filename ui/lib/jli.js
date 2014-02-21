@@ -668,6 +668,19 @@ jQuery.fn.sortChildren = function(func){
 //
 // This will create and return a pooled queue of deferred workers.
 //
+//
+// The pool can be in one of the folowing states:
+//
+// 	- filling
+// 		This state prevents .depleted() from triggering until the pool 
+// 		exits the filling state.
+// 		This helps us to prevent premature depletion of the pool in 
+// 		cases where the queue is depleted faster than it is being filled.
+//
+// 	- paused
+// 		This state prevents any new queued workers from starting.
+//
+//
 // Public interface:
 //
 // 		.enqueue(obj, func, args) -> deferred
@@ -677,6 +690,20 @@ jQuery.fn.sortChildren = function(func){
 // 			If the pool is full the worker is added to queue (FIFO) and
 // 			ran in its turn.
 //
+// 		.dropQueue() -> pool
+// 			Drop the queued workers.
+// 			NOTE: this will not stop the already running workers.
+//
+//
+//		.filling()
+//			Enter the filling state
+//
+//		.doneFilling()
+//			Exit the filling state
+//			NOTE: this will trigger .depleted() if at the time of call
+//				both the pool and queue are empty.
+//
+//
 // 		.pause() -> pool
 // 			Pause the queue.
 // 			NOTE: this also has a second form: .pause(func), see below.
@@ -684,9 +711,9 @@ jQuery.fn.sortChildren = function(func){
 // 		.resume() -> pool
 // 			Restart the queue.
 //
-// 		.dropQueue() -> pool
-// 			Drop the queued workers.
-// 			NOTE: this will not stop the already running workers.
+//
+//		.isFilling() -> bool
+//			Test if the pool is being filled -- filling state.
 //
 // 		.isRunning() -> bool
 // 			Test if any workers are running in the pool.
@@ -792,9 +819,15 @@ function makeDeferredPool(size, paused){
 
 		// run an element from the queue...
 		var worker = func.apply(null, args)
+		pool.push(worker)
+
+		// NOTE: this is explicitly after the pool push to avoid the 
+		// 		possible race condition of the worker exiting and 
+		// 		triggering .always(..) before being added to the pool...
+		worker
 			.always(function(){
 				// prepare to remove self from pool...
-				var i = pool.indexOf(worker)
+				var i = pool.indexOf(this)
 
 				Pool._event_handlers.progress.fire(pool.length - pool.len(), pool.length + queue.length)
 
@@ -830,7 +863,9 @@ function makeDeferredPool(size, paused){
 					// 		pushed to pool just before it's "compacted"...
 					pool.length = 0
 				
-					that._event_handlers.deplete.fire(l)
+					if(!that._filling){
+						that._event_handlers.deplete.fire(l)
+					}
 				}
 
 				// keep the pool full...
@@ -846,8 +881,6 @@ function makeDeferredPool(size, paused){
 			.done(function(){
 				deferred.resolve.apply(deferred, arguments)
 			})
-
-		this.pool.push(worker)
 
 		return worker
 	}
@@ -899,6 +932,31 @@ function makeDeferredPool(size, paused){
 		return this
 	}
 
+	// Filling state...
+	//
+	// When this mode is set, it will prevent the queue from triggering
+	// the depleated action until .doneFilling() is called...
+	//
+	// This is to prevent the pool depleting before the queue is filled
+	// in the case of tasks ending faster than they are added...
+	Pool.filling = function(){
+		this._filling = true
+		return this
+	}
+	Pool.doneFilling = function(){
+		delete this._filling
+		// trigger depleted if we are empty...
+		if(this.pool.len() == 0 && this.queue.length == 0){
+			that._event_handlers.deplete.fire(l)
+		}
+		return this
+	}
+	Pool.isFilling = function(){
+		return this._filling == true
+	}
+
+	// Paused state...
+	//
 	// NOTE: this will not directly cause .isRunning() to return false 
 	// 		as this will not directly spot all workers, it will just 
 	// 		pause the queue and the workers that have already started
