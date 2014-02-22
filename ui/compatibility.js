@@ -388,6 +388,7 @@ if(window.CEF_dumpJSON != null){
 		gids = gids == null ? getClosestGIDs() : gids
 
 		var queue = getWorkerQueue('Generate previews', 4)
+			.filling()
 
 		// attach the workers to the queue...
 		$.each(gids, function(_, gid){
@@ -397,7 +398,7 @@ if(window.CEF_dumpJSON != null){
 				.always(function(){ console.log(gid, 'done') })
 		})
 
-		return queue
+		return queue.doneFilling()
 	}
 
 	// format: "20130102-122315"

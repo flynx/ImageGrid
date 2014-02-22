@@ -1129,8 +1129,7 @@ function readImagesOrientationQ(gids, no_update_loaded){
 		last = queue.enqueue(readImageOrientation, gid, no_update_loaded)
 	})
 
-	queue.doneFilling()
-	return queue
+	return queue.doneFilling()
 }
 
 
@@ -1160,8 +1159,7 @@ function readImagesDatesQ(images){
 		queue.enqueue(readImageDate, gid, images)
 	})
 
-	queue.doneFilling()
-	return queue
+	return queue.doneFilling()
 }
 
 
@@ -1235,10 +1233,9 @@ function updateImagesGIDsQ(images, data){
 		queue.enqueue(updateImageGID, key, images, data)
 	})
 
-	queue.doneFilling()
 	IMAGES_CREATED = true
 
-	return queue
+	return queue.doneFilling()
 }
 
 

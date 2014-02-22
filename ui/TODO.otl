@@ -109,7 +109,11 @@ Roadmap
 
 
 [_] 32% Gen 3 current todo
-	[_] 65% High priority
+	[_] 64% High priority
+		[_] BUG: preview generation progress reporting is broken...
+		| - the progress bar is generated
+		| - the previews are created
+		| - no progress is reported
 		[_] BUG: chrome 32 / nw 0.9.1: flicker on preview swap...
 		| an image get's repainted black and only then the new preview 
 		| is loaded, this is barely noticeable for one image but slows 
