@@ -1025,6 +1025,13 @@ function makeDeferredPool(size, paused){
 		return this.on('deplete', func)
 	}
 
+	// Deferred compatibility...
+	//
+	// NOTE: the key difference between this and the deferred is that this
+	// 		does not have memory and can get called multiple times...
+	// XXX is this correct???
+	//Pool.done = Pool.depleted
+
 	// Register queue progress handler...
 	//
 	// This occurs after each worker is done.

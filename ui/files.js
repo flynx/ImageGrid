@@ -780,7 +780,8 @@ function loadRawDir(path, no_preview_processing, prefix){
 	var _run = function(func){
 		var res = $.Deferred()
 		func()
-			.done(function(){ 
+			//.done(function(){ 
+			.depleted(function(){ 
 				res.resolve() 
 			})
 		return res
@@ -1036,8 +1037,7 @@ function exportImagesTo(path, im_name, dir_name, size){
 			showStatusQ('Export: done.')
 			res.resolve()
 		})
-
-	pool.filling()
+		.filling()
 
 	// go through ribbons...
 	for(var i=DATA.ribbons.length-1; i >= 0; i--){
@@ -1062,7 +1062,6 @@ function exportImagesTo(path, im_name, dir_name, size){
 	}
 
 	pool.doneFilling()
-
 	return res
 }
 
@@ -1121,6 +1120,7 @@ function readImagesOrientationQ(gids, no_update_loaded){
 	gids = gids == null ? getClosestGIDs() : gids
 
 	var queue = getWorkerQueue('Read images orientation', 4)
+		.filling()
 
 	var last = null
 
@@ -1129,6 +1129,7 @@ function readImagesOrientationQ(gids, no_update_loaded){
 		last = queue.enqueue(readImageOrientation, gid, no_update_loaded)
 	})
 
+	queue.doneFilling()
 	return queue
 }
 
@@ -1153,11 +1154,13 @@ function readImagesDatesQ(images){
 	images = images == null ? IMAGES : images
 
 	var queue = getWorkerQueue('Read images dates', 4)
+		.filling()
 
 	$.each(images, function(gid, img){
 		queue.enqueue(readImageDate, gid, images)
 	})
 
+	queue.doneFilling()
 	return queue
 }
 
@@ -1226,11 +1229,13 @@ function updateImagesGIDsQ(images, data){
 	images = images == null ? IMAGES : images
 
 	var queue = getWorkerQueue('Update GIDs', 4)
+		.filling()
 
 	$.each(images, function(key){
 		queue.enqueue(updateImageGID, key, images, data)
 	})
 
+	queue.doneFilling()
 	IMAGES_CREATED = true
 
 	return queue
