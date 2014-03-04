@@ -169,12 +169,19 @@ var toggleSingleImageMode = createCSSClassToggler(
 
 // TODO transitions...
 // TODO a real setup UI (instead of prompt)
+//
+// XXX avoid using globals:
+// 		_pre_slideshow_marks_view
+// 		_slideshow_timer
 var toggleSlideShowMode = createCSSClassToggler(
 		'.viewer', 
 		'.slideshow-mode',
 		function(action){
 			if(action == 'on'){
 				updateStatus('Slideshow...').show()
+
+				// XXX hackish...
+				_pre_slideshow_marks_view = toggleMarksView('?')
 
 				// interval from user...
 				//var interval = prompt('Slideshow interval (sec):', SLIDESHOW_INTERVAL/1000)
@@ -216,6 +223,8 @@ var toggleSlideShowMode = createCSSClassToggler(
 						hideOverlay($('.viewer'))
 
 						toggleSingleImageMode('on')
+						toggleMarksView('off')
+
 						_slideshow_timer = setInterval(function(){
 							var cur = getImage()
 							// advance the image...
@@ -227,6 +236,8 @@ var toggleSlideShowMode = createCSSClassToggler(
 									SLIDESHOW_DIRECTION == 'next' ? firstImage() : lastImage()
 								} else {
 									toggleSlideShowMode('off')
+									toggleMarksView(window._pre_slideshow_marks_view == null ? 'on' 
+											: window._pre_slideshow_marks_view)
 									return 
 								}
 							}
@@ -238,11 +249,15 @@ var toggleSlideShowMode = createCSSClassToggler(
 					// user cancelled...
 					.fail(function(){
 						toggleSlideShowMode('off')
+						toggleMarksView(window._pre_slideshow_marks_view == null ? 'on' 
+								: window._pre_slideshow_marks_view)
 					})
 
 			} else {
 				window._slideshow_timer != null && clearInterval(_slideshow_timer)
 				showStatus('Slideshow: canceled.')
+				toggleMarksView(window._pre_slideshow_marks_view == null ? 'on' 
+						: window._pre_slideshow_marks_view)
 				hideOverlay($('.viewer'))
 			}
 		})
