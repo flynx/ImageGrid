@@ -1000,11 +1000,11 @@ function makeGIDBeforeGetterFromList(get_list, restrict_to_ribbon){
 		do {
 			prev = getGIDBefore(gid, list)
 			gid = getGIDBefore(prev, ribbon)
-		} while(prev != gid && prev != null)
+		} while(prev != gid && prev != null && gid != null)
 
 		// nothing found before current image...
-		if(prev == null){
-			return prev
+		if(prev == null || gid == null){
+			return null
 		}
 
 		return prev
