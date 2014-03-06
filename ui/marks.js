@@ -128,9 +128,9 @@ function makeUnmarkedSparseLister(get_marked){
 		var res = mode == 'all' ? 
 				DATA.order.slice()
 			: mode == 'ribbon' ? 
-				populateSparceGIDList(getRibbonGIDs())
+				populateSparseGIDList(getRibbonGIDs())
 			: typeof(mode) == typeof(123) ? 
-				populateSparceGIDList(getRibbonGIDs(mode))
+				populateSparseGIDList(getRibbonGIDs(mode))
 			: mode
 
 		// for ribbon modes, remove non-ribbon marks...
@@ -748,7 +748,7 @@ var loadFileMarks = makeFileLoader(
 		CONFIG.marked_file, 
 		[],
 		function(data){ 
-			MARKED = populateSparceGIDList(data)
+			MARKED = populateSparseGIDList(data)
 		},
 		null,
 		'marksLoaded')
@@ -797,7 +797,7 @@ function setupMarks(viewer){
 
 	return viewer
 		.on('sortedImages', function(){
-			MARKED = populateSparceGIDList(MARKED)
+			MARKED = populateSparseGIDList(MARKED)
 			marksUpdated()
 		})
 		.on('horizontalShiftedImage', function(evt, gid, direction, from, to){

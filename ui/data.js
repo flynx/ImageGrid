@@ -613,7 +613,7 @@ function binSearch(target, lst, check, return_position, get){
 //
 // NOTE: the resulting list will always be sorted...
 // NOTE: this will skip all elements not in order
-function populateSparceGIDList(gids, target, data){
+function populateSparseGIDList(gids, target, data){
 	data = data == null ? DATA : data
 	var order = data.order
 	var res = target == null ? [] : target
@@ -669,7 +669,7 @@ function compactSparceList(lst){
 //
 // NOTE: this has no side-effects on the original gids list...
 function fastSortGIDsByOrder(gids, data){
-	return compactSparceList(populateSparceGIDList(gids, data))
+	return compactSparceList(populateSparseGIDList(gids, data))
 }
 
 

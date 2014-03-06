@@ -127,7 +127,7 @@ var loadFileBookmarks = makeFileLoader(
 		CONFIG.bookmarks_file, 
 		[[], {}],
 		function(data){ 
-			BOOKMARKS = populateSparceGIDList(data[0])
+			BOOKMARKS = populateSparseGIDList(data[0])
 			BOOKMARKS_DATA = data[1]
 		})
 
@@ -170,7 +170,7 @@ function setupBookmarks(viewer){
 
 	return viewer
 		.on('sortedImages', function(){
-			BOOKMARKS = populateSparceGIDList(BOOKMARKS)
+			BOOKMARKS = populateSparseGIDList(BOOKMARKS)
 			bookmarksUpdated()
 		})
 		.on('horizontalShiftedImage', function(evt, gid, direction, from, to){
