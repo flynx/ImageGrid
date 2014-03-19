@@ -144,7 +144,9 @@ var DataPrototype = {
 		return this
 	},
 
-	// util methods...
+
+
+	// Util methods...
 	
 	// Compact a sparse list...
 	compactSparseList: function(list){
@@ -184,77 +186,8 @@ var DataPrototype = {
 		return gid
 	},
 	
-	// This is signature compatible with .getImage(..), see it for more
-	// info...
-	//
-	// XXX do we need more specific focus operations like:
-	// 		.focusImageOffset(offset)
-	// 			XXX reference impelementation:
-	// 				return this.focusImage('current', offset)
-	// 		.focusRibbonOffset(offset)
-	// 			XXX reference impelementation:
-	// 				var c = this.getRibbonOrder()
-	// 				var t = c+offset
-	// 				return this.focusImage('current', (t < c ? 'after' : 'before'), t)
-	focusImage: function(target, mode, list){
-		var current = this.getImage(target, mode, list)
-		if(this.order.indexOf(current) >= 0){
-			this.current = current
-		}
-		return this
-	},	
-	// This is signature compatible with .getRibbon(..), see it for more
-	// info...
-	setBase: function(target, offset){
-		var base = this.getRibbon(target, offset)
-		if(base in this.ribbons){
-			this.base = base
-		}
-		return this
-	},
 
-	// Create empty ribbon...
-	//
-	// XXX above/below/at...
-	// XXX do we remove ribbons and how...
-	// XXX test
-	newRibbon: function(target, mode){
-		var gid = this.newGid('R')
-		var i = this.getRibbonOrder(target)
-
-		this.ribbon_order.splice(i, 0, gid)
-		this.ribbons[gid] = []
-
-		// XXX should we return this or gid???
-		return this
-	},
-	// Merge ribbons
-	//
-	//	.mergeRibbons('all')
-	//	.mergeRibbons(ribbon, ribbon, ...)
-	//		-> data
-	// If 'all' is the first argumet, this will merge all the ribbons.
-	//
-	// This will merge the ribbons into the first.
-	//
-	// XXX we should update .base
-	// XXX test
-	mergeRibbons: function(target, other){
-		var targets = target == 'all' ? this.ribbon_order : arguments
-		var base = arguments[0]
-
-		for(var i=1; i < arguments.length; i++){
-			var r = arguments[i]
-			this.makeSparseImages(this.ribbons[r], this.ribbons[base])
-
-			delete this.ribbons[r]
-			this.ribbon_order.splice(this.ribbon_order.indexOf(r), 1)
-		}
-
-		// XXX we should update .base
-
-		return this
-	},
+	// Introspection...
 
 	// Get image
 	//
@@ -625,6 +558,82 @@ var DataPrototype = {
 		return this.ribbon_order.indexOf(this.getRibbon(target, offset))
 	},
 
+
+
+	// Edit methods...
+
+	// This is signature compatible with .getImage(..), see it for more
+	// info...
+	//
+	// XXX do we need more specific focus operations like:
+	// 		.focusImageOffset(offset)
+	// 			XXX reference impelementation:
+	// 				return this.focusImage('current', offset)
+	// 		.focusRibbonOffset(offset)
+	// 			XXX reference impelementation:
+	// 				var c = this.getRibbonOrder()
+	// 				var t = c+offset
+	// 				return this.focusImage('current', (t < c ? 'after' : 'before'), t)
+	focusImage: function(target, mode, list){
+		var current = this.getImage(target, mode, list)
+		if(this.order.indexOf(current) >= 0){
+			this.current = current
+		}
+		return this
+	},	
+	// This is signature compatible with .getRibbon(..), see it for more
+	// info...
+	setBase: function(target, offset){
+		var base = this.getRibbon(target, offset)
+		if(base in this.ribbons){
+			this.base = base
+		}
+		return this
+	},
+
+	// Create empty ribbon...
+	//
+	// XXX above/below/at...
+	// XXX do we remove ribbons and how...
+	// XXX test
+	newRibbon: function(target, mode){
+		var gid = this.newGid('R')
+		var i = this.getRibbonOrder(target)
+
+		this.ribbon_order.splice(i, 0, gid)
+		this.ribbons[gid] = []
+
+		// XXX should we return this or gid???
+		return this
+	},
+	// Merge ribbons
+	//
+	//	.mergeRibbons('all')
+	//	.mergeRibbons(ribbon, ribbon, ...)
+	//		-> data
+	// If 'all' is the first argumet, this will merge all the ribbons.
+	//
+	// This will merge the ribbons into the first.
+	//
+	// XXX we should update .base
+	// XXX test
+	mergeRibbons: function(target, other){
+		var targets = target == 'all' ? this.ribbon_order : arguments
+		var base = arguments[0]
+
+		for(var i=1; i < arguments.length; i++){
+			var r = arguments[i]
+			this.makeSparseImages(this.ribbons[r], this.ribbons[base])
+
+			delete this.ribbons[r]
+			this.ribbon_order.splice(this.ribbon_order.indexOf(r), 1)
+		}
+
+		// XXX we should update .base
+
+		return this
+	},
+
 	// Sort images in ribbons via .order...
 	//
 	// NOTE: this sorts in-place
@@ -738,6 +747,10 @@ var DataPrototype = {
 		return this 
 	},
 
+
+
+	// Data-level edit methods...
+
 	// Split data into 2 or more sections...
 	//
 	// NOTE: this might result in empty ribbons, if no images are in a 
@@ -848,13 +861,12 @@ var DataPrototype = {
 		return res
 	},
 
+
+
 	// JSON serialization...
-	//
+
 	// NOTE: this loads in-place, use .fromJSON(..) to create new data...
-	// XXX check if we need more version checking...
 	convertDataGen3: function(data){
-		// XXX check for earlier versions...
-		// XXX do we need to do more here???
 		data = data.version == null ? convertDataGen1(data) : data
 		var that = this
 		var res = {}
