@@ -9,7 +9,7 @@
 
 /*********************************************************************/
 
-var DataClassProto = {
+var DataClassPrototype = {
 	// NOTE: we consider the list sorted...
 	fromList: function(list){
 		var res = new Data()
@@ -754,14 +754,27 @@ var DataPrototype = {
 }
 
 
-var Data = function(){
-	this.base = null
-	this.current = null
-	this.order = [] 
-	this.ribbon_order = [] 
-	this.ribbons = {}
+function Data(json){
+	if(this.constructor.name != 'Data'){
+		obj = new Data
+	} else {
+		obj = this
+	}
 
-	this._gid_cache = []
+	obj.base = null
+	obj.current = null
+	obj.order = [] 
+	obj.ribbon_order = [] 
+	obj.ribbons = {}
+
+	obj._gid_cache = []
+
+	// load initial state...
+	if(json != null){
+		obj.loadJSON(json)
+	}
+
+	return obj
 }
 Data.__proto__ = DataClassPrototype
 Data.prototype = DataPrototype
