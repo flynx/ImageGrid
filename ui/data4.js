@@ -78,8 +78,11 @@ var DataPrototype = {
 	// 	ribbon gid
 	// 	list
 	//
-	focusImage: function(target, mode){
-		var current = this.getImage(target, mode)
+	// XXX do we need more specific focus operations like:
+	// 		.focusImage(offset)
+	// 		.focusRibbon(offset)
+	focusImage: function(target, mode, list){
+		var current = this.getImage(target, mode, list)
 		if(current != null){
 			this.current = current
 		}
@@ -97,6 +100,7 @@ var DataPrototype = {
 	//
 	// XXX above/below/at...
 	// XXX do we remove ribbons and how...
+	// XXX test
 	newRibbon: function(target, mode){
 		var gid = this.newGid('R')
 		var i = this.getRibbonOrder(target)
@@ -117,6 +121,7 @@ var DataPrototype = {
 	// This will merge the ribbons into the first.
 	//
 	// XXX we should update .base
+	// XXX test
 	mergeRibbons: function(target, other){
 		var targets = target == 'all' ? this.ribbon_order : arguments
 		var base = arguments[0]
@@ -140,10 +145,12 @@ var DataPrototype = {
 	// 		-> current image gid
 	//
 	// 	.getImage(gid|order)
-	// 	.getImage(gid|order, list|ribbon)	XXX
+	// 	.getImage(gid|order, list|ribbon)
 	// 		-> gid if the image is loaded/exists
 	// 		-> null if the image is not loaded or does not exist
 	// 		NOTE: if the argument gid does not exist in 
+	//		NOTE: image order can be negative, thus getting an image 
+	//				from the tail.
 	//
 	// 	.getImage('first'[, ribbon])
 	// 	.getImage('last'[, ribbon])
@@ -165,25 +172,34 @@ var DataPrototype = {
 	// 		NOTE: in both the above cases if gid|order is found explicitly
 	// 			it will be returned.
 	//
-	// 	.getImage(offset, 'relative'[, list|ribbon])
+	// 	.getImage(gid|order, offset[, list|ribbon])
 	// 		-> gid if the image at offset from current
 	// 		-> null if there is no image at that offset
 	// 		NOTE: the 'relative' string is required as there is no way to
 	// 			destinguish between order and offset...
-	//
-	// 	.getImage(gid|order, offset[, list|ribbon])
-	// 		same as the above, but relative to gid|order
 	//
 	// If gid|order is not given, current image is assumed.
 	// Similarly, if list|ribbon is not given then the current ribbon 
 	// is used.
 	//
 	// NOTE: if gid is invalid this will return -1 (XXX is this good???)
+	// NOTE: the folowing are equivalent:
+	// 			D.getImage('current', -1, R)
+	// 			D.getImage('before', R) 
+	// 			D.getImage('current', 'before', R)
+	// 		where D is a Data object and R a ribbon id/index.
+	//
 	//
 	// XXX revise argument syntax...
 	getImage: function(target, mode, list){
 		if(target == 'current'){
 			target = this.current
+		}
+		if(typeof(target) == typeof(123)){
+			if(target < 0){
+				return this.order[this.order.length+target]
+			}
+			return this.order[target]
 		}
 		if(target == null && mode == null && list == null){
 			return this.current
@@ -222,14 +238,13 @@ var DataPrototype = {
 			mode = null
 		}
 		// relative mode and offset...
-		var offset = mode == 'relative' ? target
-			: typeof(mode) == typeof(123) ? mode
-			: 1
 		if(typeof(mode) == typeof(123)){
-			mode = offset > 0 ? 'before'
-				: offset < 0 ? 'after'
+			var offset = mode
+			mode = offset < 0 ? 'before'
+				: offset > 0 ? 'after'
 				: mode
 		} else {
+			var offset = 0 
 			mode = mode == null ? 'before' : mode
 		}
 		offset = Math.abs(offset)
@@ -251,7 +266,7 @@ var DataPrototype = {
 
 		var res = list[i]
 		// we have a direct hit...
-		if(res != null){
+		if(res != null && offset == 0){
 			return res
 		}
 
@@ -276,7 +291,7 @@ var DataPrototype = {
 				continue
 			}
 			offset -= 1
-			if(offset == 0){
+			if(offset <= 0){
 				return cur
 			}
 		}
@@ -506,6 +521,7 @@ var DataPrototype = {
 	// NOTE: this will not create new ribbons.
 	//
 	// XXX process from as a list of gids...
+	// XXX test
 	shiftImage: function(from, target, mode){
 		from = from.constructor.name != 'Array' ? [from] : from
 		mode = mode == null ? 'before' : mode
@@ -577,6 +593,7 @@ var DataPrototype = {
 	//
 	// NOTE: this might result in empty ribbons, if no images are in a 
 	// 		given ribbon in the section to be split...
+	// XXX test
 	split: function(target){
 		if(target.constructor.name != 'Array'){
 			target = [target]
@@ -613,6 +630,7 @@ var DataPrototype = {
 	// NOTE: this will merge the items into the first list element...
 	//
 	// XXX should this join to this or create a new data???
+	// XXX test
 	join: function(data, align){
 		var res = data.pop()
 
@@ -640,6 +658,7 @@ var DataPrototype = {
 	// NOTE: this may result in empty ribbons...
 	//
 	// XXX should we be able to align a merged crop???
+	// XXX test
 	mergeCrop: function(crop){
 		var that = this
 
