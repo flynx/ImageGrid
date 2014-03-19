@@ -72,25 +72,30 @@ var DataPrototype = {
 		return gid
 	},
 	
-	// target can be:
-	// 	image gid
-	// 	image order
-	// 	ribbon gid
-	// 	list
+	// This is signature compatible with .getImage(..), see it for more
+	// info...
 	//
 	// XXX do we need more specific focus operations like:
-	// 		.focusImage(offset)
-	// 		.focusRibbon(offset)
+	// 		.focusImageOffset(offset)
+	// 			XXX reference impelementation:
+	// 				return this.focusImage('current', offset)
+	// 		.focusRibbonOffset(offset)
+	// 			XXX reference impelementation:
+	// 				var c = this.getRibbonOrder()
+	// 				var t = c+offset
+	// 				return this.focusImage('current', (t < c ? 'after' : 'before'), t)
 	focusImage: function(target, mode, list){
 		var current = this.getImage(target, mode, list)
-		if(current != null){
+		if(this.order.indexOf(current) >= 0){
 			this.current = current
 		}
 		return this
 	},	
-	setBase: function(target){
-		var base = this.getRibbon(target)
-		if(base != null){
+	// This is signature compatible with .getRibbon(..), see it for more
+	// info...
+	setBase: function(target, offset){
+		var base = this.getRibbon(target, offset)
+		if(base in this.ribbons){
 			this.base = base
 		}
 		return this
