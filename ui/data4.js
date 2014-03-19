@@ -131,6 +131,7 @@ var DataClassPrototype = {
 // 		NOTE: ribbons are sparse...
 //
 var DataPrototype = {
+	// Reset the state to empty...
 	_reset: function(){
 		this.base = null
 		this.current = null
@@ -139,12 +140,21 @@ var DataPrototype = {
 		this.ribbons = {}
 
 		this._gid_cache = []
+
+		return this
 	},
 
 	// util methods...
+	
+	// Compact a sparse list...
 	compactSparseList: function(list){
 		return list.filter(function(){return true})
 	},
+	// Make a sparse list of image gids...
+	//
+	// This will use this.order as the base for ordering the list.
+	//
+	// If target is given then it will get updated with the input gids.
 	makeSparseImages: function(gids, target){
 		target = target == null ? [] : target
 		order = this.order
@@ -158,6 +168,8 @@ var DataPrototype = {
 
 		return target
 	},
+	// Generate a uniqie GID...
+	//
 	// XXX generate a real gid...
 	newGid: function(prefix){
 		prefix = prefix == null ? 'G' : prefix
