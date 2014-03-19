@@ -10,7 +10,7 @@
 /*********************************************************************/
 
 var DataClassPrototype = {
-	// NOTE: we consider the list sorted...
+	// NOTE: we consider the input list sorted...
 	fromList: function(list){
 		var res = new Data()
 		// XXX make a real ribbon gid...
@@ -147,24 +147,29 @@ var DataPrototype = {
 	// Get image
 	//
 	//	.getImage()
+	//	.getImage('current')
 	// 		-> current image gid
 	//
 	// 	.getImage(gid|order)
 	// 	.getImage(gid|order, list|ribbon)
 	// 		-> gid if the image is loaded/exists
 	// 		-> null if the image is not loaded or does not exist
-	// 		NOTE: if the argument gid does not exist in 
+	// 		NOTE: the second argument must not be an int (ribbon order)
+	// 				to avoid conflict with the offset case below.
 	//		NOTE: image order can be negative, thus getting an image 
 	//				from the tail.
 	//
 	// 	.getImage('first'[, ribbon])
 	// 	.getImage('last'[, ribbon])
 	// 		-> gid of first/last image in ribbon 
+	// 		-> null
 	// 		NOTE: the second argument must be .getRibbon(..) compatible.
 	//
 	// 	.getImage(list|ribbon[, 'before'|'after'])
-	// 		-> gid
+	// 		-> gid of image closest to current in list|ribbon
 	// 		-> null
+	// 		NOTE: 'before' is default.
+	// 		NOTE: the first argument must not be a number.
 	//
 	// 	.getImage('before'[, list|ribbon])
 	// 	.getImage(gid|order, 'before'[, list|ribbon])
@@ -183,31 +188,37 @@ var DataPrototype = {
 	// 		NOTE: the 'relative' string is required as there is no way to
 	// 			destinguish between order and offset...
 	//
-	// If gid|order is not given, current image is assumed.
-	// Similarly, if list|ribbon is not given then the current ribbon 
-	// is used.
-	//
-	// NOTE: if gid is invalid this will return -1 (XXX is this good???)
+	// NOTE: If gid|order is not given, current image is assumed.
+	// 		Similarly, if list|ribbon is not given then the current 
+	// 		ribbon is used.
+	// NOTE: if input gid is invalid this will return -1 (XXX is this good???)
 	// NOTE: the folowing are equivalent:
 	// 			D.getImage('current', -1, R)
 	// 			D.getImage('before', R) 
 	// 			D.getImage('current', 'before', R)
-	// 		where D is a Data object and R a ribbon id/index.
-	//
+	// 		where D is a Data object and R a ribbon id/index different 
+	// 		from the current ribbon (see next note for details).
+	// NOTE: in before/after modes, if the target image is found then it
+	// 		will be returned, use offset to explicitly get the image 
+	// 		before/after target.
 	//
 	// XXX revise argument syntax...
 	getImage: function(target, mode, list){
+		// no args...
+		if(target == null && mode == null && list == null){
+			return this.current
+		}
+
+		// current image shorthand...
 		if(target == 'current'){
 			target = this.current
 		}
+
+		// order -> gid special case...
 		if(typeof(target) == typeof(123)){
-			if(target < 0){
-				return this.order[this.order.length+target]
-			}
-			return this.order[target]
-		}
-		if(target == null && mode == null && list == null){
-			return this.current
+			target = target < 0 ? 
+					this.order[this.order.length+target] 
+				: this.order[target]
 		}
 
 		// first/last special case...
@@ -228,17 +239,20 @@ var DataPrototype = {
 			return null
 		}
 
-		// normalize args...
+		// nirmalize target...
 		if(target in this.ribbons || target.constructor.name == 'Array'){
 			list = target
 			target = this.current
-		}
-		if(target == 'before' || target == 'after'){
+		} else if(target == 'before' || target == 'after'){
 			list = mode
 			mode = target
 			target = this.current
 		}
-		if(mode != null && mode.constructor.name == 'Array'){
+
+		// normalize mode...
+		if(mode != null 
+				&& mode.constructor.name == 'Array' 
+				|| mode in this.ribbons){
 			list = mode
 			mode = null
 		}
@@ -256,7 +270,7 @@ var DataPrototype = {
 
 		var i = this.order.indexOf(target)
 
-		// ERROR: invalid gid...
+		// invalid gid...
 		// XXX need a better way to report errors...
 		if(i == -1){
 			return -1
@@ -275,6 +289,7 @@ var DataPrototype = {
 			return res
 		}
 
+		// prepare for the search...
 		if(mode == 'before'){
 			var step = -1
 
@@ -286,8 +301,9 @@ var DataPrototype = {
 			return null
 		}
 
-		// get the first non-null, also accounting for offset...
+		// skip the current elem...
 		i += step
+		// get the first non-null, also accounting for offset...
 		// NOTE: we are using this.order.length here as ribbons might 
 		// 		be truncated...
 		for(; i >= 0 && i < this.order.length; i+=step){
