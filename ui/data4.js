@@ -6,7 +6,7 @@
 
 // General format info...
 //
-// version format:
+// Version format:
 // 	<major>.<minor>
 //
 // Major version change mean a significant incompatibility.
@@ -24,7 +24,7 @@
 // 	TAGS			- tag data
 //
 //
-// Changes:
+// Data format change history:
 // 	none - Gen1 data format, mostly experimental,
 // 			- has no explicit version set,
 // 			- not used for real data.
@@ -66,7 +66,10 @@
 // NOTE: Gen1 and Gen3 refer to code generations rather than data format
 // 		iterations, Gen2 is skipped here as it is a different project 
 // 		(PortableMag) started on the same code base as ImageGrid.Viewer
-// 		generation 1 and advanced from there...
+// 		generation 1 and advanced from there, backporting some of the 
+// 		results eventually formed Gen3...
+//
+//
 
 
 
@@ -95,20 +98,39 @@ var DataClassPrototype = {
 
 // Data object methods and API...
 //
+// DATA format:
+//
+// 	.current (gid)
+// 		gid of the current image
+//
+// 	.base (gid)
+// 		gid of the base ribbon
+//
+// 	.order
+// 		List of image gids setting the image order
+//
+// 		format:
+//	 		[ gid, .. ]
+//
+//	 	NOTE: this list may contain gids not loaded at the moment, a 
+//	 		common case for this is when data is cropped.
+//
+// 	.ribbon_order
+// 		List of ribbon gids setting the ribbon order.
+//
+// 		format:
+// 			[ gid, .. ]
+//
+// 	.ribbons
+// 		Dict of ribbons, indexed by ribbon gid, each ribbon is a sparse
+// 		list of image gids.
+//
+// 		format:
+// 			{ gid: [ gid, .. ], .. }
+//
+// 		NOTE: ribbons are sparse...
+//
 var DataPrototype = {
-	// DATA structure:
-	// 	.current
-	// 		gid
-	// 	.base
-	// 		gid
-	// 	.order
-	// 		[ gid, .. ]
-	// 	.ribbon_order
-	// 		[ gid, .. ]
-	// 	.ribbons
-	// 		{ gid: [ gid, .. ] }
-	// 		NOTE: ribbons are sparse...
-	
 	// util methods...
 	compactSparseList: function(list){
 		return list.filter(function(){return true})
