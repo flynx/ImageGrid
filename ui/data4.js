@@ -131,6 +131,16 @@ var DataClassPrototype = {
 // 		NOTE: ribbons are sparse...
 //
 var DataPrototype = {
+	_reset: function(){
+		this.base = null
+		this.current = null
+		this.order = [] 
+		this.ribbon_order = [] 
+		this.ribbons = {}
+
+		this._gid_cache = []
+	},
+
 	// util methods...
 	compactSparseList: function(list){
 		return list.filter(function(){return true})
@@ -900,17 +910,11 @@ function Data(json){
 		obj = this
 	}
 
-	obj.base = null
-	obj.current = null
-	obj.order = [] 
-	obj.ribbon_order = [] 
-	obj.ribbons = {}
-
-	obj._gid_cache = []
-
 	// load initial state...
 	if(json != null){
 		obj.loadJSON(json)
+	} else {
+		obj._reset()
 	}
 
 	return obj
