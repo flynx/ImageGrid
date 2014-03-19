@@ -8,6 +8,69 @@
 
 
 /*********************************************************************/
+// Format version...
+//
+// version format:
+// 	<major>.<minor>
+//
+// Major version change mean a significant incompatibility.
+//
+// Minor version changes mean some detail changed and can be handled
+// by it's specific handler seamlessly. Backwards compatible.
+//
+//
+// For more info see:
+// 	DATA			- main data
+// 	IMAGES			- image data
+// 	MARKED			- marks data
+// 	BOOKMARKS		- bookmarks data
+// 	BOOKMARKS_DATA	- bookmarks metadata
+// 	TAGS			- tag data
+//
+//
+// Changes:
+// 	none - Gen1 data format, mostly experimental,
+// 			- has no explicit version set,
+// 			- not used for real data.
+// 	2.0 - Gen3 data format, still experimental,
+// 			- completely and incompatibly new structure,
+// 			- use convertDataGen1(..) to convert Gen1 to 2.0 
+// 			- auto-convert form gen1 on load...
+// 			- used for my archive, not public,
+// 	2.1 - Minor update to format spec,	
+// 			- MARKED now maintained sorted, live,
+// 			- will auto-sort marks on load of 2.0 data and change 
+// 			  data version to 2.1, will need a re-save,
+// 	2.2 - Minor update to how data is handled and saved
+// 			- now DATA.current is saved separately in current.json,
+// 			  loading is done from current.json and if not found from
+// 			  data.json.
+// 			  the file is optional.
+// 			- data, marks, bookmarks, tags are now saved only if updated
+// 	2.3 - Minor update to sorting restrictions
+// 			- now MARKED and BOOKMARKS do not need to be sorted 
+// 			  explicitly in json, they are now sorted as a side-effect 
+// 			  of being sparse.
+// 			  This negates some restrictions posed in 2.1, including 
+// 			  conversion of 2.0 data.
+// 			  NOTE: TAGS gid sets are still compact lists, thus are 
+// 			  		actively maintained sorted.
+// 			  		...still thinking of whether making them sparse will 
+// 			  		take up too much memory, and is it worth the work...
+// 	3.0	- Gen4 format, introduced several backwards incompatible cahnges:
+// 			- added ribbon GIDs, .ribbons now is a gid indexed object
+// 			- added .ribbon_order
+// 			- added base ribbon
+// 			- ribbons are now sparse in memory but can be compact when
+// 			  serialized.
+// 		NOTE: these changes apply only to the DATA structure and 
+// 				serialization.
+//
+//
+// NOTE: Gen1 and Gen3 refer to code generations rather than data format
+// 		iterations, Gen2 is skipped here as it is a different project 
+// 		(PortableMag) started on the same code base as ImageGrid.Viewer
+// 		generation 1 and advanced from there...
 
 var DataClassPrototype = {
 	// NOTE: we consider the input list sorted...
@@ -202,7 +265,8 @@ var DataPrototype = {
 	// 		will be returned, use offset to explicitly get the image 
 	// 		before/after target.
 	//
-	// XXX revise argument syntax...
+	// XXX most of the complexity here comes from argument DSL parsing,
+	// 		might be good to revise argument syntax and handling...
 	getImage: function(target, mode, list){
 		// no args...
 		if(target == null && mode == null && list == null){
@@ -320,6 +384,7 @@ var DataPrototype = {
 		return null
 	},	
 	// same as .getImage(..) but return image order.
+	//
 	// XXX should be able to get order in the following contexts:
 	// 		- all (default)
 	// 		- loaded
@@ -337,8 +402,11 @@ var DataPrototype = {
 	//	.getImages('all')
 	//		-> list of all images, both loaded and not
 	//
+	//	.getImages('current')
+	//		-> list of images, in current ribbon
+	//
 	//	.getImages(list)
-	//		-> only loaded images from list
+	//		-> return only loaded images from list
 	//
 	//	.getImages(gid|order|ribbon)
 	//		-> get loaded images from ribbon
@@ -355,6 +423,7 @@ var DataPrototype = {
 	// This will allways return count images if there is enough images 
 	// in ribbon from the requested sides of target.
 	//
+	// NOTE: this expects ribbon order and not image order.
 	// NOTE: if count is even, it will return 1 more image to the left 
 	// 		(before) the target.
 	// NOTE: if the target is present in the image-set it will be included
@@ -368,6 +437,9 @@ var DataPrototype = {
 		var list
 
 		// normalize target and build the source list...
+
+		// 'current' ribbon...
+		target = target == 'current' ? this.current : target
 
 		// get all gids...
 		if(target == 'all'){
@@ -504,6 +576,9 @@ var DataPrototype = {
 		return this.ribbon_order.indexOf(this.getRibbon(target, offset))
 	},
 
+	// Sort images in ribbons via .order...
+	//
+	// NOTE: this sorts in-place
 	sortImages: function(){
 		var ribbons = this.ribbons
 		for(k in ribbons){
@@ -511,6 +586,10 @@ var DataPrototype = {
 		}
 		return this
 	},
+	// Reverse .order and all the ribbons...
+	//
+	// NOTE: this sorts in-place
+	//
 	// XXX this depends on setting length of an array, it works in Chrome
 	// 		but will it work the same in other systems???
 	reverseImages: function(){
@@ -721,16 +800,6 @@ var DataPrototype = {
 	},
 
 	// JSON serialization...
-	//
-	// Format version:
-	// 	3.0	- Gen4 format, introduced several backwards incompatible 
-	// 		cahnges:
-	// 			- added ribbon GIDs, .ribbons now is a gid indexed 
-	// 			  object
-	// 			- added .ribbon_order
-	// 			- added base ribbon
-	// 			- ribbons are now sparse in memory but can be compact 
-	// 			  in file
 	//
 	// NOTE: this loads in-place, use .fromJSON(..) to create new data...
 	// XXX check if we need more version checking...
