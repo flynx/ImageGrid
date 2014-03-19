@@ -4,11 +4,7 @@
 *
 **********************************************************************/
 
-//var DEBUG = DEBUG != null ? DEBUG : true
-
-
-/*********************************************************************/
-// Format version...
+// General format info...
 //
 // version format:
 // 	<major>.<minor>
@@ -33,10 +29,10 @@
 // 			- has no explicit version set,
 // 			- not used for real data.
 // 	2.0 - Gen3 data format, still experimental,
-// 			- completely and incompatibly new structure,
+// 			- completely new and incompatible structure,
 // 			- use convertDataGen1(..) to convert Gen1 to 2.0 
-// 			- auto-convert form gen1 on load...
 // 			- used for my archive, not public,
+// 			- auto-convert form gen1 on load...
 // 	2.1 - Minor update to format spec,	
 // 			- MARKED now maintained sorted, live,
 // 			- will auto-sort marks on load of 2.0 data and change 
@@ -55,16 +51,16 @@
 // 			  conversion of 2.0 data.
 // 			  NOTE: TAGS gid sets are still compact lists, thus are 
 // 			  		actively maintained sorted.
-// 			  		...still thinking of whether making them sparse will 
-// 			  		take up too much memory, and is it worth the work...
-// 	3.0	- Gen4 format, introduced several backwards incompatible cahnges:
+// 			  		...still thinking of whether making them sparse is
+// 			  		worth the work...
+// 	3.0	- Gen4 DATA format, introduced several backwards incompatible 
+// 		cahnges:
 // 			- added ribbon GIDs, .ribbons now is a gid indexed object
 // 			- added .ribbon_order
 // 			- added base ribbon
 // 			- ribbons are now sparse in memory but can be compact when
 // 			  serialized.
-// 		NOTE: these changes apply only to the DATA structure and 
-// 				serialization.
+// 			- auto-convert from gen1 (no version) and gen3 (2.*) on load
 //
 //
 // NOTE: Gen1 and Gen3 refer to code generations rather than data format
@@ -72,6 +68,12 @@
 // 		(PortableMag) started on the same code base as ImageGrid.Viewer
 // 		generation 1 and advanced from there...
 
+
+
+/*********************************************************************/
+
+// Data class methods and API...
+//
 var DataClassPrototype = {
 	// NOTE: we consider the input list sorted...
 	fromList: function(list){
@@ -90,6 +92,9 @@ var DataClassPrototype = {
 }
 
 
+
+// Data object methods and API...
+//
 var DataPrototype = {
 	// DATA structure:
 	// 	.current
@@ -863,6 +868,9 @@ var DataPrototype = {
 }
 
 
+
+// Main Data object...
+//
 function Data(json){
 	if(this.constructor.name != 'Data'){
 		obj = new Data
