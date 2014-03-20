@@ -175,6 +175,7 @@ var DataPrototype = {
 	},
 	
 
+
 	/*********************************************** Introspection ***/
 
 	// Get image
@@ -218,8 +219,6 @@ var DataPrototype = {
 	// 	.getImage(gid|order, offset[, list|ribbon])
 	// 		-> gid if the image at offset from current
 	// 		-> null if there is no image at that offset
-	// 		NOTE: the 'relative' string is required as there is no way to
-	// 			destinguish between order and offset...
 	//
 	// NOTE: If gid|order is not given, current image is assumed.
 	// 		Similarly, if list|ribbon is not given then the current 
@@ -484,7 +483,11 @@ var DataPrototype = {
 	// Get ribbon...
 	// 
 	//	.getRibbon()
+	//	.getRibbon('current')
 	//		-> current ribbon gid
+	//
+	//	.getRibbon('base')
+	//		-> base ribbon gid
 	//
 	//	.getRibbon(ribbon|order|gid)
 	//		-> ribbon gid
@@ -506,6 +509,13 @@ var DataPrototype = {
 		offset = offset == null ? 0 : offset
 		offset = offset == 'before' ? -1 : offset
 		offset = offset == 'after' ? 1 : offset
+
+		// special keywords...
+		if(target == 'base'){
+			return this.base
+		} else if(target == 'current'){
+			target = this.current
+		}
 
 		var ribbons = this.ribbons
 		var o
@@ -551,6 +561,8 @@ var DataPrototype = {
 
 	/******************************************************** Edit ***/
 
+	// Focus an image -- make it current...
+	//
 	// This is signature compatible with .getImage(..), see it for more
 	// info...
 	//
@@ -571,6 +583,8 @@ var DataPrototype = {
 		return this
 	},	
 
+	// Set base ribbon...
+	//
 	// This is signature compatible with .getRibbon(..), see it for more
 	// info...
 	setBase: function(target, offset){
@@ -776,24 +790,84 @@ var DataPrototype = {
 		return res
 	},
 
+	// Join data objects...
+	//
+	//	.join(data, ..)
+	//	.join([ data, .. ])
+	//		-> this
+	//
+	//	.join(align, data, ..)
+	//	.join(align, [ data, .. ])
+	//		-> this
+	//
+	//
 	// align can be:
-	// 	'gid'
-	// 	'base'
+	// 	'base' (default)
 	// 	'top'
 	// 	'bottom'
 	//
-	// NOTE: this will merge the items into the first list element...
+	// NOTE: data can be both a list of arguments or an array.
+	// NOTE: this will merge the items in-place, if it is needed to 
+	// 		keep the original intact, just .clone() it...
 	//
-	// XXX should this join to this or create a new data???
 	// XXX test
-	join: function(data, align){
-		var res = data.pop()
+	join: function(){
+		var args = Array.apply(null, arguments)
+		var align = typeof(args[0]) == typeof('str') ? args.splice(0, 1)[0] : 'base'
+		args = args[0].constructor.name == 'Array' ? args[0] : args
 
-		data.forEach(function(d){
+		var base = this
+
+		args.forEach(function(data){
+			// calculate align offset...
+			if(align == 'base'){
+				var d = base.getRibbonOrder('base') - data.getRibbonOrder('base')
+
+			} else if(align == 'top'){
+				var d = 0
+
+			} else if(align == 'bottom'){
+				var d = base.ribbon_order.length - data.ribbon_order.length
+			}
+
+			var t = 0
+
+			// merge ribbons...
+			for(var i=0; i < data.ribbon_order.length; i++){
+				var g = data.ribbon_order[i]
+				var r = data.ribbons[g]
+
+				// push the new ribbon just before the base...
+				if(d < 0){
+					// see if g is unique...
+					if(g in base.ribbons || base.order.indexOf(g) >= 0){
+						g = base.newGid('R')
+					}
+					base.ribbon_order.splice(t, 0, g)
+					base.ribbons[g] = r
+					t += 1
+					d -= 1
+
+				// append ribbons...
+				} else if(d < base.ribbon_order.length){
+					var tg = base.ribbon_order[d]
+					base.ribbons[tg].concat(r)
+
+				// push the new ribbon to the end...
+				} else {
+					// see if g is unique...
+					if(g in base.ribbons || base.order.indexOf(g) >= 0){
+						g = base.newGid('R')
+					}
+					base.ribbon_order.push(g)
+					base.ribbons[g] = r
+				}
+
+				d += 1
+			}
 		})
-		// XXX
 
-		return res
+		return base
 	},
 
 	// NOTE: this may result in empty ribbons...
