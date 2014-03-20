@@ -131,27 +131,14 @@ var DataClassPrototype = {
 // 		NOTE: ribbons are sparse...
 //
 var DataPrototype = {
-	// Reset the state to empty...
-	_reset: function(){
-		this.base = null
-		this.current = null
-		this.order = [] 
-		this.ribbon_order = [] 
-		this.ribbons = {}
 
-		this._gid_cache = []
-
-		return this
-	},
-
-
-
-	// Util methods...
+	/******************************************************* Utils ***/
 	
 	// Compact a sparse list...
 	compactSparseList: function(list){
 		return list.filter(function(){return true})
 	},
+
 	// Make a sparse list of image gids...
 	//
 	// This will use this.order as the base for ordering the list.
@@ -170,6 +157,7 @@ var DataPrototype = {
 
 		return target
 	},
+
 	// Generate a uniqie GID...
 	//
 	// XXX generate a real gid...
@@ -187,7 +175,7 @@ var DataPrototype = {
 	},
 	
 
-	// Introspection...
+	/*********************************************** Introspection ***/
 
 	// Get image
 	//
@@ -375,6 +363,7 @@ var DataPrototype = {
 	getImageOrder: function(target, mode, list){
 		return this.order.indexOf(this.getImage(target, mode, list))
 	},	
+
 	// Get a list of gids...
 	//
 	//	.getImages()
@@ -560,7 +549,7 @@ var DataPrototype = {
 
 
 
-	// Edit methods...
+	/******************************************************** Edit ***/
 
 	// This is signature compatible with .getImage(..), see it for more
 	// info...
@@ -581,6 +570,7 @@ var DataPrototype = {
 		}
 		return this
 	},	
+
 	// This is signature compatible with .getRibbon(..), see it for more
 	// info...
 	setBase: function(target, offset){
@@ -606,6 +596,7 @@ var DataPrototype = {
 		// XXX should we return this or gid???
 		return this
 	},
+
 	// Merge ribbons
 	//
 	//	.mergeRibbons('all')
@@ -644,6 +635,7 @@ var DataPrototype = {
 		}
 		return this
 	},
+
 	// Reverse .order and all the ribbons...
 	//
 	// NOTE: this sorts in-place
@@ -749,7 +741,7 @@ var DataPrototype = {
 
 
 
-	// Data-level edit methods...
+	/********************************************* Data-level edit ***/
 
 	// Split data into 2 or more sections...
 	//
@@ -783,6 +775,7 @@ var DataPrototype = {
 		res.push(tail)
 		return res
 	},
+
 	// align can be:
 	// 	'gid'
 	// 	'base'
@@ -815,6 +808,7 @@ var DataPrototype = {
 		}
 		return crop
 	},
+
 	// Merge changes from crop into data...
 	//
 	// NOTE: this may result in empty ribbons...
@@ -861,11 +855,24 @@ var DataPrototype = {
 		return res
 	},
 
+	// Reset the state to empty...
+	_reset: function(){
+		this.base = null
+		this.current = null
+		this.order = [] 
+		this.ribbon_order = [] 
+		this.ribbons = {}
+
+		this._gid_cache = []
+
+		return this
+	},
 
 
-	// JSON serialization...
 
-	// NOTE: this loads in-place, use .fromJSON(..) to create new data...
+	/****************************************** JSON serialization ***/
+
+	// Convert gen3 data to gen4 json...
 	convertDataGen3: function(data){
 		data = data.version == null ? convertDataGen1(data) : data
 		var that = this
@@ -885,6 +892,10 @@ var DataPrototype = {
 		res.base = res.ribbon_order[0]
 		return res
 	},
+
+	// Load data from JSON...
+	//
+	// NOTE: this loads in-place, use .fromJSON(..) to create new data...
 	loadJSON: function(data){
 		if(typeof(data) == typeof('str')){
 			data = JSON.parse(data)
@@ -901,6 +912,9 @@ var DataPrototype = {
 		}
 		return this
 	},
+
+	// Generate JSON from data...
+	//
 	// NOTE: if mode is either 'str' or 'string' then this will stringify
 	// 		the result...
 	dumpJSON: function(mode){
