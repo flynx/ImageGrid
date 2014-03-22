@@ -134,23 +134,47 @@ var DataPrototype = {
 
 	/******************************************************* Utils ***/
 	
-	// Compact a sparse list...
-	compactSparseList: function(list){
-		return list.filter(function(){return true})
-	},
-
 	// Make a sparse list of image gids...
 	//
 	// This will use this.order as the base for ordering the list.
 	//
 	// If target is given then it will get updated with the input gids.
-	makeSparseImages: function(gids, target){
+	//
+	// NOTE: this can be used to re-sort sections of a target ribbon, 
+	// 		but care must be taken not to overwrite existing data...
+	// NOTE: if target is given some items in it might get pushed out
+	// 		by the new gids, especially if target is out of sync with 
+	// 		.order, this can be avoided by setting keep_target_items 
+	// 		(see next for more info).
+	// 		Another way to deal with this is to .makeSparseImages(target)
+	// 		before using it as a target.
+	// NOTE: if keep_target_items is set items that are overwritten in 
+	// 		the target will get pushed to gids.
+	// 		This flag has no effect if target is an empty list (default).
+	makeSparseImages: function(gids, target, keep_target_items){
 		target = target == null ? [] : target
+		keep_target_items = keep_target_items == null ? false : keep_target_items
 		order = this.order
+
+		// avoid directly updating self...
+		if(gids === target){
+			gids = gids.slice()
+		}
 
 		gids.forEach(function(e){
 			i = order.indexOf(e)
 			if(i >= 0){
+				var o = target[i]
+				// save overwritten target items if keep_target_items 
+				// is set...
+				if(keep_target_items 
+						&& o != null 
+						// if the items is already in gids, forget it...
+						// NOTE: this is to avoid juggling loops...
+						&& gids.indexOf(o) < 0){
+					gids.push(o)
+				}
+
 				target[i] = e
 			}
 		})
@@ -442,7 +466,7 @@ var DataPrototype = {
 			for(var k in ribbons){
 				this.makeSparseImages(ribbons[k], res)
 			}
-			list = this.compactSparseList(res)
+			list = res.compact()
 			target = null 
 
 		// filter out the unloaded gids from given list...
@@ -462,7 +486,7 @@ var DataPrototype = {
 		// get the ribbon gids...
 		if(list == null){
 			list = this.ribbons[this.getRibbon(target)] 
-			list = list != null ? this.compactSparseList(list) : []
+			list = list != null ? list.compact() : []
 		}
 
 		if(count == null){
@@ -1044,7 +1068,7 @@ var DataPrototype = {
 		}
 		// compact ribbons...
 		for(var k in this.ribbons){
-			res.ribbons[k] = this.compactSparseList(this.ribbons[k])
+			res.ribbons[k] = this.ribbons[k].compact()
 		}
 		if(mode == 'string' || mode == 'str'){
 			res = JSON.stringify(res)
