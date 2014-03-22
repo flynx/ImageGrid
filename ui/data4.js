@@ -200,7 +200,6 @@ var DataPrototype = {
 		return lst
 	},
 
-
 	// Generate a uniqie GID...
 	//
 	// XXX generate a real gid...
@@ -629,16 +628,6 @@ var DataPrototype = {
 	//
 	// This is signature compatible with .getImage(..), see it for more
 	// info...
-	//
-	// XXX do we need more specific focus operations like:
-	// 		.focusImageOffset(offset)
-	// 			XXX reference impelementation:
-	// 				return this.focusImage('current', offset)
-	// 		.focusRibbonOffset(offset)
-	// 			XXX reference impelementation:
-	// 				var c = this.getRibbonOrder()
-	// 				var t = c+offset
-	// 				return this.focusImage('current', (t < c ? 'after' : 'before'), t)
 	focusImage: function(target, mode, list){
 		var current = this.getImage(target, mode, list)
 		if(this.order.indexOf(current) >= 0){
@@ -649,8 +638,18 @@ var DataPrototype = {
 
 	// Shorthand methods...
 	//
+	// XXX firstImage/lastImage???
+	// XXX focusBaseRibbon?
+	// XXX test vertical...
 	// XXX should these be here???
 	focusImageOffset: function(offset){
+		offset = offset == null ? 0 : offset
+
+		var min = -this.getImageOrder('ribbon')
+		var max = this.getImages('current').length-1
+
+		offset = Math.max(min, Math.min(max, offset))
+
 		return this.focusImage('current', offset)
 	},
 	nextImage: function(){ return this.focusImageOffset(1) },
@@ -659,6 +658,9 @@ var DataPrototype = {
 		var c = this.getRibbonOrder()
 		var t = c+offset
 		t = Math.max(0, Math.min(this.ribbon_order.length-1, t))
+
+		// NOTE: the modes here are different for directions to balance
+		// 		up/down navigation...
 		return this.focusImage('current', (t < c ? 'after' : 'before'), t)
 	},
 	nextRibbon: function(){ return this.focusRibbonOffset(1) },
@@ -805,7 +807,7 @@ var DataPrototype = {
 
 			// normalize the target...
 			// XXX is this the correct way to go???
-			target = Math.max(0, Math.min(this.ribbon_order.length-1, target)
+			target = Math.max(0, Math.min(this.ribbon_order.length-1, target))
 
 			var ribbon = this.ribbon_order[target]
 
