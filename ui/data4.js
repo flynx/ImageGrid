@@ -761,7 +761,6 @@ var DataPrototype = {
 	//
 	// NOTE: this might result in empty ribbons, if no images are in a 
 	// 		given ribbon in the section to be split...
-	// XXX test
 	split: function(target){
 		if(target.constructor.name != 'Array'){
 			target = [target]
@@ -773,10 +772,10 @@ var DataPrototype = {
 			i = tail.getImageOrder(i)-1
 			var n = new Data()
 			n.base = tail.base
-			n.ribbon_order = base.ribbon_order.slice()
+			n.ribbon_order = tail.ribbon_order.slice()
 			n.order = tail.order.splice(0, i)
-			for(var k in this.ribbons){
-				n.ribbons[k] = tail.ribbons.splice(0, i)
+			for(var k in tail.ribbons){
+				n.ribbons[k] = tail.ribbons[k].splice(0, i)
 			}
 			n.current = n.order.indexOf(tail.current) >= 0 ? tail.current : n.order[0]
 			
@@ -810,7 +809,8 @@ var DataPrototype = {
 	// NOTE: this will merge the items in-place, if it is needed to 
 	// 		keep the original intact, just .clone() it...
 	//
-	// XXX test
+	// XXX should we remove duplicate gids here???
+	// XXX test more complex cases...
 	join: function(){
 		var args = Array.apply(null, arguments)
 		var align = typeof(args[0]) == typeof('str') ? args.splice(0, 1)[0] : 'base'
@@ -832,6 +832,9 @@ var DataPrototype = {
 
 			var t = 0
 
+			// merge order...
+			base.order = base.order.concat(data.order)
+
 			// merge ribbons...
 			for(var i=0; i < data.ribbon_order.length; i++){
 				var g = data.ribbon_order[i]
@@ -851,7 +854,7 @@ var DataPrototype = {
 				// append ribbons...
 				} else if(d < base.ribbon_order.length){
 					var tg = base.ribbon_order[d]
-					base.ribbons[tg].concat(r)
+					base.ribbons[tg] = base.ribbons[tg].concat(r)
 
 				// push the new ribbon to the end...
 				} else {
