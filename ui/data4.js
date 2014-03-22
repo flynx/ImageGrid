@@ -395,15 +395,36 @@ var DataPrototype = {
 		// target is either first or last...
 		return null
 	},	
-	// same as .getImage(..) but return image order.
+
+	// Return image order...
 	//
-	// XXX should be able to get order in the following contexts:
-	// 		- all (default)
-	// 		- loaded
-	// 		- ribbon
-	// 		- list
-	getImageOrder: function(target, mode, list){
-		return this.order.indexOf(this.getImage(target, mode, list))
+	// This is similar to .getImage(..) but adds an optional context.
+	//
+	// The context can be:
+	//	'all' 		- global order (default)
+	// 	'loaded'	- order in loaded images
+	// 	'ribbon'	- order in ribbon
+	//
+	// NOTE: acquiring the gid is exactly the same as with .getImage(..)
+	// 		next, that gid is used to get the order, in case of the 
+	// 		'ribbon' context, the order is relative to the ribbon where
+	// 		the image is located.
+	// 		To get the order of an image in a different ribbon, get an 
+	// 		appropriate before/after image in that ribbon and get it's 
+	// 		order.
+	getImageOrder: function(context, target, mode, list){
+		if(context == 'loaded'){
+			return this.getImages('loaded').indexOf(this.getImage(target, mode, list))
+
+		} else if(context == 'ribbon'){
+			var gid = this.getImage(target, mode, list)
+			return this.getImages(gid).indexOf(gid)
+
+		} else if(context == 'all'){
+			return this.order.indexOf(this.getImage(target, mode, list))
+		} 
+
+		return this.order.indexOf(this.getImage(context, target, mode))
 	},	
 
 	// Get a list of gids...
