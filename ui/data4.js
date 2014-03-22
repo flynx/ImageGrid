@@ -158,6 +158,25 @@ var DataPrototype = {
 		return target
 	},
 
+	// Remove dublicate items from list in-place...
+	//
+	// NOTE: only the first occurance is kept...
+	// NOTE: this is slow-ish...
+	removeDuplicates: function(lst, skip_undefined){
+		skip_undefined = skip_undefined == null ? true : skip_undefined
+		for(var i=0; i < lst.length; i++){
+			if(skip_undefined && lst[i] == null){
+				continue
+			}
+			if(lst.indexOf(lst[i]) != i){
+				lst.splice(i, 1)
+				i -= 1
+			}
+		}
+		return lst
+	},
+
+
 	// Generate a uniqie GID...
 	//
 	// XXX generate a real gid...
@@ -809,7 +828,6 @@ var DataPrototype = {
 	// NOTE: this will merge the items in-place, if it is needed to 
 	// 		keep the original intact, just .clone() it...
 	//
-	// XXX should we remove duplicate gids here???
 	// XXX test more complex cases...
 	join: function(){
 		var args = Array.apply(null, arguments)
@@ -870,6 +888,9 @@ var DataPrototype = {
 			}
 		})
 
+		// XXX this is slow-ish...
+		base._removeDuplicates()
+
 		return base
 	},
 
@@ -898,7 +919,7 @@ var DataPrototype = {
 		this.order = crop.order.slice()
 		// XXX sync these???
 		this.ribbon_order = crop.ribbon_order.slice()
-		this.sortRibbons()
+		this.sortImages()
 
 		// 
 		for(var k in crop.ribbons){
@@ -942,6 +963,15 @@ var DataPrototype = {
 
 		this._gid_cache = []
 
+		return this
+	},
+
+	// romove duplicate gids form data...
+	//
+	// NOTE: this is slow-ish
+	_removeDuplicateGIDs: function(lst){
+		this.removeDuplicates(this.order)
+		this.sortImages()
 		return this
 	},
 
