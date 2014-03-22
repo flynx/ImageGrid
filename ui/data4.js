@@ -1,5 +1,6 @@
 /**********************************************************************
 * 
+* Data generation 4 implementation.
 *
 *
 **********************************************************************/
@@ -54,7 +55,7 @@
 // 			  		...still thinking of whether making them sparse is
 // 			  		worth the work...
 // 	3.0	- Gen4 DATA format, introduced several backwards incompatible 
-// 		cahnges:
+// 		changes:
 // 			- added ribbon GIDs, .ribbons now is a gid indexed object
 // 			- added .ribbon_order
 // 			- added base ribbon
@@ -66,7 +67,7 @@
 // NOTE: Gen1 and Gen3 refer to code generations rather than data format
 // 		iterations, Gen2 is skipped here as it is a different project 
 // 		(PortableMag) started on the same code base as ImageGrid.Viewer
-// 		generation 1 and advanced from there, backporting some of the 
+// 		generation 1 and advanced from there, back-porting some of the 
 // 		results eventually formed Gen3...
 //
 //
@@ -95,6 +96,8 @@ var DataClassPrototype = {
 }
 
 
+
+/*********************************************************************/
 
 // Data object methods and API...
 //
@@ -182,9 +185,9 @@ var DataPrototype = {
 		return target
 	},
 
-	// Remove dublicate items from list in-place...
+	// Remove duplicate items from list in-place...
 	//
-	// NOTE: only the first occurance is kept...
+	// NOTE: only the first occurrence is kept...
 	// NOTE: this is slow-ish...
 	removeDuplicates: function(lst, skip_undefined){
 		skip_undefined = skip_undefined == null ? true : skip_undefined
@@ -200,7 +203,7 @@ var DataPrototype = {
 		return lst
 	},
 
-	// Generate a uniqie GID...
+	// Generate a unique GID...
 	//
 	// XXX generate a real gid...
 	newGid: function(prefix){
@@ -453,7 +456,7 @@ var DataPrototype = {
 	//
 	// If no image is given the current image/ribbon is assumed as target.
 	//
-	// This will allways return count images if there is enough images 
+	// This will always return count images if there is enough images 
 	// in ribbon from the requested sides of target.
 	//
 	// NOTE: this expects ribbon order and not image order.
@@ -700,7 +703,7 @@ var DataPrototype = {
 	//	.mergeRibbons(ribbon, ribbon, ...)
 	//		-> data
 	//
-	// If 'all' is the first argumet, this will merge all the ribbons.
+	// If 'all' is the first argument, this will merge all the ribbons.
 	//
 	// This will merge the ribbons into the first.
 	mergeRibbons: function(target, other){
@@ -1164,6 +1167,8 @@ var DataPrototype = {
 }
 
 
+
+/*********************************************************************/
 
 // Main Data object...
 //
