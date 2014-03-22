@@ -753,8 +753,13 @@ var DataPrototype = {
 	// NOTE: .getImage(..) defaults to 'before' thus this to defaults
 	// 		to 'after'
 	//
-	// XXX ribbon position range checking...
-	// XXX ribbon order range checking...
+	// XXX check for corner cases:
+	// 		- first/last in ribbon offset
+	// 		- first/last in order offset
+	// 		- first/last ribbon up/down
+	// 			do we create new ribbons and round???
+	// XXX when shifting groups of images we are using the first as a 
+	// 		base, should we use last as a base for right shifting???
 	// XXX process from as a list of gids...
 	// XXX test vertical..
 	shiftImage: function(from, target, mode){
@@ -770,6 +775,8 @@ var DataPrototype = {
 
 		// target is an offset...
 		if(mode == 'offset'){
+			// XXX change check this...
+			// XXX check that we can place an elem at first and last positions...
 			var t = this.getImageOrder(this.getImage(first, target))
 
 			var ribbon = this.getRibbon(first)
@@ -778,6 +785,11 @@ var DataPrototype = {
 		// XXX range checking???
 		} else if(typeof(target) == typeof(123)){
 			var t = f
+
+			// normalize the target...
+			// XXX is this the correct way to go???
+			target = Math.max(0, target)
+			target = Math.min(this.ribbon_order-1, target)
 
 			var ribbon = this.ribbon_order[target]
 
@@ -799,6 +811,7 @@ var DataPrototype = {
 		var from_ribbon = this.getRibbon(first)
 
 		// do vertical shift...
+		// XXX do we create new ribbons here???
 		if(ribbon != from_ribbon || from.length > 1){
 			var that = this
 			from.forEach(function(e){
