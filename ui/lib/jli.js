@@ -1116,7 +1116,7 @@ Object.get = function(obj, name, dfl){
 //
 // NOTE: this will not compact in-place.
 Array.prototype.compact = function(){
-	return list.filter(function(){ return true })
+	return this.filter(function(){ return true })
 }
 
 
