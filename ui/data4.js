@@ -889,7 +889,7 @@ var DataPrototype = {
 		})
 
 		// XXX this is slow-ish...
-		base._removeDuplicates()
+		base.removeDuplicateGIDs()
 
 		return base
 	},
@@ -969,7 +969,7 @@ var DataPrototype = {
 	// romove duplicate gids form data...
 	//
 	// NOTE: this is slow-ish
-	_removeDuplicateGIDs: function(lst){
+	removeDuplicateGIDs: function(lst){
 		this.removeDuplicates(this.order)
 		this.sortImages()
 		return this
