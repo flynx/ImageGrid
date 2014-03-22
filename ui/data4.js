@@ -635,25 +635,26 @@ var DataPrototype = {
 	//	.mergeRibbons('all')
 	//	.mergeRibbons(ribbon, ribbon, ...)
 	//		-> data
+	//
 	// If 'all' is the first argumet, this will merge all the ribbons.
 	//
 	// This will merge the ribbons into the first.
-	//
-	// XXX we should update .base
-	// XXX test
 	mergeRibbons: function(target, other){
-		var targets = target == 'all' ? this.ribbon_order : arguments
-		var base = arguments[0]
+		var targets = target == 'all' ? this.ribbon_order.slice() : arguments
+		var base = targets[0]
 
-		for(var i=1; i < arguments.length; i++){
-			var r = arguments[i]
+		for(var i=1; i < targets.length; i++){
+			var r = targets[i]
 			this.makeSparseImages(this.ribbons[r], this.ribbons[base])
 
 			delete this.ribbons[r]
 			this.ribbon_order.splice(this.ribbon_order.indexOf(r), 1)
 		}
 
-		// XXX we should update .base
+		// update .base if that gid got merged in...
+		if(this.ribbon_order.indexOf(this.base) < 0){
+			this.base = base
+		}
 
 		return this
 	},
@@ -673,8 +674,8 @@ var DataPrototype = {
 	//
 	// NOTE: this sorts in-place
 	//
-	// XXX this depends on setting length of an array, it works in Chrome
-	// 		but will it work the same in other systems???
+	// NOTE: this depends on setting length of an array, it works in 
+	// 		Chrome but will it work the same in other systems???
 	reverseImages: function(){
 		this.order.reverse()
 		var l = this.order.length
@@ -776,8 +777,9 @@ var DataPrototype = {
 
 	/********************************************* Data-level edit ***/
 
-	// Split data into 2 or more sections...
+	// Split data into sections...
 	//
+	// NOTE: this will not affect the original data object...
 	// NOTE: this might result in empty ribbons, if no images are in a 
 	// 		given ribbon in the section to be split...
 	split: function(target){
@@ -808,25 +810,26 @@ var DataPrototype = {
 		return res
 	},
 
-	// Join data objects...
+	// Join data objects into the current object...
 	//
 	//	.join(data, ..)
 	//	.join([ data, .. ])
-	//		-> this
+	//		-> data with all the other data objects merged in, aligned 
+	//			via base ribbon.
 	//
 	//	.join(align, data, ..)
 	//	.join(align, [ data, .. ])
-	//		-> this
+	//		-> data with all the other data objects merged in, via align
 	//
 	//
 	// align can be:
-	// 	'base' (default)
-	// 	'top'
-	// 	'bottom'
+	// 	'base'		- base ribbons (default)
+	// 	'top'		- top ribbons
+	// 	'bottom'	- bottom ribbons
 	//
 	// NOTE: data can be both a list of arguments or an array.
-	// NOTE: this will merge the items in-place, if it is needed to 
-	// 		keep the original intact, just .clone() it...
+	// NOTE: this will merge the items in-place, into the method's object
+	// 		if it is needed to the original intact, just .clone() it...
 	//
 	// XXX test more complex cases...
 	join: function(){
@@ -894,6 +897,9 @@ var DataPrototype = {
 		return base
 	},
 
+	// Crop the data...
+	//
+	// NOTE: this will not affect the original data object...
 	// NOTE: this may result in empty ribbons...
 	// NOTE: this will not crop the .order...
 	crop: function(list){
@@ -939,6 +945,8 @@ var DataPrototype = {
 		return this
 	},
 
+	// Clone/copy the data object...
+	//
 	clone: function(){
 		var res = new Data()
 		res.base = this.base
@@ -954,6 +962,7 @@ var DataPrototype = {
 	},
 
 	// Reset the state to empty...
+	//
 	_reset: function(){
 		this.base = null
 		this.current = null
@@ -966,9 +975,9 @@ var DataPrototype = {
 		return this
 	},
 
-	// romove duplicate gids form data...
+	// romove duplicate gids...
 	//
-	// NOTE: this is slow-ish
+	// NOTE: this is slow-ish...
 	removeDuplicateGIDs: function(lst){
 		this.removeDuplicates(this.order)
 		this.sortImages()
