@@ -1112,9 +1112,17 @@ Object.get = function(obj, name, dfl){
 }
 
 
+// Compact a sparse array...
+//
+// NOTE: this will not compact in-place.
+Array.prototype.compact = function(){
+	return list.filter(function(){ return true })
+}
+
+
 // like .length but for sparse arrays will return the element count...
 Array.prototype.len = function(){
-	return this.filter(function(){ return true }).length
+	return this.compact().length
 }
 
 
