@@ -638,9 +638,6 @@ var DataPrototype = {
 
 	// Shorthand methods...
 	//
-	// XXX firstImage/lastImage???
-	// XXX focusBaseRibbon?
-	// XXX test vertical...
 	// XXX should these be here???
 	focusImageOffset: function(offset){
 		offset = offset == null ? 0 : offset
@@ -654,6 +651,8 @@ var DataPrototype = {
 	},
 	nextImage: function(){ return this.focusImageOffset(1) },
 	prevImage: function(){ return this.focusImageOffset(-1) },
+	firstImage: function(){ return this.focusImageOffset(-this.getImages('current').length) },
+	lastImage: function(){ return this.focusImageOffset(this.getImages('current').length) },
 	focusRibbonOffset: function(offset){
 		var c = this.getRibbonOrder()
 		var t = c+offset
@@ -665,6 +664,7 @@ var DataPrototype = {
 	},
 	nextRibbon: function(){ return this.focusRibbonOffset(1) },
 	prevRibbon: function(){ return this.focusRibbonOffset(-1) },
+	focusBaseRibbon: function(){ return this.focusImage(this.base) },
 
 	// Set base ribbon...
 	//
