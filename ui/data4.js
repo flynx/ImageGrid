@@ -661,18 +661,18 @@ var DataPrototype = {
 
 	// Create empty ribbon...
 	//
-	// XXX above/below/at...
-	// XXX do we remove ribbons and how...
-	// XXX test
+	// If mode is 'below' this will create a new ribbon below the target,
+	// otherwise the new ribbon will be created above.
 	newRibbon: function(target, mode){
 		var gid = this.newGid('R')
 		var i = this.getRibbonOrder(target)
 
+		i = mode == 'below' ? i+1 : i
+
 		this.ribbon_order.splice(i, 0, gid)
 		this.ribbons[gid] = []
 
-		// XXX should we return this or gid???
-		return this
+		return gid
 	},
 
 	// Merge ribbons
@@ -789,7 +789,7 @@ var DataPrototype = {
 			// normalize the target...
 			// XXX is this the correct way to go???
 			target = Math.max(0, target)
-			target = Math.min(this.ribbon_order-1, target)
+			target = Math.min(this.ribbon_order.length-1, target)
 
 			var ribbon = this.ribbon_order[target]
 
@@ -841,11 +841,29 @@ var DataPrototype = {
 		return this 
 	},
 
-	// XXX shorthand actions...
-	shiftImageUp: function(gid){ return this.shiftImage(gid, this.getRibbonIndex(gid)-1) },
-	shiftImageDown: function(gid){ return this.shiftImage(gid, this.getRibbonIndex(gid)+1) },
+	// Shorthand actions...
+	//
+	// NOTE: shiftImageUp/shiftImageDown will create new ribbons when 
+	// 		shifting from first/last ribbons respectively.
+	// NOTE: non of these change .current
+	//
+	// XXX should this be here??
 	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') },
 	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') },
+	shiftImageUp: function(gid){ 
+		// check if we need to create a ribbon here...
+		if(this.getRibbonOrder(gid) == 0){
+			this.newRibbon(gid)
+		}
+		return this.shiftImage(gid, this.getRibbonOrder(gid)-1) 
+	},
+	shiftImageDown: function(gid){ 
+		// check if we need to create a ribbon here...
+		if(this.getRibbonOrder(gid) == this.ribbon_order.length-1){
+			this.newRibbon(gid, 'below')
+		}
+		return this.shiftImage(gid, this.getRibbonOrder(gid)+1) 
+	},
 
 
 
