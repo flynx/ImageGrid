@@ -260,7 +260,7 @@ var DataPrototype = {
 	// 			it will be returned.
 	//
 	// 	.getImage(gid|order, offset[, list|ribbon])
-	// 		-> gid if the image at offset from current
+	// 		-> gid of the image at offset from current
 	// 		-> null if there is no image at that offset
 	//
 	// NOTE: If gid|order is not given, current image is assumed.
@@ -736,24 +736,32 @@ var DataPrototype = {
 
 	// Shift image...
 	//
-	//	.shiftImage(from, gid|ribbon)
-	//	.shiftImage(from, gid|ribbon, 'before')
-	//	.shiftImage(from, gid|ribbon, 'after')
+	//	.shiftImage(from, gid|order|ribbon)
+	//	.shiftImage(from, gid|order|ribbon, 'before')
+	//	.shiftImage(from, gid|order|ribbon, 'after')
 	//		-> data
 	//
 	//	.shiftImage(from, offset, 'offset')
 	//		-> data
 	//
+	// order is expected to be ribbon order.
+	//
 	// from must be a .getImage(..) compatible object. usually an image
 	// gid, order, or null, see .getImage(..) for more info.
 	//
 	// NOTE: this will not create new ribbons.
+	// NOTE: .getImage(..) defaults to 'before' thus this to defaults
+	// 		to 'after'
 	//
+	// XXX ribbon position range checking...
+	// XXX ribbon order range checking...
 	// XXX process from as a list of gids...
-	// XXX test
+	// XXX test vertical..
 	shiftImage: function(from, target, mode){
+		from = from == null ? this.current : from
+		from = from == 'current' ? this.current : from
 		from = from.constructor.name != 'Array' ? [from] : from
-		mode = mode == null ? 'before' : mode
+		mode = mode == null ? 'after' : mode
 		var ribbons = this.ribbons
 		var order = this.order
 
@@ -762,14 +770,16 @@ var DataPrototype = {
 
 		// target is an offset...
 		if(mode == 'offset'){
-			target = target == null ? 0 : target
-			var t = f + target
-			t = t > order.length ? order.length-1
-				: t < 0 ? 0
-				: t
-			target = order[t]
+			var t = this.getImageOrder(this.getImage(first, target))
 
-			var ribbon = this.getRibbon(target)
+			var ribbon = this.getRibbon(first)
+
+		// target is ribbon order...
+		// XXX range checking???
+		} else if(typeof(target) == typeof(123)){
+			var t = f
+
+			var ribbon = this.ribbon_order[target]
 
 		// target is a ribbon gid...
 		} else if(target in this.ribbons){
@@ -806,7 +816,7 @@ var DataPrototype = {
 				f = order.indexOf(from[i])
 
 				// update order...
-				order.splice(t+i, 0, this.splice(f, 1)[0])
+				order.splice(t+i, 0, this.order.splice(f, 1)[0])
 
 				// update ribbons...
 				for(k in ribbons){
@@ -817,6 +827,12 @@ var DataPrototype = {
 
 		return this 
 	},
+
+	// XXX shorthand actions...
+	shiftImageUp: function(gid){ return this.shiftImage(gid, this.getRibbonIndex(gid)-1) },
+	shiftImageDown: function(gid){ return this.shiftImage(gid, this.getRibbonIndex(gid)+1) },
+	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') },
+	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') },
 
 
 
@@ -1020,10 +1036,10 @@ var DataPrototype = {
 		return this
 	},
 
-	// romove duplicate gids...
+	// Remove duplicate gids...
 	//
 	// NOTE: this is slow-ish...
-	removeDuplicateGIDs: function(lst){
+	removeDuplicateGIDs: function(){
 		this.removeDuplicates(this.order)
 		this.sortImages()
 		return this
