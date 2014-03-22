@@ -647,6 +647,23 @@ var DataPrototype = {
 		return this
 	},	
 
+	// Shorthand methods...
+	//
+	// XXX should these be here???
+	focusImageOffset: function(offset){
+		return this.focusImage('current', offset)
+	},
+	nextImage: function(){ return this.focusImageOffset(1) },
+	prevImage: function(){ return this.focusImageOffset(-1) },
+	focusRibbonOffset: function(offset){
+		var c = this.getRibbonOrder()
+		var t = c+offset
+		t = Math.max(0, Math.min(this.ribbon_order.length-1, t))
+		return this.focusImage('current', (t < c ? 'after' : 'before'), t)
+	},
+	nextRibbon: function(){ return this.focusRibbonOffset(1) },
+	prevRibbon: function(){ return this.focusRibbonOffset(-1) },
+
 	// Set base ribbon...
 	//
 	// This is signature compatible with .getRibbon(..), see it for more
@@ -788,8 +805,7 @@ var DataPrototype = {
 
 			// normalize the target...
 			// XXX is this the correct way to go???
-			target = Math.max(0, target)
-			target = Math.min(this.ribbon_order.length-1, target)
+			target = Math.max(0, Math.min(this.ribbon_order.length-1, target)
 
 			var ribbon = this.ribbon_order[target]
 
@@ -845,7 +861,7 @@ var DataPrototype = {
 	//
 	// NOTE: shiftImageUp/shiftImageDown will create new ribbons when 
 	// 		shifting from first/last ribbons respectively.
-	// NOTE: non of these change .current
+	// NOTE: none of these change .current
 	//
 	// XXX should this be here??
 	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') },
