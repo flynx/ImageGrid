@@ -164,7 +164,7 @@ osx: $(APP_ZIP) $(MAC_BUILD_DIR) Info.plist
 
 # XXX this is almost identical to osx...
 # XXX BUG: rebuilding without cleaning will mess up folders...
-osx10.6: $(APP_ZIP) $(MAC_10_6_BUILD_DIR) Info.plist
+osx-10.6: $(APP_ZIP) $(MAC_10_6_BUILD_DIR) Info.plist
 	unzip -u $(wildcard targets/node-webkit/node-webkit-*-osx10.6-ia32.zip) \
 		-d $(MAC_10_6_BUILD_DIR)
 	cp $(APP_ZIP) $(MAC_10_6_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
@@ -182,7 +182,7 @@ osx10.6: $(APP_ZIP) $(MAC_10_6_BUILD_DIR) Info.plist
 osx-dist: osx $(DIST_DIR)
 	zip -r $(MAC_DIST_ZIP) $(MAC_BUILD_DIR)
 
-osx10.6-dist: osx $(DIST_DIR)
+osx-10.6-dist: osx $(DIST_DIR)
 	zip -r $(MAC_10_6_DIST_ZIP) $(MAC_10_6_BUILD_DIR)
 
 
@@ -224,6 +224,8 @@ linux-x64-dist: linux-x64 $(DIST_DIR)
 # XXX android...
 # XXX iOS...
 
+
+all: win32 osx osx-10.4 linux-ia32 linux-x64
 
 dist: win32-dist osx-dist
 
