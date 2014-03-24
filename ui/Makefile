@@ -225,7 +225,7 @@ linux-x64-dist: linux-x64 $(DIST_DIR)
 # XXX iOS...
 
 
-all: win32 osx osx-10.4 linux-ia32 linux-x64
+all: win32 osx osx-10.6 linux-ia32 linux-x64
 
 dist: win32-dist osx-dist
 
