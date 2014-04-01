@@ -101,40 +101,41 @@ var DataClassPrototype = {
 
 // Data object methods and API...
 //
-// DATA format:
-//
-// 	.current (gid)
-// 		gid of the current image
-//
-// 	.base (gid)
-// 		gid of the base ribbon
-//
-// 	.order
-// 		List of image gids setting the image order
-//
-// 		format:
-//	 		[ gid, .. ]
-//
-//	 	NOTE: this list may contain gids not loaded at the moment, a 
-//	 		common case for this is when data is cropped.
-//
-// 	.ribbon_order
-// 		List of ribbon gids setting the ribbon order.
-//
-// 		format:
-// 			[ gid, .. ]
-//
-// 	.ribbons
-// 		Dict of ribbons, indexed by ribbon gid, each ribbon is a sparse
-// 		list of image gids.
-//
-// 		format:
-// 			{ gid: [ gid, .. ], .. }
-//
-// 		NOTE: ribbons are sparse...
-//
 var DataPrototype = {
 
+	/****************************************************** Format ***/
+	//
+	// 	.current (gid)
+	// 		gid of the current image
+	//
+	// 	.base (gid)
+	// 		gid of the base ribbon
+	//
+	// 	.order
+	// 		List of image gids setting the image order
+	//
+	// 		format:
+	//	 		[ gid, .. ]
+	//
+	//	 	NOTE: this list may contain gids not loaded at the moment, 
+	//	 		a common case for this is when data is cropped.
+	//
+	// 	.ribbon_order
+	// 		List of ribbon gids setting the ribbon order.
+	//
+	// 		format:
+	// 			[ gid, .. ]
+	//
+	// 	.ribbons
+	// 		Dict of ribbons, indexed by ribbon gid, each ribbon is a 
+	// 		sparse list of image gids.
+	//
+	// 		format:
+	// 			{ gid: [ gid, .. ], .. }
+	//
+	// 		NOTE: ribbons are sparse...
+	//
+	//
 	/******************************************************* Utils ***/
 	
 	// Make a sparse list of image gids...
