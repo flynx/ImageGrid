@@ -990,7 +990,7 @@ var _ccw = {
 // 		needed, then one should write a GID based version (data.js)
 // 		XXX do we need a GID based version?
 function rotateImage(direction, image){
-	var r_table = direction == 'left' ? _cw : _ccw
+	var r_table = direction == 'left' ? _ccw : _cw
 	image = image == null ? getImage() : $(image)
 	image.each(function(i, e){
 		var img = $(this)
