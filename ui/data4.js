@@ -26,24 +26,14 @@
 //
 //
 // Data format change history:
-// 	none - Gen1 data format, mostly experimental,
-// 			- has no explicit version set,
-// 			- not used for real data.
-// 	2.0 - Gen3 data format, still experimental,
-// 			- completely new and incompatible structure,
-// 			- use convertDataGen1(..) to convert Gen1 to 2.0 
-// 			- used for my archive, not public,
-// 			- auto-convert form gen1 on load...
-// 	2.1 - Minor update to format spec,	
-// 			- MARKED now maintained sorted, live,
-// 			- will auto-sort marks on load of 2.0 data and change 
-// 			  data version to 2.1, will need a re-save,
-// 	2.2 - Minor update to how data is handled and saved
-// 			- now DATA.current is saved separately in current.json,
-// 			  loading is done from current.json and if not found from
-// 			  data.json.
-// 			  the file is optional.
-// 			- data, marks, bookmarks, tags are now saved only if updated
+// 	3.0	- Gen4 DATA format, introduced several backwards incompatible 
+// 		changes:
+// 			- added ribbon GIDs, .ribbons now is a gid indexed object
+// 			- added .ribbon_order
+// 			- added .base ribbon
+// 			- ribbons are now sparse in memory but can be compact when
+// 			  serialized.
+// 			- auto-convert from gen1 (no version) and gen3 (2.*) on load
 // 	2.3 - Minor update to sorting restrictions
 // 			- now MARKED and BOOKMARKS do not need to be sorted 
 // 			  explicitly in json, they are now sorted as a side-effect 
@@ -54,14 +44,24 @@
 // 			  		actively maintained sorted.
 // 			  		...still thinking of whether making them sparse is
 // 			  		worth the work...
-// 	3.0	- Gen4 DATA format, introduced several backwards incompatible 
-// 		changes:
-// 			- added ribbon GIDs, .ribbons now is a gid indexed object
-// 			- added .ribbon_order
-// 			- added base ribbon
-// 			- ribbons are now sparse in memory but can be compact when
-// 			  serialized.
-// 			- auto-convert from gen1 (no version) and gen3 (2.*) on load
+// 	2.2 - Minor update to how data is handled and saved
+// 			- now DATA.current is saved separately in current.json,
+// 			  loading is done from current.json and if not found from
+// 			  data.json.
+// 			  the file is optional.
+// 			- data, marks, bookmarks, tags are now saved only if updated
+// 	2.1 - Minor update to format spec,	
+// 			- MARKED now maintained sorted, live,
+// 			- will auto-sort marks on load of 2.0 data and change 
+// 			  data version to 2.1, will need a re-save,
+// 	2.0 - Gen3 data format, still experimental,
+// 			- completely new and incompatible structure,
+// 			- use convertDataGen1(..) to convert Gen1 to 2.0 
+// 			- used for my archive, not public,
+// 			- auto-convert form gen1 on load...
+// 	none - Gen1 data format, mostly experimental,
+// 			- has no explicit version set,
+// 			- not used for real data.
 //
 //
 // NOTE: Gen1 and Gen3 refer to code generations rather than data format
@@ -134,6 +134,7 @@ var DataPrototype = {
 	// 			{ gid: [ gid, .. ], .. }
 	//
 	// 		NOTE: ribbons are sparse...
+	// 		NOTE: ribbons can be compact when serialized...
 	//
 	//
 	/******************************************************* Utils ***/
@@ -226,45 +227,60 @@ var DataPrototype = {
 
 	// Get image
 	//
+	//	Get current image:
 	//	.getImage()
 	//	.getImage('current')
-	// 		-> current image gid
+	// 		-> gid
 	//
+	// 	Check if image is loaded/exists:
 	// 	.getImage(gid|order)
 	// 	.getImage(gid|order, list|ribbon)
-	// 		-> gid if the image is loaded/exists
-	// 		-> null if the image is not loaded or does not exist
+	// 		-> gid
+	// 		-> null
+	// 		NOTE: null is returned if image does not exist.
 	// 		NOTE: the second argument must not be an int (ribbon order)
 	// 				to avoid conflict with the offset case below.
 	//		NOTE: image order can be negative, thus getting an image 
 	//				from the tail.
 	//
+	// 	Get first or last image:
 	// 	.getImage('first'[, ribbon])
 	// 	.getImage('last'[, ribbon])
-	// 		-> gid of first/last image in ribbon 
-	// 		-> null
+	// 		-> gid
+	// 		-> null (XXX ???)
 	// 		NOTE: the second argument must be .getRibbon(..) compatible.
 	//
+	// 	Get image closest to current in list/ribbon:
 	// 	.getImage(list|ribbon[, 'before'|'after'])
-	// 		-> gid of image closest to current in list|ribbon
+	// 		-> gid
 	// 		-> null
+	// 		NOTE: null is returned if there is no image before/after the
+	// 				current image in the given list/ribbon, e.g. the 
+	// 				current image is first/last resp.
 	// 		NOTE: 'before' is default.
 	// 		NOTE: the first argument must not be a number.
 	//
+	// 	Get image closest to current or a specific image:
 	// 	.getImage('before'[, list|ribbon])
 	// 	.getImage(gid|order, 'before'[, list|ribbon])
-	// 		-> gid of the image before gid|order
-	// 		-> null of nothing is before
+	// 		-> gid
+	// 		-> null
 	// 	.getImage('after'[, list|ribbon])
 	// 	.getImage(gid|order, 'after'[, list|ribbon])
-	// 		-> gid of the image after git|order
-	// 		-> null of nothing is after
+	// 		-> gid
+	// 		-> null
+	// 		NOTE: null is returned if there is no image before/after the
+	// 				current image in the given list/ribbon, e.g. the 
+	// 				current image is first/last resp.
 	// 		NOTE: in both the above cases if gid|order is found explicitly
 	// 			it will be returned.
 	//
+	// 	Get image at an offset from a given image:
 	// 	.getImage(gid|order, offset[, list|ribbon])
-	// 		-> gid of the image at offset from current
-	// 		-> null if there is no image at that offset
+	// 		-> gid
+	// 		-> null
+	// 		NOTE: null is returned if there is no image at given offset.
+	//
 	//
 	// NOTE: If gid|order is not given, current image is assumed.
 	// 		Similarly, if list|ribbon is not given then the current 
@@ -432,28 +448,34 @@ var DataPrototype = {
 
 	// Get a list of gids...
 	//
+	//	Get list of loaded images:
 	//	.getImages()
 	//	.getImages('loaded')
-	//		-> list of currently loaded images, from all ribbons
+	//		-> list
 	//
+	//	Get all images, both loaded and not:
 	//	.getImages('all')
-	//		-> list of all images, both loaded and not
+	//		-> list
 	//
+	//	Get list of images in current ribbon:
 	//	.getImages('current')
-	//		-> list of images, in current ribbon
+	//		-> list
 	//
+	//	Filter the list and return only loaded images from it:
 	//	.getImages(list)
-	//		-> return only loaded images from list
+	//		-> list
 	//
+	//	Get loaded images from ribbon:
 	//	.getImages(gid|order|ribbon)
-	//		-> get loaded images from ribbon
+	//		-> list 
 	//
+	//	Get count gids around (default) before or after the target image:
 	//	.getImages(gid|order|ribbon, count)
 	//	.getImages(gid|order|ribbon, count, 'around')
 	//	.getImages(gid|order|ribbon, count, 'after')
 	//	.getImages(gid|order|ribbon, count, 'before')
-	//		-> get a fixed number of gids around (default) before or
-	//			after the target
+	//		-> list 
+	//
 	//
 	// If no image is given the current image/ribbon is assumed as target.
 	//
@@ -549,25 +571,32 @@ var DataPrototype = {
 
 	// Get ribbon...
 	// 
+	//	Get current ribbon:
 	//	.getRibbon()
 	//	.getRibbon('current')
-	//		-> current ribbon gid
+	//		-> ribbon gid
 	//
+	//	Get base ribbon:
 	//	.getRibbon('base')
 	//		-> base ribbon gid
 	//
+	//	Get ribbon by target image/ribbon:
 	//	.getRibbon(ribbon|order|gid)
 	//		-> ribbon gid
 	//		-> null -- invalid target
+	//		NOTE: if ribbon gid is given this will return it as-is.
 	//
+	//	Get ribbon before/after target:
 	//	.getRibbon(ribbon|order|gid, 'before')
 	//	.getRibbon(ribbon|order|gid, 'after')
 	//		-> ribbon gid
 	//		-> null -- invalid target
 	//
+	//	Get ribbon at offset from target:
 	//	.getRibbon(ribbon|order|gid, offset)
 	//		-> ribbon gid
 	//		-> null -- invalid target
+	//
 	//
 	// NOTE: this expects ribbon order and not image order.
 	//		
@@ -759,13 +788,16 @@ var DataPrototype = {
 
 	// Shift image...
 	//
+	//	Shift umage to target position:
 	//	.shiftImage(from, gid|order|ribbon)
 	//	.shiftImage(from, gid|order|ribbon, 'before')
 	//	.shiftImage(from, gid|order|ribbon, 'after')
 	//		-> data
 	//
+	//	Shift image by offset:
 	//	.shiftImage(from, offset, 'offset')
 	//		-> data
+	//
 	//
 	// order is expected to be ribbon order.
 	//
