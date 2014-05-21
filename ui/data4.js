@@ -10,7 +10,7 @@
 // Version format:
 // 	<major>.<minor>
 //
-// Major version change mean a significant incompatibility.
+// Major version changes mean a significant incompatibility.
 //
 // Minor version changes mean some detail changed and can be handled
 // by it's specific handler seamlessly. Backwards compatible.
@@ -249,6 +249,8 @@ var DataPrototype = {
 	// 		-> gid
 	// 		-> null (XXX ???)
 	// 		NOTE: the second argument must be .getRibbon(..) compatible.
+	// 		NOTE: to get global first/last image use the index, e.g.:
+	// 			.getImage(0) / .getImage(-1)
 	//
 	// 	Get image closest to current in list/ribbon:
 	// 	.getImage(list|ribbon[, 'before'|'after'])
@@ -311,6 +313,9 @@ var DataPrototype = {
 
 		// order -> gid special case...
 		if(typeof(target) == typeof(123)){
+			if(target >= this.order.length){
+				return null
+			}
 			target = target < 0 ? 
 					this.order[this.order.length+target] 
 				: this.order[target]
@@ -415,7 +420,7 @@ var DataPrototype = {
 		return null
 	},	
 
-	// Return image order...
+	// Get image order...
 	//
 	// This is similar to .getImage(..) but adds an optional context.
 	//
@@ -446,7 +451,7 @@ var DataPrototype = {
 		return this.order.indexOf(this.getImage(context, target, mode))
 	},	
 
-	// Get a list of gids...
+	// Get a list of image gids...
 	//
 	//	Get list of loaded images:
 	//	.getImages()
@@ -487,6 +492,10 @@ var DataPrototype = {
 	// 		(before) the target.
 	// NOTE: if the target is present in the image-set it will be included
 	// 		in the result regardless of mode...
+	// NOTE: to get a set of image around a specific (non-current) image
+	// 		in a specific (non-current) ribbon first get an apropriate image
+	// 		via. .getImage(..) and then get the list with this...
+	// 			D.getImages(D.getImage(gid, ribbon_gid), N, 'around')
 	//
 	// XXX for some reason negative target number (ribbon number) 
 	// 		breaks this...
@@ -925,18 +934,52 @@ var DataPrototype = {
 
 	// Split data into sections...
 	//
+	// 	.split(target, ..)
+	// 	.split([target, ..])
+	// 		-> list
+	//
+	//
+	// This will "split" the data just before each target, i.e. target N
+	// will get the head of N+1 section.
+	//
+	// 		 Data							 Data		 Data
+	// 		[...oooooXooooo...]		->		[...ooooo]	[Xooooo...]
+	// 				 ^									 ^
+	// 			  target							  target
+	//
+	//
+	// Special case: target is .order.length
+	// This will indicate that the last data section will be empty.
+	//
+	// 		 Data							 Data		 		 Data
+	// 		[...oooooooooooo]		->		[...oooooooooooo]	[]
+	// 						^								^
+	//					 target							 target
+	//
+	//
+	// Targets MUST be listed in order of occurrence.
+	//
 	// NOTE: this will not affect the original data object...
 	// NOTE: this might result in empty ribbons, if no images are in a 
 	// 		given ribbon in the section to be split...
+	// NOTE: target must be a .getImage(..) compatible value.
+	// NOTE: if no target is given this will assume the current image.
 	split: function(target){
-		if(target.constructor.name != 'Array'){
-			target = [target]
+		if(arguments.length > 1){
+			target = Array.apply(null, arguments)
+		} else if(target == null 
+				|| target.constructor.name != 'Array'){
+			target = [ target ]
 		}
 		var res = []
 		var tail = this.clone()
+		var that = this
 
+		// NOTE: we modify tail here on each iteration...
 		target.forEach(function(i){
-			i = tail.getImageOrder(i)-1
+			i = i >= that.order.length 
+				? tail.order.length
+				: tail.getImageOrder(that.getImage(i))
 			var n = new Data()
 			n.base = tail.base
 			n.ribbon_order = tail.ribbon_order.slice()
@@ -974,8 +1017,8 @@ var DataPrototype = {
 	// 	'bottom'	- bottom ribbons
 	//
 	// NOTE: data can be both a list of arguments or an array.
-	// NOTE: this will merge the items in-place, into the method's object
-	// 		if it is needed to the original intact, just .clone() it...
+	// NOTE: this will merge the items in-place, into the method's object;
+	// 		if it is needed to keep the original intact, just .clone() it...
 	//
 	// XXX test more complex cases...
 	join: function(){
@@ -1041,6 +1084,52 @@ var DataPrototype = {
 		base.removeDuplicateGIDs()
 
 		return base
+	},
+
+	// Align data to ribbon...
+	//
+	// NOTE: if either start or end is not given this will infer the 
+	// 		missing values via the ribbon above.
+	// NOTE: if either start or end is not given this can only align 
+	// 		downward, needing a ribbon above the target to infer the 
+	// 		values.
+	alignToRibbon: function(ribbon, start, end){
+		ribbon = ribbon == null ? this.base : this.getRibbon(ribbon)
+
+		if(start == null || end == null){
+			var r = this.getRibbonOrder(ribbon)
+			// ribbon is top ribbon, nothing to do...
+			if(r <= 0){
+				return this
+			}
+
+			var above = this.getRibbon(r-1)
+		}
+
+		start = start == null 
+			? this.getImageOrder('first', above)
+			: this.getImageOrder(start)
+		end = end == null 
+			// NOTE: we need to exclude the last image in ribbon from 
+			// 		the next section, this the offset.
+			? this.getImageOrder('last', above)+1
+			: this.getImageOrder(end)
+
+		// split the data into three sections...
+		var res = this.split(start, end)
+		var rest = res.splice(1)
+
+		// set the base ribbon on the middle section...
+		rest[0].setBase(0)
+
+		// join the resulting data to the base ribbon...
+		res = res.join(rest)
+
+		// transfer data to new data object...
+		res.current = this.current
+		res.base = this.base
+
+		return res
 	},
 
 	// Crop the data...

@@ -13,6 +13,8 @@ printhelp(){
 	echo "	-h --help	- print this help and exit."
 	echo "	--common-previews PATH"
 	echo "			- build a single preview set at PATH."
+	echo "	-c		- build a single common path at ARCHIVE_ROOT;"
+	echo "			  this is a shorthand for: --common-path '.'."
 	echo
 	echo "	--skip-archive	- skip creating archive structure (use: exiftool)."
 	echo "	--skip-previews	- skip creating previews (use: vips)."
@@ -33,6 +35,10 @@ while true ; do
 			exit
 			;;
 
+		-c)
+			COMMON_PREVIEWS="."
+			shift
+			;;
 		--common-previews)
 			COMMON_PREVIEWS="${2}"
 			shift
