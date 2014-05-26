@@ -1093,6 +1093,8 @@ var DataPrototype = {
 	// NOTE: if either start or end is not given this can only align 
 	// 		downward, needing a ribbon above the target to infer the 
 	// 		values.
+	//
+	// XXX test
 	alignToRibbon: function(ribbon, start, end){
 		ribbon = ribbon == null ? this.base : this.getRibbon(ribbon)
 
