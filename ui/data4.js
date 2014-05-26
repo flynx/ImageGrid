@@ -1297,20 +1297,19 @@ var DataPrototype = {
 // Main Data object...
 //
 function Data(json){
+	// in case this is called as a function (without new)...
 	if(this.constructor.name != 'Data'){
-		obj = new Data
-	} else {
-		obj = this
+		return new Data(json)
 	}
 
 	// load initial state...
 	if(json != null){
-		obj.loadJSON(json)
+		this.loadJSON(json)
 	} else {
-		obj._reset()
+		this._reset()
 	}
 
-	return obj
+	return this
 }
 Data.__proto__ = DataClassPrototype
 Data.prototype = DataPrototype
