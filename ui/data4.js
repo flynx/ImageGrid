@@ -71,9 +71,13 @@
 // 		results eventually formed Gen3...
 //
 //
-
-
-
+/*********************************************************************/
+//
+// TODO save current crop/state as JSON (named)...
+// TODO save current order (named)...
+// TODO auto-save manual sort -- on re-sort...
+//
+//
 /*********************************************************************/
 
 // Data class methods and API...
@@ -797,7 +801,7 @@ var DataPrototype = {
 
 	// Shift image...
 	//
-	//	Shift umage to target position:
+	//	Shift image to target position:
 	//	.shiftImage(from, gid|order|ribbon)
 	//	.shiftImage(from, gid|order|ribbon, 'before')
 	//	.shiftImage(from, gid|order|ribbon, 'after')
@@ -810,8 +814,14 @@ var DataPrototype = {
 	//
 	// order is expected to be ribbon order.
 	//
-	// from must be a .getImage(..) compatible object. usually an image
-	// gid, order, or null, see .getImage(..) for more info.
+	// from must be:
+	// 	- a .getImage(..) compatible object. usually an image gid, order,
+	// 	  or null, see .getImage(..) for more info.
+	// 	- a list of .getImage(..) compatible objects.
+	//
+	// When shifting a set of gids horizontally this will pack them 
+	// together in order.
+	//
 	//
 	// NOTE: this will not create new ribbons.
 	// NOTE: .getImage(..) defaults to 'before' thus this to defaults
@@ -824,6 +834,7 @@ var DataPrototype = {
 	// 			do we create new ribbons and round???
 	// XXX when shifting groups of images we are using the first as a 
 	// 		base, should we use last as a base for right shifting???
+	// 		...another way to go could be using current as a reference
 	// XXX process from as a list of gids...
 	// XXX test vertical..
 	shiftImage: function(from, target, mode){
@@ -874,7 +885,7 @@ var DataPrototype = {
 		var from_ribbon = this.getRibbon(first)
 
 		// do vertical shift...
-		// XXX do we create new ribbons here???
+		// NOTE: image order here is not changed...
 		if(ribbon != from_ribbon || from.length > 1){
 			var that = this
 			from.forEach(function(e){
@@ -887,6 +898,7 @@ var DataPrototype = {
 		}
 
 		// do horizontal shift...
+		// NOTE: images are packed horizontally together...
 		if(f != t){
 			for(var i=0; i<from.length; i++){
 				f = order.indexOf(from[i])
@@ -913,20 +925,67 @@ var DataPrototype = {
 	// XXX should this be here??
 	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') },
 	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') },
+	// XXX test...
 	shiftImageUp: function(gid){ 
+		var g = gid.constructor.name == 'Array' ? gid[0] : gid
 		// check if we need to create a ribbon here...
-		if(this.getRibbonOrder(gid) == 0){
-			this.newRibbon(gid)
+		if(this.getRibbonOrder(g) == 0){
+			this.newRibbon(g)
 		}
-		return this.shiftImage(gid, this.getRibbonOrder(gid)-1) 
+		return this.shiftImage(gid, this.getRibbonOrder(g)-1) 
 	},
+	// XXX test...
 	shiftImageDown: function(gid){ 
+		var g = gid.constructor.name == 'Array' ? gid[0] : gid
 		// check if we need to create a ribbon here...
-		if(this.getRibbonOrder(gid) == this.ribbon_order.length-1){
-			this.newRibbon(gid, 'below')
+		if(this.getRibbonOrder(g) == this.ribbon_order.length-1){
+			this.newRibbon(g, 'below')
 		}
-		return this.shiftImage(gid, this.getRibbonOrder(gid)+1) 
+		return this.shiftImage(gid, this.getRibbonOrder(g)+1) 
 	},
+
+	// Shift ribbon vertically...
+	//
+	// 	Shift ribbon to position...
+	// 	.shiftRibbon(gid, gid)
+	// 	.shiftRibbon(gid, gid, 'before')
+	// 	.shiftRibbon(gid, gid, 'after')
+	// 		-> data
+	// 		NOTE: 'before' is default.
+	//
+	// 	Shift ribbon by offset...
+	// 	.shiftRibbon(gid, offset, 'offset')
+	// 		-> data
+	//
+	//
+	// XXX test...
+	shiftRibbon: function(gid, to, mode){
+		var i = this.getRibbonOrder(gid)
+
+		// to is an offset...
+		if(mode == 'offset'){
+			to = i + to
+
+		// to is a gid...
+		} else {
+			to = this.getRibbonOrder(to)
+			if(mode == 'after'){
+				to += 1
+			}
+		}
+
+		// normalize to...
+		to = Math.max(0, Math.min(this.ribbon_order.length-1, to))
+
+		this.ribbon_order.splice(to, 0, this.ribbon_order.splice(i, 1)[0])
+
+		return this
+	},
+
+	// Shorthand actions...
+	//
+	shiftRibbonUp: function(gid){ return this.shiftRibbon(gid, -1, 'offset') },
+	shiftRibbonDown: function(gid){ return this.shiftRibbon(gid, 1, 'offset') },
 
 
 
