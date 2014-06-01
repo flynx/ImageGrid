@@ -2275,6 +2275,7 @@ function setupData(viewer){
 		.on([
 			// ribbons.js API...
 			'shiftedImage',
+			'shiftedImages',
 			'createdRibbon',
 			'removedRibbon',
 		].join(' '), function(){

@@ -286,6 +286,7 @@ var DataPrototype = {
 	// 		-> gid
 	// 		-> null
 	// 		NOTE: null is returned if there is no image at given offset.
+	//		NOTE: offset is calculated within the same ribbon...
 	//
 	//
 	// NOTE: If gid|order is not given, current image is assumed.
@@ -366,11 +367,11 @@ var DataPrototype = {
 			mode = offset < 0 ? 'before'
 				: offset > 0 ? 'after'
 				: mode
+			offset = Math.abs(offset)
 		} else {
 			var offset = 0 
 			mode = mode == null ? 'before' : mode
 		}
-		offset = Math.abs(offset)
 
 		var i = this.order.indexOf(target)
 
@@ -814,7 +815,7 @@ var DataPrototype = {
 	//
 	// order is expected to be ribbon order.
 	//
-	// from must be:
+	// from must be one of:
 	// 	- a .getImage(..) compatible object. usually an image gid, order,
 	// 	  or null, see .getImage(..) for more info.
 	// 	- a list of .getImage(..) compatible objects.
@@ -835,7 +836,6 @@ var DataPrototype = {
 	// XXX when shifting groups of images we are using the first as a 
 	// 		base, should we use last as a base for right shifting???
 	// 		...another way to go could be using current as a reference
-	// XXX process from as a list of gids...
 	// XXX test vertical..
 	shiftImage: function(from, target, mode){
 		from = from == null ? this.current : from
@@ -850,7 +850,6 @@ var DataPrototype = {
 
 		// target is an offset...
 		if(mode == 'offset'){
-			// XXX change check this...
 			// XXX check that we can place an elem at first and last positions...
 			var t = this.getImageOrder(this.getImage(first, target))
 
@@ -922,7 +921,7 @@ var DataPrototype = {
 	// 		shifting from first/last ribbons respectively.
 	// NOTE: none of these change .current
 	//
-	// XXX should this be here??
+	// XXX should these be here??
 	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') },
 	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') },
 	// XXX test...
@@ -984,6 +983,7 @@ var DataPrototype = {
 
 	// Shorthand actions...
 	//
+	// XXX should these be here??
 	shiftRibbonUp: function(gid){ return this.shiftRibbon(gid, -1, 'offset') },
 	shiftRibbonDown: function(gid){ return this.shiftRibbon(gid, 1, 'offset') },
 

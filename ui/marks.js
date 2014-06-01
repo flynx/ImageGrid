@@ -602,6 +602,8 @@ function shiftMarkedImages(direction, mode, new_ribbon){
 		DATA.ribbons[cur] = fastSortGIDsByOrder(DATA.ribbons[cur].concat(marked))
 	}
 	
+	dataUpdated()
+
 	// remove empty ribbons and reload...
 	dropEmptyRibbons()
 	reloadViewer()
