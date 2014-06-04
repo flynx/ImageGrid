@@ -107,6 +107,19 @@ var DataClassPrototype = {
 //
 var DataPrototype = {
 
+	/*****************************************************************/
+	//
+	// Base Terminology:
+	// 	- gen1 methods
+	// 		- use the data API/Format
+	// 		- use other gen1 methods
+	// 	- gen2 methods
+	// 		- do NOT use the data API/Format
+	// 		- use other methods from any of gen1 and gen2
+	//
+	// NOTE: only gen2 methods are marked.
+	//
+	//
 	/****************************************************** Format ***/
 	//
 	// 	.current (gid)
@@ -145,7 +158,7 @@ var DataPrototype = {
 	
 	// Make a sparse list of image gids...
 	//
-	// This will use this.order as the base for ordering the list.
+	// This uses .order as the base for ordering the list.
 	//
 	// If target is given then it will get updated with the input gids.
 	//
@@ -288,7 +301,6 @@ var DataPrototype = {
 	// 		NOTE: null is returned if there is no image at given offset.
 	//		NOTE: offset is calculated within the same ribbon...
 	//
-	//
 	// NOTE: If gid|order is not given, current image is assumed.
 	// 		Similarly, if list|ribbon is not given then the current 
 	// 		ribbon is used.
@@ -344,7 +356,7 @@ var DataPrototype = {
 			return null
 		}
 
-		// nirmalize target...
+		// normalize target...
 		if(target in this.ribbons || target.constructor.name == 'Array'){
 			list = target
 			target = this.current
@@ -686,6 +698,7 @@ var DataPrototype = {
 	// Shorthand methods...
 	//
 	// XXX should these be here???
+	focusBaseRibbon: function(){ return this.focusImage(this.base) },
 	focusImageOffset: function(offset){
 		offset = offset == null ? 0 : offset
 
@@ -696,10 +709,10 @@ var DataPrototype = {
 
 		return this.focusImage('current', offset)
 	},
-	nextImage: function(){ return this.focusImageOffset(1) },
-	prevImage: function(){ return this.focusImageOffset(-1) },
-	firstImage: function(){ return this.focusImageOffset(-this.getImages('current').length) },
-	lastImage: function(){ return this.focusImageOffset(this.getImages('current').length) },
+	nextImage: function(){ return this.focusImageOffset(1) }, // Gen2
+	prevImage: function(){ return this.focusImageOffset(-1) }, // Gen2
+	firstImage: function(){ return this.focusImageOffset(-this.getImages('current').length) }, // Gen2
+	lastImage: function(){ return this.focusImageOffset(this.getImages('current').length) }, // Gen2
 	focusRibbonOffset: function(offset){
 		var c = this.getRibbonOrder()
 		var t = c+offset
@@ -709,9 +722,8 @@ var DataPrototype = {
 		// 		up/down navigation...
 		return this.focusImage('current', (t < c ? 'after' : 'before'), t)
 	},
-	nextRibbon: function(){ return this.focusRibbonOffset(1) },
-	prevRibbon: function(){ return this.focusRibbonOffset(-1) },
-	focusBaseRibbon: function(){ return this.focusImage(this.base) },
+	nextRibbon: function(){ return this.focusRibbonOffset(1) }, // Gen2
+	prevRibbon: function(){ return this.focusRibbonOffset(-1) }, // Gen2
 
 	// Set base ribbon...
 	//
@@ -922,8 +934,8 @@ var DataPrototype = {
 	// NOTE: none of these change .current
 	//
 	// XXX should these be here??
-	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') },
-	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') },
+	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') }, // Gen2
+	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') }, // Gen2
 	// XXX test...
 	shiftImageUp: function(gid){ 
 		var g = gid.constructor.name == 'Array' ? gid[0] : gid
@@ -984,8 +996,8 @@ var DataPrototype = {
 	// Shorthand actions...
 	//
 	// XXX should these be here??
-	shiftRibbonUp: function(gid){ return this.shiftRibbon(gid, -1, 'offset') },
-	shiftRibbonDown: function(gid){ return this.shiftRibbon(gid, 1, 'offset') },
+	shiftRibbonUp: function(gid){ return this.shiftRibbon(gid, -1, 'offset') }, // Gen2
+	shiftRibbonDown: function(gid){ return this.shiftRibbon(gid, 1, 'offset') }, // Gen2
 
 
 
