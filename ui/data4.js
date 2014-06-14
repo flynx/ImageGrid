@@ -1226,6 +1226,7 @@ var DataPrototype = {
 	//
 	// NOTE: this may result in empty ribbons...
 	//
+	// XXX sync ribbon order???
 	// XXX should we be able to align a merged crop???
 	// XXX test
 	mergeCrop: function(crop){
@@ -1256,6 +1257,7 @@ var DataPrototype = {
 
 	// Create a sortable ribbon representation...
 	//
+	// 	.cropRibbons()
 	// 	.cropRibbons(mode)
 	// 		-> Data
 	//
@@ -1263,7 +1265,9 @@ var DataPrototype = {
 	// 	'current'	- the closest to current image (default)
 	// 	'first'		- first image in ribbon
 	// 	'last'		- last ribbon in image
-	// 	<function>	- a function that will get an image gid
+	// 	func(ribbon) -> gid
+	// 				- a function that will get a ribbon gid and return 
+	// 				  an apropriate image gid
 	//
 	// NOTE: the images used with a given string mode are the same as 
 	// 		the returned via .getImage(mode, ribbon)
@@ -1328,6 +1332,7 @@ var DataPrototype = {
 		}
 		return this
 	},
+
 
 	// Clone/copy the data object...
 	//
