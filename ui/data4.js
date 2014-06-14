@@ -1281,6 +1281,7 @@ var DataPrototype = {
 	// The crop can be merged back into the source ribbon via the 
 	// .mergeRibbonCrop(..) method.
 	//
+	// XXX should there be a way to set the base ribbon???
 	// XXX do these belong here???
 	cropRibbons: function(mode){
 		mode = mode == null ? 'current' : mode
@@ -1309,6 +1310,8 @@ var DataPrototype = {
 	// the .ribbon_order of this.
 	//
 	// NOTE: see .cropRibbons(..) for more details...
+	//
+	// XXX should there be a way to set the base ribbon???
 	mergeRibbonCrop: function(crop){
 		var that = this
 		this.ribbon_order = crop.order.map(function(e){
