@@ -1211,6 +1211,8 @@ var DataPrototype = {
 	// NOTE: this will not affect the original data object...
 	// NOTE: this may result in empty ribbons...
 	// NOTE: this will not crop the .order...
+	//
+	// XXX should this link to .root and .parent data???
 	crop: function(list){
 		var crop = this.clone()
 		list = crop.makeSparseImages(list)
@@ -1219,6 +1221,11 @@ var DataPrototype = {
 				return list[i] != null
 			}))
 		}
+
+		// XXX ???
+		//crop.parent = this
+		//crop.root = this.root == null ? this : this.root
+
 		return crop
 	},
 
@@ -1286,10 +1293,11 @@ var DataPrototype = {
 	// .mergeRibbonCrop(..) method.
 	//
 	// XXX should there be a way to set the base ribbon???
+	// XXX should this link to .root and .parent data???
 	// XXX do these belong here???
 	cropRibbons: function(mode){
 		mode = mode == null ? 'current' : mode
-		var res = new Data()
+		var crop = new Data()
 
 		// get image representations from each ribbon...
 		var that = this
@@ -1298,14 +1306,18 @@ var DataPrototype = {
 				? function(e){ return that.getImage(mode, e) }
 				: mode)
 
-		var r = res.newRibbon()
+		var r = crop.newRibbon()
 
-		res.ribbons[r] = images
-		res.order = images.slice()
-		res.base = r
-		res.current = images[0]
+		crop.ribbons[r] = images
+		crop.order = images.slice()
+		crop.base = r
+		crop.current = images[0]
 
-		return res
+		// XXX ???
+		//crop.parent = this
+		//crop.root = this.root == null ? this : this.root
+
+		return crop
 	},
 
 	// Merge the sortable ribbon representation into data...
