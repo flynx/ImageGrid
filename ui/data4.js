@@ -1307,16 +1307,25 @@ var DataPrototype = {
 	// Merge the sortable ribbon representation into data...
 	//
 	// This will take the image order from the crop and merge it into 
-	// the .ribbon_order of this.
+	// the .ribbon_order of this, essentially sorting ribbons...
 	//
 	// NOTE: see .cropRibbons(..) for more details...
+	// NOTE: this will set the base to the top ribbon, but only if base
+	// 		was the top ribbon (default) in the first place...
+	// 		XXX is this correct???
 	//
 	// XXX should there be a way to set the base ribbon???
 	mergeRibbonCrop: function(crop){
+		var b = this.ribbon_order.indexOf(this.base)
 		var that = this
 		this.ribbon_order = crop.order.map(function(e){
 			return that.getRibbon(e)
 		})
+		// set the base to the first/top ribbon...
+		// XXX is this the correct way???
+		if(b == 0){
+			this.base = this.ribbon_order[0]
+		}
 		return this
 	},
 
