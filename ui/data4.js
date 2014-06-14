@@ -1268,6 +1268,12 @@ var DataPrototype = {
 	// NOTE: the images used with a given string mode are the same as 
 	// 		the returned via .getImage(mode, ribbon)
 	//
+	// 				v
+	// 		 oooooo|a|ooooooo
+	// 		ooooooo|A|ooooooooooooo		->		aAa
+	// 			ooo|a|ooooo
+	//
+	//
 	// The resulting data will contain a single ribbon, each image in 
 	// which represents a ribbon in the source data.
 	// This view allows convenient sorting of ribbons as images.
