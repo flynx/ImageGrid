@@ -741,6 +741,7 @@ var DataPrototype = {
 	//
 	// If mode is 'below' this will create a new ribbon below the target,
 	// otherwise the new ribbon will be created above.
+	// XXX account for no ribbons...
 	newRibbon: function(target, mode){
 		var gid = this.newGid('R')
 		var i = this.getRibbonOrder(target)
@@ -1250,6 +1251,63 @@ var DataPrototype = {
 			})
 		}
 
+		return this
+	},
+
+	// Create a sortable ribbon representation...
+	//
+	// 	.cropRibbons(mode)
+	// 		-> Data
+	//
+	// mode controls which images represent each ribbon, it can be:
+	// 	'current'	- the closest to current image (default)
+	// 	'first'		- first image in ribbon
+	// 	'last'		- last ribbon in image
+	// 	<function>	- a function that will get an image gid
+	//
+	// NOTE: the images used with a given string mode are the same as 
+	// 		the returned via .getImage(mode, ribbon)
+	//
+	// The resulting data will contain a single ribbon, each image in 
+	// which represents a ribbon in the source data.
+	// This view allows convenient sorting of ribbons as images.
+	//
+	// The crop can be merged back into the source ribbon via the 
+	// .mergeRibbonCrop(..) method.
+	//
+	// XXX do these belong here???
+	cropRibbons: function(mode){
+		mode = mode == null ? 'current' : mode
+		var res = new Data()
+
+		// get image representations from each ribbon...
+		var that = this
+		var images = this.ribbon_order.map(
+			typeof(mode) == typeof('str') 
+				? function(e){ return that.getImage(mode, e) }
+				: mode)
+
+		var r = res.newRibbon()
+
+		res.ribbons[r] = images
+		res.order = images.slice()
+		res.base = r
+		res.current = images[0]
+
+		return res
+	},
+
+	// Merge the sortable ribbon representation into data...
+	//
+	// This will take the image order from the crop and merge it into 
+	// the .ribbon_order of this.
+	//
+	// NOTE: see .cropRibbons(..) for more details...
+	mergeRibbonCrop: function(crop){
+		var that = this
+		this.ribbon_order = crop.order.map(function(e){
+			return that.getRibbon(e)
+		})
 		return this
 	},
 
