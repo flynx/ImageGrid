@@ -38,6 +38,14 @@
 	-o-transform: rotate(@deg) scaleY(@scaleY) scaleX(@scaleX);
 	-ms-transform: rotate(@deg) scaleY(@scaleY) scaleX(@scaleX);
 	transform: rotate(@deg) scaleY(@scaleY) scaleX(@scaleX);
+
+	/* This prevents elements from aligning to sub-pixels...*/
+	/*
+	-webkit-transform-style: preserve-3d;
+	-moz-transform-style: preserve-3d;
+	transform-style: preserve-3d;
+	*/
+	
 }
 .scale (@scale) {
 	.transform(0deg, @scale, @scale)

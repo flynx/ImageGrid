@@ -260,7 +260,7 @@ var DataPrototype = {
 	//		NOTE: image order can be negative, thus getting an image 
 	//				from the tail.
 	//
-	// 	Get first or last image:
+	// 	Get first or last image in ribbon:
 	// 	.getImage('first'[, ribbon])
 	// 	.getImage('last'[, ribbon])
 	// 		-> gid
@@ -625,7 +625,6 @@ var DataPrototype = {
 	//
 	//
 	// NOTE: this expects ribbon order and not image order.
-	//		
 	getRibbon: function(target, offset){
 		target = target == null ? this.current : target
 		offset = offset == null ? 0 : offset
@@ -711,8 +710,8 @@ var DataPrototype = {
 	},
 	nextImage: function(){ return this.focusImageOffset(1) }, // Gen2
 	prevImage: function(){ return this.focusImageOffset(-1) }, // Gen2
-	firstImage: function(){ return this.focusImageOffset(-this.getImages('current').length) }, // Gen2
-	lastImage: function(){ return this.focusImageOffset(this.getImages('current').length) }, // Gen2
+	firstImage: function(){ return this.focusImage('first') }, // Gen2
+	lastImage: function(){ return this.focusImage('last') }, // Gen2
 	focusRibbonOffset: function(offset){
 		var c = this.getRibbonOrder()
 		var t = c+offset
@@ -741,7 +740,6 @@ var DataPrototype = {
 	//
 	// If mode is 'below' this will create a new ribbon below the target,
 	// otherwise the new ribbon will be created above.
-	// XXX account for no ribbons...
 	newRibbon: function(target, mode){
 		var gid = this.newGid('R')
 		var i = this.getRibbonOrder(target)
@@ -763,7 +761,7 @@ var DataPrototype = {
 	// If 'all' is the first argument, this will merge all the ribbons.
 	//
 	// This will merge the ribbons into the first.
-	mergeRibbons: function(target, other){
+	mergeRibbons: function(target){
 		var targets = target == 'all' ? this.ribbon_order.slice() : arguments
 		var base = targets[0]
 
