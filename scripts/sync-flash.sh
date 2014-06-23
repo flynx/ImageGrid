@@ -2,15 +2,19 @@
 
 DATE=`date +%Y%m%d`
 COUNT=1
+TITLE=""
+
+if ! [ -z $2 ] ; then
+	TITLE=" - $2"
+fi
 
 # XXX do a real three digit count...
-DIR="./- ${DATE}.00${COUNT}/"
+DIR="./- ${DATE}.00${COUNT}${TITLE}/"
 
 while [ -e "$DIR" ] ; do
 	COUNT=$((COUNT+1))
-	DIR="./- ${DATE}.00${COUNT}/"
+	DIR="./- ${DATE}.00${COUNT}${TITLE}/"
 done
-
 
 
 echo "Creating directory: $DIR"
