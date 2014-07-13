@@ -100,6 +100,11 @@ var IMAGE_UPDATERS = []
 
 /*********************************************************************/
 
+// XXX Constructors...
+
+
+/*********************************************************************/
+
 // Run all the image update functions registered in IMAGE_UPDATERS, on 
 // an image...
 //
