@@ -282,6 +282,66 @@ function updateImages(list, size, cmp){
 }
 
 
+// Compensate for viewer proportioned and rotated images.
+//
+// This will set the margins so as to make the rotated image offset the
+// same space as it is occupying visually...
+//
+// NOTE: this is not needed for square image blocks.
+// NOTE: if an image block is square, this will remove the margins.
+function correctImageProportionsForRotation(images, container){
+	container = container == null ? $('.viewer') : container
+
+	var W = container.innerWidth()
+	var H = container.innerHeight()
+
+	var viewer_p = W > H ? 'landscape' : 'portrait'
+
+	return $(images).each(function(i, e){
+		var image = $(this)
+		// orientation...
+		var o = image.attr('orientation')
+		o = o == null ? 0 : o
+		var w = image.outerWidth()
+		var h = image.outerHeight()
+
+		// non-square image...
+		if(w != h){
+
+			var image_p = w > h ? 'landscape' : 'portrait'
+
+			// when the image is turned 90deg/270deg and its 
+			// proportions are the same as the screen...
+			if((o == 90 || o == 270) && image_p == viewer_p){
+				image.css({
+					width: h,
+					height: w,
+				})
+				image.css({
+					'margin-top': -((w - h)/2),
+					'margin-bottom': -((w - h)/2),
+					'margin-left': (w - h)/2,
+					'margin-right': (w - h)/2,
+				})
+
+			} else if((o == 0 || o == 180) && image_p != viewer_p){
+				image.css({
+					width: h,
+					height: w,
+				})
+				image.css({
+					'margin': '',
+				})
+			}
+
+		// square image...
+		} else {
+			image.css({
+				'margin': '',
+			})
+		}
+	})
+}
 
 
 

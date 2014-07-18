@@ -8,6 +8,20 @@
 
 
 /*********************************************************************/
+//
+// Might also be a good idea to add "relative terms" to be used as 
+// arguments for actions (a-la jQuery collections):
+//
+// 	Image			- current image
+// 	Images			- all images
+// 	Ribbon			- ribbon or ribbon images
+// 	Marked			- marked images
+// 	Bookmarked		- bookmarked images
+//
+// NOTE: these can also beused as a basis for actions...
+//
+//
+/*********************************************************************/
 
 // NOTE: context is dynamic.
 function Action(context, name, doc, code){
@@ -90,40 +104,6 @@ function Actions(context, names, actions){
 // 			actions chanined to it's main event.
 // 		- actions should accept arguments, both optional and required
 var BASE_ACTIONS = {
-	// basic navigation...
-	nextImage: 'Focus next image in current ribbon',
-	nextRibbon: 'Focus next ribbon (down)',
-	nextScreen: 'Show next screen width of images',
-
-	prevImage: 'Focus previous image in current ribbon',
-	prevRibbon: 'Focus previous ribbon (up)',
-	prevScreen: 'Show previous screen width of images',
-
-	firstImage: 'Focus first image in ribbon',
-	lastImage: 'Focus last image in ribbon',
-
-	// zooming...
-	zoomIn: 'Zoom in',
-	zoomOut: 'Zoom out',
-
-	fitNImages: 'fit N images',
-
-	fitOne: ['Fit one image',{ fitNImages: 1, }],
-	fitTwo: ['Fit two images', { fitNImages: 2, }],
-	fitThree: ['Fit three images', { fitNImages: 3, }],
-	fitFour: ['Fit four images', { fitNImages: 4, }],
-	fitFive: ['Fit five images', { fitNImages: 5, }],
-	fitSix: ['Fit six images', { fitNImages: 6, }],
-	fitSeven: ['Fit seven images', { fitNImages: 7, }],
-	fitEight: ['Fit eight images', { fitNImages: 8, }],
-	fitNine: ['Fit nine images', { fitNImages: 9, }],
-
-	fitMax: 'Fit the maximum number of images',
-
-	fitSmall: 'Show small image',
-	fitNormal: 'Show normal image',
-	fitScreen: 'Fit image to screen',
-
 	// basic editing...
 	shiftImageUp: 
 		'Shift image to the ribbon above current, creating one if '
@@ -142,8 +122,8 @@ var BASE_ACTIONS = {
 	setAsBaseRibbon: '',
 
 	// image adjustments...
-	rotateLeft: '',
-	rotateRight: '',
+	rotateCW: '',
+	rotateCCW: '',
 	flipVertical: '',
 	flipHorizontal: '',
 
@@ -156,6 +136,62 @@ var BASE_ACTIONS = {
 	cropRibbon: '',
 	uncropView: '',
 	uncropAll: '',
+
+	openURL: '',
+	openHistory: '',
+
+	saveState: '',
+	exportImages: '',
+
+	exit: '',
+}
+
+
+// XXX think of a better name...
+function setupBaseActions(context, actions){
+	return Actions(context, BASE_ACTIONS, actions)
+}
+
+
+
+/*********************************************************************/
+
+var UI_ACTIONS = {
+	// basic navigation...
+	nextImage: 'Focus next image in current ribbon',
+	nextRibbon: 'Focus next ribbon (down)',
+	nextScreen: 'Show next screen width of images',
+
+	prevImage: 'Focus previous image in current ribbon',
+	prevRibbon: 'Focus previous ribbon (up)',
+	prevScreen: 'Show previous screen width of images',
+
+	firstImage: 'Focus first image in ribbon',
+	lastImage: 'Focus last image in ribbon',
+
+	// zooming...
+	zoomIn: 'Zoom in',
+	zoomOut: 'Zoom out',
+
+	// NOTE: if this gets a count argument it will fit count images, 
+	// 		default is one.
+	fitImage: 'Fit image',
+
+	// XXX should these be relative to screen rather than actual image counts?
+	fitTwo: ['Fit two images', { fitImage: 2, }],
+	fitThree: ['Fit three images', { fitImage: 3, }],
+	fitFour: ['Fit four images', { fitImage: 4, }],
+	fitFive: ['Fit five images', { fitImage: 5, }],
+	fitSix: ['Fit six images', { fitImage: 6, }],
+	fitSeven: ['Fit seven images', { fitImage: 7, }],
+	fitEight: ['Fit eight images', { fitImage: 8, }],
+	fitNine: ['Fit nine images', { fitImage: 9, }],
+
+	fitMax: 'Fit the maximum number of images',
+
+	fitSmall: 'Show small image',
+	fitNormal: 'Show normal image',
+	fitScreen: 'Fit image to screen',
 
 	// modes...
 	singleImageMode: '',
@@ -172,14 +208,6 @@ var BASE_ACTIONS = {
 	showStatesPanel: '',
 	showConsolePanel: '',
 
-	openURL: '',
-	openHistory: '',
-
-	saveState: '',
-	exportImages: '',
-
-	exit: '',
-
 	// developer actions...
 	showConsole: '',
 	showDevTools: '',
@@ -187,8 +215,8 @@ var BASE_ACTIONS = {
 
 
 // XXX think of a better name...
-function setupBaseActions(context, actions){
-	return Actions(context, BASE_ACTIONS, actions)
+function setupUIActions(context, actions){
+	return Actions(context, UI_ACTIONS, actions)
 }
 
 
