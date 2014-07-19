@@ -138,7 +138,7 @@ var BASE_ACTIONS = {
 	uncropAll: '',
 
 	openURL: '',
-	openHistory: '',
+	//openHistory: '',
 
 	saveState: '',
 	exportImages: '',
@@ -199,6 +199,12 @@ var UI_ACTIONS = {
 
 	toggleTheme: '',
 
+	// dialogs...
+	openDialog: '',
+	historyDialog: '',
+	cropDialog: '',
+	markDialog: '',
+
 	// panels...
 	togglePanels: '',
 	showInfoPanel: '',
@@ -206,6 +212,8 @@ var UI_ACTIONS = {
 	showSearchPanel: '',
 	showQuickEditPanel: '',
 	showStatesPanel: '',
+	showHistoryPanel: '',
+	showDirBrowserPanel: '',
 	showConsolePanel: '',
 
 	// developer actions...
