@@ -143,6 +143,8 @@ var RibbonsPrototype = {
 		return updateImage(image)
 	},
 
+	// XXX do we need shorthands like shiftImageUp/shiftImageDown/... here?
+
 	// XXX this does not align anything, it's just a low level focus...
 	// XXX interaction animation...
 	focusImage: function(gid){
@@ -240,10 +242,10 @@ var RibbonsPrototype = {
 
 	// shorthands...
 	// XXX should these be here???
-	rotateCW: function(target){ return this.rotateImage(target, this.CW) },
-	rotateCCW: function(target){ return this.rotateImage(target, this.CCW) },
-	flipVertical: function(target){ return this.flipImage(target, this.VERTICAL) },
-	flipHorizontal: function(target){ return this.flipImage(target, this.HORIZONTAL) },
+	//rotateCW: function(target){ return this.rotateImage(target, this.CW) },
+	//rotateCCW: function(target){ return this.rotateImage(target, this.CCW) },
+	//flipVertical: function(target){ return this.flipImage(target, this.VERTICAL) },
+	//flipHorizontal: function(target){ return this.flipImage(target, this.HORIZONTAL) },
 
 
 	// Bulk manipulation...

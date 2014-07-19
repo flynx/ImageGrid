@@ -25,7 +25,9 @@ APP_NAME=ImageGrid.Viewer
 #**********************************************************************
 
 # get all the .less files to process...
-CSS_FILES := $(patsubst %.less,%.css,$(wildcard *.less))
+#LESS_FILES := $(shell find . -type f -name '*.less')
+#CSS_FILES := $(patsubst %.less,%.css,$(LESS_FILES))
+CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 
 LIB_DIR=lib
 EXT_LIB_DIR=ext-lib
@@ -114,9 +116,9 @@ node-deps:
 #	npm install exif
 
 dev: $(CSS_FILES)
-	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
-	rm -f nwsnapshot.exe credits.html
-	chmod +x *.{exe,dll}
+	#unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
+	#rm -f nwsnapshot.exe credits.html
+	#chmod +x *.{exe,dll}
 
 #dev-targets:
 #	mkdir -p targets/node-webkit
