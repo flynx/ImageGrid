@@ -6,51 +6,132 @@
 <link rel="stylesheet" href="css/editor.css">
 
 
+<script src="ext-lib/jquery.js"></script>
+<script src="ext-lib/jquery-ui.js"></script>
+
+<script src="lib/jli.js"></script>
+<script src="lib/keyboard.js"></script>
+
+<script src="actions.js"></script>
+<!--script src="interaction.js"></script-->
+<script src="data.js"></script>
+<script src="viewer.js"></script>
+<script src="ribbons.js"></script>
+<script src="images.js"></script>
+<script src="image.js"></script>
+<script src="loader.js"></script>
+
+<script>
+
+var gui = require('nw.gui')
+
+window.toggleFullscreenMode = createCSSClassToggler(
+		document.body, 
+		'.full-screen-mode',
+		function(action){
+			gui.Window.get().toggleFullscreen()
+		})
+window.closeWindow = function(){
+	gui.Window.get().close()
+}
+window.showDevTools = function(){
+	gui.Window.get().showDevTools()
+}
+window.reload = function(){
+	gui.Window.get().reload()
+}
+window.setWindowTitle = function(text){
+	var title = text +' - '+ CONFIG.app_name
+	gui.Window.get().title = title
+	$('.title-bar .title').text(title)
+}
+
+var GLOBAL_KEYBOARD = {
+	'Global bindings': {
+		doc: 'NOTE: binding priority is the same as the order of sections '+
+			'on this page.',
+		pattern: '*',
+
+		F4: {
+			alt: doc('Close viewer', 
+				function(){ 
+					closeWindow() 
+					return false
+				}),
+		},
+		F5: doc('Full reload viewer', 
+			function(){ 
+				/*
+				killAllWorkers()
+					.done(function(){
+						reload() 
+					})
+				*/
+				reload()
+				return false
+			}),
+		F12: doc('Show devTools', 
+			function(){ 
+				showDevTools() 
+				return false
+			}),
+		// NOTE: these are for systems where F** keys are not available 
+		// 		or do other stuff...
+		R: {
+			/*
+			'ctrl+alt': doc('Reload viewer', 
+				function(){ 
+					reloadViewer() 
+					return false
+				}),
+			*/
+			'ctrl+shift': 'F5',
+		},
+		P: {
+			'ctrl+shift': 'F12',
+		},
+
+		// NOTE: this is handled by the wrapper at this point, so we do 
+		// 		not have to do anything here...
+		F11: doc('Toggle full screen view', function(){ 
+				toggleFullscreenMode() 
+				return false
+			}),
+		F: {
+			ctrl: 'F11',
+		},
+
+	},
+}	
+
+
+$(function(){
+	$(document)
+		.keydown(makeKeyboardHandler(
+			GLOBAL_KEYBOARD,
+			function(k){
+				window.DEBUG && console.log(k)
+			}))
+})
+
+</script>
+
 </head>
 <body>
 
-<!-- This is the basic viewer structure...
+<!-- for viewer structure doc see: ribbons.js... -->
 
-Unpopulated
-NOTE: there can be only .ribbon-set element.
-
-<div class="viewer">
-	<div class="ribbon-set"></div>
-</div>
-
-
-Populated
-
-<div class="viewer">
-	<div class="ribbon-set">
-		<div class="ribbon">
-			<div class="image"></div>
-			<div class="image"></div>
-			...
-		</div>
-		<div class="ribbon">
-			<div class="image"></div>
-			<div class="current image"></div>
-			<div class="image"></div>
-			<div class="mark selected"></div>
-			<div class="image"></div>
-			...
-		</div>
-		...
-	</div>
-</div>
--->
-
-<div class="viewer">
+<div class="viewer dark">
 
 	<div class="ribbon-set"></div>
 
 
-	<!-- XXX should these be here??? -->
+	<!-- XXX should these be here???
 	<div class="overlay-block">
 		<div class="background"></div>
 		<div class="content"></div>
 	</div>
+	-->
 
 </div>
 

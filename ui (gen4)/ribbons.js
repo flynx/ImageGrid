@@ -9,8 +9,59 @@
 
 
 /*********************************************************************/
+//
+// This xpects the folowing HTML structure...
+//
+// Unpopulated:
+// NOTE: there can be only .ribbon-set element.
+//
+//	<div class="viewer">
+//		<div class="ribbon-set"></div>
+//	</div>
+//
+//
+// Populated:
+//
+//	<div class="viewer">
+//		<div class="ribbon-set">
+//			<div class="ribbon">
+//				<div class="image"></div>
+//				<div class="image"></div>
+//				...
+//			</div>
+//			<div class="ribbon">
+//				<div class="image"></div>
+//				<div class="current image"></div>
+//				<div class="image"></div>
+//				<div class="mark selected"></div>
+//				<div class="image"></div>
+//				...
+//			</div>
+//			...
+//		</div>
+//	</div>
+//
+//
+/*********************************************************************/
 
 var RibbonsClassPrototype = {
+	// NOTE: these will return unattached objects...
+	createViewer: function(){
+		return $('<div>')
+			.addClass('viewer')
+			.append($('<div>')
+				.addClass('ribbon-set'))
+	},
+	createRibbon: function(gid){
+		return $('<div>')
+			.addClass('ribbon')
+			.setAttribute('gid', JSON.stringify(gid))
+	},
+	createImage: function(gid){
+		return $('<div>')
+			.addClass('image')
+			.setAttribute('gid', JSON.stringify(gid))
+	},
 } 
 
 
@@ -20,6 +71,11 @@ var RibbonsPrototype = {
 	//
 	//	.viewer (jQuery object)
 	//
+	
+	// Constructors...
+	createViewer: RibbonsClassPrototype.createViewer,
+	createRibbon: RibbonsClassPrototype.createRibbon,
+	createImage: RibbonsClassPrototype.createImage,
 
 	// NOTE: these accept gids or jQuery objects...
 	getRibbon: function(target){
@@ -39,18 +95,6 @@ var RibbonsPrototype = {
 			return this.viewer.find('.image[gid='+JSON.stringify(target)+']')
 		}
 		return $(target).filter('.image')
-	},
-
-	// NOTE: these will return unattached objects...
-	createRibbon: function(gid){
-		return $('<div>')
-			.addClass('ribbon')
-			.setAttribute('gid', JSON.stringify(gid))
-	},
-	createImage: function(gid){
-		return $('<div>')
-			.addClass('image')
-			.setAttribute('gid', JSON.stringify(gid))
 	},
 
 
@@ -83,8 +127,12 @@ var RibbonsPrototype = {
 		position = position < 0 ? 0 : position
 
 		// place the ribbon...
-		if(ribbons.length <= position){
+		if(ribbons.length == 0){
+			this.viewer.find('ribbon-set').append(ribbon)
+
+		} else if(ribbons.length <= position){
 			ribbons.last().after(ribbon)
+
 		} else {
 			ribbons.eq(position).before(ribbon)
 		}
@@ -134,8 +182,9 @@ var RibbonsPrototype = {
 		position = position < 0 ? 0 : position
 
 		// place the image...
-		if(images.length <= position){
+		if(images.length == 0 || images.length <= position){
 			ribbon.append(image)
+
 		} else {
 			images.eq(position).before(image)
 		}
