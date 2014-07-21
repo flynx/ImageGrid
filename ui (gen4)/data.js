@@ -5,6 +5,12 @@
 *
 **********************************************************************/
 
+define(function(require){ var module = {}
+
+
+
+/*********************************************************************/
+//
 // General format info...
 //
 // Version format:
@@ -82,7 +88,7 @@
 
 // Data class methods and API...
 //
-var DataClassPrototype = {
+module.DataClassPrototype = {
 	// NOTE: we consider the input list sorted...
 	fromList: function(list){
 		var res = new Data()
@@ -105,7 +111,7 @@ var DataClassPrototype = {
 
 // Data object methods and API...
 //
-var DataPrototype = {
+module.DataPrototype = {
 
 	/*****************************************************************/
 	//
@@ -1473,11 +1479,13 @@ function Data(json){
 
 	return this
 }
-Data.__proto__ = DataClassPrototype
-Data.prototype = DataPrototype
+module.Data = Data
+Data.__proto__ = module.DataClassPrototype
+Data.prototype = module.DataPrototype
 Data.prototype.constructor = Data
 
 
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
+return module })

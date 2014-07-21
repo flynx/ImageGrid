@@ -5,6 +5,8 @@
 *
 **********************************************************************/
 
+define(function(require){ var module = {}
+
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 
@@ -44,7 +46,7 @@
 //
 /*********************************************************************/
 
-var RibbonsClassPrototype = {
+module.RibbonsClassPrototype = {
 	// NOTE: these will return unattached objects...
 	createViewer: function(){
 		return $('<div>')
@@ -67,15 +69,15 @@ var RibbonsClassPrototype = {
 
 // XXX this is a low level interface, not a set of actions...
 // XXX test
-var RibbonsPrototype = {
+module.RibbonsPrototype = {
 	//
 	//	.viewer (jQuery object)
 	//
 	
 	// Constructors...
-	createViewer: RibbonsClassPrototype.createViewer,
-	createRibbon: RibbonsClassPrototype.createRibbon,
-	createImage: RibbonsClassPrototype.createImage,
+	createViewer: module.RibbonsClassPrototype.createViewer,
+	createRibbon: module.RibbonsClassPrototype.createRibbon,
+	createImage: module.RibbonsClassPrototype.createImage,
 
 	// NOTE: these accept gids or jQuery objects...
 	getRibbon: function(target){
@@ -392,11 +394,13 @@ function Ribbons(viewer){
 
 	return this
 }
-Ribbons.__proto__ = RibbonsClassPrototype
-Ribbons.prototype = RibbonsPrototype
+module.Ribbons = Ribbons
+Ribbons.__proto__ = module.RibbonsClassPrototype
+Ribbons.prototype = module.RibbonsPrototype
 Ribbons.prototype.constructor = Ribbons
 
 
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
+return module })
