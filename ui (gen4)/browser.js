@@ -49,21 +49,6 @@ module.toggleFullscreenMode = createCSSClassToggler(
 		})
 
 
-window.closeWindow = 
-module.closeWindow = function(){
-	window.close()
-}
-
-
-window.showDevTools = 
-module.showDevTools = function(){}
-
-
-window.reload = 
-module.reload = function(){
-	location.reload()
-}
-
 
 window.setWindowTitle = 
 module.setWindowTitle = function(text){

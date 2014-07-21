@@ -12,11 +12,16 @@ console.log('>>> ui')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var keyboard = require('lib/keyboard')
+var doc = keyboard.doc
+
+// compatibility...
 var browser = require('browser')
 var nw = require('nw')
 
-var keyboard = require('lib/keyboard')
-var doc = keyboard.doc
+// XXX load only the actualy used here modules...
+var actions = require('actions')
+var data = require('data')
 
 
 
@@ -31,7 +36,7 @@ window.GLOBAL_KEYBOARD = {
 		F4: {
 			alt: doc('Close viewer', 
 				function(){ 
-					closeWindow() 
+					window.close() 
 					return false
 				}),
 		},
@@ -43,13 +48,19 @@ window.GLOBAL_KEYBOARD = {
 						reload() 
 					})
 				*/
-				reload()
+				location.reload()
 				return false
 			}),
 		F12: doc('Show devTools', 
 			function(){ 
-				showDevTools() 
-				return false
+				if(window.showDevTools != null){
+					showDevTools() 
+					return false
+
+				// if no showDevTools defined pass the button further...
+				} else {
+					return true
+				}
 			}),
 		// NOTE: these are for systems where F** keys are not available 
 		// 		or do other stuff...
@@ -76,7 +87,6 @@ window.GLOBAL_KEYBOARD = {
 		F: {
 			ctrl: 'F11',
 		},
-
 	},
 }	
 
@@ -85,6 +95,7 @@ window.GLOBAL_KEYBOARD = {
 /*********************************************************************/
 
 $(function(){
+	// setup base keyboard for devel, in case something breaks...
 	$(document)
 		.keydown(
 			keyboard.makeKeyboardHandler(

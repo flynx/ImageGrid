@@ -4,6 +4,9 @@
 *
 **********************************************************************/
 
+define(function(require){ var module = {}
+console.log('>>> actions')
+
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 
@@ -24,6 +27,8 @@
 /*********************************************************************/
 
 // NOTE: context is dynamic.
+var Action =
+module.Action = 
 function Action(context, name, doc, code){
 	var action = function(){
 		var args = args2array(arguments)
@@ -83,6 +88,8 @@ function Action(context, name, doc, code){
 //
 //
 // NOTE: context is dynamic.
+var Actions =
+module.Action = 
 function Actions(context, names, actions){
 	actions = actions == null ? {} : actions
 	Object.keys(names).forEach(function(e){
@@ -103,7 +110,8 @@ function Actions(context, names, actions){
 // 		- compound action is like a normal action with a set of other 
 // 			actions chanined to it's main event.
 // 		- actions should accept arguments, both optional and required
-var BASE_ACTIONS = {
+var BASE_ACTIONS =
+module.BASE_ACTIONS = {
 	// basic editing...
 	shiftImageUp: 
 		'Shift image to the ribbon above current, creating one if '
@@ -148,6 +156,8 @@ var BASE_ACTIONS = {
 
 
 // XXX think of a better name...
+var setupBaseActions =
+module.setupBaseActions =
 function setupBaseActions(context, actions){
 	return Actions(context, BASE_ACTIONS, actions)
 }
@@ -156,7 +166,8 @@ function setupBaseActions(context, actions){
 
 /*********************************************************************/
 
-var UI_ACTIONS = {
+var UI_ACTIONS =
+module.UI_ACTIONS = {
 	// basic navigation...
 	nextImage: 'Focus next image in current ribbon',
 	nextRibbon: 'Focus next ribbon (down)',
@@ -223,6 +234,8 @@ var UI_ACTIONS = {
 
 
 // XXX think of a better name...
+var setupUIActions =
+module.setupUIActions =
 function setupUIActions(context, actions){
 	return Actions(context, UI_ACTIONS, actions)
 }
@@ -233,7 +246,8 @@ function setupUIActions(context, actions){
 
 // Marks actions...
 // XXX move to marks.js
-var MARKS_ACTIONS = {
+var MARKS_ACTIONS =
+module.MARKS_ACTIONS = {
 	toggleMark: '',
 	toggleMarkBlock: '',
 
@@ -253,6 +267,8 @@ var MARKS_ACTIONS = {
 	cropMarkedImagesToSingleRibbon: '',
 }
 
+var setupMarksActions = 
+module.setupMarksActions = 
 function setupMarksActions(context, actions){
 	return Actions(context, MARKS_ACTIONS, actions)
 }
@@ -263,7 +279,8 @@ function setupMarksActions(context, actions){
 
 // Bookmarks actions...
 // XXX move to bookmarks.js
-var BOOKMARKS_ACTIONS = {
+var BOOKMARKS_ACTIONS =
+module.BOOKMARKS_ACTIONS = {
 	toggleBookmark: 'Toggle image bookmark',
 
 	bookmarkMarked: 'Bookmark marked images',
@@ -277,6 +294,8 @@ var BOOKMARKS_ACTIONS = {
 	cropBookmarkedImagesToSingleRibbon: '',
 }
 
+var setupBookmarksActions =
+module.setupBookmarksActions =
 function setupBookmarksActions(context, actions){
 	return Actions(context, BOOKMARKS_ACTIONS, actions)
 }
@@ -286,3 +305,4 @@ function setupBookmarksActions(context, actions){
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
+return module })
