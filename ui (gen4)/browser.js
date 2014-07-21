@@ -56,9 +56,7 @@ module.closeWindow = function(){
 
 
 window.showDevTools = 
-module.showDevTools = function(){
-	// XXX
-}
+module.showDevTools = function(){}
 
 
 window.reload = 
