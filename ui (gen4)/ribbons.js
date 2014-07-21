@@ -6,8 +6,10 @@
 **********************************************************************/
 
 define(function(require){ var module = {}
+console.log('>>> ribbons')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
+
 
 
 /*********************************************************************/
@@ -15,7 +17,7 @@ define(function(require){ var module = {}
 // This xpects the folowing HTML structure...
 //
 // Unpopulated:
-// NOTE: there can be only .ribbon-set element.
+// NOTE: there can be only one .ribbon-set element.
 //
 //	<div class="viewer">
 //		<div class="ribbon-set"></div>
@@ -46,6 +48,7 @@ define(function(require){ var module = {}
 //
 /*********************************************************************/
 
+var RibbonsClassPrototype =
 module.RibbonsClassPrototype = {
 	// NOTE: these will return unattached objects...
 	createViewer: function(){
@@ -69,15 +72,16 @@ module.RibbonsClassPrototype = {
 
 // XXX this is a low level interface, not a set of actions...
 // XXX test
+var RibbonsPrototype =
 module.RibbonsPrototype = {
 	//
 	//	.viewer (jQuery object)
 	//
 	
 	// Constructors...
-	createViewer: module.RibbonsClassPrototype.createViewer,
-	createRibbon: module.RibbonsClassPrototype.createRibbon,
-	createImage: module.RibbonsClassPrototype.createImage,
+	createViewer: RibbonsClassPrototype.createViewer,
+	createRibbon: RibbonsClassPrototype.createRibbon,
+	createImage: RibbonsClassPrototype.createImage,
 
 	// NOTE: these accept gids or jQuery objects...
 	getRibbon: function(target){
@@ -386,6 +390,8 @@ module.RibbonsPrototype = {
 
 // Main Ribbons object...
 //
+var Ribbons =
+module.Ribbons =
 function Ribbons(viewer){
 	// in case this is called as a function (without new)...
 	if(this.constructor.name != 'Ribbons'){
@@ -394,9 +400,8 @@ function Ribbons(viewer){
 
 	return this
 }
-module.Ribbons = Ribbons
-Ribbons.__proto__ = module.RibbonsClassPrototype
-Ribbons.prototype = module.RibbonsPrototype
+Ribbons.__proto__ = RibbonsClassPrototype
+Ribbons.prototype = RibbonsPrototype
 Ribbons.prototype.constructor = Ribbons
 
 

@@ -6,6 +6,7 @@
 **********************************************************************/
 
 define(function(require){ var module = {}
+console.log('>>> data')
 
 
 
@@ -88,6 +89,7 @@ define(function(require){ var module = {}
 
 // Data class methods and API...
 //
+var DataClassPrototype =
 module.DataClassPrototype = {
 	// NOTE: we consider the input list sorted...
 	fromList: function(list){
@@ -111,6 +113,7 @@ module.DataClassPrototype = {
 
 // Data object methods and API...
 //
+var DataPrototype =
 module.DataPrototype = {
 
 	/*****************************************************************/
@@ -1464,6 +1467,8 @@ module.DataPrototype = {
 
 // Main Data object...
 //
+var Data = 
+module.Data =
 function Data(json){
 	// in case this is called as a function (without new)...
 	if(this.constructor.name != 'Data'){
@@ -1479,9 +1484,8 @@ function Data(json){
 
 	return this
 }
-module.Data = Data
-Data.__proto__ = module.DataClassPrototype
-Data.prototype = module.DataPrototype
+Data.__proto__ = DataClassPrototype
+Data.prototype = DataPrototype
 Data.prototype.constructor = Data
 
 

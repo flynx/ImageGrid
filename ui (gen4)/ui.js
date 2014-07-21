@@ -22,11 +22,13 @@ var nw = require('nw')
 // XXX load only the actualy used here modules...
 var actions = require('actions')
 var data = require('data')
+var ribbons = require('ribbons')
 
 
 
 /*********************************************************************/
 
+// XXX add this to the global doc...
 window.GLOBAL_KEYBOARD = {
 	'Global bindings': {
 		doc: 'NOTE: binding priority is the same as the order of sections '+
