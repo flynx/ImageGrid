@@ -115,7 +115,7 @@ module.IMAGE_UPDATERS = []
 
 /*********************************************************************/
 
-// XXX is this the right place for this???
+// XXX use Ribbon.getElemGID(..) in place of this...
 var getImageGID =
 module.getImageGID =
 function(img){
@@ -126,6 +126,7 @@ function(img){
 // XXX getVisibleImageSize(...)
 // XXX getBestPreview(...) 
 // XXX setImageFlipState(...)
+// XXX makeGIDDistanceCmp(...)
 
 
 

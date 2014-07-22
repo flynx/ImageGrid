@@ -53,6 +53,10 @@ var image = require('image')
 
 var RibbonsClassPrototype =
 module.RibbonsClassPrototype = {
+	getElemGID: function(elem){
+		return JSON.parse('"' + elem.attr('gid') + '"')
+	},
+
 	// NOTE: these will return unattached objects...
 	createViewer: function(){
 		return $('<div>')
@@ -94,10 +98,10 @@ module.RibbonsPrototype = {
 	createRibbon: RibbonsClassPrototype.createRibbon,
 	createImage: RibbonsClassPrototype.createImage,
 
-	getElemGID: function(elem){
-		return JSON.parse('"' + elem.attr('gid') + '"')
-	},
+	// Generic getters...
+	getElemGID: RibbonsClassPrototype.getElemGID,
 
+	// Contextual getters...
 	// NOTE: these accept gids or jQuery objects...
 	getRibbon: function(target){
 		if(target == null) {
@@ -119,10 +123,6 @@ module.RibbonsPrototype = {
 		}
 		return $(target).filter('.image')
 	},
-
-
-	// NOTE: to remove a ribbon or an image just use .getRibbon(..).remove()
-	// 		and .getImage(...).remove() respectivly.
 
 
 	// Place a ribbon...
@@ -286,6 +286,26 @@ module.RibbonsPrototype = {
 		})
 		return this
 	},
+
+
+	// Clear elements...
+	//
+	// Clear all elements:
+	// 	.clear()
+	// 	.clear('*')
+	// 		-> Ribbons
+	//
+	// Clear an image or a ribbon by gid:
+	// 	.clear(gid)
+	// 		-> Ribbons
+	//
+	// Clear a set of elements:
+	// 	.clear([gid, ...])
+	// 		-> Ribbons
+	//
+	//
+	// NOTE: another way to remove a ribbon or an image just to use 
+	// 		.getRibbon(..).remove() and .getImage(...).remove() respectivly.
 	clear: function(gids){
 		// clear all...
 		if(gids == null || gids == '*'){
@@ -356,11 +376,12 @@ module.RibbonsPrototype = {
 		270: 180,
 	},
 	rotateImage: function(target, direction){
-		var r_table = direction == this.CW ? _cw : _ccw
+		var r_table = direction == this.CW ? this._cw : this._ccw
 		target = this.getImage(target)
 		target.each(function(i, e){
 			var img = $(this)
-			var o = r_table[img.attr('orientation')]
+			var o = img.attr('orientation')
+			o = r_table[ o == null ? null : o ]
 			if(o == null){
 				img.removeAttr('orientation')
 			} else {
