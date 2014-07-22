@@ -62,19 +62,21 @@ module.RibbonsClassPrototype = {
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
 	createRibbon: function(gid){
+		gid = gid != null ? gid+'' : gid
 		return $('<div>')
 			.addClass('ribbon')
 			.attr('gid', JSON.stringify(gid)
 					// this removes the extra quots...
-					.slice(1,-1))
+					.replace(/^"(.*)"$/g, '$1'))
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
 	createImage: function(gid){
+		gid = gid != null ? gid+'' : gid
 		return $('<div>')
 			.addClass('image')
 			.attr('gid', JSON.stringify(gid)
 					// this removes the extra quots...
-					.slice(1,-1))
+					.replace(/^"(.*)"$/g, '$1'))
 	},
 } 
 
@@ -91,6 +93,10 @@ module.RibbonsPrototype = {
 	createViewer: RibbonsClassPrototype.createViewer,
 	createRibbon: RibbonsClassPrototype.createRibbon,
 	createImage: RibbonsClassPrototype.createImage,
+
+	getElemGID: function(elem){
+		return JSON.parse('"' + elem.attr('gid') + '"')
+	},
 
 	// NOTE: these accept gids or jQuery objects...
 	getRibbon: function(target){
@@ -125,6 +131,7 @@ module.RibbonsPrototype = {
 	// 	- index
 	// 	- ribbon gid
 	// 	- ribbon
+	// 	- null			- append the ribbon to the end
 	//
 	// NOTE: if ribbon does not exist a new ribbon will be created...
 	// XXX these will place at current loaded position rather than the 
@@ -140,15 +147,13 @@ module.RibbonsPrototype = {
 		// normalize the position...
 		var p = this.getRibbon(position)
 		position = p.hasClass('ribbon') ? ribbons.index(p) : position
-		position = position < 0 ? (ribbons.length - position)+1 : position
+		position = position == null ? -1 : position
+		position = position < 0 ? ribbons.length + position + 1 : position
 		position = position < 0 ? 0 : position
 
 		// place the ribbon...
-		if(ribbons.length == 0){
+		if(ribbons.length == 0 || ribbons.length <= position){
 			this.viewer.find('.ribbon-set').append(ribbon)
-
-		} else if(ribbons.length <= position){
-			ribbons.last().after(ribbon)
 
 		} else {
 			ribbons.eq(position).before(ribbon)
@@ -181,8 +186,8 @@ module.RibbonsPrototype = {
 	// XXX interaction animation...
 	placeImage: function(gid, ribbon, position){
 		// get/create the image...
-		var image = this.getImage(gid)
-		image = image.length == 0 ? this.createImage(gid) : image
+		var img = this.getImage(gid)
+		img = img.length == 0 ? this.createImage(gid) : img
 
 		// normalize the position, ribbon and images...
 		if(position == null){
@@ -195,21 +200,121 @@ module.RibbonsPrototype = {
 			: this.getRibbon(ribbon)
 		var images = ribbon.find('.image')
 		position = p.hasClass('image') ? images.index(p) : position
-		position = position < 0 ? (images.length - position)+1 : position
+		position = position < 0 ? images.length + position + 1 : position
 		position = position < 0 ? 0 : position
 
 		// place the image...
 		if(images.length == 0 || images.length <= position){
-			ribbon.append(image)
+			ribbon.append(img)
 
 		} else {
-			images.eq(position).before(image)
+			images.eq(position).before(img)
 		}
 
-		return image.updateImage(image)
+		//return image.updateImage(img)
+		return img
 	},
 
 	// XXX do we need shorthands like shiftImageUp/shiftImageDown/... here?
+
+
+	// Bulk manipulation...
+
+	// NOTE: gids and ribbon must be .getImage(..) and .getRibbon(..) 
+	// 		compatible...
+	// XXX do we need an image pool here???
+	showImagesInRibbon: function(gids, ribbon){
+		// get/create the ribbon...
+		var r = this.getRibbon(ribbon)
+		if(r.length == 0){
+			// no such ribbon exists, then create and append it...
+			r = this.placeRibbon(ribbon, this.viewer.find('.ribbon').length)
+		}
+
+		var loaded = r.find('.image')
+
+		var that = this
+		$(gids).each(function(i, gid){
+			// get/create image...
+			var img = that.getImage(gid)
+			img = img.length == 0 ? that.createImage(gid) : img
+
+			// clear images that are not in gids...
+			var g = loaded.length > i ? that.getElemGID(loaded.eq(i)) : null
+			while(g != null && gids.indexOf(g) < 0){
+				that.clear(g)
+				loaded.splice(i, 1)
+				g = loaded.length > i ? that.getElemGID(loaded.eq(i)) : null
+			}
+
+			// check if we need to reattach the image...
+			if(gid != g){
+				// append the image to set...
+				if(loaded.length == 0 || loaded.length <= i){
+					r.append(img.detach())
+
+				// attach the image at i...
+				} else {
+					// update the DOM...
+					loaded.eq(i).before(img.detach())
+
+					// update the loaded list...
+					var l = loaded.index(img)
+					if(l >= 0){
+						loaded.splice(l, 1)
+					}
+					loaded.splice(i, 0, img)
+				}
+			}
+
+			//image.updateImage(img)
+		})
+
+		// remove the rest of the stuff in ribbon... 
+		if(loaded.length > gids.length){
+			loaded.eq(gids.length).nextAll().remove()
+			loaded.eq(gids.length).remove()
+		}
+
+		return this
+	},
+	// XXX do we need anything else here? ..seems too simple :)
+	loadData: function(data){
+		var that = this
+		data.ribbon_order.forEach(function(gid){
+			that.showImagesInRibbon(data.ribbons[gid], gid)
+		})
+		return this
+	},
+	clear: function(gids){
+		// clear all...
+		if(gids == null || gids == '*'){
+			this.viewer.find('.ribbon').remove()
+
+		// clear one or more gids...
+		} else {
+			gids = gids.constructor.name != 'Array' ? [gids] : gids
+			var that = this
+			gids.forEach(function(g){
+				that.viewer.find('[gid='+JSON.stringify(g)+']').remove()
+			})
+		}
+		return this
+	},
+
+
+	// UI manipulation...
+	
+	// XXX if target is an image align the ribbon both vertically and horizontally...
+	alignRibbon: function(target, mode){
+		// XXX
+	},
+
+	// XXX
+	fitNImages: function(n){
+		// XXX
+	},
+
 
 	// XXX this does not align anything, it's just a low level focus...
 	// XXX interaction animation...
@@ -312,85 +417,6 @@ module.RibbonsPrototype = {
 	//rotateCCW: function(target){ return this.rotateImage(target, this.CCW) },
 	//flipVertical: function(target){ return this.flipImage(target, this.VERTICAL) },
 	//flipHorizontal: function(target){ return this.flipImage(target, this.HORIZONTAL) },
-
-
-	// Bulk manipulation...
-
-	// NOTE: gids and ribbon must be .getImage(..) and .getRibbon(..) 
-	// 		compatible...
-	// XXX do we need an image pool here???
-	showImagesInRibbon: function(gids, ribbon){
-		// get/create the ribbon...
-		var r = this.getRibbon(ribbon)
-		if(r.length == 0){
-			r = this.createRibbon(ribbon)
-		}
-
-		var loaded = r.find('.image')
-
-		var that = this
-		$(gids).each(function(gid, i){
-			// get/create image...
-			var img = that.getImage(gid)
-			if(img.length == 0){
-				img = that.createImage(gid)
-			}
-
-			// clear images that are not in gids...
-			var g = JSON.parse(loaded.eq(i).attr('gid'))
-			while(gids.indexOf(g) < 0){
-				//r.find('[gid='+JSON.stringify(g)+']')
-				//	.remove()
-				that.clear(g)
-				loaded.splice(i, 1)
-				g = JSON.parse(loaded.eq(i).attr('gid'))
-			}
-
-			// check if we need to reattach the image...
-			if(gid != g){
-				// attach the image at i...
-				loaded.eq(i).before(img.detach())
-			}
-
-			image.updateImage(img)
-		})
-
-		// remove the rest of the stuff in ribbon... 
-		if(loaded.length > gids.length){
-			loaded.eq(gids.length).nextAll().remove()
-			loaded.eq(gids.length).remove()
-		}
-
-		return this
-	},
-	clear: function(gids){
-		// clear all...
-		if(gids == null){
-			this.viewer.find('.ribbon').remove()
-
-		// clear one or more gids...
-		} else {
-			gids = gids.constructor.name != 'Array' ? [gids] : gids
-			var that = this
-			gids.forEach(function(g){
-				that.viewer.find('[gid='+JSON.stringify(g)+']').remove()
-			})
-		}
-		return this
-	},
-
-
-	// UI manipulation...
-	
-	// XXX if target is an image align the ribbon both vertically and horizontally...
-	alignRibbon: function(target, mode){
-		// XXX
-	},
-
-	// XXX
-	fitNImages: function(n){
-		// XXX
-	},
 
 
 	_setup: function(viewer){

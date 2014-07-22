@@ -7,12 +7,14 @@
 define(function(require){ var module = {}
 console.log('>>> image')
 
+var images = require('images')
 
 
 /*********************************************************************/
 
 // A stub image, also here for documentation...
-var STUB_IMAGE_DATA = {
+var STUB_IMAGE_DATA =
+module.STUB_IMAGE_DATA = {
 	// Entity GID...
 	id: 'STUB-GID',
 
@@ -101,13 +103,30 @@ var STUB_IMAGE_DATA = {
 // each function must be of the form:
 // 	updateImage(gid, image) -> image
 //
-var IMAGE_UPDATERS = []
+var IMAGE_UPDATERS =
+module.IMAGE_UPDATERS = []
 
 
 
 /*********************************************************************/
 
 // XXX Constructors...
+
+
+/*********************************************************************/
+
+// XXX is this the right place for this???
+var getImageGID =
+module.getImageGID =
+function(img){
+	return JSON.parse('"'+$(img).attr('gid')+'"')
+}
+
+// XXX getImage(...)
+// XXX getVisibleImageSize(...)
+// XXX getBestPreview(...) 
+// XXX setImageFlipState(...)
+
 
 
 /*********************************************************************/

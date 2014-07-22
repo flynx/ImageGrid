@@ -13,23 +13,18 @@ var data = require('data')
 
 /*********************************************************************/
 
-module.loadData = function(target, callback){
-	// Data...
-	if(target instanceof data.Data){
-		callback(target)
-	
-	// Object...
-	} else if(typeof(target) == typeof({})){
-		callback(data.Data(target))
-
-	// String...
-	} else if(typeof(target) == typeof('str')){
-		// url...
-		if(/^(http:|file:|app:|embed:)/.test(target)){
-		} 
-	}
+module.loadDir = function(url){
 }
 
+
+// Load data from url...
+//
+// Supported protocols:
+// 	- http:
+// 	- file:
+//
+module.loadURL = function(url){
+}
 
 
 
