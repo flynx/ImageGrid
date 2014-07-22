@@ -10,6 +10,9 @@ console.log('>>> ribbons')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var data = require('data')
+var image = require('image')
+
 
 
 /*********************************************************************/
@@ -57,15 +60,21 @@ module.RibbonsClassPrototype = {
 			.append($('<div>')
 				.addClass('ribbon-set'))
 	},
+	// XXX NOTE: quots removal might render this incompatible with older data formats...
 	createRibbon: function(gid){
 		return $('<div>')
 			.addClass('ribbon')
-			.setAttribute('gid', JSON.stringify(gid))
+			.attr('gid', JSON.stringify(gid)
+					// this removes the extra quots...
+					.slice(1,-1))
 	},
+	// XXX NOTE: quots removal might render this incompatible with older data formats...
 	createImage: function(gid){
 		return $('<div>')
 			.addClass('image')
-			.setAttribute('gid', JSON.stringify(gid))
+			.attr('gid', JSON.stringify(gid)
+					// this removes the extra quots...
+					.slice(1,-1))
 	},
 } 
 
@@ -89,6 +98,7 @@ module.RibbonsPrototype = {
 			return this.viewer.find('.current.image').parents('.ribbon').first()
 
 		} else if(typeof(target) == typeof('str')){
+			//return this.viewer.find('.ribbon[gid="'+JSON.stringify(target)+'"]')
 			return this.viewer.find('.ribbon[gid='+JSON.stringify(target)+']')
 		}
 		return $(target).filter('.ribbon')
@@ -98,6 +108,7 @@ module.RibbonsPrototype = {
 			return this.viewer.find('.current.image')
 
 		} else if(typeof(target) == typeof('str')){
+			//return this.viewer.find('.image[gid="'+JSON.stringify(target)+'"]')
 			return this.viewer.find('.image[gid='+JSON.stringify(target)+']')
 		}
 		return $(target).filter('.image')
@@ -134,7 +145,7 @@ module.RibbonsPrototype = {
 
 		// place the ribbon...
 		if(ribbons.length == 0){
-			this.viewer.find('ribbon-set').append(ribbon)
+			this.viewer.find('.ribbon-set').append(ribbon)
 
 		} else if(ribbons.length <= position){
 			ribbons.last().after(ribbon)
@@ -195,7 +206,7 @@ module.RibbonsPrototype = {
 			images.eq(position).before(image)
 		}
 
-		return updateImage(image)
+		return image.updateImage(image)
 	},
 
 	// XXX do we need shorthands like shiftImageUp/shiftImageDown/... here?
@@ -251,10 +262,10 @@ module.RibbonsPrototype = {
 				img.attr('orientation', o)
 			}
 			// account for proportions...
-			correctImageProportionsForRotation(img)
+			image.correctImageProportionsForRotation(img)
 			// XXX this is a bit of an overkill but it will update the 
 			// 		preview if needed...
-			//updateImage(img)
+			//image.updateImage(img)
 		})
 		return target
 	},
@@ -341,7 +352,7 @@ module.RibbonsPrototype = {
 				loaded.eq(i).before(img.detach())
 			}
 
-			updateImage(img)
+			image.updateImage(img)
 		})
 
 		// remove the rest of the stuff in ribbon... 
@@ -397,6 +408,8 @@ function Ribbons(viewer){
 	if(this.constructor.name != 'Ribbons'){
 		return new Ribbons(viewer)
 	}
+
+	this.viewer = $(viewer)
 
 	return this
 }

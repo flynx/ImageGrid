@@ -9,6 +9,8 @@ define(function(require){ var module = {}
 console.log('>>> data')
 
 
+module.DATA_VERSION = '3.0'
+
 
 /*********************************************************************/
 //
@@ -1396,27 +1398,6 @@ module.DataPrototype = {
 
 	/****************************************** JSON serialization ***/
 
-	// Convert gen3 data to gen4 json...
-	convertDataGen3: function(data){
-		data = data.version == null ? convertDataGen1(data) : data
-		var that = this
-		var res = {}
-		res.version = '3.0'
-		res.current = data.current
-		res.order = data.order.slice()
-		res.ribbon_order = []
-		res.ribbons = {}
-		// generate gids...
-		data.ribbons.forEach(function(e){
-			var gid = that.newGid('R')
-			res.ribbon_order.push(gid)
-			res.ribbons[gid] = e.slice()
-		})
-		// we set the base to the first ribbon...
-		res.base = res.ribbon_order[0]
-		return res
-	},
-
 	// Load data from JSON...
 	//
 	// NOTE: this loads in-place, use .fromJSON(..) to create new data...
@@ -1424,7 +1405,7 @@ module.DataPrototype = {
 		if(typeof(data) == typeof('str')){
 			data = JSON.parse(data)
 		}
-		data = data.version < '3.0' ? this.convertDataGen3(data) : data
+		data = formats.updateData(data)
 		this.base = data.base
 		this.current = data.current
 		this.order = data.order.slice()
@@ -1443,7 +1424,7 @@ module.DataPrototype = {
 	// 		the result...
 	dumpJSON: function(mode){
 		var res = {
-			varsion: '3.0',
+			varsion: module.DATA_VERSION,
 			base: this.base,
 			current: this.current,
 			order: this.order.slice(),

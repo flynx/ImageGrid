@@ -4,6 +4,13 @@
 *
 **********************************************************************/
 
+define(function(require){ var module = {}
+console.log('>>> image')
+
+
+
+/*********************************************************************/
+
 // A stub image, also here for documentation...
 var STUB_IMAGE_DATA = {
 	// Entity GID...
@@ -108,6 +115,8 @@ var IMAGE_UPDATERS = []
 // Run all the image update functions registered in IMAGE_UPDATERS, on 
 // an image...
 //
+var updateImageIndicators =
+module.updateImageIndicators =
 function updateImageIndicators(gid, image){
 	gid = gid == null ? getImageGID() : gid
 	image = image == null ? getImage() : $(image)
@@ -121,6 +130,8 @@ function updateImageIndicators(gid, image){
 
 
 // helper...
+var _loadImagePreviewURL =
+module._loadImagePreviewURL =
 function _loadImagePreviewURL(image, url){
 	// pre-cache and load image...
 	// NOTE: this will make images load without a blackout...
@@ -140,6 +151,8 @@ function _loadImagePreviewURL(image, url){
 // NOTE: care must be taken to reset ALL attributes an image can have,
 // 		a common bug if this is not done correctly, is that some settings
 // 		may leak to newly loaded images...
+var updateImage =
+module.updateImage =
 function updateImage(image, gid, size, sync){
 	image = image == null ? getImage() : $(image)
 	sync = sync == null ? CONFIG.load_img_sync : sync
@@ -237,6 +250,8 @@ function updateImage(image, gid, size, sync){
 // distance from current image, loading the closest images first...
 //
 // If CONFIG.update_sync is set, this will run asynchronously.
+var updateImages =
+module.updateImages =
 function updateImages(list, size, cmp){
 	var deferred = $.Deferred()
 
@@ -289,6 +304,8 @@ function updateImages(list, size, cmp){
 //
 // NOTE: this is not needed for square image blocks.
 // NOTE: if an image block is square, this will remove the margins.
+var correctImageProportionsForRotation =
+module.correctImageProportionsForRotation =
 function correctImageProportionsForRotation(images, container){
 	container = container == null ? $('.viewer') : container
 
@@ -347,3 +364,4 @@ function correctImageProportionsForRotation(images, container){
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
+return module })

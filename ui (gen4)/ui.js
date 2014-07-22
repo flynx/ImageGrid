@@ -29,7 +29,7 @@ var ribbons = require('ribbons')
 /*********************************************************************/
 
 // XXX add this to the global doc...
-window.GLOBAL_KEYBOARD = {
+module.GLOBAL_KEYBOARD = {
 	'Global bindings': {
 		doc: 'NOTE: binding priority is the same as the order of sections '+
 			'on this page.',
@@ -101,7 +101,7 @@ $(function(){
 	$(document)
 		.keydown(
 			keyboard.makeKeyboardHandler(
-				GLOBAL_KEYBOARD,
+				module.GLOBAL_KEYBOARD,
 				function(k){
 					window.DEBUG && console.log(k)
 				}))
