@@ -495,14 +495,21 @@ module.RibbonsPrototype = {
 
 	// Rotate an image...
 	//
-	// direction can be:
-	// XXX not sure if we need these as attrs...
-	CW: 'cw',
-	CCW: 'ccw',
+	// Rotate image clockwise:
+	//	.rotateImage(target, 'cw')
+	//		-> image
 	//
-	// rotation tables...
-	// NOTE: setting a value to null will remove the attribute, 0 will 
-	// 		set 0 explicitly...
+	// Rotate image counterclockwise:
+	//	.rotateImage(target, 'ccw')
+	//		-> image
+	//
+	//
+	// NOTE: target must be .getImage(..) compatible.
+	// NOTE: this can be applied in bulk, e.g. 
+	// 		this.rotateImage($('.image'), 'cw') will rotate all the 
+	// 		loaded images clockwise.
+	//
+	// Rotation tables...
 	_cw: {
 		null: 90,
 		0: 90,
@@ -519,8 +526,10 @@ module.RibbonsPrototype = {
 		180: 90,
 		270: 180,
 	},
+	// NOTE: setting a value to null will remove the attribute, 0 will 
+	// 		set 0 explicitly...
 	rotateImage: function(target, direction){
-		var r_table = direction == this.CW ? this._cw : this._ccw
+		var r_table = direction == 'cw' ? this._cw : this._ccw
 		target = this.getImage(target)
 		target.each(function(i, e){
 			var img = $(this)
@@ -542,10 +551,14 @@ module.RibbonsPrototype = {
 
 	// Flip an image...
 	//
-	// direction can be:
-	// XXX not sure if we need these as attrs...
-	VERTICAL: 'vertical',
-	HORIZONTAL: 'horizontal',
+	// 	.flipImage(target, 'horizontal')
+	// 	.flipImage(target, 'vertical')
+	// 		-> image
+	//
+	// NOTE: target must be .getImage(..) compatible.
+	// NOTE: this can be applied in bulk, e.g. 
+	// 		this.flipImage($('.image'), 'vertical') will rotate all the 
+	// 		loaded images vertically.
 	flipImage: function(target, direction){
 		target = this.getImage(target)
 		target.each(function(i, e){
@@ -578,10 +591,10 @@ module.RibbonsPrototype = {
 
 	// shorthands...
 	// XXX should these be here???
-	rotateCW: function(target){ return this.rotateImage(target, this.CW) },
-	rotateCCW: function(target){ return this.rotateImage(target, this.CCW) },
-	flipVertical: function(target){ return this.flipImage(target, this.VERTICAL) },
-	flipHorizontal: function(target){ return this.flipImage(target, this.HORIZONTAL) },
+	//rotateCW: function(target){ return this.rotateImage(target, 'cw') },
+	//rotateCCW: function(target){ return this.rotateImage(target, 'ccw') },
+	//flipVertical: function(target){ return this.flipImage(target, 'vertical') },
+	//flipHorizontal: function(target){ return this.flipImage(target, 'horizontal') },
 
 
 	// UI manipulation...
