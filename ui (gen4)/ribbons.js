@@ -5,6 +5,9 @@
 *
 **********************************************************************/
 
+// XXX this is a stub, here untill image.js is done...
+_UPDATE_IMAGE = false
+
 define(function(require){ var module = {}
 console.log('>>> ribbons')
 
@@ -53,10 +56,12 @@ var image = require('image')
 
 var RibbonsClassPrototype =
 module.RibbonsClassPrototype = {
+	// Generic getters...
 	getElemGID: function(elem){
 		return JSON.parse('"' + elem.attr('gid') + '"')
 	},
 
+	// Constructors...
 	// NOTE: these will return unattached objects...
 	createViewer: function(){
 		return $('<div>')
@@ -85,8 +90,7 @@ module.RibbonsClassPrototype = {
 } 
 
 
-// XXX this is a low level interface, not a set of actions...
-// XXX test
+// NOTE: this is a low level interface, not a set of actions...
 var RibbonsPrototype =
 module.RibbonsPrototype = {
 	//
@@ -101,22 +105,70 @@ module.RibbonsPrototype = {
 	// Generic getters...
 	getElemGID: RibbonsClassPrototype.getElemGID,
 
+
 	// Contextual getters...
-	// NOTE: these accept gids or jQuery objects...
+	
+	// Get ribbon...
+	//
+	// Get current ribbon:
+	//	.getRibbon()
+	//		-> ribbon
+	//
+	// Get ribbon by index/gid:
+	//	.getRibbon(index)
+	//	.getRibbon(gid)
+	//		-> ribbon
+	//
+	// Get ribbons from list:
+	//	.getRibbon($(..))
+	//	.getRibbon([..])
+	//		-> ribbon(s)
+	//		NOTE: this will filter the list but not search the tree...
+	//
 	getRibbon: function(target){
+		// current...
 		if(target == null) {
 			return this.viewer.find('.current.image').parents('.ribbon').first()
 
+		// index...
+		} else if(typeof(target) == typeof(123)){
+			return this.viewer.find('.ribbon').eq(target)
+
+		// gid...
 		} else if(typeof(target) == typeof('str')){
 			//return this.viewer.find('.ribbon[gid="'+JSON.stringify(target)+'"]')
 			return this.viewer.find('.ribbon[gid='+JSON.stringify(target)+']')
 		}
 		return $(target).filter('.ribbon')
 	},
+	// Like .getRibbon(..) but returns ribbon index instead of the actual 
+	// ribbon object...
+	getRibbonIndex: function(target){
+		return this.viewer.find('.ribbon').index(this.getRibbon(target))
+	},
+
+	// Get ribbon...
+	//
+	// Get current image:
+	//	.getImage()
+	//		-> image
+	//
+	// Get image by gid:
+	//	.getImage(gid)
+	//		-> image
+	//
+	// Get images from list:
+	//	.getImage($(..))
+	//	.getImage([..])
+	//		-> image(s)
+	//		NOTE: this will filter the list but not search the tree...
+	//
 	getImage: function(target){
+		// current...
 		if(target == null) {
 			return this.viewer.find('.current.image')
 
+		// gid...
 		} else if(typeof(target) == typeof('str')){
 			//return this.viewer.find('.image[gid="'+JSON.stringify(target)+'"]')
 			return this.viewer.find('.image[gid='+JSON.stringify(target)+']')
@@ -125,37 +177,62 @@ module.RibbonsPrototype = {
 	},
 
 
+	// Basic manipulation...
+
 	// Place a ribbon...
 	//
-	// position can be:
-	// 	- index
-	// 	- ribbon gid
-	// 	- ribbon
-	// 	- null			- append the ribbon to the end
+	// Append target ribbon:
+	//	.placeRibbon(target)
+	//		-> ribbon
 	//
-	// NOTE: if ribbon does not exist a new ribbon will be created...
-	// XXX these will place at current loaded position rather than the 
-	// 		actual DATA position...
-	// 		...is this correct?
+	// Place target ribbon at position:
+	//	.placeRibbon(target, index)
+	//	.placeRibbon(target, ribbon-gid)
+	//	.placeRibbon(target, ribbon)
+	//		-> ribbon
+	//
+	// The ribbon will be placed at the new position shifting the next 
+	// ribbon(s), if present, by one.
+	//
+	// Indexes if used, can be negative. Negative indexes are relative 
+	// to the end, e.g. -1 is the same as length-1.
+	// Placing an element at a negative index will place it AFTER the 
+	// target element, this is in contrast to positive indexes where an
+	// element is placed before the target. In both of the above cases
+	// (positive and negative indexes) the resulting target position 
+	// will AT the passed position.
+	//
+	// NOTE: negative and positive indexes overflow to 0 and length
+	// 		respectively.
+	// NOTE: both target and position must be .getRibbon(..) compatible.
+	// NOTE: if target ribbon does not exist a new ribbon will be created.
+	// NOTE: if position ribbon (gid,ribbon) does not exist or is not 
+	// 		attached then the target will be appended to the end.
+	// NOTE: this uses the DOM data for placement, this may differ from 
+	// 		the actual data.
+	//
 	// XXX interaction animation...
-	placeRibbon: function(gid, position){
+	placeRibbon: function(target, position){
 		// get create the ribbon...
-		var ribbon = this.getRibbon(gid)
-		ribbon = ribbon.length == 0 ? this.createRibbon(gid) : ribbon
+		var ribbon = this.getRibbon(target)
+		var i = this.getRibbonIndex(ribbon)
+		ribbon = ribbon.length == 0 ? this.createRibbon(target) : ribbon
 
 		var ribbons = this.viewer.find('.ribbon')
 		// normalize the position...
-		var p = this.getRibbon(position)
-		position = p.hasClass('ribbon') ? ribbons.index(p) : position
-		position = position == null ? -1 : position
-		position = position < 0 ? ribbons.length + position + 1 : position
-		position = position < 0 ? 0 : position
+		if(typeof(position) == typeof(123)){
+			position = position < 0 ? ribbons.length + position + 1 : position
+			position = position < 0 ? 0 : position
+		} else {
+			var p = this.getRibbonIndex(position)
+			// XXX what do we do if the target does not exist, i.e. p == -1 ????
+		}
 
 		// place the ribbon...
 		if(ribbons.length == 0 || ribbons.length <= position){
 			this.viewer.find('.ribbon-set').append(ribbon)
 
-		} else {
+		} else if(i != position) {
 			ribbons.eq(position).before(ribbon)
 		}
 
@@ -184,10 +261,10 @@ module.RibbonsPrototype = {
 	// 		be ignored and the actual ribbon will be derived from the 
 	// 		image given.
 	// XXX interaction animation...
-	placeImage: function(gid, ribbon, position){
+	placeImage: function(target, ribbon, position){
 		// get/create the image...
-		var img = this.getImage(gid)
-		img = img.length == 0 ? this.createImage(gid) : img
+		var img = this.getImage(target)
+		img = img.length == 0 ? this.createImage(target) : img
 
 		// normalize the position, ribbon and images...
 		if(position == null){
@@ -211,8 +288,7 @@ module.RibbonsPrototype = {
 			images.eq(position).before(img)
 		}
 
-		//return image.updateImage(img)
-		return img
+		return _UPDATE_IMAGE ? image.updateImage(img) : img
 	},
 
 	// XXX do we need shorthands like shiftImageUp/shiftImageDown/... here?
@@ -220,10 +296,14 @@ module.RibbonsPrototype = {
 
 	// Bulk manipulation...
 
+	// update a set of images in a ribbon...
+	//
+	// This will reuse the images that already exist, thus if updating or
+	// adding images to an already loaded set this should be very fast.
+	//
 	// NOTE: gids and ribbon must be .getImage(..) and .getRibbon(..) 
 	// 		compatible...
-	// XXX do we need an image pool here???
-	showImagesInRibbon: function(gids, ribbon){
+	updateRibbon: function(gids, ribbon){
 		// get/create the ribbon...
 		var r = this.getRibbon(ribbon)
 		if(r.length == 0){
@@ -239,7 +319,7 @@ module.RibbonsPrototype = {
 			var img = that.getImage(gid)
 			img = img.length == 0 ? that.createImage(gid) : img
 
-			// clear images that are not in gids...
+			// clear a chunk of images that are not in gids until one that is...
 			var g = loaded.length > i ? that.getElemGID(loaded.eq(i)) : null
 			while(g != null && gids.indexOf(g) < 0){
 				that.clear(g)
@@ -267,7 +347,7 @@ module.RibbonsPrototype = {
 				}
 			}
 
-			//image.updateImage(img)
+			_UPDATE_IMAGE && image.updateImage(img)
 		})
 
 		// remove the rest of the stuff in ribbon... 
@@ -278,12 +358,49 @@ module.RibbonsPrototype = {
 
 		return this
 	},
-	// XXX do we need anything else here? ..seems too simple :)
-	loadData: function(data){
+
+	// Update a data object in ribbons...
+	//
+	// This uses .updateRibbon(..) to load individual ribbons, for
+	// more info see docs for that.
+	//
+	// This uses data.ribbon_order to place the ribbons and data.ribbons
+	// place the images, either is optional, but at least one of the two
+	// must exist for this to work.
+	//
+	// NOTE: this will not clear the ribbons object explicitly.
+	// NOTE: this will clear the ribbons that are not present in 
+	// 		data.ribbon_order (if given) unless keep_untouched_ribbons 
+	// 		is set.
+	updateData: function(data, keep_untouched_ribbons){
+		// load the data...
 		var that = this
-		data.ribbon_order.forEach(function(gid){
-			that.showImagesInRibbon(data.ribbons[gid], gid)
-		})
+
+		// place images...
+		if(data.ribbons != null){
+			Object.keys(data.ribbons).forEach(function(gid){
+				that.updateRibbon(data.ribbons[gid], gid)
+			})
+		}
+
+		// place ribbons...
+		if(data.ribbon_order != null){
+			data.ribbon_order.forEach(function(gid, i){
+				that.placeRibbon(gid, i)
+			})
+		}
+
+		// clear the ribbons that did not get updated...
+		if(!keep_untouched_ribbons && data.ribbon_order != null){
+			var ribbons = data.ribbon_order
+			that.viewer.find('.ribbon').each(function(){
+				var r = $(this)
+				if(ribbons.indexOf(that.getElemGID(r)) < 0){
+					r.remove()
+				}
+			})
+		}
+
 		return this
 	},
 
@@ -323,20 +440,6 @@ module.RibbonsPrototype = {
 	},
 
 
-	// UI manipulation...
-	
-	// XXX if target is an image align the ribbon both vertically and horizontally...
-	alignRibbon: function(target, mode){
-		// XXX
-	},
-
-	// XXX
-	fitNImages: function(n){
-		// XXX
-	},
-
-
-	// XXX this does not align anything, it's just a low level focus...
 	// XXX interaction animation...
 	focusImage: function(gid){
 		this.viewer
@@ -434,10 +537,23 @@ module.RibbonsPrototype = {
 
 	// shorthands...
 	// XXX should these be here???
-	//rotateCW: function(target){ return this.rotateImage(target, this.CW) },
-	//rotateCCW: function(target){ return this.rotateImage(target, this.CCW) },
-	//flipVertical: function(target){ return this.flipImage(target, this.VERTICAL) },
-	//flipHorizontal: function(target){ return this.flipImage(target, this.HORIZONTAL) },
+	rotateCW: function(target){ return this.rotateImage(target, this.CW) },
+	rotateCCW: function(target){ return this.rotateImage(target, this.CCW) },
+	flipVertical: function(target){ return this.flipImage(target, this.VERTICAL) },
+	flipHorizontal: function(target){ return this.flipImage(target, this.HORIZONTAL) },
+
+
+	// UI manipulation...
+	
+	// XXX if target is an image align the ribbon both vertically and horizontally...
+	alignRibbon: function(target, mode){
+		// XXX
+	},
+
+	// XXX
+	fitNImages: function(n){
+		// XXX
+	},
 
 
 	_setup: function(viewer){
@@ -456,7 +572,7 @@ function Ribbons(viewer){
 		return new Ribbons(viewer)
 	}
 
-	this.viewer = $(viewer)
+	this._setup(viewer)
 
 	return this
 }
