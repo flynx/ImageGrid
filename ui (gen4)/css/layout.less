@@ -5,11 +5,18 @@
 /******************************************************** Settings ***/
 
 @image-tile-size: 300px;
+// XXX current used version of node-webkit (0.8) is buggy with this...
+//	-- ribbons are not sized horizpntally correctly...
+//@image-tile-size: 100vmin;
 
-@ribbon-mark-offset: 5px;
+// these are relative to image tile size...
+@image-border: @image-tile-size/200;
+@ribbon-margin: @image-tile-size/30;
+@ribbon-mark-offset: @image-tile-size/200;
 
+
+// these are relative to dpi/scale...
 @ribbon-mark-size: 10px;
-
 @single-image-indicator-size: 10px;
 
 
@@ -350,13 +357,16 @@ button:hover {
 
 
 /********************************************************** Ribbon ***/
+/* XXX for some reason setting image size in vmin stops this from 
+stretching in width... */
 .ribbon {
 	position: relative;
 	display: block;
 	/* XXX BUG: setting this will mess up new ribbon creation....
 	display: inline-block;*/
 	height: auto;
-	min-width: 0px;
+	/*min-width: 0px;*/
+	width: auto;
 	overflow: visible;
 	white-space: nowrap;
 	font-size: 0;
@@ -364,11 +374,10 @@ button:hover {
 	float: left;
 	clear: both;
 
-	/* XXX not still sure about this... */
 	background: black;
 
-	margin-top: 10px;
-	margin-bottom: 10px;
+	margin-top: @ribbon-margin;
+	margin-bottom: @ribbon-margin;
 }
 .ribbon:empty {
 	display: none;
@@ -401,9 +410,11 @@ button:hover {
 
 	text-shadow: black 0.1em 0.1em 0.4em, black 0.1em 0.1em;
 
+	/* NOTE: we can't set the bg color here because it will get 
+	 	affected by filters... */
 	background: no-repeat 50% transparent;
 	background-size: contain;
-	border: solid 5px transparent;
+	border: solid @image-border transparent;
 }
 /*
 .current.image {
@@ -1300,6 +1311,8 @@ progress:not(value)::-webkit-progress-bar {
 /********************************************************** Themes ***/
 
 /* XXX this is by no means final... */
+/*@import "theme-light";*/
+
 .viewer,
 .light.viewer,
 .light.viewer .overlay-block .background {
@@ -1339,6 +1352,9 @@ progress:not(value)::-webkit-progress-bar {
 	color: silver;
 }
 
+
+/*@import "theme-gray";*/
+
 .gray.viewer,
 .gray.viewer .overlay-block .background {
 	background: #333;
@@ -1350,6 +1366,9 @@ progress:not(value)::-webkit-progress-bar {
 	color: silver;
 	opacity: 0.4;
 }
+
+
+/*@import "theme-dark";*/
 
 .dark.viewer,
 .dark.viewer .overlay-block .background {

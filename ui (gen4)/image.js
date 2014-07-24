@@ -122,11 +122,11 @@ function(img){
 	return JSON.parse('"'+$(img).attr('gid')+'"')
 }
 
-// XXX getImage(...)
-// XXX getVisibleImageSize(...)
-// XXX getBestPreview(...) 
-// XXX setImageFlipState(...)
-// XXX makeGIDDistanceCmp(...)
+// XXX getImage(...)	->	ribbons
+// XXX getVisibleImageSize(...)		-> ribbons
+// XXX getBestPreview(...) 		-> ribbons/images
+// XXX setImageFlipState(...)	-> ribbons
+// XXX makeGIDDistanceCmp(...)	-> data
 
 
 

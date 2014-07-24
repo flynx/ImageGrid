@@ -105,7 +105,8 @@ module.DataClassPrototype = {
 	},
 	// XXX is this the right way to construct data???
 	fromJSON: function(data){
-		return new Data().loadJSON(data)
+		//return new Data().loadJSON(data)
+		return new this().loadJSON(data)
 	},
 }
 
@@ -1402,9 +1403,7 @@ module.DataPrototype = {
 	//
 	// NOTE: this loads in-place, use .fromJSON(..) to create new data...
 	loadJSON: function(data){
-		if(typeof(data) == typeof('str')){
-			data = JSON.parse(data)
-		}
+		data = typeof(data) == typeof('str') ? JSON.parse(data) : data
 		data = formats.updateData(data)
 		this.base = data.base
 		this.current = data.current

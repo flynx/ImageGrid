@@ -100,6 +100,7 @@ module.RibbonsPrototype = {
 	//
 	//	.viewer (jQuery object)
 	//
+	// XXX to update images we need to know about images...
 	
 	// Constructors...
 	createViewer: RibbonsClassPrototype.createViewer,
@@ -152,7 +153,7 @@ module.RibbonsPrototype = {
 		return this.viewer.find('.ribbon').index(this.getRibbon(target))
 	},
 
-	// Get ribbon...
+	// Get image...
 	//
 	// Get current image:
 	//	.getImage()
@@ -603,6 +604,24 @@ module.RibbonsPrototype = {
 
 	// UI manipulation...
 	
+	// XXX try and make image size the product of vmin and scale...
+	// XXX is this the right place for this???
+	// XXX uses jli.js getElementScale(..)
+	getVisibleImageSize: function(dim){
+		dim = dim == null ? 'width' : dim
+		var img = this.viewer.find('.image')
+		var scale = getElementScale(this.viewer.find('.ribbon-set'))
+		if(dim == 'height'){
+			return img.outerHeight(true) * scale
+		} else if(dim == 'width'){
+			return img.outerWidth(true) * scale
+		} else if(dim == 'max'){
+			return Math.max(img.outerHeight(true), img.outerWidth(true)) * scale
+		} else if(dim == 'min'){
+			return Math.min(img.outerHeight(true), img.outerWidth(true)) * scale
+		}
+	},
+
 	// XXX if target is an image align the ribbon both vertically and horizontally...
 	alignRibbon: function(target, mode){
 		// XXX

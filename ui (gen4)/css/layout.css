@@ -239,6 +239,8 @@ button:hover {
   opacity: 0.5;
 }
 /********************************************************** Ribbon ***/
+/* XXX for some reason setting image size in vmin stops this from 
+stretching in width... */
 .ribbon {
   position: relative;
   display: block;
@@ -246,14 +248,14 @@ button:hover {
 	display: inline-block;*/
 
   height: auto;
-  min-width: 0px;
+  /*min-width: 0px;*/
+
+  width: auto;
   overflow: visible;
   white-space: nowrap;
   font-size: 0;
   float: left;
   clear: both;
-  /* XXX not still sure about this... */
-
   background: black;
   margin-top: 10px;
   margin-bottom: 10px;
@@ -283,9 +285,12 @@ button:hover {
   box-sizing: border-box;
   color: white;
   text-shadow: black 0.1em 0.1em 0.4em, black 0.1em 0.1em;
+  /* NOTE: we can't set the bg color here because it will get 
+	 	affected by filters... */
+
   background: no-repeat 50% transparent;
   background-size: contain;
-  border: solid 5px transparent;
+  border: solid 1.5px transparent;
 }
 /*
 .current.image {
@@ -1494,6 +1499,7 @@ progress:not(value)::-webkit-progress-bar {
 }
 /********************************************************** Themes ***/
 /* XXX this is by no means final... */
+/*@import "theme-light";*/
 .viewer,
 .light.viewer,
 .light.viewer .overlay-block .background {
@@ -1528,6 +1534,7 @@ progress:not(value)::-webkit-progress-bar {
 .light.viewer .progress-bar {
   color: silver;
 }
+/*@import "theme-gray";*/
 .gray.viewer,
 .gray.viewer .overlay-block .background {
   background: #333;
@@ -1539,6 +1546,7 @@ progress:not(value)::-webkit-progress-bar {
   color: silver;
   opacity: 0.4;
 }
+/*@import "theme-dark";*/
 .dark.viewer,
 .dark.viewer .overlay-block .background {
   background: #0a0a0a;
