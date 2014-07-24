@@ -13,6 +13,9 @@ console.log('>>> ribbons')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+// XXX is this correct...
+require('ext-lib/jquery')
+
 var data = require('data')
 var image = require('image')
 
@@ -20,10 +23,9 @@ var image = require('image')
 
 /*********************************************************************/
 //
-// This xpects the folowing HTML structure...
+// This expects the following HTML structure...
 //
 // Unpopulated:
-// NOTE: there can be only one .ribbon-set element.
 //
 //	<div class="viewer">
 //		<div class="ribbon-set"></div>
@@ -35,22 +37,24 @@ var image = require('image')
 //	<div class="viewer">
 //		<div class="ribbon-set">
 //			<div class="ribbon">
-//				<div class="image"></div>
-//				<div class="image"></div>
+//				<div class="image" gid="a"></div>
+//				<div class="image" gid="b"></div>
 //				...
 //			</div>
 //			<div class="ribbon">
-//				<div class="image"></div>
-//				<div class="current image"></div>
-//				<div class="image"></div>
-//				<div class="mark selected"></div>
-//				<div class="image"></div>
+//				<div class="image" gid="c"></div>
+//				<div class="current image" gid="d"></div>
+//				<div class="image" gid="e"></div>
+//				<div class="mark selected" gid="f"></div>
+//				<div class="image" gid="g"></div>
 //				...
 //			</div>
 //			...
 //		</div>
 //	</div>
 //
+//
+// NOTE: there can be only one .ribbon-set element.
 //
 /*********************************************************************/
 
