@@ -141,6 +141,7 @@ module.RibbonsPrototype = {
 		}
 		return $(target).filter('.ribbon')
 	},
+
 	// Like .getRibbon(..) but returns ribbon index instead of the actual 
 	// ribbon object...
 	getRibbonIndex: function(target){
@@ -440,11 +441,51 @@ module.RibbonsPrototype = {
 	},
 
 
+	// Focus image...
+	//
+	// Focus image by gid:
+	//	.focusImage(gid)
+	//		-> image
+	//
+	// Focus next/prev image relative to current:
+	//	.focusImage('next')
+	//	.focusImage('prev')
+	//		-> image
+	//
+	// Focus image at offset from current:
+	//	.focusImage(offset)
+	//		-> image
+	//
+	// NOTE: gid must be a .getImage(..) compatible object.
+	// NOTE: for keyword and offset to work an image must be focused.
+	// NOTE: overflowing offset will focus first/last image.
+	//
 	// XXX interaction animation...
 	focusImage: function(gid){
-		this.viewer
+		var cur = this.viewer
 			.find('.current.image')
-				.removeClass('current')
+
+		// relative keywords...
+		gid = gid == 'next' ? 1
+			: gid == 'prev' ? -1
+			: gid
+
+		// offset...
+		if(typeof(gid) == typeof(123)){
+			if(gid != 0){
+				var list = gid > 0 ? 'nextAll' : 'prevAll'
+				gid = Math.abs(gid)-1
+				var target = cur[list]('.image')
+				// handle overflow...
+				target = target.eq(Math.min(gid, target.length-1))
+				if(target.length > 0){
+					return this.focusImage(target)
+				}
+			}
+			return cur
+		}
+
+		cur.removeClass('current')
 		return this.getImage(gid)
 			.addClass('current')
 	},
