@@ -7,17 +7,6 @@
 define(function(require){ var module = {}
 console.log('>>> actions')
 
-//var DEBUG = DEBUG != null ? DEBUG : true
-
-// can be:
-// 	'jQuery'
-// 	'node'
-//
-var EVT_MODE =
-module.EVT_MODE =
-	typeof(window) != null && window.jQuery ? 'jQuery'
-	: typeof(global) != null && global.jQuery ? 'jQuery'
-	: 'node'
 
 
 /*********************************************************************/
@@ -36,15 +25,28 @@ module.EVT_MODE =
 //
 /*********************************************************************/
 
+// XXX test the context if it's a jQuery object use it's interface and 
+// 		if it's a events.EventEmitter instance use that...
 var fireEvent =
 module.fireEvent =
 function(context, name, args){
-	if(EVT_MODE == 'jQuery'){
+	var EventEmitter = nodejs != null 
+		? nodejs.require('events').EventEmitter 
+		: null
+	var jQuery = typeof(jQuery) != 'undefined' ? jQuery : null
+
+	if(typeof(context) == typeof('str')
+			|| (jq_object != null 
+				&& context instanceof jQuery)){
 		var c = $(context)
 			.trigger(name, args)
-	} else {
+
+	} else if(EventEmitter != null && context instanceof EventEmitter){
 		var c = context
 			.emit.apply(context, [name].concat(args))
+
+	} else {
+		console.error('Incompatible event context type:', context)
 	}
 	return c
 }
@@ -113,14 +115,14 @@ function Action(context, name, doc, code){
 // NOTE: context is dynamic.
 var Actions =
 module.Action = 
-function Actions(context, names, actions){
+function Actions(context, names, actions, mode){
 	actions = actions == null ? {} : actions
 	Object.keys(names).forEach(function(e){
 		var doc = names[e]
 		var code = doc.constructor.name == 'Array' ? doc[1] : null
 		doc = code != null ? doc : doc[0]
 
-		actions[e] = Action(context, e, doc, code)
+		actions[e] = Action(context, e, doc, code, mode)
 	})
 	return actions
 }

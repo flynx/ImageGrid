@@ -4,7 +4,11 @@
 *
 **********************************************************************/
 
-window.isNodeWebKit = (typeof(process) === 'object' && process.features.uv) ? true : false
+window.nodejs = (typeof(process) === 'object' && process.features.uv) 
+	? {
+		require: window.require,
+	} 
+	: null
 
 
 define(function(require){ var module = {}
