@@ -103,7 +103,14 @@ module.ImagesClassPrototype = {
 var ImagesPrototype =
 module.ImagesPrototype = {
 
-	// Generic helpers...
+	// Generic iterators...
+	//
+	// function format:
+	// 		function(key, value, index, object)
+	//
+	// this will be set to the value...
+	//
+	//
 	// XXX are these slower than doing it manualy via Object.keys(..)
 	forEach: function(func){
 		var i = 0
@@ -128,6 +135,39 @@ module.ImagesPrototype = {
 				res[key] = this[key]
 			}
 		}
+		return res
+	},
+
+	keys: function(){
+		return Object.keys(this)
+	},
+
+	// Build an image index relative to an attribute...
+	//
+	// Format:
+	// 	{
+	// 		<attr-value> : [
+	// 			<gid>,
+	// 			...
+	// 		],
+	// 		...
+	// 	}
+	//
+	// XXX test out the attr list functionality...
+	makeIndex: function(attr){
+		var res = {}
+		attr = attr.constructor.name != 'Array' ? [attr] : attr
+
+		// buld the index...
+		var that = this
+		this.forEach(function(key){
+			var n = attr.map(function(n){ return that[n] })
+			n = JSON.stringify(n.length == 1 ? n[0] : n)
+				// XXX is this the right way to go?
+				.replace(/^"(.*)"$/g, '$1')
+			res[n] = n in res ? res[n].concat(key) : [key]
+		})
+
 		return res
 	},
 
@@ -159,6 +199,7 @@ module.ImagesPrototype = {
 
 
 	// Gid sorters...
+	// XXX might be a good idea to add caching...
 	// XXX chainCmp(..) is loaded from lib/jli.js
 	sortImages: function(gids, cmp, reverse){
 		gids = gids == null ? Object.keys(this) : gids
