@@ -270,6 +270,7 @@ module.RibbonsPrototype = {
 
 		// offset on same ribbon...
 		if(typeof(to) == typeof(123)){
+			// moving the image to itself...
 			if(to == 0){
 				return img
 			}
@@ -282,6 +283,7 @@ module.RibbonsPrototype = {
 		} else {
 			var i = mode == 'before' ? -1 : 1
 			to = this.getImage(to)
+			// moving the image to itself...
 			if(to[0] == img[0]){
 				return img
 			}
