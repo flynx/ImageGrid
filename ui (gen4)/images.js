@@ -190,7 +190,7 @@ module.ImagesPrototype = {
 	},
 	// XXX 
 	sortedImagesByFileNameSeqWithOverflow: function(gids, reverse){
-		// XXX see ui/sort.js
+		// XXX see ../ui/sort.js
 	},
 
 

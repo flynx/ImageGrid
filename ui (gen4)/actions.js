@@ -9,6 +9,16 @@ console.log('>>> actions')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+// can be:
+// 	'jQuery'
+// 	'node'
+//
+var EVT_MODE =
+module.EVT_MODE =
+	typeof(window) != null && window.jQuery ? 'jQuery'
+	: typeof(global) != null && global.jQuery ? 'jQuery'
+	: 'node'
+
 
 /*********************************************************************/
 //
@@ -26,14 +36,27 @@ console.log('>>> actions')
 //
 /*********************************************************************/
 
+var fireEvent =
+module.fireEvent =
+function(context, name, args){
+	if(EVT_MODE == 'jQuery'){
+		var c = $(context)
+			.trigger(name, args)
+	} else {
+		var c = context
+			.emit.apply(context, [name].concat(args))
+	}
+	return c
+}
+
+
 // NOTE: context is dynamic.
 var Action =
 module.Action = 
 function Action(context, name, doc, code){
 	var action = function(){
 		var args = args2array(arguments)
-		var c = $(context)
-			.trigger(name + '.pre', args)
+		var c = fireEvent(context, name + '.pre', args)
 
 		// run compound action content...
 		if(code != null){
@@ -51,9 +74,9 @@ function Action(context, name, doc, code){
 			}
 		}
 
+		fireEvent(c, name, args)
+		fireEvent(c, name + '.post', args)
 		return c
-			.trigger(name, args)
-			.trigger(name + '.post', args)
 	}
 	action.doc = doc == null ? name : doc
 	return action
