@@ -248,56 +248,57 @@ module.RibbonsPrototype = {
 
 	// Place an image...
 	//
-	// Place gid at image position and image ribbon:
+	// Place gid at at offset from current position:
+	//	.placeImage(gid, offset)
+	//		-> image
+	//
+	// Place gid at image position:
 	//	.placeImage(gid, image)
-	//		-> image
-	//
-	// Place gid at index in current ribbon:
-	//	.placeImage(gid, position)
-	//		-> image
-	//
-	// Place gid at position in ribbon:
-	//	.placeImage(gid, ribbon, position)
+	//	.placeImage(gid, image, 'before')
+	//	.placeImage(gid, image, 'after')
 	//		-> image
 	//
 	//
+	// NOTE: mode is defaults to 'before'.
 	// NOTE: if image gid does not exist it will be created.
-	// NOTE: index can be negative indicating the position from the tail.
-	// NOTE: if index is an image or a gid then the ribbon argument will
-	// 		be ignored and the actual ribbon will be derived from the 
-	// 		image given.
+	//
 	// XXX interaction animation...
-	placeImage: function(target, ribbon, position){
-		// get/create the image...
+	// XXX mode is ugly...
+	placeImage: function(target, to, mode){
+		mode = mode == null ? 'before' : mode
 		var img = this.getImage(target)
 		img = img.length == 0 ? this.createImage(target) : img
 
-		// normalize the position, ribbon and images...
-		if(position == null){
-			position = ribbon
-			ribbon = null
+		// offset on same ribbon...
+		if(typeof(to) == typeof(123)){
+			if(to == 0){
+				return target
+			}
+			var i = to
+			var images = img[i > 0 ? 'nextAll' : 'prevAll']('.image')
+			to = images.length > 0 
+				? images.eq(Math.min(Math.abs(i), images.length)-1) 
+				: img
+		// relative to image...
+		} else {
+			var i = mode == 'before' ? -1 : 1
+			to = this.getImage(to)
+			var images = to[mode]('.image')
 		}
-		var p = this.getImage(position)
-		ribbon = p.hasClass('image') 
-			? p.parents('.ribbon').first() 
-			: this.getRibbon(ribbon)
-		var images = ribbon.find('.image')
-		position = p.hasClass('image') ? images.index(p) : position
-		position = position < 0 ? images.length + position + 1 : position
-		position = position < 0 ? 0 : position
 
 		// place the image...
-		if(images.length == 0 || images.length <= position){
-			ribbon.append(img)
-
+		if(images.length <= i){
+			to.parents('.ribbon').append(img)
+		// after...
+		} else if(i > 0){
+			to.next('.image').before(img)
+		// before...
 		} else {
-			images.eq(position).before(img)
+			to.before(img)
 		}
 
 		return _UPDATE_IMAGE ? image.updateImage(img) : img
 	},
-
-	// XXX do we need shorthands like shiftImageUp/shiftImageDown/... here?
 
 
 	// Bulk manipulation...
