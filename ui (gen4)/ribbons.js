@@ -248,16 +248,15 @@ module.RibbonsPrototype = {
 
 	// Place an image...
 	//
-	// Place gid at at offset from current position:
-	//	.placeImage(gid, offset)
+	// Place target at at offset from current position:
+	//	.placeImage(target, offset)
 	//		-> image
 	//
-	// Place gid at image position:
-	//	.placeImage(gid, image)
-	//	.placeImage(gid, image, 'before')
-	//	.placeImage(gid, image, 'after')
+	// Place target at image position:
+	//	.placeImage(target, image)
+	//	.placeImage(target, image, 'before')
+	//	.placeImage(target, image, 'after')
 	//		-> image
-	//
 	//
 	// NOTE: mode is defaults to 'before'.
 	// NOTE: if image gid does not exist it will be created.
@@ -272,7 +271,7 @@ module.RibbonsPrototype = {
 		// offset on same ribbon...
 		if(typeof(to) == typeof(123)){
 			if(to == 0){
-				return target
+				return img
 			}
 			var i = to
 			var images = img[i > 0 ? 'nextAll' : 'prevAll']('.image')
@@ -283,6 +282,9 @@ module.RibbonsPrototype = {
 		} else {
 			var i = mode == 'before' ? -1 : 1
 			to = this.getImage(to)
+			if(to[0] == img[0]){
+				return img
+			}
 			var images = to[mode]('.image')
 		}
 
