@@ -117,12 +117,22 @@ module.RibbonsPrototype = {
 	//
 	// Get current ribbon:
 	//	.getRibbon()
+	//	.getRibbon('current')
 	//		-> ribbon
 	//
-	// Get ribbon by index/gid:
+	// Get base ribbon:
+	//	.getRibbon('base')
+	//		-> ribbon
+	//
+	// Get ribbon by its index/gid:
 	//	.getRibbon(index)
 	//	.getRibbon(gid)
 	//		-> ribbon
+	//
+	// Get ribbon by image:
+	//	.getRibbon(image)
+	//		-> ribbon
+	//		NOTE: image must be .getImage(..) compatible.
 	//
 	// Get ribbons from list:
 	//	.getRibbon($(..))
@@ -130,10 +140,22 @@ module.RibbonsPrototype = {
 	//		-> ribbon(s)
 	//		NOTE: this will filter the list but not search the tree...
 	//
+	//
+	// NOTE: if current image is unset then this will not be able to 
+	// 		get it.
+	// NOTE: if base ribbon is unset this will return the first ribbon.
 	getRibbon: function(target){
 		// current...
-		if(target == null) {
-			return this.viewer.find('.current.image').parents('.ribbon').first()
+		if(target == null || target == 'current') {
+			return this.getImage().parents('.ribbon').first()
+
+		// base...
+		} else if(target == 'base'){
+			var r = this.viewer.find('.base.ribbon').first()
+			if(r.length == 0){
+				return this.viewer.find('.ribbon').first()
+			}
+			return r
 
 		// index...
 		} else if(typeof(target) == typeof(123)){
@@ -142,7 +164,11 @@ module.RibbonsPrototype = {
 		// gid...
 		} else if(typeof(target) == typeof('str')){
 			//return this.viewer.find('.ribbon[gid="'+JSON.stringify(target)+'"]')
-			return this.viewer.find('.ribbon[gid='+JSON.stringify(target)+']')
+			var r = this.viewer.find('.ribbon[gid='+JSON.stringify(target)+']')
+			// if no ribbon is found, try and get an image and it's ribbon...
+			return r.length == 0 
+				? this.getImage(target).parents('.ribbon').first()
+				: r
 		}
 		return $(target).filter('.ribbon')
 	},
@@ -157,10 +183,23 @@ module.RibbonsPrototype = {
 	//
 	// Get current image:
 	//	.getImage()
+	//	.getImage('current')
 	//		-> image
 	//
 	// Get image by gid:
 	//	.getImage(gid)
+	//		-> image
+	//
+	// Get image at offset relative to current image:
+	//	.getImage('next')
+	//	.getImage('prev')
+	//	.getImage(offset)
+	//		-> image
+	//
+	// Get image at offset relative to image:
+	//	.getImage(image, 'next')
+	//	.getImage(image, 'prev')
+	//	.getImage(image, offset)
 	//		-> image
 	//
 	// Get images from list:
@@ -169,17 +208,48 @@ module.RibbonsPrototype = {
 	//		-> image(s)
 	//		NOTE: this will filter the list but not search the tree...
 	//
-	getImage: function(target){
+	getImage: function(target, offset){
+		var img = null
+
+		// relative to current -- target is offset...
+		if(target == 'next' 
+				|| target == 'prev' 
+				|| typeof(target) == typeof(123)){
+			offset = target
+			target = 'current'
+		}
+		
+		// get the base image...
 		// current...
-		if(target == null) {
-			return this.viewer.find('.current.image')
+		if(target == null || target == 'current') {
+			img = this.viewer.find('.current.image')
 
 		// gid...
 		} else if(typeof(target) == typeof('str')){
 			//return this.viewer.find('.image[gid="'+JSON.stringify(target)+'"]')
-			return this.viewer.find('.image[gid='+JSON.stringify(target)+']')
+			img = this.viewer.find('.image[gid='+JSON.stringify(target)+']')
 		}
-		return $(target).filter('.image')
+
+		// we got a collection...
+		if(img == null){
+			return $(target).filter('.image')
+		}
+
+		// get the offset...
+		if(offset != null && offset != 0){
+			// relative keywords...
+			offset = offset == 'next' ? 1
+				: offset == 'prev' ? -1
+				: offset
+			var list = offset > 0 ? 'nextAll' : 'prevAll'
+			offset = Math.abs(offset)-1
+			var res = img[list]('.image')
+			// handle overflow...
+			res = res.eq(Math.min(offset, res.length-1))
+			img = res.length == 0 ? img : res
+		}
+
+		return img
 	},
 
 
@@ -372,18 +442,51 @@ module.RibbonsPrototype = {
 
 	// Update a data object in ribbons...
 	//
+	// 	.updateData(data, settings)
+	// 		-> ribbons
+	//
+	//
 	// This uses .updateRibbon(..) to load individual ribbons, for
 	// more info see docs for that.
 	//
 	// This uses data.ribbon_order to place the ribbons and data.ribbons
-	// place the images, either is optional, but at least one of the two
-	// must exist for this to work.
+	// to place the images.
+	//
+	// This uses data.base and data.current to set the base ribbon and 
+	// current image respectively.
+	//
+	// All the data fields are optional, but for this to make a change 
+	// at least one must be present.
+	//
+	//
+	// Settings format:
+	// 	{
+	// 		// if true keep the unchanged ribbons (default: false)
+	// 		// NOTE: untouched ribbons are the ones loaded into DOM but
+	// 		//		not included in any of:
+	// 		//			- data.ribbon_order
+	// 		//			- data.ribbons
+	// 		//			- data.base
+	// 		keep_ribbons: bool,
+	//
+	// 		// if true do not update the base ribbon (default: false)
+	// 		keep_base: bool,
+	//
+	// 		// if true do not update the current image (default: false)
+	// 		keep_current: bool,
+	//
+	//
+	//		// a shorthand setting all the above to true (default: false).
+	//		// NOTE: if this is set to true all other settings will be 
+	//		//		ignored...
+	// 		keep_all: bool,
+	// 	}
 	//
 	// NOTE: this will not clear the ribbons object explicitly.
-	// NOTE: this will clear the ribbons that are not present in 
-	// 		data.ribbon_order (if given) unless keep_untouched_ribbons 
-	// 		is set.
-	updateData: function(data, keep_untouched_ribbons){
+	// NOTE: this will never remove the ribbons included in any of the
+	// 		data.base, data.ribbon_order or data.ribbons...
+	updateData: function(data, settings){
+		var settings = settings == null ? {} : settings
 		// load the data...
 		var that = this
 
@@ -401,15 +504,36 @@ module.RibbonsPrototype = {
 			})
 		}
 
-		// clear the ribbons that did not get updated...
-		if(!keep_untouched_ribbons && data.ribbon_order != null){
-			var ribbons = data.ribbon_order
-			that.viewer.find('.ribbon').each(function(){
-				var r = $(this)
-				if(ribbons.indexOf(that.getElemGID(r)) < 0){
-					r.remove()
-				}
-			})
+		if(!settings.keep_all){
+			// set base ribbon...
+			if(!settings.keep_base && data.base != null){
+				this.setBaseRibbon(data.base)
+			}
+
+			// set base ribbon...
+			if(!settings.keep_current && data.current != null){
+				this.focusImage(data.current)
+			}
+
+			// clear the ribbons that did not get updated...
+			if(!settings.keep_ribbons 
+					&& (data.ribbon_order != null || data.ribbons != null)){
+				var ribbons = []
+				ribbons = data.ribbon_order != null 
+					? ribbons.concat(Object.keys(data.ribbon_order)) 
+					: ribbons
+				ribbons = data.ribbons != null 
+					? ribbons.concat(Object.keys(data.ribbons)) 
+					: ribbons
+				ribbons.push(data.base)
+
+				that.viewer.find('.ribbon').each(function(){
+					var r = $(this)
+					if(ribbons.indexOf(that.getElemGID(r)) < 0){
+						r.remove()
+					}
+				})
+			}
 		}
 
 		return this
@@ -482,22 +606,18 @@ module.RibbonsPrototype = {
 
 		// offset...
 		if(typeof(gid) == typeof(123)){
-			if(gid != 0){
-				var list = gid > 0 ? 'nextAll' : 'prevAll'
-				gid = Math.abs(gid)-1
-				var target = cur[list]('.image')
-				// handle overflow...
-				target = target.eq(Math.min(gid, target.length-1))
-				if(target.length > 0){
-					return this.focusImage(target)
-				}
-			}
-			return cur
+			return this.focusImage(this.getImage(gid))
 		}
 
 		cur.removeClass('current')
 		return this.getImage(gid)
 			.addClass('current')
+	},
+
+	// XXX should this support keywords a-la .focusImage(..)???
+	setBaseRibbon: function(gid){
+		this.viewer.find('.base.ribbon').removeClass('base')
+		return this.getRibbon(gid).addClass('base')
 	},
 
 

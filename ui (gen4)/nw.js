@@ -3,7 +3,7 @@
 *
 *
 **********************************************************************/
-if(window.isNodeWebKit){
+if(window.nodejs != null){
 
 // node-webkit specific modules...
 var gui = require('nw.gui')
