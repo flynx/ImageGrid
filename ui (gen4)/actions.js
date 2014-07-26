@@ -144,6 +144,8 @@ module.BASE_ACTIONS = {
 	shiftImageDown:
 		'Shift image to the ribbon below current, creating one if '
 		+'it does not exist',
+	shiftImageUpNewRibbon: '',
+	shiftImageDownNewRibbon: '',
 	shiftImageLeft: 'Shift image to the left',
 	shiftImageRight: 'Shift image to the right',
 
@@ -230,16 +232,16 @@ module.UI_ACTIONS = {
 	fitScreen: 'Fit image to screen',
 
 	// modes...
-	singleImageMode: '',
-	ribbonMode: '',
+	singleImageMode: 'Show single image',
+	ribbonMode: 'Show ribbon',
 
-	toggleTheme: '',
+	toggleTheme: 'Toggle themes',
 
 	// dialogs...
-	openDialog: '',
-	historyDialog: '',
-	cropDialog: '',
-	markDialog: '',
+	openDialog: 'Show open diaolg',
+	historyDialog: 'Show history dialog',
+	cropDialog: 'Show crop dialog',
+	markDialog: 'Show mark dialog',
 
 	// panels...
 	togglePanels: '',
@@ -253,8 +255,8 @@ module.UI_ACTIONS = {
 	showConsolePanel: '',
 
 	// developer actions...
-	showConsole: '',
-	showDevTools: '',
+	showConsole: 'Show application console',
+	showDevTools: 'Show development tools',
 }
 
 
@@ -276,6 +278,11 @@ module.MARKS_ACTIONS = {
 	toggleMark: '',
 	toggleMarkBlock: '',
 
+	nextMarked: '',
+	prevMarked: '',
+	nextMarkedInRibbon: '',
+	prevMarkedInRibbon: '',
+
 	markRibbon: '',
 	unmarkRibbon: '',
 	markAll: '',
@@ -287,6 +294,8 @@ module.MARKS_ACTIONS = {
 	shiftMarkedDown: '',
 	shiftMarkedLeft: '',
 	shiftMarkedRight: '',
+	shiftMarkedUpNewRibbon: '',
+	shiftMarkedDownNewRibbon: '',
 
 	cropMarkedImages: '',
 	cropMarkedImagesToSingleRibbon: '',
@@ -307,6 +316,11 @@ function setupMarksActions(context, actions){
 var BOOKMARKS_ACTIONS =
 module.BOOKMARKS_ACTIONS = {
 	toggleBookmark: 'Toggle image bookmark',
+
+	nextBookmarked: '',
+	prevBookmarked: '',
+	nextBookmarkedInRibbon: '',
+	prevBookmarkedInRibbon: '',
 
 	bookmarkMarked: 'Bookmark marked images',
 	unbookmarkMarked: 'Remove bookmarks from marked images',
