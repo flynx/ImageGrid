@@ -5,9 +5,6 @@
 *
 **********************************************************************/
 
-// XXX this is a stub, here untill image.js is done...
-_UPDATE_IMAGE = false
-
 define(function(require){ var module = {}
 console.log('>>> ribbons')
 
@@ -84,7 +81,6 @@ module.RibbonsClassPrototype = {
 					.replace(/^"(.*)"$/g, '$1'))
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
-	// XXX should this do .updateImage(..) ???
 	createImage: function(gid){
 		gid = gid != null ? gid+'' : gid
 		return $('<div>')
@@ -92,6 +88,14 @@ module.RibbonsClassPrototype = {
 			.attr('gid', JSON.stringify(gid)
 					// this removes the extra quots...
 					.replace(/^"(.*)"$/g, '$1'))
+	},
+	createMark: function(cls, gid){
+		gid = gid != null ? gid+'' : gid
+		return $('<div class="mark">')
+			.addClass(cls)
+			.attr('gid', JSON.stringify(gid)
+				// this removes the extra quots...
+				.replace(/^"(.*)"$/g, '$1'))
 	},
 } 
 
@@ -110,6 +114,7 @@ module.RibbonsPrototype = {
 	createViewer: RibbonsClassPrototype.createViewer,
 	createRibbon: RibbonsClassPrototype.createRibbon,
 	createImage: RibbonsClassPrototype.createImage,
+	createMark: RibbonsClassPrototype.createMark,
 
 	// Generic getters...
 	getElemGID: RibbonsClassPrototype.getElemGID,
@@ -256,6 +261,28 @@ module.RibbonsPrototype = {
 		return img
 	},
 
+	// Get image marks...
+	//
+	//	.getImageMarks(gid)
+	//	.getImageMarks(image)
+	//		-> marks
+	//
+	//	.getImageMarks(gid, cls)
+	//	.getImageMarks(image, cls)
+	//		-> marks
+	//
+	getImageMarks: function(img, cls){
+		gid = typeof(img) == typeof('str') ? img : null
+		gid = gid == null ? this.getElemGID(img) : gid
+
+		var marks = this.viewer.find('.mark[gid='+JSON.stringify(gid)+']')
+
+		if(cls != null){
+			return marks.filter('.'+cls)
+		}
+		return marks
+	},
+
 
 	// Basic manipulation...
 
@@ -376,7 +403,7 @@ module.RibbonsPrototype = {
 			to.before(img)
 		}
 
-		return _UPDATE_IMAGE ? image.updateImage(img) : img
+		return this.updateImage(img)
 	},
 
 
@@ -435,7 +462,7 @@ module.RibbonsPrototype = {
 				}
 			}
 
-			_UPDATE_IMAGE && image.updateImage(img)
+			that.updateImage(img)
 		})
 
 		// remove the rest of the stuff in ribbon... 
@@ -628,9 +655,38 @@ module.RibbonsPrototype = {
 	},
 
 
-	getImageMarks: function(){
-		// XXX
+	// Mark an image...
+	//
+	// Mark current image with cls
+	// 	.markImage(cls)
+	// 		-> mark
+	//
+	// 	.markImage(cls, gid)
+	// 		-> mark
+	//
+	// NOTE: this will reuse existing marks...
+	markImage: function(cls, image){
+		var gid = typeof(image) == typeof('str') ? image : null
+		image = this.getImage(gid) 
+		gid = gid == null ? this.getElemGID(image) : gid
+
+		// no image is loaded...
+		if(image.length == 0){
+			return
+		}
+
+		var mark = this.getImageMarks(gid, cls)
+
+		if(mark.length == 0){
+			mark = this.createMark(cls, gid)
+		} 
+
+		// make sure the mark is explicitly after the image...
+		mark.insertAfter(image)
+
+		return mark
 	},
+
 	// XXX this needs:
 	// 		IMAGE_UPDATERS -- make it a callback/event (node/jquery)...
 	updateImageIndicators: function(gid, image){
@@ -656,7 +712,7 @@ module.RibbonsPrototype = {
 		return img
 	},
 
-	// Update image{s}...
+	// Update image(s)...
 	//
 	load_img_sync: false,
 	//
@@ -667,6 +723,7 @@ module.RibbonsPrototype = {
 	updateImage: function(image, gid, size, sync){
 		image = image == null ? this.getImage() : $(image)
 		sync = sync == null ? this.load_img_sync : sync
+		size = size == null ? this.getVisibleImageSize('max') : size
 
 		var that = this
 		return image.each(function(){
@@ -693,12 +750,16 @@ module.RibbonsPrototype = {
 						'background-image': '',
 					})
 			}
-			size = size == null ? that.getVisibleImageSize('max') : size
+
+			// if not images data defined drop out...
+			if(that.images == null){
+				return
+			}
 
 			// get the image data...
 			var img_data = that.images[gid]
 			if(img_data == null){
-				img_data = STUB_IMAGE_DATA
+				img_data = images.STUB_IMAGE_DATA
 			}
 
 			/* XXX does not seem to be needing this...
@@ -710,10 +771,28 @@ module.RibbonsPrototype = {
 			}
 			*/
 
+			/*
+			// main attrs...
+			image
+				.attr({
+					orientation: [null, 0].indexOf(img_data.orientation) < 0 
+						? img_data.orientation,
+						: null 
+					flipped: img_data.flipped != null 
+						? img_data.flipped.join(', '),
+						: null 
+				})
+			*/
+
+			// image state...
+			that.rotateImage(image, img_data.orientation == null ? 0 : img_data.orientation)
+			that.flipImage(image, img_data.flipped == null ? [] : img_data.flipped)
+
 			// preview...
 			var p_url = that.images.getBestPreview(gid, size).url
 
 			// update the preview if it's a new image or...
+			// XXX this should be pushed as far back as possible...
 			if(old_gid != gid 
 					// the new preview (purl) is different to current...
 					|| image.css('background-image').indexOf(encodeURI(p_url)) < 0){
@@ -738,17 +817,8 @@ module.RibbonsPrototype = {
 				}
 			}
 
-			// main attrs...
-			image
-				.attr({
-					//order: DATA.order.indexOf(gid),
-					orientation: img_data.orientation == null ? 0 : img_data.orientation,
-				})
-
-			// flip...
-			setImageFlipState(image, img_data.flipped == null ? [] : img_data.flipped)
-
 			// NOTE: this only has effect on non-square image blocks...
+			// XXX this needs the loaded image, thus should be done right after preview loading...
 			that.correctImageProportionsForRotation(image)
 
 			// marks and other indicators...
@@ -866,15 +936,20 @@ module.RibbonsPrototype = {
 			that.correctImageProportionsForRotation(img)
 			// XXX this is a bit of an overkill but it will update the 
 			// 		preview if needed...
-			//image.updateImage(img)
+			//that.updateImage(img)
 		})
 		return target
 	},
 
 	// Flip an image...
 	//
+	// Flip image:
 	// 	.flipImage(target, 'horizontal')
 	// 	.flipImage(target, 'vertical')
+	// 		-> image
+	//
+	// Set an explicit state:
+	// 	.flipImage(target, [ .. ])
 	// 		-> image
 	//
 	// NOTE: target must be .getImage(..) compatible.
@@ -883,22 +958,28 @@ module.RibbonsPrototype = {
 	// 		loaded images vertically.
 	flipImage: function(target, direction){
 		target = this.getImage(target)
+		var set_state = direction.constructor.name == 'Array' ? direction : null
 		target.each(function(i, e){
 			var img = $(this)
 
-			// get the state...
-			var state = img.attr('flipped')
-			state = (state == null ? '' : state)
-				.split(',')
-				.map(function(e){ return e.trim() })
-				.filter(function(e){ return e != '' })
+			// update existing state...
+			if(set_state == null){
+				var state = img.attr('flipped')
+				state = (state == null ? '' : state)
+					.split(',')
+					.map(function(e){ return e.trim() })
+					.filter(function(e){ return e != '' })
+				// toggle the specific state...
+				var i = state.indexOf(direction)
+				if(i >= 0){
+					state.splice(i, 1)
+				} else {
+					state.push(direction)
+				}
 
-			// toggle the specific state...
-			var i = state.indexOf(direction)
-			if(i >= 0){
-				state.splice(i, 1)
+			// set an explicit state...
 			} else {
-				state.push(direction)
+				var state = set_state.slice()
 			}
 
 			// write the state...
