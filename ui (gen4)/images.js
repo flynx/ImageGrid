@@ -13,6 +13,49 @@ console.log('>>> images')
 
 /*********************************************************************/
 
+// Calculate relative rotation angle...
+//
+// Calculate rotation angle relative to from:
+// 	calcRelativeRotation(from, 'cw')
+// 	calcRelativeRotation(from, 'ccw')
+// 		-> 0 | 90 | 180 | 270
+//
+// Validate an angle:
+// 	calcRelativeRotation(angle)
+// 	calcRelativeRotation(from, angle)
+// 		-> 0 | 90 | 180 | 270
+// 		-> null
+//
+//
+module.calcRelativeRotation = function(from, to){
+	if(to == null){
+		to = from
+		from = 0
+	}
+	to = to == 'cw' ? 1 
+		: to == 'ccw' ? -1
+		: [0, 90, 180, 270].indexOf(to*1) >= 0 ? to*1
+		: [-90, -180, -270].indexOf(to*1) >= 0 ? 360+(to*1)
+		: null
+
+	// relative rotation...
+	if(to == 1 || to == -1){
+		var res = from
+		res = res == null ? 0 : res*1
+		res += 90*to
+		res = res < 0 ? 270 
+			: res > 270 ? 0
+			: res
+
+	// explicit direction...
+	} else {
+		var res = to
+	}
+
+	return res
+}
+
+
 // cmp functions...
 // XXX is this the right way to seporate these???
 
@@ -174,6 +217,11 @@ module.ImagesPrototype = {
 
 	// Image data helpers...
 
+	// XXX see: ribbons.js for details...
+	getBestPreview: function(){
+		// XXX
+	},
+
 	// Get image filename...
 	getImageFileName: function(gid, do_unescape){
 		do_unescape = do_unescape == null ? true : do_unescape
@@ -232,6 +280,80 @@ module.ImagesPrototype = {
 	// XXX 
 	sortedImagesByFileNameSeqWithOverflow: function(gids, reverse){
 		// XXX see ../ui/sort.js
+	},
+
+	// Actions...
+
+	// Rotate image...
+	//
+	// Rotate image clockwise:
+	//	.rotateImage(target, 'cw')
+	//		-> images
+	//
+	// Rotate image counterclockwise:
+	//	.rotateImage(target, 'ccw')
+	//		-> images
+	//
+	// Set explicit image rotation angle:
+	//	.rotateImage(target, 0|90|180|270)
+	//	.rotateImage(target, -90|-180|-270)
+	//		-> images
+	//
+	// NOTE: target can be a gid or a list of gids...
+	rotateImage: function(gids, direction){
+		gids = gids.constructor.name != 'Array' ? [gids] : gids
+		// validate direction...
+		if(module.calcRelativeRotation(direction) == null){
+			return this
+		}
+
+		var that = this
+		gids.forEach(function(key){
+			var img = that[key]
+			var o = direction == 'cw' || direction == 'ccw' 
+				? module.calcRelativeRotation(img.orientation, direction) 
+				: direction*1
+			if(o == 0){
+				delete img.orientation
+			} else {
+				img.orientation = o
+			}
+			// account for proportions...
+			//that.correctImageProportionsForRotation(img)
+			// XXX this is a bit of an overkill but it will update the 
+			// 		preview if needed...
+			//that.updateImage(img)
+		})
+		return this
+	},
+
+	// Flip image...
+	//
+	//	.flipImage(target, 'horizontal')
+	//	.flipImage(target, 'vertical')
+	//		-> images
+	//
+	flipImage: function(gids, direction){
+		gids = gids.constructor.name != 'Array' ? [gids] : gids
+		var that = this
+		gids.forEach(function(key){
+			var img = that[key]
+			var state = img.flipped
+			state = state == null ? [] : state
+			// toggle the specific state...
+			var i = state.indexOf(direction)
+			if(i >= 0){
+				state.splice(i, 1)
+			} else {
+				state.push(direction)
+			}
+			if(state.length == 0){
+				delete img.flipped
+			} else {
+				img.flipped = state
+			}
+		})
+		return this
 	},
 
 

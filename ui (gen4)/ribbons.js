@@ -18,6 +18,7 @@ require('ext-lib/jquery')
 
 var data = require('data')
 var image = require('image')
+var images = require('images')
 
 
 
@@ -83,6 +84,7 @@ module.RibbonsClassPrototype = {
 					.replace(/^"(.*)"$/g, '$1'))
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
+	// XXX should this do .updateImage(..) ???
 	createImage: function(gid){
 		gid = gid != null ? gid+'' : gid
 		return $('<div>')
@@ -99,6 +101,8 @@ var RibbonsPrototype =
 module.RibbonsPrototype = {
 	//
 	//	.viewer (jQuery object)
+	//
+	//	.images (Images object)
 	//
 	// XXX to update images we need to know about images...
 	
@@ -333,6 +337,7 @@ module.RibbonsPrototype = {
 	//
 	// XXX interaction animation...
 	// XXX mode is ugly...
+	// XXX should this be strongly or weakly coupled to images.updateImage(..)???
 	placeImage: function(target, to, mode){
 		mode = mode == null ? 'before' : mode
 		var img = this.getImage(target)
@@ -384,6 +389,8 @@ module.RibbonsPrototype = {
 	//
 	// NOTE: gids and ribbon must be .getImage(..) and .getRibbon(..) 
 	// 		compatible...
+	//
+	// XXX should this be strongly or weakly coupled to images.updateImage(..)???
 	updateRibbon: function(gids, ribbon){
 		// get/create the ribbon...
 		var r = this.getRibbon(ribbon)
@@ -621,6 +628,196 @@ module.RibbonsPrototype = {
 	},
 
 
+	getImageMarks: function(){
+		// XXX
+	},
+	// XXX this needs:
+	// 		IMAGE_UPDATERS -- make it a callback/event (node/jquery)...
+	updateImageIndicators: function(gid, image){
+		gid = gid == null ? this.getElemGID() : gid
+		image = image == null ? this.getImage() : $(image)
+
+		IMAGE_UPDATERS.forEach(function(update){
+			update(gid, image)
+		})
+
+		return image
+	},
+	_loadImagePreviewURL: function(image, url){
+		// pre-cache and load image...
+		// NOTE: this will make images load without a blackout...
+		var img = new Image()
+		img.onload = function(){
+			image.css({
+					'background-image': 'url("'+ url +'")',
+				})
+		}
+		img.src = url
+		return img
+	},
+
+	// Update image{s}...
+	//
+	load_img_sync: false,
+	//
+	// XXX this needs: 
+	// 		STUB_IMAGE_DATA
+	// 		this.images
+	// XXX
+	updateImage: function(image, gid, size, sync){
+		image = image == null ? this.getImage() : $(image)
+		sync = sync == null ? this.load_img_sync : sync
+
+		var that = this
+		return image.each(function(){
+			var image = $(this)
+			var old_gid = that.getElemGID(image)
+
+			// same image -- update...
+			if(old_gid == gid || gid == null){
+				gid = old_gid
+
+			// reuse for different image -- reconstruct...
+			} else {
+				// remove old marks...
+				if(typeof(old_gid) == typeof('str')){
+					that.getImageMarks(old_gid).remove()
+				}
+				// reset gid...
+				image
+					.attr('gid', JSON.stringify(gid)
+						// this removes the extra quots...
+						.replace(/^"(.*)"$/g, '$1'))
+					.css({
+						// clear the old preview...
+						'background-image': '',
+					})
+			}
+			size = size == null ? that.getVisibleImageSize('max') : size
+
+			// get the image data...
+			var img_data = that.images[gid]
+			if(img_data == null){
+				img_data = STUB_IMAGE_DATA
+			}
+
+			/* XXX does not seem to be needing this...
+			// set the current class...
+			if(gid == DATA.current){
+				image.addClass('current')
+			} else {
+				image.removeClass('current')
+			}
+			*/
+
+			// preview...
+			var p_url = that.images.getBestPreview(gid, size).url
+
+			// update the preview if it's a new image or...
+			if(old_gid != gid 
+					// the new preview (purl) is different to current...
+					|| image.css('background-image').indexOf(encodeURI(p_url)) < 0){
+				// sync load...
+				if(sync){
+					that._loadImagePreviewURL(image, p_url)
+
+				// async load...
+				} else {
+					// NOTE: storing the url in .data() makes the image load the 
+					// 		last requested preview and in a case when we manage to 
+					// 		call updateImage(...) on the same element multiple times 
+					// 		before the previews get loaded...
+					// 		...setting the data().loading is sync while loading an 
+					// 		image is not, and if several loads are done in sequence
+					// 		there is no guarantee that they will happen in the same
+					// 		order as requested...
+					image.data().loading = p_url
+					setTimeout(function(){ 
+						that._loadImagePreviewURL(image, image.data().loading)
+					}, 0)
+				}
+			}
+
+			// main attrs...
+			image
+				.attr({
+					//order: DATA.order.indexOf(gid),
+					orientation: img_data.orientation == null ? 0 : img_data.orientation,
+				})
+
+			// flip...
+			setImageFlipState(image, img_data.flipped == null ? [] : img_data.flipped)
+
+			// NOTE: this only has effect on non-square image blocks...
+			that.correctImageProportionsForRotation(image)
+
+			// marks and other indicators...
+			that.updateImageIndicators(gid, image)
+		})
+	},
+
+	// XXX reread...
+	// Compensate for viewer proportioned and rotated images.
+	//
+	// This will set the margins so as to make the rotated image offset the
+	// same space as it is occupying visually...
+	//
+	// NOTE: this is not needed for square image blocks.
+	// NOTE: if an image block is square, this will remove the margins.
+	correctImageProportionsForRotation: function(images){
+		// XXX
+		var W = this.viewer.innerWidth()
+		var H = this.viewer.innerHeight()
+
+		var viewer_p = W > H ? 'landscape' : 'portrait'
+
+		return $(images).each(function(i, e){
+			var image = $(this)
+			// orientation...
+			var o = image.attr('orientation')
+			o = o == null ? 0 : o
+			var w = image.outerWidth()
+			var h = image.outerHeight()
+
+			// non-square image...
+			if(w != h){
+
+				var image_p = w > h ? 'landscape' : 'portrait'
+
+				// when the image is turned 90deg/270deg and its 
+				// proportions are the same as the screen...
+				if((o == 90 || o == 270) && image_p == viewer_p){
+					image.css({
+						width: h,
+						height: w,
+					})
+					image.css({
+						'margin-top': -((w - h)/2),
+						'margin-bottom': -((w - h)/2),
+						'margin-left': (w - h)/2,
+						'margin-right': (w - h)/2,
+					})
+
+				} else if((o == 0 || o == 180) && image_p != viewer_p){
+					image.css({
+						width: h,
+						height: w,
+					})
+					image.css({
+						'margin': '',
+					})
+				}
+
+			// square image...
+			} else {
+				image.css({
+					'margin': '',
+				})
+			}
+		})
+	},
+
+
 	// Image manipulation...
 
 	// Rotate an image...
@@ -633,45 +830,40 @@ module.RibbonsPrototype = {
 	//	.rotateImage(target, 'ccw')
 	//		-> image
 	//
+	// Set explicit image rotation angle:
+	//	.rotateImage(target, 0|90|180|270)
+	//	.rotateImage(target, -90|-180|-270)
+	//		-> image
 	//
 	// NOTE: target must be .getImage(..) compatible.
 	// NOTE: this can be applied in bulk, e.g. 
 	// 		this.rotateImage($('.image'), 'cw') will rotate all the 
 	// 		loaded images clockwise.
 	//
-	// Rotation tables...
-	_cw: {
-		null: 90,
-		0: 90,
-		90: 180,
-		180: 270,
-		//270: 0,
-		270: null,
-	},
-	_ccw: {
-		null: 270,
-		0: 270,
-		//90: 0,
-		90: null,
-		180: 90,
-		270: 180,
-	},
-	// NOTE: setting a value to null will remove the attribute, 0 will 
-	// 		set 0 explicitly...
+	// XXX should this be strongly or weakly coupled to images.updateImage(..) 
+	// 		or images.correctImageProportionsForRotation(..)???
+	// XXX should .correctImageProportionsForRotation(..) be in images???
 	rotateImage: function(target, direction){
-		var r_table = direction == 'cw' ? this._cw : this._ccw
 		target = this.getImage(target)
+
+		// validate direction...
+		if(images.calcRelativeRotation(direction) == null){
+			return target
+		}
+
+		var that = this
 		target.each(function(i, e){
 			var img = $(this)
-			var o = img.attr('orientation')
-			o = r_table[ o == null ? null : o ]
-			if(o == null){
+			var o = direction == 'cw' || direction == 'ccw' 
+				? images.calcRelativeRotation(img.attr('orientation'), direction)
+				: direction*1
+			if(o == 0){
 				img.removeAttr('orientation')
 			} else {
 				img.attr('orientation', o)
 			}
 			// account for proportions...
-			image.correctImageProportionsForRotation(img)
+			that.correctImageProportionsForRotation(img)
 			// XXX this is a bit of an overkill but it will update the 
 			// 		preview if needed...
 			//image.updateImage(img)
@@ -758,8 +950,9 @@ module.RibbonsPrototype = {
 	},
 
 
-	_setup: function(viewer){
+	_setup: function(viewer, images){
 		this.viewer = $(viewer)
+		this.images = images
 	},
 } 
 
@@ -768,13 +961,13 @@ module.RibbonsPrototype = {
 //
 var Ribbons =
 module.Ribbons =
-function Ribbons(viewer){
+function Ribbons(viewer, images){
 	// in case this is called as a function (without new)...
 	if(this.constructor.name != 'Ribbons'){
 		return new Ribbons(viewer)
 	}
 
-	this._setup(viewer)
+	this._setup(viewer, images)
 
 	return this
 }
