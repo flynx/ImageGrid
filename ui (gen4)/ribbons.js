@@ -14,9 +14,13 @@ console.log('>>> ribbons')
 require('ext-lib/jquery')
 
 var data = require('data')
-var image = require('image')
 var images = require('images')
 
+
+
+// XXX STUB
+var IMAGE_UPDATERS =
+module.IMAGE_UPDATERS = []
 
 
 /*********************************************************************/
@@ -120,6 +124,43 @@ module.RibbonsPrototype = {
 	getElemGID: RibbonsClassPrototype.getElemGID,
 
 
+	// Helpers...
+
+	// Get visible image tile size...
+	//
+	//	.getVisibleImageSize()
+	//	.getVisibleImageSize('width')
+	//		-> size
+	//
+	//	.getVisibleImageSize('height')
+	//		-> size
+	//
+	//	.getVisibleImageSize('max')
+	//	.getVisibleImageSize('min')
+	//		-> size
+	//
+	// NOTE: this is similar to vh, vw, vmin and vmax CSS3 units, but
+	// 		gets the visible size of the image tile in pixels.
+	//
+	// XXX try and make image size the product of vmin and scale...
+	// XXX is this the right place for this???
+	// XXX uses jli.js getElementScale(..)
+	getVisibleImageSize: function(dim){
+		dim = dim == null ? 'width' : dim
+		var img = this.viewer.find('.image')
+		var scale = getElementScale(this.viewer.find('.ribbon-set'))
+		if(dim == 'height'){
+			return img.outerHeight(true) * scale
+		} else if(dim == 'width'){
+			return img.outerWidth(true) * scale
+		} else if(dim == 'max'){
+			return Math.max(img.outerHeight(true), img.outerWidth(true)) * scale
+		} else if(dim == 'min'){
+			return Math.min(img.outerHeight(true), img.outerWidth(true)) * scale
+		}
+	},
+
+
 	// Contextual getters...
 	
 	// Get ribbon...
@@ -181,7 +222,6 @@ module.RibbonsPrototype = {
 		}
 		return $(target).filter('.ribbon')
 	},
-
 	// Like .getRibbon(..) but returns ribbon index instead of the actual 
 	// ribbon object...
 	getRibbonIndex: function(target){
@@ -271,6 +311,7 @@ module.RibbonsPrototype = {
 	//	.getImageMarks(image, cls)
 	//		-> marks
 	//
+	// XXX should this be here or in a marks plugin...
 	getImageMarks: function(img, cls){
 		gid = typeof(img) == typeof('str') ? img : null
 		gid = gid == null ? this.getElemGID(img) : gid
@@ -407,7 +448,152 @@ module.RibbonsPrototype = {
 	},
 
 
-	// Bulk manipulation...
+	// Loading and updating...
+
+	// XXX this needs:
+	// 		IMAGE_UPDATERS -- make it a callback/event (node/jquery)...
+	updateImageIndicators: function(gid, image){
+		gid = gid == null ? this.getElemGID() : gid
+		image = image == null ? this.getImage() : $(image)
+
+		IMAGE_UPDATERS.forEach(function(update){
+			update(gid, image)
+		})
+
+		return image
+	},
+	_loadImagePreviewURL: function(image, url){
+		// pre-cache and load image...
+		// NOTE: this will make images load without a blackout...
+		var img = new Image()
+		img.onload = function(){
+			image.css({
+					'background-image': 'url("'+ url +'")',
+				})
+		}
+		img.src = url
+		return img
+	},
+
+	// Update image(s)...
+	//
+	// Update current image:
+	//	.updateImage()
+	//		-> image
+	//
+	// Update all image:
+	//	.updateImage('*')
+	//		-> image
+	//
+	load_img_sync: false,
+	//
+	updateImage: function(image, gid, size, sync){
+		image = image == null ? this.getImage() 
+			: image == '*' ? this.viewer.find('.image')
+			: $(image)
+		sync = sync == null ? this.load_img_sync : sync
+		size = size == null ? this.getVisibleImageSize('max') : size
+
+		var that = this
+		return image.each(function(){
+			var image = $(this)
+			var old_gid = that.getElemGID(image)
+
+			// same image -- update...
+			if(old_gid == gid || gid == null){
+				var gid = old_gid
+
+			// reuse for different image -- reconstruct...
+			} else {
+				// remove old marks...
+				if(typeof(old_gid) == typeof('str')){
+					that.getImageMarks(old_gid).remove()
+				}
+				// reset gid...
+				image
+					.attr('gid', JSON.stringify(gid)
+						// this removes the extra quots...
+						.replace(/^"(.*)"$/g, '$1'))
+					.css({
+						// clear the old preview...
+						'background-image': '',
+					})
+			}
+
+			// if not images data defined drop out...
+			if(that.images == null){
+				return
+			}
+
+			// get the image data...
+			var img_data = that.images[gid]
+			if(img_data == null){
+				img_data = images.STUB_IMAGE_DATA
+			}
+
+			/* XXX does not seem to be needing this...
+			// set the current class...
+			if(gid == DATA.current){
+				image.addClass('current')
+			} else {
+				image.removeClass('current')
+			}
+			*/
+
+			/*
+			// main attrs...
+			image
+				.attr({
+					orientation: [null, 0].indexOf(img_data.orientation) < 0 
+						? img_data.orientation,
+						: null 
+					flipped: img_data.flipped != null 
+						? img_data.flipped.join(', '),
+						: null 
+				})
+			*/
+
+			// image state...
+			that.rotateImage(image, img_data.orientation == null ? 0 : img_data.orientation)
+			that.flipImage(image, img_data.flipped == null ? [] : img_data.flipped)
+
+			// preview...
+			var p_url = that.images.getBestPreview(gid, size, img_data).url
+
+			// update the preview if it's a new image or...
+			// XXX this should be pushed as far back as possible...
+			if(old_gid != gid 
+					// the new preview (purl) is different to current...
+					|| image.css('background-image').indexOf(encodeURI(p_url)) < 0){
+				// sync load...
+				if(sync){
+					that._loadImagePreviewURL(image, p_url)
+
+				// async load...
+				} else {
+					// NOTE: storing the url in .data() makes the image load the 
+					// 		last requested preview and in a case when we manage to 
+					// 		call updateImage(...) on the same element multiple times 
+					// 		before the previews get loaded...
+					// 		...setting the data().loading is sync while loading an 
+					// 		image is not, and if several loads are done in sequence
+					// 		there is no guarantee that they will happen in the same
+					// 		order as requested...
+					image.data().loading = p_url
+					setTimeout(function(){ 
+						that._loadImagePreviewURL(image, image.data().loading)
+					}, 0)
+				}
+			}
+
+			// NOTE: this only has effect on non-square image blocks...
+			// XXX this needs the loaded image, thus should be done right after preview loading...
+			that.correctImageProportionsForRotation(image)
+
+			// marks and other indicators...
+			that.updateImageIndicators(gid, image)
+		})
+	},
 
 	// update a set of images in a ribbon...
 	//
@@ -648,6 +834,8 @@ module.RibbonsPrototype = {
 			.addClass('current')
 	},
 
+	// Set base ribbon...
+	//
 	// XXX should this support keywords a-la .focusImage(..)???
 	setBaseRibbon: function(gid){
 		this.viewer.find('.base.ribbon').removeClass('base')
@@ -655,240 +843,92 @@ module.RibbonsPrototype = {
 	},
 
 
+	// Image manipulation...
+
 	// Mark an image...
 	//
-	// Mark current image with cls
-	// 	.markImage(cls)
+	// Toggle current image cls mark:
+	// 	.toggleImageMark(cls)
+	// 	.toggleImageMark(cls, 'toggle')
 	// 		-> mark
 	//
-	// 	.markImage(cls, gid)
+	// Set current image cls mark on or off explicitly:
+	// 	.toggleImageMark(cls, 'on')
+	// 	.toggleImageMark(cls, 'off')
 	// 		-> mark
 	//
+	// Toggle image cls mark:
+	// 	.toggleImageMark(image, cls)
+	// 	.toggleImageMark(image, cls, 'toggle')
+	// 		-> mark
+	//
+	// Set image cls mark on or off explicitly:
+	// 	.toggleImageMark(image, cls, 'on')
+	// 	.toggleImageMark(image, cls, 'off')
+	// 		-> mark
+	//
+	// Get image cls mark state:
+	// 	.toggleImageMark(cls, '?')
+	// 	.toggleImageMark(image, cls, '?')
+	// 		-> 'on'
+	// 		-> 'off'
+	// 		NOTE: this will only test the first image.
+	//
+	//
+	// NOTE: cls can be a list...
+	// NOTE: this can operate on multiple images...
 	// NOTE: this will reuse existing marks...
-	markImage: function(cls, image){
-		var gid = typeof(image) == typeof('str') ? image : null
-		image = this.getImage(gid) 
-		gid = gid == null ? this.getElemGID(image) : gid
+	//
+	// XXX use a cssToggler???
+	toggleImageMark: function(image, cls, action){
+		var that = this
+		if(cls == null || ['toggle', 'on', 'off', '?'].indexOf(cls) >= 0 ){
+			action = cls
+			cls = image
+			image = null
+		}
+		image = this.getImage(image) 
+		cls = cls.constructor.name != 'Array' ? [cls] : cls
+		action = action == null ? 'toggle' : action
 
 		// no image is loaded...
 		if(image.length == 0){
 			return
 		}
 
-		var mark = this.getImageMarks(gid, cls)
+		// get marked state...
+		if(action == '?'){
+			var gid = this.getElemGID(image)
+			var res = 0
+			cls.forEach(function(cls){
+				res += that.getImageMarks(gid, cls).length != 0 ? 1 : 0
+			})
+			return res == cls.length ? 'on' : 'off'
+		}
 
-		if(mark.length == 0){
-			mark = this.createMark(cls, gid)
-		} 
+		// set the marks...
+		image.each(function(){
+			var image = $(this)
+			var gid = that.getElemGID(image)
+			cls.forEach(function(cls){
+				var mark = that.getImageMarks(gid, cls)
 
-		// make sure the mark is explicitly after the image...
-		mark.insertAfter(image)
+				// set the mark...
+				if(mark.length == 0 
+						&& (action == 'toggle' 
+							|| action == 'on')){
+					that.createMark(cls, gid)
+						.insertAfter(image)
 
-		return mark
-	},
-
-	// XXX this needs:
-	// 		IMAGE_UPDATERS -- make it a callback/event (node/jquery)...
-	updateImageIndicators: function(gid, image){
-		gid = gid == null ? this.getElemGID() : gid
-		image = image == null ? this.getImage() : $(image)
-
-		IMAGE_UPDATERS.forEach(function(update){
-			update(gid, image)
+				// clear the mark...
+				} else if(action != 'on') {
+					mark.remove()
+				}
+			})
 		})
 
 		return image
 	},
-	_loadImagePreviewURL: function(image, url){
-		// pre-cache and load image...
-		// NOTE: this will make images load without a blackout...
-		var img = new Image()
-		img.onload = function(){
-			image.css({
-					'background-image': 'url("'+ url +'")',
-				})
-		}
-		img.src = url
-		return img
-	},
-
-	// Update image(s)...
-	//
-	load_img_sync: false,
-	//
-	// XXX this needs: 
-	// 		STUB_IMAGE_DATA
-	// 		this.images
-	// XXX
-	updateImage: function(image, gid, size, sync){
-		image = image == null ? this.getImage() : $(image)
-		sync = sync == null ? this.load_img_sync : sync
-		size = size == null ? this.getVisibleImageSize('max') : size
-
-		var that = this
-		return image.each(function(){
-			var image = $(this)
-			var old_gid = that.getElemGID(image)
-
-			// same image -- update...
-			if(old_gid == gid || gid == null){
-				gid = old_gid
-
-			// reuse for different image -- reconstruct...
-			} else {
-				// remove old marks...
-				if(typeof(old_gid) == typeof('str')){
-					that.getImageMarks(old_gid).remove()
-				}
-				// reset gid...
-				image
-					.attr('gid', JSON.stringify(gid)
-						// this removes the extra quots...
-						.replace(/^"(.*)"$/g, '$1'))
-					.css({
-						// clear the old preview...
-						'background-image': '',
-					})
-			}
-
-			// if not images data defined drop out...
-			if(that.images == null){
-				return
-			}
-
-			// get the image data...
-			var img_data = that.images[gid]
-			if(img_data == null){
-				img_data = images.STUB_IMAGE_DATA
-			}
-
-			/* XXX does not seem to be needing this...
-			// set the current class...
-			if(gid == DATA.current){
-				image.addClass('current')
-			} else {
-				image.removeClass('current')
-			}
-			*/
-
-			/*
-			// main attrs...
-			image
-				.attr({
-					orientation: [null, 0].indexOf(img_data.orientation) < 0 
-						? img_data.orientation,
-						: null 
-					flipped: img_data.flipped != null 
-						? img_data.flipped.join(', '),
-						: null 
-				})
-			*/
-
-			// image state...
-			that.rotateImage(image, img_data.orientation == null ? 0 : img_data.orientation)
-			that.flipImage(image, img_data.flipped == null ? [] : img_data.flipped)
-
-			// preview...
-			var p_url = that.images.getBestPreview(gid, size).url
-
-			// update the preview if it's a new image or...
-			// XXX this should be pushed as far back as possible...
-			if(old_gid != gid 
-					// the new preview (purl) is different to current...
-					|| image.css('background-image').indexOf(encodeURI(p_url)) < 0){
-				// sync load...
-				if(sync){
-					that._loadImagePreviewURL(image, p_url)
-
-				// async load...
-				} else {
-					// NOTE: storing the url in .data() makes the image load the 
-					// 		last requested preview and in a case when we manage to 
-					// 		call updateImage(...) on the same element multiple times 
-					// 		before the previews get loaded...
-					// 		...setting the data().loading is sync while loading an 
-					// 		image is not, and if several loads are done in sequence
-					// 		there is no guarantee that they will happen in the same
-					// 		order as requested...
-					image.data().loading = p_url
-					setTimeout(function(){ 
-						that._loadImagePreviewURL(image, image.data().loading)
-					}, 0)
-				}
-			}
-
-			// NOTE: this only has effect on non-square image blocks...
-			// XXX this needs the loaded image, thus should be done right after preview loading...
-			that.correctImageProportionsForRotation(image)
-
-			// marks and other indicators...
-			that.updateImageIndicators(gid, image)
-		})
-	},
-
-	// XXX reread...
-	// Compensate for viewer proportioned and rotated images.
-	//
-	// This will set the margins so as to make the rotated image offset the
-	// same space as it is occupying visually...
-	//
-	// NOTE: this is not needed for square image blocks.
-	// NOTE: if an image block is square, this will remove the margins.
-	correctImageProportionsForRotation: function(images){
-		// XXX
-		var W = this.viewer.innerWidth()
-		var H = this.viewer.innerHeight()
-
-		var viewer_p = W > H ? 'landscape' : 'portrait'
-
-		return $(images).each(function(i, e){
-			var image = $(this)
-			// orientation...
-			var o = image.attr('orientation')
-			o = o == null ? 0 : o
-			var w = image.outerWidth()
-			var h = image.outerHeight()
-
-			// non-square image...
-			if(w != h){
-
-				var image_p = w > h ? 'landscape' : 'portrait'
-
-				// when the image is turned 90deg/270deg and its 
-				// proportions are the same as the screen...
-				if((o == 90 || o == 270) && image_p == viewer_p){
-					image.css({
-						width: h,
-						height: w,
-					})
-					image.css({
-						'margin-top': -((w - h)/2),
-						'margin-bottom': -((w - h)/2),
-						'margin-left': (w - h)/2,
-						'margin-right': (w - h)/2,
-					})
-
-				} else if((o == 0 || o == 180) && image_p != viewer_p){
-					image.css({
-						width: h,
-						height: w,
-					})
-					image.css({
-						'margin': '',
-					})
-				}
-
-			// square image...
-			} else {
-				image.css({
-					'margin': '',
-				})
-			}
-		})
-	},
-
-
-	// Image manipulation...
 
 	// Rotate an image...
 	//
@@ -1002,22 +1042,64 @@ module.RibbonsPrototype = {
 
 	// UI manipulation...
 	
-	// XXX try and make image size the product of vmin and scale...
-	// XXX is this the right place for this???
-	// XXX uses jli.js getElementScale(..)
-	getVisibleImageSize: function(dim){
-		dim = dim == null ? 'width' : dim
-		var img = this.viewer.find('.image')
-		var scale = getElementScale(this.viewer.find('.ribbon-set'))
-		if(dim == 'height'){
-			return img.outerHeight(true) * scale
-		} else if(dim == 'width'){
-			return img.outerWidth(true) * scale
-		} else if(dim == 'max'){
-			return Math.max(img.outerHeight(true), img.outerWidth(true)) * scale
-		} else if(dim == 'min'){
-			return Math.min(img.outerHeight(true), img.outerWidth(true)) * scale
-		}
+	// Compensate for viewer proportioned and rotated images.
+	//
+	// This will set the margins so as to make the rotated image offset the
+	// same space as it is occupying visually...
+	//
+	// NOTE: this is not needed for square image blocks.
+	// NOTE: if an image block is square, this will remove the margins.
+	correctImageProportionsForRotation: function(images){
+		// XXX
+		var W = this.viewer.innerWidth()
+		var H = this.viewer.innerHeight()
+
+		var viewer_p = W > H ? 'landscape' : 'portrait'
+
+		return $(images).each(function(i, e){
+			var image = $(this)
+			// orientation...
+			var o = image.attr('orientation')
+			o = o == null ? 0 : o
+			var w = image.outerWidth()
+			var h = image.outerHeight()
+
+			// non-square image...
+			if(w != h){
+
+				var image_p = w > h ? 'landscape' : 'portrait'
+
+				// when the image is turned 90deg/270deg and its 
+				// proportions are the same as the screen...
+				if((o == 90 || o == 270) && image_p == viewer_p){
+					image.css({
+						width: h,
+						height: w,
+					})
+					image.css({
+						'margin-top': -((w - h)/2),
+						'margin-bottom': -((w - h)/2),
+						'margin-left': (w - h)/2,
+						'margin-right': (w - h)/2,
+					})
+
+				} else if((o == 0 || o == 180) && image_p != viewer_p){
+					image.css({
+						width: h,
+						height: w,
+					})
+					image.css({
+						'margin': '',
+					})
+				}
+
+			// square image...
+			} else {
+				image.css({
+					'margin': '',
+				})
+			}
+		})
 	},
 
 	// XXX if target is an image align the ribbon both vertically and horizontally...
@@ -1045,7 +1127,7 @@ module.Ribbons =
 function Ribbons(viewer, images){
 	// in case this is called as a function (without new)...
 	if(this.constructor.name != 'Ribbons'){
-		return new Ribbons(viewer)
+		return new Ribbons(viewer, images)
 	}
 
 	this._setup(viewer, images)

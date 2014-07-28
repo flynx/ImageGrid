@@ -45,9 +45,9 @@ module.STUB_IMAGE_DATA = {
 	// NOTE: the actual values depend on specific image and can be
 	// 		any size...
 	preview: {
-		'150px': './images/sizes/150px/SIZE.jpg',
-		'350px': './images/sizes/350px/SIZE.jpg',
-		'900px': './images/sizes/900px/SIZE.jpg',
+		'150px': './images/150px/SIZE.jpg',
+		'350px': './images/350px/SIZE.jpg',
+		'900px': './images/900px/SIZE.jpg',
 	},
 
 	// Classes
@@ -302,8 +302,28 @@ module.ImagesPrototype = {
 	// Image data helpers...
 
 	// XXX see: ribbons.js for details...
-	getBestPreview: function(){
-		// XXX
+	getBestPreview: function(gid, size, img_data){
+		//gid = gid == null ? getImageGID(): gid
+		//size = size == null ? getVisibleImageSize('max') : size
+		img_data = img_data == null ? this[gid] : img_data
+		var s
+		var url = img_data.path
+		var preview_size = 'Original'
+		var p = Infinity
+
+		for(var k in img_data.preview){
+			s = parseInt(k)
+			if(s < p && s > size){
+				preview_size = k
+				p = s
+				url = img_data.preview[k]
+			}
+		}
+		return {
+			//url: normalizePath(url),
+			url: url,
+			size: preview_size
+		}
 	},
 
 	// Get image filename...
