@@ -485,6 +485,7 @@ module.RibbonsPrototype = {
 	//	.updateImage('*')
 	//		-> image
 	//
+	// If this is set to true image previews will be loaded synchronously...
 	load_img_sync: false,
 	//
 	updateImage: function(image, gid, size, sync){
@@ -616,6 +617,10 @@ module.RibbonsPrototype = {
 
 		var that = this
 		$(gids).each(function(i, gid){
+			// support for sparse ribbons...
+			if(gid == null){
+				return 
+			}
 			// get/create image...
 			var img = that.getImage(gid)
 			img = img.length == 0 ? that.createImage(gid) : img
@@ -759,7 +764,6 @@ module.RibbonsPrototype = {
 		return this
 	},
 
-
 	// Clear elements...
 	//
 	// Clear all elements:
@@ -845,7 +849,7 @@ module.RibbonsPrototype = {
 
 	// Image manipulation...
 
-	// Mark an image...
+	// Toggle image mark...
 	//
 	// Toggle current image cls mark:
 	// 	.toggleImageMark(cls)
@@ -878,8 +882,6 @@ module.RibbonsPrototype = {
 	// NOTE: cls can be a list...
 	// NOTE: this can operate on multiple images...
 	// NOTE: this will reuse existing marks...
-	//
-	// XXX use a cssToggler???
 	toggleImageMark: function(image, cls, action){
 		var that = this
 		if(cls == null || ['toggle', 'on', 'off', '?'].indexOf(cls) >= 0 ){

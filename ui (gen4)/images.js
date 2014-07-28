@@ -39,7 +39,7 @@ module.STUB_IMAGE_DATA = {
 	ctime: 0,
 
 	// Original path...
-	path: './images/sizes/900px/SIZE.jpg',
+	path: './images/900px/SIZE.jpg',
 
 	// Previews...
 	// NOTE: the actual values depend on specific image and can be

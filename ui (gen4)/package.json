@@ -12,5 +12,9 @@
     "min_height": 400,
     "frame": false,
     "toolbar": false
+  },
+
+  "webkit": {
+    "page-cache": true
   }
 }
