@@ -481,23 +481,39 @@ module.RibbonsPrototype = {
 	//	.updateImage()
 	//		-> image
 	//
+	// Update specific image:
+	//	.updateImage(gid)
+	//	.updateImage(image)
+	//		-> image
+	//
 	// Update all image:
 	//	.updateImage('*')
 	//		-> image
+	//
+	// NOTE: this can update collections of images by passing either a 
+	// 		list of gids, images or a jQuery collection...
 	//
 	// If this is set to true image previews will be loaded synchronously...
 	load_img_sync: false,
 	//
 	updateImage: function(image, gid, size, sync){
-		image = image == null ? this.getImage() 
-			: image == '*' ? this.viewer.find('.image')
-			: $(image)
+		image = (image == '*' ? this.viewer.find('.image')
+			: image == null 
+				|| typeof(image) == typeof('str') ? this.getImage(image)
+			: $(image))
+		var lst = image.toArray()
 		sync = sync == null ? this.load_img_sync : sync
 		size = size == null ? this.getVisibleImageSize('max') : size
 
 		var that = this
-		return image.each(function(){
-			var image = $(this)
+		return $(image.map(function(){
+			var image = this instanceof String 
+					|| typeof(this) == typeof('str') 
+				? that.getImage(this+'') 
+				: $(this)
+			if(image.length == 0){
+				return
+			}
 			var old_gid = that.getElemGID(image)
 
 			// same image -- update...
@@ -523,7 +539,7 @@ module.RibbonsPrototype = {
 
 			// if not images data defined drop out...
 			if(that.images == null){
-				return
+				return image[0]
 			}
 
 			// get the image data...
@@ -564,7 +580,8 @@ module.RibbonsPrototype = {
 			// update the preview if it's a new image or...
 			// XXX this should be pushed as far back as possible...
 			if(old_gid != gid 
-					// the new preview (purl) is different to current...
+					// the new preview (p_url) is different to current...
+					// NOTE: this may not work correctly for relative urls...
 					|| image.css('background-image').indexOf(encodeURI(p_url)) < 0){
 				// sync load...
 				if(sync){
@@ -593,7 +610,9 @@ module.RibbonsPrototype = {
 
 			// marks and other indicators...
 			that.updateImageIndicators(gid, image)
-		})
+
+			return image[0]
+		}))
 	},
 
 	// update a set of images in a ribbon...
