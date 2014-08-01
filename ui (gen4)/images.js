@@ -508,6 +508,15 @@ Images.prototype.constructor = Images
 
 
 
+/*********************************************************************/
+
+// XXX keep this here or move this to a different module???
+module.setupActionHandlers = function(context){
+	// XXX
+}
+
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
 return module })

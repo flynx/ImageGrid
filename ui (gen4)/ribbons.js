@@ -1,6 +1,6 @@
 /**********************************************************************
 * 
-* Minomal UI API...
+* Minimal UI API...
 *
 *
 **********************************************************************/
@@ -21,6 +21,39 @@ var images = require('images')
 // XXX STUB
 var IMAGE_UPDATERS =
 module.IMAGE_UPDATERS = []
+
+
+/*********************************************************************/
+
+// XXX add inheritance...
+var makeObject =
+module.makeObject =
+function makeObject(name, cls, obj){
+	// NOTE: we are using eval here to name the function correctly as
+	// 		simply assigning .name does not work...
+	// 		XXX think of a cleaner way...
+	eval(('var O = function ${NAME}(){'
+		+'	if(this.constructor.name != name){'
+		+'		return new (Function.prototype.bind.apply('
+		+'			${NAME},'
+		+'			arguments.length == 1 ? [null, arguments[0]]'
+		+'				: [null].concat(Array.apply(null, arguments))))'
+		+'	}'
+		+''
+		+'	if(this.__init__ != null){'
+		+'		this.__init__.apply(this, arguments)'
+		+'	}'
+		+''
+		+'	return this'
+		+'}').replace(/\${NAME}/g, name))
+
+	O.__proto__ = cls == null ? {} : cls
+	O.prototype = obj == null ? {} : obj 
+	O.prototype.constructor = O
+
+	return O
+}
+
 
 
 /*********************************************************************/
@@ -1158,6 +1191,23 @@ function Ribbons(viewer, images){
 Ribbons.__proto__ = RibbonsClassPrototype
 Ribbons.prototype = RibbonsPrototype
 Ribbons.prototype.constructor = Ribbons
+
+
+
+/*********************************************************************/
+
+// XXX keep this here or move this to a different module???
+module.setupActionHandlers = function(ribbons, context, actions){
+
+	context.on('focusImage', function(evt, img){ 
+		ribbons.alignRibbon(ribbons.focusImage(img))
+	})
+
+
+	// XXX this does not need focus ribbon handlers as the Data will 
+	// 		get those, chose an image and trigger the appropriate 
+	// 		focusImage event...
+}
 
 
 

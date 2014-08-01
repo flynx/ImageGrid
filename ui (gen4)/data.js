@@ -372,7 +372,7 @@ module.DataPrototype = {
 		if(target in this.ribbons || target.constructor.name == 'Array'){
 			list = target
 			target = this.current
-		} else if(target == 'before' || target == 'after'){
+		} else if(['before', 'after', 'next', 'prev'].indexOf(target) >= 0){
 			list = mode
 			mode = target
 			target = this.current
@@ -419,10 +419,10 @@ module.DataPrototype = {
 		}
 
 		// prepare for the search...
-		if(mode == 'before'){
+		if(mode == 'before' || mode == 'prev'){
 			var step = -1
 
-		} else if(mode == 'after'){
+		} else if(mode == 'after' || mode == 'next'){
 			var step = 1
 
 		// strict -- no hit means there is no point in searching...
@@ -1467,6 +1467,15 @@ function Data(json){
 Data.__proto__ = DataClassPrototype
 Data.prototype = DataPrototype
 Data.prototype.constructor = Data
+
+
+
+/*********************************************************************/
+
+// XXX keep this here or move this to a different module???
+module.setupActionHandlers = function(context){
+	// XXX
+}
 
 
 

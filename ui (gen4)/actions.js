@@ -15,10 +15,16 @@ console.log('>>> actions')
 // arguments for actions (a-la jQuery collections):
 //
 // 	Image			- current image
-// 	Images			- all images
+// 		.next(<offset> | 'all')
+// 		.prev(..)
 // 	Ribbon			- ribbon or ribbon images
+// 		.next(..)
+// 		.prev(..)
+//
+// 	Images			- all images
 // 	Marked			- marked images
 // 	Bookmarked		- bookmarked images
+//
 //
 // NOTE: these can also beused as a basis for actions...
 //
@@ -35,12 +41,14 @@ function(context, name, args){
 		: null
 	var jQuery = typeof(jQuery) != 'undefined' ? jQuery : null
 
+	// jQuery event...
 	if(typeof(context) == typeof('str')
 			|| (jq_object != null 
 				&& context instanceof jQuery)){
 		var c = $(context)
 			.trigger(name, args)
 
+	// node event...
 	} else if(EventEmitter != null && context instanceof EventEmitter){
 		var c = context
 			.emit.apply(context, [name].concat(args))
@@ -130,6 +138,37 @@ function Actions(context, names, actions, mode){
 
 
 /*********************************************************************/
+//
+// Action variables:
+//
+// 	SCREEN_IMAGES		
+// 		- screen width in images
+// 		- resolves to number
+// 		
+// 	CURRENT				
+// 		- current image
+// 		- resolves to gid
+// 		- support basic math: +/-
+// 			e.g. CURRENT + 1	~ next image
+//
+// 	RIBBON				
+// 		- current ribbon
+// 		- resolves to gid
+// 		- support basic math: +/-
+//
+// 	BASE				
+// 		- base ribbon
+// 		- resolves to gid
+// 		- support basic math: +/-
+//
+//
+// XXX add action variables!!!
+var SCREEN_IMAGES = null
+
+
+
+
+/*********************************************************************/
 
 // XXX need a way to define compound actions...
 // 		- compound action is like a normal action with a set of other 
@@ -169,12 +208,17 @@ module.BASE_ACTIONS = {
 	// crop...
 	// XXX should this be here on in a crop pligin...
 	cropRibbon: '',
-	uncropView: '',
-	uncropAll: '',
+	cropCurrentRibbonAndAbove: '',
+	uncropView: 'Uncrop to previous crop',
+	uncropAll: 'Uncrop to base',
+	uncropViewAndKeepOrder: 
+		'Uncrop view to previous crop, keeping current image order',
+	uncropAllAndKeepOrder: 'Uncrop to base, keeping current image order',
 
 	openURL: '',
 	//openHistory: '',
 
+	saveOrder: '',
 	saveState: '',
 	exportImages: '',
 
@@ -195,14 +239,19 @@ function setupBaseActions(context, actions){
 
 var UI_ACTIONS =
 module.UI_ACTIONS = {
-	// basic navigation...
-	nextImage: 'Focus next image in current ribbon',
-	nextRibbon: 'Focus next ribbon (down)',
-	nextScreen: 'Show next screen width of images',
+	focusImage: '',
+	focusRibbon: '',
 
-	prevImage: 'Focus previous image in current ribbon',
-	prevRibbon: 'Focus previous ribbon (up)',
-	prevScreen: 'Show previous screen width of images',
+	// basic navigation...
+	nextImage: ['Focus next image in current ribbon', { focusImage: 'next' }],
+	nextRibbon: ['Focus next ribbon (down)', { focusRibbon: 'next' }],
+	// XXX actions vars...
+	nextScreen: ['Show next screen width of images', { focusImage: SCREEN_IMAGES }],
+
+	prevImage: ['Focus previous image in current ribbon', { focusImage: 'prev' }],
+	prevRibbon: ['Focus previous ribbon (up)', { focusRibbon: 'prev' }],
+	// XXX actions vars...
+	prevScreen: ['Show previous screen width of images', { focusImage: -SCREEN_IMAGES }],
 
 	firstImage: 'Focus first image in ribbon',
 	lastImage: 'Focus last image in ribbon',
@@ -238,10 +287,10 @@ module.UI_ACTIONS = {
 	toggleTheme: 'Toggle themes',
 
 	// dialogs...
+	// XXX move to specific blocks...
 	openDialog: 'Show open diaolg',
 	historyDialog: 'Show history dialog',
 	cropDialog: 'Show crop dialog',
-	markDialog: 'Show mark dialog',
 
 	// panels...
 	togglePanels: '',
@@ -290,6 +339,10 @@ module.MARKS_ACTIONS = {
 	invertMarkedRibbon: '',
 	invertMarkedAll: '',
 
+	// placing...
+	placeMarkedAfter: 'Place marked images after current',
+	placeMarkedBefore: 'Place marked images before current',
+
 	shiftMarkedUp: '',
 	shiftMarkedDown: '',
 	shiftMarkedLeft: '',
@@ -299,6 +352,9 @@ module.MARKS_ACTIONS = {
 
 	cropMarkedImages: '',
 	cropMarkedImagesToSingleRibbon: '',
+
+	markDialog: 'Show mark dialog',
+	placeMarkedDialog: '',
 }
 
 var setupMarksActions = 
