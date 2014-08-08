@@ -32,23 +32,33 @@ function makeObject(name, cls, obj){
 	// NOTE: we are using eval here to name the function correctly as
 	// 		simply assigning .name does not work...
 	// 		XXX think of a cleaner way...
-	eval(('var O = function ${NAME}(){'
-		+'	if(this.constructor.name != name){'
-		+'		return new (Function.prototype.bind.apply('
-		+'			${NAME},'
-		+'			arguments.length == 1 ? [null, arguments[0]]'
-		+'				: [null].concat(Array.apply(null, arguments))))'
-		+'	}'
-		+''
-		+'	if(this.__init__ != null){'
-		+'		this.__init__.apply(this, arguments)'
-		+'	}'
-		+''
-		+'	return this'
-		+'}').replace(/\${NAME}/g, name))
+	var O = function OBJECT(){
+		if(this.constructor.name != name){
+			return new (Function.prototype.bind.apply(
+				OBJECT,
+				arguments.length == 1 ? [null, arguments[0]]
+					: [null].concat(Array.apply(null, arguments))))
+		}
+	
+		if(this.__init__ != null){
+			this.__init__.apply(this, arguments)
+		}
+	
+		return this
+	}
 
-	O.__proto__ = cls == null ? {} : cls
-	O.prototype = obj == null ? {} : obj 
+	if(name != null){
+		O = eval(O
+			.toString()
+			.replace(/OBJRCT/g, name))
+	}
+
+	if(cls != null){
+		O.__proto__ = cls
+	}
+	if(obj != null){
+		O.prototype = obj
+	}
 	O.prototype.constructor = O
 
 	return O

@@ -48,7 +48,7 @@ if(window.CEF_dumpJSON != null){
 
 	window.osPath = function(p){
 		return path
-			.normalize(p.replace(/file:\/\/\//, ''))
+			.normalize(p.replace(/file:\/\/(\/[a-zA-Z]:|\/)/, '$1'))
 	}
 	window.execPathPush = function(p){
 		process.env.PATH += ';' + path.normalize(path.dirname(process.execPath) + '/' + p)
