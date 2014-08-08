@@ -48,7 +48,10 @@ if(window.CEF_dumpJSON != null){
 
 	window.osPath = function(p){
 		return path
-			.normalize(p.replace(/file:\/\/(\/[a-zA-Z]:|\/)/, '$1'))
+			// we can have two types of path:
+			// 	file:///some/path			-> /some/path
+			// 	file:///X:/some/other/path	-> X:/some/other/path
+			.normalize(p.replace(/file:\/+([a-zA-Z]:\/|\/)/, '$1'))
 	}
 	window.execPathPush = function(p){
 		process.env.PATH += ';' + path.normalize(path.dirname(process.execPath) + '/' + p)

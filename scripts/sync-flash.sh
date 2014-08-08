@@ -50,9 +50,9 @@ while true ; do
 		echo "0) Multi flash card mode is `[[ $MULTI ]] && echo "on" || echo "off"`"
 		echo "1) Directoy description is: \"$TITLE\"."
 		if [[ ! $DRIVE ]] ; then
-			echo "a-z) type a drive letter."
+			echo "a-z) type a drive letter and start."
 		else
-			echo "a-z) type a new drive letter."
+			echo "a-z) type a new drive letter and start."
 			echo "Enter) copy drive ${DRIVE}"
 		fi
 		echo "2) build."
@@ -125,7 +125,7 @@ while true ; do
 
 
 	# exit interactive mode...
-	if [[ ! $INTERACTIVE || $LAST ]] ; then
+	if [[ ! $MULTI || ! $INTERACTIVE || $LAST ]] ; then
 		break
 	fi
 done
