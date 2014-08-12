@@ -110,6 +110,9 @@ var KEYBOARD_CONFIG = {
 				toggleFullscreenMode() 
 				return false
 			}),
+		Enter: {
+			alt: 'F11'
+		},
 		F: {
 			ctrl: 'F11',
 		},
@@ -645,7 +648,6 @@ var KEYBOARD_CONFIG = {
 
 		Enter: doc('Toggle single image view', 
 				function(){ toggleSingleImageMode() }),
-
 		B: {
 				default: doc('Toggle theme', 
 					function(){ toggleTheme() }),
