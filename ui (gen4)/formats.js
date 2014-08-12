@@ -71,10 +71,11 @@ function(data, cmp){
 // 		the Data object...
 // NOTE: this uses require('data').Data().newGid(..) for ribbon gid 
 // 		generation...
+// XXX test...
 //module.convertDataGen3 = 
 module.VERSIONS['3.0'] =
 function(data){
-	data = data.version == null ? module.VERSIONS['2.0'](data) : data
+	data = data.version < '3.0' ? module.VERSIONS['2.0'](data) : data
 
 	// XXX is this the right way to go???
 	var that = require('data').Data()
@@ -83,18 +84,39 @@ function(data){
 	res.version = '3.0'
 	res.current = data.current
 	res.order = data.order.slice()
-	res.ribbon_order = []
-	res.ribbons = {}
+	res.ribbon_order = data.ribbon_order == null ? [] : data.ribbon_order.slice()
+	res.ribbons = {} 
 	// generate gids...
-	data.ribbons.forEach(function(e){
-		var gid = that.newGid('R')
+	// NOTE: this will use the structures stored in data if available, 
+	// 		otherwise new structures will be generated...
+	// NOTE: we need to do this anyway as we also need to deep-copy the 
+	// 		ribbons...
+	var keys = data.ribbon_order != null 
+		? data.ribbon_order 
+		: Object.keys(data.ribbons)
+	keys.forEach(function(k){
+		var gid = k*1 == null ? k : that.newGid('R')
 		res.ribbon_order.push(gid)
-		res.ribbons[gid] = e.slice()
+		res.ribbons[gid] = data.ribbons[k].slice()
 	})
 	// we set the base to the first ribbon...
-	res.base = res.ribbon_order[0]
+	res.base = data.base == null ? res.ribbon_order[0] : res.base
 	return res
 }
+
+
+
+// XXX EXPERIMENTAL...
+module.VERSIONS['3.1'] =
+function(data){
+	res = module.VERSIONS['3.0'](data)
+
+	res.version = '3.1'
+	res.order_list = data.order_list != null ? JSON.parse(JSON.stringify(data.order_list)) : null
+
+	return res
+}
+
 
 
 // Get latest updater version...
