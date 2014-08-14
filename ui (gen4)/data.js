@@ -152,19 +152,6 @@ module.DataPrototype = {
 	//	 	NOTE: this list may contain gids not loaded at the moment, 
 	//	 		a common case for this is when data is cropped.
 	//
-	//	.order_list	EXPERIMENTAL
-	//		Dict of named user defined order lists
-	//
-	//		format:
-	//			{ name: [ gid, .. ], .. }
-	//
-	//		reserved order names:
-	//			'last'		- stores the last order before cange
-	//			'manual'	- stores the last user-defined orderbefore 
-	//						  resort
-	//
-	//		NOTE: this attr is optional...
-	//
 	// 	.ribbon_order
 	// 		List of ribbon gids setting the ribbon order.
 	//
@@ -839,23 +826,6 @@ module.DataPrototype = {
 		return this
 	},
 
-	// XXX should these be here or in a pligin???
-	saveOrderAs: function(name, order){
-		if(this.order_list == null){
-			this.order_list = {}
-		}
-		this.order_list[name] = order != null ? order : this.order.slice()
-		return this
-	},
-	loadOrder: function(name){
-		var order = name.constructor.name == 'Array' ? name : this.order_list[name].slice()
-		if(order == null){
-			return this
-		}
-		this.order = order
-		return this.sortImages()
-	},
-
 	// Shift image...
 	//
 	//	Shift image to target position:
@@ -1442,7 +1412,6 @@ module.DataPrototype = {
 		this.base = data.base
 		this.current = data.current
 		this.order = data.order.slice()
-		this.order_list = data.order_list != null ? JSON.parse(JSON.stringify(data.order_list)) : null
 		this.ribbon_order = data.ribbon_order.slice()
 		this.ribbons = {}
 		// make ribbons sparse...
@@ -1464,10 +1433,6 @@ module.DataPrototype = {
 			order: this.order.slice(),
 			ribbon_order: this.ribbon_order.slice(),
 			ribbons: {},
-		}
-		if(this.order_list != null && Object.keys(this.order_list).length > 0){
-			// do a deep copy...
-			res.order_list = JSON.parse(JSON.stringify(this.order_list))
 		}
 		// compact ribbons...
 		for(var k in this.ribbons){

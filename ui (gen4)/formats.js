@@ -106,6 +106,7 @@ function(data){
 
 
 
+/* This is best kept as a separate entity...
 // XXX EXPERIMENTAL...
 module.VERSIONS['3.1'] =
 function(data){
@@ -116,6 +117,7 @@ function(data){
 
 	return res
 }
+*/
 
 
 
