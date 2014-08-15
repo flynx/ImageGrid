@@ -29,6 +29,10 @@ var data = require('data')
 var ribbons = require('ribbons')
 
 
+// XXX 
+var testing = require('testing')
+
+
 
 /*********************************************************************/
 
@@ -109,6 +113,10 @@ $(function(){
 				function(k){
 					window.DEBUG && console.log(k)
 				}))
+
+	// XXX 
+	window.r = testing.loadTestRibbons()
+	window.a = testing.setupActions(null, r)
 })
 
 

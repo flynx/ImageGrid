@@ -242,6 +242,11 @@ module.RibbonsPrototype = {
 		if(target == null || target == 'current') {
 			return this.getImage().parents('.ribbon').first()
 
+		// dom element...
+		} else if(target instanceof $
+				&& target.hasClass('image')){
+			return this.getImage(target).parents('.ribbon').first()
+
 		// base...
 		} else if(target == 'base'){
 			var r = this.viewer.find('.base.ribbon').first()
@@ -1166,9 +1171,101 @@ module.RibbonsPrototype = {
 		})
 	},
 
-	// XXX if target is an image align the ribbon both vertically and horizontally...
-	alignRibbon: function(target, mode){
-		// XXX
+	// Get absolute offsets...
+	//
+	// This will calculate the vertical offsets relative to the ribbon-set
+	// and horizontal offsets relative to the specific loaded ribbon.
+	//
+	// vertical can be:
+	// 	'center'
+	// 	'left'
+	// 	'right'
+	// 	'30%'
+	// 	40
+	//
+	// NOTE: image_offset is applicable ONLY when both vertical and 
+	// 		horizontal are set to 'center', either explicitly or 
+	// 		implicitly (i.e. the default)
+	_getOffset: function(target, vertical, horizontal, image_offset){
+		vertical = vertical == null ? 'center' : vertical
+		horizontal = horizontal == null ? 'center' : horizontal
+		image_offset = image_offset == null ? 'center' : image_offset
+
+		if(vertical == 'before' || vertical == 'after'){
+			image_offset = vertical
+			vertical = 'center'
+			horizontal = 'center'
+		}
+
+		//
+		var viewer = this.viewer
+		var image = this.getImage(target)
+		var ribbon = this.getRibbon(target)
+		var ribbon_set = viewer.find('.ribbon-set')
+
+		// NOTE: to avoid errors these need to be taken at the same time.
+		var vo = viewer.offset()
+		var io = image.offset()
+		var rl = ribbon.offset().left
+		var rst = ribbon_set.offset().top
+
+		var W = viewer.width()
+		var H = viewer.height()
+		var w = image.width()
+		var h = image.height()
+
+		image_offset = image_offset == 'before' ? w/2
+			: image_offset == 'after' ? -w/2
+			: 0
+
+		// viewport position...
+		var pl = horizontal == 'center' ? (W - w)/2 + image_offset
+			: horizontal == 'left' ? 0
+			: horizontal == 'right' ? W - w
+			// explicit % value...
+			: typeof(horizontal) == typeof('str') && /[0-9.]*%/.test(horizontal) ?
+				(W - h) / (100/parseFloat(horizontal))
+			// explicit px value...
+			: horizontal*1
+		var pt = vertical == 'center' ? (H - h)/2
+			: vertical == 'top' ? 0
+			: vertical == 'bottom' ? H - h
+			// explicit % value...
+			: typeof(vertical) == typeof('str') && /[0-9.]*%/.test(vertical) ?
+				(H - h) / (100/parseFloat(vertical))
+			// explicit px value...
+			: vertical*1
+
+		return {
+			top: rst + pt - (io.top - vo.top),
+			left: rl + pl - (io.left - vo.left),
+		}
+	},
+	// center a ribbon vertically...
+	// XXX
+	centerRibbon: function(target, offset){
+		offset = offset == null ? this._getOffset(target) : offset
+
+		// vertical offset...
+		this.viewer.find('.ribbon-set')
+			.css({
+				top: offset.top,
+			})
+
+		return this
+	},
+	// center an image horizontally...
+	// XXX
+	centerImage: function(target, mode, offset){
+		offset = offset == null ? this._getOffset(target) : offset
+
+		// horizontal offset, current ribbon...
+		this.getRibbon(target)
+			.css({
+				left: offset.left
+			})
+
+		return this
 	},
 
 	// XXX
@@ -1210,7 +1307,10 @@ Ribbons.prototype.constructor = Ribbons
 module.setupActionHandlers = function(ribbons, context, actions){
 
 	context.on('focusImage', function(evt, img){ 
-		ribbons.alignRibbon(ribbons.focusImage(img))
+		img = ribbons.focusImage(img)
+		ribbons
+			.centerImage(img)
+			.centerRibbon(img)
 	})
 
 

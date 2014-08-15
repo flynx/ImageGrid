@@ -39,11 +39,10 @@ function(context, name, args){
 	var EventEmitter = nodejs != null 
 		? nodejs.require('events').EventEmitter 
 		: null
-	var jQuery = typeof(jQuery) != 'undefined' ? jQuery : null
 
 	// jQuery event...
 	if(typeof(context) == typeof('str')
-			|| (jq_object != null 
+			|| (jQuery != null 
 				&& context instanceof jQuery)){
 		var c = $(context)
 			.trigger(name, args)
@@ -122,7 +121,7 @@ function Action(context, name, doc, code){
 //
 // NOTE: context is dynamic.
 var Actions =
-module.Action = 
+module.Actions = 
 function Actions(context, names, actions, mode){
 	actions = actions == null ? {} : actions
 	Object.keys(names).forEach(function(e){
