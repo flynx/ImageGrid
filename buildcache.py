@@ -2,14 +2,18 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20140121064724'''
+__sub_version__ = '''20140814025456'''
 __copyright__ = '''(c) Alex A. Naanou 2011'''
 
 
 #-----------------------------------------------------------------------
 
 import os
-import Image
+# support both pil and pillow...
+try:
+	import Image
+except ImportError:
+	from PIL import Image
 import json
 import sha
 import urllib2
