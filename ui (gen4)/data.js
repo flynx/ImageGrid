@@ -1479,6 +1479,8 @@ Data.prototype.constructor = Data
 // XXX keep this here or move this to a different module???
 module.setupActionHandlers = function(context){
 	// XXX
+	context.on('focusImage', function(evt, img){ 
+	})
 }
 
 
