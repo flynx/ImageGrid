@@ -15,6 +15,15 @@ data = require('data')
 
 
 
+function proxy(attr, name){
+	return function(){
+		this[attr][name].apply(this[attr], arguments)
+		return this
+	}
+}
+
+
+
 /*********************************************************************/
 
 var CLIENT_ACTIONS = {
@@ -23,12 +32,8 @@ var CLIENT_ACTIONS = {
 	// 	.data
 	//
 
-	focusImage: doc('Focus Image',
-		// XXX do we need to account for event first argument here???
-		function(gid){
-			this.data.focusImage(gid)
-			return this
-		}),
+	focusImage: doc('Focus Image', 
+		proxy('data', 'focusImage')),
 
 	// target can be:
 	// 	- current
@@ -36,6 +41,7 @@ var CLIENT_ACTIONS = {
 	// 	- before
 	// 	- after
 	//
+	// XXX should this be implemented here on in data.js????
 	focusRibbon: doc('Focus ribbon',
 		function(target){
 			var cur = this.data.getRibbonIndex()
@@ -48,6 +54,11 @@ var CLIENT_ACTIONS = {
 			return this.focusImage(
 				this.data.getImage(ribbon, direction))
 		}),
+
+	firstImage: doc('', 
+		proxy('data', 'firstImage')),
+	lastImage: doc('', 
+		proxy('data', 'lastImage')),
 }
 
 
