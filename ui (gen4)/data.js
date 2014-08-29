@@ -621,6 +621,12 @@ module.DataPrototype = {
 	//	.getRibbon('base')
 	//		-> base ribbon gid
 	//
+	//	Get ribbon before/after current 
+	//	.getRibbon('before')
+	//	.getRibbon('after')
+	//		-> gid
+	//		-> null
+	//
 	//	Get ribbon by target image/ribbon:
 	//	.getRibbon(ribbon|order|gid)
 	//		-> ribbon gid
@@ -642,6 +648,12 @@ module.DataPrototype = {
 	// NOTE: this expects ribbon order and not image order.
 	getRibbon: function(target, offset){
 		target = target == null ? this.current : target
+
+		if(target == 'before' || target == 'after'){
+			target = this.current
+			offset = target
+		}
+
 		offset = offset == null ? 0 : offset
 		offset = offset == 'before' ? -1 : offset
 		offset = offset == 'after' ? 1 : offset
