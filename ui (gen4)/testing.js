@@ -47,7 +47,7 @@ module.mock_data = {
 	},
 }
 Object.keys(mock_data.ribbons).forEach(function(k){ 
-	mock_data.order = mock_data.order.concat(mock_data.order[k]) 
+	mock_data.order = mock_data.order.concat(mock_data.ribbons[k]) 
 })
 
 var test_data =

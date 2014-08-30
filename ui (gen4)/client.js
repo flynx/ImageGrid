@@ -34,27 +34,8 @@ var CLIENT_ACTIONS = {
 
 	focusImage: doc('Focus Image', 
 		proxy('data', 'focusImage')),
-
-	// target can be:
-	// 	- current
-	// 	- base
-	// 	- before
-	// 	- after
-	//
-	// XXX should this be implemented here on in data.js????
 	focusRibbon: doc('Focus ribbon',
-		function(target){
-			var cur = this.data.getRibbonIndex()
-			var ribbon = this.data.getRibbon(target)
-			var t = this.data.getRibbonIndex(ribbon)
-
-			// XXX revise this...
-			var direction = t < cur ? 'before' : 'after'
-
-			return this.focusImage(
-				this.data.getImage(ribbon, direction))
-		}),
-
+		proxy('data', 'focusRibbon')),
 	firstImage: doc('', 
 		proxy('data', 'firstImage')),
 	lastImage: doc('', 

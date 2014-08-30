@@ -650,8 +650,8 @@ module.DataPrototype = {
 		target = target == null ? this.current : target
 
 		if(target == 'before' || target == 'after'){
-			target = this.current
 			offset = target
+			target = 'current'
 		}
 
 		offset = offset == null ? 0 : offset
@@ -720,6 +720,32 @@ module.DataPrototype = {
 		}
 		return this
 	},	
+
+	focusRibbon: function(target){
+		var cur = this.getRibbonOrder()
+		var ribbon = this.getRibbon(target)
+
+		// nothing to do...
+		if(target == null || ribbon == null){
+			return this
+		}
+
+		var t = this.getRibbonOrder(ribbon)
+
+		// XXX revise this...
+		var direction = t < cur ? 'before' : 'after'
+
+		var img = this.getImage(ribbon, direction)
+
+		if(img == null){
+			img = direction == 'before' 
+				? this.getImage('first', ribbon) 
+				: this.getImage('last', ribbon)
+		}
+
+		return this.focusImage(img)
+	},
+
 
 	// Shorthand methods...
 	//
