@@ -721,6 +721,9 @@ module.DataPrototype = {
 		return this
 	},	
 
+	// Focus a ribbon -- focus an image in that ribbon
+	//
+	// NOTE: target must be .getRibbon(..) compatible.
 	focusRibbon: function(target){
 		var cur = this.getRibbonOrder()
 		var ribbon = this.getRibbon(target)
@@ -737,6 +740,7 @@ module.DataPrototype = {
 
 		var img = this.getImage(ribbon, direction)
 
+		// first/last image...
 		if(img == null){
 			img = direction == 'before' 
 				? this.getImage('first', ribbon) 
@@ -837,6 +841,7 @@ module.DataPrototype = {
 	// Sort images in ribbons via .order...
 	//
 	// NOTE: this sorts in-place
+	// NOTE: this will not change image order
 	sortImages: function(){
 		var ribbons = this.ribbons
 		for(k in ribbons){
@@ -1509,17 +1514,6 @@ function Data(json){
 Data.__proto__ = DataClassPrototype
 Data.prototype = DataPrototype
 Data.prototype.constructor = Data
-
-
-
-/*********************************************************************/
-
-// XXX keep this here or move this to a different module???
-module.setupActionHandlers = function(context){
-	// XXX
-	context.on('focusImage', function(evt, img){ 
-	})
-}
 
 
 

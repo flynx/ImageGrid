@@ -182,14 +182,17 @@ module.BASE_ACTIONS = {
 	shiftImageDown:
 		'Shift image to the ribbon below current, creating one if '
 		+'it does not exist',
-	shiftImageUpNewRibbon: '',
-	shiftImageDownNewRibbon: '',
+	shiftImageUpNewRibbon: 
+		'Create an empty ribbon above and shift the image into it',
+	shiftImageDownNewRibbon:
+		'Create an empty ribbon below and shift the image into it',
 	shiftImageLeft: 'Shift image to the left',
 	shiftImageRight: 'Shift image to the right',
 
-	moveRibbonUp: 'Move current ribbon one position up',
-	moveRibbonDown: 'Move current ribbon one position down',
+	shiftRibbonUp: 'Move current ribbon one position up',
+	shiftRibbonDown: 'Move current ribbon one position down',
 
+	// XXX
 	sortImages: '',
 	reverseImages: '',
 	setAsBaseRibbon: '',

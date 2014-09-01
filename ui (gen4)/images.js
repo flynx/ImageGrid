@@ -140,6 +140,9 @@ module.calcRelativeRotation = function(from, to){
 }
 
 
+
+/*********************************************************************/
+
 // cmp functions...
 // XXX is this the right way to seporate these???
 

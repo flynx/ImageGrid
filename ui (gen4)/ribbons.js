@@ -272,7 +272,7 @@ module.RibbonsPrototype = {
 	},
 	// Like .getRibbon(..) but returns ribbon index instead of the actual 
 	// ribbon object...
-	getRibbonIndex: function(target){
+	getRibbonOrder: function(target){
 		return this.viewer.find('.ribbon').index(this.getRibbon(target))
 	},
 
@@ -411,7 +411,7 @@ module.RibbonsPrototype = {
 	placeRibbon: function(target, position){
 		// get create the ribbon...
 		var ribbon = this.getRibbon(target)
-		var i = this.getRibbonIndex(ribbon)
+		var i = this.getRibbonOrder(ribbon)
 		ribbon = ribbon.length == 0 ? this.createRibbon(target) : ribbon
 
 		var ribbons = this.viewer.find('.ribbon')
@@ -420,7 +420,7 @@ module.RibbonsPrototype = {
 			position = position < 0 ? ribbons.length + position + 1 : position
 			position = position < 0 ? 0 : position
 		} else {
-			var p = this.getRibbonIndex(position)
+			var p = this.getRibbonOrder(position)
 			// XXX what do we do if the target does not exist, i.e. p == -1 ????
 		}
 
@@ -544,6 +544,8 @@ module.RibbonsPrototype = {
 	// If this is set to true image previews will be loaded synchronously...
 	load_img_sync: false,
 	//
+	// XXX this depends on .images...
+	// 		...a good candidate to move to images, but not yet sure...
 	updateImage: function(image, gid, size, sync){
 		image = (image == '*' ? this.viewer.find('.image')
 			: image == null 

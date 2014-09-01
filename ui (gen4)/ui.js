@@ -33,6 +33,9 @@ var ribbons = require('ribbons')
 var testing = require('testing')
 
 
+var client = require('client')
+
+
 
 /*********************************************************************/
 
