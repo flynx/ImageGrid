@@ -3,6 +3,9 @@
 * Data generation 4 implementation.
 *
 *
+* XXX might be a good idea to make a set of universal argument parsing 
+* 	utils...
+*
 **********************************************************************/
 
 define(function(require){ var module = {}

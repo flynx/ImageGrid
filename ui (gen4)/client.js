@@ -97,18 +97,30 @@ proxyMethods(ClientPrototype)
 
 
 // XXX auto apply this...
-function chainSelfAttrMethods(cls, attr, meth){
+function chainSelfAttrMethod(cls, attr, name, func){
 		return function(){
 			// NOTE: this is super, python-style but without multiple 
 			// 		inheritance...
 			// 		...that last part makes this more of a code reuse 
 			// 		than a programming tool...
-			cls.__proto__[meth].apply(this, arguments)
+			cls.__proto__[name].apply(this, arguments)
 			// call the encapsulated method...
-			this[attr][meth].apply(this[attr], arguments)
+			this[attr][name].apply(this[attr], arguments)
+			if(func != null){
+				return func.apply(this, arguments)
+			}
 			return this
 		}),
 }
+
+function chainSelfAttrMethods(obj, map){
+	for(var attr in map){
+		var methods = map[attr]
+		for(var name in methods){
+			obj[name] = doc(methods[name], chainSelfAttrMethod(obj, attr, name))
+		}
+	}
+} 
 
 
 var ViewerPrototype = {
@@ -116,13 +128,13 @@ var ViewerPrototype = {
 	//
 	// 	.ribbons
 	//
-
-	focusImage: doc('Focus image', 
-		chainSelfAttrMethods(ViewerPrototype, 'ribbons', 'focusImage')),
-	focusRibbon: doc('Focus ribbon',
-		chainSelfAttrMethods(ViewerPrototype, 'ribbons', 'focusRibbon')),
-
 }
+chainSelfAttrMethods(ViewerPrototype, {
+	ribbons: {
+		focusImage: 'Focus image', 
+		focusRibbon: 'Focus ribbon',
+	},
+})
 ViewerPrototype.__proto__ = ClientPrototype
 
 
