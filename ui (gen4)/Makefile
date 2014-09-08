@@ -111,9 +111,9 @@ zip: $(APP_ZIP)
 #**********************************************************************
 # dev env...
 
+# see: package.json for a list...
 node-deps:
-	npm install fs.extra
-#	npm install exif
+	npm install
 
 dev: $(CSS_FILES)
 	#unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
