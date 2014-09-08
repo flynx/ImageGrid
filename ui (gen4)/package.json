@@ -16,7 +16,7 @@
 
 	"webkit": {
 		"page-cache": true
-	}
+	},
 
 	"dependencies": {
 		"requirejs": "*",
