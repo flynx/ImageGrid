@@ -110,7 +110,7 @@ function chainSelfAttrMethod(cls, attr, name, func){
 				return func.apply(this, arguments)
 			}
 			return this
-		}),
+		}
 }
 
 function chainSelfAttrMethods(obj, map){

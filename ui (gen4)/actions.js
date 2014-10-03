@@ -7,132 +7,7 @@
 define(function(require){ var module = {}
 console.log('>>> actions')
 
-
-
-/*********************************************************************/
-//
-// Might also be a good idea to add "relative terms" to be used as 
-// arguments for actions (a-la jQuery collections):
-//
-// 	Image			- current image
-// 		.next(<offset> | 'all')
-// 		.prev(..)
-// 	Ribbon			- ribbon or ribbon images
-// 		.next(..)
-// 		.prev(..)
-//
-// 	Images			- all images
-// 	Marked			- marked images
-// 	Bookmarked		- bookmarked images
-//
-//
-// NOTE: these can also beused as a basis for actions...
-//
-//
-/*********************************************************************/
-
-// XXX test the context if it's a jQuery object use it's interface and 
-// 		if it's a events.EventEmitter instance use that...
-var fireEvent =
-module.fireEvent =
-function(context, name, args){
-	var EventEmitter = nodejs != null 
-		? nodejs.require('events').EventEmitter 
-		: null
-
-	// jQuery event...
-	if(typeof(context) == typeof('str')
-			|| (jQuery != null 
-				&& context instanceof jQuery)){
-		var c = $(context)
-			.trigger(name, args)
-
-	// node event...
-	} else if(EventEmitter != null && context instanceof EventEmitter){
-		var c = context
-			.emit.apply(context, [name].concat(args))
-
-	} else {
-		console.error('Incompatible event context type:', context)
-	}
-	return c
-}
-
-
-// NOTE: context is dynamic.
-var Action =
-module.Action = 
-function Action(context, name, doc, code){
-	var action = function(){
-		var args = args2array(arguments)
-		var c = fireEvent(context, name + '.pre', args)
-
-		// run compound action content...
-		if(code != null){
-			// code is a function...
-			if(typeof(code) == typeof(function(){})){
-				code.apply(this, [c].concat(args))
-
-			// code is an object...
-			} else {
-				for(var a in code){
-					var sargs = code[a]
-					sargs = sargs.constructor.name != 'Array' ? [sargs] : sargs
-					this[a].apply(this, sargs)
-				}
-			}
-		}
-
-		fireEvent(c, name, args)
-		fireEvent(c, name + '.post', args)
-		return c
-	}
-	action.doc = doc == null ? name : doc
-	return action
-}
-
-
-// if actions is given this will extend that action object, else a new 
-// action object will be created.
-//
-// names format:
-// 	{
-// 		// basic action...
-// 		<action-name>: <doc>,
-//
-// 		// compound action...
-// 		<action-name>: [<doc>, {
-// 			<action-name>: <args>,
-// 			...
-// 		}],
-//
-// 		// compound action with a JS function...
-// 		<action-name>: [<doc>, 
-// 			// this is run in the context of the action set...
-// 			// NOTE: this will get the same arguments passed to the action
-// 			//		preceded with the action event context.
-// 			function(evt_context, ...){
-// 				...
-// 			}],
-//
-// 		...
-// 	}
-//
-//
-// NOTE: context is dynamic.
-var Actions =
-module.Actions = 
-function Actions(context, names, actions, mode){
-	actions = actions == null ? {} : actions
-	Object.keys(names).forEach(function(e){
-		var doc = names[e]
-		var code = doc.constructor.name == 'Array' ? doc[1] : null
-		doc = code != null ? doc : doc[0]
-
-		actions[e] = Action(context, e, doc, code, mode)
-	})
-	return actions
-}
+var actions = require('lib/actions')
 
 
 
@@ -228,14 +103,6 @@ module.BASE_ACTIONS = {
 }
 
 
-// XXX think of a better name...
-var setupBaseActions =
-module.setupBaseActions =
-function setupBaseActions(context, actions){
-	return Actions(context, BASE_ACTIONS, actions)
-}
-
-
 
 /*********************************************************************/
 
@@ -311,15 +178,6 @@ module.UI_ACTIONS = {
 }
 
 
-// XXX think of a better name...
-var setupUIActions =
-module.setupUIActions =
-function setupUIActions(context, actions){
-	return Actions(context, UI_ACTIONS, actions)
-}
-
-
-
 /*********************************************************************/
 
 // Marks actions...
@@ -359,12 +217,6 @@ module.MARKS_ACTIONS = {
 	placeMarkedDialog: '',
 }
 
-var setupMarksActions = 
-module.setupMarksActions = 
-function setupMarksActions(context, actions){
-	return Actions(context, MARKS_ACTIONS, actions)
-}
-
 
 
 /*********************************************************************/
@@ -390,13 +242,6 @@ module.BOOKMARKS_ACTIONS = {
 	cropBookmarkedImages: '',
 	cropBookmarkedImagesToSingleRibbon: '',
 }
-
-var setupBookmarksActions =
-module.setupBookmarksActions =
-function setupBookmarksActions(context, actions){
-	return Actions(context, BOOKMARKS_ACTIONS, actions)
-}
-
 
 
 

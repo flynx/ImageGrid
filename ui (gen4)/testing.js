@@ -81,11 +81,13 @@ module.setupActions = function(viewer, r){
 	viewer = viewer == null ? $('.viewer') : viewer
 	r = r == null ? makeTestRibbons(viewer, images) : r
 
+	/*
 	var a = actions.setupBaseActions(viewer, {})
 	actions.setupUIActions(viewer, a)
 	ribbons.setupActionHandlers(r, viewer, a)
 
 	return a
+	*/
 }
 
 
