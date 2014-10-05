@@ -18,11 +18,15 @@ define(function(require){ var module = {}
 // The action system consists of these parts:
 //
 // 1) documentation generation and introspection
+// 	XXX not all helpers are defined at this point...
 // 	
 //
 // 2) event-like callbacks for actions
 //
 // 		MyActions.on('action', function(){ ... })
+// 		MyActions.on('action.post', function(){ ... })
+//
+// 		MyActions.on('action.pre', function(){ ... })
 //
 //
 // 3) a mechanism to extend already defined actions
@@ -57,18 +61,12 @@ define(function(require){ var module = {}
 // 			}]
 // 		})
 //
-// 		// event-like callbacks for actions...
-// 		O.on('m', function(){...})
-// 		O.on('m.pre', function(){...})
-//
 //
 // Comparing to the native system:
 // 	+ no need to chain overloaded calls by hand (automatic)
-// 	+/- more restrictive -- no way to overload/shadow original action
-// 	+/- hidden the internals (.__proto__)
-// 	+ an event-like system enabling us to add handlers to actions at any
-// 	  point in the inheritance chain without the need to explicitly 
-// 	  overload an action at that level...
+// 	+/- more restrictive -- no way to prevent original actions from 
+// 	  running, i.e. no way to shadow.
+// 	+/- hidden the internals (.__proto__ assignment)
 // 	- more structural code (returning a callback vs. B.__proto__.m.call)
 // 		NOTE: that the Actions(..) call and lists containing functions
 // 			is not added complexity as they are mainly used for docs.
@@ -83,8 +81,11 @@ function args2array(args){
 	return Array.apply(null, args)
 }
 
+
 // collect all the handlers from the inheritance chain and arrange
 // them up-down, first defined to last...
+var _collect_handlers =
+module._collect_handlers =
 function _collect_handlers(obj, name){
 	var handlers = []
 	var cur = obj
@@ -115,11 +116,14 @@ function _collect_handlers(obj, name){
 
 // Construct an action object...
 //
-// Action format:
+// Action function format:
+//
+// 		// pre event code...
 // 		function(){
 //			... // pre code
 // 		}
 //
+// 		// pre/post event code...
 // 		function(){
 //			... // pre code
 //			return function(){
@@ -127,6 +131,7 @@ function _collect_handlers(obj, name){
 //			}
 // 		}
 //
+// 		// same as above but using a deferred instead of a callback...
 // 		function(){
 //			... // pre code
 //			return $.Deferred()
@@ -136,9 +141,6 @@ function _collect_handlers(obj, name){
 // 		}
 //
 //
-// NOTE: it is not possible to auto-generate Class.__proto__.meth(..) calls
-// 		without explicitly knowing the Class, thus using the overloading 
-// 		mechanism is not feasible until this is solved...
 var Action =
 module.Action =
 function Action(name, doc, ldoc, func){
@@ -161,6 +163,13 @@ function Action(name, doc, ldoc, func){
 		var args = args2array(arguments)
 
 		// get and call handlers -- pre phase...
+		//
+		// NOTE: using CLASS.__proto__[name].call(this, ...) here is not
+		// 		possible as there is no reliable way to get the "class" 
+		// 		the current method is referenced from.
+		// 		...searching the inheritance chain is not reliable as a
+		// 		method can be referenced more than once, both with the 
+		// 		same as well as under different names...
 		var handlers = _collect_handlers(this, name)
 			.map(function(h){ return h.apply(that, args) })
 
@@ -198,6 +207,7 @@ function Action(name, doc, ldoc, func){
 }
 
 
+// XXX .off(...) needs more work...
 var MetaActions =
 module.MetaActions = {
 	// List actions...
@@ -243,6 +253,7 @@ module.MetaActions = {
 	// 	'post'		- the handler is fired after the action is finished.
 	// 					this is the default.
 	//
+	// NOTE: 'post' mode is the default.
 	on: function(action, handler){
 		// prepare the handler...
 		var mode = action.split('.')
@@ -482,10 +493,21 @@ function test(){
 	TestActions2.testActionGen2()
 
 	// and an event-like handler...
-	TestActions2.on('testActionGen1', function(){ console.log('  post handler!') })
+	TestActions2.on('testActionGen1.post', 
+			function(){ console.log('  post handler! (first defined)') })
+	TestActions2.on('testActionGen1', 
+			function(){ console.log('  post handler! (last defined)') })
 
 	console.log('TestActions2.testActionGen1()')
 	TestActions2.testActionGen1()
+
+	TestActions2.on('testActionGen2.pre', 
+			function(){ console.log('  pre handler! (first defined)') })
+	TestActions2.on('testActionGen2.pre', 
+			function(){ console.log('  pre handler! (last defined)') })
+
+	console.log('TestActions2.testActionGen2()')
+	TestActions2.testActionGen2()
 }
 
 
