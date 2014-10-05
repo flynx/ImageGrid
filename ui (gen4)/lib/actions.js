@@ -59,6 +59,7 @@ define(function(require){ var module = {}
 //
 // 		// event-like callbacks for actions...
 // 		O.on('m', function(){...})
+// 		O.on('m.pre', function(){...})
 //
 //
 // Comparing to the native system:
@@ -88,12 +89,21 @@ function _collect_handlers(obj, name){
 	var handlers = []
 	var cur = obj
 	while(cur.__proto__ != null){
-		if(obj._action_handlers == null){
-			break
+		// get action "event" handlers...
+		if(cur.hasOwnProperty('_action_handlers') 
+				&& name in cur._action_handlers){
+			handlers.splice.apply(handlers,
+					[handlers.length, 0].concat(cur._action_handlers[name]))
 		}
-		if(cur.hasOwnProperty('_action_handlers') && name in cur._action_handlers){
-			handlers.splice.apply(handlers, [0, 0].concat(cur._action_handlers[name]))
+
+		// get the overloading action...
+		// NOTE: this will get all the handlers including the root 
+		// 		and the current handlers...
+		// NOTE: this will ignore "shadows" that are not actions...
+		if(cur.hasOwnProperty(name) && cur[name] instanceof Action){
+			handlers.push(cur[name].func)
 		}
+
 		cur = cur.__proto__
 	}
 	return handlers
@@ -105,6 +115,30 @@ function _collect_handlers(obj, name){
 
 // Construct an action object...
 //
+// Action format:
+// 		function(){
+//			... // pre code
+// 		}
+//
+// 		function(){
+//			... // pre code
+//			return function(){
+//				... // post code
+//			}
+// 		}
+//
+// 		function(){
+//			... // pre code
+//			return $.Deferred()
+//				.done(function(){
+//					... // post code
+//				})
+// 		}
+//
+//
+// NOTE: it is not possible to auto-generate Class.__proto__.meth(..) calls
+// 		without explicitly knowing the Class, thus using the overloading 
+// 		mechanism is not feasible until this is solved...
 var Action =
 module.Action =
 function Action(name, doc, ldoc, func){
@@ -126,30 +160,30 @@ function Action(name, doc, ldoc, func){
 		var that = this
 		var args = args2array(arguments)
 
-		// normal handlers -- pre phase...
+		// get and call handlers -- pre phase...
 		var handlers = _collect_handlers(this, name)
 			.map(function(h){ return h.apply(that, args) })
 
-		// call the action...
-		var res = func.apply(this, args)
+		// NOTE: this action will get included and called by the code 
+		// 		above and below...
 
-		// simple post callback...
-		//_collect_handlers(this, name)
-		//	.forEach(function(h){ return h.apply(that, args) })
-
-		// normal handlers -- post phase...
-		handlers.forEach(function(h){ 
-			// pre-callback returned a function...
+		// call handlers -- post phase...
+		// NOTE: post handlers need to get called last run pre first run post...
+		handlers.reverse().forEach(function(h){ 
+			// function...
 			if(h instanceof Function){
-				h.call(that, res)
+				//h.call(that, res)
+				h.call(that)
 
-			// pre-callback returned an object with a .resolve(..) method...
+			// deferred...
 			} else if(h != null && h.resolve instanceof Function){
-				h.resolve(res)
+				//h.resolve(res)
+				h.resolve()
 			} 
 		})
 
-		return res
+		//return res
+		return this
 	}
 	meth.__proto__ = this.__proto__
 
@@ -157,6 +191,8 @@ function Action(name, doc, ldoc, func){
 	meth.name = name
 	meth.doc = doc
 	meth.long_doc = ldoc
+
+	meth.func = func
 
 	return meth
 }
@@ -235,7 +271,8 @@ module.MetaActions = {
 		}
 		// register a handler only once...
 		if(this._action_handlers[action].indexOf(handler) < 0){
-			this._action_handlers[action].push(handler)
+			// NOTE: last registered is first...
+			this._action_handlers[action].splice(0, 0, handler)
 		}
 		return this
 	},
@@ -274,6 +311,7 @@ module.MetaActions = {
 		return this
 	},
 }
+
 
 
 // Define an action set...
@@ -331,8 +369,8 @@ module.MetaActions = {
 // 		when the action is done.
 //
 // NOTE: the action, action pre-callback and post-callbacks will be 
-// 		called with the same context as the original callback and the 
-// 		action, i.e. the action set.
+// 		called with the same context (this) as the original callback 
+// 		and the action, i.e. the action set.
 //
 //
 var Actions =
@@ -354,18 +392,8 @@ function Actions(a, b){
 
 		var func = args.pop()
 
-		// if an action already exists then register the function as its
-		// callback...
-		if(proto != null 
-				&& k in proto 
-				&& proto[k] instanceof Action){
-			delete obj[k]
-			proto.on.call(obj, k+'.pre', func)
-
 		// create a new action...
-		} else {
-			obj[k] = new Action(k, args[0], args[0], func)
-		}
+		obj[k] = new Action(k, args[0], args[1], func)
 	})
 
 	if(proto != null){
@@ -377,7 +405,6 @@ function Actions(a, b){
 
 
 
-
 /*********************************************************************/
 
 var test =
@@ -386,15 +413,17 @@ function test(){
 	var TestActions = 
 	module.TestActions = 
 	Actions({
-
 		testActionGen1: ['baisc test action...',
 			'some extra info',
 			function(){
-				console.log('  test!')
+				console.log('  test 1!')
+				return function(){
+					console.log('  test 2!')
+				}
 			}],
 
 		testActionGen2: ['baisc 2\'nd gen test action...',
-			'some extra info',
+			// no extra info...
 			function(){
 				console.log('  test gen 2!')
 				this.testActionGen1()
@@ -404,7 +433,6 @@ function test(){
 	var TestActions2 = 
 	module.TestActions2 = 
 	Actions(TestActions, {
-
 		// NOTE: this looks like an action and feels like an action but 
 		// 		actually this is a callback as an action with this name 
 		// 		already exists...
@@ -416,6 +444,29 @@ function test(){
 		}],
 
 	})
+
+	// XXX the main question here is that there is no way to know if a 
+	// 		particular action is going to be a root action or an action
+	// 		callback because we do not know if the action in the parent 
+	// 		will be available at mix time or not, and the two models 
+	// 		are different...
+	// 		XXX one way to do this is to make all code a callback and 
+	// 			just use the root as an event trigger...
+	//
+	// 			...but this effectively means we are implementing 
+	// 			inheritance ourselves as the traditional name resolution
+	// 			will no longer be used, and as in the case we implement
+	// 			MRO why not go the whole way and implement multiple 
+	// 			inheritance in the first place...
+	//
+	// 			...let's try and avoid this...
+	/*
+	var TestActionMixin =
+	module.TestActionMixin = 
+	ActionMixin({
+		// XXX
+	})
+	*/
 
 
 	console.log('TestActions.testActionGen1()')
@@ -436,7 +487,6 @@ function test(){
 	console.log('TestActions2.testActionGen1()')
 	TestActions2.testActionGen1()
 }
-
 
 
 

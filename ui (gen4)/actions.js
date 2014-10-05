@@ -43,13 +43,110 @@ var SCREEN_IMAGES = null
 
 
 /*********************************************************************/
+//
+// Contexts:
+// 				Browser		node		node-webkit		PhoneGap
+// 	UI			o			x			o				o
+// 	navigation	o			o			o				o
+// 	edit		o, x		o			o, x			o, x
+//
+//
+// The basic inheritance tree should be something like this:
+//
+//							.
+//					   Data . UI
+//							.
+//		MetaActions			.
+//			^				.
+//			|				.
+//			|				.
+// 		BaseActions			.
+// 			^	^			.
+// 			|	+------------------ UIActions
+//			|				.			^
+//			|				.			|	   -+
+// 		BaseMarks			.			|		|
+// 				^			.			|		| Plugin
+// 				+ - - - - -???- - - UIMarks		|
+//							.				   -+
+//							.
+//
+//
+// XXX Need a way to combine a set of features into a view, preferably
+// 		in runtime...
+// 			- turn feature on/off at load
+// 			- turn feature on/off in runtime
+//
+// XXX without multiple inheritance we'll need to either:
+//
+// 		- build inheritance chains per task -- i.e. connect blocks in 
+// 		  a custom way depending on use
+// 		  ...this makes it really hard to have two systems configured 
+// 		  differently in the same runtime...
+//
+// 		- build a multiple inheritance system
+// 		  ...without the ability to hook into attribute access this is
+// 		  not trivial... (feasibility unknown)
+//
+// 		- make the UI versions by copying methods from the base and UI 
+// 		  into a single object, effectively creating two separate chains
+// 		  ...auto-creating proxy methods is another way to implement this
+// 		  	+ solves the problem
+// 		  	- not dynamic -- changes have to be applied to both chains 
+// 		  	  rather than to a single relevant object.
+//
+// 		- encapsulate and proxy?
+//
+// 		- static mixin...
+//
+//
+// XXX actions should be split by feature
+//	 		- basic navigation
+// 			- basic editing
+// 			- cropping
+// 			- marking
+// 			- bookmarking
+// 			- tagging
+// 			- image editing
+// 			- url loading
+// 			- url saving
+// 			- fs loading
+// 			- fs saving
+// 		Features can be organized into contexts:
+// 			- browser viewer
+// 			- browser editor
+// 			- app viewer
+// 			- app editor
+//
+// XXX each plugin must be split into:
+// 		- UI view -- display only
+// 		- UI controls -- edit
+// 		- base actions -- usable without UI
+//
+// XXX think about life-cycle...
+//
+//
+/*********************************************************************/
 
-// XXX need a way to define compound actions...
-// 		- compound action is like a normal action with a set of other 
-// 			actions chanined to it's main event.
-// 		- actions should accept arguments, both optional and required
-var BASE_ACTIONS =
-module.BASE_ACTIONS = {
+var BaseActions =
+module.BaseActions = actions.Actions({
+	// state props...
+	get current(){
+		// XXX should this return a gid or a jQuery-like object for 
+		// 		image-oriented operations???
+		return this.data.current
+	},
+	set current(val){
+		return this.focusImage(val)
+	},
+
+	// life-cycle / state...
+	// XXX
+
+	// actions...
+	focusImage: '',
+	focusRibbon: '',
+
 	// basic editing...
 	shiftImageUp: 
 		'Shift image to the ribbon above current, creating one if '
@@ -100,16 +197,14 @@ module.BASE_ACTIONS = {
 	exportImages: '',
 
 	exit: '',
-}
+})
 
 
 
 /*********************************************************************/
 
-var UI_ACTIONS =
-module.UI_ACTIONS = {
-	focusImage: '',
-	focusRibbon: '',
+var UIActions =
+module.UIActions = {
 
 	// basic navigation...
 	nextImage: ['Focus next image in current ribbon', { focusImage: 'next' }],
