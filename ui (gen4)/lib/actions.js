@@ -82,35 +82,6 @@ function args2array(args){
 }
 
 
-// collect all the handlers from the inheritance chain and arrange
-// them up-down, first defined to last...
-var _collect_handlers =
-module._collect_handlers =
-function _collect_handlers(obj, name){
-	var handlers = []
-	var cur = obj
-	while(cur.__proto__ != null){
-		// get action "event" handlers...
-		if(cur.hasOwnProperty('_action_handlers') 
-				&& name in cur._action_handlers){
-			handlers.splice.apply(handlers,
-					[handlers.length, 0].concat(cur._action_handlers[name]))
-		}
-
-		// get the overloading action...
-		// NOTE: this will get all the handlers including the root 
-		// 		and the current handlers...
-		// NOTE: this will ignore "shadows" that are not actions...
-		if(cur.hasOwnProperty(name) && cur[name] instanceof Action){
-			handlers.push(cur[name].func)
-		}
-
-		cur = cur.__proto__
-	}
-	return handlers
-}
-
-
 
 /*********************************************************************/
 
@@ -170,7 +141,7 @@ function Action(name, doc, ldoc, func){
 		// 		...searching the inheritance chain is not reliable as a
 		// 		method can be referenced more than once, both with the 
 		// 		same as well as under different names...
-		var handlers = _collect_handlers(this, name)
+		var handlers = this.getHandlers(name)
 			.map(function(h){ return h.apply(that, args) })
 
 		// NOTE: this action will get included and called by the code 
@@ -232,6 +203,53 @@ module.MetaActions = {
 	// Number of defined actions...
 	get length(){
 		return this.actions.length
+	},
+
+	// get action documentation...
+	getDoc: function(actions){
+		var res = {}
+		var that = this
+		actions = actions == null ? this.actions() 
+			: typeof(actions) == typeof('str') ? [actions]
+			: actions
+		// get the first defined set of docs in the inheritance chain...
+		actions.forEach(function(n){
+			var cur = that
+			while(cur.__proto__ != null){
+				if(cur[n].doc != null){
+					res[n] = [ cur[n].doc, cur[n].long_doc ]
+					break
+				}
+				cur = cur.__proto__
+			}
+		})
+		return res
+	},
+
+	// collect all the handlers from the inheritance chain and arrange
+	// them up-down, first defined to last...
+	getHandlers: function(name){
+		var handlers = []
+		var cur = this
+		while(cur.__proto__ != null){
+			// get action "event" handlers...
+			if(cur.hasOwnProperty('_action_handlers') 
+					&& name in cur._action_handlers){
+				handlers.splice.apply(handlers,
+						[handlers.length, 0].concat(cur._action_handlers[name]))
+			}
+
+			// get the overloading action...
+			// NOTE: this will get all the handlers including the root 
+			// 		and the current handlers...
+			// NOTE: this will ignore "shadows" that are not actions...
+			if(cur.hasOwnProperty(name) && cur[name] instanceof Action){
+				handlers.push(cur[name].func)
+			}
+
+			cur = cur.__proto__
+		}
+		return handlers
 	},
 
 	// Register an action callback...
