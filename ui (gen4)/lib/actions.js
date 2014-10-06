@@ -131,12 +131,20 @@ function args2array(args){
 // 	  registered from the current object and up to the base action set
 // 	  will be fired.
 //
-// NOTE: actions once defined do not depend on the inheritance hierarchy,
-// 		but they do on the other hand depend on methods defined in the
-// 		MetaActions object.
-// 		XXX should this be the case???
+// NOTE: actions once defined do not depend on the inheritance hierarchy, 
+// 		other than the .getHandlers(..) method. If this method is not 
+// 		found in the inheritance chain (i.e. the link to MetaActions)
+// 		was severed, then the default will be used: 
+// 			MetaActions.getHandlers(..)
+// 		This makes it possible to redefine the method if needed but 
+// 		prevents the system from breaking when an action set gets 
+// 		disconnected from MetaActions. This can be useful, for example,
+// 		to remove .on(..) / .off(..) handler functionality.
+// 		XXX is this correct??
 // NOTE: by default an action will return 'this', i.e. the action set
 // 		object the action was called from.
+//
+// XXX do we need to return something from an action ever?
 var Action =
 module.Action =
 function Action(name, doc, ldoc, func){
@@ -158,6 +166,9 @@ function Action(name, doc, ldoc, func){
 		var that = this
 		var args = args2array(arguments)
 
+		var getHandlers = this.getHandlers
+		getHandlers = getHandlers == null ? MetaActions.getHandlers : getHandlers
+
 		// get and call handlers -- pre phase...
 		//
 		// NOTE: using CLASS.__proto__[name].call(this, ...) here is not
@@ -166,7 +177,7 @@ function Action(name, doc, ldoc, func){
 		// 		...searching the inheritance chain is not reliable as a
 		// 		method can be referenced more than once, both with the 
 		// 		same as well as under different names...
-		var handlers = this.getHandlers(name)
+		var handlers = getHandlers(name)
 			.map(function(h){ return h.apply(that, args) })
 
 		// NOTE: this action will get included and called by the code 
@@ -212,17 +223,11 @@ var MetaActions =
 module.MetaActions = {
 	// List actions...
 	//
-	// NOTE: this will only list all actions except the ones defined in 
-	// 		MetaActions, unless 'all' is set...
-	actions: function(all){
+	get actions(){
 		var res = []
 		for(var k in this){
 			// get only actions...
-			if(this[k] instanceof Action 
-					// if all is true, get all actions...
-					&& !all 
-					// if all is false, skip actions defined in MetaActions...
-					|| MetaActions.hasOwnProperty(k)){
+			if(this[k] instanceof Action){
 				res.push(k)
 			}
 		}
@@ -230,11 +235,13 @@ module.MetaActions = {
 	},
 
 	// Number of defined actions...
+	//
 	get length(){
 		return this.actions.length
 	},
 
-	// get action documentation...
+	// Get action documentation...
+	//
 	getDoc: function(actions){
 		var res = {}
 		var that = this
@@ -255,8 +262,9 @@ module.MetaActions = {
 		return res
 	},
 
-	// collect all the handlers from the inheritance chain and arrange
+	// Collect all the handlers from the inheritance chain and arrange
 	// them up-down, first defined to last...
+	//
 	getHandlers: function(name){
 		var handlers = []
 		var cur = this
@@ -280,6 +288,7 @@ module.MetaActions = {
 		}
 		return handlers
 	},
+
 
 	// Register an action callback...
 	//
