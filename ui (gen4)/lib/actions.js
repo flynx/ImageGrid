@@ -112,6 +112,31 @@ function args2array(args){
 // 		}
 //
 //
+// An action is essentially a method with several additional features:
+//
+// 	- actions are split into two stages:
+// 		pre: 	the code of the method is executed before the action 
+// 				event is fired
+// 		post:	if the action returns a callback function or a deferred
+// 				object it will be executed after the event is fired
+//
+// 	- actions automatically call the shadowed action, the pre stage is
+// 	  executed down-up while the post stage is run in reverse order, 
+// 	  i.e. the pre is going down and the post is going up.
+//
+// 	- actions provide an event-like mechanism to register handlers or 
+// 	  callbacks. These callbacks are local to a specific object and will
+// 	  be fired on action event/call starting from the current action 
+// 	  caller and down the inheritance chain, i.e. all event handlers 
+// 	  registered from the current object and up to the base action set
+// 	  will be fired.
+//
+// NOTE: actions once defined do not depend on the inheritance hierarchy,
+// 		but they do on the other hand depend on methods defined in the
+// 		MetaActions object.
+// 		XXX should this be the case???
+// NOTE: by default an action will return 'this', i.e. the action set
+// 		object the action was called from.
 var Action =
 module.Action =
 function Action(name, doc, ldoc, func){
@@ -178,6 +203,10 @@ function Action(name, doc, ldoc, func){
 }
 
 
+// A base action-set object...
+//
+// This will define a set of action-set specific methods and helpers.
+//
 // XXX .off(...) needs more work...
 var MetaActions =
 module.MetaActions = {
@@ -343,7 +372,7 @@ module.MetaActions = {
 
 
 
-// Define an action set...
+// An action set...
 //
 //	Actions(<object>)
 //	Actions(<prototype>, <object>)
@@ -375,33 +404,9 @@ module.MetaActions = {
 // 	}
 //
 //
-// An action definition can be processed in two different ways:
+// NOTE: if <prototype> is not given, MetaActions will be used as default.
 //
-// 	1) when no actions with <name> exist in the inheritance chain.
-// 		A new <name> action will be created.
-//
-// 		The action object will get .name, .doc and .long_doc attributes
-// 		set to the respective fields if they are defined and null if 
-// 		they are not.
-//
-// 	2) when action <name> is already defined in the inheritance chain.
-// 		A new <name> action callback will be registered in the current
-// 		action context (set).
-//
-// 		Documentation fields will be ignored (this might change in the 
-// 		future)
-//
-// 		This callback is called before the action (pre-callback).
-//
-// 		If the callback returns a deferred object or a function 
-// 		(post-callback) then it will get resolved, called respectively 
-// 		when the action is done.
-//
-// NOTE: the action, action pre-callback and post-callbacks will be 
-// 		called with the same context (this) as the original callback 
-// 		and the action, i.e. the action set.
-//
-//
+// For more documentation see: Action(..).
 var Actions =
 module.Actions =
 function Actions(a, b){
