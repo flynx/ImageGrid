@@ -370,6 +370,8 @@ var KEYBOARD_CONFIG = {
 					}),
 				ctrl: 'next-screen',
 			},
+		PgUp: 'next-screen',
+		PgDown: 'prev-screen',
 		'prev-screen': doc('Previous screen',
 				function(){ 
 					event.preventDefault()
