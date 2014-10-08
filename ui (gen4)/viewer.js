@@ -11,7 +11,20 @@ console.log('>>> viewer')
 
 
 /*********************************************************************/
+//
+// XXX Tasks to accomplish here:
+// 	- life-cycle actions/events
+// 		- setup
+// 		- reset
+// 	- "features" and the mechanism to turn them on or off (action-sets)
+//
+//
 
+var Client = {
+}
+
+var Viewer = {
+}
 
 
 

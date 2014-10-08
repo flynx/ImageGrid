@@ -15,38 +15,67 @@ define(function(require){ var module = {}
 // Actions are an extension to the JavaScript object model tailored for
 // a set of specific tasks.
 //
-// The action system consists of these parts:
+// Goals:
+// 	- provide a unified mechanism to define and manage user API's for 
+// 	  use in UI-hooks, keyboard mappings, scripting, ...
+// 	- a means to generate configuration UI's
+// 	- a means to generate documentation
 //
-// 1) documentation generation and introspection
-// 	XXX not all helpers are defined at this point...
+//
+// The main entities:
+//
+// 	Action set
+// 		- an object containing a number of actions,
+// 		- optionally, directly or indirectly inherited from MetaActions
+// 		  and/or other action sets,
+// 		- the action handlers are bound relative to it (._action_handlers)
+//
+// 	Action
+// 		- a method, created by Action(..),
+// 		- calls all the shadowed actions in the inheritance chain in 
+// 		  sequence implicitly,
+// 		  NOTE: there is no way to prevent an action in the chain from
+// 		  		running, this is by design, i.e. no way to full shadow.
+// 		- returns the action set (for call chaining),
+// 		- can consist of two parts: the first is called before the 
+// 		  shadowed action (pre-callback) and the second after (post-callback).
+// 		- can be bound to, a-la an event, calling the handlers when it is 
+// 		  called, 
+//
+// 	Action (event) handler
+//  	- a function,
+// 		- can be bound to run before and/or after the action itself,
+// 		- is local to an action set it was bound via,
+// 		- when an action is triggered from an action set, all the pre 
+// 		  handlers in its inheritance chain will be called before the 
+// 		  respective actions they are bound to and all the post handlers
+// 		  are called directly after.
+//
+//
+//
+// The action system provides three components:
+//
+// 1) Documentation generation and introspection (MetaActions)
+//
+// 		<action-set>.getDoc()
+// 		<action-set>.getDoc(<action-name>[, ..])
+// 				-> dict of action-name, doc
+//
+// 		<action-set>.actions
+// 				-> list of action names
 // 	
 //
-// 2) event-like callbacks for actions
+// 2) Event-like callbacks for actions (MetaActions, Action)
 //
-// 		MyActions.on('action', function(){ ... })
-// 		MyActions.on('action.post', function(){ ... })
+// 		<action-set>.on('action', function(){ ... })
+// 		<action-set>.on('action.post', function(){ ... })
 //
-// 		MyActions.on('action.pre', function(){ ... })
+// 		<action-set>.on('action.pre', function(){ ... })
 //
 //
-// 3) a mechanism to extend already defined actions
+// 3) A mechanism to define and extend already defined actions
 // 	This replaces / complements the standard JavaScript overloading 
-// 	mechanisms, here is a direct comparison:
-//
-//
-// 		// Native...
-// 		var X = {
-// 			m: function(){ console.log('m') }
-// 		}
-// 		var O = {
-// 			m: function(){
-// 				console.log('pre')
-// 				B.__proto__.m.call(this)
-// 				console.log('post')
-// 			}
-// 		}
-// 		O.__proto__ = X
-//
+// 	mechanisms (Action, Actions)
 //
 // 		// Actions...
 // 		var X = Actions({
@@ -61,15 +90,10 @@ define(function(require){ var module = {}
 // 			}]
 // 		})
 //
-//
-// Comparing to the native system:
-// 	+ no need to chain overloaded calls by hand (automatic)
-// 	+/- more restrictive -- no way to prevent original actions from 
-// 	  running, i.e. no way to shadow.
-// 	+/- hidden the internals (.__proto__ assignment)
-// 	- more structural code (returning a callback vs. B.__proto__.m.call)
-// 		NOTE: that the Actions(..) call and lists containing functions
-// 			is not added complexity as they are mainly used for docs.
+//	NOTE: what is done here is similar to calling O.__proto__.m.call(..)
+//		but is implicit, and not dependant on the original containing 
+//		object name/reference ('O'), thus enabling an action to be 
+//		referenced and called from any object and still chain correctly.
 //
 //
 //
@@ -246,6 +270,7 @@ module.MetaActions = {
 		var res = {}
 		var that = this
 		actions = actions == null ? this.actions() 
+			: arguments.length > 1 ? args2array(arguments)
 			: typeof(actions) == typeof('str') ? [actions]
 			: actions
 		// get the first defined set of docs in the inheritance chain...
@@ -262,9 +287,14 @@ module.MetaActions = {
 		return res
 	},
 
-	// Collect all the handlers from the inheritance chain and arrange
-	// them up-down, first defined to last...
+	// Get action handlers from the inheritance chain...
 	//
+	// NOTE: this collects both the event handlers (in order of hierarchy,
+	// 		then order of definition) and actions (in order of hierarchy)
+	// NOTE: this is the correct order for 'pre' calling, but is the 
+	// 		reverse of how the 'post' handlers must be called.
+	//
+	// For more docs on handler sequencing and definition see: .on(..)
 	getHandlers: function(name){
 		var handlers = []
 		var cur = this

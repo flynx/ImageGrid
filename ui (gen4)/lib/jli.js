@@ -231,6 +231,189 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 }
 
 
+// Make a generic toggler function/method...
+//
+// state_accessor signature:
+//
+// 	Get current state:
+// 	state_accessor()
+// 		-> <current-state>
+//
+// 	Set new state:
+// 	state_accessor(<new-state>)
+// 		-> <new-state>
+//
+// NOTE: for single state toggling, 'none' will get passed to 
+// 		state_accessor to indicate an "empty" state...
+//
+function makeToggler(state_accessor, states, callback_a, callback_b){
+	// normalize states...
+	states = typeof(states) == typeof('str') ? ['none', states] : states
+	// normalize the callbacks...
+	if(callback_b == null){
+		var callback_pre = null
+		var callback_post = callback_a
+	} else {
+		var callback_pre = callback_a
+		var callback_post = callback_b
+	}
+
+	var bool_action = (states.length == 2 && states[0] == 'none')
+
+	var func = function(a, b){
+		// so as to be able to distinguish between a method and a root 
+		// context in a simple manner...
+		'use strict'
+
+		// parse arguments...
+		if(b == null){
+			var action = a == 'next' ? null : a
+			// XXX is this correct???
+			var e = this
+		} else {
+			var e = a
+			var action = b == 'next' ? null : b
+		}
+
+		// option number...
+		if(typeof(action) == typeof(1)){
+			// range check...
+			if(action < 0 || action >= states.length){
+				return null
+			}
+			if(bool_action){
+				action = action == 0 ? 'off' : 'on'
+			} else {
+				action = states[action]
+			}
+		}
+
+		// we need to get the current state...
+		if(action == null || action == '?' || action == '!'){
+			// get current state...
+			var cur = state_accessor.call(e)
+
+			// just asking for info...
+			if(action == '?'){
+				return bool_action ? (cur == 'none' ? 'off' : 'on') : cur
+			}
+
+			// force reload of current state...
+			if(action == '!'){
+				action = bool_action ? (cur == 'none' ? 'off' : 'on') : cur
+			}
+
+		// invalid action...
+		} else if((bool_action && ['on', 'off'].indexOf(action) == -1)
+				|| (!bool_action && states.indexOf(action) == -1)){
+			return null
+		}
+
+		var state = bool_action ? states[1] : action
+		// get the right class...
+		if(action == null){
+			var i = states.indexOf(cur)+1
+			i = i == -1 ? 0 : i
+			i = i == states.length ? 0 : i
+			state = states[i]
+
+			if(bool_action){
+				action = state == 'none' ? 'off' : 'on'
+			} else {
+				action = state
+			}
+		}
+
+		// NOTE: the callbacks are passed the same this as the calling 
+		// 		function, this will enable them to act as metods correctly
+		// pre callback...
+		if(callback_pre != null){
+			if(callback_pre.apply(this, [action, e].concat(args)) === false){
+				//return
+				return func('?')
+			}
+		}
+
+		// update the element...
+		state_accessor.call(e, state)
+
+		// post callback...
+		if(callback_post != null){
+			callback_post.apply(this, [action, e].concat(args))
+		}
+
+		return action
+	}
+
+	func.states = states
+	if(bool_action){
+		func.doc = 'With no arguments this will toggle between "on" and '+
+			'"off".\n'+
+			'If either "on" or "off" are given then this will switch '+
+			'to that mode.\n'+
+			'If "?" is given, this will return either "on" or "off" '+
+			'depending on the current state.'
+	}else{
+		func.doc = 'With no arguments this will toggle between '+
+			states +' in cycle.\n' + 
+			'if any of the state names or its number is given then that '+
+			'state is switched on.'+
+			'If "?" is given, this will return the current state.'
+	}
+
+	return func
+}
+
+
+// XXX this should be drop-in compatible with createCSSClassToggler(..)
+// 		test and replace...
+function makeCSSClassToggler(elem, classes, callback_a, callback_b){
+	// normalize the states...
+	classes = typeof(classes) == typeof('str') ? ['none', classes] : classes
+	// remove the dot from class names...
+	// NOTE: this is here because I've made the error of including a 
+	// 		leading "." almost every time I use this after I forget 
+	// 		the UI...
+	classes = classes
+		.map(function(e){
+			return e.split(' ')
+				.map(function(c){
+					c = c.trim()
+					return c[0] == '.' ? c.slice(1) : c
+				}).join(' ')
+		})
+	
+	return makeToggler(
+		function(state){
+			var e = $(this == null ? elem : this)
+			// get the state...
+			if(state == null){
+				var cur = 'none'
+				for(var i=0; i < classes.length; i++){
+					// XXX make this faster by getting the class list once 
+					// 		and checking in that rather than doing a 
+					// 		.hasClass(..) per iteration...
+					if(e.hasClass(classes[i])){
+						cur = classes[i]
+						break
+					}
+				} 
+				return cur
+
+			// set the state...
+			} else {
+				e.removeClass(classes.join(' '))
+				if(state != 'none' && action != 'off'){
+					e.addClass(state)
+				}
+			}
+		}, 
+		classes, 
+		callback_a, 
+		callback_b)
+}
+
+
 
 /*
 // show a jQuary opject in viewer overlay...
@@ -1121,6 +1304,7 @@ Array.prototype.compact = function(){
 
 
 // like .length but for sparse arrays will return the element count...
+// XXX make this a prop...
 Array.prototype.len = function(){
 	return this.compact().length
 }
