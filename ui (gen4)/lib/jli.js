@@ -246,7 +246,11 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 // NOTE: for single state toggling, 'none' will get passed to 
 // 		state_accessor to indicate an "empty" state...
 //
-function makeToggler(state_accessor, states, callback_a, callback_b){
+// XXX technically we do not need both elem and state_accessor here, the
+// 		later is enough, but as strict mode is not stable enough (sometimes
+// 		works and sometimes does not), we can not reliably pass the element
+// 		via 'this'.
+function makeToggler(elem, state_accessor, states, callback_a, callback_b){
 	// normalize states...
 	states = typeof(states) == typeof('str') ? ['none', states] : states
 	// normalize the callbacks...
@@ -260,16 +264,18 @@ function makeToggler(state_accessor, states, callback_a, callback_b){
 
 	var bool_action = (states.length == 2 && states[0] == 'none')
 
+	// NOTE: this needs to be strict so as to be able to distinguish 
+	// 		between a method and a root context in a simple manner...
 	var func = function(a, b){
-		// so as to be able to distinguish between a method and a root 
-		// context in a simple manner...
+		// XXX for some magical reason this does not work...
 		'use strict'
 
 		// parse arguments...
 		if(b == null){
 			var action = a == 'next' ? null : a
 			// XXX is this correct???
-			var e = this
+			//var e = this
+			var e = elem
 		} else {
 			var e = a
 			var action = b == 'next' ? null : b
@@ -309,7 +315,7 @@ function makeToggler(state_accessor, states, callback_a, callback_b){
 			return null
 		}
 
-		var state = bool_action ? states[1] : action
+		var state = bool_action ? states[action == 'off' ? 0 : 1] : action
 		// get the right class...
 		if(action == null){
 			var i = states.indexOf(cur)+1
@@ -384,7 +390,9 @@ function makeCSSClassToggler(elem, classes, callback_a, callback_b){
 		})
 	
 	return makeToggler(
+		elem,
 		function(state){
+			'use strict'
 			var e = $(this == null ? elem : this)
 			// get the state...
 			if(state == null){
@@ -403,7 +411,7 @@ function makeCSSClassToggler(elem, classes, callback_a, callback_b){
 			// set the state...
 			} else {
 				e.removeClass(classes.join(' '))
-				if(state != 'none' && action != 'off'){
+				if(state != 'none' && state != 'off'){
 					e.addClass(state)
 				}
 			}

@@ -131,6 +131,7 @@ var SCREEN_IMAGES = null
 var BaseActions =
 module.BaseActions = actions.Actions({
 	// state props...
+	/*
 	get current(){
 		// XXX should this return a gid or a jQuery-like object for 
 		// 		image-oriented operations???
@@ -139,6 +140,7 @@ module.BaseActions = actions.Actions({
 	set current(val){
 		return this.focusImage(val)
 	},
+	*/
 
 	// life-cycle / state...
 	// XXX
