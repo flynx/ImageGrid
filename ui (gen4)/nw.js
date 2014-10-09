@@ -20,7 +20,7 @@ var browser = require('browser')
 //var data = require('data')
 
 window.toggleFullscreenMode = 
-module.toggleFullscreenMode = createCSSClassToggler(
+module.toggleFullscreenMode = makeCSSClassToggler(
 		document.body, 
 		'.full-screen-mode',
 		function(action){

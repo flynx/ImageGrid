@@ -99,6 +99,7 @@ var USE_3D_TRANSFORM = true
 // 		we are changing into but the changes are not yet made.
 // NOTE: if the pre-callback explicitly returns false, then the change will
 // 		not be made.
+/*
 function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 	var bool_action = false
 	if(typeof(class_list) == typeof('')){
@@ -229,6 +230,7 @@ function createCSSClassToggler(elem, class_list, callback_a, callback_b){
 
 	return func
 }
+*/
 
 
 // Make a generic toggler function/method...
@@ -280,6 +282,9 @@ function makeToggler(elem, state_accessor, states, callback_a, callback_b){
 			var e = a
 			var action = b == 'next' ? null : b
 		}
+
+		// XXX is this correct???
+		var args = args2array(arguments).slice(2)
 
 		// option number...
 		if(typeof(action) == typeof(1)){

@@ -37,7 +37,7 @@ module.exitFullscreen = function() {
 
 
 window.toggleFullscreenMode = 
-module.toggleFullscreenMode = createCSSClassToggler(
+module.toggleFullscreenMode = makeCSSClassToggler(
 		document.body, 
 		'.full-screen-mode',
 		function(action){
