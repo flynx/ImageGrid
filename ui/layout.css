@@ -129,7 +129,6 @@ button:hover {
   opacity: 0;
   z-index: 10000;
   /* node-webkit */
-
   -webkit-app-region: drag;
 }
 .title-bar:hover {
@@ -160,7 +159,6 @@ button:hover {
   font-size: 18px;
   vertical-align: middle;
   /* node-webkit */
-
   -webkit-app-region: no-drag;
 }
 .title-bar .button:hover {
@@ -181,7 +179,6 @@ button:hover {
   height: 100%;
   overflow: hidden;
   /*border: solid blue 1px;*/
-
   box-sizing: border-box;
   -moz-user-select: none;
   -webkit-user-select: none;
@@ -203,7 +200,6 @@ button:hover {
 		shift the element, when its dimensions change... 
 		...this is because .ribbon-set will both be used for scaling 
 		and aligning... */
-
   -webkit-transform-origin: top left;
   -ms-transform-origin: top left;
   transform-origin: top left;
@@ -244,7 +240,6 @@ button:hover {
   display: block;
   /* XXX BUG: setting this will mess up new ribbon creation....
 	display: inline-block;*/
-
   height: auto;
   min-width: 0px;
   overflow: visible;
@@ -253,7 +248,6 @@ button:hover {
   float: left;
   clear: both;
   /* XXX not still sure about this... */
-
   background: black;
   margin-top: 10px;
   margin-bottom: 10px;
@@ -328,13 +322,11 @@ button:hover {
   -ms-transform: rotate(270deg) scaleY(1) scaleX(1);
   transform: rotate(270deg) scaleY(1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
   opacity: 0.5;
 }
 .single-image-mode.viewer .marker {
@@ -364,13 +356,11 @@ button:hover {
   -ms-transform: rotate(90deg) scaleY(1) scaleX(1);
   transform: rotate(90deg) scaleY(1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="180"] {
   -webkit-transform: rotate(180deg) scaleY(1) scaleX(1);
@@ -379,13 +369,11 @@ button:hover {
   -ms-transform: rotate(180deg) scaleY(1) scaleX(1);
   transform: rotate(180deg) scaleY(1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="270"] {
   -webkit-transform: rotate(270deg) scaleY(1) scaleX(1);
@@ -394,13 +382,11 @@ button:hover {
   -ms-transform: rotate(270deg) scaleY(1) scaleX(1);
   transform: rotate(270deg) scaleY(1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 /* Flipped vertically only... */
 /* NOTE: wee need to do all possible combinations here as we can't 
@@ -413,13 +399,11 @@ button:hover {
   -ms-transform: rotate(0deg) scaleY(-1) scaleX(1);
   transform: rotate(0deg) scaleY(-1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="90"][flipped="vertical"] {
   -webkit-transform: rotate(90deg) scaleY(-1) scaleX(1);
@@ -428,13 +412,11 @@ button:hover {
   -ms-transform: rotate(90deg) scaleY(-1) scaleX(1);
   transform: rotate(90deg) scaleY(-1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="180"][flipped="vertical"] {
   -webkit-transform: rotate(180deg) scaleY(-1) scaleX(1);
@@ -443,13 +425,11 @@ button:hover {
   -ms-transform: rotate(180deg) scaleY(-1) scaleX(1);
   transform: rotate(180deg) scaleY(-1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="270"][flipped="vertical"] {
   -webkit-transform: rotate(270deg) scaleY(-1) scaleX(1);
@@ -458,13 +438,11 @@ button:hover {
   -ms-transform: rotate(270deg) scaleY(-1) scaleX(1);
   transform: rotate(270deg) scaleY(-1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 /* Flipped horizontally only... */
 .image[flipped*="horizontal"] {
@@ -474,13 +452,11 @@ button:hover {
   -ms-transform: rotate(0deg) scaleY(1) scaleX(-1);
   transform: rotate(0deg) scaleY(1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="90"][flipped="horizontal"] {
   -webkit-transform: rotate(90deg) scaleY(1) scaleX(-1);
@@ -489,13 +465,11 @@ button:hover {
   -ms-transform: rotate(90deg) scaleY(1) scaleX(-1);
   transform: rotate(90deg) scaleY(1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="180"][flipped="horizontal"] {
   -webkit-transform: rotate(180deg) scaleY(1) scaleX(-1);
@@ -504,13 +478,11 @@ button:hover {
   -ms-transform: rotate(180deg) scaleY(1) scaleX(-1);
   transform: rotate(180deg) scaleY(1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="270"][flipped="horizontal"] {
   -webkit-transform: rotate(270deg) scaleY(1) scaleX(-1);
@@ -519,13 +491,11 @@ button:hover {
   -ms-transform: rotate(270deg) scaleY(1) scaleX(-1);
   transform: rotate(270deg) scaleY(1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 /* Flipped vertically and horizontally... */
 .image[flipped*="vertical"][flipped*="horizontal"] {
@@ -535,13 +505,11 @@ button:hover {
   -ms-transform: rotate(0deg) scaleY(-1) scaleX(-1);
   transform: rotate(0deg) scaleY(-1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="90"][flipped*="vertical"][flipped*="horizontal"] {
   -webkit-transform: rotate(90deg) scaleY(-1) scaleX(-1);
@@ -550,13 +518,11 @@ button:hover {
   -ms-transform: rotate(90deg) scaleY(-1) scaleX(-1);
   transform: rotate(90deg) scaleY(-1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="180"][flipped*="vertical"][flipped*="horizontal"] {
   -webkit-transform: rotate(180deg) scaleY(-1) scaleX(-1);
@@ -565,13 +531,11 @@ button:hover {
   -ms-transform: rotate(180deg) scaleY(-1) scaleX(-1);
   transform: rotate(180deg) scaleY(-1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="270"][flipped*="vertical"][flipped*="horizontal"] {
   -webkit-transform: rotate(270deg) scaleY(-1) scaleX(-1);
@@ -580,13 +544,11 @@ button:hover {
   -ms-transform: rotate(270deg) scaleY(-1) scaleX(-1);
   transform: rotate(270deg) scaleY(-1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 /* default backgrounds */
 /* XXX not sure if we need these... 
@@ -725,7 +687,6 @@ button:hover {
 /* new gen marks... */
 .mark {
   /* this fully covers the image to simplify positioning of actual marks */
-
   margin-left: -300px;
   border: none;
 }
@@ -808,13 +769,11 @@ button:hover {
   -ms-transform: rotate(-90deg) scaleY(1) scaleX(1);
   transform: rotate(-90deg) scaleY(1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="180"] .inline-image-info {
   top: 0px;
@@ -825,13 +784,11 @@ button:hover {
   -ms-transform: rotate(180deg) scaleY(1) scaleX(1);
   transform: rotate(180deg) scaleY(1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="270"] .inline-image-info {
   top: auto;
@@ -846,13 +803,11 @@ button:hover {
   -ms-transform: rotate(90deg) scaleY(1) scaleX(1);
   transform: rotate(90deg) scaleY(1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 /* compensate for flipping... */
 /* XXX START: I hate this code, will think if a better way to do this... */
@@ -863,13 +818,11 @@ button:hover {
   -ms-transform: rotate(0deg) scaleY(1) scaleX(-1);
   transform: rotate(0deg) scaleY(1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="90"][flipped*="horizontal"] .inline-image-info {
   top: auto;
@@ -885,13 +838,11 @@ button:hover {
   -ms-transform: rotate(90deg) scaleY(1) scaleX(-1);
   transform: rotate(90deg) scaleY(1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="180"][flipped*="horizontal"] .inline-image-info {
   top: auto;
@@ -907,13 +858,11 @@ button:hover {
   -ms-transform: rotate(180deg) scaleY(1) scaleX(-1);
   transform: rotate(180deg) scaleY(1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="270"][flipped*="horizontal"] .inline-image-info {
   top: auto;
@@ -929,13 +878,11 @@ button:hover {
   -ms-transform: rotate(270deg) scaleY(1) scaleX(-1);
   transform: rotate(270deg) scaleY(1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[flipped*="vertical"] .inline-image-info {
   top: 0px;
@@ -946,13 +893,11 @@ button:hover {
   -ms-transform: rotate(0deg) scaleY(-1) scaleX(1);
   transform: rotate(0deg) scaleY(-1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="90"][flipped*="vertical"] .inline-image-info {
   top: auto;
@@ -968,13 +913,11 @@ button:hover {
   -ms-transform: rotate(-270deg) scaleY(-1) scaleX(1);
   transform: rotate(-270deg) scaleY(-1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="180"][flipped*="vertical"] .inline-image-info {
   top: auto;
@@ -990,13 +933,11 @@ button:hover {
   -ms-transform: rotate(180deg) scaleY(-1) scaleX(1);
   transform: rotate(180deg) scaleY(-1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="270"][flipped*="vertical"] .inline-image-info {
   top: auto;
@@ -1012,13 +953,11 @@ button:hover {
   -ms-transform: rotate(270deg) scaleY(-1) scaleX(1);
   transform: rotate(270deg) scaleY(-1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[flipped*="vertical"][flipped*="horizontal"] .inline-image-info {
   top: 0px;
@@ -1029,13 +968,11 @@ button:hover {
   -ms-transform: rotate(0deg) scaleY(-1) scaleX(-1);
   transform: rotate(0deg) scaleY(-1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="90"][flipped*="vertical"][flipped*="horizontal"] .inline-image-info {
   top: auto;
@@ -1051,13 +988,11 @@ button:hover {
   -ms-transform: rotate(-90deg) scaleY(-1) scaleX(-1);
   transform: rotate(-90deg) scaleY(-1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="180"][flipped*="vertical"][flipped*="horizontal"] .inline-image-info {
   top: auto;
@@ -1073,13 +1008,11 @@ button:hover {
   -ms-transform: rotate(180deg) scaleY(-1) scaleX(-1);
   transform: rotate(180deg) scaleY(-1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .image[orientation="270"][flipped*="vertical"][flipped*="horizontal"] .inline-image-info {
   top: auto;
@@ -1095,13 +1028,11 @@ button:hover {
   -ms-transform: rotate(90deg) scaleY(-1) scaleX(-1);
   transform: rotate(90deg) scaleY(-1) scaleX(-1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 /* XXX END */
 .overlay-info {
@@ -1178,13 +1109,11 @@ button:hover {
   -ms-transform: rotate(45deg) scaleY(1) scaleX(1);
   transform: rotate(45deg) scaleY(1) scaleX(1);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .down-indicator {
   top: auto;
@@ -1341,7 +1270,6 @@ button:hover {
 .single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-bookmarked,
 .single-image-mode.marks-visible.viewer .context-mode-indicators .current-image-marked {
   /*display: none;*/
-
   display: inline-block;
   text-decoration: line-through;
   opacity: 0.3;
@@ -1478,18 +1406,15 @@ progress:not(value)::-webkit-progress-bar {
 .single-image-mode.viewer .image {
   background-color: transparent;
   /* NOTE: need to keep a distance from screen borders... */
-
   border: solid transparent 2px;
 }
 .single-image-mode.viewer .image:not(.current) {
   /* XXX for some reason this breaks the alignment on large magnifications...
 	display: none;
 	*/
-
   /* XXX this makes images pass through the :visible filter...
 	opacity: 0;
 	*/
-
   visibility: hidden;
 }
 /********************************************************** Themes ***/
@@ -1567,13 +1492,11 @@ progress:not(value)::-webkit-progress-bar {
   -ms-transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
   transform: rotate(0deg) scaleY(0.7) scaleX(0.7);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 .small.viewer:not(.single-image-mode) .mark:after,
 .small.viewer:not(.single-image-mode) .marked.image:after {
@@ -1583,13 +1506,11 @@ progress:not(value)::-webkit-progress-bar {
   -ms-transform: rotate(0deg) scaleY(1.5) scaleX(1.5);
   transform: rotate(0deg) scaleY(1.5) scaleX(1.5);
   /* This prevents elements from aligning to sub-pixels...*/
-
   /*
 	-webkit-transform-style: preserve-3d;
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 	*/
-
 }
 /********************************************************* Overlay ***/
 .overlay-block {
@@ -1606,7 +1527,6 @@ progress:not(value)::-webkit-progress-bar {
 /* XXX this is experimental... */
 .viewer.overlay .ribbon-set {
   /* XXX blur makes things slow with transparency... */
-
   -webkit-filter: /*blur(2px)*/ grayscale(0.5);
   filter: /*blur(2px)*/ grayscale(0.5);
   /*
@@ -1618,13 +1538,11 @@ progress:not(value)::-webkit-progress-bar {
 	-webkit-animation-fill-mode: forwards;
 	-webkit-animation-delay: 0s;
 	*/
-
 }
 .overlay-block .content,
 .overlay-block .background {
   /* XXX for some magical reason position and top are overwritten 
 		with 'static' and 'auto' values respectively */
-
   position: absolute !important;
   top: 0px !important;
   left: 0px;
@@ -1656,13 +1574,10 @@ progress:not(value)::-webkit-progress-bar {
   min-height: 50px;
   min-width: 300px;
   /* XXX for some reason this is not sized correctly... */
-
   max-height: 90%;
   max-width: 90%;
   /* XXX this needs to be lower priority than max-height... */
-
   /*overflow-y: auto;*/
-
   color: white;
   border: solid silver 1px;
   border-radius: 3px;

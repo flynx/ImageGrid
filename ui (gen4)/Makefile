@@ -132,8 +132,10 @@ dev: $(CSS_FILES)
 
 # node-webkit win32
 win32: $(APP_ZIP) $(WIN_BUILD_DIR)
-	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) \
+	unzip -u targets/node-webkit/node-webkit-*-win-ia32.zip \
 		-d $(WIN_BUILD_DIR)
+	mv $(WIN_BUILD_DIR)/node-webkit*win-ia32/* $(WIN_BUILD_DIR)/	
+	rm -rf $(WIN_BUILD_DIR)/node-webkit*/	
 	cat $(APP_ZIP) >> $(WIN_BUILD_DIR)/nw.exe
 	mv $(WIN_BUILD_DIR)/nw.exe $(WIN_BUILD_DIR)/$(APP_NAME).exe
 	chmod +x $(WIN_BUILD_DIR)/*.{exe,dll}
