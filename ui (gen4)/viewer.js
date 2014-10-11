@@ -29,14 +29,18 @@ var Client =
 module.Client = 
 actions.Actions({
 
+	// XXX should this be here???
 	config: {
 		'steps-to-change-direction': 3,
 	},
+
 
 	// basic state...
 	// NOTE: the setters in the following use the appropriate actions
 	// 		so to avoid recursion do not use these in the specific 
 	// 		actions...
+
+	// Base ribbon...
 	get base(){
 		return this.data == null ? null : this.data.base
 	},
@@ -44,6 +48,7 @@ actions.Actions({
 		this.setBaseRibbon(value)
 	},
 
+	// Current image...
 	get current(){
 		return this.data == null ? null : this.data.current
 	},
@@ -51,6 +56,7 @@ actions.Actions({
 		this.focusImage(value)
 	},
 
+	// Current ribbon...
 	get currentRibbon(){
 		return this.data == null ? null : this.data.getRibbon()
 	},
@@ -58,15 +64,18 @@ actions.Actions({
 		this.focusRibbon(value)
 	},
 
-	// default direction
+	// Default direction...
 	//
-	// NOTE: the system has inertial direction change, after >N steps of 
-	// 		movement in one direction it takes N steps to reverse the
-	// 		default direction.
-	// 		the number of steps (N) is set in:
-	// 			.config['steps-to-change-direction']
+	// This can be 'left' or 'right', other values are ignored.
+	//
+	// The system has inertial direction change, after >N steps of 
+	// movement in one direction it takes N steps to reverse the default
+	// direction.
+	// The number of steps (N) is set in:
+	// 		.config['steps-to-change-direction']
+	//
 	// NOTE: to force direction change append a '!' to the direction.
-	// NOTE: values other than 'left'/'right' are ignored...
+	// 		e.g. X.direction = 'left!'
 	get direction(){
 		return this._direction >= 0 ? 'right'
 			: this._direction < 0 ? 'left'
@@ -76,13 +85,13 @@ actions.Actions({
 		// force direction change...
 		if(value.slice(-1) == '!'){
 			this._direction = value == 'left!' ? -1
-				: value == 'right!' : 0
+				: value == 'right!' ? 0
 				: this._direction
 
 		// 'update' direction...
 		} else {
 			value = value == 'left' ? -1 
-				: value == 'right' : 1
+				: value == 'right' ? 1
 				: 0
 			var d = (this._direction || 0) + value
 			var s = this.config['steps-to-change-direction']
@@ -94,10 +103,11 @@ actions.Actions({
 			d = d < -s ? -s : d
 			this._direction = d
 		}
-	}
+	},
 
 
 	// basic life-cycle actions...
+	//
 	ready: [
 		function(){
 			// XXX setup empty state...
@@ -113,6 +123,7 @@ actions.Actions({
 
 
 	// basic navigation...
+	//
 	focusImage: ['Focus image',
 		function(img){
 			this.data.focusImage(img)
@@ -186,6 +197,9 @@ actions.Actions({
 			}
 		}],
 	shiftImageDown: ['Shift image down',
+		'If implicitly shifting current image (i.e. no arguments), focus '
+			+'will shift to the next or previous image in the current '
+			+'ribbon depending on current direction.',
 		function(target){ 
 			// by default we need to update the current position...
 			if(target == null){
