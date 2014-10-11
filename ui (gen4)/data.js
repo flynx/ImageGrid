@@ -247,12 +247,9 @@ module.DataPrototype = {
 		prefix = prefix == null ? 'G' : prefix
 		var gid = prefix + Date.now()
 		while(this.ribbon_order.indexOf(gid) >= 0 
-				|| this.order.indexOf(gid) >= 0
-				|| this._gid_cache.indexOf(gid) >= 0){
+				|| this.order.indexOf(gid) >= 0){
 			gid = prefix + Date.now()
 		}
-		// XXX not sure if this is a good idea...
-		this._gid_cache.push(gid)
 		return gid
 	},
 	
@@ -1019,28 +1016,42 @@ module.DataPrototype = {
 	//
 	// NOTE: shiftImageUp/shiftImageDown will create new ribbons when 
 	// 		shifting from first/last ribbons respectively.
+	// NOTE: shiftImageUp/shiftImageUp will remove an empty ribbon after
+	// 		shifting the last image out...
 	// NOTE: none of these change .current
 	//
 	// XXX should these be here??
 	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') }, // Gen2
 	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') }, // Gen2
-	// XXX test...
 	shiftImageUp: function(gid){ 
 		var g = gid.constructor.name == 'Array' ? gid[0] : gid
+		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
-		if(this.getRibbonOrder(g) == 0){
+		if(r == 0){
 			this.newRibbon(g)
 		}
-		return this.shiftImage(gid, this.getRibbonOrder(g)-1) 
+		var res = this.shiftImage(gid, r-1) 
+		// clear empty ribbon...
+		if(this.ribbons[this.ribbon_order[r]].len() == 0){
+			r = this.ribbon_order.splice(r, 1)[0]
+			delete this.ribbons[r]
+		}
+		return res
 	},
-	// XXX test...
 	shiftImageDown: function(gid){ 
 		var g = gid.constructor.name == 'Array' ? gid[0] : gid
+		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
-		if(this.getRibbonOrder(g) == this.ribbon_order.length-1){
+		if(r == this.ribbon_order.length-1){
 			this.newRibbon(g, 'below')
 		}
-		return this.shiftImage(gid, this.getRibbonOrder(g)+1) 
+		var res = this.shiftImage(gid, r+1) 
+		// clear empty ribbon...
+		if(this.ribbons[this.ribbon_order[r]].len() == 0){
+			r = this.ribbon_order.splice(r, 1)[0]
+			delete this.ribbons[r]
+		}
+		return res
 	},
 
 	// Shift ribbon vertically...
@@ -1457,8 +1468,6 @@ module.DataPrototype = {
 		this.order = [] 
 		this.ribbon_order = [] 
 		this.ribbons = {}
-
-		this._gid_cache = []
 
 		return this
 	},

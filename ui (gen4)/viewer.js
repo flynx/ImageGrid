@@ -165,13 +165,15 @@ actions.Actions({
 	lastRibbon: ['Focus next ribbon',
 		function(){ this.focusRibbon('last') }],
 
+	// XXX check that going up/down must be stable and not drift to 
+	// 		adjacent images...
 	prevRibbon: ['Focus previous ribbon',
 		function(){ this.focusRibbon('before') }],
 	nextRibbon: ['Focus next ribbon',
 		function(){ this.focusRibbon('after') }],
 
 
-	// basic editing...
+	// basic ribbon editing...
 	//
 	// NOTE: for all of these, current/ribbon image is a default...
 	//
@@ -187,6 +189,9 @@ actions.Actions({
 
 				var cur = this.data.getImage()
 				var next = this.data.getImage(direction)
+				next = next == null 
+					? this.data.getImage(direction == 'next' ? 'prev' : 'next') 
+					: next
 
 				this.data.shiftImageUp(cur)
 				this.focusImage(next)
@@ -207,6 +212,9 @@ actions.Actions({
 
 				var cur = this.data.getImage()
 				var next = this.data.getImage(direction)
+				next = next == null 
+					? this.data.getImage(direction == 'next' ? 'prev' : 'next') 
+					: next
 
 				this.data.shiftImageDown(cur)
 				this.focusImage(next)
@@ -216,49 +224,70 @@ actions.Actions({
 				this.data.shiftImageDown(target)
 			}
 		}],
-	shiftImageUpNewRibbon: ['',
+	shiftImageUpNewRibbon: ['Shift image up to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target)
 			this.shiftImageUp(target)
 		}],
-	shiftImageDownNewRibbon: ['',
+	shiftImageDownNewRibbon: ['Shift image down to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target, 'below')
 			this.shiftImageUp(target)
 		}],
 	// XXX is tracking direction here correct???
-	shiftImageLeft: ['',
+	shiftImageLeft: ['Shift image left',
 		function(target){ 
 			if(target == null){
 				this.direction = 'left'
 			}
 			this.data.shiftImageLeft(target) 
-			// XXX is this the right way to go/???
 			this.focusImage()
 		}],
 	// XXX is tracking direction here correct???
-	shiftImageRight: ['',
+	shiftImageRight: ['Shift image right',
 		function(target){ 
 			if(target == null){
 				this.direction = 'right'
 			}
-			this.data.shiftImageLeft(target) 
-			// XXX is this the right way to go/???
+			this.data.shiftImageRight(target) 
 			this.focusImage()
 		}],
 
-	shiftRibbonUp: ['',
+	shiftRibbonUp: ['Shift ribbon up',
 		function(target){ 
 			this.data.shiftRibbonUp(target) 
 			// XXX is this the right way to go/???
 			this.focusImage()
 		}],
-	shiftRibbonDown: ['',
+	shiftRibbonDown: ['Shift ribbon down',
 		function(target){ 
 			this.data.shiftRibbonDown(target)
 			// XXX is this the right way to go/???
 			this.focusImage()
 		}],
+	
+	// XXX
+	sortImages: [
+		function(){  }],
+	// XXX
+	reverseImages: [
+		function(){  }],
+
+
+	// basic image editing...
+	//
+	// XXX
+	rotateCW: [ 
+		function(){  }],
+	rotateCCW: [ 
+		function(){  }],
+	flipVertical: [ 
+		function(){  }],
+	flipHorizontal: [
+		function(){  }],
+
+
+	// crop...
 })
 
 
@@ -355,12 +384,12 @@ actions.Actions(Client, {
 			this.ribbons.setBaseRibbon(r)
 		}],
 
-	// XXX
+	// XXX need screen width in images...
 	prevScreen: ['Focus previous image one screen width away',
 		function(){
 			// XXX
 		}],
-	// XXX
+	// XXX need screen width in images...
 	nextScreen: ['Focus next image one screen width away',
 		function(){
 			// XXX
@@ -369,36 +398,44 @@ actions.Actions(Client, {
 
 	// XXX
 	shiftImageUp: [
-		function(){
-			// XXX
+		function(target){
+			return function(){
+				// XXX this is cheating...
+				this.ribbons.updateData(this.data)
+				this.focusImage()
+			}
 		}],
 	shiftImageDown: [
-		function(){
-			// XXX
+		function(target){
+			return function(){
+				// XXX this is cheating...
+				this.ribbons.updateData(this.data)
+				this.focusImage()
+			}
 		}],
 	shiftImageUpNewRibbon: [
-		function(){
-			// XXX
+		function(target){
+			// XXX only create a new ribbon...
 		}],
 	shiftImageDownNewRibbon: [
-		function(){
-			// XXX
+		function(target){
+			// XXX only create a new ribbon...
 		}],
 	shiftImageLeft: [
-		function(){
-			// XXX
+		function(target){
+			this.ribbons.placeImage(target, -1)
 		}],
 	shiftImageRight: [
-		function(){
-			// XXX
+		function(target){
+			this.ribbons.placeImage(target, 1)
 		}],
 
 	shiftRibbonUp: [
-		function(){
+		function(target){
 			// XXX
 		}],
 	shiftRibbonDown: [
-		function(){
+		function(target){
 			// XXX
 		}],
 })

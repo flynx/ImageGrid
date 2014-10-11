@@ -102,6 +102,21 @@ module.GLOBAL_KEYBOARD = {
 		F: {
 			ctrl: 'F11',
 		},
+
+		// XXX testing...
+		Home: doc('', function(){ a.firstImage() }),
+		End: doc('', function(){ a.lastImage() }),
+		Left: doc('', function(){ a.prevImage() }),
+		Right: doc('', function(){ a.nextImage() }),
+		Up: {
+			default: doc('', function(){ a.prevRibbon() }),
+			shift: doc('', function(){ a.shiftImageUp() }),
+		},
+		Down: {
+			default: doc('', function(){ a.nextRibbon() }),
+			shift: doc('', function(){ a.shiftImageDown() }),
+		}
+
 	},
 }	
 

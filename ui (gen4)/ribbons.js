@@ -448,7 +448,13 @@ module.RibbonsPrototype = {
 	//	.placeImage(target, image, 'after')
 	//		-> image
 	//
-	// NOTE: mode is defaults to 'before'.
+	// Place target at ribbon start/end:
+	//	.placeImage(target, ribbon)
+	//	.placeImage(target, ribbon, 'before')
+	//	.placeImage(target, ribbon, 'after')
+	//		-> image
+	//
+	// NOTE: mode defaults to 'before'.
 	// NOTE: if image gid does not exist it will be created.
 	//
 	// XXX interaction animation...
@@ -458,6 +464,7 @@ module.RibbonsPrototype = {
 		mode = mode == null ? 'before' : mode
 		var img = this.getImage(target)
 		img = img.length == 0 ? this.createImage(target) : img
+		var r = this.getRibbon(to)
 
 		// offset on same ribbon...
 		if(typeof(to) == typeof(123)){
@@ -470,6 +477,19 @@ module.RibbonsPrototype = {
 			to = images.length > 0 
 				? images.eq(Math.min(Math.abs(i), images.length)-1) 
 				: img
+			if(to === img){
+				return to
+			}
+
+		// append/prepend to ribbon...
+		} else if(r.length > 0 && r.hasClass('ribbon')){
+			if(mode == 'before'){
+				r.append(img)
+			} else {
+				r.prepend(img)
+			}
+			return this.updateImage(img)
+
 		// relative to image...
 		} else {
 			var i = mode == 'before' ? -1 : 1
