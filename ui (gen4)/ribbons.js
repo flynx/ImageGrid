@@ -855,6 +855,10 @@ module.RibbonsPrototype = {
 		// clear all...
 		if(gids == null || gids == '*'){
 			this.viewer.find('.ribbon').remove()
+			// reset offsets...
+			this.viewer.find('.ribbon-set').css({
+				top: '',
+			})
 
 		// clear one or more gids...
 		} else {
@@ -888,23 +892,13 @@ module.RibbonsPrototype = {
 	// NOTE: overflowing offset will focus first/last image.
 	//
 	// XXX interaction animation...
-	focusImage: function(gid){
+	focusImage: function(target){
 		var cur = this.viewer
 			.find('.current.image')
-
-		// relative keywords...
-		gid = gid == 'next' ? 1
-			: gid == 'prev' ? -1
-			: gid
-
-		// offset...
-		if(typeof(gid) == typeof(123)){
-			return this.focusImage(this.getImage(gid))
-		}
+		var next = this.getImage(target)
 
 		cur.removeClass('current')
-		return this.getImage(gid)
-			.addClass('current')
+		return next.addClass('current')
 	},
 
 	// Set base ribbon...
@@ -1259,7 +1253,7 @@ module.RibbonsPrototype = {
 	// center an image horizontally...
 	// XXX
 	centerImage: function(target, mode, offset){
-		offset = offset == null ? this._getOffset(target) : offset
+		offset = offset == null ? this._getOffset(target, 'center', 'center', mode) : offset
 
 		// horizontal offset, current ribbon...
 		this.getRibbon(target)
@@ -1300,26 +1294,6 @@ function Ribbons(viewer, images){
 Ribbons.__proto__ = RibbonsClassPrototype
 Ribbons.prototype = RibbonsPrototype
 Ribbons.prototype.constructor = Ribbons
-
-
-
-/*********************************************************************/
-
-// XXX keep this here or move this to a different module???
-module.setupActionHandlers = function(ribbons, context, actions){
-
-	context.on('focusImage', function(evt, img){ 
-		img = ribbons.focusImage(img)
-		ribbons
-			.centerImage(img)
-			.centerRibbon(img)
-	})
-
-
-	// XXX this does not need focus ribbon handlers as the Data will 
-	// 		get those, chose an image and trigger the appropriate 
-	// 		focusImage event...
-}
 
 
 

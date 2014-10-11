@@ -201,7 +201,7 @@ function Action(name, doc, ldoc, func){
 		// 		...searching the inheritance chain is not reliable as a
 		// 		method can be referenced more than once, both with the 
 		// 		same as well as under different names...
-		var handlers = getHandlers(name)
+		var handlers = getHandlers.call(this, name)
 			.map(function(h){ return h.apply(that, args) })
 
 		// NOTE: this action will get included and called by the code 
@@ -250,6 +250,10 @@ module.MetaActions = {
 	get actions(){
 		var res = []
 		for(var k in this){
+			// avoid recursion...
+			if(k == 'actions' || k == 'length'){
+				continue
+			}
 			// get only actions...
 			if(this[k] instanceof Action){
 				res.push(k)
@@ -269,15 +273,16 @@ module.MetaActions = {
 	getDoc: function(actions){
 		var res = {}
 		var that = this
-		actions = actions == null ? this.actions() 
+		actions = actions == null ? this.actions
 			: arguments.length > 1 ? args2array(arguments)
 			: typeof(actions) == typeof('str') ? [actions]
 			: actions
 		// get the first defined set of docs in the inheritance chain...
 		actions.forEach(function(n){
 			var cur = that
+			res[n] = []
 			while(cur.__proto__ != null){
-				if(cur[n].doc != null){
+				if(cur[n] != null && cur[n].doc != null){
 					res[n] = [ cur[n].doc, cur[n].long_doc ]
 					break
 				}

@@ -312,6 +312,13 @@ module.DataPrototype = {
 	// 		NOTE: in both the above cases if gid|order is found explicitly
 	// 			it will be returned.
 	//
+	// 	Get next/prev image (offset of 1):
+	// 	.getImage('next')
+	// 	.getImage('prev')
+	// 	.getImage(gid|order, 'next'[, list|ribbon])
+	// 	.getImage(gid|order, 'prev'[, list|ribbon])
+	// 		-> gid
+	//
 	// 	Get image at an offset from a given image:
 	// 	.getImage(gid|order, offset[, list|ribbon])
 	// 		-> gid
@@ -398,6 +405,10 @@ module.DataPrototype = {
 				: offset > 0 ? 'after'
 				: mode
 			offset = Math.abs(offset)
+		} else if(mode == 'next'){
+			offset = 1
+		} else if(mode == 'prev'){
+			offset = -1
 		} else {
 			var offset = 0 
 			mode = mode == null ? 'before' : mode
@@ -620,6 +631,11 @@ module.DataPrototype = {
 	//	.getRibbon('current')
 	//		-> ribbon gid
 	//
+	//	Get first/last ribbon:
+	//	.getRibbon('first')
+	//	.getRibbon('last')
+	//		-> ribbon gid
+	//
 	//	Get base ribbon:
 	//	.getRibbon('base')
 	//		-> base ribbon gid
@@ -651,6 +667,13 @@ module.DataPrototype = {
 	// NOTE: this expects ribbon order and not image order.
 	getRibbon: function(target, offset){
 		target = target == null ? this.current : target
+
+		if(target == 'first'){
+			return this.ribbon_order[0]
+
+		} else if(target == 'last'){
+			return this.ribbon_order.slice(-1)[0]
+		}
 
 		if(target == 'before' || target == 'after'){
 			offset = target

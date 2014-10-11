@@ -22,9 +22,9 @@ var ribbons =
 module.ribbons = 
 	require('ribbons')
 
-var actions =
-module.actions = 
-	require('actions')
+var v =
+module.v = 
+	require('viewer')
 
 
 
@@ -77,17 +77,19 @@ module.loadTestRibbons = function(ribbons, data, images, viewer){
 
 
 var setupActions =
-module.setupActions = function(viewer, r){
+module.setupActions = function(viewer){
 	viewer = viewer == null ? $('.viewer') : viewer
-	r = r == null ? makeTestRibbons(viewer, images) : r
+	//r = r == null ? makeTestRibbons(viewer, images) : r
 
-	/*
-	var a = actions.setupBaseActions(viewer, {})
-	actions.setupUIActions(viewer, a)
-	ribbons.setupActionHandlers(r, viewer, a)
+	var vv = Object.create(v.Viewer)
 
-	return a
-	*/
+	vv.load({
+		data: data.Data(module.mock_data),
+		viewer: viewer,
+		images: makeTestImages(),
+	})
+
+	return vv
 }
 
 

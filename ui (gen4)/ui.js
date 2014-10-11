@@ -35,6 +35,8 @@ var testing = require('testing')
 
 var client = require('client')
 
+var viewer = require('viewer')
+
 
 
 /*********************************************************************/
@@ -117,9 +119,7 @@ $(function(){
 					window.DEBUG && console.log(k)
 				}))
 
-	// XXX 
-	window.r = testing.loadTestRibbons()
-	window.a = testing.setupActions(null, r)
+	window.a = testing.setupActions()
 })
 
 
