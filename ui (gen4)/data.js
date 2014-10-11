@@ -642,7 +642,9 @@ module.DataPrototype = {
 	//
 	//	Get ribbon before/after current 
 	//	.getRibbon('before')
+	//	.getRibbon('prev')
 	//	.getRibbon('after')
+	//	.getRibbon('next')
 	//		-> gid
 	//		-> null
 	//
@@ -674,6 +676,9 @@ module.DataPrototype = {
 		} else if(target == 'last'){
 			return this.ribbon_order.slice(-1)[0]
 		}
+
+		target = target == 'next' ? 'after' : target
+		target = target == 'prev' ? 'before' : target
 
 		if(target == 'before' || target == 'after'){
 			offset = target

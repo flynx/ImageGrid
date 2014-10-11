@@ -169,6 +169,10 @@ function args2array(args){
 // 		object the action was called from.
 //
 // XXX do we need to return something from an action ever?
+// XXX add more metadata/docs:
+// 		.section
+// 		.category
+// 		...
 var Action =
 module.Action =
 function Action(name, doc, ldoc, func){
@@ -462,7 +466,8 @@ function Actions(a, b){
 		var args = obj[k]
 
 		// skip non-arrays...
-		if(args.constructor !== Array 
+		if(args == null 
+				|| args.constructor !== Array 
 				// and arrays the last element of which is not a function...
 				|| !(args[args.length-1] instanceof Function)){
 			return
