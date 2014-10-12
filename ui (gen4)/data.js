@@ -379,7 +379,7 @@ module.DataPrototype = {
 		}
 
 		// normalize target...
-		if(target in this.ribbons || target.constructor.name == 'Array'){
+		if(target in this.ribbons || target.constructor === Array){
 			list = target
 			target = this.current
 		} else if(['before', 'after', 'next', 'prev'].indexOf(target) >= 0){
@@ -885,6 +885,7 @@ module.DataPrototype = {
 	// NOTE: this depends on setting length of an array, it works in 
 	// 		Chrome but will it work the same in other systems???
 	reverseImages: function(){
+		var ribbons = this.ribbons
 		this.order.reverse()
 		var l = this.order.length
 		for(k in ribbons){
@@ -1004,7 +1005,17 @@ module.DataPrototype = {
 
 				// update ribbons...
 				for(k in ribbons){
-					ribbons[k].splice(t+i, 0, ribbons[k].splice(f, 1)[0])
+					var e = ribbons[k].splice(f, 1)[0]
+					ribbons[k].splice(t+i, 0, e)
+					// remove the null/undefined if it was just inserted...
+					// NOTE: this needs to be done as splice inserts the 3'rd
+					// 		argument explicitly regardless of it's value,
+					// 		this if not done we'll end up with undefined 
+					// 		inserted into a sparse ribbon which will be
+					// 		considered as an element...
+					if(e == null){
+						delete ribbons[k][t+i]
+					}
 				}
 			}
 		}

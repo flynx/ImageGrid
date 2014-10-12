@@ -88,6 +88,12 @@ module.GLOBAL_KEYBOARD = {
 				}),
 			*/
 			'ctrl+shift': 'F5',
+
+			// XXX testing...
+			ctrl: function(){ 
+				event.preventDefault()
+				a.reverseImages() 
+			},
 		},
 		P: {
 			'ctrl+shift': 'F12',
@@ -104,20 +110,33 @@ module.GLOBAL_KEYBOARD = {
 		},
 
 		// XXX testing...
-		Home: doc('', function(){ a.firstImage() }),
-		End: doc('', function(){ a.lastImage() }),
-		Left: doc('', function(){ a.prevImage() }),
-		Right: doc('', function(){ a.nextImage() }),
+		Home: function(){ a.firstImage() },
+		End: function(){ a.lastImage() },
+		Left: {
+			default: function(){ a.prevImage() },
+			alt: function(){ a.shiftImageLeft() },
+		},
+		Right: {
+			default: function(){ a.nextImage() },
+			alt: function(){ a.shiftImageRight() },
+		},
 		Up: {
-			default: doc('', function(){ a.prevRibbon() }),
-			shift: doc('', function(){ a.shiftImageUp() }),
-			'ctrl+shift': doc('', function(){ a.shiftImageUpNewRibbon() }),
+			default: function(){ a.prevRibbon() },
+			shift: function(){ a.shiftImageUp() },
+			'ctrl+shift': function(){ a.shiftImageUpNewRibbon() },
 		},
 		Down: {
-			default: doc('', function(){ a.nextRibbon() }),
-			shift: doc('', function(){ a.shiftImageDown() }),
-			'ctrl+shift': doc('', function(){ a.shiftImageDownNewRibbon() }),
-		}
+			default: function(){ a.nextRibbon() },
+			shift: function(){ a.shiftImageDown() },
+			'ctrl+shift': function(){ a.shiftImageDownNewRibbon() },
+		},
+		'#0': function(){ a.fitImage(20) },
+		'#1': function(){ a.fitOrig() },
+		'#2': function(){ a.fitTwo() },
+		'#3': function(){ a.fitThree() },
+		'#4': function(){ a.fitFour() },
+		'#5': function(){ a.fitFive() },
+		
 
 	},
 }	

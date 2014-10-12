@@ -132,9 +132,21 @@ actions.Actions({
 		function(target){
 			var data = this.data
 			var r = data.getRibbon(target)
-			var t = data.getImage('current', r)
-			// XXX is there a 'last' special case???
-			t = t == null ? data.getImage('first', r) : t
+			if(r == null){
+				return
+			}
+			var c = data.getRibbonOrder()
+			var i = data.getRibbonOrder(r)
+
+			// NOTE: we are not changing the direction here based on 
+			// 		this.direction as swap will confuse the user...
+			var direction = c < i ? 'before' : 'after'
+
+			var t = data.getImage(r, direction)
+
+			// if there are no images in the requied direction, try the 
+			// other way...
+			t = t == null ? data.getImage(r, direction == 'before' ? 'after' : 'before') : t
 
 			this.focusImage(t, r)
 		}],
@@ -183,6 +195,9 @@ actions.Actions({
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
 		function(target){ 
+			// stop transitions...
+			this.ribbons.preventTransitions()
+
 			// by default we need to update the current position...
 			if(target == null){
 				var direction = this.direction == 'right' ? 'next' : 'prev'
@@ -200,12 +215,20 @@ actions.Actions({
 			} else {
 				this.data.shiftImageUp(target)
 			}
+
+			// restore transitions...
+			return function(){
+				this.ribbons.restoreTransitions()
+			}
 		}],
 	shiftImageDown: ['Shift image down',
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
 		function(target){ 
+			// stop transitions...
+			this.ribbons.preventTransitions()
+
 			// by default we need to update the current position...
 			if(target == null){
 				var direction = this.direction == 'right' ? 'next' : 'prev'
@@ -222,6 +245,11 @@ actions.Actions({
 			// if a specific target is given, just shift it...
 			} else {
 				this.data.shiftImageDown(target)
+			}
+		
+			// restore transitions...
+			return function(){
+				this.ribbons.restoreTransitions()
 			}
 		}],
 	shiftImageUpNewRibbon: ['Shift image up to a new empty ribbon',
@@ -269,9 +297,8 @@ actions.Actions({
 	// XXX
 	sortImages: [
 		function(){  }],
-	// XXX
 	reverseImages: [
-		function(){  }],
+		function(){ this.data.reverseImages() }],
 
 
 	// basic image editing...
@@ -288,6 +315,9 @@ actions.Actions({
 
 
 	// crop...
+	//
+	// XXX
+
 })
 
 
@@ -400,6 +430,51 @@ actions.Actions(Client, {
 			// XXX
 		}],
 
+	// zooming...
+	// XXX
+	zoomIn: ['Zoom in',
+		function(){  }],
+	zoomOut: ['Zoom out',
+		function(){  }],
+
+	fitOrig: ['Fit to original scale',
+		function(){ this.ribbons.setScale(1) }],
+
+	// NOTE: if this gets a count argument it will fit count images, 
+	// 		default is one.
+	// XXX animation broken for this...
+	fitImage: ['Fit image',
+		function(count){
+			this.ribbons.fitImage(count)
+			this.ribbons.updateImage('*')
+			//this.focusImage()
+		}],
+
+	// XXX should these be relative to screen rather than actual image counts?
+	fitTwo: ['Fit two images', function(){ this.fitImage(2) }],
+	fitThree: ['Fit three images', function(){ this.fitImage(3) }],
+	fitFour: ['Fit four images', function(){ this.fitImage(4) }],
+	fitFive: ['Fit five images', function(){ this.fitImage(5) }],
+	fitSix: ['Fit six images', function(){ this.fitImage(6) }],
+	fitSeven: ['Fit seven images', function(){ this.fitImage(7) }],
+	fitEight: ['Fit eight images', function(){ this.fitImage(8) }],
+	fitNine: ['Fit nine images', function(){ this.fitImage(9) }],
+
+	// XXX
+	fitMax: ['Fit the maximum number of images',
+		function(){  }],
+
+	// XXX
+	fitSmall: ['Show small image',
+		function(){  }],
+	// XXX
+	fitNormal: ['Show normal image',
+		function(){  }],
+	// XXX
+	fitScreen: ['Fit image to screen',
+		function(){  }],
+
+
 	// XXX
 	shiftImageUp: [
 		function(target){
@@ -415,16 +490,11 @@ actions.Actions(Client, {
 				this.reload()
 			}
 		}],
-	/* XXX these are not needed when reloading in .shiftImageUp(..) / .shiftImageDown(..)...
-	shiftImageUpNewRibbon: [
-		function(target){
-			// XXX only create a new ribbon...
-		}],
-	shiftImageDownNewRibbon: [
-		function(target){
-			// XXX only create a new ribbon...
-		}],
-	*/
+
+	// NOTE: .shiftImageDownNewRibbon(..) and .shiftImageUpNewRibbon(..)
+	// 		are not needed here when doing a reload on vertical 
+	// 		shifting...
+
 	shiftImageLeft: [
 		function(target){
 			this.ribbons.placeImage(target, -1)
@@ -442,6 +512,17 @@ actions.Actions(Client, {
 		function(target){
 			// XXX
 		}],
+
+	reverseImages: [
+		function(){ 
+			this.ribbons.preventTransitions()
+			return function(){ 
+				this.reload() 
+				this.ribbons.restoreTransitions()
+			}
+		}],
+
+
 })
 
 

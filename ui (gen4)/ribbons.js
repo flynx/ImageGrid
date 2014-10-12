@@ -169,6 +169,30 @@ module.RibbonsPrototype = {
 
 	// Helpers...
 
+	// XXX
+	preventTransitions: function(){
+		this.viewer.addClass('no-transitions')
+	},
+	restoreTransitions: function(now){
+		// sync...
+		if(now){
+			this.viewer.removeClass('no-transitions')
+
+		// on next exec frame...
+		} else {
+			var that = this
+			setTimeout(function(){
+				that.viewer.removeClass('no-transitions')}, 0)
+		}
+	},
+
+	noTransitions: function(func){
+		this.preventTransitions()
+		func.apply(this, args2array(arguments).slice(1))
+		this.restoreTransitions()
+	},
+
+
 	// Get visible image tile size...
 	//
 	//	.getVisibleImageSize()
@@ -187,11 +211,10 @@ module.RibbonsPrototype = {
 	//
 	// XXX try and make image size the product of vmin and scale...
 	// XXX is this the right place for this???
-	// XXX uses jli.js getElementScale(..)
 	getVisibleImageSize: function(dim){
 		dim = dim == null ? 'width' : dim
 		var img = this.viewer.find('.image')
-		var scale = getElementScale(this.viewer.find('.ribbon-set'))
+		var scale = this.getScale()
 		if(dim == 'height'){
 			return img.outerHeight(true) * scale
 		} else if(dim == 'width'){
@@ -201,6 +224,24 @@ module.RibbonsPrototype = {
 		} else if(dim == 'min'){
 			return Math.min(img.outerHeight(true), img.outerWidth(true)) * scale
 		}
+	},
+
+	getScreenWidthImages: function(scale){
+		var scale = scale == null ? 1 : scale/this.getScale()
+
+		var W = this.viewer.width()
+		var w = this.getVisibleImageSize('width')*scale
+
+		return W/w
+	},
+
+	// XXX uses jli.js getElementScale(..) / setElementScale(..)
+	getScale: function(){
+		return getElementScale(this.viewer.find('.ribbon-set'))
+	},
+	setScale: function(scale){
+		setElementScale(this.viewer.find('.ribbon-set'), scale)
+		return this
 	},
 
 
@@ -1202,10 +1243,13 @@ module.RibbonsPrototype = {
 	// NOTE: image_offset is applicable ONLY when both vertical and 
 	// 		horizontal are set to 'center', either explicitly or 
 	// 		implicitly (i.e. the default)
-	_getOffset: function(target, vertical, horizontal, image_offset){
+	// NOTE: this will get absolute results relative to screen, view 
+	// 		scaling will have no effect...
+	_getOffset: function(target, vertical, horizontal, image_offset, scale){
 		vertical = vertical == null ? 'center' : vertical
 		horizontal = horizontal == null ? 'center' : horizontal
 		image_offset = image_offset == null ? 'center' : image_offset
+		scale = scale == null ? this.getScale() : scale
 
 		if(vertical == 'before' || vertical == 'after'){
 			image_offset = vertical
@@ -1227,8 +1271,8 @@ module.RibbonsPrototype = {
 
 		var W = viewer.width()
 		var H = viewer.height()
-		var w = image.width()
-		var h = image.height()
+		var w = image.width() * scale
+		var h = image.height() * scale
 
 		image_offset = image_offset == 'before' ? w/2
 			: image_offset == 'after' ? -w/2
@@ -1258,9 +1302,11 @@ module.RibbonsPrototype = {
 		}
 	},
 	// center a ribbon vertically...
-	// XXX
-	centerRibbon: function(target, offset){
-		offset = offset == null ? this._getOffset(target) : offset
+	// 
+	centerRibbon: function(target, offset, scale){
+		offset = offset == null 
+			? this._getOffset(target, null, null, null, scale) 
+			: offset
 
 		// vertical offset...
 		this.viewer.find('.ribbon-set')
@@ -1271,22 +1317,34 @@ module.RibbonsPrototype = {
 		return this
 	},
 	// center an image horizontally...
-	// XXX
-	centerImage: function(target, mode, offset){
-		offset = offset == null ? this._getOffset(target, 'center', 'center', mode) : offset
+	// 
+	centerImage: function(target, mode, offset, scale){
+		scale = scale == null ? this.getScale() : scale
+		offset = offset == null 
+			? this._getOffset(target, 'center', 'center', mode, scale) 
+			: offset
 
 		// horizontal offset, current ribbon...
 		this.getRibbon(target)
 			.css({
-				left: offset.left
+				left: offset.left / scale,
 			})
 
 		return this
 	},
 
 	// XXX
-	fitNImages: function(n){
-		// XXX
+	fitImage: function(n){
+		n = n == null ? 1 : n
+
+		var scale = this.getScreenWidthImages(1) / n
+
+		this
+			.setScale(scale)
+			//.centerRibbon(null, null, scale)
+			//.centerImage(null, null, null, scale)
+		
+		return this
 	},
 
 

@@ -1325,7 +1325,8 @@ Array.prototype.len = function(){
 
 // convert JS arguments to Array...
 function args2array(args){
-	return Array.apply(null, args)
+	//return Array.apply(null, args)
+	return [].slice.call(args)
 }
 
 

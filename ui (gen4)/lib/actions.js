@@ -101,8 +101,10 @@ define(function(require){ var module = {}
 // helpers...
 
 // XXX
-function args2array(args){
-	return Array.apply(null, args)
+if(typeof(args2array) != 'function'){
+	function args2array(args){
+		return [].slice.call(args)
+	}
 }
 
 
@@ -209,7 +211,7 @@ function Action(name, doc, ldoc, func){
 			.map(function(h){ return h.apply(that, args) })
 
 		// NOTE: this action will get included and called by the code 
-		// 		above and below...
+		// 		above and below, so no need to explicitly call func...
 
 		// call handlers -- post phase...
 		// NOTE: post handlers need to get called last run pre first run post...
@@ -519,12 +521,18 @@ function test(){
 		// NOTE: this looks like an action and feels like an action but 
 		// 		actually this is a callback as an action with this name 
 		// 		already exists...
-		testActionGen1: [function(){
-			console.log('  pre callback!')
-			return function(){
-				console.log('  post callback!')
-			}
-		}],
+		testActionGen1: [
+			function(){
+				console.log('  pre callback!')
+				return function(){
+					console.log('  post callback!')
+				}
+			}],
+
+		testAction2: ['this is an action',
+			function(){
+				console.log('testAction2 args:', arguments)
+			}],
 
 	})
 

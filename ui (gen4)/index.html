@@ -5,6 +5,49 @@
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/editor.css">
 
+<!-- XXX remove before use... -->
+<style>
+
+.image:after {
+	content: attr(gid);
+	display: block;
+	position: relative;
+	color: red;
+	margin: 10px;
+	width: 20px;
+	height: 20px;
+	text-align: center;
+	border: solid 2px red;
+	border-radius: 50%;
+	background: black;
+}
+
+.image.current {
+	border-color: red;
+}
+
+/* basic animation... */
+.viewer:not(.no-transitions) .ribbon-set {
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+.viewer:not(.no-transitions) .ribbon {
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+}
+
+.no-transitions {
+  -webkit-transition: none;
+  -moz-transition: none;
+  transition: none;
+}
+
+
+</style>
+
 <!--script>
 require('nw.gui').Window.get().showDevTools()
 </script-->
