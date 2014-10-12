@@ -232,7 +232,7 @@ actions.Actions({
 	shiftImageDownNewRibbon: ['Shift image down to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target, 'below')
-			this.shiftImageUp(target)
+			this.shiftImageDown(target)
 		}],
 	// XXX is tracking direction here correct???
 	shiftImageLeft: ['Shift image left',
@@ -320,6 +320,11 @@ actions.Actions(Client, {
 				this.focusImage()
 			}
 		}],
+	reload: [
+		function(){
+			this.ribbons.updateData(this.data)
+			this.focusImage()
+		}],
 	clear: [
 		// XXX do we need to delete the ribbons???
 		function(){
@@ -395,24 +400,22 @@ actions.Actions(Client, {
 			// XXX
 		}],
 
-
 	// XXX
 	shiftImageUp: [
 		function(target){
 			return function(){
 				// XXX this is cheating...
-				this.ribbons.updateData(this.data)
-				this.focusImage()
+				this.reload()
 			}
 		}],
 	shiftImageDown: [
 		function(target){
 			return function(){
 				// XXX this is cheating...
-				this.ribbons.updateData(this.data)
-				this.focusImage()
+				this.reload()
 			}
 		}],
+	/* XXX these are not needed when reloading in .shiftImageUp(..) / .shiftImageDown(..)...
 	shiftImageUpNewRibbon: [
 		function(target){
 			// XXX only create a new ribbon...
@@ -421,6 +424,7 @@ actions.Actions(Client, {
 		function(target){
 			// XXX only create a new ribbon...
 		}],
+	*/
 	shiftImageLeft: [
 		function(target){
 			this.ribbons.placeImage(target, -1)

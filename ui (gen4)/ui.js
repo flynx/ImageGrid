@@ -111,10 +111,12 @@ module.GLOBAL_KEYBOARD = {
 		Up: {
 			default: doc('', function(){ a.prevRibbon() }),
 			shift: doc('', function(){ a.shiftImageUp() }),
+			'ctrl+shift': doc('', function(){ a.shiftImageUpNewRibbon() }),
 		},
 		Down: {
 			default: doc('', function(){ a.nextRibbon() }),
 			shift: doc('', function(){ a.shiftImageDown() }),
+			'ctrl+shift': doc('', function(){ a.shiftImageDownNewRibbon() }),
 		}
 
 	},
