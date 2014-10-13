@@ -334,12 +334,12 @@ module.MetaActions = {
 	// Register an action callback...
 	//
 	//	Register a post action callback
-	// 	.on('action', <function>)
-	// 	.on('action.post', <function>)
+	// 	.on('action', [<tag>, ]<function>)
+	// 	.on('action.post', [<tag>, ]<function>)
 	// 		-> <action-set>
 	//
 	// 	Register a pre action callback
-	// 	.on('action.pre', <function>)
+	// 	.on('action.pre', [<tag>, ]<function>)
 	// 		-> <action-set>
 	//
 	// Modes:
@@ -350,8 +350,17 @@ module.MetaActions = {
 	// 	'post'		- the handler is fired after the action is finished.
 	// 					this is the default.
 	//
+	// The optional tag marks the handler to enable group removal via 
+	// .off(..)
+	//
 	// NOTE: 'post' mode is the default.
-	on: function(action, handler){
+	//
+	// XXX add something like text tags to events (extra arg) to enable
+	// 		simple and fast handler removal...
+	on: function(action, b, c){
+		var handler = typeof(c) == 'function' ? c : b
+		var tag = typeof(c) == 'function' ? b : c
+
 		// prepare the handler...
 		var mode = action.split('.')
 		action = mode[0]
@@ -367,8 +376,11 @@ module.MetaActions = {
 
 		// mot pre mode...
 		} else if(mode != 'pre') {
+			// XXX
 			throw 'Unknown action mode: '+action+'.'+mode
 		}
+
+		handler.tag = tag
 
 		// register handlers locally only...
 		if(!this.hasOwnProperty('_action_handlers')){
@@ -387,34 +399,53 @@ module.MetaActions = {
 
 	// Remove an action callback...
 	//
-	// XXX this will not work for explicit <action>.post...
+	// XXX needs more testing...
 	off: function(action, handler){
 		if(this.hasOwnProperty('_action_handlers')){
-			var mode = action.split('.')
-			action = mode[0]
-			mode = mode[1]
+			if(action == '*'){
+				var actions = Object.keys(this._action_handlers)
+			} else {
+				var actions = [action]
+			}
+			var that = this
+			actions.forEach(function(action){
+				var mode = action.split('.')
+				action = mode[0]
+				mode = mode[1]
 
-			// get the handlers...
-			var h = this._action_handlers[action]
+				// get the handlers...
+				var h = that._action_handlers[action]
 
-			var i = -1
-			if(mode == null || mode == 'post'){
-				// XXX find via e.orig_handler == handler && e.mode == 'post'
-				h.forEach(function(e, j){
-					// NOTE: we will only get the first match...
-					if(e.orig_handler == handler && i == -1){
-						i = j
+				// remove explicit handler...
+				if(typeof(handler) == 'function'){
+					var i = -1
+					if(mode == null || mode == 'post'){
+						// XXX find via e.orig_handler == handler && e.mode == 'post'
+						h.forEach(function(e, j){
+							// NOTE: we will only get the first match...
+							if(e.orig_handler === handler && i == -1){
+								i = j
+							}
+						})
+
+					} else if(mode == 'pre'){
+						i = h.indexOf(handler)
 					}
-				})
 
-			} else if(mode == 'pre'){
-				i = h.indexOf(handler)
-			}
+					// NOTE: unknown modes are skipped...
+					if(i >= 0){
+						h.splice(i, 1)
+					}
 
-			// NOTE: unknown modes are skipped...
-			if(i >= 0){
-				h.splice(i, 1)
-			}
+				// remove handlers by tag...
+				} else {
+					// filter out everything that mathches a tag in-place...
+					h.splice.apply(h, 
+							[0, h.length]
+								.concat(h.filter(function(e){ 
+									return e.tag != handler })))
+				}
+			})
 		}
 		return this
 	},

@@ -278,6 +278,8 @@ module.RibbonsPrototype = {
 		return this
 	},
 
+	// XXX make this work for multiple targets...
+	// XXX avoid ardcoded delays...
 	makeShadow: function(target, animate){
 		var img = this.getImage(target)
 		var gid = this.getElemGID(img)

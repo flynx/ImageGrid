@@ -549,23 +549,36 @@ actions.Actions(Client, {
 
 
 
-var setupAnimation =
-module.setupAnimation =
-function setupAnimation(actions){
-	var animate = function(target){
-			var s = this.ribbons.makeShadow(target, true)
-			return function(){ s() }
-		}
-	var noanimate = function(target){
-			var s = this.ribbons.makeShadow(target)
-			return function(){ s() }
-		}
-	return actions
-		.on('shiftImageUp.pre', animate)
-		.on('shiftImageDown.pre', animate)
-		.on('shiftImageLeft.pre', noanimate)
-		.on('shiftImageRight.pre', noanimate)
+/*********************************************************************/
+// XXX do a simple feature framework...
+// 		...need something like:
+// 			Features(['feature_a', 'feature_b'], action).setup()
+
+var Animation =
+module.Animation = {
+	tag: 'animation_handler',
+
+	setup: function(actions){
+		var animate = function(target){
+				var s = this.ribbons.makeShadow(target, true)
+				return function(){ s() }
+			}
+		var noanimate = function(target){
+				var s = this.ribbons.makeShadow(target)
+				return function(){ s() }
+			}
+		var tag = this.tag
+		return actions
+			.on('shiftImageUp.pre', tag, animate)
+			.on('shiftImageDown.pre', tag, animate)
+			.on('shiftImageLeft.pre', tag, noanimate)
+			.on('shiftImageRight.pre', tag, noanimate)
+	},
+	remove: function(actions){
+		return actions.off('*', this.tag)
+	}
 }
+
 
 
 /**********************************************************************

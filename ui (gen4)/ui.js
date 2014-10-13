@@ -163,7 +163,7 @@ $(function(){
 
 	window.a = testing.setupActions()
 
-	viewer.setupAnimation(a)
+	viewer.Animation.setup(a)
 })
 
 
