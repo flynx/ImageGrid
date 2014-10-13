@@ -114,11 +114,17 @@ module.GLOBAL_KEYBOARD = {
 		End: function(){ a.lastImage() },
 		Left: {
 			default: function(){ a.prevImage() },
-			alt: function(){ a.shiftImageLeft() },
+			alt: function(){ 
+				event.preventDefault()
+				a.shiftImageLeft() 
+			},
 		},
 		Right: {
 			default: function(){ a.nextImage() },
-			alt: function(){ a.shiftImageRight() },
+			alt: function(){ 
+				event.preventDefault()
+				a.shiftImageRight() 
+			},
 		},
 		Up: {
 			default: function(){ a.prevRibbon() },
@@ -156,6 +162,8 @@ $(function(){
 				}))
 
 	window.a = testing.setupActions()
+
+	viewer.setupAnimation(a)
 })
 
 

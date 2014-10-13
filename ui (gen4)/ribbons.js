@@ -239,10 +239,72 @@ module.RibbonsPrototype = {
 	getScale: function(){
 		return getElementScale(this.viewer.find('.ribbon-set'))
 	},
-	setScale: function(scale){
-		setElementScale(this.viewer.find('.ribbon-set'), scale)
+	// XXX need work on alignment after scaling...
+	// 		...this may require:
+	// 			- setting origin
+	// 			- using translate instead of top to position ribbon-set...
+	//
+	// 		Origin needs to be at the point on .ribbon-set that coresponds 
+	// 		to the point on screen that we need to scale relative to (i.e. 
+	// 		a fixed point).
+	//
+	// 		The problem here is that setting the origin messes up the 
+	// 		positioning (removing the top/left css attrs), thus a different
+	// 		strategy is needed to control positioning...
+	//
+	// 		One of the folowing approaches might work:
+	// 			- use translate for placement of the .ribbon-set (prefered)
+	// 			- use an extra eleemnt for positioning and keep the 
+	// 			  .ribbon-set at (0,0)
+	setScale: function(scale, t, l){
+		var ribbon_set = this.viewer.find('.ribbon-set')
+
+		var s = this.getScale()
+
+		if(t == null){
+			var img = this.getImage()
+			t = img.offset()
+			l = t.left + (img.width()/s)/2
+			t = t.top + (img.height()/s)/2
+		}
+
+		var ro = ribbon_set.offset()
+
+		var ot = t - ro.top
+		var ol = l - ro.left
+		setElementOrigin(ribbon_set, ol+'px', ot+'px')
+			
+		setElementScale(ribbon_set, scale)
 		return this
 	},
+
+	makeShadow: function(target, animate){
+		var img = this.getImage(target)
+		var gid = this.getElemGID(img)
+		var shadow = $('<div>')
+			.addClass('shadow')
+			.append(img
+					.clone()
+					.removeClass('current')
+					.attr('gid', null))
+			.css(img.offset())
+			.appendTo(this.viewer)
+		img.addClass('moving')
+		var that = this
+
+		return function(){
+			var img = that.getImage(gid)
+			if(animate){
+				shadow.css(img.offset())
+			}
+			setTimeout(function(){
+				img.removeClass('moving')
+				shadow.remove()
+			}, 200)
+			return img
+		}
+	},
+
 
 
 	// Contextual getters...
@@ -1333,7 +1395,10 @@ module.RibbonsPrototype = {
 		return this
 	},
 
-	// XXX
+	// XXX need work on alignment after scaling...
+	// 		...this may require:
+	// 			- setting origin
+	// 			- using translate instead of top to position ribbon-set...
 	fitImage: function(n){
 		n = n == null ? 1 : n
 

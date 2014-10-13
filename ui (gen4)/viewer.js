@@ -262,7 +262,6 @@ actions.Actions({
 			this.data.newRibbon(target, 'below')
 			this.shiftImageDown(target)
 		}],
-	// XXX is tracking direction here correct???
 	shiftImageLeft: ['Shift image left',
 		function(target){ 
 			if(target == null){
@@ -271,7 +270,6 @@ actions.Actions({
 			this.data.shiftImageLeft(target) 
 			this.focusImage()
 		}],
-	// XXX is tracking direction here correct???
 	shiftImageRight: ['Shift image right',
 		function(target){ 
 			if(target == null){
@@ -438,16 +436,28 @@ actions.Actions(Client, {
 		function(){  }],
 
 	fitOrig: ['Fit to original scale',
-		function(){ this.ribbons.setScale(1) }],
+		function(){ 
+			//this.ribbons.preventTransitions()
+
+			this.ribbons.setScale(1) 
+			this.ribbons.updateImage('*')
+
+			//this.focusImage()
+			//this.ribbons.restoreTransitions()
+		}],
 
 	// NOTE: if this gets a count argument it will fit count images, 
 	// 		default is one.
 	// XXX animation broken for this...
 	fitImage: ['Fit image',
 		function(count){
+			//this.ribbons.preventTransitions()
+
 			this.ribbons.fitImage(count)
 			this.ribbons.updateImage('*')
+
 			//this.focusImage()
+			//this.ribbons.restoreTransitions()
 		}],
 
 	// XXX should these be relative to screen rather than actual image counts?
@@ -523,8 +533,39 @@ actions.Actions(Client, {
 		}],
 
 
+	// basic image editing...
+	//
+	// XXX
+	rotateCW: [ 
+		function(){  }],
+	rotateCCW: [ 
+		function(){  }],
+	flipVertical: [ 
+		function(){  }],
+	flipHorizontal: [
+		function(){  }],
+
 })
 
+
+
+var setupAnimation =
+module.setupAnimation =
+function setupAnimation(actions){
+	var animate = function(target){
+			var s = this.ribbons.makeShadow(target, true)
+			return function(){ s() }
+		}
+	var noanimate = function(target){
+			var s = this.ribbons.makeShadow(target)
+			return function(){ s() }
+		}
+	return actions
+		.on('shiftImageUp.pre', animate)
+		.on('shiftImageDown.pre', animate)
+		.on('shiftImageLeft.pre', noanimate)
+		.on('shiftImageRight.pre', noanimate)
+}
 
 
 /**********************************************************************
