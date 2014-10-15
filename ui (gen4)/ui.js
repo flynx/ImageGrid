@@ -142,6 +142,10 @@ module.GLOBAL_KEYBOARD = {
 		'#3': function(){ a.fitThree() },
 		'#4': function(){ a.fitFour() },
 		'#5': function(){ a.fitFive() },
+		'#6': function(){ a.fitSix() },
+		'#7': function(){ a.fitSeven() },
+		'#8': function(){ a.fitEight() },
+		'#9': function(){ a.fitNine() },
 		
 
 	},

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<style>
+
+.container {
+	position: absolute;
+	top: 200px;
+	left: 400px;
+	width: 400px;
+	height: 400px;
+	border: dashed 1px black;
+}
+
+.container-center {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 10px;
+	height: 10px;
+
+	border-top: solid 1px black;
+	border-left: solid 1px black;
+}
+.container-center:after {
+	content: "";
+	position: absolute;
+	top: -11px;
+	left: -11px;
+	width: 10px;
+	height: 10px;
+
+	border-top: none;
+	border-left: none;
+	border-bottom: solid 1px black;
+	border-right: solid 1px black;
+}
+
+.block {
+	position: absolute;
+	top: auto;
+	left: auto;
+	width: 300px;
+	height: 300px;
+	background: silver;
+
+	opacity: 0.8;
+}
+
+.point, .point-old {
+	position: absolute;
+	width: 4px;
+	height: 4px;
+	border: solid 1px blue;
+	margin-top: -2px;
+	margin-left: -2px;
+
+	transition-origin: 50% 50%;
+}
+.point-old {
+	opacity: 0.3;
+}
+
+.block, .point {
+	-webkit-transition: all 0.2s linear;
+	-moz-transition: all 0.2s linear;
+	transition: all 0.2s linear;
+}
+
+</style>
+
+<script src="../ext-lib/jquery.js"></script>
+<script src="../ext-lib/jquery-ui.js"></script>
+
+<script src="../lib/jli.js"></script>
+
+<script>
+
+function setOffset(l, t){
+	setElementOffset($('.block'), l, t)
+}
+
+function setScale(s){
+	setElementScale($('.block'), s)
+	setElementScale($('.point'), 1/s)
+	setElementScale($('.point-old'), 1/s)
+}
+
+// The goal of the experiment is to make this do it's thing without 
+// changing element's screen position
+//
+// XXX this does not work of position is negative...
+function setOrigin(l, t, no_comp){
+	var block = $('.block')
+	var o = getElementOrigin(block)
+
+	if(!no_comp){
+		var s = getElementScale(block)
+
+		var offset = getElementOffset(block)
+
+		// calculate the offset change and compensate...
+		// XXX this breaks with negative values...
+		//		- starts moving around
+		//		- the secondary pointer goes crazy...
+		var cl = offset.left + ((o.left - o.left*s) - (l - l*s))
+		var ct = offset.top + ((o.top - o.top*s) - (t - t*s))
+
+		setElementOffset(block, cl, ct)
+	}
+
+	setElementOrigin(block, l+'px', t+'px')
+
+	setElementOffset($('.point'), l, t)
+	setElementOffset($('.point-old'), o.left, o.top)
+}
+
+
+// center a specific point (default: origin)
+//
+// NOTE: scale indicates the source coordinate scale, if set to 1 t and 
+//		l will 1:1 to screen, and if set the the same scale as the element
+//		then t and l will be 1:1 to the element...
+//		supported keywords:
+//			'screen'
+//			'elem'
+function centerBlock(l, t, scale){
+	scale = scale == true || scale == 'screen' ? 1 
+		: scale == 'elem' ? null
+		: scale
+
+	var s = getElementScale(block)
+	var block = $('.block')
+	var offset = getElementOffset(block)
+	
+	var bo = block.offset()
+	var co = $('.container').offset()
+
+	var W = $('.container').width()
+	var H = $('.container').height()
+
+	var o = getElementOrigin(block)
+
+	// normalize the l,t to element scale...
+	if(l != null && t != null){
+		l = scale != null ? (l/s)*scale : l
+		t = scale != null ? (t/s)*scale : t
+
+		var w = block.width()
+		var h = block.height()
+		o = {
+			top: t*s + (h - h*s) / (w / o.left), 
+			left: l*s + (w - w*s) / (h / o.left),
+		}
+	}
+
+	var dl = offset.left + (W/2 - offset.left) - o.left
+	var dt = offset.top + (H/2 - offset.top) - o.top
+
+	setOffset(dl, dt)
+}
+
+
+$(function(){
+	setOrigin(100, 100)
+	setOffset(50, 100)
+	setScale(0.7)
+})
+
+</script>
+
+<body>
+
+<div class="container">
+	<div class="block">
+		<div class="point" title="current origin point"> </div>
+		<div class="point-old" title="previous origin point"> </div>
+	</div>
+	<div class="container-center"> </div>
+</div>
+
+</body>
+</html>
+<!-- vim:set ts=4 sw=4 : -->

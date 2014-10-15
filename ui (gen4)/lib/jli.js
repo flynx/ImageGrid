@@ -509,6 +509,19 @@ function makeCSSVendorAttrGetter(attr, dfl, callback){
 }
 
 
+
+var getElementOrigin = makeCSSVendorAttrGetter(
+		'transformOrigin',
+		{top: 0, left: 0},
+		function(data){
+			res = /([0-9.]*(px|%)) ([0-9.]*(px|%))/.exec(data)
+			return {
+				left: res[1].slice(-2) == 'px' ? parseFloat(res[1]) : res[1],
+				top: res[3].slice(-2) == 'px' ? parseFloat(res[3]) : res[3],
+			}
+		})
+
+
 // Return a scale value for the given element(s).
 // NOTE: this will only return a single scale value...
 var getElementScale = makeCSSVendorAttrGetter(
@@ -519,7 +532,7 @@ var getElementScale = makeCSSVendorAttrGetter(
 		})
 
 
-var getElementShift = makeCSSVendorAttrGetter(
+var getElementOffset = makeCSSVendorAttrGetter(
 		'transform',
 		{left: 0, top: 0},
 		function(data){
@@ -544,7 +557,7 @@ function setElementTransform(elem, offset, scale, duration){
 	var t3d = USE_3D_TRANSFORM ? 'translate3d(0,0,0)' : ''
 
 	if(offset == null){
-		offset = getElementShift(elem)
+		offset = getElementOffset(elem)
 	// number -- only the x coord...
 	} else if(typeof(offset) == typeof(1)){
 		offset = {
@@ -686,7 +699,7 @@ function animateElementTo(elem, to, duration, easing, speed, callback, use_trans
 
 		var start = Date.now()
 		var then = start + duration
-		var from = getElementShift(elem)
+		var from = getElementOffset(elem)
 		var cur = {
 			top: from.top,
 			left: from.left
@@ -789,6 +802,11 @@ function stopAnimation(elem){
 
 
 // XXX account for other transitions...
+function setElementOffset(elem, l, t){
+	return setElementTransform(elem, [l, t])
+}
+
+
 function setElementScale(elem, scale){
 	return setElementTransform(elem, null, scale)
 }
@@ -802,9 +820,28 @@ function setElementOrigin(elem, x, y, z){
 
 	return $(elem).css({
 		'transform-origin': value, 
+		'-o-transform-origin':  value,
 		'-ms-transform-origin':  value,
+		'-moz-transform-origin':  value,
 		'-webkit-transform-origin':  value,
 	})
+}
+
+// this is like setElementOrigin(..) but will compensate for element 
+// shift when scaled...
+// NOTE: this will work only of translate is used for positioning...
+function shiftOriginTo(elem, l, t){
+	var o = getElementOrigin(elem)
+	var scale = getElementScale(elem)
+	var offset = getElementOffset(elem)
+
+	// calculate the offset change and compensate...
+	var cl = offset.left + ((o.left - o.left*scale) - (l - l*scale))
+	var ct = offset.top + ((o.top - o.top*scale) - (t - t*scale))
+
+	setElementOffset(elem, cl, ct)
+
+	return setElementOrigin(elem, l+'px', t+'px')
 }
 
 

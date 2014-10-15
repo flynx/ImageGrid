@@ -256,25 +256,123 @@ module.RibbonsPrototype = {
 	// 			- use translate for placement of the .ribbon-set (prefered)
 	// 			- use an extra eleemnt for positioning and keep the 
 	// 			  .ribbon-set at (0,0)
+	//
+	// XXX do we account vor viewer offset???
 	setScale: function(scale, t, l){
 		var ribbon_set = this.viewer.find('.ribbon-set')
 
-		var s = this.getScale()
+		var img = t == null ? this.getImage() : t
 
-		if(t == null){
-			var img = this.getImage()
-			t = img.offset()
-			l = t.left + (img.width()/s)/2
-			t = t.top + (img.height()/s)/2
+		// XXX need to make this sync and not animate...
+		this.setOrigin(img)
+
+		setElementScale(ribbon_set, scale)
+		return this
+	},
+
+	getOrigin: function(){
+		return getElementOrigin(this.viewer.find('.ribbon-set'))
+	},
+	// Set ribbon set origin...
+	//
+	//	Set origin to center of current image
+	//	.setOrigin()
+	//		-> ribbons
+	//
+	//	Set origin to center of elment:
+	//	.setOrigin(elem)
+	//		-> ribbons
+	//
+	//	Set origin to screen coordinates:
+	//	.setOrigin(x, y)
+	//		-> ribbons
+	//
+	// XXX this appears not to be scale-neutral -- it gets a different 
+	// 		set of numbers in ribbons >0 after doing .centerRibbon(..)
+	// 		...but before calling .centerRibbon(..) this does everything
+	// 		quite correctly...
+	//
+	// 		...this mutual dependency between this and .centerRibbon(..)
+	// 		makes it really hards to find where exactly the problem is...
+	//
+	// XXX should this also update offset????
+	/*
+	setOrigin: function(a, b){
+		var s = this.getScale()
+		var ribbon_set = this.viewer.find('.ribbon-set')
+
+		if(typeof(a) == typeof(123) && typeof(b) == typeof(123)){
+			var t = a
+			var l = b
+
+		} else {
+			if(a == null){
+				var img = this.getImage()
+			} else {
+				var img = this.getImage(a)
+			}
+			var io = img.offset()
+			var vo = this.viewer.offset()
+
+			// get distance from center of image to top left corner of 
+			// screen...
+			// NOTE: the result should be scale-neutral.
+			var l = (io.left - vo.left) + (img.width()*s)/2
+			var t = (io.top - vo.top) + (img.height()*s)/2
 		}
 
-		var ro = ribbon_set.offset()
+		var rs = getElementOffset(ribbon_set)
 
-		var ot = t - ro.top
-		var ol = l - ro.left
+		var ot = t - rs.top
+		var ol = l - rs.left
+
+		var ro = this.getOrigin()
+
+		console.log('### origin:', ol, ot)
+
 		setElementOrigin(ribbon_set, ol+'px', ot+'px')
-			
-		setElementScale(ribbon_set, scale)
+
+		//setElementOffset(ribbon_set,
+		//	rs.left + (ro.left - ro.left*s) - (l - l*s),
+		//	rs.top + (ro.top - ro.top*s) - (t - t*s))
+
+		return this
+	},
+	*/
+	setOrigin: function(a, b){
+		var ribbon_set = this.viewer.find('.ribbon-set')
+
+		if(typeof(a) == typeof(123) && typeof(b) == typeof(123)){
+			var t = a
+			var l = b
+
+		} else {
+			if(a == null){
+				var img = this.getImage()
+			} else {
+				var img = this.getImage(a)
+			}
+
+			var s = this.getScale()
+			var io = img.offset()
+			var vo = this.viewer.offset()
+
+			// get distance from center of image to top left corner of 
+			// screen...
+			// NOTE: the result should be scale-neutral.
+			var l = (io.left - vo.left) + (img.width()*s)/2
+			var t = (io.top - vo.top) + (img.height()*s)/2
+		}
+
+		var rs = getElementOffset(ribbon_set)
+
+		var ot = t - rs.top
+		var ol = l - rs.left
+
+		console.log('### origin:', ol, ot)
+
+		shiftOriginTo(ribbon_set, ol, ot)
+
 		return this
 	},
 
@@ -1309,6 +1407,8 @@ module.RibbonsPrototype = {
 	// 		implicitly (i.e. the default)
 	// NOTE: this will get absolute results relative to screen, view 
 	// 		scaling will have no effect...
+	//
+	// XXX split this in two...(???)
 	_getOffset: function(target, vertical, horizontal, image_offset, scale){
 		vertical = vertical == null ? 'center' : vertical
 		horizontal = horizontal == null ? 'center' : horizontal
@@ -1333,8 +1433,12 @@ module.RibbonsPrototype = {
 		var rl = ribbon.offset().left
 		var rst = ribbon_set.offset().top
 
-		var W = viewer.width()
-		var H = viewer.height()
+		// NOTE: not quite sure why need to multiply this by scale but
+		// 		without it this does not work with origin/translate but 
+		// 		does fine with top/left offsets...
+		var W = viewer.width() * scale
+		var H = viewer.height() * scale
+
 		var w = image.width() * scale
 		var h = image.height() * scale
 
@@ -1368,15 +1472,25 @@ module.RibbonsPrototype = {
 	// center a ribbon vertically...
 	// 
 	centerRibbon: function(target, offset, scale){
-		offset = offset == null 
-			? this._getOffset(target, null, null, null, scale) 
-			: offset
+		scale = scale == null ? this.getScale() : scale
+		// NOTE: when woring with origin we do not care about scale...
+		//scale = scale == null ? 1 : scale
 
-		// vertical offset...
-		this.viewer.find('.ribbon-set')
-			.css({
-				top: offset.top,
-			})
+		offset = offset == null 
+			// XXX this should not get affected by scale or origin...
+			// XXX this gives correct resolts ONLY when we got scaled when
+			// 		focused on ribbon 0, in other cases it's messed up...
+			? this._getOffset(target, null, null, null, 1).top
+			: offset.top
+
+		var ot = this.getOrigin().top
+		// XXX something is still missing here...
+		// 		...it's getting closer when enlarging and blows up when scale -> 0
+		offset -= (ot/scale - ot)
+
+		console.log('### offset-top:', offset)
+
+		setElementOffset(this.viewer.find('.ribbon-set'), 0, offset)
 
 		return this
 	},
@@ -1384,6 +1498,7 @@ module.RibbonsPrototype = {
 	// 
 	centerImage: function(target, mode, offset, scale){
 		scale = scale == null ? this.getScale() : scale
+	
 		offset = offset == null 
 			? this._getOffset(target, 'center', 'center', mode, scale) 
 			: offset
