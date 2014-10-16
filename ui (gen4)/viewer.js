@@ -403,6 +403,11 @@ actions.Actions(Client, {
 					// XXX is there a 'last' special case here???
 					var t = data.getImage(gid, r)
 					if(t == null){
+						var f = data.getImage('first', r)
+						// nothing found -- empty ribbon?
+						if(f == null){
+							continue
+						}
 						ribbons.centerImage(data.getImage('first', r), 'before')
 					} else {
 						ribbons.centerImage(t, 'after')

@@ -81,6 +81,7 @@ function setOffset(l, t){
 
 function setScale(s){
 	setElementScale($('.block'), s)
+	// compensate for point scale...
 	setElementScale($('.point'), 1/s)
 	setElementScale($('.point-old'), 1/s)
 }
@@ -111,6 +112,7 @@ function setOrigin(l, t, no_comp){
 }
 
 
+
 // Center a block to a point...
 //
 // If not coordinates are given then center to element origin...
@@ -121,44 +123,21 @@ function setOrigin(l, t, no_comp){
 //		supported keywords:
 //			'screen'
 //			'elem'
+//
+// XXX need to make this independent of current position...
+//		...this is to prevent it from getting the wrong target coords 
+//		during animations..
 function centerBlock(l, t, scale){
 	var block = $('.block')
-	var s = getElementScale(block)
+	var container = $('.container')
 
-	scale = scale == 'screen' ? 1 
-		: scale == 'elem' ? s
-		: s
+	var offset = getRelativeOffset(container, block, {
+			top: t,
+			left: l,
+			scale: scale,
+		})
 
-	var offset = getElementOffset(block)
-	
-	var bo = block.offset()
-	var co = $('.container').offset()
-
-	var W = $('.container').width()
-	var H = $('.container').height()
-
-	var o = getElementOrigin(block)
-
-	// normalize the l,t to element scale...
-	if(l != null && t != null){
-
-		var w = block.width()
-		var h = block.height()
-		o = {
-			// target offset scale...
-			top: t*scale 
-				// set origin to top left corner of element (compensate
-				// for scaling)...
-				+ (h - h*s) / (w / o.left), 
-			left: l*scale 
-				+ (w - w*s) / (h / o.left),
-		}
-	}
-
-	var dl = offset.left + (W/2 - offset.left) - o.left
-	var dt = offset.top + (H/2 - offset.top) - o.top
-
-	setOffset(dl, dt)
+	setOffset(offset.left, offset.top)
 }
 
 

@@ -935,6 +935,7 @@ module.DataPrototype = {
 	// 		base, should we use last as a base for right shifting???
 	// 		...another way to go could be using current as a reference
 	// XXX test vertical..
+	// XXX should this be called .placeImage(..)???
 	shiftImage: function(from, target, mode){
 		from = from == null ? this.current : from
 		from = from == 'current' ? this.current : from
@@ -1004,17 +1005,31 @@ module.DataPrototype = {
 				order.splice(t+i, 0, this.order.splice(f, 1)[0])
 
 				// update ribbons...
-				for(k in ribbons){
-					var e = ribbons[k].splice(f, 1)[0]
-					ribbons[k].splice(t+i, 0, e)
-					// remove the null/undefined if it was just inserted...
-					// NOTE: this needs to be done as splice inserts the 3'rd
-					// 		argument explicitly regardless of it's value,
-					// 		this if not done we'll end up with undefined 
-					// 		inserted into a sparse ribbon which will be
-					// 		considered as an element...
-					if(e == null){
-						delete ribbons[k][t+i]
+				for(var k in ribbons){
+					var r = ribbons[k]
+
+					var e = r.splice(f, 1)[0]
+
+					// NOTE: for some magical reason L.slice(n, .., x) will
+					// 		append x to L rather than place it at position 
+					// 		n, if L.length < n
+					// 		...this we can't use .splice(..) for cases when 
+					// 		inserting after the last element of the array...
+					if(r.length > t+i){
+						r.splice(t+i, 0, e)
+
+						// remove the null/undefined if it was just inserted...
+						// NOTE: this needs to be done as splice inserts the 3'rd
+						// 		argument explicitly regardless of it's value,
+						// 		this if not done we'll end up with undefined 
+						// 		inserted into a sparse ribbon which will be
+						// 		considered as an element...
+						if(e == null){
+							delete r[t+i]
+						}
+
+					} else if(e != null){
+						r[t+i] = e
 					}
 				}
 			}

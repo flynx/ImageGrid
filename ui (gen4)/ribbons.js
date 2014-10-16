@@ -1488,6 +1488,14 @@ module.RibbonsPrototype = {
 		// 		...it's getting closer when enlarging and blows up when scale -> 0
 		offset -= (ot/scale - ot)
 
+		/*
+		var ribbon_set = this.viewer.find('.ribbon-set')
+		// XXX this needs the correct origin set before centering...
+		// XXX at scale this does not center corretly if ribbon is offset...
+		// 		...calling it multiple times gets it closer and closer...
+		var offset = getRelativeOffset(this.viewer, ribbon_set).top
+		*/
+
 		console.log('### offset-top:', offset)
 
 		setElementOffset(this.viewer.find('.ribbon-set'), 0, offset)

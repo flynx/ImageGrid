@@ -550,6 +550,73 @@ var getElementTransitionDuration = makeCSSVendorAttrGetter(
 		parseInt)
 
 
+// Get relative offset...
+//
+// This is like jQuery.offset() but takes into account:
+//	- scale
+//	- origin
+//	- actual relative offset
+//
+// point can be:
+//	- {
+//		top: <top>, 
+//		left: <left>,
+//		[scale: 'screen'|'elem'|<scale>,]
+//	  }
+//	- 'origin' (default)
+//
+// This expects: 
+// 	- the block is directly nested in the container
+// 	- the block can be scaled
+// 	- the block has an origin set
+//
+function getRelativeOffset(container, block, point){
+	point = point == null ? {} : point
+	var l = point.left
+	var t = point.top
+	var scale = point.scale
+
+	// get the input data...
+	var s = getElementScale(block)
+	var o = getElementOrigin(block)
+	// get only the value we need...
+	var W = container.width()
+	var H = container.height()
+	// we need this to make everything relative to the container...
+	var co = container.offset()
+	var offset = getElementOffset(block)
+	var bo = block.offset()
+
+	scale = scale == 'screen' ? 1 
+		: scale == 'elem' ? s
+		: scale
+
+	// normalize the l,t to element scale...
+	if(l != null && t != null){
+
+		// get only the value we need...
+		// NOTE: width and height are used to calculate the correction
+		//		due to origin/scale...
+		var w = block.width()
+		var h = block.height()
+		o = {
+			// target offset scale...
+			top: t*scale 
+				// set origin to top left corner of element (compensate
+				// for scaling)...
+				+ (h - h*s) / (h / o.top), 
+			left: l*scale 
+				+ (w - w*s) / (w / o.left),
+		}
+	}
+
+	return {
+		top: offset.top + (H/2 - offset.top) - o.top,
+		left: offset.left + (W/2 - offset.left) - o.left,
+	}
+}
+
+
 // NOTE: at this point this works only on the X axis...
 function setElementTransform(elem, offset, scale, duration){
 	elem = $(elem)
