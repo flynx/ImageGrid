@@ -88,7 +88,6 @@ function setScale(s){
 // The goal of the experiment is to make this do it's thing without 
 // changing element's screen position
 //
-// XXX this does not work of position is negative...
 function setOrigin(l, t, no_comp){
 	var block = $('.block')
 	var o = getElementOrigin(block)
@@ -99,9 +98,6 @@ function setOrigin(l, t, no_comp){
 		var offset = getElementOffset(block)
 
 		// calculate the offset change and compensate...
-		// XXX this breaks with negative values...
-		//		- starts moving around
-		//		- the secondary pointer goes crazy...
 		var cl = offset.left + ((o.left - o.left*s) - (l - l*s))
 		var ct = offset.top + ((o.top - o.top*s) - (t - t*s))
 
@@ -115,21 +111,24 @@ function setOrigin(l, t, no_comp){
 }
 
 
-// center a specific point (default: origin)
+// Center a block to a point...
+//
+// If not coordinates are given then center to element origin...
 //
 // NOTE: scale indicates the source coordinate scale, if set to 1 t and 
-//		l will 1:1 to screen, and if set the the same scale as the element
+//		l will 1:1 to screen, and if set to the same scale as the element
 //		then t and l will be 1:1 to the element...
 //		supported keywords:
 //			'screen'
 //			'elem'
 function centerBlock(l, t, scale){
-	scale = scale == true || scale == 'screen' ? 1 
-		: scale == 'elem' ? null
-		: scale
-
-	var s = getElementScale(block)
 	var block = $('.block')
+	var s = getElementScale(block)
+
+	scale = scale == 'screen' ? 1 
+		: scale == 'elem' ? s
+		: s
+
 	var offset = getElementOffset(block)
 	
 	var bo = block.offset()
@@ -142,14 +141,17 @@ function centerBlock(l, t, scale){
 
 	// normalize the l,t to element scale...
 	if(l != null && t != null){
-		l = scale != null ? (l/s)*scale : l
-		t = scale != null ? (t/s)*scale : t
 
 		var w = block.width()
 		var h = block.height()
 		o = {
-			top: t*s + (h - h*s) / (w / o.left), 
-			left: l*s + (w - w*s) / (h / o.left),
+			// target offset scale...
+			top: t*scale 
+				// set origin to top left corner of element (compensate
+				// for scaling)...
+				+ (h - h*s) / (w / o.left), 
+			left: l*scale 
+				+ (w - w*s) / (h / o.left),
 		}
 	}
 

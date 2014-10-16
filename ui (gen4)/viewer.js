@@ -417,15 +417,17 @@ actions.Actions(Client, {
 			this.ribbons.setBaseRibbon(r)
 		}],
 
-	// XXX need screen width in images...
+	// XXX test...
 	prevScreen: ['Focus previous image one screen width away',
 		function(){
-			// XXX
+			var s = Math.floor(this.ribbons.getScreenWidthImages())
+			this.focusImage(this.data.getImage('current', -s))
 		}],
-	// XXX need screen width in images...
+	// XXX test...
 	nextScreen: ['Focus next image one screen width away',
 		function(){
-			// XXX
+			var s = Math.floor(this.ribbons.getScreenWidthImages())
+			this.focusImage(this.data.getImage('current', s))
 		}],
 
 	// zooming...
