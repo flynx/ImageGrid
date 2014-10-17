@@ -341,37 +341,25 @@ module.RibbonsPrototype = {
 	*/
 	setOrigin: function(a, b){
 		var ribbon_set = this.viewer.find('.ribbon-set')
+		var ro = ribbon_set.offset()
 
 		if(typeof(a) == typeof(123) && typeof(b) == typeof(123)){
-			var t = a
-			var l = b
+			var l = a - ro.top
+			var t = b - ro.left
 
 		} else {
-			if(a == null){
-				var img = this.getImage()
-			} else {
-				var img = this.getImage(a)
-			}
-
+			var img = this.getImage(a)
 			var s = this.getScale()
 			var io = img.offset()
-			var vo = this.viewer.offset()
+			var w = img.width()
+			var h = img.height()
 
-			// get distance from center of image to top left corner of 
-			// screen...
-			// NOTE: the result should be scale-neutral.
-			var l = (io.left - vo.left) + (img.width()*s)/2
-			var t = (io.top - vo.top) + (img.height()*s)/2
+			var l = (io.left - ro.left)/s + w/2
+			var t = (io.top - ro.top)/s + h/2
 		}
 
-		var rs = getElementOffset(ribbon_set)
-
-		var ot = t - rs.top
-		var ol = l - rs.left
-
-		console.log('### origin:', ol, ot)
-
-		shiftOriginTo(ribbon_set, ol, ot)
+		shiftOriginTo(ribbon_set, l, t)
+		setElementOffset($('.point'), l, t)
 
 		return this
 	},
@@ -1471,6 +1459,7 @@ module.RibbonsPrototype = {
 	},
 	// center a ribbon vertically...
 	// 
+	/*
 	centerRibbon: function(target, offset, scale){
 		scale = scale == null ? this.getScale() : scale
 		// NOTE: when woring with origin we do not care about scale...
@@ -1488,20 +1477,40 @@ module.RibbonsPrototype = {
 		// 		...it's getting closer when enlarging and blows up when scale -> 0
 		offset -= (ot/scale - ot)
 
-		/*
-		var ribbon_set = this.viewer.find('.ribbon-set')
-		// XXX this needs the correct origin set before centering...
-		// XXX at scale this does not center corretly if ribbon is offset...
-		// 		...calling it multiple times gets it closer and closer...
-		var offset = getRelativeOffset(this.viewer, ribbon_set).top
-		*/
-
 		console.log('### offset-top:', offset)
 
 		setElementOffset(this.viewer.find('.ribbon-set'), 0, offset)
 
 		return this
 	},
+	*/
+
+
+	// XXX experimental...
+	centerRibbon: function(target, offset, scale){
+		var ribbon_set = this.viewer.find('.ribbon-set')
+
+		//this.setOrigin(target)
+		
+		target = this.getImage(target)
+		var s = this.getScale()
+		var ro = ribbon_set.offset()
+		var io = target.offset()
+		var h = target.height()
+
+		var t = (io.top - ro.top)/s + h/2
+
+		var offset = getRelativeOffset(this.viewer, ribbon_set, {
+			top: t,
+			left: 0,
+		}).top
+		
+		setElementOffset(ribbon_set, 0, offset)
+
+		return this
+	},
+
+
 	// center an image horizontally...
 	// 
 	centerImage: function(target, mode, offset, scale){
@@ -1562,6 +1571,19 @@ function Ribbons(viewer, images){
 Ribbons.__proto__ = RibbonsClassPrototype
 Ribbons.prototype = RibbonsPrototype
 Ribbons.prototype.constructor = Ribbons
+
+
+
+/*********************************************************************/
+
+
+window.getOrigin = function(l, t){
+	return getElementOrigin($('.ribbon-set'))
+}
+window.setOrigin = function(l, t){
+	shiftOriginTo($('.ribbon-set'), l, t)
+	setElementOffset($('.point'), l, t)
+}
 
 
 

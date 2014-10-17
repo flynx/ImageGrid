@@ -94,18 +94,11 @@ function setOrigin(l, t, no_comp){
 	var o = getElementOrigin(block)
 
 	if(!no_comp){
-		var s = getElementScale(block)
-
-		var offset = getElementOffset(block)
-
-		// calculate the offset change and compensate...
-		var cl = offset.left + ((o.left - o.left*s) - (l - l*s))
-		var ct = offset.top + ((o.top - o.top*s) - (t - t*s))
-
-		setElementOffset(block, cl, ct)
+		shiftOriginTo(block, l, t)
+	} else {
+		setElementOrigin(block, l+'px', t+'px')
 	}
 
-	setElementOrigin(block, l+'px', t+'px')
 
 	setElementOffset($('.point'), l, t)
 	setElementOffset($('.point-old'), o.left, o.top)
@@ -144,7 +137,7 @@ function centerBlock(l, t, scale){
 $(function(){
 	setOrigin(100, 100)
 	setOffset(50, 100)
-	setScale(0.7)
+	setScale(1.3)
 })
 
 </script>

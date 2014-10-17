@@ -589,6 +589,7 @@ function getRelativeOffset(container, block, point){
 
 	scale = scale == 'screen' ? 1 
 		: scale == 'elem' ? s
+		: scale == null ? s
 		: scale
 
 	// normalize the l,t to element scale...
