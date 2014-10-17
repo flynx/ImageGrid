@@ -492,7 +492,7 @@ actions.Actions(Client, {
 		function(){  }],
 
 
-	// XXX
+	// XXX these are cheating...
 	shiftImageUp: [
 		function(target){
 			return function(){

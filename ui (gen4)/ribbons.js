@@ -169,7 +169,7 @@ module.RibbonsPrototype = {
 
 	// Helpers...
 
-	// XXX
+	// XXX need a better way of doing this...
 	preventTransitions: function(){
 		this.viewer.addClass('no-transitions')
 	},
@@ -210,7 +210,6 @@ module.RibbonsPrototype = {
 	// 		gets the visible size of the image tile in pixels.
 	//
 	// XXX try and make image size the product of vmin and scale...
-	// XXX is this the right place for this???
 	getVisibleImageSize: function(dim){
 		dim = dim == null ? 'width' : dim
 		var img = this.viewer.find('.image')
@@ -240,7 +239,8 @@ module.RibbonsPrototype = {
 	getScale: function(){
 		return getElementScale(this.viewer.find('.ribbon-set'))
 	},
-	// Get ribbon set scale...
+
+	// Set ribbon set scale...
 	//
 	// NOTE: this will also set origin...
 	setScale: function(scale, t, l){
@@ -277,6 +277,7 @@ module.RibbonsPrototype = {
 	// NOTE: this will also compensate for scaling.
 	//
 	// XXX make this work sync without affecting animation...
+	// XXX DEBUG: remove point updating when not needed...
 	setOrigin: function(a, b){
 		//this.preventTransitions()
 
@@ -300,7 +301,11 @@ module.RibbonsPrototype = {
 
 		// XXX when transitions are enabled this will make the view jump...
 		shiftOriginTo(ribbon_set, l, t)
-		setElementOffset($('.point'), l, t)
+
+		// XXX DEBUG: remove when done...
+		if($('.point').length > 0){
+			setElementOffset($('.point'), l, t)
+		}
 
 		//this.restoreTransitions(true)
 
@@ -368,76 +373,6 @@ module.RibbonsPrototype = {
 
 	// Contextual getters...
 	
-	// Get ribbon...
-	//
-	// Get current ribbon:
-	//	.getRibbon()
-	//	.getRibbon('current')
-	//		-> ribbon
-	//
-	// Get base ribbon:
-	//	.getRibbon('base')
-	//		-> ribbon
-	//
-	// Get ribbon by its index/gid:
-	//	.getRibbon(index)
-	//	.getRibbon(gid)
-	//		-> ribbon
-	//
-	// Get ribbon by image:
-	//	.getRibbon(image)
-	//		-> ribbon
-	//		NOTE: image must be .getImage(..) compatible.
-	//
-	// Get ribbons from list:
-	//	.getRibbon($(..))
-	//	.getRibbon([..])
-	//		-> ribbon(s)
-	//		NOTE: this will filter the list but not search the tree...
-	//
-	//
-	// NOTE: if current image is unset then this will not be able to 
-	// 		get it.
-	// NOTE: if base ribbon is unset this will return the first ribbon.
-	getRibbon: function(target){
-		// current...
-		if(target == null || target == 'current') {
-			return this.getImage().parents('.ribbon').first()
-
-		// dom element...
-		} else if(target instanceof $
-				&& target.hasClass('image')){
-			return this.getImage(target).parents('.ribbon').first()
-
-		// base...
-		} else if(target == 'base'){
-			var r = this.viewer.find('.base.ribbon').first()
-			if(r.length == 0){
-				return this.viewer.find('.ribbon').first()
-			}
-			return r
-
-		// index...
-		} else if(typeof(target) == typeof(123)){
-			return this.viewer.find('.ribbon').eq(target)
-
-		// gid...
-		} else if(typeof(target) == typeof('str')){
-			//return this.viewer.find('.ribbon[gid="'+JSON.stringify(target)+'"]')
-			var r = this.viewer.find('.ribbon[gid='+JSON.stringify(target)+']')
-			// if no ribbon is found, try and get an image and it's ribbon...
-			return r.length == 0 
-				? this.getImage(target).parents('.ribbon').first()
-				: r
-		}
-		return $(target).filter('.ribbon')
-	},
-	// Like .getRibbon(..) but returns ribbon index instead of the actual 
-	// ribbon object...
-	getRibbonOrder: function(target){
-		return this.viewer.find('.ribbon').index(this.getRibbon(target))
-	},
-
 	// Get image...
 	//
 	// Get current image:
@@ -534,6 +469,76 @@ module.RibbonsPrototype = {
 		return marks
 	},
 
+	// Get ribbon...
+	//
+	// Get current ribbon:
+	//	.getRibbon()
+	//	.getRibbon('current')
+	//		-> ribbon
+	//
+	// Get base ribbon:
+	//	.getRibbon('base')
+	//		-> ribbon
+	//
+	// Get ribbon by its index/gid:
+	//	.getRibbon(index)
+	//	.getRibbon(gid)
+	//		-> ribbon
+	//
+	// Get ribbon by image:
+	//	.getRibbon(image)
+	//		-> ribbon
+	//		NOTE: image must be .getImage(..) compatible.
+	//
+	// Get ribbons from list:
+	//	.getRibbon($(..))
+	//	.getRibbon([..])
+	//		-> ribbon(s)
+	//		NOTE: this will filter the list but not search the tree...
+	//
+	//
+	// NOTE: if current image is unset then this will not be able to 
+	// 		get it.
+	// NOTE: if base ribbon is unset this will return the first ribbon.
+	getRibbon: function(target){
+		// current...
+		if(target == null || target == 'current') {
+			return this.getImage().parents('.ribbon').first()
+
+		// dom element...
+		} else if(target instanceof $
+				&& target.hasClass('image')){
+			return this.getImage(target).parents('.ribbon').first()
+
+		// base...
+		} else if(target == 'base'){
+			var r = this.viewer.find('.base.ribbon').first()
+			if(r.length == 0){
+				return this.viewer.find('.ribbon').first()
+			}
+			return r
+
+		// index...
+		} else if(typeof(target) == typeof(123)){
+			return this.viewer.find('.ribbon').eq(target)
+
+		// gid...
+		} else if(typeof(target) == typeof('str')){
+			//return this.viewer.find('.ribbon[gid="'+JSON.stringify(target)+'"]')
+			var r = this.viewer.find('.ribbon[gid='+JSON.stringify(target)+']')
+			// if no ribbon is found, try and get an image and it's ribbon...
+			return r.length == 0 
+				? this.getImage(target).parents('.ribbon').first()
+				: r
+		}
+		return $(target).filter('.ribbon')
+	},
+	// Like .getRibbon(..) but returns ribbon index instead of the actual 
+	// ribbon object...
+	getRibbonOrder: function(target){
+		return this.viewer.find('.ribbon').index(this.getRibbon(target))
+	},
+
 
 	// Basic manipulation...
 
@@ -568,8 +573,6 @@ module.RibbonsPrototype = {
 	// 		attached then the target will be appended to the end.
 	// NOTE: this uses the DOM data for placement, this may differ from 
 	// 		the actual data.
-	//
-	// XXX interaction animation...
 	placeRibbon: function(target, position){
 		// get create the ribbon...
 		var ribbon = this.getRibbon(target)
@@ -618,10 +621,6 @@ module.RibbonsPrototype = {
 	//
 	// NOTE: mode defaults to 'before'.
 	// NOTE: if image gid does not exist it will be created.
-	//
-	// XXX interaction animation...
-	// XXX mode is ugly...
-	// XXX should this be strongly or weakly coupled to images.updateImage(..)???
 	placeImage: function(target, to, mode){
 		mode = mode == null ? 'before' : mode
 		var img = this.getImage(target)
@@ -854,8 +853,6 @@ module.RibbonsPrototype = {
 	//
 	// NOTE: gids and ribbon must be .getImage(..) and .getRibbon(..) 
 	// 		compatible...
-	//
-	// XXX should this be strongly or weakly coupled to images.updateImage(..)???
 	updateRibbon: function(gids, ribbon){
 		// get/create the ribbon...
 		var r = this.getRibbon(ribbon)
@@ -1072,8 +1069,6 @@ module.RibbonsPrototype = {
 	// NOTE: gid must be a .getImage(..) compatible object.
 	// NOTE: for keyword and offset to work an image must be focused.
 	// NOTE: overflowing offset will focus first/last image.
-	//
-	// XXX interaction animation...
 	focusImage: function(target){
 		var cur = this.viewer
 			.find('.current.image')
@@ -1085,6 +1080,7 @@ module.RibbonsPrototype = {
 
 	// Set base ribbon...
 	//
+	// XXX is this really needed here???
 	// XXX should this support keywords a-la .focusImage(..)???
 	setBaseRibbon: function(gid){
 		this.viewer.find('.base.ribbon').removeClass('base')
@@ -1196,10 +1192,6 @@ module.RibbonsPrototype = {
 	// NOTE: this can be applied in bulk, e.g. 
 	// 		this.rotateImage($('.image'), 'cw') will rotate all the 
 	// 		loaded images clockwise.
-	//
-	// XXX should this be strongly or weakly coupled to images.updateImage(..) 
-	// 		or images.correctImageProportionsForRotation(..)???
-	// XXX should .correctImageProportionsForRotation(..) be in images???
 	rotateImage: function(target, direction){
 		target = this.getImage(target)
 
@@ -1281,10 +1273,10 @@ module.RibbonsPrototype = {
 
 	// shorthands...
 	// XXX should these be here???
-	//rotateCW: function(target){ return this.rotateImage(target, 'cw') },
-	//rotateCCW: function(target){ return this.rotateImage(target, 'ccw') },
-	//flipVertical: function(target){ return this.flipImage(target, 'vertical') },
-	//flipHorizontal: function(target){ return this.flipImage(target, 'horizontal') },
+	rotateCW: function(target){ return this.rotateImage(target, 'cw') },
+	rotateCCW: function(target){ return this.rotateImage(target, 'ccw') },
+	flipVertical: function(target){ return this.flipImage(target, 'vertical') },
+	flipHorizontal: function(target){ return this.flipImage(target, 'horizontal') },
 
 
 	// UI manipulation...
