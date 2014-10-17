@@ -1349,88 +1349,6 @@ module.RibbonsPrototype = {
 		})
 	},
 
-	/*
-	// Get absolute offsets...
-	//
-	// This will calculate the vertical offsets relative to the ribbon-set
-	// and horizontal offsets relative to the specific loaded ribbon.
-	//
-	// vertical can be:
-	// 	'center'
-	// 	'left'
-	// 	'right'
-	// 	'30%'
-	// 	40
-	//
-	// NOTE: image_offset is applicable ONLY when both vertical and 
-	// 		horizontal are set to 'center', either explicitly or 
-	// 		implicitly (i.e. the default)
-	// NOTE: this will get absolute results relative to screen, view 
-	// 		scaling will have no effect...
-	//
-	// XXX do we still need this...
-	_getOffset: function(target, vertical, horizontal, image_offset, scale){
-		vertical = vertical == null ? 'center' : vertical
-		horizontal = horizontal == null ? 'center' : horizontal
-		image_offset = image_offset == null ? 'center' : image_offset
-		scale = scale == null ? this.getScale() : scale
-
-		if(vertical == 'before' || vertical == 'after'){
-			image_offset = vertical
-			vertical = 'center'
-			horizontal = 'center'
-		}
-
-		//
-		var viewer = this.viewer
-		var image = this.getImage(target)
-		var ribbon = this.getRibbon(target)
-		var ribbon_set = viewer.find('.ribbon-set')
-
-		// NOTE: to avoid errors these need to be taken at the same time.
-		var vo = viewer.offset()
-		var io = image.offset()
-		var rl = ribbon.offset().left
-		var rst = ribbon_set.offset().top
-
-		// NOTE: not quite sure why need to multiply this by scale but
-		// 		without it this does not work with origin/translate but 
-		// 		does fine with top/left offsets...
-		var W = viewer.width() * scale
-		var H = viewer.height() * scale
-
-		var w = image.width() * scale
-		var h = image.height() * scale
-
-		image_offset = image_offset == 'before' ? w/2
-			: image_offset == 'after' ? -w/2
-			: 0
-
-		// viewport position...
-		var pl = horizontal == 'center' ? (W - w)/2 + image_offset
-			: horizontal == 'left' ? 0
-			: horizontal == 'right' ? W - w
-			// explicit % value...
-			: typeof(horizontal) == typeof('str') && /[0-9.]*%/.test(horizontal) ?
-				(W - h) / (100/parseFloat(horizontal))
-			// explicit px value...
-			: horizontal*1
-		var pt = vertical == 'center' ? (H - h)/2
-			: vertical == 'top' ? 0
-			: vertical == 'bottom' ? H - h
-			// explicit % value...
-			: typeof(vertical) == typeof('str') && /[0-9.]*%/.test(vertical) ?
-				(H - h) / (100/parseFloat(vertical))
-			// explicit px value...
-			: vertical*1
-
-		return {
-			top: rst + pt - (io.top - vo.top),
-			left: rl + pl - (io.left - vo.left),
-		}
-	},
-	*/
-
 	// center a ribbon vertically...
 	// 
 	centerRibbon: function(target, offset, scale){
@@ -1456,27 +1374,8 @@ module.RibbonsPrototype = {
 		return this
 	},
 
-
 	// center an image horizontally...
 	// 
-	/*
-	// XXX should this still use the relatively redundant ._getOffset(..)???
-	centerImage: function(target, mode, offset, scale){
-		scale = scale == null ? this.getScale() : scale
-	
-		offset = offset == null 
-			? this._getOffset(target, 'center', 'center', mode, scale) 
-			: offset
-
-		// horizontal offset, current ribbon...
-		this.getRibbon(target)
-			.css({
-				left: offset.left / scale,
-			})
-
-		return this
-	},
-	*/
 	centerImage: function(target, mode, offset, scale){
 		target = this.getImage(target)
 		scale = scale || this.getScale()
@@ -1500,10 +1399,11 @@ module.RibbonsPrototype = {
 		return this
 	},
 
-	// XXX need work on alignment after scaling...
-	// 		...this may require:
-	// 			- setting origin
-	// 			- using translate instead of top to position ribbon-set...
+	// Fit image to view...
+	//
+	// If n is given this will fit n images (default: 1)
+	//
+	// XXX might be usefull to set origin before scaling...
 	fitImage: function(n){
 		n = n == null ? 1 : n
 
