@@ -314,22 +314,29 @@ module.RibbonsPrototype = {
 	},
 
 	// XXX make this work for multiple targets...
-	// XXX avoid ardcoded delays...
+	// XXX avoid hardcoded delays...
 	makeShadow: function(target, animate){
 		var img = this.getImage(target)
 		var gid = this.getElemGID(img)
+		var s = this.getScale()
 		var shadow = $('<div>')
-			.addClass('shadow')
-			.append(img
-					.clone()
-					.removeClass('current')
-					.attr('gid', null))
-			.css(img.offset())
+				.addClass('shadow')
+				.append(setElementScale(
+					img
+						.clone()
+						.removeClass('current')
+						.attr('gid', null), s))
+				.css({
+					width: img.width()*s,
+					height: img.height()*s,
+				})
+				.css(img.offset())
 			.appendTo(this.viewer)
 		img.addClass('moving')
 		var that = this
 
 		return function(){
+			var s = that.getScale()
 			var img = that.getImage(gid)
 			if(animate){
 				shadow.css(img.offset())
