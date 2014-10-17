@@ -47,15 +47,15 @@
 
 /* basic animation... */
 .viewer:not(.no-transitions) .ribbon-set {
-	-webkit-transition: all 0.2s ease, transform 0.2s linear/*, transform-origin 0s none*/;
-	-moz-transition: all 0.2s ease, transform 0.2s linear/*, transform-origin 0s none*/;
-	transition: all 0.2s ease, transform 0.2s linear/*, transform-origin 0s none*/;
+	-webkit-transition: all 0.2s linear, transform 0.2s linear;
+	-moz-transition: all 0.2s linear, transform 0.2s linear;
+	transition: all 0.2s linear, transform 0.2s linear;
 }
 
 .viewer:not(.no-transitions) .ribbon {
-	-webkit-transition: all 0.2s ease;
-	-moz-transition: all 0.2s ease;
-	transition: all 0.2s ease;
+	-webkit-transition: all 0.2s ease-out;
+	-moz-transition: all 0.2s ease-out;
+	transition: all 0.2s ease-out;
 }
 
 .no-transitions {

@@ -172,6 +172,7 @@ module.RibbonsPrototype = {
 	// XXX need a better way of doing this...
 	preventTransitions: function(){
 		this.viewer.addClass('no-transitions')
+		getComputedStyle(this.viewer[0]).style
 	},
 	restoreTransitions: function(now){
 		// sync...
@@ -276,7 +277,6 @@ module.RibbonsPrototype = {
 	//
 	// NOTE: this will also compensate for scaling.
 	//
-	// XXX make this work sync without affecting animation...
 	// XXX DEBUG: remove point updating when not needed...
 	setOrigin: function(a, b){
 		//this.preventTransitions()
@@ -299,7 +299,6 @@ module.RibbonsPrototype = {
 			var t = (io.top - ro.top)/s + h/2
 		}
 
-		// XXX when transitions are enabled this will make the view jump...
 		shiftOriginTo(ribbon_set, l, t)
 
 		// XXX DEBUG: remove when done...
@@ -1343,6 +1342,9 @@ module.RibbonsPrototype = {
 
 	// center a ribbon vertically...
 	// 
+	// XXX offset and scale are not used...
+	// XXX custom align point woud also be nice... 
+	// 		(top, bottom, center, %, px)
 	centerRibbon: function(target, offset, scale){
 		var ribbon_set = this.viewer.find('.ribbon-set')
 
@@ -1368,6 +1370,9 @@ module.RibbonsPrototype = {
 
 	// center an image horizontally...
 	// 
+	// XXX offset is not used...
+	// XXX custom align point woud also be nice... 
+	// 		(top, bottom, center, %, px)
 	centerImage: function(target, mode, offset, scale){
 		target = this.getImage(target)
 		scale = scale || this.getScale()

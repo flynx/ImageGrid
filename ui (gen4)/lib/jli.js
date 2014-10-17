@@ -870,6 +870,7 @@ function stopAnimation(elem){
 
 
 // XXX account for other transitions...
+// XXX make a sync version...
 function setElementOffset(elem, l, t){
 	return setElementTransform(elem, [l, t])
 }
@@ -895,6 +896,34 @@ function setElementOrigin(elem, x, y, z){
 	})
 }
 
+
+// a sync version of setElementOrigin(..), this will not trigger transforms...
+function setElementOriginSync(elem, x, y, z){
+	x = x == null ? '50%' : x
+	y = y == null ? '50%' : y
+	z = z == null ? '0' : z
+	var value = x +' '+ y +' '+ z
+
+	elem = $(elem)
+	var e = elem[0]
+
+	e.style.display = 'none'
+	// now kick the browser into recognition of our changes NOW ;)
+	getComputedStyle(e).display
+
+	e.style['-o-transform-origin'] =  value
+	e.style['-ms-transform-origin'] =  value
+	e.style['-moz-transform-origin'] =  value
+	e.style['-webkit-transform-origin'] =  value
+	e.style['transform-origin'] = value
+
+	e.style.display = ''
+	getComputedStyle(e).display
+
+	return $(elem)
+}
+
+
 // this is like setElementOrigin(..) but will compensate for element 
 // shift when scaled...
 // NOTE: this will work only of translate is used for positioning...
@@ -909,7 +938,7 @@ function shiftOriginTo(elem, l, t){
 
 	setElementOffset(elem, cl, ct)
 
-	return setElementOrigin(elem, l+'px', t+'px')
+	return setElementOriginSync(elem, l+'px', t+'px')
 }
 
 
