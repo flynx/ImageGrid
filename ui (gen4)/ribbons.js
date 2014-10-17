@@ -235,41 +235,27 @@ module.RibbonsPrototype = {
 		return W/w
 	},
 
-	// XXX uses jli.js getElementScale(..) / setElementScale(..)
+	// Get ribbon set scale...
+	//
 	getScale: function(){
 		return getElementScale(this.viewer.find('.ribbon-set'))
 	},
-	// XXX need work on alignment after scaling...
-	// 		...this may require:
-	// 			- setting origin
-	// 			- using translate instead of top to position ribbon-set...
+	// Get ribbon set scale...
 	//
-	// 		Origin needs to be at the point on .ribbon-set that coresponds 
-	// 		to the point on screen that we need to scale relative to (i.e. 
-	// 		a fixed point).
-	//
-	// 		The problem here is that setting the origin messes up the 
-	// 		positioning (removing the top/left css attrs), thus a different
-	// 		strategy is needed to control positioning...
-	//
-	// 		One of the folowing approaches might work:
-	// 			- use translate for placement of the .ribbon-set (prefered)
-	// 			- use an extra eleemnt for positioning and keep the 
-	// 			  .ribbon-set at (0,0)
-	//
-	// XXX do we account vor viewer offset???
+	// NOTE: this will also set origin...
 	setScale: function(scale, t, l){
 		var ribbon_set = this.viewer.find('.ribbon-set')
 
 		var img = t == null ? this.getImage() : t
 
-		// XXX need to make this sync and not animate...
 		this.setOrigin(img)
 
 		setElementScale(ribbon_set, scale)
 		return this
 	},
 
+	// Get current ribbon-set origin...
+	//
 	getOrigin: function(){
 		return getElementOrigin(this.viewer.find('.ribbon-set'))
 	},
@@ -288,7 +274,12 @@ module.RibbonsPrototype = {
 	//	.setOrigin(x, y)
 	//		-> ribbons
 	//
+	// NOTE: this will also compensate for scaling.
+	//
+	// XXX make this work sync without affecting animation...
 	setOrigin: function(a, b){
+		//this.preventTransitions()
+
 		var ribbon_set = this.viewer.find('.ribbon-set')
 		var ro = ribbon_set.offset()
 
@@ -307,8 +298,11 @@ module.RibbonsPrototype = {
 			var t = (io.top - ro.top)/s + h/2
 		}
 
+		// XXX when transitions are enabled this will make the view jump...
 		shiftOriginTo(ribbon_set, l, t)
 		setElementOffset($('.point'), l, t)
+
+		//this.restoreTransitions(true)
 
 		return this
 	},
@@ -336,7 +330,6 @@ module.RibbonsPrototype = {
 	// state is restored (default: 200).
 	//
 	// XXX make this work for multiple targets...
-	// XXX avoid hardcoded delays...
 	makeShadow: function(target, animate, delay){
 		delay = delay || 200
 		var img = this.getImage(target)
@@ -1356,6 +1349,7 @@ module.RibbonsPrototype = {
 		})
 	},
 
+	/*
 	// Get absolute offsets...
 	//
 	// This will calculate the vertical offsets relative to the ribbon-set
@@ -1374,7 +1368,7 @@ module.RibbonsPrototype = {
 	// NOTE: this will get absolute results relative to screen, view 
 	// 		scaling will have no effect...
 	//
-	// XXX split this in two...(???)
+	// XXX do we still need this...
 	_getOffset: function(target, vertical, horizontal, image_offset, scale){
 		vertical = vertical == null ? 'center' : vertical
 		horizontal = horizontal == null ? 'center' : horizontal
@@ -1435,9 +1429,10 @@ module.RibbonsPrototype = {
 			left: rl + pl - (io.left - vo.left),
 		}
 	},
+	*/
+
 	// center a ribbon vertically...
 	// 
-	// XXX experimental...
 	centerRibbon: function(target, offset, scale){
 		var ribbon_set = this.viewer.find('.ribbon-set')
 
@@ -1464,6 +1459,8 @@ module.RibbonsPrototype = {
 
 	// center an image horizontally...
 	// 
+	/*
+	// XXX should this still use the relatively redundant ._getOffset(..)???
 	centerImage: function(target, mode, offset, scale){
 		scale = scale == null ? this.getScale() : scale
 	
@@ -1475,6 +1472,29 @@ module.RibbonsPrototype = {
 		this.getRibbon(target)
 			.css({
 				left: offset.left / scale,
+			})
+
+		return this
+	},
+	*/
+	centerImage: function(target, mode, offset, scale){
+		target = this.getImage(target)
+		scale = scale || this.getScale()
+		var ribbon = this.getRibbon(target)
+
+		var vl = this.viewer.offset().left
+		var rl = ribbon.offset().left
+		var il = target.offset().left
+		var W = this.viewer.width() * scale
+		var w = target.width() * scale
+
+		var image_offset = mode == 'before' ? w/2
+			: mode == 'after' ? -w/2
+			: 0
+
+		ribbon
+			.css({
+				left: (rl + ((W-w)/2 + image_offset) - (il - vl)) / scale,
 			})
 
 		return this
@@ -1522,19 +1542,6 @@ function Ribbons(viewer, images){
 Ribbons.__proto__ = RibbonsClassPrototype
 Ribbons.prototype = RibbonsPrototype
 Ribbons.prototype.constructor = Ribbons
-
-
-
-/*********************************************************************/
-
-
-window.getOrigin = function(l, t){
-	return getElementOrigin($('.ribbon-set'))
-}
-window.setOrigin = function(l, t){
-	shiftOriginTo($('.ribbon-set'), l, t)
-	setElementOffset($('.point'), l, t)
-}
 
 
 
