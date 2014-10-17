@@ -313,9 +313,32 @@ module.RibbonsPrototype = {
 		return this
 	},
 
+	// Make a "shadow" image for use with image oriented animations...
+	//
+	//	.makeShadwo([<image>][, <animate>][, <delay>])
+	//		-> <finalize>
+	//
+	// A shadow is a clone of <image> placed directly above it while it 
+	// is hidden (transparent), calling <finalize> will remove the shadwo
+	// and restore the original image, if <animate> is set then the shadow
+	// will be moved to the image location, and <delay> sets the time delay
+	// to provision for shadow animations.
+	//
+	// <finalize> is a function, that when called will remove the shadow
+	// and restore image state.
+	//
+	// <image> is the target image to clone
+	//
+	// <animate> if is set, <finalize> will shift the shadow to target 
+	// image offset before removing it (default: false).
+	//
+	// <delay> sets the delay before the shadow is removed and the target 
+	// state is restored (default: 200).
+	//
 	// XXX make this work for multiple targets...
 	// XXX avoid hardcoded delays...
-	makeShadow: function(target, animate){
+	makeShadow: function(target, animate, delay){
+		delay = delay || 200
 		var img = this.getImage(target)
 		var gid = this.getElemGID(img)
 		var s = this.getScale()
@@ -344,11 +367,10 @@ module.RibbonsPrototype = {
 			setTimeout(function(){
 				img.removeClass('moving')
 				shadow.remove()
-			}, 200)
+			}, delay)
 			return img
 		}
 	},
-
 
 
 	// Contextual getters...
