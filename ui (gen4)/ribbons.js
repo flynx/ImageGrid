@@ -333,38 +333,99 @@ module.RibbonsPrototype = {
 	// <delay> sets the delay before the shadow is removed and the target 
 	// state is restored (default: 200).
 	//
+	//
+	// NOTE: if a previous shadow if the same image exists this will recycle
+	// 		the existing shadow and cancel it's removal.
+	//
 	// XXX make this work for multiple targets...
+	// XXX do we need this to adapt to scaling???
+	// 		...if so, then we'll need to place the shadow inside the 
+	// 		ribbon-set...
 	makeShadow: function(target, animate, delay){
 		delay = delay || 200
 		var img = this.getImage(target)
 		var gid = this.getElemGID(img)
 		var s = this.getScale()
-		var shadow = setElementScale($('<div>')
-				.addClass('shadow')
-				.append(
-					img
-						.clone()
-						.removeClass('current')
-						.attr('gid', null))
+		var vo = this.viewer.offset()
+		var io = img.offset()
+
+		// get the shadow if it exists...
+		var shadow = this.viewer.find('.shadow[gid="'+gid+'"]')
+
+		// recycle the shadow...
+		if(shadow.length > 0){
+			// cancel previous shadow removal ticket...
+			var ticket = shadow.attr('ticket') + 1
+			shadow
+				// reset ticket...
+				// NOTE: this is a possible race condition... (XXX)
+				.attr('ticket', ticket)
+				// place it over the current image...
 				.css({
-					width: img.width(),
-					height: img.height(),
-				}), s)
-				.css(img.offset())
-			.appendTo(this.viewer)
+					top: io.top - vo.top,
+					left: io.left - vo.left,
+				})
+
+		// create a new shadow...
+		} else {
+			// removal ticket...
+			var ticket = 0
+
+			// make a shadow element...
+			// ...we need to scale it to the current scale...
+			var shadow = setElementScale(
+				$('<div>')
+					.addClass('shadow')
+					.attr({
+						gid: gid,
+						ticket: ticket,
+					})
+					.append(
+						// clone the target into the shadow..
+						img
+							.clone()
+							.removeClass('current')
+							.attr('gid', null))
+					.css({
+						width: img.width(),
+						height: img.height(),
+					}), s)
+				// place it over the current image...
+				.css({
+					top: io.top - vo.top,
+					left: io.left - vo.left,
+				})
+				// place in the viewer...
+				// NOTE: placing the shadow in the viewer is a compromise that
+				// 		lets us do simpler positioning 
+				.appendTo(this.viewer)
+		}
+
 		img.addClass('moving')
 		var that = this
 
+		// function to clear the shadow...
 		return function(){
-			var s = that.getScale()
-			var img = that.getImage(gid)
-			if(animate){
-				shadow.css(img.offset())
+			// remove only the item with the correct ticket...
+			if(ticket == shadow.attr('ticket')){
+				var s = that.getScale()
+				var img = that.getImage(gid)
+				var vo = that.viewer.offset()
+				var io = img.offset()
+				if(animate){
+					shadow.css({
+						top: io.top - vo.top,
+						left: io.left - vo.left,
+					})
+				}
+				setTimeout(function(){
+					// remove only the item with the correct ticket...
+					if(ticket == shadow.attr('ticket')){
+						img.removeClass('moving')
+						shadow.remove()
+					}
+				}, delay)
 			}
-			setTimeout(function(){
-				img.removeClass('moving')
-				shadow.remove()
-			}, delay)
 			return img
 		}
 	},
