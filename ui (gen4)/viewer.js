@@ -482,6 +482,9 @@ actions.Actions(Client, {
 	fitSeven: ['Fit seven images', function(){ this.fitImage(7) }],
 	fitEight: ['Fit eight images', function(){ this.fitImage(8) }],
 	fitNine: ['Fit nine images', function(){ this.fitImage(9) }],
+	fitTen: ['Fit ten images', function(){ this.fitImage(10) }],
+	fitEleven: ['Fit eleven images', function(){ this.fitImage(11) }],
+	fitTwelve: ['Fit twelve images', function(){ this.fitImage(12) }],
 
 	// XXX
 	fitMax: ['Fit the maximum number of images',
