@@ -36,9 +36,16 @@
 
 	-webkit-transition: all 0.1s ease-in;
 	-moz-transition: all 0.1s ease-in;
+	-ms-transition: all 0.1s ease-in;
+	-o-transition: all 0.1s ease-in;
 	transition: all 0.1s ease-in;
 }
+.shadow,
 .shadow .image {
+	-webkit-transform-origin: 0 0;
+	-moz-transform-origin: 0 0;
+	-ms-transform-origin: 0 0;
+	-o-transform-origin: 0 0;
 	transform-origin: 0 0;
 }
 .image.moving {
@@ -49,18 +56,24 @@
 .viewer:not(.no-transitions) .ribbon-set {
 	-webkit-transition: all 0.2s linear, transform 0.2s linear;
 	-moz-transition: all 0.2s linear, transform 0.2s linear;
+	-ms-transition: all 0.2s linear, transform 0.2s linear;
+	-o-transition: all 0.2s linear, transform 0.2s linear;
 	transition: all 0.2s linear, transform 0.2s linear;
 }
 
 .viewer:not(.no-transitions) .ribbon {
 	-webkit-transition: all 0.2s ease-out;
 	-moz-transition: all 0.2s ease-out;
+	-ms-transition: all 0.2s ease-out;
+	-o-transition: all 0.2s ease-out;
 	transition: all 0.2s ease-out;
 }
 
 .no-transitions {
 	-webkit-transition: none;
 	-moz-transition: none;
+	-ms-transition: none;
+	-o-transition: none;
 	transition: none;
 }
 

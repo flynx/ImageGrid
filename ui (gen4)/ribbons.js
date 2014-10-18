@@ -339,17 +339,17 @@ module.RibbonsPrototype = {
 		var img = this.getImage(target)
 		var gid = this.getElemGID(img)
 		var s = this.getScale()
-		var shadow = $('<div>')
+		var shadow = setElementScale($('<div>')
 				.addClass('shadow')
-				.append(setElementScale(
+				.append(
 					img
 						.clone()
 						.removeClass('current')
-						.attr('gid', null), s))
+						.attr('gid', null))
 				.css({
-					width: img.width()*s,
-					height: img.height()*s,
-				})
+					width: img.width(),
+					height: img.height(),
+				}), s)
 				.css(img.offset())
 			.appendTo(this.viewer)
 		img.addClass('moving')

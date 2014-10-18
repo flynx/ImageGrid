@@ -190,15 +190,19 @@ actions.Actions({
 	// basic ribbon editing...
 	//
 	// NOTE: for all of these, current/ribbon image is a default...
-	//
-	// XXX move this out to a mixin...
+
+	// XXX to be used for things like mark/place and dragging...
+	shiftImageTo: ['',
+		function(target, to){
+			// XXX
+		}],
 	
 	shiftImageUp: ['Shift image up',
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
 		function(target){ 
-			// by default we need to update the current position...
+			// by default we need to focus another image in the same ribbon...
 			if(target == null){
 				var direction = this.direction == 'right' ? 'next' : 'prev'
 
@@ -221,7 +225,7 @@ actions.Actions({
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
 		function(target){ 
-			// by default we need to update the current position...
+			// by default we need to focus another image in the same ribbon...
 			if(target == null){
 				var direction = this.direction == 'right' ? 'next' : 'prev'
 
@@ -506,22 +510,28 @@ actions.Actions(Client, {
 		function(){  }],
 
 
-	// XXX these are cheating...
+	// XXX are these cheating???
 	shiftImageUp: [
 		function(target){
+			// prevent animations form adding/removing ribbons...
 			this.ribbons.preventTransitions()
 
 			return function(){
 				this.ribbons.restoreTransitions()
+				// NOTE: this may seem like cheating, but .reload() should
+				// 		be very efficient, reusing all of the items loaded...
 				this.reload()
 			}
 		}],
 	shiftImageDown: [
 		function(target){
+			// prevent animations form adding/removing ribbons...
 			this.ribbons.preventTransitions()
 
 			return function(){
 				this.ribbons.restoreTransitions()
+				// NOTE: this may seem like cheating, but .reload() should
+				// 		be very efficient, reusing all of the items loaded...
 				this.reload()
 			}
 		}],
