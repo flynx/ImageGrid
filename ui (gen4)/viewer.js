@@ -292,16 +292,17 @@ actions.Actions({
 			this.focusImage()
 		}],
 	
-	// XXX
-	sortImages: [
-		function(){  }],
 	reverseImages: [
 		function(){ this.data.reverseImages() }],
 
+	// XXX this also requires images...
+	sortImages: [
+		function(){  }],
 
 	// basic image editing...
 	//
-	// XXX
+	// XXX these are not data stuff... should this be split into a 
+	// 		separate images block???
 	rotateCW: [ 
 		function(){  }],
 	rotateCCW: [ 
@@ -422,17 +423,19 @@ actions.Actions(Client, {
 			this.ribbons.setBaseRibbon(r)
 		}],
 
-	// XXX test...
 	prevScreen: ['Focus previous image one screen width away',
 		function(){
-			var s = Math.floor(this.ribbons.getScreenWidthImages())
-			this.focusImage(this.data.getImage('current', -s))
+			var s = Math.ceil(this.ribbons.getScreenWidthImages())
+			this.focusImage(this.data.getImage('current', -s)
+					// go to the first image if it's closer than s...
+					|| this.data.getImage('first'))
 		}],
-	// XXX test...
 	nextScreen: ['Focus next image one screen width away',
 		function(){
-			var s = Math.floor(this.ribbons.getScreenWidthImages())
-			this.focusImage(this.data.getImage('current', s))
+			var s = Math.ceil(this.ribbons.getScreenWidthImages())
+			this.focusImage(this.data.getImage('current', s)
+					// go to the last image if it's closer than s...
+					|| this.data.getImage('last'))
 		}],
 
 	// zooming...
@@ -523,11 +526,19 @@ actions.Actions(Client, {
 
 	shiftRibbonUp: [
 		function(target){
-			// XXX
+			target = this.ribbons.getRibbon(target)
+			var i = this.ribbons.getRibbonOrder(target)
+			if(i > 0){
+				this.ribbons.placeRibbon(target, i-1)
+			}
 		}],
 	shiftRibbonDown: [
 		function(target){
-			// XXX
+			target = this.ribbons.getRibbon(target)
+			var i = this.ribbons.getRibbonOrder(target)
+			if(i < this.data.ribbon_order.length-1){
+				this.ribbons.placeRibbon(target, i+1)
+			}
 		}],
 
 	reverseImages: [
@@ -542,15 +553,14 @@ actions.Actions(Client, {
 
 	// basic image editing...
 	//
-	// XXX
 	rotateCW: [ 
-		function(){  }],
+		function(target){ this.ribbons.rotateCW(target) }],
 	rotateCCW: [ 
-		function(){  }],
+		function(target){ this.ribbons.rotateCCW(target) }],
 	flipVertical: [ 
-		function(){  }],
+		function(target){ this.ribbons.flipVertical(target) }],
 	flipHorizontal: [
-		function(){  }],
+		function(target){ this.ribbons.flipHorizontal(target) }],
 
 })
 

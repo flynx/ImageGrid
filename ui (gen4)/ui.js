@@ -118,6 +118,7 @@ module.GLOBAL_KEYBOARD = {
 				event.preventDefault()
 				a.shiftImageLeft() 
 			},
+			ctrl: function(){ a.prevScreen() },
 		},
 		Right: {
 			default: function(){ a.nextImage() },
@@ -125,6 +126,7 @@ module.GLOBAL_KEYBOARD = {
 				event.preventDefault()
 				a.shiftImageRight() 
 			},
+			ctrl: function(){ a.nextScreen() },
 		},
 		Up: {
 			default: function(){ a.prevRibbon() },

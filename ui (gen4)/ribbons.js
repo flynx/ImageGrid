@@ -588,12 +588,20 @@ module.RibbonsPrototype = {
 			// XXX what do we do if the target does not exist, i.e. p == -1 ????
 		}
 
+		if(i == position){
+			return ribbon
+		}
+
 		// place the ribbon...
 		if(ribbons.length == 0 || ribbons.length <= position){
 			this.viewer.find('.ribbon-set').append(ribbon)
 
-		} else if(i != position) {
+		} else if(i > position) {
 			ribbons.eq(position).before(ribbon)
+
+		// for placing after need to account for target ribbon removal...
+		} else if(i < position) {
+			ribbons.eq(position).after(ribbon)
 		}
 
 		// XXX do we need to update the ribbon here???
