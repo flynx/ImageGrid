@@ -138,8 +138,14 @@ module.GLOBAL_KEYBOARD = {
 			shift: function(){ a.shiftImageDown() },
 			'ctrl+shift': function(){ a.shiftImageDownNewRibbon() },
 		},
-		'#0': function(){ a.fitImage(20) },
-		'#1': function(){ a.fitOrig() },
+		'#0': function(){ a.fitMax() },
+		'#1': {
+			default: function(){ a.fitImage() },
+			ctrl: function(){ 
+				event.preventDefault()
+				a.fitOrig() 
+			},
+		},
 		'#2': function(){ a.fitTwo() },
 		'#3': function(){ a.fitThree() },
 		'#4': function(){ a.fitFour() },
@@ -148,6 +154,10 @@ module.GLOBAL_KEYBOARD = {
 		'#7': function(){ a.fitSeven() },
 		'#8': function(){ a.fitEight() },
 		'#9': function(){ a.fitNine() },
+		
+		'+': function(){ a.zoomIn() },
+		'=': '+',
+		'-': function(){ a.zoomOut() },
 		
 
 	},

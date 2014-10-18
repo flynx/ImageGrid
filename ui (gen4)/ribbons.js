@@ -211,10 +211,10 @@ module.RibbonsPrototype = {
 	// 		gets the visible size of the image tile in pixels.
 	//
 	// XXX try and make image size the product of vmin and scale...
-	getVisibleImageSize: function(dim){
+	getVisibleImageSize: function(dim, scale){
+		scale = scale || this.getScale()
 		dim = dim == null ? 'width' : dim
 		var img = this.viewer.find('.image')
-		var scale = this.getScale()
 		if(dim == 'height'){
 			return img.outerHeight(true) * scale
 		} else if(dim == 'width'){
@@ -230,7 +230,7 @@ module.RibbonsPrototype = {
 		var scale = scale == null ? 1 : scale/this.getScale()
 
 		var W = this.viewer.width()
-		var w = this.getVisibleImageSize('width')*scale
+		var w = this.getVisibleImageSize('width') * scale
 
 		return W/w
 	},
@@ -1408,11 +1408,24 @@ module.RibbonsPrototype = {
 	//
 	// If n is given this will fit n images (default: 1)
 	//
+	// NOTE: this will never scale the view in a wat that an image 
+	// 		overflows either in height nor width.
+	//
 	// XXX might be usefull to set origin before scaling...
 	fitImage: function(n){
 		n = n == null ? 1 : n
 
+		// NOTE: this is width oriented...
 		var scale = this.getScreenWidthImages(1) / n
+
+		// check bounds...
+		var H = this.viewer.height()
+		var h = this.getVisibleImageSize('height', 1)
+
+		// n images will be higher than the viewer, adjust for height...
+		if(h*scale >= H){
+			scale = H/h 
+		}
 
 		this
 			.setScale(scale)

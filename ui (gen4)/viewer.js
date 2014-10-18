@@ -32,6 +32,8 @@ actions.Actions({
 	// XXX should this be here???
 	config: {
 		'steps-to-change-direction': 3,
+		'max-screen-images': 30,
+		'zoom-step': 1.2,
 	},
 
 
@@ -190,14 +192,12 @@ actions.Actions({
 	// NOTE: for all of these, current/ribbon image is a default...
 	//
 	// XXX move this out to a mixin...
+	
 	shiftImageUp: ['Shift image up',
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
 		function(target){ 
-			// stop transitions...
-			this.ribbons.preventTransitions()
-
 			// by default we need to update the current position...
 			if(target == null){
 				var direction = this.direction == 'right' ? 'next' : 'prev'
@@ -215,20 +215,12 @@ actions.Actions({
 			} else {
 				this.data.shiftImageUp(target)
 			}
-
-			// restore transitions...
-			return function(){
-				this.ribbons.restoreTransitions()
-			}
 		}],
 	shiftImageDown: ['Shift image down',
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
 		function(target){ 
-			// stop transitions...
-			this.ribbons.preventTransitions()
-
 			// by default we need to update the current position...
 			if(target == null){
 				var direction = this.direction == 'right' ? 'next' : 'prev'
@@ -245,11 +237,6 @@ actions.Actions({
 			// if a specific target is given, just shift it...
 			} else {
 				this.data.shiftImageDown(target)
-			}
-		
-			// restore transitions...
-			return function(){
-				this.ribbons.restoreTransitions()
 			}
 		}],
 	shiftImageUpNewRibbon: ['Shift image up to a new empty ribbon',
@@ -442,11 +429,32 @@ actions.Actions(Client, {
 		}],
 
 	// zooming...
-	// XXX
+	//
+	// Zooming is done by multiplying the current scale by config['zoom-step']
+	// and rounding to nearest discrete number of images to fit on screen.
 	zoomIn: ['Zoom in',
-		function(){  }],
+		function(){ 
+			this.ribbons.setOrigin()
+
+			//var n = Math.round(this.ribbons.getScreenWidthImages())-1
+			var d = this.config['zoom-step']
+			var s = a.ribbons.getScale() * d
+			var n = Math.floor(this.ribbons.getScreenWidthImages(s))
+		
+			this.fitImage(n <= 0 ? 1 : n)
+		}],
 	zoomOut: ['Zoom out',
-		function(){  }],
+		function(){ 
+			this.ribbons.setOrigin()
+
+			//var n = Math.round(this.ribbons.getScreenWidthImages())+1
+			var d = this.config['zoom-step']
+			var s = a.ribbons.getScale() / d
+			var n = Math.ceil(this.ribbons.getScreenWidthImages(s))
+
+			var max = this.config['max-screen-images']
+			this.fitImage(n > max ? max : n)
+		}],
 
 	fitOrig: ['Fit to original scale',
 		function(){ 
@@ -461,7 +469,6 @@ actions.Actions(Client, {
 
 	// NOTE: if this gets a count argument it will fit count images, 
 	// 		default is one.
-	// XXX animation broken for this...
 	fitImage: ['Fit image',
 		function(count){
 			//this.ribbons.preventTransitions()
@@ -473,7 +480,6 @@ actions.Actions(Client, {
 			//this.ribbons.restoreTransitions()
 		}],
 
-	// XXX should these be relative to screen rather than actual image counts?
 	fitTwo: ['Fit two images', function(){ this.fitImage(2) }],
 	fitThree: ['Fit three images', function(){ this.fitImage(3) }],
 	fitFour: ['Fit four images', function(){ this.fitImage(4) }],
@@ -486,9 +492,8 @@ actions.Actions(Client, {
 	fitEleven: ['Fit eleven images', function(){ this.fitImage(11) }],
 	fitTwelve: ['Fit twelve images', function(){ this.fitImage(12) }],
 
-	// XXX
 	fitMax: ['Fit the maximum number of images',
-		function(){  }],
+		function(){ this.fitImage(this.config['max-screen-images']) }],
 
 	// XXX
 	fitSmall: ['Show small image',
@@ -504,15 +509,19 @@ actions.Actions(Client, {
 	// XXX these are cheating...
 	shiftImageUp: [
 		function(target){
+			this.ribbons.preventTransitions()
+
 			return function(){
-				// XXX this is cheating...
+				this.ribbons.restoreTransitions()
 				this.reload()
 			}
 		}],
 	shiftImageDown: [
 		function(target){
+			this.ribbons.preventTransitions()
+
 			return function(){
-				// XXX this is cheating...
+				this.ribbons.restoreTransitions()
 				this.reload()
 			}
 		}],
@@ -566,6 +575,9 @@ actions.Actions(Client, {
 
 	// basic image editing...
 	//
+	// XXX should these call .images.* or should it be done by data...
+	// 		...I think that data is a better candidate as it should be
+	// 		standalone...
 	rotateCW: [ 
 		function(target){ this.ribbons.rotateCW(target) }],
 	rotateCCW: [ 
