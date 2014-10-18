@@ -243,13 +243,23 @@ module.RibbonsPrototype = {
 
 	// Set ribbon set scale...
 	//
+	// 	.setScale(<scale>)
+	// 	.setScale(<scale>, <image>)
+	// 	.setScale(<scale>, 'top'|'center'|'bottom'|<px>|%, 'left'|'center'|'right'|<px>|%)
+	// 		-> <ribbons>
+	//
 	// NOTE: this will also set origin...
 	setScale: function(scale, t, l){
 		var ribbon_set = this.viewer.find('.ribbon-set')
 
-		var img = t == null ? this.getImage() : t
+		if(t != null && l != null){
+			this.setOrigin(t, l)
 
-		this.setOrigin(img)
+		} else {
+			var img = t == null ? this.getImage() : t
+
+			this.setOrigin(img)
+		}
 
 		setElementScale(ribbon_set, scale)
 		return this
@@ -268,29 +278,39 @@ module.RibbonsPrototype = {
 	//		-> ribbons
 	//
 	//	Set origin to center of elment:
-	//	.setOrigin(elem)
+	//	.setOrigin(image)
 	//		-> ribbons
 	//
 	//	Set origin to screen coordinates:
-	//	.setOrigin(x, y)
+	//	.setOrigin(x|%|'left'|'center'|'right', x|%|'top'|'center'|'bottom')
 	//		-> ribbons
 	//
 	// NOTE: this will also compensate for scaling.
 	//
 	// XXX DEBUG: remove point updating when not needed...
 	setOrigin: function(a, b){
-		//this.preventTransitions()
-
 		var ribbon_set = this.viewer.find('.ribbon-set')
 		var ro = ribbon_set.offset()
+		var s = this.getScale()
 
-		if(typeof(a) == typeof(123) && typeof(b) == typeof(123)){
-			var l = a - ro.top
-			var t = b - ro.left
+		if(a != null && b != null){
+			a = a == 'left' ? 0
+				: a == 'right' ? this.viewer.width()
+				: a == 'center' ? this.viewer.width()/2
+				: /[0-9.]*%/.test(a) ? this.viewer.width()*(parseFloat(a)/100)
+				: a
+
+			b = b == 'top' ? 0
+				: b == 'bottom' ? this.viewer.height()
+				: b == 'center' ? this.viewer.height()/2
+				: /[0-9.]*%/.test(b) ? this.viewer.height()*(parseFloat(b)/100)
+				: b
+
+			var l = (a - ro.left)/s
+			var t = (b - ro.top)/s
 
 		} else {
 			var img = this.getImage(a)
-			var s = this.getScale()
 			var io = img.offset()
 			var w = img.width()
 			var h = img.height()
@@ -305,8 +325,6 @@ module.RibbonsPrototype = {
 		if($('.point').length > 0){
 			setElementOffset($('.point'), l, t)
 		}
-
-		//this.restoreTransitions(true)
 
 		return this
 	},
