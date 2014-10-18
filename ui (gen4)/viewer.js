@@ -292,8 +292,11 @@ actions.Actions({
 			this.focusImage()
 		}],
 	
-	reverseImages: [
+	reverseImages: ['Reverse image order',
 		function(){ this.data.reverseImages() }],
+	reverseRibbons: ['Reverse ribbon order',
+		function(){ this.data.reverseRibbons() }],
+
 
 	// XXX this also requires images...
 	sortImages: [
@@ -547,6 +550,13 @@ actions.Actions(Client, {
 			return function(){ 
 				this.reload() 
 				this.ribbons.restoreTransitions()
+			}
+		}],
+	reverseRibbons: [
+		function(target){
+			return function(){
+				// XXX this is cheating...
+				this.reload()
 			}
 		}],
 

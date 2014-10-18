@@ -898,6 +898,10 @@ module.DataPrototype = {
 		return this
 	},
 
+	reverseRibbons: function(){
+		this.ribbon_order.reverse()
+	},
+
 	// Shift image...
 	//
 	//	Shift image to target position:
