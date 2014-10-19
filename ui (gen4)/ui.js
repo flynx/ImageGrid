@@ -128,6 +128,8 @@ module.GLOBAL_KEYBOARD = {
 			},
 			ctrl: function(){ a.nextScreen() },
 		},
+		'(': function(){ a.prevImageInOrder() },
+		')': function(){ a.nextImageInOrder() },
 		Up: {
 			default: function(){ a.prevRibbon() },
 			shift: function(){ a.shiftImageUp() },

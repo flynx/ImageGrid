@@ -127,8 +127,8 @@ actions.Actions({
 	// basic navigation...
 	//
 	focusImage: ['Focus image',
-		function(img){
-			this.data.focusImage(img)
+		function(img, list){
+			this.data.focusImage(img, list)
 		}],
 	focusRibbon: ['Focus Ribbon',
 		function(target){
@@ -152,7 +152,7 @@ actions.Actions({
 
 			this.focusImage(t, r)
 		}],
-	setBaseRibbon: ['',
+	setBaseRibbon: ['Set base ribbon',
 		function(target){ this.data.setBase(target) }],
 
 	// shorthands for .focusImage(..) and .focusRibbon(..)...
@@ -172,6 +172,19 @@ actions.Actions({
 			// keep track of traverse direction...
 			this.direction = 'right'
 			this.focusImage('next') 
+		}],
+
+	prevImageInOrder: ['Focus previous image in order',
+		function(){ 
+			// keep track of traverse direction...
+			this.direction = 'left'
+			this.focusImage('prev', this.data.order) 
+		}],
+	nextImageInOrder: ['Focus next image in order',
+		function(){ 
+			// keep track of traverse direction...
+			this.direction = 'right'
+			this.focusImage('next', this.data.order) 
 		}],
 
 	firstRibbon: ['Focus previous ribbon',
@@ -359,58 +372,61 @@ actions.Actions(Client, {
 	focusImage: [
 		// XXX skip invisible ribbons (???)
 		// XXX load data chunks...
-		function(target){
+		function(target, list){
 			var ribbons = this.ribbons
 			var data = this.data
 
-			if(data != null){
-				var gid = data.getImage(target)
-				gid = gid == null ? data.getImage('current') : gid
-
-				// XXX see if we need to load a new data set...
-				// XXX
-		
-				target = ribbons.focusImage(gid)
-
-			} else {
+			if(data == null){
 				target = ribbons.focusImage(target)
 				var gid = ribbons.getElemGID(target)
 			}
 
-			// align current ribbon...
-			ribbons
-				.centerRibbon(target)
-				.centerImage(target)
+			return function(){
+				if(data != null){
+					// use the data for all the heavy lifting...
+					// NOTE: this will prevent sync errors...
+					var gid = data.getImage()
+					target = ribbons.focusImage(gid)
 
-			// align other ribbons...
-			if(data != null){
-				var ribbon = data.getRibbon(gid)
-				for(var r in data.ribbons){
-					// skip the current ribbon...
-					if(r == ribbon){
-						continue
-					}
-
-					// XXX skip off-screen ribbons...
+					// XXX see if we need to do some loading...
 					// XXX
+				}
 
-					// center...
-					// XXX is there a 'last' special case here???
-					var t = data.getImage(gid, r)
-					if(t == null){
-						var f = data.getImage('first', r)
-						// nothing found -- empty ribbon?
-						if(f == null){
+				// align current ribbon...
+				ribbons
+					.centerRibbon(target)
+					.centerImage(target)
+
+				// align other ribbons...
+				if(data != null){
+					var ribbon = data.getRibbon(gid)
+					for(var r in data.ribbons){
+						// skip the current ribbon...
+						if(r == ribbon){
 							continue
 						}
-						ribbons.centerImage(data.getImage('first', r), 'before')
-					} else {
-						ribbons.centerImage(t, 'after')
+
+						// XXX skip off-screen ribbons...
+						// XXX
+
+						// center...
+						// XXX is there a 'last' special case here???
+						var t = data.getImage(gid, r)
+						if(t == null){
+							var f = data.getImage('first', r)
+							// nothing found -- empty ribbon?
+							if(f == null){
+								continue
+							}
+							ribbons.centerImage(data.getImage('first', r), 'before')
+						} else {
+							ribbons.centerImage(t, 'after')
+						}
 					}
 				}
 			}
 		}],
-	setBaseRibbon: ['',
+	setBaseRibbon: [
 		function(target){
 			var r = this.data.getRibbon(target)
 			r =  r == null ? this.ribbons.getRibbon(target) : r

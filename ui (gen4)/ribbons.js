@@ -373,8 +373,14 @@ module.RibbonsPrototype = {
 	//
 	// NOTE: if a previous shadow if the same image exists this will recycle
 	// 		the existing shadow and cancel it's removal.
+	// 		...this is useful for when a second consecutive action with
+	// 		the same image is issued before the previous has time to
+	// 		complete, recycling the shadow will enable a single flowing 
+	// 		animation for such series of commands.
+	// 		Example: several fast consecutive horizontal shifts will result
+	// 			in a single shadow "flowing" through the ribbon.
+	// NOTE: multiple shadows of different images are supported...
 	//
-	// XXX make this work for multiple targets...
 	// XXX should we also have a ribbon shadow???
 	makeShadow: function(target, animate, delay){
 		delay = delay || 200
