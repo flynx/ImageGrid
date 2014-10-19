@@ -172,25 +172,42 @@ module.RibbonsPrototype = {
 	// XXX need a better way of doing this...
 	preventTransitions: function(){
 		this.viewer.addClass('no-transitions')
-		getComputedStyle(this.viewer[0]).style
+		var v = this.viewer[0]
+		getComputedStyle(v).webkitTransition
+		getComputedStyle(v).mozTransition
+		getComputedStyle(v).msTransition
+		getComputedStyle(v).oTransition
+		getComputedStyle(v).transition
 	},
 	restoreTransitions: function(now){
 		// sync...
 		if(now){
 			this.viewer.removeClass('no-transitions')
+			var v = this.viewer[0]
+			getComputedStyle(v).webkitTransition
+			getComputedStyle(v).mozTransition
+			getComputedStyle(v).msTransition
+			getComputedStyle(v).oTransition
+			getComputedStyle(v).transition
 
 		// on next exec frame...
 		} else {
 			var that = this
 			setTimeout(function(){
 				that.viewer.removeClass('no-transitions')}, 0)
+				var v = that.viewer[0]
+				getComputedStyle(v).webkitTransition
+				getComputedStyle(v).mozTransition
+				getComputedStyle(v).msTransition
+				getComputedStyle(v).oTransition
+				getComputedStyle(v).transition
 		}
 	},
 
 	noTransitions: function(func){
 		this.preventTransitions()
 		func.apply(this, args2array(arguments).slice(1))
-		this.restoreTransitions()
+		this.restoreTransitions(true)
 	},
 
 
@@ -358,9 +375,7 @@ module.RibbonsPrototype = {
 	// 		the existing shadow and cancel it's removal.
 	//
 	// XXX make this work for multiple targets...
-	// XXX do we need this to adapt to scaling???
-	// 		...if so, then we'll need to place the shadow inside the 
-	// 		ribbon-set...
+	// XXX should we also have a ribbon shadow???
 	makeShadow: function(target, animate, delay){
 		delay = delay || 200
 		var img = this.getImage(target)
@@ -415,10 +430,14 @@ module.RibbonsPrototype = {
 					top: io.top - vo.top,
 					left: io.left - vo.left,
 				})
+				.append(this.getImageMarks(img)
+						.clone()
+						.attr('gid', null))
 				// place in the viewer...
 				// NOTE: placing the shadow in the viewer is a compromise that
 				// 		lets us do simpler positioning 
 				.appendTo(this.viewer)
+				
 		}
 
 		img.addClass('moving')
@@ -538,6 +557,7 @@ module.RibbonsPrototype = {
 	//
 	// XXX should this be here or in a marks plugin...
 	getImageMarks: function(img, cls){
+		img = img || this.getImage()
 		gid = typeof(img) == typeof('str') ? img : null
 		gid = gid == null ? this.getElemGID(img) : gid
 
@@ -752,13 +772,16 @@ module.RibbonsPrototype = {
 
 		// place the image...
 		if(images.length <= i){
-			to.parents('.ribbon').append(img)
+			to.parents('.ribbon')
+				.append(img)
 		// after...
 		} else if(i > 0){
-			to.next('.image').before(img)
+			to.next('.image')
+				.before(img)
 		// before...
 		} else {
-			to.before(img)
+			to
+				.before(img)
 		}
 
 		return this.updateImage(img)
@@ -772,6 +795,9 @@ module.RibbonsPrototype = {
 	updateImageIndicators: function(gid, image){
 		gid = gid == null ? this.getElemGID() : gid
 		image = image == null ? this.getImage() : $(image)
+
+		// collect marks...
+		image.after(this.getImageMarks(gid))
 
 		IMAGE_UPDATERS.forEach(function(update){
 			update(gid, image)

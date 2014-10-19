@@ -462,26 +462,16 @@ actions.Actions(Client, {
 
 	fitOrig: ['Fit to original scale',
 		function(){ 
-			//this.ribbons.preventTransitions()
-
 			this.ribbons.setScale(1) 
 			this.ribbons.updateImage('*')
-
-			//this.focusImage()
-			//this.ribbons.restoreTransitions()
 		}],
 
 	// NOTE: if this gets a count argument it will fit count images, 
 	// 		default is one.
 	fitImage: ['Fit image',
 		function(count){
-			//this.ribbons.preventTransitions()
-
 			this.ribbons.fitImage(count)
 			this.ribbons.updateImage('*')
-
-			//this.focusImage()
-			//this.ribbons.restoreTransitions()
 		}],
 
 	fitTwo: ['Fit two images', function(){ this.fitImage(2) }],
@@ -517,10 +507,10 @@ actions.Actions(Client, {
 			this.ribbons.preventTransitions()
 
 			return function(){
-				this.ribbons.restoreTransitions()
 				// NOTE: this may seem like cheating, but .reload() should
 				// 		be very efficient, reusing all of the items loaded...
 				this.reload()
+				this.ribbons.restoreTransitions()
 			}
 		}],
 	shiftImageDown: [
@@ -529,10 +519,10 @@ actions.Actions(Client, {
 			this.ribbons.preventTransitions()
 
 			return function(){
-				this.ribbons.restoreTransitions()
 				// NOTE: this may seem like cheating, but .reload() should
 				// 		be very efficient, reusing all of the items loaded...
 				this.reload()
+				this.ribbons.restoreTransitions()
 			}
 		}],
 
@@ -569,6 +559,7 @@ actions.Actions(Client, {
 	reverseImages: [
 		function(){ 
 			this.ribbons.preventTransitions()
+
 			return function(){ 
 				this.reload() 
 				this.ribbons.restoreTransitions()
