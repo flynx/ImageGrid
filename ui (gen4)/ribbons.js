@@ -294,6 +294,8 @@ module.RibbonsPrototype = {
 		var s = this.getScale()
 
 		if(a != null && b != null){
+			var vo = this.viewer.offset()
+
 			a = a == 'left' ? 0
 				: a == 'right' ? this.viewer.width()
 				: a == 'center' ? this.viewer.width()/2
@@ -306,8 +308,8 @@ module.RibbonsPrototype = {
 				: /[0-9.]*%/.test(b) ? this.viewer.height()*(parseFloat(b)/100)
 				: b
 
-			var l = (a - ro.left)/s
-			var t = (b - ro.top)/s
+			var l = (a - ro.left)/s + vo.left
+			var t = (b - ro.top)/s + vo.top
 
 		} else {
 			var img = this.getImage(a)
@@ -1458,16 +1460,16 @@ module.RibbonsPrototype = {
 	// center an image horizontally...
 	// 
 	// XXX offset is not used...
-	// XXX custom align point woud also be nice... 
+	// XXX custom align point would also be nice... 
 	// 		(top, bottom, center, %, px)
 	centerImage: function(target, mode, offset, scale){
 		target = this.getImage(target)
 		scale = scale || this.getScale()
 		var ribbon = this.getRibbon(target)
 
-		var vl = this.viewer.offset().left
 		var rl = ribbon.offset().left
 		var il = target.offset().left
+		//var rsl = this.viewer.find('.ribbon-set').offset().left
 		var W = this.viewer.width() * scale
 		var w = target.width() * scale
 
@@ -1477,7 +1479,7 @@ module.RibbonsPrototype = {
 
 		ribbon
 			.css({
-				left: (rl + ((W-w)/2 + image_offset) - (il - vl)) / scale,
+				left: (rl + ((W-w)/2 + image_offset) - il) / scale,
 			})
 
 		return this
