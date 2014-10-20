@@ -242,6 +242,8 @@ function Action(name, doc, ldoc, func){
 
 	return meth
 }
+// this will make action instances behave like real functions...
+Action.prototype.__proto__ = Function
 
 
 // A base action-set object...

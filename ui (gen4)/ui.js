@@ -110,66 +110,66 @@ module.GLOBAL_KEYBOARD = {
 		},
 
 		// XXX testing...
-		Home: function(){ a.firstImage() },
-		End: function(){ a.lastImage() },
+		Home: 'firstImage',
+		End: 'lastImage',
 		Left: {
-			default: function(){ a.prevImage() },
-			alt: function(){ 
-				event.preventDefault()
-				a.shiftImageLeft() 
-			},
-			ctrl: function(){ a.prevScreen() },
+			default: 'prevImage',
+			alt: 'shiftImageLeft!',
+			ctrl: 'prevScreen',
 		},
 		Right: {
-			default: function(){ a.nextImage() },
-			alt: function(){ 
-				event.preventDefault()
-				a.shiftImageRight() 
-			},
-			ctrl: function(){ a.nextScreen() },
+			default: 'nextImage',
+			alt: 'shiftImageRight!',
+			ctrl: 'nextScreen',
 		},
-		'(': function(){ a.prevImageInOrder() },
-		')': function(){ a.nextImageInOrder() },
+		'(': 'prevImageInOrder',
+		')': 'nextImageInOrder',
 		Up: {
-			default: function(){ a.prevRibbon() },
-			shift: function(){ a.shiftImageUp() },
-			'ctrl+shift': function(){ a.shiftImageUpNewRibbon() },
+			default: 'prevRibbon',
+			shift: 'shiftImageUp',
+			'ctrl+shift': 'shiftImageUpNewRibbon',
 		},
 		Down: {
-			default: function(){ a.nextRibbon() },
-			shift: function(){ a.shiftImageDown() },
-			'ctrl+shift': function(){ a.shiftImageDownNewRibbon() },
+			default: 'nextRibbon',
+			shift: 'shiftImageDown',
+			'ctrl+shift': 'shiftImageDownNewRibbon',
 		},
-		'#0': function(){ a.fitMax() },
+		'#0': 'fitMax',
 		'#1': {
-			default: function(){ a.fitImage() },
-			ctrl: function(){ 
-				event.preventDefault()
-				a.fitOrig() 
-			},
+			default: 'fitImage',
+			ctrl: 'fitOrig!',
 		},
-		'#2': function(){ a.fitTwo() },
-		'#3': function(){ a.fitThree() },
-		'#4': function(){ a.fitFour() },
-		'#5': function(){ a.fitFive() },
-		'#6': function(){ a.fitSix() },
-		'#7': function(){ a.fitSeven() },
-		'#8': function(){ a.fitEight() },
-		'#9': function(){ a.fitNine() },
+		'#2': 'fitTwo',
+		'#3': 'fitThree',
+		'#4': 'fitFour',
+		'#5': 'fitFive',
+		'#6': 'fitSix',
+		'#7': 'fitSeven',
+		'#8': 'fitEight',
+		'#9': 'fitNine',
 		
-		'+': function(){ a.zoomIn() },
+		'+': 'zoomIn',
 		'=': '+',
-		'-': function(){ a.zoomOut() },
+		'-': 'zoomOut',
 		
-
 	},
 }	
+
 
 
 
 /*********************************************************************/
 
 $(function(){
+
+	window.a = testing.setupActions()
+
+	viewer.Animation.setup(a)
+
+	// this publishes all the actions...
+	//module.GLOBAL_KEYBOARD.__proto__ = a
+
+
 	// setup base keyboard for devel, in case something breaks...
 	$(document)
 		.keydown(
@@ -177,11 +177,8 @@ $(function(){
 				module.GLOBAL_KEYBOARD,
 				function(k){
 					window.DEBUG && console.log(k)
-				}))
-
-	window.a = testing.setupActions()
-
-	viewer.Animation.setup(a)
+				}, 
+				a))
 })
 
 
