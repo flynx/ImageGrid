@@ -376,19 +376,29 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 				// 		and letting the caller decide how to make the call 
 				// 		seems more logical...
 				handler = function(n){ 
-					return function(){ 
-						return actions[n]() }}(handler)
+					var f = function(){ return actions[n]() }
+					// make this doc-generator compatible -- inherit all
+					// the docs from the actual action...
+					f.__proto__ = actions[n]
+					return f
+				}(handler)
 
 			// action name with '!' -- prevent default...
 			} else if(handler.slice(-1) == '!' 
 					&& handler.slice(0, -1) in actions){
 				// build a handler...
-				// ...see notes for the previous section...
+				// ...for the reasons why this is like it is see notes
+				// for the previous if...
 				handler = function(n){ 
-					return function(){ 
+					var f = function(){ 
 						event.preventDefault()
 						return actions[n]() 
-					}}(handler.slice(0, -1))
+					}
+					// make this doc-generator compatible -- inherit all
+					// the docs from the actual action...
+					f.__proto__ = actions[n]
+					return f
+				}(handler.slice(0, -1))
 
 			// key code...
 			} else if(typeof(handler) == typeof(1)) {
