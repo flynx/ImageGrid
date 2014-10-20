@@ -201,6 +201,17 @@ function normalizeModifiers(c, a, s){
  * 'shift-/' is the same as '?', and either can be used, but the shorter 
  * direct notation has priority (see _SHIFT_KEYS for supported keys).
  *
+ * When resolving handler aliases this will look in:
+ * 	1) the current mode
+ * 	2) the keybinding object
+ * 	3) the actions object if given
+ *
+ * NOTE: if a handler is found in the action object it will be called in
+ * 		the action object context rather than the keybinding context as
+ * 		as with normal handlers.
+ * NOTE: if and action alias ends with '!' then event.preventDefault() will
+ * 		get called before the action.
+ *
  *
  * Returns:
  * 	{
@@ -238,16 +249,17 @@ function normalizeModifiers(c, a, s){
  */
 var getKeyHandlers =
 module.getKeyHandlers =
-function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
+function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, actions){
 	var chr = null
 	var s_chr = null
 	// XXX I do not understand why this is here...
 	var did_handling = false
 	var did_ignore = false
-	modifiers = modifiers == null ? '' : modifiers
+	modifiers = modifiers || ''
 	modifiers = modifiers != '?' ? normalizeModifiers(modifiers) : modifiers
-	modes = modes == null ? 'any' : modes
-	shifted_keys = shifted_keys == null ? _SHIFT_KEYS : shifted_keys
+	modes = modes || 'any'
+	shifted_keys = shifted_keys || _SHIFT_KEYS
+	actions = actions || {}
 
 	if(typeof(key) == typeof(123)){
 		key = key
@@ -265,6 +277,10 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 	res = {}
 
 	for(var title in keybindings){
+		// skip functions...
+		if(typeof(keybindings[title]) == 'function'){
+			continue
+		}
 
 		// If a key is ignored then look no further...
 		if(did_ignore){
@@ -313,13 +329,14 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 		// alias...
 		// XXX should this be before after or combined with ignore handling...
 		while( handler != null 
-				&& (typeof(handler) == typeof(123) 
-					|| typeof(handler) == typeof('str')
-					|| typeof(handler) == typeof({}) 
-						&& handler.constructor.name == 'Object') ){
+				&& typeof(handler) != 'function'){
+				//&& (typeof(handler) == typeof(123) 
+				//	|| typeof(handler) == typeof('str')
+				//	|| typeof(handler) == typeof({}) 
+				//		&& handler.constructor.name == 'Object') ){
 
 			// do the complex handler aliases...
-			if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
+			if(handler != null && handler.constructor == Object){
 				// build modifier list...
 				if(modifiers == '?'){
 					break
@@ -341,8 +358,40 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 			if(handler in bindings){
 				// XXX need to take care of that we can always be a number or a string...
 				handler = bindings[handler]
+
+			// global alias...
+			} else if(handler in keybindings){
+				handler = keybindings[handler]
+
+			// action name...
+			} else if(handler in actions){
+				// build a handler...
+				// NOTE: 'handler' is changing in a loop, and so as to 
+				// 		link it's specific value we need to construct a
+				// 		seporate closue, thus the odd construct below...
+				// XXX this is a bit non-uniform, marking this as an action
+				// 		and letting the caller decide how to make the call 
+				// 		seems more logical...
+				handler = function(n){ 
+					return function(){ 
+						return actions[n]() }}(handler)
+
+			// action name with '!' -- prevent default...
+			} else if(handler.slice(-1) == '!' 
+					&& handler.slice(0, -1) in actions){
+				// build a handler...
+				// ...see notes for the previous section...
+				handler = function(n){ 
+					return function(){ 
+						event.preventDefault()
+						return actions[n]() 
+					}}(handler.slice(0, -1))
+
+			// key code...
 			} else if(typeof(handler) == typeof(1)) {
 				handler = bindings[toKeyName(handler)]
+
+			// key name...
 			} else {
 				handler = bindings[toKeyCode(handler)]
 			}
@@ -370,7 +419,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 		}
 
 		// complex handler...
-		if(typeof(handler) == typeof({}) && handler.constructor.name == 'Object'){
+		if(handler != null && handler.constructor === Object){
 			// build modifier list...
 			if(modifiers == '?'){
 				res[mode] = Object.keys(handler)
@@ -412,9 +461,15 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
 }
 
 
-/* Basic key binding format:
+/* Make a keyboard handler function...
+ *
+ * Basic key binding format:
  *
  * {
+ *		// alias...
+ * 		<alias> : <handler> | <callback>,
+ *
+ * 		// section...
  * 		<title>: {
  * 			doc: <text>,
  * 			pattern: <css-selector>,
@@ -425,6 +480,9 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  *			// NOTE: ignoring a key will stop processing it in other 
  *			//		compatible modes.
  * 			ignore: <ignored-keys>
+ *
+ *			// alias...
+ * 			<alias> : <handler> | <callback>,
  *
  *			// NOTE: a callback can have a .doc attr containing 
  *			//		documentation...
@@ -441,7 +499,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  *				// a value...
  *				// NOTE: when the alias is resolved, the same modifiers 
  *				//		will be applied to the final resolved handler.
- * 				default: <callback> | <key-def-x>,
+ * 				default: <callback> | <alias>,
  *
  *				// a modifier can be any single modifier, like shift or a 
  *				// combination of modifiers like 'ctrl+shift', in order 
@@ -457,7 +515,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  * 			},
  *
  *			// alias...
- * 			<key-def-a> : <key-def-b>,
+ * 			<key-def> : <alias>,
  *
  *			...
  * 		},
@@ -477,9 +535,16 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  * 	- explicit key code, e.g. 65
  * 	- key name, if present in _SPECIAL_KEYS, e.g. Enter
  * 	- key char (uppercase), as is returned by String.fromCharCode(...) e.g. A
- * 	- action -- any arbitrary string that is not in the above categories.
+ * 	- action/alias -- any arbitrary string that is not in the above 
+ * 	  categories.
+ *
+ * <alias> will be matched to key definitions in sections and in the key
+ * binding object itself and in an actions object if given.
  *
  *
+ *
+ * NOTE: The handler will be called with keybindings as context (this).
+ * NOTE: handlers found in actions will be called with the actions as context.
  * NOTE: adding a key to the ignore list has the same effect as returning
  * 		false form it's handler in the same context.
  * NOTE: actions,the last case, are used for alias referencing, they will
@@ -506,10 +571,11 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys){
  */
 var makeKeyboardHandler =
 module.makeKeyboardHandler =
-function makeKeyboardHandler(keybindings, unhandled){
+function makeKeyboardHandler(keybindings, unhandled, actions){
 	if(unhandled == null){
 		unhandled = function(){}
 	}
+
 	return function(evt){
 		var did_handling = false
 		var res = null
@@ -522,20 +588,21 @@ function makeKeyboardHandler(keybindings, unhandled){
 
 		//window.DEBUG && console.log('KEY:', key, chr, modifiers)
 
-		var handlers = getKeyHandlers(key, modifiers, keybindings)
+		var handlers = getKeyHandlers(key, modifiers, keybindings, null, null, actions)
 
 		for(var mode in handlers){
 			var handler = handlers[mode]
 			if(handler != null){
 
 				// Array, lisp style with docs...
-				if(typeof(handler) == typeof([]) && handler.constructor.name == 'Array'){
+				if(typeof(handler) == typeof([]) && handler.constructor == Array){
 					// we do not care about docs here, so just get the handler...
 					handler = handler[0]
 				}
 
 				did_handling = true
-				res = handler(evt)
+				//res = handler(evt)
+				res = handler.call(keybindings)
 
 				if(res === false){
 					break
@@ -571,7 +638,7 @@ function makeKeyboardHandler(keybindings, unhandled){
 // 		- might be a good idea to normalize the <modifiers>...
 var buildKeybindingsHelp =
 module.buildKeybindingsHelp =
-function buildKeybindingsHelp(keybindings, shifted_keys){
+function buildKeybindingsHelp(keybindings, shifted_keys, actions){
 	shifted_keys = shifted_keys == null ? _SHIFT_KEYS : shifted_keys
 	var res = {}
 	var mode, title
@@ -598,13 +665,13 @@ function buildKeybindingsHelp(keybindings, shifted_keys){
 			if(KEYBOARD_SYSTEM_ATTRS.indexOf(key) >= 0){
 				continue
 			}
-			var modifiers = getKeyHandlers(key, '?', keybindings, 'all')[pattern]
+			var modifiers = getKeyHandlers(key, '?', keybindings, 'all', null, actions)[pattern]
 			modifiers = modifiers == 'none' || modifiers == undefined ? [''] : modifiers
 
 			for(var i=0; i < modifiers.length; i++){
 				var mod = modifiers[i]
 
-				var handler = getKeyHandlers(key, mod, keybindings, 'all')[pattern]
+				var handler = getKeyHandlers(key, mod, keybindings, 'all', null, actions)[pattern]
 
 				if(handler.constructor.name == 'Array' && handler[1] == 'IGNORE NEXT'){
 					handler = handler[0]
