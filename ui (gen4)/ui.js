@@ -80,13 +80,7 @@ module.GLOBAL_KEYBOARD = {
 		// NOTE: these are for systems where F** keys are not available 
 		// 		or do other stuff...
 		R: {
-			/*
-			'ctrl+alt': doc('Reload viewer', 
-				function(){ 
-					reloadViewer() 
-					return false
-				}),
-			*/
+			'ctrl+alt': 'reload!',
 			'ctrl+shift': 'F5',
 
 			// XXX testing...
@@ -131,6 +125,7 @@ module.GLOBAL_KEYBOARD = {
 			shift: 'shiftImageDown',
 			'ctrl+shift': 'shiftImageDownNewRibbon',
 		},
+
 		'#0': 'fitMax',
 		'#1': {
 			default: 'fitImage',

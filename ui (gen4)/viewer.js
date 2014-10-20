@@ -604,6 +604,7 @@ actions.Actions(Client, {
 	flipHorizontal: [
 		function(target){ this.ribbons.flipHorizontal(target) }],
 
+
 })
 
 
