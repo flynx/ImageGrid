@@ -90,10 +90,7 @@ module.GLOBAL_KEYBOARD = {
 			'ctrl+shift': 'F5',
 
 			// XXX testing...
-			ctrl: function(){ 
-				event.preventDefault()
-				a.reverseImages() 
-			},
+			ctrl: 'reverseImages!',
 		},
 		P: {
 			'ctrl+shift': 'F12',

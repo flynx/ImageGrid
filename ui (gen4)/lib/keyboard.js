@@ -246,6 +246,9 @@ function normalizeModifiers(c, a, s){
  * XXX check do we need did_handling here...
  * XXX BUG explicitly given modes do not yield results if the pattern 
  * 		does not match...
+ * XXX should action handler support event.stoppropagation()???
+ * 		...at this point I'm not sure it is needed as it will not affect 
+ * 		the keyboard handlers, it will preven further JS event handlers...
  */
 var getKeyHandlers =
 module.getKeyHandlers =
@@ -545,6 +548,8 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
  *
  * NOTE: The handler will be called with keybindings as context (this).
  * NOTE: handlers found in actions will be called with the actions as context.
+ * NOTE: only for handlers found in actions, if the alias ends with '!'
+ * 		then event.preventDefault() will be called before the handler.
  * NOTE: adding a key to the ignore list has the same effect as returning
  * 		false form it's handler in the same context.
  * NOTE: actions,the last case, are used for alias referencing, they will
