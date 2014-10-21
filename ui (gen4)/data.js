@@ -390,7 +390,7 @@ module.DataPrototype = {
 
 		// normalize mode...
 		if(mode != null 
-				&& mode.constructor.name == 'Array' 
+				&& mode.constructor === Array
 				|| mode in this.ribbons){
 			list = mode
 			mode = null
@@ -568,7 +568,7 @@ module.DataPrototype = {
 			target = null 
 
 		// filter out the unloaded gids from given list...
-		} else if(target != null && target.constructor.name == 'Array'){
+		} else if(target != null && target.constructor === Array){
 			var loaded = this.getImages('loaded')
 			list = target.filter(function(e){
 				return loaded.indexOf(e) >= 0
@@ -943,7 +943,7 @@ module.DataPrototype = {
 	shiftImage: function(from, target, mode){
 		from = from == null ? this.current : from
 		from = from == 'current' ? this.current : from
-		from = from.constructor.name != 'Array' ? [from] : from
+		from = from.constructor !== Array ? [from] : from
 		mode = mode == null ? 'after' : mode
 		var ribbons = this.ribbons
 		var order = this.order
@@ -1060,7 +1060,7 @@ module.DataPrototype = {
 	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') }, // Gen2
 	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') }, // Gen2
 	shiftImageUp: function(gid){ 
-		var g = gid.constructor.name == 'Array' ? gid[0] : gid
+		var g = gid.constructor === Array ? gid[0] : gid
 		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
 		if(r == 0){
@@ -1075,7 +1075,7 @@ module.DataPrototype = {
 		return res
 	},
 	shiftImageDown: function(gid){ 
-		var g = gid.constructor.name == 'Array' ? gid[0] : gid
+		var g = gid.constructor === Array ? gid[0] : gid
 		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
 		if(r == this.ribbon_order.length-1){
@@ -1174,7 +1174,7 @@ module.DataPrototype = {
 		if(arguments.length > 1){
 			target = Array.apply(null, arguments)
 		} else if(target == null 
-				|| target.constructor.name != 'Array'){
+				|| target.constructor !== Array){
 			target = [ target ]
 		}
 		var res = []
@@ -1230,7 +1230,7 @@ module.DataPrototype = {
 	join: function(){
 		var args = Array.apply(null, arguments)
 		var align = typeof(args[0]) == typeof('str') ? args.splice(0, 1)[0] : 'base'
-		args = args[0].constructor.name == 'Array' ? args[0] : args
+		args = args[0].constructor === Array ? args[0] : args
 
 		var base = this
 
@@ -1605,7 +1605,7 @@ var Data =
 module.Data =
 function Data(json){
 	// in case this is called as a function (without new)...
-	if(this.constructor.name != 'Data'){
+	if(this.constructor !== Data){
 		return new Data(json)
 	}
 

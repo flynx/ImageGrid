@@ -151,7 +151,7 @@ function doc(text, func){
 var normalizeModifiers =
 module.normalizeModifiers =
 function normalizeModifiers(c, a, s){
-		if(c != null && c.constructor.name == 'Array'){
+		if(c != null && c.constructor === Array){
 			a = c[1]
 			s = c[2]
 			c = c[0]
@@ -331,12 +331,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 
 		// alias...
 		// XXX should this be before after or combined with ignore handling...
-		while( handler != null 
-				&& typeof(handler) != 'function'){
-				//&& (typeof(handler) == typeof(123) 
-				//	|| typeof(handler) == typeof('str')
-				//	|| typeof(handler) == typeof({}) 
-				//		&& handler.constructor.name == 'Object') ){
+		while( handler != null && typeof(handler) != 'function'){
 
 			// do the complex handler aliases...
 			if(handler != null && handler.constructor == Object){
@@ -688,7 +683,7 @@ function buildKeybindingsHelp(keybindings, shifted_keys, actions){
 
 				var handler = getKeyHandlers(key, mod, keybindings, 'all', null, actions)[pattern]
 
-				if(handler.constructor.name == 'Array' && handler[1] == 'IGNORE NEXT'){
+				if(handler.constructor === Array && handler[1] == 'IGNORE NEXT'){
 					handler = handler[0]
 				}
 
@@ -697,7 +692,7 @@ function buildKeybindingsHelp(keybindings, shifted_keys, actions){
 					var doc = handler.doc
 
 				// lisp style...
-				} else if(handler.constructor.name == 'Array'){
+				} else if(handler.constructor === Array){
 					var doc = handler[1]
 
 				// no doc...

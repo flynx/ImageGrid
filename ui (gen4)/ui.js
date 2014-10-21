@@ -83,10 +83,7 @@ module.GLOBAL_KEYBOARD = {
 
 		// NOTE: this is handled by the wrapper at this point, so we do 
 		// 		not have to do anything here...
-		F11: doc('Toggle full screen view', function(){ 
-				toggleFullscreenMode() 
-				return false
-			}),
+		F11: 'toggleFullScreen', 
 		F: {
 			ctrl: 'F11',
 		},
@@ -155,7 +152,7 @@ $(function(){
 
 	window.a = testing.setupActions()
 
-	viewer.Animation.setup(a)
+	viewer.ShiftAnimation.setup(a)
 	viewer.BoundsIndicators.setup(a)
 
 	// this publishes all the actions...

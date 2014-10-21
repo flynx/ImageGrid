@@ -286,7 +286,7 @@ module.ImagesPrototype = {
 	// XXX test out the attr list functionality...
 	makeIndex: function(attr){
 		var res = {}
-		attr = attr.constructor.name != 'Array' ? [attr] : attr
+		attr = attr.constructor !== Array ? [attr] : attr
 
 		// buld the index...
 		var that = this
@@ -360,7 +360,7 @@ module.ImagesPrototype = {
 		gids = gids == null ? Object.keys(this) : gids
 
 		cmp = cmp == null ? module.makeImageDateCmp(this) : cmp
-		cmp = cmp.constructor.name == 'Array' ? chainCmp(cmp) : cmp
+		cmp = cmp.constructor === Array ? chainCmp(cmp) : cmp
 
 		gids = gids.sort(cmp)
 		gids = reverse ? gids.reverse() : gids
@@ -408,7 +408,7 @@ module.ImagesPrototype = {
 	//
 	// NOTE: target can be a gid or a list of gids...
 	rotateImage: function(gids, direction){
-		gids = gids.constructor.name != 'Array' ? [gids] : gids
+		gids = gids.constructor !== Array ? [gids] : gids
 		// validate direction...
 		if(module.calcRelativeRotation(direction) == null){
 			return this
@@ -441,7 +441,7 @@ module.ImagesPrototype = {
 	//		-> images
 	//
 	flipImage: function(gids, direction){
-		gids = gids.constructor.name != 'Array' ? [gids] : gids
+		gids = gids.constructor !== Array ? [gids] : gids
 		var that = this
 		gids.forEach(function(key){
 			var img = that[key]
@@ -492,7 +492,7 @@ var Images =
 module.Images =
 function Images(json){
 	// in case this is called as a function (without new)...
-	if(this.constructor.name != 'Images'){
+	if(this.constructor !== Images){
 		return new Images(json)
 	}
 

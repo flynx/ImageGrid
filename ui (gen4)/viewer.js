@@ -395,6 +395,29 @@ actions.Actions({
 		function(){
 			// XXX
 		}],
+
+	cropRibbon: ['Crop current ribbon',
+		function(ribbon, flatten){
+			ribbon = ribbon || 'current'
+			this.crop(this.data.getImages(ribbon), flatten)
+		}],
+	cropRibbonAndAbove: ['Crop current and above ribbons',
+		function(ribbon, flatten){
+			ribbon = ribbon || this.data.getRibbon()
+
+			var data = this.data
+			var that = this
+
+			var i = data.ribbon_order.indexOf(ribbon)
+			var ribbons = data.ribbon_order.slice(0, i)
+			var images = ribbons
+				.reduce(function(a, b){ 
+						return data.getImages(a).concat(data.getImages(b)) 
+					}, data.getImages(ribbon))
+				.compact()
+
+			this.crop(data.getImages(images), flatten)
+		}],
 })
 
 
@@ -609,10 +632,6 @@ actions.Actions(Client, {
 	shiftImageUp: [ reloadAfter() ],
 	shiftImageDown: [ reloadAfter() ],
 
-	// NOTE: .shiftImageDownNewRibbon(..) and .shiftImageUpNewRibbon(..)
-	// 		are not needed here when doing a reload on vertical 
-	// 		shifting...
-
 	shiftImageLeft: [
 		function(target){
 			this.ribbons.placeImage(target, -1)
@@ -659,30 +678,6 @@ actions.Actions(Client, {
 
 	crop: [ reloadAfter() ],
 	uncrop: [ reloadAfter() ],
-
-	// XXX need flat version of these...
-	cropRibbon: ['Crop current ribbon',
-		function(ribbon, flatten){
-			ribbon = ribbon || 'current'
-			this.crop(this.data.getImages(ribbon), flatten)
-		}],
-	cropRibbonAndAbove: ['',
-		function(ribbon, flatten){
-			ribbon = ribbon || this.data.getRibbon()
-
-			var data = this.data
-			var that = this
-
-			var i = data.ribbon_order.indexOf(ribbon)
-			var ribbons = data.ribbon_order.slice(0, i)
-			var images = ribbons
-				.reduce(function(a, b){ 
-						return data.getImages(a).concat(data.getImages(b)) 
-					}, data.getImages(ribbon))
-				.compact()
-
-			this.crop(data.getImages(images), flatten)
-		}],
 })
 
 
@@ -692,8 +687,8 @@ actions.Actions(Client, {
 // 		...need something like:
 // 			Features(['feature_a', 'feature_b'], action).setup()
 
-var Animation =
-module.Animation = {
+var ShiftAnimation =
+module.ShiftAnimation = {
 	tag: 'ui-animation',
 
 	setup: function(actions){

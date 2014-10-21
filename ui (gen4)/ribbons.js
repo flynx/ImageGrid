@@ -24,49 +24,6 @@ module.IMAGE_UPDATERS = []
 
 
 /*********************************************************************/
-
-// XXX add inheritance...
-var makeObject =
-module.makeObject =
-function makeObject(name, cls, obj){
-	// NOTE: we are using eval here to name the function correctly as
-	// 		simply assigning .name does not work...
-	// 		XXX think of a cleaner way...
-	var O = function OBJECT(){
-		if(this.constructor.name != name){
-			return new (Function.prototype.bind.apply(
-				OBJECT,
-				arguments.length == 1 ? [null, arguments[0]]
-					: [null].concat(Array.apply(null, arguments))))
-		}
-	
-		if(this.__init__ != null){
-			this.__init__.apply(this, arguments)
-		}
-	
-		return this
-	}
-
-	if(name != null){
-		O = eval(O
-			.toString()
-			.replace(/OBJRCT/g, name))
-	}
-
-	if(cls != null){
-		O.__proto__ = cls
-	}
-	if(obj != null){
-		O.prototype = obj
-	}
-	O.prototype.constructor = O
-
-	return O
-}
-
-
-
-/*********************************************************************/
 //
 // This expects the following HTML structure...
 //
@@ -1165,7 +1122,7 @@ module.RibbonsPrototype = {
 
 		// clear one or more gids...
 		} else {
-			gids = gids.constructor.name != 'Array' ? [gids] : gids
+			gids = gids.constructor !== Array ? [gids] : gids
 			var that = this
 			gids.forEach(function(g){
 				that.viewer.find('[gid='+JSON.stringify(g)+']').remove()
@@ -1255,7 +1212,7 @@ module.RibbonsPrototype = {
 			image = null
 		}
 		image = this.getImage(image) 
-		cls = cls.constructor.name != 'Array' ? [cls] : cls
+		cls = cls.constructor !== Array ? [cls] : cls
 		action = action == null ? 'toggle' : action
 
 		// no image is loaded...
@@ -1361,7 +1318,7 @@ module.RibbonsPrototype = {
 	// 		loaded images vertically.
 	flipImage: function(target, direction){
 		target = this.getImage(target)
-		var set_state = direction.constructor.name == 'Array' ? direction : null
+		var set_state = direction.constructor === Array ? direction : null
 		target.each(function(i, e){
 			var img = $(this)
 
@@ -1566,7 +1523,7 @@ var Ribbons =
 module.Ribbons =
 function Ribbons(viewer, images){
 	// in case this is called as a function (without new)...
-	if(this.constructor.name != 'Ribbons'){
+	if(this.constructor !== Ribbons){
 		return new Ribbons(viewer, images)
 	}
 
