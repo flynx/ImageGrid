@@ -953,8 +953,15 @@ module.DataPrototype = {
 
 		// target is an offset...
 		if(mode == 'offset'){
-			// XXX check that we can place an elem at first and last positions...
-			var t = this.getImageOrder(this.getImage(first, target))
+			var t = this.getImage(first, target)
+
+			// if we hit start/end of ribbon get index if first/last image resp.
+			// XXX for multiple images what should we do if we hit ribbon start/end???
+			t = t == null && target > 0 ? this.getImage('last', this.getRibbon(first))
+				: t == null && target < 0 ? this.getImage('first', this.getRibbon(first))
+				: t
+			var t = this.getImageOrder(t)
+
 
 			var ribbon = this.getRibbon(first)
 
@@ -1050,7 +1057,6 @@ module.DataPrototype = {
 	// 		shifting the last image out...
 	// NOTE: none of these change .current
 	//
-	// XXX should these be here??
 	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') }, // Gen2
 	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') }, // Gen2
 	shiftImageUp: function(gid){ 
@@ -1340,6 +1346,7 @@ module.DataPrototype = {
 	// NOTE: this may result in empty ribbons...
 	// NOTE: this will not crop the .order...
 	//
+	// XXX flatten as an option...
 	// XXX should this link to .root and .parent data???
 	crop: function(list){
 		var crop = this.clone()

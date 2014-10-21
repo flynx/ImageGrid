@@ -16,6 +16,26 @@ var ribbons = require('ribbons')
 
 
 /*********************************************************************/
+// helpers...
+
+var reloadAfter =
+module.reloadAfter = 
+function reloadAfter(transitions){
+	return function(){
+		// prevent animations form adding/removing ribbons...
+		!transitions && this.ribbons.preventTransitions()
+
+		return function(){
+			// NOTE: this may seem like cheating, but .reload() should
+			// 		be very efficient, reusing all of the items loaded...
+			this.reload()
+			!transitions && this.ribbons.restoreTransitions()
+		}
+	}
+}
+
+
+/*********************************************************************/
 //
 // XXX Tasks to accomplish here:
 // 	- life-cycle actions/events
@@ -162,30 +182,40 @@ actions.Actions({
 		function(){ this.focusImage('last') }],
 
 	prevImage: ['Focus previous image',
-		function(){ 
+		function(a){ 
 			// keep track of traverse direction...
 			this.direction = 'left'
-			this.focusImage('prev') 
+
+			if(typeof(a) == typeof(123)){
+				// XXX should this force direction change???
+				this.focusImage(this.data.getImage('current', -a)
+						// go to the first image if it's closer than s...
+						|| this.data.getImage('first'))
+
+			} else {
+				this.focusImage('prev', a) 
+			}
 		}],
 	nextImage: ['Focus next image',
-		function(){ 
+		function(a){ 
 			// keep track of traverse direction...
 			this.direction = 'right'
-			this.focusImage('next') 
+
+			if(typeof(a) == typeof(123)){
+				// XXX should this force direction change???
+				this.focusImage(this.data.getImage('current', a)
+						// go to the first image if it's closer than s...
+						|| this.data.getImage('last'))
+
+			} else {
+				this.focusImage('next', a) 
+			}
 		}],
 
 	prevImageInOrder: ['Focus previous image in order',
-		function(){ 
-			// keep track of traverse direction...
-			this.direction = 'left'
-			this.focusImage('prev', this.data.order) 
-		}],
+		function(){ this.prevImage(this.data.order) }],
 	nextImageInOrder: ['Focus next image in order',
-		function(){ 
-			// keep track of traverse direction...
-			this.direction = 'right'
-			this.focusImage('next', this.data.order) 
-		}],
+		function(){ this.nextImage(this.data.order) }],
 
 	firstRibbon: ['Focus previous ribbon',
 		function(){ this.focusRibbon('fisrt') }],
@@ -323,7 +353,37 @@ actions.Actions({
 	// crop...
 	//
 	// XXX
+	crop: [ 
+		function(list){ 
+			if(this.crop_stack == null){
+				this.crop_stack = []
+			}
 
+			this.crop_stack.push(this.data)
+			this.data = this.data.crop(list)
+
+			this.focusImage()
+		}],
+	// XXX add level...
+	uncrop: ['',
+		function(){
+			if(this.crop_stack == null){
+				return
+			}
+
+			this.data = this.crop_stack.pop()
+
+			if(this.crop_stack.length == 0){
+				delete this.crop_stac
+			}
+
+			this.focusImage()
+		}],
+	// XXX same as uncrop but will also try and merge changes...
+	mergeCrop: ['',
+		function(){
+			// XXX
+		}],
 })
 
 
@@ -366,6 +426,25 @@ actions.Actions(Client, {
 		function(){
 			this.ribbons.clear()
 			delete this.ribbons
+		}],
+
+
+	close: ['Cloase viewer',
+		function(){
+			// XXX should we do anything else here like auto-save???
+			window.close() 
+		}],
+	toggleFullScreen: ['',
+		function(){
+			// XXX
+		}],
+	toggleSingleImage: ['',
+		function(){
+			// XXX
+		}],
+	showDevTools: ['',
+		function(){
+			// XXX
 		}],
 
 
@@ -435,17 +514,11 @@ actions.Actions(Client, {
 
 	prevScreen: ['Focus previous image one screen width away',
 		function(){
-			var s = Math.ceil(this.ribbons.getScreenWidthImages())
-			this.focusImage(this.data.getImage('current', -s)
-					// go to the first image if it's closer than s...
-					|| this.data.getImage('first'))
+			this.prevImage(Math.round(this.ribbons.getScreenWidthImages()))
 		}],
 	nextScreen: ['Focus next image one screen width away',
 		function(){
-			var s = Math.ceil(this.ribbons.getScreenWidthImages())
-			this.focusImage(this.data.getImage('current', s)
-					// go to the last image if it's closer than s...
-					|| this.data.getImage('last'))
+			this.nextImage(Math.round(this.ribbons.getScreenWidthImages()))
 		}],
 
 	// zooming...
@@ -517,30 +590,8 @@ actions.Actions(Client, {
 
 
 	// XXX are these cheating???
-	shiftImageUp: [
-		function(target){
-			// prevent animations form adding/removing ribbons...
-			this.ribbons.preventTransitions()
-
-			return function(){
-				// NOTE: this may seem like cheating, but .reload() should
-				// 		be very efficient, reusing all of the items loaded...
-				this.reload()
-				this.ribbons.restoreTransitions()
-			}
-		}],
-	shiftImageDown: [
-		function(target){
-			// prevent animations form adding/removing ribbons...
-			this.ribbons.preventTransitions()
-
-			return function(){
-				// NOTE: this may seem like cheating, but .reload() should
-				// 		be very efficient, reusing all of the items loaded...
-				this.reload()
-				this.ribbons.restoreTransitions()
-			}
-		}],
+	shiftImageUp: [ reloadAfter() ],
+	shiftImageDown: [ reloadAfter() ],
 
 	// NOTE: .shiftImageDownNewRibbon(..) and .shiftImageUpNewRibbon(..)
 	// 		are not needed here when doing a reload on vertical 
@@ -572,22 +623,8 @@ actions.Actions(Client, {
 			}
 		}],
 
-	reverseImages: [
-		function(){ 
-			this.ribbons.preventTransitions()
-
-			return function(){ 
-				this.reload() 
-				this.ribbons.restoreTransitions()
-			}
-		}],
-	reverseRibbons: [
-		function(target){
-			return function(){
-				// XXX this is cheating...
-				this.reload()
-			}
-		}],
+	reverseImages: [ reloadAfter() ],
+	reverseRibbons: [ reloadAfter(true) ],
 
 
 	// basic image editing...
@@ -604,7 +641,8 @@ actions.Actions(Client, {
 	flipHorizontal: [
 		function(target){ this.ribbons.flipHorizontal(target) }],
 
-
+	crop: [ reloadAfter() ],
+	uncrop: [ reloadAfter() ],
 })
 
 
@@ -616,13 +654,15 @@ actions.Actions(Client, {
 
 var Animation =
 module.Animation = {
-	tag: 'animation_handler',
+	tag: 'ui-animation',
 
 	setup: function(actions){
 		var animate = function(target){
 				var s = this.ribbons.makeShadow(target, true)
 				return function(){ s() }
 			}
+		// NOTE: this will keep the shadow in place -- the shadow will not
+		// 		go to the mountain, the mountain will come to the shadow ;)
 		var noanimate = function(target){
 				var s = this.ribbons.makeShadow(target)
 				return function(){ s() }
@@ -637,6 +677,105 @@ module.Animation = {
 	remove: function(actions){
 		return actions.off('*', this.tag)
 	}
+}
+
+
+var CurrentIndicator = 
+module.CurrentIndicator = {
+	tag: 'ui-current-indicator',
+
+	setup: function(actions){
+	},
+	remove: function(actions){
+		actions.viewer.find('.' + this.tag).remove()
+		return actions.off('*', this.tag)
+	},
+}
+
+
+var BoundsIndicators = 
+module.BoundsIndicators = {
+	tag: 'ui-bounds-indicators',
+
+	flashIndicator: function(viewer, direction){
+		var cls = {
+			// shift up/down...
+			up: '.up-indicator',
+			down: '.down-indicator',
+			// hit start/end/top/bottom of view...
+			start: '.start-indicator',
+			end: '.end-indicator',
+			top: '.top-indicator',
+			bottom: '.bottom-indicator',
+		}[direction]
+
+		var indicator = viewer.find(cls)
+
+		if(indicator.length == 0){
+			indicator = $('<div>')
+				.addClass(cls.replace('.', '') +' '+ this.tag)
+				.appendTo(viewer)
+		}
+
+		return indicator
+			// NOTE: this needs to be visible in all cases and key press 
+			// 		rhythms... 
+			.show()
+			.delay(100)
+			.fadeOut(300)
+	},
+
+	setup: function(actions){
+		var that = this
+
+		var didAdvance = function(indicator){
+			return function(){
+				var img = this.data.current
+				return function(){
+					if(img == this.data.current){
+						that.flashIndicator(actions.ribbons.viewer, indicator)
+					}
+				}
+			}
+		}
+
+		var tag = this.tag
+		return actions
+			// basic navigation...
+			.on('nextImage.pre', tag, didAdvance('end'))
+			.on('prevImage.pre', tag, didAdvance('start'))
+			.on('nextRibbon.pre', tag, didAdvance('bottom'))
+			.on('prevRibbon.pre', tag, didAdvance('top'))
+			// vertical shifting...
+			.on('shiftImageUp.post', tag, 
+				function(){ 
+					that.flashIndicator(actions.ribbons.viewer, 'up')
+				})
+			.on('shiftImageDown.post', tag, 
+				function(){ 
+					that.flashIndicator(actions.ribbons.viewer, 'down') 
+				})
+			// horizontal shifting...
+			.on('shiftImageLeft.pre', tag, 
+				function(target){ 
+					if(target == null 
+							//&& actions.data.getImageOrder('ribbon') == 0){
+							&& actions.data.getImage('prev') == null){
+						that.flashIndicator(actions.ribbons.viewer, 'start')
+					}
+				})
+			.on('shiftImageRight.pre', tag, 
+				function(target){ 
+					if(target == null 
+							&& actions.data.getImage('next') == null){
+						that.flashIndicator(actions.ribbons.viewer, 'end')
+					}
+				})
+	},
+	remove: function(actions){
+		actions.viewer.find('.' + this.tag).remove()
+		return actions.off('*', this.tag)
+	},
 }
 
 

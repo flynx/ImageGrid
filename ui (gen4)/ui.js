@@ -157,6 +157,7 @@ $(function(){
 	window.a = testing.setupActions()
 
 	viewer.Animation.setup(a)
+	viewer.BoundsIndicators.setup(a)
 
 	// this publishes all the actions...
 	//module.GLOBAL_KEYBOARD.__proto__ = a
