@@ -101,13 +101,21 @@ module.GLOBAL_KEYBOARD = {
 		},
 
 		// XXX testing...
-		Home: 'firstImage',
-		End: 'lastImage',
+		Home: {
+			default: 'firstImage',
+			ctrl: 'firstRibbon',
+		},
+		End: {
+			default: 'lastImage',
+			ctrl: 'lastRibbon',
+		},
 		Left: {
 			default: 'prevImage',
 			alt: 'shiftImageLeft!',
 			ctrl: 'prevScreen',
 		},
+		PgUp: 'prevScreen',
+		PgDown: 'nextScreen',
 		Right: {
 			default: 'nextImage',
 			alt: 'shiftImageRight!',

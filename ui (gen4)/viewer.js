@@ -218,12 +218,10 @@ actions.Actions({
 		function(){ this.nextImage(this.data.order) }],
 
 	firstRibbon: ['Focus previous ribbon',
-		function(){ this.focusRibbon('fisrt') }],
+		function(){ this.focusRibbon('first') }],
 	lastRibbon: ['Focus next ribbon',
 		function(){ this.focusRibbon('last') }],
 
-	// XXX check that going up/down must be stable and not drift to 
-	// 		adjacent images...
 	prevRibbon: ['Focus previous ribbon',
 		function(){ this.focusRibbon('before') }],
 	nextRibbon: ['Focus next ribbon',
@@ -746,6 +744,12 @@ module.BoundsIndicators = {
 			.on('prevImage.pre', tag, didAdvance('start'))
 			.on('nextRibbon.pre', tag, didAdvance('bottom'))
 			.on('prevRibbon.pre', tag, didAdvance('top'))
+			// XXX not sure about these...
+			.on('lastImage.pre', tag, didAdvance('end'))
+			.on('firstImage.pre', tag, didAdvance('start'))
+			.on('firstRibbon.pre', tag, didAdvance('top'))
+			.on('lastRibbon.pre', tag, didAdvance('bottom'))
+
 			// vertical shifting...
 			.on('shiftImageUp.post', tag, 
 				function(){ 
@@ -755,6 +759,7 @@ module.BoundsIndicators = {
 				function(){ 
 					that.flashIndicator(actions.ribbons.viewer, 'down') 
 				})
+
 			// horizontal shifting...
 			.on('shiftImageLeft.pre', tag, 
 				function(target){ 
