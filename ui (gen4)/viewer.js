@@ -350,33 +350,46 @@ actions.Actions({
 
 	// crop...
 	//
-	// XXX
 	crop: [ 
-		function(list){ 
+		function(list, flatten){ 
+			list = list || this.data.order
 			if(this.crop_stack == null){
 				this.crop_stack = []
 			}
-
 			this.crop_stack.push(this.data)
-			this.data = this.data.crop(list)
-
-			this.focusImage()
+			this.data = this.data.crop(list, flatten)
 		}],
-	// XXX add level...
-	uncrop: ['',
-		function(){
+	uncrop: ['Uncrop ribbons',
+		function(level, restore_current){
+			level = level || 1
+
+			var cur = this.current
+
 			if(this.crop_stack == null){
 				return
 			}
 
-			this.data = this.crop_stack.pop()
+			// uncrop all...
+			if(level == 'all'){
+				this.data = this.crop_stack[0]
+				this.crop_stack = []
 
-			if(this.crop_stack.length == 0){
-				delete this.crop_stac
+			// get the element at level and drop the tail...
+			} else {
+				this.data = this.crop_stack.splice(-level, this.crop_stack.length)[0]
 			}
 
-			this.focusImage()
+			// by default set the current from the crop...
+			if(!restore_current){
+				this.data.focusImage(cur)
+			}
+
+			if(this.crop_stack.length == 0){
+				delete this.crop_stack
+			}
 		}],
+	uncropAll: ['',
+		function(restore_current){ this.uncrop('all', restore_current) }],
 	// XXX same as uncrop but will also try and merge changes...
 	mergeCrop: ['',
 		function(){
@@ -427,22 +440,27 @@ actions.Actions(Client, {
 		}],
 
 
+	// XXX move this to a viewer window action set
 	close: ['Cloase viewer',
 		function(){
 			// XXX should we do anything else here like auto-save???
 			window.close() 
 		}],
+	// XXX where should toggleFullscreenMode(..) be defined...
 	toggleFullScreen: ['',
 		function(){
-			// XXX
+			toggleFullscreenMode() 
 		}],
 	toggleSingleImage: ['',
 		function(){
 			// XXX
 		}],
+	// XXX revise this...
 	showDevTools: ['',
 		function(){
-			// XXX
+			if(window.showDevTools != null){
+				showDevTools() 
+			}
 		}],
 
 
@@ -641,6 +659,30 @@ actions.Actions(Client, {
 
 	crop: [ reloadAfter() ],
 	uncrop: [ reloadAfter() ],
+
+	// XXX need flat version of these...
+	cropRibbon: ['Crop current ribbon',
+		function(ribbon, flatten){
+			ribbon = ribbon || 'current'
+			this.crop(this.data.getImages(ribbon), flatten)
+		}],
+	cropRibbonAndAbove: ['',
+		function(ribbon, flatten){
+			ribbon = ribbon || this.data.getRibbon()
+
+			var data = this.data
+			var that = this
+
+			var i = data.ribbon_order.indexOf(ribbon)
+			var ribbons = data.ribbon_order.slice(0, i)
+			var images = ribbons
+				.reduce(function(a, b){ 
+						return data.getImages(a).concat(data.getImages(b)) 
+					}, data.getImages(ribbon))
+				.compact()
+
+			this.crop(data.getImages(images), flatten)
+		}],
 })
 
 
@@ -678,6 +720,7 @@ module.Animation = {
 }
 
 
+// XXX
 var CurrentIndicator = 
 module.CurrentIndicator = {
 	tag: 'ui-current-indicator',

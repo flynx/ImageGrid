@@ -203,7 +203,6 @@ module.RibbonsPrototype = {
 				getComputedStyle(v).transition
 		}
 	},
-
 	noTransitions: function(func){
 		this.preventTransitions()
 		func.apply(this, args2array(arguments).slice(1))
@@ -966,14 +965,18 @@ module.RibbonsPrototype = {
 		}))
 	},
 
-	// update a set of images in a ribbon...
+	// Update a set of images in a ribbon...
 	//
 	// This will reuse the images that already exist, thus if updating or
 	// adding images to an already loaded set this should be very fast.
 	//
 	// NOTE: gids and ribbon must be .getImage(..) and .getRibbon(..) 
 	// 		compatible...
+	//
+	// XXX at this point this expects gids to be a list of gids, need 
+	// 		to make this compatible with jQuery collections...
 	updateRibbon: function(gids, ribbon){
+		var that = this
 		// get/create the ribbon...
 		var r = this.getRibbon(ribbon)
 		if(r.length == 0){
@@ -982,24 +985,30 @@ module.RibbonsPrototype = {
 		}
 
 		var loaded = r.find('.image')
+		
+		// remove all images that we do not need...
+		loaded = loaded
+			.filter(function(i, img){ 
+				// XXX .indexOf(..) will not work for a jQuery collection...
+				if(gids.indexOf(that.getElemGID($(img))) >= 0){
+					return true
+				}
+				$(img).remove()
+				return false
+			})
 
-		var that = this
 		$(gids).each(function(i, gid){
 			// support for sparse ribbons...
 			if(gid == null){
 				return 
 			}
 			// get/create image...
+			// XXX this may affect other ribbons...
 			var img = that.getImage(gid)
 			img = img.length == 0 ? that.createImage(gid) : img
 
-			// clear a chunk of images that are not in gids until one that is...
+			// see of we are loaded in the right position...
 			var g = loaded.length > i ? that.getElemGID(loaded.eq(i)) : null
-			while(g != null && gids.indexOf(g) < 0){
-				that.clear(g)
-				loaded.splice(i, 1)
-				g = loaded.length > i ? that.getElemGID(loaded.eq(i)) : null
-			}
 
 			// check if we need to reattach the image...
 			if(gid != g){
@@ -1111,14 +1120,9 @@ module.RibbonsPrototype = {
 			// clear the ribbons that did not get updated...
 			if(!settings.keep_ribbons 
 					&& (data.ribbon_order != null || data.ribbons != null)){
-				var ribbons = []
-				ribbons = data.ribbon_order != null 
-					? ribbons.concat(Object.keys(data.ribbon_order)) 
-					: ribbons
-				ribbons = data.ribbons != null 
-					? ribbons.concat(Object.keys(data.ribbons)) 
-					: ribbons
-				ribbons.push(data.base)
+				var ribbons = data.ribbon_order != null ? data.ribbon_order.slice() 
+					: data.ribbons != null ? Object.keys(data.ribbons)
+					: []
 
 				that.viewer.find('.ribbon').each(function(){
 					var r = $(this)

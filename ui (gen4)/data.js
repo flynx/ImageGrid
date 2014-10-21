@@ -422,7 +422,7 @@ module.DataPrototype = {
 		// normalize the list to a sparse list of gids...
 		list = list == null ? 
 				this.ribbons[this.getRibbon(target)]
-			: list.constructor.name == 'Array' ? 
+			: list.constructor === Array ? 
 				this.makeSparseImages(list)
 			: this.ribbons[this.getRibbon(list)]
 
@@ -1348,13 +1348,43 @@ module.DataPrototype = {
 	//
 	// XXX flatten as an option...
 	// XXX should this link to .root and .parent data???
-	crop: function(list){
+	crop: function(list, flatten){
 		var crop = this.clone()
 		list = crop.makeSparseImages(list)
-		for(var k in crop.ribbons){
-			crop.ribbons[k] = crop.makeSparseImages(crop.ribbons[k].filter(function(_, i){
-				return list[i] != null
-			}))
+
+		if(!flatten){
+			// place images in ribbons...
+			for(var k in crop.ribbons){
+				crop.ribbons[k] = crop.makeSparseImages(crop.ribbons[k].filter(function(_, i){
+					return list[i] != null
+				}))
+			}
+
+		// flatten the crop...
+		} else {
+			crop.ribbons = {}
+			crop.ribbon_order = []
+			crop.ribbons[crop.newRibbon()] = list
+		}
+
+		// clear empty ribbons...
+		Object.keys(crop.ribbons)
+			.forEach(function(k){ 
+				if(crop.ribbons[k].length == 0){
+					crop.ribbon_order.splice(crop.ribbon_order.indexOf(k), 1)
+					delete crop.ribbons[k]
+				} 
+			})
+
+		// set the current image in the crop...
+		var r = this.getRibbon()
+		// if current ribbon is not empty get the closest image in it...
+		if(r in crop.ribbons && crop.ribbons[r].length > 0){
+			crop.focusImage(this.current, 'after', this.getRibbon())
+
+		// if ribbon got deleted, get the closest loaded image...
+		} else {
+			crop.focusImage(this.current, list)
 		}
 
 		// XXX ???

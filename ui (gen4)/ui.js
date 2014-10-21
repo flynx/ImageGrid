@@ -49,11 +49,14 @@ module.GLOBAL_KEYBOARD = {
 		pattern: '*',
 
 		F4: {
+			alt: 'close',
+			/*
 			alt: doc('Close viewer', 
 				function(){ 
 					window.close() 
 					return false
 				}),
+			*/
 		},
 		F5: doc('Full reload viewer', 
 			function(){ 
@@ -66,25 +69,13 @@ module.GLOBAL_KEYBOARD = {
 				location.reload()
 				return false
 			}),
-		F12: doc('Show devTools', 
-			function(){ 
-				if(window.showDevTools != null){
-					showDevTools() 
-					return false
-
-				// if no showDevTools defined pass the button further...
-				} else {
-					return true
-				}
-			}),
+		F12: 'showDevTools',
 		// NOTE: these are for systems where F** keys are not available 
 		// 		or do other stuff...
 		R: {
-			'ctrl+alt': 'reload!',
+			default: 'reverseImages!',
+			ctrl: 'reload!',
 			'ctrl+shift': 'F5',
-
-			// XXX testing...
-			ctrl: 'reverseImages!',
 		},
 		P: {
 			'ctrl+shift': 'F12',
