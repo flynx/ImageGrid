@@ -620,11 +620,12 @@ actions.Actions(Client, {
 	//		The main question here is: 
 	//			should we split out aligning to a feature?
 	//		The differences/trade-off's in this version:
-	//			+ less code (not by much)
+	//			+ less code in total (not by much)
+	//				34 action-only vs. 39 total (25 action + 14 feature)
 	//			+ all in one place
 	//			+ all the logic in one place
 	//			+ usable as-is without any extra "features"
-	//			- not customizable
+	//			- not customizable without rewriting...
 	//			- might be too monolithic (god object?)
 	focusImage: [
 		function(target, list){
