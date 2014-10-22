@@ -139,6 +139,15 @@ module.GLOBAL_KEYBOARD = {
 		'+': 'zoomIn',
 		'=': '+',
 		'-': 'zoomOut',
+
+		F2: {
+			default: 'cropRibbon',
+			shift: 'cropRibbonAndAbove',
+		},
+		Esc: {
+			default: 'uncrop',
+			ctrl: 'uncropAll',
+		},
 		
 	},
 }	
@@ -152,6 +161,8 @@ $(function(){
 
 	window.a = testing.setupActions()
 
+	viewer.RibbonAlignToOrder.setup(a)
+	//viewer.RibbonAlignToFirst.setup(a)
 	viewer.ShiftAnimation.setup(a)
 	viewer.BoundsIndicators.setup(a)
 

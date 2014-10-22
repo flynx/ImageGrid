@@ -390,6 +390,10 @@ actions.Actions({
 		}],
 	uncropAll: ['',
 		function(restore_current){ this.uncrop('all', restore_current) }],
+	// XXX not sure about this...
+	uncropAndKeepOrder: ['',
+		function(){
+		}],
 	// XXX same as uncrop but will also try and merge changes...
 	mergeCrop: ['',
 		function(){
@@ -487,13 +491,113 @@ actions.Actions(Client, {
 		}],
 
 
+	// align modes...
+	// XXX skip invisible ribbons (???)
+	// XXX load data chunks...
+	alignByOrder: ['Align ribbons by image order',
+		function(target){
+			var ribbons = this.ribbons
+			var data = this.data
+
+			// XXX handle raw dom elements...
+			var gid = target instanceof jQuery 
+				? ribbons.getElemGID(target)
+				: data.getImage(target)
+
+			// align current ribbon...
+			ribbons
+				.centerRibbon(gid)
+				.centerImage(gid)
+
+			// align other ribbons...
+			var ribbon = data.getRibbon(gid)
+			for(var r in data.ribbons){
+				// skip the current ribbon...
+				if(r == ribbon){
+					continue
+				}
+
+				// XXX skip off-screen ribbons...
+
+				// XXX see if we need to do some loading...
+
+				// center...
+				// XXX is there a 'last' special case here???
+				var t = data.getImage(gid, r)
+				if(t == null){
+					var f = data.getImage('first', r)
+					// nothing found -- empty ribbon?
+					if(f == null){
+						continue
+					}
+					ribbons.centerImage(f, 'before')
+				} else {
+					ribbons.centerImage(t, 'after')
+				}
+			}
+		}],
+	// XXX these should also affect up/down navigation...
+	// 		...navigate by proximity (closest to center) rather than by
+	// 		order...
+	alignByFirst: ['Aling ribbons except current to first image',
+		function(target){
+			var ribbons = this.ribbons
+			var data = this.data
+
+			// XXX handle raw dom elements...
+			var gid = target instanceof jQuery 
+				? ribbons.getElemGID(target)
+				: data.getImage(target)
+
+			// align current ribbon...
+			ribbons
+				.centerRibbon(gid)
+				.centerImage(gid)
+
+			// align other ribbons...
+			var ribbon = data.getRibbon(gid)
+			for(var r in data.ribbons){
+				// skip the current ribbon...
+				if(r == ribbon){
+					continue
+				}
+
+				// XXX skip off-screen ribbons...
+
+				// XXX see if we need to do some loading...
+
+				// center...
+				var f = data.getImage('first', r)
+				// nothing found -- empty ribbon?
+				if(f == null){
+					continue
+				}
+				ribbons.centerImage(f, 'before')
+			}
+		}],
+	// NOTE: this will align only a single image...
+	centerImage: ['Center image',
+		function(target){
+			target = target instanceof jQuery 
+				? this.ribbons.getElemGID(target)
+				: target
+
+			// align current ribbon...
+			this.ribbons
+				.centerRibbon(target)
+				.centerImage(target)
+		}],
+
+	// XXX skip invisible ribbons (???)
+	// XXX load data chunks...
 	focusImage: [
-		// XXX skip invisible ribbons (???)
-		// XXX load data chunks...
 		function(target, list){
 			var ribbons = this.ribbons
 			var data = this.data
 
+			// NOTE: we do not need to do anything in the alternative 
+			// 		case as it's done in data/Client, so we'll just 
+			// 		peek there later...
 			if(data == null){
 				target = ribbons.focusImage(target)
 				var gid = ribbons.getElemGID(target)
@@ -504,46 +608,60 @@ actions.Actions(Client, {
 					// use the data for all the heavy lifting...
 					// NOTE: this will prevent sync errors...
 					var gid = data.getImage()
-					target = ribbons.focusImage(gid)
 
 					// XXX see if we need to do some loading...
-					// XXX
-				}
-
-				// align current ribbon...
-				ribbons
-					.centerRibbon(target)
-					.centerImage(target)
-
-				// align other ribbons...
-				if(data != null){
-					var ribbon = data.getRibbon(gid)
-					for(var r in data.ribbons){
-						// skip the current ribbon...
-						if(r == ribbon){
-							continue
-						}
-
-						// XXX skip off-screen ribbons...
-						// XXX
-
-						// center...
-						// XXX is there a 'last' special case here???
-						var t = data.getImage(gid, r)
-						if(t == null){
-							var f = data.getImage('first', r)
-							// nothing found -- empty ribbon?
-							if(f == null){
-								continue
-							}
-							ribbons.centerImage(data.getImage('first', r), 'before')
-						} else {
-							ribbons.centerImage(t, 'after')
-						}
-					}
+				
+					target = ribbons.focusImage(gid)
 				}
 			}
 		}],
+	/*
+	// XXX an ideologically different version of .focusImage(..)
+	//		The main question here is: 
+	//			should we split out aligning to a feature?
+	//		The differences/trade-off's in this version:
+	//			+ less code (not by much)
+	//			+ all in one place
+	//			+ all the logic in one place
+	//			+ usable as-is without any extra "features"
+	//			- not customizable
+	//			- might be too monolithic (god object?)
+	focusImage: [
+		function(target, list){
+			var ribbons = this.ribbons
+			var data = this.data
+
+			// NOTE: we do not need to do anything in the alternative 
+			// 		case as it's done in data/Client, so we'll just 
+			// 		peek there later...
+			if(data == null){
+				target = ribbons.focusImage(target)
+				var gid = ribbons.getElemGID(target)
+			}
+
+			return function(){
+				if(data != null){
+					// use the data for all the heavy lifting...
+					// NOTE: this will prevent sync errors...
+					var gid = data.getImage()
+
+					// XXX see if we need to do some loading...
+					// XXX
+				
+					target = ribbons.focusImage(gid)
+
+					this.alignByOrder(gid)
+
+				// align current ribbon...
+				} else {
+					ribbons
+						.centerRibbon(target)
+						.centerImage(target)
+				}
+			}
+		}],
+	*/
+
 	setBaseRibbon: [
 		function(target){
 			var r = this.data.getRibbon(target)
@@ -687,8 +805,68 @@ actions.Actions(Client, {
 // 		...need something like:
 // 			Features(['feature_a', 'feature_b'], action).setup()
 
+var FeatureProto =
+module.FeatureProto = {
+	tag: null,
+
+	remove: function(actions){
+		return actions.off('*', this.tag)
+	},
+}
+
+// XXX also need a feature registry and global feature setup...
+// 		something like:
+// 			Features.setup(actions, [
+// 				'feature1',
+// 				'feature2',
+// 				...
+// 			])
+// 		...where the feature list can be saved to config...
+// 		Same should be done for .remove()
+var Feature =
+module.Feature =
+function Feature(obj){
+	obj.__proto__ = this.FeatureProto
+	return obj
+}
+
+
+
+// XXX need a better name...
+// XXX this should also define up/down navigation behavior...
+var RibbonAlignToOrder = 
+module.RibbonAlignToOrder = Feature({
+	tag: 'ui-ribbon-align-to-order',
+
+	setup: function(actions){
+		return actions
+			.on('focusImage.post', this.tag, function(target){
+				this.alignByOrder(target)
+			})
+			// normalize the initial state...
+			.focusImage()
+	},
+})
+
+
+// XXX need a better name...
+var RibbonAlignToFirst = 
+module.RibbonAlignToFirst = Feature({
+	tag: 'ui-ribbon-align-to-first',
+
+	setup: function(actions){
+		return actions
+			.on('focusImage.post', this.tag, function(target){
+				this.alignByFirst(target)
+			})
+			// normalize the initial state...
+			.focusImage()
+	},
+})
+
+
 var ShiftAnimation =
-module.ShiftAnimation = {
+module.ShiftAnimation = Feature({
 	tag: 'ui-animation',
 
 	setup: function(actions){
@@ -709,15 +887,12 @@ module.ShiftAnimation = {
 			.on('shiftImageLeft.pre', tag, noanimate)
 			.on('shiftImageRight.pre', tag, noanimate)
 	},
-	remove: function(actions){
-		return actions.off('*', this.tag)
-	}
-}
+})
 
 
 // XXX
 var CurrentIndicator = 
-module.CurrentIndicator = {
+module.CurrentIndicator = Feature({
 	tag: 'ui-current-indicator',
 
 	setup: function(actions){
@@ -726,11 +901,11 @@ module.CurrentIndicator = {
 		actions.viewer.find('.' + this.tag).remove()
 		return actions.off('*', this.tag)
 	},
-}
+})
 
 
 var BoundsIndicators = 
-module.BoundsIndicators = {
+module.BoundsIndicators = Feature({
 	tag: 'ui-bounds-indicators',
 
 	flashIndicator: function(viewer, direction){
@@ -819,7 +994,7 @@ module.BoundsIndicators = {
 		actions.viewer.find('.' + this.tag).remove()
 		return actions.off('*', this.tag)
 	},
-}
+})
 
 
 
