@@ -89,13 +89,16 @@ module.GLOBAL_KEYBOARD = {
 		},
 
 		// XXX testing...
+
 		Home: {
 			default: 'firstImage',
-			ctrl: 'firstRibbon',
+			ctrl: 'firstGlobalImage',
+			shift: 'firstRibbon',
 		},
 		End: {
 			default: 'lastImage',
-			ctrl: 'lastRibbon',
+			ctrl: 'lastGlobalImage',
+			shift: 'lastRibbon',
 		},
 		Left: {
 			default: 'prevImage',

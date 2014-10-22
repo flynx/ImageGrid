@@ -150,6 +150,8 @@ actions.Actions({
 		function(img, list){
 			this.data.focusImage(img, list)
 		}],
+
+
 	focusRibbon: ['Focus Ribbon',
 		function(target){
 			var data = this.data
@@ -175,11 +177,15 @@ actions.Actions({
 	setBaseRibbon: ['Set base ribbon',
 		function(target){ this.data.setBase(target) }],
 
-	// shorthands for .focusImage(..) and .focusRibbon(..)...
 	firstImage: ['Focus first image in current ribbon',
-		function(){ this.focusImage('first') }],
+		function(all){ this.focusImage(all == null ? 'first' : 0) }],
 	lastImage: ['Focus last image in current ribbon',
-		function(){ this.focusImage('last') }],
+		function(all){ this.focusImage(all == null ? 'last' : -1) }],
+
+	firstGlobalImage: ['Get first globally image',
+		function(){ this.firstImage(true) }],
+	lastGlobalImage: ['Get last globally image',
+		function(){ this.lastImage(true) }],
 
 	prevImage: ['Focus previous image',
 		function(a){ 
@@ -216,6 +222,7 @@ actions.Actions({
 		function(){ this.prevImage(this.data.order) }],
 	nextImageInOrder: ['Focus next image in order',
 		function(){ this.nextImage(this.data.order) }],
+
 
 	firstRibbon: ['Focus previous ribbon',
 		function(){ this.focusRibbon('first') }],
@@ -627,6 +634,7 @@ actions.Actions(Client, {
 	//			+ usable as-is without any extra "features"
 	//			- not customizable without rewriting...
 	//			- might be too monolithic (god object?)
+	//		...need to think about it a bit more...
 	focusImage: [
 		function(target, list){
 			var ribbons = this.ribbons
@@ -786,6 +794,7 @@ actions.Actions(Client, {
 	// XXX should these call .images.* or should it be done by data...
 	// 		...I think that data is a better candidate as it should be
 	// 		standalone...
+	// XXX should we have .rotate(..) and .flip(..) generic actions???
 	rotateCW: [ 
 		function(target){ this.ribbons.rotateCW(target) }],
 	rotateCCW: [ 

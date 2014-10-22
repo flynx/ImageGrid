@@ -1346,7 +1346,6 @@ module.DataPrototype = {
 	// NOTE: this may result in empty ribbons...
 	// NOTE: this will not crop the .order...
 	//
-	// XXX flatten as an option...
 	// XXX should this link to .root and .parent data???
 	crop: function(list, flatten){
 		var crop = this.clone()
@@ -1398,6 +1397,7 @@ module.DataPrototype = {
 	//
 	// NOTE: this may result in empty ribbons...
 	//
+	// XXX what are we doing with new ribbons???
 	// XXX sync ribbon order???
 	// XXX should we be able to align a merged crop???
 	// XXX test
