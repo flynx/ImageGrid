@@ -403,13 +403,21 @@ actions.Actions({
 		}],
 	uncropAll: ['',
 		function(restore_current){ this.uncrop('all', restore_current) }],
+	// XXX see if we need to do this on this level??
+	// 		...might be a good idea to do this in data...
 	uncropAndKeepOrder: ['Uncrop and keep crop image order',
 		function(level, restore_current){ this.uncrop(level, restore_current, true) }],
 	// XXX same as uncrop but will also try and merge changes...
+	// 		- the order is simple and already done above...
+	// 		- I think that levels should be relative to images, the 
+	// 		  only problem here is how to deal with new ribbons...
 	mergeCrop: ['',
 		function(){
 			// XXX
 		}],
+
+	// XXX save a crop (catalog)...
+	// XXX
 
 	cropRibbon: ['Crop current ribbon',
 		function(ribbon, flatten){
