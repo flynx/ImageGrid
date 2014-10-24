@@ -73,10 +73,14 @@ module.GLOBAL_KEYBOARD = {
 		// NOTE: these are for systems where F** keys are not available 
 		// 		or do other stuff...
 		R: {
-			default: 'reverseImages!',
+			default: 'rotateCW',
+			shift: 'reverseImages',
 			ctrl: 'reload!',
 			'ctrl+shift': 'F5',
 		},
+		L: 'rotateCCW',
+		H: 'flipHorizontal',
+		V: 'flipVertical',
 		P: {
 			'ctrl+shift': 'F12',
 		},

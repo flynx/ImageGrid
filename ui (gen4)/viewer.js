@@ -150,8 +150,6 @@ actions.Actions({
 		function(img, list){
 			this.data.focusImage(img, list)
 		}],
-
-
 	focusRibbon: ['Focus Ribbon',
 		function(target){
 			var data = this.data
@@ -177,11 +175,12 @@ actions.Actions({
 	setBaseRibbon: ['Set base ribbon',
 		function(target){ this.data.setBase(target) }],
 
+	// shorthands...
+	// XXX do we reset direction on these???
 	firstImage: ['Focus first image in current ribbon',
 		function(all){ this.focusImage(all == null ? 'first' : 0) }],
 	lastImage: ['Focus last image in current ribbon',
 		function(all){ this.focusImage(all == null ? 'last' : -1) }],
-
 	firstGlobalImage: ['Get first globally image',
 		function(){ this.firstImage(true) }],
 	lastGlobalImage: ['Get last globally image',
@@ -228,7 +227,6 @@ actions.Actions({
 		function(){ this.focusRibbon('first') }],
 	lastRibbon: ['Focus next ribbon',
 		function(){ this.focusRibbon('last') }],
-
 	prevRibbon: ['Focus previous ribbon',
 		function(){ this.focusRibbon('before') }],
 	nextRibbon: ['Focus next ribbon',
