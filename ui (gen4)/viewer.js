@@ -975,15 +975,10 @@ module.BoundsIndicators = Feature({
 		var tag = this.tag
 		return actions
 			// basic navigation...
-			.on('nextImage.pre', tag, didAdvance('end'))
-			.on('prevImage.pre', tag, didAdvance('start'))
-			.on('nextRibbon.pre', tag, didAdvance('bottom'))
-			.on('prevRibbon.pre', tag, didAdvance('top'))
-			// XXX not sure about these...
-			.on('lastImage.pre', tag, didAdvance('end'))
-			.on('firstImage.pre', tag, didAdvance('start'))
-			.on('firstRibbon.pre', tag, didAdvance('top'))
-			.on('lastRibbon.pre', tag, didAdvance('bottom'))
+			.on('nextImage.pre lastImage.pre', tag, didAdvance('end'))
+			.on('prevImage.pre firstImage.pre', tag, didAdvance('start'))
+			.on('nextRibbon.pre lastRibbon.pre', tag, didAdvance('bottom'))
+			.on('prevRibbon.pre firstRibbon.pre', tag, didAdvance('top'))
 
 			// vertical shifting...
 			.on('shiftImageUp.post', tag, 
