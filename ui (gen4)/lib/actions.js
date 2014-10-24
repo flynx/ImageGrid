@@ -359,43 +359,47 @@ module.MetaActions = {
 	//
 	// XXX add something like text tags to events (extra arg) to enable
 	// 		simple and fast handler removal...
-	on: function(action, b, c){
+	on: function(actions, b, c){
 		var handler = typeof(c) == 'function' ? c : b
 		var tag = typeof(c) == 'function' ? b : c
 
-		// prepare the handler...
-		var mode = action.split('.')
-		action = mode[0]
-		mode = mode[1]
+		var that = this
+		actions.split(' ').forEach(function(action){
+			// prepare the handler...
+			var mode = action.split('.')
+			action = mode[0]
+			mode = mode[1]
 
-		// a post handler (default)...
-		if(mode == null || mode == 'post'){
-			var old_handler = handler
-			handler = function(){ return old_handler }
-			// NOTE: this is set so as to identify the handler for removal
-			// 		via. .off(..)
-			handler.orig_handler = old_handler
+			// a post handler (default)...
+			if(mode == null || mode == 'post'){
+				var old_handler = handler
+				handler = function(){ return old_handler }
+				// NOTE: this is set so as to identify the handler for removal
+				// 		via. .off(..)
+				handler.orig_handler = old_handler
 
-		// mot pre mode...
-		} else if(mode != 'pre') {
-			// XXX
-			throw 'Unknown action mode: '+action+'.'+mode
-		}
+			// mot pre mode...
+			} else if(mode != 'pre') {
+				// XXX
+				throw 'Unknown action mode: '+action+'.'+mode
+			}
 
-		handler.tag = tag
+			handler.tag = tag
 
-		// register handlers locally only...
-		if(!this.hasOwnProperty('_action_handlers')){
-			this._action_handlers = {}
-		}
-		if(!(action in this._action_handlers)){
-			this._action_handlers[action] = []
-		}
-		// register a handler only once...
-		if(this._action_handlers[action].indexOf(handler) < 0){
-			// NOTE: last registered is first...
-			this._action_handlers[action].splice(0, 0, handler)
-		}
+			// register handlers locally only...
+			if(!that.hasOwnProperty('_action_handlers')){
+				that._action_handlers = {}
+			}
+			if(!(action in that._action_handlers)){
+				that._action_handlers[action] = []
+			}
+			// register a handler only once...
+			if(that._action_handlers[action].indexOf(handler) < 0){
+				// NOTE: last registered is first...
+				that._action_handlers[action].splice(0, 0, handler)
+			}
+		})
+
 		return this
 	},
 
@@ -407,7 +411,7 @@ module.MetaActions = {
 			if(action == '*'){
 				var actions = Object.keys(this._action_handlers)
 			} else {
-				var actions = [action]
+				var actions = action.split(' ')
 			}
 			var that = this
 			actions.forEach(function(action){
