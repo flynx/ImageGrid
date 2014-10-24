@@ -365,10 +365,11 @@ actions.Actions({
 			this.data = this.data.crop(list, flatten)
 		}],
 	uncrop: ['Uncrop ribbons',
-		function(level, restore_current){
+		function(level, restore_current, keep_crop_order){
 			level = level || 1
 
 			var cur = this.current
+			var order = this.data.order
 
 			if(this.crop_stack == null){
 				return
@@ -389,16 +390,21 @@ actions.Actions({
 				this.data.focusImage(cur)
 			}
 
+			// restore order from the crop...
+			if(keep_crop_order){
+				this.data.order = order
+				this.data.sortImages()
+			}
+
+			// purge the stack...
 			if(this.crop_stack.length == 0){
 				delete this.crop_stack
 			}
 		}],
 	uncropAll: ['',
 		function(restore_current){ this.uncrop('all', restore_current) }],
-	// XXX not sure about this...
-	uncropAndKeepOrder: ['',
-		function(){
-		}],
+	uncropAndKeepOrder: ['Uncrop and keep crop image order',
+		function(level, restore_current){ this.uncrop(level, restore_current, true) }],
 	// XXX same as uncrop but will also try and merge changes...
 	mergeCrop: ['',
 		function(){
