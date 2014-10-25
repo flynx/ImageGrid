@@ -363,8 +363,10 @@ module.MetaActions = {
 		var handler = typeof(c) == 'function' ? c : b
 		var tag = typeof(c) == 'function' ? b : c
 
+		actions = typeof(actions) == 'string' ? actions.split(' ') : actions
+
 		var that = this
-		actions.split(' ').forEach(function(action){
+		actions.forEach(function(action){
 			// prepare the handler...
 			var mode = action.split('.')
 			action = mode[0]
@@ -406,13 +408,13 @@ module.MetaActions = {
 	// Remove an action callback...
 	//
 	// XXX needs more testing...
-	off: function(action, handler){
+	off: function(actions, handler){
 		if(this.hasOwnProperty('_action_handlers')){
-			if(action == '*'){
-				var actions = Object.keys(this._action_handlers)
-			} else {
-				var actions = action.split(' ')
-			}
+
+			actions = actions == '*' ? Object.keys(this._action_handlers)
+				: typeof(actions) == 'string' ?  action.split(' ')
+				: actions
+
 			var that = this
 			actions.forEach(function(action){
 				var mode = action.split('.')
@@ -454,6 +456,16 @@ module.MetaActions = {
 			})
 		}
 		return this
+	},
+
+
+	// NOTE: if 'all' is set them mixin all the actions available, 
+	// 		otherwise only mixin local actions...
+	mixin: function(from, all){
+		// XXX link actions from 'from' into this...
+	},
+	mixinto: function(to, all){
+		return this.mixin.call(to, this, all)
 	},
 }
 
