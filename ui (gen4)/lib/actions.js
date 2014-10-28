@@ -357,8 +357,7 @@ module.MetaActions = {
 	//
 	// NOTE: 'post' mode is the default.
 	//
-	// XXX add something like text tags to events (extra arg) to enable
-	// 		simple and fast handler removal...
+	// XXX document tags...
 	on: function(actions, b, c){
 		var handler = typeof(c) == 'function' ? c : b
 		var tag = typeof(c) == 'function' ? b : c
@@ -407,7 +406,7 @@ module.MetaActions = {
 
 	// Remove an action callback...
 	//
-	// XXX needs more testing...
+	// XXX document tags...
 	off: function(actions, handler){
 		if(this.hasOwnProperty('_action_handlers')){
 
@@ -461,11 +460,29 @@ module.MetaActions = {
 
 	// NOTE: if 'all' is set them mixin all the actions available, 
 	// 		otherwise only mixin local actions...
-	mixin: function(from, all){
-		// XXX link actions from 'from' into this...
+	// XXX test
+	mixin: function(from, all, all_attr_types){
+		if(all){
+			var keys = []
+			for(var k in from){
+				keys.push(k)
+			}
+		} else {
+			var keys = Object.keys(from)
+		}
+
+		var that = this
+		keys.forEach(function(k){
+			var attr = from[k]
+			if(all_attr_types || attr instanceof Action){
+				that[k] = attr
+			}
+		})
+
+		return this
 	},
-	mixinto: function(to, all){
-		return this.mixin.call(to, this, all)
+	mixinto: function(to, all, all_attr_types){
+		return this.mixin.call(to, this, all, all_attr_types)
 	},
 }
 

@@ -463,7 +463,14 @@ actions.Actions(Client, {
 				: viewer
 			// XXX do we need to recycle the images???
 
-			this.ribbons = ribbons.Ribbons(viewer, data.images)
+			// XXX is keeping ribbons here correct???
+			if(this.ribbons == null){
+				this.ribbons = ribbons.Ribbons(viewer, data.images)
+			}
+
+			// NOTE: this is here to prevent animations when the view 
+			// 		is resized and recentered...
+			this.ribbons.preventTransitions()
 
 			return function(){
 				// XXX do a partial load...
@@ -471,6 +478,8 @@ actions.Actions(Client, {
 
 				this.ribbons.updateData(this.data)
 				this.focusImage()
+
+				this.ribbons.restoreTransitions()
 			}
 		}],
 	reload: [
