@@ -458,8 +458,11 @@ module.MetaActions = {
 	},
 
 
+	// Mixin a set of actions into this...
+	//
 	// NOTE: if 'all' is set them mixin all the actions available, 
 	// 		otherwise only mixin local actions...
+	//
 	// XXX test
 	mixin: function(from, all, all_attr_types){
 		if(all){
@@ -481,8 +484,51 @@ module.MetaActions = {
 
 		return this
 	},
-	mixinto: function(to, all, all_attr_types){
+
+	// Mixin a set of local actions into an object...
+	//
+	mixinTo: function(to, all, all_attr_types){
 		return this.mixin.call(to, this, all, all_attr_types)
+	},
+
+
+	// Remove mixed in actions from this...
+	//
+	// NOTE: this will only remove local actions, inherited actions will
+	// 		not be affected...
+	// NOTE: this will not affect event handlers, they should be removed
+	// 		manually if needed...
+	//
+	// XXX not sure about these...
+	// XXX test
+	mixout: function(from, all, all_attr_types){
+		if(all){
+			var keys = []
+			for(var k in from){
+				keys.push(k)
+			}
+		} else {
+			var keys = Object.keys(from)
+		}
+
+		var locals = Object.keys(this)
+		var that = this
+		keys.forEach(function(k){
+			var attr = from[k]
+			if((all_attr_types || attr instanceof Action) 
+					// remove only local attrs...
+					&& locals.indexOf(k) >= 0){
+				delete that[k]
+			}
+		})
+
+		return this
+	},
+
+	// Remove a set of local mixed in actions from object...
+	//
+	mixoutFrom: function(to, all, all_attr_types){
+		return this.mixout.call(to, this, all, all_attr_types)
 	},
 }
 
