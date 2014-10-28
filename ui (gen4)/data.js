@@ -253,6 +253,114 @@ module.DataPrototype = {
 		return gid
 	},
 	
+	// Clear elements from data...
+	//
+	// 	Clear all data:
+	// 	.clear('*')
+	// 	.clear('all')
+	// 		-> data
+	//
+	// 	Clear empty ribbons:
+	// 	.clear('empty')
+	// 		-> data
+	//
+	// 	Clear gid(s) form data:
+	// 	.clear(gid)
+	// 	.clear([gid, gid, ..])
+	// 		-> data
+	//
+	//
+	// Two extra argumants are considered:
+	// 	- deep		- if set to true (default), when cleared a ribbon all
+	// 				  images within that ribbon will also be cleared.
+	// 	- clear_empty
+	// 				- if true (default), empty ribbons will be removed 
+	// 				  after all gids are cleared.
+	// 				  this is equivalent to calling:
+	// 				  	.clear('empty')
+	//
+	//
+	// NOTE: at this point this will not set .base and .current but this
+	// 		will reset them to null if a base ribbon or current image is
+	// 		cleared...
+	// 		thus setting appropriate .base and .current values is the 
+	// 		responsibility of the caller.
+	//
+	// XXX not sure this should be here...
+	// XXX should this reset .base and .current to appropriate values 
+	// 		other than null?
+	// XXX should this return this or the removed gids???
+	clear: function(gids, deep, clear_empty){
+		// defaults...
+		deep = deep == null ? true : false
+		clear_empty = clear_empty == null ? true : false 
+
+		if(gids == null){
+			return this
+		}
+
+		// clear all data...
+		if(gids == '*' || gids == 'all'){
+			this._reset()
+
+		// clear empty ribbons only...
+		} else if(gids == 'empty'){
+			for(var r in this.ribbons){
+				if(this.ribbons[r].len() == 0){
+					this.clear(r)
+				}
+			}
+
+		// clear gids...
+		} else {
+			gids = gids.constructor === Array ? gids : [gids]
+			var that = this
+			gids.forEach(function(gid){
+				var r = that.ribbon_order.indexOf(gid)
+				var i = that.order.indexOf(gid)
+				// gid is a ribbon...
+				if(r >= 0){
+					// clear from order...
+					that.ribbon_order.splice(r, 1)
+
+					// clear from ribbons...
+					var images = that.ribbons[gid]
+					delete that.ribbons[gid]
+
+					// remove ribbon images...
+					if(deep){
+						images.forEach(function(gid){ that.clear(gid) })
+					}
+
+					if(that.base == gid){
+						that.base = null
+					}
+
+				// gid is an image...
+				} else if(i >= 0) {
+					// remove from order...
+					that.order.splice(i, 1)
+
+					// remove from ribbons...
+					Object.keys(that.ribbons).forEach(function(r){
+						that.ribbons[r].splice(i, 1)
+					})
+
+					if(that.current == gid){
+						that.current = null
+					}
+				}
+			})
+
+			// cleanup...
+			if(clear_empty){
+				this.clear('empty')
+			}
+		}
+
+		return this
+	},
+
 
 
 	/*********************************************** Introspection ***/

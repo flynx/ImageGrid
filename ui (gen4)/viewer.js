@@ -472,6 +472,7 @@ actions.Actions(Client, {
 			// 		is resized and recentered...
 			this.ribbons.preventTransitions()
 
+			// XXX should we use this.reload() here???
 			return function(){
 				// XXX do a partial load...
 				// XXX
@@ -484,8 +485,14 @@ actions.Actions(Client, {
 		}],
 	reload: [
 		function(){
-			this.ribbons.updateData(this.data)
-			this.focusImage()
+			this.ribbons.preventTransitions()
+
+			return function(){
+				this.ribbons.updateData(this.data)
+				this.focusImage()
+
+				this.ribbons.restoreTransitions()
+			}
 		}],
 	clear: [
 		// XXX do we need to delete the ribbons???
