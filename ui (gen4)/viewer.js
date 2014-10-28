@@ -468,31 +468,21 @@ actions.Actions(Client, {
 				this.ribbons = ribbons.Ribbons(viewer, data.images)
 			}
 
-			// NOTE: this is here to prevent animations when the view 
-			// 		is resized and recentered...
-			this.ribbons.preventTransitions()
-
-			// XXX should we use this.reload() here???
 			return function(){
 				// XXX do a partial load...
 				// XXX
 
-				this.ribbons.updateData(this.data)
-				this.focusImage()
-
-				this.ribbons.restoreTransitions()
+				this.reload()
 			}
 		}],
-	reload: [
+	reload: ['Reload viewer',
 		function(){
 			this.ribbons.preventTransitions()
 
-			return function(){
-				this.ribbons.updateData(this.data)
-				this.focusImage()
+			this.ribbons.updateData(this.data)
+			this.focusImage()
 
-				this.ribbons.restoreTransitions()
-			}
+			this.ribbons.restoreTransitions()
 		}],
 	clear: [
 		// XXX do we need to delete the ribbons???
