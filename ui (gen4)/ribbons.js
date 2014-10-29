@@ -127,43 +127,55 @@ module.RibbonsPrototype = {
 	// Helpers...
 
 	// XXX need a better way of doing this...
-	preventTransitions: function(){
-		this.viewer.addClass('no-transitions')
-		var v = this.viewer[0]
-		getComputedStyle(v).webkitTransition
-		getComputedStyle(v).mozTransition
-		getComputedStyle(v).msTransition
-		getComputedStyle(v).oTransition
-		getComputedStyle(v).transition
+	preventTransitions: function(target){
+		target = target || this.viewer
+		target.addClass('no-transitions')
+		var t = target[0]
+		getComputedStyle(t).webkitTransition
+		getComputedStyle(t).mozTransition
+		getComputedStyle(t).msTransition
+		getComputedStyle(t).oTransition
+		getComputedStyle(t).transition
+
+		return this
 	},
-	restoreTransitions: function(now){
+	restoreTransitions: function(target, now){
+		if(target === true || target === false){
+			now = target
+			target = this.viewer
+		} else {
+			target = target || this.viewer
+		}
 		// sync...
 		if(now){
-			this.viewer.removeClass('no-transitions')
-			var v = this.viewer[0]
-			getComputedStyle(v).webkitTransition
-			getComputedStyle(v).mozTransition
-			getComputedStyle(v).msTransition
-			getComputedStyle(v).oTransition
-			getComputedStyle(v).transition
+			target.removeClass('no-transitions')
+			var t = target[0]
+			getComputedStyle(t).webkitTransition
+			getComputedStyle(t).mozTransition
+			getComputedStyle(t).msTransition
+			getComputedStyle(t).oTransition
+			getComputedStyle(t).transition
 
 		// on next exec frame...
 		} else {
 			var that = this
 			setTimeout(function(){
-				that.viewer.removeClass('no-transitions')}, 0)
-				var v = that.viewer[0]
-				getComputedStyle(v).webkitTransition
-				getComputedStyle(v).mozTransition
-				getComputedStyle(v).msTransition
-				getComputedStyle(v).oTransition
-				getComputedStyle(v).transition
+				target.removeClass('no-transitions')}, 0)
+				var t = target[0]
+				getComputedStyle(t).webkitTransition
+				getComputedStyle(t).mozTransition
+				getComputedStyle(t).msTransition
+				getComputedStyle(t).oTransition
+				getComputedStyle(t).transition
 		}
+
+		return this
 	},
 	noTransitions: function(func){
 		this.preventTransitions()
 		func.apply(this, args2array(arguments).slice(1))
 		this.restoreTransitions(true)
+		return this
 	},
 
 
@@ -927,12 +939,18 @@ module.RibbonsPrototype = {
 	// This will reuse the images that already exist, thus if updating or
 	// adding images to an already loaded set this should be very fast.
 	//
-	// NOTE: gids and ribbon must be .getImage(..) and .getRibbon(..) 
-	// 		compatible...
+	// If reference is given then this will compensate ribbon offset to
+	// keep the reference image in the same position (XXX ???) 
 	//
-	// XXX at this point this expects gids to be a list of gids, need 
-	// 		to make this compatible with jQuery collections...
-	updateRibbon: function(gids, ribbon){
+	// gids must be a list of gids.
+	//
+	// ribbons must be .getRibbon(..) compatible.
+	//
+	// reference must be .getImage(..) compatible.
+	//
+	// XXX should this compensate for load offset???
+	// XXX need to make this animation-neutral...
+	updateRibbon: function(gids, ribbon, reference){
 		var that = this
 		// get/create the ribbon...
 		var r = this.getRibbon(ribbon)
@@ -942,17 +960,40 @@ module.RibbonsPrototype = {
 		}
 
 		var loaded = r.find('.image')
+		var unload = $()
+
+		// compensate for new/removed images...
+		// XXX need to make this animation-neutral...
+		if(reference != null){
+			var ref = this.getImage(reference)
+
+			// align only if ref is loaded...
+			// XXX
+			if(ref.length > 0){
+				var gid = this.getElemGID(ref)
+				var w = ref.outerWidth()
+
+				// calculate offset...
+				// NOTE: this will not work for non-square images...
+				var dl = loaded.index(ref) - gids.indexOf(gid)
+
+				if(dl != 0){
+					r.css({left: parseFloat(r.css('left')) + dl * w})
+				}
+			}
+		}
 		
 		// remove all images that we do not need...
 		loaded = loaded
 			.filter(function(i, img){ 
-				// XXX .indexOf(..) will not work for a jQuery collection...
 				if(gids.indexOf(that.getElemGID($(img))) >= 0){
 					return true
 				}
-				$(img).remove()
+				unload.push(img)
 				return false
 			})
+		// remove everything in one go...
+		unload.remove()
 
 		$(gids).each(function(i, gid){
 			// support for sparse ribbons...
@@ -990,12 +1031,13 @@ module.RibbonsPrototype = {
 			that.updateImage(img)
 		})
 
+		/*
 		// remove the rest of the stuff in ribbon... 
 		if(loaded.length > gids.length){
-			loaded.eq(gids.length).nextAll().remove()
-			loaded.eq(gids.length).remove()
+			loaded.eq(gids.length-1).nextAll().remove()
 		}
-
+		*/
+		
 		return this
 	},
 

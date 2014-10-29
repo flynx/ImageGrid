@@ -172,6 +172,7 @@ $(function(){
 	//viewer.RibbonAlignToFirst.setup(a)
 	viewer.ShiftAnimation.setup(a)
 	viewer.BoundsIndicators.setup(a)
+	viewer.PartialRibbons.setup(a)
 
 	// this publishes all the actions...
 	//module.GLOBAL_KEYBOARD.__proto__ = a

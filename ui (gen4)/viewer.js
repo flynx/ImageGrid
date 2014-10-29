@@ -540,7 +540,7 @@ actions.Actions(Client, {
 				: data.getImage(target)
 
 			// align current ribbon...
-			ribbons
+			this
 				.centerRibbon(gid)
 				.centerImage(gid)
 
@@ -565,9 +565,9 @@ actions.Actions(Client, {
 					if(f == null){
 						continue
 					}
-					ribbons.centerImage(f, 'before')
+					this.centerImage(f, 'before')
 				} else {
-					ribbons.centerImage(t, 'after')
+					this.centerImage(t, 'after')
 				}
 			}
 		}],
@@ -585,7 +585,7 @@ actions.Actions(Client, {
 				: data.getImage(target)
 
 			// align current ribbon...
-			ribbons
+			this
 				.centerRibbon(gid)
 				.centerImage(gid)
 
@@ -607,20 +607,28 @@ actions.Actions(Client, {
 				if(f == null){
 					continue
 				}
-				ribbons.centerImage(f, 'before')
+				this.centerImage(f, 'before')
 			}
 		}],
 	// NOTE: this will align only a single image...
-	centerImage: ['Center image',
+	// XXX do we need these low level primitives here???
+	centerImage: ['Center an image in ribbon horizontally',
+		function(target, align){
+			target = target instanceof jQuery 
+				? this.ribbons.getElemGID(target)
+				: target
+
+			// align current ribbon...
+			this.ribbons.centerImage(target, align)
+		}],
+	centerRibbon: ['Center a ribbon vertically',
 		function(target){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
 				: target
 
 			// align current ribbon...
-			this.ribbons
-				.centerRibbon(target)
-				.centerImage(target)
+			this.ribbons.centerRibbon(target)
 		}],
 
 	// XXX skip invisible ribbons (???)
@@ -897,6 +905,73 @@ function Feature(obj){
 
 
 
+// XXX revise...
+var PartialRibbons = 
+module.PartialRibbons = Feature({
+	tag: 'ui-partial-ribbons',
+
+	// number of screen widths to load...
+	size: 5,
+
+	// number of screen widths to edge to trigger reload...
+	threshold: 1,
+
+	setup: function(actions){
+		var feature = this
+
+		var updateRibbon = function(target, w){
+			target = target instanceof jQuery 
+				? this.ribbons.getElemGID(target)
+				: this.data.getImage(target)
+
+			w = w || this.screenwidth
+
+			var s = feature.size * w
+			var t = feature.threshold * w
+
+			// next/prev loaded... 
+			var nl = this.ribbons.getImage(target).nextAll('.image').length
+			var pl = this.ribbons.getImage(target).prevAll('.image').length
+
+			// next/prev available...
+			var na = this.data.getImages(target, s/2, 'after').length - 1 
+			var pa = this.data.getImages(target, s/2, 'before').length - 1 
+
+			// the target is not loaded...
+			if(this.ribbons.getImage(target).length == 0
+					// passed threshold on the right...
+					|| (nl < t && na > nl) 
+					// passed threshold on the left...
+					|| (pl < t && pa > pl) 
+					// loaded more than we need by threshold...
+					|| nl + pl + 1 > s + t){
+
+				// localize transition prevention... 
+				// NOTE: we can't get ribbon via target directly here as
+				// 		the target might not be loaded...
+				var r = this.ribbons.getRibbon(this.data.getRibbon(target))
+
+				this.ribbons
+					.preventTransitions(r)
+					.updateRibbon(
+						this.data.getImages(target, s), 
+						this.data.getRibbon(target),
+						target)
+					.restoreTransitions(r, true)
+			}
+		}
+
+		return actions
+			.on('focusImage.pre centerImage.pre', this.tag, function(target){
+				return updateRibbon.call(this, target)
+			})
+			.on('fitImage.pre', this.tag, function(n){
+				return updateRibbon.call(this, 'current', n || 1)
+			})
+	},
+})
+
+
 // XXX need a better name...
 // XXX this should also define up/down navigation behavior...
 var RibbonAlignToOrder = 
@@ -905,6 +980,7 @@ module.RibbonAlignToOrder = Feature({
 
 	setup: function(actions){
 		return actions
+			// XXX this can be either pre or post...
 			.on('focusImage.post', this.tag, function(target){
 				this.alignByOrder(target)
 			})
@@ -921,6 +997,7 @@ module.RibbonAlignToFirst = Feature({
 
 	setup: function(actions){
 		return actions
+			// XXX this can be either pre or post...
 			.on('focusImage.post', this.tag, function(target){
 				this.alignByFirst(target)
 			})
@@ -969,6 +1046,8 @@ module.CurrentIndicator = Feature({
 })
 
 
+// XXX should we keep actions in a closure (like it is done here) or get
+// 		them live as in PartialRibbons???
 var BoundsIndicators = 
 module.BoundsIndicators = Feature({
 	tag: 'ui-bounds-indicators',
