@@ -450,6 +450,14 @@ var Viewer =
 module.Viewer = 
 actions.Actions(Client, {
 
+	get screenwidth(){
+		return this.ribbons != null ? this.ribbons.getScreenWidthImages() : null
+	},
+	set screenwidth(n){
+		this.fitImage(n)
+	},
+
+
 	ready: [
 		function(){
 			// XXX setup empty state...
@@ -479,10 +487,12 @@ actions.Actions(Client, {
 		function(){
 			this.ribbons.preventTransitions()
 
-			this.ribbons.updateData(this.data)
-			this.focusImage()
+			return function(){
+				this.ribbons.updateData(this.data)
+				this.focusImage()
 
-			this.ribbons.restoreTransitions()
+				this.ribbons.restoreTransitions()
+			}
 		}],
 	clear: [
 		// XXX do we need to delete the ribbons???
@@ -642,6 +652,10 @@ actions.Actions(Client, {
 		}],
 	/*
 	// XXX an ideologically different version of .focusImage(..)
+	// 		This version aligns the ribbons internally while the above
+	// 		version does not align at all, and all alignment is handled
+	// 		by a feature.
+	//
 	//		The main question here is: 
 	//			should we split out aligning to a feature?
 	//		The differences/trade-off's in this version:
@@ -824,6 +838,29 @@ actions.Actions(Client, {
 
 	crop: [ reloadAfter() ],
 	uncrop: [ reloadAfter() ],
+
+	// XXX experimental: not sure if this is the right way to go...
+	// XXX make this play nice with crops...
+	toggleRibbonList: ['Toggle ribbons as images view',
+		function(){
+			if(this._full_data == null){
+				// XXX do a better name here...
+				this._full_data = this.data
+
+				// generate the view...
+				this.data = this.data.cropRibbons()
+
+				this.reload()
+			} else {
+				var data = this._full_data
+				delete this._full_data
+
+				// restore...
+				this.data = data.mergeRibbonCrop(this.data)
+
+				this.reload()
+			}
+		}],
 })
 
 

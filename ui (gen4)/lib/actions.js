@@ -357,7 +357,7 @@ module.MetaActions = {
 	//
 	// NOTE: 'post' mode is the default.
 	//
-	// XXX document tags...
+	// XXX should we have multiple tags per handler???
 	on: function(actions, b, c){
 		var handler = typeof(c) == 'function' ? c : b
 		var tag = typeof(c) == 'function' ? b : c
@@ -377,7 +377,7 @@ module.MetaActions = {
 				handler = function(){ return old_handler }
 				// NOTE: this is set so as to identify the handler for removal
 				// 		via. .off(..)
-				handler.orig_handler = old_handler
+				handler.orig_handler = old_handler.orig_handler || old_handler
 
 			// mot pre mode...
 			} else if(mode != 'pre') {
@@ -406,12 +406,27 @@ module.MetaActions = {
 
 	// Remove an action callback...
 	//
-	// XXX document tags...
+	//	Remove all handlers from action:
+	//	.off('action')
+	//	.off('action', '*')
+	//	.off('action', 'all')
+	// 		-> <action-set>
+	//
+	//	Remove specific handler from action:
+	//	.off('action', <handler>)
+	// 		-> <action-set>
+	//
+	//	Remove handlers from action by tag:
+	//	.off('action', <tag>)
+	// 		-> <action-set>
+	//
+	// NOTE: the handler passed to .off(..) for removal must be the same
+	// 		as the handler passed to .on(..) / .one(..)
 	off: function(actions, handler){
 		if(this.hasOwnProperty('_action_handlers')){
 
 			actions = actions == '*' ? Object.keys(this._action_handlers)
-				: typeof(actions) == 'string' ?  action.split(' ')
+				: typeof(actions) == 'string' ?  actions.split(' ')
 				: actions
 
 			var that = this
@@ -444,6 +459,10 @@ module.MetaActions = {
 						h.splice(i, 1)
 					}
 
+				// remove all handlers...
+				} else if(handler == null || handler == 'all' || handler == '*'){
+					h.splice(0, h.length)
+
 				// remove handlers by tag...
 				} else {
 					// filter out everything that mathches a tag in-place...
@@ -454,6 +473,30 @@ module.MetaActions = {
 				}
 			})
 		}
+
+		return this
+	},
+
+	// Register an action callback that will only fire once per event...
+	//
+	// This is signature compatible with .on(..)
+	one: function(actions, b, c){
+		var handler = typeof(c) == 'function' ? c : b
+		var tag = typeof(c) == 'function' ? b : c
+
+		actions = typeof(actions) == 'string' ? actions.split(' ') : actions
+
+		var that = this
+		actions.forEach(function(action){
+			var _handler = function(){
+				// remove handler... 
+				that.off(action, handler)
+				return handler.apply(this, arguments)
+			}
+			_handler.orig_handler = handler
+			that.on(action, tag, _handler)
+		})
+
 		return this
 	},
 
@@ -487,6 +530,7 @@ module.MetaActions = {
 
 	// Mixin a set of local actions into an object...
 	//
+	// XXX test
 	mixinTo: function(to, all, all_attr_types){
 		return this.mixin.call(to, this, all, all_attr_types)
 	},
@@ -527,6 +571,7 @@ module.MetaActions = {
 
 	// Remove a set of local mixed in actions from object...
 	//
+	// XXX test
 	mixoutFrom: function(to, all, all_attr_types){
 		return this.mixout.call(to, this, all, all_attr_types)
 	},
@@ -569,6 +614,8 @@ module.MetaActions = {
 // NOTE: if <prototype> is not given, MetaActions will be used as default.
 //
 // For more documentation see: Action(..).
+//
+// XXX add doc, ldoc, tags and save them to each action...
 var Actions =
 module.Actions =
 function Actions(a, b){
