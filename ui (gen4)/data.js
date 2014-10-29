@@ -270,7 +270,7 @@ module.DataPrototype = {
 	// 		-> data
 	//
 	//
-	// Two extra argumants are considered:
+	// Two extra arguments are considered:
 	// 	- deep		- if set to true (default), when cleared a ribbon all
 	// 				  images within that ribbon will also be cleared.
 	// 	- clear_empty
@@ -724,7 +724,6 @@ module.DataPrototype = {
 
 		// get the actual bounds...
 		from = Math.max(0, from)
-		to = Math.min(list.length-1, to)
 
 		return list.slice(from, to)
 	},
