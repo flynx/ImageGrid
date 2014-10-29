@@ -168,6 +168,7 @@ $(function(){
 
 	window.a = testing.setupActions()
 
+	// setup features...
 	viewer.RibbonAlignToOrder.setup(a)
 	//viewer.RibbonAlignToFirst.setup(a)
 	viewer.ShiftAnimation.setup(a)

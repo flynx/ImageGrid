@@ -906,6 +906,7 @@ function Feature(obj){
 
 
 // XXX revise...
+// XXX need to test and tweak with actual images...
 var PartialRibbons = 
 module.PartialRibbons = Feature({
 	tag: 'ui-partial-ribbons',
