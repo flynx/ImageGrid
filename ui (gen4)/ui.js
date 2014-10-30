@@ -169,11 +169,18 @@ $(function(){
 	window.a = testing.setupActions()
 
 	// setup features...
+	// XXX I do not full understand it yet, but PartialRibbons must be 
+	// 		setup BEFORE RibbonAlignToFirst, otherwise the later will break
+	// 		on shifting an image to a new ribbon...
+	// 			To reproduce:
+	// 				- setupe RibbonAlignToFirst first
+	// 				- go to top ribbon
+	// 				- shift image up
+	viewer.PartialRibbons.setup(a)
 	viewer.RibbonAlignToOrder.setup(a)
 	//viewer.RibbonAlignToFirst.setup(a)
 	viewer.ShiftAnimation.setup(a)
 	viewer.BoundsIndicators.setup(a)
-	viewer.PartialRibbons.setup(a)
 
 	// this publishes all the actions...
 	//module.GLOBAL_KEYBOARD.__proto__ = a

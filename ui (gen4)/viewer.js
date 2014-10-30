@@ -22,14 +22,10 @@ var reloadAfter =
 module.reloadAfter = 
 function reloadAfter(transitions){
 	return function(){
-		// prevent animations form adding/removing ribbons...
-		!transitions && this.ribbons.preventTransitions()
-
 		return function(){
 			// NOTE: this may seem like cheating, but .reload() should
 			// 		be very efficient, reusing all of the items loaded...
 			this.reload()
-			!transitions && this.ribbons.restoreTransitions()
 		}
 	}
 }
@@ -528,7 +524,6 @@ actions.Actions(Client, {
 
 	// align modes...
 	// XXX skip invisible ribbons (???)
-	// XXX load data chunks...
 	alignByOrder: ['Align ribbons by image order',
 		function(target){
 			var ribbons = this.ribbons
@@ -553,8 +548,6 @@ actions.Actions(Client, {
 				}
 
 				// XXX skip off-screen ribbons...
-
-				// XXX see if we need to do some loading...
 
 				// center...
 				// XXX is there a 'last' special case here???
@@ -899,13 +892,20 @@ module.FeatureProto = {
 var Feature =
 module.Feature =
 function Feature(obj){
-	obj.__proto__ = this.FeatureProto
+	obj.__proto__ = FeatureProto
 	return obj
 }
 
 
 
-// XXX revise...
+// XXX I do not fully understand it yet, but PartialRibbons must be 
+// 		setup BEFORE RibbonAlignToFirst, otherwise the later will break
+// 		on shifting an image to a new ribbon...
+// 			To reproduce:
+// 				- setupe RibbonAlignToFirst first
+// 				- go to top ribbon
+// 				- shift image up
+// 		The two should be completely independent....
 // XXX need to test and tweak with actual images...
 var PartialRibbons = 
 module.PartialRibbons = Feature({
@@ -947,18 +947,22 @@ module.PartialRibbons = Feature({
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > s + t){
 
-				// localize transition prevention... 
 				// NOTE: we can't get ribbon via target directly here as
 				// 		the target might not be loaded...
-				var r = this.ribbons.getRibbon(this.data.getRibbon(target))
+				var r_gid = this.data.getRibbon(target)
 
-				this.ribbons
-					.preventTransitions(r)
-					.updateRibbon(
-						this.data.getImages(target, s), 
-						this.data.getRibbon(target),
-						target)
-					.restoreTransitions(r, true)
+				// localize transition prevention... 
+				var r = this.ribbons.getRibbon(r_gid)
+
+				if(r.length > 0){
+					this.ribbons
+						.preventTransitions(r)
+						.updateRibbon(
+							this.data.getImages(target, s), 
+							r_gid,
+							target)
+						.restoreTransitions(r, true)
+				}
 			}
 		}
 
