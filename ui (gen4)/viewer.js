@@ -903,7 +903,7 @@ function Feature(obj){
 var PartialRibbonsActions = 
 module.PartialRibbonsActions = 
 actions.Actions({
-	updateRibbonSize: ['', 
+	updateRibbonSize: ['Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
@@ -911,6 +911,7 @@ actions.Actions({
 
 			w = w || this.screenwidth
 
+			// get config data...
 			size = size 
 				|| this.config['ribbon-size-screens'] 
 				|| 5
@@ -918,6 +919,7 @@ actions.Actions({
 				|| this.config['ribbon-resize-threshold'] 
 				|| 1
 
+			// normalize to image count...
 			var s = size * w
 			var t = threshold * w
 
@@ -1057,8 +1059,6 @@ module.ShiftAnimation = Feature({
 })
 
 
-// XXX should we keep actions in a closure (like it is done here) or get
-// 		them live as in PartialRibbons???
 var BoundsIndicators = 
 module.BoundsIndicators = Feature({
 	tag: 'ui-bounds-indicators',
@@ -1230,6 +1230,8 @@ module.CurrentImageIndicator = Feature({
 					that.updateMarker(this, null, w0 > w1 ? 'before' : 'after') 
 				}
 			})
+			// XXX not sure about this...
+			.focusImage()
 	},
 	remove: function(actions){
 		actions.viewer.find('.' + this.tag).remove()
