@@ -371,13 +371,16 @@ module.MetaActions = {
 			action = mode[0]
 			mode = mode[1]
 
+			// keep the original handler for future use...
+			var a_handler = handler
+
 			// a post handler (default)...
 			if(mode == null || mode == 'post'){
-				var old_handler = handler
-				handler = function(){ return old_handler }
+				var old_handler = a_handler
+				a_handler = function(){ return old_handler }
 				// NOTE: this is set so as to identify the handler for removal
 				// 		via. .off(..)
-				handler.orig_handler = old_handler.orig_handler || old_handler
+				a_handler.orig_handler = old_handler.orig_handler || old_handler
 
 			// mot pre mode...
 			} else if(mode != 'pre') {
@@ -385,7 +388,7 @@ module.MetaActions = {
 				throw 'Unknown action mode: '+action+'.'+mode
 			}
 
-			handler.tag = tag
+			a_handler.tag = tag
 
 			// register handlers locally only...
 			if(!that.hasOwnProperty('_action_handlers')){
@@ -395,9 +398,9 @@ module.MetaActions = {
 				that._action_handlers[action] = []
 			}
 			// register a handler only once...
-			if(that._action_handlers[action].indexOf(handler) < 0){
+			if(that._action_handlers[action].indexOf(a_handler) < 0){
 				// NOTE: last registered is first...
-				that._action_handlers[action].splice(0, 0, handler)
+				that._action_handlers[action].splice(0, 0, a_handler)
 			}
 		})
 

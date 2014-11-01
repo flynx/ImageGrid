@@ -898,37 +898,28 @@ function Feature(obj){
 
 
 
-// XXX I do not fully understand it yet, but PartialRibbons must be 
-// 		setup BEFORE RibbonAlignToFirst, otherwise the later will break
-// 		on shifting an image to a new ribbon...
-// 			To reproduce:
-// 				- setupe RibbonAlignToFirst first
-// 				- go to top ribbon
-// 				- shift image up
-// 		The two should be completely independent....
-// XXX need to test and tweak with actual images...
-var PartialRibbons = 
-module.PartialRibbons = Feature({
-	tag: 'ui-partial-ribbons',
-
-	// number of screen widths to load...
-	size: 5,
-
-	// number of screen widths to edge to trigger reload...
-	threshold: 1,
-
-	setup: function(actions){
-		var feature = this
-
-		var updateRibbon = function(target, w){
+// NOTE: this is split out to an action so as to enable ui elements to 
+// 		adapt to ribbon size changes...
+var PartialRibbonsActions = 
+module.PartialRibbonsActions = 
+actions.Actions({
+	updateRibbonSize: ['', 
+		function(target, w, size, threshold){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
 				: this.data.getImage(target)
 
 			w = w || this.screenwidth
 
-			var s = feature.size * w
-			var t = feature.threshold * w
+			size = size 
+				|| this.config['ribbon-size-screens'] 
+				|| 5
+			threshold = threshold 
+				|| this.config['ribbon-resize-threshold'] 
+				|| 1
+
+			var s = size * w
+			var t = threshold * w
 
 			// next/prev loaded... 
 			var nl = this.ribbons.getImage(target).nextAll('.image').length
@@ -964,23 +955,53 @@ module.PartialRibbons = Feature({
 						.restoreTransitions(r, true)
 				}
 			}
-		}
+		}]
+})
+
+
+// XXX I do not fully understand it yet, but PartialRibbons must be 
+// 		setup BEFORE RibbonAlignToFirst, otherwise the later will break
+// 		on shifting an image to a new ribbon...
+// 			To reproduce:
+// 				- setupe RibbonAlignToFirst first
+// 				- go to top ribbon
+// 				- shift image up
+// 		The two should be completely independent....
+// XXX need to test and tweak with actual images...
+var PartialRibbons = 
+module.PartialRibbons = Feature({
+	tag: 'ui-partial-ribbons',
+
+	// number of screen widths to load...
+	size: 5,
+
+	// number of screen widths to edge to trigger reload...
+	threshold: 1,
+
+	setup: function(actions){
+		var feature = this
+
+		actions.mixin(PartialRibbonsActions)
 
 		return actions
 			.on('focusImage.pre centerImage.pre', this.tag, function(target){
-				return updateRibbon.call(this, target)
+				this.updateRibbonSize(target)
 			})
 			.on('fitImage.pre', this.tag, function(n){
-				return updateRibbon.call(this, 'current', n || 1)
+				this.updateRibbonSize('current', n || 1)
 			})
+	},
+	remove: function(actions){
+		actions.mixout(PartialRibbonsActions)
+		return actions.off('*', this.tag)
 	},
 })
 
 
-// XXX need a better name...
-// XXX this should also define up/down navigation behavior...
-var RibbonAlignToOrder = 
-module.RibbonAlignToOrder = Feature({
+// XXX this should also define up/down navigation behavior e.g. what to 
+// 		focus on next/prev ribbon...
+var AlignRibbonsToImageOrder = 
+module.AlignRibbonsToImageOrder = Feature({
 	tag: 'ui-ribbon-align-to-order',
 
 	setup: function(actions){
@@ -995,9 +1016,8 @@ module.RibbonAlignToOrder = Feature({
 })
 
 
-// XXX need a better name...
-var RibbonAlignToFirst = 
-module.RibbonAlignToFirst = Feature({
+var AlignRibbonsToFirstImage = 
+module.AlignRibbonsToFirstImage = Feature({
 	tag: 'ui-ribbon-align-to-first',
 
 	setup: function(actions){
@@ -1033,20 +1053,6 @@ module.ShiftAnimation = Feature({
 			.on('shiftImageDown.pre', tag, animate)
 			.on('shiftImageLeft.pre', tag, noanimate)
 			.on('shiftImageRight.pre', tag, noanimate)
-	},
-})
-
-
-// XXX
-var CurrentIndicator = 
-module.CurrentIndicator = Feature({
-	tag: 'ui-current-indicator',
-
-	setup: function(actions){
-	},
-	remove: function(actions){
-		actions.viewer.find('.' + this.tag).remove()
-		return actions.off('*', this.tag)
 	},
 })
 
@@ -1139,6 +1145,130 @@ module.BoundsIndicators = Feature({
 		return actions.off('*', this.tag)
 	},
 })
+
+
+var CurrentImageIndicator = 
+module.CurrentImageIndicator = Feature({
+	tag: 'ui-current-image-indicator',
+
+	border: 3,
+	min_border: 2,
+
+	border_timeout: 200,
+
+	updateMarker: function(actions, target, update_border){
+		var scale = actions.ribbons.getScale()
+		var cur = actions.ribbons.getImage(target)
+		var ribbon = actions.ribbons.getRibbon()
+		var ribbon_set = actions.ribbons.viewer.find('.ribbon-set')
+
+		var marker = ribbon.find('.current-marker')
+
+		// no marker found...
+		if(marker.length == 0){
+			// get marker globally...
+			marker = actions.ribbons.viewer.find('.current-marker')
+
+			// create a marker...
+			if(marker.length == 0){
+				var marker = $('<div/>')
+					.addClass('current-marker ' + this.tag)
+					.css({
+						opacity: '0',
+						top: '0px',
+						left: '0px',
+					})
+					.appendTo(ribbon)
+					.animate({
+						'opacity': 1
+					}, 500)
+
+			// add marker to current ribbon...
+			} else {
+				marker.appendTo(ribbon)
+			}
+		}
+
+		var w = cur.outerWidth(true)
+		var h = cur.outerHeight(true)
+
+		var border = Math.max(this.min_border, this.border / scale)
+
+		// set border right away...
+		if(update_border == 'before'){
+			marker.css({ borderWidth: border }) 
+
+		// set border with a delay...
+		} else {
+			setTimeout(function(){ 
+				marker.css({ borderWidth: border }) 
+			}, this.border_timeout)
+		}
+
+		return marker.css({
+			left: cur[0].offsetLeft,
+
+			// keep size same as the image...
+			width: w,
+			height: h,
+		})
+	},
+
+	setup: function(actions){
+		var that = this
+		return actions
+			.on( 'focusImage.post', this.tag, 
+					function(target){ that.updateMarker(this, target) })
+			// Change border size in the appropriate spot in the animation:
+			// 	- before animation when scaling up
+			// 	- after when scaling down
+			// This is done to make the visuals consistent...
+			.on( 'fitImage.pre', this.tag, function(w1){ 
+				var w0 = this.screenwidth
+				w1 = w1 || 1
+				return function(){
+					that.updateMarker(this, null, w0 > w1 ? 'before' : 'after') 
+				}
+			})
+	},
+	remove: function(actions){
+		actions.viewer.find('.' + this.tag).remove()
+		return actions.off('*', this.tag)
+	},
+})
+
+
+// XXX
+var ImageStateIndicator = 
+module.ImageStateIndicator = Feature({
+	tag: 'ui-image-state-indicator',
+
+	setup: function(actions){
+	},
+	remove: function(actions){
+		actions.viewer.find('.' + this.tag).remove()
+		return actions.off('*', this.tag)
+	},
+})
+
+
+
+// XXX
+var GlobalStateIndicator = 
+module.GlobalStateIndicator = Feature({
+	tag: 'ui-global-state-indicator',
+
+	setup: function(actions){
+	},
+	remove: function(actions){
+		actions.viewer.find('.' + this.tag).remove()
+		return actions.off('*', this.tag)
+	},
+})
+
+
+// XXX console / log / status bar
+
 
 
 
