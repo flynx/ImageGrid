@@ -1192,6 +1192,7 @@ module.BoundsIndicators = Feature({
 				function(target){ 
 					target = target || this.current
 					var r = this.data.getRibbonOrder(target)
+
 					var l = this.data.getImages(r).length
 					var l0 = this.data.getImages(0).length
 

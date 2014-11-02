@@ -752,7 +752,10 @@ module.RibbonsPrototype = {
 				.append(img)
 		// after...
 		} else if(i > 0){
-			to.next('.image')
+			// XXX this stumbles on non-images...
+			//to.next('.image')
+			// XXX is this fast enough??
+			to.nextAll('.image').first()
 				.before(img)
 		// before...
 		} else {
