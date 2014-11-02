@@ -654,12 +654,13 @@ module.RibbonsPrototype = {
 		ribbon = ribbon.length == 0 ? this.createRibbon(target) : ribbon
 
 		var ribbons = this.viewer.find('.ribbon')
+
 		// normalize the position...
 		if(typeof(position) == typeof(123)){
 			position = position < 0 ? ribbons.length + position + 1 : position
 			position = position < 0 ? 0 : position
 		} else {
-			var p = this.getRibbonOrder(position)
+			position = this.getRibbonOrder(position)
 			// XXX what do we do if the target does not exist, i.e. p == -1 ????
 		}
 
@@ -671,7 +672,7 @@ module.RibbonsPrototype = {
 		if(ribbons.length == 0 || ribbons.length <= position){
 			this.viewer.find('.ribbon-set').append(ribbon)
 
-		} else if(i > position) {
+		} else if(i == -1 || i > position) {
 			ribbons.eq(position).before(ribbon)
 
 		// for placing after need to account for target ribbon removal...

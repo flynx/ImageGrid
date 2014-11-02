@@ -30,6 +30,58 @@ function reloadAfter(transitions){
 	}
 }
 
+var updateImagePosition =
+module.updateImagePosition =
+function updateImagePosition(actions, target){
+	target = target instanceof jQuery ? actions.ribbons.getElemGID(target) : target
+	target = target || actions.current
+
+	var source_ribbon = actions.ribbons.getElemGID(actions.ribbons.getRibbon(target))
+	var source_order = actions.data.getImageOrder(target)
+
+	return function(){
+		actions.ribbons.preventTransitions()
+
+		var target_ribbon = actions.data.getRibbon(target)
+
+		// nothing changed...
+		if(source_ribbon == target_ribbon 
+				&& actions.data.getImageOrder(target) == source_order){
+			return
+		}
+
+		var to = actions.data.getImage(target, 'next')
+		if(to != null){
+			actions.ribbons.placeImage(target, to, 'before')
+
+		} else {
+			to = actions.data.getImage(target, 'prev')
+			if(to != null){
+				actions.ribbons.placeImage(target, to, 'after')
+
+			// new ribbon...
+			} else {
+				to = actions.data.getRibbon(target)
+
+				if(actions.ribbons.getRibbon(to).length == 0){
+					actions.ribbons.placeRibbon(to, actions.data.getRibbonOrder(target))
+				}
+
+				actions.ribbons.placeImage(target, to)
+			}
+		}
+
+		if(actions.data.getImages(source_ribbon).length == 0){
+			actions.ribbons.getRibbon(source_ribbon).remove()
+		}
+
+		actions.focusImage()
+
+		actions.ribbons.restoreTransitions(true)
+	}
+}
+
+
 
 /*********************************************************************/
 //
@@ -479,6 +531,11 @@ actions.Actions(Client, {
 				this.reload()
 			}
 		}],
+	// XXX make this better support partial data view...
+	// 		...at this point this first loads the full data and then 
+	// 		.focusImage(..) triggers a reload...
+	// 		.....another approach would be to avoid .reload() where 
+	// 		possible...
 	reload: ['Reload viewer',
 		function(){
 			this.ribbons.preventTransitions()
@@ -487,6 +544,7 @@ actions.Actions(Client, {
 				this.ribbons.updateData(this.data)
 				this.focusImage()
 
+				//this.ribbons.restoreTransitions(true)
 				this.ribbons.restoreTransitions()
 			}
 		}],
@@ -788,9 +846,13 @@ actions.Actions(Client, {
 		function(){  }],
 
 
-	// XXX are these cheating???
-	shiftImageUp: [ reloadAfter() ],
-	shiftImageDown: [ reloadAfter() ],
+	// NOTE: these work by getting the target position from .data...
+	shiftImageTo: [ 
+		function(target){ return updateImagePosition(this, target) }],
+	shiftImageUp: [ 
+		function(target){ return updateImagePosition(this, target) }],
+	shiftImageDown: [
+		function(target){ return updateImagePosition(this, target) }],
 
 	shiftImageLeft: [
 		function(target){
@@ -961,14 +1023,14 @@ actions.Actions({
 })
 
 
-// XXX I do not fully understand it yet, but PartialRibbons must be 
+// NOTE: I do not fully understand it yet, but PartialRibbons must be 
 // 		setup BEFORE RibbonAlignToFirst, otherwise the later will break
 // 		on shifting an image to a new ribbon...
 // 			To reproduce:
 // 				- setupe RibbonAlignToFirst first
 // 				- go to top ribbon
 // 				- shift image up
-// 		The two should be completely independent....
+// 		XXX The two should be completely independent....
 // XXX need to test and tweak with actual images...
 var PartialRibbons = 
 module.PartialRibbons = Feature({
@@ -1114,13 +1176,37 @@ module.BoundsIndicators = Feature({
 			.on('prevRibbon.pre firstRibbon.pre', tag, didAdvance('top'))
 
 			// vertical shifting...
-			.on('shiftImageUp.post', tag, 
-				function(){ 
-					that.flashIndicator(actions.ribbons.viewer, 'up')
+			.on('shiftImageUp.pre', tag, 
+				function(target){ 
+					target = target || this.current
+					var r0 = this.data.getRibbonOrder(target)
+					var l = this.data.getImages(r0).length
+
+					return function(){
+						var r1 = this.data.getRibbonOrder(target)
+						// when shifting last image of top ribbon (i.e. length == 1)
+						// up the state essentially will not change...
+						if(r0 == 0 && r1 == 0 && l == 1){
+							that.flashIndicator(this.ribbons.viewer, 'top')
+						} else {	
+							that.flashIndicator(this.ribbons.viewer, 'up')
+						}
+					}
 				})
-			.on('shiftImageDown.post', tag, 
-				function(){ 
-					that.flashIndicator(actions.ribbons.viewer, 'down') 
+			.on('shiftImageDown.pre', tag, 
+				function(target){ 
+					target = target || this.current
+					var r0 = this.data.getRibbonOrder(target)
+					var l = this.data.getImages(r0).length
+
+					return function(){
+						var r1 = this.data.getRibbonOrder(target)
+						if(r0 == r1 && r0 == this.data.ribbon_order.length-1 && l == 1){
+							that.flashIndicator(this.ribbons.viewer, 'bottom')
+						} else {
+							that.flashIndicator(this.ribbons.viewer, 'down') 
+						}
+					}
 				})
 
 			// horizontal shifting...
@@ -1128,15 +1214,15 @@ module.BoundsIndicators = Feature({
 				function(target){ 
 					if(target == null 
 							//&& actions.data.getImageOrder('ribbon') == 0){
-							&& actions.data.getImage('prev') == null){
-						that.flashIndicator(actions.ribbons.viewer, 'start')
+							&& this.data.getImage('prev') == null){
+						that.flashIndicator(this.ribbons.viewer, 'start')
 					}
 				})
 			.on('shiftImageRight.pre', tag, 
 				function(target){ 
 					if(target == null 
-							&& actions.data.getImage('next') == null){
-						that.flashIndicator(actions.ribbons.viewer, 'end')
+							&& this.data.getImage('next') == null){
+						that.flashIndicator(this.ribbons.viewer, 'end')
 					}
 				})
 	},

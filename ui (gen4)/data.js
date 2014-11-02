@@ -1166,6 +1166,7 @@ module.DataPrototype = {
 	//
 	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') }, // Gen2
 	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') }, // Gen2
+	// XXX these can remove ribbons, do we need to shift base ribbon???
 	shiftImageUp: function(gid){ 
 		var g = gid.constructor === Array ? gid[0] : gid
 		var r = this.getRibbonOrder(g)
@@ -1175,6 +1176,7 @@ module.DataPrototype = {
 		}
 		var res = this.shiftImage(gid, r-1) 
 		// clear empty ribbon...
+		r = r == 0 ? 1 : r
 		if(this.ribbons[this.ribbon_order[r]].len() == 0){
 			r = this.ribbon_order.splice(r, 1)[0]
 			delete this.ribbons[r]
