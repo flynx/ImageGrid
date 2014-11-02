@@ -52,11 +52,13 @@ function updateImagePosition(actions, target){
 			return
 		}
 
+		// place image at position...
 		var to = actions.data.getImage(target, 'next')
 		if(to != null){
 			actions.ribbons.placeImage(target, to, 'before')
 
 		} else {
+			// place image after position...
 			to = actions.data.getImage(target, 'prev')
 			if(to != null){
 				actions.ribbons.placeImage(target, to, 'after')
@@ -1189,21 +1191,23 @@ module.BoundsIndicators = Feature({
 			.on('shiftImageUp.pre', tag, 
 				function(target){ 
 					target = target || this.current
-					var r0 = this.data.getRibbonOrder(target)
-					var l = this.data.getImages(r0).length
+					var r = this.data.getRibbonOrder(target)
+					var l = this.data.getImages(r).length
+					var l0 = this.data.getImages(0).length
 
 					return function(){
-						var r1 = this.data.getRibbonOrder(target)
 						// when shifting last image of top ribbon (i.e. length == 1)
 						// up the state essentially will not change...
-						if(r0 == 0 && r1 == 0 && l == 1){
+						if((r == 0 && l == 1) 
+								// we are shifting to a new empty ribbon...
+								|| (r == 1 && l == 1 && l0 == 0)){
 							that.flashIndicator(this.ribbons.viewer, 'top')
 						} else {	
 							that.flashIndicator(this.ribbons.viewer, 'up')
 						}
 					}
 				})
-			.on('shiftimagedown.pre', tag, 
+			.on('shiftImageDown.pre', tag, 
 				function(target){ 
 					target = target || this.current
 					var r0 = this.data.getRibbonOrder(target)
