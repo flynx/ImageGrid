@@ -33,7 +33,9 @@ function reloadAfter(transitions){
 var updateImagePosition =
 module.updateImagePosition =
 function updateImagePosition(actions, target){
-	target = target instanceof jQuery ? actions.ribbons.getElemGID(target) : target
+	target = target instanceof jQuery 
+		? actions.ribbons.getElemGID(target) 
+		: target
 	target = target || actions.current
 
 	var source_ribbon = actions.ribbons.getElemGID(actions.ribbons.getRibbon(target))
@@ -960,6 +962,7 @@ function Feature(obj){
 
 
 
+//---------------------------------------------------------------------
 // NOTE: this is split out to an action so as to enable ui elements to 
 // 		adapt to ribbon size changes...
 var PartialRibbonsActions = 
@@ -1022,7 +1025,6 @@ actions.Actions({
 		}]
 })
 
-
 // NOTE: I do not fully understand it yet, but PartialRibbons must be 
 // 		setup BEFORE RibbonAlignToFirst, otherwise the later will break
 // 		on shifting an image to a new ribbon...
@@ -1062,6 +1064,8 @@ module.PartialRibbons = Feature({
 })
 
 
+
+//---------------------------------------------------------------------
 // XXX this should also define up/down navigation behavior e.g. what to 
 // 		focus on next/prev ribbon...
 var AlignRibbonsToImageOrder = 
@@ -1080,6 +1084,8 @@ module.AlignRibbonsToImageOrder = Feature({
 })
 
 
+
+//---------------------------------------------------------------------
 var AlignRibbonsToFirstImage = 
 module.AlignRibbonsToFirstImage = Feature({
 	tag: 'ui-ribbon-align-to-first',
@@ -1096,6 +1102,8 @@ module.AlignRibbonsToFirstImage = Feature({
 })
 
 
+
+//---------------------------------------------------------------------
 var ShiftAnimation =
 module.ShiftAnimation = Feature({
 	tag: 'ui-animation',
@@ -1121,6 +1129,8 @@ module.ShiftAnimation = Feature({
 })
 
 
+
+//---------------------------------------------------------------------
 var BoundsIndicators = 
 module.BoundsIndicators = Feature({
 	tag: 'ui-bounds-indicators',
@@ -1193,7 +1203,7 @@ module.BoundsIndicators = Feature({
 						}
 					}
 				})
-			.on('shiftImageDown.pre', tag, 
+			.on('shiftimagedown.pre', tag, 
 				function(target){ 
 					target = target || this.current
 					var r0 = this.data.getRibbonOrder(target)
@@ -1233,6 +1243,8 @@ module.BoundsIndicators = Feature({
 })
 
 
+
+//---------------------------------------------------------------------
 var CurrentImageIndicator = 
 module.CurrentImageIndicator = Feature({
 	tag: 'ui-current-image-indicator',
@@ -1326,6 +1338,8 @@ module.CurrentImageIndicator = Feature({
 })
 
 
+
+//---------------------------------------------------------------------
 // XXX
 var ImageStateIndicator = 
 module.ImageStateIndicator = Feature({
@@ -1341,6 +1355,7 @@ module.ImageStateIndicator = Feature({
 
 
 
+//---------------------------------------------------------------------
 // XXX
 var GlobalStateIndicator = 
 module.GlobalStateIndicator = Feature({
@@ -1355,6 +1370,8 @@ module.GlobalStateIndicator = Feature({
 })
 
 
+
+//---------------------------------------------------------------------
 // XXX console / log / status bar
 
 

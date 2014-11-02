@@ -708,6 +708,7 @@ module.RibbonsPrototype = {
 		mode = mode == null ? 'before' : mode
 		var img = this.getImage(target)
 		img = img.length == 0 ? this.createImage(target) : img
+		var i = this.getImage(to)
 		var r = this.getRibbon(to)
 
 		// offset on same ribbon...
@@ -726,7 +727,7 @@ module.RibbonsPrototype = {
 			}
 
 		// append/prepend to ribbon...
-		} else if(r.length > 0 && r.hasClass('ribbon')){
+		} else if(i.length == 0 && r.length > 0 && r.hasClass('ribbon')){
 			if(mode == 'before'){
 				r.append(img)
 			} else {
