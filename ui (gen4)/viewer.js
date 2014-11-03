@@ -1258,6 +1258,11 @@ module.CurrentImageIndicator = Feature({
 	min_border: 2,
 
 	border_timeout: 200,
+	shift_timeout: 200,
+
+	fadein: 500,
+
+	animate: true,
 
 	updateMarker: function(actions, target, update_border){
 		var scale = actions.ribbons.getScale()
@@ -1275,7 +1280,7 @@ module.CurrentImageIndicator = Feature({
 			// create a marker...
 			if(marker.length == 0){
 				var marker = $('<div/>')
-					.addClass('current-marker ' + this.tag)
+					.addClass('current-marker '+ this.tag)
 					.css({
 						opacity: '0',
 						top: '0px',
@@ -1284,7 +1289,7 @@ module.CurrentImageIndicator = Feature({
 					.appendTo(ribbon)
 					.animate({
 						'opacity': 1
-					}, 500)
+					}, this.fadein)
 
 			// add marker to current ribbon...
 			} else {
@@ -1318,10 +1323,21 @@ module.CurrentImageIndicator = Feature({
 	},
 
 	setup: function(actions){
+		var timeout
 		var that = this
 		return actions
+			// move marker to current image...
 			.on( 'focusImage.post', this.tag, 
 					function(target){ that.updateMarker(this, target) })
+			// prevent animations when focusing ribbons...
+			.on('focusRibbon.pre', this.tag, 
+					function(){
+						var m = this.ribbons.viewer.find('.current-marker')
+						this.ribbons.preventTransitions(m)
+						return function(){
+							this.ribbons.restoreTransitions(m)
+						}
+					})
 			// Change border size in the appropriate spot in the animation:
 			// 	- before animation when scaling up
 			// 	- after when scaling down
@@ -1333,6 +1349,25 @@ module.CurrentImageIndicator = Feature({
 					that.updateMarker(this, null, w0 > w1 ? 'before' : 'after') 
 				}
 			})
+			// hide marker on shift left/right...
+			.on([
+					'shiftImageLeft.pre',
+					'shiftImageRight.pre',
+				], this.tag, function(){
+					this.ribbons.viewer.find('.current-marker').hide()
+					if(timeout != null){
+						clearTimeout(timeout)
+						timeout == null
+					}
+					return function(){
+						var ribbons = this.ribbons
+						var fadein = that.fadein
+						timeout = setTimeout(function(){ 
+							ribbons.viewer.find('.current-marker').fadeIn(fadein)
+						}, that.shift_timeout)
+					}
+				})
+			// turn the marker on...
 			// XXX not sure about this...
 			.focusImage()
 	},

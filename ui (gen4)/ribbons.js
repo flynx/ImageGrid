@@ -411,7 +411,6 @@ module.RibbonsPrototype = {
 				// NOTE: placing the shadow in the viewer is a compromise that
 				// 		lets us do simpler positioning 
 				.appendTo(this.viewer)
-				
 		}
 
 		img.addClass('moving')
