@@ -1349,7 +1349,7 @@ module.CurrentImageIndicator = Feature({
 					that.updateMarker(this, null, w0 > w1 ? 'before' : 'after') 
 				}
 			})
-			// hide marker on shift left/right...
+			// hide marker on shift left/right and show it after done shifting...
 			.on([
 					'shiftImageLeft.pre',
 					'shiftImageRight.pre',
