@@ -283,13 +283,36 @@ stretching in width... */
 	 	affected by filters... */
   background: no-repeat 50% transparent;
   background-size: contain;
-  border: solid 1.5px transparent;
+  border: solid 3.75px transparent;
 }
 /*
 .current.image {
 	border: solid 5px red;
 }
 */
+.shadow {
+  position: absolute;
+  overflow: visible;
+  width: 300px;
+  height: 300px;
+  background: black;
+  -webkit-transition: all 0.1s ease-in;
+  -moz-transition: all 0.1s ease-in;
+  -ms-transition: all 0.1s ease-in;
+  -o-transition: all 0.1s ease-in;
+  transition: all 0.1s ease-in;
+}
+.shadow,
+.shadow .image {
+  -webkit-transform-origin: 0 0;
+  -moz-transform-origin: 0 0;
+  -ms-transform-origin: 0 0;
+  -o-transform-origin: 0 0;
+  transform-origin: 0 0;
+}
+.image.moving {
+  visibility: hidden;
+}
 .current-marker {
   position: absolute;
   border: solid 5px red;

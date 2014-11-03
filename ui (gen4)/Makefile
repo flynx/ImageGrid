@@ -115,7 +115,9 @@ zip: $(APP_ZIP)
 node-deps:
 	npm install
 
-dev: $(CSS_FILES)
+css: $(CSS_FILES)
+
+dev: css
 	#unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
 	#rm -f nwsnapshot.exe credits.html
 	#chmod +x *.{exe,dll}

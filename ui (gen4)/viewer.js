@@ -1413,6 +1413,7 @@ module.GlobalStateIndicator = Feature({
 
 //---------------------------------------------------------------------
 // XXX console / log / status bar
+// XXX title bar
 
 
 

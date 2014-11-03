@@ -11,7 +11,8 @@
 //@image-tile-size: 100vmax;
 
 // these are relative to image tile size...
-@image-border: @image-tile-size/200;
+//@image-border: @image-tile-size/200;
+@image-border: @image-tile-size/80;
 @ribbon-margin: @image-tile-size/30;
 @ribbon-mark-offset: @image-tile-size/200;
 
@@ -422,6 +423,34 @@ stretching in width... */
 	border: solid 5px red;
 }
 */
+
+.shadow {
+	position: absolute;
+	overflow: visible;
+
+	width: auto;
+	height: auto;
+
+	background: black;
+
+	-webkit-transition: all 0.1s ease-in;
+	-moz-transition: all 0.1s ease-in;
+	-ms-transition: all 0.1s ease-in;
+	-o-transition: all 0.1s ease-in;
+	transition: all 0.1s ease-in;
+}
+.shadow,
+.shadow .image {
+	-webkit-transform-origin: 0 0;
+	-moz-transform-origin: 0 0;
+	-ms-transform-origin: 0 0;
+	-o-transform-origin: 0 0;
+	transform-origin: 0 0;
+}
+.image.moving {
+	visibility: hidden;
+}
+
 
 .current-marker {
 	position: absolute;

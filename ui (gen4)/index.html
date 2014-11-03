@@ -8,6 +8,7 @@
 <!-- XXX remove before use... -->
 <style>
 
+/* show image gid... */
 .image:after {
 	content: attr(gid);
 	display: block;
@@ -27,32 +28,6 @@
 	border-color: red;
 }
 */
-
-.shadow {
-	position: absolute;
-	overflow: visible;
-	width: auto;
-	height: auto;
-
-	background: black;
-
-	-webkit-transition: all 0.1s ease-in;
-	-moz-transition: all 0.1s ease-in;
-	-ms-transition: all 0.1s ease-in;
-	-o-transition: all 0.1s ease-in;
-	transition: all 0.1s ease-in;
-}
-.shadow,
-.shadow .image {
-	-webkit-transform-origin: 0 0;
-	-moz-transform-origin: 0 0;
-	-ms-transform-origin: 0 0;
-	-o-transform-origin: 0 0;
-	transform-origin: 0 0;
-}
-.image.moving {
-	visibility: hidden;
-}
 
 .shadow {
 	z-index: 4000;
