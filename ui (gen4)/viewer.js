@@ -839,6 +839,7 @@ actions.Actions(Client, {
 	fitMax: ['Fit the maximum number of images',
 		function(){ this.fitImage(this.config['max-screen-images']) }],
 
+
 	// XXX
 	fitSmall: ['Show small image',
 		function(){  }],
@@ -848,6 +849,18 @@ actions.Actions(Client, {
 	// XXX
 	fitScreen: ['Fit image to screen',
 		function(){  }],
+
+
+	fitRibbon: ['Fit ribbon vertically',
+		function(count){
+			this.ribbons.fitRibbon(count)
+			this.ribbons.updateImage('*')
+		}],
+
+	// XXX is n + 0.5 a good number here???
+	fitThreeRibbons: ['Fit three ribbons vertically', function(){ this.fitRibbon(3.5) }],
+	fitFiveRibbons: ['Fit five ribbons vertically', function(){ this.fitRibbon(5.5) }],
+	fitSevenRibbon: ['Fit seven ribbons vertically', function(){ this.fitRibbon(7.5) }],
 
 
 	// NOTE: these work by getting the target position from .data...
@@ -1350,10 +1363,7 @@ module.CurrentImageIndicator = Feature({
 				}
 			})
 			// hide marker on shift left/right and show it after done shifting...
-			.on([
-					'shiftImageLeft.pre',
-					'shiftImageRight.pre',
-				], this.tag, function(){
+			.on('shiftImageLeft.pre shiftImageRight.pre', this.tag, function(){
 					this.ribbons.viewer.find('.current-marker').hide()
 					if(timeout != null){
 						clearTimeout(timeout)

@@ -1554,6 +1554,36 @@ module.RibbonsPrototype = {
 		
 		return this
 	},
+	// NOTE: if fit_whole_images is true (default) this will fit a discrete
+	// 		number of images in width...
+	// XXX this does not account for ribbon spacing...
+	fitRibbon: function(n, fit_whole_images){
+		fit_whole_images = fit_whole_images == null ? true : false
+
+		var h = this.getVisibleImageSize('height', 1)
+		var scale = this.viewer.height() / (h * n)
+
+		var w = this.getVisibleImageSize('width', 1)
+		var W = this.viewer.width()
+
+		// n ribbons will be wider than the viewer...
+		if(w*scale >= W){
+			scale = W/w
+		}
+
+		// shift the scale to the point where screen width is a whole 
+		// number of images...
+		if(fit_whole_images){
+			var d = this.getScreenWidthImages(scale)
+			d = d / Math.ceil(d)
+
+			scale *= d
+		}
+
+		this.setScale(scale)
+
+		return this
+	},
 
 
 	_setup: function(viewer, images){

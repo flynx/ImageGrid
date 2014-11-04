@@ -135,12 +135,18 @@ module.GLOBAL_KEYBOARD = {
 			ctrl: 'fitOrig!',
 		},
 		'#2': 'fitTwo',
-		'#3': 'fitThree',
+		'#3': {
+			default: 'fitThree',
+			shift: 'fitThreeRibbons',
+		},
 		'#4': 'fitFour',
-		'#5': 'fitFive',
+		'#5': {
+			default: 'fitFive',
+			shift: 'fitFiveRibbons',
+		},
 		'#6': 'fitSix',
-		'#7': 'fitSeven',
-		'#8': 'fitEight',
+		'#7': 'fitSevenr',
+		'#8':'fitEight',
 		'#9': 'fitNine',
 		
 		'+': 'zoomIn',
