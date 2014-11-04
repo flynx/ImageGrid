@@ -1533,7 +1533,7 @@ module.RibbonsPrototype = {
 	//
 	// XXX might be usefull to set origin before scaling...
 	fitImage: function(n){
-		n = n == null ? 1 : n
+		n = n || 1
 
 		// NOTE: this is width oriented...
 		var scale = this.getScreenWidthImages(1) / n
@@ -1558,6 +1558,7 @@ module.RibbonsPrototype = {
 	// 		number of images in width...
 	// XXX this does not account for ribbon spacing...
 	fitRibbon: function(n, fit_whole_images){
+		n = n || 1
 		fit_whole_images = fit_whole_images == null ? true : false
 
 		var h = this.getVisibleImageSize('height', 1)

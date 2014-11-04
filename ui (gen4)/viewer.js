@@ -1355,7 +1355,7 @@ module.CurrentImageIndicator = Feature({
 			// 	- before animation when scaling up
 			// 	- after when scaling down
 			// This is done to make the visuals consistent...
-			.on( 'fitImage.pre', this.tag, function(w1){ 
+			.on( 'fitImage.pre fitRibbon.pre', this.tag, function(w1){ 
 				var w0 = this.screenwidth
 				w1 = w1 || 1
 				return function(){
