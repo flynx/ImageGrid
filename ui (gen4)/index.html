@@ -37,6 +37,14 @@
 }
 
 /* basic animation... */
+.viewer:not(.no-transitions) {
+	-webkit-transition: background-color 0.8s ease;
+	-moz-transition: background-color 0.8s ease;
+	-ms-transition: background-color 0.8s ease;
+	-o-transition: background-color 0.8s ease;
+	transition: background-color 0.8s ease;
+}
+
 .viewer:not(.no-transitions) .ribbon-set:not(.no-transitions) {
 	-webkit-transition: all 0.2s linear, transform 0.2s linear;
 	-moz-transition: all 0.2s linear, transform 0.2s linear;
