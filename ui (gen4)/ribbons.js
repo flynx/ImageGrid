@@ -1313,6 +1313,9 @@ module.RibbonsPrototype = {
 		return image
 	},
 
+	getImageRotation: function(target){
+		return this.getImage(target).attr('orientation') || 0
+	},
 	// Rotate an image...
 	//
 	// Rotate image clockwise:
@@ -1360,6 +1363,12 @@ module.RibbonsPrototype = {
 		return target
 	},
 
+	getImageFlip: function(target){
+		return (this.getImage(target).attr('flipped') || '')
+			.split(',')
+			.map(function(e){ return e.trim() })
+			.filter(function(e){ return e != '' })
+	},
 	// Flip an image...
 	//
 	// Flip image:

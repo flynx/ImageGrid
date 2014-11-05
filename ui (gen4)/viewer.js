@@ -687,7 +687,6 @@ actions.Actions(Client, {
 		}],
 
 	// XXX skip invisible ribbons (???)
-	// XXX load data chunks...
 	focusImage: [
 		function(target, list){
 			var ribbons = this.ribbons
@@ -707,8 +706,6 @@ actions.Actions(Client, {
 					// NOTE: this will prevent sync errors...
 					var gid = data.getImage()
 
-					// XXX see if we need to do some loading...
-				
 					target = ribbons.focusImage(gid)
 				}
 			}
@@ -895,10 +892,37 @@ actions.Actions(Client, {
 		function(target){ this.ribbons.rotateCW(target) }],
 	rotateCCW: [ 
 		function(target){ this.ribbons.rotateCCW(target) }],
+	// NOTE: these are relative to how the image is viewed and not to 
+	// 		it's original orientation...
+	// 		...this makes things consistent both visually and internally
+	// NOTE: these support target lists...
+	// XXX tell data/images about the flip...
 	flipVertical: [ 
-		function(target){ this.ribbons.flipVertical(target) }],
+		function(target){ 
+			target = target == null || target.constructor !== Array ? [target] : target
+			var that = this
+			target.forEach(function(target){
+				var r = that.ribbons.getImageRotation(target)
+				if(r == 0 || r == 180){
+					that.ribbons.flipVertical(target) 
+				} else {
+					that.ribbons.flipHorizontal(target)
+				}
+			})
+		}],
 	flipHorizontal: [
-		function(target){ this.ribbons.flipHorizontal(target) }],
+		function(target){
+			target = target == null || target.constructor !== Array ? [target] : target
+			var that = this
+			target.forEach(function(target){
+				var r = that.ribbons.getImageRotation(target)
+				if(r == 0 || r == 180){
+					that.ribbons.flipHorizontal(target)
+				} else {
+					that.ribbons.flipVertical(target) 
+				}
+			})
+		}],
 
 	crop: [ reloadAfter() ],
 	uncrop: [ reloadAfter() ],
