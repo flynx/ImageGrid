@@ -293,8 +293,8 @@ stretching in width... */
 .shadow {
   position: absolute;
   overflow: visible;
-  width: 300px;
-  height: 300px;
+  width: auto;
+  height: auto;
   background: black;
   -webkit-transition: all 0.1s ease-in;
   -moz-transition: all 0.1s ease-in;

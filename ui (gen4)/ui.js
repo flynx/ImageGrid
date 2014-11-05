@@ -135,10 +135,10 @@ module.GLOBAL_KEYBOARD = {
 			shift: 'fitRibbon',
 			ctrl: 'fitOrig!',
 		},
-		'#2': 'fitTwo',
+		'#2': 'fitImage: 2',
 		'#3': {
-			default: 'fitThree',
-			shift: 'fitThreeRibbons',
+			default: 'fitImage: 3',
+					 shift: 'fitRibbons: 3',
 		},
 		'#4': 'fitFour',
 		'#5': {
@@ -176,8 +176,8 @@ $(function(){
 	window.a = testing.setupActions()
 
 	// setup features...
-	// XXX I do not full understand it yet, but PartialRibbons must be 
-	// 		setup BEFORE RibbonAlignToFirst, otherwise the later will break
+	// XXX I do not fully understand it yet, but PartialRibbons must be 
+	// 		setup BEFORE AlignRibbonsTo*, otherwise the later will break
 	// 		on shifting an image to a new ribbon...
 	// 			To reproduce:
 	// 				- setupe RibbonAlignToFirst first

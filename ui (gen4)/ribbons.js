@@ -234,6 +234,8 @@ module.RibbonsPrototype = {
 	// 		-> <ribbons>
 	//
 	// NOTE: this will also set origin...
+	//
+	// XXX if chrome 38 renders images blurry uncomment the fix...
 	setScale: function(scale, t, l){
 		var ribbon_set = this.viewer.find('.ribbon-set')
 

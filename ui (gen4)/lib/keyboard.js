@@ -361,6 +361,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 			} else if(handler in keybindings){
 				handler = keybindings[handler]
 
+			/*
 			// action name...
 			} else if(handler in actions){
 				// build a handler...
@@ -375,25 +376,57 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 					// make this doc-generator compatible -- inherit all
 					// the docs from the actual action...
 					f.__proto__ = actions[n]
+					// tell the doc generator about the action stuff...
+					f.action = n
+
 					return f
 				}(handler)
+			*/
 
-			// action name with '!' -- prevent default...
-			} else if(handler.slice(-1) == '!' 
-					&& handler.slice(0, -1) in actions){
-				// build a handler...
-				// ...for the reasons why this is like it is see notes
-				// for the previous if...
-				handler = function(n){ 
-					var f = function(){ 
-						event.preventDefault()
-						return actions[n]() 
+			// actions...
+			//
+			// supported action format:
+			// 	<actio-name>[!][: <args>]
+			//
+			// <args> can contain space seporated:
+			// 	- numbers
+			// 	- strings
+			// 	- non-nested arrays or arrays
+			} else if(handler in actions 
+					|| handler.split(/!?\s*:\s*|!/)[0].trim() in actions){
+				var c = handler.split(':')
+
+				handler = c[0].trim()
+				var no_default = handler.slice(-1) == '!'
+				handler = no_default ? handler.slice(0, -1) : handler
+
+				var args = JSON.parse('['+(
+					((c[1] || '')
+					 	.match(/"[^"]*"|'[^']*'|\{[^\}]*\}|\[[^\]]*\]|\d+|\d+\.\d*/gm) 
+					|| [])
+					.join(','))+']')
+
+				handler = function(n, no_default, args){ 
+					if(no_default){
+						var f = function(){ 
+							event.preventDefault()
+							return actions[n].apply(actions, args) 
+						}
+					} else {
+						var f = function(){ 
+							return actions[n].apply(actions, args) 
+						}
 					}
 					// make this doc-generator compatible -- inherit all
 					// the docs from the actual action...
 					f.__proto__ = actions[n]
+					// tell the doc generator about the action stuff...
+					f.action = n
+					f.args = args
+					f.no_default = no_default
+
 					return f
-				}(handler.slice(0, -1))
+				}(handler, no_default, args.slice())
 
 			// key code...
 			} else if(typeof(handler) == typeof(1)) {
@@ -548,6 +581,18 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
  *
  * <alias> will be matched to key definitions in sections and in the key
  * binding object itself and in an actions object if given.
+ *
+ * <alias> syntax examples:
+ * 		actionName		- simple alias / action name
+ * 		actionName!		- same as above but calls event.preventDefault()
+ * 		actionNmae: 1 "2" [3, 4] {5:6, 7:8}
+ * 						- action with arguments.
+ * 						  arguments can be:
+ * 						  	- numbers
+ * 						  	- strings
+ * 						  	- non-nested arrays and/or objects
+ * 		actionNmae!: 1 "2" [3, 4] {5:6, 7:8}
+ * 						- same as above but calls event.preventDefault()
  *
  *
  *
