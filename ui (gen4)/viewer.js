@@ -666,6 +666,7 @@ actions.Actions(Client, {
 				this.centerImage(f, 'before')
 			}
 		}],
+
 	// NOTE: this will align only a single image...
 	// XXX do we need these low level primitives here???
 	centerImage: ['Center an image in ribbon horizontally',
@@ -687,7 +688,6 @@ actions.Actions(Client, {
 			this.ribbons.centerRibbon(target)
 		}],
 
-	// XXX skip invisible ribbons (???)
 	focusImage: [
 		function(target, list){
 			var ribbons = this.ribbons
@@ -711,58 +711,6 @@ actions.Actions(Client, {
 				}
 			}
 		}],
-	/*
-	// XXX an ideologically different version of .focusImage(..)
-	// 		This version aligns the ribbons internally while the above
-	// 		version does not align at all, and all alignment is handled
-	// 		by a feature.
-	//
-	//		The main question here is: 
-	//			should we split out aligning to a feature?
-	//		The differences/trade-off's in this version:
-	//			+ less code in total (not by much)
-	//				34 action-only vs. 39 total (25 action + 14 feature)
-	//			+ all in one place
-	//			+ all the logic in one place
-	//			+ usable as-is without any extra "features"
-	//			- not customizable without rewriting...
-	//			- might be too monolithic (god object?)
-	//		...need to think about it a bit more...
-	focusImage: [
-		function(target, list){
-			var ribbons = this.ribbons
-			var data = this.data
-
-			// NOTE: we do not need to do anything in the alternative 
-			// 		case as it's done in data/Client, so we'll just 
-			// 		peek there later...
-			if(data == null){
-				target = ribbons.focusImage(target)
-				var gid = ribbons.getElemGID(target)
-			}
-
-			return function(){
-				if(data != null){
-					// use the data for all the heavy lifting...
-					// NOTE: this will prevent sync errors...
-					var gid = data.getImage()
-
-					// XXX see if we need to do some loading...
-					// XXX
-				
-					target = ribbons.focusImage(gid)
-
-					this.alignByOrder(gid)
-
-				// align current ribbon...
-				} else {
-					ribbons
-						.centerRibbon(target)
-						.centerImage(target)
-				}
-			}
-		}],
-	*/
 
 	setBaseRibbon: [
 		function(target){
