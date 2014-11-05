@@ -361,28 +361,6 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 			} else if(handler in keybindings){
 				handler = keybindings[handler]
 
-			/*
-			// action name...
-			} else if(handler in actions){
-				// build a handler...
-				// NOTE: 'handler' is changing in a loop, and so as to 
-				// 		link it's specific value we need to construct a
-				// 		seporate closue, thus the odd construct below...
-				// XXX this is a bit non-uniform, marking this as an action
-				// 		and letting the caller decide how to make the call 
-				// 		seems more logical...
-				handler = function(n){ 
-					var f = function(){ return actions[n]() }
-					// make this doc-generator compatible -- inherit all
-					// the docs from the actual action...
-					f.__proto__ = actions[n]
-					// tell the doc generator about the action stuff...
-					f.action = n
-
-					return f
-				}(handler)
-			*/
-
 			// actions...
 			//
 			// supported action format:
