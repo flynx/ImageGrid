@@ -893,15 +893,12 @@ actions.Actions(Client, {
 		function(target){ this.ribbons.rotateCW(target) }],
 	rotateCCW: [ 
 		function(target){ this.ribbons.rotateCCW(target) }],
-	// NOTE: these are relative to how the image is viewed and not to 
-	// 		it's original orientation...
-	// 		...this makes things consistent both visually and internally
-	// NOTE: these support target lists...
 	// XXX tell data/images about the flip...
 	flipVertical: [ 
 		function(target){ this.ribbons.flipVertical(target, 'view') }],
 	flipHorizontal: [
 		function(target){ this.ribbons.flipHorizontal(target, 'view') }],
+
 
 	crop: [ reloadAfter() ],
 	uncrop: [ reloadAfter() ],

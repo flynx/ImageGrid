@@ -1372,17 +1372,16 @@ module.RibbonsPrototype = {
 	},
 	// Flip an image...
 	//
-	// Flip image:
+	// Flip image relative to view:
 	// 	.flipImage(target, 'horizontal')
 	// 	.flipImage(target, 'vertical')
-	// 		-> image
-	//
-	// 	.flipImage(target, 'horizontal', 'image')
-	// 	.flipImage(target, 'vertical', 'image')
-	// 		-> image
-	//
 	// 	.flipImage(target, 'horizontal', 'view')
 	// 	.flipImage(target, 'vertical', 'view')
+	// 		-> image
+	//
+	// Flip image relative to image:
+	// 	.flipImage(target, 'horizontal', 'image')
+	// 	.flipImage(target, 'vertical', 'image')
 	// 		-> image
 	//
 	// Set an explicit state:
@@ -1393,6 +1392,9 @@ module.RibbonsPrototype = {
 	// NOTE: this can be applied in bulk, e.g. 
 	// 		this.flipImage($('.image'), 'vertical') will rotate all the 
 	// 		loaded images vertically.
+	// NOTE: this is relative to how the image is viewed and not to 
+	// 		it's original orientation by default...
+	// 		...this makes things consistent both visually and internally
 	flipImage: function(target, direction, reference){
 		reference = reference || 'image'
 		target = target == null || target.constructor !== Array ? [target] : target
@@ -1443,8 +1445,10 @@ module.RibbonsPrototype = {
 	// XXX should these be here???
 	rotateCW: function(target){ return this.rotateImage(target, 'cw') },
 	rotateCCW: function(target){ return this.rotateImage(target, 'ccw') },
-	flipVertical: function(target, reference){ return this.flipImage(target, 'vertical', reference) },
-	flipHorizontal: function(target, reference){ return this.flipImage(target, 'horizontal', reference) },
+	flipVertical: function(target, reference){
+		return this.flipImage(target, 'vertical', reference) },
+	flipHorizontal: function(target, reference){ 
+		return this.flipImage(target, 'horizontal', reference) },
 
 
 	// UI manipulation...
