@@ -30,6 +30,7 @@ function reloadAfter(transitions){
 	}
 }
 
+// XXX make this compatible with multiple images...
 var updateImagePosition =
 module.updateImagePosition =
 function updateImagePosition(actions, target){
@@ -898,31 +899,9 @@ actions.Actions(Client, {
 	// NOTE: these support target lists...
 	// XXX tell data/images about the flip...
 	flipVertical: [ 
-		function(target){ 
-			target = target == null || target.constructor !== Array ? [target] : target
-			var that = this
-			target.forEach(function(target){
-				var r = that.ribbons.getImageRotation(target)
-				if(r == 0 || r == 180){
-					that.ribbons.flipVertical(target) 
-				} else {
-					that.ribbons.flipHorizontal(target)
-				}
-			})
-		}],
+		function(target){ this.ribbons.flipVertical(target, 'view') }],
 	flipHorizontal: [
-		function(target){
-			target = target == null || target.constructor !== Array ? [target] : target
-			var that = this
-			target.forEach(function(target){
-				var r = that.ribbons.getImageRotation(target)
-				if(r == 0 || r == 180){
-					that.ribbons.flipHorizontal(target)
-				} else {
-					that.ribbons.flipVertical(target) 
-				}
-			})
-		}],
+		function(target){ this.ribbons.flipHorizontal(target, 'view') }],
 
 	crop: [ reloadAfter() ],
 	uncrop: [ reloadAfter() ],

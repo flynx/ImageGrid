@@ -1314,7 +1314,7 @@ module.RibbonsPrototype = {
 	},
 
 	getImageRotation: function(target){
-		return this.getImage(target).attr('orientation') || 0
+		return (this.getImage(target).attr('orientation') || 0)*1
 	},
 	// Rotate an image...
 	//
@@ -1336,7 +1336,7 @@ module.RibbonsPrototype = {
 	// 		this.rotateImage($('.image'), 'cw') will rotate all the 
 	// 		loaded images clockwise.
 	rotateImage: function(target, direction){
-		target = this.getImage(target)
+		target = target == null || target.constructor !== Array ? [target] : target
 
 		// validate direction...
 		if(images.calcRelativeRotation(direction) == null){
@@ -1344,9 +1344,9 @@ module.RibbonsPrototype = {
 		}
 
 		var that = this
-		target.each(function(i, e){
-			var img = $(this)
-			var o = direction == 'cw' || direction == 'ccw' 
+		$(target).each(function(i, e){
+			var img = that.getImage(e)
+			var o = (direction == 'cw' || direction == 'ccw')
 				? images.calcRelativeRotation(img.attr('orientation'), direction)
 				: direction*1
 			if(o == 0){
@@ -1360,7 +1360,8 @@ module.RibbonsPrototype = {
 			// 		preview if needed...
 			//that.updateImage(img)
 		})
-		return target
+
+		return this
 	},
 
 	getImageFlip: function(target){
@@ -1376,6 +1377,14 @@ module.RibbonsPrototype = {
 	// 	.flipImage(target, 'vertical')
 	// 		-> image
 	//
+	// 	.flipImage(target, 'horizontal', 'image')
+	// 	.flipImage(target, 'vertical', 'image')
+	// 		-> image
+	//
+	// 	.flipImage(target, 'horizontal', 'view')
+	// 	.flipImage(target, 'vertical', 'view')
+	// 		-> image
+	//
 	// Set an explicit state:
 	// 	.flipImage(target, [ .. ])
 	// 		-> image
@@ -1384,25 +1393,34 @@ module.RibbonsPrototype = {
 	// NOTE: this can be applied in bulk, e.g. 
 	// 		this.flipImage($('.image'), 'vertical') will rotate all the 
 	// 		loaded images vertically.
-	flipImage: function(target, direction){
-		target = this.getImage(target)
+	flipImage: function(target, direction, reference){
+		reference = reference || 'image'
+		target = target == null || target.constructor !== Array ? [target] : target
+
 		var set_state = direction.constructor === Array ? direction : null
-		target.each(function(i, e){
-			var img = $(this)
+
+		var that = this
+		$(target).each(function(i, e){
+			var img = that.getImage(e)
 
 			// update existing state...
 			if(set_state == null){
+				if(reference == 'view' && [90, 270].indexOf(that.getImageRotation(img)) > -1){
+					var d = direction == 'vertical' ? 'horizontal' : 'vertical'
+				} else {
+					var d = direction
+				}
 				var state = img.attr('flipped')
 				state = (state == null ? '' : state)
 					.split(',')
 					.map(function(e){ return e.trim() })
 					.filter(function(e){ return e != '' })
 				// toggle the specific state...
-				var i = state.indexOf(direction)
+				var i = state.indexOf(d)
 				if(i >= 0){
 					state.splice(i, 1)
 				} else {
-					state.push(direction)
+					state.push(d)
 				}
 
 			// set an explicit state...
@@ -1417,15 +1435,16 @@ module.RibbonsPrototype = {
 				img.attr('flipped', state.join(', '))
 			}
 		})
-		return target
+
+		return this
 	},
 
 	// shorthands...
 	// XXX should these be here???
 	rotateCW: function(target){ return this.rotateImage(target, 'cw') },
 	rotateCCW: function(target){ return this.rotateImage(target, 'ccw') },
-	flipVertical: function(target){ return this.flipImage(target, 'vertical') },
-	flipHorizontal: function(target){ return this.flipImage(target, 'horizontal') },
+	flipVertical: function(target, reference){ return this.flipImage(target, 'vertical', reference) },
+	flipHorizontal: function(target, reference){ return this.flipImage(target, 'horizontal', reference) },
 
 
 	// UI manipulation...
