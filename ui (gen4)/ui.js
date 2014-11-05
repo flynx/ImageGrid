@@ -132,6 +132,7 @@ module.GLOBAL_KEYBOARD = {
 		'#0': 'fitMax',
 		'#1': {
 			default: 'fitImage',
+			shift: 'fitRibbon',
 			ctrl: 'fitOrig!',
 		},
 		'#2': 'fitTwo',
@@ -145,7 +146,7 @@ module.GLOBAL_KEYBOARD = {
 			shift: 'fitFiveRibbons',
 		},
 		'#6': 'fitSix',
-		'#7': 'fitSevenr',
+		'#7': 'fitSeven',
 		'#8':'fitEight',
 		'#9': 'fitNine',
 		

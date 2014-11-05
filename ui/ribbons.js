@@ -1082,6 +1082,14 @@ function fitNImages(n, fixed_proportions, no_strict_fit){
 	setElementScale($('.ribbon-set'), scale)
 	centerView(image, 'css')
 
+	// XXX fix a render bug in chrome 38...
+	var v = viewer[0]
+	if(v.style.transform == ''){
+		v.style.transform = 'translateZ(0)'
+	} else {
+		v.style.transform = ''
+	}
+
 	viewer.trigger('fittingImages', [n])
 
 	return scale

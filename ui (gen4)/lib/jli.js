@@ -491,7 +491,7 @@ function getRelativeOffset(container, block, point){
 // NOTE: at this point this works only on the X axis...
 function setElementTransform(elem, offset, scale, duration){
 	elem = $(elem)
-	//var t3d = USE_3D_TRANSFORM ? 'translateZ(0px)' : ''
+	//var t3d = USE_3D_TRANSFORM ? 'translateZ(0)' : ''
 	var t3d = USE_3D_TRANSFORM ? 'translate3d(0,0,0)' : ''
 
 	if(offset == null){

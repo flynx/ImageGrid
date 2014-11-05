@@ -247,6 +247,17 @@ module.RibbonsPrototype = {
 		}
 
 		setElementScale(ribbon_set, scale)
+
+		/* XXX not sure if this is needed yet...
+		// XXX fix a render bug in chrome 38...
+		var v = this.viewer[0]
+		if(v.style.transform == ''){
+			v.style.transform = 'translateZ(0)'
+		} else {
+			v.style.transform = ''
+		}
+		*/
+
 		return this
 	},
 
