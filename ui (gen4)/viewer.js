@@ -824,17 +824,6 @@ actions.Actions(Client, {
 			this.ribbons.updateImage('*')
 		}],
 
-	fitTwo: ['Fit two images', function(){ this.fitImage(2) }],
-	fitThree: ['Fit three images', function(){ this.fitImage(3) }],
-	fitFour: ['Fit four images', function(){ this.fitImage(4) }],
-	fitFive: ['Fit five images', function(){ this.fitImage(5) }],
-	fitSix: ['Fit six images', function(){ this.fitImage(6) }],
-	fitSeven: ['Fit seven images', function(){ this.fitImage(7) }],
-	fitEight: ['Fit eight images', function(){ this.fitImage(8) }],
-	fitNine: ['Fit nine images', function(){ this.fitImage(9) }],
-	fitTen: ['Fit ten images', function(){ this.fitImage(10) }],
-	fitEleven: ['Fit eleven images', function(){ this.fitImage(11) }],
-	fitTwelve: ['Fit twelve images', function(){ this.fitImage(12) }],
 
 	fitMax: ['Fit the maximum number of images',
 		function(){ this.fitImage(this.config['max-screen-images']) }],
@@ -856,11 +845,6 @@ actions.Actions(Client, {
 			this.ribbons.fitRibbon(count)
 			this.ribbons.updateImage('*')
 		}],
-
-	// XXX is n + 0.5 a good number here???
-	fitThreeRibbons: ['Fit three ribbons vertically', function(){ this.fitRibbon(3.5) }],
-	fitFiveRibbons: ['Fit five ribbons vertically', function(){ this.fitRibbon(5.5) }],
-	fitSevenRibbon: ['Fit seven ribbons vertically', function(){ this.fitRibbon(7.5) }],
 
 
 	// NOTE: these work by getting the target position from .data...
