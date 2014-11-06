@@ -117,6 +117,8 @@ var USE_3D_TRANSFORM = true
 //
 // NOTE: for single state toggling, 'none' will get passed to 
 // 		state_accessor to indicate an "empty" state...
+// NOTE: if elem is a function it will be called in the same context as
+// 		the toggler and is expected to return the element.
 //
 // XXX technically we do not need both elem and state_accessor here, the
 // 		later is enough, but as strict mode is not stable enough (sometimes
@@ -152,6 +154,8 @@ function makeToggler(elem, state_accessor, states, callback_a, callback_b){
 			var e = a
 			var action = b == 'next' ? null : b
 		}
+
+		e = e instanceof Function ? e.call(this) : e
 
 		// XXX is this correct???
 		var args = args2array(arguments).slice(2)

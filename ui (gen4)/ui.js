@@ -94,6 +94,9 @@ module.GLOBAL_KEYBOARD = {
 
 		// XXX testing...
 
+		Enter: 'toggleSingleImage',
+		B: 'toggleTheme',
+
 		Home: {
 			default: 'firstImage',
 			ctrl: 'firstGlobalImage',

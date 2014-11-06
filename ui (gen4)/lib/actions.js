@@ -157,6 +157,9 @@ if(typeof(args2array) != 'function'){
 // 	  registered from the current object and up to the base action set
 // 	  will be fired.
 //
+// 	- an action will return the last deepest action's return, if that 
+// 	  return is null, then the action set is returned.
+//
 // NOTE: actions once defined do not depend on the inheritance hierarchy, 
 // 		other than the .getHandlers(..) method. If this method is not 
 // 		found in the inheritance chain (i.e. the link to MetaActions)
@@ -210,26 +213,29 @@ function Action(name, doc, ldoc, func){
 		var handlers = getHandlers.call(this, name)
 			.map(function(h){ return h.apply(that, args) })
 
+		// XXX use the last return as result...
+		var res = handlers.slice(-1)[0]
+
 		// NOTE: this action will get included and called by the code 
 		// 		above and below, so no need to explicitly call func...
 
 		// call handlers -- post phase...
 		// NOTE: post handlers need to get called last run pre first run post...
-		handlers.reverse().forEach(function(h){ 
+		handlers.reverse().forEach(function(h, i){ 
 			// function...
 			if(h instanceof Function){
-				//h.call(that, res)
-				h.call(that)
+				var r = h.call(that)
+				res = i == 0 ? r : res
 
 			// deferred...
 			} else if(h != null && h.resolve instanceof Function){
-				//h.resolve(res)
 				h.resolve()
+				res = i == 0 ? h : res
 			} 
 		})
 
-		//return res
-		return this
+		return res || this
+		//return this
 	}
 	meth.__proto__ = this.__proto__
 

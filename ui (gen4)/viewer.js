@@ -572,10 +572,11 @@ actions.Actions(Client, {
 		function(){
 			toggleFullscreenMode() 
 		}],
-	toggleSingleImage: ['',
-		function(){
-			// XXX
-		}],
+	toggleSingleImage: ['Toggle single image view', 
+		// XXX this is wrong!!!
+		makeCSSClassToggler(
+			function(){ return this.ribbons.viewer }, 
+			'single-image-mode') ],
 	// XXX revise this...
 	showDevTools: ['',
 		function(){
@@ -584,6 +585,14 @@ actions.Actions(Client, {
 			}
 		}],
 
+	toggleTheme: ['', 
+		makeCSSClassToggler(
+			function(){ return this.ribbons.viewer }, 
+			[
+				'gray', 
+				'dark', 
+				'light'
+			]) ],
 
 	// align modes...
 	// XXX skip invisible ribbons (???)
