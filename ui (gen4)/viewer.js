@@ -12,6 +12,7 @@ console.log('>>> viewer')
 var actions = require('lib/actions')
 
 var data = require('data')
+var images = require('images')
 var ribbons = require('ribbons')
 
 
@@ -183,17 +184,15 @@ actions.Actions({
 
 	// basic life-cycle actions...
 	//
-	ready: [
-		function(){
-			// XXX setup empty state...
-		}],
 	load: [
 		function(d){
 			this.data = data.Data(d.data)
+			this.images = images.Images(d.images)
 		}],
 	clear: [
 		function(){
 			delete this.data
+			delete this.Images
 		}],
 
 
@@ -274,7 +273,6 @@ actions.Actions({
 		function(){ this.prevImage(this.data.order) }],
 	nextImageInOrder: ['Focus next image in order',
 		function(){ this.nextImage(this.data.order) }],
-
 
 	firstRibbon: ['Focus previous ribbon',
 		function(){ this.focusRibbon('first') }],
@@ -396,6 +394,7 @@ actions.Actions({
 	//
 	// XXX these are not data stuff... should this be split into a 
 	// 		separate images block???
+	// XXX should we have .rotate(..) and .flip(..) generic actions???
 	rotateCW: [ 
 		function(){  }],
 	rotateCCW: [ 
@@ -511,10 +510,6 @@ actions.Actions(Client, {
 	},
 
 
-	ready: [
-		function(){
-			// XXX setup empty state...
-		}],
 	load: [
 		function(data){
 			// recycle the viewer if one is not given specifically...
@@ -845,15 +840,11 @@ actions.Actions(Client, {
 
 	// basic image editing...
 	//
-	// XXX should these call .images.* or should it be done by data...
-	// 		...I think that data is a better candidate as it should be
-	// 		standalone...
 	// XXX should we have .rotate(..) and .flip(..) generic actions???
 	rotateCW: [ 
 		function(target){ this.ribbons.rotateCW(target) }],
 	rotateCCW: [ 
 		function(target){ this.ribbons.rotateCCW(target) }],
-	// XXX tell data/images about the flip...
 	flipVertical: [ 
 		function(target){ this.ribbons.flipVertical(target, 'view') }],
 	flipHorizontal: [

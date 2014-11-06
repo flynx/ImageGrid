@@ -238,9 +238,13 @@ module.ImagesPrototype = {
 	// function format:
 	// 		function(key, value, index, object)
 	//
+	// reduce function format:
+	// 		function(value1, value2, key, index, object)
+	//
+	//
 	// this will be set to the value...
 	//
-	//
+	// XXX revise...
 	// XXX are these slower than doing it manualy via Object.keys(..)
 	forEach: function(func){
 		var i = 0
@@ -264,6 +268,13 @@ module.ImagesPrototype = {
 			if(func.call(this[key], key, this[key], i++, this)){
 				res[key] = this[key]
 			}
+		}
+		return res
+	},
+	reduce: function(func, initial){
+		var res = initial
+		for(var key in this){
+			res = func.call(this[key], res, this[key], key, i++, this)
 		}
 		return res
 	},
@@ -440,7 +451,8 @@ module.ImagesPrototype = {
 	//	.flipImage(target, 'vertical')
 	//		-> images
 	//
-	flipImage: function(gids, direction){
+	// XXX add reference support...
+	flipImage: function(gids, direction, reference){
 		gids = gids.constructor !== Array ? [gids] : gids
 		var that = this
 		gids.forEach(function(key){

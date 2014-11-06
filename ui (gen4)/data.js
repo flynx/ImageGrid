@@ -13,6 +13,7 @@ console.log('>>> data')
 
 
 var formats = require('formats')
+var sha1 = require('./ext-lib/sha1')
 
 
 module.DATA_VERSION = '3.0'
@@ -103,7 +104,7 @@ module.DataClassPrototype = {
 	fromList: function(list){
 		var res = new Data()
 		// XXX make a real ribbon gid...
-		var gid = res.newGid('R')
+		var gid = res.newGid()
 		res.order = list
 		res.ribbon_order.push(gid)
 		res.ribbons[gid] = list.slice()
@@ -240,16 +241,42 @@ module.DataPrototype = {
 		return lst
 	},
 
-	// Generate a unique GID...
+	// Generate a GID...
 	//
-	// XXX generate a real gid...
-	newGid: function(prefix){
-		prefix = prefix == null ? 'G' : prefix
-		var gid = prefix + Date.now()
+	// If no arguments are given then a unique gid will be generated.
+	//
+	newGid: function(str, nohash){
+		var p = location.hostname + '-'
+		// if we are on node.js add process pid
+		if(typeof(process) != 'undefined'){
+			p += process.pid + '-'
+		}
+		// decide to use a hashing function...
+		if(typeof(sha1) != 'undefined'){
+			var hash = sha1.hash.bind(sha1)
+		} else {
+			var hash = function(g){ return g }
+		}
+
+		// return string as-is...
+		if(nohash){
+			return str || p+Date.now()
+		}
+
+		// make a hash...
+		var gid = hash(str || (p+Date.now()))
+
+		// for explicit string return the hash as-is...
+		if(str != null){
+			return gid
+		}
+
+		// check that the gid is unique...
 		while(this.ribbon_order.indexOf(gid) >= 0 
 				|| this.order.indexOf(gid) >= 0){
-			gid = prefix + Date.now()
+			gid = hash(p+Date.now())
 		}
+
 		return gid
 	},
 	
@@ -933,7 +960,7 @@ module.DataPrototype = {
 	// If mode is 'below' this will create a new ribbon below the target,
 	// otherwise the new ribbon will be created above.
 	newRibbon: function(target, mode){
-		var gid = this.newGid('R')
+		var gid = this.newGid()
 		var i = this.getRibbonOrder(target)
 
 		i = mode == 'below' ? i+1 : i
@@ -1369,7 +1396,7 @@ module.DataPrototype = {
 				if(d < 0){
 					// see if g is unique...
 					if(g in base.ribbons || base.order.indexOf(g) >= 0){
-						g = base.newGid('R')
+						g = base.newGid()
 					}
 					base.ribbon_order.splice(t, 0, g)
 					base.ribbons[g] = r
@@ -1385,7 +1412,7 @@ module.DataPrototype = {
 				} else {
 					// see if g is unique...
 					if(g in base.ribbons || base.order.indexOf(g) >= 0){
-						g = base.newGid('R')
+						g = base.newGid()
 					}
 					base.ribbon_order.push(g)
 					base.ribbons[g] = r
