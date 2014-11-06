@@ -607,9 +607,12 @@ actions.Actions(Client, {
 				: data.getImage(target)
 
 			// align current ribbon...
+			// NOTE: the ordering of calls here makes it simpler to load
+			// 		data into ribbons based on target gid... i.e. first
+			// 		we know the section we need then align it vertically...
 			this
-				.centerRibbon(gid)
 				.centerImage(gid)
+				.centerRibbon(gid)
 
 			// align other ribbons...
 			var ribbon = data.getRibbon(gid)
@@ -1011,6 +1014,21 @@ module.PartialRibbons = Feature({
 			})
 			.on('fitImage.pre', this.tag, function(n){
 				this.updateRibbonSize('current', n || 1)
+			})
+			.on('fitRibbon.pre', this.tag, function(n){
+				n = n || 1
+
+				// convert target height in ribbons to width in images...
+				// NOTE: this does not account for compensation that 
+				// 		.updateRibbonSize(..) makes for fitting whole image
+				// 		counts, this is a small enough error so as not
+				// 		to waste time on...
+				var s = this.ribbons.getScale()
+				var h = this.ribbons.getScreenHeightRibbons()
+				var w = this.ribbons.getScreenWidthImages()
+				var nw = w / (h/n)
+
+				this.updateRibbonSize('current', nw)
 			})
 	},
 	remove: function(actions){

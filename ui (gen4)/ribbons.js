@@ -219,6 +219,15 @@ module.RibbonsPrototype = {
 
 		return W/w
 	},
+	// XXX this does not account for ribbon spacing...
+	getScreenHeightRibbons: function(scale){
+		var scale = scale == null ? 1 : scale/this.getScale()
+
+		var H = this.viewer.height()
+		var h = this.getVisibleImageSize('height') * scale
+
+		return H/h
+	},
 
 	// Get ribbon set scale...
 	//
@@ -1606,8 +1615,7 @@ module.RibbonsPrototype = {
 		n = n || 1
 		fit_whole_images = fit_whole_images == null ? true : false
 
-		var h = this.getVisibleImageSize('height', 1)
-		var scale = this.viewer.height() / (h * n)
+		var scale = this.getScreenHeightRibbons(1) / n
 
 		var w = this.getVisibleImageSize('width', 1)
 		var W = this.viewer.width()
