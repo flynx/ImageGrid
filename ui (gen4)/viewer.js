@@ -32,19 +32,26 @@ function reloadAfter(transitions){
 }
 
 // XXX make this compatible with multiple images...
+// XXX for muptiple targets this will just do a .reload()...
 var updateImagePosition =
 module.updateImagePosition =
 function updateImagePosition(actions, target){
+	target = target || actions.current
 	target = target instanceof jQuery 
 		? actions.ribbons.getElemGID(target) 
 		: target
-	target = target || actions.current
 
 	var source_ribbon = actions.ribbons.getElemGID(actions.ribbons.getRibbon(target))
 	var source_order = actions.data.getImageOrder(target)
 
 	return function(){
 		actions.ribbons.preventTransitions()
+
+		// XXX hack...
+		if(target.constructor === Array){
+			actions.reload()
+			return
+		}
 
 		var target_ribbon = actions.data.getRibbon(target)
 
@@ -534,8 +541,6 @@ actions.Actions(Client, {
 	// XXX make this better support partial data view...
 	// 		...at this point this first loads the full data and then 
 	// 		.focusImage(..) triggers a reload...
-	// 		.....another approach would be to avoid .reload() where 
-	// 		possible...
 	reload: ['Reload viewer',
 		function(){
 			this.ribbons.preventTransitions()
@@ -808,13 +813,15 @@ actions.Actions(Client, {
 	shiftImageDown: [
 		function(target){ return updateImagePosition(this, target) }],
 
+	// XXX these produce jumpy animation when gathering images from the 
+	// 		left from outside of the loaded partial ribbon...
 	shiftImageLeft: [
-		function(target){
-			this.ribbons.placeImage(target, -1)
+		function(target){ 
+			this.ribbons.placeImage(target, -1) 
 		}],
 	shiftImageRight: [
 		function(target){
-			this.ribbons.placeImage(target, 1)
+			this.ribbons.placeImage(target, 1) 
 		}],
 
 	shiftRibbonUp: [
@@ -1069,21 +1076,30 @@ module.AlignRibbonsToFirstImage = Feature({
 
 
 //---------------------------------------------------------------------
+// XXX at this point this does not support target lists...
 var ShiftAnimation =
 module.ShiftAnimation = Feature({
 	tag: 'ui-animation',
 
 	setup: function(actions){
 		var animate = function(target){
-				var s = this.ribbons.makeShadow(target, true)
-				return function(){ s() }
+			// XXX do not do target lists...
+			if(target != null && target.constructor === Array){
+				return
 			}
+			var s = this.ribbons.makeShadow(target, true)
+			return function(){ s() }
+		}
 		// NOTE: this will keep the shadow in place -- the shadow will not
 		// 		go to the mountain, the mountain will come to the shadow ;)
 		var noanimate = function(target){
-				var s = this.ribbons.makeShadow(target)
-				return function(){ s() }
+			// XXX do not do target lists...
+			if(target != null && target.constructor === Array){
+				return
 			}
+			var s = this.ribbons.makeShadow(target)
+			return function(){ s() }
+		}
 		var tag = this.tag
 		return actions
 			.on('shiftImageUp.pre', tag, animate)

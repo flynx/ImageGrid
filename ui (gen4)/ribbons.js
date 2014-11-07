@@ -76,22 +76,28 @@ module.RibbonsClassPrototype = {
 				.addClass('ribbon-set'))
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
-	createRibbon: function(gid){
-		gid = gid != null ? gid+'' : gid
-		return $('<div>')
-			.addClass('ribbon')
-			.attr('gid', JSON.stringify(gid)
-					// this removes the extra quots...
-					.replace(/^"(.*)"$/g, '$1'))
+	createRibbon: function(gids){
+		gids = gids.constructor !== Array ? [gids] : gids
+		return $(gids.map(function(gid){
+			gid = gid != null ? gid+'' : gid
+			return $('<div>')
+				.addClass('ribbon')
+				.attr('gid', JSON.stringify(gid)
+						// this removes the extra quots...
+						.replace(/^"(.*)"$/g, '$1'))[0]
+		}))
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
-	createImage: function(gid){
-		gid = gid != null ? gid+'' : gid
-		return $('<div>')
-			.addClass('image')
-			.attr('gid', JSON.stringify(gid)
-					// this removes the extra quots...
-					.replace(/^"(.*)"$/g, '$1'))
+	createImage: function(gids){
+		gids = gids.constructor !== Array ? [gids] : gids
+		return $(gids.map(function(gid){
+			gid = gid != null ? gid+'' : gid
+			return $('<div>')
+				.addClass('image')
+				.attr('gid', JSON.stringify(gid)
+						// this removes the extra quots...
+						.replace(/^"(.*)"$/g, '$1'))[0]
+		}))
 	},
 	createMark: function(cls, gid){
 		gid = gid != null ? gid+'' : gid
@@ -725,10 +731,23 @@ module.RibbonsPrototype = {
 	//
 	// NOTE: mode defaults to 'before'.
 	// NOTE: if image gid does not exist it will be created.
+	// NOTE: if target is a list of gids, this will place the gids in 
+	// 		the same order as given, not as they were before placing...
+	//
+	// XXX is this too complicated???
 	placeImage: function(target, to, mode){
 		mode = mode == null ? 'before' : mode
-		var img = this.getImage(target)
-		img = img.length == 0 ? this.createImage(target) : img
+
+		target = target == null || target.constructor !== Array ? [target] : target
+
+		// get or make images...
+		var that = this
+		var img = $($(target)
+			.map(function(_, e){
+				var i = that.getImage(e)
+				return (i.length == 0 ? that.createImage(e) : i)[0]
+			}))
+	
 		var i = this.getImage(to)
 		var r = this.getRibbon(to)
 
@@ -739,13 +758,11 @@ module.RibbonsPrototype = {
 				return img
 			}
 			var i = to
-			var images = img[i > 0 ? 'nextAll' : 'prevAll']('.image')
+			var images = img[i > 0 ? 'last' : 'first']()
+				[i > 0 ? 'nextAll' : 'prevAll']('.image')
 			to = images.length > 0 
 				? images.eq(Math.min(Math.abs(i), images.length)-1) 
 				: img
-			if(to === img){
-				return to
-			}
 
 		// append/prepend to ribbon...
 		} else if(i.length == 0 && r.length > 0 && r.hasClass('ribbon')){
@@ -1113,7 +1130,7 @@ module.RibbonsPrototype = {
 	// NOTE: this will never remove the ribbons included in any of the
 	// 		data.base, data.ribbon_order or data.ribbons...
 	updateData: function(data, settings){
-		var settings = settings == null ? {} : settings
+		settings = settings == null ? {} : settings
 		// load the data...
 		var that = this
 
@@ -1322,6 +1339,8 @@ module.RibbonsPrototype = {
 		return image
 	},
 
+	// Get image rotation...
+	//
 	getImageRotation: function(target){
 		return (this.getImage(target).attr('orientation') || 0)*1
 	},
@@ -1373,6 +1392,8 @@ module.RibbonsPrototype = {
 		return this
 	},
 
+	// Get image flip...
+	//
 	getImageFlip: function(target){
 		return (this.getImage(target).attr('flipped') || '')
 			.split(',')

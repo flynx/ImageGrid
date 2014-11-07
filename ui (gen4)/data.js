@@ -1036,6 +1036,139 @@ module.DataPrototype = {
 		this.ribbon_order.reverse()
 	},
 
+	// Gather gids into an connected section...
+	//
+	// The section is positioned relative to a reference gid, which also
+	// determines the ribbon.
+	//
+	// 	Gather images relative to current image 
+	// 	.gatherImages(images)
+	// 	.gatherImages(images, 'current')
+	// 		-> data
+	//
+	// 	Gather images relative to image/ribbon
+	// 	.gatherImages(images, image|ribbon)
+	// 		-> data
+	//
+	// 	Gather images relative to first/last image in given images
+	// 	.gatherImages(images, 'first')
+	// 	.gatherImages(images, 'last')
+	// 		-> data
+	//
+	// 	Gather images relative to image/ribbon and place them strictly 
+	// 	after (default) or before it...
+	// 	.gatherImages(images, 'auto')
+	// 	.gatherImages(images, 'after')
+	// 	.gatherImages(images, 'before')
+	// 	.gatherImages(images, image|ribbon, 'auto')
+	// 	.gatherImages(images, image|ribbon, 'after')
+	// 	.gatherImages(images, image|ribbon, 'before')
+	// 		-> data
+	//
+	// 	Gather images only in one explicit dimension...
+	// 	.gatherImages(.., 'horizontal')
+	// 	.gatherImages(.., 'vertical')
+	// 		-> data
+	//
+	// NOTE: if mode is 'vertical' then place is ignored...
+	//
+	// XXX needs testing...
+	gatherImages: function(gids, reference, place, mode){
+		gids = this.makeSparseImages(gids)
+
+		var that = this
+
+		var modes = /vertical|horizontal|both/
+		var placements = /before|after|auto/
+
+		// parse arguments...
+		var  _mode = mode
+		mode = modes.test(reference) ? reference
+			: modes.test(place) ? place
+			: mode
+		mode = mode || 'both'
+
+		place = placements.test(reference) ? reference
+			: placements.test(_mode) ? _mode
+			: place
+		place = place == 'auto' ? null : place
+
+		reference = modes.test(reference) || placements.test(reference) ? null : reference
+		reference = reference == 'first' ? gids[0]
+			: reference == 'last' ? gids.slice(-1)[0]
+			: reference
+
+		//console.log('reference:', reference, '\nplace:', place, '\nmode:', mode)
+
+		// shift all gids to a reference ribbon...
+		if(mode == 'both' || mode == 'vertical'){
+			var ref = this.getRibbon(reference)
+
+			var ribbons = this.ribbons
+			gids.forEach(function(gid, i){
+				var r = that.getRibbon(gid)
+
+				// do the move...
+				if(r != ref){
+					ribbons[ref][i] = gid
+					delete ribbons[r][i]
+				}
+			})
+		}
+
+		// shift all gids to a reference image...
+		if(mode == 'both' || mode == 'horizontal'){
+			var order = this.order
+			var ref = this.getImage(reference)
+
+			place = gids.indexOf(ref) < 0 && place == null ? 'after' : place
+
+			// NOTE: the reference index will not move as nothing will 
+			// 		ever change it's position relative to it...
+			var ri = this.order.indexOf(ref)
+			var l = ri
+
+			gids.forEach(function(gid){
+				if(gid == ref){
+					return
+				}
+
+				// we need to get this live as we are moving images around...
+				var f = this.order.indexOf(gid)
+
+				// target is left of the reference -- place at reference...
+				// NOTE: we are moving left to right, thus the final order
+				// 		of images will stay the same.
+				if(f < ri){
+					if(place == 'after'){
+						order.splice(l, 0, order.splice(f, 1)[0])
+
+					} else {
+						order.splice(ri-1, 0, order.splice(f, 1)[0])
+					}
+
+				// target is right of the reference -- place each new image
+				// at an offset from reference, the offset is equal to 
+				// the number of the target image the right of the reference
+				} else {
+					if(place == 'before'){
+						order.splice(l, 0, order.splice(f, 1)[0])
+						l += 1
+
+					} else {
+						l += 1
+						order.splice(l, 0, order.splice(f, 1)[0])
+					}
+				}
+			})
+
+			// XXX this is cheating...
+			this.sortImages()
+		}
+
+		return this
+	},
+	
 	// Shift image...
 	//
 	//	Shift image to target position:
@@ -1064,123 +1197,38 @@ module.DataPrototype = {
 	// NOTE: .getImage(..) defaults to 'before' thus this to defaults
 	// 		to 'after'
 	//
-	// XXX check for corner cases:
-	// 		- first/last in ribbon offset
-	// 		- first/last in order offset
-	// 		- first/last ribbon up/down
-	// 			do we create new ribbons and round???
-	// XXX when shifting groups of images we are using the first as a 
-	// 		base, should we use last as a base for right shifting???
-	// 		...another way to go could be using current as a reference
-	// XXX test vertical..
-	// XXX should this be called .placeImage(..)???
-	shiftImage: function(from, target, mode){
-		from = from == null ? this.current : from
-		from = from == 'current' ? this.current : from
+	shiftImage: function(from, target, mode, direction){
+		from = from == null || from == 'current' ? this.current : from
 		from = from.constructor !== Array ? [from] : from
-		mode = mode == null ? 'after' : mode
-		var ribbons = this.ribbons
-		var order = this.order
 
-		first = this.getImage(from[0])
-		var f = order.indexOf(first)
+		var place
 
 		// target is an offset...
 		if(mode == 'offset'){
-			var t = this.getImage(first, target)
-
-			// if we hit start/end of ribbon get index if first/last image resp.
-			// XXX for multiple images what should we do if we hit ribbon start/end???
-			t = t == null && target > 0 ? this.getImage('last', this.getRibbon(first))
-				: t == null && target < 0 ? this.getImage('first', this.getRibbon(first))
-				: t
-			var t = this.getImageOrder(t)
-
-
-			var ribbon = this.getRibbon(first)
-
-		// target is ribbon order...
-		// XXX range checking???
-		} else if(typeof(target) == typeof(123)){
-			var t = f
-
-			// normalize the target...
-			// XXX is this the correct way to go???
-			target = Math.max(0, Math.min(this.ribbon_order.length-1, target))
-
-			var ribbon = this.ribbon_order[target]
-
-		// target is a ribbon gid...
-		} else if(target in this.ribbons){
-			var t = f
-
-			var ribbon = target
-
-		// target is a gid or order...
-		} else {
-			target = this.getImage(target)
-			var t = order.indexOf(target)
-			t = mode == 'after' ? t+1 : t
-
-			var ribbon = this.getRibbon(target)
-		}
-
-		var from_ribbon = this.getRibbon(first)
-
-		// do vertical shift...
-		// NOTE: image order here is not changed...
-		if(ribbon != from_ribbon || from.length > 1){
-			var that = this
-			from.forEach(function(e){
-				var i = order.indexOf(e)
-				var from_ribbon = that.getRibbon(e)
-
-				that.ribbons[ribbon][i] = e
-				delete that.ribbons[from_ribbon][i]
-			})
-		}
-
-		// do horizontal shift...
-		// NOTE: images are packed horizontally together...
-		if(f != t){
-			for(var i=0; i<from.length; i++){
-				f = order.indexOf(from[i])
-
-				// update order...
-				order.splice(t+i, 0, this.order.splice(f, 1)[0])
-
-				// update ribbons...
-				for(var k in ribbons){
-					var r = ribbons[k]
-
-					var e = r.splice(f, 1)[0]
-
-					// NOTE: for some magical reason L.slice(n, .., x) will
-					// 		append x to L rather than place it at position 
-					// 		n, if L.length < n
-					// 		...this we can't use .splice(..) for cases when 
-					// 		inserting after the last element of the array...
-					if(r.length > t+i){
-						r.splice(t+i, 0, e)
-
-						// remove the null/undefined if it was just inserted...
-						// NOTE: this needs to be done as splice inserts the 3'rd
-						// 		argument explicitly regardless of it's value,
-						// 		this if not done we'll end up with undefined 
-						// 		inserted into a sparse ribbon which will be
-						// 		considered as an element...
-						if(e == null){
-							delete r[t+i]
-						}
-
-					} else if(e != null){
-						r[t+i] = e
-					}
-				}
+			if(target > 0){
+				var t = this.getImage(from.slice(-1)[0], target)
+					|| this.getImage('last', from.slice(-1)[0])
+				place = from.indexOf(t) >= 0 ? null : 'after'
+			} else {
+				var t = this.getImage(from[0], target) 
+					|| this.getImage('first', from[0])
+				place = from.indexOf(t) >= 0 ? null : 'before'
 			}
+
+		// target is ribbon index...
+		} else if(typeof(target) == typeof(123)){
+			var t = this.getImage(this.getRibbon(target))
+				// in case of an empty ribbon...
+				|| this.getRibbon(target)
+			place = mode || 'after'
+
+		// target is an image...
+		} else {
+			var t = this.getImage(target)
+			place = mode || 'after'
 		}
 
-		return this 
+		return this.gatherImages(from, t, place, direction)
 	},
 
 	// Shorthand actions...
@@ -1191,17 +1239,18 @@ module.DataPrototype = {
 	// 		shifting the last image out...
 	// NOTE: none of these change .current
 	//
-	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') }, // Gen2
-	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') }, // Gen2
+	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') },
+	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') },
 	// XXX these can remove ribbons, do we need to shift base ribbon???
 	shiftImageUp: function(gid){ 
 		var g = gid.constructor === Array ? gid[0] : gid
 		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
 		if(r == 0){
+			r += 1
 			this.newRibbon(g)
 		}
-		var res = this.shiftImage(gid, r-1) 
+		var res = this.shiftImage(gid, r-1, 'vertical') 
 		// clear empty ribbon...
 		r = r == 0 ? 1 : r
 		if(this.ribbons[this.ribbon_order[r]].len() == 0){
@@ -1217,7 +1266,7 @@ module.DataPrototype = {
 		if(r == this.ribbon_order.length-1){
 			this.newRibbon(g, 'below')
 		}
-		var res = this.shiftImage(gid, r+1) 
+		var res = this.shiftImage(gid, r+1, 'vertical') 
 		// clear empty ribbon...
 		if(this.ribbons[this.ribbon_order[r]].len() == 0){
 			r = this.ribbon_order.splice(r, 1)[0]
@@ -1267,8 +1316,8 @@ module.DataPrototype = {
 	// Shorthand actions...
 	//
 	// XXX should these be here??
-	shiftRibbonUp: function(gid){ return this.shiftRibbon(gid, -1, 'offset') }, // Gen2
-	shiftRibbonDown: function(gid){ return this.shiftRibbon(gid, 1, 'offset') }, // Gen2
+	shiftRibbonUp: function(gid){ return this.shiftRibbon(gid, -1, 'offset') },
+	shiftRibbonDown: function(gid){ return this.shiftRibbon(gid, 1, 'offset') },
 
 
 
