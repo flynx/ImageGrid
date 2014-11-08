@@ -1233,15 +1233,16 @@ module.DataPrototype = {
 
 	// Shorthand actions...
 	//
-	// NOTE: shiftImageUp/shiftImageDown will create new ribbons when 
-	// 		shifting from first/last ribbons respectively.
-	// NOTE: shiftImageUp/shiftImageUp will remove an empty ribbon after
-	// 		shifting the last image out...
 	// NOTE: none of these change .current
-	//
 	shiftImageLeft: function(gid){ return this.shiftImage(gid, -1, 'offset') },
 	shiftImageRight: function(gid){ return this.shiftImage(gid, 1, 'offset') },
-	// XXX these can remove ribbons, do we need to shift base ribbon???
+	// NOTE: these will not affect ribbon order.
+	// NOTE: these will create new ribbons when shifting from first/last
+	// 		ribbons respectively.
+	// NOTE: these will remove an empty ribbon after shifting the last 
+	// 		image out...
+	// NOTE: if base ribbon is removed this will try and reset it to the
+	// 		ribbon above or the top ribbon...
 	shiftImageUp: function(gid){ 
 		var g = gid.constructor === Array ? gid[0] : gid
 		var r = this.getRibbonOrder(g)
@@ -1254,8 +1255,15 @@ module.DataPrototype = {
 		// clear empty ribbon...
 		r = r == 0 ? 1 : r
 		if(this.ribbons[this.ribbon_order[r]].len() == 0){
+			var b = this.getRibbonOrder(this.base)-1
+
 			r = this.ribbon_order.splice(r, 1)[0]
 			delete this.ribbons[r]
+
+			// shift base...
+			if(!(this.base in this.ribbons)){
+				this.setBase(Math.max(0, b))
+			}
 		}
 		return res
 	},
@@ -1269,8 +1277,15 @@ module.DataPrototype = {
 		var res = this.shiftImage(gid, r+1, 'vertical') 
 		// clear empty ribbon...
 		if(this.ribbons[this.ribbon_order[r]].len() == 0){
+			var b = this.getRibbonOrder(this.base)-1
+
 			r = this.ribbon_order.splice(r, 1)[0]
 			delete this.ribbons[r]
+
+			// shift base...
+			if(!(this.base in this.ribbons)){
+				this.setBase(Math.max(0, b))
+			}
 		}
 		return res
 	},
@@ -1287,7 +1302,6 @@ module.DataPrototype = {
 	// 	Shift ribbon by offset...
 	// 	.shiftRibbon(gid, offset, 'offset')
 	// 		-> data
-	//
 	//
 	// XXX test...
 	shiftRibbon: function(gid, to, mode){

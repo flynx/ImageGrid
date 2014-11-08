@@ -36,7 +36,7 @@ module.mock_data = {
 	varsion: '3.0',
 
 	current: 'b',
-	base: 'x',
+	base: 'r0',
 
 	order: [],
 
