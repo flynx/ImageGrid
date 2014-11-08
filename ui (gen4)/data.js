@@ -1071,8 +1071,6 @@ module.DataPrototype = {
 	// 		-> data
 	//
 	// NOTE: if mode is 'vertical' then place is ignored...
-	//
-	// XXX needs testing...
 	gatherImages: function(gids, reference, place, mode){
 		gids = this.makeSparseImages(gids)
 
@@ -1197,6 +1195,7 @@ module.DataPrototype = {
 	// NOTE: .getImage(..) defaults to 'before' thus this to defaults
 	// 		to 'after'
 	//
+	// XXX needs better docs...
 	shiftImage: function(from, target, mode, direction){
 		from = from == null || from == 'current' ? this.current : from
 		from = from.constructor !== Array ? [from] : from

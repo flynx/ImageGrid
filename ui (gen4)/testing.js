@@ -85,12 +85,6 @@ module.setupActions = function(viewer){
 
 	var vv = Object.create(v.Viewer)
 
-	vv.load({
-		data: data.Data(module.mock_data),
-		viewer: viewer,
-		images: makeTestImages(),
-	})
-
 	return vv
 }
 

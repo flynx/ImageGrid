@@ -989,11 +989,14 @@ module.RibbonsPrototype = {
 	//
 	// ribbons must be .getRibbon(..) compatible.
 	//
-	// reference must be .getImage(..) compatible.
+	// reference must be .getImage(..) compatible or null to disable 
+	// offset compensation.
 	//
-	// XXX should this compensate for load offset???
-	// XXX need to make this animation-neutral...
-	updateRibbon: function(gids, ribbon, reference){
+	// NOTE: this will change ribbon size and compensate for it, but this 
+	// 		will not disable transitions, which at this point is the 
+	// 		responsibility of the caller...
+	// NOTE: offset calculation depends on image blocks being square...
+	updateRibbon: function(gids, ribbon, reference, count){
 		var that = this
 		// get/create the ribbon...
 		var r = this.getRibbon(ribbon)
@@ -1006,12 +1009,10 @@ module.RibbonsPrototype = {
 		var unload = $()
 
 		// compensate for new/removed images...
-		// XXX need to make this animation-neutral...
 		if(reference != null){
 			var ref = this.getImage(reference)
 
 			// align only if ref is loaded...
-			// XXX
 			if(ref.length > 0){
 				var gid = this.getElemGID(ref)
 				var w = ref.outerWidth()
@@ -1074,13 +1075,6 @@ module.RibbonsPrototype = {
 			that.updateImage(img)
 		})
 
-		/*
-		// remove the rest of the stuff in ribbon... 
-		if(loaded.length > gids.length){
-			loaded.eq(gids.length-1).nextAll().remove()
-		}
-		*/
-		
 		return this
 	},
 
@@ -1134,10 +1128,13 @@ module.RibbonsPrototype = {
 		// load the data...
 		var that = this
 
-		// place images...
+		// update ribbons -- place images...
 		if(data.ribbons != null){
+			// see if we've got a custom ribbon updater...
+			var updateRibbon = settings.updateRibbon || this.updateRibbon.bind(this)
+
 			Object.keys(data.ribbons).forEach(function(gid){
-				that.updateRibbon(data.ribbons[gid], gid)
+				updateRibbon(data.ribbons[gid], gid)
 			})
 		}
 

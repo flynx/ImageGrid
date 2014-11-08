@@ -538,18 +538,24 @@ actions.Actions(Client, {
 				this.reload()
 			}
 		}],
-	// XXX make this better support partial data view...
-	// 		...at this point this first loads the full data and then 
-	// 		.focusImage(..) triggers a reload...
+	// NOTE: this will pass the .ribbons.updateData(..) a custom ribbon 
+	// 		updater if one is defined here as .updateRibbon(target)
+	// XXX actions.updateRibbon(..) and ribbons.updateRibbon(..) are NOT
+	// 		signature compatible...
 	reload: ['Reload viewer',
 		function(){
 			this.ribbons.preventTransitions()
 
 			return function(){
-				this.ribbons.updateData(this.data)
+				// see if we've got a custom ribbon updater...
+				var that = this
+				var settings = this.updateRibbon != null 
+					? { updateRibbon: function(_, ribbon){ that.updateRibbon(ribbon) } }
+					: null
+
+				this.ribbons.updateData(this.data, settings)
 				this.focusImage()
 
-				//this.ribbons.restoreTransitions(true)
 				this.ribbons.restoreTransitions()
 			}
 		}],
@@ -559,7 +565,6 @@ actions.Actions(Client, {
 			this.ribbons.clear()
 			delete this.ribbons
 		}],
-
 
 	// XXX move this to a viewer window action set
 	close: ['Cloase viewer',
@@ -925,7 +930,16 @@ function Feature(obj){
 var PartialRibbonsActions = 
 module.PartialRibbonsActions = 
 actions.Actions({
-	updateRibbonSize: ['Update partial ribbon size', 
+	/*
+	// NOTE: this is here for documentation only, mixing-this into an 
+	// 		action set will overload the original config...
+	config: {
+		'ribbon-size-screens': 5,
+		'ribbon-resize-threshold': 1,
+	},
+	*/
+
+	updateRibbon: ['Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
@@ -953,6 +967,8 @@ actions.Actions({
 			var na = this.data.getImages(target, s/2, 'after').length - 1 
 			var pa = this.data.getImages(target, s/2, 'before').length - 1 
 
+
+			// do the update...
 			// the target is not loaded...
 			if(this.ribbons.getImage(target).length == 0
 					// passed threshold on the right...
@@ -1008,17 +1024,17 @@ module.PartialRibbons = Feature({
 
 		return actions
 			.on('focusImage.pre centerImage.pre', this.tag, function(target){
-				this.updateRibbonSize(target)
+				this.updateRibbon(target)
 			})
 			.on('fitImage.pre', this.tag, function(n){
-				this.updateRibbonSize('current', n || 1)
+				this.updateRibbon('current', n || 1)
 			})
 			.on('fitRibbon.pre', this.tag, function(n){
 				n = n || 1
 
 				// convert target height in ribbons to width in images...
 				// NOTE: this does not account for compensation that 
-				// 		.updateRibbonSize(..) makes for fitting whole image
+				// 		.updateRibbon(..) makes for fitting whole image
 				// 		counts, this is a small enough error so as not
 				// 		to waste time on...
 				var s = this.ribbons.getScale()
@@ -1026,7 +1042,7 @@ module.PartialRibbons = Feature({
 				var w = this.ribbons.getScreenWidthImages()
 				var nw = w / (h/n)
 
-				this.updateRibbonSize('current', nw)
+				this.updateRibbon('current', nw)
 			})
 	},
 	remove: function(actions){
@@ -1051,7 +1067,7 @@ module.AlignRibbonsToImageOrder = Feature({
 				this.alignByOrder(target)
 			})
 			// normalize the initial state...
-			.focusImage()
+			//.focusImage()
 	},
 })
 
@@ -1069,7 +1085,7 @@ module.AlignRibbonsToFirstImage = Feature({
 				this.alignByFirst(target)
 			})
 			// normalize the initial state...
-			.focusImage()
+			//.focusImage()
 	},
 })
 
@@ -1345,7 +1361,7 @@ module.CurrentImageIndicator = Feature({
 				})
 			// turn the marker on...
 			// XXX not sure about this...
-			.focusImage()
+			//.focusImage()
 	},
 	remove: function(actions){
 		actions.viewer.find('.' + this.tag).remove()

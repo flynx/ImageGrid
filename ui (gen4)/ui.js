@@ -197,6 +197,15 @@ $(function(){
 	//module.GLOBAL_KEYBOARD.__proto__ = a
 
 
+	// load some testing data...
+	a.load({
+		data: data.Data(testing.mock_data),
+		viewer: $('.viewer'),
+		images: testing.makeTestImages(),
+	})
+
+
+
 	// setup base keyboard for devel, in case something breaks...
 	$(document)
 		.keydown(
