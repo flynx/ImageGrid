@@ -176,6 +176,7 @@ module.GLOBAL_KEYBOARD = {
 
 $(function(){
 
+	// XXX
 	window.a = testing.setupActions()
 
 	// setup features...
@@ -204,7 +205,6 @@ $(function(){
 		viewer: $('.viewer'),
 		images: testing.makeTestImages(),
 	})
-
 
 
 	// setup base keyboard for devel, in case something breaks...

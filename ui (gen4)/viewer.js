@@ -1074,23 +1074,34 @@ actions.Actions({
 })
 
 
+// XXX 
 var SingleImageView =
 module.SingleImageView = Feature({
 	tag: 'ui-single-image-view',
 
+	// XXX should this be an action???
 	// XXX
+	updateImageProportions: function(actions){
+		// XXX
+	},
+
 	setup: function(actions){
+		var that = this
 		return actions
 			.mixin(SingleImageActions)
-			.on('toggleSingleImage.post fitImgae.post', this.tag, function(){ 
-				// XXX set image proportions...
+			.on('fitImgae.post', this.tag, function(){ 
+				// singe image mode -- set image proportions...
 				if(this.toggleSingleImage('?') == 'on'){
-					console.log('!!!! single image: on')
-					// XXX
+					that.updateImageProportions(this)
+				}
+			})
+			.on('toggleSingleImage.post', this.tag, function(){ 
+				// singe image mode -- set image proportions...
+				if(this.toggleSingleImage('?') == 'on'){
+					that.updateImageProportions(this)
 
-				// restore original image size...
+				// ribbon mode -- restore original image size...
 				} else {
-					console.log('!!!! single image: off')
 					this.ribbons.viewer.find('.image').css({
 						width: '',
 						height: ''

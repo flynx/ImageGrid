@@ -1602,7 +1602,7 @@ module.RibbonsPrototype = {
 	// NOTE: this will never scale the view in a wat that an image 
 	// 		overflows either in height nor width.
 	//
-	// XXX might be usefull to set origin before scaling...
+	// XXX might be useful to set origin before scaling...
 	fitImage: function(n, min){
 		n = n || 1
 
