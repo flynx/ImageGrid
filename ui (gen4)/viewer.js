@@ -944,6 +944,10 @@ actions.Actions({
 
 			w = w || this.screenwidth
 
+			// get config data and normalize...
+			size = (size 
+				|| this.config['ribbon-size-screens'] 
+				|| 5) * w
 			threshold = (threshold 
 				|| this.config['ribbon-resize-threshold'] 
 				|| 1) * w
@@ -966,11 +970,6 @@ actions.Actions({
 					|| (pl < threshold && pa > pl) 
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + threshold){
-
-				// get config data and normalize...
-				size = (size 
-					|| this.config['ribbon-size-screens'] 
-					|| 5) * w
 
 				this.resizeRibbon(target, size)
 			}
@@ -1007,7 +1006,7 @@ actions.Actions({
 // 				- setupe RibbonAlignToFirst first
 // 				- go to top ribbon
 // 				- shift image up
-// 		XXX The two should be completely independent....
+// 		XXX The two should be completely independent.... (???)
 // XXX need to test and tweak with actual images...
 var PartialRibbons = 
 module.PartialRibbons = Feature({
@@ -1021,7 +1020,6 @@ module.PartialRibbons = Feature({
 
 	setup: function(actions){
 		var feature = this
-
 
 		if(!('ribbon-size-screens' in actions.config)){
 			actions.config['ribbon-size-screens'] = this.size
@@ -1074,7 +1072,71 @@ actions.Actions({
 })
 
 
-// XXX 
+// XXX an ideal case would be:
+//
+// A)
+// 		 viewer
+// 		+---------------+
+// 		|	  image		|	- small image
+// 		|	  +---+		|	- square image block
+// 		|	  |   |		|	- smaller than this the block is always square
+// 		|	  +---+		|	- we just change scale
+// 		|				|
+// 		+---------------+
+//
+//
+// B)
+// 		 viewer
+// 		+---------------+
+// 		| +-----------+	|	- bigger image
+// 		| | image	  |	|	- block close to viewer proportion
+// 		| |	   <-->	  |	|	- image block growing parallel to viewer
+// 		| |			  |	|	  longer side
+// 		| +-----------+	|
+// 		+---------------+
+//
+//
+// C)
+// 		 viewer
+// 		+---------------+
+// 		| image			|	- image block same size as viewer
+// 		|				|
+// 		|				|
+// 		|				|
+// 		|				|
+// 		+---------------+
+//
+//
+// D)
+// 		 image
+// 		+ - - - - - - - +
+// 		.				.
+// 		+---------------+
+// 		| viewer		|	- image bigger than viewer in one dimension
+// 		|		^		|	- block grows along viewer short side, now
+// 		|		|		|	  closer to image proportions
+// 		|		v		|	- drag enabled
+// 		|				|
+// 		+---------------+
+// 		.				.
+// 		+ - - - - - - - +
+//
+//
+// E) 
+// 	   image
+// 	  + - - - - - - - - - +
+//	  .					  .
+// 	  .	+---------------+ .
+// 	  .	| viewer		| .	- image bigger than viewer 
+// 	  .	|				| .	- image block same proportion as image
+// 	  .	|				| . - we just change scale
+// 	  .	|				| .	- drag enabled
+// 	  .	|				| .
+// 	  .	+---------------+ .
+//	  .					  .
+// 	  + - - - - - - - - - +
+//
+//
 var SingleImageView =
 module.SingleImageView = Feature({
 	tag: 'ui-single-image-view',
