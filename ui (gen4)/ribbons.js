@@ -206,22 +206,21 @@ module.RibbonsPrototype = {
 		scale = scale || this.getScale()
 		dim = dim == null ? 'width' : dim
 		var img = this.viewer.find('.image')
-		if(dim == 'height'){
-			return img.outerHeight(true) * scale
-		} else if(dim == 'width'){
-			return img.outerWidth(true) * scale
-		} else if(dim == 'max'){
-			return Math.max(img.outerHeight(true), img.outerWidth(true)) * scale
-		} else if(dim == 'min'){
-			return Math.min(img.outerHeight(true), img.outerWidth(true)) * scale
-		}
+
+		return dim == 'height' ? img.outerHeight(true) * scale
+			: dim == 'width' ? img.outerWidth(true) * scale
+			: dim == 'max' ?
+				Math.max(img.outerHeight(true), img.outerWidth(true)) * scale
+			: dim == 'min' ?
+				Math.min(img.outerHeight(true), img.outerWidth(true)) * scale
+			: null
 	},
 
-	getScreenWidthImages: function(scale){
+	getScreenWidthImages: function(scale, min){
 		var scale = scale == null ? 1 : scale/this.getScale()
 
 		var W = this.viewer.width()
-		var w = this.getVisibleImageSize('width') * scale
+		var w = this.getVisibleImageSize(min ? 'min' : 'width') * scale
 
 		return W/w
 	},
@@ -1604,11 +1603,11 @@ module.RibbonsPrototype = {
 	// 		overflows either in height nor width.
 	//
 	// XXX might be usefull to set origin before scaling...
-	fitImage: function(n){
+	fitImage: function(n, min){
 		n = n || 1
 
 		// NOTE: this is width oriented...
-		var scale = this.getScreenWidthImages(1) / n
+		var scale = this.getScreenWidthImages(1, min) / n
 
 		// check bounds...
 		var H = this.viewer.height()

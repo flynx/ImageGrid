@@ -100,7 +100,7 @@ var USE_3D_TRANSFORM = true
 // NOTE: if the pre-callback explicitly returns false, then the change will
 // 		not be made.
 //
-// XXX revize/update this doc for makeToggler(..)
+// XXX revize/update this doc for Toggler(..)
 
 
 // Make a generic toggler function/method...
@@ -124,7 +124,7 @@ var USE_3D_TRANSFORM = true
 // 		later is enough, but as strict mode is not stable enough (sometimes
 // 		works and sometimes does not), we can not reliably pass the element
 // 		via 'this'.
-function makeToggler(elem, state_accessor, states, callback_a, callback_b){
+function Toggler(elem, state_accessor, states, callback_a, callback_b){
 	// normalize states...
 	states = typeof(states) == typeof('str') ? ['none', states] : states
 	// normalize the callbacks...
@@ -246,13 +246,17 @@ function makeToggler(elem, state_accessor, states, callback_a, callback_b){
 			'If "?" is given, this will return the current state.'
 	}
 
+	func.__proto__ = Toggler.prototype
+	func.constructor = Toggler
+
 	return func
 }
+Toggler.prototype.__proto__ = Function.prototype
 
 
 // XXX this should be drop-in compatible with createCSSClassToggler(..)
 // 		test and replace...
-function makeCSSClassToggler(elem, classes, callback_a, callback_b){
+function CSSClassToggler(elem, classes, callback_a, callback_b){
 	// normalize the states...
 	classes = typeof(classes) == typeof('str') ? ['none', classes] : classes
 	// remove the dot from class names...
@@ -268,7 +272,7 @@ function makeCSSClassToggler(elem, classes, callback_a, callback_b){
 				}).join(' ')
 		})
 	
-	return makeToggler(
+	var toggler = Toggler(
 		elem,
 		function(state){
 			'use strict'
@@ -298,7 +302,14 @@ function makeCSSClassToggler(elem, classes, callback_a, callback_b){
 		classes, 
 		callback_a, 
 		callback_b)
+
+	toggler.__proto__ = CSSClassToggler.prototype
+	toggler.constructor = CSSClassToggler
+
+	return toggler
 }
+
+CSSClassToggler.prototype.__proto__ = Toggler.prototype
 
 
 

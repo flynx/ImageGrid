@@ -189,6 +189,7 @@ $(function(){
 	viewer.PartialRibbons.setup(a)
 	viewer.AlignRibbonsToImageOrder.setup(a)
 	//viewer.AlignRibbonsToFirstImage.setup(a)
+	viewer.SingleImageView.setup(a)
 	viewer.ShiftAnimation.setup(a)
 	viewer.BoundsIndicators.setup(a)
 	viewer.CurrentImageIndicator.setup(a)

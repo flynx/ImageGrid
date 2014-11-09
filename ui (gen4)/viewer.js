@@ -542,6 +542,9 @@ actions.Actions(Client, {
 	// 		updater if one is defined here as .updateRibbon(target)
 	// XXX actions.updateRibbon(..) and ribbons.updateRibbon(..) are NOT
 	// 		signature compatible...
+	// 		...I'll fix this as/if I need to, right now there is no point to
+	// 		spend time and effort on unifying the interface when the common
+	// 		use-cases are not known + it seems quite logical as-is right now.
 	reload: ['Reload viewer',
 		function(){
 			this.ribbons.preventTransitions()
@@ -577,11 +580,6 @@ actions.Actions(Client, {
 		function(){
 			toggleFullscreenMode() 
 		}],
-	toggleSingleImage: ['Toggle single image view', 
-		// XXX this is wrong!!!
-		makeCSSClassToggler(
-			function(){ return this.ribbons.viewer }, 
-			'single-image-mode') ],
 	// XXX revise this...
 	showDevTools: ['',
 		function(){
@@ -591,7 +589,7 @@ actions.Actions(Client, {
 		}],
 
 	toggleTheme: ['', 
-		makeCSSClassToggler(
+		CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			[
 				'gray', 
@@ -792,13 +790,12 @@ actions.Actions(Client, {
 		function(){ this.fitImage(this.config['max-screen-images']) }],
 
 
-	// XXX
+	// XXX the question with these is how to make these relatively 
+	// 		similar across platforms...
 	fitSmall: ['Show small image',
 		function(){  }],
-	// XXX
 	fitNormal: ['Show normal image',
 		function(){  }],
-	// XXX
 	fitScreen: ['Fit image to screen',
 		function(){  }],
 
@@ -947,53 +944,58 @@ actions.Actions({
 
 			w = w || this.screenwidth
 
-			// get config data...
-			size = size 
-				|| this.config['ribbon-size-screens'] 
-				|| 5
-			threshold = threshold 
+			threshold = (threshold 
 				|| this.config['ribbon-resize-threshold'] 
-				|| 1
-
-			// normalize to image count...
-			var s = size * w
-			var t = threshold * w
+				|| 1) * w
 
 			// next/prev loaded... 
 			var nl = this.ribbons.getImage(target).nextAll('.image').length
 			var pl = this.ribbons.getImage(target).prevAll('.image').length
 
 			// next/prev available...
-			var na = this.data.getImages(target, s/2, 'after').length - 1 
-			var pa = this.data.getImages(target, s/2, 'before').length - 1 
+			var na = this.data.getImages(target, size/2, 'after').length - 1 
+			var pa = this.data.getImages(target, size/2, 'before').length - 1 
 
 
 			// do the update...
 			// the target is not loaded...
 			if(this.ribbons.getImage(target).length == 0
 					// passed threshold on the right...
-					|| (nl < t && na > nl) 
+					|| (nl < threshold && na > nl) 
 					// passed threshold on the left...
-					|| (pl < t && pa > pl) 
+					|| (pl < threshold && pa > pl) 
 					// loaded more than we need by threshold...
-					|| nl + pl + 1 > s + t){
+					|| nl + pl + 1 > size + threshold){
 
-				// NOTE: we can't get ribbon via target directly here as
-				// 		the target might not be loaded...
-				var r_gid = this.data.getRibbon(target)
+				// get config data and normalize...
+				size = (size 
+					|| this.config['ribbon-size-screens'] 
+					|| 5) * w
 
-				// localize transition prevention... 
-				var r = this.ribbons.getRibbon(r_gid)
+				this.resizeRibbon(target, size)
+			}
+		}],
+	resizeRibbon: ['Resize ribbon to n images',
+		function(target, size){
+			size = size 
+				|| (this.config['ribbon-size-screens'] * this.screenwidth)
+				|| (5 * this.screenwidth)
 
-				if(r.length > 0){
-					this.ribbons
-						.preventTransitions(r)
-						.updateRibbon(
-							this.data.getImages(target, s), 
-							r_gid,
-							target)
-						.restoreTransitions(r, true)
-				}
+			// NOTE: we can't get ribbon via target directly here as
+			// 		the target might not be loaded...
+			var r_gid = this.data.getRibbon(target)
+
+			// localize transition prevention... 
+			var r = this.ribbons.getRibbon(r_gid)
+
+			if(r.length > 0){
+				this.ribbons
+					.preventTransitions(r)
+					.updateRibbon(
+						this.data.getImages(target, size), 
+						r_gid,
+						target)
+					.restoreTransitions(r, true)
 			}
 		}]
 })
@@ -1012,17 +1014,24 @@ module.PartialRibbons = Feature({
 	tag: 'ui-partial-ribbons',
 
 	// number of screen widths to load...
-	size: 5,
+	size: 7,
 
 	// number of screen widths to edge to trigger reload...
-	threshold: 1,
+	threshold: 1.5,
 
 	setup: function(actions){
 		var feature = this
 
-		actions.mixin(PartialRibbonsActions)
+
+		if(!('ribbon-size-screens' in actions.config)){
+			actions.config['ribbon-size-screens'] = this.size
+		}
+		if(!('ribbon-resize-threshold' in actions.config)){
+			actions.config['ribbon-resize-threshold'] = this.threshold
+		}
 
 		return actions
+			.mixin(PartialRibbonsActions)
 			.on('focusImage.pre centerImage.pre', this.tag, function(target){
 				this.updateRibbon(target)
 			})
@@ -1054,6 +1063,50 @@ module.PartialRibbons = Feature({
 
 
 //---------------------------------------------------------------------
+var SingleImageActions =
+module.SingleImageActions = 
+actions.Actions({
+	toggleSingleImage: ['Toggle single image view', 
+		// XXX this is wrong!!!
+		CSSClassToggler(
+			function(){ return this.ribbons.viewer }, 
+			'single-image-mode') ],
+})
+
+
+var SingleImageView =
+module.SingleImageView = Feature({
+	tag: 'ui-single-image-view',
+
+	// XXX
+	setup: function(actions){
+		return actions
+			.mixin(SingleImageActions)
+			.on('toggleSingleImage.post fitImgae.post', this.tag, function(){ 
+				// XXX set image proportions...
+				if(this.toggleSingleImage('?') == 'on'){
+					console.log('!!!! single image: on')
+					// XXX
+
+				// restore original image size...
+				} else {
+					console.log('!!!! single image: off')
+					this.ribbons.viewer.find('.image').css({
+						width: '',
+						height: ''
+					})
+				}
+			})
+	},
+	remove: function(actions){
+		actions.mixout(SingleImageActions)
+		return actions.off('*', this.tag)
+	},
+})
+
+
+
+//---------------------------------------------------------------------
 // XXX this should also define up/down navigation behavior e.g. what to 
 // 		focus on next/prev ribbon...
 var AlignRibbonsToImageOrder = 
@@ -1062,12 +1115,8 @@ module.AlignRibbonsToImageOrder = Feature({
 
 	setup: function(actions){
 		return actions
-			// XXX this can be either pre or post...
-			.on('focusImage.post', this.tag, function(target){
-				this.alignByOrder(target)
-			})
-			// normalize the initial state...
-			//.focusImage()
+			.on('focusImage.post', this.tag, 
+					function(){ this.alignByOrder() })
 	},
 })
 
@@ -1080,12 +1129,8 @@ module.AlignRibbonsToFirstImage = Feature({
 
 	setup: function(actions){
 		return actions
-			// XXX this can be either pre or post...
-			.on('focusImage.post', this.tag, function(target){
-				this.alignByFirst(target)
-			})
-			// normalize the initial state...
-			//.focusImage()
+			.on('focusImage.post', this.tag, 
+					function(){ this.alignByFirst() })
 	},
 })
 
@@ -1237,7 +1282,7 @@ module.BoundsIndicators = Feature({
 				})
 	},
 	remove: function(actions){
-		actions.viewer.find('.' + this.tag).remove()
+		actions.ribbons.viewer.find('.' + this.tag).remove()
 		return actions.off('*', this.tag)
 	},
 })
@@ -1262,12 +1307,12 @@ module.CurrentImageIndicator = Feature({
 	updateMarker: function(actions, target, update_border){
 		var scale = actions.ribbons.getScale()
 		var cur = actions.ribbons.getImage(target)
-		var ribbon = actions.ribbons.getRibbon()
+		var ribbon = actions.ribbons.getRibbon(target)
 		var ribbon_set = actions.ribbons.viewer.find('.ribbon-set')
 
 		var marker = ribbon.find('.current-marker')
 
-		// no marker found...
+		// no marker found -- either in different ribbon or not created yet...
 		if(marker.length == 0){
 			// get marker globally...
 			marker = actions.ribbons.viewer.find('.current-marker')
@@ -1292,29 +1337,37 @@ module.CurrentImageIndicator = Feature({
 			}
 		}
 
+		// NOTE: we will update only the attrs that need to be updated...
+		var css = {}
+
 		var w = cur.outerWidth(true)
 		var h = cur.outerHeight(true)
 
-		var border = Math.max(this.min_border, this.border / scale)
-
-		// set border right away...
-		if(update_border == 'before'){
-			marker.css({ borderWidth: border }) 
-
-		// set border with a delay...
-		} else {
-			setTimeout(function(){ 
-				marker.css({ borderWidth: border }) 
-			}, this.border_timeout)
+		// keep size same as the image...
+		if(marker.outerWidth() != w || marker.outerHeight() != h){
+			css.width = w
+			css.height = h
 		}
 
-		return marker.css({
-			left: cur[0].offsetLeft,
+		// update border...
+		if(update_border !== false){
+			var border = Math.max(this.min_border, this.border / scale)
 
-			// keep size same as the image...
-			width: w,
-			height: h,
-		})
+			// set border right away...
+			if(update_border == 'before'){
+				css.borderWidth = border
+
+			// set border with a delay...
+			} else {
+				setTimeout(function(){ 
+					marker.css({ borderWidth: border }) 
+				}, this.border_timeout)
+			}
+		}
+
+		css.left = cur[0].offsetLeft
+
+		return marker.css(css)
 	},
 
 	setup: function(actions){
@@ -1323,7 +1376,7 @@ module.CurrentImageIndicator = Feature({
 		return actions
 			// move marker to current image...
 			.on( 'focusImage.post', this.tag, 
-					function(target){ that.updateMarker(this, target) })
+					function(){ that.updateMarker(this) })
 			// prevent animations when focusing ribbons...
 			.on('focusRibbon.pre', this.tag, 
 					function(){
@@ -1331,6 +1384,17 @@ module.CurrentImageIndicator = Feature({
 						this.ribbons.preventTransitions(m)
 						return function(){
 							this.ribbons.restoreTransitions(m)
+						}
+					})
+			// this is here to compensate for position change on ribbon 
+			// resize...
+			.on('resizeRibbon.post', this.tag, 
+					function(target, s){
+						var m = this.ribbons.viewer.find('.current-marker')
+						if(m.length != 0){
+							this.ribbons.preventTransitions(m)
+							that.updateMarker(this, target, false)
+							this.ribbons.restoreTransitions(m, true)
 						}
 					})
 			// Change border size in the appropriate spot in the animation:
@@ -1364,7 +1428,7 @@ module.CurrentImageIndicator = Feature({
 			//.focusImage()
 	},
 	remove: function(actions){
-		actions.viewer.find('.' + this.tag).remove()
+		actions.ribbons.viewer.find('.' + this.tag).remove()
 		return actions.off('*', this.tag)
 	},
 })
@@ -1380,7 +1444,7 @@ module.ImageStateIndicator = Feature({
 	setup: function(actions){
 	},
 	remove: function(actions){
-		actions.viewer.find('.' + this.tag).remove()
+		actions.ribbons.viewer.find('.' + this.tag).remove()
 		return actions.off('*', this.tag)
 	},
 })
@@ -1396,7 +1460,7 @@ module.GlobalStateIndicator = Feature({
 	setup: function(actions){
 	},
 	remove: function(actions){
-		actions.viewer.find('.' + this.tag).remove()
+		actions.ribbons.viewer.find('.' + this.tag).remove()
 		return actions.off('*', this.tag)
 	},
 })

@@ -9,6 +9,7 @@
 define(function(require){ var module = {}
 
 
+
 /*********************************************************************/
 // Actions
 //
@@ -157,9 +158,12 @@ if(typeof(args2array) != 'function'){
 // 	  registered from the current object and up to the base action set
 // 	  will be fired.
 //
-// 	- an action will return the last deepest action's return, if that 
-// 	  return is null, then the action set is returned.
+// 	- an action will return the deepest (root) action's return, if that 
+// 	  returns is undefined, then the action set is returned instead.
 //
+// NOTE: of the root handler is instance of Toggler (jli) and the action
+// 		is called with '?' as argument, then the toggler will be called 
+// 		with the argument and return the result bypassing the handlers.
 // NOTE: actions once defined do not depend on the inheritance hierarchy, 
 // 		other than the .getHandlers(..) method. If this method is not 
 // 		found in the inheritance chain (i.e. the link to MetaActions)
@@ -173,7 +177,6 @@ if(typeof(args2array) != 'function'){
 // NOTE: by default an action will return 'this', i.e. the action set
 // 		object the action was called from.
 //
-// XXX do we need to return something from an action ever?
 // XXX add more metadata/docs:
 // 		.section
 // 		.category
@@ -211,6 +214,18 @@ function Action(name, doc, ldoc, func){
 		// 		method can be referenced more than once, both with the 
 		// 		same as well as under different names...
 		var handlers = getHandlers.call(this, name)
+		//	.map(function(h){ return h.apply(that, args) })
+
+		// special case: if the root handler is a toggler and we call 
+		// it with '?' then do not call the handlers...
+		// XXX might be good to make this modular/configurable...
+		if(handlers.slice(-1)[0] instanceof Toggler 
+				&& args.length == 1 
+				&& args[0] == '?'){
+			return handlers.slice(-1)[0].apply(this, args)
+		}
+
+		handlers = handlers
 			.map(function(h){ return h.apply(that, args) })
 
 		// XXX use the last return as result...
@@ -224,7 +239,7 @@ function Action(name, doc, ldoc, func){
 		handlers.reverse().forEach(function(h, i){ 
 			// function...
 			if(h instanceof Function){
-				var r = h.call(that)
+				var r = h.apply(that, args)
 				res = i == 0 ? r : res
 
 			// deferred...
@@ -234,7 +249,8 @@ function Action(name, doc, ldoc, func){
 			} 
 		})
 
-		return res || this
+		// XXX is this the right way to go?
+		return res !== undefined ? res : this
 		//return this
 	}
 	meth.__proto__ = this.__proto__
