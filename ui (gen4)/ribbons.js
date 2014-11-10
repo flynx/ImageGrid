@@ -422,14 +422,8 @@ module.RibbonsPrototype = {
 						img
 							.clone()
 							.removeClass('current')
-							.attr('gid', null))
-					/*
-					.css({
-						width: img.outerWidth(),
-						height: img.outerHeight(),
-					})
-					*/
-					, s)
+							.attr('gid', null)),
+					s)
 				// place it over the current image...
 				.css({
 					top: io.top - vo.top,
