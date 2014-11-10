@@ -1075,66 +1075,66 @@ actions.Actions({
 // XXX an ideal case would be:
 //
 // A)
-// 		 viewer
-// 		+---------------+
-// 		|	  image		|	- small image
-// 		|	  +---+		|	- square image block
-// 		|	  |   |		|	- smaller than this the block is always square
-// 		|	  +---+		|	- we just change scale
-// 		|				|
-// 		+---------------+
+//       viewer
+//      +---------------+
+//      |     image     |   - small image
+//      |     +---+     |   - square image block
+//      |     |   |     |   - smaller than this the block is always square
+//      |     +---+     |   - we just change scale
+//      |               |
+//      +---------------+
 //
 //
 // B)
-// 		 viewer
-// 		+---------------+
-// 		| +-----------+	|	- bigger image
-// 		| | image	  |	|	- block close to viewer proportion
-// 		| |	   <-->	  |	|	- image block growing parallel to viewer
-// 		| |			  |	|	  longer side
-// 		| +-----------+	|   - this stage is not affected specific by image
-// 		+---------------+	  proportions and can be done in bulk
+//       viewer
+//      +---------------+
+//      | +-----------+ |   - bigger image
+//      | | image     | |   - block close to viewer proportion
+//      | |    <-->   | |   - image block growing parallel to viewer
+//      | |           | |     longer side
+//      | +-----------+ |   - this stage is not affected specific by image
+//      +---------------+     proportions and can be done in bulk
 //
 //
 // C)
-// 		 viewer
-// 		+---------------+
-// 		| image			|	- image block same size as viewer
-// 		|				|	- need to account for chrome
-// 		|				|
-// 		|				|
-// 		|				|
-// 		+---------------+
+//       viewer
+//      +---------------+
+//      | image         |   - image block same size as viewer
+//      |               |   - need to account for chrome
+//      |               |
+//      |               |
+//      |               |
+//      +---------------+
 //
 //
 // D)
-// 		 image
-// 		+ - - - - - - - +
-// 		.				.
-// 		+---------------+
-// 		| viewer		|	- image bigger than viewer in one dimension
-// 		|		^		|	- block grows to fit image proportions
-// 		|		|		|	- need to account for individual image 
-// 		|		v		|	  proportions
-// 		|				|	- drag enabled
-// 		+---------------+
-// 		.				.
-// 		+ - - - - - - - +
+//       image
+//      + - - - - - - - +
+//      .               .
+//      +---------------+
+//      | viewer        |   - image bigger than viewer in one dimension
+//      |       ^       |   - block grows to fit image proportions
+//      |       |       |   - need to account for individual image 
+//      |       v       |     proportions
+//      |               |   - drag enabled
+//      +---------------+
+//      .               .
+//      + - - - - - - - +
 //
 //
 // E) 
-// 	   image
-// 	  + - - - - - - - - - +
-//	  .					  .
-// 	  .	+---------------+ .
-// 	  .	| viewer		| .	- image bigger than viewer 
-// 	  .	|				| .	- image block same proportion as image
-// 	  .	|				| . - we just change scale
-// 	  .	|				| .	- drag enabled
-// 	  .	|				| .
-// 	  .	+---------------+ .
-//	  .					  .
-// 	  + - - - - - - - - - +
+//     image
+//    + - - - - - - - - - +
+//    .                   .
+//    . +---------------+ .
+//    . | viewer        | . - image bigger than viewer 
+//    . |               | . - image block same proportion as image
+//    . |               | . - we just change scale
+//    . |               | . - drag enabled
+//    . |               | .
+//    . +---------------+ .
+//    .                   .
+//    + - - - - - - - - - +
 //
 //
 var SingleImageView =
