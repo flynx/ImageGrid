@@ -375,6 +375,7 @@ module.RibbonsPrototype = {
 	// 		Example: several fast consecutive horizontal shifts will result
 	// 			in a single shadow "flowing" through the ribbon.
 	// NOTE: multiple shadows of different images are supported...
+	// NOTE: the .shadow element is essentially a ribbon.
 	//
 	// XXX should we also have a ribbon shadow???
 	makeShadow: function(target, animate, delay){
@@ -411,7 +412,7 @@ module.RibbonsPrototype = {
 			// ...we need to scale it to the current scale...
 			var shadow = setElementScale(
 				$('<div>')
-					.addClass('shadow')
+					.addClass('shadow ribbon')
 					.attr({
 						gid: gid,
 						ticket: ticket,
@@ -422,10 +423,13 @@ module.RibbonsPrototype = {
 							.clone()
 							.removeClass('current')
 							.attr('gid', null))
+					/*
 					.css({
-						width: img.width(),
-						height: img.height(),
-					}), s)
+						width: img.outerWidth(),
+						height: img.outerHeight(),
+					})
+					*/
+					, s)
 				// place it over the current image...
 				.css({
 					top: io.top - vo.top,

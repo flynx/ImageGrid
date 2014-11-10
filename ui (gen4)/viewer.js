@@ -1092,15 +1092,15 @@ actions.Actions({
 // 		| | image	  |	|	- block close to viewer proportion
 // 		| |	   <-->	  |	|	- image block growing parallel to viewer
 // 		| |			  |	|	  longer side
-// 		| +-----------+	|
-// 		+---------------+
+// 		| +-----------+	|   - this stage is not affected specific by image
+// 		+---------------+	  proportions and can be done in bulk
 //
 //
 // C)
 // 		 viewer
 // 		+---------------+
 // 		| image			|	- image block same size as viewer
-// 		|				|
+// 		|				|	- need to account for chrome
 // 		|				|
 // 		|				|
 // 		|				|
@@ -1113,10 +1113,10 @@ actions.Actions({
 // 		.				.
 // 		+---------------+
 // 		| viewer		|	- image bigger than viewer in one dimension
-// 		|		^		|	- block grows along viewer short side, now
-// 		|		|		|	  closer to image proportions
-// 		|		v		|	- drag enabled
-// 		|				|
+// 		|		^		|	- block grows to fit image proportions
+// 		|		|		|	- need to account for individual image 
+// 		|		v		|	  proportions
+// 		|				|	- drag enabled
 // 		+---------------+
 // 		.				.
 // 		+ - - - - - - - +
@@ -1142,7 +1142,6 @@ module.SingleImageView = Feature({
 	tag: 'ui-single-image-view',
 
 	// XXX should this be an action???
-	// XXX
 	updateImageProportions: function(actions){
 		// XXX
 	},
