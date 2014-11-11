@@ -903,15 +903,7 @@ module.FeatureProto = {
 	},
 }
 
-// XXX also need a feature registry and global feature setup...
-// 		something like:
-// 			Features.setup(actions, [
-// 				'feature1',
-// 				'feature2',
-// 				...
-// 			])
-// 		...where the feature list can be saved to config...
-// 		Same should be done for .remove()
+
 var Feature =
 module.Feature =
 function Feature(obj){
