@@ -894,23 +894,92 @@ actions.Actions(Client, {
 // 		...need something like:
 // 			Features(['feature_a', 'feature_b'], action).setup()
 
+// XXX might be a good idea to automate .setup(..)/.remove(..) and split
+// 		it into components:
+// 			- actions sets
+// 			- event handlers
+// 				- will need a standard way to reference both the action-set
+// 				  and feature from the handler... (???)
+// 			- .config merging
+// 			- custom setup stuff
 var FeatureProto =
 module.FeatureProto = {
 	tag: null,
 
+	setup: function(actions){
+		var that = this
+
+		// mixin actions...
+		if(this.actions != null){
+			actions.mixin(this.actions)
+		}
+
+		// install handlers...
+		if(this.handlers != null){
+			this.handlers.forEach(function(h){
+				actions.on(h[0], that.tag, h[1])
+			})
+		}
+
+		// merge config...
+		// XXX should this use inheritance???
+		if(this.config != null || (this.actions != null && this.actions.config != null)){
+			var config = this.config || this.actions.config
+
+			if(actions.config == null){
+				actions.config = {}
+			}
+			Object.keys(config).forEach(function(n){
+				if(actions.config[n] === undefined){
+					actions.config[n] = config[n]
+				}
+			})
+		}
+
+		// custom setup...
+		// XXX is this the correct way???
+		if(this.hasOwnProperty('setup') && this.setup !== FeatureProto.setup){
+			this.setup(actions)
+		}
+
+		return this
+	},
 	remove: function(actions){
-		return actions.off('*', this.tag)
+		if(this.actions != null){
+			actions.mixout(this.actions)
+		}
+
+		if(this.handlers != null){
+			actions.off('*', this.tag)
+		}
+
+		if(this.hasOwnProperty('remove') && this.setup !== FeatureProto.remove){
+			this.remove(actions)
+		}
+
+		// remove feature DOM elements...
+		actions.ribbons.viewer.find('.' + this.tag).remove()
+
+		return this
 	},
 }
 
 
+// XXX is hard-coded default feature-set a good way to go???
 var Feature =
 module.Feature =
-function Feature(obj){
+function Feature(feature_set, obj){
+	if(obj == null){
+		obj = feature_set
+		// XXX is this a good default???
+		feature_set = Features
+	}
+
 	obj.__proto__ = FeatureProto
 
-	// XXX not sure about this...
-	Features[obj.tag] = obj
+	if(feature_set){
+		feature_set[obj.tag] = obj
+	}
 
 	return obj
 }
@@ -919,22 +988,27 @@ function Feature(obj){
 // XXX experimental...
 // 		...not sure if the global feature set is a good idea...
 // XXX might be good to track and automate:
-// 		- priority/precedence
-// 		- exclusivity groups -- i.e. only one from a group can be on.
-// 		- dependency and dependency precedence
 // 		- documentation and control ui
 // 			- title
 // 			- doc
 // 			- ...
+// 		- exclusivity groups -- i.e. only one from a group can be on.
+// 			the last one wins + output error
+// 		- priority/precedence (sort)
+// 		- dependency and dependency precedence (sort)
+// XXX if this works out might be a good idea to organize everything as
+// 		a feature... including the Client and Viewer
+// 		...needs more thought...
 var FeatureSet =
 module.FeatureSet = {
 	setup: function(obj, lst){
 		lst = lst.constructor !== Array ? [lst] : lst
 		var that = this
+		var setup = FeatureProto.setup
 		lst.forEach(function(n){
 			if(that[n] != null){
 				console.log('Setting up feature:', n)
-				that[n].setup(obj)
+				setup.call(that[n], obj)
 			}
 		})
 	},
@@ -1045,33 +1119,36 @@ actions.Actions({
 // XXX need to test and tweak with actual images...
 var PartialRibbons = 
 module.PartialRibbons = Feature({
+	title: 'Partial Ribbons',
+	doc: 'Maintains partially loaded ribbons, this enables very lage '
+		+'image sets to be hadled eficiently.',
+
+	priority: 'high',
+
 	tag: 'ui-partial-ribbons',
 
-	// number of screen widths to load...
-	size: 7,
 
-	// number of screen widths to edge to trigger reload...
-	threshold: 1.5,
+	actions: PartialRibbonsActions,
 
-	setup: function(actions){
-		var feature = this
+	config: {
+		// number of screen widths to load...
+		'ribbon-size-screens': 7,
 
-		if(!('ribbon-size-screens' in actions.config)){
-			actions.config['ribbon-size-screens'] = this.size
-		}
-		if(!('ribbon-resize-threshold' in actions.config)){
-			actions.config['ribbon-resize-threshold'] = this.threshold
-		}
+		// number of screen widths to edge to trigger reload...
+		'ribbon-resize-threshold': 1.5,
+	},
 
-		return actions
-			.mixin(PartialRibbonsActions)
-			.on('focusImage.pre centerImage.pre', this.tag, function(target){
+	handlers: [
+		['focusImage.pre centerImage.pre', 
+			function(target){
 				this.updateRibbon(target)
-			})
-			.on('fitImage.pre', this.tag, function(n){
+			}],
+		['fitImage.pre', 
+			function(n){
 				this.updateRibbon('current', n || 1)
-			})
-			.on('fitRibbon.pre', this.tag, function(n){
+			}],
+		['fitRibbon.pre', 
+			function(n){
 				n = n || 1
 
 				// convert target height in ribbons to width in images...
@@ -1085,12 +1162,8 @@ module.PartialRibbons = Feature({
 				var nw = w / (h/n)
 
 				this.updateRibbon('current', nw)
-			})
-	},
-	remove: function(actions){
-		actions.mixout(PartialRibbonsActions)
-		return actions.off('*', this.tag)
-	},
+			}],
+	],
 })
 
 
@@ -1105,6 +1178,11 @@ actions.Actions({
 			function(){ return this.ribbons.viewer }, 
 			'single-image-mode') ],
 })
+
+// XXX should this be an action???
+function updateImageProportions(){
+	// XXX
+}
 
 
 // XXX an ideal case would be:
@@ -1176,25 +1254,21 @@ var SingleImageView =
 module.SingleImageView = Feature({
 	tag: 'ui-single-image-view',
 
-	// XXX should this be an action???
-	updateImageProportions: function(actions){
-		// XXX
-	},
+	actions: SingleImageActions,
 
-	setup: function(actions){
-		var that = this
-		return actions
-			.mixin(SingleImageActions)
-			.on('fitImgae.post', this.tag, function(){ 
+	handlers:[
+		['fitImgae.post',
+			function(){ 
 				// singe image mode -- set image proportions...
 				if(this.toggleSingleImage('?') == 'on'){
-					that.updateImageProportions(this)
+					updateImageProportions.call(this)
 				}
-			})
-			.on('toggleSingleImage.post', this.tag, function(){ 
+			}],
+		['toggleSingleImage.post', 
+			function(){ 
 				// singe image mode -- set image proportions...
 				if(this.toggleSingleImage('?') == 'on'){
-					that.updateImageProportions(this)
+					updateImageProportions.call(this)
 
 				// ribbon mode -- restore original image size...
 				} else {
@@ -1203,12 +1277,8 @@ module.SingleImageView = Feature({
 						height: ''
 					})
 				}
-			})
-	},
-	remove: function(actions){
-		actions.mixout(SingleImageActions)
-		return actions.off('*', this.tag)
-	},
+			}],
+	],
 })
 
 
@@ -1216,15 +1286,15 @@ module.SingleImageView = Feature({
 //---------------------------------------------------------------------
 // XXX this should also define up/down navigation behavior e.g. what to 
 // 		focus on next/prev ribbon...
+// XXX should .alignByOrder(..) be a feature-specific action or global 
+// 		as it is now???
 var AlignRibbonsToImageOrder = 
 module.AlignRibbonsToImageOrder = Feature({
 	tag: 'ui-ribbon-align-to-order',
 
-	setup: function(actions){
-		return actions
-			.on('focusImage.post', this.tag, 
-					function(){ this.alignByOrder() })
-	},
+	handlers: [
+		['focusImage.post', function(){ this.alignByOrder() }]
+	],
 })
 
 
@@ -1234,11 +1304,9 @@ var AlignRibbonsToFirstImage =
 module.AlignRibbonsToFirstImage = Feature({
 	tag: 'ui-ribbon-align-to-first',
 
-	setup: function(actions){
-		return actions
-			.on('focusImage.post', this.tag, 
-					function(){ this.alignByFirst() })
-	},
+	handlers: [
+		['focusImage.post', function(){ this.alignByFirst() }],
+	],
 })
 
 
@@ -1249,295 +1317,294 @@ var ShiftAnimation =
 module.ShiftAnimation = Feature({
 	tag: 'ui-animation',
 
-	setup: function(actions){
-		var animate = function(target){
-			// XXX do not do target lists...
-			if(target != null && target.constructor === Array){
-				return
-			}
-			var s = this.ribbons.makeShadow(target, true)
-			return function(){ s() }
-		}
+	handlers: [
+		['shiftImageUp.pre shiftImageDown.pre', 
+			function(target){
+				// XXX do not do target lists...
+				if(target != null && target.constructor === Array){
+					return
+				}
+				var s = this.ribbons.makeShadow(target, true)
+				return function(){ s() }
+			}],
 		// NOTE: this will keep the shadow in place -- the shadow will not
 		// 		go to the mountain, the mountain will come to the shadow ;)
-		var noanimate = function(target){
-			// XXX do not do target lists...
-			if(target != null && target.constructor === Array){
-				return
-			}
-			var s = this.ribbons.makeShadow(target)
-			return function(){ s() }
-		}
-		var tag = this.tag
-		return actions
-			.on('shiftImageUp.pre', tag, animate)
-			.on('shiftImageDown.pre', tag, animate)
-			.on('shiftImageLeft.pre', tag, noanimate)
-			.on('shiftImageRight.pre', tag, noanimate)
-	},
+		['shiftImageLeft.pre shiftImageRight.pre', 
+			function(target){
+				// XXX do not do target lists...
+				if(target != null && target.constructor === Array){
+					return
+				}
+				var s = this.ribbons.makeShadow(target)
+				return function(){ s() }
+			}],
+	],
 })
 
 
 
 //---------------------------------------------------------------------
+var BoundsIndicatorsActions =
+module.BoundsIndicatorsActions = 
+actions.Actions({
+	flashIndicator: ['Flash an indicator',
+		function(direction){
+			var cls = {
+				// shift up/down...
+				up: '.up-indicator',
+				down: '.down-indicator',
+				// hit start/end/top/bottom of view...
+				start: '.start-indicator',
+				end: '.end-indicator',
+				top: '.top-indicator',
+				bottom: '.bottom-indicator',
+			}[direction]
+
+			var indicator = this.ribbons.viewer.find(cls)
+
+			if(indicator.length == 0){
+				indicator = $('<div>')
+					.addClass(cls.replace('.', '') +' '+ this.tag)
+					.appendTo(this.ribbons.viewer)
+			}
+
+			return indicator
+				// NOTE: this needs to be visible in all cases and key press 
+				// 		rhythms... 
+				.show()
+				.delay(100)
+				.fadeOut(300)
+		}],
+})
+
+function didAdvance(indicator){
+	return function(){
+		var img = this.data.current
+		return function(){
+			if(img == this.data.current){
+				this.flashIndicator(indicator)
+			}
+		}
+	}
+}
+
 var BoundsIndicators = 
 module.BoundsIndicators = Feature({
 	tag: 'ui-bounds-indicators',
 
-	flashIndicator: function(viewer, direction){
-		var cls = {
-			// shift up/down...
-			up: '.up-indicator',
-			down: '.down-indicator',
-			// hit start/end/top/bottom of view...
-			start: '.start-indicator',
-			end: '.end-indicator',
-			top: '.top-indicator',
-			bottom: '.bottom-indicator',
-		}[direction]
+	actions: BoundsIndicatorsActions,
 
-		var indicator = viewer.find(cls)
+	handlers: [
+		// basic navigation...
+		['nextImage.pre lastImage.pre', didAdvance('end')],
+		['prevImage.pre firstImage.pre', didAdvance('start')],
+		['nextRibbon.pre lastRibbon.pre', didAdvance('bottom')],
+		['prevRibbon.pre firstRibbon.pre', didAdvance('top')],
 
-		if(indicator.length == 0){
-			indicator = $('<div>')
-				.addClass(cls.replace('.', '') +' '+ this.tag)
-				.appendTo(viewer)
-		}
+		// vertical shifting...
+		['shiftImageUp.pre',
+			function(target){ 
+				target = target || this.current
+				var r = this.data.getRibbonOrder(target)
 
-		return indicator
-			// NOTE: this needs to be visible in all cases and key press 
-			// 		rhythms... 
-			.show()
-			.delay(100)
-			.fadeOut(300)
-	},
+				var l = this.data.getImages(r).length
+				var l0 = this.data.getImages(0).length
 
-	setup: function(actions){
-		var that = this
-
-		var didAdvance = function(indicator){
-			return function(){
-				var img = this.data.current
 				return function(){
-					if(img == this.data.current){
-						that.flashIndicator(actions.ribbons.viewer, indicator)
+					// when shifting last image of top ribbon (i.e. length == 1)
+					// up the state essentially will not change...
+					if((r == 0 && l == 1) 
+							// we are shifting to a new empty ribbon...
+							|| (r == 1 && l == 1 && l0 == 0)){
+						this.flashIndicator('top')
+					} else {	
+						this.flashIndicator('up')
 					}
 				}
-			}
-		}
+			}],
+		['shiftImageDown.pre',
+			function(target){ 
+				target = target || this.current
+				var r0 = this.data.getRibbonOrder(target)
+				var l = this.data.getImages(r0).length
 
-		var tag = this.tag
-		return actions
-			// basic navigation...
-			.on('nextImage.pre lastImage.pre', tag, didAdvance('end'))
-			.on('prevImage.pre firstImage.pre', tag, didAdvance('start'))
-			.on('nextRibbon.pre lastRibbon.pre', tag, didAdvance('bottom'))
-			.on('prevRibbon.pre firstRibbon.pre', tag, didAdvance('top'))
-
-			// vertical shifting...
-			.on('shiftImageUp.pre', tag, 
-				function(target){ 
-					target = target || this.current
-					var r = this.data.getRibbonOrder(target)
-
-					var l = this.data.getImages(r).length
-					var l0 = this.data.getImages(0).length
-
-					return function(){
-						// when shifting last image of top ribbon (i.e. length == 1)
-						// up the state essentially will not change...
-						if((r == 0 && l == 1) 
-								// we are shifting to a new empty ribbon...
-								|| (r == 1 && l == 1 && l0 == 0)){
-							that.flashIndicator(this.ribbons.viewer, 'top')
-						} else {	
-							that.flashIndicator(this.ribbons.viewer, 'up')
-						}
+				return function(){
+					var r1 = this.data.getRibbonOrder(target)
+					if(r0 == r1 && r0 == this.data.ribbon_order.length-1 && l == 1){
+						this.flashIndicator('bottom')
+					} else {
+						this.flashIndicator('down') 
 					}
-				})
-			.on('shiftImageDown.pre', tag, 
-				function(target){ 
-					target = target || this.current
-					var r0 = this.data.getRibbonOrder(target)
-					var l = this.data.getImages(r0).length
+				}
+			}],
 
-					return function(){
-						var r1 = this.data.getRibbonOrder(target)
-						if(r0 == r1 && r0 == this.data.ribbon_order.length-1 && l == 1){
-							that.flashIndicator(this.ribbons.viewer, 'bottom')
-						} else {
-							that.flashIndicator(this.ribbons.viewer, 'down') 
-						}
-					}
-				})
-
-			// horizontal shifting...
-			.on('shiftImageLeft.pre', tag, 
-				function(target){ 
-					if(target == null 
-							//&& actions.data.getImageOrder('ribbon') == 0){
-							&& this.data.getImage('prev') == null){
-						that.flashIndicator(this.ribbons.viewer, 'start')
-					}
-				})
-			.on('shiftImageRight.pre', tag, 
-				function(target){ 
-					if(target == null 
-							&& this.data.getImage('next') == null){
-						that.flashIndicator(this.ribbons.viewer, 'end')
-					}
-				})
-	},
-	remove: function(actions){
-		actions.ribbons.viewer.find('.' + this.tag).remove()
-		return actions.off('*', this.tag)
-	},
+		// horizontal shifting...
+		['shiftImageLeft.pre',
+			function(target){ 
+				if(target == null 
+						//&& actions.data.getImageOrder('ribbon') == 0){
+						&& this.data.getImage('prev') == null){
+					this.flashIndicator('start')
+				}
+			}],
+		['shiftImageRight.pre',
+			function(target){ 
+				if(target == null 
+						&& this.data.getImage('next') == null){
+					this.flashIndicator('end')
+				}
+			}],
+	],
 })
 
 
 
 //---------------------------------------------------------------------
+var CurrentImageIndicatorActions =
+module.CurrentImageIndicatorActions = 
+actions.Actions({
+	updateCurrentImageIndicator: ['Update current image indicator',
+		function(target, update_border){
+			var scale = this.ribbons.getScale()
+			var cur = this.ribbons.getImage(target)
+			var ribbon = this.ribbons.getRibbon(target)
+			var ribbon_set = this.ribbons.viewer.find('.ribbon-set')
+
+			var marker = ribbon.find('.current-marker')
+
+			// get config...
+			var border = this.config['current-image-border']
+			var min_border = this.config['current-image-min-border']
+			var border_timeout = this.config['current-image-border-timeout']
+			var fadein = this.config['current-image-indicator-fadein']
+
+			// no marker found -- either in different ribbon or not created yet...
+			if(marker.length == 0){
+				// get marker globally...
+				marker = this.ribbons.viewer.find('.current-marker')
+
+				// create a marker...
+				if(marker.length == 0){
+					var marker = $('<div/>')
+						.addClass('current-marker '+ this.tag)
+						.css({
+							opacity: '0',
+							top: '0px',
+							left: '0px',
+						})
+						.appendTo(ribbon)
+						.animate({
+							'opacity': 1
+						}, fadein)
+
+				// add marker to current ribbon...
+				} else {
+					marker.appendTo(ribbon)
+				}
+			}
+
+			// NOTE: we will update only the attrs that need to be updated...
+			var css = {}
+
+			var w = cur.outerWidth(true)
+			var h = cur.outerHeight(true)
+
+			// keep size same as the image...
+			if(marker.outerWidth() != w || marker.outerHeight() != h){
+				css.width = w
+				css.height = h
+			}
+
+			// update border...
+			if(update_border !== false){
+				var border = Math.max(min_border, border / scale)
+
+				// set border right away...
+				if(update_border == 'before'){
+					css.borderWidth = border
+
+				// set border with a delay...
+				} else {
+					setTimeout(function(){ 
+						marker.css({ borderWidth: border }) 
+					}, border_timeout)
+				}
+			}
+
+			css.left = cur[0].offsetLeft
+
+			marker.css(css)
+		}],
+})
+
 var CurrentImageIndicator = 
 module.CurrentImageIndicator = Feature({
 	tag: 'ui-current-image-indicator',
 
-	border: 3,
-	min_border: 2,
+	actions: CurrentImageIndicatorActions,
 
-	border_timeout: 200,
-	shift_timeout: 200,
+	config: {
+		'current-image-border': 3,
+		'current-image-min-border': 2,
 
-	fadein: 500,
+		'current-image-border-timeout': 200,
+		'current-image-shift-timeout': 200,
 
-	animate: true,
-
-	updateMarker: function(actions, target, update_border){
-		var scale = actions.ribbons.getScale()
-		var cur = actions.ribbons.getImage(target)
-		var ribbon = actions.ribbons.getRibbon(target)
-		var ribbon_set = actions.ribbons.viewer.find('.ribbon-set')
-
-		var marker = ribbon.find('.current-marker')
-
-		// no marker found -- either in different ribbon or not created yet...
-		if(marker.length == 0){
-			// get marker globally...
-			marker = actions.ribbons.viewer.find('.current-marker')
-
-			// create a marker...
-			if(marker.length == 0){
-				var marker = $('<div/>')
-					.addClass('current-marker '+ this.tag)
-					.css({
-						opacity: '0',
-						top: '0px',
-						left: '0px',
-					})
-					.appendTo(ribbon)
-					.animate({
-						'opacity': 1
-					}, this.fadein)
-
-			// add marker to current ribbon...
-			} else {
-				marker.appendTo(ribbon)
-			}
-		}
-
-		// NOTE: we will update only the attrs that need to be updated...
-		var css = {}
-
-		var w = cur.outerWidth(true)
-		var h = cur.outerHeight(true)
-
-		// keep size same as the image...
-		if(marker.outerWidth() != w || marker.outerHeight() != h){
-			css.width = w
-			css.height = h
-		}
-
-		// update border...
-		if(update_border !== false){
-			var border = Math.max(this.min_border, this.border / scale)
-
-			// set border right away...
-			if(update_border == 'before'){
-				css.borderWidth = border
-
-			// set border with a delay...
-			} else {
-				setTimeout(function(){ 
-					marker.css({ borderWidth: border }) 
-				}, this.border_timeout)
-			}
-		}
-
-		css.left = cur[0].offsetLeft
-
-		return marker.css(css)
+		'current-image-indicator-fadein': 500,
 	},
 
-	setup: function(actions){
-		var timeout
-		var that = this
-		return actions
-			// move marker to current image...
-			.on( 'focusImage.post', this.tag, 
-					function(){ that.updateMarker(this) })
-			// prevent animations when focusing ribbons...
-			.on('focusRibbon.pre', this.tag, 
-					function(){
-						var m = this.ribbons.viewer.find('.current-marker')
-						this.ribbons.preventTransitions(m)
-						return function(){
-							this.ribbons.restoreTransitions(m)
-						}
-					})
-			// this is here to compensate for position change on ribbon 
-			// resize...
-			.on('resizeRibbon.post', this.tag, 
-					function(target, s){
-						var m = this.ribbons.viewer.find('.current-marker')
-						if(m.length != 0){
-							this.ribbons.preventTransitions(m)
-							that.updateMarker(this, target, false)
-							this.ribbons.restoreTransitions(m, true)
-						}
-					})
-			// Change border size in the appropriate spot in the animation:
-			// 	- before animation when scaling up
-			// 	- after when scaling down
-			// This is done to make the visuals consistent...
-			.on( 'fitImage.pre fitRibbon.pre', this.tag, function(w1){ 
+	handlers: [
+		// move marker to current image...
+		[ 'focusImage.post',
+			function(){ this.updateCurrentImageIndicator() }],
+		// prevent animations when focusing ribbons...
+		['focusRibbon.pre',
+			function(){
+				var m = this.ribbons.viewer.find('.current-marker')
+				this.ribbons.preventTransitions(m)
+				return function(){
+					this.ribbons.restoreTransitions(m)
+				}
+			}],
+		// this is here to compensate for position change on ribbon 
+		// resize...
+		['resizeRibbon.post',
+			function(target, s){
+				var m = this.ribbons.viewer.find('.current-marker')
+				if(m.length != 0){
+					this.ribbons.preventTransitions(m)
+					this.updateCurrentImageIndicator(target, false)
+					this.ribbons.restoreTransitions(m, true)
+				}
+			}],
+		// Change border size in the appropriate spot in the animation:
+		// 	- before animation when scaling up
+		// 	- after when scaling down
+		// This is done to make the visuals consistent...
+		[ 'fitImage.pre fitRibbon.pre',
+			function(w1){ 
 				var w0 = this.screenwidth
 				w1 = w1 || 1
 				return function(){
-					that.updateMarker(this, null, w0 > w1 ? 'before' : 'after') 
+					this.updateCurrentImageIndicator(null, w0 > w1 ? 'before' : 'after') 
 				}
-			})
-			// hide marker on shift left/right and show it after done shifting...
-			.on('shiftImageLeft.pre shiftImageRight.pre', this.tag, function(){
-					this.ribbons.viewer.find('.current-marker').hide()
-					if(timeout != null){
-						clearTimeout(timeout)
-						timeout == null
-					}
-					return function(){
-						var ribbons = this.ribbons
-						var fadein = that.fadein
-						timeout = setTimeout(function(){ 
-							ribbons.viewer.find('.current-marker').fadeIn(fadein)
-						}, that.shift_timeout)
-					}
-				})
-			// turn the marker on...
-			// XXX not sure about this...
-			//.focusImage()
-	},
-	remove: function(actions){
-		actions.ribbons.viewer.find('.' + this.tag).remove()
-		return actions.off('*', this.tag)
-	},
+			}],
+		['shiftImageLeft.pre shiftImageRight.pre',
+			function(){
+				this.ribbons.viewer.find('.current-marker').hide()
+				if(this._current_image_indicator_timeout != null){
+					clearTimeout(this._current_image_indicator_timeout)
+					delete this._current_image_indicator_timeout
+				}
+				return function(){
+					var ribbons = this.ribbons
+					var fadein = this.config['current-image-indicator-fadein']
+					this._current_image_indicator_timeout = setTimeout(function(){ 
+						ribbons.viewer.find('.current-marker').fadeIn(fadein)
+					}, this.config['current-image-shift-timeout'])
+				}
+			}],
+	],
 })
 
 
@@ -1547,13 +1614,6 @@ module.CurrentImageIndicator = Feature({
 var ImageStateIndicator = 
 module.ImageStateIndicator = Feature({
 	tag: 'ui-image-state-indicator',
-
-	setup: function(actions){
-	},
-	remove: function(actions){
-		actions.ribbons.viewer.find('.' + this.tag).remove()
-		return actions.off('*', this.tag)
-	},
 })
 
 
@@ -1563,13 +1623,6 @@ module.ImageStateIndicator = Feature({
 var GlobalStateIndicator = 
 module.GlobalStateIndicator = Feature({
 	tag: 'ui-global-state-indicator',
-
-	setup: function(actions){
-	},
-	remove: function(actions){
-		actions.ribbons.viewer.find('.' + this.tag).remove()
-		return actions.off('*', this.tag)
-	},
 })
 
 
