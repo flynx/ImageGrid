@@ -180,6 +180,7 @@ $(function(){
 	window.a = testing.setupActions()
 
 	// setup features...
+	/*
 	// XXX I do not fully understand it yet, but PartialRibbons must be 
 	// 		setup BEFORE AlignRibbonsTo*, otherwise the later will break
 	// 		on shifting an image to a new ribbon...
@@ -194,6 +195,23 @@ $(function(){
 	viewer.ShiftAnimation.setup(a)
 	viewer.BoundsIndicators.setup(a)
 	viewer.CurrentImageIndicator.setup(a)
+	*/
+
+	viewer.Features.setup(a, [
+		// XXX I do not fully understand it yet, but PartialRibbons must be 
+		// 		setup BEFORE AlignRibbonsTo*, otherwise the later will break
+		// 		on shifting an image to a new ribbon...
+		// 			To reproduce:
+		// 				- setupe RibbonAlignToFirst first
+		// 				- go to top ribbon
+		// 				- shift image up
+		'ui-partial-ribbons',
+		'ui-ribbon-align-to-order',
+		'ui-single-image-view',
+		'ui-animation',
+		'ui-bounds-indicators',
+		'ui-current-image-indicator',
+	])
 
 	// this publishes all the actions...
 	//module.GLOBAL_KEYBOARD.__proto__ = a

@@ -916,8 +916,51 @@ var Feature =
 module.Feature =
 function Feature(obj){
 	obj.__proto__ = FeatureProto
+
+	// XXX not sure about this...
+	Features[obj.tag] = obj
+
 	return obj
 }
+
+
+// XXX experimental...
+// 		...not sure if the global feature set is a good idea...
+// XXX might be good to track and automate:
+// 		- priority/precedence
+// 		- exclusivity groups -- i.e. only one from a group can be on.
+// 		- dependency and dependency precedence
+// 		- documentation and control ui
+// 			- title
+// 			- doc
+// 			- ...
+var FeatureSet =
+module.FeatureSet = {
+	setup: function(obj, lst){
+		lst = lst.constructor !== Array ? [lst] : lst
+		var that = this
+		lst.forEach(function(n){
+			if(that[n] != null){
+				console.log('Setting up feature:', n)
+				that[n].setup(obj)
+			}
+		})
+	},
+	remove: function(obj, lst){
+		lst = lst.constructor !== Array ? [lst] : lst
+		var that = this
+		lst.forEach(function(n){
+			if(that[n] != null){
+				console.log('Removing feature:', n)
+				that[n].remove(obj)
+			}
+		})
+	},
+}
+
+
+var Features =
+module.Features = Object.create(FeatureSet)
 
 
 
