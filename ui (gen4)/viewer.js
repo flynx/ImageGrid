@@ -894,14 +894,6 @@ actions.Actions(Client, {
 // 		...need something like:
 // 			Features(['feature_a', 'feature_b'], action).setup()
 
-// XXX might be a good idea to automate .setup(..)/.remove(..) and split
-// 		it into components:
-// 			- actions sets
-// 			- event handlers
-// 				- will need a standard way to reference both the action-set
-// 				  and feature from the handler... (???)
-// 			- .config merging
-// 			- custom setup stuff
 var FeatureProto =
 module.FeatureProto = {
 	tag: null,
@@ -985,20 +977,13 @@ function Feature(feature_set, obj){
 }
 
 
+
 // XXX experimental...
 // 		...not sure if the global feature set is a good idea...
-// XXX might be good to track and automate:
-// 		- documentation and control ui
-// 			- title
-// 			- doc
-// 			- ...
-// 		- exclusivity groups -- i.e. only one from a group can be on.
-// 			the last one wins + output error
-// 		- priority/precedence (sort)
-// 		- dependency and dependency precedence (sort)
 // XXX if this works out might be a good idea to organize everything as
 // 		a feature... including the Client and Viewer
 // 		...needs more thought...
+// XXX add a standard doc set...
 var FeatureSet =
 module.FeatureSet = {
 	setup: function(obj, lst){
@@ -1036,15 +1021,6 @@ module.Features = Object.create(FeatureSet)
 var PartialRibbonsActions = 
 module.PartialRibbonsActions = 
 actions.Actions({
-	/*
-	// NOTE: this is here for documentation only, mixing-this into an 
-	// 		action set will overload the original config...
-	config: {
-		'ribbon-size-screens': 5,
-		'ribbon-resize-threshold': 1,
-	},
-	*/
-
 	updateRibbon: ['Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
