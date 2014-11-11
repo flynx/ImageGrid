@@ -36,6 +36,10 @@ function reloadAfter(transitions){
 var updateImagePosition =
 module.updateImagePosition =
 function updateImagePosition(actions, target){
+	if(actions.ribbons.getRibbonSet().length == 0){
+		return
+	}
+
 	target = target || actions.current
 	target = target instanceof jQuery 
 		? actions.ribbons.getElemGID(target) 
@@ -890,9 +894,6 @@ actions.Actions(Client, {
 
 
 /*********************************************************************/
-// XXX do a simple feature framework...
-// 		...need something like:
-// 			Features(['feature_a', 'feature_b'], action).setup()
 
 var FeatureProto =
 module.FeatureProto = {
@@ -1018,9 +1019,7 @@ module.Features = Object.create(FeatureSet)
 //---------------------------------------------------------------------
 // NOTE: this is split out to an action so as to enable ui elements to 
 // 		adapt to ribbon size changes...
-var PartialRibbonsActions = 
-module.PartialRibbonsActions = 
-actions.Actions({
+var PartialRibbonsActions = actions.Actions({
 	updateRibbon: ['Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
@@ -1145,9 +1144,7 @@ module.PartialRibbons = Feature({
 
 
 //---------------------------------------------------------------------
-var SingleImageActions =
-module.SingleImageActions = 
-actions.Actions({
+var SingleImageActions = actions.Actions({
 	toggleSingleImage: ['Toggle single image view', 
 		// XXX this is wrong!!!
 		CSSClassToggler(
@@ -1155,6 +1152,7 @@ actions.Actions({
 			'single-image-mode') ],
 })
 
+// helper...
 // XXX should this be an action???
 function updateImageProportions(){
 	// XXX
@@ -1228,6 +1226,9 @@ function updateImageProportions(){
 //
 var SingleImageView =
 module.SingleImageView = Feature({
+	title: '',
+	doc: '',
+
 	tag: 'ui-single-image-view',
 
 	actions: SingleImageActions,
@@ -1266,6 +1267,9 @@ module.SingleImageView = Feature({
 // 		as it is now???
 var AlignRibbonsToImageOrder = 
 module.AlignRibbonsToImageOrder = Feature({
+	title: '',
+	doc: '',
+
 	tag: 'ui-ribbon-align-to-order',
 
 	handlers: [
@@ -1278,6 +1282,9 @@ module.AlignRibbonsToImageOrder = Feature({
 //---------------------------------------------------------------------
 var AlignRibbonsToFirstImage = 
 module.AlignRibbonsToFirstImage = Feature({
+	title: '',
+	doc: '',
+
 	tag: 'ui-ribbon-align-to-first',
 
 	handlers: [
@@ -1291,6 +1298,9 @@ module.AlignRibbonsToFirstImage = Feature({
 // XXX at this point this does not support target lists...
 var ShiftAnimation =
 module.ShiftAnimation = Feature({
+	title: '',
+	doc: '',
+
 	tag: 'ui-animation',
 
 	handlers: [
@@ -1320,11 +1330,12 @@ module.ShiftAnimation = Feature({
 
 
 //---------------------------------------------------------------------
-var BoundsIndicatorsActions =
-module.BoundsIndicatorsActions = 
-actions.Actions({
+var BoundsIndicatorsActions = actions.Actions({
 	flashIndicator: ['Flash an indicator',
 		function(direction){
+			if(this.ribbons.getRibbonSet().length == 0){
+				return
+			}
 			var cls = {
 				// shift up/down...
 				up: '.up-indicator',
@@ -1353,6 +1364,7 @@ actions.Actions({
 		}],
 })
 
+// helper...
 function didAdvance(indicator){
 	return function(){
 		var img = this.data.current
@@ -1366,6 +1378,9 @@ function didAdvance(indicator){
 
 var BoundsIndicators = 
 module.BoundsIndicators = Feature({
+	title: '',
+	doc: '',
+
 	tag: 'ui-bounds-indicators',
 
 	actions: BoundsIndicatorsActions,
@@ -1436,15 +1451,18 @@ module.BoundsIndicators = Feature({
 
 
 //---------------------------------------------------------------------
-var CurrentImageIndicatorActions =
-module.CurrentImageIndicatorActions = 
-actions.Actions({
+var CurrentImageIndicatorActions = actions.Actions({
 	updateCurrentImageIndicator: ['Update current image indicator',
 		function(target, update_border){
+			var ribbon_set = this.ribbons.getRibbonSet()
+
+			if(ribbon_set.length == 0){
+				return this
+			}
+
 			var scale = this.ribbons.getScale()
 			var cur = this.ribbons.getImage(target)
 			var ribbon = this.ribbons.getRibbon(target)
-			var ribbon_set = this.ribbons.viewer.find('.ribbon-set')
 
 			var marker = ribbon.find('.current-marker')
 
@@ -1515,9 +1533,10 @@ actions.Actions({
 
 var CurrentImageIndicator = 
 module.CurrentImageIndicator = Feature({
-	tag: 'ui-current-image-indicator',
+	title: '',
+	doc: '',
 
-	actions: CurrentImageIndicatorActions,
+	tag: 'ui-current-image-indicator',
 
 	config: {
 		'current-image-border': 3,
@@ -1528,6 +1547,8 @@ module.CurrentImageIndicator = Feature({
 
 		'current-image-indicator-fadein': 500,
 	},
+
+	actions: CurrentImageIndicatorActions,
 
 	handlers: [
 		// move marker to current image...
@@ -1589,6 +1610,9 @@ module.CurrentImageIndicator = Feature({
 // XXX
 var ImageStateIndicator = 
 module.ImageStateIndicator = Feature({
+	title: '',
+	doc: '',
+
 	tag: 'ui-image-state-indicator',
 })
 
@@ -1598,6 +1622,9 @@ module.ImageStateIndicator = Feature({
 // XXX
 var GlobalStateIndicator = 
 module.GlobalStateIndicator = Feature({
+	title: '',
+	doc: '',
+
 	tag: 'ui-global-state-indicator',
 })
 

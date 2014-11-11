@@ -72,8 +72,8 @@ module.RibbonsClassPrototype = {
 	createViewer: function(){
 		return $('<div>')
 			.addClass('viewer')
-			.append($('<div>')
-				.addClass('ribbon-set'))
+			//.append($('<div>')
+			//	.addClass('ribbon-set'))
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
 	createRibbon: function(gids){
@@ -135,6 +135,9 @@ module.RibbonsPrototype = {
 	// XXX need a better way of doing this...
 	preventTransitions: function(target){
 		target = target || this.viewer
+		if(target.length == 0){
+			return this
+		}
 		target.addClass('no-transitions')
 		var t = target[0]
 		getComputedStyle(t).webkitTransition
@@ -151,6 +154,9 @@ module.RibbonsPrototype = {
 			target = this.viewer
 		} else {
 			target = target || this.viewer
+		}
+		if(target.length == 0){
+			return this
 		}
 		// sync...
 		if(now){
@@ -237,7 +243,7 @@ module.RibbonsPrototype = {
 	// Get ribbon set scale...
 	//
 	getScale: function(){
-		return getElementScale(this.viewer.find('.ribbon-set'))
+		return getElementScale(this.getRibbonSet())
 	},
 
 	// Set ribbon set scale...
@@ -251,7 +257,11 @@ module.RibbonsPrototype = {
 	//
 	// XXX if chrome 38 renders images blurry uncomment the fix...
 	setScale: function(scale, t, l){
-		var ribbon_set = this.viewer.find('.ribbon-set')
+		var ribbon_set = this.getRibbonSet()  
+
+		if(ribbon_set.length == 0){
+			return this
+		}
 
 		if(t != null && l != null){
 			this.setOrigin(t, l)
@@ -280,7 +290,7 @@ module.RibbonsPrototype = {
 	// Get current ribbon-set origin...
 	//
 	getOrigin: function(){
-		return getElementOrigin(this.viewer.find('.ribbon-set'))
+		return getElementOrigin(this.getRibbonSet())
 	},
 	
 	// Set ribbon set origin...
@@ -301,7 +311,12 @@ module.RibbonsPrototype = {
 	//
 	// XXX DEBUG: remove point updating when not needed...
 	setOrigin: function(a, b){
-		var ribbon_set = this.viewer.find('.ribbon-set')
+		var ribbon_set = this.getRibbonSet()
+
+		if(ribbon_set.length == 0){
+			return this
+		}
+
 		var ro = ribbon_set.offset()
 		var s = this.getScale()
 
@@ -378,9 +393,17 @@ module.RibbonsPrototype = {
 	// NOTE: the .shadow element is essentially a ribbon.
 	//
 	// XXX should we also have a ribbon shadow???
+	// XXX when this cant find a target it will return an empty function,
+	// 		not sure if this is correct...
 	makeShadow: function(target, animate, delay){
 		delay = delay || 200
 		var img = this.getImage(target)
+
+		if(img.length == 0){
+			// XXX is this correct???
+			return function(){}
+		}
+
 		var gid = this.getElemGID(img)
 		var s = this.getScale()
 		var vo = this.viewer.offset()
@@ -470,6 +493,26 @@ module.RibbonsPrototype = {
 
 	// Contextual getters...
 	
+	// Get ribbon-set...
+	//
+	// 	Get ribbon set if it exists
+	// 	.getRibbonSet()
+	// 		-> ribbon-set
+	//
+	// 	Get ribbon set if it exists or create it if not
+	// 	.getRibbonSet(true)
+	// 		-> ribbon-set
+	//
+	getRibbonSet: function(create){
+		var ribbon_set = this.viewer.find('.ribbon-set')
+		if(ribbon_set.length == 0 && create){
+			ribbon_set = $('<div/>')
+				.addClass('ribbon-set')
+				.appendTo(this.viewer)
+		}
+		return ribbon_set
+	},
+
 	// Get image...
 	//
 	// Get current image:
@@ -676,6 +719,7 @@ module.RibbonsPrototype = {
 		var ribbon = this.getRibbon(target)
 		var i = this.getRibbonOrder(ribbon)
 		ribbon = ribbon.length == 0 ? this.createRibbon(target) : ribbon
+		var ribbon_set = this.getRibbonSet(true) 
 
 		var ribbons = this.viewer.find('.ribbon')
 
@@ -694,7 +738,7 @@ module.RibbonsPrototype = {
 
 		// place the ribbon...
 		if(ribbons.length == 0 || ribbons.length <= position){
-			this.viewer.find('.ribbon-set').append(ribbon)
+			ribbon_set.append(ribbon)
 
 		} else if(i == -1 || i > position) {
 			ribbons.eq(position).before(ribbon)
@@ -734,6 +778,10 @@ module.RibbonsPrototype = {
 	// XXX is this too complicated???
 	placeImage: function(target, to, mode){
 		mode = mode == null ? 'before' : mode
+
+		if(this.getRibbonSet().length == 0){
+			return
+		}
 
 		target = target == null || target.constructor !== Array ? [target] : target
 
@@ -1193,11 +1241,7 @@ module.RibbonsPrototype = {
 	clear: function(gids){
 		// clear all...
 		if(gids == null || gids == '*'){
-			this.viewer.find('.ribbon').remove()
-			// reset offsets...
-			this.viewer.find('.ribbon-set').css({
-				top: '',
-			})
+			this.getRibbonSet().remove()
 
 		// clear one or more gids...
 		} else {
@@ -1543,7 +1587,11 @@ module.RibbonsPrototype = {
 	// XXX custom align point woud also be nice... 
 	// 		(top, bottom, center, %, px)
 	centerRibbon: function(target, offset, scale){
-		var ribbon_set = this.viewer.find('.ribbon-set')
+		var ribbon_set = this.getRibbonSet() 
+
+		if(ribbon_set.length == 0){
+			return this
+		}
 
 		//this.setOrigin(target)
 		
@@ -1575,9 +1623,13 @@ module.RibbonsPrototype = {
 		scale = scale || this.getScale()
 		var ribbon = this.getRibbon(target)
 
+		if(ribbon.length == 0){
+			return this
+		}
+
 		var rl = ribbon.offset().left
 		var il = target.offset().left
-		//var rsl = this.viewer.find('.ribbon-set').offset().left
+		//var rsl = this.getRibbonSet().offset().left
 		var W = this.viewer.width() * scale
 		var w = target.width() * scale
 
