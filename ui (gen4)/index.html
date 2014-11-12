@@ -72,6 +72,7 @@
 	transition: left 0.2s ease-out;
 }
 
+/* XXX should this be !important */
 .no-transitions {
 	-webkit-transition: none;
 	-moz-transition: none;
@@ -81,7 +82,8 @@
 }
 
 /* XXX think of a way not to use !important */
-.viewer.single-image-mode .ribbon {
+.single-image-mode .ribbon,
+.single-image-mode .ribbon-set {
 	-webkit-transition: none !important;
 	-moz-transition: none !important;
 	-ms-transition: none !important;

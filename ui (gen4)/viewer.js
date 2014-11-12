@@ -1307,7 +1307,9 @@ module.ShiftAnimation = Feature({
 		['shiftImageUp.pre shiftImageDown.pre', 
 			function(target){
 				// XXX do not do target lists...
-				if(target != null && target.constructor === Array){
+				if(target != null && target.constructor === Array 
+						// do not animate in single image mode...
+						&& this.toggleSingleImage('?') == 'on'){
 					return
 				}
 				var s = this.ribbons.makeShadow(target, true)
@@ -1318,7 +1320,9 @@ module.ShiftAnimation = Feature({
 		['shiftImageLeft.pre shiftImageRight.pre', 
 			function(target){
 				// XXX do not do target lists...
-				if(target != null && target.constructor === Array){
+				if(target != null && target.constructor === Array
+						// do not animate in single image mode...
+						&& this.toggleSingleImage('?') == 'on'){
 					return
 				}
 				var s = this.ribbons.makeShadow(target)
