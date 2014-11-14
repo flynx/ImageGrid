@@ -9,6 +9,17 @@ console.log('>>> images')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var sha1 = require('./ext-lib/sha1')
+
+
+/*********************************************************************/
+
+// decide to use a hashing function...
+if(typeof(sha1) != 'undefined'){
+	var hash = sha1.hash.bind(sha1)
+} else {
+	var hash = function(g){ return g }
+}
 
 
 /*********************************************************************/
@@ -224,6 +235,20 @@ module.makeImageSeqOrNameCmp = function(data, get, seq){
 
 var ImagesClassPrototype =
 module.ImagesClassPrototype = {
+	fromArray: function(data){
+		var images = new this()
+		// XXX stub...
+		var i = 0
+		data.forEach(function(path){
+			var gid = hash('I'+i)
+			images[gid] = {
+				id: gid,
+				path: path,
+			}
+			i += 1
+		})
+		return images
+	},
 	fromJSON: function(data){
 		return new this().loadJSON(data)
 	},
@@ -324,6 +349,7 @@ module.ImagesPrototype = {
 		var url = img_data.path
 		var preview_size = 'Original'
 		var p = Infinity
+		var previews = img_data.preview || {}
 
 		for(var k in img_data.preview){
 			s = parseInt(k)

@@ -197,13 +197,20 @@ actions.Actions({
 	//
 	load: [
 		function(d){
-			this.data = data.Data(d.data)
 			this.images = images.Images(d.images)
+			this.data = data.Data(d.data)
 		}],
 	clear: [
 		function(){
 			delete this.data
 			delete this.Images
+		}],
+
+	// XXX should this be here???
+	loadURLs: ['Load a URL list',
+		function(lst){
+			this.images = images.Images.fromArray(lst)
+			this.data = data.Data.fromArray(Object.keys(this.images))
 		}],
 
 
@@ -523,21 +530,16 @@ actions.Actions(Client, {
 
 	load: [
 		function(data){
-			// recycle the viewer if one is not given specifically...
-			var viewer = data.viewer
-			viewer = viewer == null && this.ribbons != null 
-				? this.ribbons.viewer 
-				: viewer
-			// XXX do we need to recycle the images???
-
-			// XXX is keeping ribbons here correct???
-			if(this.ribbons == null){
-				this.ribbons = ribbons.Ribbons(viewer, data.images)
-			}
-
 			return function(){
-				// XXX do a partial load...
-				// XXX
+				// recycle the viewer if one is not given specifically...
+				var viewer = data.viewer
+				viewer = viewer == null && this.ribbons != null 
+					? this.ribbons.viewer 
+					: viewer
+
+				if(this.ribbons == null){
+					this.ribbons = ribbons.Ribbons(viewer, data.images)
+				}
 
 				this.reload()
 			}
@@ -567,11 +569,27 @@ actions.Actions(Client, {
 			}
 		}],
 	clear: [
-		// XXX do we need to delete the ribbons???
+		function(){ this.ribbons.clear() }],
+
+	loadURLs: [
 		function(){
-			this.ribbons.clear()
-			delete this.ribbons
+			return function(){
+				// recycle the viewer if one is not given specifically...
+				var viewer = this.ribbons != null 
+					? this.ribbons.viewer 
+					: viewer
+
+				if(this.ribbons == null){
+					this.ribbons = ribbons.Ribbons(viewer, data.images)
+
+				} else {
+					this.ribbons.clear()
+				}
+
+				this.reload()
+			}
 		}],
+
 
 	// XXX move this to a viewer window action set
 	close: ['Cloase viewer',

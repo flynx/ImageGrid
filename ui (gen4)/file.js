@@ -4,27 +4,29 @@
 *
 **********************************************************************/
 
+var glob = require('glob')
+var path = require('path')
+
+
 define(function(require){ var module = {}
 console.log('>>> file')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-
-/*********************************************************************/
-
-function listDir(path){
-}
-
-function openFile(path){
-}
-
-function loadJSONFile(path){
-}
+var tasks = require('lib/tasks')
 
 
 
 /*********************************************************************/
 
+var INDEX_DIR = '.ImageGrid'
+
+
+/*********************************************************************/
+
+function listIndexes(base){
+	return glob(base +'/**/'+ INDEX_DIR)
+}
 
 
 /**********************************************************************

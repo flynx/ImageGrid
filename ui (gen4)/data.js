@@ -96,18 +96,32 @@ module.DATA_VERSION = '3.0'
 //
 /*********************************************************************/
 
+// decide to use a hashing function...
+if(typeof(sha1) != 'undefined'){
+	var hash = sha1.hash.bind(sha1)
+} else {
+	var hash = function(g){ return g }
+}
+
+
+/*********************************************************************/
+
 // Data class methods and API...
 //
 var DataClassPrototype =
 module.DataClassPrototype = {
 	// NOTE: we consider the input list sorted...
-	fromList: function(list){
+	fromArray: function(list){
 		var res = new Data()
 		// XXX make a real ribbon gid...
 		var gid = res.newGid()
 		res.order = list
 		res.ribbon_order.push(gid)
 		res.ribbons[gid] = list.slice()
+
+		res.focusImage(list[0])
+		res.setBase(gid)
+
 		return res
 	},
 	// XXX is this the right way to construct data???
@@ -250,12 +264,6 @@ module.DataPrototype = {
 		// if we are on node.js add process pid
 		if(typeof(process) != 'undefined'){
 			p += process.pid + '-'
-		}
-		// decide to use a hashing function...
-		if(typeof(sha1) != 'undefined'){
-			var hash = sha1.hash.bind(sha1)
-		} else {
-			var hash = function(g){ return g }
 		}
 
 		// return string as-is...
