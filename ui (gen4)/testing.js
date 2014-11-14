@@ -4,6 +4,11 @@
 *
 **********************************************************************/
 
+if(typeof(process) != 'undefined'){
+	var glob = require('glob')
+}
+
+
 //var DEBUG = DEBUG != null ? DEBUG : true
 //
 define(function(require){ var module = {}
@@ -86,6 +91,12 @@ module.setupActions = function(viewer){
 	var vv = Object.create(v.Viewer)
 
 	return vv
+}
+
+
+window.load2014 = function(){
+	return glob('l:/media/img/my/2014/*jpg')
+		.on('end', function(l){ window.a.loadURLs(l) })
 }
 
 

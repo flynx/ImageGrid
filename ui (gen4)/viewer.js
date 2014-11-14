@@ -584,6 +584,8 @@ actions.Actions(Client, {
 
 				} else {
 					this.ribbons.clear()
+					// XXX
+					this.ribbons.images = this.images
 				}
 
 				this.reload()
@@ -639,30 +641,33 @@ actions.Actions(Client, {
 				.centerImage(gid)
 				.centerRibbon(gid)
 
-			// align other ribbons...
-			var ribbon = data.getRibbon(gid)
-			for(var r in data.ribbons){
-				// skip the current ribbon...
-				if(r == ribbon){
-					continue
-				}
-
-				// XXX skip off-screen ribbons...
-
-				// center...
-				// XXX is there a 'last' special case here???
-				var t = data.getImage(gid, r)
-				if(t == null){
-					var f = data.getImage('first', r)
-					// nothing found -- empty ribbon?
-					if(f == null){
+			var that = this
+			//setTimeout(function(){
+				// align other ribbons...
+				var ribbon = data.getRibbon(gid)
+				for(var r in data.ribbons){
+					// skip the current ribbon...
+					if(r == ribbon){
 						continue
 					}
-					this.centerImage(f, 'before')
-				} else {
-					this.centerImage(t, 'after')
+
+					// XXX skip off-screen ribbons...
+
+					// center...
+					// XXX is there a 'last' special case here???
+					var t = data.getImage(gid, r)
+					if(t == null){
+						var f = data.getImage('first', r)
+						// nothing found -- empty ribbon?
+						if(f == null){
+							continue
+						}
+						that.centerImage(f, 'before')
+					} else {
+						that.centerImage(t, 'after')
+					}
 				}
-			}
+			//}, 0)
 		}],
 	// XXX these should also affect up/down navigation...
 	// 		...navigate by proximity (closest to center) rather than by
@@ -682,26 +687,29 @@ actions.Actions(Client, {
 				.centerRibbon(gid)
 				.centerImage(gid)
 
-			// align other ribbons...
-			var ribbon = data.getRibbon(gid)
-			for(var r in data.ribbons){
-				// skip the current ribbon...
-				if(r == ribbon){
-					continue
+			var that = this
+			//setTimeout(function(){
+				// align other ribbons...
+				var ribbon = data.getRibbon(gid)
+				for(var r in data.ribbons){
+					// skip the current ribbon...
+					if(r == ribbon){
+						continue
+					}
+
+					// XXX skip off-screen ribbons...
+
+					// XXX see if we need to do some loading...
+
+					// center...
+					var f = data.getImage('first', r)
+					// nothing found -- empty ribbon?
+					if(f == null){
+						continue
+					}
+					that.centerImage(f, 'before')
 				}
-
-				// XXX skip off-screen ribbons...
-
-				// XXX see if we need to do some loading...
-
-				// center...
-				var f = data.getImage('first', r)
-				// nothing found -- empty ribbon?
-				if(f == null){
-					continue
-				}
-				this.centerImage(f, 'before')
-			}
+			//}, 0)
 		}],
 
 	// NOTE: this will align only a single image...
