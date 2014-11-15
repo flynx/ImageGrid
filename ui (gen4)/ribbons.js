@@ -66,6 +66,12 @@ module.RibbonsClassPrototype = {
 	getElemGID: function(elem){
 		return JSON.parse('"' + elem.attr('gid') + '"')
 	},
+	setElemGID: function(elem, gid){
+		return $(elem)
+			.attr('gid', JSON.stringify(gid)
+					// this removes the extra quots...
+					.replace(/^"(.*)"$/g, '$1'))
+	},
 
 	// DOM Constructors...
 	// NOTE: these will return unattached objects...
@@ -78,34 +84,27 @@ module.RibbonsClassPrototype = {
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
 	createRibbon: function(gids){
 		gids = gids.constructor !== Array ? [gids] : gids
+		var that = this
 		return $(gids.map(function(gid){
 			gid = gid != null ? gid+'' : gid
-			return $('<div>')
-				.addClass('ribbon')
-				.attr('gid', JSON.stringify(gid)
-						// this removes the extra quots...
-						.replace(/^"(.*)"$/g, '$1'))[0]
+			return that.setElemGID($('<div>')
+				.addClass('ribbon'), gid)[0]
 		}))
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
 	createImage: function(gids){
 		gids = gids.constructor !== Array ? [gids] : gids
+		var that = this
 		return $(gids.map(function(gid){
 			gid = gid != null ? gid+'' : gid
-			return $('<div>')
-				.addClass('image')
-				.attr('gid', JSON.stringify(gid)
-						// this removes the extra quots...
-						.replace(/^"(.*)"$/g, '$1'))[0]
+			return that.setElemGID($('<div>')
+					.addClass('image'), gid)[0]
 		}))
 	},
 	createMark: function(cls, gid){
 		gid = gid != null ? gid+'' : gid
-		return $('<div class="mark">')
-			.addClass(cls)
-			.attr('gid', JSON.stringify(gid)
-				// this removes the extra quots...
-				.replace(/^"(.*)"$/g, '$1'))
+		return this.setElemGID($('<div class="mark">')
+			.addClass(cls), gid)
 	},
 } 
 
@@ -128,6 +127,7 @@ module.RibbonsPrototype = {
 
 	// Generic getters...
 	getElemGID: RibbonsClassPrototype.getElemGID,
+	setElemGID: RibbonsClassPrototype.setElemGID,
 
 
 	// Helpers...
@@ -435,7 +435,7 @@ module.RibbonsPrototype = {
 			// ...we need to scale it to the current scale...
 			var shadow = setElementScale(
 				$('<div>')
-					.addClass('shadow ribbon')
+					.addClass('shadow')
 					.attr({
 						gid: gid,
 						ticket: ticket,
@@ -1051,7 +1051,6 @@ module.RibbonsPrototype = {
 		}
 
 		var loaded = r.find('.image')
-		var unload = $()
 
 		// compensate for new/removed images...
 		if(reference != null){
@@ -1073,16 +1072,18 @@ module.RibbonsPrototype = {
 		}
 		
 		// remove all images that we do not need...
+		var unloaded = $()
 		loaded = loaded
 			.filter(function(i, img){ 
 				if(gids.indexOf(that.getElemGID($(img))) >= 0){
 					return true
 				}
-				unload.push(img)
+				unloaded.push(img)
 				return false
 			})
 		// remove everything in one go...
-		unload.remove()
+		unloaded.detach()
+		unloaded = unloaded.toArray()
 
 		$(gids).each(function(i, gid){
 			// support for sparse ribbons...
@@ -1090,9 +1091,16 @@ module.RibbonsPrototype = {
 				return 
 			}
 			// get/create image...
-			// XXX this may affect other ribbons...
+			// NOTE: as this will get a loaded image if it's loaded in 
+			// 		a different ribbon this WILL affect that ribbon...
 			var img = that.getImage(gid)
-			img = img.length == 0 ? that.createImage(gid) : img
+			if(img.length == 0){
+				img = unloaded.length > 0 
+					// reuse an image we just detached...
+					? that.setElemGID(unloaded.pop(), gid) 
+					// create a new image...
+					: that.createImage(gid)
+			}
 
 			// see of we are loaded in the right position...
 			var g = loaded.length > i ? that.getElemGID(loaded.eq(i)) : null

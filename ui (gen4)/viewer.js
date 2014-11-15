@@ -126,7 +126,7 @@ actions.Actions({
 	// NOTE: the setters in the following use the appropriate actions
 	// 		so to avoid recursion do not use these in the specific 
 	// 		actions...
-
+	
 	// Base ribbon...
 	get base(){
 		return this.data == null ? null : this.data.base
@@ -520,6 +520,19 @@ var Viewer =
 module.Viewer = 
 actions.Actions(Client, {
 
+	// Images...
+	/*
+	get images(){
+		return this.ribbons != null ? this.ribbons.images : null
+	},
+	// NOTE: if ribbons are null this will have no effect...
+	set images(value){
+		if(this.ribbons != null){
+			this.ribbons.images = value
+		}
+	},
+	*/
+
 	get screenwidth(){
 		return this.ribbons != null ? this.ribbons.getScreenWidthImages() : null
 	},
@@ -580,11 +593,10 @@ actions.Actions(Client, {
 					: viewer
 
 				if(this.ribbons == null){
-					this.ribbons = ribbons.Ribbons(viewer, data.images)
+					this.ribbons = ribbons.Ribbons(viewer, this.images)
 
 				} else {
 					this.ribbons.clear()
-					// XXX
 					this.ribbons.images = this.images
 				}
 
@@ -667,7 +679,7 @@ actions.Actions(Client, {
 						that.centerImage(t, 'after')
 					}
 				}
-			//}, 0)
+			//}, 10)
 		}],
 	// XXX these should also affect up/down navigation...
 	// 		...navigate by proximity (closest to center) rather than by

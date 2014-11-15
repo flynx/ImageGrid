@@ -237,6 +237,7 @@ button:hover {
 /********************************************************** Ribbon ***/
 /* XXX for some reason setting image size in vmin stops this from 
 stretching in width... */
+.shadow,
 .ribbon {
   position: relative;
   display: block;
@@ -290,11 +291,13 @@ stretching in width... */
 	border: solid 5px red;
 }
 */
+/* NOTE: this is essentially a ribbon... */
 .shadow {
   position: absolute;
   overflow: visible;
   width: auto;
   height: auto;
+  margin: 0px;
   background: black;
   -webkit-transition: all 0.1s ease-in;
   -moz-transition: all 0.1s ease-in;
