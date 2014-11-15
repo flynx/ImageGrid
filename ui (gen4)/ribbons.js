@@ -23,6 +23,10 @@ var IMAGE_UPDATERS =
 module.IMAGE_UPDATERS = []
 
 
+var IMAGE = '.image:not(.clone)'
+var RIBBON = '.ribbon:not(.clone)'
+
+
 /*********************************************************************/
 //
 // This expects the following HTML structure...
@@ -211,7 +215,7 @@ module.RibbonsPrototype = {
 	getVisibleImageSize: function(dim, scale){
 		scale = scale || this.getScale()
 		dim = dim == null ? 'width' : dim
-		var img = this.viewer.find('.image')
+		var img = this.viewer.find(IMAGE)
 
 		return dim == 'height' ? img.outerHeight(true) * scale
 			: dim == 'width' ? img.outerWidth(true) * scale
@@ -435,7 +439,7 @@ module.RibbonsPrototype = {
 			// ...we need to scale it to the current scale...
 			var shadow = setElementScale(
 				$('<div>')
-					.addClass('shadow')
+					.addClass('shadow ribbon')
 					.attr({
 						gid: gid,
 						ticket: ticket,
@@ -444,6 +448,7 @@ module.RibbonsPrototype = {
 						// clone the target into the shadow..
 						img
 							.clone()
+							.addClass('clone')
 							.removeClass('current')
 							.attr('gid', null)),
 					s)
@@ -566,7 +571,7 @@ module.RibbonsPrototype = {
 
 		// we got a collection...
 		if(img == null){
-			return $(target).filter('.image')
+			return $(target).filter(IMAGE)
 		}
 
 		// get the offset...
@@ -577,7 +582,7 @@ module.RibbonsPrototype = {
 				: offset
 			var list = offset > 0 ? 'nextAll' : 'prevAll'
 			offset = Math.abs(offset)-1
-			var res = img[list]('.image')
+			var res = img[list](IMAGE)
 			// handle overflow...
 			res = res.eq(Math.min(offset, res.length-1))
 			img = res.length == 0 ? img : res
@@ -655,13 +660,13 @@ module.RibbonsPrototype = {
 		} else if(target == 'base'){
 			var r = this.viewer.find('.base.ribbon').first()
 			if(r.length == 0){
-				return this.viewer.find('.ribbon').first()
+				return this.viewer.find(RIBBON).first()
 			}
 			return r
 
 		// index...
 		} else if(typeof(target) == typeof(123)){
-			return this.viewer.find('.ribbon').eq(target)
+			return this.viewer.find(RIBBON).eq(target)
 
 		// gid...
 		} else if(typeof(target) == typeof('str')){
@@ -672,12 +677,12 @@ module.RibbonsPrototype = {
 				? this.getImage(target).parents('.ribbon').first()
 				: r
 		}
-		return $(target).filter('.ribbon')
+		return $(target).filter(RIBBON)
 	},
 	// Like .getRibbon(..) but returns ribbon index instead of the actual 
 	// ribbon object...
 	getRibbonOrder: function(target){
-		return this.viewer.find('.ribbon').index(this.getRibbon(target))
+		return this.viewer.find(RIBBON).index(this.getRibbon(target))
 	},
 
 
@@ -721,7 +726,7 @@ module.RibbonsPrototype = {
 		ribbon = ribbon.length == 0 ? this.createRibbon(target) : ribbon
 		var ribbon_set = this.getRibbonSet(true) 
 
-		var ribbons = this.viewer.find('.ribbon')
+		var ribbons = this.viewer.find(RIBBON)
 
 		// normalize the position...
 		if(typeof(position) == typeof(123)){
@@ -804,7 +809,7 @@ module.RibbonsPrototype = {
 			}
 			var i = to
 			var images = img[i > 0 ? 'last' : 'first']()
-				[i > 0 ? 'nextAll' : 'prevAll']('.image')
+				[i > 0 ? 'nextAll' : 'prevAll'](IMAGE)
 			to = images.length > 0 
 				? images.eq(Math.min(Math.abs(i), images.length)-1) 
 				: img
@@ -826,7 +831,7 @@ module.RibbonsPrototype = {
 			if(to[0] == img[0]){
 				return img
 			}
-			var images = to[mode]('.image')
+			var images = to[mode](IMAGE)
 		}
 
 		// place the image...
@@ -836,9 +841,9 @@ module.RibbonsPrototype = {
 		// after...
 		} else if(i > 0){
 			// XXX this stumbles on non-images...
-			//to.next('.image')
+			//to.next(IMAGE)
 			// XXX is this fast enough??
-			to.nextAll('.image').first()
+			to.nextAll(IMAGE).first()
 				.before(img)
 		// before...
 		} else {
@@ -904,7 +909,7 @@ module.RibbonsPrototype = {
 	// XXX this depends on .images...
 	// 		...a good candidate to move to images, but not yet sure...
 	updateImage: function(image, gid, size, sync){
-		image = (image == '*' ? this.viewer.find('.image')
+		image = (image == '*' ? this.viewer.find(IMAGE)
 			: image == null 
 				|| typeof(image) == typeof('str') ? this.getImage(image)
 			: $(image))
@@ -1050,7 +1055,7 @@ module.RibbonsPrototype = {
 			r = this.placeRibbon(ribbon, this.viewer.find('.ribbon').length)
 		}
 
-		var loaded = r.find('.image')
+		var loaded = r.find(IMAGE)
 
 		// compensate for new/removed images...
 		if(reference != null){
@@ -1216,7 +1221,7 @@ module.RibbonsPrototype = {
 					: data.ribbons != null ? Object.keys(data.ribbons)
 					: []
 
-				that.viewer.find('.ribbon').each(function(){
+				that.viewer.find(RIBBON).each(function(){
 					var r = $(this)
 					if(ribbons.indexOf(that.getElemGID(r)) < 0){
 						r.remove()

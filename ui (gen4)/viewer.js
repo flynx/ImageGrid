@@ -410,17 +410,31 @@ actions.Actions({
 
 	// basic image editing...
 	//
-	// XXX these are not data stuff... should this be split into a 
-	// 		separate images block???
 	// XXX should we have .rotate(..) and .flip(..) generic actions???
 	rotateCW: [ 
-		function(){  }],
+		function(target){ 
+			if(this.images != null){
+				this.images.rotateImage(this.data.getImage(target), 'cw')
+			}
+		}],
 	rotateCCW: [ 
-		function(){  }],
+		function(target){ 
+			if(this.images != null){
+				this.images.rotateImage(this.data.getImage(target), 'ccw')
+			}
+		}],
 	flipVertical: [ 
-		function(){  }],
+		function(target){ 
+			if(this.images != null){
+				this.images.flipImage(this.data.getImage(target), 'vertical')
+			}
+		}],
 	flipHorizontal: [
-		function(){  }],
+		function(target){ 
+			if(this.images != null){
+				this.images.flipImage(this.data.getImage(target), 'horizontal')
+			}
+		}],
 
 
 	// crop...
@@ -551,7 +565,7 @@ actions.Actions(Client, {
 					: viewer
 
 				if(this.ribbons == null){
-					this.ribbons = ribbons.Ribbons(viewer, data.images)
+					this.ribbons = ribbons.Ribbons(viewer, this.images)
 				}
 
 				this.reload()
@@ -653,8 +667,14 @@ actions.Actions(Client, {
 				.centerImage(gid)
 				.centerRibbon(gid)
 
+			// if we are going fast we might skip an update... 
+			if(this._align_timeout != null){
+				clearTimeout(this._align_timeout)
+				this._align_timeout = null
+			}
 			var that = this
-			//setTimeout(function(){
+			this._align_timeout = setTimeout(function(){
+				this._align_timeout = null
 				// align other ribbons...
 				var ribbon = data.getRibbon(gid)
 				for(var r in data.ribbons){
@@ -663,7 +683,7 @@ actions.Actions(Client, {
 						continue
 					}
 
-					// XXX skip off-screen ribbons...
+					// XXX skip off-screen ribbons... (???)
 
 					// center...
 					// XXX is there a 'last' special case here???
@@ -679,7 +699,7 @@ actions.Actions(Client, {
 						that.centerImage(t, 'after')
 					}
 				}
-			//}, 10)
+			}, 50)
 		}],
 	// XXX these should also affect up/down navigation...
 	// 		...navigate by proximity (closest to center) rather than by
@@ -1075,8 +1095,8 @@ var PartialRibbonsActions = actions.Actions({
 				|| 1) * w
 
 			// next/prev loaded... 
-			var nl = this.ribbons.getImage(target).nextAll('.image').length
-			var pl = this.ribbons.getImage(target).prevAll('.image').length
+			var nl = this.ribbons.getImage(target).nextAll('.image:not(.clone)').length
+			var pl = this.ribbons.getImage(target).prevAll('.image:not(.clone)').length
 
 			// next/prev available...
 			var na = this.data.getImages(target, size/2, 'after').length - 1 
@@ -1287,7 +1307,7 @@ module.SingleImageView = Feature({
 
 				// ribbon mode -- restore original image size...
 				} else {
-					this.ribbons.viewer.find('.image').css({
+					this.ribbons.viewer.find('.image:not(.clone)').css({
 						width: '',
 						height: ''
 					})
@@ -1519,7 +1539,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 				// get marker globally...
 				marker = this.ribbons.viewer.find('.current-marker')
 
-				// create a marker...
+				// no marker exists -- create a marker...
 				if(marker.length == 0){
 					var marker = $('<div/>')
 						.addClass('current-marker '+ this.tag)
@@ -1610,7 +1630,8 @@ module.CurrentImageIndicator = Feature({
 		['resizeRibbon.post',
 			function(target, s){
 				var m = this.ribbons.viewer.find('.current-marker')
-				if(m.length != 0){
+				// only update if marker exists and we are in current ribbon...
+				if(m.length != 0 && this.currentRibbon == this.data.getRibbon(target)){
 					this.ribbons.preventTransitions(m)
 					this.updateCurrentImageIndicator(target, false)
 					this.ribbons.restoreTransitions(m, true)

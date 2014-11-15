@@ -345,18 +345,26 @@ module.ImagesPrototype = {
 		//gid = gid == null ? getImageGID(): gid
 		//size = size == null ? getVisibleImageSize('max') : size
 		img_data = img_data == null ? this[gid] : img_data
+
+		// XXX if no usable images are available use STUB data...
+		if((img_data.preview == null 
+					|| Object.keys(img_data.preview).length == 0)
+				&& img_data.path == null){
+			img_data = STUB_IMAGE_DATA
+		}
+
 		var s
 		var url = img_data.path
 		var preview_size = 'Original'
 		var p = Infinity
 		var previews = img_data.preview || {}
 
-		for(var k in img_data.preview){
+		for(var k in previews){
 			s = parseInt(k)
 			if(s < p && s > size){
 				preview_size = k
 				p = s
-				url = img_data.preview[k]
+				url = previews[k]
 			}
 		}
 		return {
@@ -454,6 +462,9 @@ module.ImagesPrototype = {
 		var that = this
 		gids.forEach(function(key){
 			var img = that[key]
+			if(img == null){
+				img = that[key] = {}
+			}
 			var o = direction == 'cw' || direction == 'ccw' 
 				? module.calcRelativeRotation(img.orientation, direction) 
 				: direction*1
@@ -480,9 +491,13 @@ module.ImagesPrototype = {
 	// XXX add reference support...
 	flipImage: function(gids, direction, reference){
 		gids = gids.constructor !== Array ? [gids] : gids
+		reference = reference || 'image'
 		var that = this
 		gids.forEach(function(key){
 			var img = that[key]
+			if(img == null){
+				img = that[key] = {}
+			}
 			var state = img.flipped
 			state = state == null ? [] : state
 			// toggle the specific state...
