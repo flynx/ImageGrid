@@ -1,0 +1,38 @@
+{
+	// for details see: https://developer.chrome.com/extensions/manifest
+
+	"manifest_version": 2,
+	"name": "ImageGrid.Viewer",
+	"version": "4.0.1",
+
+	//"default_locale": "en",
+	"description": "A plain text description",
+	"icons": {
+		//"16": "icon16.png",
+		//"48": "icon48.png",
+		//"128": "icon128.png"
+	},
+
+	"app": {
+		"launch": {
+			"local_path": "index.html",
+			"container": "panel",
+			"width": 800,
+			"height": 600
+		}
+	},
+
+	"author": "Alex A. Naanou <alex.nanou@gmail.com>",
+	"background": {
+		// Recommended
+		//"persistent": false
+	},
+
+	"permissions": [
+		"clipboardRead",
+		"clipboardWrite",
+		"fileSystemProvider",
+		"storage",
+		"unlimitedStorage"
+	]
+}
