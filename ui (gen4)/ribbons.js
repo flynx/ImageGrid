@@ -439,7 +439,7 @@ module.RibbonsPrototype = {
 			// ...we need to scale it to the current scale...
 			var shadow = setElementScale(
 				$('<div>')
-					.addClass('shadow ribbon')
+					.addClass('shadow ribbon clone')
 					.attr({
 						gid: gid,
 						ticket: ticket,
@@ -851,6 +851,9 @@ module.RibbonsPrototype = {
 				.before(img)
 		}
 
+		// cleanup source ribbons...
+		this.clearEmptyRibbons()
+
 		return this.updateImage(img)
 	},
 
@@ -1052,7 +1055,7 @@ module.RibbonsPrototype = {
 		var r = this.getRibbon(ribbon)
 		if(r.length == 0){
 			// no such ribbon exists, then create and append it...
-			r = this.placeRibbon(ribbon, this.viewer.find('.ribbon').length)
+			r = this.placeRibbon(ribbon, this.viewer.find(RIBBON).length)
 		}
 
 		var loaded = r.find(IMAGE)
@@ -1230,6 +1233,13 @@ module.RibbonsPrototype = {
 			}
 		}
 
+		return this
+	},
+
+	clearEmptyRibbons: function(){
+		this.viewer.find(RIBBON).filter(function(_, e){
+			return $(e).children().length == 0 
+		}).remove()
 		return this
 	},
 
