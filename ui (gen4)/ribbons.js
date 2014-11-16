@@ -212,18 +212,41 @@ module.RibbonsPrototype = {
 	// 		gets the visible size of the image tile in pixels.
 	//
 	// XXX try and make image size the product of vmin and scale...
+	// XXX this might break when no images are loaded and proportions 
+	// 		are not square...
 	getVisibleImageSize: function(dim, scale){
 		scale = scale || this.getScale()
 		dim = dim == null ? 'width' : dim
 		var img = this.viewer.find(IMAGE)
+		var tmp
 
-		return dim == 'height' ? img.outerHeight(true) * scale
+		// if no images are loaded create one temporarily....
+		if(img.length == 0){
+			img = tmp = this.createImage('__tmp_image__')
+				.css({
+					position: 'absolute',
+					visibility: 'hidden',
+					top: '-200%',
+					left: '-200%',
+				})
+				.appendTo(this.viewer)
+		}
+
+		// do the calc...
+		var res = dim == 'height' ? img.outerHeight(true) * scale
 			: dim == 'width' ? img.outerWidth(true) * scale
 			: dim == 'max' ?
 				Math.max(img.outerHeight(true), img.outerWidth(true)) * scale
 			: dim == 'min' ?
 				Math.min(img.outerHeight(true), img.outerWidth(true)) * scale
 			: null
+
+		// remove the tmp image we created...
+		if(tmp != null){
+			tmp.remove()
+		}
+
+		return res
 	},
 
 	getScreenWidthImages: function(scale, min){

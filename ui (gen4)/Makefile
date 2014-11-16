@@ -140,8 +140,10 @@ dev: css
 chrome-app: $(APP_ZIP) $(CHROME_APP_BUILD_DIR)
 	unzip -u $(APP_ZIP) -d $(CHROME_APP_BUILD_DIR)
 	cp manifest.json $(CHROME_APP_BUILD_DIR)
+	cp -R images $(CHROME_APP_BUILD_DIR)
 	rm -rf $(CHROME_APP_BUILD_DIR)/node_modules/
-	#chrome --pack-extension=$(CHROME_APP_BUILD_DIR) --pack-extension-key=$(CHROME_APP_KEY)
+	# this needs to be OS independent...
+	chrome --pack-extension=$(CHROME_APP_BUILD_DIR) --pack-extension-key=$(CHROME_APP_KEY)
 
 # node-webkit win32
 win32: $(APP_ZIP) $(WIN_BUILD_DIR)
