@@ -35,6 +35,8 @@ CSS_DIR=css
 NW_PROJECT_FILE=package.json
 JS_FILES := $(wildcard *.js)
 HTML_FILES := $(wildcard *.html)
+CHROME_APP_KEY=chrome-app.pem
+
 
 # get files to minify...
 JS_MIN_FILES := $(patsubst %.js,%.min.js,$(wildcard *.js))
@@ -43,6 +45,7 @@ LOGS := *.log
 
 NODE_DIR=node_modules
 BUILD_DIR=build
+CHROME_APP_BUILD_DIR=build/Chrome-App/ImageGrid.Viewer
 WIN_BUILD_DIR=build/Win32
 MAC_BUILD_DIR=build/MacOSX
 MAC_10_6_BUILD_DIR=build/MacOSX-10.6
@@ -80,6 +83,8 @@ $(NODE_DIR):
 	mkdir -p $(NODE_DIR)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
+$(CHROME_APP_BUILD_DIR):
+	mkdir -p $(CHROME_APP_BUILD_DIR)
 $(WIN_BUILD_DIR):
 	mkdir -p $(WIN_BUILD_DIR)
 $(MAC_BUILD_DIR):
@@ -131,6 +136,12 @@ dev: css
 #**********************************************************************
 # build targets...
 # XXX most of the code here is duplicated, find a way to reuse sections...
+
+chrome-app: $(APP_ZIP) $(CHROME_APP_BUILD_DIR)
+	unzip -u $(APP_ZIP) -d $(CHROME_APP_BUILD_DIR)
+	cp manifest.json $(CHROME_APP_BUILD_DIR)
+	rm -rf $(CHROME_APP_BUILD_DIR)/node_modules/
+	#chrome --pack-extension=$(CHROME_APP_BUILD_DIR) --pack-extension-key=$(CHROME_APP_KEY)
 
 # node-webkit win32
 win32: $(APP_ZIP) $(WIN_BUILD_DIR)

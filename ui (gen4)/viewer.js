@@ -210,7 +210,7 @@ actions.Actions({
 	loadURLs: ['Load a URL list',
 		function(lst){
 			this.images = images.Images.fromArray(lst)
-			this.data = data.Data.fromArray(Object.keys(this.images))
+			this.data = data.Data.fromArray(this.images.keys())
 		}],
 
 

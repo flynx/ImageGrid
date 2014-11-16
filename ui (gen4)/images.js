@@ -258,6 +258,10 @@ module.ImagesClassPrototype = {
 var ImagesPrototype =
 module.ImagesPrototype = {
 
+	get length(){
+		return Object.keys(this).length
+	},
+
 	// Generic iterators...
 	//
 	// function format:

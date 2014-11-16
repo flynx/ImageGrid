@@ -100,6 +100,12 @@ window.load2014 = function(){
 }
 
 
+window.loadInsta = function(){
+	return glob('l:/mnt/Dropbox/Instagram/fav/ALL/*+(jpg|png)')
+		.on('end', function(l){ window.a.loadURLs(l) })
+}
+
+
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
