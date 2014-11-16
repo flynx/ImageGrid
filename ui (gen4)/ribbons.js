@@ -270,7 +270,7 @@ module.RibbonsPrototype = {
 	// Get ribbon set scale...
 	//
 	getScale: function(){
-		return getElementScale(this.getRibbonSet())
+		return getElementScale(this.getRibbonSet()) || 1
 	},
 
 	// Set ribbon set scale...
@@ -1113,7 +1113,9 @@ module.RibbonsPrototype = {
 				return false
 			})
 		// remove everything in one go...
-		unloaded.detach()
+		unloaded
+			.detach()
+			.removeClass('moving')
 		unloaded = unloaded.toArray()
 
 		$(gids).each(function(i, gid){

@@ -94,15 +94,28 @@ module.setupActions = function(viewer){
 }
 
 
-window.load2014 = function(){
-	return glob('l:/media/img/my/2014/*jpg')
-		.on('end', function(l){ window.a.loadURLs(l) })
-}
+/*********************************************************************/
+// node.js specific stuff...
+if(typeof(glob) != 'undefined'){
+
+	window.load2014 = function(){
+		return glob('l:/media/img/my/2014/*jpg')
+			.on('end', function(l){ window.a.loadURLs(l) })
+	}
 
 
-window.loadInsta = function(){
-	return glob('l:/mnt/Dropbox/Instagram/fav/ALL/*+(jpg|png)')
-		.on('end', function(l){ window.a.loadURLs(l) })
+	window.loadInsta = function(){
+		return glob('l:/mnt/Dropbox/Instagram/fav/ALL/*+(jpg|png)')
+			.on('end', function(l){ window.a.loadURLs(l) })
+	}
+
+
+	/*
+	window.loadSaved = function(){
+		a.data.loadJSON(require('fs').readFileSync('insta.json', 'utf-8'))
+	}
+	*/
+
 }
 
 

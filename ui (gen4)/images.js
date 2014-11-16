@@ -235,12 +235,14 @@ module.makeImageSeqOrNameCmp = function(data, get, seq){
 
 var ImagesClassPrototype =
 module.ImagesClassPrototype = {
+	// XXX populate the image doc better...
 	fromArray: function(data){
 		var images = new this()
 		// XXX stub...
 		var i = 0
 		data.forEach(function(path){
 			var gid = hash('I'+i)
+			// XXX populate the image doc better...
 			images[gid] = {
 				id: gid,
 				path: path,
