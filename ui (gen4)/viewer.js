@@ -213,6 +213,17 @@ actions.Actions({
 			this.data = data.Data.fromArray(this.images.keys())
 		}],
 
+	// XXX experimental...
+	// 		...the bad thing about this is that we can not extend this,
+	// 		adding new items to the resulting structure...
+	dump: ['Dump state as JSOM object',
+		function(){
+			return {
+				data: this.data.dumpJSON(),
+				images: this.images != null ? this.images.dumpJSON() : null
+			}
+		}],
+
 
 	// basic navigation...
 	//
