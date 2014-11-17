@@ -219,6 +219,8 @@ actions.Actions({
 	// XXX is this the correct way to go???
 	// 		...can we save simple attribute values???
 	dump: ['Dump state as JSOM object',
+		'This will collect JSON data from every afailable attribute '
+			+'supporting the .dumpJSON() method.',
 		function(){
 			var res = {}
 			for(var k in this){
@@ -550,8 +552,8 @@ var Viewer =
 module.Viewer = 
 actions.Actions(Client, {
 
-	// Images...
 	/*
+	// Images...
 	get images(){
 		return this.ribbons != null ? this.ribbons.images : null
 	},
@@ -654,7 +656,7 @@ actions.Actions(Client, {
 			}
 		}],
 
-	toggleTheme: ['', 
+	toggleTheme: ['Toggle viewer theme', 
 		CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			[
@@ -812,13 +814,17 @@ actions.Actions(Client, {
 			this.ribbons.setBaseRibbon(r)
 		}],
 
+	// NOTE: these prioritize whole images, i.e. each image will at least
+	// 		once be fully shown.
 	prevScreen: ['Focus previous image one screen width away',
 		function(){
-			this.prevImage(Math.round(this.ribbons.getScreenWidthImages()))
+			// NOTE: the 0.2 is added to compensate for alignment/scaling
+			// 		errors -- 2.99 images wide counts as 3 while 2.5 as 2.
+			this.prevImage(Math.floor(this.ribbons.getScreenWidthImages() + 0.2))
 		}],
 	nextScreen: ['Focus next image one screen width away',
 		function(){
-			this.nextImage(Math.round(this.ribbons.getScreenWidthImages()))
+			this.nextImage(Math.floor(this.ribbons.getScreenWidthImages() + 0.2))
 		}],
 
 	// zooming...
@@ -1050,7 +1056,8 @@ function Feature(feature_set, obj){
 
 	return obj
 }
-
+Feature.prototype = FeatureProto
+Feature.prototype.constructor = Feature
 
 
 // XXX experimental...
