@@ -216,12 +216,17 @@ actions.Actions({
 	// XXX experimental...
 	// 		...the bad thing about this is that we can not extend this,
 	// 		adding new items to the resulting structure...
+	// XXX is this the correct way to go???
+	// 		...can we save simple attribute values???
 	dump: ['Dump state as JSOM object',
 		function(){
-			return {
-				data: this.data.dumpJSON(),
-				images: this.images != null ? this.images.dumpJSON() : null
+			var res = {}
+			for(var k in this){
+				if(this[k] != null && this[k].dumpJSON != null){
+					res[k] = this[k].dumpJSON()
+				}
 			}
+			return res
 		}],
 
 

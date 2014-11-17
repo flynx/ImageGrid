@@ -181,6 +181,7 @@ if(typeof(args2array) != 'function'){
 // 		.section
 // 		.category
 // 		...
+// XXX might be a good idea to add an option to return the full results...
 var Action =
 module.Action =
 function Action(name, doc, ldoc, func){
@@ -228,30 +229,27 @@ function Action(name, doc, ldoc, func){
 		handlers = handlers
 			.map(function(h){ return h.apply(that, args) })
 
-		// XXX use the last return as result...
-		var res = handlers.slice(-1)[0]
-
 		// NOTE: this action will get included and called by the code 
 		// 		above and below, so no need to explicitly call func...
 
 		// call handlers -- post phase...
 		// NOTE: post handlers need to get called last run pre first run post...
-		handlers.reverse().forEach(function(h, i){ 
+		var results = handlers.reverse().map(function(h, i){ 
 			// function...
 			if(h instanceof Function){
-				var r = h.apply(that, args)
-				res = i == 0 ? r : res
+				return h.apply(that, args)
 
 			// deferred...
 			} else if(h != null && h.resolve instanceof Function){
-				h.resolve()
-				res = i == 0 ? h : res
-			} 
+				return h.resolve()
+			}
+
+			return h
 		})
 
-		// XXX is this the right way to go?
-		return res !== undefined ? res : this
-		//return this
+		// XXX might be a good idea to add an option to return the full
+		// 		results...
+		return results[0] !== undefined ? results[0] : this
 	}
 	meth.__proto__ = this.__proto__
 
