@@ -12,6 +12,8 @@ define(function(require){ var module = {}
 console.log('>>> data')
 
 
+var object = require('object')
+
 var formats = require('formats')
 var sha1 = require('./ext-lib/sha1')
 
@@ -1805,6 +1807,7 @@ module.DataPrototype = {
 
 // Main Data object...
 //
+/*
 var Data = 
 module.Data =
 function Data(json){
@@ -1825,7 +1828,10 @@ function Data(json){
 Data.__proto__ = DataClassPrototype
 Data.prototype = DataPrototype
 Data.prototype.constructor = Data
+*/
 
+var Data = 
+module.Data = object.makeConstructor('Data', DataClassPrototype, DataPrototype)
 
 
 /**********************************************************************
