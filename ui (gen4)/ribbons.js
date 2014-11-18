@@ -13,6 +13,8 @@ console.log('>>> ribbons')
 // XXX is this correct...
 require('ext-lib/jquery')
 
+var object = require('object')
+
 var data = require('data')
 var images = require('images')
 
@@ -64,8 +66,7 @@ var RIBBON = '.ribbon:not(.clone)'
 //
 /*********************************************************************/
 
-var RibbonsClassPrototype =
-module.RibbonsClassPrototype = {
+var RibbonsClassPrototype = {
 	// Generic getters...
 	getElemGID: function(elem){
 		return JSON.parse('"' + elem.attr('gid') + '"')
@@ -114,8 +115,7 @@ module.RibbonsClassPrototype = {
 
 
 // NOTE: this is a low level interface, not a set of actions...
-var RibbonsPrototype =
-module.RibbonsPrototype = {
+var RibbonsPrototype = {
 	//
 	//	.viewer (jQuery object)
 	//
@@ -123,6 +123,12 @@ module.RibbonsPrototype = {
 	//
 	// XXX to update images we need to know about images...
 	
+	__init__: function(viewer, images){
+		this.viewer = $(viewer)
+		this.images = images
+	},
+
+
 	// Constructors...
 	createViewer: RibbonsClassPrototype.createViewer,
 	createRibbon: RibbonsClassPrototype.createRibbon,
@@ -1757,30 +1763,17 @@ module.RibbonsPrototype = {
 	},
 
 
-	_setup: function(viewer, images){
-		this.viewer = $(viewer)
-		this.images = images
-	},
 } 
 
 
-// Main Ribbons object...
-//
-var Ribbons =
-module.Ribbons =
-function Ribbons(viewer, images){
-	// in case this is called as a function (without new)...
-	if(this.constructor !== Ribbons){
-		return new Ribbons(viewer, images)
-	}
 
-	this._setup(viewer, images)
+/*********************************************************************/
 
-	return this
-}
-Ribbons.__proto__ = RibbonsClassPrototype
-Ribbons.prototype = RibbonsPrototype
-Ribbons.prototype.constructor = Ribbons
+var Ribbons = 
+module.Ribbons = 
+object.makeConstructor('Ribbons', 
+		RibbonsClassPrototype, 
+		RibbonsPrototype)
 
 
 

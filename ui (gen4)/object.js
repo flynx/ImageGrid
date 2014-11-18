@@ -20,23 +20,36 @@ function makeConstructor(name, a, b){
 	var proto = b == null ? a : b
 	var cls_proto = b == null ? b : a
 
-	var _constructor = function Constructor(json){
+	var _constructor = function Constructor(){
 		// in case this is called as a function (without new)...
 		if(this.constructor !== _constructor){
-			return new _constructor(json)
+			// NOTE: the folowing does the job of the 'new' operator but
+			// 		with one advantage, we can now pass arbitrarry args 
+			// 		in...
+			// 		This is equivalent to:
+			//			return new _constructor(json)
+			var obj = {}
+			obj.__proto__ = _constructor.prototype
+			obj.constructor = _constructor
+
+		} else {
+			var obj = this
 		}
 
 		// load initial state...
-		if(json != null){
-			this.loadJSON(json)
-		} else {
-			this._reset()
+		if(obj.__init__ != null){
+			obj.__init__.apply(obj, arguments)
 		}
 
-		return this
+		return obj
 	}
 
-	eval('_constructor = '+ _constructor.toString().replace(/Constructor/g, name))
+	// this is here to make Chrome output more user friendly...
+	if(_constructor.name == 'Constructor'){
+		eval('_constructor = '+ _constructor
+				.toString()
+				.replace(/Constructor/g, name))
+	}
 
 	_constructor.__proto__ = cls_proto
 	_constructor.prototype = proto

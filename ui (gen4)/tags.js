@@ -29,8 +29,13 @@ var TagsPrototype = {
 }
 
 
+/*********************************************************************/
+
 var Tags =
-module.Tags = object.makeConstructor('Tags', TagsClassPrototype, TagsPrototype)
+module.Tags = 
+object.makeConstructor('Tags', 
+		TagsClassPrototype, 
+		TagsPrototype)
 
 
 

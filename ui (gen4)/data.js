@@ -110,8 +110,7 @@ if(typeof(sha1) != 'undefined'){
 
 // Data class methods and API...
 //
-var DataClassPrototype =
-module.DataClassPrototype = {
+var DataClassPrototype = {
 	// NOTE: we consider the input list sorted...
 	fromArray: function(list){
 		var res = new Data()
@@ -139,8 +138,7 @@ module.DataClassPrototype = {
 
 // Data object methods and API...
 //
-var DataPrototype =
-module.DataPrototype = {
+var DataPrototype = {
 
 	/*****************************************************************/
 	//
@@ -188,7 +186,21 @@ module.DataPrototype = {
 	// 		NOTE: ribbons are sparse...
 	// 		NOTE: ribbons can be compact when serialized...
 	//
-	//
+	/*****************************************************************/
+
+	// XXX is this a good name for this??? (see: object.js)
+	__init__: function(json){
+		// load initial state...
+		if(json != null){
+			this.loadJSON(json)
+		} else {
+			this._reset()
+		}
+		return this
+	},
+
+
+
 	/******************************************************* Utils ***/
 	
 	// Make a sparse list of image gids...
@@ -1806,32 +1818,12 @@ module.DataPrototype = {
 /*********************************************************************/
 
 // Main Data object...
-//
-/*
 var Data = 
-module.Data =
-function Data(json){
-	// in case this is called as a function (without new)...
-	if(this.constructor !== Data){
-		return new Data(json)
-	}
+module.Data = 
+object.makeConstructor('Data', 
+		DataClassPrototype, 
+		DataPrototype)
 
-	// load initial state...
-	if(json != null){
-		this.loadJSON(json)
-	} else {
-		this._reset()
-	}
-
-	return this
-}
-Data.__proto__ = DataClassPrototype
-Data.prototype = DataPrototype
-Data.prototype.constructor = Data
-*/
-
-var Data = 
-module.Data = object.makeConstructor('Data', DataClassPrototype, DataPrototype)
 
 
 /**********************************************************************

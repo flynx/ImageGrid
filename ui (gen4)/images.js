@@ -11,6 +11,9 @@ console.log('>>> images')
 
 var sha1 = require('./ext-lib/sha1')
 
+var object = require('object')
+
+
 
 /*********************************************************************/
 
@@ -259,6 +262,18 @@ module.ImagesClassPrototype = {
 
 var ImagesPrototype =
 module.ImagesPrototype = {
+
+	// XXX is this a good name for this??? (see: object.js)
+	__init__: function(json){
+		// load initial state...
+		if(json != null){
+			this.loadJSON(json)
+		} else {
+			this._reset()
+		}
+		return this
+	},
+
 
 	get length(){
 		return Object.keys(this).length
@@ -546,27 +561,11 @@ module.ImagesPrototype = {
 /*********************************************************************/
 
 // Main Images object...
-//
 var Images = 
-module.Images =
-function Images(json){
-	// in case this is called as a function (without new)...
-	if(this.constructor !== Images){
-		return new Images(json)
-	}
-
-	// load initial state...
-	if(json != null){
-		this.loadJSON(json)
-	} else {
-		this._reset()
-	}
-
-	return this
-}
-Images.__proto__ = ImagesClassPrototype
-Images.prototype = ImagesPrototype
-Images.prototype.constructor = Images
+module.Images = 
+object.makeConstructor('Images', 
+		ImagesClassPrototype, 
+		ImagesPrototype)
 
 
 
