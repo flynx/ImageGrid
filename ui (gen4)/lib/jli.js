@@ -1338,7 +1338,8 @@ Array.prototype.compact = function(){
 // like .length but for sparse arrays will return the element count...
 // XXX make this a prop...
 Array.prototype.len = function(){
-	return this.compact().length
+	//return this.compact().length
+	return Object.keys(this).length
 }
 
 

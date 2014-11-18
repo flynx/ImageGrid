@@ -1817,12 +1817,201 @@ var DataPrototype = {
 
 /*********************************************************************/
 
+var DataWithTagsPrototype = {
+
+	// XXX need a unified init/dump/load scheme...
+	loadJSON: function(json){
+		json = typeof(json) == typeof('str') ? JSON.parse(json) : json
+
+		// XXX hate manual super calls...
+		DataWithTagsPrototype.__proto__.loadJSON.call(this, json)
+
+		if(json.tags != null){
+			// XXX should we make  copy here???
+			this.tags = json.tags
+			this.sortTags()
+		}
+		
+		return this
+	},
+	dumpJSON: function(){
+		// XXX hate manual super calls...
+		var res = DataWithTagsPrototype.__proto__.dumpJSON.call(this)
+
+		if(this.tags != null){
+			var tags = this.tags
+			res.tags = {}
+			Object.keys(tags).forEach(function(tag){
+				res.tags[tag] = tags[tag].compact()
+			})
+		}
+
+		return res
+	},
+
+	sortTags: function(){
+		var that = this
+		var tags = this.tags
+
+		if(tags == null){
+			return this
+		}
+
+		Object.keys(tags).forEach(function(tag){
+			tags[tag] = that.makeSparseImages(tags[tag])
+		})
+		return this
+	},
+
+	tag: function(tags, gids){
+		tags = tags.constructor !== Array ? [tags] : tags
+
+		gids = gids == null ? this.getImage() : gids
+		gids = gids.constructor !== Array ? [gids] : gids
+
+		if(this.tags == null){
+			this.tags = {}
+		}
+
+		var that = this
+		var tagset = this.tags
+		var order = this.order
+		tags.forEach(function(tag){
+			gids.forEach(function(gid){
+				if(tagset[tag] == null){
+					tagset[tag] = []
+				}
+				tagset[tag][order.indexOf(gid)] = gid
+			})
+		})
+
+		return this
+	},
+	untag: function(tags, gids){
+		tags = tags.constructor !== Array ? [tags] : tags
+
+		gids = gids == null ? this.getImage() : gids
+		gids = gids.constructor !== Array ? [gids] : gids
+
+		var that = this
+		var tagset = this.tags
+		var order = this.order
+		tags.forEach(function(tag){
+			gids.forEach(function(gid){
+				delete tagset[tag][order.indexOf(gid)]
+			})
+			if(tagset[tag].length == 0){
+				delete tagset[tag]
+			}
+		})
+
+		return this
+	},
+
+	getTags: function(gids){
+		gids = gids == null ? this.getImage() : gids
+		gids = gids.constructor !== Array ? [gids] : gids
+
+		if(this.tags == null){
+			return []
+		}
+
+		var tags = this.tags
+		var order = this.order
+
+		// index the gids...
+		var indexes = gids.map(function(gid){ return order.indexOf(gid) })
+
+		// return only those tags that have at least one non-null gid index...
+		return Object.keys(tags).filter(function(tag){
+			return indexes.filter(function(i){ 
+				return tags[tag][i] != null 
+			}).length > 0
+		})
+	},
+
+	// selectors...
+	getTaggedByAny: function(tags){
+		tags = tags.constructor !== Array ? [tags] : tags
+
+		var res = []
+
+		if(this.tags == null){
+			return res
+		}
+
+		var that = this
+		var tagset = this.tags
+		tags.forEach(function(tag){
+			if(tag in tagset){
+				that.makeSparseImages(tagset[tag], res)
+			}
+		})
+
+		return res.compact()
+	},
+	getTaggedByAll: function(tags){
+		tags = tags.constructor !== Array ? [tags] : tags
+
+		if(this.tags == null){
+			return []
+		}
+
+		var index = []
+		var l = tags.length
+
+		// count how many of the tags each image is tagged...
+		var that = this
+		var tagset = this.tags
+		tags.forEach(function(tag){
+			if(tag in tagset){
+				Object.keys(tagset[tag]).forEach(function(n){
+					if(index[n] == null){
+						index[n] = 1
+					} else {
+						index[n] += 1
+					}
+				})
+			}
+		})
+
+		// filter only the images tagged by all of the tags...
+		var order = this.order
+		var res = []
+		var i = index.indexOf(l)
+		while(i != -1){
+			res.push(order[i])
+			delete index[i]
+
+			i = index.indexOf(l)
+		}
+
+		return res
+	},
+}
+DataWithTagsPrototype.__proto__ = DataPrototype
+
+
+
+/*********************************************************************/
+
 // Main Data object...
-var Data = 
-module.Data = 
-object.makeConstructor('Data', 
+var BaseData = 
+module.BaseData = 
+object.makeConstructor('BaseData', 
 		DataClassPrototype, 
 		DataPrototype)
+
+
+var DataWithTags = 
+module.DataWithTags = 
+object.makeConstructor('DataWithTags', 
+		DataClassPrototype, 
+		DataWithTagsPrototype)
+
+
+var Data =
+module.Data = DataWithTags
 
 
 
