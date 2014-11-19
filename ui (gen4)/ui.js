@@ -121,6 +121,8 @@ module.GLOBAL_KEYBOARD = {
 		},
 		'(': 'prevImageInOrder',
 		')': 'nextImageInOrder',
+		',': 'prevMarked',
+		'.': 'nextMarked',
 		Up: {
 			default: 'prevRibbon',
 			shift: 'shiftImageUp',

@@ -668,6 +668,11 @@ var DataPrototype = {
 	//
 	//	Filter the list and return only loaded images from it:
 	//	.getImages(list)
+	//	.getImages(list, 'loaded')
+	//		-> list
+	//
+	//	.getImages(list, 'current')
+	//	.getImages(list, order|ribbon)
 	//		-> list
 	//
 	//	Get loaded images from ribbon:
@@ -726,10 +731,17 @@ var DataPrototype = {
 
 		// filter out the unloaded gids from given list...
 		} else if(target != null && target.constructor === Array){
-			var loaded = this.getImages('loaded')
+			var loaded = count == 'current' ? this.getImages('current')
+				: count in this.ribbons ? this.ribbons[count].compact()
+				: typeof(count) == typeof(123) ? 
+					this.ribbons[this.getRibbon(count)].compact()
+				: this.getImages('loaded')
+			count = null 
+
 			list = target.filter(function(e){
 				return loaded.indexOf(e) >= 0
 			})
+
 			target = null 
 
 		// target is ribbon gid...
@@ -820,6 +832,7 @@ var DataPrototype = {
 	//
 	//
 	// NOTE: this expects ribbon order and not image order.
+	// NOTE: negative ribbon order is relative to list tail.
 	getRibbon: function(target, offset){
 		target = target == null ? this.current : target
 
@@ -873,7 +886,12 @@ var DataPrototype = {
 		}
 
 		if(o != null){
+			// negative indexes are relative to list tail...
+			o = o < 0 ? o + this.ribbon_order.length : o
+
 			o += offset
+
+
 			if(o < 0 || o > this.ribbon_order.length){
 				// ERROR: offset out of bounds...
 				return null

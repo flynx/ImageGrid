@@ -99,6 +99,32 @@ function updateImagePosition(actions, target){
 }
 
 
+// mode can be:
+// 	"ribbon"	- next marked in current ribbon (default)
+// 	"all"		- next marked in sequence
+//
+// XXX add support for tag lists...
+function makeTagWalker(direction, dfl_tag){
+	var meth = direction == 'next' ? 'nextImage' : 'prevImage'
+
+	return function(tag, mode){
+		mode = mode == null ? 'all' : mode
+		tag = tag || dfl_tag
+
+		// account for no tags or no images tagged...
+		var lst = this.data.tags != null ? this.data.tags[tag] : []
+		lst = lst || []
+
+		if(mode == 'ribbon'){
+			this[meth](this.data.getImages(lst, 'current'))
+
+		} else {
+			this[meth](lst)
+		}
+	}
+}
+
+
 
 /*********************************************************************/
 //
@@ -274,6 +300,7 @@ actions.Actions({
 	lastGlobalImage: ['Get last globally image',
 		function(){ this.lastImage(true) }],
 
+	// XXX skip unloaded images...
 	prevImage: ['Focus previous image',
 		function(a){ 
 			// keep track of traverse direction...
@@ -305,10 +332,17 @@ actions.Actions({
 			}
 		}],
 
+	// XXX skip unloaded images...
 	prevImageInOrder: ['Focus previous image in order',
-		function(){ this.prevImage(this.data.order) }],
+		function(){ this.prevImage(this.data.getImages(this.data.order)) }],
 	nextImageInOrder: ['Focus next image in order',
-		function(){ this.nextImage(this.data.order) }],
+		function(){ this.nextImage(this.data.getImages(this.data.order)) }],
+
+	// XXX should these be here???
+	prevTagged: ['',
+		makeTagWalker('prev')],
+	nextTagged: ['',
+		makeTagWalker('next')],
 
 	firstRibbon: ['Focus previous ribbon',
 		function(){ this.focusRibbon('first') }],
@@ -542,6 +576,13 @@ actions.Actions({
 				.compact()
 
 			this.crop(data.getImages(images), flatten)
+		}],
+	
+	// XXX should this be here???
+	cropTagged: ['',
+		function(tags, mode, flatten){
+			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
+			this.crop(this.data[selector](tags), flatten)
 		}],
 })
 
@@ -1127,8 +1168,10 @@ var PartialRibbonsActions = actions.Actions({
 
 
 			// do the update...
-			// the target is not loaded...
-			if(this.ribbons.getImage(target).length == 0
+			// loaded more than we need (crop?)...
+			if(na + pa < nl + pl
+					// the target is not loaded...
+					|| this.ribbons.getImage(target).length == 0
 					// passed threshold on the right...
 					|| (nl < threshold && na > nl) 
 					// passed threshold on the left...
@@ -1723,6 +1766,7 @@ module.GlobalStateIndicator = Feature({
 
 
 //---------------------------------------------------------------------
+
 var ImageMarkActions = actions.Actions({
 	toggleMark: ['',
 		// XXX make this a real toggler...
@@ -1736,41 +1780,14 @@ var ImageMarkActions = actions.Actions({
 			return action
 		}],
 
-	// mode can be:
-	// 	"ribbon"	- next marked in current ribbon (default)
-	// 	"all"		- next marked in sequence
-	nextMarked: ['',
-		function(mode){
-			mode = mode == null ? 'ribbon' : mode
-
-			// XXX
-		}],
+	// XXX do we need first/last marked???
 	prevMarked: ['',
-		function(mode){
-			mode = mode == null ? 'ribbon' : mode
-
-			// XXX
-		}],
-
-	firstMarked: ['',
-		function(mode){
-			mode = mode == null ? 'ribbon' : mode
-
-			// XXX
-		}],
-	lastMarked: ['',
-		function(mode){
-			mode = mode == null ? 'ribbon' : mode
-
-			// XXX
-		}],
+		function(mode){ this.prevTagged('selected', mode) }],
+	nextMarked: ['',
+		function(mode){ this.nextTagged('selected', mode) }],
 
 	cropMarked: ['',
-		function(mode){
-			mode = mode == null ? 'ribbon' : mode
-
-			// XXX
-		}],
+		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
 })
 
 
@@ -1799,6 +1816,14 @@ module.ImageBookmarks = Feature({
 	tag: 'image-bookmarks',
 
 	actions: ImageBookmarkActions,
+
+	prevBookmarked: ['',
+		function(mode){ this.prevTagged('bookmarked', mode) }],
+	nextBookmarked: ['',
+		function(mode){ this.nextTagged('bookmarked', mode) }],
+
+	cropBookmarked: ['',
+		function(flatten){ this.cropTagged('bookmarked', 'any', flatten) }],
 })
 
 

@@ -1107,7 +1107,7 @@ var RibbonsPrototype = {
 				}
 			}
 		}
-		
+
 		// remove all images that we do not need...
 		var unloaded = $()
 		loaded = loaded
