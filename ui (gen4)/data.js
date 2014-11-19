@@ -1909,6 +1909,7 @@ var DataWithTagsPrototype = {
 	},
 
 	getTags: function(gids){
+		gids = arguments.length > 1 ? [].slice.call(arguments) : gids
 		gids = gids == null ? this.getImage() : gids
 		gids = gids.constructor !== Array ? [gids] : gids
 
@@ -1932,6 +1933,7 @@ var DataWithTagsPrototype = {
 
 	// selectors...
 	getTaggedByAny: function(tags){
+		tags = arguments.length > 1 ? [].slice.call(arguments) : tags
 		tags = tags.constructor !== Array ? [tags] : tags
 
 		var res = []
@@ -1951,6 +1953,7 @@ var DataWithTagsPrototype = {
 		return res.compact()
 	},
 	getTaggedByAll: function(tags){
+		tags = arguments.length > 1 ? [].slice.call(arguments) : tags
 		tags = tags.constructor !== Array ? [tags] : tags
 
 		if(this.tags == null){
