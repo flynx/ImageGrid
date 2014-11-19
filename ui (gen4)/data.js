@@ -1908,6 +1908,10 @@ var DataWithTagsPrototype = {
 		return this
 	},
 
+	// XXX
+	toggleTag: function(tags, gids, action){
+	},
+
 	getTags: function(gids){
 		gids = arguments.length > 1 ? [].slice.call(arguments) : gids
 		gids = gids == null ? this.getImage() : gids

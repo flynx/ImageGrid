@@ -1722,6 +1722,87 @@ module.GlobalStateIndicator = Feature({
 
 
 
+//---------------------------------------------------------------------
+var ImageMarkActions = actions.Actions({
+	toggleMark: ['',
+		// XXX make this a real toggler...
+		function(target, action){
+			// XXX do tagging on data and get the correct action if one is not given...
+
+			if(this.ribbons != null){
+				this.ribbons.toggleImageMark(target, 'selected', action)
+			}
+
+			return action
+		}],
+
+	// mode can be:
+	// 	"ribbon"	- next marked in current ribbon (default)
+	// 	"all"		- next marked in sequence
+	nextMarked: ['',
+		function(mode){
+			mode = mode == null ? 'ribbon' : mode
+
+			// XXX
+		}],
+	prevMarked: ['',
+		function(mode){
+			mode = mode == null ? 'ribbon' : mode
+
+			// XXX
+		}],
+
+	firstMarked: ['',
+		function(mode){
+			mode = mode == null ? 'ribbon' : mode
+
+			// XXX
+		}],
+	lastMarked: ['',
+		function(mode){
+			mode = mode == null ? 'ribbon' : mode
+
+			// XXX
+		}],
+
+	cropMarked: ['',
+		function(mode){
+			mode = mode == null ? 'ribbon' : mode
+
+			// XXX
+		}],
+})
+
+
+var ImageMarks = 
+module.ImageMarks = Feature({
+	title: '',
+	doc: '',
+
+	tag: 'image-marks',
+
+	actions: ImageMarkActions,
+})
+
+
+
+//---------------------------------------------------------------------
+var ImageBookmarkActions = actions.Actions({
+})
+
+
+var ImageBookmarks = 
+module.ImageBookmarks = Feature({
+	title: '',
+	doc: '',
+
+	tag: 'image-bookmarks',
+
+	actions: ImageBookmarkActions,
+})
+
+
+
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */

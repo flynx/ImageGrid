@@ -193,6 +193,9 @@ $(function(){
 		'ui-animation',
 		'ui-bounds-indicators',
 		'ui-current-image-indicator',
+
+		'image-marks',
+		'image-bookmarks',
 	])
 
 	// this publishes all the actions...
