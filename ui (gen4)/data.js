@@ -355,7 +355,7 @@ var DataPrototype = {
 		// clear empty ribbons only...
 		} else if(gids == 'empty'){
 			for(var r in this.ribbons){
-				if(this.ribbons[r].len() == 0){
+				if(this.ribbons[r].len == 0){
 					this.clear(r)
 				}
 			}
@@ -1293,7 +1293,7 @@ var DataPrototype = {
 		var res = this.shiftImage(gid, r-1, 'vertical') 
 		// clear empty ribbon...
 		r = r == 0 ? 1 : r
-		if(this.ribbons[this.ribbon_order[r]].len() == 0){
+		if(this.ribbons[this.ribbon_order[r]].len == 0){
 			var b = this.getRibbonOrder(this.base)-1
 
 			r = this.ribbon_order.splice(r, 1)[0]
@@ -1315,7 +1315,7 @@ var DataPrototype = {
 		}
 		var res = this.shiftImage(gid, r+1, 'vertical') 
 		// clear empty ribbon...
-		if(this.ribbons[this.ribbon_order[r]].len() == 0){
+		if(this.ribbons[this.ribbon_order[r]].len == 0){
 			var b = this.getRibbonOrder(this.base)-1
 
 			r = this.ribbon_order.splice(r, 1)[0]
@@ -1858,10 +1858,16 @@ var DataWithTagsPrototype = {
 
 		if(this.tags != null){
 			var tags = this.tags
-			res.tags = {}
+			var restags = {}
 			Object.keys(tags).forEach(function(tag){
-				res.tags[tag] = tags[tag].compact()
+				var lst = tags[tag].compact()
+				if(lst.len > 0){
+					restags[tag] = lst
+				}
 			})
+			if(Object.keys(restags).length > 0){
+				res.tags = restags
+			}
 		}
 
 		return res
@@ -1896,6 +1902,7 @@ var DataWithTagsPrototype = {
 		var order = this.order
 		tags.forEach(function(tag){
 			gids.forEach(function(gid){
+				gid = that.getImage(gid)
 				if(tagset[tag] == null){
 					tagset[tag] = []
 				}
@@ -1906,6 +1913,9 @@ var DataWithTagsPrototype = {
 		return this
 	},
 	untag: function(tags, gids){
+		if(this.tags == null){
+			return this
+		}
 		tags = tags.constructor !== Array ? [tags] : tags
 
 		gids = gids == null ? this.getImage() : gids
@@ -1915,19 +1925,69 @@ var DataWithTagsPrototype = {
 		var tagset = this.tags
 		var order = this.order
 		tags.forEach(function(tag){
-			gids.forEach(function(gid){
-				delete tagset[tag][order.indexOf(gid)]
-			})
-			if(tagset[tag].length == 0){
-				delete tagset[tag]
+			if(tag in tagset){
+				gids.forEach(function(gid){
+					if(tag in tagset){
+						delete tagset[tag][order.indexOf(gid)]
+					}
+				})
+				if(tagset[tag].len == 0){
+					delete tagset[tag]
+				}
 			}
 		})
 
 		return this
 	},
 
-	// XXX
-	toggleTag: function(tags, gids, action){
+	// NOTE: this does not support multiple tags at this point...
+	toggleTag: function(tag, gids, action){
+		gids = gids == null ? this.getImage() : gids
+		gids = gids.constructor !== Array ? [gids] : gids
+
+		// tag all...
+		if(action == 'on'){
+			this.tag(tag, gids)
+			return action
+
+		// untag all...
+		} else if(action == 'off'){
+			this.untag(tag, gids)
+			return action
+
+		// get tag state...
+		} else if(action == '?'){
+			if(this.tags == null){
+				return gids.map(function(gid){ return 'off' })
+			}
+			var that = this
+			var tagset = this.tags
+			var order = this.order
+			var res = gids.map(function(gid){
+				//return that.getTags(gid).indexOf(tag) != -1 ? 'on' : 'off'
+				return tagset[tag][order.indexOf(gid)] != null ?  'on' : 'off'
+			})
+
+		// toggle each...
+		} else {
+			var that = this
+			var tagset = this.tags
+			var order = this.order
+			var res = gids.map(function(gid){
+				//var t = that.getTags(gid).indexOf(tag) != -1 ? 'off' : 'on'
+				var t = tagset == null ? 'on'
+					: tagset[tag][order.indexOf(gid)] == null ? 'on'
+					: 'off'
+				if(t == 'on'){
+					that.tag(tag, gid)
+				} else {
+					that.untag(tag, gid)
+				}
+				return t
+			})
+		}
+
+		return res.length == 1 ? res[0] : res
 	},
 
 	getTags: function(gids){

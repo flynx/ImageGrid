@@ -1044,21 +1044,21 @@ function makeDeferredPool(size, paused){
 				// prepare to remove self from pool...
 				var i = pool.indexOf(this)
 
-				Pool._event_handlers.progress.fire(pool.length - pool.len(), pool.length + queue.length)
+				Pool._event_handlers.progress.fire(pool.length - pool.len, pool.length + queue.length)
 
 				// remove self from queue...
 				delete pool[i]
 
 				// shrink the pool if it's overfilled...
 				// i.e. do not pop another worker and let the "thread" die.
-				if(pool.len() > pool_size){
+				if(pool.len > pool_size){
 					// remove self...
 					return
 				}
 				// pause the queue -- do not do anything else...
 				if(that._paused == true){
 					// if pool is empty fire the pause event...
-					if(pool.len() == 0){
+					if(pool.len == 0){
 						Pool._event_handlers.pause.fire()
 					}
 					return
@@ -1072,7 +1072,7 @@ function makeDeferredPool(size, paused){
 					run.apply(that, next)
 
 				// empty queue AND empty pool mean we are done...
-				} else if(pool.len() == 0){
+				} else if(pool.len == 0){
 					var l = pool.length
 					// NOTE: potential race condition -- something can be
 					// 		pushed to pool just before it's "compacted"...
@@ -1087,7 +1087,7 @@ function makeDeferredPool(size, paused){
 				that._fill()
 			})
 			.fail(function(){
-				Pool._event_handlers.fail.fire(pool.length - pool.len(), pool.length + queue.length)
+				Pool._event_handlers.fail.fire(pool.length - pool.len, pool.length + queue.length)
 				deferred.reject.apply(deferred, arguments)
 			})
 			.progress(function(){
@@ -1106,7 +1106,7 @@ function makeDeferredPool(size, paused){
 		var that = this
 		var pool_size = this.size
 		var run = this._run
-		var l = this.pool.len()
+		var l = this.pool.len
 
 		if(this._paused != true 
 				&& l < pool_size 
@@ -1161,7 +1161,7 @@ function makeDeferredPool(size, paused){
 	Pool.doneFilling = function(){
 		delete this._filling
 		// trigger depleted if we are empty...
-		if(this.pool.len() == 0 && this.queue.length == 0){
+		if(this.pool.len == 0 && this.queue.length == 0){
 			that._event_handlers.deplete.fire(l)
 		}
 		return this
@@ -1204,7 +1204,7 @@ function makeDeferredPool(size, paused){
 		return this._paused
 	}
 	Pool.isRunning = function(){
-		return this.pool.len() > 0
+		return this.pool.len > 0
 	}
 
 
@@ -1337,10 +1337,19 @@ Array.prototype.compact = function(){
 
 // like .length but for sparse arrays will return the element count...
 // XXX make this a prop...
+/*
 Array.prototype.len = function(){
 	//return this.compact().length
 	return Object.keys(this).length
 }
+*/
+
+Object.defineProperty(Array.prototype, 'len', {
+	get : function () {
+		return Object.keys(this).length
+	},
+	set : function(val){},
+});
 
 
 // convert JS arguments to Array...

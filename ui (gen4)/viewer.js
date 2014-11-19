@@ -1767,17 +1767,51 @@ module.GlobalStateIndicator = Feature({
 
 //---------------------------------------------------------------------
 
+// XXX add image updater...
 var ImageMarkActions = actions.Actions({
+	// target can be:
+	// 		'all'
+	// 		'loaded'
+	// 		'ribbon'	- current ribbon
+	// 		ribbon		- specific ribbon (gid)
+	// 		Array
+	//
+	// XXX make this a real toggler... ???
 	toggleMark: ['',
-		// XXX make this a real toggler...
 		function(target, action){
-			// XXX do tagging on data and get the correct action if one is not given...
+			target = target || 'current'
+			target = target == 'all' 
+					|| target == 'loaded' 
+					|| target in this.data.ribbons 
+						? this.data.getImages(target)
+				: target == 'ribbon' ? this.data.getImages('current')
+				: target
+			target = target.constructor !== Array ? [target] : target
+
+			var res = this.data.toggleTag('selected', target, action)
 
 			if(this.ribbons != null){
-				this.ribbons.toggleImageMark(target, 'selected', action)
+				var that = this
+				target.forEach(function(t){
+					that.ribbons.toggleImageMark(t, 'selected', action)
+				})
 			}
 
-			return action
+			return res
+		}],
+	toggleMarkBlock: ['',
+		function(){
+			// XXX
+		}],
+
+	markTagged: ['',
+		function(tags, mode){
+			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
+
+			var that = this
+			this.data[selector](tags).forEach(function(gid){
+				that.toggleMark(gid, 'on')
+			})
 		}],
 
 	// XXX do we need first/last marked???
@@ -1805,6 +1839,24 @@ module.ImageMarks = Feature({
 
 //---------------------------------------------------------------------
 var ImageBookmarkActions = actions.Actions({
+	toggleBookmark: ['',
+		function(){ 
+		}],
+	// action can be:
+	// 	'on'	- toggle all on
+	// 	'off'	- toggle all off
+	// 	'next'	- toggle each image to next state
+	toggleBookmarkOnMarked: ['',
+		function(action){ 
+		}],
+
+	prevBookmarked: ['',
+		function(mode){ this.prevTagged('bookmarked', mode) }],
+	nextBookmarked: ['',
+		function(mode){ this.nextTagged('bookmarked', mode) }],
+
+	cropBookmarked: ['',
+		function(flatten){ this.cropTagged('bookmarked', 'any', flatten) }],
 })
 
 
@@ -1817,13 +1869,6 @@ module.ImageBookmarks = Feature({
 
 	actions: ImageBookmarkActions,
 
-	prevBookmarked: ['',
-		function(mode){ this.prevTagged('bookmarked', mode) }],
-	nextBookmarked: ['',
-		function(mode){ this.nextTagged('bookmarked', mode) }],
-
-	cropBookmarked: ['',
-		function(flatten){ this.cropTagged('bookmarked', 'any', flatten) }],
 })
 
 

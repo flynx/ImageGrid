@@ -167,6 +167,17 @@ module.GLOBAL_KEYBOARD = {
 			default: 'uncrop',
 			ctrl: 'uncropAll',
 		},
+
+		// marking...
+		A: {
+			ctrl: 'toggleMark!: "ribbon" "on"',
+		},
+		D: {
+			ctrl: 'toggleMark!: "ribbon" "off"',
+		},
+		I: {
+			ctrl: 'toggleMark!: "ribbon"',
+		},
 		
 	},
 }	
