@@ -95,7 +95,6 @@ module.GLOBAL_KEYBOARD = {
 		// XXX testing...
 
 		Enter: 'toggleSingleImage',
-		B: 'toggleTheme',
 
 		Home: {
 			default: 'firstImage',
@@ -169,6 +168,9 @@ module.GLOBAL_KEYBOARD = {
 		},
 
 		// marking...
+		M: {
+			default: 'toggleMark',
+		},
 		A: {
 			ctrl: 'toggleMark!: "ribbon" "on"',
 		},
@@ -179,6 +181,10 @@ module.GLOBAL_KEYBOARD = {
 			ctrl: 'toggleMark!: "ribbon"',
 		},
 		
+		B: {
+			default: 'toggleBookmark',
+			ctrl: 'toggleTheme',
+		},
 	},
 }	
 

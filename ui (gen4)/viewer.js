@@ -1767,44 +1767,51 @@ module.GlobalStateIndicator = Feature({
 
 //---------------------------------------------------------------------
 
+// target can be:
+// 		'all'
+// 		'loaded'
+// 		'ribbon'	- current ribbon
+// 		ribbon		- specific ribbon (gid)
+// 		Array
+//
+// XXX make this a real toggler... ???
+function makeTagTogglerAction(tag){
+	return function(target, action){
+		if(target == '?' || target == 'on' || target == 'off'){
+			var x = action
+			action = target
+			target = x
+		}
+		target = target || 'current'
+		target = target == 'all' 
+				|| target == 'loaded' 
+				|| target in this.data.ribbons 
+					? this.data.getImages(target)
+			: target == 'ribbon' ? this.data.getImages('current')
+			: target
+		target = target.constructor !== Array ? [target] : target
+
+		var res = this.data.toggleTag(tag, target, action)
+
+		if(action != '?' && this.ribbons != null){
+			var that = this
+			target.forEach(function(t){
+				that.ribbons.toggleImageMark(t, tag, action)
+			})
+		}
+
+		return res 
+	}
+}
+
+
 // XXX add image updater...
 var ImageMarkActions = actions.Actions({
-	// target can be:
-	// 		'all'
-	// 		'loaded'
-	// 		'ribbon'	- current ribbon
-	// 		ribbon		- specific ribbon (gid)
-	// 		Array
-	//
-	// XXX make this a real toggler... ???
-	toggleMark: ['',
-		function(target, action){
-			if(target == '?' || target == 'on' || target == 'off'){
-				var x = action
-				action = target
-				target = x
-			}
-			target = target || 'current'
-			target = target == 'all' 
-					|| target == 'loaded' 
-					|| target in this.data.ribbons 
-						? this.data.getImages(target)
-				: target == 'ribbon' ? this.data.getImages('current')
-				: target
-			target = target.constructor !== Array ? [target] : target
-
-			var res = this.data.toggleTag('selected', target, action)
-
-			if(action != '?' && this.ribbons != null){
-				var that = this
-				target.forEach(function(t){
-					that.ribbons.toggleImageMark(t, 'selected', action)
-				})
-			}
-
-			return res 
-		}],
-	toggleMarkBlock: ['',
+	toggleMark: ['Toggle image mark',
+		makeTagTogglerAction('selected')],
+	toggleMarkBlock: ['Toggle block marks',
+		'A block is a set of adjacent images either marked on unmarked '
+			+'in the same way',
 		function(target){
 			var cur = this.toggleMark(target, '?')
 
@@ -1812,7 +1819,7 @@ var ImageMarkActions = actions.Actions({
 			// XXX
 		}],
 
-	markTagged: ['',
+	markTagged: ['Mark images by tags',
 		function(tags, mode){
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
 
@@ -1823,12 +1830,12 @@ var ImageMarkActions = actions.Actions({
 		}],
 
 	// XXX do we need first/last marked???
-	prevMarked: ['',
+	prevMarked: ['Focus previous marked image',
 		function(mode){ this.prevTagged('selected', mode) }],
-	nextMarked: ['',
+	nextMarked: ['Focus next marked image',
 		function(mode){ this.nextTagged('selected', mode) }],
 
-	cropMarked: ['',
+	cropMarked: ['Crop marked images',
 		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
 })
 
@@ -1848,14 +1855,14 @@ module.ImageMarks = Feature({
 //---------------------------------------------------------------------
 var ImageBookmarkActions = actions.Actions({
 	toggleBookmark: ['',
-		function(){ 
-		}],
+		makeTagTogglerAction('bookmark')],
 	// action can be:
 	// 	'on'	- toggle all on
 	// 	'off'	- toggle all off
 	// 	'next'	- toggle each image to next state
 	toggleBookmarkOnMarked: ['',
 		function(action){ 
+			return this.toggleBookmark(this.data.getTaggedByAny('selected'), action) 
 		}],
 
 	prevBookmarked: ['',
