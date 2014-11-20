@@ -1958,12 +1958,16 @@ var DataWithTagsPrototype = {
 		// get tag state...
 		} else if(action == '?'){
 			if(this.tags == null){
-				return gids.map(function(gid){ return 'off' })
+				return gids.length > 1 ? gids.map(function(gid){ return 'off' }) : 'off'
 			}
 			var that = this
 			var tagset = this.tags
 			var order = this.order
 			var res = gids.map(function(gid){
+				gid = that.getImage(gid)
+				if(!(tag in tagset)){
+					return 'off'
+				}
 				//return that.getTags(gid).indexOf(tag) != -1 ? 'on' : 'off'
 				return tagset[tag][order.indexOf(gid)] != null ?  'on' : 'off'
 			})
@@ -1974,8 +1978,9 @@ var DataWithTagsPrototype = {
 			var tagset = this.tags
 			var order = this.order
 			var res = gids.map(function(gid){
+				gid = that.getImage(gid)
 				//var t = that.getTags(gid).indexOf(tag) != -1 ? 'off' : 'on'
-				var t = tagset == null ? 'on'
+				var t = tagset == null || !(tag in tagset) ? 'on'
 					: tagset[tag][order.indexOf(gid)] == null ? 'on'
 					: 'off'
 				if(t == 'on'){

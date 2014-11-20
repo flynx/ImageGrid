@@ -1779,6 +1779,11 @@ var ImageMarkActions = actions.Actions({
 	// XXX make this a real toggler... ???
 	toggleMark: ['',
 		function(target, action){
+			if(target == '?' || target == 'on' || target == 'off'){
+				var x = action
+				action = target
+				target = x
+			}
 			target = target || 'current'
 			target = target == 'all' 
 					|| target == 'loaded' 
@@ -1790,17 +1795,20 @@ var ImageMarkActions = actions.Actions({
 
 			var res = this.data.toggleTag('selected', target, action)
 
-			if(this.ribbons != null){
+			if(action != '?' && this.ribbons != null){
 				var that = this
 				target.forEach(function(t){
 					that.ribbons.toggleImageMark(t, 'selected', action)
 				})
 			}
 
-			return res
+			return res 
 		}],
 	toggleMarkBlock: ['',
-		function(){
+		function(target){
+			var cur = this.toggleMark(target, '?')
+
+			// get all the next/prev gids until we get a state other than cur...
 			// XXX
 		}],
 
