@@ -1163,9 +1163,10 @@ var PartialRibbonsActions = actions.Actions({
 			var pl = this.ribbons.getImage(target).prevAll('.image:not(.clone)').length
 
 			// next/prev available...
-			var na = this.data.getImages(target, size/2, 'after').length - 1 
-			var pa = this.data.getImages(target, size/2, 'before').length - 1 
-
+			// NOTE: we subtract 1 to remove the current and make these 
+			// 		compatible with: nl, pl
+			var na = this.data.getImages(target, size, 'after').length - 1
+			var pa = this.data.getImages(target, size, 'before').length - 1
 
 			// do the update...
 			// loaded more than we need (crop?)...
@@ -1767,6 +1768,8 @@ module.GlobalStateIndicator = Feature({
 
 //---------------------------------------------------------------------
 
+// XXX should we rename this to "select"???
+
 // target can be:
 // 		'all'
 // 		'loaded'
@@ -1807,8 +1810,33 @@ function makeTagTogglerAction(tag){
 
 // XXX add image updater...
 var ImageMarkActions = actions.Actions({
+
+	// NOTE: this will return a copy...
+	get marked(){
+		if(this.data == null 
+				|| this.data.tags == null
+				|| !('selected' in this.data.tags)){
+			return []
+		}
+		return this.data.tags['selected'].slice()
+	},
+
+	// Common use-cases:
+	// 	Toggle mark on current image
+	// 	.toggleMark()
+	//
+	// 	Mark current ribbon
+	// 	.toggleMark('ribbon', 'on')
+	//
+	// 	Unmark all loaded images
+	// 	.toggleMark('loaded', 'off')
+	//
+	// 	Invert marks on current ribbon
+	// 	.toggleMark('ribbon')
+	//
 	toggleMark: ['Toggle image mark',
 		makeTagTogglerAction('selected')],
+	// XXX
 	toggleMarkBlock: ['Toggle block marks',
 		'A block is a set of adjacent images either marked on unmarked '
 			+'in the same way',
@@ -1848,12 +1876,27 @@ module.ImageMarks = Feature({
 	tag: 'image-marks',
 
 	actions: ImageMarkActions,
+
+	// XXX image update...
+	handlers: [
+	],
 })
 
 
 
 //---------------------------------------------------------------------
 var ImageBookmarkActions = actions.Actions({
+
+	// NOTE: this will return a copy...
+	get bookmarked(){
+		if(this.data == null 
+				|| this.data.tags == null
+				|| !('bookmark' in this.data.tags)){
+			return []
+		}
+		return this.data.tags['bookmark'].slice()
+	},
+
 	toggleBookmark: ['',
 		makeTagTogglerAction('bookmark')],
 	// action can be:

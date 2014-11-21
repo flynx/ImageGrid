@@ -530,7 +530,11 @@ module.MetaActions = {
 	// 		otherwise only mixin local actions...
 	//
 	// XXX test
-	mixin: function(from, all, all_attr_types){
+	mixin: function(from, all, descriptors, all_attr_types){
+		// defaults...
+		descriptors = descriptors || true
+		all_attr_types = all_attr_types || false
+
 		if(all){
 			var keys = []
 			for(var k in from){
@@ -542,9 +546,19 @@ module.MetaActions = {
 
 		var that = this
 		keys.forEach(function(k){
-			var attr = from[k]
-			if(all_attr_types || attr instanceof Action){
-				that[k] = attr
+			// properties....
+			var prop = Object.getOwnPropertyDescriptor(from, k)
+			if(descriptors && prop.get != null){
+				// NOTE: so as to be able to delete this on mixout...
+				prop.configurable = true
+				Object.defineProperty(that, k, prop)
+
+			// actions and other attributes...
+			} else {
+				var attr = from[k]
+				if(all_attr_types || attr instanceof Action){
+					that[k] = attr
+				}
 			}
 		})
 
@@ -569,6 +583,10 @@ module.MetaActions = {
 	// XXX not sure about these...
 	// XXX test
 	mixout: function(from, all, all_attr_types){
+		// defaults...
+		descriptors = descriptors || true
+		all_attr_types = all_attr_types || false
+
 		if(all){
 			var keys = []
 			for(var k in from){
@@ -581,11 +599,22 @@ module.MetaActions = {
 		var locals = Object.keys(this)
 		var that = this
 		keys.forEach(function(k){
-			var attr = from[k]
-			if((all_attr_types || attr instanceof Action) 
-					// remove only local attrs...
-					&& locals.indexOf(k) >= 0){
-				delete that[k]
+			var prop = Object.getOwnPropertyDescriptor(from, k)
+
+			// descriptor...
+			if(descriptors && prop.get != null){
+				if(prop.get === Object.getOwnPropertyDescriptor(that, k).get){
+					delete that[k]
+				}
+
+			// actions and other attrs...
+			} else {
+				var attr = from[k]
+				if((all_attr_types || attr instanceof Action) 
+						// remove only local attrs...
+						&& locals.indexOf(k) >= 0){
+					delete that[k]
+				}
 			}
 		})
 

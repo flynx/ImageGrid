@@ -183,7 +183,7 @@ module.GLOBAL_KEYBOARD = {
 		
 		B: {
 			default: 'toggleBookmark',
-			ctrl: 'toggleTheme',
+			ctrl: 'toggleTheme!',
 		},
 	},
 }	
