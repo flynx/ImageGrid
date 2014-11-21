@@ -19,8 +19,6 @@ var ribbons = require('ribbons')
 /*********************************************************************/
 // helpers...
 
-var reloadAfter =
-module.reloadAfter = 
 function reloadAfter(transitions){
 	return function(){
 		return function(){
@@ -31,10 +29,9 @@ function reloadAfter(transitions){
 	}
 }
 
+
 // XXX make this compatible with multiple images...
 // XXX for muptiple targets this will just do a .reload()...
-var updateImagePosition =
-module.updateImagePosition =
 function updateImagePosition(actions, target){
 	if(actions.ribbons.getRibbonSet().length == 0){
 		return
@@ -1020,6 +1017,11 @@ actions.Actions(Client, {
 		function(msg, help){ this.ribbons.setEmptyMsg(msg, help) }],
 
 
+	// This is called by .ribbons, the goal is to use it to hook into 
+	// image updating from features and extensions...
+	//
+	// NOTE: not intended for calling manually.
+	//
 	// XXX experimental...
 	// 		...need this to get triggered by .ribbons
 	// 		at this point manually triggering this will not do anything...
