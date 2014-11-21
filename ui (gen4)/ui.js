@@ -122,6 +122,8 @@ module.GLOBAL_KEYBOARD = {
 		')': 'nextImageInOrder',
 		',': 'prevMarked',
 		'.': 'nextMarked',
+		'[': 'prevBookmarked',
+		']': 'nextBookmarked',
 		Up: {
 			default: 'prevRibbon',
 			shift: 'shiftImageUp',
@@ -161,6 +163,8 @@ module.GLOBAL_KEYBOARD = {
 		F2: {
 			default: 'cropRibbon',
 			shift: 'cropRibbonAndAbove',
+			ctrl: 'cropMarked',
+			alt: 'cropBookmarked',
 		},
 		Esc: {
 			default: 'uncrop',
@@ -197,6 +201,14 @@ $(function(){
 
 	// XXX
 	window.a = testing.setupActions()
+		.load({
+			viewer: $('.viewer')
+		})
+
+
+	// XXX for some reason this does not happen right away...
+	a.setEmptyMsg('Loading...')
+
 
 	viewer.Features.setup(a, [
 		// XXX I do not fully understand it yet, but PartialRibbons must be 
@@ -209,24 +221,32 @@ $(function(){
 		'ui-partial-ribbons',
 		'ui-ribbon-align-to-order',
 		'ui-single-image-view',
+
+		'image-marks',
+		'image-bookmarks',
+
+		// chrome...
 		'ui-animation',
 		'ui-bounds-indicators',
 		'ui-current-image-indicator',
 
-		'image-marks',
-		'image-bookmarks',
 	])
 
 	// this publishes all the actions...
 	//module.GLOBAL_KEYBOARD.__proto__ = a
 
-
 	// load some testing data...
+	// NOTE: we can load this in parts...
 	a.load({
+		//viewer: $('.viewer'),
 		data: data.Data(testing.mock_data),
-		viewer: $('.viewer'),
 		images: testing.makeTestImages(),
 	})
+
+
+	a.setEmptyMsg(
+		'Nothing loaded...',
+		'Press \'O\' to load, \'F1\' for help or \'?\' for keyboard mappings.')
 
 
 	// setup base keyboard for devel, in case something breaks...

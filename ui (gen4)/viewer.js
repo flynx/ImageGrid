@@ -625,6 +625,8 @@ actions.Actions(Client, {
 
 				if(this.ribbons == null){
 					this.ribbons = ribbons.Ribbons(viewer, this.images)
+					// XXX is this correct???
+					this.ribbons.__image_updaters = [this.updateImage.bind(this)]
 				}
 
 				this.reload()
@@ -667,6 +669,8 @@ actions.Actions(Client, {
 
 				if(this.ribbons == null){
 					this.ribbons = ribbons.Ribbons(viewer, this.images)
+					// XXX is this correct???
+					this.ribbons.__image_updaters = [this.updateImage.bind(this)]
 
 				} else {
 					this.ribbons.clear()
@@ -1010,6 +1014,17 @@ actions.Actions(Client, {
 				this.reload()
 			}
 		}],
+
+	// a shorthand...
+	setEmptyMsg: ['Set message to be displayed when nothing is loaded.',
+		function(msg, help){ this.ribbons.setEmptyMsg(msg, help) }],
+
+
+	// XXX experimental...
+	// 		...need this to get triggered by .ribbons
+	// 		at this point manually triggering this will not do anything...
+	updateImage: ['',
+		function(gid, image){ }],
 })
 
 
@@ -1240,7 +1255,12 @@ module.PartialRibbons = Feature({
 
 	handlers: [
 		['focusImage.pre centerImage.pre', 
-			function(target){
+			function(target, list){
+				// NOTE: we have to do this as we are called BEFORE the 
+				// 		actual focus change happens...
+				// XXX is there a better way to do this???
+				target = list != null ? target = this.data.getImage(target, list) : target
+
 				this.updateRibbon(target)
 			}],
 		['fitImage.pre', 
@@ -1811,6 +1831,7 @@ function makeTagTogglerAction(tag){
 // XXX add image updater...
 var ImageMarkActions = actions.Actions({
 
+	// a shorthand...
 	// NOTE: this will return a copy...
 	get marked(){
 		if(this.data == null 
@@ -1877,8 +1898,13 @@ module.ImageMarks = Feature({
 
 	actions: ImageMarkActions,
 
-	// XXX image update...
 	handlers: [
+		// XXX is this the right way to go???
+		['updateImage', function(gid, img){
+			if(this.toggleMark(gid, '?') == 'on'){
+				this.ribbons.toggleImageMark(gid, 'selected', 'on')
+			}
+		}],
 	],
 })
 
@@ -1887,6 +1913,7 @@ module.ImageMarks = Feature({
 //---------------------------------------------------------------------
 var ImageBookmarkActions = actions.Actions({
 
+	// a shorthand...
 	// NOTE: this will return a copy...
 	get bookmarked(){
 		if(this.data == null 
@@ -1909,12 +1936,12 @@ var ImageBookmarkActions = actions.Actions({
 		}],
 
 	prevBookmarked: ['',
-		function(mode){ this.prevTagged('bookmarked', mode) }],
+		function(mode){ this.prevTagged('bookmark', mode) }],
 	nextBookmarked: ['',
-		function(mode){ this.nextTagged('bookmarked', mode) }],
+		function(mode){ this.nextTagged('bookmark', mode) }],
 
 	cropBookmarked: ['',
-		function(flatten){ this.cropTagged('bookmarked', 'any', flatten) }],
+		function(flatten){ this.cropTagged('bookmark', 'any', flatten) }],
 })
 
 
@@ -1927,6 +1954,14 @@ module.ImageBookmarks = Feature({
 
 	actions: ImageBookmarkActions,
 
+	handlers: [
+		// XXX is this the right way to go???
+		['updateImage', function(gid, img){
+			if(this.toggleBookmark(gid, '?') == 'on'){
+				this.ribbons.toggleImageMark(gid, 'bookmark', 'on')
+			}
+		}],
+	],
 })
 
 

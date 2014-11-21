@@ -608,7 +608,8 @@ var DataPrototype = {
 		// 		be truncated...
 		for(; i >= 0 && i < this.order.length; i+=step){
 			var cur = list[i]
-			if(cur == null){
+			// skip undefined or unloaded images...
+			if(cur == null || this.getRibbon(cur) == null){
 				continue
 			}
 			offset -= 1
@@ -876,6 +877,9 @@ var DataPrototype = {
 		// image gid...
 		} else {
 			var i = this.order.indexOf(target)
+			if(i == -1){
+				return null
+			}
 			var k
 			for(k in ribbons){
 				if(ribbons[k][i] != null){
@@ -1871,6 +1875,28 @@ var DataWithTagsPrototype = {
 		}
 
 		return res
+	},
+	crop: function(){
+		var crop = DataWithTagsPrototype.__proto__.crop.apply(this, arguments)
+
+		// make the tags mutable...
+		if(this.tags != null){
+			crop.tags = this.tags
+		}
+
+		return crop
+	},
+	clone: function(){
+		var clone = DataWithTagsPrototype.__proto__.clone.apply(this, arguments)
+
+		if(this.tags != null){
+			clone.tags = {}
+			for(var k in this.tags){
+				clone.tags[k] = this.tags[k].slice()
+			}
+		}
+
+		return clone
 	},
 
 	sortTags: function(){

@@ -52,6 +52,11 @@ module.mock_data = {
 			 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
 			 'y', 'z']
 	},
+
+	tags: {
+		selected: ['b', 'z'],
+		bookmark: ['1', 'c', 'z'],
+	},
 }
 Object.keys(mock_data.ribbons).forEach(function(k){ 
 	mock_data.order = mock_data.order.concat(mock_data.ribbons[k]) 

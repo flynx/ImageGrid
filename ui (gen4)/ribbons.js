@@ -18,13 +18,6 @@ var object = require('object')
 var data = require('data')
 var images = require('images')
 
-
-
-// XXX STUB
-var IMAGE_UPDATERS =
-module.IMAGE_UPDATERS = []
-
-
 var IMAGE = '.image:not(.clone)'
 var RIBBON = '.ribbon:not(.clone)'
 
@@ -172,11 +165,12 @@ var RibbonsPrototype = {
 		if(now){
 			target.removeClass('no-transitions')
 			var t = target[0]
-			getComputedStyle(t).webkitTransition
-			getComputedStyle(t).mozTransition
-			getComputedStyle(t).msTransition
-			getComputedStyle(t).oTransition
-			getComputedStyle(t).transition
+			var s = getComputedStyle(t)
+			s.webkitTransition
+			s.mozTransition
+			s.msTransition
+			s.oTransition
+			s.transition
 
 		// on next exec frame...
 		} else {
@@ -184,11 +178,12 @@ var RibbonsPrototype = {
 			setTimeout(function(){
 				target.removeClass('no-transitions')}, 0)
 				var t = target[0]
-				getComputedStyle(t).webkitTransition
-				getComputedStyle(t).mozTransition
-				getComputedStyle(t).msTransition
-				getComputedStyle(t).oTransition
-				getComputedStyle(t).transition
+				var s = getComputedStyle(t)
+				s.webkitTransition
+				s.mozTransition
+				s.msTransition
+				s.oTransition
+				s.transition
 		}
 
 		return this
@@ -889,8 +884,7 @@ var RibbonsPrototype = {
 
 	// Loading and updating...
 
-	// XXX this needs:
-	// 		IMAGE_UPDATERS -- make it a callback/event (node/jquery)...
+	// XXX is .__image_updaters the right way to go???
 	updateImageIndicators: function(gid, image){
 		gid = gid == null ? this.getElemGID() : gid
 		image = image == null ? this.getImage() : $(image)
@@ -898,9 +892,12 @@ var RibbonsPrototype = {
 		// collect marks...
 		image.after(this.getImageMarks(gid))
 
-		IMAGE_UPDATERS.forEach(function(update){
-			update(gid, image)
-		})
+
+		if(this.__image_updaters != null){
+			this.__image_updaters.forEach(function(update){
+				update(gid, image)
+			})
+		}
 
 		return image
 	},
@@ -1109,20 +1106,25 @@ var RibbonsPrototype = {
 		}
 
 		// remove all images that we do not need...
-		var unloaded = $()
+		var unloaded = []
+		var unload_marks = []
 		loaded = loaded
 			.filter(function(i, img){ 
-				if(gids.indexOf(that.getElemGID($(img))) >= 0){
+				var g = that.getElemGID($(img))
+				if(gids.indexOf(g) >= 0){
 					return true
 				}
 				unloaded.push(img)
+				unload_marks = unload_marks.concat(that.getImageMarks(g).toArray())
 				return false
 			})
 		// remove everything in one go...
-		unloaded
+		$(unloaded)
 			.detach()
 			.removeClass('moving')
-		unloaded = unloaded.toArray()
+		// clear marks...
+		$(unload_marks)
+			.remove()
 
 		$(gids).each(function(i, gid){
 			// support for sparse ribbons...
@@ -1297,14 +1299,16 @@ var RibbonsPrototype = {
 	clear: function(gids){
 		// clear all...
 		if(gids == null || gids == '*'){
-			this.getRibbonSet().remove()
+			this.preventTransitions()
+			setElementOffset(this.getRibbonSet(), 0, 0).children().detach()
+			this.restoreTransitions()
 
 		// clear one or more gids...
 		} else {
 			gids = gids.constructor !== Array ? [gids] : gids
 			var that = this
 			gids.forEach(function(g){
-				that.viewer.find('[gid='+JSON.stringify(g)+']').remove()
+				that.viewer.find('[gid='+JSON.stringify(g)+']').detach()
 			})
 		}
 		return this
@@ -1763,6 +1767,18 @@ var RibbonsPrototype = {
 	},
 
 
+	setEmptyMsg: function(msg, help){
+		this.viewer
+			.attr({
+				'empty-msg': msg || '',
+				'empty-help': help || '',
+			})
+		this.getRibbonSet()
+			.attr({
+				'empty-msg': msg || '',
+				'empty-help': help || '',
+			})
+	},
 } 
 
 
