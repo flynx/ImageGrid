@@ -2017,11 +2017,14 @@ var DataPrototype = {
 		res.current = this.current
 		res.order = this.order.slice()
 		res.ribbon_order = this.ribbon_order.slice()
-		res.ribbons = {}
-		// make ribbons sparse...
-		for(var k in this.ribbons){
-			res.ribbons[k] = this.ribbons[k].slice()
-		}
+
+		this.eachImageList(function(lst, k, s){
+			if(res[s] == null){
+				res[s] = {}
+			}
+			res[s][k] = this[s][k].slice()
+		})
+
 		return res
 	},
 
@@ -2061,11 +2064,20 @@ var DataPrototype = {
 		this.current = data.current
 		this.order = data.order.slice()
 		this.ribbon_order = data.ribbon_order.slice()
-		this.ribbons = {}
-		// make ribbons sparse...
-		for(var k in data.ribbons){
-			this.ribbons[k] = this.makeSparseImages(data.ribbons[k])
-		}
+
+		// make sparse lists...
+		var that = this
+		this.__gid_lists.forEach(function(s){
+			if(data[s] == null){
+				return
+			}
+			if(that[s] == null){
+				that[s] = {}
+			}
+			for(var k in data[s]){
+				that[s][k] = that.makeSparseImages(data[s][k])
+			}
+		})
 		return this
 	},
 
@@ -2082,10 +2094,13 @@ var DataPrototype = {
 			ribbon_order: this.ribbon_order.slice(),
 			ribbons: {},
 		}
-		// compact ribbons...
-		for(var k in this.ribbons){
-			res.ribbons[k] = this.ribbons[k].compact()
-		}
+		// compact sets...
+		this.eachImageList(function(lst, k, s){
+			if(res[s] == null){
+				res[s] = {}
+			}
+			res[s][k] = lst.compact()
+		})
 		if(mode == 'string' || mode == 'str'){
 			res = JSON.stringify(res)
 		}
@@ -2103,42 +2118,7 @@ var DataWithTagsPrototype = {
 	// 		....is there a way not to say DataPrototype here???
 	__gid_lists: DataPrototype.__gid_lists.concat(['tags']),
 
-
-	// XXX need a unified init/dump/load scheme...
-	loadJSON: function(json){
-		json = typeof(json) == typeof('str') ? JSON.parse(json) : json
-
-		// XXX hate manual super calls...
-		DataWithTagsPrototype.__proto__.loadJSON.call(this, json)
-
-		if(json.tags != null){
-			// XXX should we make  copy here???
-			this.tags = json.tags
-			this.sortTags()
-		}
-		
-		return this
-	},
-	dumpJSON: function(){
-		// XXX hate manual super calls...
-		var res = DataWithTagsPrototype.__proto__.dumpJSON.call(this)
-
-		if(this.tags != null){
-			var tags = this.tags
-			var restags = {}
-			Object.keys(tags).forEach(function(tag){
-				var lst = tags[tag].compact()
-				if(lst.len > 0){
-					restags[tag] = lst
-				}
-			})
-			if(Object.keys(restags).length > 0){
-				res.tags = restags
-			}
-		}
-
-		return res
-	},
+	// NOTE: this is here only to make the tags mutable...
 	crop: function(){
 		var crop = DataWithTagsPrototype.__proto__.crop.apply(this, arguments)
 
@@ -2149,29 +2129,7 @@ var DataWithTagsPrototype = {
 
 		return crop
 	},
-	clone: function(){
-		var clone = DataWithTagsPrototype.__proto__.clone.apply(this, arguments)
 
-		if(this.tags != null){
-			clone.tags = {}
-			for(var k in this.tags){
-				clone.tags[k] = this.tags[k].slice()
-			}
-		}
-
-		return clone
-	},
-	group: function(){
-		var res = DataWithTagsPrototype.__proto__.group.apply(this, arguments)
-		this.sortTags()
-		return res
-	},
-	ungroup: function(){
-		var res = DataWithTagsPrototype.__proto__.ungroup.apply(this, arguments)
-		this.sortTags()
-		return res
-	},
-	
 
 	sortTags: function(){
 		var that = this
