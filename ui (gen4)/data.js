@@ -381,8 +381,13 @@ var DataPrototype = {
 						images.forEach(function(gid){ that.clear(gid) })
 					}
 
-					if(that.base == gid){
+					// no more ribbons left...
+					if(that.ribbon_order.length == 0){
 						that.base = null
+
+					// shift base up or to first image...
+					} else if(that.base == gid){
+						that.setBase(Math.max(0, r-1))
 					}
 
 				// gid is an image...
@@ -390,9 +395,8 @@ var DataPrototype = {
 					// remove from order...
 					that.order.splice(i, 1)
 
-					// remove from ribbons...
-					Object.keys(that.ribbons).forEach(function(r){
-						that.ribbons[r].splice(i, 1)
+					that.eachImageList(function(lst){
+						lst.splice(i, 1)
 					})
 
 					if(that.current == gid){
@@ -1044,15 +1048,96 @@ var DataPrototype = {
 		return this
 	},
 
-	// Sort images in ribbons via .order...
+	__gid_lists: ['ribbons', 'groups'],
+
+	// Iterate through image lists...
 	//
-	// NOTE: this sorts in-place
-	// NOTE: this will not change image order
-	sortImages: function(){
-		var ribbons = this.ribbons
-		for(k in ribbons){
-			ribbons[k] = this.makeSparseImages(ribbons[k])
-		}
+	// This accepts a function:
+	// 	func(list, key, set)
+	//
+	// Where:
+	// 	list		- the sparse list of gids
+	// 	key			- the list key in set
+	// 	set			- the set name
+	//
+	// The function is called in the context of the data object.
+	//
+	// The arguments can be used to access the list directly like this:
+	// 	this[set][key]	-> list
+	//
+	eachImageList: function(func){
+		var that = this
+		this.__gid_lists.forEach(function(k){
+			var lst = that[k]
+			if(lst == null){
+				return
+			}
+			Object.keys(lst).forEach(function(l){
+				func.call(that, lst[l], l, k)
+			})
+		})
+		return this
+	},
+
+	// Update image position via .order...
+	//
+	//	Full sort
+	//	.updateImagePositions()
+	//		-> data
+	//
+	//	Reposition item(s)
+	//	.updateImagePositions(gid|index)
+	//		-> data
+	//
+	//	Reposition item(s) and the item(s) they replace
+	//	.updateImagePositions(gid|index, 'keep')
+	//		-> data
+	//
+	//	Hide item(s) from lists
+	//	.updateImagePositions(gid|index, 'hide')
+	//		-> data
+	//
+	//	Remove item(s) from lists
+	//	.updateImagePositions(gid|index, 'remove')
+	//		-> data
+	//
+	// NOTE: hide will not change the order of other items while remove 
+	// 		will do a full sort...
+	// NOTE: in any case other that the first this will not try to 
+	// 		correct any errors.
+	//
+	// XXX needs more thought....
+	// 		do we need to move images by this???
+	updateImagePositions: function(from, mode){
+		from = from != null && from.constructor !== Array ? [from] : from
+
+		this.eachImageList(function(cur, key, set){
+			set = this[set]
+
+			// resort...
+			if(from == null){
+				set[key] = this.makeSparseImages(cur)
+
+			// remove/hide elements...
+			} else if(mode == 'remove' || mode == 'hide'){
+				from.forEach(function(g){
+					delete cur[cur.indexOf(g)]
+				})
+				// if we are removing we'll also need to resort...
+				if(mode == 'remove'){
+					set[key] = this.makeSparseImages(cur)
+				}
+
+			// place and keep existing...
+			} else if(mode == 'keep'){
+				set[key] = this.makeSparseImages(from, cur, true)
+
+			// only place...
+			} else {
+				set[key] = this.makeSparseImages(from, cur)
+			}
+		})
+
 		return this
 	},
 
@@ -1063,22 +1148,35 @@ var DataPrototype = {
 	// NOTE: this depends on setting length of an array, it works in 
 	// 		Chrome but will it work the same in other systems???
 	reverseImages: function(){
-		var ribbons = this.ribbons
-		this.order.reverse()
-		var l = this.order.length
-		for(k in ribbons){
-			// XXX will this work everywhere???
-			// NOTE: ribbons may be truncated, so we need to explicitly 
-			// 		set their length...
-			ribbons[k].length = l
-			ribbons[k].reverse()
-		}
+		var order = this.order
+		order.reverse()
+		var l = order.length
+
+		var that = this
+		this.eachImageList(function(lst){
+			lst.length = l
+			lst.reverse()
+		})
+
 		return this
+	},
+
+	// Sort images in ribbons via .order...
+	//
+	// NOTE: this sorts in-place
+	// NOTE: this will not change image order
+	sortImages: function(cmp){
+
+		// sort the order...
+		this.order.sort(cmp)
+		
+		return this.updateImagePositions()
 	},
 
 	reverseRibbons: function(){
 		this.ribbon_order.reverse()
 	},
+
 
 	// Gather gids into an connected section...
 	//
@@ -1205,7 +1303,7 @@ var DataPrototype = {
 			})
 
 			// XXX this is cheating...
-			this.sortImages()
+			this.updateImagePositions()
 		}
 
 		return this
@@ -1298,15 +1396,7 @@ var DataPrototype = {
 		// clear empty ribbon...
 		r = r == 0 ? 1 : r
 		if(this.ribbons[this.ribbon_order[r]].len == 0){
-			var b = this.getRibbonOrder(this.base)-1
-
-			r = this.ribbon_order.splice(r, 1)[0]
-			delete this.ribbons[r]
-
-			// shift base...
-			if(!(this.base in this.ribbons)){
-				this.setBase(Math.max(0, b))
-			}
+			this.clear(this.ribbon_order[r])
 		}
 		return res
 	},
@@ -1320,15 +1410,7 @@ var DataPrototype = {
 		var res = this.shiftImage(gid, r+1, 'vertical') 
 		// clear empty ribbon...
 		if(this.ribbons[this.ribbon_order[r]].len == 0){
-			var b = this.getRibbonOrder(this.base)-1
-
-			r = this.ribbon_order.splice(r, 1)[0]
-			delete this.ribbons[r]
-
-			// shift base...
-			if(!(this.base in this.ribbons)){
-				this.setBase(Math.max(0, b))
-			}
+			this.clear(this.ribbon_order[r])
 		}
 		return res
 	},
@@ -1375,6 +1457,189 @@ var DataPrototype = {
 	// XXX should these be here??
 	shiftRibbonUp: function(gid){ return this.shiftRibbon(gid, -1, 'offset') },
 	shiftRibbonDown: function(gid){ return this.shiftRibbon(gid, 1, 'offset') },
+
+
+	// XXX experimental...
+	// 		...not sure if storing groups in .groups here is the right 
+	// 		way to go...
+	// XXX need to set default cover... (???)
+	// XXX should these be here or in a separate class???
+	isGroup: function(gid){
+		gid = gid == null ? this.getImage() : gid
+		return this.groups != null ? gid in this.groups : false
+	},
+	getGroup: function(gid){
+		gid = gid == null ? this.getImage() : gid
+		if(this.isGroup(gid)){
+			return gid
+		}
+		if(this.groups == null){
+			return null
+		}
+
+		for(var k in this.groups){
+			if(this.groups[k].indexOf(gid) >= 0){
+				return k
+			}
+		}
+
+		return null
+	},
+
+	group: function(gids, group){
+		gids = gids == null ? this.getImage() : gids
+		gids = gids.constructor !== Array ? [gids] : gids
+		group = group == null ? this.newGid('G') : group
+
+		if(this.groups == null){
+			this.groups = {}
+		}
+
+		// existing group...
+		if(group in this.groups){
+			var lst = this.makeSparseImages(this.groups[group])
+			var place = false
+
+		// new group...
+		} else {
+			var lst = []
+			var place = true
+		}
+
+		this.groups[group] = this.makeSparseImages(gids, lst)
+
+		// place group...
+		if(place){
+			var place = this.order.indexOf(gids[0])
+			var r = this.getRibbon(gids[0])
+
+			// update order...
+			this.order.splice(place, 0, group)
+
+			// update lists...
+			this.eachImageList(function(lst, k, s){
+				// insert a place for the group...
+				lst.splice(place, 0, undefined)
+				delete lst[place]
+			})
+
+			// insert the group gid only in the correct ribbon... 
+			this.ribbons[r][place] = group
+
+			// collapse the new group...
+			this.collapseGroup(group)
+
+		// when adding to a new group, collapse only if group is collapsed...
+		} else if(this.getRibbon(group) != null){
+			this.collapseGroup(group)
+		}
+
+		return this
+	},
+	// NOTE: this will ungroup the image into the same ribbon as the 
+	// 		group...
+	ungroup: function(group){
+		group = this.getGroup(group)
+
+		if(group == null){
+			return this
+		}
+
+		this.expandGroup(group)
+
+		// remove the group...
+		delete this.groups[group]
+		this.clear(group)
+
+		return this
+	},
+
+	expandGroup: function(groups){
+		groups = groups == null ? this.getGroup() : groups
+		groups = groups.constructor !== Array ? [groups] : groups
+
+		var that = this
+		groups.forEach(function(group){
+			group = that.getGroup(group)
+			
+			if(group == null){
+				return
+			}
+
+			var lst = that.groups[group]
+			var r = that.getRibbon(group)
+
+			// already expanded...
+			if(r == null){
+				return
+			}
+
+			// place images...
+			lst.forEach(function(gid, i){
+				that.ribbons[r][i] = gid
+			})
+
+			if(that.current == group){
+				that.current = lst.compact()[0]
+			}
+
+			// hide group...
+			delete that.ribbons[r][that.order.indexOf(group)]
+		})
+
+		return this
+	},
+	collapseGroup: function(groups){
+		groups = groups == null ? this.getGroup() : groups
+		groups = groups.constructor !== Array ? [groups] : groups
+
+		var that = this
+		groups.forEach(function(group){
+			group = that.getGroup(group)
+			
+			if(group == null){
+				return
+			}
+
+			var lst = that.groups[group]
+			var r = that.getRibbon(group)
+			r = r == null ? that.getRibbon(that.groups[group].compact()[0]) : r
+
+			// remove grouped images from ribbons...
+			lst.forEach(function(gid, i){
+				Object.keys(that.ribbons).forEach(function(r){
+					delete that.ribbons[r][i]
+				})
+			})
+
+			// insert group...
+			that.ribbons[r][that.order.indexOf(group)] = group
+
+			// shift current...
+			if(lst.indexOf(that.current) >= 0){
+				that.current = group
+			}
+		})
+
+		return this
+	},
+
+	cropGroup: function(group){
+		group = this.getGroup(group)
+		
+		if(group == null){
+			return
+		}
+
+		// XXX is this the correct way to do this???
+		this.expandGroup(group)
+
+		var res = this.crop(this.groups[group])
+
+		this.collapseGroup(group)
+
+		return res
+	},
 
 
 
@@ -1585,7 +1850,6 @@ var DataPrototype = {
 	// Crop the data...
 	//
 	// NOTE: this will not affect the original data object...
-	// NOTE: this may result in empty ribbons...
 	// NOTE: this will not crop the .order...
 	crop: function(list, flatten){
 		var crop = this.clone()
@@ -1607,13 +1871,7 @@ var DataPrototype = {
 		}
 
 		// clear empty ribbons...
-		Object.keys(crop.ribbons)
-			.forEach(function(k){ 
-				if(crop.ribbons[k].length == 0){
-					crop.ribbon_order.splice(crop.ribbon_order.indexOf(k), 1)
-					delete crop.ribbons[k]
-				} 
-			})
+		crop.clear('empty')
 
 		// set the current image in the crop...
 		var r = this.getRibbon()
@@ -1647,7 +1905,7 @@ var DataPrototype = {
 		this.order = crop.order.slice()
 		// XXX sync these???
 		this.ribbon_order = crop.ribbon_order.slice()
-		this.sortImages()
+		this.updateImagePositions()
 
 		// 
 		for(var k in crop.ribbons){
@@ -1784,7 +2042,7 @@ var DataPrototype = {
 	// NOTE: this is slow-ish...
 	removeDuplicateGIDs: function(){
 		this.removeDuplicates(this.order)
-		this.sortImages()
+		this.updateImagePositions()
 		return this
 	},
 
@@ -1840,6 +2098,11 @@ var DataPrototype = {
 /*********************************************************************/
 
 var DataWithTagsPrototype = {
+
+	// XXX hate manual super calls...
+	// 		....is there a way not to say DataPrototype here???
+	__gid_lists: DataPrototype.__gid_lists.concat(['tags']),
+
 
 	// XXX need a unified init/dump/load scheme...
 	loadJSON: function(json){
@@ -1898,6 +2161,17 @@ var DataWithTagsPrototype = {
 
 		return clone
 	},
+	group: function(){
+		var res = DataWithTagsPrototype.__proto__.group.apply(this, arguments)
+		this.sortTags()
+		return res
+	},
+	ungroup: function(){
+		var res = DataWithTagsPrototype.__proto__.ungroup.apply(this, arguments)
+		this.sortTags()
+		return res
+	},
+	
 
 	sortTags: function(){
 		var that = this

@@ -28,16 +28,12 @@ if(typeof(sha1) != 'undefined'){
 /*********************************************************************/
 
 // A stub image, also here for documentation...
-var STUB_IMAGE_DATA =
-module.STUB_IMAGE_DATA = {
+var IMAGE_DATA =
+module.IMAGE_DATA = {
 	// Entity GID...
-	id: 'STUB-GID',
+	id: 'GID',
 
 	// Entity type
-	//
-	// can be:
-	// 	- 'image'
-	// 	- 'group'
 	type: 'image',
 
 	// Entity state
@@ -66,7 +62,7 @@ module.STUB_IMAGE_DATA = {
 
 	// Classes
 	// XXX currently unused...
-	classes: '',
+	//classes: '',
 
 	// Image orientation (optional)
 	//
@@ -79,7 +75,7 @@ module.STUB_IMAGE_DATA = {
 	//
 	// NOTE: use orientationExif2ImageGrid(..) to convert from EXIF 
 	// 		orientation format to ImageGrid format...
-	orientation: 0,
+	//orientation: 0,
 
 	// Image flip state (optional)
 	//
@@ -93,23 +89,67 @@ module.STUB_IMAGE_DATA = {
 	//
 	// NOTE: use orientationExif2ImageGrid(..) to convert from EXIF 
 	// 		orientation format to ImageGrid format...
-	flipped: null,
+	//flipped: null,
 
 	// Image comment (optional)
 	//
 	// can be:
 	// 	- null/undefined
 	// 	- string
-	comment: null,
+	//comment: null,
 
 	// List of image tags (optional)
 	//
 	// can be:
 	// 	- null/undefined
 	// 	- array
-	tags: null,
+	//tags: null,
 }
 
+
+var GROUP_DATA =
+module.GROUP_DATA = {
+	// Entity GID...
+	id: 'GID',
+
+	// Entity type
+	type: 'group',
+
+	// Entity state
+	//
+	// can be:
+	// 	- 'single'
+	// 	- 'grouped'
+	// 	- 'hidden'
+	// 	- ...
+	state: 'single',
+
+	// image used to represent/display group...
+	cover: 'GID',
+
+	// list of group contents, including .cover
+	items: [
+		'GID',
+	],
+
+	// Classes
+	// XXX currently unused...
+	//classes: '',
+
+	// Image comment (optional)
+	//
+	// can be:
+	// 	- null/undefined
+	// 	- string
+	//comment: null,
+
+	// List of image tags (optional)
+	//
+	// can be:
+	// 	- null/undefined
+	// 	- array
+	//tags: null,
+}
 
 // Calculate relative rotation angle...
 //
@@ -371,7 +411,7 @@ module.ImagesPrototype = {
 		if((img_data.preview == null 
 					|| Object.keys(img_data.preview).length == 0)
 				&& img_data.path == null){
-			img_data = STUB_IMAGE_DATA
+			img_data = IMAGE_DATA
 		}
 
 		var s

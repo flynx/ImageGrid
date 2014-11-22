@@ -986,7 +986,22 @@ var RibbonsPrototype = {
 			// get the image data...
 			var img_data = that.images[gid]
 			if(img_data == null){
-				img_data = images.STUB_IMAGE_DATA
+				img_data = images.IMAGE_DATA
+			}
+
+			// if we are a group, get the cover...
+			// NOTE: groups can be nested...
+			var seen = []
+			while(img_data.type == 'group'){
+				// error, recursive group...
+				if(seen.indexOf(img_data.id) >= 0){
+					img_data = images.IMAGE_DATA
+					console.error('Recursice group:', gid)
+					break
+				}
+				seen.push(img_data.id)
+
+				img_data = that.images[img_data.cover]
 			}
 
 			/* XXX does not seem to be needing this...
@@ -1016,7 +1031,7 @@ var RibbonsPrototype = {
 			that.flipImage(image, img_data.flipped == null ? [] : img_data.flipped)
 
 			// preview...
-			var p_url = that.images.getBestPreview(gid, size, img_data).url
+			var p_url = that.images.getBestPreview(img_data.id, size, img_data).url
 
 			// update the preview if it's a new image or...
 			// XXX this should be pushed as far back as possible...
