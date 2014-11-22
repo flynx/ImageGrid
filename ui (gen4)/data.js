@@ -269,6 +269,41 @@ var DataPrototype = {
 		return lst
 	},
 
+	// List of sparse image set names...
+	//
+	// NOTE: this is used mostly by .eachImageList(..), not intended for
+	// 		client use.
+	__gid_lists: ['ribbons', 'groups'],
+
+	// Iterate through image lists...
+	//
+	// This accepts a function:
+	// 	func(list, key, set)
+	//
+	// Where:
+	// 	list		- the sparse list of gids
+	// 	key			- the list key in set
+	// 	set			- the set name
+	//
+	// The function is called in the context of the data object.
+	//
+	// The arguments can be used to access the list directly like this:
+	// 	this[set][key]	-> list
+	//
+	eachImageList: function(func){
+		var that = this
+		this.__gid_lists.forEach(function(k){
+			var lst = that[k]
+			if(lst == null){
+				return
+			}
+			Object.keys(lst).forEach(function(l){
+				func.call(that, lst[l], l, k)
+			})
+		})
+		return this
+	},
+
 	// Generate a GID...
 	//
 	// If no arguments are given then a unique gid will be generated.
@@ -1048,37 +1083,6 @@ var DataPrototype = {
 		return this
 	},
 
-	__gid_lists: ['ribbons', 'groups'],
-
-	// Iterate through image lists...
-	//
-	// This accepts a function:
-	// 	func(list, key, set)
-	//
-	// Where:
-	// 	list		- the sparse list of gids
-	// 	key			- the list key in set
-	// 	set			- the set name
-	//
-	// The function is called in the context of the data object.
-	//
-	// The arguments can be used to access the list directly like this:
-	// 	this[set][key]	-> list
-	//
-	eachImageList: function(func){
-		var that = this
-		this.__gid_lists.forEach(function(k){
-			var lst = that[k]
-			if(lst == null){
-				return
-			}
-			Object.keys(lst).forEach(function(l){
-				func.call(that, lst[l], l, k)
-			})
-		})
-		return this
-	},
-
 	// Update image position via .order...
 	//
 	//	Full sort
@@ -1459,15 +1463,25 @@ var DataPrototype = {
 	shiftRibbonDown: function(gid){ return this.shiftRibbon(gid, 1, 'offset') },
 
 
+	/****************************************************** Groups ***/
 	// XXX experimental...
 	// 		...not sure if storing groups in .groups here is the right 
 	// 		way to go...
 	// XXX need to set default cover... (???)
 	// XXX should these be here or in a separate class???
+	
+	// Test if a gid is a group gid...
+	//
 	isGroup: function(gid){
 		gid = gid == null ? this.getImage() : gid
 		return this.groups != null ? gid in this.groups : false
 	},
+
+	// Get a group gid...
+	//
+	// This will check if the given gid is contained in a group and 
+	// return the group's gid or null if the image is ungrouped.
+	//
 	getGroup: function(gid){
 		gid = gid == null ? this.getImage() : gid
 		if(this.isGroup(gid)){
@@ -1486,6 +1500,20 @@ var DataPrototype = {
 		return null
 	},
 
+	// Group image(s)...
+	//
+	// 	Group image(s) into a new group
+	// 	.group(image(s))
+	// 		-> data
+	//
+	// 	Group image(s) into a specific group, creating one if needed
+	// 	.group(image(s), group)
+	// 		-> data
+	//
+	// NOTE: image(s) can be either a single image gid or a list of gids.
+	// NOTE: group intersections are not allowed, i.e. images can not 
+	// 		belong to two groups.
+	// NOTE: nesting groups is supported. (XXX test)
 	group: function(gids, group){
 		gids = gids == null ? this.getImage() : gids
 		gids = gids.constructor !== Array ? [gids] : gids
@@ -1493,6 +1521,18 @@ var DataPrototype = {
 
 		if(this.groups == null){
 			this.groups = {}
+		}
+
+		// take only images that are not part of a group...
+		if(this.__group_index !== false){
+			var that = this
+			var index = this.__group_index || []
+			Object.keys(this.groups).forEach(function(k){ 
+				that.makeSparseImages(that.groups[k], index) 
+			})
+			gids = gids.filter(function(g){ return index.indexOf(g) < 0 })
+			// update the index...
+			this.__group_index = this.makeSparseImages(gids, index)
 		}
 
 		// existing group...
@@ -1536,8 +1576,12 @@ var DataPrototype = {
 
 		return this
 	},
-	// NOTE: this will ungroup the image into the same ribbon as the 
-	// 		group...
+
+	// Ungroup grouped images
+	//
+	// The containing group will be removed placing the images in the 
+	// ribbon where the group resided.
+	//
 	ungroup: function(group){
 		group = this.getGroup(group)
 
@@ -1547,6 +1591,14 @@ var DataPrototype = {
 
 		this.expandGroup(group)
 
+		// cleanup the index if it exists...
+		if(this.__group_index){
+			var index = this.__group_index
+			this.groups[group].forEach(function(g){
+				delete index[index.indexOf(g)]
+			})
+		}
+
 		// remove the group...
 		delete this.groups[group]
 		this.clear(group)
@@ -1554,6 +1606,10 @@ var DataPrototype = {
 		return this
 	},
 
+	// Expand a group...
+	//
+	// This will show the group images and hide group cover.
+	//
 	expandGroup: function(groups){
 		groups = groups == null ? this.getGroup() : groups
 		groups = groups.constructor !== Array ? [groups] : groups
@@ -1589,6 +1645,12 @@ var DataPrototype = {
 
 		return this
 	},
+
+	// Collapse a group...
+	//
+	// This is the opposite of expand, showing the cover and hiding the
+	// contained images.
+	//
 	collapseGroup: function(groups){
 		groups = groups == null ? this.getGroup() : groups
 		groups = groups.constructor !== Array ? [groups] : groups
