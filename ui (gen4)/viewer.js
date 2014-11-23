@@ -1205,19 +1205,21 @@ var PartialRibbonsActions = actions.Actions({
 			size = size 
 				|| (this.config['ribbon-size-screens'] * this.screenwidth)
 				|| (5 * this.screenwidth)
+			var data = this.data
+			var ribbons = this.ribbons
 
 			// NOTE: we can't get ribbon via target directly here as
 			// 		the target might not be loaded...
-			var r_gid = this.data.getRibbon(target)
+			var r_gid = data.getRibbon(target)
 
 			// localize transition prevention... 
-			var r = this.ribbons.getRibbon(r_gid)
+			var r = ribbons.getRibbon(r_gid)
 
 			if(r.length > 0){
-				this.ribbons
+				ribbons
 					.preventTransitions(r)
 					.updateRibbon(
-						this.data.getImages(target, size), 
+						data.getImages(target, size), 
 						r_gid,
 						target)
 					.restoreTransitions(r, true)
