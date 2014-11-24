@@ -1056,6 +1056,7 @@ actions.Actions(Client, {
 	groupMarked: [ reloadAfter() ],
 	expandGroup: [ reloadAfter() ],
 	collapseGroup: [ reloadAfter() ],
+	// XXX might be a good idea to do this in a new viewer in an overlay...
 	cropGroup: [ reloadAfter() ],
 
 	// XXX experimental: not sure if this is the right way to go...

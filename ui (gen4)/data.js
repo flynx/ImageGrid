@@ -1477,6 +1477,22 @@ var DataPrototype = {
 
 
 	/****************************************************** Groups ***/
+	// A group is a small set of images...
+	//
+	// All images in a group are in ONE ribbon but can be at any location
+	// in order.
+	//
+	// It can be in one of two states:
+	// 	- collapsed
+	// 		- group images are not loaded
+	// 		- group cover is loaded
+	// 	- expanded
+	// 		- group cover is not loaded
+	// 		- group images are loaded
+	//
+	// XXX group cover -- which image and should this question be asked
+	// 		on this level???
+	//
 	// XXX experimental...
 	// 		...not sure if storing groups in .groups here is the right 
 	// 		way to go...
