@@ -607,6 +607,10 @@ var DataPrototype = {
 			mode = mode == null ? 'before' : mode
 		}
 
+		// get the loaded group gid...
+		var x = this.getLoadedInGroup(target)
+		target = x != null ? x : target
+
 		var i = this.order.indexOf(target)
 
 		// invalid gid...
@@ -920,6 +924,10 @@ var DataPrototype = {
 
 		// image gid...
 		} else {
+			// get the loaded group gid...
+			var x = this.getLoadedInGroup(target)
+			target = x != null ? x : target
+
 			var i = this.order.indexOf(target)
 			if(i == -1){
 				return null
@@ -1502,6 +1510,44 @@ var DataPrototype = {
 			}
 		}
 
+		return null
+	},
+
+	// Get loaded gid representing a group...
+	//
+	// This will either be a group gid if collapsed or first loaded gid
+	// from within if group expanded...
+	//
+	// NOTE: this will get the first loaded image of a group regardless
+	// 		of group/image gid given...
+	// 		Thus, this will return the argument ONLY if it is loaded.
+	// NOTE: this does not account for current position in selecting an
+	// 		image from the group...
+	getLoadedInGroup: function(gid){
+		var group = this.getGroup(gid)
+
+		// not a group...
+		if(group == null){
+			return null
+		}
+
+		// get the actual image gid...
+		var gids = gid == group ? this.groups[group] : [gid]
+
+		// find either
+		for(var k in this.ribbons){
+			if(this.ribbons[k].indexOf(group) >= 0){
+				return group
+			}
+			// get the first loaded gid in group...
+			for(var i=0; i<gids.length; i++){
+				if(this.ribbons[k].indexOf(gids[i]) >= 0){
+					return gids[i]
+				}
+			}
+		}
+
+		// nothing loaded...
 		return null
 	},
 
