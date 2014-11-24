@@ -407,7 +407,7 @@ module.ImagesPrototype = {
 		//size = size == null ? getVisibleImageSize('max') : size
 		img_data = img_data == null ? this[gid] : img_data
 
-		// XXX if no usable images are available use STUB data...
+		// if no usable images are available use STUB data...
 		if((img_data.preview == null 
 					|| Object.keys(img_data.preview).length == 0)
 				&& img_data.path == null){

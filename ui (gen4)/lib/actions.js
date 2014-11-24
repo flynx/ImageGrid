@@ -568,8 +568,8 @@ module.MetaActions = {
 	// Mixin a set of local actions into an object...
 	//
 	// XXX test
-	mixinTo: function(to, all, all_attr_types){
-		return this.mixin.call(to, this, all, all_attr_types)
+	mixinTo: function(to, all, descriptors, all_attr_types){
+		return this.mixin.call(to, this, all, descriptors, all_attr_types)
 	},
 
 
@@ -582,7 +582,7 @@ module.MetaActions = {
 	//
 	// XXX not sure about these...
 	// XXX test
-	mixout: function(from, all, all_attr_types){
+	mixout: function(from, all, descriptors, all_attr_types){
 		// defaults...
 		descriptors = descriptors || true
 		all_attr_types = all_attr_types || false
@@ -624,8 +624,8 @@ module.MetaActions = {
 	// Remove a set of local mixed in actions from object...
 	//
 	// XXX test
-	mixoutFrom: function(to, all, all_attr_types){
-		return this.mixout.call(to, this, all, all_attr_types)
+	mixoutFrom: function(to, all, descriptors, all_attr_types){
+		return this.mixout.call(to, this, all, descriptors, all_attr_types)
 	},
 }
 

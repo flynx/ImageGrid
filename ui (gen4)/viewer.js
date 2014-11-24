@@ -862,11 +862,15 @@ actions.Actions(Client, {
 		function(){
 			// NOTE: the 0.2 is added to compensate for alignment/scaling
 			// 		errors -- 2.99 images wide counts as 3 while 2.5 as 2.
-			this.prevImage(Math.floor(this.ribbons.getScreenWidthImages() + 0.2))
+			var w = Math.floor(this.ribbons.getScreenWidthImages() + 0.2)
+			w += (w % 2) - 1
+			this.prevImage(w)
 		}],
 	nextScreen: ['Focus next image one screen width away',
 		function(){
-			this.nextImage(Math.floor(this.ribbons.getScreenWidthImages() + 0.2))
+			var w = Math.floor(this.ribbons.getScreenWidthImages() + 0.2)
+			w += (w % 2) - 1
+			this.nextImage(w)
 		}],
 
 	// zooming...
@@ -1186,10 +1190,13 @@ var PartialRibbonsActions = actions.Actions({
 			var pa = this.data.getImages(target, size, 'before').length - 1
 
 			// do the update...
+			// the target is not loaded...
+			if(this.ribbons.getImage(target).length == 0){
+				this.resizeRibbon(target, size)
+
+			// do a late resize...
 			// loaded more than we need (crop?)...
-			if(na + pa < nl + pl
-					// the target is not loaded...
-					|| this.ribbons.getImage(target).length == 0
+			} else if(na + pa < nl + pl
 					// passed threshold on the right...
 					|| (nl < threshold && na > nl) 
 					// passed threshold on the left...
@@ -1197,7 +1204,11 @@ var PartialRibbonsActions = actions.Actions({
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + threshold){
 
-				this.resizeRibbon(target, size)
+				// XXX this still causes jitter in animation, sometime 
+				// 		even skipping the whole sequence...
+				return function(){
+					this.resizeRibbon(target, size)
+				}
 			}
 		}],
 	resizeRibbon: ['Resize ribbon to n images',
@@ -1633,7 +1644,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 				// no marker exists -- create a marker...
 				if(marker.length == 0){
 					var marker = $('<div/>')
-						.addClass('current-marker '+ this.tag)
+						.addClass('current-marker ui-current-image-indicator')
 						.css({
 							opacity: '0',
 							top: '0px',
@@ -1705,7 +1716,7 @@ module.CurrentImageIndicator = Feature({
 
 	handlers: [
 		// move marker to current image...
-		[ 'focusImage.post',
+		['focusImage.post',
 			function(){ this.updateCurrentImageIndicator() }],
 		// prevent animations when focusing ribbons...
 		['focusRibbon.pre',
