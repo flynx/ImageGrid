@@ -541,15 +541,15 @@ var DataPrototype = {
 			return this.current
 		}
 
+		// current image shorthand...
+		if(target == 'current'){
+			target = this.current
+		}
+
 		// explicit image gid -- get the loaded group gid...
 		if(this.order.indexOf(target) >= 0){
 			var x = this.getLoadedInGroup(target)
 			target = x != null ? x : target
-		}
-
-		// current image shorthand...
-		if(target == 'current'){
-			target = this.current
 		}
 
 		// order -> gid special case...
