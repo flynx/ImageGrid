@@ -135,7 +135,26 @@ var RibbonsPrototype = {
 
 	// Helpers...
 
-	// XXX need a better way of doing this...
+	// Prevent CSS transitions...
+	//
+	// 	Prevent transitions globally (.viewer):
+	// 	.preventTransitions()
+	// 		-> data
+	//
+	// 	Prevent transitions on elem:
+	// 	.preventTransitions(elem)
+	// 		-> data
+	//
+	// 	Prevent transitions on this and all nested calls
+	// 	.preventTransitions(.., true)
+	// 		-> data
+	//
+	// 		NOTE: all *nested* calls to this and .restoreTransitions(..)
+	// 			will be ignored.
+	//
+	// NOTE: this will set a .no-transitions CSS class and force 
+	// 		recalculation on the given element
+	// NOTE: for this to have effect proper CSS configuration is needed.
 	preventTransitions: function(target, prevent_nested){
 		target = target || this.viewer
 		prevent_nested = prevent_nested || false
@@ -164,6 +183,32 @@ var RibbonsPrototype = {
 
 		return this
 	},
+
+	// Prevent CSS transitions...
+	//
+	// This is a companion to .preventTransitions(..)
+	//
+	// 	Restore transitions globally (.viewer):
+	// 	.restoreTransitions()
+	// 		-> data
+	//
+	// 	Restore transitions on elem: 
+	// 	.restoreTransitions(elem)
+	// 		-> data
+	//
+	// 	Restore transitions on elem (force sync): 
+	// 	.restoreTransitions(elem, true)
+	// 		-> data
+	//
+	// 	Force restore transitions: 
+	// 	.restoreTransitions(.., .., true)
+	// 		-> data
+	//
+	// When at least one .preventTransitions(..) is called with 
+	// prevent_nested set to true, this will be a no-op on all nested
+	// levels.
+	// This can be overridden via setting the force to true.
+	//
 	restoreTransitions: function(target, now, force){
 		if(target === true || target === false){
 			now = target
@@ -209,6 +254,10 @@ var RibbonsPrototype = {
 
 		return this
 	},
+
+	// Shorthand wrappers of the above...
+	//
+	// XXX do we need custom target support here???
 	noTransitions: function(func){
 		this.preventTransitions()
 		func.apply(this, args2array(arguments).slice(1))
