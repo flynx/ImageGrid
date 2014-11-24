@@ -145,33 +145,25 @@ var RibbonsPrototype = {
 	// 	.preventTransitions(elem)
 	// 		-> data
 	//
-	// 	Prevent transitions on this and all nested calls
-	// 	.preventTransitions(.., true)
-	// 		-> data
-	//
-	// 		NOTE: all *nested* calls to this and .restoreTransitions(..)
-	// 			will be ignored.
 	//
 	// NOTE: this will set a .no-transitions CSS class and force 
 	// 		recalculation on the given element
 	// NOTE: for this to have effect proper CSS configuration is needed.
-	preventTransitions: function(target, prevent_nested){
+	preventTransitions: function(target){
 		target = target || this.viewer
-		prevent_nested = prevent_nested || false
+		//prevent_nested = prevent_nested || false
 		if(target.length == 0){
 			return this
 		}
 		var t = target[0]
 
 		// handle nesting...
-		if(prevent_nested){
-			var l = t.getAttribute('__prevent_transitions')
-			if(l != null){
-				t.getAttribute('__prevent_transitions', l+1)
-				return this
-			}
-			t.getAttribute('__prevent_transitions', 0)
+		var l = t.getAttribute('__prevent_transitions')
+		if(l != null){
+			t.getAttribute('__prevent_transitions', l+1)
+			return this
 		}
+		t.getAttribute('__prevent_transitions', 0)
 
 		target.addClass('no-transitions')
 		getComputedStyle(t).webkitTransition
@@ -209,6 +201,9 @@ var RibbonsPrototype = {
 	// levels.
 	// This can be overridden via setting the force to true.
 	//
+	// NOTE: the implementation of this method might seem ugly, but the 
+	// 		code is speed-critical, thus we access the DOM directly and
+	// 		the two branches are unrolled...
 	restoreTransitions: function(target, now, force){
 		if(target === true || target === false){
 			now = target
@@ -221,16 +216,16 @@ var RibbonsPrototype = {
 		}
 		var t = target[0]
 
-		// handle nesting...
-		var l = t.getAttribute('__prevent_transitions')
-		if(l != null && !force && l != '0'){
-			t.getAttribute('__prevent_transitions', l-1)
-			return this
-		}
-		t.removeAttribute('__prevent_transitions')
-
 		// sync...
 		if(now){
+			// handle nesting...
+			var l = t.getAttribute('__prevent_transitions')
+			if(l != null && !force && l != '0'){
+				t.getAttribute('__prevent_transitions', l-1)
+				return this
+			}
+			t.removeAttribute('__prevent_transitions')
+
 			target.removeClass('no-transitions')
 			var s = getComputedStyle(t)
 			s.webkitTransition
@@ -243,13 +238,22 @@ var RibbonsPrototype = {
 		} else {
 			var that = this
 			setTimeout(function(){
-				target.removeClass('no-transitions')}, 0)
+				// handle nesting...
+				var l = t.getAttribute('__prevent_transitions')
+				if(l != null && !force && l != '0'){
+					t.getAttribute('__prevent_transitions', l-1)
+					return this
+				}
+				t.removeAttribute('__prevent_transitions')
+
+				target.removeClass('no-transitions')
 				var s = getComputedStyle(t)
 				s.webkitTransition
 				s.mozTransition
 				s.msTransition
 				s.oTransition
 				s.transition
+			}, 0)
 		}
 
 		return this
