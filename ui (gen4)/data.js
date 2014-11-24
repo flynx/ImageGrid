@@ -541,6 +541,12 @@ var DataPrototype = {
 			return this.current
 		}
 
+		// explicit image gid -- get the loaded group gid...
+		if(this.order.indexOf(target) >= 0){
+			var x = this.getLoadedInGroup(target)
+			target = x != null ? x : target
+		}
+
 		// current image shorthand...
 		if(target == 'current'){
 			target = this.current
@@ -606,10 +612,6 @@ var DataPrototype = {
 			var offset = 0 
 			mode = mode == null ? 'before' : mode
 		}
-
-		// get the loaded group gid...
-		var x = this.getLoadedInGroup(target)
-		target = x != null ? x : target
 
 		var i = this.order.indexOf(target)
 
