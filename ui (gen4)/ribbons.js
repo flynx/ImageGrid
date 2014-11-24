@@ -136,22 +136,35 @@ var RibbonsPrototype = {
 	// Helpers...
 
 	// XXX need a better way of doing this...
-	preventTransitions: function(target){
+	preventTransitions: function(target, prevent_nested){
 		target = target || this.viewer
+		prevent_nested = prevent_nested || false
 		if(target.length == 0){
 			return this
 		}
-		target.addClass('no-transitions')
 		var t = target[0]
+
+		// handle nesting...
+		if(prevent_nested){
+			var l = t.getAttribute('__prevent_transitions')
+			if(l != null){
+				t.getAttribute('__prevent_transitions', l+1)
+				return this
+			}
+			t.getAttribute('__prevent_transitions', 0)
+		}
+
+		target.addClass('no-transitions')
 		getComputedStyle(t).webkitTransition
 		getComputedStyle(t).mozTransition
 		getComputedStyle(t).msTransition
 		getComputedStyle(t).oTransition
 		getComputedStyle(t).transition
 
+
 		return this
 	},
-	restoreTransitions: function(target, now){
+	restoreTransitions: function(target, now, force){
 		if(target === true || target === false){
 			now = target
 			target = this.viewer
@@ -161,10 +174,19 @@ var RibbonsPrototype = {
 		if(target.length == 0){
 			return this
 		}
+		var t = target[0]
+
+		// handle nesting...
+		var l = t.getAttribute('__prevent_transitions')
+		if(l != null && !force && l != '0'){
+			t.getAttribute('__prevent_transitions', l-1)
+			return this
+		}
+		t.removeAttribute('__prevent_transitions')
+
 		// sync...
 		if(now){
 			target.removeClass('no-transitions')
-			var t = target[0]
 			var s = getComputedStyle(t)
 			s.webkitTransition
 			s.mozTransition
@@ -177,7 +199,6 @@ var RibbonsPrototype = {
 			var that = this
 			setTimeout(function(){
 				target.removeClass('no-transitions')}, 0)
-				var t = target[0]
 				var s = getComputedStyle(t)
 				s.webkitTransition
 				s.mozTransition
@@ -190,6 +211,12 @@ var RibbonsPrototype = {
 	},
 	noTransitions: function(func){
 		this.preventTransitions()
+		func.apply(this, args2array(arguments).slice(1))
+		this.restoreTransitions(true)
+		return this
+	},
+	noTransitionsDeep: function(func){
+		this.preventTransitions(null, true)
 		func.apply(this, args2array(arguments).slice(1))
 		this.restoreTransitions(true)
 		return this

@@ -495,7 +495,13 @@ actions.Actions({
 				this.crop_stack = []
 			}
 			this.crop_stack.push(this.data)
-			this.data = this.data.crop(list, flatten)
+
+			if(list instanceof data.Data){
+				this.data = list 
+
+			} else {
+				this.data = this.data.crop(list, flatten)
+			}
 		}],
 	uncrop: ['Uncrop ribbons',
 		function(level, restore_current, keep_crop_order){
@@ -581,6 +587,53 @@ actions.Actions({
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
 			this.crop(this.data[selector](tags), flatten)
 		}],
+
+
+	// grouping...
+	group: ['Group images', 
+		function(gids, group){ this.data.group(gids, group) }],
+	ungroup: ['Ungroup images', 
+		function(gids, group){ this.data.ungroup(gids, group) }],
+
+	// direction can be:
+	// 	'next'
+	// 	'prev'
+	groupTo: ['', 
+		function(target, direction){
+			target = this.data.getImage(target)
+			var other = this.data.getImage(target, direction == 'next' ? 1 : -1)
+
+			// we are start/end of ribbon...
+			if(other == null){
+				return
+			}
+			
+			// add into an existing group...
+			if(this.data.isGroup(other)){
+				this.group(target, other)
+
+			// new group...
+			} else {
+				this.group([target, other])
+			}
+		}],
+	// shorthands to .groupTo(..)
+	groupBack: ['Group target image with the image/group before it', 
+		function(target){ this.groupTo(target, 'prev') }],
+	groupForward: ['Group target image with the image/group after it', 
+		function(target){ this.groupTo(target, 'next') }],
+
+	// NOTE: this will only group loaded images...
+	groupMarked: ['Group loaded marked images', 
+		function(){ this.group(this.data.getImages(this.data.getTaggedByAny('marked'))) }],
+
+	expandGroup: ['', 
+		function(target){ this.data.expandGroup(target || this.current) }],
+	collapseGroup: ['', 
+		function(target){ this.data.collapseGroup(target || this.current) }],
+
+	cropGroup: ['', 
+		function(target){ this.crop(this.data.cropGroup(target || this.current)) }],
 })
 
 
@@ -993,6 +1046,16 @@ actions.Actions(Client, {
 	crop: [ reloadAfter() ],
 	uncrop: [ reloadAfter() ],
 
+	// XXX need to force reload for actions that remove/add small numbers
+	// 		if images...
+	group: [ reloadAfter() ],
+	ungroup: [ reloadAfter() ],
+	groupTo: [ reloadAfter() ],
+	groupMarked: [ reloadAfter() ],
+	expandGroup: [ reloadAfter() ],
+	collapseGroup: [ reloadAfter() ],
+	cropGroup: [ reloadAfter() ],
+
 	// XXX experimental: not sure if this is the right way to go...
 	// XXX make this play nice with crops...
 	toggleRibbonList: ['Toggle ribbons as images view',
@@ -1162,6 +1225,7 @@ module.Features = Object.create(FeatureSet)
 //---------------------------------------------------------------------
 // NOTE: this is split out to an action so as to enable ui elements to 
 // 		adapt to ribbon size changes...
+// XXX try a strategy: load more in the direction of movement by an offset...
 var PartialRibbonsActions = actions.Actions({
 	updateRibbon: ['Update partial ribbon size', 
 		function(target, w, size, threshold){

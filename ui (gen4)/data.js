@@ -742,6 +742,8 @@ var DataPrototype = {
 	// 		via. .getImage(..) and then get the list with this...
 	// 			D.getImages(D.getImage(gid, ribbon_gid), N, 'around')
 	//
+	// XXX add group support -- get the loaded, either a group gid or 
+	// 		one of the contained images (first?)
 	// XXX for some reason negative target number (ribbon number) 
 	// 		breaks this...
 	getImages: function(target, count, mode){
@@ -873,6 +875,9 @@ var DataPrototype = {
 	//
 	// NOTE: this expects ribbon order and not image order.
 	// NOTE: negative ribbon order is relative to list tail.
+	//
+	// XXX add group support -- get the loaded, either a group gid or 
+	// 		one of the contained images (first?)
 	getRibbon: function(target, offset){
 		target = target == null ? this.current : target
 
@@ -1686,20 +1691,26 @@ var DataPrototype = {
 		return this
 	},
 
-	cropGroup: function(group){
-		group = this.getGroup(group)
+	// XXX if the group is collapsed there will be problems with uncropping...
+	cropGroup: function(target){
+		var target = this.getImage(target)
+		var group = this.getGroup(target)
 		
 		if(group == null){
 			return
 		}
 
-		// XXX is this the correct way to do this???
-		this.expandGroup(group)
+		if(target == group){
+			var res = this.crop(this.groups[group])
 
-		var res = this.crop(this.groups[group])
-
-		this.collapseGroup(group)
-
+		} else {
+			var r = this.getRibbon(target)
+			var res = this.crop(this.groups[group])
+			res.ribbon_order = [r]
+			res.ribbons[r] = this.groups[group].slice()
+			res.focusImage(this.current, 'before', r)
+		}
+		
 		return res
 	},
 
