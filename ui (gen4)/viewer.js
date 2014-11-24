@@ -215,7 +215,6 @@ actions.Actions({
 		}
 	},
 
-
 	// basic life-cycle actions...
 	//
 	load: [
@@ -673,11 +672,14 @@ actions.Actions(Client, {
 					? this.ribbons.viewer 
 					: viewer
 
-				if(this.ribbons == null){
-					this.ribbons = ribbons.Ribbons(viewer, this.images)
-					// XXX is this correct???
-					this.ribbons.__image_updaters = [this.updateImage.bind(this)]
+				// XXX do we need to recycle the ribbons???
+				if(this.ribbons != null){
+					this.ribbons.clear()
 				}
+
+				this.ribbons = ribbons.Ribbons(viewer, this.images)
+				// XXX is this correct???
+				this.ribbons.__image_updaters = [this.updateImage.bind(this)]
 
 				this.reload()
 			}
