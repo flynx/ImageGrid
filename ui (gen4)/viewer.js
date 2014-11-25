@@ -589,6 +589,7 @@ actions.Actions({
 
 
 	// grouping...
+	// XXX need to tell .images about this...
 	group: ['Group images', 
 		function(gids, group){ this.data.group(gids, group) }],
 	ungroup: ['Ungroup images', 
@@ -1238,6 +1239,10 @@ module.Features = Object.create(FeatureSet)
 // XXX try a strategy: load more in the direction of movement by an offset...
 // XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
 var PartialRibbonsActions = actions.Actions({
+	// NOTE: this will force sync resize if one of the following is true:
+	// 		- the target is not loaded
+	// 		- we are less that screen width from the edge
+	// 		- threshold is set to 0
 	// XXX this is not signature compatible with data.updateRibbon(..)
 	updateRibbon: ['Update partial ribbon size', 
 		function(target, w, size, threshold){
@@ -1269,8 +1274,15 @@ var PartialRibbonsActions = actions.Actions({
 			var pa = this.data.getImages(target, size, 'before').length - 1
 
 			// do the update...
-			// the target is not loaded...
-			if(threshold == 0 || this.ribbons.getImage(target).length == 0){
+			// no threshold beans force load...
+			if(threshold == 0 
+					// the target is not loaded...
+					|| this.ribbons.getImage(target).length == 0
+					// passed hard threshold on the right...
+					|| (nl < w && na > nl) 
+					// passed hard threshold on the left...
+					|| (pl < w && pa > pl)){
+
 				this.resizeRibbon(target, size)
 
 			// do a late resize...
