@@ -19,12 +19,12 @@ var ribbons = require('ribbons')
 /*********************************************************************/
 // helpers...
 
-function reloadAfter(transitions){
+function reloadAfter(force){
 	return function(){
 		return function(){
 			// NOTE: this may seem like cheating, but .reload() should
 			// 		be very efficient, reusing all of the items loaded...
-			this.reload()
+			this.reload(force)
 		}
 	}
 }
@@ -677,7 +677,10 @@ actions.Actions(Client, {
 					this.ribbons.clear()
 				}
 
+				// NOTE: this is done unconditionally to avoid manually 
+				// 		setting images and other stuff in the future...
 				this.ribbons = ribbons.Ribbons(viewer, this.images)
+
 				// XXX is this correct???
 				this.ribbons.__image_updaters = [this.updateImage.bind(this)]
 
@@ -686,20 +689,26 @@ actions.Actions(Client, {
 		}],
 	// NOTE: this will pass the .ribbons.updateData(..) a custom ribbon 
 	// 		updater if one is defined here as .updateRibbon(target)
-	// XXX actions.updateRibbon(..) and ribbons.updateRibbon(..) are NOT
-	// 		signature compatible...
-	// 		...I'll fix this as/if I need to, right now there is no point to
-	// 		spend time and effort on unifying the interface when the common
-	// 		use-cases are not known + it seems quite logical as-is right now.
+	// XXX HACK: tow sins:
+	// 		- actions.updateRibbon(..) and ribbons.updateRibbon(..)
+	// 		  are NOT signature compatible...
+	// 		- we depend on the internals of a custom add-on feature
 	reload: ['Reload viewer',
-		function(){
+		function(force){
 			this.ribbons.preventTransitions()
+
+			// NOTE: this essentially sets the update threshold to 0...
+			// XXX this should be a custom arg...
+			force = force ? 0 : null
 
 			return function(){
 				// see if we've got a custom ribbon updater...
 				var that = this
 				var settings = this.updateRibbon != null 
-					? { updateRibbon: function(_, ribbon){ that.updateRibbon(ribbon) } }
+					// XXX this should be: { updateRibbon: this.updateRibbon.bind(this) }
+					? { updateRibbon: function(_, ribbon){ 
+							that.updateRibbon(ribbon, null, null, force) 
+						} }
 					: null
 
 				this.ribbons.updateData(this.data, settings)
@@ -734,25 +743,20 @@ actions.Actions(Client, {
 		}],
 
 
-	// XXX move this to a viewer window action set
-	close: ['Cloase viewer',
-		function(){
-			// XXX should we do anything else here like auto-save???
-			window.close() 
-		}],
-	// XXX where should toggleFullscreenMode(..) be defined...
-	toggleFullScreen: ['',
-		function(){
-			toggleFullscreenMode() 
-		}],
-	// XXX revise this...
-	showDevTools: ['',
-		function(){
-			if(window.showDevTools != null){
-				showDevTools() 
-			}
-		}],
+	// This is called by .ribbons, the goal is to use it to hook into 
+	// image updating from features and extensions...
+	//
+	// NOTE: not intended for calling manually.
+	//
+	// XXX experimental...
+	// 		...need this to get triggered by .ribbons
+	// 		at this point manually triggering this will not do anything...
+	updateImage: ['',
+		function(gid, image){ }],
 
+
+	// General UI stuff...
+	// NOTE: this is applicable to all uses...
 	toggleTheme: ['Toggle viewer theme', 
 		CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
@@ -761,9 +765,35 @@ actions.Actions(Client, {
 				'dark', 
 				'light'
 			]) ],
+	setEmptyMsg: ['Set message to be displayed when nothing is loaded.',
+		function(msg, help){ this.ribbons.setEmptyMsg(msg, help) }],
+
+	// App stuff...
+	// XXX move this to a viewer window action set
+	// XXX revise these...
+	close: ['Cloase viewer',
+		function(){
+			// XXX should we do anything else here like auto-save???
+			window.close() 
+		}],
+	toggleFullScreen: ['',
+		function(){
+			// XXX where should toggleFullscreenMode(..) be defined...
+			toggleFullscreenMode() 
+		}],
+	showDevTools: ['',
+		function(){
+			if(window.showDevTools != null){
+				showDevTools() 
+			}
+		}],
+
 
 	// align modes...
-	// XXX skip invisible ribbons (???)
+	// XXX these should also affect up/down navigation...
+	// 		...navigate by proximity (closest to center) rather than by
+	// 		order...
+	// XXX skip off-screen ribbons (???)
 	alignByOrder: ['Align ribbons by image order',
 		function(target){
 			var ribbons = this.ribbons
@@ -816,9 +846,6 @@ actions.Actions(Client, {
 				}
 			}, 50)
 		}],
-	// XXX these should also affect up/down navigation...
-	// 		...navigate by proximity (closest to center) rather than by
-	// 		order...
 	alignByFirst: ['Aling ribbons except current to first image',
 		function(target){
 			var ribbons = this.ribbons
@@ -903,7 +930,6 @@ actions.Actions(Client, {
 				}
 			}
 		}],
-
 	setBaseRibbon: [
 		function(target){
 			var r = this.data.getRibbon(target)
@@ -961,7 +987,6 @@ actions.Actions(Client, {
 			this.ribbons.setScale(1) 
 			this.ribbons.updateImage('*')
 		}],
-
 	// NOTE: if this gets a count argument it will fit count images, 
 	// 		default is one.
 	fitImage: ['Fit image',
@@ -969,8 +994,6 @@ actions.Actions(Client, {
 			this.ribbons.fitImage(count)
 			this.ribbons.updateImage('*')
 		}],
-
-
 	fitMax: ['Fit the maximum number of images',
 		function(){ this.fitImage(this.config['max-screen-images']) }],
 
@@ -1000,8 +1023,6 @@ actions.Actions(Client, {
 	shiftImageDown: [
 		function(target){ return updateImagePosition(this, target) }],
 
-	// XXX these produce jumpy animation when gathering images from the 
-	// 		left from outside of the loaded partial ribbon...
 	shiftImageLeft: [
 		function(target){ 
 			this.ribbons.placeImage(target, -1) 
@@ -1029,7 +1050,7 @@ actions.Actions(Client, {
 		}],
 
 	reverseImages: [ reloadAfter() ],
-	reverseRibbons: [ reloadAfter(true) ],
+	reverseRibbons: [ reloadAfter() ],
 
 
 	// basic image editing...
@@ -1045,19 +1066,20 @@ actions.Actions(Client, {
 		function(target){ this.ribbons.flipHorizontal(target, 'view') }],
 
 
+	// group stuff...
+	group: [ reloadAfter(true) ],
+	ungroup: [ reloadAfter(true) ],
+	groupTo: [ reloadAfter(true) ],
+	groupMarked: [ reloadAfter(true) ],
+	expandGroup: [ reloadAfter(true) ],
+	collapseGroup: [ reloadAfter(true) ],
+
+
 	crop: [ reloadAfter() ],
 	uncrop: [ reloadAfter() ],
-
-	// XXX need to force reload for actions that remove/add small numbers
-	// 		if images...
-	group: [ reloadAfter() ],
-	ungroup: [ reloadAfter() ],
-	groupTo: [ reloadAfter() ],
-	groupMarked: [ reloadAfter() ],
-	expandGroup: [ reloadAfter() ],
-	collapseGroup: [ reloadAfter() ],
 	// XXX might be a good idea to do this in a new viewer in an overlay...
 	cropGroup: [ reloadAfter() ],
+
 
 	// XXX experimental: not sure if this is the right way to go...
 	// XXX make this play nice with crops...
@@ -1082,21 +1104,6 @@ actions.Actions(Client, {
 			}
 		}],
 
-	// a shorthand...
-	setEmptyMsg: ['Set message to be displayed when nothing is loaded.',
-		function(msg, help){ this.ribbons.setEmptyMsg(msg, help) }],
-
-
-	// This is called by .ribbons, the goal is to use it to hook into 
-	// image updating from features and extensions...
-	//
-	// NOTE: not intended for calling manually.
-	//
-	// XXX experimental...
-	// 		...need this to get triggered by .ribbons
-	// 		at this point manually triggering this will not do anything...
-	updateImage: ['',
-		function(gid, image){ }],
 })
 
 
@@ -1229,7 +1236,9 @@ module.Features = Object.create(FeatureSet)
 // NOTE: this is split out to an action so as to enable ui elements to 
 // 		adapt to ribbon size changes...
 // XXX try a strategy: load more in the direction of movement by an offset...
+// XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
 var PartialRibbonsActions = actions.Actions({
+	// XXX this is not signature compatible with data.updateRibbon(..)
 	updateRibbon: ['Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
@@ -1242,9 +1251,10 @@ var PartialRibbonsActions = actions.Actions({
 			size = (size 
 				|| this.config['ribbon-size-screens'] 
 				|| 5) * w
-			threshold = (threshold 
-				|| this.config['ribbon-resize-threshold'] 
-				|| 1) * w
+			threshold = threshold == 0 ? threshold
+				: (threshold 
+					|| this.config['ribbon-resize-threshold'] 
+					|| 1) * w
 
 			// next/prev loaded... 
 			var nl = this.ribbons.getImage(target).nextAll('.image:not(.clone)').length
@@ -1258,7 +1268,7 @@ var PartialRibbonsActions = actions.Actions({
 
 			// do the update...
 			// the target is not loaded...
-			if(this.ribbons.getImage(target).length == 0){
+			if(threshold == 0 || this.ribbons.getImage(target).length == 0){
 				this.resizeRibbon(target, size)
 
 			// do a late resize...

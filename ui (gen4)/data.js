@@ -1583,10 +1583,14 @@ var DataPrototype = {
 	// NOTE: group intersections are not allowed, i.e. images can not 
 	// 		belong to two groups.
 	// NOTE: nesting groups is supported. (XXX test)
+	//
+	// XXX test if generated gid is unique...
 	group: function(gids, group){
 		gids = gids == null ? this.getImage() : gids
 		gids = gids.constructor !== Array ? [gids] : gids
-		group = group == null ? this.newGid('G') : group
+		// XXX not safe -- fast enough and one can generate two identical
+		// 		gids...
+		group = group == null ? this.newGid('G' + Date.now()) : group
 
 		if(this.groups == null){
 			this.groups = {}

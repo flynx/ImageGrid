@@ -474,17 +474,27 @@ module.ImagesPrototype = {
 		return gids
 	},
 	// Shorthands...
-	// XXX these seem a bit messy...
-	sortByDate: function(gids, reverse){ return this.sortImages(gids, null, reverse) },
+	// XXX default gids may include stray attributes...
+	sortByDate: function(gids, reverse){
+		gids = gids == null ? Object.keys(this) : gids
+		return this.sortImages(gids, null, reverse) 
+	},
 	sortByName: function(gids, reverse){
-		return this.sortImages(gids, module.makeImageNameCmp(this), reverse) },
+		gids = gids == null ? Object.keys(this) : gids
+		return this.sortImages(gids, module.makeImageNameCmp(this), reverse) 
+	},
 	sortBySeqOrName: function(gids, reverse){ 
-		return this.sortImages(gids, module.makeImageSeqOrNameCmp(this), reverse) },
+		gids = gids == null ? Object.keys(this) : gids
+		return this.sortImages(gids, module.makeImageSeqOrNameCmp(this), reverse) 
+	},
 	sortByNameXPStyle: function(gids, reverse){ 
+		gids = gids == null ? Object.keys(this) : gids
 		return this.sortImages(gids, 
 				module.makeImageSeqOrNameCmp(this, null, this.getImageNameLeadingSeq), 
-				reverse) },
+				reverse) 
+	},
 	sortByDateOrSeqOrName: function(gids, reverse){
+		gids = gids == null ? Object.keys(this) : gids
 		return this.sortImages(gids, [
 					module.makeImageDateCmp(this),
 					module.makeImageSeqOrNameCmp(this)
@@ -492,6 +502,8 @@ module.ImagesPrototype = {
 	},
 	// XXX 
 	sortedImagesByFileNameSeqWithOverflow: function(gids, reverse){
+		gids = gids == null ? Object.keys(this) : gids
+
 		// XXX see ../ui/sort.js
 	},
 
