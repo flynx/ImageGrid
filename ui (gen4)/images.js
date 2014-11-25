@@ -549,24 +549,31 @@ module.ImagesPrototype = {
 	//	.flipImage(target, 'vertical')
 	//		-> images
 	//
-	// XXX add reference support...
 	flipImage: function(gids, direction, reference){
 		gids = gids.constructor !== Array ? [gids] : gids
-		reference = reference || 'image'
+		reference = reference || 'view'
 		var that = this
 		gids.forEach(function(key){
 			var img = that[key]
+			var o = img.orientation
+			var d = direction
+
+			// flip relative to 
+			if(reference == 'view' && (o == 90 || o == 270)){
+				d = d == 'horizontal' ? 'vertical' : 'horizontal'
+			}
+
 			if(img == null){
 				img = that[key] = {}
 			}
 			var state = img.flipped
 			state = state == null ? [] : state
 			// toggle the specific state...
-			var i = state.indexOf(direction)
+			var i = state.indexOf(d)
 			if(i >= 0){
 				state.splice(i, 1)
 			} else {
-				state.push(direction)
+				state.push(d)
 			}
 			if(state.length == 0){
 				delete img.flipped

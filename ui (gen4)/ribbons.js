@@ -1619,7 +1619,7 @@ var RibbonsPrototype = {
 	// 		it's original orientation by default...
 	// 		...this makes things consistent both visually and internally
 	flipImage: function(target, direction, reference){
-		reference = reference || 'image'
+		reference = reference || 'view'
 		target = target == null || target.constructor !== Array ? [target] : target
 
 		var set_state = direction.constructor === Array ? direction : null
@@ -1630,10 +1630,9 @@ var RibbonsPrototype = {
 
 			// update existing state...
 			if(set_state == null){
+				var d = direction
 				if(reference == 'view' && [90, 270].indexOf(that.getImageRotation(img)) > -1){
-					var d = direction == 'vertical' ? 'horizontal' : 'vertical'
-				} else {
-					var d = direction
+					d = direction == 'vertical' ? 'horizontal' : 'vertical'
 				}
 				var state = img.attr('flipped')
 				state = (state == null ? '' : state)

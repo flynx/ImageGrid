@@ -1755,18 +1755,22 @@ var DataPrototype = {
 		return this
 	},
 
-	// XXX if the group is collapsed there will be problems with uncropping...
+	// Croup current group...
+	//
 	cropGroup: function(target){
 		var target = this.getImage(target)
 		var group = this.getGroup(target)
 		
+		// not a group...
 		if(group == null){
 			return
 		}
 
-		if(target == group){
+		// group is expanded -- all the images we need are loaded...
+		if(target != group){
 			var res = this.crop(this.groups[group])
 
+		// group collapsed -- need to get the elements manually...
 		} else {
 			var r = this.getRibbon(target)
 			var res = this.crop(this.groups[group])
