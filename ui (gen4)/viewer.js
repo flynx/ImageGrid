@@ -1256,6 +1256,8 @@ var PartialRibbonsActions = actions.Actions({
 					|| this.config['ribbon-resize-threshold'] 
 					|| 1) * w
 
+			var timeout = this.config['ribbon-update-timeout']
+
 			// next/prev loaded... 
 			var nl = this.ribbons.getImage(target).nextAll('.image:not(.clone)').length
 			var pl = this.ribbons.getImage(target).prevAll('.image:not(.clone)').length
@@ -1281,10 +1283,24 @@ var PartialRibbonsActions = actions.Actions({
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + threshold){
 
-				// XXX this still causes jitter in animation, sometime 
-				// 		even skipping the whole sequence...
 				return function(){
-					this.resizeRibbon(target, size)
+					// sync update...
+					if(timeout == null){
+						this.resizeRibbon(target, size)
+
+					// async update...
+					} else {
+						// XXX need to check if we are too close to the edge...
+						var that = this
+						//setTimeout(function(){ that.resizeRibbon(target, size) }, 0)
+						if(this.__update_timeout){
+							clearTimeout(this.__update_timeout)
+						}
+						this.__update_timeout = setTimeout(function(){ 
+							delete this.__update_timeout
+							that.resizeRibbon(target, size) 
+						}, timeout)
+					}
 				}
 			}
 		}],
@@ -1343,6 +1359,11 @@ module.PartialRibbons = Feature({
 
 		// number of screen widths to edge to trigger reload...
 		'ribbon-resize-threshold': 1.5,
+
+		// timeout before a non-forced ribbon size update happens after
+		// the action...
+		// NOTE: if set to null, the update will be sync...
+		'ribbon-update-timeout': 120,
 	},
 
 	handlers: [
@@ -1772,6 +1793,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 		}],
 })
 
+// XXX still a bit jumpy on resizeRibbon(..)...
 var CurrentImageIndicator = 
 module.CurrentImageIndicator = Feature({
 	title: '',
