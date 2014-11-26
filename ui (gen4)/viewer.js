@@ -240,7 +240,7 @@ actions.Actions({
 	// 		adding new items to the resulting structure...
 	// XXX is this the correct way to go???
 	// 		...can we save simple attribute values???
-	dump: ['Dump state as JSOM object',
+	json: ['Dump state as JSOM object',
 		'This will collect JSON data from every afailable attribute '
 			+'supporting the .dumpJSON() method.',
 		function(){
@@ -291,6 +291,8 @@ actions.Actions({
 		function(all){ this.focusImage(all == null ? 'first' : 0) }],
 	lastImage: ['Focus last image in current ribbon',
 		function(all){ this.focusImage(all == null ? 'last' : -1) }],
+	// XXX these break if image at first/last position are not loaded (crop, group, ...)
+	// XXX do we actually need these???
 	firstGlobalImage: ['Get first globally image',
 		function(){ this.firstImage(true) }],
 	lastGlobalImage: ['Get last globally image',

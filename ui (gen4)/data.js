@@ -563,6 +563,7 @@ var DataPrototype = {
 		}
 
 		// first/last special case...
+		// XXX need to get first loaded...
 		if(target == 'first'){
 			list = this.ribbons[this.getRibbon(mode)]
 			for(var res in list){

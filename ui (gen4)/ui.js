@@ -206,22 +206,19 @@ $(function(){
 		})
 
 
-	// XXX for some reason this does not happen right away...
+	// XXX for some reason this is not visible when loading...
 	a.setEmptyMsg('Loading...')
 
 
 	viewer.Features.setup(a, [
-		// XXX I do not fully understand it yet, but PartialRibbons must be 
-		// 		setup BEFORE AlignRibbonsTo*, otherwise the later will break
-		// 		on shifting an image to a new ribbon...
-		// 			To reproduce:
-		// 				- setupe RibbonAlignToFirst first
-		// 				- go to top ribbon
-		// 				- shift image up
+		// features...
+		// NOTE: partial ribbons needs to be setup first...
+		// 		...the reasons why things break otherwise is not too clear.
 		'ui-partial-ribbons',
 		'ui-ribbon-align-to-order',
 		'ui-single-image-view',
 
+		// ui elements...
 		'image-marks',
 		'image-bookmarks',
 
@@ -229,7 +226,6 @@ $(function(){
 		'ui-animation',
 		'ui-bounds-indicators',
 		'ui-current-image-indicator',
-
 	])
 
 	// this publishes all the actions...
