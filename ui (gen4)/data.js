@@ -1608,6 +1608,12 @@ var DataPrototype = {
 			this.__group_index = this.makeSparseImages(gids, index)
 		}
 
+		// no images no group...
+		// XXX should we complain??
+		if(gids.length == 0){
+			return this
+		}
+
 		// existing group...
 		if(group in this.groups){
 			var lst = this.makeSparseImages(this.groups[group])
@@ -1621,29 +1627,8 @@ var DataPrototype = {
 
 		this.groups[group] = this.makeSparseImages(gids, lst)
 
-		// place group...
-		if(place){
-			var place = this.order.indexOf(gids[0])
-			var r = this.getRibbon(gids[0])
-
-			// update order...
-			this.order.splice(place, 0, group)
-
-			// update lists...
-			this.eachImageList(function(lst, k, s){
-				// insert a place for the group...
-				lst.splice(place, 0, undefined)
-				delete lst[place]
-			})
-
-			// insert the group gid only in the correct ribbon... 
-			this.ribbons[r][place] = group
-
-			// collapse the new group...
-			this.collapseGroup(group)
-
 		// when adding to a new group, collapse only if group is collapsed...
-		} else if(this.getRibbon(group) != null){
+		if(this.getRibbon(group) != null){
 			this.collapseGroup(group)
 		}
 
@@ -1684,7 +1669,9 @@ var DataPrototype = {
 	// This will show the group images and hide group cover.
 	//
 	expandGroup: function(groups){
-		groups = groups == null ? this.getGroup() : groups
+		groups = groups == null ? this.getGroup()
+			: groups == 'all' || groups == '*' ? Object.keys(this.groups)
+			: groups
 		groups = groups.constructor !== Array ? [groups] : groups
 
 		var that = this
@@ -1724,9 +1711,14 @@ var DataPrototype = {
 	// This is the opposite of expand, showing the cover and hiding the
 	// contained images.
 	//
-	collapseGroup: function(groups){
-		groups = groups == null ? this.getGroup() : groups
+	// NOTE: if group gid is not present in .order it will be added and 
+	// 		all data sets will be updated accordingly...
+	collapseGroup: function(groups, safe){
+		groups = groups == null ? this.getGroup() 
+			: groups == 'all' || groups == '*' ? Object.keys(this.groups)
+			: groups
 		groups = groups.constructor !== Array ? [groups] : groups
+		safe = safe || false
 
 		var that = this
 		groups.forEach(function(group){
@@ -1737,8 +1729,36 @@ var DataPrototype = {
 			}
 
 			var lst = that.groups[group]
+
+			if(lst.len == 0){
+				return
+			}
+
 			var r = that.getRibbon(group)
 			r = r == null ? that.getRibbon(that.groups[group].compact()[0]) : r
+
+			// if group is not in olace place it...
+			var g = that.order.indexOf(group)
+			if(g == -1){
+				g = that.order.indexOf(that.groups[group].compact(0)[0])
+
+				// update order...
+				that.order.splice(g, 0, group)
+
+				if(safe){
+					that.updateImagePositions()
+
+				// NOTE: if the data is not consistent, this might be 
+				// 		destructive, but this is faster...
+				} else {
+					// update lists...
+					that.eachImageList(function(lst){
+						// insert a place for the group...
+						lst.splice(g, 0, undefined)
+						delete lst[g]
+					})
+				}
+			}
 
 			// remove grouped images from ribbons...
 			lst.forEach(function(gid, i){

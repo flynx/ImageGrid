@@ -57,6 +57,13 @@ module.mock_data = {
 		selected: ['b', 'z'],
 		bookmark: ['1', 'c', 'z'],
 	},
+
+	// NOTE: group gids do not have to be present in .order, they will 
+	// 		get added on .collapseGroup(..)...
+	groups: {
+		g0: ['a', 'b', 'c'],
+		g1: ['l', 'y'],
+	},
 }
 Object.keys(mock_data.ribbons).forEach(function(k){ 
 	mock_data.order = mock_data.order.concat(mock_data.ribbons[k]) 

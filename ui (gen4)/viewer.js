@@ -1840,6 +1840,7 @@ module.CurrentImageIndicator = Feature({
 			}],
 		// this is here to compensate for position change on ribbon 
 		// resize...
+		// XXX still jumpy...
 		['resizeRibbon.post',
 			function(target, s){
 				var m = this.ribbons.viewer.find('.current-marker')
