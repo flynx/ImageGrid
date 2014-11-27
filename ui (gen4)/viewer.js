@@ -456,7 +456,8 @@ actions.Actions({
 
 	// XXX this also requires images...
 	sortImages: [
-		function(){  }],
+		function(method){ 
+		}],
 
 	// basic image editing...
 	//
@@ -1236,8 +1237,10 @@ module.Features = Object.create(FeatureSet)
 
 
 //---------------------------------------------------------------------
+
 // NOTE: this is split out to an action so as to enable ui elements to 
 // 		adapt to ribbon size changes...
+//
 // XXX try a strategy: load more in the direction of movement by an offset...
 // XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
 var PartialRibbonsActions = actions.Actions({
@@ -1416,6 +1419,7 @@ module.PartialRibbons = Feature({
 
 
 //---------------------------------------------------------------------
+
 var SingleImageActions = actions.Actions({
 	toggleSingleImage: ['Toggle single image view', 
 		// XXX this is wrong!!!
@@ -1533,6 +1537,7 @@ module.SingleImageView = Feature({
 
 
 //---------------------------------------------------------------------
+
 // XXX this should also define up/down navigation behavior e.g. what to 
 // 		focus on next/prev ribbon...
 // XXX should .alignByOrder(..) be a feature-specific action or global 
@@ -1552,6 +1557,7 @@ module.AlignRibbonsToImageOrder = Feature({
 
 
 //---------------------------------------------------------------------
+
 var AlignRibbonsToFirstImage = 
 module.AlignRibbonsToFirstImage = Feature({
 	title: '',
@@ -1567,6 +1573,7 @@ module.AlignRibbonsToFirstImage = Feature({
 
 
 //---------------------------------------------------------------------
+
 // XXX at this point this does not support target lists...
 var ShiftAnimation =
 module.ShiftAnimation = Feature({
@@ -1606,6 +1613,7 @@ module.ShiftAnimation = Feature({
 
 
 //---------------------------------------------------------------------
+
 var BoundsIndicatorsActions = actions.Actions({
 	flashIndicator: ['Flash an indicator',
 		function(direction){
@@ -1727,6 +1735,7 @@ module.BoundsIndicators = Feature({
 
 
 //---------------------------------------------------------------------
+
 var CurrentImageIndicatorActions = actions.Actions({
 	updateCurrentImageIndicator: ['Update current image indicator',
 		function(target, update_border){
@@ -1886,6 +1895,7 @@ module.CurrentImageIndicator = Feature({
 
 
 //---------------------------------------------------------------------
+
 // XXX
 var ImageStateIndicator = 
 module.ImageStateIndicator = Feature({
@@ -1898,6 +1908,7 @@ module.ImageStateIndicator = Feature({
 
 
 //---------------------------------------------------------------------
+
 // XXX
 var GlobalStateIndicator = 
 module.GlobalStateIndicator = Feature({
