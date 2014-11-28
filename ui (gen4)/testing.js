@@ -102,6 +102,9 @@ module.setupActions = function(viewer){
 
 	var vv = Object.create(v.Viewer)
 
+	// XXX need to automate this...
+	vv.config = Object.create(vv.config || {})
+
 	return vv
 }
 

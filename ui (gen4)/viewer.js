@@ -137,13 +137,9 @@ var Client =
 module.Client = 
 actions.Actions({
 
-	// XXX should this be here???
 	config: {
 		'steps-to-change-direction': 3,
-		'max-screen-images': 30,
-		'zoom-step': 1.2,
 	},
-
 
 	// basic state...
 	// NOTE: the setters in the following use the appropriate actions
@@ -646,6 +642,15 @@ var Viewer =
 module.Viewer = 
 actions.Actions(Client, {
 
+	config: {
+		'max-screen-images': 30,
+
+		'zoom-step': 1.2,
+
+		// added to number of images to fit to indicate scroll ability...
+		'fit-overflow': 0.2,
+	},
+
 	/*
 	// Images...
 	get images(){
@@ -967,7 +972,7 @@ actions.Actions(Client, {
 			this.ribbons.setOrigin()
 
 			//var n = Math.round(this.ribbons.getScreenWidthImages())-1
-			var d = this.config['zoom-step']
+			var d = this.config['zoom-step'] || 1.2
 			var s = a.ribbons.getScale() * d
 			var n = Math.floor(this.ribbons.getScreenWidthImages(s))
 		
@@ -978,7 +983,7 @@ actions.Actions(Client, {
 			this.ribbons.setOrigin()
 
 			//var n = Math.round(this.ribbons.getScreenWidthImages())+1
-			var d = this.config['zoom-step']
+			var d = this.config['zoom-step'] || 1.2
 			var s = a.ribbons.getScale() / d
 			var n = Math.ceil(this.ribbons.getScreenWidthImages(s))
 
@@ -993,8 +998,18 @@ actions.Actions(Client, {
 		}],
 	// NOTE: if this gets a count argument it will fit count images, 
 	// 		default is one.
+	// NOTE: this will add .config['fit-overflow'] to odd counts if no 
+	// 		overflow if passed.
+	// 		...this is done to add ability to control scroll indication.
 	fitImage: ['Fit image',
-		function(count){
+		function(count, overflow){
+			if(count != null){
+				overflow = overflow == false ? 0 : overflow
+				var o = overflow != null ? overflow 
+					: count % 2 != 1 ? 0
+					: (this.config['fit-overflow'] || 0)
+				count += o
+			}
 			this.ribbons.fitImage(count)
 			this.ribbons.updateImage('*')
 		}],

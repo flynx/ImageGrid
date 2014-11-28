@@ -639,6 +639,9 @@ module.MetaActions = {
 //
 // This will pre-process an object to setup the action mechanics.
 //
+// If the this and prototype both contain a .config attribute then this
+// will make set <actions>.config.__proto__ = <prototype>.config 
+//
 //
 // The action format:
 // 	{
@@ -668,6 +671,7 @@ module.MetaActions = {
 // For more documentation see: Action(..).
 //
 // XXX add doc, ldoc, tags and save them to each action...
+// XXX is .config processing correct here???
 var Actions =
 module.Actions =
 function Actions(a, b){
@@ -694,6 +698,11 @@ function Actions(a, b){
 
 	if(proto != null){
 		obj.__proto__ = proto
+
+		// XXX is this the right way to go???
+		if(obj.config != null && proto.config != null){
+			obj.config.__proto__ = proto.config
+		}
 	}
 
 	return obj
