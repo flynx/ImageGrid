@@ -226,6 +226,9 @@ $(function(){
 		'ui-animation',
 		'ui-bounds-indicators',
 		'ui-current-image-indicator',
+
+		// experimental and optional features...
+		//'auto-single-image',
 	])
 
 	// this publishes all the actions...

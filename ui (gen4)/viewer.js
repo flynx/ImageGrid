@@ -138,6 +138,7 @@ module.Client =
 actions.Actions({
 
 	config: {
+		// see .direction for details...
 		'steps-to-change-direction': 3,
 	},
 
@@ -643,11 +644,17 @@ module.Viewer =
 actions.Actions(Client, {
 
 	config: {
+		// The maximum screen width allowed when zooming...
 		'max-screen-images': 30,
 
+		// A step (multiplier) used by .zoomIn()/.zoomOut() actions.
+		// NOTE: this is rounded to the nearest whole screen width in images
+		// 		and current fit-overflow added.
 		'zoom-step': 1.2,
 
-		// added to number of images to fit to indicate scroll ability...
+		// added to odd number of images to fit to indicate scroll ability...
+		// ...this effectively sets the closest distance an image can be from
+		// the viewer edge...
 		'fit-overflow': 0.2,
 	},
 
@@ -1019,6 +1026,7 @@ actions.Actions(Client, {
 
 	// XXX the question with these is how to make these relatively 
 	// 		similar across platforms...
+	// 		...for this we need to get display dpi...
 	fitSmall: ['Show small image',
 		function(){  }],
 	fitNormal: ['Show normal image',
@@ -1525,7 +1533,7 @@ module.SingleImageView = Feature({
 	actions: SingleImageActions,
 
 	handlers:[
-		['fitImgae.post',
+		['fitImage.post',
 			function(){ 
 				// singe image mode -- set image proportions...
 				if(this.toggleSingleImage('?') == 'on'){
@@ -1938,6 +1946,45 @@ module.GlobalStateIndicator = Feature({
 //---------------------------------------------------------------------
 // XXX console / log / status bar
 // XXX title bar
+
+
+
+//---------------------------------------------------------------------
+
+// XXX experimental...
+// 		...not sure if this is the right way to go...
+// XXX need to get the minimal size and not the width as results will 
+// 		depend on viewer format...
+var AutoSingleImage = 
+module.AutoSingleImage = Feature({
+	title: '',
+	doc: '',
+
+	tag: 'auto-single-image',
+
+	config: {
+		'auto-single-image-in': 2,
+		'auto-single-image-out': 7,
+	},
+
+	handlers: [
+		['fitImage.pre',
+			function(count){
+				count = count || 1
+
+				if(this.toggleSingleImage('?') == 'off' 
+						&& count < this.config['auto-single-image-in']
+						&& count < this.screenwidth){
+					this.toggleSingleImage()
+
+				} else if(this.toggleSingleImage('?') == 'on' 
+						&& count >= this.config['auto-single-image-out']
+						&& count > this.screenwidth){
+					this.toggleSingleImage()
+				}
+			}],
+	],
+})
 
 
 
