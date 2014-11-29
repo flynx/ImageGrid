@@ -92,6 +92,20 @@
 }
 
 
+/* TEST: this is mostly speed limited... */
+.ribbon {
+	box-shadow: 5px 5px 50px -5px rgba(0, 0, 0, 0.2); 
+
+	-webkit-transition: box-shadow 0.8s ease;
+	-moz-transition: box-shadow 0.8s ease;
+	-ms-transition: box-shadow 0.8s ease;
+	-o-transition: box-shadow 0.8s ease;
+	transition: box-shadow 0.8s ease;
+}
+.current.ribbon {
+	box-shadow: 5px 5px 60px -5px rgba(0, 0, 0, 0.3); 
+}
+
 
 /* DEBUG stuff... */
 .container-center {
