@@ -533,7 +533,7 @@ module.MetaActions = {
 		var cur = this
 		var proto = this.__proto__
 		while(proto != null){
-			// we have a hit, pop it off the chain...
+			// we have a hit...
 			if(proto.hasOwnProperty('__mixin_source') 
 					&& proto.__mixin_source === from){
 				return pre ? cur : proto
