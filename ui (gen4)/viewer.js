@@ -1137,6 +1137,10 @@ actions.Actions(Client, {
 
 /*********************************************************************/
 
+// XXX this could install the handlers in two locations:
+// 		- mixin if available...
+// 		- base object (currently implemented)
+// 		should the first be done?
 var FeatureProto =
 module.FeatureProto = {
 	tag: null,
@@ -1158,13 +1162,16 @@ module.FeatureProto = {
 
 		// merge config...
 		// XXX should this use inheritance???
-		if(this.config != null || (this.actions != null && this.actions.config != null)){
+		if(this.config != null 
+				|| (this.actions != null 
+					&& this.actions.config != null)){
 			var config = this.config || this.actions.config
 
 			if(actions.config == null){
 				actions.config = {}
 			}
 			Object.keys(config).forEach(function(n){
+				// keep existing keys...
 				if(actions.config[n] === undefined){
 					actions.config[n] = config[n]
 				}
