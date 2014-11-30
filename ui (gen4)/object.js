@@ -30,6 +30,7 @@ function makeConstructor(name, a, b){
 			//			return new _constructor(json)
 			var obj = {}
 			obj.__proto__ = _constructor.prototype
+			// XXX for some reason this does not resolve from .__proto__
 			obj.constructor = _constructor
 
 		} else {

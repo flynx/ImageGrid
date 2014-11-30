@@ -524,13 +524,33 @@ module.MetaActions = {
 	},
 
 
+	// Get mixin object in inheritance chain...
+	//
+	// NOTE: if pre is true this will return the chain item before the 
+	// 		mixin, this is useful, for example, to remove mixins, see 
+	// 		.mixout(..) for an example...
+	getMixin: function(from, pre){
+		var cur = this
+		var proto = this.__proto__
+		while(proto != null){
+			// we have a hit, pop it off the chain...
+			if(proto.hasOwnProperty('__mixin_source') 
+					&& proto.__mixin_source === from){
+				return pre ? cur : proto
+			}
+			// go to next item in chain...
+			cur = proto
+			proto = cur.__proto__
+		}
+		return null
+	},
+	
 	// Mixin a set of actions into this...
 	//
 	// NOTE: if 'all' is set them mixin all the actions available, 
 	// 		otherwise only mixin local actions...
-	//
-	// XXX test
-	mixin: function(from, all, descriptors, all_attr_types){
+	// NOTE: this will override existing own attributes.
+	inlineMmixin: function(from, all, descriptors, all_attr_types){
 		// defaults...
 		descriptors = descriptors || true
 		all_attr_types = all_attr_types || false
@@ -546,6 +566,15 @@ module.MetaActions = {
 
 		var that = this
 		keys.forEach(function(k){
+			/*
+			// XXX is this the right way to go???
+			// check if we are not overwriting anything...
+			if(that.hasOwnProperty(k)){
+				console.warn('WARNING:', that,'already has attribute', k, '- skipping...')
+				return
+			}
+			*/
+
 			// properties....
 			var prop = Object.getOwnPropertyDescriptor(from, k)
 			if(descriptors && prop.get != null){
@@ -565,9 +594,25 @@ module.MetaActions = {
 		return this
 	},
 
+	// Same as .inlineMmixin(..) but isolates a mixin in a seporate object
+	// in the ingeritance chain...
+	//
+	mixin: function(from, all, descriptors, all_attr_types){
+		var proto = Object.create(this.__proto__)
+
+		// mixinto an empty object
+		proto.inlineMmixin(from, all, descriptors, all_attr_types)
+
+		// mark the mixin for simpler removal...
+		proto.__mixin_source = from
+
+		this.__proto__ = proto
+
+		return this
+	},
+
 	// Mixin a set of local actions into an object...
 	//
-	// XXX test
 	mixinTo: function(to, all, descriptors, all_attr_types){
 		return this.mixin.call(to, this, all, descriptors, all_attr_types)
 	},
@@ -579,10 +624,7 @@ module.MetaActions = {
 	// 		not be affected...
 	// NOTE: this will not affect event handlers, they should be removed
 	// 		manually if needed...
-	//
-	// XXX not sure about these...
-	// XXX test
-	mixout: function(from, all, descriptors, all_attr_types){
+	inlineMixout: function(from, all, descriptors, all_attr_types){
 		// defaults...
 		descriptors = descriptors || true
 		all_attr_types = all_attr_types || false
@@ -621,9 +663,24 @@ module.MetaActions = {
 		return this
 	},
 
+	// This is similare in effect but different in mechanics to .inlineMixout(..)
+	//
+	// This will find and remove a mixin object from the inheritance chian.
+	//
+	// NOTE: this will remove only the first occurance of a mixin.
+	mixout: function(from){
+		var o = this.getMixin(from, true)
+
+		// pop the mixin off the chain...
+		if(o != null){
+			o.__proto__ = o.__proto__.__proto__
+		}
+
+		return this
+	},
+
 	// Remove a set of local mixed in actions from object...
 	//
-	// XXX test
 	mixoutFrom: function(to, all, descriptors, all_attr_types){
 		return this.mixout.call(to, this, all, descriptors, all_attr_types)
 	},
