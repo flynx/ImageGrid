@@ -1862,6 +1862,8 @@ module.CurrentImageIndicator = Feature({
 		'current-image-shift-timeout': 200,
 
 		'current-image-indicator-fadein': 500,
+
+		'current-image-indicator-hide-timeout': 250,
 	},
 
 	actions: CurrentImageIndicatorActions,
@@ -1930,22 +1932,22 @@ module.CurrentImageIndicator = Feature({
 				}
 			}],
 
-		// XXX experimental...
-		// XXX move all the sittings into .config
-		// XXX BUG: this does not restore the indicator in some situations...
-		// 		to reproduce:
-		// 			do the action twice, fast.
+		// XXX experimental -- not sure if we need this...
+		// NOTE: we use .pre events here to see if we have moved...
 		['prevScreen.pre nextScreen.pre',
 			function(){ 
-				var t = 250
 				var m = this.ribbons.viewer.find('.current-marker')
+				var t = this.config['current-image-indicator-hide-timeout']
+
 				var cur = this.current
 
 				return function(){
 					var that = this
 
 					// delay fadeout...
-					if(cur != this.current && m.css('opacity') != 0){
+					if(cur != this.current 
+							&& m.css('opacity') == 1
+							&& this.__current_indicator_t0 == null){
 						this.__current_indicator_t0 = setTimeout(function(){
 							delete that.__current_indicator_t0
 
@@ -1953,12 +1955,12 @@ module.CurrentImageIndicator = Feature({
 						}, t)
 					}
 
-					// cancel previous fadein...
+					// cancel/delay previous fadein...
 					if(this.__current_indicator_t1 != null){
 						clearTimeout(this.__current_indicator_t1)
 					}
 
-					// cancel fadeout or do fadein...
+					// cancel fadeout and do fadein...
 					this.__current_indicator_t1 = setTimeout(function(){
 						delete that.__current_indicator_t1
 
@@ -1969,9 +1971,7 @@ module.CurrentImageIndicator = Feature({
 						} 
 
 						// show...
-						if(m.css('opacity') == 0){
-							m.css({ opacity: '' })
-						}
+						m.animate({ opacity: '1' })
 					}, t-50)
 				}
 			}],
