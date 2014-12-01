@@ -1881,22 +1881,32 @@ module.CurrentImageIndicator = Feature({
 			}],
 		// this is here to compensate for position change on ribbon 
 		// resize...
-		// XXX still jumpy...
-		['resizeRibbon.post',
+		// NOTE: hide/show of indicator on resize appears to have solved
+		// 		the jumpy animation issue.
+		// 		this might cause some blinking on slow resizes (visible 
+		// 		only on next/prev screen)... 
+		// 		...still not sure why .preventTransitions(m) did not
+		// 		do the job.
+		['resizeRibbon.pre',
 			function(target, s){
 				var m = this.ribbons.viewer.find('.current-marker')
 				// only update if marker exists and we are in current ribbon...
 				if(m.length != 0 && this.currentRibbon == this.data.getRibbon(target)){
-					this.ribbons.preventTransitions(m)
-					this.updateCurrentImageIndicator(target, false)
-					this.ribbons.restoreTransitions(m, true)
+					//this.ribbons.preventTransitions(m)
+					m.hide()
+
+					return function(){
+						this.updateCurrentImageIndicator(target, false)
+						//this.ribbons.restoreTransitions(m, true)
+						m.show()
+					}
 				}
 			}],
 		// Change border size in the appropriate spot in the animation:
 		// 	- before animation when scaling up
 		// 	- after when scaling down
 		// This is done to make the visuals consistent...
-		[ 'fitImage.pre fitRibbon.pre',
+		['fitImage.pre fitRibbon.pre',
 			function(w1){ 
 				var w0 = this.screenwidth
 				w1 = w1 || 1
@@ -1917,6 +1927,52 @@ module.CurrentImageIndicator = Feature({
 					this._current_image_indicator_timeout = setTimeout(function(){ 
 						ribbons.viewer.find('.current-marker').fadeIn(fadein)
 					}, this.config['current-image-shift-timeout'])
+				}
+			}],
+
+		// XXX experimental...
+		// XXX move all the sittings into .config
+		// XXX BUG: this does not restore the indicator in some situations...
+		// 		to reproduce:
+		// 			do the action twice, fast.
+		['prevScreen.pre nextScreen.pre',
+			function(){ 
+				var t = 250
+				var m = this.ribbons.viewer.find('.current-marker')
+				var cur = this.current
+
+				return function(){
+					var that = this
+
+					// delay fadeout...
+					if(cur != this.current && m.css('opacity') != 0){
+						this.__current_indicator_t0 = setTimeout(function(){
+							delete that.__current_indicator_t0
+
+							m.css({ opacity: 0 })
+						}, t)
+					}
+
+					// cancel previous fadein...
+					if(this.__current_indicator_t1 != null){
+						clearTimeout(this.__current_indicator_t1)
+					}
+
+					// cancel fadeout or do fadein...
+					this.__current_indicator_t1 = setTimeout(function(){
+						delete that.__current_indicator_t1
+
+						// cancel fadeout...
+						if(that.__current_indicator_t0 != null){
+							clearTimeout(that.__current_indicator_t0)
+							delete that.__current_indicator_t0
+						} 
+
+						// show...
+						if(m.css('opacity') == 0){
+							m.css({ opacity: '' })
+						}
+					}, t-50)
 				}
 			}],
 	],
