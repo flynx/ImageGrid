@@ -1846,7 +1846,6 @@ var CurrentImageIndicatorActions = actions.Actions({
 		}],
 })
 
-// XXX still a bit jumpy on resizeRibbon(..)...
 var CurrentImageIndicator = 
 module.CurrentImageIndicator = Feature({
 	title: '',
@@ -1933,6 +1932,8 @@ module.CurrentImageIndicator = Feature({
 			}],
 
 		// XXX experimental -- not sure if we need this...
+		// XXX need to think about the trigger mechanics here and make 
+		// 		them more natural...
 		// NOTE: we use .pre events here to see if we have moved...
 		['prevScreen.pre nextScreen.pre',
 			function(){ 
