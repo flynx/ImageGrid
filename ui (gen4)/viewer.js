@@ -1931,10 +1931,11 @@ module.CurrentImageIndicator = Feature({
 				}
 			}],
 
+		// hide indicator on screen next/prev...
+		//
 		// XXX experimental -- not sure if we need this...
 		// XXX need to think about the trigger mechanics here and make 
 		// 		them more natural...
-		// NOTE: we use .pre events here to see if we have moved...
 		['prevScreen.pre nextScreen.pre',
 			function(){ 
 				var m = this.ribbons.viewer.find('.current-marker')
@@ -1976,6 +1977,25 @@ module.CurrentImageIndicator = Feature({
 					}, t-50)
 				}
 			}],
+
+		/*
+		// XXX one other way to do this:
+		// 		- hide on screen jump
+		// 		- show on any other action
+		// NOTE: we use .pre events here to see if we have moved...
+		['prevScreen.post nextScreen.post',
+			function(){ 
+				var m = this.ribbons.viewer.find('.current-marker')
+
+				m.css({ opacity: 0 })
+			}],
+		['focusImage.post',
+			function(){ 
+				var m = this.ribbons.viewer.find('.current-marker')
+
+				m.css({ opacity: '' })
+			}],
+		*/
 	],
 })
 
