@@ -210,7 +210,7 @@ $(function(){
 	a.setEmptyMsg('Loading...')
 
 
-	viewer.Features.setup(a, [
+	viewer.ImageGridFeatures.setup(a, [
 		// features...
 		'ui-partial-ribbons',
 		'ui-ribbon-align-to-order',
