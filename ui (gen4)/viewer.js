@@ -1185,6 +1185,10 @@ var FeatureProto =
 module.FeatureProto = {
 	tag: null,
 
+	isApplicable: function(actions){
+		return true
+	},
+
 	getPriority: function(){
 		var res = this.priority || 0
 		return res == 'high' ? 99
@@ -1282,10 +1286,9 @@ Feature.prototype.constructor = Feature
 // XXX if this works out might be a good idea to organize everything as
 // 		a feature... including the Client and Viewer
 // 		...needs more thought...
-// XXX add a standard doc set...
 var FeatureSet =
 module.FeatureSet = {
-	buildFeatureList: function(lst){
+	buildFeatureList: function(obj, lst){
 		lst = lst.constructor !== Array ? [lst] : lst
 
 		var that = this
@@ -1298,12 +1301,25 @@ module.FeatureSet = {
 		})
 
 		// sort features via dependencies...
+		var unapplicable = []
 		var conflicts = {}
 		lst = lst.filter(function(n, i){
 			var e = that[n]
-			if(e == null || e.depends == null ){
+			if(e == null){
 				return true
 			}
+
+			// check applicability...
+			if(!e.isApplicable(obj)){
+				unapplicable.push(n)
+				return false
+			}
+
+			// no dependencies...
+			if(e.depends == null ){
+				return true
+			}
+
 			// keep only conflicting...
 			var deps = e.depends.filter(function(dep){
 				dep = lst.indexOf(dep)
@@ -1350,13 +1366,14 @@ module.FeatureSet = {
 		return {
 			features: lst,
 			excluded: excluded,
-			conflicts: conflicts
+			conflicts: conflicts,
+			unapplicable: unapplicable,
 		}
 	},
 
 	setup: function(obj, lst){
 		lst = lst.constructor !== Array ? [lst] : lst
-		var features = this.buildFeatureList(lst)
+		var features = this.buildFeatureList(obj, lst)
 		lst = features.features
 
 		// check for conflicts...
@@ -1375,6 +1392,12 @@ module.FeatureSet = {
 		if(features.excluded.length > 0){
 			console.warn('Excluded features due to exclusivity conflict:', 
 					features.excluded.join(', '))
+		}
+
+		// report unapplicable features...
+		if(features.unapplicable.length > 0){
+			console.log('Features not applicable in current context:', 
+					features.unapplicable.join(', '))
 		}
 
 		// do the setup...
@@ -2430,6 +2453,21 @@ module.ImageBookmarks = Feature({
 			}
 		}],
 	],
+})
+
+
+
+//---------------------------------------------------------------------
+var FileSystemLoader = 
+module.FileSystemLoader = Feature({
+	title: '',
+	doc: '',
+
+	tag: 'fs-loader',
+
+	isApplicable: function(){
+		return window.nodejs != null
+	},
 })
 
 

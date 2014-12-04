@@ -215,6 +215,7 @@ $(function(){
 		'ui-partial-ribbons',
 		'ui-ribbon-align-to-order',
 		'ui-single-image-view',
+		'fs-loader',
 
 		// ui elements...
 		'image-marks',
