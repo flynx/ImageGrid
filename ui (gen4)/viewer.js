@@ -1136,7 +1136,47 @@ actions.Actions(Client, {
 
 
 /*********************************************************************/
-
+//
+// Feature attributes:
+// 	.tag			- feature tag (string)
+// 					  this is used to identify the feature, its event handlers
+// 					  and DOM elements.
+//
+// 	.title			- feature name (string | null)
+// 	.doc			- feature description (string | null)
+//
+// 	.priority		- feature priority
+// 					  can be:
+// 					  	- 'high' (99) | 'medium' (0) | 'low' (-99)
+// 					  	- number
+// 					  	- null (0, default)
+// 					  features with higher priority will be setup first,
+// 					  features with the same priority will be run in order of
+// 					  occurrence.
+// 	.depends		- feature dependencies -- tags of features that must setup
+// 					  before the feature (list | null)
+// 	.exclusive		- feature exclusivity tags (list | null)
+// 					  an exclusivity group enforces that only one feature in
+// 					  it will be run, i.e. the first / highest priority.
+//
+// 	.actions		- action object containing feature actions (ActionSet | null)
+// 					  this will be mixed into the base object on .setup()
+// 					  and mixed out on .remove()
+// 	.config			- feature configuration, will be merged with base 
+// 					  object's .config
+// 	.handlers		- feature event handlers (list | null)
+// 
+//
+//
+// .handlers format:
+// 	[
+// 		[ <event-spec>, <handler-function> ],
+// 		...
+// 	]
+//
+// NOTE: both <event-spec> and <handler-function> must be compatible with
+// 		Action.on(..)
+//
 // XXX this could install the handlers in two locations:
 // 		- mixin if available...
 // 		- base object (currently implemented)
@@ -1144,6 +1184,14 @@ actions.Actions(Client, {
 var FeatureProto =
 module.FeatureProto = {
 	tag: null,
+
+	getPriority: function(){
+		var res = this.priority || 0
+		return res == 'high' ? 99
+			: res == 'low' ? -99
+			: res == 'medium' ? 0
+			: res
+	},
 
 	setup: function(actions){
 		var that = this
@@ -1237,11 +1285,103 @@ Feature.prototype.constructor = Feature
 // XXX add a standard doc set...
 var FeatureSet =
 module.FeatureSet = {
+	buildFeatureList: function(lst){
+		lst = lst.constructor !== Array ? [lst] : lst
+
+		var that = this
+
+		// sort features via priority...
+		lst = lst.sort(function(a, b){
+			a = that[a] == null ? 0 : that[a].getPriority()
+			b = that[b] == null ? 0 : that[b].getPriority()
+			return b - a
+		})
+
+		// sort features via dependencies...
+		var conflicts = {}
+		lst = lst.filter(function(n, i){
+			var e = that[n]
+			if(e == null || e.depends == null ){
+				return true
+			}
+			// keep only conflicting...
+			var deps = e.depends.filter(function(dep){
+				dep = lst.indexOf(dep)
+				return dep == -1 || dep > i
+			})
+
+			// no conflicts...
+			if(deps.length == 0){
+				return true
+			}
+
+			// can't fix...
+			conflicts[n] = deps
+
+			return false
+		})
+
+		// skip duplicate exclusive features...
+		var exclusive = []
+		var excluded = []
+		lst = lst.filter(function(n){
+			var e = that[n]
+			if(e == null || e.exclusive == null ){
+				return true
+			}
+			// count the number of exclusive features already present...
+			var res = e.exclusive
+				.filter(function(n){
+					if(exclusive.indexOf(n) < 0){
+						exclusive.push(n)
+						return false
+					}
+					return true
+				})
+				.length == 0
+
+			if(!res){
+				excluded.push(n)
+			}
+
+			return res
+		})
+
+		return {
+			features: lst,
+			excluded: excluded,
+			conflicts: conflicts
+		}
+	},
+
 	setup: function(obj, lst){
 		lst = lst.constructor !== Array ? [lst] : lst
+		var features = this.buildFeatureList(lst)
+		lst = features.features
+
+		// check for conflicts...
+		if(Object.keys(features.conflicts).length != 0){
+			var c = features.conflicts
+
+			// build a report...
+			var report = []
+			Object.keys(c).forEach(function(k){
+				report.push(k + ': must setup after:\n          ' + c[k].join(', '))
+			})
+			throw 'Feature dependency error:\n    ' + report.join('\n    ')
+		}
+
+		// report excluded features...
+		if(features.excluded.length > 0){
+			console.warn('Excluded features due to exclusivity conflict:', 
+					features.excluded.join(', '))
+		}
+
+		// do the setup...
 		var that = this
 		var setup = FeatureProto.setup
 		lst.forEach(function(n){
+			// setup...
 			if(that[n] != null){
 				console.log('Setting up feature:', n)
 				setup.call(that[n], obj)
@@ -1393,6 +1533,8 @@ module.PartialRibbons = Feature({
 	doc: 'Maintains partially loaded ribbons, this enables very lage '
 		+'image sets to be hadled eficiently.',
 
+	// NOTE: partial ribbons needs to be setup first...
+	// 		...the reasons why things break otherwise is not too clear.
 	priority: 'high',
 
 	tag: 'ui-partial-ribbons',
@@ -1863,6 +2005,13 @@ module.CurrentImageIndicator = Feature({
 		'current-image-indicator-fadein': 500,
 
 		'current-image-indicator-hide-timeout': 250,
+
+		// this can be:
+		// 	'hide'			- simply hide on next/prev screen action
+		// 					  and show on focus image.
+		// 	'hide-show'		- hide on fast scroll through screens and 
+		// 					  show when slowing down.
+		'current-image-indicator-screen-nav-mode': 'hide',
 	},
 
 	actions: CurrentImageIndicatorActions,
@@ -1930,7 +2079,24 @@ module.CurrentImageIndicator = Feature({
 					}, this.config['current-image-shift-timeout'])
 				}
 			}],
+	],
+})
 
+
+// XXX this depends on CurrentImageIndicator...
+var CurrentImageIndicatorHideOnFastScreenNav = 
+module.CurrentImageIndicatorHideOnFastScreenNav = Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-current-image-indicator-hide-on-fast-screen-nav',
+
+
+	depends: ['ui-current-image-indicator'],
+	exclusive: ['ui-current-image-indicator-hide'],
+
+
+	handlers: [
 		// hide indicator on screen next/prev...
 		//
 		// XXX experimental -- not sure if we need this...
@@ -1977,11 +2143,28 @@ module.CurrentImageIndicator = Feature({
 					}, t-50)
 				}
 			}],
+	],
+})
 
-		/*
-		// XXX one other way to do this:
+
+// XXX this depends on CurrentImageIndicator...
+var CurrentImageIndicatorHideOnScreenNav = 
+module.CurrentImageIndicatorHideOnScreenNav = Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-current-image-indicator-hide-on-screen-nav',
+
+
+	depends: ['ui-current-image-indicator'],
+	exclusive: ['ui-current-image-indicator-hide'],
+
+
+	handlers: [
+		// 	this does the following:
 		// 		- hide on screen jump
 		// 		- show on any other action
+		//
 		// NOTE: we use .pre events here to see if we have moved...
 		['prevScreen.post nextScreen.post',
 			function(){ 
@@ -1995,7 +2178,6 @@ module.CurrentImageIndicator = Feature({
 
 				m.css({ opacity: '' })
 			}],
-		*/
 	],
 })
 

@@ -212,8 +212,6 @@ $(function(){
 
 	viewer.Features.setup(a, [
 		// features...
-		// NOTE: partial ribbons needs to be setup first...
-		// 		...the reasons why things break otherwise is not too clear.
 		'ui-partial-ribbons',
 		'ui-ribbon-align-to-order',
 		'ui-single-image-view',
@@ -226,6 +224,9 @@ $(function(){
 		'ui-animation',
 		'ui-bounds-indicators',
 		'ui-current-image-indicator',
+			// NOTE: only one of these can be set...
+			'ui-current-image-indicator-hide-on-fast-screen-nav',
+			//'ui-current-image-indicator-hide-on-screen-nav',
 
 		// experimental and optional features...
 		//'auto-single-image',
