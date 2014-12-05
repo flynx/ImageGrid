@@ -164,16 +164,25 @@ Feature.prototype.constructor = Feature
 var FeatureSet =
 module.FeatureSet = {
 	buildFeatureList: function(obj, lst){
+		lst = lst == null ? Object.keys(this) : lst
 		lst = lst.constructor !== Array ? [lst] : lst
 
 		var that = this
 
-		// sort features via priority...
-		lst = lst.sort(function(a, b){
-			a = that[a] == null ? 0 : that[a].getPriority()
-			b = that[b] == null ? 0 : that[b].getPriority()
-			return b - a
-		})
+		// sort features via priority keeping the order as close to 
+		// manual as possible...
+		var l = lst.length
+		lst = lst
+			// remove undefined features...
+			.filter(function(e){ return that[e] != null })
+			// build the sort table: [ <priority>, <rev-index>, <elem> ]
+			// NOTE: <rev-index> is element number from the tail...
+			.map(function(e, i){ return [ -that[e].getPriority(), i, e ] })
+			// do the sort...
+			// XXX for some reason JS compares lists as strings...
+			.sort(function(a, b){ return a[0] - b[0] || a[1] - b[1] })
+			// cleanup...
+			.map(function(e){ return e[2] })
 
 		// sort features via dependencies...
 		var unapplicable = []

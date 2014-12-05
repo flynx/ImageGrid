@@ -785,26 +785,6 @@ actions.Actions(Client, {
 	setEmptyMsg: ['Set message to be displayed when nothing is loaded.',
 		function(msg, help){ this.ribbons.setEmptyMsg(msg, help) }],
 
-	// App stuff...
-	// XXX move this to a viewer window action set
-	// XXX revise these...
-	close: ['Cloase viewer',
-		function(){
-			// XXX should we do anything else here like auto-save???
-			window.close() 
-		}],
-	toggleFullScreen: ['',
-		function(){
-			// XXX where should toggleFullscreenMode(..) be defined...
-			toggleFullscreenMode() 
-		}],
-	showDevTools: ['',
-		function(){
-			if(window.showDevTools != null){
-				showDevTools() 
-			}
-		}],
-
 
 	// align modes...
 	// XXX these should also affect up/down navigation...
@@ -1050,7 +1030,6 @@ actions.Actions(Client, {
 		function(target){ return updateImagePosition(this, target) }],
 	shiftImageDown: [
 		function(target){ return updateImagePosition(this, target) }],
-
 	shiftImageLeft: [
 		function(target){ 
 			this.ribbons.placeImage(target, -1) 
@@ -1076,6 +1055,7 @@ actions.Actions(Client, {
 				this.ribbons.placeRibbon(target, i+1)
 			}
 		}],
+
 
 	reverseImages: [ reloadAfter() ],
 	reverseRibbons: [ reloadAfter() ],
@@ -1140,6 +1120,7 @@ actions.Actions(Client, {
 
 var ImageGridFeatures =
 module.ImageGridFeatures = Object.create(features.FeatureSet)
+
 
 
 //---------------------------------------------------------------------
@@ -1262,7 +1243,6 @@ var PartialRibbonsActions = actions.Actions({
 // 				- go to top ribbon
 // 				- shift image up
 // 		XXX The two should be completely independent.... (???)
-// XXX need to test and tweak with actual images...
 var PartialRibbons = 
 module.PartialRibbons = features.Feature(ImageGridFeatures, {
 	title: 'Partial Ribbons',
@@ -1456,6 +1436,7 @@ module.AlignRibbonsToImageOrder = features.Feature(ImageGridFeatures, {
 	doc: '',
 
 	tag: 'ui-ribbon-align-to-order',
+	exclusive: ['ui-ribbon-align'],
 
 	handlers: [
 		['focusImage.post', function(){ this.alignByOrder() }]
@@ -1463,15 +1444,13 @@ module.AlignRibbonsToImageOrder = features.Feature(ImageGridFeatures, {
 })
 
 
-
-//---------------------------------------------------------------------
-
 var AlignRibbonsToFirstImage = 
 module.AlignRibbonsToFirstImage = features.Feature(ImageGridFeatures, {
 	title: '',
 	doc: '',
 
 	tag: 'ui-ribbon-align-to-first',
+	exclusive: ['ui-ribbon-align'],
 
 	handlers: [
 		['focusImage.post', function(){ this.alignByFirst() }],
@@ -1819,7 +1798,6 @@ module.CurrentImageIndicator = features.Feature(ImageGridFeatures, {
 })
 
 
-// XXX this depends on CurrentImageIndicator...
 var CurrentImageIndicatorHideOnFastScreenNav = 
 module.CurrentImageIndicatorHideOnFastScreenNav = features.Feature(ImageGridFeatures, {
 	title: '',
@@ -1882,8 +1860,6 @@ module.CurrentImageIndicatorHideOnFastScreenNav = features.Feature(ImageGridFeat
 	],
 })
 
-
-// XXX this depends on CurrentImageIndicator...
 var CurrentImageIndicatorHideOnScreenNav = 
 module.CurrentImageIndicatorHideOnScreenNav = features.Feature(ImageGridFeatures, {
 	title: '',
@@ -2171,6 +2147,51 @@ module.ImageBookmarks = features.Feature(ImageGridFeatures, {
 
 
 //---------------------------------------------------------------------
+
+var AppControlActions = actions.Actions({
+	// XXX revise these...
+	close: ['Cloase viewer',
+		function(){
+			// XXX should we do anything else here like auto-save???
+			window.close() 
+		}],
+	toggleFullScreen: ['',
+		function(){
+			// XXX where should toggleFullscreenMode(..) be defined...
+			toggleFullscreenMode() 
+		}],
+	showDevTools: ['',
+		function(){
+			if(window.showDevTools != null){
+				showDevTools() 
+			}
+		}],
+})
+
+
+// XXX this needs a better .isApplicable(..)
+var AppControl = 
+module.AppControl = features.Feature(ImageGridFeatures, {
+	title: '',
+	doc: '',
+
+	tag: 'app-control',
+
+	actions: AppControlActions,
+
+	// XXX test if in:
+	// 	- chrome app
+	// 	- nw
+	// 	- mobile
+	isApplicable: function(){
+		return window.nodejs != null
+	},
+})
+
+
+
+//---------------------------------------------------------------------
+// XXX at this point this is a stub...
 var FileSystemLoader = 
 module.FileSystemLoader = features.Feature(ImageGridFeatures, {
 	title: '',
@@ -2182,7 +2203,6 @@ module.FileSystemLoader = features.Feature(ImageGridFeatures, {
 		return window.nodejs != null
 	},
 })
-
 
 
 

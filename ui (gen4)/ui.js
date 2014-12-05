@@ -212,15 +212,16 @@ $(function(){
 
 	viewer.ImageGridFeatures.setup(a, [
 		// features...
-		'ui-partial-ribbons',
 		'ui-ribbon-align-to-order',
 		'ui-single-image-view',
 		'fs-loader',
+		'app-control',
 
 		// ui elements...
 		'image-marks',
 		'image-bookmarks',
 
+		'ui-partial-ribbons',
 		// chrome...
 		'ui-animation',
 		'ui-bounds-indicators',
