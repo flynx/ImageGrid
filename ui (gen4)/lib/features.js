@@ -162,11 +162,27 @@ Feature.prototype = FeatureProto
 Feature.prototype.constructor = Feature
 
 
-// XXX experimental...
-// 		...not sure if the global feature set is a good idea...
 var FeatureSet =
 module.FeatureSet = {
-	// NOTE: this will fix dependency ordering errors except for two:
+	// Build feature list...
+	//
+	// 	Build a list of all registered features
+	// 	.buildFeatureList()
+	// 	.buildFeatureList(actions)
+	// 		-> list
+	//
+	// 	Build a list of given features
+	// 	.buildFeatureList(null, list)
+	// 	.buildFeatureList(actions, list)
+	// 		-> list
+	//
+	//
+	// NOTE: some feature .isApplicable(..) may expect the action set thus
+	// 		making it required for building a feature list.
+	// NOTE: this will try and keep the order as close as possible to the
+	// 		original as possible, this if the list is correctly ordered 
+	// 		it will not be affected...
+	// NOTE: this will fix most dependency ordering errors except for two:
 	// 		- cyclic dependencies
 	// 			e.g. a -> b and b -> a, here there is no way to reorder
 	// 				a and b to resolve this.
@@ -288,7 +304,8 @@ module.FeatureSet = {
 		}
 	},
 
-	// XXX might be good to give better reasoning to dependency errors...
+	// XXX might be good to give better reasoning/classification to 
+	// 		dependency errors...
 	setup: function(obj, lst){
 		lst = lst.constructor !== Array ? [lst] : lst
 		var features = this.buildFeatureList(obj, lst)

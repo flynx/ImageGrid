@@ -230,6 +230,8 @@ $(function(){
 			// NOTE: only one of these can be set...
 			'ui-current-image-indicator-hide-on-fast-screen-nav',
 			//'ui-current-image-indicator-hide-on-screen-nav',
+		'ui-image-state-indicator',
+		'ui-global-state-indicator',
 
 		// experimental and optional features...
 		//'auto-single-image',
