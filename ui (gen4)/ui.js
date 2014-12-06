@@ -214,6 +214,7 @@ $(function(){
 		// features...
 		'ui-ribbon-align-to-order',
 		'ui-single-image-view',
+
 		'fs-loader',
 		'app-control',
 

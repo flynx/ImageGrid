@@ -52,6 +52,12 @@ console.log('>>> features')
 // NOTE: both <event-spec> and <handler-function> must be compatible with
 // 		Action.on(..)
 //
+//
+// Feature applicability:
+// 	If feature.isApplicable(..) returns true then the feature will not be
+// 	considered on setup...
+//
+//
 // XXX this could install the handlers in two locations:
 // 		- mixin if available...
 // 		- base object (currently implemented)
@@ -158,16 +164,43 @@ Feature.prototype.constructor = Feature
 
 // XXX experimental...
 // 		...not sure if the global feature set is a good idea...
-// XXX if this works out might be a good idea to organize everything as
-// 		a feature... including the Client and Viewer
-// 		...needs more thought...
 var FeatureSet =
 module.FeatureSet = {
+	// NOTE: this will fix dependency ordering errors except for two:
+	// 		- cyclic dependencies
+	// 			e.g. a -> b and b -> a, here there is no way to reorder
+	// 				a and b to resolve this.
+	// 		- dependency / priority conflict
+	// 			e.g. a -> b but a has a higher priority that b thus 
+	// 				making it impossible to order the two without 
+	// 				breaking either the dependency or priority ordering.
 	buildFeatureList: function(obj, lst){
 		lst = lst == null ? Object.keys(this) : lst
 		lst = lst.constructor !== Array ? [lst] : lst
 
 		var that = this
+
+		// sort dependencies...
+		// NOTE: if dependency priority conflicts with order or cyclic
+		// 		dependencies are found this will be broken at the next 
+		// 		stage...
+		// 			- cyclic dependency
+		// 				X will be before one of its dependencies...
+		// 			- dependency / priority conflict
+		// 				X will have higher priority that one of its
+		// 				dependencies...
+		var res = []
+		lst.forEach(function(n){
+			var e = that[n]
+			if(e.depends == null || e.depends.length == 0){
+				res.push(n)
+			}
+			// place dependencies before the depended...
+			res = res.concat(e.depends)
+			res.push(n)
+		})
+		// remove duplicates, keeping only the first occurance...
+		lst = res.filter(function(e, i, l){ return l.indexOf(e) == i })
 
 		// sort features via priority keeping the order as close to 
 		// manual as possible...
@@ -184,7 +217,7 @@ module.FeatureSet = {
 			// cleanup...
 			.map(function(e){ return e[2] })
 
-		// sort features via dependencies...
+		// clasify features...
 		var unapplicable = []
 		var conflicts = {}
 		lst = lst.filter(function(n, i){
@@ -200,7 +233,7 @@ module.FeatureSet = {
 			}
 
 			// no dependencies...
-			if(e.depends == null ){
+			if(e.depends == null || e.depends.length == 0){
 				return true
 			}
 
@@ -255,6 +288,7 @@ module.FeatureSet = {
 		}
 	},
 
+	// XXX might be good to give better reasoning to dependency errors...
 	setup: function(obj, lst){
 		lst = lst.constructor !== Array ? [lst] : lst
 		var features = this.buildFeatureList(obj, lst)
@@ -269,7 +303,8 @@ module.FeatureSet = {
 			Object.keys(c).forEach(function(k){
 				report.push(k + ': must setup after:\n          ' + c[k].join(', '))
 			})
-			throw 'Feature dependency error:\n    ' + report.join('\n    ')
+			throw 'Feature dependency error:\n    ' + report.join('\n    ') 
+				+ '\n ...this can either be a cylic dependency or a dependency/priority conflict.'
 		}
 
 		// report excluded features...
