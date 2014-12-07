@@ -222,7 +222,8 @@ module.FeatureSet = {
 		var l = lst.length
 		lst = lst
 			// remove duplicates, keeping only the first occurance...
-			.filter(function(e, i, l){ return l.indexOf(e) == i })
+			//.filter(function(e, i, l){ return l.indexOf(e) == i })
+			.unique()
 			// remove undefined features...
 			.filter(function(e){ return that[e] != null })
 			// build the sort table: [ <priority>, <rev-index>, <elem> ]

@@ -1335,6 +1335,40 @@ Array.prototype.compact = function(){
 }
 
 
+// return an array with duplicate elements removed...
+//
+Array.prototype.unique = function(){
+	return this.filter(function(e, i, a){ return a.indexOf(e) == i })
+}
+
+
+// Compare two arrays...
+//
+Array.prototype.cmp = function(other){
+	if(this === other){
+		return true
+	}
+	if(this.length != other.length){
+		return false
+	}
+	for(var i=0; i<this.length; i++){
+		if(this[i] != other[i]){
+			return false
+		}
+	}
+	return true
+}
+
+// Compare two Arrays as sets...
+//
+// This will ignore order
+Array.prototype.setCmp = function(other){
+	return this === other 
+		|| this.unique().sort().cmp(other.unique().sort())
+}
+
+
+
 // like .length but for sparse arrays will return the element count...
 // XXX make this a prop...
 /*
