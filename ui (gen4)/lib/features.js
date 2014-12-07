@@ -215,13 +215,14 @@ module.FeatureSet = {
 			res = res.concat(e.depends)
 			res.push(n)
 		})
-		// remove duplicates, keeping only the first occurance...
-		lst = res.filter(function(e, i, l){ return l.indexOf(e) == i })
+		lst = res
 
 		// sort features via priority keeping the order as close to 
 		// manual as possible...
 		var l = lst.length
 		lst = lst
+			// remove duplicates, keeping only the first occurance...
+			.filter(function(e, i, l){ return l.indexOf(e) == i })
 			// remove undefined features...
 			.filter(function(e){ return that[e] != null })
 			// build the sort table: [ <priority>, <rev-index>, <elem> ]

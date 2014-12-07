@@ -209,11 +209,11 @@ $(function(){
 	// XXX for some reason this is not visible when loading...
 	a.setEmptyMsg('Loading...')
 
-
 	viewer.ImageGridFeatures.setup(a, [
 		// features...
 		'ui-ribbon-align-to-order',
 		'ui-single-image-view',
+		'ui-partial-ribbons',
 
 		'fs-loader',
 		'app-control',
@@ -222,7 +222,6 @@ $(function(){
 		'image-marks',
 		'image-bookmarks',
 
-		'ui-partial-ribbons',
 		// chrome...
 		'ui-animation',
 		'ui-bounds-indicators',

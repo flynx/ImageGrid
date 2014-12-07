@@ -1690,6 +1690,8 @@ var CurrentImageIndicatorActions = actions.Actions({
 					css.borderWidth = border
 
 				// set border with a delay...
+				// NOTE: this is to prevent the ugly border resize before
+				// 		the scale on scale down animation starts...
 				} else {
 					setTimeout(function(){ 
 						marker.css({ borderWidth: border }) 
@@ -1763,7 +1765,12 @@ module.CurrentImageIndicator = features.Feature(ImageGridFeatures, {
 					return function(){
 						this.updateCurrentImageIndicator(target, false)
 						//this.ribbons.restoreTransitions(m, true)
-						m.show()
+						m
+							.show()
+							// NOTE: keeping display in inline style will
+							// 		prevent the element from being hidden
+							// 		by css...
+							.css({display: ''})
 					}
 				}
 			}],
