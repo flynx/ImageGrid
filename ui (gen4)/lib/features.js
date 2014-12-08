@@ -240,7 +240,9 @@ module.FeatureSet = {
 								missing[d] = []
 							}
 
-							missing[d].push(n)
+							if(missing[d].indexOf(n) < 0){
+								missing[d].push(n)
+							}
 
 							return false
 						}
