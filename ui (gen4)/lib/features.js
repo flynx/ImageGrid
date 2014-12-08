@@ -197,23 +197,59 @@ module.FeatureSet = {
 		var that = this
 
 		// sort dependencies...
-		// NOTE: if dependency priority conflicts with order or cyclic
-		// 		dependencies are found this will be broken at the next 
-		// 		stage...
+		//
+		// These are order dependencies, i.e. for a dependency to be 
+		// resolved it must satisfy ALL of the folowing:
+		// 	- all dependencies must exist in the list.
+		// 	- all dependencies must be positiond/setup before the
+		// 		dependant.
+		//
+		// The general algorithm is as folows:
+		// 	1) place the dependencies befeore the dependant for each 
+		//		element
+		// 	2) remove the duplicate features except fot the first 
+		// 		occurance
+		//
+		// NOTE: we do not do recursice dependency expansion.
+		// NOTE: stage 2 is done later when filtering the list...
+		// NOTE: if dependency errors/conflicts exist this will break at
+		// 		the next step.
+		// NOTE: conflicta that can occur and can not be recovered from:
 		// 			- cyclic dependency
 		// 				X will be before one of its dependencies...
 		// 			- dependency / priority conflict
-		// 				X will have higher priority that one of its
+		// 				X will have higher priority than one of its
 		// 				dependencies...
+		//
+		// XXX do we add dependencies that are not included in the list???
 		var res = []
+		var missing = {}
 		lst.forEach(function(n){
 			var e = that[n]
+			// no dependencies...
 			if(e.depends == null || e.depends.length == 0){
 				res.push(n)
+
+			} else {
+				// skip dependencies that are not in list...
+				var deps = e.depends.filter(function(d){ 
+					if(lst.indexOf(d) < 0){
+						if(missing[d] == null){
+							missing[d] = []
+						}
+
+						missing[d].push(n)
+
+						return false
+					}
+					return true
+				})
+
+				// place dependencies before the depended...
+				res = res.concat(deps)
+				res.push(n)
 			}
-			// place dependencies before the depended...
-			res = res.concat(e.depends)
-			res.push(n)
+
 		})
 		lst = res
 
@@ -224,15 +260,17 @@ module.FeatureSet = {
 			// remove duplicates, keeping only the first occurance...
 			//.filter(function(e, i, l){ return l.indexOf(e) == i })
 			.unique()
-			// remove undefined features...
-			.filter(function(e){ return that[e] != null })
+			// remove undefined and non-features...
+			.filter(function(e){ return that[e] != null 
+				&& that[e] instanceof Feature })
 			// build the sort table: [ <priority>, <rev-index>, <elem> ]
 			// NOTE: <rev-index> is element number from the tail...
 			.map(function(e, i){ return [ -that[e].getPriority(), i, e ] })
 			// do the sort...
-			// XXX for some reason JS compares lists as strings...
+			// NOTE: for some reason JS compares lists as strings so we
+			// 		have to comare the list manually...
 			.sort(function(a, b){ return a[0] - b[0] || a[1] - b[1] })
-			// cleanup...
+			// cleanup -- drom the table...
 			.map(function(e){ return e[2] })
 
 		// clasify features...
@@ -260,6 +298,9 @@ module.FeatureSet = {
 				dep = lst.indexOf(dep)
 				return dep == -1 || dep > i
 			})
+
+			// skip missing dependencies...
+			deps = deps.filter(function(d){ return missing[d] == null })
 
 			// no conflicts...
 			if(deps.length == 0){
@@ -301,6 +342,7 @@ module.FeatureSet = {
 		return {
 			features: lst,
 			excluded: excluded,
+			missing: missing,
 			conflicts: conflicts,
 			unapplicable: unapplicable,
 		}
@@ -314,16 +356,21 @@ module.FeatureSet = {
 		lst = features.features
 
 		// check for conflicts...
-		if(Object.keys(features.conflicts).length != 0){
+		if(Object.keys(features.conflicts).length != 0
+				|| Object.keys(features.missing).length != 0){
+			var m = features.missing
 			var c = features.conflicts
 
 			// build a report...
 			var report = []
+			Object.keys(m).forEach(function(k){
+				report.push(k + ': missing but required by:\n          ' + m[k].join(', '))
+			})
+			report.push('\n')
 			Object.keys(c).forEach(function(k){
 				report.push(k + ': must setup after:\n          ' + c[k].join(', '))
 			})
 			throw 'Feature dependency error:\n    ' + report.join('\n    ') 
-				+ '\n ...this can either be a cylic dependency or a dependency/priority conflict.'
 		}
 
 		// report excluded features...
