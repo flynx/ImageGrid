@@ -209,12 +209,12 @@ module.FeatureSet = {
 		//		element
 		// 	2) remove the duplicate features except fot the first 
 		// 		occurance
+		// 	3) repeat 1 and 2 for a second time to cover 2'nd gen 
+		// 		dependencies...
 		//
 		// NOTE: recursice dependency expansion is not needed here as if
 		// 		a dependency is not included in the list then it is not 
 		// 		needed...
-		// 		their dependencies to be sorted, and if that does not work 
-		// 		we can give up...
 		// NOTE: stage 2 is done later when filtering the list...
 		// NOTE: if dependency errors/conflicts exist this will break at
 		// 		the next step.
@@ -357,8 +357,6 @@ module.FeatureSet = {
 		}
 	},
 
-	// XXX might be good to give better reasoning/classification to 
-	// 		dependency errors...
 	setup: function(obj, lst){
 		lst = lst.constructor !== Array ? [lst] : lst
 		var features = this.buildFeatureList(obj, lst)
@@ -372,13 +370,19 @@ module.FeatureSet = {
 
 			// build a report...
 			var report = []
+
+			// missing deps...
 			Object.keys(m).forEach(function(k){
 				report.push(k + ': missing but required by:\n          ' + m[k].join(', '))
 			})
 			report.push('\n')
+
+			// conflicts...
 			Object.keys(c).forEach(function(k){
 				report.push(k + ': must setup after:\n          ' + c[k].join(', '))
 			})
+
+			// break...
 			throw 'Feature dependency error:\n    ' + report.join('\n    ') 
 		}
 
