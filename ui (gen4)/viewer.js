@@ -215,6 +215,8 @@ actions.Actions({
 
 	// basic life-cycle actions...
 	//
+	// XXX sync tags between data and images...
+	// 		...but which takes priority???
 	load: [
 		function(d){
 			this.images = images.Images(d.images)
@@ -486,6 +488,63 @@ actions.Actions({
 		}],
 
 
+	// tags...
+	//
+	// XXX mark updated...
+	tag: ['Tag image(s)',
+		function(tags, gids){
+			gids = gids || this.current
+			gids = gids.constructor !== Array ? [gids] : gids
+			tags = tags.constructor !== Array ? [tags] : tags
+
+			// data...
+			this.data.tag(tags, gids)
+
+			// images...
+			var images = this.images
+			gids.forEach(function(gid){
+				var img = images[gid]
+				if(img == null){
+					img = images[gid] = {}
+				}
+				if(img.tags == null){
+					img.tags = []
+				}
+
+				img.tags = img.tags.concat(tags).unique()
+
+				// XXX mark updated...
+			})
+		}],
+	// XXX mark updated...
+	untag: ['Untag image(s)',
+		function(tags, gids){
+			gids = gids || this.current
+			gids = gids.constructor !== Array ? [gids] : gids
+			tags = tags.constructor !== Array ? [tags] : tags
+
+			// data...
+			this.data.untag(tags, gids)
+
+			// images...
+			var images = this.images
+			gids.forEach(function(gid){
+				var img = images[gid]
+				if(img == null || img.tags == null){
+					return
+				}
+
+				img.tags = img.tags.filter(function(tag){ return tags.indexOf(tag) < 0 })
+
+				if(img.tags.length == 0){
+					delete img.tags
+				}
+
+				// XXX mark updated...
+			})
+		}],
+
+
 	// crop...
 	//
 	crop: [ 
@@ -729,6 +788,8 @@ actions.Actions(Client, {
 					: null
 
 				this.ribbons.updateData(this.data, settings)
+				// XXX should this be here???
+				this.ribbons.updateImage('*')
 				this.focusImage()
 
 				this.ribbons.restoreTransitions()
@@ -768,8 +829,7 @@ actions.Actions(Client, {
 	// XXX experimental...
 	// 		...need this to get triggered by .ribbons
 	// 		at this point manually triggering this will not do anything...
-	updateImage: ['',
-		function(gid, image){ }],
+	updateImage: ['', function(gid, image){ }],
 
 
 	// General UI stuff...
@@ -1072,6 +1132,23 @@ actions.Actions(Client, {
 		function(target){ this.ribbons.flipVertical(target, 'view') }],
 	flipHorizontal: [
 		function(target){ this.ribbons.flipHorizontal(target, 'view') }],
+
+
+	// tags...
+	tag: [ 
+		function(tags, gids){ 
+			gids = gids != null && gids.constructor !== Array ? [gids] : gids
+			return function(){
+				this.ribbons.updateImage(gids) 
+			}
+		}],
+	untag: [
+		function(tags, gids){ 
+			gids = gids != null && gids.constructor !== Array ? [gids] : gids
+			return function(){
+				this.ribbons.updateImage(gids) 
+			}
+		}],
 
 
 	// group stuff...
@@ -2001,13 +2078,35 @@ function makeTagTogglerAction(tag){
 			: target
 		target = target.constructor !== Array ? [target] : target
 
-		var res = this.data.toggleTag(tag, target, action)
+		// on...
+		if(action == 'on'){
+			this.tag(tag, target)
+			var res = 'on'
 
-		if(action != '?' && this.ribbons != null){
+		// off...
+		} else if(action == 'off'){
+			this.untag(tag, target)
+			var res = 'off'
+
+		// next...
+		} else if(action != '?'){
+			var res = []
 			var that = this
 			target.forEach(function(t){
-				that.ribbons.toggleImageMark(t, tag, action)
+				if(that.data.getTags(t).indexOf(tag) < 0){
+					that.tag(tag, t)
+					res.push('on')
+				} else {
+					that.untag(tag, t)
+					res.push('off')
+				}
 			})
+			res = res.length == 1 ? res[0] : res
+
+		// ?
+		} else if(action == '?'){
+			var res = this.data.toggleTag(tag, target, '?')
+			res = res.length == 1 ? res[0] : res
 		}
 
 		return res 
@@ -2090,6 +2189,8 @@ module.ImageMarks = features.Feature(ImageGridFeatures, {
 		['updateImage', function(gid, img){
 			if(this.toggleMark(gid, '?') == 'on'){
 				this.ribbons.toggleImageMark(gid, 'selected', 'on')
+			} else {
+				this.ribbons.toggleImageMark(gid, 'selected', 'off')
 			}
 		}],
 	],
@@ -2146,6 +2247,8 @@ module.ImageBookmarks = features.Feature(ImageGridFeatures, {
 		['updateImage', function(gid, img){
 			if(this.toggleBookmark(gid, '?') == 'on'){
 				this.ribbons.toggleImageMark(gid, 'bookmark', 'on')
+			} else {
+				this.ribbons.toggleImageMark(gid, 'bookmark', 'off')
 			}
 		}],
 	],

@@ -2462,7 +2462,7 @@ var DataWithTagsPrototype = {
 	tag: function(tags, gids){
 		tags = tags.constructor !== Array ? [tags] : tags
 
-		gids = gids == null ? this.getImage() : gids
+		gids = gids == null || gids == 'current' ? this.getImage() : gids
 		gids = gids.constructor !== Array ? [gids] : gids
 
 		if(this.tags == null){
@@ -2490,7 +2490,7 @@ var DataWithTagsPrototype = {
 		}
 		tags = tags.constructor !== Array ? [tags] : tags
 
-		gids = gids == null ? this.getImage() : gids
+		gids = gids == null || gids == 'current' ? this.getImage() : gids
 		gids = gids.constructor !== Array ? [gids] : gids
 
 		var that = this
@@ -2514,7 +2514,7 @@ var DataWithTagsPrototype = {
 
 	// NOTE: this does not support multiple tags at this point...
 	toggleTag: function(tag, gids, action){
-		gids = gids == null ? this.getImage() : gids
+		gids = gids == null || gids == 'current' ? this.getImage() : gids
 		gids = gids.constructor !== Array ? [gids] : gids
 
 		// tag all...
@@ -2569,7 +2569,7 @@ var DataWithTagsPrototype = {
 
 	getTags: function(gids){
 		gids = arguments.length > 1 ? [].slice.call(arguments) : gids
-		gids = gids == null ? this.getImage() : gids
+		gids = gids == null || gids == 'current' ? this.getImage() : gids
 		gids = gids.constructor !== Array ? [gids] : gids
 
 		if(this.tags == null){
