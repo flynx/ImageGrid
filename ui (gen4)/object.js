@@ -32,6 +32,7 @@ function makeConstructor(name, a, b){
 			obj.__proto__ = _constructor.prototype
 			// XXX for some reason this does not resolve from .__proto__
 			obj.constructor = _constructor
+			//obj.__proto__.constructor = _constructor
 
 		} else {
 			var obj = this

@@ -837,6 +837,12 @@ actions.Actions(Client, {
 				this.ribbons.restoreTransitions()
 			}
 		}],
+	// NOTE: this will trigger .updateImage hooks...
+	refresh: ['A lighter version of reload',
+		function(gids){
+			gids = gids || '*'
+			this.ribbons.updateImage(gids)
+		}],
 	clear: [
 		function(){ this.ribbons.clear() }],
 
@@ -866,12 +872,18 @@ actions.Actions(Client, {
 	// This is called by .ribbons, the goal is to use it to hook into 
 	// image updating from features and extensions...
 	//
-	// NOTE: not intended for calling manually.
+	// NOTE: not intended for calling manually, use .refresh(..) instead...
 	//
 	// XXX experimental...
 	// 		...need this to get triggered by .ribbons
 	// 		at this point manually triggering this will not do anything...
-	updateImage: ['', function(gid, image){ }],
+	// XXX problem: need to either redesign this or distinguish from 
+	// 		other actions as I keep calling it expecting results...
+	// 		NOTE: calling this.ribbons.updateImage(gid, image) from within
+	// 			this will result in infinite recursion...
+	// 			...we need this to be triggered from .ribbons
+	// XXX hide from user action list...
+	updateImage: ['This will do nothing', function(gid, image){ }],
 
 
 	// General UI stuff...
@@ -1219,16 +1231,15 @@ actions.Actions(Client, {
 				// generate the view...
 				this.data = this.data.cropRibbons()
 
-				this.reload()
 			} else {
 				var data = this._full_data
 				delete this._full_data
 
 				// restore...
 				this.data = data.mergeRibbonCrop(this.data)
-
-				this.reload()
 			}
+
+			this.reload()
 		}],
 
 })
