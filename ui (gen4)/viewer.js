@@ -831,14 +831,14 @@ actions.Actions(Client, {
 
 				this.ribbons.updateData(this.data, settings)
 				// XXX should this be here???
-				this.ribbons.updateImage('*')
+				this.refresh()
 				this.focusImage()
 
 				this.ribbons.restoreTransitions()
 			}
 		}],
 	// NOTE: this will trigger .updateImage hooks...
-	refresh: ['A lighter version of reload',
+	refresh: ['Refresh images without reloading',
 		function(gids){
 			gids = gids || '*'
 			this.ribbons.updateImage(gids)
@@ -879,11 +879,11 @@ actions.Actions(Client, {
 	// 		at this point manually triggering this will not do anything...
 	// XXX problem: need to either redesign this or distinguish from 
 	// 		other actions as I keep calling it expecting results...
-	// 		NOTE: calling this.ribbons.updateImage(gid, image) from within
-	// 			this will result in infinite recursion...
-	// 			...we need this to be triggered from .ribbons
 	// XXX hide from user action list...
-	updateImage: ['This will do nothing', function(gid, image){ }],
+	updateImage: ['This will do nothing',
+		'This will be called by .refresh(..) and intended for use as an '
+			+'trigger for handlers, and not as a callable acation.',
+		function(gid, image){ }],
 
 
 	// General UI stuff...
@@ -1096,7 +1096,7 @@ actions.Actions(Client, {
 	fitOrig: ['Fit to original scale',
 		function(){ 
 			this.ribbons.setScale(1) 
-			this.ribbons.updateImage('*')
+			this.refresh()
 		}],
 	// NOTE: if this gets a count argument it will fit count images, 
 	// 		default is one.
@@ -1113,7 +1113,7 @@ actions.Actions(Client, {
 				count += o
 			}
 			this.ribbons.fitImage(count)
-			this.ribbons.updateImage('*')
+			this.refresh()
 		}],
 	fitMax: ['Fit the maximum number of images',
 		function(){ this.fitImage(this.config['max-screen-images']) }],
@@ -1133,7 +1133,7 @@ actions.Actions(Client, {
 	fitRibbon: ['Fit ribbon vertically',
 		function(count){
 			this.ribbons.fitRibbon(count)
-			this.ribbons.updateImage('*')
+			this.refresh()
 		}],
 
 
@@ -1193,14 +1193,16 @@ actions.Actions(Client, {
 		function(tags, gids){ 
 			gids = gids != null && gids.constructor !== Array ? [gids] : gids
 			return function(){
-				this.ribbons.updateImage(gids) 
+				//this.ribbons.updateImage(gids) 
+				this.refresh(gids)
 			}
 		}],
 	untag: [
 		function(tags, gids){ 
 			gids = gids != null && gids.constructor !== Array ? [gids] : gids
 			return function(){
-				this.ribbons.updateImage(gids) 
+				//this.ribbons.updateImage(gids) 
+				this.refresh(gids)
 			}
 		}],
 
