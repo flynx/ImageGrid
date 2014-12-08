@@ -217,12 +217,12 @@ $(function(){
 		'ui-single-image-view',
 		'ui-partial-ribbons',
 
+		'image-marks',
+		'image-bookmarks',
+
 		'fs-loader',
 		'app-control',
 
-		// ui elements...
-		'image-marks',
-		'image-bookmarks',
 
 		// chrome...
 		'ui-animation',
@@ -256,7 +256,6 @@ $(function(){
 		// synced...
 		// do not do for actual data...
 		//.syncTags()
-
 
 
 	a.setEmptyMsg(

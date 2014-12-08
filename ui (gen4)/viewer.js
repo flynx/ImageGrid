@@ -2156,7 +2156,7 @@ function makeTagTogglerAction(tag){
 }
 
 
-// XXX add image updater...
+// XXX .toggleMarkBlock(..) not done yet...
 var ImageMarkActions = actions.Actions({
 
 	// a shorthand...
@@ -2217,6 +2217,7 @@ var ImageMarkActions = actions.Actions({
 })
 
 
+// NOTE: this is usable without ribbons...
 var ImageMarks = 
 module.ImageMarks = features.Feature(ImageGridFeatures, {
 	title: '',
@@ -2229,10 +2230,13 @@ module.ImageMarks = features.Feature(ImageGridFeatures, {
 	handlers: [
 		// XXX is this the right way to go???
 		['updateImage', function(gid, img){
-			if(this.toggleMark(gid, '?') == 'on'){
-				this.ribbons.toggleImageMark(gid, 'selected', 'on')
-			} else {
-				this.ribbons.toggleImageMark(gid, 'selected', 'off')
+			// update only when ribbons are preset... 
+			if(this.ribbons != null){
+				if(this.toggleMark(gid, '?') == 'on'){
+					this.ribbons.toggleImageMark(gid, 'selected', 'on')
+				} else {
+					this.ribbons.toggleImageMark(gid, 'selected', 'off')
+				}
 			}
 		}],
 	],
@@ -2275,6 +2279,7 @@ var ImageBookmarkActions = actions.Actions({
 })
 
 
+// NOTE: this is usable without ribbons...
 var ImageBookmarks = 
 module.ImageBookmarks = features.Feature(ImageGridFeatures, {
 	title: '',
@@ -2287,10 +2292,13 @@ module.ImageBookmarks = features.Feature(ImageGridFeatures, {
 	handlers: [
 		// XXX is this the right way to go???
 		['updateImage', function(gid, img){
-			if(this.toggleBookmark(gid, '?') == 'on'){
-				this.ribbons.toggleImageMark(gid, 'bookmark', 'on')
-			} else {
-				this.ribbons.toggleImageMark(gid, 'bookmark', 'off')
+			// update only when ribbons are preset... 
+			if(this.ribbons != null){
+				if(this.toggleBookmark(gid, '?') == 'on'){
+					this.ribbons.toggleImageMark(gid, 'bookmark', 'on')
+				} else {
+					this.ribbons.toggleImageMark(gid, 'bookmark', 'off')
+				}
 			}
 		}],
 	],

@@ -190,40 +190,56 @@ module.FeatureSet = {
 	// 			e.g. a -> b but a has a higher priority that b thus 
 	// 				making it impossible to order the two without 
 	// 				breaking either the dependency or priority ordering.
-	buildFeatureList: function(obj, lst){
+	//
+	//
+	// Dependency sorting:
+	//
+	// These are order dependencies, i.e. for a dependency to be 
+	// resolved it must satisfy ALL of the folowing:
+	// 	- all dependencies must exist in the list.
+	// 	- all dependencies must be positiond/setup before the dependant.
+	//
+	// The general algorithm is as folows:
+	// 	1) place the dependencies befeore the dependant for each element
+	// 	2) remove the duplicate features except fot the first occurance
+	// 	3) repeat 1 and 2 for 2 to depth times or until the feature list
+	// 		stabelizes, i.e. no new features are added on the last run.
+	//
+	// NOTE: if auto_include is true (default) this will add dependencies
+	// 		as they are needed...
+	// 		This is useful for "meta-features" that do nothing other than
+	// 		depend/include sets of other features, for exmale: 'ui', 
+	// 		'core', 'browser', ...etc.
+	// NOTE: dependency chains larger than depth will be dropped, this 
+	// 		can be fixed by setting a greater depth (default: 8)...
+	// NOTE: conflicts that can occur and can not be recovered from:
+	// 		- cyclic dependency
+	// 			X will be before one of its dependencies...
+	// 		- dependency / priority conflict
+	// 			X will have higher priority than one of its dependencies...
+	buildFeatureList: function(obj, lst, auto_include, depth){
 		lst = lst == null ? Object.keys(this) : lst
 		lst = lst.constructor !== Array ? [lst] : lst
+		auto_include = auto_include == null ? true : false
+		depth = depth || 8
 
 		var that = this
 
-		// sort dependencies...
-		//
-		// These are order dependencies, i.e. for a dependency to be 
-		// resolved it must satisfy ALL of the folowing:
-		// 	- all dependencies must exist in the list.
-		// 	- all dependencies must be positiond/setup before the
-		// 		dependant.
-		//
-		// The general algorithm is as folows:
-		// 	1) place the dependencies befeore the dependant for each 
-		//		element
-		// 	2) remove the duplicate features except fot the first 
-		// 		occurance
-		// 	3) repeat 1 and 2 for a second time to cover 2'nd gen 
-		// 		dependencies...
-		//
-		// NOTE: recursice dependency expansion is not needed here as if
-		// 		a dependency is not included in the list then it is not 
-		// 		needed...
-		// NOTE: stage 2 is done later when filtering the list...
-		// NOTE: if dependency errors/conflicts exist this will break at
-		// 		the next step.
-		// NOTE: conflicta that can occur and can not be recovered from:
-		// 			- cyclic dependency
-		// 				X will be before one of its dependencies...
-		// 			- dependency / priority conflict
-		// 				X will have higher priority than one of its
-		// 				dependencies...
+		// helpers...
+		// NOTE: _skipMissing(..) will add missing dependencies to missing...
+		var _skipMissing = function(feature, deps, missing){
+			return deps.filter(function(d){ 
+				if(lst.indexOf(d) < 0){
+					if(missing[d] == null){
+						missing[d] = []
+					}
+					if(missing[d].indexOf(feature) < 0){
+						missing[d].push(feature)
+					}
+				}
+				return missing[d] == null
+			})
+		}
 		var _sortDep = function(lst, missing){
 			var res = []
 			lst.forEach(function(n){
@@ -233,21 +249,14 @@ module.FeatureSet = {
 					res.push(n)
 
 				} else {
+					// auto-include dependencies...
+					if(auto_include){
+						var deps = e.depends
+
 					// skip dependencies that are not in list...
-					var deps = e.depends.filter(function(d){ 
-						if(lst.indexOf(d) < 0){
-							if(missing[d] == null){
-								missing[d] = []
-							}
-
-							if(missing[d].indexOf(n) < 0){
-								missing[d].push(n)
-							}
-
-							return false
-						}
-						return true
-					})
+					} else {
+						var deps = _skipMissing(n, e.depends, missing)
+					}
 
 					// place dependencies before the depended...
 					res = res.concat(deps)
@@ -258,19 +267,21 @@ module.FeatureSet = {
 			return res
 		}
 
+		// expand and sort dependencies...
+		// 	2+ times untill depth is 0 or length stabelizes...
 		var missing = {}
-		// sort twice to cover the dependencies of dependencies...
-		// ...if this does not work we give up ;)
-		lst = _sortDep(lst, missing)
-		lst = _sortDep(lst, missing)
+		lst = _sortDep(lst, missing).unique()
+		var l
+		do {
+			l = lst.length
+			lst = _sortDep(lst, missing).unique()
+			depth -= 1
+		} while(l != lst.length && depth > 0)
 
 		// sort features via priority keeping the order as close to 
 		// manual as possible...
 		var l = lst.length
 		lst = lst
-			// remove duplicates, keeping only the first occurance...
-			//.filter(function(e, i, l){ return l.indexOf(e) == i })
-			.unique()
 			// remove undefined and non-features...
 			.filter(function(e){ return that[e] != null 
 				&& that[e] instanceof Feature })
@@ -311,14 +322,17 @@ module.FeatureSet = {
 			})
 
 			// skip missing dependencies...
-			deps = deps.filter(function(d){ return missing[d] == null })
+			// NOTE: we need to check for missing again as a feature 
+			// 		could have been removed due to inapplicability or
+			// 		being undefined...
+			deps = _skipMissing(n, deps, missing)
 
 			// no conflicts...
 			if(deps.length == 0){
 				return true
 			}
 
-			// can't fix...
+			// dependency exists but in wrong order -- can't fix...
 			conflicts[n] = deps
 
 			return false
