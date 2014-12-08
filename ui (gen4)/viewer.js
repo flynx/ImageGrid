@@ -215,8 +215,7 @@ actions.Actions({
 
 	// basic life-cycle actions...
 	//
-	// XXX sync tags between data and images...
-	// 		...but which takes priority???
+	// XXX do we need to call .syncTags(..) here???
 	load: [
 		function(d){
 			this.images = images.Images(d.images)
@@ -225,7 +224,7 @@ actions.Actions({
 	clear: [
 		function(){
 			delete this.data
-			delete this.Images
+			delete this.images
 		}],
 
 	// XXX should this be here???
@@ -542,6 +541,49 @@ actions.Actions({
 
 				// XXX mark updated...
 			})
+		}],
+	// Sync tags...
+	//
+	// 	Sync both ways...
+	//	.syncTags()
+	//	.syncTags('both')
+	//
+	//	Sync from .data
+	//	.syncTags('data')
+	//
+	//	Sync from .images
+	//	.syncTags('images')
+	//
+	//	Sync from <images> object
+	//	.syncTags(<images>)
+	//
+	// NOTE: mode is data.tagsToImages(..) / data.tagsFromImages(..) 
+	// 		compatible...
+	// NOTE: setting source to 'both' and mode to 'reset' is the same as
+	// 		'images' and 'reset' as all .data tags will be lost on first 
+	// 		pass...
+	syncTags: ['Synchoronize tags between data and images',
+		function(source, mode){
+			// can't do anything if either .data or .images are not 
+			// defined...
+			if(this.data == null || this.images == null){
+				return
+			}
+
+			source = source || 'both'
+			mode = mode || 'merge'
+			images = this.images
+			if(typeof(source) != typeof('str')){
+				images = source
+				source = 'images'
+			}
+
+			if(source == 'data' || source == 'both'){
+				this.data.tagsToImages(images, mode)
+			}
+			if(source == 'images' || source == 'both'){
+				this.data.tagsFromImages(images, mode)
+			}
 		}],
 
 
@@ -2313,6 +2355,45 @@ module.FileSystemLoader = features.Feature(ImageGridFeatures, {
 		return window.nodejs != null
 	},
 })
+
+
+
+//---------------------------------------------------------------------
+
+var ExperimentActions = actions.Actions({
+	/* trying an argument mutation method... (FAILED: arguments is mutable)
+	argumentMutation: [
+		function(a, b){
+			console.log('ACTIONS ARGS:', a, b)
+		}],
+	*/
+})
+
+var ExperimentFeature = 
+module.ExperimentFeature = features.Feature(ImageGridFeatures, {
+	title: '',
+	doc: '',
+
+	tag: 'experiments',
+
+	isApplicable: function(actions){
+		return actions.experimental
+	},
+
+	actions: ExperimentActions,
+
+	handlers: [
+		/* trying an argument mutation method... (FAILED: arguments is mutable)
+		['argumentMutation.pre', 
+			function(a, b){
+				console.log('EVENT ARGS:', a, b)
+				arguments[0] += 1
+				arguments[1] += 1
+			}],
+		*/
+	],
+})
+
 
 
 

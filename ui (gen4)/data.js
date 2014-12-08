@@ -2324,7 +2324,7 @@ var DataWithTagsPrototype = {
 	// 		-> data
 	//
 	// 	Reset image tags from data...
-	// 	.tagsToImages(images, 'rest')
+	// 	.tagsToImages(images, 'reset')
 	// 		-> data
 	//
 	// XXX should this be here???

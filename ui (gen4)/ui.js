@@ -205,6 +205,8 @@ $(function(){
 			viewer: $('.viewer')
 		})
 
+	// used switch experimental actions on (set to true) or off (unset or false)...
+	//a.experimental = true
 
 	// XXX for some reason this is not visible when loading...
 	a.setEmptyMsg('Loading...')
@@ -234,18 +236,27 @@ $(function(){
 
 		// experimental and optional features...
 		//'auto-single-image',
-	])
 
+		// XXX this is not for production...
+		'experiments',
+	])
+	
 	// this publishes all the actions...
 	//module.GLOBAL_KEYBOARD.__proto__ = a
 
 	// load some testing data...
 	// NOTE: we can load this in parts...
-	a.load({
-		//viewer: $('.viewer'),
-		data: data.Data(testing.mock_data),
-		images: testing.makeTestImages(),
-	})
+	a
+		.load({
+			//viewer: $('.viewer'),
+			data: data.Data(testing.mock_data),
+			images: testing.makeTestImages(),
+		})
+		// this is needed when loading legacy sources that do not have tags
+		// synced...
+		// do not do for actual data...
+		//.syncTags()
+
 
 
 	a.setEmptyMsg(
