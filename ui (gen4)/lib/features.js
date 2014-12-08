@@ -210,7 +210,11 @@ module.FeatureSet = {
 		// 	2) remove the duplicate features except fot the first 
 		// 		occurance
 		//
-		// NOTE: we do not do recursice dependency expansion.
+		// NOTE: recursice dependency expansion is not needed here as if
+		// 		a dependency is not included in the list then it is not 
+		// 		needed...
+		// 		their dependencies to be sorted, and if that does not work 
+		// 		we can give up...
 		// NOTE: stage 2 is done later when filtering the list...
 		// NOTE: if dependency errors/conflicts exist this will break at
 		// 		the next step.
@@ -220,38 +224,43 @@ module.FeatureSet = {
 		// 			- dependency / priority conflict
 		// 				X will have higher priority than one of its
 		// 				dependencies...
-		//
-		// XXX do we add dependencies that are not included in the list???
-		var res = []
-		var missing = {}
-		lst.forEach(function(n){
-			var e = that[n]
-			// no dependencies...
-			if(e.depends == null || e.depends.length == 0){
-				res.push(n)
+		var _sortDep = function(lst, missing){
+			var res = []
+			lst.forEach(function(n){
+				var e = that[n]
+				// no dependencies...
+				if(e.depends == null || e.depends.length == 0){
+					res.push(n)
 
-			} else {
-				// skip dependencies that are not in list...
-				var deps = e.depends.filter(function(d){ 
-					if(lst.indexOf(d) < 0){
-						if(missing[d] == null){
-							missing[d] = []
+				} else {
+					// skip dependencies that are not in list...
+					var deps = e.depends.filter(function(d){ 
+						if(lst.indexOf(d) < 0){
+							if(missing[d] == null){
+								missing[d] = []
+							}
+
+							missing[d].push(n)
+
+							return false
 						}
+						return true
+					})
 
-						missing[d].push(n)
+					// place dependencies before the depended...
+					res = res.concat(deps)
+					res.push(n)
+				}
 
-						return false
-					}
-					return true
-				})
+			})
+			return res
+		}
 
-				// place dependencies before the depended...
-				res = res.concat(deps)
-				res.push(n)
-			}
-
-		})
-		lst = res
+		var missing = {}
+		// sort twice to cover the dependencies of dependencies...
+		// ...if this does not work we give up ;)
+		lst = _sortDep(lst, missing)
+		lst = _sortDep(lst, missing)
 
 		// sort features via priority keeping the order as close to 
 		// manual as possible...
