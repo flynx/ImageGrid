@@ -28,6 +28,10 @@ console.log('>>> features')
 // 					  features with higher priority will be setup first,
 // 					  features with the same priority will be run in order of
 // 					  occurrence.
+// 	.suggested		- list of optional suggested features, these are not 
+// 					  required but setup if available.
+// 					  This is useful for defining meta features but without
+// 					  making each sub-feature a strict dependency.
 // 	.depends		- feature dependencies -- tags of features that must setup
 // 					  before the feature (list | null)
 // 	.exclusive		- feature exclusivity tags (list | null)
@@ -148,6 +152,9 @@ function Feature(feature_set, obj){
 		obj = feature_set
 		// XXX is this a good default???
 		feature_set = Features
+
+	} else if(feature_set == null){
+		feature_set = Features
 	}
 
 	obj.__proto__ = FeatureProto
@@ -160,6 +167,20 @@ function Feature(feature_set, obj){
 }
 Feature.prototype = FeatureProto
 Feature.prototype.constructor = Feature
+
+
+var MetaFeature
+module.MetaFeature = function(feature_set, tag, list){
+	if(list == null){
+		list = tag
+		tag = feature_set
+		feature_set = null
+	}
+	return Feature(feature_set, {
+		tag: tag,
+		suggested: list,
+	})
+}
 
 
 var FeatureSet =
@@ -266,6 +287,17 @@ module.FeatureSet = {
 			})
 			return res
 		}
+
+		// expand optional "suggested" features...
+		var res = []
+		lst.forEach(function(n){
+			var e = that[n]
+			if(e != null && e.suggested != null){
+				res = res.concat(e.suggested)
+			}
+			res.push(n)
+		})
+		lst = res
 
 		// expand and sort dependencies...
 		// 	2+ times untill depth is 0 or length stabelizes...

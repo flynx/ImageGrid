@@ -2380,6 +2380,67 @@ module.FileSystemLoader = features.Feature(ImageGridFeatures, {
 
 
 //---------------------------------------------------------------------
+// Meta features...
+//
+// XXX need to make a set of basic configurations:
+// 		- commandline		- everything but no UI
+// 		- viewer-minimal	- basic browser compatible viewer
+// 		- viewer			- full viewer
+// 		- editor			- editing capability
+//
+
+features.MetaFeature(ImageGridFeatures, 'viewer-testing', [
+	// features...
+	'ui-ribbon-align-to-order',
+	'ui-single-image-view',
+	'ui-partial-ribbons',
+
+	'image-marks',
+	'image-bookmarks',
+
+	'fs-loader',
+	'app-control',
+
+	// chrome...
+	'ui-animation',
+	'ui-bounds-indicators',
+	'ui-current-image-indicator',
+		// NOTE: only one of these can be set...
+		'ui-current-image-indicator-hide-on-fast-screen-nav',
+		//'ui-current-image-indicator-hide-on-screen-nav',
+	'ui-image-state-indicator',
+	'ui-global-state-indicator',
+
+	// experimental and optional features...
+	//'auto-single-image',
+])
+
+features.MetaFeature(ImageGridFeatures, 'commandline', [
+	'image-marks',
+	'image-bookmarks',
+])
+
+features.MetaFeature(ImageGridFeatures, 'viewer-minimal', [
+	'ui-ribbon-align-to-order',
+	'ui-animation',
+	'ui-bounds-indicators',
+	'ui-current-image-indicator',
+		'ui-current-image-indicator-hide-on-fast-screen-nav',
+		//'ui-current-image-indicator-hide-on-screen-nav',
+])
+
+features.MetaFeature(ImageGridFeatures, 'viewer', [
+	'viewer-minimal',
+])
+
+features.MetaFeature(ImageGridFeatures, 'viewer-partial', [
+	'viewer',
+	'ui-partial-ribbons',
+])
+
+
+
+//---------------------------------------------------------------------
 
 var ExperimentActions = actions.Actions({
 	/* trying an argument mutation method... (FAILED: arguments is mutable)

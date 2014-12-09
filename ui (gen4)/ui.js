@@ -212,30 +212,7 @@ $(function(){
 	a.setEmptyMsg('Loading...')
 
 	viewer.ImageGridFeatures.setup(a, [
-		// features...
-		'ui-ribbon-align-to-order',
-		'ui-single-image-view',
-		'ui-partial-ribbons',
-
-		'image-marks',
-		'image-bookmarks',
-
-		'fs-loader',
-		'app-control',
-
-
-		// chrome...
-		'ui-animation',
-		'ui-bounds-indicators',
-		'ui-current-image-indicator',
-			// NOTE: only one of these can be set...
-			'ui-current-image-indicator-hide-on-fast-screen-nav',
-			//'ui-current-image-indicator-hide-on-screen-nav',
-		'ui-image-state-indicator',
-		'ui-global-state-indicator',
-
-		// experimental and optional features...
-		//'auto-single-image',
+		'viewer-testing',
 
 		// XXX this is not for production...
 		'experiments',
