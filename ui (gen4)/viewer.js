@@ -2389,7 +2389,7 @@ module.FileSystemLoader = features.Feature(ImageGridFeatures, {
 // 		- editor			- editing capability
 //
 
-features.MetaFeature(ImageGridFeatures, 'viewer-testing', [
+features.Feature(ImageGridFeatures, 'viewer-testing', [
 	// features...
 	'ui-ribbon-align-to-order',
 	'ui-single-image-view',
@@ -2415,12 +2415,12 @@ features.MetaFeature(ImageGridFeatures, 'viewer-testing', [
 	//'auto-single-image',
 ])
 
-features.MetaFeature(ImageGridFeatures, 'commandline', [
+features.Feature(ImageGridFeatures, 'commandline', [
 	'image-marks',
 	'image-bookmarks',
 ])
 
-features.MetaFeature(ImageGridFeatures, 'viewer-minimal', [
+features.Feature(ImageGridFeatures, 'viewer-minimal', [
 	'ui-ribbon-align-to-order',
 	'ui-animation',
 	'ui-bounds-indicators',
@@ -2429,11 +2429,11 @@ features.MetaFeature(ImageGridFeatures, 'viewer-minimal', [
 		//'ui-current-image-indicator-hide-on-screen-nav',
 ])
 
-features.MetaFeature(ImageGridFeatures, 'viewer', [
+features.Feature(ImageGridFeatures, 'viewer', [
 	'viewer-minimal',
 ])
 
-features.MetaFeature(ImageGridFeatures, 'viewer-partial', [
+features.Feature(ImageGridFeatures, 'viewer-partial', [
 	'viewer',
 	'ui-partial-ribbons',
 ])

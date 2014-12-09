@@ -9,6 +9,9 @@ console.log('>>> features')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+actions = require('lib/actions')
+
+
 
 /*********************************************************************/
 //
@@ -145,19 +148,75 @@ module.FeatureProto = {
 
 
 // XXX is hard-coded default feature-set a good way to go???
+//
+// 	Feature(obj)
+// 		-> feature
+//
+// 	Feature(feature-set, obj)
+// 		-> feature
+//
+// 	Feature(tag, obj)
+// 		-> feature
+//
+//
+// 	Feature(tag, actions)
+// 		-> feature
+//
+// 	Feature(feature-set, tag, actions)
+// 		-> feature
+//
 var Feature =
 module.Feature =
-function Feature(feature_set, obj){
-	if(obj == null){
-		obj = feature_set
-		// XXX is this a good default???
-		feature_set = Features
+function Feature(feature_set, tag, obj){
+	if(arguments.length == 2){
+		// Feature(<tag>, <obj>)
+		if(typeof(feature_set) == typeof('str')){
+			obj = tag
+			tag = feature_set
+			feature_set = Features
 
-	} else if(feature_set == null){
+		// Feature(<feature-set>, <obj>)
+		} else {
+			obj = tag
+			tag = null
+		}
+
+	// Feature(<obj>)
+	} else if(arguments.length == 1){
+		obj = feature_set
 		feature_set = Features
 	}
 
-	obj.__proto__ = FeatureProto
+	if(tag != null && obj.tag != null && obj.tag != tag){
+		throw 'Error: tag and obj.tag mismatch, either use one or both must match.'
+	}
+
+	// action...
+	if(obj instanceof actions.Action){
+		if(tag == null){
+			throw 'Error: need a tag to make a feature out of an action'
+		}
+		var f = {
+			tag: tag,
+			actions: obj,
+		}
+		obj = f
+
+	// meta-feature...
+	} else if(obj.constructor === Array){
+		if(tag == null){
+			throw 'Error: need a tag to make a meta-feature'
+		}
+		var f = {
+			tag: tag,
+			suggested: obj,
+		}
+		obj = f
+
+	// feature...
+	} else {
+		obj.__proto__ = FeatureProto
+	}
 
 	if(feature_set){
 		feature_set[obj.tag] = obj
@@ -167,20 +226,6 @@ function Feature(feature_set, obj){
 }
 Feature.prototype = FeatureProto
 Feature.prototype.constructor = Feature
-
-
-var MetaFeature
-module.MetaFeature = function(feature_set, tag, list){
-	if(list == null){
-		list = tag
-		tag = feature_set
-		feature_set = null
-	}
-	return Feature(feature_set, {
-		tag: tag,
-		suggested: list,
-	})
-}
 
 
 var FeatureSet =
