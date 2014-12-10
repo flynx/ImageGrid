@@ -23,6 +23,17 @@ var INDEX_DIR = '.ImageGrid'
 
 
 /*********************************************************************/
+// things we need...
+// 	- load latest by pattern
+// 	- merge
+// 		- load latest base
+// 		- merge diffs later than base
+// 	- find index(s) in subtree
+// 	- load index
+// 		- data version
+// 	- join indexes
+// 		- take care of different base paths in images
+//
 
 function listIndexes(base){
 	return glob(base +'/**/'+ INDEX_DIR)
