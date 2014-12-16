@@ -200,13 +200,13 @@ function Action(name, doc, ldoc, func){
 
 	// create the actual instance we will be returning...
 	var meth = function(){
-		var that = this
 		var args = args2array(arguments)
+		var that = this
 
 		var getHandlers = this.getHandlers
 		getHandlers = getHandlers == null ? MetaActions.getHandlers : getHandlers
 
-		// get and call handlers -- pre phase...
+		// get handlers...
 		//
 		// NOTE: using CLASS.__proto__[name].call(this, ...) here is not
 		// 		possible as there is no reliable way to get the "class" 
@@ -226,6 +226,7 @@ function Action(name, doc, ldoc, func){
 			return handlers.slice(-1)[0].apply(this, args)
 		}
 
+		// call handlers -- pre phase...
 		handlers = handlers
 			.map(function(h){ return h.apply(that, args) })
 
