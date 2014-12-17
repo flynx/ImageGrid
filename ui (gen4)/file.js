@@ -28,34 +28,8 @@ var INDEX_DIR = '.ImageGrid'
 
 /*********************************************************************/
 // Queue
-// 	.enqueue(func)
-// 	.enqueue(task)
-//
-// 	.start()
-// 	.stop()
-//
-//	.state
-//	.size				- running pool size
-//
 //
 // Task
-// 	.start(..)
-// 	.stop()
-//
-// 	.done(..)
-// 	.fail(..)
-//
-//	.state
-//
-// Task()
-// Task(val)
-// Task(val, ...)
-// Task([val, ...])
-//
-// NOTE: val can be a function or a value...
-// 		...if value is a promise or a deferred then the task is linked 
-// 		to that, and is not startable or resumable...
-//
 //
 
 
