@@ -16,6 +16,7 @@
     "page-cache": true
   },
   "dependencies": {
+    "flickrapi": "^0.3.28",
     "fs.extra": "*",
     "glob": "^4.0.6",
     "promise": "^6.0.1",
