@@ -63,20 +63,53 @@ var INDEX_DIR = '.ImageGrid'
 // 	}
 //
 
-// XXX return a promise rather than an event emitter....
-function listIndexes(base){
-	return glob(base +'/**/'+ INDEX_DIR)
+var guaranteeGlobEvents =
+module.guaranteeGlobEvents =
+function guaranteeGlobEvents(glob, all_matches){
+	all_matches = all_matches == null ? true : false
+	var visited = []
+
+	return glob
+		// keep track of visited matches...
+		.on('match', function(path){
+			all_matches && visited.push(path)
+		})
+		// trigger new handlers...
+		.on('newListener', function(evt, func){
+			// trigger the 'end' handler if we have already finished...
+			if(evt == 'end' && this.found != null){
+				func.call(this, this.found)
+
+			// trigger the 'match' handler for each match already found...
+			} else if(all_matches && evt == 'match' && visited.length > 0){
+				visited.forEach(function(path){
+					func.call(this, path)
+				})
+			}
+		})
 }
 
 
-// XXX return a promise rather than an event emitter....
+// XXX return a promise rather than an event emitter (???)
+// XXX glob has a problem: if a match happens fast enough and we are slow
+// 		enough to register a 'match' handler, then that match(s) will get
+// 		missed...
+function listIndexes(base){
+	return guaranteeGlobEvents(glob(base +'/**/'+ INDEX_DIR))
+}
+
+
+// XXX return a promise rather than an event emitter (???)
 function listJSON(path, pattern){
 	pattern = pattern || '*'
-	return glob(path +'/'+ pattern +'.json')
+	return guaranteeGlobEvents(glob(path +'/'+ pattern +'.json'))
 }
 
 
 var loadFile = promise.denodeify(fse.readFile)
+
+
+// XXX handle errors...
 function loadJSON(path){
 	return loadFile(path).then(JSON.parse)
 }
@@ -110,6 +143,10 @@ function(path, logger){
 		// we've got an index...
 		if(p.length > 1 && /^\/*$/.test(last)){
 			listJSON(path)
+				// XXX handle errors...
+				.on('error', function(err){
+					logger && logger.emit('error', err)
+				})
 				.on('end', function(files){
 					var res = {}
 					var index = {}
@@ -152,20 +189,21 @@ function(path, logger){
 						})
 
 					// add root files where needed...
-					Object.keys(root).forEach(function(k){
-						var n = root[k]
+					Object.keys(root)
+						.forEach(function(k){
+							var n = root[k]
 
-						// no diffs...
-						if(index[k] == null){
-							index[k] = [[false, n]]
-							logger && logger.emit('queued', n)
+							// no diffs...
+							if(index[k] == null){
+								index[k] = [[false, n]]
+								logger && logger.emit('queued', n)
 
-						// add root file if no base is found...
-						} else if(index[k].slice(-1)[0][0] == true){
-							index[k].push([false, n])
-							logger && logger.emit('queued', n)
-						}
-					})
+							// add root file if no base is found...
+							} else if(index[k].slice(-1)[0][0] == true){
+								index[k].push([false, n])
+								logger && logger.emit('queued', n)
+							}
+						})
 
 					// load...
 					promise
@@ -185,6 +223,7 @@ function(path, logger){
 												p = p[1]
 												// load diff...
 												return loadJSON(p)
+													// XXX handle errors...
 													.done(function(json){
 														// merge...
 														for(var k in json){
@@ -217,6 +256,10 @@ function(path, logger){
 
 			// XXX handle 'error' event...
 			listIndexes(path)
+				// XXX handle errors...
+				.on('error', function(err){
+					logger && logger.emit('error', err)
+				})
 				// collect the found indexes...
 				.on('match', function(path){
 					loadIndex(path, logger) 
