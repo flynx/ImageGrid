@@ -89,7 +89,8 @@ function loadJSON(path){
 // 	- queued <path>			- json file path queued for loading
 // 	- loaded <path>			- done loading json file path
 // 	- index <path> <data>	- done loding index at path
-// 	- end <indexes>			- done loading all indexes
+//
+// NOTE: logger must be an event emitter...
 //
 // XXX test with:
 // 		requirejs(['file'], 
@@ -97,6 +98,8 @@ function loadJSON(path){
 // 				f = m.loadIndex("L:/mnt/hdd15 (photo)/NTFS1/media/img/others") })
 // 			.done(function(d){ console.log(d) })
 // XXX need to do better error handling...
+// XXX a bit overcomplicated, see if this can be split into more generic 
+// 		sections...
 var loadIndex =
 module.loadIndex = 
 function(path, logger){
@@ -212,23 +215,16 @@ function(path, logger){
 		} else {
 			var res = {}
 
+			// XXX handle 'error' event...
 			listIndexes(path)
-				.on('end', function(indexes){
-					var i = indexes.length
-
-					indexes.forEach(function(path){ 
-						loadIndex(path, logger) 
-							// collect the found indexes...
-							.done(function(obj){
-								i -= 1
-								res[path] = obj[path]
-
-								// call this when the load is done...
-								if(i <= 0){
-									resolve(res)
-								}
-							})
-					})
+				// collect the found indexes...
+				.on('match', function(path){
+					loadIndex(path, logger) 
+						.done(function(obj){ res[path] = obj[path] })
+				})
+				// done...
+				.on('end', function(paths){
+					resolve(res)
 				})
 		}
 	})
