@@ -4,7 +4,7 @@
 *
 **********************************************************************/
 
-var path = require('path')
+var pathlib = require('path')
 var events = require('events')
 
 var fse = require('fs.extra')
@@ -78,7 +78,7 @@ function listJSON(path, pattern){
 
 var loadFile = promise.denodeify(fse.readFile)
 function loadJSON(path){
-	return readFile(path).then(JSON.parse)
+	return loadFile(path).then(JSON.parse)
 }
 
 
@@ -92,12 +92,24 @@ function loadJSON(path){
 // 	- end <indexes>			- done loading all indexes
 //
 // XXX return a promice rather than an event emitter....
-function loadIndex(path, emitter){
+// XXX test with:
+// 		requirejs(['file'], function(m){ 
+// 			m.loadIndex("L:/mnt/hdd15 (photo)/NTFS1/media/img/others")
+// 				.on('index', function(){ console.log('!!!', arguments) }) })
+var loadIndex =
+module.loadIndex = 
+function(path, emitter){
 	var p = path.split(INDEX_DIR)
 	var last = p.slice(-1)[0].trim()
 
 	var end = emitter == null
 	emitter = emitter == null ? new events.EventEmitter() : emitter
+
+	// XXX to facilitate tracking this needs return an object that both
+	// 		emits events (EventEmitter) and holds state (promise)...
+	//return new promice(function(resolve, reject){
+	//	// XXX
+	//})
 
 	// we've got an index...
 	if(p.length > 1 && /^\/*$/.test(last)){
@@ -105,17 +117,24 @@ function loadIndex(path, emitter){
 			.on('end', function(files){
 				var res = {}
 				var index = {}
+				var root = {}
+
 				// group by keyword...
 				files
 					.sort()
 					.reverse()
 					.forEach(function(n){
-						var s = n.split(/[-.]/g).slice(0, -1)
+						var b = pathlib.basename(n)
+						var s = b.split(/[-.]/g).slice(0, -1)
 
 						// <keyword>.json / non-diff
+						// NOTE: this is a special case, we add this to
+						// 		a seporate index and then concat it to 
+						// 		the final list if needed...
 						if(s.length == 1){
 							var k = s[0]
-							var d = false
+							root[k] = n 
+							return
 
 						// <timestamp>-<keyword>[-diff].json / diff / non-diff
 						} else {
@@ -125,19 +144,32 @@ function loadIndex(path, emitter){
 
 						// new keyword...
 						if(index[k] == null){
-							index[k] = []
+							index[k] = [[d, n]]
+							emitter.emit('queued', n)
 
 						// do not add anything past the latest non-diff 
 						// for each keyword...
-						} else if(index[k].slice(-1)[0][0] == false){
+						} else if(index[k].slice(-1)[0][0] == true){
 							index[k].push([d, n])
 							emitter.emit('queued', n)
-							return
 						}
-
-						index[k].push([d, n])
-						emitter.emit('queued', n)
 					})
+
+				// add root files where needed...
+				Object.keys(root).forEach(function(k){
+					var n = root[k]
+
+					// no diffs...
+					if(index[k] == null){
+						index[k] = [[false, n]]
+						emitter.emit('queued', n)
+
+					// add root file if no base is found...
+					} else if(index[k].slice(-1)[0][0] == true){
+						index[k].push([false, n])
+						emitter.emit('queued', n)
+					}
+				})
 
 				// load...
 				promise
@@ -155,6 +187,7 @@ function loadIndex(path, emitter){
 										.reverse()
 										.map(function(p){
 											p = p[1]
+											// load diff...
 											return loadJSON(p)
 												.done(function(json){
 													// merge...
@@ -171,7 +204,7 @@ function loadIndex(path, emitter){
 										emitter.emit('loaded', latest)
 									})
 							})
-					})
+					}))
 					.then(function(){
 						emitter.emit('index', path, res)
 
@@ -186,15 +219,24 @@ function loadIndex(path, emitter){
 	} else {
 		var res = {}
 
-		// collect the found indexes...
-		emitter.on('index', function(path, obj){ res[path] = obj })
 
 		listIndexes(path)
 			.on('end', function(indexes){
+				var i = indexes.length
+
+				// collect the found indexes...
+				emitter.on('index', function(path, obj){ 
+					i -= 1
+					res[path] = obj 
+
+					if(i <= 0){
+						// XXX need to call this when the load was done...
+						emitter.emit('end', res)
+					}
+				})
+
 				indexes.forEach(function(path){ loadIndex(path, emitter) })
 
-				// XXX need to call this when the load was done...
-				emitter.emit('end', res)
 			})
 	}
 

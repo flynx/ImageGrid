@@ -11,6 +11,18 @@ window.nodejs = (typeof(process) === 'object' && process.features.uv)
 	: null
 
 
+// XXX for some reason requirejs does not fall back to node's require...
+if(nodejs){
+	var requirejs = require('requirejs')
+
+	requirejs.config({
+		nodeRequire: require,
+		//baseUrl: __dirname,
+	})
+}
+
+
+
 define(function(require){ var module = {}
 console.log('>>> ui')
 
@@ -36,6 +48,8 @@ var testing = require('testing')
 var client = require('client')
 
 var viewer = require('viewer')
+
+//var promise = require('promise')
 
 
 
