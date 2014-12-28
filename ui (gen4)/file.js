@@ -26,6 +26,7 @@ var tasks = require('lib/tasks')
 var INDEX_DIR = '.ImageGrid'
 
 
+
 /*********************************************************************/
 // Queue
 //
@@ -34,35 +35,23 @@ var INDEX_DIR = '.ImageGrid'
 
 
 
-
 /*********************************************************************/
-// things we need...
-// 	- load latest by pattern
-// 	- merge
-// 		- load latest base
-// 		- merge diffs later than base
-// 	- find index(s) in subtree
-// 	- load index
-// 		- data version
-// 	- join indexes
-// 		- take care of different base paths in images
-//
-//
-//
-// Might also be a nice idea to generic import:
-//	- get all .ImageGrid/*.json
-//	- group by ([a-z]*).* — pattern with <keyword>
-//	- sort by name, descending
-//	- split at first non-diff
-//	- merge diff's in reverse tail to head
-// 
-// ...and output to format:
-// 	{
-// 		<keyword>: <data>,
-// 		...
-// 	}
-//
+// helpers...
 
+// Guarantee that the 'end' and 'match' handlers will always get called 
+// with all results at least once...
+//
+// This does two things:
+// 	- every 'end' event handler will get the full result set, regardless
+// 		of when it was set...
+// 	- every 'match' handler will be called for every match found, again
+// 		regardless of whether it was set before or after the time of 
+// 		match.
+//
+// This prevents handlers from missing the event they are waiting for, 
+// essentially making it similar to how Promise/Deferred handle their
+// callbacks.
+//
 var guaranteeGlobEvents =
 module.guaranteeGlobEvents =
 function guaranteeGlobEvents(glob, all_matches){
@@ -88,6 +77,12 @@ function guaranteeGlobEvents(glob, all_matches){
 			}
 		})
 }
+
+
+
+
+/*********************************************************************/
+// Reader...
 
 
 // XXX return a promise rather than an event emitter (???)
@@ -121,7 +116,8 @@ function loadJSON(path){
 // events emited:
 // 	- queued <path>			- json file path queued for loading
 // 	- loaded <path>			- done loading json file path
-// 	- index <path> <data>	- done loding index at path
+// 	- index <path> <data>	- done loading index at path
+// 	- error <err>			- an error occurred...
 //
 // NOTE: logger must be an event emitter...
 //
@@ -131,7 +127,7 @@ function loadJSON(path){
 // 				f = m.loadIndex("L:/mnt/hdd15 (photo)/NTFS1/media/img/others") })
 // 			.done(function(d){ console.log(d) })
 // XXX need to do better error handling...
-// XXX a bit overcomplicated, see if this can be split into more generic 
+// XXX a bit overcomplicated (???), see if this can be split into more generic 
 // 		sections...
 var loadIndex =
 module.loadIndex = 
@@ -188,7 +184,7 @@ function(path, logger){
 							}
 						})
 
-					// add root files where needed...
+					// add base files back where needed...
 					Object.keys(root)
 						.forEach(function(k){
 							var n = root[k]
@@ -212,6 +208,14 @@ function(path, logger){
 							var diffs = index[k]
 							var latest = diffs.splice(-1)[0][1]
 
+							// NOTE: so far I really do not like how nested and
+							// 		unreadable the Promise/Deferred code becomes
+							// 		even with a small rise in complexity...
+							// 		...for example, the following code is quite
+							// 		simple, but does not look the part.
+							//
+							// 		Maybe it's a style thing...
+
 							// load latest...
 							return loadJSON(latest)
 								.then(function(data){
@@ -224,6 +228,10 @@ function(path, logger){
 												// load diff...
 												return loadJSON(p)
 													// XXX handle errors...
+													// XXX we should abort loading this index...
+													.catch(function(err){
+														logger && logger.emit('error', err)
+													})
 													.done(function(json){
 														// merge...
 														for(var k in json){
@@ -273,6 +281,11 @@ function(path, logger){
 	})
 }
  
+
+
+/*********************************************************************/
+// Writer...
+
 
 
 
