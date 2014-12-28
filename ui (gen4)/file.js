@@ -63,13 +63,13 @@ var INDEX_DIR = '.ImageGrid'
 // 	}
 //
 
-// XXX return a promice rather than an event emitter....
+// XXX return a promise rather than an event emitter....
 function listIndexes(base){
 	return glob(base +'/**/'+ INDEX_DIR)
 }
 
 
-// XXX return a promice rather than an event emitter....
+// XXX return a promise rather than an event emitter....
 function listJSON(path, pattern){
 	pattern = pattern || '*'
 	return glob(path +'/'+ pattern +'.json')
@@ -91,156 +91,147 @@ function loadJSON(path){
 // 	- index <path> <data>	- done loding index at path
 // 	- end <indexes>			- done loading all indexes
 //
-// XXX return a promice rather than an event emitter....
 // XXX test with:
-// 		requirejs(['file'], function(m){ 
-// 			m.loadIndex("L:/mnt/hdd15 (photo)/NTFS1/media/img/others")
-// 				.on('index', function(){ console.log('!!!', arguments) }) })
+// 		requirejs(['file'], 
+// 			function(m){ 
+// 				f = m.loadIndex("L:/mnt/hdd15 (photo)/NTFS1/media/img/others") })
+// 			.done(function(d){ console.log(d) })
+// XXX need to do better error handling...
 var loadIndex =
 module.loadIndex = 
-function(path, emitter){
+function(path, logger){
 	var p = path.split(INDEX_DIR)
 	var last = p.slice(-1)[0].trim()
 
-	var end = emitter == null
-	emitter = emitter == null ? new events.EventEmitter() : emitter
+	return new promise(function(resolve, reject){
+		// we've got an index...
+		if(p.length > 1 && /^\/*$/.test(last)){
+			listJSON(path)
+				.on('end', function(files){
+					var res = {}
+					var index = {}
+					var root = {}
 
-	// XXX to facilitate tracking this needs return an object that both
-	// 		emits events (EventEmitter) and holds state (promise)...
-	//return new promice(function(resolve, reject){
-	//	// XXX
-	//})
+					// group by keyword...
+					files
+						.sort()
+						.reverse()
+						.forEach(function(n){
+							var b = pathlib.basename(n)
+							var s = b.split(/[-.]/g).slice(0, -1)
 
-	// we've got an index...
-	if(p.length > 1 && /^\/*$/.test(last)){
-		listJSON(path)
-			.on('end', function(files){
-				var res = {}
-				var index = {}
-				var root = {}
+							// <keyword>.json / non-diff
+							// NOTE: this is a special case, we add this to
+							// 		a seporate index and then concat it to 
+							// 		the final list if needed...
+							if(s.length == 1){
+								var k = s[0]
+								root[k] = n 
+								return
 
-				// group by keyword...
-				files
-					.sort()
-					.reverse()
-					.forEach(function(n){
-						var b = pathlib.basename(n)
-						var s = b.split(/[-.]/g).slice(0, -1)
+							// <timestamp>-<keyword>[-diff].json / diff / non-diff
+							} else {
+								var k = s[1]
+								var d = s[2] == 'diff'
+							}
 
-						// <keyword>.json / non-diff
-						// NOTE: this is a special case, we add this to
-						// 		a seporate index and then concat it to 
-						// 		the final list if needed...
-						if(s.length == 1){
-							var k = s[0]
-							root[k] = n 
-							return
+							// new keyword...
+							if(index[k] == null){
+								index[k] = [[d, n]]
+								logger && logger.emit('queued', n)
 
-						// <timestamp>-<keyword>[-diff].json / diff / non-diff
-						} else {
-							var k = s[1]
-							var d = s[2] == 'diff'
-						}
+							// do not add anything past the latest non-diff 
+							// for each keyword...
+							} else if(index[k].slice(-1)[0][0] == true){
+								index[k].push([d, n])
+								logger && logger.emit('queued', n)
+							}
+						})
 
-						// new keyword...
+					// add root files where needed...
+					Object.keys(root).forEach(function(k){
+						var n = root[k]
+
+						// no diffs...
 						if(index[k] == null){
-							index[k] = [[d, n]]
-							emitter.emit('queued', n)
+							index[k] = [[false, n]]
+							logger && logger.emit('queued', n)
 
-						// do not add anything past the latest non-diff 
-						// for each keyword...
+						// add root file if no base is found...
 						} else if(index[k].slice(-1)[0][0] == true){
-							index[k].push([d, n])
-							emitter.emit('queued', n)
+							index[k].push([false, n])
+							logger && logger.emit('queued', n)
 						}
 					})
 
-				// add root files where needed...
-				Object.keys(root).forEach(function(k){
-					var n = root[k]
+					// load...
+					promise
+						.all(Object.keys(index).map(function(k){
+							// get relevant paths...
+							var diffs = index[k]
+							var latest = diffs.splice(-1)[0][1]
 
-					// no diffs...
-					if(index[k] == null){
-						index[k] = [[false, n]]
-						emitter.emit('queued', n)
+							// load latest...
+							return loadJSON(latest)
+								.then(function(data){
+									// handle diffs...
+									return promise
+										.all(diffs
+											.reverse()
+											.map(function(p){
+												p = p[1]
+												// load diff...
+												return loadJSON(p)
+													.done(function(json){
+														// merge...
+														for(var k in json){
+															data[k] = json[k]
+														}
 
-					// add root file if no base is found...
-					} else if(index[k].slice(-1)[0][0] == true){
-						index[k].push([false, n])
-						emitter.emit('queued', n)
-					}
+														logger && logger.emit('loaded', p)
+													})
+											}))
+										.then(function(){
+											res[k] = data
+
+											logger && logger.emit('loaded', latest)
+										})
+								})
+						}))
+						.then(function(){
+							logger && logger.emit('index', path, res)
+
+							var d = {}
+							d[path] = res
+
+							resolve(d)
+						})
 				})
 
-				// load...
-				promise
-					.all(Object.keys(index).map(function(k){
-						// get relevant paths...
-						var diffs = index[k]
-						var latest = diffs.splice(-1)[0][1]
+		// no explicit index given -- find all in sub tree...
+		} else {
+			var res = {}
 
-						// load latest...
-						return loadJSON(latest)
-							.then(function(data){
-								// handle diffs...
-								return promise
-									.all(diffs
-										.reverse()
-										.map(function(p){
-											p = p[1]
-											// load diff...
-											return loadJSON(p)
-												.done(function(json){
-													// merge...
-													for(var k in json){
-														data[k] = json[k]
-													}
+			listIndexes(path)
+				.on('end', function(indexes){
+					var i = indexes.length
 
-													emitter.emit('loaded', p)
-												})
-										}))
-									.then(function(){
-										res[k] = data
+					indexes.forEach(function(path){ 
+						loadIndex(path, logger) 
+							// collect the found indexes...
+							.done(function(obj){
+								i -= 1
+								res[path] = obj[path]
 
-										emitter.emit('loaded', latest)
-									})
+								// call this when the load is done...
+								if(i <= 0){
+									resolve(res)
+								}
 							})
-					}))
-					.then(function(){
-						emitter.emit('index', path, res)
-
-						// indicate end only if we are not part of a multi-index load...
-						if(end){
-							emitter.emit('end', {path: res})
-						}
 					})
-			})
-
-	// no explicit index given -- find all in sub tree...
-	} else {
-		var res = {}
-
-
-		listIndexes(path)
-			.on('end', function(indexes){
-				var i = indexes.length
-
-				// collect the found indexes...
-				emitter.on('index', function(path, obj){ 
-					i -= 1
-					res[path] = obj 
-
-					if(i <= 0){
-						// XXX need to call this when the load was done...
-						emitter.emit('end', res)
-					}
 				})
-
-				indexes.forEach(function(path){ loadIndex(path, emitter) })
-
-			})
-	}
-
-	return emitter
+		}
+	})
 }
  
 
