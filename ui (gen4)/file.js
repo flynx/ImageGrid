@@ -38,6 +38,33 @@ var INDEX_DIR = '.ImageGrid'
 /*********************************************************************/
 // helpers...
 
+// XXX this is quite generic, might be a good idea to move to a better 
+// 		node-specific place...
+var guaranteeEvents = 
+module.guaranteeEvents =
+function(names, emitter){
+	names = typeof(names) == typeof('str') ? names.split(/\s+/g) : names
+
+	names.forEach(function(name){
+		var seen = []
+		emitter
+			.on(name, function(){
+				seen.push([].slice.apply(arguments))
+			})
+			.on('newListener', function(evt, func){
+				if(evt == name && seen.length > 0){
+					var that = this
+					seen.forEach(function(args){
+						func.apply(that, args)
+					})
+				}
+			})
+	})
+
+	return emitter
+}
+
+
 // Guarantee that the 'end' and 'match' handlers will always get called 
 // with all results at least once...
 //
@@ -54,30 +81,7 @@ var INDEX_DIR = '.ImageGrid'
 //
 var guaranteeGlobEvents =
 module.guaranteeGlobEvents =
-function guaranteeGlobEvents(glob, all_matches){
-	all_matches = all_matches == null ? true : false
-	var visited = []
-
-	return glob
-		// keep track of visited matches...
-		.on('match', function(path){
-			all_matches && visited.push(path)
-		})
-		// trigger new handlers...
-		.on('newListener', function(evt, func){
-			// trigger the 'end' handler if we have already finished...
-			if(evt == 'end' && this.found != null){
-				func.call(this, this.found)
-
-			// trigger the 'match' handler for each match already found...
-			} else if(all_matches && evt == 'match' && visited.length > 0){
-				visited.forEach(function(path){
-					func.call(this, path)
-				})
-			}
-		})
-}
-
+function(glob){ return guaranteeEvents('match end', glob) }
 
 
 
@@ -110,16 +114,46 @@ function loadJSON(path){
 }
 
 
-// json file name format:
-// 	[<timestamp>-]<keyword>[-diff].json
+// Load index(s)...
 //
-// events emited:
+//	loadIndex(path)
+//		-> data
+//
+//	loadIndex(path, logger)
+//		-> data
+//
+//
+// Procedure:
+// 	- locate indexes in path given
+// 	- per each index
+// 		- get all .json files
+// 		- get and load latest base file per keyword
+// 		- merge all later than loaded base diff files per keyword
+//
+//
+// Index format (input):
+// 	.ImageGrid/
+// 		+- [<timestamp>-]<keyword>[-diff].json
+// 		+- ...
+//
+//
+// Output format:
+// 	{
+// 		// one per index found...
+// 		<path>/<sub-path>: {
+// 			<keyword>: <kw-data>,
+// 			...
+// 		},
+// 		...
+// 	}
+//
+//
+// Events emitted on logger if passed:
 // 	- queued <path>			- json file path queued for loading
 // 	- loaded <path>			- done loading json file path
 // 	- index <path> <data>	- done loading index at path
 // 	- error <err>			- an error occurred...
 //
-// NOTE: logger must be an event emitter...
 //
 // XXX test with:
 // 		requirejs(['file'], 
