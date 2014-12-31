@@ -607,6 +607,8 @@ module.ImagesPrototype = {
 		}
 		return this
 	},
+	// XXX this is really odd: renaming this to 'toJSON' breaks JavasCript
+	// 		making chrome/node just say: "<error>" and a filename...
 	dumpJSON: function(data){
 		return JSON.parse(JSON.stringify(this))
 	},
