@@ -53,10 +53,10 @@ function(data, cmp){
 			order.push(id)
 			images[id] = image
 		}
-		ribbon.sort(cmp)
+		cmp && ribbon.sort(cmp)
 	})
 
-	order.sort(cmp)
+	cmp && order.sort(cmp)
 
 	// XXX STUB
 	res.data.current = order[0]
@@ -71,11 +71,10 @@ function(data, cmp){
 // 		the Data object...
 // NOTE: this uses require('data').Data().newGid(..) for ribbon gid 
 // 		generation...
-// XXX test...
-//module.convertDataGen3 = 
+//
 module.VERSIONS['3.0'] =
 function(data){
-	data = data.version < '3.0' ? module.VERSIONS['2.0'](data) : data
+	data = data.version < '2.0' ? module.VERSIONS['2.0'](data) : data
 
 	// XXX is this the right way to go???
 	var that = require('data').Data()
@@ -95,7 +94,7 @@ function(data){
 		? data.ribbon_order 
 		: Object.keys(data.ribbons)
 	keys.forEach(function(k){
-		var gid = k*1 == null ? k : that.newGid('R')
+		var gid = k*1 == null ? k : that.newGid()
 		res.ribbon_order.push(gid)
 		res.ribbons[gid] = data.ribbons[k].slice()
 	})

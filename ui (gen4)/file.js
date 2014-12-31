@@ -9,7 +9,9 @@ var events = require('events')
 
 var fse = require('fs.extra')
 var glob = require('glob')
-var promise = require('promise')
+var Promise = require('promise')
+
+var guaranteeEvents = require('guarantee-events')
 
 
 define(function(require){ var module = {}
@@ -37,33 +39,6 @@ var INDEX_DIR = '.ImageGrid'
 
 /*********************************************************************/
 // helpers...
-
-// XXX this is quite generic, might be a good idea to move to a better 
-// 		node-specific place...
-var guaranteeEvents = 
-module.guaranteeEvents =
-function(names, emitter){
-	names = typeof(names) == typeof('str') ? names.split(/\s+/g) : names
-
-	names.forEach(function(name){
-		var seen = []
-		emitter
-			.on(name, function(){
-				seen.push([].slice.apply(arguments))
-			})
-			.on('newListener', function(evt, func){
-				if(evt == name && seen.length > 0){
-					var that = this
-					seen.forEach(function(args){
-						func.apply(that, args)
-					})
-				}
-			})
-	})
-
-	return emitter
-}
-
 
 // Guarantee that the 'end' and 'match' handlers will always get called 
 // with all results at least once...
@@ -105,7 +80,7 @@ function listJSON(path, pattern){
 }
 
 
-var loadFile = promise.denodeify(fse.readFile)
+var loadFile = Promise.denodeify(fse.readFile)
 
 
 // XXX handle errors...
@@ -169,7 +144,7 @@ function(path, logger){
 	var p = path.split(INDEX_DIR)
 	var last = p.slice(-1)[0].trim()
 
-	return new promise(function(resolve, reject){
+	return new Promise(function(resolve, reject){
 		// we've got an index...
 		if(p.length > 1 && /^\/*$/.test(last)){
 			listJSON(path)
@@ -236,7 +211,7 @@ function(path, logger){
 						})
 
 					// load...
-					promise
+					Promise
 						.all(Object.keys(index).map(function(k){
 							// get relevant paths...
 							var diffs = index[k]
@@ -254,7 +229,7 @@ function(path, logger){
 							return loadJSON(latest)
 								.then(function(data){
 									// handle diffs...
-									return promise
+									return Promise
 										.all(diffs
 											.reverse()
 											.map(function(p){

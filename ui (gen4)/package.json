@@ -19,6 +19,7 @@
     "flickrapi": "^0.3.28",
     "fs.extra": "^1.2.1",
     "glob": "^4.0.6",
+    "guarantee-events": "^1.0.0",
     "promise": "^6.0.1",
     "requirejs": "*"
   }
