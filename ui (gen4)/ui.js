@@ -141,11 +141,13 @@ module.GLOBAL_KEYBOARD = {
 		Up: {
 			default: 'prevRibbon',
 			shift: 'shiftImageUp',
+			'alt+shift': 'travelImageUp',
 			'ctrl+shift': 'shiftImageUpNewRibbon',
 		},
 		Down: {
 			default: 'nextRibbon',
 			shift: 'shiftImageDown',
+			'alt+shift': 'travelImageDown',
 			'ctrl+shift': 'shiftImageDownNewRibbon',
 		},
 
