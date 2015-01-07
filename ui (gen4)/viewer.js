@@ -337,9 +337,9 @@ actions.Actions({
 		function(){ this.nextImage(this.data.getImages(this.data.order)) }],
 
 	// XXX should these be here???
-	prevTagged: ['',
+	prevTagged: ['Focus previous image tagged with tag',
 		makeTagWalker('prev')],
-	nextTagged: ['',
+	nextTagged: ['Focus next image tagged with tag',
 		makeTagWalker('next')],
 
 	firstRibbon: ['Focus previous ribbon',
@@ -447,6 +447,21 @@ actions.Actions({
 			// XXX is this the right way to go/???
 			this.focusImage()
 		}],
+
+	// these operate on the current image...
+	travelImageUp: ['Travel with the current image up (Shift up and keep focus)',
+		function(target){
+			target = target || this.current
+			this.shiftImageUp(target)
+			this.focusImage(target)
+		}],
+	travelImageDown: ['Travel with the current image down (Shift down and keep focus)',
+		function(target){
+			target = target || this.current
+			this.shiftImageDown(target)
+			this.focusImage(target)
+		}],
+
 	
 	reverseImages: ['Reverse image order',
 		function(){ this.data.reverseImages() }],
@@ -1154,6 +1169,14 @@ actions.Actions(Client, {
 			this.ribbons.placeImage(target, 1) 
 		}],
 
+	// XXX how should these animate???
+	travelImageUp: [
+		function(){
+		}],
+	travelImageDown: [
+		function(){
+		}],
+
 	shiftRibbonUp: [
 		function(target){
 			target = this.ribbons.getRibbon(target)
@@ -1170,7 +1193,6 @@ actions.Actions(Client, {
 				this.ribbons.placeRibbon(target, i+1)
 			}
 		}],
-
 
 	reverseImages: [ reloadAfter() ],
 	reverseRibbons: [ reloadAfter() ],
