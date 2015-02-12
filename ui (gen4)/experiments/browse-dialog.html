@@ -32,6 +32,12 @@
 .browse .path {
 	white-space: nowrap;
 }
+.browse .path:empty {
+	display: block;
+}
+.browse .path:before {
+	content: "/";
+}
 .browse .path .dir {
 	display: inline-block;
 }
@@ -75,6 +81,10 @@ var TREE = {
 	},
 	file: 'this is a file',
 }
+// add some recursion for testing...
+TREE.dir_d = TREE.dir_c.dir_b
+TREE.dir_a.tree = TREE
+TREE.dir_c.dir_b.tree = TREE
 
 
 function skipFiles(e, v){
@@ -172,6 +182,8 @@ function popDir(){
 	var path = getPath(browser, this)
 
 	showPath(browser, path, TREE)
+
+	select('"'+dir+'"')
 }
 
 
@@ -273,14 +285,28 @@ function prev(browser){
 	return select('prev', browser)
 }
 
+
+// default action...
+function action(browser){
+	browser = browser || $('.browse')
+
+	alert('/' + getPath(browser).concat(['']).join('/'))
+
+	return false
+}
+
 var KB = {
 	'*':{
 		F5: function(){ window.location.reload() },
-
+	},
+	'.browse':{
 		Up: prev,
+		Backspace: 'Up',
 		Down: next,
 		Left: pop,
 		Right: push,
+
+		Enter: action,
 	},
 }
 
@@ -294,9 +320,7 @@ requirejs(['../lib/keyboard'], function(m){
 		.keydown(
 			keyboard.makeKeyboardHandler(
 				KB,
-				function(k){
-					console.log(k)
-				}))
+				function(k){ window.DEBUG && console.log(k) }))
 
 })
 
@@ -306,7 +330,6 @@ $(function(){
 		.empty()
 		.append(browser)
 	showPath(browser, '/', TREE)
-
 })
 
 </script>
