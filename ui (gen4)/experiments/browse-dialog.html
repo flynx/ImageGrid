@@ -56,6 +56,8 @@
 
 <script src="../lib/jli.js"></script>
 
+<script src="../ext-lib/require.js"></script>
+
 <script>
 
 var TREE = {
@@ -73,6 +75,7 @@ var TREE = {
 	},
 	file: 'this is a file',
 }
+
 
 function skipFiles(e, v){
 	return typeof(v) != typeof('str')
@@ -270,6 +273,32 @@ function prev(browser){
 	return select('prev', browser)
 }
 
+var KB = {
+	'*':{
+		F5: function(){ window.location.reload() },
+
+		Up: prev,
+		Down: next,
+		Left: pop,
+		Right: push,
+	},
+}
+
+
+
+requirejs(['../lib/keyboard'], function(m){
+	keyboard = m
+
+	// setup base keyboard for devel, in case something breaks...
+	$(document)
+		.keydown(
+			keyboard.makeKeyboardHandler(
+				KB,
+				function(k){
+					console.log(k)
+				}))
+
+})
 
 $(function(){
 	var browser = make()
@@ -277,6 +306,7 @@ $(function(){
 		.empty()
 		.append(browser)
 	showPath(browser, '/', TREE)
+
 })
 
 </script>
