@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<style>
+
+.container {
+	display: inline-block;
+	position: absolute;
+
+	top: 100px;
+	left: 100px;
+
+	border: 5px solid gray;
+}
+
+.browse {
+	display: inline-block;
+	min-width: 300px;
+	width: initial;
+}
+
+.browse .v-block {
+	width: 100%;
+	height: auto;
+
+	border: 1px solid gray;
+	box-sizing: border-box;
+}
+.browse .v-block:empty {
+	display: none;
+}
+
+.browse .path {
+	white-space: nowrap;
+}
+.browse .path .dir {
+	display: inline-block;
+}
+.browse .path .dir:after {
+	content: "/";
+
+}
+
+.browse .path .dir:hover,
+.browse .list div:hover {
+	background: rgba(0,0,0, 0.1);
+}
+
+.browse .list div.selected {
+	background: rgba(0,0,0, 0.05);
+}
+
+</style>
+
+<script src="../ext-lib/jquery.js"></script>
+<script src="../ext-lib/jquery-ui.js"></script>
+
+<script src="../lib/jli.js"></script>
+
+<script>
+
+var TREE = {
+	dir_a: {},
+	dir_b: {
+		file1: 'this is a file',
+		file2: 'this is a file',
+		file3: 'this is a file',
+	},
+	dir_c: {
+		file1: 'this is a file',
+		dir_b: {
+			file1: 'this is a file',
+		},
+	},
+	file: 'this is a file',
+}
+
+function skipFiles(e, v){
+	return typeof(v) != typeof('str')
+}
+
+function make(title){
+	var browser = $('<div>')
+		.addClass('browse')
+		.append($('<div>')
+		       .addClass('v-block title')
+		       .text(title))
+		.append($('<div>')
+		       .addClass('v-block path'))
+		.append($('<div>')
+		       .addClass('v-block list'))
+		.append($('<div>')
+		       .addClass('v-block info'))
+		.append($('<div>')
+		       .addClass('v-block actions'))
+	return browser
+}
+
+// low level update...
+function update(browser, path, list){
+	browser = browser || $('.browse')
+	var p = browser.find('.path').empty()
+	var l = browser.find('.list').empty()
+
+	path.forEach(function(e){
+		p.append($('<div>')
+			.addClass('dir')
+			.click(popDir)
+			.text(e))
+	})
+	list.forEach(function(e){
+		l.append($('<div>')
+			.click(pushDir)
+			.text(e))
+	})
+	return browser
+}
+
+
+function showPath(browser, path, tree, skip){
+	// XXX remove for pruduction...
+	skip = skip || skipFiles
+
+	browser = browser || $('.browse')
+	path = path.constructor !== Array ? path.split(/[\\\/]+/g) : path
+	path = path.filter(function(e){ return e != '' })
+
+	var dir = tree
+	path.forEach(function(d){
+		dir = dir[d]
+	})
+
+	// XXX do error checking...
+
+	dir = skip != null
+		// skip files....
+		? Object.keys(dir).filter(function(e){ return skip(e, dir[e]) }) 
+		: Object.keys(dir)
+
+	update(browser, path, dir)
+}
+
+// XXX this will skip incuding the current dir...
+//	...this might work and might not work...
+function getPath(browser, to){
+	var skip = false
+	return browser.find('.path .dir')
+		.filter(function(i, e){
+			if(e === to){
+				skip = true
+			}
+			return !skip
+		})
+		.map(function(i, e){ return $(e).text() })
+		.toArray()
+}
+
+
+function pushDir(){
+	var dir = $(this).text()
+	var browser = $(this).parents('.browse')
+	var path = getPath(browser)
+	path.push(dir)
+
+	showPath(browser, path, TREE)
+}
+function popDir(){
+	var dir = $(this).text()
+	var browser = $(this).parents('.browse')
+	var path = getPath(browser, this)
+
+	showPath(browser, path, TREE)
+}
+
+
+// base control actions...
+// XXX add keywords:
+//	'first'
+//	'prev'
+//	'next'
+//	'last'
+//	'none'		-- deselect
+//	'!'		-- return selected element if it exists...
+//	<number>	-- select by sequence number...
+//	<elem>		-- select a specific element...
+function select(elem, browser){
+	browser = browser || $('.browse')
+	var elems = browser.find('.list div')
+
+	if(elems.length == 0){
+		return $()
+	}
+
+	elem = elem || select('!')
+	// if none selected get the first...
+	elem = elem.length == 0 ? 'first' : elem
+
+	// first/last...
+	if(elem == 'first' || elem == 'last'){
+		return select(elems[elem](), browser)
+	
+	// prev/next...
+	} else if(elem == 'prev' || elem == 'next'){
+		var to = select('!', browser)[elem]('.list div')
+		if(to.length == 0){
+			return select(elem == 'prev' ? 'last' : 'first', browser)
+		}
+		select('none')
+		return select(to, browser)
+
+	// deselect...
+	} else if(elem == 'none'){
+		return elems
+			.filter('.selected')
+			.removeClass('selected')
+
+	// strict...
+	} else if(elem == '!'){
+		return elems.filter('.selected')
+
+	// number...
+	} else if(typeof(elem) == typeof(123)){
+		return select($(elems[elem]), browser)
+
+	// string...
+	} else if(typeof(elem) == typeof('str') && /^'.*'$|^".*"$/.test(elem.trim())){
+		elem = elem.trim().slice(1, -1)
+		return select(browser.find('.list div').filter(function(i, e){
+			return $(e).text() == elem
+		}))
+
+	// element...
+	} else {
+		select('none', browser)
+		return elem.addClass('selected')
+	}
+}
+function push(browser){
+	browser = browser || $('.browse')
+	var elem = select('!', browser)
+
+	if(elem.length == 0){
+		return select()
+	}
+
+	var path = getPath(browser)
+
+	path.push(elem.text())
+
+	var res = showPath(browser, path, TREE)
+
+	select(null, browser)
+
+	return res
+}
+function pop(browser){
+	browser = browser || $('.browse')
+	var path = getPath(browser)
+	var dir = path.pop()
+
+	var res = showPath(browser, path, TREE)
+
+	select('"'+dir+'"')
+
+	return res
+}
+function next(browser){
+	return select('next', browser)
+}
+function prev(browser){
+	return select('prev', browser)
+}
+
+
+$(function(){
+	var browser = make()
+	$('.container')
+		.empty()
+		.append(browser)
+	showPath(browser, '/', TREE)
+})
+
+</script>
+
+<body>
+
+
+<div class="container">
+	<div class="browse">
+		<!-- title, optional -->
+		<div class="v-block title">
+			[title]
+		</div>
+
+		<!-- the actual list -->
+		<div class="v-block path">
+			<div class="dir">
+				[dir]
+			</div>
+			<div class="dir">
+				[dir]
+			</div>
+			<div class="dir">
+				[dir]
+			</div>
+		</div>
+
+		<!-- the actual list -->
+		<div class="v-block list">
+			<div>
+				[dir]
+			</div>
+			<div>
+				[dir]
+			</div>
+			<div>
+				[dir]
+			</div>
+		</div>
+
+		<!-- info, optional -->
+		<div class="v-block info">
+			[info]
+		</div>
+
+		<!-- buttons, optional -->
+		<div class="v-block actions">
+			[actions]
+		</div>
+	</div>
+</div>
+
+
+</body>
+</html>
