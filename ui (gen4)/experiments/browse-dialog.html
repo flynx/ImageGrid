@@ -40,13 +40,13 @@
 
 }
 
+.browse .list div.selected {
+	background: rgba(0,0,0, 0.05);
+}
+
 .browse .path .dir:hover,
 .browse .list div:hover {
 	background: rgba(0,0,0, 0.1);
-}
-
-.browse .list div.selected {
-	background: rgba(0,0,0, 0.05);
 }
 
 </style>
@@ -282,6 +282,11 @@ $(function(){
 </script>
 
 <body>
+
+<button onclick="pop()">&lt;</button>
+<button onclick="push()">&gt;</button>
+<button onclick="prev()">^</button>
+<button onclick="next()">v</button>
 
 
 <div class="container">
