@@ -319,7 +319,8 @@ function prev(browser){
 function action(browser){
 	browser = browser || $('.browse')
 
-	alert('/' + getPath(browser).concat(['']).join('/'))
+	var cur = select('!', browser).text()
+	alert('/' + getPath(browser).concat(cur == '' ? [cur] : [cur, '']).join('/'))
 
 	return false
 }
