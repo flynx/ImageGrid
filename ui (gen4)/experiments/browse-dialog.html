@@ -8,28 +8,45 @@
 
 	top: 100px;
 	left: 100px;
-
-	border: 5px solid gray;
 }
 
 .browse {
 	display: inline-block;
 	min-width: 300px;
 	width: initial;
+	background: gray;
+	color: rgba(255,255,255,0.8);
+	padding: 5px;
+	font-family: sans-serif;
 }
 
 .browse .v-block {
 	width: 100%;
 	height: auto;
 
-	border: 1px solid gray;
 	box-sizing: border-box;
+
+	border-top: 1px solid rgba(255,255,255, 0.3);
+}
+.browse .v-block:first-of-type {
+	border-top: none;
 }
 .browse .v-block:empty {
 	display: none;
 }
 
+.browse .title {
+	font-weight: bold;
+	color: rgba(255,255,255,0.9);
+	padding: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
 .browse .path {
+	padding: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
 	white-space: nowrap;
 }
 .browse .path:empty {
@@ -43,17 +60,29 @@
 }
 .browse .path .dir:after {
 	content: "/";
+}
+.browse .list div {
+	padding: 5px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
 
+.browse .list div.selected,
+.browse .path .dir:hover,
+.browse .list div:hover {
+	background: rgba(0,0,0, 0.05);
+	color: white;
+	text-shadow: rgba(0,0,0,0.5) 0.05em 0.005em 0.4em, 
+			rgba(0,0,0,0.5) 0.05em 0.05em;
 }
 
 .browse .list div.selected {
-	background: rgba(0,0,0, 0.05);
+	background: rgba(0,0,0, 0.1);
+	text-shadow: rgba(0,0,0,0.3) 0.1em 0.1em 0.4em, 
+			rgba(0,0,0,0.3) 0.1em 0.1em;
+	box-shadow: rgba(0,0,0,0.2) 0.1em 0.1em 0.2em; 
 }
 
-.browse .path .dir:hover,
-.browse .list div:hover {
-	background: rgba(0,0,0, 0.1);
-}
 
 </style>
 
