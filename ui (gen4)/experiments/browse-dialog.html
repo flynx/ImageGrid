@@ -8,6 +8,8 @@
 
 	top: 100px;
 	left: 100px;
+
+	box-shadow: rgba(0,0,0,0.5) 0.1em 0.1em 0.4em;
 }
 
 .browse {
@@ -19,7 +21,6 @@
 	padding: 5px;
 	font-family: sans-serif;
 }
-
 .browse .v-block {
 	width: 100%;
 	height: auto;
@@ -67,20 +68,20 @@
 	padding-right: 10px;
 }
 
-.browse .list div.selected,
+.browse:focus .list div.selected,
 .browse .path .dir:hover,
 .browse .list div:hover {
-	background: rgba(0,0,0, 0.05);
 	color: white;
-	text-shadow: rgba(0,0,0,0.5) 0.05em 0.005em 0.4em, 
-			rgba(0,0,0,0.5) 0.05em 0.05em;
+	background: rgba(0,0,0, 0.05);
+}
+
+.browse:focus .list div.selected {
+	background: rgba(0,0,0, 0.1);
+	box-shadow: rgba(0,0,0,0.2) 0.1em 0.1em 0.2em; 
 }
 
 .browse .list div.selected {
-	background: rgba(0,0,0, 0.1);
-	text-shadow: rgba(0,0,0,0.3) 0.1em 0.1em 0.4em, 
-			rgba(0,0,0,0.3) 0.1em 0.1em;
-	box-shadow: rgba(0,0,0,0.2) 0.1em 0.1em 0.2em; 
+	background: rgba(0,0,0, 0.08);
 }
 
 
@@ -113,6 +114,7 @@ var TREE = {
 // add some recursion for testing...
 TREE.dir_d = TREE.dir_c.dir_b
 TREE.dir_a.tree = TREE
+TREE.dir_c.tree = TREE
 TREE.dir_c.dir_b.tree = TREE
 
 
@@ -123,6 +125,10 @@ function skipFiles(e, v){
 function make(title){
 	var browser = $('<div>')
 		.addClass('browse')
+		.attr('tabindex', -1)
+		.click(function(){
+			$(this).focus()
+		})
 		.append($('<div>')
 		       .addClass('v-block title')
 		       .text(title))
@@ -329,7 +335,7 @@ var KB = {
 	'*':{
 		F5: function(){ window.location.reload() },
 	},
-	'.browse':{
+	'.browse:focus':{
 		Up: prev,
 		Backspace: 'Up',
 		Down: next,
@@ -360,6 +366,8 @@ $(function(){
 		.empty()
 		.append(browser)
 	showPath(browser, '/', TREE)
+
+	$('.container').draggable()
 })
 
 </script>
