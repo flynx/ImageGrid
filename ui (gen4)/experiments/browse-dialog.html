@@ -125,7 +125,9 @@ function skipFiles(e, v){
 function make(title){
 	var browser = $('<div>')
 		.addClass('browse')
+		// make thie widget focusable...
 		.attr('tabindex', -1)
+		// focus the widget if something inside is clicked...
 		.click(function(){
 			$(this).focus()
 		})
@@ -367,7 +369,11 @@ $(function(){
 		.append(browser)
 	showPath(browser, '/', TREE)
 
-	$('.container').draggable()
+	$('.container').draggable({ 
+			cancel: ".path .dir, .list div" 
+		})
+
+	browser.focus()
 })
 
 </script>
