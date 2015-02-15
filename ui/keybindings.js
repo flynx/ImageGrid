@@ -714,31 +714,11 @@ var KEYBOARD_CONFIG = {
 				// NOTE: marking does not change move direction...
 				// XXX  should this toggle or set mark to on?
 				default: doc('Mark current image and advance',
-					function(){ 
-						toggleMark('on')
-						directionImage()
-						// XXX do we need this???
-						//if(getImage().filter(':visible').length == 0){
-						//	centerView(focusImage(getImageBefore()))
-						//}
-						centerRibbons()
-					}),
-				// same as default but in reverse direction...
-				shift: doc('Mark current image and return',
-					function(){
-						toggleMark('on')
-						directionImage(true)
-						// XXX do we need this???
-						//if(getImage().filter(':visible').length == 0){
-						//	centerView(focusImage(getImageBefore()))
-						//} 
-						centerRibbons()
-					}),
+					function(){ toggleMark() }),
 				ctrl: doc('Show mark dialog', function(){ markImagesDialog() }),
 			},
 		Ins: doc('Toggle mark on current image', function(){ toggleMark() }),
-		'invert-marks': doc('Invert image marks', 
-			function(){ invertImageMarks() }),
+		'invert-marks': doc('Invert image marks', function(){ invertImageMarks() }),
 		A: {
 			  	// XXX does not yet work with DATA (???)
 				//shift: doc('Toggle marks in current contagious block', 

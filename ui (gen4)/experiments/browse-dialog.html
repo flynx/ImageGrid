@@ -21,6 +21,11 @@
 	padding: 5px;
 	font-family: sans-serif;
 }
+/*
+.browse:not(:focus) {
+	opacity: 0.8;
+}
+*/
 .browse .v-block {
 	width: 100%;
 	height: auto;
@@ -62,6 +67,15 @@
 .browse .path .dir:after {
 	content: "/";
 }
+/* XXX need to make this resizable up but only to a certain size (~80vh) */
+/*
+.browse .list {
+	max-height: 50vh;
+}
+.browse .list:empty {
+	display: block;
+}
+*/
 .browse .list div {
 	padding: 5px;
 	padding-left: 10px;
@@ -110,6 +124,25 @@ var TREE = {
 		},
 	},
 	file: 'this is a file',
+	/*
+	dir_d: {},
+	dir_e: {},
+	dir_f: {},
+	dir_g: {},
+	dir_h: {},
+	dir_i: {},
+	dir_j: {},
+	dir_k: {},
+	dir_l: {},
+	dir_m: {},
+	dir_o: {},
+	dir_p: {},
+	dir_q: {},
+	dir_r: {},
+	dir_s: {},
+	dir_t: {},
+	dir_u: {},
+	*/
 }
 // add some recursion for testing...
 TREE.dir_d = TREE.dir_c.dir_b
