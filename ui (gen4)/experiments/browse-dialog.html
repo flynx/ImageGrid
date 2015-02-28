@@ -159,7 +159,10 @@ function make(title){
 	var browser = $('<div>')
 		.addClass('browse')
 		// make thie widget focusable...
-		.attr('tabindex', -1)
+		// NOTE: tabindex 0 means automatic tab indexing and -1 means 
+		//		focusable bot not tabable...
+		//.attr('tabindex', -1)
+		.attr('tabindex', 0)
 		// focus the widget if something inside is clicked...
 		.click(function(){
 			$(this).focus()
