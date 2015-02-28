@@ -264,7 +264,7 @@ function popDir(){
 //	'next'
 //	'last'
 //	'none'		-- deselect
-//	'!'		-- return selected element if it exists...
+//	'!'			-- return selected element if it exists...
 //	<number>	-- select by sequence number...
 //	<elem>		-- select a specific element...
 function select(elem, browser){
@@ -370,7 +370,8 @@ var KB = {
 	'*':{
 		F5: function(){ window.location.reload() },
 	},
-	'.browse:focus':{
+	//'.browse:focus':{
+	'.browse':{
 		Up: prev,
 		Backspace: 'Up',
 		Down: next,
@@ -387,7 +388,8 @@ requirejs(['../lib/keyboard'], function(m){
 	keyboard = m
 
 	// setup base keyboard for devel, in case something breaks...
-	$(document)
+	//$(document)
+	$('.browse')
 		.keydown(
 			keyboard.makeKeyboardHandler(
 				KB,
@@ -467,3 +469,4 @@ $(function(){
 
 </body>
 </html>
+<!-- vim:set ts=4 sw=4 : -->
