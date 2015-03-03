@@ -10,6 +10,20 @@
 	left: 100px;
 
 	box-shadow: rgba(0,0,0,0.5) 0.1em 0.1em 0.4em;
+
+	/* make the container expand only to a certain size, then scroll */
+	/* XXX need to:
+		- auto-scroll vertically
+		- use custom scroll bars
+		- shorten path to fit width
+			i.e. manage width manually when at max-width...
+	*/
+	max-height: 60vh;
+	max-width: 60vw;
+	height: auto;
+	width: auto;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 .browse {
@@ -122,27 +136,26 @@ var TREE = {
 		dir_b: {
 			file1: 'this is a file',
 		},
+		dir_c: {},
+		dir_d: {},
+		dir_e: {},
+		dir_f: {},
+		dir_g: {},
+		dir_h: {},
+		dir_i: {},
+		dir_j: {},
+		dir_k: {},
+		dir_l: {},
+		dir_m: {},
+		dir_o: {},
+		dir_p: {},
+		dir_q: {},
+		dir_r: {},
+		dir_s: {},
+		dir_t: {},
+		dir_u: {},
 	},
 	file: 'this is a file',
-	/*
-	dir_d: {},
-	dir_e: {},
-	dir_f: {},
-	dir_g: {},
-	dir_h: {},
-	dir_i: {},
-	dir_j: {},
-	dir_k: {},
-	dir_l: {},
-	dir_m: {},
-	dir_o: {},
-	dir_p: {},
-	dir_q: {},
-	dir_r: {},
-	dir_s: {},
-	dir_t: {},
-	dir_u: {},
-	*/
 }
 // add some recursion for testing...
 TREE.dir_d = TREE.dir_c.dir_b

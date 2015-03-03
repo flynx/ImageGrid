@@ -468,6 +468,7 @@ actions.Actions({
 	reverseRibbons: ['Reverse ribbon order',
 		function(){ this.data.reverseRibbons() }],
 
+	// XXX align to ribbon...
 
 	// XXX this also requires images...
 	sortImages: [
