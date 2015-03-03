@@ -397,11 +397,15 @@ var KEYBOARD_CONFIG = {
 
 		// align to base ribbon...
 		// XXX base ribbon concept is not yet fully defined...
+		'align-to-ribbon': doc('Align sorted section to current ribbon (EXPERIMENTAL)',
+			function(){
+				alignRibbons()
+			}),
 		Down: {
-				'ctrl+alt': doc('Align sorted section to current ribbon (EXPERIMENTAL)',
-					function(){
-						alignRibbons()
-					}),
+				'ctrl+alt': 'align-to-ribbon',
+			},
+		A: {
+				'ctrl+alt': 'align-to-ribbon',
 			},
 
 		// zooming...
