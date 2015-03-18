@@ -401,9 +401,13 @@ var KB = {
 
 //---
 
+// XXX NOTE: the widget itself does not need a title, that's the job for
+//		a container widget (dialog, field, ...)
+//		...it can be implemented trivially via an attribute and a :before
+//		CSS class...
 var BrowserClassPrototype = {
 	// construct the dom...
-	make: function(){
+	make: function(options){
 		var browser = $('<div>')
 			.addClass('browse')
 			// make thie widget focusable...
@@ -415,24 +419,39 @@ var BrowserClassPrototype = {
 			.click(function(){
 				$(this).focus()
 			})
-			.append($('<div>')
-				   .addClass('v-block title')
-				   .text(title))
-			.append($('<div>')
-				   .addClass('v-block path'))
+
+
+		if(options.path == null || options.show_path){
+			browser
+				.append($('<div>')
+					   .addClass('v-block path'))
+		}
+
+		browser
 			.append($('<div>')
 				   .addClass('v-block list'))
-			.append($('<div>')
-				   .addClass('v-block info'))
-			.append($('<div>')
-				   .addClass('v-block actions'))
+
 		return browser
 	},
 }
 
+// XXX Q: should we make a base list dialog and build this on that or
+//		simplify this to implement a list (removing the path and disbling
+//		traversal)??
+// XXX need a search/filter field...
+// XXX need base events:
+//		- opne
+//		- update
+//		- select (???)
 var BrowserPrototype = {
 	dom: null,
 
+	options: {
+		//path: null,
+		//show_path: null,
+	},
+
+	// XXX this should prevent event handler deligation...
 	keyboard: {
 		'.browse':{
 			Up: 'prev',
@@ -449,6 +468,7 @@ var BrowserPrototype = {
 	// base api...
 	// NOTE: to avoid duplicating and syncing data, the actual path is 
 	//		stored in DOM...
+	// XXX does the path includes the currently selected element?
 	get path(){
 		var skip = false
 		return this.dom.find('.path .dir')
@@ -461,6 +481,7 @@ var BrowserPrototype = {
 	},
 
 	// update path...
+	// XXX trigger an "update" event...
 	update: function(path){
 		var browser = this.dom
 
@@ -488,6 +509,7 @@ var BrowserPrototype = {
 
 	// internal actions...
 
+	// Select a list element...
 	//
 	//	Select first/last child
 	//	.select('first')
@@ -523,6 +545,7 @@ var BrowserPrototype = {
 	//
 	//
 	// XXX revise return values...
+	// XXX Q: should this trigger a "select" event???
 	select: function(elem){
 		var browser = this.dom
 		var elems = browser.find('.list div')
@@ -589,9 +612,15 @@ var BrowserPrototype = {
 			return this
 		}
 
+		var path = this.path.push(elem.text())
+
+		// if not traversable call the action...
+		if(this.isTraversable && ! this.isTraversable(path)){
+			return this.action(path)
+		}
 
 		this
-			.update(this.path.push(elem.text()))
+			.update(path)
 			.select()
 
 		return this
@@ -624,37 +653,42 @@ var BrowserPrototype = {
 	},
 
 	// XXX think about the API...
+	// XXX trigger an "open" event...
 	action: function(){
-		var res = this.open(this.path)
+		var elem = this.select('!')
 
-		// XXX close the dialog if everything is OK...
-		// XXX
+		// nothing selected, select first and exit...
+		if(elem.length == 0){
+			this.select()
+			return this
+		}
+
+		var path = this.path.push(elem.text())
+
+		var res = this.open(path)
 
 		return res
 	},
-	// close the dialog...
-	// XXX
-	close: function(){
-	},
 
 	// extension methods...
-	// XXX think about the API...
-	//		needs to control closing of the dialog
-	open: function(){
-	},
-	list: function(){
-	},
+	open: function(){ },
+	list: function(){ },
 	isTraversable: null,
 
-	// XXX
-	__init__: function(parent){
+	// XXX need to get a container....
+	// XXX prepare/merge options...
+	__init__: function(parent, options){
+		// XXX merge options...
+		// XXX
+
 		// build the dom...
-		var dom = this.dom = this.constructor.make()
+		var dom = this.dom = this.constructor.make(options)
 
 		// add keyboard handler...
 		dom.keydown(
 			keyboard.makeKeyboardHandler(
 				this.keyboard,
+				// XXX
 				function(k){ window.DEBUG && console.log(k) },
 				this))
 
