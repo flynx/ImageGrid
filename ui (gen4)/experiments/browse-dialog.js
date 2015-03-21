@@ -48,7 +48,7 @@ var BrowserClassPrototype = {
 //		traversal)??
 // XXX need a search/filter field...
 // XXX need base events:
-//		- opne
+//		- open
 //		- update
 //		- select (???)
 // XXX add "current selection" to the path...
@@ -90,8 +90,14 @@ var BrowserPrototype = {
 	},
 
 	// update path...
+	// 	- build the path
+	// 	- build the element list
+	//
 	// XXX trigger an "update" event...
+	// XXX current path click shoud make it editable and start a live 
+	// 		search/filter...
 	update: function(path){
+		path = path || this.path
 		var browser = this.dom
 		var that = this
 
@@ -116,9 +122,20 @@ var BrowserPrototype = {
 		// add current selction indicator...
 		p.append($('<div>')
 			.addClass('dir cur')
+			// XXX start search/filter...
+			// 		- on click / letter set content editable
+			// 		- triger filterig on modified
+			// 		- disable nav in favor of editing
+			// 		- enter/blur to exit edit mode
+			// 		- esc to cancel and reset
 			.click(function(){
-				that
-					.update(path.concat($(this).text())) 
+				//that.update(path.concat($(this).text())) 
+				$(this)
+					.text('')
+					.attr('contenteditable', true)
+					.keyup(function(){
+						that.filter($(this).text())
+					})
 			}))
 
 		// fill the children list...
@@ -132,6 +149,37 @@ var BrowserPrototype = {
 			})
 
 		return this
+	},
+
+	// XXX should have two non_matched modes:
+	// 		- hide			- hide non-matching content
+	// 		- shadow		- shadow non-matching content
+	// XXX pattern modes:
+	// 		- lazy match
+	// 			abc		-> *abc*		-> ^.*abc.*$
+	// 			ab cd	-> *ab*cd*		-> ^.*ab.*cd.*$
+	// 		- glob
+	// 		- regex
+	// XXX sort:
+	// 		- as-is
+	// 		- best match
+	filter: function(pattern, mode, non_matched, sort){
+		var that = this
+		var browser = this.dom
+
+		var l = browser.find('.list>div')
+
+		l.each(function(i, e){
+			e = $(e)
+			var t = e.text()
+			var i = t.search(pattern)
+			if(i < 0){
+				e.remove()
+
+			} else {
+				e.html(t.replace(pattern, pattern.bold()))
+			}
+		})
 	},
 
 	// internal actions...
@@ -313,7 +361,7 @@ var BrowserPrototype = {
 	},
 	list: function(path){
 		var m = this.options.list
-		return m ? m.call(this, path) : path
+		return m ? m.call(this, path) : []
 	},
 	isTraversable: null,
 

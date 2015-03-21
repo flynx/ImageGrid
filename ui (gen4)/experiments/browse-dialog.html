@@ -90,7 +90,7 @@
 .browse .path .dir.cur:hover {
 	opacity: 1;
 }
-.browse .path .dir.cur:empty {
+.browse .path .dir.cur:empty:not([contenteditable]) {
 	display: none;
 }
 /* XXX need to make this resizable up but only to a certain size (~80vh) */
