@@ -80,7 +80,7 @@ var BrowserPrototype = {
 	// XXX does the path includes the currently selected element?
 	get path(){
 		var skip = false
-		return this.dom.find('.path .dir')
+		return this.dom.find('.path .dir:not(.cur)')
 			.map(function(i, e){ return $(e).text() })
 			.toArray()
 	},
@@ -99,19 +99,36 @@ var BrowserPrototype = {
 		var p = browser.find('.path').empty()
 		var l = browser.find('.list').empty()
 
+		var c = []
 		// fill the path field...
 		path.forEach(function(e){
+			c.push(e)
+			var cur = c.slice()
 			p.append($('<div>')
 				.addClass('dir')
-				.click(function(){ that.pop() })
+				.click(function(){
+					that
+						.update(cur.slice(0, -1)) 
+						.select('"'+cur.pop()+'"')
+				})
 				.text(e))
 		})
+
+		// add current selction indicator...
+		p.append($('<div>')
+			.addClass('dir cur')
+			.click(function(){
+				that
+					.update(path.concat($(this).text())) 
+			}))
 
 		// fill the children list...
 		this.list(path)
 			.forEach(function(e){
 				l.append($('<div>')
-					.click(function(){ that.push() })
+					.click(function(){
+						that.update(that.path.concat([$(this).text()])) 
+					})
 					.text(e))
 			})
 
@@ -208,6 +225,7 @@ var BrowserPrototype = {
 		// element...
 		} else {
 			this.select('none')
+			browser.find('.path .dir.cur').text(elem.text())
 			return elem.addClass('selected')
 		}
 	},
@@ -267,7 +285,7 @@ var BrowserPrototype = {
 
 	focus: function(){
 		this.dom.focus()
-		return thsi
+		return this
 	},
 
 	// XXX think about the API...
