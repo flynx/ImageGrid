@@ -85,7 +85,6 @@ var BrowserPrototype = {
 			.toArray()
 	},
 	set path(value){
-		console.log('!!!', value)
 		// XXX normalize path...
 		return this.update(value)
 	},
@@ -201,6 +200,7 @@ var BrowserPrototype = {
 
 		// deselect...
 		} else if(elem == 'none'){
+			browser.find('.path .dir.cur').empty()
 			return elems
 				.filter('.selected')
 				.removeClass('selected')
