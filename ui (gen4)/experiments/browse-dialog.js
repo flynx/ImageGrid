@@ -128,6 +128,7 @@ var BrowserPrototype = {
 			// 		- disable nav in favor of editing
 			// 		- enter/blur to exit edit mode
 			// 		- esc to cancel and reset
+			// XXX add a filter mode...
 			.click(function(){
 				//that.update(path.concat($(this).text())) 
 				$(this)
@@ -167,19 +168,28 @@ var BrowserPrototype = {
 		var that = this
 		var browser = this.dom
 
-		var l = browser.find('.list>div')
+		// show all...
+		if(pattern == null || pattern.trim() == '*'){
+			this.update()
 
-		l.each(function(i, e){
-			e = $(e)
-			var t = e.text()
-			var i = t.search(pattern)
-			if(i < 0){
-				e.remove()
+		// basic filter...
+		} else {
+			var l = browser.find('.list>div')
 
-			} else {
-				e.html(t.replace(pattern, pattern.bold()))
-			}
-		})
+			l.each(function(i, e){
+				e = $(e)
+				var t = e.text()
+				var i = t.search(pattern)
+				if(i < 0){
+					e.remove()
+
+				} else {
+					e.html(t.replace(pattern, pattern.bold()))
+				}
+			})
+		}
+
+		return this
 	},
 
 	// internal actions...
