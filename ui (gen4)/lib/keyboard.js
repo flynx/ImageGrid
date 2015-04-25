@@ -148,24 +148,31 @@ function doc(text, func){
 // 	- 'alt+shift'		-> "alt+shift"
 // 	- 'shift - alt'		-> "alt+shift"
 //
+// Bool flag order:
+// 		ctrl, meta, alt, shift
+//
+// NOTE: 'meta' is the OSX "Command" key...
 var normalizeModifiers =
 module.normalizeModifiers =
-function normalizeModifiers(c, a, s){
+function normalizeModifiers(c, m, a, s){
 		if(c != null && c.constructor === Array){
-			a = c[1]
-			s = c[2]
+			m = c[1]
+			a = c[2]
+			s = c[3]
 			c = c[0]
 		}
 		if(typeof(c) == typeof('str')){
 			var modifiers = c
 		} else {
 			var modifiers = (c ? 'ctrl' : '') 
+				+ (m ? ' meta' : '') 
 				+ (a ? ' alt' : '') 
 				+ (s ? ' shift' : '')
 		}
 
 		// build the dormalized modifier string...
 		var res = /ctrl/i.test(modifiers) ? 'ctrl' : ''
+		res += /meta/i.test(modifiers) ? (res != '' ? '+meta' : 'meta') : ''
 		res += /alt/i.test(modifiers) ? (res != '' ? '+alt' : 'alt') : ''
 		res += /shift/i.test(modifiers) ? (res != '' ? '+shift' : 'shift') : ''
 
@@ -617,7 +624,7 @@ function makeKeyboardHandler(keybindings, unhandled, actions){
 		var key = evt.keyCode
 
 		// get modifiers...
-		var modifiers = [evt.ctrlKey, evt.altKey, evt.shiftKey]
+		var modifiers = [evt.ctrlKey, evt.metaKey, evt.altKey, evt.shiftKey]
 
 		//window.DEBUG && console.log('KEY:', key, chr, modifiers)
 

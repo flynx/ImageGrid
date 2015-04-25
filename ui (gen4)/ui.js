@@ -72,6 +72,9 @@ module.GLOBAL_KEYBOARD = {
 				}),
 			*/
 		},
+		Q: {
+			meta: 'close',
+		},
 		F5: doc('Full reload viewer', 
 			function(){ 
 				/*
@@ -104,6 +107,7 @@ module.GLOBAL_KEYBOARD = {
 		F11: 'toggleFullScreen', 
 		F: {
 			ctrl: 'F11',
+			meta: 'F11',
 		},
 
 		// XXX testing...
@@ -124,6 +128,8 @@ module.GLOBAL_KEYBOARD = {
 			default: 'prevImage',
 			alt: 'shiftImageLeft!',
 			ctrl: 'prevScreen',
+			// XXX need to prevent default on mac + browser...
+			meta: 'prevScreen',
 		},
 		PgUp: 'prevScreen',
 		PgDown: 'nextScreen',
@@ -131,6 +137,8 @@ module.GLOBAL_KEYBOARD = {
 			default: 'nextImage',
 			alt: 'shiftImageRight!',
 			ctrl: 'nextScreen',
+			// XXX need to prevent default on mac + browser...
+			meta: 'nextScreen',
 		},
 		'(': 'prevImageInOrder',
 		')': 'nextImageInOrder',
@@ -199,6 +207,8 @@ module.GLOBAL_KEYBOARD = {
 		},
 		I: {
 			ctrl: 'toggleMark!: "ribbon"',
+
+			'meta+alt': 'showDevTools',
 		},
 		
 		B: {
