@@ -113,6 +113,8 @@ node-deps:
 	npm install fs.extra
 #	npm install exif
 
+css: $(CSS_FILES)
+
 dev: $(CSS_FILES)
 	unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
 	rm -f nwsnapshot.exe credits.html
