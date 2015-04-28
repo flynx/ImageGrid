@@ -4,6 +4,21 @@ DATE=`date +%Y%m%d`
 COUNT=1
 TITLE=""
 
+# base mount dir...
+# systems with /mnt
+if [ -d /mnt ] ; then
+	BASE=/mnt
+
+# raw Cygwin
+elif [ -d /cygdrive ] ; then
+	BASE=/cygdrive
+
+# OSX
+elif [ -d /Volumes ] ; then
+	BASE=/Volumes
+fi
+
+
 while true ; do
 	case "$1" in
 		-h|-help|--help)
@@ -15,6 +30,8 @@ while true ; do
 			echo "			single shoot."
 			echo "	-l|-last	last flash card in set, run"
 			echo "			process-archive.sh after copying."
+			echo "	-b|-base	the base dir to look for drives in"
+			echo "			default: $BASE"
 			echo
 			exit
 			;;
@@ -29,6 +46,10 @@ while true ; do
 			;;
 		-l|-last|--last)
 			LAST=1
+			shift
+			;;
+		-b|-base|--base)
+			BASE=1
 			shift
 			;;
 		*)
@@ -50,9 +71,9 @@ while true ; do
 		echo "0) Multi flash card mode is `[[ $MULTI ]] && echo "on" || echo "off"`"
 		echo "1) Directoy description is: \"$TITLE\"."
 		if [[ ! $DRIVE ]] ; then
-			echo "a-z) type a drive letter and start."
+			echo "a-z|name) type a drive letter or mount name in $BASE and start."
 		else
-			echo "a-z) type a new drive letter and start."
+			echo "a-z|name) type a drive letter or mount name in $BASE and start."
 			echo "Enter) copy drive ${DRIVE}"
 		fi
 		echo "2) build."
@@ -118,9 +139,8 @@ while true ; do
 
 	mkdir -vp "$DIR"
 
-
 	echo "Copying files from $1..."
-	cp -Rpfv /mnt/${DRIVE}/* "$DIR"
+	cp -Rpfv ${BASE}/${DRIVE}/* "$DIR"
 	echo "Copying files: done."
 
 
