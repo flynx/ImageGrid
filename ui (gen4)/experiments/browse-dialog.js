@@ -196,12 +196,22 @@ var BrowserPrototype = {
 
 	// Select a list element...
 	//
+	//	Get selected element if it exists, otherwise select and return 
+	//	the first...
+	//	.select()
+	//		-> elem
+	//
+	//	Get selected element if it exists, null otherwise...
+	//	.select('!')
+	//		-> elem
+	//		-> $()
+	//
 	//	Select first/last child
 	//	.select('first')
 	//	.select('last')
 	//		-> elem
 	//
-	//	Select previous/lext child
+	//	Select previous/next child
 	//	.select('prev')
 	//	.select('next')
 	//		-> elem
@@ -209,11 +219,6 @@ var BrowserPrototype = {
 	//	Deselect
 	//	.select('none')
 	//		-> elem
-	//
-	//	Get selected element if it exists, null otherwise...
-	//	.select('!')
-	//		-> elem
-	//		-> $()
 	//
 	//	Select element by sequence number
 	//	.select(<number>)
@@ -288,6 +293,24 @@ var BrowserPrototype = {
 		}
 	},
 
+	// Select next element...
+	next: function(elem){
+		if(elem != null){
+			this.select(elem)
+		}
+		this.select('next')
+		return this
+	},
+	// Select previous element...
+	prev: function(elem){
+		if(elem != null){
+			this.select(elem)
+		}
+		this.select('prev')
+		return this
+	},
+
+	// Push an element to path / go down one level...
 	push: function(elem){
 		var browser = this.dom 
 		var elem = this.select(elem || '!')
@@ -314,7 +337,7 @@ var BrowserPrototype = {
 
 		return this
 	},
-	// pop an element off the path / go up one level...
+	// Pop an element off the path / go up one level...
 	pop: function(){
 		var browser = this.dom
 		var path = this.path
@@ -324,20 +347,6 @@ var BrowserPrototype = {
 
 		this.select('"'+dir+'"')
 
-		return this
-	},
-	next: function(elem){
-		if(elem != null){
-			this.select(elem)
-		}
-		this.select('next')
-		return this
-	},
-	prev: function(elem){
-		if(elem != null){
-			this.select(elem)
-		}
-		this.select('prev')
 		return this
 	},
 
