@@ -55,9 +55,17 @@ var BrowserClassPrototype = {
 var BrowserPrototype = {
 	dom: null,
 
+	// option defaults and doc...
+	//
+	// XXX add enable/disable filter option...
 	options: {
 		//path: null,
 		//show_path: null,
+
+		// handle keys that are not bound...
+		//
+		// NOTE: to disable, set ot undefined.
+		logKeys: function(k){ window.DEBUG && console.log(k) },
 	},
 
 	// XXX this should prevent event handler deligation...
@@ -385,12 +393,14 @@ var BrowserPrototype = {
 	isTraversable: null,
 
 	// XXX need to get a container....
-	// XXX prepare/merge options...
 	// XXX setup instance events...
 	__init__: function(parent, options){
-		// XXX merge options...
-		// XXX
-		this.options = options
+		options = options || {}
+
+		// merge options...
+		var opts = Object.create(this.options)
+		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
+		options = this.options = opts
 
 		// build the dom...
 		var dom = this.dom = this.constructor.make(options)
@@ -399,8 +409,7 @@ var BrowserPrototype = {
 		dom.keydown(
 			keyboard.makeKeyboardHandler(
 				this.keyboard,
-				// XXX
-				function(k){ window.DEBUG && console.log(k) },
+				options.logKeys,
 				this))
 
 		// attach to parent...
