@@ -1298,6 +1298,92 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 
 //---------------------------------------------------------------------
 
+// XXX would be great to add a mechanism define how to reverse actions...
+// 		...one way to do this at this point is to revert to last state
+// 		and re-run the journal until the desired event...
+var Journal = 
+module.Journal = features.Feature(ImageGridFeatures, {
+	title: 'Partial Ribbons',
+
+	tag: 'system-journal',
+
+	actions: actions.Actions({
+		// XXX might be good to add some kind of metadata to journal...
+		journalPush: ['add an item to journal',
+			function(){
+				if(this.journal == null){
+					this.journal = []
+				}
+				//console.log('ACTION:', action, args2array(arguments))
+				this.journal.push(args2array(arguments))
+			}],
+		clearJournal: ['Clear the action journal',
+			function(){
+				if(this.journal){
+					delete this.journal
+				}
+			}],
+	}),
+
+	// log state, action and its args... 
+	// XXX need to drop journal on save...
+	// XXX rotate/truncate journal???
+	// XXX need to check that all the listed actions are clean -- i.e.
+	// 		running the journal will produce the same results as user 
+	// 		actions that generated the journal.
+	// XXX would be good if we could know the name of the action in the 
+	// 		handler, thus enabling us to define a single handler rather
+	// 		than generating a custom handler per action...
+	handlers: [
+				'clear',
+				'load',
+				'loadURLs',
+
+				'setBaseRibbon',
+
+				'shiftImageTo',
+				'shiftImageUp',
+				'shiftImageDown',
+				'shiftImageLeft',
+				'shiftImageRight',
+				'shiftRibbonUp',
+				'shiftRibbonDown',
+
+				'rotateCW',
+				'rotateCCW',
+				'flipHorizontal',
+				'flipVertical',
+
+				'sortImages',
+				'reverseImages',
+				'reverseRibbons',
+
+				'crop',
+				'uncrop',
+
+				'tag', 
+				'untag',
+
+				'group',
+				'ungroup',
+				'expandGroup',
+				'collapseGroup',
+			].map(function(action){
+				return [
+					action, 
+					function(){
+						this.journalPush(
+							this.current, 
+							action, 
+							args2array(arguments))
+					}]
+			}), 
+})
+
+
+
+//---------------------------------------------------------------------
+
 // NOTE: this is split out to an action so as to enable ui elements to 
 // 		adapt to ribbon size changes...
 //
@@ -2454,6 +2540,9 @@ features.Feature(ImageGridFeatures, 'viewer-testing', [
 
 	// experimental and optional features...
 	//'auto-single-image',
+	
+	// XXX not yet fully tested...
+	'system-journal',
 ])
 
 features.Feature(ImageGridFeatures, 'commandline', [
