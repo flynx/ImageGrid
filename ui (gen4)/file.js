@@ -68,8 +68,17 @@ function(glob){ return guaranteeEvents('match end', glob) }
 // XXX glob has a problem: if a match happens fast enough and we are slow
 // 		enough to register a 'match' handler, then that match(s) will get
 // 		missed...
-function listIndexes(base){
+var listIndexes =
+module.listIndexes = 
+function(base){
 	return guaranteeGlobEvents(glob(base +'/**/'+ INDEX_DIR))
+}
+
+
+var listPreviews =
+module.listPreviews = 
+function(base){
+	return guaranteeGlobEvents(glob(base +'/*px/*jpg'))
 }
 
 
@@ -105,6 +114,9 @@ function loadJSON(path){
 // 		- get and load latest base file per keyword
 // 		- merge all later than loaded base diff files per keyword
 //
+// Merging is done by copying the key-value pairs from diff to the
+// resulting object.
+//
 //
 // Index format (input):
 // 	.ImageGrid/
@@ -133,8 +145,9 @@ function loadJSON(path){
 // NOTE: this is fairly generic and does not care about the type of data
 // 		or it's format as long as it's JSON and the file names comply
 // 		with the scheme above...
+// NOTE: this only loads the JSON data and does not import or process 
+// 		anything...
 //
-// XXX add support for sharding...
 // XXX test with:
 // 		requirejs(['file'], 
 // 			function(m){ 
@@ -163,6 +176,27 @@ function(path, logger){
 					var root = {}
 
 					// group by keyword...
+					//
+					// this will build a structure in the following format:
+					// 	{
+					// 		<keyword>: [
+					// 			// diff files...
+					// 			// NOTE: the first argument indicates 
+					// 			//	if this is a diff or not, used to 
+					// 			//	skip past the last base...
+					// 			[true, <filename>],
+					// 			...
+					//
+					// 			// base file (non-diff)
+					// 			[false, <filename>]
+					// 		],
+					// 		...
+					// 	}
+					//
+					// This is used to sequence, load and correctly merge 
+					// the found JSON files.
+					//
+					// NOTE: all files past the first non-diff are skipped.
 					files
 						.sort()
 						.reverse()
@@ -172,7 +206,7 @@ function(path, logger){
 
 							// <keyword>.json / non-diff
 							// NOTE: this is a special case, we add this to
-							// 		a seporate index and then concat it to 
+							// 		a separate index and then concat it to 
 							// 		the final list if needed...
 							if(s.length == 1){
 								var k = s[0]
@@ -295,6 +329,72 @@ function(path, logger){
 	})
 }
  
+
+// get/populate the previews...
+//
+// format:
+// 	{
+// 		<index-base>: {
+// 			<gid>: {
+// 				<resolution>: <local-path>,
+// 				...
+// 			},
+// 			...
+// 		},
+// 		...
+// 	}
+//
+// XXX should this be compatible with loadIndex(..) data???
+// XXX handle errors....
+var loadPreviews =
+module.loadPreviews =
+function(base, previews, absolute_path){
+	previews = previews || {}
+
+	return new Promise(function(resolve, reject){
+		listIndexes(base)
+			// XXX handle errors....
+			//.on('error', function(err){
+			//})
+			.on('match', function(base){
+				if(!(base in previews)){
+					previews[base] = {}
+				}
+
+				var images = previews[base]
+
+				listPreviews(base)
+					// XXX handle errors....
+					//.on('error', function(err){
+					//})
+					// preview name syntax:
+					// 	<res>px/<gid> - <orig-filename>.jpg
+					.on('match', function(path){
+						// get the data we need...
+						var gid = pathlib.basename(path).split(' - ')[0]
+						var res = pathlib.basename(pathlib.dirname(path))
+
+						// build the structure if it does not exist...
+						if(!(gid in images)){
+							images[gid] = {}
+						}
+						if(images[gid].preview == null){
+							images[gid].preview = {}
+						}
+
+						// add a preview...
+						// NOTE: this will overwrite a previews if they are found in
+						// 		several locations...
+						images[gid].preview[res] = INDEX_DIR +'/'+ path.split(INDEX_DIR)[1]
+					})
+			})
+			.on('end', function(){
+				resolve(previews)
+			})
+	})
+}
+
+
 
 
 /*********************************************************************/

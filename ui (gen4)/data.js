@@ -2657,6 +2657,21 @@ DataWithTagsPrototype.__proto__ = DataPrototype
 
 /*********************************************************************/
 
+// Proxy Data API to one of the target data objects...
+var DataProxyPrototype = {
+	datasets: null,
+
+	get order(){
+		// XXX
+	},
+
+}
+//DataProxyPrototype.__proto__ = DataPrototype
+DataProxyPrototype.__proto__ = DataWithTagsPrototype
+
+
+/*********************************************************************/
+
 // Main Data object...
 var BaseData = 
 module.BaseData = 
