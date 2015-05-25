@@ -229,11 +229,21 @@ var BrowserPrototype = {
 	//		-> elem
 	//
 	//	Select element by sequence number
+	//	NOTE: negative numbers count from the tail.
+	//	NOTE: overflowing selects the first/last element.
 	//	.select(<number>)
 	//		-> elem
 	//
 	//	Select element by its text...
+	//	NOTE: if text matches one of the reserved commands above use 
+	//		quotes to escape it...
+	//	.select('<text>')
+	//	.select("'<text>'")
 	//	.select('"<text>"')
+	//		-> elem
+	//
+	//	Select element via a regular expression...
+	//	.select(<elem>)
 	//		-> elem
 	//
 	//	.select(<elem>)
@@ -241,9 +251,12 @@ var BrowserPrototype = {
 	//
 	// This will return a jQuery object.
 	//
+	// NOTE: if multiple matches occur this will select the first.
+	//
 	//
 	// XXX revise return values...
 	// XXX Q: should this trigger a "select" event???
+	// XXX on string/regexp mismatch this will select the first, is this correct???
 	select: function(elem){
 		var browser = this.dom
 		var elems = browser.find('.list div')
@@ -252,6 +265,7 @@ var BrowserPrototype = {
 			return $()
 		}
 
+		elem = elem == 0 ? 'first' : elem
 		elem = elem || this.select('!')
 		// if none selected get the first...
 		elem = elem.length == 0 ? 'first' : elem
@@ -281,23 +295,41 @@ var BrowserPrototype = {
 			return elems.filter('.selected')
 
 		// number...
+		// NOTE: on overflow this will get the first/last element...
 		} else if(typeof(elem) == typeof(123)){
-			return this.select($(elems[elem]))
+			return this.select($(elems.slice(elem)[0] || elems.slice(-1)[0] ))
 
 		// string...
-		} else if(typeof(elem) == typeof('str') 
-				&& /^'.*'$|^".*"$/.test(elem.trim())){
-			elem = elem.trim().slice(1, -1)
+		// XXX on mismatch this will select the first, is this correct???
+		} else if(typeof(elem) == typeof('str')){
+			if(/^'.*'$|^".*"$/.test(elem.trim())){
+				elem = elem.trim().slice(1, -1)
+			}
 			return this.select(browser.find('.list div')
 					.filter(function(i, e){
 						return $(e).text() == elem
 					}))
 
+		// regexp...
+		// XXX on mismatch this will select the first, is this correct???
+		} else if(elem.constructor === RegExp){
+			return this.select(browser.find('.list div')
+					.filter(function(i, e){
+						return elem.test($(e).text())
+					}))
+
 		// element...
 		} else {
-			this.select('none')
-			browser.find('.path .dir.cur').text(elem.text())
-			return elem.addClass('selected')
+			elem = $(elem).first()
+
+			if(elem.length == 0){
+				this.select()
+
+			} else {
+				this.select('none')
+				browser.find('.path .dir.cur').text(elem.text())
+				return elem.addClass('selected')
+			}
 		}
 	},
 
@@ -374,7 +406,9 @@ var BrowserPrototype = {
 			return this
 		}
 
-		var path = this.path.push(elem.text())
+		var path = this.path
+
+		path.push(elem.text())
 
 		var res = this.open(path)
 
@@ -382,11 +416,15 @@ var BrowserPrototype = {
 	},
 
 	// extension methods...
+	// XXX this is wrong...
+	// 		...need to actually open something...
 	open: function(path){ 
+		path = path || this.path
 		var m = this.options.list
 		return m ? m.call(this, path) : path
 	},
 	list: function(path){
+		path = path || this.path
 		var m = this.options.list
 		return m ? m.call(this, path) : []
 	},

@@ -194,6 +194,7 @@ requirejs(['../lib/keyboard', '../object'], function(k, o){
 
 	b = Browser($('.container').last(), {
 			list: function(path){
+				console.log('>>>', path)
 				var cur = TREE
 				path.forEach(function(p){
 					cur = cur[p]
