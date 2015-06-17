@@ -92,9 +92,9 @@ var BrowserPrototype = {
 		General: {
 			pattern: '.browse',
 
-			Up: 'prev',
+			Up: 'prev!',
 			Backspace: 'Up',
-			Down: 'next',
+			Down: 'next!',
 			Left: 'pop',
 			Right: 'push',
 
@@ -417,6 +417,28 @@ var BrowserPrototype = {
 				if(!filtering){
 					browser.find('.path .dir.cur').text(elem.text())
 				}
+
+
+				// handle scroll position...
+				var p = elem.scrollParent()
+				var S = p.scrollTop()
+				var H = p.height()
+
+				var h = elem.height()
+				var t = elem.offset().top - p.offset().top
+
+				var D = 3 * h 
+
+				// XXX there is an error here...
+				// too low...
+				if(t+h+D > H){
+					p.scrollTop(S + (t+h+D) - H)
+
+				// too high...
+				} else if(t < D){
+					p.scrollTop(S + t - D)
+				}
+
 				return elem.addClass('selected')
 			}
 		}

@@ -98,10 +98,12 @@
 	opacity: 0;
 }
 .browse .path .dir.cur:empty:hover:not([contenteditable]) {
-	opacity: 0.3;
+	opacity: 0.6;
 }
 .browse .path .dir.cur:empty:hover:not([contenteditable]):after {
-	content: "filter";
+	content: "______";
+	border: dashed white 1px;
+	cursor: text;
 }
 /* XXX need to make this resizable up but only to a certain size (~80vh) */
 /*
