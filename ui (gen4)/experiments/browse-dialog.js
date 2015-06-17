@@ -82,6 +82,7 @@ var BrowserPrototype = {
 					'Right',
 					'Enter',
 					'Esc',
+					'/',
 				],
 
 			Enter: 'action!',
@@ -124,8 +125,6 @@ var BrowserPrototype = {
 	// 	- build the element list
 	//
 	// XXX trigger an "update" event...
-	// XXX current path click shoud make it editable and start a live 
-	// 		search/filter...
 	update: function(path){
 		path = path || this.path
 		var browser = this.dom
@@ -152,10 +151,27 @@ var BrowserPrototype = {
 		// add current selction indicator...
 		p.append($('<div>')
 			.addClass('dir cur')
-			// XXX add a filter mode...
 			.click(function(){
 				that.startFilter()
 				//that.update(path.concat($(this).text())) 
+
+				// XXX HACK: prevents the field from bluring when clicked...
+				// 			...need to find a better way...
+				that._hold_blur = true
+				setTimeout(function(){ delete that._hold_blur }, 20)
+			})
+			// XXX for some reason this gets triggered when clicking ano 
+			// 		is not triggered when entering via '/'
+			.on('blur', function(){
+				// XXX HACK: prevents the field from bluring when clicked...
+				// 			...need to find a better way...
+				if(!that._hold_blur){
+					that.stopFilter()
+				}
+				//that.stopFilter()
+			})
+			.keyup(function(){
+				that.filter($(this).text())
 			}))
 
 		// fill the children list...
@@ -184,6 +200,8 @@ var BrowserPrototype = {
 	// XXX sort:
 	// 		- as-is
 	// 		- best match
+	// XXX add deep-mode filtering...
+	// 		if '/' is in the pattern then we list down and combine paths...
 	filter: function(pattern, non_matched, sort){
 		var that = this
 		var browser = this.dom
@@ -236,9 +254,6 @@ var BrowserPrototype = {
 		var e = this.dom.find('.path .dir.cur')
 			.text('')
 			.attr('contenteditable', true)
-			.keyup(function(){
-				that.filter($(this).text())
-			})
 			.focus()
 
 		// place the cursor...
@@ -323,6 +338,7 @@ var BrowserPrototype = {
 	// XXX revise return values...
 	// XXX Q: should this trigger a "select" event???
 	// XXX on string/regexp mismatch this will select the first, is this correct???
+	// XXX handle scrollTop to show the selected element...
 	select: function(elem, filtering){
 		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
@@ -397,7 +413,6 @@ var BrowserPrototype = {
 				this.select(null, filtering)
 
 			} else {
-
 				this.select('none', filtering)
 				if(!filtering){
 					browser.find('.path .dir.cur').text(elem.text())

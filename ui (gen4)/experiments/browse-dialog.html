@@ -91,7 +91,17 @@
 	opacity: 1;
 }
 .browse .path .dir.cur:empty:not([contenteditable]) {
-	display: none;
+	position: relative;
+	width: 50px;
+	height: 12px;
+	background: transparent;
+	opacity: 0;
+}
+.browse .path .dir.cur:empty:hover:not([contenteditable]) {
+	opacity: 0.3;
+}
+.browse .path .dir.cur:empty:hover:not([contenteditable]):after {
+	content: "filter";
 }
 /* XXX need to make this resizable up but only to a certain size (~80vh) */
 /*
