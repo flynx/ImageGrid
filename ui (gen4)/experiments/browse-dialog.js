@@ -9,6 +9,7 @@
 
 /*********************************************************************/
 
+// XXX add a hook to render the content of an element...
 // XXX NOTE: the widget itself does not need a title, that's the job for
 //		a container widget (dialog, field, ...)
 //		...it can be implemented trivially via an attribute and a :before
@@ -70,7 +71,26 @@ var BrowserPrototype = {
 
 	// XXX this should prevent event handler deligation...
 	keyboard: {
-		'.browse':{
+		// filter mappings...
+		Filter: {
+			pattern: '.browse .path div.cur[contenteditable]',
+
+			// keep text edeting action from affecting the seelction...
+			ignore: [
+					'Backspace',
+					'Left',
+					'Right',
+					'Enter',
+					'Esc',
+				],
+
+			Enter: 'action!',
+			Esc: 'stopFilter!',
+		},
+
+		General: {
+			pattern: '.browse',
+
 			Up: 'prev',
 			Backspace: 'Up',
 			Down: 'next',
@@ -79,6 +99,8 @@ var BrowserPrototype = {
 
 			Enter: 'action',
 			Esc: 'close',
+
+			'/': 'startFilter!',
 		},
 	},
 
@@ -130,21 +152,10 @@ var BrowserPrototype = {
 		// add current selction indicator...
 		p.append($('<div>')
 			.addClass('dir cur')
-			// XXX start search/filter...
-			// 		- on click / letter set content editable
-			// 		- triger filterig on modified
-			// 		- disable nav in favor of editing
-			// 		- enter/blur to exit edit mode
-			// 		- esc to cancel and reset
 			// XXX add a filter mode...
 			.click(function(){
+				that.startFilter()
 				//that.update(path.concat($(this).text())) 
-				$(this)
-					.text('')
-					.attr('contenteditable', true)
-					.keyup(function(){
-						that.filter($(this).text())
-					})
 			}))
 
 		// fill the children list...
@@ -152,7 +163,9 @@ var BrowserPrototype = {
 			.forEach(function(e){
 				l.append($('<div>')
 					.click(function(){
-						that.update(that.path.concat([$(this).text()])) 
+						if(!$(this).hasClass('disabled')){
+							that.update(that.path.concat([$(this).text()])) 
+						}
 					})
 					.text(e))
 			})
@@ -160,9 +173,8 @@ var BrowserPrototype = {
 		return this
 	},
 
-	// XXX should have two non_matched modes:
-	// 		- hide			- hide non-matching content
-	// 		- shadow		- shadow non-matching content
+	// internal actions...
+
 	// XXX pattern modes:
 	// 		- lazy match
 	// 			abc		-> *abc*		-> ^.*abc.*$
@@ -172,27 +184,34 @@ var BrowserPrototype = {
 	// XXX sort:
 	// 		- as-is
 	// 		- best match
-	filter: function(pattern, mode, non_matched, sort){
+	filter: function(pattern, non_matched, sort){
 		var that = this
 		var browser = this.dom
 
 		// show all...
 		if(pattern == null || pattern.trim() == '*'){
-			this.update()
+			browser.find('.filtered-out')
+				.removeClass('filtered-out')
+			// clear the highlighing...
+			browser.find('.list b')
+				.replaceWith(function() { return this.innerHTML })
 
 		// basic filter...
 		} else {
-			var l = browser.find('.list>div')
+			var l = browser.find('.list>div:not(disabled)')
 
 			l.each(function(i, e){
 				e = $(e)
 				var t = e.text()
 				var i = t.search(pattern)
 				if(i < 0){
-					e.remove()
+					e
+						.addClass('filtered-out')
+						.removeClass('selected')
 
 				} else {
 					e.html(t.replace(pattern, pattern.bold()))
+						.removeClass('filtered-out')
 				}
 			})
 		}
@@ -200,7 +219,49 @@ var BrowserPrototype = {
 		return this
 	},
 
-	// internal actions...
+	// XXX start search/filter...
+	// 		- set content editable
+	// 		- triger filterig on modified
+	// 		- disable nav in favor of editing
+	// 		- enter/blur to exit edit mode
+	// 		- esc to cancel and reset
+	// XXX BUG: when starting with '/' key the '/' gets appended to the
+	// 		field...
+	startFilter: function(){
+		var range = document.createRange()
+		var selection = window.getSelection()
+
+		var that = this
+		var e = this.dom.find('.path .dir.cur')
+			.text('')
+			.attr('contenteditable', true)
+			.keyup(function(){
+				that.filter($(this).text())
+			})
+			.focus()
+
+		// place the cursor...
+		range.setStart(e[0], 0)
+		range.collapse(true)
+		// XXX
+		selection.removeAllRanges()
+		selection.addRange(range)
+
+		return this
+	},
+	stopFilter: function(){
+		this.filter('*')
+		this.dom.find('.path .dir.cur')
+			.text('')
+			.removeAttr('contenteditable')
+		this
+			.focus()
+
+		return this
+	},
+	get filtering(){
+		return this.dom.find('.path .dir.cur[contenteditable]').length > 0 
+	},
 
 	// Select a list element...
 	//
@@ -257,9 +318,12 @@ var BrowserPrototype = {
 	// XXX revise return values...
 	// XXX Q: should this trigger a "select" event???
 	// XXX on string/regexp mismatch this will select the first, is this correct???
-	select: function(elem){
+	select: function(elem, filtering){
+		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
-		var elems = browser.find('.list div')
+		var elems = browser.find(pattern)
+
+		filtering = filtering == null ? this.filtering : filtering
 
 		if(elems.length == 0){
 			return $()
@@ -272,20 +336,22 @@ var BrowserPrototype = {
 
 		// first/last...
 		if(elem == 'first' || elem == 'last'){
-			return this.select(elems[elem]())
+			return this.select(elems[elem](), filtering)
 		
 		// prev/next...
 		} else if(elem == 'prev' || elem == 'next'){
-			var to = this.select('!', browser)[elem]('.list div')
+			var to = this.select('!', filtering)[elem + 'All'](pattern).first()
 			if(to.length == 0){
-				return this.select(elem == 'prev' ? 'last' : 'first', browser)
+				return this.select(elem == 'prev' ? 'last' : 'first', filtering)
 			}
-			this.select('none')
-			return this.select(to)
+			this.select('none', filtering)
+			return this.select(to, filtering)
 
 		// deselect...
 		} else if(elem == 'none'){
-			browser.find('.path .dir.cur').empty()
+			if(!filtering){
+				browser.find('.path .dir.cur').empty()
+			}
 			return elems
 				.filter('.selected')
 				.removeClass('selected')
@@ -297,7 +363,7 @@ var BrowserPrototype = {
 		// number...
 		// NOTE: on overflow this will get the first/last element...
 		} else if(typeof(elem) == typeof(123)){
-			return this.select($(elems.slice(elem)[0] || elems.slice(-1)[0] ))
+			return this.select($(elems.slice(elem)[0] || elems.slice(-1)[0] ), filtering)
 
 		// string...
 		// XXX on mismatch this will select the first, is this correct???
@@ -305,29 +371,32 @@ var BrowserPrototype = {
 			if(/^'.*'$|^".*"$/.test(elem.trim())){
 				elem = elem.trim().slice(1, -1)
 			}
-			return this.select(browser.find('.list div')
+			return this.select(browser.find(pattern)
 					.filter(function(i, e){
 						return $(e).text() == elem
-					}))
+					}), filtering)
 
 		// regexp...
 		// XXX on mismatch this will select the first, is this correct???
 		} else if(elem.constructor === RegExp){
-			return this.select(browser.find('.list div')
+			return this.select(browser.find(pattern)
 					.filter(function(i, e){
 						return elem.test($(e).text())
-					}))
+					}), filtering)
 
 		// element...
 		} else {
 			elem = $(elem).first()
 
 			if(elem.length == 0){
-				this.select()
+				this.select(null, filtering)
 
 			} else {
-				this.select('none')
-				browser.find('.path .dir.cur').text(elem.text())
+
+				this.select('none', filtering)
+				if(!filtering){
+					browser.find('.path .dir.cur').text(elem.text())
+				}
 				return elem.addClass('selected')
 			}
 		}

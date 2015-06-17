@@ -115,6 +115,14 @@
 	background: rgba(0,0,0, 0.05);
 }
 
+/* XXX need to make the next two different...  */
+.browse .list div.filtered-out {
+	display: none;
+}
+.browse .list div.disabled {
+	opacity: 0.3;
+}
+
 .browse:focus .list div.selected {
 	background: rgba(0,0,0, 0.1);
 	box-shadow: rgba(0,0,0,0.2) 0.1em 0.1em 0.2em; 
@@ -122,6 +130,30 @@
 
 .browse .list div.selected {
 	background: rgba(0,0,0, 0.08);
+}
+
+
+
+::-webkit-scrollbar {
+	width: 10px;
+}
+::-webkit-scrollbar-button {
+	display: none;
+}
+::-webkit-scrollbar-track {
+}
+::-webkit-scrollbar-track-piece {
+	background: gray;
+}
+::-webkit-scrollbar-thumb {
+	background: rgba(0, 0, 0, 0.05);
+}
+::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 0, 0, 0.3);
+}
+::-webkit-scrollbar-corner {
+}
+::-webkit-resizer {
 }
 
 
@@ -238,7 +270,7 @@ $(function(){
 			[title]
 		</div>
 
-		<!-- the actual list -->
+		<!-- current path -->
 		<div class="v-block path">
 			<div class="dir">
 				[dir]
@@ -251,7 +283,7 @@ $(function(){
 			</div>
 		</div>
 
-		<!-- the actual list -->
+		<!-- path list -->
 		<div class="v-block list">
 			<div>
 				[dir]
