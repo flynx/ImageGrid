@@ -227,6 +227,7 @@ var BrowserPrototype = {
 	// 		- esc to cancel and reset
 	// XXX BUG: when starting with '/' key the '/' gets appended to the
 	// 		field...
+	// XXX make this a toggler...
 	startFilter: function(){
 		var range = document.createRange()
 		var selection = window.getSelection()
@@ -261,6 +262,10 @@ var BrowserPrototype = {
 	},
 	get filtering(){
 		return this.dom.find('.path .dir.cur[contenteditable]').length > 0 
+	},
+	toggleFilterMode: function(){
+		this.dom.toggleClass('show-filtered-out')
+		return this
 	},
 
 	// Select a list element...
