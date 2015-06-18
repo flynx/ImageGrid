@@ -201,8 +201,6 @@ var BrowserPrototype = {
 		return this
 	},
 
-	// internal actions...
-	
 	// Filter the item list...
 	//
 	// 	.filter()
@@ -212,25 +210,33 @@ var BrowserPrototype = {
 	// 	.filter(<string>)
 	// 		-> elements
 	//
-	// 	.filter(<string>)
+	// 	.filter(<regexp>)
 	// 		-> elements
 	//
 	// 	.filter(<function>)
 	// 		-> elements
 	//
 	//
+	// 	.filter(<pattern>[, <rejected-handler>][, <ignore-disabled>])
+	// 	
+	// XXX write out the following signatures...
+	// 	.filter(<pattern>)
+	// 	.filter(<pattern>, <ignore-disabled>)
+	// 	.filter(<pattern>, <rejected-handler>)
+	// 	.filter(<pattern>, <rejected-handler>, <ignore-disabled>)
+	//
 	// XXX pattern modes:
 	// 		- lazy match
 	// 			abc		-> *abc*		-> ^.*abc.*$
 	// 			ab cd	-> *ab*cd*		-> ^.*ab.*cd.*$
 	// 		- glob
-	// 		- regex
 	// XXX need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/
-	// XXX make the signature a bit more flexible...
 	filter: function(pattern, rejected, ignore_disabled){
 		pattern = pattern || '*'
+		ignore_disabled = typeof(rejected) == typeof(true) ? rejected : ignore_disabled
 		ignore_disabled = ignore_disabled == null ? true : ignore_disabled
+		rejected = typeof(rejected) == typeof(true) ? null : rejected
 
 		var that = this
 		var browser = this.dom
@@ -285,6 +291,9 @@ var BrowserPrototype = {
 		return elems.filter(filter)
 	},
 
+
+	// internal actions...
+	
 	// NOTE: this uses .filter(..) for actual filtering...
 	// XXX revise API...
 	showFiltered: function(pattern){
