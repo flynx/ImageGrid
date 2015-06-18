@@ -232,6 +232,9 @@ var BrowserPrototype = {
 	// 		- glob
 	// XXX need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/
+	// XXX make this more compatible with the canonical filter....
+	// 		- set this for predicate function...
+	// 		- unwrap the element (???)
 	filter: function(pattern, rejected, ignore_disabled){
 		pattern = pattern || '*'
 		ignore_disabled = typeof(rejected) == typeof(true) ? rejected : ignore_disabled
