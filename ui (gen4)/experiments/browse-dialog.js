@@ -44,10 +44,11 @@ var BrowserClassPrototype = {
 	},
 }
 
+// XXX need to scroll only the list, keeping the path allways in view...
+// XXX need to handle long paths -- smart shortening or auto scroll...
 // XXX Q: should we make a base list dialog and build this on that or
 //		simplify this to implement a list (removing the path and disbling
 //		traversal)??
-// XXX need a search/filter field...
 // XXX need base events:
 //		- open
 //		- update
@@ -80,6 +81,8 @@ var BrowserPrototype = {
 					'Backspace',
 					'Left',
 					'Right',
+					'Home',
+					'End',
 					'Enter',
 					'Esc',
 					'/',
@@ -97,6 +100,14 @@ var BrowserPrototype = {
 			Down: 'next!',
 			Left: 'pop',
 			Right: 'push',
+
+			Home: 'select!: "first"',
+			End: 'select!: "last"',
+
+			// XXX add page up and page down...
+			// XXX
+			// XXX ctrl-Left to go to root/base/home
+			// XXX
 
 			Enter: 'action',
 			Esc: 'close',
@@ -179,6 +190,7 @@ var BrowserPrototype = {
 			.forEach(function(e){
 				l.append($('<div>')
 					.click(function(){
+						// handle clicks ONLY when not disabled...
 						if(!$(this).hasClass('disabled')){
 							that.update(that.path.concat([$(this).text()])) 
 						}
@@ -202,7 +214,8 @@ var BrowserPrototype = {
 	// 		- best match
 	// XXX add deep-mode filtering...
 	// 		if '/' is in the pattern then we list down and combine paths...
-	filter: function(pattern, non_matched, sort){
+	// XXX might be good to use the same mechanism for this and .select(..)
+	filter: function(pattern){
 		var that = this
 		var browser = this.dom
 
@@ -228,8 +241,8 @@ var BrowserPrototype = {
 						.removeClass('selected')
 
 				} else {
-					e.html(t.replace(pattern, pattern.bold()))
-						.removeClass('filtered-out')
+					e.removeClass('filtered-out')
+						.html(t.replace(pattern, pattern.bold()))
 				}
 			})
 		}
@@ -237,15 +250,7 @@ var BrowserPrototype = {
 		return this
 	},
 
-	// XXX start search/filter...
-	// 		- set content editable
-	// 		- triger filterig on modified
-	// 		- disable nav in favor of editing
-	// 		- enter/blur to exit edit mode
-	// 		- esc to cancel and reset
-	// XXX BUG: when starting with '/' key the '/' gets appended to the
-	// 		field...
-	// XXX make this a toggler...
+	// XXX make this a toggler... (???)
 	startFilter: function(){
 		var range = document.createRange()
 		var selection = window.getSelection()
@@ -307,7 +312,7 @@ var BrowserPrototype = {
 	//
 	//	Deselect
 	//	.select('none')
-	//		-> elem
+	//		-> $()
 	//
 	//	Select element by sequence number
 	//	NOTE: negative numbers count from the tail.
@@ -324,21 +329,24 @@ var BrowserPrototype = {
 	//		-> elem
 	//
 	//	Select element via a regular expression...
-	//	.select(<elem>)
+	//	.select(<regexp>)
 	//		-> elem
+	//		-> $()
 	//
+	//	Select jQuery object...
 	//	.select(<elem>)
 	//		-> elem
+	//		-> $()
 	//
 	// This will return a jQuery object.
 	//
 	// NOTE: if multiple matches occur this will select the first.
+	// NOTE: 'none' will always return an empty jQuery object, to get 
+	// 		the selection state before deselecting use .select('!')
 	//
 	//
-	// XXX revise return values...
 	// XXX Q: should this trigger a "select" event???
-	// XXX on string/regexp mismatch this will select the first, is this correct???
-	// XXX handle scrollTop to show the selected element...
+	// XXX the scroll handling might be a bit inaccurate...
 	select: function(elem, filtering){
 		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
@@ -350,10 +358,10 @@ var BrowserPrototype = {
 			return $()
 		}
 
-		elem = elem == 0 ? 'first' : elem
-		elem = elem || this.select('!')
-		// if none selected get the first...
-		elem = elem.length == 0 ? 'first' : elem
+		// empty list/string selects none...
+		elem = elem != null && elem.length == 0 ? 'none' : elem
+		// 0 or no args (null) selects first...
+		elem = elem == 0 || elem == null ? 'first' : elem
 
 		// first/last...
 		if(elem == 'first' || elem == 'last'){
@@ -373,9 +381,10 @@ var BrowserPrototype = {
 			if(!filtering){
 				browser.find('.path .dir.cur').empty()
 			}
-			return elems
+			elems
 				.filter('.selected')
 				.removeClass('selected')
+			return $()
 
 		// strict...
 		} else if(elem == '!'){
@@ -387,7 +396,6 @@ var BrowserPrototype = {
 			return this.select($(elems.slice(elem)[0] || elems.slice(-1)[0] ), filtering)
 
 		// string...
-		// XXX on mismatch this will select the first, is this correct???
 		} else if(typeof(elem) == typeof('str')){
 			if(/^'.*'$|^".*"$/.test(elem.trim())){
 				elem = elem.trim().slice(1, -1)
@@ -398,7 +406,6 @@ var BrowserPrototype = {
 					}), filtering)
 
 		// regexp...
-		// XXX on mismatch this will select the first, is this correct???
 		} else if(elem.constructor === RegExp){
 			return this.select(browser.find(pattern)
 					.filter(function(i, e){
@@ -429,7 +436,6 @@ var BrowserPrototype = {
 
 				var D = 3 * h 
 
-				// XXX there is an error here...
 				// too low...
 				if(t+h+D > H){
 					p.scrollTop(S + (t+h+D) - H)
