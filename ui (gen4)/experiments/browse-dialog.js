@@ -182,7 +182,7 @@ var BrowserPrototype = {
 				//that.stopFilter()
 			})
 			.keyup(function(){
-				that.filter($(this).text())
+				that.showFiltered($(this).text())
 			}))
 
 		// fill the children list...
@@ -202,20 +202,92 @@ var BrowserPrototype = {
 	},
 
 	// internal actions...
-
+	
+	// Filter the item list...
+	//
+	// 	.filter()
+	// 	.filter('*')
+	// 		-> all elements
+	//
+	// 	.filter(<string>)
+	// 		-> elements
+	//
+	// 	.filter(<string>)
+	// 		-> elements
+	//
+	// 	.filter(<function>)
+	// 		-> elements
+	//
+	//
 	// XXX pattern modes:
 	// 		- lazy match
 	// 			abc		-> *abc*		-> ^.*abc.*$
 	// 			ab cd	-> *ab*cd*		-> ^.*ab.*cd.*$
 	// 		- glob
 	// 		- regex
-	// XXX sort:
-	// 		- as-is
-	// 		- best match
-	// XXX add deep-mode filtering...
-	// 		if '/' is in the pattern then we list down and combine paths...
-	// XXX might be good to use the same mechanism for this and .select(..)
-	filter: function(pattern){
+	// XXX need to support glob / nested patterns...
+	// 		..things like /**/a*/*moo/
+	// XXX make the signature a bit more flexible...
+	filter: function(pattern, rejected, ignore_disabled){
+		pattern = pattern || '*'
+		ignore_disabled = ignore_disabled == null ? true : ignore_disabled
+
+		var that = this
+		var browser = this.dom
+
+		var elems = browser.find('.list>div' + (ignore_disabled ? ':not(disabled)' : ''))
+
+		if(pattern == '*'){
+			return elems 
+		}
+
+		// function...
+		if(typeof(pattern) == typeof(function(){})){
+			var filter = function(i, e){
+				if(!pattern(i, e)){
+					if(rejected){
+						rejected(i, e)
+					}
+					return false
+				}
+				return true
+			}
+
+		// regexp...
+		} else if(typeof(pattern) == typeof(/regexp/)){
+			var filter = function(i, e){
+				if(!pattern.test($(e).text())){
+					if(rejected){
+						rejected(i, e)
+					}
+					return false
+				}
+				return true
+			}
+
+		// string...
+		// XXX support glob...
+		} else if(typeof(pattern) == typeof('str')){
+			var filter = function(i, e){
+				e = $(e)
+				var t = e.text()
+				var i = t.search(pattern)
+				if(!(i >= 0)){
+					if(rejected){
+						rejected(i, e)
+					}
+					return false
+				}
+				return true
+			}
+		}
+
+		return elems.filter(filter)
+	},
+
+	// NOTE: this uses .filter(..) for actual filtering...
+	// XXX revise API...
+	showFiltered: function(pattern){
 		var that = this
 		var browser = this.dom
 
@@ -223,33 +295,30 @@ var BrowserPrototype = {
 		if(pattern == null || pattern.trim() == '*'){
 			browser.find('.filtered-out')
 				.removeClass('filtered-out')
-			// clear the highlighing...
+			// clear the highlighting...
 			browser.find('.list b')
 				.replaceWith(function() { return this.innerHTML })
 
 		// basic filter...
 		} else {
-			var l = browser.find('.list>div:not(disabled)')
-
-			l.each(function(i, e){
-				e = $(e)
-				var t = e.text()
-				var i = t.search(pattern)
-				if(i < 0){
-					e
-						.addClass('filtered-out')
-						.removeClass('selected')
-
-				} else {
-					e.removeClass('filtered-out')
-						.html(t.replace(pattern, pattern.bold()))
-				}
-			})
+			this.filter(pattern,
+					// rejected...
+					function(i, e){
+						e
+							.addClass('filtered-out')
+							.removeClass('selected')
+					})
+				// passed...
+				.removeClass('filtered-out')
+				.each(function(_, e){
+					e = $(e)
+					var t = e.text()
+					e.html(t.replace(pattern, pattern.bold()))
+				})
 		}
 
 		return this
 	},
-
 	// XXX make this a toggler... (???)
 	startFilter: function(){
 		var range = document.createRange()
@@ -271,7 +340,7 @@ var BrowserPrototype = {
 		return this
 	},
 	stopFilter: function(){
-		this.filter('*')
+		this.showFiltered('*')
 		this.dom.find('.path .dir.cur')
 			.text('')
 			.removeAttr('contenteditable')
@@ -343,6 +412,7 @@ var BrowserPrototype = {
 	// NOTE: if multiple matches occur this will select the first.
 	// NOTE: 'none' will always return an empty jQuery object, to get 
 	// 		the selection state before deselecting use .select('!')
+	// NOTE: this uses .filter(..) for string and regexp matching...
 	//
 	//
 	// XXX Q: should this trigger a "select" event???
@@ -361,7 +431,12 @@ var BrowserPrototype = {
 		// empty list/string selects none...
 		elem = elem != null && elem.length == 0 ? 'none' : elem
 		// 0 or no args (null) selects first...
-		elem = elem == 0 || elem == null ? 'first' : elem
+		elem = elem == 0 ? 'first' : elem
+		// no args -> either we start with the selected or the first...
+		if(elem == null){
+			var cur = this.select('!')
+			elem = cur.length == 0 ? 'first' : cur
+		}
 
 		// first/last...
 		if(elem == 'first' || elem == 'last'){
@@ -400,17 +475,11 @@ var BrowserPrototype = {
 			if(/^'.*'$|^".*"$/.test(elem.trim())){
 				elem = elem.trim().slice(1, -1)
 			}
-			return this.select(browser.find(pattern)
-					.filter(function(i, e){
-						return $(e).text() == elem
-					}), filtering)
+			return this.select(this.filter(elem).first(), filtering)
 
 		// regexp...
 		} else if(elem.constructor === RegExp){
-			return this.select(browser.find(pattern)
-					.filter(function(i, e){
-						return elem.test($(e).text())
-					}), filtering)
+			return this.select(this.filter(elem).first(), filtering)
 
 		// element...
 		} else {
