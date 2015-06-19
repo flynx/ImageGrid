@@ -44,7 +44,7 @@ var BrowserClassPrototype = {
 	},
 }
 
-// XXX need to scroll only the list, keeping the path allways in view...
+// XXX need to scroll only the list, keeping the path always in view...
 // XXX need to handle long paths -- smart shortening or auto scroll...
 // XXX Q: should we make a base list dialog and build this on that or
 //		simplify this to implement a list (removing the path and disbling
@@ -76,7 +76,7 @@ var BrowserPrototype = {
 		Filter: {
 			pattern: '.browse .path div.cur[contenteditable]',
 
-			// keep text edeting action from affecting the seelction...
+			// keep text editing action from affecting the seelction...
 			ignore: [
 					'Backspace',
 					'Left',
@@ -203,27 +203,37 @@ var BrowserPrototype = {
 
 	// Filter the item list...
 	//
+	// 	General signature...
+	// 	.filter(<pattern>[, <rejected-handler>][, <ignore-disabled>])
+	// 		-> elements
+	// 	
+	//
+	// 	Get all elements...
 	// 	.filter()
 	// 	.filter('*')
 	// 		-> all elements
 	//
+	// 	Get all elements containing a string...
 	// 	.filter(<string>)
 	// 		-> elements
 	//
+	// 	Get all elements matching a regexp...
 	// 	.filter(<regexp>)
 	// 		-> elements
 	//
+	// 	Filter the elements via a function...
 	// 	.filter(<function>)
 	// 		-> elements
 	//
 	//
-	// 	.filter(<pattern>[, <rejected-handler>][, <ignore-disabled>])
-	// 	
-	// XXX write out the following signatures...
-	// 	.filter(<pattern>)
-	// 	.filter(<pattern>, <ignore-disabled>)
-	// 	.filter(<pattern>, <rejected-handler>)
-	// 	.filter(<pattern>, <rejected-handler>, <ignore-disabled>)
+	// If <rejected-handler> function is passed it will get called with 
+	// every element that was rejected by the predicate / not matching 
+	// the pattern.
+	//
+	// By default, <ignore-disabled> is false, thus this will ignore 
+	// disabled elements. If <ignore_disabled> is false then disabled 
+	// elements will be searched too.
+	//
 	//
 	// XXX pattern modes:
 	// 		- lazy match
@@ -232,14 +242,13 @@ var BrowserPrototype = {
 	// 		- glob
 	// XXX need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/
-	// XXX make this more compatible with the canonical filter....
-	// 		- set this for predicate function...
-	// 		- unwrap the element (???)
-	filter: function(pattern, rejected, ignore_disabled){
+	// XXX should we unwrap the elements to be more compatible with 
+	// 		jQuery .filter(..)?
+	filter: function(pattern, a, b){
 		pattern = pattern || '*'
-		ignore_disabled = typeof(rejected) == typeof(true) ? rejected : ignore_disabled
+		var ignore_disabled = typeof(a) == typeof(true) ? a : b
 		ignore_disabled = ignore_disabled == null ? true : ignore_disabled
-		rejected = typeof(rejected) == typeof(true) ? null : rejected
+		var rejected = typeof(a) == typeof(true) ? null : a
 
 		var that = this
 		var browser = this.dom
@@ -253,9 +262,9 @@ var BrowserPrototype = {
 		// function...
 		if(typeof(pattern) == typeof(function(){})){
 			var filter = function(i, e){
-				if(!pattern(i, e)){
+				if(!pattern.call(e, i, e)){
 					if(rejected){
-						rejected(i, e)
+						rejected.call(e, i, e)
 					}
 					return false
 				}
@@ -267,7 +276,7 @@ var BrowserPrototype = {
 			var filter = function(i, e){
 				if(!pattern.test($(e).text())){
 					if(rejected){
-						rejected(i, e)
+						rejected.call(e, i, e)
 					}
 					return false
 				}
@@ -283,7 +292,7 @@ var BrowserPrototype = {
 				var i = t.search(pattern)
 				if(!(i >= 0)){
 					if(rejected){
-						rejected(i, e)
+						rejected.call(e, i, e)
 					}
 					return false
 				}
@@ -345,7 +354,6 @@ var BrowserPrototype = {
 		// place the cursor...
 		range.setStart(e[0], 0)
 		range.collapse(true)
-		// XXX
 		selection.removeAllRanges()
 		selection.addRange(range)
 

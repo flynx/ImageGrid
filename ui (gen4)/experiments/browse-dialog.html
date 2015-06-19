@@ -55,6 +55,8 @@
 	display: none;
 }
 
+
+
 .browse .title {
 	font-weight: bold;
 	color: rgba(255,255,255,0.9);
@@ -62,6 +64,8 @@
 	padding-left: 10px;
 	padding-right: 10px;
 }
+
+
 
 .browse .path {
 	padding: 5px;
@@ -77,12 +81,17 @@
 }
 .browse .path .dir {
 	display: inline-block;
+	cursor: pointer;
 }
 .browse .path .dir:after {
 	content: "/";
 }
+.browse .path .dir:hover ~ .dir {
+	opacity: 0.2;
+}
 .browse .path .dir.cur {
 	opacity: 0.5;
+	cursor: text;
 }
 .browse .path .dir.cur:after {
 	content: "";
@@ -105,11 +114,22 @@
 	border: dashed white 1px;
 	cursor: text;
 }
+
+
+
 /* XXX need to make this resizable up but only to a certain size (~80vh) */
-/*
 .browse .list {
+	/* XXX need a way to make this automatic and depend on .browser 
+			setup to avoid multiple scrollbars and the need to manually
+	 		dive into the configuration to change the container size 
+			limits
+	*/
 	max-height: 50vh;
+
+	overflow-y: auto;
+	overflow-x: hidden;
 }
+/*
 .browse .list:empty {
 	display: block;
 }
@@ -118,6 +138,7 @@
 	padding: 5px;
 	padding-left: 10px;
 	padding-right: 10px;
+	cursor: pointer;
 }
 
 .browse:focus .list div.selected,
@@ -151,6 +172,7 @@
 
 ::-webkit-scrollbar {
 	width: 10px;
+	height: 10px;
 }
 ::-webkit-scrollbar-button {
 	display: none;
@@ -158,10 +180,13 @@
 ::-webkit-scrollbar-track {
 }
 ::-webkit-scrollbar-track-piece {
-	background: gray;
+	background: transparent;
+}
+::-webkit-scrollbar-track-piece {
+	background: rgba(0, 0, 0, 0.05);
 }
 ::-webkit-scrollbar-thumb {
-	background: rgba(0, 0, 0, 0.05);
+	background: rgba(0, 0, 0, 0.15);
 }
 ::-webkit-scrollbar-thumb:hover {
 	background: rgba(0, 0, 0, 0.3);
