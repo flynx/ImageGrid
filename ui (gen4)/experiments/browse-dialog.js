@@ -6,6 +6,11 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+define(function(require){ var module = {}
+
+
+var object = require('../object')
+
 
 /*********************************************************************/
 
@@ -667,13 +672,11 @@ var BrowserPrototype = {
 }
 
 
-/*
 var Browser = 
-//module.Browser = 
+module.Browser = 
 object.makeConstructor('Browser', 
 		BrowserClassPrototype, 
 		BrowserPrototype)
-*/
 
 
 
@@ -682,3 +685,4 @@ object.makeConstructor('Browser',
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
+return module })

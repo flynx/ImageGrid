@@ -67,7 +67,7 @@
 <script src="../ext-lib/require.js"></script>
 
 
-<script src="browse-dialog.js"></script>
+<!--script src="browse-dialog.js"></script-->
 
 <script>
 
@@ -115,16 +115,11 @@ TREE.dir_c.dir_b.tree = TREE
 //---
 
 
-requirejs(['../lib/keyboard', '../object'], function(k, o){
+requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, browser){
 	keyboard = k
 	object = o
 
-	Browser = object.makeConstructor('Browser', 
-			BrowserClassPrototype, 
-			BrowserPrototype)
-
-
-	b = Browser($('.container').last(), {
+	b = browser.Browser($('.container').last(), {
 			list: function(path){
 				console.log('>>>', path)
 				var cur = TREE
@@ -157,10 +152,10 @@ $(function(){
 
 <body>
 
-<button onclick="pop()">&lt;</button>
-<button onclick="push()">&gt;</button>
-<button onclick="prev()">^</button>
-<button onclick="next()">v</button>
+<button onclick="b.pop()">&lt;</button>
+<button onclick="b.push()">&gt;</button>
+<button onclick="b.prev()">^</button>
+<button onclick="b.next()">v</button>
 
 
 <div class="container">
