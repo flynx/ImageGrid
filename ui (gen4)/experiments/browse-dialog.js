@@ -14,8 +14,7 @@ var object = require('../object')
 
 /*********************************************************************/
 
-// XXX add a hook to render the content of an element...
-// XXX NOTE: the widget itself does not need a title, that's the job for
+// NOTE: the widget itself does not need a title, that's the job for
 //		a container widget (dialog, field, ...)
 //		...it can be implemented trivially via an attribute and a :before
 //		CSS class...
@@ -49,33 +48,32 @@ var BrowserClassPrototype = {
 	},
 }
 
-// XXX need to scroll only the list, keeping the path always in view...
 // XXX need to handle long paths -- smart shortening or auto scroll...
 // XXX Q: should we make a base list dialog and build this on that or
-//		simplify this to implement a list (removing the path and disbling
+//		simplify this to implement a list (removing the path and disabling
 //		traversal)??
 // XXX need base events:
 //		- open
 //		- update
 //		- select (???)
-// XXX add "current selection" to the path...
 var BrowserPrototype = {
 	dom: null,
 
 	// option defaults and doc...
-	//
-	// XXX add enable/disable filter option...
 	options: {
 		//path: null,
 		//show_path: null,
 
+		// enable/disable user selection filtering...
+		// NOTE: this only affects .stopFilter(..)
+		filter: true,
+
 		// handle keys that are not bound...
-		//
 		// NOTE: to disable, set ot undefined.
 		logKeys: function(k){ window.DEBUG && console.log(k) },
 	},
 
-	// XXX this should prevent event handler deligation...
+	// XXX this should prevent event handler delegation...
 	keyboard: {
 		// filter mappings...
 		Filter: {
@@ -124,7 +122,8 @@ var BrowserPrototype = {
 	// base api...
 	// NOTE: to avoid duplicating and syncing data, the actual path is 
 	//		stored in DOM...
-	// XXX does the path includes the currently selected element?
+	// NOTE: path does not include the currently selected list element,
+	// 		just the path to the current list...
 	get path(){
 		var skip = false
 		return this.dom.find('.path .dir:not(.cur)')
@@ -132,7 +131,6 @@ var BrowserPrototype = {
 			.toArray()
 	},
 	set path(value){
-		// XXX normalize path...
 		return this.update(value)
 	},
 
@@ -141,10 +139,25 @@ var BrowserPrototype = {
 	// 	- build the element list
 	//
 	// XXX trigger an "update" event...
+	// XXX do we normalize path here???
+	// XXX need a way to handle path errors in the extension API...
+	// 		...for example, if .list(..) can't list or lists a different
+	// 		path due to an error, we need to be able to render the new
+	// 		path both in the path and list sections...
+	// 		NOTE: current behaviour is not wrong, it just not too flexible...
 	update: function(path){
 		path = path || this.path
 		var browser = this.dom
 		var that = this
+
+		// normalize path...
+		// XXX is it correct to ignore empty path elements, e.g. 'aa//cc'?
+		var splitter = /[\\\/]/
+		if(typeof(path) == typeof('str') && splitter.test(path)){
+			path = path
+				.split(splitter)
+				.filter(function(e){ return e != '' })
+		}
 
 		var p = browser.find('.path').empty()
 		var l = browser.find('.list').empty()
@@ -164,14 +177,14 @@ var BrowserPrototype = {
 				.text(e))
 		})
 
-		// add current selction indicator...
+		// add current selection indicator...
 		p.append($('<div>')
 			.addClass('dir cur')
 			.click(function(){
 				that.startFilter()
 				//that.update(path.concat($(this).text())) 
 
-				// XXX HACK: prevents the field from bluring when clicked...
+				// XXX HACK: prevents the field from blurring when clicked...
 				// 			...need to find a better way...
 				that._hold_blur = true
 				setTimeout(function(){ delete that._hold_blur }, 20)
@@ -240,15 +253,17 @@ var BrowserPrototype = {
 	// elements will be searched too.
 	//
 	//
-	// XXX pattern modes:
+	// TODO pattern modes:
 	// 		- lazy match
 	// 			abc		-> *abc*		-> ^.*abc.*$
 	// 			ab cd	-> *ab*cd*		-> ^.*ab.*cd.*$
 	// 		- glob
-	// XXX need to support glob / nested patterns...
+	// TODO need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/
-	// XXX should we unwrap the elements to be more compatible with 
+	//
+	// XXX Q: should we unwrap the elements to be more compatible with 
 	// 		jQuery .filter(..)?
+	// 		...currently I don't think so...
 	filter: function(pattern, a, b){
 		pattern = pattern || '*'
 		var ignore_disabled = typeof(a) == typeof(true) ? a : b
@@ -347,21 +362,22 @@ var BrowserPrototype = {
 	},
 	// XXX make this a toggler... (???)
 	startFilter: function(){
-		var range = document.createRange()
-		var selection = window.getSelection()
+		if(this.options.filter){
+			var range = document.createRange()
+			var selection = window.getSelection()
 
-		var that = this
-		var e = this.dom.find('.path .dir.cur')
-			.text('')
-			.attr('contenteditable', true)
-			.focus()
+			var that = this
+			var e = this.dom.find('.path .dir.cur')
+				.text('')
+				.attr('contenteditable', true)
+				.focus()
 
-		// place the cursor...
-		range.setStart(e[0], 0)
-		range.collapse(true)
-		selection.removeAllRanges()
-		selection.addRange(range)
-
+			// place the cursor...
+			range.setStart(e[0], 0)
+			range.collapse(true)
+			selection.removeAllRanges()
+			selection.addRange(range)
+		}
 		return this
 	},
 	stopFilter: function(){
@@ -442,6 +458,9 @@ var BrowserPrototype = {
 	//
 	// XXX Q: should this trigger a "select" event???
 	// XXX the scroll handling might be a bit inaccurate...
+	// XXX Q: should this have a version that will just return the 
+	// 		selected element without affecting the ui?
+	// 		...something like .filter(..) vs. .showFiltered(..)
 	select: function(elem, filtering){
 		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
@@ -677,9 +696,6 @@ module.Browser =
 object.makeConstructor('Browser', 
 		BrowserClassPrototype, 
 		BrowserPrototype)
-
-
-
 
 
 

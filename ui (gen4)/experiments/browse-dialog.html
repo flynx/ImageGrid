@@ -3,33 +3,7 @@
 <link rel="stylesheet" href="browse-dialog.css">
 <style>
 
-.container {
-	display: inline-block;
-	position: absolute;
-
-	top: 100px;
-	left: 100px;
-
-	box-shadow: rgba(0,0,0,0.5) 0.1em 0.1em 0.4em;
-
-	/* make the container expand only to a certain size, then scroll */
-	/* XXX need to:
-		- auto-scroll vertically
-		- use custom scroll bars
-		- shorten path to fit width
-			i.e. manage width manually when at max-width...
-	*/
-	max-height: 60vh;
-	max-width: 60vw;
-	height: auto;
-	width: auto;
-	overflow-y: auto;
-	overflow-x: hidden;
-}
-
-
-
-
+/* scrollbar setup... */
 ::-webkit-scrollbar {
 	width: 10px;
 	height: 10px;
@@ -57,12 +31,62 @@
 }
 
 
+
+/* theaming... */
+
+body.dark {
+	background: black;
+	color: white;
+}
+
+.dark ::-webkit-scrollbar-track-piece {
+	background: rgba(255, 255, 255, 0.05);
+}
+.dark ::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.15);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.3);
+}
+
+
+
+/* testbed... */
+
+.container {
+	display: inline-block;
+	position: absolute;
+
+	top: 100px;
+	left: 100px;
+
+	box-shadow: rgba(0,0,0,0.5) 0.1em 0.1em 0.4em;
+
+	/* make the container expand only to a certain size, then scroll */
+	/* XXX need to:
+		- auto-scroll vertically
+		- use custom scroll bars
+		- shorten path to fit width
+			i.e. manage width manually when at max-width...
+	*/
+	max-height: 60vh;
+	max-width: 60vw;
+	height: auto;
+	width: auto;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+
+
+
 </style>
 
 <script src="../ext-lib/jquery.js"></script>
 <script src="../ext-lib/jquery-ui.js"></script>
 
 <script src="../lib/jli.js"></script>
+<script src="../lib/toggler.js"></script>
 
 <script src="../ext-lib/require.js"></script>
 
@@ -135,6 +159,8 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 			},
 		})
 		.focus()
+
+	b.path = '/dir_a/tree/dir_c'
 })
 
 $(function(){
@@ -148,6 +174,16 @@ $(function(){
 	//browser.focus()
 })
 
+var themeToggler = CSSClassToggler('body',
+		[
+			'none', 
+			'light',
+			'dark', 
+		],
+		function(state){
+			$('#theme').text(state)
+		})
+
 </script>
 
 <body>
@@ -156,6 +192,11 @@ $(function(){
 <button onclick="b.push()">&gt;</button>
 <button onclick="b.prev()">^</button>
 <button onclick="b.next()">v</button>
+
+<br>
+<br>
+
+Theme: <button id="theme" onclick="themeToggler()">none</button>
 
 
 <div class="container">

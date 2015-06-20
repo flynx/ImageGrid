@@ -1,12 +1,15 @@
 
+/********************************************************** Widget ***/
 .browse {
 	display: inline-block;
 	min-width: 300px;
 	width: initial;
-	background: gray;
-	color: rgba(255,255,255,0.8);
 	padding: 5px;
 	font-family: sans-serif;
+
+	background: gray;
+	/*color: rgba(255,255,255,0.8);*/
+	color: white;
 }
 /*
 .browse:not(:focus) {
@@ -18,11 +21,9 @@
 	height: auto;
 
 	box-sizing: border-box;
-
-	border-top: 1px solid rgba(255,255,255, 0.3);
 }
-.browse .v-block:first-of-type {
-	border-top: none;
+.browse .v-block:not(:first-of-type) {
+	border-top: 1px solid rgba(255, 255, 255, 0.3);
 }
 .browse .v-block:empty {
 	display: none;
@@ -30,21 +31,18 @@
 
 
 
-.browse .title {
-	font-weight: bold;
-	color: rgba(255,255,255,0.9);
-	padding: 5px;
-	padding-left: 10px;
-	padding-right: 10px;
-}
-
-
+/************************************************************ Path ***/
 
 .browse .path {
 	padding: 5px;
 	padding-left: 10px;
 	padding-right: 10px;
 	white-space: nowrap;
+
+	opacity: 0.8;
+}
+.browse .path:hover {
+	opacity: 1;
 }
 .browse .path:empty {
 	display: block;
@@ -90,6 +88,8 @@
 
 
 
+/************************************************************ List ***/
+
 /* XXX need to make this resizable up but only to a certain size (~80vh) */
 .browse .list {
 	/* XXX need a way to make this automatic and depend on .browser 
@@ -112,13 +112,25 @@
 	padding-left: 10px;
 	padding-right: 10px;
 	cursor: pointer;
+
+	opacity: 0.7;
 }
 
 .browse:focus .list div.selected,
 .browse .path .dir:hover,
 .browse .list div:hover {
-	color: white;
-	background: rgba(0,0,0, 0.05);
+	background: rgba(0, 0, 0, 0.05);
+
+	opacity: 0.9;
+}
+.browse .list div.selected {
+	background: rgba(0, 0, 0, 0.08);
+}
+.browse:focus .list div.selected {
+	background: rgba(0, 0, 0, 0.08);
+	box-shadow: rgba(0, 0, 0, 0.2) 0.1em 0.1em 0.2em; 
+
+	opacity: 1;
 }
 
 /* XXX need to make the next two different...  */
@@ -132,11 +144,39 @@
 	opacity: 0.3;
 }
 
-.browse:focus .list div.selected {
-	background: rgba(0,0,0, 0.1);
-	box-shadow: rgba(0,0,0,0.2) 0.1em 0.1em 0.2em; 
+
+
+/******************************************************** Theaming ***/
+
+/* Light */
+.light .browse {
+	background: white;
+	color: rgba(0, 0, 0, 0.8);
+}
+.light .browse .v-block:not(:first-of-type) {
+	border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
-.browse .list div.selected {
-	background: rgba(0,0,0, 0.08);
+
+
+/* Dark */
+.dark .browse {
+	background: #0a0a0a;
+	color: rgba(255, 255, 255, 0.8);
 }
+/* XXX can we make this simpler??? */
+.dark .browse:focus .list div.selected,
+.dark .browse .path .dir:hover,
+.dark .browse .list div:hover {
+	background: rgba(255, 255, 255, 0.08);
+}
+.dark .browse .list div.selected {
+	background: rgba(255, 255, 255, 0.1);
+}
+.dark .browse:focus .list div.selected {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+
+
+/*********************************************************************/
