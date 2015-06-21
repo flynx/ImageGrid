@@ -115,6 +115,9 @@
 
 	opacity: 0.7;
 }
+.browse .list div:not(.not-traversable):after {
+	content: "/";
+}
 
 .browse:focus .list div.selected,
 .browse .path .dir:hover,

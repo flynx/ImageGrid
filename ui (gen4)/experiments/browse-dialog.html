@@ -142,6 +142,7 @@ TREE.dir_c.dir_b.tree = TREE
 //---
 
 var use_disabled = true
+var show_files = false
 
 requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, browser){
 	keyboard = k
@@ -157,7 +158,7 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 				return Object.keys(cur)
 					// remove all strings...
 					.filter(function(k){
-						return typeof(cur[k]) != typeof('str')
+						return show_files || typeof(cur[k]) != typeof('str')
 					})
 					.map(function(k){
 						// make the element...
@@ -165,6 +166,9 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 						// disable dir_b...
 						if(use_disabled && k == 'dir_b'){
 							e.addClass('disabled')
+						}
+						if(typeof(cur[k]) == typeof('str')){
+							e.addClass('not-traversable')
 						}
 						return k
 					})
@@ -202,6 +206,15 @@ function toggleDisabled(){
 	use_disabled ?  b.disableElements('_b') : b.enableElements('_b')
 }
 
+function toggleFiles(){
+	show_files = !show_files
+	
+	// NOTE: we need to update only because .list(..) does not show
+	//		files at all and we need to re-render them, another way 
+	//		would be render everything but hide and show files via CSS 
+	//		class...
+	b.update()
+}
 
 </script>
 
@@ -220,6 +233,11 @@ Theme: <button id="theme" onclick="themeToggler()">none</button>
 <br>
 
 Disabled: <button id="theme" onclick="toggleDisabled()">toggle</button>
+
+<br>
+
+Files: <button id="theme" onclick="toggleFiles()">toggle</button>
+
 
 
 <div class="container">

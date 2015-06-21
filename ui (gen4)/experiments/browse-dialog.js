@@ -648,9 +648,7 @@ var BrowserPrototype = {
 		path.push(elem.text())
 
 		// if not traversable call the action...
-		if(this.isTraversable != null 
-				&& (this.isTraversable !== false
-					|| ! this.isTraversable(path))){
+		if(elem.hasClass('not-traversable')){
 			return this.action(path)
 		}
 
@@ -727,12 +725,20 @@ var BrowserPrototype = {
 	// 			- make should never get called
 	// 			- the returned list will be rendered
 	//
+	//
+	// This can set the following classes on elements:
+	//
+	// 	.disabled
+	// 		an element is disabled.
+	//
+	// 	.non-traversable
+	// 		an element is not traversable/listable and will trigger the
+	// 		.action(..) on push...
 	list: function(path, make){
 		path = path || this.path
 		var m = this.options.list
 		return m ? m.apply(this, arguments) : []
 	},
-	isTraversable: null,
 
 	// XXX need to get a container....
 	// XXX setup instance events...
