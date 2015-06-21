@@ -714,16 +714,18 @@ var BrowserPrototype = {
 	// There are two mods of operation:
 	//
 	// 1) interactive:
-	// 		- for each item make is called with it's text
-	//		- make will return a jQuery object of the item
+	// 		.list(path, make)
+	// 			- for each item make is called with it's text
+	//			- make will return a jQuery object of the item
 	//
 	// 		NOTE: selection is currently done based on .text() thus the 
 	// 			modification should not affect it's output...
 	//
 	// 2) non-interactive:
-	// 		- .list(..) should return a list
-	// 		- make should never get called
-	// 		- the returned list will be rendered
+	// 		.list(path) -> list
+	// 			- .list(..) should return a list
+	// 			- make should never get called
+	// 			- the returned list will be rendered
 	//
 	list: function(path, make){
 		path = path || this.path
