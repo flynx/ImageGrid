@@ -323,11 +323,21 @@ var BrowserPrototype = {
 	// elements will be searched too.
 	//
 	//
-	// TODO pattern modes:
-	// 		- lazy match
-	// 			abc		-> *abc*		-> ^.*abc.*$
-	// 			ab cd	-> *ab*cd*		-> ^.*ab.*cd.*$
-	// 		- glob
+	// Extended string patterns:
+	//
+	// The pattern string is split by whitespace and each resulting 
+	// substring is searched independently.
+	// Order is not considered.
+	//
+	// 	Examples:
+	// 		'aaa'			- matches any element containing 'aaa'
+	// 							same as: /aaa/
+	// 		'aa bb'			- matches any element containing both 'aa'
+	// 							AND 'bb' in any order.
+	// 							same as: /aa.*bb|bb.*aa/
+	//
+	//
+	//
 	// TODO need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/
 	//
@@ -376,17 +386,21 @@ var BrowserPrototype = {
 			}
 
 		// string...
+		// NOTE: this supports several space-separated patterns.
 		// XXX support glob...
 		} else if(typeof(pattern) == typeof('str')){
+			var pl = pattern.trim().split(/\s+/)
 			var filter = function(i, e){
 				e = $(e)
 				var t = e.text()
-				var i = t.search(pattern)
-				if(!(i >= 0)){
-					if(rejected){
-						rejected.call(e, i, e)
+				for(var p=0; p < pl.length; p++){
+					var i = t.search(pl[p])
+					if(!(i >= 0)){
+						if(rejected){
+							rejected.call(e, i, e)
+						}
+						return false
 					}
-					return false
 				}
 				return true
 			}
@@ -411,7 +425,7 @@ var BrowserPrototype = {
 	// internal actions...
 	
 	// NOTE: this uses .filter(..) for actual filtering...
-	// XXX revise API...
+	// XXX revise API -- seems a bit overcomplicated...
 	showFiltered: function(pattern){
 		var that = this
 		var browser = this.dom
@@ -426,6 +440,7 @@ var BrowserPrototype = {
 
 		// basic filter...
 		} else {
+			var p = RegExp('(' + pattern.trim().split(/\s+/).join('|') + ')', 'g')
 			this.filter(pattern,
 					// rejected...
 					function(i, e){
@@ -441,10 +456,12 @@ var BrowserPrototype = {
 					false)
 				// passed...
 				.removeClass('filtered-out')
+				// NOTE: this will mess up (clear) any highlighting that was 
+				// 		present before...
 				.each(function(_, e){
 					e = $(e)
 					var t = e.text()
-					e.html(t.replace(pattern, pattern.bold()))
+					e.html(t.replace(p, '<b>$1</b>'))
 				})
 		}
 
@@ -753,13 +770,15 @@ var BrowserPrototype = {
 	},
 
 	// extension methods...
-	// XXX this is wrong...
-	// 		...need to actually open something...
+
+	// Open action...
+	//
 	open: function(path){ 
 		path = path || this.path
 		var m = this.options.open
 		return m ? m.apply(this, arguments) : path
 	},
+
 	// List the path...
 	//
 	// This will get passed a path and an item constructor and should 
