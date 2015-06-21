@@ -256,8 +256,11 @@ var BrowserPrototype = {
 	// 	.filter(<index>)
 	// 	.filter(<jQuery-obj>)
 	// 		-> element
+	//		-> $()
 	// 		NOTE: when passing a jQuery-obj it will be return iff it's an
 	// 			element.
+	// 		NOTE: unlike .select(..) index overflow will produce empty 
+	// 			lists rather than to/bottom elements.
 	//
 	//
 	// If <rejected-handler> function is passed it will get called with 
