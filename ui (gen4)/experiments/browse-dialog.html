@@ -68,7 +68,6 @@ body.dark {
 	background: black;
 	color: white;
 }
-
 .dark ::-webkit-scrollbar-track-piece {
 	background: rgba(255, 255, 255, 0.05);
 }
@@ -142,23 +141,32 @@ TREE.dir_c.dir_b.tree = TREE
 
 //---
 
+var use_disabled = true
 
 requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, browser){
 	keyboard = k
 	object = o
 
 	b = browser.Browser($('.container').last(), {
-			list: function(path){
-				console.log('>>>', path)
+			list: function(path, make){
 				var cur = TREE
 				path.forEach(function(p){
 					cur = cur[p]
 				})
 
 				return Object.keys(cur)
+					// remove all strings...
 					.filter(function(k){
-						// XXX stub...
 						return typeof(cur[k]) != typeof('str')
+					})
+					.map(function(k){
+						// make the element...
+						var e = make(k)
+						// disable dir_b...
+						if(use_disabled && k == 'dir_b'){
+							e.addClass('disabled')
+						}
+						return k
 					})
 			},
 		})
@@ -188,6 +196,13 @@ var themeToggler = CSSClassToggler('body',
 			$('#theme').text(state)
 		})
 
+function toggleDisabled(){
+	use_disabled = !use_disabled
+
+	use_disabled ?  b.disableElements('_b') : b.enableElements('_b')
+}
+
+
 </script>
 
 <body>
@@ -201,6 +216,10 @@ var themeToggler = CSSClassToggler('body',
 <br>
 
 Theme: <button id="theme" onclick="themeToggler()">none</button>
+
+<br>
+
+Disabled: <button id="theme" onclick="toggleDisabled()">toggle</button>
 
 
 <div class="container">

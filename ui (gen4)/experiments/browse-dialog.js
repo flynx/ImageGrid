@@ -204,17 +204,26 @@ var BrowserPrototype = {
 			}))
 
 		// fill the children list...
-		this.list(path)
-			.forEach(function(e){
-				l.append($('<div>')
-					.click(function(){
-						// handle clicks ONLY when not disabled...
-						if(!$(this).hasClass('disabled')){
-							that.update(that.path.concat([$(this).text()])) 
-						}
-					})
-					.text(e))
-			})
+		var interactive = false
+
+		var make = function(p){
+			interactive = true
+			return $('<div>')
+				.click(function(){
+					// handle clicks ONLY when not disabled...
+					if(!$(this).hasClass('disabled')){
+						that.update(that.path.concat([$(this).text()])) 
+					}
+				})
+				.text(p)
+				.appendTo(l)
+		}
+
+		var res = this.list(path, make)
+
+		if(!interactive){
+			res.forEach(make)
+		}
 
 		return this
 	},
@@ -243,6 +252,13 @@ var BrowserPrototype = {
 	// 	.filter(<function>)
 	// 		-> elements
 	//
+	// 	Get specific element...
+	// 	.filter(<index>)
+	// 	.filter(<jQuery-obj>)
+	// 		-> element
+	// 		NOTE: when passing a jQuery-obj it will be return iff it's an
+	// 			element.
+	//
 	//
 	// If <rejected-handler> function is passed it will get called with 
 	// every element that was rejected by the predicate / not matching 
@@ -261,11 +277,13 @@ var BrowserPrototype = {
 	// TODO need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/
 	//
+	// XXX should we filter by jQuery object???
+	// 		...i.e. return argument if it is an item...
 	// XXX Q: should we unwrap the elements to be more compatible with 
 	// 		jQuery .filter(..)?
 	// 		...currently I don't think so...
 	filter: function(pattern, a, b){
-		pattern = pattern || '*'
+		pattern = pattern == null ? '*' : pattern
 		var ignore_disabled = typeof(a) == typeof(true) ? a : b
 		ignore_disabled = ignore_disabled == null ? true : ignore_disabled
 		var rejected = typeof(a) == typeof(true) ? null : a
@@ -273,7 +291,7 @@ var BrowserPrototype = {
 		var that = this
 		var browser = this.dom
 
-		var elems = browser.find('.list>div' + (ignore_disabled ? ':not(disabled)' : ''))
+		var elems = browser.find('.list>div' + (ignore_disabled ? ':not(.disabled)' : ''))
 
 		if(pattern == '*'){
 			return elems 
@@ -292,7 +310,7 @@ var BrowserPrototype = {
 			}
 
 		// regexp...
-		} else if(typeof(pattern) == typeof(/regexp/)){
+		} else if(pattern.constructor == RegExp){
 			var filter = function(i, e){
 				if(!pattern.test($(e).text())){
 					if(rejected){
@@ -318,6 +336,18 @@ var BrowserPrototype = {
 				}
 				return true
 			}
+
+		// number...
+		} else if(typeof(pattern) == typeof(123)){
+			return elems.eq(pattern)
+
+		// jQuery object...
+		} else if(elems.index(pattern) >= 0){
+			return pattern
+
+		// unknown pattern...
+		} else {
+			return $()
 		}
 
 		return elems.filter(filter)
@@ -348,7 +378,13 @@ var BrowserPrototype = {
 						e
 							.addClass('filtered-out')
 							.removeClass('selected')
-					})
+					},
+					// NOTE: setting this to true will not remove disabled
+					// 		elements from view as they will neither get 
+					// 		included in the filter not in the filtered out
+					// 		thus it will require manual setting of the
+					// 		.filtered-out class
+					false)
 				// passed...
 				.removeClass('filtered-out')
 				.each(function(_, e){
@@ -395,6 +431,20 @@ var BrowserPrototype = {
 	},
 	toggleFilterMode: function(){
 		this.dom.toggleClass('show-filtered-out')
+		return this
+	},
+
+	// XXX should this be a toggler???
+	// XXX might be good for these to accept the same types as .select(..)
+	disableElements: function(pattern){
+		this.filter(pattern, false)
+			.addClass('disabled')
+			.removeClass('selected')
+		return this
+	},
+	enableElements: function(pattern){
+		this.filter(pattern, false)
+			.removeClass('disabled')
 		return this
 	},
 
@@ -651,12 +701,31 @@ var BrowserPrototype = {
 	open: function(path){ 
 		path = path || this.path
 		var m = this.options.list
-		return m ? m.call(this, path) : path
+		return m ? m.apply(this, arguments) : path
 	},
-	list: function(path){
+	// List the path...
+	//
+	// This will get passed a path and an item constructor and should 
+	// return a list.
+	//
+	// There are two mods of operation:
+	//
+	// 1) interactive:
+	// 		- for each item make is called with it's text
+	//		- make will return a jQuery object of the item
+	//
+	// 		NOTE: selection is currently done based on .text() thus the 
+	// 			modification should not affect it's output...
+	//
+	// 2) non-interactive:
+	// 		- .list(..) should return a list
+	// 		- make should never get called
+	// 		- the returned list will be rendered
+	//
+	list: function(path, make){
 		path = path || this.path
 		var m = this.options.list
-		return m ? m.call(this, path) : []
+		return m ? m.apply(this, arguments) : []
 	},
 	isTraversable: null,
 
