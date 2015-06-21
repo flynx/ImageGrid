@@ -302,14 +302,16 @@ var BrowserPrototype = {
 	// 	Filter the elements via a function...
 	// 	.filter(<function>)
 	// 		-> elements
+	// 		NOTE: the elements passed to the <function> on each iteration
+	// 			are unwrapped for compatibility with jQuery API.
 	//
 	// 	Get specific element...
 	// 	.filter(<index>)
 	// 	.filter(<jQuery-obj>)
 	// 		-> element
 	//		-> $()
-	// 		NOTE: when passing a jQuery-obj it will be return iff it's an
-	// 			element.
+	// 		NOTE: when passing a jQuery-obj it will be returned iff it's
+	// 			an element.
 	// 		NOTE: unlike .select(..) index overflow will produce empty 
 	// 			lists rather than to/bottom elements.
 	//
@@ -323,6 +325,7 @@ var BrowserPrototype = {
 	// elements will be searched too.
 	//
 	//
+	//
 	// Extended string patterns:
 	//
 	// The pattern string is split by whitespace and each resulting 
@@ -331,21 +334,18 @@ var BrowserPrototype = {
 	//
 	// 	Examples:
 	// 		'aaa'			- matches any element containing 'aaa'
-	// 							same as: /aaa/
+	// 							(Same as: /aaa/)
 	// 		'aa bb'			- matches any element containing both 'aa'
 	// 							AND 'bb' in any order.
-	// 							same as: /aa.*bb|bb.*aa/
+	// 							(Same as: /aa.*bb|bb.*aa/)
 	//
+	// NOTE: currently there is no way to search for whitespace explicitly,
+	// 		at this point this is "by-design" as an experiment on how
+	// 		vital this feature is.
 	//
 	//
 	// TODO need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/
-	//
-	// XXX should we filter by jQuery object???
-	// 		...i.e. return argument if it is an item...
-	// XXX Q: should we unwrap the elements to be more compatible with 
-	// 		jQuery .filter(..)?
-	// 		...currently I don't think so...
 	filter: function(pattern, a, b){
 		pattern = pattern == null ? '*' : pattern
 		var ignore_disabled = typeof(a) == typeof(true) ? a : b
@@ -364,6 +364,7 @@ var BrowserPrototype = {
 		// function...
 		if(typeof(pattern) == typeof(function(){})){
 			var filter = function(i, e){
+				e = e[0]
 				if(!pattern.call(e, i, e)){
 					if(rejected){
 						rejected.call(e, i, e)
