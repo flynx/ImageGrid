@@ -44,8 +44,6 @@
 
 	/* make the container expand only to a certain size, then scroll */
 	/* XXX need to:
-		- auto-scroll vertically
-		- use custom scroll bars
 		- shorten path to fit width
 			i.e. manage width manually when at max-width...
 	*/
@@ -151,8 +149,10 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 	keyboard = k
 	object = o
 
+	// Tree demo...
 	b = browser.Browser($('.container.tree'), {
 			path: '/dir_a/tree/dir_c',
+
 			list: function(path, make){
 				var cur = TREE
 				path.forEach(function(p){
@@ -182,9 +182,9 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 			},
 		})
 		.focus()
-	//b.path = '/dir_a/tree/dir_c'
 
 
+	// Flat list demo...
 	f = browser.Browser($('.container.flat'), {
 			data: [
 				'option 1',
