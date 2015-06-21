@@ -47,7 +47,7 @@
 .browse .path:empty {
 	display: block;
 }
-.browse .path:before {
+.browse:not(.flat) .path:before {
 	content: "/";
 }
 .browse .path .dir {
@@ -115,7 +115,7 @@
 
 	opacity: 0.7;
 }
-.browse .list div:not(.not-traversable):after {
+.browse:not(.flat) .list div:not(.not-traversable):after {
 	content: "/";
 }
 

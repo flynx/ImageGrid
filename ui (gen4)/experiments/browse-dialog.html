@@ -57,6 +57,9 @@
 	overflow-x: hidden;
 }
 
+.container.flat {
+	left: 500px;
+}
 
 
 
@@ -148,7 +151,8 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 	keyboard = k
 	object = o
 
-	b = browser.Browser($('.container').last(), {
+	b = browser.Browser($('.container.tree'), {
+			path: '/dir_a/tree/dir_c',
 			list: function(path, make){
 				var cur = TREE
 				path.forEach(function(p){
@@ -173,10 +177,43 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 						return k
 					})
 			},
+			open: function(path){
+				console.log('OPEN:', path)
+			},
 		})
 		.focus()
+	//b.path = '/dir_a/tree/dir_c'
 
-	b.path = '/dir_a/tree/dir_c'
+
+	f = browser.Browser($('.container.flat'), {
+			data: [
+				'option 1',
+				'option 2',
+				'option 3',
+				'option 4',
+				'option 5',
+				'option 6',
+				'option 7',
+			],
+			traversable: false,
+			flat: true,
+
+			list: function(path, make){
+				return this.options.data
+					.map(function(k){
+						// make the element...
+						var e = make(k)
+						// disable dir_b...
+						if(use_disabled && k == 'option 4'){
+							e.addClass('disabled')
+						}
+						return k
+					})
+			},
+			open: function(path){
+				console.log('OPEN:', path)
+			},
+		})
 })
 
 $(function(){
@@ -190,6 +227,8 @@ $(function(){
 	//browser.focus()
 })
 
+
+
 var themeToggler = CSSClassToggler('body',
 		[
 			'none', 
@@ -199,13 +238,12 @@ var themeToggler = CSSClassToggler('body',
 		function(state){
 			$('#theme').text(state)
 		})
-
 function toggleDisabled(){
 	use_disabled = !use_disabled
 
-	use_disabled ?  b.disableElements('_b') : b.enableElements('_b')
+	use_disabled ? b.disableElements('_b') : b.enableElements('_b')
+	use_disabled ? f.disableElements('4') : f.enableElements('4')
 }
-
 function toggleFiles(){
 	show_files = !show_files
 	
@@ -285,7 +323,10 @@ Files: <button id="theme" onclick="toggleFiles()">toggle</button>
 	</div>
 </div>
 
-<div class="container">
+<div class="container tree">
+</div>
+
+<div class="container flat">
 </div>
 
 </body>

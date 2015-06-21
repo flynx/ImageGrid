@@ -33,14 +33,21 @@ var BrowserClassPrototype = {
 				$(this).focus()
 			})
 
+		if(options.flat){
+			browser.addClass('flat')
+		}
 
-		if(options.path == null || options.show_path){
-			browser
-				.append($('<div>')
-					   .addClass('v-block path'))
+		// path...
+		var path = $('<div>')
+			.addClass('v-block path')
+
+		if(options.show_path == false){
+			path.hide()
 		}
 
 		browser
+			.append(path)
+			// list...
 			.append($('<div>')
 				   .addClass('v-block list'))
 
@@ -61,16 +68,31 @@ var BrowserPrototype = {
 
 	// option defaults and doc...
 	options: {
+		// Initial path...
 		//path: null,
-		//show_path: null,
 
-		// enable/disable user selection filtering...
+		//show_path: true,
+
+		// Enable/disable user selection filtering...
 		// NOTE: this only affects .stopFilter(..)
 		filter: true,
 
-		// handle keys that are not bound...
+		// If false will disable traversal...
+		// NOTE: if false this will also disable traversal up.
+		// NOTE: this will not disable manual updates or explicit path 
+		// 		setting.
+		// NOTE: another way to disable traversal is to set 
+		// 		.not-traversable on the .browse element
+		traversable: true,
+
+		// Handle keys that are not bound...
 		// NOTE: to disable, set ot undefined.
 		logKeys: function(k){ window.DEBUG && console.log(k) },
+
+		// If set disables leading and trailing '/' on list and path 
+		// elements.
+		// This is mainly used for flat list selectors.
+		flat: false,
 	},
 
 	// XXX this should prevent event handler delegation...
@@ -119,6 +141,32 @@ var BrowserPrototype = {
 		},
 	},
 
+	// XXX should these set both the options and dom???
+	get flat(){
+		return !this.dom.hasClass('flat') || this.options.flat
+	},
+	set flat(value){
+		if(value){
+			this.dom.addClass('flat')
+		} else {
+			this.dom.removeClass('flat')
+		}
+		this.options.flat = value
+	},
+
+	// XXX should these set both the options and dom???
+	get traversable(){
+		return !this.dom.hasClass('not-traversable') && this.options.traversable
+	},
+	set traversable(value){
+		if(value){
+			this.dom.removeClass('not-traversable')
+		} else {
+			this.dom.addClass('not-traversable')
+		}
+		this.options.traversable = value
+	},
+
 	// base api...
 	// NOTE: to avoid duplicating and syncing data, the actual path is 
 	//		stored in DOM...
@@ -137,6 +185,7 @@ var BrowserPrototype = {
 	// update path...
 	// 	- build the path
 	// 	- build the element list
+	// 	- bind to control events
 	//
 	// XXX trigger an "update" event...
 	// XXX do we normalize path here???
@@ -170,9 +219,11 @@ var BrowserPrototype = {
 			p.append($('<div>')
 				.addClass('dir')
 				.click(function(){
-					that
-						.update(cur.slice(0, -1)) 
-						.select('"'+cur.pop()+'"')
+					if(that.traversable){
+						that
+							.update(cur.slice(0, -1)) 
+							.select('"'+cur.pop()+'"')
+					}
 				})
 				.text(e))
 		})
@@ -212,7 +263,7 @@ var BrowserPrototype = {
 				.click(function(){
 					// handle clicks ONLY when not disabled...
 					if(!$(this).hasClass('disabled')){
-						that.update(that.path.concat([$(this).text()])) 
+						that.push($(this).text()) 
 					}
 				})
 				.text(p)
@@ -648,7 +699,7 @@ var BrowserPrototype = {
 		path.push(elem.text())
 
 		// if not traversable call the action...
-		if(elem.hasClass('not-traversable')){
+		if(!this.traversable || elem.hasClass('not-traversable')){
 			return this.action(path)
 		}
 
@@ -661,6 +712,11 @@ var BrowserPrototype = {
 	// Pop an element off the path / go up one level...
 	pop: function(){
 		var browser = this.dom
+
+		if(!this.traversable){
+			return this
+		}
+
 		var path = this.path
 		var dir = path.pop()
 
@@ -701,7 +757,7 @@ var BrowserPrototype = {
 	// 		...need to actually open something...
 	open: function(path){ 
 		path = path || this.path
-		var m = this.options.list
+		var m = this.options.open
 		return m ? m.apply(this, arguments) : path
 	},
 	// List the path...
@@ -766,7 +822,8 @@ var BrowserPrototype = {
 		}
 
 		// load the initial state...
-		this.update(this.path)
+		// XXX check if this default is correct...
+		this.update(options.path || this.path)
 	},
 }
 
