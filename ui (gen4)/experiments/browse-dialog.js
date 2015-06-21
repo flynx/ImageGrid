@@ -95,7 +95,7 @@ var BrowserPrototype = {
 		flat: false,
 	},
 
-	// XXX this should prevent event handler delegation...
+	// XXX TEST: this should prevent event handler delegation...
 	keyboard: {
 		// filter mappings...
 		Filter: {
@@ -187,13 +187,13 @@ var BrowserPrototype = {
 	// 	- build the element list
 	// 	- bind to control events
 	//
-	// XXX trigger an "update" event...
 	// XXX do we normalize path here???
 	// XXX need a way to handle path errors in the extension API...
 	// 		...for example, if .list(..) can't list or lists a different
 	// 		path due to an error, we need to be able to render the new
 	// 		path both in the path and list sections...
 	// 		NOTE: current behaviour is not wrong, it just not too flexible...
+	// XXX trigger an "update" event...
 	update: function(path){
 		path = path || this.path
 		var browser = this.dom
@@ -468,7 +468,7 @@ var BrowserPrototype = {
 
 		return this
 	},
-	// XXX make this a toggler... (???)
+	// XXX should this be a toggler???
 	startFilter: function(){
 		if(this.options.filter){
 			var range = document.createRange()
@@ -507,7 +507,6 @@ var BrowserPrototype = {
 	},
 
 	// XXX should this be a toggler???
-	// XXX might be good for these to accept the same types as .select(..)
 	disableElements: function(pattern){
 		this.filter(pattern, false)
 			.addClass('disabled')
@@ -579,10 +578,6 @@ var BrowserPrototype = {
 	//
 	//
 	// XXX Q: should this trigger a "select" event???
-	// XXX the scroll handling might be a bit inaccurate...
-	// XXX Q: should this have a version that will just return the 
-	// 		selected element without affecting the ui?
-	// 		...something like .filter(..) vs. .showFiltered(..)
 	select: function(elem, filtering){
 		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
@@ -816,7 +811,7 @@ var BrowserPrototype = {
 		return m ? m.apply(this, arguments) : []
 	},
 
-	// XXX need to get a container....
+	// XXX need to get a container -- UI widget API....
 	// XXX setup instance events...
 	__init__: function(parent, options){
 		options = options || {}
