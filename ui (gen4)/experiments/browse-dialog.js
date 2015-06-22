@@ -820,8 +820,6 @@ var BrowserPrototype = {
 
 		var res = this.open(path)
 
-		this.trigger('open', path)
-
 		return res
 	},
 
@@ -833,7 +831,12 @@ var BrowserPrototype = {
 	open: function(path){ 
 		path = path || this.path
 		var m = this.options.open
-		return m ? m.apply(this, arguments) : path
+		var res = m ? m.apply(this, arguments) : path
+
+		this.trigger('open', path)
+		elem.trigger('open')
+
+		return res
 	},
 
 	// List the path...
