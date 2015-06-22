@@ -14,6 +14,16 @@ var object = require('../object')
 
 /*********************************************************************/
 
+function proxyToDom(name){
+	return function(){ 
+		this.dom[name].apply(this.dom, arguments)
+		return this 
+	}
+}
+
+
+/*********************************************************************/
+
 // NOTE: the widget itself does not need a title, that's the job for
 //		a container widget (dialog, field, ...)
 //		...it can be implemented trivially via an attribute and a :before
@@ -141,6 +151,21 @@ var BrowserPrototype = {
 		},
 	},
 
+	// proxy event api...
+	on: proxyToDom('on'),
+	one: proxyToDom('one'),
+	off: proxyToDom('off'),
+	trigger: proxyToDom('trigger'),
+	bind: proxyToDom('bind'),
+	unbind: proxyToDom('unbind'),
+	deligate: proxyToDom('deligate'),
+	undeligate: proxyToDom('undeligate'),
+
+	// specific events...
+	focus: proxyToDom('focus'),
+	blur: proxyToDom('blur'),
+
+
 	// XXX should these set both the options and dom???
 	get flat(){
 		return !this.dom.hasClass('flat') || this.options.flat
@@ -193,7 +218,6 @@ var BrowserPrototype = {
 	// 		path due to an error, we need to be able to render the new
 	// 		path both in the path and list sections...
 	// 		NOTE: current behaviour is not wrong, it just not too flexible...
-	// XXX trigger an "update" event...
 	update: function(path){
 		path = path || this.path
 		var browser = this.dom
@@ -275,6 +299,8 @@ var BrowserPrototype = {
 		if(!interactive){
 			res.forEach(make)
 		}
+
+		this.trigger('update')
 
 		return this
 	},
@@ -577,7 +603,7 @@ var BrowserPrototype = {
 	// NOTE: this uses .filter(..) for string and regexp matching...
 	//
 	//
-	// XXX Q: should this trigger a "select" event???
+	// XXX Q: should this trigger a "deselect" event???
 	select: function(elem, filtering){
 		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
@@ -675,6 +701,8 @@ var BrowserPrototype = {
 					p.scrollTop(S + t - D)
 				}
 
+				this.trigger('select', elem)
+
 				return elem.addClass('selected')
 			}
 		}
@@ -740,12 +768,15 @@ var BrowserPrototype = {
 		return this
 	},
 
+	/*
 	focus: function(){
 		this.dom.focus()
 		return this
 	},
+	*/
 
 	// XXX think about the API...
+	// XXX need to check if openable and if not use .push()
 	// XXX trigger an "open" event...
 	action: function(){
 		var elem = this.select('!')
@@ -760,10 +791,25 @@ var BrowserPrototype = {
 
 		path.push(elem.text())
 
+		/* XXX need to sort out several issues:
+		 * 		- if not openable and not traversable this infinitely recurs...
+		if(this.isOpenable && !this.isOpenable(path)){
+			return this.push()
+		}
+		*/
+
 		var res = this.open(path)
+
+		this.trigger('open', path)
 
 		return res
 	},
+
+	/*
+	isOpenable: function(path){
+		return false
+	},
+	*/
 
 	// extension methods...
 
@@ -792,7 +838,7 @@ var BrowserPrototype = {
 	//
 	// 2) non-interactive:
 	// 		.list(path) -> list
-	// 			- .list(..) should return a list
+	// 			- .list(..) should return an array
 	// 			- make should never get called
 	// 			- the returned list will be rendered
 	//
