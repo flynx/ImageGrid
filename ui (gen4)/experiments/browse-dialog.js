@@ -920,42 +920,47 @@ object.makeConstructor('Browser',
 		BrowserPrototype)
 
 
-// Construct a flat list selector...
+// Flat list...
 //
-//	makeList(<elem>, <list>)
-//		-> browser
-//
-//
-// <list> format:
-//		{
-//			<text>: <callback>,
-//			...
-//		}
-//
-//
-// XXX should this be an object???
+// This expects a data option set with the following format:
+// 	{
+// 		<option-text>: <callback>,
+// 		...
+// 	}
+// 	
+// NOTE: this essentially a different default configuration of Browser...
+var ListPrototype = Object.create(BrowserPrototype)
+ListPrototype.options = {
+
+	traversable: false,
+	flat: true,
+
+	list: function(path, make){
+		var that = this
+		return Object.keys(this.options.data)
+			.map(function(k){
+				var e = make(k)
+					.on('open', function(){ 
+						return that.options.data[k].apply(this, arguments)
+					})
+
+				return k
+			})
+	},
+}
+ListPrototype.options.__proto__ = BrowserPrototype.options
+
+var List = 
+module.List = 
+object.makeConstructor('List', 
+		BrowserClassPrototype, 
+		ListPrototype)
+
+
+// This is a shorthand for: new List(<elem>, { data: <list> })
 var makeList = 
 module.makeList = function(elem, list){
-	return browser.Browser(elem, {
-			data: list,
-
-			traversable: false,
-			flat: true,
-
-			list: function(path, make){
-				var that = this
-				return Object.keys(this.options.data)
-					.map(function(k){
-						// make the element...
-						var e = make(k)
-							.on('open', function(){ 
-								return that.options.data[k].apply(this, arguments)
-							})
-
-						return k
-					})
-			},
-		})
+	return List(elem, { data: list })
 }
 
 

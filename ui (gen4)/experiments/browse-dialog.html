@@ -191,7 +191,7 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, b)
 		.focus()
 
 
-	// Flat list demo...
+	// Custom flat list demo...
 	f = browser.Browser($('.container.flat'), {
 			data: [
 				'option 1',
@@ -226,7 +226,9 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, b)
 			},
 		})
 
-	f = browser.makeList($('.container.flat2'), {
+
+	// Default flat list demo...
+	f2 = browser.makeList($('.container.flat2'), {
 			'option 1': function(_, p){ console.log('option:', p) },
 			'option 2': function(_, p){ console.log('option:', p) },
 			'option 3': function(_, p){ console.log('option:', p) },
