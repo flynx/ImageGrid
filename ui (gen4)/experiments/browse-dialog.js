@@ -828,13 +828,19 @@ var BrowserPrototype = {
 
 	// Open action...
 	//
+	// XXX do we need to pass this to the event???
 	open: function(path){ 
 		path = path || this.path
 		var m = this.options.open
 		var res = m ? m.apply(this, arguments) : path
+		var elem = this.select('!')
 
+		// XXX do we need to pass this to the event???
 		this.trigger('open', path)
-		elem.trigger('open')
+		if(elem.length > 0){
+			// XXX do we need to pass this to the event???
+			elem.trigger('open', path)
+		}
 
 		return res
 	},
@@ -912,6 +918,45 @@ module.Browser =
 object.makeConstructor('Browser', 
 		BrowserClassPrototype, 
 		BrowserPrototype)
+
+
+// Construct a flat list selector...
+//
+//	makeList(<elem>, <list>)
+//		-> browser
+//
+//
+// <list> format:
+//		{
+//			<text>: <callback>,
+//			...
+//		}
+//
+//
+// XXX should this be an object???
+var makeList = 
+module.makeList = function(elem, list){
+	return browser.Browser(elem, {
+			data: list,
+
+			traversable: false,
+			flat: true,
+
+			list: function(path, make){
+				var that = this
+				return Object.keys(this.options.data)
+					.map(function(k){
+						// make the element...
+						var e = make(k)
+							.on('open', function(){ 
+								return that.options.data[k].apply(this, arguments)
+							})
+
+						return k
+					})
+			},
+		})
+}
 
 
 

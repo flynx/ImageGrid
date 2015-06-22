@@ -60,6 +60,12 @@
 }
 
 
+.container.flat2 {
+	left: 500px;
+	top: 400px;
+}
+
+
 
 
 
@@ -145,9 +151,10 @@ TREE.dir_c.dir_b.tree = TREE
 var use_disabled = true
 var show_files = false
 
-requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, browser){
+requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, b){
 	keyboard = k
 	object = o
+	browser = b
 
 	// Tree demo...
 	b = browser.Browser($('.container.tree'), {
@@ -207,12 +214,23 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 						if(use_disabled && k == 'option 4'){
 							e.addClass('disabled')
 						}
+
+						if(k == 'option 3'){
+							e.on('open', function(){ alert('openning: option 3!') })
+						}
 						return k
 					})
 			},
 			open: function(path){
 				console.log('OPEN:', path)
 			},
+		})
+
+	f = browser.makeList($('.container.flat2'), {
+			'option 1': function(_, p){ console.log('option:', p) },
+			'option 2': function(_, p){ console.log('option:', p) },
+			'option 3': function(_, p){ console.log('option:', p) },
+			'option 4': function(_, p){ console.log('option:', p) },
 		})
 })
 
@@ -327,6 +345,9 @@ Files: <button id="theme" onclick="toggleFiles()">toggle</button>
 </div>
 
 <div class="container flat">
+</div>
+
+<div class="container flat2">
 </div>
 
 </body>
