@@ -768,15 +768,9 @@ var BrowserPrototype = {
 		return this
 	},
 
-	/*
-	focus: function(){
-		this.dom.focus()
-		return this
-	},
-	*/
-
 	// XXX think about the API...
-	// XXX need to check if openable and if not use .push()
+	// XXX need to check if openable i.e. when to use open and when push...
+	// XXX might be a good idea to add a live traversable check...
 	// XXX trigger an "open" event...
 	action: function(){
 		var elem = this.select('!')
@@ -791,13 +785,6 @@ var BrowserPrototype = {
 
 		path.push(elem.text())
 
-		/* XXX need to sort out several issues:
-		 * 		- if not openable and not traversable this infinitely recurs...
-		if(this.isOpenable && !this.isOpenable(path)){
-			return this.push()
-		}
-		*/
-
 		var res = this.open(path)
 
 		this.trigger('open', path)
@@ -805,11 +792,6 @@ var BrowserPrototype = {
 		return res
 	},
 
-	/*
-	isOpenable: function(path){
-		return false
-	},
-	*/
 
 	// extension methods...
 
