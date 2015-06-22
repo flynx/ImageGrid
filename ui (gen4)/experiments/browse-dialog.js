@@ -50,6 +50,21 @@ var BrowserClassPrototype = {
 		// path...
 		var path = $('<div>')
 			.addClass('v-block path')
+			/*
+			.click(function(){
+				// XXX set contenteditable...
+				// XXX set value to path...
+				// XXX select all...
+			})
+			.on('blur', function(){
+				// XXX unset contenteditable...
+			})
+			.keyup(function(){
+				// XXX update path...
+				// 		- set /../..../ to path
+				// 		- use the part after the last '/' ad filter...
+			})
+		  	*/
 
 		if(options.show_path == false){
 			path.hide()
@@ -111,7 +126,7 @@ var BrowserPrototype = {
 		Filter: {
 			pattern: '.browse .path div.cur[contenteditable]',
 
-			// keep text editing action from affecting the seelction...
+			// keep text editing action from affecting the selection...
 			ignore: [
 					'Backspace',
 					'Left',
@@ -253,6 +268,7 @@ var BrowserPrototype = {
 		})
 
 		// add current selection indicator...
+		var txt
 		p.append($('<div>')
 			.addClass('dir cur')
 			.click(function(){
@@ -272,10 +288,23 @@ var BrowserPrototype = {
 				if(!that._hold_blur){
 					that.stopFilter()
 				}
-				//that.stopFilter()
+			})
+			/* XXX does the right thing (replaces the later .focus(..) 
+			 * 		and .keyup(..)) but does not work in IE...
+			.on('input', function(){
+				that.showFiltered($(this).text())
+			})
+			*/
+			// only update if text changed...
+			.focus(function(){
+				txt = $(this).text()
 			})
 			.keyup(function(){
-				that.showFiltered($(this).text())
+				var cur  = $(this).text()
+				if(txt != cur){
+					txt = cur
+					that.showFiltered(cur)
+				}
 			}))
 
 		// fill the children list...
@@ -372,6 +401,8 @@ var BrowserPrototype = {
 	//
 	// TODO need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/
+	//
+	// XXX add * support...
 	filter: function(pattern, a, b){
 		pattern = pattern == null ? '*' : pattern
 		var ignore_disabled = typeof(a) == typeof(true) ? a : b
@@ -502,13 +533,14 @@ var BrowserPrototype = {
 
 			var that = this
 			var e = this.dom.find('.path .dir.cur')
-				.text('')
+				//.text('')
 				.attr('contenteditable', true)
 				.focus()
 
 			// place the cursor...
-			range.setStart(e[0], 0)
-			range.collapse(true)
+			//range.setStart(e[0], 0)
+			//range.collapse(true)
+			range.selectNodeContents(e[0])
 			selection.removeAllRanges()
 			selection.addRange(range)
 		}
