@@ -554,6 +554,11 @@ var BrowserPrototype = {
 		this
 			.focus()
 
+		// NOTE: we might select an item outside of the current visible
+		// 		area, thus re-selecting it after we remove the filter 
+		// 		will place it correctly.
+		this.select(this.select('!'))
+
 		return this
 	},
 	get filtering(){
