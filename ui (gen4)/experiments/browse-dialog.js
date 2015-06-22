@@ -601,9 +601,6 @@ var BrowserPrototype = {
 	// NOTE: 'none' will always return an empty jQuery object, to get 
 	// 		the selection state before deselecting use .select('!')
 	// NOTE: this uses .filter(..) for string and regexp matching...
-	//
-	//
-	// XXX Q: should this trigger a "deselect" event???
 	select: function(elem, filtering){
 		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
@@ -643,9 +640,10 @@ var BrowserPrototype = {
 			if(!filtering){
 				browser.find('.path .dir.cur').empty()
 			}
-			elems
+			elems = elems
 				.filter('.selected')
 				.removeClass('selected')
+			this.trigger('deselect', elems)
 			return $()
 
 		// strict...
@@ -701,9 +699,11 @@ var BrowserPrototype = {
 					p.scrollTop(S + t - D)
 				}
 
+				elem.addClass('selected')
+
 				this.trigger('select', elem)
 
-				return elem.addClass('selected')
+				return elem
 			}
 		}
 	},
@@ -726,6 +726,7 @@ var BrowserPrototype = {
 	},
 
 	// Push an element to path / go down one level...
+	// XXX trigger a "push" event... (???)
 	push: function(elem){
 		var browser = this.dom 
 		var elem = this.select(elem || '!')
@@ -751,6 +752,7 @@ var BrowserPrototype = {
 		return this
 	},
 	// Pop an element off the path / go up one level...
+	// XXX trigger a "pop" event... (???)
 	pop: function(){
 		var browser = this.dom
 
@@ -771,7 +773,6 @@ var BrowserPrototype = {
 	// XXX think about the API...
 	// XXX need to check if openable i.e. when to use open and when push...
 	// XXX might be a good idea to add a live traversable check...
-	// XXX trigger an "open" event...
 	action: function(){
 		var elem = this.select('!')
 
@@ -840,7 +841,7 @@ var BrowserPrototype = {
 	},
 
 	// XXX need to get a container -- UI widget API....
-	// XXX setup instance events...
+	// XXX trigger started event...
 	__init__: function(parent, options){
 		options = options || {}
 
