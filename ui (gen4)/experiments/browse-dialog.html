@@ -151,10 +151,10 @@ TREE.dir_c.dir_b.tree = TREE
 var use_disabled = true
 var show_files = false
 
-requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, b){
+requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br){
 	keyboard = k
 	object = o
-	browser = b
+	browser = br
 
 	// Tree demo...
 	b = browser.Browser($('.container.tree'), {

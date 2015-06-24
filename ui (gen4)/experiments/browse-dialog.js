@@ -227,6 +227,12 @@ var BrowserPrototype = {
 	// 	- build the element list
 	// 	- bind to control events
 	//
+	// For uniformity and ease of access from DOM, this will also set the
+	// 'path' html attribute on the .browse element.
+	// NOTE: this works one way, navigating to a different path will 
+	// 		overwrite the attr but setting a new value to the html attr 
+	// 		will not affect the actual path.
+	//
 	// XXX do we normalize path here???
 	// XXX need a way to handle path errors in the extension API...
 	// 		...for example, if .list(..) can't list or lists a different
@@ -329,6 +335,7 @@ var BrowserPrototype = {
 			res.forEach(make)
 		}
 
+		this.dom.attr('path', '/' + this.path.join('/'))
 		this.trigger('update')
 
 		return this
@@ -634,6 +641,12 @@ var BrowserPrototype = {
 	//
 	// This will return a jQuery object.
 	//
+	// For uniformity and ease of access from DOM, this will also set 
+	// the value attr on the .browse element.
+	// NOTE: this is one way and setting the html attribute "value" will
+	// 		not affect the selection, but changing the selection will 
+	// 		overwrite the attribute.
+	//
 	// NOTE: if multiple matches occur this will select the first.
 	// NOTE: 'none' will always return an empty jQuery object, to get 
 	// 		the selection state before deselecting use .select('!')
@@ -737,6 +750,7 @@ var BrowserPrototype = {
 				}
 
 				elem.addClass('selected')
+				browser.attr('value', elem.text())
 
 				this.trigger('select', elem)
 
@@ -932,6 +946,12 @@ object.makeConstructor('Browser',
 // 		<option-text>: <callback>,
 // 		...
 // 	}
+//
+// or:
+// 	[
+// 		<option-text>,
+// 		...
+// 	]
 // 	
 // NOTE: this essentially a different default configuration of Browser...
 var ListPrototype = Object.create(BrowserPrototype)
@@ -942,12 +962,17 @@ ListPrototype.options = {
 
 	list: function(path, make){
 		var that = this
-		return Object.keys(this.options.data)
+		var data = this.options.data
+		var keys = data.constructor == Array ? data : Object.keys(data)
+		return keys
 			.map(function(k){
 				var e = make(k)
-					.on('open', function(){ 
+
+				if(data !== keys){
+					e.on('open', function(){ 
 						return that.options.data[k].apply(this, arguments)
 					})
+				}
 
 				return k
 			})
