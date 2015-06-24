@@ -13,6 +13,7 @@ var object = require('../object')
 
 
 /*********************************************************************/
+// helpers...
 
 function proxyToDom(name){
 	return function(){ 
@@ -166,11 +167,34 @@ var BrowserPrototype = {
 		},
 	},
 
+
+	// Trigger jQuery events on Browser...
+	//
+	// This will pass the browser instance to .source attribute of the
+	// event object triggered.
+	trigger: function(){
+		var args = args2array(arguments)
+		var evt = args.shift()
+		
+		if(typeof(evt) == typeof('str')){
+			evt = {
+				type: evt,
+				source: this,
+			}
+		} else {
+			evt.source = this
+		}
+
+		args.splice(0, 0, evt)
+
+		this.dom.trigger.apply(this.dom, args)
+		return this 
+	},
+
 	// proxy event api...
 	on: proxyToDom('on'),
 	one: proxyToDom('one'),
 	off: proxyToDom('off'),
-	trigger: proxyToDom('trigger'),
 	bind: proxyToDom('bind'),
 	unbind: proxyToDom('unbind'),
 	deligate: proxyToDom('deligate'),
@@ -651,6 +675,9 @@ var BrowserPrototype = {
 	// NOTE: 'none' will always return an empty jQuery object, to get 
 	// 		the selection state before deselecting use .select('!')
 	// NOTE: this uses .filter(..) for string and regexp matching...
+	//
+	// XXX should the select event also contain path info???
+	// 		(also see: event api proxy)
 	select: function(elem, filtering){
 		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
