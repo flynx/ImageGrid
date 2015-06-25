@@ -85,10 +85,6 @@ var BrowserClassPrototype = {
 // XXX Q: should we make a base list dialog and build this on that or
 //		simplify this to implement a list (removing the path and disabling
 //		traversal)??
-// XXX need base events:
-//		- open
-//		- update
-//		- select (???)
 var BrowserPrototype = {
 	dom: null,
 
@@ -167,6 +163,47 @@ var BrowserPrototype = {
 		},
 	},
 
+
+	// Normalize path...
+	//
+	// This converts the path into a universal absolute array 
+	// representation, taking care of relative path constructs including
+	// '.' (current path) and '..' (up one level)
+	//
+	// XXX is this the correct name???
+	path2lst: function(path){
+		var splitter = /[\\\/]+/
+
+		if(typeof(path) == typeof('str')){
+			path = path
+				.split(splitter)
+				.filter(function(e){ return e != '' })
+		}
+
+		// we've got a relative path...
+		if(path[0] == '.' || path[0] == '..'){
+			path = this.path.concat(path)
+		}
+
+		path = path
+			// clear the '..'...
+			// NOTE: we reverse to avoid setting elements with negative
+			// 		indexes if we have a leading '..'
+			.reverse()
+			.map(function(e, i){
+				if(e == '..'){
+					e = '.'
+					path[i] = '.'
+					path[i+1] = '.'
+				}
+				return e
+			})
+			.reverse()
+			// filter out '.'...
+			.filter(function(e){ return e != '.' })
+
+		return path
+	},
 
 	// Trigger jQuery events on Browser...
 	//
@@ -257,7 +294,6 @@ var BrowserPrototype = {
 	// 		overwrite the attr but setting a new value to the html attr 
 	// 		will not affect the actual path.
 	//
-	// XXX do we normalize path here???
 	// XXX need a way to handle path errors in the extension API...
 	// 		...for example, if .list(..) can't list or lists a different
 	// 		path due to an error, we need to be able to render the new
@@ -269,13 +305,7 @@ var BrowserPrototype = {
 		var that = this
 
 		// normalize path...
-		// XXX is it correct to ignore empty path elements, e.g. 'aa//cc'?
-		var splitter = /[\\\/]/
-		if(typeof(path) == typeof('str') && splitter.test(path)){
-			path = path
-				.split(splitter)
-				.filter(function(e){ return e != '' })
-		}
+		path = this.path2lst(path)
 
 		var p = browser.find('.path').empty()
 		var l = browser.find('.list').empty()
@@ -675,9 +705,6 @@ var BrowserPrototype = {
 	// NOTE: 'none' will always return an empty jQuery object, to get 
 	// 		the selection state before deselecting use .select('!')
 	// NOTE: this uses .filter(..) for string and regexp matching...
-	//
-	// XXX should the select event also contain path info???
-	// 		(also see: event api proxy)
 	select: function(elem, filtering){
 		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
@@ -805,6 +832,7 @@ var BrowserPrototype = {
 
 	// Push an element to path / go down one level...
 	// XXX trigger a "push" event... (???)
+	// XXX might be a good idea to add a live traversable check...
 	push: function(elem){
 		var browser = this.dom 
 		var elem = this.select(elem || '!')
@@ -815,14 +843,15 @@ var BrowserPrototype = {
 			return this
 		}
 
+		// if not traversable call the action...
+		if(!this.traversable || elem.hasClass('not-traversable')){
+			return this.action()
+		}
+
 		var path = this.path
 		path.push(elem.text())
 
-		// if not traversable call the action...
-		if(!this.traversable || elem.hasClass('not-traversable')){
-			return this.action(path)
-		}
-
+		// do the actual traverse...
 		this.path = path
 
 		this.select()
@@ -848,9 +877,12 @@ var BrowserPrototype = {
 		return this
 	},
 
-	// XXX think about the API...
+	// Pre-open action...
+	//
+	// This opens (.open(..)) the selected item and if none are selected
+	// selects the default (.select()) and exits.
+	// 
 	// XXX need to check if openable i.e. when to use open and when push...
-	// XXX might be a good idea to add a live traversable check...
 	action: function(){
 		var elem = this.select('!')
 
@@ -874,19 +906,57 @@ var BrowserPrototype = {
 
 	// Open action...
 	//
-	// XXX do we need to pass this to the event???
+	// This is called when an element is selected and opened.
+	//
+	// By default this happens in the following situations:
+	// 	- an element is selected and Enter is pressed.
+	// 	- an element is not traversable and push (Left, click) is called.
+	//
+	// By default this only triggers the 'open' event on both the browser
+	// and the selected element if one exists.
+	//
+	//
+	// NOTE: if nothing is selected this will do nothing...
+	// NOTE: internally this is never called directly, instead a pre-open
+	// 		stage is used to execute default behavior not directly 
+	// 		related to opening an item (see: .action()).
+	// NOTE: unlike .list(..) this can be used directly if an item is 
+	// 		selected and an actual open action is defined, either in an
+	// 		instance or in .options
 	open: function(path){ 
-		path = path || this.path
-		var m = this.options.open
-		var res = m ? m.apply(this, arguments) : path
 		var elem = this.select('!')
 
-		// XXX do we need to pass this to the event???
-		this.trigger('open', path)
+		// get path + selection...
+		if(!path){
+			// nothing selected, select first and exit...
+			if(elem.length == 0){
+				//this.select()
+				return this
+			}
+
+			// load the current path + selection...
+			path = this.path
+			path.push(elem.text())
+
+		// normalize and load path...
+		} else {
+			path = this.path2lst(path)
+			var elem = path.slice(-1)[0]
+			this.path = path.slice(0, -1)
+			elem = this.select(elem)
+		}
+
+		// get the options method and call it if it exists...
+		var m = this.options.open
+		var args = args2array(arguments)
+		args[0] = path
+		var res = m ? m.apply(this, args) : path
+
+		// trigger the 'open' events...
 		if(elem.length > 0){
-			// XXX do we need to pass this to the event???
 			elem.trigger('open', path)
 		}
+		this.trigger('open', path)
 
 		return res
 	},
@@ -895,6 +965,12 @@ var BrowserPrototype = {
 	//
 	// This will get passed a path and an item constructor and should 
 	// return a list.
+	//
+	// NOTE: This is not intended for direct client use, rather it is 
+	// 		designed to either be overloaded by the user in an instance 
+	// 		or in the .options
+	//		To re-list/re-load the view use .update()
+	//
 	//
 	// There are two mods of operation:
 	//
@@ -920,7 +996,8 @@ var BrowserPrototype = {
 	//
 	// 	.non-traversable
 	// 		an element is not traversable/listable and will trigger the
-	// 		.action(..) on push...
+	// 		.open(..) on push...
+	//
 	list: function(path, make){
 		path = path || this.path
 		var m = this.options.list
