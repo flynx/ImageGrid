@@ -145,15 +145,16 @@ var BrowserPrototype = {
 			Up: 'prev!',
 			Backspace: 'Up',
 			Down: 'next!',
-			Left: 'pop',
+			Left: {
+				default: 'pop',
+				ctrl: 'update: "/"',
+			},
 			Right: 'push',
 
 			Home: 'select!: "first"',
 			End: 'select!: "last"',
 
 			// XXX add page up and page down...
-			// XXX
-			// XXX ctrl-Left to go to root/base/home
 			// XXX
 
 			Enter: 'action',
