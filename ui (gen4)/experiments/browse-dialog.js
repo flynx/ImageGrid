@@ -705,6 +705,10 @@ var BrowserPrototype = {
 	// NOTE: 'none' will always return an empty jQuery object, to get 
 	// 		the selection state before deselecting use .select('!')
 	// NOTE: this uses .filter(..) for string and regexp matching...
+	//
+	// XXX should we unconditionally clear string quotes or can an item 
+	// 		contain '"' or "'"?
+	// 		...currently the outer quotes are cleared.
 	select: function(elem, filtering){
 		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
@@ -761,6 +765,8 @@ var BrowserPrototype = {
 
 		// string...
 		} else if(typeof(elem) == typeof('str')){
+			// clear quotes...
+			// XXX can an item contain '"' or "'"???
 			if(/^'.*'$|^".*"$/.test(elem.trim())){
 				elem = elem.trim().slice(1, -1)
 			}
@@ -813,7 +819,7 @@ var BrowserPrototype = {
 		}
 	},
 
-	// Select next element...
+	// Select next/prev element...
 	next: function(elem){
 		if(elem != null){
 			this.select(elem)
@@ -821,7 +827,6 @@ var BrowserPrototype = {
 		this.select('next')
 		return this
 	},
-	// Select previous element...
 	prev: function(elem){
 		if(elem != null){
 			this.select(elem)
@@ -831,6 +836,7 @@ var BrowserPrototype = {
 	},
 
 	// Push an element to path / go down one level...
+	//
 	// XXX trigger a "push" event... (???)
 	// XXX might be a good idea to add a live traversable check...
 	push: function(elem){
@@ -858,7 +864,9 @@ var BrowserPrototype = {
 
 		return this
 	},
+
 	// Pop an element off the path / go up one level...
+	//
 	// XXX trigger a "pop" event... (???)
 	pop: function(){
 		var browser = this.dom
