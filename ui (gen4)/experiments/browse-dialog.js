@@ -173,7 +173,7 @@ var BrowserPrototype = {
 	//
 	// XXX is this the correct name???
 	path2lst: function(path){
-		var splitter = /[\\\/]+/
+		var splitter = /[\\\/]/
 
 		if(typeof(path) == typeof('str')){
 			path = path
@@ -208,7 +208,7 @@ var BrowserPrototype = {
 
 	// Trigger jQuery events on Browser...
 	//
-	// This will pass the browser instance to .source attribute of the
+	// This will pass the Browser instance to .source attribute of the
 	// event object triggered.
 	trigger: function(){
 		var args = args2array(arguments)
@@ -243,6 +243,8 @@ var BrowserPrototype = {
 	blur: proxyToDom('blur'),
 
 
+	// base api...
+
 	// XXX should these set both the options and dom???
 	get flat(){
 		return !this.dom.hasClass('flat') || this.options.flat
@@ -269,7 +271,13 @@ var BrowserPrototype = {
 		this.options.traversable = value
 	},
 
-	// base api...
+	// Get/set the path...
+	//
+	// On more info on setting the path see .update(..)
+	//
+	//
+	// NOTE: .path = <some-path> is equivalent to .update(<some-path>)
+	// 		both exist at the same time to enable chaining...
 	// NOTE: to avoid duplicating and syncing data, the actual path is 
 	//		stored in DOM...
 	// NOTE: path does not include the currently selected list element,
@@ -291,9 +299,12 @@ var BrowserPrototype = {
 	//
 	// For uniformity and ease of access from DOM, this will also set the
 	// 'path' html attribute on the .browse element.
-	// NOTE: this works one way, navigating to a different path will 
-	// 		overwrite the attr but setting a new value to the html attr 
-	// 		will not affect the actual path.
+	//
+	// NOTE: setting the DOM attr 'path' works one way, navigating to a
+	// 		different path will overwrite the attr but setting a new 
+	// 		value to the html attr will not affect the actual path.
+	// NOTE: .path = <some-path> is equivalent to .update(<some-path>)
+	// 		both exist at the same time to enable chaining...
 	//
 	// XXX need a way to handle path errors in the extension API...
 	// 		...for example, if .list(..) can't list or lists a different
@@ -462,7 +473,8 @@ var BrowserPrototype = {
 	//
 	//
 	// TODO need to support glob / nested patterns...
-	// 		..things like /**/a*/*moo/
+	// 		..things like /**/a*/*moo/ should list all matching items in
+	// 		a single list.
 	//
 	// XXX add * support...
 	filter: function(pattern, a, b){
@@ -644,7 +656,7 @@ var BrowserPrototype = {
 		return this
 	},
 
-	// Select a list element...
+	// Select an element from current list...
 	//
 	//	Get selected element if it exists, otherwise select and return 
 	//	the first...
@@ -970,7 +982,7 @@ var BrowserPrototype = {
 		return res
 	},
 
-	// List the path...
+	// List current path level...
 	//
 	// This will get passed a path and an item constructor and should 
 	// return a list.
@@ -1051,6 +1063,9 @@ object.makeConstructor('Browser',
 		BrowserClassPrototype, 
 		BrowserPrototype)
 
+
+
+/*********************************************************************/
 
 // Flat list...
 //
