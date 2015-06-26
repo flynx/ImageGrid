@@ -6,6 +6,15 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+if(typeof(module) !== 'undefined' && module.exports){
+	var NW = true
+	var gui = require('nw.gui')
+
+} else {
+	var NW = false
+}
+
+
 define(function(require){ var module = {}
 
 
@@ -326,6 +335,51 @@ var BrowserPrototype = {
 	set path(value){
 		return this.update(value)
 	},
+	// String path...
+	get strPath(){
+		return '/' + this.path.join('/')
+	},
+	// NOTE: this is just a shorthand to .path for uniformity...
+	set strPath(value){
+		this.path = value
+	},
+
+	// Copy/Paste...
+	//
+	// XXX use 'Test' for IE...
+	copy: function(){
+		var path = this.strPath
+
+		if(NW){
+			gui.Clipboard.get()
+				.set(path, 'text')
+
+		// browser...
+		// XXX use 'Test' for IE...
+		} else if(event != undefined){
+			event.clipboardData.setData('text/plain', path)
+		}
+
+		return path
+	},
+	paste: function(str){
+		// generic...
+		if(str != null){
+			this.path = str
+
+		// nw.js
+		} else if(NW){
+			this.path = gui.Clipboard.get()
+				.get('text')
+
+		// browser...
+		// XXX use 'Test' for IE...
+		} else if(event != undefined){
+			this.path = event.clipboardData.getData('text/plain')
+		}
+
+		return this
+	},
 
 	// update path...
 	// 	- build the path
@@ -452,7 +506,7 @@ var BrowserPrototype = {
 			res.forEach(make)
 		}
 
-		this.dom.attr('path', '/' + this.path.join('/'))
+		this.dom.attr('path', this.strPath)
 		this.trigger('update')
 
 		// maintain focus within the widget...
@@ -673,7 +727,7 @@ var BrowserPrototype = {
 	startFullPathEdit: function(){
 		if(this.options.fullpathedit){
 			var browser = this.dom
-			var path = '/' + this.path.join('/')
+			var path = this.strPath
 			var orig = this.select('!').text()
 			browser
 				.attr('orig-path', path)
@@ -1191,13 +1245,22 @@ var BrowserPrototype = {
 			})
 			// handle paste...
 			// XXX does not work on IE yet...
+			// XXX do we handle other types???
+			// 		...try an get the path of anything...
+			// XXX seems not to work until we cycle any of the editable
+			// 		controls (filter/path), and then it still is on and 
+			// 		off...
 			.on('paste', function(){
 				event.preventDefault()
-				var path = event.clipboardData.getData('text/plain')
-				that.path = path
+				that.paste()
 			})
 			// XXX handle copy...
-			// XXX
+			/* XXX
+			.on('cut copy', function(){
+				event.preventDefault()
+				that.copy()
+			})
+			*/
 
 		// add keyboard handler...
 		dom.keydown(
