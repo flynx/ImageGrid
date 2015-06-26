@@ -725,8 +725,8 @@ var BrowserPrototype = {
 	// list filtering...
 	//
 	// 	start ---->	edit / select --(enter)--> action (use selection)
-	// 					|
-	// 					+--------(blur/esc)--> exit (clear)
+	// 					 |
+	// 					 +-------(blur/esc)--> exit (clear)
 	//
 	//
 	// NOTE: the action as a side effect exits the filter (causes blur 
