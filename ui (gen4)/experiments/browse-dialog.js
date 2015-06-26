@@ -100,6 +100,7 @@ var BrowserPrototype = {
 		filter: true,
 
 		// Enable/disable full path editing...
+		// NOTE: as with .filter above, this only affects .startFullPathEdit(..)
 		fullpathedit: true,
 
 		// If false will disable traversal...
@@ -145,7 +146,6 @@ var BrowserPrototype = {
 			Esc: 'abortFullPathEdit!',
 		},
 
-		// filter mappings...
 		Filter: {
 			pattern: '.browse .path div.cur[contenteditable]',
 
@@ -336,6 +336,8 @@ var BrowserPrototype = {
 	// 		value to the html attr will not affect the actual path.
 	// NOTE: .path = <some-path> is equivalent to .update(<some-path>)
 	// 		both exist at the same time to enable chaining...
+	// NOTE: this will scroll the path to show the last element for paths
+	// 		that do not fit in view...
 	//
 	// XXX need a way to handle path errors in the extension API...
 	// 		...for example, if .list(..) can't list or lists a different
@@ -346,6 +348,7 @@ var BrowserPrototype = {
 		path = path || this.path
 		var browser = this.dom
 		var that = this
+		var focus = browser.find(':focus').length > 0
 
 		// normalize path...
 		path = this.path2lst(path)
@@ -410,14 +413,27 @@ var BrowserPrototype = {
 				}
 			}))
 
+
+		// handle path scroll..
+		var e = p.children().last()
+		// scroll to the end when wider than view...
+		if(e.length > 0 && p.width() < p[0].scrollWidth){
+			// scroll all the way to the right...
+			p.scrollLeft(p[0].scrollWidth)
+
+		// keep left aligned...
+		} else {
+			p.scrollLeft(0)
+		}
+
 		// fill the children list...
 		var interactive = false
 
 		var make = function(p){
 			interactive = true
 			return $('<div>')
+				// handle clicks ONLY when not disabled...
 				.click(function(){
-					// handle clicks ONLY when not disabled...
 					if(!$(this).hasClass('disabled')){
 						that.push($(this).text()) 
 					}
@@ -434,6 +450,11 @@ var BrowserPrototype = {
 
 		this.dom.attr('path', '/' + this.path.join('/'))
 		this.trigger('update')
+
+		// maintain focus within the widget...
+		if(focus && browser.find(':focus').length == 0){
+			this.focus()
+		}
 
 		return this
 	},
@@ -587,15 +608,19 @@ var BrowserPrototype = {
 
 	// internal actions...
 	
-	// XXX full path editing...
+	// full path editing...
+	//
+	// NOTE: the event handlers for this are set in .__init__()...
+	//
 	// XXX should these be a toggle???
 	startFullPathEdit: function(){
 		if(this.options.fullpathedit){
 			var browser = this.dom
-			var path = this.path.join('/')
+			var path = '/' + this.path.join('/')
+			var orig = this.select('!').text()
 			browser
 				.attr('orig-path', path)
-				.attr('orig-selection', this.select('!').text())
+				.attr('orig-selection', orig)
 
 			var range = document.createRange()
 			var selection = window.getSelection()
@@ -634,12 +659,17 @@ var BrowserPrototype = {
 		var e = browser.find('.path')
 			.removeAttr('contenteditable')
 
-		this.path = path || '/' + e.text()
+		this.path = path || e.text()
 
-		return this.focus()
+		return this
+			.focus()
 	},
 	
+	// path filtering...
+	//
 	// NOTE: this uses .filter(..) for actual filtering...
+	//
+	// XXX add support for '/' in filter...
 	// XXX revise API -- seems a bit overcomplicated...
 	showFiltered: function(pattern){
 		var that = this
@@ -708,8 +738,6 @@ var BrowserPrototype = {
 		this.dom.find('.path .dir.cur')
 			.text('')
 			.removeAttr('contenteditable')
-		this
-			.focus()
 
 		// NOTE: we might select an item outside of the current visible
 		// 		area, thus re-selecting it after we remove the filter 
@@ -717,6 +745,7 @@ var BrowserPrototype = {
 		this.select(this.select('!'))
 
 		return this
+			.focus()
 	},
 	get filtering(){
 		return this.dom.find('.path .dir.cur[contenteditable]').length > 0 
@@ -990,6 +1019,8 @@ var BrowserPrototype = {
 	action: function(){
 		var elem = this.select('!')
 
+		//this.focus()
+
 		// nothing selected, select first and exit...
 		if(elem.length == 0){
 			this.select()
@@ -1102,6 +1133,7 @@ var BrowserPrototype = {
 	// 		an element is not traversable/listable and will trigger the
 	// 		.open(..) on push...
 	//
+	// XXX need a way to constructively communicate errors up...
 	list: function(path, make){
 		path = path || this.path
 		var m = this.options.list
@@ -1124,8 +1156,18 @@ var BrowserPrototype = {
 
 		// basic permanent interactions...
 		dom.find('.path')
+			// NOTE: these are used for full-path editing and are defined
+			// 		here in contrast to other feature handlers as the
+			// 		'.path' element is long-lived and not rewritten 
+			// 		on .update(..)
 			.dblclick(function(){
 				that.startFullPathEdit()
+			})
+			.keyup(function(){
+				var e = $(this)
+				if(e.attr('contenteditable') && e.text() != dom.attr('orig-path')){
+					dom.find('.list').empty()
+				}
 			})
 
 		// add keyboard handler...

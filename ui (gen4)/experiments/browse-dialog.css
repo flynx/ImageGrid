@@ -40,7 +40,19 @@
 	white-space: nowrap;
 	padding-right: 30px;
 
-	opacity: 0.8;
+
+	/* XXX need a way to make this automatic and depend on .browser 
+		setup to avoid multiple scrollbars and the need to manually
+	 	dive into the configuration to change the container size 
+		limits
+	*/
+	max-width: 50vh;
+	overflow: auto;
+}
+/* XXX not sure about this... */
+.browse .path::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
 }
 .browse .path:hover {
 	opacity: 1;
@@ -48,12 +60,14 @@
 .browse .path:empty {
 	display: block;
 }
-.browse:not(.flat) .path:before {
+.browse:not(.flat) .path:not([contenteditable]):before {
 	content: "/";
 }
 .browse .path .dir {
 	display: inline-block;
 	cursor: pointer;
+
+	opacity: 0.8;
 }
 .browse .path .dir:after {
 	content: "/";
@@ -97,9 +111,9 @@
 /* XXX need to make this resizable up but only to a certain size (~80vh) */
 .browse .list {
 	/* XXX need a way to make this automatic and depend on .browser 
-			setup to avoid multiple scrollbars and the need to manually
-	 		dive into the configuration to change the container size 
-			limits
+		setup to avoid multiple scrollbars and the need to manually
+	 	dive into the configuration to change the container size 
+		limits
 	*/
 	max-height: 50vh;
 
@@ -118,6 +132,15 @@
 	cursor: pointer;
 
 	opacity: 0.7;
+
+
+	/* XXX need a way to make this automatic and depend on .browser 
+		setup to avoid multiple scrollbars and the need to manually
+	 	dive into the configuration to change the container size 
+		limits
+	*/
+	max-width: 50vh;
+	overflow: hidden;
 }
 .browse:not(.flat) .list div:not(.not-traversable):after {
 	content: "/";
