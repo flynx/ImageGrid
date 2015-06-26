@@ -96,8 +96,11 @@ var BrowserPrototype = {
 		//show_path: true,
 
 		// Enable/disable user selection filtering...
-		// NOTE: this only affects .stopFilter(..)
+		// NOTE: this only affects .startFilter(..)
 		filter: true,
+
+		// Enable/disable full path editing...
+		fullpathedit: true,
 
 		// If false will disable traversal...
 		// NOTE: if false this will also disable traversal up.
@@ -119,6 +122,29 @@ var BrowserPrototype = {
 
 	// XXX TEST: this should prevent event handler delegation...
 	keyboard: {
+		FullPathEdit: {
+			pattern: '.browse .path[contenteditable]',
+
+			// keep text editing action from affecting the selection...
+			ignore: [
+					'Backspace',
+					'Up',
+					'Down',
+					'Left',
+					'Right',
+					'Home',
+					'End',
+					'Enter',
+					'Esc',
+					'/',
+					'A',
+
+				],
+
+			Enter: 'stopFullPathEdit!',
+			Esc: 'abortFullPathEdit!',
+		},
+
 		// filter mappings...
 		Filter: {
 			pattern: '.browse .path div.cur[contenteditable]',
@@ -133,6 +159,7 @@ var BrowserPrototype = {
 					'Enter',
 					'Esc',
 					'/',
+					'A',
 				],
 
 			Enter: 'action!',
@@ -143,12 +170,12 @@ var BrowserPrototype = {
 			pattern: '.browse',
 
 			Up: 'prev!',
-			Backspace: 'Up',
 			Down: 'next!',
 			Left: {
-				default: 'pop',
-				ctrl: 'update: "/"',
+				default: 'pop!',
+				ctrl: 'update!: "/"',
 			},
+			Backspace: 'Left',
 			Right: 'push',
 
 			Home: 'select!: "first"',
@@ -161,6 +188,10 @@ var BrowserPrototype = {
 			Esc: 'close',
 
 			'/': 'startFilter!',
+
+			A: {
+				ctrl: 'startFullPathEdit!',
+			},
 		},
 	},
 
@@ -555,6 +586,58 @@ var BrowserPrototype = {
 
 
 	// internal actions...
+	
+	// XXX full path editing...
+	// XXX should these be a toggle???
+	startFullPathEdit: function(){
+		if(this.options.fullpathedit){
+			var browser = this.dom
+			var path = this.path.join('/')
+			browser
+				.attr('orig-path', path)
+				.attr('orig-selection', this.select('!').text())
+
+			var range = document.createRange()
+			var selection = window.getSelection()
+
+			var e = browser.find('.path')
+				.text(path)
+				.attr('contenteditable', true)
+				.focus()
+
+			range.selectNodeContents(e[0])
+			selection.removeAllRanges()
+			selection.addRange(range)
+		}
+		return this
+	},
+	abortFullPathEdit: function(){
+		var browser = this.dom
+		var e = browser.find('.path')
+
+		var path = '/' + browser.attr('orig-path')
+		var selection = browser.attr('orig-selection')
+
+		this.stopFullPathEdit(path)
+
+		if(selection != ''){
+			this.select(selection)	
+		}
+
+		return this
+	},
+	stopFullPathEdit: function(path){
+		var browser = this.dom
+			.removeAttr('orig-path')
+			.removeAttr('orig-selection')
+
+		var e = browser.find('.path')
+			.removeAttr('contenteditable')
+
+		this.path = path || '/' + e.text()
+
+		return this.focus()
+	},
 	
 	// NOTE: this uses .filter(..) for actual filtering...
 	// XXX revise API -- seems a bit overcomplicated...
@@ -1028,6 +1111,7 @@ var BrowserPrototype = {
 	// XXX need to get a container -- UI widget API....
 	// XXX trigger started event...
 	__init__: function(parent, options){
+		var that = this
 		options = options || {}
 
 		// merge options...
@@ -1037,6 +1121,12 @@ var BrowserPrototype = {
 
 		// build the dom...
 		var dom = this.dom = this.constructor.make(options)
+
+		// basic permanent interactions...
+		dom.find('.path')
+			.dblclick(function(){
+				that.startFullPathEdit()
+			})
 
 		// add keyboard handler...
 		dom.keydown(
@@ -1085,6 +1175,7 @@ object.makeConstructor('Browser',
 var ListPrototype = Object.create(BrowserPrototype)
 ListPrototype.options = {
 
+	fullpathedit: false,
 	traversable: false,
 	flat: true,
 

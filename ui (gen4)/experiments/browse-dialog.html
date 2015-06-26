@@ -202,6 +202,8 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 				'option 6',
 				'option 7',
 			],
+
+			fullpathedit: false,
 			traversable: false,
 			flat: true,
 
@@ -243,8 +245,6 @@ $(function(){
 	$('.container').draggable({ 
 			cancel: ".path .dir, .list div" 
 		})
-
-	//browser.focus()
 })
 
 
