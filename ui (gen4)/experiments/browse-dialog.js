@@ -81,7 +81,6 @@ var BrowserClassPrototype = {
 	},
 }
 
-// XXX need to handle long paths -- smart shortening or auto scroll...
 // XXX Q: should we make a base list dialog and build this on that or
 //		simplify this to implement a list (removing the path and disabling
 //		traversal)??
@@ -302,6 +301,11 @@ var BrowserPrototype = {
 		this.options.traversable = value
 	},
 
+	// Indicate if UI in list filtering mode...
+	get filtering(){
+		return this.dom.find('.path .dir.cur[contenteditable]').length > 0 
+	},
+
 	// Get/set the path...
 	//
 	// On more info on setting the path see .update(..)
@@ -398,7 +402,7 @@ var BrowserPrototype = {
 			/* XXX does the right thing (replaces the later .focus(..) 
 			 * 		and .keyup(..)) but does not work in IE...
 			.on('input', function(){
-				that.showFiltered($(this).text())
+				that.filterList($(this).text())
 			})
 			*/
 			// only update if text changed...
@@ -409,7 +413,7 @@ var BrowserPrototype = {
 				var cur  = $(this).text()
 				if(txt != cur){
 					txt = cur
-					that.showFiltered(cur)
+					that.filterList(cur)
 				}
 			}))
 
@@ -523,12 +527,9 @@ var BrowserPrototype = {
 	// 		at this point this is "by-design" as an experiment on how
 	// 		vital this feature is.
 	//
-	//
 	// TODO need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/ should list all matching items in
 	// 		a single list.
-	//
-	// XXX add * support...
 	filter: function(pattern, a, b){
 		pattern = pattern == null ? '*' : pattern
 		var ignore_disabled = typeof(a) == typeof(true) ? a : b
@@ -605,10 +606,66 @@ var BrowserPrototype = {
 		return elems.filter(filter)
 	},
 
+	// Filter list elements...
+	//
+	// This will set the .filtered-out class on all non-matching elements.
+	//
+	// Use .filterList('*') to clear filter and show all elements.
+	//
+	// NOTE: see .filter(..) for docs on actual filtering.
+	// NOTE: this does not affect any UI modes, for list filtering mode
+	// 		see: .startFilter(..) and friends...
+	filterList: function(pattern){
+		var that = this
+		var browser = this.dom
+
+		// show all...
+		if(pattern == null || pattern.trim() == '*'){
+			browser.find('.filtered-out')
+				.removeClass('filtered-out')
+			// clear the highlighting...
+			browser.find('.list b')
+				.replaceWith(function() { return this.innerHTML })
+
+		// basic filter...
+		} else {
+			var p = RegExp('(' + pattern.trim().split(/\s+/).join('|') + ')', 'g')
+			this.filter(pattern,
+					// rejected...
+					function(i, e){
+						e
+							.addClass('filtered-out')
+							.removeClass('selected')
+					},
+					// NOTE: setting this to true will not remove disabled
+					// 		elements from view as they will neither get 
+					// 		included in the filter not in the filtered out
+					// 		thus it will require manual setting of the
+					// 		.filtered-out class
+					false)
+				// passed...
+				.removeClass('filtered-out')
+				// NOTE: this will mess up (clear) any highlighting that was 
+				// 		present before...
+				.each(function(_, e){
+					e = $(e)
+					var t = e.text()
+					e.html(t.replace(p, '<b>$1</b>'))
+				})
+		}
+
+		return this
+	},
+
 
 	// internal actions...
 	
 	// full path editing...
+	//
+	// 	start ---->	edit --(enter)--> stop (accept)
+	// 				  |
+	// 			 	 +-------(esc)--> abort (reset)
+	//
 	//
 	// NOTE: the event handlers for this are set in .__init__()...
 	//
@@ -665,53 +722,17 @@ var BrowserPrototype = {
 			.focus()
 	},
 	
-	// path filtering...
+	// list filtering...
 	//
+	// 	start ---->	edit / select --(enter)--> action (use selection)
+	// 					|
+	// 					+--------(blur/esc)--> exit (clear)
+	//
+	//
+	// NOTE: the action as a side effect exits the filter (causes blur 
+	// 		on filter field)...
 	// NOTE: this uses .filter(..) for actual filtering...
 	//
-	// XXX add support for '/' in filter...
-	// XXX revise API -- seems a bit overcomplicated...
-	showFiltered: function(pattern){
-		var that = this
-		var browser = this.dom
-
-		// show all...
-		if(pattern == null || pattern.trim() == '*'){
-			browser.find('.filtered-out')
-				.removeClass('filtered-out')
-			// clear the highlighting...
-			browser.find('.list b')
-				.replaceWith(function() { return this.innerHTML })
-
-		// basic filter...
-		} else {
-			var p = RegExp('(' + pattern.trim().split(/\s+/).join('|') + ')', 'g')
-			this.filter(pattern,
-					// rejected...
-					function(i, e){
-						e
-							.addClass('filtered-out')
-							.removeClass('selected')
-					},
-					// NOTE: setting this to true will not remove disabled
-					// 		elements from view as they will neither get 
-					// 		included in the filter not in the filtered out
-					// 		thus it will require manual setting of the
-					// 		.filtered-out class
-					false)
-				// passed...
-				.removeClass('filtered-out')
-				// NOTE: this will mess up (clear) any highlighting that was 
-				// 		present before...
-				.each(function(_, e){
-					e = $(e)
-					var t = e.text()
-					e.html(t.replace(p, '<b>$1</b>'))
-				})
-		}
-
-		return this
-	},
 	// XXX should this be a toggler???
 	startFilter: function(){
 		if(this.options.filter){
@@ -734,7 +755,7 @@ var BrowserPrototype = {
 		return this
 	},
 	stopFilter: function(){
-		this.showFiltered('*')
+		this.filterList('*')
 		this.dom.find('.path .dir.cur')
 			.text('')
 			.removeAttr('contenteditable')
@@ -747,10 +768,9 @@ var BrowserPrototype = {
 		return this
 			.focus()
 	},
-	get filtering(){
-		return this.dom.find('.path .dir.cur[contenteditable]').length > 0 
-	},
-	toggleFilterMode: function(){
+
+	// Toggle filter view mode...
+	toggleFilterViewMode: function(){
 		this.dom.toggleClass('show-filtered-out')
 		return this
 	},
@@ -1018,8 +1038,6 @@ var BrowserPrototype = {
 	// XXX need to check if openable i.e. when to use open and when push...
 	action: function(){
 		var elem = this.select('!')
-
-		//this.focus()
 
 		// nothing selected, select first and exit...
 		if(elem.length == 0){
