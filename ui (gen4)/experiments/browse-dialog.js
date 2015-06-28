@@ -21,6 +21,7 @@ define(function(require){ var module = {}
 var object = require('../object')
 
 
+
 /*********************************************************************/
 // helpers...
 
@@ -30,6 +31,7 @@ function proxyToDom(name){
 		return this 
 	}
 }
+
 
 
 /*********************************************************************/
@@ -90,6 +92,8 @@ var BrowserClassPrototype = {
 	},
 }
 
+
+
 // XXX Q: should we make a base list dialog and build this on that or
 //		simplify this to implement a list (removing the path and disabling
 //		traversal)??
@@ -148,6 +152,7 @@ var BrowserPrototype = {
 					'/',
 					'A',
 
+					// let the system handle copy paste...
 					'C',
 					'V',
 					'X',
@@ -172,6 +177,7 @@ var BrowserPrototype = {
 					'/',
 					'A',
 
+					// let the system handle copy paste...
 					'C',
 					'V',
 					'X',
@@ -342,16 +348,18 @@ var BrowserPrototype = {
 	set path(value){
 		return this.update(value)
 	},
+
 	// String path...
+	//
+	// NOTE: the setter is just a shorthand to .path setter for uniformity...
 	get strPath(){
 		return '/' + this.path.join('/')
 	},
-	// NOTE: this is just a shorthand to .path for uniformity...
 	set strPath(value){
 		this.path = value
 	},
 
-	// Copy/Paste...
+	// Copy/Paste actions...
 	//
 	// XXX use 'Test' for IE...
 	copy: function(){
@@ -1043,8 +1051,8 @@ var BrowserPrototype = {
 
 	// Push an element to path / go down one level...
 	//
-	// XXX trigger a "push" event... (???)
 	// XXX might be a good idea to add a live traversable check...
+	// XXX revise event...
 	push: function(elem){
 		var browser = this.dom 
 		var elem = this.select(elem || '!')
@@ -1061,7 +1069,12 @@ var BrowserPrototype = {
 		}
 
 		var path = this.path
+		var txt = elem.text()
 		path.push(elem.text())
+
+		// XXX should this be before or after the actual path update???
+		// XXX can we cancel the update from a handler???
+		this.trigger('push', path)
 
 		// do the actual traverse...
 		this.path = path
@@ -1073,7 +1086,7 @@ var BrowserPrototype = {
 
 	// Pop an element off the path / go up one level...
 	//
-	// XXX trigger a "pop" event... (???)
+	// XXX revise event...
 	pop: function(){
 		var browser = this.dom
 
@@ -1083,6 +1096,10 @@ var BrowserPrototype = {
 
 		var path = this.path
 		var dir = path.pop()
+
+		// XXX should this be before or after the actual path update???
+		// XXX can we cancel the update from a handler???
+		this.trigger('pop', path)
 
 		this.update(path)
 
@@ -1116,7 +1133,8 @@ var BrowserPrototype = {
 	},
 
 
-	// extension methods...
+	// Extension methods...
+	// ...these are resolved from .options
 
 	// Open action...
 	//
