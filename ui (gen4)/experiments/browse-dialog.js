@@ -148,6 +148,9 @@ var BrowserPrototype = {
 					'/',
 					'A',
 
+					'C',
+					'V',
+					'X',
 				],
 
 			Enter: 'stopFullPathEdit!',
@@ -168,6 +171,10 @@ var BrowserPrototype = {
 					'Esc',
 					'/',
 					'A',
+
+					'C',
+					'V',
+					'X',
 				],
 
 			Enter: 'action!',
@@ -1239,23 +1246,33 @@ var BrowserPrototype = {
 			})
 			.keyup(function(){
 				var e = $(this)
+				// clear the list on edit...
 				if(e.attr('contenteditable') && e.text() != dom.attr('orig-path')){
 					dom.find('.list').empty()
 				}
 			})
-			// handle paste...
+			/* XXX 
+			// Handle copy/paste...
+			//
+			// Make the whole widget support copy/paste of current path.
+			//
+			// NOTE: on nw.js mode this will handle this via keyboard 
+			// 		directly, skipping the events and their quirks...
+			//
 			// XXX does not work on IE yet...
 			// XXX do we handle other types???
-			// 		...try an get the path of anything...
+			// 		...try and get the path of anything, including files, dirs, etc...
 			// XXX seems not to work until we cycle any of the editable
 			// 		controls (filter/path), and then it still is on and 
 			// 		off...
-			.on('paste', function(){
+			// XXX does not work with ':not([contenteditable])' and kills
+			// 		copy/paste on editable fields without...
+			// XXX do we bother with these??
+			.on('paste', ':not([contenteditable])', function(){
 				event.preventDefault()
 				that.paste()
 			})
-			// XXX handle copy...
-			/* XXX
+			// XXX does not work...
 			.on('cut copy', function(){
 				event.preventDefault()
 				that.copy()
@@ -1279,6 +1296,25 @@ var BrowserPrototype = {
 		this.update(options.path || this.path)
 	},
 }
+
+
+/*
+// nw.js copy/paste handling...
+//
+// XXX not sure if we actually need these...
+if(NW){
+	// override copy...
+	BrowserPrototype.keyboard.General.C = {
+		ctrl: 'copy!',
+	}
+	BrowserPrototype.keyboard.General.X = 'C'
+
+	// override paste...
+	BrowserPrototype.keyboard.General.V = {
+		ctrl: 'paste!',
+	}
+}
+*/
 
 
 var Browser = 
