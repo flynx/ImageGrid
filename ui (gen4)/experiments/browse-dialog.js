@@ -375,7 +375,7 @@ var BrowserPrototype = {
 
 	// Copy/Paste actions...
 	//
-	// XXX use 'Test' for IE...
+	// XXX use 'Text' for IE...
 	copy: function(){
 		var path = this.strPath
 
@@ -466,9 +466,7 @@ var BrowserPrototype = {
 			.addClass('dir cur')
 			.click(function(){
 				event.stopPropagation()
-
 				that.toggleFilter('on')
-				//that.update(path.concat($(this).text())) 
 			})
 			.on('blur', function(){
 				that.toggleFilter('off')
@@ -846,7 +844,6 @@ var BrowserPrototype = {
 				this.focus()
 			}
 
-			// XXX is this correct???
 			return this
 		}),
 	// shorthands mostly for use in actions and for chaining...
@@ -1030,6 +1027,7 @@ var BrowserPrototype = {
 				this.select(null, filtering)
 
 			} else {
+				// clear selection...
 				this.select('none', filtering)
 				if(!filtering){
 					browser.find('.path .dir.cur').text(elem.text())
@@ -1055,6 +1053,7 @@ var BrowserPrototype = {
 					p.scrollTop(S + t - D)
 				}
 
+				// now do the selection...
 				elem.addClass('selected')
 				browser.attr('value', elem.text())
 
@@ -1187,6 +1186,9 @@ var BrowserPrototype = {
 	//
 	// This is signature compatible with .select(..) but adds support 
 	// for full paths.
+	//
+	// The .options.open(..), if defined, will always get the full path 
+	// as first argument.
 	//
 	// NOTE: if nothing is selected this will do nothing...
 	// NOTE: internally this is never called directly, instead a pre-open
