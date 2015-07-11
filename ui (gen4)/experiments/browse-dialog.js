@@ -108,7 +108,7 @@ var BrowserPrototype = {
 		//show_path: true,
 
 		// Enable/disable user selection filtering...
-		// NOTE: this only affects .startFilter(..)
+		// NOTE: this only affects starting the filter...
 		filter: true,
 
 		// Enable/disable full path editing...
@@ -187,7 +187,9 @@ var BrowserPrototype = {
 					'#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
 				],
 
-			Enter: 'action!',
+			// XXX should this be an action or a push????
+			//Enter: 'action!',
+			Enter: 'push!',
 			Esc: 'stopFilter!',
 		},
 
@@ -341,12 +343,6 @@ var BrowserPrototype = {
 		this.options.traversable = value
 	},
 
-	// Indicate if UI in list filtering mode...
-	get filtering(){
-		return this.dom.hasClass('filtering')
-		//return this.dom.find('.path .dir.cur[contenteditable]').length > 0 
-	},
-
 	// Get/set the path...
 	//
 	// On more info on setting the path see .update(..)
@@ -436,6 +432,8 @@ var BrowserPrototype = {
 	// 		path due to an error, we need to be able to render the new
 	// 		path both in the path and list sections...
 	// 		NOTE: current behaviour is not wrong, it just not too flexible...
+	// XXX BUG (IE): clicking the filter field selects it but loses 
+	// 		focus disabling text input...
 	update: function(path){
 		path = path || this.path
 		var browser = this.dom
@@ -469,14 +467,19 @@ var BrowserPrototype = {
 		var txt
 		p.append($('<div>')
 			.addClass('dir cur')
+			// XXX BUG: for some reason this element keeps the selection
+			// 		but looses focus in IE...
 			.click(function(){
-				that.startFilter()
+				that.toggleFilter('on')
 				//that.update(path.concat($(this).text())) 
 
 				// XXX HACK: prevents the field from blurring when clicked...
-				// 			...need to find a better way...
 				that._hold_blur = true
 				setTimeout(function(){ delete that._hold_blur }, 20)
+
+				// XXX HACK: this will work around double triggering of the focus
+				// 		event after a click happens...
+				that._focus_hold = true
 			})
 			// XXX for some reason this gets triggered when clicking ano 
 			// 		is not triggered when entering via '/'
@@ -484,7 +487,7 @@ var BrowserPrototype = {
 				// XXX HACK: prevents the field from bluring when clicked...
 				// 			...need to find a better way...
 				if(!that._hold_blur){
-					that.stopFilter()
+					that.toggleFilter('off')
 				}
 			})
 			/* XXX does the right thing (replaces the later .focus(..) 
@@ -494,7 +497,16 @@ var BrowserPrototype = {
 			})
 			*/
 			// only update if text changed...
+			// XXX for some reason this gets triggered when clicking ano 
+			// 		is not triggered when entering via '/'
 			.focus(function(){
+				// XXX HACK: this will work around double triggering of the focus
+				// 		event after a click happens...
+				if(that._focus_hold){
+					delete that._focus_hold
+					return
+				}
+
 				txt = $(this).text()
 			})
 			.keyup(function(){
@@ -702,7 +714,7 @@ var BrowserPrototype = {
 	//
 	// NOTE: see .filter(..) for docs on actual filtering.
 	// NOTE: this does not affect any UI modes, for list filtering mode
-	// 		see: .startFilter(..) and friends...
+	// 		see: .toggleFilter(..)...
 	filterList: function(pattern){
 		var that = this
 		var browser = this.dom
@@ -820,44 +832,52 @@ var BrowserPrototype = {
 	// NOTE: the action as a side effect exits the filter (causes blur 
 	// 		on filter field)...
 	// NOTE: this uses .filter(..) for actual filtering...
-	//
-	// XXX should this be a toggler???
-	startFilter: function(){
-		if(this.options.filter){
-			var range = document.createRange()
-			var selection = window.getSelection()
+	// NOTE: on state change this will return this...
+	toggleFilter: CSSClassToggler(
+		function(){ return this.dom }, 
+		'filtering',
+		// do not enter filter mode if filtering is disabled...
+		function(action){ return action != 'on' || this.options.filter },
+		function(action){
+			// on...
+			if(action == 'on'){
+				var range = document.createRange()
+				var selection = window.getSelection()
 
-			var that = this
-			this.dom.addClass('filtering')
-			var e = this.dom.find('.path .dir.cur')
-				//.text('')
-				.attr('contenteditable', true)
-				.focus()
+				var that = this
+				var e = this.dom.find('.path .dir.cur')
+					//.text('')
+					.attr('contenteditable', true)
 
-			// place the cursor...
-			//range.setStart(e[0], 0)
-			//range.collapse(true)
-			range.selectNodeContents(e[0])
-			selection.removeAllRanges()
-			selection.addRange(range)
-		}
-		return this
-	},
-	stopFilter: function(){
-		this.filterList('*')
-		this.dom.removeClass('filtering')
-		this.dom.find('.path .dir.cur')
-			.text('')
-			.removeAttr('contenteditable')
+				// place the cursor...
+				//range.setStart(e[0], 0)
+				//range.collapse(true)
+				range.selectNodeContents(e[0])
+				selection.removeAllRanges()
+				selection.addRange(range)
+					
+			// off...
+			} else {
+				this.filterList('*')
+				this.dom
+					.find('.path .dir.cur')
+						.text('')
+						.removeAttr('contenteditable')
 
-		// NOTE: we might select an item outside of the current visible
-		// 		area, thus re-selecting it after we remove the filter 
-		// 		will place it correctly.
-		this.select(this.select('!'))
+				// NOTE: we might select an item outside of the current visible
+				// 		area, thus re-selecting it after we remove the filter 
+				// 		will place it correctly.
+				this.select(this.select('!'))
 
-		return this
-			.focus()
-	},
+				this.focus()
+			}
+
+			// XXX is this correct???
+			return this
+		}),
+	// shorthands mostly for use in actions and for chaining...
+	startFilter: function(){ return this.toggleFilter('on') },
+	stopFilter: function(){ return this.toggleFilter('off') },
 
 	// Toggle filter view mode...
 	toggleFilterViewMode: function(){
@@ -959,7 +979,7 @@ var BrowserPrototype = {
 			return $()
 		}
 
-		filtering = filtering == null ? this.filtering : filtering
+		filtering = filtering == null ? this.toggleFilter('?') == 'on' : filtering
 
 		// empty list/string selects none...
 		elem = elem != null && elem.length == 0 ? 'none' : elem

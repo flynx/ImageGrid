@@ -60,7 +60,7 @@
 // 		list is not normalized...
 // NOTE: the toggler can be passed a non-jquery object, but then only an
 // 		explicit state is supported as the second argument, the reason 
-// 		being that we can not determain the current state without a propper
+// 		being that we can not determine the current state without a proper
 // 		.hasClass(..) test...
 //
 //
@@ -112,7 +112,7 @@ function Toggler(elem, state_accessor, states, callback_a, callback_b){
 	// normalize states...
 	states = typeof(states) == typeof('str') ? ['none', states] : states
 	// normalize the callbacks...
-	if(callback_b == null){
+	if(callback_b === undefined){
 		var callback_pre = null
 		var callback_post = callback_a
 	} else {
@@ -208,7 +208,10 @@ function Toggler(elem, state_accessor, states, callback_a, callback_b){
 
 		// post callback...
 		if(callback_post != null){
-			callback_post.apply(this, [action, e].concat(args))
+			var res = callback_post.apply(this, [action, e].concat(args))
+			if(res !== undefined){
+				action = res
+			}
 		}
 
 		return action
