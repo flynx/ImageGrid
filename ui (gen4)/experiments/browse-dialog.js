@@ -432,8 +432,6 @@ var BrowserPrototype = {
 	// 		path due to an error, we need to be able to render the new
 	// 		path both in the path and list sections...
 	// 		NOTE: current behaviour is not wrong, it just not too flexible...
-	// XXX BUG (IE): clicking the filter field selects it but loses 
-	// 		focus disabling text input...
 	update: function(path){
 		path = path || this.path
 		var browser = this.dom
@@ -470,6 +468,8 @@ var BrowserPrototype = {
 			// XXX BUG: for some reason this element keeps the selection
 			// 		but looses focus in IE...
 			.click(function(){
+				event.stopPropagation()
+
 				that.toggleFilter('on')
 				//that.update(path.concat($(this).text())) 
 
@@ -480,6 +480,8 @@ var BrowserPrototype = {
 				// XXX HACK: this will work around double triggering of the focus
 				// 		event after a click happens...
 				that._focus_hold = true
+
+				setTimeout(function(){ console.log('>>>', $(':focus')[0]) }, 1000)
 			})
 			// XXX for some reason this gets triggered when clicking ano 
 			// 		is not triggered when entering via '/'
