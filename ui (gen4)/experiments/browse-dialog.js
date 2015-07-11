@@ -347,7 +347,6 @@ var BrowserPrototype = {
 	//
 	// On more info on setting the path see .update(..)
 	//
-	//
 	// NOTE: .path = <some-path> is equivalent to .update(<some-path>)
 	// 		both exist at the same time to enable chaining...
 	// NOTE: to avoid duplicating and syncing data, the actual path is 
@@ -465,32 +464,14 @@ var BrowserPrototype = {
 		var txt
 		p.append($('<div>')
 			.addClass('dir cur')
-			// XXX BUG: for some reason this element keeps the selection
-			// 		but looses focus in IE...
 			.click(function(){
 				event.stopPropagation()
 
 				that.toggleFilter('on')
 				//that.update(path.concat($(this).text())) 
-
-				// XXX HACK: prevents the field from blurring when clicked...
-				that._hold_blur = true
-				setTimeout(function(){ delete that._hold_blur }, 20)
-
-				// XXX HACK: this will work around double triggering of the focus
-				// 		event after a click happens...
-				that._focus_hold = true
-
-				setTimeout(function(){ console.log('>>>', $(':focus')[0]) }, 1000)
 			})
-			// XXX for some reason this gets triggered when clicking ano 
-			// 		is not triggered when entering via '/'
 			.on('blur', function(){
-				// XXX HACK: prevents the field from bluring when clicked...
-				// 			...need to find a better way...
-				if(!that._hold_blur){
-					that.toggleFilter('off')
-				}
+				that.toggleFilter('off')
 			})
 			/* XXX does the right thing (replaces the later .focus(..) 
 			 * 		and .keyup(..)) but does not work in IE...
@@ -499,16 +480,7 @@ var BrowserPrototype = {
 			})
 			*/
 			// only update if text changed...
-			// XXX for some reason this gets triggered when clicking ano 
-			// 		is not triggered when entering via '/'
 			.focus(function(){
-				// XXX HACK: this will work around double triggering of the focus
-				// 		event after a click happens...
-				if(that._focus_hold){
-					delete that._focus_hold
-					return
-				}
-
 				txt = $(this).text()
 			})
 			.keyup(function(){
@@ -1111,6 +1083,8 @@ var BrowserPrototype = {
 
 	// Push an element to path / go down one level...
 	//
+	// NOTE: if the element is not traversable it will be opened.
+	//
 	// XXX might be a good idea to add a live traversable check...
 	// XXX revise event...
 	push: function(pattern){
@@ -1178,8 +1152,6 @@ var BrowserPrototype = {
 	//
 	// This opens (.open(..)) the selected item and if none are selected
 	// selects the default (.select()) and exits.
-	// 
-	// XXX need to check if openable i.e. when to use open and when push...
 	action: function(){
 		var elem = this.select('!')
 
