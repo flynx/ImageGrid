@@ -213,6 +213,16 @@ var BrowserPrototype = {
 			A: {
 				ctrl: 'startFullPathEdit!',
 			},
+
+			'#1': 'select: "0!"',
+			'#2': 'select: "1!"',
+			'#3': 'select: "2!"',
+			'#4': 'select: "3!"',
+			'#5': 'select: "4!"',
+			'#6': 'select: "5!"',
+			'#7': 'select: "6!"',
+			'#8': 'select: "7!"',
+			'#9': 'select: "8!"',
 		},
 	},
 
@@ -889,6 +899,12 @@ var BrowserPrototype = {
 	//	.select(<number>)
 	//		-> elem
 	//
+	//	Select element by absolute sequence number
+	//	This is the same as above but will count disabled elements...
+	//	NOTE: this will not select unselectable (disabled) elements.
+	//	.select('<number>!')
+	//		-> elem
+	//
 	//	Select element by its text...
 	//	NOTE: if text matches one of the reserved commands above use 
 	//		quotes to escape it...
@@ -924,15 +940,15 @@ var BrowserPrototype = {
 	// 		contain '"' or "'"?
 	// 		...currently the outer quotes are cleared.
 	select: function(elem, filtering){
-		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var browser = this.dom
+		var pattern = '.list div:not(.disabled):not(.filtered-out)'
 		var elems = browser.find(pattern)
-
-		filtering = filtering == null ? this.filtering : filtering
 
 		if(elems.length == 0){
 			return $()
 		}
+
+		filtering = filtering == null ? this.filtering : filtering
 
 		// empty list/string selects none...
 		elem = elem != null && elem.length == 0 ? 'none' : elem
@@ -942,6 +958,17 @@ var BrowserPrototype = {
 		if(elem == null){
 			var cur = this.select('!')
 			elem = cur.length == 0 ? 'first' : cur
+		}
+
+		// special case: absolute position...
+		if(/\d+!/.test(elem)){
+			elem = this.filter(parseInt(elem), false)
+
+			if(elems.index(elem) < 0){
+				return this.select('none')
+			}
+
+			return this.select(elem)
 		}
 
 		// first/last...
@@ -1155,6 +1182,8 @@ var BrowserPrototype = {
 	// NOTE: unlike .list(..) this can be used directly if an item is 
 	// 		selected and an actual open action is defined, either in an
 	// 		instance or in .options
+	//
+	// XXX should this be select-compatible???
 	open: function(path){ 
 		var elem = this.select('!')
 
