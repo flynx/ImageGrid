@@ -203,6 +203,9 @@
 	float: right;
 	font-size: small;
 }
+.browse.filtering .list div:before {
+	display: none;
+}
 
 .browse .list div:nth-of-type(1):before {
 	content: "1";

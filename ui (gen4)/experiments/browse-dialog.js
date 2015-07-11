@@ -135,6 +135,7 @@ var BrowserPrototype = {
 
 	// XXX TEST: this should prevent event handler delegation...
 	keyboard: {
+		// XXX should we ignore numbers here???
 		FullPathEdit: {
 			pattern: '.browse .path[contenteditable]',
 
@@ -153,15 +154,17 @@ var BrowserPrototype = {
 					'A',
 
 					// let the system handle copy paste...
-					'C',
-					'V',
-					'X',
+					'C', 'V', 'X',
+
+					// enter numbers as-is...
+					'#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
 				],
 
 			Enter: 'stopFullPathEdit!',
 			Esc: 'abortFullPathEdit!',
 		},
 
+		// XXX should we have things like ctrl-<number> for fast selection???
 		Filter: {
 			pattern: '.browse .path div.cur[contenteditable]',
 
@@ -178,9 +181,10 @@ var BrowserPrototype = {
 					'A',
 
 					// let the system handle copy paste...
-					'C',
-					'V',
-					'X',
+					'C', 'V', 'X',
+
+					// enter numbers as-is...
+					'#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
 				],
 
 			Enter: 'action!',
@@ -339,7 +343,8 @@ var BrowserPrototype = {
 
 	// Indicate if UI in list filtering mode...
 	get filtering(){
-		return this.dom.find('.path .dir.cur[contenteditable]').length > 0 
+		return this.dom.hasClass('filtering')
+		//return this.dom.find('.path .dir.cur[contenteditable]').length > 0 
 	},
 
 	// Get/set the path...
@@ -823,6 +828,7 @@ var BrowserPrototype = {
 			var selection = window.getSelection()
 
 			var that = this
+			this.dom.addClass('filtering')
 			var e = this.dom.find('.path .dir.cur')
 				//.text('')
 				.attr('contenteditable', true)
@@ -839,6 +845,7 @@ var BrowserPrototype = {
 	},
 	stopFilter: function(){
 		this.filterList('*')
+		this.dom.removeClass('filtering')
 		this.dom.find('.path .dir.cur')
 			.text('')
 			.removeAttr('contenteditable')
