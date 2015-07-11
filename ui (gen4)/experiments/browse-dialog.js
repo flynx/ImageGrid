@@ -214,15 +214,19 @@ var BrowserPrototype = {
 				ctrl: 'startFullPathEdit!',
 			},
 
-			'#1': 'select: "0!"',
-			'#2': 'select: "1!"',
-			'#3': 'select: "2!"',
-			'#4': 'select: "3!"',
-			'#5': 'select: "4!"',
-			'#6': 'select: "5!"',
-			'#7': 'select: "6!"',
-			'#8': 'select: "7!"',
-			'#9': 'select: "8!"',
+			// XXX should these be select???
+			// XXX should these be relative to visible area or absolute 
+			// 		to current list regardless of scroll (as is now)???
+			// XXX should these work while filtering??
+			'#1': 'push: "0!"',
+			'#2': 'push: "1!"',
+			'#3': 'push: "2!"',
+			'#4': 'push: "3!"',
+			'#5': 'push: "4!"',
+			'#6': 'push: "5!"',
+			'#7': 'push: "6!"',
+			'#8': 'push: "7!"',
+			'#9': 'push: "8!"',
 		},
 	},
 
@@ -1080,12 +1084,18 @@ var BrowserPrototype = {
 	//
 	// XXX might be a good idea to add a live traversable check...
 	// XXX revise event...
-	push: function(elem){
+	push: function(pattern){
 		var browser = this.dom 
-		var elem = this.select(elem || '!')
+		var cur = this.select('!')
+		var elem = this.select(pattern || '!')
+
+		// item not found...
+		if(elem.length == 0 && pattern != null){
+			return this
+		}
 
 		// nothing selected, select first and exit...
-		if(elem.length == 0){
+		if(cur.length == 0 && elem.length == 0){
 			this.select()
 			return this
 		}
@@ -1174,6 +1184,8 @@ var BrowserPrototype = {
 	// By default this only triggers the 'open' event on both the browser
 	// and the selected element if one exists.
 	//
+	// This is signature compatible with .select(..) but adds support 
+	// for full paths.
 	//
 	// NOTE: if nothing is selected this will do nothing...
 	// NOTE: internally this is never called directly, instead a pre-open
@@ -1182,8 +1194,6 @@ var BrowserPrototype = {
 	// NOTE: unlike .list(..) this can be used directly if an item is 
 	// 		selected and an actual open action is defined, either in an
 	// 		instance or in .options
-	//
-	// XXX should this be select-compatible???
 	open: function(path){ 
 		var elem = this.select('!')
 
@@ -1200,11 +1210,23 @@ var BrowserPrototype = {
 			path.push(elem.text())
 
 		// normalize and load path...
-		} else {
+		//} else {
+		} else if(path.constructor == Array || /[\\\/]/.test(path)) {
 			path = this.path2lst(path)
 			var elem = path.slice(-1)[0]
 			this.path = path.slice(0, -1)
 			elem = this.select(elem)
+
+		// select-compatible -- select from current context...	
+		} else {
+			elem = this.select(path)
+
+			if(elem.length == 0){
+				return this
+			}
+
+			path = this.path
+			path.push(elem.text())
 		}
 
 		// get the options method and call it if it exists...
