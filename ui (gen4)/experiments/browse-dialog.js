@@ -373,6 +373,21 @@ var BrowserPrototype = {
 		this.path = value
 	},
 
+	// Get/set current selection (text)...
+	//
+	// Setting the selection accepts the same values as .select(..), see
+	// it for more docs.
+	get selected(){
+		var e = this.select('!')
+		if(e.length <= 0){
+			return null
+		}
+		return e.text()
+	},
+	set selected(value){
+		return this.select(value)
+	},
+
 	// Copy/Paste actions...
 	//
 	// XXX use 'Text' for IE...
@@ -611,7 +626,7 @@ var BrowserPrototype = {
 		var that = this
 		var browser = this.dom
 
-		var elems = browser.find('.list>div' + (ignore_disabled ? ':not(.disabled)' : ''))
+		var elems = browser.find('.list>div:visible' + (ignore_disabled ? ':not(.disabled)' : ''))
 
 		if(pattern == '*'){
 			return elems 
@@ -746,7 +761,7 @@ var BrowserPrototype = {
 		if(this.options.fullpathedit){
 			var browser = this.dom
 			var path = this.strPath
-			var orig = this.select('!').text()
+			var orig = this.selected
 			browser
 				.attr('orig-path', path)
 				.attr('orig-selection', orig)
@@ -907,7 +922,7 @@ var BrowserPrototype = {
 	//	.select('<number>!')
 	//		-> elem
 	//
-	//	Select element by its text...
+	//	Select element by its full or partial text...
 	//	NOTE: if text matches one of the reserved commands above use 
 	//		quotes to escape it...
 	//	.select('<text>')
@@ -943,7 +958,7 @@ var BrowserPrototype = {
 	// 		...currently the outer quotes are cleared.
 	select: function(elem, filtering){
 		var browser = this.dom
-		var pattern = '.list div:not(.disabled):not(.filtered-out)'
+		var pattern = '.list>div:not(.disabled):not(.filtered-out):visible'
 		var elems = browser.find(pattern)
 
 		if(elems.length == 0){
@@ -1175,6 +1190,72 @@ var BrowserPrototype = {
 
 	// Open action...
 	//
+	// 	Open current element...
+	// 	NOTE: if no element selected this will do nothing.
+	// 	NOTE: this will return the return of .options.open(..) or the 
+	// 		full path if null is returned...
+	// 	.open()
+	// 		-> this
+	// 		-> object
+	//
+	// 	Open a path...
+	// 	.open(<path>)
+	// 		-> this
+	// 		-> object
+	//
+	// 	Register an open event handler...
+	// 	.open(<function>)
+	// 		-> this
+	//
+	//
+	// The following signatures are relative from current context via 
+	// .select(..), see it for more details...
+	// NOTE: this will also select the opened element, so to get the full
+	// 		path from the handler just get the current path and value:
+	// 			var full_path = '/' + browser.path.concat([browser.selected || '']).join('/')
+	// 		or:
+	// 			browser.dom.attr('path') +'/'+ browser.dom.attr('value')
+	//
+	// 	Open first/last element...
+	// 	.open('first')
+	// 	.open('last')
+	// 		-> this
+	// 		-> object
+	//
+	// 	Open next/prev element...
+	// 	.open('next')
+	// 	.open('prev')
+	// 		-> this
+	// 		-> object
+	//
+	// 	Open active element at index...
+	// 	.open(<number>)
+	// 		-> this
+	// 		-> object
+	//
+	// 	Open element by absolute index...
+	// 	.open('<number>!')
+	// 		-> this
+	// 		-> object
+	//
+	// 	Open element by full or partial text...
+	//	.open('<text>')
+	//	.open("'<text>'")
+	//	.open('"<text>"')
+	// 		-> this
+	// 		-> object
+	//
+	//	Open first element matching a regexp...
+	//	.open(<regexp>)
+	// 		-> this
+	// 		-> object
+	//
+	//	Open an element explicitly...
+	//	.open(<elem>)
+	// 		-> this
+	// 		-> object
+	//
+	//
 	// This is called when an element is selected and opened.
 	//
 	// By default this happens in the following situations:
@@ -1198,6 +1279,11 @@ var BrowserPrototype = {
 	// 		selected and an actual open action is defined, either in an
 	// 		instance or in .options
 	open: function(path){ 
+		// special case: register the open handler...
+		if(typeof(path) == typeof(function(){})){
+			return this.on('open', path)
+		}
+
 		var elem = this.select('!')
 
 		// get path + selection...
@@ -1221,6 +1307,7 @@ var BrowserPrototype = {
 			elem = this.select(elem)
 
 		// select-compatible -- select from current context...	
+		// XXX this is semilar to the first branch, should we merge them???
 		} else {
 			elem = this.select(path)
 
@@ -1236,13 +1323,17 @@ var BrowserPrototype = {
 		var m = this.options.open
 		var args = args2array(arguments)
 		args[0] = path
-		var res = m ? m.apply(this, args) : path
+		var res = m ? m.apply(this, args) : this
+		res = res || this
 
 		// trigger the 'open' events...
+		// NOTE: this will propagate up to the parent...
 		if(elem.length > 0){
 			elem.trigger('open', path)
+
+		} else {
+			this.trigger('open', path)
 		}
-		this.trigger('open', path)
 
 		return res
 	},
