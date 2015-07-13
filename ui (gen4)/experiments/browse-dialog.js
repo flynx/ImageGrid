@@ -113,7 +113,7 @@ var BrowserPrototype = {
 
 		// Enable/disable full path editing...
 		// NOTE: as with .filter above, this only affects .startFullPathEdit(..)
-		fullpathedit: true,
+		fullPathEdit: true,
 
 		// If false will disable traversal...
 		// NOTE: if false this will also disable traversal up.
@@ -131,6 +131,11 @@ var BrowserPrototype = {
 		// elements.
 		// This is mainly used for flat list selectors.
 		flat: false,
+
+		// List of events that will not get propagated outside the browser...
+		nonPropagatedEvents: [
+			'open',
+		],
 	},
 
 	// XXX TEST: this should prevent event handler delegation...
@@ -282,18 +287,17 @@ var BrowserPrototype = {
 	//
 	// This will pass the Browser instance to .source attribute of the
 	// event object triggered.
+	//
+	// NOTE: event triggered by this will not propagate up.
 	trigger: function(){
 		var args = args2array(arguments)
 		var evt = args.shift()
 		
 		if(typeof(evt) == typeof('str')){
-			evt = {
-				type: evt,
-				source: this,
-			}
-		} else {
-			evt.source = this
+			evt = $.Event(evt)
 		}
+
+		evt.source = this
 
 		args.splice(0, 0, evt)
 
@@ -784,7 +788,7 @@ var BrowserPrototype = {
 	//
 	// XXX should these be a toggle???
 	startFullPathEdit: function(){
-		if(this.options.fullpathedit){
+		if(this.options.fullPathEdit){
 			var browser = this.dom
 			var path = this.strPath
 			var orig = this.selected
@@ -1353,9 +1357,12 @@ var BrowserPrototype = {
 		res = res || this
 
 		// trigger the 'open' events...
-		// NOTE: this will propagate up to the parent...
 		if(elem.length > 0){
-			elem.trigger('open', path)
+			// NOTE: this will bubble up to the browser root...
+			elem.trigger({
+					type: 'open',
+					source: this,
+				}, path)
 
 		} else {
 			this.trigger('open', path)
@@ -1483,6 +1490,9 @@ var BrowserPrototype = {
 		// load the initial state...
 		// XXX check if this default is correct...
 		this.update(options.path || this.path)
+
+		this.on(this.options.nonPropagatedEvents.join(''), 
+			function(evt){ evt.stopPropagation() })
 	},
 }
 
@@ -1534,7 +1544,7 @@ object.makeConstructor('Browser',
 var ListPrototype = Object.create(BrowserPrototype)
 ListPrototype.options = {
 
-	fullpathedit: false,
+	fullPathEdit: false,
 	traversable: false,
 	flat: true,
 
