@@ -134,8 +134,9 @@ var BrowserPrototype = {
 	},
 
 	// XXX TEST: this should prevent event handler delegation...
+	// XXX should we have things like ctrl-<number> for fast selection 
+	// 		in filter mode???
 	keyboard: {
-		// XXX should we ignore numbers here???
 		FullPathEdit: {
 			pattern: '.browse .path[contenteditable]',
 
@@ -164,7 +165,6 @@ var BrowserPrototype = {
 			Esc: 'abortFullPathEdit!',
 		},
 
-		// XXX should we have things like ctrl-<number> for fast selection???
 		Filter: {
 			pattern: '.browse .path div.cur[contenteditable]',
 
@@ -373,6 +373,32 @@ var BrowserPrototype = {
 		this.path = value
 	},
 
+	// Get/set path with selection...
+	//
+	// NOTE: this is different from .path as it loads the path upto the
+	// 		last '/' and selects the rest, in case of the array path the
+	// 		last element is selected but not traversed unless it's a ''
+	get selectionPath(){
+		return this.strPath +'/'+ (this.selected || '')
+	},
+	set selectionPath(value){
+		// if path ends with a '/' then select nothing...
+		if(value.constructor != Array && /[\\\/]/.test(value.trim().slice(-1))){
+			this.path = value
+			return
+		}
+
+		value = this.path2lst(value)
+		var selection = value.pop()
+
+		console.log('!!!', value, selection)
+		this.path = value
+
+		if(selection && selection != ''){
+			this.selected = selection
+		}
+	},
+
 	// Get/set current selection (text)...
 	//
 	// Setting the selection accepts the same values as .select(..), see
@@ -425,7 +451,7 @@ var BrowserPrototype = {
 		return this
 	},
 
-	// update path...
+	// update (load) path...
 	// 	- build the path
 	// 	- build the element list
 	// 	- bind to control events
@@ -1212,9 +1238,9 @@ var BrowserPrototype = {
 	// .select(..), see it for more details...
 	// NOTE: this will also select the opened element, so to get the full
 	// 		path from the handler just get the current path and value:
-	// 			var full_path = '/' + browser.path.concat([browser.selected || '']).join('/')
-	// 		or:
 	// 			browser.dom.attr('path') +'/'+ browser.dom.attr('value')
+	// 		or:
+	// 			browser.selectionPath
 	//
 	// 	Open first/last element...
 	// 	.open('first')
