@@ -262,7 +262,8 @@ var BrowserPrototype = {
 	// 		array, adding a '' at the end seems both obvious and 
 	// 		artificial...
 	// XXX is this the correct name???
-	path2lst: function(path){
+	// 		...should this be .normalizePath(..)???
+	path2list: function(path){
 		var splitter = /[\\\/]/
 
 		if(typeof(path) == typeof('str')){
@@ -508,11 +509,11 @@ var BrowserPrototype = {
 
 		// string path and terminated with '/' -- no selection...
 		if(typeof(path) == typeof('str') && !/[\\\/]/.test(path.trim().slice(-1))){
-			path = this.path2lst(path)
+			path = this.path2list(path)
 			var selection = path.pop()
 
 		} else {
-			path = this.path2lst(path)
+			path = this.path2list(path)
 			var selection = null
 		}
 
@@ -1369,7 +1370,7 @@ var BrowserPrototype = {
 		// normalize and load path...
 		//} else {
 		} else if(path.constructor == Array || /[\\\/]/.test(path)) {
-			path = this.path2lst(path)
+			path = this.path2list(path)
 			var elem = path.slice(-1)[0]
 			this.path = path.slice(0, -1)
 			elem = this.select(elem)
