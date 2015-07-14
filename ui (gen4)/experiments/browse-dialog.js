@@ -133,12 +133,21 @@ var BrowserPrototype = {
 		flat: false,
 
 		// List of events that will not get propagated outside the browser...
+		// NOTE: these are local events defined on the widget, so it 
+		// 		would not be logical to propagate them up the DOM, but if
+		// 		such behavior is desired one could always change the 
+		// 		configuration ;)
 		nonPropagatedEvents: [
+			'push',
+			'pop',
 			'open',
+			'update',
+			'select',
+			'deselect',
 		],
 	},
 
-	// XXX TEST: this should prevent event handler delegation...
+	// XXX TEST: this should prevent event propagation...
 	// XXX should we have things like ctrl-<number> for fast selection 
 	// 		in filter mode???
 	keyboard: {
@@ -288,7 +297,10 @@ var BrowserPrototype = {
 	// This will pass the Browser instance to .source attribute of the
 	// event object triggered.
 	//
-	// NOTE: event triggered by this will not propagate up.
+	// NOTE: event propagation for some events is disabled by binding 
+	// 		handlers that stop propagation in .__init__(..).
+	// 		The list of non-propagated events in defined in 
+	// 		.options.nonPropagatedEvents
 	trigger: function(){
 		var args = args2array(arguments)
 		var evt = args.shift()
@@ -353,10 +365,14 @@ var BrowserPrototype = {
 	//
 	// NOTE: .path = <some-path> is equivalent to .update(<some-path>)
 	// 		both exist at the same time to enable chaining...
+	// NOTE: if the string path assigned does not contain a trailing '/'
+	// 		the path will be loaded up to the last item and the last item
+	// 		will be selected (see .update(..) for example).
 	// NOTE: to avoid duplicating and syncing data, the actual path is 
 	//		stored in DOM...
-	// NOTE: path does not include the currently selected list element,
-	// 		just the path to the current list...
+	// NOTE: path returned does not include the currently selected list 
+	// 		element, just the path to the current list...
+	// 		To get the path with selection use: .selectionPath prop
 	get path(){
 		var skip = false
 		return this.dom.find('.path .dir:not(.cur)')
@@ -371,7 +387,7 @@ var BrowserPrototype = {
 	//
 	// NOTE: the setter is just a shorthand to .path setter for uniformity...
 	get strPath(){
-		return '/' + this.path.join('/')
+		return '/' + this.path.join('/') + '/'
 	},
 	set strPath(value){
 		this.path = value
@@ -379,34 +395,18 @@ var BrowserPrototype = {
 
 	// Get/set path with selection...
 	//
-	// NOTE: this is different from .path as it loads the path upto the
-	// 		last '/' and selects the rest, in case of the array path the
-	// 		last element is selected but not traversed unless it's a ''
+	// NOTE: the setter is just a shorthand to .path setter for uniformity...
 	get selectionPath(){
 		return this.strPath +'/'+ (this.selected || '')
 	},
 	set selectionPath(value){
-		// if path ends with a '/' then select nothing...
-		if(value.constructor != Array && /[\\\/]/.test(value.trim().slice(-1))){
-			this.path = value
-			return
-		}
-
-		value = this.path2lst(value)
-		var selection = value.pop()
-
-		console.log('!!!', value, selection)
 		this.path = value
-
-		if(selection && selection != ''){
-			this.selected = selection
-		}
 	},
 
 	// Get/set current selection (text)...
 	//
-	// Setting the selection accepts the same values as .select(..), see
-	// it for more docs.
+	// NOTE: setting the selection accepts the same values as .select(..),
+	// 		see it for more docs.
 	get selected(){
 		var e = this.select('!')
 		if(e.length <= 0){
@@ -463,6 +463,18 @@ var BrowserPrototype = {
 	// For uniformity and ease of access from DOM, this will also set the
 	// 'path' html attribute on the .browse element.
 	//
+	// If the given string path does not end with a '/' then the path
+	// up to the last item will be loaded and the last item loaded.
+	//
+	// Examle:
+	// 		Load and select...
+	// 		'/some/path/there'		-> .update('/some/path/')
+	// 									.select('there')
+	//
+	// 		Load path only...
+	// 		'/some/path/there/'		-> .update('/some/path/there/')
+	//
+	//
 	// NOTE: setting the DOM attr 'path' works one way, navigating to a
 	// 		different path will overwrite the attr but setting a new 
 	// 		value to the html attr will not affect the actual path.
@@ -482,8 +494,16 @@ var BrowserPrototype = {
 		var that = this
 		var focus = browser.find(':focus').length > 0
 
-		// normalize path...
-		path = this.path2lst(path)
+		// string path and terminated with '/' -- no selection...
+		if(typeof(path) == typeof('str') && !/[\\\/]/.test(path.trim().slice(-1))){
+			path = this.path2lst(path)
+			var selection = path.pop()
+
+		} else {
+			path = this.path2lst(path)
+			var selection = null
+		}
+
 
 		var p = browser.find('.path').empty()
 		var l = browser.find('.list').empty()
@@ -571,6 +591,11 @@ var BrowserPrototype = {
 
 		this.dom.attr('path', this.strPath)
 		this.trigger('update')
+
+		// select the item...
+		if(selection){
+			this.select(selection)
+		}
 
 		// maintain focus within the widget...
 		if(focus && browser.find(':focus').length == 0){
