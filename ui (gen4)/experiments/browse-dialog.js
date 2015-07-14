@@ -257,6 +257,10 @@ var BrowserPrototype = {
 	// representation, taking care of relative path constructs including
 	// '.' (current path) and '..' (up one level)
 	//
+	// XXX does this need to handle trailing '/'???
+	// 		...the problem is mainly encoding a trailing '/' into an 
+	// 		array, adding a '' at the end seems both obvious and 
+	// 		artificial...
 	// XXX is this the correct name???
 	path2lst: function(path){
 		var splitter = /[\\\/]/
@@ -298,7 +302,7 @@ var BrowserPrototype = {
 	// event object triggered.
 	//
 	// NOTE: event propagation for some events is disabled by binding 
-	// 		handlers that stop propagation in .__init__(..).
+	// 		to them handlers that stop propagation in .__init__(..).
 	// 		The list of non-propagated events in defined in 
 	// 		.options.nonPropagatedEvents
 	trigger: function(){
@@ -359,12 +363,11 @@ var BrowserPrototype = {
 		this.options.traversable = value
 	},
 
-	// Get/set the path...
+	// Get/set the listed path...
 	//
 	// On more info on setting the path see .update(..)
 	//
-	// NOTE: .path = <some-path> is equivalent to .update(<some-path>)
-	// 		both exist at the same time to enable chaining...
+	// NOTE: .path = <path> is equivalent to .update(<path>) 
 	// NOTE: if the string path assigned does not contain a trailing '/'
 	// 		the path will be loaded up to the last item and the last item
 	// 		will be selected (see .update(..) for example).
@@ -385,6 +388,10 @@ var BrowserPrototype = {
 
 	// String path...
 	//
+	// This is the same as .path but returns a string result.
+	//
+	// NOTE: this does not include the selected element, i.e. the returned 
+	// 		path always ends with a trailing '/'.
 	// NOTE: the setter is just a shorthand to .path setter for uniformity...
 	get strPath(){
 		return '/' + this.path.join('/') + '/'
@@ -395,6 +402,9 @@ var BrowserPrototype = {
 
 	// Get/set path with selection...
 	//
+	// NOTE: this always returns the selected element last if one is 
+	// 		selected, if no element is selected this is equivalent to 
+	// 		.strPath
 	// NOTE: the setter is just a shorthand to .path setter for uniformity...
 	get selectionPath(){
 		return this.strPath +'/'+ (this.selected || '')
@@ -405,8 +415,8 @@ var BrowserPrototype = {
 
 	// Get/set current selection (text)...
 	//
-	// NOTE: setting the selection accepts the same values as .select(..),
-	// 		see it for more docs.
+	// NOTE: .selected = <value> is equivalent to .select(<value>) for 
+	// 		more info on accepted values see .select(..)
 	get selected(){
 		var e = this.select('!')
 		if(e.length <= 0){
@@ -459,6 +469,8 @@ var BrowserPrototype = {
 	// 	- build the path
 	// 	- build the element list
 	// 	- bind to control events
+	//
+	// This will trigger the 'update' event.
 	//
 	// For uniformity and ease of access from DOM, this will also set the
 	// 'path' html attribute on the .browse element.
@@ -640,7 +652,6 @@ var BrowserPrototype = {
 	// 			an element.
 	// 		NOTE: unlike .select(..) index overflow will produce empty 
 	// 			lists rather than to/bottom elements.
-	//
 	//
 	// If <rejected-handler> function is passed it will get called with 
 	// every element that was rejected by the predicate / not matching 
@@ -916,7 +927,7 @@ var BrowserPrototype = {
 
 			return this
 		}),
-	// shorthands mostly for use in actions and for chaining...
+	// shorthands mostly for use as actions...
 	startFilter: function(){ return this.toggleFilter('on') },
 	stopFilter: function(){ return this.toggleFilter('off') },
 
@@ -996,6 +1007,8 @@ var BrowserPrototype = {
 	//		-> $()
 	//
 	// This will return a jQuery object.
+	//
+	// This will trigger the 'select' or 'deselect' events.
 	//
 	// For uniformity and ease of access from DOM, this will also set 
 	// the value attr on the .browse element.
@@ -1152,6 +1165,8 @@ var BrowserPrototype = {
 
 	// Push an element to path / go down one level...
 	//
+	// This will trigger the 'push' event.
+	//
 	// NOTE: if the element is not traversable it will be opened.
 	//
 	// XXX might be a good idea to add a live traversable check...
@@ -1194,6 +1209,8 @@ var BrowserPrototype = {
 	},
 
 	// Pop an element off the path / go up one level...
+	//
+	// This will trigger the 'pop' event.
 	//
 	// XXX revise event...
 	pop: function(){
@@ -1275,41 +1292,37 @@ var BrowserPrototype = {
 	// 	.open('first')
 	// 	.open('last')
 	// 		-> this
-	// 		-> object
 	//
 	// 	Open next/prev element...
 	// 	.open('next')
 	// 	.open('prev')
 	// 		-> this
-	// 		-> object
 	//
 	// 	Open active element at index...
 	// 	.open(<number>)
 	// 		-> this
-	// 		-> object
 	//
 	// 	Open element by absolute index...
 	// 	.open('<number>!')
 	// 		-> this
-	// 		-> object
 	//
 	// 	Open element by full or partial text...
 	//	.open('<text>')
 	//	.open("'<text>'")
 	//	.open('"<text>"')
 	// 		-> this
-	// 		-> object
 	//
 	//	Open first element matching a regexp...
 	//	.open(<regexp>)
 	// 		-> this
-	// 		-> object
 	//
 	//	Open an element explicitly...
 	//	.open(<elem>)
 	// 		-> this
-	// 		-> object
 	//
+	//
+	// This will trigger the 'open' event on the opened element and the
+	// widget.
 	//
 	// This is called when an element is selected and opened.
 	//
@@ -1434,6 +1447,11 @@ var BrowserPrototype = {
 	// 		.open(..) on push...
 	//
 	// XXX need a way to constructively communicate errors up...
+	// XXX also need a load strategy when something bad happens...
+	// 		...e.g. load up until the first error, or something like:
+	// 			while(!this.list(path, make)){
+	// 				path.pop()
+	// 			}
 	list: function(path, make){
 		path = path || this.path
 		var m = this.options.list
@@ -1443,7 +1461,6 @@ var BrowserPrototype = {
 	// XXX need to get a container -- UI widget API....
 	// XXX paste does not work on IE yet...
 	// XXX handle copy...
-	// XXX trigger started event...
 	__init__: function(parent, options){
 		var that = this
 		options = options || {}
@@ -1513,11 +1530,12 @@ var BrowserPrototype = {
 		}
 
 		// load the initial state...
-		// XXX check if this default is correct...
-		this.update(options.path || this.path)
+		this.update(options.path || this.path || '/')
 
-		this.on(this.options.nonPropagatedEvents.join(''), 
-			function(evt){ evt.stopPropagation() })
+		if(this.options.nonPropagatedEvents != null){
+			this.on(this.options.nonPropagatedEvents.join(''), 
+				function(evt){ evt.stopPropagation() })
+		}
 	},
 }
 
