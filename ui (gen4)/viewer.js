@@ -695,11 +695,19 @@ actions.Actions({
 
 	cropRibbon: ['Crop current ribbon',
 		function(ribbon, flatten){
+			if(typeof(ribbon) == typeof(true)){
+				flatten = ribbon
+				ribbon = null
+			}
 			ribbon = ribbon || 'current'
 			this.crop(this.data.getImages(ribbon), flatten)
 		}],
 	cropRibbonAndAbove: ['Crop current and above ribbons',
 		function(ribbon, flatten){
+			if(typeof(ribbon) == typeof(true)){
+				flatten = ribbon
+				ribbon = null
+			}
 			ribbon = ribbon || this.data.getRibbon()
 
 			var data = this.data
@@ -1258,6 +1266,14 @@ actions.Actions(Client, {
 
 
 	crop: [ reloadAfter() ],
+	// XXX BUG: this does not align correctly if the current image is in
+	// 		a different ribbon relative to the top...
+	// 		to repeat:
+	// 			- in a three ribbon setup focus an image in the middle ribbon
+	// 			- .cropRibbonAndAbove(true) -> single ribbon
+	// 			- .uncrop()
+	// 		result:
+	// 			ribbon vertical alignment will not change.
 	uncrop: [ reloadAfter() ],
 	// XXX might be a good idea to do this in a new viewer in an overlay...
 	cropGroup: [ reloadAfter() ],
