@@ -662,6 +662,7 @@ var BrowserPrototype = {
 	// disabled elements. If <ignore_disabled> is false then disabled 
 	// elements will be searched too.
 	//
+	// NOTE: this will filter every item loaded regardless of visibility.
 	//
 	//
 	// Extended string patterns:
@@ -680,7 +681,6 @@ var BrowserPrototype = {
 	// NOTE: currently there is no way to search for whitespace explicitly,
 	// 		at this point this is "by-design" as an experiment on how
 	// 		vital this feature is.
-	// NOTE: this will ignore items that are not visible.
 	//
 	// TODO need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/ should list all matching items in
@@ -694,7 +694,7 @@ var BrowserPrototype = {
 		var that = this
 		var browser = this.dom
 
-		var elems = browser.find('.list>div:visible' + (ignore_disabled ? ':not(.disabled)' : ''))
+		var elems = browser.find('.list>div' + (ignore_disabled ? ':not(.disabled)' : ''))
 
 		if(pattern == '*'){
 			return elems 
@@ -775,11 +775,9 @@ var BrowserPrototype = {
 		var browser = this.dom
 
 		// show all...
-		browser.find('.filtered-out')
-			.removeClass('filtered-out')
-
-		// clear match highlighting...
 		if(pattern == null || pattern.trim() == '*'){
+			browser.find('.filtered-out')
+				.removeClass('filtered-out')
 			// clear the highlighting...
 			browser.find('.list b')
 				.replaceWith(function() { return this.innerHTML })
@@ -796,15 +794,12 @@ var BrowserPrototype = {
 					},
 					// NOTE: setting this to true will not remove disabled
 					// 		elements from view as they will neither get 
-					// 		included in the filter not in the filtered out
+					// 		included in the filter nor in the filtered out
 					// 		thus it will require manual setting of the
 					// 		.filtered-out class
 					false)
-				// NOTE: as .filter(..) ignores non visible elements including
-				// 		filtered out stuff, we remove the class unconditionally
-				// 		above and do not need to do it here...
-				//// passed...
-				//.removeClass('filtered-out')
+				// passed...
+				.removeClass('filtered-out')
 				// NOTE: this will mess up (clear) any highlighting that was 
 				// 		present before...
 				.each(function(_, e){
