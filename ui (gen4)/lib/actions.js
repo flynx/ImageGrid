@@ -159,7 +159,7 @@ if(typeof(args2array) != 'function'){
 // 	  will be fired.
 //
 // 	- an action will return the deepest (root) action's return, if that 
-// 	  returns is undefined, then the action set is returned instead.
+// 	  return is undefined, then the action set is returned instead.
 //
 // NOTE: of the root handler is instance of Toggler (jli) and the action
 // 		is called with '?' as argument, then the toggler will be called 
@@ -724,6 +724,7 @@ module.MetaActions = {
 // 	}
 //
 //
+// NOTE: the action function is always last.
 // NOTE: if <prototype> is not given, MetaActions will be used as default.
 //
 // For more documentation see: Action(..).
