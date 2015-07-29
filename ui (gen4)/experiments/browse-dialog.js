@@ -680,6 +680,7 @@ var BrowserPrototype = {
 	// NOTE: currently there is no way to search for whitespace explicitly,
 	// 		at this point this is "by-design" as an experiment on how
 	// 		vital this feature is.
+	// NOTE: this will ignore items that are not visible.
 	//
 	// TODO need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/ should list all matching items in
@@ -774,9 +775,11 @@ var BrowserPrototype = {
 		var browser = this.dom
 
 		// show all...
+		browser.find('.filtered-out')
+			.removeClass('filtered-out')
+
+		// clear match highlighting...
 		if(pattern == null || pattern.trim() == '*'){
-			browser.find('.filtered-out')
-				.removeClass('filtered-out')
 			// clear the highlighting...
 			browser.find('.list b')
 				.replaceWith(function() { return this.innerHTML })
@@ -797,8 +800,11 @@ var BrowserPrototype = {
 					// 		thus it will require manual setting of the
 					// 		.filtered-out class
 					false)
-				// passed...
-				.removeClass('filtered-out')
+				// NOTE: as .filter(..) ignores non visible elements including
+				// 		filtered out stuff, we remove the class unconditionally
+				// 		above and do not need to do it here...
+				//// passed...
+				//.removeClass('filtered-out')
 				// NOTE: this will mess up (clear) any highlighting that was 
 				// 		present before...
 				.each(function(_, e){
