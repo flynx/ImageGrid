@@ -848,8 +848,9 @@ actions.Actions(Client, {
 			}
 		}],
 	// NOTE: this will pass the .ribbons.updateData(..) a custom ribbon 
-	// 		updater if one is defined here as .updateRibbon(target)
-	// XXX HACK: tow sins:
+	// 		updater if one is defined here as .updateRibbon(target) action
+	//
+	// XXX HACK: two sins:
 	// 		- actions.updateRibbon(..) and ribbons.updateRibbon(..)
 	// 		  are NOT signature compatible...
 	// 		- we depend on the internals of a custom add-on feature
@@ -867,14 +868,16 @@ actions.Actions(Client, {
 				var settings = this.updateRibbon != null 
 					// XXX this should be: { updateRibbon: this.updateRibbon.bind(this) }
 					? { updateRibbon: function(_, ribbon){ 
-							that.updateRibbon(ribbon, null, null, force) 
+							return that.updateRibbon(ribbon, null, null, force) 
 						} }
 					: null
 
 				this.ribbons.updateData(this.data, settings)
-				// XXX should this be here???
-				this.refresh()
-				this.focusImage()
+
+				this
+					// XXX should this be here???
+					.refresh()
+					.focusImage()
 
 				this.ribbons.restoreTransitions()
 			}
@@ -1266,15 +1269,8 @@ actions.Actions(Client, {
 
 
 	crop: [ reloadAfter() ],
-	// XXX BUG: this does not align correctly if the current image is in
-	// 		a different ribbon relative to the top...
-	// 		to repeat:
-	// 			- in a three ribbon setup focus an image in the middle ribbon
-	// 			- .cropRibbonAndAbove(true) -> single ribbon
-	// 			- .uncrop()
-	// 		result:
-	// 			ribbon vertical alignment will not change.
-	uncrop: [ reloadAfter() ],
+	// XXX BUG? reloadAfter() produces an align error...
+	uncrop: [ reloadAfter(true) ],
 	// XXX might be a good idea to do this in a new viewer in an overlay...
 	cropGroup: [ reloadAfter() ],
 
@@ -1410,14 +1406,17 @@ module.Journal = features.Feature(ImageGridFeatures, {
 var PartialRibbonsActions = actions.Actions({
 	// NOTE: this will force sync resize if one of the following is true:
 	// 		- the target is not loaded
-	// 		- we are less that screen width from the edge
+	// 		- we are less than screen width from the edge
 	// 		- threshold is set to 0
 	// XXX this is not signature compatible with data.updateRibbon(..)
 	updateRibbon: ['Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
-				: this.data.getImage(target)
+				// NOTE: data.getImage(..) can return null at start or end
+				// 		of ribbon, thus we need to account for this...
+				: (this.data.getImage(target)
+					|| this.data.getImage(target, 'after'))
 
 			w = w || this.screenwidth
 
@@ -1433,8 +1432,9 @@ var PartialRibbonsActions = actions.Actions({
 			var timeout = this.config['ribbon-update-timeout']
 
 			// next/prev loaded... 
-			var nl = this.ribbons.getImage(target).nextAll('.image:not(.clone)').length
-			var pl = this.ribbons.getImage(target).prevAll('.image:not(.clone)').length
+			var img = this.ribbons.getImage(target)
+			var nl = img.nextAll('.image:not(.clone)').length
+			var pl = img.prevAll('.image:not(.clone)').length
 
 			// next/prev available...
 			// NOTE: we subtract 1 to remove the current and make these 
@@ -1443,10 +1443,11 @@ var PartialRibbonsActions = actions.Actions({
 			var pa = this.data.getImages(target, size, 'before').length - 1
 
 			// do the update...
-			// no threshold beans force load...
+			// no threshold means force load...
 			if(threshold == 0 
 					// the target is not loaded...
-					|| this.ribbons.getImage(target).length == 0
+					//|| this.ribbons.getImage(target).length == 0
+					|| img.length == 0
 					// passed hard threshold on the right...
 					|| (nl < w && na > nl) 
 					// passed hard threshold on the left...
@@ -1478,13 +1479,14 @@ var PartialRibbonsActions = actions.Actions({
 							clearTimeout(this.__update_timeout)
 						}
 						this.__update_timeout = setTimeout(function(){ 
-							delete this.__update_timeout
+							delete that.__update_timeout
 							that.resizeRibbon(target, size) 
 						}, timeout)
 					}
 				}
 			}
 		}],
+	// XXX do we handle off-screen ribbons here???
 	resizeRibbon: ['Resize ribbon to n images',
 		function(target, size){
 			size = size 
@@ -1498,17 +1500,20 @@ var PartialRibbonsActions = actions.Actions({
 			var r_gid = data.getRibbon(target)
 
 			// localize transition prevention... 
+			// NOTE: for the initial load this may be empty...
 			var r = ribbons.getRibbon(r_gid)
 
-			if(r.length > 0){
-				ribbons
-					.preventTransitions(r)
-					.updateRibbon(
-						data.getImages(target, size), 
-						r_gid,
-						target)
-					.restoreTransitions(r, true)
-			}
+			// XXX do we need to for example ignore unloaded (r.length == 0)
+			// 		ribbons here, for example not load ribbons too far off 
+			// 		screen??
+
+			ribbons
+				.preventTransitions(r)
+				.updateRibbon(
+					data.getImages(target, size), 
+					r_gid,
+					target)
+				.restoreTransitions(r, true)
 		}]
 })
 

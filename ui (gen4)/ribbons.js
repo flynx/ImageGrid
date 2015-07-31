@@ -1174,11 +1174,16 @@ var RibbonsPrototype = {
 	// 		place holder for overloading...
 	updateRibbon: function(gids, ribbon, reference, force){
 		var that = this
+		var place = false
 		// get/create the ribbon...
 		var r = this.getRibbon(ribbon)
+
 		if(r.length == 0){
-			// no such ribbon exists, then create and append it...
-			r = this.placeRibbon(ribbon, this.viewer.find(RIBBON).length)
+			place = true
+			// no such ribbon exists, then create and append it in the end...
+			// NOTE: this effectively makes the update offline and pushes
+			// 		the new ribbon on the dom in one go...
+			r = this.createRibbon(ribbon)
 		}
 
 		var loaded = r.find(IMAGE)
@@ -1267,6 +1272,10 @@ var RibbonsPrototype = {
 
 			that.updateImage(img)
 		})
+
+		if(place){
+			this.placeRibbon(r, this.viewer.find(RIBBON).length)
+		}
 
 		return this
 	},
