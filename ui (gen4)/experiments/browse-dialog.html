@@ -65,6 +65,10 @@
 	top: 400px;
 }
 
+.container.pathlist {
+	left: 700px;
+	top: 600px;
+}
 
 
 
@@ -173,13 +177,10 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 					})
 					.map(function(k){
 						// make the element...
-						var e = make(k)
+						var e = make(k, typeof(cur[k]) != typeof('str'))
 						// disable dir_b...
 						if(use_disabled && k == 'dir_b'){
 							e.addClass('disabled')
-						}
-						if(typeof(cur[k]) == typeof('str')){
-							e.addClass('not-traversable')
 						}
 						return k
 					})
@@ -239,6 +240,18 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 		// another way to handle the opening of items...
 		.open(function(evt, text){
 				alert('>>> ' + text)
+		})
+
+	// path list demo...
+	f3 = browser.makePathList($('.container.pathlist'), {
+			// XXX need a way to trigger open ecents with touch/mouse...
+			'/dir 1': function(_, p){ console.log('dir:', p) },
+			'dir 1/option 1': function(_, p){ console.log('option:', p) },
+			'dir 1/option 2': function(_, p){ console.log('option:', p) },
+			'dir 2/option 3': function(_, p){ console.log('option:', p) },
+			'option 4': function(_, p){ console.log('option:', p) },
+			'option 5': function(_, p){ console.log('option:', p) },
+			'option 6': function(_, p){ console.log('option:', p) },
 		})
 })
 
@@ -361,6 +374,9 @@ Basic key bindings:
 </div>
 
 <div class="container flat2">
+</div>
+
+<div class="container pathlist">
 </div>
 
 </body>

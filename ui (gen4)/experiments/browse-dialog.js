@@ -394,6 +394,8 @@ var BrowserPrototype = {
 	// NOTE: this does not include the selected element, i.e. the returned 
 	// 		path always ends with a trailing '/'.
 	// NOTE: the setter is just a shorthand to .path setter for uniformity...
+	//
+	// XXX need to append '/' only if traversable...
 	get strPath(){
 		return '/' + this.path.join('/') + '/'
 	},
@@ -408,7 +410,7 @@ var BrowserPrototype = {
 	// 		.strPath
 	// NOTE: the setter is just a shorthand to .path setter for uniformity...
 	get selectionPath(){
-		return this.strPath +'/'+ (this.selected || '')
+		return this.strPath + (this.selected || '')
 	},
 	set selectionPath(value){
 		this.path = value
@@ -583,9 +585,10 @@ var BrowserPrototype = {
 		// fill the children list...
 		var interactive = false
 
-		var make = function(p){
+		var make = function(p, traversable){
+			traversable = traversable == null ? true : traversable
 			interactive = true
-			return $('<div>')
+			var res = $('<div>')
 				// handle clicks ONLY when not disabled...
 				.click(function(){
 					if(!$(this).hasClass('disabled')){
@@ -594,6 +597,10 @@ var BrowserPrototype = {
 				})
 				.text(p)
 				.appendTo(l)
+			if(!traversable){
+				res.addClass('not-traversable')
+			}
+			return res
 		}
 
 		var res = this.list(path, make)
@@ -1396,6 +1403,9 @@ var BrowserPrototype = {
 		var res = m ? m.apply(this, args) : this
 		res = res || this
 
+		// XXX do we strigify the path???
+		path = '/' + path.join('/')
+
 		// trigger the 'open' events...
 		if(elem.length > 0){
 			// NOTE: this will bubble up to the browser root...
@@ -1626,6 +1636,96 @@ module.makeList = function(elem, list){
 	return List(elem, { data: list })
 }
 
+
+
+/*********************************************************************/
+
+// This full compatible with List(..) but will parse paths in keys...
+//
+// For example:
+// 	{
+// 		'a/b': ..,
+// 		'a/c': ..,
+// 		'd': ..,
+//
+// 	}
+//
+// 	will translate into:
+// 		a/
+// 			b
+// 		 	c
+// 		d
+//
+var PathListPrototype = Object.create(BrowserPrototype)
+PathListPrototype.options = {
+
+	fullPathEdit: false,
+	traversable: true,
+	flat: false,
+
+	list: function(path, make){
+		var that = this
+		var data = this.options.data
+		var keys = data.constructor == Array ? data : Object.keys(data)
+
+		var visited = []
+
+		return keys
+			.map(function(k){
+				var kp = k.split(/[\\\/]+/g)
+				kp[0] == '' && kp.shift()
+
+				// get and check current path, continue if relevant...
+				var p = kp.splice(0, path.length)
+				if(kp.length == 0 
+						|| p.length < path.length 
+						|| p.filter(function(e, i){ return e != path[i] }).length > 0){
+					return false
+				}
+
+
+				// get current path element if one exists and we did not create it already...
+				cur = kp.shift()
+				if(cur == undefined){
+					return false
+				}
+
+				if(visited.indexOf(cur) >= 0){
+					// set element to traversable...
+					if(kp.length > 0){
+						that.filter(cur).removeClass('not-traversable')
+					}
+					return false
+				}
+				visited.push(cur)
+
+				// build the element....
+				var e = make(cur, kp.length > 0)
+
+				// setup handlers...
+				if(data !== keys && kp.length == 0){
+					e.on('open', function(){ 
+						return that.options.data[k].apply(this, arguments)
+					})
+				}
+
+				return cur
+			})
+			.filter(function(e){ return e !== false })
+	},
+}
+PathListPrototype.options.__proto__ = BrowserPrototype.options
+
+var PathList = 
+module.PathList = 
+object.makeConstructor('PathList', 
+		BrowserClassPrototype, 
+		PathListPrototype)
+
+var makePathList = 
+module.makePathList = function(elem, list){
+	return PathList(elem, { data: list })
+}
 
 
 /**********************************************************************
