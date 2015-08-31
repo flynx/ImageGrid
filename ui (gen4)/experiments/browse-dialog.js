@@ -1707,6 +1707,9 @@ module.makeList = function(elem, list){
 //		for more docs see: Browser.list(..)
 //
 //
+// NOTE: listers take precedence over explicit path definitions, thus 
+// 		if a custom lister pattern intersects with a normal path the path
+// 		will be ignored and the lister called.
 // NOTE: currently only trailing '*' are supported.
 //
 // XXX add support for '*' and '**' glob patterns...
