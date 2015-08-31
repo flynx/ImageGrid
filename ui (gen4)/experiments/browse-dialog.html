@@ -247,11 +247,36 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 			// XXX need a way to trigger open ecents with touch/mouse...
 			'/dir 1': function(_, p){ console.log('dir:', p) },
 			'dir 1/option 1': function(_, p){ console.log('option:', p) },
-			'dir 1/option 2': function(_, p){ console.log('option:', p) },
+			'dir 1/option 2/': function(_, p){ console.log('option:', p) },
 			'dir 2/option 3': function(_, p){ console.log('option:', p) },
 			'option 4': function(_, p){ console.log('option:', p) },
-			'option 5': function(_, p){ console.log('option:', p) },
-			'option 6': function(_, p){ console.log('option:', p) },
+
+			// XXX this is the wrong way to do this, but it shows a bug...
+			// XXX BUG: for some reason 2 and 3 are set to traversable while
+			//		1 is not...
+			'option 5': function(_, p){ 
+				console.log('option:', p) 
+
+				f3.update(p + '/', function(){ return [1, 2, 3] })
+			},
+
+			// render a custom sub-tree...
+			'dynamic/*': function(path, make){ 
+				console.log('option:', path) 
+
+				return [1,2,3]
+					.map(function(e){
+						make(e, true)
+						return e
+					})
+			},
+
+			// this will override the 'dynamic/*' in case of longer 
+			// matches...
+			'dynamic/1/1/*': function(path, make){
+				make('mooo!/')
+				make('fooo!')
+			},
 		})
 })
 

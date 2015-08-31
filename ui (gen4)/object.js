@@ -64,6 +64,13 @@ function makeConstructor(name, a, b){
 }
 
 
+// super equivalent...
+var parent =
+module.parent =
+function parent(obj){
+	return obj.__proto__.__proto__
+}
+
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
