@@ -752,6 +752,7 @@ stretching in width... */
 	overflow: visible;
 }
 .mark.bookmark:after,
+.mark.selected:before,
 .mark.selected:after {
 	display: block;
 	position: absolute;
@@ -785,6 +786,26 @@ stretching in width... */
 	left: -15px;
 }
 
+
+/* the selected tick... */
+.mark.selected:before,
+.mark.selected:after {
+	top: 10px;
+	left: -20px;
+	bottom: auto;
+
+	border-radius: 3px;
+
+	.rotate(-45deg);
+}
+.mark.selected:before {
+	width: 3px;
+	height: 6px;
+}
+.mark.selected:after {
+	width: 12px;
+	height: 3px;
+}
 
 
 /****************************************************** Image info ***/

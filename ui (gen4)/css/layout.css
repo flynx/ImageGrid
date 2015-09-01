@@ -740,6 +740,7 @@ stretching in width... */
   overflow: visible;
 }
 .mark.bookmark:after,
+.mark.selected:before,
 .mark.selected:after {
   display: block;
   position: absolute;
@@ -764,6 +765,33 @@ stretching in width... */
 .mark.bookmark:after {
   background: yellow;
   left: -15px;
+}
+/* the selected tick... */
+.mark.selected:before,
+.mark.selected:after {
+  top: 10px;
+  left: -20px;
+  bottom: auto;
+  border-radius: 3px;
+  -webkit-transform: rotate(-45deg) scaleY(1) scaleX(1);
+  -moz-transform: rotate(-45deg) scaleY(1) scaleX(1);
+  -o-transform: rotate(-45deg) scaleY(1) scaleX(1);
+  -ms-transform: rotate(-45deg) scaleY(1) scaleX(1);
+  transform: rotate(-45deg) scaleY(1) scaleX(1);
+  /* This prevents elements from aligning to sub-pixels...*/
+  /*
+	-webkit-transform-style: preserve-3d;
+	-moz-transform-style: preserve-3d;
+	transform-style: preserve-3d;
+	*/
+}
+.mark.selected:before {
+  width: 3px;
+  height: 6px;
+}
+.mark.selected:after {
+  width: 12px;
+  height: 3px;
 }
 /****************************************************** Image info ***/
 .inline-image-info {
@@ -1569,8 +1597,8 @@ progress:not(value)::-webkit-progress-bar {
 /* XXX this is experimental... */
 .viewer.overlay .ribbon-set {
   /* XXX blur makes things slow with transparency... */
-  -webkit-filter: /*blur(2px)*/ grayscale(0.5);
-  filter: /*blur(2px)*/ grayscale(0.5);
+  -webkit-filter: grayscale(0.5);
+  filter: grayscale(0.5);
   /*
 	-webkit-animation-name: testAnim;
 	-webkit-animation-duration: .2s;
