@@ -1716,7 +1716,7 @@ module.makeList = function(elem, list){
 var PathListPrototype = Object.create(BrowserPrototype)
 PathListPrototype.options = {
 
-	fullPathEdit: false,
+	fullPathEdit: true,
 	traversable: true,
 	flat: false,
 

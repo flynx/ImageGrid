@@ -166,7 +166,7 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 
 			list: function(path, make){
 				var cur = TREE
-				path.forEach(function(p){
+				this.path2list(path).forEach(function(p){
 					cur = cur[p]
 				})
 
@@ -244,7 +244,8 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 
 	// path list demo...
 	f3 = browser.makePathList($('.container.pathlist'), {
-			// XXX need a way to trigger open ecents with touch/mouse...
+			// build a basic tree...
+			// XXX need a way to trigger open events with touch/mouse...
 			'/dir 1': function(_, p){ console.log('dir:', p) },
 			'dir 1/option 1': function(_, p){ console.log('option:', p) },
 			'dir 1/option 2/': function(_, p){ console.log('option:', p) },
@@ -254,10 +255,13 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 			// XXX this is the wrong way to do this, but it shows a bug...
 			// XXX BUG: for some reason 2 and 3 are set to traversable while
 			//		1 is not...
-			'option 5': function(_, p){ 
+			'bug demo': function(_, p){ 
 				console.log('option:', p) 
 
-				f3.update(p + '/', function(){ return [1, 2, 3] })
+				f3.update(p + '/', function(){ return [
+					'not traversable?!', 
+					'traversable!', 
+					'also traversable!'] })
 			},
 
 			// render a custom sub-tree...
@@ -273,9 +277,29 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 
 			// this will override the 'dynamic/*' in case of longer 
 			// matches...
+			// NOTE: this will make more sence when path patterns are 
+			//		supported...
 			'dynamic/1/1/*': function(path, make){
 				make('mooo!/')
 				make('fooo!')
+			},
+
+			// include another list...
+			// NOTE: we need to trim the path before passing it to the 
+			//		list to avoid confusing it...
+			// NOTE: this will lose any instance data and works here 
+			//		befause b references TREE in a closure...
+			//		Thus, it is recommended to avoid storing state in
+			//		the browser object.
+			//		...also note that internally nothing is stored in the
+			//		browser object, other than the options.
+			'browser/*': function(path, make){
+				var list = b.options.list
+
+				// trim off the base path...
+				path = this.path2list(path).slice(1)
+
+				return list.call(this, path, make)
 			},
 		})
 })
