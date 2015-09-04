@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<link rel="stylesheet" href="browse-dialog.css">
+<link rel="stylesheet" href="../../css/widget/browse.css">
 <style>
 
 /* scrollbar setup... */
@@ -96,13 +96,13 @@ body.dark {
 
 </style>
 
-<script src="../ext-lib/jquery.js"></script>
-<script src="../ext-lib/jquery-ui.js"></script>
+<script src="../../ext-lib/jquery.js"></script>
+<script src="../../ext-lib/jquery-ui.js"></script>
 
-<script src="../lib/jli.js"></script>
-<script src="../lib/toggler.js"></script>
+<script src="../jli.js"></script>
+<script src="../toggler.js"></script>
 
-<script src="../ext-lib/require.js"></script>
+<script src="../../ext-lib/require.js"></script>
 
 
 <!--script src="browse-dialog.js"></script-->
@@ -155,7 +155,7 @@ TREE.dir_c.dir_b.tree = TREE
 var use_disabled = true
 var show_files = false
 
-requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br){
+requirejs(['../keyboard', '../../object', './browse'], function(k, o, br){
 	keyboard = k
 	object = o
 	browser = br
@@ -279,7 +279,7 @@ requirejs(['../lib/keyboard', '../object', './browse-dialog'], function(k, o, br
 			// matches...
 			// NOTE: this will make more sence when path patterns are 
 			//		supported...
-			'dynamic/1/1/*': function(path, make){
+			'dynamic/1/*/*': function(path, make){
 				make('mooo!/')
 				make('fooo!')
 			},

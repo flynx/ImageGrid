@@ -18,7 +18,8 @@ if(typeof(module) !== 'undefined' && module.exports){
 define(function(require){ var module = {}
 
 
-var object = require('../object')
+// XXX
+var object = require('../../object')
 
 
 
@@ -1731,12 +1732,15 @@ PathListPrototype.options = {
 		var lister = keys
 			.filter(function(k){ return k.trim().slice(-1) == '*' })
 			.filter(function(k){
-				return k
-					.split(/[\\\/]+/)
-					// remove the '*'...
+				k = k.split(/[\\\/]+/)
+					// remove the trailing '*'...
 					.slice(0, -1)
-					// do the match...
-					.filter(function(e, i){ return e != path[i] }).length == 0 })
+
+				// do the match...
+				return k.length <= path.length 
+					&& k.filter(function(e, i){ 
+							return e != '*' && e != path[i] 
+						}).length == 0 })
 			.sort(function(a, b){ return a.length - b.length})
 			.pop()
 
