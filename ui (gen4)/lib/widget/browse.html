@@ -248,7 +248,8 @@ requirejs(['../keyboard', '../../object', './browse'], function(k, o, br){
 			// XXX need a way to trigger open events with touch/mouse...
 			'/dir 1': function(_, p){ console.log('dir:', p) },
 			'dir 1/option 1': function(_, p){ console.log('option:', p) },
-			'dir 1/option 2/': function(_, p){ console.log('option:', p) },
+			// add an element to two paths...
+			'dir 1|dir 2|dir 3/option 2/': function(_, p){ console.log('option:', p) },
 			'dir 2/option 3': function(_, p){ console.log('option:', p) },
 			'option 4': function(_, p){ console.log('option:', p) },
 
@@ -265,6 +266,7 @@ requirejs(['../keyboard', '../../object', './browse'], function(k, o, br){
 			},
 
 			// render a custom sub-tree...
+			//'dynamic/*': function(path, make){ 
 			'dynamic/*': function(path, make){ 
 				console.log('listing:', path) 
 
