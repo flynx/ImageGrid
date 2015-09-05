@@ -1654,6 +1654,27 @@ module.makeList = function(elem, list){
 
 // This is similar to List(..) but will parse paths in keys...
 //
+// Path grammar:
+//
+// 	PATH ::= [/]<dirs>				- simple traversable path
+// 			| [/]<dirs>/<item>		- path with last item non-traversable
+// 			| [/]<dirs>/*			- path to lister
+//
+// 	<dirs> ::= <item> 
+// 			| <dirs>/<item>/
+//
+// 	<item> ::= <name>				- explicit path element 
+// 			| <item>|<name>			- multiple path elements (a-la simlink)
+//
+// 	<name> ::= [^\|\\\/]*
+//
+// 	NOTE: <dirs> always ends with '/' or '\' and produces a set of 
+// 		traversable items.
+// 	NOTE: the last item is non-traversable iff:
+// 		- it does not end with '/' or '\'
+// 		- there is no other path defined where it is traversable
+//
+//
 // Format:
 // 	{
 // 		// basic 'file' path...
@@ -1740,6 +1761,8 @@ PathListPrototype.options = {
 		// 	A		- matches A exactly
 		// 	A|B		- matches either A or B
 		var match = function(a, path){
+			// NOTE: might be good to make this recursive when expanding
+			// 		pattern support...
 			return a
 					.split('|')
 					.filter(function(e){ 
