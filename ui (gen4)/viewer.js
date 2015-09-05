@@ -257,8 +257,8 @@ actions.Actions({
 	// 		adding new items to the resulting structure...
 	// XXX is this the correct way to go???
 	// 		...can we save simple attribute values???
-	json: ['Dump state as JSOM object',
-		'This will collect JSON data from every afailable attribute '
+	json: ['Serialize/Dump state as JSOM object',
+		'This will collect JSON data from every available attribute '
 			+'supporting the .dumpJSON() method.',
 		function(){
 			var res = {}
@@ -304,19 +304,19 @@ actions.Actions({
 
 	// shorthands...
 	// XXX do we reset direction on these???
-	firstImage: ['Focus first image in current ribbon',
+	firstImage: ['Navigate/Focus first image in current ribbon',
 		function(all){ this.focusImage(all == null ? 'first' : 0) }],
-	lastImage: ['Focus last image in current ribbon',
+	lastImage: ['Navigate/Focus last image in current ribbon',
 		function(all){ this.focusImage(all == null ? 'last' : -1) }],
 	// XXX these break if image at first/last position are not loaded (crop, group, ...)
 	// XXX do we actually need these???
-	firstGlobalImage: ['Get first globally image',
+	firstGlobalImage: ['Navigate/Get first globally image',
 		function(){ this.firstImage(true) }],
-	lastGlobalImage: ['Get last globally image',
+	lastGlobalImage: ['Navigate/Get last globally image',
 		function(){ this.lastImage(true) }],
 
 	// XXX skip unloaded images...
-	prevImage: ['Focus previous image',
+	prevImage: ['Navigate/Focus previous image',
 		function(a){ 
 			// keep track of traverse direction...
 			this.direction = 'left'
@@ -331,7 +331,7 @@ actions.Actions({
 				this.focusImage('prev', a) 
 			}
 		}],
-	nextImage: ['Focus next image',
+	nextImage: ['Navigate/Focus next image',
 		function(a){ 
 			// keep track of traverse direction...
 			this.direction = 'right'
@@ -348,24 +348,24 @@ actions.Actions({
 		}],
 
 	// XXX skip unloaded images...
-	prevImageInOrder: ['Focus previous image in order',
+	prevImageInOrder: ['Navigate/Focus previous image in order',
 		function(){ this.prevImage(this.data.getImages(this.data.order)) }],
-	nextImageInOrder: ['Focus next image in order',
+	nextImageInOrder: ['Navigate/Focus next image in order',
 		function(){ this.nextImage(this.data.getImages(this.data.order)) }],
 
 	// XXX should these be here???
-	prevTagged: ['Focus previous image tagged with tag',
+	prevTagged: ['Navigate/Focus previous image tagged with tag',
 		makeTagWalker('prev')],
-	nextTagged: ['Focus next image tagged with tag',
+	nextTagged: ['Navigate/Focus next image tagged with tag',
 		makeTagWalker('next')],
 
-	firstRibbon: ['Focus previous ribbon',
+	firstRibbon: ['Navigate/Focus previous ribbon',
 		function(){ this.focusRibbon('first') }],
-	lastRibbon: ['Focus next ribbon',
+	lastRibbon: ['Navigate/Focus next ribbon',
 		function(){ this.focusRibbon('last') }],
-	prevRibbon: ['Focus previous ribbon',
+	prevRibbon: ['Navigate/Focus previous ribbon',
 		function(){ this.focusRibbon('before') }],
-	nextRibbon: ['Focus next ribbon',
+	nextRibbon: ['Navigate/Focus next ribbon',
 		function(){ this.focusRibbon('after') }],
 
 
@@ -379,7 +379,7 @@ actions.Actions({
 			// XXX
 		}],
 	
-	shiftImageUp: ['Shift image up',
+	shiftImageUp: ['Edit/Shift image up',
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
@@ -402,7 +402,7 @@ actions.Actions({
 				this.data.shiftImageUp(target)
 			}
 		}],
-	shiftImageDown: ['Shift image down',
+	shiftImageDown: ['Edit/Shift image down',
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
@@ -425,17 +425,17 @@ actions.Actions({
 				this.data.shiftImageDown(target)
 			}
 		}],
-	shiftImageUpNewRibbon: ['Shift image up to a new empty ribbon',
+	shiftImageUpNewRibbon: ['Edit/Shift image up to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target)
 			this.shiftImageUp(target)
 		}],
-	shiftImageDownNewRibbon: ['Shift image down to a new empty ribbon',
+	shiftImageDownNewRibbon: ['Edit/Shift image down to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target, 'below')
 			this.shiftImageDown(target)
 		}],
-	shiftImageLeft: ['Shift image left',
+	shiftImageLeft: ['Edit/Shift image left',
 		function(target){ 
 			if(target == null){
 				this.direction = 'left'
@@ -443,7 +443,7 @@ actions.Actions({
 			this.data.shiftImageLeft(target) 
 			this.focusImage()
 		}],
-	shiftImageRight: ['Shift image right',
+	shiftImageRight: ['Edit/Shift image right',
 		function(target){ 
 			if(target == null){
 				this.direction = 'right'
@@ -452,13 +452,13 @@ actions.Actions({
 			this.focusImage()
 		}],
 
-	shiftRibbonUp: ['Shift ribbon up',
+	shiftRibbonUp: ['Edit/Shift ribbon up',
 		function(target){ 
 			this.data.shiftRibbonUp(target) 
 			// XXX is this the right way to go/???
 			this.focusImage()
 		}],
-	shiftRibbonDown: ['Shift ribbon down',
+	shiftRibbonDown: ['Edit/Shift ribbon down',
 		function(target){ 
 			this.data.shiftRibbonDown(target)
 			// XXX is this the right way to go/???
@@ -466,13 +466,13 @@ actions.Actions({
 		}],
 
 	// these operate on the current image...
-	travelImageUp: ['Travel with the current image up (Shift up and keep focus)',
+	travelImageUp: ['Edit/Travel with the current image up (Shift up and keep focus)',
 		function(target){
 			target = target || this.current
 			this.shiftImageUp(target)
 			this.focusImage(target)
 		}],
-	travelImageDown: ['Travel with the current image down (Shift down and keep focus)',
+	travelImageDown: ['Edit/Travel with the current image down (Shift down and keep focus)',
 		function(target){
 			target = target || this.current
 			this.shiftImageDown(target)
@@ -480,9 +480,9 @@ actions.Actions({
 		}],
 
 	
-	reverseImages: ['Reverse image order',
+	reverseImages: ['Edit/Reverse image order',
 		function(){ this.data.reverseImages() }],
-	reverseRibbons: ['Reverse ribbon order',
+	reverseRibbons: ['Edit/Reverse ribbon order',
 		function(){ this.data.reverseRibbons() }],
 
 	// XXX align to ribbon...
@@ -623,7 +623,7 @@ actions.Actions({
 
 	// crop...
 	//
-	crop: [ 
+	crop: ['Crop/Crop image list',
 		function(list, flatten){ 
 			list = list || this.data.order
 			if(this.crop_stack == null){
@@ -638,7 +638,7 @@ actions.Actions({
 				this.data = this.data.crop(list, flatten)
 			}
 		}],
-	uncrop: ['Uncrop ribbons',
+	uncrop: ['Crop/Uncrop ribbons',
 		function(level, restore_current, keep_crop_order){
 			level = level || 1
 
@@ -675,17 +675,17 @@ actions.Actions({
 				delete this.crop_stack
 			}
 		}],
-	uncropAll: ['',
+	uncropAll: ['Crop/Uncrop all',
 		function(restore_current){ this.uncrop('all', restore_current) }],
 	// XXX see if we need to do this on this level??
 	// 		...might be a good idea to do this in data...
-	uncropAndKeepOrder: ['Uncrop and keep crop image order',
+	uncropAndKeepOrder: ['Crop/Uncrop and keep crop image order',
 		function(level, restore_current){ this.uncrop(level, restore_current, true) }],
 	// XXX same as uncrop but will also try and merge changes...
 	// 		- the order is simple and already done above...
 	// 		- I think that levels should be relative to images, the 
 	// 		  only problem here is how to deal with new ribbons...
-	mergeCrop: ['',
+	mergeCrop: ['Crop/Merge crop',
 		function(){
 			// XXX
 		}],
@@ -693,7 +693,7 @@ actions.Actions({
 	// XXX save a crop (catalog)...
 	// XXX
 
-	cropRibbon: ['Crop current ribbon',
+	cropRibbon: ['Crop/Crop current ribbon',
 		function(ribbon, flatten){
 			if(typeof(ribbon) == typeof(true)){
 				flatten = ribbon
@@ -702,7 +702,7 @@ actions.Actions({
 			ribbon = ribbon || 'current'
 			this.crop(this.data.getImages(ribbon), flatten)
 		}],
-	cropRibbonAndAbove: ['Crop current and above ribbons',
+	cropRibbonAndAbove: ['Crop/Crop current and above ribbons',
 		function(ribbon, flatten){
 			if(typeof(ribbon) == typeof(true)){
 				flatten = ribbon
@@ -725,7 +725,7 @@ actions.Actions({
 		}],
 	
 	// XXX should this be here???
-	cropTagged: ['',
+	cropTagged: ['Crop/Crop tagged images',
 		function(tags, mode, flatten){
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
 			this.crop(this.data[selector](tags), flatten)
@@ -734,15 +734,15 @@ actions.Actions({
 
 	// grouping...
 	// XXX need to tell .images about this...
-	group: ['Group images', 
+	group: ['Group/Group images', 
 		function(gids, group){ this.data.group(gids, group) }],
-	ungroup: ['Ungroup images', 
+	ungroup: ['Group/Ungroup images', 
 		function(gids, group){ this.data.ungroup(gids, group) }],
 
 	// direction can be:
 	// 	'next'
 	// 	'prev'
-	groupTo: ['', 
+	groupTo: ['Group/Group to', 
 		function(target, direction){
 			target = this.data.getImage(target)
 			var other = this.data.getImage(target, direction == 'next' ? 1 : -1)
@@ -762,21 +762,21 @@ actions.Actions({
 			}
 		}],
 	// shorthands to .groupTo(..)
-	groupBack: ['Group target image with the image/group before it', 
+	groupBack: ['Group/Group target image with the image/group before it', 
 		function(target){ this.groupTo(target, 'prev') }],
-	groupForward: ['Group target image with the image/group after it', 
+	groupForward: ['Group/Group target image with the image/group after it', 
 		function(target){ this.groupTo(target, 'next') }],
 
 	// NOTE: this will only group loaded images...
-	groupMarked: ['Group loaded marked images', 
+	groupMarked: ['Group/Group loaded marked images', 
 		function(){ this.group(this.data.getImages(this.data.getTaggedByAny('marked'))) }],
 
-	expandGroup: ['', 
+	expandGroup: ['Group/Expand group', 
 		function(target){ this.data.expandGroup(target || this.current) }],
-	collapseGroup: ['', 
+	collapseGroup: ['Group/Collapse group', 
 		function(target){ this.data.collapseGroup(target || this.current) }],
 
-	cropGroup: ['', 
+	cropGroup: ['Crop/Crop group', 
 		function(target){ this.crop(this.data.cropGroup(target || this.current)) }],
 })
 
@@ -933,7 +933,7 @@ actions.Actions(Client, {
 
 	// General UI stuff...
 	// NOTE: this is applicable to all uses...
-	toggleTheme: ['Toggle viewer theme', 
+	toggleTheme: ['Interface/Toggle viewer theme', 
 		CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			[
@@ -941,7 +941,7 @@ actions.Actions(Client, {
 				'dark', 
 				'light'
 			]) ],
-	setEmptyMsg: ['Set message to be displayed when nothing is loaded.',
+	setEmptyMsg: ['Interface/Set message to be displayed when nothing is loaded.',
 		function(msg, help){ this.ribbons.setEmptyMsg(msg, help) }],
 
 
@@ -1095,7 +1095,7 @@ actions.Actions(Client, {
 
 	// NOTE: these prioritize whole images, i.e. each image will at least
 	// 		once be fully shown.
-	prevScreen: ['Focus previous image one screen width away',
+	prevScreen: ['Navigate/Focus previous image one screen width away',
 		function(){
 			// NOTE: the 0.2 is added to compensate for alignment/scaling
 			// 		errors -- 2.99 images wide counts as 3 while 2.5 as 2.
@@ -1103,7 +1103,7 @@ actions.Actions(Client, {
 			w += (w % 2) - 1
 			this.prevImage(w)
 		}],
-	nextScreen: ['Focus next image one screen width away',
+	nextScreen: ['Navigate/Focus next image one screen width away',
 		function(){
 			var w = Math.floor(this.ribbons.getScreenWidthImages() + 0.2)
 			w += (w % 2) - 1
@@ -1114,7 +1114,7 @@ actions.Actions(Client, {
 	//
 	// Zooming is done by multiplying the current scale by config['zoom-step']
 	// and rounding to nearest discrete number of images to fit on screen.
-	zoomIn: ['Zoom in',
+	zoomIn: ['Zoom/Zoom in',
 		function(){ 
 			this.ribbons.setOrigin()
 
@@ -1125,7 +1125,7 @@ actions.Actions(Client, {
 		
 			this.fitImage(n <= 0 ? 1 : n)
 		}],
-	zoomOut: ['Zoom out',
+	zoomOut: ['Zoom/Zoom out',
 		function(){ 
 			this.ribbons.setOrigin()
 
@@ -1138,7 +1138,7 @@ actions.Actions(Client, {
 			this.fitImage(n > max ? max : n)
 		}],
 
-	fitOrig: ['Fit to original scale',
+	fitOrig: ['Zoom/Fit to original scale',
 		function(){ 
 			this.ribbons.setScale(1) 
 			this.refresh()
@@ -1148,7 +1148,7 @@ actions.Actions(Client, {
 	// NOTE: this will add .config['fit-overflow'] to odd counts if no 
 	// 		overflow if passed.
 	// 		...this is done to add ability to control scroll indication.
-	fitImage: ['Fit image',
+	fitImage: ['Zoom/Fit image',
 		function(count, overflow){
 			if(count != null){
 				overflow = overflow == false ? 0 : overflow
@@ -1167,15 +1167,15 @@ actions.Actions(Client, {
 	// XXX the question with these is how to make these relatively 
 	// 		similar across platforms...
 	// 		...for this we need to get display dpi...
-	fitSmall: ['Show small image',
+	fitSmall: ['Zoom/Show small image',
 		function(){  }],
-	fitNormal: ['Show normal image',
+	fitNormal: ['Zoom/Show normal image',
 		function(){  }],
-	fitScreen: ['Fit image to screen',
+	fitScreen: ['Zoom/Fit image to screen',
 		function(){  }],
 
 
-	fitRibbon: ['Fit ribbon vertically',
+	fitRibbon: ['Zoom/Fit ribbon vertically',
 		function(count){
 			this.ribbons.fitRibbon(count)
 			this.refresh()
@@ -1409,7 +1409,7 @@ var PartialRibbonsActions = actions.Actions({
 	// 		- we are less than screen width from the edge
 	// 		- threshold is set to 0
 	// XXX this is not signature compatible with data.updateRibbon(..)
-	updateRibbon: ['Update partial ribbon size', 
+	updateRibbon: ['Interface/Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
@@ -1487,7 +1487,7 @@ var PartialRibbonsActions = actions.Actions({
 			}
 		}],
 	// XXX do we handle off-screen ribbons here???
-	resizeRibbon: ['Resize ribbon to n images',
+	resizeRibbon: ['Interface/Resize ribbon to n images',
 		function(target, size){
 			size = size 
 				|| (this.config['ribbon-size-screens'] * this.screenwidth)
@@ -1784,7 +1784,7 @@ module.ShiftAnimation = features.Feature(ImageGridFeatures, {
 //---------------------------------------------------------------------
 
 var BoundsIndicatorsActions = actions.Actions({
-	flashIndicator: ['Flash an indicator',
+	flashIndicator: ['Interface/Flash an indicator',
 		function(direction){
 			if(this.ribbons.getRibbonSet().length == 0){
 				return
@@ -1906,7 +1906,7 @@ module.BoundsIndicators = features.Feature(ImageGridFeatures, {
 //---------------------------------------------------------------------
 
 var CurrentImageIndicatorActions = actions.Actions({
-	updateCurrentImageIndicator: ['Update current image indicator',
+	updateCurrentImageIndicator: ['Interface/Update current image indicator',
 		function(target, update_border){
 			var ribbon_set = this.ribbons.getRibbonSet()
 
@@ -2346,10 +2346,10 @@ var ImageMarkActions = actions.Actions({
 	// 	Invert marks on current ribbon
 	// 	.toggleMark('ribbon')
 	//
-	toggleMark: ['Toggle image mark',
+	toggleMark: ['Mark/Toggle image mark',
 		makeTagTogglerAction('selected')],
 	// XXX
-	toggleMarkBlock: ['Toggle block marks',
+	toggleMarkBlock: ['Mark/Toggle block marks',
 		'A block is a set of adjacent images either marked on unmarked '
 			+'in the same way',
 		function(target){
@@ -2359,7 +2359,7 @@ var ImageMarkActions = actions.Actions({
 			// XXX
 		}],
 
-	markTagged: ['Mark images by tags',
+	markTagged: ['Mark/Mark images by tags',
 		function(tags, mode){
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
 
@@ -2370,12 +2370,12 @@ var ImageMarkActions = actions.Actions({
 		}],
 
 	// XXX do we need first/last marked???
-	prevMarked: ['Focus previous marked image',
+	prevMarked: ['Mark|Navigate/Focus previous marked image',
 		function(mode){ this.prevTagged('selected', mode) }],
-	nextMarked: ['Focus next marked image',
+	nextMarked: ['Mark|Navigate/Focus next marked image',
 		function(mode){ this.nextTagged('selected', mode) }],
 
-	cropMarked: ['Crop marked images',
+	cropMarked: ['Mark|Crop/Crop marked images',
 		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
 })
 

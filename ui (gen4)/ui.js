@@ -52,6 +52,10 @@ var viewer = require('viewer')
 //var promise = require('promise')
 
 
+// widgets...
+var browse = require('lib/widget/browse')
+
+
 
 /*********************************************************************/
 
