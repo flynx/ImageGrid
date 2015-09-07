@@ -1,6 +1,6 @@
 
 /********************************************************** Widget ***/
-.browse {
+.browse-widget {
 	display: inline-block;
 	min-width: 300px;
 	width: initial;
@@ -12,20 +12,20 @@
 	color: white;
 }
 /*
-.browse:not(:focus) {
+.browse-widget:not(:focus) {
 	opacity: 0.8;
 }
 */
-.browse .v-block {
+.browse-widget .v-block {
 	width: 100%;
 	height: auto;
 
 	box-sizing: border-box;
 }
-.browse .v-block:not(:first-of-type) {
+.browse-widget .v-block:not(:first-of-type) {
 	border-top: 1px solid rgba(255, 255, 255, 0.3);
 }
-.browse .v-block:empty {
+.browse-widget .v-block:empty {
 	display: none;
 }
 
@@ -33,7 +33,7 @@
 
 /************************************************************ Path ***/
 
-.browse .path {
+.browse-widget .path {
 	padding: 5px;
 	padding-left: 10px;
 	padding-right: 10px;
@@ -50,55 +50,55 @@
 	overflow: auto;
 }
 /* XXX not sure about this... */
-.browse .path::-webkit-scrollbar {
+.browse-widget .path::-webkit-scrollbar {
 	width: 5px;
 	height: 5px;
 }
-.browse .path:hover {
+.browse-widget .path:hover {
 	opacity: 1;
 }
-.browse .path:empty {
+.browse-widget .path:empty {
 	display: block;
 }
-.browse:not(.flat) .path:not([contenteditable]):before {
+.browse-widget:not(.flat) .path:not([contenteditable]):before {
 	content: "/";
 }
-.browse .path .dir {
+.browse-widget .path .dir {
 	display: inline-block;
 	cursor: pointer;
 
 	opacity: 0.8;
 }
-.browse .path .dir:after {
+.browse-widget .path .dir:after {
 	content: "/";
 }
-.browse .path .dir:hover ~ .dir {
+.browse-widget .path .dir:hover ~ .dir {
 	opacity: 0.2;
 }
-.browse .path .dir.cur {
+.browse-widget .path .dir.cur {
 	opacity: 0.5;
 	cursor: text;
 }
-.browse .path .dir.cur:after {
+.browse-widget .path .dir.cur:after {
 	content: "";
 }
-.browse .path .dir.cur:hover {
+.browse-widget .path .dir.cur:hover {
 	opacity: 1;
 }
-.browse .path .dir.cur[contenteditable] {
+.browse-widget .path .dir.cur[contenteditable] {
 	opacity: 1;
 }
-.browse .path .dir.cur:empty:not([contenteditable]) {
+.browse-widget .path .dir.cur:empty:not([contenteditable]) {
 	position: relative;
 	width: 50px;
 	height: 12px;
 	background: transparent;
 	opacity: 0;
 }
-.browse .path .dir.cur:empty:hover:not([contenteditable]) {
+.browse-widget .path .dir.cur:empty:hover:not([contenteditable]) {
 	opacity: 0.6;
 }
-.browse .path .dir.cur:empty:hover:not([contenteditable]):after {
+.browse-widget .path .dir.cur:empty:hover:not([contenteditable]):after {
 	content: "______";
 	border: dashed white 1px;
 	cursor: text;
@@ -109,7 +109,7 @@
 /************************************************************ List ***/
 
 /* XXX need to make this resizable up but only to a certain size (~80vh) */
-.browse .list {
+.browse-widget .list {
 	/* XXX need a way to make this automatic and depend on .browser 
 		setup to avoid multiple scrollbars and the need to manually
 	 	dive into the configuration to change the container size 
@@ -121,7 +121,7 @@
 	overflow-x: hidden;
 }
 /*
-.browse .list:before {
+.browse-widget .list:before {
 	content: "";
 	position: absolute;
 	display: inline-block;
@@ -131,7 +131,7 @@
 	left: 0px;
 	background: linear-gradient(to top, rgba(128, 128, 128, 0), rgba(128, 128, 128, 1));
 }
-.browse .list:after {
+.browse-widget .list:after {
 	content: "";
 	position: absolute;
 	display: inline-block;
@@ -143,11 +143,11 @@
 }
 */
 /*
-.browse .list:empty {
+.browse-widget .list:empty {
 	display: block;
 }
 */
-.browse .list div {
+.browse-widget .list div {
 	padding: 5px;
 	padding-left: 10px;
 	padding-right: 10px;
@@ -164,21 +164,21 @@
 	max-width: 50vh;
 	overflow: hidden;
 }
-.browse:not(.flat) .list div:not(.not-traversable):after {
+.browse-widget:not(.flat) .list div:not(.not-traversable):after {
 	content: "/";
 }
 
-.browse:focus .list div.selected,
-.browse .path .dir:hover,
-.browse .list div:hover {
+.browse-widget:focus .list div.selected,
+.browse-widget .path .dir:hover,
+.browse-widget .list div:hover {
 	background: rgba(0, 0, 0, 0.05);
 
 	opacity: 0.9;
 }
-.browse .list div.selected {
+.browse-widget .list div.selected {
 	background: rgba(0, 0, 0, 0.08);
 }
-.browse:focus .list div.selected {
+.browse-widget:focus .list div.selected {
 	background: rgba(0, 0, 0, 0.08);
 	box-shadow: rgba(0, 0, 0, 0.2) 0.1em 0.1em 0.2em; 
 
@@ -186,52 +186,52 @@
 }
 
 /* XXX need to make the next two different...  */
-.browse .list div.filtered-out {
+.browse-widget .list div.filtered-out {
 	opacity: 0.5;
 }
-.browse:not(.show-filtered-out) .list div.filtered-out {
+.browse-widget:not(.show-filtered-out) .list div.filtered-out {
 	display: none;	
 }
-.browse .list div.disabled {
+.browse-widget .list div.disabled {
 	opacity: 0.3;
 }
 
 /* numbers... */
 /* XXX need to show this only on devices with keyboards... */
-.browse .list div:before {
+.browse-widget .list div:before {
 	opacity: 0.3;
 	float: right;
 	font-size: small;
 }
-.browse.filtering .list div:before {
+.browse-widget.filtering .list div:before {
 	display: none;
 }
 
-.browse .list div:nth-of-type(1):before {
+.browse-widget .list div:nth-of-type(1):before {
 	content: "1";
 }
-.browse .list div:nth-of-type(2):before {
+.browse-widget .list div:nth-of-type(2):before {
 	content: "2";
 }
-.browse .list div:nth-of-type(3):before {
+.browse-widget .list div:nth-of-type(3):before {
 	content: "3";
 }
-.browse .list div:nth-of-type(4):before {
+.browse-widget .list div:nth-of-type(4):before {
 	content: "4";
 }
-.browse .list div:nth-of-type(5):before {
+.browse-widget .list div:nth-of-type(5):before {
 	content: "5";
 }
-.browse .list div:nth-of-type(6):before {
+.browse-widget .list div:nth-of-type(6):before {
 	content: "6";
 }
-.browse .list div:nth-of-type(7):before {
+.browse-widget .list div:nth-of-type(7):before {
 	content: "7";
 }
-.browse .list div:nth-of-type(8):before {
+.browse-widget .list div:nth-of-type(8):before {
 	content: "8";
 }
-.browse .list div:nth-of-type(9):before {
+.browse-widget .list div:nth-of-type(9):before {
 	content: "9";
 }
 
@@ -240,31 +240,31 @@
 /******************************************************** Theaming ***/
 
 /* Light */
-.light .browse {
+.light .browse-widget {
 	background: white;
 	color: rgba(0, 0, 0, 0.8);
 }
-.light .browse .v-block:not(:first-of-type) {
+.light .browse-widget .v-block:not(:first-of-type) {
 	border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 
 
 /* Dark */
-.dark .browse {
+.dark .browse-widget {
 	background: #0a0a0a;
 	color: rgba(255, 255, 255, 0.8);
 }
 /* XXX can we make this simpler??? */
-.dark .browse:focus .list div.selected,
-.dark .browse .path .dir:hover,
-.dark .browse .list div:hover {
+.dark .browse-widget:focus .list div.selected,
+.dark .browse-widget .path .dir:hover,
+.dark .browse-widget .list div:hover {
 	background: rgba(255, 255, 255, 0.08);
 }
-.dark .browse .list div.selected {
+.dark .browse-widget .list div.selected {
 	background: rgba(255, 255, 255, 0.1);
 }
-.dark .browse:focus .list div.selected {
+.dark .browse-widget:focus .list div.selected {
 	background: rgba(255, 255, 255, 0.1);
 }
 

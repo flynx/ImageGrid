@@ -19,7 +19,7 @@ var OverlayClassPrototype = {
 	make: function(client, options){
 		var that = this
 		var overlay = $('<div>')
-			.addClass('overlay')
+			.addClass('overlay-widget')
 			.click(function(){
 				event.stopPropagation()
 			})
@@ -56,7 +56,7 @@ var OverlayPrototype = {
 		// trigger the event...
 		if(handler == null){
 			this.dom.detach()
-			if(this.parent.children('.overlay').length == 0){
+			if(this.parent.children('.overlay-widget').length == 0){
 				this.parent.removeClass('blur')
 			}
 			this.trigger('close')

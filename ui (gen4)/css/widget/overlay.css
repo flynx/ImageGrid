@@ -1,5 +1,5 @@
 
-.overlay {
+.overlay-widget {
 	position: absolute;
 
 	width: 100%;
@@ -15,12 +15,12 @@
 	-moz-transform-style: preserve-3d;
 	transform-style: preserve-3d;
 }
-.overlay~.overlay {
+.overlay-widget~.overlay-widget {
 	background: rgba(0, 0, 0, 0.1);
 }
 
 
-.overlay .content {
+.overlay-widget .content {
 	position: relative;
 	display: inline-block;
 
@@ -40,7 +40,7 @@
 
 	box-shadow: rgba(0, 0, 0, 0.1) 0.3em 0.3em 5em;
 }
-.overlay~.overlay .content {
+.overlay-widget~.overlay-widget .content {
 	box-shadow: rgba(0, 0, 0, 0.05) 0.1em 0.1em 3em;
 }
 
@@ -51,7 +51,7 @@
 	-webkit-filter: blur(2px);
 	filter: blur(2px);
 }
-.blur>.overlay {
+.blur>.overlay-widget {
 	-webkit-filter: none;
 	filter: none;
 }

@@ -35,7 +35,7 @@ var BrowserClassPrototype = {
 	// construct the dom...
 	make: function(options){
 		var browser = $('<div>')
-			.addClass('browse')
+			.addClass('browse-widget')
 			// make thie widget focusable...
 			// NOTE: tabindex 0 means automatic tab indexing and -1 means 
 			//		focusable bot not tabable...
@@ -111,7 +111,7 @@ var BrowserPrototype = {
 		// NOTE: this will not disable manual updates or explicit path 
 		// 		setting.
 		// NOTE: another way to disable traversal is to set 
-		// 		.not-traversable on the .browse element
+		// 		.not-traversable on the .browse-widget element
 		traversable: true,
 
 		// Handle keys that are not bound...
@@ -143,7 +143,7 @@ var BrowserPrototype = {
 	// 		in filter mode???
 	keyboard: {
 		FullPathEdit: {
-			pattern: '.browse .path[contenteditable]',
+			pattern: '.browse-widget .path[contenteditable]',
 
 			// keep text editing action from affecting the selection...
 			ignore: [
@@ -171,7 +171,7 @@ var BrowserPrototype = {
 		},
 
 		Filter: {
-			pattern: '.browse .path div.cur[contenteditable]',
+			pattern: '.browse-widget .path div.cur[contenteditable]',
 
 			// keep text editing action from affecting the selection...
 			ignore: [
@@ -199,7 +199,7 @@ var BrowserPrototype = {
 		},
 
 		General: {
-			pattern: '.browse',
+			pattern: '.browse-widget',
 
 			Up: 'prev!',
 			Down: 'next!',
@@ -456,7 +456,7 @@ var BrowserPrototype = {
 	// This will trigger the 'update' event.
 	//
 	// For uniformity and ease of access from DOM, this will also set the
-	// 'path' html attribute on the .browse element.
+	// 'path' html attribute on the .browse-widget element.
 	//
 	// If the given string path does not end with a '/' then the path
 	// up to the last item will be loaded and the last item loaded.
@@ -1011,7 +1011,7 @@ var BrowserPrototype = {
 	// This will trigger the 'select' or 'deselect' events.
 	//
 	// For uniformity and ease of access from DOM, this will also set 
-	// the value attr on the .browse element.
+	// the value attr on the .browse-widget element.
 	// NOTE: this is one way and setting the html attribute "value" will
 	// 		not affect the selection, but changing the selection will 
 	// 		overwrite the attribute.
