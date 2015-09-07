@@ -11,7 +11,7 @@ console.log('>>> ribbons')
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 // XXX is this correct...
-require('ext-lib/jquery')
+//require('ext-lib/jquery')
 
 var object = require('object')
 

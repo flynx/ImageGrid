@@ -48,10 +48,12 @@
 		...need a way to go around this...
 */
 .blur>* {
-	-webkit-filter: blur(2px);
-	filter: blur(2px);
+	-webkit-filter: blur(2px) saturate(0.5);
+	filter: blur(2px) saturate(0.5);
 }
 .blur>.overlay-widget {
 	-webkit-filter: none;
 	filter: none;
 }
+
+

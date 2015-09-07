@@ -20,7 +20,7 @@ var OverlayClassPrototype = {
 		var that = this
 		var overlay = $('<div>')
 			.addClass('overlay-widget')
-			.click(function(){
+			.on(options.nonPropagatedEvents.join(' '), function(){
 				event.stopPropagation()
 			})
 			.append($('<div>')
@@ -37,6 +37,12 @@ var OverlayClassPrototype = {
 
 var OverlayPrototype = {
 	dom: null,
+	options: {
+		nonPropagatedEvents: [
+			'clik',
+			//'keydown',
+		],
+	},
 
 	// XXX triggering events from here and from jQuery/dom has a 
 	// 		different effect...
@@ -70,6 +76,12 @@ var OverlayPrototype = {
 	__init__: function(parent, client, options){
 		var that = this
 		parent = this.parent = $(parent || 'body')
+		options = options || {}
+
+		// merge options...
+		var opts = Object.create(this.options)
+		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
+		options = this.options = opts
 
 		var dom = this.dom = this.constructor.make(client, options)
 			.click(function(){

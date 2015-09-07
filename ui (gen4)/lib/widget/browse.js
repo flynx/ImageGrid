@@ -19,6 +19,7 @@ define(function(require){ var module = {}
 console.log('>>> browse')
 
 
+var keyboard = require('../keyboard')
 // XXX
 var object = require('../../object')
 var widget = require('./widget')
@@ -135,6 +136,8 @@ var BrowserPrototype = {
 			'update',
 			'select',
 			'deselect',
+
+			'keydown',
 		],
 	},
 
@@ -1536,7 +1539,7 @@ var BrowserPrototype = {
 		this.update(options.path || this.path || '/')
 
 		if(this.options.nonPropagatedEvents != null){
-			this.on(this.options.nonPropagatedEvents.join(''), 
+			this.on(this.options.nonPropagatedEvents.join(' '), 
 				function(evt){ evt.stopPropagation() })
 		}
 	},

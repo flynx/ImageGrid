@@ -2421,23 +2421,23 @@ var ImageBookmarkActions = actions.Actions({
 		return this.data.tags['bookmark'].slice()
 	},
 
-	toggleBookmark: ['',
+	toggleBookmark: ['Bookmark/',
 		makeTagTogglerAction('bookmark')],
 	// action can be:
 	// 	'on'	- toggle all on
 	// 	'off'	- toggle all off
 	// 	'next'	- toggle each image to next state
-	toggleBookmarkOnMarked: ['',
+	toggleBookmarkOnMarked: ['Bookmark|Mark/',
 		function(action){ 
 			return this.toggleBookmark(this.data.getTaggedByAny('selected'), action) 
 		}],
 
-	prevBookmarked: ['',
+	prevBookmarked: ['Bookmark|Navigate/',
 		function(mode){ this.prevTagged('bookmark', mode) }],
-	nextBookmarked: ['',
+	nextBookmarked: ['Bookmark|Navigate/',
 		function(mode){ this.nextTagged('bookmark', mode) }],
 
-	cropBookmarked: ['',
+	cropBookmarked: ['Bookmark|Crop/',
 		function(flatten){ this.cropTagged('bookmark', 'any', flatten) }],
 })
 

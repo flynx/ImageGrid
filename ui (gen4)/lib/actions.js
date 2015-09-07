@@ -306,10 +306,12 @@ module.MetaActions = {
 			: arguments.length > 1 ? args2array(arguments)
 			: typeof(actions) == typeof('str') ? [actions]
 			: actions
+
 		// get the first defined set of docs in the inheritance chain...
 		actions.forEach(function(n){
 			var cur = that
 			res[n] = []
+			// go up the proto chain...
 			while(cur.__proto__ != null){
 				if(cur[n] != null && cur[n].doc != null){
 					res[n] = [ cur[n].doc, cur[n].long_doc ]
@@ -320,6 +322,33 @@ module.MetaActions = {
 		})
 		return res
 	},
+
+	getPath: function(actions){
+		var res = {}
+		var that = this
+		actions = actions == null ? this.actions
+			: arguments.length > 1 ? args2array(arguments)
+			: typeof(actions) == typeof('str') ? [actions]
+			: actions
+
+		// get the first defined set of docs in the inheritance chain...
+		actions.forEach(function(n){
+			var cur = that
+			// go up the proto chain...
+			while(cur.__proto__ != null){
+				if(cur[n] != null && cur[n].doc != null){
+					var doc = cur[n].doc
+					var long_doc = cur[n].long_doc
+					break
+				}
+				cur = cur.__proto__
+			}
+
+			res[(doc && doc.replace(/[\\\/]$/, '/'+n)) || n] = [n, doc, long_doc]
+		})
+		return res
+	},
+
 
 	// Get action handlers from the inheritance chain...
 	//

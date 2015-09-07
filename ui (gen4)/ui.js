@@ -4,6 +4,7 @@
 *
 **********************************************************************/
 
+
 window.nodejs = (typeof(process) === 'object' && process.features.uv) 
 	? {
 		require: window.require,
@@ -54,6 +55,7 @@ var viewer = require('viewer')
 
 // widgets...
 var browse = require('lib/widget/browse')
+var overlay = require('lib/widget/overlay')
 
 
 
@@ -204,6 +206,8 @@ module.GLOBAL_KEYBOARD = {
 			default: 'toggleMark',
 		},
 		A: {
+			// XXX STUB...
+			alt: function(){ browseActions() },
 			ctrl: 'toggleMark!: "ribbon" "on"',
 		},
 		D: {
@@ -228,6 +232,29 @@ module.GLOBAL_KEYBOARD = {
 /*********************************************************************/
 
 $(function(){
+
+	window.browse = browse
+	window.overlay = overlay
+
+
+	window.browseActions = function(){
+		var paths = a.getPath()
+		var actions = {}
+
+		Object.keys(paths).forEach(function(k){
+			var n = paths[k][0]
+			actions[k] = function(){
+				return a[n].apply(a)
+			}
+		})
+
+		var b = browse.makePathList(null, actions)
+		var o = overlay.Overlay($('body'), b.dom)
+
+		b.open(function(){ o.close() })
+
+		b.focus()
+	}
 
 	// XXX
 	window.a = testing.setupActions()
