@@ -21,18 +21,7 @@ console.log('>>> browse')
 
 // XXX
 var object = require('../../object')
-
-
-
-/*********************************************************************/
-// helpers...
-
-function proxyToDom(name){
-	return function(){ 
-		this.dom[name].apply(this.dom, arguments)
-		return this 
-	}
-}
+var widget = require('./widget')
 
 
 
@@ -308,34 +297,23 @@ var BrowserPrototype = {
 	// 		to them handlers that stop propagation in .__init__(..).
 	// 		The list of non-propagated events in defined in 
 	// 		.options.nonPropagatedEvents
-	trigger: function(){
-		var args = args2array(arguments)
-		var evt = args.shift()
-		
-		if(typeof(evt) == typeof('str')){
-			evt = $.Event(evt)
-		}
-
-		evt.source = this
-
-		args.splice(0, 0, evt)
-
-		this.dom.trigger.apply(this.dom, args)
-		return this 
-	},
+	//
+	// XXX triggering events from here and from jQuery/dom has a 
+	// 		different effect...
+	trigger: widget.triggerEventWithSource,
 
 	// proxy event api...
-	on: proxyToDom('on'),
-	one: proxyToDom('one'),
-	off: proxyToDom('off'),
-	bind: proxyToDom('bind'),
-	unbind: proxyToDom('unbind'),
-	deligate: proxyToDom('deligate'),
-	undeligate: proxyToDom('undeligate'),
+	on: widget.proxyToDom('on'),
+	one: widget.proxyToDom('one'),
+	off: widget.proxyToDom('off'),
+	bind: widget.proxyToDom('bind'),
+	unbind: widget.proxyToDom('unbind'),
+	deligate: widget.proxyToDom('deligate'),
+	undeligate: widget.proxyToDom('undeligate'),
 
 	// specific events...
-	focus: proxyToDom('focus'),
-	blur: proxyToDom('blur'),
+	focus: widget.proxyToDom('focus'),
+	blur: widget.proxyToDom('blur'),
 
 
 	// base api...
