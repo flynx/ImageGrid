@@ -16,6 +16,7 @@ if(typeof(module) !== 'undefined' && module.exports){
 
 
 define(function(require){ var module = {}
+console.log('>>> browse')
 
 
 // XXX

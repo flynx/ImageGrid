@@ -17,19 +17,26 @@ exifup(){
 	true
 }
 
-# XXX this does not support absolute paths...
 if [[ $1 != "" ]] ; then
 	if ! [ -d "$1" ] ; then
 		echo "\"$1\": is not a directory."
 		exit 1
 	fi
-	cd "./$1/DCIM/"
+	if [ -e "$1/DCIM/preview/" ] ; then
+		cd "$1/DCIM/"
+	else
+		cd "$1"
+	fi
 	exifup ./preview/
 	exifup ./hi-res/
 	cd "$DIR"
 else
 	for d in */DCIM/ ; do
-		cd "./$d"
+		if [ -e "$1/DCIM/preview/" ] ; then
+			cd "$d"
+		else
+			cd "$d/../"
+		fi
 		exifup ./preview/
 		exifup ./hi-res/
 		cd "$DIR"

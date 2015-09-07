@@ -212,6 +212,7 @@ if [ -z $SKIP_PREVIEWS ] ; then
 	#export TOTAL=$(find . -type d -name 'hi-res (RAW)' -exec ls "{}" \; | wc -l)
 	# XXX do not know how to pass and modify a var...
 	#export CUR=1
+	#export TOTAL=`find . -path '*hi-res (RAW)/*.jpg' | wc -l`
 
 	find . -path '*hi-res (RAW)/*.jpg' -exec bash -c 'makepreview "$SIZE" "{}"' \;
 fi
@@ -224,6 +225,9 @@ if ! [ -z "$COMMON_PREVIEWS" ] ; then
 	if ! [ -e "./$COMMON_PREVIEWS" ] ; then
 		mkdir -p "./$COMMON_PREVIEWS"
 	fi
+	#if [ -z $TOTAL ] ; then
+	#	export TOTAL=`find . -path '*hi-res (RAW)/*.jpg' | wc -l`
+	#fi
 	find . -type d \
 		-name 'preview (RAW)' \
 		-print \
@@ -235,6 +239,9 @@ fi
 
 # build cache...
 if [ -z $SKIP_CACHE ] ; then
+	#if [ -z $TOTAL ] ; then
+	#	export TOTAL=`find . -path '*hi-res (RAW)/*.jpg' | wc -l`
+	#fi
 	if ! [ -z "$COMMON_PREVIEWS" ] && [ -e "./$COMMON_PREVIEWS/preview (RAW)" ] ; then
 		buildcache "./$COMMON_PREVIEWS/preview (RAW)"
 	else
