@@ -237,24 +237,30 @@ $(function(){
 	window.overlay = overlay
 
 
-	window.browseActions = function(){
-		var paths = a.getPath()
-		var actions = {}
+	// XXX make this an action...
+	var makeActionLister = function(list){
+		return function(){
+			var paths = a.getPath()
+			var actions = {}
 
-		Object.keys(paths).forEach(function(k){
-			var n = paths[k][0]
-			actions[k] = function(){
-				return a[n].apply(a)
-			}
-		})
+			Object.keys(paths).forEach(function(k){
+				var n = paths[k][0]
+				actions[k] = function(){
+					return a[n].apply(a)
+				}
+			})
 
-		var b = browse.makePathList(null, actions)
-		var o = overlay.Overlay($('body'), b.dom)
+			var b = list(null, actions)
+			var o = overlay.Overlay($('body'), b.dom)
 
-		b.open(function(){ o.close() })
+			b.open(function(){ o.close() })
 
-		b.focus()
+			b.focus()
+		}
 	}
+
+	window.browseActions = makeActionLister(browse.makePathList)
+	window.listActions = makeActionLister(browse.makeList)
 
 	// XXX
 	window.a = testing.setupActions()

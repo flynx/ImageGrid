@@ -115,7 +115,7 @@
 	 	dive into the configuration to change the container size 
 		limits
 	*/
-	max-height: 50vh;
+	max-height: 80vh;
 
 	overflow-y: auto;
 	overflow-x: hidden;

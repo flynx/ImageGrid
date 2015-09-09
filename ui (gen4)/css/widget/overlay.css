@@ -34,7 +34,9 @@
 
 	min-width: 200px;
 	max-width: 80vw;
-	max-height: 100vh;
+	max-height: 90vh;
+
+	overflow: hidden;
 
 	transform: translateY(-50%) translateX(-50%);
 

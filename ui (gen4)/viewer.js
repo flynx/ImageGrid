@@ -234,19 +234,19 @@ actions.Actions({
 	// basic life-cycle actions...
 	//
 	// XXX do we need to call .syncTags(..) here???
-	load: [
+	load: ['File|Interface/',
 		function(d){
 			this.images = images.Images(d.images)
 			this.data = data.Data(d.data)
 		}],
-	clear: [
+	clear: ['File|Interface/',
 		function(){
 			delete this.data
 			delete this.images
 		}],
 
 	// XXX should this be here???
-	loadURLs: ['Load a URL list',
+	loadURLs: ['File/Load a URL list',
 		function(lst){
 			this.images = images.Images.fromArray(lst)
 			this.data = data.Data.fromArray(this.images.keys())
@@ -257,7 +257,7 @@ actions.Actions({
 	// 		adding new items to the resulting structure...
 	// XXX is this the correct way to go???
 	// 		...can we save simple attribute values???
-	json: ['Serialize/Dump state as JSOM object',
+	json: ['File/Dump state as JSOM object',
 		'This will collect JSON data from every available attribute '
 			+'supporting the .dumpJSON() method.',
 		function(){
@@ -273,11 +273,11 @@ actions.Actions({
 
 	// basic navigation...
 	//
-	focusImage: ['Focus image',
+	focusImage: ['Navigate/Focus image',
 		function(img, list){
 			this.data.focusImage(img, list)
 		}],
-	focusRibbon: ['Focus Ribbon',
+	focusRibbon: ['Navigate/Focus Ribbon',
 		function(target){
 			var data = this.data
 			var r = data.getRibbon(target)
@@ -299,24 +299,24 @@ actions.Actions({
 
 			this.focusImage(t, r)
 		}],
-	setBaseRibbon: ['Set base ribbon',
+	setBaseRibbon: ['Edit/Set base ribbon',
 		function(target){ this.data.setBase(target) }],
 
 	// shorthands...
 	// XXX do we reset direction on these???
-	firstImage: ['Navigate/Focus first image in current ribbon',
+	firstImage: ['Navigate/First image in current ribbon',
 		function(all){ this.focusImage(all == null ? 'first' : 0) }],
-	lastImage: ['Navigate/Focus last image in current ribbon',
+	lastImage: ['Navigate/Last image in current ribbon',
 		function(all){ this.focusImage(all == null ? 'last' : -1) }],
 	// XXX these break if image at first/last position are not loaded (crop, group, ...)
 	// XXX do we actually need these???
-	firstGlobalImage: ['Navigate/Get first globally image',
+	firstGlobalImage: ['Navigate/First globally image',
 		function(){ this.firstImage(true) }],
-	lastGlobalImage: ['Navigate/Get last globally image',
+	lastGlobalImage: ['Navigate/Last globally image',
 		function(){ this.lastImage(true) }],
 
 	// XXX skip unloaded images...
-	prevImage: ['Navigate/Focus previous image',
+	prevImage: ['Navigate/Previous image',
 		function(a){ 
 			// keep track of traverse direction...
 			this.direction = 'left'
@@ -331,7 +331,7 @@ actions.Actions({
 				this.focusImage('prev', a) 
 			}
 		}],
-	nextImage: ['Navigate/Focus next image',
+	nextImage: ['Navigate/Next image',
 		function(a){ 
 			// keep track of traverse direction...
 			this.direction = 'right'
@@ -348,24 +348,24 @@ actions.Actions({
 		}],
 
 	// XXX skip unloaded images...
-	prevImageInOrder: ['Navigate/Focus previous image in order',
+	prevImageInOrder: ['Navigate/Previous image in order',
 		function(){ this.prevImage(this.data.getImages(this.data.order)) }],
-	nextImageInOrder: ['Navigate/Focus next image in order',
+	nextImageInOrder: ['Navigate/Next image in order',
 		function(){ this.nextImage(this.data.getImages(this.data.order)) }],
 
 	// XXX should these be here???
-	prevTagged: ['Navigate/Focus previous image tagged with tag',
+	prevTagged: ['Navigate/Previous image tagged with tag',
 		makeTagWalker('prev')],
-	nextTagged: ['Navigate/Focus next image tagged with tag',
+	nextTagged: ['Navigate/Next image tagged with tag',
 		makeTagWalker('next')],
 
-	firstRibbon: ['Navigate/Focus previous ribbon',
+	firstRibbon: ['Navigate/First ribbon',
 		function(){ this.focusRibbon('first') }],
-	lastRibbon: ['Navigate/Focus next ribbon',
+	lastRibbon: ['Navigate/Last ribbon',
 		function(){ this.focusRibbon('last') }],
-	prevRibbon: ['Navigate/Focus previous ribbon',
+	prevRibbon: ['Navigate/Previous ribbon',
 		function(){ this.focusRibbon('before') }],
-	nextRibbon: ['Navigate/Focus next ribbon',
+	nextRibbon: ['Navigate/Next ribbon',
 		function(){ this.focusRibbon('after') }],
 
 
@@ -374,7 +374,7 @@ actions.Actions({
 	// NOTE: for all of these, current/ribbon image is a default...
 
 	// XXX to be used for things like mark/place and dragging...
-	shiftImageTo: ['',
+	shiftImageTo: ['Edit|Sort/',
 		function(target, to){
 			// XXX
 		}],
@@ -435,7 +435,7 @@ actions.Actions({
 			this.data.newRibbon(target, 'below')
 			this.shiftImageDown(target)
 		}],
-	shiftImageLeft: ['Edit/Shift image left',
+	shiftImageLeft: ['Edit|Sort/Shift image left',
 		function(target){ 
 			if(target == null){
 				this.direction = 'left'
@@ -443,7 +443,7 @@ actions.Actions({
 			this.data.shiftImageLeft(target) 
 			this.focusImage()
 		}],
-	shiftImageRight: ['Edit/Shift image right',
+	shiftImageRight: ['Edit|Sort/Shift image right',
 		function(target){ 
 			if(target == null){
 				this.direction = 'right'
@@ -480,40 +480,40 @@ actions.Actions({
 		}],
 
 	
-	reverseImages: ['Edit/Reverse image order',
+	reverseImages: ['Edit|Sort/Reverse image order',
 		function(){ this.data.reverseImages() }],
-	reverseRibbons: ['Edit/Reverse ribbon order',
+	reverseRibbons: ['Edit|Sort/Reverse ribbon order',
 		function(){ this.data.reverseRibbons() }],
 
 	// XXX align to ribbon...
 
 	// XXX this also requires images...
-	sortImages: [
+	sortImages: ['Sort/',
 		function(method){ 
 		}],
 
 	// basic image editing...
 	//
 	// XXX should we have .rotate(..) and .flip(..) generic actions???
-	rotateCW: [ 
+	rotateCW: ['Image|Edit/', 
 		function(target){ 
 			if(this.images != null){
 				this.images.rotateImage(this.data.getImage(target), 'cw')
 			}
 		}],
-	rotateCCW: [ 
+	rotateCCW: ['Image|Edit/', 
 		function(target){ 
 			if(this.images != null){
 				this.images.rotateImage(this.data.getImage(target), 'ccw')
 			}
 		}],
-	flipVertical: [ 
+	flipVertical: ['Image|Edit/',
 		function(target){ 
 			if(this.images != null){
 				this.images.flipImage(this.data.getImage(target), 'vertical')
 			}
 		}],
-	flipHorizontal: [
+	flipHorizontal: ['Image|Edit/',
 		function(target){ 
 			if(this.images != null){
 				this.images.flipImage(this.data.getImage(target), 'horizontal')
@@ -524,7 +524,7 @@ actions.Actions({
 	// tags...
 	//
 	// XXX mark updated...
-	tag: ['Tag image(s)',
+	tag: ['Tag/Tag image(s)',
 		function(tags, gids){
 			gids = gids || this.current
 			gids = gids.constructor !== Array ? [gids] : gids
@@ -550,7 +550,7 @@ actions.Actions({
 			})
 		}],
 	// XXX mark updated...
-	untag: ['Untag image(s)',
+	untag: ['Tag/Untag image(s)',
 		function(tags, gids){
 			gids = gids || this.current
 			gids = gids.constructor !== Array ? [gids] : gids
@@ -596,7 +596,7 @@ actions.Actions({
 	// NOTE: setting source to 'both' and mode to 'reset' is the same as
 	// 		'images' and 'reset' as all .data tags will be lost on first 
 	// 		pass...
-	syncTags: ['Synchoronize tags between data and images',
+	syncTags: ['Tag/Synchoronize tags between data and images',
 		function(source, mode){
 			// can't do anything if either .data or .images are not 
 			// defined...
@@ -679,13 +679,13 @@ actions.Actions({
 		function(restore_current){ this.uncrop('all', restore_current) }],
 	// XXX see if we need to do this on this level??
 	// 		...might be a good idea to do this in data...
-	uncropAndKeepOrder: ['Crop/Uncrop and keep crop image order',
+	uncropAndKeepOrder: ['Crop|Edit/Uncrop and keep crop image order',
 		function(level, restore_current){ this.uncrop(level, restore_current, true) }],
 	// XXX same as uncrop but will also try and merge changes...
 	// 		- the order is simple and already done above...
 	// 		- I think that levels should be relative to images, the 
 	// 		  only problem here is how to deal with new ribbons...
-	mergeCrop: ['Crop/Merge crop',
+	mergeCrop: ['Crop|Edit/Merge crop',
 		function(){
 			// XXX
 		}],
@@ -725,7 +725,7 @@ actions.Actions({
 		}],
 	
 	// XXX should this be here???
-	cropTagged: ['Crop/Crop tagged images',
+	cropTagged: ['Tag|Crop/Crop tagged images',
 		function(tags, mode, flatten){
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
 			this.crop(this.data[selector](tags), flatten)
@@ -734,15 +734,15 @@ actions.Actions({
 
 	// grouping...
 	// XXX need to tell .images about this...
-	group: ['Group/Group images', 
+	group: ['Group|Edit/Group images', 
 		function(gids, group){ this.data.group(gids, group) }],
-	ungroup: ['Group/Ungroup images', 
+	ungroup: ['Group|Edit/Ungroup images', 
 		function(gids, group){ this.data.ungroup(gids, group) }],
 
 	// direction can be:
 	// 	'next'
 	// 	'prev'
-	groupTo: ['Group/Group to', 
+	groupTo: ['Group|Edit/Group to', 
 		function(target, direction){
 			target = this.data.getImage(target)
 			var other = this.data.getImage(target, direction == 'next' ? 1 : -1)
@@ -762,13 +762,13 @@ actions.Actions({
 			}
 		}],
 	// shorthands to .groupTo(..)
-	groupBack: ['Group/Group target image with the image/group before it', 
+	groupBack: ['Group|Edit/Group target image with the image or group before it', 
 		function(target){ this.groupTo(target, 'prev') }],
-	groupForward: ['Group/Group target image with the image/group after it', 
+	groupForward: ['Group|Edit/Group target image with the image or group after it', 
 		function(target){ this.groupTo(target, 'next') }],
 
 	// NOTE: this will only group loaded images...
-	groupMarked: ['Group/Group loaded marked images', 
+	groupMarked: ['Group|Mark/Group loaded marked images', 
 		function(){ this.group(this.data.getImages(this.data.getTaggedByAny('marked'))) }],
 
 	expandGroup: ['Group/Expand group', 
@@ -776,7 +776,7 @@ actions.Actions({
 	collapseGroup: ['Group/Collapse group', 
 		function(target){ this.data.collapseGroup(target || this.current) }],
 
-	cropGroup: ['Crop/Crop group', 
+	cropGroup: ['Crop|Group/Crop group', 
 		function(target){ this.crop(this.data.cropGroup(target || this.current)) }],
 })
 
@@ -854,7 +854,7 @@ actions.Actions(Client, {
 	// 		- actions.updateRibbon(..) and ribbons.updateRibbon(..)
 	// 		  are NOT signature compatible...
 	// 		- we depend on the internals of a custom add-on feature
-	reload: ['Reload viewer',
+	reload: ['Interface/Reload viewer',
 		function(force){
 			this.ribbons.preventTransitions()
 
@@ -883,7 +883,7 @@ actions.Actions(Client, {
 			}
 		}],
 	// NOTE: this will trigger .updateImage hooks...
-	refresh: ['Refresh images without reloading',
+	refresh: ['Interface/Refresh images without reloading',
 		function(gids){
 			gids = gids || '*'
 			this.ribbons.updateImage(gids)
@@ -925,7 +925,7 @@ actions.Actions(Client, {
 	// XXX problem: need to either redesign this or distinguish from 
 	// 		other actions as I keep calling it expecting results...
 	// XXX hide from user action list...
-	updateImage: ['This will do nothing',
+	updateImage: ['Interface/Update image (This will do nothing)',
 		'This will be called by .refresh(..) and intended for use as an '
 			+'trigger for handlers, and not as a callable acation.',
 		function(gid, image){ }],
@@ -950,7 +950,7 @@ actions.Actions(Client, {
 	// 		...navigate by proximity (closest to center) rather than by
 	// 		order...
 	// XXX skip off-screen ribbons (???)
-	alignByOrder: ['Align ribbons by image order',
+	alignByOrder: ['Interface/Align ribbons by image order',
 		function(target){
 			var ribbons = this.ribbons
 			var data = this.data
@@ -1002,7 +1002,7 @@ actions.Actions(Client, {
 				}
 			}, 50)
 		}],
-	alignByFirst: ['Aling ribbons except current to first image',
+	alignByFirst: ['Interface/Aling ribbons except current to first image',
 		function(target){
 			var ribbons = this.ribbons
 			var data = this.data
@@ -1044,7 +1044,7 @@ actions.Actions(Client, {
 
 	// NOTE: this will align only a single image...
 	// XXX do we need these low level primitives here???
-	centerImage: ['Center an image in ribbon horizontally',
+	centerImage: ['Interface/Center an image in ribbon horizontally',
 		function(target, align){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
@@ -1053,7 +1053,7 @@ actions.Actions(Client, {
 			// align current ribbon...
 			this.ribbons.centerImage(target, align)
 		}],
-	centerRibbon: ['Center a ribbon vertically',
+	centerRibbon: ['Interface/Center a ribbon vertically',
 		function(target){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
@@ -1095,7 +1095,7 @@ actions.Actions(Client, {
 
 	// NOTE: these prioritize whole images, i.e. each image will at least
 	// 		once be fully shown.
-	prevScreen: ['Navigate/Focus previous image one screen width away',
+	prevScreen: ['Navigate/Screen width back',
 		function(){
 			// NOTE: the 0.2 is added to compensate for alignment/scaling
 			// 		errors -- 2.99 images wide counts as 3 while 2.5 as 2.
@@ -1103,7 +1103,7 @@ actions.Actions(Client, {
 			w += (w % 2) - 1
 			this.prevImage(w)
 		}],
-	nextScreen: ['Navigate/Focus next image one screen width away',
+	nextScreen: ['Navigate/Screen width forward',
 		function(){
 			var w = Math.floor(this.ribbons.getScreenWidthImages() + 0.2)
 			w += (w % 2) - 1
@@ -1160,7 +1160,7 @@ actions.Actions(Client, {
 			this.ribbons.fitImage(count)
 			this.refresh()
 		}],
-	fitMax: ['Fit the maximum number of images',
+	fitMax: ['Zoom/Fit the maximum number of images',
 		function(){ this.fitImage(this.config['max-screen-images']) }],
 
 
@@ -1277,7 +1277,7 @@ actions.Actions(Client, {
 
 	// XXX experimental: not sure if this is the right way to go...
 	// XXX make this play nice with crops...
-	toggleRibbonList: ['Toggle ribbons as images view',
+	toggleRibbonList: ['Interface/Toggle ribbons as images view',
 		function(){
 			if(this._full_data == null){
 				// XXX do a better name here...
@@ -1317,13 +1317,13 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 // 		and re-run the journal until the desired event...
 var Journal = 
 module.Journal = features.Feature(ImageGridFeatures, {
-	title: 'Partial Ribbons',
+	title: 'Action Journal',
 
 	tag: 'system-journal',
 
 	actions: actions.Actions({
 		// XXX might be good to add some kind of metadata to journal...
-		journalPush: ['add an item to journal',
+		journalPush: ['Journal/Add an item to journal',
 			function(){
 				if(this.journal == null){
 					this.journal = []
@@ -1331,7 +1331,7 @@ module.Journal = features.Feature(ImageGridFeatures, {
 				//console.log('ACTION:', action, args2array(arguments))
 				this.journal.push(args2array(arguments))
 			}],
-		clearJournal: ['Clear the action journal',
+		clearJournal: ['Journal/Clear the action journal',
 			function(){
 				if(this.journal){
 					delete this.journal
@@ -1591,7 +1591,7 @@ module.PartialRibbons = features.Feature(ImageGridFeatures, {
 //---------------------------------------------------------------------
 
 var SingleImageActions = actions.Actions({
-	toggleSingleImage: ['Toggle single image view', 
+	toggleSingleImage: ['Interface/Toggle single image view', 
 		// XXX this is wrong!!!
 		CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
@@ -2370,9 +2370,9 @@ var ImageMarkActions = actions.Actions({
 		}],
 
 	// XXX do we need first/last marked???
-	prevMarked: ['Mark|Navigate/Focus previous marked image',
+	prevMarked: ['Mark|Navigate/Previous marked image',
 		function(mode){ this.prevTagged('selected', mode) }],
-	nextMarked: ['Mark|Navigate/Focus next marked image',
+	nextMarked: ['Mark|Navigate/Next marked image',
 		function(mode){ this.nextTagged('selected', mode) }],
 
 	cropMarked: ['Mark|Crop/Crop marked images',
@@ -2421,23 +2421,23 @@ var ImageBookmarkActions = actions.Actions({
 		return this.data.tags['bookmark'].slice()
 	},
 
-	toggleBookmark: ['Bookmark/',
+	toggleBookmark: ['Bookmark/Toggle image bookmark',
 		makeTagTogglerAction('bookmark')],
 	// action can be:
 	// 	'on'	- toggle all on
 	// 	'off'	- toggle all off
 	// 	'next'	- toggle each image to next state
-	toggleBookmarkOnMarked: ['Bookmark|Mark/',
+	toggleBookmarkOnMarked: ['Bookmark|Mark/Toggle bookmark on maked images',
 		function(action){ 
 			return this.toggleBookmark(this.data.getTaggedByAny('selected'), action) 
 		}],
 
-	prevBookmarked: ['Bookmark|Navigate/',
+	prevBookmarked: ['Bookmark|Navigate/Previous bookmarked image',
 		function(mode){ this.prevTagged('bookmark', mode) }],
-	nextBookmarked: ['Bookmark|Navigate/',
+	nextBookmarked: ['Bookmark|Navigate/Next bookmarked image',
 		function(mode){ this.nextTagged('bookmark', mode) }],
 
-	cropBookmarked: ['Bookmark|Crop/',
+	cropBookmarked: ['Bookmark|Crop/Crop bookmarked images',
 		function(flatten){ this.cropTagged('bookmark', 'any', flatten) }],
 })
 
