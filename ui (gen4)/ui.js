@@ -237,14 +237,14 @@ $(function(){
 	window.overlay = overlay
 
 
-	// XXX make this an action...
-	var makeActionLister = function(list){
+	var makeActionLister = function(list, filter){
 		return function(){
 			var paths = a.getPath()
 			var actions = {}
 
 			Object.keys(paths).forEach(function(k){
 				var n = paths[k][0]
+				k = filter ? filter(k) : k
 				actions[k] = function(){
 					return a[n].apply(a)
 				}
@@ -259,8 +259,18 @@ $(function(){
 		}
 	}
 
+	// XXX make this an action...
 	window.browseActions = makeActionLister(browse.makePathList)
-	window.listActions = makeActionLister(browse.makeList)
+
+	// XXX make this an action...
+	window.listActions = makeActionLister(browse.makeList, 
+		// format the doc to: <name> (<category>, ..)
+		// NOTE: this a bit naive...
+		function(k){ 
+			var l = k.split(/[\\\/\|]/)
+			var a = l.pop()
+			return a +' ('+ l.join(', ') +')'
+		})
 
 	// XXX
 	window.a = testing.setupActions()
