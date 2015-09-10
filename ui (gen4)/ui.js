@@ -244,13 +244,14 @@ $(function(){
 
 			Object.keys(paths).forEach(function(k){
 				var n = paths[k][0]
-				k = filter ? filter(k) : k
+				var k = filter ? filter(k) : k
 				actions[k] = function(){
-					return a[n].apply(a)
+					console.log('>>>>', n, k)
+					return a[n]()
 				}
 			})
 
-			var b = list(null, actions)
+			var b = L = list(null, actions)
 			var o = overlay.Overlay($('body'), b.dom)
 
 			b.open(function(){ o.close() })

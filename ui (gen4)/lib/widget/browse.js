@@ -27,6 +27,15 @@ var widget = require('./widget')
 
 
 /*********************************************************************/
+// Helpers...
+
+var quoteWS = function(str){
+	return str.replace(/(\s)/g, '\\$1')
+}
+
+
+
+/*********************************************************************/
 
 // NOTE: the widget itself does not need a title, that's the job for
 //		a container widget (dialog, field, ...)
@@ -538,7 +547,7 @@ var BrowserPrototype = {
 			/* XXX does the right thing (replaces the later .focus(..) 
 			 * 		and .keyup(..)) but does not work in IE...
 			.on('input', function(){
-				that.filterList($(this).text())
+				that.filterList(quoteWS($(this).text()))
 			})
 			*/
 			// only update if text changed...
@@ -583,7 +592,7 @@ var BrowserPrototype = {
 				// handle clicks ONLY when not disabled...
 				.click(function(){
 					if(!$(this).hasClass('disabled')){
-						that.push($(this).text()) 
+						that.push(quoteWS($(this).text())) 
 					}
 				})
 				.text(p)
@@ -634,6 +643,10 @@ var BrowserPrototype = {
 	// 	Get all elements containing a string...
 	// 	.filter(<string>)
 	// 		-> elements
+	// 		NOTE: as whitespace is treated as a pattern separator, if it
+	// 			is need explicitly simply quote it...
+	// 				'a b c'		- three sub patterns: 'a', 'b' and 'c'
+	// 				'a\ b\ c'	- single pattern
 	//
 	// 	Get all elements matching a regexp...
 	// 	.filter(<regexp>)
@@ -686,6 +699,9 @@ var BrowserPrototype = {
 	// TODO need to support glob / nested patterns...
 	// 		..things like /**/a*/*moo/ should list all matching items in
 	// 		a single list.
+	//
+	// XXX case sensitivity???
+	// XXX invalid patterns that the user did not finish inputing???
 	filter: function(pattern, a, b){
 		pattern = pattern == null ? '*' : pattern
 		var ignore_disabled = typeof(a) == typeof(true) ? a : b
@@ -730,7 +746,8 @@ var BrowserPrototype = {
 		// NOTE: this supports several space-separated patterns.
 		// XXX support glob...
 		} else if(typeof(pattern) == typeof('str')){
-			var pl = pattern.trim().split(/\s+/)
+			//var pl = pattern.trim().split(/\s+/)
+			var pl = pattern.trim().split(/[^\\]\s/).filter(function(e){ return e.trim() != '' })
 			var filter = function(i, e){
 				e = $(e)
 				var t = e.text()
@@ -771,6 +788,7 @@ var BrowserPrototype = {
 	// NOTE: see .filter(..) for docs on actual filtering.
 	// NOTE: this does not affect any UI modes, for list filtering mode
 	// 		see: .toggleFilter(..)...
+	// XXX should this be case insensitive???
 	filterList: function(pattern){
 		var that = this
 		var browser = this.dom
@@ -785,7 +803,19 @@ var BrowserPrototype = {
 
 		// basic filter...
 		} else {
-			var p = RegExp('(' + pattern.trim().split(/\s+/).join('|') + ')', 'g')
+			var p = RegExp('(' 
+				+ pattern
+					.trim()
+					// ignore trailing '\'
+					.replace(/\\+$/, '')
+					.split(/[^\\]\s/)
+					// drop empty strings...
+					.filter(function(e){ return e.trim() != '' })
+					// remove escapes...
+					.map(function(e){ return e.replace(/\\(\s)/, '$1') })
+					.join('|') 
+				+ ')', 'gi')
+			// XXX should this be case insensitive???
 			this.filter(pattern,
 					// rejected...
 					function(i, e){
@@ -1196,7 +1226,7 @@ var BrowserPrototype = {
 		}
 
 		var path = this.path
-		var txt = elem.text()
+		var txt = quoteWS(elem.text())
 		path.push(elem.text())
 
 		// XXX should this be before or after the actual path update???
@@ -1252,7 +1282,7 @@ var BrowserPrototype = {
 
 		var path = this.path
 
-		path.push(elem.text())
+		path.push(quoteWS(elem.text()))
 
 		var res = this.open(path)
 
@@ -1387,7 +1417,7 @@ var BrowserPrototype = {
 			}
 
 			path = this.path
-			path.push(elem.text())
+			path.push(quoteWS(elem.text()))
 		}
 
 		// get the options method and call it if it exists...
@@ -1811,7 +1841,8 @@ PathListPrototype.options = {
 						var e = make(cur, star || kp.length > 0)
 
 						// setup handlers...
-						if(!star && data !== keys && kp.length == 0){
+						if(!star && data !== keys && kp.length == 0 && data[k] != null){
+							//console.log('>>> "'+ cur +'" -> "'+ k +'"')
 							e.on('open', function(){ 
 								return that.options.data[k].apply(this, arguments)
 							})
