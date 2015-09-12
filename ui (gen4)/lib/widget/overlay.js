@@ -9,6 +9,7 @@ console.log('>>> overlay')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var keyboard = require('../keyboard')
 var object = require('../../object')
 var widget = require('./widget')
 
@@ -37,11 +38,21 @@ var OverlayClassPrototype = {
 
 var OverlayPrototype = {
 	dom: null,
+	client: null,
+
 	options: {
 		nonPropagatedEvents: [
-			'clik',
-			//'keydown',
+			'click',
+			'keydown',
 		],
+	},
+
+	keyboard: {
+		General: {
+			pattern: '.browse-widget',
+
+			Esc: 'close',
+		},
 	},
 
 	// XXX triggering events from here and from jQuery/dom has a 
@@ -78,12 +89,14 @@ var OverlayPrototype = {
 		parent = this.parent = $(parent || 'body')
 		options = options || {}
 
+		this.client = client
+
 		// merge options...
 		var opts = Object.create(this.options)
 		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
 		options = this.options = opts
 
-		var dom = this.dom = this.constructor.make(client, options)
+		var dom = this.dom = this.constructor.make(client.dom || client, options)
 			.click(function(){
 				that.close()
 			})
@@ -91,6 +104,18 @@ var OverlayPrototype = {
 		parent
 			.addClass('blur')
 			.append(dom)
+
+		// add keyboard handler...
+		dom.keydown(
+			keyboard.makeKeyboardHandler(
+				this.keyboard,
+				options.logKeys,
+				this))
+
+		// focus the client...
+		if(client.focus){
+			client.focus()
+		}
 
 		return this
 	},

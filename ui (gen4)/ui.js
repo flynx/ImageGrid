@@ -236,27 +236,36 @@ $(function(){
 	window.browse = browse
 	window.overlay = overlay
 
+	actionCategoryOrder = [
+		'File',
+		'Edit',
+		'Navigate',
+	]
 
 	var makeActionLister = function(list, filter){
 		return function(){
 			var paths = a.getPath()
 			var actions = {}
 
+			// pre-order the main categories...
+			actionCategoryOrder.forEach(function(k){
+				actions[k] = null
+			})
+
+			// build the action list...
 			Object.keys(paths).forEach(function(k){
 				var n = paths[k][0]
 				var k = filter ? filter(k) : k
 				actions[k] = function(){
-					console.log('>>>>', n, k)
 					return a[n]()
 				}
 			})
 
-			var b = L = list(null, actions)
-			var o = overlay.Overlay($('body'), b.dom)
+			var o = overlay.Overlay($('body'), 
+				list(null, actions)
+					.open(function(){ o.close() }))
 
-			b.open(function(){ o.close() })
-
-			b.focus()
+			L = o.client
 		}
 	}
 

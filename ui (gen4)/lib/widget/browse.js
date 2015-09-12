@@ -146,7 +146,7 @@ var BrowserPrototype = {
 			'select',
 			'deselect',
 
-			'keydown',
+			//'keydown',
 		],
 	},
 
@@ -1842,7 +1842,6 @@ PathListPrototype.options = {
 
 						// setup handlers...
 						if(!star && data !== keys && kp.length == 0 && data[k] != null){
-							//console.log('>>> "'+ cur +'" -> "'+ k +'"')
 							e.on('open', function(){ 
 								return that.options.data[k].apply(this, arguments)
 							})
