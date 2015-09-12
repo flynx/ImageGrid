@@ -204,10 +204,10 @@ module.GLOBAL_KEYBOARD = {
 		// marking...
 		M: {
 			default: 'toggleMark',
+			alt: 'browseActions: "/Mark/"',
 		},
 		A: {
-			// XXX STUB...
-			alt: function(){ browseActions() },
+			alt: 'browseActions',
 			ctrl: 'toggleMark!: "ribbon" "on"',
 		},
 		D: {
@@ -222,6 +222,7 @@ module.GLOBAL_KEYBOARD = {
 		B: {
 			default: 'toggleBookmark',
 			ctrl: 'toggleTheme!',
+			alt: 'browseActions: "/Bookmark/"',
 		},
 	},
 }	
@@ -232,55 +233,6 @@ module.GLOBAL_KEYBOARD = {
 /*********************************************************************/
 
 $(function(){
-
-	window.browse = browse
-	window.overlay = overlay
-
-	actionCategoryOrder = [
-		'File',
-		'Edit',
-		'Navigate',
-	]
-
-	var makeActionLister = function(list, filter){
-		return function(){
-			var paths = a.getPath()
-			var actions = {}
-
-			// pre-order the main categories...
-			actionCategoryOrder.forEach(function(k){
-				actions[k] = null
-			})
-
-			// build the action list...
-			Object.keys(paths).forEach(function(k){
-				var n = paths[k][0]
-				var k = filter ? filter(k) : k
-				actions[k] = function(){
-					return a[n]()
-				}
-			})
-
-			var o = overlay.Overlay($('body'), 
-				list(null, actions)
-					.open(function(){ o.close() }))
-
-			L = o.client
-		}
-	}
-
-	// XXX make this an action...
-	window.browseActions = makeActionLister(browse.makePathList)
-
-	// XXX make this an action...
-	window.listActions = makeActionLister(browse.makeList, 
-		// format the doc to: <name> (<category>, ..)
-		// NOTE: this a bit naive...
-		function(k){ 
-			var l = k.split(/[\\\/\|]/)
-			var a = l.pop()
-			return a +' ('+ l.join(', ') +')'
-		})
 
 	// XXX
 	window.a = testing.setupActions()

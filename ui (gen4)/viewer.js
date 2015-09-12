@@ -2211,6 +2211,80 @@ module.GlobalStateIndicator = features.Feature(ImageGridFeatures, {
 
 
 //---------------------------------------------------------------------
+// XXX revise names...
+
+// widgets...
+var browse = require('lib/widget/browse')
+var overlay = require('lib/widget/overlay')
+
+var makeActionLister = function(list, filter, pre_order){
+	pre_order = typeof(filter) == typeof(true) ? filter : pre_order
+	filter = typeof(filter) == typeof(true) ? null : filter
+
+	return function(path){
+		var paths = a.getPath()
+		var actions = {}
+
+		// pre-order the main categories...
+		if(pre_order){
+			this.config['action-category-order'].forEach(function(k){
+				actions[k] = null
+			})
+		}
+
+		// build the action list...
+		Object.keys(paths).forEach(function(k){
+			var n = paths[k][0]
+			var k = filter ? filter(k, n) : k
+			actions[k] = function(){
+				return a[n]()
+			}
+		})
+
+		var o = overlay.Overlay($('body'), 
+			list(null, actions, path)
+				.open(function(){ o.close() }))
+
+		return this
+	}
+}
+
+var ActionTreeActions = actions.Actions({
+	browseActions: ['Interface/Browse actions',
+		makeActionLister(browse.makePathList, true)],
+
+	listActions:['Interface/List actions',
+		makeActionLister(browse.makeList, 
+			// format the doc to: <name> (<category>, ..)
+			// NOTE: this a bit naive...
+			function(k){ 
+				var l = k.split(/[\\\/\|]/)
+				var a = l.pop()
+				return a +' ('+ l.join(', ') +')'
+			})],
+})
+
+var ActionTree = 
+module.ActionTree = features.Feature(ImageGridFeatures, {
+	title: '',
+	doc: '',
+
+	tag: 'ui-action-tree',
+
+	config: {
+		'action-category-order': [
+			'File',
+			'Edit',
+			'Navigate',
+		],
+	},
+
+	actions: ActionTreeActions,
+})
+
+
+
+//---------------------------------------------------------------------
 // XXX console / log / status bar
 // XXX title bar
 
@@ -2560,6 +2634,7 @@ features.Feature(ImageGridFeatures, 'viewer-testing', [
 		//'ui-current-image-indicator-hide-on-screen-nav',
 	'ui-image-state-indicator',
 	'ui-global-state-indicator',
+	'ui-action-tree',
 
 	// experimental and optional features...
 	//'auto-single-image',
@@ -2580,6 +2655,7 @@ features.Feature(ImageGridFeatures, 'viewer-minimal', [
 	'ui-current-image-indicator',
 		'ui-current-image-indicator-hide-on-fast-screen-nav',
 		//'ui-current-image-indicator-hide-on-screen-nav',
+	'ui-action-tree',
 ])
 
 features.Feature(ImageGridFeatures, 'viewer', [

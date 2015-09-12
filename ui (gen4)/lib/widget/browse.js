@@ -1863,8 +1863,8 @@ object.makeConstructor('PathList',
 		PathListPrototype)
 
 var makePathList = 
-module.makePathList = function(elem, list){
-	return PathList(elem, { data: list })
+module.makePathList = function(elem, list, path){
+	return PathList(elem, { data: list, path: path })
 }
 
 
