@@ -2547,17 +2547,17 @@ module.ImageBookmarks = features.Feature(ImageGridFeatures, {
 
 var AppControlActions = actions.Actions({
 	// XXX revise these...
-	close: ['Cloase viewer',
+	close: ['File|Interface/Cloase viewer',
 		function(){
 			// XXX should we do anything else here like auto-save???
 			window.close() 
 		}],
-	toggleFullScreen: ['',
+	toggleFullScreen: ['Interface/Toggle full screen mode',
 		function(){
 			// XXX where should toggleFullscreenMode(..) be defined...
 			toggleFullscreenMode() 
 		}],
-	showDevTools: ['',
+	showDevTools: ['Interface|Development/Show Dev Tools',
 		function(){
 			if(window.showDevTools != null){
 				showDevTools() 

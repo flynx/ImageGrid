@@ -180,6 +180,50 @@ function normalizeModifiers(c, m, a, s){
 }
 
 
+// Event handler wrapper that will drop identical keys repeating at rate
+// greater than max_rate
+//
+// NOTE: this will only limit repeating key combinations thus no lag is 
+// 		introduced...
+var dropRepeatingkeys =
+module.dropRepeatingkeys =
+function dropRepeatingkeys(handler, max_rate){
+	var _timeout = null
+
+	var key = null
+
+	var ctrl = null
+	var meta = null
+	var alt = null
+	var shift = null
+
+	return function(evt){
+		if(_timeout != null
+				&& key == evt.keyCode
+				&& ctrl == evt.ctrlKey
+				&& meta == evt.metaKey
+				&& alt == evt.altKey
+				&& shift == evt.shiftKey){
+			return
+		}
+
+		key = evt.keyCode
+		ctrl = evt.ctrlKey
+		meta = evt.metaKey
+		alt = evt.altKey
+		shift = evt.shiftKey
+
+		_timeout = setTimeout(function(){
+				_timeout = null
+			}, 
+			// XXX is this the right way to go???
+			typeof(max_rate) == typeof(123) ? max_rate : max_rate())
+
+		return handler(evt)
+	}
+}
+
+
 /* Key handler getter
  *
  * For doc on format see makeKeyboardHandler(...)

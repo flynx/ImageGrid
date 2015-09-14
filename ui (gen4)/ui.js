@@ -61,6 +61,9 @@ var overlay = require('lib/widget/overlay')
 
 /*********************************************************************/
 
+// XXX move this to config...
+module.MAX_KEY_REPEAT_RATE = 100
+
 // XXX add this to the global doc...
 module.GLOBAL_KEYBOARD = {
 	'Global bindings': {
@@ -229,7 +232,6 @@ module.GLOBAL_KEYBOARD = {
 
 
 
-
 /*********************************************************************/
 
 $(function(){
@@ -278,12 +280,17 @@ $(function(){
 	// setup base keyboard for devel, in case something breaks...
 	$(document)
 		.keydown(
-			keyboard.makeKeyboardHandler(
-				module.GLOBAL_KEYBOARD,
-				function(k){
-					window.DEBUG && console.log(k)
-				}, 
-				a))
+			keyboard.dropRepeatingkeys(
+				keyboard.makeKeyboardHandler(
+					module.GLOBAL_KEYBOARD,
+					function(k){
+						window.DEBUG && console.log(k)
+					}, 
+					a), 
+				function(){ 
+					// XXX get this from config...
+					return module.MAX_KEY_REPEAT_RATE
+				}))
 })
 
 

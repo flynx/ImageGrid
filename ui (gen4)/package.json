@@ -1,9 +1,9 @@
 {
-  "name": "ImageGrid.Viewer",
+  "name": "ImageGrid.Viewer (gen4)",
   "main": "index.html",
   "version": "0.0.1",
   "window": {
-    "title": "ImageGrid.Viewer",
+    "title": "ImageGrid.Viewer (gen4)",
     "position": "center",
     "width": 900,
     "height": 700,
