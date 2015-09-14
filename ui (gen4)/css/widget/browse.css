@@ -46,7 +46,7 @@
 	 	dive into the configuration to change the container size 
 		limits
 	*/
-	max-width: 50vh;
+	max-width: 80vh;
 	overflow: auto;
 }
 /* XXX not sure about this... */
@@ -161,7 +161,7 @@
 	 	dive into the configuration to change the container size 
 		limits
 	*/
-	max-width: 50vh;
+	max-width: 80vh;
 	overflow: hidden;
 }
 .browse-widget:not(.flat) .list div:not(.not-traversable):after {
