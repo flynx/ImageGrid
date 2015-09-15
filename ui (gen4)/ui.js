@@ -62,7 +62,10 @@ var overlay = require('lib/widget/overlay')
 /*********************************************************************/
 
 // XXX move this to config...
-module.MAX_KEY_REPEAT_RATE = 100
+// NOTE: setting this here (and only here) to -1 or null will desable 
+// 		key dropping...
+// NOTE: keeping this disabled is recommended for development...
+module.MAX_KEY_REPEAT_RATE = 0 //100
 
 // XXX add this to the global doc...
 module.GLOBAL_KEYBOARD = {
@@ -278,19 +281,31 @@ $(function(){
 
 
 	// setup base keyboard for devel, in case something breaks...
-	$(document)
-		.keydown(
-			keyboard.dropRepeatingkeys(
+	if(module.MAX_KEY_REPEAT_RATE < 0 || module.MAX_KEY_REPEAT_RATE == null){
+		$(document)
+			.keydown(
 				keyboard.makeKeyboardHandler(
 					module.GLOBAL_KEYBOARD,
 					function(k){
 						window.DEBUG && console.log(k)
 					}, 
-					a), 
-				function(){ 
-					// XXX get this from config...
-					return module.MAX_KEY_REPEAT_RATE
-				}))
+					a))
+
+	} else {
+		$(document)
+			.keydown(
+				keyboard.dropRepeatingkeys(
+					keyboard.makeKeyboardHandler(
+						module.GLOBAL_KEYBOARD,
+						function(k){
+							window.DEBUG && console.log(k)
+						},
+						a), 
+					function(){ 
+						// XXX get this from config...
+						return module.MAX_KEY_REPEAT_RATE
+					}))
+	}
 })
 
 
