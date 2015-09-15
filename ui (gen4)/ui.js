@@ -53,11 +53,6 @@ var viewer = require('viewer')
 //var promise = require('promise')
 
 
-// widgets...
-var browse = require('lib/widget/browse')
-var overlay = require('lib/widget/overlay')
-
-
 
 /*********************************************************************/
 
@@ -65,7 +60,12 @@ var overlay = require('lib/widget/overlay')
 // NOTE: setting this here (and only here) to -1 or null will desable 
 // 		key dropping...
 // NOTE: keeping this disabled is recommended for development...
-module.MAX_KEY_REPEAT_RATE = 0 //100
+// NOTE: setting this to 0 will only allow a single keypress per 
+// 		execution frame...
+// 		XXX yes there should be only one execution frame per event 
+// 			triggered but this actually improves things, thus the issue 
+// 			needs more investigation...
+module.MAX_KEY_REPEAT_RATE = 0
 
 // XXX add this to the global doc...
 module.GLOBAL_KEYBOARD = {
@@ -230,6 +230,7 @@ module.GLOBAL_KEYBOARD = {
 			ctrl: 'toggleTheme!',
 			alt: 'browseActions: "/Bookmark/"',
 		},
+		C: 'browseActions: "/Crop/"',
 	},
 }	
 

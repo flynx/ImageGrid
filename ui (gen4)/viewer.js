@@ -257,7 +257,7 @@ actions.Actions({
 	// 		adding new items to the resulting structure...
 	// XXX is this the correct way to go???
 	// 		...can we save simple attribute values???
-	json: ['File/Dump state as JSOM object',
+	json: ['File/Dump state as JSON object',
 		'This will collect JSON data from every available attribute '
 			+'supporting the .dumpJSON() method.',
 		function(){
