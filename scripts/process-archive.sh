@@ -188,9 +188,21 @@ makepreview(){
 		# calculate the factor...
 		FACTOR=$(echo "scale = 4; if($H > $W) s = $H else s = $W ; s / $SIZE" | bc -l)
 
-		echo "($FACTOR): ${OUT}:${COMPRESSION}"
+		# NOTE: bash does not do float comparisons so we cheat again ;)
+		TOO_SMALL=$(echo "if($FACTOR <= 1) s = 1 else s = 0 ; s" | bc -l)
 
-		vips im_shrink "./$IN" "./${OUT}:${COMPRESSION}" $FACTOR $FACTOR 2> /dev/null
+		# the input is smaller than target size, copy as-is...
+		if [[ $TOO_SMALL == 1 ]] ; then
+			echo "$IN: Too small, copying as-is..."
+
+			cp "./$IN" "./$OUT"
+
+		# shrink...
+		else
+			echo "($FACTOR): ${OUT}:${COMPRESSION}"
+
+			vips im_shrink "./$IN" "./${OUT}:${COMPRESSION}" $FACTOR $FACTOR 2> /dev/null
+		fi
 
 		touch -c -r "./$IN" "./${OUT}"
 
