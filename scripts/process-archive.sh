@@ -97,7 +97,13 @@ JSON_NAME="%-:1d/${METADATA_DIR}/%f.json"
 #	- to be more flexible...
 #	- check speed...
 #	- give the user more options...
-#
+# TODO use dcraw to extract/generate previews if we could not get any 
+#	via exiftool
+#		dcraw -e $RAW 
+#			- try and extract a preview
+#			- creates a file: $RAW-thumb.jpg
+#		dcraw -c $RAW | pnmtojpeg -quality=90 > $JPG
+#			- process raw and convert to jpeg (slow)
 
 # XXX need to also copy jpg originals to the preview dir (things that 
 #	were shot in jpeg in-camera)...
