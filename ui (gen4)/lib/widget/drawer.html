@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="../../css/widget/drawer.css">
+<style>
+
+
+.container {
+	position: absolute;
+	box-sizing: border-box;
+
+	width: 50vw;
+	height: 50vh;
+	top: 10vh;
+	right: 10vw;
+
+	border: solid 1px black;
+
+	padding: 10px;
+}
+
+
+.drawer-content {
+	padding: 5px;
+}
+body>.drawer-content {
+	display: none;
+}
+
+
+.drawer-widget .content {
+	background: white;
+}
+
+/* theaming... */
+
+body.dark {
+	background: black;
+	color: white;
+}
+.dark ::-webkit-scrollbar-track-piece {
+	background: rgba(255, 255, 255, 0.05);
+}
+.dark ::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.15);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+	background: rgba(255, 255, 255, 0.3);
+}
+.dark .container {
+	border: solid 1px rgba(255, 255, 255, 0.2);
+}
+
+
+
+
+</style>
+
+<script src="../../ext-lib/jquery.js"></script>
+<script src="../../ext-lib/jquery-ui.js"></script>
+
+<script src="../jli.js"></script>
+<script src="../toggler.js"></script>
+
+<script src="../../ext-lib/require.js"></script>
+
+
+<script>
+
+requirejs(['../keyboard', '../../object', './drawer'], function(kbd, obj, d){
+	keyboard = kbd
+	drawer = d
+	object = obj
+})
+
+$(function(){
+
+})
+
+
+
+var themeToggler = CSSClassToggler('body',
+		[
+			'none', 
+			'light',
+			'dark', 
+		],
+		function(state){
+			$('#theme').text(state)
+		})
+
+</script>
+
+<body>
+
+Theme: <button id="theme" onclick="themeToggler()">none</button>
+
+<br>
+
+<button onclick="drawer.Overlay('body', $('body>.drawer-content').clone())">Global drawer (default)</button>
+<button onclick="drawer.Overlay('.container', $('body>.drawer-content').clone())">Local drawer</button>
+
+
+<div class="container">
+	<h4>A context for an drawer...<h4>
+	<button onclick="drawer.Overlay('.container', $('body>.drawer-content').clone())">Local drawer</button>
+</div>
+
+
+<div class="drawer-content">
+	<h3>Overlay</h3>
+	<button>Sub drawer</button>
+</div>
+
+
+
+</body>
+</html>
+<!-- vim:set ts=4 sw=4 : -->

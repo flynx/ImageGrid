@@ -1,0 +1,54 @@
+
+.drawer-widget {
+	position: absolute;
+
+	width: 100%;
+	height: 100%;
+	top: 0px;
+	left: 0px;
+
+	overflow: auto;
+
+	background: rgba(0, 0, 0, 0.5);
+
+	-webkit-transform-style: preserve-3d;
+	-moz-transform-style: preserve-3d;
+	transform-style: preserve-3d;
+}
+.drawer-widget~.drawer-widget {
+	background: rgba(0, 0, 0, 0.1);
+}
+
+
+.drawer-widget .content {
+	position: relative;
+	display: inline-block;
+
+	top: 100%;
+	left: 0px;
+
+	width: 100%;
+	height: auto;
+
+	overflow: hidden;
+
+
+	box-shadow: rgba(0, 0, 0, 0.1) 0.3em 0.3em 5em;
+}
+.drawer-widget~.drawer-widget .content {
+	box-shadow: rgba(0, 0, 0, 0.05) 0.1em 0.1em 3em;
+}
+
+/* NOTE: this does not include text... 
+		...need a way to go around this...
+*/
+.blur>* {
+	-webkit-filter: blur(2px) saturate(0.3);
+	filter: blur(2px) saturate(0.3);
+}
+.blur>.drawer-widget {
+	-webkit-filter: none;
+	filter: none;
+}
+
+
