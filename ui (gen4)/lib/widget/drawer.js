@@ -5,7 +5,7 @@
 **********************************************************************/
 
 define(function(require){ var module = {}
-console.log('>>> overlay')
+console.log('>>> drawer')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
@@ -16,7 +16,7 @@ var widget = require('./widget')
 
 /*********************************************************************/
 
-var OverlayClassPrototype = {
+var DrawerClassPrototype = {
 	make: function(client, options){
 		var that = this
 		var overlay = $('<div>')
@@ -36,7 +36,7 @@ var OverlayClassPrototype = {
 }
 
 
-var OverlayPrototype = {
+var DrawerPrototype = {
 	dom: null,
 	client: null,
 
@@ -163,11 +163,11 @@ var OverlayPrototype = {
 }
 
 
-var Overlay = 
-module.Overlay = 
+var Drawer = 
+module.Drawer = 
 object.makeConstructor('Drawer', 
-		OverlayClassPrototype, 
-		OverlayPrototype)
+		DrawerClassPrototype, 
+		DrawerPrototype)
 
 
 

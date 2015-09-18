@@ -96,18 +96,18 @@ Theme: <button id="theme" onclick="themeToggler()">none</button>
 
 <br>
 
-<button onclick="drawer.Overlay('body', $('body>.drawer-content').clone())">Global drawer (default)</button>
-<button onclick="drawer.Overlay('.container', $('body>.drawer-content').clone())">Local drawer</button>
+<button onclick="drawer.Drawer('body', $('body>.drawer-content').clone())">Global drawer (default)</button>
+<button onclick="drawer.Drawer('.container', $('body>.drawer-content').clone())">Local drawer</button>
 
 
 <div class="container">
 	<h4>A context for an drawer...<h4>
-	<button onclick="drawer.Overlay('.container', $('body>.drawer-content').clone())">Local drawer</button>
+	<button onclick="drawer.Drawer('.container', $('body>.drawer-content').clone())">Local drawer</button>
 </div>
 
 
 <div class="drawer-content">
-	<h3>Overlay</h3>
+	<h3>Drawer</h3>
 	<button>Sub drawer</button>
 </div>
 
