@@ -2216,6 +2216,7 @@ module.GlobalStateIndicator = features.Feature(ImageGridFeatures, {
 // widgets...
 var browse = require('lib/widget/browse')
 var overlay = require('lib/widget/overlay')
+var drawer = require('lib/widget/drawer')
 
 var makeActionLister = function(list, filter, pre_order){
 	pre_order = typeof(filter) == typeof(true) ? filter : pre_order
@@ -2262,6 +2263,22 @@ var ActionTreeActions = actions.Actions({
 				var a = l.pop()
 				return a +' ('+ l.join(', ') +')'
 			})],
+
+	// XXX this is just a test...
+	drawerTest:['Interface/Drawer widget test',
+		function(){
+			drawer.Drawer($('body'), 
+				$('<div>')
+					.css({
+						position: 'relative',
+						background: 'white',
+						height: '300px',
+					})
+					.append($('<h1>')
+						.text('Drawer test...'))
+					.append($('<p>')
+						.text('With some text.')))
+		}],
 })
 
 var ActionTree = 

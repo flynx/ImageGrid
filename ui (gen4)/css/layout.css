@@ -793,6 +793,27 @@ stretching in width... */
   width: 12px;
   height: 3px;
 }
+/* XXX these are still experimental... */
+.mark.brace-opening {
+  width: 20px;
+  height: 310px;
+  border-top: solid 5px yellow;
+  border-left: solid 5px yellow;
+  border-bottom: solid 5px yellow;
+  margin-top: -10px;
+  margin-bottom: -10px;
+  margin-right: -15px;
+}
+.mark.brace-closing {
+  width: 20px;
+  height: 310px;
+  border-top: solid 5px yellow;
+  border-right: solid 5px yellow;
+  border-bottom: solid 5px yellow;
+  margin-top: -10px;
+  margin-bottom: -10px;
+  margin-left: -15px;
+}
 /****************************************************** Image info ***/
 .inline-image-info {
   display: none;
