@@ -41,6 +41,10 @@ var OverlayPrototype = {
 	client: null,
 
 	options: {
+		'close-at': 10,
+		'fade-at': 100,
+		'animate': 120,
+
 		nonPropagatedEvents: [
 			'click',
 			'keydown',
@@ -78,7 +82,7 @@ var OverlayPrototype = {
 					opacity: 0,
 					filter: 'none',
 				}, 
-				120,
+				this.options['animate'],
 				function(){
 					that.dom.detach()
 					if(that.parent.children('.overlay-widget').length == 0){
@@ -127,14 +131,15 @@ var OverlayPrototype = {
 						client_dom.outerHeight(), 
 						// do not scroll more than the container height and
 						// keep a bit on top...
-						(parent.is('body') ? $(document) : parent).outerHeight()-100)+'px',
+						(parent.is('body') ? $(document) : parent)
+							.outerHeight()-options['fade-at'])+'px',
 					opacity: 1,
 				}, 
-				120,
+				options['animate'],
 				function(){
 					dom.scroll(function(){
 						var st = $(this).scrollTop()
-						var h = Math.min(100, client_dom.outerHeight())
+						var h = Math.min(options['fade-at'], client_dom.outerHeight())
 						// start fading...
 						if(st < h){
 							dom.css({ opacity: Math.min(1, st/h) })
@@ -142,7 +147,7 @@ var OverlayPrototype = {
 							dom.css('opacity', 1)
 						}
 						// close drawer when scrolling to the top...
-						if(st < 10){
+						if(st < options['close-at']){
 							that.close()
 						}
 					})
