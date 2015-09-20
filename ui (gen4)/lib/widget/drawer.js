@@ -59,19 +59,6 @@ var DrawerPrototype = {
 		},
 	},
 
-	// XXX triggering events from here and from jQuery/dom has a 
-	// 		different effect...
-	trigger: widget.triggerEventWithSource,
-
-	// proxy event api...
-	on: widget.proxyToDom('on'),
-	one: widget.proxyToDom('one'),
-	off: widget.proxyToDom('off'),
-	bind: widget.proxyToDom('bind'),
-	unbind: widget.proxyToDom('unbind'),
-	deligate: widget.proxyToDom('deligate'),
-	undeligate: widget.proxyToDom('undeligate'),
-
 	// custom events...
 	close: function(handler){
 		// trigger the event...
@@ -99,32 +86,22 @@ var DrawerPrototype = {
 
 	__init__: function(parent, client, options){
 		var that = this
-		parent = this.parent = $(parent || 'body')
-		options = options || {}
 
-		this.client = client
+		object.superMethod(Drawer, '__init__').call(this, parent, client, options)
+
 		var client_dom = client.dom || client
+		var dom = this.dom
+		options = this.options
 
-		// merge options...
-		var opts = Object.create(this.options)
-		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
-		options = this.options = opts
-
-		var dom = this.dom = this.constructor.make(client_dom, options)
-			.click(function(){
-				that.close()
-			})
-
-		parent
+		this.parent
 			.addClass('blur')
 			.append(dom)
 
 		// add keyboard handler...
-		dom.keydown(
-			keyboard.makeKeyboardHandler(
-				this.keyboard,
-				options.logKeys,
-				this))
+		dom
+			.click(function(){
+				that.close()
+			})
 			.css({opacity: 0})
 			.animate({
 					scrollTop: Math.min(
@@ -168,6 +145,9 @@ module.Drawer =
 object.makeConstructor('Drawer', 
 		DrawerClassPrototype, 
 		DrawerPrototype)
+
+// inherit from widget...
+Drawer.prototype.__proto__ = widget.Container.prototype
 
 
 

@@ -55,19 +55,6 @@ var OverlayPrototype = {
 		},
 	},
 
-	// XXX triggering events from here and from jQuery/dom has a 
-	// 		different effect...
-	trigger: widget.triggerEventWithSource,
-
-	// proxy event api...
-	on: widget.proxyToDom('on'),
-	one: widget.proxyToDom('one'),
-	off: widget.proxyToDom('off'),
-	bind: widget.proxyToDom('bind'),
-	unbind: widget.proxyToDom('unbind'),
-	deligate: widget.proxyToDom('deligate'),
-	undeligate: widget.proxyToDom('undeligate'),
-
 	// custom events...
 	close: function(handler){
 		// trigger the event...
@@ -86,31 +73,17 @@ var OverlayPrototype = {
 
 	__init__: function(parent, client, options){
 		var that = this
-		parent = this.parent = $(parent || 'body')
-		options = options || {}
 
-		this.client = client
+		object.superMethod(Overlay, '__init__').call(this, parent, client, options)
 
-		// merge options...
-		var opts = Object.create(this.options)
-		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
-		options = this.options = opts
-
-		var dom = this.dom = this.constructor.make(client.dom || client, options)
+		this.dom
 			.click(function(){
 				that.close()
 			})
 
-		parent
+		this.parent
 			.addClass('blur')
-			.append(dom)
-
-		// add keyboard handler...
-		dom.keydown(
-			keyboard.makeKeyboardHandler(
-				this.keyboard,
-				options.logKeys,
-				this))
+			.append(this.dom)
 
 		// focus the client...
 		if(client.focus){
@@ -122,11 +95,16 @@ var OverlayPrototype = {
 }
 
 
+
 var Overlay = 
 module.Overlay = 
 object.makeConstructor('Overlay', 
 		OverlayClassPrototype, 
 		OverlayPrototype)
+
+
+// inherit from widget...
+Overlay.prototype.__proto__ = widget.Container.prototype
 
 
 

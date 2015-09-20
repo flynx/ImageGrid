@@ -65,10 +65,10 @@ function makeConstructor(name, a, b){
 
 
 // super equivalent...
-var parent =
-module.parent =
-function parent(obj){
-	return obj.__proto__.__proto__
+var superMethod =
+module.superMethod =
+function superMethod(cls, meth){
+	return cls.prototype.__proto__[meth]
 }
 
 

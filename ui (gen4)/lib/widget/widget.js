@@ -9,6 +9,10 @@ console.log('>>> widget')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var keyboard = require('../keyboard')
+var object = require('../../object')
+
+
 
 /*********************************************************************/
 // helpers...
@@ -47,6 +51,130 @@ function(){
 
 /*********************************************************************/
 
+var WidgetClassPrototype = {
+	make: function(client, options){
+		console.error('Widget must define a .make method.')
+	},
+}
+
+
+var WidgetPrototype = {
+	dom: null,
+	client: null,
+
+	options: {
+		nonPropagatedEvents: [
+			'click',
+			'keydown',
+		],
+	},
+
+	keyboard: null,
+
+	// XXX triggering events from here and from jQuery/dom has a 
+	// 		different effect...
+	trigger: triggerEventWithSource,
+
+	// proxy event api...
+	on: proxyToDom('on'),
+	one: proxyToDom('one'),
+	off: proxyToDom('off'),
+	bind: proxyToDom('bind'),
+	unbind: proxyToDom('unbind'),
+	deligate: proxyToDom('deligate'),
+	undeligate: proxyToDom('undeligate'),
+
+
+	// XXX this will not:
+	// 		- attach dom to parent...
+	// 		- handle focus...
+	// XXX same as ContainerPrototype.__init__ but skips client...
+	__init__: function(parent, options){
+		var that = this
+
+		parent = this.parent = $(parent || 'body')
+		options = options || {}
+
+		// merge options...
+		var opts = Object.create(this.options)
+		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
+		options = this.options = opts
+
+		// build the dom...
+		if(this.constructor.make){
+			var dom = this.dom = this.constructor.make(options)
+		}
+
+		// add keyboard handler...
+		if(this.keyboard){
+			dom.keydown(
+				keyboard.makeKeyboardHandler(
+					this.keyboard,
+					options.logKeys,
+					this))
+		}
+
+		return this
+	},
+}
+
+
+
+var Widget = 
+module.Widget = 
+object.makeConstructor('Widget', 
+		WidgetClassPrototype, 
+		WidgetPrototype)
+
+
+
+/*********************************************************************/
+
+var ContainerClassPrototype = {
+}
+
+
+var ContainerPrototype = {
+	// XXX this is the same as WidgetPrototype.__init__ but also handles
+	// 		the client...
+	__init__: function(parent, client, options){
+		var that = this
+		parent = this.parent = $(parent || 'body')
+		options = options || {}
+
+		this.client = client
+
+		// merge options...
+		var opts = Object.create(this.options)
+		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
+		options = this.options = opts
+
+		// build the dom...
+		if(this.constructor.make){
+			var dom = this.dom = this.constructor.make(client.dom || client, options)
+		}
+
+		// add keyboard handler...
+		if(this.keyboard){
+			dom.keydown(
+				keyboard.makeKeyboardHandler(
+					this.keyboard,
+					options.logKeys,
+					this))
+		}
+
+		return this
+	},
+}
+
+
+var Container = 
+module.Container = 
+object.makeConstructor('Container', 
+		ContainerClassPrototype, 
+		ContainerPrototype)
+
+Container.prototype.__proto__ = Widget.prototype
 
 
 

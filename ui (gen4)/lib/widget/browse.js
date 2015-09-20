@@ -312,16 +312,7 @@ var BrowserPrototype = {
 	//
 	// XXX triggering events from here and from jQuery/dom has a 
 	// 		different effect...
-	trigger: widget.triggerEventWithSource,
-
-	// proxy event api...
-	on: widget.proxyToDom('on'),
-	one: widget.proxyToDom('one'),
-	off: widget.proxyToDom('off'),
-	bind: widget.proxyToDom('bind'),
-	unbind: widget.proxyToDom('unbind'),
-	deligate: widget.proxyToDom('deligate'),
-	undeligate: widget.proxyToDom('undeligate'),
+	//trigger: widget.triggerEventWithSource,
 
 	// specific events...
 	focus: widget.proxyToDom('focus'),
@@ -1499,15 +1490,11 @@ var BrowserPrototype = {
 	// XXX handle copy...
 	__init__: function(parent, options){
 		var that = this
-		options = options || {}
 
-		// merge options...
-		var opts = Object.create(this.options)
-		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
-		options = this.options = opts
+		object.superMethod(Browser, '__init__').call(this, parent, options)
 
-		// build the dom...
-		var dom = this.dom = this.constructor.make(options)
+		var dom = this.dom
+		options = this.options
 
 		// basic permanent interactions...
 		dom.find('.path')
@@ -1553,13 +1540,6 @@ var BrowserPrototype = {
 			})
 			*/
 
-		// add keyboard handler...
-		dom.keydown(
-			keyboard.makeKeyboardHandler(
-				this.keyboard,
-				options.logKeys,
-				this))
-
 		// attach to parent...
 		if(parent != null){
 			parent.append(dom)
@@ -1600,6 +1580,10 @@ module.Browser =
 object.makeConstructor('Browser', 
 		BrowserClassPrototype, 
 		BrowserPrototype)
+
+
+// inherit from widget...
+Browser.prototype.__proto__ = widget.Widget.prototype
 
 
 
