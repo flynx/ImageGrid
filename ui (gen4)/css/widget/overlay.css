@@ -52,6 +52,10 @@
 	filter: blur(2px) saturate(0.3);
 }
 .blur>.overlay-widget {
+	-webkit-filter: blur(0.8px) saturate(0.3);
+	filter: blur(0.8px) saturate(0.3);
+}
+.blur>.overlay-widget:last-child {
 	-webkit-filter: none;
 	filter: none;
 }
