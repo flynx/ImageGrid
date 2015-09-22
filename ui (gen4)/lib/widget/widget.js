@@ -102,12 +102,12 @@ var WidgetPrototype = {
 
 		// build the dom...
 		if(this.constructor.make){
-			var dom = this.dom = this.constructor.make(options)
+			this.dom = this.constructor.make(options)
 		}
 
 		// add keyboard handler...
-		if(this.keyboard){
-			dom.keydown(
+		if(this.keyboard && this.dom){
+			this.dom.keydown(
 				keyboard.makeKeyboardHandler(
 					this.keyboard,
 					options.logKeys,
@@ -134,6 +134,20 @@ var ContainerClassPrototype = {
 
 
 var ContainerPrototype = {
+
+	focus: function(handler){
+		if(handler != null){
+			this.on('focus', handler)
+
+		} else {
+			this.dom.focus()
+			this.client
+				&& this.client.focus 
+				&& this.client.focus()
+		}
+		return this
+	},
+
 	// XXX this is the same as WidgetPrototype.__init__ but also handles
 	// 		the client...
 	__init__: function(parent, client, options){
@@ -150,12 +164,13 @@ var ContainerPrototype = {
 
 		// build the dom...
 		if(this.constructor.make){
-			var dom = this.dom = this.constructor.make(client.dom || client, options)
+			this.dom = this.constructor
+				.make(client.dom || client, options)
 		}
 
 		// add keyboard handler...
-		if(this.keyboard){
-			dom.keydown(
+		if(this.keyboard && this.dom){
+			this.dom.keydown(
 				keyboard.makeKeyboardHandler(
 					this.keyboard,
 					options.logKeys,

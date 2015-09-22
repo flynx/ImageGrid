@@ -2218,12 +2218,16 @@ var browse = require('lib/widget/browse')
 var overlay = require('lib/widget/overlay')
 var drawer = require('lib/widget/drawer')
 
+// This will wrap the actions adding a contextual .preventClosing() method, 
+// if called it will prevent the list from closing on open event and give 
+// the user control over when to close the base list...
 var makeActionLister = function(list, filter, pre_order){
 	pre_order = typeof(filter) == typeof(true) ? filter : pre_order
 	filter = typeof(filter) == typeof(true) ? null : filter
 
 	return function(path){
-		var paths = a.getPath()
+		var that = this
+		var paths = this.getPath()
 		var actions = {}
 
 		// pre-order the main categories...
@@ -2233,38 +2237,47 @@ var makeActionLister = function(list, filter, pre_order){
 			})
 		}
 
+		var closingPrevented = false
+
 		// build the action list...
 		Object.keys(paths).forEach(function(k){
 			var n = paths[k][0]
 			var k = filter ? filter(k, n) : k
+
 			// pass args to listers...
 			if(k.slice(-1) == '*'){
 				actions[k] = function(){
+
+					var a = Object.create(that)
+					a.preventClosing = function(){ 
+						closingPrevented = true 
+						return o
+					}
+
 					return a[n].apply(a, arguments)
 				}
 			// ignore args of actions...
 			} else {
 				actions[k] = function(){
+
+					var a = Object.create(that)
+					a.preventClosing = function(){ 
+						closingPrevented = true 
+						return o
+					}
+
 					return a[n]()
 				}
 			}
 		})
 
-		var closingPrevented = false
-
 		var o = overlay.Overlay($('body'), 
 			list(null, actions, path)
 				.open(function(evt){ 
-
-					evt.preventClosing = 
-						event.preventClosing = 
-							function(){ closingPrevented = true }
-
-					setTimeout(function(){
-						if(!closingPrevented){
-							o.close() 
-						}
-					}, 0)
+					if(!closingPrevented){
+						o.close() 
+					}
+					closingPrevented = false
 				}))
 
 		// XXX DEBUG
@@ -2288,7 +2301,7 @@ var ActionTreeActions = actions.Actions({
 				return a +' ('+ l.join(', ') +')'
 			})],
 
-	// XXX lister test...
+	// XXX this is just a test...
 	embededListerTest: ['Interface/Lister test (embeded)/*',
 		function(path, make){
 			make('a/')
@@ -2297,10 +2310,7 @@ var ActionTreeActions = actions.Actions({
 		}],
 	floatingListerTest: ['Interface/Lister test (floating)...',
 		function(path){
-			console.log('11111111')
-			event 
-				&& event.preventClosing 
-				&& event.preventClosing()
+			var parent = this.preventClosing ? this.preventClosing() : null
 
 			// we got an argument and can exit...
 			if(path){
@@ -2325,11 +2335,20 @@ var ActionTreeActions = actions.Actions({
 				})
 					.open(function(evt, path){ 
 						o.close() 
+
+						// close the parent ui...
+						parent 
+							&& parent.close 
+							&& parent.close()
+
 						that.floatingListerTest(path)
 					}))
+					.close(function(){
+						parent 
+							&& parent.focus 
+							&& parent.focus()
+					})
 		}],
-
-	// XXX this is just a test...
 	drawerTest:['Interface/Drawer widget test',
 		function(){
 			drawer.Drawer($('body'), 
@@ -2342,7 +2361,10 @@ var ActionTreeActions = actions.Actions({
 					.append($('<h1>')
 						.text('Drawer test...'))
 					.append($('<p>')
-						.text('With some text.')))
+						.text('With some text.')),
+				{
+					focusable: true,
+				})
 		}],
 })
 

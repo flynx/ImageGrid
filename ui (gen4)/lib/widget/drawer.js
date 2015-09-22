@@ -30,6 +30,10 @@ var DrawerClassPrototype = {
 					event.stopPropagation()
 				})
 				.append(client))
+		
+		if(options.focusable){
+			overlay.attr('tabindex', 0)
+		}
 
 		return overlay
 	},
@@ -41,6 +45,8 @@ var DrawerPrototype = {
 	client: null,
 
 	options: {
+		focusable: false,
+
 		'close-at': 40,
 		'fade-at': 100,
 		'animate': 120,
@@ -53,7 +59,8 @@ var DrawerPrototype = {
 
 	keyboard: {
 		General: {
-			pattern: '.browse-widget',
+			//pattern: '.drawer-widget',
+			pattern: '*',
 
 			Esc: 'close',
 		},
@@ -82,6 +89,7 @@ var DrawerPrototype = {
 		} else {
 			this.on('close', handler)
 		}
+		return this
 	},
 
 	__init__: function(parent, client, options){
@@ -131,8 +139,11 @@ var DrawerPrototype = {
 				})
 
 		// focus the client...
-		if(client.focus){
+		if(client.dom && client.focus){
 			client.focus()
+
+		} else {
+			this.focus()
 		}
 
 		return this
