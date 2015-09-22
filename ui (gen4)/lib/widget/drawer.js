@@ -41,7 +41,7 @@ var DrawerPrototype = {
 	client: null,
 
 	options: {
-		'close-at': 10,
+		'close-at': 40,
 		'fade-at': 100,
 		'animate': 120,
 

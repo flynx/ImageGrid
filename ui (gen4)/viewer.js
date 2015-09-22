@@ -2237,14 +2237,38 @@ var makeActionLister = function(list, filter, pre_order){
 		Object.keys(paths).forEach(function(k){
 			var n = paths[k][0]
 			var k = filter ? filter(k, n) : k
-			actions[k] = function(){
-				return a[n]()
+			// pass args to listers...
+			if(k.slice(-1) == '*'){
+				actions[k] = function(){
+					return a[n].apply(a, arguments)
+				}
+			// ignore args of actions...
+			} else {
+				actions[k] = function(){
+					return a[n]()
+				}
 			}
 		})
 
+		var closingPrevented = false
+
 		var o = overlay.Overlay($('body'), 
 			list(null, actions, path)
-				.open(function(){ o.close() }))
+				.open(function(evt){ 
+
+					evt.preventClosing = 
+						event.preventClosing = 
+							function(){ closingPrevented = true }
+
+					setTimeout(function(){
+						if(!closingPrevented){
+							o.close() 
+						}
+					}, 0)
+				}))
+
+		// XXX DEBUG
+		window.LIST = o.client
 
 		return this
 	}
@@ -2263,6 +2287,47 @@ var ActionTreeActions = actions.Actions({
 				var a = l.pop()
 				return a +' ('+ l.join(', ') +')'
 			})],
+
+	// XXX lister test...
+	embededListerTest: ['Interface/Lister test (embeded)/*',
+		function(path, make){
+			make('a/')
+			make('b/')
+			make('c/')
+		}],
+	floatingListerTest: ['Interface/Lister test (floating)...',
+		function(path){
+			console.log('11111111')
+			event 
+				&& event.preventClosing 
+				&& event.preventClosing()
+
+			// we got an argument and can exit...
+			if(path){
+				console.log('PATH:', path)
+				return
+			}
+
+			// load the UI...
+			var that = this
+			var list = function(path, make){
+				
+				make('a/')
+				make('b/')
+				make('c/')
+			}
+
+			var o = overlay.Overlay($('body'), 
+				browse.makePathList(null, {
+					'a/*': list,
+					'b/*': list,
+					'c/*': list,
+				})
+					.open(function(evt, path){ 
+						o.close() 
+						that.floatingListerTest(path)
+					}))
+		}],
 
 	// XXX this is just a test...
 	drawerTest:['Interface/Drawer widget test',

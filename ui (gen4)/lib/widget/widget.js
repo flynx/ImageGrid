@@ -119,7 +119,6 @@ var WidgetPrototype = {
 }
 
 
-
 var Widget = 
 module.Widget = 
 object.makeConstructor('Widget', 

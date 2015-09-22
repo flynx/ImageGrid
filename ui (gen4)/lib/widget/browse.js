@@ -42,7 +42,54 @@ var quoteWS = function(str){
 //		...it can be implemented trivially via an attribute and a :before
 //		CSS class...
 var BrowserClassPrototype = {
-	// construct the dom...
+
+	// Normalize path...
+	//
+	// This converts the path into a universal absolute array 
+	// representation, taking care of relative path constructs including
+	// '.' (current path) and '..' (up one level)
+	//
+	// XXX does this need to handle trailing '/'???
+	// 		...the problem is mainly encoding a trailing '/' into an 
+	// 		array, adding a '' at the end seems both obvious and 
+	// 		artificial...
+	// XXX is this the correct name???
+	// 		...should this be .normalizePath(..)???
+	path2list: function(path){
+		var splitter = /[\\\/]/
+
+		if(typeof(path) == typeof('str')){
+			path = path
+				.split(splitter)
+				.filter(function(e){ return e != '' })
+		}
+
+		// we've got a relative path...
+		if(path[0] == '.' || path[0] == '..'){
+			path = this.path.concat(path)
+		}
+
+		path = path
+			// clear the '..'...
+			// NOTE: we reverse to avoid setting elements with negative
+			// 		indexes if we have a leading '..'
+			.reverse()
+			.map(function(e, i){
+				if(e == '..'){
+					e = '.'
+					path[i] = '.'
+					path[i+1] = '.'
+				}
+				return e
+			})
+			.reverse()
+			// filter out '.'...
+			.filter(function(e){ return e != '.' })
+
+		return path
+	},
+
+	// Construct the dom...
 	make: function(options){
 		var browser = $('<div>')
 			.addClass('browse-widget')
@@ -254,50 +301,11 @@ var BrowserPrototype = {
 	},
 
 
-	// Normalize path...
+	// Call the constructor's .path2list(..)..
 	//
-	// This converts the path into a universal absolute array 
-	// representation, taking care of relative path constructs including
-	// '.' (current path) and '..' (up one level)
-	//
-	// XXX does this need to handle trailing '/'???
-	// 		...the problem is mainly encoding a trailing '/' into an 
-	// 		array, adding a '' at the end seems both obvious and 
-	// 		artificial...
-	// XXX is this the correct name???
-	// 		...should this be .normalizePath(..)???
-	path2list: function(path){
-		var splitter = /[\\\/]/
-
-		if(typeof(path) == typeof('str')){
-			path = path
-				.split(splitter)
-				.filter(function(e){ return e != '' })
-		}
-
-		// we've got a relative path...
-		if(path[0] == '.' || path[0] == '..'){
-			path = this.path.concat(path)
-		}
-
-		path = path
-			// clear the '..'...
-			// NOTE: we reverse to avoid setting elements with negative
-			// 		indexes if we have a leading '..'
-			.reverse()
-			.map(function(e, i){
-				if(e == '..'){
-					e = '.'
-					path[i] = '.'
-					path[i+1] = '.'
-				}
-				return e
-			})
-			.reverse()
-			// filter out '.'...
-			.filter(function(e){ return e != '.' })
-
-		return path
+	// See: BrowserClassPrototype.path2list(..) for docs...
+	path2list: function(){ 
+		return this.constructor.path2list.apply(this, arguments) 
 	},
 
 	// Trigger jQuery events on Browser...
@@ -738,12 +746,21 @@ var BrowserPrototype = {
 		// XXX support glob...
 		} else if(typeof(pattern) == typeof('str')){
 			//var pl = pattern.trim().split(/\s+/)
-			var pl = pattern.trim().split(/[^\\]\s/).filter(function(e){ return e.trim() != '' })
+			var pl = pattern.trim()
+				// split on whitespace but keep quoted chars...
+				.split(/\s*((?:\\\s|[^\s])*)\s*/g)
+				// remove empty strings...
+				.filter(function(e){ return e.trim() != '' })
+				// remove '\' -- enables direct string comparison...
+				.map(function(e){ return e.replace(/\\(\s)/g, '$1') })
 			var filter = function(i, e){
 				e = $(e)
 				var t = e.text()
 				for(var p=0; p < pl.length; p++){
-					var i = t.search(pl[p])
+					// NOTE: we are not using search here as it treats 
+					// 		the string as a regex and we need literal
+					// 		search...
+					var i = t.indexOf(pl[p])
 					if(!(i >= 0)){
 						if(rejected){
 							rejected.call(e, i, e)
@@ -1629,6 +1646,10 @@ ListPrototype.options = {
 			})
 	},
 }
+// XXX should we inherit or copy options???
+// 		...inheriting might pose problems with deleting values reverting
+// 		them to default instead of nulling them and mutable options might
+// 		get overwritten...
 ListPrototype.options.__proto__ = BrowserPrototype.options
 
 var List = 
@@ -1838,6 +1859,10 @@ PathListPrototype.options = {
 		}
 	},
 }
+// XXX should we inherit or copy options???
+// 		...inheriting might pose problems with deleting values reverting
+// 		them to default instead of nulling them and mutable options might
+// 		get overwritten...
 PathListPrototype.options.__proto__ = BrowserPrototype.options
 
 var PathList = 
