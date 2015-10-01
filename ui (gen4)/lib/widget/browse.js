@@ -20,7 +20,6 @@ console.log('>>> browse')
 
 
 var keyboard = require('../keyboard')
-// XXX
 var object = require('../../object')
 var widget = require('./widget')
 
@@ -578,7 +577,7 @@ var BrowserPrototype = {
 		// NOTE: this will be set to true if make(..) is called at least once...
 		var interactive = false
 
-		var make = function(p, traversable){
+		var make = function(p, traversable, disabled){
 			p = p + ''
 			var dir = /[\\\/]\s*$/
 			traversable = dir.test(p) && traversable == null ? true : traversable
@@ -599,6 +598,9 @@ var BrowserPrototype = {
 			if(!traversable){
 				res.addClass('not-traversable')
 			}
+			if(disabled){
+				res.addClass('disabled')
+			}
 			return res
 		}
 
@@ -607,7 +609,7 @@ var BrowserPrototype = {
 
 		// second API: make is not called and .list(..) returns an Array
 		// that will get loaded as list items...
-		if(!interactive){
+		if(!interactive && res){
 			res.forEach(make)
 		}
 

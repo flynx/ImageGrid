@@ -2349,6 +2349,37 @@ var ActionTreeActions = actions.Actions({
 							&& parent.focus()
 					})
 		}],
+	// XXX make this nw only...
+	pathListerTest: ['Interface/Path lister test (floating)...',
+		function(path){
+			var parent = this.preventClosing ? this.preventClosing() : null
+
+			// we got an argument and can exit...
+			if(path){
+				console.log('PATH:', path)
+				return
+			}
+
+			var that = this
+
+			var o = overlay.Overlay($('body'), 
+				require('./lib/widget/browse-walk').makeWalk(null, '/')
+					.open(function(evt, path){ 
+						o.close() 
+
+						// close the parent ui...
+						parent 
+							&& parent.close 
+							&& parent.close()
+
+						that.pathListerTest(path)
+					}))
+					.close(function(){
+						parent 
+							&& parent.focus 
+							&& parent.focus()
+					})
+		}],
 	drawerTest:['Interface/Drawer widget test',
 		function(){
 			drawer.Drawer($('body'), 

@@ -48,9 +48,9 @@ function makeConstructor(name, a, b){
 
 	// this is here to make Chrome output more user friendly...
 	// skip for IE...
-	if(_constructor.name == 'Constructor' 
+	if(_constructor.name == 'Constructor'){
 			// skip for chrome app...
-			&& !(window.chrome && chrome.runtime && chrome.runtime.id)){
+			//&& !(window.chrome && chrome.runtime && chrome.runtime.id)){
 		eval('_constructor = '+ _constructor
 				.toString()
 				.replace(/Constructor/g, name))

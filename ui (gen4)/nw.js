@@ -15,9 +15,14 @@ var browser = require('browser')
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 
+var walk = require('lib/widget/browse-walk')
+
+
 /*********************************************************************/
 
 //var data = require('data')
+
+window.dirLister = walk.listDir
 
 window.toggleFullscreenMode = 
 module.toggleFullscreenMode = CSSClassToggler(
