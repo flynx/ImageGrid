@@ -22,7 +22,8 @@ var browse = require('./browse')
 // XXX need a root management to do OS-specific root dir management...
 // 		e.g. X:/.. and /Volume/..
 
-// XXX does not list drive letter root dirs, deeper paths work...
+// XXX mostly works, does not list drive letter root dirs, deeper paths 
+// 		work...
 var listDirGlob = 
 module.listDirGlob =
 function(path, make){
@@ -54,7 +55,7 @@ function(path, make){
 			})
 }
 
-// XXX this has trouble with drives...
+// XXX mostly works, this has trouble with drives...
 var listDirfs = 
 module.listDirfs =
 function(path, make){
@@ -85,6 +86,8 @@ function(path, make){
 	})
 }
 
+// NOTE: this should work from a chrome app and does not require anything
+// 		but fs access...
 // XXX for some reason this breaks with a 404...
 var listDirBrowser = 
 module.listDirBrowser =
