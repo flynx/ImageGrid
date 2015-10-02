@@ -2302,13 +2302,13 @@ var ActionTreeActions = actions.Actions({
 			})],
 
 	// XXX this is just a test...
-	embededListerTest: ['Interface/Lister test (embeded)/*',
+	embededListerTest: ['Interface|Test/Lister test (embeded)/*',
 		function(path, make){
 			make('a/')
 			make('b/')
 			make('c/')
 		}],
-	floatingListerTest: ['Interface/Lister test (floating)...',
+	floatingListerTest: ['Interface|Test/Lister test (floating)...',
 		function(path){
 			var parent = this.preventClosing ? this.preventClosing() : null
 
@@ -2350,7 +2350,7 @@ var ActionTreeActions = actions.Actions({
 					})
 		}],
 	// XXX make this nw only...
-	pathListerTest: ['Interface/Path lister test (floating)...',
+	pathListerTest: ['Interface|Test/Path lister test (floating)...',
 		function(path){
 			var parent = this.preventClosing ? this.preventClosing() : null
 
@@ -2380,7 +2380,7 @@ var ActionTreeActions = actions.Actions({
 							&& parent.focus()
 					})
 		}],
-	drawerTest:['Interface/Drawer widget test',
+	drawerTest:['Interface|Test/Drawer widget test',
 		function(){
 			drawer.Drawer($('body'), 
 				$('<div>')

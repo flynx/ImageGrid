@@ -86,8 +86,8 @@ var WidgetPrototype = {
 
 
 	// XXX this will not:
-	// 		- attach dom to parent...
-	// 		- handle focus...
+	// 		- attach dom to parent... (???)
+	// 		- handle focus... (???)
 	// XXX same as ContainerPrototype.__init__ but skips client...
 	__init__: function(parent, options){
 		var that = this
@@ -104,6 +104,13 @@ var WidgetPrototype = {
 		if(this.constructor.make){
 			this.dom = this.constructor.make(options)
 		}
+
+		// XXX do we do this here???
+		/*
+		if(parent && this.dom){
+			parent.append(this.dom)
+		}
+		*/
 
 		// add keyboard handler...
 		if(this.keyboard && this.dom){
