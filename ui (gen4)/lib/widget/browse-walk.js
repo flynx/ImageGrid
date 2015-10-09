@@ -55,13 +55,14 @@ function(path, make){
 			})
 }
 
-// XXX mostly works, this has trouble with drives...
 var listDirfs = 
 module.listDirfs =
 function(path, make){
 	path = path.constructor == Array ? path.join('/') : path
 	path = /^[a-zA-Z]:/.test(path.trim()) ? path : '/'+path
-	
+	// XXX the windows root path must have a trailing '/'
+	path = /^[a-zA-Z]:$/.test(path.trim()) ? path+'/' : path
+
 	var fullpath = false
 
 	fs.readdir(path, function(err, files){
@@ -88,42 +89,46 @@ function(path, make){
 
 // NOTE: this should work from a chrome app and does not require anything
 // 		but fs access...
-// XXX for some reason this breaks with a 404...
+// XXX need a default for '/' on windows...
 var listDirBrowser = 
 module.listDirBrowser =
 function(path, make){
 	path = path.constructor == Array ? path.join('/') : path
 	path = /^[a-zA-Z]:/.test(path.trim()) ? path : '/'+path
-	path = /^file:\/\//.test(path.trim()) ? path : 'file://'+path
+	// XXX this is a bit fragile...
+	path = /^file:\/\//.test(path.trim()) ? path : 'file:///'+path
 
 	var fullpath = false
 
 	$.get(path)
 		// XXX
 		.fail(function(err){
+			console.log('!!!', arguments)
 		})
 		.done(function(data){
-
-			// XXX this is chrome specific...
+			// XXX this is very chrome specific...
 			// look for: addRow(name, url, isdir, size, date_modified)
-			data
-				.split(/.*addRow\(([^)]+)\)/g)
-				// skip odd sections...
-				.filter(function(e, i){ return i % 2 })
-				// skip the columns...
-				.slice(1)
-				.forEach(function(elem){
-					// get the data...
-					elem = elem.split(',')
-					var file = elem[0]
-						// remove quotes...
-						.replace(/.*(['"])([^\1]*)\1.*/, '$2')
-						//.replace(/"([^"]+)"/, '$1')
+			$(data)
+				.filter('script')
+				.toArray()
+				.forEach(function(e){
+					e = e.innerHTML.split(/.*addRow\((.*)\);/g)
+					if(e.length > 1){
+						e.filter(function(e, i){ return i % 2 })
+							.forEach(function(elem){
+								elem = JSON.parse('['+elem+']')
+								var file = elem[0]
 
-					// do the build...
-					make(fullpath 
-						? path +'/'+ file 
-						: file + (elem[2]*1 ? '/' : ''))
+								if(file == '..' || file == '.'){
+									return
+								}
+
+								// do the build...
+								make(fullpath 
+									? path +'/'+ file 
+									: file + (elem[2] ? '/' : ''))
+							})
+					}
 				})
 		})
 }
@@ -136,6 +141,8 @@ var listDir = module.listDir = listDirfs
 
 /*********************************************************************/
 
+// XXX for some reason pop does not focus the container dir correctly...
+// 		...this is potentially due to the list not being ready yet...
 var WalkPrototype = Object.create(browse.Browser.prototype)
 WalkPrototype.options = {
 

@@ -22,7 +22,7 @@ var walk = require('lib/widget/browse-walk')
 
 //var data = require('data')
 
-window.dirLister = walk.listDir
+window.listDirBrowser = walk.listDirBrowser
 
 window.toggleFullscreenMode = 
 module.toggleFullscreenMode = CSSClassToggler(
