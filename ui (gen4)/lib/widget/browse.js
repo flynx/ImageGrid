@@ -19,6 +19,8 @@ define(function(require){ var module = {}
 console.log('>>> browse')
 
 
+//var promise = require('promise')
+
 var keyboard = require('../keyboard')
 var object = require('../../object')
 var widget = require('./widget')
@@ -374,7 +376,7 @@ var BrowserPrototype = {
 			.toArray()
 	},
 	set path(value){
-		return this.update(value)
+		this.update(value)
 	},
 
 	// String path...
@@ -462,6 +464,7 @@ var BrowserPrototype = {
 	// 	- build the path
 	// 	- build the element list
 	// 	- bind to control events
+	// 	- return a deferred
 	//
 	// This will trigger the 'update' event.
 	//
@@ -500,6 +503,8 @@ var BrowserPrototype = {
 		var focus = browser.find(':focus').length > 0
 		list = list || this.list
 
+		var deferred = $.Deferred()
+
 		// string path and terminated with '/' -- no selection...
 		if(typeof(path) == typeof('str') && !/[\\\/]/.test(path.trim().slice(-1))){
 			path = this.path2list(path)
@@ -522,10 +527,13 @@ var BrowserPrototype = {
 			p.append($('<div>')
 				.addClass('dir')
 				.click(function(){
+					// XXX we should use pop here...
 					if(that.traversable){
 						that
 							.update(cur.slice(0, -1)) 
-							.select('"'+cur.pop()+'"')
+								.done(function(){
+									that.select('"'+cur.pop()+'"')
+								})
 					}
 				})
 				.text(e))
@@ -609,24 +617,36 @@ var BrowserPrototype = {
 
 		// second API: make is not called and .list(..) returns an Array
 		// that will get loaded as list items...
-		if(!interactive && res){
+		if(!interactive && res && res.constructor == Array){
 			res.forEach(make)
+		} 
+
+		// wait for the render...
+		if(res && res.then){
+			res.then(function(){ deferred.resolve() })
+
+		// sync...
+		} else {
+			deferred.resolve()
 		}
 
-		this.dom.attr('path', this.strPath)
-		this.trigger('update')
+		//return this
+		return deferred
+			.done(function(){
+				that.dom.attr('path', this.strPath)
+				that.trigger('update')
 
-		// select the item...
-		if(selection){
-			this.select(selection)
-		}
+				// select the item...
+				if(selection){
+					that.select(selection)
+				}
 
-		// maintain focus within the widget...
-		if(focus && browser.find(':focus').length == 0){
-			this.focus()
-		}
+				// maintain focus within the widget...
+				if(focus && browser.find(':focus').length == 0){
+					this.focus()
+				}
 
-		return this
+			})
 	},
 
 	// Filter the item list...
@@ -1257,6 +1277,7 @@ var BrowserPrototype = {
 	//
 	// XXX revise event...
 	pop: function(){
+		var that = this
 		var browser = this.dom
 
 		if(!this.traversable){
@@ -1268,11 +1289,12 @@ var BrowserPrototype = {
 
 		// XXX should this be before or after the actual path update???
 		// XXX can we cancel the update from a handler???
-		this.trigger('pop', path)
-
-		this.update(path)
-
-		this.select('"'+dir+'"')
+		this
+			.trigger('pop', path)
+			.update(path)
+				.done(function(){
+					that.select('"'+dir+'"')
+				})
 
 		return this
 	},

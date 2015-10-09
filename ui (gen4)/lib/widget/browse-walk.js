@@ -6,7 +6,8 @@
 
 var fs = require('fs')
 var path = require('path')
-var walk = require('glob')
+var promise = require('promise')
+var glob = require('glob')
 var guaranteeEvents = require('guarantee-events')
 
 define(function(require){ var module = {}
@@ -64,24 +65,40 @@ function(path, make){
 	path = /^[a-zA-Z]:$/.test(path.trim()) ? path+'/' : path
 
 	var fullpath = false
+	var stat = promise.denodeify(fs.stat)
 
-	fs.readdir(path, function(err, files){
-		// XXX
-		if(err){
-			return
-		}
+	return new promise(function(resolve, reject){
+		fs.readdir(path, function(err, files){
+			// XXX
+			if(err){
+				reject(err)
+				return
+			}
+			var res = []
 
-		files.forEach(function(file){
-			fs.stat(path +'/'+ file, function(err, stat){
-				if(err){
-					make(fullpath 
-						? path +'/'+ file 
-						: file, null, true)
-				} else {
-					make(fullpath 
-						? path +'/'+ file 
-						: file + (stat.isDirectory() ? '/' : ''))
-				}
+			files.map(function(file){
+				return stat(path +'/'+ file)
+					.catch(function(err){
+						make(fullpath 
+							? path +'/'+ file 
+							: file, null, true)
+					})
+					.then(function(res){
+						if(!res){
+							return
+						}
+						make(fullpath 
+							? path +'/'+ file 
+							: file + (res.isDirectory() ? '/' : ''))
+					})
+					// NOTE: we are not using promise.all(..) here because it
+					// 		triggers BEFORE the first make(..) is called...
+					.then(function(){
+						res.push(file)
+						if(res.length == files.length){
+							resolve()
+						}
+					})
 			})
 		})
 	})
