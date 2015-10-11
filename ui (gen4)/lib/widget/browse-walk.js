@@ -70,6 +70,8 @@ function(path, make){
 	var fullpath = false
 	var showfiles = true
 
+	var stat = promise.denodeify(fs.stat)
+
 	// get the drive list on windows...
 	if(os.type() == 'Windows_NT' && path == '/'){
 		return new promise(function(resolve, reject){
@@ -78,18 +80,22 @@ function(path, make){
 			'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 				.split('')
 				.forEach(function(drive){
-					// XXX error handling???
-					if(fs.existsSync(drive+':/')){
-						make(drive+':/')
-					}
+					stat(drive+':/')
+						// XXX
+						.catch(function(err){
+						})
+						.then(function(data){
+							data && make(drive+':/')
+
+							if(drive == 'Z'){
+								resolve()
+							}
+						})
 			})
-			resolve()
 		})
 
 	// list dirs...
 	} else {
-		var stat = promise.denodeify(fs.stat)
-
 		return new promise(function(resolve, reject){
 			fs.readdir(path, function(err, files){
 				// XXX
