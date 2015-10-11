@@ -4,6 +4,7 @@
 *
 **********************************************************************/
 
+var os = require('os')
 var fs = require('fs')
 var path = require('path')
 var promise = require('promise')
@@ -56,6 +57,7 @@ function(path, make){
 			})
 }
 
+// XXX might be good to add some caching...
 var listDirfs = 
 module.listDirfs =
 function(path, make){
@@ -64,44 +66,75 @@ function(path, make){
 	// XXX the windows root path must have a trailing '/'
 	path = /^[a-zA-Z]:$/.test(path.trim()) ? path+'/' : path
 
+	// XXX expose these as config...
 	var fullpath = false
-	var stat = promise.denodeify(fs.stat)
+	var showfiles = true
 
-	return new promise(function(resolve, reject){
-		fs.readdir(path, function(err, files){
-			// XXX
-			if(err){
-				reject(err)
-				return
-			}
-			var res = []
+	// get the drive list on windows...
+	if(os.type() == 'Windows_NT' && path == '/'){
+		return new promise(function(resolve, reject){
+			// NOTE: this is a bit brain-dead but it does the job done 
+			// 		and faster than fancy modules like drivelist...
+			'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+				.split('')
+				.forEach(function(drive){
+					// XXX error handling???
+					if(fs.existsSync(drive+':/')){
+						make(drive+':/')
+					}
+			})
+			resolve()
+		})
 
-			files.map(function(file){
-				return stat(path +'/'+ file)
-					.catch(function(err){
-						make(fullpath 
-							? path +'/'+ file 
-							: file, null, true)
-					})
-					.then(function(res){
-						if(!res){
-							return
-						}
-						make(fullpath 
-							? path +'/'+ file 
-							: file + (res.isDirectory() ? '/' : ''))
-					})
-					// NOTE: we are not using promise.all(..) here because it
-					// 		triggers BEFORE the first make(..) is called...
-					.then(function(){
-						res.push(file)
-						if(res.length == files.length){
-							resolve()
-						}
-					})
+	// list dirs...
+	} else {
+		var stat = promise.denodeify(fs.stat)
+
+		return new promise(function(resolve, reject){
+			fs.readdir(path, function(err, files){
+				// XXX
+				if(err){
+					reject(err)
+					return
+				}
+				var res = []
+
+				files.map(function(file){
+					return stat(path +'/'+ file)
+						.catch(function(err){
+							make(fullpath 
+								? path +'/'+ file 
+								: file, null, true)
+						})
+						.then(function(res){
+							if(!res){
+								return
+							}
+							var dir = res.isDirectory()
+							if(!dir && !showfiles) {
+								return
+							}
+							make(fullpath 
+								? path +'/'+ file 
+								: file + (dir ? '/' : ''))
+						})
+						// NOTE: we are not using promise.all(..) here because it
+						// 		triggers BEFORE the first make(..) is called...
+						// 		...not sure I fully understand why...
+						.then(function(){
+							// NOTE: this will get called for all results 
+							// 		including ones that generate errors, not 
+							// 		sure if this is a bug in .denodeify(..) 
+							// 		or by-design though...
+							res.push(file)
+							if(res.length == files.length){
+								resolve()
+							}
+						})
+				})
 			})
 		})
-	})
+	}
 }
 
 // NOTE: this should work from a chrome app and does not require anything
