@@ -26,6 +26,7 @@ var browse = require('./browse')
 
 // XXX mostly works, does not list drive letter root dirs, deeper paths 
 // 		work...
+// XXX appears to hang and crash on large lists....
 var listDirGlob = 
 module.listDirGlob =
 function(path, make){
@@ -36,25 +37,29 @@ function(path, make){
 	var fullpath = path.indexOf('*') >= 0
 	path = path.indexOf('*') < 0 ? path + '/*' : path
 
-	guaranteeEvents([
-			'match',
-			'error',
-		], 
-		glob.glob(path))
-			.on('match', function(path){
-				fs.stat(path, function(err, stat){
-					if(err){
-						make(fullpath ? path : path.split(/[\\\/]/).pop(), null, true)
-					} else {
-						make(fullpath ? path : path.split(/[\\\/]/).pop() 
-							+ (stat.isDirectory() ? '/' : ''))
-					}
+	return new promise(function(resolve, reject){
+		// XXX do we need this???
+		/*guaranteeEvents([
+				'match',
+				'error',
+			], 
+			glob.glob(path))*/
+			glob.glob(path)
+				.on('match', function(path){
+					fs.stat(path, function(err, stat){
+						if(err){
+							make(fullpath ? path : path.split(/[\\\/]/).pop(), null, true)
+						} else {
+							make(fullpath ? path : path.split(/[\\\/]/).pop() 
+								+ (stat.isDirectory() ? '/' : ''))
+						}
+					})
 				})
-			})
-			// XXX finalize...
-			// 		...and do this after all the stats are done...
-			.on('end', function(){
-			})
+				// XXX do this after all the stats are done...
+				.on('end', function(){
+					resolve()
+				})
+	})
 }
 
 // XXX might be good to add some caching...
@@ -68,7 +73,6 @@ function(path, make){
 
 	// XXX expose these as config...
 	var fullpath = false
-	var showfiles = true
 
 	var stat = promise.denodeify(fs.stat)
 
@@ -82,11 +86,11 @@ function(path, make){
 				.forEach(function(drive){
 					stat(drive+':/')
 						// XXX
-						.catch(function(err){
-						})
+						.catch(function(err){ })
 						.then(function(data){
 							data && make(drive+':/')
 
+							// resolve when we are done...
 							if(drive == 'Z'){
 								resolve()
 							}
@@ -113,16 +117,9 @@ function(path, make){
 								: file, null, true)
 						})
 						.then(function(res){
-							if(!res){
-								return
-							}
-							var dir = res.isDirectory()
-							if(!dir && !showfiles) {
-								return
-							}
-							make(fullpath 
+							res && make(fullpath 
 								? path +'/'+ file 
-								: file + (dir ? '/' : ''))
+								: file + (res.isDirectory() ? '/' : ''))
 						})
 						// NOTE: we are not using promise.all(..) here because it
 						// 		triggers BEFORE the first make(..) is called...
@@ -191,6 +188,7 @@ function(path, make){
 
 
 //var listDir = module.listDir = listDirBrowser
+//var listDir = module.listDir = listDirGlob
 var listDir = module.listDir = listDirfs
 
 
@@ -224,6 +222,15 @@ module.makeWalk = function(elem, path){
 	var w = Walk(elem, { path: path })
 	console.log(w)
 	return w
+}
+
+
+
+/*********************************************************************/
+
+var makeGlobList = 
+module.makeGlobList = function(elem, pattern, prepare){
+	// XXX
 }
 
 

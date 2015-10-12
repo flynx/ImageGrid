@@ -270,6 +270,10 @@ var BrowserPrototype = {
 			Backspace: 'Left',
 			Right: 'push',
 
+			// XXX
+			PgUp: 'prevPage!',
+			PgDown: 'nextPage!',
+
 			Home: 'select!: "first"',
 			End: 'select!: "last"',
 
@@ -1226,6 +1230,116 @@ var BrowserPrototype = {
 		return this
 	},
 
+	getTopVisibleElem: function(){
+		var elems = this.filter('*')
+
+		var p = elems.first().scrollParent()
+		var S = p.scrollTop()
+		var T = p.offset().top
+
+		if(S == 0){
+			return elems.first()
+		}
+
+		return elems
+			.filter(function(i, e){
+				return $(e).offset().top - T >= 0
+			})
+			.first()
+	},
+	getBottomVisibleElem: function(){
+		var elems = this.filter('*')
+
+		var p = elems.first().scrollParent()
+		var S = p.scrollTop()
+		var T = p.offset().top
+		var H = p.height()
+
+		if(S + H == p[0].scrollHeight){
+			return elems.last()
+		}
+
+		return elems
+			.filter(function(i, e){
+				e = $(e)
+				return e.offset().top + e.height() <= T + H
+			})
+			.last()
+	},
+
+	// XXX merge with .select(..)...
+	// XXX needs testing...
+	prevPage: function(){
+		var pattern = '.list>div:not(.disabled):not(.filtered-out):visible'
+		var elem = this.getTopVisibleElem()
+		var cur = this.select('!')
+
+		var p = elem.scrollParent()
+		var S = p.scrollTop()
+		var H = p.height()
+		var T = p.offset().top
+
+		// jump to top visible elem if it's not the one selected...
+		if(cur.length == 0 || (3 * elem.height()) + S < cur.position().top ){
+			this.select(elem.prev(pattern).length == 0 ? elem : elem.next())
+
+		// we are at the top or we are less than a page from the top...
+		} else if(S <= H){
+			this.select('first')
+
+		// get the next page...
+		// XXX test...
+		} else {
+			var t = S - H
+
+			var elems = this.filter('*')
+			this.select(elems
+				.slice(0, elems.index(elem))
+				.reverse()
+				.filter(function(i, e){
+					return $(e).offset().top - T >= t
+				})
+				.first())
+		}
+
+		return this
+	},
+	// XXX not finished and buggy....
+	// XXX merge with .select(..)...
+	// XXX needs testing...
+	nextPage: function(){
+		var elem = this.getBottomVisibleElem()
+		var cur = this.select('!')
+
+		var p = elem.scrollParent()
+		var S = p.scrollTop()
+		var H = p.height()
+		var T = p.offset().top
+
+		// jump to first elem if it's not the one selected...
+		if(cur.length == 0 || S + H - (3 * cur.height()) > cur.position().top ){
+			this.select(elem.prev())
+
+		// we are at the bottom or we are less than a page from the bottom...
+		} else if(S + H >= p[0].scrollHeight){
+			this.select('last')
+
+		// get the next page...
+		} else {
+			var t = S + 2 * H
+
+			var elems = this.filter('*')
+			this.select(elems
+				.slice(elems.index(elem))
+				.filter(function(i, e){
+					return $(e).offset().top - T >= t
+				})
+				.first())
+		}
+
+		return this
+	},
+	
 	// Push an element to path / go down one level...
 	//
 	// This will trigger the 'push' event.
