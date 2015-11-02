@@ -274,10 +274,28 @@ actions.Actions({
 	// basic navigation...
 	//
 	focusImage: ['Navigate/Focus image',
+		/* XXX same structure as action but instead of a function uses 
+		 		a list of args...
+		// aliases...
+		{
+			'firstImage': ['Navigate/First image in current ribbon', [ 'first' ]],
+			'lastImage': ['Navigate/Last image in current ribbon', [ 'last' ]],
+			'firstGlobalImage': ['Navigate/First globally image', [ 0 ]],
+			'lastGlobalImage': ['Navigate/Last globally image', [ -1 ]],
+		},
+		*/
 		function(img, list){
 			this.data.focusImage(img, list)
 		}],
 	focusRibbon: ['Navigate/Focus Ribbon',
+		/*
+		{
+			firstRibbon: ['Navigate/First ribbon', [ 'first' ]],
+			lastRibbon: ['Navigate/Last ribbon', [ 'last' ]],
+			prevRibbon: ['Navigate/Previous ribbon', [ 'before' ]],
+			nextRibbon: ['Navigate/Next ribbon', [ 'after' ]],
+		},
+		*/
 		function(target){
 			var data = this.data
 			var r = data.getRibbon(target)

@@ -591,6 +591,13 @@ var DataPrototype = {
 			target = this.current
 		}
 
+		var offset = list == 'before' ? -1
+			: list == 'after' ? 1 
+			: 0
+		if(list == 'before' || list == 'after'){
+			list = null
+		}
+
 		// normalize mode...
 		if(mode != null 
 				&& mode.constructor === Array
@@ -600,7 +607,7 @@ var DataPrototype = {
 		}
 		// relative mode and offset...
 		if(typeof(mode) == typeof(123)){
-			var offset = mode
+			offset += mode
 			mode = offset < 0 ? 'before'
 				: offset > 0 ? 'after'
 				: mode
@@ -622,6 +629,7 @@ var DataPrototype = {
 			return -1
 		}
 
+
 		// normalize the list to a sparse list of gids...
 		list = list == null ? 
 				this.ribbons[this.getRibbon(target)]
@@ -636,14 +644,12 @@ var DataPrototype = {
 		}
 
 		// prepare for the search...
-		if(mode == 'before' || mode == 'prev'){
-			var step = -1
-
-		} else if(mode == 'after' || mode == 'next'){
-			var step = 1
+		var step = (mode == 'before' || mode == 'prev') ? -1
+			: (mode == 'after' || mode == 'next') ? 1
+			: null
 
 		// strict -- no hit means there is no point in searching...
-		} else {
+		if(step == null){
 			return null
 		}
 
@@ -652,6 +658,8 @@ var DataPrototype = {
 		// get the first non-null, also accounting for offset...
 		// NOTE: we are using this.order.length here as ribbons might 
 		// 		be truncated...
+		// XXX currently this works correctly ONLY when step and offset
+		// 		are in the same direction...
 		for(; i >= 0 && i < this.order.length; i+=step){
 			var cur = list[i]
 			// skip undefined or unloaded images...
