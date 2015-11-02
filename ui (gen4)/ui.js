@@ -242,15 +242,9 @@ $(function(){
 
 	// XXX
 	window.a = testing.setupActions()
-		.load({
-			viewer: $('.viewer')
-		})
 
 	// used switch experimental actions on (set to true) or off (unset or false)...
 	//a.experimental = true
-
-	// XXX for some reason this is not visible when loading...
-	a.setEmptyMsg('Loading...')
 
 	viewer.ImageGridFeatures.setup(a, [
 		'viewer-testing',
@@ -258,7 +252,7 @@ $(function(){
 		// XXX this is not for production...
 		'experiments',
 	])
-	
+
 	// this publishes all the actions...
 	//module.GLOBAL_KEYBOARD.__proto__ = a
 
@@ -266,10 +260,11 @@ $(function(){
 	// NOTE: we can load this in parts...
 	a
 		.load({
-			//viewer: $('.viewer'),
+			viewer: $('.viewer'),
 			data: data.Data(testing.mock_data),
 			images: testing.makeTestImages(),
 		})
+		.setEmptyMsg('Loading...')
 		// this is needed when loading legacy sources that do not have tags
 		// synced...
 		// do not do for actual data...

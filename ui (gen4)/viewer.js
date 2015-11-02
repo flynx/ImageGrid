@@ -274,28 +274,10 @@ actions.Actions({
 	// basic navigation...
 	//
 	focusImage: ['Navigate/Focus image',
-		/* XXX same structure as action but instead of a function uses 
-		 		a list of args...
-		// aliases...
-		{
-			'firstImage': ['Navigate/First image in current ribbon', [ 'first' ]],
-			'lastImage': ['Navigate/Last image in current ribbon', [ 'last' ]],
-			'firstGlobalImage': ['Navigate/First globally image', [ 0 ]],
-			'lastGlobalImage': ['Navigate/Last globally image', [ -1 ]],
-		},
-		*/
 		function(img, list){
 			this.data.focusImage(img, list)
 		}],
 	focusRibbon: ['Navigate/Focus Ribbon',
-		/*
-		{
-			firstRibbon: ['Navigate/First ribbon', [ 'first' ]],
-			lastRibbon: ['Navigate/Last ribbon', [ 'last' ]],
-			prevRibbon: ['Navigate/Previous ribbon', [ 'before' ]],
-			nextRibbon: ['Navigate/Next ribbon', [ 'after' ]],
-		},
-		*/
 		function(target){
 			var data = this.data
 			var r = data.getRibbon(target)
@@ -800,25 +782,19 @@ actions.Actions({
 
 
 
-// XXX do partial loading...
-var Viewer = 
-module.Viewer = 
-actions.Actions(Client, {
+/*********************************************************************/
 
-	config: {
-		// The maximum screen width allowed when zooming...
-		'max-screen-images': 30,
+var ImageGridFeatures =
+module.ImageGridFeatures = Object.create(features.FeatureSet)
 
-		// A step (multiplier) used by .zoomIn()/.zoomOut() actions.
-		// NOTE: this is rounded to the nearest whole screen width in images
-		// 		and current fit-overflow added.
-		'zoom-step': 1.2,
 
-		// added to odd number of images to fit to indicate scroll ability...
-		// ...this effectively sets the closest distance an image can be from
-		// the viewer edge...
-		'fit-overflow': 0.2,
-	},
+
+//---------------------------------------------------------------------
+
+var ViewerActions = 
+module.ViewerActions = 
+//actions.Actions(Client, {
+actions.Actions({
 
 	/*
 	// Images...
@@ -1317,12 +1293,31 @@ actions.Actions(Client, {
 
 })
 
+var Viewer =
+module.Viewer = features.Feature(ImageGridFeatures, {
+	title: 'Graphical User Interface',
 
+	tag: 'ui',
 
-/*********************************************************************/
+	priority: 'high',
 
-var ImageGridFeatures =
-module.ImageGridFeatures = Object.create(features.FeatureSet)
+	config: {
+		// The maximum screen width allowed when zooming...
+		'max-screen-images': 30,
+
+		// A step (multiplier) used by .zoomIn()/.zoomOut() actions.
+		// NOTE: this is rounded to the nearest whole screen width in images
+		// 		and current fit-overflow added.
+		'zoom-step': 1.2,
+
+		// added to odd number of images to fit to indicate scroll ability...
+		// ...this effectively sets the closest distance an image can be from
+		// the viewer edge...
+		'fit-overflow': 0.2,
+	},
+
+	actions: ViewerActions,
+})
 
 
 
@@ -1333,6 +1328,10 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 // XXX would be great to add a mechanism define how to reverse actions...
 // 		...one way to do this at this point is to revert to last state
 // 		and re-run the journal until the desired event...
+// XXX need to define a clear journaling strategy in the lines of:
+// 		- save state clears journal and adds a state load action
+// 		- .load(..) clears journal
+// XXX needs careful testing...
 var Journal = 
 module.Journal = features.Feature(ImageGridFeatures, {
 	title: 'Action Journal',
@@ -1354,6 +1353,16 @@ module.Journal = features.Feature(ImageGridFeatures, {
 				if(this.journal){
 					delete this.journal
 				}
+			}],
+		runJournal: ['Journal/Run journal',
+			function(journal){
+				var that = this
+				journal.forEach(function(e){
+					// load state...
+					that.focusImage(e[0])
+					// run action...
+					that[e[1]].apply(that, e[2])
+				})
 			}],
 	}),
 
@@ -1400,6 +1409,8 @@ module.Journal = features.Feature(ImageGridFeatures, {
 				'ungroup',
 				'expandGroup',
 				'collapseGroup',
+
+				'runJournal',
 			].map(function(action){
 				return [
 					action, 
@@ -1554,6 +1565,7 @@ module.PartialRibbons = features.Feature(ImageGridFeatures, {
 	priority: 'high',
 
 	tag: 'ui-partial-ribbons',
+	depends: ['ui'],
 
 
 	actions: PartialRibbonsActions,
@@ -1694,6 +1706,12 @@ module.SingleImageView = features.Feature(ImageGridFeatures, {
 	doc: '',
 
 	tag: 'ui-single-image-view',
+	depends: ['ui'],
+
+	config: {
+		'single-image-scale': null,
+		'ribbon-scale': null,
+	},
 
 	actions: SingleImageActions,
 
@@ -1705,11 +1723,17 @@ module.SingleImageView = features.Feature(ImageGridFeatures, {
 					updateImageProportions.call(this)
 				}
 			}],
+		// XXX this uses .screenwidth for scale, is this the right way to go?
 		['toggleSingleImage.post', 
 			function(){ 
 				// singe image mode -- set image proportions...
 				if(this.toggleSingleImage('?') == 'on'){
 					updateImageProportions.call(this)
+
+					// update scale...
+					var w = this.screenwidth
+					this.config['ribbon-scale'] = w
+					this.screenwidth = this.config['single-image-scale'] || w
 
 				// ribbon mode -- restore original image size...
 				} else {
@@ -1717,6 +1741,11 @@ module.SingleImageView = features.Feature(ImageGridFeatures, {
 						width: '',
 						height: ''
 					})
+
+					// update scale...
+					var w = this.screenwidth
+					this.config['single-image-scale'] = w
+					this.screenwidth = this.config['ribbon-scale'] || w
 				}
 			}],
 	],
@@ -1736,6 +1765,7 @@ module.AlignRibbonsToImageOrder = features.Feature(ImageGridFeatures, {
 	doc: '',
 
 	tag: 'ui-ribbon-align-to-order',
+	depends: ['ui'],
 	exclusive: ['ui-ribbon-align'],
 
 	handlers: [
@@ -1750,6 +1780,7 @@ module.AlignRibbonsToFirstImage = features.Feature(ImageGridFeatures, {
 	doc: '',
 
 	tag: 'ui-ribbon-align-to-first',
+	depends: ['ui'],
 	exclusive: ['ui-ribbon-align'],
 
 	handlers: [
@@ -1768,6 +1799,7 @@ module.ShiftAnimation = features.Feature(ImageGridFeatures, {
 	doc: '',
 
 	tag: 'ui-animation',
+	depends: ['ui'],
 
 	handlers: [
 		['shiftImageUp.pre shiftImageDown.pre', 
@@ -1853,6 +1885,7 @@ module.BoundsIndicators = features.Feature(ImageGridFeatures, {
 	doc: '',
 
 	tag: 'ui-bounds-indicators',
+	depends: ['ui'],
 
 	actions: BoundsIndicatorsActions,
 
@@ -2011,6 +2044,7 @@ module.CurrentImageIndicator = features.Feature(ImageGridFeatures, {
 	doc: '',
 
 	tag: 'ui-current-image-indicator',
+	depends: ['ui'],
 
 	config: {
 		'current-image-border': 3,
@@ -2113,7 +2147,10 @@ module.CurrentImageIndicatorHideOnFastScreenNav = features.Feature(ImageGridFeat
 	tag: 'ui-current-image-indicator-hide-on-fast-screen-nav',
 
 
-	depends: ['ui-current-image-indicator'],
+	depends: [
+		'ui',
+		'ui-current-image-indicator'
+	],
 	exclusive: ['ui-current-image-indicator-hide'],
 
 
@@ -2175,7 +2212,10 @@ module.CurrentImageIndicatorHideOnScreenNav = features.Feature(ImageGridFeatures
 	tag: 'ui-current-image-indicator-hide-on-screen-nav',
 
 
-	depends: ['ui-current-image-indicator'],
+	depends: [
+		'ui',
+		'ui-current-image-indicator'
+	],
 	exclusive: ['ui-current-image-indicator-hide'],
 
 
@@ -2211,6 +2251,7 @@ module.ImageStateIndicator = features.Feature(ImageGridFeatures, {
 	doc: '',
 
 	tag: 'ui-image-state-indicator',
+	depends: ['ui'],
 })
 
 
@@ -2224,6 +2265,7 @@ module.GlobalStateIndicator = features.Feature(ImageGridFeatures, {
 	doc: '',
 
 	tag: 'ui-global-state-indicator',
+	depends: ['ui'],
 })
 
 
@@ -2423,6 +2465,7 @@ module.ActionTree = features.Feature(ImageGridFeatures, {
 	doc: '',
 
 	tag: 'ui-action-tree',
+	depends: ['ui'],
 
 	config: {
 		'action-category-order': [
@@ -2767,6 +2810,8 @@ module.FileSystemLoader = features.Feature(ImageGridFeatures, {
 //
 
 features.Feature(ImageGridFeatures, 'viewer-testing', [
+	'ui',
+
 	// features...
 	'ui-ribbon-align-to-order',
 	'ui-single-image-view',
@@ -2802,6 +2847,7 @@ features.Feature(ImageGridFeatures, 'commandline', [
 ])
 
 features.Feature(ImageGridFeatures, 'viewer-minimal', [
+	'ui',
 	'ui-ribbon-align-to-order',
 	'ui-animation',
 	'ui-bounds-indicators',

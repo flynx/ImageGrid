@@ -453,6 +453,14 @@ var DataPrototype = {
 
 	/*********************************************** Introspection ***/
 
+	get length(){
+		return this.order.length
+	},
+	get ribbonLength(){
+		return this.getImages(this.getRibbon()).len
+	},
+
+
 	// Get image
 	//
 	//	Get current image:
@@ -522,16 +530,18 @@ var DataPrototype = {
 	// NOTE: If gid|order is not given, current image is assumed.
 	// 		Similarly, if list|ribbon is not given then the current 
 	// 		ribbon is used.
-	// NOTE: if input gid is invalid this will return -1 (XXX is this good???)
-	// NOTE: the folowing are equivalent:
+	// NOTE: if input gid is invalid this will return -1
+	// NOTE: the following are equivalent:
 	// 			D.getImage('current', -1, R)
 	// 			D.getImage('before', R) 
 	// 			D.getImage('current', 'before', R)
 	// 		where D is a Data object and R a ribbon id/index different 
-	// 		from the current ribbon (see next note for details).
+	// 		from the current ribbon, i.e. the current image is not present
+	// 		in R (see next note for details).
 	// NOTE: in before/after modes, if the target image is found then it
-	// 		will be returned, use offset to explicitly get the image 
-	// 		before/after target.
+	// 		will be returned, thus the mode has no effect unless the 
+	// 		target image is not loaded.
+	// 		Use offset to explicitly get the image before/after target.
 	//
 	// XXX most of the complexity here comes from argument DSL parsing,
 	// 		might be good to revise argument syntax and handling...

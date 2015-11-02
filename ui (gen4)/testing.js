@@ -100,7 +100,8 @@ module.setupActions = function(viewer){
 	viewer = viewer == null ? $('.viewer') : viewer
 	//r = r == null ? makeTestRibbons(viewer, images) : r
 
-	var vv = Object.create(v.Viewer)
+	//var vv = Object.create(v.Viewer)
+	var vv = Object.create(v.Client)
 
 	// XXX need to automate this...
 	vv.config = Object.create(vv.config || {})
