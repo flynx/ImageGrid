@@ -546,6 +546,10 @@ var DataPrototype = {
 	// XXX most of the complexity here comes from argument DSL parsing,
 	// 		might be good to revise argument syntax and handling...
 	getImage: function(target, mode, list){
+		// empty data...
+		if(this.order == null || (this.order && this.order.length == 0)){
+			return null
+		}
 		// no args...
 		if(target == null && mode == null && list == null){
 			return this.current

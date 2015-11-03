@@ -246,6 +246,7 @@ $(function(){
 	// used switch experimental actions on (set to true) or off (unset or false)...
 	//a.experimental = true
 
+	// setup actions...
 	viewer.ImageGridFeatures.setup(a, [
 		'viewer-testing',
 
@@ -256,15 +257,20 @@ $(function(){
 	// this publishes all the actions...
 	//module.GLOBAL_KEYBOARD.__proto__ = a
 
+	// setup the viewer...
+	a.load({
+			viewer: $('.viewer'),
+		})
+
+
 	// load some testing data...
 	// NOTE: we can load this in parts...
 	a
+		.setEmptyMsg('Loading...')
 		.load({
-			viewer: $('.viewer'),
 			data: data.Data(testing.mock_data),
 			images: testing.makeTestImages(),
 		})
-		.setEmptyMsg('Loading...')
 		// this is needed when loading legacy sources that do not have tags
 		// synced...
 		// do not do for actual data...

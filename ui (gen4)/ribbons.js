@@ -81,6 +81,7 @@ var RibbonsClassPrototype = {
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
 	createRibbon: function(gids){
+		gids = gids || []
 		gids = gids.constructor !== Array ? [gids] : gids
 		var that = this
 		return $(gids.map(function(gid){
@@ -91,6 +92,7 @@ var RibbonsClassPrototype = {
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
 	createImage: function(gids){
+		gids = gids || []
 		gids = gids.constructor !== Array ? [gids] : gids
 		var that = this
 		return $(gids.map(function(gid){

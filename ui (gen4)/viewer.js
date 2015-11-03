@@ -793,7 +793,6 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 
 var ViewerActions = 
 module.ViewerActions = 
-//actions.Actions(Client, {
 actions.Actions({
 
 	/*
@@ -1528,6 +1527,10 @@ var PartialRibbonsActions = actions.Actions({
 			// 		the target might not be loaded...
 			var r_gid = data.getRibbon(target)
 
+			if(r_gid == null){
+				return
+			}
+
 			// localize transition prevention... 
 			// NOTE: for the initial load this may be empty...
 			var r = ribbons.getRibbon(r_gid)
@@ -1535,7 +1538,7 @@ var PartialRibbonsActions = actions.Actions({
 			// XXX do we need to for example ignore unloaded (r.length == 0)
 			// 		ribbons here, for example not load ribbons too far off 
 			// 		screen??
-
+			
 			ribbons
 				.preventTransitions(r)
 				.updateRibbon(
