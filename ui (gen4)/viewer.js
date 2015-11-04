@@ -1293,12 +1293,10 @@ actions.Actions({
 })
 
 var Viewer =
-module.Viewer = features.Feature(ImageGridFeatures, {
+module.Viewer = ImageGridFeatures.Feature({
 	title: 'Graphical User Interface',
 
 	tag: 'ui',
-
-	priority: 'high',
 
 	config: {
 		// The maximum screen width allowed when zooming...
@@ -1316,6 +1314,13 @@ module.Viewer = features.Feature(ImageGridFeatures, {
 	},
 
 	actions: ViewerActions,
+
+	// check if we are running in a UI context...
+	// NOTE: this will prevent loading of any features dependant on the 
+	// 		UI in a non UI context...
+	isApplicable: function(){ 
+		return typeof(window) == typeof({}) 
+	},
 })
 
 
@@ -1332,7 +1337,7 @@ module.Viewer = features.Feature(ImageGridFeatures, {
 // 		- .load(..) clears journal
 // XXX needs careful testing...
 var Journal = 
-module.Journal = features.Feature(ImageGridFeatures, {
+module.Journal = ImageGridFeatures.Feature({
 	title: 'Action Journal',
 
 	tag: 'system-journal',
@@ -1558,7 +1563,7 @@ var PartialRibbonsActions = actions.Actions({
 // 				- shift image up
 // 		XXX The two should be completely independent.... (???)
 var PartialRibbons = 
-module.PartialRibbons = features.Feature(ImageGridFeatures, {
+module.PartialRibbons = ImageGridFeatures.Feature({
 	title: 'Partial Ribbons',
 	doc: 'Maintains partially loaded ribbons, this enables very lage '
 		+'image sets to be hadled eficiently.',
@@ -1704,7 +1709,7 @@ function updateImageProportions(){
 //
 //
 var SingleImageView =
-module.SingleImageView = features.Feature(ImageGridFeatures, {
+module.SingleImageView = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -1763,7 +1768,7 @@ module.SingleImageView = features.Feature(ImageGridFeatures, {
 // XXX should .alignByOrder(..) be a feature-specific action or global 
 // 		as it is now???
 var AlignRibbonsToImageOrder = 
-module.AlignRibbonsToImageOrder = features.Feature(ImageGridFeatures, {
+module.AlignRibbonsToImageOrder = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -1778,7 +1783,7 @@ module.AlignRibbonsToImageOrder = features.Feature(ImageGridFeatures, {
 
 
 var AlignRibbonsToFirstImage = 
-module.AlignRibbonsToFirstImage = features.Feature(ImageGridFeatures, {
+module.AlignRibbonsToFirstImage = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -1797,7 +1802,7 @@ module.AlignRibbonsToFirstImage = features.Feature(ImageGridFeatures, {
 
 // XXX at this point this does not support target lists...
 var ShiftAnimation =
-module.ShiftAnimation = features.Feature(ImageGridFeatures, {
+module.ShiftAnimation = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -1883,7 +1888,7 @@ function didAdvance(indicator){
 }
 
 var BoundsIndicators = 
-module.BoundsIndicators = features.Feature(ImageGridFeatures, {
+module.BoundsIndicators = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2042,7 +2047,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 })
 
 var CurrentImageIndicator = 
-module.CurrentImageIndicator = features.Feature(ImageGridFeatures, {
+module.CurrentImageIndicator = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2143,7 +2148,7 @@ module.CurrentImageIndicator = features.Feature(ImageGridFeatures, {
 
 
 var CurrentImageIndicatorHideOnFastScreenNav = 
-module.CurrentImageIndicatorHideOnFastScreenNav = features.Feature(ImageGridFeatures, {
+module.CurrentImageIndicatorHideOnFastScreenNav = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2208,7 +2213,7 @@ module.CurrentImageIndicatorHideOnFastScreenNav = features.Feature(ImageGridFeat
 })
 
 var CurrentImageIndicatorHideOnScreenNav = 
-module.CurrentImageIndicatorHideOnScreenNav = features.Feature(ImageGridFeatures, {
+module.CurrentImageIndicatorHideOnScreenNav = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2249,7 +2254,7 @@ module.CurrentImageIndicatorHideOnScreenNav = features.Feature(ImageGridFeatures
 
 // XXX
 var ImageStateIndicator = 
-module.ImageStateIndicator = features.Feature(ImageGridFeatures, {
+module.ImageStateIndicator = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2263,7 +2268,7 @@ module.ImageStateIndicator = features.Feature(ImageGridFeatures, {
 
 // XXX
 var GlobalStateIndicator = 
-module.GlobalStateIndicator = features.Feature(ImageGridFeatures, {
+module.GlobalStateIndicator = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2463,7 +2468,7 @@ var ActionTreeActions = actions.Actions({
 })
 
 var ActionTree = 
-module.ActionTree = features.Feature(ImageGridFeatures, {
+module.ActionTree = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2496,7 +2501,7 @@ module.ActionTree = features.Feature(ImageGridFeatures, {
 // XXX need to get the minimal size and not the width as results will 
 // 		depend on viewer format...
 var AutoSingleImage = 
-module.AutoSingleImage = features.Feature(ImageGridFeatures, {
+module.AutoSingleImage = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2655,7 +2660,7 @@ var ImageMarkActions = actions.Actions({
 
 // NOTE: this is usable without ribbons...
 var ImageMarks = 
-module.ImageMarks = features.Feature(ImageGridFeatures, {
+module.ImageMarks = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2717,7 +2722,7 @@ var ImageBookmarkActions = actions.Actions({
 
 // NOTE: this is usable without ribbons...
 var ImageBookmarks = 
-module.ImageBookmarks = features.Feature(ImageGridFeatures, {
+module.ImageBookmarks = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2767,7 +2772,7 @@ var AppControlActions = actions.Actions({
 
 // XXX this needs a better .isApplicable(..)
 var AppControl = 
-module.AppControl = features.Feature(ImageGridFeatures, {
+module.AppControl = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2789,7 +2794,7 @@ module.AppControl = features.Feature(ImageGridFeatures, {
 //---------------------------------------------------------------------
 // XXX at this point this is a stub...
 var FileSystemLoader = 
-module.FileSystemLoader = features.Feature(ImageGridFeatures, {
+module.FileSystemLoader = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -2812,7 +2817,7 @@ module.FileSystemLoader = features.Feature(ImageGridFeatures, {
 // 		- editor			- editing capability
 //
 
-features.Feature(ImageGridFeatures, 'viewer-testing', [
+ImageGridFeatures.Feature('viewer-testing', [
 	'ui',
 
 	// features...
@@ -2844,12 +2849,7 @@ features.Feature(ImageGridFeatures, 'viewer-testing', [
 	'system-journal',
 ])
 
-features.Feature(ImageGridFeatures, 'commandline', [
-	'image-marks',
-	'image-bookmarks',
-])
-
-features.Feature(ImageGridFeatures, 'viewer-minimal', [
+ImageGridFeatures.Feature('viewer-minimal', [
 	'ui',
 	'ui-ribbon-align-to-order',
 	'ui-animation',
@@ -2860,11 +2860,11 @@ features.Feature(ImageGridFeatures, 'viewer-minimal', [
 	'ui-action-tree',
 ])
 
-features.Feature(ImageGridFeatures, 'viewer', [
+ImageGridFeatures.Feature('viewer', [
 	'viewer-minimal',
 ])
 
-features.Feature(ImageGridFeatures, 'viewer-partial', [
+ImageGridFeatures.Feature('viewer-partial', [
 	'viewer',
 	'ui-partial-ribbons',
 ])
@@ -2883,7 +2883,7 @@ var ExperimentActions = actions.Actions({
 })
 
 var ExperimentFeature = 
-module.ExperimentFeature = features.Feature(ImageGridFeatures, {
+module.ExperimentFeature = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 

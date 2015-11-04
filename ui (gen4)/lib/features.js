@@ -230,6 +230,8 @@ Feature.prototype.constructor = Feature
 
 var FeatureSet =
 module.FeatureSet = {
+	__feature__: Feature,
+
 	// Build feature list...
 	//
 	// 	Build a list of all registered features
@@ -283,6 +285,15 @@ module.FeatureSet = {
 	// 			X will be before one of its dependencies...
 	// 		- dependency / priority conflict
 	// 			X will have higher priority than one of its dependencies...
+	// NOTE: feature that depend in unapplicable features are considered
+	// 		unapplicable.
+	// 		XXX not sure if this is 100% correct...
+	// NOTE: child high priority features will push their dependencies up
+	// 		to precede them.
+	// 		...this will not resolve all the possible conflicts so be 
+	// 		careful.
+	//
+	// XXX make suggested feature expansion recursive...
 	buildFeatureList: function(obj, lst, auto_include, depth){
 		lst = lst == null ? Object.keys(this) : lst
 		lst = lst.constructor !== Array ? [lst] : lst
@@ -291,14 +302,14 @@ module.FeatureSet = {
 
 		var that = this
 
+		var missing = {}
+
 		// helpers...
 		// NOTE: _skipMissing(..) will add missing dependencies to missing...
 		var _skipMissing = function(feature, deps, missing){
 			return deps.filter(function(d){ 
 				if(lst.indexOf(d) < 0){
-					if(missing[d] == null){
-						missing[d] = []
-					}
+					missing[d] = missing[d] != null ? missing[d] : []
 					if(missing[d].indexOf(feature) < 0){
 						missing[d].push(feature)
 					}
@@ -306,39 +317,82 @@ module.FeatureSet = {
 				return missing[d] == null
 			})
 		}
-		var _sortDep = function(lst, missing){
-			var res = []
-			lst.forEach(function(n){
-				var e = that[n]
-				// no dependencies...
-				if(e.depends == null || e.depends.length == 0){
-					res.push(n)
+		var _sortDep = function(lst, missing, depth){
 
-				} else {
-					// auto-include dependencies...
-					if(auto_include){
-						var deps = e.depends
+			do {
+				var res = []
+				var l = lst.length
 
-					// skip dependencies that are not in list...
+				lst.forEach(function(n){
+					var e = that[n]
+
+					// no dependencies...
+					if(e.depends == null || e.depends.length == 0){
+						res.push(n)
+
 					} else {
-						var deps = _skipMissing(n, e.depends, missing)
+						// auto-include dependencies...
+						if(auto_include){
+							var deps = e.depends
+
+						// skip dependencies that are not in list...
+						} else {
+							var deps = _skipMissing(n, e.depends, missing)
+						}
+
+						// place dependencies before the depended...
+						res = res.concat(deps)
+						res.push(n)
 					}
 
-					// place dependencies before the depended...
-					res = res.concat(deps)
-					res.push(n)
-				}
+				})
+				lst = res
+				depth -= 1
+			} while(lst.length != l && depth > 0)
 
-			})
-			return res
+			return lst
+		}
+		var _getSuggested = function(featureset, feature, suggested, missing){
+			suggested = suggested || []
+			
+			var s = (feature.suggested || [])
+
+			s
+				// remove the already visited suggenstions...
+				.filter(function(e){ return suggested.indexOf(e) < 0 }) 
+				// add unloaded features to missing...
+				.filter(function(e){ 
+					if(featureset[e] == null){
+						missing[e] = missing[e] != null ? missing[e] : []
+						if(missing[e].indexOf(feature.tag) < 0){
+							missing[e].push(feature.tag)
+						}
+						return false
+					}
+					return true
+				}) 
+				// load new suggenstions...
+				.forEach(function(n){
+					var e = featureset[n]
+					if(e != null && e.suggested != null){
+						suggested = suggested
+							.concat(_getSuggested(featureset, e, suggested, missing))
+							.unique()
+					}
+					suggested.push(n)
+				})
+
+			return suggested
 		}
 
 		// expand optional "suggested" features...
+		// XXX make this recursive...
 		var res = []
 		lst.forEach(function(n){
 			var e = that[n]
 			if(e != null && e.suggested != null){
-				res = res.concat(e.suggested)
+				//res = res.concat(e.suggested)
+				res = res.concat(_getSuggested(that, e, res, missing))
 			}
 			res.push(n)
 		})
@@ -346,14 +400,7 @@ module.FeatureSet = {
 
 		// expand and sort dependencies...
 		// 	2+ times untill depth is 0 or length stabelizes...
-		var missing = {}
-		lst = _sortDep(lst, missing).unique()
-		var l
-		do {
-			l = lst.length
-			lst = _sortDep(lst, missing).unique()
-			depth -= 1
-		} while(l != lst.length && depth > 0)
+		lst = _sortDep(lst, missing, depth).unique()
 
 		// sort features via priority keeping the order as close to 
 		// manual as possible...
@@ -369,8 +416,13 @@ module.FeatureSet = {
 			// NOTE: for some reason JS compares lists as strings so we
 			// 		have to comare the list manually...
 			.sort(function(a, b){ return a[0] - b[0] || a[1] - b[1] })
-			// cleanup -- drom the table...
+			// cleanup -- drop the table...
 			.map(function(e){ return e[2] })
+
+		// sort dependencies again...
+		// NOTE: this bubles the "priority" up the dependency tree...
+		// NOTE: this will not resolve all the conflicts...
+		lst = _sortDep(lst, missing, depth).unique()
 
 		// clasify features...
 		var unapplicable = []
@@ -390,6 +442,16 @@ module.FeatureSet = {
 			// no dependencies...
 			if(e.depends == null || e.depends.length == 0){
 				return true
+			}
+
+			// mark feature unapplicable if it depends on an unapplicable...
+			// NOTE: we need to do this once as features at this point
+			// 		are sorted by dependencies...
+			if(e.depends.filter(function(dep){
+						return unapplicable.indexOf(dep) > -1 
+					}).length > 0){
+				unapplicable.push(n)
+				return false
 			}
 
 			// keep only conflicting...
@@ -511,6 +573,12 @@ module.FeatureSet = {
 				that[n].remove(obj)
 			}
 		})
+	},
+
+	// shorthand for: Feature(<feature-set>, ...)
+	// XXX should this return this?
+	Feature: function(){
+		return this.__feature__.apply(null, [this].concat(args2array(arguments)))
 	},
 }
 
