@@ -563,6 +563,8 @@ module.FeatureSet = {
 				setup.call(that[n], obj)
 			}
 		})
+
+		return obj
 	},
 	remove: function(obj, lst){
 		lst = lst.constructor !== Array ? [lst] : lst

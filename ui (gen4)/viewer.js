@@ -143,6 +143,13 @@ function makeTagWalker(direction, dfl_tag){
 
 
 /*********************************************************************/
+
+var ImageGridFeatures =
+module.ImageGridFeatures = Object.create(features.FeatureSet)
+
+
+
+/*********************************************************************/
 //
 // XXX Tasks to accomplish here:
 // 	- life-cycle actions/events
@@ -152,8 +159,8 @@ function makeTagWalker(direction, dfl_tag){
 //
 //
 
-var Client = 
-module.Client = 
+var BaseActions = 
+module.BaseActions = 
 actions.Actions({
 
 	config: {
@@ -781,11 +788,19 @@ actions.Actions({
 })
 
 
+var Base =
+module.Base = ImageGridFeatures.Feature({
+	title: 'ImageGrid base',
 
-/*********************************************************************/
+	tag: 'base',
 
-var ImageGridFeatures =
-module.ImageGridFeatures = Object.create(features.FeatureSet)
+	config: {
+		// see .direction for details...
+		'steps-to-change-direction': 3,
+	},
+
+	actions: BaseActions,
+})
 
 
 
@@ -1298,6 +1313,8 @@ module.Viewer = ImageGridFeatures.Feature({
 
 	tag: 'ui',
 
+	depends: ['base'],
+
 	config: {
 		// The maximum screen width allowed when zooming...
 		'max-screen-images': 30,
@@ -1341,6 +1358,8 @@ module.Journal = ImageGridFeatures.Feature({
 	title: 'Action Journal',
 
 	tag: 'system-journal',
+
+	depends: ['base'],
 
 	actions: actions.Actions({
 		// XXX might be good to add some kind of metadata to journal...
@@ -2666,6 +2685,8 @@ module.ImageMarks = ImageGridFeatures.Feature({
 
 	tag: 'image-marks',
 
+	depends: ['base'],
+
 	actions: ImageMarkActions,
 
 	handlers: [
@@ -2727,6 +2748,8 @@ module.ImageBookmarks = ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'image-bookmarks',
+
+	depends: ['base'],
 
 	actions: ImageBookmarkActions,
 
@@ -2818,6 +2841,8 @@ module.FileSystemLoader = ImageGridFeatures.Feature({
 //
 
 ImageGridFeatures.Feature('viewer-testing', [
+	'base',
+
 	'ui',
 
 	// features...
@@ -2850,6 +2875,7 @@ ImageGridFeatures.Feature('viewer-testing', [
 ])
 
 ImageGridFeatures.Feature('viewer-minimal', [
+	'base',
 	'ui',
 	'ui-ribbon-align-to-order',
 	'ui-animation',

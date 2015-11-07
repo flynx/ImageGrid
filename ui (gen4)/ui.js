@@ -37,7 +37,7 @@ var browser = require('browser')
 var nw = require('nw')
 
 // XXX load only the actualy used here modules...
-var actions = require('actions')
+var actions = require('lib/actions')
 var data = require('data')
 var ribbons = require('ribbons')
 
@@ -240,8 +240,8 @@ module.GLOBAL_KEYBOARD = {
 
 $(function(){
 
-	// XXX
-	window.a = testing.setupActions()
+	// XXX stub action set -- this needs to be auto-generated...
+	window.a = actions.Actions()
 
 	// used switch experimental actions on (set to true) or off (unset or false)...
 	//a.experimental = true
@@ -283,6 +283,7 @@ $(function(){
 
 
 	// setup base keyboard for devel, in case something breaks...
+	// This branch does not drop keys...
 	if(module.MAX_KEY_REPEAT_RATE < 0 || module.MAX_KEY_REPEAT_RATE == null){
 		$(document)
 			.keydown(
@@ -293,6 +294,8 @@ $(function(){
 					}, 
 					a))
 
+	// drop keys if repeating to fast...
+	// NOTE: this is done for smoother animations...
 	} else {
 		$(document)
 			.keydown(
