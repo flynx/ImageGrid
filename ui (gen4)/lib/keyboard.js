@@ -300,6 +300,8 @@ function dropRepeatingkeys(handler, max_rate){
  * XXX should action handler support event.stoppropagation()???
  * 		...at this point I'm not sure it is needed as it will not affect 
  * 		the keyboard handlers, it will preven further JS event handlers...
+ * XXX this also supports the experimental 'ALL' key name that matches 
+ * 		all the keys, needs more work, not for production use...
  */
 var getKeyHandlers =
 module.getKeyHandlers =
@@ -376,8 +378,11 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 			modifiers = modifiers.replace(/\+?shift/i, '') 
 		} else if(chr in bindings){
 			var handler = bindings[chr]
-		} else {
+		} else if(key in bindings) {
 			var handler = bindings[key]
+		// XXX experimental...
+		} else {
+			var handler = bindings['ALL']
 		}
 
 		// alias...

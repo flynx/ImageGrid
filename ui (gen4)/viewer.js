@@ -2309,6 +2309,11 @@ var drawer = require('lib/widget/drawer')
 // This will wrap the actions adding a contextual .preventClosing() method, 
 // if called it will prevent the list from closing on open event and give 
 // the user control over when to close the base list...
+//
+// XXX this may be a source for race conditions...
+// 		scenario:
+// 			- an action is run while a menu runs a state changing action
+//			- state restoration will overwrite the effects fo the BG action
 var makeActionLister = function(list, filter, pre_order){
 	pre_order = typeof(filter) == typeof(true) ? filter : pre_order
 	filter = typeof(filter) == typeof(true) ? null : filter
