@@ -2369,7 +2369,7 @@ var makeActionLister = function(list, filter, pre_order){
 				}))
 
 		// XXX DEBUG
-		window.LIST = o.client
+		//window.LIST = o.client
 
 		return this
 	}

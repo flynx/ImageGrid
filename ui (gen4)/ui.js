@@ -214,6 +214,8 @@ module.GLOBAL_KEYBOARD = {
 		},
 		A: {
 			alt: 'browseActions',
+			'alt+shift': 'listActions',
+
 			ctrl: 'toggleMark!: "ribbon" "on"',
 		},
 		D: {

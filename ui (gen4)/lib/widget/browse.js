@@ -647,7 +647,7 @@ var BrowserPrototype = {
 
 				// maintain focus within the widget...
 				if(focus && browser.find(':focus').length == 0){
-					this.focus()
+					that.focus()
 				}
 
 			})
@@ -769,6 +769,8 @@ var BrowserPrototype = {
 
 		// string...
 		// NOTE: this supports several space-separated patterns.
+		// NOTE: this is case-agnostic...
+		// 		...for case sensitivity remove .toLowerCase()...
 		// XXX support glob...
 		} else if(typeof(pattern) == typeof('str')){
 			//var pl = pattern.trim().split(/\s+/)
@@ -778,10 +780,10 @@ var BrowserPrototype = {
 				// remove empty strings...
 				.filter(function(e){ return e.trim() != '' })
 				// remove '\' -- enables direct string comparison...
-				.map(function(e){ return e.replace(/\\(\s)/g, '$1') })
+				.map(function(e){ return e.replace(/\\(\s)/g, '$1').toLowerCase() })
 			var filter = function(i, e){
 				e = $(e)
-				var t = e.text()
+				var t = e.text().toLowerCase()
 				for(var p=0; p < pl.length; p++){
 					// NOTE: we are not using search here as it treats 
 					// 		the string as a regex and we need literal
