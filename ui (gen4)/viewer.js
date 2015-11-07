@@ -2342,7 +2342,18 @@ var makeActionLister = function(list, filter, pre_order){
 						return o
 					}
 
-					return a[n].apply(a, arguments)
+					var res = a[n].apply(a, arguments)
+
+					// cleanup -- restore data that was updated by action...
+					// NOTE: we do not need to worry about partial 
+					// 		updates as they are done in place...
+					Object.keys(a).forEach(function(n){
+						if(n != 'preventClosing'){
+							that[n] = a[n]
+						}
+					})
+
+					return res
 				}
 			// ignore args of actions...
 			} else {
@@ -2354,7 +2365,18 @@ var makeActionLister = function(list, filter, pre_order){
 						return o
 					}
 
-					return a[n]()
+					var res = a[n]()
+
+					// cleanup -- restore data that was updated by action...
+					// NOTE: we do not need to worry about partial 
+					// 		updates as they are done in place...
+					Object.keys(a).forEach(function(n){
+						if(n != 'preventClosing'){
+							that[n] = a[n]
+						}
+					})
+
+					return res
 				}
 			}
 		})
