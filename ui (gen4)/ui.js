@@ -254,17 +254,13 @@ $(function(){
 		'experiments',
 	])
 
-	// this publishes all the actions...
-	//module.GLOBAL_KEYBOARD.__proto__ = a
-
 	// setup the viewer...
 	a.load({
 			viewer: $('.viewer'),
 		})
 
-
 	// load some testing data...
-	// NOTE: we can load this in parts...
+	// NOTE: we can (and do) load this in parts...
 	a
 		.setEmptyMsg('Loading...')
 		.load({

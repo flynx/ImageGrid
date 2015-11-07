@@ -643,10 +643,15 @@ var DataPrototype = {
 			return -1
 		}
 
-
 		// normalize the list to a sparse list of gids...
 		list = list == null ? 
-				this.ribbons[this.getRibbon(target)]
+				this.ribbons[
+					this.getRibbon(target)
+						// target exists but is not loaded...
+						|| this.getRibbon() 
+						// no current ribbon...
+						|| this.getRibbon(this.getImage(target, 'before', this.getImages()))
+						|| this.getRibbon(this.getImage(target, 'after', this.getImages()))]
 			: list.constructor === Array ? 
 				this.makeSparseImages(list)
 			: this.ribbons[this.getRibbon(list)]
@@ -2065,12 +2070,19 @@ var DataPrototype = {
 		var r = this.getRibbon()
 		// if current ribbon is not empty get the closest image in it...
 		if(r in crop.ribbons && crop.ribbons[r].length > 0){
-			crop.focusImage(this.current, 'after', this.getRibbon())
+			// XXX is this the correct way to do this???
+			// 		...should we use direction???
+			var target = crop.getImage(this.current, 'after', this.getRibbon())
+				|| crop.getImage(this.current, 'before', this.getRibbon())
 
 		// if ribbon got deleted, get the closest loaded image...
 		} else {
-			crop.focusImage(this.current, list)
+			// XXX is this the correct way to do this???
+			// 		...should we use direction???
+			var target = crop.getImage(this.current, 'after', list)
+				|| crop.getImage(this.current, 'before', list)
 		}
+		crop.focusImage(target)
 
 		// XXX ???
 		//crop.parent = this

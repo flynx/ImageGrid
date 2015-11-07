@@ -1276,7 +1276,8 @@ actions.Actions({
 	collapseGroup: [ reloadAfter(true) ],
 
 
-	crop: [ reloadAfter() ],
+	// XXX BUG? reloadAfter() here does not remove some images...
+	crop: [ reloadAfter(true) ],
 	// XXX BUG? reloadAfter() produces an align error...
 	uncrop: [ reloadAfter(true) ],
 	// XXX might be a good idea to do this in a new viewer in an overlay...
