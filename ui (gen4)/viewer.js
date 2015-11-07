@@ -674,7 +674,7 @@ actions.Actions({
 			// restore order from the crop...
 			if(keep_crop_order){
 				this.data.order = order
-				this.data.sortImages()
+				this.data.updateImagePositions()
 			}
 
 			// purge the stack...
