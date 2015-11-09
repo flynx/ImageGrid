@@ -625,7 +625,7 @@ module.MetaActions = {
 	},
 
 	// Same as .inlineMmixin(..) but isolates a mixin in a seporate object
-	// in the ingeritance chain...
+	// in the inheritance chain...
 	//
 	mixin: function(from, all, descriptors, all_attr_types){
 		var proto = Object.create(this.__proto__)

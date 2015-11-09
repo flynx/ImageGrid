@@ -91,7 +91,7 @@ var BrowserClassPrototype = {
 	},
 
 	// Construct the dom...
-	make: function(options){
+	make: function(obj, options){
 		var browser = $('<div>')
 			.addClass('browse-widget')
 			// make thie widget focusable...
@@ -136,6 +136,11 @@ var BrowserClassPrototype = {
 			// list...
 			.append($('<div>')
 				   .addClass('v-block list'))
+
+		// XXX make this part of the framework...
+		if(obj){
+			browser.data('widget-controller', obj)
+		}
 
 		return browser
 	},

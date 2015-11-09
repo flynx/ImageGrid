@@ -52,7 +52,7 @@ function(){
 /*********************************************************************/
 
 var WidgetClassPrototype = {
-	make: function(client, options){
+	make: function(obj, client, options){
 		console.error('Widget must define a .make method.')
 	},
 }
@@ -102,7 +102,7 @@ var WidgetPrototype = {
 
 		// build the dom...
 		if(this.constructor.make){
-			this.dom = this.constructor.make(options)
+			this.dom = this.constructor.make(this, options)
 		}
 
 		// XXX do we do this here???
@@ -172,7 +172,7 @@ var ContainerPrototype = {
 		// build the dom...
 		if(this.constructor.make){
 			this.dom = this.constructor
-				.make(client.dom || client, options)
+				.make(this, client.dom || client, options)
 		}
 
 		// add keyboard handler...

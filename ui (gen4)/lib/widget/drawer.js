@@ -17,7 +17,7 @@ var widget = require('./widget')
 /*********************************************************************/
 
 var DrawerClassPrototype = {
-	make: function(client, options){
+	make: function(obj, client, options){
 		var that = this
 		var overlay = $('<div>')
 			.addClass('drawer-widget')
@@ -33,6 +33,11 @@ var DrawerClassPrototype = {
 		
 		if(options.focusable){
 			overlay.attr('tabindex', 0)
+		}
+
+		// XXX make this part of the framework...
+		if(obj){
+			overlay.data('widget-controller', obj)
 		}
 
 		return overlay

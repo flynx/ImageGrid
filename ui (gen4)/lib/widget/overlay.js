@@ -17,7 +17,7 @@ var widget = require('./widget')
 /*********************************************************************/
 
 var OverlayClassPrototype = {
-	make: function(client, options){
+	make: function(obj, client, options){
 		var that = this
 		var overlay = $('<div>')
 			.addClass('overlay-widget')
@@ -33,6 +33,11 @@ var OverlayClassPrototype = {
 
 		if(options.focusable){
 			overlay.attr('tabindex', 0)
+		}
+
+		// XXX make this part of the framework...
+		if(obj){
+			overlay.data('widget-controller', obj)
 		}
 
 		return overlay
@@ -117,6 +122,23 @@ object.makeConstructor('Overlay',
 
 // inherit from widget...
 Overlay.prototype.__proto__ = widget.Container.prototype
+
+
+
+// XXX this should return a proxy with a set of extension API...
+var getOverlay =
+module.getOverlay = function(obj){
+	var overlay = $(obj || 'body')
+		.find('.overlay-widget')
+		.last()
+
+	if(overlay.length == 0){
+		return null
+	}
+
+	// get the controller...
+	return overlay.data('widget-controller')
+}
 
 
 

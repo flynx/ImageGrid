@@ -2314,6 +2314,36 @@ var drawer = require('lib/widget/drawer')
 // 		scenario:
 // 			- an action is run while a menu runs a state changing action
 //			- state restoration will overwrite the effects fo the BG action
+// XXX .preventClosing(..) mechanism needs revision...
+// 		...might be a better idea to add a permanent action to work with 
+// 		modal overlays and to define strict rules under which such overlays 
+// 		operate, like:
+// 			- only the top overlay is active and can receive events
+// 			- an overlay is closed on open event
+// 			- an overlay can be prevented from closing only while handling
+// 				an open event
+// 			- an overlay can close itself or the previous overlay during
+// 				its open event
+//
+// 		Proposed API:
+// 			getOverlay(context) 
+// 				-> overlay object
+// 				-> null
+// 					returns an overlay controller for a given container
+// 					NOTE: if no overlay is open this returns null
+//					NOTE: this might be implemented as an action.
+//					NOTE: this returns an object that represents only 
+//						the top overlay
+//					NOTE: this should either extend the overlay client
+//						or encapsulate it (preferred), providing a method to access 
+//						it (something like: .client prop or 
+//						.getCleint() method)...
+// 			.preventClosing()
+// 				prevent closing of an overlay after this open event is
+// 				handled
+// 			.close()
+//
+//
 var makeActionLister = function(list, filter, pre_order){
 	pre_order = typeof(filter) == typeof(true) ? filter : pre_order
 	filter = typeof(filter) == typeof(true) ? null : filter
@@ -2341,6 +2371,9 @@ var makeActionLister = function(list, filter, pre_order){
 			if(k.slice(-1) == '*'){
 				actions[k] = function(){
 
+					// XXX this may cause race conditions as we are 
+					// 		splitting the state in two and then 
+					// 		overwriting one...
 					var a = Object.create(that)
 					a.preventClosing = function(){ 
 						closingPrevented = true 
@@ -2364,6 +2397,9 @@ var makeActionLister = function(list, filter, pre_order){
 			} else {
 				actions[k] = function(){
 
+					// XXX this may cause race conditions as we are 
+					// 		splitting the state in two and then 
+					// 		overwriting one...
 					var a = Object.create(that)
 					a.preventClosing = function(){ 
 						closingPrevented = true 
@@ -2403,6 +2439,11 @@ var makeActionLister = function(list, filter, pre_order){
 }
 
 var ActionTreeActions = actions.Actions({
+	// XXX move this to a generic modal overlay feature...
+	getOverlay: ['Interface/Get overlay object',
+		function(){
+		}],
+
 	browseActions: ['Interface/Browse actions',
 		makeActionLister(browse.makePathList, true)],
 
