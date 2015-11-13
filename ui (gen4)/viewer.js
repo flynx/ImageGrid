@@ -2343,6 +2343,9 @@ var drawer = require('lib/widget/drawer')
 // 				handled
 // 			.close()
 //
+//		XXX need a way to prevent closing ONLY if action is run FROM the
+//			list...
+//			...the current solution does not have this problem...
 //
 var makeActionLister = function(list, filter, pre_order){
 	pre_order = typeof(filter) == typeof(true) ? filter : pre_order
@@ -2441,7 +2444,8 @@ var makeActionLister = function(list, filter, pre_order){
 var ActionTreeActions = actions.Actions({
 	// XXX move this to a generic modal overlay feature...
 	getOverlay: ['Interface/Get overlay object',
-		function(){
+		function(o){
+			return overlay.getOverlay(o || this.viewer)
 		}],
 
 	browseActions: ['Interface/Browse actions',

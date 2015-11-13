@@ -335,6 +335,11 @@ module.ImagesPrototype = {
 	forEach: function(func){
 		var i = 0
 		for(var key in this){
+			// reject non images...
+			// XXX make this cleaner...
+			if(key == 'length' || typeof(this[key]) == typeof(function(){})){
+				continue
+			}
 			func.call(this[key], key, this[key], i++, this)
 		}
 		return this
@@ -343,6 +348,11 @@ module.ImagesPrototype = {
 		var res = this.constructor()
 		var i = 0
 		for(var key in this){
+			// reject non images...
+			// XXX make this cleaner...
+			if(key == 'length' || typeof(this[key]) == typeof(function(){})){
+				continue
+			}
 			res[k] = func.call(this[key], key, this[key], i++, this)
 		}
 		return res
@@ -351,6 +361,11 @@ module.ImagesPrototype = {
 		var res = this.constructor()
 		var i = 0
 		for(var key in this){
+			// reject non images...
+			// XXX make this cleaner...
+			if(key == 'length' || typeof(this[key]) == typeof(function(){})){
+				continue
+			}
 			if(func.call(this[key], key, this[key], i++, this)){
 				res[key] = this[key]
 			}
@@ -360,6 +375,11 @@ module.ImagesPrototype = {
 	reduce: function(func, initial){
 		var res = initial
 		for(var key in this){
+			// reject non images...
+			// XXX make this cleaner...
+			if(key == 'length' || typeof(this[key]) == typeof(function(){})){
+				continue
+			}
 			res = func.call(this[key], res, this[key], key, i++, this)
 		}
 		return res
