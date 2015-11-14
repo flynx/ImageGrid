@@ -413,12 +413,15 @@ module.buildIndex = function(index, base){
 	var d = data.Data.fromJSON(index.data)
 
 	// buildup the data object...
-	d.tags = d.tags || {} 
+	// NOTE: this is mostly to attach stuff that is stored in separate files...
+	
+	// .tags + bookmarks + selection...
+	d.tags = index.tags || {} 
 	d.tags.bookmark = index.bookmarked ? index.bookmarked[0] : []
 	d.tags.selected = index.marked || []
 	d.sortTags()
 
-	// current...
+	// .current...
 	d.current = index.current || d.current
 
 
@@ -449,6 +452,12 @@ module.buildIndex = function(index, base){
 	}
 }
 
+
+// XXX
+var mergeIndex = 
+module.mergeIndex = function(index, base){
+	// XXX
+}
 
 
 /*********************************************************************/

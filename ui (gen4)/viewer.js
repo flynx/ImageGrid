@@ -2548,7 +2548,7 @@ var ActionTreeActions = actions.Actions({
 							&& parent.focus()
 					})
 		}],
-	drawerTest:['Interface|Test/Drawer widget test',
+	drawerTest: ['Interface|Test/Drawer widget test',
 		function(){
 			drawer.Drawer($('body'), 
 				$('<div>')
@@ -2565,6 +2565,123 @@ var ActionTreeActions = actions.Actions({
 					focusable: true,
 				})
 		}],
+
+	// XXX needs cleanup...
+	// XXX need a clean constructor strategy -- this and ui.js are a mess...
+	showTaggedInDrawer: ['Interface|Test/Show tagged in drawer',
+		function(tag){
+			tag = tag || 'bookmark'
+			var that = this
+			var H = '200px'
+
+			var viewer = $('<div class="viewer">')
+				.css({
+					height: H,
+					background: 'black',
+				})
+			var widget = drawer.Drawer($('body'), 
+				$('<div>')
+					.css({
+						position: 'relative',
+						height: H,
+					})
+					.append(viewer),
+				{
+					focusable: true,
+				})
+
+			var data = this.data.crop(a.data.getTaggedByAll(tag), true)
+
+			var b = actions.Actions()
+
+			// used switch experimental actions on (set to true) or off (unset or false)...
+			//a.experimental = true
+
+			// setup actions...
+			ImageGridFeatures.setup(b, [
+				'viewer-testing',
+			])
+
+			// setup the viewer...
+			// XXX for some reason if we load this with data and images
+			// 		the images will not show up...
+			b.load({
+					viewer: viewer,
+				})
+
+			// load some testing data...
+			// NOTE: we can (and do) load this in parts...
+			b
+				.load({
+					data: data,
+					images: this.images, 
+				})
+				// this is needed when loading legacy sources that do not have tags
+				// synced...
+				// do not do for actual data...
+				//.syncTags()
+				.setEmptyMsg('No images bookmarked...')
+				.fitImage(1)
+
+				// link navigation...
+				.on('focusImage', function(){
+					that.focusImage(this.current)
+				})
+
+			// XXX setup keyboard...
+			var keyboard = require('lib/keyboard')
+
+			// XXX move this to the .config...
+			var kb = {
+				'Basic Control': {
+					pattern: '*',
+
+					Home: {
+						default: 'firstImage!',
+					},
+					End: {
+						default: 'lastImage!',
+					},
+					Left: {
+						default: 'prevImage!',
+						ctrl: 'prevScreen!',
+						// XXX need to prevent default on mac + browser...
+						meta: 'prevScreen!',
+					},
+					PgUp: 'prevScreen!',
+					PgDown: 'nextScreen!',
+					Right: {
+						default: 'nextImage!',
+						ctrl: 'nextScreen!',
+						// XXX need to prevent default on mac + browser...
+						meta: 'nextScreen!',
+					},
+				}
+			}
+
+			widget.dom
+				// XXX
+				.keydown(
+					keyboard.dropRepeatingkeys(
+						keyboard.makeKeyboardHandler(
+							kb,
+							function(k){
+								window.DEBUG && console.log(k)
+							},
+							b), 
+						function(){ 
+							return that.config['max-key-repeat-rate']
+						}))
+
+			// XXX STUB
+			window.b = b
+
+			return b
+		}],
+	showBookmarkedInDrawer: ['Interface|Test/Show bookmarked in drawer',
+		function(){ this.showTaggedInDrawer('bookmark') }],
+	showSelectedInDrawer: ['Interface|Test/Show selected in drawer',
+		function(){ this.showTaggedInDrawer('selected') }],
 })
 
 var ActionTree = 
