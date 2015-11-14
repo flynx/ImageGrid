@@ -810,8 +810,9 @@ var ViewerActions =
 module.ViewerActions = 
 actions.Actions({
 
-	/*
 	// Images...
+	// XXX this seems like a hack...
+	// 		...should this be here???
 	get images(){
 		return this.ribbons != null ? this.ribbons.images : null
 	},
@@ -821,7 +822,6 @@ actions.Actions({
 			this.ribbons.images = value
 		}
 	},
-	*/
 
 	get screenwidth(){
 		return this.ribbons != null ? this.ribbons.getScreenWidthImages() : null
@@ -1329,6 +1329,14 @@ module.Viewer = ImageGridFeatures.Feature({
 		// ...this effectively sets the closest distance an image can be from
 		// the viewer edge...
 		'fit-overflow': 0.2,
+
+		
+		// limit key repeat to one per N milliseconds.
+		//
+		// Set this to -1 or null to run keys without any limitations.
+		// XXX at this point the keyboard is setup in ui.js, need to 
+		// 		move to a more logical spot...
+		'max-key-repeat-rate': 0,
 	},
 
 	actions: ViewerActions,
@@ -2889,12 +2897,63 @@ module.AppControl = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 // XXX at this point this is a stub...
+if(window.nodejs != null){
+	var file = requirejs('./file')
+}
+
+var FileSystemLoaderActions = actions.Actions({
+	// XXX
+	loadPath: ['File/',
+		function(path){
+			var that = this
+			// XXX does not appear to load correctly...
+			file.loadIndex(path)
+				.done(function(res){
+					// XXX res may contain multiple indexes, need to 
+					// 		combine them...
+					var k = Object.keys(res)[0]
+
+					// XXX use the logger...
+					console.log('LOADING:', k)
+
+					var d = data.Data.fromJSON(res[k].data)
+					// XXX need to load tags, marks, bookmarks, ...
+					// XXX
+
+					// XXX need to make this segment specific...
+					d.base = k
+
+					// XXX STUB remove ASAP... 
+					// 		...need a real way to handle base dir, possible
+					// 		approaches:
+					// 			1) .base attr in image, set on load and 
+					// 				do not save (or ignore on load)...
+					// 				if exists prepend to all paths...
+					// 				- more to do in view-time
+					// 				+ more flexible
+					// 			2) add/remove on load/save (approach below)
+					// 				+ less to do in real time
+					// 				- more processing on load/save
+					var img = images.Images(res[k].images)
+						.forEach(function(_, img){ img.base = k })
+
+					that.load({
+						data: d,
+						images: img,
+					})
+				})
+		}],
+})
+
+
 var FileSystemLoader = 
 module.FileSystemLoader = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
 	tag: 'fs-loader',
+
+	actions: FileSystemLoaderActions,
 
 	isApplicable: function(){
 		return window.nodejs != null

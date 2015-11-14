@@ -282,7 +282,7 @@ $(function(){
 
 	// setup base keyboard for devel, in case something breaks...
 	// This branch does not drop keys...
-	if(module.MAX_KEY_REPEAT_RATE < 0 || module.MAX_KEY_REPEAT_RATE == null){
+	if(a.config['max-key-repeat-rate'] < 0 || a.config['max-key-repeat-rate'] == null){
 		$(document)
 			.keydown(
 				keyboard.makeKeyboardHandler(
@@ -305,8 +305,7 @@ $(function(){
 						},
 						a), 
 					function(){ 
-						// XXX get this from config...
-						return module.MAX_KEY_REPEAT_RATE
+						return a.config['max-key-repeat-rate']
 					}))
 	}
 })

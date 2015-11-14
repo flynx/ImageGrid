@@ -319,7 +319,15 @@ function(path, logger){
 				// collect the found indexes...
 				.on('match', function(path){
 					loadIndex(path, logger) 
-						.done(function(obj){ res[path] = obj[path] })
+						.done(function(obj){ 
+							// NOTE: considering that all the paths within
+							// 		the index are relative to the preview 
+							// 		dir (the parent dir to the index root)
+							// 		we do not need to include the index 
+							// 		itself in the base path...
+							var p = path.split(INDEX_DIR)[0]
+							res[p] = obj[path] 
+						})
 				})
 				// done...
 				.on('end', function(paths){
