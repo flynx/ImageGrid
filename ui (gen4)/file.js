@@ -19,6 +19,9 @@ console.log('>>> file')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var data = require('data')
+var images = require('images')
+
 var tasks = require('lib/tasks')
 
 
@@ -402,6 +405,49 @@ function(base, previews, absolute_path){
 	})
 }
 
+
+
+// XXX move this to a better spot...
+var buildIndex = 
+module.buildIndex = function(index, base){
+	var d = data.Data.fromJSON(index.data)
+
+	// buildup the data object...
+	d.tags = d.tags || {} 
+	d.tags.bookmark = index.bookmarked ? index.bookmarked[0] : []
+	d.tags.selected = index.marked || []
+	d.sortTags()
+
+	// current...
+	d.current = index.current || d.current
+
+
+	// images...
+	// XXX there seems to be a problem with updated images...
+	// 		- in the test set not all rotated manually images are loaded rotated...
+	var img = images.Images(index.images)
+
+	if(base){
+		d.base_path = base
+		// XXX STUB remove ASAP... 
+		// 		...need a real way to handle base dir, possible
+		// 		approaches:
+		// 			1) .base attr in image, set on load and 
+		// 				do not save (or ignore on load)...
+		// 				if exists prepend to all paths...
+		// 				- more to do in view-time
+		// 				+ more flexible
+		// 			2) add/remove on load/save (approach below)
+		// 				+ less to do in real time
+		// 				- more processing on load/save
+		img.forEach(function(_, img){ img.base = base })
+	}
+
+	return {
+		data: d, 
+		images: img,
+	}
+}
 
 
 

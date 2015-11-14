@@ -125,6 +125,11 @@ if(typeof(glob) != 'undefined'){
 	}
 
 
+	window.loadMBFWR1 = function(){
+		a.loadPath('L:/mnt/hdd15 (photo)/NTFS2/media/img/my/work/20151022 - MBFWR (1),/*')
+	}
+
+
 	/*
 	window.loadSaved = function(){
 		a.data.loadJSON(require('fs').readFileSync('insta.json', 'utf-8'))

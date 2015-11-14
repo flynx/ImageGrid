@@ -85,6 +85,7 @@ function(data){
 	res.order = data.order.slice()
 	res.ribbon_order = data.ribbon_order == null ? [] : data.ribbon_order.slice()
 	res.ribbons = {} 
+
 	// generate gids...
 	// NOTE: this will use the structures stored in data if available, 
 	// 		otherwise new structures will be generated...
@@ -98,6 +99,7 @@ function(data){
 		res.ribbon_order.push(gid)
 		res.ribbons[gid] = data.ribbons[k].slice()
 	})
+
 	// we set the base to the first ribbon...
 	res.base = data.base == null ? res.ribbon_order[0] : res.base
 	return res

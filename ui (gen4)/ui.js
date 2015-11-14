@@ -233,6 +233,9 @@ module.GLOBAL_KEYBOARD = {
 			alt: 'browseActions: "/Bookmark/"',
 		},
 		C: 'browseActions: "/Crop/"',
+
+		// XXX for debug...
+		G: function(){ $('.viewer').toggleClass('visible-gid') },
 	},
 }	
 

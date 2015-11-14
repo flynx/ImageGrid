@@ -65,6 +65,15 @@ function makeConstructor(name, a, b){
 
 
 // super equivalent...
+//
+// Example:
+// 	superMethod(<class>, <method-name>).call(this, ...)
+// 		-> <result>
+//
+// This will return a next method in inheritance chain after <class> by
+// its name (<method-name>).
+// In the normal use-case <class> is the current class and <method-name>
+// is the name of the current method.
 var superMethod =
 module.superMethod =
 function superMethod(cls, meth){

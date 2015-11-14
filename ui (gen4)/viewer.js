@@ -2901,11 +2901,14 @@ if(window.nodejs != null){
 	var file = requirejs('./file')
 }
 
+
 var FileSystemLoaderActions = actions.Actions({
 	// XXX
 	loadPath: ['File/',
 		function(path){
 			var that = this
+
+			// XXX get a logger...
 
 			// XXX this will not work for explicit path (path to a dir 
 			// 		that contains the index) 
@@ -2915,36 +2918,14 @@ var FileSystemLoaderActions = actions.Actions({
 
 					// XXX res may contain multiple indexes, need to 
 					// 		combine them...
+
 					var k = Object.keys(res)[0]
+					var index = res[k]
 
 					// XXX use the logger...
 					console.log('LOADING:', k)
-
-					var d = data.Data.fromJSON(res[k].data)
-					// XXX need to load tags, marks, bookmarks, ...
-					// XXX
-
-					// XXX need to make this segment specific...
-					d.base = k
-
-					// XXX STUB remove ASAP... 
-					// 		...need a real way to handle base dir, possible
-					// 		approaches:
-					// 			1) .base attr in image, set on load and 
-					// 				do not save (or ignore on load)...
-					// 				if exists prepend to all paths...
-					// 				- more to do in view-time
-					// 				+ more flexible
-					// 			2) add/remove on load/save (approach below)
-					// 				+ less to do in real time
-					// 				- more processing on load/save
-					var img = images.Images(res[k].images)
-						.forEach(function(_, img){ img.base = k })
-
-					that.load({
-						data: d,
-						images: img,
-					})
+					
+					that.load(file.buildIndex(index, k))
 				})
 		}],
 })
