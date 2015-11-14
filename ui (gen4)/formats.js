@@ -44,7 +44,7 @@ function(data, cmp){
 	res.data.current = data.position
 	
 	// ribbons and images...
-	$.each(data.ribbons, function(i, input_images){
+	data.ribbons.forEach(function(input_images, i){
 		var ribbon = []
 		ribbons.push(ribbon)
 		for(var id in input_images){

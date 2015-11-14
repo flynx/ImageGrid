@@ -308,20 +308,28 @@ var DataPrototype = {
 	//
 	// If no arguments are given then a unique gid will be generated.
 	//
+	// XXX revise...
 	newGid: function(str, nohash){
-		var p = location.hostname + '-'
+		// prevent same gids from ever being created...
+		// NOTE: this is here in case we are generating new gids fast 
+		// 		enough that Date.now() produces identical results for 2+
+		// 		consecutive calls...
+		var t = module.__gid_ticker = (module.__gid_ticker || 0) + 1
+
+		var p = typeof(location) != 'undefined' ? location.hostname : ''
+
 		// if we are on node.js add process pid
 		if(typeof(process) != 'undefined'){
-			p += process.pid + '-'
+			p += process.pid
 		}
 
 		// return string as-is...
 		if(nohash){
-			return str || p+Date.now()
+			return str || p+'-'+t+'-'+Date.now()
 		}
 
 		// make a hash...
-		var gid = hash(str || (p+Date.now()))
+		var gid = hash(str || (p+'-'+t+'-'+Date.now()))
 
 		// for explicit string return the hash as-is...
 		if(str != null){
@@ -331,7 +339,7 @@ var DataPrototype = {
 		// check that the gid is unique...
 		while(this.ribbon_order.indexOf(gid) >= 0 
 				|| this.order.indexOf(gid) >= 0){
-			gid = hash(p+Date.now())
+			gid = hash(p+'-'+t+'-'+Date.now())
 		}
 
 		return gid

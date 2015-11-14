@@ -2906,9 +2906,13 @@ var FileSystemLoaderActions = actions.Actions({
 	loadPath: ['File/',
 		function(path){
 			var that = this
-			// XXX does not appear to load correctly...
+
+			// XXX this will not work for explicit path (path to a dir 
+			// 		that contains the index) 
 			file.loadIndex(path)
 				.done(function(res){
+					// XXX if res is empty load raw...
+
 					// XXX res may contain multiple indexes, need to 
 					// 		combine them...
 					var k = Object.keys(res)[0]
