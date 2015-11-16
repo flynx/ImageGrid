@@ -19,6 +19,9 @@ if(nodejs){
 	requirejs.config({
 		nodeRequire: require,
 		//baseUrl: __dirname,
+
+		// XXX this does not work on direct filesystem access...
+		//urlArgs: 'bust='+Date.now(),
 	})
 }
 

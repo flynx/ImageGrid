@@ -61,34 +61,35 @@ var guaranteeGlobEvents =
 module.guaranteeGlobEvents =
 function(glob){ return guaranteeEvents('match end', glob) }
 
+var gGlob = 
+module.gGlob = function(){
+	return guaranteeGlobEvents(glob.apply(null, arguments))
+}
 
 
 /*********************************************************************/
 // Reader...
 
 
-// XXX return a promise rather than an event emitter (???)
-// XXX glob has a problem: if a match happens fast enough and we are slow
-// 		enough to register a 'match' handler, then that match(s) will get
-// 		missed...
+// XXX if path +'/'+ INDEX_DIR exists it will not be returned...
 var listIndexes =
 module.listIndexes = 
 function(base){
-	return guaranteeGlobEvents(glob(base +'/**/'+ INDEX_DIR))
+	return gGlob(base +'/**/'+ INDEX_DIR)
 }
 
 
 var listPreviews =
 module.listPreviews = 
 function(base){
-	return guaranteeGlobEvents(glob(base +'/*px/*jpg'))
+	return gGlob(base +'/*px/*jpg')
 }
 
 
 // XXX return a promise rather than an event emitter (???)
 function listJSON(path, pattern){
 	pattern = pattern || '*'
-	return guaranteeGlobEvents(glob(path +'/'+ pattern +'.json'))
+	return gGlob(path +'/'+ pattern +'.json')
 }
 
 
@@ -157,9 +158,21 @@ function loadJSON(path){
 // 				f = m.loadIndex("L:/mnt/hdd15 (photo)/NTFS1/media/img/others") })
 // 			.done(function(d){ console.log(d) })
 // XXX need to do better error handling -- stop when an error is not recoverable...
-// XXX a bit overcomplicated (???), see if this can be split into more generic 
+// XXX really overcomplicated, mostly due to promises...
+// 		...see if this can be split into more generic 
 // 		sections...
-// XXX problem with diff merging...
+// XXX change path handling:
+// 		1) explicit index -- ends with INDEX_DIR
+// 			-> load directly...
+// 		2) implicit index -- path contains INDEX_DIR
+// 			-> append INDEX_DIR and (1)...
+// 		3) path is a pattern (contains glob wildcards)
+// 			-> search + load
+// 		4) non of the above...
+// 			a) error
+// 			b) append '**' (current behavior)
+// 			...(a) seems more logical...
+//
 var loadIndex =
 module.loadIndex = 
 function(path, logger){
@@ -168,6 +181,7 @@ function(path, logger){
 
 	return new Promise(function(resolve, reject){
 		// we've got an index...
+		// XXX rewrite this check...
 		if(p.length > 1 && /^\/*$/.test(last)){
 			listJSON(path)
 				// XXX handle errors...
