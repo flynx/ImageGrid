@@ -108,7 +108,7 @@ var getElementOrigin = makeCSSVendorAttrGetter(
 		'transformOrigin',
 		{top: 0, left: 0},
 		function(data){
-			res = /(-?[0-9.]*(px|%)) (-?[0-9.]*(px|%))/.exec(data)
+			var res = /(-?[0-9.]*(px|%)) (-?[0-9.]*(px|%))/.exec(data)
 			return {
 				left: res[1].slice(-2) == 'px' ? parseFloat(res[1]) : res[1],
 				top: res[3].slice(-2) == 'px' ? parseFloat(res[3]) : res[3],
@@ -130,7 +130,7 @@ var getElementOffset = makeCSSVendorAttrGetter(
 		'transform',
 		{left: 0, top: 0},
 		function(data){
-			res = /(translate\(|matrix\([^,]*,[^,]*,[^,]*,[^,]*,)([^,]*),([^\)]*)\)/.exec(data)
+			var res = /(translate\(|matrix\([^,]*,[^,]*,[^,]*,[^,]*,)([^,]*),([^\)]*)\)/.exec(data)
 			return {
 				left: parseFloat(res[2]),
 				top: parseFloat(res[3])

@@ -125,8 +125,8 @@ if(typeof(glob) != 'undefined'){
 	}
 
 
-	window.loadMBFWR1 = function(){
-		a.loadPath('L:/mnt/hdd15 (photo)/NTFS2/media/img/my/work/20151022 - MBFWR (1),/*')
+	window.loadMBFWR1 = function(logger){
+		a.loadPath('L:/mnt/hdd15 (photo)/NTFS2/media/img/my/work/20151022 - MBFWR (1),/*', logger)
 	}
 
 

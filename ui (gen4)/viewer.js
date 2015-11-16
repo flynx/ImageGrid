@@ -3022,15 +3022,15 @@ if(window.nodejs != null){
 var FileSystemLoaderActions = actions.Actions({
 	// XXX
 	loadPath: ['File/',
-		function(path){
+		function(path, logger){
 			var that = this
 
 			// XXX get a logger...
 
 			// XXX this will not work for explicit path (path to a dir 
 			// 		that contains the index) 
-			file.loadIndex(path)
-				.done(function(res){
+			file.loadIndex(path, logger)
+				.then(function(res){
 					// XXX if res is empty load raw...
 
 					// XXX res may contain multiple indexes, need to 
@@ -3040,7 +3040,7 @@ var FileSystemLoaderActions = actions.Actions({
 					var index = res[k]
 
 					// XXX use the logger...
-					console.log('LOADING:', k)
+					console.log('LOADING:', k, res)
 					
 					that.load(file.buildIndex(index, k))
 				})

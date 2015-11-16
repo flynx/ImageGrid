@@ -159,6 +159,7 @@ function loadJSON(path){
 // XXX need to do better error handling -- stop when an error is not recoverable...
 // XXX a bit overcomplicated (???), see if this can be split into more generic 
 // 		sections...
+// XXX problem with diff merging...
 var loadIndex =
 module.loadIndex = 
 function(path, logger){
@@ -252,11 +253,12 @@ function(path, logger){
 							}
 						})
 
+	
 					// load...
 					Promise
-						.all(Object.keys(index).map(function(k){
+						.all(Object.keys(index).map(function(keyword){
 							// get relevant paths...
-							var diffs = index[k]
+							var diffs = index[keyword]
 							var latest = diffs.splice(-1)[0][1]
 
 							// NOTE: so far I really do not like how nested and
@@ -270,32 +272,45 @@ function(path, logger){
 							// load latest...
 							return loadJSON(latest)
 								.then(function(data){
+									logger && logger.emit('loaded', latest)
+
+									var loading = {}
+
 									// handle diffs...
 									return Promise
-										.all(diffs
-											.reverse()
-											.map(function(p){
-												p = p[1]
-												// load diff...
-												return loadJSON(p)
-													// XXX handle errors...
-													// XXX we should abort loading this index...
-													.catch(function(err){
-														logger && logger.emit('error', err)
-													})
-													.done(function(json){
-														// merge...
-														for(var k in json){
-															data[k] = json[k]
-														}
-
-														logger && logger.emit('loaded', p)
-													})
-											}))
+										// load diffs...
+										.all(diffs.map(function(p){
+											p = p[1]
+											return loadJSON(p)
+												// XXX handle errors...
+												// XXX we should abort loading this index...
+												.catch(function(err){
+													logger && logger.emit('error', err)
+												})
+												.then(function(json){
+													// NOTE: we can't merge here
+													// 		as the files can be
+													// 		read in arbitrary order...
+													loading[p] = json
+												})
+										}))
+										// merge diffs...
 										.then(function(){
-											res[k] = data
+											diffs
+												.reverse()
+												.forEach(function(p){
+													p = p[1]
 
-											logger && logger.emit('loaded', latest)
+													var json = loading[p]
+
+													for(var n in json){
+														data[n] = json[n]
+													}
+
+													logger && logger.emit('loaded', p)
+												})
+
+											res[keyword] = data
 										})
 								})
 						}))
@@ -312,6 +327,7 @@ function(path, logger){
 		// no explicit index given -- find all in sub tree...
 		} else {
 			var res = {}
+			var loaders = []
 
 			// XXX handle 'error' event...
 			listIndexes(path)
@@ -321,8 +337,8 @@ function(path, logger){
 				})
 				// collect the found indexes...
 				.on('match', function(path){
-					loadIndex(path, logger) 
-						.done(function(obj){ 
+					loaders.push(loadIndex(path, logger) 
+						.then(function(obj){ 
 							// NOTE: considering that all the paths within
 							// 		the index are relative to the preview 
 							// 		dir (the parent dir to the index root)
@@ -330,11 +346,12 @@ function(path, logger){
 							// 		itself in the base path...
 							var p = path.split(INDEX_DIR)[0]
 							res[p] = obj[path] 
-						})
+						}))
 				})
 				// done...
 				.on('end', function(paths){
-					resolve(res)
+					// wait for all the loaders to complete...
+					Promise.all(loaders).then(function(){ resolve(res) })
 				})
 		}
 	})
@@ -408,6 +425,7 @@ function(base, previews, absolute_path){
 
 
 // XXX move this to a better spot...
+// XXX make this merge if we locate more than one index...
 var buildIndex = 
 module.buildIndex = function(index, base){
 	var d = data.Data.fromJSON(index.data)
@@ -452,12 +470,6 @@ module.buildIndex = function(index, base){
 	}
 }
 
-
-// XXX
-var mergeIndex = 
-module.mergeIndex = function(index, base){
-	// XXX
-}
 
 
 /*********************************************************************/
