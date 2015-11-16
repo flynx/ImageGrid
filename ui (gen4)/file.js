@@ -71,7 +71,6 @@ module.gGlob = function(){
 // Reader...
 
 
-// XXX if path +'/'+ INDEX_DIR exists it will not be returned...
 var listIndexes =
 module.listIndexes = 
 function(base){
