@@ -151,11 +151,6 @@ function loadJSON(path){
 // NOTE: this only loads the JSON data and does not import or process 
 // 		anything...
 //
-// XXX test with:
-// 		requirejs(['file'], 
-// 			function(m){ 
-// 				f = m.loadIndex("L:/mnt/hdd15 (photo)/NTFS1/media/img/others") })
-// 			.done(function(d){ console.log(d) })
 // XXX need to do better error handling -- stop when an error is not recoverable...
 // XXX really overcomplicated, mostly due to promises...
 // 		...see if this can be split into more generic 
@@ -175,13 +170,10 @@ function loadJSON(path){
 var loadIndex =
 module.loadIndex = 
 function(path, logger){
-	var p = path.split(INDEX_DIR)
-	var last = p.slice(-1)[0].trim()
-
 	return new Promise(function(resolve, reject){
 		// we've got an index...
-		// XXX rewrite this check...
-		if(p.length > 1 && /^\/*$/.test(last)){
+		// XXX do we need to check if if it's a dir???
+		if(pathlib.basename(path) == INDEX_DIR){
 			listJSON(path)
 				// XXX handle errors...
 				.on('error', function(err){
@@ -437,10 +429,31 @@ function(base, previews, absolute_path){
 
 
 
+// Build a data and images objects from the json returned by loadIndex(..)
+//
+// Contrary to loadIndex(..) this expects a specific format of data:
+// 	.data
+// 	.images
+// 	.bookmarked
+// 	.marked
+// 	.tags
+// 	.current
+//
+//
+// XXX need a clear format upgrade path/strategy...
+// 		...this can be:
+// 			- full upgrade -- full update all data to new format
+// 			- format continuation -- store in new format stating with a
+// 			  new snapshot keeping the older data as-is...
+// 			  XXX will need a "cut-off strategy", i.e. when a keyword 
+// 			  	stops being used we need some way to tell the 
+// 			  	loader/builder to ignore it...
+// 		currently I'm for the second option...
+//
 // XXX move this to a better spot...
 // XXX make this merge if we locate more than one index...
 var buildIndex = 
-module.buildIndex = function(index, base){
+module.buildIndex = function(index, base_path){
 	var d = data.Data.fromJSON(index.data)
 
 	// buildup the data object...
@@ -461,12 +474,12 @@ module.buildIndex = function(index, base){
 	// 		- in the test set not all rotated manually images are loaded rotated...
 	var img = images.Images(index.images)
 
-	if(base){
-		d.base_path = base
+	if(base_path){
+		d.base_path = base_path
 		// XXX STUB remove ASAP... 
 		// 		...need a real way to handle base dir, possible
 		// 		approaches:
-		// 			1) .base attr in image, set on load and 
+		// 			1) .base_path attr in image, set on load and 
 		// 				do not save (or ignore on load)...
 		// 				if exists prepend to all paths...
 		// 				- more to do in view-time
@@ -474,7 +487,7 @@ module.buildIndex = function(index, base){
 		// 			2) add/remove on load/save (approach below)
 		// 				+ less to do in real time
 		// 				- more processing on load/save
-		img.forEach(function(_, img){ img.base = base })
+		img.forEach(function(_, img){ img.base_path = base_path })
 	}
 
 	return {

@@ -1116,9 +1116,9 @@ var RibbonsPrototype = {
 			var p_url = that.images.getBestPreview(img_data.id, size, img_data).url
 
 			// XXX experimental...
-			if(img_data.base != null){
+			if(img_data.base_path != null){
 				// XXX need to check if p_url is already absolute...
-				p_url = img_data.base +'/'+ p_url
+				p_url = img_data.base_path +'/'+ p_url
 			}
 
 			// update the preview if it's a new image or...
