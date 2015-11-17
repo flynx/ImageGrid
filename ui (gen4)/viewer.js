@@ -2524,7 +2524,13 @@ var ActionTreeActions = actions.Actions({
 
 			// we got an argument and can exit...
 			if(path){
-				console.log('PATH:', path)
+				console.log('PATH:', path.slice(1))
+
+				// XXX use logger...
+				// XXX this does not work because in the last path 
+				// 		element ' ' is replaced with a '\\ '...
+				this.loadPath && this.loadPath(path.slice(1))
+						
 				return
 			}
 
@@ -2533,6 +2539,7 @@ var ActionTreeActions = actions.Actions({
 			var o = overlay.Overlay($('body'), 
 				require('./lib/widget/browse-walk').makeWalk(null, '/')
 					.open(function(evt, path){ 
+
 						o.close() 
 
 						// close the parent ui...
@@ -2540,6 +2547,7 @@ var ActionTreeActions = actions.Actions({
 							&& parent.close 
 							&& parent.close()
 
+						// do the actual opening...
 						that.pathListerTest(path)
 					}))
 					.close(function(){

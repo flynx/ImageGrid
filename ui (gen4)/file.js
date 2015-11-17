@@ -161,11 +161,11 @@ function loadJSON(path){
 // 		...see if this can be split into more generic 
 // 		sections...
 // XXX change path handling:
-// 		1) explicit index -- ends with INDEX_DIR
+// 		1) explicit index -- ends with INDEX_DIR (works)
 // 			-> load directly...
-// 		2) implicit index -- path contains INDEX_DIR
+// 		2) implicit index -- path contains INDEX_DIR (works)
 // 			-> append INDEX_DIR and (1)...
-// 		3) path is a pattern (contains glob wildcards)
+// 		3) path is a pattern (contains glob wildcards) (works)
 // 			-> search + load
 // 		4) non of the above...
 // 			a) error
