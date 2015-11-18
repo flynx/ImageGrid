@@ -1232,6 +1232,8 @@ var RibbonsPrototype = {
 		$(unloaded)
 			.detach()
 			.removeClass('moving')
+			// blank out images to prevent wrong image flashing...
+			.css('background-image', 'none')
 		// clear marks...
 		$(unload_marks)
 			.remove()

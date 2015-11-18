@@ -1465,6 +1465,75 @@ module.Journal = ImageGridFeatures.Feature({
 // XXX try a strategy: load more in the direction of movement by an offset...
 // XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
 var PartialRibbonsActions = actions.Actions({
+	// XXX should this be here???
+	preCacheJumpTargets: ['Interface/Pre-cache potential jump target images',
+		function(target, tags, radius, size){
+			target = target instanceof jQuery 
+				? this.ribbons.getElemGID(target)
+				// NOTE: data.getImage(..) can return null at start or end
+				// 		of ribbon, thus we need to account for this...
+				: (this.data.getImage(target)
+					|| this.data.getImage(target, 'after'))
+
+			tags = tags || this.config['preload-jum-tags'] || ['bookmark', 'selected']
+			tags = tags.constructor !== Array ? [tags] : tags
+			radius = radius || this.config['preload-jump-radius'] || 9
+
+			var that = this
+			// run async...
+			setTimeout(function(){
+				tags.forEach(function(tag){
+					// nothing tagged then nothing to do...
+					if(that.data.tags == null 
+							|| that.data.tags[tag] == null 
+							|| that.data.tags[tag].length == 0){
+						return 
+					}
+
+					size = size || that.ribbons.getVisibleImageSize() 
+
+					var i = that.data.order.indexOf(target)
+					var lst = []
+
+					// NOTE: we are also ordering the resulting gids by their 
+					// 		distance from target...
+					var _get = function(lst, source, radius, oddity, step){
+						var found = oddity
+						var max = source.length 
+
+						for(var j = i+step; (step > 0 && j < max) || (step < 0 && j >= 0); j += step){
+							var c = source[j]
+
+							if(c == null || that.images[c] == null){
+								continue
+							}
+
+							// build the URL...
+							lst[found] = (that.images[c].base_path ? 
+								(that.images[c].base_path +'/') 
+								: '') 
+									+ that.images.getBestPreview(c, size).url
+
+							found += 2
+							if(found >= radius*2){
+								break
+							}
+						}
+					}
+
+					// get the list of URLs before and after current...
+					_get(lst, that.data.tags[tag], radius, 0, 1)
+					_get(lst, that.data.tags[tag], radius, 1, -1)
+
+					// do the actual preloading...
+					lst.forEach(function(url){
+						var img = new Image()
+						img.src = url
+					})
+				})
+			}, 0)
+		}],
+
 	// NOTE: this will force sync resize if one of the following is true:
 	// 		- the target is not loaded
 	// 		- we are less than screen width from the edge
@@ -1617,6 +1686,12 @@ module.PartialRibbons = ImageGridFeatures.Feature({
 		// the action...
 		// NOTE: if set to null, the update will be sync...
 		'ribbon-update-timeout': 120,
+
+		// how many non-adjacent images to preload...
+		'preload-jump-radius': 5,
+
+		// jump tags to preload...
+		'preload-jum-tags': ['bookmark', 'selected'],
 	},
 
 	handlers: [
@@ -1629,9 +1704,14 @@ module.PartialRibbons = ImageGridFeatures.Feature({
 
 				this.updateRibbon(target)
 			}],
+		['focusImage.post', 
+			function(target){
+				this.preCacheJumpTargets(target)
+			}],
 		['fitImage.pre', 
 			function(n){
 				this.updateRibbon('current', n || 1)
+				//this.preCacheJumpTargets()
 			}],
 		['fitRibbon.pre', 
 			function(n){
@@ -1648,6 +1728,7 @@ module.PartialRibbons = ImageGridFeatures.Feature({
 				var nw = w / (h/n)
 
 				this.updateRibbon('current', nw)
+				//this.preCacheJumpTargets()
 			}],
 	],
 })

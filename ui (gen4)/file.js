@@ -166,7 +166,6 @@ function loadJSON(path){
 // 			a) error
 // 			b) append '**' (current behavior)
 // 			...(a) seems more logical...
-//
 var loadIndex =
 module.loadIndex = 
 function(path, logger){
