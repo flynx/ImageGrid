@@ -1465,19 +1465,22 @@ module.Journal = ImageGridFeatures.Feature({
 // XXX try a strategy: load more in the direction of movement by an offset...
 // XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
 var PartialRibbonsActions = actions.Actions({
+	// Pre-load images...
+	//
+	// Sources supported:
+	// 	<tag>			- pre-load images tagged with <tag> 
+	// 					  (default: ['bookmark', 'selected']) 
+	// 	<ribbon-gid>	- pre-cache from a specific ribbon
+	// 	'ribbon'		- pre-cache from current ribbon
+	// 	'order'			- pre-cache from images in order
+	//
+	// XXX make this support an explicit list of gids....
 	// XXX should this be here???
 	// XXX should this be run in a worker???
 	// 		NOTE: workers when loaded from file:// in a browser context 
 	// 			will not have access to local images...
-	// XXX should this be split into two (signatures, functions)?
-	// 		- generic -- accepts list of gids
-	// 		- context-specific -- current signature
-	// XXX add special tags:
-	// 		- 'ribbon'/<ribbon-gic>
-	//		- 'order'
-	// XXX make this support an explicit list of gids....
 	preCacheJumpTargets: ['Interface/Pre-cache potential jump target images',
-		function(target, tags, radius, size){
+		function(target, sources, radius, size){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
 				// NOTE: data.getImage(..) can return null at start or end
@@ -1485,14 +1488,45 @@ var PartialRibbonsActions = actions.Actions({
 				: (this.data.getImage(target)
 					|| this.data.getImage(target, 'after'))
 
-			tags = tags || this.config['preload-jum-tags'] || ['bookmark', 'selected']
-			tags = tags.constructor !== Array ? [tags] : tags
-			radius = radius || this.config['preload-jump-radius'] || 9
+			sources = sources || this.config['preload-sources'] || ['bookmark', 'selected']
+			sources = sources.constructor !== Array ? [sources] : sources
+			radius = radius || this.config['preload-radius'] || 9
 
 			var that = this
+
+			var _getPreview = function(c){
+				return that.images[c] && (that.images[c].base_path ? 
+							(that.images[c].base_path +'/') 
+							: '') 
+								+ that.images.getBestPreview(c, size).url
+			}
+			// NOTE: we are also ordering the resulting gids by their 
+			// 		distance from target...
+			var _get = function(i, lst, source, radius, oddity, step){
+				var found = oddity
+				var max = source.length 
+
+				for(var j = i+step; (step > 0 && j < max) || (step < 0 && j >= 0); j += step){
+					var c = source[j]
+
+					if(c == null || that.images[c] == null){
+						continue
+					}
+
+					// build the URL...
+					lst[found] = _getPreview(c)
+
+					found += 2
+					if(found >= radius*2){
+						break
+					}
+				}
+			}
+
+
 			// run async...
 			setTimeout(function(){
-				tags.forEach(function(tag){
+				sources.forEach(function(tag){
 					// order...
 					if(tag == 'order'){
 						var source = that.data.order
@@ -1521,35 +1555,13 @@ var PartialRibbonsActions = actions.Actions({
 					var i = that.data.order.indexOf(target)
 					var lst = []
 
-					// NOTE: we are also ordering the resulting gids by their 
-					// 		distance from target...
-					var _get = function(lst, source, radius, oddity, step){
-						var found = oddity
-						var max = source.length 
-
-						for(var j = i+step; (step > 0 && j < max) || (step < 0 && j >= 0); j += step){
-							var c = source[j]
-
-							if(c == null || that.images[c] == null){
-								continue
-							}
-
-							// build the URL...
-							lst[found] = (that.images[c].base_path ? 
-								(that.images[c].base_path +'/') 
-								: '') 
-									+ that.images.getBestPreview(c, size).url
-
-							found += 2
-							if(found >= radius*2){
-								break
-							}
-						}
-					}
-
 					// get the list of URLs before and after current...
-					_get(lst, source, radius, 0, 1)
-					_get(lst, source, radius, 1, -1)
+					_get(i ,lst, source, radius, 0, 1)
+					_get(i, lst, source, radius, 1, -1)
+
+					// get target preview in case the target is not loaded...
+					var p = _getPreview(that.data.getImage(target))
+					p && lst.splice(0, 0, p)
 
 					// do the actual preloading...
 					lst.forEach(function(url){
@@ -1714,10 +1726,10 @@ module.PartialRibbons = ImageGridFeatures.Feature({
 		'ribbon-update-timeout': 120,
 
 		// how many non-adjacent images to preload...
-		'preload-jump-radius': 5,
+		'preload-radius': 5,
 
-		// jump tags to preload...
-		'preload-jum-tags': ['bookmark', 'selected'],
+		// sources to preload...
+		'preload-sources': ['bookmark', 'selected'],
 	},
 
 	handlers: [
