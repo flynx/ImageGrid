@@ -1466,6 +1466,16 @@ module.Journal = ImageGridFeatures.Feature({
 // XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
 var PartialRibbonsActions = actions.Actions({
 	// XXX should this be here???
+	// XXX should this be run in a worker???
+	// 		NOTE: workers when loaded from file:// in a browser context 
+	// 			will not have access to local images...
+	// XXX should this be split into two (signatures, functions)?
+	// 		- generic -- accepts list of gids
+	// 		- context-specific -- current signature
+	// XXX add special tags:
+	// 		- 'ribbon'/<ribbon-gic>
+	//		- 'order'
+	// XXX make this support an explicit list of gids....
 	preCacheJumpTargets: ['Interface/Pre-cache potential jump target images',
 		function(target, tags, radius, size){
 			target = target instanceof jQuery 
@@ -1483,11 +1493,27 @@ var PartialRibbonsActions = actions.Actions({
 			// run async...
 			setTimeout(function(){
 				tags.forEach(function(tag){
+					// order...
+					if(tag == 'order'){
+						var source = that.data.order
+
+					// current ribbon...
+					}else if(tag == 'ribbon'){
+						var source = that.data.ribbons[that.data.getRibbon()]
+
+					// ribbon-gid...
+					} else if(tag in that.data.ribbons){
+						var source = that.data.ribbons[tag]
+				
 					// nothing tagged then nothing to do...
-					if(that.data.tags == null 
+					} else if(that.data.tags == null 
 							|| that.data.tags[tag] == null 
 							|| that.data.tags[tag].length == 0){
 						return 
+
+					// tag...
+					} else {
+						var source = that.data.tags[tag]
 					}
 
 					size = size || that.ribbons.getVisibleImageSize() 
@@ -1522,8 +1548,8 @@ var PartialRibbonsActions = actions.Actions({
 					}
 
 					// get the list of URLs before and after current...
-					_get(lst, that.data.tags[tag], radius, 0, 1)
-					_get(lst, that.data.tags[tag], radius, 1, -1)
+					_get(lst, source, radius, 0, 1)
+					_get(lst, source, radius, 1, -1)
 
 					// do the actual preloading...
 					lst.forEach(function(url){
