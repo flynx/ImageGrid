@@ -422,7 +422,11 @@ module.ImagesPrototype = {
 	// Image data helpers...
 
 	// XXX see: ribbons.js for details...
-	getBestPreview: function(gid, size, img_data){
+	getBestPreview: function(gid, size, img_data, full_path){
+		if(img_data === true){
+			full_path = true
+			img_data = null
+		}
 		//gid = gid == null ? getImageGID(): gid
 		//size = size == null ? getVisibleImageSize('max') : size
 		img_data = img_data == null ? this[gid] : img_data
@@ -450,7 +454,10 @@ module.ImagesPrototype = {
 		}
 		return {
 			//url: normalizePath(url),
-			url: url,
+			url: (full_path && img_data.base_path ?
+				  	img_data.base_path + '/' 
+					: '') 
+				+ url,
 			size: preview_size
 		}
 	},

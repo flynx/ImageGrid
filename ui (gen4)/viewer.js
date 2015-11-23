@@ -1465,6 +1465,52 @@ module.Journal = ImageGridFeatures.Feature({
 // XXX try a strategy: load more in the direction of movement by an offset...
 // XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
 var PartialRibbonsActions = actions.Actions({
+	// NOTE: this will not work from chrome when loading from a local fs...
+	// XXX experimental...
+	startCacheWorker: [
+		function(){
+			// a worker is started already...
+			if(this.cacheWorker != null){
+				return
+			}
+
+			var b = new Blob([[
+				'addEventListener(\'message\', function(e) {',
+				'	var urls = e.data',
+				'	urls = urls.constructor !== Array ? [urls] : urls',
+				'	var l = urls.length',
+				'	urls.forEach(function(url){',
+				'		var xhr = new XMLHttpRequest()',
+				'		xhr.responseType = \'blob\'',
+				/*
+				'		xhr.onload = xhr.onerror = function(){',
+				'			l -= 1',
+				'			if(l <= 0){',
+				'				postMessage({status: \'done.\', urls: urls})',
+				'			}',
+				'		}',
+				*/
+				'		xhr.open(\'GET\', url, true)',
+				'		xhr.send()',
+				'	})',
+				'}, false)',
+			].join('\n')])
+
+			var url = URL.createObjectURL(b)
+
+			this.cacheWorker = new Worker(url)
+			this.cacheWorker.url = url
+		}],
+	stopCacheWorker: [
+		function(){
+			if(this.cacheWorker){
+				this.cacheWorker.terminate()
+				URL.revokeObjectURL(this.cacheWorker.url)
+				delete this.cacheWorker
+			}
+		}],
+
+
 	// Pre-load images...
 	//
 	// Sources supported:
@@ -1474,11 +1520,32 @@ var PartialRibbonsActions = actions.Actions({
 	// 	'ribbon'		- pre-cache from current ribbon
 	// 	'order'			- pre-cache from images in order
 	//
+	// NOTE: workers when loaded from file:// in a browser context 
+	// 		will not have access to local images...
+	//
+	// XXX need a clear strategy to run this...
+	// XXX might be a good idea to make the worker queue the lists...
+	// 		...this will need careful prioritization logic...
+	// 			- avoid loading the same url too often
+	// 			- load the most probable urls first
+	// 				- next targets
+	// 					- next/prev
+	// 						.preCacheJumpTargets(target, 'ribbon', this.screenwidth)
+	// 					- next/prev marked/bookmarked/order
+	// 						.preCacheJumpTargets(target, 'marked')
+	// 						.preCacheJumpTargets(target, 'bookmarked')
+	// 						.preCacheJumpTargets(target, 'order')
+	// 					- next/prev screen
+	// 						.preCacheJumpTargets(target, 'ribbon',
+	// 							this.config['preload-radius'] * this.screenwidth)
+	// 					- next/prev ribbon
+	// 						.preCacheJumpTargets(target, this.data.getRibbon(target, 1))
+	// 						.preCacheJumpTargets(target, this.data.getRibbon(target, -1))
+	// 				- next blocks
+	// 					- what resize ribbon does...
+	// XXX coordinate this with .resizeRibbon(..)
 	// XXX make this support an explicit list of gids....
 	// XXX should this be here???
-	// XXX should this be run in a worker???
-	// 		NOTE: workers when loaded from file:// in a browser context 
-	// 			will not have access to local images...
 	preCacheJumpTargets: ['Interface/Pre-cache potential jump target images',
 		function(target, sources, radius, size){
 			target = target instanceof jQuery 
@@ -1494,12 +1561,13 @@ var PartialRibbonsActions = actions.Actions({
 
 			var that = this
 
+			// get preview...
 			var _getPreview = function(c){
-				return that.images[c] && (that.images[c].base_path ? 
-							(that.images[c].base_path +'/') 
-							: '') 
-								+ that.images.getBestPreview(c, size).url
+				return that.images[c] 
+					&& that.images.getBestPreview(c, size, true).url
 			}
+
+			// get a stet of paths...
 			// NOTE: we are also ordering the resulting gids by their 
 			// 		distance from target...
 			var _get = function(i, lst, source, radius, oddity, step){
@@ -1523,9 +1591,8 @@ var PartialRibbonsActions = actions.Actions({
 				}
 			}
 
-
-			// run async...
-			setTimeout(function(){
+			// run the actual preload...
+			var _run = function(){
 				sources.forEach(function(tag){
 					// order...
 					if(tag == 'order'){
@@ -1563,13 +1630,27 @@ var PartialRibbonsActions = actions.Actions({
 					var p = _getPreview(that.data.getImage(target))
 					p && lst.splice(0, 0, p)
 
-					// do the actual preloading...
-					lst.forEach(function(url){
-						var img = new Image()
-						img.src = url
-					})
+					// web worker...
+					if(that.cacheWorker != null){
+						that.cacheWorker.postMessage(lst)
+
+					// async inline...
+					} else {
+						// do the actual preloading...
+						lst.forEach(function(url){
+							var img = new Image()
+							img.src = url
+						})
+					}
 				})
-			}, 0)
+			}
+
+			if(that.cacheWorker != null){
+				_run()
+
+			} else {
+				setTimeout(_run, 0)
+			}
 		}],
 
 	// NOTE: this will force sync resize if one of the following is true:
