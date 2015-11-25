@@ -2718,6 +2718,8 @@ var ActionTreeActions = actions.Actions({
 					})
 		}],
 	// XXX make this nw only...
+	// XXX BUG: for some reason this when run from .browseActions(..) loads
+	// 		incorrectly while when called directly is OK...
 	pathListerTest: ['Interface|Test/Path lister test (floating)...',
 		function(path){
 			var parent = this.preventClosing ? this.preventClosing() : null
@@ -2727,8 +2729,7 @@ var ActionTreeActions = actions.Actions({
 				console.log('PATH:', path.slice(1))
 
 				// XXX use logger...
-				// XXX this does not work because in the last path 
-				// 		element ' ' is replaced with a '\\ '...
+				// XXX need to strip the leading '/' in a more cross-platform way...
 				this.loadPath && this.loadPath(path.slice(1))
 						
 				return
@@ -3180,7 +3181,7 @@ module.ImageBookmarks = ImageGridFeatures.Feature({
 
 var AppControlActions = actions.Actions({
 	// XXX revise these...
-	close: ['File|Interface/Cloase viewer',
+	close: ['File|Interface/Close viewer',
 		function(){
 			// XXX should we do anything else here like auto-save???
 			window.close() 

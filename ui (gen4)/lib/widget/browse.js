@@ -30,6 +30,7 @@ var widget = require('./widget')
 /*********************************************************************/
 // Helpers...
 
+// XXX why do we need this???
 var quoteWS = function(str){
 	return str.replace(/(\s)/g, '\\$1')
 }
@@ -562,7 +563,8 @@ var BrowserPrototype = {
 			/* XXX does the right thing (replaces the later .focus(..) 
 			 * 		and .keyup(..)) but does not work in IE...
 			.on('input', function(){
-				that.filterList(quoteWS($(this).text()))
+				//that.filterList(quoteWS($(this).text()))
+				that.filterList($(this).text())
 			})
 			*/
 			// only update if text changed...
@@ -607,7 +609,8 @@ var BrowserPrototype = {
 				// handle clicks ONLY when not disabled...
 				.click(function(){
 					if(!$(this).hasClass('disabled')){
-						that.push(quoteWS($(this).text())) 
+						//that.push(quoteWS($(this).text())) 
+						that.push($(this).text())
 					}
 				})
 				.text(p)
@@ -1377,7 +1380,8 @@ var BrowserPrototype = {
 		}
 
 		var path = this.path
-		var txt = quoteWS(elem.text())
+		//var txt = quoteWS(elem.text())
+		var txt = elem.text()
 		path.push(elem.text())
 
 		// XXX should this be before or after the actual path update???
@@ -1435,7 +1439,8 @@ var BrowserPrototype = {
 
 		var path = this.path
 
-		path.push(quoteWS(elem.text()))
+		//path.push(quoteWS(elem.text()))
+		path.push(elem.text())
 
 		var res = this.open(path)
 
@@ -1570,7 +1575,8 @@ var BrowserPrototype = {
 			}
 
 			path = this.path
-			path.push(quoteWS(elem.text()))
+			//path.push(quoteWS(elem.text()))
+			path.push(elem.text())
 		}
 
 		// get the options method and call it if it exists...

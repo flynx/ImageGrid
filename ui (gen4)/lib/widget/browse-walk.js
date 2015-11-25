@@ -79,7 +79,7 @@ function(path, make){
 	// get the drive list on windows...
 	if(os.type() == 'Windows_NT' && path == '/'){
 		return new promise(function(resolve, reject){
-			// NOTE: this is a bit brain-dead but it does the job done 
+			// NOTE: this is a bit brain-dead but it gets the job done 
 			// 		and faster than fancy modules like drivelist...
 			'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 				.split('')
