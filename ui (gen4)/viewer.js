@@ -2738,7 +2738,7 @@ var ActionTreeActions = actions.Actions({
 			var that = this
 
 			var o = overlay.Overlay($('body'), 
-				require('./lib/widget/browse-walk').makeWalk(null, '/')
+				require('./lib/widget/browse-walk').makeWalk(null, '/', false, false)
 					.open(function(evt, path){ 
 
 						o.close() 

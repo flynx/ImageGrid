@@ -148,13 +148,13 @@
 }
 */
 .browse-widget .list div {
+	opacity: 0.7;
+}
+.browse-widget .list>div {
 	padding: 5px;
 	padding-left: 10px;
 	padding-right: 10px;
 	cursor: pointer;
-
-	opacity: 0.7;
-
 
 	/* XXX need a way to make this automatic and depend on .browser 
 		setup to avoid multiple scrollbars and the need to manually
@@ -162,23 +162,24 @@
 		limits
 	*/
 	max-width: 80vh;
+
 	overflow: hidden;
 }
-.browse-widget:not(.flat) .list div:not(.not-traversable):after {
+.browse-widget:not(.flat) .list div:not(.not-traversable) .text:after {
 	content: "/";
 }
 
-.browse-widget:focus .list div.selected,
-.browse-widget .path .dir:hover,
-.browse-widget .list div:hover {
+.browse-widget:focus .list>div.selected,
+.browse-widget .path>.dir:hover,
+.browse-widget .list>div:hover {
 	background: rgba(0, 0, 0, 0.05);
 
 	opacity: 0.9;
 }
-.browse-widget .list div.selected {
+.browse-widget .list>div.selected {
 	background: rgba(0, 0, 0, 0.08);
 }
-.browse-widget:focus .list div.selected {
+.browse-widget:focus .list>div.selected {
 	background: rgba(0, 0, 0, 0.08);
 	box-shadow: rgba(0, 0, 0, 0.2) 0.1em 0.1em 0.2em; 
 
@@ -186,52 +187,52 @@
 }
 
 /* XXX need to make the next two different...  */
-.browse-widget .list div.filtered-out {
+.browse-widget .list>div.filtered-out {
 	opacity: 0.5;
 }
-.browse-widget:not(.show-filtered-out) .list div.filtered-out {
+.browse-widget:not(.show-filtered-out) .list>div.filtered-out {
 	display: none;	
 }
-.browse-widget .list div.disabled {
+.browse-widget .list>div.disabled {
 	opacity: 0.3;
 }
 
 /* numbers... */
 /* XXX need to show this only on devices with keyboards... */
-.browse-widget .list div:before {
+.browse-widget .list>div:before {
 	opacity: 0.3;
 	float: right;
 	font-size: small;
 }
-.browse-widget.filtering .list div:before {
+.browse-widget.filtering .list>div:before {
 	display: none;
 }
 
-.browse-widget .list div:nth-of-type(1):before {
+.browse-widget .list>div:nth-of-type(1):before {
 	content: "1";
 }
-.browse-widget .list div:nth-of-type(2):before {
+.browse-widget .list>div:nth-of-type(2):before {
 	content: "2";
 }
-.browse-widget .list div:nth-of-type(3):before {
+.browse-widget .list>div:nth-of-type(3):before {
 	content: "3";
 }
-.browse-widget .list div:nth-of-type(4):before {
+.browse-widget .list>div:nth-of-type(4):before {
 	content: "4";
 }
-.browse-widget .list div:nth-of-type(5):before {
+.browse-widget .list>div:nth-of-type(5):before {
 	content: "5";
 }
-.browse-widget .list div:nth-of-type(6):before {
+.browse-widget .list>div:nth-of-type(6):before {
 	content: "6";
 }
-.browse-widget .list div:nth-of-type(7):before {
+.browse-widget .list>div:nth-of-type(7):before {
 	content: "7";
 }
-.browse-widget .list div:nth-of-type(8):before {
+.browse-widget .list>div:nth-of-type(8):before {
 	content: "8";
 }
-.browse-widget .list div:nth-of-type(9):before {
+.browse-widget .list>div:nth-of-type(9):before {
 	content: "9";
 }
 

@@ -217,9 +217,17 @@ object.makeConstructor('Walk',
 
 
 var makeWalk = 
-module.makeWalk = function(elem, path){
+module.makeWalk = function(elem, path, showNonTraversable, showDisabled){
 	//return Walk(elem, { path: path })
-	var w = Walk(elem, { path: path })
+	var w = Walk(elem, { 
+		path: path,
+		showNonTraversable: showNonTraversable == null ?
+			WalkPrototype.options.showNonTraversable
+			: showNonTraversable,
+		showDisabled: showDisabled == null ? 
+			WalkPrototype.options.showDisabled
+			: showDisabled,
+	})
 	console.log(w)
 	return w
 }

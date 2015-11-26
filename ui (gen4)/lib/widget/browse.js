@@ -178,6 +178,9 @@ var BrowserPrototype = {
 		// 		.not-traversable on the .browse-widget element
 		traversable: true,
 
+		showNonTraversable: true,
+		showDisabled: true,
+
 		// Handle keys that are not bound...
 		// NOTE: to disable, set ot undefined.
 		logKeys: function(k){ window.DEBUG && console.log(k) },
@@ -366,6 +369,18 @@ var BrowserPrototype = {
 		this.options.traversable = value
 	},
 
+	toogleTraversableDrawing: function(){
+		this.options.showNonTraversable = !this.options.showNonTraversable
+		this.update()
+		return this
+	},
+	toogleDisabledDrawing: function(){
+		this.options.showDisabled = !this.options.showDisabled
+		this.update()
+		return this
+	},
+
+
 	// Get/set the listed path...
 	//
 	// On more info on setting the path see .update(..)
@@ -427,7 +442,7 @@ var BrowserPrototype = {
 		if(e.length <= 0){
 			return null
 		}
-		return e.text()
+		return e.find('.text').text()
 	},
 	set selected(value){
 		return this.select(value)
@@ -605,15 +620,25 @@ var BrowserPrototype = {
 
 			interactive = true
 
+			// do not draw non-traversable elements if .showNonTraversable
+			// is false...
+			if((!traversable && !that.options.showNonTraversable)
+					|| (disabled && !that.options.showDisabled)){
+				return $()
+			}
+
 			var res = $('<div>')
 				// handle clicks ONLY when not disabled...
 				.click(function(){
 					if(!$(this).hasClass('disabled')){
-						//that.push(quoteWS($(this).text())) 
-						that.push($(this).text())
+						//that.push(quoteWS($(this).find('.text').text())) 
+						that.push($(this).find('.text').text())
 					}
 				})
-				.text(p)
+				//.text(p)
+				.append($('<div>')
+					.addClass('text')
+					.text(p))
 				.appendTo(l)
 			if(!traversable){
 				res.addClass('not-traversable')
@@ -766,7 +791,7 @@ var BrowserPrototype = {
 		// regexp...
 		} else if(pattern.constructor == RegExp){
 			var filter = function(i, e){
-				if(!pattern.test($(e).text())){
+				if(!pattern.test($(e).find('.text').text())){
 					if(rejected){
 						rejected.call(e, i, e)
 					}
@@ -791,7 +816,7 @@ var BrowserPrototype = {
 				.map(function(e){ return e.replace(/\\(\s)/g, '$1').toLowerCase() })
 			var filter = function(i, e){
 				e = $(e)
-				var t = e.text().toLowerCase()
+				var t = e.find('.text').text().toLowerCase()
 				for(var p=0; p < pl.length; p++){
 					// NOTE: we are not using search here as it treats 
 					// 		the string as a regex and we need literal
@@ -878,7 +903,7 @@ var BrowserPrototype = {
 				// NOTE: this will mess up (clear) any highlighting that was 
 				// 		present before...
 				.each(function(_, e){
-					e = $(e)
+					e = $(e).find('.text')
 					var t = e.text()
 					e.html(t.replace(p, '<b>$1</b>'))
 				})
@@ -1190,7 +1215,7 @@ var BrowserPrototype = {
 				// clear selection...
 				this.select('none', filtering)
 				if(!filtering){
-					browser.find('.path .dir.cur').text(elem.text())
+					browser.find('.path .dir.cur').text(elem.find('.text').text())
 				}
 
 
@@ -1215,7 +1240,7 @@ var BrowserPrototype = {
 
 				// now do the selection...
 				elem.addClass('selected')
-				browser.attr('value', elem.text())
+				browser.attr('value', elem.find('.text').text())
 
 				this.trigger('select', elem)
 
@@ -1380,9 +1405,9 @@ var BrowserPrototype = {
 		}
 
 		var path = this.path
-		//var txt = quoteWS(elem.text())
-		var txt = elem.text()
-		path.push(elem.text())
+		//var txt = quoteWS(elem.find('.text').text())
+		var txt = elem.find('.text').text()
+		path.push(elem.find('.text').text())
 
 		// XXX should this be before or after the actual path update???
 		// XXX can we cancel the update from a handler???
@@ -1439,8 +1464,8 @@ var BrowserPrototype = {
 
 		var path = this.path
 
-		//path.push(quoteWS(elem.text()))
-		path.push(elem.text())
+		//path.push(quoteWS(elem.find('.text').text()))
+		path.push(elem.find('.text').text())
 
 		var res = this.open(path)
 
@@ -1555,7 +1580,7 @@ var BrowserPrototype = {
 
 			// load the current path + selection...
 			path = this.path
-			path.push(elem.text())
+			path.push(elem.find('.text').text())
 
 		// normalize and load path...
 		//} else {
@@ -1575,8 +1600,8 @@ var BrowserPrototype = {
 			}
 
 			path = this.path
-			//path.push(quoteWS(elem.text()))
-			path.push(elem.text())
+			//path.push(quoteWS(elem.find('.text').text()))
+			path.push(elem.find('.text').text())
 		}
 
 		// get the options method and call it if it exists...
@@ -1622,7 +1647,7 @@ var BrowserPrototype = {
 	// 			- for each item make is called with it's text
 	//			- make will return a jQuery object of the item
 	//
-	// 		NOTE: selection is currently done based on .text() thus the 
+	// 		NOTE: selection is currently done based on .find('.text').text() thus the 
 	// 			modification should not affect it's output...
 	//
 	// 2) non-interactive:
