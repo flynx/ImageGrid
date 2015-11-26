@@ -200,7 +200,7 @@
 
 /* numbers... */
 /* XXX need to show this only on devices with keyboards... */
-.browse-widget .list>div:before {
+.browse-widget .list .text:before {
 	opacity: 0.3;
 	float: right;
 	font-size: small;
@@ -209,31 +209,31 @@
 	display: none;
 }
 
-.browse-widget .list>div:nth-of-type(1):before {
+.browse-widget .list>div:nth-of-type(1) .text:before {
 	content: "1";
 }
-.browse-widget .list>div:nth-of-type(2):before {
+.browse-widget .list>div:nth-of-type(2) .text:before {
 	content: "2";
 }
-.browse-widget .list>div:nth-of-type(3):before {
+.browse-widget .list>div:nth-of-type(3) .text:before {
 	content: "3";
 }
-.browse-widget .list>div:nth-of-type(4):before {
+.browse-widget .list>div:nth-of-type(4) .text:before {
 	content: "4";
 }
-.browse-widget .list>div:nth-of-type(5):before {
+.browse-widget .list>div:nth-of-type(5) .text:before {
 	content: "5";
 }
-.browse-widget .list>div:nth-of-type(6):before {
+.browse-widget .list>div:nth-of-type(6) .text:before {
 	content: "6";
 }
-.browse-widget .list>div:nth-of-type(7):before {
+.browse-widget .list>div:nth-of-type(7) .text:before {
 	content: "7";
 }
-.browse-widget .list>div:nth-of-type(8):before {
+.browse-widget .list>div:nth-of-type(8) .text:before {
 	content: "8";
 }
-.browse-widget .list>div:nth-of-type(9):before {
+.browse-widget .list>div:nth-of-type(9) .text:before {
 	content: "9";
 }
 
