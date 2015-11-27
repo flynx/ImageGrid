@@ -181,6 +181,9 @@ var BrowserPrototype = {
 		showNonTraversable: true,
 		showDisabled: true,
 
+		actionButton: false,
+		pushButton: false,
+
 		// Handle keys that are not bound...
 		// NOTE: to disable, set ot undefined.
 		logKeys: function(k){ window.DEBUG && console.log(k) },
@@ -227,6 +230,8 @@ var BrowserPrototype = {
 					'Esc',
 					'/',
 					'A',
+					'P',
+					'O',
 
 					// let the system handle copy paste...
 					'C', 'V', 'X',
@@ -253,6 +258,8 @@ var BrowserPrototype = {
 					'Esc',
 					'/',
 					'A',
+					'P',
+					'O',
 
 					// let the system handle copy paste...
 					'C', 'V', 'X',
@@ -278,6 +285,7 @@ var BrowserPrototype = {
 			},
 			Backspace: 'Left',
 			Right: 'push',
+			P: 'push',
 
 			// XXX
 			PgUp: 'prevPage!',
@@ -290,6 +298,7 @@ var BrowserPrototype = {
 			// XXX
 
 			Enter: 'action',
+			O: 'action',
 			Esc: 'close',
 
 			'/': 'startFilter!',
@@ -642,10 +651,39 @@ var BrowserPrototype = {
 				.appendTo(l)
 			if(!traversable){
 				res.addClass('not-traversable')
-			}
+
+			} 
 			if(disabled){
 				res.addClass('disabled')
 			}
+
+			// buttons...
+			// action (open)...
+			if(traversable && that.options.actionButton){
+				res.append($('<div>')
+					.addClass('button')
+					.html(that.options.actionButton === true ? 
+						'o' 
+						: that.options.actionButton)
+					.click(function(evt){
+						evt.stopPropagation()
+						that.select(p)
+						that.action()
+					}))
+			}
+			// push action...
+			if(traversable && that.options.pushButton){
+				res.append($('<div>')
+					.addClass('button')
+					.html(that.options.pushButton ?
+						'p' 
+						: that.options.pushButton)
+					.click(function(evt){
+						evt.stopPropagation()
+						that.push(p)
+					}))
+			}
+
 			return res
 		}
 

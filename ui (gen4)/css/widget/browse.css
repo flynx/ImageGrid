@@ -147,12 +147,33 @@
 	display: block;
 }
 */
-.browse-widget .list div {
+/* XXX this is not used because it will mess up numbering and some actions...
+ * 	...need a more thorough avoidance of non-visible elements...
+.browse-widget.disabled-hidden:not(.flat) .list div.disabled,
+.browse-widget.not-traversable-hidden:not(.flat) .list div.not-traversable {
+	display: none;
+}
+*/
+.browse-widget .list .text {
+	display: inline-block;
+	float:left;
+}
+.browse-widget .list .button {
+	display: inline-block;
+	float:right;
+	opacity: 0.7;
+	padding-left: 10px;
+	padding-right: 10px;
+	box-sizing: border-box;
+}
+.browse-widget .list .button:hover {
+	opacity: 0.9;
+	background-color: rgba(0, 0, 0, 0.2);
 }
 .browse-widget .list>div {
 	padding: 5px;
-	padding-left: 10px;
-	padding-right: 10px;
+	padding-left: 15px;
+	padding-right: 15px;
 	cursor: pointer;
 
 	/* XXX need a way to make this automatic and depend on .browser 
@@ -202,11 +223,16 @@
 /* XXX need to show this only on devices with keyboards... */
 .browse-widget .list .text:before {
 	opacity: 0.3;
-	float: right;
+	float: left;
 	font-size: small;
 }
-.browse-widget.filtering .list>div:before {
+.browse-widget.filtering .list>div .text:before {
 	display: none;
+}
+
+.browse-widget .list>div .text:before {
+	width: 12px;
+	margin-left: -15px;
 }
 
 .browse-widget .list>div:nth-of-type(1) .text:before {

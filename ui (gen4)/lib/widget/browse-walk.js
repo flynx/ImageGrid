@@ -204,6 +204,9 @@ WalkPrototype.options = {
 	traversable: true,
 	flat: false,
 
+	actionButton: 'o',
+	pushButton: false,
+
 	list: listDir,
 }
 WalkPrototype.options.__proto__ = browse.Browser.prototype.options
