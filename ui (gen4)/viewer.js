@@ -2721,8 +2721,8 @@ var ActionTreeActions = actions.Actions({
 	// XXX make this nw only...
 	// XXX BUG: for some reason this when run from .browseActions(..) loads
 	// 		incorrectly while when called directly is OK...
-	pathListerTest: ['Interface|Test/Path lister test (floating)...',
-		function(base){
+	pathBrowse: ['Interface|Test/Path lister test (floating)...',
+		function(base, callback){
 			var that = this
 			var parent = this.preventClosing ? this.preventClosing() : null
 			base = base || '/'
@@ -2738,11 +2738,19 @@ var ActionTreeActions = actions.Actions({
 							&& parent.close 
 							&& parent.close()
 
-						console.log('PATH:', path.slice(1))
+
+						// XXX need to strip the leading '/' in a more cross-platform way...
+						path = path.strip(1)
 
 						// XXX use logger...
-						// XXX need to strip the leading '/' in a more cross-platform way...
-						that.loadPath && that.loadPath(path.slice(1))
+						console.log('PATH:', path)
+
+						if(callback){
+							callback(path)
+
+						} else {
+							that.loadPath && that.loadPath(path)
+						}
 					}))
 					.close(function(){
 						parent 
