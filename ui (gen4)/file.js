@@ -169,10 +169,17 @@ function loadJSON(path){
 var loadIndex =
 module.loadIndex = 
 function(path, logger){
+	// XXX should this be interactive (a-la EventEmitter) or as it is now 
+	// 		return the whole thing as a block (Promise)...
+	// 		NOTE: one way to do this is use the logger, it will get
+	// 				each index data on an index event
 	return new Promise(function(resolve, reject){
 		// we've got an index...
 		// XXX do we need to check if if it's a dir???
 		if(pathlib.basename(path) == INDEX_DIR){
+
+			logger && logger.emit('path', path)
+
 			listJSON(path)
 				// XXX handle errors...
 				.on('error', function(err){
@@ -182,6 +189,9 @@ function(path, logger){
 					var res = {}
 					var index = {}
 					var root = {}
+					var queued = 0
+
+					logger && logger.emit('files-found', files.length, files)
 
 					// group by keyword...
 					//
@@ -231,12 +241,14 @@ function(path, logger){
 							if(index[k] == null){
 								index[k] = [[d, n]]
 								logger && logger.emit('queued', n)
+								queued += 1
 
 							// do not add anything past the latest non-diff 
 							// for each keyword...
 							} else if(index[k].slice(-1)[0][0] == true){
 								index[k].push([d, n])
 								logger && logger.emit('queued', n)
+								queued += 1
 							}
 						})
 
@@ -249,14 +261,17 @@ function(path, logger){
 							if(index[k] == null){
 								index[k] = [[false, n]]
 								logger && logger.emit('queued', n)
+								queued += 1
 
 							// add root file if no base is found...
 							} else if(index[k].slice(-1)[0][0] == true){
 								index[k].push([false, n])
 								logger && logger.emit('queued', n)
+								queued += 1
 							}
 						})
 
+					logger && logger.emit('files-queued', queued)
 	
 					// load...
 					Promise
@@ -276,7 +291,7 @@ function(path, logger){
 							// load latest...
 							return loadJSON(latest)
 								.then(function(data){
-									logger && logger.emit('loaded', latest)
+									logger && logger.emit('loaded', keyword, latest)
 
 									var loading = {}
 
@@ -311,7 +326,7 @@ function(path, logger){
 														data[n] = json[n]
 													}
 
-													logger && logger.emit('loaded', p)
+													logger && logger.emit('loaded', keyword+'-diff', p)
 												})
 
 											res[keyword] = data

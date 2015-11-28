@@ -1467,7 +1467,7 @@ module.Journal = ImageGridFeatures.Feature({
 var PartialRibbonsActions = actions.Actions({
 	// NOTE: this will not work from chrome when loading from a local fs...
 	// XXX experimental...
-	startCacheWorker: [
+	startCacheWorker: ['Interface/',
 		function(){
 			// a worker is started already...
 			if(this.cacheWorker != null){
@@ -1501,7 +1501,7 @@ var PartialRibbonsActions = actions.Actions({
 			this.cacheWorker = new Worker(url)
 			this.cacheWorker.url = url
 		}],
-	stopCacheWorker: [
+	stopCacheWorker: ['Interface/',
 		function(){
 			if(this.cacheWorker){
 				this.cacheWorker.terminate()
@@ -3235,23 +3235,84 @@ var FileSystemLoaderActions = actions.Actions({
 			var that = this
 
 			// XXX get a logger...
+			logger = logger || this.logger
 
-			// XXX this will not work for explicit path (path to a dir 
-			// 		that contains the index) 
 			file.loadIndex(path, logger)
 				.then(function(res){
 					// XXX if res is empty load raw...
 
-					// XXX res may contain multiple indexes, need to 
-					// 		combine them...
-
-					var k = Object.keys(res)[0]
-					var index = res[k]
-
 					// XXX use the logger...
-					console.log('LOADING:', k, res)
-					
-					that.load(file.buildIndex(index, k))
+					//console.log('FOUND INDEXES:', Object.keys(res).length)
+
+					// skip nested paths...
+					// XXX make this optional...
+					// XXX this is best done BEFORE we load all the 
+					// 		indexes, e.g. in .loadIndex(..)
+					var paths = Object.keys(res)
+					var skipped = []
+					paths.forEach(function(p){
+						// already removed...
+						if(skipped.indexOf(p) >= 0){
+							return
+						}
+
+						paths
+							// get all paths that fully contain p...
+							.filter(function(o){
+								return o != p && o.indexOf(p) == 0
+							})
+							// drop all longer paths...
+							.forEach(function(e){
+								skipped.push(e)
+								delete res[e]
+							})
+					})
+					//console.log('SKIPPING NESTED:', skipped.length)
+
+					var index
+
+					// NOTE: res may contain multiple indexes...
+					for(var k in res){
+
+
+						// skip empty indexes...
+						// XXX should we rebuild  or list here???
+						if(res[k].data == null || res[k].images == null){
+							continue
+						}
+
+						var part = file.buildIndex(res[k], k)
+
+						// load the first index...
+						if(index == null){
+							// XXX use the logger...
+							//console.log('LOADING:', k, res)
+							logger && logger.emit('base index', k, res)
+
+							index = part
+
+						// merge indexes...
+						// XXX need to skip sub-indexes in the same sub-tree...
+						// 		...skip any path that fully contains an 
+						// 		already loaded path..
+						// XXX load data in chunks rather than merge...
+						} else {
+							//console.log('MERGING:', k, part)
+							logger && logger.emit('merge index', k, res)
+
+							// merge...
+							// XXX this appears to lose bookmarks and other tags...
+							index.data.join(part.data)
+							index.images.join(part.images)
+						}
+
+						// XXX do a better merge and remove this...
+						break
+					}
+
+					logger && logger.emit('load index', index)
+
+					that.load(index)
 				})
 		}],
 })

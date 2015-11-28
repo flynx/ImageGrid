@@ -624,6 +624,21 @@ module.ImagesPrototype = {
 	},
 
 
+	clone: function(){
+		return (new Images()).join(this)
+	},
+	// NOTE: this will join the other data into the current object in-place,
+	// 		use .clone() to preserve current data...
+	join: function(other){
+		var that = this
+
+		other.forEach(function(gid, img){
+			that[gid] = img
+		})
+
+		return this
+	},
+
 	// serialization...
 	loadJSON: function(data){
 		data = typeof(data) == typeof('str') 
