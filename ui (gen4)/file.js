@@ -139,10 +139,16 @@ function loadJSON(path){
 //
 //
 // Events emitted on logger if passed:
-// 	- queued <path>			- json file path queued for loading
-// 	- loaded <path>			- done loading json file path
-// 	- index <path> <data>	- done loading index at path
-// 	- error <err>			- an error occurred...
+// 	- path <path>				- path currently being processed
+// 	- files-found <n> <files>	- number and list of files found (XXX do we need this?)
+// 	- queued <path>				- json file path queued for loading
+// 	- files-queued <n> <queue>	- number of files queued and index (XXX do we need this?)
+// 	- loaded <keyword> <path>	- done loading json file path
+// 	- loaded <keyword>-diff <path>	
+// 								- done loading json file path (diff file)
+// 	- index <path> <data>		- done loading index at path
+// 	- error <err>				- an error occurred...
+//
 //
 //
 // NOTE: this is fairly generic and does not care about the type of data
@@ -271,7 +277,7 @@ function(path, logger){
 							}
 						})
 
-					logger && logger.emit('files-queued', queued)
+					logger && logger.emit('files-queued', queued, index)
 	
 					// load...
 					Promise

@@ -2633,7 +2633,8 @@ var makeActionLister = function(list, filter, pre_order){
 			}
 		})
 
-		var o = overlay.Overlay($('body'), 
+		// XXX get the correct parent...
+		var o = overlay.Overlay(that.ribbons.viewer, 
 			list(null, actions, path)
 				.open(function(evt){ 
 					if(!closingPrevented){
@@ -2695,7 +2696,7 @@ var ActionTreeActions = actions.Actions({
 				make('c/')
 			}
 
-			var o = overlay.Overlay($('body'), 
+			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makePathList(null, {
 					'a/*': list,
 					'b/*': list,
@@ -2737,7 +2738,7 @@ var ActionTreeActions = actions.Actions({
 
 			var that = this
 
-			var o = overlay.Overlay($('body'), 
+			var o = overlay.Overlay(this.ribbons.viewer, 
 				require('./lib/widget/browse-walk').makeWalk(null, '/', false, false)
 					.open(function(evt, path){ 
 
@@ -2757,8 +2758,10 @@ var ActionTreeActions = actions.Actions({
 							&& parent.focus()
 					})
 		}],
+	// XXX use this.ribbons.viewer as base...
 	drawerTest: ['Interface|Test/Drawer widget test',
 		function(){
+			// XXX use this.ribbons.viewer as base...
 			drawer.Drawer($('body'), 
 				$('<div>')
 					.css({
@@ -2777,6 +2780,9 @@ var ActionTreeActions = actions.Actions({
 
 	// XXX needs cleanup...
 	// XXX need a clean constructor strategy -- this and ui.js are a mess...
+	// XXX use this.ribbons.viewer as base...
+	// XXX BUG: when using this.ribbons.viewer as base some actions leak
+	// 		between the two viewers...
 	showTaggedInDrawer: ['Interface|Test/Show tagged in drawer',
 		function(tag){
 			tag = tag || 'bookmark'
@@ -2788,6 +2794,8 @@ var ActionTreeActions = actions.Actions({
 					height: H,
 					background: 'black',
 				})
+			// XXX use this.ribbons.viewer as base...
+			// XXX when using viewer zoom and other stuff get leaked...
 			var widget = drawer.Drawer($('body'), 
 				$('<div>')
 					.css({
