@@ -197,8 +197,11 @@ var listDir = module.listDir = listDirfs
 
 // XXX for some reason pop does not focus the container dir correctly...
 // 		...this is potentially due to the list not being ready yet...
+// XXX this should be smarter and support other URL schemes...
 var WalkPrototype = Object.create(browse.Browser.prototype)
 WalkPrototype.options = {
+	// XXX this should be smarter and support other URL schemes...
+	pathPrefix: os.type() == 'Windows_NT' ? '' : '/',
 
 	fullPathEdit: true,
 	traversable: true,
@@ -221,7 +224,6 @@ object.makeConstructor('Walk',
 
 var makeWalk = 
 module.makeWalk = function(elem, path, showNonTraversable, showDisabled){
-	//return Walk(elem, { path: path })
 	var w = Walk(elem, { 
 		path: path,
 		showNonTraversable: showNonTraversable == null ?

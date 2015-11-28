@@ -161,6 +161,10 @@ var BrowserPrototype = {
 		//path: null,
 
 		//show_path: true,
+		
+		// XXX at this time this is used only for generating paths, need
+		// 		to also use this for parsing...
+		pathPrefix: '/',
 
 		// Enable/disable user selection filtering...
 		// NOTE: this only affects starting the filter...
@@ -423,7 +427,7 @@ var BrowserPrototype = {
 	//
 	// XXX need to append '/' only if traversable...
 	get strPath(){
-		return '/' + this.path.join('/') + '/'
+		return this.options.pathPrefix + this.path.join('/') + '/'
 	},
 	set strPath(value){
 		this.path = value
@@ -1650,7 +1654,8 @@ var BrowserPrototype = {
 		res = res || this
 
 		// XXX do we strigify the path???
-		path = '/' + path.join('/')
+		// XXX should we use .strPath here???
+		path = this.options.pathPrefix + path.join('/')
 
 		// trigger the 'open' events...
 		if(elem.length > 0){
@@ -2019,7 +2024,7 @@ PathListPrototype.options = {
 
 		// use the custom lister (defined by trailing '*')...
 		if(data !== keys && lister){
-			return data[lister].call(this, '/' + path.join('/'), make)
+			return data[lister].call(this, this.options.pathPrefix + path.join('/'), make)
 
 		// list via provided paths...
 		} else {

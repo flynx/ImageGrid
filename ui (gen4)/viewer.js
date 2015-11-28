@@ -2718,46 +2718,6 @@ var ActionTreeActions = actions.Actions({
 							&& parent.focus()
 					})
 		}],
-	// XXX make this nw only...
-	// XXX BUG: for some reason this when run from .browseActions(..) loads
-	// 		incorrectly while when called directly is OK...
-	pathBrowse: ['Interface|Test/Path lister test (floating)...',
-		function(base, callback){
-			var that = this
-			var parent = this.preventClosing ? this.preventClosing() : null
-			base = base || '/'
-
-			var o = overlay.Overlay(this.ribbons.viewer, 
-				require('./lib/widget/browse-walk').makeWalk(null, base, false, false)
-					.open(function(evt, path){ 
-
-						o.close() 
-
-						// close the parent ui...
-						parent 
-							&& parent.close 
-							&& parent.close()
-
-
-						// XXX need to strip the leading '/' in a more cross-platform way...
-						path = path.strip(1)
-
-						// XXX use logger...
-						console.log('PATH:', path)
-
-						if(callback){
-							callback(path)
-
-						} else {
-							that.loadPath && that.loadPath(path)
-						}
-					}))
-					.close(function(){
-						parent 
-							&& parent.focus 
-							&& parent.focus()
-					})
-		}],
 	// XXX use this.ribbons.viewer as base...
 	drawerTest: ['Interface|Test/Drawer widget test',
 		function(){
@@ -3322,6 +3282,48 @@ var FileSystemLoaderActions = actions.Actions({
 
 					that.load(index)
 				})
+		}],
+
+	// XXX move this to the UI version of this feature...
+	// 		...and make the UI version of .loadPath(..) run this if no 
+	// 		path was given...
+	// XXX STUB: this dances around an issue in the browser -- removing
+	// 		the leading '/' on windows...
+	// 		...fix in Browse(..) / Walk(..)
+	// XXX BUG: for some reason this when run from .browseActions(..) loads
+	// 		incorrectly while when called directly is OK...
+	browsePath: ['File/Browse file system...',
+		function(base, callback){
+			var that = this
+			var parent = this.preventClosing ? this.preventClosing() : null
+			base = base || '/'
+
+			var o = overlay.Overlay(this.ribbons.viewer, 
+				require('./lib/widget/browse-walk').makeWalk(null, base, false, false)
+					// path selected...
+					.open(function(evt, path){ 
+						// close self and parent...
+						o.close() 
+						parent 
+							&& parent.close 
+							&& parent.close()
+
+						console.log('PATH:', path)
+
+						// pass the selected path on...
+						if(callback){
+							callback(path)
+
+						} else {
+							that.loadPath(path)
+						}
+					}))
+					// we closed the browser...
+					.close(function(){
+						parent 
+							&& parent.focus 
+							&& parent.focus()
+					})
 		}],
 })
 
