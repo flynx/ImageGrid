@@ -2722,24 +2722,13 @@ var ActionTreeActions = actions.Actions({
 	// XXX BUG: for some reason this when run from .browseActions(..) loads
 	// 		incorrectly while when called directly is OK...
 	pathListerTest: ['Interface|Test/Path lister test (floating)...',
-		function(path){
-			var parent = this.preventClosing ? this.preventClosing() : null
-
-			// we got an argument and can exit...
-			if(path){
-				console.log('PATH:', path.slice(1))
-
-				// XXX use logger...
-				// XXX need to strip the leading '/' in a more cross-platform way...
-				this.loadPath && this.loadPath(path.slice(1))
-						
-				return
-			}
-
+		function(base){
 			var that = this
+			var parent = this.preventClosing ? this.preventClosing() : null
+			base = base || '/'
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
-				require('./lib/widget/browse-walk').makeWalk(null, '/', false, false)
+				require('./lib/widget/browse-walk').makeWalk(null, base, false, false)
 					.open(function(evt, path){ 
 
 						o.close() 
@@ -2749,8 +2738,11 @@ var ActionTreeActions = actions.Actions({
 							&& parent.close 
 							&& parent.close()
 
-						// do the actual opening...
-						that.pathListerTest(path)
+						console.log('PATH:', path.slice(1))
+
+						// XXX use logger...
+						// XXX need to strip the leading '/' in a more cross-platform way...
+						that.loadPath && that.loadPath(path.slice(1))
 					}))
 					.close(function(){
 						parent 
