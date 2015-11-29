@@ -3313,10 +3313,10 @@ module.FileSystemLoader = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var FileSystemLoaderUIActions = actions.Actions({
-	// NOTE: this is the same as .browsePath(..) if no argument is given.
-	// 		the difference is how the first (path/base) argument is handled
-	// 		here it's the path to load (now browser shown) and in 
-	// 		.browsePath(..) it's the base path to start from.
+	// NOTE: if no path is passed (null) this behaves just like .browsePath(..)
+	// 		otherwise it will just load the given path (no UI) while
+	// 		.browsePath(..) will load the UI in all cases but will treat 
+	// 		the given path as a base path to start from.
 	// XXX should passing no path to this start browsing from the current
 	// 		path or from the root?
 	loadPath: ['File/Load path...',

@@ -183,10 +183,25 @@ var BrowserPrototype = {
 		// 		setting.
 		// NOTE: another way to disable traversal is to set 
 		// 		.not-traversable on the .browse-widget element
+		// NOTE: if false this will also disable .toggleNonTraversableDrawing()
+		// 		as this will essentially hide/show the whole list.
 		traversable: true,
 
 		showNonTraversable: true,
 		showDisabled: true,
+
+		// enable/disable disabled drawing...
+		// 
+		// If false these will disable the corresponding methods.
+		//
+		// NOTE: these are here to let the user enable/disable these 
+		// 		without the need to go into the keyboard configuration...
+		// NOTE: non-traversable drawing is disabled/enabled by .traversable
+		// 		option above.
+		// NOTE: this will have an effect only on items disabled via list/make
+		// 		items with .disabled CSS class set manually will not be 
+		// 		affected...
+		toggleDisabledDrawing: true,
 
 		actionButton: false,
 		pushButton: false,
@@ -239,6 +254,7 @@ var BrowserPrototype = {
 					'A',
 					'P',
 					'O',
+					'T', 'D',
 
 					// let the system handle copy paste...
 					'C', 'V', 'X',
@@ -267,6 +283,7 @@ var BrowserPrototype = {
 					'A',
 					'P',
 					'O',
+					'T', 'D',
 
 					// let the system handle copy paste...
 					'C', 'V', 'X',
@@ -301,9 +318,6 @@ var BrowserPrototype = {
 			Home: 'select!: "first"',
 			End: 'select!: "last"',
 
-			// XXX add page up and page down...
-			// XXX
-
 			Enter: 'action',
 			O: 'action',
 			Esc: 'close',
@@ -313,6 +327,9 @@ var BrowserPrototype = {
 			A: {
 				ctrl: 'startFullPathEdit!',
 			},
+
+			D: 'toggleDisabledDrawing',
+			T: 'toggleNonTraversableDrawing',
 
 			// XXX should these be select???
 			// XXX should these be relative to visible area or absolute 
@@ -385,18 +402,6 @@ var BrowserPrototype = {
 		this.options.traversable = value
 	},
 
-	toogleTraversableDrawing: function(){
-		this.options.showNonTraversable = !this.options.showNonTraversable
-		this.update()
-		return this
-	},
-	toogleDisabledDrawing: function(){
-		this.options.showDisabled = !this.options.showDisabled
-		this.update()
-		return this
-	},
-
-
 	// Get/set the listed path...
 	//
 	// On more info on setting the path see .update(..)
@@ -463,6 +468,37 @@ var BrowserPrototype = {
 	set selected(value){
 		return this.select(value)
 	},
+
+
+	// NOTE: if .options.traversable is false this will have no effect.
+	// XXX might be a good idea to toggle .non-traversable-hidden CSS 
+	// 		class here too...
+	// 		...will need to account for 1-9 shortcut keys and hints to 
+	// 		still work...
+	toggleNonTraversableDrawing: function(){
+		if(this.options.traversable == false){
+			return this
+		}
+		this.options.showNonTraversable = !this.options.showNonTraversable
+		this.update()
+		return this
+	},
+	// XXX this will not affect elements that were disabled via setting 
+	// 		the .disabled class and not via list/make...
+	// 		...is this a problem???
+	// XXX might be a good idea to toggle .disabled-hidden CSS class 
+	// 		here too...
+	// 		...will need to account for 1-9 shortcut keys and hints to 
+	// 		still work...
+	toggleDisabledDrawing: function(){
+		if(this.options.toggleDisabledDrawing == false){
+			return this
+		}
+		this.options.showDisabled = !this.options.showDisabled
+		this.update()
+		return this
+	},
+
 
 	// Copy/Paste actions...
 	//
@@ -639,8 +675,8 @@ var BrowserPrototype = {
 
 			interactive = true
 
-			// do not draw non-traversable elements if .showNonTraversable
-			// is false...
+			// skip drawing of non-traversable or disabled elements if
+			// .showNonTraversable or .showDisabled are false respectively...
 			if((!traversable && !that.options.showNonTraversable)
 					|| (disabled && !that.options.showDisabled)){
 				return $()
