@@ -165,15 +165,19 @@ var BrowserPrototype = {
 
 		//show_path: true,
 		
+		// Set the path prefix...
+		//
 		// XXX at this time this is used only for generating paths, need
 		// 		to also use this for parsing...
 		pathPrefix: '/',
 
 		// Enable/disable user selection filtering...
+		//
 		// NOTE: this only affects starting the filter...
 		filter: true,
 
 		// Enable/disable full path editing...
+		//
 		// NOTE: as with .filter above, this only affects .startFullPathEdit(..)
 		fullPathEdit: true,
 
@@ -187,10 +191,20 @@ var BrowserPrototype = {
 		// 		as this will essentially hide/show the whole list.
 		traversable: true,
 
+		// If true non-traversable items will be shown...
+		//
+		// NOTE: setting both this and .traversable to false will hide 
+		// 		all elements in the list.
 		showNonTraversable: true,
+
+		// If true disabled items will be shown...
+		//
+		// NOTE: this will have an effect only on items disabled via list/make
+		// 		items with .disabled CSS class set manually will not be 
+		// 		affected...
 		showDisabled: true,
 
-		// enable/disable disabled drawing...
+		// Enable/disable disabled drawing...
 		// 
 		// If false these will disable the corresponding methods.
 		//
@@ -203,7 +217,18 @@ var BrowserPrototype = {
 		// 		affected...
 		toggleDisabledDrawing: true,
 
+		// Controls the display of the action button on each list item...
+		//
+		// Possible values:
+		// 	false			- disable the action button
+		// 	true			- show default action button
+		// 	<text/html>		- display <text/html> in action button
 		actionButton: false,
+
+		// Controls the display of the push button on each list item...
+		//
+		// This has the same semantics as .actionButton so see that for 
+		// more info.
 		pushButton: false,
 
 		// Handle keys that are not bound...
@@ -216,6 +241,7 @@ var BrowserPrototype = {
 		flat: false,
 
 		// List of events that will not get propagated outside the browser...
+		//
 		// NOTE: these are local events defined on the widget, so it 
 		// 		would not be logical to propagate them up the DOM, but if
 		// 		such behavior is desired one could always change the 
