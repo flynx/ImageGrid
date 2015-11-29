@@ -162,7 +162,6 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 var BaseActions = 
 module.BaseActions = 
 actions.Actions({
-
 	config: {
 		// see .direction for details...
 		'steps-to-change-direction': 3,
@@ -1852,6 +1851,7 @@ module.PartialRibbons = ImageGridFeatures.Feature({
 
 var SingleImageActions = actions.Actions({
 	config: {
+		// NOTE: these will get overwritten if/when the user changes the scale...
 		'single-image-scale': null,
 		'ribbon-scale': null,
 	},
@@ -2895,6 +2895,7 @@ module.AutoSingleImage = ImageGridFeatures.Feature({
 
 	tag: 'auto-single-image',
 
+	// NOTE: this feature has no actions defined but needs the config...
 	config: {
 		'auto-single-image-in': 2,
 		'auto-single-image-out': 7,
@@ -3344,6 +3345,11 @@ var makeProwseProxy = function(action){
 
 var FileSystemLoaderUIActions = actions.Actions({
 	config: {
+		// list of loaders to complete .browsePath(..) action
+		//
+		// NOTE: these will be displayed in the same order as they appear
+		// 		in the list.
+		// NOTE: the first one is auto-selected.
 		'path-loaders': [
 			'loadIndex',
 			'loadImages',
@@ -3357,14 +3363,14 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 		to start from.
 	// XXX should passing no path to this start browsing from the current
 	// 		path or from the root?
-	loadIndex: ['File/Load index...',
-		makeProwseProxy('loadIndex')],
-	loadImages: ['File/Load images...',
-		makeProwseProxy('loadImages')],
+	loadIndex: [makeProwseProxy('loadIndex')],
+	loadImages: [makeProwseProxy('loadImages')],
 
 	// XXX BUG: for some reason this when run from .browseActions(..) or
 	// 		any other Browse, loads incorrectly while when called 
 	// 		directly is OK...
+	// XXX for some reason the path list blinks (.update()???) when sub 
+	// 		menu is shown...
 	// XXX should the loader list be nested or open in overlay (as-is now)???
 	browsePath: ['File/Browse file system...',
 		function(base, callback){
@@ -3376,6 +3382,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 				require('./lib/widget/browse-walk').makeWalk(null, base, false, false)
 					// path selected...
 					.open(function(evt, path){ 
+						var item = o.client.selected
 
 						// single loader...
 						if(callback && callback.constructor === Function){
@@ -3397,7 +3404,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 							} else {
 								var loaders = {}
 								that.config['path-loaders'].forEach(function(m){
-									loaders[that[m].doc.split('/').pop()] = function(){ 
+									loaders[that.getDoc(m)[m][0].split('/').pop()] = function(){ 
 										return that[m](path) 
 									}
 								})
@@ -3414,7 +3421,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 									// closed menu...
 									.close(function(){
 										o.focus()
+										o.client.select(item)
 									})
+							// select top element...
 							so.client.select(0)
 						}
 					}))

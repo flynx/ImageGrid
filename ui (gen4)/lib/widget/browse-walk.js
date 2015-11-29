@@ -233,7 +233,6 @@ module.makeWalk = function(elem, path, showNonTraversable, showDisabled){
 			WalkPrototype.options.showDisabled
 			: showDisabled,
 	})
-	console.log(w)
 	return w
 }
 
