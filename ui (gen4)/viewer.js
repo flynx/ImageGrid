@@ -3185,6 +3185,8 @@ module.AppControl = ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// fs reader/loader...
+
 // XXX at this point this is a stub...
 if(window.nodejs != null){
 	var file = requirejs('./file')
@@ -3329,7 +3331,7 @@ module.FileSystemLoader = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-var makeProwseProxy = function(action){
+var makeBrowseProxy = function(action){
 	return function(path, logger){
 		var that = this
 		if(path == null){
@@ -3355,16 +3357,6 @@ var FileSystemLoaderUIActions = actions.Actions({
 			'loadImages',
 		],
 	},
-
-	// NOTE: if no path is passed (null) these behave just like .browsePath(..)
-	// 		with the appropriate callback otherwise it will just load 
-	// 		the given path (no UI) while .browsePath(..) will load the 
-	// 		UI in all cases but will treat the given path as a base path 
-	// 		to start from.
-	// XXX should passing no path to this start browsing from the current
-	// 		path or from the root?
-	loadIndex: [makeProwseProxy('loadIndex')],
-	loadImages: [makeProwseProxy('loadImages')],
 
 	// XXX BUG: for some reason this when run from .browseActions(..) or
 	// 		any other Browse, loads incorrectly while when called 
@@ -3434,6 +3426,16 @@ var FileSystemLoaderUIActions = actions.Actions({
 							&& parent.focus()
 					})
 		}],
+
+	// NOTE: if no path is passed (null) these behave just like .browsePath(..)
+	// 		with the appropriate callback otherwise it will just load 
+	// 		the given path (no UI) while .browsePath(..) will load the 
+	// 		UI in all cases but will treat the given path as a base path 
+	// 		to start from.
+	// XXX should passing no path to this start browsing from the current
+	// 		path or from the root?
+	loadIndex: [makeBrowseProxy('loadIndex')],
+	loadImages: [makeBrowseProxy('loadImages')],
 })
 
 
@@ -3448,6 +3450,11 @@ module.FileSystemLoaderUI = ImageGridFeatures.Feature({
 
 	actions: FileSystemLoaderUIActions,
 })
+
+
+
+//---------------------------------------------------------------------
+// fs writer...
 
 
 
