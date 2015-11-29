@@ -128,6 +128,9 @@ var BrowserClassPrototype = {
 			})
 		  	*/
 
+		if(options.pathPrefix){
+			path.attr('prefix', options.pathPrefix)
+		}
 		if(options.show_path == false){
 			path.hide()
 		}
@@ -556,6 +559,9 @@ var BrowserPrototype = {
 		// clear the ui...
 		var p = browser.find('.path').empty()
 		var l = browser.find('.list').empty()
+
+		// set the path prefix...
+		p.attr('prefix', this.options.pathPrefix)
 
 		var c = []
 		// fill the path field...
@@ -2094,6 +2100,7 @@ var makePathList =
 module.makePathList = function(elem, list, path){
 	return PathList(elem, { data: list, path: path })
 }
+
 
 
 /**********************************************************************

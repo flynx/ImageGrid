@@ -3283,13 +3283,28 @@ var FileSystemLoaderActions = actions.Actions({
 					that.load(index)
 				})
 		}],
+})
 
-	// XXX move this to the UI version of this feature...
-	// 		...and make the UI version of .loadPath(..) run this if no 
-	// 		path was given...
-	// XXX STUB: this dances around an issue in the browser -- removing
-	// 		the leading '/' on windows...
-	// 		...fix in Browse(..) / Walk(..)
+
+var FileSystemLoader = 
+module.FileSystemLoader = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'fs-loader',
+
+	actions: FileSystemLoaderActions,
+
+	isApplicable: function(){
+		return window.nodejs != null
+	},
+})
+
+
+
+//---------------------------------------------------------------------
+
+var FileSystemLoaderUIActions = actions.Actions({
 	// XXX BUG: for some reason this when run from .browseActions(..) loads
 	// 		incorrectly while when called directly is OK...
 	browsePath: ['File/Browse file system...',
@@ -3307,8 +3322,6 @@ var FileSystemLoaderActions = actions.Actions({
 						parent 
 							&& parent.close 
 							&& parent.close()
-
-						console.log('PATH:', path)
 
 						// pass the selected path on...
 						if(callback){
@@ -3328,18 +3341,15 @@ var FileSystemLoaderActions = actions.Actions({
 })
 
 
-var FileSystemLoader = 
-module.FileSystemLoader = ImageGridFeatures.Feature({
+var FileSystemLoaderUI = 
+module.FileSystemLoaderUI = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'fs-loader',
+	tag: 'fs-loader-ui',
+	depends: ['fs-loader'],
 
-	actions: FileSystemLoaderActions,
-
-	isApplicable: function(){
-		return window.nodejs != null
-	},
+	actions: FileSystemLoaderUIActions,
 })
 
 
@@ -3368,6 +3378,7 @@ ImageGridFeatures.Feature('viewer-testing', [
 	'image-bookmarks',
 
 	'fs-loader',
+		'fs-loader-ui',
 	'app-control',
 
 	// chrome...

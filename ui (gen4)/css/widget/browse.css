@@ -61,7 +61,7 @@
 	display: block;
 }
 .browse-widget:not(.flat) .path:not([contenteditable]):before {
-	content: "/";
+	content: attr(prefix);
 }
 .browse-widget .path .dir {
 	display: inline-block;
