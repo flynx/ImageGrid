@@ -161,7 +161,7 @@ if(typeof(args2array) != 'function'){
 // 	- an action will return the deepest (root) action's return, if that 
 // 	  return is undefined, then the action set is returned instead.
 //
-// NOTE: of the root handler is instance of Toggler (jli) and the action
+// NOTE: if the root handler is instance of Toggler (jli) and the action
 // 		is called with '?' as argument, then the toggler will be called 
 // 		with the argument and return the result bypassing the handlers.
 // NOTE: actions once defined do not depend on the inheritance hierarchy, 

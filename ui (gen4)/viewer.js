@@ -3197,10 +3197,18 @@ if(window.nodejs != null){
 
 
 var FileSystemLoaderActions = actions.Actions({
-	// XXX
-	loadPath: ['File/',
+	// NOTE: when passed no path this will not do anything...
+	// XXX should this set something like .path???
+	// 		...and how should this be handled when merging indexes or
+	//		viewing multiple/clustered indexes???
+	// XXX look inside...
+	loadPath: ['File/Load path',
 		function(path, logger){
 			var that = this
+
+			if(path == null){
+				return
+			}
 
 			// XXX get a logger...
 			logger = logger || this.logger
@@ -3241,7 +3249,6 @@ var FileSystemLoaderActions = actions.Actions({
 
 					// NOTE: res may contain multiple indexes...
 					for(var k in res){
-
 
 						// skip empty indexes...
 						// XXX should we rebuild  or list here???
@@ -3286,6 +3293,7 @@ var FileSystemLoaderActions = actions.Actions({
 })
 
 
+// XXX is this a good name???
 var FileSystemLoader = 
 module.FileSystemLoader = ImageGridFeatures.Feature({
 	title: '',
@@ -3305,8 +3313,27 @@ module.FileSystemLoader = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var FileSystemLoaderUIActions = actions.Actions({
-	// XXX BUG: for some reason this when run from .browseActions(..) loads
-	// 		incorrectly while when called directly is OK...
+	// NOTE: this is the same as .browsePath(..) if no argument is given.
+	// 		the difference is how the first (path/base) argument is handled
+	// 		here it's the path to load (now browser shown) and in 
+	// 		.browsePath(..) it's the base path to start from.
+	// XXX should passing no path to this start browsing from the current
+	// 		path or from the root?
+	loadPath: ['File/Load path...',
+		function(path, logger){
+			var that = this
+			if(path == null){
+				// XXX should we set a start path here to current???
+				return this.browsePath(path, 
+					function(path){ 
+						return that.loadPath(path, logger) 
+					})
+			}
+		}],
+
+	// XXX BUG: for some reason this when run from .browseActions(..) or
+	// 		any other Browse, loads incorrectly while when called 
+	// 		directly is OK...
 	browsePath: ['File/Browse file system...',
 		function(base, callback){
 			var that = this
@@ -3341,6 +3368,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 })
 
 
+// XXX is this a good name???
 var FileSystemLoaderUI = 
 module.FileSystemLoaderUI = ImageGridFeatures.Feature({
 	title: '',
@@ -3379,6 +3407,7 @@ ImageGridFeatures.Feature('viewer-testing', [
 
 	'fs-loader',
 		'fs-loader-ui',
+
 	'app-control',
 
 	// chrome...
