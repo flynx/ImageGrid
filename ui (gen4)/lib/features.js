@@ -105,7 +105,7 @@ module.FeatureProto = {
 		if(this.config != null 
 				|| (this.actions != null 
 					&& this.actions.config != null)){
-			var config = this.config || this.actions.config
+			var config = this.config = this.config || this.actions.config
 
 			if(actions.config == null){
 				actions.config = {}

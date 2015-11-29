@@ -794,11 +794,6 @@ module.Base = ImageGridFeatures.Feature({
 
 	tag: 'base',
 
-	config: {
-		// see .direction for details...
-		'steps-to-change-direction': 3,
-	},
-
 	actions: BaseActions,
 })
 
@@ -809,6 +804,28 @@ module.Base = ImageGridFeatures.Feature({
 var ViewerActions = 
 module.ViewerActions = 
 actions.Actions({
+	config: {
+		// The maximum screen width allowed when zooming...
+		'max-screen-images': 30,
+
+		// A step (multiplier) used by .zoomIn()/.zoomOut() actions.
+		// NOTE: this is rounded to the nearest whole screen width in images
+		// 		and current fit-overflow added.
+		'zoom-step': 1.2,
+
+		// added to odd number of images to fit to indicate scroll ability...
+		// ...this effectively sets the closest distance an image can be from
+		// the viewer edge...
+		'fit-overflow': 0.2,
+
+		
+		// limit key repeat to one per N milliseconds.
+		//
+		// Set this to -1 or null to run keys without any limitations.
+		// XXX at this point the keyboard is setup in ui.js, need to 
+		// 		move to a more logical spot...
+		'max-key-repeat-rate': 0,
+	},
 
 	// Images...
 	// XXX this seems like a hack...
@@ -1316,29 +1333,6 @@ module.Viewer = ImageGridFeatures.Feature({
 
 	depends: ['base'],
 
-	config: {
-		// The maximum screen width allowed when zooming...
-		'max-screen-images': 30,
-
-		// A step (multiplier) used by .zoomIn()/.zoomOut() actions.
-		// NOTE: this is rounded to the nearest whole screen width in images
-		// 		and current fit-overflow added.
-		'zoom-step': 1.2,
-
-		// added to odd number of images to fit to indicate scroll ability...
-		// ...this effectively sets the closest distance an image can be from
-		// the viewer edge...
-		'fit-overflow': 0.2,
-
-		
-		// limit key repeat to one per N milliseconds.
-		//
-		// Set this to -1 or null to run keys without any limitations.
-		// XXX at this point the keyboard is setup in ui.js, need to 
-		// 		move to a more logical spot...
-		'max-key-repeat-rate': 0,
-	},
-
 	actions: ViewerActions,
 
 	// check if we are running in a UI context...
@@ -1465,6 +1459,25 @@ module.Journal = ImageGridFeatures.Feature({
 // XXX try a strategy: load more in the direction of movement by an offset...
 // XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
 var PartialRibbonsActions = actions.Actions({
+	config: {
+		// number of screen widths to load...
+		'ribbon-size-screens': 7,
+
+		// number of screen widths to edge to trigger reload...
+		'ribbon-resize-threshold': 1.5,
+
+		// timeout before a non-forced ribbon size update happens after
+		// the action...
+		// NOTE: if set to null, the update will be sync...
+		'ribbon-update-timeout': 120,
+
+		// how many non-adjacent images to preload...
+		'preload-radius': 5,
+
+		// sources to preload...
+		'preload-sources': ['bookmark', 'selected'],
+	},
+
 	// NOTE: this will not work from chrome when loading from a local fs...
 	// XXX experimental...
 	startCacheWorker: ['Interface/',
@@ -1794,25 +1807,6 @@ module.PartialRibbons = ImageGridFeatures.Feature({
 
 	actions: PartialRibbonsActions,
 
-	config: {
-		// number of screen widths to load...
-		'ribbon-size-screens': 7,
-
-		// number of screen widths to edge to trigger reload...
-		'ribbon-resize-threshold': 1.5,
-
-		// timeout before a non-forced ribbon size update happens after
-		// the action...
-		// NOTE: if set to null, the update will be sync...
-		'ribbon-update-timeout': 120,
-
-		// how many non-adjacent images to preload...
-		'preload-radius': 5,
-
-		// sources to preload...
-		'preload-sources': ['bookmark', 'selected'],
-	},
-
 	handlers: [
 		['focusImage.pre centerImage.pre', 
 			function(target, list){
@@ -1857,6 +1851,11 @@ module.PartialRibbons = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var SingleImageActions = actions.Actions({
+	config: {
+		'single-image-scale': null,
+		'ribbon-scale': null,
+	},
+
 	toggleSingleImage: ['Interface/Toggle single image view', 
 		// XXX this is wrong!!!
 		CSSClassToggler(
@@ -1943,11 +1942,6 @@ module.SingleImageView = ImageGridFeatures.Feature({
 
 	tag: 'ui-single-image-view',
 	depends: ['ui'],
-
-	config: {
-		'single-image-scale': null,
-		'ribbon-scale': null,
-	},
 
 	actions: SingleImageActions,
 
@@ -2193,6 +2187,25 @@ module.BoundsIndicators = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var CurrentImageIndicatorActions = actions.Actions({
+	config: {
+		'current-image-border': 3,
+		'current-image-min-border': 2,
+
+		'current-image-border-timeout': 200,
+		'current-image-shift-timeout': 200,
+
+		'current-image-indicator-fadein': 500,
+
+		'current-image-indicator-hide-timeout': 250,
+
+		// this can be:
+		// 	'hide'			- simply hide on next/prev screen action
+		// 					  and show on focus image.
+		// 	'hide-show'		- hide on fast scroll through screens and 
+		// 					  show when slowing down.
+		'current-image-indicator-screen-nav-mode': 'hide',
+	},
+
 	updateCurrentImageIndicator: ['Interface/Update current image indicator',
 		function(target, update_border){
 			var ribbon_set = this.ribbons.getRibbonSet()
@@ -2281,25 +2294,6 @@ module.CurrentImageIndicator = ImageGridFeatures.Feature({
 
 	tag: 'ui-current-image-indicator',
 	depends: ['ui'],
-
-	config: {
-		'current-image-border': 3,
-		'current-image-min-border': 2,
-
-		'current-image-border-timeout': 200,
-		'current-image-shift-timeout': 200,
-
-		'current-image-indicator-fadein': 500,
-
-		'current-image-indicator-hide-timeout': 250,
-
-		// this can be:
-		// 	'hide'			- simply hide on next/prev screen action
-		// 					  and show on focus image.
-		// 	'hide-show'		- hide on fast scroll through screens and 
-		// 					  show when slowing down.
-		'current-image-indicator-screen-nav-mode': 'hide',
-	},
 
 	actions: CurrentImageIndicatorActions,
 
@@ -2651,6 +2645,14 @@ var makeActionLister = function(list, filter, pre_order){
 }
 
 var ActionTreeActions = actions.Actions({
+	config: {
+		'action-category-order': [
+			'File',
+			'Edit',
+			'Navigate',
+		],
+	},
+
 	// XXX move this to a generic modal overlay feature...
 	getOverlay: ['Interface/Get overlay object',
 		function(o){
@@ -2868,14 +2870,6 @@ module.ActionTree = ImageGridFeatures.Feature({
 
 	tag: 'ui-action-tree',
 	depends: ['ui'],
-
-	config: {
-		'action-category-order': [
-			'File',
-			'Edit',
-			'Navigate',
-		],
-	},
 
 	actions: ActionTreeActions,
 })
@@ -3193,6 +3187,7 @@ module.AppControl = ImageGridFeatures.Feature({
 // XXX at this point this is a stub...
 if(window.nodejs != null){
 	var file = requirejs('./file')
+	var glob = requirejs('glob')
 }
 
 
@@ -3202,7 +3197,7 @@ var FileSystemLoaderActions = actions.Actions({
 	// 		...and how should this be handled when merging indexes or
 	//		viewing multiple/clustered indexes???
 	// XXX look inside...
-	loadPath: ['File/Load path',
+	loadIndex: ['File/Load index',
 		function(path, logger){
 			var that = this
 
@@ -3290,6 +3285,27 @@ var FileSystemLoaderActions = actions.Actions({
 					that.load(index)
 				})
 		}],
+	// XXX use the logger...
+	// XXX add a recursive option...
+	// 		...might also be nice to add sub-dirs to ribbons...
+	loadImages: ['File/Load images',
+		function(path, logger){
+			if(path == null){
+				return
+			}
+
+			var that = this
+
+			return glob(path + '/*+(jpg|png)')
+				.on('end', function(lst){ 
+					that.loadURLs(lst)
+				})
+		}],
+
+	// XXX auto-detect format or let the user chose...
+	loadPath: ['File/Load path',
+		function(){
+		}],
 })
 
 
@@ -3312,28 +3328,44 @@ module.FileSystemLoader = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+var makeProwseProxy = function(action){
+	return function(path, logger){
+		var that = this
+		if(path == null){
+			// XXX should we set a start path here to current???
+			return this.browsePath(path, 
+				function(path){ 
+					return that[action](path, logger) 
+				})
+		}
+	}
+}
+
+
 var FileSystemLoaderUIActions = actions.Actions({
-	// NOTE: if no path is passed (null) this behaves just like .browsePath(..)
-	// 		otherwise it will just load the given path (no UI) while
-	// 		.browsePath(..) will load the UI in all cases but will treat 
-	// 		the given path as a base path to start from.
+	config: {
+		'path-loaders': [
+			'loadIndex',
+			'loadImages',
+		],
+	},
+
+	// NOTE: if no path is passed (null) these behave just like .browsePath(..)
+	// 		with the appropriate callback otherwise it will just load 
+	// 		the given path (no UI) while .browsePath(..) will load the 
+	// 		UI in all cases but will treat the given path as a base path 
+	// 		to start from.
 	// XXX should passing no path to this start browsing from the current
 	// 		path or from the root?
-	loadPath: ['File/Load path...',
-		function(path, logger){
-			var that = this
-			if(path == null){
-				// XXX should we set a start path here to current???
-				return this.browsePath(path, 
-					function(path){ 
-						return that.loadPath(path, logger) 
-					})
-			}
-		}],
+	loadIndex: ['File/Load index...',
+		makeProwseProxy('loadIndex')],
+	loadImages: ['File/Load images...',
+		makeProwseProxy('loadImages')],
 
 	// XXX BUG: for some reason this when run from .browseActions(..) or
 	// 		any other Browse, loads incorrectly while when called 
 	// 		directly is OK...
+	// XXX should the loader list be nested or open in overlay (as-is now)???
 	browsePath: ['File/Browse file system...',
 		function(base, callback){
 			var that = this
@@ -3344,18 +3376,46 @@ var FileSystemLoaderUIActions = actions.Actions({
 				require('./lib/widget/browse-walk').makeWalk(null, base, false, false)
 					// path selected...
 					.open(function(evt, path){ 
-						// close self and parent...
-						o.close() 
-						parent 
-							&& parent.close 
-							&& parent.close()
 
-						// pass the selected path on...
-						if(callback){
+						// single loader...
+						if(callback && callback.constructor === Function){
+							// close self and parent...
+							o.close() 
+							parent 
+								&& parent.close 
+								&& parent.close()
+
 							callback(path)
 
+						// list of loaders...
 						} else {
-							that.loadPath(path)
+							// user-provided list...
+							if(callback){
+								var loaders = callback
+
+							// build the loaders list from .config...
+							} else {
+								var loaders = {}
+								that.config['path-loaders'].forEach(function(m){
+									loaders[that[m].doc.split('/').pop()] = function(){ 
+										return that[m](path) 
+									}
+								})
+							}
+
+							// show user the list...
+							var so = overlay.Overlay(that.ribbons.viewer, 
+								browse.makeList(null, loaders)
+									// close self and parent...
+									.open(function(){
+										so.close()
+										o.close() 
+									}))
+									// closed menu...
+									.close(function(){
+										o.focus()
+									})
+							so.client.select(0)
 						}
 					}))
 					// we closed the browser...

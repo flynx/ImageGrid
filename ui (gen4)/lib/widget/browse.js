@@ -599,6 +599,18 @@ var BrowserPrototype = {
 	// 		path due to an error, we need to be able to render the new
 	// 		path both in the path and list sections...
 	// 		NOTE: current behaviour is not wrong, it just not too flexible...
+	//
+	// XXX one use-case here would be to pass this a custom lister or a full
+	// 		browser, need to make this work correctly for full set of 
+	// 		events...
+	// 			- custom lister -- handle all sub-paths in some way...
+	// 			- full browser -- handle all sub-paths by the nested 
+	// 								browser...
+	// 		one way to handle nested browsers is to implement a browser 
+	// 		stack which if not empty the top browser handles all the 
+	// 		sub-paths
+	// 		...this will also need to indicate a way to split the path 
+	// 		and when to 'pop' the sub browser...
 	update: function(path, list){
 		path = path || this.path
 		var browser = this.dom
@@ -743,7 +755,7 @@ var BrowserPrototype = {
 						that.action()
 					}))
 			}
-			// push action...
+			// push...
 			if(traversable && that.options.pushButton){
 				res.append($('<div>')
 					.addClass('button')
