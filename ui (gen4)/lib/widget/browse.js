@@ -1349,6 +1349,7 @@ var BrowserPrototype = {
 				var h = elem.height()
 				var t = elem.offset().top - p.offset().top
 
+				// XXX should this be in config???
 				var D = 3 * h 
 
 				// too low...
@@ -1423,75 +1424,91 @@ var BrowserPrototype = {
 			})
 			.last()
 	},
+	// NOTE: this will not give a number greater than the number of 
+	// 		elements, thus for lists without scroll, this will allways
+	// 		return the number of elements.
+	// XXX this will not count the elements at the top if they are 
+	// 		disabled...
+	getHeightInElems: function(){
+		var t = this.getTopVisibleElem()
+		var b = this.getBottomVisibleElem()
 
-	// XXX merge with .select(..)...
-	// XXX needs testing...
+		var res = 1
+		while(!t.is(b)){
+			t = t.next()
+			if(t.length == 0){
+				break
+			}
+			res += 1
+		}
+
+		return res
+	},
+
+	// XXX there are two modes of doing page travel:
+	// 		1) keep relative to page position
+	// 		2) travel up on top element and down on bottom (curret)
+	// 		...is this the natural choice?
+	// XXX merge with .select(..)???
 	prevPage: function(){
-		var pattern = '.list>div:not(.disabled):not(.filtered-out):visible'
-		var elem = this.getTopVisibleElem()
+		var t = this.getTopVisibleElem()
 		var cur = this.select('!')
 
-		var p = elem.scrollParent()
-		var S = p.scrollTop()
-		var H = p.height()
-		var T = p.offset().top
 
-		// jump to top visible elem if it's not the one selected...
-		if(cur.length == 0 || (3 * elem.height()) + S < cur.position().top ){
-			this.select(elem.prev(pattern).length == 0 ? elem : elem.next())
+		// nothing selected...
+		if(cur.length == 0 
+				// element not near the top...
+				// XXX make the delta configurable (see .select(..) 
+				// 		for same issue)...
+				|| cur.offset().top - t.offset().top > (3 * t.height())){
+			// select top...
+			this.select(t)
 
-		// we are at the top or we are less than a page from the top...
-		} else if(S <= H){
-			this.select('first')
-
-		// get the next page...
-		// XXX test...
+		// make the top bottom...
 		} else {
-			var t = S - H
+			var p = t.scrollParent()
+			var S = p.scrollTop()
+			var H = p.height()
 
-			var elems = this.filter('*')
-			this.select(elems
-				.slice(0, elems.index(elem))
-				.reverse()
-				.filter(function(i, e){
-					return $(e).offset().top - T >= t
-				})
-				.first())
+			// rough scroll...
+			// XXX make the delta configurable (see .select(..) 
+			// 		for same issue)...
+			p.scrollTop(S - (H - 4 * t.height()))
+
+			// select the element and fix scrolling errors...
+			this.select(this.getTopVisibleElem())
 		}
 
 		return this
 	},
-	// XXX not finished and buggy....
-	// XXX merge with .select(..)...
-	// XXX needs testing...
+	// XXX this is essentially identical to .prevPage(..)
 	nextPage: function(){
-		var elem = this.getBottomVisibleElem()
+		var b = this.getBottomVisibleElem()
 		var cur = this.select('!')
 
-		var p = elem.scrollParent()
-		var S = p.scrollTop()
-		var H = p.height()
-		var T = p.offset().top
 
-		// jump to first elem if it's not the one selected...
-		if(cur.length == 0 || S + H - (3 * cur.height()) > cur.position().top ){
-			this.select(elem.prev())
+		// nothing selected...
+		if(cur.length == 0 
+				// element not near the top...
+				// XXX make the delta configurable (see .select(..) 
+				// 		for same issue)...
+				|| b.offset().top - cur.offset().top > (3 * b.height())){
+			// select bottom...
+			this.select(b)
 
-		// we are at the bottom or we are less than a page from the bottom...
-		} else if(S + H >= p[0].scrollHeight){
-			this.select('last')
-
-		// get the next page...
+		// make the top bottom...
 		} else {
-			var t = S + 2 * H
+			var p = b.scrollParent()
+			var S = p.scrollTop()
+			var H = p.height()
 
-			var elems = this.filter('*')
-			this.select(elems
-				.slice(elems.index(elem))
-				.filter(function(i, e){
-					return $(e).offset().top - T >= t
-				})
-				.first())
+			// rough scroll...
+			// XXX make the delta configurable (see .select(..) 
+			// 		for same issue)...
+			p.scrollTop(S + (H - 4 * b.height()))
+
+			// select the element and fix scrolling errors...
+			this.select(this.getBottomVisibleElem())
 		}
 
 		return this

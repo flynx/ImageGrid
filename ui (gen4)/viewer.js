@@ -3306,12 +3306,14 @@ var FileSystemLoaderActions = actions.Actions({
 		}],
 
 	// XXX auto-detect format or let the user chose...
-	loadPath: ['File/Load path',
+	loadPath: ['File/Load path (STUB)',
 		function(){
 		}],
 })
 
 
+// XXX add load history to this...
+// 		...might be good to add a generic history feature and use that...
 // XXX is this a good name???
 var FileSystemLoader = 
 module.FileSystemLoader = ImageGridFeatures.Feature({
@@ -3355,6 +3357,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 		'path-loaders': [
 			'loadIndex',
 			'loadImages',
+			//'loadPath',
 		],
 	},
 
