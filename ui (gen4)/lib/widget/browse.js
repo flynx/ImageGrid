@@ -1425,7 +1425,7 @@ var BrowserPrototype = {
 			.last()
 	},
 	// NOTE: this will not give a number greater than the number of 
-	// 		elements, thus for lists without scroll, this will allways
+	// 		elements, thus for lists without scroll, this will always
 	// 		return the number of elements.
 	// XXX this will not count the elements at the top if they are 
 	// 		disabled...
@@ -1450,6 +1450,8 @@ var BrowserPrototype = {
 	// 		2) travel up on top element and down on bottom (curret)
 	// 		...is this the natural choice?
 	// XXX merge with .select(..)???
+	// XXX still not too happy with this, item sizes will throw this
+	// 		off...
 	prevPage: function(){
 		var t = this.getTopVisibleElem()
 		var cur = this.select('!')
