@@ -297,10 +297,10 @@ var RibbonsPrototype = {
 	// XXX try and make image size the product of vmin and scale...
 	// XXX this might break when no images are loaded and proportions 
 	// 		are not square...
-	getVisibleImageSize: function(dim, scale){
+	getVisibleImageSize: function(dim, scale, img){
 		scale = scale || this.getScale()
 		dim = dim == null ? 'width' : dim
-		var img = this.viewer.find(IMAGE)
+		img = img || this.viewer.find(IMAGE)
 		var tmp
 
 		// if no images are loaded create one temporarily....
@@ -348,6 +348,117 @@ var RibbonsPrototype = {
 		var h = this.getVisibleImageSize('height') * scale
 
 		return H/h
+	},
+
+	// Get an image at a relative to viewer position...
+	//
+	//	Get central image in current ribbon:
+	//	.getImageByPosition()
+	//		-> image
+	//
+	//	Get central image closest to current:
+	//	.getImageByPosition('current'[, <ribbon>])
+	//		-> image
+	//
+	//	Get central image closest to html element:
+	//	.getImageByPosition(<elem>[, <ribbon>])
+	//		-> image
+	//
+	//	Get image in a specific ribbon:
+	//	.getImageByPosition('left'[, <ribbon>])
+	//	.getImageByPosition('center'[, <ribbon>])
+	//	.getImageByPosition('right'[, <ribbon>])
+	//		-> image
+	//
+	// This can return a pair of images when position is either 'center',
+	// 'current' or a jquery object, this can happen when the two 
+	// candidates are closer to the target than delta.
+	//
+	//
+	// NOTE: if no ribbon is given, current ribbon is assumed.
+	// NOTE: <ribbon> is the same as expected by .getRibbon(..)
+	// NOTE: position can also be an image...
+	// NOTE: delta is used ONLY if position is either 'center', 'current'
+	// 		or an jQuery object...
+	getImageByPosition: function(position, ribbon, delta){
+		position = position || 'center'	
+		ribbon = this.getRibbon(ribbon) 
+
+		var viewer = this.viewer
+
+		var W = viewer.outerWidth()
+		var L = viewer.offset().left
+
+		var target = position == 'current' ? this.getImage()
+			: position == 'center' ? viewer
+			: position == 'left' ? L
+			: position == 'right' ? L + W
+			: position
+
+		// unknown keyword...
+		if(target == null){
+			return $()
+
+		// center of an element...
+		} else if(typeof(target) != typeof(123)){
+			target = $(target)
+			var w = target.hasClass('image') ? 
+				this.getVisibleImageSize('width', null, target) : 
+				target.outerWidth()
+			// NOTE: we will need delta only in this branch, i.e. when
+			// 		position is either 'current', 'center' or a jQuery 
+			// 		object...
+			delta = delta || w / 10
+			target = target.offset().left + w/2
+		}
+
+		var that = this
+		var res = ribbon.find(IMAGE)
+			.toArray()
+			.map(function(img){
+				img = $(img)
+				var l = img.offset().left
+				var w = that.getVisibleImageSize('width', null, img)
+
+				// skip images not fully shown in viewer...
+				if(L > l || l+w > L+W){
+					return
+				}
+
+				// distance between centers...
+				if(position == 'center' || position == 'current'){
+					return [target - (l + w/2), img]
+
+				// distance between left edges...
+				} else if(position == 'left'){
+					return [target - l, img]
+
+				// distance between right edges...
+				} else {
+					return [target - (l + w), img]
+				}
+			})
+			// drop images outside the viewer...
+			.filter(function(e){ return e != null })
+			// sort images by distance...
+			.sort(function(a, b){ return Math.abs(a[0]) - Math.abs(b[0]) })
+
+		var a = res[0][0]
+		var b = res[1] ? res[1][0] : null
+
+		// we have two images that are about the same distance from 
+		// target...
+		// NOTE: this is a one-dimentional filter so the can not be more
+		// 		than two hits...
+		// NOTE: delta is used ONLY if position is either 'center', 
+		// 		'current' or an jQuery object...
+		if(b && (a >= 0) != (b >= 0) && Math.abs(a + b) < delta){
+			return $([res[0][1][0], res[1][1][0]])
+
+		// a single hit...
+		} else {
+			return res[0][1]
+		}
 	},
 
 	// Get ribbon set scale...

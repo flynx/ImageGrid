@@ -165,6 +165,16 @@ actions.Actions({
 	config: {
 		// see .direction for details...
 		'steps-to-change-direction': 3,
+
+		// determines the image selection mode when focusing ribbons...
+		//
+		// supported modes:
+		// 	'order'		- select image closest to current in order
+		// 	'first'		- select first image
+		// 	'last'		- select last image
+		// 	'visual'	- select image closest visually
+		//'ribbon-focus-mode': 'order',
+		'ribbon-focus-mode': 'visual',
 	},
 
 	// basic state...
@@ -283,8 +293,16 @@ actions.Actions({
 		function(img, list){
 			this.data.focusImage(img, list)
 		}],
+	// Focuses a ribbon by selecting an image in it...
+	//
+	// modes supported:
+	// 	'order'			- focus closest image to current in order
+	// 	'first'/'last'	- focus first/last image in ribbon
+	// 	'visual'		- focus visually closest to current image
+	//
+	// NOTE: default mode is set in .config.ribbon-focus-mode
 	focusRibbon: ['Navigate/Focus Ribbon',
-		function(target){
+		function(target, mode){
 			var data = this.data
 			var r = data.getRibbon(target)
 			if(r == null){
@@ -293,15 +311,36 @@ actions.Actions({
 			var c = data.getRibbonOrder()
 			var i = data.getRibbonOrder(r)
 
+			mode = mode || this.config['ribbon-focus-mode'] || 'order'
+
 			// NOTE: we are not changing the direction here based on 
 			// 		this.direction as swap will confuse the user...
 			var direction = c < i ? 'before' : 'after'
 
-			var t = data.getImage(r, direction)
+			// closest image in order...
+			if(mode == 'order'){
+				var t = data.getImage(r, direction)
 
-			// if there are no images in the requied direction, try the 
-			// other way...
-			t = t == null ? data.getImage(r, direction == 'before' ? 'after' : 'before') : t
+				// if there are no images in the requied direction, try the 
+				// other way...
+				t = t == null ? data.getImage(r, direction == 'before' ? 'after' : 'before') : t
+
+			// first/last image...
+			} else if(mode == 'first' || mode == 'last'){
+				var t = data.getImage(mode, r)
+
+			// visually closest image...
+			//} else if(mode == 'visual'){
+			} else {
+				var ribbons = this.ribbons
+				var t = ribbons.getImageByPosition('current', r)
+
+				if(t.length > 1){
+					t = t.eq(direction == 'before' ? 0 : 1)
+				}
+
+				t = ribbons.getElemGID(t)
+			}
 
 			this.focusImage(t, r)
 		}],
@@ -1984,6 +2023,66 @@ module.SingleImageView = ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// These feature glue traverse and ribbon alignment...
+
+// XXX manual align needs more work...
+var AutoAlignRibbons = 
+module.AutoAlignRibbons = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-ribbon-auto-align',
+	depends: ['ui'],
+	exclusive: ['ui-ribbon-align'],
+
+	config: {
+		// Control image selection and optionally ribbon alignment...
+		//
+		// NOTE: this only supports the following modes:
+		// 		- 'visual'
+		// 		- 'order'
+		// 		- 'fisrt'
+		// 		- 'manual'
+		// NOTE: if 'ribbon-align-mode' is not null this can be set to 
+		// 		any mode without restriction.
+		//'ribbon-focus-mode': 'order',
+		'ribbon-focus-mode': 'visual',
+		
+		// control ribbon alignment...
+		//
+		// NOTE: when this is null then 'ribbon-focus-mode' will be used...
+		// NOTE: this supports the same modes as 'ribbon-focus-mode'...
+		'ribbon-align-mode': null,
+	},
+
+	handlers: [
+		['focusImage.post', 
+			function(){ 
+				var mode = this.config['ribbon-align-mode'] 
+					|| this.config['ribbon-focus-mode']
+
+				if(mode == 'visual' || mode == 'order'){
+					this.alignByOrder() 
+
+				} else if(mode == 'first'){
+					this.alignByFirst()
+
+				// manual...
+				// XXX is this correct???
+				} else {
+					this
+						.centerRibbon()
+						.centerImage()
+				}
+			}],
+	],
+})
+
+
+// XXX add a feature not to align the ribbons and focus the central 
+// 		image on next prev ribbon...
+// XXX in general need a way to control .nextRibbon(..)/.prevRibbon(..)
+// 		image selection...
 
 // XXX this should also define up/down navigation behavior e.g. what to 
 // 		focus on next/prev ribbon...
@@ -1997,6 +2096,11 @@ module.AlignRibbonsToImageOrder = ImageGridFeatures.Feature({
 	tag: 'ui-ribbon-align-to-order',
 	depends: ['ui'],
 	exclusive: ['ui-ribbon-align'],
+
+	config: {
+		//'ribbon-focus-mode': 'order',
+		'ribbon-focus-mode': 'visual',
+	},
 
 	handlers: [
 		['focusImage.post', function(){ this.alignByOrder() }]
@@ -2013,8 +2117,38 @@ module.AlignRibbonsToFirstImage = ImageGridFeatures.Feature({
 	depends: ['ui'],
 	exclusive: ['ui-ribbon-align'],
 
+	config: {
+		'ribbon-focus-mode': 'first',
+	},
+
 	handlers: [
 		['focusImage.post', function(){ this.alignByFirst() }],
+	],
+})
+
+// XXX needs more work...
+// XXX need to save position in some way, ad on each load the same 
+// 		initial state will get loaded...
+// 		...also would need an initial state...
+var ManualAlignRibbons = 
+module.ManualAlignRibbons = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-ribbon-manual-align',
+	depends: ['ui'],
+	exclusive: ['ui-ribbon-align'],
+
+	config: {
+		'ribbon-focus-mode': 'visual',
+	},
+
+	handlers: [
+		['focusImage.post', function(){ 
+			this
+				.centerRibbon()
+				.centerImage()
+		}],
 	],
 })
 
@@ -3477,7 +3611,10 @@ ImageGridFeatures.Feature('viewer-testing', [
 	'ui',
 
 	// features...
-	'ui-ribbon-align-to-order',
+	'ui-ribbon-auto-align',
+	//'ui-ribbon-align-to-order',
+	//'ui-ribbon-align-to-first',
+	//'ui-ribbon-manual-align',
 	'ui-single-image-view',
 	'ui-partial-ribbons',
 

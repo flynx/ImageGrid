@@ -79,13 +79,6 @@ module.GLOBAL_KEYBOARD = {
 
 		F4: {
 			alt: 'close',
-			/*
-			alt: doc('Close viewer', 
-				function(){ 
-					window.close() 
-					return false
-				}),
-			*/
 		},
 		Q: {
 			meta: 'close',
