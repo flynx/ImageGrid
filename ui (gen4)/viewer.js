@@ -3326,7 +3326,7 @@ if(window.nodejs != null){
 
 var FileSystemLoaderActions = actions.Actions({
 	config: {
-		'index-dir': '.ImageGrid',
+		//'index-dir': '.ImageGrid',
 	},
 	
 	// NOTE: when passed no path this will not do anything...
@@ -3469,6 +3469,8 @@ module.FileSystemLoader = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX would need to delay the original action while the user is 
+// 		browsing...
 var makeBrowseProxy = function(action){
 	return function(path, logger){
 		var that = this
@@ -3597,8 +3599,7 @@ module.FileSystemLoaderUI = ImageGridFeatures.Feature({
 
 var FileSystemWriterActions = actions.Actions({
 	config: {
-		// XXX should this include the '.ImageGrid/' section???
-		'index-filename-template': '${DATE}-${KEYWORD}.${EXT}',
+		//'index-filename-template': '${DATE}-${KEYWORD}.${EXT}',
 	},
 
 	// This is here so as other features can participate in index
@@ -3616,8 +3617,13 @@ var FileSystemWriterActions = actions.Actions({
 		}],
 	// XXX should this get the base uncropped state or the current state??? 
 	// XXX get real base path...
-	saveIndex: ['File/save index',
+	saveIndex: ['File/Save index',
 		function(path, logger){
+			// XXX this is a stub to make this compatible with makeBrowseProxy(..)
+			// 		...we do need a default here...
+			if(path == null){
+				return
+			}
 			// XXX get real base path...
 			path = path || this.base_path +'/'+ this.config['index-dir']
 
@@ -3657,6 +3663,31 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 })
 
 
+//---------------------------------------------------------------------
+// XXX add writer UI feature...
+// 		- save as.. (browser)
+// 		- save if not base path present (browser)
+var FileSystemWriterUIActions = actions.Actions({
+	// XXX add ability to create dirs...
+	saveIndex: [makeBrowseProxy('saveIndex')],
+})
+
+
+var FileSystemWriterUI = 
+module.FileSystemWriterUI = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'fs-writer-ui',
+	depends: [
+		'fs-writer', 
+		'fs-loader-ui',
+	],
+
+	actions: FileSystemWriterUIActions,
+})
+
+
 
 //---------------------------------------------------------------------
 // Meta features...
@@ -3687,6 +3718,7 @@ ImageGridFeatures.Feature('viewer-testing', [
 	'fs-loader',
 		'fs-loader-ui',
 	'fs-writer',
+		'fs-writer-ui',
 
 	'app-control',
 
