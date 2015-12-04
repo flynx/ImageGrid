@@ -7,15 +7,20 @@
 var pathlib = require('path')
 var events = require('events')
 
-var fse = require('fs.extra')
+var fse = require('fs-extra')
 var glob = require('glob')
 var Promise = require('promise')
+
+// XXX seems that we need different buids of this for use with node and nw...
+// XXX BUG: nw-gyp does not support msvs2015...
+//var sharp = require('sharp') 
 
 var guaranteeEvents = require('guarantee-events')
 
 
 define(function(require){ var module = {}
 console.log('>>> file')
+
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
@@ -73,8 +78,8 @@ module.gGlob = function(){
 
 var listIndexes =
 module.listIndexes = 
-function(base){
-	return gGlob(base +'/**/'+ INDEX_DIR)
+function(base, index_dir){
+	return gGlob(base +'/**/'+ index_dir || INDEX_DIR)
 }
 
 
@@ -93,6 +98,8 @@ function listJSON(path, pattern){
 
 
 var loadFile = Promise.denodeify(fse.readFile)
+var writeFile = Promise.denodeify(fse.writeFile)
+var ensureDir = Promise.denodeify(fse.ensureDir)
 
 
 // XXX handle errors...
@@ -174,7 +181,8 @@ function loadJSON(path){
 // 			...(a) seems more logical...
 var loadIndex =
 module.loadIndex = 
-function(path, logger){
+function(path, index_dir, logger){
+	index_dir = index_dir || INDEX_DIR
 	// XXX should this be interactive (a-la EventEmitter) or as it is now 
 	// 		return the whole thing as a block (Promise)...
 	// 		NOTE: one way to do this is use the logger, it will get
@@ -182,7 +190,7 @@ function(path, logger){
 	return new Promise(function(resolve, reject){
 		// we've got an index...
 		// XXX do we need to check if if it's a dir???
-		if(pathlib.basename(path) == INDEX_DIR){
+		if(pathlib.basename(path) == index_dir){
 
 			logger && logger.emit('path', path)
 
@@ -355,7 +363,7 @@ function(path, logger){
 			var loaders = []
 
 			// XXX handle 'error' event...
-			listIndexes(path)
+			listIndexes(path, index_dir)
 				// XXX handle errors...
 				.on('error', function(err){
 					logger && logger.emit('error', err)
@@ -369,7 +377,7 @@ function(path, logger){
 							// 		dir (the parent dir to the index root)
 							// 		we do not need to include the index 
 							// 		itself in the base path...
-							var p = path.split(INDEX_DIR)[0]
+							var p = path.split(index_dir)[0]
 							res[p] = obj[path] 
 						}))
 				})
@@ -401,8 +409,9 @@ function(path, logger){
 // XXX handle errors....
 var loadPreviews =
 module.loadPreviews =
-function(base, previews, absolute_path){
+function(base, previews, index_dir, absolute_path){
 	previews = previews || {}
+	index_dir = index_dir || INDEX_DIR
 
 	return new Promise(function(resolve, reject){
 		listIndexes(base)
@@ -438,7 +447,7 @@ function(base, previews, absolute_path){
 						// add a preview...
 						// NOTE: this will overwrite a previews if they are found in
 						// 		several locations...
-						images[gid].preview[res] = INDEX_DIR +'/'+ path.split(INDEX_DIR)[1]
+						images[gid].preview[res] = index_dir +'/'+ path.split(index_dir)[1]
 					})
 			})
 			.on('end', function(){
@@ -519,7 +528,129 @@ module.buildIndex = function(index, base_path){
 
 
 /*********************************************************************/
+// Builder...
+// 	- read list
+// 	- generate previews (use config)
+// 	- build images/data
+// 		.loadURLs(..)
+// 	- write (writer)
+
+
+
+/*********************************************************************/
 // Writer...
+//
+// This is just like the loader, done in two stages:
+// 	- format dependent de-construction (symetric to buildIndex(..))
+// 	- generic writer...
+//
+// NOTE: for now we'll stick to the current format...
+
+// this will take the output of .json()
+//
+// 	.data
+// 	.images
+// 	.bookmarked
+// 	.marked
+// 	.tags
+// 	.current
+//
+// NOTE: this will prepare for version 2.0 file structure...
+//
+// XXX write tags, marks and bookmarks only if changed...
+var prepareIndex =
+module.prepareIndex =
+function(json, changes){
+	changes = changes || {}
+
+	var res = {
+		data: json.data,
+		current: json.data.current,
+	}
+
+	// NOTE: we write the whole set ONLY if an item is true or undefined
+	// 		i.e. not false...
+	if(changes.bookmarked !== false){
+		res.bookmarked = json.data.tags.bookmark
+	}
+
+	if(changes.selected !== false){
+		res.marked = json.data.tags.selected
+	}
+
+	if(changes.tags !== false){
+		res.tags = json.data.tags
+	}
+
+	// clean out some stuff from data...
+	delete res.data.tags.bookmark
+	delete res.data.tags.selected
+	delete res.data.tags
+
+	if(changes.images){
+		var diff = res['images-diff'] = {}
+		changes.images.forEach(function(gid){
+			diff[gid] = json.images[gid]
+		})
+
+	} else {
+		res.images = json.images
+	}
+
+	return res
+}
+
+
+var FILENAME = '${DATE}-${KEYWORD}.${EXT}'
+
+var writeIndex =
+module.writeIndex = 
+function(json, path, filename_tpl, logger){
+	filename_tpl = filename_tpl || FILENAME
+	// XXX for some reason this gets the unpatched node.js Date, so we 
+	// 		get the patched date explicitly...
+	var date = window.Date.timeStamp()
+	var files = []
+
+	// build the path if it does not exist...
+	return ensureDir(path)
+		.catch(function(err){
+			logger && logger.emit('error', err)
+		})
+		.then(function(){
+			logger && logger.emit('path', path)
+
+			// write files...
+			// NOTE: we are not doing this sequencilly as there will not
+			// 		be too many files...
+			return Promise
+				.all(Object.keys(json).map(function(keyword){
+					var file = path +'/'+ (filename_tpl
+						.replace('${DATE}', date)
+						.replace('${KEYWORD}', keyword)
+						.replace('${EXT}', 'json'))
+
+					return ensureDir(pathlib.dirname(file))
+						.then(function(){
+							files.push(file)
+							var data = JSON.stringify(json[keyword])
+
+							logger && logger.emit('queued', file)
+
+							return writeFile(file, data, 'utf8')
+								.catch(function(err){
+									logger && logger.emit('error', err)
+								})
+								.then(function(){
+									logger && logger.emit('written', file)
+								})
+						})
+				}))
+			.then(function(){
+				logger && logger.emit('done', files)
+			})
+		})
+}
 
 
 

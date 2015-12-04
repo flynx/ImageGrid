@@ -18,10 +18,11 @@
   "dependencies": {
     "flickrapi": "^0.3.28",
     "fs-walk": "0.0.1",
-    "fs.extra": "^1.2.1",
+    "fs-extra": "*",
     "glob": "^4.0.6",
     "guarantee-events": "^1.0.0",
     "promise": "^6.0.1",
-    "requirejs": "*"
+    "requirejs": "*",
+    "sharp": "^0.12.0"
   }
 }

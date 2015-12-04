@@ -2079,13 +2079,6 @@ module.AutoAlignRibbons = ImageGridFeatures.Feature({
 })
 
 
-// XXX add a feature not to align the ribbons and focus the central 
-// 		image on next prev ribbon...
-// XXX in general need a way to control .nextRibbon(..)/.prevRibbon(..)
-// 		image selection...
-
-// XXX this should also define up/down navigation behavior e.g. what to 
-// 		focus on next/prev ribbon...
 // XXX should .alignByOrder(..) be a feature-specific action or global 
 // 		as it is now???
 var AlignRibbonsToImageOrder = 
@@ -2157,6 +2150,7 @@ module.ManualAlignRibbons = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 // XXX at this point this does not support target lists...
+// XXX shift up/down to new ribbon is not too correct...
 var ShiftAnimation =
 module.ShiftAnimation = ImageGridFeatures.Feature({
 	title: '',
@@ -2166,7 +2160,9 @@ module.ShiftAnimation = ImageGridFeatures.Feature({
 	depends: ['ui'],
 
 	handlers: [
-		['shiftImageUp.pre shiftImageDown.pre', 
+		//['shiftImageUp.pre shiftImageDown.pre '
+		//		+'travelImageUp.pre travelImageDown.pre', 
+		['shiftImageUp.pre shiftImageDown.pre',
 			function(target){
 				// XXX do not do target lists...
 				if(target != null && target.constructor === Array 
@@ -3329,10 +3325,16 @@ if(window.nodejs != null){
 
 
 var FileSystemLoaderActions = actions.Actions({
+	config: {
+		'index-dir': '.ImageGrid',
+	},
+	
 	// NOTE: when passed no path this will not do anything...
 	// XXX should this set something like .path???
 	// 		...and how should this be handled when merging indexes or
 	//		viewing multiple/clustered indexes???
+	// XXX add a symmetric equivalent to .prepareIndexForWrite(..) so as 
+	// 		to enable features to load their data...
 	// XXX look inside...
 	loadIndex: ['File/Load index',
 		function(path, logger){
@@ -3345,7 +3347,7 @@ var FileSystemLoaderActions = actions.Actions({
 			// XXX get a logger...
 			logger = logger || this.logger
 
-			file.loadIndex(path, logger)
+			file.loadIndex(path, this.config['index-dir'], logger)
 				.then(function(res){
 					// XXX if res is empty load raw...
 
@@ -3593,6 +3595,67 @@ module.FileSystemLoaderUI = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // fs writer...
 
+var FileSystemWriterActions = actions.Actions({
+	config: {
+		// XXX should this include the '.ImageGrid/' section???
+		'index-filename-template': '${DATE}-${KEYWORD}.${EXT}',
+	},
+
+	// This is here so as other features can participate in index
+	// preparation...
+	// There are several stages features can control the output format:
+	// 	1) .json() action
+	// 		- use this for global high level serialization format
+	// 		- the output of this is .load(..) compatible
+	// 	2) .prepareIndex(..) action
+	// 		- use this for file system write preparation
+	// 		- this directly affects the index structure
+	prepareIndexForWrite: ['File/Prepare index for writing',
+		function(json){
+			return file.prepareIndex(json || this.json())
+		}],
+	// XXX should this get the base uncropped state or the current state??? 
+	// XXX get real base path...
+	saveIndex: ['File/save index',
+		function(path, logger){
+			// XXX get real base path...
+			path = path || this.base_path +'/'+ this.config['index-dir']
+
+			file.writeIndex(
+				this.prepareIndexForWrite(), 
+				path, 
+				this.config['index-filename-template'], 
+				logger || this.logger)
+		}],
+
+	// XXX same as ctrl-shif-s in gen3
+	exportView: ['File/Export current view',
+		function(){
+		}],
+	// XXX export current state as a full loadable index
+	// XXX might be interresting to unify this and .exportView(..)
+	exportCollection: ['File/Export as collection',
+		function(){
+		}],
+})
+
+
+var FileSystemWriter = 
+module.FileSystemWriter = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'fs-writer',
+	// NOTE: this is mostly because of the base path handling...
+	depends: ['fs-loader'],
+
+	actions: FileSystemWriterActions,
+
+	isApplicable: function(){
+		return window.nodejs != null
+	},
+})
+
 
 
 //---------------------------------------------------------------------
@@ -3623,6 +3686,7 @@ ImageGridFeatures.Feature('viewer-testing', [
 
 	'fs-loader',
 		'fs-loader-ui',
+	'fs-writer',
 
 	'app-control',
 
