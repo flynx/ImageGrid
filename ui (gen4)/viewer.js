@@ -3198,7 +3198,7 @@ module.ImageMarks = ImageGridFeatures.Feature({
 
 	handlers: [
 		// XXX is this the right way to go???
-		['updateImage', function(gid, img){
+		['updateImage', function(_, gid, img){
 			// update only when ribbons are preset... 
 			if(this.ribbons != null){
 				if(this.toggleMark(gid, '?') == 'on'){
@@ -3262,7 +3262,7 @@ module.ImageBookmarks = ImageGridFeatures.Feature({
 
 	handlers: [
 		// XXX is this the right way to go???
-		['updateImage', function(gid, img){
+		['updateImage', function(_, gid, img){
 			// update only when ribbons are preset... 
 			if(this.ribbons != null){
 				if(this.toggleBookmark(gid, '?') == 'on'){
@@ -3335,6 +3335,10 @@ var FileSystemLoaderActions = actions.Actions({
 	config: {
 		//'index-dir': '.ImageGrid',
 	},
+
+	// XXX need to revise these...
+	base_path: null,
+	loaded_paths: null,
 	
 	// NOTE: when passed no path this will not do anything...
 	// XXX should this set something like .path???
@@ -3354,6 +3358,8 @@ var FileSystemLoaderActions = actions.Actions({
 			// XXX get a logger...
 			logger = logger || this.logger
 
+			// XXX make this load incrementally (i.e. and EventEmitter
+			// 		a-la glob)....
 			file.loadIndex(path, this.config['index-dir'], logger)
 				.then(function(res){
 					// XXX if res is empty load raw...
@@ -3387,6 +3393,8 @@ var FileSystemLoaderActions = actions.Actions({
 					//console.log('SKIPPING NESTED:', skipped.length)
 
 					var index
+					var base_path
+					var loaded = []
 
 					// NOTE: res may contain multiple indexes...
 					for(var k in res){
@@ -3423,11 +3431,17 @@ var FileSystemLoaderActions = actions.Actions({
 						}
 
 						// XXX do a better merge and remove this...
+						// 		...we either need to lazy-load clustered indexes
+						// 		or merge, in both cases base_path should reflet
+						// 		the fact that we have multiple indexes...
+						base_path = k
 						break
 					}
 
 					logger && logger.emit('load index', index)
 
+					that.loaded_paths = loaded
+					that.base_path = base_path
 					that.load(index)
 				})
 		}],
@@ -3452,6 +3466,11 @@ var FileSystemLoaderActions = actions.Actions({
 	loadPath: ['File/Load path (STUB)',
 		function(){
 		}],
+
+	clear: [function(){
+		this.base_path = null
+		this.loaded_paths = null
+	}],
 })
 
 
@@ -3618,9 +3637,26 @@ var FileSystemWriterActions = actions.Actions({
 	// 	2) .prepareIndex(..) action
 	// 		- use this for file system write preparation
 	// 		- this directly affects the index structure
+	//
+	// This will get the base index, ignoring the cropped state.
+	//
+	// Returns:
+	// 	{
+	// 		// This is the original json object, either the one passed as
+	// 		// an argument or the one returned by .json('base')
+	// 		raw: <original-json>,
+	//
+	// 		// this is the prepared object, the one that is going to be
+	// 		// saved.
+	// 		prepared: <prepared-json>,
+	// 	}
 	prepareIndexForWrite: ['File/Prepare index for writing',
 		function(json){
-			return file.prepareIndex(json || this.json())
+			json = json || this.json('base')
+			return {
+				raw: json,
+				prepared: file.prepareIndex(json),
+			}
 		}],
 	// XXX should this get the base uncropped state or the current state??? 
 	// XXX get real base path...
@@ -3635,7 +3671,7 @@ var FileSystemWriterActions = actions.Actions({
 			path = path || this.base_path +'/'+ this.config['index-dir']
 
 			file.writeIndex(
-				this.prepareIndexForWrite(), 
+				this.prepareIndexForWrite().prepared, 
 				path, 
 				this.config['index-filename-template'], 
 				logger || this.logger)
@@ -3724,6 +3760,7 @@ ImageGridFeatures.Feature('viewer-testing', [
 
 	'fs-loader',
 		'fs-loader-ui',
+
 	'fs-writer',
 		'fs-writer-ui',
 
