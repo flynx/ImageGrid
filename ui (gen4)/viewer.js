@@ -3548,7 +3548,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 		function(base, callback){
 			var that = this
 			var parent = this.preventClosing ? this.preventClosing() : null
-			base = base || '/'
+			base = base || this.base_path || '/'
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				require('./lib/widget/browse-walk').makeWalk(null, base, false, false)
