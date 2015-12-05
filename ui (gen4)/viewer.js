@@ -276,10 +276,15 @@ actions.Actions({
 	json: ['File/Dump state as JSON object',
 		'This will collect JSON data from every available attribute '
 			+'supporting the .dumpJSON() method.',
-		function(){
+		function(mode){
 			var res = {}
 			for(var k in this){
-				if(this[k] != null && this[k].dumpJSON != null){
+				// dump the base crop state...
+				if(k == 'data' && this.crop_stack && this.crop_stack.length > 0){
+					res[k] = this.crop_stack[0].dumpJSON()
+
+				// dump current state...
+				} else if(this[k] != null && this[k].dumpJSON != null){
 					res[k] = this[k].dumpJSON()
 				}
 			}
@@ -668,6 +673,8 @@ actions.Actions({
 
 	// crop...
 	//
+	// XXX should we keep this isolated or should we connect stuff like 
+	// 		tags, ...
 	crop: ['Crop/Crop image list',
 		function(list, flatten){ 
 			list = list || this.data.order
@@ -1856,7 +1863,7 @@ module.PartialRibbons = ImageGridFeatures.Feature({
 				this.updateRibbon(target)
 			}],
 		['focusImage.post', 
-			function(target){
+			function(res, target){
 				this.preCacheJumpTargets(target)
 			}],
 		['fitImage.pre', 

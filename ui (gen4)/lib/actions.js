@@ -51,6 +51,10 @@ define(function(require){ var module = {}
 // 		  handlers in its inheritance chain will be called before the 
 // 		  respective actions they are bound to and all the post handlers
 // 		  are called directly after.
+// 		- pre handlers are passed the same arguments the original actions
+// 		  got when it was called.
+// 		- post action handlers will get the root action result as first 
+// 		  argument succeeded by the action arguments.
 //
 //
 //
@@ -117,23 +121,23 @@ if(typeof(args2array) != 'function'){
 // Action function format:
 //
 // 		// pre event code...
-// 		function(){
+// 		function(..){
 //			... // pre code
 // 		}
 //
 // 		// pre/post event code...
-// 		function(){
+// 		function(..){
 //			... // pre code
-//			return function(){
+//			return function(<return>, ..){
 //				... // post code
 //			}
 // 		}
 //
 // 		// same as above but using a deferred instead of a callback...
-// 		function(){
+// 		function(..){
 //			... // pre code
 //			return $.Deferred()
-//				.done(function(){
+//				.done(function(<return>, ..){
 //					... // post code
 //				})
 // 		}
@@ -146,6 +150,9 @@ if(typeof(args2array) != 'function'){
 // 				event is fired
 // 		post:	if the action returns a callback function or a deferred
 // 				object it will be executed after the event is fired
+// 				NOTE: the signature if the post stage is the same as the
+// 					action's with the added return value as first argument
+// 					(the rest og the arguments are shifted by 1).
 //
 // 	- actions automatically call the shadowed action, the pre stage is
 // 	  executed down-up while the post stage is run in reverse order, 
@@ -160,6 +167,10 @@ if(typeof(args2array) != 'function'){
 //
 // 	- an action will return the deepest (root) action's return, if that 
 // 	  return is undefined, then the action set is returned instead.
+//
+// 	- action arguments are "threaded" through the action chain down and 
+// 	  root action return value and arguments are threaded back up the 
+// 	  action chain.
 //
 // NOTE: if the root handler is instance of Toggler (jli) and the action
 // 		is called with '?' as argument, then the toggler will be called 
@@ -235,17 +246,27 @@ function Action(name, doc, ldoc, func){
 
 		// call handlers -- post phase...
 		// NOTE: post handlers need to get called last run pre first run post...
-		var results = handlers.reverse().map(function(h, i){ 
+		var results = []
+		handlers.reverse().forEach(function(h, i){ 
+			var res = h
 			// function...
 			if(h instanceof Function){
-				return h.apply(that, args)
+				//res = h.apply(that, args)
+				res = h.apply(that,
+					[results[0] !== undefined ?
+						reults[0] 
+						: that].concat(args))
 
 			// deferred...
 			} else if(h != null && h.resolve instanceof Function){
-				return h.resolve()
+				//res = h.resolve()
+				res = h.resolve.apply(h,
+					[results[0] !== undefined ? 
+						results[0] 
+						: that].concat(args))
 			}
 
-			return h
+			results.push(res)
 		})
 
 		// XXX might be a good idea to add an option to return the full
@@ -401,6 +422,12 @@ module.MetaActions = {
 	// 					the action is done.
 	// 	'post'		- the handler is fired after the action is finished.
 	// 					this is the default.
+	//
+	// Handler Arguments:
+	// 	'pre'		- the handler will get the same arguments as the main
+	// 					action when called.
+	// 	'post'		- the handler will get the action return value followed
+	// 					by action arguments.
 	//
 	// The optional tag marks the handler to enable group removal via 
 	// .off(..)
