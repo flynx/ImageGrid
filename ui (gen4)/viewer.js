@@ -3337,6 +3337,7 @@ var FileSystemLoaderActions = actions.Actions({
 	},
 
 	// XXX need to revise these...
+	// XXX should there be a loaded path and a requested path???
 	base_path: null,
 	loaded_paths: null,
 	
@@ -3430,18 +3431,22 @@ var FileSystemLoaderActions = actions.Actions({
 							index.images.join(part.images)
 						}
 
+						loaded.push(k)
+
 						// XXX do a better merge and remove this...
 						// 		...we either need to lazy-load clustered indexes
 						// 		or merge, in both cases base_path should reflet
 						// 		the fact that we have multiple indexes...
-						base_path = k
 						break
 					}
 
 					logger && logger.emit('load index', index)
 
 					that.loaded_paths = loaded
-					that.base_path = base_path
+					// XXX should we get the requested path or the base path currently loaded
+					//that.base_path = loaded.length == 1 ? loaded[0] : path
+					that.base_path = loaded.length == 1 ? loaded[0] : path
+
 					that.load(index)
 				})
 		}],
@@ -3468,8 +3473,8 @@ var FileSystemLoaderActions = actions.Actions({
 		}],
 
 	clear: [function(){
-		this.base_path = null
-		this.loaded_paths = null
+		delete this.base_path
+		delete this.loaded_paths
 	}],
 })
 
@@ -3667,6 +3672,10 @@ var FileSystemWriterActions = actions.Actions({
 			if(path == null){
 				return
 			}
+
+			// XXX get a logger...
+			logger = logger || this.logger
+
 			// XXX get real base path...
 			path = path || this.base_path +'/'+ this.config['index-dir']
 

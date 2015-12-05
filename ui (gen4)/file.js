@@ -370,7 +370,7 @@ function(path, index_dir, logger){
 				})
 				// collect the found indexes...
 				.on('match', function(path){
-					loaders.push(loadIndex(path, logger) 
+					loaders.push(loadIndex(path, index_dir, logger) 
 						.then(function(obj){ 
 							// NOTE: considering that all the paths within
 							// 		the index are relative to the preview 
@@ -558,6 +558,7 @@ module.buildIndex = function(index, base_path){
 // NOTE: this will prepare for version 2.0 file structure...
 //
 // XXX write tags, marks and bookmarks only if changed...
+// XXX this is not yet correct...
 var prepareIndex =
 module.prepareIndex =
 function(json, changes){
@@ -571,7 +572,13 @@ function(json, changes){
 	// NOTE: we write the whole set ONLY if an item is true or undefined
 	// 		i.e. not false...
 	if(changes.bookmarked !== false){
-		res.bookmarked = json.data.tags.bookmark
+		res.bookmarked = [
+			json.data.tags.bookmark, 
+			// NOTE: this is for bookmark metadata line comments, text,
+			// 		tags, ... etc.
+			// XXX currently this is not used...
+			json.data.bookmark_data || {},
+		]
 	}
 
 	if(changes.selected !== false){
