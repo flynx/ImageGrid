@@ -264,6 +264,8 @@ actions.Actions({
 	// XXX should this be here???
 	loadURLs: ['File/Load a URL list',
 		function(lst){
+			this.clear()
+
 			this.images = images.Images.fromArray(lst)
 			this.data = data.Data.fromArray(this.images.keys())
 		}],
@@ -3331,6 +3333,9 @@ if(window.nodejs != null){
 }
 
 
+// XXX revise base path mechanics...
+// 		.base_path
+// 		.loaded_paths
 var FileSystemLoaderActions = actions.Actions({
 	config: {
 		//'index-dir': '.ImageGrid',
@@ -3464,6 +3469,9 @@ var FileSystemLoaderActions = actions.Actions({
 			return glob(path + '/*+(jpg|png)')
 				.on('end', function(lst){ 
 					that.loadURLs(lst)
+
+					// XXX not sure if this is the way to go...
+					that.base_path = path 
 				})
 		}],
 
@@ -3677,7 +3685,7 @@ var FileSystemWriterActions = actions.Actions({
 			logger = logger || this.logger
 
 			// XXX get real base path...
-			path = path || this.base_path +'/'+ this.config['index-dir']
+			//path = path || this.base_path +'/'+ this.config['index-dir']
 
 			file.writeIndex(
 				this.prepareIndexForWrite().prepared, 

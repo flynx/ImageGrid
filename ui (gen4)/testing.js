@@ -114,14 +114,16 @@ module.setupActions = function(viewer){
 if(typeof(glob) != 'undefined'){
 
 	window.load2014 = function(){
-		return glob('l:/media/img/my/2014/*jpg')
-			.on('end', function(l){ window.a.loadURLs(l) })
+		return a.loadImages('l:/media/img/my/2014/')
+		//return glob('l:/media/img/my/2014/*jpg')
+		//	.on('end', function(l){ window.a.loadURLs(l) })
 	}
 
 
 	window.loadInsta = function(){
-		return glob('l:/mnt/Dropbox/Instagram/fav/ALL/*+(jpg|png)')
-			.on('end', function(l){ window.a.loadURLs(l) })
+		return a.loadImages('l:/mnt/Dropbox/Instagram/fav/ALL/')
+		//return glob('l:/mnt/Dropbox/Instagram/fav/ALL/*+(jpg|png)')
+		//	.on('end', function(l){ window.a.loadURLs(l) })
 	}
 
 

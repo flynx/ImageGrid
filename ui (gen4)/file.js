@@ -591,6 +591,7 @@ function(json, changes){
 
 	// clean out some stuff from data...
 	delete res.data.tags.bookmark
+	delete res.data.tags.bookmark_data
 	delete res.data.tags.selected
 	delete res.data.tags
 
