@@ -3326,8 +3326,32 @@ module.AppControl = ImageGridFeatures.Feature({
 
 // XXX at this point this is a stub...
 if(window.nodejs != null){
-	var file = requirejs('./file')
 	var glob = requirejs('glob')
+	var file = requirejs('./file')
+}
+
+
+// NOTE: we are not using node's path module as we need this to work in
+// 		all contexts, not only node... (???)
+// 		XXX currently this is only used in node-specific modules and in 
+// 			images...
+// XXX make this standard...
+var normalizePath = 
+module.normalizePath =
+function(path){
+	return path
+		// normalize the slashes...
+		.replace(/(\/)/g, '/')
+		// remove duplicate '/'
+		.replace(/(\/)\1+/g, '/')
+		// remove trailing '/'
+		.replace(/\/+$/, '')
+		// take care of .
+		.replace(/\/\.\//g, '/')
+		.replace(/\/\.$/, '')
+		// take care of ..
+		.replace(/\/[^\/]+\/\.\.\//g, '/')
+		.replace(/\/[^\/]+\/\.\.$/, '')
 }
 
 
@@ -3349,14 +3373,14 @@ var FileSystemLoaderActions = actions.Actions({
 	get base_path(){
 		var b = this._base_path
 		if(b && b != '/' && b != '\\'){
-			b = b.replace(/[\/\\]+$/, '')
+			b = normalizePath(b)
 		}
 		return b
 	},
 	// XXX use .loadPath(..)
 	set base_path(value){
 		if(value != '/' && value != '\\'){
-			value = value.replace(/[\/\\]+$/, '')
+			value = normalizePath(value)
 		}
 		this._base_path = value
 		this.loadIndex(value)
@@ -3483,9 +3507,10 @@ var FileSystemLoaderActions = actions.Actions({
 
 			var that = this
 
-			return glob(path + '/*+(jpg|png)')
+			glob(path + '/*+(jpg|png)')
 				.on('end', function(lst){ 
-					that.loadURLs(lst, path)
+					that.loadURLs(lst
+						.map(function(p){ return normalizePath(p) }), path)
 
 					// XXX not sure if this is the way to go...
 					that._base_path = path 
@@ -3499,11 +3524,68 @@ var FileSystemLoaderActions = actions.Actions({
 			// 		.loadIndex(..) else .loadImages(..)
 		}],
 
-	// XXX
-	loadNewImages: ['File/Load new and not indexed images',
-		function(){
-			// XXX list images and add ones that are not in .images
-			// XXX
+	// XXX merging does not work (something wrong with .data.join(..))
+	// XXX revise logger...
+	loadNewImages: ['File/Load new images',
+		function(path, logger){
+			path = path || this.base_path
+			logger = logger || this.logger
+
+			if(path == null){
+				return
+			}
+
+			var that = this
+
+			// cache the loaded images...
+			var loaded = this.images.map(function(gid, img){ return img.path })
+			var base_pattern = RegExp('^'+path)
+
+			// find images...
+			glob(path + '/*+(jpg|png)')
+				.on('end', function(lst){ 
+					// create a new images chunk...
+					lst = lst
+						// filter out loaded images...
+						.filter(function(p){
+							return loaded.indexOf(
+								normalizePath(p)
+									// remove the base path if it exists...
+									.replace(base_pattern, '')
+									// normalize the leading './'
+									.replace(/^[\/\\]+/, './')) < 0
+						})
+
+
+					// nothing new...
+					if(lst.length == 0){
+						// XXX
+						logger && logger.emit('loaded', [])
+						return
+					}
+
+					// XXX
+					logger && logger.emit('queued', lst)
+
+					var new_images = images.Images.fromArray(lst, path)
+					var gids = new_images.keys()
+					var new_data = that.data.constructor.fromArray(gids)
+
+					// merge with index...
+					// NOTE: we are prepending new images to the start...
+					// NOTE: all ribbon gids will change here...
+					var cur = that.data.current
+					// XXX this does not seem to work...
+					that.data = new_data.join(that.data)
+					that.data.current = cur
+
+					that.images.join(new_images)
+
+					that.reload()
+
+					// XXX report that we are done...
+					logger && logger.emit('loaded', lst)
+				})
 		}],
 
 	clear: [function(){

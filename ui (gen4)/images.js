@@ -291,7 +291,9 @@ module.ImagesClassPrototype = {
 			// XXX populate the image doc better...
 			images[gid] = {
 				id: gid,
-				path: base_pattern ? path.replace(base_pattern, './') : path,
+				// XXX need to normalize path...
+				path: (base_pattern ? path.replace(base_pattern, './') : path)
+					.replace(/([\/\\])\1+/g, '/'),
 			}
 			// remove only of base path is given and in path...
 			if(base && base_pattern.test(path)){
@@ -351,19 +353,6 @@ module.ImagesPrototype = {
 		}
 		return this
 	},
-	map: function(func){
-		var res = this.constructor()
-		var i = 0
-		for(var key in this){
-			// reject non images...
-			// XXX make this cleaner...
-			if(key == 'length' || typeof(this[key]) == typeof(function(){})){
-				continue
-			}
-			res[k] = func.call(this[key], key, this[key], i++, this)
-		}
-		return res
-	},
 	filter: function(func){
 		var res = this.constructor()
 		var i = 0
@@ -376,6 +365,22 @@ module.ImagesPrototype = {
 			if(func.call(this[key], key, this[key], i++, this)){
 				res[key] = this[key]
 			}
+		}
+		return res
+	},
+	// NOTE: .map(..) and .reduce(..) will not return Images objects...
+	map: function(func){
+		//var res = this.constructor()
+		var res = []
+		var i = 0
+		for(var key in this){
+			// reject non images...
+			// XXX make this cleaner...
+			if(key == 'length' || typeof(this[key]) == typeof(function(){})){
+				continue
+			}
+			//res[key] = func.call(this[key], key, this[key], i++, this)
+			res.push(func.call(this[key], key, this[key], i++, this))
 		}
 		return res
 	},
