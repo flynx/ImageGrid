@@ -263,10 +263,10 @@ actions.Actions({
 
 	// XXX should this be here???
 	loadURLs: ['File/Load a URL list',
-		function(lst){
+		function(lst, base){
 			this.clear()
 
-			this.images = images.Images.fromArray(lst)
+			this.images = images.Images.fromArray(lst, base)
 			this.data = data.Data.fromArray(this.images.keys())
 		}],
 
@@ -675,8 +675,6 @@ actions.Actions({
 
 	// crop...
 	//
-	// XXX should we keep this isolated or should we connect stuff like 
-	// 		tags, ...
 	crop: ['Crop/Crop image list',
 		function(list, flatten){ 
 			list = list || this.data.order
@@ -3338,14 +3336,33 @@ if(window.nodejs != null){
 // 		.loaded_paths
 var FileSystemLoaderActions = actions.Actions({
 	config: {
-		//'index-dir': '.ImageGrid',
+		'index-dir': '.ImageGrid',
 	},
 
+	// NOTE: these will remove the trailing '/' (or '\') unless the path
+	// 		is root...
+	// 		...this is mainly to facilitate better browse support, i.e.
+	// 		to open the dir (open parent + select current) and not 
+	// 		within the dir
 	// XXX need to revise these...
 	// XXX should there be a loaded path and a requested path???
-	base_path: null,
+	get base_path(){
+		var b = this._base_path
+		if(b && b != '/' && b != '\\'){
+			b = b.replace(/[\/\\]+$/, '')
+		}
+		return b
+	},
+	// XXX use .loadPath(..)
+	set base_path(value){
+		if(value != '/' && value != '\\'){
+			value = value.replace(/[\/\\]+$/, '')
+		}
+		this._base_path = value
+		this.loadIndex(value)
+	},
 	loaded_paths: null,
-	
+
 	// NOTE: when passed no path this will not do anything...
 	// XXX should this set something like .path???
 	// 		...and how should this be handled when merging indexes or
@@ -3450,7 +3467,7 @@ var FileSystemLoaderActions = actions.Actions({
 					that.loaded_paths = loaded
 					// XXX should we get the requested path or the base path currently loaded
 					//that.base_path = loaded.length == 1 ? loaded[0] : path
-					that.base_path = loaded.length == 1 ? loaded[0] : path
+					that._base_path = loaded.length == 1 ? loaded[0] : path
 
 					that.load(index)
 				})
@@ -3468,20 +3485,29 @@ var FileSystemLoaderActions = actions.Actions({
 
 			return glob(path + '/*+(jpg|png)')
 				.on('end', function(lst){ 
-					that.loadURLs(lst)
+					that.loadURLs(lst, path)
 
 					// XXX not sure if this is the way to go...
-					that.base_path = path 
+					that._base_path = path 
 				})
 		}],
 
 	// XXX auto-detect format or let the user chose...
 	loadPath: ['File/Load path (STUB)',
+		function(path, logger){
+			// XXX check if this.config['index-dir'] exists, if yes then
+			// 		.loadIndex(..) else .loadImages(..)
+		}],
+
+	// XXX
+	loadNewImages: ['File/Load new and not indexed images',
 		function(){
+			// XXX list images and add ones that are not in .images
+			// XXX
 		}],
 
 	clear: [function(){
-		delete this.base_path
+		delete this._base_path
 		delete this.loaded_paths
 	}],
 })
@@ -3663,6 +3689,7 @@ var FileSystemWriterActions = actions.Actions({
 	// 		// saved.
 	// 		prepared: <prepared-json>,
 	// 	}
+	//
 	prepareIndexForWrite: ['File/Prepare index for writing',
 		function(json){
 			json = json || this.json('base')
@@ -3671,7 +3698,6 @@ var FileSystemWriterActions = actions.Actions({
 				prepared: file.prepareIndex(json),
 			}
 		}],
-	// XXX should this get the base uncropped state or the current state??? 
 	// XXX get real base path...
 	saveIndex: ['File/Save index',
 		function(path, logger){
@@ -3689,7 +3715,9 @@ var FileSystemWriterActions = actions.Actions({
 
 			file.writeIndex(
 				this.prepareIndexForWrite().prepared, 
-				path, 
+				// XXX should we check if index dir is present in path???
+				//path, 
+				path +'/'+ this.config['index-dir'], 
 				this.config['index-filename-template'], 
 				logger || this.logger)
 		}],
@@ -3699,9 +3727,55 @@ var FileSystemWriterActions = actions.Actions({
 		function(){
 		}],
 	// XXX export current state as a full loadable index
-	// XXX might be interresting to unify this and .exportView(..)
+	// XXX might be interesting to unify this and .exportView(..)
+	// XXX local collections???
 	exportCollection: ['File/Export as collection',
-		function(){
+		function(path, logger){
+			var json = this.json()
+
+			// get all loaded gids...
+			var gids = []
+			for(var r in json.data.ribbons){
+				this.data.makeSparseImages(json.data.ribbons[r], gids)
+			}
+			gids = gids.compact()
+
+			// build .images with loaded images...
+			// XXX list of previews should be configurable (max size)
+			var images = {}
+			gids.forEach(function(gid){
+				var img = json.images[gid]
+				if(img){
+					images[gid] = json.images[gid]
+					// remove un-needed previews...
+					// XXX
+				}
+			})
+
+			// prepare and save index to target path...
+			json.data.order = gids
+			json.images = images
+			// XXX should we check if index dir is present in path???
+			path = path +'/'+ this.config['index-dir']
+
+			file.writeIndex(
+				this.prepareIndexForWrite(json).prepared, 
+				path, 
+				this.config['index-filename-template'], 
+				logger || this.logger)
+			
+			// copy previews for the loaded images...
+			// XXX should also optionally populate the base dir and nested favs...
+			var base_dir = this.base_dir
+			gids.forEach(function(gid){
+				json.images[gid].base_path = path
+				var previews = json.images[gid].preview
+
+				for(var res in previews){
+					// XXX copy from .base_dir +'/'+ preview_path to path +'/'+ preview_path
+					// XXX
+				}
+			})
 		}],
 })
 
@@ -3761,7 +3835,6 @@ module.FileSystemWriterUI = ImageGridFeatures.Feature({
 
 ImageGridFeatures.Feature('viewer-testing', [
 	'base',
-
 	'ui',
 
 	// features...

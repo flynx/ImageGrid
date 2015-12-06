@@ -279,16 +279,23 @@ module.makeImageSeqOrNameCmp = function(data, get, seq){
 var ImagesClassPrototype =
 module.ImagesClassPrototype = {
 	// XXX populate the image doc better...
-	fromArray: function(data){
+	// NOTE: if base is given then it will be set as .base_path and 
+	// 		removed from each url if present...
+	fromArray: function(data, base){
 		var images = new this()
 		// XXX stub...
 		var i = 0
+		var base_pattern = base ? RegExp('^' + base) : null 
 		data.forEach(function(path){
 			var gid = hash('I'+i)
 			// XXX populate the image doc better...
 			images[gid] = {
 				id: gid,
-				path: path,
+				path: base_pattern ? path.replace(base_pattern, './') : path,
+			}
+			// remove only of base path is given and in path...
+			if(base && base_pattern.test(path)){
+				images[gid].base_path = base
 			}
 			i += 1
 		})

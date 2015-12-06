@@ -569,31 +569,33 @@ function(json, changes){
 		current: json.data.current,
 	}
 
-	// NOTE: we write the whole set ONLY if an item is true or undefined
-	// 		i.e. not false...
-	if(changes.bookmarked !== false){
-		res.bookmarked = [
-			json.data.tags.bookmark, 
-			// NOTE: this is for bookmark metadata line comments, text,
-			// 		tags, ... etc.
-			// XXX currently this is not used...
-			json.data.bookmark_data || {},
-		]
-	}
+	if(json.data.tags != null){
+		// NOTE: we write the whole set ONLY if an item is true or undefined
+		// 		i.e. not false...
+		if(changes.bookmarked !== false){
+			res.bookmarked = [
+				json.data.tags.bookmark || [], 
+				// NOTE: this is for bookmark metadata line comments, text,
+				// 		tags, ... etc.
+				// XXX currently this is not used...
+				json.data.bookmark_data || {},
+			]
+		}
 
-	if(changes.selected !== false){
-		res.marked = json.data.tags.selected
-	}
+		if(changes.selected !== false){
+			res.marked = json.data.tags.selected || []
+		}
 
-	if(changes.tags !== false){
-		res.tags = json.data.tags
-	}
+		if(changes.tags !== false){
+			res.tags = json.data.tags
+		}
 
-	// clean out some stuff from data...
-	delete res.data.tags.bookmark
-	delete res.data.tags.bookmark_data
-	delete res.data.tags.selected
-	delete res.data.tags
+		// clean out some stuff from data...
+		delete res.data.tags.bookmark
+		delete res.data.tags.bookmark_data
+		delete res.data.tags.selected
+		delete res.data.tags
+	}
 
 	if(changes.images){
 		var diff = res['images-diff'] = {}

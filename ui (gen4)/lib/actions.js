@@ -254,7 +254,7 @@ function Action(name, doc, ldoc, func){
 				//res = h.apply(that, args)
 				res = h.apply(that,
 					[results[0] !== undefined ?
-						reults[0] 
+						results[0] 
 						: that].concat(args))
 
 			// deferred...
