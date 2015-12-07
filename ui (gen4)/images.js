@@ -354,7 +354,7 @@ module.ImagesPrototype = {
 		return this
 	},
 	filter: function(func){
-		var res = this.constructor()
+		var res = new this.constructor()
 		var i = 0
 		for(var key in this){
 			// reject non images...

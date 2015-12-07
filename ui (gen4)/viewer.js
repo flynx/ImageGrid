@@ -367,7 +367,8 @@ actions.Actions({
 	lastGlobalImage: ['Navigate/Last globally image',
 		function(){ this.lastImage(true) }],
 
-	// XXX skip unloaded images...
+	// XXX skip unloaded images... (groups?)
+	// XXX the next two are almost identical...
 	prevImage: ['Navigate/Previous image',
 		function(a){ 
 			// keep track of traverse direction...
@@ -399,11 +400,50 @@ actions.Actions({
 			}
 		}],
 
-	// XXX skip unloaded images...
+	// XXX skip unloaded images... (groups?)
+	// XXX the next two are almost identical...
 	prevImageInOrder: ['Navigate/Previous image in order',
-		function(){ this.prevImage(this.data.getImages(this.data.order)) }],
+		function(){ 
+			// NOTE: this used to be algorithmically substantially slower
+			// 		than the code below but after .makeSparseImages(..)
+			// 		got updated the difference is far less... 
+			// 		...since I've already spent the time to write and 
+			// 		debug the long version and it gives a small advantage
+			// 		I'll keep it for now...
+			// 		(~15-20% @ 10K images, e.g 50ms vs 80ms on average)
+			//this.prevImage(this.data.getImages('loaded')) 
+
+			var c = {}
+			// get prev images for each ribbon...
+			for(var r in this.data.ribbons){
+				var i = this.data.getImageOrder('prev', r)
+				if(i >= 0){
+					c[i] = r
+				}
+			}
+			this.prevImage(c[Math.max.apply(null, Object.keys(c))])
+		}],
 	nextImageInOrder: ['Navigate/Next image in order',
-		function(){ this.nextImage(this.data.getImages(this.data.order)) }],
+		function(){ 
+			// NOTE: this used to be algorithmically substantially slower
+			// 		than the code below but after .makeSparseImages(..)
+			// 		got updated the difference is far less... 
+			// 		...since I've already spent the time to write and 
+			// 		debug the long version and it gives a small advantage
+			// 		I'll keep it for now...
+			// 		(~15-20% @ 10K images)
+			//this.nextImage(this.data.getImages('loaded')) 
+	
+			var c = {}
+			// get next images for each ribbon...
+			for(var r in this.data.ribbons){
+				var i = this.data.getImageOrder('next', r)
+				if(i >= 0){
+					c[i] = r
+				}
+			}
+			this.nextImage(c[Math.min.apply(null, Object.keys(c))])
+		}],
 
 	// XXX should these be here???
 	prevTagged: ['Navigate/Previous image tagged with tag',
@@ -3576,7 +3616,8 @@ var FileSystemLoaderActions = actions.Actions({
 					// NOTE: all ribbon gids will change here...
 					var cur = that.data.current
 					// XXX this does not seem to work...
-					that.data = new_data.join(that.data)
+					//that.data = new_data.join(that.data)
+					that.data = new_data.join('top', that.data)
 					that.data.current = cur
 
 					that.images.join(new_images)

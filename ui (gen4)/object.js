@@ -14,6 +14,8 @@ console.log('>>> objects')
 /*********************************************************************/
 
 
+// XXX BUG: if the constructor is called from it's instance this will 
+// 		return the instance and not a new object...
 var makeConstructor =
 module.makeConstructor =
 function makeConstructor(name, a, b){
