@@ -3790,6 +3790,9 @@ var FileSystemWriterActions = actions.Actions({
 		//'index-filename-template': '${DATE}-${KEYWORD}.${EXT}',
 	},
 
+	// XXX is this a good name???
+	chages: null,
+
 	// This is here so as other features can participate in index
 	// preparation...
 	// There are several stages features can control the output format:
@@ -3814,11 +3817,12 @@ var FileSystemWriterActions = actions.Actions({
 	// 	}
 	//
 	prepareIndexForWrite: ['File/Prepare index for writing',
-		function(json){
+		function(json, full){
 			json = json || this.json('base')
+			var changes = full ? null : this.changes
 			return {
 				raw: json,
-				prepared: file.prepareIndex(json),
+				prepared: file.prepareIndex(json, changes),
 			}
 		}],
 	// XXX get real base path...
@@ -3849,6 +3853,7 @@ var FileSystemWriterActions = actions.Actions({
 	exportView: ['File/Export current view',
 		function(){
 		}],
+	// XXX not done yet...
 	// XXX export current state as a full loadable index
 	// XXX might be interesting to unify this and .exportView(..)
 	// XXX local collections???
@@ -3917,6 +3922,109 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 	isApplicable: function(){
 		return window.nodejs != null
 	},
+
+	// monitor changes...
+	handlers: [
+		// loaders: clear changes...
+		// XXX currently if no args are passed then nothing is 
+		// 		done here, this might change...
+		[[
+			'loadIndex',
+			'saveIndex',
+		].join(' '), 
+			function(_, path){
+				// XXX currently if no args are passed then nothing is 
+				// 		done here, this might change...
+				if(path){
+					this.changes = false 
+				}
+			}],
+
+		// everything changed...
+		[[
+			'loadURLs',
+		].join(' '), 
+			function(_, target){
+				delete this.changes
+			}],
+
+		// data...
+		[[
+			//'clear',
+			//'load',
+
+			'setBaseRibbon',
+
+			'shiftImageTo',
+			'shiftImageUp',
+			'shiftImageDown',
+			'shiftImageLeft',
+			'shiftImageRight',
+			'shiftRibbonUp',
+			'shiftRibbonDown',
+
+			'sortImages',
+			'reverseImages',
+			'reverseRibbons',
+
+			'group',
+			'ungroup',
+			'expandGroup',
+			'collapseGroup',
+		].join(' '), 
+			function(_, target){
+				var changes = this.changes = this.changes || {}
+
+				changes.data = true
+			}],
+
+		// image specific...
+		[[
+			'rotateCW',
+			'rotateCCW',
+			'flipHorizontal',
+			'flipVertical',
+		].join(' '), 
+			function(_, target){
+				var changes = this.changes = this.changes || {}
+				var images = changes.images = changes.images || []
+				target = this.data.getImage(target)
+
+				images.push(target)
+			}],
+
+		// tags and images...
+		// NOTE: tags are also stored in images...
+		['tag untag',
+			function(_, tags, gids){
+				var changes = this.changes = this.changes || {}
+				var images = changes.images = changes.images || []
+
+				gids = gids || [this.data.getImage()]
+				gids = gids.constructor !== Array ? [this.data.getImage(gids)] : gids
+
+				tags = tags || []
+				tags = tags.constructor !== Array ? [tags] : tags
+
+				// images...
+				changes.images = images.concat(gids).unique()
+
+				// tags...
+				if(tags.length > 0){
+					changes.tags = true
+
+					// selected...
+					if(tags.indexOf('selected') >= 0){
+						changes.selected = true
+					}
+
+					// bookmark...
+					if(tags.indexOf('bookmark') >= 0){
+						changes.bookmarked = true
+					}
+				}
+			}],
+	]
 })
 
 

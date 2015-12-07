@@ -555,24 +555,47 @@ module.buildIndex = function(index, base_path){
 // 	.tags
 // 	.current
 //
-// NOTE: this will prepare for version 2.0 file structure...
 //
-// XXX write tags, marks and bookmarks only if changed...
-// XXX this is not yet correct...
+// changes can be:
+// 	true | null		- write all
+// 	false			- write only .current
+// 	<detailed-format>
+// 					- see below...
+//
+// changes detailed format:
+// 	{
+// 		data: <bool>,
+//
+// 		images: <bool> | { <gid>, ... }
+//
+// 		tags: <bool>,
+// 		bookmarked: <bool>,
+// 		selected: <bool>,
+// 	}
+//
+// NOTE: this will prepare for version 2.0 file structure...
 var prepareIndex =
 module.prepareIndex =
 function(json, changes){
-	changes = changes || {}
+	changes = changes === false ? false
+		: changes == null ? true
+		: changes
 
+	// always save current...
 	var res = {
-		data: json.data,
 		current: json.data.current,
 	}
 
-	if(json.data.tags != null){
+	// data...
+	if(changes === true || changes && changes.data){
+		res.data = json.data
+	}
+
+	// tags...
+	if(changes === true || changes && json.data.tags != null){
 		// NOTE: we write the whole set ONLY if an item is true or undefined
 		// 		i.e. not false...
-		if(changes.bookmarked !== false){
+		if(changes === true || changes.bookmarked){
 			res.bookmarked = [
 				json.data.tags.bookmark || [], 
 				// NOTE: this is for bookmark metadata line comments, text,
@@ -582,29 +605,31 @@ function(json, changes){
 			]
 		}
 
-		if(changes.selected !== false){
+		if(changes === true || changes.selected){
 			res.marked = json.data.tags.selected || []
 		}
 
-		if(changes.tags !== false){
+		if(changes === true || changes.tags){
 			res.tags = json.data.tags
 		}
 
 		// clean out some stuff from data...
-		delete res.data.tags.bookmark
-		delete res.data.tags.bookmark_data
-		delete res.data.tags.selected
-		delete res.data.tags
+		if(res.data){
+			delete res.data.tags.bookmark
+			delete res.data.tags.bookmark_data
+			delete res.data.tags.selected
+			delete res.data.tags
+		}
 	}
 
-	if(changes.images){
+	if(changes === true || changes && changes.images === true){
+		res.images = json.images
+
+	} else if(changes && changes.images){
 		var diff = res['images-diff'] = {}
 		changes.images.forEach(function(gid){
 			diff[gid] = json.images[gid]
 		})
-
-	} else {
-		res.images = json.images
 	}
 
 	return res
