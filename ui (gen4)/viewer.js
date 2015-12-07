@@ -3925,17 +3925,20 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 
 	// monitor changes...
 	handlers: [
-		// loaders: clear changes...
+		// clear changes...
 		// XXX currently if no args are passed then nothing is 
 		// 		done here, this might change...
-		[[
-			'loadIndex',
-			'saveIndex',
-		].join(' '), 
+		['loadIndex',
 			function(_, path){
-				// XXX currently if no args are passed then nothing is 
-				// 		done here, this might change...
 				if(path){
+					this.changes = false 
+				}
+			}],
+		['saveIndex',
+			function(_, path){
+				// NOTE: if saving to a different path than loaded do not
+				// 		drop the .changes flags...
+				if(path && path == this.base_path){
 					this.changes = false 
 				}
 			}],
