@@ -284,6 +284,9 @@ $(function(){
 		'Press \'O\' to load, \'F1\' for help or \'?\' for keyboard mappings.')
 
 
+	a.logger = a.logger || {emit: function(e, v){ console.log('    ', e, v) }}
+
+
 	// setup base keyboard for devel, in case something breaks...
 	// This branch does not drop keys...
 	if(a.config['max-key-repeat-rate'] < 0 || a.config['max-key-repeat-rate'] == null){
