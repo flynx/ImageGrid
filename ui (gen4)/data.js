@@ -230,8 +230,16 @@ var DataPrototype = {
 			gids = gids.slice()
 		}
 
-		gids.forEach(function(e){
-			var i = order.indexOf(e)
+		gids.forEach(function(e, i){
+			// if the element is in its place alredy do nothing...
+			if(e == order[i] && e == target[i]){
+				return
+			}
+			
+			// NOTE: try and avoid the expensive .indexOf(..) as much as
+			// 		possible...
+			i = e != order[i] ? order.indexOf(e) : i
+
 			if(i >= 0){
 				var o = target[i]
 				// save overwritten target items if keep_target_items 
@@ -1233,7 +1241,7 @@ var DataPrototype = {
 	},
 
 
-	// Gather gids into an connected section...
+	// Gather gids into a connected section...
 	//
 	// The section is positioned relative to a reference gid, which also
 	// determines the ribbon.
@@ -1357,7 +1365,8 @@ var DataPrototype = {
 				}
 			})
 
-			// XXX this is cheating...
+			// NOTE: this is cheating, but if it's fast and simple I do
+			// 		not care ;)
 			this.updateImagePositions()
 		}
 
@@ -1873,6 +1882,8 @@ var DataPrototype = {
 	//
 	// Targets MUST be listed in order of occurrence.
 	//
+	// Returns list of split sections.
+	//
 	// NOTE: this will not affect the original data object...
 	// NOTE: this might result in empty ribbons, if no images are in a 
 	// 		given ribbon in the section to be split...
@@ -1935,6 +1946,7 @@ var DataPrototype = {
 	// 		if it is needed to keep the original intact, just .clone() it...
 	//
 	// XXX test more complex cases...
+	// XXX appears to be broken for joining sets via 'base' align...
 	join: function(){
 		var args = Array.apply(null, arguments)
 		var align = typeof(args[0]) == typeof('str') ? args.splice(0, 1)[0] : 'base'
