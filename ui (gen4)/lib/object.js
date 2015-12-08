@@ -51,7 +51,11 @@ function makeConstructor(name, a, b){
 		obj.__proto__ = _constructor.prototype
 		// XXX for some reason this does not resolve from .__proto__
 		// XXX this also is a regular attr and not a prop...
-		obj.constructor = _constructor
+		//obj.constructor = _constructor
+		Object.defineProperty(obj, 'constructor', {
+			value: _constructor,
+			enumerable: false,
+		})
 		//obj.__proto__.constructor = _constructor
 
 

@@ -16,7 +16,7 @@ console.log('>>> browse-walk')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-var object = require('../../object')
+var object = require('../object')
 var browse = require('./browse')
 
 

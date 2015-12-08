@@ -11,7 +11,7 @@ console.log('>>> images')
 
 var sha1 = require('./ext-lib/sha1')
 
-var object = require('object')
+var object = require('lib/object')
 
 
 

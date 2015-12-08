@@ -12,7 +12,7 @@ define(function(require){ var module = {}
 console.log('>>> data')
 
 
-var object = require('object')
+var object = require('lib/object')
 
 var formats = require('formats')
 var sha1 = require('./ext-lib/sha1')

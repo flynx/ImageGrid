@@ -10,7 +10,7 @@ console.log('>>> drawer')
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 var keyboard = require('../keyboard')
-var object = require('../../object')
+var object = require('../object')
 var widget = require('./widget')
 
 

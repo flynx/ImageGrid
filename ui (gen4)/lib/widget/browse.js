@@ -22,7 +22,7 @@ console.log('>>> browse')
 //var promise = require('promise')
 
 var keyboard = require('../keyboard')
-var object = require('../../object')
+var object = require('../object')
 var widget = require('./widget')
 
 

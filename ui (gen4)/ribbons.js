@@ -13,7 +13,7 @@ console.log('>>> ribbons')
 // XXX is this correct...
 //require('ext-lib/jquery')
 
-var object = require('object')
+var object = require('lib/object')
 
 var data = require('data')
 var images = require('images')

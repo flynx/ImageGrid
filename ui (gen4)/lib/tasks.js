@@ -10,80 +10,14 @@ console.log('>>> tasks')
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 var actions = require('lib/actions')
+var object = require('lib/object')
 
 
 
 /*********************************************************************/
 
-/*
-var Promise = require('promise')
-
-function PTask(fn) {
-	if (!(this instanceof PTask)){
-		return new PTask(fn)
-	}
-	Promise.call(this, fn)
-}
-PTask.prototype = Object.create(Promise.prototype)
-PTask.prototype.constructor = PTask
-
-PTask.prototype.spread = function (cb) {
-	return this.then(function (arr) {
-		return cb.apply(this, arr);
-	})
-}
-*/
-
-
-
-/*********************************************************************/
-
-// XXX experimental...
-// Create a task...
-//
-//	Task(<func>, <arg>[, ...])
-//		-> <task>
-//
-// A task is a deferred like object that runs a function returning a 
-// deferred and adds to it the ability to restart.
-//
-// Restarting is possible only of the original is rejected.
-//
-// Restarting will call the original function with the original set of 
-// arguments and reset the task.
-//
-// XXX this depends on that func(..) will return a deferred...
-// XXX restarting will not transfer the handlers...
-// 		...this might be a deal breaker...
-module.Task = function(func){
-	var args = [].slice.call(arguments)
-
-	// remove func from args...
-	args.splice(0, 1)
-	
-	return ({
-		restart: function(){
-			// XXX jQuery compatible, need promise state check...
-			if(this.isRejected == null || this.isRejected()){
-				this.__proto__ = func.apply(null, args)
-			}
-			return this
-		},
-	}).restart()
-}
-
-
-
-/*********************************************************************/
-
-module.TaskPrototype = {
-}
-
-
-/*********************************************************************/
-
-var Queue = 
-module.Queue = actions.Actions({
+var QueueActions = 
+module.QueueActions = actions.Actions({
 	config: {
 		'running-pool-size': 8,
 		// XXX at this point these is ignored...
@@ -139,6 +73,7 @@ module.Queue = actions.Actions({
 	taskStarted: ['', function(){}],
 	taskFailed: ['', function(){}],
 	taskDone: ['', function(){}],
+	allTasksDone: ['', function(){}],
 
 
 	// task manipulation actions...
@@ -326,6 +261,15 @@ module.Queue = actions.Actions({
 							// XXX
 							failed.push(elem)
 							that.taskFailed(elem[0], task)
+
+							// run some more...
+							that._run()
+
+							// queue empty...
+							if(this.__ready && this.__ready.len == 0
+									&& this.__running && this.__running.len == 0){
+								this.allTasksDone()
+							}
 						})
 						// push to done and ._run some more...
 						.then(function(){
@@ -336,10 +280,16 @@ module.Queue = actions.Actions({
 							var done = that.__done = that.__done || []
 
 							done.push(elem)
+							that.taskDone(elem[0], task)
 
 							// run some more...
 							that._run()
-							that.taskDone(elem[0], task)
+
+							// queue empty...
+							if(this.__ready && this.__ready.len == 0
+									&& this.__running && this.__running.len == 0){
+								this.allTasksDone()
+							}
 						})
 
 				// other...
@@ -353,8 +303,11 @@ module.Queue = actions.Actions({
 					done.push(elem)
 					that.taskDone(elem[0], task)
 
-					// run some more...
-					that._run()
+					// queue empty...
+					if(this.__ready && this.__ready.len == 0
+							&& this.__running && this.__running.len == 0){
+						this.allTasksDone()
+					}
 				}
 			})() }
 
@@ -383,9 +336,9 @@ module.Queue = actions.Actions({
 })
 
 
-
-// XXX need to make the queue usable as an object...
-// XXX
+var Queue = 
+module.Queue = 
+object.makeConstructor('Queue', QueueActions)
 
 
 

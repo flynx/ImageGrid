@@ -179,6 +179,7 @@ function loadJSON(path){
 // 			a) error
 // 			b) append '**' (current behavior)
 // 			...(a) seems more logical...
+// XXX do a task version...
 var loadIndex =
 module.loadIndex = 
 function(path, index_dir, logger){
@@ -454,6 +455,16 @@ function(base, previews, index_dir, absolute_path){
 				resolve(previews)
 			})
 	})
+}
+
+
+// XXX
+var copyPreviews =
+module.copyPreviews = 
+function(){
+	var q = tasks.Queue.clone()
+
+	// XXX
 }
 
 
