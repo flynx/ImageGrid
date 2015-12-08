@@ -332,6 +332,14 @@ module.QueueActions = actions.Actions({
 			delete this.__failed
 			delete this.__done
 		}],
+
+
+	// This will create a .config in instances...
+	__init__: function(){
+		if(this.__proto__.config && !Object.hasOwnProperty(this, 'config')){
+			this.config = Object.create(this.__proto__.config)
+		}
+	}
 })
 
 

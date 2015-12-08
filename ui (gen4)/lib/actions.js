@@ -743,9 +743,17 @@ module.MetaActions = {
 		return this.mixout.call(to, this, all, descriptors, all_attr_types)
 	},
 
+	// Create a child object...
+	//
+	// NOTE: this will create a .config in the instance that inherits from
+	// 		this.config...
+	// NOTE: this will not copy/clone any data.
+	//
 	// XXX is this correct???
 	clone: function(){
-		return Object.create(this)
+		var o = Object.create(this)
+		o.config = Object.create(this.config)
+		return o
 	},
 }
 
