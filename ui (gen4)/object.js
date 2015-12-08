@@ -23,10 +23,11 @@ function makeConstructor(name, a, b){
 	var cls_proto = b == null ? b : a
 
 	var _constructor = function Constructor(){
+		/*
 		// in case this is called as a function (without new)...
 		if(this.constructor !== _constructor){
-			// NOTE: the folowing does the job of the 'new' operator but
-			// 		with one advantage, we can now pass arbitrarry args 
+			// NOTE: the following does the job of the 'new' operator but
+			// 		with one advantage, we can now pass arbitrary args 
 			// 		in...
 			// 		This is equivalent to:
 			//			return new _constructor(json)
@@ -39,6 +40,19 @@ function makeConstructor(name, a, b){
 		} else {
 			var obj = this
 		}
+		*/
+
+		// NOTE: the following does the job of the 'new' operator but
+		// 		with one advantage, we can now pass arbitrary args 
+		// 		in...
+		// 		This is equivalent to:
+		//			return new _constructor(json)
+		var obj = {}
+		obj.__proto__ = _constructor.prototype
+		// XXX for some reason this does not resolve from .__proto__
+		obj.constructor = _constructor
+		//obj.__proto__.constructor = _constructor
+
 
 		// load initial state...
 		if(obj.__init__ != null){

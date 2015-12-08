@@ -670,6 +670,7 @@ module.MetaActions = {
 
 	// Mixin a set of local actions into an object...
 	//
+	// XXX this will not work on non-actions...
 	mixinTo: function(to, all, descriptors, all_attr_types){
 		return this.mixin.call(to, this, all, descriptors, all_attr_types)
 	},
@@ -740,6 +741,11 @@ module.MetaActions = {
 	//
 	mixoutFrom: function(to, all, descriptors, all_attr_types){
 		return this.mixout.call(to, this, all, descriptors, all_attr_types)
+	},
+
+	// XXX is this correct???
+	clone: function(){
+		return Object.create(this)
 	},
 }
 
