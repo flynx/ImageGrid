@@ -1481,7 +1481,7 @@ module.Journal = ImageGridFeatures.Feature({
 		clone: [function(full){
 				return function(res){
 					res.journal = null
-					if(full && Object.hasOwnProperty(this, 'journal') && this.journal){
+					if(full && this.hasOwnProperty('journal') && this.journal){
 						res.journal = JSON.parse(JSON.stringify(this.journal))
 					}
 				}
@@ -1490,7 +1490,7 @@ module.Journal = ImageGridFeatures.Feature({
 		// XXX might be good to add some kind of metadata to journal...
 		journalPush: ['Journal/Add an item to journal',
 			function(){
-				this.journal = (Object.hasOwnProperty(this, 'journal') 
+				this.journal = (this.hasOwnProperty('journal') 
 						|| this.journal) ? 
 					this.journal 
 					: []
@@ -3449,15 +3449,15 @@ var FileSystemLoaderActions = actions.Actions({
 	},
 
 	clone: [function(full){
-			return function(res){
-				if(this.base_path){
-					res.base_path = this.base_path
-				}
-				if(this.loaded_paths){
-					res.loaded_paths = JSON.parse(JSON.stringify(this.loaded_paths))
-				}
+		return function(res){
+			if(this.base_path){
+				res.base_path = this.base_path
 			}
-		}],
+			if(this.loaded_paths){
+				res.loaded_paths = JSON.parse(JSON.stringify(this.loaded_paths))
+			}
+		}
+	}],
 
 	// NOTE: these will remove the trailing '/' (or '\') unless the path
 	// 		is root...
@@ -3595,6 +3595,7 @@ var FileSystemLoaderActions = actions.Actions({
 	// XXX use the logger...
 	// XXX add a recursive option...
 	// 		...might also be nice to add sub-dirs to ribbons...
+	// XXX make image pattern more generic...
 	loadImages: ['File/Load images',
 		function(path, logger){
 			if(path == null){
@@ -3603,7 +3604,7 @@ var FileSystemLoaderActions = actions.Actions({
 
 			var that = this
 
-			glob(path + '/*+(jpg|png)')
+			glob(path + '/*+(jpg|jpeg|png|JPG|JPEG|PNG)')
 				.on('end', function(lst){ 
 					that.loadURLs(lst
 						.map(function(p){ return normalizePath(p) }), path)
@@ -3638,7 +3639,7 @@ var FileSystemLoaderActions = actions.Actions({
 			var base_pattern = RegExp('^'+path)
 
 			// find images...
-			glob(path + '/*+(jpg|png)')
+			glob(path + '/*+(jpg|jpeg|png|JPG|JPEG|PNG)')
 				.on('end', function(lst){ 
 					// create a new images chunk...
 					lst = lst
@@ -3830,10 +3831,344 @@ module.FileSystemLoaderUI = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'fs-loader-ui',
+	tag: 'ui-fs-loader',
 	depends: ['fs-loader'],
 
 	actions: FileSystemLoaderUIActions,
+})
+
+
+
+//---------------------------------------------------------------------
+// url history...
+
+var URLHistoryActions = actions.Actions({
+	config: {
+		'url-history-push-up-on-open': false,
+
+		// values:
+		// 	-1		- no limit.
+		// 	0		- disabled
+		// 	1+		- length of history
+		'url-history-length': 100,
+	},
+
+	__url_history: null,
+
+	// Format:
+	// 	{
+	// 		url: {
+	// 			open: <action-name> | <function>,
+	// 			check: <action-name> | <function>,
+	// 		},
+	// 		...
+	// 	}
+	//
+	// NOTE: last opened url is last...
+	// NOTE: though functions are supported they are not recommended as
+	// 		we can not stringify them to JSON...
+	get url_history(){
+		return this.hasOwnProperty('__url_history') ? this.__url_history : undefined
+	},
+	set url_history(value){
+		this.__url_history = value
+	},
+
+
+	clone: [function(full){
+		return function(res){
+			res.url_history = null
+			if(full && this.url_history){
+				res.url_history = JSON.parse(JSON.stringify(this.url_history))
+			}
+		}
+	}],
+
+	pushURLToHistory: ['',
+		function(url, open, check){
+			var l = this.config['url-history-length'] || -1
+
+			if(l == 0){
+				return
+			}
+
+			this.url_history = this.url_history || {}
+
+			// remove the old value...
+			if(url in this.url_history && this.config['url-history-push-up-on-open']){
+				delete this.url_history[url]
+			}
+
+			// push url to history...
+			this.url_history[url] = {
+				open: open,
+				check: check,
+			}
+
+			// update history length...
+			if(l > 0){
+				var k = Object.keys(this.url_history)
+				while(k.length > l){
+					// drop first url in order -- last added...
+					this.dropURLFromHistory(k[0])
+					var k = Object.keys(this.url_history)
+				}
+			}
+		}],
+	// NOTE: url can be an index, 0 being the last url added to history;
+	// 		negative values are also supported.
+	dropURLFromHistory: ['', 
+		function(url){
+			this.url_history = this.url_history || {}
+
+			url = typeof(url) == typeof(123) ? 
+				Object.keys(this.url_history).reverse().slice(url)[0]
+				: url
+
+			if(url){
+				delete this.url_history[url]
+			}
+		}],
+	checkURLFromHistory: ['',
+		function(url){
+			this.url_history = this.url_history || {}
+
+			url = typeof(url) == typeof(123) ? 
+				Object.keys(this.url_history).reverse().slice(url)[0]
+				: url
+
+			// if we have a check action then use it...
+			if(url && this.url_history[url] && this.url_history[url].check){
+				var check = this.url_history[url].check
+
+				if(check instanceof Function){
+					return check(url)
+
+				} else {
+					return this[check](url)
+				}
+
+			// no way to check so we do not know...
+			} else {
+				return true
+			}
+		}],
+	openURLFromHistory: ['',
+		function(url){
+			this.url_history = this.url_history || {}
+
+			url = typeof(url) == typeof(123) ? 
+				Object.keys(this.url_history).reverse().slice(url)[0]
+				: url
+
+			if(url && this.url_history[url] && this.url_history[url].open){
+				var open = this.url_history[url].open
+
+				if(open instanceof Function){
+					return open(url)
+
+				} else {
+					return this[open](url)
+				}
+			}
+		}],
+	clearURLHistory: ['', 
+		function(){ this.url_history = null }],
+})
+
+
+var URLHistory = 
+module.URLHistory = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'url-history',
+
+	actions: URLHistoryActions,
+})
+
+
+//---------------------------------------------------------------------
+
+var URLHistoryLocalStorageActions = actions.Actions({
+	config: {
+		'url-history-local-storage-key': 'url-history',
+	},
+
+	__url_history: null,
+
+	// load url history...
+	get url_history(){
+		// get the attr value...
+		if(this.hasOwnProperty('__url_history') && this.__url_history){
+			return this.__url_history
+		}
+
+		var key = this.config['url-history-local-storage-key']
+		if(key){
+			// get the storage value...
+			// if not local __url_history and we are configured, load from storage...
+			if(this.config && key){
+				var history = localStorage[key]
+				if(history){
+					this.__url_history = JSON.parse(history)
+				}
+			}
+		}
+
+		return this.hasOwnProperty('__url_history') ? this.__url_history : null
+	},
+	set url_history(value){
+		this.__url_history = value
+
+		var key = this.config['url-history-local-storage-key']
+		if(key){
+			localStorage[key] = JSON.stringify(value) 
+		}
+	},
+
+
+	// Disable localStorage in child...
+	clone: [function(){
+		return function(res){
+			res.config['url-history-local-storage-key'] = null
+		}
+	}],
+
+	saveURLHistory: ['',
+		function(){
+			var key = this.config['url-history-local-storage-key']
+
+			if(key == null){
+				return
+			}
+
+			localStorage[key] = 
+				JSON.stringify(this.url_history) 
+		}],
+})
+
+var URLHistoryLocalStorage = 
+module.URLHistoryLocalStorage = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'url-history-local-storage',
+	depends: [
+		'url-history',
+	],
+
+	actions: URLHistoryLocalStorageActions,
+
+	// NOTE: loading is done by the .url_history prop...
+	handlers: [
+		// save...
+		['pushURLToHistory dropURLFromHistory', 
+			function(){ 
+				this.saveURLHistory()
+			}],
+		// clear...
+		['clearURLHistory.pre',
+			function(){
+				delete this.__url_history
+
+				var key = this.config['url-history-local-storage-key']
+				if(key){
+					delete localStorage[this.config['url-history-local-storage-key']]
+				}
+			}],
+	],
+})
+
+
+//---------------------------------------------------------------------
+
+var URLHistoryUIActions = actions.Actions({
+	// XXX BUG: when running from action menu this breaks...
+	// 			...possibly connected with restoring after .preventClosing(..)
+	// XXX need to highlight/select current...
+	// XXX need to check items...
+	listURLHistory: ['File/History',
+		function(){
+			var that = this
+			var parent = this.preventClosing ? this.preventClosing() : null
+			var cur = this.base_path
+
+			var o = overlay.Overlay(this.ribbons.viewer, 
+				browse.makeList(
+						null, 
+						Object.keys(this.url_history).reverse(), 
+						// XXX for some reason this is not selected...
+						cur)
+					.open(function(evt, path){ 
+						o.close() 
+
+						// close the parent ui...
+						parent 
+							&& parent.close 
+							&& parent.close()
+
+						that.openURLFromHistory(path)
+					}))
+					.close(function(){
+						parent 
+							&& parent.focus 
+							&& parent.focus()
+					})
+
+			// XXX HACK: for some reason arg 3 in the constructor has 
+			// 		no effect...
+			cur && o.client
+				.select(cur)
+					.addClass('highlighted')
+		}],
+})
+
+var URLHistoryUI = 
+module.URLHistoryUI = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-url-history',
+	depends: [
+		'ui',
+		'url-history',
+	],
+
+	actions: URLHistoryUIActions,
+})
+
+
+
+//---------------------------------------------------------------------
+
+var pushToHistory = function(action){
+	return [action, 
+		function(_, path){ 
+			if(path){
+				this.pushURLToHistory(normalizePath(path), action) 
+			}
+		}]
+}
+
+// XXX add path checking...
+var FileSystemURLHistory = 
+module.FileSystemLoaderURLHistory = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'fs-url-history',
+	depends: [
+		'fs-loader',
+		'url-history',
+	],
+
+	handlers: [
+		pushToHistory('loadImages'), 
+		pushToHistory('loadIndex'), 
+		pushToHistory('loadPath'), 
+		//pushToHistory('loadNewImages'), 
+	],
 })
 
 
@@ -3876,7 +4211,7 @@ var FileSystemWriterActions = actions.Actions({
 	clone: [function(full){
 			return function(res){
 				res.changes = null
-				if(full && Object.hasOwnProperty(this, 'changes') && this.changes){
+				if(full && this.hasOwnProperty('changes') && this.changes){
 					res.changes = JSON.parse(JSON.stringify(this.changes))
 				}
 			}
@@ -3927,7 +4262,7 @@ var FileSystemWriterActions = actions.Actions({
 		function(json, full){
 			json = json || this.json('base')
 			var changes = full ? null 
-				: Object.hasOwnProperty(this, 'changes') ? this.changes
+				: this.hasOwnProperty('changes') ? this.changes
 				: null
 			return {
 				raw: json,
@@ -4121,7 +4456,7 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 		].join(' '), 
 			function(_, target){
 				var changes = this.changes = 
-					Object.hasOwnProperty(this, 'changes') ?
+					this.hasOwnProperty('changes') ?
 						this.changes
 						: {}
 
@@ -4137,7 +4472,7 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 		].join(' '), 
 			function(_, target){
 				var changes = this.changes = 
-					Object.hasOwnProperty(this, 'changes') ?
+					this.hasOwnProperty('changes') ?
 						this.changes
 						: {}
 				var images = changes.images = changes.images || []
@@ -4151,7 +4486,7 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 		['tag untag',
 			function(_, tags, gids){
 				var changes = this.changes = 
-					Object.hasOwnProperty(this, 'changes') ?
+					this.hasOwnProperty('changes') ?
 						this.changes
 						: {}
 				var images = changes.images = changes.images || []
@@ -4199,10 +4534,10 @@ module.FileSystemWriterUI = ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'fs-writer-ui',
+	tag: 'ui-fs-writer',
 	depends: [
 		'fs-writer', 
-		'fs-loader-ui',
+		'ui-fs-loader',
 	],
 
 	actions: FileSystemWriterUIActions,
@@ -4235,11 +4570,14 @@ ImageGridFeatures.Feature('viewer-testing', [
 	'image-marks',
 	'image-bookmarks',
 
+	'url-history-local-storage',
+
 	'fs-loader',
-		'fs-loader-ui',
+		'ui-fs-loader',
+		'fs-url-history',
 
 	'fs-writer',
-		'fs-writer-ui',
+		'ui-fs-writer',
 
 	'app-control',
 
@@ -4253,6 +4591,7 @@ ImageGridFeatures.Feature('viewer-testing', [
 	'ui-image-state-indicator',
 	'ui-global-state-indicator',
 	'ui-action-tree',
+	'ui-url-history',
 
 	// experimental and optional features...
 	//'auto-single-image',

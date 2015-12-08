@@ -102,7 +102,10 @@ module.GLOBAL_KEYBOARD = {
 			'ctrl+shift': 'F5',
 		},
 		L: 'rotateCCW',
-		H: 'flipHorizontal',
+		H: {
+			default: 'flipHorizontal',
+			ctrl: 'listURLHistory',
+		},
 		V: 'flipVertical',
 		P: {
 			'ctrl+shift': 'F12',
@@ -246,7 +249,7 @@ module.GLOBAL_KEYBOARD = {
 $(function(){
 
 	// list all loaded modules...
-	console.log('LOADED:', requirejs.s.contexts._.defined)
+	console.log('MODULES:', requirejs.s.contexts._.defined)
 
 	// XXX stub action set -- this needs to be auto-generated...
 	window.a = actions.Actions()

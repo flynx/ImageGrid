@@ -187,6 +187,12 @@
 
 	overflow: hidden;
 }
+.browse-widget .list>div.highlighted {
+	font-style: italic;
+}
+.browse-widget .list>div.highlighted:after {
+	content: '*';
+}
 .browse-widget:not(.flat) .list div:not(.not-traversable) .text:after {
 	content: "/";
 }

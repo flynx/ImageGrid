@@ -161,7 +161,7 @@ TREE.dir_c.dir_b.tree = TREE
 var use_disabled = true
 var show_files = false
 
-requirejs(['../keyboard', '../../object', './browse'], function(k, o, br){
+requirejs(['../keyboard', '../object', './browse'], function(k, o, br){
 	keyboard = k
 	object = o
 	browser = br
@@ -207,10 +207,12 @@ requirejs(['../keyboard', '../../object', './browse'], function(k, o, br){
 				'option 2',
 				'option 3',
 				'option 4',
-				'option 5',
+				'option 5/moo',
 				'option 6',
 				'option 7',
 			],
+
+			path: 'option 5/moo',
 
 			fullPathEdit: false,
 			traversable: false,

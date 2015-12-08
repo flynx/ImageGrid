@@ -376,7 +376,11 @@ var BrowserPrototype = {
 	// Call the constructor's .path2list(..)..
 	//
 	// See: BrowserClassPrototype.path2list(..) for docs...
-	path2list: function(){ 
+	path2list: function(path){ 
+		// if list is flat we do not need to split it, just format...
+		if(this.options.flat && path && path.constructor !== Array){
+			return path == '' || path.length == 0 ? [] : [path]
+		}
 		return this.constructor.path2list.apply(this, arguments) 
 	},
 
@@ -1941,6 +1945,7 @@ Browser.prototype.__proto__ = widget.Widget.prototype
 var ListPrototype = Object.create(BrowserPrototype)
 ListPrototype.options = {
 
+	pathPrefix: '', 
 	fullPathEdit: false,
 	traversable: false,
 	flat: true,
@@ -1978,8 +1983,11 @@ object.makeConstructor('List',
 
 // This is a shorthand for: new List(<elem>, { data: <list> })
 var makeList = 
-module.makeList = function(elem, list){
-	return List(elem, { data: list })
+module.makeList = function(elem, list, path){
+	return List(elem, { 
+		data: list, 
+		path: path,
+	})
 }
 
 
