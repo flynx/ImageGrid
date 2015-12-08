@@ -4088,6 +4088,9 @@ var URLHistoryUIActions = actions.Actions({
 	// 			...possibly connected with restoring after .preventClosing(..)
 	// XXX need to highlight/select current...
 	// XXX need to check items...
+	// XXX add buttons:
+	// 		- remove item... (&times;)
+	// 		- bring to top...
 	listURLHistory: ['File/History',
 		function(){
 			var that = this
@@ -4121,6 +4124,7 @@ var URLHistoryUIActions = actions.Actions({
 			cur && o.client
 				.select(cur)
 					.addClass('highlighted')
+			o.client.filter('*')
 		}],
 })
 
@@ -4457,7 +4461,7 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 			function(_, target){
 				var changes = this.changes = 
 					this.hasOwnProperty('changes') ?
-						this.changes
+						this.changes || {}
 						: {}
 
 				changes.data = true
@@ -4473,7 +4477,7 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 			function(_, target){
 				var changes = this.changes = 
 					this.hasOwnProperty('changes') ?
-						this.changes
+						this.changes || {}
 						: {}
 				var images = changes.images = changes.images || []
 				target = this.data.getImage(target)
@@ -4487,7 +4491,7 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 			function(_, tags, gids){
 				var changes = this.changes = 
 					this.hasOwnProperty('changes') ?
-						this.changes
+						this.changes || {}
 						: {}
 				var images = changes.images = changes.images || []
 
