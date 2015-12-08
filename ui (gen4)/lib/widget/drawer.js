@@ -5,7 +5,6 @@
 **********************************************************************/
 
 define(function(require){ var module = {}
-console.log('>>> drawer')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 

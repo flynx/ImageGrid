@@ -9,7 +9,6 @@ if(window.nodejs != null){
 var gui = require('nw.gui')
 
 define(function(require){ var module = {}
-console.log('>>> nw')
 
 var browser = require('browser')
 //var DEBUG = DEBUG != null ? DEBUG : true

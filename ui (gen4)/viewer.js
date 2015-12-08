@@ -22,7 +22,6 @@
 **********************************************************************/
 
 define(function(require){ var module = {}
-console.log('>>> viewer')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 

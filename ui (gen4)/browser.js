@@ -5,7 +5,6 @@
 **********************************************************************/
 
 define(function(require){ var module = {}
-console.log('>>> browser')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 

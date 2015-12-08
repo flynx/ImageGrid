@@ -7,7 +7,6 @@
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 define(function(require){ var module = {}
-console.log('>>> client')
 
 doc = require('lib/keyboard').doc
 

@@ -5,7 +5,6 @@
 **********************************************************************/
 
 define(function(require){ var module = {}
-console.log('>>> overlay')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 

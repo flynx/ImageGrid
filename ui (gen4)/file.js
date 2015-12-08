@@ -19,7 +19,6 @@ var guaranteeEvents = require('guarantee-events')
 
 
 define(function(require){ var module = {}
-console.log('>>> file')
 
 
 //var DEBUG = DEBUG != null ? DEBUG : true

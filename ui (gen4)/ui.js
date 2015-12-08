@@ -27,7 +27,6 @@ if(nodejs){
 
 
 define(function(require){ var module = {}
-console.log('>>> ui')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
@@ -245,6 +244,9 @@ module.GLOBAL_KEYBOARD = {
 /*********************************************************************/
 
 $(function(){
+
+	// list all loaded modules...
+	console.log('LOADED:', requirejs.s.contexts._.defined)
 
 	// XXX stub action set -- this needs to be auto-generated...
 	window.a = actions.Actions()

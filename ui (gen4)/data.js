@@ -9,7 +9,6 @@
 **********************************************************************/
 
 define(function(require){ var module = {}
-console.log('>>> data')
 
 
 var object = require('lib/object')

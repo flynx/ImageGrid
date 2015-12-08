@@ -12,7 +12,6 @@ if(typeof(process) != 'undefined'){
 //var DEBUG = DEBUG != null ? DEBUG : true
 //
 define(function(require){ var module = {}
-console.log('>>> testing')
 
 
 var data =

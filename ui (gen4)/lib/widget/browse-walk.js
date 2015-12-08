@@ -12,7 +12,6 @@ var glob = require('glob')
 var guaranteeEvents = require('guarantee-events')
 
 define(function(require){ var module = {}
-console.log('>>> browse-walk')
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
