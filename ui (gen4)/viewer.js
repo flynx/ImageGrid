@@ -260,6 +260,21 @@ actions.Actions({
 			delete this.images
 		}],
 
+	// NOTE: for complete isolation it is best to completely copy the 
+	// 		.config...
+	clone: [function(full){
+		var res = actions.MetaActions.clone.call(this, full)
+
+		if(this.data){
+			res.data = this.data.clone()
+		} 
+		if(this.images){
+			res.images = this.images.clone()
+		}
+
+		return res
+	}],
+
 	// XXX should this be here???
 	loadURLs: ['File/Load a URL list',
 		function(lst, base){
@@ -1000,6 +1015,18 @@ actions.Actions({
 	clear: [
 		function(){ this.ribbons.clear() }],
 
+	clone: [function(full){
+		return function(res){
+			if(this.ribbons){
+				// NOTE: this is a bit wasteful as .ribbons will clone 
+				// 		their ref to .images that we will throw away...
+				res.ribbons = this.ribbons.clone()
+				res.ribbons.images = res.images
+			} 
+		}
+	}],
+
+
 	loadURLs: [
 		function(){
 			return function(){
@@ -1449,19 +1476,39 @@ module.Journal = ImageGridFeatures.Feature({
 	depends: ['base'],
 
 	actions: actions.Actions({
+
+		journal: null,
+
+		clone: [function(full){
+				return function(res){
+					res.journal = null
+					if(full && Object.hasOwnProperty(this, 'journal') && this.journal){
+						res.journal = JSON.parse(JSON.stringify(this.journal))
+					}
+				}
+			}],
+
 		// XXX might be good to add some kind of metadata to journal...
 		journalPush: ['Journal/Add an item to journal',
 			function(){
-				if(this.journal == null){
-					this.journal = []
-				}
+				this.journal = (Object.hasOwnProperty(this, 'journal') 
+						|| this.journal) ? 
+					this.journal 
+					: []
 				//console.log('ACTION:', action, args2array(arguments))
 				this.journal.push(args2array(arguments))
 			}],
 		clearJournal: ['Journal/Clear the action journal',
 			function(){
 				if(this.journal){
-					delete this.journal
+					// NOTE: overwriting here is better as it will keep
+					// 		shadowing the parent's .journal in case we 
+					// 		are cloned.
+					// NOTE: either way this will have no effect as we 
+					// 		only use the local .journal but the user may
+					// 		get confused...
+					//delete this.journal
+					this.journal = null
 				}
 			}],
 		runJournal: ['Journal/Run journal',
@@ -3402,6 +3449,17 @@ var FileSystemLoaderActions = actions.Actions({
 		'index-dir': '.ImageGrid',
 	},
 
+	clone: [function(full){
+			return function(res){
+				if(this.base_path){
+					res.base_path = this.base_path
+				}
+				if(this.loaded_paths){
+					res.loaded_paths = JSON.parse(JSON.stringify(this.loaded_paths))
+				}
+			}
+		}],
+
 	// NOTE: these will remove the trailing '/' (or '\') unless the path
 	// 		is root...
 	// 		...this is mainly to facilitate better browse support, i.e.
@@ -3816,6 +3874,14 @@ var FileSystemWriterActions = actions.Actions({
 	// NOTE: .current is written always.
 	chages: null,
 
+	clone: [function(full){
+			return function(res){
+				res.changes = null
+				if(full && Object.hasOwnProperty(this, 'changes') && this.changes){
+					res.changes = JSON.parse(JSON.stringify(this.changes))
+				}
+			}
+		}],
 
 	// Convert json index to a format compatible with file.writeIndex(..)
 	//
@@ -3861,7 +3927,9 @@ var FileSystemWriterActions = actions.Actions({
 	prepareIndexForWrite: ['File/Prepare index for writing',
 		function(json, full){
 			json = json || this.json('base')
-			var changes = full ? null : this.changes
+			var changes = full ? null 
+				: Object.hasOwnProperty(this, 'changes') ? this.changes
+				: null
 			return {
 				raw: json,
 				prepared: file.prepareIndex(json, changes),
@@ -4017,7 +4085,11 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 			'loadURLs',
 		].join(' '), 
 			function(_, target){
-				delete this.changes
+				// NOTE: this is better than delete as it will shadow 
+				// 		the parent's changes in case we got cloned from
+				// 		a live instance...
+				//delete this.changes
+				this.changes = null
 			}],
 
 		// data...
@@ -4045,7 +4117,10 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 			'collapseGroup',
 		].join(' '), 
 			function(_, target){
-				var changes = this.changes = this.changes || {}
+				var changes = this.changes = 
+					Object.hasOwnProperty(this, 'changes') ?
+						this.changes
+						: {}
 
 				changes.data = true
 			}],
@@ -4058,7 +4133,10 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 			'flipVertical',
 		].join(' '), 
 			function(_, target){
-				var changes = this.changes = this.changes || {}
+				var changes = this.changes = 
+					Object.hasOwnProperty(this, 'changes') ?
+						this.changes
+						: {}
 				var images = changes.images = changes.images || []
 				target = this.data.getImage(target)
 
@@ -4069,7 +4147,10 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 		// NOTE: tags are also stored in images...
 		['tag untag',
 			function(_, tags, gids){
-				var changes = this.changes = this.changes || {}
+				var changes = this.changes = 
+					Object.hasOwnProperty(this, 'changes') ?
+						this.changes
+						: {}
 				var images = changes.images = changes.images || []
 
 				gids = gids || [this.data.getImage()]

@@ -750,11 +750,27 @@ module.MetaActions = {
 	// NOTE: this will not copy/clone any data.
 	//
 	// XXX is this correct???
-	clone: function(){
+	// XXX should this be an action???
+	clone: function(full){
 		var o = Object.create(this)
-		o.config = Object.create(this.config)
+		if(this.config){
+			if(full){
+				o.config = JSON.parse(JSON.stringify(this.config))
+			} else {
+				o.config = Object.create(this.config)
+			}
+		}
 		return o
 	},
+
+
+	// This will create a .config in instances...
+	// NOTE: this makes Actions compatible with lib/object.js...
+	__init__: function(){
+		if(this.__proto__.config && !Object.hasOwnProperty(this, 'config')){
+			this.config = Object.create(this.__proto__.config)
+		}
+	}
 }
 
 

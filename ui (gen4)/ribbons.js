@@ -122,6 +122,19 @@ var RibbonsPrototype = {
 		this.images = images
 	},
 
+	// XXX
+	clone: function(){
+		var o = new this.constructor()
+		if(this.viewer){
+			// XXX does this completely detach from the orriginal???
+			// XXX do we need to reattach something???
+			o.viewer = this.viewer.clone()
+		}
+		if(this.images){
+			o.images = this.images.clone()
+		}
+		return o
+	},
 
 	// Constructors...
 	createViewer: RibbonsClassPrototype.createViewer,
