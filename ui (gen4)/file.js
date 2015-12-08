@@ -129,7 +129,7 @@ function loadJSON(path){
 //
 //
 // Index format (input):
-// 	.ImageGrid/
+// 	<index-dir>/
 // 		+- [<timestamp>-]<keyword>[-diff].json
 // 		+- ...
 //
@@ -566,7 +566,7 @@ module.buildIndex = function(index, base_path){
 // 	{
 // 		data: <bool>,
 //
-// 		images: <bool> | { <gid>, ... }
+// 		images: <bool> | [ <gid>, ... ]
 //
 // 		tags: <bool>,
 // 		bookmarked: <bool>,

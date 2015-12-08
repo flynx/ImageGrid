@@ -3790,9 +3790,36 @@ var FileSystemWriterActions = actions.Actions({
 		//'index-filename-template': '${DATE}-${KEYWORD}.${EXT}',
 	},
 
-	// XXX is this a good name???
+	// This can be:
+	// 	- null/undefined	- write all
+	// 	- true				- write all
+	// 	- false				- write nothing
+	// 	- {
+	//		// write/skip data...
+	//		data: <bool>,
+	//
+	//		// write/skip images or write a diff including the given 
+	//		// <gid>s only...
+	//		images: <bool> | [ <gid>, ... ],
+	//
+	//		// write/skip tags...
+	//		tags: <bool>,
+	//
+	//		// write/skip bookmarks...
+	//		bookmarked: <bool>,
+	//
+	//		// write/skip selected...
+	//		selected: <bool>,
+	// 	  }
+	//
+	// NOTE: in the complex format all fields ar optional; if a field 
+	// 		is not included it is not written (same as when set to false)
+	// NOTE: .current is written always.
 	chages: null,
 
+
+	// Convert json index to a format compatible with file.writeIndex(..)
+	//
 	// This is here so as other features can participate in index
 	// preparation...
 	// There are several stages features can control the output format:
@@ -3815,6 +3842,22 @@ var FileSystemWriterActions = actions.Actions({
 	// 		// saved.
 	// 		prepared: <prepared-json>,
 	// 	}
+	//
+	//
+	// The format for the <prapared-json> is as follows:
+	// 	{
+	// 		<keyword>: <data>,
+	// 		...
+	// 	}
+	//
+	// The <prepared-json> is written out to a fs index in the following
+	// way:
+	// 		<index-dir>/<timestamp>-<keyword>.json
+	//
+	// 	<index-dir>		- taken from .config['index-dir'] (default: '.ImageGrid')
+	// 	<timestamp>		- as returned by Date.timeStamp() (see: jli)
+	//
+	// For more info see file.writeIndex(..) and file.loadIndex(..).
 	//
 	prepareIndexForWrite: ['File/Prepare index for writing',
 		function(json, full){
@@ -3854,6 +3897,10 @@ var FileSystemWriterActions = actions.Actions({
 		function(){
 		}],
 	// XXX not done yet...
+	// 		needs:
+	// 			ensureDir(..)
+	// 			copy(..)
+	// 		...both denodeify(..)'ed
 	// XXX export current state as a full loadable index
 	// XXX might be interesting to unify this and .exportView(..)
 	// XXX local collections???
@@ -3886,6 +3933,8 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX should we check if index dir is present in path???
 			path = path +'/'+ this.config['index-dir']
 
+			// NOTE: if we are to use .saveIndex(..) here, do not forget
+			// 		to reset .changes
 			file.writeIndex(
 				this.prepareIndexForWrite(json).prepared, 
 				path, 
@@ -3896,12 +3945,33 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX should also optionally populate the base dir and nested favs...
 			var base_dir = this.base_dir
 			gids.forEach(function(gid){
-				json.images[gid].base_path = path
-				var previews = json.images[gid].preview
+				var img = json.images[gid]
+				var img_base = img.base_path
+				img.base_path = path
+				var previews = img.preview
 
 				for(var res in previews){
-					// XXX copy from .base_dir +'/'+ preview_path to path +'/'+ preview_path
+					var from = (img_base || base_dir) +'/'+ preview_path 
+					var to = path +'/'+ preview_path
+
+					// XXX do we queue these or let the OS handle it???
+					// 		...needs testing, if node's fs queues the io
+					// 		internally then we do not need to bother...
 					// XXX
+					ensureDir(pathlib.dirname(to))
+						.catch(function(err){
+							// XXX
+						})
+						.then(function(){
+							return copy(from, to)
+								// XXX do we need to have both of this 
+								// 		and the above .catch(..) or can
+								// 		we just use the one above (after
+								// 		.then(..))
+								.catch(function(err){
+									// XXX
+								})
+						})
 				}
 			})
 		}],
