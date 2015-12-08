@@ -1014,7 +1014,6 @@ actions.Actions({
 		}],
 	clear: [
 		function(){ this.ribbons.clear() }],
-
 	clone: [function(full){
 		return function(res){
 			if(this.ribbons){
@@ -4061,6 +4060,9 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 	},
 
 	// monitor changes...
+	// XXX should we use .load(..) to trigger changes instead of .loadURLs(..)???
+	// 		...the motivation is that .crop(..) may also trigger loads...
+	// 		....needs more thought...
 	handlers: [
 		// clear changes...
 		// XXX currently if no args are passed then nothing is 
@@ -4083,8 +4085,9 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 		// everything changed...
 		[[
 			'loadURLs',
+			'clear',
 		].join(' '), 
-			function(_, target){
+			function(){
 				// NOTE: this is better than delete as it will shadow 
 				// 		the parent's changes in case we got cloned from
 				// 		a live instance...
