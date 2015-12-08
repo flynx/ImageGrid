@@ -57,7 +57,7 @@ module.QueueActions = actions.Actions({
 	},
 
 
-	// general task life cycle events...
+	// General task life cycle events...
 	//
 	// NOTE: these are not intended to be called by the user...
 	// NOTE: .on('taskQueued') is just a more uniform shorthand for
@@ -75,7 +75,7 @@ module.QueueActions = actions.Actions({
 	allTasksDone: ['', function(){}],
 
 
-	// task manipulation actions...
+	// Task manipulation actions...
 	//
 	// A task can be either a Promise/A+ or a function. In the case of 
 	// a function this will work sync.
@@ -96,9 +96,6 @@ module.QueueActions = actions.Actions({
 			mode = mode || this.config['default-queue-mode']
 			var ready = this.__ready = this.__ready || []
 
-			// XXX check if task is a task...
-			// XXX else, wrap in a task...
-			
 			ready.push([tag, task, mode])
 			this.taskQueued(tag, task, mode)
 
@@ -313,7 +310,8 @@ module.QueueActions = actions.Actions({
 			delete that.__is_running
 		}],
 
-	// state manipulation actions...
+	// State manipulation actions...
+	//
 	// NOTE: we do not need events for these as they are actions...
 	start: ['',
 		function(){
