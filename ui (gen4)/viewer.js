@@ -158,6 +158,7 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 //
 //
 
+// XXX split this into read and write actions...
 var BaseActions = 
 module.BaseActions = 
 actions.Actions({
@@ -900,6 +901,7 @@ module.Base = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX split this into read and write actions...
 var ViewerActions = 
 module.ViewerActions = 
 actions.Actions({
@@ -4124,7 +4126,6 @@ var URLHistoryUIActions = actions.Actions({
 			cur && o.client
 				.select(cur)
 					.addClass('highlighted')
-			o.client.filter('*')
 		}],
 })
 
@@ -4568,8 +4569,14 @@ ImageGridFeatures.Feature('viewer-testing', [
 	//'ui-ribbon-align-to-order',
 	//'ui-ribbon-align-to-first',
 	//'ui-ribbon-manual-align',
+	
 	'ui-single-image-view',
 	'ui-partial-ribbons',
+
+	// XXX
+	//'ui-keyboard-control',
+	//'ui-direct-control',
+	//'ui-indirect-control',
 
 	'image-marks',
 	'image-bookmarks',
