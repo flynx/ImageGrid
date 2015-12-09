@@ -161,7 +161,7 @@
 .browse-widget .list .button {
 	display: inline-block;
 	float:right;
-	opacity: 0.7;
+	opacity: 0.5;
 	padding-left: 10px;
 	padding-right: 10px;
 	box-sizing: border-box;
@@ -186,6 +186,10 @@
 	opacity: 0.7;
 
 	overflow: hidden;
+}
+.browse-widget .list>div.strike-out .text {
+	text-decoration: line-through;
+	opacity: 0.3;
 }
 .browse-widget .list>div.highlighted {
 	font-style: italic;

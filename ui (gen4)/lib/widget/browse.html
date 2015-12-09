@@ -170,7 +170,7 @@ requirejs(['../keyboard', '../object', './browse'], function(k, o, br){
 	b = browser.Browser($('.container.tree'), {
 			path: '/dir_a/tree/dir_c/',
 
-			actionButton: 'o',
+			actionButton: true,
 
 			list: function(path, make){
 				var cur = TREE
@@ -217,6 +217,34 @@ requirejs(['../keyboard', '../object', './browse'], function(k, o, br){
 			fullPathEdit: false,
 			traversable: false,
 			flat: true,
+
+			itemButtons: [
+				['&#x02912;', 
+					function(p){
+						this.filter().first()
+							.before(this.filter(p))
+					}],
+				['&utri;', 
+					function(p){
+						var c = this.filter(p)
+						var p = c.prev()
+						if(p.length > 0){
+							p.before(c)
+						}
+					}],
+				['&dtri;', 
+					function(p){
+						var c = this.filter(p)
+						var p = c.next()
+						if(p.length > 0){
+							p.after(c)
+						}
+					}],
+				['&times;', 
+					function(p){
+						this.filter(p).remove()
+					}],
+			],
 
 			list: function(path, make){
 				return this.options.data

@@ -2864,7 +2864,8 @@ var makeActionLister = function(list, filter, pre_order){
 		// XXX DEBUG
 		//window.LIST = o.client
 
-		return this
+		//return this
+		return o.client
 	}
 }
 
@@ -3813,6 +3814,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 							&& parent.focus 
 							&& parent.focus()
 					})
+			return o.client
 		}],
 
 	// NOTE: if no path is passed (null) these behave just like .browsePath(..)
@@ -3886,6 +3888,17 @@ var URLHistoryActions = actions.Actions({
 		}
 	}],
 
+	setTopURLHistory: ['',
+		function(url){
+			var data = this.url_history[url]
+
+			if(data == null){
+				return
+			}
+
+			delete this.url_history[url]
+			this.url_history[url] = data
+		}],
 	pushURLToHistory: ['',
 		function(url, open, check){
 			var l = this.config['url-history-length'] || -1
@@ -4057,6 +4070,7 @@ module.URLHistoryLocalStorage = ImageGridFeatures.Feature({
 
 	tag: 'url-history-local-storage',
 	depends: [
+		'ui',
 		'url-history',
 	],
 
@@ -4065,7 +4079,7 @@ module.URLHistoryLocalStorage = ImageGridFeatures.Feature({
 	// NOTE: loading is done by the .url_history prop...
 	handlers: [
 		// save...
-		['pushURLToHistory dropURLFromHistory', 
+		['pushURLToHistory dropURLFromHistory setTopURLHistory', 
 			function(){ 
 				this.saveURLHistory()
 			}],
@@ -4086,26 +4100,79 @@ module.URLHistoryLocalStorage = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var URLHistoryUIActions = actions.Actions({
+	config: {
+		// Indicate when to remove striked items from url history list
+		//
+		// Supported values:
+		// 	- true | undefined		- always remove
+		// 	- flase					- never remove
+		// 	- [ 'open', 'close' ]	- explicitly select event
+		'url-history-list-clear': ['open', 'close'],
+	},
 	// XXX BUG: when running from action menu this breaks...
 	// 			...possibly connected with restoring after .preventClosing(..)
-	// XXX need to highlight/select current...
 	// XXX need to check items...
-	// XXX add buttons:
-	// 		- remove item... (&times;)
-	// 		- bring to top...
+	// XXX use svg icons for buttons...
 	listURLHistory: ['File/History',
 		function(){
 			var that = this
 			var parent = this.preventClosing ? this.preventClosing() : null
 			var cur = this.base_path
 
+			var to_remove = []
+
+			// remove stirked out elements...
+			var removeStriked = function(evt){
+				var rem = that.config['url-history-list-clear']
+				if(rem == false || rem != null && rem.indexOf(evt) < 0){
+					return
+				}
+				to_remove.forEach(function(e){
+					that.dropURLFromHistory(e)
+				})
+				to_remove = []
+			}
+
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
 						null, 
-						Object.keys(this.url_history).reverse(), 
-						// XXX for some reason this is not selected...
-						cur)
+						Object.keys(this.url_history).reverse(),
+						{
+							// add item buttons...
+							itemButtons: [
+								// move to top...
+								['&diams;', 
+									function(p){
+										var top = this.filter().first()
+										var cur = this.filter(p)
+
+										if(!top.is(cur)){
+											top.before(cur)
+											that.setTopURLHistory(p)
+										}
+									}],
+								// mark for removal...
+								['&times;', 
+									function(p){
+										var e = this.filter(p)
+											.toggleClass('strike-out')
+
+										if(e.hasClass('strike-out')){
+											to_remove.indexOf(p) < 0 
+												&& to_remove.push(p)
+
+										} else {
+											var i = to_remove.indexOf(p)
+											if(i >= 0){
+												to_remove.splice(i, 1)
+											}
+										}
+									}],
+							],
+						})
 					.open(function(evt, path){ 
+						removeStriked('open')
+
 						o.close() 
 
 						// close the parent ui...
@@ -4115,17 +4182,20 @@ var URLHistoryUIActions = actions.Actions({
 
 						that.openURLFromHistory(path)
 					}))
-					.close(function(){
-						parent 
-							&& parent.focus 
-							&& parent.focus()
-					})
+				.close(function(){
+					removeStriked('close')
 
-			// XXX HACK: for some reason arg 3 in the constructor has 
-			// 		no effect...
+					parent 
+						&& parent.focus 
+						&& parent.focus()
+				})
+
+			// select and highlight current path...
 			cur && o.client
 				.select(cur)
 					.addClass('highlighted')
+
+			return o.client
 		}],
 })
 
@@ -4147,11 +4217,15 @@ module.URLHistoryUI = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-var pushToHistory = function(action){
+var pushToHistory = function(action, to_top){
 	return [action, 
 		function(_, path){ 
+			path = normalizePath(path)
 			if(path){
 				this.pushURLToHistory(normalizePath(path), action) 
+			}
+			if(to_top){
+				this.setTopURLHistory(path)
 			}
 		}]
 }
@@ -4173,6 +4247,34 @@ module.FileSystemLoaderURLHistory = ImageGridFeatures.Feature({
 		pushToHistory('loadIndex'), 
 		pushToHistory('loadPath'), 
 		//pushToHistory('loadNewImages'), 
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+
+// Opening the url via .browsePath(..) if url is in history will move 
+// it to top of list...
+var FileSystemURLHistoryUI = 
+module.FileSystemLoaderURLHistoryUI = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-fs-url-history',
+	depends: [
+		'ui-fs-loader',
+		'fs-url-history',
+	],
+
+	handlers: [
+		['browsePath', 
+			function(res){ 
+				var that = this
+				res.open(function(_, path){
+					that.setTopURLHistory(path) 
+				})
+			}],
 	],
 })
 
@@ -4586,6 +4688,7 @@ ImageGridFeatures.Feature('viewer-testing', [
 	'fs-loader',
 		'ui-fs-loader',
 		'fs-url-history',
+		'ui-fs-url-history',
 
 	'fs-writer',
 		'ui-fs-writer',

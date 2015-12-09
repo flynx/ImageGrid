@@ -206,7 +206,8 @@ WalkPrototype.options = {
 	traversable: true,
 	flat: false,
 
-	actionButton: 'o',
+	//actionButton: '&ctdot;',
+	actionButton: '&odot;',
 	pushButton: false,
 
 	list: listDir,

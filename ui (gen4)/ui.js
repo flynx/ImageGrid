@@ -269,19 +269,26 @@ $(function(){
 	a.load({
 			viewer: $('.viewer'),
 		})
+		.setEmptyMsg('Loading...')
+
+
+	// load last url in history...
+	if(a.url_history && Object.keys(a.url_history).length > 0){
+		a.openURLFromHistory(0)
 
 	// load some testing data...
-	// NOTE: we can (and do) load this in parts...
-	a
-		.setEmptyMsg('Loading...')
-		.load({
-			data: data.Data(testing.mock_data),
-			images: testing.makeTestImages(),
-		})
-		// this is needed when loading legacy sources that do not have tags
-		// synced...
-		// do not do for actual data...
-		//.syncTags()
+	} else {
+		// NOTE: we can (and do) load this in parts...
+		a
+			.load({
+				data: data.Data(testing.mock_data),
+				images: testing.makeTestImages(),
+			})
+			// this is needed when loading legacy sources that do not have tags
+			// synced...
+			// do not do for actual data...
+			//.syncTags()
+	}
 
 
 	a.setEmptyMsg(

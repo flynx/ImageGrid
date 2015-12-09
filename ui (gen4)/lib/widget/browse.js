@@ -35,6 +35,23 @@ var quoteWS = function(str){
 }
 
 
+function makeBrowserMaker(constructor){
+	return function(elem, list, rest){
+		if(typeof(rest) == typeof('str')){
+			return constructor(elem, { data: list, path: rest })
+
+		} else {
+			var opts = {}
+			for(var k in rest){
+				opts[k] = rest[k]
+			}
+			opts.data = list
+			return constructor(elem, opts)
+		}
+	}
+}
+
+
 
 /*********************************************************************/
 
@@ -229,6 +246,11 @@ var BrowserPrototype = {
 		// This has the same semantics as .actionButton so see that for 
 		// more info.
 		pushButton: false,
+
+		// A set of custom buttons to add to each item.
+		//
+		// Format:
+		itemButtons: false,
 
 		// Handle keys that are not bound...
 		// NOTE: to disable, set ot undefined.
@@ -750,7 +772,7 @@ var BrowserPrototype = {
 				res.append($('<div>')
 					.addClass('button')
 					.html(that.options.actionButton === true ? 
-						'o' 
+						'&check;' 
 						: that.options.actionButton)
 					.click(function(evt){
 						evt.stopPropagation()
@@ -770,6 +792,35 @@ var BrowserPrototype = {
 						that.push(p)
 					}))
 			}
+
+			// custom buttons...
+			that.options.itemButtons 
+					&& that.options.itemButtons.slice()
+						// make the order consistent for the user -- first
+						// in list, first in item (from left), and should
+						// be added last...
+						.reverse()
+						.forEach(function(e){
+				var html = e[0]
+				var func = e[1]
+
+				res.append($('<div>')
+					.addClass('button')
+					.html(html)
+					.click(function(evt){
+						// prevent clicks from triggering the item action...
+						evt.stopPropagation()
+
+						// action name...
+						if(typeof(func) == typeof('str')){
+							that[func](p)
+
+						// handler...
+						} else {
+							func.call(that, p)
+						}
+					}))
+			})
 
 			return res
 		}
@@ -1983,12 +2034,7 @@ object.makeConstructor('List',
 
 // This is a shorthand for: new List(<elem>, { data: <list> })
 var makeList = 
-module.makeList = function(elem, list, path){
-	return List(elem, { 
-		data: list, 
-		path: path,
-	})
-}
+module.makeList = makeBrowserMaker(List)
 
 
 
@@ -2197,9 +2243,7 @@ object.makeConstructor('PathList',
 		PathListPrototype)
 
 var makePathList = 
-module.makePathList = function(elem, list, path){
-	return PathList(elem, { data: list, path: path })
-}
+module.makePathList = makeBrowserMaker(PathList)
 
 
 
