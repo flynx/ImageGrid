@@ -277,6 +277,8 @@ actions.Actions({
 	}],
 
 	// XXX should this be here???
+	// XXX should this use .load(..)
+	// 		...note if we use this it breaks, need to rethink...
 	loadURLs: ['File/Load a URL list',
 		function(lst, base){
 			this.clear()
@@ -3607,12 +3609,23 @@ var FileSystemLoaderActions = actions.Actions({
 
 			var that = this
 
+			// NOTE: we set this before we start the load so as to let 
+			// 		clients know what we are loading and not force them
+			// 		to wait to find out...
+			// XXX not sure if this is the way to go...
+			this._base_path = path 
+
 			glob(path + '/*+(jpg|jpeg|png|JPG|JPEG|PNG)')
+				.on('error', function(err){
+					console.log('!!!!', err)
+				})
 				.on('end', function(lst){ 
 					that.loadURLs(lst
 						.map(function(p){ return normalizePath(p) }), path)
 
-					// XXX not sure if this is the way to go...
+					// NOTE: we set it again because .loadURLs() does a clear
+					// 		before it starts loading...
+					// 		XXX is this a bug???
 					that._base_path = path 
 				})
 		}],
@@ -3696,9 +3709,6 @@ var FileSystemLoaderActions = actions.Actions({
 })
 
 
-// XXX add load history to this...
-// 		...might be good to add a generic history feature and use that...
-// XXX is this a good name???
 var FileSystemLoader = 
 module.FileSystemLoader = ImageGridFeatures.Feature({
 	title: '',
@@ -3888,7 +3898,7 @@ var URLHistoryActions = actions.Actions({
 		}
 	}],
 
-	setTopURLHistory: ['',
+	setTopURLHistory: ['History/',
 		function(url){
 			var data = this.url_history[url]
 
@@ -3899,7 +3909,7 @@ var URLHistoryActions = actions.Actions({
 			delete this.url_history[url]
 			this.url_history[url] = data
 		}],
-	pushURLToHistory: ['',
+	pushURLToHistory: ['History/',
 		function(url, open, check){
 			var l = this.config['url-history-length'] || -1
 
@@ -3932,7 +3942,7 @@ var URLHistoryActions = actions.Actions({
 		}],
 	// NOTE: url can be an index, 0 being the last url added to history;
 	// 		negative values are also supported.
-	dropURLFromHistory: ['', 
+	dropURLFromHistory: ['History/', 
 		function(url){
 			this.url_history = this.url_history || {}
 
@@ -3944,7 +3954,7 @@ var URLHistoryActions = actions.Actions({
 				delete this.url_history[url]
 			}
 		}],
-	checkURLFromHistory: ['',
+	checkURLFromHistory: ['History/',
 		function(url){
 			this.url_history = this.url_history || {}
 
@@ -3968,7 +3978,7 @@ var URLHistoryActions = actions.Actions({
 				return true
 			}
 		}],
-	openURLFromHistory: ['',
+	openURLFromHistory: ['History/',
 		function(url){
 			this.url_history = this.url_history || {}
 
@@ -3987,7 +3997,7 @@ var URLHistoryActions = actions.Actions({
 				}
 			}
 		}],
-	clearURLHistory: ['', 
+	clearURLHistory: ['History/', 
 		function(){ this.url_history = null }],
 })
 
@@ -4008,6 +4018,7 @@ module.URLHistory = ImageGridFeatures.Feature({
 var URLHistoryLocalStorageActions = actions.Actions({
 	config: {
 		'url-history-local-storage-key': 'url-history',
+		'url-history-loaded-local-storage-key': 'url-history-loaded',
 	},
 
 	__url_history: null,
@@ -4026,7 +4037,12 @@ var URLHistoryLocalStorageActions = actions.Actions({
 			if(this.config && key){
 				var history = localStorage[key]
 				if(history){
-					this.__url_history = JSON.parse(history)
+					try{
+						this.__url_history = JSON.parse(history)
+
+					} catch(e) {
+						delete localStorage[key]
+					}
 				}
 			}
 		}
@@ -4047,20 +4063,38 @@ var URLHistoryLocalStorageActions = actions.Actions({
 	clone: [function(){
 		return function(res){
 			res.config['url-history-local-storage-key'] = null
+			res.config['url-history-loaded-local-storage-key'] = null
 		}
 	}],
 
-	saveURLHistory: ['',
+	saveURLHistory: ['History/',
 		function(){
-			var key = this.config['url-history-local-storage-key']
-
-			if(key == null){
-				return
+			var history = this.config['url-history-local-storage-key']
+			if(history != null){
+				localStorage[history] = 
+					JSON.stringify(this.url_history) 
 			}
 
-			localStorage[key] = 
-				JSON.stringify(this.url_history) 
+			this.saveBasePath()
 		}],
+	saveBasePath: ['History/',
+		function(){
+			var loaded = this.config['url-history-loaded-local-storage-key']
+			if(loaded != null){
+				localStorage[loaded] = this.base_path
+			}
+		}],
+		loadLastSavedBasePath: ['History/',
+			function(){
+				var loaded = this.config['url-history-loaded-local-storage-key']
+
+				if(loaded && localStorage[loaded]){
+					this.openURLFromHistory(localStorage[loaded])
+
+				} else {
+					this.openURLFromHistory(0)
+				}
+			}]
 })
 
 var URLHistoryLocalStorage = 
@@ -4078,6 +4112,9 @@ module.URLHistoryLocalStorage = ImageGridFeatures.Feature({
 
 	// NOTE: loading is done by the .url_history prop...
 	handlers: [
+		// XXX not sure if we need this...
+		['load loadURLs', 
+			function(){ this.base_path && this.saveBasePath() }],
 		// save...
 		['pushURLToHistory dropURLFromHistory setTopURLHistory', 
 			function(){ 
@@ -4088,9 +4125,14 @@ module.URLHistoryLocalStorage = ImageGridFeatures.Feature({
 			function(){
 				delete this.__url_history
 
-				var key = this.config['url-history-local-storage-key']
-				if(key){
-					delete localStorage[this.config['url-history-local-storage-key']]
+				var history = this.config['url-history-local-storage-key']
+				if(history){
+					delete localStorage[history]
+				}
+
+				var loaded = this.config['url-history-loaded-local-storage-key']
+				if(loaded){
+					delete localStorage[loaded]
 				}
 			}],
 	],
@@ -4113,7 +4155,7 @@ var URLHistoryUIActions = actions.Actions({
 	// 			...possibly connected with restoring after .preventClosing(..)
 	// XXX need to check items...
 	// XXX use svg icons for buttons...
-	listURLHistory: ['File/History',
+	listURLHistory: ['History|File/Show history',
 		function(){
 			var that = this
 			var parent = this.preventClosing ? this.preventClosing() : null

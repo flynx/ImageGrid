@@ -272,9 +272,9 @@ $(function(){
 		.setEmptyMsg('Loading...')
 
 
-	// load last url in history...
+	// load last loaded path...
 	if(a.url_history && Object.keys(a.url_history).length > 0){
-		a.openURLFromHistory(0)
+		a.loadLastSavedBasePath()
 
 	// load some testing data...
 	} else {
