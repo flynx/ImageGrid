@@ -100,6 +100,7 @@ function(path, make){
 	// list dirs...
 	} else {
 		return new promise(function(resolve, reject){
+			// XXX should this be a promise???
 			fs.readdir(path, function(err, files){
 				// XXX
 				if(err){
@@ -116,9 +117,21 @@ function(path, make){
 								: file, null, true)
 						})
 						.then(function(res){
-							res && make(fullpath 
+							var dir = res.isDirectory()
+							var elem = res && make(fullpath 
 								? path +'/'+ file 
-								: file + (res.isDirectory() ? '/' : ''))
+								: file + (dir ? '/' : ''))
+
+							// count the number of files...
+							// NOTE: we do not care how long it will take
+							// 		so we'll not wait...
+							if(res && dir){
+								fs.readdir(path +'/'+ file, function(err, files){
+									if(!err){
+										elem.attr('count', '('+ files.length +')')
+									}
+								})
+							}
 						})
 						// NOTE: we are not using promise.all(..) here because it
 						// 		triggers BEFORE the first make(..) is called...
