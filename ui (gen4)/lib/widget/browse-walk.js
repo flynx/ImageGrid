@@ -126,11 +126,18 @@ function(path, make){
 							// NOTE: we do not care how long it will take
 							// 		so we'll not wait...
 							if(res && dir){
-								fs.readdir(path +'/'+ file, function(err, files){
-									if(!err){
-										elem.attr('count', '('+ files.length +')')
-									}
-								})
+								var i = 0
+								glob(path +'/'+ file +'/*+(jpg|jpeg|png|JPG|JPEG|PNG)')
+									/*
+									.on('match', function(){
+										i += 1
+										elem.attr('count', '('+ i +')')
+									})
+									*/
+									.on('end', function(lst){
+										i += 1
+										elem.attr('count', '('+ lst.length +')')
+									})
 							}
 						})
 						// NOTE: we are not using promise.all(..) here because it
