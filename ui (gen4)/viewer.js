@@ -3416,6 +3416,7 @@ module.AppControl = ImageGridFeatures.Feature({
 
 // XXX at this point this is a stub...
 if(window.nodejs != null){
+	var fse = requirejs('fs-extra')
 	var glob = requirejs('glob')
 	var file = requirejs('./file')
 }
@@ -3487,6 +3488,12 @@ var FileSystemLoaderActions = actions.Actions({
 		this.loadIndex(value)
 	},
 	loaded_paths: null,
+
+
+	// XXX is this a hack???
+	// XXX need a more generic form...
+	checkPath: ['File/',
+		function(path){ return fse.existsSync(path) }],
 
 	// NOTE: when passed no path this will not do anything...
 	// XXX should this set something like .path???
@@ -3966,11 +3973,11 @@ var URLHistoryActions = actions.Actions({
 			if(url && this.url_history[url] && this.url_history[url].check){
 				var check = this.url_history[url].check
 
-				if(check instanceof Function){
-					return check(url)
+				if(typeof(check) == typeof('str')){
+					return this[check](url)
 
 				} else {
-					return this[check](url)
+					return check(url)
 				}
 
 			// no way to check so we do not know...
@@ -4112,9 +4119,10 @@ module.URLHistoryLocalStorage = ImageGridFeatures.Feature({
 
 	// NOTE: loading is done by the .url_history prop...
 	handlers: [
-		// XXX not sure if we need this...
+		// save base_path...
 		['load loadURLs', 
 			function(){ this.base_path && this.saveBasePath() }],
+
 		// save...
 		['pushURLToHistory dropURLFromHistory setTopURLHistory', 
 			function(){ 
@@ -4232,12 +4240,18 @@ var URLHistoryUIActions = actions.Actions({
 						&& parent.focus()
 				})
 
+			var list = o.client
+
+			Object.keys(this.url_history).reverse().forEach(function(p){
+				that.checkURLFromHistory(p) || list.filter(p).addClass('disabled')
+			})
+
 			// select and highlight current path...
-			cur && o.client
+			cur && list
 				.select(cur)
 					.addClass('highlighted')
 
-			return o.client
+			return list
 		}],
 })
 
@@ -4259,12 +4273,15 @@ module.URLHistoryUI = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-var pushToHistory = function(action, to_top){
+var pushToHistory = function(action, to_top, checker){
 	return [action, 
 		function(_, path){ 
 			path = normalizePath(path)
 			if(path){
-				this.pushURLToHistory(normalizePath(path), action) 
+				this.pushURLToHistory(
+					normalizePath(path), 
+					action, 
+					checker || 'checkPath') 
 			}
 			if(to_top){
 				this.setTopURLHistory(path)
