@@ -263,18 +263,19 @@ actions.Actions({
 
 	// NOTE: for complete isolation it is best to completely copy the 
 	// 		.config...
-	clone: [function(full){
-		var res = actions.MetaActions.clone.call(this, full)
+	clone: ['File/',
+		function(full){
+			var res = actions.MetaActions.clone.call(this, full)
 
-		if(this.data){
-			res.data = this.data.clone()
-		} 
-		if(this.images){
-			res.images = this.images.clone()
-		}
+			if(this.data){
+				res.data = this.data.clone()
+			} 
+			if(this.images){
+				res.images = this.images.clone()
+			}
 
-		return res
-	}],
+			return res
+		}],
 
 	// XXX should this be here???
 	// XXX should this use .load(..)
@@ -4182,6 +4183,12 @@ var URLHistoryUIActions = actions.Actions({
 				})
 				to_remove = []
 			}
+			var makeRE = function(path){
+				return RegExp('^'
+					// quote regular expression chars...
+					+p.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
+					+'$')
+			}
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
@@ -4194,7 +4201,7 @@ var URLHistoryUIActions = actions.Actions({
 								['&diams;', 
 									function(p){
 										var top = this.filter().first()
-										var cur = this.filter(p)
+										var cur = this.filter(makeRE(p))
 
 										if(!top.is(cur)){
 											top.before(cur)
@@ -4204,7 +4211,7 @@ var URLHistoryUIActions = actions.Actions({
 								// mark for removal...
 								['&times;', 
 									function(p){
-										var e = this.filter(p)
+										var e = this.filter(makeRE(p))
 											.toggleClass('strike-out')
 
 										if(e.hasClass('strike-out')){
