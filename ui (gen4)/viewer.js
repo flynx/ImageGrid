@@ -3453,6 +3453,8 @@ function(path){
 var FileSystemLoaderActions = actions.Actions({
 	config: {
 		'index-dir': '.ImageGrid',
+
+		'image-file-pattern': '*+(jpg|jpeg|png|JPG|JPEG|PNG)',
 	},
 
 	clone: [function(full){
@@ -3623,7 +3625,7 @@ var FileSystemLoaderActions = actions.Actions({
 			// XXX not sure if this is the way to go...
 			this._base_path = path 
 
-			glob(path + '/*+(jpg|jpeg|png|JPG|JPEG|PNG)')
+			glob(path + '/'+ this.config['image-file-pattern'])
 				.on('error', function(err){
 					console.log('!!!!', err)
 				})
@@ -3663,7 +3665,7 @@ var FileSystemLoaderActions = actions.Actions({
 			var base_pattern = RegExp('^'+path)
 
 			// find images...
-			glob(path + '/*+(jpg|jpeg|png|JPG|JPEG|PNG)')
+			glob(path + '/'+ this.config['image-file-pattern'])
 				.on('end', function(lst){ 
 					// create a new images chunk...
 					lst = lst
@@ -3778,7 +3780,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 			base = base || this.base_path || '/'
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
-				require('./lib/widget/browse-walk').makeWalk(null, base, false, false)
+				require('./lib/widget/browse-walk').makeWalk(
+						null, base, false, false, 
+						this.config['image-file-pattern'])
 					// path selected...
 					.open(function(evt, path){ 
 						var item = o.client.selected
@@ -4186,7 +4190,7 @@ var URLHistoryUIActions = actions.Actions({
 			var makeRE = function(path){
 				return RegExp('^'
 					// quote regular expression chars...
-					+p.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
+					+path.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
 					+'$')
 			}
 

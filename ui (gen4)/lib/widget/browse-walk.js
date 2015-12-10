@@ -65,6 +65,7 @@ function(path, make){
 var listDirfs = 
 module.listDirfs =
 function(path, make){
+	var that = this
 	path = path.constructor == Array ? path.join('/') : path
 	path = /^[a-zA-Z]:/.test(path.trim()) ? path : '/'+path
 	// XXX the windows root path must have a trailing '/'
@@ -127,7 +128,7 @@ function(path, make){
 							// 		so we'll not wait...
 							if(res && dir){
 								var i = 0
-								glob(path +'/'+ file +'/*+(jpg|jpeg|png|JPG|JPEG|PNG)')
+								glob(path +'/'+ file +'/'+ that.options.fileCountPattern)
 									/*
 									.on('match', function(){
 										i += 1
@@ -231,6 +232,8 @@ WalkPrototype.options = {
 	pushButton: false,
 
 	list: listDir,
+
+	fileCountPattern: '*+(jpg|jpeg|png|JPG|JPEG|PNG)',
 }
 WalkPrototype.options.__proto__ = browse.Browser.prototype.options
 
@@ -243,16 +246,30 @@ object.makeConstructor('Walk',
 
 
 var makeWalk = 
-module.makeWalk = function(elem, path, showNonTraversable, showDisabled){
-	var w = Walk(elem, { 
-		path: path,
-		showNonTraversable: showNonTraversable == null ?
-			WalkPrototype.options.showNonTraversable
-			: showNonTraversable,
-		showDisabled: showDisabled == null ? 
-			WalkPrototype.options.showDisabled
-			: showDisabled,
-	})
+module.makeWalk = function(elem, path, showNonTraversable, showDisabled, fileCountPattern, rest){
+	var opts = {}
+	if(rest){
+		for(var k in rest){
+			opts[k] = rest[k]
+		}
+	}
+
+	opts.path = path
+
+	opts.showNonTraversable = showNonTraversable == null ?
+		WalkPrototype.options.showNonTraversable
+		: showNonTraversable
+
+	opts.showDisabled = showDisabled == null ? 
+		WalkPrototype.options.showDisabled
+		: showDisabled
+
+	opts.fileCountPattern = fileCountPattern == null ?
+		WalkPrototype.options.fileCountPattern
+		: fileCountPattern
+
+	var w = Walk(elem, opts)
+
 	return w
 }
 

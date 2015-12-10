@@ -197,15 +197,20 @@
 
 	opacity: 0.4;
 }
+/* highlight seach... */
+.browse-widget .list>div .text b {
+	background-color: rgba(0, 0, 255, 0.5);
+}
 .browse-widget .list>div.strike-out .text {
 	text-decoration: line-through;
 	opacity: 0.3;
 }
 .browse-widget .list>div.highlighted {
 	font-style: italic;
+	font-weight: bold;
 }
-.browse-widget .list>div.highlighted:after {
-	content: '*';
+.browse-widget .list>div.highlighted .text:after {
+	content: ' *';
 }
 .browse-widget:not(.flat) .list div:not(.not-traversable) .text:after {
 	content: "/";
