@@ -35,7 +35,7 @@ var ribbons = require('ribbons')
 
 
 /*********************************************************************/
-// helpers...
+// Helpers...
 
 function reloadAfter(force){
 	return function(){
@@ -250,12 +250,12 @@ actions.Actions({
 	// basic life-cycle actions...
 	//
 	// XXX do we need to call .syncTags(..) here???
-	load: ['File|Interface/',
+	load: ['- File|Interface/',
 		function(d){
 			this.images = images.Images(d.images)
 			this.data = data.Data(d.data)
 		}],
-	clear: ['File|Interface/',
+	clear: ['File|Interface/Clear viewer',
 		function(){
 			delete this.data
 			delete this.images
@@ -263,7 +263,7 @@ actions.Actions({
 
 	// NOTE: for complete isolation it is best to completely copy the 
 	// 		.config...
-	clone: ['File/',
+	clone: ['- File/',
 		function(full){
 			var res = actions.MetaActions.clone.call(this, full)
 
@@ -293,7 +293,7 @@ actions.Actions({
 	// 		adding new items to the resulting structure...
 	// XXX is this the correct way to go???
 	// 		...can we save simple attribute values???
-	json: ['File/Dump state as JSON object',
+	json: ['- File/Dump state as JSON object',
 		'This will collect JSON data from every available attribute '
 			+'supporting the .dumpJSON() method.',
 		function(mode){
@@ -314,7 +314,7 @@ actions.Actions({
 
 	// basic navigation...
 	//
-	focusImage: ['Navigate/Focus image',
+	focusImage: ['- Navigate/Focus image',
 		function(img, list){
 			this.data.focusImage(img, list)
 		}],
@@ -326,7 +326,7 @@ actions.Actions({
 	// 	'visual'		- focus visually closest to current image
 	//
 	// NOTE: default mode is set in .config.ribbon-focus-mode
-	focusRibbon: ['Navigate/Focus Ribbon',
+	focusRibbon: ['- Navigate/Focus Ribbon',
 		function(target, mode){
 			var data = this.data
 			var r = data.getRibbon(target)
@@ -464,9 +464,9 @@ actions.Actions({
 		}],
 
 	// XXX should these be here???
-	prevTagged: ['Navigate/Previous image tagged with tag',
+	prevTagged: ['- Navigate/Previous image tagged with tag',
 		makeTagWalker('prev')],
-	nextTagged: ['Navigate/Next image tagged with tag',
+	nextTagged: ['- Navigate/Next image tagged with tag',
 		makeTagWalker('next')],
 
 	firstRibbon: ['Navigate/First ribbon',
@@ -484,7 +484,7 @@ actions.Actions({
 	// NOTE: for all of these, current/ribbon image is a default...
 
 	// XXX to be used for things like mark/place and dragging...
-	shiftImageTo: ['Edit|Sort/',
+	shiftImageTo: ['- Edit|Sort/',
 		function(target, to){
 			// XXX
 		}],
@@ -634,7 +634,7 @@ actions.Actions({
 	// tags...
 	//
 	// XXX mark updated...
-	tag: ['Tag/Tag image(s)',
+	tag: ['- Tag/Tag image(s)',
 		function(tags, gids){
 			gids = gids || this.current
 			gids = gids.constructor !== Array ? [gids] : gids
@@ -660,7 +660,7 @@ actions.Actions({
 			})
 		}],
 	// XXX mark updated...
-	untag: ['Tag/Untag image(s)',
+	untag: ['- Tag/Untag image(s)',
 		function(tags, gids){
 			gids = gids || this.current
 			gids = gids.constructor !== Array ? [gids] : gids
@@ -733,7 +733,7 @@ actions.Actions({
 
 	// crop...
 	//
-	crop: ['Crop/Crop image list',
+	crop: ['- Crop/Crop image list',
 		function(list, flatten){ 
 			list = list || this.data.order
 			if(this.crop_stack == null){
@@ -844,7 +844,7 @@ actions.Actions({
 
 	// grouping...
 	// XXX need to tell .images about this...
-	group: ['Group|Edit/Group images', 
+	group: ['- Group|Edit/Group images', 
 		function(gids, group){ this.data.group(gids, group) }],
 	ungroup: ['Group|Edit/Ungroup images', 
 		function(gids, group){ this.data.ungroup(gids, group) }],
@@ -852,7 +852,7 @@ actions.Actions({
 	// direction can be:
 	// 	'next'
 	// 	'prev'
-	groupTo: ['Group|Edit/Group to', 
+	groupTo: ['- Group|Edit/Group to', 
 		function(target, direction){
 			target = this.data.getImage(target)
 			var other = this.data.getImage(target, direction == 'next' ? 1 : -1)
@@ -1065,7 +1065,7 @@ actions.Actions({
 	// XXX problem: need to either redesign this or distinguish from 
 	// 		other actions as I keep calling it expecting results...
 	// XXX hide from user action list...
-	updateImage: ['Interface/Update image (This will do nothing)',
+	updateImage: ['- Interface/Update image (This will do nothing)',
 		'This will be called by .refresh(..) and intended for use as an '
 			+'trigger for handlers, and not as a callable acation.',
 		function(gid, image){ }],
@@ -1081,7 +1081,7 @@ actions.Actions({
 				'dark', 
 				'light'
 			]) ],
-	setEmptyMsg: ['Interface/Set message to be displayed when nothing is loaded.',
+	setEmptyMsg: ['- Interface/Set message to be displayed when nothing is loaded.',
 		function(msg, help){ this.ribbons.setEmptyMsg(msg, help) }],
 
 
@@ -1184,7 +1184,7 @@ actions.Actions({
 
 	// NOTE: this will align only a single image...
 	// XXX do we need these low level primitives here???
-	centerImage: ['Interface/Center an image in ribbon horizontally',
+	centerImage: ['- Interface/Center an image in ribbon horizontally',
 		function(target, align){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
@@ -1193,7 +1193,7 @@ actions.Actions({
 			// align current ribbon...
 			this.ribbons.centerImage(target, align)
 		}],
-	centerRibbon: ['Interface/Center a ribbon vertically',
+	centerRibbon: ['- Interface/Center a ribbon vertically',
 		function(target){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
@@ -1493,7 +1493,7 @@ module.Journal = ImageGridFeatures.Feature({
 			}],
 
 		// XXX might be good to add some kind of metadata to journal...
-		journalPush: ['Journal/Add an item to journal',
+		journalPush: ['- Journal/Add an item to journal',
 			function(){
 				this.journal = (this.hasOwnProperty('journal') 
 						|| this.journal) ? 
@@ -1515,7 +1515,7 @@ module.Journal = ImageGridFeatures.Feature({
 					this.journal = null
 				}
 			}],
-		runJournal: ['Journal/Run journal',
+		runJournal: ['- Journal/Run journal',
 			function(journal){
 				var that = this
 				journal.forEach(function(e){
@@ -1694,7 +1694,7 @@ var PartialRibbonsActions = actions.Actions({
 	// XXX coordinate this with .resizeRibbon(..)
 	// XXX make this support an explicit list of gids....
 	// XXX should this be here???
-	preCacheJumpTargets: ['Interface/Pre-cache potential jump target images',
+	preCacheJumpTargets: ['- Interface/Pre-cache potential jump target images',
 		function(target, sources, radius, size){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
@@ -1806,7 +1806,7 @@ var PartialRibbonsActions = actions.Actions({
 	// 		- we are less than screen width from the edge
 	// 		- threshold is set to 0
 	// XXX this is not signature compatible with data.updateRibbon(..)
-	updateRibbon: ['Interface/Update partial ribbon size', 
+	updateRibbon: ['- Interface/Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
@@ -1884,7 +1884,7 @@ var PartialRibbonsActions = actions.Actions({
 			}
 		}],
 	// XXX do we handle off-screen ribbons here???
-	resizeRibbon: ['Interface/Resize ribbon to n images',
+	resizeRibbon: ['- Interface/Resize ribbon to n images',
 		function(target, size){
 			size = size 
 				|| (this.config['ribbon-size-screens'] * this.screenwidth)
@@ -2291,7 +2291,7 @@ module.ShiftAnimation = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var BoundsIndicatorsActions = actions.Actions({
-	flashIndicator: ['Interface/Flash an indicator',
+	flashIndicator: ['- Interface/Flash an indicator',
 		function(direction){
 			if(this.ribbons.getRibbonSet().length == 0){
 				return
@@ -2433,7 +2433,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 		'current-image-indicator-screen-nav-mode': 'hide',
 	},
 
-	updateCurrentImageIndicator: ['Interface/Update current image indicator',
+	updateCurrentImageIndicator: ['- Interface/Update current image indicator',
 		function(target, update_border){
 			var ribbon_set = this.ribbons.getRibbonSet()
 
@@ -2874,15 +2874,19 @@ var makeActionLister = function(list, filter, pre_order){
 
 var ActionTreeActions = actions.Actions({
 	config: {
+		// NOTE: the slashes at the end are significant, of they are not
+		// 		present the .toggleNonTraversableDrawing(..) will hide 
+		// 		these paths before they can get any content...
+		// 		XXX not sure if this is a bug or not...
 		'action-category-order': [
-			'File',
-			'Edit',
-			'Navigate',
+			'File/',
+			'Edit/',
+			'Navigate/',
 		],
 	},
 
 	// XXX move this to a generic modal overlay feature...
-	getOverlay: ['Interface/Get overlay object',
+	getOverlay: ['- Interface/Get overlay object',
 		function(o){
 			return overlay.getOverlay(o || this.viewer)
 		}],
@@ -3254,7 +3258,7 @@ var ImageMarkActions = actions.Actions({
 			// XXX
 		}],
 
-	markTagged: ['Mark/Mark images by tags',
+	markTagged: ['- Mark/Mark images by tags',
 		function(tags, mode){
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
 
@@ -3495,7 +3499,7 @@ var FileSystemLoaderActions = actions.Actions({
 
 	// XXX is this a hack???
 	// XXX need a more generic form...
-	checkPath: ['File/',
+	checkPath: ['- File/',
 		function(path){ return fse.existsSync(path) }],
 
 	// NOTE: when passed no path this will not do anything...
@@ -3910,7 +3914,7 @@ var URLHistoryActions = actions.Actions({
 		}
 	}],
 
-	setTopURLHistory: ['History/',
+	setTopURLHistory: ['- History/',
 		function(url){
 			var data = this.url_history[url]
 
@@ -3921,7 +3925,7 @@ var URLHistoryActions = actions.Actions({
 			delete this.url_history[url]
 			this.url_history[url] = data
 		}],
-	pushURLToHistory: ['History/',
+	pushURLToHistory: ['- History/',
 		function(url, open, check){
 			var l = this.config['url-history-length'] || -1
 
@@ -3954,7 +3958,7 @@ var URLHistoryActions = actions.Actions({
 		}],
 	// NOTE: url can be an index, 0 being the last url added to history;
 	// 		negative values are also supported.
-	dropURLFromHistory: ['History/', 
+	dropURLFromHistory: ['- History/', 
 		function(url){
 			this.url_history = this.url_history || {}
 
@@ -3966,7 +3970,7 @@ var URLHistoryActions = actions.Actions({
 				delete this.url_history[url]
 			}
 		}],
-	checkURLFromHistory: ['History/',
+	checkURLFromHistory: ['- History/',
 		function(url){
 			this.url_history = this.url_history || {}
 
@@ -3990,7 +3994,7 @@ var URLHistoryActions = actions.Actions({
 				return true
 			}
 		}],
-	openURLFromHistory: ['History/',
+	openURLFromHistory: ['- History/',
 		function(url){
 			this.url_history = this.url_history || {}
 
@@ -4096,7 +4100,7 @@ var URLHistoryLocalStorageActions = actions.Actions({
 				localStorage[loaded] = this.base_path
 			}
 		}],
-		loadLastSavedBasePath: ['History/',
+		loadLastSavedBasePath: ['- History/',
 			function(){
 				var loaded = this.config['url-history-loaded-local-storage-key']
 
@@ -4187,12 +4191,6 @@ var URLHistoryUIActions = actions.Actions({
 				})
 				to_remove = []
 			}
-			var makeRE = function(path){
-				return RegExp('^'
-					// quote regular expression chars...
-					+path.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
-					+'$')
-			}
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
@@ -4205,7 +4203,7 @@ var URLHistoryUIActions = actions.Actions({
 								['&diams;', 
 									function(p){
 										var top = this.filter().first()
-										var cur = this.filter(makeRE(p))
+										var cur = this.filter('"'+p+'"')
 
 										if(!top.is(cur)){
 											top.before(cur)
@@ -4215,7 +4213,7 @@ var URLHistoryUIActions = actions.Actions({
 								// mark for removal...
 								['&times;', 
 									function(p){
-										var e = this.filter(makeRE(p))
+										var e = this.filter('"'+p+'"')
 											.toggleClass('strike-out')
 
 										if(e.hasClass('strike-out')){
@@ -4435,7 +4433,7 @@ var FileSystemWriterActions = actions.Actions({
 	//
 	// For more info see file.writeIndex(..) and file.loadIndex(..).
 	//
-	prepareIndexForWrite: ['File/Prepare index for writing',
+	prepareIndexForWrite: ['- File/Prepare index for writing',
 		function(json, full){
 			json = json || this.json('base')
 			var changes = full ? null 

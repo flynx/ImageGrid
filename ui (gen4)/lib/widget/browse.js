@@ -35,6 +35,15 @@ var quoteWS = function(str){
 }
 
 
+// Quote a string and convert to RegExp to match self literally.
+function toRegExp(str){
+	return RegExp('^'
+		// quote regular expression chars...
+		+str.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
+		+'$')
+}
+
+
 function makeBrowserMaker(constructor){
 	return function(elem, list, rest){
 		if(typeof(rest) == typeof('str')){
@@ -527,11 +536,13 @@ var BrowserPrototype = {
 	// 		...will need to account for 1-9 shortcut keys and hints to 
 	// 		still work...
 	toggleNonTraversableDrawing: function(){
+		var cur = this.selected 
 		if(this.options.traversable == false){
 			return this
 		}
 		this.options.showNonTraversable = !this.options.showNonTraversable
 		this.update()
+		cur && this.select(cur)
 		return this
 	},
 	// XXX this will not affect elements that were disabled via setting 
@@ -542,11 +553,13 @@ var BrowserPrototype = {
 	// 		...will need to account for 1-9 shortcut keys and hints to 
 	// 		still work...
 	toggleDisabledDrawing: function(){
+		var cur = this.selected 
 		if(this.options.toggleDisabledDrawing == false){
 			return this
 		}
 		this.options.showDisabled = !this.options.showDisabled
 		this.update()
+		cur && this.select(cur)
 		return this
 	},
 
@@ -882,6 +895,15 @@ var BrowserPrototype = {
 	// 				'a b c'		- three sub patterns: 'a', 'b' and 'c'
 	// 				'a\ b\ c'	- single pattern
 	//
+	// 	Get element exactly matching a string...
+	// 	.filter(<quoted-string>)
+	// 		-> elements
+	// 		NOTE: this supports bot single and double quotes, e.g. 
+	// 			'"abc"' and "'abc'" are equivalent...
+	// 		NOTE: only outer quotes are considered, so if there is a 
+	// 			need to exactly match '"X"', just add a set of quotes 
+	// 			around it, e.g. '""X""' or '\'"X"\''...
+	//
 	// 	Get all elements matching a regexp...
 	// 	.filter(<regexp>)
 	// 		-> elements
@@ -965,7 +987,12 @@ var BrowserPrototype = {
 			}
 
 		// regexp...
-		} else if(pattern.constructor == RegExp){
+		} else if(pattern.constructor == RegExp
+				|| (typeof(pattern) == typeof('str') 
+					&& /^'.*'$|^".*"$/.test(pattern.trim()))){
+			if(typeof(pattern) == typeof('str')){
+				pattern = toRegExp(pattern.trim().slice(1, -1))
+			}
 			var filter = function(i, e){
 				if(!pattern.test($(e).find('.text').text())){
 					if(rejected){
@@ -1270,6 +1297,9 @@ var BrowserPrototype = {
 	//	NOTE: if text matches one of the reserved commands above use 
 	//		quotes to escape it...
 	//	.select('<text>')
+	//		-> elem
+	//
+	//	Select element by its literal full test...
 	//	.select("'<text>'")
 	//	.select('"<text>"')
 	//		-> elem
@@ -1369,11 +1399,6 @@ var BrowserPrototype = {
 
 		// string...
 		} else if(typeof(elem) == typeof('str')){
-			// clear quotes...
-			// XXX can an item contain '"' or "'"???
-			if(/^'.*'$|^".*"$/.test(elem.trim())){
-				elem = elem.trim().slice(1, -1)
-			}
 			return this.select(this.filter(elem).first(), filtering)
 
 		// regexp...
@@ -1991,6 +2016,10 @@ Browser.prototype.__proto__ = widget.Widget.prototype
 // 		<option-text>,
 // 		...
 // 	]
+//
+// If <option-test> starts with a '- ' then it will be added disabled,
+// to control the pattern use the .disableItemPattern option, and to 
+// disable this feature set it to false|null.
 // 	
 // NOTE: this essentially a different default configuration of Browser...
 var ListPrototype = Object.create(BrowserPrototype)
@@ -2001,13 +2030,34 @@ ListPrototype.options = {
 	traversable: false,
 	flat: true,
 
+	// XXX not sure if we need these...
+	skipDisabledItems: false,
+	// NOTE: to disable this set it to false or null
+	disableItemPattern: '^- ',
+
 	list: function(path, make){
 		var that = this
 		var data = this.options.data
 		var keys = data.constructor == Array ? data : Object.keys(data)
+		var pattern = this.options.disableItemPattern 
+			&& RegExp(this.options.disableItemPattern)
+
 		return keys
 			.map(function(k){
-				var e = make(k)
+				var disable = null
+
+				if(pattern){
+					var n = k.replace(pattern, '')
+					if(n != k){
+						disable = true
+
+						if(that.options.skipDisabledItems){
+							return
+						}
+					}
+				}
+
+				var e = make(n, null, disable)
 
 				if(data !== keys){
 					e.on('open', function(){ 
@@ -2105,6 +2155,9 @@ module.makeList = makeBrowserMaker(List)
 // NOTE: in the A|B|C pattern, ALL of the alternatives will be created.
 // NOTE: there may be multiple matching patterns/listers or a given path
 // 		the one used is the longest match.
+// NOTE: if path is receded with '- ' ('- a|b/c') then the basename of 
+// 		that path will be disabled, to control the pattern use
+// 		.disableItemPattern and to disable this feature set it to false.
 //
 //
 // Handler format:
@@ -2136,10 +2189,21 @@ PathListPrototype.options = {
 	traversable: true,
 	flat: false,
 
+	// XXX not sure if we need these...
+	skipDisabledItems: false,
+	// NOTE: to disable this set it to false or null
+	disableItemPattern: '^- ',
+
 	list: function(path, make){
 		var that = this
 		var data = this.options.data
 		var keys = data.constructor == Array ? data : Object.keys(data)
+		var pattern = this.options.disableItemPattern 
+			&& RegExp(this.options.disableItemPattern)
+
+		if(pattern && this.options.skipDisabledItems){
+			keys = keys.filter(function(k){ return !pattern.test(k) })
+		}
 
 		var visited = []
 
@@ -2182,6 +2246,13 @@ PathListPrototype.options = {
 		} else {
 			return keys
 				.map(function(k){
+					var disable = null
+					if(pattern){
+						var n = k.replace(pattern, '')
+						disable = n != k
+						k = n
+					}
+
 					var kp = k.split(/[\\\/]+/g)
 					kp[0] == '' && kp.shift()
 
@@ -2203,26 +2274,36 @@ PathListPrototype.options = {
 						return false
 					}
 
-					cur.split('|').forEach(function(cur){
-						if(visited.indexOf(cur) >= 0){
-							// set element to traversable...
-							if(kp.length > 0){
-								that.filter(cur).removeClass('not-traversable')
+					cur.split('|')
+						// skip empty path items...
+						// NOTE: this avoids creating empty items in cases
+						// 		of paths ending with '/' or containing '//'
+						.filter(function(e){ return e.trim() != '' })
+						.forEach(function(cur){
+							if(visited.indexOf(cur) >= 0){
+								// set element to traversable if we visit it again...
+								if(kp.length > 0){
+									that.filter(cur, false)
+										.removeClass('not-traversable')
+										//.removeClass('disabled')
+								}
+								return false
 							}
-							return false
-						}
-						visited.push(cur)
+							visited.push(cur)
 
-						// build the element....
-						var e = make(cur, star || kp.length > 0)
+							// build the element....
+							var e = make(cur,
+								star || kp.length > 0, 
+								// XXX this might still disable a dir...
+								!star && kp.length == 0 && disable)
 
-						// setup handlers...
-						if(!star && data !== keys && kp.length == 0 && data[k] != null){
-							e.on('open', function(){ 
-								return that.options.data[k].apply(this, arguments)
-							})
-						}
-					})
+							// setup handlers...
+							if(!star && data !== keys && kp.length == 0 && data[k] != null){
+								e.on('open', function(){ 
+									return that.options.data[k].apply(this, arguments)
+								})
+							}
+						})
 
 					return cur
 				})

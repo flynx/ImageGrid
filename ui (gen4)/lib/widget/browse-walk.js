@@ -126,7 +126,7 @@ function(path, make){
 							// count the number of files...
 							// NOTE: we do not care how long it will take
 							// 		so we'll not wait...
-							if(res && dir){
+							if(res && dir && that.options.fileCountPattern){
 								var i = 0
 								glob(path +'/'+ file +'/'+ that.options.fileCountPattern)
 									/*
@@ -137,7 +137,7 @@ function(path, make){
 									*/
 									.on('end', function(lst){
 										i += 1
-										elem.attr('count', '('+ lst.length +')')
+										elem.attr('count', lst.length)
 									})
 							}
 						})
@@ -233,7 +233,8 @@ WalkPrototype.options = {
 
 	list: listDir,
 
-	fileCountPattern: '*+(jpg|jpeg|png|JPG|JPEG|PNG)',
+	//disableItemPattern: false,
+	fileCountPattern: '*',
 }
 WalkPrototype.options.__proto__ = browse.Browser.prototype.options
 

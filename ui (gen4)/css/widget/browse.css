@@ -187,10 +187,10 @@
 
 	overflow: hidden;
 }
-.browse-widget .list>div:after {
+.browse-widget .list>div[count]:after {
 	display: inline-block;
 
-	content: attr(count);
+	content: "(" attr(count) ")";
 
 	float: right;
 	margin-right: 10px;
