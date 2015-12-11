@@ -1684,6 +1684,7 @@ module.Journal = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX add .resetDefaults(..)...
 var ConfigLocalStorageActions = actions.Actions({
 	config: {
 		'config-local-storage-key': 'config',
@@ -3640,6 +3641,10 @@ module.ImageBookmarks = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var AppControlActions = actions.Actions({
+	config: {
+		'application-window': null,
+	},
+
 	// XXX revise these...
 	close: ['File|Interface/Close viewer',
 		function(){
@@ -3661,6 +3666,7 @@ var AppControlActions = actions.Actions({
 
 
 // XXX this needs a better .isApplicable(..)
+// XXX store/load window state...
 var AppControl = 
 module.AppControl = ImageGridFeatures.Feature({
 	title: '',
@@ -3682,14 +3688,13 @@ module.AppControl = ImageGridFeatures.Feature({
 	handlers: [
 		['start',
 			function(){
-				//or global.window.nwDispatcher.requireNwGui()
-				//(see https://github.com/rogerwang/node-webkit/issues/707)
+				// or global.window.nwDispatcher.requireNwGui()
+				// (see: https://github.com/rogerwang/node-webkit/issues/707)
 				var gui = requirejs('nw.gui') 
-
-				// Get the current window
 				var win = gui.Window.get()
 
 				// XXX get state from config and load it...
+				// XXX
 
 				win.show()
 			}],
