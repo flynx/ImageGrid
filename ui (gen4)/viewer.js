@@ -151,10 +151,10 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 /*********************************************************************/
 
 // XXX should this be a generic library thing???
-// XXX should this also unbind events???
-// 		...in case we manually stop...
 // XXX should his have state???
 // 		...if so, should this be a toggler???
+// XXX HACK: need to check if actual events are bound...
+// XXX also need ability to unbind... 
 var LifeCycleActions = actions.Actions({
 	// XXX avoid binding multiple times per object...
 	start: ['- System/', 
@@ -162,15 +162,56 @@ var LifeCycleActions = actions.Actions({
 			var that = this
 			this.logger && this.logger.emit('start')
 
-			// setup exit...
-			// browser and nw.js
-			if(typeof('window') != 'undefined'){
-				$(window).unload(function(){ a.stop() })
+			// XXX HACK: need to check if actual events are bound...
+			// XXX also need ability to unbind... 
+			if(this.__stop_bound == null){
+				this.__stop_bound = true
 
-			// pure node.js
-			} else if(typeof(process) != 'undefined'){
-				process.on('exit', function(){ that.stop() })
+			} else {
+				return
 			}
+
+			// setup exit...
+			if(typeof(process) != 'undefined'){
+				// nw.js...
+				try{
+					this.runtime = 'nw'
+					var gui = requirejs('nw.gui')
+					gui.Window.get().on('close', function(){
+						var w = this
+						try{
+							that
+								// register the last handler on the stop event
+								// to wait for all other handlers to finish...
+								.on('stop.post', function(){ w.close(true) })
+								.stop()
+
+						// if something breaks force stop...
+						} catch(e) {
+							this.close(true)
+						}
+					})
+
+				// pure node.js...
+				} catch(e) {
+					this.runtime = 'node'
+					process.on('exit', function(){ 
+						that.stop() 
+					})
+				}
+
+			// browser...
+			} else if(typeof('window') != 'undefined'){
+				this.runtime = 'browser'
+				$(window).unload(function(){ 
+					that.stop() 
+				})
+
+			// unknown...
+			} else {
+				this.runtime = 'unknown'
+			}
+
 		}],
 	// XXX unbind events...
 	stop: ['- System/', 
@@ -3636,6 +3677,23 @@ module.AppControl = ImageGridFeatures.Feature({
 	isApplicable: function(){
 		return window.nodejs != null
 	},
+
+	// XXX show main window...
+	handlers: [
+		['start',
+			function(){
+				//or global.window.nwDispatcher.requireNwGui()
+				//(see https://github.com/rogerwang/node-webkit/issues/707)
+				var gui = requirejs('nw.gui') 
+
+				// Get the current window
+				var win = gui.Window.get()
+
+				// XXX get state from config and load it...
+
+				win.show()
+			}],
+	],
 })
 
 

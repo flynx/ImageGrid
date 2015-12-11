@@ -10,7 +10,8 @@
     "min_width": 400,
     "min_height": 400,
     "frame": false,
-    "toolbar": false
+    "toolbar": false,
+    "show": false
   },
   "webkit": {
     "page-cache": true
