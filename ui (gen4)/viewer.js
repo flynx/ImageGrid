@@ -149,14 +149,49 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 
 
 /*********************************************************************/
-//
-// XXX Tasks to accomplish here:
-// 	- life-cycle actions/events
-// 		- setup
-// 		- reset
-// 	- "features" and the mechanism to turn them on or off (action-sets)
-//
-//
+
+// XXX should this be a generic library thing???
+// XXX should this also unbind events???
+// 		...in case we manually stop...
+// XXX should his have state???
+// 		...if so, should this be a toggler???
+var LifeCycleActions = actions.Actions({
+	// XXX avoid binding multiple times per object...
+	start: ['- System/', 
+		function(){
+			var that = this
+			this.logger && this.logger.emit('start')
+
+			// setup exit...
+			// browser and nw.js
+			if(typeof('window') != 'undefined'){
+				$(window).unload(function(){ a.stop() })
+
+			// pure node.js
+			} else if(typeof(process) != 'undefined'){
+				process.on('exit', function(){ that.stop() })
+			}
+		}],
+	// XXX unbind events...
+	stop: ['- System/', 
+		function(){
+			this.logger && this.logger.emit('stop')
+		}],
+})
+
+var LifeCycle = 
+module.LifeCycle = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'lifecycle',
+
+	actions: LifeCycleActions,
+})
+
+
+
+//---------------------------------------------------------------------
 
 // XXX split this into read and write actions...
 var BaseActions = 
@@ -1588,6 +1623,127 @@ module.Journal = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+var ConfigLocalStorageActions = actions.Actions({
+	config: {
+		'config-local-storage-key': 'config',
+		
+		// NOTE: this is in seconds...
+		// NOTE: if this is null or 0 the timer will not start...
+		'auto-save-config-local-storage-interval': 5*60,
+	},
+
+	__config_loaded: null,
+	__auto_save_config_timer: null,
+
+	// Disable localStorage in child...
+	clone: [function(){
+		return function(res){
+			res.config['config-local-storage-key'] = null
+		}
+	}],
+
+	storeConfig: ['File/Store configuration',
+		function(key){
+			var key = key || this.config['config-local-storage-key']
+
+			if(key != null){
+				localStorage[key] = JSON.stringify(this.config) 
+			}
+		}],
+	loadStoredConfig: ['File/Load stored configuration',
+		function(key){
+			key = key || this.config['config-local-storage-key']
+
+			if(key && localStorage[key]){
+				this.config = JSON.parse(localStorage[key])
+			}
+		}],
+
+	// XXX make this a real toggler...
+	toggleAutoStoreConfig: ['File/Store configuration',
+		function(state){
+			var that = this
+			// NOTE: this is the target state and not the current...
+			state = state 
+				|| (this.__auto_save_config_timer == null ? 'on' : 'off')
+
+			if(state == '?'){
+				return this.__auto_save_config_timer == null ? 'off' : 'on'
+			}
+
+			interval = this.config['auto-save-config-local-storage-interval']
+
+			// no timer interval set...
+			if(!interval){
+				return this.toggleAutoStoreConfig('?')
+			}
+
+			if(this.__auto_save_config_timer != null){
+				clearTimeout(this.__auto_save_config_timer)
+				delete this.__auto_save_config_timer
+			}
+
+			if(state == 'on' 
+					&& interval 
+					&& this.__auto_save_config_timer == null){
+
+				var runner = function(){
+					clearTimeout(that.__auto_save_config_timer)
+
+					//that.logger && that.logger.emit('config', 'saving to local storage...')
+					that.storeConfig()
+
+					var interval = that.config['auto-save-config-local-storage-interval']
+
+					if(!interval){
+						delete that.__auto_save_config_timer
+						return
+					}
+
+					interval *= 1000
+
+					that.__auto_save_config_timer = setTimeout(runner, interval)
+				}
+
+				runner()
+			}
+
+			return state
+		}],
+})
+
+var ConfigLocalStorage = 
+module.ConfigLocalStorage = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'config-local-storage',
+	depends: [
+		'ui',
+	],
+
+	actions: ConfigLocalStorageActions,
+
+	handlers: [
+		['start',
+			function(){ 
+				this
+					.loadStoredConfig() 
+					.toggleAutoStoreConfig('on')
+			}],
+		['stop',
+			function(){ 
+				this
+					.storeConfig() 
+					.toggleAutoStoreConfig('off')
+			}],
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+
 // NOTE: this is split out to an action so as to enable ui elements to 
 // 		adapt to ribbon size changes...
 //
@@ -2084,9 +2240,15 @@ module.SingleImageView = ImageGridFeatures.Feature({
 	handlers:[
 		['fitImage.post',
 			function(){ 
+
 				// singe image mode -- set image proportions...
 				if(this.toggleSingleImage('?') == 'on'){
 					updateImageProportions.call(this)
+
+					this.config['single-image-scale'] = this.screenwidth
+
+				} else {
+					this.config['ribbon-scale'] = this.screenwidth
 				}
 			}],
 		// XXX this uses .screenwidth for scale, is this the right way to go?
@@ -2117,6 +2279,36 @@ module.SingleImageView = ImageGridFeatures.Feature({
 	],
 })
 
+
+var SingleImageViewLocalStorage =
+module.SingleImageViewLocalStorage = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-single-image-view-local-storage',
+	depends: [
+		'ui-single-image-view',
+		'config-local-storage',
+	],
+
+	handlers:[
+		// set scale...
+		['load loadURLs',
+			function(){
+				// prevent this from doing anything while no viewer...
+				if(!this.ribbons || !this.ribbons.viewer || this.ribbons.viewer.length == 0){
+					return
+				}
+
+				if(this.toggleSingleImage('?') == 'on'){
+					this.screenwidth = this.config['single-image-scale'] || this.screenwidth
+
+				} else {
+					this.screenwidth = this.config['ribbon-scale'] || this.screenwidth
+				}
+			}],
+	],
+})
 
 
 //---------------------------------------------------------------------
@@ -2856,13 +3048,21 @@ var makeActionLister = function(list, filter, pre_order){
 
 		// XXX get the correct parent...
 		var o = overlay.Overlay(that.ribbons.viewer, 
-			list(null, actions, path)
+			list(null, actions, {
+						path: path,
+						// load show disabled state from .config...
+						showDisabled: that.config['browse-actions-show-disabled'] || false,
+					})
 				.open(function(evt){ 
 					if(!closingPrevented){
 						o.close() 
 					}
 					closingPrevented = false
 				}))
+			// save show disabled state to .config...
+			.close(function(){
+				that.config['browse-actions-show-disabled'] = o.client.options.showDisabled
+			})
 
 		// XXX DEBUG
 		//window.LIST = o.client
@@ -2883,6 +3083,8 @@ var ActionTreeActions = actions.Actions({
 			'Edit/',
 			'Navigate/',
 		],
+
+		'browse-actions-show-disabled': false,
 	},
 
 	// XXX move this to a generic modal overlay feature...
@@ -4100,17 +4302,17 @@ var URLHistoryLocalStorageActions = actions.Actions({
 				localStorage[loaded] = this.base_path
 			}
 		}],
-		loadLastSavedBasePath: ['- History/',
-			function(){
-				var loaded = this.config['url-history-loaded-local-storage-key']
+	loadLastSavedBasePath: ['- History/',
+		function(){
+			var loaded = this.config['url-history-loaded-local-storage-key']
 
-				if(loaded && localStorage[loaded]){
-					this.openURLFromHistory(localStorage[loaded])
+			if(loaded && localStorage[loaded]){
+				this.openURLFromHistory(localStorage[loaded])
 
-				} else {
-					this.openURLFromHistory(0)
-				}
-			}]
+			} else {
+				this.openURLFromHistory(0)
+			}
+		}]
 })
 
 var URLHistoryLocalStorage = 
@@ -4128,6 +4330,11 @@ module.URLHistoryLocalStorage = ImageGridFeatures.Feature({
 
 	// NOTE: loading is done by the .url_history prop...
 	handlers: [
+		['start',
+			function(){ this.loadLastSavedBasePath() }], 
+		['stop',
+			function(){ this.saveURLHistory() }], 
+
 		// save base_path...
 		['load loadURLs', 
 			function(){ this.base_path && this.saveBasePath() }],
@@ -4731,6 +4938,7 @@ module.FileSystemWriterUI = ImageGridFeatures.Feature({
 //
 
 ImageGridFeatures.Feature('viewer-testing', [
+	'lifecycle',
 	'base',
 	'ui',
 
@@ -4751,7 +4959,10 @@ ImageGridFeatures.Feature('viewer-testing', [
 	'image-marks',
 	'image-bookmarks',
 
+	// local storage...
+	'config-local-storage',
 	'url-history-local-storage',
+	'ui-single-image-view-local-storage',
 
 	'fs-loader',
 		'ui-fs-loader',

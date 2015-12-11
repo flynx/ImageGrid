@@ -233,7 +233,6 @@ WalkPrototype.options = {
 
 	list: listDir,
 
-	//disableItemPattern: false,
 	fileCountPattern: '*',
 }
 WalkPrototype.options.__proto__ = browse.Browser.prototype.options

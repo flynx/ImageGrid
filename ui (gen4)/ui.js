@@ -83,6 +83,7 @@ module.GLOBAL_KEYBOARD = {
 		},
 		F5: doc('Full reload viewer', 
 			function(){ 
+				//a.stop()
 				/*
 				killAllWorkers()
 					.done(function(){
@@ -259,26 +260,31 @@ $(function(){
 	//a.experimental = true
 
 	// setup actions...
-	viewer.ImageGridFeatures.setup(a, [
-		'viewer-testing',
+	viewer.ImageGridFeatures
+		.setup(a, [
+			'viewer-testing',
 
-		// XXX this is not for production...
-		'experiments',
-	])
+			// XXX this is not for production...
+			'experiments',
+		])
+
+
+	a.logger = a.logger || {emit: function(e, v){ console.log('    ', e, v) }}
+
+
 
 	// setup the viewer...
-	a.load({
+	a
+		//.toggleAutoStoreConfig()
+		.load({
 			viewer: $('.viewer'),
 		})
 		.setEmptyMsg('Loading...')
+		.start()
 
 
-	// load last loaded path...
-	if(a.url_history && Object.keys(a.url_history).length > 0){
-		a.loadLastSavedBasePath()
-
-	// load some testing data...
-	} else {
+	// load some testing data if nothing else loaded...
+	if(!a.url_history || Object.keys(a.url_history).length == 0){
 		// NOTE: we can (and do) load this in parts...
 		a
 			.load({
@@ -296,8 +302,6 @@ $(function(){
 		'Nothing loaded...',
 		'Press \'O\' to load, \'F1\' for help or \'?\' for keyboard mappings.')
 
-
-	a.logger = a.logger || {emit: function(e, v){ console.log('    ', e, v) }}
 
 
 	// setup base keyboard for devel, in case something breaks...
