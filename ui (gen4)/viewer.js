@@ -964,6 +964,14 @@ actions.Actions({
 		// XXX at this point the keyboard is setup in ui.js, need to 
 		// 		move to a more logical spot...
 		'max-key-repeat-rate': 0,
+
+		'theme': null,
+
+		'themes': [
+			'gray', 
+			'dark', 
+			'light',
+		],
 	},
 
 	// Images...
@@ -1111,11 +1119,14 @@ actions.Actions({
 	toggleTheme: ['Interface/Toggle viewer theme', 
 		CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
+			// XXX how do we get this live from config???
+			//this.config.themes,
 			[
 				'gray', 
 				'dark', 
-				'light'
-			]) ],
+				'light',
+			],
+			function(state){ this.config['theme'] = state }) ],
 	setEmptyMsg: ['- Interface/Set message to be displayed when nothing is loaded.',
 		function(msg, help){ this.ribbons.setEmptyMsg(msg, help) }],
 
@@ -1491,6 +1502,15 @@ module.Viewer = ImageGridFeatures.Feature({
 	isApplicable: function(){ 
 		return typeof(window) == typeof({}) 
 	},
+
+	handlers: [
+		['start',
+			function(){
+				if(this.config.theme){
+					this.toggleTheme(this.config.theme)
+				}
+			}],
+	],
 })
 
 
@@ -1725,7 +1745,9 @@ module.ConfigLocalStorage = ImageGridFeatures.Feature({
 	actions: ConfigLocalStorageActions,
 
 	handlers: [
-		['start',
+		// NOTE: considering that allot depends on this it must be 
+		// 		first to run...
+		['start.pre',
 			function(){ 
 				this
 					.loadStoredConfig() 
