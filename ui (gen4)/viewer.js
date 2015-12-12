@@ -1721,25 +1721,25 @@ var ConfigLocalStorageActions = actions.Actions({
 		function(key){
 			var key = key || this.config['config-local-storage-key']
 
-			// build a diff...
-			if(this.config['config-local-storage-save-diff']){
-				var base = this.__base_config || {}
-				var cur = this.config
-				var config = {}
-				Object.keys(cur)
-					.forEach(function(e){
-						if(cur.hasOwnProperty(e) && base[e] != cur[e]){
-							config[e] = cur[e]
-						}
-					})
-				console.log('!!!!', config)
-
-			// full save...
-			} else {
-				var config = this.config
-			}
-
 			if(key != null){
+				// build a diff...
+				if(this.config['config-local-storage-save-diff']){
+					var base = this.__base_config || {}
+					var cur = this.config
+					var config = {}
+					Object.keys(cur)
+						.forEach(function(e){
+							if(cur.hasOwnProperty(e) && base[e] != cur[e]){
+								config[e] = cur[e]
+							}
+						})
+
+				// full save...
+				} else {
+					var config = this.config
+				}
+
+				// store...
 				localStorage[key] = JSON.stringify(config) 
 			}
 		}],
@@ -3689,7 +3689,6 @@ var AppControlActions = actions.Actions({
 	config: {
 		'application-window': null,
 
-		'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
 		'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
 	},
 
