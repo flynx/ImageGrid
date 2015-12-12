@@ -238,7 +238,11 @@ module.LifeCycle = ImageGridFeatures.Feature({
 var BaseActions = 
 module.BaseActions = 
 actions.Actions({
+
 	config: {
+		// XXX should this be here???
+		version: 'gen4',
+
 		// see .direction for details...
 		'steps-to-change-direction': 3,
 
@@ -251,6 +255,12 @@ actions.Actions({
 		// 	'visual'	- select image closest visually
 		//'ribbon-focus-mode': 'order',
 		'ribbon-focus-mode': 'visual',
+	},
+
+	
+	// XXX
+	get version(){
+		return this.config.version
 	},
 
 	// basic state...
@@ -1686,7 +1696,10 @@ var ConfigLocalStorageActions = actions.Actions({
 		
 		// NOTE: this is in seconds...
 		// NOTE: if this is null or 0 the timer will not start...
-		'auto-save-config-local-storage-interval': 5*60,
+		'config-auto-save-local-storage-interval': 5*60,
+
+		// XXX not sure what should be the default...
+		'config-local-storage-save-diff': true,
 	},
 
 	// XXX should we store this in something like .default_config and
@@ -1708,8 +1721,26 @@ var ConfigLocalStorageActions = actions.Actions({
 		function(key){
 			var key = key || this.config['config-local-storage-key']
 
+			// build a diff...
+			if(this.config['config-local-storage-save-diff']){
+				var base = this.__base_config || {}
+				var cur = this.config
+				var config = {}
+				Object.keys(cur)
+					.forEach(function(e){
+						if(cur.hasOwnProperty(e) && base[e] != cur[e]){
+							config[e] = cur[e]
+						}
+					})
+				console.log('!!!!', config)
+
+			// full save...
+			} else {
+				var config = this.config
+			}
+
 			if(key != null){
-				localStorage[key] = JSON.stringify(this.config) 
+				localStorage[key] = JSON.stringify(config) 
 			}
 		}],
 	loadStoredConfig: ['File/Load stored configuration',
@@ -1747,7 +1778,7 @@ var ConfigLocalStorageActions = actions.Actions({
 				return this.__auto_save_config_timer == null ? 'off' : 'on'
 			}
 
-			interval = this.config['auto-save-config-local-storage-interval']
+			interval = this.config['config-auto-save-local-storage-interval']
 
 			// no timer interval set...
 			if(!interval){
@@ -1769,7 +1800,7 @@ var ConfigLocalStorageActions = actions.Actions({
 					//that.logger && that.logger.emit('config', 'saving to local storage...')
 					that.storeConfig()
 
-					var interval = that.config['auto-save-config-local-storage-interval']
+					var interval = that.config['config-auto-save-local-storage-interval']
 
 					if(!interval){
 						delete that.__auto_save_config_timer
@@ -3657,6 +3688,9 @@ module.ImageBookmarks = ImageGridFeatures.Feature({
 var AppControlActions = actions.Actions({
 	config: {
 		'application-window': null,
+
+		'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
+		'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
 	},
 
 	// XXX revise these...
@@ -3719,9 +3753,21 @@ module.AppControl = ImageGridFeatures.Feature({
 
 				if(this.images){
 					var img = this.images[this.current]
-					win.title = 'ImageGrid.Viewer: '
-						+ (img.name 
-								|| img.path.replace(/\.[\\\/]/, ''))
+					win.title = (this.config['window-title'] 
+							|| 'ImageGrid.Viewer (${VERSION}): ${FILENAME}')
+						// XXX get this from the viewer...
+						.replace('${VERSION}', this.version || 'gen4')
+						.replace('${FILENAME}', 
+							(img.name 
+								|| img.path.replace(/\.[\\\/]/, '')))
+						.replace('${PATH}', 
+							(img.base_path || '.') 
+								+'/'+ img.path.replace(/\.[\\\/]/, ''))
+						.replace('${DIR}', 
+							pathlib.dirname((img.base_path || '.') 
+								+'/'+ img.path.replace(/\.[\\\/]/, '')))
+						// XXX add ...
+						
 				}
 			}],
 	],
@@ -3735,6 +3781,7 @@ module.AppControl = ImageGridFeatures.Feature({
 // XXX at this point this is a stub...
 if(window.nodejs != null){
 	var fse = requirejs('fs-extra')
+	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
 	var file = requirejs('./file')
 }
