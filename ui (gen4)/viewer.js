@@ -1678,7 +1678,6 @@ module.Journal = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-// XXX add .resetDefaults(..)...
 var ConfigLocalStorageActions = actions.Actions({
 	config: {
 		'config-local-storage-key': 'config',
@@ -1688,6 +1687,11 @@ var ConfigLocalStorageActions = actions.Actions({
 		'auto-save-config-local-storage-interval': 5*60,
 	},
 
+	// XXX should we store this in something like .default_config and
+	// 		clone it???
+	// 		...do not think so, as the __base_config xhould always be set
+	// 		to the values set in code... (check this!)
+	__base_config: null,
 	__config_loaded: null,
 	__auto_save_config_timer: null,
 
@@ -1711,12 +1715,22 @@ var ConfigLocalStorageActions = actions.Actions({
 			key = key || this.config['config-local-storage-key']
 
 			if(key && localStorage[key]){
-				var base = this.config
+				// get the original (default) config and keep it for 
+				// reference...
+				// NOTE: this is here so as to avoid creating 'endless'
+				// 		config inheritance chains...
+				base = this.__base_config = this.__base_config || this.config
+
 				var loaded = JSON.parse(localStorage[key])
 				loaded.__proto__ = base
 
 				this.config = loaded 
 			}
+		}],
+	// XXX need to load the reset config, and not just set it...
+	resetConfig: ['File/Reset configuration to default state',
+		function(){
+			this.config = this.__base_config || this.config
 		}],
 
 	// XXX make this a real toggler...
@@ -3695,6 +3709,16 @@ module.AppControl = ImageGridFeatures.Feature({
 				// XXX
 
 				win.show()
+			}],
+		['focusImage',
+			function(){
+				var gui = requirejs('nw.gui') 
+				var win = gui.Window.get()
+
+				if(this.images){
+					var img = this.images[this.current]
+					win.title = 'ImageGrid.Viewer: '+ (img.name || img.path)
+				}
 			}],
 	],
 })

@@ -241,48 +241,61 @@ function Toggler(elem, state_accessor, states, callback_a, callback_b){
 		return action
 	}
 
-	// XXX these are broken...
-	//func.states = states
-	Object.defineProperty(func, 'states', {
-		get: function(){
-			return typeof(states_getter) == typeof(function(){}) ?
-				states_getter.apply(this)
-				: state_set
-		},
-		set: function(value){
-			state_set = states_getter = value
-		},
-	})
-	Object.defineProperty(func, 'doc', {
-		get: function(){
-			if(func.__doc != null){
-				return func.__doc
-			}
-			var states = typeof(states_getter) == typeof(function(){}) ?
-				states_getter.apply(this)
-				: state_set
+	// XXX these are broken -- this is wrong...
+	// 		...do not see how to fix this now in a good way...
+	if(typeof(states_getter) == typeof(function(){})){
+		Object.defineProperty(func, 'states', {
+			get: function(){ return states_getter.apply(this) },
+		})
+		Object.defineProperty(func, 'doc', {
+			get: function(){
+				if(func.__doc != null){
+					return func.__doc
+				}
+				var states = typeof(states_getter) == typeof(function(){}) ?
+					states_getter.apply(this)
+					: state_set
 
-			// bool_action...
-			if(states.length == 2 && states[0] == 'none'){
-				return 'With no arguments this will toggle between "on" and '
-					+'"off".\n'
-					+'If either "on" or "off" are given then this will switch '
-					+'to that mode.\n'
-					+'If "?" is given, this will return either "on" or "off" '
-					+'depending on the current state.'
+				// bool_action...
+				if(states.length == 2 && states[0] == 'none'){
+					return 'With no arguments this will toggle between "on" and '
+						+'"off".\n'
+						+'If either "on" or "off" are given then this will switch '
+						+'to that mode.\n'
+						+'If "?" is given, this will return either "on" or "off" '
+						+'depending on the current state.'
 
-			} else {
-				return 'With no arguments this will toggle between '
-					+ states +' in cycle.\n'  
-					+'if any of the state names or its number is given then that '
-					+'state is switched on.'
-					+'If "?" is given, this will return the current state.'
-			}
-		},
-		set: function(value){
-			func.__doc = value
-		},
-	})
+				} else {
+					return 'With no arguments this will toggle between '
+						+ states +' in cycle.\n'  
+						+'if any of the state names or its number is given then that '
+						+'state is switched on.'
+						+'If "?" is given, this will return the current state.'
+				}
+			},
+			set: function(value){
+				func.__doc = value
+			},
+		})
+
+	} else {
+		func.states = state_set
+		if(state_set.length == 2 && state_set[0] == 'none'){
+			func.doc = 'With no arguments this will toggle between "on" and '
+				+'"off".\n'
+				+'If either "on" or "off" are given then this will switch '
+				+'to that mode.\n'
+				+'If "?" is given, this will return either "on" or "off" '
+				+'depending on the current state.'
+
+		} else {
+			func.doc = 'With no arguments this will toggle between '
+				+ state_set +' in cycle.\n'  
+				+'if any of the state names or its number is given then that '
+				+'state is switched on.'
+				+'If "?" is given, this will return the current state.'
+		}
+	}
 
 	func.__proto__ = Toggler.prototype
 	func.constructor = Toggler
