@@ -36,10 +36,12 @@ var quoteWS = function(str){
 
 
 // Quote a string and convert to RegExp to match self literally.
+// XXX this depends on jli.quoteRegExp(..)
 function toRegExp(str){
 	return RegExp('^'
 		// quote regular expression chars...
-		+str.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
+		+quoteRegExp(str)
+		//+str.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
 		+'$')
 }
 

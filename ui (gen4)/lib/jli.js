@@ -1193,6 +1193,10 @@ function assyncCall(func){
 	return _func
 }
 
+// Quote a string and convert to RegExp to match self literally.
+function quoteRegExp(str){
+	return str.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
+}
 
 
 /**********************************************************************

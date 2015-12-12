@@ -275,6 +275,7 @@ module.makeImageSeqOrNameCmp = function(data, get, seq){
 
 /*********************************************************************/
 
+// XXX depends on jli.quoteRegExp(..)
 var ImagesClassPrototype =
 module.ImagesClassPrototype = {
 	// XXX populate the image doc better...
@@ -284,7 +285,8 @@ module.ImagesClassPrototype = {
 		var images = new this()
 		// XXX stub...
 		var i = 0
-		var base_pattern = base ? RegExp('^' + base) : null 
+		//var base_pattern = base ? RegExp('^' + base) : null 
+		var base_pattern = base ? RegExp('^' + quoteRegExp(base)) : null 
 		data.forEach(function(path){
 			var gid = hash('I'+i)
 			// XXX populate the image doc better...

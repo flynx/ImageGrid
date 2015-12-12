@@ -1006,8 +1006,10 @@ actions.Actions({
 		// 		move to a more logical spot...
 		'max-key-repeat-rate': 0,
 
+		// Theme to set on startup...
 		'theme': null,
 
+		// Supported themes...
 		'themes': [
 			'gray', 
 			'dark', 
@@ -3717,7 +3719,9 @@ module.AppControl = ImageGridFeatures.Feature({
 
 				if(this.images){
 					var img = this.images[this.current]
-					win.title = 'ImageGrid.Viewer: '+ (img.name || img.path)
+					win.title = 'ImageGrid.Viewer: '
+						+ (img.name 
+								|| img.path.replace(/\.[\\\/]/, ''))
 				}
 			}],
 	],
