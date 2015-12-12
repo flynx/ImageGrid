@@ -92,17 +92,31 @@
 // state_accessor signature:
 //
 // 	Get current state:
-// 	state_accessor()
+// 	state_accessor(<elem>)
 // 		-> <current-state>
 //
 // 	Set new state:
-// 	state_accessor(<new-state>)
+// 	state_accessor(<elem>, <new-state>)
 // 		-> <new-state>
+//
+// `this' within <state_accessor> is set to toggler's context.
 //
 // NOTE: for single state toggling, 'none' will get passed to 
 // 		state_accessor to indicate an "empty" state...
 // NOTE: if elem is a function it will be called in the same context as
 // 		the toggler and is expected to return the element.
+//
+//
+// states can be:
+// 	<state>				- state string, equivalent to ['none', <state>]
+// 							this will produce a bool toggler that will toggle
+// 							a single state on and off.
+// 	[<state>, ...]		- list of string states that will be toggled 
+// 							through, one special state 'none' is supported
+// 	function(){ ... }	- function that will return either a state or 
+// 							a list of states, `this' will be set to
+// 							the toggler's context...
+//
 //
 // XXX technically we do not need both elem and state_accessor here, the
 // 		later is enough, but as strict mode is not stable enough (sometimes
@@ -110,7 +124,8 @@
 // 		via 'this'.
 function Toggler(elem, state_accessor, states, callback_a, callback_b){
 	// normalize states...
-	states = typeof(states) == typeof('str') ? ['none', states] : states
+	var states_getter = states
+	var state_set = typeof(states) == typeof('str') ? ['none', states] : states
 	// normalize the callbacks...
 	if(callback_b === undefined){
 		var callback_pre = null
@@ -119,8 +134,6 @@ function Toggler(elem, state_accessor, states, callback_a, callback_b){
 		var callback_pre = callback_a
 		var callback_post = callback_b
 	}
-
-	var bool_action = (states.length == 2 && states[0] == 'none')
 
 	// NOTE: this needs to be strict so as to be able to distinguish 
 	// 		between a method and a root context in a simple manner...
@@ -141,6 +154,17 @@ function Toggler(elem, state_accessor, states, callback_a, callback_b){
 
 		e = e instanceof Function ? e.call(this) : e
 
+		// see if we got an explicit state list or need to use a getter...
+		var states = state_set
+		if(typeof(states_getter) == typeof(function(){})){
+			// get the states...
+			var states = states_getter.call(this)
+			var states = typeof(states) == typeof('str') ? 
+				['none', states] 
+				: states
+		}
+		var bool_action = (state_set.length == 2 && state_set[0] == 'none')
+
 		// XXX is this correct???
 		var args = args2array(arguments).slice(2)
 
@@ -160,7 +184,7 @@ function Toggler(elem, state_accessor, states, callback_a, callback_b){
 		// we need to get the current state...
 		if(action == null || action == '?' || action == '!'){
 			// get current state...
-			var cur = state_accessor.call(e)
+			var cur = state_accessor.call(this, e)
 
 			// just asking for info...
 			if(action == '?'){
@@ -204,7 +228,7 @@ function Toggler(elem, state_accessor, states, callback_a, callback_b){
 		}
 
 		// update the element...
-		state_accessor.call(e, state)
+		state_accessor.call(this, e, state)
 
 		// post callback...
 		if(callback_post != null){
@@ -217,21 +241,48 @@ function Toggler(elem, state_accessor, states, callback_a, callback_b){
 		return action
 	}
 
-	func.states = states
-	if(bool_action){
-		func.doc = 'With no arguments this will toggle between "on" and '+
-			'"off".\n'+
-			'If either "on" or "off" are given then this will switch '+
-			'to that mode.\n'+
-			'If "?" is given, this will return either "on" or "off" '+
-			'depending on the current state.'
-	}else{
-		func.doc = 'With no arguments this will toggle between '+
-			states +' in cycle.\n' + 
-			'if any of the state names or its number is given then that '+
-			'state is switched on.'+
-			'If "?" is given, this will return the current state.'
-	}
+	// XXX these are broken...
+	//func.states = states
+	Object.defineProperty(func, 'states', {
+		get: function(){
+			return typeof(states_getter) == typeof(function(){}) ?
+				states_getter.apply(this)
+				: state_set
+		},
+		set: function(value){
+			state_set = states_getter = value
+		},
+	})
+	Object.defineProperty(func, 'doc', {
+		get: function(){
+			if(func.__doc != null){
+				return func.__doc
+			}
+			var states = typeof(states_getter) == typeof(function(){}) ?
+				states_getter.apply(this)
+				: state_set
+
+			// bool_action...
+			if(states.length == 2 && states[0] == 'none'){
+				return 'With no arguments this will toggle between "on" and '
+					+'"off".\n'
+					+'If either "on" or "off" are given then this will switch '
+					+'to that mode.\n'
+					+'If "?" is given, this will return either "on" or "off" '
+					+'depending on the current state.'
+
+			} else {
+				return 'With no arguments this will toggle between '
+					+ states +' in cycle.\n'  
+					+'if any of the state names or its number is given then that '
+					+'state is switched on.'
+					+'If "?" is given, this will return the current state.'
+			}
+		},
+		set: function(value){
+			func.__doc = value
+		},
+	})
 
 	func.__proto__ = Toggler.prototype
 	func.constructor = Toggler
@@ -244,26 +295,46 @@ Toggler.prototype.__proto__ = Function.prototype
 // XXX this should be drop-in compatible with createCSSClassToggler(..)
 // 		test and replace...
 function CSSClassToggler(elem, classes, callback_a, callback_b){
-	// normalize the states...
-	classes = typeof(classes) == typeof('str') ? ['none', classes] : classes
-	// remove the dot from class names...
-	// NOTE: this is here because I've made the error of including a 
-	// 		leading "." almost every time I use this after I forget 
-	// 		the UI...
-	classes = classes
-		.map(function(e){
-			return e.split(' ')
-				.map(function(c){
-					c = c.trim()
-					return c[0] == '.' ? c.slice(1) : c
-				}).join(' ')
-		})
+	var classes_getter = classes
+	var classes_set = classes
+
+	var getClasses = function(){
+		var classes = typeof(classes_getter) == typeof(function(){}) ? 
+				classes_getter.call(this)
+				: classes_set
+		classes = typeof(classes) == typeof('str') ? ['none', classes] : classes
+
+		// remove the dot from class names...
+		// NOTE: this is here because I've made the error of including a 
+		// 		leading "." almost every time I use this after I forget 
+		// 		the UI...
+		return classes
+			.map(function(e){
+				return e.split(' ')
+					.map(function(c){
+						c = c.trim()
+						return c[0] == '.' ? c.slice(1) : c
+					}).join(' ')
+			})
+	}
+
+	// normalize...
+	// NOTE: this happens here once if we got explicit classes, and on
+	// 		each access if we get a getter function...
+	classes_set = typeof(classes_getter) != typeof(function(){}) ?
+		getClasses.call(this)
+		: classes_set
 	
 	var toggler = Toggler(
 		elem,
-		function(state){
+		function(e, state){
 			'use strict'
-			var e = $(this == null ? elem : this)
+
+			var classes = classes_set.constructor === Array ?
+				classes_set
+				: getClasses.call(this)
+
+			e = $(e == null ? elem : e)
 			// get the state...
 			if(state == null){
 				var cur = 'none'
@@ -286,7 +357,7 @@ function CSSClassToggler(elem, classes, callback_a, callback_b){
 				}
 			}
 		}, 
-		classes, 
+		typeof(classes_getter) == typeof(function(){}) ? getClasses : classes_set,
 		callback_a, 
 		callback_b)
 

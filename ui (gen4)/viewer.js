@@ -456,9 +456,9 @@ actions.Actions({
 		function(all){ this.focusImage(all == null ? 'last' : -1) }],
 	// XXX these break if image at first/last position are not loaded (crop, group, ...)
 	// XXX do we actually need these???
-	firstGlobalImage: ['Navigate/First globally image',
+	firstGlobalImage: ['Navigate/First image globally',
 		function(){ this.firstImage(true) }],
-	lastGlobalImage: ['Navigate/Last globally image',
+	lastGlobalImage: ['Navigate/Last image globally',
 		function(){ this.lastImage(true) }],
 
 	// XXX skip unloaded images... (groups?)
@@ -1160,14 +1160,8 @@ actions.Actions({
 	toggleTheme: ['Interface/Toggle viewer theme', 
 		CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
-			// XXX how do we get this live from config???
-			//this.config.themes,
-			[
-				'gray', 
-				'dark', 
-				'light',
-			],
-			function(state){ this.config['theme'] = state }) ],
+			function(){ return this.config.themes },
+			function(state){ this.config.theme = state }) ],
 	setEmptyMsg: ['- Interface/Set message to be displayed when nothing is loaded.',
 		function(msg, help){ this.ribbons.setEmptyMsg(msg, help) }],
 
@@ -1717,7 +1711,11 @@ var ConfigLocalStorageActions = actions.Actions({
 			key = key || this.config['config-local-storage-key']
 
 			if(key && localStorage[key]){
-				this.config = JSON.parse(localStorage[key])
+				var base = this.config
+				var loaded = JSON.parse(localStorage[key])
+				loaded.__proto__ = base
+
+				this.config = loaded 
 			}
 		}],
 
@@ -3796,7 +3794,7 @@ var FileSystemLoaderActions = actions.Actions({
 	// XXX add a symmetric equivalent to .prepareIndexForWrite(..) so as 
 	// 		to enable features to load their data...
 	// XXX look inside...
-	loadIndex: ['File/Load index',
+	loadIndex: ['- File/Load index',
 		function(path, logger){
 			var that = this
 
@@ -3902,7 +3900,7 @@ var FileSystemLoaderActions = actions.Actions({
 	// XXX add a recursive option...
 	// 		...might also be nice to add sub-dirs to ribbons...
 	// XXX make image pattern more generic...
-	loadImages: ['File/Load images',
+	loadImages: ['- File/Load images',
 		function(path, logger){
 			if(path == null){
 				return
@@ -3932,7 +3930,7 @@ var FileSystemLoaderActions = actions.Actions({
 		}],
 
 	// XXX auto-detect format or let the user chose...
-	loadPath: ['File/Load path (STUB)',
+	loadPath: ['- File/Load path (STUB)',
 		function(path, logger){
 			// XXX check if this.config['index-dir'] exists, if yes then
 			// 		.loadIndex(..) else .loadImages(..)
@@ -4137,8 +4135,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 		to start from.
 	// XXX should passing no path to this start browsing from the current
 	// 		path or from the root?
-	loadIndex: [makeBrowseProxy('loadIndex')],
-	loadImages: [makeBrowseProxy('loadImages')],
+	loadIndex: ['File/Load index', makeBrowseProxy('loadIndex')],
+	loadImages: ['File/Load images', makeBrowseProxy('loadImages')],
 })
 
 
