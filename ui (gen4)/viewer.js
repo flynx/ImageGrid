@@ -153,16 +153,14 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 // XXX should this be a generic library thing???
 // XXX should his have state???
 // 		...if so, should this be a toggler???
-// XXX also need ability to unbind... 
 var LifeCycleActions = actions.Actions({
-	// XXX avoid binding multiple times per object...
 	start: ['- System/', 
 		function(){
 			var that = this
 			this.logger && this.logger.emit('start')
 
-			// XXX HACK: need to check if actual events are bound...
-			// XXX also need ability to unbind... 
+			// NOTE: jQuery currently provides no way to check if an event
+			// 		is bound so we'll need to keep track manually...
 			if(this.__stop_handler == null){
 				var stop = this.__stop_handler = function(){ that.stop() }
 
@@ -186,7 +184,7 @@ var LifeCycleActions = actions.Actions({
 					// 		get triggered in specific conditions and some do,
 					// 		for example, this gets triggered when the window's
 					// 		'X' is clicked while does not on reload...
-					gui.Window.get().on('close', function(){
+					this.__nw_stop_handler = function(){
 						var w = this
 						try{
 							that
@@ -202,7 +200,8 @@ var LifeCycleActions = actions.Actions({
 						} catch(e){
 							this.close(true)
 						}
-					})
+					}
+					gui.Window.get().on('close', this.__nw_stop_handler)
 
 
 				// pure node.js...
@@ -224,11 +223,25 @@ var LifeCycleActions = actions.Actions({
 			}
 
 		}],
+	// unbind events...
 	stop: ['- System/', 
 		function(){
-			// unbind events...
-			if(this.runtime == 'browser' || this.runtime == 'nw'){
+			// browser & nw...
+			if(this.__stop_handler 
+					&& (this.runtime == 'browser' || this.runtime == 'nw')){
 				$(window).off('beforeunload', this.__stop_handler)
+			}
+
+			// nw...
+			if(this.__nw_stop_handler && this.runtime == 'nw'){
+				var gui = requirejs('nw.gui')
+				gui.Window.get().off('close', this.__nw_stop_handler)
+				delete this.__nw_stop_handler
+			}
+
+			// node...
+			if(this.__stop_handler && this.runtime == 'node'){
+				process.off('exit', this.__stop_handler)
 			}
 
 			delete this.__stop_handler
@@ -1570,7 +1583,10 @@ module.Viewer = ImageGridFeatures.Feature({
 
 	tag: 'ui',
 
-	depends: ['base'],
+	depends: [
+		'lifecycle',
+		'base',
+	],
 
 	actions: ViewerActions,
 
@@ -3890,6 +3906,9 @@ module.AppControl = ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'app-control',
+	depends: [
+		'ui',
+	],
 
 	actions: AppControlActions,
 

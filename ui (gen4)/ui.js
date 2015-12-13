@@ -261,7 +261,9 @@ module.GLOBAL_KEYBOARD = {
 $(function(){
 
 	// list all loaded modules...
-	console.log('MODULES:', requirejs.s.contexts._.defined)
+	var m = requirejs.s.contexts._.defined
+	m = Object.keys(m).filter(function(e){ return m[e] != null })
+	console.log('Modules (%d):', m.length, m)
 
 	// XXX stub action set -- this needs to be auto-generated...
 	window.a = actions.Actions()
@@ -279,8 +281,20 @@ $(function(){
 		])
 
 
-	a.logger = a.logger || {emit: function(e, v){ console.log('    ', e, v) }}
+	// report stuff...
+	// XXX we also have .conflicts and .missing
+	a.features.excluded.length > 0 
+		&& console.warn('Features excluded (%d):',
+			a.features.excluded.length, 
+			a.features.excluded)
+	console.log('Features not applicable (%d):', 
+		a.features.unapplicable.length, 
+		a.features.unapplicable)
+	console.log('Features loaded (%d):',
+		a.features.features.length, 
+		a.features.features)
 
+	a.logger = a.logger || {emit: function(e, v){ console.log('    ', e, v) }}
 
 
 	// setup the viewer...

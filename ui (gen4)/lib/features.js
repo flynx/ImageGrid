@@ -231,6 +231,9 @@ var FeatureSet =
 module.FeatureSet = {
 	__feature__: Feature,
 
+	// if true, .setup(..) will report things it's doing... 
+	__verbose__: null,
+
 	// Build feature list...
 	//
 	// 	Build a list of all registered features
@@ -541,13 +544,13 @@ module.FeatureSet = {
 		}
 
 		// report excluded features...
-		if(features.excluded.length > 0){
+		if(this.__verbose__ && features.excluded.length > 0){
 			console.warn('Excluded features due to exclusivity conflict:', 
 					features.excluded.join(', '))
 		}
 
 		// report unapplicable features...
-		if(features.unapplicable.length > 0){
+		if(this.__verbose__ && features.unapplicable.length > 0){
 			console.log('Features not applicable in current context:', 
 					features.unapplicable.join(', '))
 		}
@@ -558,10 +561,13 @@ module.FeatureSet = {
 		lst.forEach(function(n){
 			// setup...
 			if(that[n] != null){
-				console.log('Setting up feature:', n)
+				this.__verbose__ && console.log('Setting up feature:', n)
 				setup.call(that[n], obj)
 			}
 		})
+
+		// XXX should we extend this if it already was in the object???
+		obj.features = features
 
 		return obj
 	},
