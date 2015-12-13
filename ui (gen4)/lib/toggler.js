@@ -28,12 +28,14 @@
 // 	- 'off'			: switch mode off -- remove class
 // 	- '!'			: reload current state, same as toggler(toggler('?'))
 // 	- '?'			: return current state ('on'|'off')
+// 	- '??'			: return a list of supported states
 //
 // In forms 2 and 3, if class_list is a list of strings, the <action> can be:
 //  - <index>		: explicitly set the state to index in class_list
 //  - <class-name>	: explicitly set a class from the list
 // 	- '!'			: reload current state, same as toggler(toggler('?'))
 // 	- '?'			: return current state ('on'|'off')
+// 	- '??'			: return a list of supported states
 //
 //
 // In the third form the <target> is a jquery-compatible object.
@@ -181,8 +183,12 @@ function Toggler(elem, state_accessor, states, callback_a, callback_b){
 			}
 		}
 
+		// get the state list...
+		if(action == '??'){
+			return states
+
 		// we need to get the current state...
-		if(action == null || action == '?' || action == '!'){
+		} else if(action == null || action == '?' || action == '!'){
 			// get current state...
 			var cur = state_accessor.call(this, e)
 
