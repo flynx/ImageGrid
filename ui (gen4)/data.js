@@ -1275,6 +1275,8 @@ var DataPrototype = {
 	// 		-> data
 	//
 	// NOTE: if mode is 'vertical' then place is ignored...
+	//
+	// XXX this is very similar to .placeImage(..) should keep one...
 	gatherImages: function(gids, reference, place, mode){
 		gids = this.makeSparseImages(gids)
 
@@ -1372,6 +1374,92 @@ var DataPrototype = {
 		return this
 	},
 	
+	// Place image at position... 
+	//
+	//	Place imagess at order into ribbon...
+	//	.placeImage(images, ribbon, order)
+	//		-> data
+	//
+	//	Place images at order but do not touch ribbon position...
+	//	.placeImage(images, 'keep', order)
+	//		-> data
+	//
+	//	Place images to ribbon but do not touch order...
+	//	.placeImage(images, ribbon, 'keep')
+	//		-> data
+	//
+	// images is .getImage(..) compatible or a list of compatibles.
+	// ribbon is .getRibbon(..) compatible or 'keep'.
+	// order is .getImageOrder(..) compatible or 'keep'.
+	//
+	// NOTE: if images is a list, all images will be placed in the order
+	// 		they are given.
+	// NOTE: this can affect element indexes, thus for example element 
+	// 		at input order may be at a different position after this is 
+	// 		run.
+	//
+	// XXX this is very similar to .gatherImages(..) should keep one...
+	placeImage: function(images, ribbon, order, mode){
+		var that = this
+		mode = mode || 'before'
+
+		// XXX how do we complain and fail here??
+		if(mode != 'before' && mode != 'after'){
+			console.error('invalid mode:', mode)
+			return this
+		}
+
+		images = images instanceof Array ? images : [images]
+		images = images.map(function(img){ return that.getImage(img) })
+
+		// vertical shift...
+		// NOTE: this will gather all the images to the target ribbon...
+		if(ribbon != 'keep'){
+			var to = this.getRibbon(ribbon)
+			this.makeSparseImages(images)
+				.forEach(function(img, f){
+					var from = that.getRibbon(img)
+					if(from != to){
+						that.ribbons[to][f] = img
+						delete that.ribbons[from][f]
+					}
+				})
+		}
+		
+		// horizontal shift...
+		// NOTE: this will gather the images horizontally...
+		if(order != 'keep'){
+			var reorder = false
+			order = this.getImage(this.getImageOrder(order) 
+				+ (mode == 'after' ? 1 : 0))
+			images.forEach(function(img){
+				var f = that.order.indexOf(img)
+				var t = order == null ? 
+					// special case: add after last element...
+					that.order.length 
+					: that.order.indexOf(order)
+
+				if(f > t){
+					that.order.splice(t, 0, that.order.splice(f, 1)[0])
+					reorder = true
+
+				} else if(f < t){
+					// NOTE: need to compensate for when we are remoing 
+					// 		an image before where we want to place it...
+					that.order.splice(t-1, 0, that.order.splice(f, 1)[0])
+					reorder = true
+				}
+			})
+
+			// update the rest of sparse data...
+			if(reorder){
+				this.updateImagePositions()
+			}
+		}
+
+		return this
+	},
+
 	// Shift image...
 	//
 	//	Shift image to target position:
