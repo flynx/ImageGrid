@@ -685,13 +685,8 @@ var BrowserPrototype = {
 			p.append($('<div>')
 				.addClass('dir')
 				.click(function(){
-					// XXX we should use pop here...
 					if(that.traversable){
-						that
-							.update(cur.slice(0, -1)) 
-								.done(function(){
-									that.select('"'+cur.pop()+'"')
-								})
+						that.update(cur.join('/')) 
 					}
 				})
 				.text(e))
