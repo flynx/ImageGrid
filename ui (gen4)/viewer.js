@@ -148,7 +148,7 @@ var makeConfigToggler = function(attr, states){
 			var lst = states.constructor === Array ? states : states.call(this)
 
 			if(action == null){
-				return this.config[attr] || lst[0]
+				return this.config[attr] || lst[lst.indexOf('none')] || lst[0]
 
 			} else {
 				this.config[attr] = action
@@ -1237,7 +1237,9 @@ actions.Actions({
 			function(){ return this.config.themes },
 			function(state){ this.config.theme = state }) ],
 	setEmptyMsg: ['- Interface/Set message to be displayed when nothing is loaded.',
-		function(msg, help){ this.ribbons.setEmptyMsg(msg, help) }],
+		function(msg, help){ this.ribbons 
+			&& this.ribbons.length > 0 
+			&& this.ribbons.setEmptyMsg(msg, help) }],
 
 
 	// align modes...
@@ -1964,7 +1966,13 @@ var ConfigLocalStorageActions = actions.Actions({
 					var config = {}
 					Object.keys(cur)
 						.forEach(function(e){
-							if(cur.hasOwnProperty(e) && base[e] != cur[e]){
+							if(cur.hasOwnProperty(e) 
+									&& base[e] != cur[e] 
+									// NOTE: this may go wrong for objects
+									// 		if key order is different...
+									// 		...this is no big deal as false
+									// 		positives are not lost data...
+									|| JSON.stringify(base[e]) != JSON.stringify(cur[e])){
 								config[e] = cur[e]
 							}
 						})
@@ -2067,12 +2075,14 @@ module.ConfigLocalStorage = ImageGridFeatures.Feature({
 		// 		first to run...
 		['start.pre',
 			function(){ 
+				this.logger && this.logger.emit('loaded', 'config')
 				this
 					.loadStoredConfig() 
 					.toggleAutoStoreConfig('on')
 			}],
-		['stop',
+		['stop.pre',
 			function(){ 
+				this.logger && this.logger.emit('loaded', 'config')
 				this
 					.storeConfig() 
 					.toggleAutoStoreConfig('off')
@@ -3732,9 +3742,8 @@ module.AutoSingleImage = ImageGridFeatures.Feature({
 // 		ribbon		- specific ribbon (gid)
 // 		Array
 //
-// XXX make this a real toggler... ???
 function makeTagTogglerAction(tag){
-	return function(target, action){
+	var toggler = function(target, action){
 		if(target == '?' || target == 'on' || target == 'off'){
 			var x = action
 			action = target
@@ -3778,12 +3787,57 @@ function makeTagTogglerAction(tag){
 		} else if(action == '?'){
 			var res = this.data.toggleTag(tag, target, '?')
 			res = res.length == 1 ? res[0] : res
+
+		// ??
+		} else if(action == '?'){
+			res = ['on', 'off']
 		}
 
 		return res 
 	}
-}
 
+	// cheating a bit...
+	toggler.__proto__ = Toggler.prototype
+	toggler.constructor = Toggler
+
+	return toggler
+}
+/* XXX this toggler is not fully compatible with the Toggler interface
+ * 		thus, we either need to update the Toggler to suppor multiple 
+ * 		values or keep this...
+function makeTagTogglerAction(tag){
+	return Toggler(null,
+		function(target, action){
+			// get the target...
+			target = target || 'current'
+			target = target == 'all' 
+					|| target == 'loaded' 
+					|| target in this.data.ribbons 
+						? this.data.getImages(target)
+				: target == 'ribbon' ? this.data.getImages('current')
+				: target
+			target = target.constructor !== Array ? [target] : target
+
+			// get state...
+			if(action == null){
+				var res = this.data.toggleTag(tag, target, '?')
+
+				return res.constructor == Array ? res
+					: res == 'on' ? tag 
+					: 'none'
+
+			// on...
+			} else if(action == tag){
+				this.tag(tag, target)
+
+			// off...
+			} else {
+				this.untag(tag, target)
+			}
+		},
+		tag)
+}
+*/
 
 // XXX .toggleMarkBlock(..) not done yet...
 var ImageMarkActions = actions.Actions({
@@ -4046,6 +4100,7 @@ if(window.nodejs != null){
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
 	var file = requirejs('./file')
+	var browseWalk = requirejs('./lib/widget/browse-walk')
 }
 
 
@@ -4412,7 +4467,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 			base = base || this.base_path || '/'
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
-				require('./lib/widget/browse-walk').makeWalk(
+				browseWalk.makeWalk(
 						null, base, this.config['image-file-pattern'],
 						this.config['file-browser-settings'])
 					// path selected...

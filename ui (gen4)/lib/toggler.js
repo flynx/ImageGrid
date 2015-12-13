@@ -195,6 +195,14 @@ function Toggler(elem, state_accessor, states, callback_a, callback_b){
 			// just asking for info...
 			if(action == '?'){
 				return bool_action ? (cur == 'none' ? 'off' : 'on') : cur
+				/*
+				// NOTE: if cur is not in states then return it as-is...
+				return bool_action ? (
+						cur == 'none' ? 'off' 
+						: cur == states[1-states.indexOf('none')] ? 'on'
+						: cur) 
+					: cur
+				*/
 			}
 
 			// force reload of current state...

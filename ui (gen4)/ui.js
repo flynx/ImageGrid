@@ -299,10 +299,7 @@ $(function(){
 
 	// setup the viewer...
 	a
-		//.toggleAutoStoreConfig()
-		.load({
-			viewer: $('.viewer'),
-		})
+		.load({ viewer: $('.viewer') })
 		.setEmptyMsg('Loading...')
 		.start()
 
