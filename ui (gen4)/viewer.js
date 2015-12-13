@@ -1991,6 +1991,8 @@ module.ConfigLocalStorage = ImageGridFeatures.Feature({
 		'ui',
 	],
 
+	isApplicable: function(){ return localStorage != null },
+
 	actions: ConfigLocalStorageActions,
 
 	handlers: [
@@ -4677,6 +4679,8 @@ module.URLHistoryLocalStorage = ImageGridFeatures.Feature({
 		'ui',
 		'url-history',
 	],
+
+	isApplicable: function(){ return localStorage != null },
 
 	actions: URLHistoryLocalStorageActions,
 
