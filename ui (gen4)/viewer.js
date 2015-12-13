@@ -140,6 +140,25 @@ function makeTagWalker(direction, dfl_tag){
 }
 
 
+// NOTE: if not state is set this assumes that the first state is the 
+// 		default...
+var makeConfigToggler = function(attr, states){
+	return Toggler(null,
+		function(_, action){
+			var lst = states.constructor === Array ? states : states.call(this)
+
+			if(action == null){
+				return this.config[attr] || lst[0]
+
+			} else {
+				this.config[attr] = action
+				this.focusImage()
+			}
+		},
+		states)
+}
+
+
 
 /*********************************************************************/
 
@@ -276,14 +295,16 @@ actions.Actions({
 		// see .direction for details...
 		'steps-to-change-direction': 3,
 
-		// determines the image selection mode when focusing ribbons...
+		// Determines the image selection mode when focusing or moving 
+		// between ribbons...
 		//
 		// supported modes:
-		// 	'order'		- select image closest to current in order
-		// 	'first'		- select first image
-		// 	'last'		- select last image
-		// 	'visual'	- select image closest visually
-		//'ribbon-focus-mode': 'order',
+		'ribbon-focus-modes': [
+			'visual',	// select image closest visually
+			'order',	// select image closest to current in order
+			'first',	// select first image
+			'last',		// select last image
+		],
 		'ribbon-focus-mode': 'visual',
 	},
 
@@ -362,6 +383,11 @@ actions.Actions({
 			this._direction = d
 		}
 	},
+
+	toggleRibbonFocusMode : ['Interface/Toggle ribbon focus mode',
+		makeConfigToggler('ribbon-focus-mode', 
+			function(){ return this.config['ribbon-focus-modes'] })],
+
 
 	// basic life-cycle actions...
 	//
@@ -1600,8 +1626,33 @@ module.Viewer = ImageGridFeatures.Feature({
 	handlers: [
 		['start',
 			function(){
+				var that = this
+
 				if(this.config.theme){
 					this.toggleTheme(this.config.theme)
+				}
+
+				if(!this.__viewer_resize){
+					this.__viewer_resize = function(){
+						if(that.__centering_on_resize){
+							return
+						}
+						// this will prevent centering calls from overlapping...
+						that.__centering_on_resize = true
+
+						that.centerViewer()
+
+						delete that.__centering_on_resize
+					}
+
+					$(window).resize(this.__viewer_resize)
+				}
+			}],
+		['stop', 
+			function(){
+				if(that.__viewer_resize){
+					$(window).off('resize', that.__viewer_resize) 
+					delete that.__viewer_resize
 				}
 			}],
 	],
@@ -2604,6 +2655,7 @@ module.SingleImageViewLocalStorage = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // These feature glue traverse and ribbon alignment...
 
+
 // XXX manual align needs more work...
 var AutoAlignRibbons = 
 module.AutoAlignRibbons = ImageGridFeatures.Feature({
@@ -2615,24 +2667,26 @@ module.AutoAlignRibbons = ImageGridFeatures.Feature({
 	exclusive: ['ui-ribbon-align'],
 
 	config: {
-		// Control image selection and optionally ribbon alignment...
-		//
-		// NOTE: this only supports the following modes:
-		// 		- 'visual'
-		// 		- 'order'
-		// 		- 'fisrt'
-		// 		- 'manual'
-		// NOTE: if 'ribbon-align-mode' is not null this can be set to 
-		// 		any mode without restriction.
-		//'ribbon-focus-mode': 'order',
-		'ribbon-focus-mode': 'visual',
-		
 		// control ribbon alignment...
 		//
 		// NOTE: when this is null then 'ribbon-focus-mode' will be used...
 		// NOTE: this supports the same modes as 'ribbon-focus-mode'...
+		'ribbon-align-modes': [
+			'none',		// use .config['ribbon-focus-mode']'s value
+			'visual',
+			'order',
+			'first',
+			//'last',
+			'manual',
+		],
 		'ribbon-align-mode': null,
 	},
+
+	actions: actions.Actions({
+		toggleRibbonAlignMode : ['Interface/Toggle ribbon align mode',
+			makeConfigToggler('ribbon-align-mode', 
+				function(){ return this.config['ribbon-align-modes'] })],
+	}),
 
 	handlers: [
 		['focusImage.post', 
@@ -3334,6 +3388,24 @@ var makeActionLister = function(list, filter, pre_order){
 					return res
 				}
 			}
+
+			// toggler -- add state list...
+			if(that.isToggler && that.isToggler(n)){
+				var states = that[n]('??')
+				var cur = that[n]('?')
+
+				// bool toggler...
+				if(cur == 'on' || cur == 'off'){
+					states = ['off', 'on']
+				}
+
+				states.forEach(function(state){
+					actions[k +'/'+ state + (cur == state ? ' *': '')] =
+						function(){ 
+							that[n](state) 
+						}
+				})
+			}
 		})
 
 		var config = Object.create(that.config['browse-actions-settings'] || {})
@@ -3400,13 +3472,13 @@ var ActionTreeActions = actions.Actions({
 			})],
 
 	// XXX this is just a test...
-	embededListerTest: ['Interface|Test/Lister test (embeded)/*',
+	embededListerTest: ['Test/Lister test (embeded)/*',
 		function(path, make){
 			make('a/')
 			make('b/')
 			make('c/')
 		}],
-	floatingListerTest: ['Interface|Test/Lister test (floating)...',
+	floatingListerTest: ['Test/Lister test (floating)...',
 		function(path){
 			var parent = this.preventClosing ? this.preventClosing() : null
 
@@ -3448,7 +3520,7 @@ var ActionTreeActions = actions.Actions({
 					})
 		}],
 	// XXX use this.ribbons.viewer as base...
-	drawerTest: ['Interface|Test/Drawer widget test',
+	drawerTest: ['Test/Drawer widget test',
 		function(){
 			// XXX use this.ribbons.viewer as base...
 			drawer.Drawer($('body'), 
@@ -3472,7 +3544,7 @@ var ActionTreeActions = actions.Actions({
 	// XXX use this.ribbons.viewer as base...
 	// XXX BUG: when using this.ribbons.viewer as base some actions leak
 	// 		between the two viewers...
-	showTaggedInDrawer: ['Interface|Test/Show tagged in drawer',
+	showTaggedInDrawer: ['- Test/Show tagged in drawer',
 		function(tag){
 			tag = tag || 'bookmark'
 			var that = this
@@ -3584,9 +3656,9 @@ var ActionTreeActions = actions.Actions({
 
 			return b
 		}],
-	showBookmarkedInDrawer: ['Interface|Test/Show bookmarked in drawer',
+	showBookmarkedInDrawer: ['Test/Show bookmarked in drawer',
 		function(){ this.showTaggedInDrawer('bookmark') }],
-	showSelectedInDrawer: ['Interface|Test/Show selected in drawer',
+	showSelectedInDrawer: ['Test/Show selected in drawer',
 		function(){ this.showTaggedInDrawer('selected') }],
 })
 
@@ -3886,6 +3958,8 @@ var AppControlActions = actions.Actions({
 		function(){
 			// XXX where should toggleFullscreenMode(..) be defined...
 			toggleFullscreenMode() 
+
+			this.centerViewer()
 		}],
 	showDevTools: ['Interface|Development/Show Dev Tools',
 		function(){
@@ -3933,20 +4007,6 @@ module.AppControl = ImageGridFeatures.Feature({
 				// XXX
 
 				win.show()
-
-				// XXX not sure if this should be here...
-				var that = this
-				$(window).resize(function(){
-					if(that.__centering_on_resize){
-						return
-					}
-					// this will prevent centering calls from overlapping...
-					that.__centering_on_resize = true
-
-					that.centerViewer()
-
-					delete that.__centering_on_resize
-				})
 			}],
 		['focusImage',
 			function(){

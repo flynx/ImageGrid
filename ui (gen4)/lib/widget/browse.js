@@ -770,7 +770,7 @@ var BrowserPrototype = {
 				.click(function(){
 					if(!$(this).hasClass('disabled')){
 						//that.push(quoteWS($(this).find('.text').text())) 
-						that.push($(this).find('.text').text())
+						that.push('"'+ $(this).find('.text').text() +'"')
 					}
 				})
 				//.text(p)
@@ -795,7 +795,7 @@ var BrowserPrototype = {
 						: that.options.actionButton)
 					.click(function(evt){
 						evt.stopPropagation()
-						that.select(p)
+						that.select('"'+ p +'"')
 						that.action()
 					}))
 			}
@@ -808,7 +808,7 @@ var BrowserPrototype = {
 						: that.options.pushButton)
 					.click(function(evt){
 						evt.stopPropagation()
-						that.push(p)
+						that.push('"'+ p +'"')
 					}))
 			}
 
@@ -1650,7 +1650,7 @@ var BrowserPrototype = {
 
 		var path = this.path
 		//var txt = quoteWS(elem.find('.text').text())
-		var txt = elem.find('.text').text()
+		var txt = '"'+ elem.find('.text').text() +'"'
 		path.push(elem.find('.text').text())
 
 		// XXX should this be before or after the actual path update???
@@ -1709,7 +1709,7 @@ var BrowserPrototype = {
 		var path = this.path
 
 		//path.push(quoteWS(elem.find('.text').text()))
-		path.push(elem.find('.text').text())
+		path.push('"'+ elem.find('.text').text() +'"')
 
 		var res = this.open(path)
 
@@ -1824,7 +1824,7 @@ var BrowserPrototype = {
 
 			// load the current path + selection...
 			path = this.path
-			path.push(elem.find('.text').text())
+			path.push('"'+ elem.find('.text').text() +'"')
 
 		// normalize and load path...
 		//} else {
@@ -1845,7 +1845,7 @@ var BrowserPrototype = {
 
 			path = this.path
 			//path.push(quoteWS(elem.find('.text').text()))
-			path.push(elem.find('.text').text())
+			path.push('"'+ elem.find('.text').text() +'"')
 		}
 
 		// get the options method and call it if it exists...
@@ -2248,7 +2248,8 @@ PathListPrototype.options = {
 
 		// get the '*' listers...
 		var lister = keys
-			.filter(function(k){ return k.trim().slice(-1) == '*' })
+			.filter(function(k){ 
+				return k.trim().split(/[\\\/]+/g).pop() == '*' })
 			.filter(function(k){
 				k = k.split(/[\\\/]+/)
 					// remove the trailing '*'...

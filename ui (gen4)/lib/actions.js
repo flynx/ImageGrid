@@ -215,8 +215,8 @@ function Action(name, doc, ldoc, func){
 		var args = args2array(arguments)
 		var that = this
 
-		var getHandlers = this.getHandlers
-		getHandlers = getHandlers == null ? MetaActions.getHandlers : getHandlers
+		var getHandlers = this.getHandlers || MetaActions.getHandlers
+		var isToggler = this.isToggler || MetaActions.isToggler
 
 		// get handlers...
 		//
@@ -232,7 +232,7 @@ function Action(name, doc, ldoc, func){
 		// special case: if the root handler is a toggler and we call 
 		// it with '?'/'??' then do not call the handlers...
 		// XXX might be good to make this modular/configurable...
-		if(handlers.slice(-1)[0] instanceof Toggler 
+		if(isToggler.call(this, name)//handlers.slice(-1)[0] instanceof Toggler 
 				&& args.length == 1 
 				&& (args[0] == '?' || args[0] == '??')){
 			return handlers.slice(-1)[0].apply(this, args)
@@ -287,6 +287,7 @@ function Action(name, doc, ldoc, func){
 }
 // this will make action instances behave like real functions...
 Action.prototype.__proto__ = Function
+
 
 
 // A base action-set object...
@@ -402,6 +403,26 @@ module.MetaActions = {
 			cur = cur.__proto__
 		}
 		return handlers
+	},
+
+
+	// Test if the action is a Toggler...
+	//
+	// NOTE: an action is considered a toggler only if it's base action
+	// 		is a toggler (instance of Toggler), thus, the same "top"
+	// 		action can be or not be a toggler in different contexts.
+	//
+	// For more info on togglers see: lib/toggler.js
+	isToggler: function(name){
+		var handlers = (this.getHandlers 
+				|| MetaActions.getHandlers)
+			.call(this, name)
+
+		if(handlers.slice(-1)[0] instanceof Toggler){
+			return true
+		}
+
+		return false
 	},
 
 
