@@ -173,8 +173,9 @@ if(typeof(args2array) != 'function'){
 // 	  action chain.
 //
 // NOTE: if the root handler is instance of Toggler (jli) and the action
-// 		is called with '?' as argument, then the toggler will be called 
-// 		with the argument and return the result bypassing the handlers.
+// 		is called with '?'/'??' as argument, then the toggler will be 
+// 		called with the argument and return the result bypassing the 
+// 		handlers.
 // NOTE: actions once defined do not depend on the inheritance hierarchy, 
 // 		other than the .getHandlers(..) method. If this method is not 
 // 		found in the inheritance chain (i.e. the link to MetaActions)
@@ -229,11 +230,11 @@ function Action(name, doc, ldoc, func){
 		//	.map(function(h){ return h.apply(that, args) })
 
 		// special case: if the root handler is a toggler and we call 
-		// it with '?' then do not call the handlers...
+		// it with '?'/'??' then do not call the handlers...
 		// XXX might be good to make this modular/configurable...
 		if(handlers.slice(-1)[0] instanceof Toggler 
 				&& args.length == 1 
-				&& args[0] == '?'){
+				&& (args[0] == '?' || args[0] == '??')){
 			return handlers.slice(-1)[0].apply(this, args)
 		}
 
@@ -827,7 +828,12 @@ function Actions(a, b){
 
 	// NOTE: this is intentionally done only for own attributes...
 	Object.keys(obj).forEach(function(k){
-		var args = obj[k]
+		// NOTE: we are not getting the attrs directly (vars = obj[k])
+		// 		as that will trigger the getters on an object that is
+		// 		not in a consistent state...
+		// NOTE: this will skip all the getters and setters, they will 
+		// 		be included as-is...
+		var args = Object.getOwnPropertyDescriptor(obj, k).value
 
 		// skip non-arrays...
 		if(args == null 
