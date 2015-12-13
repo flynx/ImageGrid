@@ -185,6 +185,7 @@
 
 	opacity: 0.7;
 
+	/*white-space: nowrap;*/
 	overflow: hidden;
 }
 .browse-widget .list>div[count]:after {

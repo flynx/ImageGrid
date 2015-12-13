@@ -164,8 +164,8 @@ var LifeCycleActions = actions.Actions({
 
 			// XXX HACK: need to check if actual events are bound...
 			// XXX also need ability to unbind... 
-			if(this.__stop_bound == null){
-				this.__stop_bound = true
+			if(this.__stop_handler == null){
+				var stop = this.__stop_handler = function(){ that.stop() }
 
 			} else {
 				return
@@ -176,36 +176,25 @@ var LifeCycleActions = actions.Actions({
 				// nw.js...
 				try{
 					this.runtime = 'nw'
-					var gui = requirejs('nw.gui')
-					gui.Window.get().on('close', function(){
-						var w = this
-						try{
-							that
-								// register the last handler on the stop event
-								// to wait for all other handlers to finish...
-								.on('stop.post', function(){ w.close(true) })
-								.stop()
 
-						// if something breaks force stop...
-						} catch(e) {
-							this.close(true)
-						}
-					})
+					// this will fail if we're not in nw.js...
+					var gui = requirejs('nw.gui')
+
+					// this handles both reload and close...
+					$(window).on('beforeunload', stop)
 
 				// pure node.js...
 				} catch(e) {
 					this.runtime = 'node'
-					process.on('exit', function(){ 
-						that.stop() 
-					})
+
+					process.on('exit', stop)
 				}
 
 			// browser...
 			} else if(typeof('window') != 'undefined'){
 				this.runtime = 'browser'
-				$(window).unload(function(){ 
-					that.stop() 
-				})
+
+				$(window).on('beforeunload', stop)
 
 			// unknown...
 			} else {
@@ -213,9 +202,15 @@ var LifeCycleActions = actions.Actions({
 			}
 
 		}],
-	// XXX unbind events...
 	stop: ['- System/', 
 		function(){
+			// unbind events...
+			if(this.runtime == 'browser' || this.runtime == 'nw'){
+				$(window).off('beforeunload', this.__stop_handler)
+			}
+
+			delete this.__stop_handler
+
 			this.logger && this.logger.emit('stop')
 		}],
 })
@@ -1565,7 +1560,8 @@ module.Viewer = ImageGridFeatures.Feature({
 
 // Format:
 // 	{
-// 		<action>: <undo-action> | <undo-function>
+// 		<action>: <undo-action> | <undo-function> | null,
+// 		...
 // 	}
 var journalActions = {
 	clear: null,
@@ -1654,8 +1650,6 @@ function logImageShift(action){
 		}]
 }
 
-function logTags(action){
-}
 
 // XXX is this the right level for this???
 // 		...data seems to be a better candidate...
@@ -1728,7 +1722,7 @@ module.Journal = ImageGridFeatures.Feature({
 		// 		undoing something, and after some actions doing a 
 		// 		.redoLast(..)
 		// XXX this is not ready for production...
-		undoLast: ['Journal/Undo last edit',
+		undoLast: ['Journal/Undo last',
 			function(){
 				var journal = this.journal
 				this.rjournal = (this.hasOwnProperty('rjournal') 
@@ -3291,13 +3285,12 @@ var makeActionLister = function(list, filter, pre_order){
 			}
 		})
 
+		var config = Object.create(that.config['browse-actions-settings'] || {})
+		config.path = path
+
 		// XXX get the correct parent...
 		var o = overlay.Overlay(that.ribbons.viewer, 
-			list(null, actions, {
-						path: path,
-						// load show disabled state from .config...
-						showDisabled: that.config['browse-actions-show-disabled'] || false,
-					})
+			list(null, actions, config)
 				.open(function(evt){ 
 					if(!closingPrevented){
 						o.close() 
@@ -3306,7 +3299,9 @@ var makeActionLister = function(list, filter, pre_order){
 				}))
 			// save show disabled state to .config...
 			.close(function(){
-				that.config['browse-actions-show-disabled'] = o.client.options.showDisabled
+				var config = that.config['browse-actions-settings'] 
+
+				config.showDisabled = o.client.options.showDisabled
 			})
 
 		// XXX DEBUG
@@ -3329,7 +3324,9 @@ var ActionTreeActions = actions.Actions({
 			'Navigate/',
 		],
 
-		'browse-actions-show-disabled': false,
+		'browse-actions-settings': {
+			showDisabled: false,
+		},
 	},
 
 	// XXX move this to a generic modal overlay feature...
@@ -3882,6 +3879,22 @@ module.AppControl = ImageGridFeatures.Feature({
 				// XXX
 
 				win.show()
+
+				// XXX not sure if this should be here...
+				var that = this
+				$(window).resize(function(){
+					if(that.__centering_on_resize){
+						return
+					}
+					// this will prevent centering calls from overlapping...
+					that.__centering_on_resize = true
+
+					that
+						.centerImage()
+						.centerRibbon()
+
+					delete that.__centering_on_resize
+				})
 			}],
 		['focusImage',
 			function(){
@@ -4266,6 +4279,12 @@ var FileSystemLoaderUIActions = actions.Actions({
 			'loadImages',
 			//'loadPath',
 		],
+
+		'file-browser-settings': {
+			disableFiles: true,
+			showNonTraversable: true,
+			showDisabled: true,
+		},
 	},
 
 	// XXX BUG: for some reason this when run from .browseActions(..) or
@@ -4282,8 +4301,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				require('./lib/widget/browse-walk').makeWalk(
-						null, base, false, false, 
-						this.config['image-file-pattern'])
+						null, base, this.config['image-file-pattern'],
+						this.config['file-browser-settings'])
 					// path selected...
 					.open(function(evt, path){ 
 						var item = o.client.selected
@@ -4333,6 +4352,13 @@ var FileSystemLoaderUIActions = actions.Actions({
 					}))
 					// we closed the browser...
 					.close(function(){
+
+						var config = that.config['file-browser-settings']
+
+						config.disableFiles = o.client.options.disableFiles
+						config.showDisabled = o.client.options.showDisabled
+						config.showNonTraversable = o.client.options.showNonTraversable
+
 						parent 
 							&& parent.focus 
 							&& parent.focus()

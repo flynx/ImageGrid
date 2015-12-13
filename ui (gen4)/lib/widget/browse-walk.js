@@ -120,8 +120,10 @@ function(path, make){
 						.then(function(res){
 							var dir = res.isDirectory()
 							var elem = res && make(fullpath 
-								? path +'/'+ file 
-								: file + (dir ? '/' : ''))
+									? path +'/'+ file 
+									: file + (dir ? '/' : ''),
+								null,
+								that.options.disableFiles && !dir)
 
 							// count the number of files...
 							// NOTE: we do not care how long it will take
@@ -234,6 +236,8 @@ WalkPrototype.options = {
 	list: listDir,
 
 	fileCountPattern: '*',
+
+	disableFiles: false,
 }
 WalkPrototype.options.__proto__ = browse.Browser.prototype.options
 
@@ -246,7 +250,7 @@ object.makeConstructor('Walk',
 
 
 var makeWalk = 
-module.makeWalk = function(elem, path, showNonTraversable, showDisabled, fileCountPattern, rest){
+module.makeWalk = function(elem, path, fileCountPattern, rest){
 	var opts = {}
 	if(rest){
 		for(var k in rest){
@@ -255,14 +259,6 @@ module.makeWalk = function(elem, path, showNonTraversable, showDisabled, fileCou
 	}
 
 	opts.path = path
-
-	opts.showNonTraversable = showNonTraversable == null ?
-		WalkPrototype.options.showNonTraversable
-		: showNonTraversable
-
-	opts.showDisabled = showDisabled == null ? 
-		WalkPrototype.options.showDisabled
-		: showDisabled
 
 	opts.fileCountPattern = fileCountPattern == null ?
 		WalkPrototype.options.fileCountPattern
