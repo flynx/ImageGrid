@@ -244,6 +244,14 @@ var BrowserPrototype = {
 		// 		affected...
 		toggleDisabledDrawing: true,
 
+		// Group traversable elements...
+		//
+		// Possible values:
+		// 	null | false | 'none'	- show items as-is
+		// 	'first'					- group traversable items at top
+		// 	'last'					- group traversable items at bottom
+		sortTraversable: null,
+
 		// Controls the display of the action button on each list item...
 		//
 		// Possible values:
@@ -735,6 +743,8 @@ var BrowserPrototype = {
 			p.scrollLeft(0)
 		}
 
+		var sort_traversable = this.options.sortTraversable
+		var section_tail
 		// fill the children list...
 		// NOTE: this will be set to true if make(..) is called at least once...
 		var interactive = false
@@ -767,10 +777,9 @@ var BrowserPrototype = {
 				.append($('<div>')
 					.addClass('text')
 					.text(p))
-				.appendTo(l)
+
 			if(!traversable){
 				res.addClass('not-traversable')
-
 			} 
 			if(disabled){
 				res.addClass('disabled')
@@ -806,31 +815,49 @@ var BrowserPrototype = {
 			// custom buttons...
 			that.options.itemButtons 
 					&& that.options.itemButtons.slice()
-						// make the order consistent for the user -- first
-						// in list, first in item (from left), and should
-						// be added last...
-						.reverse()
-						.forEach(function(e){
-				var html = e[0]
-				var func = e[1]
+				// make the order consistent for the user -- first
+				// in list, first in item (from left), and should
+				// be added last...
+				.reverse()
+				.forEach(function(e){
+					var html = e[0]
+					var func = e[1]
 
-				res.append($('<div>')
-					.addClass('button')
-					.html(html)
-					.click(function(evt){
-						// prevent clicks from triggering the item action...
-						evt.stopPropagation()
+					res.append($('<div>')
+						.addClass('button')
+						.html(html)
+						.click(function(evt){
+							// prevent clicks from triggering the item action...
+							evt.stopPropagation()
 
-						// action name...
-						if(typeof(func) == typeof('str')){
-							that[func](p)
+							// action name...
+							if(typeof(func) == typeof('str')){
+								that[func](p)
 
-						// handler...
-						} else {
-							func.call(that, p)
-						}
-					}))
-			})
+							// handler...
+							} else {
+								func.call(that, p)
+							}
+						}))
+				})
+
+			// place in list...
+			// as-is...
+			if(!sort_traversable || sort_traversable == 'none'){
+				res.appendTo(l)
+
+			// traversable first/last...
+			} else {
+				if(sort_traversable == 'first' ? traversable : !traversable){
+					section_tail == null ?
+						l.prepend(res)
+						: section_tail.after(res)
+					section_tail = res
+
+				} else {
+					res.appendTo(l)
+				}
+			}
 
 			return res
 		}

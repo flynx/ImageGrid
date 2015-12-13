@@ -229,6 +229,8 @@ WalkPrototype.options = {
 	traversable: true,
 	flat: false,
 
+	sortTraversable: 'first',
+
 	//actionButton: '&ctdot;',
 	actionButton: '&odot;',
 	pushButton: false,
