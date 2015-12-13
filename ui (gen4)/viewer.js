@@ -153,7 +153,6 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 // XXX should this be a generic library thing???
 // XXX should his have state???
 // 		...if so, should this be a toggler???
-// XXX HACK: need to check if actual events are bound...
 // XXX also need ability to unbind... 
 var LifeCycleActions = actions.Actions({
 	// XXX avoid binding multiple times per object...
@@ -182,6 +181,29 @@ var LifeCycleActions = actions.Actions({
 
 					// this handles both reload and close...
 					$(window).on('beforeunload', stop)
+
+					// NOTE: we are using both events as some of them do not
+					// 		get triggered in specific conditions and some do,
+					// 		for example, this gets triggered when the window's
+					// 		'X' is clicked while does not on reload...
+					gui.Window.get().on('close', function(){
+						var w = this
+						try{
+							that
+								// wait till ALL the handlers finish before 
+								// exiting...
+								.on('stop.post', function(){
+									w.close(true)
+								})
+								.stop()
+
+						// in case something breaks exit...
+						// XXX not sure if this is correct...
+						} catch(e){
+							this.close(true)
+						}
+					})
+
 
 				// pure node.js...
 				} catch(e) {
@@ -1041,6 +1063,13 @@ actions.Actions({
 		this.fitImage(n)
 	},
 
+	get screenheight(){
+		return this.ribbons != null ? this.ribbons.getScreenHeightRibbons() : null
+	},
+	set screenheight(n){
+		this.fitRibbon(n)
+	},
+
 
 	load: [
 		function(data){
@@ -1288,6 +1317,14 @@ actions.Actions({
 
 			// align current ribbon...
 			this.ribbons.centerRibbon(target)
+		}],
+	centerViewer: ['- Interface/Center the viewer',
+		function(target){
+			this
+				.centerImage(target)
+				.centerRibbon(target)
+				.ribbons
+					.setOrigin(target)
 		}],
 
 	focusImage: [
@@ -1826,7 +1863,7 @@ var ConfigLocalStorageActions = actions.Actions({
 		
 		// NOTE: this is in seconds...
 		// NOTE: if this is null or 0 the timer will not start...
-		'config-auto-save-local-storage-interval': 5*60,
+		'config-auto-save-local-storage-interval': 3*60,
 
 		// XXX not sure what should be the default...
 		'config-local-storage-save-diff': true,
@@ -1840,7 +1877,8 @@ var ConfigLocalStorageActions = actions.Actions({
 	__config_loaded: null,
 	__auto_save_config_timer: null,
 
-	// Disable localStorage in child...
+	// Disable localStorage in child, preventing two viewers from messing
+	// things up in one store...
 	clone: [function(){
 		return function(res){
 			res.config['config-local-storage-key'] = null
@@ -1896,57 +1934,51 @@ var ConfigLocalStorageActions = actions.Actions({
 			this.config = this.__base_config || this.config
 		}],
 
-	// XXX make this a real toggler...
 	toggleAutoStoreConfig: ['File/Store configuration',
-		function(state){
-			var that = this
-			// NOTE: this is the target state and not the current...
-			state = state 
-				|| (this.__auto_save_config_timer == null ? 'on' : 'off')
+		Toggler(null, function(_, state){ 
+				if(state == null){
+					return this.__auto_save_config_timer || 'none'
 
-			if(state == '?'){
-				return this.__auto_save_config_timer == null ? 'off' : 'on'
-			}
+				} else {
+					var that = this
+					var interval = this.config['config-auto-save-local-storage-interval']
 
-			interval = this.config['config-auto-save-local-storage-interval']
-
-			// no timer interval set...
-			if(!interval){
-				return this.toggleAutoStoreConfig('?')
-			}
-
-			if(this.__auto_save_config_timer != null){
-				clearTimeout(this.__auto_save_config_timer)
-				delete this.__auto_save_config_timer
-			}
-
-			if(state == 'on' 
-					&& interval 
-					&& this.__auto_save_config_timer == null){
-
-				var runner = function(){
-					clearTimeout(that.__auto_save_config_timer)
-
-					//that.logger && that.logger.emit('config', 'saving to local storage...')
-					that.storeConfig()
-
-					var interval = that.config['config-auto-save-local-storage-interval']
-
+					// no timer interval set...
 					if(!interval){
-						delete that.__auto_save_config_timer
-						return
+						return false
 					}
 
-					interval *= 1000
+					// this cleans up before 'on' and fully handles 'off' action...
+					if(this.__auto_save_config_timer != null){
+						clearTimeout(this.__auto_save_config_timer)
+						delete this.__auto_save_config_timer
+					}
 
-					that.__auto_save_config_timer = setTimeout(runner, interval)
+					if(state == 'running' 
+							&& interval 
+							&& this.__auto_save_config_timer == null){
+
+						var runner = function(){
+							clearTimeout(that.__auto_save_config_timer)
+
+							//that.logger && that.logger.emit('config', 'saving to local storage...')
+							that.storeConfig()
+
+							var interval = that.config['config-auto-save-local-storage-interval']
+							if(!interval){
+								delete that.__auto_save_config_timer
+								return
+							}
+							interval *= 1000
+
+							that.__auto_save_config_timer = setTimeout(runner, interval)
+						}
+
+						runner()
+					}
 				}
-
-				runner()
-			}
-
-			return state
-		}],
+			},
+			'running')],
 })
 
 var ConfigLocalStorage = 
@@ -2201,6 +2233,7 @@ var PartialRibbonsActions = actions.Actions({
 	// 		- we are less than screen width from the edge
 	// 		- threshold is set to 0
 	// XXX this is not signature compatible with data.updateRibbon(..)
+	// XXX do not do anything for off-screen ribbons...
 	updateRibbon: ['- Interface/Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
@@ -2348,7 +2381,7 @@ module.PartialRibbons = ImageGridFeatures.Feature({
 				this.updateRibbon(target)
 			}],
 		['focusImage.post', 
-			function(res, target){
+			function(_, target){
 				this.preCacheJumpTargets(target)
 			}],
 		['fitImage.pre', 
@@ -3249,7 +3282,7 @@ var makeActionLister = function(list, filter, pre_order){
 					// NOTE: we do not need to worry about partial 
 					// 		updates as they are done in place...
 					Object.keys(a).forEach(function(n){
-						if(n != 'preventClosing'){
+						if(n != 'preventClosing' && a.hasOwnProperty(n)){
 							that[n] = a[n]
 						}
 					})
@@ -3260,7 +3293,7 @@ var makeActionLister = function(list, filter, pre_order){
 			} else {
 				actions[k] = function(){
 
-					// XXX this may cause race conditions as we are 
+					// XXX this will cause race conditions as we are 
 					// 		splitting the state in two and then 
 					// 		overwriting one...
 					var a = Object.create(that)
@@ -3275,7 +3308,7 @@ var makeActionLister = function(list, filter, pre_order){
 					// NOTE: we do not need to worry about partial 
 					// 		updates as they are done in place...
 					Object.keys(a).forEach(function(n){
-						if(n != 'preventClosing'){
+						if(n != 'preventClosing' && a.hasOwnProperty(n)){
 							that[n] = a[n]
 						}
 					})
@@ -3889,9 +3922,7 @@ module.AppControl = ImageGridFeatures.Feature({
 					// this will prevent centering calls from overlapping...
 					that.__centering_on_resize = true
 
-					that
-						.centerImage()
-						.centerRibbon()
+					that.centerViewer()
 
 					delete that.__centering_on_resize
 				})
