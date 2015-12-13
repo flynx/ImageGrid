@@ -239,6 +239,16 @@ module.GLOBAL_KEYBOARD = {
 			ctrl: 'saveIndex',
 		},
 
+		// XXX still experimental...
+		U: {
+			default: 'undoLast',
+			shift: 'redoLast',
+		},
+		Z: {
+			ctrl: 'undoLast',
+			'ctrl+shift': 'redoLast',
+		},
+
 		// XXX for debug...
 		G: function(){ $('.viewer').toggleClass('visible-gid') },
 	},

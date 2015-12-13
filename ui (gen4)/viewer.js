@@ -570,10 +570,9 @@ actions.Actions({
 	// NOTE: for all of these, current/ribbon image is a default...
 
 	// XXX to be used for things like mark/place and dragging...
+	// XXX revise...
 	shiftImageTo: ['- Edit|Sort/',
-		function(target, to){
-			// XXX
-		}],
+		function(target, to){ this.data.shiftImageTo(target, to) }],
 	
 	shiftImageUp: ['Edit/Shift image up',
 		'If implicitly shifting current image (i.e. no arguments), focus '
@@ -1564,6 +1563,100 @@ module.Viewer = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// Format:
+// 	{
+// 		<action>: <undo-action> | <undo-function>
+// 	}
+var journalActions = {
+	clear: null,
+	load: null,
+	loadURLs: null,
+
+	setBaseRibbon: null,
+
+	// XXX need to account for position change, i.e. if action had no 
+	// 		effect then do nothing...
+	// 		...take target position before and after...
+	shiftImageTo: null,
+
+	shiftImageUp: 'shiftImageDown',
+	shiftImageDown: 'shiftImageUp',
+	shiftImageLeft: 'shiftImageRight',
+	shiftImageRight: 'shiftImageLeft',
+	shiftRibbonUp: 'shiftRibbonDown',
+	shiftRibbonDown: 'shiftRibbonUp',
+
+	rotateCW: 'rotateCCW',
+	rotateCCW: 'rotateCW',
+	flipHorizontal: 'flipHorizontal',
+	flipVertical: 'flipVertical',
+
+	sortImages: null,
+	reverseImages: 'reverseImages',
+	reverseRibbons: 'reverseRibbons',
+
+	crop: null,
+	uncrop: null,
+
+	tag: null, 
+	untag: null,
+
+	group: null,
+	ungroup: null,
+	expandGroup: null,
+	collapseGroup: null,
+
+	runJournal: null,
+}
+
+function logImageShift(action){
+	return [action.slice(-4) != '.pre' ? 
+			action + '.pre' 
+			: action,
+		function(target){
+			target = this.data.getImage(target)
+			var args = args2array(arguments)
+
+			var o = this.data.getImageOrder(target)
+			var r = this.data.getRibbon(target)
+			var current = this.current
+
+			return function(){
+				var on = this.data.getImageOrder(target)
+				var rn = this.data.getRibbon(target)
+
+				if(o == on || r == rn){ 
+					/*
+					this.journalPush(
+						this.current, 
+						action, 
+						args,
+						{
+							before: [r, o],
+							after: [rn, on],
+						})
+					*/
+					this.journalPush({
+						type: 'shift',
+						current: current, 
+						target: target,
+						action: action, 
+						args: args,
+						undo: journalActions[action],
+						diff: {
+							before: [r, o],
+							after: [rn, on],
+						},
+					})
+				}
+				
+			}
+		}]
+}
+
+function logTags(action){
+}
+
 // XXX is this the right level for this???
 // 		...data seems to be a better candidate...
 // XXX would be great to add a mechanism define how to reverse actions...
@@ -1584,9 +1677,11 @@ module.Journal = ImageGridFeatures.Feature({
 	actions: actions.Actions({
 
 		journal: null,
+		rjournal: null,
 
 		clone: [function(full){
 				return function(res){
+					res.rjournal = null
 					res.journal = null
 					if(full && this.hasOwnProperty('journal') && this.journal){
 						res.journal = JSON.parse(JSON.stringify(this.journal))
@@ -1596,13 +1691,12 @@ module.Journal = ImageGridFeatures.Feature({
 
 		// XXX might be good to add some kind of metadata to journal...
 		journalPush: ['- Journal/Add an item to journal',
-			function(){
+			function(data){
 				this.journal = (this.hasOwnProperty('journal') 
 						|| this.journal) ? 
 					this.journal 
 					: []
-				//console.log('ACTION:', action, args2array(arguments))
-				this.journal.push(args2array(arguments))
+				this.journal.push(data)
 			}],
 		clearJournal: ['Journal/Clear the action journal',
 			function(){
@@ -1622,10 +1716,49 @@ module.Journal = ImageGridFeatures.Feature({
 				var that = this
 				journal.forEach(function(e){
 					// load state...
-					that.focusImage(e[0])
-					// run action...
-					that[e[1]].apply(that, e[2])
+					that
+						.focusImage(e.current)
+						// run action...
+						[e.action].apply(that, e.args)
 				})
+			}],
+
+		// XXX need to clear the rjournal as soon as we do something...
+		// 		...at this point it is really easy to mess things up by
+		// 		undoing something, and after some actions doing a 
+		// 		.redoLast(..)
+		// XXX this is not ready for production...
+		undoLast: ['Journal/Undo last edit',
+			function(){
+				var journal = this.journal
+				this.rjournal = (this.hasOwnProperty('rjournal') 
+						|| this.rjournal) ? 
+					this.rjournal 
+					: []
+
+				for(var i = journal.length-1; i >= 0; i--){
+					var a = journal[i]
+
+					// we undo only a very specific set of actions...
+					if(a.undo && a.type == 'shift' && a.args.length == 0){
+						this
+							.focusImage(a.current)
+							[a.undo].call(this, a.target)
+
+						// pop the undo command...
+						this.journal.pop()
+						this.rjournal.push(journal.splice(i, 1)[0])
+						break
+					}
+				}
+			}],
+		_redoLast: ['Journal/Redo last',
+			function(){
+				if(!this.rjournal || this.rjournal.length == 0){
+					return
+				}
+
+				this.runJournal([this.rjournal.pop()])
 			}],
 	}),
 
@@ -1639,51 +1772,54 @@ module.Journal = ImageGridFeatures.Feature({
 	// 		handler, thus enabling us to define a single handler rather
 	// 		than generating a custom handler per action...
 	handlers: [
-				'clear',
-				'load',
-				'loadURLs',
+		logImageShift('shiftImageTo'),
+		logImageShift('shiftImageUp'),
+		logImageShift('shiftImageDown'),
+		logImageShift('shiftImageLeft'),
+		logImageShift('shiftImageRight'),
+		logImageShift('shiftRibbonUp'),
+		logImageShift('shiftRibbonDown'),
 
-				'setBaseRibbon',
+	].concat([
+			'clear',
+			'load',
+			'loadURLs',
 
-				'shiftImageTo',
-				'shiftImageUp',
-				'shiftImageDown',
-				'shiftImageLeft',
-				'shiftImageRight',
-				'shiftRibbonUp',
-				'shiftRibbonDown',
+			'setBaseRibbon',
 
-				'rotateCW',
-				'rotateCCW',
-				'flipHorizontal',
-				'flipVertical',
+			'rotateCW',
+			'rotateCCW',
+			'flipHorizontal',
+			'flipVertical',
 
-				'sortImages',
-				'reverseImages',
-				'reverseRibbons',
+			'sortImages',
+			'reverseImages',
+			'reverseRibbons',
 
-				'crop',
-				'uncrop',
+			'crop',
+			'uncrop',
 
-				'tag', 
-				'untag',
+			'tag', 
+			'untag',
 
-				'group',
-				'ungroup',
-				'expandGroup',
-				'collapseGroup',
+			'group',
+			'ungroup',
+			'expandGroup',
+			'collapseGroup',
 
-				'runJournal',
-			].map(function(action){
-				return [
-					action, 
-					function(){
-						this.journalPush(
-							this.current, 
-							action, 
-							args2array(arguments))
-					}]
-			}), 
+			//'runJournal',
+		].map(function(action){
+			return [
+				action+'.pre', 
+				function(){
+					this.journalPush({
+						type: 'basic',
+						current: this.current, 
+						action: action, 
+						args: args2array(arguments),
+					})
+				}]
+		})), 
 })
 
 
@@ -3714,6 +3850,8 @@ var AppControlActions = actions.Actions({
 
 // XXX this needs a better .isApplicable(..)
 // XXX store/load window state...
+// 		- size
+// 		- state (fullscreen/normal)
 var AppControl = 
 module.AppControl = ImageGridFeatures.Feature({
 	title: '',
@@ -3740,7 +3878,7 @@ module.AppControl = ImageGridFeatures.Feature({
 				var gui = requirejs('nw.gui') 
 				var win = gui.Window.get()
 
-				// XXX get state from config and load it...
+				// XXX get window state from config and load it...
 				// XXX
 
 				win.show()
@@ -4960,7 +5098,7 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 		[[
 			'loadURLs',
 			'clear',
-		].join(' '), 
+		], 
 			function(){
 				// NOTE: this is better than delete as it will shadow 
 				// 		the parent's changes in case we got cloned from
@@ -4992,7 +5130,7 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 			'ungroup',
 			'expandGroup',
 			'collapseGroup',
-		].join(' '), 
+		], 
 			function(_, target){
 				var changes = this.changes = 
 					this.hasOwnProperty('changes') ?
@@ -5008,7 +5146,7 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 			'rotateCCW',
 			'flipHorizontal',
 			'flipVertical',
-		].join(' '), 
+		], 
 			function(_, target){
 				var changes = this.changes = 
 					this.hasOwnProperty('changes') ?
