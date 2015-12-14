@@ -381,8 +381,8 @@ var BrowserPrototype = {
 			PgUp: 'prevPage!',
 			PgDown: 'nextPage!',
 
-			Home: 'select!: "first"',
-			End: 'select!: "last"',
+			Home: 'navigate!: "first"',
+			End: 'navigate!: "last"',
 
 			Enter: 'action',
 			O: 'action',
@@ -770,7 +770,7 @@ var BrowserPrototype = {
 				.click(function(){
 					if(!$(this).hasClass('disabled')){
 						//that.push(quoteWS($(this).find('.text').text())) 
-						that.push('"'+ $(this).find('.text').text() +'"')
+						that.push($(this).find('.text').text())
 					}
 				})
 				//.text(p)
@@ -948,6 +948,12 @@ var BrowserPrototype = {
 	// 		NOTE: unlike .select(..) index overflow will produce empty 
 	// 			lists rather than to/bottom elements.
 	//
+	// 	Get specific absolute element...
+	// 	.filter('<index>!')
+	// 		-> element
+	//		-> $()
+	//		NOTE: this is equivalent to setting ignore_disabled tp false
+	//
 	// If <rejected-handler> function is passed it will get called with 
 	// every element that was rejected by the predicate / not matching 
 	// the pattern.
@@ -997,6 +1003,11 @@ var BrowserPrototype = {
 			return elems 
 		}
 
+		// special case: absolute position...
+		if(/\d+!/.test(pattern)){
+			return this.filter(parseInt(pattern), rejected, false)
+		}
+
 		// function...
 		if(typeof(pattern) == typeof(function(){})){
 			var filter = function(i, e){
@@ -1013,7 +1024,7 @@ var BrowserPrototype = {
 		// regexp...
 		} else if(pattern.constructor == RegExp
 				|| (typeof(pattern) == typeof('str') 
-					&& /^'.*'$|^".*"$/.test(pattern.trim()))){
+					&& /^(['"]).*\1$/.test(pattern.trim()))){
 			if(typeof(pattern) == typeof('str')){
 				pattern = toRegExp(pattern.trim().slice(1, -1))
 			}
@@ -1104,13 +1115,14 @@ var BrowserPrototype = {
 					.trim()
 					// ignore trailing '\'
 					.replace(/\\+$/, '')
-					.split(/[^\\]\s/)
+					.split(/(?=[^\\])\s/)
 					// drop empty strings...
 					.filter(function(e){ return e.trim() != '' })
 					// remove escapes...
 					.map(function(e){ return e.replace(/\\(\s)/, '$1') })
 					.join('|') 
 				+ ')', 'gi')
+			console.log('>>>>', p, pattern)
 			// XXX should this be case insensitive???
 			this.filter(pattern,
 					// rejected...
@@ -1281,6 +1293,11 @@ var BrowserPrototype = {
 
 	// Select an element from current list...
 	//
+	// This is like .filter(..) but:
+	// 	- adds several special case arguments (see below)
+	// 	- gets it first matched element and selects it
+	// 	- takes care of visual scrolling.
+	//
 	//	Get selected element if it exists, otherwise select and return 
 	//	the first...
 	//	.select()
@@ -1291,52 +1308,17 @@ var BrowserPrototype = {
 	//		-> elem
 	//		-> $()
 	//
-	//	Select first/last child
-	//	.select('first')
-	//	.select('last')
-	//		-> elem
-	//
-	//	Select previous/next child
-	//	.select('prev')
-	//	.select('next')
-	//		-> elem
-	//
 	//	Deselect
-	//	.select('none')
-	//		-> $()
-	//
-	//	Select element by sequence number
-	//	NOTE: negative numbers count from the tail.
-	//	NOTE: overflowing selects the first/last element.
-	//	.select(<number>)
-	//		-> elem
-	//
-	//	Select element by absolute sequence number
-	//	This is the same as above but will count disabled elements...
-	//	NOTE: this will not select unselectable (disabled) elements.
-	//	.select('<number>!')
-	//		-> elem
-	//
-	//	Select element by its full or partial text...
-	//	NOTE: if text matches one of the reserved commands above use 
-	//		quotes to escape it...
-	//	.select('<text>')
-	//		-> elem
-	//
-	//	Select element by its literal full test...
-	//	.select("'<text>'")
-	//	.select('"<text>"')
-	//		-> elem
-	//
-	//	Select element via a regular expression...
-	//	.select(<regexp>)
-	//		-> elem
+	//	.select(null)
 	//		-> $()
 	//
 	//	Select jQuery object...
 	//	.select(<elem>)
 	//		-> elem
 	//		-> $()
+	//
+	// All other call configurations are like .filter(..) so see that 
+	// for more info.
 	//
 	// This will return a jQuery object.
 	//
@@ -1352,10 +1334,6 @@ var BrowserPrototype = {
 	// NOTE: 'none' will always return an empty jQuery object, to get 
 	// 		the selection state before deselecting use .select('!')
 	// NOTE: this uses .filter(..) for string and regexp matching...
-	//
-	// XXX should we unconditionally clear string quotes or can an item 
-	// 		contain '"' or "'"?
-	// 		...currently the outer quotes are cleared.
 	select: function(elem, filtering){
 		var browser = this.dom
 		var pattern = '.list>div:not(.disabled):not(.filtered-out):visible'
@@ -1368,41 +1346,15 @@ var BrowserPrototype = {
 		filtering = filtering == null ? this.toggleFilter('?') == 'on' : filtering
 
 		// empty list/string selects none...
-		elem = elem != null && elem.length == 0 ? 'none' : elem
-		// 0 or no args (null) selects first...
-		elem = elem == 0 ? 'first' : elem
+		elem = elem != null && elem.length == 0 ? null : elem
 		// no args -> either we start with the selected or the first...
-		if(elem == null){
+		if(elem === undefined){
 			var cur = this.select('!')
-			elem = cur.length == 0 ? 'first' : cur
+			elem = cur.length == 0 ? 0 : cur
 		}
 
-		// special case: absolute position...
-		if(/\d+!/.test(elem)){
-			elem = this.filter(parseInt(elem), false)
-
-			if(elems.index(elem) < 0){
-				return this.select('none')
-			}
-
-			return this.select(elem)
-		}
-
-		// first/last...
-		if(elem == 'first' || elem == 'last'){
-			return this.select(elems[elem](), filtering)
-		
-		// prev/next...
-		} else if(elem == 'prev' || elem == 'next'){
-			var to = this.select('!', filtering)[elem + 'All'](pattern).first()
-			if(to.length == 0){
-				return this.select(elem == 'prev' ? 'last' : 'first', filtering)
-			}
-			this.select('none', filtering)
-			return this.select(to, filtering)
-
-		// deselect...
-		} else if(elem == 'none'){
+		// explicit deselect...
+		if(elem === null){
 			if(!filtering){
 				browser.find('.path .dir.cur').empty()
 			}
@@ -1411,68 +1363,103 @@ var BrowserPrototype = {
 				.removeClass('selected')
 			this.trigger('deselect', elems)
 			return $()
+		}
 
 		// strict...
-		} else if(elem == '!'){
+		if(elem == '!'){
 			return elems.filter('.selected')
+		}
 
-		// number...
-		// NOTE: on overflow this will get the first/last element...
-		} else if(typeof(elem) == typeof(123)){
-			return this.select($(elems.slice(elem)[0] || elems.slice(-1)[0] ), filtering)
+		var item = elem instanceof $ ? elem : this.filter(elem).first()
 
-		// string...
-		} else if(typeof(elem) == typeof('str')){
-			return this.select(this.filter(elem).first(), filtering)
+		// we found a match or got an element...
+		// NOTE: if elem was a keyword it means we have an item with the
+		// 		same text on the list...
+		if(item.length != 0){
+			elem = $(item).first()
 
-		// regexp...
-		} else if(elem.constructor === RegExp){
-			return this.select(this.filter(elem).first(), filtering)
+			// clear selection...
+			this.select(null, filtering)
+			if(!filtering){
+				browser.find('.path .dir.cur').text(elem.find('.text').text())
+			}
 
-		// element...
-		} else {
-			elem = $(elem).first()
+			// handle scroll position...
+			var p = elem.scrollParent()
+			var S = p.scrollTop()
+			var H = p.height()
 
-			if(elem.length == 0){
-				this.select(null, filtering)
+			var h = elem.height()
+			var t = elem.offset().top - p.offset().top
 
+			// XXX should this be in config???
+			var D = 3 * h 
+
+			// too low...
+			if(t+h+D > H){
+				p.scrollTop(S + (t+h+D) - H)
+
+			// too high...
+			} else if(t < D){
+				p.scrollTop(S + t - D)
+			}
+
+			// now do the selection...
+			elem.addClass('selected')
+			browser.attr('value', elem.find('.text').text())
+
+			this.trigger('select', elem)
+
+			return elem
+		}
+
+		// nothing found...
+		return $()
+	},
+
+	// Navigate relative to selection...
+	//
+	// 	Navigate to first/previous/next/last element...
+	// 	.navigate('first')
+	// 	.navigate('prev')
+	// 	.navigate('next')
+	// 	.navigate('last')
+	// 		-> elem
+	// 		NOTE: this will overflow, i.e. navigating 'next' when on the
+	// 				last element will navigate to the first.
+	// 		NOTE: when no element is selected, 'next' will select the 
+	// 				first, while 'prev' the last element's
+	//
+	// 	Deselect element...
+	// 	.navigate('none')
+	// 		-> elem
+	//
+	//
+	// Other arguments are compatible with .select(..) and then .filter(..)
+	// but note that this will "shadow" any element with the save name as
+	// a keyword, e.g. if we have an element with the text "next", 
+	// .navigate('next') will simply navigate to the next element while
+	// .select('next') / .filter('next') will yield that element by name.
+	navigate: function(action, filtering){
+		var pattern = '.list>div:not(.disabled):not(.filtered-out):visible'
+		action = action || 'first'
+																   
+		if(action == 'none'){
+			return this.select(null, filtering)
+
+		} else if(action == 'next' || action == 'prev'){
+			var to = this.select('!', filtering)[action+'All'](pattern).first()
+			// range check and overflow...
+			if(to.length == 0){
+				action = action == 'next' ? 'first' : 'last'
 			} else {
-				// clear selection...
-				this.select('none', filtering)
-				if(!filtering){
-					browser.find('.path .dir.cur').text(elem.find('.text').text())
-				}
-
-
-				// handle scroll position...
-				var p = elem.scrollParent()
-				var S = p.scrollTop()
-				var H = p.height()
-
-				var h = elem.height()
-				var t = elem.offset().top - p.offset().top
-
-				// XXX should this be in config???
-				var D = 3 * h 
-
-				// too low...
-				if(t+h+D > H){
-					p.scrollTop(S + (t+h+D) - H)
-
-				// too high...
-				} else if(t < D){
-					p.scrollTop(S + t - D)
-				}
-
-				// now do the selection...
-				elem.addClass('selected')
-				browser.attr('value', elem.find('.text').text())
-
-				this.trigger('select', elem)
-
-				return elem
+				return this.select(to, filtering)
 			}
 		}
+		return action == 'first' ? this.select(0, filtering)
+			: action == 'last' ? this.select(-1, filtering)
+			// fall back to select...
+			: this.select(action, filtering)
 	},
 
 	// Select next/prev element...
@@ -1480,14 +1467,14 @@ var BrowserPrototype = {
 		if(elem != null){
 			this.select(elem)
 		}
-		this.select('next')
+		this.navigate('next')
 		return this
 	},
 	prev: function(elem){
 		if(elem != null){
 			this.select(elem)
 		}
-		this.select('prev')
+		this.navigate('prev')
 		return this
 	},
 
@@ -1559,7 +1546,6 @@ var BrowserPrototype = {
 		var t = this.getTopVisibleElem()
 		var cur = this.select('!')
 
-
 		// nothing selected...
 		if(cur.length == 0 
 				// element not near the top...
@@ -1630,7 +1616,10 @@ var BrowserPrototype = {
 	push: function(pattern){
 		var browser = this.dom 
 		var cur = this.select('!')
-		var elem = this.select(pattern || '!')
+		var elem = this.select(!pattern ? '!'
+				: /-?[0-9]+/.test(pattern) ? pattern
+				// avoid keywords that .select(..) understands...
+				: '"'+pattern+'"' )
 
 		// item not found...
 		if(elem.length == 0 && pattern != null){
@@ -1650,7 +1639,7 @@ var BrowserPrototype = {
 
 		var path = this.path
 		//var txt = quoteWS(elem.find('.text').text())
-		var txt = '"'+ elem.find('.text').text() +'"'
+		//var txt = '"'+ elem.find('.text').text() +'"'
 		path.push(elem.find('.text').text())
 
 		// XXX should this be before or after the actual path update???
@@ -1709,7 +1698,8 @@ var BrowserPrototype = {
 		var path = this.path
 
 		//path.push(quoteWS(elem.find('.text').text()))
-		path.push('"'+ elem.find('.text').text() +'"')
+		//path.push('"'+ elem.find('.text').text() +'"')
+		path.push(elem.find('.text').text())
 
 		var res = this.open(path)
 

@@ -1879,15 +1879,15 @@ var RibbonsPrototype = {
 	// XXX custom align point woud also be nice... 
 	// 		(top, bottom, center, %, px)
 	centerRibbon: function(target, offset, scale){
+		target = this.getImage(target)
 		var ribbon_set = this.getRibbonSet() 
 
-		if(ribbon_set.length == 0){
+		if(ribbon_set.length == 0 || target.length == 0){
 			return this
 		}
 
 		//this.setOrigin(target)
 		
-		target = this.getImage(target)
 		var s = this.getScale()
 		var ro = ribbon_set.offset()
 		var io = target.offset()

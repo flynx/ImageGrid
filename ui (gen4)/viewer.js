@@ -147,6 +147,8 @@ var makeConfigToggler = function(attr, states){
 		function(_, action){
 			var lst = states.constructor === Array ? states : states.call(this)
 
+			console.log('action', action)
+
 			if(action == null){
 				return this.config[attr] || lst[lst.indexOf('none')] || lst[0]
 
@@ -4100,7 +4102,10 @@ if(window.nodejs != null){
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
 	var file = requirejs('./file')
-	var browseWalk = requirejs('./lib/widget/browse-walk')
+	// XXX this for some reason does not load in nw while require(..)
+	// 		for some reason works in browser...
+	//var browseWalk = requirejs('./lib/widget/browse-walk')
+	var browseWalk = require('./lib/widget/browse-walk')
 }
 
 
