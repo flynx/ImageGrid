@@ -4006,16 +4006,85 @@ var AppControlActions = actions.Actions({
 
 	// XXX revise these...
 	close: ['File|Interface/Close viewer',
+		function(){ window.close() }],
+	storeWindowGeometry: ['- Interface/Store window state',
 		function(){
-			// XXX should we do anything else here like auto-save???
-			window.close() 
+			// store window parameters (size, state)...
+			var gui = requirejs('nw.gui')
+			var win = gui.Window.get()
+
+			if(win.isFullscreen){
+				this.config.window = this.config.window || {}
+				this.config.window.fullscreen = true
+
+			} else {
+				this.config.window = {
+					size: {
+						width: win.width,
+						height: win.height,
+					},
+					fullscreen: false,
+				}
+			}
+		}],
+	restoreWindowGeometry: ['- Interface/Restore window state',
+		function(){
+			// or global.window.nwDispatcher.requireNwGui()
+			// (see: https://github.com/rogerwang/node-webkit/issues/707)
+			var gui = requirejs('nw.gui') 
+			var win = gui.Window.get()
+
+			// XXX move this into .restoreWindowGeometry(..)
+			// get window state from config and load it...
+			var cfg = this.config.window
+			if(cfg != null){
+				var W = screen.width
+				var H = screen.height
+				var w = 800
+				var h = 600
+
+				if(cfg.size){
+					w = win.width = Math.min(cfg.size.width, screen.width)
+					h = win.height = Math.min(cfg.size.height, screen.height)
+				}
+
+				// place on center of the screen...
+				var x = win.x = (W - w)/2
+				var y = win.y = (H - h)/2
+
+				//console.log('GEOMETRY:', w, h, x, y)
+
+				this.centerViewer()
+			}
+
+			win.show()
+
+			if(cfg != null && cfg.fullscreen){
+				this.toggleFullScreen()
+			}
 		}],
 	toggleFullScreen: ['Interface/Toggle full screen mode',
 		function(){
-			// XXX where should toggleFullscreenMode(..) be defined...
-			toggleFullscreenMode() 
+			var that = this
+			this.ribbons.preventTransitions()
 
-			this.centerViewer()
+			// hide the viewer to hide any animation crimes...
+			this.ribbons.viewer[0].style.visibility = 'hidden'
+
+			// XXX where should toggleFullscreenMode(..) be defined...
+			// 		...this also toggles a fullscreen css class on body...
+			toggleFullscreenMode() 
+			//requirejs('nw.gui').Window.get().toggleFullscreen()
+
+			setTimeout(function(){ 
+				that
+					.centerViewer()
+					.focusImage()
+					.ribbons
+						.restoreTransitions()
+
+				that.ribbons.viewer[0].style.visibility = ''
+			}, 0)
 		}],
 	showDevTools: ['Interface|Development/Show Dev Tools',
 		function(){
@@ -4053,17 +4122,12 @@ module.AppControl = ImageGridFeatures.Feature({
 	// XXX show main window...
 	handlers: [
 		['start',
-			function(){
-				// or global.window.nwDispatcher.requireNwGui()
-				// (see: https://github.com/rogerwang/node-webkit/issues/707)
-				var gui = requirejs('nw.gui') 
-				var win = gui.Window.get()
-
-				// XXX get window state from config and load it...
-				// XXX
-
-				win.show()
-			}],
+			function(){ this.restoreWindowGeometry() }],
+		[[
+			'close.pre',
+			'toggleFullScreen',
+		],
+			function(){ this.storeWindowGeometry() }],
 		['focusImage',
 			function(){
 				var gui = requirejs('nw.gui') 

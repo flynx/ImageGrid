@@ -190,7 +190,7 @@ var RibbonsPrototype = {
 		return this
 	},
 
-	// Prevent CSS transitions...
+	// Restore CSS transitions...
 	//
 	// This is a companion to .preventTransitions(..)
 	//
