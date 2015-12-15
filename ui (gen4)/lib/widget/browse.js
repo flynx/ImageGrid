@@ -997,7 +997,10 @@ var BrowserPrototype = {
 		var that = this
 		var browser = this.dom
 
-		var elems = browser.find('.list>div' + (ignore_disabled ? ':not(.disabled)' : ''))
+		var elems = browser.find('.list>div' 
+			+ (ignore_disabled ? 
+				':not(.disabled):not(.filtered-out)' 
+				: ''))
 
 		if(pattern == '*'){
 			return elems 
