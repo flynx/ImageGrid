@@ -97,7 +97,7 @@ var OverlayPrototype = {
 		// 	2'nd click -- close overlay
 		//
 		// XXX HACK: need a better way to do this...
-		var focused
+		var focused = document.hasFocus()
 		var unlock = function() { setTimeout(function(){ focused = true }, 200) }
 		var lock = function() { focused = false }
 		// blur-lock...
@@ -126,13 +126,14 @@ var OverlayPrototype = {
 			.addClass('blur')
 			.append(this.dom)
 
-		// focus the client...
-		if(client.dom && client.focus){
-			client.focus()
+		// pass focus to the client...
+		this.on('focus click', function(){
+			if(client.dom && client.focus){
+				client.focus()
+			}
+		})
 
-		} else {
-			this.focus()
-		}
+		this.focus()
 
 		return this
 	},

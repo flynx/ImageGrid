@@ -4880,8 +4880,8 @@ var URLHistoryUIActions = actions.Actions({
 								// move to top...
 								['&diams;', 
 									function(p){
-										var top = this.filter().first()
-										var cur = this.filter('"'+p+'"')
+										var top = this.filter('*', false).first()
+										var cur = this.filter('"'+p+'"', false)
 
 										if(!top.is(cur)){
 											top.before(cur)
@@ -4891,7 +4891,7 @@ var URLHistoryUIActions = actions.Actions({
 								// mark for removal...
 								['&times;', 
 									function(p){
-										var e = this.filter('"'+p+'"')
+										var e = this.filter('"'+p+'"', false)
 											.toggleClass('strike-out')
 
 										if(e.hasClass('strike-out')){
@@ -4938,7 +4938,7 @@ var URLHistoryUIActions = actions.Actions({
 				.select(cur)
 					.addClass('highlighted')
 
-			return list
+			return o
 		}],
 })
 
