@@ -3279,51 +3279,15 @@ module.GlobalStateIndicator = ImageGridFeatures.Feature({
 // XXX revise names...
 
 // widgets...
+var widget = require('lib/widget/widget')
 var browse = require('lib/widget/browse')
 var overlay = require('lib/widget/overlay')
 var drawer = require('lib/widget/drawer')
 
-// This will wrap the actions adding a contextual .preventClosing() method, 
-// if called it will prevent the list from closing on open event and give 
-// the user control over when to close the base list...
-//
-// XXX this may be a source for race conditions...
-// 		scenario:
-// 			- an action is run while a menu runs a state changing action
-//			- state restoration will overwrite the effects fo the BG action
-// XXX .preventClosing(..) mechanism needs revision...
-// 		...might be a better idea to add a permanent action to work with 
-// 		modal overlays and to define strict rules under which such overlays 
-// 		operate, like:
-// 			- only the top overlay is active and can receive events
-// 			- an overlay is closed on open event
-// 			- an overlay can be prevented from closing only while handling
-// 				an open event
-// 			- an overlay can close itself or the previous overlay during
-// 				its open event
-//
-// 		Proposed API:
-// 			getOverlay(context) 
-// 				-> overlay object
-// 				-> null
-// 					returns an overlay controller for a given container
-// 					NOTE: if no overlay is open this returns null
-//					NOTE: this might be implemented as an action.
-//					NOTE: this returns an object that represents only 
-//						the top overlay
-//					NOTE: this should either extend the overlay client
-//						or encapsulate it (preferred), providing a method to access 
-//						it (something like: .client prop or 
-//						.getCleint() method)...
-// 			.preventClosing()
-// 				prevent closing of an overlay after this open event is
-// 				handled
-// 			.close()
-//
-//		XXX need a way to prevent closing ONLY if action is run FROM the
-//			list...
-//			...the current solution does not have this problem...
-//
+// NOTE: if the action returns an instance of overlay.Overlay this will
+// 		not close right away but rather bind to:
+// 			overlay.close			-> self.focus()
+// 			overlay.client.open		-> self.close()
 var makeActionLister = function(list, filter, pre_order){
 	pre_order = typeof(filter) == typeof(true) ? filter : pre_order
 	filter = typeof(filter) == typeof(true) ? null : filter
@@ -3332,6 +3296,7 @@ var makeActionLister = function(list, filter, pre_order){
 		var that = this
 		var paths = this.getPath()
 		var actions = {}
+		var o
 
 		// pre-order the main categories...
 		if(pre_order){
@@ -3347,58 +3312,26 @@ var makeActionLister = function(list, filter, pre_order){
 			var n = paths[k][0]
 			var k = filter ? filter(k, n) : k
 
+			// XXX this expects that .client will trigger an open event...
+			var waitFor = function(child){
+				// we got a widget, wait for it to close...
+				if(child instanceof overlay.Overlay){
+					closingPrevented = true
+					child
+						.on('close', function(){ o.focus() })
+						.client
+							.on('open', function(){ o.close() })
+				}
+				return child
+			}
+
 			// pass args to listers...
 			if(k.slice(-1) == '*'){
-				actions[k] = function(){
+				actions[k] = function(){ return waitFor(a[n].apply(a, arguments)) }
 
-					// XXX this may cause race conditions as we are 
-					// 		splitting the state in two and then 
-					// 		overwriting one...
-					var a = Object.create(that)
-					a.preventClosing = function(){ 
-						closingPrevented = true 
-						return o
-					}
-
-					var res = a[n].apply(a, arguments)
-
-					// cleanup -- restore data that was updated by action...
-					// NOTE: we do not need to worry about partial 
-					// 		updates as they are done in place...
-					Object.keys(a).forEach(function(n){
-						if(n != 'preventClosing' && a.hasOwnProperty(n)){
-							that[n] = a[n]
-						}
-					})
-
-					return res
-				}
 			// ignore args of actions...
 			} else {
-				actions[k] = function(){
-
-					// XXX this will cause race conditions as we are 
-					// 		splitting the state in two and then 
-					// 		overwriting one...
-					var a = Object.create(that)
-					a.preventClosing = function(){ 
-						closingPrevented = true 
-						return o
-					}
-
-					var res = a[n]()
-
-					// cleanup -- restore data that was updated by action...
-					// NOTE: we do not need to worry about partial 
-					// 		updates as they are done in place...
-					Object.keys(a).forEach(function(n){
-						if(n != 'preventClosing' && a.hasOwnProperty(n)){
-							that[n] = a[n]
-						}
-					})
-
-					return res
-				}
+				actions[k] = function(){ return waitFor(a[n]()) }
 			}
 
 			// toggler -- add state list...
@@ -3424,7 +3357,7 @@ var makeActionLister = function(list, filter, pre_order){
 		config.path = path
 
 		// XXX get the correct parent...
-		var o = overlay.Overlay(that.ribbons.viewer, 
+		o = overlay.Overlay(that.ribbons.viewer, 
 			list(null, actions, config)
 				.open(function(evt){ 
 					if(!closingPrevented){
@@ -3442,8 +3375,8 @@ var makeActionLister = function(list, filter, pre_order){
 		// XXX DEBUG
 		//window.LIST = o.client
 
-		//return this
-		return o.client
+		//return o.client
+		return o
 	}
 }
 
@@ -3492,8 +3425,6 @@ var ActionTreeActions = actions.Actions({
 		}],
 	floatingListerTest: ['Test/Lister test (floating)...',
 		function(path){
-			var parent = this.preventClosing ? this.preventClosing() : null
-
 			// we got an argument and can exit...
 			if(path){
 				console.log('PATH:', path)
@@ -3518,18 +3449,10 @@ var ActionTreeActions = actions.Actions({
 					.open(function(evt, path){ 
 						o.close() 
 
-						// close the parent ui...
-						parent 
-							&& parent.close 
-							&& parent.close()
-
 						that.floatingListerTest(path)
 					}))
-					.close(function(){
-						parent 
-							&& parent.focus 
-							&& parent.focus()
-					})
+
+			return o
 		}],
 	// XXX use this.ribbons.viewer as base...
 	drawerTest: ['Test/Drawer widget test',
@@ -4181,19 +4104,20 @@ if(window.nodejs != null){
 var normalizePath = 
 module.normalizePath =
 function(path){
-	return path
-		// normalize the slashes...
-		.replace(/(\/)/g, '/')
-		// remove duplicate '/'
-		.replace(/(\/)\1+/g, '/')
-		// remove trailing '/'
-		.replace(/\/+$/, '')
-		// take care of .
-		.replace(/\/\.\//g, '/')
-		.replace(/\/\.$/, '')
-		// take care of ..
-		.replace(/\/[^\/]+\/\.\.\//g, '/')
-		.replace(/\/[^\/]+\/\.\.$/, '')
+	return typeof(path) == typeof('str') ? path
+			// normalize the slashes...
+			.replace(/(\/)/g, '/')
+			// remove duplicate '/'
+			.replace(/(\/)\1+/g, '/')
+			// remove trailing '/'
+			.replace(/\/+$/, '')
+			// take care of .
+			.replace(/\/\.\//g, '/')
+			.replace(/\/\.$/, '')
+			// take care of ..
+			.replace(/\/[^\/]+\/\.\.\//g, '/')
+			.replace(/\/[^\/]+\/\.\.$/, '')
+		: path
 }
 
 
@@ -4492,13 +4416,12 @@ module.FileSystemLoader = ImageGridFeatures.Feature({
 var makeBrowseProxy = function(action){
 	return function(path, logger){
 		var that = this
-		if(path == null){
-			// XXX should we set a start path here to current???
-			return this.browsePath(path, 
-				function(path){ 
-					return that[action](path, logger) 
-				})
-		}
+		path = path || this.base_path
+		// XXX should we set a start path here to current???
+		return this.browsePath(path, 
+			function(path){ 
+				return that[action](path, logger) 
+			})
 	}
 }
 
@@ -4523,16 +4446,12 @@ var FileSystemLoaderUIActions = actions.Actions({
 		},
 	},
 
-	// XXX BUG: for some reason this when run from .browseActions(..) or
-	// 		any other Browse, loads incorrectly while when called 
-	// 		directly is OK...
 	// XXX for some reason the path list blinks (.update()???) when sub 
 	// 		menu is shown...
 	// XXX should the loader list be nested or open in overlay (as-is now)???
 	browsePath: ['File/Browse file system...',
 		function(base, callback){
 			var that = this
-			var parent = this.preventClosing ? this.preventClosing() : null
 			base = base || this.base_path || '/'
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
@@ -4547,9 +4466,6 @@ var FileSystemLoaderUIActions = actions.Actions({
 						if(callback && callback.constructor === Function){
 							// close self and parent...
 							o.close() 
-							parent 
-								&& parent.close 
-								&& parent.close()
 
 							callback(path)
 
@@ -4594,12 +4510,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 						config.disableFiles = o.client.options.disableFiles
 						config.showDisabled = o.client.options.showDisabled
 						config.showNonTraversable = o.client.options.showNonTraversable
-
-						parent 
-							&& parent.focus 
-							&& parent.focus()
 					})
-			return o.client
+			return o
 		}],
 
 	// NOTE: if no path is passed (null) these behave just like .browsePath(..)
@@ -4609,8 +4521,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 		to start from.
 	// XXX should passing no path to this start browsing from the current
 	// 		path or from the root?
-	loadIndex: ['File/Load index', makeBrowseProxy('loadIndex')],
-	loadImages: ['File/Load images', makeBrowseProxy('loadImages')],
+	browseIndex: ['File/Load index', makeBrowseProxy('loadIndex')],
+	browseImages: ['File/Load images', makeBrowseProxy('loadImages')],
 })
 
 
@@ -5105,7 +5017,7 @@ module.FileSystemLoaderURLHistoryUI = ImageGridFeatures.Feature({
 		['browsePath', 
 			function(res){ 
 				var that = this
-				res.open(function(_, path){
+				res.client.open(function(_, path){
 					that.setTopURLHistory(path) 
 				})
 			}],
