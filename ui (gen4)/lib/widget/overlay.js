@@ -55,6 +55,8 @@ var OverlayPrototype = {
 			'click',
 			'keydown',
 		],
+
+		closeOnUnFocusedClick: false,
 	},
 
 	// XXX for some reason this does not work...
@@ -89,9 +91,35 @@ var OverlayPrototype = {
 
 		object.superMethod(Overlay, '__init__').call(this, parent, client, options)
 
+		// Prevent closing the overlay if clicked while blurred...
+		// i.e.
+		// 	1'st click -- focus window
+		// 	2'nd click -- close overlay
+		//
+		// XXX HACK: need a better way to do this...
+		var focused
+		var unlock = function() { setTimeout(function(){ focused = true }, 200) }
+		var lock = function() { focused = false }
+		// blur-lock...
+		$(window)
+			.focus(unlock)
+			.blur(lock)
+		// cleanup...
+		this.close(function(){
+			$(window)
+				.off('focus', unlock)
+				.off('blur', lock)
+		})
+
 		this.dom
 			.click(function(){
-				that.close()
+				if(that.options.closeOnUnFocusedClick || focused){
+					that.close()
+
+				// don't make the user wait if they really wants to close...
+				} else {
+					focused = true
+				}
 			})
 
 		this.parent

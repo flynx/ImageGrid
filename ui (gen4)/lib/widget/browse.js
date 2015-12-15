@@ -1122,7 +1122,6 @@ var BrowserPrototype = {
 					.map(function(e){ return e.replace(/\\(\s)/, '$1') })
 					.join('|') 
 				+ ')', 'gi')
-			console.log('>>>>', p, pattern)
 			// XXX should this be case insensitive???
 			this.filter(pattern,
 					// rejected...
