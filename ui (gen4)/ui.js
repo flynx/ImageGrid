@@ -236,7 +236,7 @@ module.GLOBAL_KEYBOARD = {
 		S: {
 			// XXX need to make this save to base_path if it exists and
 			// 		ask the user if it does not... now it always asks.
-			ctrl: 'saveIndex',
+			ctrl: 'browseSaveIndex',
 		},
 
 		// XXX still experimental...

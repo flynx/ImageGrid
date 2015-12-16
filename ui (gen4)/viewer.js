@@ -142,22 +142,23 @@ function makeTagWalker(direction, dfl_tag){
 
 // NOTE: if not state is set this assumes that the first state is the 
 // 		default...
-var makeConfigToggler = function(attr, states){
+var makeConfigToggler = function(attr, states, callback){
 	return Toggler(null,
 		function(_, action){
 			var lst = states.constructor === Array ? states : states.call(this)
 
-			console.log('action', action)
+			//console.log('action', action)
 
 			if(action == null){
 				return this.config[attr] || lst[lst.indexOf('none')] || lst[0]
 
 			} else {
 				this.config[attr] = action
-				this.focusImage()
+				//this.focusImage()
 			}
 		},
-		states)
+		states,
+		callback || function(action){ action != null && this.focusImage() })
 }
 
 
@@ -3925,6 +3926,12 @@ var AppControlActions = actions.Actions({
 		'application-window': null,
 
 		'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
+
+		// XXX
+		'ui-scale-modes': {
+			desktop: 0,
+			touch: 3,
+		},
 	},
 
 	// XXX revise these...
@@ -3936,9 +3943,12 @@ var AppControlActions = actions.Actions({
 			var gui = requirejs('nw.gui')
 			var win = gui.Window.get()
 
+			// fullscreen...
+			// ...avoid overwriting size...
 			if(win.isFullscreen){
 				this.config.window = this.config.window || {}
 				this.config.window.fullscreen = true
+				this.config.window.zoom = win.zoomLevel 
 
 			} else {
 				this.config.window = {
@@ -3947,6 +3957,7 @@ var AppControlActions = actions.Actions({
 						height: win.height,
 					},
 					fullscreen: false,
+					zoom: win.zoomLevel ,
 				}
 			}
 		}],
@@ -3965,6 +3976,7 @@ var AppControlActions = actions.Actions({
 				var H = screen.height
 				var w = 800
 				var h = 600
+				var s = cfg.scale
 
 				if(cfg.size){
 					w = win.width = Math.min(cfg.size.width, screen.width)
@@ -3975,16 +3987,28 @@ var AppControlActions = actions.Actions({
 				var x = win.x = (W - w)/2
 				var y = win.y = (H - h)/2
 
+				if(s){
+					win.zoomLevel = s
+				}
+
 				//console.log('GEOMETRY:', w, h, x, y)
 
 				this.centerViewer()
 			}
+
 
 			win.show()
 
 			if(cfg != null && cfg.fullscreen){
 				this.toggleFullScreen()
 			}
+
+			/* XXX still buggy....
+			// restore interface scale...
+			this.toggleInterfaceScale(
+				this.config['ui-scale-mode'] 
+				|| this.toggleInterfaceScale('??')[0])
+			*/
 		}],
 	toggleFullScreen: ['Interface/Toggle full screen mode',
 		function(){
@@ -4009,6 +4033,25 @@ var AppControlActions = actions.Actions({
 				that.ribbons.viewer[0].style.visibility = ''
 			}, 0)
 		}],
+	// XXX need to account for scale in PartialRibbons
+	// XXX should this be browser API???
+	toggleInterfaceScale: ['Interface/Toggle interface modes',
+		makeConfigToggler('ui-scale-mode', 
+			function(){ return Object.keys(this.config['ui-scale-modes']) },
+			function(state){ 
+				var gui = requirejs('nw.gui')
+				var win = gui.Window.get()
+
+
+				this.ribbons.preventTransitions()
+
+				var w = this.screenwidth
+				win.zoomLevel = this.config['ui-scale-modes'][state] || 0
+				this.screenwidth = w
+				this.centerViewer()
+
+				this.ribbons.restoreTransitions()
+			})],
 	showDevTools: ['Interface|Development/Show Dev Tools',
 		function(){
 			if(window.showDevTools != null){
@@ -4045,7 +4088,13 @@ module.AppControl = ImageGridFeatures.Feature({
 	// XXX show main window...
 	handlers: [
 		['start',
-			function(){ this.restoreWindowGeometry() }],
+			function(){ 
+				this.restoreWindowGeometry()
+
+				// XXX this messes up ribbon scale...
+				// 		...to close/fast?
+				//this.toggleInterfaceScale('!')
+			}],
 		[[
 			'close.pre',
 			'toggleFullScreen',
@@ -4076,6 +4125,81 @@ module.AppControl = ImageGridFeatures.Feature({
 				}
 			}],
 	],
+})
+
+
+
+//---------------------------------------------------------------------
+// XXX should this or LocationLocalStorage save/load location (now it's 
+// 		done by history)
+// XXX this should provide mechaincs to define location handlers, i.e.
+// 		a set for loader/saver per location type (.method)
+// XXX revise the wording...
+// 		.method?
+// 		.path or .url
+
+var LocationActions = actions.Actions({
+	// Format:
+	// 	{
+	// 		path: <base-path>,
+	// 		method: <load-method>,
+	// 	}
+	//
+	// NOTE: these will remove the trailing '/' (or '\') from .path 
+	// 		unless the path is root (i.e. "/")...
+	// 		...this is mainly to facilitate better browse support, i.e.
+	// 		to open the dir (open parent + select current) and not 
+	// 		within the dir
+	__location: null,
+	get location(){
+		this.__location = this.__location || {}
+
+		var b = this.__location.path
+		if(b && b != '/' && b != '\\'){
+			b = normalizePath(b)
+		}
+
+		if(b){
+			this.__location.path = b
+		}
+		return this.__location
+	},
+	set location(value){
+		// got a path...
+		if(typeof(value) == typeof('str')){
+			var path = value
+			// XXX get a better reasonable default...
+			var method = this.__location 
+				&& this.__location.method 
+					|| undefined 
+
+		// got an object...
+		} else {
+			var path = value.path
+			var method = value.method
+		}
+
+		// normalize path if it's not root...
+		if(path != '/' && path != '\\'){
+			path = normalizePath(path)
+		}
+
+		this.__location = {
+			path: path,
+			method: method,
+		}
+
+		this[value.method || 'loadIndex'](path)
+	},
+})
+
+module.AppControl = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'location',
+
+	actions: LocationActions,
 })
 
 
@@ -4122,7 +4246,6 @@ function(path){
 
 
 // XXX revise base path mechanics...
-// 		.base_path
 // 		.loaded_paths
 var FileSystemLoaderActions = actions.Actions({
 	config: {
@@ -4133,8 +4256,9 @@ var FileSystemLoaderActions = actions.Actions({
 
 	clone: [function(full){
 		return function(res){
-			if(this.base_path){
-				res.base_path = this.base_path
+			if(this.location){
+				res.location.path = this.location.path
+				res.location.method = this.location.method
 			}
 			if(this.loaded_paths){
 				res.loaded_paths = JSON.parse(JSON.stringify(this.loaded_paths))
@@ -4142,28 +4266,6 @@ var FileSystemLoaderActions = actions.Actions({
 		}
 	}],
 
-	// NOTE: these will remove the trailing '/' (or '\') unless the path
-	// 		is root...
-	// 		...this is mainly to facilitate better browse support, i.e.
-	// 		to open the dir (open parent + select current) and not 
-	// 		within the dir
-	// XXX need to revise these...
-	// XXX should there be a loaded path and a requested path???
-	get base_path(){
-		var b = this._base_path
-		if(b && b != '/' && b != '\\'){
-			b = normalizePath(b)
-		}
-		return b
-	},
-	// XXX use .loadPath(..)
-	set base_path(value){
-		if(value != '/' && value != '\\'){
-			value = normalizePath(value)
-		}
-		this._base_path = value
-		this.loadIndex(value)
-	},
 	loaded_paths: null,
 
 
@@ -4275,8 +4377,10 @@ var FileSystemLoaderActions = actions.Actions({
 
 					that.loaded_paths = loaded
 					// XXX should we get the requested path or the base path currently loaded
-					//that.base_path = loaded.length == 1 ? loaded[0] : path
-					that._base_path = loaded.length == 1 ? loaded[0] : path
+					that.__location ={
+						path: loaded.length == 1 ? loaded[0] : path,
+						method: 'loadIndex',
+					}
 
 					that.load(index)
 				})
@@ -4297,7 +4401,10 @@ var FileSystemLoaderActions = actions.Actions({
 			// 		clients know what we are loading and not force them
 			// 		to wait to find out...
 			// XXX not sure if this is the way to go...
-			this._base_path = path 
+			this.__location = {
+				path: path,
+				method: 'loadImages',
+			}
 
 			glob(path + '/'+ this.config['image-file-pattern'])
 				.on('error', function(err){
@@ -4310,7 +4417,10 @@ var FileSystemLoaderActions = actions.Actions({
 					// NOTE: we set it again because .loadURLs() does a clear
 					// 		before it starts loading...
 					// 		XXX is this a bug???
-					that._base_path = path 
+					that.__location = {
+						path: path,
+						method: 'loadImages',
+					}
 				})
 		}],
 
@@ -4319,13 +4429,15 @@ var FileSystemLoaderActions = actions.Actions({
 		function(path, logger){
 			// XXX check if this.config['index-dir'] exists, if yes then
 			// 		.loadIndex(..) else .loadImages(..)
+
+			//this.location.method = 'loadImages'
 		}],
 
 	// XXX merging does not work (something wrong with .data.join(..))
 	// XXX revise logger...
 	loadNewImages: ['File/Load new images',
 		function(path, logger){
-			path = path || this.base_path
+			path = path || this.location.path
 			logger = logger || this.logger
 
 			if(path == null){
@@ -4387,7 +4499,7 @@ var FileSystemLoaderActions = actions.Actions({
 		}],
 
 	clear: [function(){
-		delete this._base_path
+		delete this.__location
 		delete this.loaded_paths
 	}],
 })
@@ -4399,6 +4511,9 @@ module.FileSystemLoader = ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'fs-loader',
+	depends: [
+		'location',
+	],
 
 	actions: FileSystemLoaderActions,
 
@@ -4413,14 +4528,16 @@ module.FileSystemLoader = ImageGridFeatures.Feature({
 
 // XXX would need to delay the original action while the user is 
 // 		browsing...
-var makeBrowseProxy = function(action){
+var makeBrowseProxy = function(action, callback){
 	return function(path, logger){
 		var that = this
-		path = path || this.base_path
+		path = path || this.location.path
 		// XXX should we set a start path here to current???
 		return this.browsePath(path, 
 			function(path){ 
-				return that[action](path, logger) 
+				var res = that[action](path, logger) 
+				callback && callback.call(that, path)
+				return res
 			})
 	}
 }
@@ -4452,7 +4569,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 	browsePath: ['File/Browse file system...',
 		function(base, callback){
 			var that = this
-			base = base || this.base_path || '/'
+			base = base || this.location.path || '/'
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browseWalk.makeWalk(
@@ -4500,9 +4617,11 @@ var FileSystemLoaderUIActions = actions.Actions({
 									})
 							// select top element...
 							so.client.select(0)
+
+							return so
 						}
 					}))
-					// we closed the browser...
+					// we closed the browser -- save settings to .config...
 					.close(function(){
 
 						var config = that.config['file-browser-settings']
@@ -4511,6 +4630,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 						config.showDisabled = o.client.options.showDisabled
 						config.showNonTraversable = o.client.options.showNonTraversable
 					})
+
 			return o
 		}],
 
@@ -4604,6 +4724,10 @@ var URLHistoryActions = actions.Actions({
 				return
 			}
 
+			url = url || this.location.path
+			open = open || this.location.method
+			check = check || 'checkPath'
+
 			this.url_history = this.url_history || {}
 
 			// remove the old value...
@@ -4666,16 +4790,18 @@ var URLHistoryActions = actions.Actions({
 			}
 		}],
 	openURLFromHistory: ['- History/',
-		function(url){
+		function(url, open){
 			this.url_history = this.url_history || {}
 
 			url = typeof(url) == typeof(123) ? 
 				Object.keys(this.url_history).reverse().slice(url)[0]
 				: url
 
-			if(url && this.url_history[url] && this.url_history[url].open){
-				var open = this.url_history[url].open
+			if(url && !open && this.url_history[url] && this.url_history[url].open){
+				open = this.url_history[url].open
+			}
 
+			if(url && open){
 				if(open instanceof Function){
 					return open(url)
 
@@ -4695,6 +4821,9 @@ module.URLHistory = ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'url-history',
+	depends: [
+		'location',
+	],
 
 	actions: URLHistoryActions,
 })
@@ -4702,6 +4831,9 @@ module.URLHistory = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX should this be responsible for saving and loading of .location???
+// 		...on one hand it's part of the history, on the other it's part 
+// 		of file loader...
 var URLHistoryLocalStorageActions = actions.Actions({
 	config: {
 		'url-history-local-storage-key': 'url-history',
@@ -4762,13 +4894,14 @@ var URLHistoryLocalStorageActions = actions.Actions({
 					JSON.stringify(this.url_history) 
 			}
 
-			this.saveBasePath()
+			this.saveLocation()
 		}],
-	saveBasePath: ['History/',
+	saveLocation: ['History/',
 		function(){
 			var loaded = this.config['url-history-loaded-local-storage-key']
+
 			if(loaded != null){
-				localStorage[loaded] = this.base_path
+				localStorage[loaded] = JSON.stringify(this.location || {})
 			}
 		}],
 	loadLastSavedBasePath: ['- History/',
@@ -4776,7 +4909,8 @@ var URLHistoryLocalStorageActions = actions.Actions({
 			var loaded = this.config['url-history-loaded-local-storage-key']
 
 			if(loaded && localStorage[loaded]){
-				this.openURLFromHistory(localStorage[loaded])
+				var l = JSON.parse(localStorage[loaded])
+				this.openURLFromHistory(l.path, l.method)
 
 			} else {
 				this.openURLFromHistory(0)
@@ -4803,12 +4937,12 @@ module.URLHistoryLocalStorage = ImageGridFeatures.Feature({
 	handlers: [
 		['start',
 			function(){ this.loadLastSavedBasePath() }], 
-		['stop',
+		['stop.pre',
 			function(){ this.saveURLHistory() }], 
 
 		// save base_path...
 		['load loadURLs', 
-			function(){ this.base_path && this.saveBasePath() }],
+			function(){ this.location && this.location.path && this.saveLocation() }],
 
 		// save...
 		['pushURLToHistory dropURLFromHistory setTopURLHistory', 
@@ -4854,7 +4988,7 @@ var URLHistoryUIActions = actions.Actions({
 		function(){
 			var that = this
 			var parent = this.preventClosing ? this.preventClosing() : null
-			var cur = this.base_path
+			var cur = this.location.path
 
 			var to_remove = []
 
@@ -4976,7 +5110,6 @@ var pushToHistory = function(action, to_top, checker){
 		}]
 }
 
-// XXX add path checking...
 var FileSystemURLHistory = 
 module.FileSystemLoaderURLHistory = ImageGridFeatures.Feature({
 	title: '',
@@ -5122,28 +5255,35 @@ var FileSystemWriterActions = actions.Actions({
 				prepared: file.prepareIndex(json, changes),
 			}
 		}],
-	// XXX get real base path...
-	saveIndex: ['File/Save index',
+	// NOTE: with no arguments this will save index to .location.path
+	saveIndex: ['- File/Save index',
 		function(path, logger){
+			var that = this
 			// XXX this is a stub to make this compatible with makeBrowseProxy(..)
 			// 		...we do need a default here...
+			/*
 			if(path == null){
 				return
 			}
+			*/
+			path = path || this.location.path
 
 			// XXX get a logger...
 			logger = logger || this.logger
 
 			// XXX get real base path...
-			//path = path || this.base_path +'/'+ this.config['index-dir']
+			//path = path || this.location.path +'/'+ this.config['index-dir']
 
 			file.writeIndex(
-				this.prepareIndexForWrite().prepared, 
-				// XXX should we check if index dir is present in path???
-				//path, 
-				path +'/'+ this.config['index-dir'], 
-				this.config['index-filename-template'], 
-				logger || this.logger)
+					this.prepareIndexForWrite().prepared, 
+					// XXX should we check if index dir is present in path???
+					//path, 
+					path +'/'+ this.config['index-dir'], 
+					this.config['index-filename-template'], 
+					logger || this.logger)
+				.then(function(){
+					that.location.method = 'loadIndex'
+				})
 		}],
 
 	// XXX same as ctrl-shif-s in gen3
@@ -5265,7 +5405,7 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 			function(_, path){
 				// NOTE: if saving to a different path than loaded do not
 				// 		drop the .changes flags...
-				if(path && path == this.base_path){
+				if(path && path == this.location.path){
 					this.changes = false 
 				}
 			}],
@@ -5377,8 +5517,19 @@ module.FileSystemWriter = ImageGridFeatures.Feature({
 // 		- save as.. (browser)
 // 		- save if not base path present (browser)
 var FileSystemWriterUIActions = actions.Actions({
+	// XXX should this ask the user for a path???
+	// XXX this for some reason works differently than browseSaveIndex(..)
+	// 		and saves images-diff instead of images...
+	saveIndexHere: ['File/Save',
+		function(){ 
+			if(this.location.path){ 
+				this.saveIndex(this.location.path) 
+			} 
+		}],
 	// XXX add ability to create dirs...
-	saveIndex: [makeBrowseProxy('saveIndex')],
+	browseSaveIndex: ['File/Save index to...', 
+		makeBrowseProxy('saveIndex', function(){
+			this.loaction.method = 'loadIndex' })],
 })
 
 
