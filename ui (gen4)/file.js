@@ -588,6 +588,7 @@ var prepareIndex =
 module.prepareIndex =
 function(json, changes){
 	changes = changes === false ? false
+		// nothing set then save all...
 		: changes == null ? true
 		: changes
 
@@ -602,7 +603,7 @@ function(json, changes){
 	}
 
 	// tags...
-	if(changes === true || changes && json.data.tags != null){
+	if((changes === true || changes) && json.data.tags != null){
 		// NOTE: we write the whole set ONLY if an item is true or undefined
 		// 		i.e. not false...
 		if(changes === true || changes.bookmarked){
