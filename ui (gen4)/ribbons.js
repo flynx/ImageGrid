@@ -21,6 +21,26 @@ var IMAGE = '.image:not(.clone)'
 var RIBBON = '.ribbon:not(.clone)'
 
 
+
+/*********************************************************************/
+
+function path2url(path){
+	// test if we have a schema, and if yes return as-is...
+	if(/^(http|https|file|[\w-]*):[\\\/]{2}/.test(path)){
+		return path
+	}
+	// skip encoding windows drives...
+	var drive = path.split(/^([a-z]:[\\\/])/i)
+	path = drive.pop()
+	drive = drive.pop() || ''
+	return drive + (path
+		.split(/[\\\/]/g)
+		.map(encodeURIComponent)
+		.join('/'))
+}
+
+
+
 /*********************************************************************/
 //
 // This expects the following HTML structure...
@@ -1107,6 +1127,7 @@ var RibbonsPrototype = {
 		return image
 	},
 	_loadImagePreviewURL: function(image, url){
+		url = path2url(url)
 		// pre-cache and load image...
 		// NOTE: this will make images load without a blackout...
 		var img = new Image()
@@ -1243,7 +1264,8 @@ var RibbonsPrototype = {
 			if(old_gid != gid 
 					// the new preview (p_url) is different to current...
 					// NOTE: this may not work correctly for relative urls...
-					|| image.css('background-image').indexOf(encodeURI(p_url)) < 0){
+					//|| image.css('background-image').indexOf(encodeURI(p_url)) < 0){
+					|| image.css('background-image').indexOf(path2url(p_url)) < 0){
 				// sync load...
 				if(sync){
 					that._loadImagePreviewURL(image, p_url)

@@ -4089,11 +4089,12 @@ module.AppControl = ImageGridFeatures.Feature({
 	handlers: [
 		['start',
 			function(){ 
-				this.restoreWindowGeometry()
-
 				// XXX this messes up ribbon scale...
 				// 		...to close/fast?
 				//this.toggleInterfaceScale('!')
+				
+				this.restoreWindowGeometry()
+
 			}],
 		[[
 			'close.pre',
