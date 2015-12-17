@@ -71,8 +71,10 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 		//'ui-current-image-indicator-hide-on-screen-nav',
 	'ui-image-state-indicator',
 	'ui-global-state-indicator',
-	'ui-action-tree',
 	'ui-url-history',
+
+	'ui-browse-actions',
+		'ui-widget-test',
 
 	// experimental and optional features...
 	//'auto-single-image',

@@ -27,7 +27,6 @@ var drawer = require('lib/widget/drawer')
 
 
 /*********************************************************************/
-// XXX revise names...
 
 // NOTE: if the action returns an instance of overlay.Overlay this will
 // 		not close right away but rather bind to:
@@ -125,7 +124,7 @@ var makeActionLister = function(list, filter, pre_order){
 	}
 }
 
-var ActionTreeActions = actions.Actions({
+var BrowseActionsActions = actions.Actions({
 	config: {
 		// NOTE: the slashes at the end are significant, of they are not
 		// 		present the .toggleNonTraversableDrawing(..) will hide 
@@ -148,9 +147,9 @@ var ActionTreeActions = actions.Actions({
 			return overlay.getOverlay(o || this.viewer)
 		}],
 
+
 	browseActions: ['Interface/Browse actions',
 		makeActionLister(browse.makePathList, true)],
-
 	listActions:['Interface/List actions',
 		makeActionLister(browse.makeList, 
 			// format the doc to: <name> (<category>, ..)
@@ -161,6 +160,27 @@ var ActionTreeActions = actions.Actions({
 				return a +' ('+ l.join(', ') +')'
 			})],
 
+})
+
+var BrowseActions = 
+module.BrowseActions = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-browse-actions',
+	depends: [
+		'ui'
+	],
+
+	actions: BrowseActionsActions,
+})
+
+
+
+//---------------------------------------------------------------------
+// XXX make this not applicable to production...
+
+var WidgetTestActions = actions.Actions({
 	// XXX this is just a test...
 	embededListerTest: ['Test/Lister test (embeded)/*',
 		function(path, make){
@@ -342,20 +362,18 @@ var ActionTreeActions = actions.Actions({
 		function(){ this.showTaggedInDrawer('selected') }],
 })
 
-var ActionTree = 
-module.ActionTree = core.ImageGridFeatures.Feature({
+var WidgetTest = 
+module.WidgetTest = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-action-tree',
+	tag: 'ui-widget-test',
 	depends: [
-		'ui'
+		'ui-browse-actions',
 	],
 
-	actions: ActionTreeActions,
+	actions: WidgetTestActions,
 })
-
-
 
 
 
