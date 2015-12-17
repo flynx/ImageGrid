@@ -11,6 +11,7 @@ var promise = require('promise')
 var glob = require('glob')
 var guaranteeEvents = require('guarantee-events')
 
+
 define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true

@@ -8,6 +8,8 @@
 
 define(function(require){ var module = {}
 
+var object = require('lib/object')
+
 
 
 /*********************************************************************/
@@ -661,6 +663,7 @@ module.MetaActions = {
 				prop.configurable = true
 				Object.defineProperty(that, k, prop)
 
+
 			// actions and other attributes...
 			} else {
 				var attr = from[k]
@@ -854,20 +857,20 @@ function Actions(a, b){
 		// 		not in a consistent state...
 		// NOTE: this will skip all the getters and setters, they will 
 		// 		be included as-is...
-		var args = Object.getOwnPropertyDescriptor(obj, k).value
+		var arg = Object.getOwnPropertyDescriptor(obj, k).value
 
 		// skip non-arrays...
-		if(args == null 
-				|| args.constructor !== Array 
+		if(arg == null 
+				|| arg.constructor !== Array 
 				// and arrays the last element of which is not a function...
-				|| !(args[args.length-1] instanceof Function)){
+				|| !(arg[arg.length-1] instanceof Function)){
 			return
 		}
 
-		var func = args.pop()
+		var func = arg.pop()
 
 		// create a new action...
-		obj[k] = new Action(k, args[0], args[1], func)
+		obj[k] = new Action(k, arg[0], arg[1], func)
 	})
 
 	if(proto != null){

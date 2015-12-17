@@ -328,6 +328,10 @@ module.FeatureSet = {
 				lst.forEach(function(n){
 					var e = that[n]
 
+					if(!e){
+						console.warn('%s: feature is not loaded.', n)
+					}
+
 					// no dependencies...
 					if(e.depends == null || e.depends.length == 0){
 						res.push(n)
