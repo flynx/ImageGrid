@@ -63,6 +63,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'app-control',
 
 	// chrome...
+	'ui-direct-control',
 	'ui-animation',
 	'ui-bounds-indicators',
 	'ui-current-image-indicator',

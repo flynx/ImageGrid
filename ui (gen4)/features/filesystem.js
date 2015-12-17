@@ -8,15 +8,6 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-var util = require('lib/util')
-
-var actions = require('lib/actions')
-var features = require('lib/features')
-
-var core = require('features/core')
-
-var overlay = require('lib/widget/overlay')
-
 // XXX this should not be imported!!!
 // 		...something wrong with requirejs(..)
 if(window.nodejs != null){
@@ -30,6 +21,16 @@ if(window.nodejs != null){
 	//var browseWalk = requirejs('./lib/widget/browse-walk')
 	var browseWalk = require('lib/widget/browse-walk')
 }
+
+var util = require('lib/util')
+
+var actions = require('lib/actions')
+var features = require('lib/features')
+
+var core = require('features/core')
+
+var overlay = require('lib/widget/overlay')
+var browse = require('lib/widget/browse')
 
 
 

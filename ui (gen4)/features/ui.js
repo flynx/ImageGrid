@@ -2044,14 +2044,21 @@ var CurrentImageIndicatorActions = actions.Actions({
 			var ribbon_set = this.ribbons.getRibbonSet()
 
 			if(ribbon_set.length == 0){
-				return this
+				return
 			}
 
 			var scale = this.ribbons.getScale()
 			var cur = this.ribbons.getImage(target)
-			var ribbon = this.ribbons.getRibbon(target)
+			// NOTE: cur may be unloaded...
+			var ribbon = this.ribbons.getRibbon(cur.length > 0 ? target : this.currentRibbon)
 
 			var marker = ribbon.find('.current-marker')
+
+			// remove marker if current image is not loaded...
+			if(cur.length == 0){
+				marker.remove()
+				return
+			}
 
 			// get config...
 			var border = this.config['current-image-border']
@@ -2370,6 +2377,69 @@ module.AutoSingleImage = core.ImageGridFeatures.Feature({
 			}],
 	],
 })
+
+
+
+//---------------------------------------------------------------------
+
+// XXX add tap/click to focus...
+// XXX add pinch-zoom...
+// XXX add vertical scroll...
+// XXX BUG: current image indicator gets shown in random places...
+var DirectControl = 
+module.DirectControl = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-direct-control',
+	depends: [
+		'ui',
+		// this is only used to trigger reoad...
+		//'ui-partial-ribbons',
+	],
+
+	/*
+	config: {
+		'ui-direct-control-engines': [
+			'none',
+			'jquery',
+		],
+		'ui-direct-control-engine': 'jquery',
+	},
+
+	actions: actions.Actions({
+		toggleDirectControlEngine: ['Interface/',
+			base.makeConfigToggler('ui-direct-control-engine', 
+				function(){ return this.config['ui-direct-control-engines'] })],
+	}),
+	*/
+
+	handlers: [
+		// XXX hide current image indicator as soon as the image is not visible...
+		// XXX inertia...
+		// XXX limit scroll to at least one image being on screen (center?)...
+		// XXX add setup/taredown...
+		['updateRibbon', 
+			function(_, target){
+				var that = this
+				var r = this.ribbons.getRibbon(target)
+
+				r.length > 0 
+					&& !r.hasClass('ui-draggable')
+					&& r.draggable({
+						axis: 'x',
+						stop: function(){
+							var c = that.ribbons.getImageByPosition('center', r)
+							that
+								.updateRibbon(c)
+								// XXX is this correct???
+								//.updateCurrentImageIndicator()
+						}
+					})
+			}],
+	],
+})
+
 
 
 
