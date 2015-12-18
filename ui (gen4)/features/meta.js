@@ -63,7 +63,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'app-control',
 
 	// chrome...
-	'ui-direct-control',
 	'ui-animation',
 	'ui-bounds-indicators',
 	'ui-current-image-indicator',
@@ -76,6 +75,9 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'ui-browse-actions',
 		'ui-widget-test',
+
+	//'ui-direct-control-jquery',
+	'ui-direct-control-gsap',
 
 	// experimental and optional features...
 	//'auto-single-image',

@@ -485,7 +485,7 @@ var RibbonsPrototype = {
 	// Set ribbon set scale...
 	//
 	// 	.setScale(<scale>)
-	// 	.setScale(<scale>, <image>)
+	// 	.setScale(<scale>, <image>|'current'|'closest')
 	// 	.setScale(<scale>, 'top'|'center'|'bottom'|<px>|%, 'left'|'center'|'right'|<px>|%)
 	// 		-> <ribbons>
 	//
@@ -499,13 +499,20 @@ var RibbonsPrototype = {
 			return this
 		}
 
-		if(t != null && l != null){
-			this.setOrigin(t, l)
+		// default origin -- center...
+		if(t == null && l == null){
+			this.setOrigin('center', 'center')
 
+		// an image...
+		} else if(l == null){
+			t = t == 'current' ? this.getImage()
+				: t == 'closest' ? this.getImageByPosition()
+				: t
+			this.setOrigin(t)
+
+		// explicit...
 		} else {
-			var img = t == null ? this.getImage() : t
-
-			this.setOrigin(img)
+			this.setOrigin(t, l)
 		}
 
 		setElementScale(ribbon_set, scale)

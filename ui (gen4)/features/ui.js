@@ -2386,48 +2386,85 @@ module.AutoSingleImage = core.ImageGridFeatures.Feature({
 // XXX add pinch-zoom...
 // XXX add vertical scroll...
 // XXX BUG: current image indicator gets shown in random places...
-var DirectControl = 
-module.DirectControl = core.ImageGridFeatures.Feature({
+var DirectControljQ = 
+module.DirectControljQ = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-direct-control',
+	tag: 'ui-direct-control-jquery',
 	depends: [
 		'ui',
 		// this is only used to trigger reoad...
 		//'ui-partial-ribbons',
 	],
 
-	/*
-	config: {
-		'ui-direct-control-engines': [
-			'none',
-			'jquery',
-		],
-		'ui-direct-control-engine': 'jquery',
-	},
-
-	actions: actions.Actions({
-		toggleDirectControlEngine: ['Interface/',
-			base.makeConfigToggler('ui-direct-control-engine', 
-				function(){ return this.config['ui-direct-control-engines'] })],
-	}),
-	*/
-
+	// XXX add setup/taredown...
 	handlers: [
+		// setup click targets...
+		// XXX click only if we did not drag...
+		['updateImage', 
+			function(res, gid){
+				var that = this
+				var img = this.ribbons.getImage(gid)
+
+				// set the clicker only once...
+				if(!img.prop('clickable')){
+					var x, y
+					img
+						.prop('clickable', true)
+						.on('mousedown touchstart', function(){ 
+							x = event.clientX
+							y = event.clientY
+							t = Date.now()
+						})
+						.on('mouseup touchend', function(){ 
+							if(x != null 
+								&& Math.max(
+									Math.abs(x - event.clientX), 
+									Math.abs(y - event.clientY)) < 5){
+								// this will prevent double clicks...
+								x = null
+								y = null
+								that.focusImage(that.ribbons.getElemGID($(this)))
+							}
+						})
+				}
+			}],
+
+		// setup ribbon dragging...
+		// XXX this is really sloooooow...
 		// XXX hide current image indicator as soon as the image is not visible...
 		// XXX inertia...
 		// XXX limit scroll to at least one image being on screen (center?)...
-		// XXX add setup/taredown...
 		['updateRibbon', 
 			function(_, target){
 				var that = this
 				var r = this.ribbons.getRibbon(target)
 
+				var scale = 1
+
+				// setup dragging...
 				r.length > 0 
 					&& !r.hasClass('ui-draggable')
 					&& r.draggable({
 						axis: 'x',
+
+						start: function(evt, ui){
+							scale = that.ribbons.getScale()	
+						},
+						// compensate for ribbon scale...
+						drag: function(evt, ui) {
+							// compensate for scale...
+							ui.position = {
+								left: ui.originalPosition.left 
+									+ (ui.position.left 
+										- ui.originalPosition.left) / scale,
+								top: ui.originalPosition.top 
+									+ (ui.position.top 
+										- ui.originalPosition.top) / scale,
+							}
+						},
+
 						stop: function(){
 							var c = that.ribbons.getImageByPosition('center', r)
 							that
@@ -2436,6 +2473,92 @@ module.DirectControl = core.ImageGridFeatures.Feature({
 								//.updateCurrentImageIndicator()
 						}
 					})
+			}],
+	],
+})
+
+
+var DirectControlGSAP = 
+module.DirectControlGSAP = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-direct-control-gsap',
+	depends: [
+		'ui',
+		// this is only used to trigger reoad...
+		//'ui-partial-ribbons',
+	],
+
+	// XXX add setup/taredown...
+	handlers: [
+		// setup click targets...
+		// XXX click only if we did not drag...
+		['updateImage', 
+			function(res, gid){
+				var that = this
+				var img = this.ribbons.getImage(gid)
+
+				// set the clicker only once...
+				if(!img.prop('clickable')){
+					var x, y
+					img
+						.prop('clickable', true)
+						.on('mousedown touchstart', function(){ 
+							x = event.clientX
+							y = event.clientY
+							t = Date.now()
+						})
+						.on('mouseup touchend', function(){ 
+							if(x != null 
+								&& Math.max(
+									Math.abs(x - event.clientX), 
+									Math.abs(y - event.clientY)) < 5){
+								// this will prevent double clicks...
+								x = null
+								y = null
+								that.focusImage(that.ribbons.getElemGID($(this)))
+							}
+						})
+				}
+			}],
+
+		// setup ribbon dragging...
+		// XXX fast but uses messes up positioning...
+		// 		...setting type: 'left' will fix this but make things 
+		// 		really slow (as slow as jQuery.ui.draggable(..))...
+		['updateRibbon', 
+			function(_, target){
+				var that = this
+				var r = this.ribbons.getRibbon(target)
+
+				// setup dragging...
+				if(r.length > 0 && !r.hasClass('draggable')){
+					r.addClass('draggable')
+
+					var o
+
+					Draggable.create(r, {
+						type: 'x',
+						onDragStart: function(){
+							o = r.position().left
+						},
+						onDragEnd: function(){
+							var l = r.position().left
+							l += o - l
+
+							that.ribbons.preventTransitions(r)
+							r[0].style.left = l
+							r[0].style.transform = 'translate3d(0, 0, 0)'
+							that.ribbons.restoreTransitions(r)
+
+							var c = that.ribbons.getImageByPosition('center', r)
+							that
+								.updateRibbon(c)
+								// XXX is this correct???
+								//.updateCurrentImageIndicator()
+						}})
+				}
 			}],
 	],
 })
