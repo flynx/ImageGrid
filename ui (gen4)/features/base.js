@@ -95,6 +95,8 @@ actions.Actions({
 		// between ribbons...
 		//
 		// supported modes:
+		//
+		// XXX should this be here???
 		'ribbon-focus-modes': [
 			'visual',	// select image closest visually
 			'order',	// select image closest to current in order

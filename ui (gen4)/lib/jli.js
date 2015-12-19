@@ -217,6 +217,8 @@ function setElementTransform(elem, offset, scale, duration){
 	elem = $(elem)
 	//var t3d = USE_3D_TRANSFORM ? 'translateZ(0)' : ''
 	var t3d = USE_3D_TRANSFORM ? 'translate3d(0,0,0)' : ''
+	//var translate = USE_3D_TRANSFORM ? 'translate3d' : 'translate'
+	var translate = 'translate'
 
 	if(offset == null){
 		offset = getElementOffset(elem)
@@ -237,9 +239,12 @@ function setElementTransform(elem, offset, scale, duration){
 		var scale = getElementScale(elem)
 	}
 	if(USE_TRANSFORM){
-		var transform = 'translate('+ 
+		var transform = translate+'('+ 
 				Math.round(offset.left) +'px, '+
-				Math.round(offset.top) +'px) scale('+ scale +') ' + t3d
+				//Math.round(offset.top) +'px'+ (USE_3D_TRANSFORM && ', 0px' || '') +') '
+				Math.round(offset.top) +'px) '
+			+'scale('+ scale +') '
+			+ t3d
 		elem.css({
 			'-ms-transform' : transform, 
 			'-webkit-transform' : transform, 
@@ -253,7 +258,10 @@ function setElementTransform(elem, offset, scale, duration){
 			top: ''
 		}, duration)
 	} else {
-		var transform = 'translate(0px, 0px) scale('+ scale +') ' + t3d
+		//var transform = translate+'(0px, 0px'+ (USE_3D_TRANSFORM && ', 0px' || '') +') '
+		var transform = translate+'(0px, 0px) '
+			+'scale('+ scale +') '
+			+ t3d
 		elem.css({
 			// NOTE: this will be wrong during a transition, that's why we 
 			// 		can pass the pre-calculated offset as an argument...
@@ -465,8 +473,8 @@ function stopAnimation(elem){
 
 // XXX account for other transitions...
 // XXX make a sync version...
-function setElementOffset(elem, l, t){
-	return setElementTransform(elem, [l, t])
+function setElementOffset(elem, l, t, scale){
+	return setElementTransform(elem, [l, t], scale)
 }
 
 

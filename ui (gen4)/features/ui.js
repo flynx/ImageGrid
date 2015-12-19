@@ -2385,6 +2385,7 @@ module.AutoSingleImage = core.ImageGridFeatures.Feature({
 // XXX add tap/click to focus...
 // XXX add pinch-zoom...
 // XXX add vertical scroll...
+// XXX disable drag in single image mode unless image is larger than the screen...
 // XXX BUG: current image indicator gets shown in random places...
 var DirectControljQ = 
 module.DirectControljQ = core.ImageGridFeatures.Feature({
@@ -2478,6 +2479,8 @@ module.DirectControljQ = core.ImageGridFeatures.Feature({
 })
 
 
+// XXX disable drag in single image mode unless image is larger than the screen...
+// XXX do not use this for production -- GSAp has bad license...
 var DirectControlGSAP = 
 module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 	title: '',
@@ -2527,6 +2530,8 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 		// XXX fast but uses messes up positioning...
 		// 		...setting type: 'left' will fix this but make things 
 		// 		really slow (as slow as jQuery.ui.draggable(..))...
+		// XXX shifting to using transforms for centering fixes the align
+		// 		issue but makes the initial move jump...
 		['updateRibbon', 
 			function(_, target){
 				var that = this
@@ -2536,22 +2541,12 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 				if(r.length > 0 && !r.hasClass('draggable')){
 					r.addClass('draggable')
 
-					var o
+					var o, scale
 
 					Draggable.create(r, {
 						type: 'x',
-						onDragStart: function(){
-							o = r.position().left
-						},
+						cursor: 'auto',
 						onDragEnd: function(){
-							var l = r.position().left
-							l += o - l
-
-							that.ribbons.preventTransitions(r)
-							r[0].style.left = l
-							r[0].style.transform = 'translate3d(0, 0, 0)'
-							that.ribbons.restoreTransitions(r)
-
 							var c = that.ribbons.getImageByPosition('center', r)
 							that
 								.updateRibbon(c)

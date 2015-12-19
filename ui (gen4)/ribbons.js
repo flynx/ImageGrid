@@ -1946,7 +1946,11 @@ var RibbonsPrototype = {
 		ribbon
 			.css({
 				left: (rl + ((W-w)/2 + image_offset) - il) / scale,
+				//transform: 'translate3d('
+				//	+ ((rl + ((W-w)/2 + image_offset) - il) / scale) + 'px, 0px, 0px)'
 			})
+
+		//setElementOffset(ribbon, ((rl + ((W-w)/2 + image_offset) - il) / scale), 0, 1)
 
 		return this
 	},
