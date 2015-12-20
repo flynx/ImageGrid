@@ -101,6 +101,7 @@ module.FeatureProto = {
 
 		// merge config...
 		// XXX should this use inheritance???
+		// XXX do we need to clone .config?
 		if(this.config != null 
 				|| (this.actions != null 
 					&& this.actions.config != null)){
@@ -110,12 +111,6 @@ module.FeatureProto = {
 				actions.config = {}
 			}
 			Object.keys(config).forEach(function(n){
-				/*
-				// keep existing keys...
-				if(actions.config[n] === undefined){
-					actions.config[n] = config[n]
-				}
-				*/
 				// NOTE: this will overwrite existing values...
 				actions.config[n] = config[n]
 			})

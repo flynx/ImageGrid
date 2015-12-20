@@ -80,7 +80,6 @@ function(attr, states, callback){
 /*********************************************************************/
 
 // XXX split this into read and write actions...
-// XXX check if align by position is relevant here...
 var BaseActions = 
 module.BaseActions = 
 actions.Actions({
@@ -239,12 +238,7 @@ actions.Actions({
 		function(mode){
 			var res = {}
 			for(var k in this){
-				// dump the base crop state...
-				if(k == 'data' && this.crop_stack && this.crop_stack.length > 0){
-					res[k] = this.crop_stack[0].dumpJSON()
-
-				// dump current state...
-				} else if(this[k] != null && this[k].dumpJSON != null){
+				if(this[k] != null && this[k].dumpJSON != null){
 					res[k] = this[k].dumpJSON()
 				}
 			}
@@ -551,8 +545,25 @@ actions.Actions({
 		function(target){ 
 			this.images
 				&& this.images.flipImage(this.data.getImage(target), 'horizontal') }],
+})
 
 
+var Base =
+module.Base = core.ImageGridFeatures.Feature({
+	title: 'ImageGrid base',
+
+	tag: 'base',
+
+	actions: BaseActions,
+})
+
+
+
+//---------------------------------------------------------------------
+// Tags...
+
+var TagsActions = 
+module.TagsActions = actions.Actions({
 	// tags...
 	//
 	// XXX mark updated...
@@ -651,7 +662,67 @@ actions.Actions({
 				this.data.tagsFromImages(images, mode)
 			}
 		}],
+})
 
+
+var Tags =
+module.Tags = core.ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'tags',
+	depends: [
+		'base',
+	],
+
+	actions: TagsActions,
+})
+
+
+
+//---------------------------------------------------------------------
+// Crop...
+
+var CropActions =
+module.CropActions = actions.Actions({
+
+	crop_stack: null,
+
+	// load the crop stack if present...
+	load: [function(data){
+		if(data.crop_stack){
+			this.crop_stack = data.crop_stack.map(function(j){
+				return data.Data(j)
+			})
+		}
+	}],
+
+	// store the root crop state instead of the current view...
+	//
+	// modes supported:
+	// 	- current	- store the current state/view
+	// 	- base		- store the base state/view
+	// 	- full		- store the crop stack
+	//
+	// XXX might need to revise the mode approach...
+	// XXX add support to loading the states...
+	json: [function(mode){
+		mode = mode || 'current'
+
+		return function(res){
+			if(mode == 'base' 
+					&& this.crop_stack 
+					&& this.crop_stack.length > 0){
+				res.data = this.crop_stack[0].dumpJSON()
+			}
+			if(mode == 'full' 
+					&& this.crop_stack 
+					&& this.crop_stack.length > 0){
+				res.crop_stack = this.crop_stack.map(function(c){
+					return c.dumpJSON()
+				})
+			}
+		}
+	}],
 
 	// crop...
 	//
@@ -762,8 +833,28 @@ actions.Actions({
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
 			this.crop(this.data[selector](tags), flatten)
 		}],
+})
 
 
+var Crop =
+module.Crop = core.ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'crop',
+	depends: [
+		'base',
+	],
+
+	actions: CropActions,
+})
+
+
+
+//---------------------------------------------------------------------
+// Image Group...
+
+var ImageGroupActions =
+module.ImageGroupActions = actions.Actions({
 	// grouping...
 	// XXX need to tell .images about this...
 	group: ['- Group|Edit/Group images', 
@@ -813,15 +904,30 @@ actions.Actions({
 })
 
 
-var Base =
-module.Base = core.ImageGridFeatures.Feature({
-	title: 'ImageGrid base',
+var ImageGroup =
+module.ImageGroup = core.ImageGridFeatures.Feature({
+	title: '',
 
-	tag: 'base',
+	tag: 'image-group',
+	depends: [
+		'base',
+	],
 
-	actions: BaseActions,
+	actions: ImageGroupActions,
 })
 
+
+
+//---------------------------------------------------------------------
+// Meta base features...
+
+// full features base...
+core.ImageGridFeatures.Feature('base-full', [
+	'base',
+	'tags',
+	'crop',
+	'image-group',
+])
 
 
 

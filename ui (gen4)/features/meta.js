@@ -27,7 +27,7 @@ var core = require('features/core')
 
 core.ImageGridFeatures.Feature('viewer-testing', [
 	'lifecycle',
-	'base',
+	'base-full',
 	'ui',
 
 	// features...
