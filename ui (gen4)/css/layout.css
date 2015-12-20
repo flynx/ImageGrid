@@ -274,6 +274,34 @@ stretching in width... */
 .ribbon:last-child {
   margin-bottom: 0px;
 }
+.base-ribbon-marker {
+  position: absolute;
+  height: 100%;
+  color: transparent;
+  font-size: 20pt;
+  font-weight: bold;
+}
+.base-ribbon-marker:after {
+  content: "base ribbon";
+  display: block;
+  position: absolute;
+  width: 300px;
+  bottom: 0px;
+  left: 0px;
+  padding: 5px;
+  box-sizing: border-box;
+  z-index: 1000;
+  color: white;
+  background: black;
+  opacity: 0.2;
+  font-size: 20pt;
+  font-weight: bold;
+  transform-origin: bottom left;
+  transform: rotate(-90deg);
+}
+.single-image-mode.viewer .base-ribbon-marker {
+  display: none;
+}
 /*********************************************************** Image ***/
 .marker,
 .current-marker,
@@ -1403,6 +1431,16 @@ stretching in width... */
   display: inline-block;
   content: "ribbon number";
   font-size: 14px;
+  opacity: 0.8;
+}
+.show-passive-base-ribbon-indicator:not(.single-image-mode) .base.ribbon:after {
+  content: "";
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 6px;
+  top: 101%;
+  background: yellow;
   opacity: 0.8;
 }
 /*************************************************** Progress bars ***/

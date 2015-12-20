@@ -20,7 +20,7 @@ var object = require('lib/object')
 //
 // Goals:
 // 	- provide a unified mechanism to define and manage user API's for 
-// 	  use in UI-hooks, keyboard mappings, scripting, ...
+// 	  use in UI-hooks, keyboard mappings, scripting, ... etc.
 // 	- a means to generate configuration UI's
 // 	- a means to generate documentation
 //
@@ -34,14 +34,31 @@ var object = require('lib/object')
 // 		- the action handlers are bound relative to it (._action_handlers)
 //
 // 	Action
+//
+//								+  pre	+  pre	+		+  post	+  post	+
+//		Action event handler:	o-------x						o-------x
+//										v						^
+//		Actions							o-------x		o-------x
+//												v		^
+//		Root Action								o-------x
+//
 // 		- a method, created by Action(..),
-// 		- calls all the shadowed actions in the inheritance chain in 
-// 		  sequence implicitly,
+// 		- calls all the shadowed/overloaded actions in the inheritance 
+// 		  chain in sequence implicitly,
 // 		  NOTE: there is no way to prevent an action in the chain from
-// 		  		running, this is by design, i.e. no way to full shadow.
-// 		- returns the action set (for call chaining),
+// 		  		running, this is by design, i.e. no way to fully shadow.
+// 		- actions that do not shadow anything are called root actions.
+// 		- returns the action set by default (for call chaining),
+// 		- the base/root action can return any value.
+// 		  NOTE: if undefined is returned, it will be replaced by the 
+// 		  		action context/action set.
+// 		  NOTE: there is no distinction between root and other actions
+// 		  		other than that root action's return values are not 
+// 		  		ignored.
 // 		- can consist of two parts: the first is called before the 
 // 		  shadowed action (pre-callback) and the second after (post-callback).
+// 		- post-callback has access to the return value and can modify it
+// 		  but not replace it.
 // 		- can be bound to, a-la an event, calling the handlers when it is 
 // 		  called, 
 //
@@ -70,6 +87,9 @@ var object = require('lib/object')
 //
 // 		<action-set>.actions
 // 				-> list of action names
+//
+// 		<action-set>.length
+// 				-> number of actions
 // 	
 //
 // 2) Event-like callbacks for actions (MetaActions, Action)
@@ -91,7 +111,7 @@ var object = require('lib/object')
 // 		var O = Actions(X, {
 // 			m: [function(){
 // 				console.log('pre')
-// 				return function(){
+// 				return function(res){
 // 					console.log('post')
 // 				}
 // 			}]

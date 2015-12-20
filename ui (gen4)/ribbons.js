@@ -436,7 +436,12 @@ var RibbonsPrototype = {
 				var w = that.getVisibleImageSize('width', null, img)
 
 				// skip images not fully shown in viewer...
-				if(L > l || l+w > L+W){
+				// NOTE: we explicitly leave partial images here so as to
+				// 		include at least two.
+				// 		This is done so as to include at least a couple 
+				// 		of images at large magnifications when nothing 
+				// 		other than the current image fully fit...
+				if(L > l+w || l > L+W){
 					return
 				}
 
@@ -463,8 +468,8 @@ var RibbonsPrototype = {
 
 		// we have two images that are about the same distance from 
 		// target...
-		// NOTE: this is a one-dimentional filter so the can not be more
-		// 		than two hits...
+		// NOTE: this is a one-dimentional filter so there can not be 
+		// 		more than two hits...
 		// NOTE: delta is used ONLY if position is either 'center', 
 		// 		'current' or an jQuery object...
 		if(b && (a >= 0) != (b >= 0) && Math.abs(a + b) < delta){

@@ -407,6 +407,42 @@ stretching in width... */
 	margin-bottom: 0px;
 }
 
+.base-ribbon-marker {
+	position: absolute;
+	height: 100%;
+
+	color: transparent;
+	font-size: 20pt;
+	font-weight: bold;
+}
+.base-ribbon-marker:after {
+	content: "base ribbon";
+
+	display: block;
+
+	position: absolute;
+	width: @image-tile-size;
+	bottom: 0px;
+	left: 0px;
+	padding: 5px;
+	box-sizing: border-box;
+
+	z-index: 1000;
+
+	color: white;
+	background: black;
+	opacity: 0.2;
+
+	font-size: 20pt;
+	font-weight: bold;
+
+	transform-origin: bottom left;
+	transform: rotate(-90deg);
+}
+.single-image-mode.viewer .base-ribbon-marker {
+	display: none;
+}
+
 
 
 /*********************************************************** Image ***/
@@ -1105,7 +1141,6 @@ stretching in width... */
 	display: none;
 }
 
-
 /* these are generic containers for indicators */
 .global-mode-indicators,
 .context-mode-indicators {
@@ -1289,6 +1324,23 @@ stretching in width... */
 
 	opacity: 0.8;
 }
+
+.show-passive-base-ribbon-indicator:not(.single-image-mode) .base.ribbon:after {
+	content: "";
+
+	position: absolute;
+	display: block;
+
+	width: 100%;
+	height: @image-tile-size/50;
+	top: 101%;
+	//left: -100%;
+
+	background: yellow;
+
+	opacity: 0.8;
+}
+
 
 
 

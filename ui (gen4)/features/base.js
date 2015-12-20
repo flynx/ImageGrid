@@ -259,6 +259,8 @@ actions.Actions({
 	// 	'visual'		- focus visually closest to current image
 	//
 	// NOTE: default mode is set in .config.ribbon-focus-mode
+	// NOTE: this explicitly does nothing if mode is unrecognised, this
+	// 		is done to add support for other custom modes...
 	focusRibbon: ['- Navigate/Focus Ribbon',
 		function(target, mode){
 			var data = this.data
@@ -287,7 +289,7 @@ actions.Actions({
 			} else if(mode == 'first' || mode == 'last'){
 				var t = data.getImage(mode, r)
 
-			// unknown mode...
+			// unknown mode -- do nothing...
 			} else {
 				return
 			}
@@ -387,12 +389,6 @@ actions.Actions({
 			}
 			this.nextImage(c[Math.min.apply(null, Object.keys(c))])
 		}],
-
-	// XXX should these be here???
-	prevTagged: ['- Navigate/Previous image tagged with tag',
-		makeTagWalker('prev')],
-	nextTagged: ['- Navigate/Next image tagged with tag',
-		makeTagWalker('next')],
 
 	firstRibbon: ['Navigate/First ribbon',
 		function(){ this.focusRibbon('first') }],
@@ -662,6 +658,12 @@ module.TagsActions = actions.Actions({
 				this.data.tagsFromImages(images, mode)
 			}
 		}],
+	
+	prevTagged: ['- Navigate/Previous image tagged with tag',
+		makeTagWalker('prev')],
+	nextTagged: ['- Navigate/Next image tagged with tag',
+		makeTagWalker('next')],
+
 })
 
 

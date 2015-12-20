@@ -468,6 +468,30 @@ actions.Actions({
 				}
 			}
 		}],
+	focusRibbon: [
+		function(target, mode){
+			mode = mode || this.config['ribbon-focus-mode']
+
+			var c = this.data.getRibbonOrder()
+			var i = this.data.getRibbonOrder(target)
+			// NOTE: we are not changing the direction here based on 
+			// 		this.direction as swap will confuse the user...
+			var direction = c < i ? 'before' : 'after'
+
+			if(mode == 'visual'){
+				var ribbons = this.ribbons
+				var r = this.data.getRibbon(target)
+				var t = ribbons.getImageByPosition('current', r)
+
+				if(t.length > 1){
+					t = t.eq(direction == 'before' ? 0 : 1)
+				}
+
+				t = ribbons.getElemGID(t)
+
+				this.focusImage(t, r)
+			}
+		}],
 	setBaseRibbon: [
 		function(target){
 			var r = this.data.getRibbon(target)
@@ -701,10 +725,12 @@ module.Viewer = core.ImageGridFeatures.Feature({
 			function(){
 				var that = this
 
+				// load themes from config...
 				if(this.config.theme){
 					this.toggleTheme(this.config.theme)
 				}
 
+				// center viewer on resize events...
 				if(!this.__viewer_resize){
 					this.__viewer_resize = function(){
 						if(that.__centering_on_resize){
@@ -726,33 +752,6 @@ module.Viewer = core.ImageGridFeatures.Feature({
 				if(that.__viewer_resize){
 					$(window).off('resize', that.__viewer_resize) 
 					delete that.__viewer_resize
-				}
-			}],
-
-		// add support for visual mode...
-		// XXX 'visual' mode fails in single-image-mode....
-		['focusRibbon', 
-			function(res, target, mode){
-				mode = mode || this.config['ribbon-focus-mode']
-
-				var c = this.data.getRibbonOrder()
-				var i = this.data.getRibbonOrder(r)
-				// NOTE: we are not changing the direction here based on 
-				// 		this.direction as swap will confuse the user...
-				var direction = c < i ? 'before' : 'after'
-
-				if(mode == 'visual'){
-					var ribbons = this.ribbons
-					var r = this.data.getRibbon(target)
-					var t = ribbons.getImageByPosition('current', r)
-
-					if(t.length > 1){
-						t = t.eq(direction == 'before' ? 0 : 1)
-					}
-
-					t = ribbons.getElemGID(t)
-
-					this.focusImage(t, r)
 				}
 			}],
 	],
@@ -2350,6 +2349,125 @@ module.CurrentImageIndicatorHideOnScreenNav = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// XXX this should:
+// 	- float to the left of a ribbon if image #1 is fully visible (working)
+// 	- float at left of viewer if image #1 is off screen...
+// 	- float on the same level as the base ribbon...
+
+// XXX make this an action...
+var updateBaseRibbonIndicator = function(img){
+	var scale = this.ribbons.getScale()
+	var base = this.ribbons.getRibbon('base')
+	img = this.ribbons.getImage(img)
+	var m = base.find('.base-ribbon-marker')
+
+	if(base.length == 0){
+		return
+	}
+
+	if(m.length == 0){
+		m = this.ribbons.viewer.find('.base-ribbon-marker')
+
+		// make the indicator...
+		if(m.length == 0){
+			m = $('<div>')
+				.addClass('base-ribbon-marker')
+				.text('base ribbon')
+		}
+
+		m.prependTo(base)
+	}
+
+	// XXX this is wrong -- need to calculate the offset after the move and not now...
+	if(base.offset().left < 0){
+		m.css('left', (img.position().left + img.width()/2 - this.ribbons.viewer.width()/2) / scale)
+
+	} else {
+		m.css('left', '')
+	}
+}
+
+var BaseRibbonIndicator = 
+module.BaseRibbonIndicator = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-base-ribbon-indicator',
+	depends: ['ui'],
+
+	handlers: [
+		// move marker to current image...
+		['focusImage.pre',
+			function(target){ 
+				updateBaseRibbonIndicator.call(this, target)
+			}],
+		// prevent animations when focusing ribbons...
+		['focusRibbon.pre setBaseRibbon',
+			function(){
+				updateBaseRibbonIndicator.call(this)
+
+				/*
+				this.ribbons.preventTransitions(m)
+				return function(){
+					this.ribbons.restoreTransitions(m)
+				}
+				*/
+			}],
+	]
+})
+
+
+var PassiveBaseRibbonIndicator = 
+module.PassiveBaseRibbonIndicator = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-passive-base-ribbon-indicator',
+	depends: ['ui'],
+
+	config: {
+		'ui-show-passive-base-ribbon-indicator': true,
+	},
+
+	actions: actions.Actions({
+		togglePassiveBaseRibbonIndicator: ['Interface/Toggle passive base ribbon indicator',
+			CSSClassToggler(
+				function(){ return this.ribbons.viewer }, 
+				'show-passive-base-ribbon-indicator',
+				function(state){ 
+					this.config['ui-show-passive-base-ribbon-indicator'] = state == 'on' }) ],
+	}),
+
+	handlers: [
+		['start',
+			function(){
+				this.togglePassiveBaseRibbonIndicator(
+					this.config['ui-show-passive-base-ribbon-indicator'] ?
+						'on' : 'off')
+			}]
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+
+
+// XXX add setup / teardown...
+// XXX might be a good idea to merge this with single image mode...
+var makeStateIndicator = function(type){
+	return $('<div>')
+		.addClass('state-indicator-container ' + type || '')
+}
+
+var makeStateIndicatorItem = function(container, type, text){
+	var item = $('<div>')
+			.addClass('item '+ type || '')
+			.attr('text', text)
+	this.ribbons.viewer.find('.state-indicator-container.'+container)
+		.append(item)
+	return item
+}
 
 // XXX
 var ImageStateIndicator = 
@@ -2358,7 +2476,38 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'ui-image-state-indicator',
-	depends: ['ui'],
+	depends: [
+		'ui',
+		'ui-single-image-view',
+	],
+
+	actions: actions.Actions({
+		updateStateIndicators: ['- Interface/',
+			function(){
+				// make/get indicator containers...
+				var image = this.ribbons.viewer.find('.state-indicator-container.image-info')
+				if(image.length == 0){
+					image = makeStateIndicator('.image-info') 
+						.appendTo(this.ribbons.viewer)
+				}
+
+				var global = this.ribbons.viewer.find('.state-indicator-container.global-info')
+				if(global.length == 0){
+					global = makeStateIndicator('.global-info') 
+						.appendTo(this.ribbons.viewer)
+				}
+
+				// XXX specific status...
+				// XXX
+			}],
+	}),
+
+	handlers: [
+		['focusImage',
+			function(){
+				this.updateStateIndicators()
+			}]
+	],
 })
 
 
@@ -2372,14 +2521,17 @@ module.GlobalStateIndicator = core.ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'ui-global-state-indicator',
-	depends: ['ui'],
+	depends: [
+		'ui'
+		//'ui-single-image-view',
+	],
 })
 
 
 
 //---------------------------------------------------------------------
-
 // XXX experimental...
+
 // 		...not sure if this is the right way to go...
 // XXX need to get the minimal size and not the width as results will 
 // 		depend on viewer format...
@@ -2415,28 +2567,35 @@ module.AutoSingleImage = core.ImageGridFeatures.Feature({
 	],
 })
 
+var AutoRibbon = 
+module.AutoRibbon = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'auto-ribbon',
+
+	handlers: [
+		['nextRibbon prevRibbon',
+			function(){
+				this.toggleSingleImage('?') == 'on' 
+					&& this.toggleSingleImage('off') }],
+	],
+})
 
 
 //---------------------------------------------------------------------
 
-// XXX add tap/click to focus...
-// XXX add pinch-zoom...
-// XXX add vertical scroll...
-// XXX disable drag in single image mode unless image is larger than the screen...
-// XXX BUG: current image indicator gets shown in random places...
-var DirectControljQ = 
-module.DirectControljQ = core.ImageGridFeatures.Feature({
+// XXX add setup/taredown...
+var Clickable = 
+module.Clickable = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-direct-control-jquery',
+	tag: 'ui-clickable',
 	depends: [
 		'ui',
-		// this is only used to trigger reoad...
-		//'ui-partial-ribbons',
 	],
 
-	// XXX add setup/taredown...
 	handlers: [
 		// setup click targets...
 		// XXX click only if we did not drag...
@@ -2468,7 +2627,30 @@ module.DirectControljQ = core.ImageGridFeatures.Feature({
 						})
 				}
 			}],
+	],
+})
 
+
+// XXX add tap/click to focus...
+// XXX add pinch-zoom...
+// XXX add vertical scroll...
+// XXX disable drag in single image mode unless image is larger than the screen...
+// XXX BUG: current image indicator gets shown in random places...
+var DirectControljQ = 
+module.DirectControljQ = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-direct-control-jquery',
+	exclusive: ['ui-direct-control'],
+	depends: [
+		'ui',
+		// this is only used to trigger reoad...
+		//'ui-partial-ribbons',
+	],
+
+	// XXX add setup/taredown...
+	handlers: [
 		// setup ribbon dragging...
 		// XXX this is really sloooooow...
 		// XXX hide current image indicator as soon as the image is not visible...
@@ -2517,13 +2699,14 @@ module.DirectControljQ = core.ImageGridFeatures.Feature({
 
 
 // XXX disable drag in single image mode unless image is larger than the screen...
-// XXX do not use this for production -- GSAp has bad license...
+// XXX do not use this for production -- GSAp has a bad license...
 var DirectControlGSAP = 
 module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
 	tag: 'ui-direct-control-gsap',
+	exclusive: ['ui-direct-control'],
 	depends: [
 		'ui',
 		// this is only used to trigger reoad...
@@ -2532,37 +2715,6 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 
 	// XXX add setup/taredown...
 	handlers: [
-		// setup click targets...
-		// XXX click only if we did not drag...
-		['updateImage', 
-			function(res, gid){
-				var that = this
-				var img = this.ribbons.getImage(gid)
-
-				// set the clicker only once...
-				if(!img.prop('clickable')){
-					var x, y
-					img
-						.prop('clickable', true)
-						.on('mousedown touchstart', function(){ 
-							x = event.clientX
-							y = event.clientY
-							t = Date.now()
-						})
-						.on('mouseup touchend', function(){ 
-							if(x != null 
-								&& Math.max(
-									Math.abs(x - event.clientX), 
-									Math.abs(y - event.clientY)) < 5){
-								// this will prevent double clicks...
-								x = null
-								y = null
-								that.focusImage(that.ribbons.getElemGID($(this)))
-							}
-						})
-				}
-			}],
-
 		// setup ribbon dragging...
 		// XXX fast but uses messes up positioning...
 		// 		...setting type: 'left' will fix this but make things 
