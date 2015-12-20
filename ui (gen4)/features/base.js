@@ -80,6 +80,7 @@ function(attr, states, callback){
 /*********************************************************************/
 
 // XXX split this into read and write actions...
+// XXX check if align by position is relevant here...
 var BaseActions = 
 module.BaseActions = 
 actions.Actions({
@@ -98,12 +99,11 @@ actions.Actions({
 		//
 		// XXX should this be here???
 		'ribbon-focus-modes': [
-			'visual',	// select image closest visually
 			'order',	// select image closest to current in order
 			'first',	// select first image
 			'last',		// select last image
 		],
-		'ribbon-focus-mode': 'visual',
+		'ribbon-focus-mode': 'order',
 	},
 
 	
@@ -293,17 +293,9 @@ actions.Actions({
 			} else if(mode == 'first' || mode == 'last'){
 				var t = data.getImage(mode, r)
 
-			// visually closest image...
-			//} else if(mode == 'visual'){
+			// unknown mode...
 			} else {
-				var ribbons = this.ribbons
-				var t = ribbons.getImageByPosition('current', r)
-
-				if(t.length > 1){
-					t = t.eq(direction == 'before' ? 0 : 1)
-				}
-
-				t = ribbons.getElemGID(t)
+				return
 			}
 
 			this.focusImage(t, r)

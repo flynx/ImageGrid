@@ -110,10 +110,14 @@ module.FeatureProto = {
 				actions.config = {}
 			}
 			Object.keys(config).forEach(function(n){
+				/*
 				// keep existing keys...
 				if(actions.config[n] === undefined){
 					actions.config[n] = config[n]
 				}
+				*/
+				// NOTE: this will overwrite existing values...
+				actions.config[n] = config[n]
 			})
 		}
 

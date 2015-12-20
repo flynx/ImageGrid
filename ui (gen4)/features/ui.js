@@ -144,6 +144,16 @@ actions.Actions({
 			'dark', 
 			'light',
 		],
+
+		// XXX BUG: for some reason this get's shadowed by base.config...
+		'ribbon-focus-modes': [
+			'visual',	// select image closest visually 
+
+			'order',	// select image closest to current in order
+			'first',	// select first image
+			'last',		// select last image
+		],
+		'ribbon-focus-mode': 'visual',
 	},
 
 	// Images...
@@ -716,6 +726,33 @@ module.Viewer = core.ImageGridFeatures.Feature({
 				if(that.__viewer_resize){
 					$(window).off('resize', that.__viewer_resize) 
 					delete that.__viewer_resize
+				}
+			}],
+
+		// add support for visual mode...
+		// XXX 'visual' mode fails in single-image-mode....
+		['focusRibbon', 
+			function(res, target, mode){
+				mode = mode || this.config['ribbon-focus-mode']
+
+				var c = this.data.getRibbonOrder()
+				var i = this.data.getRibbonOrder(r)
+				// NOTE: we are not changing the direction here based on 
+				// 		this.direction as swap will confuse the user...
+				var direction = c < i ? 'before' : 'after'
+
+				if(mode == 'visual'){
+					var ribbons = this.ribbons
+					var r = this.data.getRibbon(target)
+					var t = ribbons.getImageByPosition('current', r)
+
+					if(t.length > 1){
+						t = t.eq(direction == 'before' ? 0 : 1)
+					}
+
+					t = ribbons.getElemGID(t)
+
+					this.focusImage(t, r)
 				}
 			}],
 	],
