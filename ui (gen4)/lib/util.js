@@ -77,72 +77,68 @@ function(path){
 
 /*********************************************************************/
 
+// func -> [{attr|alt: unit, ..}, ..]
 var _transform_parse = {
 	// 2d transforms:
 	//martix: [],
 
-	translate: ['left|0', 'top|0'],
-	translateX: ['left'],
-	translateY: ['top'],
+	translate: [{'left|0': 'px', 'top|0': 'px'}],
+	translateX: [{'left|x': 'px'}],
+	translateY: [{'top|y': 'px'}],
 
 	scale: [
-		['scale'],
-		['scaleX|scale', 'scaleY|scale'],
+		{scale: null},
+		{'scaleX|scale': null, 'scaleY|scale': null},
 	],
-	scaleX: ['scaleX'],
-	scaleY: ['scaleY'],
+	scaleX: [{'scaleX': null}],
+	scaleY: [{'scaleY': null}],
 
-	rotate: ['rotate'],
+	rotate: [{'rotate': 'deg'}],
 	
-	skew: ['skewX', 'skewY'],
-	skewX: ['skewX'],
-	skewY: ['skewY'],
+	skew: [{'skewX': 'px', 'skewY': 'px'}],
+	skewX: [{'skewX': 'px'}],
+	skewY: [{'skewY': 'px'}],
 
 	// 3d transforms:
 	//martix3d: [],
 
-	translate3d: ['x|0', 'y|0', 'z|0'],
-	translateZ: ['z'],
+	translate3d: [{'x|0': 'px', 'y|0': 'px', 'z|0': 'px'}],
+	translateZ: [{'z': 'px'}],
 
-	scale3d: ['scaleX', 'scaleY', 'scaleZ'],
-	scaleZ: ['scaleZ'],
+	scale3d: [{'scaleX': null, 'scaleY': null, 'scaleZ': null}],
+	scaleZ: [{'scaleZ': null}],
 
 	// XXX
-	//rotate3d: [x, y, z, angle],
+	//rotate3d: [x, y, z, angle]],
 	// 	rotateX
 	// 	rotateY
 	// 	rotateZ
 	
-	perspective: ['perspective'],
+	perspective: [{'perspective': null}],
 }
-var _transform_parse_rev = {}
+
+
+// attr -> [alt, ..]
+var _transform_parse_alt = {}
+// attr -> [func, ..]
+var _transform_parse_func = {}
 Object.keys(_transform_parse).forEach(function(func){
-	var args = _transform_parse[func]
+	_transform_parse[func].forEach(function(variant){
+		Object.keys(variant).forEach(function(arg){
+			var alt = arg.split(/\|/g)
+			var arg = alt.shift()
 
-	// we got multiple signatures == merge...
-	if(!(args[0] instanceof Array)){
-		args = [args]
-	}
+			_transform_parse_func[arg] = _transform_parse_func[arg] || []
+			_transform_parse_func[arg].push(func)
+			_transform_parse_alt[arg] = _transform_parse_alt[arg] || []
 
-	args
-		// merge lists of args...
-		.reduce(function(a, b){ return [].concat.call(a, b) })
-		.unique()
-		// split alternatives...
-		.map(function(a){ return a.split(/\|/g) })
-		.forEach(function(a){
-			var arg = a[0]
-			var alt = a.slice(1)
-
-			var e = _transform_parse_rev[arg] = _transform_parse_rev[arg] || {}
-
-			e.funcs = e.funcs || []
-			e.funcs.indexOf(func) < 0 && e.funcs.push(func)
-
-			e.alt = e.alt || []
-			// XXX we explicitly support only one alternative now...
-			e.alt = e.alt.concat(alt).unique()
+			if(alt.length > 0){
+				_transform_parse_alt[arg] = (_transform_parse_alt[alt] || [])
+					.concat(alt)
+					.unique()
+			}
 		})
+	})
 })
 
 
@@ -188,16 +184,19 @@ jQuery.fn.transform = function(){
 	var origin_str = elem.style[prefix + 'transformOrigin']
 	var transform_str = elem.style[prefix + 'transform']
 
+	// origin...
+	var origin = origin_str
+		.split(/\s+/)
+		// XXX add this to transform...
+
 	// build the current state...
 	// NOTE: we'll need this for both fetching (parsing) and writing 
 	// 		(checking)...
 	var transform = {}
 	var functions = {}
-
-	// origin...
-	var origin = origin_str
-		.split(/\s+/)
-		// XXX add this to transform...
+	var attrs = {}
+	//var implicit = {}
+	//var implicit_attrs = {}
 
 	// transform...
 	transform_str
@@ -223,142 +222,160 @@ jQuery.fn.transform = function(){
 
 			// we do not know this function...
 			if(spec == null){
-				transform[func] = args
+				transform[func] = [args]
 
 			} else {
-				spec = spec[0] instanceof Array ? spec : [spec]
-				spec.forEach(function(s){ 
-					// skip non-matching signatures...
-					// XXX is this correct???
-					if(s.length != args.length){
-						return
-					}
-					s.forEach(function(e, i){ 
-						// this is for things that have optional arguments
-						// like scale(..)
-						// XXX should we treat this in some special way???
-						if(args[i] == null){
+				var seen = []
+				transform[func] = []
+				var proc = function(res, attrs, explicit){
+					return function(s){ 
+						var keys = Object.keys(s)
+						// skip non-matching signatures...
+						// XXX is this correct???
+						if(explicit && keys.length != args.length){
 							return
 						}
 
-						var alternatives = e.split(/\|/g)
-						var k = alternatives.shift().trim()
+						var data = {}
+						res.push(data)
 
-						transform[k] = args[i].slice(-2) == 'px' 
-								|| /[0-9\.]+/.test(args[i]) ?
-							parseFloat(args[i]) 
-							: args[i] 
-					})
-				})
+						keys.forEach(function(e, i){
+							if(args[i] == null){
+								return
+							}
+
+							var alternatives = e.split(/\|/g)
+							var k = alternatives.shift().trim()
+
+							var val = args[i].slice(-2) == 'px' 
+									|| /^[0-9\.]+$/.test(args[i]) ?
+								parseFloat(args[i]) 
+								: args[i] 
+
+							var unit = args[i].split(val+'').pop()
+
+							attrs[k] = function(v, d){
+								v = v || val
+								d = d || data
+
+								// set attrs -- for getting data...
+								d[k] = v
+								// set funcs -- for setting data...
+								functions[func][i] = typeof(v) == typeof('str') ?
+									v
+									: v + unit
+
+								return v
+							}
+							attrs[k]()
+						})
+					}
+				}
+				spec.forEach(proc(transform[func], attrs, true))
 			}
 		})
 
+	// handler origin...
+	if(origin_str != ''){
+		transform['origin'] = [origin_str.split(/\s+/g)
+			.map(function(e){
+				return e.slice(-2) == 'px' 
+						|| /^[0-9\.]+$/.test(e) ?
+					parseFloat(e) 
+					: e 
+			})]
+	}
 
 	// get data...
+	// 	functions -> transform
 	if(args.constructor === Array){
 		var res = {}
 
-		// return the full transform...
+		// get everything set...
 		if(args.length == 0){
-			return transform
+			Object.keys(attrs).forEach(function(k){ attrs[k](null, res) })
+			return res
 		}
 
 		args.forEach(function(arg){
-			// direct match in shorthand data...
-			if(arg in transform){
-				res[arg] = transform[arg]
-
-			// try and find an alias...
-			} else if(arg in _transform_parse_rev){
-				var funcs = _transform_parse_rev[arg].funcs
-				var alt = _transform_parse_rev[arg].alt[0]
-
-				// no alternatives...
-				if(!alt){
-					res[arg] = ''
-
-				// explicit number value...
-				} else if(/^[0-9\.]+$/.test(alt)){
-					res[arg] = parseFloat(alt)
-
-				// explicit string value...
-				} else if(/^(['"]).*\1$/.test(alt)){
-					res[arg] = alt.slice(1, -1)
-
-				} else {
-					var v = $(that).transform(alt)
-					res[arg] = v == '' ? alt : v
+			do {
+				// we got an explicitly defined attr name...
+				if(arg in attrs){
+					res[arg] = attrs[arg]()
+					break
 				}
 
+				// we got a explicit function name...
+				if(arg in transform){
+					res[arg] = transform[arg][0]
+					break
+				}
 
-			// collect from function...
-			} else if(arg in _transform_parse){
-				var v = res[arg] = {}
-				_transform_parse[arg].forEach(function(e){
-					var alternatives = e.split(/\|/g)
-					var k = alternatives.shift().trim()
+				// we got an implicitly defined function...
+				if(arg in _transform_parse){
+					// XXX
+				}
 
-					v[k] = transform[k] != null ? transform[k] : ''
-				})
+				// search for aliases...
+				if(arg in _transform_parse_alt){
+					arg = _transform_parse_alt[arg][0] 
+				}
 
-			// don't know about this attr...
-			} else {
-				res[arg] = ''
-			}
+				break
+			} while(arg in _transform_parse_alt 
+				|| arg in attrs 
+				|| arg in transform)
 		})
-
-		// special case: we asked for a single value...
+		
 		if(args.length == 1){
-			return res[args[0]]
+			return res[Object.keys(res)[0]]
 		}
 		return res
 	
 	// set data...
+	// 	transform -> functions
 	} else {
-		transform = Object.create(transform)
-		Object.keys(args).forEach(function(key){
-			// the changing value already exists...
-			if(key in transform
-					// get one of the shorthand keys...
-					// NOTE: we might need to pack or re-pack the date but we 
-					// 		can't decide here...
-					|| key in _transform_parse_rev
-					// got one of the standard keys...
-					|| key in _transform_parse){
-				transform[key] = args[key]
+		Object.keys(args).forEach(function(arg){
+			var val = args[arg]
 
-			// key undefined...
-			} else {
-				console.warn('Ignoring key "%s".', key)
-				transform[key] = args[key]
+			// special case: origin...
+			if(arg == 'origin'){
+				transform['origin'] = val
+
+			// full function...
+			} else if(arg in _transform_parse){
+				if(val == ''){
+					delete functions[arg]
+
+				} else {
+					val = val instanceof Array ? val : [val]
+					var units = _transform_parse[arg]
+						.filter(function(s){ 
+							return Object.keys(s).length == val.length })[0]
+					functions[arg] = val.map(function(a, i){ 
+						var u = units[Object.keys(units)[i]] || ''
+						return typeof(a) != typeof('str') ? a + u : a })
+				}
+
+
+			// got an arg...
+			} else if(arg in attrs){
+				attrs[arg](val)
 			}
 		})
 
+		elem.style.transform = Object.keys(functions)
+			.map(function(func){
+				return func +'('+ functions[func].join(', ') + ')'
+			})
+			.join(' ')
 
-		console.log('>>>>', transform)
-
-		// XXX set new values and resolve new functions...
-		// XXX
-		
-
-		// build the value string...
-		var transform_str = ''
-		for(var f in functions){
-			transform_str += f +'('
-				+(functions[f]
-					// XXX test if px value...
-					.map(function(e){ return typeof(e) == typeof(123) ? e + 'px' : e })
-					.join(', '))+') '
-		}
-
-		console.log(transform_str)
-
-		// XXX STUB
-		return functions
-
-		// set the values...
-		elem.style.transform = transform_str
-		elem.style.transformOrigin = origin_str
+		elem.style.transformOrigin = transform['origin'] != '' ?
+			transform['origin']
+				.map(function(e){
+					return typeof(e) == typeof('str') ? e : e + 'px'
+				}).join(' ')
+			: ''
 	}
 
 	return $(this)
@@ -372,9 +389,11 @@ jQuery.fn.scale = function(value){
 		return $(this).transform('scale')
 	}
 }
-jQuery.fn.origin = function(value){
-	if(value){
-		return $(this).transform({origin: value})
+jQuery.fn.origin = function(a, b, c){
+	if(a && b && c){
+		return $(this).transform({origin: [a, b, c]})
+	} else if(a == '' || a instanceof Array){
+		return $(this).transform({origin: a})
 	} else {
 		return $(this).transform('origin')
 	}
