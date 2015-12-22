@@ -441,8 +441,9 @@ jQuery.fn.origin = function(a, b, c){
 // 		general structure...
 var transform2obj = function(str){
 	var res = {}
+	str = str || ''
 	// parse the string...
-	(str || '')
+	str
 		// split functions...
 		.split(/(\w+\([^\)]*)\)/)
 		// remove empty strings...
@@ -479,21 +480,37 @@ var obj2transform = function(obj){
 
 // XXX BUG: passing '' to an alias will clear ALL the aliased functions...
 // 		...should clear only full matches...
+// XXX BUG: setting a single arg alias will return string results...
+// 			.x(123)		-> ['123px']	-> must be [123]
+// 			.x()		-> [123]
+// 			.translate3d(1,2,3)
+// 						-> [1, 2, 3]
+// 		NOTE: both set data correctly...
 // XXX move the grammar out of this...
 // XXX need:
 // 		- a way to minimize this, i.e. get only full and minimal functions...
 // 		- a way to get what was defined as-is...
+// XXX might be a good idea to use aliases for getting stuff and not 
+// 		just setting stuff...
+// 			.x(123) -> set all the aliases
+// 			.x()	-> search only the first match
 var transformEditor = function(){
 	var editor = {
 		// data set...
 		data: {},
 
 		// function that directly edit the data...
-		direct: {},
+		__direct: {},
+
+
+		// methods...
+		toString: function(){ return obj2transform(this.data) },
+		// XXX this will not build the alias data...
+		fromString: function(str){ this.data = transform2obj(str) },
 	}
 	var func = function(name, args){
 		args = args || []
-		editor.direct[name] = function(val){
+		editor.__direct[name] = function(val){
 			var that = this
 			// set...
 			if(val != null && val != ''){
@@ -547,16 +564,16 @@ var transformEditor = function(){
 					var i = spec[k]
 
 					if(args.length == 0){
-						return k in that.direct ? 
-							that.direct[k].call(that) 
+						return k in that.__direct ? 
+							that.__direct[k].call(that) 
 							: null
 					}
 
 					var a = []
 					a[i] = arg
 
-					return k in that.direct ?
-						that.direct[k].call(that, a) 
+					return k in that.__direct ?
+						that.__direct[k].call(that, a) 
 						: null
 				})
 				.filter(function(e){ return e != null })
@@ -576,21 +593,23 @@ var transformEditor = function(){
 				// wrap the original alias...
 				function(){
 					var args = args2array(arguments)
-					if(args.length == 0 && k in this.direct){
-						return this.direct[k].call(this)
+					// XXX do a full search through the alias values...
+					if(args.length == 0 && k in this.__direct){
+						return this.__direct[k].call(this)
 					}
 
 					var a = f.apply(this, args)
 					var b = func.call(this, k, args)
 
-					if(k in this.direct){
-						return this.direct[k].call(this)
+					if(k in this.__direct){
+						return this.__direct[k].call(this)
 					}
 					return b
 				} 
 				: function(){ 
 					var args = args2array(arguments)
-					return func.call(this, k, args) }
+					return func.call(this, k, args) 
+				}
 
 		})
 	}
@@ -618,7 +637,7 @@ var transformEditor = function(){
 		if(arguments.length == 1){
 			return this.scale(arguments[0], arguments[0])
 		}
-		return this.direct.scale.apply(this)
+		return this.__direct.scale.apply(this)
 	} })
 
 	func('rotate', ['deg'])
@@ -638,10 +657,19 @@ var transformEditor = function(){
 
 	func('perspective')
 
+
+	// non-transform functions...
+	func('origin', ['px', 'px', 'px'])
+
+
 	// proxy the undefined in aliases functions...
-	Object.keys(editor.direct).forEach(function(k){
+	Object.keys(editor.__direct).forEach(function(k){
 		if(!(k in editor)){
-			editor[k] = function(){ return editor.direct[k].apply(this, arguments) }
+			editor[k] = function(){ 
+				var args = args2array(arguments)
+				editor.__direct[k].apply(this, args.length > 0 ? [args]: [])
+				return editor.__direct[k].call(this)
+			}
 		}
 	})
 
