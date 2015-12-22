@@ -59,6 +59,33 @@ var RIBBON = '.ribbon:not(.clone)'
 //
 // NOTE: there can be only one .ribbon-set element.
 //
+//
+// XXX need to replace soemlegacy CSS API and make this compatible with
+// 		modern libs like velocity.js...
+// 			- jli.getElementOrigin(..)
+// 				<elem>.transform('origin')
+//
+// 			- jli.getElementScale(..)
+// 				<elem>.transform('scale')
+//
+// 			- jli.getRelativeOffset(..)
+// 				XXX offset if x from y...
+//
+// 			- jli.setElementOffset(..)
+// 				<elem>.transform({x: <X>, y: <Y>, z: 0})
+// 				<elem>.velocity({translateX: <X>, translateY: <Y>, translateZ: 0})
+//
+// 			- jli.setElementScale(..)
+// 				<elem>.transform({scale, <scale>})
+// 				<elem>.velocity({scale, <scale>})
+//
+// 			- jli.shiftOriginTo(..)
+// 				XXX this sets origin and compensates for offsets...
+//
+// XXX think if a way to manage animation timings...
+//
+//
+//
 /*********************************************************************/
 
 var RibbonsClassPrototype = {
