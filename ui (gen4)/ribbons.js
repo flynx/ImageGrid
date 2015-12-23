@@ -1343,6 +1343,7 @@ var RibbonsPrototype = {
 	// 		place holder for overloading...
 	//
 	// XXX make this add images in chunks of adjacent images...
+	// XXX might be a good idea to do the actual adding in requestAnimationFrame(..)
 	updateRibbon: function(gids, ribbon, reference, force){
 		var that = this
 		var place = false

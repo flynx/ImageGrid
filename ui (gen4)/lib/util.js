@@ -8,6 +8,8 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var object = require('lib/object')
+
 
 /*********************************************************************/
 
@@ -77,356 +79,6 @@ function(path){
 
 /*********************************************************************/
 
-// func -> [{attr|alt: unit, ..}, ..]
-var _transform_parse = {
-	// 2d transforms:
-	//martix: [],
-
-	translate: [{'left|0': 'px', 'top|0': 'px'}],
-	translateX: [{'left|x': 'px'}],
-	translateY: [{'top|y': 'px'}],
-
-	scale: [
-		{scale: null},
-		{'scaleX|scale': null, 'scaleY|scale': null},
-	],
-	scaleX: [{'scaleX': null}],
-	scaleY: [{'scaleY': null}],
-
-	rotate: [{'rotate': 'deg'}],
-	
-	skew: [{'skewX': 'px', 'skewY': 'px'}],
-	skewX: [{'skewX': 'px'}],
-	skewY: [{'skewY': 'px'}],
-
-	// 3d transforms:
-	//martix3d: [],
-
-	translate3d: [{'x|0': 'px', 'y|0': 'px', 'z|0': 'px'}],
-	translateZ: [{'z': 'px'}],
-
-	scale3d: [{'scaleX': null, 'scaleY': null, 'scaleZ': null}],
-	scaleZ: [{'scaleZ': null}],
-
-	// XXX
-	//rotate3d: [x, y, z, angle]],
-	// 	rotateX
-	// 	rotateY
-	// 	rotateZ
-	
-	perspective: [{'perspective': null}],
-}
-
-
-// attr -> [alt, ..]
-var _transform_parse_alt = {}
-// attr -> [func, ..]
-var _transform_parse_func = {}
-Object.keys(_transform_parse).forEach(function(func){
-	_transform_parse[func].forEach(function(variant){
-		Object.keys(variant).forEach(function(arg){
-			var alt = arg.split(/\|/g)
-			var arg = alt.shift()
-
-			_transform_parse_func[arg] = _transform_parse_func[arg] || []
-			_transform_parse_func[arg].push(func)
-			_transform_parse_alt[arg] = _transform_parse_alt[arg] || []
-
-			if(alt.length > 0){
-				_transform_parse_alt[arg] = (_transform_parse_alt[alt] || [])
-					.concat(alt)
-					.unique()
-			}
-		})
-	})
-})
-
-
-// XXX get vendor...
-
-// 
-// 	Set element transform...
-// 	.transform({..})
-// 		-> element
-//
-// 	Get element transform...
-// 	.transform()
-// 	.transform(<attr>[, ...])
-// 	.transform([<attr>, ...])
-// 		-> data
-//
-// Supported transformations:
-// 	x/y/z
-// 	scale
-// 	scaleX/scaleY
-// 	origin
-// 	originX/originY
-//
-// NOTE: pixel values are converted to numbers and back by default...
-//
-//
-// XXX this should consist of:
-// 		- transform string parser -> functions format
-// 		- functions format generator ***
-// 			- generate single value functions (scaleX(), translateZ(), ...)
-// 			- optionally merge into multivalue funcs (scale(), translate3d(), ...)
-// 		- transform string generator
-//
-// XXX BUG: does not work with empty initial state, i.e. without 
-// 		transforms set...
-// XXX this will get/set values only on the first element, is this correct???
-// XXX how do we combine translate(..) and translate3d(..)???
-jQuery.fn.transform = function(){
-	var that = $(this)
-	var args = args2array(arguments)
-
-	// XXX get the browser prefix...
-	var prefix = ''
-
-	// normalize...
-	args = args.length == 0 
-			|| typeof(args[0]) == typeof('str') ? args
-		: args[0].constructor === Array 
-			|| args.length == 1 ? args[0]
-		: args
-
-	var elem = $(this)[0]
-	var origin_str = elem ? elem.style[prefix + 'transformOrigin'] : ''
-	var transform_str = elem ? elem.style[prefix + 'transform'] : ''
-
-	// origin...
-	var origin = origin_str
-		.split(/\s+/)
-		// XXX add this to transform...
-
-	// build the current state...
-	// NOTE: we'll need this for both fetching (parsing) and writing 
-	// 		(checking)...
-	var transform = {}
-	var functions = {}
-	var attrs = {}
-	//var implicit = {}
-	//var implicit_attrs = {}
-
-	// transform...
-	transform_str
-		// split functions...
-		.split(/(\w+\([^\)]*)\)/)
-		// remove empty strings...
-		.filter(function(e){ return e.trim().length > 0})
-		// split each function...
-		.map(function(e){ return e
-			// split args...
-			.split(/\s*[\(,\s]\s*/)
-			// cleanup...
-			.filter(function(e){ return e.trim().length > 0 }) })
-		// build the structure...
-		.forEach(function(data){
-			var func = data.shift() 
-			var args = data
-
-			// XXX do we care about function vendor tags here???
-			var spec = _transform_parse[func]
-
-			functions[func] = args
-
-			// we do not know this function...
-			if(spec == null){
-				transform[func] = [args]
-
-			} else {
-				var seen = []
-				transform[func] = []
-				var proc = function(res, attrs, explicit){
-					return function(s){ 
-						var keys = Object.keys(s)
-						// skip non-matching signatures...
-						// XXX is this correct???
-						if(explicit && keys.length != args.length){
-							return
-						}
-
-						var data = {}
-						res.push(data)
-
-						keys.forEach(function(e, i){
-							if(args[i] == null){
-								return
-							}
-
-							var alternatives = e.split(/\|/g)
-							var k = alternatives.shift().trim()
-
-							var val = args[i].slice(-2) == 'px' 
-									|| /^[0-9\.]+$/.test(args[i]) ?
-								parseFloat(args[i]) 
-								: args[i] 
-
-							var unit = args[i].split(val+'').pop()
-
-							attrs[k] = function(v, d){
-								v = v || val
-								d = d || data
-
-								// set attrs -- for getting data...
-								d[k] = v
-								// set funcs -- for setting data...
-								functions[func][i] = typeof(v) == typeof('str') ?
-									v
-									: v + unit
-
-								return v
-							}
-							attrs[k]()
-						})
-					}
-				}
-				spec.forEach(proc(transform[func], attrs, true))
-			}
-		})
-
-	// handler origin...
-	if(origin_str != ''){
-		transform['origin'] = [origin_str.split(/\s+/g)
-			.map(function(e){
-				return e.slice(-2) == 'px' 
-						|| /^[0-9\.]+$/.test(e) ?
-					parseFloat(e) 
-					: e 
-			})]
-	}
-
-	// get data...
-	// 	functions -> transform
-	if(args.constructor === Array){
-		var res = {}
-
-		// get everything set...
-		if(args.length == 0){
-			Object.keys(attrs).forEach(function(k){ attrs[k](null, res) })
-			return res
-		}
-
-		args.forEach(function(arg){
-			do {
-				// we got an explicitly defined attr name...
-				if(arg in attrs){
-					res[arg] = attrs[arg]()
-					break
-				}
-
-				// we got a explicit function name...
-				if(arg in transform){
-					res[arg] = transform[arg][0]
-					break
-				}
-
-				// we got an implicitly defined function...
-				if(arg in _transform_parse){
-					// XXX
-				}
-
-				// search for aliases...
-				if(arg in _transform_parse_alt){
-					arg = _transform_parse_alt[arg][0] 
-				}
-
-				break
-			} while(arg in _transform_parse_alt 
-				|| arg in attrs 
-				|| arg in transform)
-		})
-		
-		if(args.length == 1){
-			return res[Object.keys(res)[0]]
-		}
-		return res
-	
-	// set data...
-	// 	transform -> functions
-	} else {
-		// empty elem...
-		if(that.length == 0){
-			return that
-		}
-
-		Object.keys(args).forEach(function(arg){
-			var val = args[arg]
-
-			// special case: origin...
-			if(arg == 'origin'){
-				transform['origin'] = val
-
-			// full function...
-			} else if(arg in _transform_parse){
-				if(val == ''){
-					delete functions[arg]
-
-				} else {
-					val = val instanceof Array ? val : [val]
-					var units = _transform_parse[arg]
-						.filter(function(s){ 
-							return Object.keys(s).length == val.length })[0]
-					functions[arg] = val.map(function(a, i){ 
-						var u = units[Object.keys(units)[i]] || ''
-						return typeof(a) != typeof('str') ? a + u : a })
-				}
-
-			// got an arg...
-			} else if(arg in attrs){
-				attrs[arg](val)
-
-			// new arg...
-			} else if(arg in _transform_parse_func){
-				_transform_parse_func[arg]
-			}
-		})
-
-		var t = Object.keys(functions)
-			.map(function(func){
-				return func +'('+ functions[func].join(', ') + ')'
-			})
-			.join(' ')
-
-		var o = (transform['origin'] && transform['origin'] != '') ?
-			transform['origin']
-				.map(function(e){
-					return typeof(e) == typeof('str') ? e : e + 'px'
-				}).join(' ')
-			: ''
-
-		that.css({
-			'transform-origin': o,
-			'transform' : t, 
-		})
-		/*
-		elem.style.transformOrigin = o
-		elem.style.transform = t
-		*/
-	}
-
-	return $(this)
-}
-
-// shorthands...
-jQuery.fn.scale = function(value){
-	if(value){
-		return $(this).transform({scale: value})
-	} else {
-		return $(this).transform('scale')
-	}
-}
-jQuery.fn.origin = function(a, b, c){
-	if(a && b && c){
-		return $(this).transform({origin: [a, b, c]})
-	} else if(a == '' || a instanceof Array){
-		return $(this).transform({origin: a})
-	} else {
-		return $(this).transform('origin')
-	}
-}
-
-
 
 
 // convert a transform string to an object...
@@ -469,8 +121,18 @@ var transform2obj = function(str){
 //
 // NOTE: this does not care about the actual semantics of the format, 
 // 		e.g. argument units or function names...
-var obj2transform = function(obj){
+var obj2transform = function(obj, filter){
+	filter = filter || []
+	var keep = filter
+		.filter(function(f){ return f[0] != '-' }) 
+	var remove = filter
+		.filter(function(f){ return f[0] == '-' })
+		.map(function(f){ return f.slice(1) })
 	return Object.keys(obj)
+		// keep...
+		.filter(function(func){ return keep.length == 0 || keep.indexOf(func) >= 0 })
+		// remove...
+		.filter(function(func){ return remove.indexOf(func) < 0 })
 		.map(function(func){
 			return func +'('+ obj[func].join(', ') + ')'
 		})
@@ -480,6 +142,8 @@ var obj2transform = function(obj){
 
 // XXX BUG: passing '' to an alias will clear ALL the aliased functions...
 // 		...should clear only full matches...
+// XXX BUG: passing '' to a multi-arg function will clear the args but 
+// 		still keep the function...
 // XXX BUG: setting a single arg alias will return string results...
 // 			.x(123)		-> ['123px']	-> must be [123]
 // 			.x()		-> [123]
@@ -494,6 +158,13 @@ var obj2transform = function(obj){
 // 		just setting stuff...
 // 			.x(123) -> set all the aliases
 // 			.x()	-> search only the first match
+// XXX not critical yet but will need to support for completeness...
+//		- transformStyle 
+//		- prespective 
+//		- prespectiveOrigin 
+//		- backfaceVisibility
+// XXX add transitions...
+// XXX add support for vendor tags...
 var transformEditor = function(){
 	var editor = {
 		// data set...
@@ -504,10 +175,78 @@ var transformEditor = function(){
 
 
 		// methods...
-		toString: function(){ return obj2transform(this.data) },
-		// XXX this will not build the alias data...
-		fromString: function(str){ this.data = transform2obj(str) },
+		toString: function(){ return obj2transform(this.data, args2array(arguments)) },
+		// NOTE: this will not build the alias data...
+		fromString: function(str){ 
+			this.data = transform2obj(str) 
+			return this
+		},
+		// XXX need to simplify first...
+		// XXX use vendor prefix...
+		toElem: function(elem){
+			var origin = this.data.origin || ''
+			var transform = this.toString('-origin')
+
+			elem = elem instanceof jQuery ? elem.toArray() 
+				: elem instanceof Array ? elem
+				: [elem]
+
+			// XXX simplify state...
+			// XXX
+
+			elem.forEach(function(e){
+				e.style.transformOrigin = origin.join ? origin.join(' ') : origin
+				e.style.transform = transform
+			})
+
+			return this
+		},
+
+		get: function(){
+			var that = this
+			var attrs = arguments[0] instanceof Array ?
+				arguments[0] 
+				: args2array(arguments)
+			var res = {}
+
+			attrs.forEach(function(a){
+				if(!(a in that)){
+					return
+				}
+				var v = that[a]()
+				v = v.length == 1 ? v.pop() 
+					: v.length == 0 ? undefined
+					: v
+				res[a] = v
+			})
+
+			if(attrs.length == 1){
+				return res[attrs[0]]
+			}
+
+			return res
+		},
+
+		// XXX also load origin...
+		// XXX use vendor prefix...
+		__init__: function(str){
+			this.data = {}
+
+			if(str != null){
+				if(str instanceof jQuery){
+					str = str[0]
+				}
+				if(str instanceof HTMLElement){
+					var origin = str.style.transformOrigin
+					origin = origin.length > 0 ? ' origin('+ origin +')' : ''
+
+					str = str.style.transform + origin
+				}
+				this.fromString(str)
+			}
+		},
 	}
+
 	var func = function(name, args){
 		args = args || []
 		editor.__direct[name] = function(val){
@@ -560,6 +299,7 @@ var transformEditor = function(){
 			// NOTE: this is the name of the called alias...
 			var arg = args[spec[alias]]
 
+			// XXX get the correct return value...
 			return Object.keys(spec).map(function(k){
 					var i = spec[k]
 
@@ -610,7 +350,6 @@ var transformEditor = function(){
 					var args = args2array(arguments)
 					return func.call(this, k, args) 
 				}
-
 		})
 	}
 
@@ -624,21 +363,25 @@ var transformEditor = function(){
 	alias({ translate3d: 1, translate: 1, translateY: 0, y: 0, })
 	alias({ translate3d: 2, translateZ: 0, z: 0, }) 
 
-	func('scale')
-	func('scale3d')
+	func('scale', ['', ''])
+	func('scale3d', ['', '', ''])
 	func('scaleX')
 	func('scaleY')
-	func('scaleZ')
+	//func('scaleZ')
 	alias({ scale: 0, scale3d: 0, scaleX: 0, })
 	alias({ scale: 1, scale3d: 1, scaleY: 0, })
 	alias({ scale3d: 2, scaleZ: 0, })
+
 	// special case: single arg scale: scale(n) -> scale(n, n)
-	alias({ scale: function(){
-		if(arguments.length == 1){
-			return this.scale(arguments[0], arguments[0])
+	editor._scale = editor.scale
+	editor.scale = function(){
+		if(arguments.length == 1 
+				&& arguments[0] != '' 
+				&& arguments[0] != '='){
+			return this._scale.call(this, arguments[0], arguments[0])
 		}
-		return this.__direct.scale.apply(this)
-	} })
+		return this._scale.apply(this, arguments)
+	}
 
 	func('rotate', ['deg'])
 	func('rotate3d', ['px', 'px', 'px', 'deg'])
@@ -646,10 +389,15 @@ var transformEditor = function(){
 	func('rotateY', ['deg'])
 	func('rotateZ', ['deg'])
 
-	func('matrix')
-	func('matrix3d')
+	func('matrix') // XXX ???
+	func('matrix3d', [
+		'', '', '', '',
+		'', '', '', '',
+		'', '', '', '',
+		'', '', '', '',
+	])
 
-	func('skew')
+	func('skew', ['', ''])
 	func('skewX')
 	func('skewY')
 	alias({skewX: 0, skew: 0})
@@ -676,10 +424,17 @@ var transformEditor = function(){
 	return editor
 }
 
-// XXX STUB: for testing only...
-window.transformEditor = transformEditor
 
-var transform = function(){
+var TransformEditor = 
+module.TransformEditor =
+object.makeConstructor('TransformEditor', transformEditor())
+
+// XXX STUB: for testing only...
+window.transformEditor = TransformEditor
+
+
+// jQuery API for the TransformEditor...
+jQuery.fn.transform = function(){
 	var that = this
 	var elem = $(this)[0]
 
@@ -691,43 +446,58 @@ var transform = function(){
 			|| args.length == 1 ? args[0]
 		: args
 
-	// XXX do vendor tags...
-	var prefix = ''
-
-	// get the current state...
-	var transform = transform2obj(elem && elem.style[prefix + 'transform'])
-	var origin = (elem ? elem.style[prefix + 'transformOrigin'] : '').split(/\s+/)
-
-	/* XXX not critical yet...
-	var style = this.style.transformStyle
-	var prespective = this.style.prespective
-	var prespectiveOrigin = this.style.prespectiveOrigin
-	var backfaceVisibility = this.style.backfaceVisibility
-	*/
-
-	// XXX populate transformEditor with current state...
-	// XXX
+	// load the current state...
+	var transform = TransformEditor(elem)
 
 	// get state...
 	if(args.constructor === Array){
-		// XXX minimize transformEditor and return
-		// XXX
+		if(args.length == 0){
+			// XXX get all attrs...
+			// XXX
 
-		// XXX
-		return
+			return
+		}
+
+		// get requested attrs...
+		return transform.get(args)
 
 	// set state...
 	} else {
-		// XXX add user inputs...
-		// XXX
+		// load user inputs...
+		Object.keys(args).forEach(function(k){
+			if(!(k in transform)){
+				return
+			}
 
-		// XXX minimize transformEditor and set...
-		// XXX
+			transform[k].apply(transform, args[k] instanceof Array ? args[k] : [args[k]])
+		})
+
+		transform.toElem(this)
 	}
 
 	return $(this)
 }
 
+
+// shorthands...
+jQuery.fn.scale = function(value){
+	if(value){
+		return $(this).transform({scale: value})
+	} else {
+		return $(this).transform('scale')
+	}
+}
+jQuery.fn.origin = function(a, b, c){
+	if(a != null && b != null){
+		return $(this).transform({origin: [a, b, c == null ? 0 : c]})
+
+	} else if(a == '' || a instanceof Array){
+		return $(this).transform({origin: a})
+
+	} else {
+		return $(this).transform('origin')
+	}
+}
 
 
 
