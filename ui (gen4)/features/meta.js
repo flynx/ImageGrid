@@ -81,7 +81,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	// ui control...
 	'ui-clickable',
 	//'ui-direct-control-jquery',
-	'ui-direct-control-gsap',
+	//'ui-direct-control-gsap',
 
 	// experimental and optional features...
 	//'auto-single-image',

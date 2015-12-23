@@ -122,17 +122,21 @@ var transform2obj = function(str){
 // NOTE: this does not care about the actual semantics of the format, 
 // 		e.g. argument units or function names...
 var obj2transform = function(obj, filter){
+	// build the filters...
 	filter = filter || []
 	var keep = filter
 		.filter(function(f){ return f[0] != '-' }) 
 	var remove = filter
 		.filter(function(f){ return f[0] == '-' })
 		.map(function(f){ return f.slice(1) })
+
 	return Object.keys(obj)
 		// keep...
-		.filter(function(func){ return keep.length == 0 || keep.indexOf(func) >= 0 })
+		.filter(function(func){ 
+			return keep.length == 0 || keep.indexOf(func) >= 0 })
 		// remove...
-		.filter(function(func){ return remove.indexOf(func) < 0 })
+		.filter(function(func){ 
+			return remove.indexOf(func) < 0 })
 		.map(function(func){
 			return func +'('+ obj[func].join(', ') + ')'
 		})
@@ -175,13 +179,45 @@ var transformEditor = function(){
 
 
 		// methods...
-		toString: function(){ return obj2transform(this.data, args2array(arguments)) },
+		// XXX needs more work...
+		simplify: function(filter){
+			data = this.data
+
+			// scale...
+			if(data.scale){
+				if((data.scaleX||[])[0] == data.scale[0]){ delete data.scaleX }
+				if((data.scaleY||[])[0] == data.scale[1]){ delete data.scaleY }
+				if((data.scale||[])[0] == data.scale[1]){ data.scale = data.scale.slice(0, 1) }
+			}
+
+			if(data.translate3d){
+				// XXX STUB
+				data.translate3d[0] = data.translate3d[0] || 0
+				data.translate3d[1] = data.translate3d[1] || 0
+				data.translate3d[2] = data.translate3d[2] || 0
+
+				// translate...
+				if(data.translate && data.translate3d){ delete data.translate }
+
+				// translate3d...
+				if((data.translateX||[])[0] == data.translate3d[0]){ delete data.translateX }
+				if((data.translateY||[])[0] == data.translate3d[1]){ delete data.translateY }
+				if((data.translateZ||[])[0] == data.translate3d[2]){ delete data.translateZ }
+			}
+
+			return this.data
+		},
+
+		toString: function(){ 
+			//return obj2transform(this.data, args2array(arguments)) 
+			var args = args2array(arguments)
+			return obj2transform(this.simplify(args), args) 
+		},
 		// NOTE: this will not build the alias data...
 		fromString: function(str){ 
 			this.data = transform2obj(str) 
 			return this
 		},
-		// XXX need to simplify first...
 		// XXX use vendor prefix...
 		toElem: function(elem){
 			var origin = this.data.origin || ''
@@ -191,9 +227,6 @@ var transformEditor = function(){
 				: elem instanceof Array ? elem
 				: [elem]
 
-			// XXX simplify state...
-			// XXX
-
 			elem.forEach(function(e){
 				e.style.transformOrigin = origin.join ? origin.join(' ') : origin
 				e.style.transform = transform
@@ -202,6 +235,7 @@ var transformEditor = function(){
 			return this
 		},
 
+		// get data by attr names...
 		get: function(){
 			var that = this
 			var attrs = arguments[0] instanceof Array ?
@@ -227,7 +261,6 @@ var transformEditor = function(){
 			return res
 		},
 
-		// XXX also load origin...
 		// XXX use vendor prefix...
 		__init__: function(str){
 			this.data = {}
@@ -299,22 +332,23 @@ var transformEditor = function(){
 			// NOTE: this is the name of the called alias...
 			var arg = args[spec[alias]]
 
-			// XXX get the correct return value...
 			return Object.keys(spec).map(function(k){
 					var i = spec[k]
 
 					if(args.length == 0){
-						return k in that.__direct ? 
+						var res = k in that.__direct ? 
 							that.__direct[k].call(that) 
 							: null
+						return res != null ? res[i] : res
 					}
 
 					var a = []
 					a[i] = arg
 
-					return k in that.__direct ?
+					var res = k in that.__direct ?
 						that.__direct[k].call(that, a) 
 						: null
+					return res != null ? res[i] : res
 				})
 				.filter(function(e){ return e != null })
 				.slice(-1)[0]
@@ -333,7 +367,7 @@ var transformEditor = function(){
 				// wrap the original alias...
 				function(){
 					var args = args2array(arguments)
-					// XXX do a full search through the alias values...
+					// XXX do a full search through the alias values and merge results...
 					if(args.length == 0 && k in this.__direct){
 						return this.__direct[k].call(this)
 					}
@@ -364,13 +398,13 @@ var transformEditor = function(){
 	alias({ translate3d: 2, translateZ: 0, z: 0, }) 
 
 	func('scale', ['', ''])
-	func('scale3d', ['', '', ''])
+	//func('scale3d', ['', '', ''])
 	func('scaleX')
 	func('scaleY')
 	//func('scaleZ')
-	alias({ scale: 0, scale3d: 0, scaleX: 0, })
-	alias({ scale: 1, scale3d: 1, scaleY: 0, })
-	alias({ scale3d: 2, scaleZ: 0, })
+	alias({ scale: 0, /*scale3d: 0,*/ scaleX: 0, })
+	alias({ scale: 1, /*scale3d: 1,*/ scaleY: 0, })
+	//alias({ scale3d: 2, scaleZ: 0, })
 
 	// special case: single arg scale: scale(n) -> scale(n, n)
 	editor._scale = editor.scale
@@ -380,7 +414,9 @@ var transformEditor = function(){
 				&& arguments[0] != '='){
 			return this._scale.call(this, arguments[0], arguments[0])
 		}
-		return this._scale.apply(this, arguments)
+		var res = this._scale.apply(this, arguments)
+		// is this correct here???
+		return res.length == 2 && res[0] == res[1] ? res[0] : res
 	}
 
 	func('rotate', ['deg'])
@@ -481,11 +517,20 @@ jQuery.fn.transform = function(){
 
 // shorthands...
 jQuery.fn.scale = function(value){
-	if(value){
-		return $(this).transform({scale: value})
+	if(arguments.length > 0){
+		return $(this).transform({scale: args2array(arguments)})
+
 	} else {
 		return $(this).transform('scale')
 	}
+}
+// get element scale... 
+jQuery.fn.getscale = function(){
+	var res = 1
+	$(this).parents().toArray().forEach(function(e){
+		res *= $(e).scale() || 1
+	})
+	return res
 }
 jQuery.fn.origin = function(a, b, c){
 	if(a != null && b != null){
@@ -497,6 +542,50 @@ jQuery.fn.origin = function(a, b, c){
 	} else {
 		return $(this).transform('origin')
 	}
+}
+
+
+
+//---------------------------------------------------------------------
+
+// XXX experiment
+jQuery.fn._drag = function(){
+	var dragging = false
+	var s, 
+		px, py
+
+	var elem = $(this)
+		.on('mousedown touchstart', function(evt){
+			dragging = true
+			px = evt.clientX
+			px = evt.clientY
+
+			s = elem.getscale()
+		})
+		.on('mousemove touchmove', function(evt){
+			if(!dragging){
+				return
+			}
+
+			var x = evt.clientX 
+			var dx = px - x
+			px = x
+
+			var y = evt.clientY 
+			var dy = py - y
+			py = y
+
+			elem
+				.velocity('stop')
+				.velocity({
+					translateX: '-=' + (dx / s),
+					translateY: '-=' + (dy / s),
+				}, 0)
+		})
+		.on('mouseup touchend', function(evt){
+			dragging = false
+			elem.velocity('stop')
+		})
 }
 
 

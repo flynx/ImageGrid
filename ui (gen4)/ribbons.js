@@ -62,26 +62,41 @@ var RIBBON = '.ribbon:not(.clone)'
 //
 // XXX need to replace soemlegacy CSS API and make this compatible with
 // 		modern libs like velocity.js...
+if(false){ // XXX still problems with translate...
 // 			- jli.getElementOrigin(..)
+				getElementOrigin = function(elem){ 
+					var o = $(elem).origin() || [0, 0] 
+					return { left: o[0], top: o[1], }
+				}
 // 				<elem>.transform('origin')
 //
 // 			- jli.getElementScale(..)
-// 				<elem>.transform('scale')
+				getElementScale = function(elem){ return $(elem).scale() }
 //
 // 			- jli.getRelativeOffset(..)
-// 				XXX offset if x from y...
+				getElementOffset = function(elem){ 
+					var o = $(elem).transform('x', 'y') 
+					return { left: o.x, top: o.y, }
+				}
 //
 // 			- jli.setElementOffset(..)
-// 				<elem>.transform({x: <X>, y: <Y>, z: 0})
-// 				<elem>.velocity({translateX: <X>, translateY: <Y>, translateZ: 0})
+// 				// XXX still does not work for some reason...
+				setElementOffset = function(elem, l, t){ 
+					//return $(elem).velocity({translateX: l, translateY: t})
+					return $(elem).transform({x: l || 0, y: t || 0, z: 0}) 
+				}
 //
 // 			- jli.setElementScale(..)
-// 				<elem>.transform({scale, <scale>})
-// 				<elem>.velocity({scale, <scale>})
+				setElementScale = function(elem, scale){ 
+					//return $(elem).velocity({scale: scale || 1}, 150)
+					return $(elem).scale(scale || 1) 
+				}
 //
 // 			- jli.shiftOriginTo(..)
 // 				XXX this sets origin and compensates for offsets...
+// 					...to make shifting origin not affect element visual position...
 //
+}
 // XXX think if a way to manage animation timings...
 //
 //
