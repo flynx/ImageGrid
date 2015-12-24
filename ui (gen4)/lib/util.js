@@ -560,7 +560,7 @@ jQuery.fn.scale = function(value){
 	}
 }
 // get element scale... 
-jQuery.fn.getscale = function(){
+jQuery.fn.rscale = function(){
 	var res = 1
 	$(this).parents().toArray().forEach(function(e){
 		res *= $(e).scale() || 1
