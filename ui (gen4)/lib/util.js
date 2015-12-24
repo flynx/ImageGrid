@@ -158,10 +158,12 @@ var obj2transform = function(obj, filter){
 // XXX need:
 // 		- a way to minimize this, i.e. get only full and minimal functions...
 // 		- a way to get what was defined as-is...
-// XXX might be a good idea to use aliases for getting stuff and not 
-// 		just setting stuff...
-// 			.x(123) -> set all the aliases
-// 			.x()	-> search only the first match
+// XXX STUB: .simplify(..) should be rewritten and be configurable...
+// 		...preferable work on write -- set the alias that already esists
+// 		and ignore the rest...
+// XXX make aliases collect and merge data, e.g. asking for scale with 
+// 		scaleX and scaleY set should return the combination of the two 
+// 		results...
 // XXX not critical yet but will need to support for completeness...
 //		- transformStyle 
 //		- prespective 
@@ -179,31 +181,34 @@ var transformEditor = function(){
 
 
 		// methods...
-		// XXX needs more work...
+		// XXX generate this...
 		simplify: function(filter){
 			data = this.data
 
 			// scale...
-			if(data.scale){
-				if((data.scaleX||[])[0] == data.scale[0]){ delete data.scaleX }
-				if((data.scaleY||[])[0] == data.scale[1]){ delete data.scaleY }
-				if((data.scale||[])[0] == data.scale[1]){ data.scale = data.scale.slice(0, 1) }
-			}
+			if(data.scale 
+					&& data.scale[0] == 1 
+					&& data.scale[1] == 1){ delete data.scale }
+			if((data.scaleX||[1])[0] == 1){ delete data.scaleX }
+			if((data.scaleY||[1])[0] == 1){ delete data.scaleY }
 
-			if(data.translate3d){
-				// XXX STUB
-				data.translate3d[0] = data.translate3d[0] || 0
-				data.translate3d[1] = data.translate3d[1] || 0
-				data.translate3d[2] = data.translate3d[2] || 0
+			// translate...
+			if(data.translate 
+					&& data.translate.len == 2 
+					&& parseFloat(data.translate[0]) == 0 
+					&& parseFloat(data.translate[1]) == 0){ delete data.translate }
+			if(data.translate3d
+					&& data.translate3d.len == 3 
+					&& parseFloat(data.translate3d[0]) == 0 
+					&& parseFloat(data.translate3d[1]) == 1
+					&& parseFloat(data.translate3d[2]) == 1){ delete data.translate3d }
+			if(parseFloat((data.translateX||[1])[0]) == 0){ delete data.translateX }
+			if(parseFloat((data.translateY||[1])[0]) == 0){ delete data.translateY }
+			if(parseFloat((data.translateZ||[1])[0]) == 0){ delete data.translateZ }
 
-				// translate...
-				if(data.translate && data.translate3d){ delete data.translate }
+			// XXX rotate...
 
-				// translate3d...
-				if((data.translateX||[])[0] == data.translate3d[0]){ delete data.translateX }
-				if((data.translateY||[])[0] == data.translate3d[1]){ delete data.translateY }
-				if((data.translateZ||[])[0] == data.translate3d[2]){ delete data.translateZ }
-			}
+			// XXX skew...
 
 			return this.data
 		},
@@ -287,7 +292,8 @@ var transformEditor = function(){
 			// set...
 			if(val != null && val != ''){
 				val = val instanceof Array ? val : [val]
-				var res = this.data[name] = this.data[name] || []
+				var data = this.data[name] = this.data[name] || []
+				var res = []
 				// add units and general processing...
 				val.map(function(arg, i){
 					// special case, if an arg is undefined do not change it...
@@ -295,11 +301,12 @@ var transformEditor = function(){
 						return 
 					}
 					var unit = args[i] || ''
-					res[i] = typeof(arg) == typeof(123) 
+					data[i] = typeof(arg) == typeof(123) 
 							|| (typeof(arg) == typeof('str') 
 								&& /^[0-9\.]+$/.test(arg)) ?
 						arg + unit
 						: arg
+					res[i] = arg
 				})
 				return res
 
@@ -323,7 +330,13 @@ var transformEditor = function(){
 		}
 	}
 	
-	var alias = function(spec){
+	var alias = function(spec, reduce, mode){
+		reduce = reduce || 'last'
+		// can be:
+		// 	'first'
+		// 	'last'
+		// 	'all'
+		mode = mode || 'first'
 		// alias runner...
 		var handler = function(alias, args){
 			var that = this
@@ -332,9 +345,12 @@ var transformEditor = function(){
 			// NOTE: this is the name of the called alias...
 			var arg = args[spec[alias]]
 
-			return Object.keys(spec).map(function(k){
+			var aliases = Object.keys(spec)
+
+			return aliases.map(function(k, j){
 					var i = spec[k]
 
+					// get state...
 					if(args.length == 0){
 						var res = k in that.__direct ? 
 							that.__direct[k].call(that) 
@@ -342,20 +358,33 @@ var transformEditor = function(){
 						return res != null ? res[i] : res
 					}
 
+					// prepare arguments...
 					var a = []
-					a[i] = arg
+					a[i] = mode == 'first' && j == 0 ? arg
+						: mode == 'last' && j == aliases.length - 1 ? arg
+						: reduce == 'sum' ? 0
+						: reduce == 'mul' ? 1
+						: arg
 
+					// do the call...
 					var res = k in that.__direct ?
 						that.__direct[k].call(that, a) 
 						: null
 					return res != null ? res[i] : res
 				})
 				.filter(function(e){ return e != null })
-				.slice(-1)[0]
+				.reduce(reduce == 'sum' ? function(a, b){ return a + b }
+					: reduce == 'mul' ? function(a, b){ return a * b }
+					: reduce == 'last' ? function(a, b){ return b != null ? b : a }
+					: reduce)
 		}
 
 		// setup the aliases...
-		Object.keys(spec).forEach(function(k){
+		var aliases = Object.keys(spec)
+
+		mode == 'last' && aliases.reverse()
+
+		aliases.forEach(function(k){
 			var i = spec[k]
 
 			var func = i instanceof Function ? i : handler
@@ -363,8 +392,11 @@ var transformEditor = function(){
 			// NOTE: we will pass the called alias name to the handler 
 			// 		via 'this'...
 			var f = editor[k]
-			editor[k] = f ? 
+			var alias = editor[k] = f ? 
 				// wrap the original alias...
+				// NOTE: this will iterate the overloaded aliases... 
+				// 		i.e. this will iterate the arguments (width) while 
+				// 		the handler(..) will iterate the aliases...
 				function(){
 					var args = args2array(arguments)
 					// XXX do a full search through the alias values and merge results...
@@ -384,6 +416,9 @@ var transformEditor = function(){
 					var args = args2array(arguments)
 					return func.call(this, k, args) 
 				}
+
+			alias.isAlias = true
+			alias.reduce = reduce
 		})
 	}
 
@@ -393,18 +428,18 @@ var transformEditor = function(){
 	func('translateX', ['px'])
 	func('translateY', ['px'])
 	func('translateZ', ['px'])
-	alias({ translate3d: 0, translate: 0, translateX: 0, x: 0 })
-	alias({ translate3d: 1, translate: 1, translateY: 0, y: 0, })
-	alias({ translate3d: 2, translateZ: 0, z: 0, }) 
+	alias({ translate3d: 0, translate: 0, translateX: 0, x: 0 }, 'sum')
+	alias({ translate3d: 1, translate: 1, translateY: 0, y: 0, }, 'sum')
+	alias({ translate3d: 2, translateZ: 0, z: 0, }, 'sum') 
 
 	func('scale', ['', ''])
 	//func('scale3d', ['', '', ''])
 	func('scaleX')
 	func('scaleY')
 	//func('scaleZ')
-	alias({ scale: 0, /*scale3d: 0,*/ scaleX: 0, })
-	alias({ scale: 1, /*scale3d: 1,*/ scaleY: 0, })
-	//alias({ scale3d: 2, scaleZ: 0, })
+	alias({ scale: 0, /*scale3d: 0,*/ scaleX: 0, }, 'mul')
+	alias({ scale: 1, /*scale3d: 1,*/ scaleY: 0, }, 'mul')
+	//alias({ scale3d: 2, scaleZ: 0, }, 'mul')
 
 	// special case: single arg scale: scale(n) -> scale(n, n)
 	editor._scale = editor.scale
