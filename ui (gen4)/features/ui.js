@@ -2113,13 +2113,14 @@ var CurrentImageIndicatorActions = actions.Actions({
 						.addClass('current-marker ui-current-image-indicator')
 						.css({
 							opacity: '0',
-							top: '0px',
-							left: '0px',
+							//top: '0px',
+							//left: '0px',
 						})
 						.appendTo(ribbon)
 						.animate({
 							'opacity': 1
 						}, fadein)
+					this.ribbons.dom.setOffset(marker, 0, 0)
 
 				// add marker to current ribbon...
 				} else {
@@ -2157,7 +2158,8 @@ var CurrentImageIndicatorActions = actions.Actions({
 				}
 			}
 
-			css.left = cur[0].offsetLeft
+			//css.left = cur[0].offsetLeft
+			this.ribbons.dom.setOffset(marker, cur[0].offsetLeft, 0)
 
 			marker.css(css)
 		}],

@@ -1527,7 +1527,7 @@ var RibbonsPrototype = {
 				var dl = loaded.index(ref) - gids.indexOf(gid)
 
 				if(dl != 0){
-					this.dom.setOffset(r, this.dom.getOrigin(r) + dl * w)
+					this.dom.setOffset(r, this.dom.getOffset(r).left + dl * w)
 				}
 			}
 		}
