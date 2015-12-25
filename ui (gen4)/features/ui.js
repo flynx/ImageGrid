@@ -2597,33 +2597,34 @@ module.RibbonsPlacement = core.ImageGridFeatures.Feature({
 	depends: [ 'ui' ],
 
 	config: {
-		'ui-ribbons-placement-mode': 'legacy',
+		// NOTE: the adapter names bust be registered in the ribbons module
+		// 		...not sure if this is good, but it's how it works now...
+		'ui-ribbons-placement-modes': {
+			'legacy': 'legacyDOMAdapter',
+			'new': 'DOMAdapter',
+		},
+		'ui-ribbons-placement-mode': 'new',
 	},
 
 	actions: actions.Actions({
-		toggleRibbonsPlacementMode: ['Interfcae/',
+		toggleRibbonsPlacementMode: ['Interface/',
 			Toggler(null, function(_, state){ 
 					if(state == null){
 						return this.config['ui-ribbons-placement-mode']
 					}
 
 					this.config['ui-ribbons-placement-mode'] = state
-					if(state == 'legacy'){
-						this.ribbons.dom = ribbons.legacyDOMAdapter
+					var modes = this.config['ui-ribbons-placement-modes']
 
-					} else {
-						this.ribbons.dom = ribbons.DOMAdapter
-					}
+					this.ribbons.dom = ribbons[modes[state]]
 
 					// NOTE: this will lose any state/configuration that
 					// 		was stored in ribbon dom...
 					this.ribbons.clear('full')
 					this.reload(true)
 				},
-				[
-					'legacy', 
-					'new',
-				])],
+				function(){ 
+					return Object.keys(this.config['ui-ribbons-placement-modes']) } )],
 	}),
 
 	handlers: [
