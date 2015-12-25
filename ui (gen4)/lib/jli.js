@@ -529,9 +529,9 @@ function setElementOriginSync(elem, x, y, z){
 // this is like setElementOrigin(..) but will compensate for element 
 // shift when scaled...
 // NOTE: this will work only of translate is used for positioning...
-function shiftOriginTo(elem, l, t){
+function shiftOriginTo(elem, l, t, scale){
 	var o = getElementOrigin(elem)
-	var scale = getElementScale(elem)
+	var scale = scale || getElementScale(elem)
 	var offset = getElementOffset(elem)
 
 	// calculate the offset change and compensate...

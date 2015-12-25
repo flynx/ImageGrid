@@ -62,45 +62,154 @@ var RIBBON = '.ribbon:not(.clone)'
 //
 // XXX need to replace soemlegacy CSS API and make this compatible with
 // 		modern libs like velocity.js...
-if(false){ // XXX still problems with translate...
-// 			- jli.getElementOrigin(..)
-				getElementOrigin = function(elem){ 
-					var o = $(elem).origin() || [0, 0] 
-					return { left: o[0], top: o[1], }
-				}
-// 				<elem>.transform('origin')
-//
-// 			- jli.getElementScale(..)
-				getElementScale = function(elem){ return $(elem).scale() }
-//
 // 			- jli.getRelativeOffset(..)
-				getElementOffset = function(elem){ 
-					var o = $(elem).transform('x', 'y') 
-					return { left: o.x, top: o.y, }
-				}
-//
-// 			- jli.setElementOffset(..)
-// 				// XXX still does not work for some reason...
-				setElementOffset = function(elem, l, t){ 
-					//return $(elem).velocity({translateX: l, translateY: t})
-					return $(elem).transform({x: l || 0, y: t || 0, z: 0}) 
-				}
-//
+// 			- jli.getElementOrigin(..)
+// 			- jli.getElementScale(..)
 // 			- jli.setElementScale(..)
-				setElementScale = function(elem, scale){ 
-					//return $(elem).velocity({scale: scale || 1}, 150)
-					return $(elem).scale(scale || 1) 
-				}
-//
+// 			- jli.setElementOffset(..)
 // 			- jli.shiftOriginTo(..)
-// 				XXX this sets origin and compensates for offsets...
-// 					...to make shifting origin not affect element visual position...
-//
-}
 // XXX think if a way to manage animation timings...
 //
 //
 //
+/*********************************************************************/
+// Low Level dom access...
+//
+// XXX not sure if this is the right way to go...
+
+var legacyDOMAdapter = {
+	getOrigin: getElementOrigin,
+	// XXX this is not used here...
+	setOrigin: setElementOrigin, 
+
+	getScale: getElementScale,
+	setScale: setElementScale,
+
+	getOffset: getElementOffset,
+	setOffset: setElementOffset,
+
+	// a bit higher level...
+	shiftOrigin: shiftOriginTo,
+	relativeOffset: getRelativeOffset,
+}
+
+
+
+// XXX BUG: ...
+// 		to reproduce:
+// 			- .focusImage('j')
+// 			- .toggleSingleImage('on')
+// 		the image disappears...
+var DOMAdapter = {
+	getOrigin: function(elem){
+		var o = $(elem).origin() || [0, 0] 
+		return { left: o[0], top: o[1], }
+	},
+	setOrigin: function(elem, left, top){
+		return $(elem).origin(left, top, 0)
+	},
+	setOriginSync: function(elem, x, y, z){
+		x = x == null ? '50%' : x
+		y = y == null ? '50%' : y
+		z = z == null ? '0' : z
+		var value = x +' '+ y +' '+ z
+
+		elem = $(elem)
+		var e = elem[0]
+
+		e.style.display = 'none'
+		// now kick the browser into recognition of our changes NOW ;)
+		getComputedStyle(e).display
+
+		e.style['-o-transform-origin'] =  value
+		e.style['-ms-transform-origin'] =  value
+		e.style['-moz-transform-origin'] =  value
+		e.style['-webkit-transform-origin'] =  value
+		e.style['transform-origin'] = value
+
+		e.style.display = ''
+		getComputedStyle(e).display
+
+		return $(elem)
+	},
+
+	getScale: function(elem){ 
+		return $(elem).scale() || 1 },
+	setScale: function(elem, scale){
+		return $(elem).scale(scale || 1) },
+
+	getOffset: function(elem){
+		var o = $(elem).transform('x', 'y') 
+		return { left: o.x, top: o.y, }
+	},
+	setOffset: function(elem, left, top){
+		return $(elem).transform({x: left || 0, y: top || 0, z: 0}) 
+	},
+
+	shiftOrigin: function(elem, left, top, scale){
+		var o = this.getOrigin(elem)
+		var scale = scale || this.getScale(elem)
+		var offset = this.getOffset(elem)
+
+		// calculate the offset change and compensate...
+		var cl = offset.left + ((o.left - o.left*scale) - (left - left*scale))
+		var ct = offset.top + ((o.top - o.top*scale) - (top - top*scale))
+
+		this.setOffset(elem, cl, ct)
+
+		return this.setOriginSync(elem, left+'px', top+'px')
+	},
+	// see docs in jli.js
+	relativeOffset: function(container, block, point){
+		point = point == null ? {} : point
+		var l = point.left
+		var t = point.top
+		var scale = point.scale
+
+		// get the input data...
+		var s = this.getScale(block) || 1
+		var o = this.getOrigin(block)
+		// get only the value we need...
+		var W = container.width()
+		var H = container.height()
+		// we need this to make everything relative to the container...
+		var co = container.offset()
+		var offset = this.getOffset(block)
+		var bo = block.offset()
+
+		scale = scale == 'screen' ? 1 
+			: scale == 'elem' ? s
+			: scale == null ? s
+			: scale
+
+		// normalize the l,t to element scale...
+		if(l != null && t != null){
+
+			// get only the value we need...
+			// NOTE: width and height are used to calculate the correction
+			//		due to origin/scale...
+			var w = block.width()
+			var h = block.height()
+			o = {
+				// target offset scale...
+				top: t*scale 
+					// set origin to top left corner of element (compensate
+					// for scaling)...
+					+ (h - h*s) / (h / o.top), 
+				left: l*scale 
+					+ (w - w*s) / (w / o.left),
+			}
+		}
+
+		return {
+			top: offset.top + (H/2 - offset.top) - o.top,
+			left: offset.left + (W/2 - offset.left) - o.left,
+		}
+	},
+}
+
+
+
 /*********************************************************************/
 
 var RibbonsClassPrototype = {
@@ -181,6 +290,10 @@ var RibbonsPrototype = {
 		return o
 	},
 
+	// DOM Adapter...
+	//dom: legacyDOMAdapter,
+	dom: DOMAdapter,
+	
 	// Constructors...
 	createViewer: RibbonsClassPrototype.createViewer,
 	createRibbon: RibbonsClassPrototype.createRibbon,
@@ -352,7 +465,7 @@ var RibbonsPrototype = {
 	scale: function(scale, t, l){
 		// get...
 		if(arguments.length == 0){
-			return getElementScale(this.getRibbonSet()) || 1
+			return this.dom.getScale(this.getRibbonSet()) || 1
 
 		// set...
 		} else {
@@ -378,7 +491,7 @@ var RibbonsPrototype = {
 				this.origin(t, l)
 			}
 
-			setElementScale(ribbon_set, scale)
+			this.dom.setScale(ribbon_set, scale)
 
 			/* XXX not sure if this is needed yet...
 			// XXX fix a render bug in chrome 38...
@@ -414,7 +527,7 @@ var RibbonsPrototype = {
 	origin: function(a, b){
 		// get...
 		if(arguments.length == 0){
-			return getElementOrigin(this.getRibbonSet())
+			return this.dom.getOrigin(this.getRibbonSet())
 
 		// set...
 		} else {
@@ -456,11 +569,11 @@ var RibbonsPrototype = {
 				var t = (io.top - ro.top)/s + h/2
 			}
 
-			shiftOriginTo(ribbon_set, l, t)
+			this.dom.shiftOrigin(ribbon_set, l, t)
 
 			// XXX DEBUG: remove when done...
 			if($('.point').length > 0){
-				setElementOffset($('.point'), l, t)
+				this.dom.setOffset($('.point'), l, t)
 			}
 
 			return this
@@ -541,7 +654,7 @@ var RibbonsPrototype = {
 
 	// Make a "shadow" image for use with image oriented animations...
 	//
-	//	.makeShadwo([<image>][, <animate>][, <delay>])
+	//	.makeShadow([<image>][, <animate>][, <delay>])
 	//		-> <finalize>
 	//
 	// A shadow is a clone of <image> placed directly above it while it 
@@ -576,6 +689,7 @@ var RibbonsPrototype = {
 	// XXX should we also have a ribbon shadow???
 	// XXX when this cant find a target it will return an empty function,
 	// 		not sure if this is correct...
+	// XXX should we use transforms instead of css positions???
 	makeShadow: function(target, animate, delay){
 		delay = delay || 200
 		var img = this.getImage(target)
@@ -614,7 +728,7 @@ var RibbonsPrototype = {
 
 			// make a shadow element...
 			// ...we need to scale it to the current scale...
-			var shadow = setElementScale(
+			var shadow = this.dom.setScale(
 				$('<div>')
 					.addClass('shadow ribbon clone')
 					.attr({
@@ -1396,7 +1510,7 @@ var RibbonsPrototype = {
 				var dl = loaded.index(ref) - gids.indexOf(gid)
 
 				if(dl != 0){
-					r.css({left: parseFloat(r.css('left')) + dl * w})
+					this.dom.setOffset(r, this.dom.getOrigin(r) + dl * w)
 				}
 			}
 		}
@@ -1602,7 +1716,7 @@ var RibbonsPrototype = {
 		// clear all...
 		if(gids == null || gids == '*'){
 			this.preventTransitions()
-			setElementOffset(this.getRibbonSet(), 0, 0).children().detach()
+			this.dom.setOffset(this.getRibbonSet(), 0, 0).children().detach()
 			this.restoreTransitions()
 
 		// clear one or more gids...
@@ -1964,12 +2078,12 @@ var RibbonsPrototype = {
 
 		var t = (io.top - ro.top)/s + h/2
 
-		var offset = getRelativeOffset(this.viewer, ribbon_set, {
+		var offset = this.dom.relativeOffset(this.viewer, ribbon_set, {
 			top: t,
 			left: 0,
 		}).top
 		
-		setElementOffset(ribbon_set, 0, offset)
+		this.dom.setOffset(ribbon_set, 0, offset)
 
 		return this
 	},
@@ -1998,14 +2112,7 @@ var RibbonsPrototype = {
 			: mode == 'after' ? -w/2
 			: 0
 
-		ribbon
-			.css({
-				left: (rl + ((W-w)/2 + image_offset) - il) / scale,
-				//transform: 'translate3d('
-				//	+ ((rl + ((W-w)/2 + image_offset) - il) / scale) + 'px, 0px, 0px)'
-			})
-
-		//setElementOffset(ribbon, ((rl + ((W-w)/2 + image_offset) - il) / scale), 0, 1)
+		this.dom.setOffset(ribbon, ((rl + ((W-w)/2 + image_offset) - il) / scale))
 
 		return this
 	},

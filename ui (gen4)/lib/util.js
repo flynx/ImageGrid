@@ -347,6 +347,14 @@ var transformEditor = function(){
 
 			var aliases = Object.keys(spec)
 
+			var r = reduce == 'sum' ? function(a, b){ return a + b }
+				: reduce == 'mul' ? function(a, b){ return a * b }
+				: reduce == 'last' ? function(a, b){ return b != null ? b : a }
+				: reduce
+			var n = reduce == 'sum' ? 0
+				: reduce == 'mul' ? 1
+				: 0
+
 			return aliases.map(function(k, j){
 					var i = spec[k]
 
@@ -373,10 +381,21 @@ var transformEditor = function(){
 					return res != null ? res[i] : res
 				})
 				.filter(function(e){ return e != null })
+				.reduce(r, n)
+				// XXX for some magical reason this breaks if...
+				// 		t = transformEditor($('.ribbon-set'))
+				// 		t.x()	// works ok
+				// 		var x = t.data
+				// 		t.x()	// now this breaks because reduce is 0...
+				 /*
 				.reduce(reduce == 'sum' ? function(a, b){ return a + b }
-					: reduce == 'mul' ? function(a, b){ return a * b }
-					: reduce == 'last' ? function(a, b){ return b != null ? b : a }
-					: reduce)
+						: reduce == 'mul' ? function(a, b){ return a * b }
+						: reduce == 'last' ? function(a, b){ return b != null ? b : a }
+						: reduce,
+					reduce == 'mul' ? 1
+						: reduce = 'sum'? 0
+						: 0)
+				 */
 		}
 
 		// setup the aliases...
@@ -471,8 +490,8 @@ var transformEditor = function(){
 	func('skew', ['', ''], 0)
 	func('skewX', [''], 0)
 	func('skewY', [''], 0)
-	alias({skewX: 0, skew: 0})
-	alias({skewY: 0, skew: 1})
+	alias({skewX: 0, skew: 0}, 'sum')
+	alias({skewY: 0, skew: 1}, 'sum')
 
 	func('perspective')
 
