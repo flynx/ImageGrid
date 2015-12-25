@@ -442,7 +442,7 @@ actions.Actions({
 				.centerImage(target)
 				.centerRibbon(target)
 				.ribbons
-					.setOrigin(target)
+					.origin(target)
 		}],
 
 	focusImage: [
@@ -522,22 +522,22 @@ actions.Actions({
 	// and rounding to nearest discrete number of images to fit on screen.
 	zoomIn: ['Zoom/Zoom in',
 		function(){ 
-			this.ribbons.setOrigin()
+			this.ribbons.origin()
 
 			//var n = Math.round(this.ribbons.getScreenWidthImages())-1
 			var d = this.config['zoom-step'] || 1.2
-			var s = a.ribbons.getScale() * d
+			var s = a.ribbons.scale() * d
 			var n = Math.floor(this.ribbons.getScreenWidthImages(s))
 		
 			this.fitImage(n <= 0 ? 1 : n)
 		}],
 	zoomOut: ['Zoom/Zoom out',
 		function(){ 
-			this.ribbons.setOrigin()
+			this.ribbons.origin()
 
 			//var n = Math.round(this.ribbons.getScreenWidthImages())+1
 			var d = this.config['zoom-step'] || 1.2
-			var s = a.ribbons.getScale() / d
+			var s = a.ribbons.scale() / d
 			var n = Math.ceil(this.ribbons.getScreenWidthImages(s))
 
 			var max = this.config['max-screen-images']
@@ -1573,7 +1573,7 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 				// 		.updateRibbon(..) makes for fitting whole image
 				// 		counts, this is a small enough error so as not
 				// 		to waste time on...
-				var s = this.ribbons.getScale()
+				var s = this.ribbons.scale()
 				var h = this.ribbons.getScreenHeightRibbons()
 				var w = this.ribbons.getScreenWidthImages()
 				var nw = w / (h/n)
@@ -2083,7 +2083,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 				return
 			}
 
-			var scale = this.ribbons.getScale()
+			var scale = this.ribbons.scale()
 			var cur = this.ribbons.getImage(target)
 			// NOTE: cur may be unloaded...
 			var ribbon = this.ribbons.getRibbon(cur.length > 0 ? target : this.currentRibbon)
@@ -2356,7 +2356,7 @@ module.CurrentImageIndicatorHideOnScreenNav = core.ImageGridFeatures.Feature({
 
 // XXX make this an action...
 var updateBaseRibbonIndicator = function(img){
-	var scale = this.ribbons.getScale()
+	var scale = this.ribbons.scale()
 	var base = this.ribbons.getRibbon('base')
 	img = this.ribbons.getImage(img)
 	var m = base.find('.base-ribbon-marker')
@@ -2670,7 +2670,7 @@ module.DirectControljQ = core.ImageGridFeatures.Feature({
 						axis: 'x',
 
 						start: function(evt, ui){
-							scale = that.ribbons.getScale()	
+							scale = that.ribbons.scale()	
 						},
 						// compensate for ribbon scale...
 						drag: function(evt, ui) {

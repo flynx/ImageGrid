@@ -334,7 +334,139 @@ var RibbonsPrototype = {
 		return this
 	},
 
+	// Scale...
+	//
+	// 	Get scale...
+	// 	.scale()
+	// 		-> <scale>
+	//
+	// 	Set scale...
+	// 	.scale(<scale>)
+	// 	.scale(<scale>, <image>|'current'|'closest')
+	// 	.scale(<scale>, 'top'|'center'|'bottom'|<px>|%, 'left'|'center'|'right'|<px>|%)
+	// 		-> <ribbons>
+	//
+	// NOTE: this will also set origin...
+	//
+	// XXX if chrome 38 renders images blurry uncomment the fix...
+	scale: function(scale, t, l){
+		// get...
+		if(arguments.length == 0){
+			return getElementScale(this.getRibbonSet()) || 1
 
+		// set...
+		} else {
+			var ribbon_set = this.getRibbonSet()  
+
+			if(ribbon_set.length == 0){
+				return this
+			}
+
+			// default origin -- center...
+			if(t == null && l == null){
+				this.origin('center', 'center')
+
+			// an image...
+			} else if(l == null){
+				t = t == 'current' ? this.getImage()
+					: t == 'closest' ? this.getImageByPosition()
+					: t
+				this.origin(t)
+
+			// explicit...
+			} else {
+				this.origin(t, l)
+			}
+
+			setElementScale(ribbon_set, scale)
+
+			/* XXX not sure if this is needed yet...
+			// XXX fix a render bug in chrome 38...
+			var v = this.viewer[0]
+			if(v.style.transform == ''){
+				v.style.transform = 'translateZ(0)'
+			} else {
+				v.style.transform = ''
+			}
+			*/
+
+			return this
+		}
+	},
+	
+	// Origin...
+	//
+	// 	Get origin...
+	// 	.origin()
+	// 		-> <origin>
+	//
+	//	Set origin to center of image:
+	//	.origin(image)
+	//		-> ribbons
+	//
+	//	Set origin to screen coordinates:
+	//	.origin(x|%|'left'|'center'|'right', x|%|'top'|'center'|'bottom')
+	//		-> ribbons
+	//
+	// NOTE: this will also compensate for scaling.
+	//
+	// XXX DEBUG: remove point updating when not needed...
+	origin: function(a, b){
+		// get...
+		if(arguments.length == 0){
+			return getElementOrigin(this.getRibbonSet())
+
+		// set...
+		} else {
+			var ribbon_set = this.getRibbonSet()
+
+			if(ribbon_set.length == 0){
+				return this
+			}
+
+			var ro = ribbon_set.offset()
+			var s = this.scale()
+
+			if(a != null && b != null){
+				var vo = this.viewer.offset()
+
+				a = a == 'left' ? 0
+					: a == 'right' ? this.viewer.width()
+					: a == 'center' ? this.viewer.width()/2
+					: /[0-9.]*%/.test(a) ? this.viewer.width()*(parseFloat(a)/100)
+					: a
+
+				b = b == 'top' ? 0
+					: b == 'bottom' ? this.viewer.height()
+					: b == 'center' ? this.viewer.height()/2
+					: /[0-9.]*%/.test(b) ? this.viewer.height()*(parseFloat(b)/100)
+					: b
+
+				var l = (a - ro.left)/s + vo.left
+				var t = (b - ro.top)/s + vo.top
+
+			// image...
+			} else {
+				var img = this.getImage(a)
+				var io = img.offset()
+				var w = img.width()
+				var h = img.height()
+
+				var l = (io.left - ro.left)/s + w/2
+				var t = (io.top - ro.top)/s + h/2
+			}
+
+			shiftOriginTo(ribbon_set, l, t)
+
+			// XXX DEBUG: remove when done...
+			if($('.point').length > 0){
+				setElementOffset($('.point'), l, t)
+			}
+
+			return this
+		}
+	},
+	
 	// Get visible image tile size...
 	//
 	//	.getVisibleImageSize()
@@ -355,7 +487,7 @@ var RibbonsPrototype = {
 	// XXX this might break when no images are loaded and proportions 
 	// 		are not square...
 	getVisibleImageSize: function(dim, scale, img){
-		scale = scale || this.getScale()
+		scale = scale || this.scale()
 		dim = dim == null ? 'width' : dim
 		img = img || this.viewer.find(IMAGE)
 		var tmp
@@ -390,7 +522,7 @@ var RibbonsPrototype = {
 	},
 
 	getScreenWidthImages: function(scale, min){
-		var scale = scale == null ? 1 : scale/this.getScale()
+		var scale = scale == null ? 1 : scale/this.scale()
 
 		var W = this.viewer.width()
 		var w = this.getVisibleImageSize(min ? 'min' : 'width') * scale
@@ -399,253 +531,12 @@ var RibbonsPrototype = {
 	},
 	// XXX this does not account for ribbon spacing...
 	getScreenHeightRibbons: function(scale){
-		var scale = scale == null ? 1 : scale/this.getScale()
+		var scale = scale == null ? 1 : scale/this.scale()
 
 		var H = this.viewer.height()
 		var h = this.getVisibleImageSize('height') * scale
 
 		return H/h
-	},
-
-	// Get an image at a relative to viewer position...
-	//
-	//	Get central image in current ribbon:
-	//	.getImageByPosition()
-	//		-> image
-	//
-	//	Get central image closest to current:
-	//	.getImageByPosition('current'[, <ribbon>])
-	//		-> image
-	//
-	//	Get central image closest to html element:
-	//	.getImageByPosition(<elem>[, <ribbon>])
-	//		-> image
-	//
-	//	Get image in a specific ribbon:
-	//	.getImageByPosition('left'[, <ribbon>])
-	//	.getImageByPosition('center'[, <ribbon>])
-	//	.getImageByPosition('right'[, <ribbon>])
-	//		-> image
-	//
-	// This can return a pair of images when position is either 'center',
-	// 'current' or a jquery object, this can happen when the two 
-	// candidates are closer to the target than delta.
-	//
-	//
-	// NOTE: if no ribbon is given, current ribbon is assumed.
-	// NOTE: <ribbon> is the same as expected by .getRibbon(..)
-	// NOTE: position can also be an image...
-	// NOTE: delta is used ONLY if position is either 'center', 'current'
-	// 		or an jQuery object...
-	getImageByPosition: function(position, ribbon, delta){
-		position = position || 'center'	
-		ribbon = this.getRibbon(ribbon) 
-
-		var viewer = this.viewer
-
-		var W = viewer.outerWidth()
-		var L = viewer.offset().left
-
-		var target = position == 'current' ? this.getImage()
-			: position == 'center' ? viewer
-			: position == 'left' ? L
-			: position == 'right' ? L + W
-			: position
-
-		// unknown keyword...
-		if(target == null){
-			return $()
-
-		// center of an element...
-		} else if(typeof(target) != typeof(123)){
-			target = $(target)
-			var w = target.hasClass('image') ? 
-				this.getVisibleImageSize('width', null, target) : 
-				target.outerWidth()
-			// NOTE: we will need delta only in this branch, i.e. when
-			// 		position is either 'current', 'center' or a jQuery 
-			// 		object...
-			delta = delta || w / 10
-			target = target.offset().left + w/2
-		}
-
-		var that = this
-		var res = ribbon.find(IMAGE)
-			.toArray()
-			.map(function(img){
-				img = $(img)
-				var l = img.offset().left
-				var w = that.getVisibleImageSize('width', null, img)
-
-				// skip images not fully shown in viewer...
-				// NOTE: we explicitly leave partial images here so as to
-				// 		include at least two.
-				// 		This is done so as to include at least a couple 
-				// 		of images at large magnifications when nothing 
-				// 		other than the current image fully fit...
-				if(L > l+w || l > L+W){
-					return
-				}
-
-				// distance between centers...
-				if(position == 'center' || position == 'current'){
-					return [target - (l + w/2), img]
-
-				// distance between left edges...
-				} else if(position == 'left'){
-					return [target - l, img]
-
-				// distance between right edges...
-				} else {
-					return [target - (l + w), img]
-				}
-			})
-			// drop images outside the viewer...
-			.filter(function(e){ return e != null })
-			// sort images by distance...
-			.sort(function(a, b){ return Math.abs(a[0]) - Math.abs(b[0]) })
-
-		var a = res[0][0]
-		var b = res[1] ? res[1][0] : null
-
-		// we have two images that are about the same distance from 
-		// target...
-		// NOTE: this is a one-dimentional filter so there can not be 
-		// 		more than two hits...
-		// NOTE: delta is used ONLY if position is either 'center', 
-		// 		'current' or an jQuery object...
-		if(b && (a >= 0) != (b >= 0) && Math.abs(a + b) < delta){
-			return $([res[0][1][0], res[1][1][0]])
-
-		// a single hit...
-		} else {
-			return res[0][1]
-		}
-	},
-
-	// Get ribbon set scale...
-	//
-	getScale: function(){
-		return getElementScale(this.getRibbonSet()) || 1
-	},
-
-	// Set ribbon set scale...
-	//
-	// 	.setScale(<scale>)
-	// 	.setScale(<scale>, <image>|'current'|'closest')
-	// 	.setScale(<scale>, 'top'|'center'|'bottom'|<px>|%, 'left'|'center'|'right'|<px>|%)
-	// 		-> <ribbons>
-	//
-	// NOTE: this will also set origin...
-	//
-	// XXX if chrome 38 renders images blurry uncomment the fix...
-	setScale: function(scale, t, l){
-		var ribbon_set = this.getRibbonSet()  
-
-		if(ribbon_set.length == 0){
-			return this
-		}
-
-		// default origin -- center...
-		if(t == null && l == null){
-			this.setOrigin('center', 'center')
-
-		// an image...
-		} else if(l == null){
-			t = t == 'current' ? this.getImage()
-				: t == 'closest' ? this.getImageByPosition()
-				: t
-			this.setOrigin(t)
-
-		// explicit...
-		} else {
-			this.setOrigin(t, l)
-		}
-
-		setElementScale(ribbon_set, scale)
-
-		/* XXX not sure if this is needed yet...
-		// XXX fix a render bug in chrome 38...
-		var v = this.viewer[0]
-		if(v.style.transform == ''){
-			v.style.transform = 'translateZ(0)'
-		} else {
-			v.style.transform = ''
-		}
-		*/
-
-		return this
-	},
-
-	// Get current ribbon-set origin...
-	//
-	getOrigin: function(){
-		return getElementOrigin(this.getRibbonSet())
-	},
-	
-	// Set ribbon set origin...
-	//
-	//	Set origin to center of current image
-	//	.setOrigin()
-	//		-> ribbons
-	//
-	//	Set origin to center of elment:
-	//	.setOrigin(image)
-	//		-> ribbons
-	//
-	//	Set origin to screen coordinates:
-	//	.setOrigin(x|%|'left'|'center'|'right', x|%|'top'|'center'|'bottom')
-	//		-> ribbons
-	//
-	// NOTE: this will also compensate for scaling.
-	//
-	// XXX DEBUG: remove point updating when not needed...
-	setOrigin: function(a, b){
-		var ribbon_set = this.getRibbonSet()
-
-		if(ribbon_set.length == 0){
-			return this
-		}
-
-		var ro = ribbon_set.offset()
-		var s = this.getScale()
-
-		if(a != null && b != null){
-			var vo = this.viewer.offset()
-
-			a = a == 'left' ? 0
-				: a == 'right' ? this.viewer.width()
-				: a == 'center' ? this.viewer.width()/2
-				: /[0-9.]*%/.test(a) ? this.viewer.width()*(parseFloat(a)/100)
-				: a
-
-			b = b == 'top' ? 0
-				: b == 'bottom' ? this.viewer.height()
-				: b == 'center' ? this.viewer.height()/2
-				: /[0-9.]*%/.test(b) ? this.viewer.height()*(parseFloat(b)/100)
-				: b
-
-			var l = (a - ro.left)/s + vo.left
-			var t = (b - ro.top)/s + vo.top
-
-		} else {
-			var img = this.getImage(a)
-			var io = img.offset()
-			var w = img.width()
-			var h = img.height()
-
-			var l = (io.left - ro.left)/s + w/2
-			var t = (io.top - ro.top)/s + h/2
-		}
-
-		shiftOriginTo(ribbon_set, l, t)
-
-		// XXX DEBUG: remove when done...
-		if($('.point').length > 0){
-			setElementOffset($('.point'), l, t)
-		}
-
-		return this
 	},
 
 	// Make a "shadow" image for use with image oriented animations...
@@ -695,7 +586,7 @@ var RibbonsPrototype = {
 		}
 
 		var gid = this.getElemGID(img)
-		var s = this.getScale()
+		var s = this.scale()
 		var vo = this.viewer.offset()
 		var io = img.offset()
 
@@ -759,7 +650,7 @@ var RibbonsPrototype = {
 		return function(){
 			// remove only the item with the correct ticket...
 			if(ticket == shadow.attr('ticket')){
-				var s = that.getScale()
+				var s = that.scale()
 				var img = that.getImage(gid)
 				var vo = that.viewer.offset()
 				var io = img.offset()
@@ -899,6 +790,122 @@ var RibbonsPrototype = {
 			return marks.filter('.'+cls)
 		}
 		return marks
+	},
+
+	// Get an image at a relative to viewer position...
+	//
+	//	Get central image in current ribbon:
+	//	.getImageByPosition()
+	//		-> image
+	//
+	//	Get central image closest to current:
+	//	.getImageByPosition('current'[, <ribbon>])
+	//		-> image
+	//
+	//	Get central image closest to html element:
+	//	.getImageByPosition(<elem>[, <ribbon>])
+	//		-> image
+	//
+	//	Get image in a specific ribbon:
+	//	.getImageByPosition('left'[, <ribbon>])
+	//	.getImageByPosition('center'[, <ribbon>])
+	//	.getImageByPosition('right'[, <ribbon>])
+	//		-> image
+	//
+	// This can return a pair of images when position is either 'center',
+	// 'current' or a jquery object, this can happen when the two 
+	// candidates are closer to the target than delta.
+	//
+	//
+	// NOTE: if no ribbon is given, current ribbon is assumed.
+	// NOTE: <ribbon> is the same as expected by .getRibbon(..)
+	// NOTE: position can also be an image...
+	// NOTE: delta is used ONLY if position is either 'center', 'current'
+	// 		or an jQuery object...
+	getImageByPosition: function(position, ribbon, delta){
+		position = position || 'center'	
+		ribbon = this.getRibbon(ribbon) 
+
+		var viewer = this.viewer
+
+		var W = viewer.outerWidth()
+		var L = viewer.offset().left
+
+		var target = position == 'current' ? this.getImage()
+			: position == 'center' ? viewer
+			: position == 'left' ? L
+			: position == 'right' ? L + W
+			: position
+
+		// unknown keyword...
+		if(target == null){
+			return $()
+
+		// center of an element...
+		} else if(typeof(target) != typeof(123)){
+			target = $(target)
+			var w = target.hasClass('image') ? 
+				this.getVisibleImageSize('width', null, target) : 
+				target.outerWidth()
+			// NOTE: we will need delta only in this branch, i.e. when
+			// 		position is either 'current', 'center' or a jQuery 
+			// 		object...
+			delta = delta || w / 10
+			target = target.offset().left + w/2
+		}
+
+		var that = this
+		var res = ribbon.find(IMAGE)
+			.toArray()
+			.map(function(img){
+				img = $(img)
+				var l = img.offset().left
+				var w = that.getVisibleImageSize('width', null, img)
+
+				// skip images not fully shown in viewer...
+				// NOTE: we explicitly leave partial images here so as to
+				// 		include at least two.
+				// 		This is done so as to include at least a couple 
+				// 		of images at large magnifications when nothing 
+				// 		other than the current image fully fit...
+				if(L > l+w || l > L+W){
+					return
+				}
+
+				// distance between centers...
+				if(position == 'center' || position == 'current'){
+					return [target - (l + w/2), img]
+
+				// distance between left edges...
+				} else if(position == 'left'){
+					return [target - l, img]
+
+				// distance between right edges...
+				} else {
+					return [target - (l + w), img]
+				}
+			})
+			// drop images outside the viewer...
+			.filter(function(e){ return e != null })
+			// sort images by distance...
+			.sort(function(a, b){ return Math.abs(a[0]) - Math.abs(b[0]) })
+
+		var a = res[0][0]
+		var b = res[1] ? res[1][0] : null
+
+		// we have two images that are about the same distance from 
+		// target...
+		// NOTE: this is a one-dimentional filter so there can not be 
+		// 		more than two hits...
+		// NOTE: delta is used ONLY if position is either 'center', 
+		// 		'current' or an jQuery object...
+		if(b && (a >= 0) != (b >= 0) && Math.abs(a + b) < delta){
+			return $([res[0][1][0], res[1][1][0]])
+
+		// a single hit...
+		} else {
+			return res[0][1]
+		}
 	},
 
 	// Get ribbon...
@@ -1948,9 +1955,9 @@ var RibbonsPrototype = {
 			return this
 		}
 
-		//this.setOrigin(target)
+		//this.origin(target)
 		
-		var s = this.getScale()
+		var s = this.scale()
 		var ro = ribbon_set.offset()
 		var io = target.offset()
 		var h = target.height()
@@ -1974,7 +1981,7 @@ var RibbonsPrototype = {
 	// 		(top, bottom, center, %, px)
 	centerImage: function(target, mode, offset, scale){
 		target = this.getImage(target)
-		scale = scale || this.getScale()
+		scale = scale || this.scale()
 		var ribbon = this.getRibbon(target)
 
 		if(ribbon.length == 0){
@@ -2027,7 +2034,7 @@ var RibbonsPrototype = {
 		}
 
 		this
-			.setScale(scale)
+			.scale(scale)
 			//.centerRibbon(null, null, scale)
 			//.centerImage(null, null, null, scale)
 		
@@ -2059,7 +2066,7 @@ var RibbonsPrototype = {
 			scale *= d
 		}
 
-		this.setScale(scale)
+		this.scale(scale)
 
 		return this
 	},

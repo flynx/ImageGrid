@@ -285,7 +285,7 @@ var transformEditor = function(){
 		},
 	}
 
-	var func = function(name, args){
+	var func = function(name, args, neutral){
 		args = args || []
 		editor.__direct[name] = function(val){
 			var that = this
@@ -303,8 +303,8 @@ var transformEditor = function(){
 					var unit = args[i] || ''
 					data[i] = typeof(arg) == typeof(123) 
 							|| (typeof(arg) == typeof('str') 
-								&& /^[0-9\.]+$/.test(arg)) ?
-						arg + unit
+								&& /^[0-9\.]+$/.test(arg)) ? arg + unit
+						: arg == '' ? neutral + unit
 						: arg
 					res[i] = arg
 				})
@@ -423,19 +423,19 @@ var transformEditor = function(){
 	}
 
 	// XXX get these from grammar...
-	func('translate', ['px', 'px'])
-	func('translate3d', ['px', 'px', 'px'])
-	func('translateX', ['px'])
-	func('translateY', ['px'])
-	func('translateZ', ['px'])
+	func('translate', ['px', 'px'], 0)
+	func('translate3d', ['px', 'px', 'px'], 0)
+	func('translateX', ['px'], 0)
+	func('translateY', ['px'], 0)
+	func('translateZ', ['px'], 0)
 	alias({ translate3d: 0, translate: 0, translateX: 0, x: 0 }, 'sum')
 	alias({ translate3d: 1, translate: 1, translateY: 0, y: 0, }, 'sum')
 	alias({ translate3d: 2, translateZ: 0, z: 0, }, 'sum') 
 
-	func('scale', ['', ''])
+	func('scale', ['', ''], 1)
 	//func('scale3d', ['', '', ''])
-	func('scaleX')
-	func('scaleY')
+	func('scaleX', [''], 1)
+	func('scaleY', [''], 1)
 	//func('scaleZ')
 	alias({ scale: 0, /*scale3d: 0,*/ scaleX: 0, }, 'mul')
 	alias({ scale: 1, /*scale3d: 1,*/ scaleY: 0, }, 'mul')
@@ -454,11 +454,11 @@ var transformEditor = function(){
 		return res.length == 2 && res[0] == res[1] ? res[0] : res
 	}
 
-	func('rotate', ['deg'])
-	func('rotate3d', ['px', 'px', 'px', 'deg'])
-	func('rotateX', ['deg'])
-	func('rotateY', ['deg'])
-	func('rotateZ', ['deg'])
+	func('rotate', ['deg'], 0)
+	func('rotate3d', ['px', 'px', 'px', 'deg'], 0)
+	func('rotateX', ['deg'], 0)
+	func('rotateY', ['deg'], 0)
+	func('rotateZ', ['deg'], 0)
 
 	func('matrix') // XXX ???
 	func('matrix3d', [
@@ -468,9 +468,9 @@ var transformEditor = function(){
 		'', '', '', '',
 	])
 
-	func('skew', ['', ''])
-	func('skewX')
-	func('skewY')
+	func('skew', ['', ''], 0)
+	func('skewX', [''], 0)
+	func('skewY', [''], 0)
 	alias({skewX: 0, skew: 0})
 	alias({skewY: 0, skew: 1})
 
@@ -478,7 +478,7 @@ var transformEditor = function(){
 
 
 	// non-transform functions...
-	func('origin', ['px', 'px', 'px'])
+	func('origin', ['px', 'px', 'px'], 0)
 
 
 	// proxy the undefined in aliases functions...
