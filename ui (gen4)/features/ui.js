@@ -749,9 +749,9 @@ module.Viewer = core.ImageGridFeatures.Feature({
 			}],
 		['stop', 
 			function(){
-				if(that.__viewer_resize){
-					$(window).off('resize', that.__viewer_resize) 
-					delete that.__viewer_resize
+				if(this.__viewer_resize){
+					$(window).off('resize', this.__viewer_resize) 
+					delete this.__viewer_resize
 				}
 			}],
 	],
@@ -2584,6 +2584,54 @@ module.AutoRibbon = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+
+
+var RibbonsPlacement = 
+module.RibbonsPlacement = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-ribbons-placement',
+	depends: [ 'ui' ],
+
+	config: {
+		'ui-ribbons-placement-mode': 'legacy',
+	},
+
+	actions: actions.Actions({
+		toggleRibbonsPlacementMode: ['Interfcae/',
+			Toggler(null, function(_, state){ 
+					if(state == null){
+						return this.config['ui-ribbons-placement-mode']
+					}
+
+					this.config['ui-ribbons-placement-mode'] = state
+					if(state == 'legacy'){
+						this.ribbons.dom = ribbons.legacyDOMAdapter
+
+					} else {
+						this.ribbons.dom = ribbons.DOMAdapter
+					}
+
+					// NOTE: this will lose any state/configuration that
+					// 		was stored in ribbon dom...
+					this.ribbons.clear('full')
+					this.reload(true)
+				},
+				[
+					'legacy', 
+					'new',
+				])],
+	}),
+
+	handlers: [
+		['setup', 
+			function(){
+				this.toggleRibbonsPlacementMode(this.config['ui-ribbons-placement-mode'])
+			}],
+	]
+})
+
 
 // XXX add setup/taredown...
 var Clickable = 

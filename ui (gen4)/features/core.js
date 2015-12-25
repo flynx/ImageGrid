@@ -122,6 +122,16 @@ var LifeCycleActions = actions.Actions({
 
 			this.logger && this.logger.emit('stop')
 		}],
+
+	/*
+	// XXX need a clear protocol for this...
+	// 		something like:
+	// 			- clear state
+	// 			- load state
+	reset: ['System/',
+		function(){
+		}],
+	*/
 })
 
 var LifeCycle = 

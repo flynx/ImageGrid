@@ -30,6 +30,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'base-full',
 	'ui',
 
+	'ui-ribbons-placement',
+
 	// features...
 	'ui-ribbon-auto-align',
 	//'ui-ribbon-align-to-order',

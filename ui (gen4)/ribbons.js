@@ -77,7 +77,8 @@ var RIBBON = '.ribbon:not(.clone)'
 //
 // XXX not sure if this is the right way to go...
 
-var legacyDOMAdapter = {
+var legacyDOMAdapter =
+module.legacyDOMAdapter = {
 	getOrigin: getElementOrigin,
 	// XXX this is not used here...
 	setOrigin: setElementOrigin, 
@@ -99,8 +100,24 @@ var legacyDOMAdapter = {
 // 		to reproduce:
 // 			- .focusImage('j')
 // 			- .toggleSingleImage('on')
-// 		the image disappears...
-var DOMAdapter = {
+// 		the image disappears... (wrong offset)
+// 		
+// 		also reproducable in ribbon mode...
+//
+//
+// 		appears to be connected to partial ribbon loading in single 
+// 		image mode -- current image gets reloaded for some reason...
+//
+// 		seems to be a problem with resizeRibbon compensating and syncicng
+// 		differently as above...
+// 		...the problem is that when the ribbon gets resized, the initial offset is wrong...
+//
+// 		the problem is present in both cases, but the timing is different
+// 		so it is easier to spot here...
+// 		...appears to be connected with translate+origin vs. left being 
+// 		used to aign ribbons...
+var DOMAdapter =
+module.DOMAdapter = {
 	getOrigin: function(elem){
 		var o = $(elem).origin() || [0, 0] 
 		return { left: o[0], top: o[1], }
@@ -291,8 +308,8 @@ var RibbonsPrototype = {
 	},
 
 	// DOM Adapter...
-	//dom: legacyDOMAdapter,
-	dom: DOMAdapter,
+	dom: legacyDOMAdapter,
+	//dom: DOMAdapter,
 	
 	// Constructors...
 	createViewer: RibbonsClassPrototype.createViewer,
@@ -1709,12 +1726,21 @@ var RibbonsPrototype = {
 	// 	.clear([gid, ...])
 	// 		-> Ribbons
 	//
+	// Clear ribbon-set -- full rest:
+	// 	.clear('full')
+	// 		-> Ribbons
+	// 		NOTE: this will lose any state stored in the ribbon set, this
+	// 			includes vertical align and scaling...
+	//
 	//
 	// NOTE: another way to remove a ribbon or an image just to use 
 	// 		.getRibbon(..).remove() and .getImage(...).remove() respectivly.
 	clear: function(gids){
+		if(gids == 'full'){
+			this.getRibbonSet().remove()
+
 		// clear all...
-		if(gids == null || gids == '*'){
+		} else if(gids == null || gids == '*'){
 			this.preventTransitions()
 			this.dom.setOffset(this.getRibbonSet(), 0, 0).children().detach()
 			this.restoreTransitions()
