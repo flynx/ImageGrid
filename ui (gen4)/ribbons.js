@@ -308,8 +308,7 @@ var RibbonsPrototype = {
 	},
 
 	// DOM Adapter...
-	dom: legacyDOMAdapter,
-	//dom: DOMAdapter,
+	dom: DOMAdapter,
 	
 	// Constructors...
 	createViewer: RibbonsClassPrototype.createViewer,
@@ -1495,6 +1494,11 @@ var RibbonsPrototype = {
 	// NOTE: the argument force is currently ignored, it serves as a 
 	// 		place holder for overloading...
 	//
+	// XXX this depends on image size being fixed for compensating 
+	// 		position shift...
+	// 		...a simpler way to go is to check .position().left of the 
+	// 		reference image before and after the chage and add the delta
+	// 		to the offset...
 	// XXX make this add images in chunks of adjacent images...
 	// XXX might be a good idea to do the actual adding in requestAnimationFrame(..)
 	updateRibbon: function(gids, ribbon, reference, force){

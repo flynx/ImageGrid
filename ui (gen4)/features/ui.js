@@ -546,7 +546,7 @@ actions.Actions({
 
 	fitOrig: ['Zoom/Fit to original scale',
 		function(){ 
-			this.ribbons.setScale(1) 
+			this.ribbons.scale(1) 
 			this.refresh()
 		}],
 	// NOTE: if this gets a count argument it will fit count images, 
@@ -2113,8 +2113,11 @@ var CurrentImageIndicatorActions = actions.Actions({
 						.addClass('current-marker ui-current-image-indicator')
 						.css({
 							opacity: '0',
-							//top: '0px',
-							//left: '0px',
+							// NOTE: these are not used for positioning
+							// 		but are needed for correct absolute
+							// 		placement...
+							top: '0px',
+							left: '0px',
 						})
 						.appendTo(ribbon)
 						.animate({
@@ -2607,7 +2610,7 @@ module.RibbonsPlacement = core.ImageGridFeatures.Feature({
 	},
 
 	actions: actions.Actions({
-		toggleRibbonsPlacementMode: ['Interface/',
+		toggleRibbonsPlacementMode: ['- Interface/',
 			Toggler(null, function(_, state){ 
 					if(state == null){
 						return this.config['ui-ribbons-placement-mode']
@@ -2682,11 +2685,12 @@ module.Clickable = core.ImageGridFeatures.Feature({
 })
 
 
-// XXX add tap/click to focus...
 // XXX add pinch-zoom...
 // XXX add vertical scroll...
 // XXX disable drag in single image mode unless image is larger than the screen...
 // XXX BUG: current image indicator gets shown in random places...
+// XXX BUG: this does it's work via css left which is both slow and 
+// 		messes up positioning...
 var DirectControljQ = 
 module.DirectControljQ = core.ImageGridFeatures.Feature({
 	title: '',
@@ -2749,6 +2753,8 @@ module.DirectControljQ = core.ImageGridFeatures.Feature({
 })
 
 
+// XXX BUG: this does not account for scale when setting the initial drag
+// 		position, resulting in a jump...
 // XXX disable drag in single image mode unless image is larger than the screen...
 // XXX do not use this for production -- GSAp has a bad license...
 var DirectControlGSAP = 
@@ -2767,11 +2773,6 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 	// XXX add setup/taredown...
 	handlers: [
 		// setup ribbon dragging...
-		// XXX fast but uses messes up positioning...
-		// 		...setting type: 'left' will fix this but make things 
-		// 		really slow (as slow as jQuery.ui.draggable(..))...
-		// XXX shifting to using transforms for centering fixes the align
-		// 		issue but makes the initial move jump...
 		['updateRibbon', 
 			function(_, target){
 				var that = this
@@ -2781,8 +2782,6 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 				if(r.length > 0 && !r.hasClass('draggable')){
 					r.addClass('draggable')
 
-					var o, scale
-
 					Draggable.create(r, {
 						type: 'x',
 						cursor: 'auto',
@@ -2790,8 +2789,6 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 							var c = that.ribbons.getImageByPosition('center', r)
 							that
 								.updateRibbon(c)
-								// XXX is this correct???
-								//.updateCurrentImageIndicator()
 						}})
 				}
 			}],
