@@ -85,7 +85,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	//'ui-direct-control-jquery',
 	// XXX BUG: on touch down and first move this gets offset by a distance
 	// 		not sure why...
-	'ui-direct-control-gsap',
+	// 		...seems to be related to scaling
+	//'ui-direct-control-gsap',
 
 	// experimental and optional features...
 	//'auto-single-image',

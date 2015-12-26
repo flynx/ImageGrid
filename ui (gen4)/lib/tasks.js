@@ -80,7 +80,7 @@ module.QueueActions = actions.Actions({
 	// A task can be either a Promise/A+ or a function. In the case of 
 	// a function this will work sync.
 	//
-	// NOTE: these and task events are partly redundent....
+	// NOTE: these and task events are partly redundant....
 	enqueue: ['',
 		function(a, b, c){
 			// normalize arguments...
@@ -190,12 +190,12 @@ module.QueueActions = actions.Actions({
 	// 	1) run until the .__ready queue is completely depleted
 	// 		This can occur for very fast or sync tasks, essentially
 	// 		each iteration will replenish the .__running pool until there
-	// 		are not task to run.
+	// 		are no tasks to run.
 	// 	2) load the .__running pool and exit
 	// 		The first task to finish will run this again to replenish
 	// 		the pool.
 	//
-	// NOTE: there can be no more that one instance running at a time.
+	// NOTE: there can be no more than one instance running at a time.
 	// NOTE: if .state is not 'running' this will silently exit.
 	//
 	// XXX need to handle retries correctly, at this point all errors just

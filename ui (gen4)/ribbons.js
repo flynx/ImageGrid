@@ -13,6 +13,7 @@ define(function(require){ var module = {}
 //require('ext-lib/jquery')
 
 var util = require('lib/util')
+var transform = require('lib/transform')
 var object = require('lib/object')
 
 var data = require('data')
