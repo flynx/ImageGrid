@@ -19,6 +19,8 @@ var core = require('features/core')
 
 /*********************************************************************/
 
+// XXX add .hash support for in-location .current setting when no index
+// 		available... 
 // XXX should this or LocationLocalStorage save/load location (now it's 
 // 		done by history)
 // XXX this should provide mechaincs to define location handlers, i.e.
@@ -32,6 +34,9 @@ var LocationActions = actions.Actions({
 	// 	{
 	// 		path: <base-path>,
 	// 		method: <load-method>,
+	// 		// XXX current or hash???
+	// 		// XXX not yet supported...
+	// 		current: <current-gid>,
 	// 	}
 	//
 	// NOTE: these will remove the trailing '/' (or '\') from .path 
@@ -61,11 +66,13 @@ var LocationActions = actions.Actions({
 			var method = this.__location 
 				&& this.__location.method 
 					|| undefined 
+			var cur = this.current
 
 		// got an object...
 		} else {
 			var path = value.path
 			var method = value.method
+			var cur = value.current
 		}
 
 		// normalize path if it's not root...
@@ -76,9 +83,13 @@ var LocationActions = actions.Actions({
 		this.__location = {
 			path: path,
 			method: method,
+			current: cur,
 		}
 
 		this[value.method || 'loadIndex'](path)
+
+		// XXX load current...
+		// XXX
 	},
 })
 
