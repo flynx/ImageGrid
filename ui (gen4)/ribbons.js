@@ -61,21 +61,11 @@ var RIBBON = '.ribbon:not(.clone)'
 // NOTE: there can be only one .ribbon-set element.
 //
 //
-// XXX need to replace soemlegacy CSS API and make this compatible with
-// 		modern libs like velocity.js...
-// 			- jli.getRelativeOffset(..)
-// 			- jli.getElementOrigin(..)
-// 			- jli.getElementScale(..)
-// 			- jli.setElementScale(..)
-// 			- jli.setElementOffset(..)
-// 			- jli.shiftOriginTo(..)
-// XXX think if a way to manage animation timings...
-//
-//
 //
 /*********************************************************************/
 // Low Level dom access...
 //
+// XXX think if a way to manage animation timings...
 // XXX not sure if this is the right way to go...
 
 var legacyDOMAdapter =
@@ -96,27 +86,6 @@ module.legacyDOMAdapter = {
 }
 
 
-
-// XXX BUG: ...
-// 		to reproduce:
-// 			- .focusImage('j')
-// 			- .toggleSingleImage('on')
-// 		the image disappears... (wrong offset)
-// 		
-// 		also reproducable in ribbon mode...
-//
-//
-// 		appears to be connected to partial ribbon loading in single 
-// 		image mode -- current image gets reloaded for some reason...
-//
-// 		seems to be a problem with resizeRibbon compensating and syncicng
-// 		differently as above...
-// 		...the problem is that when the ribbon gets resized, the initial offset is wrong...
-//
-// 		the problem is present in both cases, but the timing is different
-// 		so it is easier to spot here...
-// 		...appears to be connected with translate+origin vs. left being 
-// 		used to aign ribbons...
 var DOMAdapter =
 module.DOMAdapter = {
 	getOrigin: function(elem){

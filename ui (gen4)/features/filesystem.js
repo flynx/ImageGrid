@@ -22,6 +22,9 @@ if(window.nodejs != null){
 	var browseWalk = require('lib/widget/browse-walk')
 }
 
+var data = require('data')
+var images = require('images')
+
 var util = require('lib/util')
 
 var actions = require('lib/actions')
@@ -227,6 +230,7 @@ var FileSystemLoaderActions = actions.Actions({
 		}],
 
 	// XXX merging does not work (something wrong with .data.join(..))
+	// 		...fixed a bug in images.js hash generator, now might be fixed...
 	// XXX revise logger...
 	loadNewImages: ['File/Load new images',
 		function(path, logger){
