@@ -49,10 +49,14 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'image-marks',
 	'image-bookmarks',
 
-	// local storage...
+
+	// local storage + url...
 	'config-local-storage',
+	// XXX make this browser-only...
+	'ui-url-hash',
 	'url-history-local-storage',
 	'ui-single-image-view-local-storage',
+
 
 	'fs-loader',
 		'ui-fs-loader',
@@ -92,6 +96,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	//'auto-single-image',
 	//'auto-ribbon',
 	
+
 	// XXX not yet fully tested...
 	'system-journal',
 ])

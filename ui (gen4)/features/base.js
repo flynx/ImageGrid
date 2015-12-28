@@ -245,6 +245,21 @@ actions.Actions({
 			return res
 		}],
 
+	replaceGid: ['- System/Replace image gid',
+		function(from, to){
+			from = this.data.getImage(from)
+
+			// data...
+			var res = this.data.replaceGid(from, to)
+
+			if(res == null){
+				return
+			}
+
+			// images...
+			this.images && this.images.replaceGid(from, to)
+		}],
+
 
 	// basic navigation...
 	//

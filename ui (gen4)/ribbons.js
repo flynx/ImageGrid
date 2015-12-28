@@ -1315,6 +1315,18 @@ var RibbonsPrototype = {
 		return img
 	},
 
+	// Replace image gid...
+	//
+	// XXX should this work for ribbon gids???
+	replaceGid: function(from, to){
+		var img = this.getImage(from)
+
+		img && img.length > 0 
+			&& this.setElemGID(img, to)
+
+		return this
+	},
+
 	// Update image(s)...
 	//
 	// Update current image:

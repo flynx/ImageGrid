@@ -289,6 +289,13 @@ actions.Actions({
 		}],
 
 
+	replaceGid: [
+		function(from, to){
+			return function(res){
+				res && this.ribbons.replaceGid(from, to)
+			}
+		}],
+
 	// This is called by .ribbons, the goal is to use it to hook into 
 	// image updating from features and extensions...
 	//
@@ -2799,6 +2806,45 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 	],
 })
 
+
+
+
+//---------------------------------------------------------------------
+// XXX make this browser specific...
+// XXX BUG: loading of current gid from url for some reason is broken, 
+// 		race?... 
+
+var URLHash = 
+module.URLHash = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-url-hash',
+	depends: ['ui'],
+
+	handlers: [
+		['focusImage',
+			function(res, a){
+				console.log('focus:', a)
+				if(this.current && this.current != ''){
+					location.hash = this.current
+				}
+			}],
+		// XXX this does not work for some reason...
+		// 		...likely because of the slow async load and sync set...
+		['start',
+			function(){
+				var h = location.hash
+				h = h.replace(/^#/, '')
+
+				// for some odd reason this does not work...
+				if(h != ''){
+					console.log('!!!!', h)
+					this.current = h
+				}
+			}],
+	],
+})
 
 
 

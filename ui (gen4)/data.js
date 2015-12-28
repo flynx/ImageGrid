@@ -464,6 +464,35 @@ var DataPrototype = {
 		return this
 	},
 
+	// Replace image gid...
+	//
+	// XXX should this work for ribbon gids???
+	replaceGid: function(from, to){
+		from = this.getImage(from)
+		var i = this.getImageOrder(from)
+
+		var t = this.getImage(to)
+
+		if(t != -1 && t != null){
+			return
+		}
+
+		// current...
+		if(from == this.current){
+			this.current = to
+		}
+		// order...
+		this.order[i] = to
+		// image lists...
+		this.eachImageList(function(list){
+			if(list[i] != null){
+				list[i] = to
+			}
+		})
+
+		return this
+	},
+
 
 
 	/*********************************************** Introspection ***/

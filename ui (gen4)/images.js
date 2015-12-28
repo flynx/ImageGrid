@@ -501,6 +501,19 @@ module.ImagesPrototype = {
 		return r == null ? n : parseInt(r[1])
 	},
 
+	// Replace image gid...
+	//
+	replaceGid: function(from, to){
+		var img = this[from]
+
+		// XXX is the test needed here???
+		if(img != null){
+			delete this[from]
+			this[to] = img
+		}
+
+		return this
+	},
 
 	// Gid sorters...
 	// XXX might be a good idea to add caching...
