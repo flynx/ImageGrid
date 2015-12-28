@@ -191,6 +191,8 @@ actions.Actions({
 	// XXX do we need to call .syncTags(..) here???
 	load: ['- File|Interface/',
 		function(d){
+			this.clear()
+
 			this.images = images.Images(d.images)
 			this.data = data.Data(d.data)
 		}],
@@ -221,10 +223,12 @@ actions.Actions({
 	// 		...note if we use this it breaks, need to rethink...
 	loadURLs: ['File/Load a URL list',
 		function(lst, base){
-			this.clear()
+			var imgs = images.Images.fromArray(lst, base)
 
-			this.images = images.Images.fromArray(lst, base)
-			this.data = data.Data.fromArray(this.images.keys())
+			this.load({
+				images: imgs,
+				data: data.Data.fromArray(imgs.keys()),
+			})
 		}],
 
 	// XXX experimental...

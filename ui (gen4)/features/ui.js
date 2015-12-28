@@ -193,17 +193,15 @@ actions.Actions({
 					? this.ribbons.viewer 
 					: viewer
 
-				// XXX do we need to recycle the ribbons???
-				if(this.ribbons != null){
+				if(this.ribbons == null){
+					this.ribbons = ribbons.Ribbons(viewer, this.images)
+					// XXX is this correct???
+					this.ribbons.__image_updaters = [this.updateImage.bind(this)]
+
+				} else {
 					this.ribbons.clear()
+					this.ribbons.images = this.images
 				}
-
-				// NOTE: this is done unconditionally to avoid manually 
-				// 		setting images and other stuff in the future...
-				this.ribbons = ribbons.Ribbons(viewer, this.images)
-
-				// XXX is this correct???
-				this.ribbons.__image_updaters = [this.updateImage.bind(this)]
 
 				this.reload()
 			}
@@ -250,7 +248,7 @@ actions.Actions({
 			this.ribbons.updateImage(gids)
 		}],
 	clear: [
-		function(){ this.ribbons.clear() }],
+		function(){ this.ribbon && this.ribbons.clear() }],
 	clone: [function(full){
 		return function(res){
 			if(this.ribbons){
@@ -261,32 +259,6 @@ actions.Actions({
 			} 
 		}
 	}],
-
-
-	// XXX should this be an entry point???
-	// 		...IMO this should be more like .fromArray(..) and use .load(..)
-	// 		internally...
-	loadURLs: [
-		function(){
-			return function(){
-				// recycle the viewer if one is not given specifically...
-				var viewer = this.ribbons != null 
-					? this.ribbons.viewer 
-					: viewer
-
-				if(this.ribbons == null){
-					this.ribbons = ribbons.Ribbons(viewer, this.images)
-					// XXX is this correct???
-					this.ribbons.__image_updaters = [this.updateImage.bind(this)]
-
-				} else {
-					this.ribbons.clear()
-					this.ribbons.images = this.images
-				}
-
-				this.reload()
-			}
-		}],
 
 
 	replaceGid: [
@@ -775,7 +747,7 @@ module.Viewer = core.ImageGridFeatures.Feature({
 var journalActions = {
 	clear: null,
 	load: null,
-	loadURLs: null,
+	//loadURLs: null,
 
 	setBaseRibbon: null,
 
@@ -1794,7 +1766,8 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 
 	handlers:[
 		// set scale...
-		['load loadURLs',
+		//['load loadURLs',
+		['load',
 			function(){
 				// prevent this from doing anything while no viewer...
 				if(!this.ribbons || !this.ribbons.viewer || this.ribbons.viewer.length == 0){
@@ -2810,10 +2783,8 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
-// XXX make this browser specific...
-// XXX BUG: loading of current gid from url for some reason is broken, 
-// 		race?... 
 
+// XXX make this browser specific... (???)
 var URLHash = 
 module.URLHash = core.ImageGridFeatures.Feature({
 	title: '',
@@ -2822,25 +2793,24 @@ module.URLHash = core.ImageGridFeatures.Feature({
 	tag: 'ui-url-hash',
 	depends: ['ui'],
 
+	//isApplicable: function(){},
+
 	handlers: [
 		['focusImage',
 			function(res, a){
-				console.log('focus:', a)
 				if(this.current && this.current != ''){
 					location.hash = this.current
 				}
 			}],
-		// XXX this does not work for some reason...
-		// 		...likely because of the slow async load and sync set...
-		['start',
+		['load.pre',
 			function(){
 				var h = location.hash
 				h = h.replace(/^#/, '')
 
-				// for some odd reason this does not work...
-				if(h != ''){
-					console.log('!!!!', h)
-					this.current = h
+				return function(){
+					if(h != '' && this.data.getImageOrder(h) >= 0){
+						this.current = h
+					}
 				}
 			}],
 	],

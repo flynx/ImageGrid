@@ -34,8 +34,6 @@ var LocationActions = actions.Actions({
 	// 	{
 	// 		path: <base-path>,
 	// 		method: <load-method>,
-	// 		// XXX current or hash???
-	// 		// XXX not yet supported...
 	// 		current: <current-gid>,
 	// 	}
 	//
@@ -56,6 +54,11 @@ var LocationActions = actions.Actions({
 		if(b){
 			this.__location.path = b
 		}
+
+		if(this.__location.current == null){
+			this.__location.current = this.current
+		}
+
 		return this.__location
 	},
 	set location(value){
@@ -86,10 +89,17 @@ var LocationActions = actions.Actions({
 			current: cur,
 		}
 
-		this[value.method || 'loadIndex'](path)
+		var res = this[value.method || 'loadIndex'](path)
 
 		// XXX load current...
-		// XXX
+		if(res.then != null){
+			res.then(function(){
+				this.current = cur
+			})
+
+		} else {
+			this.current = cur
+		}
 	},
 })
 

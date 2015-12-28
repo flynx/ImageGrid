@@ -196,6 +196,7 @@ var URLHistoryLocalStorageActions = actions.Actions({
 	config: {
 		'url-history-local-storage-key': 'url-history',
 		'url-history-loaded-local-storage-key': 'url-history-loaded',
+		'url-history-load-current': true,
 	},
 
 	__url_history: null,
@@ -268,6 +269,13 @@ var URLHistoryLocalStorageActions = actions.Actions({
 
 			if(loaded && localStorage[loaded]){
 				var l = JSON.parse(localStorage[loaded])
+
+				if(l.current != null && this.config['url-history-load-current']){
+					this.one('load', function(){
+						this.current = l.current
+					})
+				}
+
 				this.openURLFromHistory(l.path, l.method)
 
 			} else {
@@ -299,7 +307,7 @@ module.URLHistoryLocalStorage = core.ImageGridFeatures.Feature({
 			function(){ this.saveURLHistory() }], 
 
 		// save base_path...
-		['load loadURLs', 
+		['load', 
 			function(){ this.location && this.location.path && this.saveLocation() }],
 
 		// save...

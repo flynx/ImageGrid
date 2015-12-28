@@ -291,14 +291,18 @@ module.ImagesClassPrototype = {
 		//var base_pattern = base ? RegExp('^' + base) : null 
 		var base_pattern = base ? RegExp('^' + quoteRegExp(base)) : null 
 		data.forEach(function(path){
-			var gid = hash('I'+i)
+			// XXX need to normalize path...
+			var p = (base_pattern ? path.replace(base_pattern, './') : path)
+					.replace(/([\/\\])\1+/g, '/')
+			// XXXX
+			var gid = hash('I'+i+':'+p)
+
 			// XXX populate the image doc better...
 			images[gid] = {
 				id: gid,
-				// XXX need to normalize path...
-				path: (base_pattern ? path.replace(base_pattern, './') : path)
-					.replace(/([\/\\])\1+/g, '/'),
+				path: p,
 			}
+
 			// remove only of base path is given and in path...
 			if(base && base_pattern.test(path)){
 				images[gid].base_path = base
