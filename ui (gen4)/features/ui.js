@@ -1022,6 +1022,53 @@ module.Journal = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX add setup/taredown...
+var Clickable = 
+module.Clickable = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-clickable',
+	depends: ['ui'],
+
+	handlers: [
+		// setup click targets...
+		// XXX click only if we did not drag...
+		['updateImage', 
+			function(res, gid){
+				var that = this
+				var img = this.ribbons.getImage(gid)
+
+				// set the clicker only once...
+				if(!img.prop('clickable')){
+					var x, y
+					img
+						.prop('clickable', true)
+						.on('mousedown touchstart', function(){ 
+							x = event.clientX
+							y = event.clientY
+							t = Date.now()
+						})
+						.on('mouseup touchend', function(){ 
+							if(x != null 
+								&& Math.max(
+									Math.abs(x - event.clientX), 
+									Math.abs(y - event.clientY)) < 5){
+								// this will prevent double clicks...
+								x = null
+								y = null
+								that.focusImage(that.ribbons.getElemGID($(this)))
+							}
+						})
+				}
+			}],
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+
 var ConfigLocalStorageActions = actions.Actions({
 	config: {
 		'config-local-storage-key': 'config',
@@ -2590,7 +2637,8 @@ module.AutoRibbon = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-
+// Adds user management of different back-ends for low level ribbon 
+// alignment and placement...
 var RibbonsPlacement = 
 module.RibbonsPlacement = core.ImageGridFeatures.Feature({
 	title: '',
@@ -2639,55 +2687,12 @@ module.RibbonsPlacement = core.ImageGridFeatures.Feature({
 })
 
 
-// XXX add setup/taredown...
-var Clickable = 
-module.Clickable = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-clickable',
-	depends: [
-		'ui',
-	],
-
-	handlers: [
-		// setup click targets...
-		// XXX click only if we did not drag...
-		['updateImage', 
-			function(res, gid){
-				var that = this
-				var img = this.ribbons.getImage(gid)
-
-				// set the clicker only once...
-				if(!img.prop('clickable')){
-					var x, y
-					img
-						.prop('clickable', true)
-						.on('mousedown touchstart', function(){ 
-							x = event.clientX
-							y = event.clientY
-							t = Date.now()
-						})
-						.on('mouseup touchend', function(){ 
-							if(x != null 
-								&& Math.max(
-									Math.abs(x - event.clientX), 
-									Math.abs(y - event.clientY)) < 5){
-								// this will prevent double clicks...
-								x = null
-								y = null
-								that.focusImage(that.ribbons.getElemGID($(this)))
-							}
-						})
-				}
-			}],
-	],
-})
-
-
-// XXX add pinch-zoom...
+//---------------------------------------------------------------------
+// Direct control mode...
 // XXX add vertical scroll...
+// XXX add pinch-zoom...
 // XXX disable drag in single image mode unless image is larger than the screen...
+
 // XXX BUG: current image indicator gets shown in random places...
 // XXX BUG: this does it's work via css left which is both slow and 
 // 		messes up positioning...
@@ -2755,7 +2760,6 @@ module.DirectControljQ = core.ImageGridFeatures.Feature({
 
 // XXX BUG: this does not account for scale when setting the initial drag
 // 		position, resulting in a jump...
-// XXX disable drag in single image mode unless image is larger than the screen...
 // XXX do not use this for production -- GSAp has a bad license...
 var DirectControlGSAP = 
 module.DirectControlGSAP = core.ImageGridFeatures.Feature({
@@ -2801,7 +2805,7 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 // XXX console / log / status bar
-// XXX title bar
+// XXX title bar (???)
 
 
 
