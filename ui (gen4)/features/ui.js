@@ -2781,7 +2781,6 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 
 
 
-
 //---------------------------------------------------------------------
 
 // XXX make this browser specific... (???)
@@ -2793,7 +2792,7 @@ module.URLHash = core.ImageGridFeatures.Feature({
 	tag: 'ui-url-hash',
 	depends: ['ui'],
 
-	//isApplicable: function(){},
+	isApplicable: function(){ return this.runtime == 'browser' },
 
 	handlers: [
 		['focusImage',

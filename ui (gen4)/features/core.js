@@ -21,6 +21,30 @@ var ImageGridFeatures =
 module.ImageGridFeatures = Object.create(features.FeatureSet)
 
 
+// setup exit...
+if(typeof(process) != 'undefined'){
+	// nw.js...
+	try{
+		// this will fail if we're not in nw.js...
+		requirejs('nw.gui')
+
+		ImageGridFeatures.runtime = 'nw'
+
+	// pure node.js...
+	} catch(e) {
+		ImageGridFeatures.runtime = 'node'
+	}
+
+// browser...
+} else if(typeof('window') != 'undefined'){
+	ImageGridFeatures.runtime = 'browser'
+
+// unknown...
+} else {
+	ImageGridFeatures.runtime = 'unknown'
+}
+
+
 
 /*********************************************************************/
 
@@ -42,60 +66,52 @@ var LifeCycleActions = actions.Actions({
 				return
 			}
 
-			// setup exit...
-			if(typeof(process) != 'undefined'){
-				// nw.js...
-				try{
-					this.runtime = 'nw'
+			// set the runtime...
+			var runtime = this.runtime = ImageGridFeatures.runtime
 
-					// this will fail if we're not in nw.js...
-					var gui = requirejs('nw.gui')
+			// nw.js...
+			if(runtime == 'nw'){
+				var gui = requirejs('nw.gui')
 
-					// this handles both reload and close...
-					$(window).on('beforeunload', stop)
-
-					// NOTE: we are using both events as some of them do not
-					// 		get triggered in specific conditions and some do,
-					// 		for example, this gets triggered when the window's
-					// 		'X' is clicked while does not on reload...
-					this.__nw_stop_handler = function(){
-						var w = this
-						try{
-							that
-								// wait till ALL the handlers finish before 
-								// exiting...
-								.on('stop.post', function(){
-									w.close(true)
-								})
-								.stop()
-
-						// in case something breaks exit...
-						// XXX not sure if this is correct...
-						} catch(e){
-							this.close(true)
-						}
-					}
-					gui.Window.get().on('close', this.__nw_stop_handler)
-
-
-				// pure node.js...
-				} catch(e) {
-					this.runtime = 'node'
-
-					process.on('exit', stop)
-				}
-
-			// browser...
-			} else if(typeof('window') != 'undefined'){
-				this.runtime = 'browser'
-
+				// this handles both reload and close...
 				$(window).on('beforeunload', stop)
 
-			// unknown...
-			} else {
-				this.runtime = 'unknown'
-			}
+				// NOTE: we are using both events as some of them do not
+				// 		get triggered in specific conditions and some do,
+				// 		for example, this gets triggered when the window's
+				// 		'X' is clicked while does not on reload...
+				this.__nw_stop_handler = function(){
+					var w = this
+					try{
+						that
+							// wait till ALL the handlers finish before 
+							// exiting...
+							.on('stop.post', function(){
+								w.close(true)
+							})
+							.stop()
 
+					// in case something breaks exit...
+					// XXX not sure if this is correct...
+					} catch(e){
+						this.close(true)
+					}
+				}
+				gui.Window.get().on('close', this.__nw_stop_handler)
+
+
+			// node.js...
+			} else if(runtime == 'node'){
+				process.on('exit', stop)
+
+			// browser...
+			} else if(runtime == 'browser'){
+				$(window).on('beforeunload', stop)
+
+			// other...
+			} else {
+				// XXX
+			}
 		}],
 	// unbind events...
 	stop: ['- System/', 

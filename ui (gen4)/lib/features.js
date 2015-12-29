@@ -432,6 +432,7 @@ module.FeatureSet = {
 		// clasify features...
 		var unapplicable = []
 		var conflicts = {}
+		var that = this
 		lst = lst.filter(function(n, i){
 			var e = that[n]
 			if(e == null){
@@ -439,7 +440,7 @@ module.FeatureSet = {
 			}
 
 			// check applicability...
-			if(!e.isApplicable(obj)){
+			if(!e.isApplicable.call(that, obj)){
 				unapplicable.push(n)
 				return false
 			}
