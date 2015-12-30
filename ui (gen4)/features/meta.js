@@ -90,6 +90,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	// 		not sure why...
 	// 		...seems to be related to scaling
 	//'ui-direct-control-gsap',
+	'ui-indirect-control',
 
 	// experimental and optional features...
 	//'auto-single-image',

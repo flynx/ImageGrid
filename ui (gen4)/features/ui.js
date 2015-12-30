@@ -2780,10 +2780,82 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 })
 
 
+// XXX load state from config...
+// XXX sometimes this makes the indicator hang for longer than needed...
+// XXX try direct control with hammer.js
+// XXX use this with hammer.js taps...
+var IndirectControl = 
+module.IndirectControl = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-indirect-control',
+	// XXX is this correct???
+	exclusive: ['ui-direct-control'],
+	depends: ['ui'],
+
+	config: {
+	},
+
+	actions: actions.Actions({
+		toggleSwipeHandling:['Interface/Toggle indirect control swipe handling',
+			Toggler(null,
+				function(_, state){
+
+					if(state == null){
+						return this.__touch_handler || 'none'
+
+					// on...
+					} else if(state == 'handling-swipes'){
+						var that = this
+						var viewer = this.ribbons.viewer
+
+						// prevent multiple handlers...
+						if(this.__touch_handler){
+							return
+						}
+
+						viewer.hammer()
+
+						var h = this.__touch_handler = viewer.data('hammer')
+						h.get('swipe').set({direction: Hammer.DIRECTION_ALL})
+
+						viewer
+							.on('swipeleft', function(){ that.nextImage() })
+							.on('swiperight', function(){ that.prevImage() })
+							.on('swipeup', function(){ that.shiftImageUp() })
+							.on('swipedown', function(){ that.shiftImageDown() })
+
+					// off...
+					} else {
+						this.ribbons.viewer
+							.off('swipeleft')
+							.off('swiperight')
+							.off('swipeup')
+							.off('swipedown')
+							.removeData('hammer')
+						delete this.__touch_handler
+					}
+
+				},
+				'handling-swipes')],
+	}),
+
+	handlers: [
+		['load', 
+			function(){ a.toggleSwipeHandling('on') }],
+		['stop', 
+			function(){ a.toggleSwipeHandling('off') }],
+	],
+})
+
+
 
 //---------------------------------------------------------------------
 
 // XXX make this work for external links in a stable manner...
+// 		...a bit unpredictable when working in combination with history
+// 		feature -- need to stop them from competing...
 var URLHash = 
 module.URLHash = core.ImageGridFeatures.Feature({
 	title: 'Handle URL hash',
