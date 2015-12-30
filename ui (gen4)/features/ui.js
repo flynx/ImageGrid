@@ -2783,18 +2783,37 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-// XXX make this browser specific... (???)
+// XXX make this work for external links in a stable manner...
 var URLHash = 
 module.URLHash = core.ImageGridFeatures.Feature({
-	title: '',
+	title: 'Handle URL hash',
 	doc: '',
 
 	tag: 'ui-url-hash',
 	depends: ['ui'],
 
+	//isApplicable: function(){ 
+	//	return typeof(location) != 'undefined' && location.hash != null },
 	isApplicable: function(){ return this.runtime == 'browser' },
 
 	handlers: [
+		// hanlde window.onhashchange event...
+		['start',
+			function(){
+				var that = this
+				var handler = this.__hashchange_handler = function(){
+					var h = location.hash
+					h = h.replace(/^#/, '')
+					that.current = h
+				}
+				$(window).on('hashchange', handler)
+			}],
+		['stop',
+			function(){
+				this.__hashchange_handler 
+					&& $(window).on('hashchange', this.__hashchange_handler)
+			}],
+		// store/restore hash when we focus images...
 		['focusImage',
 			function(res, a){
 				if(this.current && this.current != ''){
