@@ -2816,7 +2816,10 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 				function(_, state){
 
 					if(state == null){
-						return this.__touch_handler || 'none'
+						return (this.ribbons 
+								&& this.ribbons.viewer 
+								&& this.ribbons.viewer.data('hammer')) 
+							|| 'none'
 
 					// on...
 					} else if(state == 'handling-swipes'){
@@ -2824,13 +2827,13 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 						var viewer = this.ribbons.viewer
 
 						// prevent multiple handlers...
-						if(this.__touch_handler){
+						if(viewer.data('hammer') != null){
 							return
 						}
 
 						viewer.hammer()
 
-						var h = this.__touch_handler = viewer.data('hammer')
+						var h = viewer.data('hammer')
 						h.get('swipe').set({direction: Hammer.DIRECTION_ALL})
 
 						viewer
@@ -2847,7 +2850,6 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 							.off('swipeup')
 							.off('swipedown')
 							.removeData('hammer')
-						delete this.__touch_handler
 					}
 
 				},

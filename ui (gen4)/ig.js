@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**********************************************************************
 * 
+* ImageGrid.CLI entry point...
 *
 *
 **********************************************************************/
@@ -21,6 +22,7 @@ require = requirejs
 
 //---------------------------------------------------------------------
 
+// XXX need to automate this...
 var core = require('features/core')
 var base = require('features/base')
 var location = require('features/location')
@@ -43,14 +45,12 @@ module.ImageGridFeatures =
 	core.ImageGridFeatures
 
 
-
 //---------------------------------------------------------------------
 
 // setup actions and start...
 ImageGridFeatures
 	.setup(['viewer-commandline'])
 	.start()
-
 
 
 

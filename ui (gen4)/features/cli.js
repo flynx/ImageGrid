@@ -43,8 +43,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 	depends: ['base'],
 
 	isApplicable: function(){ 
-		return this.runtime == 'node' || this.runtime == 'nw' 
-	},
+		return this.runtime == 'node' || this.runtime == 'nw' },
 
 	handlers: [
 		['start',
@@ -103,9 +102,6 @@ module.CLI = core.ImageGridFeatures.Feature({
 			}]
 	],
 })
-
-
-
 
 
 
