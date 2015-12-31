@@ -8,6 +8,8 @@
 
 define(function(require){ var module = {}
 
+var args2array = require('lib/util').args2array
+var toggler = require('lib/toggler')
 var object = require('lib/object')
 
 
@@ -126,14 +128,6 @@ var object = require('lib/object')
 //
 /*********************************************************************/
 // helpers...
-
-// XXX
-if(typeof(args2array) != 'function'){
-	function args2array(args){
-		return [].slice.call(args)
-	}
-}
-
 
 
 /*********************************************************************/
@@ -440,7 +434,7 @@ module.MetaActions = {
 				|| MetaActions.getHandlers)
 			.call(this, name)
 
-		if(handlers.slice(-1)[0] instanceof Toggler){
+		if(handlers.slice(-1)[0] instanceof toggler.Toggler){
 			return true
 		}
 

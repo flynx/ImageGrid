@@ -295,7 +295,9 @@ module.URLHistoryLocalStorage = core.ImageGridFeatures.Feature({
 		'url-history',
 	],
 
-	isApplicable: function(){ return localStorage != null },
+	isApplicable: function(){ 
+		return typeof(localStorage) != 'undefined' 
+			&& localStorage != null },
 
 	actions: URLHistoryLocalStorageActions,
 

@@ -8,6 +8,7 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+args2array = require('lib/util').args2array
 actions = require('lib/actions')
 
 
@@ -328,11 +329,12 @@ module.FeatureSet = {
 					var e = that[n]
 
 					if(!e){
-						console.warn('%s: feature is not loaded.', n)
-					}
+						//console.warn('%s: feature is not loaded.', n)
+						// XXX should we break here???
+						throw (n + ': feature is not loaded.')
 
 					// no dependencies...
-					if(e.depends == null || e.depends.length == 0){
+					} else if(e.depends == null || e.depends.length == 0){
 						res.push(n)
 
 					} else {
@@ -349,7 +351,6 @@ module.FeatureSet = {
 						res = res.concat(deps)
 						res.push(n)
 					}
-
 				})
 				lst = res
 				depth -= 1

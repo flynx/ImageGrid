@@ -11,6 +11,81 @@ define(function(require){ var module = {}
 
 /*********************************************************************/
 
+String.prototype.capitalize = function(){
+	return this[0].toUpperCase() + this.slice(1)
+}
+
+
+// XXX not sure if this has to be a utility or a method...
+Object.get = function(obj, name, dfl){
+	var val = obj[name]
+	if(val === undefined && dfl != null){
+		return dfl
+	}
+	return val
+}
+
+
+// Compact a sparse array...
+//
+// NOTE: this will not compact in-place.
+Array.prototype.compact = function(){
+	return this.filter(function(){ return true })
+}
+
+
+// return an array with duplicate elements removed...
+//
+Array.prototype.unique = function(){
+	return this.filter(function(e, i, a){ return a.indexOf(e) == i })
+}
+
+
+// Compare two arrays...
+//
+Array.prototype.cmp = function(other){
+	if(this === other){
+		return true
+	}
+	if(this.length != other.length){
+		return false
+	}
+	for(var i=0; i<this.length; i++){
+		if(this[i] != other[i]){
+			return false
+		}
+	}
+	return true
+}
+
+// Compare two Arrays as sets...
+//
+// This will ignore order
+Array.prototype.setCmp = function(other){
+	return this === other 
+		|| this.unique().sort().cmp(other.unique().sort())
+}
+
+
+
+// like .length but for sparse arrays will return the element count...
+// XXX make this a prop...
+/*
+Array.prototype.len = function(){
+	//return this.compact().length
+	return Object.keys(this).length
+}
+*/
+
+Object.defineProperty(Array.prototype, 'len', {
+	get : function () {
+		return Object.keys(this).length
+	},
+	set : function(val){},
+});
+
+
+
 // convert JS arguments to Array...
 var args2array =
 module.args2array =
@@ -78,45 +153,46 @@ function(path){
 /*********************************************************************/
 
 // XXX experiment
-jQuery.fn._drag = function(){
-	var dragging = false
-	var s, 
-		px, py
+if(typeof(jQuery) != typeof(undefined)){
+	jQuery.fn._drag = function(){
+		var dragging = false
+		var s, 
+			px, py
 
-	var elem = $(this)
-		.on('mousedown touchstart', function(evt){
-			dragging = true
-			px = evt.clientX
-			px = evt.clientY
+		var elem = $(this)
+			.on('mousedown touchstart', function(evt){
+				dragging = true
+				px = evt.clientX
+				px = evt.clientY
 
-			s = elem.rscale()
-		})
-		.on('mousemove touchmove', function(evt){
-			if(!dragging){
-				return
-			}
+				s = elem.rscale()
+			})
+			.on('mousemove touchmove', function(evt){
+				if(!dragging){
+					return
+				}
 
-			var x = evt.clientX 
-			var dx = px - x
-			px = x
+				var x = evt.clientX 
+				var dx = px - x
+				px = x
 
-			var y = evt.clientY 
-			var dy = py - y
-			py = y
+				var y = evt.clientY 
+				var dy = py - y
+				py = y
 
-			elem
-				.velocity('stop')
-				.velocity({
-					translateX: '-=' + (dx / s),
-					translateY: '-=' + (dy / s),
-				}, 0)
-		})
-		.on('mouseup touchend', function(evt){
-			dragging = false
-			elem.velocity('stop')
-		})
+				elem
+					.velocity('stop')
+					.velocity({
+						translateX: '-=' + (dx / s),
+						translateY: '-=' + (dy / s),
+					}, 0)
+			})
+			.on('mouseup touchend', function(evt){
+				dragging = false
+				elem.velocity('stop')
+			})
+	}
 }
-
 
 
 /**********************************************************************

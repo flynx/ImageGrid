@@ -10,7 +10,7 @@ define(function(require){ var module = {}
 
 // XXX this should not be imported!!!
 // 		...something wrong with requirejs(..)
-if(window.nodejs != null){
+if(typeof(process) != 'undefined'){
 	var fse = requirejs('fs-extra')
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
@@ -314,7 +314,8 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 
 	actions: FileSystemLoaderActions,
 
-	isApplicable: function(){ return window.nodejs != null },
+	isApplicable: function(){ 
+		return this.runtime == 'node' || this.runtime == 'nw' },
 })
 
 
@@ -746,7 +747,8 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 
 	actions: FileSystemWriterActions,
 
-	isApplicable: function(){ return window.nodejs != null },
+	isApplicable: function(){ 
+		return this.runtime == 'node' || this.runtime == 'nw' },
 
 	// monitor changes...
 	// XXX should we use .load(..) to trigger changes instead of .loadURLs(..)???

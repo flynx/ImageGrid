@@ -8,12 +8,12 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
 
 var data = require('data')
 var images = require('images')
-var ribbons = require('ribbons')
 
 var core = require('features/core')
 var base = require('features/base')
@@ -32,7 +32,7 @@ var base = require('features/base')
 // 		Array
 //
 function makeTagTogglerAction(tag){
-	var toggler = function(target, action){
+	var t = function(target, action){
 		if(target == '?' || target == 'on' || target == 'off'){
 			var x = action
 			action = target
@@ -86,16 +86,16 @@ function makeTagTogglerAction(tag){
 	}
 
 	// cheating a bit...
-	toggler.__proto__ = Toggler.prototype
-	toggler.constructor = Toggler
+	t.__proto__ = toggler.Toggler.prototype
+	t.constructor = toggler.Toggler
 
-	return toggler
+	return t
 }
 /* XXX this toggler is not fully compatible with the Toggler interface
  * 		thus, we either need to update the Toggler to suppor multiple 
  * 		values or keep this...
 function makeTagTogglerAction(tag){
-	return Toggler(null,
+	return toggler.Toggler(null,
 		function(target, action){
 			// get the target...
 			target = target || 'current'

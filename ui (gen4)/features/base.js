@@ -11,6 +11,7 @@ define(function(require){ var module = {}
 
 var actions = require('lib/actions')
 var features = require('lib/features')
+var toggler = require('lib/toggler')
 
 var data = require('data')
 var images = require('images')
@@ -57,7 +58,7 @@ function(direction, dfl_tag){
 var makeConfigToggler = 
 module.makeConfigToggler = 
 function(attr, states, callback){
-	return Toggler(null,
+	return toggler.Toggler(null,
 		function(_, action){
 			var lst = states.constructor === Array ? states : states.call(this)
 

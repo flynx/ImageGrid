@@ -1,6 +1,10 @@
 /**********************************************************************
 *
+*
+*
 **********************************************************************/
+
+define(function(require){ var module = {}
 
 
 
@@ -124,7 +128,9 @@
 // 		later is enough, but as strict mode is not stable enough (sometimes
 // 		works and sometimes does not), we can not reliably pass the element
 // 		via 'this'.
-function Toggler(elem, state_accessor, states, callback_a, callback_b){
+var Toggler =
+module.Toggler =
+function(elem, state_accessor, states, callback_a, callback_b){
 	// normalize states...
 	var states_getter = states
 	var state_set = typeof(states) == typeof('str') ? ['none', states] : states
@@ -321,6 +327,8 @@ Toggler.prototype.__proto__ = Function.prototype
 
 // XXX this should be drop-in compatible with createCSSClassToggler(..)
 // 		test and replace...
+var CSSClassToggler =
+module.CSSClassToggler =
 function CSSClassToggler(elem, classes, callback_a, callback_b){
 	var classes_getter = classes
 	var classes_set = classes
@@ -400,3 +408,4 @@ CSSClassToggler.prototype.__proto__ = Toggler.prototype
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
+return module })

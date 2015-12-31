@@ -8,6 +8,8 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var toggler = require('lib/toggler')
+
 
 /*********************************************************************/
 
@@ -36,7 +38,7 @@ module.exitFullscreen = function() {
 
 
 window.toggleFullscreenMode = 
-module.toggleFullscreenMode = CSSClassToggler(
+module.toggleFullscreenMode = toggler.CSSClassToggler(
 		document.body, 
 		'.full-screen-mode',
 		function(action){

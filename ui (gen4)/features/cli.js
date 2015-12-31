@@ -13,7 +13,6 @@ var features = require('lib/features')
 
 var data = require('data')
 var images = require('images')
-var ribbons = require('ribbons')
 
 var core = require('features/core')
 var base = require('features/base')
@@ -44,15 +43,31 @@ module.CLI = core.ImageGridFeatures.Feature({
 				}
 
 				// XXX for some reason this always contains --help in nw...
-				console.log('>>>>', argv)
+				//console.log('>>>>', argv)
+
 
 				var cli = requirejs('commander')
-
-				cli
 					.version('0.0.1')
-					.usage('COMMAND OPTION ..')
-					.command('index PATH', 'build and index of path')
+					.usage('[command] [options] ..')
+					.option('--features', 'list loaded features')
+					.command('index [path]', 'build and index of path')
 					.parse(argv)
+
+
+				// list features...
+				// XXX make this a core action...
+				if(cli.features){
+					this.features.excluded.length > 0 
+						&& console.warn('Features excluded (%d):\n   ',
+							this.features.excluded.length, 
+							this.features.excluded.join('\n    '))
+					console.log('Features not applicable (%d):\n   ', 
+						this.features.unapplicable.length, 
+						this.features.unapplicable.join('\n    '))
+					console.log('Features loaded (%d):\n   ',
+						this.features.features.length, 
+						this.features.features.join('\n    '))
+				}
 			}]
 	],
 })

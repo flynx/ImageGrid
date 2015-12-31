@@ -10,9 +10,10 @@ var gui = require('nw.gui')
 
 define(function(require){ var module = {}
 
+var toggler = require('lib/toggler')
+
 var browser = require('browser')
 //var DEBUG = DEBUG != null ? DEBUG : true
-
 
 var walk = require('lib/widget/browse-walk')
 
@@ -24,7 +25,7 @@ var walk = require('lib/widget/browse-walk')
 window.listDirBrowser = walk.listDirBrowser
 
 window.toggleFullscreenMode = 
-module.toggleFullscreenMode = CSSClassToggler(
+module.toggleFullscreenMode = toggler.CSSClassToggler(
 		document.body, 
 		'.full-screen-mode',
 		function(action){

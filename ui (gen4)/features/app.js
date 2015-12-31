@@ -168,7 +168,7 @@ module.AppControl = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'app-control',
+	tag: 'ui-app-control',
 	depends: [
 		'ui',
 	],
@@ -179,7 +179,7 @@ module.AppControl = core.ImageGridFeatures.Feature({
 	// 	- chrome app
 	// 	- nw
 	// 	- mobile
-	isApplicable: function(){ return window.nodejs != null },
+	isApplicable: function(){ return this.runtime == 'nw' },
 
 	// XXX show main window...
 	handlers: [

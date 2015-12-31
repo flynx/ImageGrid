@@ -25,10 +25,24 @@ var core = require('features/core')
 // 		- editor			- editing capability
 //
 
-core.ImageGridFeatures.Feature('viewer-testing', [
+core.ImageGridFeatures.Feature('viewer-commandline', [
 	'lifecycle',
 	'base-full',
 	'commandline',
+
+	'image-marks',
+	'image-bookmarks',
+
+	'fs-loader',
+	'fs-writer',
+])
+
+
+
+
+core.ImageGridFeatures.Feature('viewer-testing', [
+	'viewer-commandline',
+
 	'ui',
 
 	'ui-ribbons-placement',
@@ -58,15 +72,11 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-single-image-view-local-storage',
 
 
-	'fs-loader',
-		'ui-fs-loader',
-		'fs-url-history',
-		'ui-fs-url-history',
-
-	'fs-writer',
-		'ui-fs-writer',
-
-	'app-control',
+	// fs...
+	'ui-fs-loader',
+	'fs-url-history',
+	'ui-fs-url-history',
+	'ui-fs-writer',
 
 	// chrome...
 	'ui-animation',
@@ -97,6 +107,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	//'auto-single-image',
 	//'auto-ribbon',
 	
+	'ui-app-control',
 
 	// XXX not yet fully tested...
 	'system-journal',

@@ -20,8 +20,9 @@ define(function(require){ var module = {}
 
 //var promise = require('promise')
 
-var keyboard = require('../keyboard')
-var object = require('../object')
+var toggler = require('lib/toggler')
+var keyboard = require('lib/keyboard')
+var object = require('lib/object')
 var widget = require('./widget')
 
 
@@ -1229,7 +1230,7 @@ var BrowserPrototype = {
 	// 		on filter field)...
 	// NOTE: this uses .filter(..) for actual filtering...
 	// NOTE: on state change this will return this...
-	toggleFilter: CSSClassToggler(
+	toggleFilter: toggler.CSSClassToggler(
 		function(){ return this.dom }, 
 		'filtering',
 		// do not enter filter mode if filtering is disabled...

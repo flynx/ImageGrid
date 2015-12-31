@@ -19,6 +19,7 @@ var object = require('lib/object')
 var data = require('data')
 var images = require('images')
 
+
 var IMAGE = '.image:not(.clone)'
 var RIBBON = '.ribbon:not(.clone)'
 

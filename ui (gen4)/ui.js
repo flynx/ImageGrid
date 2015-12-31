@@ -46,9 +46,6 @@ var ribbons = require('ribbons')
 // XXX 
 var testing = require('testing')
 
-
-var client = require('client')
-
 var viewer = require('viewer')
 
 //var promise = require('promise')

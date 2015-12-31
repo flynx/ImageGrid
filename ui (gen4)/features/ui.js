@@ -8,6 +8,7 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -288,7 +289,7 @@ actions.Actions({
 	// General UI stuff...
 	// NOTE: this is applicable to all uses...
 	toggleTheme: ['Interface/Toggle viewer theme', 
-		CSSClassToggler(
+		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config.themes },
 			function(state){ this.config.theme = state }) ],
@@ -1132,7 +1133,7 @@ var ConfigLocalStorageActions = actions.Actions({
 		}],
 
 	toggleAutoStoreConfig: ['File/Store configuration',
-		Toggler(null, function(_, state){ 
+		toggler.Toggler(null, function(_, state){ 
 				if(state == null){
 					return this.__auto_save_config_timer || 'none'
 
@@ -1188,7 +1189,9 @@ module.ConfigLocalStorage = core.ImageGridFeatures.Feature({
 		'ui',
 	],
 
-	isApplicable: function(){ return localStorage != null },
+	isApplicable: function(){ 
+		return typeof(localStorage) != 'undefined' 
+			&& localStorage != null },
 
 	actions: ConfigLocalStorageActions,
 
@@ -1623,7 +1626,7 @@ var SingleImageActions = actions.Actions({
 
 	toggleSingleImage: ['Interface/Toggle single image view', 
 		// XXX this is wrong!!!
-		CSSClassToggler(
+		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			'single-image-mode') ],
 })
@@ -2463,7 +2466,7 @@ module.PassiveBaseRibbonIndicator = core.ImageGridFeatures.Feature({
 
 	actions: actions.Actions({
 		togglePassiveBaseRibbonIndicator: ['Interface/Toggle passive base ribbon indicator',
-			CSSClassToggler(
+			toggler.CSSClassToggler(
 				function(){ return this.ribbons.viewer }, 
 				'show-passive-base-ribbon-indicator',
 				function(state){ 
@@ -2639,7 +2642,7 @@ module.RibbonsPlacement = core.ImageGridFeatures.Feature({
 
 	actions: actions.Actions({
 		toggleRibbonsPlacementMode: ['- Interface/',
-			Toggler(null, function(_, state){ 
+			toggler.Toggler(null, function(_, state){ 
 					if(state == null){
 						return this.config['ui-ribbons-placement-mode']
 					}
@@ -2809,7 +2812,7 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 
 	actions: actions.Actions({
 		toggleSwipeHandling:['Interface/Toggle indirect control swipe handling',
-			Toggler(null,
+			toggler.Toggler(null,
 				function(_, state){
 
 					if(state == null){

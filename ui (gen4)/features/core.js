@@ -23,20 +23,20 @@ module.ImageGridFeatures = Object.create(features.FeatureSet)
 
 // setup exit...
 if(typeof(process) != 'undefined'){
-	// nw.js...
-	try{
-		// this will fail if we're not in nw.js...
-		requirejs('nw.gui')
 
-		ImageGridFeatures.runtime = 'nw'
-
-	// pure node.js...
-	} catch(e) {
-		ImageGridFeatures.runtime = 'node'
-	}
+	// NOTE: if this passes it is async while when fails it's sync, this
+	// 		is why we set .runtime to 'nw' optimistically in advance so 
+	// 		as not to wait if all goes well and set it to 'node' in the 
+	// 		callback that if fails will fail right away...
+	ImageGridFeatures.runtime = 'nw'
+	requirejs(['nw.gui'], 
+		// OK: nw.js
+		function(){}, 
+		// ERR: pure node.js...
+		function(){ ImageGridFeatures.runtime = 'node' })
 
 // browser...
-} else if(typeof('window') != 'undefined'){
+} else if(typeof(window) != 'undefined'){
 	ImageGridFeatures.runtime = 'browser'
 
 // unknown...
@@ -130,9 +130,11 @@ var LifeCycleActions = actions.Actions({
 			}
 
 			// node...
+			/* XXX there's no process.off(...)
 			if(this.__stop_handler && this.runtime == 'node'){
 				process.off('exit', this.__stop_handler)
 			}
+			*/
 
 			delete this.__stop_handler
 
