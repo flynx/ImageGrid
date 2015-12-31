@@ -36,6 +36,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 	handlers: [
 		['start',
 			function(){
+				// get the arguments...
 				if(this.runtime == 'nw'){
 					var argv = requirejs('nw.gui').App.argv
 
@@ -50,6 +51,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 
 				var cli = requirejs('commander')
 				cli
+					// XXX get the version from config...
 					.version('0.0.1')
 					//.usage('[command] [options] ..')
 
@@ -68,13 +70,18 @@ module.CLI = core.ImageGridFeatures.Feature({
 				// list features...
 				// XXX make this a core action... (???)
 				if(cli.listFeatures){
+					// excluded...
 					this.features.excluded.length > 0 
 						&& console.warn('Features excluded (%d):\n   ',
 							this.features.excluded.length, 
 							this.features.excluded.join('\n    '))
+
+					// not applicable...
 					console.log('Features not applicable (%d):\n   ', 
 						this.features.unapplicable.length, 
 						this.features.unapplicable.join('\n    '))
+
+					// loaded...
 					console.log('Features loaded (%d):\n   ',
 						this.features.features.length, 
 						this.features.features.join('\n    '))
