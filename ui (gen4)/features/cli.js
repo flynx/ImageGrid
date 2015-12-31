@@ -38,25 +38,36 @@ module.CLI = core.ImageGridFeatures.Feature({
 			function(){
 				if(this.runtime == 'nw'){
 					var argv = requirejs('nw.gui').App.argv
+
+					// XXX 
+					console.log('>>>>', argv)
+
 				} else if(this.runtime == 'node'){
 					var argv = process.argv
 				}
 
-				// XXX for some reason this always contains --help in nw...
-				//console.log('>>>>', argv)
 
 
 				var cli = requirejs('commander')
+				cli
 					.version('0.0.1')
-					.usage('[command] [options] ..')
-					.option('--features', 'list loaded features')
-					.command('index [path]', 'build and index of path')
+					//.usage('[command] [options] ..')
+
+					.option('--list-features', 'list loaded features')
+
+					//.command('index [path]', 'build an index of path')
+
+					.arguments('<action> [args]')
+					.action(function(action, args){
+						console.log('>>>>', action, args)
+					})
+
 					.parse(argv)
 
 
 				// list features...
-				// XXX make this a core action...
-				if(cli.features){
+				// XXX make this a core action... (???)
+				if(cli.listFeatures){
 					this.features.excluded.length > 0 
 						&& console.warn('Features excluded (%d):\n   ',
 							this.features.excluded.length, 

@@ -262,20 +262,19 @@ $(function(){
 	m = Object.keys(m).filter(function(e){ return m[e] != null })
 	console.log('Modules (%d):', m.length, m)
 
-	// XXX stub action set -- this needs to be auto-generated...
-	window.a = actions.Actions()
-
-	// used switch experimental actions on (set to true) or off (unset or false)...
-	//a.experimental = true
 
 	// setup actions...
-	viewer.ImageGridFeatures
-		.setup(a, [
+	window.a = viewer.ImageGridFeatures
+		.setup([
 			'viewer-testing',
 
 			// XXX this is not for production...
 			'experiments',
 		])
+
+
+	// used switch experimental actions on (set to true) or off (unset or false)...
+	//a.experimental = true
 
 
 	// report stuff...

@@ -46,12 +46,9 @@ module.ImageGridFeatures =
 
 //---------------------------------------------------------------------
 
-// XXX stub action set -- this needs to be auto-generated...
-var a = actions.Actions()
-
-// setup actions...
+// setup actions and start...
 ImageGridFeatures
-	.setup(a, ['viewer-commandline'])
+	.setup(['viewer-commandline'])
 	.start()
 
 

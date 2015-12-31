@@ -9,6 +9,7 @@ define(function(require){ var module = {}
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 args2array = require('lib/util').args2array
+
 actions = require('lib/actions')
 
 
@@ -519,7 +520,21 @@ module.FeatureSet = {
 		}
 	},
 
+	//
+	//	.setup(<actions>, [<feature>, ...])
+	//		-> <actions>
+	//
+	//	.setup([<feature>, ...])
+	//		-> <actions>
+	//
 	setup: function(obj, lst){
+		// if no explicit object is given, just the list...
+		if(lst == null){
+			lst = obj
+			obj = null
+		}
+
+		obj = obj || actions.Actions()
 		lst = lst.constructor !== Array ? [lst] : lst
 		var features = this.buildFeatureList(obj, lst)
 		lst = features.features
