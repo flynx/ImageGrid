@@ -20,6 +20,19 @@ var base = require('features/base')
 
 
 /*********************************************************************/
+// XXX what we need here is:
+// 		- base introspection
+// 			- list features
+// 			- list actions
+// 			- list action scripts / commands
+// 		- call action
+// 		- call action script (a-la git commands)
+//
+// XXX the main functionality:
+// 		- make previews
+// 		- make index
+// 		- merge
+// 		- clone
 
 var CLI = 
 module.CLI = core.ImageGridFeatures.Feature({
@@ -61,6 +74,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 
 					.arguments('<action> [args]')
 					.action(function(action, args){
+						// XXX
 						console.log('>>>>', action, args)
 					})
 
