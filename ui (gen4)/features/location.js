@@ -55,9 +55,7 @@ var LocationActions = actions.Actions({
 			this.__location.path = b
 		}
 
-		if(this.__location.current == null){
-			this.__location.current = this.current
-		}
+		this.__location.current = this.current
 
 		return this.__location
 	},
