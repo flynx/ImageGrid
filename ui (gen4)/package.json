@@ -17,9 +17,10 @@
     "page-cache": true
   },
   "dependencies": {
+    "commander": "^2.9.0",
     "flickrapi": "^0.3.28",
-    "fs-walk": "0.0.1",
     "fs-extra": "*",
+    "fs-walk": "0.0.1",
     "glob": "^4.0.6",
     "guarantee-events": "^1.0.0",
     "promise": "^6.0.1",

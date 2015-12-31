@@ -28,6 +28,7 @@ var core = require('features/core')
 core.ImageGridFeatures.Feature('viewer-testing', [
 	'lifecycle',
 	'base-full',
+	'commandline',
 	'ui',
 
 	'ui-ribbons-placement',

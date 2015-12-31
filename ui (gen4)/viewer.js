@@ -39,6 +39,7 @@ var experimental = require('features/experimental')
 
 if(window.nodejs != null){
 	var filesystem = require('features/filesystem')
+	var cli = require('features/cli')
 }
 
 
