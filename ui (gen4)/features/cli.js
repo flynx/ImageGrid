@@ -69,7 +69,34 @@ module.CLI = core.ImageGridFeatures.Feature({
 					.version('0.0.1')
 					//.usage('[command] [options] ..')
 
-					.option('--list-features', 'list loaded features')
+					// list features...
+					// XXX make this a core action... (???)
+					.option('--list-features', 'list loaded features', function(){
+						// excluded...
+						this.features.excluded.length > 0 
+							&& console.warn('Features excluded (%d):\n   ',
+								this.features.excluded.length, 
+								this.features.excluded.join('\n    '))
+
+						// not applicable...
+						console.log('Features not applicable (%d):\n   ', 
+							this.features.unapplicable.length, 
+							this.features.unapplicable.join('\n    '))
+
+						// loaded...
+						console.log('Features loaded (%d):\n   ',
+							this.features.features.length, 
+							this.features.features.join('\n    '))
+					})
+
+					// list actions...
+					// XXX this is a bit pointless as single actions are
+					// 		meaningless when no state is stored...
+					.option('--list-actions', 'list loaded actions', function(){
+						console.log('Actions loaded (%d):\n   ', 
+							this.length, 
+							Object.keys(this.getDoc()).join('\n    '))
+					})
 
 					//.command('index [path]', 'build an index of path')
 
@@ -80,27 +107,6 @@ module.CLI = core.ImageGridFeatures.Feature({
 					})
 
 					.parse(argv)
-
-
-				// list features...
-				// XXX make this a core action... (???)
-				if(cli.listFeatures){
-					// excluded...
-					this.features.excluded.length > 0 
-						&& console.warn('Features excluded (%d):\n   ',
-							this.features.excluded.length, 
-							this.features.excluded.join('\n    '))
-
-					// not applicable...
-					console.log('Features not applicable (%d):\n   ', 
-						this.features.unapplicable.length, 
-						this.features.unapplicable.join('\n    '))
-
-					// loaded...
-					console.log('Features loaded (%d):\n   ',
-						this.features.features.length, 
-						this.features.features.join('\n    '))
-				}
 			}]
 	],
 })
