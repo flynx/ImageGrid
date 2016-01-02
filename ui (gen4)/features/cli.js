@@ -52,7 +52,9 @@ module.CLI = core.ImageGridFeatures.Feature({
 				if(this.runtime == 'nw'){
 					var argv = requirejs('nw.gui').App.argv
 
-					// XXX 
+					// XXX appears to have a stray '--help' lodged in 
+					// 		all the time...
+					// 		...need to test this with a packed exec...
 					console.log('>>>>', argv)
 
 				} else if(this.runtime == 'node'){
