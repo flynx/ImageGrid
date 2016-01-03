@@ -27,8 +27,13 @@ var core = require('features/core')
 
 core.ImageGridFeatures.Feature('viewer-commandline', [
 	'lifecycle',
-	'base-full',
 	'commandline',
+])
+
+
+core.ImageGridFeatures.Feature('viewer-minimal', [
+	'lifecycle',
+	'base-full',
 
 	'image-marks',
 	'image-bookmarks',
@@ -38,10 +43,9 @@ core.ImageGridFeatures.Feature('viewer-commandline', [
 ])
 
 
-
-
 core.ImageGridFeatures.Feature('viewer-testing', [
 	'viewer-commandline',
+	'viewer-minimal',
 
 	'ui',
 
@@ -113,6 +117,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'system-journal',
 ])
 
+/*
 core.ImageGridFeatures.Feature('viewer-minimal', [
 	'base',
 	'ui',
@@ -124,6 +129,7 @@ core.ImageGridFeatures.Feature('viewer-minimal', [
 		//'ui-current-image-indicator-hide-on-screen-nav',
 	'ui-action-tree',
 ])
+*/
 
 
 

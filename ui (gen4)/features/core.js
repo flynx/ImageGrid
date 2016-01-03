@@ -158,6 +158,7 @@ module.LifeCycle = ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'lifecycle',
+	priority: 'high',
 
 	actions: LifeCycleActions,
 })

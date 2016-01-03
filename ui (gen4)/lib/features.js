@@ -235,6 +235,16 @@ module.FeatureSet = {
 	// if true, .setup(..) will report things it's doing... 
 	__verbose__: null,
 
+	// List of registered features...
+	get features(){
+		var that = this
+		return Object.keys(this)
+			.filter(function(e){ 
+				return e != 'features' 
+					&& that[e] instanceof Feature }) 
+	},
+
+
 	// Build feature list...
 	//
 	// 	Build a list of all registered features
@@ -297,13 +307,17 @@ module.FeatureSet = {
 	// 		careful.
 	//
 	// XXX make suggested feature expansion recursive...
+	// XXX this appears to be very slow if lst not passed...
 	buildFeatureList: function(obj, lst, auto_include, depth){
-		lst = lst == null ? Object.keys(this) : lst
+		var that = this
+		obj = obj || {}
+
+		lst = lst == null ? this.features : lst
 		lst = lst.constructor !== Array ? [lst] : lst
+
 		auto_include = auto_include == null ? true : false
 		depth = depth || 8
 
-		var that = this
 
 		var missing = {}
 

@@ -1,34 +1,38 @@
 {
-	"name": "ImageGrid.Viewer.g4",
-	"main": "index.html",
-	"version": "0.0.1",
-	"window": {
-		"title": "ImageGrid.Viewer (gen4)",
-		"position": "center",
-		"width": 900,
-		"height": 700,
-		"min_width": 400,
-		"min_height": 400,
-		"frame": true,
-		"toolbar": false,
-		"show": false
-	},
-	"webkit": {
-		"page-cache": true
-	},
-	"dependencies": {
-		"commander": "^2.9.0",
-		"flickrapi": "^0.3.28",
-		"fs-extra": "*",
-		"fs-walk": "0.0.1",
-		"glob": "^4.0.6",
-		"guarantee-events": "^1.0.0",
-		"promise": "^6.0.1",
-		"requirejs": "*",
-		"sharp": "^0.12.0"
-	},
-	"preferGlobal": true,
-	"bin": {
-		"ig": "ig.js"
-	}
+  "name": "ImageGrid.Viewer.g4",
+  "main": "index.html",
+  "version": "0.0.1",
+  "window": {
+    "title": "ImageGrid.Viewer (gen4)",
+    "position": "center",
+    "width": 900,
+    "height": 700,
+    "min_width": 400,
+    "min_height": 400,
+    "frame": true,
+    "toolbar": false,
+    "show": false
+  },
+  "webkit": {
+    "page-cache": true
+  },
+  "dependencies": {
+    "commander": "^2.9.0",
+    "flickrapi": "^0.3.28",
+    "fs-extra": "*",
+    "fs-walk": "0.0.1",
+    "glob": "^4.0.6",
+    "guarantee-events": "^1.0.0",
+    "promise": "^6.0.1",
+    "requirejs": "*",
+    "sharp": "^0.12.0"
+  },
+  "preferGlobal": true,
+  "bin": {
+    "ig": "ig.js"
+  },
+  "devDependencies": {
+    "nw-builder": "^2.2.0",
+    "less": "*"
+  }
 }
