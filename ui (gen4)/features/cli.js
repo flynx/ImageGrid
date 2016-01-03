@@ -62,7 +62,6 @@ module.CLI = core.ImageGridFeatures.Feature({
 				}
 
 
-
 				var cli = requirejs('commander')
 				cli
 					// XXX get the version from config...
@@ -98,7 +97,13 @@ module.CLI = core.ImageGridFeatures.Feature({
 							Object.keys(this.getDoc()).join('\n    '))
 					})
 
-					//.command('index [path]', 'build an index of path')
+					// XXX the problem with this is that it still tires 
+					// 		to find and run 'ig-index'...
+					/*
+					.command('index [path]', 'build an index of path', function(path){
+						console.log('!!!!!! INDEX', path)
+					})
+					*/
 
 					.arguments('<action> [args]')
 					.action(function(action, args){
