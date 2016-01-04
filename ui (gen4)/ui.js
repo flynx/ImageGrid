@@ -228,6 +228,10 @@ module.GLOBAL_KEYBOARD = {
 			ctrl: 'toggleTheme!',
 			alt: 'browseActions: "/Bookmark/"',
 		},
+		E: {
+			default: 'openInExtenalEditor',
+			alt: 'listExtenalEditors',
+		},
 		C: 'browseActions: "/Crop/"',
 		O: 'browsePath',
 		S: {

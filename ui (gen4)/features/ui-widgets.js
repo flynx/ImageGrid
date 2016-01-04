@@ -385,18 +385,52 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 var ExternalEditorActions = actions.Actions({
 	config: {
 		// XXX
-		// format:
-		// 	[
-		// 		[title, path, args]
-		// 	]
 		'external-editors': [
-			// XXX need real arguments...
-			['Photoshop', 'photoshop.exe', '$CURRENT.raw'],
+			// XXX system default might be different on different systems...
+			['System default|"$PATH"', 'current'],
+
+			// XXX for some reason irfanview doesnot open a path passed 
+			// 		as argument unless it uses only '\' and not '/'
+			['IrfanView|"C:/Program Files (x86)/IrfanView/i_view32.exe" "$PATH"', 'current'],
+			//['Photoshop|"C:/Portable Apps/Adobe Photoshop CC/PhotoshopPortable.exe" $PATH', 'current'],
 		],
 	},
 
+	// XXX this still needs image type and better support for OS paths 
+	// 		...irfanview for instance does not understand '/' in paths 
+	// 		while windows in general have no problem...
 	openInExtenalEditor: ['Edit/Open with external editor',
-		function(){
+		function(editor, image, type){
+			editor = typeof(editor) == typeof('str') ? editor 
+				: this.config['external-editors'][editor == null ? 0 : editor]
+			editor = editor ? editor[0] : '$PATH'
+
+			// get the path part...
+			editor = editor.split(/\|/g).pop()
+
+			// get the image...
+			var img = this.images[this.data.getImage(image)]
+
+			if(img == null){
+				return
+			}
+
+			// XXX get the correct type -- raw, preview, orig, ...
+
+			var full_path = img.base_path +'/'+ img.path
+
+			editor = editor
+				// XXX make '$' quotable....
+				.replace(/\$PATH/, full_path)
+				// XXX add other stuff???
+				
+			console.log('>>>>', editor)
+
+			// do the actual running...
+			requirejs('child_process')
+				.exec(editor, function(err, res){
+					err && console.log('!!!', err)
+				})
 		}],
 })
 
@@ -409,6 +443,9 @@ module.ExternalEditor = core.ImageGridFeatures.Feature({
 	depends: [
 		// XXX
 	],
+
+	isApplicable: function(){ 
+		return this.runtime == 'nw' || this.runtime == 'node' },
 
 	actions: ExternalEditorActions,
 })
