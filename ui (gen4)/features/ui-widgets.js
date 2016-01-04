@@ -377,6 +377,65 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 
 
 
+//---------------------------------------------------------------------
+// External editor...
+// XXX need to get the resulting (edited) file and add it to the index...
+// XXX move this to a separate feature...
+
+var ExternalEditorActions = actions.Actions({
+	config: {
+		// XXX
+		// format:
+		// 	[
+		// 		[title, path, args]
+		// 	]
+		'external-editors': [
+			// XXX need real arguments...
+			['Photoshop', 'photoshop.exe', '$CURRENT.raw'],
+		],
+	},
+
+	openInExtenalEditor: ['Edit/Open with external editor',
+		function(){
+		}],
+})
+
+var ExternalEditor = 
+module.ExternalEditor = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'external-editor',
+	depends: [
+		// XXX
+	],
+
+	actions: ExternalEditorActions,
+})
+
+
+var ExternalEditorUIActions = actions.Actions({
+	// XXX this should be a 
+	listExtenalEditors: ['Edit/List external editors',
+		function(){
+		}],
+})
+
+var ExternalEditorUI = 
+module.ExternalEditorUI = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-external-editor',
+	depends: [
+		'external-editor',
+	],
+
+	actions: ExternalEditorUIActions,
+})
+
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
 return module })
