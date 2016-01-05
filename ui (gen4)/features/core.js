@@ -125,7 +125,7 @@ var LifeCycleActions = actions.Actions({
 			// nw...
 			if(this.__nw_stop_handler && this.runtime == 'nw'){
 				var gui = requirejs('nw.gui')
-				gui.Window.get().off('close', this.__nw_stop_handler)
+				//gui.Window.get().off('close', this.__nw_stop_handler)
 				delete this.__nw_stop_handler
 			}
 

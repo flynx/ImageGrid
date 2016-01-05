@@ -24,6 +24,8 @@ var browse = require('lib/widget/browse')
 var overlay = require('lib/widget/overlay')
 var drawer = require('lib/widget/drawer')
 
+var browseWalk = require('lib/widget/browse-walk')
+
 
 
 /*********************************************************************/
@@ -467,10 +469,29 @@ var ExternalEditorUIActions = actions.Actions({
 					}
 				})
 
+			var closingPrevented = false
+
 			// XXX STUB: use a top button...
 			// XXX this must not close the overlay...
 			list['Add new editor...'] = function(){
+				closingPrevented = true
 				// XXX open 'new editor...' dialog...
+				var b = overlay.Overlay(that.ribbons.viewer, 
+					browseWalk.makeWalk(
+							null, '/', 
+							// XXX
+							'*+(exe|cmd|ps1|sh)',
+							{})
+						// path selected...
+						.open(function(evt, path){ 
+							// XXX
+							//this.parent.close()
+							b.close()
+						}))
+						.close(function(){
+							o.focus()
+						})
+				return b
 			}
 
 			// build the dialog...
@@ -511,14 +532,19 @@ var ExternalEditorUIActions = actions.Actions({
 								}],
 						] })
 					.open(function(evt){ 
-						o.close() 
+						if(!closingPrevented){
+							o.close() 
+						}
+						closingPrevented = false
 					}))
 				.close(function(){
 				})
 
 			// XXX STUB...
+			// XXX do this someplace like an update handler (for some 
+			// 		reason not working yet)...
 			var b = o.client.filter(-1)
-
+			// XXX do this with CSS...
 			b.find('.button').remove()
 			b.find('.text').css({fontStyle: 'italic'})
 

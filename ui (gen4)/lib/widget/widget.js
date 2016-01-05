@@ -162,6 +162,7 @@ var ContainerPrototype = {
 		options = options || {}
 
 		this.client = client
+		client.parent = this
 
 		// merge options...
 		var opts = Object.create(this.options)
