@@ -392,7 +392,6 @@ var ExternalEditorActions = actions.Actions({
 			// XXX for some reason irfanview doesnot open a path passed 
 			// 		as argument unless it uses only '\' and not '/'
 			['IrfanView|"C:/Program Files (x86)/IrfanView/i_view32.exe" "$PATH"', 'current'],
-			//['Photoshop|"C:/Portable Apps/Adobe Photoshop CC/PhotoshopPortable.exe" $PATH', 'current'],
 		],
 	},
 
@@ -452,9 +451,78 @@ module.ExternalEditor = core.ImageGridFeatures.Feature({
 
 
 var ExternalEditorUIActions = actions.Actions({
-	// XXX this should be a 
+	// XXX add root button...
+	// XXX add CSS to mark the first item '(default)'
 	listExtenalEditors: ['Edit/List external editors',
 		function(){
+			var that = this
+
+			// build the list...
+			var list = {}
+			var editors = this.config['external-editors']
+			editors
+				.forEach(function(e, i){
+					list[e[0].split(/\|/g)[0]] = function(){
+						that.openInExtenalEditor(i)
+					}
+				})
+
+			// XXX STUB: use a top button...
+			// XXX this must not close the overlay...
+			list['Add new editor...'] = function(){
+				// XXX open 'new editor...' dialog...
+			}
+
+			// build the dialog...
+			var o = overlay.Overlay(this.ribbons.viewer, 
+				browse.makeList(null, list, {
+						// add item buttons...
+						itemButtons: [
+							// move to top...
+							['&diams;', 
+								function(p){
+									var top = this.filter('*', false).first()
+									var cur = this.filter('"'+p+'"', false)
+									// XXX current element index...
+									var i = 0 
+
+									if(!top.is(cur)){
+										top.before(cur)
+										// shift element position...
+										//editors.splice(0, 0, editors.splice(i, 1)[0])
+									}
+								}],
+							// mark for removal...
+							['&times;', 
+								function(p){
+									var e = this.filter('"'+p+'"', false)
+										.toggleClass('strike-out')
+
+									if(e.hasClass('strike-out')){
+										to_remove.indexOf(p) < 0 
+											&& to_remove.push(p)
+
+									} else {
+										var i = to_remove.indexOf(p)
+										if(i >= 0){
+											to_remove.splice(i, 1)
+										}
+									}
+								}],
+						] })
+					.open(function(evt){ 
+						o.close() 
+					}))
+				.close(function(){
+				})
+
+			// XXX STUB...
+			var b = o.client.filter(-1)
+
+			b.find('.button').remove()
+			b.find('.text').css({fontStyle: 'italic'})
+
+			return o
 		}],
 })
 
