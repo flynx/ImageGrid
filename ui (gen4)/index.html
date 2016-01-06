@@ -125,12 +125,18 @@ body {
 
 
 .browse-widget.editor-list .list div:first-child .text:after {
-	content: "(default)";
+	content: "(primary)";
 	margin-left: 5px;
 	opacity: 0.5;
 	font-style: italic;
 }
-.browse-widget.editor-list .list div:last-child {
+.browse-widget.editor-list .list div:nth-child(2) .text:after {
+	content: "(secondary)";
+	margin-left: 5px;
+	opacity: 0.5;
+	font-style: italic;
+}
+.browse-widget.editor-list .list div:last-child .text {
 	font-style: italic;
 }
 .browse-widget.editor-list .list div:last-child .button {

@@ -387,6 +387,8 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 // 		- pretty name
 // 		- shortcut key
 // 		- image type to open
+// XXX add root button...
+// XXX disable the remove button on "System default"
 // XXX move this to a separate feature...
 
 var ExternalEditorActions = actions.Actions({
@@ -461,8 +463,6 @@ module.ExternalEditor = core.ImageGridFeatures.Feature({
 
 
 var ExternalEditorUIActions = actions.Actions({
-	// XXX add root button...
-	// XXX disable the remove button on "System default"
 	listExtenalEditors: ['Edit/List external editors',
 		function(){
 			var that = this
@@ -529,14 +529,34 @@ var ExternalEditorUIActions = actions.Actions({
 							// move to top...
 							['&diams;', 
 								function(p){
-									var top = this.filter('*', false).first()
+									var target = this.filter(0, false)
 									var cur = this.filter('"'+p+'"', false)
 
 									var i = _getEditor(p) 
 
-									if(!top.is(cur)){
-										top.before(cur)
+									if(!target.is(cur)){
+										target.before(cur)
 										editors.splice(0, 0, editors.splice(i, 1)[0])
+
+										that.config['external-editors'] = editors
+									}
+								}],
+							// set secondary editor...
+							// XXX make a simpler icon....
+							['<span style="letter-spacing: -4px">&diams;&diams;</span>', 
+								function(p){
+									var target = this.filter(1, false)
+									var cur = this.filter('"'+p+'"', false)
+
+									var i = _getEditor(p) 
+
+									if(!target.is(cur)){
+										if(target.prev().is(cur)){
+											target.after(cur)
+										} else {
+											target.before(cur)
+										}
+										editors.splice(1, 0, editors.splice(i, 1)[0])
 
 										that.config['external-editors'] = editors
 									}
@@ -582,6 +602,7 @@ var ExternalEditorUIActions = actions.Actions({
 					})
 				})
 
+			o.client.select(0)
 			o.client.dom.addClass('editor-list')
 
 			return o

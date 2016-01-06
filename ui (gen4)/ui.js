@@ -230,6 +230,7 @@ module.GLOBAL_KEYBOARD = {
 		},
 		E: {
 			default: 'openInExtenalEditor',
+			shift: 'openInExtenalEditor: 1',
 			alt: 'listExtenalEditors',
 		},
 		C: 'browseActions: "/Crop/"',
