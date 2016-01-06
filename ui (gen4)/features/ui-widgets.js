@@ -386,6 +386,7 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 
 var ExternalEditorActions = actions.Actions({
 	config: {
+		'external-editor-default': 'System default',
 		// XXX
 		'external-editors': [
 			// XXX system default might be different on different systems...
@@ -454,14 +455,14 @@ module.ExternalEditor = core.ImageGridFeatures.Feature({
 
 var ExternalEditorUIActions = actions.Actions({
 	// XXX add root button...
-	// XXX add CSS to mark the first item '(default)'
+	// XXX disable the remove button on "System default"
 	listExtenalEditors: ['Edit/List external editors',
 		function(){
 			var that = this
 
 			// build the list...
 			var list = {}
-			var editors = this.config['external-editors']
+			var editors = this.config['external-editors'].slice()
 			editors
 				.forEach(function(e, i){
 					list[e[0].split(/\|/g)[0]] = function(){
@@ -472,7 +473,7 @@ var ExternalEditorUIActions = actions.Actions({
 			var closingPrevented = false
 
 			// XXX STUB: use a top button...
-			// XXX this must not close the overlay...
+			// XXX update the list...
 			list['Add new editor...'] = function(){
 				closingPrevented = true
 				// XXX open 'new editor...' dialog...
@@ -486,6 +487,13 @@ var ExternalEditorUIActions = actions.Actions({
 						.open(function(evt, path){ 
 							// XXX
 							//this.parent.close()
+
+							// add a pretty name...
+							editors.push([path+'|"'+ path +'" "$PATH"'])
+							that.config['external-editors'] = editors
+
+							// XXX update the editor list...
+
 							b.close()
 						}))
 						.close(function(){
@@ -493,6 +501,15 @@ var ExternalEditorUIActions = actions.Actions({
 						})
 				return b
 			}
+
+			// element index...
+			var _getEditor = function(str){
+				return editors
+					.map(function(e){ return e[0].split(/\|/g)[0] })
+					.indexOf(str)
+			}
+
+			var to_remove = []
 
 			// build the dialog...
 			var o = overlay.Overlay(this.ribbons.viewer, 
@@ -504,18 +521,23 @@ var ExternalEditorUIActions = actions.Actions({
 								function(p){
 									var top = this.filter('*', false).first()
 									var cur = this.filter('"'+p+'"', false)
-									// XXX current element index...
-									var i = 0 
+
+									var i = _getEditor(p) 
 
 									if(!top.is(cur)){
 										top.before(cur)
-										// shift element position...
-										//editors.splice(0, 0, editors.splice(i, 1)[0])
+										editors.splice(0, 0, editors.splice(i, 1)[0])
+
+										that.config['external-editors'] = editors
 									}
 								}],
 							// mark for removal...
 							['&times;', 
 								function(p){
+									if(p == that.config['external-editor-default']){
+										return
+									}
+
 									var e = this.filter('"'+p+'"', false)
 										.toggleClass('strike-out')
 
@@ -532,21 +554,25 @@ var ExternalEditorUIActions = actions.Actions({
 								}],
 						] })
 					.open(function(evt){ 
+						// close self if no dialog is triggered...
 						if(!closingPrevented){
 							o.close() 
 						}
 						closingPrevented = false
 					}))
 				.close(function(){
+					// remove elements marked for removal...
+					to_remove.forEach(function(e){
+						if(e == that.config['external-editor-default']){
+							return
+						}
+
+						editors.splice(_getEditor(e), 1)
+						that.config['external-editors'] = editors
+					})
 				})
 
-			// XXX STUB...
-			// XXX do this someplace like an update handler (for some 
-			// 		reason not working yet)...
-			var b = o.client.filter(-1)
-			// XXX do this with CSS...
-			b.find('.button').remove()
-			b.find('.text').css({fontStyle: 'italic'})
+			o.client.dom.addClass('editor-list')
 
 			return o
 		}],
