@@ -382,6 +382,11 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // External editor...
 // XXX need to get the resulting (edited) file and add it to the index...
+// XXX make a UI for adding new editors:
+// 		- enter path / browse (done)
+// 		- pretty name
+// 		- shortcut key
+// 		- image type to open
 // XXX move this to a separate feature...
 
 var ExternalEditorActions = actions.Actions({
@@ -390,11 +395,11 @@ var ExternalEditorActions = actions.Actions({
 		// XXX
 		'external-editors': [
 			// XXX system default might be different on different systems...
-			['System default|"$PATH"', 'current'],
+			['System default|"$PATH"'],
 
 			// XXX for some reason irfanview doesnot open a path passed 
 			// 		as argument unless it uses only '\' and not '/'
-			['IrfanView|"C:/Program Files (x86)/IrfanView/i_view32.exe" "$PATH"', 'current'],
+			['IrfanView|"C:/Program Files (x86)/IrfanView/i_view32.exe" "$PATH"'],
 		],
 	},
 
@@ -421,13 +426,15 @@ var ExternalEditorActions = actions.Actions({
 
 			var full_path = img.base_path +'/'+ img.path
 
+			// XXX is this portable enough???
+			var path = requirejs('path')
+			full_path = path.normalize(full_path)
+
 			editor = editor
 				// XXX make '$' quotable....
 				.replace(/\$PATH/, full_path)
 				// XXX add other stuff???
 				
-			console.log('>>>>', editor)
-
 			// do the actual running...
 			requirejs('child_process')
 				.exec(editor, function(err, res){
@@ -494,7 +501,10 @@ var ExternalEditorUIActions = actions.Actions({
 
 							// XXX update the editor list...
 
+							// is this the correct way to do this???
 							b.close()
+							o.close()
+							that.listExtenalEditors()
 						}))
 						.close(function(){
 							o.focus()
