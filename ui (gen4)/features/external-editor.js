@@ -31,6 +31,7 @@ var browseWalk = require('lib/widget/browse-walk')
 // 		- image type to open
 // XXX add root button...
 // XXX disable the remove button on "System default"
+// XXX move the CSS out of index.html and into a correct CSS file...
 // XXX move this to a separate feature...
 
 var ExternalEditorActions = actions.Actions({
@@ -265,6 +266,7 @@ module.ExternalEditorUI = core.ImageGridFeatures.Feature({
 
 	actions: ExternalEditorUIActions,
 })
+
 
 
 

@@ -124,24 +124,39 @@ body {
 
 
 
-.browse-widget.editor-list .list div:first-child .text:after {
+/* External Editor List */
+.browse-widget.editor-list .list>div:first-child .text:after {
 	content: "(primary)";
 	margin-left: 5px;
 	opacity: 0.5;
 	font-style: italic;
 }
-.browse-widget.editor-list .list div:nth-child(2) .text:after {
+/* XXX this is ugly -- use a class... */
+.browse-widget.editor-list .list>div:first-child .button:nth-child(4) {
+	opacity: 0.1;
+}
+.browse-widget.editor-list .list>div:nth-child(2) .text:after {
 	content: "(secondary)";
 	margin-left: 5px;
 	opacity: 0.5;
 	font-style: italic;
 }
-.browse-widget.editor-list .list div:last-child .text {
+/* XXX this is ugly -- use a class... */
+.browse-widget.editor-list .list>div:nth-child(2) .button:nth-child(3) {
+	opacity: 0.1;
+}
+
+/* XXX STUB: use a button instead of a list element... */
+.browse-widget.editor-list .list>div:last-child {
+	border-top: solid 1px rgba(255,255,255, 0.2);
+}
+.browse-widget.editor-list .list>div:last-child .text {
 	font-style: italic;
 }
-.browse-widget.editor-list .list div:last-child .button {
+.browse-widget.editor-list .list>div:last-child .button {
 	display: none;
 }
+
 
 
 /* DEBUG stuff... */
