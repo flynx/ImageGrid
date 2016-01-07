@@ -34,6 +34,7 @@ var app = require('features/app')
 var ui = require('features/ui')
 var marks = require('features/ui-marks')
 var widgets = require('features/ui-widgets')
+var exteditor = require('features/external-editor')
 var meta = require('features/meta')
 var experimental = require('features/experimental')
 
