@@ -95,6 +95,21 @@ module.EXIF = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 // Exif editor/viewer...
+//
+// XXX first instinct is to use browse with editable fields as it will
+// 		give us: 
+// 			- searchability
+// 			- navigation
+// 			- ...
+// 		missing functionality:
+// 			- editor/form on open event
+// 				- inline (preferred)
+// 				- modal-form
+// 			- table-like layout
+// 				- template???
+// 				- script layout tweaking (post-update)
+//
+// 		...need to think about this...
 
 // XXX
 
