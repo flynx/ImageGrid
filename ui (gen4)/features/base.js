@@ -222,7 +222,7 @@ actions.Actions({
 	// XXX should this be here???
 	// XXX should this use .load(..)
 	// 		...note if we use this it breaks, need to rethink...
-	loadURLs: ['File/Load a URL list',
+	loadURLs: ['- File/Load a URL list',
 		function(lst, base){
 			var imgs = images.Images.fromArray(lst, base)
 

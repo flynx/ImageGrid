@@ -159,7 +159,7 @@ var ImageMarkActions = actions.Actions({
 	// 	Invert marks on current ribbon
 	// 	.toggleMark('ribbon')
 	//
-	toggleMark: ['Mark/Toggle image mark',
+	toggleMark: ['Mark|Image/Toggle image mark',
 		makeTagTogglerAction('selected')],
 	// XXX
 	toggleMarkBlock: ['Mark/Toggle block marks',
@@ -237,7 +237,7 @@ var ImageBookmarkActions = actions.Actions({
 		return this.data.tags['bookmark'].slice()
 	},
 
-	toggleBookmark: ['Bookmark/Toggle image bookmark',
+	toggleBookmark: ['Bookmark|Image/Toggle image bookmark',
 		makeTagTogglerAction('bookmark')],
 	// action can be:
 	// 	'on'	- toggle all on

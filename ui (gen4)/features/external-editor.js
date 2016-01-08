@@ -11,7 +11,6 @@ define(function(require){ var module = {}
 var actions = require('lib/actions')
 
 var core = require('features/core')
-var base = require('features/base')
 
 // widgets...
 var browse = require('lib/widget/browse')
@@ -95,7 +94,7 @@ module.ExternalEditor = core.ImageGridFeatures.Feature({
 
 	tag: 'external-editor',
 	depends: [
-		// XXX
+		'base',
 	],
 
 	isApplicable: function(){ 
@@ -261,6 +260,7 @@ module.ExternalEditorUI = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-external-editor',
 	depends: [
+		'ui',
 		'external-editor',
 	],
 

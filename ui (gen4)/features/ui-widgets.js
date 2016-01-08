@@ -278,7 +278,7 @@ var WidgetTestActions = actions.Actions({
 			//a.experimental = true
 
 			// setup actions...
-			ImageGridFeatures.setup(b, [
+			core.ImageGridFeatures.setup(b, [
 				'viewer-testing',
 			])
 

@@ -748,7 +748,6 @@ module.Viewer = core.ImageGridFeatures.Feature({
 var journalActions = {
 	clear: null,
 	load: null,
-	//loadURLs: null,
 
 	setBaseRibbon: null,
 
@@ -959,7 +958,6 @@ module.Journal = core.ImageGridFeatures.Feature({
 	].concat([
 			'clear',
 			'load',
-			'loadURLs',
 
 			'setBaseRibbon',
 
@@ -1769,7 +1767,6 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 
 	handlers:[
 		// set scale...
-		//['load loadURLs',
 		['load',
 			function(){
 				// prevent this from doing anything while no viewer...
