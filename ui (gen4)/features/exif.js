@@ -25,13 +25,14 @@ var core = require('features/core')
 
 /*********************************************************************/
 
+// XXX add exif writer...
 var EXIFActions = actions.Actions({
 	// XXX cache the result and see if it is cached before running exiftool... 
 	// XXX also check the metadata/ folder (???)
 	// XXX this uses .markChanged(..) form filesystem.FileSystemWriter 
 	// 		feature, but technically does not depend on it...
 	// XXX should we store metadata in an image (current) or in fs???
-	getExif: ['Edit/Open with external editor',
+	getExif: ['- Image/Get exif data',
 		function(image, force){
 			var that = this
 
@@ -68,6 +69,11 @@ var EXIFActions = actions.Actions({
 				})
 			})
 		}],
+
+	// XXX take image exif and write it to target...
+	setExif: ['- Image/Set exif data',
+		function(image, target){
+		}]
 })
 
 var EXIF = 
@@ -87,6 +93,10 @@ module.EXIF = core.ImageGridFeatures.Feature({
 })
 
 
+//---------------------------------------------------------------------
+// Exif editor/viewer...
+
+// XXX
 
 
 /**********************************************************************
