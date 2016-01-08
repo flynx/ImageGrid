@@ -9,7 +9,6 @@ define(function(require){ var module = {}
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 var actions = require('lib/actions')
-
 var core = require('features/core')
 
 // widgets...

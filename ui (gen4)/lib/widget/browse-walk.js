@@ -4,15 +4,24 @@
 *
 **********************************************************************/
 
-var os = require('os')
-var fs = require('fs')
-var path = require('path')
-var promise = require('promise')
-var glob = require('glob')
-var guaranteeEvents = require('guarantee-events')
+if(typeof(process) != 'undefined'){
+	var os = require('os')
+	var fs = require('fs')
+	var path = require('path')
+	var promise = require('promise')
+	var glob = require('glob')
+	var guaranteeEvents = require('guarantee-events')
+}
 
 
 define(function(require){ var module = {}
+
+// XXX HACK...
+// 		...for some reason this gets loaded in browser...
+if(typeof(process) == 'undefined'){
+	return module
+}
+
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 

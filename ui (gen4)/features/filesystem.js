@@ -15,11 +15,6 @@ if(typeof(process) != 'undefined'){
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
 	var file = requirejs('./file')
-
-	// XXX this for some reason does not load in nw while require(..)
-	// 		for some reason works in browser...
-	//var browseWalk = requirejs('./lib/widget/browse-walk')
-	var browseWalk = require('lib/widget/browse-walk')
 }
 
 var data = require('data')
@@ -34,6 +29,7 @@ var core = require('features/core')
 
 var overlay = require('lib/widget/overlay')
 var browse = require('lib/widget/browse')
+var browseWalk = requirejs('lib/widget/browse-walk')
 
 
 
@@ -567,6 +563,67 @@ var FileSystemWriterActions = actions.Actions({
 			}
 		}],
 
+	//
+	//	Mark everything changed...
+	//	.markChanged('all')
+	//
+	//	Mark nothing changed...
+	//	.markChanged('none')
+	//
+	//	Mark a section changed...
+	//	.markChanged('data')
+	//	.markChanged('tags')
+	//	.markChanged('selected')
+	//	.markChanged('bookmarked')
+	//
+	//	Mark image changed...
+	//	.markChanged(<gid>, ...)
+	//
+	markChanged: ['- System/',
+		function(){
+			var that = this
+			var args = util.args2array(arguments)
+			//var changes = this.changes = 
+			var changes = 
+				this.hasOwnProperty('changes') ?
+					this.changes || {}
+					: {}
+
+			// all...
+			if(args.length == 1 && args[0] == 'all'){
+				// NOTE: this is better than delete as it will shadow 
+				// 		the parent's changes in case we got cloned from
+				// 		a live instance...
+				//delete this.changes
+				this.changes = null
+
+			// none...
+			} else if(args.length == 1 && args[0] == 'none'){
+				this.changes = false 
+
+			} else {
+				var images = (changes.images || [])
+
+				args.forEach(function(arg){
+					var gid = that.data.getImage(arg)
+
+					// special case: image gid...
+					if(gid != -1 && gid != null){
+						images.push(gid)
+						images = images.unique()
+
+						changes.images = images
+						that.changes = changes
+
+					// all other keywords...
+					} else {
+						changes[arg] = true
+						that.changes = changes
+					}
+				})
+			}
+		}],
+
 	// Convert json index to a format compatible with file.writeIndex(..)
 	//
 	// This is here so as other features can participate in index
@@ -761,7 +818,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 		['loadIndex',
 			function(_, path){
 				if(path){
-					this.changes = false 
+					this.markChanged('none')
 				}
 			}],
 		['saveIndex',
@@ -769,7 +826,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 				// NOTE: if saving to a different path than loaded do not
 				// 		drop the .changes flags...
 				if(path && path == this.location.path){
-					this.changes = false 
+					this.markChanged('none')
 				}
 			}],
 
@@ -778,13 +835,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 			'loadURLs',
 			'clear',
 		], 
-			function(){
-				// NOTE: this is better than delete as it will shadow 
-				// 		the parent's changes in case we got cloned from
-				// 		a live instance...
-				//delete this.changes
-				this.changes = null
-			}],
+			function(){ this.markChanged('all') }],
 
 		// data...
 		[[
@@ -810,14 +861,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 			'expandGroup',
 			'collapseGroup',
 		], 
-			function(_, target){
-				var changes = this.changes = 
-					this.hasOwnProperty('changes') ?
-						this.changes || {}
-						: {}
-
-				changes.data = true
-			}],
+			function(_, target){ this.markChanged('data') }],
 
 		// image specific...
 		[[
@@ -826,26 +870,13 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 			'flipHorizontal',
 			'flipVertical',
 		], 
-			function(_, target){
-				var changes = this.changes = 
-					this.hasOwnProperty('changes') ?
-						this.changes || {}
-						: {}
-				var images = changes.images = changes.images || []
-				target = this.data.getImage(target)
-
-				images.push(target)
-			}],
+			function(_, target){ this.markChanged(target) }],
 
 		// tags and images...
 		// NOTE: tags are also stored in images...
 		['tag untag',
 			function(_, tags, gids){
-				var changes = this.changes = 
-					this.hasOwnProperty('changes') ?
-						this.changes || {}
-						: {}
-				var images = changes.images = changes.images || []
+				var changes = []
 
 				gids = gids || [this.data.getImage()]
 				gids = gids.constructor !== Array ? [this.data.getImage(gids)] : gids
@@ -854,22 +885,24 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 				tags = tags.constructor !== Array ? [tags] : tags
 
 				// images...
-				changes.images = images.concat(gids).unique()
+				changes = changes.concat(gids)
 
 				// tags...
 				if(tags.length > 0){
-					changes.tags = true
+					changes.push('tags')
 
 					// selected...
 					if(tags.indexOf('selected') >= 0){
-						changes.selected = true
+						changes.push('selected')
 					}
 
 					// bookmark...
 					if(tags.indexOf('bookmark') >= 0){
-						changes.bookmarked = true
+						changes.push('bookmarked')
 					}
 				}
+
+				this.markChanged.apply(this, changes)
 			}],
 	]
 })
