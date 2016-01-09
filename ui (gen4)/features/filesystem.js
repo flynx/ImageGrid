@@ -29,7 +29,7 @@ var core = require('features/core')
 
 var overlay = require('lib/widget/overlay')
 var browse = require('lib/widget/browse')
-var browseWalk = requirejs('lib/widget/browse-walk')
+var browseWalk = require('lib/widget/browse-walk')
 
 
 

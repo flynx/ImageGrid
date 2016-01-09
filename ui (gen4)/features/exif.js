@@ -73,6 +73,7 @@ var EXIFActions = actions.Actions({
 	// XXX take image exif and write it to target...
 	setExif: ['- Image/Set exif data',
 		function(image, target){
+			// XXX
 		}]
 })
 
@@ -111,7 +112,34 @@ module.EXIF = core.ImageGridFeatures.Feature({
 //
 // 		...need to think about this...
 
+// XXX this should basically be platform independent...
+var EXIFUIActions = actions.Actions({
+	showExif: ['Image/Show exif',
+		function(image, force){
+			image = this.data.getImage(image)
+			var exif = !force 
+				&& this.images[image].metadata 
+				|| this.getExif(image, force)
+
+			// XXX
+		}]
+})
+
 // XXX
+var EXIFUI = 
+module.EXIFUI = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-exif',
+	depends: [
+		'ui',
+		'exif',
+	],
+
+	actions: EXIFUIActions,
+})
+
 
 
 /**********************************************************************

@@ -766,6 +766,7 @@ var BrowserPrototype = {
 				return $()
 			}
 
+			// build list item...
 			var res = $('<div>')
 				// handle clicks ONLY when not disabled...
 				.click(function(){
@@ -774,8 +775,8 @@ var BrowserPrototype = {
 						that.push($(this).find('.text').text())
 					}
 				})
-				//.text(p)
-				.append($('<div>')
+				// XXX add support for multiple .test blocks...
+				.append($('<span>')
 					.addClass('text')
 					.text(p))
 
@@ -1145,9 +1146,15 @@ var BrowserPrototype = {
 				// NOTE: this will mess up (clear) any highlighting that was 
 				// 		present before...
 				.each(function(_, e){
-					e = $(e).find('.text')
-					var t = e.text()
-					e.html(t.replace(p, '<b>$1</b>'))
+					e = $(e)
+						.find('.text')
+						// NOTE: here we support multiple text elements per
+						// 		list element...
+						.each(function(i, e){
+							e = $(e)
+							var t = e.text()
+							e.html(t.replace(p, '<b>$1</b>'))
+						})
 				})
 		}
 
