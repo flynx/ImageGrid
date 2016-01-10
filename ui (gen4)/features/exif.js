@@ -25,6 +25,10 @@ var core = require('features/core')
 
 /*********************************************************************/
 
+// XXX split this into two:
+// 		- getter from .images[gid].metadata (no external dependencies)
+// 		- fileExifExtractor / webExifExtractor / ... to implement 
+// 			extracting of exif if .metadata does not exist...
 // XXX add exif writer...
 var EXIFActions = actions.Actions({
 	// XXX cache the result and see if it is cached before running exiftool... 
@@ -121,7 +125,22 @@ var EXIFUIActions = actions.Actions({
 				&& this.images[image].metadata 
 				|| this.getExif(image, force)
 
-			// XXX
+			// XXX make a list with two .text elements per list item:
+			// 			.text.field		- exif field name
+			// 			.text.value		- exif field value 
+			// 		Add CSS:
+			// 			.exif-browser .list>div .text {
+			// 				display: inline-block;
+			// 				width: 50%;
+			// 			}
+			// 			.exif-browser .list>div .text:first-child {
+			// 				text-align: right; 
+			// 			}
+			// 			.exif-browser .list>div .text:first-child:after {
+			// 				content: ": ";
+			// 			}
+			// 			.exif-browser .list>div .text:last-child {
+			// 			}
 		}]
 })
 
