@@ -277,6 +277,26 @@ module.makeImageSeqOrNameCmp = function(data, get, seq){
 
 
 /*********************************************************************/
+// XXX Image base class...
+// 		...not sure if we need this... (???)
+
+var ImageClassPrototype =
+module.ImageClassPrototype = {
+}
+
+var ImagePrototype =
+module.ImagePrototype = {
+}
+
+var Image = 
+module.Image = 
+object.makeConstructor('Image', 
+		ImageClassPrototype, 
+		ImagePrototype)
+
+
+
+/*********************************************************************/
 
 // XXX depends on jli.quoteRegExp(..)
 var ImagesClassPrototype =

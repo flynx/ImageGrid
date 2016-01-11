@@ -24,19 +24,68 @@ var core = require('features/core')
 
 
 /*********************************************************************/
+// XXX rename: EXIF -> Metadata
+// XXX make metadata a prop of image...
 
-// XXX split this into two:
-// 		- getter from .images[gid].metadata (no external dependencies)
-// 		- fileExifExtractor / webExifExtractor / ... to implement 
-// 			extracting of exif if .metadata does not exist...
-// XXX add exif writer...
 var EXIFActions = actions.Actions({
-	// XXX cache the result and see if it is cached before running exiftool... 
+	getExif: ['- Image/Get exif data',
+		function(image){
+			var gid = this.data.getImage(image)
+
+			if(this.images && this.images[gid]){
+				return this.images[gid].metadata || {}
+			}
+			return null
+		}],
+	setExif: ['- Image/Set exif data',
+		function(image, metadata, merge){
+			var that = this
+			var gid = this.data.getImage(image)
+
+			if(this.images && this.images[gid]){
+				if(merge){
+					var m = this.images[gid].metadata
+					Object.keys(metadata).forEach(function(k){
+						m[k] = metadata[k]
+					})
+
+				} else {
+					this.images[gid].metadata = metadata
+				}
+			}
+		}]
+})
+
+var EXIF = 
+module.EXIF = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'exif',
+	depends: [
+		'base',
+	],
+
+	isApplicable: function(){ 
+		return this.runtime == 'nw' || this.runtime == 'node' },
+
+	actions: EXIFActions,
+})
+
+
+//---------------------------------------------------------------------
+// Exif reader/writer...
+
+
+// XXX add exif writer...
+var EXIFReaderActions = actions.Actions({
+	// XXX should this be sync???
+	// XXX should this process multiple images???
 	// XXX also check the metadata/ folder (???)
 	// XXX this uses .markChanged(..) form filesystem.FileSystemWriter 
 	// 		feature, but technically does not depend on it...
 	// XXX should we store metadata in an image (current) or in fs???
-	getExif: ['- Image/Get exif data',
+	readExif: ['- Image/Get exif data',
 		function(image, force){
 			var that = this
 
@@ -75,18 +124,18 @@ var EXIFActions = actions.Actions({
 		}],
 
 	// XXX take image exif and write it to target...
-	setExif: ['- Image/Set exif data',
+	writeExif: ['- Image/Set exif data',
 		function(image, target){
 			// XXX
 		}]
 })
 
-var EXIF = 
+var EXIFReader = 
 module.EXIF = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'exif',
+	tag: 'exif-reader',
 	depends: [
 		'base',
 	],
@@ -94,8 +143,9 @@ module.EXIF = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ 
 		return this.runtime == 'nw' || this.runtime == 'node' },
 
-	actions: EXIFActions,
+	actions: EXIFReaderActions,
 })
+
 
 
 //---------------------------------------------------------------------
