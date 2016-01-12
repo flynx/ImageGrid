@@ -82,7 +82,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-fs-url-history',
 	'ui-fs-writer',
 
-	'exif',
+	'metadata',
+	'ui-metadata',
 
 	'external-editor',
 	'ui-external-editor',

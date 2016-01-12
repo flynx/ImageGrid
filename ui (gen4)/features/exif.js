@@ -24,11 +24,10 @@ var core = require('features/core')
 
 
 /*********************************************************************/
-// XXX rename: EXIF -> Metadata
 // XXX make metadata a prop of image...
 
-var EXIFActions = actions.Actions({
-	getExif: ['- Image/Get exif data',
+var MetadataActions = actions.Actions({
+	getMetadata: ['- Image/Get metadata data',
 		function(image){
 			var gid = this.data.getImage(image)
 
@@ -37,7 +36,7 @@ var EXIFActions = actions.Actions({
 			}
 			return null
 		}],
-	setExif: ['- Image/Set exif data',
+	setMetadata: ['- Image/Set metadata data',
 		function(image, metadata, merge){
 			var that = this
 			var gid = this.data.getImage(image)
@@ -56,12 +55,12 @@ var EXIFActions = actions.Actions({
 		}]
 })
 
-var EXIF = 
-module.EXIF = core.ImageGridFeatures.Feature({
+var Metadata = 
+module.Metadata = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'exif',
+	tag: 'metadata',
 	depends: [
 		'base',
 	],
@@ -69,23 +68,23 @@ module.EXIF = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ 
 		return this.runtime == 'nw' || this.runtime == 'node' },
 
-	actions: EXIFActions,
+	actions: MetadataActions,
 })
 
 
 //---------------------------------------------------------------------
-// Exif reader/writer...
+// Metadata reader/writer...
 
 
-// XXX add exif writer...
-var EXIFReaderActions = actions.Actions({
+// XXX add Metadata writer...
+var MetadataReaderActions = actions.Actions({
 	// XXX should this be sync???
 	// XXX should this process multiple images???
 	// XXX also check the metadata/ folder (???)
 	// XXX this uses .markChanged(..) form filesystem.FileSystemWriter 
 	// 		feature, but technically does not depend on it...
 	// XXX should we store metadata in an image (current) or in fs???
-	readExif: ['- Image/Get exif data',
+	readMetadata: ['- Image/Get metadata data',
 		function(image, force){
 			var that = this
 
@@ -123,19 +122,19 @@ var EXIFReaderActions = actions.Actions({
 			})
 		}],
 
-	// XXX take image exif and write it to target...
-	writeExif: ['- Image/Set exif data',
+	// XXX take image Metadata and write it to target...
+	writeMetadata: ['- Image/Set metadata data',
 		function(image, target){
 			// XXX
 		}]
 })
 
-var EXIFReader = 
-module.EXIF = core.ImageGridFeatures.Feature({
+var MetadataReader = 
+module.Metadata = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'exif-reader',
+	tag: 'metadata-reader',
 	depends: [
 		'base',
 	],
@@ -143,13 +142,13 @@ module.EXIF = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ 
 		return this.runtime == 'nw' || this.runtime == 'node' },
 
-	actions: EXIFReaderActions,
+	actions: MetadataReaderActions,
 })
 
 
 
 //---------------------------------------------------------------------
-// Exif editor/viewer...
+// Metadata editor/viewer...
 //
 // XXX first instinct is to use browse with editable fields as it will
 // 		give us: 
@@ -167,46 +166,42 @@ module.EXIF = core.ImageGridFeatures.Feature({
 // 		...need to think about this...
 
 // XXX this should basically be platform independent...
-var EXIFUIActions = actions.Actions({
-	showExif: ['Image/Show exif',
+var MetadataUIActions = actions.Actions({
+	showMetadata: ['Image/Show metadata',
 		function(image, force){
 			image = this.data.getImage(image)
-			var exif = !force 
-				&& this.images[image].metadata 
-				|| this.getExif(image, force)
-
 			// XXX make a list with two .text elements per list item:
-			// 			.text.field		- exif field name
-			// 			.text.value		- exif field value 
+			// 			.text.field		- metadata field name
+			// 			.text.value		- metadata field value 
 			// 		Add CSS:
-			// 			.exif-browser .list>div .text {
+			// 			.metadata-browser .list>div .text {
 			// 				display: inline-block;
 			// 				width: 50%;
 			// 			}
-			// 			.exif-browser .list>div .text:first-child {
+			// 			.metadata-browser .list>div .text:first-child {
 			// 				text-align: right; 
 			// 			}
-			// 			.exif-browser .list>div .text:first-child:after {
+			// 			.metadata-browser .list>div .text:first-child:after {
 			// 				content: ": ";
 			// 			}
-			// 			.exif-browser .list>div .text:last-child {
+			// 			.metadata-browser .list>div .text:last-child {
 			// 			}
 		}]
 })
 
 // XXX
-var EXIFUI = 
-module.EXIFUI = core.ImageGridFeatures.Feature({
+var MetadataUI = 
+module.MetadataUI = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-exif',
+	tag: 'ui-metadata',
 	depends: [
 		'ui',
-		'exif',
+		'metadata',
 	],
 
-	actions: EXIFUIActions,
+	actions: MetadataUIActions,
 })
 
 

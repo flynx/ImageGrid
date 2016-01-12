@@ -356,7 +356,7 @@ actions.Actions({
 				}
 			}, 50)
 		}],
-	alignByFirst: ['Interface/Aling ribbons except current to first image',
+	alignByFirst: ['Interface/Align ribbons except current to first image',
 		function(target){
 			var ribbons = this.ribbons
 			var data = this.data
