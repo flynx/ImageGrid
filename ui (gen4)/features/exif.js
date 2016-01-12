@@ -24,7 +24,9 @@ var core = require('features/core')
 
 
 /*********************************************************************/
-// XXX make metadata a prop of image...
+// XXX make metadata a prop of image... (???)
+// XXX Q: should we standardise metadata field names and adapt them to 
+// 		lib???
 
 var MetadataActions = actions.Actions({
 	getMetadata: ['- Image/Get metadata data',
@@ -64,9 +66,6 @@ module.Metadata = core.ImageGridFeatures.Feature({
 	depends: [
 		'base',
 	],
-
-	isApplicable: function(){ 
-		return this.runtime == 'nw' || this.runtime == 'node' },
 
 	actions: MetadataActions,
 })
@@ -130,13 +129,13 @@ var MetadataReaderActions = actions.Actions({
 })
 
 var MetadataReader = 
-module.Metadata = core.ImageGridFeatures.Feature({
+module.MetadataReader = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'metadata-reader',
+	tag: 'fs-metadata',
 	depends: [
-		'base',
+		'metadata',
 	],
 
 	isApplicable: function(){ 
@@ -164,9 +163,14 @@ module.Metadata = core.ImageGridFeatures.Feature({
 // 				- script layout tweaking (post-update)
 //
 // 		...need to think about this...
+// XXX add a way to sort fields...
 
 // XXX this should basically be platform independent...
 var MetadataUIActions = actions.Actions({
+	config: {
+		'metadata-field-order': [
+		],
+	}
 	showMetadata: ['Image/Show metadata',
 		function(image, force){
 			image = this.data.getImage(image)

@@ -750,6 +750,10 @@ var BrowserPrototype = {
 		// NOTE: this will be set to true if make(..) is called at least once...
 		var interactive = false
 
+		// XXX p should be understood as:
+		// 		- str	(done)
+		// 		- [str, ...]
+		// 		- DOM/jQuery
 		var make = function(p, traversable, disabled){
 			p = p + ''
 			var dir = /[\\\/]\s*$/
