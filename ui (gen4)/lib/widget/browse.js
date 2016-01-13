@@ -756,6 +756,8 @@ var BrowserPrototype = {
 		// 		- DOM/jQuery
 		var make = function(p, traversable, disabled){
 			p = p + ''
+
+			// trailing '/' -- dir...
 			var dir = /[\\\/]\s*$/
 			traversable = dir.test(p) && traversable == null ? true : traversable
 			traversable = traversable == null ? false : traversable
