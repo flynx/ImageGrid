@@ -170,7 +170,8 @@ var MetadataUIActions = actions.Actions({
 	config: {
 		'metadata-field-order': [
 		],
-	}
+	},
+
 	showMetadata: ['Image/Show metadata',
 		function(image, force){
 			image = this.data.getImage(image)
