@@ -755,13 +755,32 @@ var BrowserPrototype = {
 		// 		- [str, ...]
 		// 		- DOM/jQuery
 		var make = function(p, traversable, disabled){
-			p = p + ''
+			// array of str...
+			if(p.constructor === Array){
+				// XXX check if traversable...
+				p = $(p.map(function(t){
+					return $('<span>')
+						.addClass('text')
+						.text(t)[0]
+				}))
 
-			// trailing '/' -- dir...
-			var dir = /[\\\/]\s*$/
-			traversable = dir.test(p) && traversable == null ? true : traversable
-			traversable = traversable == null ? false : traversable
-			p = p.replace(dir, '')
+			// jQuery or dom...
+			} else if(p instanceof jQuery){
+				// XXX disable search???
+				console.warn('jQuery objects as browse list elements not yet supported.')
+
+			// str and other stuff...
+			} else {
+				p = p + ''
+
+				// trailing '/' -- dir...
+				var dir = /[\\\/]\s*$/
+				traversable = dir.test(p) && traversable == null ? true : traversable
+				traversable = traversable == null ? false : traversable
+				p = $('<span>')
+						.addClass('text')
+						.text(p.replace(dir, ''))
+			}
 
 			interactive = true
 
@@ -781,10 +800,8 @@ var BrowserPrototype = {
 						that.push($(this).find('.text').text())
 					}
 				})
-				// XXX add support for multiple .test blocks...
-				.append($('<span>')
-					.addClass('text')
-					.text(p))
+				// append text elements... 
+				.append(p)
 
 			if(!traversable){
 				res.addClass('not-traversable')

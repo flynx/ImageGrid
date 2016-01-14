@@ -106,7 +106,6 @@ body.dark {
 <script src="../../ext-lib/jquery-ui.js"></script>
 
 <script src="../jli.js"></script>
-<script src="../toggler.js"></script>
 
 <script src="../../ext-lib/require.js"></script>
 
@@ -161,10 +160,21 @@ TREE.dir_c.dir_b.tree = TREE
 var use_disabled = true
 var show_files = false
 
-requirejs(['../keyboard', '../object', './browse'], function(k, o, br){
+requirejs(['../keyboard', '../object', '../toggler', './browse'], function(k, o, t, br){
 	keyboard = k
 	object = o
+	toggler = t
 	browser = br
+
+	themeToggler = toggler.CSSClassToggler('body',
+			[
+				'none', 
+				'light',
+				'dark', 
+			],
+			function(state){
+				$('#theme').text(state)
+			})
 
 	// Tree demo...
 	b = browser.Browser($('.container.tree'), {
@@ -356,15 +366,6 @@ $(function(){
 
 
 
-var themeToggler = CSSClassToggler('body',
-		[
-			'none', 
-			'light',
-			'dark', 
-		],
-		function(state){
-			$('#theme').text(state)
-		})
 function toggleDisabled(){
 	use_disabled = !use_disabled
 
