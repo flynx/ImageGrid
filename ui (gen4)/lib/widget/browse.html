@@ -160,7 +160,12 @@ TREE.dir_c.dir_b.tree = TREE
 var use_disabled = true
 var show_files = false
 
-requirejs(['../keyboard', '../object', '../toggler', './browse'], function(k, o, t, br){
+requirejs([
+			'../keyboard', 
+			'../object', 
+			'../toggler', 
+			'./browse'
+		], function(k, o, t, br){
 	keyboard = k
 	object = o
 	toggler = t

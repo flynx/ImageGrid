@@ -252,40 +252,40 @@
 	float: left;
 	font-size: small;
 }
-.browse-widget.filtering .list>div .text:before {
+.browse-widget.filtering .list>div .text:first-child:before {
 	display: none;
 }
 
-.browse-widget .list>div .text:before {
+.browse-widget .list>div .text:first-child:before {
 	width: 12px;
 	margin-left: -15px;
 }
 
-.browse-widget .list>div:nth-of-type(1) .text:before {
+.browse-widget .list>div:nth-of-type(1) .text:first-child:before {
 	content: "1";
 }
-.browse-widget .list>div:nth-of-type(2) .text:before {
+.browse-widget .list>div:nth-of-type(2) .text:first-child:before {
 	content: "2";
 }
-.browse-widget .list>div:nth-of-type(3) .text:before {
+.browse-widget .list>div:nth-of-type(3) .text:first-child:before {
 	content: "3";
 }
-.browse-widget .list>div:nth-of-type(4) .text:before {
+.browse-widget .list>div:nth-of-type(4) .text:first-child:before {
 	content: "4";
 }
-.browse-widget .list>div:nth-of-type(5) .text:before {
+.browse-widget .list>div:nth-of-type(5) .text:first-child:before {
 	content: "5";
 }
-.browse-widget .list>div:nth-of-type(6) .text:before {
+.browse-widget .list>div:nth-of-type(6) .text:first-child:before {
 	content: "6";
 }
-.browse-widget .list>div:nth-of-type(7) .text:before {
+.browse-widget .list>div:nth-of-type(7) .text:first-child:before {
 	content: "7";
 }
-.browse-widget .list>div:nth-of-type(8) .text:before {
+.browse-widget .list>div:nth-of-type(8) .text:first-child:before {
 	content: "8";
 }
-.browse-widget .list>div:nth-of-type(9) .text:before {
+.browse-widget .list>div:nth-of-type(9) .text:first-child:before {
 	content: "9";
 }
 

@@ -385,6 +385,8 @@ var URLHistoryUIActions = actions.Actions({
 										var top = this.filter('*', false).first()
 										var cur = this.filter('"'+p+'"', false)
 
+										console.log('!!!', p)
+
 										if(!top.is(cur)){
 											top.before(cur)
 											that.setTopURLHistory(p)

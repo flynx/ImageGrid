@@ -21,6 +21,9 @@ define(function(require){ var module = {}
 var actions = require('lib/actions')
 var core = require('features/core')
 
+var browse = require('lib/widget/browse')
+var overlay = require('lib/widget/overlay')
+
 
 
 /*********************************************************************/
@@ -191,6 +194,25 @@ var MetadataUIActions = actions.Actions({
 			// 			}
 			// 			.metadata-browser .list>div .text:last-child {
 			// 			}
+
+			
+			var o = overlay.Overlay(this.ribbons.viewer, 
+				browse.makeList(
+						null,
+						[
+							['aaa', 'bbb'],
+							['bbb', 'ccc'],
+							['ccc', 'ddd'],
+						])
+					// path selected...
+					.open(function(evt, path){ 
+						console.log('!!!!!', path)
+						o.close()
+					}))
+					.close(function(){
+					})
+
+			return o
 		}]
 })
 

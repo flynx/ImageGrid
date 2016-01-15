@@ -20,9 +20,9 @@ define(function(require){ var module = {}
 
 //var promise = require('promise')
 
-var toggler = require('lib/toggler')
-var keyboard = require('lib/keyboard')
-var object = require('lib/object')
+var toggler = require('../toggler')
+var keyboard = require('../keyboard')
+var object = require('../object')
 var widget = require('./widget')
 
 
@@ -757,6 +757,7 @@ var BrowserPrototype = {
 		var make = function(p, traversable, disabled){
 			// array of str...
 			if(p.constructor === Array){
+				var txt = p.join('')
 				// XXX check if traversable...
 				p = $(p.map(function(t){
 					return $('<span>')
@@ -766,12 +767,14 @@ var BrowserPrototype = {
 
 			// jQuery or dom...
 			} else if(p instanceof jQuery){
+				// XXX is this the correct way to do this???
+				var txt = p.text()
 				// XXX disable search???
 				console.warn('jQuery objects as browse list elements not yet supported.')
 
 			// str and other stuff...
 			} else {
-				p = p + ''
+				var txt = p = p + ''
 
 				// trailing '/' -- dir...
 				var dir = /[\\\/]\s*$/
@@ -820,7 +823,7 @@ var BrowserPrototype = {
 						: that.options.actionButton)
 					.click(function(evt){
 						evt.stopPropagation()
-						that.select('"'+ p +'"')
+						that.select('"'+ txt +'"')
 						that.action()
 					}))
 			}
@@ -833,7 +836,7 @@ var BrowserPrototype = {
 						: that.options.pushButton)
 					.click(function(evt){
 						evt.stopPropagation()
-						that.push('"'+ p +'"')
+						that.push('"'+ txt +'"')
 					}))
 			}
 
@@ -857,11 +860,11 @@ var BrowserPrototype = {
 
 							// action name...
 							if(typeof(func) == typeof('str')){
-								that[func](p)
+								that[func](txt)
 
 							// handler...
 							} else {
-								func.call(that, p)
+								func.call(that, txt)
 							}
 						}))
 				})
@@ -2092,8 +2095,10 @@ ListPrototype.options = {
 		return keys
 			.map(function(k){
 				var disable = null
+				var n = k
 
-				if(pattern){
+				// XXX make this support list args as well...
+				if(pattern && typeof(k) == typeof('str')){
 					var n = k.replace(pattern, '')
 					if(n != k){
 						disable = true
