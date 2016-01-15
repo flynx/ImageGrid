@@ -218,6 +218,9 @@ module.GLOBAL_KEYBOARD = {
 			ctrl: 'toggleMark!: "ribbon" "off"',
 		},
 		I: {
+			default: 'showMetadata',
+			shift: 'showMetadata: "current" "full"',
+
 			ctrl: 'toggleMark!: "ribbon"',
 
 			'meta+alt': 'showDevTools',

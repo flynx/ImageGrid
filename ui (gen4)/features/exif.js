@@ -79,6 +79,7 @@ module.Metadata = core.ImageGridFeatures.Feature({
 
 
 // XXX add Metadata writer...
+// XXX need a way to trigger read-metadata...
 var MetadataReaderActions = actions.Actions({
 	// XXX should this be sync???
 	// XXX should this process multiple images???
@@ -91,7 +92,12 @@ var MetadataReaderActions = actions.Actions({
 			var that = this
 
 			var gid = this.data.getImage(image)
-			var img = this.images[gid]
+			var img = this.images && this.images[gid]
+
+			if(!image){
+				return
+			}
+
 			var full_path = path.normalize(img.base_path +'/'+ img.path)
 
 			return new promise(function(resolve, reject){
@@ -119,6 +125,8 @@ var MetadataReaderActions = actions.Actions({
 
 							resolve(data)
 						}
+
+						resolve(data)
 					})
 				})
 			})
@@ -145,6 +153,20 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 		return this.runtime == 'nw' || this.runtime == 'node' },
 
 	actions: MetadataReaderActions,
+
+	handlers: [
+		// XXX STUB: need a better strategy to read metadata...
+		['focusImage', 
+			function(){
+				var gid = this.current
+				metadata = this.images && this.images[gid] && this.images[gid].metadata
+				metadata = metadata && (Object.keys(metadata).length > 0)
+
+				if(!metadata){
+					this.readMetadata(gid)
+				}
+			}]
+	],
 })
 
 
@@ -169,48 +191,91 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 // XXX add a way to sort fields...
 
 // XXX this should basically be platform independent...
+// XXX add ability to sort fields -- moving a field up/down edits .config...
+// 		...not sure how to go about this yet...
+// XXX add combined fields...
+// 		'Make' + 'Camera Model Name'
+// XXX add identical fields -- show first available and hide the rest...
+// 		'Shutter Speed', 'Exposure Time',
+// 		'Lens ID', 'Lens'
 var MetadataUIActions = actions.Actions({
 	config: {
 		'metadata-field-order': [
+			'Make', 'Camera Model Name', 'Lens ID', 'Lens', 'Lens Profile Name', 'Focal Length',
+
+			'Metering Mode', 'Exposure Program', 'Exposure Compensation', 
+			'Shutter Speed Value', 'Aperture Value', 'Iso',
+
+			'Artist', 'Copyright',
+
+			'Date/time Original', 'Create Date', 'Modify Date',
+
+			'Mime Type',
+
+			// NOTE: this is here so as not to hide the 'metadata: unavailable'
+			// 		message when not metadata is present and .showMetadata(..)
+			// 		is called in 'short' mode...
+			'Metadata',
 		],
 	},
 
 	showMetadata: ['Image/Show metadata',
-		function(image, force){
+		function(image, mode){
 			image = this.data.getImage(image)
-			// XXX make a list with two .text elements per list item:
-			// 			.text.field		- metadata field name
-			// 			.text.value		- metadata field value 
-			// 		Add CSS:
-			// 			.metadata-browser .list>div .text {
-			// 				display: inline-block;
-			// 				width: 50%;
-			// 			}
-			// 			.metadata-browser .list>div .text:first-child {
-			// 				text-align: right; 
-			// 			}
-			// 			.metadata-browser .list>div .text:first-child:after {
-			// 				content: ": ";
-			// 			}
-			// 			.metadata-browser .list>div .text:last-child {
-			// 			}
+			mode = mode || 'short'
 
+			var field_order = this.config['metadata-field-order'] || []
+			var x = field_order.length + 1
+
+			// get image metadata...
+			var metadata = (this.images 
+					&& this.images[image] 
+					&& this.images[image].metadata)
+				|| { metadata: 'unavailable.' }
+
+			// build fields...
+			var fields = []
+			Object.keys(metadata).forEach(function(k){
+				var n =  k
+					// convert camel-case to human-case ;)
+					.replace(/([A-Z]+)/g, ' $1')
+					.capitalize()
+
+				// skip metadata stuff in short mode...
+				if(mode == 'short' 
+						&& field_order.indexOf(n) == -1){
+					return
+				}
+
+				fields.push([ n + ': ',
+						metadata[k] ])
+			})
+
+			// sort fields...
+			fields.sort(function(a, b){
+				a = field_order.indexOf(a[0].replace(/: $/, ''))
+				a = a == -1 ? x : a
+				b = field_order.indexOf(b[0].replace(/: $/, ''))
+				b = b == -1 ? x : b
+				return a - b
+			})
+
+			// XXX replace field names with pretty names...
+			// XXX do two types of fields:
+			// 		- base
+			// 		- other (browse.Browse + sub-directory???)
 			
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
 						null,
-						[
-							['aaa', 'bbb'],
-							['bbb', 'ccc'],
-							['ccc', 'ddd'],
-						])
+						fields)
 					// path selected...
 					.open(function(evt, path){ 
-						console.log('!!!!!', path)
-						o.close()
+						//o.close()
 					}))
 					.close(function(){
 					})
+			o.client.dom.addClass('metadata-view')
 
 			return o
 		}]
