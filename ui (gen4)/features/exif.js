@@ -219,6 +219,7 @@ var MetadataUIActions = actions.Actions({
 		],
 	},
 
+	// XXX should we replace 'mode' with nested set of metadata???
 	showMetadata: ['Image/Show metadata',
 		function(image, mode){
 			image = this.data.getImage(image)
@@ -242,13 +243,17 @@ var MetadataUIActions = actions.Actions({
 					.capitalize()
 
 				// skip metadata stuff in short mode...
-				if(mode == 'short' 
+				if(mode != 'full' 
 						&& field_order.indexOf(n) == -1){
-					return
+					if(mode == 'short'){
+						return
+
+					} else if(mode == 'disabled') {
+						n = '- ' + n
+					}
 				}
 
-				fields.push([ n + ': ',
-						metadata[k] ])
+				fields.push([ n + ': ', metadata[k] ])
 			})
 
 			// sort fields...
@@ -260,11 +265,6 @@ var MetadataUIActions = actions.Actions({
 				return a - b
 			})
 
-			// XXX replace field names with pretty names...
-			// XXX do two types of fields:
-			// 		- base
-			// 		- other (browse.Browse + sub-directory???)
-			
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
 						null,

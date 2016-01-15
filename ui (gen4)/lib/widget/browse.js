@@ -2098,10 +2098,18 @@ ListPrototype.options = {
 				var n = k
 
 				// XXX make this support list args as well...
-				if(pattern && typeof(k) == typeof('str')){
-					var n = k.replace(pattern, '')
-					if(n != k){
+				if(pattern){
+					var t = typeof(n) == typeof('str') ? n : n[0]
+
+					var tt = t.replace(pattern, '')
+					if(t != tt){
 						disable = true
+
+						if(typeof(k) == typeof('str')){
+							n = tt
+						} else {
+							n[0] = tt
+						}
 
 						if(that.options.skipDisabledItems){
 							return
