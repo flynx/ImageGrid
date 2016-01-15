@@ -198,6 +198,8 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 // XXX add identical fields -- show first available and hide the rest...
 // 		'Shutter Speed', 'Exposure Time',
 // 		'Lens ID', 'Lens'
+// XXX show all fields but make some of them hidden/disabled 
+// 		-- togglable via D
 var MetadataUIActions = actions.Actions({
 	config: {
 		'metadata-field-order': [
@@ -220,10 +222,13 @@ var MetadataUIActions = actions.Actions({
 	},
 
 	// XXX should we replace 'mode' with nested set of metadata???
+	// XXX BUG: with mode 'disabled' key D enables elements but does not
+	// 		hide them...
 	showMetadata: ['Image/Show metadata',
 		function(image, mode){
 			image = this.data.getImage(image)
-			mode = mode || 'short'
+			//mode = mode || 'short'
+			mode = mode || 'disabled'
 
 			var field_order = this.config['metadata-field-order'] || []
 			var x = field_order.length + 1
