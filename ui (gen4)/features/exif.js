@@ -174,6 +174,8 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Metadata editor/viewer...
 //
+// NOTE: this is by-design platform independent...
+//
 // XXX first instinct is to use browse with editable fields as it will
 // 		give us: 
 // 			- searchability
@@ -188,10 +190,9 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 // 				- script layout tweaking (post-update)
 //
 // 		...need to think about this...
-// XXX add a way to sort fields...
 
-// XXX this should basically be platform independent...
-// XXX add ability to sort fields -- moving a field up/down edits .config...
+// XXX add ability to manually sort fields -- moving a field up/down 
+// 		edits .config...
 // 		...not sure how to go about this yet...
 // XXX add combined fields...
 // 		'Make' + 'Camera Model Name'
@@ -200,6 +201,7 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 // 		'Lens ID', 'Lens'
 // XXX show all fields but make some of them hidden/disabled 
 // 		-- togglable via D
+// XXX add field editing... (open)
 var MetadataUIActions = actions.Actions({
 	config: {
 		'metadata-field-order': [
@@ -222,6 +224,7 @@ var MetadataUIActions = actions.Actions({
 	},
 
 	// XXX should we replace 'mode' with nested set of metadata???
+	// XXX make this support multiple images...
 	// XXX BUG: with mode 'disabled' key D enables elements but does not
 	// 		hide them...
 	showMetadata: ['Image/Show metadata',
@@ -276,7 +279,13 @@ var MetadataUIActions = actions.Actions({
 						fields)
 					// path selected...
 					.open(function(evt, path){ 
-						//o.close()
+						// edit field...
+						/*
+						o.client.filter().find('.text')
+							.last()
+							.prop('contenteditable', true)
+							.focus()
+						*/
 					}))
 					.close(function(){
 					})
