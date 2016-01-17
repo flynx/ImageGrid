@@ -225,12 +225,9 @@ var MetadataUIActions = actions.Actions({
 
 	// XXX should we replace 'mode' with nested set of metadata???
 	// XXX make this support multiple images...
-	// XXX BUG: with mode 'disabled' key D enables elements but does not
-	// 		hide them...
 	showMetadata: ['Image/Show metadata',
 		function(image, mode){
 			image = this.data.getImage(image)
-			//mode = mode || 'short'
 			mode = mode || 'disabled'
 
 			var field_order = this.config['metadata-field-order'] || []
@@ -276,7 +273,10 @@ var MetadataUIActions = actions.Actions({
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
 						null,
-						fields)
+						fields,
+						{
+							showDisabled: false,
+						})
 					// path selected...
 					.open(function(evt, path){ 
 						// edit field...
@@ -288,6 +288,7 @@ var MetadataUIActions = actions.Actions({
 						*/
 					}))
 					.close(function(){
+						// XXX
 					})
 			o.client.dom.addClass('metadata-view')
 

@@ -2107,7 +2107,11 @@ ListPrototype.options = {
 
 						if(typeof(k) == typeof('str')){
 							n = tt
+
 						} else {
+							// NOTE: here we want to avoid .data contamination
+							// 		so we'll make a copy...
+							n = n.slice()
 							n[0] = tt
 						}
 

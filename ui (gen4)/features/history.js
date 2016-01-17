@@ -348,8 +348,7 @@ var URLHistoryUIActions = actions.Actions({
 		// 	- [ 'open', 'close' ]	- explicitly select event
 		'url-history-list-clear': ['open', 'close'],
 	},
-	// XXX BUG: when running from action menu this breaks...
-	// 			...possibly connected with restoring after .preventClosing(..)
+	// XXX make availabilyty checking live (now on open dialog)...
 	// XXX need to check items...
 	// XXX use svg icons for buttons...
 	listURLHistory: ['History|File/Show history',
@@ -375,7 +374,15 @@ var URLHistoryUIActions = actions.Actions({
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
 						null, 
-						Object.keys(this.url_history).reverse(),
+						Object.keys(this.url_history)
+							.reverse()
+							// NOTE: this might get a little slow for 
+							// 		very large sets...
+							.map(function(p){
+								return !that.checkURLFromHistory(p) ? 
+									'- ' + p 
+									: p 
+							}),
 						{
 							// add item buttons...
 							itemButtons: [
@@ -433,9 +440,11 @@ var URLHistoryUIActions = actions.Actions({
 
 			var list = o.client
 
+			/*
 			Object.keys(this.url_history).reverse().forEach(function(p){
 				that.checkURLFromHistory(p) || list.filter(p).addClass('disabled')
 			})
+			*/
 
 			// select and highlight current path...
 			cur && list
