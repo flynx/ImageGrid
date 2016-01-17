@@ -35,7 +35,7 @@ var ui = require('features/ui')
 var marks = require('features/ui-marks')
 var widgets = require('features/ui-widgets')
 var exteditor = require('features/external-editor')
-var exif = require('features/exif')
+var metadata = require('features/metadata')
 var meta = require('features/meta')
 var experimental = require('features/experimental')
 

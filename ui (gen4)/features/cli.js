@@ -127,6 +127,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 						var app = require('features/app')
 						var marks = require('features/ui-marks')
 						var filesystem = require('features/filesystem')
+						var metadata = require('features/metadata')
 						var experimental = require('features/experimental')
 
 						// extend the current instance to a minimal non-ui
