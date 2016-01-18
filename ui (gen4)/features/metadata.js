@@ -18,6 +18,8 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var tasks = require('lib/tasks')
+
 var actions = require('lib/actions')
 var core = require('features/core')
 
@@ -79,7 +81,8 @@ module.Metadata = core.ImageGridFeatures.Feature({
 
 
 // XXX add Metadata writer...
-// XXX need a way to trigger read-metadata...
+// XXX store metadata in a JSON format -- currently exiftool returns an
+// 		Array with attributes, make it an object...
 var MetadataReaderActions = actions.Actions({
 	// XXX should this be sync???
 	// XXX should this process multiple images???
@@ -120,7 +123,15 @@ var MetadataReaderActions = actions.Actions({
 						} else {
 							// store metadata...
 							// XXX 
-							that.images[gid].metadata = data
+
+							// convert to a real dict...
+							// NOTE: exiftool appears to return an array 
+							// 		object rather than an actual dict/object
+							// 		and that is not JSON compatible....
+							var m = {}
+							Object.keys(data).forEach(function(k){ m[k] = data[k] })
+
+							that.images[gid].metadata = m
 							that.markChanged && that.markChanged(gid)
 
 							resolve(data)
@@ -130,6 +141,26 @@ var MetadataReaderActions = actions.Actions({
 					})
 				})
 			})
+		}],
+
+	// XXX STUB: add support for this to .readMetadata(..)
+	_readAllMetadata: ['- Image/Read all metadata',
+		function(){
+			var that = this
+			// XXX make this a global API...
+			var q = this.__reader_queue = this.__reader_queue || tasks.Queue()
+
+			var read = function(gid){ 
+				return function(){ return that.readMetadata(gid) } }
+
+			q.start()
+
+			this.images 
+				&& this.images.forEach(function(gid){
+					q.enqueue('metadata', read(gid))
+				})
+			
+			return q
 		}],
 
 	// XXX take image Metadata and write it to target...

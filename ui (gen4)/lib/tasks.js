@@ -239,6 +239,7 @@ module.QueueActions = actions.Actions({
 				that.__running.push(elem)
 
 				// start the task...
+				// XXX should we run a task in some specific context???
 				res = task()
 				that.taskStarted(elem[0], task)
 

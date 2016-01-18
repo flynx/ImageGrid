@@ -40,6 +40,9 @@ core.ImageGridFeatures.Feature('viewer-minimal', [
 
 	'fs-loader',
 	'fs-writer',
+
+	'metadata',
+	'fs-metadata',
 ])
 
 
