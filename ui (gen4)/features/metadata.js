@@ -85,6 +85,7 @@ module.Metadata = core.ImageGridFeatures.Feature({
 // 		Array with attributes, make it an object...
 var MetadataReaderActions = actions.Actions({
 	// XXX should this be sync???
+	// XXX add support to taskqueue...
 	// XXX should this process multiple images???
 	// XXX also check the metadata/ folder (???)
 	// XXX this uses .markChanged(..) form filesystem.FileSystemWriter 
@@ -233,9 +234,21 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 // XXX show all fields but make some of them hidden/disabled 
 // 		-- togglable via D
 // XXX add field editing... (open)
+// XXX might be good to split this to sections...
+// 		- base info
+// 		- general metadata
+// 		- full metadata
+// 			- EXIF
+// 			- IPTC
+// 			- ...
 var MetadataUIActions = actions.Actions({
 	config: {
 		'metadata-field-order': [
+			// image attrs...
+			'GID', 'Index (ribbon)', 'Index (global)',
+			'File Name', 'Full Path', 
+
+			// metadata...
 			'Make', 'Camera Model Name', 'Lens ID', 'Lens', 'Lens Profile Name', 'Focal Length',
 
 			'Metering Mode', 'Exposure Program', 'Exposure Compensation', 
@@ -269,9 +282,31 @@ var MetadataUIActions = actions.Actions({
 					&& this.images[image] 
 					&& this.images[image].metadata)
 				|| { metadata: 'unavailable.' }
+			var img = this.images && this.images[image] || null
+
+			// base fields...
+			var fields = [
+				['GID: ', image],
+				// NOTE: these are 1-based and not 0-based...
+				['Index (ribbon): ', 
+					this.data.getImageOrder('ribbon', image) + 1
+					+'/'+ 
+					this.data.getImages(image).len],
+				['Index (global): ', 
+					this.data.getImageOrder(image) + 1
+					+'/'+ 
+					this.data.getImages().len],
+			]
+			// fields that expect that image data is available...
+			if(img){
+				fields = fields.concat([
+					['File Name: ', img.path],
+					// XXX normalize this...
+					['Full Path: ', (img.base_path || '.') +'/'+ img.path],
+				])
+			}
 
 			// build fields...
-			var fields = []
 			Object.keys(metadata).forEach(function(k){
 				var n =  k
 					// convert camel-case to human-case ;)
