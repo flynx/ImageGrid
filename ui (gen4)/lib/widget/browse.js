@@ -297,6 +297,27 @@ var BrowserPrototype = {
 
 			//'keydown',
 		],
+
+
+		// Separator element...
+	
+		// Element text as passed to make(..) to generate a separator
+		// element rather than a list element...
+		//
+		// NOTE: if null text checking is disabled...
+		elementSeparatorText: null,
+
+		// Separator class...
+		//
+		// NOTE: if make(..) is passed an element with this class it will
+		// 		be treated as a separator and not as a list element.
+		// NOTE: to disable class checking set this to null
+		elementSeparatorClass: 'separator',
+
+		// Separator HTML code...
+		//
+		// NOTE: if this is null, then '<hr>' is used.
+		elementSeparatorHTML: '<hr>',
 	},
 
 	// XXX TEST: this should prevent event propagation...
@@ -755,6 +776,20 @@ var BrowserPrototype = {
 		// 		- [str, ...]
 		// 		- DOM/jQuery
 		var make = function(p, traversable, disabled){
+			// special case separator...
+			if(p && (p == that.options.elementSeparatorText
+					|| (p.hasClass 
+						&& that.options.elementSeparatorClass 
+						&& p.hasClass(that.options.elementSeparatorClass)))){
+				var res = p
+				if(typeof(res) == typeof('str')){
+					res = $(that.options.elementSeparatorHTML || '<hr>')
+						.addClass(that.options.elementSeparatorClass || '')
+				}
+				res.appendTo(l)
+				return res
+			}
+
 			// array of str...
 			if(p.constructor === Array){
 				var txt = p.join('')
@@ -1026,6 +1061,9 @@ var BrowserPrototype = {
 		var browser = this.dom
 
 		var elems = browser.find('.list>div' 
+			+ (this.options.elementSeparatorClass ? 
+				':not('+ this.options.elementSeparatorClass +')'
+				: '')
 			+ (ignore_disabled ? 
 				':not(.disabled):not(.filtered-out)' 
 				: ''))
@@ -1372,7 +1410,11 @@ var BrowserPrototype = {
 	// NOTE: this uses .filter(..) for string and regexp matching...
 	select: function(elem, filtering){
 		var browser = this.dom
-		var pattern = '.list>div:not(.disabled):not(.filtered-out):visible'
+		var pattern = '.list>div'
+			+ (this.options.elementSeparatorClass ? 
+				':not('+ this.options.elementSeparatorClass +')'
+				: '')
+			+':not(.disabled):not(.filtered-out):visible'
 		var elems = browser.find(pattern)
 
 		if(elems.length == 0){
@@ -1477,7 +1519,11 @@ var BrowserPrototype = {
 	// .navigate('next') will simply navigate to the next element while
 	// .select('next') / .filter('next') will yield that element by name.
 	navigate: function(action, filtering){
-		var pattern = '.list>div:not(.disabled):not(.filtered-out):visible'
+		var pattern = '.list>div'
+			+ (this.options.elementSeparatorClass ? 
+				':not('+ this.options.elementSeparatorClass +')'
+				: '')
+			+':not(.disabled):not(.filtered-out):visible'
 		action = action || 'first'
 																   
 		if(action == 'none'){
@@ -2085,6 +2131,8 @@ ListPrototype.options = {
 	// NOTE: to disable this set it to false or null
 	disableItemPattern: '^- ',
 
+	elementSeparatorText: '---',
+
 	list: function(path, make){
 		var that = this
 		var data = this.options.data
@@ -2123,7 +2171,7 @@ ListPrototype.options = {
 
 				var e = make(n, null, disable)
 
-				if(data !== keys){
+				if(data !== keys && that.options.data[k] != null){
 					e.on('open', function(){ 
 						return that.options.data[k].apply(this, arguments)
 					})

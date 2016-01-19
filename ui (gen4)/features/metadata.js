@@ -244,10 +244,6 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 var MetadataUIActions = actions.Actions({
 	config: {
 		'metadata-field-order': [
-			// image attrs...
-			'GID', 'Index (ribbon)', 'Index (crop)', 'Index (global)',
-			'File Name', 'Full Path', 
-
 			// metadata...
 			'Make', 'Camera Model Name', 'Lens ID', 'Lens', 'Lens Profile Name', 'Focal Length',
 
@@ -259,11 +255,6 @@ var MetadataUIActions = actions.Actions({
 			'Date/time Original', 'Create Date', 'Modify Date',
 
 			'Mime Type',
-
-			// NOTE: this is here so as not to hide the 'metadata: unavailable'
-			// 		message when not metadata is present and .showMetadata(..)
-			// 		is called in 'short' mode...
-			'Metadata',
 		],
 	},
 
@@ -277,16 +268,13 @@ var MetadataUIActions = actions.Actions({
 			var field_order = this.config['metadata-field-order'] || []
 			var x = field_order.length + 1
 
-			// get image metadata...
-			var metadata = (this.images 
-					&& this.images[image] 
-					&& this.images[image].metadata)
-				|| { metadata: 'unavailable.' }
 			var img = this.images && this.images[image] || null
+			// get image metadata...
+			var metadata = img && img.metadata || {} 
 
 			// XXX move these to an info feature...
 			// base fields...
-			var fields = [
+			var base = [
 				['GID: ', image],
 				// NOTE: these are 1-based and not 0-based...
 				['Index (ribbon): ', 
@@ -301,7 +289,7 @@ var MetadataUIActions = actions.Actions({
 			]
 			// crop-specific stuff...
 			if(this.crop_stack && this.crop_stack.len > 0){
-				fields = fields.concat([
+				base = base.concat([
 					['Index (crop): ', 
 						this.data.getImageOrder('loaded', image) + 1
 						+'/'+ 
@@ -310,7 +298,7 @@ var MetadataUIActions = actions.Actions({
 			}
 			// fields that expect that image data is available...
 			if(img){
-				fields = fields.concat([
+				base = base.concat([
 					['File Name: ', img.path],
 					// XXX normalize this...
 					['Full Path: ', (img.base_path || '.') +'/'+ img.path],
@@ -318,6 +306,7 @@ var MetadataUIActions = actions.Actions({
 			}
 
 			// build fields...
+			var fields = []
 			Object.keys(metadata).forEach(function(k){
 				var n =  k
 					// convert camel-case to human-case ;)
@@ -347,10 +336,13 @@ var MetadataUIActions = actions.Actions({
 				return a - b
 			})
 
+			// add separator to base...
+			fields.length > 0 && base.push('---')
+
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
 						null,
-						fields,
+						base.concat(fields),
 						{
 							showDisabled: false,
 						})
