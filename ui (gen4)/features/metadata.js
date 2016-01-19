@@ -245,7 +245,7 @@ var MetadataUIActions = actions.Actions({
 	config: {
 		'metadata-field-order': [
 			// image attrs...
-			'GID', 'Index (ribbon)', 'Index (global)',
+			'GID', 'Index (ribbon)', 'Index (crop)', 'Index (global)',
 			'File Name', 'Full Path', 
 
 			// metadata...
@@ -284,6 +284,7 @@ var MetadataUIActions = actions.Actions({
 				|| { metadata: 'unavailable.' }
 			var img = this.images && this.images[image] || null
 
+			// XXX move these to an info feature...
 			// base fields...
 			var fields = [
 				['GID: ', image],
@@ -292,11 +293,21 @@ var MetadataUIActions = actions.Actions({
 					this.data.getImageOrder('ribbon', image) + 1
 					+'/'+ 
 					this.data.getImages(image).len],
+				// show this only when cropped...
 				['Index (global): ', 
 					this.data.getImageOrder(image) + 1
 					+'/'+ 
-					this.data.getImages().len],
+					this.data.getImages('all').len],
 			]
+			// crop-specific stuff...
+			if(this.crop_stack && this.crop_stack.len > 0){
+				fields = fields.concat([
+					['Index (crop): ', 
+						this.data.getImageOrder('loaded', image) + 1
+						+'/'+ 
+						this.data.getImages('loaded').len],
+				])
+			}
 			// fields that expect that image data is available...
 			if(img){
 				fields = fields.concat([
