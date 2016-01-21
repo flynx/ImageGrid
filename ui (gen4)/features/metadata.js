@@ -365,7 +365,6 @@ var MetadataUIActions = actions.Actions({
 		}]
 })
 
-// XXX
 var MetadataUI = 
 module.MetadataUI = core.ImageGridFeatures.Feature({
 	title: '',
