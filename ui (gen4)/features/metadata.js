@@ -244,6 +244,7 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 // 			- EXIF
 // 			- IPTC
 // 			- ...
+// XXX should this be a panel or a list (as is now...)????
 var MetadataUIActions = actions.Actions({
 	config: {
 		'metadata-auto-select-modes': [
@@ -259,6 +260,10 @@ var MetadataUIActions = actions.Actions({
 			'Comment',
 		],
 		'metadata-field-order': [
+			// base
+			'GID', 
+			'File Name', 'Parent Directory', 'Full Path',
+
 			// metadata...
 			'Make', 'Camera Model Name', 'Lens ID', 'Lens', 'Lens Profile Name', 'Focal Length',
 
@@ -292,6 +297,23 @@ var MetadataUIActions = actions.Actions({
 			// get image metadata...
 			var metadata = img && img.metadata || {} 
 
+			// helpers...
+			var _cmp = function(a, b){
+				a = field_order.indexOf(a[0].replace(/: $/, ''))
+				a = a == -1 ? x : a
+				b = field_order.indexOf(b[0].replace(/: $/, ''))
+				b = b == -1 ? x : b
+				return a - b
+			}
+			var _selectElemText = function(elem){
+				var range = document.createRange()
+				range.selectNodeContents(elem)
+				var sel = window.getSelection()
+				sel.removeAllRanges()
+				sel.addRange(range)
+			}
+
+
 			// XXX move these to an info feature...
 			// base fields...
 			var base = [
@@ -318,10 +340,24 @@ var MetadataUIActions = actions.Actions({
 			}
 			// fields that expect that image data is available...
 			if(img){
+				// XXX should these be here???
+				var _normalize = typeof(path) != 'undefined' ? 
+					path.normalize
+					: function(e){ return e.replace(/\/\.\//, '') }
+				var _basename = typeof(path) != 'undefined' ?
+					path.basename
+					: function(e){ return e.split(/[\\\/]/g).pop() }
+				var _dirname = typeof(path) != 'undefined' ?
+					function(e){ return path.normalize(path.dirname(e)) }
+					: function(e){ return _normalize(e.split(/[\\\/]/g).slice(0, -1).join('/')) }
+
 				base = base.concat([
-					['File Name: ', img.path],
-					// XXX normalize this...
-					['Full Path: ', (img.base_path || '.') +'/'+ img.path],
+					['File Name: ', 
+						_basename(img.path)],
+					['Parent Directory: ', 
+						_dirname((img.base_path || '.') +'/'+ img.path)],
+					['Full Path: ', 
+						_normalize((img.base_path || '.') +'/'+ img.path)],
 				])
 			}
 
@@ -349,24 +385,11 @@ var MetadataUIActions = actions.Actions({
 			})
 
 			// sort fields...
-			fields.sort(function(a, b){
-				a = field_order.indexOf(a[0].replace(/: $/, ''))
-				a = a == -1 ? x : a
-				b = field_order.indexOf(b[0].replace(/: $/, ''))
-				b = b == -1 ? x : b
-				return a - b
-			})
+			base.sort(_cmp)
+			fields.sort(_cmp)
 
 			// add separator to base...
 			fields.length > 0 && base.push('---')
-
-			var selectElemText = function(elem){
-				var range = document.createRange()
-				range.selectNodeContents(elem)
-				var sel = window.getSelection()
-				sel.removeAllRanges()
-				sel.addRange(range)
-			}
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
@@ -378,7 +401,7 @@ var MetadataUIActions = actions.Actions({
 					// select value of current item...
 					.on('select', function(evt, elem){
 						if(that.config['metadata-auto-select-mode'] == 'on select'){
-							selectElemText($(elem).find('.text').last()[0])
+							_selectElemText($(elem).find('.text').last()[0])
 						}
 					})
 					// path selected...
@@ -389,8 +412,9 @@ var MetadataUIActions = actions.Actions({
 
 						var elem = o.client.filter(path).find('.text').last()
 
+						// handle select...
 						if(that.config['metadata-auto-select-mode'] == 'on open'){
-							selectElemText(elem[0])
+							_selectElemText(elem[0])
 						}
 
 						// skip non-editable fields...
