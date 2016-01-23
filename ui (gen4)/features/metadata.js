@@ -18,10 +18,13 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var util = require('lib/util')
+var toggler = require('lib/toggler')
 var tasks = require('lib/tasks')
 
 var actions = require('lib/actions')
 var core = require('features/core')
+var base = require('features/base')
 
 var browse = require('lib/widget/browse')
 var overlay = require('lib/widget/overlay')
@@ -243,6 +246,18 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 // 			- ...
 var MetadataUIActions = actions.Actions({
 	config: {
+		'metadata-auto-select-modes': [
+			'none',
+			'on select',
+			'on open',
+		],
+		'metadata-auto-select-mode': 'on select',
+
+		'metadata-editable-fields': [
+			'Artist',
+			'Copyright',
+			'Comment',
+		],
 		'metadata-field-order': [
 			// metadata...
 			'Make', 'Camera Model Name', 'Lens ID', 'Lens', 'Lens Profile Name', 'Focal Length',
@@ -258,10 +273,15 @@ var MetadataUIActions = actions.Actions({
 		],
 	},
 
+	toggleMetadataAutoSelect: ['Interface/Toggle metadata value auto-select',
+		base.makeConfigToggler('metadata-auto-select-mode', 
+			function(){ return this.config['metadata-auto-select-modes'] })],
+
 	// XXX should we replace 'mode' with nested set of metadata???
 	// XXX make this support multiple images...
 	showMetadata: ['Image/Show metadata',
 		function(image, mode){
+			var that = this
 			image = this.data.getImage(image)
 			mode = mode || 'disabled'
 
@@ -305,6 +325,7 @@ var MetadataUIActions = actions.Actions({
 				])
 			}
 
+
 			// build fields...
 			var fields = []
 			Object.keys(metadata).forEach(function(k){
@@ -339,6 +360,14 @@ var MetadataUIActions = actions.Actions({
 			// add separator to base...
 			fields.length > 0 && base.push('---')
 
+			var selectElemText = function(elem){
+				var range = document.createRange()
+				range.selectNodeContents(elem)
+				var sel = window.getSelection()
+				sel.removeAllRanges()
+				sel.addRange(range)
+			}
+
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
 						null,
@@ -346,15 +375,36 @@ var MetadataUIActions = actions.Actions({
 						{
 							showDisabled: false,
 						})
+					// select value of current item...
+					.on('select', function(evt, elem){
+						if(that.config['metadata-auto-select-mode'] == 'on select'){
+							selectElemText($(elem).find('.text').last()[0])
+						}
+					})
 					// path selected...
 					.open(function(evt, path){ 
-						// edit field...
-						/* XXX need keyboard bindings setup for this to work...
-						o.client.filter().find('.text')
-							.last()
-							.prop('contenteditable', true)
-							.focus()
-						*/
+						var editable = RegExp(that.config['metadata-editable-fields']
+							.map(function(f){ return util.quoteRegExp(f) })
+							.join('|'))
+
+						var elem = o.client.filter(path).find('.text').last()
+
+						if(that.config['metadata-auto-select-mode'] == 'on open'){
+							selectElemText(elem[0])
+						}
+
+						// skip non-editable fields...
+						if(editable.test(path)){
+							elem
+								.prop('contenteditable', true)
+								.focus()
+								/*
+								.one('blur', function(){
+									$(this)
+										.prop('contenteditable', false)
+								})
+								*/
+						}
 					}))
 					.close(function(){
 						// XXX

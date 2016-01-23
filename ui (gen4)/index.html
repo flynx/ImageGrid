@@ -13,11 +13,187 @@
 <!-- XXX remove before use... -->
 <style>
 
+/* Open Sans 
+*	- line spacing a bit too large...
+*/
+@font-face {
+	font-family: OpenSans;
+	src: url(fonts/Open_Sans/OpenSans-Regular.ttf)
+}
+@font-face {
+	font-family: OpenSans;
+	src: url(fonts/Open_Sans/OpenSans-Bold.ttf)
+	font-weight: bold;
+}
+@font-face {
+	font-family: OpenSans;
+	src: url(fonts/Open_Sans/OpenSans-Italic.ttf)
+	font-style: italic;
+}
+@font-face {
+	font-family: OpenSans;
+	src: url(fonts/Open_Sans/OpenSans-BoldItalic.ttf)
+	font-weight: bold;
+	font-style: italic;
+}
+@font-face {
+	font-family: OpenSans;
+	src: url(fonts/Open_Sans/OpenSans-ExtraBold.ttf)
+	font-weight: bolder;
+}
+@font-face {
+	font-family: OpenSans;
+	src: url(fonts/Open_Sans/OpenSans-ExtraBoldItalic.ttf)
+	font-weight: bolder;
+	font-style: italic;
+}
+@font-face {
+	font-family: OpenSans;
+	src: url(fonts/Open_Sans/OpenSans-Light.ttf)
+	font-weight: lighter;
+}
+@font-face {
+	font-family: OpenSans;
+	src: url(fonts/Open_Sans/OpenSans-LightItalic.ttf)
+	font-weight: lighter;
+	font-style: italic;
+}
+
+
+
+/* Source Sans Pro */
+/*
+@font-face {
+	font-family: SourceSansPro;
+	src: url(fonts/Source_Sans_Pro/SourceSansPro-Regular.ttf)
+}
+@font-face {
+	font-family: SourceSansPro;
+	src: url(fonts/Source_Sans_Pro/SourceSansPro-Bold.ttf)
+	font-weight: bold;
+}
+@font-face {
+	font-family: SourceSansPro;
+	src: url(fonts/Source_Sans_Pro/SourceSansPro-Italic.ttf)
+	font-style: italic;
+}
+@font-face {
+	font-family: SourceSansPro;
+	src: url(fonts/Source_Sans_Pro/SourceSansPro-BoldItalic.ttf)
+	font-weight: bold;
+	font-style: italic;
+}
+@font-face {
+	font-family: SourceSansPro;
+	src: url(fonts/Source_Sans_Pro/SourceSansPro-ExtraBold.ttf)
+	font-weight: bolder;
+}
+@font-face {
+	font-family: SourceSansPro;
+	src: url(fonts/Source_Sans_Pro/SourceSansPro-ExtraBoldItalic.ttf)
+	font-weight: bolder;
+	font-style: italic;
+}
+@font-face {
+	font-family: SourceSansPro;
+	src: url(fonts/Source_Sans_Pro/SourceSansPro-Light.ttf)
+	font-weight: lighter;
+}
+@font-face {
+	font-family: SourceSansPro;
+	src: url(fonts/Source_Sans_Pro/SourceSansPro-LightItalic.ttf)
+	font-weight: lighter;
+	font-style: italic;
+}
+*/
+
+
+
+/* Arimo 
+*	- bold face a bit too narrow
+*/
+/*
+@font-face {
+	font-family: Arimo;
+	src: url(fonts/Arimo/Arimo-Regular.ttf)
+}
+@font-face {
+	font-family: Arimo;
+	src: url(fonts/Arimo/Arimo-Bold.ttf)
+	font-weight: bold;
+}
+@font-face {
+	font-family: Arimo;
+	src: url(fonts/Arimo/Arimo-Italic.ttf)
+	font-style: italic;
+}
+@font-face {
+	font-family: Arimo;
+	src: url(fonts/Arimo/Arimo-BoldItalic.ttf)
+	font-weight: bold;
+	font-style: italic;
+}
+*/
+
+
+
+/* Roboto */
+/*
+@font-face {
+	font-family: Roboto;
+	src: url(fonts/Roboto/Roboto-Regular.ttf)
+}
+@font-face {
+	font-family: Roboto;
+	src: url(fonts/Roboto/Roboto-Bold.ttf)
+	font-weight: bold;
+}
+@font-face {
+	font-family: Roboto;
+	src: url(fonts/Roboto/Roboto-Italic.ttf)
+	font-style: italic;
+}
+@font-face {
+	font-family: Roboto;
+	src: url(fonts/Roboto/Roboto-BoldItalic.ttf)
+	font-weight: bold;
+	font-style: italic;
+}
+@font-face {
+	font-family: Roboto;
+	src: url(fonts/Roboto/Roboto-ExtraBold.ttf)
+	font-weight: bolder;
+}
+@font-face {
+	font-family: Roboto;
+	src: url(fonts/Roboto/Roboto-ExtraBoldItalic.ttf)
+	font-weight: bolder;
+	font-style: italic;
+}
+@font-face {
+	font-family: Roboto;
+	src: url(fonts/Roboto/Roboto-Light.ttf)
+	font-weight: lighter;
+}
+@font-face {
+	font-family: Roboto;
+	src: url(fonts/Roboto/Roboto-LightItalic.ttf)
+	font-weight: lighter;
+	font-style: italic;
+}
+*/
+
+
+
+/*********************************************************************/
+
 body {
 	margin: 0;
 	/* this will prevent odd blur effects when blurring out specific 
 		elements... */
 	background: black;
+
+	/*font: OpenSans, sans-serif;*/
 }
 
 /* show image gid... */
@@ -130,6 +306,14 @@ body {
 }
 .browse-widget.metadata-view .list>div .text:nth-child(2) {
 	font-style: italic;
+
+	-moz-user-select: auto;
+	-webkit-user-select: auto;
+	-o-user-select: auto;
+	-ms-user-select: auto;
+	user-select: auto;
+
+	cursor: text;
 }
 
 

@@ -325,7 +325,8 @@ var BrowserPrototype = {
 	// 		in filter mode???
 	keyboard: {
 		FullPathEdit: {
-			pattern: '.browse-widget .path[contenteditable]',
+			//pattern: '.browse-widget .path[contenteditable]',
+			pattern: '.browse-widget [contenteditable]',
 
 			// keep text editing action from affecting the selection...
 			ignore: [
