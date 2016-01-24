@@ -324,9 +324,40 @@ var BrowserPrototype = {
 	// XXX should we have things like ctrl-<number> for fast selection 
 	// 		in filter mode???
 	keyboard: {
+		// XXX this is the same as FullPathEdit, should we combine the two?
+		ItemEdit: {
+			pattern: '.browse-widget .list .text[contenteditable]',
+
+			// keep text editing action from affecting the selection...
+			ignore: [
+					'Backspace',
+					'Up',
+					'Down',
+					'Left',
+					'Right',
+					'Home',
+					'End',
+					'Enter',
+					'Esc',
+					'/',
+					'A',
+					'P',
+					'O',
+					'T', 'D',
+
+					// let the system handle copy paste...
+					'C', 'V', 'X',
+
+					// enter numbers as-is...
+					'#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
+				],
+
+			Enter: 'stopFullPathEdit!',
+			Esc: 'abortFullPathEdit!',
+		},
+
 		FullPathEdit: {
-			//pattern: '.browse-widget .path[contenteditable]',
-			pattern: '.browse-widget [contenteditable]',
+			pattern: '.browse-widget .path[contenteditable]',
 
 			// keep text editing action from affecting the selection...
 			ignore: [
