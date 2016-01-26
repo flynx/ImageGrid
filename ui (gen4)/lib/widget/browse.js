@@ -183,6 +183,9 @@ var BrowserClassPrototype = {
 // XXX Q: should we make a base list dialog and build this on that or
 //		simplify this to implement a list (removing the path and disabling
 //		traversal)??
+// XXX might be a good idea to add a ctrl-c/copy handler...
+// 		...copy path by default but overloadable with something like 
+// 		.getCopyValue() which would return .strPath by default...
 var BrowserPrototype = {
 	dom: null,
 

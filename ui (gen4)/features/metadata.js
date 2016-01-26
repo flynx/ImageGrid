@@ -391,6 +391,7 @@ var MetadataUIActions = actions.Actions({
 			// add separator to base...
 			fields.length > 0 && base.push('---')
 
+			// XXX might be a good idea to directly bind ctrl-c to copy value...
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
 						null,
