@@ -2519,13 +2519,13 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 				// make/get indicator containers...
 				var image = this.ribbons.viewer.find('.state-indicator-container.image-info')
 				if(image.length == 0){
-					image = makeStateIndicator('.image-info') 
+					image = makeStateIndicator('image-info') 
 						.appendTo(this.ribbons.viewer)
 				}
 
 				var global = this.ribbons.viewer.find('.state-indicator-container.global-info')
 				if(global.length == 0){
-					global = makeStateIndicator('.global-info') 
+					global = makeStateIndicator('global-info') 
 						.appendTo(this.ribbons.viewer)
 				}
 
