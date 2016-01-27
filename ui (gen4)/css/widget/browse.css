@@ -5,7 +5,7 @@
 	min-width: 300px;
 	width: initial;
 	padding: 5px;
-	font-family: sans-serif;
+	font-family: /*worksans,*/ opensans, sans-serif;
 
 	background: gray;
 	/*color: rgba(255,255,255,0.8);*/
