@@ -2502,6 +2502,32 @@ var makeStateIndicatorItem = function(container, type, text){
 }
 
 // XXX
+// XXX an alternative approach:
+// 		- global status area
+// 		- status bar for local status
+// 			- as in gen3
+// 			- add image status
+// 		Format:
+// 			full:
+// 			[ 12/123 DSC_1234.jpg GID:a1b2c3 T:2016-01-28 08:37:50			B M C ]
+//
+// 			minimal (no background):
+// 			[ 12/123 														B M C ]
+//
+// 			hidden:
+// 			[																	  ]
+//
+// 		General item format:
+// 			- minimal state		- only short version / icon is shown
+// 								- when not active a disabled state/icon is shown
+//
+// 			- expanded state	- status bar sows expanded state (only?)
+// 								- title/help shown above 
+// 									- floating text, transparent bg
+// 									- same align as item
+//
+// XXX Q: can title bar be used instead of global state indication???
+// 		...especially if we are indicating only crop...
 var ImageStateIndicator = 
 module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 	title: '',
