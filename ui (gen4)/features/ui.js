@@ -2544,9 +2544,14 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 		'ui-single-image-view',
 	],
 
+	config: {
+	},
+
 	actions: actions.Actions({
 		updateStateIndicators: ['- Interface/',
-			function(){
+			function(gid){
+				gid = gid || this.current
+
 				// make/get indicator containers...
 				var image = this.ribbons.viewer.find('.state-indicator-container.image-info')
 				if(image.length == 0){
@@ -2556,13 +2561,60 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 
 				var global = this.ribbons.viewer.find('.state-indicator-container.global-info')
 				if(global.length == 0){
-					global = makeStateIndicator('global-info') 
+					//global = makeStateIndicator('global-info') 
+					global = makeStateIndicator('global-info overlay-info') 
+						// XXX do this based on config...
+						.append($('<span>')
+							.addClass('path expanding-text')
+							.append($('<span class="shown">'))
+							.append($('<span class="hidden">')))
+
+						.append($('<span>')
+							.addClass('gid expanding-text')
+							.append($('<span class="shown">'))
+							.append($('<span class="hidden">')))
+
+						.append($('<span>')
+							.addClass('index float-right'))
+
+						.append($('<span>')
+							.addClass('bookmarked float-right'))
+
+						.append($('<span>')
+							.addClass('marked float-right'))
+
 						.appendTo(this.ribbons.viewer)
 				}
 
-				// XXX specific status...
+				if(!gid){
+					return
+				}
+
+				var img = this.images && gid in this.images && this.images[gid]
+
+				// gid..
+				global.find('.gid .shown').text(gid.slice(-6))
+				global.find('.gid .hidden').text(gid)
+
+				// path...
+				global.find('.path .shown').text(img && img.path || '---')
+				global.find('.path .hidden').text(img && img.path || '---')
+
+				// pos...
+				global.find('.index')
+					.text(
+						(this.data.getImageOrder('ribbon', gid)+1) 
+						+'/'+ 
+						this.data.getImages(gid).len)
+
+				// marks...
 				// XXX
+				global.find('.marked').text('M')
+				global.find('.bookmarked').text('B')
 			}],
+
+			// XXX add toggler to toggle global image indicator (status bar) modes...
+			// XXX
 	}),
 
 	handlers: [
