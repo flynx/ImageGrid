@@ -2492,6 +2492,7 @@ var makeStateIndicator = function(type){
 		.addClass('state-indicator-container ' + type || '')
 }
 
+// XXX do we need this???
 var makeStateIndicatorItem = function(container, type, text){
 	var item = $('<div>')
 			.addClass('item '+ type || '')
@@ -2500,6 +2501,25 @@ var makeStateIndicatorItem = function(container, type, text){
 		.append(item)
 	return item
 }
+
+// XXX should we use this or makeStateIndicatorItem(..)???
+// 		...investigate the features of the above...
+// 			- .attr('text')???
+var makeExpandingInfoItem = function(container, cls, align){
+	var e = $('<span>')
+		.addClass(cls + ' expanding-text ' + align)
+		.append($('<span class="shown">'))
+		.append($('<span class="hidden">'))
+	container.append(e)
+	return e
+}
+var makeInfoItem = function(container, cls, align){
+	var e = $('<span>')
+		.addClass(cls +' '+ align)
+	container.append(e)
+	return e
+} 
+
 
 // Format:
 // 	full:
@@ -2545,12 +2565,24 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 	],
 
 	config: {
+		'global-info-elements': [
+			'path',
+			'gid',
+			'---',
+			'index',
+			'mark',
+			'bookmark',
+		],
 	},
 
 	actions: actions.Actions({
+		// XXX for some reason mark indicator clicking does not work in
+		// 		single image mode...
 		updateStateIndicators: ['- Interface/',
 			function(gid){
 				gid = gid || this.current
+
+				var that = this
 
 				// make/get indicator containers...
 				var image = this.ribbons.viewer.find('.state-indicator-container.image-info')
@@ -2563,27 +2595,43 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 				if(global.length == 0){
 					//global = makeStateIndicator('global-info') 
 					global = makeStateIndicator('global-info overlay-info') 
-						// XXX do this based on config...
-						.append($('<span>')
-							.addClass('path expanding-text')
-							.append($('<span class="shown">'))
-							.append($('<span class="hidden">')))
 
-						.append($('<span>')
-							.addClass('gid expanding-text')
-							.append($('<span class="shown">'))
-							.append($('<span class="hidden">')))
+					var align = ''
+					var order = this.config['global-info-elements'].slice()
 
-						.append($('<span>')
-							.addClass('index float-right'))
+					var i = order.indexOf('---')
+					// rearrange the tail section...
+					// NOTE: this is here as we need to push the floated
+					// 		right items in reverse order...
+					if(i >= 0){
+						order = order.concat(order.splice(i+1, order.length).reverse())
+					}
 
-						.append($('<span>')
-							.addClass('bookmarked float-right'))
+					order.forEach(function(elem){
+						// spacer...
+						if(elem == '---'){
+							align = 'float-right'
 
-						.append($('<span>')
-							.addClass('marked float-right'))
+						// expanding indicators...
+						} else if(elem == 'gid' || elem == 'path'){
+							makeExpandingInfoItem(global, elem, align)
 
-						.appendTo(this.ribbons.viewer)
+						// simple indicators...
+						} else if(elem == 'index'){
+							makeInfoItem(global, elem, align)
+
+						// toggler indicators...
+						} else if(elem == 'bookmark' || elem == 'mark'){
+							makeInfoItem(global, elem+'ed', align)
+								.click(function(){
+									that['toggle'+elem.capitalize()]()
+								})
+								// XXX use CSS for this...
+								.text(elem[0].toUpperCase())
+						}
+					})
+
+					global.appendTo(this.ribbons.viewer)
 				}
 
 				if(!gid){
@@ -2607,10 +2655,23 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 						+'/'+ 
 						this.data.getImages(gid).len)
 
+				// NOTE: we are not using .toggleMark('?') and friends 
+				// 		here to avoid recursion as we might be handling 
+				// 		them here...
+				// 		...this also simpler than handling '?' and other
+				// 		special toggler args in the handler...
+				var tags = this.data.getTags(gid)
+
 				// marks...
-				// XXX
-				global.find('.marked').text('M')
-				global.find('.bookmarked').text('B')
+				// XXX change class...
+				global.find('.marked')
+					.css({
+						opacity: tags.indexOf('selected') < 0 ? '0.5' : '1',
+					})
+				global.find('.bookmarked')
+					.css({
+						opacity: tags.indexOf('bookmark') < 0 ? '0.5' : '1',
+					})
 			}],
 
 			// XXX add toggler to toggle global image indicator (status bar) modes...
@@ -2618,7 +2679,11 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 	}),
 
 	handlers: [
-		['focusImage',
+		[[
+			'focusImage',
+			'toggleBookmark',
+			'toggleMark',
+		],
 			function(){
 				this.updateStateIndicators()
 			}]
