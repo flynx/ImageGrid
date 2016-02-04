@@ -2638,6 +2638,9 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 					return
 				}
 
+
+				// populate the info...
+
 				var img = this.images && gid in this.images && this.images[gid]
 
 				// gid..
@@ -2663,19 +2666,22 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 				var tags = this.data.getTags(gid)
 
 				// marks...
-				// XXX change class...
 				global.find('.marked')
+					[tags.indexOf('selected') < 0 ? 'removeClass' : 'addClass']('on')
+					// XXX STUB: add a css rule for visualising the above...
 					.css({
 						opacity: tags.indexOf('selected') < 0 ? '0.5' : '1',
 					})
 				global.find('.bookmarked')
+					[tags.indexOf('bookmark') < 0 ? 'removeClass' : 'addClass']('on')
+					// XXX STUB: add a css rule for visualising the above...
 					.css({
 						opacity: tags.indexOf('bookmark') < 0 ? '0.5' : '1',
 					})
 			}],
 
-			// XXX add toggler to toggle global image indicator (status bar) modes...
-			// XXX
+		// XXX add toggler to toggle global image indicator (status bar) modes...
+		// XXX
 	}),
 
 	handlers: [
