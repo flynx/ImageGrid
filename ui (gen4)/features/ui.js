@@ -2505,36 +2505,130 @@ var makeStateIndicatorItem = function(container, type, text){
 // XXX should we use this or makeStateIndicatorItem(..)???
 // 		...investigate the features of the above...
 // 			- .attr('text')???
-var makeExpandingInfoItem = function(container, cls, align){
+var makeExpandingInfoItem = function(container, cls, align, full_only){
 	var e = $('<span>')
-		.addClass(cls + ' expanding-text ' + align)
+		.addClass(cls + ' expanding-text ' + align +' '+ (full_only && 'full-only'))
 		.append($('<span class="shown">'))
 		.append($('<span class="hidden">'))
 	container.append(e)
 	return e
 }
-var makeInfoItem = function(container, cls, align){
+var makeInfoItem = function(container, cls, align, full_only){
 	var e = $('<span>')
-		.addClass(cls +' '+ align)
+		.addClass(cls +' '+ align +' '+ (full_only && 'full_only'))
 	container.append(e)
 	return e
 } 
 
 
-// Format:
-// 	full:
-// 	[ (12/123) DSC_1234.jpg GID:a1b2c3 T:2016-01-28 08:37:50	B M C ]
-// 	or
-// 	[ DSC_1234.jpg GID:a1b2c3 T:2016-01-28 08:37:50		B M C (12/123) ]
-//
-// 	minimal (no background):
-// 	[ (12/123) 													 B M C ]
-// 	or
-// 	[ 													B M C (12/123) ]
-//
-// 	hidden:
-// 	[																  ]
-//
+var ImageStateIndicatorActions = actions.Actions({
+	updateStateIndicators: ['- Interface/',
+		function(gid){
+			gid = gid || this.current
+
+			var that = this
+
+			// make/get indicator containers...
+			/*
+			var image = this.ribbons.viewer.find('.state-indicator-container.image-info')
+			if(image.length == 0){
+				image = makeStateIndicator('image-info') 
+					.appendTo(this.ribbons.viewer)
+			}
+			*/
+
+			var global = this.ribbons.viewer.find('.state-indicator-container.global-info')
+			if(global.length == 0){
+				//global = makeStateIndicator('global-info') 
+				global = makeStateIndicator('global-info overlay-info') 
+
+				var align = ''
+				var order = this.config['global-state-indicator-elements'].slice()
+
+				var i = order.indexOf('---')
+				// rearrange the tail section...
+				// NOTE: this is here as we need to push the floated
+				// 		right items in reverse order...
+				if(i >= 0){
+					order = order.concat(order.splice(i+1, order.length).reverse())
+				}
+
+				order.forEach(function(elem){
+					var full_only = that.config['global-state-indicator-elements-full-only'].indexOf(elem) >= 0
+					// spacer...
+					if(elem == '---'){
+						align = 'float-right'
+
+					// expanding indicators...
+					} else if(elem == 'gid' || elem == 'path'){
+						makeExpandingInfoItem(global, elem, align, full_only)
+
+					// simple indicators...
+					} else if(elem == 'index'){
+						makeInfoItem(global, elem, align, full_only)
+
+					// toggler indicators...
+					} else if(elem == 'bookmark' || elem == 'mark'){
+						makeInfoItem(global, elem+'ed', align, full_only)
+							.click(function(){
+								that['toggle'+elem.capitalize()]()
+							})
+					}
+				})
+
+				global.appendTo(this.ribbons.viewer)
+			}
+
+			if(!gid){
+				return
+			}
+
+
+			// populate the info...
+
+			var img = this.images && gid in this.images && this.images[gid]
+
+			// gid..
+			global.find('.gid .shown').text(gid.slice(-6))
+			global.find('.gid .hidden').text(gid)
+
+			// path...
+			global.find('.path .shown').text(img && img.path || '---')
+			global.find('.path .hidden').text(img && img.path || '---')
+
+			// pos...
+			global.find('.index')
+				.text(
+					(this.data.getImageOrder('ribbon', gid)+1) 
+					+'/'+ 
+					this.data.getImages(gid).len)
+
+			// NOTE: we are not using .toggleMark('?') and friends 
+			// 		here to avoid recursion as we might be handling 
+			// 		them here...
+			// 		...this also simpler than handling '?' and other
+			// 		special toggler args in the handler...
+			var tags = this.data.getTags(gid)
+
+			// marks...
+			global.find('.marked')[
+				tags.indexOf('selected') < 0 ?
+					'removeClass' 
+					: 'addClass']('on')
+			global.find('.bookmarked')[
+				tags.indexOf('bookmark') < 0 ? 
+					'removeClass' 
+					: 'addClass']('on')
+		}],
+	toggleStateIndicator: ['Interface/Toggle state indicator modes',
+		toggler.CSSClassToggler(
+			function(){ 
+				return this.ribbons.viewer.find('.state-indicator-container.global-info') }, 
+			function(){ return this.config['global-state-indicator-modes'] },
+			function(state){ this.config['global-state-indicator-mode'] = state }) ],
+})
+
+
 // XXX an alternative approach:
 // 		- global status area
 // 		- status bar for local status
@@ -2552,7 +2646,11 @@ var makeInfoItem = function(container, cls, align){
 //
 // XXX Q: can title bar be used instead of global state indication???
 // 		...especially if we are indicating only crop...
-// XXX
+// XXX add styling:
+// 		- element spacing
+// 		- tip text
+// 		- avoid multi-line -- scroll???
+// XXX rename to status bar???
 var ImageStateIndicator = 
 module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 	title: '',
@@ -2565,126 +2663,39 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 	],
 
 	config: {
-		'global-info-elements': [
-			'path',
-			'gid',
-			'---',
+		'global-state-indicator-elements': [
+			// XXX should index be here or to the right???
 			'index',
+			//'path',
+			'gid',
+
+			'---',
+
 			'mark',
 			'bookmark',
 		],
+
+		'global-state-indicator-elements-full-only': [
+			'gid',
+		],
+
+		'global-state-indicator-modes': [
+			'none',
+			'minimal',
+			'full',
+		],
+		'global-state-indicator-mode': null,
 	},
 
-	actions: actions.Actions({
-		// XXX for some reason mark indicator clicking does not work in
-		// 		single image mode...
-		updateStateIndicators: ['- Interface/',
-			function(gid){
-				gid = gid || this.current
-
-				var that = this
-
-				// make/get indicator containers...
-				var image = this.ribbons.viewer.find('.state-indicator-container.image-info')
-				if(image.length == 0){
-					image = makeStateIndicator('image-info') 
-						.appendTo(this.ribbons.viewer)
-				}
-
-				var global = this.ribbons.viewer.find('.state-indicator-container.global-info')
-				if(global.length == 0){
-					//global = makeStateIndicator('global-info') 
-					global = makeStateIndicator('global-info overlay-info') 
-
-					var align = ''
-					var order = this.config['global-info-elements'].slice()
-
-					var i = order.indexOf('---')
-					// rearrange the tail section...
-					// NOTE: this is here as we need to push the floated
-					// 		right items in reverse order...
-					if(i >= 0){
-						order = order.concat(order.splice(i+1, order.length).reverse())
-					}
-
-					order.forEach(function(elem){
-						// spacer...
-						if(elem == '---'){
-							align = 'float-right'
-
-						// expanding indicators...
-						} else if(elem == 'gid' || elem == 'path'){
-							makeExpandingInfoItem(global, elem, align)
-
-						// simple indicators...
-						} else if(elem == 'index'){
-							makeInfoItem(global, elem, align)
-
-						// toggler indicators...
-						} else if(elem == 'bookmark' || elem == 'mark'){
-							makeInfoItem(global, elem+'ed', align)
-								.click(function(){
-									that['toggle'+elem.capitalize()]()
-								})
-								// XXX use CSS for this...
-								.text(elem[0].toUpperCase())
-						}
-					})
-
-					global.appendTo(this.ribbons.viewer)
-				}
-
-				if(!gid){
-					return
-				}
-
-
-				// populate the info...
-
-				var img = this.images && gid in this.images && this.images[gid]
-
-				// gid..
-				global.find('.gid .shown').text(gid.slice(-6))
-				global.find('.gid .hidden').text(gid)
-
-				// path...
-				global.find('.path .shown').text(img && img.path || '---')
-				global.find('.path .hidden').text(img && img.path || '---')
-
-				// pos...
-				global.find('.index')
-					.text(
-						(this.data.getImageOrder('ribbon', gid)+1) 
-						+'/'+ 
-						this.data.getImages(gid).len)
-
-				// NOTE: we are not using .toggleMark('?') and friends 
-				// 		here to avoid recursion as we might be handling 
-				// 		them here...
-				// 		...this also simpler than handling '?' and other
-				// 		special toggler args in the handler...
-				var tags = this.data.getTags(gid)
-
-				// marks...
-				global.find('.marked')
-					[tags.indexOf('selected') < 0 ? 'removeClass' : 'addClass']('on')
-					// XXX STUB: add a css rule for visualising the above...
-					.css({
-						opacity: tags.indexOf('selected') < 0 ? '0.5' : '1',
-					})
-				global.find('.bookmarked')
-					[tags.indexOf('bookmark') < 0 ? 'removeClass' : 'addClass']('on')
-					// XXX STUB: add a css rule for visualising the above...
-					.css({
-						opacity: tags.indexOf('bookmark') < 0 ? '0.5' : '1',
-					})
-			}],
-
-		// XXX add toggler to toggle global image indicator (status bar) modes...
-		// XXX
-	}),
+	actions: ImageStateIndicatorActions,
 
 	handlers: [
+		['start',
+			function(){
+				if(this.config['global-state-indicator-mode']){
+					this.toggleStateIndicator(this.config['global-state-indicator-mode'])
+				}
+			}],
 		[[
 			'focusImage',
 			'toggleBookmark',
