@@ -2573,10 +2573,47 @@ var ImageStateIndicatorActions = actions.Actions({
 							.click(function(){
 								that['toggle'+elem.capitalize()]()
 							})
+
+					// XXX custom elements...
+					// 		format:
+					// 			{
+					// 				<key>: <handler>,
+					// 				<alias>: <key>|<alias>,
+					// 				...
+					// 			}
+					// XXX the handler should take care of it's own updating...
+					// 		...will also need a way to drop a handler if 
+					// 		the list changes, otherwise this is a potential
+					// 		leak...
+					// XXX move other elements into this...
+					// XXX need a better attr name...
+					} else if(that.__state_indicator_elements){
+						var handler = that.__state_indicator_elements[elem]
+						// handle aliases...
+						var seen = []
+						while(typeof(handler) == typeof('str')){
+							seen.push(handler)
+							var handler = that.__state_indicator_elements[handler]
+							// check for loops...
+							if(seen.indexOf(handler) >= 0){
+								console.error('state indicator alias loop detected at:', elem)
+								handler = null
+							}
+						}
+
+						// do the call...
+						if(handler != null){
+							handler.call(that, elem, makeInfoItem, makeExpandingInfoItem)
+						}
 					}
 				})
 
 				global.appendTo(this.ribbons.viewer)
+
+				// init in the correct state...
+				if(this.config['global-state-indicator-mode']){
+					this.toggleStateIndicator(this.config['global-state-indicator-mode'])
+				}
 			}
 
 			if(!gid){
@@ -2663,12 +2700,14 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 	],
 
 	config: {
+		// XXX might be a good idea to add custom components API...
 		'global-state-indicator-elements': [
 			// XXX should index be here or to the right???
 			'index',
 			//'path',
 			'gid',
 
+			// separates left/right aligned elements...
 			'---',
 
 			'mark',
