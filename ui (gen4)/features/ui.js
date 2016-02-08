@@ -2603,6 +2603,7 @@ var ImageStateIndicatorActions = actions.Actions({
 
 						// do the call...
 						if(handler != null){
+							// XXX simplify the constructors... (into one?)
 							handler.call(that, elem, makeInfoItem, makeExpandingInfoItem)
 						}
 					}
