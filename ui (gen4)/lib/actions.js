@@ -42,7 +42,7 @@ var object = require('lib/object')
 //										v						^
 //		Actions							o-------x		o-------x
 //												v		^
-//		Root Action								o-------x
+//		Root Action								o---|---x
 //
 // 		- a method, created by Action(..),
 // 		- calls all the shadowed/overloaded actions in the inheritance 
@@ -311,6 +311,7 @@ Action.prototype.__proto__ = Function
 // This will define a set of action-set specific methods and helpers.
 //
 // XXX .off(...) needs more work...
+// XXX need a mechanism to publish specific attrs...
 var MetaActions =
 module.MetaActions = {
 	// List actions...
@@ -822,7 +823,7 @@ module.MetaActions = {
 //
 // This will pre-process an object to setup the action mechanics.
 //
-// If the this and prototype both contain a .config attribute then this
+// If the 'this and prototype both contain a .config attribute then this
 // will make set <actions>.config.__proto__ = <prototype>.config 
 //
 //

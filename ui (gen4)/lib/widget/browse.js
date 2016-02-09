@@ -1755,8 +1755,6 @@ var BrowserPrototype = {
 		}
 
 		var path = this.path
-		//var txt = quoteWS(elem.find('.text').text())
-		//var txt = '"'+ elem.find('.text').text() +'"'
 		// XXX do we need qotes here???
 		//path.push('"'+ elem.find('.text').text() +'"')
 		path.push(elem.find('.text').text())

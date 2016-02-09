@@ -2522,6 +2522,9 @@ var makeInfoItem = function(container, cls, align, full_only){
 
 
 var ImageStateIndicatorActions = actions.Actions({
+	get moo(){ return 321 },
+	foo: 123,
+
 	updateStateIndicators: ['- Interface/',
 		function(gid){
 			gid = gid || this.current
