@@ -1816,7 +1816,7 @@ var BrowserPrototype = {
 
 		//path.push(quoteWS(elem.find('.text').text()))
 		//path.push('"'+ elem.find('.text').text() +'"')
-		path.push('"'+ elem.find('.text').text() +'"')
+		path.push(elem.find('.text').text())
 
 		var res = this.open(path)
 
@@ -1939,10 +1939,10 @@ var BrowserPrototype = {
 			path = this.path2list(path)
 			var elem = path.slice(-1)[0]
 			this.path = path.slice(0, -1)
-			elem = this.select(elem)
+			elem = this.select('"'+ elem +'"')
 
 		// select-compatible -- select from current context...	
-		// XXX this is semilar to the first branch, should we merge them???
+		// XXX this is similar to the first branch, should we merge them???
 		} else {
 			elem = this.select(path)
 
