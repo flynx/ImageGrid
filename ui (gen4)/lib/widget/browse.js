@@ -1921,37 +1921,29 @@ var BrowserPrototype = {
 
 		var elem = this.select('!')
 
-		// get path + selection...
-		if(!path){
-			// nothing selected, select first and exit...
-			if(elem.length == 0){
-				//this.select()
-				return this
-			}
-
-			// load the current path + selection...
-			path = this.path
-			path.push('"'+ elem.find('.text').text() +'"')
-
 		// normalize and load path...
-		//} else {
-		} else if(path.constructor == Array || /[\\\/]/.test(path)) {
+		if(path && (path.constructor == Array || /[\\\/]/.test(path))){
 			path = this.path2list(path)
 			var elem = path.slice(-1)[0]
 			this.path = path.slice(0, -1)
 			elem = this.select('"'+ elem +'"')
 
-		// select-compatible -- select from current context...	
-		// XXX this is similar to the first branch, should we merge them???
+		// get path + selection...
 		} else {
-			elem = this.select(path)
+			// select-compatible -- select from current context...	
+			if(!path){
+				// NOTE: this is select compatible thus no need to quote 
+				// 		anything here...
+				elem = this.select(path)
+			}
 
 			if(elem.length == 0){
 				return this
 			}
 
 			path = this.path
-			//path.push(quoteWS(elem.find('.text').text()))
+			// NOTE: we are quoting here to get a explicit element 
+			// 		selected from list...
 			path.push('"'+ elem.find('.text').text() +'"')
 		}
 
