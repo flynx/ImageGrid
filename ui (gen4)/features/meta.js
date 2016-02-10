@@ -93,6 +93,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-external-editor',
 
 	// chrome...
+	'ui-status-log',
 	'ui-scale',
 	'ui-animation',
 	'ui-bounds-indicators',

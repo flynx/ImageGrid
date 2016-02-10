@@ -2521,7 +2521,37 @@ var makeInfoItem = function(container, cls, align, full_only){
 } 
 
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+// XXX Add status messages and log...
 var ImageStateIndicatorActions = actions.Actions({
+	config: {
+		// XXX might be a good idea to add custom components API...
+		'global-state-indicator-elements': [
+			// XXX should index be here or to the right???
+			'index',
+			//'path',
+			'gid',
+
+			// separates left/right aligned elements...
+			'---',
+
+			'mark',
+			'bookmark',
+		],
+
+		'global-state-indicator-elements-full-only': [
+			'gid',
+		],
+
+		'global-state-indicator-modes': [
+			'none',
+			'minimal',
+			'full',
+		],
+		'global-state-indicator-mode': null,
+	},
+
 	get moo(){ return 321 },
 	foo: 123,
 
@@ -2669,7 +2699,6 @@ var ImageStateIndicatorActions = actions.Actions({
 			function(state){ this.config['global-state-indicator-mode'] = state }) ],
 })
 
-
 // XXX an alternative approach:
 // 		- global status area
 // 		- status bar for local status
@@ -2702,33 +2731,6 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 		'ui',
 		'ui-single-image-view',
 	],
-
-	config: {
-		// XXX might be a good idea to add custom components API...
-		'global-state-indicator-elements': [
-			// XXX should index be here or to the right???
-			'index',
-			//'path',
-			'gid',
-
-			// separates left/right aligned elements...
-			'---',
-
-			'mark',
-			'bookmark',
-		],
-
-		'global-state-indicator-elements-full-only': [
-			'gid',
-		],
-
-		'global-state-indicator-modes': [
-			'none',
-			'minimal',
-			'full',
-		],
-		'global-state-indicator-mode': null,
-	},
 
 	actions: ImageStateIndicatorActions,
 
@@ -2765,6 +2767,63 @@ module.GlobalStateIndicator = core.ImageGridFeatures.Feature({
 		'ui'
 		//'ui-single-image-view',
 	],
+})
+
+
+
+//---------------------------------------------------------------------
+// XXX
+
+var StatusLogActions = actions.Actions({
+	config: {
+		// NOTE: if this is 0 then do not trim the log...
+		'ui-status-log-size': 100,
+
+		'ui-status-fade': 1000,
+	},
+
+	// XXX should this be here or in a separate feature???
+	statusLog: ['Interface/Show status log',
+		function(){
+			// XXX use list
+		}],
+	clearStatusLog: ['Interface/Clear status log',
+		function(){
+			delete this.__status_log
+		}],
+	statusMessage: ['- Interface/',
+		function(){
+			var msg = args2array(arguments)
+			if(msg.len == 0){
+				return
+			}
+			var log = this.__status_log = this.__status_log || []
+			
+			// XXX should we convert here and how???
+			log.push(msg.join(' '))
+
+			// truncate the log...
+			var s = this.config['ui-status-log-size']
+			if(s != 0 && log.length > (s || 100)){
+				log.splice(0, log.length - (s || 100))
+			}
+
+			// XXX show the message above the status bar (same style)...
+			// XXX
+		}],
+})
+
+var StatusLog = 
+module.StatusLog = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-status-log',
+	depends: [
+		'ui'
+	],
+
+	actions: StatusLogActions,
 })
 
 
