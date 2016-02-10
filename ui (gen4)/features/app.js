@@ -18,18 +18,11 @@ var base = require('features/base')
 
 /*********************************************************************/
 
-
 var AppControlActions = actions.Actions({
 	config: {
 		'application-window': null,
 
 		'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
-
-		// XXX
-		'ui-scale-modes': {
-			desktop: 0,
-			touch: 3,
-		},
 	},
 
 	// XXX revise these...
@@ -131,25 +124,6 @@ var AppControlActions = actions.Actions({
 				that.ribbons.viewer[0].style.visibility = ''
 			}, 0)
 		}],
-	// XXX need to account for scale in PartialRibbons
-	// XXX should this be browser API???
-	toggleInterfaceScale: ['Interface/Toggle interface modes',
-		base.makeConfigToggler('ui-scale-mode', 
-			function(){ return Object.keys(this.config['ui-scale-modes']) },
-			function(state){ 
-				var gui = requirejs('nw.gui')
-				var win = gui.Window.get()
-
-
-				this.ribbons.preventTransitions()
-
-				var w = this.screenwidth
-				win.zoomLevel = this.config['ui-scale-modes'][state] || 0
-				this.screenwidth = w
-				this.centerViewer()
-
-				this.ribbons.restoreTransitions()
-			})],
 	showDevTools: ['Interface|Development/Show Dev Tools',
 		function(){
 			if(window.showDevTools != null){

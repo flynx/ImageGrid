@@ -3131,6 +3131,80 @@ module.URLHash = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX make this work in browser
+var UIScaleActions = actions.Actions({
+	config: {
+		// XXX
+		'ui-scale-modes': {
+			desktop: 0,
+			touch: 3,
+		},
+	},
+
+	// XXX need to account for scale in PartialRibbons
+	// XXX should this be browser API???
+	toggleInterfaceScale: ['Interface/Toggle interface modes',
+		base.makeConfigToggler('ui-scale-mode', 
+			function(){ return Object.keys(this.config['ui-scale-modes']) },
+			function(state){ 
+				var gui = requirejs('nw.gui')
+				var win = gui.Window.get()
+
+
+				this.ribbons.preventTransitions()
+
+				var w = this.screenwidth
+
+				// XXX need to compensate for external size change...
+				//this.ribbons.viewer[0].style.transform = 'scale('
+				//	+ (this.config['ui-scale-modes'][state] || 1) 
+				//	+')'
+				win.zoomLevel = this.config['ui-scale-modes'][state] || 0
+
+				this.screenwidth = w
+				this.centerViewer()
+
+				this.ribbons.restoreTransitions()
+			})],
+})
+
+
+// XXX enable scale loading...
+// 		...need to make this play nice with restoring scale on startup...
+var UIScale = 
+module.UIScale = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-scale',
+	depends: [
+		'ui',
+	],
+
+	actions: UIScaleActions,
+
+	// XXX test if in:
+	// 	- chrome app
+	// 	- nw
+	// 	- mobile
+	isApplicable: function(){ return this.runtime == 'nw' },
+
+	// XXX show main window...
+	handlers: [
+		['start',
+			function(){ 
+				// XXX this messes up ribbon scale...
+				// 		...too close/fast?
+				//this.toggleInterfaceScale('!')
+			}],
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+
+
 // XXX console / log / status bar
 // XXX title bar (???)
 
