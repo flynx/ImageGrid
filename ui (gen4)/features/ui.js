@@ -2773,6 +2773,7 @@ module.GlobalStateIndicator = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 // XXX
+// XXX might also be a good idea to use the similar mechanism for tips...
 
 var StatusLogActions = actions.Actions({
 	config: {
