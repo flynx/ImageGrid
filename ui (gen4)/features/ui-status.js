@@ -40,22 +40,6 @@ var makeStateIndicatorItem = function(container, type, text){
 	return item
 }
 
-// XXX should we use this or makeStateIndicatorItem(..)???
-// 		...investigate the features of the above...
-// 			- .attr('text')???
-var makeExpandingInfoItem = function(container, cls, align, full_only){
-	var e = $('<span>')
-		.addClass(cls + ' expanding-text ')
-		.append($('<span class="shown">'))
-		.append($('<span class="hidden">'))
-	return e
-}
-var makeInfoItem = function(container, cls, align, full_only){
-	var e = $('<span>')
-		.addClass(cls)
-	return e
-} 
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -99,6 +83,7 @@ var ImageStateIndicatorActions = actions.Actions({
 	// NOTE: alias loops are ignored.
 	//
 	// XXX make this visible to the user???
+	// XXX is this too complex???
 	__state_indicator_elements__: {
 		index: function(action, container, elem, gid){
 			// construct...
@@ -187,7 +172,6 @@ var ImageStateIndicatorActions = actions.Actions({
 		bookmark: 'mark', 
 	},
 
-
 	updateStateIndicators: ['- Interface/',
 		function(gid){
 			gid = gid || this.current
@@ -204,7 +188,7 @@ var ImageStateIndicatorActions = actions.Actions({
 					|| (ImageStateIndicatorActions.__state_indicator_elements__ || {})[key]
 
 				if(handler == null){
-					return handler
+					return
 				}
 
 				// handle aliases...
@@ -247,9 +231,9 @@ var ImageStateIndicatorActions = actions.Actions({
 					if(elem == '---'){
 						align = 'float-right'
 
+					// handlers...
 					} else {
 						var handler = _getHandler(elem)
-
 						// do the call...
 						if(handler != null){
 							res = handler.call(that, 'make', global, elem, gid)
@@ -262,9 +246,8 @@ var ImageStateIndicatorActions = actions.Actions({
 						.appendTo(global)
 				})
 
+				// add and init in the correct state...
 				global.appendTo(this.ribbons.viewer)
-
-				// init in the correct state...
 				if(this.config['global-state-indicator-mode']){
 					this.toggleStateIndicator(this.config['global-state-indicator-mode'])
 				}
