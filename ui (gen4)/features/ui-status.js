@@ -45,16 +45,14 @@ var makeStateIndicatorItem = function(container, type, text){
 // 			- .attr('text')???
 var makeExpandingInfoItem = function(container, cls, align, full_only){
 	var e = $('<span>')
-		.addClass(cls + ' expanding-text ' + align +' '+ (full_only && 'full-only'))
+		.addClass(cls + ' expanding-text ')
 		.append($('<span class="shown">'))
 		.append($('<span class="hidden">'))
-	container.append(e)
 	return e
 }
 var makeInfoItem = function(container, cls, align, full_only){
 	var e = $('<span>')
-		.addClass(cls +' '+ align +' '+ (full_only && 'full_only'))
-	container.append(e)
+		.addClass(cls)
 	return e
 } 
 
@@ -90,9 +88,105 @@ var ImageStateIndicatorActions = actions.Actions({
 		'global-state-indicator-mode': null,
 	},
 
-	// XXX TESTING...
-	get moo(){ return 321 },
-	foo: 123,
+	// Format:
+	// 	{
+	// 		<key>: <handler>,
+	// 		<alias>: <key> | <handler>,
+	// 		...
+	// 	}
+	//
+	// NOTE: built-in handlers can be overloaded by user.
+	// NOTE: alias loops are ignored.
+	//
+	// XXX make this visible to the user???
+	__state_indicator_elements__: {
+		index: function(action, container, elem, gid){
+			// construct...
+			if(action == 'make'){
+				return $('<span>').addClass(elem)
+
+			// update...
+			} else if(action == 'update'){
+				// XXX how do we pass a custom gid to here???
+				var gid = this.current
+				container.find('.'+elem)
+					.text(
+						(this.data.getImageOrder('ribbon', gid)+1) 
+						+'/'+ 
+						this.data.getImages(gid).len)
+
+			// remove...
+			} else if(action == 'remove'){
+				container.find('.'+elem).remove()
+			}
+		},
+
+		// XXX handle path correctly...
+		gid: function(action, container, elem, gid){
+			// construct...
+			if(action == 'make'){
+				return $('<span>')
+					.addClass(elem + ' expanding-text ')
+					.append($('<span class="shown">'))
+					.append($('<span class="hidden">'))
+
+			// update...
+			} else if(action == 'update'){
+				// gid..
+				if(elem == 'gid'){
+					var txt = gid.slice(0, 6)
+					var text = gid 
+
+				// path...
+				// XXX
+				} else if(elem == 'path'){
+					var img = this.images && gid in this.images && this.images[gid]
+
+					var text = img && img.path || '---'
+					var txt = text
+				}
+
+				container.find('.'+elem+' .shown').text(txt)
+				container.find('.'+elem+' .hidden').text(text)
+
+			// remove...
+			} else if(action == 'remove'){
+				container.find('.'+elem).remove()
+			}
+		},
+		path: 'gid',
+
+		mark: function(action, container, elem, gid){
+			// construct...
+			if(action == 'make'){
+				var that = this
+				return $('<span>').addClass(elem+'ed')
+					.click(function(){
+						that['toggle'+elem.capitalize()]()
+					})
+
+			// update...
+			} else if(action == 'update'){
+				// NOTE: we are not using .toggleMark('?') and friends 
+				// 		here to avoid recursion as we might be handling 
+				// 		them here...
+				// 		...this also simpler than handling '?' and other
+				// 		special toggler args in the handler...
+				var tags = this.data.getTags(gid)
+				var tag = elem == 'mark' ? 'selected' : 'bookmark'
+				container.find('.'+elem+'ed')[
+					tags.indexOf(tag) < 0 ?
+						'removeClass' 
+						: 'addClass']('on')
+
+			// remove...
+			} else if(action == 'remove'){
+				container.find('.'+elem+'ed').remove()
+			}
+		},
+		bookmark: 'mark', 
+	},
+
 
 	updateStateIndicators: ['- Interface/',
 		function(gid){
@@ -100,14 +194,34 @@ var ImageStateIndicatorActions = actions.Actions({
 
 			var that = this
 
-			// make/get indicator containers...
-			/*
-			var image = this.ribbons.viewer.find('.state-indicator-container.image-info')
-			if(image.length == 0){
-				image = makeStateIndicator('image-info') 
-					.appendTo(this.ribbons.viewer)
+			var _getHandlers = function(){
+				return Object.keys(that.__state_indicator_elements__ || {})
+					.concat(Object.keys(ImageStateIndicatorActions.__state_indicator_elements__ || {}))
+					.unique()
 			}
-			*/
+			var _getHandler = function(key){
+				var handler = (that.__state_indicator_elements__ || {})[key]
+					|| (ImageStateIndicatorActions.__state_indicator_elements__ || {})[key]
+
+				if(handler == null){
+					return handler
+				}
+
+				// handle aliases...
+				var seen = []
+				while(typeof(handler) == typeof('str')){
+					seen.push(handler)
+					var handler = (that.__state_indicator_elements__ || {})[handler]
+						|| (ImageStateIndicatorActions.__state_indicator_elements__ || {})[handler]
+					// check for loops...
+					if(seen.indexOf(handler) >= 0){
+						console.error('state indicator alias loop detected at:', key)
+						handler = null
+					}
+				}
+
+				return handler
+			}
 
 			var global = this.ribbons.viewer.find('.state-indicator-container.global-info')
 			if(global.length == 0){
@@ -127,58 +241,25 @@ var ImageStateIndicatorActions = actions.Actions({
 
 				order.forEach(function(elem){
 					var full_only = that.config['global-state-indicator-elements-full-only'].indexOf(elem) >= 0
+					var res = $()
+
 					// spacer...
 					if(elem == '---'){
 						align = 'float-right'
 
-					// expanding indicators...
-					} else if(elem == 'gid' || elem == 'path'){
-						makeExpandingInfoItem(global, elem, align, full_only)
-
-					// simple indicators...
-					} else if(elem == 'index'){
-						makeInfoItem(global, elem, align, full_only)
-
-					// toggler indicators...
-					} else if(elem == 'bookmark' || elem == 'mark'){
-						makeInfoItem(global, elem+'ed', align, full_only)
-							.click(function(){
-								that['toggle'+elem.capitalize()]()
-							})
-
-					// XXX custom elements...
-					// 		format:
-					// 			{
-					// 				<key>: <handler>,
-					// 				<alias>: <key>|<alias>,
-					// 				...
-					// 			}
-					// XXX the handler should take care of it's own updating...
-					// 		...will also need a way to drop a handler if 
-					// 		the list changes, otherwise this is a potential
-					// 		leak...
-					// XXX move other elements into this...
-					// XXX need a better attr name...
-					} else if(that.__state_indicator_elements){
-						var handler = that.__state_indicator_elements[elem]
-						// handle aliases...
-						var seen = []
-						while(typeof(handler) == typeof('str')){
-							seen.push(handler)
-							var handler = that.__state_indicator_elements[handler]
-							// check for loops...
-							if(seen.indexOf(handler) >= 0){
-								console.error('state indicator alias loop detected at:', elem)
-								handler = null
-							}
-						}
+					} else {
+						var handler = _getHandler(elem)
 
 						// do the call...
 						if(handler != null){
-							// XXX simplify the constructors... (into one?)
-							handler.call(that, elem, makeInfoItem, makeExpandingInfoItem)
+							res = handler.call(that, 'make', global, elem, gid)
 						}
 					}
+
+					// append the actual element...
+					res.length > 0 && res
+						.addClass(align +' '+ (full_only && 'full-only'))
+						.appendTo(global)
 				})
 
 				global.appendTo(this.ribbons.viewer)
@@ -193,42 +274,10 @@ var ImageStateIndicatorActions = actions.Actions({
 				return
 			}
 
-
 			// populate the info...
-
-			var img = this.images && gid in this.images && this.images[gid]
-
-			// gid..
-			global.find('.gid .shown').text(gid.slice(-6))
-			global.find('.gid .hidden').text(gid)
-
-			// path...
-			global.find('.path .shown').text(img && img.path || '---')
-			global.find('.path .hidden').text(img && img.path || '---')
-
-			// pos...
-			global.find('.index')
-				.text(
-					(this.data.getImageOrder('ribbon', gid)+1) 
-					+'/'+ 
-					this.data.getImages(gid).len)
-
-			// NOTE: we are not using .toggleMark('?') and friends 
-			// 		here to avoid recursion as we might be handling 
-			// 		them here...
-			// 		...this also simpler than handling '?' and other
-			// 		special toggler args in the handler...
-			var tags = this.data.getTags(gid)
-
-			// marks...
-			global.find('.marked')[
-				tags.indexOf('selected') < 0 ?
-					'removeClass' 
-					: 'addClass']('on')
-			global.find('.bookmarked')[
-				tags.indexOf('bookmark') < 0 ? 
-					'removeClass' 
-					: 'addClass']('on')
+			_getHandlers().forEach(function(key){
+				_getHandler(key).call(that, 'update', global, key, gid)
+			})
 		}],
 	toggleStateIndicator: ['Interface/Toggle state indicator modes',
 		toggler.CSSClassToggler(
@@ -282,8 +331,8 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 			}],
 		[[
 			'focusImage',
-			'toggleBookmark',
-			'toggleMark',
+			'tag',
+			'untag',
 		],
 			function(){
 				this.updateStateIndicators()
