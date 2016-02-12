@@ -90,6 +90,7 @@ var ImageStateIndicatorActions = actions.Actions({
 		'global-state-indicator-mode': null,
 	},
 
+	// XXX TESTING...
 	get moo(){ return 321 },
 	foo: 123,
 
