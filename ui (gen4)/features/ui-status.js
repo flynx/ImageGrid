@@ -119,7 +119,7 @@ var ImageStateIndicatorActions = actions.Actions({
 			} else if(action == 'update'){
 				// gid..
 				if(elem == 'gid'){
-					var txt = gid.slice(0, 6)
+					var txt = gid.slice(-6)
 					var text = gid 
 
 				// path...
