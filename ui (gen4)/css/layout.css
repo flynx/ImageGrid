@@ -1163,7 +1163,7 @@ stretching in width... */
   padding-right: 10px;
   box-sizing: border-box;
   background: black;
-  color: white;
+  color: silver;
   opacity: 0.6;
 }
 .overlay-info:hover {
@@ -1198,6 +1198,10 @@ stretching in width... */
 .overlay-info.minimal .full-only {
   display: none;
 }
+/* space elements... */
+.overlay-info > :not(:first-child) {
+  margin-left: 10px;
+}
 /* XXX REUSE: this is the same as selected/bookmarked image markers... */
 .overlay-info .marked,
 .overlay-info .marked:after,
@@ -1208,8 +1212,8 @@ stretching in width... */
   content: "";
   font-size: 0pt;
   border: none;
-  margin: 4px;
-  margin-right: 10px;
+  margin-top: 4px;
+  margin-bottom: 4px;
   width: 10px;
   height: 10px;
   box-shadow: 2px 2px 20px -2px rgba(0, 0, 0, 0.7);
@@ -1258,6 +1262,15 @@ stretching in width... */
 .overlay-info .marked:not(.on):after,
 .overlay-info .bookmarked:not(.on):after {
   background: gray;
+}
+/* image index status element */
+.overlay-info .index.global:after {
+  content: "G";
+  opacity: 0.7;
+  font-size: small;
+}
+.overlay-info .index.global:hover:after {
+  content: "Global";
 }
 /*************************************************** Global status ***/
 .global-status {

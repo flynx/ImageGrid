@@ -90,20 +90,56 @@ var ImageStateIndicatorActions = actions.Actions({
 	// XXX make this visible to the user???
 	// XXX is this too complex???
 	__state_indicator_elements__: {
+		// XXX make position editable...
+		// 		- edit position on click
+		// 		- goto position on enter/blur (blur with value)
+		// 		- cancel on esc/blur (blur with no value)
+		// 		- treat index depending on mode (global/ribbon)
 		index: function(action, container, elem, gid){
+			var that = this
 			// construct...
 			if(action == 'make'){
 				return $('<span>').addClass(elem)
+					// XXX might be a good idea to make this an input...
+					.append($('<span>')
+						.addClass('position')
+						.click(function(){
+							// XXX enter edit mode -> select contents...
+							// XXX might be a good idea to live select 
+							// 		the indexed image... (???)
+							//$(this)
+							//	.prop('contenteditable', true)
+							// XXX
+						}))
+					.append($('<span>')
+						.addClass('length')
+						// toggle index state...
+						.click(function(){
+							$(this).parent()
+								.toggleClass('global')
+							that.updateStateIndicators()
+						}))
 
 			// update...
 			} else if(action == 'update'){
-				// XXX how do we pass a custom gid to here???
-				var gid = this.current
-				container.find('.'+elem)
-					.text(
-						(this.data.getImageOrder('ribbon', gid)+1) 
-						+'/'+ 
-						this.data.getImages(gid).len)
+				gid = gid || this.current
+
+				var c = container.find('.'+elem)
+
+				// global index...
+				if(c.hasClass('global')){
+					c.find('.position')
+						.text(this.data.getImageOrder(gid)+1)
+					c.find('.length')
+						.text('/'+ this.data.length)
+
+				// ribbon index...
+				} else {
+					c.find('.position')
+						.text(this.data.getImageOrder('ribbon', gid)+1)
+					c.find('.length')
+						.text('/'+ this.data.getImages(gid).len)
+				}
 
 			// remove...
 			} else if(action == 'remove'){
