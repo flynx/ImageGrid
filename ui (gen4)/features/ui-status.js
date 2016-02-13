@@ -79,6 +79,11 @@ var ImageStateIndicatorActions = actions.Actions({
 	// 		...
 	// 	}
 	//
+	// Supported actions:
+	// 	- make
+	// 	- update
+	// 	- remove
+	//
 	// NOTE: built-in handlers can be overloaded by user.
 	// NOTE: alias loops are ignored.
 	//
@@ -172,6 +177,7 @@ var ImageStateIndicatorActions = actions.Actions({
 		bookmark: 'mark', 
 	},
 
+	// XXX should this be a toggler???
 	updateStateIndicators: ['- Interface/',
 		function(gid){
 			gid = gid || this.current
