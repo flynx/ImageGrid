@@ -72,6 +72,8 @@ var ImageStateIndicatorActions = actions.Actions({
 		'global-state-indicator-mode': null,
 	},
 
+	// Status indicator handlers...
+	//
 	// Format:
 	// 	{
 	// 		<key>: <handler>,
@@ -95,6 +97,7 @@ var ImageStateIndicatorActions = actions.Actions({
 		// 		- goto position on enter/blur (blur with value)
 		// 		- cancel on esc/blur (blur with no value)
 		// 		- treat index depending on mode (global/ribbon)
+		// XXX might be a good idea to auto-reset global index to ribbon...
 		index: function(action, container, elem, gid){
 			var that = this
 			// construct...
@@ -356,6 +359,10 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 			}],
 		[[
 			'focusImage',
+			// XXX these might not be the right way to go because these
+			// 		will get triggered on batch operations and the such...
+			// 		...one way to fix this is to test if it's the current
+			// 		image being updated and do nothing otherwise...
 			'tag',
 			'untag',
 		],
