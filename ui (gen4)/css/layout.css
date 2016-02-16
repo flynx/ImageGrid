@@ -1202,6 +1202,9 @@ stretching in width... */
 .overlay-info > :not(:first-child) {
   margin-left: 10px;
 }
+.overlay-info .info {
+  font-style: italic;
+}
 /* XXX REUSE: this is the same as selected/bookmarked image markers... */
 .overlay-info .marked,
 .overlay-info .marked:after,

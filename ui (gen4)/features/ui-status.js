@@ -52,6 +52,7 @@ var ImageStateIndicatorActions = actions.Actions({
 			'index',
 			//'path',
 			'gid',
+			'info',
 
 			// separates left/right aligned elements...
 			'---',
@@ -113,6 +114,14 @@ var ImageStateIndicatorActions = actions.Actions({
 							//$(this)
 							//	.prop('contenteditable', true)
 							// XXX
+						})
+						// XXX STUB...
+						.on('mouseover', function(){
+							that.showInfo('Image position (click to edit image position)')
+						})
+						// XXX STUB...
+						.on('mouseout', function(){
+							that.hideInfo()
 						}))
 					.append($('<span>')
 						.addClass('length')
@@ -121,6 +130,14 @@ var ImageStateIndicatorActions = actions.Actions({
 							$(this).parent()
 								.toggleClass('global')
 							that.updateStateIndicators()
+						})
+						// XXX STUB...
+						.on('mouseover', function(){
+							that.showInfo('Image position (click to toggle ribbon/global)')
+						})
+						// XXX STUB...
+						.on('mouseout', function(){
+							that.hideInfo()
 						}))
 
 			// update...
@@ -193,6 +210,16 @@ var ImageStateIndicatorActions = actions.Actions({
 					.click(function(){
 						that['toggle'+elem.capitalize()]()
 					})
+					// XXX STUB...
+					.on('mouseover', function(){
+						that.showInfo('Image '
+							+(elem == 'mark' ? 'selection' : 'bookmark')
+							+' status (click to toggle)')
+					})
+					// XXX STUB...
+					.on('mouseout', function(){
+						that.hideInfo()
+					})
 
 			// update...
 			} else if(action == 'update'){
@@ -214,6 +241,25 @@ var ImageStateIndicatorActions = actions.Actions({
 			}
 		},
 		bookmark: 'mark', 
+
+		// XXX STUB
+		// XXX need to style this in an appropriate way...
+		// 		...might not be a good spot for this...
+		// XXX might be a good idea to make the info global, e.g. show 
+		// 		info for anything that either has or is nested in an 
+		// 		element that has an info attr...
+		info: function(action, container, elem, gid){
+			// construct...
+			if(action == 'make'){
+				return $('<span>')
+					.addClass('info')
+					.hide()
+
+			// remove...
+			} else if(action == 'remove'){
+				container.find('.info').remove()
+			}
+		},
 	},
 
 	// XXX should this be a toggler???
@@ -313,6 +359,22 @@ var ImageStateIndicatorActions = actions.Actions({
 				return this.ribbons.viewer.find('.state-indicator-container.global-info') }, 
 			function(){ return this.config['global-state-indicator-modes'] },
 			function(state){ this.config['global-state-indicator-mode'] = state }) ],
+
+
+	// Should these be a separate class???
+	showInfo: ['- Interface/',
+		function(text){
+			this.ribbons.viewer.find('.state-indicator-container.global-info .info')
+				.text(text)
+				.stop()
+				.css('opacity', 1)
+				.show()
+		}],
+	hideInfo: ['- Interface/',
+		function(){
+			this.ribbons.viewer.find('.state-indicator-container.global-info .info')
+				.fadeOut()
+		}]
 })
 
 // XXX an alternative approach:
