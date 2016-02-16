@@ -357,18 +357,23 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 					this.toggleStateIndicator(this.config['global-state-indicator-mode'])
 				}
 			}],
+		['focusImage',
+			function(){
+				this.updateStateIndicators()
+			}],
 		[[
-			'focusImage',
-			// XXX these might not be the right way to go because these
-			// 		will get triggered on batch operations and the such...
-			// 		...one way to fix this is to test if it's the current
-			// 		image being updated and do nothing otherwise...
 			'tag',
 			'untag',
 		],
-			function(){
-				this.updateStateIndicators()
-			}]
+			function(res, tags, gids){
+				// trigger only when current image is affected...
+				if(gids.constructor === Array 
+						&& (gids.indexOf('current') >= 0 
+							|| gids.indexOf(this.current) >= 0)
+						|| this.data.getImage(gids) == this.current){
+					this.updateStateIndicators()
+				}
+			}],
 	],
 })
 
