@@ -361,7 +361,7 @@ var ImageStateIndicatorActions = actions.Actions({
 			function(state){ this.config['global-state-indicator-mode'] = state }) ],
 
 
-	// Should these be a separate class???
+	// XXX Should these be a separate class???
 	showInfo: ['- Interface/',
 		function(text){
 			this.ribbons.viewer.find('.state-indicator-container.global-info .info')
