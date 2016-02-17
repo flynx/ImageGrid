@@ -23,6 +23,48 @@ var base = require('features/base')
 
 /*********************************************************************/
 
+// XXX different ways to do this:
+// 		1) dict of handlers (as-is now)
+// 			handlers defined as:
+// 				.__state_indicator_elements__ = {
+// 					<item>: <handler>,
+// 				}
+// 			- complex to extend
+// 			+ does not pollute the namespace
+//
+// 			...seems messy...
+//
+// 		2) info items as actions/togglers
+// 			handlers defined as:
+// 				.toggleInfo<item>(...)
+// 			a handler constructor
+// 				makeInfoToggler(<item>, ...)
+// 			a set of default states
+// 				'on'		-- also update...
+// 				'off'
+// 			- pollutes the ns
+// 			- need to auto-create the container
+// 			+ easy to extend
+// 			+ easy to put into action menus cleanly -- nest the path...
+//
+// 			...feels the nicest...
+//
+// 		3) sub action-set
+// 			handlers defined as:
+// 				.__state_indicator_actions__		-- constructor
+// 				.info.<item>(...)
+// 			info constructed via:
+// 				.info		-- prop
+// 				.toggleStateIndicator(..)
+// 			+ clean
+// 			- hard to access root ns (need to link manually)
+// 			- extending needs to either be done manually or via and 
+// 			  extension to Features(..)
+//
+// 			 ...might be a bit over-complicated...
+// 			
+// 			
+
 // XXX add setup / teardown...
 // XXX might be a good idea to merge this with single image mode...
 var makeStateIndicator = function(type){
@@ -440,6 +482,87 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 	],
 })
 
+
+
+//---------------------------------------------------------------------
+
+/*
+var InfoIndicatorActions = actions.Actions({
+	config: {
+		// XXX might be a good idea to add custom components API...
+		'global-state-indicator-elements': [
+			// Q: should index be here or to the right???
+			'index',
+			//'path',
+			'gid',
+			// XXX is this the right place for this???
+			'info',
+
+			// separates left/right aligned elements...
+			'---',
+
+			'mark',
+			'bookmark',
+		],
+	},
+
+	__state_indicator_elements__: {
+		// XXX STUB
+		// XXX need to style this in an appropriate way...
+		// 		...might not be a good spot for this...
+		// XXX might be a good idea to make the info global, e.g. show 
+		// 		info for anything that either has or is nested in an 
+		// 		element that has an info attr...
+		info: function(action, container, elem, gid){
+			// construct...
+			if(action == 'make'){
+				return $('<span>')
+					.addClass('info')
+					.hide()
+
+			// remove...
+			} else if(action == 'remove'){
+				container.find('.info').remove()
+			}
+		},
+	},
+
+	// XXX Should these be a separate class???
+	showInfo: ['- Interface/',
+		function(text){
+			this.ribbons.viewer.find('.state-indicator-container.global-info .info')
+				.text(text)
+				.stop()
+				.css('opacity', 1)
+				.show()
+		}],
+	hideInfo: ['- Interface/',
+		function(){
+			this.ribbons.viewer.find('.state-indicator-container.global-info .info')
+				.fadeOut()
+		}]
+})
+
+InfoIndicatorActions
+	.__state_indicator_elements__.__proto__ 
+		= ImageStateIndicatorActions.__state_indicator_elements__
+
+
+var InfoIndicator = 
+module.InfoIndicator = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-info-indicator',
+	depends: [
+		'ui',
+		'ui-image-state-indicator',
+	],
+
+	actions: InfoIndicatorActions,
+})
+
+*/
 
 
 //---------------------------------------------------------------------
