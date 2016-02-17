@@ -48,10 +48,11 @@ var ImageStateIndicatorActions = actions.Actions({
 	config: {
 		// XXX might be a good idea to add custom components API...
 		'global-state-indicator-elements': [
-			// XXX should index be here or to the right???
+			// Q: should index be here or to the right???
 			'index',
 			//'path',
 			'gid',
+			// XXX is this the right place for this???
 			'info',
 
 			// separates left/right aligned elements...

@@ -144,7 +144,7 @@ var URLHistoryActions = actions.Actions({
 
 			// no way to check so we do not know...
 			} else {
-				return true
+				return null
 			}
 		}],
 	openURLFromHistory: ['- History/',
@@ -448,7 +448,7 @@ var URLHistoryUIActions = actions.Actions({
 
 			// select and highlight current path...
 			cur && list
-				.select(cur)
+				.select('"'+ cur +'"')
 					.addClass('highlighted')
 
 			return o
