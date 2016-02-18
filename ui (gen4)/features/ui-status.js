@@ -22,49 +22,6 @@ var base = require('features/base')
 
 
 /*********************************************************************/
-
-// XXX different ways to do this:
-// 		1) dict of handlers (as-is now)
-// 			handlers defined as:
-// 				.__state_indicator_elements__ = {
-// 					<item>: <handler>,
-// 				}
-// 			- complex to extend
-// 			+ does not pollute the namespace
-//
-// 			...seems messy...
-//
-// 		2) info items as actions/togglers
-// 			handlers defined as:
-// 				.toggleInfo<item>(...)
-// 			a handler constructor
-// 				makeInfoToggler(<item>, ...)
-// 			a set of default states
-// 				'on'		-- also update...
-// 				'off'
-// 			- pollutes the ns
-// 			- need to auto-create the container
-// 			+ easy to extend
-// 			+ easy to put into action menus cleanly -- nest the path...
-//
-// 			...feels the nicest...
-//
-// 		3) sub action-set
-// 			handlers defined as:
-// 				.__state_indicator_actions__		-- constructor
-// 				.info.<item>(...)
-// 			info constructed via:
-// 				.info		-- prop
-// 				.toggleStateIndicator(..)
-// 			+ clean
-// 			- hard to access root ns (need to link manually)
-// 			- extending needs to either be done manually or via and 
-// 			  extension to Features(..)
-//
-// 			 ...might be a bit over-complicated...
-// 			
-// 			
-
 // XXX add setup / teardown...
 // XXX might be a good idea to merge this with single image mode...
 var makeStateIndicator = function(type){
@@ -85,6 +42,7 @@ var makeStateIndicatorItem = function(container, type, text){
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+// XXX revise how/where info is displayed...
 var StatusBarActions = actions.Actions({
 	config: {
 		'status-bar-mode': 'minimal',
