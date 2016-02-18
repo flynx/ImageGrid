@@ -2740,6 +2740,7 @@ var DataWithTagsPrototype = {
 	getTags: function(gids){
 		gids = arguments.length > 1 ? [].slice.call(arguments) : gids
 		gids = gids == null || gids == 'current' ? this.getImage() : gids
+		gids = gids == null ? [] : gids
 		gids = gids.constructor !== Array ? [gids] : gids
 
 		if(this.tags == null){

@@ -85,17 +85,18 @@ var makeStateIndicatorItem = function(container, type, text){
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-// XXX Add status messages and log...
-var ImageStateIndicatorActions = actions.Actions({
+var StatusBarActions = actions.Actions({
 	config: {
-		// XXX might be a good idea to add custom components API...
-		'global-state-indicator-elements': [
-			// Q: should index be here or to the right???
+		'status-bar-mode': 'minimal',
+		'status-bar-modes': [
+			'none',
+			'minimal',
+			'full'
+		],
+		'status-bar-items': [
 			'index',
-			//'path',
 			'gid',
-			// XXX is this the right place for this???
-			'info',
+			//'path',
 
 			// separates left/right aligned elements...
 			'---',
@@ -104,52 +105,26 @@ var ImageStateIndicatorActions = actions.Actions({
 			'bookmark',
 		],
 
-		'global-state-indicator-elements-full-only': [
+		// XXX not sure about this...
+		'status-bar-full-only': [
 			'gid',
+			'path',
 		],
-
-		'global-state-indicator-modes': [
-			'none',
-			'minimal',
-			'full',
-		],
-		'global-state-indicator-mode': null,
 	},
 
-	// Status indicator handlers...
-	//
-	// Format:
-	// 	{
-	// 		<key>: <handler>,
-	// 		<alias>: <key> | <handler>,
-	// 		...
-	// 	}
-	//
-	// Supported actions:
-	// 	- make
-	// 	- update
-	// 	- remove
-	//
-	// NOTE: built-in handlers can be overloaded by user.
-	// NOTE: alias loops are ignored.
-	//
-	// XXX make this visible to the user???
-	// XXX is this too complex???
-	__state_indicator_elements__: {
-		// XXX make position editable...
-		// 		- edit position on click
-		// 		- goto position on enter/blur (blur with value)
-		// 		- cancel on esc/blur (blur with no value)
-		// 		- treat index depending on mode (global/ribbon)
-		// XXX might be a good idea to auto-reset global index to ribbon...
-		index: function(action, container, elem, gid){
+	__statusbar_elements__: {
+		index: function(item, gid, img){
 			var that = this
-			// construct...
-			if(action == 'make'){
-				return $('<span>').addClass(elem)
-					// XXX might be a good idea to make this an input...
+			gid = gid || this.current
+
+			// make an element...
+			if(typeof(item) == typeof('str')){
+				var type = item
+				item = $('<span>')
+					.addClass(type)
 					.append($('<span>')
 						.addClass('position')
+						.attr('info', 'Image position (click to edit image position)')
 						.click(function(){
 							// XXX enter edit mode -> select contents...
 							// XXX might be a good idea to live select 
@@ -157,314 +132,269 @@ var ImageStateIndicatorActions = actions.Actions({
 							//$(this)
 							//	.prop('contenteditable', true)
 							// XXX
-						})
-						// XXX STUB...
-						.on('mouseover', function(){
-							that.showInfo('Image position (click to edit image position)')
-						})
-						// XXX STUB...
-						.on('mouseout', function(){
-							that.hideInfo()
 						}))
 					.append($('<span>')
 						.addClass('length')
+						.attr('info', 'Image position (click to toggle ribbon/global)')
 						// toggle index state...
 						.click(function(){
 							$(this).parent()
 								.toggleClass('global')
-							that.updateStateIndicators()
-						})
-						// XXX STUB...
-						.on('mouseover', function(){
-							that.showInfo('Image position (click to toggle ribbon/global)')
-						})
-						// XXX STUB...
-						.on('mouseout', function(){
-							that.hideInfo()
+							that.updateStatusBar()
 						}))
 
-			// update...
-			} else if(action == 'update'){
-				gid = gid || this.current
-
-				var c = container.find('.'+elem)
-
-				// global index...
-				if(c.hasClass('global')){
-					c.find('.position')
-						.text(this.data.getImageOrder(gid)+1)
-					c.find('.length')
-						.text('/'+ this.data.length)
-
-				// ribbon index...
-				} else {
-					c.find('.position')
-						.text(this.data.getImageOrder('ribbon', gid)+1)
-					c.find('.length')
-						.text('/'+ this.data.getImages(gid).len)
-				}
-
-			// remove...
-			} else if(action == 'remove'){
-				container.find('.'+elem).remove()
+			} else {
+				var type = item.attr('type')
 			}
+
+			// update...
+			// global index...
+			if(item.hasClass('global')){
+				item.find('.position')
+					.text(this.data.getImageOrder(gid)+1)
+				item.find('.length')
+					.text('/'+ this.data.length)
+
+			// ribbon index...
+			} else {
+				item.find('.position')
+					.text(this.data.getImageOrder('ribbon', gid)+1)
+				item.find('.length')
+					.text('/'+ this.data.getImages(gid).len)
+			}
+
+			return item
 		},
 
 		// XXX handle path correctly...
-		gid: function(action, container, elem, gid){
-			// construct...
-			if(action == 'make'){
-				return $('<span>')
-					.addClass(elem + ' expanding-text ')
+		gid: function(item, gid, img){
+			var that = this
+			gid = gid || this.current
+			img = img || (this.images && gid in this.images && this.images[gid])
+
+			// make an element...
+			if(typeof(item) == typeof('str')){
+				var type = item
+				item = $('<span>')
+					.addClass(type + ' expanding-text ')
+					.attr('info', type == 'gid' ? 'Image GID'
+							: type == 'path'? 'Image filename/path'
+							: '')
 					.append($('<span class="shown">'))
 					.append($('<span class="hidden">'))
 
-			// update...
-			} else if(action == 'update'){
-				// gid..
-				if(elem == 'gid'){
-					var txt = gid.slice(-6)
-					var text = gid 
-
-				// path...
-				// XXX
-				} else if(elem == 'path'){
-					var img = this.images && gid in this.images && this.images[gid]
-
-					var text = img && img.path || '---'
-					var txt = text
-				}
-
-				container.find('.'+elem+' .shown').text(txt)
-				container.find('.'+elem+' .hidden').text(text)
-
-			// remove...
-			} else if(action == 'remove'){
-				container.find('.'+elem).remove()
+			} else {
+				var type = item.attr('type')
 			}
+
+			// update...
+			var txt = ''
+			var text = ''
+
+			// gid..
+			if(type == 'gid'){
+				txt = gid ? gid.slice(-6) : '-'
+				text = gid || '-'
+
+			// path...
+			// XXX
+			} else if(type == 'path'){
+				text = img && img.path || '---'
+				txt = text
+			}
+
+			item.find('.shown').text(txt)
+			item.find('.hidden').text(text)
+
+			return item
 		},
 		path: 'gid',
 
-		mark: function(action, container, elem, gid){
-			// construct...
-			if(action == 'make'){
-				var that = this
-				return $('<span>').addClass(elem+'ed')
-					.click(function(){
-						that['toggle'+elem.capitalize()]()
-					})
-					// XXX STUB...
-					.on('mouseover', function(){
-						that.showInfo('Image '
-							+(elem == 'mark' ? 'selection' : 'bookmark')
-							+' status (click to toggle)')
-					})
-					// XXX STUB...
-					.on('mouseout', function(){
-						that.hideInfo()
-					})
-
-			// update...
-			} else if(action == 'update'){
-				// NOTE: we are not using .toggleMark('?') and friends 
-				// 		here to avoid recursion as we might be handling 
-				// 		them here...
-				// 		...this also simpler than handling '?' and other
-				// 		special toggler args in the handler...
-				var tags = this.data.getTags(gid)
-				var tag = elem == 'mark' ? 'selected' : 'bookmark'
-				container.find('.'+elem+'ed')[
-					tags.indexOf(tag) < 0 ?
-						'removeClass' 
-						: 'addClass']('on')
-
-			// remove...
-			} else if(action == 'remove'){
-				container.find('.'+elem+'ed').remove()
-			}
-		},
-		bookmark: 'mark', 
-
-		// XXX STUB
-		// XXX need to style this in an appropriate way...
-		// 		...might not be a good spot for this...
-		// XXX might be a good idea to make the info global, e.g. show 
-		// 		info for anything that either has or is nested in an 
-		// 		element that has an info attr...
-		info: function(action, container, elem, gid){
-			// construct...
-			if(action == 'make'){
-				return $('<span>')
-					.addClass('info')
-					.hide()
-
-			// remove...
-			} else if(action == 'remove'){
-				container.find('.info').remove()
-			}
-		},
-	},
-
-	// XXX should this be a toggler???
-	updateStateIndicators: ['- Interface/',
-		function(gid){
+		mark: function(item, gid, img){
 			gid = gid || this.current
-
 			var that = this
 
-			var _getHandlers = function(){
-				return Object.keys(that.__state_indicator_elements__ || {})
-					.concat(Object.keys(ImageStateIndicatorActions.__state_indicator_elements__ || {}))
-					.unique()
-			}
-			var _getHandler = function(key){
-				var handler = (that.__state_indicator_elements__ || {})[key]
-					|| (ImageStateIndicatorActions.__state_indicator_elements__ || {})[key]
+			if(typeof(item) == typeof('str')){
+				var type = item
+				item = $('<span>')
+					.addClass(type + 'ed')
+					.attr('info', 'Image '
+						+(type == 'mark' ? 'selection' : 'bookmark')
+						+' status (click to toggle)')
+					.click(function(){
+						that['toggle'+type.capitalize()]()
+					})
 
-				if(handler == null){
-					return
-				}
-
-				// handle aliases...
-				var seen = []
-				while(typeof(handler) == typeof('str')){
-					seen.push(handler)
-					var handler = (that.__state_indicator_elements__ || {})[handler]
-						|| (ImageStateIndicatorActions.__state_indicator_elements__ || {})[handler]
-					// check for loops...
-					if(seen.indexOf(handler) >= 0){
-						console.error('state indicator alias loop detected at:', key)
-						handler = null
-					}
-				}
-
-				return handler
+			} else {
+				var type = item.attr('type')
 			}
 
-			var global = this.ribbons.viewer.find('.state-indicator-container.global-info')
-			if(global.length == 0){
-				//global = makeStateIndicator('global-info') 
-				global = makeStateIndicator('global-info overlay-info') 
+			// NOTE: we are not using .toggleMark('?') and friends 
+			// 		here to avoid recursion as we might be handling 
+			// 		them here...
+			// 		...this also simpler than handling '?' and other
+			// 		special toggler args in the handler...
+			var tags = this.data.getTags(gid)
+			var tag = type == 'mark' ? 'selected' : 'bookmark'
+			item[tags.indexOf(tag) < 0 ?
+					'removeClass' 
+					: 'addClass']('on')
 
-				var align = ''
-				var order = this.config['global-state-indicator-elements'].slice()
+			return item
+		},
+		bookmark: 'mark', 
+	},
 
-				var i = order.indexOf('---')
-				// rearrange the tail section...
-				// NOTE: this is here as we need to push the floated
-				// 		right items in reverse order...
-				if(i >= 0){
-					order = order.concat(order.splice(i+1, order.length).reverse())
-				}
-
-				order.forEach(function(elem){
-					var full_only = that.config['global-state-indicator-elements-full-only'].indexOf(elem) >= 0
-					var res = $()
-
-					// spacer...
-					if(elem == '---'){
-						align = 'float-right'
-
-					// handlers...
-					} else {
-						var handler = _getHandler(elem)
-						// do the call...
-						if(handler != null){
-							res = handler.call(that, 'make', global, elem, gid)
-						}
-					}
-
-					// append the actual element...
-					res.length > 0 && res
-						.addClass(align +' '+ (full_only && 'full-only'))
-						.appendTo(global)
-				})
-
-				// add and init in the correct state...
-				global.appendTo(this.ribbons.viewer)
-				if(this.config['global-state-indicator-mode']){
-					this.toggleStateIndicator(this.config['global-state-indicator-mode'])
-				}
-			}
-
-			if(!gid){
-				return
-			}
-
-			// populate the info...
-			_getHandlers().forEach(function(key){
-				_getHandler(key).call(that, 'update', global, key, gid)
-			})
-		}],
-	toggleStateIndicator: ['Interface/Toggle state indicator modes',
+	// NOTE: to reset the status bar cycle through 'none' mode to 
+	// 		reconstruct all the items.
+	toggleStatusBar: ['Interface/Toggle status bar modes',
 		toggler.CSSClassToggler(
+			// XXX change class...
 			function(){ 
-				return this.ribbons.viewer.find('.state-indicator-container.global-info') }, 
-			function(){ return this.config['global-state-indicator-modes'] },
-			function(state){ this.config['global-state-indicator-mode'] = state }) ],
+				var bar = this.ribbons.viewer.find('.state-indicator-container.global-info') 
+				if(bar.length == 0){
+					bar = makeStateIndicator('global-info overlay-info') 
+						.on('mouseover', function(){
+							var t = $(event.target)
+							
+							var info = t.attr('info') 
+								|| t.parents('.overlay-info, [info]').first().attr('info')
 
+							if(info){
+								bar.find('.info').text(info)
+							}
+						})
+						.on('mouseout', function(){
+							bar.find('.info').empty()
+						})
+						.appendTo(this.ribbons.viewer)
+				}
+				return bar
+			}, 
+			function(){ return this.config['status-bar-modes'] },
+			// XXX check if we will be getting gid reliably...
+			function(state, bar, gid){ 
+				var that = this
+				this.config['status-bar-mode'] = state 
 
-	// XXX Should these be a separate class???
-	showInfo: ['- Interface/',
-		function(text){
-			this.ribbons.viewer.find('.state-indicator-container.global-info .info')
-				.text(text)
-				.stop()
-				.css('opacity', 1)
-				.show()
-		}],
-	hideInfo: ['- Interface/',
-		function(){
-			this.ribbons.viewer.find('.state-indicator-container.global-info .info')
-				.fadeOut()
-		}]
+				// destroy...
+				if(state == 'none'){
+					bar.empty()
+
+				// build/update...
+				} else {
+					gid = gid || this.current
+					var img = this.images && this.images[gid]
+
+					var _getHandler = function(key){
+						var elems = that.__statusbar_elements__ || {}
+						var base_elems = StatusBarActions.__statusbar_elements__ || {}
+
+						var handler = elems[key] || base_elems[key]
+
+						if(handler == null){
+							return
+						}
+
+						// handle aliases...
+						var seen = []
+						while(typeof(handler) == typeof('str')){
+							seen.push(handler)
+							var handler = elems[handler] || base_elems[handler]
+							// check for loops...
+							if(seen.indexOf(handler) >= 0){
+								console.error('state indicator alias loop detected at:', key)
+								handler = null
+								break
+							}
+						}
+
+						return handler
+					}
+
+					// build...
+					if(bar.children().length <= 0){
+						var items = this.config['status-bar-items'].slice()
+
+						// rearrange the tail section...
+						// NOTE: this is here as we need to push the floated
+						// 		right items in reverse order...
+						var i = items.indexOf('---')
+						items = i >= 0 ? 
+							items.concat(items.splice(i+1, items.length).reverse())
+							: items
+
+						items.forEach(function(item){
+							// spacer...
+							if(item == '---'){
+								//item = $('<span class="spacer">')
+								item = $('<span class="spacer info">')
+
+							// info items...
+							} else {
+								var handler = _getHandler(item)
+
+								var type = item
+								item = (handler ? 
+										handler.call(that, item, gid, img) 
+										: $('<span>'))
+									.attr('type', item)
+
+								if('status-bar-full-only' in that.config 
+										&& that.config['status-bar-full-only'].indexOf(type) >= 0){
+									item.addClass('full-only')
+								}
+							}
+
+							bar.append(item)
+						})
+
+					// update...
+					} else {
+						var items = bar.children()
+							.each(function(i, item){
+								item = $(item)
+								var type = item.attr('type') 
+
+								if(type == null){
+									return
+								}
+
+								var handler = _getHandler(type)
+
+								if(handler != null){
+									handler.call(that, item, gid, img) 
+								}
+							})
+					}
+				}
+			})],	
+	updateStatusBar: ['Interface/Update satus bar',
+		function(){ this.toggleStatusBar('!') }]
 })
 
-// XXX an alternative approach:
-// 		- global status area
-// 		- status bar for local status
-// 			- as in gen3
-// 			- add image status
-//
-// 		General item format:
-// 			- minimal state		- only short version / icon is shown
-// 								- when not active a disabled state/icon is shown
-//
-// 			- expanded state	- status bar sows expanded state (only?)
-// 								- title/help shown above 
-// 									- floating text, transparent bg
-// 									- same align as item
-//
-// XXX Q: can title bar be used instead of global state indication???
-// 		...especially if we are indicating only crop...
-// XXX add styling:
-// 		- element spacing
-// 		- tip text
-// 		- avoid multi-line
-// XXX rename to status bar???
-var ImageStateIndicator = 
-module.ImageStateIndicator = core.ImageGridFeatures.Feature({
+var StatusBar = 
+module.StatusBar = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-image-state-indicator',
+	tag: 'ui-status-bar',
 	depends: [
 		'ui',
-		'ui-single-image-view',
 	],
 
-	actions: ImageStateIndicatorActions,
+	actions: StatusBarActions,
 
 	handlers: [
 		['start',
 			function(){
-				if(this.config['global-state-indicator-mode']){
-					this.toggleStateIndicator(this.config['global-state-indicator-mode'])
+				if(this.config['status-bar-mode']){
+					this.toggleStatusBar(this.config['status-bar-mode'])
 				}
 			}],
 		['focusImage',
 			function(){
-				this.updateStateIndicators()
+				this.updateStatusBar()
 			}],
 		[[
 			'tag',
@@ -476,93 +406,12 @@ module.ImageStateIndicator = core.ImageGridFeatures.Feature({
 						&& (gids.indexOf('current') >= 0 
 							|| gids.indexOf(this.current) >= 0)
 						|| this.data.getImage(gids) == this.current){
-					this.updateStateIndicators()
+					this.updateStatusBar()
 				}
 			}],
 	],
 })
 
-
-
-//---------------------------------------------------------------------
-
-/*
-var InfoIndicatorActions = actions.Actions({
-	config: {
-		// XXX might be a good idea to add custom components API...
-		'global-state-indicator-elements': [
-			// Q: should index be here or to the right???
-			'index',
-			//'path',
-			'gid',
-			// XXX is this the right place for this???
-			'info',
-
-			// separates left/right aligned elements...
-			'---',
-
-			'mark',
-			'bookmark',
-		],
-	},
-
-	__state_indicator_elements__: {
-		// XXX STUB
-		// XXX need to style this in an appropriate way...
-		// 		...might not be a good spot for this...
-		// XXX might be a good idea to make the info global, e.g. show 
-		// 		info for anything that either has or is nested in an 
-		// 		element that has an info attr...
-		info: function(action, container, elem, gid){
-			// construct...
-			if(action == 'make'){
-				return $('<span>')
-					.addClass('info')
-					.hide()
-
-			// remove...
-			} else if(action == 'remove'){
-				container.find('.info').remove()
-			}
-		},
-	},
-
-	// XXX Should these be a separate class???
-	showInfo: ['- Interface/',
-		function(text){
-			this.ribbons.viewer.find('.state-indicator-container.global-info .info')
-				.text(text)
-				.stop()
-				.css('opacity', 1)
-				.show()
-		}],
-	hideInfo: ['- Interface/',
-		function(){
-			this.ribbons.viewer.find('.state-indicator-container.global-info .info')
-				.fadeOut()
-		}]
-})
-
-InfoIndicatorActions
-	.__state_indicator_elements__.__proto__ 
-		= ImageStateIndicatorActions.__state_indicator_elements__
-
-
-var InfoIndicator = 
-module.InfoIndicator = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-info-indicator',
-	depends: [
-		'ui',
-		'ui-image-state-indicator',
-	],
-
-	actions: InfoIndicatorActions,
-})
-
-*/
 
 
 //---------------------------------------------------------------------

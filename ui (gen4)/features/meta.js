@@ -103,8 +103,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 		//'ui-current-image-indicator-hide-on-screen-nav',
 	//'ui-base-ribbon-indicator',
 	'ui-passive-base-ribbon-indicator',
-	'ui-image-state-indicator',
-	'ui-global-state-indicator',
+	'ui-status-bar',
 	'ui-url-history',
 
 	'ui-browse-actions',

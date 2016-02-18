@@ -219,7 +219,7 @@ module.GLOBAL_KEYBOARD = {
 		},
 		I: {
 			default: 'showMetadata',
-			shift: 'toggleStateIndicator',
+			shift: 'toggleStatusBar',
 
 			ctrl: 'toggleMark!: "ribbon"',
 			'ctrl+shift': 'showMetadata: "current" "full"',

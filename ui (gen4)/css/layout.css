@@ -1173,7 +1173,7 @@ stretching in width... */
   -ms-user-select: auto;
   user-select: auto;
 }
-.overlay-info .float-right {
+.overlay-info .spacer ~ * {
   float: right;
 }
 .overlay-info .secondary {
