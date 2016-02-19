@@ -22,8 +22,7 @@ var base = require('features/base')
 
 
 /*********************************************************************/
-// XXX add setup / teardown...
-// XXX might be a good idea to merge this with single image mode...
+
 var makeStateIndicator = function(type){
 	return $('<div>')
 		.addClass('state-indicator-container ' + type || '')
