@@ -8,13 +8,7 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-
-/*********************************************************************/
-
-//var DEBUG = DEBUG != null ? DEBUG : true
-
 // import features...
-// XXX should this be auto-loaded???
 var core = require('features/core')
 var base = require('features/base')
 var location = require('features/location')
