@@ -146,6 +146,14 @@ actions.Actions({
 			'light',
 		],
 
+		'ribbon-theme': 'black',
+		'ribbon-themes': [
+			'black-ribbon',
+			'gray-ribbon',
+			'light-gray-ribbon',
+			'transparent-ribbon',
+		],
+
 		// XXX BUG: for some reason this get's shadowed by base.config...
 		'ribbon-focus-modes': [
 			'visual',	// select image closest visually 
@@ -293,6 +301,11 @@ actions.Actions({
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config.themes },
 			function(state){ this.config.theme = state }) ],
+	toggleRibbonTheme: ['Interface/Toggle ribbon theme', 
+		toggler.CSSClassToggler(
+			function(){ return this.ribbons.viewer }, 
+			function(){ return this.config['ribbon-themes'] },
+			function(state){ this.config['ribbon-theme'] = state }) ],
 	setEmptyMsg: ['- Interface/Set message to be displayed when nothing is loaded.',
 		function(msg, help){ this.ribbons 
 			&& this.ribbons.length > 0 
@@ -708,6 +721,9 @@ module.Viewer = core.ImageGridFeatures.Feature({
 				// load themes from config...
 				if(this.config.theme){
 					this.toggleTheme(this.config.theme)
+				}
+				if(this.config['ribbon-theme']){
+					this.toggleRibbonTheme(this.config['ribbon-theme'])
 				}
 
 				// center viewer on resize events...
