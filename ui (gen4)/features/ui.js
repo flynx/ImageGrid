@@ -1061,6 +1061,7 @@ module.Clickable = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX might be a good idea to add a threshold to show the cursor...
 var AutoHideCursor = 
 module.AutoHideCursor = core.ImageGridFeatures.Feature({
 	title: '',
@@ -1070,7 +1071,8 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 	depends: ['ui'],
 
 	config: {
-		'cursor-hide-timeout': 1000,
+		'cursor-autohide-timeout': 1000,
+		'cursor-autohide-threshold': 10,
 	},
 
 	actions: actions.Actions({
@@ -1084,27 +1086,44 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 
 					// setup...
 					if(state == 'on'){
+						var x, y
 						var timer
-						var timeout = this.config['cursor-hide-timeout']
+						var timeout = this.config['cursor-autohide-timeout'] || 1000
 						var handler 
 							= this.__cursor_autohide_handler 
 							= (this.__cursor_autohide_handler 
 								|| function(){
 									timer && clearTimeout(timer)
 
-									that.ribbons.viewer
-										.removeClass('cursor-hidden')
+									var threshold = that.config['cursor-autohide-threshold'] || 0
+									x = x || event.clientX
+									y = y || event.clientY
 
-									if(!viewer.prop('cursor-auto-hide')){
+									// show only if cursor moved outside of threshold...
+									if(threshold > 0){ 
+										if(Math.max(Math.abs(x - event.clientX), 
+												Math.abs(y - event.clientY)) > threshold){
+											x = y = null
+											that.ribbons.viewer
+												.removeClass('cursor-hidden')
+										}
+
+									// show right away...
+									} else {
+										that.ribbons.viewer
+											.removeClass('cursor-hidden')
+									}
+
+									if(!viewer.prop('cursor-autohide')){
 										return
 									}
 
-									var timeout = that.config['cursor-hide-timeout']
+									var timeout = that.config['cursor-autohide-timeout'] || 1000
 									if(timeout && timeout > 0){
 										timer = setTimeout(function(){
 											var viewer = that.ribbons.viewer
 
-											if(!viewer.prop('cursor-auto-hide')){
+											if(!viewer.prop('cursor-autohide')){
 												viewer.removeClass('cursor-hidden')
 												return
 											}
@@ -1114,16 +1133,16 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 									}
 								})
 
-						!viewer.prop('cursor-auto-hide')
+						!viewer.prop('cursor-autohide')
 							&& viewer
-								.prop('cursor-auto-hide', true)
+								.prop('cursor-autohide', true)
 								.mousemove(handler)
 
 					// teardown...
 					} else {
 						viewer
 							.off('mousemove', this.__cursor_autohide_handler)
-							.prop('cursor-auto-hide', false)
+							.prop('cursor-autohide', false)
 							.removeClass('cursor-hidden')
 						delete this.__cursor_autohide_handler
 					}
