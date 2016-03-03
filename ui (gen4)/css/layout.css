@@ -100,6 +100,13 @@
   font-size: small;
   opacity: 0.9;
 }
+.cursor-hidden {
+  cursor: none;
+}
+.cursor-hidden-r,
+.cursor-hidden-r * {
+  cursor: none !important;
+}
 /*********************************************************************/
 body {
   font-family: opensans, sans-serif;

@@ -719,12 +719,10 @@ module.Viewer = core.ImageGridFeatures.Feature({
 				var that = this
 
 				// load themes from config...
-				if(this.config.theme){
-					this.toggleTheme(this.config.theme)
-				}
-				if(this.config['ribbon-theme']){
-					this.toggleRibbonTheme(this.config['ribbon-theme'])
-				}
+				this.config.theme 
+					&& this.toggleTheme(this.config.theme)
+				this.config['ribbon-theme'] 
+					&& this.toggleRibbonTheme(this.config['ribbon-theme'])
 
 				// center viewer on resize events...
 				if(!this.__viewer_resize){
@@ -1057,6 +1055,131 @@ module.Clickable = core.ImageGridFeatures.Feature({
 				}
 			}],
 	],
+})
+
+
+
+//---------------------------------------------------------------------
+
+var AutoHideCursor = 
+module.AutoHideCursor = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-autohide-cursor',
+	depends: ['ui'],
+
+	config: {
+		'cursor-hide-timeout': 1000,
+	},
+
+	actions: actions.Actions({
+		toggleAutoHideCursor: ['Interface/Toggle cursor auto hiding',
+			toggler.CSSClassToggler(
+				function(){ return this.ribbons.viewer }, 
+				'cursor-hidden',
+				function(state){
+					var that = this
+					var viewer = this.ribbons.viewer
+
+					// setup...
+					if(state == 'on'){
+						var timer
+						var timeout = this.config['cursor-hide-timeout']
+						var handler 
+							= this.__cursor_autohide_handler 
+							= (this.__cursor_autohide_handler 
+								|| function(){
+									timer && clearTimeout(timer)
+
+									that.ribbons.viewer
+										.removeClass('cursor-hidden')
+
+									if(!viewer.prop('cursor-auto-hide')){
+										return
+									}
+
+									var timeout = that.config['cursor-hide-timeout']
+									if(timeout && timeout > 0){
+										timer = setTimeout(function(){
+											var viewer = that.ribbons.viewer
+
+											if(!viewer.prop('cursor-auto-hide')){
+												viewer.removeClass('cursor-hidden')
+												return
+											}
+
+											timer && viewer.addClass('cursor-hidden')
+										}, timeout)
+									}
+								})
+
+						!viewer.prop('cursor-auto-hide')
+							&& viewer
+								.prop('cursor-auto-hide', true)
+								.mousemove(handler)
+
+					// teardown...
+					} else {
+						viewer
+							.off('mousemove', this.__cursor_autohide_handler)
+							.prop('cursor-auto-hide', false)
+							.removeClass('cursor-hidden')
+						delete this.__cursor_autohide_handler
+					}
+				})],
+	}),
+})
+
+
+// This will store/restore autohide state for single-image and ribbon 
+// views...
+var AutoHideCursorSingleImage = 
+module.AutoHideCursorSingleImage = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-autohide-cursor-single-image-view',
+	depends: [
+		'ui-autohide-cursor',
+		'ui-single-image-view',
+	],
+
+	config: {
+		'cursor-autohide-single-image-view': 'on',
+		'cursor-autohide-ribbon-view': 'off',
+	},
+
+	handlers: [
+		// setup...
+		['load',
+			function(){
+				var mode = this.toggleSingleImage('?') == 'on' ? 
+					'cursor-autohide-single-image-view'
+					: 'cursor-autohide-ribbon-view'
+
+				this.toggleAutoHideCursor(this.config[mode] || 'off')
+			}],
+		// store state for each mode...
+		['toggleAutoHideCursor',
+			function(){
+				var mode = this.toggleSingleImage('?') == 'on' ? 
+					'cursor-autohide-single-image-view'
+					: 'cursor-autohide-ribbon-view'
+
+				this.config[mode] = this.toggleAutoHideCursor('?')
+			}],
+		// restore state per mode...
+		['toggleSingleImage', 
+			function(){
+				if(this.toggleSingleImage('?') == 'on'){
+					this.toggleAutoHideCursor(this.config['cursor-autohide-single-image-view'])
+
+				} else {
+					this.toggleAutoHideCursor(this.config['cursor-autohide-ribbon-view'])
+				}
+			}]
+	]
 })
 
 

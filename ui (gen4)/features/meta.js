@@ -111,6 +111,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	// ui control...
 	'ui-clickable',
+	//'ui-autohide-cursor',
+	'ui-autohide-cursor-single-image-view',
 	//'ui-direct-control-jquery',
 	// XXX BUG: on touch down and first move this gets offset by a distance
 	// 		not sure why...
