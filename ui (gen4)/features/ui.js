@@ -1061,6 +1061,11 @@ module.Clickable = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// NOTE: removing the prop 'cursor-autohide' will stop hiding the cursor
+// 		and show it on next timeout/mousemove.
+// 		This will not stop watching the cursor, this setting the prop back
+// 		on will re-enable autohide.
+// 		XXX needs testing...
 var AutoHideCursor = 
 module.AutoHideCursor = core.ImageGridFeatures.Feature({
 	title: '',
@@ -1108,14 +1113,10 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 												.removeClass('cursor-hidden')
 										}
 
-									// show right away...
+									// show right away -- no threshold...
 									} else {
 										that.ribbons.viewer
 											.removeClass('cursor-hidden')
-									}
-
-									if(!viewer.prop('cursor-autohide')){
-										return
 									}
 
 									var timeout = that.config['cursor-autohide-timeout'] || 1000
@@ -1133,10 +1134,13 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 									}
 								})
 
+						// do the base setup...
 						!viewer.prop('cursor-autohide')
 							&& viewer
 								.prop('cursor-autohide', true)
 								.addClass('cursor-hidden')
+								// prevent multiple handlers...
+								.off('mousemove', this.__cursor_autohide_handler)
 								.mousemove(handler)
 
 					// teardown...
@@ -1154,6 +1158,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 
 // This will store/restore autohide state for single-image and ribbon 
 // views...
+// XXX might be a good idea to hide cursor on navigation in autohide mode...
 var AutoHideCursorSingleImage = 
 module.AutoHideCursorSingleImage = core.ImageGridFeatures.Feature({
 	title: '',
