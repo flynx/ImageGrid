@@ -1060,12 +1060,14 @@ module.Clickable = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// Auto-hide cursor...
 
 // NOTE: removing the prop 'cursor-autohide' will stop hiding the cursor
 // 		and show it on next timeout/mousemove.
 // 		This will not stop watching the cursor, this setting the prop back
 // 		on will re-enable autohide.
 // 		XXX needs testing...
+// NOTE: chrome 49 + devtools open appears to prevent the cursor from being hidden...
 var AutoHideCursor = 
 module.AutoHideCursor = core.ImageGridFeatures.Feature({
 	title: '',
@@ -1158,7 +1160,10 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 
 // This will store/restore autohide state for single-image and ribbon 
 // views...
-// XXX might be a good idea to hide cursor on navigation in autohide mode...
+//
+// NOTE: chrome 49 + devtools open appears to prevent the cursor from being hidden...
+//
+// XXX hiding cursor on navigation for some reason does not work...
 var AutoHideCursorSingleImage = 
 module.AutoHideCursorSingleImage = core.ImageGridFeatures.Feature({
 	title: '',
@@ -1173,6 +1178,8 @@ module.AutoHideCursorSingleImage = core.ImageGridFeatures.Feature({
 	config: {
 		'cursor-autohide-single-image-view': 'on',
 		'cursor-autohide-ribbon-view': 'off',
+
+		//'cursor-autohide-on-navigate': true, 
 	},
 
 	handlers: [
@@ -1203,7 +1210,23 @@ module.AutoHideCursorSingleImage = core.ImageGridFeatures.Feature({
 				} else {
 					this.toggleAutoHideCursor(this.config['cursor-autohide-ribbon-view'])
 				}
-			}]
+			}],
+		/* XXX for some reason this does not work...
+		// autohide on navigation...
+		['focusImage', 
+			function(){
+				//if(this.config['cursor-autohide-on-navigate'] 
+				//		&& this.toggleAutoHideCursor('?') == 'on'){
+				//	this.toggleAutoHideCursor('on')
+				//}
+				if(this.config['cursor-autohide-on-navigate'] 
+						&& this.toggleAutoHideCursor('?') == 'on'
+						&& this.ribbons.viewer.prop('cursor-autohide')){
+					this.ribbons.viewer
+						.addClass('cursor-hidden')
+				}
+			}],
+		*/
 	]
 })
 
