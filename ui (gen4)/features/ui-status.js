@@ -167,6 +167,7 @@ var StatusBarActions = actions.Actions({
 		},
 		path: 'gid',
 
+		// XXX show menu in the appropriate corner...
 		mark: function(item, gid, img){
 			gid = gid || this.current
 			var that = this
@@ -180,6 +181,14 @@ var StatusBarActions = actions.Actions({
 						+' status (click to toggle)')
 					.click(function(){
 						that['toggle'+type.capitalize()]()
+					})
+					// toggle action menu...
+					// XXX show this in the appropriate corner...
+					.on('contextmenu', function(){
+						event.preventDefault()
+						event.stopPropagation()
+
+						that.browseActions('/'+ type.capitalize() +'/')
 					})
 
 			} else {

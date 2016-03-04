@@ -28,6 +28,11 @@ var OverlayClassPrototype = {
 				.click(function(){
 					event.stopPropagation()
 				})
+				.on('contextmenu', function(){
+					event.preventDefault()
+					event.stopPropagation()
+					return false
+				})
 				.append(client))
 
 		if(options.focusable){
