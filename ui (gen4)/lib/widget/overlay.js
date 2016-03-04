@@ -23,6 +23,10 @@ var OverlayClassPrototype = {
 			.on(options.nonPropagatedEvents.join(' '), function(){
 				event.stopPropagation()
 			})
+			.on('contextmenu', function(){
+				event.preventDefault()
+				event.stopPropagation()
+			})
 			.append($('<div>')
 				.addClass('content')
 				.click(function(){
@@ -31,7 +35,6 @@ var OverlayClassPrototype = {
 				.on('contextmenu', function(){
 					event.preventDefault()
 					event.stopPropagation()
-					return false
 				})
 				.append(client))
 

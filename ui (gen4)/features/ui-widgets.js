@@ -180,6 +180,54 @@ module.BrowseActions = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+
+var ContextActionMenu = 
+module.ContextActionMenu = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-context-action-menu',
+	depends: [
+		'ui-browse-actions',
+	],
+
+	handlers: [
+		['updateImage',
+			function(){
+				var that = this
+				var img = this.ribbons.getImage(gid)
+
+				!img.data('context-menu') 
+					&& img
+						.data('context-menu', true)
+						.on('contextmenu', function(){
+							event.preventDefault()
+							event.stopPropagation()
+
+							that.browseActions('/Image/')
+						})
+			}],
+		['load',
+			function(){
+				var that = this
+				var viewer = this.ribbons.viewer
+
+				!viewer.data('context-menu') 
+					&& viewer
+						.data('context-menu', true)
+						.on('contextmenu', function(){
+							event.preventDefault()
+							event.stopPropagation()
+
+							that.browseActions()
+						})
+			}],
+	],
+})
+
+
+
+//---------------------------------------------------------------------
 // XXX make this not applicable to production...
 
 var WidgetTestActions = actions.Actions({

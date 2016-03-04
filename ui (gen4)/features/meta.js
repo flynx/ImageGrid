@@ -107,6 +107,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-url-history',
 
 	'ui-browse-actions',
+		'ui-context-action-menu',
 		'ui-widget-test',
 
 	// ui control...
