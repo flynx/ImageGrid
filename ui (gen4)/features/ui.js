@@ -1061,7 +1061,6 @@ module.Clickable = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-// XXX might be a good idea to add a threshold to show the cursor...
 var AutoHideCursor = 
 module.AutoHideCursor = core.ImageGridFeatures.Feature({
 	title: '',
@@ -1089,6 +1088,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 						var x, y
 						var timer
 						var timeout = this.config['cursor-autohide-timeout'] || 1000
+
 						var handler 
 							= this.__cursor_autohide_handler 
 							= (this.__cursor_autohide_handler 
@@ -1136,6 +1136,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 						!viewer.prop('cursor-autohide')
 							&& viewer
 								.prop('cursor-autohide', true)
+								.addClass('cursor-hidden')
 								.mousemove(handler)
 
 					// teardown...
