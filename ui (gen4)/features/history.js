@@ -336,6 +336,47 @@ module.URLHistoryLocalStorage = core.ImageGridFeatures.Feature({
 })
 
 
+// XXX
+var URLHistoryFSWriter = 
+module.URLHistoryFSWriter = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'url-history-fs-writer',
+	depends: [
+		'fs-writer',
+		'url-history-local-storage',
+	],
+
+	config: {
+		'url-history-push-to-top-on-save': false,
+	},
+
+	handlers: [
+		['saveIndex',
+			function(){ 
+				// push saved to top...
+				if(this.config['url-history-push-to-top-on-save']){
+					this.pushURLToHistory()
+
+				// update...
+				} else {
+					var l = this.location
+					var e = this.url_history[l.path]
+					if(e != null){
+						e.open = l.method
+						this.saveURLHistory()
+
+					} else {
+						this.pushURLToHistory()
+					}
+				}
+			}], 
+	],
+})
+
+
+
 //---------------------------------------------------------------------
 
 var URLHistoryUIActions = actions.Actions({

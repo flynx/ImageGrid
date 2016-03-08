@@ -34,5 +34,8 @@
   "devDependencies": {
     "nw-builder": "^2.2.0",
     "less": "*"
+  },
+  "scripts": {
+    "build-css": "lessc css/layout.less css/layout.css"
   }
 }

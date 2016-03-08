@@ -925,7 +925,7 @@ var FileSystemWriterUIActions = actions.Actions({
 	// XXX add ability to create dirs...
 	browseSaveIndex: ['File/Save index to...', 
 		makeBrowseProxy('saveIndex', function(){
-			this.loaction.method = 'loadIndex' })],
+			this.location.method = 'loadIndex' })],
 })
 
 

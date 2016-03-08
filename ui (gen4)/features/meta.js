@@ -76,6 +76,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'config-local-storage',
 	'ui-url-hash',
 	'url-history-local-storage',
+	'url-history-fs-writer',
 	'ui-single-image-view-local-storage',
 
 

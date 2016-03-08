@@ -348,7 +348,8 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 	depends: [
 		'ui',
 
-		// XXX this is here to enable context menu...
+		// XXX this is here to enable context menu 
+		// 		see: StatusBarActions.__statusbar_elements__.mark(..)
 		'ui-browse-actions',
 	],
 
