@@ -349,6 +349,7 @@ module.URLHistoryFSWriter = core.ImageGridFeatures.Feature({
 	],
 
 	config: {
+		// XXX should we add a toggler action to toggle this?
 		'url-history-push-to-top-on-save': false,
 	},
 

@@ -38,7 +38,11 @@ var makeActionLister = function(list, filter, pre_order){
 	pre_order = typeof(filter) == typeof(true) ? filter : pre_order
 	filter = typeof(filter) == typeof(true) ? null : filter
 
-	return function(path){
+	return function(path, inline_state){
+		inline_state = inline_state == null ? 
+			that.config['actions-list-show-toggler-state-inline']
+			: inline_state
+
 		var that = this
 		var paths = this.getPath()
 		var actions = {}
@@ -91,7 +95,9 @@ var makeActionLister = function(list, filter, pre_order){
 				}
 
 				states.forEach(function(state){
-					actions[k +'/'+ state + (cur == state ? ' *': '')] =
+					//actions[k +'/'+ state + (cur == state ? ' *': '')] =
+					actions[k +(inline_state ? (' ('+ cur +')') : '')
+							+'/'+ state + (cur == state ? ' *': '')] =
 						function(){ 
 							that[n](state) 
 						}
@@ -137,6 +143,8 @@ var BrowseActionsActions = actions.Actions({
 			'Edit/',
 			'Navigate/',
 		],
+
+		'actions-list-show-toggler-state-inline': true,
 
 		'browse-actions-settings': {
 			showDisabled: false,
