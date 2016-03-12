@@ -40,7 +40,7 @@ var makeActionLister = function(list, filter, pre_order){
 
 	return function(path, inline_state){
 		inline_state = inline_state == null ? 
-			that.config['actions-list-show-toggler-state-inline']
+			this.config['actions-list-show-toggler-state-inline']
 			: inline_state
 
 		var that = this
@@ -61,6 +61,13 @@ var makeActionLister = function(list, filter, pre_order){
 		Object.keys(paths).forEach(function(k){
 			var n = paths[k][0]
 			var k = filter ? filter(k, n) : k
+
+			// prepare for toggler stuff...
+			var isToggler = that.isToggler && that.isToggler(n) || false
+			if(isToggler){
+				var cur_state = that[n]('?')
+				k = k +(inline_state ? (' ('+ cur_state +')') : '')
+			}
 
 			// XXX this expects that .client will trigger an open event...
 			var waitFor = function(child){
@@ -85,19 +92,16 @@ var makeActionLister = function(list, filter, pre_order){
 			}
 
 			// toggler -- add state list...
-			if(that.isToggler && that.isToggler(n)){
+			if(isToggler){
 				var states = that[n]('??')
-				var cur = that[n]('?')
 
 				// bool toggler...
-				if(cur == 'on' || cur == 'off'){
+				if(cur_state == 'on' || cur_state == 'off'){
 					states = ['off', 'on']
 				}
 
 				states.forEach(function(state){
-					//actions[k +'/'+ state + (cur == state ? ' *': '')] =
-					actions[k +(inline_state ? (' ('+ cur +')') : '')
-							+'/'+ state + (cur == state ? ' *': '')] =
+					actions[k +'/'+ state + (cur_state == state ? ' *': '')] =
 						function(){ 
 							that[n](state) 
 						}

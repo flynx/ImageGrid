@@ -111,6 +111,9 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 		'ui-context-action-menu',
 		'ui-widget-test',
 
+	// slideshow...
+	'ui-slideshow',
+
 	// ui control...
 	'ui-clickable',
 	//'ui-autohide-cursor',
