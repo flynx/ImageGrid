@@ -44,6 +44,7 @@ var makeStateIndicatorItem = function(container, type, text){
 // XXX revise how/where info is displayed...
 var StatusBarActions = actions.Actions({
 	config: {
+		// XXX for some reason this does not load as default...
 		'status-bar-mode': 'minimal',
 		'status-bar-modes': [
 			'none',
@@ -220,6 +221,7 @@ var StatusBarActions = actions.Actions({
 				var bar = this.ribbons.viewer.find('.state-indicator-container.global-info') 
 				if(bar.length == 0){
 					bar = makeStateIndicator('global-info overlay-info') 
+						.addClass(this.config['status-bar-mode'] || '')
 						.on('mouseover', function(){
 							var t = $(event.target)
 							
@@ -358,9 +360,7 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 	handlers: [
 		['start',
 			function(){
-				if(this.config['status-bar-mode']){
-					this.toggleStatusBar(this.config['status-bar-mode'])
-				}
+				this.toggleStatusBar(this.config['status-bar-mode'])
 			}],
 		['focusImage',
 			function(){

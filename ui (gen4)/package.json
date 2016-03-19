@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "commander": "^2.9.0",
+    "exiftool": "0.0.3",
     "flickrapi": "^0.3.28",
     "fs-extra": "*",
     "fs-walk": "0.0.1",
