@@ -3043,6 +3043,7 @@ var UIScaleActions = actions.Actions({
 
 	// XXX need to account for scale in PartialRibbons
 	// XXX should this be browser API???
+	// XXX this does not re-scale the ribbons correctly in nw0.13
 	toggleInterfaceScale: ['Interface/Toggle interface modes',
 		base.makeConfigToggler('ui-scale-mode', 
 			function(){ return Object.keys(this.config['ui-scale-modes']) },
@@ -3055,10 +3056,8 @@ var UIScaleActions = actions.Actions({
 
 				var w = this.screenwidth
 
-				// XXX need to compensate for external size change...
-				//this.ribbons.viewer[0].style.transform = 'scale('
-				//	+ (this.config['ui-scale-modes'][state] || 1) 
-				//	+')'
+				// NOTE: scale = Math.pow(1.2, zoomLevel)
+				// XXX in nw0.13 this appears to be async...
 				win.zoomLevel = this.config['ui-scale-modes'][state] || 0
 
 				this.screenwidth = w

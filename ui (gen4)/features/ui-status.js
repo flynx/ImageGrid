@@ -49,7 +49,7 @@ var StatusBarActions = actions.Actions({
 		'status-bar-modes': [
 			'none',
 			'minimal',
-			'full'
+			'full',
 		],
 		'status-bar-items': [
 			'index',
