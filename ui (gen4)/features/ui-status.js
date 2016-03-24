@@ -11,6 +11,7 @@ define(function(require){ var module = {}
 var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
+var keyboard = require('lib/keyboard')
 
 var data = require('data')
 var images = require('images')
@@ -68,6 +69,8 @@ var StatusBarActions = actions.Actions({
 			'gid',
 			'path',
 		],
+
+		'status-bar-index-live-update-on-edit': false,
 	},
 
 	__statusbar_elements__: {
@@ -83,13 +86,48 @@ var StatusBarActions = actions.Actions({
 					.append($('<span>')
 						.addClass('position')
 						.attr('info', 'Image position (click to edit image position)')
+						.prop('contenteditable', true)
+						.keydown(function(){
+							// keep this from affecting the viewer...
+							event.stopPropagation()
+
+							var n = keyboard.toKeyName(event.keyCode)
+							console.log('KEY:', n)
+
+							// lose focus and exit...
+							if(n == 'Esc' || n == 'Enter'){
+								event.preventDefault()
+
+								// get image on enter...
+								if(n == 'Enter'){
+									that.focusImage(parseInt($(this).text())-1, 
+										item.hasClass('global') ? 'global' : undefined)
+								}
+
+								// clear selection....
+								window.getSelection().removeAllRanges()
+								$(this).blur()
+
+								return false
+							}
+						})
+						// update image position...
+						.keyup(function(){
+							event.stopPropagation()
+
+							that.config['status-bar-index-live-update-on-edit']
+								&& that.focusImage(parseInt($(this).text())-1,
+									item.hasClass('global') ? 'global' : undefined)
+						})
 						.click(function(){
-							// XXX enter edit mode -> select contents...
-							// XXX might be a good idea to live select 
-							// 		the indexed image... (???)
-							//$(this)
-							//	.prop('contenteditable', true)
-							// XXX
+							// select the text...
+							window.getSelection().removeAllRanges()
+							var range = document.createRange()
+							range.selectNodeContents(this)
+							window.getSelection().addRange(range)
+						})
+						.blur(function(){
+							that.updateStatusBar()
 						}))
 					.append($('<span>')
 						.addClass('length')
@@ -108,14 +146,14 @@ var StatusBarActions = actions.Actions({
 			// update...
 			// global index...
 			if(item.hasClass('global')){
-				item.find('.position')
+				item.find('.position:not(:focus)')
 					.text(this.data.getImageOrder(gid)+1)
 				item.find('.length')
 					.text('/'+ this.data.length)
 
 			// ribbon index...
 			} else {
-				item.find('.position')
+				item.find('.position:not(:focus)')
 					.text(this.data.getImageOrder('ribbon', gid)+1)
 				item.find('.length')
 					.text('/'+ this.data.getImages(gid).len)
