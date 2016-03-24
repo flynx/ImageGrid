@@ -33,8 +33,9 @@
     "ig": "ig.js"
   },
   "devDependencies": {
+    "less": "*",
     "nw-builder": "^2.2.0",
-    "less": "*"
+    "webdriverio": "^4.0.4"
   },
   "scripts": {
     "build-css": "lessc css/layout.less css/layout.css"

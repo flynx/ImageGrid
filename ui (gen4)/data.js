@@ -513,21 +513,40 @@ var DataPrototype = {
 	// 		-> gid
 	//
 	// 	Check if image is loaded/exists:
-	// 	.getImage(gid|order)
-	// 	.getImage(gid|order, list|ribbon)
+	// 	.getImage(gid)
+	// 		-> gid
+	// 		-> null
+	//
+	// 	Get image or closest to it from list/ribbon:
+	// 	.getImage(gid, list|ribbon)
 	// 		-> gid
 	// 		-> null
 	// 		NOTE: null is returned if image does not exist.
+	//
+	// 	Get image by order in ribbon: 
+	// 	.getImage(n)
+	// 	.getImage(n, ribbon)
+	// 		-> gid
+	// 		-> null
+	//		NOTE: n can be negative, thus getting an image from the tail.
 	// 		NOTE: the second argument must not be an int (ribbon order)
 	// 				to avoid conflict with the offset case below.
-	//		NOTE: image order can be negative, thus getting an image 
-	//				from the tail.
+	// 		NOTE: null is returned if image does not exist.
+	//
+	// 	Get image by global order: 
+	// 	.getImage(n, 'global')
+	// 		-> gid
+	// 		-> null
+	//		NOTE: n can be negative, thus getting an image from the tail.
+	// 		NOTE: this is similar to .order[n], aside from negative index
+	// 				processing.
+	// 		NOTE: null is returned if image does not exist.
 	//
 	// 	Get first or last image in ribbon:
 	// 	.getImage('first'[, ribbon])
 	// 	.getImage('last'[, ribbon])
 	// 		-> gid
-	// 		-> null (XXX ???)
+	// 		-> null (XXX empty ribbon??? ...test!)
 	// 		NOTE: the second argument must be .getRibbon(..) compatible.
 	// 		NOTE: to get global first/last image use the index, e.g.:
 	// 			.getImage(0) / .getImage(-1)
@@ -610,16 +629,6 @@ var DataPrototype = {
 			target = x != null ? x : target
 		}
 
-		// order -> gid special case...
-		if(typeof(target) == typeof(123)){
-			if(target >= this.order.length){
-				return null
-			}
-			target = target < 0 ? 
-					this.order[this.order.length+target] 
-				: this.order[target]
-		}
-
 		// first/last special case...
 		// XXX need to get first loaded...
 		if(target == 'first'){
@@ -670,6 +679,9 @@ var DataPrototype = {
 				: offset > 0 ? 'after'
 				: mode
 			offset = Math.abs(offset)
+		} else if(mode == 'global'){
+			list = mode
+			mode = 'before'
 		} else if(mode == 'next'){
 			offset = 1
 		} else if(mode == 'prev'){
@@ -679,26 +691,42 @@ var DataPrototype = {
 			mode = mode == null ? 'before' : mode
 		}
 
-		var i = this.order.indexOf(target)
-
-		// invalid gid...
-		// XXX need a better way to report errors...
-		if(i == -1){
-			return -1
-		}
-
 		// normalize the list to a sparse list of gids...
 		list = list == null ? 
 				this.ribbons[
-					this.getRibbon(target)
+					this.getRibbon(typeof(target) == typeof(123) ? undefined : target)
 						// target exists but is not loaded...
 						|| this.getRibbon() 
 						// no current ribbon...
 						|| this.getRibbon(this.getImage(target, 'before', this.getImages()))
 						|| this.getRibbon(this.getImage(target, 'after', this.getImages()))]
+			: list == 'global' ?
+				this.order
 			: list.constructor === Array ? 
 				this.makeSparseImages(list)
 			: this.ribbons[this.getRibbon(list)]
+
+		// order -> gid special case...
+		var i
+		if(typeof(target) == typeof(123)){
+			list = list.compact()
+			if(target >= list.length){
+				return null
+			}
+			i = target
+
+		} else {
+			i = this.order.indexOf(target)
+
+			// invalid gid...
+			// XXX need a better way to report errors...
+			if(i == -1){
+				return -1
+			}
+		}
+
+		// normalize i...
+		i = i >= 0 ? i : list.length+i
 
 		var res = list[i]
 		// we have a direct hit...
