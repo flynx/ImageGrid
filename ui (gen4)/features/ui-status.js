@@ -70,7 +70,15 @@ var StatusBarActions = actions.Actions({
 			'path',
 		],
 
-		'status-bar-index-live-update-on-edit': false,
+		'status-bar-index': {
+			// NOTE: this would need to reconstruct the status bar for 
+			// 		changes to take effect, i.e. call .resetStatusBar()
+			// XXX might be a good idea to run an editor on click on
+			// 		touch devices...
+			'editable': true,
+
+			'live-update-on-edit': false,
+		},
 	},
 
 	__statusbar_elements__: {
@@ -83,52 +91,68 @@ var StatusBarActions = actions.Actions({
 				var type = item
 				item = $('<span>')
 					.addClass(type)
-					.append($('<span>')
-						.addClass('position')
-						.attr('info', 'Image position (click to edit image position)')
-						.prop('contenteditable', true)
-						.keydown(function(){
-							// keep this from affecting the viewer...
-							event.stopPropagation()
+					.append(!(this.config['status-bar-index'] || {})['editable'] ?
+						// not-editable...
+						$('<span>')
+							.addClass('position')
+							.attr('info', 'Image position (click to toggle ribbon/global)')
+							// toggle index state...
+							.click(function(){
+								$(this).parent()
+									.toggleClass('global')
+								that.updateStatusBar()
+							})
+						// editable...
+						: $('<span>')
+							.addClass('position editable')
+							.attr('info', 'Image position (click to edit image position)')
+							.prop('contenteditable', true)
+							.keydown(function(){
+								// keep this from affecting the viewer...
+								event.stopPropagation()
 
-							var n = keyboard.toKeyName(event.keyCode)
-							console.log('KEY:', n)
+								var n = keyboard.toKeyName(event.keyCode)
 
-							// lose focus and exit...
-							if(n == 'Esc' || n == 'Enter'){
-								event.preventDefault()
+								// lose focus and exit...
+								if(n == 'Esc' || n == 'Enter'){
+									event.preventDefault()
 
-								// get image on enter...
-								if(n == 'Enter'){
-									that.focusImage(parseInt($(this).text())-1, 
-										item.hasClass('global') ? 'global' : undefined)
+									// get image on enter...
+									if(n == 'Enter'){
+										that.focusImage(parseInt($(this).text())-1 || 'current', 
+											item.hasClass('global') ? 'global' : undefined)
+									}
+
+									// clear selection....
+									window.getSelection().removeAllRanges()
+									$(this).blur()
+
+									// reset on esc...
+									if(n == 'Esc'){
+										that.updateStatusBar()
+									}
+
+									return false
 								}
+							})
+							// update image position...
+							.keyup(function(){
+								event.stopPropagation()
 
-								// clear selection....
+								that.config['status-bar-index']['live-update-on-edit']
+									&& that.focusImage(parseInt($(this).text())-1,
+										item.hasClass('global') ? 'global' : undefined)
+							})
+							.click(function(){
+								// select the text...
 								window.getSelection().removeAllRanges()
-								$(this).blur()
-
-								return false
-							}
-						})
-						// update image position...
-						.keyup(function(){
-							event.stopPropagation()
-
-							that.config['status-bar-index-live-update-on-edit']
-								&& that.focusImage(parseInt($(this).text())-1,
-									item.hasClass('global') ? 'global' : undefined)
-						})
-						.click(function(){
-							// select the text...
-							window.getSelection().removeAllRanges()
-							var range = document.createRange()
-							range.selectNodeContents(this)
-							window.getSelection().addRange(range)
-						})
-						.blur(function(){
-							that.updateStatusBar()
-						}))
+								var range = document.createRange()
+								range.selectNodeContents(this)
+								window.getSelection().addRange(range)
+							})
+							.blur(function(){
+								that.updateStatusBar()
+							}))
 					.append($('<span>')
 						.addClass('length')
 						.attr('info', 'Image position (click to toggle ribbon/global)')
@@ -376,7 +400,14 @@ var StatusBarActions = actions.Actions({
 				}
 			})],	
 	updateStatusBar: ['Interface/Update satus bar',
-		function(){ this.toggleStatusBar('!') }]
+		function(){ this.toggleStatusBar('!') }],
+
+	resetStatusBar: ['Interface/Reset status bar',
+		function(){
+			var mode = this.toggleStatusBar('?')
+			this.toggleStatusBar('none')
+			this.toggleStatusBar(mode)
+		}],
 })
 
 var StatusBar = 
