@@ -113,13 +113,18 @@ var StatusBarActions = actions.Actions({
 
 								var n = keyboard.toKeyName(event.keyCode)
 
+								var i = parseInt($(this).text())
+								i = i >= 1 ? i-1
+									: i == null ? 'current'
+									: i
+
 								// lose focus and exit...
 								if(n == 'Esc' || n == 'Enter'){
 									event.preventDefault()
 
 									// get image on enter...
 									if(n == 'Enter'){
-										that.focusImage(parseInt($(this).text())-1 || 'current', 
+										that.focusImage(i, 
 											item.hasClass('global') ? 'global' : undefined)
 									}
 
@@ -127,10 +132,7 @@ var StatusBarActions = actions.Actions({
 									window.getSelection().removeAllRanges()
 									$(this).blur()
 
-									// reset on esc...
-									if(n == 'Esc'){
-										that.updateStatusBar()
-									}
+									that.updateStatusBar()
 
 									return false
 								}
@@ -140,7 +142,7 @@ var StatusBarActions = actions.Actions({
 								event.stopPropagation()
 
 								that.config['status-bar-index']['live-update-on-edit']
-									&& that.focusImage(parseInt($(this).text())-1,
+									&& that.focusImage(i,
 										item.hasClass('global') ? 'global' : undefined)
 							})
 							.click(function(){
