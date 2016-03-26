@@ -21,6 +21,7 @@ define(function(require){ var module = {}
 var util = require('lib/util')
 var toggler = require('lib/toggler')
 var tasks = require('lib/tasks')
+var keyboard = require('lib/keyboard')
 
 var actions = require('lib/actions')
 var core = require('features/core')
@@ -337,6 +338,7 @@ var MetadataUIActions = actions.Actions({
 				])
 			}
 			// fields that expect that image data is available...
+			var info = ['---']
 			if(img){
 				// XXX should these be here???
 				var _normalize = typeof(path) != 'undefined' ? 
@@ -357,8 +359,14 @@ var MetadataUIActions = actions.Actions({
 					['Full Path: ', 
 						_normalize((img.base_path || '.') +'/'+ img.path)],
 				])
+
+				// comment and tags...
+				info.push(['Comment', 
+					function(){ return img.comment || '' }]) 
 			}
 
+			info.push(['Tags', 
+				function(){ return that.data.getTags().join(', ') || '' }])
 
 			// build fields...
 			var fields = []
@@ -387,13 +395,15 @@ var MetadataUIActions = actions.Actions({
 			fields.sort(_cmp)
 
 			// add separator to base...
-			fields.length > 0 && base.push('---')
+			fields.length > 0 && info.push('---')
 
 			// XXX might be a good idea to directly bind ctrl-c to copy value...
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
 						null,
-						base.concat(fields),
+						base
+							.concat(info)
+							.concat(fields),
 						{
 							showDisabled: false,
 						})
@@ -421,12 +431,22 @@ var MetadataUIActions = actions.Actions({
 							elem
 								.prop('contenteditable', true)
 								.focus()
-								/*
-								.one('blur', function(){
-									$(this)
-										.prop('contenteditable', false)
+								.keydown(function(){ 
+									event.stopPropagation() 
+
+									var n = keyboard.toKeyName(event.keyCode)
+
+									// reset to original value...
+									if(n == 'Esc'){
+										// XXX
+
+									// save value...
+									} else if(n == 'Enter' && event.ctrlKey){
+										event.preventDefault()
+
+										// XXX
+									}
 								})
-								*/
 						}
 					}))
 					.close(function(){

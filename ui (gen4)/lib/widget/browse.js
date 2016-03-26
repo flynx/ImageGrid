@@ -721,6 +721,8 @@ var BrowserPrototype = {
 	//								If an item is a function it is called 
 	//								and the returned value is treated as
 	//								the text.
+	//								NOTE: empty strings will get replaced 
+	//									with &nbsp;
 	//	- DOM/jQuery			- an element to be used as an item
 	//
 	//	Both traversable and disabled are optional and can take bool 
@@ -894,7 +896,8 @@ var BrowserPrototype = {
 				p = $(p.map(function(t){
 					return $('<span>')
 						.addClass('text')
-						.text(t)[0]
+						// here we also replace empty strings with &nbsp;...
+						[t ? 'text' : 'html'](t || '&nbsp;')[0]
 				}))
 
 			// jQuery or dom...
