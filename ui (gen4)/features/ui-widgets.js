@@ -104,6 +104,17 @@ var makeActionLister = function(list, filter, pre_order){
 					actions[k +'/'+ state + (cur_state == state ? ' *': '')] =
 						function(){ 
 							that[n](state) 
+
+							// XXX this works but is not yet usable...
+							// 		reason: not being able to update path
+							// 			components without reconstructing
+							// 			the whole list...
+							/*
+							closingPrevented = true
+							// XXX need to re-render the overlay paths...
+							that.getOverlay().client
+								.pop()
+							*/
 						}
 				})
 			}

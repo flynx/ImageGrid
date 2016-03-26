@@ -699,6 +699,52 @@ var BrowserPrototype = {
 	// NOTE: this will scroll the path to show the last element for paths
 	// 		that do not fit in view...
 	//
+	//
+	// Item constructor:
+	// 	This is passed to the lister and can be used by the user to 
+	// 	construct and extend list items.
+	//
+	// Make an item...
+	//	make(item, options)
+	//	make(item, traversable, disabled, buttons)
+	//		-> item
+	//
+	//	item format:
+	//	- str					- item text
+	//								NOTE: if text is '---' then a 
+	//									separator item is created, it is
+	//									not selectable (default: <hr>).
+	//									
+	//	- [str/func, ... ]		- item elements
+	//								Each of the elements is individually
+	//								wrapped in a .text container.
+	//								If an item is a function it is called 
+	//								and the returned value is treated as
+	//								the text.
+	//	- DOM/jQuery			- an element to be used as an item
+	//
+	//	Both traversable and disabled are optional and can take bool 
+	//	values.
+	//
+	//	options format:
+	//	{
+	//		traversable: ..,
+	//		disabled: ..,
+	//		buttons: ..,
+	//	}
+	//
+	//	buttons format (optional):
+	//	[ 
+	//		[<html>, <func>], 
+	//		... 
+	//	]
+	//
+	// NOTE: buttons will override .options.itemButtons, if this is not
+	// 		desired simply append the custom buttons to a copy of 
+	// 		.itemButtons
+	//
+	//
+	//
 	// XXX need a way to handle path errors in the extension API...
 	// 		...for example, if .list(..) can't list or lists a different
 	// 		path due to an error, we need to be able to render the new
@@ -806,11 +852,19 @@ var BrowserPrototype = {
 		// NOTE: this will be set to true if make(..) is called at least once...
 		var interactive = false
 
-		// XXX p should be understood as:
-		// 		- str	(done)
-		// 		- [str, ...]
-		// 		- DOM/jQuery
-		var make = function(p, traversable, disabled){
+		// XXX revise signature... 
+		var make = function(p, traversable, disabled, buttons){
+			// options passed as an object...
+			if(traversable != null && typeof(traversable) == typeof({})){
+				var opts = traversable
+				traversable = opts.traversable
+				disabled = opts.disabled
+				buttons = opts.buttons
+			}
+
+			buttons = buttons
+				|| (that.options.itemButtons && that.options.itemButtons.slice())
+
 			// special case separator...
 			if(p && (p == that.options.elementSeparatorText
 					|| (p.hasClass 
@@ -825,8 +879,16 @@ var BrowserPrototype = {
 				return res
 			}
 
-			// array of str...
+			// array of str/func...
 			if(p.constructor === Array){
+				// resolve handlers...
+				p = p.map(function(e){ 
+					return typeof(e) == typeof(function(){}) ? 
+						// XXX should this pass anything to the handler 
+						// 		and set the context???
+						e.call(that, p) 
+						: e})
+
 				var txt = p.join('')
 				// XXX check if traversable...
 				p = $(p.map(function(t){
@@ -911,8 +973,7 @@ var BrowserPrototype = {
 			}
 
 			// custom buttons...
-			that.options.itemButtons 
-					&& that.options.itemButtons.slice()
+			buttons && buttons
 				// make the order consistent for the user -- first
 				// in list, first in item (from left), and should
 				// be added last...
