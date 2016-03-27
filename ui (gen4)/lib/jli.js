@@ -1110,9 +1110,11 @@ Date.str2ms = function(str, dfl){
 		str = dfl
 
 	} else {
+		var val = parseFloat(str)
 		str = str.trim()
 
-		var val = parseFloat(str)
+		// check if a unit is given...
+		str = str == val ? dfl : str
 	}
 	
 	var c = /(m(illi)?(-)?s(ec(ond(s)?)?)?)$/i.test(str) ? 1
@@ -1120,9 +1122,9 @@ Date.str2ms = function(str, dfl){
 		: /m(in(ute(s)?)?)?$/i.test(str) ? 1000*60
 		: /h(our(s)?)?$/i.test(str) ? 1000*60*60
 		: /d(ay(s)?)?$/i.test(str) ? 1000*60*60*24
-		: Date.str2ms(val, dfl)
+		: null
 
-	return val * c
+	return c ? val * c : NaN
 }
 
 
