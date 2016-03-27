@@ -361,11 +361,11 @@ var MetadataUIActions = actions.Actions({
 				])
 
 				// comment and tags...
-				info.push(['Comment', 
+				info.push(['Comment: ', 
 					function(){ return img.comment || '' }]) 
 			}
 
-			info.push(['Tags', 
+			info.push(['Tags: ', 
 				function(){ return that.data.getTags().join(', ') || '' }])
 
 			// build fields...
@@ -412,6 +412,10 @@ var MetadataUIActions = actions.Actions({
 						if(that.config['metadata-auto-select-mode'] == 'on select'){
 							_selectElemText($(elem).find('.text').last()[0])
 						}
+					})
+					// XXX start editing onkeydown...
+					.on('keydown', function(){
+						// XXX Enter + editable -> edit (only this???)
 					})
 					// path selected...
 					.open(function(evt, path){ 

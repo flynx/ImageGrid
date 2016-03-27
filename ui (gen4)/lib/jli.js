@@ -1101,6 +1101,29 @@ Date.timeStamp = function(){
 Date.fromTimeStamp = function(ts){
 	return (new Date()).setTimeStamp(ts)
 }
+// convert string time period to milliseconds...
+Date.str2ms = function(str, dfl){
+	dfl = dfl || 'ms'
+
+	if(typeof(str) == typeof(123)){
+		var val = str
+		str = dfl
+
+	} else {
+		str = str.trim()
+
+		var val = parseFloat(str)
+	}
+	
+	var c = /(m(illi)?(-)?s(ec(ond(s)?)?)?)$/i.test(str) ? 1
+		: /s(ec(ond(s)?)?)?$/i.test(str) ? 1000
+		: /m(in(ute(s)?)?)?$/i.test(str) ? 1000*60
+		: /h(our(s)?)?$/i.test(str) ? 1000*60*60
+		: /d(ay(s)?)?$/i.test(str) ? 1000*60*60*24
+		: Date.str2ms(val, dfl)
+
+	return val * c
+}
 
 
 function logCalls(func, logger){

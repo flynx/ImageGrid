@@ -112,8 +112,7 @@ function updateImagePosition(actions, target){
 //
 // XXX split this into read and write actions...
 var ViewerActions = 
-module.ViewerActions = 
-actions.Actions({
+module.ViewerActions = actions.Actions({
 	config: {
 		// The maximum screen width allowed when zooming...
 		'max-screen-images': 30,
@@ -692,7 +691,6 @@ actions.Actions({
 
 			this.reload()
 		}],
-
 })
 
 var Viewer =
@@ -750,6 +748,89 @@ module.Viewer = core.ImageGridFeatures.Feature({
 			}],
 	],
 })
+
+
+
+//---------------------------------------------------------------------
+//
+// Basic protocol:
+// 	A participating feature should:
+// 	- react to .saveWorkspace(..) by saving it's relevant state data to the 
+// 		object returned by the .saveWorkspace() action.
+// 		NOTE: it is recommended that a feature save its relevant .config
+// 			data as-is.
+// 	- react to .loadWorkspace(..) by loading it's state from the returned
+// 		object...
+// 	- react to .toggleChrome(..) and switch on and off the chrome 
+// 		visibility... (XXX)
+//
+//
+
+var WorkspaceActions = 
+module.WorkspaceActions = actions.Actions({
+	config: {
+		'workspace': 'default',
+		'chrome-visible': 'on',
+
+		'saved-workspaces': {},
+	},
+
+	get workspace(){
+		return this.config.workspace
+	},
+	set workspace(value){
+		this.loadWorkspace(value)
+	},
+
+	// NOTE: these are mainly triggers for other features to save/load
+	// 		their specific states...
+	// XXX for some reason this does not trigger a .config save...
+	saveWorkspace: ['Workspace/Save Workspace',
+		function(name){
+			this.config['saved-workspaces'] = this.config['saved-workspaces']
+
+			var res = this.config['saved-workspaces'][name || this.config.workspace] = {}
+
+			return res
+		}],
+	// NOTE: merging the state data is the responsibility of the feature
+	// 		...this is done so as not to restrict the feature to one 
+	// 		specific way to do stuff...
+	loadWorkspace: ['Workspace/Load Workspace',
+		function(name){
+			this.config.workspace = name
+
+			return this.config['saved-workspaces'][name] || {}
+		}],
+
+	// toggle chrome on and off...
+	toggleChrome: ['Workspace|Interface/Toggle chrome',
+		base.makeConfigToggler('chrome-visible',
+			['off', 'on'])],
+	toggleWorkspace: ['Workspace/Toggle Workspace',
+		base.makeConfigToggler('workspace',
+			function(){ return Object.keys(this.config['saved-workspaces']) },
+			function(state){ this.loadWorkspace(state) })],
+})
+
+
+module.Workspace = core.ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'ui-workspace',
+
+	depends: [
+		'ui',
+	],
+
+	actions: WorkspaceActions,
+
+	handlers: [
+		['stop', 
+			function(){ this.saveWorkspace() }],
+	],
+})
+
 
 
 //---------------------------------------------------------------------
