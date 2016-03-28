@@ -162,6 +162,9 @@ module.ViewerActions = actions.Actions({
 			'last',		// select last image
 		],
 		'ribbon-focus-mode': 'visual',
+
+
+		'chrome-visible': 'on',
 	},
 
 	// Images...

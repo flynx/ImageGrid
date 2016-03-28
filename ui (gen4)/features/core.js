@@ -213,12 +213,57 @@ module.LifeCycle = ImageGridFeatures.Feature({
 //
 //
 
+
+// Helpers...
+var makeWorkspaceConfigWriter =
+module.makeWorkspaceConfigWriter = function(keys, callback){
+	return function(workspace){
+		var that = this
+
+		keys = typeof(keys) == typeof(function(){}) ? keys() : keys
+
+		// store statusbar data...
+		keys.forEach(function(key){
+			workspace[key] = JSON.parse(JSON.stringify(that.config[key]))
+		})
+
+		callback && callback.call(this, workspace)
+	}
+}
+
+// XXX should this delete a prop if it's not in the loading workspace???
+var makeWorkspaceConfigLoader =
+module.makeWorkspaceConfigLoader = function(keys, callback){
+	return function(workspace){
+		var that = this
+
+		keys = typeof(keys) == typeof(function(){}) ? keys() : keys
+
+		// load statusbar data...
+		keys.forEach(function(key){
+			// the key exists...
+			if(key in workspace){
+				that.config[key] = JSON.parse(JSON.stringify(workspace[key]))
+
+			// no key set...
+			// XXX is this the right way to go???
+			} else {
+				delete that.config[key]
+			}
+		})
+
+		callback && callback.call(this, workspace)
+	}
+}
+
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 var WorkspaceActions = actions.Actions({
 	config: {
 		'workspace': 'default',
-		'chrome-visible': 'on',
-
-		'saved-workspaces': {},
+		'workspaces': {},
 	},
 
 	get workspace(){
@@ -227,6 +272,11 @@ var WorkspaceActions = actions.Actions({
 	set workspace(value){
 		this.loadWorkspace(value)
 	},
+
+	get workspaces(){
+		return this.config.workspaces
+	},
+
 
 	getWorkspace: ['- Workspace/',
 		function(){ return this.saveWorkspace(null) }],
@@ -242,12 +292,12 @@ var WorkspaceActions = actions.Actions({
 	// XXX for some reason this does not trigger a .config save...
 	saveWorkspace: ['Workspace/Save Workspace',
 		function(name){
-			this.config['saved-workspaces'] = this.config['saved-workspaces']
+			this.config['workspaces'] = this.config['workspaces']
 
 			var res = {}
 
 			if(name !== null){
-				this.config['saved-workspaces'][name || this.config.workspace] = res
+				this.config['workspaces'][name || this.config.workspace] = res
 			}
 
 			return res
@@ -257,14 +307,21 @@ var WorkspaceActions = actions.Actions({
 	// 		specific way to do stuff...
 	loadWorkspace: ['Workspace/Load Workspace',
 		function(name){
-			this.config.workspace = name
+			// get a workspace by name and load it...
+			if(typeof(name) == typeof('str')){
+				this.config.workspace = name
 
-			return this.config['saved-workspaces'][name] || {}
+				return this.config['workspaces'][name || this.config.workspace] || {}
+
+			// we got the workspace object...
+			} else {
+				return name
+			}
 		}],
 
 	toggleWorkspace: ['Workspace/Toggle Workspace',
 		makeConfigToggler('workspace',
-			function(){ return Object.keys(this.config['saved-workspaces']) },
+			function(){ return Object.keys(this.config['workspaces']) },
 			function(state){ this.loadWorkspace(state) })],
 })
 

@@ -419,6 +419,7 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-status-bar',
 	depends: [
+		'workspace',
 		'ui',
 
 		// XXX this is here to enable context menu 
@@ -450,6 +451,19 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 					this.updateStatusBar()
 				}
 			}],
+
+		// Workspace...
+		// XXX is storing all the config a bit too much???
+		['saveWorkspace',
+			core.makeWorkspaceConfigWriter(
+				function(){ return Object.keys(StatusBar.config) })],
+		['loadWorkspace',
+			core.makeWorkspaceConfigLoader(
+				function(){ return Object.keys(StatusBar.config) },
+				function(workspace){
+					'status-bar-mode' in workspace 
+						&& this.toggleStatusBar(workspace['status-bar-mode'])
+				})],
 	],
 })
 

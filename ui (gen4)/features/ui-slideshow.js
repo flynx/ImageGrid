@@ -71,7 +71,8 @@ var SlideshowActions = actions.Actions({
 		core.makeConfigToggler('ui-slideshow-direction', ['forward', 'reverse'])],
 	toggleSlideshowLooping: ['Slideshow/Looping',
 		core.makeConfigToggler('ui-slideshow-looping', ['on', 'off'])],
-	// XXX need to save/load state...
+
+	// XXX should this save/load a tmp workspace or a dedicated slideshow workspace???
 	toggleSlideshow: ['Slideshow/Start',
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
@@ -90,14 +91,22 @@ var SlideshowActions = actions.Actions({
 
 					// prepare for the slideshow...
 					} else {
-						// XXX get state before setting/hiding things...
-						// XXX
+						// save current workspace...
+						this.__pre_slideshow_workspace = this.workspace
+						this.saveWorkspace() 
+
+						// construct the slideshow workspace if it does not exist...
+						if(this.workspaces['slideshow'] == null){
+							this.toggleChrome('off')
+							this.saveWorkspace('slideshow') 
+
+						// load the slideshow workspace...
+						} else {
+							this.loadWorkspace('slideshow')
+						}
 				
 						// single image mode...
 						this.toggleSingleImage('on')
-
-						// XXX hide all marks...
-						// XXX
 					}
 
 					// start the timer... 
@@ -122,12 +131,14 @@ var SlideshowActions = actions.Actions({
 				// stop...
 				} else {
 					// stop timer...
-					clearTimeout(this.__slideshouw_timer)
+					this.__slideshouw_timer
+						&& clearTimeout(this.__slideshouw_timer)
 					delete this.__slideshouw_timer
 
-					// XXX restore state...
-					// XXX
-
+					// XXX should this be a dedicated slideshow workspace??
+					this.__pre_slideshow_workspace &&
+						this.loadWorkspace(this.__pre_slideshow_workspace)
+					delete this.__pre_slideshow_workspace
 				}
 			})],
 	resetSlideshowTimer: ['- Slideshow/Restart slideshow timer',
@@ -144,11 +155,17 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-slideshow',
 	depends: [
+		'workspace',
 		'ui',
 		'ui-single-image-view',
 	],
 
 	actions: SlideshowActions,
+
+	handlers: [
+		['stop',
+			function(){ this.toggleSlideshow('off') }]
+	],
 })
 
 
