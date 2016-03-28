@@ -50,6 +50,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'viewer-commandline',
 	'viewer-minimal',
 
+	'workspace',
 	'ui',
 
 	'ui-ribbons-placement',
@@ -94,7 +95,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-external-editor',
 
 	// chrome...
-	'ui-workspace',
 	'ui-status-log',
 	'ui-scale',
 	'ui-animation',

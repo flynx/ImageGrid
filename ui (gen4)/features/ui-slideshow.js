@@ -64,13 +64,13 @@ var SlideshowActions = actions.Actions({
 	// XXX add a custom setting...
 	// XXX STUB
 	selectSlideshowInterval: ['Slideshow/Interval',
-		base.makeConfigToggler('ui-slideshow-interval', 
+		core.makeConfigToggler('ui-slideshow-interval', 
 			function(){ return this.config['ui-slideshow-saved-intervals'] })],
 
 	toggleSlideshowDirection: ['Slideshow/Direction',
-		base.makeConfigToggler('ui-slideshow-direction', ['forward', 'reverse'])],
+		core.makeConfigToggler('ui-slideshow-direction', ['forward', 'reverse'])],
 	toggleSlideshowLooping: ['Slideshow/Looping',
-		base.makeConfigToggler('ui-slideshow-looping', ['on', 'off'])],
+		core.makeConfigToggler('ui-slideshow-looping', ['on', 'off'])],
 	// XXX need to save/load state...
 	toggleSlideshow: ['Slideshow/Start',
 		toggler.CSSClassToggler(

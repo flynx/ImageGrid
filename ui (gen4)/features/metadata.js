@@ -278,7 +278,7 @@ var MetadataUIActions = actions.Actions({
 	},
 
 	toggleMetadataAutoSelect: ['Interface/Toggle metadata value auto-select',
-		base.makeConfigToggler('metadata-auto-select-mode', 
+		core.makeConfigToggler('metadata-auto-select-mode', 
 			function(){ return this.config['metadata-auto-select-modes'] })],
 
 	// XXX should we replace 'mode' with nested set of metadata???

@@ -53,32 +53,6 @@ function(direction, dfl_tag){
 }
 
 
-// NOTE: if not state is set this assumes that the first state is the 
-// 		default...
-var makeConfigToggler = 
-module.makeConfigToggler = 
-function(attr, states, callback){
-	return toggler.Toggler(null,
-		function(_, action){
-			var lst = states.constructor === Array ? states : states.call(this)
-
-			//console.log('action', action)
-
-			if(action == null){
-				return this.config[attr] || lst[lst.indexOf('none')] || lst[0]
-
-			} else {
-				this.config[attr] = action
-				//this.focusImage()
-			}
-		},
-		states,
-		// XXX should we focus image by default here???
-		callback || function(action){ action != null && this.focusImage() })
-}
-
-
-
 /*********************************************************************/
 
 // XXX split this into read and write actions...
@@ -184,7 +158,7 @@ actions.Actions({
 	},
 
 	toggleRibbonFocusMode : ['Interface/Toggle ribbon focus mode',
-		makeConfigToggler('ribbon-focus-mode', 
+		core.makeConfigToggler('ribbon-focus-mode', 
 			function(){ return this.config['ribbon-focus-modes'] })],
 
 

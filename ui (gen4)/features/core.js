@@ -12,6 +12,36 @@ define(function(require){ var module = {}
 
 var actions = require('lib/actions')
 var features = require('lib/features')
+var toggler = require('lib/toggler')
+
+
+
+/*********************************************************************/
+
+// NOTE: if not state is set this assumes that the first state is the 
+// 		default...
+var makeConfigToggler = 
+module.makeConfigToggler = 
+function(attr, states, callback){
+	return toggler.Toggler(null,
+		function(_, action){
+			var lst = states.constructor === Array ? states : states.call(this)
+
+			//console.log('action', action)
+
+			if(action == null){
+				return this.config[attr] || lst[lst.indexOf('none')] || lst[0]
+
+			} else {
+				this.config[attr] = action
+				//this.focusImage()
+			}
+		},
+		states,
+		// XXX should we focus image by default here???
+		callback || function(action){ action != null && this.focusImage() })
+}
+
 
 
 
@@ -161,6 +191,101 @@ module.LifeCycle = ImageGridFeatures.Feature({
 	priority: 'high',
 
 	actions: LifeCycleActions,
+})
+
+
+
+//---------------------------------------------------------------------
+//
+// Basic protocol:
+// 	A participating feature should:
+// 	- react to .saveWorkspace(..) by saving it's relevant state data to the 
+// 		object returned by the .saveWorkspace() action.
+// 		NOTE: it is recommended that a feature save its relevant .config
+// 			data as-is.
+// 	- react to .loadWorkspace(..) by loading it's state from the returned
+// 		object...
+// 	- react to .toggleChrome(..) and switch on and off the chrome 
+// 		visibility... (XXX)
+//
+//
+
+var WorkspaceActions = 
+module.WorkspaceActions = actions.Actions({
+	config: {
+		'workspace': 'default',
+		'chrome-visible': 'on',
+
+		'saved-workspaces': {},
+	},
+
+	get workspace(){
+		return this.config.workspace
+	},
+	set workspace(value){
+		this.loadWorkspace(value)
+	},
+
+	getWorkspace: ['- Workspace/',
+		function(){ return this.saveWorkspace(null) }],
+
+	// NOTE: these are mainly triggers for other features to save/load
+	// 		their specific states...
+	// NOTE: handlers should only set data on the workspace object passively,
+	// 		no activity is recommended.
+	// NOTE: if null is passed this will only get the data, but will 
+	// 		save nothing. this us useful for introspection and temporary
+	// 		context storage.
+	//
+	// XXX for some reason this does not trigger a .config save...
+	saveWorkspace: ['Workspace/Save Workspace',
+		function(name){
+			this.config['saved-workspaces'] = this.config['saved-workspaces']
+
+			var res = {}
+
+			if(name !== null){
+				this.config['saved-workspaces'][name || this.config.workspace] = res
+			}
+
+			return res
+		}],
+	// NOTE: merging the state data is the responsibility of the feature
+	// 		...this is done so as not to restrict the feature to one 
+	// 		specific way to do stuff...
+	loadWorkspace: ['Workspace/Load Workspace',
+		function(name){
+			this.config.workspace = name
+
+			return this.config['saved-workspaces'][name] || {}
+		}],
+
+	// toggle chrome on and off...
+	toggleChrome: ['Workspace|Interface/Toggle chrome',
+		makeConfigToggler('chrome-visible', ['off', 'on'])],
+	toggleWorkspace: ['Workspace/Toggle Workspace',
+		makeConfigToggler('workspace',
+			function(){ return Object.keys(this.config['saved-workspaces']) },
+			function(state){ this.loadWorkspace(state) })],
+})
+
+
+var Workspace = 
+module.Workspace = ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'workspace',
+
+	depends: [
+		'lifecycle',
+	],
+
+	actions: WorkspaceActions,
+
+	handlers: [
+		['stop', 
+			function(){ this.saveWorkspace() }],
+	],
 })
 
 
