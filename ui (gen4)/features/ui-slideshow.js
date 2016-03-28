@@ -22,8 +22,8 @@ var base = require('features/base')
 // XXX stub...
 var SlideshowActions = actions.Actions({
 	config: {
-		'ui-slideshow-looping': true,
-		'ui-slideshow-direction': 'next',
+		'ui-slideshow-looping': 'on',
+		'ui-slideshow-direction': 'forward',
 		'ui-slideshow-interval': '3s',
 
 		'ui-slideshow-saved-intervals': [
@@ -61,82 +61,78 @@ var SlideshowActions = actions.Actions({
 	// 				Custom...		-- editable/placeholder... 'enter' 
 	// 									selects value and adds it to 
 	// 									history...
-	selectSlideshowInterval: ['Slideshow/Interval/*',
-		// XXX make this a custom menu rather than a lister... (???)
-		function(path, make){
-			make('0.2') 
-			make('1') 
-			make('3') 
-			make('Custom...') 
-		}],
+	// XXX add a custom setting...
+	// XXX STUB
+	selectSlideshowInterval: ['Slideshow/Interval',
+		base.makeConfigToggler('ui-slideshow-interval', 
+			function(){ return this.config['ui-slideshow-saved-intervals'] })],
+
 	toggleSlideshowDirection: ['Slideshow/Direction',
-		function(){}],
+		base.makeConfigToggler('ui-slideshow-direction', ['forward', 'reverse'])],
 	toggleSlideshowLooping: ['Slideshow/Looping',
-		function(){}],
+		base.makeConfigToggler('ui-slideshow-looping', ['on', 'off'])],
+	// XXX need to save/load state...
 	toggleSlideshow: ['Slideshow/Start',
-		function(){}],
+		toggler.CSSClassToggler(
+			function(){ return this.ribbons.viewer }, 
+			'slideshow-running',
+			function(state){
+				// start...
+				if(state == 'on'){
+					var that = this
 
+					// reset the timer...
+					// NOTE: this means we were in a slideshow mode so we do not
+					// 		need to prepare...
+					if(this.__slideshouw_timer){
+						clearTimeout(this.__slideshouw_timer)
+						delete this.__slideshouw_timer
 
-	// XXX might be good to add a slideshow countdown/indicator for 
-	// 		timers longer than 0.5-1sec...
-	_startSlideshow: ['- Slideshow/',
-		function(){
-			var that = this
+					// prepare for the slideshow...
+					} else {
+						// XXX get state before setting/hiding things...
+						// XXX
+				
+						// single image mode...
+						this.toggleSingleImage('on')
 
-			// reset the timer...
-			// NOTE: this means we were in a slideshow mode so we do not
-			// 		need to prepare...
-			if(this.__slideshouw_timer){
-				clearTimeout(this.__slideshouw_timer)
-				delete this.__slideshouw_timer
+						// XXX hide all marks...
+						// XXX
+					}
 
-			// prepare for the slideshow...
-			} else {
-				// XXX get state before setting/hiding things...
-				// XXX
-		
-				// single image mode...
-				this.toggleSingleImage('on')
+					// start the timer... 
+					// XXX might be a good idea to add a pause button for either
+					// 		"toggle" or "hold to pause" mode...
+					this.__slideshouw_timer = setInterval(function(){
+						var cur = that.current
 
-				// XXX hide all marks...
-				// XXX
-			}
+						// next step...
+						that.config['ui-slideshow-direction'] == 'forward' ?
+							that.nextImage()
+							: that.prevImage()
 
-			// start the timer... 
-			// XXX might be a good idea to add a pause button for either
-			// 		"toggle" or "hold to pause" mode...
-			this.__slideshouw_timer = setInterval(function(){
-				var cur = that.current
+						// we have reached the end...
+						if(that.current == cur && that.config['ui-slideshow-looping'] == 'on'){
+							that.config['ui-slideshow-direction'] == 'forward' ?
+								that.firstImage()
+								: that.lastImage()
+						}
+					}, Date.str2ms(this.config['ui-slideshow-interval'] || '3s'))
 
-				// next step...
-				that.config['ui-slideshow-direction'] == 'next' ?
-					that.nextImage()
-					: that.prevImage()
+				// stop...
+				} else {
+					// stop timer...
+					clearTimeout(this.__slideshouw_timer)
+					delete this.__slideshouw_timer
 
-				// we have reached the end...
-				if(that.current == cur && that.config['ui-slideshow-looping']){
-					that.config['ui-slideshow-direction'] == 'next' ?
-						that.firstImage()
-						: that.lastImage()
+					// XXX restore state...
+					// XXX
+
 				}
-			}, Date.str2ms(this.config['ui-slideshow-interval'] || '3s'))
-		}],
-	// XXX restart the countdown to the next image...
-	// 		...this is useful after manual navigation...
-	// XXX do we need this???
-	// 		...might be a good idea to use .toggleSlideshow('on') instead...
-	_resetSlideshowTimer: ['- Slideshow/',
+			})],
+	resetSlideshowTimer: ['- Slideshow/Restart slideshow timer',
 		function(){
-			this._startSlideshow()
-		}],
-	_stopSlideshow: ['- Slideshow/',
-		function(){
-			// stop timer...
-			clearTimeout(this.__slideshouw_timer)
-			delete this.__slideshouw_timer
-
-			// XXX restore state...
-			// XXX
+			this.__slideshouw_timer && this.toggleSlideshow('on')
 		}],
 })
 

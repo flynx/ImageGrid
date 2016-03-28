@@ -73,6 +73,7 @@ function(attr, states, callback){
 			}
 		},
 		states,
+		// XXX should we focus image by default here???
 		callback || function(action){ action != null && this.focusImage() })
 }
 
