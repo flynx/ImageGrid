@@ -203,15 +203,17 @@ module.LifeCycle = ImageGridFeatures.Feature({
 // 		object returned by the .saveWorkspace() action.
 // 		NOTE: it is recommended that a feature save its relevant .config
 // 			data as-is.
+// 		NOTE: no other action or state change should be triggered by this.
 // 	- react to .loadWorkspace(..) by loading it's state from the returned
 // 		object...
+// 		NOTE: this can be active, i.e. a feature may call actions when 
+// 			handling this.
 // 	- react to .toggleChrome(..) and switch on and off the chrome 
 // 		visibility... (XXX)
 //
 //
 
-var WorkspaceActions = 
-module.WorkspaceActions = actions.Actions({
+var WorkspaceActions = actions.Actions({
 	config: {
 		'workspace': 'default',
 		'chrome-visible': 'on',
@@ -260,9 +262,6 @@ module.WorkspaceActions = actions.Actions({
 			return this.config['saved-workspaces'][name] || {}
 		}],
 
-	// toggle chrome on and off...
-	toggleChrome: ['Workspace|Interface/Toggle chrome',
-		makeConfigToggler('chrome-visible', ['off', 'on'])],
 	toggleWorkspace: ['Workspace/Toggle Workspace',
 		makeConfigToggler('workspace',
 			function(){ return Object.keys(this.config['saved-workspaces']) },
