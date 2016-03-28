@@ -130,6 +130,8 @@ var SlideshowActions = actions.Actions({
 
 				// stop...
 				} else {
+					this.saveWorkspace('slideshow') 
+
 					// stop timer...
 					this.__slideshouw_timer
 						&& clearTimeout(this.__slideshouw_timer)

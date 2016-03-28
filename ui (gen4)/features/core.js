@@ -289,7 +289,7 @@ var WorkspaceActions = actions.Actions({
 	// 		save nothing. this us useful for introspection and temporary
 	// 		context storage.
 	//
-	// XXX for some reason this does not trigger a .config save...
+	// XXX for some reason this does not get saved with .config...
 	saveWorkspace: ['Workspace/Save Workspace',
 		function(name){
 			this.config['workspaces'] = this.config['workspaces']

@@ -1818,7 +1818,6 @@ var SingleImageActions = actions.Actions({
 	},
 
 	toggleSingleImage: ['Interface/Toggle single image view', 
-		// XXX this is wrong!!!
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			'single-image-mode') ],
@@ -1920,29 +1919,43 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 					this.config['ribbon-scale'] = this.screenwidth
 				}
 			}],
+		// NOTE: this is not part of the actual action above because we 
+		// 		need to see if the state has changed and doing this with 
+		// 		two separate pre/post callbacks (toggler callbacks) is 
+		// 		harder than with two nested callbacks (action callbacks)
 		// XXX this uses .screenwidth for scale, is this the right way to go?
-		['toggleSingleImage.post', 
+		['toggleSingleImage.pre', 
 			function(){ 
-				// singe image mode -- set image proportions...
-				if(this.toggleSingleImage('?') == 'on'){
-					updateImageProportions.call(this)
+				var pre_state = this.toggleSingleImage('?')
 
-					// update scale...
-					var w = this.screenwidth
-					this.config['ribbon-scale'] = w
-					this.screenwidth = this.config['single-image-scale'] || w
+				return function(){
+					var state = this.toggleSingleImage('?')
 
-				// ribbon mode -- restore original image size...
-				} else {
-					this.ribbons.viewer.find('.image:not(.clone)').css({
-						width: '',
-						height: ''
-					})
+					// singe image mode -- set image proportions...
+					if(state == 'on'){
+						updateImageProportions.call(this)
 
-					// update scale...
-					var w = this.screenwidth
-					this.config['single-image-scale'] = w
-					this.screenwidth = this.config['ribbon-scale'] || w
+						// update scale...
+						if(state != pre_state){
+							var w = this.screenwidth
+							this.config['ribbon-scale'] = w
+							this.screenwidth = this.config['single-image-scale'] || w
+						}
+
+					// ribbon mode -- restore original image size...
+					} else {
+						this.ribbons.viewer.find('.image:not(.clone)').css({
+							width: '',
+							height: ''
+						})
+
+						// update scale...
+						if(state != pre_state){
+							var w = this.screenwidth
+							this.config['single-image-scale'] = w
+							this.screenwidth = this.config['ribbon-scale'] || w
+						}
+					}
 				}
 			}],
 	],

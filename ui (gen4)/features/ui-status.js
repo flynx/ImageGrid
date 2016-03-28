@@ -453,7 +453,6 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 			}],
 
 		// Workspace...
-		// XXX is storing all the config a bit too much???
 		['saveWorkspace',
 			core.makeWorkspaceConfigWriter(
 				function(){ return Object.keys(StatusBar.config) })],
