@@ -15,42 +15,30 @@ var features = require('lib/features')
 var core = require('features/core')
 var base = require('features/base')
 
+var browse = require('lib/widget/browse')
+var overlay = require('lib/widget/overlay')
+
 
 
 /*********************************************************************/
 
-// XXX stub...
+// XXX still needs work...
 var SlideshowActions = actions.Actions({
 	config: {
 		'ui-slideshow-looping': 'on',
 		'ui-slideshow-direction': 'forward',
 		'ui-slideshow-interval': '3s',
 
-		'ui-slideshow-saved-intervals': [
+		'ui-slideshow-intervals': [
 			'0.2s',
+			'1s',
 			'3s',
 			'5s',
 			'7s',
 		],
 	},
 
-	// XXX
-	// 	/Slideshow/
-	// 		Interval (3)/				-- not a toggler
-	// 			0.2
-	// 			1
-	// 			3*
-	// 			5
-	// 			Custom...				-- click to edit
-	// 		Direction (forward)/
-	// 			forward*
-	// 			revrse
-	// 		Looping (on)/
-	// 			on*
-	// 			off
-	// 		Start
-	// XXX need to set the default value in title...
-	// XXX might be a good idea to make this with an editable value...
+	// XXX make interval editable...
 	// 		i.e.
 	// 			Interval: 3s /		-- 3s is editable...
 	// 				0.2		x		-- a history of values that can be 
@@ -61,19 +49,137 @@ var SlideshowActions = actions.Actions({
 	// 				Custom...		-- editable/placeholder... 'enter' 
 	// 									selects value and adds it to 
 	// 									history...
-	// XXX add a custom setting...
-	// XXX STUB
-	selectSlideshowInterval: ['Slideshow/Interval',
-		core.makeConfigToggler('ui-slideshow-interval', 
-			function(){ return this.config['ui-slideshow-saved-intervals'] })],
+	// XXX BUG: there are still problems with focus...
+	// 		to reproduce:
+	// 			click on the first option with a mouse...
+	// 		result:
+	// 			the top dialog is not focused...
+	slideshowDialog: ['Slideshow/Toggle and options',
+		function(){
+			var that = this
 
-	toggleSlideshowDirection: ['Slideshow/Direction',
+			this.suspendSlideshowTimer()
+
+			var o = overlay.Overlay(this.ribbons.viewer, 
+				browse.makeList(
+					null,
+					[
+						['Interval: ', 
+							function(){ return that.config['ui-slideshow-interval'] }],
+						['Direction: ', 
+							function(){ return that.config['ui-slideshow-direction'] }],
+						['Looping: ', 
+							function(){ return that.config['ui-slideshow-looping'] }],
+
+						'---',
+						[function(){ 
+							return that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start' }],
+					])
+					.open(function(evt, path){
+						// start/stop...
+						if(path == 'Start' || path == 'Stop'){
+							that.toggleSlideshow()
+							o.close()
+							return
+						}
+
+						// interval...
+						// XXX add custom interval editing...
+						if(/interval/i.test(path)){
+							var to_remove = []
+							var oo = overlay.Overlay(that.ribbons.viewer, 
+								browse.makeList( null, 
+									that.config['ui-slideshow-intervals'], 
+									{itemButtons: [
+										// mark for removal...
+										['&times;', 
+											function(p){
+												var e = this.filter('"'+p+'"', false)
+													.toggleClass('strike-out')
+
+												if(e.hasClass('strike-out')){
+													to_remove.indexOf(p) < 0 
+														&& to_remove.push(p)
+
+												} else {
+													var i = to_remove.indexOf(p)
+													if(i >= 0){
+														to_remove.splice(i, 1)
+													}
+												}
+											}],
+									]})
+									.open(function(evt, time){
+										that.config['ui-slideshow-interval'] = time
+
+										// XXX this is ugly...
+										oo.close()
+										o.client.update()
+										o.client.select(path.split(':')[0])
+									}))
+								.close(function(){
+									// remove striked items...
+									to_remove.forEach(function(e){
+										var lst = that.config['ui-slideshow-intervals'].slice()
+										lst.splice(lst.indexOf(e), 1)
+
+										that.config['ui-slideshow-intervals'] = lst
+									})
+
+									// XXX this is ugly...
+									o.focus()
+
+									if(that.toggleSlideshow('?') == 'on'){
+										o.close()
+									}
+								})
+
+							oo.client.select(that.config['ui-slideshow-interval'])
+
+							return
+						}
+
+						// direction...
+						if(/direction/i.test(path)){
+							that.toggleSlideshowDirection()
+							o.client.update()
+
+						// Looping...
+						} else if(/looping/i.test(path)){
+							that.toggleSlideshowLooping()
+							o.client.update()
+						}
+
+						// XXX this is ugly...
+						o.client.select(path.split(':')[0])
+
+						// do not keep the dialog open during the slideshow...
+						if(that.toggleSlideshow('?') == 'on'){
+							o.close()
+						}
+					}))
+				.close(function(){
+					that.resetSlideshowTimer()
+				})
+
+			o.client.dom.addClass('metadata-view')
+
+			o.client.select(-1)
+
+			return o
+		}],
+	
+	// XXX add a custom time setting...
+	toggleSlideshowInterval: ['- Slideshow/Interval',
+		core.makeConfigToggler('ui-slideshow-interval', 
+			function(){ return this.config['ui-slideshow-intervals'] },
+			function(){ this.resetSlideshowTimer() })],
+	toggleSlideshowDirection: ['- Slideshow/Direction',
 		core.makeConfigToggler('ui-slideshow-direction', ['forward', 'reverse'])],
-	toggleSlideshowLooping: ['Slideshow/Looping',
+	toggleSlideshowLooping: ['- Slideshow/Looping',
 		core.makeConfigToggler('ui-slideshow-looping', ['on', 'off'])],
 
-	// XXX should this save/load a tmp workspace or a dedicated slideshow workspace???
-	toggleSlideshow: ['Slideshow/Start',
+	toggleSlideshow: ['Slideshow/Quick toggle',
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			'slideshow-running',
@@ -86,7 +192,8 @@ var SlideshowActions = actions.Actions({
 					// NOTE: this means we were in a slideshow mode so we do not
 					// 		need to prepare...
 					if(this.__slideshouw_timer){
-						clearTimeout(this.__slideshouw_timer)
+						this.__slideshouw_timer != 'suspended'
+							&& clearInterval(this.__slideshouw_timer)
 						delete this.__slideshouw_timer
 
 					// prepare for the slideshow...
@@ -121,10 +228,17 @@ var SlideshowActions = actions.Actions({
 							: that.prevImage()
 
 						// we have reached the end...
-						if(that.current == cur && that.config['ui-slideshow-looping'] == 'on'){
-							that.config['ui-slideshow-direction'] == 'forward' ?
-								that.firstImage()
-								: that.lastImage()
+						if(that.current == cur){
+							// loop...
+							if(that.config['ui-slideshow-looping'] == 'on'){
+								that.config['ui-slideshow-direction'] == 'forward' ?
+									that.firstImage()
+									: that.lastImage()
+
+							// stop...
+							} else {
+								that.toggleSlideshow('off')
+							}
 						}
 					}, Date.str2ms(this.config['ui-slideshow-interval'] || '3s'))
 
@@ -134,7 +248,7 @@ var SlideshowActions = actions.Actions({
 
 					// stop timer...
 					this.__slideshouw_timer
-						&& clearTimeout(this.__slideshouw_timer)
+						&& clearInterval(this.__slideshouw_timer)
 					delete this.__slideshouw_timer
 
 					// XXX should this be a dedicated slideshow workspace??
@@ -143,9 +257,18 @@ var SlideshowActions = actions.Actions({
 					delete this.__pre_slideshow_workspace
 				}
 			})],
-	resetSlideshowTimer: ['- Slideshow/Restart slideshow timer',
+
+	// NOTE: these can be used as pause and resume...
+	resetSlideshowTimer: ['- Slideshow/',
 		function(){
 			this.__slideshouw_timer && this.toggleSlideshow('on')
+		}],
+	suspendSlideshowTimer: ['- Slideshow/',
+		function(){
+			if(this.__slideshouw_timer){
+				clearInterval(this.__slideshouw_timer)
+				this.__slideshouw_timer = 'suspended'
+			}
 		}],
 })
 

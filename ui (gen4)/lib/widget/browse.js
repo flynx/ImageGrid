@@ -2240,22 +2240,24 @@ ListPrototype.options = {
 				if(pattern){
 					var t = typeof(n) == typeof('str') ? n : n[0]
 
-					var tt = t.replace(pattern, '')
-					if(t != tt){
-						disable = true
+					if(typeof(t) == typeof('str')){
+						var tt = t.replace(pattern, '')
+						if(t != tt){
+							disable = true
 
-						if(typeof(k) == typeof('str')){
-							n = tt
+							if(typeof(k) == typeof('str')){
+								n = tt
 
-						} else {
-							// NOTE: here we want to avoid .data contamination
-							// 		so we'll make a copy...
-							n = n.slice()
-							n[0] = tt
-						}
+							} else {
+								// NOTE: here we want to avoid .data contamination
+								// 		so we'll make a copy...
+								n = n.slice()
+								n[0] = tt
+							}
 
-						if(that.options.skipDisabledItems){
-							return
+							if(that.options.skipDisabledItems){
+								return
+							}
 						}
 					}
 				}

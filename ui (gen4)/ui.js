@@ -67,7 +67,22 @@ module.MAX_KEY_REPEAT_RATE = 0
 
 // XXX add this to the global doc...
 module.GLOBAL_KEYBOARD = {
-	'Global bindings': {
+	'Slideshow': {
+		pattern: '.slideshow-running',
+		ignore: [
+			'Up', 'Down', 'Enter',
+		],
+
+		Esc: 'toggleSlideshow: "off"',
+		Enter: 'slideshowDialog',
+
+		Left: 'resetSlideshowTimer',
+		Right: 'resetSlideshowTimer',
+		Home: 'resetSlideshowTimer',
+		End: 'resetSlideshowTimer',
+	},
+
+	'Global': {
 		doc: 'NOTE: binding priority is the same as the order of sections '+
 			'on this page.',
 		pattern: '*',
@@ -240,7 +255,8 @@ module.GLOBAL_KEYBOARD = {
 		C: 'browseActions: "/Crop/"',
 		O: 'browsePath',
 		S: {
-			default: 'browseActions: "/Slideshow/"',
+			//default: 'browseActions: "/Slideshow/"',
+			default: 'slideshowDialog',
 			// XXX need to make this save to base_path if it exists and
 			// 		ask the user if it does not... now it always asks.
 			ctrl: 'browseSaveIndex',
