@@ -22,7 +22,8 @@ var overlay = require('lib/widget/overlay')
 
 /*********************************************************************/
 
-// XXX still needs work...
+// XXX would be a good idea to add provision for a timer to indicate 
+// 		slideshow progress/status... 
 var SlideshowActions = actions.Actions({
 	config: {
 		'ui-slideshow-looping': 'on',
@@ -202,23 +203,24 @@ var SlideshowActions = actions.Actions({
 						this.__pre_slideshow_workspace = this.workspace
 						this.saveWorkspace() 
 
-						// construct the slideshow workspace if it does not exist...
+						// construct the slideshow workspace if it does
+						// not exist...
+						//
+						// NOTE: this is partially redundant with the 
+						// 		loadWorkspace.pre handler in the feature...
 						if(this.workspaces['slideshow'] == null){
 							this.toggleChrome('off')
 							this.saveWorkspace('slideshow') 
+						}
 
 						// load the slideshow workspace...
-						} else {
-							this.loadWorkspace('slideshow')
-						}
+						this.loadWorkspace('slideshow')
 				
 						// single image mode...
 						this.toggleSingleImage('on')
 					}
 
 					// start the timer... 
-					// XXX might be a good idea to add a pause button for either
-					// 		"toggle" or "hold to pause" mode...
 					this.__slideshouw_timer = setInterval(function(){
 						var cur = that.current
 
@@ -251,7 +253,7 @@ var SlideshowActions = actions.Actions({
 						&& clearInterval(this.__slideshouw_timer)
 					delete this.__slideshouw_timer
 
-					// XXX should this be a dedicated slideshow workspace??
+					// restore the original workspace...
 					this.__pre_slideshow_workspace &&
 						this.loadWorkspace(this.__pre_slideshow_workspace)
 					delete this.__pre_slideshow_workspace
@@ -288,6 +290,32 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 	actions: SlideshowActions,
 
 	handlers: [
+		// add a placeholder for slideshow workspace, this is to make the
+		// workspace toggler show it as one of the options...
+		//
+		// NOTE: the slideshow workspace will get populated either on 
+		// 		loading it for the first time or on first running a 
+		// 		slideshow...
+		['start',
+			function(){ 
+				if(this.workspaces['slideshow'] == null){
+					this.workspaces['slideshow'] = null
+				} 
+			}],
+
+		// build the slideshow workspace for the first time if it's not
+		// present yet (is null)...
+		['loadWorkspace.pre',
+			function(workspace){
+				if(workspace == 'slideshow' && this.workspaces['slideshow'] == null){
+					return function(){
+						this.toggleChrome('off')
+						this.saveWorkspace('slideshow') 
+					}
+				}
+			}],
+
+		// do not leave the viewer in slideshow mode...
 		['stop',
 			function(){ this.toggleSlideshow('off') }]
 	],

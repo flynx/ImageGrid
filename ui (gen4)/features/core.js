@@ -315,7 +315,7 @@ var WorkspaceActions = actions.Actions({
 			if(typeof(name) == typeof('str')){
 				this.config.workspace = name
 
-				return this.config['workspaces'][name] || {}
+				return this.workspaces[name] || {}
 
 			// we got the workspace object...
 			} else {
@@ -323,6 +323,7 @@ var WorkspaceActions = actions.Actions({
 			}
 		}],
 
+	// NOTE: this will not save the current workspace...
 	toggleWorkspace: ['Workspace/Toggle Workspace',
 		makeConfigToggler('workspace',
 			function(){ return Object.keys(this.config['workspaces']) },
