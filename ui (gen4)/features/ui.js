@@ -698,8 +698,8 @@ module.ViewerActions = actions.Actions({
 
 	// toggle chrome on and off...
 	// XXX should this be here???
-	toggleChrome: ['Workspace|Interface/Toggle chrome',
-		core.makeConfigToggler('chrome-visible', ['off', 'on'])],
+	toggleChrome: ['Interface/Toggle chrome',
+		core.makeConfigToggler('chrome-visible', ['on', 'off'])],
 })
 
 var Viewer =

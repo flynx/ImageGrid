@@ -63,7 +63,7 @@ var SlideshowActions = actions.Actions({
 	// 			click on the first option with a mouse...
 	// 		result:
 	// 			the top dialog is not focused...
-	slideshowDialog: ['Slideshow/Toggle and options',
+	slideshowDialog: ['Slideshow/Settings and start',
 		function(){
 			var that = this
 
