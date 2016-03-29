@@ -292,7 +292,9 @@ var WorkspaceActions = actions.Actions({
 	// XXX for some reason this does not get saved with .config...
 	saveWorkspace: ['Workspace/Save Workspace',
 		function(name){
-			this.config['workspaces'] = this.config['workspaces']
+			if(!this.config.hasOwnProperty('workspaces')){
+				this.config['workspaces'] = JSON.parse(JSON.stringify(this.config['workspaces']))
+			}
 
 			var res = {}
 
@@ -307,11 +309,13 @@ var WorkspaceActions = actions.Actions({
 	// 		specific way to do stuff...
 	loadWorkspace: ['Workspace/Load Workspace',
 		function(name){
+			name = name || this.config.workspace
+
 			// get a workspace by name and load it...
 			if(typeof(name) == typeof('str')){
 				this.config.workspace = name
 
-				return this.config['workspaces'][name || this.config.workspace] || {}
+				return this.config['workspaces'][name] || {}
 
 			// we got the workspace object...
 			} else {
