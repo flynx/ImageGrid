@@ -26,11 +26,11 @@ var overlay = require('lib/widget/overlay')
 // 		slideshow progress/status... 
 var SlideshowActions = actions.Actions({
 	config: {
-		'ui-slideshow-looping': 'on',
-		'ui-slideshow-direction': 'forward',
-		'ui-slideshow-interval': '3s',
+		'slideshow-looping': 'on',
+		'slideshow-direction': 'forward',
+		'slideshow-interval': '3s',
 
-		'ui-slideshow-intervals': [
+		'slideshow-intervals': [
 			'0.2s',
 			'1s',
 			'3s',
@@ -66,11 +66,11 @@ var SlideshowActions = actions.Actions({
 					null,
 					[
 						['Interval: ', 
-							function(){ return that.config['ui-slideshow-interval'] }],
+							function(){ return that.config['slideshow-interval'] }],
 						['Direction: ', 
-							function(){ return that.config['ui-slideshow-direction'] }],
+							function(){ return that.config['slideshow-direction'] }],
 						['Looping: ', 
-							function(){ return that.config['ui-slideshow-looping'] }],
+							function(){ return that.config['slideshow-looping'] }],
 
 						'---',
 						[function(){ 
@@ -90,7 +90,7 @@ var SlideshowActions = actions.Actions({
 							var to_remove = []
 							var oo = overlay.Overlay(that.ribbons.viewer, 
 								browse.makeList( null, 
-									that.config['ui-slideshow-intervals'], 
+									that.config['slideshow-intervals'], 
 									{itemButtons: [
 										// mark for removal...
 										['&times;', 
@@ -111,7 +111,7 @@ var SlideshowActions = actions.Actions({
 											}],
 									]})
 									.open(function(evt, time){
-										that.config['ui-slideshow-interval'] = time
+										that.config['slideshow-interval'] = time
 
 										// XXX this is ugly...
 										oo.close()
@@ -121,10 +121,10 @@ var SlideshowActions = actions.Actions({
 								.close(function(){
 									// remove striked items...
 									to_remove.forEach(function(e){
-										var lst = that.config['ui-slideshow-intervals'].slice()
+										var lst = that.config['slideshow-intervals'].slice()
 										lst.splice(lst.indexOf(e), 1)
 
-										that.config['ui-slideshow-intervals'] = lst
+										that.config['slideshow-intervals'] = lst
 									})
 
 									// XXX this is ugly...
@@ -135,7 +135,7 @@ var SlideshowActions = actions.Actions({
 									}
 								})
 
-							oo.client.select(that.config['ui-slideshow-interval'])
+							oo.client.select(that.config['slideshow-interval'])
 
 							return
 						}
@@ -172,13 +172,13 @@ var SlideshowActions = actions.Actions({
 	
 	// XXX add a custom time setting...
 	toggleSlideshowInterval: ['- Slideshow/Interval',
-		core.makeConfigToggler('ui-slideshow-interval', 
-			function(){ return this.config['ui-slideshow-intervals'] },
+		core.makeConfigToggler('slideshow-interval', 
+			function(){ return this.config['slideshow-intervals'] },
 			function(){ this.resetSlideshowTimer() })],
 	toggleSlideshowDirection: ['- Slideshow/Direction',
-		core.makeConfigToggler('ui-slideshow-direction', ['forward', 'reverse'])],
+		core.makeConfigToggler('slideshow-direction', ['forward', 'reverse'])],
 	toggleSlideshowLooping: ['- Slideshow/Looping',
-		core.makeConfigToggler('ui-slideshow-looping', ['on', 'off'])],
+		core.makeConfigToggler('slideshow-looping', ['on', 'off'])],
 
 	toggleSlideshow: ['Slideshow/Quick toggle',
 		toggler.CSSClassToggler(
@@ -225,15 +225,15 @@ var SlideshowActions = actions.Actions({
 						var cur = that.current
 
 						// next step...
-						that.config['ui-slideshow-direction'] == 'forward' ?
+						that.config['slideshow-direction'] == 'forward' ?
 							that.nextImage()
 							: that.prevImage()
 
 						// we have reached the end...
 						if(that.current == cur){
 							// loop...
-							if(that.config['ui-slideshow-looping'] == 'on'){
-								that.config['ui-slideshow-direction'] == 'forward' ?
+							if(that.config['slideshow-looping'] == 'on'){
+								that.config['slideshow-direction'] == 'forward' ?
 									that.firstImage()
 									: that.lastImage()
 
@@ -242,7 +242,7 @@ var SlideshowActions = actions.Actions({
 								that.toggleSlideshow('off')
 							}
 						}
-					}, Date.str2ms(this.config['ui-slideshow-interval'] || '3s'))
+					}, Date.str2ms(this.config['slideshow-interval'] || '3s'))
 
 				// stop...
 				} else {
