@@ -276,10 +276,11 @@ module.GLOBAL_KEYBOARD = {
 			'ctrl+shift': 'redoLast',
 		},
 
-		// XXX for debug...
 		G: {
 			default: 'editStatusBarIndex!',
 			shift: 'toggleStatusBarIndexMode!',
+
+			// XXX for debug...
 			ctrl: function(){ $('.viewer').toggleClass('visible-gid') },
 		},
 	},

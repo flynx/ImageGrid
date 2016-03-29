@@ -422,10 +422,12 @@ var StatusBarActions = actions.Actions({
 	// XXX should this show a dialog???
 	editStatusBarIndex: ['- Interface/',
 		function(){
-			this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
+			if((this.config['status-bar-index'] || {} )['editable']){
+				this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
 
-			// XXX do this better...
-			this.ribbons.viewer.find('.global-info .index .position').focus().click()
+				// XXX do this better...
+				this.ribbons.viewer.find('.global-info .index .position').focus().click()
+			}
 		}],
 	toggleStatusBarIndexMode: ['Interface/Status bar index mode',
 		toggler.CSSClassToggler(
@@ -434,6 +436,7 @@ var StatusBarActions = actions.Actions({
 			function(state){
 				this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
 
+				// prepare for saving the config...
 				this.config['status-bar-index'] = 
 					JSON.parse(JSON.stringify(this.config['status-bar-index']))
 				this.config['status-bar-index']['mode'] = state
