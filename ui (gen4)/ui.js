@@ -71,6 +71,7 @@ module.GLOBAL_KEYBOARD = {
 		pattern: '.slideshow-running',
 		ignore: [
 			'Up', 'Down', 'Enter',
+			'R', 'L',
 		],
 
 		Esc: 'toggleSlideshow: "off"',
@@ -80,6 +81,9 @@ module.GLOBAL_KEYBOARD = {
 		Right: 'resetSlideshowTimer',
 		Home: 'resetSlideshowTimer',
 		End: 'resetSlideshowTimer',
+
+		R: 'toggleSlideshowDirection',
+		L: 'toggleSlideshowLooping',
 	},
 
 	'Global': {
@@ -273,7 +277,11 @@ module.GLOBAL_KEYBOARD = {
 		},
 
 		// XXX for debug...
-		G: function(){ $('.viewer').toggleClass('visible-gid') },
+		G: {
+			default: 'editStatusBarIndex!',
+			shift: 'toggleStatusBarIndexMode!',
+			ctrl: function(){ $('.viewer').toggleClass('visible-gid') },
+		},
 	},
 }	
 

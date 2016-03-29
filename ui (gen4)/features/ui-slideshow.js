@@ -22,6 +22,14 @@ var overlay = require('lib/widget/overlay')
 
 /*********************************************************************/
 
+var _cmpTimes = function(a, b){
+	return Date.str2ms(a) - Date.str2ms(b)
+}
+
+
+
+/*********************************************************************/
+
 // XXX would be a good idea to add provision for a timer to indicate 
 // 		slideshow progress/status... 
 var SlideshowActions = actions.Actions({
@@ -65,6 +73,7 @@ var SlideshowActions = actions.Actions({
 				browse.makeList(
 					null,
 					[
+						// XXX make this editable...
 						['Interval: ', 
 							function(){ return that.config['slideshow-interval'] }],
 						['Direction: ', 
@@ -90,7 +99,12 @@ var SlideshowActions = actions.Actions({
 							var to_remove = []
 							var oo = overlay.Overlay(that.ribbons.viewer, 
 								browse.makeList( null, 
-									that.config['slideshow-intervals'], 
+									that.config['slideshow-intervals']
+										.concat([
+											// XXX do we add a new item here???
+											//'---', 
+											//'New'
+										]), 
 									{itemButtons: [
 										// mark for removal...
 										['&times;', 
@@ -111,12 +125,18 @@ var SlideshowActions = actions.Actions({
 											}],
 									]})
 									.open(function(evt, time){
-										that.config['slideshow-interval'] = time
+										if(/new/i.test(time)){
+											// XXX edit...
+											// XXX
 
-										// XXX this is ugly...
-										oo.close()
-										o.client.update()
-										o.client.select(path.split(':')[0])
+										} else {
+											that.config['slideshow-interval'] = time
+
+											// XXX this is ugly...
+											oo.close()
+											o.client.update()
+											o.client.select(path.split(':')[0])
+										}
 									}))
 								.close(function(){
 									// remove striked items...
@@ -126,6 +146,17 @@ var SlideshowActions = actions.Actions({
 
 										that.config['slideshow-intervals'] = lst
 									})
+
+									// XXX add new items...
+									// XXX
+
+									// sort the times...
+									that.config['slideshow-intervals'] =
+										that.config['slideshow-intervals']
+											.sort(function(a, b){
+												return Date.str2ms(a) - Date.str2ms(b)
+											})
+
 
 									// XXX this is ugly...
 									o.focus()
@@ -282,7 +313,6 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-slideshow',
 	depends: [
-		'workspace',
 		'ui',
 		'ui-single-image-view',
 	],

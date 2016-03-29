@@ -711,6 +711,7 @@ module.Viewer = core.ImageGridFeatures.Feature({
 	depends: [
 		'lifecycle',
 		'base',
+		'workspace',
 	],
 
 	actions: ViewerActions,
@@ -1381,6 +1382,7 @@ module.ConfigLocalStorage = core.ImageGridFeatures.Feature({
 	depends: [
 		'ui',
 	],
+	priority: 80,
 
 	isApplicable: function(){ 
 		return typeof(localStorage) != 'undefined' 

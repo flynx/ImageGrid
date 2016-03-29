@@ -45,7 +45,6 @@ var makeStateIndicatorItem = function(container, type, text){
 // XXX revise how/where info is displayed...
 var StatusBarActions = actions.Actions({
 	config: {
-		// XXX for some reason this does not load as default...
 		'status-bar-mode': 'minimal',
 		'status-bar-modes': [
 			'none',
@@ -71,6 +70,8 @@ var StatusBarActions = actions.Actions({
 		],
 
 		'status-bar-index': {
+			'mode': 'normal',
+
 			// NOTE: this would need to reconstruct the status bar for 
 			// 		changes to take effect, i.e. call .resetStatusBar()
 			// XXX might be a good idea to run an editor on click on
@@ -79,6 +80,7 @@ var StatusBarActions = actions.Actions({
 
 			'live-update-on-edit': false,
 		},
+
 	},
 
 	__statusbar_elements__: {
@@ -98,8 +100,7 @@ var StatusBarActions = actions.Actions({
 							.attr('info', 'Image position (click to toggle ribbon/global)')
 							// toggle index state...
 							.click(function(){
-								$(this).parent()
-									.toggleClass('global')
+								that.toggleStatusBarIndexMode()
 								that.updateStatusBar()
 							})
 						// editable...
@@ -141,7 +142,7 @@ var StatusBarActions = actions.Actions({
 							.keyup(function(){
 								event.stopPropagation()
 
-								that.config['status-bar-index']['live-update-on-edit']
+								(that.config['status-bar-index'] || {})['live-update-on-edit']
 									&& that.focusImage(i,
 										item.hasClass('global') ? 'global' : undefined)
 							})
@@ -160,8 +161,7 @@ var StatusBarActions = actions.Actions({
 						.attr('info', 'Image position (click to toggle ribbon/global)')
 						// toggle index state...
 						.click(function(){
-							$(this).parent()
-								.toggleClass('global')
+							that.toggleStatusBarIndexMode()
 							that.updateStatusBar()
 						}))
 
@@ -170,8 +170,15 @@ var StatusBarActions = actions.Actions({
 			}
 
 			// update...
+			// NOTE: using .toggleStatusBarIndexMode(..) here will fall
+			// 		into an infinite recursion...
+			var cls = (that.config['status-bar-index'] || {})['mode'] || 'normal'
+			item
+				.addClass(cls)
+				.removeClass(cls != 'normal' ? 'normal' : 'global')
+
 			// global index...
-			if(item.hasClass('global')){
+			if(cls == 'global'){
 				item.find('.position:not(:focus)')
 					.text(this.data.getImageOrder(gid)+1)
 				item.find('.length')
@@ -410,6 +417,29 @@ var StatusBarActions = actions.Actions({
 			this.toggleStatusBar('none')
 			this.toggleStatusBar(mode)
 		}],
+
+	// XXX should these be here???
+	// XXX should this show a dialog???
+	editStatusBarIndex: ['- Interface/',
+		function(){
+			this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
+
+			// XXX do this better...
+			this.ribbons.viewer.find('.global-info .index .position').focus().click()
+		}],
+	toggleStatusBarIndexMode: ['Interface/Status bar index mode',
+		toggler.CSSClassToggler(
+			function(){ return this.ribbons.viewer.find('.global-info .index') },
+			['normal', 'global'],
+			function(state){
+				this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
+
+				this.config['status-bar-index'] = 
+					JSON.parse(JSON.stringify(this.config['status-bar-index']))
+				this.config['status-bar-index']['mode'] = state
+
+				this.updateStatusBar()
+			})],
 })
 
 var StatusBar = 
@@ -419,7 +449,6 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-status-bar',
 	depends: [
-		'workspace',
 		'ui',
 
 		// XXX this is here to enable context menu 
