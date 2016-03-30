@@ -44,6 +44,10 @@ var FileSystemLoaderActions = actions.Actions({
 		'index-dir': '.ImageGrid',
 
 		'image-file-pattern': '*+(jpg|jpeg|png|JPG|JPEG|PNG)',
+
+		// XXX if true and multiple indexes found, load only the first 
+		// 		without merging...
+		'load-first-index-only': false,
 	},
 
 	clone: [function(full){
@@ -151,7 +155,6 @@ var FileSystemLoaderActions = actions.Actions({
 							logger && logger.emit('merge index', k, res)
 
 							// merge...
-							// XXX this appears to lose bookmarks and other tags...
 							index.data.join(part.data)
 							index.images.join(part.images)
 						}
@@ -162,7 +165,9 @@ var FileSystemLoaderActions = actions.Actions({
 						// 		...we either need to lazy-load clustered indexes
 						// 		or merge, in both cases base_path should reflet
 						// 		the fact that we have multiple indexes...
-						break
+						if(that.config['load-first-index-only']){
+							break
+						}
 					}
 
 					logger && logger.emit('load index', index)

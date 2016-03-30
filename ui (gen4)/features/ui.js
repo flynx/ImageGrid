@@ -108,6 +108,13 @@ function updateImagePosition(actions, target){
 
 /*********************************************************************/
 
+// Workspaces:
+// 	ui-chrome-hidden		- all features handling chrome elements 
+// 								should hide all the chrome when this 
+// 								workspace loads.
+// 								NOTE: other workspace functionality 
+// 									should be handled without change.
+//
 // NOTE: this uses the base feature API but does not need it imported...
 //
 // XXX split this into read and write actions...
@@ -162,9 +169,6 @@ module.ViewerActions = actions.Actions({
 			'last',		// select last image
 		],
 		'ribbon-focus-mode': 'visual',
-
-
-		'chrome-visible': 'on',
 	},
 
 	// Images...
@@ -595,6 +599,7 @@ module.ViewerActions = actions.Actions({
 	shiftImageRight: [
 		function(target){ this.ribbons.placeImage(target, 1) }],
 
+	/*
 	// XXX how should these animate???
 	travelImageUp: [
 		function(){
@@ -602,6 +607,7 @@ module.ViewerActions = actions.Actions({
 	travelImageDown: [
 		function(){
 		}],
+	*/
 
 	shiftRibbonUp: [
 		function(target){
@@ -694,12 +700,6 @@ module.ViewerActions = actions.Actions({
 
 			this.reload()
 		}],
-
-
-	// toggle chrome on and off...
-	// XXX should this be here???
-	toggleChrome: ['Interface/Toggle chrome',
-		core.makeConfigToggler('chrome-visible', ['on', 'off'])],
 })
 
 var Viewer =
@@ -747,6 +747,11 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					}
 
 					$(window).resize(this.__viewer_resize)
+				}
+
+				// setup basic workspaces...
+				if(this.workspaces['ui-chrome-hidden'] == null){
+					this.workspaces['ui-chrome-hidden'] = {}
 				}
 			}],
 		['stop', 

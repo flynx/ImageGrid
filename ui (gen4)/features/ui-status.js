@@ -492,6 +492,12 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 			core.makeWorkspaceConfigLoader(
 				function(){ return Object.keys(StatusBar.config) },
 				function(workspace){
+					// XXX not sure about this protocol yet...
+					if(this.workspace == 'ui-chrome-hidden'){
+						this.toggleStatusBar('none')
+						return
+					}
+
 					'status-bar-mode' in workspace 
 						&& this.toggleStatusBar(workspace['status-bar-mode'])
 				})],

@@ -30,6 +30,9 @@ var _cmpTimes = function(a, b){
 
 /*********************************************************************/
 
+// NOTE: this uses ui-chrome-hidden workspace to set the initial state
+// 		of the slideshow workspace.
+//
 // XXX would be a good idea to add provision for a timer to indicate 
 // 		slideshow progress/status... 
 var SlideshowActions = actions.Actions({
@@ -240,7 +243,7 @@ var SlideshowActions = actions.Actions({
 						// NOTE: this is partially redundant with the 
 						// 		loadWorkspace.pre handler in the feature...
 						if(this.workspaces['slideshow'] == null){
-							this.toggleChrome('off')
+							this.loadWorkspace('ui-chrome-hidden') 
 							this.saveWorkspace('slideshow') 
 						}
 
@@ -339,7 +342,7 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 			function(workspace){
 				if(workspace == 'slideshow' && this.workspaces['slideshow'] == null){
 					return function(){
-						this.toggleChrome('off')
+						this.loadWorkspace('ui-chrome-hidden') 
 						this.saveWorkspace('slideshow') 
 					}
 				}

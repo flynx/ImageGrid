@@ -2091,6 +2091,7 @@ var DataPrototype = {
 	//
 	// XXX test more complex cases...
 	// XXX appears to be broken for joining sets via 'base' align...
+	// XXX appears not to join all the gid lists (tags)...
 	join: function(){
 		var args = Array.apply(null, arguments)
 		var align = typeof(args[0]) == typeof('str') ? args.splice(0, 1)[0] : 'base'
@@ -2148,6 +2149,23 @@ var DataPrototype = {
 
 				d += 1
 			}
+
+			// merge other stuff...
+			data.eachImageList(function(list, key, set){
+				if(set == 'ribbons'){
+					return
+				}
+
+				if(base[set] == null){
+					base[set] = {key: base.makeSparseImages(list)}
+
+				} else if(base[set][key] == null){
+					base[set][key] = base.makeSparseImages(list)
+
+				} else {
+					base[set][key] = base.makeSparseImages(base[set][key].concat(list))
+				}
+			})
 		})
 
 		// XXX this is slow-ish...
