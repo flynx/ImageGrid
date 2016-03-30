@@ -584,6 +584,8 @@ var FileSystemWriterActions = actions.Actions({
 	//	Mark image changed...
 	//	.markChanged(<gid>, ...)
 	//
+	// NOTE: when .changes is null (i.e. everything changed) then calling
+	// 		this with anything other than 'none' will have no effect.
 	markChanged: ['- System/',
 		function(){
 			var that = this
@@ -605,6 +607,13 @@ var FileSystemWriterActions = actions.Actions({
 			// none...
 			} else if(args.length == 1 && args[0] == 'none'){
 				this.changes = false 
+
+			// everything is marked changed, everything will be saved
+			// anyway...
+			// NOTE: to reset this use .markChanged('none') and then 
+			// 		manually add the desired changes...
+			} else if(this.changes == null){
+				return
 
 			} else {
 				var images = (changes.images || [])
