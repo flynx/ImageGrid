@@ -2033,6 +2033,8 @@ var DataPrototype = {
 	// 		given ribbon in the section to be split...
 	// NOTE: target must be a .getImage(..) compatible value.
 	// NOTE: if no target is given this will assume the current image.
+	//
+	// XXX do .eachImageList(..)
 	split: function(target){
 		if(arguments.length > 1){
 			target = Array.apply(null, arguments)
@@ -2090,8 +2092,6 @@ var DataPrototype = {
 	// 		if it is needed to keep the original intact, just .clone() it...
 	//
 	// XXX test more complex cases...
-	// XXX appears to be broken for joining sets via 'base' align...
-	// XXX appears not to join all the gid lists (tags)...
 	join: function(){
 		var args = Array.apply(null, arguments)
 		var align = typeof(args[0]) == typeof('str') ? args.splice(0, 1)[0] : 'base'
@@ -2117,6 +2117,9 @@ var DataPrototype = {
 			base.order = base.order.concat(data.order)
 
 			// merge ribbons...
+			// NOTE: this is a special case, so we do not handle it in 
+			// 		the .eachImageList(..) below. the reason being that
+			// 		ribbons can be merged is different ways.
 			for(var i=0; i < data.ribbon_order.length; i++){
 				var g = data.ribbon_order[i]
 				var r = data.ribbons[g]
