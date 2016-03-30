@@ -172,14 +172,13 @@ var FileSystemLoaderActions = actions.Actions({
 
 					logger && logger.emit('load index', index)
 
+					that.load(index)
+
 					that.loaded_paths = loaded
-					// XXX should we get the requested path or the base path currently loaded
-					that.__location ={
+					that.__location = {
 						path: loaded.length == 1 ? loaded[0] : path,
 						method: 'loadIndex',
 					}
-
-					that.load(index)
 				})
 		}],
 	// XXX use the logger...
@@ -568,6 +567,7 @@ var FileSystemWriterActions = actions.Actions({
 			}
 		}],
 
+	// Mark data sections as changed...
 	//
 	//	Mark everything changed...
 	//	.markChanged('all')
@@ -584,8 +584,10 @@ var FileSystemWriterActions = actions.Actions({
 	//	Mark image changed...
 	//	.markChanged(<gid>, ...)
 	//
-	// NOTE: when .changes is null (i.e. everything changed) then calling
-	// 		this with anything other than 'none' will have no effect.
+	//
+	// NOTE: when .changes is null (i.e. everything changed, marked via
+	// 		.markChanged('all')) then calling this with anything other 
+	// 		than 'none' will have no effect.
 	markChanged: ['- System/',
 		function(){
 			var that = this
