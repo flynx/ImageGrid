@@ -267,7 +267,10 @@ var MetadataUIActions = actions.Actions({
 			'Make', 'Camera Model Name', 'Lens ID', 'Lens', 'Lens Profile Name', 'Focal Length',
 
 			'Metering Mode', 'Exposure Program', 'Exposure Compensation', 
-			'Shutter Speed Value', 'Aperture Value', 'Iso',
+			'Shutter Speed Value', 'Exposure Time', 
+			'Aperture Value', 'F Number', 
+			'Iso',
+			'Quality', 'Focus Mode', 
 
 			'Artist', 'Copyright',
 

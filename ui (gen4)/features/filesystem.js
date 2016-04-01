@@ -71,11 +71,12 @@ var FileSystemLoaderActions = actions.Actions({
 		function(path){ return fse.existsSync(path) }],
 
 	// NOTE: when passed no path this will not do anything...
-	// XXX should this set something like .path???
-	// 		...and how should this be handled when merging indexes or
+	//
+	// XXX how should .location be handled when merging indexes or
 	//		viewing multiple/clustered indexes???
 	// XXX add a symmetric equivalent to .prepareIndexForWrite(..) so as 
 	// 		to enable features to load their data...
+	// XXX should this return a promise??? ...a clean promise???
 	// XXX look inside...
 	loadIndex: ['- File/Load index',
 		function(path, logger){
@@ -90,7 +91,8 @@ var FileSystemLoaderActions = actions.Actions({
 
 			// XXX make this load incrementally (i.e. and EventEmitter
 			// 		a-la glob)....
-			file.loadIndex(path, this.config['index-dir'], logger)
+			//file.loadIndex(path, this.config['index-dir'], logger)
+			return file.loadIndex(path, this.config['index-dir'], logger)
 				.then(function(res){
 					// XXX if res is empty load raw...
 
@@ -103,23 +105,25 @@ var FileSystemLoaderActions = actions.Actions({
 					// 		indexes, e.g. in .loadIndex(..)
 					var paths = Object.keys(res)
 					var skipped = []
-					paths.forEach(function(p){
-						// already removed...
-						if(skipped.indexOf(p) >= 0){
-							return
-						}
+					paths
+						.sort()
+						.forEach(function(p){
+							// already removed...
+							if(skipped.indexOf(p) >= 0){
+								return
+							}
 
-						paths
-							// get all paths that fully contain p...
-							.filter(function(o){
-								return o != p && o.indexOf(p) == 0
-							})
-							// drop all longer paths...
-							.forEach(function(e){
-								skipped.push(e)
-								delete res[e]
-							})
-					})
+							paths
+								// get all paths that fully contain p...
+								.filter(function(o){
+									return o != p && o.indexOf(p) == 0
+								})
+								// drop all longer paths...
+								.forEach(function(e){
+									skipped.push(e)
+									delete res[e]
+								})
+						})
 					//console.log('SKIPPING NESTED:', skipped.length)
 
 					var index
@@ -127,7 +131,9 @@ var FileSystemLoaderActions = actions.Actions({
 					var loaded = []
 
 					// NOTE: res may contain multiple indexes...
-					for(var k in res){
+					//for(var k in res){
+					for(var i=0; i < paths.length; i++){
+						var k = paths[i]
 
 						// skip empty indexes...
 						// XXX should we rebuild  or list here???
@@ -185,6 +191,7 @@ var FileSystemLoaderActions = actions.Actions({
 	// XXX add a recursive option...
 	// 		...might also be nice to add sub-dirs to ribbons...
 	// XXX make image pattern more generic...
+	// XXX should this return a promise??? ...a clean promise???
 	loadImages: ['- File/Load images',
 		function(path, logger){
 			if(path == null){
@@ -221,6 +228,7 @@ var FileSystemLoaderActions = actions.Actions({
 		}],
 
 	// XXX auto-detect format or let the user chose...
+	// XXX should this return a promise??? ...a clean promise???
 	loadPath: ['- File/Load path (STUB)',
 		function(path, logger){
 			// XXX check if this.config['index-dir'] exists, if yes then
@@ -231,6 +239,7 @@ var FileSystemLoaderActions = actions.Actions({
 
 	// XXX merging does not work (something wrong with .data.join(..))
 	// 		...fixed a bug in images.js hash generator, now might be fixed...
+	// XXX should this return a promise??? ...a clean promise???
 	// XXX revise logger...
 	loadNewImages: ['File/Load new images',
 		function(path, logger){
@@ -339,6 +348,18 @@ var makeBrowseProxy = function(action, callback){
 }
 
 
+// XXX show list of indexes when more than one are found....
+// 		Ex:
+// 			- <index-1>		x 	- 'x' will strike out the element...
+// 			- <index-2>		x
+// 			- ...
+// 			- load all			- load all non striked out elements
+// 		...would be nice to add either ability to sort manually or some 
+// 		modes of auto-sorting, or both...
+// 		...might be a good idea to add root images with an option to 
+// 		load them...
+// 			...do not think that recursively searching for images is a 
+// 			good idea...
 var FileSystemLoaderUIActions = actions.Actions({
 	config: {
 		// list of loaders to complete .browsePath(..) action
@@ -589,7 +610,7 @@ var FileSystemWriterActions = actions.Actions({
 	// 		.markChanged('all')) then calling this with anything other 
 	// 		than 'none' will have no effect.
 	markChanged: ['- System/',
-		function(){
+		function(section){
 			var that = this
 			var args = util.args2array(arguments)
 			//var changes = this.changes = 
@@ -597,6 +618,8 @@ var FileSystemWriterActions = actions.Actions({
 				this.hasOwnProperty('changes') ?
 					this.changes || {}
 					: {}
+
+			console.log('CHANGED:', args)
 
 			// all...
 			if(args.length == 1 && args[0] == 'all'){
@@ -693,6 +716,7 @@ var FileSystemWriterActions = actions.Actions({
 			}
 		}],
 	// NOTE: with no arguments this will save index to .location.path
+	// XXX should this return a promise??? ...a clean promise???
 	saveIndex: ['- File/Save index',
 		function(path, logger){
 			var that = this
@@ -711,7 +735,7 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX get real base path...
 			//path = path || this.location.path +'/'+ this.config['index-dir']
 
-			file.writeIndex(
+			return file.writeIndex(
 					this.prepareIndexForWrite().prepared, 
 					// XXX should we check if index dir is present in path???
 					//path, 
@@ -832,17 +856,25 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 		// XXX currently if no args are passed then nothing is 
 		// 		done here, this might change...
 		['loadIndex',
-			function(_, path){
+			function(res, path){
 				if(path){
-					this.markChanged('none')
+					//this.markChanged('none')
+					var that = this
+					res.then(function(){
+						that.markChanged('none')
+					})
 				}
 			}],
 		['saveIndex',
-			function(_, path){
+			function(res, path){
 				// NOTE: if saving to a different path than loaded do not
 				// 		drop the .changes flags...
 				if(path && path == this.location.path){
-					this.markChanged('none')
+					//this.markChanged('none')
+					var that = this
+					res.then(function(){
+						this.markChanged('none')
+					})
 				}
 			}],
 
@@ -851,7 +883,9 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 			'loadURLs',
 			'clear',
 		], 
-			function(){ this.markChanged('all') }],
+			function(){ 
+				this.markChanged('all') 
+			}],
 
 		// data...
 		[[
