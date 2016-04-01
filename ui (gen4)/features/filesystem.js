@@ -963,16 +963,18 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 // 		- save as.. (browser)
 // 		- save if not base path present (browser)
 var FileSystemWriterUIActions = actions.Actions({
-	// XXX should this ask the user for a path???
-	// XXX this for some reason works differently than browseSaveIndex(..)
-	// 		and saves images-diff instead of images...
+	// XXX this needs feedback...
 	saveIndexHere: ['File/Save',
 		function(){ 
 			if(this.location.path){ 
 				this.saveIndex(this.location.path) 
-			} 
+
+			} else {
+				this.browseSaveIndex()
+			}
 		}],
 	// XXX add ability to create dirs...
+	// XXX this needs feedback...
 	browseSaveIndex: ['File/Save index to...', 
 		makeBrowseProxy('saveIndex', function(){
 			this.location.method = 'loadIndex' })],

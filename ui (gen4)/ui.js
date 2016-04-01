@@ -263,7 +263,8 @@ module.GLOBAL_KEYBOARD = {
 			default: 'slideshowDialog',
 			// XXX need to make this save to base_path if it exists and
 			// 		ask the user if it does not... now it always asks.
-			ctrl: 'browseSaveIndex',
+			ctrl: 'saveIndexHere',
+			'ctrl+shift': 'browseSaveIndex',
 		},
 
 		// XXX still experimental...
