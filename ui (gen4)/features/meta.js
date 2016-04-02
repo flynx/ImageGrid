@@ -52,6 +52,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'workspace',
 	'ui',
+	'keyboard',
 
 	'ui-ribbons-placement',
 

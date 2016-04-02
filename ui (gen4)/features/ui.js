@@ -135,13 +135,6 @@ module.ViewerActions = actions.Actions({
 		'fit-overflow': 0.2,
 
 		
-		// limit key repeat to one per N milliseconds.
-		//
-		// Set this to -1 or null to run keys without any limitations.
-		// XXX at this point the keyboard is setup in ui.js, need to 
-		// 		move to a more logical spot...
-		'max-key-repeat-rate': 0,
-
 		// Theme to set on startup...
 		'theme': null,
 

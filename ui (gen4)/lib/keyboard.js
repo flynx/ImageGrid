@@ -669,6 +669,10 @@ function makeKeyboardHandler(keybindings, unhandled, actions){
 		var did_handling = false
 		var res = null
 
+		var _keybindings = typeof(keybindings) == typeof(function(){}) ? 
+				keybindings.call(this) 
+			: keybindings
+
 		// key data...
 		var key = evt.keyCode
 
@@ -677,7 +681,7 @@ function makeKeyboardHandler(keybindings, unhandled, actions){
 
 		//window.DEBUG && console.log('KEY:', key, chr, modifiers)
 
-		var handlers = getKeyHandlers(key, modifiers, keybindings, null, null, actions)
+		var handlers = getKeyHandlers(key, modifiers, _keybindings, null, null, actions)
 
 		for(var mode in handlers){
 			var handler = handlers[mode]
@@ -691,7 +695,7 @@ function makeKeyboardHandler(keybindings, unhandled, actions){
 
 				did_handling = true
 				//res = handler(evt)
-				res = handler.call(keybindings)
+				res = handler.call(_keybindings)
 
 				if(res === false){
 					break

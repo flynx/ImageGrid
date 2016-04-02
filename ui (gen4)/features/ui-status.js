@@ -180,16 +180,16 @@ var StatusBarActions = actions.Actions({
 			// global index...
 			if(cls == 'global'){
 				item.find('.position:not(:focus)')
-					.text(this.data.getImageOrder(gid)+1)
+					.text(this.data ? this.data.getImageOrder(gid)+1 : 0)
 				item.find('.length')
-					.text('/'+ this.data.length)
+					.text('/'+ (this.data ? this.data.length : 0))
 
 			// ribbon index...
 			} else {
 				item.find('.position:not(:focus)')
-					.text(this.data.getImageOrder('ribbon', gid)+1)
+					.text(this.data ? this.data.getImageOrder('ribbon', gid)+1 : 0)
 				item.find('.length')
-					.text('/'+ this.data.getImages(gid).len)
+					.text('/'+ (this.data ? this.data.getImages(gid).len : 0))
 			}
 
 			return item
@@ -272,7 +272,7 @@ var StatusBarActions = actions.Actions({
 			// 		them here...
 			// 		...this also simpler than handling '?' and other
 			// 		special toggler args in the handler...
-			var tags = this.data.getTags(gid)
+			var tags = this.data ? this.data.getTags(gid) : []
 			var tag = type == 'mark' ? 'selected' : 'bookmark'
 			item[tags.indexOf(tag) < 0 ?
 					'removeClass' 
@@ -287,8 +287,14 @@ var StatusBarActions = actions.Actions({
 	// 		reconstruct all the items.
 	toggleStatusBar: ['Interface/Toggle status bar modes',
 		toggler.CSSClassToggler(
+			// get/construct status bar...
 			// XXX change class...
 			function(){ 
+				// no viewer yet...
+				if(!this.ribbons || !this.ribbons.viewer){
+					return $()
+				}
+
 				var bar = this.ribbons.viewer.find('.state-indicator-container.global-info') 
 				if(bar.length == 0){
 					bar = makeStateIndicator('global-info overlay-info') 
@@ -466,7 +472,7 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 			function(){
 				this.toggleStatusBar(this.config['status-bar-mode'])
 			}],
-		['focusImage',
+		['focusImage clear',
 			function(){
 				this.updateStatusBar()
 			}],
