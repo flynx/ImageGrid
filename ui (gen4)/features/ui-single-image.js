@@ -86,7 +86,55 @@ var core = require('features/core')
 //
 // XXX should this be an action???
 function updateImageProportions(){
-	// XXX
+	var viewer = this.ribbons.viewer
+	var image = viewer.find('.image')
+
+	var W = viewer.width()
+	var H = viewer.height()
+	var w = image.width()
+	var h = image.height()
+
+	var R = W/H
+	var r = w/h
+
+	var threshold = 3
+	var scale = Math.min(this.screenwidth, this.screenheight)
+
+	// XXX the idea is that:
+	// 		- up until a specific threshold:
+	// 			r is 1 
+	// 			we do not care about R
+	// 			XXX how do we define the threshold???
+	// 		- above that threshold:
+	// 			r tends to R relative to ???
+	// 		- when W == w && H == h
+	// 			r == R
+	// 		- beyond 
+	// 			r tends to actual image proportions
+	// 		- when (W == w || H == h) && r == actual image proportions
+	// 			we change nothing...
+	
+	// reset image proportions to square...
+	if(scale > threshold){
+		image.css({
+			width: '',
+			height: '',
+		})
+
+	// shift image container proportions between 1 and R, from threshold
+	// scale to 1...
+	} else if(scale >= 1){
+		// XXX
+	
+	// shift image container proportions between R and actual image 
+	// proportions...
+	} else if(W != w || H != h){
+		// XXX
+
+	// image container proportions are the same as image proportions...
+	} else {
+		// XXX
+	}
 }
 
 

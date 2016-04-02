@@ -1277,9 +1277,12 @@ var RibbonsPrototype = {
 		// NOTE: this will make images load without a blackout...
 		var img = new Image()
 		img.onload = function(){
-			image.css({
-					'background-image': 'url("'+ url +'")',
-				})
+			var i = image[0]
+			i.style.backgroundImage = 'url("'+ url +'")',
+
+			// NOTE: these do not account for rotation...
+			i.setAttribute('preview-width', img.width)
+			i.setAttribute('preview-height', img.height)
 		}
 		img.src = url
 		return img
@@ -1379,35 +1382,13 @@ var RibbonsPrototype = {
 				// error, recursive group...
 				if(seen.indexOf(img_data.id) >= 0){
 					img_data = images.IMAGE_DATA
-					console.error('Recursice group:', gid)
+					console.error('Recursive group:', gid)
 					break
 				}
 				seen.push(img_data.id)
 
 				img_data = that.images[img_data.cover]
 			}
-
-			/* XXX does not seem to be needing this...
-			// set the current class...
-			if(gid == DATA.current){
-				image.addClass('current')
-			} else {
-				image.removeClass('current')
-			}
-			*/
-
-			/*
-			// main attrs...
-			image
-				.attr({
-					orientation: [null, 0].indexOf(img_data.orientation) < 0 
-						? img_data.orientation,
-						: null 
-					flipped: img_data.flipped != null 
-						? img_data.flipped.join(', '),
-						: null 
-				})
-			*/
 
 			// image state...
 			that.rotateImage(image, img_data.orientation == null ? 0 : img_data.orientation)
