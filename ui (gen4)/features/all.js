@@ -22,7 +22,9 @@ var slideshow = require('features/ui-slideshow')
 var exteditor = require('features/external-editor')
 var metadata = require('features/metadata')
 var meta = require('features/meta')
+
 var experimental = require('features/experimental')
+var demo = require('features/demo')
 
 if(window.nodejs != null){
 	var filesystem = require('features/filesystem')

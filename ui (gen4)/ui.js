@@ -42,10 +42,6 @@ var actions = require('lib/actions')
 var data = require('data')
 var ribbons = require('ribbons')
 
-
-// XXX 
-var testing = require('testing')
-
 var viewer = require('viewer')
 
 //var promise = require('promise')
@@ -306,6 +302,7 @@ $(function(){
 
 			// XXX this is not for production...
 			'experiments',
+			'demo',
 		])
 
 
@@ -339,11 +336,8 @@ $(function(){
 	// load some testing data if nothing else loaded...
 	if(!a.url_history || Object.keys(a.url_history).length == 0){
 		// NOTE: we can (and do) load this in parts...
-		a
-			.load({
-				data: data.Data(testing.mock_data),
-				images: testing.makeTestImages(),
-			})
+		a.loadDemoIndex()
+
 			// this is needed when loading legacy sources that do not have tags
 			// synced...
 			// do not do for actual data...
@@ -351,6 +345,7 @@ $(function(){
 	}
 
 
+	// XXX calling a.clear() does not display this...
 	a.setEmptyMsg(
 		'Nothing loaded...',
 		'Press \'O\' to load, \'F1\' for help or \'?\' for keyboard mappings.')
@@ -369,7 +364,7 @@ $(function(){
 					}, 
 					a))
 
-	// drop keys if repeating to fast...
+	// drop keys if repeating too fast...
 	// NOTE: this is done for smoother animations...
 	} else {
 		$(document)

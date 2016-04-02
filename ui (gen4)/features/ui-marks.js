@@ -31,6 +31,7 @@ var base = require('features/base')
 // 		ribbon		- specific ribbon (gid)
 // 		Array
 //
+// NOTE: of no data is defined this will not have any effect...
 function makeTagTogglerAction(tag){
 	var t = function(target, action){
 		if(target == '?' || target == 'on' || target == 'off'){
@@ -38,6 +39,11 @@ function makeTagTogglerAction(tag){
 			action = target
 			target = x
 		}
+		// special case: no data...
+		if(this.data == null){
+			return action == '??' ? ['on', 'off'] : 'off'
+		}
+
 		target = target || 'current'
 		target = target == 'all' 
 				|| target == 'loaded' 
