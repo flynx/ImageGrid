@@ -108,6 +108,8 @@ function updateImagePosition(actions, target){
 
 /*********************************************************************/
 
+// Viewer (widget/interface)...
+//
 // Workspaces:
 // 	ui-chrome-hidden		- all features handling chrome elements 
 // 								should hide all the chrome when this 
@@ -759,156 +761,9 @@ module.Viewer = core.ImageGridFeatures.Feature({
 
 
 
-//---------------------------------------------------------------------
 
-// XXX add setup/taredown...
-var Clickable = 
-module.Clickable = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-clickable',
-	depends: ['ui'],
-
-	handlers: [
-		// setup click targets...
-		// XXX click only if we did not drag...
-		['updateImage', 
-			function(res, gid){
-				var that = this
-				var img = this.ribbons.getImage(gid)
-
-				// set the clicker only once...
-				if(!img.prop('clickable')){
-					var x, y
-					img
-						.prop('clickable', true)
-						.on('mousedown touchstart', function(){ 
-							x = event.clientX
-							y = event.clientY
-							t = Date.now()
-						})
-						.on('mouseup touchend', function(){ 
-							if(x != null 
-								&& Math.max(
-									Math.abs(x - event.clientX), 
-									Math.abs(y - event.clientY)) < 5){
-								// this will prevent double clicks...
-								x = null
-								y = null
-								that.focusImage(that.ribbons.getElemGID($(this)))
-							}
-						})
-				}
-			}],
-	],
-})
-
-
-
-//---------------------------------------------------------------------
-// Auto-hide cursor...
-
-// NOTE: removing the prop 'cursor-autohide' will stop hiding the cursor
-// 		and show it on next timeout/mousemove.
-// 		This will not stop watching the cursor, this setting the prop back
-// 		on will re-enable autohide.
-// 		XXX needs testing...
-// NOTE: chrome 49 + devtools open appears to prevent the cursor from being hidden...
-var AutoHideCursor = 
-module.AutoHideCursor = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-autohide-cursor',
-	depends: [
-		'ui'
-	],
-
-	config: {
-		'cursor-autohide-timeout': 1000,
-		'cursor-autohide-threshold': 10,
-	},
-
-	actions: actions.Actions({
-		toggleAutoHideCursor: ['Interface/Toggle cursor auto hiding',
-			toggler.CSSClassToggler(
-				function(){ return this.ribbons.viewer }, 
-				'cursor-hidden',
-				function(state){
-					var that = this
-					var viewer = this.ribbons.viewer
-
-					// setup...
-					if(state == 'on'){
-						var x, y
-						var timer
-						var timeout = this.config['cursor-autohide-timeout'] || 1000
-
-						var handler 
-							= this.__cursor_autohide_handler 
-							= (this.__cursor_autohide_handler 
-								|| function(){
-									timer && clearTimeout(timer)
-
-									var threshold = that.config['cursor-autohide-threshold'] || 0
-									x = x || event.clientX
-									y = y || event.clientY
-
-									// show only if cursor moved outside of threshold...
-									if(threshold > 0){ 
-										if(Math.max(Math.abs(x - event.clientX), 
-												Math.abs(y - event.clientY)) > threshold){
-											x = y = null
-											that.ribbons.viewer
-												.removeClass('cursor-hidden')
-										}
-
-									// show right away -- no threshold...
-									} else {
-										that.ribbons.viewer
-											.removeClass('cursor-hidden')
-									}
-
-									var timeout = that.config['cursor-autohide-timeout'] || 1000
-									if(timeout && timeout > 0){
-										timer = setTimeout(function(){
-											var viewer = that.ribbons.viewer
-
-											if(!viewer.prop('cursor-autohide')){
-												viewer.removeClass('cursor-hidden')
-												return
-											}
-
-											timer && viewer.addClass('cursor-hidden')
-										}, timeout)
-									}
-								})
-
-						// do the base setup...
-						!viewer.prop('cursor-autohide')
-							&& viewer
-								.prop('cursor-autohide', true)
-								.addClass('cursor-hidden')
-								// prevent multiple handlers...
-								.off('mousemove', this.__cursor_autohide_handler)
-								.mousemove(handler)
-
-					// teardown...
-					} else {
-						viewer
-							.off('mousemove', this.__cursor_autohide_handler)
-							.prop('cursor-autohide', false)
-							.removeClass('cursor-hidden')
-						delete this.__cursor_autohide_handler
-					}
-				})],
-	}),
-})
-
-
-
-//---------------------------------------------------------------------
+/*********************************************************************/
+// Utilities and Services...
 
 var ConfigLocalStorageActions = actions.Actions({
 	config: {
@@ -1080,6 +935,66 @@ module.ConfigLocalStorage = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+
+// XXX make this work for external links in a stable manner...
+// 		...a bit unpredictable when working in combination with history
+// 		feature -- need to stop them from competing...
+// 		...appears to be a bug in location....
+var URLHash = 
+module.URLHash = core.ImageGridFeatures.Feature({
+	title: 'Handle URL hash',
+	doc: '',
+
+	tag: 'ui-url-hash',
+	depends: ['ui'],
+
+	//isApplicable: function(){ 
+	//	return typeof(location) != 'undefined' && location.hash != null },
+	isApplicable: function(){ return this.runtime == 'browser' },
+
+	handlers: [
+		// hanlde window.onhashchange event...
+		['start',
+			function(){
+				var that = this
+				var handler = this.__hashchange_handler = function(){
+					var h = location.hash
+					h = h.replace(/^#/, '')
+					that.current = h
+				}
+				$(window).on('hashchange', handler)
+			}],
+		['stop',
+			function(){
+				this.__hashchange_handler 
+					&& $(window).on('hashchange', this.__hashchange_handler)
+			}],
+		// store/restore hash when we focus images...
+		['focusImage',
+			function(res, a){
+				if(this.current && this.current != ''){
+					location.hash = this.current
+				}
+			}],
+		['load.pre',
+			function(){
+				var h = location.hash
+				h = h.replace(/^#/, '')
+
+				return function(){
+					if(h != '' && this.data.getImageOrder(h) >= 0){
+						this.current = h
+					}
+				}
+			}],
+	],
+})
+
+
+
+
+/*********************************************************************/
+// Ribbons...
 
 // NOTE: this is split out to an action so as to enable ui elements to 
 // 		adapt to ribbon size changes...
@@ -1478,7 +1393,7 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
-// These feature glue traverse and ribbon alignment...
+// These features glue traverse and ribbon alignment...
 
 
 // XXX manual align needs more work...
@@ -1607,104 +1522,6 @@ module.ManualAlignRibbons = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-// XXX at this point this does not support target lists...
-// XXX shift up/down to new ribbon is not too correct...
-var ShiftAnimation =
-module.ShiftAnimation = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-animation',
-	depends: ['ui'],
-
-	handlers: [
-		//['shiftImageUp.pre shiftImageDown.pre '
-		//		+'travelImageUp.pre travelImageDown.pre', 
-		['shiftImageUp.pre shiftImageDown.pre',
-			function(target){
-				// XXX do not do target lists...
-				if(target != null && target.constructor === Array 
-						// do not animate in single image mode...
-						&& this.toggleSingleImage('?') == 'on'){
-					return
-				}
-				var s = this.ribbons.makeShadow(target, true)
-				return function(){ s() }
-			}],
-		// NOTE: this will keep the shadow in place -- the shadow will not
-		// 		go to the mountain, the mountain will come to the shadow ;)
-		['shiftImageLeft.pre shiftImageRight.pre', 
-			function(target){
-				// XXX do not do target lists...
-				if(target != null && target.constructor === Array
-						// do not animate in single image mode...
-						&& this.toggleSingleImage('?') == 'on'){
-					return
-				}
-				var s = this.ribbons.makeShadow(target)
-				return function(){ s() }
-			}],
-	],
-})
-
-
-
-//---------------------------------------------------------------------
-// XXX experimental...
-
-// 		...not sure if this is the right way to go...
-// XXX need to get the minimal size and not the width as results will 
-// 		depend on viewer format...
-var AutoSingleImage = 
-module.AutoSingleImage = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'auto-single-image',
-
-	// NOTE: this feature has no actions defined but needs the config...
-	config: {
-		'auto-single-image-in': 2,
-		'auto-single-image-out': 7,
-	},
-
-	handlers: [
-		['fitImage.pre',
-			function(count){
-				count = count || 1
-
-				if(this.toggleSingleImage('?') == 'off' 
-						&& count < this.config['auto-single-image-in']
-						&& count < this.screenwidth){
-					this.toggleSingleImage()
-
-				} else if(this.toggleSingleImage('?') == 'on' 
-						&& count >= this.config['auto-single-image-out']
-						&& count > this.screenwidth){
-					this.toggleSingleImage()
-				}
-			}],
-	],
-})
-
-var AutoRibbon = 
-module.AutoRibbon = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'auto-ribbon',
-
-	handlers: [
-		['nextRibbon prevRibbon',
-			function(){
-				this.toggleSingleImage('?') == 'on' 
-					&& this.toggleSingleImage('off') }],
-	],
-})
-
-
-//---------------------------------------------------------------------
-
 // Adds user management of different back-ends for low level ribbon 
 // alignment and placement...
 var RibbonsPlacement = 
@@ -1755,7 +1572,209 @@ module.RibbonsPlacement = core.ImageGridFeatures.Feature({
 })
 
 
+
+
+/*********************************************************************/
+// Animation...
+
+// XXX at this point this does not support target lists...
+// XXX shift up/down to new ribbon is not too correct...
+var ShiftAnimation =
+module.ShiftAnimation = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-animation',
+	depends: ['ui'],
+
+	handlers: [
+		//['shiftImageUp.pre shiftImageDown.pre '
+		//		+'travelImageUp.pre travelImageDown.pre', 
+		['shiftImageUp.pre shiftImageDown.pre',
+			function(target){
+				// XXX do not do target lists...
+				if(target != null && target.constructor === Array 
+						// do not animate in single image mode...
+						&& this.toggleSingleImage('?') == 'on'){
+					return
+				}
+				var s = this.ribbons.makeShadow(target, true)
+				return function(){ s() }
+			}],
+		// NOTE: this will keep the shadow in place -- the shadow will not
+		// 		go to the mountain, the mountain will come to the shadow ;)
+		['shiftImageLeft.pre shiftImageRight.pre', 
+			function(target){
+				// XXX do not do target lists...
+				if(target != null && target.constructor === Array
+						// do not animate in single image mode...
+						&& this.toggleSingleImage('?') == 'on'){
+					return
+				}
+				var s = this.ribbons.makeShadow(target)
+				return function(){ s() }
+			}],
+	],
+})
+
+
+
+
+/*********************************************************************/
+// Mouse...
+
+// XXX add setup/taredown...
+var Clickable = 
+module.Clickable = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-clickable',
+	depends: ['ui'],
+
+	handlers: [
+		// setup click targets...
+		// XXX click only if we did not drag...
+		['updateImage', 
+			function(res, gid){
+				var that = this
+				var img = this.ribbons.getImage(gid)
+
+				// set the clicker only once...
+				if(!img.prop('clickable')){
+					var x, y
+					img
+						.prop('clickable', true)
+						.on('mousedown touchstart', function(){ 
+							x = event.clientX
+							y = event.clientY
+							t = Date.now()
+						})
+						.on('mouseup touchend', function(){ 
+							if(x != null 
+								&& Math.max(
+									Math.abs(x - event.clientX), 
+									Math.abs(y - event.clientY)) < 5){
+								// this will prevent double clicks...
+								x = null
+								y = null
+								that.focusImage(that.ribbons.getElemGID($(this)))
+							}
+						})
+				}
+			}],
+	],
+})
+
+
+
 //---------------------------------------------------------------------
+// Auto-hide cursor...
+
+// NOTE: removing the prop 'cursor-autohide' will stop hiding the cursor
+// 		and show it on next timeout/mousemove.
+// 		This will not stop watching the cursor, this setting the prop back
+// 		on will re-enable autohide.
+// 		XXX needs testing...
+// NOTE: chrome 49 + devtools open appears to prevent the cursor from 
+// 		being hidden...
+var AutoHideCursor = 
+module.AutoHideCursor = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-autohide-cursor',
+	depends: [
+		'ui'
+	],
+
+	config: {
+		'cursor-autohide-timeout': 1000,
+		'cursor-autohide-threshold': 10,
+	},
+
+	actions: actions.Actions({
+		toggleAutoHideCursor: ['Interface/Toggle cursor auto hiding',
+			toggler.CSSClassToggler(
+				function(){ return this.ribbons.viewer }, 
+				'cursor-hidden',
+				function(state){
+					var that = this
+					var viewer = this.ribbons.viewer
+
+					// setup...
+					if(state == 'on'){
+						var x, y
+						var timer
+						var timeout = this.config['cursor-autohide-timeout'] || 1000
+
+						var handler 
+							= this.__cursor_autohide_handler 
+							= (this.__cursor_autohide_handler 
+								|| function(){
+									timer && clearTimeout(timer)
+
+									var threshold = that.config['cursor-autohide-threshold'] || 0
+									x = x || event.clientX
+									y = y || event.clientY
+
+									// show only if cursor moved outside of threshold...
+									if(threshold > 0){ 
+										if(Math.max(Math.abs(x - event.clientX), 
+												Math.abs(y - event.clientY)) > threshold){
+											x = y = null
+											that.ribbons.viewer
+												.removeClass('cursor-hidden')
+										}
+
+									// show right away -- no threshold...
+									} else {
+										that.ribbons.viewer
+											.removeClass('cursor-hidden')
+									}
+
+									var timeout = that.config['cursor-autohide-timeout'] || 1000
+									if(timeout && timeout > 0){
+										timer = setTimeout(function(){
+											var viewer = that.ribbons.viewer
+
+											if(!viewer.prop('cursor-autohide')){
+												viewer.removeClass('cursor-hidden')
+												return
+											}
+
+											timer && viewer.addClass('cursor-hidden')
+										}, timeout)
+									}
+								})
+
+						// do the base setup...
+						!viewer.prop('cursor-autohide')
+							&& viewer
+								.prop('cursor-autohide', true)
+								.addClass('cursor-hidden')
+								// prevent multiple handlers...
+								.off('mousemove', this.__cursor_autohide_handler)
+								.mousemove(handler)
+
+					// teardown...
+					} else {
+						viewer
+							.off('mousemove', this.__cursor_autohide_handler)
+							.prop('cursor-autohide', false)
+							.removeClass('cursor-hidden')
+						delete this.__cursor_autohide_handler
+					}
+				})],
+	}),
+})
+
+
+
+
+/*********************************************************************/
+// Touch/Control...
+
 // Direct control mode...
 // XXX add vertical scroll...
 // XXX add pinch-zoom...
@@ -1951,69 +1970,60 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 
 
 
-//---------------------------------------------------------------------
 
-// XXX make this work for external links in a stable manner...
-// 		...a bit unpredictable when working in combination with history
-// 		feature -- need to stop them from competing...
-// 		...appears to be a bug in location....
-var URLHash = 
-module.URLHash = core.ImageGridFeatures.Feature({
-	title: 'Handle URL hash',
+/*********************************************************************/
+// XXX experimental...
+
+// 		...not sure if this is the right way to go...
+// XXX need to get the minimal size and not the width as results will 
+// 		depend on viewer format...
+var AutoSingleImage = 
+module.AutoSingleImage = core.ImageGridFeatures.Feature({
+	title: '',
 	doc: '',
 
-	tag: 'ui-url-hash',
-	depends: ['ui'],
+	tag: 'auto-single-image',
 
-	//isApplicable: function(){ 
-	//	return typeof(location) != 'undefined' && location.hash != null },
-	isApplicable: function(){ return this.runtime == 'browser' },
+	// NOTE: this feature has no actions defined but needs the config...
+	config: {
+		'auto-single-image-in': 2,
+		'auto-single-image-out': 7,
+	},
 
 	handlers: [
-		// hanlde window.onhashchange event...
-		['start',
-			function(){
-				var that = this
-				var handler = this.__hashchange_handler = function(){
-					var h = location.hash
-					h = h.replace(/^#/, '')
-					that.current = h
-				}
-				$(window).on('hashchange', handler)
-			}],
-		['stop',
-			function(){
-				this.__hashchange_handler 
-					&& $(window).on('hashchange', this.__hashchange_handler)
-			}],
-		// store/restore hash when we focus images...
-		['focusImage',
-			function(res, a){
-				if(this.current && this.current != ''){
-					location.hash = this.current
-				}
-			}],
-		['load.pre',
-			function(){
-				var h = location.hash
-				h = h.replace(/^#/, '')
+		['fitImage.pre',
+			function(count){
+				count = count || 1
 
-				return function(){
-					if(h != '' && this.data.getImageOrder(h) >= 0){
-						this.current = h
-					}
+				if(this.toggleSingleImage('?') == 'off' 
+						&& count < this.config['auto-single-image-in']
+						&& count < this.screenwidth){
+					this.toggleSingleImage()
+
+				} else if(this.toggleSingleImage('?') == 'on' 
+						&& count >= this.config['auto-single-image-out']
+						&& count > this.screenwidth){
+					this.toggleSingleImage()
 				}
 			}],
 	],
 })
 
+var AutoRibbon = 
+module.AutoRibbon = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
 
+	tag: 'auto-ribbon',
 
-//---------------------------------------------------------------------
+	handlers: [
+		['nextRibbon prevRibbon',
+			function(){
+				this.toggleSingleImage('?') == 'on' 
+					&& this.toggleSingleImage('off') }],
+	],
+})
 
-
-// XXX console / log / status bar
-// XXX title bar (???)
 
 
 
