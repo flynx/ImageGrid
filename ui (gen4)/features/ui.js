@@ -263,7 +263,7 @@ module.ViewerActions = actions.Actions({
 			this.ribbons.updateImage(gids)
 		}],
 	clear: [
-		function(){ this.ribbon && this.ribbons.clear() }],
+		function(){ this.ribbons && this.ribbons.clear() }],
 	clone: [function(full){
 		return function(res){
 			if(this.ribbons){

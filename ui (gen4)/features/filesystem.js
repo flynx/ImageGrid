@@ -758,6 +758,7 @@ var FileSystemWriterActions = actions.Actions({
 	// 		...both denodeify(..)'ed
 	// XXX export current state as a full loadable index
 	// XXX might be interesting to unify this and .exportView(..)
+	// XXX should this return a promise??? ...a clean promise???
 	// XXX local collections???
 	exportCollection: ['File/Export as collection',
 		function(path, logger){

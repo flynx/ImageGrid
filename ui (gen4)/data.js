@@ -355,6 +355,7 @@ var DataPrototype = {
 	// Clear elements from data...
 	//
 	// 	Clear all data:
+	// 	.clear()
 	// 	.clear('*')
 	// 	.clear('all')
 	// 		-> data
@@ -390,13 +391,9 @@ var DataPrototype = {
 	// 		other than null?
 	// XXX should this return this or the removed gids???
 	clear: function(gids, deep, clear_empty){
-		// defaults...
+		gids = gids || 'all'
 		deep = deep == null ? true : false
 		clear_empty = clear_empty == null ? true : false 
-
-		if(gids == null){
-			return this
-		}
 
 		// clear all data...
 		if(gids == '*' || gids == 'all'){
