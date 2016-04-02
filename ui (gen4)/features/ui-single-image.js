@@ -18,27 +18,6 @@ var core = require('features/core')
 
 /*********************************************************************/
 // helper...
-// XXX should this be an action???
-function updateImageProportions(){
-	// XXX
-}
-
-
-//---------------------------------------------------------------------
-
-var SingleImageActions = actions.Actions({
-	config: {
-		// NOTE: these will get overwritten if/when the user changes the scale...
-		'single-image-scale': null,
-		'ribbon-scale': null,
-	},
-
-	toggleSingleImage: ['Interface/Toggle single image view', 
-		toggler.CSSClassToggler(
-			function(){ return this.ribbons.viewer }, 
-			'single-image-mode') ],
-})
-
 
 // XXX an ideal case would be:
 //
@@ -105,6 +84,28 @@ var SingleImageActions = actions.Actions({
 //    + - - - - - - - - - +
 //
 //
+// XXX should this be an action???
+function updateImageProportions(){
+	// XXX
+}
+
+
+//---------------------------------------------------------------------
+
+var SingleImageActions = actions.Actions({
+	config: {
+		// NOTE: these will get overwritten if/when the user changes the scale...
+		'single-image-scale': null,
+		'ribbon-scale': null,
+	},
+
+	toggleSingleImage: ['Interface/Toggle single image view', 
+		toggler.CSSClassToggler(
+			function(){ return this.ribbons.viewer }, 
+			'single-image-mode') ],
+})
+
+
 var SingleImageView =
 module.SingleImageView = core.ImageGridFeatures.Feature({
 	title: '',
