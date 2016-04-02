@@ -85,6 +85,8 @@ var core = require('features/core')
 //
 //
 // XXX should this be an action???
+// XXX problems:
+// 		Q: what do we use for scale??
 function updateImageProportions(){
 	var viewer = this.ribbons.viewer
 	var image = viewer.find('.image')

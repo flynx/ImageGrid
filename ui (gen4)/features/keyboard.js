@@ -25,6 +25,7 @@ module.GLOBAL_KEYBOARD = {
 	'Slideshow': {
 		pattern: '.slideshow-running',
 		ignore: [
+			'Esc',
 			'Up', 'Down', 'Enter',
 			'R', 'L',
 		],
@@ -39,6 +40,21 @@ module.GLOBAL_KEYBOARD = {
 
 		R: 'toggleSlideshowDirection',
 		L: 'toggleSlideshowLooping',
+	},
+
+	'Single Image': {
+		pattern: '.single-image-mode',
+		ignore: [
+			'Esc',
+
+			// do not crop in single image mode...
+			'C', 'F2',
+
+			// XXX not sure about this...
+			//'Up', 'Down',
+		],
+
+		Esc: 'toggleSingleImage: "off"',
 	},
 
 	'Global': {
@@ -243,8 +259,10 @@ module.GLOBAL_KEYBOARD = {
 }	
 
 
+
 /*********************************************************************/
 
+// XXX add introspection and doc actions...
 var KeyboardActions = actions.Actions({
 	config: {
 		// limit key repeat to one per N milliseconds.
