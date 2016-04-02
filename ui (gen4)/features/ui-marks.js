@@ -292,6 +292,15 @@ module.ImageBookmarks = core.ImageGridFeatures.Feature({
 
 
 
+//---------------------------------------------------------------------
+
+core.ImageGridFeatures.Feature('marks', [
+	'image-marks',
+	'image-bookmarks',
+])
+
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
 return module })

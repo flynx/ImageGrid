@@ -928,6 +928,269 @@ core.ImageGridFeatures.Feature('base-full', [
 
 
 
+//---------------------------------------------------------------------
+// Journal...
+
+function logImageShift(action){
+	return [action.slice(-4) != '.pre' ? 
+			action + '.pre' 
+			: action,
+		function(target){
+			target = this.data.getImage(target)
+			var args = args2array(arguments)
+
+			var o = this.data.getImageOrder(target)
+			var r = this.data.getRibbon(target)
+			var current = this.current
+
+			return function(){
+				var on = this.data.getImageOrder(target)
+				var rn = this.data.getRibbon(target)
+
+				if(o == on || r == rn){ 
+					/*
+					this.journalPush(
+						this.current, 
+						action, 
+						args,
+						{
+							before: [r, o],
+							after: [rn, on],
+						})
+					*/
+					this.journalPush({
+						type: 'shift',
+						current: current, 
+						target: target,
+						action: action, 
+						args: args,
+						undo: journalActions[action],
+						diff: {
+							before: [r, o],
+							after: [rn, on],
+						},
+					})
+				}
+				
+			}
+		}]
+}
+
+
+// Format:
+// 	{
+// 		<action>: <undo-action> | <undo-function> | null,
+// 		...
+// 	}
+var journalActions = {
+	clear: null,
+	load: null,
+
+	setBaseRibbon: null,
+
+	// XXX need to account for position change, i.e. if action had no 
+	// 		effect then do nothing...
+	// 		...take target position before and after...
+	shiftImageTo: null,
+
+	shiftImageUp: 'shiftImageDown',
+	shiftImageDown: 'shiftImageUp',
+	shiftImageLeft: 'shiftImageRight',
+	shiftImageRight: 'shiftImageLeft',
+	shiftRibbonUp: 'shiftRibbonDown',
+	shiftRibbonDown: 'shiftRibbonUp',
+
+	rotateCW: 'rotateCCW',
+	rotateCCW: 'rotateCW',
+	flipHorizontal: 'flipHorizontal',
+	flipVertical: 'flipVertical',
+
+	sortImages: null,
+	reverseImages: 'reverseImages',
+	reverseRibbons: 'reverseRibbons',
+
+	crop: null,
+	uncrop: null,
+
+	tag: null, 
+	untag: null,
+
+	group: null,
+	ungroup: null,
+	expandGroup: null,
+	collapseGroup: null,
+
+	runJournal: null,
+}
+
+
+// XXX is this the right level for this???
+// 		...data seems to be a better candidate...
+// XXX would be great to add a mechanism define how to reverse actions...
+// 		...one way to do this at this point is to revert to last state
+// 		and re-run the journal until the desired event...
+// XXX need to define a clear journaling strategy in the lines of:
+// 		- save state clears journal and adds a state load action
+// 		- .load(..) clears journal
+// XXX needs careful testing...
+var Journal = 
+module.Journal = core.ImageGridFeatures.Feature({
+	title: 'Action Journal',
+
+	tag: 'system-journal',
+
+	depends: ['base'],
+
+	actions: actions.Actions({
+
+		journal: null,
+		rjournal: null,
+
+		clone: [function(full){
+				return function(res){
+					res.rjournal = null
+					res.journal = null
+					if(full && this.hasOwnProperty('journal') && this.journal){
+						res.journal = JSON.parse(JSON.stringify(this.journal))
+					}
+				}
+			}],
+
+		// XXX might be good to add some kind of metadata to journal...
+		journalPush: ['- Journal/Add an item to journal',
+			function(data){
+				this.journal = (this.hasOwnProperty('journal') 
+						|| this.journal) ? 
+					this.journal 
+					: []
+				this.journal.push(data)
+			}],
+		clearJournal: ['Journal/Clear the action journal',
+			function(){
+				if(this.journal){
+					// NOTE: overwriting here is better as it will keep
+					// 		shadowing the parent's .journal in case we 
+					// 		are cloned.
+					// NOTE: either way this will have no effect as we 
+					// 		only use the local .journal but the user may
+					// 		get confused...
+					//delete this.journal
+					this.journal = null
+				}
+			}],
+		runJournal: ['- Journal/Run journal',
+			function(journal){
+				var that = this
+				journal.forEach(function(e){
+					// load state...
+					that
+						.focusImage(e.current)
+						// run action...
+						[e.action].apply(that, e.args)
+				})
+			}],
+
+		// XXX need to clear the rjournal as soon as we do something...
+		// 		...at this point it is really easy to mess things up by
+		// 		undoing something, and after some actions doing a 
+		// 		.redoLast(..)
+		// XXX this is not ready for production...
+		undoLast: ['Journal/Undo last',
+			function(){
+				var journal = this.journal
+				this.rjournal = (this.hasOwnProperty('rjournal') 
+						|| this.rjournal) ? 
+					this.rjournal 
+					: []
+
+				for(var i = journal.length-1; i >= 0; i--){
+					var a = journal[i]
+
+					// we undo only a very specific set of actions...
+					if(a.undo && a.type == 'shift' && a.args.length == 0){
+						this
+							.focusImage(a.current)
+							[a.undo].call(this, a.target)
+
+						// pop the undo command...
+						this.journal.pop()
+						this.rjournal.push(journal.splice(i, 1)[0])
+						break
+					}
+				}
+			}],
+		_redoLast: ['Journal/Redo last',
+			function(){
+				if(!this.rjournal || this.rjournal.length == 0){
+					return
+				}
+
+				this.runJournal([this.rjournal.pop()])
+			}],
+	}),
+
+	// log state, action and its args... 
+	// XXX need to drop journal on save...
+	// XXX rotate/truncate journal???
+	// XXX need to check that all the listed actions are clean -- i.e.
+	// 		running the journal will produce the same results as user 
+	// 		actions that generated the journal.
+	// XXX would be good if we could know the name of the action in the 
+	// 		handler, thus enabling us to define a single handler rather
+	// 		than generating a custom handler per action...
+	handlers: [
+		logImageShift('shiftImageTo'),
+		logImageShift('shiftImageUp'),
+		logImageShift('shiftImageDown'),
+		logImageShift('shiftImageLeft'),
+		logImageShift('shiftImageRight'),
+		logImageShift('shiftRibbonUp'),
+		logImageShift('shiftRibbonDown'),
+
+	].concat([
+			'clear',
+			'load',
+
+			'setBaseRibbon',
+
+			'rotateCW',
+			'rotateCCW',
+			'flipHorizontal',
+			'flipVertical',
+
+			'sortImages',
+			'reverseImages',
+			'reverseRibbons',
+
+			'crop',
+			'uncrop',
+
+			'tag', 
+			'untag',
+
+			'group',
+			'ungroup',
+			'expandGroup',
+			'collapseGroup',
+
+			//'runJournal',
+		].map(function(action){
+			return [
+				action+'.pre', 
+				function(){
+					this.journalPush({
+						type: 'basic',
+						current: this.current, 
+						action: action, 
+						args: args2array(arguments),
+					})
+				}]
+		})), 
+})
+
+
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
 return module })

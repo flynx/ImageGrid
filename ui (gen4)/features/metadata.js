@@ -75,6 +75,10 @@ module.Metadata = core.ImageGridFeatures.Feature({
 	depends: [
 		'base',
 	],
+	suggested: [
+		'fs-metadata',
+		'ui-metadata',
+	],
 
 	actions: MetadataActions,
 })

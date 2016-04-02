@@ -320,6 +320,10 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 	depends: [
 		'location',
 	],
+	suggested: [
+		'ui-fs-loader',
+		'fs-url-history',
+	],
 
 	actions: FileSystemLoaderActions,
 
@@ -504,6 +508,9 @@ module.FileSystemLoaderURLHistory = core.ImageGridFeatures.Feature({
 	depends: [
 		'fs-loader',
 		'url-history',
+	],
+	suggested: [
+		'ui-fs-url-history',
 	],
 
 	handlers: [
@@ -841,7 +848,12 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-writer',
 	// NOTE: this is mostly because of the base path handling...
-	depends: ['fs-loader'],
+	depends: [
+		'fs-loader'
+	],
+	suggested: [
+		'ui-fs-writer',
+	],
 
 	actions: FileSystemWriterActions,
 
@@ -997,6 +1009,13 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 })
 
 
+
+//---------------------------------------------------------------------
+
+core.ImageGridFeatures.Feature('fs', [
+	'fs-loader',
+	'fs-writer',
+])
 
 
 /**********************************************************************

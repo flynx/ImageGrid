@@ -38,11 +38,9 @@ core.ImageGridFeatures.Feature('viewer-minimal', [
 	'image-marks',
 	'image-bookmarks',
 
-	'fs-loader',
-	'fs-writer',
+	'fs',
 
 	'metadata',
-	'fs-metadata',
 ])
 
 
@@ -62,7 +60,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	//'ui-ribbon-align-to-first',
 	//'ui-ribbon-manual-align',
 	
-	'ui-single-image-view',
+	'ui-single-image',
 	'ui-partial-ribbons',
 
 	// XXX
@@ -70,30 +68,16 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	//'ui-direct-control',
 	//'ui-indirect-control',
 
-	'image-marks',
-	'image-bookmarks',
-
+	'marks',
 
 	// local storage + url...
 	'config-local-storage',
 	'ui-url-hash',
-	'url-history-local-storage',
-	'url-history-fs-writer',
+	'url-history',
 	'ui-single-image-view-local-storage',
 
 
-	// fs...
-	'ui-fs-loader',
-	'fs-url-history',
-	'ui-fs-url-history',
-	'ui-fs-writer',
-
-	'metadata',
-	'fs-metadata',
-	'ui-metadata',
-
 	'external-editor',
-	'ui-external-editor',
 
 	// chrome...
 	'ui-status-log',
@@ -118,8 +102,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	// ui control...
 	'ui-clickable',
-	//'ui-autohide-cursor',
-	'ui-autohide-cursor-single-image-view',
 	//'ui-direct-control-jquery',
 	// XXX BUG: on touch down and first move this gets offset by a distance
 	// 		not sure why...

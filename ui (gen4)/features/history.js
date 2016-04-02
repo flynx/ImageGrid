@@ -182,6 +182,11 @@ module.URLHistory = core.ImageGridFeatures.Feature({
 	depends: [
 		'location',
 	],
+	suggested: [
+		'ui-url-history',
+		'url-history-local-storage',
+		'url-history-fs-writer',
+	],
 
 	actions: URLHistoryActions,
 })

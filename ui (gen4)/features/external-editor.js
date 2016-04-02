@@ -95,6 +95,9 @@ module.ExternalEditor = core.ImageGridFeatures.Feature({
 	depends: [
 		'base',
 	],
+	suggested: [
+		'ui-external-editor',
+	],
 
 	isApplicable: function(){ 
 		return this.runtime == 'nw' || this.runtime == 'node' },

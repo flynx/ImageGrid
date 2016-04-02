@@ -10,26 +10,29 @@ define(function(require){ var module = {}
 
 // import features...
 var core = require('features/core')
-var base = require('features/base')
-var location = require('features/location')
-var history = require('features/history')
-var app = require('features/app')
-var ui = require('features/ui')
-var keyboard = require('features/keyboard')
-var status = require('features/ui-status')
-var marks = require('features/ui-marks')
-var widgets = require('features/ui-widgets')
-var slideshow = require('features/ui-slideshow')
-var exteditor = require('features/external-editor')
-var metadata = require('features/metadata')
-var meta = require('features/meta')
 
-var experimental = require('features/experimental')
-var demo = require('features/demo')
+require('features/base')
+require('features/location')
+require('features/history')
+require('features/app')
+require('features/ui')
+require('features/ui-single-image')
+require('features/ui-chrome')
+require('features/keyboard')
+require('features/ui-status')
+require('features/ui-marks')
+require('features/ui-widgets')
+require('features/ui-slideshow')
+require('features/external-editor')
+require('features/metadata')
+require('features/meta')
+
+require('features/experimental')
+require('features/demo')
 
 if(window.nodejs != null){
-	var filesystem = require('features/filesystem')
-	var cli = require('features/cli')
+	require('features/filesystem')
+	require('features/cli')
 }
 
 
