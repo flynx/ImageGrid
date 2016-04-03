@@ -308,6 +308,9 @@ module.FeatureSet = {
 	//
 	// XXX make suggested feature expansion recursive...
 	// XXX this appears to be very slow if lst not passed...
+	// XXX add ability to remove features by prefixing a '-' to its name
+	// 		...if one -<feature> is present, remove all instances of 
+	// 		<feature>
 	buildFeatureList: function(obj, lst, auto_include, depth){
 		var that = this
 		obj = obj || {}
