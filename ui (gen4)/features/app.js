@@ -90,7 +90,8 @@ var AppControlActions = actions.Actions({
 
 			win.show()
 
-			if(cfg != null && cfg.fullscreen){
+			// XXX check if we are full screen...
+			if(cfg != null && cfg.fullscreen && !win.isFullscreen){
 				this.toggleFullScreen()
 			}
 

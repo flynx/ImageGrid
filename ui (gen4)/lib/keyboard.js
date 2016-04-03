@@ -486,7 +486,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 					}
 
 					return f
-				}(c.action, c['no-default'], c.args, c.doc)
+				}(c.action, c['no-default'], c.arguments, c.doc)
 
 			// key code...
 			} else if(typeof(handler) == typeof(1)) {
