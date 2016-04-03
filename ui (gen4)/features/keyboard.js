@@ -22,12 +22,19 @@ var core = require('features/core')
 // XXX add this to the global doc...
 var GLOBAL_KEYBOARD =
 module.GLOBAL_KEYBOARD = {
+	'Global':{
+		doc: 'Global bindings that take priority over other sections.',
+		pattern: '*',
+
+		// XXX
+	},
+
 	'Slideshow': {
 		pattern: '.slideshow-running',
 		ignore: [
 			'Esc',
 			'Up', 'Down', 'Enter',
-			'R', 'L',
+			'R', 'L', 'G',
 		],
 
 		Esc: 'toggleSlideshow: "off"',
@@ -57,7 +64,13 @@ module.GLOBAL_KEYBOARD = {
 		Esc: 'toggleSingleImage: "off"',
 	},
 
-	'Global': {
+	// XXX cropped -- needs a class to indicate a crop...
+	'Cropped': {
+		// XXX
+	},
+
+	// XXX cleanup...
+	'Viewer': {
 		doc: 'NOTE: binding priority is the same as the order of sections '+
 			'on this page.',
 		pattern: '*',
@@ -68,6 +81,7 @@ module.GLOBAL_KEYBOARD = {
 		Q: {
 			meta: 'close',
 		},
+		// XXX
 		F5: keyboard.doc('Full reload viewer', 
 			function(){ 
 				//a.stop()
@@ -331,7 +345,8 @@ var KeyboardActions = actions.Actions({
 				delete this.__keyboard_handler
 			}
 		},
-		['on', 'off'])]
+		['on', 'off'])],
+
 })
 
 var Keyboard = 

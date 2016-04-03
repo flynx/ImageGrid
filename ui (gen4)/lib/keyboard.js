@@ -224,6 +224,44 @@ function dropRepeatingkeys(handler, max_rate){
 }
 
 
+
+// supported action format:
+// 	<actio-name>[!][: <args>][-- <doc>]
+//
+// <args> can contain space seporated:
+// 	- numbers
+// 	- strings
+// 	- non-nested arrays or objects
+var parseActionCall =
+module.parseActionCall =
+function parseActionCall(txt){
+	// split off the doc...
+	var c = txt.split('--')
+	var doc = (c[1] || '').trim()
+	// the actual code...
+	c = c[0].split(':')
+
+	// action and no default flag...
+	var action = c[0].trim()
+	var no_default = action.slice(-1) == '!'
+	action = no_default ? action.slice(0, -1) : action
+
+	// parse arguments...
+	var args = JSON.parse('['+(
+		((c[1] || '')
+			.match(/"[^"]*"|'[^']*'|\{[^\}]*\}|\[[^\]]*\]|\d+|\d+\.\d*/gm) 
+		|| [])
+		.join(','))+']')
+
+	return {
+		action: action,
+		arguments: args,
+		doc: doc,
+		'no-default': no_default,
+	}
+}
+
+
 /* Key handler getter
  *
  * For doc on format see makeKeyboardHandler(...)
@@ -387,7 +425,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 
 		// alias...
 		// XXX should this be before after or combined with ignore handling...
-		while( handler != null && typeof(handler) != 'function'){
+		while(handler != null && typeof(handler) != 'function'){
 
 			// do the complex handler aliases...
 			if(handler != null && handler.constructor == Object){
@@ -418,29 +456,12 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 				handler = keybindings[handler]
 
 			// actions...
-			//
-			// supported action format:
-			// 	<actio-name>[!][: <args>]
-			//
-			// <args> can contain space seporated:
-			// 	- numbers
-			// 	- strings
-			// 	- non-nested arrays or arrays
 			} else if(handler in actions 
 					|| handler.split(/!?\s*:\s*|!/)[0].trim() in actions){
-				var c = handler.split(':')
 
-				handler = c[0].trim()
-				var no_default = handler.slice(-1) == '!'
-				handler = no_default ? handler.slice(0, -1) : handler
+				var c = parseActionCall(handler)
 
-				var args = JSON.parse('['+(
-					((c[1] || '')
-					 	.match(/"[^"]*"|'[^']*'|\{[^\}]*\}|\[[^\]]*\]|\d+|\d+\.\d*/gm) 
-					|| [])
-					.join(','))+']')
-
-				handler = function(n, no_default, args){ 
+				handler = function(n, no_default, args, doc){ 
 					if(no_default){
 						var f = function(){ 
 							event.preventDefault()
@@ -459,8 +480,13 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 					f.args = args
 					f.no_default = no_default
 
+					// use the inherited doc if no specific doc is defined...
+					if(doc && doc.length > 0){
+						f.doc = doc
+					}
+
 					return f
-				}(handler, no_default, args.slice())
+				}(c.action, c['no-default'], c.args, c.doc)
 
 			// key code...
 			} else if(typeof(handler) == typeof(1)) {
