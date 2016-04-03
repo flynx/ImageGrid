@@ -37,7 +37,7 @@ module.GLOBAL_KEYBOARD = {
 			'R', 'L', 'G',
 		],
 
-		Esc: 'toggleSlideshow: "off"',
+		Esc: 'toggleSlideshow: "off" -- Exit slideshow',
 		Enter: 'slideshowDialog',
 
 		Left: 'resetSlideshowTimer',
@@ -61,7 +61,7 @@ module.GLOBAL_KEYBOARD = {
 			//'Up', 'Down',
 		],
 
-		Esc: 'toggleSingleImage: "off"',
+		Esc: 'toggleSingleImage: "off" -- Exit single image view',
 	},
 
 	// XXX cropped -- needs a class to indicate a crop...
@@ -177,20 +177,20 @@ module.GLOBAL_KEYBOARD = {
 			shift: 'fitRibbon',
 			ctrl: 'fitOrig!',
 		},
-		'#2': 'fitImage: 2',
+		'#2': 'fitImage: 2 -- Fit 2 Images',
 		'#3': {
-			default: 'fitImage: 3',
-			shift: 'fitRibbon: 3.5',
+			default: 'fitImage: 3 -- Fit 3 images',
+			shift: 'fitRibbon: 3.5 -- Fit 3.5 ribbons',
 		},
 		'#4': 'fitImage: 4',
 		'#5': {
-			default: 'fitImage: 5',
-			shift: 'fitRibbon: 5.5',
+			default: 'fitImage: 5 -- Fit 5 images',
+			shift: 'fitRibbon: 5.5 -- Fit 5.5 ribbons',
 		},
-		'#6': 'fitImage: 6',
-		'#7': 'fitImage: 7',
-		'#8':'fitImage: 8',
-		'#9': 'fitImage: 9',
+		'#6': 'fitImage: 6 -- Fit 6 images',
+		'#7': 'fitImage: 7 -- Fit 7 images',
+		'#8':'fitImage: 8 -- Fit 8 images',
+		'#9': 'fitImage: 9 -- Fit 9 images',
 		
 		'+': 'zoomIn',
 		'=': '+',
@@ -210,23 +210,23 @@ module.GLOBAL_KEYBOARD = {
 		// marking...
 		M: {
 			default: 'toggleMark',
-			alt: 'browseActions: "/Mark/"',
+			alt: 'browseActions: "/Mark/" -- Show mark menu',
 		},
 		A: {
 			alt: 'browseActions',
 			'alt+shift': 'listActions',
 
-			ctrl: 'toggleMark!: "ribbon" "on"',
+			ctrl: 'toggleMark!: "ribbon" "on" -- Mark all images in ribbon',
 		},
 		D: {
-			ctrl: 'toggleMark!: "ribbon" "off"',
+			ctrl: 'toggleMark!: "ribbon" "off" -- Unmark all images in ribbon',
 		},
 		I: {
 			default: 'showMetadata',
 			shift: 'toggleStatusBar',
 
-			ctrl: 'toggleMark!: "ribbon"',
-			'ctrl+shift': 'showMetadata: "current" "full"',
+			ctrl: 'toggleMark!: "ribbon" -- Invert marks in ribbon',
+			'ctrl+shift': 'showMetadata: "current" "full" -- Show full metadata',
 
 			'meta+alt': 'showDevTools',
 		},
@@ -234,17 +234,16 @@ module.GLOBAL_KEYBOARD = {
 		B: {
 			default: 'toggleBookmark',
 			ctrl: 'toggleTheme!',
-			alt: 'browseActions: "/Bookmark/"',
+			alt: 'browseActions: "/Bookmark/" -- Show bookmark menu',
 		},
 		E: {
 			default: 'openInExtenalEditor',
-			shift: 'openInExtenalEditor: 1',
+			shift: 'openInExtenalEditor: 1 -- Open in alternative editor',
 			alt: 'listExtenalEditors',
 		},
-		C: 'browseActions: "/Crop/"',
+		C: 'browseActions: "/Crop/" -- Show crop menu',
 		O: 'browsePath',
 		S: {
-			//default: 'browseActions: "/Slideshow/"',
 			default: 'slideshowDialog',
 			// XXX need to make this save to base_path if it exists and
 			// 		ask the user if it does not... now it always asks.
