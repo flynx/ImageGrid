@@ -66,7 +66,8 @@ module.GLOBAL_KEYBOARD = {
 
 	// XXX cropped -- needs a class to indicate a crop...
 	'Cropped': {
-		// XXX
+		// XXX make .crop(..) toggle the class...
+		pattern: '.crop-mode',
 	},
 
 	// XXX cleanup...
