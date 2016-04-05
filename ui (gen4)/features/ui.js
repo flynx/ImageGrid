@@ -26,12 +26,14 @@ var base = require('features/base')
 
 var reloadAfter =
 module.reloadAfter =
-function(force){
+function(force, callback){
 	return function(){
 		return function(){
 			// NOTE: this may seem like cheating, but .reload() should
 			// 		be very efficient, reusing all of the items loaded...
 			this.reload(force)
+
+			callback && callback.apply(this, arguments)
 		}
 	}
 }
@@ -754,6 +756,15 @@ module.Viewer = core.ImageGridFeatures.Feature({
 				if(this.__viewer_resize){
 					$(window).off('resize', this.__viewer_resize) 
 					delete this.__viewer_resize
+				}
+			}],
+		['crop uncrop',
+			function(){
+				if(this.cropped){
+					this.ribbons.viewer.addClass('crop-mode')
+
+				} else {
+					this.ribbons.viewer.removeClass('crop-mode')
 				}
 			}],
 	],

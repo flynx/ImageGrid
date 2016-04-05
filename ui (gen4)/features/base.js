@@ -721,6 +721,11 @@ module.CropActions = actions.Actions({
 		}
 	}],
 
+	// true if current viewer is cropped...
+	get cropped(){
+		return this.crop_stack != null
+	},
+
 	// crop...
 	//
 	crop: ['- Crop/Crop image list',
