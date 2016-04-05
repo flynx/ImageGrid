@@ -64,12 +64,17 @@ module.GLOBAL_KEYBOARD = {
 		Esc: 'toggleSingleImage: "off" -- Exit single image view',
 	},
 
-	// XXX cropped -- needs a class to indicate a crop...
+	// XXX add "save as collection..."
 	'Cropped': {
-		// XXX make .crop(..) toggle the class...
 		pattern: '.crop-mode',
+
+		Esc: {
+			default: 'uncrop',
+			ctrl: 'uncropAll',
+		},
 	},
 
+	// XXX add "save as collection..." (???)
 	// XXX cleanup...
 	'Viewer': {
 		doc: 'NOTE: binding priority is the same as the order of sections '+
@@ -202,10 +207,6 @@ module.GLOBAL_KEYBOARD = {
 			shift: 'cropRibbonAndAbove',
 			ctrl: 'cropMarked',
 			alt: 'cropBookmarked',
-		},
-		Esc: {
-			default: 'uncrop',
-			ctrl: 'uncropAll',
 		},
 
 		// marking...

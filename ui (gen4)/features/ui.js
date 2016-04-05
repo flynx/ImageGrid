@@ -758,14 +758,12 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					delete this.__viewer_resize
 				}
 			}],
+		// manage the .crop-mode css class...
 		['crop uncrop',
 			function(){
-				if(this.cropped){
-					this.ribbons.viewer.addClass('crop-mode')
-
-				} else {
-					this.ribbons.viewer.removeClass('crop-mode')
-				}
+				this.ribbons.viewer[this.cropped ? 
+						'addClass' 
+					: 'removeClass']('crop-mode')
 			}],
 	],
 })
