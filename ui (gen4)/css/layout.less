@@ -1555,7 +1555,12 @@ progress:not(value)::-webkit-progress-bar {
 	background-color: transparent;
 }
 .single-image-mode.viewer .current-marker {
-	display: none;
+	/* NOTE: !important here fixes the jQuery habit of explicitly 
+		setting display on .show(..)/.hide(..)/.fadeIn(..)/... 
+		...if this proves to be a problem, use visibility instead
+		of !important...
+	 */
+	display: none !important;
 }
 .single-image-mode.viewer .image {
 	background-color: transparent;

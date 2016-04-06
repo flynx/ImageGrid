@@ -328,7 +328,10 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 					var ribbons = this.ribbons
 					var fadein = this.config['current-image-indicator-fadein']
 					this._current_image_indicator_timeout = setTimeout(function(){ 
-						ribbons.viewer.find('.current-marker').fadeIn(fadein)
+						var m = ribbons.viewer.find('.current-marker')
+							.fadeIn(fadein, function(){
+								m.css({display: ''})
+							})
 					}, this.config['current-image-shift-timeout'])
 				}
 			}],
