@@ -197,7 +197,7 @@ module.GLOBAL_KEYBOARD = {
 			default: 'fitImage: 3 -- Fit 3 images',
 			shift: 'fitRibbon: 3.5 -- Fit 3.5 ribbons',
 		},
-		'#4': 'fitImage: 4',
+		'#4': 'fitImage: 4 -- Fit 4 images',
 		'#5': {
 			default: 'fitImage: 5 -- Fit 5 images',
 			shift: 'fitRibbon: 5.5 -- Fit 5.5 ribbons',
@@ -279,6 +279,8 @@ module.GLOBAL_KEYBOARD = {
 			// XXX for debug...
 			ctrl: function(){ $('.viewer').toggleClass('visible-gid') },
 		},
+
+		'?': 'showKeyboardBindings',
 	},
 }	
 
@@ -364,15 +366,15 @@ var KeyboardActions = actions.Actions({
 	showKeyboardBindings: ['Interface/Show keyboard bindings',
 		function(){
 			var widget = drawer.Drawer($('body'), 
-				$('<div>')
-					.css({
-						background: 'white',
-					})
-					.append(
-						keyboard.buildKeybindingsHelpHTML(this.__keyboard_config, this)),
+				keyboard.buildKeybindingsHelpHTML(this.__keyboard_config, this),
 				{
 					focusable: true,
 				})
+				.dom.find('.content')
+					// XXX move to CSS...
+					.css({
+						background: 'white',
+					})
 		}],
 
 })

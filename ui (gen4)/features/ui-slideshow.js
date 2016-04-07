@@ -66,7 +66,7 @@ var SlideshowActions = actions.Actions({
 	// 			click on the first option with a mouse...
 	// 		result:
 	// 			the top dialog is not focused...
-	slideshowDialog: ['Slideshow/Settings and start',
+	slideshowDialog: ['Slideshow/Slideshow settings and start',
 		function(){
 			var that = this
 
@@ -205,16 +205,16 @@ var SlideshowActions = actions.Actions({
 		}],
 	
 	// XXX add a custom time setting...
-	toggleSlideshowInterval: ['- Slideshow/Interval',
+	toggleSlideshowInterval: ['- Slideshow/Slideshow interval',
 		core.makeConfigToggler('slideshow-interval', 
 			function(){ return this.config['slideshow-intervals'] },
 			function(){ this.resetSlideshowTimer() })],
-	toggleSlideshowDirection: ['- Slideshow/Direction',
+	toggleSlideshowDirection: ['- Slideshow/Slideshow direction',
 		core.makeConfigToggler('slideshow-direction', ['forward', 'reverse'])],
-	toggleSlideshowLooping: ['- Slideshow/Looping',
+	toggleSlideshowLooping: ['- Slideshow/Slideshow looping',
 		core.makeConfigToggler('slideshow-looping', ['on', 'off'])],
 
-	toggleSlideshow: ['Slideshow/Quick toggle',
+	toggleSlideshow: ['Slideshow/Slideshow quick toggle',
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			'slideshow-running',
