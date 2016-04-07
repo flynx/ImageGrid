@@ -792,6 +792,13 @@ function buildKeybindingsHelp(keybindings, shifted_keys, actions){
 
 				var handler = getKeyHandlers(key, mod, keybindings, 'all', null, actions)[pattern]
 
+				// no handler...
+				// NOTE: handler is present in config but not present
+				// 		in actions...
+				if(handler == null){
+					continue
+				}
+
 				if(handler.constructor === Array && handler[1] == 'IGNORE NEXT'){
 					handler = handler[0]
 				}
@@ -902,8 +909,8 @@ function getKeysByDoc(doc, help){
 //
 var buildKeybindingsHelpHTML =
 module.buildKeybindingsHelpHTML =
-function buildKeybindingsHelpHTML(keybindings){
-	var doc = buildKeybindingsHelp(keybindings)
+function buildKeybindingsHelpHTML(keybindings, actions){
+	var doc = buildKeybindingsHelp(keybindings, null, actions)
 
 	var res = '<table class="keyboard-help">'
 	for(var mode in doc){

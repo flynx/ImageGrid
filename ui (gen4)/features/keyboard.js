@@ -15,6 +15,11 @@ var keyboard = require('lib/keyboard')
 
 var core = require('features/core')
 
+var widget = require('lib/widget/widget')
+var browse = require('lib/widget/browse')
+var overlay = require('lib/widget/overlay')
+var drawer = require('lib/widget/drawer')
+
 
 
 /*********************************************************************/
@@ -80,6 +85,10 @@ module.GLOBAL_KEYBOARD = {
 		doc: 'NOTE: binding priority is the same as the order of sections '+
 			'on this page.',
 		pattern: '*',
+
+		X: {
+			alt: 'close',
+		},
 
 		F4: {
 			alt: 'close',
@@ -347,6 +356,24 @@ var KeyboardActions = actions.Actions({
 			}
 		},
 		['on', 'off'])],
+
+	// XXX need to pre-process the docs...
+	// 		- remove the path component...
+	// 		- insert the action name where not doc present...
+	// XXX cleanup CSS
+	showKeyboardBindings: ['Interface/Show keyboard bindings',
+		function(){
+			var widget = drawer.Drawer($('body'), 
+				$('<div>')
+					.css({
+						background: 'white',
+					})
+					.append(
+						keyboard.buildKeybindingsHelpHTML(this.__keyboard_config, this)),
+				{
+					focusable: true,
+				})
+		}],
 
 })
 
