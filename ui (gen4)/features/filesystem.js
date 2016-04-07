@@ -626,7 +626,7 @@ var FileSystemWriterActions = actions.Actions({
 					this.changes || {}
 					: {}
 
-			console.log('CHANGED:', args)
+			//console.log('CHANGED:', args)
 
 			// all...
 			if(args.length == 1 && args[0] == 'all'){
@@ -977,6 +977,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 // 		- save if not base path present (browser)
 var FileSystemWriterUIActions = actions.Actions({
 	// XXX this needs feedback...
+	// XXX should this return a promise???
 	saveIndexHere: ['File/Save',
 		function(){ 
 			if(this.location.path){ 
@@ -986,8 +987,17 @@ var FileSystemWriterUIActions = actions.Actions({
 				this.browseSaveIndex()
 			}
 		}],
+	// XXX should this be a UI action???
+	// XXX should this return a promise???
+	saveFullIndex: ['File/Save full',
+		function(){
+			return this
+				.markChanged('all')
+				.saveIndexHere()
+		}],
 	// XXX add ability to create dirs...
 	// XXX this needs feedback...
+	// XXX should this return a promise???
 	browseSaveIndex: ['File/Save index to...', 
 		makeBrowseProxy('saveIndex', function(){
 			this.location.method = 'loadIndex' })],
