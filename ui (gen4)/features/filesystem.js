@@ -988,13 +988,14 @@ var FileSystemWriterUIActions = actions.Actions({
 			}
 		}],
 	// XXX should this be a UI action???
+	// 		...at this point this depends on .saveIndexHere(..), thus 
+	// 		it is here...
 	// XXX should this return a promise???
 	saveFullIndex: ['File/Save full',
 		function(){
 			return this
 				.markChanged('all')
-				.saveIndexHere()
-		}],
+				.saveIndexHere()}],
 	// XXX add ability to create dirs...
 	// XXX this needs feedback...
 	// XXX should this return a promise???
