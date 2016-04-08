@@ -184,11 +184,14 @@ module.AppControl = core.ImageGridFeatures.Feature({
 						// XXX get this from the viewer...
 						.replace('${VERSION}', this.version || 'gen4')
 						.replace('${FILENAME}', 
-							(img.name 
-								|| img.path.replace(/\.[\\\/]/, '')))
+							img ? 
+									(img.name || img.path.replace(/\.[\\\/]/, ''))
+								: '')
 						.replace('${PATH}', 
-							(img.base_path || '.') 
-								+'/'+ img.path.replace(/\.[\\\/]/, ''))
+							img ?
+									(img.base_path || '.') 
+										+'/'+ img.path.replace(/\.[\\\/]/, '')
+								: '')
 						/*
 						.replace('${DIR}', 
 							pathlib.dirname((img.base_path || '.') 

@@ -104,7 +104,7 @@ var MetadataReaderActions = actions.Actions({
 			var gid = this.data.getImage(image)
 			var img = this.images && this.images[gid]
 
-			if(!image){
+			if(!image || !img){
 				return
 			}
 
