@@ -51,25 +51,27 @@ var ImageGridFeatures =
 module.ImageGridFeatures = Object.create(features.FeatureSet)
 
 
-// setup exit...
+// nw or node...
 if(typeof(process) != 'undefined'){
 
-	// NOTE: if this passes it is async while when fails it's sync, this
-	// 		is why we set .runtime to 'nw' optimistically in advance so 
-	// 		as not to wait if all goes well and set it to 'node' in the 
-	// 		callback that if fails will fail right away...
-	ImageGridFeatures.runtime = 'nw'
-	requirejs(['nw.gui'], 
-		// OK: nw.js
-		function(){}, 
-		// ERR: pure node.js...
-		function(){ ImageGridFeatures.runtime = 'node' })
+	// nw.js 0.13+
+	if(typeof(nw) != 'undefined'){
+		ImageGridFeatures.runtime = 'nw'
+
+	// node...
+	} else {
+		ImageGridFeatures.runtime = 'node'
+	}
 
 // browser...
+// NOTE: we're avoiding detecting browser specifics for as long as possible,
+// 		this will minimize the headaches of supporting several non-standard
+// 		versions of code...
 } else if(typeof(window) != 'undefined'){
 	ImageGridFeatures.runtime = 'browser'
 
 // unknown...
+// XXX do we need to detect chrome app???
 } else {
 	ImageGridFeatures.runtime = 'unknown'
 }
@@ -101,8 +103,6 @@ var LifeCycleActions = actions.Actions({
 
 			// nw.js...
 			if(runtime == 'nw'){
-				var gui = requirejs('nw.gui')
-
 				// this handles both reload and close...
 				$(window).on('beforeunload', stop)
 
@@ -117,7 +117,9 @@ var LifeCycleActions = actions.Actions({
 							// wait till ALL the handlers finish before 
 							// exiting...
 							.on('stop.post', function(){
-								w.close(true)
+								// XXX might be broken in nw13 -- test!!!
+								//w.close(true)
+								nw.App.quit()
 							})
 							.stop()
 
@@ -127,8 +129,7 @@ var LifeCycleActions = actions.Actions({
 						this.close(true)
 					}
 				}
-				gui.Window.get().on('close', this.__nw_stop_handler)
-
+				nw.Window.get().on('close', this.__nw_stop_handler)
 
 			// node.js...
 			} else if(runtime == 'node'){
@@ -154,8 +155,7 @@ var LifeCycleActions = actions.Actions({
 
 			// nw...
 			if(this.__nw_stop_handler && this.runtime == 'nw'){
-				var gui = requirejs('nw.gui')
-				//gui.Window.get().off('close', this.__nw_stop_handler)
+				//nw.Window.get().off('close', this.__nw_stop_handler)
 				delete this.__nw_stop_handler
 			}
 

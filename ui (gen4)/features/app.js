@@ -10,6 +10,7 @@ define(function(require){ var module = {}
 
 var actions = require('lib/actions')
 var features = require('lib/features')
+var toggler = require('lib/toggler')
 
 var core = require('features/core')
 var base = require('features/base')
@@ -31,12 +32,11 @@ var AppControlActions = actions.Actions({
 	storeWindowGeometry: ['- Interface/Store window state',
 		function(){
 			// store window parameters (size, state)...
-			var gui = requirejs('nw.gui')
-			var win = gui.Window.get()
+			var win = nw.Window.get()
 
 			// fullscreen...
 			// ...avoid overwriting size...
-			if(win.isFullscreen){
+			if(this.toggleFullScreen('?') == 'on'){
 				this.config.window = this.config.window || {}
 				this.config.window.fullscreen = true
 				this.config.window.zoom = win.zoomLevel 
@@ -56,8 +56,7 @@ var AppControlActions = actions.Actions({
 		function(){
 			// or global.window.nwDispatcher.requireNwGui()
 			// (see: https://github.com/rogerwang/node-webkit/issues/707)
-			var gui = requirejs('nw.gui') 
-			var win = gui.Window.get()
+			var win = nw.Window.get()
 
 			// XXX move this into .restoreWindowGeometry(..)
 			// get window state from config and load it...
@@ -92,7 +91,7 @@ var AppControlActions = actions.Actions({
 
 			// XXX check if we are full screen...
 			if(cfg != null && cfg.fullscreen && !win.isFullscreen){
-				this.toggleFullScreen()
+				this.toggleFullScreen('on')
 			}
 
 			/* XXX still buggy....
@@ -102,34 +101,48 @@ var AppControlActions = actions.Actions({
 				|| this.toggleInterfaceScale('??')[0])
 			*/
 		}],
+	
 	toggleFullScreen: ['Interface/Toggle full screen mode',
-		function(){
-			var that = this
-			this.ribbons.preventTransitions()
+		toggler.CSSClassToggler(
+			function(){ return document.body }, 
+			'.full-screen-mode',
+			function(action){
+				var that = this
+				var w = nw.Window.get()
 
-			// hide the viewer to hide any animation crimes...
-			this.ribbons.viewer[0].style.visibility = 'hidden'
+				// change the state only if the target state is not the same
+				// as the current state...
+				if((w.isFullscreen() ? 'on' : 'off') != action){
+					this.ribbons.preventTransitions()
 
-			// XXX where should toggleFullscreenMode(..) be defined...
-			// 		...this also toggles a fullscreen css class on body...
-			toggleFullscreenMode() 
-			//requirejs('nw.gui').Window.get().toggleFullscreen()
+					// hide the viewer to hide any animation crimes...
+					this.ribbons.viewer[0].style.visibility = 'hidden'
 
-			setTimeout(function(){ 
-				that
-					.centerViewer()
-					.focusImage()
-					.ribbons
-						.restoreTransitions()
+					// XXX async...
+					// 		...this complicates things as we need to do the next
+					// 		bit AFTER the resize is done...
+					w.toggleFullscreen()
 
-				that.ribbons.viewer[0].style.visibility = ''
-			}, 0)
-		}],
+					setTimeout(function(){ 
+						that
+							.centerViewer()
+							.focusImage()
+							.ribbons
+								.restoreTransitions()
+
+						that.ribbons.viewer[0].style.visibility = ''
+					}, 100)
+				}
+
+				// NOTE: we delay this to account for window animation...
+				setTimeout(function(){ 
+					that.storeWindowGeometry() 
+				}, 500)
+			})],
 	showDevTools: ['Interface|Development/Show Dev Tools',
 		function(){
-			if(window.showDevTools != null){
-				showDevTools() 
-			}
+			nw.Window.get().showDevTools &&
+				nw.Window.get().showDevTools()
 		}],
 })
 
@@ -174,8 +187,7 @@ module.AppControl = core.ImageGridFeatures.Feature({
 			function(){ this.storeWindowGeometry() }],
 		['focusImage',
 			function(){
-				var gui = requirejs('nw.gui') 
-				var win = gui.Window.get()
+				var win = nw.Window.get()
 
 				if(this.images){
 					var img = this.images[this.current]

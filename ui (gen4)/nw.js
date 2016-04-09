@@ -5,9 +5,6 @@
 **********************************************************************/
 if(window.nodejs != null){
 
-// node-webkit specific modules...
-var gui = require('nw.gui')
-
 define(function(require){ var module = {}
 
 var toggler = require('lib/toggler')
@@ -29,20 +26,20 @@ module.toggleFullscreenMode = toggler.CSSClassToggler(
 		document.body, 
 		'.full-screen-mode',
 		function(action){
-			gui.Window.get().toggleFullscreen()
+			nw.Window.get().toggleFullscreen()
 		})
 
 
 window.showDevTools = 
 module.showDevTools = function(){
-	gui.Window.get().showDevTools()
+	nw.Window.get().showDevTools()
 }
 
 
 window.setWindowTitle = 
 module.setWindowTitle = function(text){
 	browser.setWindowTitle(test)
-	gui.Window.get().title = title
+	nw.Window.get().title = title
 }
 
 

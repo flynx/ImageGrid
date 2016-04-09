@@ -11,6 +11,8 @@
 
 APP_NAME=ImageGrid.Viewer
 
+NODE_VERSION=v5.10.0
+
 
 # process LESS files to CSS...
 %.css: %.less
@@ -119,6 +121,10 @@ zip: $(APP_ZIP)
 # see: package.json for a list...
 node-deps:
 	npm install
+
+sharp: node-deps
+	cd node_modules/sharp/
+	node-gyp --target=$(NODE_VERSION) rebuild
 
 css: $(CSS_FILES)
 
