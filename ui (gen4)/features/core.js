@@ -58,6 +58,12 @@ if(typeof(process) != 'undefined'){
 	if(typeof(nw) != 'undefined'){
 		ImageGridFeatures.runtime = 'nw'
 
+		// NOTE: jli is patching the Date object and with two separate 
+		// 		instances we'll need to sync things up...
+		// XXX HACK...
+		global.Date !== window.Date
+			&& global.Date = window.Date
+
 	// node...
 	} else {
 		ImageGridFeatures.runtime = 'node'
