@@ -60,13 +60,23 @@ if(typeof(process) != 'undefined'){
 
 		// NOTE: jli is patching the Date object and with two separate 
 		// 		instances we'll need to sync things up...
-		// XXX HACK...
-		global.Date !== window.Date
-			&& global.Date = window.Date
+		// XXX HACK: if node and chrome Date implementations ever 
+		// 		significantly diverge this will break things + this is 
+		// 		a potential data leak between contexts...
+		//global.Date = window.Date
+
+		// XXX this is less of a hack but it is still an implicit
+		patchDate(global.Date)
+		patchDate(window.Date)
 
 	// node...
 	} else {
 		ImageGridFeatures.runtime = 'node'
+
+		// XXX patch Date...
+		// XXX this will not work directly as we will need to explicitly
+		// 		require jli...
+		//patchDate(global.Date)
 	}
 
 // browser...
