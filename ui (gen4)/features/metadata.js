@@ -151,7 +151,7 @@ var MetadataReaderActions = actions.Actions({
 		}],
 
 	// XXX STUB: add support for this to .readMetadata(..)
-	_readAllMetadata: ['- Image/Read all metadata',
+	readAllMetadata: ['- Image/Read all metadata',
 		function(){
 			var that = this
 			// XXX make this a global API...
@@ -194,6 +194,19 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 
 	handlers: [
 		// XXX STUB: need a better strategy to read metadata...
+		// 		Approach 1 (target):
+		// 			read the metadata on demand e.g. on .showMetadata(..)
+		// 				+ natural approach
+		// 				- not sync
+		// 					really complicated to organize...
+		//
+		// 		Approach 2:
+		// 			lazy read -- timeout and overwrite on next image
+		// 				- hack-ish
+		// 				+ simple
+		//
+		// 		Approach 3:
+		// 			index a dir
 		['focusImage', 
 			function(){
 				var gid = this.current
@@ -299,9 +312,9 @@ var MetadataUIActions = actions.Actions({
 			var field_order = this.config['metadata-field-order'] || []
 			var x = field_order.length + 1
 
-			var img = this.images && this.images[image] || null
 			// get image metadata...
-			var metadata = img && img.metadata || {} 
+			var metadata = this.getMetadata(image) || {} 
+			var img = this.images && this.images[image] || null
 
 			// helpers...
 			var _cmp = function(a, b){

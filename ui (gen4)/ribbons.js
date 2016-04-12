@@ -203,7 +203,11 @@ module.DOMAdapter = {
 var RibbonsClassPrototype = {
 	// Generic getters...
 	getElemGID: function(elem){
-		return JSON.parse('"' + elem.attr('gid') + '"')
+		return JSON.parse('"' 
+			+ (elem instanceof jQuery ? 
+					elem.attr('gid') 
+				: elem.getAttribute('gid'))
+			+ '"')
 	},
 	setElemGID: function(elem, gid){
 		return $(elem)
@@ -1505,7 +1509,7 @@ var RibbonsPrototype = {
 		var unload_marks = []
 		loaded = loaded
 			.filter(function(i, img){ 
-				var g = that.getElemGID($(img))
+				var g = that.getElemGID(img)
 				if(gids.indexOf(g) >= 0){
 					return true
 				}
@@ -1513,7 +1517,8 @@ var RibbonsPrototype = {
 				unload_marks = unload_marks.concat(that.getImageMarks(g).toArray())
 				return false
 			})
-		// remove everything in one go...
+
+		// detach/remove everything in one go...
 		$(unloaded)
 			.detach()
 			.removeClass('moving current')
