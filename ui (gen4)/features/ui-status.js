@@ -210,8 +210,15 @@ var StatusBarActions = actions.Actions({
 							: type == 'path'? 'Image filename/path'
 							: '')
 					.append($('<span class="shown">'))
-					// XXX would be nice to make triple click select this as unit...
-					.append($('<span class="hidden">'))
+					.append($('<span class="hidden">')
+						// select the text...
+						// XXX should this also copy???
+						.click(function(){
+							window.getSelection().removeAllRanges()
+							var range = document.createRange()
+							range.selectNodeContents(this)
+							window.getSelection().addRange(range)
+						}))
 
 			} else {
 				var type = item.attr('type')

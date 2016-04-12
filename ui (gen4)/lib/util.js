@@ -32,6 +32,15 @@ Object.get = function(obj, name, dfl){
 Array.prototype.compact = function(){
 	return this.filter(function(){ return true })
 }
+/*
+Array.prototype.compact = function(){
+	var res = []
+	for(var i in res){
+		res.push(this[i])
+	}
+	return res
+}
+*/
 
 
 // return an array with duplicate elements removed...

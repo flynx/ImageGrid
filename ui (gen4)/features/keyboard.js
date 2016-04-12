@@ -252,7 +252,13 @@ module.GLOBAL_KEYBOARD = {
 			shift: 'openInExtenalEditor: 1 -- Open in alternative editor',
 			alt: 'listExtenalEditors',
 		},
-		C: 'browseActions: "/Crop/" -- Show crop menu',
+		C: {
+			default: 'browseActions: "/Crop/" -- Show crop menu',
+			// do the default copy thing...
+			// NOTE: this stops the default: handler from getting the ctrl:
+			// 		key case...
+			ctrl: '',
+		},
 		O: 'browsePath',
 		S: {
 			default: 'slideshowDialog',
