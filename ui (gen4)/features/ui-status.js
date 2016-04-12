@@ -54,7 +54,7 @@ var StatusBarActions = actions.Actions({
 		'status-bar-items': [
 			'index',
 			'gid',
-			//'path',
+			'path',
 
 			// separates left/right aligned elements...
 			'---',
@@ -226,10 +226,12 @@ var StatusBarActions = actions.Actions({
 				text = gid || '-'
 
 			// path...
-			// XXX
+			// XXX use generic, platform independent path processing...
 			} else if(type == 'path'){
-				text = img && img.path || '---'
-				txt = text
+				text = (img && ((img.base_path || '') +'/'+ img.path) || '---')
+					// remove /./
+					.replace(/[\\\/]\.[\\\/]/, '/')
+				txt = text.split(/[\\\/]/).pop()
 			}
 
 			item.find('.shown').text(txt)
