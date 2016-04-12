@@ -210,6 +210,7 @@ var StatusBarActions = actions.Actions({
 							: type == 'path'? 'Image filename/path'
 							: '')
 					.append($('<span class="shown">'))
+					// XXX would be nice to make triple click select this as unit...
 					.append($('<span class="hidden">'))
 
 			} else {
