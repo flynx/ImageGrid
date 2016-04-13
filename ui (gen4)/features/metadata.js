@@ -251,8 +251,6 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 // XXX add identical fields -- show first available and hide the rest...
 // 		'Shutter Speed', 'Exposure Time',
 // 		'Lens ID', 'Lens'
-// XXX show all fields but make some of them hidden/disabled 
-// 		-- togglable via D
 // XXX add field editing... (open)
 // XXX might be good to split this to sections...
 // 		- base info
@@ -261,7 +259,6 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 // 			- EXIF
 // 			- IPTC
 // 			- ...
-// XXX should this be a panel or a list (as is now...)????
 var MetadataUIActions = actions.Actions({
 	config: {
 		'metadata-auto-select-modes': [
@@ -307,7 +304,6 @@ var MetadataUIActions = actions.Actions({
 	//
 	// XXX should we replace 'mode' with nested set of metadata???
 	// XXX make this support multiple images...
-	// XXX make this updatable...
 	showMetadata: ['Image/Show metadata',
 		function(image, mode){
 			var that = this
@@ -529,22 +525,23 @@ module.MetadataFSUI = core.ImageGridFeatures.Feature({
 	],
 
 	handlers: [
-		// read and when done update the list...
-		// XXX should this just wait for
+		// Read metadata and when done update the list...
+		// XXX should we show what we can and wait for metadata load (current
+		// 		state) or wait and show everything in one go???
 		['showMetadata.pre',
 			function(image){
 				var that = this
 				var reader = this.readMetadata(image)
 
 				return reader && function(overlay){
-
 					var client = overlay.client
 					var data = client.options.data
 
+					// add a loading indicator...
+					// NOTE: this will get removed when calling .updateMetadata()
 					data.push('---')
 					//data.push($('<center>Loading...</center>'))
 					data.push($('<center><div class="loader"/></center>'))
-
 					client.update()
 
 					reader.then(function(data){

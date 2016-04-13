@@ -905,7 +905,7 @@ var BrowserPrototype = {
 				// XXX is this the correct way to do this???
 				var txt = p.text()
 				// XXX disable search???
-				console.warn('jQuery objects as browse list elements not yet supported.')
+				console.warn('jQuery objects as browse list elements not yet fully supported.')
 
 			// str and other stuff...
 			} else {

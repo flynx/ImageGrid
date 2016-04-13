@@ -17,8 +17,9 @@
 	position: relative;
 
 	color: #ffffff;
-	font-size: 10px;
-	margin: 20px auto;
+	font-size: 8px;
+	//margin: 15px auto;
+	margin-bottom: 15px;
 
 	text-indent: -9999em;
 
