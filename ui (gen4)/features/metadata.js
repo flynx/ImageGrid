@@ -10,7 +10,6 @@ if(typeof(process) != 'undefined'){
 	var fs = require('fs')
 	var path = require('path')
 	var exiftool = require('exiftool')
-	var promise = require('promise')
 }
 
 
@@ -78,6 +77,7 @@ module.Metadata = core.ImageGridFeatures.Feature({
 	suggested: [
 		'fs-metadata',
 		'ui-metadata',
+		'ui-fs-metadata',
 	],
 
 	actions: MetadataActions,
@@ -90,7 +90,6 @@ module.Metadata = core.ImageGridFeatures.Feature({
 
 // XXX add Metadata writer...
 var MetadataReaderActions = actions.Actions({
-	// XXX should this be sync???
 	// XXX add support to taskqueue...
 	// XXX should this process multiple images???
 	// XXX also check the metadata/ folder (???)
@@ -104,13 +103,13 @@ var MetadataReaderActions = actions.Actions({
 			var gid = this.data.getImage(image)
 			var img = this.images && this.images[gid]
 
-			if(!image || !img){
-				return
+			if(!image && !img){
+				return false
 			}
 
 			var full_path = path.normalize(img.base_path +'/'+ img.path)
 
-			return new promise(function(resolve, reject){
+			return new Promise(function(resolve, reject){
 				if(!force && img.metadata){
 					return resolve(img.metadata)
 				}
@@ -139,9 +138,9 @@ var MetadataReaderActions = actions.Actions({
 							Object.keys(data).forEach(function(k){ m[k] = data[k] })
 
 							that.images[gid].metadata = m
-							that.markChanged && that.markChanged(gid)
 
-							resolve(data)
+							// XXX
+							that.markChanged && that.markChanged(gid)
 						}
 
 						resolve(data)
@@ -207,6 +206,7 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 		//
 		// 		Approach 3:
 		// 			index a dir
+		/*
 		['focusImage', 
 			function(){
 				var gid = this.current
@@ -217,6 +217,7 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 					this.readMetadata(gid)
 				}
 			}]
+		*/
 	],
 })
 
@@ -301,8 +302,12 @@ var MetadataUIActions = actions.Actions({
 		core.makeConfigToggler('metadata-auto-select-mode', 
 			function(){ return this.config['metadata-auto-select-modes'] })],
 
+	// NOTE: this will extend the Browse object with .updateMetadata(..)
+	// 		method to enable updating of metadata in the list...
+	//
 	// XXX should we replace 'mode' with nested set of metadata???
 	// XXX make this support multiple images...
+	// XXX make this updatable...
 	showMetadata: ['Image/Show metadata',
 		function(image, mode){
 			var that = this
@@ -332,98 +337,101 @@ var MetadataUIActions = actions.Actions({
 				sel.addRange(range)
 			}
 
-
-			// XXX move these to an info feature...
-			// base fields...
-			var base = [
-				['GID: ', image],
-				// NOTE: these are 1-based and not 0-based...
-				['Index (ribbon): ', 
-					this.data.getImageOrder('ribbon', image) + 1
-					+'/'+ 
-					this.data.getImages(image).len],
-				// show this only when cropped...
-				['Index (global): ', 
-					this.data.getImageOrder(image) + 1
-					+'/'+ 
-					this.data.getImages('all').len],
-			]
-			// crop-specific stuff...
-			if(this.crop_stack && this.crop_stack.len > 0){
-				base = base.concat([
-					['Index (crop): ', 
-						this.data.getImageOrder('loaded', image) + 1
+			var _buildInfoList = function(image, metadata){
+				// XXX move these to an info feature...
+				// base fields...
+				var base = [
+					['GID: ', image],
+					// NOTE: these are 1-based and not 0-based...
+					['Index (ribbon): ', 
+						that.data.getImageOrder('ribbon', image) + 1
 						+'/'+ 
-						this.data.getImages('loaded').len],
-				])
-			}
-			// fields that expect that image data is available...
-			var info = ['---']
-			if(img){
-				// XXX should these be here???
-				var _normalize = typeof(path) != 'undefined' ? 
-					path.normalize
-					: function(e){ return e.replace(/\/\.\//, '') }
-				var _basename = typeof(path) != 'undefined' ?
-					path.basename
-					: function(e){ return e.split(/[\\\/]/g).pop() }
-				var _dirname = typeof(path) != 'undefined' ?
-					function(e){ return path.normalize(path.dirname(e)) }
-					: function(e){ return _normalize(e.split(/[\\\/]/g).slice(0, -1).join('/')) }
+						that.data.getImages(image).len],
+					// show this only when cropped...
+					['Index (global): ', 
+						that.data.getImageOrder(image) + 1
+						+'/'+ 
+						that.data.getImages('all').len],
+				]
+				// crop-specific stuff...
+				if(that.crop_stack && that.crop_stack.len > 0){
+					base = base.concat([
+						['Index (crop): ', 
+							that.data.getImageOrder('loaded', image) + 1
+							+'/'+ 
+							that.data.getImages('loaded').len],
+					])
+				}
+				// fields that expect that image data is available...
+				var info = ['---']
+				if(img){
+					// XXX should these be here???
+					var _normalize = typeof(path) != 'undefined' ? 
+						path.normalize
+						: function(e){ return e.replace(/\/\.\//, '') }
+					var _basename = typeof(path) != 'undefined' ?
+						path.basename
+						: function(e){ return e.split(/[\\\/]/g).pop() }
+					var _dirname = typeof(path) != 'undefined' ?
+						function(e){ return path.normalize(path.dirname(e)) }
+						: function(e){ return _normalize(e.split(/[\\\/]/g).slice(0, -1).join('/')) }
 
-				base = base.concat([
-					['File Name: ', 
-						_basename(img.path)],
-					['Parent Directory: ', 
-						_dirname((img.base_path || '.') +'/'+ img.path)],
-					['Full Path: ', 
-						_normalize((img.base_path || '.') +'/'+ img.path)],
-				])
+					base = base.concat([
+						['File Name: ', 
+							_basename(img.path)],
+						['Parent Directory: ', 
+							_dirname((img.base_path || '.') +'/'+ img.path)],
+						['Full Path: ', 
+							_normalize((img.base_path || '.') +'/'+ img.path)],
+					])
 
-				// comment and tags...
-				info.push(['Comment: ', 
-					function(){ return img.comment || '' }]) 
-			}
-
-			info.push(['Tags: ', 
-				function(){ return that.data.getTags().join(', ') || '' }])
-
-			// build fields...
-			var fields = []
-			Object.keys(metadata).forEach(function(k){
-				var n =  k
-					// convert camel-case to human-case ;)
-					.replace(/([A-Z]+)/g, ' $1')
-					.capitalize()
-
-				// skip metadata stuff in short mode...
-				if(mode != 'full' 
-						&& field_order.indexOf(n) == -1){
-					if(mode == 'short'){
-						return
-
-					} else if(mode == 'disabled') {
-						n = '- ' + n
-					}
+					// comment and tags...
+					info.push(['Comment: ', 
+						function(){ return img.comment || '' }]) 
 				}
 
-				fields.push([ n + ': ', metadata[k] ])
-			})
+				info.push(['Tags: ', 
+					function(){ return that.data.getTags().join(', ') || '' }])
 
-			// sort fields...
-			base.sort(_cmp)
-			fields.sort(_cmp)
+				// build fields...
+				var fields = []
+				Object.keys(metadata).forEach(function(k){
+					var n =  k
+						// convert camel-case to human-case ;)
+						.replace(/([A-Z]+)/g, ' $1')
+						.capitalize()
 
-			// add separator to base...
-			fields.length > 0 && info.push('---')
+					// skip metadata stuff in short mode...
+					if(mode != 'full' 
+							&& field_order.indexOf(n) == -1){
+						if(mode == 'short'){
+							return
+
+						} else if(mode == 'disabled') {
+							n = '- ' + n
+						}
+					}
+
+					fields.push([ n + ': ', metadata[k] ])
+				})
+
+				// sort fields...
+				base.sort(_cmp)
+				fields.sort(_cmp)
+
+				// add separator to base...
+				fields.length > 0 && info.push('---')
+
+				return base
+					.concat(info)
+					.concat(fields)
+			}
 
 			// XXX might be a good idea to directly bind ctrl-c to copy value...
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeList(
 						null,
-						base
-							.concat(info)
-							.concat(fields),
+						_buildInfoList(image, metadata),
 						{
 							showDisabled: false,
 						})
@@ -478,6 +486,16 @@ var MetadataUIActions = actions.Actions({
 					})
 			o.client.dom.addClass('metadata-view')
 
+			o.client.updateMetadata = function(metadata){
+				metadata = metadata || that.getMetadata()
+
+				// build new data set and update view...
+				this.options.data = _buildInfoList(image, metadata)
+				this.update()
+
+				return this
+			}
+
 			return o
 		}]
 })
@@ -496,6 +514,36 @@ module.MetadataUI = core.ImageGridFeatures.Feature({
 	actions: MetadataUIActions,
 })
 
+
+
+var MetadataFSUI = 
+module.MetadataFSUI = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-fs-metadata',
+	depends: [
+		'ui',
+		'metadata',
+		'fs-metadata',
+	],
+
+	handlers: [
+		// read and when done update the list...
+		// XXX should this just wait for
+		['showMetadata.pre',
+			function(image){
+				var that = this
+				var reader = this.readMetadata(image)
+
+				return reader && function(overlay){
+					reader.then(function(data){
+						overlay.client.updateMetadata()
+					})
+				}
+			}],
+	],
+})
 
 
 /**********************************************************************
