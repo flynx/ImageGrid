@@ -537,8 +537,18 @@ module.MetadataFSUI = core.ImageGridFeatures.Feature({
 				var reader = this.readMetadata(image)
 
 				return reader && function(overlay){
+
+					var client = overlay.client
+					var data = client.options.data
+
+					data.push('---')
+					//data.push($('<center>Loading...</center>'))
+					data.push($('<center><div class="loader"/></center>'))
+
+					client.update()
+
 					reader.then(function(data){
-						overlay.client.updateMetadata()
+						client.updateMetadata()
 					})
 				}
 			}],
