@@ -424,7 +424,7 @@ var StatusBarActions = actions.Actions({
 					}
 				}
 			})],	
-	updateStatusBar: ['Interface/Update satus bar',
+	updateStatusBar: ['- Interface/Update satus bar',
 		function(){ this.toggleStatusBar('!') }],
 
 	resetStatusBar: ['Interface/Reset status bar',

@@ -299,12 +299,12 @@ module.ViewerActions = actions.Actions({
 
 	// General UI stuff...
 	// NOTE: this is applicable to all uses...
-	toggleTheme: ['Interface/Toggle viewer theme', 
+	toggleTheme: ['Interface/Theme/Toggle viewer theme', 
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config.themes },
 			function(state){ this.config.theme = state }) ],
-	toggleRibbonTheme: ['Interface/Toggle ribbon theme', 
+	toggleRibbonTheme: ['Interface/Theme/Toggle ribbon theme', 
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config['ribbon-themes'] },
