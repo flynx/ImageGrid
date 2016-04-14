@@ -139,12 +139,19 @@ var StatusBarActions = actions.Actions({
 								}
 							})
 							// update image position...
+							// XXX this appears to be run in the node context...
 							.keyup(function(){
-								event.stopPropagation()
+								// XXX KeyboardEvent does not appear to have this...
+								//event.stopPropagation()
 
-								(that.config['status-bar-index'] || {})['live-update-on-edit']
-									&& that.focusImage(i,
+								if((that.config['status-bar-index'] || {})['live-update-on-edit']){
+									var i = parseInt($(this).text())
+									i = i >= 1 ? i-1
+										: i == null ? 'current'
+										: i
+									that.focusImage(i,
 										item.hasClass('global') ? 'global' : undefined)
+								}
 							})
 							.click(function(){
 								$(this).selectText()
