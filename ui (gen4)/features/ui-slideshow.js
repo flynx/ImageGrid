@@ -11,10 +11,11 @@ define(function(require){ var module = {}
 var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
-var keyboard = require('lib/keyboard')
 
 var core = require('features/core')
 var base = require('features/base')
+
+var widgets = require('features/ui-widgets')
 
 var browse = require('lib/widget/browse')
 var overlay = require('lib/widget/overlay')
@@ -57,7 +58,6 @@ var SlideshowActions = actions.Actions({
 	// 			click on the first option with a mouse...
 	// 		result:
 	// 			the top dialog is not focused...
-	// XXX move generic stuff to browse.js...
 	slideshowDialog: ['Slideshow/Slideshow settings and start',
 		function(){
 			var that = this
@@ -76,7 +76,7 @@ var SlideshowActions = actions.Actions({
 						['Looping: ', 
 							function(){ return that.config['slideshow-looping'] }],
 
-						'---',
+						//'---',
 						[function(){ 
 							return that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start' }],
 					])
@@ -88,152 +88,29 @@ var SlideshowActions = actions.Actions({
 							return
 						}
 
-						var _makeEditable = function(elem){
-							$(elem).find('.text')
-								.prop('contenteditable', true)
-								.text('')
-								.selectText()
-								.keydown(function(){ 
-									event.stopPropagation() 
-
-									var n = keyboard.toKeyName(event.keyCode)
-
-									// reset to original value...
-									if(n == 'Esc'){
-										oo.client.update()
-
-									// save value...
-									} else if(n == 'Enter'){
-										event.preventDefault()
-										var txt = $(this).text()
-
-										// invalid format...
-										if(!Date.str2ms(txt)){
-											oo.client.update()
-											return
-										}
-
-										// list length limit -> add ass is...
-										// XXX should this take into account crossed out items???
-										if(that.config['slideshow-interval-max-count']
-												&& (that.config['slideshow-intervals'].length
-													>= that.config['slideshow-interval-max-count'])){
-											that.config['slideshow-interval'] = txt
-
-											oo.close()
-
-											if(that.toggleSlideshow('?') == 'on'){
-												o.close()
-
-											} else {
-												o.client.update()
-													.done(function(){
-														o.client.select(txt)
-													})
-											}
-
-											return
-										}
-
-										// add new value and sort list...
-										that.config['slideshow-intervals']
-											.push(txt)
-										that.config['slideshow-intervals']
-											= that.config['slideshow-intervals']
-												.unique(Date.str2ms)
-												.sort(function(a, b){
-													return Date.str2ms(a) - Date.str2ms(b)
-												})
-
-										// update the list data...
-										oo.client.options.data 
-											= that.config['slideshow-intervals']
-												.concat([
-													'---', 
-													'New...'
-												])
-
-										// update list and select new value...
-										oo.client.update()
-											.done(function(){
-												oo.client.select('"'+txt+'"')
-											})
-									}
-								})
-							return $(elem)
-						}
-
 						// interval...
-						// XXX add custom interval editing...
 						if(/interval/i.test(path)){
 							var to_remove = []
-							var oo = overlay.Overlay(that.ribbons.viewer, 
-								browse.makeList( null, 
-									that.config['slideshow-intervals']
-										.concat([
-											'---', 
-											'New...',
-										]), 
-									{itemButtons: [
-										// mark for removal...
-										['&times;', 
-											function(p){
-												var e = this.filter('"'+p+'"', false)
-													.toggleClass('strike-out')
+							var oo = widgets.makeConfigListEditor(that, 'slideshow-intervals', {
+									new_button: 'New...',
+									length_limit: that.config['slideshow-interval-max-count'],
+									check: Date.str2ms,
+									unique: Date.str2ms,
+									sort: function(a, b){
+										return Date.str2ms(a) - Date.str2ms(b) },
+									// NOTE: this is called when adding
+									// 		a new value and list maximum
+									// 		length is reached...
+									callback: function(value){
+										that.config['slideshow-interval'] = value
 
-												if(e.hasClass('strike-out')){
-													to_remove.indexOf(p) < 0 
-														&& to_remove.push(p)
+										o.client.update()
+										oo.close()
 
-												} else {
-													var i = to_remove.indexOf(p)
-													if(i >= 0){
-														to_remove.splice(i, 1)
-													}
-												}
-											}],
-									]})
-									// select 'New...' item...
-									.on('select', function(evt, elem){
-										if(/new/i.test($(elem).text())){
-											_makeEditable(elem)
-										}
-									})
-									.open(function(evt, time){
-										if(!Date.str2ms(time)){
-											oo.client.select('New...')
-											// XXX place the cursor...
-											// XXX
-
-										} else {
-											that.config['slideshow-interval'] = time
-
-											// XXX this is ugly...
-											oo.close()
-											o.client.update()
-											o.client.select(path.split(':')[0])
-										}
-									}))
+										o.client.select(value)
+									},
+								})
 								.close(function(){
-									// remove striked items...
-									to_remove.forEach(function(e){
-										var lst = that.config['slideshow-intervals'].slice()
-										lst.splice(lst.indexOf(e), 1)
-
-										that.config['slideshow-intervals'] = lst
-									})
-
-									// XXX add new items...
-									// XXX
-
-									// sort the times...
-									that.config['slideshow-intervals'] =
-										that.config['slideshow-intervals']
-											.sort(function(a, b){
-												return Date.str2ms(a) - Date.str2ms(b)
-											})
-
-
 									// XXX this is ugly...
 									o.focus()
 
@@ -242,7 +119,22 @@ var SlideshowActions = actions.Actions({
 									}
 								})
 
-							oo.client.dom.addClass('slideshow')
+							oo.client
+								.open(function(evt, time){
+									if(!Date.str2ms(time)){
+										oo.client.select('New...')
+
+									} else {
+										that.config['slideshow-interval'] = time
+
+										// XXX this is ugly...
+										oo.close()
+										o.client.update()
+										o.client.select(path.split(':')[0])
+									}
+								})
+
+							oo.client.dom.addClass('tail-action')
 							oo.client.select(that.config['slideshow-interval'])
 
 							return
@@ -271,7 +163,7 @@ var SlideshowActions = actions.Actions({
 					that.resetSlideshowTimer()
 				})
 
-			o.client.dom.addClass('metadata-view slideshow')
+			o.client.dom.addClass('metadata-view tail-action')
 
 			o.client.select(-1)
 

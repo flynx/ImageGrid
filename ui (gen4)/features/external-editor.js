@@ -249,7 +249,7 @@ var ExternalEditorUIActions = actions.Actions({
 				})
 
 			o.client.select(0)
-			o.client.dom.addClass('editor-list')
+			o.client.dom.addClass('editor-list tail-action')
 
 			return o
 		}],

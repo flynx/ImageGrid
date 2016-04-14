@@ -8,6 +8,7 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var keyboard = require('lib/keyboard')
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -25,6 +26,162 @@ var overlay = require('lib/widget/overlay')
 var drawer = require('lib/widget/drawer')
 
 var browseWalk = require('lib/widget/browse-walk')
+
+
+
+/*********************************************************************/
+
+//
+// Options format:
+// 	{
+// 		new_button: <text>|<bool>,
+//
+// 		length_limit: <number>,
+//
+// 		// check input value...
+// 		check: function(value){ ... },
+//
+// 		// if true only unique values will be stored...
+// 		// if a function this will be used to normalize the values before
+// 		// uniqueness check is performed...
+// 		unique: <bool>|function(value){ ... },
+//
+// 		// if true sort values...
+// 		// if function will be used as cmp for sorting...
+// 		sort: <bool> || function(a, b){ ... },
+//
+// 		// this is called when a new value is added via new_button but 
+// 		// list length limit is reached...
+// 		callback: function(selected){ ... },
+// 	}
+//
+// XXX add sort buttons: up/down/top/bottom...
+// XXX make this more generic...
+var makeConfigListEditor = 
+module.makeConfigListEditor =
+function(actions, list_key, options){
+	options = options || {}
+
+	var new_button = options.new_button
+	new_button = new_button === true ? 'New...' : new_button
+
+	var _makeEditable = function(elem){
+		$(elem).find('.text')
+			.prop('contenteditable', true)
+			.text('')
+			.selectText()
+			.keydown(function(){ 
+				event.stopPropagation() 
+
+				var n = keyboard.toKeyName(event.keyCode)
+
+				// reset to original value...
+				if(n == 'Esc'){
+					list.update()
+
+				// save value...
+				} else if(n == 'Enter'){
+					event.preventDefault()
+					var txt = $(this).text()
+
+					// invalid format...
+					if(options.check && !options.check(txt)){
+						list.update()
+						return
+					}
+
+					// list length limit
+					if(options.length_limit 
+						&& (actions.config[list_key].length >= options.length_limit)){
+
+						options.callback && options.callback.call(list, txt)
+
+						return
+					}
+
+					// add new value and sort list...
+					actions.config[list_key]
+						.push(txt)
+
+					// unique...
+					if(options.unique){
+						actions.config[list_key] = actions.config[list_key]
+							.unique(options.unique !== true ? options.unique : undefined)
+					}
+
+					// sort...
+					if(options.sort){
+						actions.config[list_key] = actions.config[list_key]
+							.sort(options.sort !== true ? options.sort : undefined)
+					}
+
+					// update the list data...
+					list.options.data 
+						= actions.config[list_key]
+							.concat(new_button ? [ new_button ] : [])
+
+					// update list and select new value...
+					list.update()
+						.done(function(){
+							list.select('"'+txt+'"')
+						})
+				}
+			})
+		return $(elem)
+	}
+
+	var to_remove = []
+
+	var list = browse.makeList( null, 
+		actions.config[list_key]
+			.concat(new_button ? [ new_button ] : []), 
+		{itemButtons: [
+			// mark for removal...
+			['&times;', 
+				function(p){
+					var e = this.filter('"'+p+'"', false)
+						.toggleClass('strike-out')
+
+					if(e.hasClass('strike-out')){
+						to_remove.indexOf(p) < 0 
+							&& to_remove.push(p)
+
+					} else {
+						var i = to_remove.indexOf(p)
+						if(i >= 0){
+							to_remove.splice(i, 1)
+						}
+					}
+				}],
+		]})
+		// select the new_button item...
+		.on('select', function(evt, elem){
+			if(new_button && $(elem).find('.text').text() == new_button){
+				_makeEditable(elem)
+			}
+		})
+
+	var o = overlay.Overlay(actions.ribbons.viewer, list)
+		.close(function(){
+			// remove striked items...
+			to_remove.forEach(function(e){
+				var lst = actions.config[list_key].slice()
+				lst.splice(lst.indexOf(e), 1)
+
+				actions.config[list_key] = lst
+			})
+
+			// sort the times...
+			if(options.sort){
+				actions.config[list_key] = actions.config[list_key]
+					.sort(options.sort !== true ? options.sort : undefined)
+			}
+		})
+	
+	new_button && list.dom.addClass('tail-action')
+
+	return o
+}
 
 
 

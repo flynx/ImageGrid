@@ -44,7 +44,6 @@ function(attr, states, callback){
 
 
 
-
 /*********************************************************************/
 
 var ImageGridFeatures =
