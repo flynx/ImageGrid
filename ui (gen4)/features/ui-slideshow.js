@@ -24,19 +24,12 @@ var overlay = require('lib/widget/overlay')
 
 /*********************************************************************/
 
-var _cmpTimes = function(a, b){
-	return Date.str2ms(a) - Date.str2ms(b)
-}
-
-
-
-/*********************************************************************/
-
 // NOTE: this uses ui-chrome-hidden workspace to set the initial state
 // 		of the slideshow workspace.
 //
 // XXX would be a good idea to add provision for a timer to indicate 
 // 		slideshow progress/status... 
+// 			- make this a separate feature with a toggler
 var SlideshowActions = actions.Actions({
 	config: {
 		'slideshow-looping': 'on',
@@ -314,8 +307,6 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 			function(){ this.toggleSlideshow('off') }]
 	],
 })
-
-
 
 
 
