@@ -45,8 +45,14 @@ Array.prototype.compact = function(){
 
 // return an array with duplicate elements removed...
 //
-Array.prototype.unique = function(){
-	return this.filter(function(e, i, a){ return a.indexOf(e) == i })
+Array.prototype.unique = function(normalize){
+	if(normalize){
+		var cache = this.map(normalize)
+		return this.filter(function(e, i, a){ return cache.indexOf(cache[i]) == i })
+
+	} else {
+		return this.filter(function(e, i, a){ return a.indexOf(e) == i })
+	}
 }
 
 

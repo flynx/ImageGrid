@@ -41,6 +41,7 @@ var SlideshowActions = actions.Actions({
 		'slideshow-looping': 'on',
 		'slideshow-direction': 'forward',
 		'slideshow-interval': '3s',
+		'slideshow-interval-max-count': 7,
 
 		'slideshow-intervals': [
 			'0.2s',
@@ -51,17 +52,6 @@ var SlideshowActions = actions.Actions({
 		],
 	},
 
-	// XXX make interval editable...
-	// 		i.e.
-	// 			Interval: 3s /		-- 3s is editable...
-	// 				0.2		x		-- a history of values that can be 
-	// 									selected w/o closing the dialog
-	// 									or can be removed...
-	// 				1		x
-	// 				3		x
-	// 				Custom...		-- editable/placeholder... 'enter' 
-	// 									selects value and adds it to 
-	// 									history...
 	// XXX BUG: there are still problems with focus...
 	// 		to reproduce:
 	// 			click on the first option with a mouse...
@@ -122,13 +112,37 @@ var SlideshowActions = actions.Actions({
 											return
 										}
 
+										// list length limit -> add ass is...
+										// XXX should this take into account crossed out items???
+										if(that.config['slideshow-interval-max-count']
+												&& (that.config['slideshow-intervals'].length
+													>= that.config['slideshow-interval-max-count'])){
+											that.config['slideshow-interval'] = txt
+
+											oo.close()
+
+											if(that.toggleSlideshow('?') == 'on'){
+												o.close()
+
+											} else {
+												o.client.update()
+													.done(function(){
+														o.client.select(txt)
+													})
+											}
+
+											return
+										}
+
 										// add new value and sort list...
 										that.config['slideshow-intervals']
 											.push(txt)
 										that.config['slideshow-intervals']
-											.sort(function(a, b){
-												return Date.str2ms(a) - Date.str2ms(b)
-											})
+											= that.config['slideshow-intervals']
+												.unique(Date.str2ms)
+												.sort(function(a, b){
+													return Date.str2ms(a) - Date.str2ms(b)
+												})
 
 										// update the list data...
 										oo.client.options.data 
