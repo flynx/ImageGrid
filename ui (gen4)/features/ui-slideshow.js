@@ -57,6 +57,7 @@ var SlideshowActions = actions.Actions({
 	// 			click on the first option with a mouse...
 	// 		result:
 	// 			the top dialog is not focused...
+	// XXX move generic stuff to browse.js...
 	slideshowDialog: ['Slideshow/Slideshow settings and start',
 		function(){
 			var that = this
@@ -170,9 +171,7 @@ var SlideshowActions = actions.Actions({
 								browse.makeList( null, 
 									that.config['slideshow-intervals']
 										.concat([
-											// XXX do we add a new item here???
 											'---', 
-											//$('<input type="text" pattern="[0-9]+|[0-9]*\\.[0-9]+" placeholder="New...">')
 											'New...',
 										]), 
 									{itemButtons: [
@@ -243,6 +242,7 @@ var SlideshowActions = actions.Actions({
 									}
 								})
 
+							oo.client.dom.addClass('slideshow')
 							oo.client.select(that.config['slideshow-interval'])
 
 							return
@@ -271,7 +271,7 @@ var SlideshowActions = actions.Actions({
 					that.resetSlideshowTimer()
 				})
 
-			o.client.dom.addClass('metadata-view')
+			o.client.dom.addClass('metadata-view slideshow')
 
 			o.client.select(-1)
 
