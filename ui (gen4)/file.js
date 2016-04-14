@@ -9,7 +9,6 @@ var events = require('events')
 
 var fse = require('fs-extra')
 var glob = require('glob')
-var Promise = require('promise')
 
 // XXX seems that we need different buids of this for use with node and nw...
 // XXX BUG: nw-gyp does not support msvs2015...
@@ -95,10 +94,20 @@ function listJSON(path, pattern){
 	return gGlob(path +'/'+ pattern +'.json')
 }
 
+// XXX move to someplace generic...
+var denodeify = function(func){
+	return function(){
+		return new Promise(function(resolve, reject){
+			func.apply(null, args2array(arguments).concat([function(err, res){
+				err ? reject(err) : resolve(res)
+			}]))
+		})
+	}
+}
 
-var loadFile = Promise.denodeify(fse.readFile)
-var writeFile = Promise.denodeify(fse.writeFile)
-var ensureDir = Promise.denodeify(fse.ensureDir)
+var loadFile = denodeify(fse.readFile)
+var writeFile = denodeify(fse.writeFile)
+var ensureDir = denodeify(fse.ensureDir)
 
 
 // XXX handle errors...

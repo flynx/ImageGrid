@@ -17,7 +17,6 @@
     "page-cache": true
   },
   "dependencies": {
-    "promise": "*",
     "commander": "^2.9.0",
     "exiftool": "0.0.3",
     "flickrapi": "^0.3.28",

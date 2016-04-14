@@ -8,7 +8,6 @@ if(typeof(process) != 'undefined'){
 	var os = require('os')
 	var fs = require('fs')
 	var path = require('path')
-	var promise = require('promise')
 	var glob = require('glob')
 	var guaranteeEvents = require('guarantee-events')
 }
@@ -19,7 +18,7 @@ define(function(require){ var module = {}
 // XXX HACK...
 // 		...for some reason this gets loaded in browser...
 if(typeof(process) == 'undefined'){
-	return module
+	return modul
 }
 
 
@@ -46,7 +45,7 @@ function(path, make){
 	var fullpath = path.indexOf('*') >= 0
 	path = path.indexOf('*') < 0 ? path + '/*' : path
 
-	return new promise(function(resolve, reject){
+	return new Promise(function(resolve, reject){
 		// XXX do we need this???
 		/*guaranteeEvents([
 				'match',
@@ -84,11 +83,17 @@ function(path, make){
 	// XXX expose these as config...
 	var fullpath = false
 
-	var stat = promise.denodeify(fs.stat)
+	var stat = function(path){
+		return new Promise(function(resolve, reject){
+			fs.stat.call(fs, path, function(err, res){
+				err ? reject(err) : resolve(res)
+			})
+		})
+	}
 
 	// get the drive list on windows...
 	if(os.type() == 'Windows_NT' && path == '/'){
-		return new promise(function(resolve, reject){
+		return new Promise(function(resolve, reject){
 			// NOTE: this is a bit brain-dead but it gets the job done 
 			// 		and faster than fancy modules like drivelist...
 			'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -110,7 +115,7 @@ function(path, make){
 
 	// list dirs...
 	} else {
-		return new promise(function(resolve, reject){
+		return new Promise(function(resolve, reject){
 			// XXX should this be a promise???
 			fs.readdir(path, function(err, files){
 				// XXX
@@ -128,6 +133,14 @@ function(path, make){
 								: file, null, true)
 						})
 						.then(function(res){
+							// can't read stat... (XXX ???)
+							if(res == null){
+								make(fullpath 
+									? path +'/'+ file 
+									: file, null, true)
+								return
+							}
+
 							var dir = res.isDirectory()
 							var elem = res && make(fullpath 
 									? path +'/'+ file 

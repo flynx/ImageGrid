@@ -21,9 +21,9 @@ var base = require('features/base')
 
 var AppControlActions = actions.Actions({
 	config: {
-		'application-window': null,
-
 		'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
+
+		'window-delay-initial-display': 200,
 	},
 
 	// XXX revise these...
@@ -86,20 +86,23 @@ var AppControlActions = actions.Actions({
 				this.centerViewer()
 			}
 
-
-			win.show()
-
-			// XXX check if we are full screen...
-			if(cfg != null && cfg.fullscreen && !win.isFullscreen){
-				this.toggleFullScreen('on')
-			}
-
 			/* XXX still buggy....
 			// restore interface scale...
 			this.toggleInterfaceScale(
 				this.config['ui-scale-mode'] 
 				|| this.toggleInterfaceScale('??')[0])
 			*/
+
+			// NOTE: we delay this to enable the browser time to render
+			// 		things before we show them to the user...
+			setTimeout(function(){
+				win.show()
+
+				// XXX check if we are full screen...
+				if(cfg != null && cfg.fullscreen && !win.isFullscreen){
+					this.toggleFullScreen('on')
+				}
+			}, this.config['window-delay-initial-display'] || 0)
 		}],
 	
 	toggleFullScreen: ['Interface/Toggle full screen mode',
