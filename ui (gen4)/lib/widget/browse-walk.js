@@ -18,7 +18,7 @@ define(function(require){ var module = {}
 // XXX HACK...
 // 		...for some reason this gets loaded in browser...
 if(typeof(process) == 'undefined'){
-	return modul
+	return module
 }
 
 
