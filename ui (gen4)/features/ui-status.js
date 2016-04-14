@@ -147,11 +147,7 @@ var StatusBarActions = actions.Actions({
 										item.hasClass('global') ? 'global' : undefined)
 							})
 							.click(function(){
-								// select the text...
-								window.getSelection().removeAllRanges()
-								var range = document.createRange()
-								range.selectNodeContents(this)
-								window.getSelection().addRange(range)
+								$(this).selectText()
 							})
 							.blur(function(){
 								that.updateStatusBar()
@@ -214,10 +210,7 @@ var StatusBarActions = actions.Actions({
 						// select the text...
 						// XXX should this also copy???
 						.click(function(){
-							window.getSelection().removeAllRanges()
-							var range = document.createRange()
-							range.selectNodeContents(this)
-							window.getSelection().addRange(range)
+							$(this).selectText()
 						}))
 
 			} else {
