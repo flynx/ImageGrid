@@ -11,6 +11,7 @@ define(function(require){ var module = {}
 var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
+var keyboard = require('lib/keyboard')
 
 var core = require('features/core')
 var base = require('features/base')
@@ -96,6 +97,57 @@ var SlideshowActions = actions.Actions({
 							return
 						}
 
+						var _makeEditable = function(elem){
+							$(elem).find('.text')
+								.prop('contenteditable', true)
+								.text('')
+								.selectText()
+								.keydown(function(){ 
+									event.stopPropagation() 
+
+									var n = keyboard.toKeyName(event.keyCode)
+
+									// reset to original value...
+									if(n == 'Esc'){
+										oo.client.update()
+
+									// save value...
+									} else if(n == 'Enter'){
+										event.preventDefault()
+										var txt = $(this).text()
+
+										// invalid format...
+										if(!Date.str2ms(txt)){
+											oo.client.update()
+											return
+										}
+
+										// add new value and sort list...
+										that.config['slideshow-intervals']
+											.push(txt)
+										that.config['slideshow-intervals']
+											.sort(function(a, b){
+												return Date.str2ms(a) - Date.str2ms(b)
+											})
+
+										// update the list data...
+										oo.client.options.data 
+											= that.config['slideshow-intervals']
+												.concat([
+													'---', 
+													'New...'
+												])
+
+										// update list and select new value...
+										oo.client.update()
+											.done(function(){
+												oo.client.select('"'+txt+'"')
+											})
+									}
+								})
+							return $(elem)
+						}
+
 						// interval...
 						// XXX add custom interval editing...
 						if(/interval/i.test(path)){
@@ -105,8 +157,9 @@ var SlideshowActions = actions.Actions({
 									that.config['slideshow-intervals']
 										.concat([
 											// XXX do we add a new item here???
-											//'---', 
-											//'New'
+											'---', 
+											//$('<input type="text" pattern="[0-9]+|[0-9]*\\.[0-9]+" placeholder="New...">')
+											'New...',
 										]), 
 									{itemButtons: [
 										// mark for removal...
@@ -127,9 +180,16 @@ var SlideshowActions = actions.Actions({
 												}
 											}],
 									]})
+									// select 'New...' item...
+									.on('select', function(evt, elem){
+										if(/new/i.test($(elem).text())){
+											_makeEditable(elem)
+										}
+									})
 									.open(function(evt, time){
-										if(/new/i.test(time)){
-											// XXX edit...
+										if(!Date.str2ms(time)){
+											oo.client.select('New...')
+											// XXX place the cursor...
 											// XXX
 
 										} else {

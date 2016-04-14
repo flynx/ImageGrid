@@ -355,8 +355,9 @@ var BrowserPrototype = {
 					'#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
 				],
 
-			Enter: 'stopFullPathEdit!',
-			Esc: 'abortFullPathEdit!',
+			// XXX
+			Enter: 'push!',
+			Esc: 'update!',
 		},
 
 		FullPathEdit: {
@@ -454,19 +455,19 @@ var BrowserPrototype = {
 			D: 'toggleDisabledDrawing',
 			T: 'toggleNonTraversableDrawing',
 
-			// XXX should these be select???
+			// XXX should these use .select(..)???
 			// XXX should these be relative to visible area or absolute 
 			// 		to current list regardless of scroll (as is now)???
 			// XXX should these work while filtering??
-			'#1': 'push: "0!"',
-			'#2': 'push: "1!"',
-			'#3': 'push: "2!"',
-			'#4': 'push: "3!"',
-			'#5': 'push: "4!"',
-			'#6': 'push: "5!"',
-			'#7': 'push: "6!"',
-			'#8': 'push: "7!"',
-			'#9': 'push: "8!"',
+			'#1': 'push!: "0!"',
+			'#2': 'push!: "1!"',
+			'#3': 'push!: "2!"',
+			'#4': 'push!: "3!"',
+			'#5': 'push!: "4!"',
+			'#6': 'push!: "5!"',
+			'#7': 'push!: "6!"',
+			'#8': 'push!: "7!"',
+			'#9': 'push!: "8!"',
 		},
 	},
 

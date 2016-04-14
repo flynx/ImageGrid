@@ -30,6 +30,13 @@
 }
 
 
+/* editable... */
+.browse-widget [contenteditable] {
+	min-width: 2px;
+	min-height: 2px;
+}
+
+
 
 /************************************************************ Path ***/
 
@@ -244,6 +251,7 @@
 .browse-widget .list>div.disabled {
 	opacity: 0.3;
 }
+
 
 /* numbers... */
 /* XXX need to show this only on devices with keyboards... */

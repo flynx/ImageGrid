@@ -161,6 +161,18 @@ function(path){
 
 /*********************************************************************/
 
+module.selectElemText = function(elem){
+	var range = document.createRange()
+	range.selectNodeContents(elem)
+	var sel = window.getSelection()
+	sel.removeAllRanges()
+	sel.addRange(range)
+}
+
+
+
+/*********************************************************************/
+
 // XXX experiment
 if(typeof(jQuery) != typeof(undefined)){
 	jQuery.fn._drag = function(){
@@ -201,7 +213,24 @@ if(typeof(jQuery) != typeof(undefined)){
 				elem.velocity('stop')
 			})
 	}
+
+	jQuery.fn.selectText = function(){
+		var range = document.createRange()
+
+		this.each(function(){
+			range.selectNodeContents(this)
+		})
+
+		var sel = window.getSelection()
+		sel.removeAllRanges()
+		sel.addRange(range)
+
+		return this
+	}
+
+
 }
+
 
 
 /**********************************************************************

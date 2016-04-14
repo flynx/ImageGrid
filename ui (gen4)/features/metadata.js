@@ -268,10 +268,12 @@ var MetadataUIActions = actions.Actions({
 		],
 		'metadata-auto-select-mode': 'on select',
 
+		// XXX
 		'metadata-editable-fields': [
-			'Artist',
-			'Copyright',
-			'Comment',
+			//'Artist',
+			//'Copyright',
+			//'Comment',
+			//'Tags',
 		],
 		'metadata-field-order': [
 			// base
@@ -324,13 +326,6 @@ var MetadataUIActions = actions.Actions({
 				b = field_order.indexOf(b[0].replace(/: $/, ''))
 				b = b == -1 ? x : b
 				return a - b
-			}
-			var _selectElemText = function(elem){
-				var range = document.createRange()
-				range.selectNodeContents(elem)
-				var sel = window.getSelection()
-				sel.removeAllRanges()
-				sel.addRange(range)
 			}
 
 			var _buildInfoList = function(image, metadata){
@@ -434,7 +429,7 @@ var MetadataUIActions = actions.Actions({
 					// select value of current item...
 					.on('select', function(evt, elem){
 						if(that.config['metadata-auto-select-mode'] == 'on select'){
-							_selectElemText($(elem).find('.text').last()[0])
+							$(elem).find('.text').last().selectText()
 						}
 					})
 					// XXX start editing onkeydown...
@@ -451,7 +446,7 @@ var MetadataUIActions = actions.Actions({
 
 						// handle select...
 						if(that.config['metadata-auto-select-mode'] == 'on open'){
-							_selectElemText(elem[0])
+							elem.selectText()
 						}
 
 						// skip non-editable fields...
