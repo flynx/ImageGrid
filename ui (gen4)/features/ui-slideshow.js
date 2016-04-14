@@ -170,11 +170,6 @@ var SlideshowActions = actions.Actions({
 			return o
 		}],
 	
-	// XXX add a custom time setting...
-	toggleSlideshowInterval: ['- Slideshow/Slideshow interval',
-		core.makeConfigToggler('slideshow-interval', 
-			function(){ return this.config['slideshow-intervals'] },
-			function(){ this.resetSlideshowTimer() })],
 	toggleSlideshowDirection: ['- Slideshow/Slideshow direction',
 		core.makeConfigToggler('slideshow-direction', ['forward', 'reverse'])],
 	toggleSlideshowLooping: ['- Slideshow/Slideshow looping',
