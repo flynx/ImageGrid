@@ -98,6 +98,7 @@ function listJSON(path, pattern){
 var denodeify = function(func){
 	return function(){
 		// XXX for some reason this does not see args2array...
+		// XXX and for some reason the error is not reported...
 		var args = [].slice.call(arguments)
 		return new Promise(function(resolve, reject){
 			func.apply(null, args.concat([function(err, res){

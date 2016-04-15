@@ -115,7 +115,7 @@ var AppControlActions = actions.Actions({
 
 				// change the state only if the target state is not the same
 				// as the current state...
-				if((w.isFullscreen() ? 'on' : 'off') != action){
+				if((w.isFullscreen ? 'on' : 'off') != action){
 					this.ribbons.preventTransitions()
 
 					// hide the viewer to hide any animation crimes...
