@@ -46,6 +46,55 @@ var SlideshowActions = actions.Actions({
 		],
 	},
 
+	slideshowIntervalDialog: ['Slideshow/Slideshow interval',
+		function(){
+			var that = this
+
+			// suspend the timer if it's not suspended outside...
+			var suspended_timer = this.__slideshouw_timer == 'suspended'
+			suspended_timer || this.suspendSlideshowTimer()
+
+			var button_text = 'New...'
+			var o = widgets.makeConfigListEditor(that, 'slideshow-intervals', {
+					new_button: button_text,
+					length_limit: that.config['slideshow-interval-max-count'],
+					check: Date.str2ms,
+					unique: Date.str2ms,
+					sort: function(a, b){
+						return Date.str2ms(a) - Date.str2ms(b) },
+					// NOTE: this is called when adding a new value and 
+					// 		list maximum length is reached...
+					callback: function(value){
+						that.config['slideshow-interval'] = value
+
+						o.close()
+					},
+				})
+				.close(function(){
+					// reset the timer if it was not suspended outside...
+					suspended_timer || that.resetSlideshowTimer()
+				})
+
+			o.client
+				.open(function(evt, time){
+					// we clicked the 'New' button -- select it...
+					if(!Date.str2ms(time)){
+						o.client.select(button_text)
+
+					// set value and exit...
+					} else {
+						that.config['slideshow-interval'] = time
+
+						// XXX this is ugly...
+						o.close()
+					}
+				})
+
+			o.client.dom.addClass('tail-action')
+			o.client.select(that.config['slideshow-interval'])
+
+			return o
+		}],
 	// XXX BUG: there are still problems with focus...
 	// 		to reproduce:
 	// 			click on the first option with a mouse...
@@ -55,7 +104,9 @@ var SlideshowActions = actions.Actions({
 		function(){
 			var that = this
 
-			this.suspendSlideshowTimer()
+			// suspend the timer if it's not suspended outside...
+			var suspended_timer = this.__slideshouw_timer == 'suspended'
+			suspended_timer || this.suspendSlideshowTimer()
 
 			// XXX might be a good idea to make this generic...
 			var _makeTogglHandler = function(toggler){
@@ -76,51 +127,28 @@ var SlideshowActions = actions.Actions({
 						.on('open', function(){
 							var txt = $(this).find('.text').first().text()
 
-							var oo = widgets.makeConfigListEditor(that, 'slideshow-intervals', {
-									new_button: 'New...',
-									length_limit: that.config['slideshow-interval-max-count'],
-									check: Date.str2ms,
-									unique: Date.str2ms,
-									sort: function(a, b){
-										return Date.str2ms(a) - Date.str2ms(b) },
-									// NOTE: this is called when adding
-									// 		a new value and list maximum
-									// 		length is reached...
-									callback: function(value){
-										that.config['slideshow-interval'] = value
-
-										o.client.update()
-										oo.close()
-
-										o.client.select(value)
-									},
-								})
+							var oo = that.slideshowIntervalDialog()
 								.close(function(){
-									// XXX this is ugly...
-									o.focus()
-
-									that.toggleSlideshow('?') == 'on'
-										&& o.close()
-								})
-
-							oo.client
-								.open(function(evt, time){
-									if(!Date.str2ms(time)){
-										oo.client.select('New...')
+									// slideshow is running -- close directly...
+									if(that.toggleSlideshow('?') == 'on'){
+										o.close()
 
 									} else {
-										that.config['slideshow-interval'] = time
-
-										// XXX this is ugly...
-										oo.close()
-
 										o.client.update()
-										o.client.select(txt)
+											.then(function(){
+												o.client.select(txt)
+
+												// XXX this is ugly...
+												o.focus()
+											})
 									}
 								})
 
-							oo.client.dom.addClass('tail-action')
-							oo.client.select(that.config['slideshow-interval'])
+							// update slideshow menu...
+							oo.client.open(function(){
+								o.client.update()
+								o.client.select(txt)
+							})
 						})
 
 					make(['Direction: ', 
@@ -139,7 +167,8 @@ var SlideshowActions = actions.Actions({
 						})
 				}))
 				.close(function(){
-					that.resetSlideshowTimer()
+					// reset the timer if it was not suspended outside...
+					suspended_timer || that.resetSlideshowTimer()
 				})
 
 			o.client.dom.addClass('metadata-view tail-action')

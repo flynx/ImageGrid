@@ -153,6 +153,7 @@ function(actions, list_key, options){
 						}
 					}
 				}],
+			// XXX add shift up/down/top/bottom and other buttons (optional)...
 		]})
 		// select the new_button item...
 		.on('select', function(evt, elem){

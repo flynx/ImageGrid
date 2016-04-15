@@ -50,6 +50,7 @@ module.GLOBAL_KEYBOARD = {
 		Home: 'resetSlideshowTimer',
 		End: 'resetSlideshowTimer',
 
+		T: 'slideshowIntervalDialog',
 		R: 'toggleSlideshowDirection',
 		L: 'toggleSlideshowLooping',
 	},

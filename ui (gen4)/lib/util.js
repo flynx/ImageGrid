@@ -47,7 +47,7 @@ Array.prototype.compact = function(){
 //
 Array.prototype.unique = function(normalize){
 	if(normalize){
-		var cache = this.map(normalize)
+		var cache = this.map(function(e){ return normalize(e) })
 		return this.filter(function(e, i, a){ return cache.indexOf(cache[i]) == i })
 
 	} else {
