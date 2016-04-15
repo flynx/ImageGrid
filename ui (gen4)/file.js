@@ -97,9 +97,11 @@ function listJSON(path, pattern){
 // XXX move to someplace generic...
 var denodeify = function(func){
 	return function(){
+		// XXX for some reason this does not see args2array...
+		var args = [].slice.call(arguments)
 		return new Promise(function(resolve, reject){
-			func.apply(null, args2array(arguments).concat([function(err, res){
-				err ? reject(err) : resolve(res)
+			func.apply(null, args.concat([function(err, res){
+				return err ? reject(err) : resolve(res)
 			}]))
 		})
 	}
