@@ -2191,6 +2191,48 @@ Browser.prototype.__proto__ = widget.Widget.prototype
 
 /*********************************************************************/
 
+var ListerPrototype = Object.create(BrowserPrototype)
+ListerPrototype.options = {
+	pathPrefix: '', 
+	fullPathEdit: false,
+	traversable: false,
+	flat: true,
+
+	// XXX not sure if we need these...
+	skipDisabledItems: false,
+	// NOTE: to disable this set it to false or null
+	disableItemPattern: '^- ',
+
+	elementSeparatorText: '---',
+}
+// XXX should we inherit or copy options???
+// 		...inheriting might pose problems with deleting values reverting
+// 		them to default instead of nulling them and mutable options might
+// 		get overwritten...
+ListerPrototype.options.__proto__ = BrowserPrototype.options
+
+var Lister = 
+module.Lister = 
+object.makeConstructor('Lister', 
+		BrowserClassPrototype, 
+		ListerPrototype)
+
+
+// This is a shorthand for: new List(<elem>, { data: <list> })
+var makeLister = 
+module.makeLister = function(elem, lister, options){
+	var opts = {}
+	for(var k in options){
+		opts[k] = rest[k]
+	}
+	opts.list = lister
+	return Lister(elem, opts)
+}
+
+
+
+/*********************************************************************/
+
 // Flat list...
 //
 // This expects a data option set with the following format:

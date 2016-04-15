@@ -94,8 +94,15 @@ function listJSON(path, pattern){
 	return gGlob(path +'/'+ pattern +'.json')
 }
 
+// wrap a node style callback function into a Promise...
+//
+// NOTE: this is inspired by the promise module for node this stopped 
+// 		working, and porting one method was simpler that trying to get
+// 		to the bottom of the issue, especially with native promises...
 // XXX move to someplace generic...
-var denodeify = function(func){
+var denodeify = 
+module.denodeify =
+function(func){
 	return function(){
 		// XXX for some reason this does not see args2array...
 		// XXX and for some reason the error is not reported...

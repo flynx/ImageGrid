@@ -34,6 +34,15 @@ var browseWalk = require('lib/widget/browse-walk')
 
 
 /*********************************************************************/
+
+if(typeof(process) != 'undefined'){
+	var copy = file.denodeify(fse.copy)
+	var ensureDir = file.denodeify(fse.ensureDir)
+}
+
+
+
+/*********************************************************************/
 // fs reader/loader...
 
 
@@ -758,17 +767,21 @@ var FileSystemWriterActions = actions.Actions({
 	exportView: ['File/Export current view',
 		function(){
 		}],
-	// XXX not done yet...
-	// 		needs:
-	// 			ensureDir(..)
-	// 			copy(..)
-	// 		...both denodeify(..)'ed
-	// XXX export current state as a full loadable index
+
+	// Export current state as a full loadable index
+	//
 	// XXX might be interesting to unify this and .exportView(..)
 	// XXX should this return a promise??? ...a clean promise???
+	// XXX add preview selection...
+	// XXX handle .image.path and other stack files...
 	// XXX local collections???
+	// XXX add a ui...
+	// 		- select path
+	// 		- select preview size
 	exportCollection: ['File/Export as collection',
 		function(path, logger){
+			logger = logger || this.logger
+
 			var json = this.json()
 
 			// get all loaded gids...
@@ -785,6 +798,7 @@ var FileSystemWriterActions = actions.Actions({
 				var img = json.images[gid]
 				if(img){
 					images[gid] = json.images[gid]
+
 					// remove un-needed previews...
 					// XXX
 				}
@@ -794,27 +808,28 @@ var FileSystemWriterActions = actions.Actions({
 			json.data.order = gids
 			json.images = images
 			// XXX should we check if index dir is present in path???
-			path = path +'/'+ this.config['index-dir']
+			var index_path = path +'/'+ this.config['index-dir']
 
-			// NOTE: if we are to use .saveIndex(..) here, do not forget
-			// 		to reset .changes
-			file.writeIndex(
-				this.prepareIndexForWrite(json).prepared, 
-				path, 
-				this.config['index-filename-template'], 
-				logger || this.logger)
-			
 			// copy previews for the loaded images...
 			// XXX should also optionally populate the base dir and nested favs...
-			var base_dir = this.base_dir
+			var base_dir = this.location.path
+
 			gids.forEach(function(gid){
 				var img = json.images[gid]
 				var img_base = img.base_path
-				img.base_path = path
 				var previews = img.preview
 
-				for(var res in previews){
-					var from = (img_base || base_dir) +'/'+ preview_path 
+				// NOTE: we are copying everything to one place so no 
+				// 		need for a base path...
+				delete img.base_path
+
+				// XXX copy img.path -- the main image, especially when no previews present....
+				// XXX
+
+				Object.keys(previews).forEach(function(res){
+					var preview_path = decodeURI(previews[res]) 
+
+					var from = (img_base || base_dir) +'/'+ preview_path
 					var to = path +'/'+ preview_path
 
 					// XXX do we queue these or let the OS handle it???
@@ -823,7 +838,7 @@ var FileSystemWriterActions = actions.Actions({
 					// XXX
 					ensureDir(pathlib.dirname(to))
 						.catch(function(err){
-							// XXX
+							logger && logger.emit('error', err)
 						})
 						.then(function(){
 							return copy(from, to)
@@ -832,12 +847,99 @@ var FileSystemWriterActions = actions.Actions({
 								// 		we just use the one above (after
 								// 		.then(..))
 								.catch(function(err){
-									// XXX
+									logger && logger.emit('error', err)
+								})
+								.then(function(){
+									logger && logger.emit('done', to)
 								})
 						})
-				}
+				})
 			})
+
+			// NOTE: if we are to use .saveIndex(..) here, do not forget
+			// 		to reset .changes
+			file.writeIndex(
+				this.prepareIndexForWrite(json, true).prepared, 
+				index_path, 
+				this.config['index-filename-template'], 
+				logger || this.logger)
+			
 		}],
+	
+	// XXX use options:
+	// 		- level dir name
+	// 		- size
+	// 		- filename pattern
+	// XXX might also be good to save/load the export state to .ImageGrid-export.json
+	// XXX make custom previews...
+	// 		...should this be a function of .images.getBestPreview(..)???
+	exportDirs: ['File/Export as nested directories',
+		function(path, pattern, level_dir, size, logger){
+			logger = logger || this.logger
+			var that = this
+			var base_dir = this.location.path
+			var to_dir = path
+
+			// get/set the config data...
+			// XXX should this store the last set???
+			level_dir = level_dir || this.config['export-level-directory-name'] || 'fav'
+			size = size || this.config['export-preview-size'] || 1000
+			pattern = pattern || this.config['export-preview-name-pattern'] || '%f'
+
+			this.data.ribbon_order
+				.slice()
+				.reverse()
+				.forEach(function(ribbon){
+					// NOTE: this is here to keep the specific path local to 
+					// 		this scope...
+					var img_dir = to_dir
+
+					ensureDir(pathlib.dirname(img_dir))
+						.catch(function(err){
+							logger && logger.emit('error', err)
+						})
+						.then(function(){
+							that.data.ribbons[ribbon].forEach(function(gid){
+								var img = that.images[gid]
+
+
+								// get best preview...
+								var from = (img.base_path || base_dir) +'/'+ that.images.getBestPreview(gid, size).url
+
+								// XXX see if we need to make a preview (sharp)
+								// XXX
+
+								// XXX get/form image name... 
+								// XXX might be a good idea to connect this to the info framework...
+								var ext = pathlib.extname(img.name)
+								var name = pattern
+									.replace(/%f/, img.name)
+									.replace(/%n/, img.name.replace(ext, ''))
+									.replace(/%e/, ext)
+									.replace(/%gid/, gid)
+									// XXX get the correct length...
+									.replace(/%g/, gid.slice(-7, -1))
+									// XXX %()m marked...
+									// XXX
+									// XXX %()b bookmarked...
+									// XXX
+									// XXX EXIF...
+
+								var to = img_dir +'/'+ name
+
+								copy(from, to)
+									.catch(function(err){
+										logger && logger.emit('error', err)
+									})
+									.then(function(){
+										logger && logger.emit('done', to)
+									})
+							})
+						})
+
+					to_dir += '/'+level_dir
+				})
+		}]
 })
 
 

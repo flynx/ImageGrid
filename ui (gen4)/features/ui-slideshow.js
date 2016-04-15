@@ -57,33 +57,25 @@ var SlideshowActions = actions.Actions({
 
 			this.suspendSlideshowTimer()
 
+			// XXX might be a good idea to make this generic...
+			var _makeTogglHandler = function(toggler){
+				return function(){
+					var txt = $(this).find('.text').first().text()
+					that[toggler]()
+					o.client.update()
+						.then(function(){ o.client.select(txt) })
+					that.toggleSlideshow('?') == 'on' 
+						&& o.close()
+				}
+			}
+
 			var o = overlay.Overlay(this.ribbons.viewer, 
-				browse.makeList(
-					null,
-					[
-						// XXX make this editable...
-						['Interval: ', 
-							function(){ return that.config['slideshow-interval'] }],
-						['Direction: ', 
-							function(){ return that.config['slideshow-direction'] }],
-						['Looping: ', 
-							function(){ return that.config['slideshow-looping'] }],
+				browse.makeLister(null, function(path, make){
+					make(['Interval: ', 
+							function(){ return that.config['slideshow-interval'] }])
+						.on('open', function(){
+							var txt = $(this).find('.text').first().text()
 
-						//'---',
-						[function(){ 
-							return that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start' }],
-					])
-					.open(function(evt, path){
-						// start/stop...
-						if(path == 'Start' || path == 'Stop'){
-							that.toggleSlideshow()
-							o.close()
-							return
-						}
-
-						// interval...
-						if(/interval/i.test(path)){
-							var to_remove = []
 							var oo = widgets.makeConfigListEditor(that, 'slideshow-intervals', {
 									new_button: 'New...',
 									length_limit: that.config['slideshow-interval-max-count'],
@@ -107,9 +99,8 @@ var SlideshowActions = actions.Actions({
 									// XXX this is ugly...
 									o.focus()
 
-									if(that.toggleSlideshow('?') == 'on'){
-										o.close()
-									}
+									that.toggleSlideshow('?') == 'on'
+										&& o.close()
 								})
 
 							oo.client
@@ -122,42 +113,36 @@ var SlideshowActions = actions.Actions({
 
 										// XXX this is ugly...
 										oo.close()
+
 										o.client.update()
-										o.client.select(path.split(':')[0])
+										o.client.select(txt)
 									}
 								})
 
 							oo.client.dom.addClass('tail-action')
 							oo.client.select(that.config['slideshow-interval'])
+						})
 
-							return
-						}
+					make(['Direction: ', 
+							function(){ return that.config['slideshow-direction'] }])
+						.on('open', _makeTogglHandler('toggleSlideshowDirection'))
+					make(['Looping: ', 
+							function(){ return that.config['slideshow-looping'] }])
+						.on('open', _makeTogglHandler('toggleSlideshowLooping'))
 
-						// direction...
-						if(/direction/i.test(path)){
-							that.toggleSlideshowDirection()
-							o.client.update()
-
-						// Looping...
-						} else if(/looping/i.test(path)){
-							that.toggleSlideshowLooping()
-							o.client.update()
-						}
-
-						// XXX this is ugly...
-						o.client.select(path.split(':')[0])
-
-						// do not keep the dialog open during the slideshow...
-						if(that.toggleSlideshow('?') == 'on'){
+					// Start/stop...
+					make([function(){ 
+							return that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start' }])
+						.on('open', function(){
+							that.toggleSlideshow()
 							o.close()
-						}
-					}))
+						})
+				}))
 				.close(function(){
 					that.resetSlideshowTimer()
 				})
 
 			o.client.dom.addClass('metadata-view tail-action')
-
 			o.client.select(-1)
 
 			return o
