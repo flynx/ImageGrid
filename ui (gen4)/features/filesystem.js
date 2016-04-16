@@ -796,14 +796,9 @@ var FileSystemWriterActions = actions.Actions({
 				})
 		}],
 
-	// XXX same as ctrl-shif-s in gen3
-	exportView: ['File/Export current view',
-		function(){
-		}],
-
 	// Export current state as a full loadable index
 	//
-	// XXX might be interesting to unify this and .exportView(..)
+	// XXX handle relative paths...
 	// XXX should this return a promise??? ...a clean promise???
 	// XXX add preview selection...
 	// XXX handle .image.path and other stack files...
@@ -899,6 +894,7 @@ var FileSystemWriterActions = actions.Actions({
 			
 		}],
 	
+	// XXX handle relative paths...
 	// XXX use options:
 	// 		- level dir name
 	// 		- size
@@ -1115,8 +1111,22 @@ var FileSystemWriterUIActions = actions.Actions({
 		'export-dialog-mode': 'Directories',
 
 		'export-dialog-modes': {
-			'Images only': 'exportDirs',
-			'Full index': 'exportIndex',
+			'Images only': {
+				action: 'exportDirs',
+				data: [
+					'pattern',
+					'size',
+					'level_dir',
+					'target_dir',
+				],
+			},
+			'Full index': {
+				action: 'exportIndex',
+				data: [
+					//'size',
+					'target_dir',
+				],
+			},
 		},
 	},
 
@@ -1140,13 +1150,13 @@ var FileSystemWriterUIActions = actions.Actions({
 			return this
 				.markChanged('all')
 				.saveIndexHere()}],
+
 	// XXX add ability to create dirs...
 	// XXX this needs feedback...
 	// XXX should this return a promise???
 	browseSaveIndex: ['File/Save index to...', 
 		makeBrowseProxy('saveIndex', function(){
 			this.location.method = 'loadIndex' })],
-	
 	// XXX need to be able to make dirs...
 	browseExportIndex: ['File/Export/Index to...',
 		makeBrowseProxy('exportIndex')],
@@ -1155,10 +1165,72 @@ var FileSystemWriterUIActions = actions.Actions({
 	browseExportDirs: ['File/Export/Images to...',
 		makeBrowseProxy('exportDirs')],
 
-	// XXX make this a multi format export dialog...
-	// 		- index
-	// 		- dirs
-	// 		- ...
+
+	// Export dialog...
+	//
+	__export_dialog_fields__: {
+		'pattern': function(actions, make, overlay){
+			return make(['Filename pattern: ', 
+					function(){
+						return actions.config['export-preview-name-pattern'] || '%f' }])
+				.on('open', 
+					widgets.makeNestedConfigListEditor(actions, overlay,
+						'export-preview-name-patterns',
+						'export-preview-name-pattern'))
+		},
+		'level_dir': function(actions, make, overlay){
+			return make(['Level directory: ', 
+					function(){ 
+						return actions.config['export-level-directory-name'] || 'fav' }])
+				.on('open', 
+					widgets.makeNestedConfigListEditor(actions, overlay,
+						'export-level-directory-names', 
+						'export-level-directory-name'))
+		},
+		'size': function(actions, make, overlay){
+			return make(['Image size: ', 
+					function(){ 
+						return actions.config['export-preview-size'] || 1000 }])
+				// XXX add validation???
+				.on('open', 
+					widgets.makeNestedConfigListEditor(actions, overlay,
+						'export-preview-sizes',
+						'export-preview-size'))
+
+		},
+		'target_dir': function(actions, make, overlay){
+			return make(['To: ', 
+				function(){ return actions.config['export-path'] || './' }], 
+				{ buttons: [
+					['browse', function(p){
+						var e = this.filter('"'+p+'"', false)
+						var path = e.find('.text').last().text()
+						var txt = e.find('.text').first().text()
+
+						// XXX add new dir global button...
+						return actions.browsePath(path, 
+							function(path){ 
+								actions.config['export-path'] = path
+								actions.config['export-paths'].splice(0, 0, path)
+
+								overlay.client.update()
+								overlay.client.select(txt)
+
+								// XXX ugly...
+								overlay.focus()
+							})
+					}]
+				]})
+				.on('open', 
+					widgets.makeNestedConfigListEditor(actions, overlay,
+						'export-paths',
+						'export-path',
+						{
+							// XXX add 'edit' button...
+							//itemButtons: []
+						}))
+		}
+	},
 	// XXX indicate export state: index, crop, image...
 	exportDialog: ['File/Export/Images...',
 		function(){
@@ -1166,7 +1238,10 @@ var FileSystemWriterUIActions = actions.Actions({
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeLister(null, function(path, make){
-					// XXX disable 'x' buttons...
+					var mode = that.config['export-dialog-mode'] || 'Images only'
+					var data = that.config['export-dialog-modes'][mode].data
+
+					// mode selector...
 					make(['Export mode: ', 
 							function(){ return that.config['export-dialog-mode'] || 'Directories' }])
 						.on('open', 
@@ -1178,67 +1253,26 @@ var FileSystemWriterUIActions = actions.Actions({
 									itemButtons: [],
 								}))
 
-					make(['Filename pattern: ', 
-							function(){ return that.config['export-preview-name-pattern'] || '%f' }])
-						.on('open', 
-							widgets.makeNestedConfigListEditor(that, o,
-								'export-preview-name-patterns',
-								'export-preview-name-pattern'))
+					// get the root and user fields...
+					var fields = that.__export_dialog_fields__ || {}
+					var base_fields = FileSystemWriterUIActions.__export_dialog_fields__ || {}
+					// build the fields...
+					data.forEach(function(k){
+						(fields[k] 
+								&& fields[k].call(that, that, make, o))
+							|| (base_fields[k] 
+									&& base_fields[k].call(that, that, make, o))
+					})
 
-					make(['Level directory: ', 
-							function(){ return that.config['export-level-directory-name'] || 'fav' }])
-						.on('open', 
-							widgets.makeNestedConfigListEditor(that, o,
-								'export-level-directory-names', 
-								'export-level-directory-name'))
-
-					make(['Target image: ', 
-							function(){ return that.config['export-preview-size'] || 1000 }])
-						// XXX add validation???
-						.on('open', 
-							widgets.makeNestedConfigListEditor(that, o,
-								'export-preview-sizes',
-								'export-preview-size'))
-
-					make(['To: ', 
-						function(){ return that.config['export-path'] || './' }], 
-						{ buttons: [
-							['browse', function(p){
-								var e = this.filter('"'+p+'"', false)
-								var path = e.find('.text').last().text()
-								var txt = e.find('.text').first().text()
-
-								// XXX add new dir global button...
-								return that.browsePath(path, 
-									function(path){ 
-										that.config['export-path'] = path
-										that.config['export-paths'].splice(0, 0, path)
-
-										o.client.update()
-										o.client.select(txt)
-
-										// XXX ugly...
-										o.focus()
-									})
-							}]
-						]})
-						.on('open', 
-							widgets.makeNestedConfigListEditor(that, o,
-								'export-paths',
-								'export-path',
-								{
-									// XXX add 'edit' button...
-									//itemButtons: []
-								}))
-
-					// Start/stop...
+					// Start/stop action...
 					make([function(){
 							// XXX indicate export state: index, crop, image...
 							return 'Export'}]) 
 						.on('open', function(){
 							// XXX is this correct???
 							// XXX handle relative paths!!!
-							that[that.config['export-mode']](that.config['export-path'] || that.location.path)
+							that[that.config['export-mode'].action](
+								that.config['export-path'] || that.location.path)
 							o.close()
 						})
 				}))
