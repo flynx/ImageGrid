@@ -114,15 +114,19 @@ function(actions, list_key, options){
 						.push(txt)
 
 					// unique...
-					if(options.unique){
+					if(options.unique == null || options.unique){
 						actions.config[list_key] = actions.config[list_key]
-							.unique(options.unique !== true ? options.unique : undefined)
+							.unique(typeof(options.unique) == typeof(function(){}) ?
+								options.unique 
+								: undefined)
 					}
 
 					// sort...
 					if(options.sort){
 						actions.config[list_key] = actions.config[list_key]
-							.sort(options.sort !== true ? options.sort : undefined)
+							.sort(typeof(options.sort) == typeof(function(){}) ? 
+								options.sort 
+								: undefined)
 					}
 
 					// update the list data...

@@ -1198,6 +1198,8 @@ var FileSystemWriterUIActions = actions.Actions({
 						'export-preview-size'))
 
 		},
+		// XXX make this editable on open and remove "new" from history...
+		// XXX add "history" button...
 		'target_dir': function(actions, make, overlay){
 			return make(['To: ', 
 				function(){ return actions.config['export-path'] || './' }], 
@@ -1219,8 +1221,17 @@ var FileSystemWriterUIActions = actions.Actions({
 								// XXX ugly...
 								overlay.focus()
 							})
-					}]
+					}],
+					['histroy', widgets.makeNestedConfigListEditor(actions, overlay,
+						'export-paths',
+						'export-path',
+						{
+							new_button: false,
+							// XXX add 'edit' button...
+							//itemButtons: []
+						})],
 				]})
+				// XXX make this editable???
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, overlay,
 						'export-paths',
