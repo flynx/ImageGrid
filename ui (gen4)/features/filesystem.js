@@ -764,19 +764,19 @@ var FileSystemWriterActions = actions.Actions({
 				prepared: file.prepareIndex(json, changes),
 			}
 		}],
+	
 	// NOTE: with no arguments this will save index to .location.path
 	// XXX should this return a promise??? ...a clean promise???
 	saveIndex: ['- File/Save index',
 		function(path, logger){
 			var that = this
-			// XXX this is a stub to make this compatible with makeBrowseProxy(..)
-			// 		...we do need a default here...
-			/*
-			if(path == null){
-				return
-			}
-			*/
 			path = path || this.location.path
+
+			// resolve relative paths...
+			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path)){
+				// XXX do we need to normalize???
+				path = this.location.path +'/'+ path
+			}
 
 			// XXX get a logger...
 			logger = logger || this.logger
@@ -798,17 +798,23 @@ var FileSystemWriterActions = actions.Actions({
 
 	// Export current state as a full loadable index
 	//
-	// XXX handle relative paths...
+	// XXX what sould happen if no path is given???
 	// XXX should this return a promise??? ...a clean promise???
 	// XXX add preview selection...
 	// XXX handle .image.path and other stack files...
 	// XXX local collections???
-	// XXX add a ui...
-	// 		- select path
-	// 		- select preview size
 	exportIndex: ['- File/Export index',
 		function(path, logger){
 			logger = logger || this.logger
+
+			// XXX is this correct???
+			path = path || './exported'
+
+			// resolve relative paths...
+			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path)){
+				// XXX do we need to normalize???
+				path = this.location.path +'/'+ path
+			}
 
 			var json = this.json()
 
@@ -894,12 +900,7 @@ var FileSystemWriterActions = actions.Actions({
 			
 		}],
 	
-	// XXX handle relative paths...
-	// XXX use options:
-	// 		- level dir name
-	// 		- size
-	// 		- filename pattern
-	// XXX might also be good to save/load the export state to .ImageGrid-export.json
+	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX make custom previews...
 	// 		...should this be a function of .images.getBestPreview(..)???
 	exportDirs: ['File/Export as nested directories',
@@ -907,6 +908,13 @@ var FileSystemWriterActions = actions.Actions({
 			logger = logger || this.logger
 			var that = this
 			var base_dir = this.location.path
+
+			// resolve relative paths...
+			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path)){
+				// XXX do we need to normalize???
+				path = base_dir +'/'+ path
+			}
+
 			var to_dir = path
 
 			// get/set the config data...
@@ -941,18 +949,28 @@ var FileSystemWriterActions = actions.Actions({
 								// XXX get/form image name... 
 								// XXX might be a good idea to connect this to the info framework...
 								var ext = pathlib.extname(img.name)
+								var tags = that.data.getTags(gid)
 								var name = pattern
+									// file name...
 									.replace(/%f/, img.name)
 									.replace(/%n/, img.name.replace(ext, ''))
 									.replace(/%e/, ext)
+
+									// gid...
 									.replace(/%gid/, gid)
-									// XXX get the correct length...
+									// XXX get the correct short gid length...
 									.replace(/%g/, gid.slice(-7, -1))
-									// XXX %()m marked...
+
+									// order...
+									.replace(/%i/, that.data.getImageOrder(gid))
+									.replace(/%I/, that.data.getImageOrder(gid, 'global'))
+
+									// tags...
+									.replace(/%\((.*)\)m/, tags.indexOf('selected') >= 0 ? '$1' : '')
+									.replace(/%\((.*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
+
+									// metadata...
 									// XXX
-									// XXX %()b bookmarked...
-									// XXX
-									// XXX EXIF...
 
 								var to = img_dir +'/'+ name
 
@@ -1223,8 +1241,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						'export-preview-size'))
 
 		},
-		// XXX make this editable on open and remove "new" from history...
-		// XXX add "history" button...
+		// XXX BUG: history closing errors -- non-critical...
 		'target_dir': function(actions, make, overlay){
 			var elem = make(['To: ', 
 				function(){ return actions.config['export-path'] || './' }], 
@@ -1247,13 +1264,13 @@ var FileSystemWriterUIActions = actions.Actions({
 								overlay.focus()
 							})
 					}],
+					// XXX BUG: closing this breaks on parant.focus()...
 					['histroy', widgets.makeNestedConfigListEditor(actions, overlay,
 						'export-paths',
 						'export-path',
 						{
+							unique: true,
 							new_button: false,
-							// XXX add 'edit' button...
-							//itemButtons: []
 						})],
 				]})
 				// XXX make this editable???
