@@ -53,6 +53,9 @@ var browseWalk = require('lib/widget/browse-walk')
 // 		// this is called when a new value is added via new_button but 
 // 		// list length limit is reached...
 // 		callback: function(selected){ ... },
+//
+// 		// see: itemButtons doc in browse.js for more info...
+// 		itemButtons: [..]
 // 	}
 //
 // XXX add sort buttons: up/down/top/bottom...
@@ -92,10 +95,15 @@ function(actions, list_key, options){
 
 					// list length limit
 					if(options.length_limit 
-						&& (actions.config[list_key].length >= options.length_limit)){
+						&& (lst.length >= options.length_limit)){
 
 						options.callback && options.callback.call(list, txt)
 
+						return
+					}
+
+					// prevent editing non-arrays...
+					if(!(actions.config[list_key] instanceof Array)){
 						return
 					}
 
@@ -134,9 +142,12 @@ function(actions, list_key, options){
 
 	var to_remove = []
 
+	var lst = actions.config[list_key]
+	lst = lst instanceof Array ? lst : Object.keys(lst)
+
 	var list = browse.makeList( null, 
-		actions.config[list_key].concat(new_button ? [ new_button ] : []), 
-		{itemButtons: [
+		lst.concat(new_button ? [ new_button ] : []), 
+		{itemButtons: options.itemButtons || [
 			// mark for removal...
 			['&times;', 
 				function(p){
@@ -174,6 +185,11 @@ function(actions, list_key, options){
 
 	var o = overlay.Overlay(actions.ribbons.viewer, list)
 		.close(function(){
+			// prevent editing non-arrays...
+			if(!(actions.config[list_key] instanceof Array)){
+				return
+			}
+
 			// remove striked items...
 			to_remove.forEach(function(e){
 				var lst = actions.config[list_key].slice()
@@ -198,7 +214,7 @@ function(actions, list_key, options){
 // XXX should this be more generic...
 var makeNestedConfigListEditor = 
 module.makeNestedConfigListEditor =
-function(actions, parent, list_name, value_name, options){
+function(actions, parent, list_key, value_key, options){
 	return function(){
 		var txt = $(this).find('.text').first().text()
 
@@ -209,14 +225,14 @@ function(actions, parent, list_name, value_name, options){
 			// NOTE: this is called when adding a new value and 
 			// 		list maximum length is reached...
 			callback: function(value){
-				actions.config[value_name] = value
+				actions.config[value_key] = value
 
 				o.close()
 			},
 		}
 		options.__proto__ = dfl_options
 
-		var o = makeConfigListEditor(actions, list_name, options) 
+		var o = makeConfigListEditor(actions, list_key, options) 
 
 		// update slideshow menu...
 		o.client.open(function(){
@@ -229,7 +245,7 @@ function(actions, parent, list_name, value_name, options){
 			parent.focus()
 		})
 
-		o.client.select(actions.config[value_name])
+		o.client.select(actions.config[value_key])
 	}
 }
 

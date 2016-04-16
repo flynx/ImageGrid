@@ -1111,6 +1111,15 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 // 		- save as.. (browser)
 // 		- save if not base path present (browser)
 var FileSystemWriterUIActions = actions.Actions({
+	config: {
+		'export-dialog-mode': 'Directories',
+
+		'export-dialog-modes': {
+			'Images only': 'exportDirs',
+			'Full index': 'exportIndex',
+		},
+	},
+
 	// XXX this needs feedback...
 	// XXX should this return a promise???
 	saveIndexHere: ['File/Save',
@@ -1151,12 +1160,24 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 		- dirs
 	// 		- ...
 	// XXX indicate export state: index, crop, image...
-	exportDirsDialog: ['File/Export/Images...',
+	exportDialog: ['File/Export/Images...',
 		function(){
 			var that = this
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeLister(null, function(path, make){
+					// XXX disable 'x' buttons...
+					make(['Export mode: ', 
+							function(){ return that.config['export-dialog-mode'] || 'Directories' }])
+						.on('open', 
+							widgets.makeNestedConfigListEditor(that, o,
+								'export-dialog-modes',
+								'export-dialog-mode',
+								{
+									new_button: false,
+									itemButtons: [],
+								}))
+
 					make(['Filename pattern: ', 
 							function(){ return that.config['export-preview-name-pattern'] || '%f' }])
 						.on('open', 
@@ -1182,14 +1203,19 @@ var FileSystemWriterUIActions = actions.Actions({
 					make(['To: ', 
 						function(){ return that.config['export-path'] || './' }], 
 						{ buttons: [
-							['browse', function(){
-								var path = $(this).find('.text').last().text()
+							['browse', function(p){
+								var e = this.filter('"'+p+'"', false)
+								var path = e.find('.text').last().text()
+								var txt = e.find('.text').first().text()
 
 								// XXX add new dir global button...
 								return that.browsePath(path, 
 									function(path){ 
 										that.config['export-path'] = path
 										that.config['export-paths'].splice(0, 0, path)
+
+										o.client.update()
+										o.client.select(txt)
 
 										// XXX ugly...
 										o.focus()
@@ -1199,7 +1225,11 @@ var FileSystemWriterUIActions = actions.Actions({
 						.on('open', 
 							widgets.makeNestedConfigListEditor(that, o,
 								'export-paths',
-								'export-path'))
+								'export-path',
+								{
+									// XXX add 'edit' button...
+									//itemButtons: []
+								}))
 
 					// Start/stop...
 					make([function(){
@@ -1208,7 +1238,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						.on('open', function(){
 							// XXX is this correct???
 							// XXX handle relative paths!!!
-							that.exportDirs(that.config['export-path'] || that.location.path)
+							that[that.config['export-mode']](that.config['export-path'] || that.location.path)
 							o.close()
 						})
 				}))
