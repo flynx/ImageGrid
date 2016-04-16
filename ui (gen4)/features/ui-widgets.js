@@ -69,79 +69,67 @@ function(actions, list_key, options){
 	new_button = new_button === true ? 'New...' : new_button
 
 	var _makeEditable = function(elem){
-		$(elem).find('.text')
-			.prop('contenteditable', true)
-			.text('')
-			.selectText()
-			.keydown(function(){ 
-				event.stopPropagation() 
-
-				var n = keyboard.toKeyName(event.keyCode)
-
-				// reset to original value...
-				if(n == 'Esc'){
-					list.update()
-
-				// save value...
-				} else if(n == 'Enter'){
-					event.preventDefault()
-					var txt = $(this).text()
-
-					// invalid format...
-					if(options.check && !options.check(txt)){
-						list.update()
-						return
-					}
-
-					// list length limit
-					if(options.length_limit 
-						&& (lst.length >= options.length_limit)){
-
-						options.callback && options.callback.call(list, txt)
-
-						return
-					}
-
-					// prevent editing non-arrays...
-					if(!(actions.config[list_key] instanceof Array)){
-						return
-					}
-
-					// save the new version...
-					actions.config[list_key] = actions.config[list_key].slice()
-					// add new value and sort list...
-					actions.config[list_key]
-						.push(txt)
-
-					// unique...
-					if(options.unique == null || options.unique){
-						actions.config[list_key] = actions.config[list_key]
-							.unique(typeof(options.unique) == typeof(function(){}) ?
-								options.unique 
-								: undefined)
-					}
-
-					// sort...
-					if(options.sort){
-						actions.config[list_key] = actions.config[list_key]
-							.sort(typeof(options.sort) == typeof(function(){}) ? 
-								options.sort 
-								: undefined)
-					}
-
-					// update the list data...
-					list.options.data 
-						= actions.config[list_key]
-							.concat(new_button ? [ new_button ] : [])
-
-					// update list and select new value...
-					list.update()
-						.done(function(){
-							list.select('"'+txt+'"')
-						})
-				}
+		return $(elem).find('.text')
+			.makeEditable()
+			.on('edit-aborted', function(){
+				list.update()
 			})
-		return $(elem)
+			.on('edit-done', function(evt, text){
+				var txt = $(this).text()
+
+				// invalid format...
+				if(options.check && !options.check(txt)){
+					list.update()
+					return
+				}
+
+				// list length limit
+				if(options.length_limit 
+					&& (lst.length >= options.length_limit)){
+
+					options.callback && options.callback.call(list, txt)
+
+					return
+				}
+
+				// prevent editing non-arrays...
+				if(!(actions.config[list_key] instanceof Array)){
+					return
+				}
+
+				// save the new version...
+				actions.config[list_key] = actions.config[list_key].slice()
+				// add new value and sort list...
+				actions.config[list_key]
+					.push(txt)
+
+				// unique...
+				if(options.unique == null || options.unique){
+					actions.config[list_key] = actions.config[list_key]
+						.unique(typeof(options.unique) == typeof(function(){}) ?
+							options.unique 
+							: undefined)
+				}
+
+				// sort...
+				if(options.sort){
+					actions.config[list_key] = actions.config[list_key]
+						.sort(typeof(options.sort) == typeof(function(){}) ? 
+							options.sort 
+							: undefined)
+				}
+
+				// update the list data...
+				list.options.data 
+					= actions.config[list_key]
+						.concat(new_button ? [ new_button ] : [])
+
+				// update list and select new value...
+				list.update()
+					.done(function(){
+						list.select('"'+txt+'"')
+					})
+			})
 	}
 
 	var to_remove = []
@@ -176,6 +164,13 @@ function(actions, list_key, options){
 			if(new_button && $(elem).find('.text').text() == new_button){
 				_makeEditable(elem)
 			}
+		})
+		// restore striked-out items...
+		.on('update', function(){
+			to_remove.forEach(function(e){
+				list.filter('"'+ e +'"')
+					.toggleClass('strike-out')
+			})
 		})
 		.open(function(evt, path){
 			// we clicked the 'New' button -- select it...

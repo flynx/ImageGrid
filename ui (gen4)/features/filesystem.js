@@ -1168,6 +1168,31 @@ var FileSystemWriterUIActions = actions.Actions({
 
 	// Export dialog...
 	//
+	// Export <mode> is set by:
+	// 		.config['export-mode']
+	//
+	// The fields used and their order is determined by:
+	// 		.config['export-modes'][<mode>].data	(list)
+	//
+	// The action used to export is determined by:
+	// 		.config['export-modes'][<mode>].action
+	//
+	//
+	// Dialog fields...
+	//
+	// Format:
+	// 	{
+	// 		// Arguments:
+	// 		//	actions		- the actions object
+	// 		//	make		- browse item constructor 
+	// 		//					(see: browse.Browser.update(..) for more info)
+	// 		//	overlay		- the containing overlay object
+	// 		<key>: function(actions, make, overlay){ ... },
+	// 		...
+	// 	}
+	//
+	// NOTE: .__export_dialog_fields__ can be defined both in the feature
+	// 		as well as in the instance.
 	__export_dialog_fields__: {
 		'pattern': function(actions, make, overlay){
 			return make(['Filename pattern: ', 
@@ -1201,7 +1226,7 @@ var FileSystemWriterUIActions = actions.Actions({
 		// XXX make this editable on open and remove "new" from history...
 		// XXX add "history" button...
 		'target_dir': function(actions, make, overlay){
-			return make(['To: ', 
+			var elem = make(['To: ', 
 				function(){ return actions.config['export-path'] || './' }], 
 				{ buttons: [
 					['browse', function(p){
@@ -1232,14 +1257,28 @@ var FileSystemWriterUIActions = actions.Actions({
 						})],
 				]})
 				// XXX make this editable???
-				.on('open', 
-					widgets.makeNestedConfigListEditor(actions, overlay,
-						'export-paths',
-						'export-path',
-						{
-							// XXX add 'edit' button...
-							//itemButtons: []
-						}))
+				.on('open', function(){
+					event.preventDefault()
+
+					var path = elem.find('.text').last()
+						.makeEditable({
+							clear_on_edit: false,
+							abort_keys: [
+								'Esc',
+							],
+						})
+						.on('edit-done', function(_, path){
+							actions.config['export-path'] = path
+							actions.config['export-paths'].splice(0, 0, path)
+
+						})
+						.on('edit-aborted edit-done', function(evt, path){
+							overlay.client.update()
+								.then(function(){
+									overlay.client.select(path)
+								})
+						})
+				})
 		}
 	},
 	// XXX indicate export state: index, crop, image...
@@ -1280,9 +1319,10 @@ var FileSystemWriterUIActions = actions.Actions({
 							// XXX indicate export state: index, crop, image...
 							return 'Export'}]) 
 						.on('open', function(){
+							var mode = that.config['export-dialog-modes'][that.config['export-dialog-mode']]
 							// XXX is this correct???
 							// XXX handle relative paths!!!
-							that[that.config['export-mode'].action](
+							that[mode.action](
 								that.config['export-path'] || that.location.path)
 							o.close()
 						})

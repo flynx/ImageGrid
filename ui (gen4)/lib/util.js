@@ -9,6 +9,7 @@ define(function(require){ var module = {}
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 
+
 /*********************************************************************/
 
 String.prototype.capitalize = function(){
@@ -220,6 +221,7 @@ if(typeof(jQuery) != typeof(undefined)){
 			})
 	}
 
+
 	jQuery.fn.selectText = function(){
 		var range = document.createRange()
 
@@ -233,6 +235,84 @@ if(typeof(jQuery) != typeof(undefined)){
 
 		return this
 	}
+
+
+	var keyboard = require('lib/keyboard')
+
+	// Make element editable...
+	//
+	// Options format:
+	// 	{
+	// 		multiline: false,
+	//
+	// 		reset_on_abort: true,
+	// 		clear_on_edit: true,
+	//
+	// 		abort_keys: [
+	// 			'Esc',
+	// 			...
+	// 		],
+	// 	}
+	//
+	// XXX should we just use form elements???
+	// 		...it's a trade-off, here we add editing functionality and fight
+	// 		a bit the original function, in an input we'll need to fight part
+	// 		of the editing functionality and add our own navigation...
+	// XXX move this to a more generic spot...
+	jQuery.fn.makeEditable = function(options){
+		options = options || {}
+		var that = this
+
+		var original = this.text()
+
+		if(options.clear_on_edit == null || options.clear_on_edit){
+			this.text('')
+		}
+
+		this
+			.prop('contenteditable', true)
+			// make the element focusable and selectable...
+			.attr('tabindex', '0')
+			// NOTE: this will also focus the element...
+			.selectText()
+			.keydown(function(){ 
+				if(!that.prop('contenteditable')){
+					return
+				}
+
+				event.stopPropagation() 
+
+				var n = keyboard.toKeyName(event.keyCode)
+
+				// abort...
+				if((options.abort_keys || ['Esc']).indexOf(n) >= 0){
+					// reset original value...
+					(options.reset_on_abort == null || options.reset_on_abort) 
+						&& that.text(original)
+
+					that
+						.trigger('edit-aborted', original)
+
+				// done -- single line...
+				} else if(n == 'Enter' 
+						&& !options.multiline){
+					event.preventDefault()
+
+					that.trigger('edit-done', that.text())
+
+				// done -- multiline...
+				} else if(n == 'Enter' 
+						&& (event.ctrlKey || event.metaKey) 
+						&& options.multiline){
+					event.preventDefault()
+
+					that.trigger('edit-done', that.text())
+				}
+			})
+
+		return this
+	}
+
 
 
 }
