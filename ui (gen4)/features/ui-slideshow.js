@@ -46,6 +46,7 @@ var SlideshowActions = actions.Actions({
 		],
 	},
 
+	// XXX use widgets.makeNestedConfigListEditor(...)???
 	slideshowIntervalDialog: ['Slideshow/Slideshow interval',
 		function(){
 			var that = this
@@ -75,22 +76,6 @@ var SlideshowActions = actions.Actions({
 					suspended_timer || that.resetSlideshowTimer()
 				})
 
-			o.client
-				.open(function(evt, time){
-					// we clicked the 'New' button -- select it...
-					if(!Date.str2ms(time)){
-						o.client.select(button_text)
-
-					// set value and exit...
-					} else {
-						that.config['slideshow-interval'] = time
-
-						// XXX this is ugly...
-						o.close()
-					}
-				})
-
-			o.client.dom.addClass('tail-action')
 			o.client.select(that.config['slideshow-interval'])
 
 			return o

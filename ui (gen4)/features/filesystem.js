@@ -27,6 +27,8 @@ var features = require('lib/features')
 
 var core = require('features/core')
 
+var widgets = require('features/ui-widgets')
+
 var overlay = require('lib/widget/overlay')
 var browse = require('lib/widget/browse')
 var browseWalk = require('lib/widget/browse-walk')
@@ -566,6 +568,37 @@ module.FileSystemLoaderURLHistoryUI = core.ImageGridFeatures.Feature({
 var FileSystemWriterActions = actions.Actions({
 	config: {
 		//'index-filename-template': '${DATE}-${KEYWORD}.${EXT}',
+
+		'export-path': null,
+		'export-paths': [],
+
+		'export-preview-name-pattern': '%f',
+		'export-preview-name-patterns': [
+			'%f',
+			'%n%(-bookmarked)b%e',
+			'%n%(-marked)m%e',
+		],
+
+		'export-level-directory-name': 'fav',
+		'export-level-directory-names': [
+			'fav',
+			'select',
+		],
+
+		'export-preview-size': 1000,
+		// XXX add options to indicate:
+		// 		- long side
+		// 		- short side
+		// 		- vertical
+		// 		- horizontal
+		// 		- ...
+		'export-preview-sizes': [
+			500,
+			900,
+			1000,
+			1280,
+			1920,
+		],
 	},
 
 	// This can be:
@@ -778,7 +811,7 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX add a ui...
 	// 		- select path
 	// 		- select preview size
-	exportCollection: ['File/Export as collection',
+	exportIndex: ['- File/Export index',
 		function(path, logger){
 			logger = logger || this.logger
 
@@ -1104,6 +1137,87 @@ var FileSystemWriterUIActions = actions.Actions({
 	browseSaveIndex: ['File/Save index to...', 
 		makeBrowseProxy('saveIndex', function(){
 			this.location.method = 'loadIndex' })],
+	
+	// XXX need to be able to make dirs...
+	browseExportIndex: ['File/Export/Index to...',
+		makeBrowseProxy('exportIndex')],
+	// XXX need to be able to make dirs...
+	// XXX STUB
+	browseExportDirs: ['File/Export/Images to...',
+		makeBrowseProxy('exportDirs')],
+
+	// XXX make this a multi format export dialog...
+	// 		- index
+	// 		- dirs
+	// 		- ...
+	// XXX indicate export state: index, crop, image...
+	exportDirsDialog: ['File/Export/Images...',
+		function(){
+			var that = this
+
+			var o = overlay.Overlay(this.ribbons.viewer, 
+				browse.makeLister(null, function(path, make){
+					make(['Filename pattern: ', 
+							function(){ return that.config['export-preview-name-pattern'] || '%f' }])
+						.on('open', 
+							widgets.makeNestedConfigListEditor(that, o,
+								'export-preview-name-patterns',
+								'export-preview-name-pattern'))
+
+					make(['Level directory: ', 
+							function(){ return that.config['export-level-directory-name'] || 'fav' }])
+						.on('open', 
+							widgets.makeNestedConfigListEditor(that, o,
+								'export-level-directory-names', 
+								'export-level-directory-name'))
+
+					make(['Target image: ', 
+							function(){ return that.config['export-preview-size'] || 1000 }])
+						// XXX add validation???
+						.on('open', 
+							widgets.makeNestedConfigListEditor(that, o,
+								'export-preview-sizes',
+								'export-preview-size'))
+
+					make(['To: ', 
+						function(){ return that.config['export-path'] || './' }], 
+						{ buttons: [
+							['browse', function(){
+								var path = $(this).find('.text').last().text()
+
+								// XXX add new dir global button...
+								return that.browsePath(path, 
+									function(path){ 
+										that.config['export-path'] = path
+										that.config['export-paths'].splice(0, 0, path)
+
+										// XXX ugly...
+										o.focus()
+									})
+							}]
+						]})
+						.on('open', 
+							widgets.makeNestedConfigListEditor(that, o,
+								'export-paths',
+								'export-path'))
+
+					// Start/stop...
+					make([function(){
+							// XXX indicate export state: index, crop, image...
+							return 'Export'}]) 
+						.on('open', function(){
+							// XXX is this correct???
+							// XXX handle relative paths!!!
+							that.exportDirs(that.config['export-path'] || that.location.path)
+							o.close()
+						})
+				}))
+
+			o.client.dom.addClass('metadata-view tail-action')
+			o.client.select(-1)
+
+			return o
+		}],
 })
 
 

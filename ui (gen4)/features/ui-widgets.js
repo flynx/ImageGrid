@@ -99,6 +99,8 @@ function(actions, list_key, options){
 						return
 					}
 
+					// save the new version...
+					actions.config[list_key] = actions.config[list_key].slice()
 					// add new value and sort list...
 					actions.config[list_key]
 						.push(txt)
@@ -133,8 +135,7 @@ function(actions, list_key, options){
 	var to_remove = []
 
 	var list = browse.makeList( null, 
-		actions.config[list_key]
-			.concat(new_button ? [ new_button ] : []), 
+		actions.config[list_key].concat(new_button ? [ new_button ] : []), 
 		{itemButtons: [
 			// mark for removal...
 			['&times;', 
@@ -161,6 +162,15 @@ function(actions, list_key, options){
 				_makeEditable(elem)
 			}
 		})
+		.open(function(evt, path){
+			// we clicked the 'New' button -- select it...
+			if(new_button && (path == new_button || path == '')){
+				list.select(new_button)
+
+			} else {
+				options.callback && options.callback.call(list, path)
+			}
+		})
 
 	var o = overlay.Overlay(actions.ribbons.viewer, list)
 		.close(function(){
@@ -172,7 +182,7 @@ function(actions, list_key, options){
 				actions.config[list_key] = lst
 			})
 
-			// sort the times...
+			// sort...
 			if(options.sort){
 				actions.config[list_key] = actions.config[list_key]
 					.sort(options.sort !== true ? options.sort : undefined)
@@ -182,6 +192,45 @@ function(actions, list_key, options){
 	new_button && list.dom.addClass('tail-action')
 
 	return o
+}
+
+
+// XXX should this be more generic...
+var makeNestedConfigListEditor = 
+module.makeNestedConfigListEditor =
+function(actions, parent, list_name, value_name, options){
+	return function(){
+		var txt = $(this).find('.text').first().text()
+
+		options = options || {}
+		var dfl_options = {
+			new_button: 'New...',
+			length_limit: 10,
+			// NOTE: this is called when adding a new value and 
+			// 		list maximum length is reached...
+			callback: function(value){
+				actions.config[value_name] = value
+
+				o.close()
+			},
+		}
+		options.__proto__ = dfl_options
+
+		var o = makeConfigListEditor(actions, list_name, options) 
+
+		// update slideshow menu...
+		o.client.open(function(){
+			parent.client.update()
+			parent.client.select(txt)
+		})
+
+		o.close(function(){
+			// XXX this is ugly...
+			parent.focus()
+		})
+
+		o.client.select(actions.config[value_name])
+	}
 }
 
 
