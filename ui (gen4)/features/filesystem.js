@@ -811,7 +811,9 @@ var FileSystemWriterActions = actions.Actions({
 			path = path || './exported'
 
 			// resolve relative paths...
-			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path)){
+			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path) 
+					// and skip windows drives...
+					&& !/^[a-z]:[\\\/]/i.test(path)){
 				// XXX do we need to normalize???
 				path = this.location.path +'/'+ path
 			}
@@ -910,9 +912,11 @@ var FileSystemWriterActions = actions.Actions({
 			var base_dir = this.location.path
 
 			// resolve relative paths...
-			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path)){
+			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path) 
+					// and skip windows drives...
+					&& !/^[a-z]:[\\\/]/i.test(path)){
 				// XXX do we need to normalize???
-				path = base_dir +'/'+ path
+				path = this.location.path +'/'+ path
 			}
 
 			var to_dir = path
