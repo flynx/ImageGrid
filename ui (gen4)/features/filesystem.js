@@ -798,6 +798,7 @@ var FileSystemWriterActions = actions.Actions({
 
 	// Export current state as a full loadable index
 	//
+	// XXX resolve env variables in path...
 	// XXX what sould happen if no path is given???
 	// XXX should this return a promise??? ...a clean promise???
 	// XXX add preview selection...
@@ -809,6 +810,9 @@ var FileSystemWriterActions = actions.Actions({
 
 			// XXX is this correct???
 			path = path || './exported'
+
+			// XXX resolve env variables in path...
+			// XXX
 
 			// resolve relative paths...
 			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path) 
@@ -874,20 +878,17 @@ var FileSystemWriterActions = actions.Actions({
 					// XXX
 					ensureDir(pathlib.dirname(to))
 						.catch(function(err){
-							logger && logger.emit('error', err)
-						})
+							logger && logger.emit('error', err) })
 						.then(function(){
 							return copy(from, to)
 								// XXX do we need to have both of this 
 								// 		and the above .catch(..) or can
 								// 		we just use the one above (after
 								// 		.then(..))
-								.catch(function(err){
-									logger && logger.emit('error', err)
-								})
 								.then(function(){
-									logger && logger.emit('done', to)
-								})
+									logger && logger.emit('done', to) })
+								.catch(function(err){
+									logger && logger.emit('error', err) })
 						})
 				})
 			})
@@ -903,6 +904,7 @@ var FileSystemWriterActions = actions.Actions({
 		}],
 	
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
+	// XXX resolve env variables in path...
 	// XXX make custom previews...
 	// 		...should this be a function of .images.getBestPreview(..)???
 	exportDirs: ['File/Export as nested directories',
@@ -910,6 +912,9 @@ var FileSystemWriterActions = actions.Actions({
 			logger = logger || this.logger
 			var that = this
 			var base_dir = this.location.path
+
+			// XXX resolve env variables in path...
+			// XXX
 
 			// resolve relative paths...
 			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path) 
@@ -937,8 +942,7 @@ var FileSystemWriterActions = actions.Actions({
 
 					ensureDir(pathlib.dirname(img_dir))
 						.catch(function(err){
-							logger && logger.emit('error', err)
-						})
+							logger && logger.emit('error', err) })
 						.then(function(){
 							that.data.ribbons[ribbon].forEach(function(gid){
 								var img = that.images[gid]
@@ -954,6 +958,7 @@ var FileSystemWriterActions = actions.Actions({
 								// XXX might be a good idea to connect this to the info framework...
 								var ext = pathlib.extname(img.name)
 								var tags = that.data.getTags(gid)
+
 								var name = pattern
 									// file name...
 									.replace(/%f/, img.name)
@@ -978,13 +983,11 @@ var FileSystemWriterActions = actions.Actions({
 
 								var to = img_dir +'/'+ name
 
-								copy(from, to)
-									.catch(function(err){
-										logger && logger.emit('error', err)
-									})
+								return copy(from, to)
 									.then(function(){
-										logger && logger.emit('done', to)
-									})
+										logger && logger.emit('done', to) })
+									.catch(function(err){
+										logger && logger.emit('error', err) })
 							})
 						})
 
