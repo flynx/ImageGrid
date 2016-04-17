@@ -36,8 +36,29 @@ var browseWalk = require('lib/widget/browse-walk')
 
 var ExternalEditorActions = actions.Actions({
 	config: {
+		// XXX do we actually need this????
 		'external-editor-default': 'System default',
-		// XXX
+
+		// XXX should this be a dict???
+		// 		...a list is simpler for sorting...
+		'_external-editors': [
+			{
+				// NOTE: empty means use app name...
+				title: 'System default',
+				// NOTE: empty means system to select editor...
+				path: '',
+				// NOTE: empty is the same as '$TARGET'...
+				arguments: '',
+				target: '',
+			},
+			{
+				title: 'IrfanView',
+				path: 'C:/Program Files (x86)/IrfanView/i_view32.exe',
+				arguments: '',
+				target: '',
+			},
+		],
+
 		'external-editors': [
 			// XXX system default might be different on different systems...
 			['System default|"$PATH"'],
@@ -48,8 +69,8 @@ var ExternalEditorActions = actions.Actions({
 		],
 
 		'external-editor-targets': [
-			'Original image',
 			'Best preview',
+			//'Original image',
 			// XXX
 		],
 	},
@@ -130,11 +151,10 @@ var ExternalEditorUIActions = actions.Actions({
 				// NOTE: empty means use app name...
 				title: '',
 				// NOTE: empty means system to select editor...
-				path: '/',
+				path: '',
 				// NOTE: empty is the same as '$TARGET'...
-				// XXX use $TARGET...
 				arguments: '',
-				target: 'Original image',
+				target: '',
 			}
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
@@ -142,7 +162,7 @@ var ExternalEditorUIActions = actions.Actions({
 					make(['Title: ', function(){ return editor.title || '' }])
 						.on('open', function(){
 							event.preventDefault()
-							widgets.makeEditableItem(o.client, 
+							widgets.makeEditableItem(o.client, $(this),
 								$(this).find('.text').last(), 
 								function(_, text){ editor.title = text }) })
 
@@ -176,26 +196,32 @@ var ExternalEditorUIActions = actions.Actions({
 						})
 						.on('open', function(){
 							event.preventDefault()
-							widgets.makeEditableItem(o.client, 
+							widgets.makeEditableItem(o.client, $(this),
 								$(this).find('.text').last(), 
 								function(_, text){ editor.path = text }) })
 
 					make(['Arguments: ', function(){ return editor.arguments || '' }])
 						.on('open', function(){
 							event.preventDefault()
-							widgets.makeEditableItem(o.client,
+							widgets.makeEditableItem(o.client, $(this),
 								$(this).find('.text').last(), 
 								function(_, text){ editor.arguments = text }) })
 
-					make(['Target: ', function(){ return editor.target || 'Original image' }])
+					make(['Target: ', 
+							function(){ 
+								return editor.target 
+									|| that.config['external-editor-targets'][0] }])
 						.on('open', 
 							widgets.makeNestedConfigListEditor(that, o,
 								'external-editor-targets',
 								function(val){ 
 									if(val == null){
 										return editor.target
+											|| that.config['external-editor-targets'][0]
+
 									} else {
-										editor.target = val
+										editor.target = val 
+											|| that.config['external-editor-targets'][0]
 									}
 								},
 								{
@@ -217,6 +243,8 @@ var ExternalEditorUIActions = actions.Actions({
 			return o
 		}],
 	// XXX use .externalEditorDialog(..)
+	// XXX need to support $TARGET in args...
+	// 		...append if not present...
 	listExtenalEditors: ['Edit/List external editors',
 		function(){
 			var that = this

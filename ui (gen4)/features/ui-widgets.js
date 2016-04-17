@@ -36,7 +36,7 @@ var browseWalk = require('lib/widget/browse-walk')
 // 		can be a different elem...
 var makeEditableItem =
 module.makeEditableItem =
-function(list, elem, callback, options){
+function(list, item, elem, callback, options){
 	return elem
 		.makeEditable({
 			clear_on_edit: false,
@@ -47,7 +47,7 @@ function(list, elem, callback, options){
 				// XXX make the selector more accurate...
 				// 		...at this point this will select the first elem
 				// 		with text which can be a different elem...
-				.then(function(){ list.select(text) })
+				.then(function(){ list.select(item.text()) })
 		})
 }
 

@@ -1299,7 +1299,7 @@ var FileSystemWriterUIActions = actions.Actions({
 		}
 	},
 	// XXX indicate export state: index, crop, image...
-	exportDialog: ['File/Export/Images...',
+	exportDialog: ['File/Export/Export optioons...',
 		function(){
 			var that = this
 
