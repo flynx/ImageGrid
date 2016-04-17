@@ -507,6 +507,8 @@ module.MetadataUI = core.ImageGridFeatures.Feature({
 
 
 
+// Load etdata on demand...
+//
 var MetadataFSUI = 
 module.MetadataFSUI = core.ImageGridFeatures.Feature({
 	title: '',

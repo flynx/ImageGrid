@@ -860,7 +860,7 @@ var FileSystemWriterActions = actions.Actions({
 				// XXX copy img.path -- the main image, especially when no previews present....
 				// XXX
 
-				Object.keys(previews).forEach(function(res){
+				previews && Object.keys(previews).forEach(function(res){
 					var preview_path = decodeURI(previews[res]) 
 
 					var from = (img_base || base_dir) +'/'+ preview_path

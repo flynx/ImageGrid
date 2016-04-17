@@ -11,6 +11,8 @@ define(function(require){ var module = {}
 var actions = require('lib/actions')
 var core = require('features/core')
 
+var widgets = require('features/ui-widgets')
+
 // widgets...
 var browse = require('lib/widget/browse')
 var overlay = require('lib/widget/overlay')
@@ -43,6 +45,12 @@ var ExternalEditorActions = actions.Actions({
 			// XXX for some reason irfanview doesnot open a path passed 
 			// 		as argument unless it uses only '\' and not '/'
 			['IrfanView|"C:/Program Files (x86)/IrfanView/i_view32.exe" "$PATH"'],
+		],
+
+		'external-editor-targets': [
+			'Original image',
+			'Best preview',
+			// XXX
 		],
 	},
 
@@ -109,6 +117,106 @@ module.ExternalEditor = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var ExternalEditorUIActions = actions.Actions({
+	// XXX get editor data...
+	// XXX set editor data...
+	// XXX revise editor format...
+	// XXX empty title -- use app name without ext...
+	externalEditorDialog: ['- Edit/',
+		function(editor){
+			var that = this
+
+			// XXX STUB: get the real editor...
+			var editor = {
+				// NOTE: empty means use app name...
+				title: '',
+				// NOTE: empty means system to select editor...
+				path: '/',
+				// NOTE: empty is the same as '$TARGET'...
+				// XXX use $TARGET...
+				arguments: '',
+				target: 'Original image',
+			}
+
+			var o = overlay.Overlay(this.ribbons.viewer, 
+				browse.makeLister(null, function(_, make){
+					make(['Title: ', function(){ return editor.title || '' }])
+						.on('open', function(){
+							event.preventDefault()
+							widgets.makeEditableItem(o.client, 
+								$(this).find('.text').last(), 
+								function(_, text){ editor.title = text }) })
+
+					make(['Path: ', function(){ return editor.path }], { 
+							buttons: [
+								['browse', function(p){
+									var e = this.filter('"'+p+'"', false)
+									var path = e.find('.text').last().text()
+									var txt = e.find('.text').first().text()
+
+									var b = overlay.Overlay(that.ribbons.viewer, 
+										browseWalk.makeWalk(null, path, 
+												// XXX
+												'*+(exe|cmd|ps1|sh)',
+												{})
+											// path selected...
+											.open(function(evt, path){ 
+												editor.path = path
+
+												b.close()
+
+												o.client.update()
+													.then(function(){ o.client.select(txt+path) })
+											}))
+											.close(function(){
+												// XXX
+												that.getOverlay().focus()
+											})
+								}]
+							]
+						})
+						.on('open', function(){
+							event.preventDefault()
+							widgets.makeEditableItem(o.client, 
+								$(this).find('.text').last(), 
+								function(_, text){ editor.path = text }) })
+
+					make(['Arguments: ', function(){ return editor.arguments || '' }])
+						.on('open', function(){
+							event.preventDefault()
+							widgets.makeEditableItem(o.client,
+								$(this).find('.text').last(), 
+								function(_, text){ editor.arguments = text }) })
+
+					make(['Target: ', function(){ return editor.target || 'Original image' }])
+						.on('open', 
+							widgets.makeNestedConfigListEditor(that, o,
+								'external-editor-targets',
+								function(val){ 
+									if(val == null){
+										return editor.target
+									} else {
+										editor.target = val
+									}
+								},
+								{
+									new_button: false,
+									itemButtons: [],
+								}))
+
+					make(['Save'])
+						.on('open', function(){
+							// XXX save stuff...
+							// XXX
+
+							o.close()
+						})
+				}))
+
+			o.client.dom.addClass('metadata-view tail-action')
+
+			return o
+		}],
+	// XXX use .externalEditorDialog(..)
 	listExtenalEditors: ['Edit/List external editors',
 		function(){
 			var that = this

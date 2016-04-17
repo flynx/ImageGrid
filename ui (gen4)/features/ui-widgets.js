@@ -31,6 +31,27 @@ var browseWalk = require('lib/widget/browse-walk')
 
 /*********************************************************************/
 
+// XXX make the selector more accurate...
+// 		...at this point this will select the first elem with text which
+// 		can be a different elem...
+var makeEditableItem =
+module.makeEditableItem =
+function(list, elem, callback, options){
+	return elem
+		.makeEditable({
+			clear_on_edit: false,
+		})
+		.on('edit-done', callback || function(){})
+		.on('edit-aborted edit-done', function(_, text){
+			list.update()
+				// XXX make the selector more accurate...
+				// 		...at this point this will select the first elem
+				// 		with text which can be a different elem...
+				.then(function(){ list.select(text) })
+		})
+}
+
+
 //
 // Options format:
 // 	{
@@ -224,7 +245,11 @@ function(actions, parent, list_key, value_key, options){
 			// NOTE: this is called when adding a new value and 
 			// 		list maximum length is reached...
 			callback: function(value){
-				actions.config[value_key] = value
+				if(typeof(value_key) == typeof(function(){})){
+					value_key(value)
+				} else {
+					actions.config[value_key] = value
+				}
 
 				o.close()
 			},
@@ -244,7 +269,12 @@ function(actions, parent, list_key, value_key, options){
 			parent.focus()
 		})
 
-		o.client.select(actions.config[value_key])
+		if(typeof(value_key) == typeof(function(){})){
+			o.client.select(value_key())
+
+		} else {
+			o.client.select(actions.config[value_key])
+		}
 	}
 }
 
