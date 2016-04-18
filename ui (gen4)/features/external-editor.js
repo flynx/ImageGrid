@@ -4,6 +4,10 @@
 *
 **********************************************************************/
 
+if(typeof(process) != 'understand'){
+	var pathlib = require('path')
+}
+
 define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
@@ -41,7 +45,7 @@ var ExternalEditorActions = actions.Actions({
 
 		// XXX should this be a dict???
 		// 		...a list is simpler for sorting...
-		'_external-editors': [
+		'external-editors': [
 			{
 				// NOTE: empty means use app name...
 				title: 'System default',
@@ -51,23 +55,17 @@ var ExternalEditorActions = actions.Actions({
 				arguments: '',
 				target: '',
 			},
+			/*
 			{
 				title: 'IrfanView',
 				path: 'C:/Program Files (x86)/IrfanView/i_view32.exe',
 				arguments: '',
 				target: '',
 			},
+			*/
 		],
 
-		'external-editors': [
-			// XXX system default might be different on different systems...
-			['System default|"$PATH"'],
-
-			// XXX for some reason irfanview doesnot open a path passed 
-			// 		as argument unless it uses only '\' and not '/'
-			['IrfanView|"C:/Program Files (x86)/IrfanView/i_view32.exe" "$PATH"'],
-		],
-
+		// XXX this is not used yet...
 		'external-editor-targets': [
 			'Best preview',
 			//'Original image',
@@ -78,14 +76,28 @@ var ExternalEditorActions = actions.Actions({
 	// XXX this still needs image type and better support for OS paths 
 	// 		...irfanview for instance does not understand '/' in paths 
 	// 		while windows in general have no problem...
+	// XXX target is not yet used...
 	openInExtenalEditor: ['Edit/Open with external editor',
 		function(editor, image, type){
-			editor = typeof(editor) == typeof('str') ? editor 
-				: this.config['external-editors'][editor == null ? 0 : editor]
-			editor = editor ? editor[0] : '$PATH'
+			editor = editor || 0
+			editor = typeof(editor) == typeof('str') ?
+					this.config['external-editors']
+						// XXX should we use other criteria???
+						.filter(function(e){ return editor == e.title })[0]
+				: this.config['external-editors'][editor]
+
+			if(editor == null){
+				// XXX ERR???
+				return
+			}
+
+			// XXX
+			//var target = editor.target == '' ? 'Best preview' : editor.target
 
 			// get the path part...
-			editor = editor.split(/\|/g).pop()
+			//editor = editor.split(/\|/g).pop()
+			editor = (editor.path != '' ? '"'+ editor.path +'" ' : '')
+				+ ((editor.arguments == '' || !editor.arguments) ? '"$PATH"' : editor.arguments)
 
 			// get the image...
 			var img = this.images[this.data.getImage(image)]
@@ -146,8 +158,17 @@ var ExternalEditorUIActions = actions.Actions({
 		function(editor){
 			var that = this
 
+			editor = editor || 0
+			editor = typeof(editor) == typeof('str') ?
+					this.config['external-editors']
+						// XXX should we use other criteria???
+						.filter(function(e){ 
+							return editor == e.title 
+								|| editor == pathlib.basename(e.path) })[0]
+				: this.config['external-editors'][editor]
+
 			// XXX STUB: get the real editor...
-			var editor = {
+			editor = editor || {
 				// NOTE: empty means use app name...
 				title: '',
 				// NOTE: empty means system to select editor...
@@ -156,6 +177,8 @@ var ExternalEditorUIActions = actions.Actions({
 				arguments: '',
 				target: '',
 			}
+
+			var editor_i = this.config['external-editors'].indexOf(editor)
 
 			var o = overlay.Overlay(this.ribbons.viewer, 
 				browse.makeLister(null, function(_, make){
@@ -231,8 +254,16 @@ var ExternalEditorUIActions = actions.Actions({
 
 					make(['Save'])
 						.on('open', function(){
-							// XXX save stuff...
-							// XXX
+							var editors = that.config['external-editors']
+
+							// updated editor...
+							if(editor_i >= 0){
+								that.config['external-editors'] = editors.slice()
+
+							// new editor...
+							} else {
+								that.config['external-editors'] = editors.concat([editor])
+							}
 
 							o.close()
 						})
@@ -248,56 +279,13 @@ var ExternalEditorUIActions = actions.Actions({
 	listExtenalEditors: ['Edit/List external editors',
 		function(){
 			var that = this
-
-			// build the list...
-			var list = {}
-			var editors = this.config['external-editors'].slice()
-			editors
-				.forEach(function(e, i){
-					list[e[0].split(/\|/g)[0]] = function(){
-						that.openInExtenalEditor(i)
-					}
-				})
-
 			var closingPrevented = false
-
-			// XXX STUB: use a top button...
-			// XXX update the list...
-			list['Add new editor...'] = function(){
-				closingPrevented = true
-				// XXX open 'new editor...' dialog...
-				var b = overlay.Overlay(that.ribbons.viewer, 
-					browseWalk.makeWalk(
-							null, '/', 
-							// XXX
-							'*+(exe|cmd|ps1|sh)',
-							{})
-						// path selected...
-						.open(function(evt, path){ 
-							// XXX
-							//this.parent.close()
-
-							// add a pretty name...
-							editors.push([path+'|"'+ path +'" "$PATH"'])
-							that.config['external-editors'] = editors
-
-							// XXX update the editor list...
-
-							// is this the correct way to do this???
-							b.close()
-							o.close()
-							that.listExtenalEditors()
-						}))
-						.close(function(){
-							o.focus()
-						})
-				return b
-			}
+			var editors = this.config['external-editors'] || []
 
 			// element index...
 			var _getEditor = function(str){
 				return editors
-					.map(function(e){ return e[0].split(/\|/g)[0] })
+					.map(function(e){ return e.title || pathlib.basename(e.path) })
 					.indexOf(str)
 			}
 
@@ -305,9 +293,62 @@ var ExternalEditorUIActions = actions.Actions({
 
 			// build the dialog...
 			var o = overlay.Overlay(this.ribbons.viewer, 
-				browse.makeList(null, list, {
+				//browse.makeList(null, list, {
+				browse.makeLister(null, 
+					function(_, make){
+						editors
+							.forEach(function(e, i){
+								make([function(){ return e.title || pathlib.basename(e.path)}])
+									.on('open', function(){
+										that.openInExtenalEditor(i)
+									})
+							})
+
+						make(['Add new editor...'])
+							.on('open', function(){
+								closingPrevented = true
+								// XXX open 'new editor...' dialog...
+								var b = overlay.Overlay(that.ribbons.viewer, 
+									browseWalk.makeWalk(
+											null, '/', 
+											// XXX
+											'*+(exe|cmd|ps1|sh)',
+											{})
+										// path selected...
+										.open(function(evt, path){ 
+											// XXX
+											//this.parent.close()
+
+											// add a pretty name...
+											editors.push({
+												path: path,
+											})
+											that.config['external-editors'] = editors
+
+											// XXX update the editor list...
+
+											// is this the correct way to do this???
+											b.close()
+											o.close()
+											that.listExtenalEditors()
+										}))
+										.close(function(){
+											o.focus()
+										})
+								return b
+							})
+					}, 
+					{
 						// add item buttons...
 						itemButtons: [
+							// edit...
+							['edit', 
+								function(p){
+									that.externalEditorDialog(p)
+										.close(function(){
+											o.client.update()
+										})
+								}],
 							// move to top...
 							['&diams;', 
 								function(p){

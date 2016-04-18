@@ -2223,7 +2223,7 @@ var makeLister =
 module.makeLister = function(elem, lister, options){
 	var opts = {}
 	for(var k in options){
-		opts[k] = rest[k]
+		opts[k] = options[k]
 	}
 	opts.list = lister
 	return Lister(elem, opts)

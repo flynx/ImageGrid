@@ -767,7 +767,7 @@ var FileSystemWriterActions = actions.Actions({
 	
 	// NOTE: with no arguments this will save index to .location.path
 	// XXX should this return a promise??? ...a clean promise???
-	saveIndex: ['- File/Save index',
+	saveIndex: ['- File/Save',
 		function(path, logger){
 			var that = this
 			path = path || this.location.path
@@ -797,6 +797,29 @@ var FileSystemWriterActions = actions.Actions({
 					that.location.method = 'loadIndex'
 				})
 		}],
+	// XXX should this be a UI action???
+	// 		...at this point this depends on .saveIndexHere(..), thus 
+	// 		it is here...
+	// XXX should this return a promise???
+	saveFullIndex: ['File/Save (full)',
+		function(){
+			return this
+				.markChanged('all')
+				.saveIndexHere()}],
+
+
+	// XXX ways to treat a collection:
+	// 		- crop data
+	// 		- independent index
+	// XXX save to: .ImageGrid/collections/<title>/
+	// XXX move to a feature???
+	// XXX API: save/load/list/remove
+	// 		...need to track save location (not the save as the index)...
+	// XXX
+	saveCollection: ['- File/Save collection',
+		function(title){
+			// XXX
+		}],
 
 	// Export current state as a full loadable index
 	//
@@ -806,7 +829,7 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX add preview selection...
 	// XXX handle .image.path and other stack files...
 	// XXX local collections???
-	exportIndex: ['- File/Export index',
+	exportIndex: ['- File/Export/Export index',
 		function(path, logger){
 			logger = logger || this.logger
 
@@ -914,12 +937,13 @@ var FileSystemWriterActions = actions.Actions({
 		}],
 	
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
-	// XXX resolve env variables in path...
-	// XXX make custom previews...
+	// XXX resolve env variables in path... (???)
+	// XXX make custom previews (option)...
 	// 		...should this be a function of .images.getBestPreview(..)???
 	// XXX report errors...
 	// XXX stop the process on errors...
-	exportDirs: ['File/Export as nested directories',
+	// XXX use tasks...
+	exportDirs: ['- File/Export/Export ribbons as directories',
 		function(path, pattern, level_dir, size, logger){
 			logger = logger || this.logger
 			var that = this
@@ -1178,37 +1202,28 @@ var FileSystemWriterUIActions = actions.Actions({
 
 	// XXX this needs feedback...
 	// XXX should this return a promise???
-	saveIndexHere: ['File/Save',
+	saveIndexHere: ['- File/',
 		function(){ 
 			if(this.location.path){ 
-				this.saveIndex(this.location.path) 
+				this.saveIndex() 
 
 			} else {
 				this.browseSaveIndex()
 			}
 		}],
-	// XXX should this be a UI action???
-	// 		...at this point this depends on .saveIndexHere(..), thus 
-	// 		it is here...
-	// XXX should this return a promise???
-	saveFullIndex: ['File/Save full',
-		function(){
-			return this
-				.markChanged('all')
-				.saveIndexHere()}],
 
 	// XXX add ability to create dirs...
 	// XXX this needs feedback...
 	// XXX should this return a promise???
-	browseSaveIndex: ['File/Save index to...', 
+	browseSaveIndex: ['- File/Save index to...', 
 		makeBrowseProxy('saveIndex', function(){
 			this.location.method = 'loadIndex' })],
 	// XXX need to be able to make dirs...
-	browseExportIndex: ['File/Export/Index to...',
+	browseExportIndex: ['File/Export/Export Index to...',
 		makeBrowseProxy('exportIndex')],
 	// XXX need to be able to make dirs...
 	// XXX STUB
-	browseExportDirs: ['File/Export/Images to...',
+	browseExportDirs: ['File/Export/Export Images to...',
 		makeBrowseProxy('exportDirs')],
 
 

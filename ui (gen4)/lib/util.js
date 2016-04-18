@@ -273,6 +273,7 @@ if(typeof(jQuery) != typeof(undefined)){
 			.prop('contenteditable', true)
 			// make the element focusable and selectable...
 			.attr('tabindex', '0')
+			.addClass('editable-field')
 			// NOTE: this will also focus the element...
 			.selectText()
 			.keydown(function(){ 
