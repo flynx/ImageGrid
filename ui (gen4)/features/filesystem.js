@@ -917,6 +917,8 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX resolve env variables in path...
 	// XXX make custom previews...
 	// 		...should this be a function of .images.getBestPreview(..)???
+	// XXX report errors...
+	// XXX stop the process on errors...
 	exportDirs: ['File/Export as nested directories',
 		function(path, pattern, level_dir, size, logger){
 			logger = logger || this.logger
@@ -942,6 +944,8 @@ var FileSystemWriterActions = actions.Actions({
 			size = size || this.config['export-preview-size'] || 1000
 			pattern = pattern || this.config['export-preview-name-pattern'] || '%f'
 
+
+			// XXX need to abort on fatal errors...
 			this.data.ribbon_order
 				.slice()
 				.reverse()
@@ -989,8 +993,11 @@ var FileSystemWriterActions = actions.Actions({
 									.replace(/%I/, that.data.getImageOrder(gid, 'global'))
 
 									// tags...
-									.replace(/%\((.*)\)m/, tags.indexOf('selected') >= 0 ? '$1' : '')
-									.replace(/%\((.*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
+									// XXX test: %n%(b)b%(m)m%e
+									.replace(
+										/%\((.*)\)m/, tags.indexOf('selected') >= 0 ? '$1' : '')
+									.replace(
+										/%\((.*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
 
 									// metadata...
 									// XXX

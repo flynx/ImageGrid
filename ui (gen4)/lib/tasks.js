@@ -18,6 +18,7 @@ var object = require('lib/object')
 // XXX need a mechanism to either queue chains of tasks that depend on 
 // 		on the previous results or a way to delay a task until what it
 // 		needs is finished...
+// XXX add fatal .abort(..) of queue...
 var QueueActions = 
 module.QueueActions = actions.Actions({
 	config: {
