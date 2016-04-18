@@ -773,7 +773,9 @@ var FileSystemWriterActions = actions.Actions({
 			path = path || this.location.path
 
 			// resolve relative paths...
-			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path)){
+			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path) 
+					// and skip windows drives...
+					&& !/^[a-z]:[\\\/]/i.test(path)){
 				// XXX do we need to normalize???
 				path = this.location.path +'/'+ path
 			}
@@ -866,31 +868,39 @@ var FileSystemWriterActions = actions.Actions({
 				// XXX copy img.path -- the main image, especially when no previews present....
 				// XXX
 
-				previews && Object.keys(previews).forEach(function(res){
-					var preview_path = decodeURI(previews[res]) 
+				if(previews || img.path){
+					Object.keys(previews || {})
+						.map(function(res){ return decodeURI(previews[res]) })
+						// XXX should we copy this, especially if it's a hi-res???
+						.concat([img.path || null])
+						.forEach(function(preview_path){
+							if(preview_path == null){
+								return
+							}
 
-					var from = (img_base || base_dir) +'/'+ preview_path
-					var to = path +'/'+ preview_path
+							var from = (img_base || base_dir) +'/'+ preview_path
+							var to = path +'/'+ preview_path
 
-					// XXX do we queue these or let the OS handle it???
-					// 		...needs testing, if node's fs queues the io
-					// 		internally then we do not need to bother...
-					// XXX
-					ensureDir(pathlib.dirname(to))
-						.catch(function(err){
-							logger && logger.emit('error', err) })
-						.then(function(){
-							return copy(from, to)
-								// XXX do we need to have both of this 
-								// 		and the above .catch(..) or can
-								// 		we just use the one above (after
-								// 		.then(..))
-								.then(function(){
-									logger && logger.emit('done', to) })
+							// XXX do we queue these or let the OS handle it???
+							// 		...needs testing, if node's fs queues the io
+							// 		internally then we do not need to bother...
+							// XXX
+							ensureDir(pathlib.dirname(to))
 								.catch(function(err){
 									logger && logger.emit('error', err) })
+								.then(function(){
+									return copy(from, to)
+										// XXX do we need to have both of this 
+										// 		and the above .catch(..) or can
+										// 		we just use the one above (after
+										// 		.then(..))
+										.then(function(){
+											logger && logger.emit('done', to) })
+										.catch(function(err){
+											logger && logger.emit('error', err) })
+								})
 						})
-				})
+				}
 			})
 
 			// NOTE: if we are to use .saveIndex(..) here, do not forget
@@ -946,23 +956,27 @@ var FileSystemWriterActions = actions.Actions({
 						.then(function(){
 							that.data.ribbons[ribbon].forEach(function(gid){
 								var img = that.images[gid]
+								var img_name = pathlib.basename(img.name || img.path)
 
 
 								// get best preview...
-								var from = decodeURI((img.base_path || base_dir) +'/'+ that.images.getBestPreview(gid, size).url)
+								var from = decodeURI(
+									(img.base_path || base_dir) 
+										+'/'
+										+ that.images.getBestPreview(gid, size).url)
 
 								// XXX see if we need to make a preview (sharp)
 								// XXX
 
 								// XXX get/form image name... 
 								// XXX might be a good idea to connect this to the info framework...
-								var ext = pathlib.extname(img.name)
+								var ext = pathlib.extname(img_name)
 								var tags = that.data.getTags(gid)
 
 								var name = pattern
 									// file name...
-									.replace(/%f/, img.name)
-									.replace(/%n/, img.name.replace(ext, ''))
+									.replace(/%f/, img_name)
+									.replace(/%n/, img_name.replace(ext, ''))
 									.replace(/%e/, ext)
 
 									// gid...
@@ -1347,8 +1361,6 @@ var FileSystemWriterUIActions = actions.Actions({
 							return 'Export'}]) 
 						.on('open', function(){
 							var mode = that.config['export-dialog-modes'][that.config['export-dialog-mode']]
-							// XXX is this correct???
-							// XXX handle relative paths!!!
 							that[mode.action](
 								that.config['export-path'] || that.location.path)
 							o.close()
