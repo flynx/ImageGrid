@@ -28,23 +28,13 @@ var browseWalk = require('lib/widget/browse-walk')
 /*********************************************************************/
 // External editor...
 // XXX need to get the resulting (edited) file and add it to the index...
-// XXX make a UI for adding new editors:
-// 		- enter path / browse (done)
-// 		- pretty name
-// 		- shortcut key
-// 		- image type to open
-// XXX add root button...
 // XXX disable the remove button on "System default"
 // XXX move the CSS out of index.html and into a correct CSS file...
-// XXX move this to a separate feature...
-
 var ExternalEditorActions = actions.Actions({
 	config: {
 		// XXX do we actually need this????
 		'external-editor-default': 'System default',
 
-		// XXX should this be a dict???
-		// 		...a list is simpler for sorting...
 		'external-editors': [
 			{
 				// NOTE: empty means use app name...
@@ -55,14 +45,6 @@ var ExternalEditorActions = actions.Actions({
 				arguments: '',
 				target: '',
 			},
-			/*
-			{
-				title: 'IrfanView',
-				path: 'C:/Program Files (x86)/IrfanView/i_view32.exe',
-				arguments: '',
-				target: '',
-			},
-			*/
 		],
 
 		// XXX this is not used yet...
@@ -150,9 +132,6 @@ module.ExternalEditor = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var ExternalEditorUIActions = actions.Actions({
-	// XXX get editor data...
-	// XXX set editor data...
-	// XXX revise editor format...
 	// XXX empty title -- use app name without ext...
 	externalEditorDialog: ['- Edit/',
 		function(editor){
@@ -273,7 +252,6 @@ var ExternalEditorUIActions = actions.Actions({
 
 			return o
 		}],
-	// XXX use .externalEditorDialog(..)
 	// XXX need to support $TARGET in args...
 	// 		...append if not present...
 	listExtenalEditors: ['Edit/List external editors',
@@ -307,7 +285,6 @@ var ExternalEditorUIActions = actions.Actions({
 						make(['Add new editor...'])
 							.on('open', function(){
 								closingPrevented = true
-								// XXX open 'new editor...' dialog...
 								var b = overlay.Overlay(that.ribbons.viewer, 
 									browseWalk.makeWalk(
 											null, '/', 
@@ -316,21 +293,16 @@ var ExternalEditorUIActions = actions.Actions({
 											{})
 										// path selected...
 										.open(function(evt, path){ 
-											// XXX
-											//this.parent.close()
-
 											// add a pretty name...
 											editors.push({
 												path: path,
 											})
 											that.config['external-editors'] = editors
 
-											// XXX update the editor list...
-
 											// is this the correct way to do this???
 											b.close()
-											o.close()
-											that.listExtenalEditors()
+											o.client.update()//.close()
+											//that.listExtenalEditors()
 										}))
 										.close(function(){
 											o.focus()
