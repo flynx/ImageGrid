@@ -125,11 +125,14 @@ function(actions, list_key, options){
 					.push(txt)
 
 				// unique...
-				if(options.unique == null || options.unique){
+				if(options.unique == null || options.unique === true){
 					actions.config[list_key] = actions.config[list_key]
-						.unique(typeof(options.unique) == typeof(function(){}) ?
-							options.unique 
-							: undefined)
+						.unique()
+
+				// unique normalized...
+				} else if( typeof(options.unique) == typeof(function(){})){
+					actions.config[list_key] = actions.config[list_key]
+						.unique(options.unique) 
 				}
 
 				// sort...
@@ -235,10 +238,11 @@ function(actions, list_key, options){
 var makeNestedConfigListEditor = 
 module.makeNestedConfigListEditor =
 function(actions, parent, list_key, value_key, options){
+	options = options || {}
+
 	return function(){
 		var txt = $(this).find('.text').first().text()
 
-		options = options || {}
 		var dfl_options = {
 			new_button: 'New...',
 			length_limit: 10,

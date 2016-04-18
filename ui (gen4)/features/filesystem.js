@@ -593,11 +593,11 @@ var FileSystemWriterActions = actions.Actions({
 		// 		- horizontal
 		// 		- ...
 		'export-preview-sizes': [
-			500,
-			900,
-			1000,
-			1280,
-			1920,
+			'500',
+			'900',
+			'1000',
+			'1280',
+			'1920',
 		],
 	},
 
@@ -949,7 +949,7 @@ var FileSystemWriterActions = actions.Actions({
 
 
 								// get best preview...
-								var from = (img.base_path || base_dir) +'/'+ that.images.getBestPreview(gid, size).url
+								var from = decodeURI((img.base_path || base_dir) +'/'+ that.images.getBestPreview(gid, size).url)
 
 								// XXX see if we need to make a preview (sharp)
 								// XXX
@@ -1245,7 +1245,10 @@ var FileSystemWriterUIActions = actions.Actions({
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, overlay,
 						'export-preview-sizes',
-						'export-preview-size'))
+						'export-preview-size',
+						{
+							sort: function(a, b){ return parseInt(a) - parseInt(b) },
+						}))
 
 		},
 		// XXX BUG: history closing errors -- non-critical...
@@ -1276,7 +1279,6 @@ var FileSystemWriterUIActions = actions.Actions({
 						'export-paths',
 						'export-path',
 						{
-							unique: true,
 							new_button: false,
 						})],
 				]})
@@ -1293,7 +1295,8 @@ var FileSystemWriterUIActions = actions.Actions({
 						})
 						.on('edit-done', function(_, path){
 							actions.config['export-path'] = path
-							actions.config['export-paths'].splice(0, 0, path)
+							actions.config['export-paths'].indexOf(path) < 0
+								&& actions.config['export-paths'].splice(0, 0, path)
 
 						})
 						.on('edit-aborted edit-done', function(evt, path){
