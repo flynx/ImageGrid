@@ -767,7 +767,7 @@ var FileSystemWriterActions = actions.Actions({
 	
 	// NOTE: with no arguments this will save index to .location.path
 	// XXX should this return a promise??? ...a clean promise???
-	saveIndex: ['- File/Save',
+	saveIndex: ['- File/',
 		function(path, logger){
 			var that = this
 			path = path || this.location.path
@@ -797,16 +797,6 @@ var FileSystemWriterActions = actions.Actions({
 					that.location.method = 'loadIndex'
 				})
 		}],
-	// XXX should this be a UI action???
-	// 		...at this point this depends on .saveIndexHere(..), thus 
-	// 		it is here...
-	// XXX should this return a promise???
-	saveFullIndex: ['File/Save (full)',
-		function(){
-			return this
-				.markChanged('all')
-				.saveIndexHere()}],
-
 
 	// XXX ways to treat a collection:
 	// 		- crop data
@@ -1202,7 +1192,7 @@ var FileSystemWriterUIActions = actions.Actions({
 
 	// XXX this needs feedback...
 	// XXX should this return a promise???
-	saveIndexHere: ['- File/',
+	saveIndexHere: ['File/Save',
 		function(){ 
 			if(this.location.path){ 
 				this.saveIndex() 
@@ -1211,18 +1201,20 @@ var FileSystemWriterUIActions = actions.Actions({
 				this.browseSaveIndex()
 			}
 		}],
-
-	// XXX add ability to create dirs...
-	// XXX this needs feedback...
+	// XXX should this be a UI action???
+	// 		...at this point this depends on .saveIndexHere(..), thus 
+	// 		it is here...
 	// XXX should this return a promise???
-	browseSaveIndex: ['- File/Save index to...', 
-		makeBrowseProxy('saveIndex', function(){
-			this.location.method = 'loadIndex' })],
+	saveFullIndex: ['File/Save (full)',
+		function(){
+			return this
+				.markChanged('all')
+				.saveIndexHere()}],
+
 	// XXX need to be able to make dirs...
 	browseExportIndex: ['File/Export/Export Index to...',
 		makeBrowseProxy('exportIndex')],
 	// XXX need to be able to make dirs...
-	// XXX STUB
 	browseExportDirs: ['File/Export/Export Images to...',
 		makeBrowseProxy('exportDirs')],
 
