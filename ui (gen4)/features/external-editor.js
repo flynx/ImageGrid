@@ -4,13 +4,12 @@
 *
 **********************************************************************/
 
-if(typeof(process) != 'understand'){
-	var pathlib = require('path')
-}
-
 define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
+if(typeof(process) != 'undefined'){
+	var pathlib = requirejs('path')
+}
 
 var actions = require('lib/actions')
 var core = require('features/core')
