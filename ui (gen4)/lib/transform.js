@@ -6,6 +6,10 @@
 
 define(function(require){ var module = {}
 
+if(typeof(window) == 'undefined'){
+	return
+}
+
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 var object = require('lib/object')

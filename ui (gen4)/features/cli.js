@@ -98,7 +98,11 @@ module.CLI = core.ImageGridFeatures.Feature({
 							that.features.features.length, 
 							that.features.features.join('\n    '))
 					})
+					// XXX make this applicable features...
 					.option('laf, --list-available-features', 'list available features', function(){
+						// XXX bug, this hangs....
+						//console.log(core.ImageGridFeatures.buildFeatureList())
+
 						var f = core.ImageGridFeatures.features
 						console.log('Features available (%d):\n   ',
 							f.length, 
@@ -121,14 +125,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 					// 		and after setup...
 					.option('sm, --setup-minimal', 'setup minimal features', function(){
 						// load features we might need...
-						// XXX require js loads these at the root...
-						var location = require('features/location')
-						var history = require('features/history')
-						var app = require('features/app')
-						var marks = require('features/ui-marks')
-						var filesystem = require('features/filesystem')
-						var metadata = require('features/metadata')
-						var experimental = require('features/experimental')
+						var all = require('features/all')
 
 						// extend the current instance to a minimal non-ui
 						// state...

@@ -30,7 +30,8 @@ require('features/meta')
 require('features/experimental')
 require('features/demo')
 
-if(window.nodejs != null){
+// node features...
+if(typeof(window) == 'undefined' || window.nodejs != null){
 	require('features/filesystem')
 	require('features/cli')
 }
