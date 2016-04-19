@@ -485,7 +485,10 @@ module.FileSystemLoaderUI = core.ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'ui-fs-loader',
-	depends: ['fs-loader'],
+	depends: [
+		'ui',
+		'fs-loader'
+	],
 
 	actions: FileSystemLoaderUIActions,
 })

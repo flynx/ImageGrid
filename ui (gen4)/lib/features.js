@@ -311,6 +311,9 @@ module.FeatureSet = {
 	// XXX add ability to remove features by prefixing a '-' to its name
 	// 		...if one -<feature> is present, remove all instances of 
 	// 		<feature>
+	// XXX .buildFeatureList() is slow and can be a bottleneck for large
+	// 		numbers of features... might be a good idea to take a look at
+	// 		this sometime...
 	buildFeatureList: function(obj, lst, auto_include, depth){
 		var that = this
 		obj = obj || {}
