@@ -56,6 +56,8 @@ var FileSystemLoaderActions = actions.Actions({
 
 		'image-file-pattern': '*+(jpg|jpeg|png|JPG|JPEG|PNG)',
 
+		'image-file-read-stat': true,
+
 		// XXX if true and multiple indexes found, load only the first 
 		// 		without merging...
 		'load-first-index-only': false,
@@ -220,13 +222,38 @@ var FileSystemLoaderActions = actions.Actions({
 				method: 'loadImages',
 			}
 
-			glob(path + '/'+ this.config['image-file-pattern'])
+			glob(path + '/'+ this.config['image-file-pattern'], 
+					{stat: !!this.config['image-file-read-stat']})
 				.on('error', function(err){
 					console.log('!!!!', err)
 				})
+				/*
+				.on('match', function(img){
+					// XXX stat stuff...
+					fse.statSync(img)
+				})
+				*/
 				.on('end', function(lst){ 
-					that.loadURLs(lst
-						.map(function(p){ return util.normalizePath(p) }), path)
+					that.loadURLs(lst, path)
+					// XXX do we need to normalize paths after we get them from glob??
+					//that.loadURLs(lst.map(pathlib.posix.normalize), path)
+					//that.loadURLs(lst
+					//	.map(function(p){ return util.normalizePath(p) }), path)
+
+					if(!!that.config['image-file-read-stat']){
+						var stats = this.statCache
+						var p = pathlib.posix
+
+						that.images.forEach(function(gid, img){
+							var stat = stats[p.join(img.base_path, img.path)]
+
+							img.atime = stat.atime
+							img.mtime = stat.mtime
+							img.ctime = stat.ctime
+
+							// XXX do we need anything else???
+						})
+					}
 
 					// NOTE: we set it again because .loadURLs() does a clear
 					// 		before it starts loading...

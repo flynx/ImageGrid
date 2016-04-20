@@ -625,6 +625,7 @@ module.ViewerActions = actions.Actions({
 
 	reverseImages: [ reloadAfter() ],
 	reverseRibbons: [ reloadAfter() ],
+	sortImages: [ reloadAfter() ],
 
 
 	// basic image editing...

@@ -51,10 +51,20 @@ module.QueueActions = actions.Actions({
 	set length(val){},
 
 	// can be:
-	// 	- running
-	// 	- ready
-	// 	- done
-	// 	- ...
+	// 	- stopped 	- (initial)
+	// 	- ready		- right after .start()
+	// 	- running	- while tasks are running
+	//
+	// 									   +-------<done>--------+
+	// 									   v					 |
+	// 		o---> stopped ---(start)---> ready --+--> running ---+
+	// 				^							 |				 |
+	// 				+--------(stop)--------------+---------------+
+	//
+	// NOTE: while .start() and .stop() are both actions and events, 
+	// 		.done() is not an action, so it is not recommended to call 
+	// 		it manually...
+	//
 	// XXX should be more informative -- now supports only 'running' and 'stopped'
 	get state(){
 		return this._state || 'stopped'
@@ -76,7 +86,8 @@ module.QueueActions = actions.Actions({
 	taskStarted: ['', function(){}],
 	taskFailed: ['', function(){}],
 	taskDone: ['', function(){}],
-	allTasksDone: ['', function(){}],
+
+	done: ['', function(){}],
 
 
 	// Task manipulation actions...
@@ -225,7 +236,7 @@ module.QueueActions = actions.Actions({
 			// NOTE: we are not using .forEach(..) here because we need 
 			// 		to stop at abstract places and to see the list live...
 			while(this.__ready && this.__ready.len > 0 
-					&& this.state == 'running'
+					&& (this.state == 'running' || this.state == 'ready')
 					&& (this.__running && this.__running.len || 0) < size){ (function(){
 
 				// XXX this might race...
@@ -236,13 +247,14 @@ module.QueueActions = actions.Actions({
 
 				var task = elem[1]
 				that.__is_running = true
+				that._state = 'running'
 
 				that.__running.push(elem)
 
 				// start the task...
 				// XXX should we run a task in some specific context???
-				res = task()
 				that.taskStarted(elem[0], task)
+				res = task()
 
 				// Promise/A+
 				if(res && res.then){
@@ -267,9 +279,10 @@ module.QueueActions = actions.Actions({
 							that._run()
 
 							// queue empty...
-							if(this.__ready && this.__ready.len == 0
-									&& this.__running && this.__running.len == 0){
-								this.allTasksDone()
+							if(that.__ready && that.__ready.len == 0
+									&& that.__running && that.__running.len == 0){
+								that._state = 'ready'
+								that.done()
 							}
 						})
 						// push to done and ._run some more...
@@ -287,9 +300,10 @@ module.QueueActions = actions.Actions({
 							that._run()
 
 							// queue empty...
-							if(this.__ready && this.__ready.len == 0
-									&& this.__running && this.__running.len == 0){
-								this.allTasksDone()
+							if(that.__ready && that.__ready.len == 0
+									&& that.__running && that.__running.len == 0){
+								that._state = 'ready'
+								that.done()
 							}
 						})
 
@@ -305,9 +319,10 @@ module.QueueActions = actions.Actions({
 					that.taskDone(elem[0], task)
 
 					// queue empty...
-					if(this.__ready && this.__ready.len == 0
-							&& this.__running && this.__running.len == 0){
-						this.allTasksDone()
+					if(that.__ready && that.__ready.len == 0
+							&& that.__running && that.__running.len == 0){
+						that._state = 'ready'
+						that.done()
 					}
 				}
 			})() }
@@ -320,7 +335,7 @@ module.QueueActions = actions.Actions({
 	// NOTE: we do not need events for these as they are actions...
 	start: ['',
 		function(){
-			this._state = 'running'
+			this._state = 'ready'
 			this._run()
 		}],
 	stop: ['',

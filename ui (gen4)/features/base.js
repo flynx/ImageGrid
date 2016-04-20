@@ -513,8 +513,14 @@ actions.Actions({
 	// XXX align to ribbon...
 
 	// XXX this also requires images...
+	// XXX cache order???
 	sortImages: ['Sort/',
 		function(method){ 
+			if(this.images){
+				// select method...
+				this.data.order = this.images.sortImages().reverse()
+			}
+			this.data.updateImagePositions()
 		}],
 
 	// basic image editing...

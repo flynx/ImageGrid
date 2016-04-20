@@ -279,6 +279,9 @@ var MetadataUIActions = actions.Actions({
 			// base
 			'GID', 
 			'File Name', 'Parent Directory', 'Full Path',
+			'Date file created', 'Date file modified', 'Date file accessed',
+
+			'Index (ribbon)', 'Index (crop)', 'Index (global)',
 
 			// metadata...
 			'Make', 'Camera Model Name', 'Lens ID', 'Lens', 'Lens Profile Name', 'Focal Length',
@@ -321,9 +324,9 @@ var MetadataUIActions = actions.Actions({
 
 			// helpers...
 			var _cmp = function(a, b){
-				a = field_order.indexOf(a[0].replace(/: $/, ''))
+				a = field_order.indexOf(a[0].replace(/^- |: $/g, ''))
 				a = a == -1 ? x : a
-				b = field_order.indexOf(b[0].replace(/: $/, ''))
+				b = field_order.indexOf(b[0].replace(/^- |: $/g, ''))
 				b = b == -1 ? x : b
 				return a - b
 			}
@@ -374,6 +377,10 @@ var MetadataUIActions = actions.Actions({
 							_dirname((img.base_path || '.') +'/'+ img.path)],
 						['Full Path: ', 
 							_normalize((img.base_path || '.') +'/'+ img.path)],
+
+						['Date file created: ', img.ctime && new Date(img.ctime).toShortDate()],
+						['- Date file modified: ', img.mtime && new Date(img.mtime).toShortDate()],
+						['- Date file accessed: ', img.atime && new Date(img.atime).toShortDate()],
 					])
 
 					// comment and tags...
