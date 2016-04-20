@@ -166,6 +166,11 @@ module.ViewerActions = actions.Actions({
 			'last',		// select last image
 		],
 		'ribbon-focus-mode': 'visual',
+
+		'sort-modes': {
+			'Sort by date': 'metadata.createDate birthtime',
+			'Sort by name': 'name path',
+		},
 	},
 
 	// Images...
@@ -625,7 +630,15 @@ module.ViewerActions = actions.Actions({
 
 	reverseImages: [ reloadAfter() ],
 	reverseRibbons: [ reloadAfter() ],
-	sortImages: [ reloadAfter() ],
+	sortImages: [ reloadAfter(true) ],
+
+	// XXX should this be a dialog with ability to edit modes???
+	// XXX should this store state???
+	toggleImageSort: ['Edit|Sort/Sort images by',
+		core.makeConfigToggler(
+			function(){ return Object.keys(this.config['sort-modes'])[0]},
+			function(){ return Object.keys(this.config['sort-modes']) },
+			function(mode){ this.sortImages(this.config['sort-modes'][mode]) })],
 
 
 	// basic image editing...

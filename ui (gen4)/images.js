@@ -317,10 +317,20 @@ module.ImagesClassPrototype = {
 			// XXXX
 			var gid = hash('I'+i+':'+p)
 
+			var name = (p
+					// basename...
+					.split(/[\\\/]/g).pop() || '')
+					// ext...
+					.split(/(\.[^\.]*$)/)
+
 			// XXX populate the image doc better...
 			images[gid] = {
 				id: gid,
 				path: p,
+				// basename...
+				name: name[0],
+				// ext with leading '.'
+				ext: name[1],
 			}
 
 			// remove only of base path is given and in path...

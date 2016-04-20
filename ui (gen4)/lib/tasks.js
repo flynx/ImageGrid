@@ -26,6 +26,8 @@ module.QueueActions = actions.Actions({
 		// XXX at this point these is ignored...
 		'retry-limit': 5,
 		'default-queue-mode': 'resumable',
+
+		'clear-on-done': true,
 	},
 		
 	// NOTE: these are sparse...
@@ -211,7 +213,9 @@ module.QueueActions = actions.Actions({
 	// 		the pool.
 	//
 	// NOTE: there can be no more than one instance running at a time.
-	// NOTE: if .state is not 'running' this will silently exit.
+	// NOTE: if .state is not 'running' or 'ready' this will silently exit.
+	// NOTE: if .state is 'ready' this will set it to 'running' and when 
+	// 		queue is depleted the .state will get set back to 'ready'
 	//
 	// XXX need to handle retries correctly, at this point all errors just
 	// 		drop to failed and retry counter is incremented, there is no
@@ -283,6 +287,9 @@ module.QueueActions = actions.Actions({
 									&& that.__running && that.__running.len == 0){
 								that._state = 'ready'
 								that.done()
+
+								that.config['clear-on-done'] 
+									&& that.clear()
 							}
 						})
 						// push to done and ._run some more...
@@ -304,6 +311,9 @@ module.QueueActions = actions.Actions({
 									&& that.__running && that.__running.len == 0){
 								that._state = 'ready'
 								that.done()
+
+								that.config['clear-on-done']
+									&& that.clear()
 							}
 						})
 
@@ -323,6 +333,9 @@ module.QueueActions = actions.Actions({
 							&& that.__running && that.__running.len == 0){
 						that._state = 'ready'
 						that.done()
+
+						that.config['clear-on-done'] 
+							&& that.clear()
 					}
 				}
 			})() }
@@ -344,6 +357,7 @@ module.QueueActions = actions.Actions({
 		}],
 	clear: ['',
 		function(){
+			// XXX should this stop???
 			this.stop()
 			delete this.__ready
 			delete this.__running

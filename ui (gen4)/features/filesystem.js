@@ -250,6 +250,9 @@ var FileSystemLoaderActions = actions.Actions({
 							img.atime = stat.atime
 							img.mtime = stat.mtime
 							img.ctime = stat.ctime
+							img.birthtime = stat.birthtime
+
+							img.size = stat.size
 
 							// XXX do we need anything else???
 						})

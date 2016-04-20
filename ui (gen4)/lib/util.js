@@ -83,6 +83,19 @@ Array.prototype.setCmp = function(other){
 }
 
 
+module.chainCmp = function(cmp_chain){
+	return function(a, b, get, data){
+		var res
+		for(var i=0; i < cmp_chain.length; i++){
+			res = cmp_chain[i](a, b, get, data)
+			if(res != 0){
+				return res
+			}
+		}
+		return res
+	}
+} 
+
 
 // like .length but for sparse arrays will return the element count...
 // XXX make this a prop...

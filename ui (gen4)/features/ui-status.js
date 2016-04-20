@@ -239,7 +239,7 @@ var StatusBarActions = actions.Actions({
 				text = (img && ((img.base_path || '') +'/'+ img.path) || '---')
 					// remove /./
 					.replace(/[\\\/]\.[\\\/]/, '/')
-				txt = text.split(/[\\\/]/).pop()
+				txt = img && (img.name + img.ext) || text.split(/[\\\/]/).pop()
 			}
 
 			item.find('.shown').text(txt)

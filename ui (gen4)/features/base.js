@@ -79,6 +79,8 @@ actions.Actions({
 			'last',		// select last image
 		],
 		'ribbon-focus-mode': 'order',
+
+		'defeault-sort': 'birthtime ctime',
 	},
 
 	
@@ -512,15 +514,90 @@ actions.Actions({
 
 	// XXX align to ribbon...
 
+	// Custom sort modes...
+	//
+	// Format:
+	// 	{
+	// 		<mode-name>: function(a, b){ ... },
+	// 		...
+	// 	}
+	//
+	// NOTE: the cmp function is called in the actions context.
+	__sort_modes__: {
+	},
 	// XXX this also requires images...
 	// XXX cache order???
-	sortImages: ['Sort/',
-		function(method){ 
-			if(this.images){
-				// select method...
-				this.data.order = this.images.sortImages().reverse()
+	sortImages: ['- Edit|Sort/Sort images',
+		function(method, reverse){ 
+			var that = this
+
+			if(method == 'reverse'){
+				method = null
+				reverse = true
 			}
-			this.data.updateImagePositions()
+
+			reverse = reverse == null 
+				|| reverse == 'reverse' 
+				|| reverse
+
+			method = method 
+				|| this.config['defeault-sort'] 
+				|| 'birthtime'
+			// handle multiple methods....
+			method = typeof(method) == typeof('str') ? method.split(/ +/g) : method
+			method = method instanceof Array ? method : [method]
+			method = method.map(function(m){
+				return BaseActions.__sort_modes__[m] 
+					|| (that.__sort_modes__ && that.__sort_modes__[m])
+					// sort by attr path...
+					|| (function(){
+						var p = m.split(/\./g)
+						var _get = function(obj){
+							for(var i=0; i<p.length; i++){
+								obj = obj[p[i]]
+								if(obj === undefined){
+									return null
+								}
+							}
+							return obj
+						}
+						return function(a, b){
+							a = _get(this.images[a])
+							b = _get(this.images[b])
+
+							if(a == b){
+								return 0
+							} else if(a < b){
+								return -1
+							} else {
+								return +1
+							}
+						}})() 
+			})
+
+			// prepare the cmp function...
+			var cmp = method.length == 1 ? 
+				method[0] 
+				// chain compare -- return first non equal (0) result...
+				: function(a, b){
+					var res = 0
+					for(var i=0; i < method.length; i++){
+						res = method[i].call(that, a, b)
+						if(res != 0){
+							return res
+						}
+					}
+					return res
+				}
+
+			// do the sort (in place)...
+			if(method && this.images){
+				this.data.order = this.data.order.slice()
+				reverse ? 
+					this.data.order.sort(cmp.bind(this)).reverse()
+					: this.data.order.sort(cmp.bind(this))
+				this.data.updateImagePositions()
+			}
 		}],
 
 	// basic image editing...
