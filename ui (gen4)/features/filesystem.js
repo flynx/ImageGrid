@@ -1007,7 +1007,7 @@ var FileSystemWriterActions = actions.Actions({
 						.then(function(){
 							that.data.ribbons[ribbon].forEach(function(gid){
 								var img = that.images[gid]
-								var img_name = pathlib.basename(img.name || img.path)
+								var img_name = pathlib.basename(img.path || (img.name + img.ext))
 
 
 								// get best preview...

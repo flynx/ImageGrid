@@ -279,7 +279,8 @@ var MetadataUIActions = actions.Actions({
 			// base
 			'GID', 
 			'File Name', 'Parent Directory', 'Full Path',
-			'Date file created', 'Date file modified', 'Date file accessed',
+
+			'Date created', 'ctime', 'mtime', 'atime',
 
 			'Index (ribbon)', 'Index (crop)', 'Index (global)',
 
@@ -378,9 +379,11 @@ var MetadataUIActions = actions.Actions({
 						['Full Path: ', 
 							_normalize((img.base_path || '.') +'/'+ img.path)],
 
-						['Date file created: ', img.ctime && new Date(img.ctime).toShortDate()],
-						['- Date file modified: ', img.mtime && new Date(img.mtime).toShortDate()],
-						['- Date file accessed: ', img.atime && new Date(img.atime).toShortDate()],
+						['Date created: ', img.birthtime 
+							&& new Date(img.birthtime).toShortDate()],
+						['- ctime: ', img.ctime && new Date(img.ctime).toShortDate()],
+						['- mtime: ', img.mtime && new Date(img.mtime).toShortDate()],
+						['- atime: ', img.atime && new Date(img.atime).toShortDate()],
 					])
 
 					// comment and tags...
