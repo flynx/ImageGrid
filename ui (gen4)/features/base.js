@@ -524,6 +524,22 @@ actions.Actions({
 	//
 	// NOTE: the cmp function is called in the actions context.
 	__sort_modes__: {
+		'name-leading-sequence': function(a, b){
+			a = this.images.getImageNameLeadingSeq(a)
+			a = typeof(a) == typeof('str') ? 0 : a
+			b = this.images.getImageNameLeadingSeq(b)
+			b = typeof(b) == typeof('str') ? 0 : b
+
+			return a - b
+		},
+		'name-sequence': function(a, b){
+			a = this.images.getImageNameSeq(a)
+			a = typeof(a) == typeof('str') ? 0 : a
+			b = this.images.getImageNameSeq(b)
+			b = typeof(b) == typeof('str') ? 0 : b
+
+			return a - b
+		},
 	},
 	// XXX this also requires images...
 	// XXX cache order???

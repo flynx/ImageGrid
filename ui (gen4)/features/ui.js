@@ -170,6 +170,8 @@ module.ViewerActions = actions.Actions({
 		'sort-modes': {
 			'Sort by date': 'metadata.createDate birthtime',
 			'Sort by name': 'name path',
+			'Sort by name (XP-style)': 'name-leading-sequence name path',
+			'Sort by file sequence number': 'name-leading-sequence name path',
 		},
 	},
 
