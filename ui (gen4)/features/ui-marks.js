@@ -34,7 +34,7 @@ var base = require('features/base')
 // NOTE: of no data is defined this will not have any effect...
 function makeTagTogglerAction(tag){
 	var t = function(target, action){
-		if(target == '?' || target == 'on' || target == 'off'){
+		if(target == '?' || target == '??'|| target == 'on' || target == 'off'){
 			var x = action
 			action = target
 			target = x
@@ -63,8 +63,17 @@ function makeTagTogglerAction(tag){
 			this.untag(tag, target)
 			var res = 'off'
 
+		// ?
+		} else if(action == '?'){
+			var res = this.data.toggleTag(tag, target, '?')
+			res = res.length == 1 ? res[0] : res
+
+		// ??
+		} else if(action == '??'){
+			res = ['on', 'off']
+
 		// next...
-		} else if(action != '?'){
+		} else {
 			var res = []
 			var that = this
 			target.forEach(function(t){
@@ -78,14 +87,6 @@ function makeTagTogglerAction(tag){
 			})
 			res = res.length == 1 ? res[0] : res
 
-		// ?
-		} else if(action == '?'){
-			var res = this.data.toggleTag(tag, target, '?')
-			res = res.length == 1 ? res[0] : res
-
-		// ??
-		} else if(action == '?'){
-			res = ['on', 'off']
 		}
 
 		return res 

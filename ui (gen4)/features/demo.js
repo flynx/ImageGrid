@@ -72,7 +72,7 @@ module.Demo = core.ImageGridFeatures.Feature({
 			function(){
 				this.load({
 					data: data.Data(demo_data),
-					images: images.Images(data),
+					images: images.Images(),
 				})
 			}],
 	})

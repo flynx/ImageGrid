@@ -665,7 +665,7 @@ module.SortActions = actions.Actions({
 			var that = this
 
 			if(method == 'reverse'){
-				method = []
+				method = 'update'
 				reverse = true
 			}
 
@@ -703,6 +703,11 @@ module.SortActions = actions.Actions({
 				i = method.indexOf('reverse')
 			}
 
+			// can't sort if we know nothing about .images
+			if(method && method.length > 0 && (!this.images || this.images.length == 0)){
+				return
+			}
+
 			// build the compare routine...
 			method = method
 				// remove duplicate methods...
@@ -714,6 +719,9 @@ module.SortActions = actions.Actions({
 						|| (function(){
 							var p = m.split(/\./g)
 							var _get = function(obj){
+								if(obj == null){
+									return null
+								}
 								for(var i=0; i<p.length; i++){
 									obj = obj[p[i]]
 									if(obj === undefined){
@@ -777,8 +785,9 @@ module.SortActions = actions.Actions({
 					.concat(this.data.manual_order ? ['Manual'] : [])},
 			// prevent setting 'none' as mode...
 			function(mode){ 
-				return mode != 'none' 
-					|| (mode == 'Manual' && this.data.manual_order) },
+				return !!this.images 
+					&& (mode != 'none' 
+						|| (mode == 'Manual' && this.data.manual_order)) },
 			function(mode){ 
 				// save manual order...
 				if(this.data.sort_method == 'Manual'){
