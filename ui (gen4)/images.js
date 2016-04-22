@@ -564,32 +564,6 @@ module.ImagesPrototype = {
 		return gids
 	},
 	// Shorthands...
-	// XXX default gids may include stray attributes...
-	sortByDate: function(gids, reverse){
-		gids = gids == null ? Object.keys(this) : gids
-		return this.sortImages(gids, null, reverse) 
-	},
-	sortByName: function(gids, reverse){
-		gids = gids == null ? Object.keys(this) : gids
-		return this.sortImages(gids, module.makeImageNameCmp(this), reverse) 
-	},
-	sortBySeqOrName: function(gids, reverse){ 
-		gids = gids == null ? Object.keys(this) : gids
-		return this.sortImages(gids, module.makeImageSeqOrNameCmp(this), reverse) 
-	},
-	sortByNameXPStyle: function(gids, reverse){ 
-		gids = gids == null ? Object.keys(this) : gids
-		return this.sortImages(gids, 
-				module.makeImageSeqOrNameCmp(this, null, this.getImageNameLeadingSeq), 
-				reverse) 
-	},
-	sortByDateOrSeqOrName: function(gids, reverse){
-		gids = gids == null ? Object.keys(this) : gids
-		return this.sortImages(gids, [
-					module.makeImageDateCmp(this),
-					module.makeImageSeqOrNameCmp(this)
-				], reverse)
-	},
 	// XXX 
 	sortedImagesByFileNameSeqWithOverflow: function(gids, reverse){
 		gids = gids == null ? Object.keys(this) : gids

@@ -263,7 +263,8 @@ module.GLOBAL_KEYBOARD = {
 		O: 'browsePath',
 		S: {
 			default: 'slideshowDialog',
-			shift: 'sortImages: "birthtime ctime" -- Sort images by date',
+			//shift: 'sortImages: "Date" -- Sort images by date',
+			shift: 'sortImages -- Sort images',
 			alt: 'browseActions: "/Sort/"',
 			// XXX need to make this save to base_path if it exists and
 			// 		ask the user if it does not... now it always asks.

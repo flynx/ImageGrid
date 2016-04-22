@@ -624,12 +624,20 @@ module.SortActions = actions.Actions({
 	//
 	//	Sort using a specific method(s):
 	//	.sortImages(<method>)
+	//	.sortImages(<method>, <reverse>)
+	//
+	//	.sortImages('<method> ..')
+	//	.sortImages('<method> ..', <reverse>)
+	//
 	//	.sortImages([<method>, ..])
+	//	.sortImages([<method>, ..], <reverse>)
 	//		NOTE: <method> can either be one of:
 	//			1) method name (key) from .config['sort-methods']
 	//			2) a space separated string of methods or attribute paths
 	//				as in .config['sort-methods']'s values.
 	//			for more info se doc for: .config['sort-methods']
+	//		NOTE: if it is needed to reverse the method by default just
+	//			add 'reverse' to it's string.
 	//
 	//	Update current sort order:
 	//	.sortImages('update')
@@ -637,6 +645,9 @@ module.SortActions = actions.Actions({
 	//			this will have no effect.
 	//		NOTE: this is designed to facilitate manual sorting of 
 	//			.data.order
+	//
+	//	Reverse image order:
+	//	.sortImages('reverse')
 	//
 	//
 	// NOTE: reverse is calculated by oddity -- if an odd number indicated
@@ -654,7 +665,7 @@ module.SortActions = actions.Actions({
 			var that = this
 
 			if(method == 'reverse'){
-				method = null
+				method = []
 				reverse = true
 			}
 
@@ -662,54 +673,68 @@ module.SortActions = actions.Actions({
 				: reverse == 'reverse' 
 				|| reverse
 
+			// special case: 'update'
 			method = method == 'update' ? [] : method
+
+			// defaults...
 			method = method 
 				|| this.config['sort-methods'][this.config['default-sort']]
 				|| this.config['default-sort'] 
 				|| 'birthtime'
-			method = this.config['sort-methods'][method] || method
-			// handle multiple methods....
+
+			// expand method names...
+			// XXX should this be recursive???
+			method = typeof(method) == typeof('str') ? 
+				method
+					.split(/ +/g)
+					.map(function(m){ 
+						return that.config['sort-methods'][m] || m })
+					.join(' ')
+				: method
 			method = typeof(method) == typeof('str') ? method.split(/ +/g) : method
 			method = method instanceof Array ? method : [method]
 
-			// get the reverse...
+			// get the reverse arity...
 			var i = method.indexOf('reverse')
 			while(i >=0){
 				reverse = !reverse
-				method.splice(i, 1)
 
+				method.splice(i, 1)
 				i = method.indexOf('reverse')
 			}
 
 			// build the compare routine...
-			method = method.map(function(m){
-				return SortActions.__sort_methods__[m] 
-					|| (that.__sort_methods__ && that.__sort_methods__[m])
-					// sort by attr path...
-					|| (function(){
-						var p = m.split(/\./g)
-						var _get = function(obj){
-							for(var i=0; i<p.length; i++){
-								obj = obj[p[i]]
-								if(obj === undefined){
-									return null
+			method = method
+				// remove duplicate methods...
+				.unique()
+				.map(function(m){
+					return SortActions.__sort_methods__[m] 
+						|| (that.__sort_methods__ && that.__sort_methods__[m])
+						// sort by attr path...
+						|| (function(){
+							var p = m.split(/\./g)
+							var _get = function(obj){
+								for(var i=0; i<p.length; i++){
+									obj = obj[p[i]]
+									if(obj === undefined){
+										return null
+									}
 								}
+								return obj
 							}
-							return obj
-						}
-						return function(a, b){
-							a = _get(this.images[a])
-							b = _get(this.images[b])
+							return function(a, b){
+								a = _get(this.images[a])
+								b = _get(this.images[b])
 
-							if(a == b){
-								return 0
-							} else if(a < b){
-								return -1
-							} else {
-								return +1
-							}
-						}})() 
-			})
+								if(a == b){
+									return 0
+								} else if(a < b){
+									return -1
+								} else {
+									return +1
+								}
+							}})() 
+				})
 
 			// prepare the cmp function...
 			var cmp = method.length == 1 ? 
@@ -732,6 +757,10 @@ module.SortActions = actions.Actions({
 				reverse ? 
 					this.data.order.sort(cmp.bind(this)).reverse()
 					: this.data.order.sort(cmp.bind(this))
+
+			// just reverse...
+			} else if(method.length <= 0 && reverse) {
+				this.data.order.reverse()
 			}
 
 			this.data.updateImagePositions()
@@ -740,7 +769,7 @@ module.SortActions = actions.Actions({
 	// XXX should this be a dialog with ability to edit modes???
 	// 		- toggle reverse sort
 	// XXX currently this will not toggle past 'none'
-	toggleImageSort: ['Edit|Sort/Sort images by',
+	toggleImageSort: ['Edit|Sort/Toggle image sort method',
 		toggler.Toggler(null,
 			function(){ return this.data.sort_method || 'none' },
 			function(){ 
@@ -763,7 +792,7 @@ module.SortActions = actions.Actions({
 					this.sortImages('update')
 
 				} else {
-					this.sortImages(this.config['sort-methods'][mode]) 
+					this.sortImages(mode) 
 				}
 
 				this.data.sort_method = mode

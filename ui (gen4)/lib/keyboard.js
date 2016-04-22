@@ -457,7 +457,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 
 			// actions...
 			} else if(handler in actions 
-					|| handler.split(/!?\s*:\s*|!/)[0].trim() in actions){
+					|| handler.split(/!?\s*:\s*|!|--/)[0].trim() in actions){
 
 				var c = parseActionCall(handler)
 
