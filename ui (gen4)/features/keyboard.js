@@ -168,6 +168,8 @@ module.GLOBAL_KEYBOARD = {
 			// XXX need to prevent default on mac + browser...
 			meta: 'nextScreen',
 		},
+		Space: 'Right',
+		Backspace: 'Left',
 		'(': 'prevImageInOrder',
 		')': 'nextImageInOrder',
 		',': 'prevMarked',

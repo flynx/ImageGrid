@@ -270,6 +270,7 @@ var FileSystemLoaderActions = actions.Actions({
 
 	// XXX auto-detect format or let the user chose...
 	// XXX should this return a promise??? ...a clean promise???
+	// XXX should the added section be marked or sorted???
 	loadPath: ['- File/Load path (STUB)',
 		function(path, logger){
 			// XXX check if this.config['index-dir'] exists, if yes then
@@ -278,8 +279,6 @@ var FileSystemLoaderActions = actions.Actions({
 			//this.location.method = 'loadImages'
 		}],
 
-	// XXX merging does not work (something wrong with .data.join(..))
-	// 		...fixed a bug in images.js hash generator, now might be fixed...
 	// XXX should this return a promise??? ...a clean promise???
 	// XXX revise logger...
 	loadNewImages: ['File/Load new images',
@@ -298,8 +297,11 @@ var FileSystemLoaderActions = actions.Actions({
 			var base_pattern = RegExp('^'+path)
 
 			// find images...
-			glob(path + '/'+ this.config['image-file-pattern'])
+			glob(path + '/'+ this.config['image-file-pattern'],
+					{stat: !!this.config['image-file-read-stat']})
 				.on('end', function(lst){ 
+					var stats = this.statCache
+
 					// create a new images chunk...
 					lst = lst
 						// filter out loaded images...
@@ -326,6 +328,19 @@ var FileSystemLoaderActions = actions.Actions({
 					var new_images = images.Images.fromArray(lst, path)
 					var gids = new_images.keys()
 					var new_data = that.data.constructor.fromArray(gids)
+
+					new_images.forEach(function(gid, img){
+						var stat = stats[p.join(img.base_path, img.path)]
+
+						img.atime = stat.atime
+						img.mtime = stat.mtime
+						img.ctime = stat.ctime
+						img.birthtime = stat.birthtime
+
+						img.size = stat.size
+
+						// XXX do we need anything else???
+					})
 
 					// merge with index...
 					// NOTE: we are prepending new images to the start...

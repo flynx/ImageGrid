@@ -141,6 +141,9 @@ module.CLI = core.ImageGridFeatures.Feature({
 					})
 					*/
 
+					// XXX might be a good idea to make the action call
+					// 		syntax like this:
+					// 			--<action-name> [args]
 					.arguments('<action> [args]')
 					.action(function(action, args){
 						// XXX

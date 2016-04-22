@@ -90,6 +90,8 @@ module.Metadata = core.ImageGridFeatures.Feature({
 
 // XXX add Metadata writer...
 var MetadataReaderActions = actions.Actions({
+	// NOTE: this will read both stat and metadata...
+	//
 	// XXX add support to taskqueue...
 	// XXX should this process multiple images???
 	// XXX also check the metadata/ folder (???)
@@ -119,6 +121,20 @@ var MetadataReaderActions = actions.Actions({
 						return reject(err)
 					}
 
+					// read stat...
+					if(!that.images[gid].birthtime){
+						var img = that.images[gid]
+						var stat = fs.statSync(full_path)
+						
+						img.atime = stat.atime
+						img.mtime = stat.mtime
+						img.ctime = stat.ctime
+						img.birthtime = stat.birthtime
+
+						img.size = stat.size
+					}
+
+					// read image metadata...
 					exiftool.metadata(file, function(err, data){
 						if(err){
 							reject(err)

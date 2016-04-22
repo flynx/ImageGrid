@@ -599,6 +599,8 @@ module.SortActions = actions.Actions({
 	// 	}
 	//
 	// NOTE: the cmp function is called in the actions context.
+	//
+	// XXX sequence number with overflow...
 	__sort_methods__: {
 		'name-leading-sequence': function(a, b){
 			a = this.images.getImageNameLeadingSeq(a)
@@ -657,9 +659,14 @@ module.SortActions = actions.Actions({
 	// 		will reverse the result's order while:
 	// 		 	'metadata.createDate birthtime reverse' + ' reverese' 
 	// 		will cancel reversal.
+	// NOTE: with empty images this will not do anything.
 	//
-	// XXX this also requires images...
 	// XXX cache order???
+	// XXX would be nice to be able to sort a list of gids or a section
+	// 		of images...
+	// XXX sorting with partial images will throw the images that do not
+	// 		exist or the ones that do not have the right attrs all over 
+	// 		the place...
 	sortImages: ['- Edit|Sort/Sort images',
 		function(method, reverse){ 
 			var that = this
@@ -692,7 +699,6 @@ module.SortActions = actions.Actions({
 					.join(' ')
 				: method
 			method = typeof(method) == typeof('str') ? method.split(/ +/g) : method
-			method = method instanceof Array ? method : [method]
 
 			// get the reverse arity...
 			var i = method.indexOf('reverse')
@@ -808,8 +814,8 @@ module.SortActions = actions.Actions({
 			})],
 
 	// Store/load sort data:
-	// 	.data.sort_method	- current sort mode (optional)
-	// 	.manual_order		- manual sort order (optional)
+	// 	.data.sort_method		- current sort mode (optional)
+	// 	.data.manual_order		- manual sort order (optional)
 	load: [function(data){
 		return function(){
 			if(data.data && data.data.sort_method){
