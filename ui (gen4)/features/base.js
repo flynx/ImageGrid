@@ -80,7 +80,6 @@ actions.Actions({
 		],
 		'ribbon-focus-mode': 'order',
 
-		'defeault-sort': 'birthtime ctime',
 	},
 
 	
@@ -514,6 +513,64 @@ actions.Actions({
 
 	// XXX align to ribbon...
 
+	// basic image editing...
+	//
+	// XXX should we have .rotate(..) and .flip(..) generic actions???
+	rotateCW: ['Image|Edit/', 
+		function(target){ 
+			this.images 
+				&& this.images.rotateImage(this.data.getImage(target), 'cw') }],
+	rotateCCW: ['Image|Edit/', 
+		function(target){ 
+			this.images 
+				&& this.images.rotateImage(this.data.getImage(target), 'ccw') }],
+	flipVertical: ['Image|Edit/',
+		function(target){ 
+			this.images 
+				&& this.images.flipImage(this.data.getImage(target), 'vertical') }],
+	flipHorizontal: ['Image|Edit/',
+		function(target){ 
+			this.images
+				&& this.images.flipImage(this.data.getImage(target), 'horizontal') }],
+})
+
+
+var Base =
+module.Base = core.ImageGridFeatures.Feature({
+	title: 'ImageGrid base',
+
+	tag: 'base',
+	/* XXX ???
+	suggested: [
+		'tags',
+		'sort',
+	],
+	*/
+
+	actions: BaseActions,
+})
+
+
+
+//---------------------------------------------------------------------
+// Sort...
+
+var SortActions = 
+module.SortActions = actions.Actions({
+	config: {
+		'default-sort': 'Date',
+
+		'sort-modes': {
+			'none': '',
+			'Date': 'metadata.createDate birthtime',
+			'Name': 'name path',
+			'Name (XP-style)': 'name-leading-sequence name path',
+			'File sequence number': 'name-leading-sequence name path',
+			// XXX sequence number with overflow...
+			// XXX manual...
+		},
+	},
+
 	// Custom sort modes...
 	//
 	// Format:
@@ -541,6 +598,16 @@ actions.Actions({
 			return a - b
 		},
 	},
+	//	Sort using the default sort method
+	//	.sortImages()
+	//
+	//	Sort using a specific method(s):
+	//	.sortImages(<method>)
+	//	.sortImages([<method>, ..])
+	//
+	//	Update current sort order:
+	//	.sortImages('update')
+	//
 	// XXX this also requires images...
 	// XXX cache order???
 	sortImages: ['- Edit|Sort/Sort images',
@@ -556,14 +623,25 @@ actions.Actions({
 				|| reverse == 'reverse' 
 				|| reverse
 
+			method = method == 'update' ? [] : method
 			method = method 
-				|| this.config['defeault-sort'] 
+				|| this.config['sort-modes'][this.config['default-sort']]
+				|| this.config['default-sort'] 
 				|| 'birthtime'
 			// handle multiple methods....
 			method = typeof(method) == typeof('str') ? method.split(/ +/g) : method
 			method = method instanceof Array ? method : [method]
+
+			// get the reverse...
+			var i = method.indexOf('reverse')
+			if(i >=0){
+				reverse = true
+				method.splice(i, 1)
+			}
+
+			// build the compare routine...
 			method = method.map(function(m){
-				return BaseActions.__sort_modes__[m] 
+				return SortActions.__sort_modes__[m] 
 					|| (that.__sort_modes__ && that.__sort_modes__[m])
 					// sort by attr path...
 					|| (function(){
@@ -607,44 +685,97 @@ actions.Actions({
 				}
 
 			// do the sort (in place)...
-			if(method && this.images){
+			if(method && method.length > 0 && this.images){
 				this.data.order = this.data.order.slice()
 				reverse ? 
 					this.data.order.sort(cmp.bind(this)).reverse()
 					: this.data.order.sort(cmp.bind(this))
-				this.data.updateImagePositions()
 			}
+
+			this.data.updateImagePositions()
 		}],
 
-	// basic image editing...
-	//
-	// XXX should we have .rotate(..) and .flip(..) generic actions???
-	rotateCW: ['Image|Edit/', 
-		function(target){ 
-			this.images 
-				&& this.images.rotateImage(this.data.getImage(target), 'cw') }],
-	rotateCCW: ['Image|Edit/', 
-		function(target){ 
-			this.images 
-				&& this.images.rotateImage(this.data.getImage(target), 'ccw') }],
-	flipVertical: ['Image|Edit/',
-		function(target){ 
-			this.images 
-				&& this.images.flipImage(this.data.getImage(target), 'vertical') }],
-	flipHorizontal: ['Image|Edit/',
-		function(target){ 
-			this.images
-				&& this.images.flipImage(this.data.getImage(target), 'horizontal') }],
+	// XXX should this be a dialog with ability to edit modes???
+	// 		- toggle reverse sort
+	// XXX should this store state???
+	// XXX handle manual...
+	// 		...set manual on shiftImageLeft/shiftImageRight
+	toggleImageSort: ['Edit|Sort/Sort images by',
+		toggler.Toggler(null,
+			function(){ return this.data.sort_mode || 'none' },
+			function(){ 
+				return Object.keys(this.config['sort-modes'])
+					.concat(this.data.manual_order ? ['Manual'] : [])},
+			// prevent setting 'none' as mode...
+			function(mode){ 
+				return mode != 'none' 
+					|| (mode == 'Manual' && this.data.manual_order) },
+			function(mode){ 
+				// save manual order...
+				if(this.data.sort_mode == 'Manual'){
+					this.data.manual_order = this.data.order.slice()
+				}
+
+				// special case: manual order...
+				// XXX this does not use .sortImages(..) thus this does not update...
+				if(mode == 'Manual'){
+					this.data.order = this.data.manual_order.slice()
+					this.sortImages('update')
+
+				} else {
+					this.sortImages(this.config['sort-modes'][mode]) 
+				}
+
+				this.data.sort_mode = mode
+			})],
+
+	// Store/load:
+	// 	.sort_mode
+	// 	.manual_order
+	load: [function(data){
+		return function(){
+			if(data.data && data.data.sort_mode){
+				this.data.sort_mode = data.data.sort_mode
+			}
+
+			if(data.data && data.data.manual_order){
+				this.data.manual_order = data.data.manual_order
+			}
+		}
+	}],
+	json: [function(){
+		return function(res){
+			if(this.data.sort_mode){
+				res.data.sort_mode = this.data.sort_mode
+			}
+
+			if(this.data.manual_order){
+				res.data.manual_order = this.data.manual_order
+
+			} else if(this.toggleImageSort('?') == 'Manual'){
+				res.data.manual_order = this.data.order
+			}
+		}
+	}],
 })
 
+var Sort =
+module.Sort = core.ImageGridFeatures.Feature({
+	title: '',
 
-var Base =
-module.Base = core.ImageGridFeatures.Feature({
-	title: 'ImageGrid base',
+	tag: 'sort',
+	depends: [
+		'base',
+	],
 
-	tag: 'base',
+	actions: SortActions,
 
-	actions: BaseActions,
+	handlers: [
+		['shiftImageRight shiftImageLeft',
+			function(){
+				this.data.sort_mode = 'Manual'
+			}],
+	],
 })
 
 
@@ -1026,6 +1157,7 @@ module.ImageGroup = core.ImageGridFeatures.Feature({
 core.ImageGridFeatures.Feature('base-full', [
 	'base',
 	'tags',
+	'sort',
 	'crop',
 	'image-group',
 ])

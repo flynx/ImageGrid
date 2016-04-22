@@ -22,7 +22,11 @@ var toggler = require('lib/toggler')
 // 		default...
 var makeConfigToggler = 
 module.makeConfigToggler = 
-function(attr, states, callback){
+function(attr, states, a, b){
+
+	var pre = a
+	var post = b || function(action){ action != null && this.focusImage() }
+
 	return toggler.Toggler(null,
 		function(_, action){
 			var lst = states.constructor === Array ? states : states.call(this)
@@ -37,9 +41,7 @@ function(attr, states, callback){
 				//this.focusImage()
 			}
 		},
-		states,
-		// XXX should we focus image by default here???
-		callback || function(action){ action != null && this.focusImage() })
+		states, pre, post)
 }
 
 

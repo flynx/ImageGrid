@@ -166,13 +166,6 @@ module.ViewerActions = actions.Actions({
 			'last',		// select last image
 		],
 		'ribbon-focus-mode': 'visual',
-
-		'sort-modes': {
-			'Sort by date': 'metadata.createDate birthtime',
-			'Sort by name': 'name path',
-			'Sort by name (XP-style)': 'name-leading-sequence name path',
-			'Sort by file sequence number': 'name-leading-sequence name path',
-		},
 	},
 
 	// Images...
@@ -634,15 +627,6 @@ module.ViewerActions = actions.Actions({
 	reverseRibbons: [ reloadAfter() ],
 	sortImages: [ reloadAfter(true) ],
 
-	// XXX should this be a dialog with ability to edit modes???
-	// XXX should this store state???
-	toggleImageSort: ['Edit|Sort/Sort images by',
-		core.makeConfigToggler(
-			function(){ return Object.keys(this.config['sort-modes'])[0]},
-			function(){ return Object.keys(this.config['sort-modes']) },
-			function(mode){ this.sortImages(this.config['sort-modes'][mode]) })],
-
-
 	// basic image editing...
 	//
 	// XXX should we have .rotate(..) and .flip(..) generic actions???
@@ -783,7 +767,6 @@ module.Viewer = core.ImageGridFeatures.Feature({
 			}],
 	],
 })
-
 
 
 

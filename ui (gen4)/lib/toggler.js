@@ -243,7 +243,7 @@ function(elem, state_accessor, states, callback_a, callback_b){
 		if(callback_pre != null){
 			if(callback_pre.apply(this, [action, e].concat(args)) === false){
 				//return
-				return func('?')
+				return func.call(this, '?')
 			}
 		}
 
