@@ -558,29 +558,48 @@ module.Base = core.ImageGridFeatures.Feature({
 var SortActions = 
 module.SortActions = actions.Actions({
 	config: {
+		// this can be:
+		// 	- sort mode name		- as set in .config['sort-mode'] key
+		// 								Example: 'Date'
+		// 	- explicit sort method	- as set in .config['sort-mode'] value
+		// 								Example: 'metadata.createDate birthtime'
 		'default-sort': 'Date',
-
-		'sort-modes': {
+		
+		// Format:
+		// 	The value is a space separated string of methods.
+		// 	A method is either a sort method defined in .__sort_methods__
+		// 	or a dot-separated image attribute path.
+		//
+		// NOTE: 'Date' is descending by default
+		// NOTE: .toggleImageSort('?') may also show 'Manual' when 
+		// 		.data.manual_order is present.
+		// NOTE: 'Manual' mode is set after .shiftImageLeft(..)/.shiftImageRight(..)
+		// 		are called or when restoring a pre-existing .data.manual_order 
+		// 		via .toggleImageSort('Manual')
+		//
+		// XXX need a natural way to reverse these...
+		'sort-methods': {
 			'none': '',
-			'Date': 'metadata.createDate birthtime',
-			'Name': 'name path',
+			// NOTE: this is descending by default...
+			'Date': 'metadata.createDate birthtime reverse',
 			'Name (XP-style)': 'name-leading-sequence name path',
 			'File sequence number': 'name-leading-sequence name path',
+			'Name': 'name path',
 			// XXX sequence number with overflow...
-			// XXX manual...
+			//'File sequence number with overflow': 'name-leading-sequence name path',
 		},
 	},
 
-	// Custom sort modes...
+	// Custom sort methods...
 	//
 	// Format:
 	// 	{
-	// 		<mode-name>: function(a, b){ ... },
+	// 		<method-name>: function(a, b){ ... },
 	// 		...
 	// 	}
 	//
 	// NOTE: the cmp function is called in the actions context.
-	__sort_modes__: {
+	__sort_methods__: {
 		'name-leading-sequence': function(a, b){
 			a = this.images.getImageNameLeadingSeq(a)
 			a = typeof(a) == typeof('str') ? 0 : a
@@ -600,13 +619,33 @@ module.SortActions = actions.Actions({
 	},
 	//	Sort using the default sort method
 	//	.sortImages()
+	//		NOTE: the actual sort method used is set via 
+	//			.config['default-sort']
 	//
 	//	Sort using a specific method(s):
 	//	.sortImages(<method>)
 	//	.sortImages([<method>, ..])
+	//		NOTE: <method> can either be one of:
+	//			1) method name (key) from .config['sort-methods']
+	//			2) a space separated string of methods or attribute paths
+	//				as in .config['sort-methods']'s values.
+	//			for more info se doc for: .config['sort-methods']
 	//
 	//	Update current sort order:
 	//	.sortImages('update')
+	//		NOTE: unless the sort order (.data.order) is changed manually
+	//			this will have no effect.
+	//		NOTE: this is designed to facilitate manual sorting of 
+	//			.data.order
+	//
+	//
+	// NOTE: reverse is calculated by oddity -- if an odd number indicated
+	// 		then the result is reversed, otherwise it is not. 
+	// 		e.g. adding:
+	// 		 	'metadata.createDate birthtime' + ' reverse' 
+	// 		will reverse the result's order while:
+	// 		 	'metadata.createDate birthtime reverse' + ' reverese' 
+	// 		will cancel reversal.
 	//
 	// XXX this also requires images...
 	// XXX cache order???
@@ -619,30 +658,33 @@ module.SortActions = actions.Actions({
 				reverse = true
 			}
 
-			reverse = reverse == null 
-				|| reverse == 'reverse' 
+			reverse = reverse == null ? false 
+				: reverse == 'reverse' 
 				|| reverse
 
 			method = method == 'update' ? [] : method
 			method = method 
-				|| this.config['sort-modes'][this.config['default-sort']]
+				|| this.config['sort-methods'][this.config['default-sort']]
 				|| this.config['default-sort'] 
 				|| 'birthtime'
+			method = this.config['sort-methods'][method] || method
 			// handle multiple methods....
 			method = typeof(method) == typeof('str') ? method.split(/ +/g) : method
 			method = method instanceof Array ? method : [method]
 
 			// get the reverse...
 			var i = method.indexOf('reverse')
-			if(i >=0){
-				reverse = true
+			while(i >=0){
+				reverse = !reverse
 				method.splice(i, 1)
+
+				i = method.indexOf('reverse')
 			}
 
 			// build the compare routine...
 			method = method.map(function(m){
-				return SortActions.__sort_modes__[m] 
-					|| (that.__sort_modes__ && that.__sort_modes__[m])
+				return SortActions.__sort_methods__[m] 
+					|| (that.__sort_methods__ && that.__sort_methods__[m])
 					// sort by attr path...
 					|| (function(){
 						var p = m.split(/\./g)
@@ -697,14 +739,12 @@ module.SortActions = actions.Actions({
 
 	// XXX should this be a dialog with ability to edit modes???
 	// 		- toggle reverse sort
-	// XXX should this store state???
-	// XXX handle manual...
-	// 		...set manual on shiftImageLeft/shiftImageRight
+	// XXX currently this will not toggle past 'none'
 	toggleImageSort: ['Edit|Sort/Sort images by',
 		toggler.Toggler(null,
-			function(){ return this.data.sort_mode || 'none' },
+			function(){ return this.data.sort_method || 'none' },
 			function(){ 
-				return Object.keys(this.config['sort-modes'])
+				return Object.keys(this.config['sort-methods'])
 					.concat(this.data.manual_order ? ['Manual'] : [])},
 			// prevent setting 'none' as mode...
 			function(mode){ 
@@ -712,7 +752,7 @@ module.SortActions = actions.Actions({
 					|| (mode == 'Manual' && this.data.manual_order) },
 			function(mode){ 
 				// save manual order...
-				if(this.data.sort_mode == 'Manual'){
+				if(this.data.sort_method == 'Manual'){
 					this.data.manual_order = this.data.order.slice()
 				}
 
@@ -723,19 +763,19 @@ module.SortActions = actions.Actions({
 					this.sortImages('update')
 
 				} else {
-					this.sortImages(this.config['sort-modes'][mode]) 
+					this.sortImages(this.config['sort-methods'][mode]) 
 				}
 
-				this.data.sort_mode = mode
+				this.data.sort_method = mode
 			})],
 
-	// Store/load:
-	// 	.sort_mode
-	// 	.manual_order
+	// Store/load sort data:
+	// 	.data.sort_method	- current sort mode (optional)
+	// 	.manual_order		- manual sort order (optional)
 	load: [function(data){
 		return function(){
-			if(data.data && data.data.sort_mode){
-				this.data.sort_mode = data.data.sort_mode
+			if(data.data && data.data.sort_method){
+				this.data.sort_method = data.data.sort_method
 			}
 
 			if(data.data && data.data.manual_order){
@@ -745,8 +785,8 @@ module.SortActions = actions.Actions({
 	}],
 	json: [function(){
 		return function(res){
-			if(this.data.sort_mode){
-				res.data.sort_mode = this.data.sort_mode
+			if(this.data.sort_method){
+				res.data.sort_method = this.data.sort_method
 			}
 
 			if(this.data.manual_order){
@@ -773,7 +813,7 @@ module.Sort = core.ImageGridFeatures.Feature({
 	handlers: [
 		['shiftImageRight shiftImageLeft',
 			function(){
-				this.data.sort_mode = 'Manual'
+				this.data.sort_method = 'Manual'
 			}],
 	],
 })
@@ -922,7 +962,6 @@ module.CropActions = actions.Actions({
 			})
 		}
 	}],
-
 	// store the root crop state instead of the current view...
 	//
 	// modes supported:
