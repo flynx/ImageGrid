@@ -128,6 +128,9 @@ module.ViewerActions = actions.Actions({
 		// The maximum screen width allowed when zooming...
 		'max-screen-images': 30,
 
+		// If true do not zoom past one image filling the screen...
+		'max-zoom-to-screen': true,
+
 		// A step (multiplier) used by .zoomIn()/.zoomOut() actions.
 		// NOTE: this is rounded to the nearest whole screen width in images
 		// 		and current fit-overflow added.
@@ -179,6 +182,13 @@ module.ViewerActions = actions.Actions({
 		if(this.ribbons != null){
 			this.ribbons.images = value
 		}
+	},
+
+	get scale(){
+		return this.ribbons != null ? this.ribbons.scale() : null
+	},
+	set scale(s){
+		this.setScale(s)
 	},
 
 	get screenwidth(){
@@ -514,32 +524,48 @@ module.ViewerActions = actions.Actions({
 
 	// zooming...
 	//
+	// XXX need to account for animations...
+	setScale: ['- Zoom/',
+		function(scale){
+			this.ribbons && scale && this.ribbons.scale(scale)
+
+			this.refresh()
+		}],
+
 	// Zooming is done by multiplying the current scale by config['zoom-step']
 	// and rounding to nearest discrete number of images to fit on screen.
 	zoomIn: ['Zoom/Zoom in',
 		function(){ 
 			this.ribbons.origin()
 
-			//var n = Math.round(this.ribbons.getScreenWidthImages())-1
-			var d = this.config['zoom-step'] || 1.2
-			var s = a.ribbons.scale() * d
-			var n = Math.floor(this.ribbons.getScreenWidthImages(s))
-		
-			this.fitImage(n <= 0 ? 1 : n)
+			var s = this.scale * (this.config['zoom-step'] || 1.2)
+
+			var W = this.ribbons.viewer.width()
+			var H = this.ribbons.viewer.height()
+			var w = this.ribbons.getVisibleImageSize('width', s)
+			var h = this.ribbons.getVisibleImageSize('height', s)
+
+			// limit scaling to screen dimensions...
+			if(this.config['max-zoom-to-screen'] && (W < w || H < h)){
+				this.fitImage(1)
+
+			} else {
+				this.scale = s
+			}
 		}],
 	zoomOut: ['Zoom/Zoom out',
 		function(){ 
 			this.ribbons.origin()
 
-			//var n = Math.round(this.ribbons.getScreenWidthImages())+1
-			var d = this.config['zoom-step'] || 1.2
-			var s = a.ribbons.scale() / d
-			var n = Math.ceil(this.ribbons.getScreenWidthImages(s))
-
 			var max = this.config['max-screen-images']
-			this.fitImage(n > max ? max : n)
-		}],
 
+			if(max && max < (this.screenwidth * (this.config['zoom-step'] || 1.2))){
+				this.fitImage(max)
+
+			} else {
+				this.scale /= (this.config['zoom-step'] || 1.2)
+			}
+		}],
 	fitOrig: ['Zoom/Fit to original scale',
 		function(){ 
 			this.ribbons.scale(1) 
@@ -550,6 +576,9 @@ module.ViewerActions = actions.Actions({
 	// NOTE: this will add .config['fit-overflow'] to odd counts if no 
 	// 		overflow if passed.
 	// 		...this is done to add ability to control scroll indication.
+	//
+	// XXX make these neutral to screen and image proportions...
+	// 		...use .scale instead of .screenwidth???
 	fitImage: ['Zoom/Fit image',
 		function(count, overflow){
 			if(count != null){
@@ -1007,6 +1036,7 @@ module.URLHash = core.ImageGridFeatures.Feature({
 // NOTE: this is split out to an action so as to enable ui elements to 
 // 		adapt to ribbon size changes...
 //
+// XXX try using .ribbons.resizeRibbon(..) for basic tasks...
 // XXX try a strategy: load more in the direction of movement by an offset...
 // XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
 var PartialRibbonsActions = actions.Actions({
@@ -1371,6 +1401,11 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 		['focusImage.post', 
 			function(_, target){
 				this.preCacheJumpTargets(target)
+			}],
+		['setScale.pre', 
+			function(s){
+				this.updateRibbon('current', this.screenwidth / s || 1)
+				//this.preCacheJumpTargets()
 			}],
 		['fitImage.pre', 
 			function(n){

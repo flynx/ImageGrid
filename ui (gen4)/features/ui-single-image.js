@@ -169,7 +169,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 	actions: SingleImageActions,
 
 	handlers:[
-		['fitImage.post',
+		['fitImage.post setScale.post',
 			function(){ 
 
 				// singe image mode -- set image proportions...
