@@ -65,7 +65,16 @@ module.GLOBAL_KEYBOARD = {
 
 			// XXX not sure about this...
 			//'Up', 'Down',
+
+			// zooming...
+			'#0', '#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
 		],
+
+		// XXX use a means to scale that does not get affected by image 
+		// 		proportions...
+		'#1': 'fitImage: 1 -- Fit image to screen',
+		'#2': 'fitImage: 2 -- Show image with frame',
+		'#3': 'fitImage: 5 -- Show small image',
 
 		Esc: 'toggleSingleImage: "off" -- Exit single image view',
 	},
