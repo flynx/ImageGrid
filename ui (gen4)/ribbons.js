@@ -1584,6 +1584,163 @@ var RibbonsPrototype = {
 		return this
 	},
 
+	// Resize ribbon...
+	//
+	// 	.resizeRIbbon(ribbon, left, right)
+	// 		-> ribbons
+	//
+	// left/right can be:
+	// 	- negative number		- the number of images to trim
+	// 	- list of gids			- the images to add
+	//
+	// NOTE: this is a less general but simpler/faster alternative to 
+	// 		.updateRibbon(..)
+	// NOTE: this needs the ribbon to exist...
+	resizeRIbbon: function(ribbon, left, right, transitions, reference){
+		ribbon = this.getRibbon(ribbon)
+		left = left || 0
+		right = right || 0
+		reference = this.getImage(reference)
+
+		var that = this
+
+		var images = ribbon.find(IMAGE)
+		var unloaded = $()
+
+		// trim right...
+		if(right < 0){
+			var marks = []
+			var unloaded = images.slice(images.length + right)
+				// remove marks...
+				.each(function(_, img){
+					marks = marks.concat(
+						that.getImageMarks(that.getElemGID(img)).toArray())
+				})
+				
+			// clear stuff...
+			$(marks)
+				.remove()
+			unloaded
+				.detach()
+				.removeClass('moving current')
+				// blank out images to prevent wrong image flashing 
+				// when reusing...
+				.css('background-image', 'none')
+		} 
+
+		// trim left...
+		// NOTE: this affects ribbon placement, thus we'll need to compensate...
+		if(left < 0){
+			var scale = this.scale()
+			var marks = []
+			// NOTE: we do not need to append or conserve previous unloaded
+			// 		images as we will need them only if we are trimming from 
+			// 		one side and growing the other...
+			var unloaded = images.slice(0, -left)
+				// remove marks...
+				.each(function(_, img){
+					marks = marks.concat(
+						that.getImageMarks(that.getElemGID(img)).toArray())
+				})
+
+			// calculate the compensation...
+			// XXX this assumes that all widths are equal...
+			// 		...we can't calculate image with unless it is attached...
+			var l = -left * reference.outerWidth()
+
+			// clear stuff...
+			$(marks)
+				.remove()
+
+			requestAnimationFrame(function(){
+				transitions || that.preventTransitions(ribbon)
+
+				unloaded
+					.detach()
+					.removeClass('moving current')
+					// blank out images to prevent wrong image flashing 
+					// when reusing...
+					.css('background-image', 'none')
+				// compensate for the offset...
+				that.dom.setOffset(ribbon, that.dom.getOffset(ribbon).left + l)
+
+				transitions || that.restoreTransitions(ribbon, true)
+			})
+		}
+
+		// grow right...
+		if(right.length > 0 || right > 0){
+			var c = right.length || right
+
+			// build set of empty images...
+			var loading = unloaded.slice(0, c)
+			while(loading.length < c){
+				loading.push(that.createImage([''])[0])
+			}
+
+			// update images...
+			right instanceof Array && right.forEach(function(gid, i){
+				var img = loading.eq(i)
+				that.setElemGID(img, gid) 
+				// XXX for some reason this does not add indicators...
+				that.updateImage(img)
+			})
+
+			ribbon.append(loading)
+
+			// XXX this is here to update the indicators...
+			// 		...indicators seem to not be attached above...
+			loading.each(function(_, img){
+				that.updateImage(img)
+			})
+		}
+
+		// grow left...
+		// NOTE: this affects ribbon placement, thus we'll need to compensate...
+		if(left.length > 0 || left > 0){
+			//var scale = this.scale()
+			var c = left.length || left
+
+			// build set of empty images...
+			var loading = unloaded.slice(0, c)
+			while(loading.length < c){
+				loading.push(that.createImage([''])[0])
+			}
+
+			// update images...
+			left instanceof Array && left.forEach(function(gid, i){
+				var img = loading.eq(i)
+				that.setElemGID(img, gid) 
+				// XXX for some reason this does not add indicators...
+				that.updateImage(img)
+			})
+
+			// calculate the compensation...
+			// XXX this assumes that all widths are equal...
+			// 		...we can't calculate image with unless it is attached...
+			var l = c * reference.outerWidth()
+
+			requestAnimationFrame(function(){
+				transitions || that.preventTransitions(ribbon)
+
+				ribbon.prepend(loading)
+
+				// XXX this is here to update the indicators...
+				// 		...indicators seem to not be attached above...
+				loading.each(function(_, img){
+					that.updateImage(img)
+				})
+
+				// compensate for the offset...
+				that.dom.setOffset(ribbon, that.dom.getOffset(ribbon).left - l)
+
+				transitions || that.restoreTransitions(ribbon, true)
+			})
+		}
+
+		return this
+	},
+
 	// Update a data object in ribbons...
 	//
 	// 	.updateData(data, settings)
