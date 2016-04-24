@@ -85,57 +85,92 @@ var core = require('features/core')
 //
 //
 // XXX should this be an action???
-// XXX problems:
-// 		Q: what do we use for scale??
+// XXX .ribbons.correctImageProportionsForRotation(..) might be working 
+// 		incorrectly...
+// 		...when scaling a horizontal image, the thing starts jumping around....
 function updateImageProportions(){
+	var that = this
+	// XXX get this from config...
+	var threshold = this.config['single-image-proportions-threshold'] || 2
 	var viewer = this.ribbons.viewer
-	var image = viewer.find('.image')
 
-	var W = viewer.width()
-	var H = viewer.height()
-	var w = image.width()
-	var h = image.height()
+	// XXX
+	return
 
-	var R = W/H
-	var r = w/h
+	var img = this.ribbons.getImage()
+	var w = img.outerWidth()
+	var h = img.outerHeight()
 
-	var threshold = 3
-	var scale = Math.min(this.screenwidth, this.screenheight)
+	var c = Math.min(this.screenwidth, this.screenheight)
 
-	// XXX the idea is that:
-	// 		- up until a specific threshold:
-	// 			r is 1 
-	// 			we do not care about R
-	// 			XXX how do we define the threshold???
-	// 		- above that threshold:
-	// 			r tends to R relative to ???
-	// 		- when W == w && H == h
-	// 			r == R
-	// 		- beyond 
-	// 			r tends to actual image proportions
-	// 		- when (W == w || H == h) && r == actual image proportions
-	// 			we change nothing...
-	
-	// reset image proportions to square...
-	if(scale > threshold){
-		image.css({
-			width: '',
-			height: '',
+	// change proportions...
+	if(c < threshold){
+		var W = viewer.width()
+		var H = viewer.height()
+
+		// get dimensional scale....
+		var s = Math.min(W, H) / Math.min(w, h)
+
+		// XXX proportion s between s and 1 depending on c position 
+		// 		between threshold and 1
+		// 			s: const 				- changes with viewer size
+		// 			c: threshold -> 1
+		//
+		//		factor:
+		// 			f: 1/s -> 1
+		//
+		//var f = 
+		//s *= f
+
+		// get new dimension in image scale...
+		var n = Math.max(W, H) / s
+
+		if(n == Math.max(w, h)){
+			return
+		}
+
+		getAnimationFrame(function(){
+			that.ribbons.preventTransitions()
+
+			// horizontal viewer...
+			if(Math.min(W, H) == H){
+				// XXX
+				viewer.find('.ribbon .image')
+					.css({
+						width: n,
+						height: '',
+					})
+
+			// vertical viewer...
+			} else {
+				// XXX
+				viewer.find('.ribbon .image')
+					.css({
+						width: '',
+						height: n,
+					})
+			}
+		
+			that.centerImage()
+
+			that.ribbons.restoreTransitions(true)
 		})
 
-	// shift image container proportions between 1 and R, from threshold
-	// scale to 1...
-	} else if(scale >= 1){
-		// XXX
-	
-	// shift image container proportions between R and actual image 
-	// proportions...
-	} else if(W != w || H != h){
-		// XXX
+	// reset proportions to square...
+	} else if(w != h) {
+		getAnimationFrame(function(){
+			that.ribbons.preventTransitions()
 
-	// image container proportions are the same as image proportions...
-	} else {
-		// XXX
+			viewer.find('.ribbon .image')
+				.css({
+					width: '',
+					height: '',
+				})
+
+			that.centerImage()
+
+			that.ribbons.restoreTransitions(true)
+		})
 	}
 }
 

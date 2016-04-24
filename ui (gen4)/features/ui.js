@@ -538,19 +538,15 @@ module.ViewerActions = actions.Actions({
 		function(){ 
 			this.ribbons.origin()
 
-			var s = this.scale * (this.config['zoom-step'] || 1.2)
-
-			var W = this.ribbons.viewer.width()
-			var H = this.ribbons.viewer.height()
-			var w = this.ribbons.getVisibleImageSize('width', s)
-			var h = this.ribbons.getVisibleImageSize('height', s)
+			var d = (this.config['zoom-step'] || 1.2)
 
 			// limit scaling to screen dimensions...
-			if(this.config['max-zoom-to-screen'] && (W < w || H < h)){
-				this.fitImage(1)
+			if(this.config['max-zoom-to-screen'] 
+					&& (Math.min(this.screenwidth, this.screenheight) / d) < 1){
+				this.scale /= 1 / Math.min(this.screenwidth, this.screenheight)
 
 			} else {
-				this.scale = s
+				this.scale *= d
 			}
 		}],
 	zoomOut: ['Zoom/Zoom out',
@@ -560,7 +556,7 @@ module.ViewerActions = actions.Actions({
 			var max = this.config['max-screen-images']
 
 			if(max && max < (this.screenwidth * (this.config['zoom-step'] || 1.2))){
-				this.fitImage(max)
+				this.scale /= max / Math.min(this.screenwidth, this.screenheight)
 
 			} else {
 				this.scale /= (this.config['zoom-step'] || 1.2)
