@@ -90,14 +90,11 @@ var core = require('features/core')
 // 		...when scaling a horizontal image, the thing starts jumping around....
 function updateImageProportions(){
 	var that = this
-	// XXX get this from config...
 	var threshold = this.config['single-image-proportions-threshold'] || 2
 	var viewer = this.ribbons.viewer
 
-	// XXX
-	return
-
 	var img = this.ribbons.getImage()
+	// XXX check if this accounts for margins...
 	var w = img.outerWidth()
 	var h = img.outerHeight()
 
@@ -108,22 +105,18 @@ function updateImageProportions(){
 		var W = viewer.width()
 		var H = viewer.height()
 
+
 		// get dimensional scale....
 		var s = Math.min(W, H) / Math.min(w, h)
+		// image dimension delta...
+		var d = 
+			// the maximum difference between image and screen proportions...
+			(Math.max(W, H) / s - Math.min(w, h)) 
+				// coefficient: 0 @ c == threshold -> 1 @ c == 1
+				* (threshold/c - 1)
+		// total size...
+		var n = Math.min(w, h) + d
 
-		// XXX proportion s between s and 1 depending on c position 
-		// 		between threshold and 1
-		// 			s: const 				- changes with viewer size
-		// 			c: threshold -> 1
-		//
-		//		factor:
-		// 			f: 1/s -> 1
-		//
-		//var f = 
-		//s *= f
-
-		// get new dimension in image scale...
-		var n = Math.max(W, H) / s
 
 		if(n == Math.max(w, h)){
 			return
@@ -182,6 +175,8 @@ var SingleImageActions = actions.Actions({
 		// NOTE: these will get overwritten if/when the user changes the scale...
 		'single-image-scale': null,
 		'ribbon-scale': null,
+
+		'single-image-proportions-threshold': 2,
 	},
 
 	toggleSingleImage: ['Interface/Toggle single image view', 
