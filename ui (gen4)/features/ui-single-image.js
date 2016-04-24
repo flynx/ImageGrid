@@ -54,22 +54,7 @@ var core = require('features/core')
 //      +---------------+
 //
 //
-// D)
-//       image
-//      + - - - - - - - +
-//      .               .
-//      +---------------+
-//      | viewer        |   - image bigger than viewer in one dimension
-//      |       ^       |   - block grows to fit image proportions
-//      |       |       |   - need to account for individual image 
-//      |       v       |     proportions
-//      |               |   - drag enabled
-//      +---------------+
-//      .               .
-//      + - - - - - - - +
-//
-//
-// E) 
+// D) 
 //     image
 //    + - - - - - - - - - +
 //    .                   .
@@ -88,6 +73,7 @@ var core = require('features/core')
 // XXX .ribbons.correctImageProportionsForRotation(..) might be working 
 // 		incorrectly...
 // 		...when scaling a horizontal image, the thing starts jumping around....
+// XXX alignment issues in some orientations...
 function updateImageProportions(){
 	var that = this
 	var threshold = this.config['single-image-proportions-threshold'] || 2
