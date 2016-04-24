@@ -63,14 +63,18 @@ var core = require('features/core')
 //    . |               | . - image block same proportion as image
 //    . |               | . - we just change scale
 //    . |               | . - drag enabled
-//    . |               | .
+//    . |               | . XXX not done...
 //    . +---------------+ .
 //    .                   .
 //    + - - - - - - - - - +
 //
 //
 // XXX should this be an action???
-// XXX alignment issues in some orientations...
+// XXX alignment issues in rotated images...
+// 		...this makes .ribbons.centerImage() / .ribbons.centerRibbon()
+// 		do things incorreclty in single image mode...
+// 		NOTE: they do their job correctly on rectangular images in 
+// 			ribbon view!
 function updateImageProportions(){
 	var that = this
 	var threshold = this.config['single-image-proportions-threshold'] || 2
@@ -108,7 +112,7 @@ function updateImageProportions(){
 			(Dm / s - di) 
 				// coefficient: 0 : c == threshold  ->  1 : c == 1
 				* (threshold/c - 1)
-		// total size...
+		// new size...
 		var n = di + d
 
 
@@ -160,6 +164,7 @@ function updateImageProportions(){
 		})
 	}
 }
+
 
 
 //---------------------------------------------------------------------
