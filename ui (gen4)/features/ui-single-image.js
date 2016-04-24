@@ -77,9 +77,13 @@ var core = require('features/core')
 // 			ribbon view!
 function updateImageProportions(){
 	var that = this
-	var threshold = this.config['single-image-proportions-threshold'] || 2
-	var viewer = this.ribbons.viewer
+	var threshold = this.config['single-image-proportions-threshold']
 
+	if(!threshold || threshold == -1){
+		return
+	}
+
+	var viewer = this.ribbons.viewer
 	var img = this.ribbons.getImage()
 
 	var w = img.outerWidth()
@@ -175,6 +179,7 @@ var SingleImageActions = actions.Actions({
 		'single-image-scale': null,
 		'ribbon-scale': null,
 
+		// NOTE: setting this to null or to -1 will disable the feature...
 		'single-image-proportions-threshold': 2,
 	},
 
@@ -200,7 +205,6 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 	handlers:[
 		['fitImage.post setScale.post',
 			function(){ 
-
 				// singe image mode -- set image proportions...
 				if(this.toggleSingleImage('?') == 'on'){
 					updateImageProportions.call(this)
@@ -209,6 +213,13 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 				} else {
 					this.config['ribbon-scale'] = this.screenwidth
+				}
+			}],
+		// update new images...
+		['resizeRibbon',
+			function(){
+				if(this.toggleSingleImage('?') == 'on'){
+					updateImageProportions.call(this)
 				}
 			}],
 		// NOTE: this is not part of the actual action above because we 

@@ -247,9 +247,9 @@ var CurrentImageIndicatorActions = actions.Actions({
 				}
 			}
 
-			// XXX need to account for image margins....
-			//css.left = cur[0].offsetLeft
-			this.ribbons.dom.setOffset(marker, cur[0].offsetLeft, 0)
+			this.ribbons.dom.setOffset(marker, 
+					cur[0].offsetLeft - (parseFloat(cur[0].style.marginLeft) || 0), 
+					0)
 
 			marker.css(css)
 		}],
