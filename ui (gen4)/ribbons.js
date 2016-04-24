@@ -2168,6 +2168,8 @@ var RibbonsPrototype = {
 		var W = this.viewer.innerWidth()
 		var H = this.viewer.innerHeight()
 
+		var images = images || this.viewer.find(IMAGE)
+
 		var viewer_p = W > H ? 'landscape' : 'portrait'
 
 		return $(images).each(function(i, e){
@@ -2221,8 +2223,10 @@ var RibbonsPrototype = {
 	// XXX offset and scale are not used...
 	// XXX custom align point woud also be nice... 
 	// 		(top, bottom, center, %, px)
+	// XXX need to account for margins...
 	centerRibbon: function(target, offset, scale){
 		target = this.getImage(target)
+		scale = scale || this.scale()
 		var ribbon_set = this.getRibbonSet() 
 
 		if(ribbon_set.length == 0 || target.length == 0){
@@ -2231,12 +2235,14 @@ var RibbonsPrototype = {
 
 		//this.origin(target)
 		
-		var s = this.scale()
-		var ro = ribbon_set.offset()
-		var io = target.offset()
-		var h = target.height()
+		var ro = ribbon_set.offset().top
+		// NOTE: this appears to account for margins...
+		var io = target.offset().top 
+		var h = target.outerHeight() 
+			+ parseFloat(target.css('margin-top'))
+			+ parseFloat(target.css('margin-bottom'))
 
-		var t = (io.top - ro.top)/s + h/2
+		var t = (io - ro)/scale + h/2
 
 		var offset = this.dom.relativeOffset(this.viewer, ribbon_set, {
 			top: t,
@@ -2253,6 +2259,7 @@ var RibbonsPrototype = {
 	// XXX offset is not used...
 	// XXX custom align point would also be nice... 
 	// 		(top, bottom, center, %, px)
+	// XXX need to account for margins...
 	centerImage: function(target, mode, offset, scale){
 		target = this.getImage(target)
 		scale = scale || this.scale()
@@ -2263,10 +2270,12 @@ var RibbonsPrototype = {
 		}
 
 		var rl = ribbon.offset().left
-		var il = target.offset().left
-		//var rsl = this.getRibbonSet().offset().left
+		// NOTE: this appears to account for margins...
+		var il = target.offset().left 
 		var W = this.viewer.width() * scale
-		var w = target.width() * scale
+		var w = (target.outerWidth()
+			+ parseFloat(target.css('margin-left'))
+			+ parseFloat(target.css('margin-right'))) * scale
 
 		var image_offset = mode == 'before' ? w/2
 			: mode == 'after' ? -w/2

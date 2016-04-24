@@ -70,9 +70,6 @@ var core = require('features/core')
 //
 //
 // XXX should this be an action???
-// XXX .ribbons.correctImageProportionsForRotation(..) might be working 
-// 		incorrectly...
-// 		...when scaling a horizontal image, the thing starts jumping around....
 // XXX alignment issues in some orientations...
 function updateImageProportions(){
 	var that = this
@@ -80,31 +77,42 @@ function updateImageProportions(){
 	var viewer = this.ribbons.viewer
 
 	var img = this.ribbons.getImage()
-	// XXX check if this accounts for margins...
+
 	var w = img.outerWidth()
 	var h = img.outerHeight()
 
+	// inner diameter
+	var di = Math.min(h, w)
+	// outer diameter -- (m)ax
+	var dm = Math.max(h, w)
+	
 	var c = Math.min(this.screenwidth, this.screenheight)
 
 	// change proportions...
 	if(c < threshold){
+		var images = viewer.find('.ribbon .image')
 		var W = viewer.width()
 		var H = viewer.height()
 
+		// inner diameter
+		var Di = Math.min(W, H)
+		// outer diameter -- (m)ax
+		var Dm = Math.max(W, H)
+
 
 		// get dimensional scale....
-		var s = Math.min(W, H) / Math.min(w, h)
+		var s = Di / di 
 		// image dimension delta...
 		var d = 
 			// the maximum difference between image and screen proportions...
-			(Math.max(W, H) / s - Math.min(w, h)) 
-				// coefficient: 0 @ c == threshold -> 1 @ c == 1
+			(Dm / s - di) 
+				// coefficient: 0 : c == threshold  ->  1 : c == 1
 				* (threshold/c - 1)
 		// total size...
-		var n = Math.min(w, h) + d
+		var n = di + d
 
 
-		if(n == Math.max(w, h)){
+		if(n == dm){
 			return
 		}
 
@@ -112,41 +120,41 @@ function updateImageProportions(){
 			that.ribbons.preventTransitions()
 
 			// horizontal viewer...
-			if(Math.min(W, H) == H){
-				// XXX
-				viewer.find('.ribbon .image')
-					.css({
-						width: n,
-						height: '',
+			if(Di == H){
+				images
+					.each(function(_, img){
+						img.style.width = n + 'px'
+						img.style.height = ''
 					})
 
 			// vertical viewer...
 			} else {
-				// XXX
-				viewer.find('.ribbon .image')
-					.css({
-						width: '',
-						height: n,
+				images
+					.each(function(_, img){
+						img.style.width = ''
+						img.style.height = n + 'px'
 					})
 			}
 		
-			that.centerImage()
+			that.ribbons.centerImage()
 
 			that.ribbons.restoreTransitions(true)
 		})
 
 	// reset proportions to square...
 	} else if(w != h) {
+		var images = viewer.find('.ribbon .image')
+
 		getAnimationFrame(function(){
 			that.ribbons.preventTransitions()
 
-			viewer.find('.ribbon .image')
-				.css({
-					width: '',
-					height: '',
+			images
+				.each(function(_, img){
+					img.style.width = ''
+					img.style.height = ''
 				})
 
-			that.centerImage()
+			that.ribbons.centerImage()
 
 			that.ribbons.restoreTransitions(true)
 		})
