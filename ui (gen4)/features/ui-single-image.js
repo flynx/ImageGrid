@@ -137,16 +137,44 @@ function updateImageProportions(){
 			if(Di == H){
 				images
 					.each(function(_, img){
-						img.style.width = n + 'px'
-						img.style.height = ''
+						var o = img.getAttribute('orientation')
+						o = o == null ? 0 : o
+
+						// rotated images...
+						if(o == 90 || o == 270){
+							img.style.width = ''
+							img.style.height = n + 'px'
+
+							img.style.margin = -(n - di)/2 +'px '+ (n - di)/2 +'px'
+
+						} else {
+							img.style.width = n + 'px'
+							img.style.height = ''
+
+							img.style.margin = ''
+						}
 					})
 
 			// vertical viewer...
 			} else {
 				images
 					.each(function(_, img){
-						img.style.width = ''
-						img.style.height = n + 'px'
+						var o = img.getAttribute('orientation')
+						o = o == null ? 0 : o
+
+						// rotated images...
+						if(o == 90 || o == 270){
+							img.style.width = n + 'px'
+							img.style.height = ''
+
+							img.style.margin = -(n - di)/2 +'px '+ (n - di)/2 +'px'
+
+						} else {
+							img.style.width = ''
+							img.style.height = n + 'px'
+
+							img.style.margin = ''
+						}
 					})
 			}
 		
@@ -166,6 +194,8 @@ function updateImageProportions(){
 				.each(function(_, img){
 					img.style.width = ''
 					img.style.height = ''
+
+					img.style.margin = ''
 				})
 
 			that.ribbons
@@ -226,10 +256,10 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 				if(this.toggleSingleImage('?') == 'on'){
 					updateImageProportions.call(this)
 
-					this.config['single-image-scale'] = this.screenwidth
+					this.config['single-image-scale'] = this.scale
 
 				} else {
-					this.config['ribbon-scale'] = this.screenwidth
+					this.config['ribbon-scale'] = this.scale
 				}
 			}],
 		// update new images...
@@ -243,7 +273,6 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 		// 		need to see if the state has changed and doing this with 
 		// 		two separate pre/post callbacks (toggler callbacks) is 
 		// 		harder than with two nested callbacks (action callbacks)
-		// XXX this uses .screenwidth for scale, is this the right way to go?
 		['toggleSingleImage.pre', 
 			function(){ 
 				var pre_state = this.toggleSingleImage('?')
@@ -257,9 +286,9 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 						// update scale...
 						if(state != pre_state){
-							var w = this.screenwidth
-							this.config['ribbon-scale'] = w
-							this.screenwidth = this.config['single-image-scale'] || w
+							var s = this.scale
+							this.config['ribbon-scale'] = s
+							this.scale = this.config['single-image-scale'] || s
 						}
 
 					// ribbon mode -- restore original image size...
@@ -268,17 +297,16 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 							.each(function(_, img){
 								img.style.width = ''
 								img.style.height = ''
+								img.style.margin = ''
 							})
 
-						// XXX this still does not align correctly with 
-						// 		rotated current image...
 						this.ribbons.centerImage()
 
 						// update scale...
 						if(state != pre_state){
-							var w = this.screenwidth
-							this.config['single-image-scale'] = w
-							this.screenwidth = this.config['ribbon-scale'] || w
+							var s = this.scale
+							this.config['single-image-scale'] = s
+							this.scale = this.config['ribbon-scale'] || s
 						}
 					}
 				}
@@ -307,11 +335,13 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 					return
 				}
 
+				console.log('!!!!!!!!!!!!!!', this.config['ribbon-scale'])
+
 				if(this.toggleSingleImage('?') == 'on'){
-					this.screenwidth = this.config['single-image-scale'] || this.screenwidth
+					this.scale = this.config['single-image-scale'] || this.scale
 
 				} else {
-					this.screenwidth = this.config['ribbon-scale'] || this.screenwidth
+					this.scale = this.config['ribbon-scale'] || this.scale
 				}
 			}],
 	],
