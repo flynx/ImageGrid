@@ -2191,18 +2191,16 @@ var RibbonsPrototype = {
 					image.css({
 						width: h,
 						height: w,
-					})
-					image.css({
-						'margin': -((w - h)/2) +'px '+ (w - h)/2 + 'px'
+
+						margin: -((w - h)/2) +'px '+ (w - h)/2 + 'px'
 					})
 
 				} else if((o == 0 || o == 180) && image_p != viewer_p){
 					image.css({
 						width: h,
 						height: w,
-					})
-					image.css({
-						'margin': '',
+
+						margin: '',
 					})
 				}
 

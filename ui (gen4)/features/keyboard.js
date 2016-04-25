@@ -72,9 +72,9 @@ module.GLOBAL_KEYBOARD = {
 
 		// XXX use a means to scale that does not get affected by image 
 		// 		proportions...
-		'#1': 'fitImage: 1 -- Fit image to screen',
-		'#2': 'fitImage: 2 -- Show image with frame',
-		'#3': 'fitImage: 5 -- Show small image',
+		'#1': 'fitScreen',
+		'#2': 'fitNormal',
+		'#3': 'fitSmall',
 
 		Esc: 'toggleSingleImage: "off" -- Exit single image view',
 	},

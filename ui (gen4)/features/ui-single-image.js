@@ -72,15 +72,11 @@ var core = require('features/core')
 //    .                   .
 //    + - - - - - - - - - +
 //
-// XXX might be a good idea to use tiles for zoomed in images...
 //
+// NOTE: this in part does the same job as .ribbons.correctImageProportionsForRotation(..)
+//
+// XXX might be a good idea to use tiles for zoomed in images...
 // XXX should this be an action???
-// XXX alignment issues in rotated images...
-// 		...this makes .ribbons.centerImage() / .ribbons.centerRibbon()
-// 		do things incorreclty in single image mode...
-// 		NOTE: they do their job correctly on rectangular images in 
-// 			ribbon view!
-// XXX this makes exiting single image mode align image incorrectly...
 function updateImageProportions(){
 	var that = this
 	var threshold = this.config['single-image-proportions-threshold']
@@ -297,6 +293,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 							.each(function(_, img){
 								img.style.width = ''
 								img.style.height = ''
+
 								img.style.margin = ''
 							})
 
@@ -335,12 +332,11 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 					return
 				}
 
-				console.log('!!!!!!!!!!!!!!', this.config['ribbon-scale'])
-
 				if(this.toggleSingleImage('?') == 'on'){
 					this.scale = this.config['single-image-scale'] || this.scale
 
 				} else {
+					// XXX for some reason this stopped working...
 					this.scale = this.config['ribbon-scale'] || this.scale
 				}
 			}],

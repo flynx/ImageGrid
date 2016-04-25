@@ -577,7 +577,6 @@ module.ViewerActions = actions.Actions({
 	// 		...this is done to add ability to control scroll indication.
 	//
 	// XXX make these neutral to screen and image proportions...
-	// 		...use .scale instead of .screenwidth???
 	fitImage: ['Zoom/Fit image',
 		function(count, overflow){
 			if(count != null){
@@ -598,11 +597,11 @@ module.ViewerActions = actions.Actions({
 	// 		similar across platforms...
 	// 		...for this we need to get display dpi...
 	fitSmall: ['Zoom/Show small image',
-		function(){  }],
+		function(){ this.fitImage(5, 0) }],
 	fitNormal: ['Zoom/Show normal image',
-		function(){  }],
+		function(){ this.fitImage(1.5, 0) }],
 	fitScreen: ['Zoom/Fit image to screen',
-		function(){  }],
+		function(){ this.fitImage(1, 0) }],
 
 
 	fitRibbon: ['Zoom/Fit ribbon vertically',
