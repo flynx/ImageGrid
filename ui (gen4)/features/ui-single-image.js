@@ -209,6 +209,17 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 	actions: SingleImageActions,
 
 	handlers:[
+		// XXX HACK: force browser to redraw off-screen images...
+		// 		...it appears that chrome cheats by not resizing off-screen
+		// 		images properly after changing scale...
+		// 		XXX this is still not perfect...
+		// 			...if needed do a .reload() / ctrl-r
+		['focusImage',
+			function(){
+				if(this.toggleSingleImage('?') == 'on'){
+					this.scale = this.scale
+				}
+			}],
 		['fitImage.post setScale.post',
 			function(){ 
 				// singe image mode -- set image proportions...

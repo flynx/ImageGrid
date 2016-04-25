@@ -260,6 +260,9 @@ module.ViewerActions = actions.Actions({
 					.refresh()
 					.focusImage()
 
+				// XXX HACK to make browser redraw images...
+				this.scale = this.scale
+
 				this.ribbons.restoreTransitions()
 			}
 		}],

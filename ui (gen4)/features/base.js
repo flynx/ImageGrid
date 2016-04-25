@@ -582,8 +582,9 @@ module.SortActions = actions.Actions({
 			'none': '',
 			// NOTE: this is descending by default...
 			'Date': 'metadata.createDate birthtime reverse',
+			'File date': 'birthtime reverse',
 			'Name (XP-style)': 'name-leading-sequence name path',
-			'File sequence number': 'name-leading-sequence name path',
+			'File sequence number': 'name-sequence name path',
 			'Name': 'name path',
 			// XXX sequence number with overflow...
 			//'File sequence number with overflow': 'name-leading-sequence name path',
