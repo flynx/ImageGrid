@@ -19,9 +19,10 @@ var core = require('features/core')
 /*********************************************************************/
 // helper...
 
-// XXX an ideal case would be:
+// Change image proportions depending on scale...
 //
-// A)
+// A) Small image -- min(screenwidth, screenheight) > threshold
+//
 //       viewer
 //      +---------------+
 //      |     image     |   - small image
@@ -32,7 +33,8 @@ var core = require('features/core')
 //      +---------------+
 //
 //
-// B)
+// B) min(screenwidth, screenheight) <= threshold
+//
 //       viewer
 //      +---------------+
 //      | +-----------+ |   - bigger image
@@ -43,7 +45,8 @@ var core = require('features/core')
 //      +---------------+     proportions and can be done in bulk
 //
 //
-// C)
+// C) fullscreen -- min(screenwidth, screenheight) == 1
+//
 //       viewer
 //      +---------------+
 //      | image         |   - image block same size as viewer
@@ -54,7 +57,8 @@ var core = require('features/core')
 //      +---------------+
 //
 //
-// D) 
+// D) zoomed in -- min(screenwidth, screenheight) < 1 (blocked, no drag)
+//
 //     image
 //    + - - - - - - - - - +
 //    .                   .
@@ -62,12 +66,13 @@ var core = require('features/core')
 //    . | viewer        | . - image bigger than viewer 
 //    . |               | . - image block same proportion as image
 //    . |               | . - we just change scale
-//    . |               | . - drag enabled
-//    . |               | . XXX not done...
+//    . |               | . - drag enabled (XXX not implemented)
+//    . |               | . - next/prev image keeps drag position
 //    . +---------------+ .
 //    .                   .
 //    + - - - - - - - - - +
 //
+// XXX might be a good idea to use tiles for zoomed in images...
 //
 // XXX should this be an action???
 // XXX alignment issues in rotated images...
@@ -75,6 +80,7 @@ var core = require('features/core')
 // 		do things incorreclty in single image mode...
 // 		NOTE: they do their job correctly on rectangular images in 
 // 			ribbon view!
+// XXX this makes exiting single image mode align image incorrectly...
 function updateImageProportions(){
 	var that = this
 	var threshold = this.config['single-image-proportions-threshold']
@@ -144,9 +150,9 @@ function updateImageProportions(){
 					})
 			}
 		
-			that.ribbons.centerImage()
-
-			that.ribbons.restoreTransitions(true)
+			that.ribbons
+				.centerImage()
+				.restoreTransitions(true)
 		})
 
 	// reset proportions to square...
@@ -162,9 +168,9 @@ function updateImageProportions(){
 					img.style.height = ''
 				})
 
-			that.ribbons.centerImage()
-
-			that.ribbons.restoreTransitions(true)
+			that.ribbons
+				.centerImage()
+				.restoreTransitions(true)
 		})
 	}
 }
@@ -247,10 +253,15 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 					// ribbon mode -- restore original image size...
 					} else {
-						this.ribbons.viewer.find('.image:not(.clone)').css({
-							width: '',
-							height: ''
-						})
+						this.ribbons.viewer.find('.image:not(.clone)')
+							.each(function(_, img){
+								img.style.width = ''
+								img.style.height = ''
+							})
+
+						// XXX this still does not align correctly with 
+						// 		rotated current image...
+						this.ribbons.centerImage()
 
 						// update scale...
 						if(state != pre_state){
