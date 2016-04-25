@@ -38,6 +38,7 @@ var browse = require('./browse')
 var listDirGlob = 
 module.listDirGlob =
 function(path, make){
+	var that = this
 	path = path.constructor == Array ? path.join('/') : path
 	path = /^[a-zA-Z]:/.test(path.trim()) ? path : '/'+path
 
@@ -46,6 +47,13 @@ function(path, make){
 	path = path.indexOf('*') < 0 ? path + '/*' : path
 
 	return new Promise(function(resolve, reject){
+
+		// XXX test...
+		if(that.options.dotDirs){
+			make(fullpath ? path + './' : './')
+			make(fullpath ? path + '../' : '../')
+		}
+
 		// XXX do we need this???
 		/*guaranteeEvents([
 				'match',
@@ -125,6 +133,10 @@ function(path, make){
 				}
 				var res = []
 
+				if(that.options.dotDirs){
+					files.splice(0, 0, '.', '..')
+				}
+
 				files.map(function(file){
 					return stat(path +'/'+ file)
 						.catch(function(err){
@@ -188,6 +200,7 @@ function(path, make){
 // NOTE: this should work from a chrome app and does not require anything
 // 		but fs access...
 // XXX need a default for '/' on windows...
+// XXX add '.' and '..' support...
 var listDirBrowser = 
 module.listDirBrowser =
 function(path, make){
@@ -263,6 +276,9 @@ WalkPrototype.options = {
 	fileCountPattern: '*',
 
 	disableFiles: false,
+
+	// enable '.' and '..' dirs...
+	dotDirs: true,
 }
 WalkPrototype.options.__proto__ = browse.Browser.prototype.options
 
