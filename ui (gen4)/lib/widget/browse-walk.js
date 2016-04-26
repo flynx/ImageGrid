@@ -123,6 +123,24 @@ function(path, make){
 
 	// list dirs...
 	} else {
+		var _countDirFiles = function(path, file, elem){
+			if(that.options.fileCountPattern){
+				var i = 0
+				glob(path +'/'+ file +'/'+ that.options.fileCountPattern)
+					/*
+					.on('match', function(){
+						i += 1
+						elem.attr('count', '('+ i +')')
+					})
+					*/
+					.on('end', function(lst){
+						i += 1
+						elem.attr('count', lst.length)
+					})
+			}
+			return elem
+		}
+
 		return new Promise(function(resolve, reject){
 			// XXX should this be a promise???
 			fs.readdir(path, function(err, files){
@@ -134,7 +152,14 @@ function(path, make){
 				var res = []
 
 				if(that.options.dotDirs){
-					files.splice(0, 0, '.', '..')
+					//files.splice(0, 0, '.', '..')
+					// NOTE: we are counting these here so as to ensure 
+					// 		they are always first and not delayed by some
+					// 		odd delay on a stat...
+					_countDirFiles(path, './',
+						make(fullpath ? path + './' : './'))
+					_countDirFiles(path, '../',
+						make(fullpath ? path + '../' : '../'))
 				}
 
 				files.map(function(file){
@@ -163,20 +188,7 @@ function(path, make){
 							// count the number of files...
 							// NOTE: we do not care how long it will take
 							// 		so we'll not wait...
-							if(res && dir && that.options.fileCountPattern){
-								var i = 0
-								glob(path +'/'+ file +'/'+ that.options.fileCountPattern)
-									/*
-									.on('match', function(){
-										i += 1
-										elem.attr('count', '('+ i +')')
-									})
-									*/
-									.on('end', function(lst){
-										i += 1
-										elem.attr('count', lst.length)
-									})
-							}
+							res && dir && _countDirFiles(path, file, elem)
 						})
 						// NOTE: we are not using promise.all(..) here because it
 						// 		triggers BEFORE the first make(..) is called...
