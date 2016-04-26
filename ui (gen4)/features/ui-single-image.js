@@ -231,6 +231,9 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 	depends: [
 		'ui'
 	],
+	suggested: [
+		'ui-single-image-view-local-storage',
+	],
 
 	actions: SingleImageActions,
 
@@ -248,6 +251,13 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 			}],
 		['fitImage.post setScale.post',
 			function(){ 
+				// prevent this from doing anything while no viewer...
+				if(!this.ribbons 
+						|| !this.ribbons.viewer 
+						|| this.ribbons.getRibbonSet().length == 0){
+					return
+				}
+
 				// singe image mode -- set image proportions...
 				if(this.toggleSingleImage('?') == 'on'){
 					updateImageProportions.call(this)
@@ -325,19 +335,26 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 
 	handlers:[
 		// set scale...
-		['load',
+		['load.pre',
 			function(){
-				// prevent this from doing anything while no viewer...
-				if(!this.ribbons || !this.ribbons.viewer || this.ribbons.viewer.length == 0){
-					return
-				}
+				// NOTE: at this stage the viewer is not yet ready, and
+				// 		we need to save these for when it is, thus avoiding
+				// 		stray actions overwriting the config with defaults
+				// 		when not finding a value in the viewer...
+				var rscale = this.config['ribbon-scale'] || this.scale
+				var iscale = this.config['single-image-scale'] || this.scale
 
-				if(this.toggleSingleImage('?') == 'on'){
-					this.scale = this.config['single-image-scale'] || this.scale
+				return function(){
+					// prevent this from doing anything while no viewer...
+					if(!this.ribbons 
+							|| !this.ribbons.viewer 
+							|| this.ribbons.getRibbonSet().length == 0){
+						return
+					}
 
-				} else {
-					// XXX for some reason this stopped working...
-					this.scale = this.config['ribbon-scale'] || this.scale
+					this.scale = this.toggleSingleImage('?') == 'on' ? 
+						iscale 
+						: rscale
 				}
 			}],
 	],
@@ -425,7 +442,6 @@ module.SingleImageAutoHideCursor = core.ImageGridFeatures.Feature({
 
 core.ImageGridFeatures.Feature('ui-single-image', [
 	'ui-single-image-view',
-	'ui-single-image-view-local-storage',
 
 	'ui-single-image-view-autohide-cursor',
 ])
