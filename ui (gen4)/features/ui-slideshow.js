@@ -270,7 +270,7 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 	tag: 'ui-slideshow',
 	depends: [
 		'ui',
-		'ui-single-image-view',
+		'ui-single-image',
 	],
 
 	actions: SlideshowActions,

@@ -227,12 +227,13 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-single-image-view',
+	tag: 'ui-single-image',
 	depends: [
 		'ui'
 	],
 	suggested: [
-		'ui-single-image-view-local-storage',
+		'ui-single-image-local-storage',
+		'ui-single-image-autohide-cursor',
 	],
 
 	actions: SingleImageActions,
@@ -327,9 +328,9 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-single-image-view-local-storage',
+	tag: 'ui-single-image-local-storage',
 	depends: [
-		'ui-single-image-view',
+		'ui-single-image',
 		'config-local-storage',
 	],
 
@@ -375,10 +376,10 @@ module.SingleImageAutoHideCursor = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-single-image-view-autohide-cursor',
+	tag: 'ui-single-image-autohide-cursor',
 	depends: [
 		'ui-autohide-cursor',
-		'ui-single-image-view',
+		'ui-single-image',
 	],
 
 	config: {
@@ -435,16 +436,6 @@ module.SingleImageAutoHideCursor = core.ImageGridFeatures.Feature({
 		*/
 	]
 })
-
-
-
-//---------------------------------------------------------------------
-
-core.ImageGridFeatures.Feature('ui-single-image', [
-	'ui-single-image-view',
-
-	'ui-single-image-view-autohide-cursor',
-])
 
 
 
