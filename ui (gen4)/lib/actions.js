@@ -478,7 +478,8 @@ module.MetaActions = {
 		var handler = typeof(c) == 'function' ? c : b
 		var tag = typeof(c) == 'function' ? b : c
 
-		actions = typeof(actions) == 'string' ? actions.split(' ') : actions
+		// XXX make this split by whitespace...
+		actions = typeof(actions) == 'string' ? actions.split(/ +/) : actions
 
 		var that = this
 		actions.forEach(function(action){
@@ -498,7 +499,7 @@ module.MetaActions = {
 				// 		via. .off(..)
 				a_handler.orig_handler = old_handler.orig_handler || old_handler
 
-			// mot pre mode...
+			// not pre mode...
 			} else if(mode != 'pre') {
 				// XXX
 				throw 'Unknown action mode: '+action+'.'+mode

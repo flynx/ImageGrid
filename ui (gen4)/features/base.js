@@ -544,6 +544,7 @@ module.Base = core.ImageGridFeatures.Feature({
 	suggested: [
 		'tags',
 		'sort',
+		'tasks',
 	],
 	*/
 

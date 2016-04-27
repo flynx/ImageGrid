@@ -48,9 +48,14 @@ function(attr, states, a, b){
 
 /*********************************************************************/
 
+// Root ImageGrid.viewer object...
+//
 var ImageGridFeatures =
 module.ImageGridFeatures = Object.create(features.FeatureSet)
 
+
+//---------------------------------------------------------------------
+// Setup runtime info...
 
 // nw or node...
 if(typeof(process) != 'undefined'){
@@ -96,6 +101,7 @@ if(typeof(process) != 'undefined'){
 
 
 /*********************************************************************/
+// System life-cycle...
 
 // XXX should this be a generic library thing???
 // XXX should his have state???
@@ -213,6 +219,7 @@ module.LifeCycle = ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// Workspace...
 //
 // Basic protocol:
 // 	A participating feature should:
@@ -366,6 +373,63 @@ module.Workspace = ImageGridFeatures.Feature({
 	],
 })
 
+
+
+//---------------------------------------------------------------------
+// Tasks...
+// XXX should this be a separate module???
+
+var tasks = require('lib/tasks')
+
+// XXX see if a protocol can be practical here to:
+// 		- serialize/restore jobs
+// 		- ...
+var TaskActions = actions.Actions({
+	config: {
+	},
+
+	get jobs(){
+		return this.__jobs
+	},
+
+	getJob: ['- Jobs/',
+		function(name){
+			name = name || this.data.newGid()
+
+			// get/init task dict...
+			var t = this.__jobs = this.__jobs || {}
+			// get/init task...
+			var job = t[name] = t[name] || tasks.Queue()
+			job.name = name
+
+			return job
+		}],
+
+	// XXX stop
+})
+
+
+var Tasks = 
+module.Tasks = ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'tasks',
+
+	depends: [ ],
+
+	actions: TaskActions,
+
+	handlers: [
+		['start', 
+			function(){ 
+				// XXX prepare for recovery and recover...
+			}],
+		['stop', 
+			function(){ 
+				// XXX stop tasks and prepare for recovery...
+			}],
+	],
+})
 
 
 

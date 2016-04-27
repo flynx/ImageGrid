@@ -152,7 +152,9 @@ function(path, make){
 				var res = []
 
 				if(that.options.dotDirs){
-					//files.splice(0, 0, '.', '..')
+					// NOTE: this sometimes gets reordered so we aren't 
+					// 		using it... (BUG?)
+					//			files.splice(0, 0, '.', '..')
 					// NOTE: we are counting these here so as to ensure 
 					// 		they are always first and not delayed by some
 					// 		odd delay on a stat...

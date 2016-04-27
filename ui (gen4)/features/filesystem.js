@@ -375,6 +375,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 	tag: 'fs-loader',
 	depends: [
 		'location',
+		'tasks',
 	],
 	suggested: [
 		'ui-fs-loader',
