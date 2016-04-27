@@ -129,6 +129,35 @@ var object = require('lib/object')
 /*********************************************************************/
 // helpers...
 
+var normalizeTabs = function(str){
+	str = str.split(/\n/g)
+
+	// get min number of leading tabs...
+	var i = str.length == 2 && /^\t/.test(str[1]) ?
+		str[1].split(/^(\t+)/)[1].length - 1
+		: Math.min.apply(null, str
+			// skip first line...
+			.slice(1)
+			// skip empty strings...
+			.filter(function(l){ return l.trim() != '' })
+			// count leading tabs...
+			.map(function(l){ 
+				return /^\t+/.test(l) ? 
+					l.split(/^(\t+)/)[1].length
+					: 0}))
+
+	return (str[0] +'\n' 
+		+ str
+			.slice(1)
+			// trim leading tabs...
+			.map(function(l){ return l.slice(i) }).join('\n')
+			// replace tabs...
+			.replace(/\t/g, '    '))
+		// remove leading and trailing whitespace...
+		.trim()
+}
+
+
 
 /*********************************************************************/
 
@@ -193,10 +222,10 @@ var object = require('lib/object')
 // 		called with the argument and return the result bypassing the 
 // 		handlers.
 // NOTE: actions once defined do not depend on the inheritance hierarchy, 
-// 		other than the .getHandlers(..) method. If this method is not 
+// 		other than the .getHandlerList(..) method. If this method is not 
 // 		found in the inheritance chain (i.e. the link to MetaActions)
 // 		was severed, then the default will be used: 
-// 			MetaActions.getHandlers(..)
+// 			MetaActions.getHandlerList(..)
 // 		This makes it possible to redefine the method if needed but 
 // 		prevents the system from breaking when an action set gets 
 // 		disconnected from MetaActions. This can be useful, for example,
@@ -228,67 +257,65 @@ function Action(name, doc, ldoc, func){
 
 	// create the actual instance we will be returning...
 	var meth = function(){
-		var args = args2array(arguments)
 		var that = this
+		var args = args2array(arguments)
+		var res = this
 
 		var getHandlers = this.getHandlers || MetaActions.getHandlers
 		var isToggler = this.isToggler || MetaActions.isToggler
 
-		// get handlers...
-		//
-		// NOTE: using CLASS.__proto__[name].call(this, ...) here is not
-		// 		possible as there is no reliable way to get the "class" 
-		// 		the current method is referenced from.
-		// 		...searching the inheritance chain is not reliable as a
-		// 		method can be referenced more than once, both with the 
-		// 		same as well as under different names...
+		// get the handler list...
 		var handlers = getHandlers.call(this, name)
-		//	.map(function(h){ return h.apply(that, args) })
 
-		// special case: if the root handler is a toggler and we call 
-		// it with '?'/'??' then do not call the handlers...
-		// XXX might be good to make this modular/configurable...
-		if(isToggler.call(this, name)//handlers.slice(-1)[0] instanceof Toggler 
+		// special case: toggler -- do not handle special args...
+		if(isToggler.call(this, name)
 				&& args.length == 1 
 				&& (args[0] == '?' || args[0] == '??')){
-			return handlers.slice(-1)[0].apply(this, args)
+			return handlers.slice(-1)[0].pre.apply(this, args)
 		}
 
-		// call handlers -- pre phase...
-		handlers = handlers
-			.map(function(h){ return h.apply(that, args) })
+		// handlers: pre phase...
+		handlers
+			// NOTE: current action will get included and called by the code 
+			// 		above and below, so no need to explicitly call func...
+			// NOTE: pre handlers are called FIFO, i.e. the last defined first... 
+			.map(function(a){
+				if(a.pre){
+					res = a.pre.apply(that, args)
 
-		// NOTE: this action will get included and called by the code 
-		// 		above and below, so no need to explicitly call func...
+					// if a handler returns a function or a deferred, 
+					// register is as a post handler...
+					if(res 
+							&& res !== that 
+							&& (res instanceof Function 
+								|| res.resolve instanceof Function)){
+						a.post = res
 
-		// call handlers -- post phase...
-		// NOTE: post handlers need to get called last run pre first run post...
-		var results = []
-		handlers.reverse().forEach(function(h, i){ 
-			var res = h
-			// function...
-			if(h instanceof Function){
-				//res = h.apply(that, args)
-				res = h.apply(that,
-					[results[0] !== undefined ?
-						results[0] 
-						: that].concat(args))
+						// reset the result...
+						res = that
+					}
+				}
+				return a
+			})
 
-			// deferred...
-			} else if(h != null && h.resolve instanceof Function){
-				//res = h.resolve()
-				res = h.resolve.apply(h,
-					[results[0] !== undefined ? 
-						results[0] 
-						: that].concat(args))
-			}
+		// return this if nothing specific is returned...
+		res = res === undefined ? this : res
+		// the post handlers get the result as the first argument...
+		args.splice(0, 0, res)
 
-			results.push(res)
-		})
+		// handlers: post phase...
+		handlers
+			// NOTE: post handlers are called LIFO -- last defined last...
+			.reverse()
+			.forEach(function(a){
+				a.post
+					&& (a.post.resolve ? 
+							a.post.resolve.apply(a.post, args)
+						: a.post.apply(that, args))
+			})
 
-		// XXX might be a good idea to add an option to return the full
-		// 		results...
-		return results[0] !== undefined ? results[0] : this
+		// action result...
+		return res
 	}
 	meth.__proto__ = this.__proto__
 
@@ -398,7 +425,7 @@ module.MetaActions = {
 	// 		reverse of how the 'post' handlers must be called.
 	//
 	// For more docs on handler sequencing and definition see: .on(..)
-	getHandlers: function(name){
+	getHandlerList: function(name){
 		var handlers = []
 		var cur = this
 		while(cur.__proto__ != null){
@@ -422,6 +449,40 @@ module.MetaActions = {
 		return handlers
 	},
 
+	// Get structured action handler definitions...
+	//
+	// Format:
+	// 	[
+	// 		{
+	// 			// NOTE: only one handler per level can be present, either
+	// 			//		.pre or .post, this does not mean that one can
+	// 			//		not define both, just that they are stored separately
+	// 			pre|post: <handler>,
+	// 		},
+	// 		...
+	// 	]
+	//
+	// XXX need to get parent action or definition context for each level... 
+	// XXX is this simpler to use than the original .getHandlerList(..)
+	// XXX rename this....
+	getHandlers: function(name){
+		return this.getHandlerList(name)
+			.map(function(a){ 
+				var res = {
+					// action doc...
+					// XXX
+				}
+
+				if(!a.post_handler){
+					res.pre = a
+
+				} else {
+					res.post = a.post_handler
+				}
+
+				return res
+			})
+	},
 
 	// Test if the action is a Toggler...
 	//
@@ -431,8 +492,8 @@ module.MetaActions = {
 	//
 	// For more info on togglers see: lib/toggler.js
 	isToggler: function(name){
-		var handlers = (this.getHandlers 
-				|| MetaActions.getHandlers)
+		var handlers = (this.getHandlerList 
+				|| MetaActions.getHandlerList)
 			.call(this, name)
 
 		if(handlers.slice(-1)[0] instanceof toggler.Toggler){
@@ -495,8 +556,9 @@ module.MetaActions = {
 			if(mode == null || mode == 'post'){
 				var old_handler = a_handler
 				a_handler = function(){ return old_handler }
-				// NOTE: this is set so as to identify the handler for removal
-				// 		via. .off(..)
+				a_handler.post_handler = old_handler
+					// NOTE: this is set so as to identify the handler 
+					// 		for removal via. .off(..)
 				a_handler.orig_handler = old_handler.orig_handler || old_handler
 
 			// not pre mode...
@@ -601,20 +663,29 @@ module.MetaActions = {
 	//
 	// This is signature compatible with .on(..)
 	one: function(actions, b, c){
-		var handler = typeof(c) == 'function' ? c : b
+		var _handler = typeof(c) == 'function' ? c : b
 		var tag = typeof(c) == 'function' ? b : c
 
-		actions = typeof(actions) == 'string' ? actions.split(' ') : actions
+		actions = typeof(actions) == 'string' ? actions.split(' *') : actions
 
 		var that = this
 		actions.forEach(function(action){
-			var _handler = function(){
-				// remove handler... 
-				that.off(action, handler)
-				return handler.apply(this, arguments)
+			// NOTE: we are using both 'that' below and 'this', so as
+			// 		to separate the call context and the bind context,
+			//		.off(..) must be called at the bind context while
+			//		the actual action is called from the call context
+			// NOTE: we are not using the closure _handler below to 
+			// 		keep the code introspectable, and direct the user
+			// 		to the original function.
+			var handler = function(){
+				// remove handler...
+				that.off(action, handler.orig_handler)
+
+				// call the actual supplied handler function...
+				return handler.orig_handler.apply(this, arguments)
 			}
-			_handler.orig_handler = handler
-			that.on(action, tag, _handler)
+			handler.orig_handler = _handler
+			that.on(action, tag, handler)
 		})
 
 		return this
@@ -802,6 +873,77 @@ module.MetaActions = {
 			}
 		}
 		return o
+	},
+
+	// doc generators...
+	//
+	// XXX would be nice to make these prop of the action itself but we
+	// 		can't get to the action container from the action...
+	getHandlerDocStr: function(name){
+		var lst = this.getHandlers(name)
+		var str = ''
+
+		var handler = function(p){
+			if(lst.length == 0){
+				//str += p + '---'
+				return
+			}
+
+			// indicate root action...
+			p = lst.length == 1 ? p+'| ' : p+' '
+
+			var cur = lst.shift()
+
+			if(cur.pre){
+				str += p 
+					+ normalizeTabs(cur.pre.toString()).replace(/\n/g, p)
+					+ p
+			}
+
+			handler(p + '  |')
+
+			str += p
+
+			if(cur.post){
+				str += p + p 
+					+ normalizeTabs(cur.post.toString()).replace(/\n/g, p)
+			}
+		}
+
+		handler('\n|')
+
+		return str
+	},
+	getHandlerDocHTML: function(name){
+		var lst = this.getHandlers(name)
+		var res = $('<div class="action">')
+
+		var handler = function(p){
+			if(lst.length == 0){
+				return
+			}
+
+			var cur = lst.shift()
+			p = $('<div class="level">')
+				.appendTo(p)
+
+			if(cur.pre){
+				p.append($('<pre>').html(
+					normalizeTabs(cur.pre.toString())
+						.replace(/return/g, '<b>return</b>')))
+			}
+
+			handler(p)
+
+			if(cur.post){
+				p.append($('<pre>').html(
+					normalizeTabs(cur.post.toString())))
+			}
+		}
+
+		handler(res)
+
+		return res
 	},
 
 
