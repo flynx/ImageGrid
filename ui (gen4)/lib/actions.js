@@ -877,8 +877,9 @@ module.MetaActions = {
 
 	// doc generators...
 	//
-	// XXX would be nice to make these prop of the action itself but we
-	// 		can't get to the action container from the action...
+	// XXX would be nice to make these prop of the action itself but I 
+	// 		do not see a way to do this properly yet -- we can't get to 
+	// 		the action context from the action dynamically...
 	getHandlerDocStr: function(name){
 		var lst = this.getHandlers(name)
 		var str = ''
