@@ -488,6 +488,10 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 					return f
 				}(c.action, c['no-default'], c.arguments, c.doc)
 
+			// ignore...
+			} else if(handler == 'IGNORE'){
+				break
+
 			// key code...
 			} else if(typeof(handler) == typeof(1)) {
 				handler = bindings[toKeyName(handler)]
@@ -499,7 +503,8 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 		}
 
 		// if something is ignored then just breakout and stop handling...
-		if(bindings.ignore == '*' 
+		if(handler == 'IGNORE' 
+				|| bindings.ignore == '*' 
 				|| bindings.ignore != null 
 					&& (bindings.ignore.indexOf(key) != -1 
 						|| bindings.ignore.indexOf(chr) != -1)){
@@ -583,7 +588,10 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
  * 			ignore: <ignored-keys>
  *
  *			// alias...
- * 			<alias> : <handler> | <callback>,
+ * 			<alias> : <handler> | <callback> | 'IGNORE',
+ *
+ *			// ignore handling...
+ * 			<key-def> : 'IGNORE',
  *
  *			// NOTE: a callback can have a .doc attr containing 
  *			//		documentation...
@@ -600,7 +608,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
  *				// a value...
  *				// NOTE: when the alias is resolved, the same modifiers 
  *				//		will be applied to the final resolved handler.
- * 				default: <callback> | <alias>,
+ * 				default: <callback> | <alias> | 'IGNORE',
  *
  *				// a modifier can be any single modifier, like shift or a 
  *				// combination of modifiers like 'ctrl+shift', in order 
@@ -611,7 +619,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
  *				//	- shift
  *				// NOTE: if in doubt use normalizeModifiers(..) as a 
  *				//		reference...
- * 				<modifer>: [...],
+ * 				<modifer>: <callback> | <alias> | 'IGNORE',
  * 				...
  * 			},
  *
@@ -719,6 +727,12 @@ function makeKeyboardHandler(keybindings, unhandled, actions){
 					handler = handler[0]
 				}
 
+				// stop handling explicitly ignored keys...
+				// XXX
+				if(handler == 'IGNORE'){
+					break
+				}
+
 				did_handling = true
 				//res = handler(evt)
 				res = handler.call(_keybindings)
@@ -755,6 +769,9 @@ function makeKeyboardHandler(keybindings, unhandled, actions){
 */
 // XXX do we need to normalize/pre-process keybindings???
 // 		- might be a good idea to normalize the <modifiers>...
+// XXX do we show ignored keys???
+// 		...at this point we show explicitly ignored keys only...
+// XXX do we show overloaded keys???
 var buildKeybindingsHelp =
 module.buildKeybindingsHelp =
 function buildKeybindingsHelp(keybindings, shifted_keys, actions){
@@ -803,8 +820,13 @@ function buildKeybindingsHelp(keybindings, shifted_keys, actions){
 					handler = handler[0]
 				}
 
+				if(handler == 'IGNORE'){
+					// XXX do we show ignored keys???
+					var doc = 'Ignored'
+					//continue
+
 				// standard object doc...
-				if('doc' in handler){
+				} else if('doc' in handler){
 					var doc = handler.doc
 
 				// lisp style...

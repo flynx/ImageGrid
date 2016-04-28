@@ -77,6 +77,14 @@ module.GLOBAL_KEYBOARD = {
 		'#3': 'fitSmall',
 
 		Esc: 'toggleSingleImage: "off" -- Exit single image view',
+
+		// ignore sorting and reversing...
+		R: {
+			shift: 'IGNORE',
+		},
+		S: {
+			shift: 'IGNORE',
+		},
 	},
 
 	// XXX add "save as collection..."
