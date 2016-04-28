@@ -592,15 +592,14 @@ module.ViewerActions = actions.Actions({
 			this.ribbons.fitImage(count)
 			this.refresh()
 		}],
+
 	fitMax: ['Zoom/Fit the maximum number of images',
 		function(){ this.fitImage(this.config['max-screen-images']) }],
 
-
-	// XXX the question with these is how to make these relatively 
-	// 		similar across platforms...
-	// 		...for this we need to get display dpi...
+	// XXX make this viewer/image proportion independent....
 	fitSmall: ['Zoom/Show small image',
 		function(){ this.fitImage(5, 0) }],
+	// XXX make this viewer/image proportion independent....
 	fitNormal: ['Zoom/Show normal image',
 		function(){ this.fitImage(1.5, 0) }],
 	fitScreen: ['Zoom/Fit image to screen',
@@ -892,6 +891,8 @@ module.SortUI = core.ImageGridFeatures.Feature({
 })
 
 
+
+//---------------------------------------------------------------------
 // XXX tag dialogs...
 // XXX
 
