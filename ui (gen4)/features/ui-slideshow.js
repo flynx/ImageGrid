@@ -132,7 +132,9 @@ var SlideshowActions = actions.Actions({
 							// update slideshow menu...
 							oo.client.open(function(){
 								o.client.update()
-								o.client.select(txt)
+									.then(function(){
+										o.client.select(txt)
+									})
 							})
 						})
 

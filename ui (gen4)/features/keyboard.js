@@ -24,6 +24,7 @@ var drawer = require('lib/widget/drawer')
 
 /*********************************************************************/
 
+// XXX might be a good idea to be able ignore actions rather than keys...
 // XXX add this to the global doc...
 var GLOBAL_KEYBOARD =
 module.GLOBAL_KEYBOARD = {
@@ -55,6 +56,8 @@ module.GLOBAL_KEYBOARD = {
 		L: 'toggleSlideshowLooping',
 	},
 
+	// XXX do we need to prevent up/down navigation here, it may get confusing?
+	// XXX do we need to disable fast sorting here???
 	'Single Image': {
 		pattern: '.single-image-mode',
 		ignore: [
@@ -62,9 +65,6 @@ module.GLOBAL_KEYBOARD = {
 
 			// do not crop in single image mode...
 			'C', 'F2',
-
-			// XXX not sure about this...
-			//'Up', 'Down',
 
 			// zooming...
 			'#0', '#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
@@ -79,6 +79,7 @@ module.GLOBAL_KEYBOARD = {
 		Esc: 'toggleSingleImage: "off" -- Exit single image view',
 
 		// ignore sorting and reversing...
+		// XXX not sure about these yet, especially reversing...
 		R: {
 			shift: 'IGNORE',
 		},
@@ -284,7 +285,8 @@ module.GLOBAL_KEYBOARD = {
 			default: 'slideshowDialog',
 			//shift: 'sortImages: "Date" -- Sort images by date',
 			shift: 'sortImages -- Sort images',
-			alt: 'browseActions: "/Sort/"',
+			//alt: 'browseActions: "/Sort/"',
+			alt: 'sortDialog',
 			// XXX need to make this save to base_path if it exists and
 			// 		ask the user if it does not... now it always asks.
 			ctrl: 'saveIndexHere',

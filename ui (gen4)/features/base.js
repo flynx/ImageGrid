@@ -785,18 +785,23 @@ module.SortActions = actions.Actions({
 	// XXX should this be a dialog with ability to edit modes???
 	// 		- toggle reverse sort
 	// XXX currently this will not toggle past 'none'
-	toggleImageSort: ['Edit|Sort/Toggle image sort method',
+	toggleImageSort: ['- Edit|Sort/Toggle image sort method',
 		toggler.Toggler(null,
 			function(){ return this.data.sort_method || 'none' },
 			function(){ 
 				return Object.keys(this.config['sort-methods'])
-					.concat(this.data.manual_order ? ['Manual'] : [])},
+					.concat((this.data.manual_order 
+						|| this.data.sort_method == 'Manual') ? ['Manual'] : [])},
 			// prevent setting 'none' as mode...
 			function(mode){ 
 				return !!this.images 
 					&& (mode != 'none' 
 						|| (mode == 'Manual' && this.data.manual_order)) },
-			function(mode){ 
+			// XXX need to refactor the toggler a bit to make the 
+			// 		signature simpler...
+			function(mode, _, reverse){ 
+				reverse = reverse == 'reverse' || reverse
+
 				// save manual order...
 				if(this.data.sort_method == 'Manual'){
 					this.data.manual_order = this.data.order.slice()
@@ -806,10 +811,10 @@ module.SortActions = actions.Actions({
 				// XXX this does not use .sortImages(..) thus this does not update...
 				if(mode == 'Manual'){
 					this.data.order = this.data.manual_order.slice()
-					this.sortImages('update')
+					this.sortImages('update' + (reverse ? ' reverse' : ''))
 
 				} else {
-					this.sortImages(mode) 
+					this.sortImages(mode + (reverse ? ' reverse' : ''))
 				}
 
 				this.data.sort_method = mode
