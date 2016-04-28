@@ -131,48 +131,38 @@ function updateImageProportions(){
 
 			// horizontal viewer...
 			if(Di == H){
-				images
-					.each(function(_, img){
-						var o = img.getAttribute('orientation')
-						o = o == null ? 0 : o
-
-						// rotated images...
-						if(o == 90 || o == 270){
-							img.style.width = ''
-							img.style.height = n + 'px'
-
-							img.style.margin = -(n - di)/2 +'px '+ (n - di)/2 +'px'
-
-						} else {
-							img.style.width = n + 'px'
-							img.style.height = ''
-
-							img.style.margin = ''
-						}
-					})
+				var a = 'width'
+				var b = 'height'
 
 			// vertical viewer...
 			} else {
-				images
-					.each(function(_, img){
-						var o = img.getAttribute('orientation')
-						o = o == null ? 0 : o
-
-						// rotated images...
-						if(o == 90 || o == 270){
-							img.style.width = n + 'px'
-							img.style.height = ''
-
-							img.style.margin = -(n - di)/2 +'px '+ (n - di)/2 +'px'
-
-						} else {
-							img.style.width = ''
-							img.style.height = n + 'px'
-
-							img.style.margin = ''
-						}
-					})
+				var a = 'height'
+				var b = 'width'
 			}
+
+			images
+				.each(function(_, img){
+					var o = img.getAttribute('orientation')
+					o = o == null ? 0 : o
+
+					// rotated images...
+					if(o == 90 || o == 270){
+						img.style[a] = ''
+						img.style[b] = n + 'px'
+
+						img.style.margin = -(n - di)/2 +'px '+ (n - di)/2 +'px'
+
+					} else {
+						img.style[a] = n + 'px'
+						img.style[b] = ''
+
+						img.style.margin = ''
+					}
+				})
+		
+			// XXX for some reason this is not working correctly...
+			//that.alignRibbons()
+			//that.ribbons.restoreTransitions(true)
 		
 			that.ribbons
 				.centerImage()
@@ -309,6 +299,8 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 							})
 
 						this.ribbons.centerImage()
+
+						// XXX need to correctly align other ribbons...
 
 						// update scale...
 						if(state != pre_state){

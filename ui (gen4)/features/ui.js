@@ -1564,14 +1564,8 @@ module.AutoAlignRibbons = core.ImageGridFeatures.Feature({
 	},
 
 	actions: actions.Actions({
-		toggleRibbonAlignMode : ['Interface/Toggle ribbon align mode',
-			core.makeConfigToggler('ribbon-align-mode', 
-				function(){ return this.config['ribbon-align-modes'] })],
-	}),
-
-	handlers: [
-		['focusImage.post', 
-			function(){ 
+		alignRibbons: ['Interface/Align ribbons',
+			function(){
 				var mode = this.config['ribbon-align-mode'] 
 					|| this.config['ribbon-focus-mode']
 
@@ -1589,6 +1583,14 @@ module.AutoAlignRibbons = core.ImageGridFeatures.Feature({
 						.centerImage()
 				}
 			}],
+		toggleRibbonAlignMode : ['Interface/Toggle ribbon align mode',
+			core.makeConfigToggler('ribbon-align-mode', 
+				function(){ return this.config['ribbon-align-modes'] })],
+	}),
+
+	handlers: [
+		['focusImage.post', 
+			function(){ this.alignRibbons() }],
 	],
 })
 
