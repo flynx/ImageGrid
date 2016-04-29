@@ -101,6 +101,7 @@ function updateImageProportions(){
 	// change proportions...
 	if(c < threshold){
 		var images = viewer.find('.ribbon .image')
+
 		var W = viewer.width()
 		var H = viewer.height()
 
@@ -120,6 +121,9 @@ function updateImageProportions(){
 				* (threshold/c - 1)
 		// new size...
 		var n = di + d
+
+		// the amount to compensate ribbon offset for per image...
+		var x = n - dm
 
 
 		if(n == dm){
@@ -159,10 +163,6 @@ function updateImageProportions(){
 						img.style.margin = ''
 					}
 				})
-		
-			// XXX for some reason this is not working correctly...
-			//that.alignRibbons()
-			//that.ribbons.restoreTransitions(true)
 		
 			that.ribbons
 				.centerImage()
@@ -275,6 +275,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 				var pre_state = this.toggleSingleImage('?')
 
 				return function(){
+					var that = this
 					var state = this.toggleSingleImage('?')
 
 					// singe image mode -- set image proportions...
@@ -290,6 +291,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 					// ribbon mode -- restore original image size...
 					} else {
+						// reset image container size...
 						this.ribbons.viewer.find('.image:not(.clone)')
 							.each(function(_, img){
 								img.style.width = ''
@@ -298,9 +300,8 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 								img.style.margin = ''
 							})
 
-						this.ribbons.centerImage()
-
-						// XXX need to correctly align other ribbons...
+						// align ribbons...
+						this.alignRibbons('now')
 
 						// update scale...
 						if(state != pre_state){

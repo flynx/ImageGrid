@@ -337,7 +337,12 @@ module.ViewerActions = actions.Actions({
 	// 		order...
 	// XXX skip off-screen ribbons (???)
 	alignByOrder: ['Interface/Align ribbons by image order',
-		function(target){
+		function(target, scale, now){
+			if(target == 'now'){
+				now = true
+				target = null
+			}
+
 			var ribbons = this.ribbons
 			var data = this.data
 
@@ -351,16 +356,11 @@ module.ViewerActions = actions.Actions({
 			// 		data into ribbons based on target gid... i.e. first
 			// 		we know the section we need then align it vertically...
 			this
-				.centerImage(gid)
-				.centerRibbon(gid)
+				.centerImage(gid, null, null, scale)
+				.centerRibbon(gid, null, null, scale)
 
-			// if we are going fast we might skip an update... 
-			if(this._align_timeout != null){
-				clearTimeout(this._align_timeout)
-				this._align_timeout = null
-			}
 			var that = this
-			this._align_timeout = setTimeout(function(){
+			var _align = function(){
 				this._align_timeout = null
 				// align other ribbons...
 				var ribbon = data.getRibbon(gid)
@@ -381,15 +381,29 @@ module.ViewerActions = actions.Actions({
 						if(f == null){
 							continue
 						}
-						that.centerImage(f, 'before')
+						that.centerImage(f, 'before', null, scale)
 					} else {
-						that.centerImage(t, 'after')
+						that.centerImage(t, 'after', null, scale)
 					}
 				}
-			}, 50)
+			}
+
+			if(now){
+				_align()
+
+			} else {
+				// if we are going fast we might skip an update... 
+				if(this._align_timeout != null){
+					clearTimeout(this._align_timeout)
+					this._align_timeout = null
+				}
+				this._align_timeout = setTimeout(_align, 50)
+			}
 		}],
 	alignByFirst: ['Interface/Align ribbons except current to first image',
 		function(target){
+			target = target == 'now' ? null : target
+
 			var ribbons = this.ribbons
 			var data = this.data
 
@@ -431,13 +445,13 @@ module.ViewerActions = actions.Actions({
 	// NOTE: this will align only a single image...
 	// XXX do we need these low level primitives here???
 	centerImage: ['- Interface/Center an image in ribbon horizontally',
-		function(target, align){
+		function(target, align, offset, scale){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
 				: target
 
 			// align current ribbon...
-			this.ribbons.centerImage(target, align)
+			this.ribbons.centerImage(target, align, offset, scale)
 		}],
 	centerRibbon: ['- Interface/Center a ribbon vertically',
 		function(target){
@@ -1565,22 +1579,26 @@ module.AutoAlignRibbons = core.ImageGridFeatures.Feature({
 
 	actions: actions.Actions({
 		alignRibbons: ['Interface/Align ribbons',
-			function(){
+			function(target, scale, now){
+				if(target == 'now'){
+					now = true
+					target = null
+				}
 				var mode = this.config['ribbon-align-mode'] 
 					|| this.config['ribbon-focus-mode']
 
 				if(mode == 'visual' || mode == 'order'){
-					this.alignByOrder() 
+					this.alignByOrder(target, scale, now) 
 
 				} else if(mode == 'first'){
-					this.alignByFirst()
+					this.alignByFirst(target, scale, now)
 
 				// manual...
 				// XXX is this correct???
 				} else {
 					this
-						.centerRibbon()
-						.centerImage()
+						.centerRibbon(target, null, null, scale)
+						.centerImage(target, null, null, scale)
 				}
 			}],
 		toggleRibbonAlignMode : ['Interface/Toggle ribbon align mode',
