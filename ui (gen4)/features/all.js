@@ -12,6 +12,7 @@ define(function(require){ var module = {}
 var core = require('features/core')
 
 require('features/base')
+require('features/sort')
 require('features/location')
 require('features/history')
 require('features/app')

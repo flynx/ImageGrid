@@ -69,13 +69,12 @@ var core = require('features/core')
 //    . |               | . - drag enabled (XXX not implemented)
 //    . |               | . - next/prev image keeps drag position
 //    . +---------------+ .
-//    .                   .
+//    .                   . - use tiles instead very large images (XXX ???)
 //    + - - - - - - - - - +
 //
 //
 // NOTE: this in part does the same job as .ribbons.correctImageProportionsForRotation(..)
 //
-// XXX might be a good idea to use tiles for zoomed in images...
 // XXX should this be an action???
 function updateImageProportions(){
 	var that = this

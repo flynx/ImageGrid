@@ -19,9 +19,6 @@ var ribbons = require('ribbons')
 var core = require('features/core')
 var base = require('features/base')
 
-var overlay = require('lib/widget/overlay')
-var browse = require('lib/widget/browse')
-
 
 
 /*********************************************************************/
@@ -336,6 +333,7 @@ module.ViewerActions = actions.Actions({
 	// 		...navigate by proximity (closest to center) rather than by
 	// 		order...
 	// XXX skip off-screen ribbons (???)
+	// XXX should the timeout be configurable???
 	alignByOrder: ['Interface/Align ribbons by image order',
 		function(target, scale, now){
 			if(target == 'now'){
@@ -753,10 +751,6 @@ module.Viewer = core.ImageGridFeatures.Feature({
 		'base',
 		'workspace',
 	],
-	suggested: [
-		'ui-sort',
-		// XXX add base ui features here...
-	],
 
 	actions: ViewerActions,
 
@@ -820,93 +814,6 @@ module.Viewer = core.ImageGridFeatures.Feature({
 /*********************************************************************/
 // User interfaces for different base features...
 
-var SortUIActions = actions.Actions({
-	config: {
-		'default-sort-order': 'default',
-	},
-
-	toggleDefaultSortOrder: ['- Edit|Sort/Default sort order',
-		core.makeConfigToggler('default-sort-order', ['default', 'reverse'])],
-	sortDialog: ['Edit|Sort/Sort images...',
-		function(){
-			var that = this
-
-			// XXX might be a good idea to make this generic...
-			var _makeTogglHandler = function(toggler){
-				return function(){
-					var txt = $(this).find('.text').first().text()
-					that[toggler]()
-					o.client.update()
-						.then(function(){ o.client.select(txt) })
-					that.toggleSlideshow('?') == 'on' 
-						&& o.close()
-				}
-			}
-
-			var o = overlay.Overlay(this.ribbons.viewer, 
-				browse.makeLister(null, function(path, make){
-					var cur = that.toggleImageSort('?')
-
-					that.toggleImageSort('??').forEach(function(mode){
-						// skip 'none'...
-						if(mode == 'none'){
-							return
-						}
-						make(mode + (cur == mode ? ' *' : ''))
-							.on('open', function(){
-								that.toggleImageSort(null, mode, 
-									that.config['default-sort-order'] == 'reverse')
-								o.close()
-							})
-					})	
-
-					// Commands...
-					make('---')
-
-					make('Reverse images')
-						.on('open', function(){
-							that.reverseImages()
-							o.close()
-						})
-					/*
-					make('Reverse ribbons')
-						.on('open', function(){
-							that.reverseRibbons()
-							o.close()
-						})
-					*/
-
-					// Settings...
-					make('---')
-
-					make(['Default order: ', that.config['default-sort-order'] || 'ascending'])
-						.on('open', _makeTogglHandler('toggleDefaultSortOrder'))
-						.addClass('item-value-view')
-				}))
-
-			// select the current order...
-			o.client.select('"' + this.toggleImageSort('?') + ' *"')
-
-			return o
-		}]	
-})
-
-var SortUI = 
-module.SortUI = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-sort',
-	depends: [
-		'ui',
-	],
-
-	actions: SortUIActions,
-})
-
-
-
-//---------------------------------------------------------------------
 // XXX tag dialogs...
 // XXX
 
