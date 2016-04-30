@@ -399,7 +399,7 @@ var URLHistoryUIActions = actions.Actions({
 	// XXX make availabilyty checking live (now on open dialog)...
 	// XXX need to check items...
 	// XXX use svg icons for buttons...
-	listURLHistory: ['History|File/Show history',
+	listURLHistory: ['History|File/Show history...',
 		widgets.makeUIDialog(function(){
 			var that = this
 			var parent = this.preventClosing ? this.preventClosing() : null
@@ -492,9 +492,11 @@ var URLHistoryUIActions = actions.Actions({
 			*/
 
 			// select and highlight current path...
-			cur && o
-				.select('"'+ cur +'"')
-					.addClass('highlighted')
+			setTimeout(function(){
+				cur && o
+					.select('"'+ cur +'"')
+						.addClass('highlighted')
+			}, 0)
 
 			return o
 		})],

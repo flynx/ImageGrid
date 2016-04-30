@@ -81,6 +81,8 @@ function(list, item, elem, callback, options){
 //
 // XXX add sort buttons: up/down/top/bottom...
 // XXX make this more generic...
+// XXX currently using this also requires the use of makeUIDialog(..),
+// 		can this be simpler???
 var makeConfigListEditor = 
 module.makeConfigListEditor =
 function(actions, list_key, options){
@@ -233,6 +235,8 @@ function(actions, list_key, options){
 
 
 // XXX should this be more generic...
+// XXX currently using this also requires the use of makeUIDialog(..),
+// 		can this be simpler???
 var makeNestedConfigListEditor = 
 module.makeNestedConfigListEditor =
 function(actions, parent, list_key, value_key, options){
