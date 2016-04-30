@@ -66,6 +66,8 @@ var WidgetPrototype = {
 		nonPropagatedEvents: [
 			'click',
 			'keydown',
+
+			'close',
 		],
 	},
 
@@ -119,6 +121,11 @@ var WidgetPrototype = {
 					this.keyboard,
 					options.logKeys,
 					this))
+		}
+
+		if(this.options.nonPropagatedEvents != null){
+			this.on(this.options.nonPropagatedEvents.join(' '), 
+				function(evt){ evt.stopPropagation() })
 		}
 
 		return this
@@ -183,6 +190,11 @@ var ContainerPrototype = {
 					this.keyboard,
 					options.logKeys,
 					this))
+		}
+
+		if(this.options.nonPropagatedEvents != null){
+			this.on(this.options.nonPropagatedEvents.join(' '), 
+				function(evt){ evt.stopPropagation() })
 		}
 
 		return this

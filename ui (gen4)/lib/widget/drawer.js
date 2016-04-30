@@ -20,9 +20,6 @@ var DrawerClassPrototype = {
 		var that = this
 		var overlay = $('<div>')
 			.addClass('drawer-widget')
-			.on(options.nonPropagatedEvents.join(' '), function(){
-				event.stopPropagation()
-			})
 			.append($('<div>')
 				.addClass('content')
 				.click(function(){
@@ -58,6 +55,8 @@ var DrawerPrototype = {
 		nonPropagatedEvents: [
 			'click',
 			'keydown',
+
+			'close',
 		],
 
 		background: null,

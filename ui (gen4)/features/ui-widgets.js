@@ -315,8 +315,14 @@ module.makeUIContainer = function(make){
 	return uiContainer(function(){
 		var o = make.apply(this, arguments)
 
-		// notify the client that we are closing...
-		o.close(function(){ o.client.trigger('close') })
+		o
+			// notify the client that we are closing...
+			.close(function(){ o.client.trigger('close') })
+			.client
+				// NOTE: strictly this is the responsibility of the client
+				// 		but it is less error prone to just in case also do
+				// 		this here...
+				.on('close', function(evt){ evt.stopPropagation() })
 
 		return o
 	})

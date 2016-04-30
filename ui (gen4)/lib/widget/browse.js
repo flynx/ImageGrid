@@ -2155,10 +2155,6 @@ var BrowserPrototype = {
 		setTimeout(function(){ 
 			that.update(options.path || that.path || '/') }, 0)
 
-		if(this.options.nonPropagatedEvents != null){
-			this.on(this.options.nonPropagatedEvents.join(' '), 
-				function(evt){ evt.stopPropagation() })
-		}
 	},
 }
 
