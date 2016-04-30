@@ -57,11 +57,11 @@ module.SortActions = actions.Actions({
 		'sort-methods': {
 			'none': '',
 			// NOTE: this is descending by default...
-			'Date': 'metadata.createDate birthtime reverse',
-			'File date': 'birthtime reverse',
-			'Name (XP-style)': 'name-leading-sequence name path',
-			'File sequence number': 'name-sequence name path',
-			'Name': 'name path',
+			'Date': 'metadata.createDate birthtime keep-position reverse',
+			'File date': 'birthtime keep-position reverse',
+			'Name (XP-style)': 'name-leading-sequence name path keep-position',
+			'File sequence number': 'name-sequence name path keep-position',
+			'Name': 'name path keep-position',
 			// XXX sequence number with overflow...
 			//'File sequence number with overflow': 'name-leading-sequence name path',
 		},
@@ -98,6 +98,15 @@ module.SortActions = actions.Actions({
 
 			return a - b
 		},
+		// this will sort items via their index...
+		'keep-position': function(a, b){
+			a = this.data.order.indexOf(a)
+			b = this.data.order.indexOf(b)
+
+			return a - b
+		},
+
+		'dummy': function(){ return 0 },
 	},
 	// Sort images...
 	//
@@ -134,6 +143,8 @@ module.SortActions = actions.Actions({
 	//	.sortImages('reverse')
 	//
 	//
+	// NOTE: if a sort method name contains a space it must be quoted either
+	// 		in '"'s or in "'"s.
 	// NOTE: reverse is calculated by oddity -- if an odd number indicated
 	// 		then the result is reversed, otherwise it is not. 
 	// 		e.g. adding:
@@ -179,12 +190,16 @@ module.SortActions = actions.Actions({
 			// XXX should this be recursive???
 			method = typeof(method) == typeof('str') ? 
 				method
-					.split(/ +/g)
+					.split(/'([^']*)'|"([^"]*)"| +/)
+						.filter(function(e){ return e && e.trim() != '' && !/['"]/.test(e) })
 					.map(function(m){ 
 						return that.config['sort-methods'][m] || m })
 					.join(' ')
 				: method
-			method = typeof(method) == typeof('str') ? method.split(/ +/g) : method
+			method = typeof(method) == typeof('str') ? 
+				method.split(/'([^']*)'|"([^"]*)"| +/)
+					.filter(function(e){ return e && e.trim() != '' && !/['"]/.test(e) })
+				: method
 
 			// get the reverse arity...
 			var i = method.indexOf('reverse')
@@ -226,7 +241,11 @@ module.SortActions = actions.Actions({
 								a = _get(this.images[a])
 								b = _get(this.images[b])
 
-								if(a == b){
+								// not enough data to compare items, test next...
+								if(a == null || b == null){
+									return 0
+
+								} else if(a == b){
 									return 0
 								} else if(a < b){
 									return -1
@@ -253,10 +272,9 @@ module.SortActions = actions.Actions({
 
 			// do the sort (in place)...
 			if(method && method.length > 0 && this.images){
-				this.data.order = this.data.order.slice()
-				reverse ? 
-					this.data.order.sort(cmp.bind(this)).reverse()
-					: this.data.order.sort(cmp.bind(this))
+				this.data.order = reverse ? 
+					this.data.order.slice().sort(cmp.bind(this)).reverse()
+					: this.data.order.slice().sort(cmp.bind(this))
 
 			// just reverse...
 			} else if(method.length <= 0 && reverse) {
@@ -280,7 +298,13 @@ module.SortActions = actions.Actions({
 	// XXX currently this will not toggle past 'none'
 	toggleImageSort: ['- Edit|Sort/Toggle image sort method',
 		toggler.Toggler(null,
-			function(){ return (this.data && this.data.sort_method) || 'none' },
+			function(){ 
+				return (this.data 
+					&& this.data.sort_method
+					&& (this.data.sort_method
+						.split(/'([^']*)'|"([^"]*)"| +/)
+							.filter(function(e){ return e && e.trim() != '' && !/['"]/.test(e) })[0]))
+					|| 'none' },
 			function(){ 
 				return Object.keys(this.config['sort-methods'])
 					.concat((this.data 
@@ -310,7 +334,7 @@ module.SortActions = actions.Actions({
 					this.data.sort_method = mode
 
 				} else {
-					this.sortImages(mode + (reverse ? ' reverse' : ''))
+					this.sortImages('"'+mode+'"' + (reverse ? ' reverse' : ''))
 				}
 			})],
 
@@ -383,10 +407,10 @@ var SortUIActions = actions.Actions({
 				return function(){
 					var txt = $(this).find('.text').first().text()
 					that[toggler]()
-					o.client.update()
-						.then(function(){ o.client.select(txt) })
+					o.update()
+						.then(function(){ o.select(txt) })
 					that.toggleSlideshow('?') == 'on' 
-						&& o.close()
+						&& o.parent.close()
 				}
 			}
 
@@ -421,7 +445,7 @@ var SortUIActions = actions.Actions({
 				make('Reverse ribbons')
 					.on('open', function(){
 						that.reverseRibbons()
-						o.close()
+						lister.parent.close()
 					})
 				*/
 

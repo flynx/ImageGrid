@@ -2149,13 +2149,13 @@ var BrowserPrototype = {
 			parent.append(dom)
 		}
 
-		// load the initial state...
-		//this.update(options.path || this.path || '/')
 		// XXX is this the right way to go???
 		setTimeout(function(){ 
+			// load the initial state...
 			that.update(options.path || that.path || '/')
 
-			// in case we have a manually selected item but not aligned...
+			// in case we have a manually selected item but that was 
+			// not aligned...
 			that.selected && that.select()
 		}, 0)
 
