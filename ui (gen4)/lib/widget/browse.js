@@ -2153,7 +2153,11 @@ var BrowserPrototype = {
 		//this.update(options.path || this.path || '/')
 		// XXX is this the right way to go???
 		setTimeout(function(){ 
-			that.update(options.path || that.path || '/') }, 0)
+			that.update(options.path || that.path || '/')
+
+			// in case we have a manually selected item but not aligned...
+			that.selected && that.select()
+		}, 0)
 
 	},
 }

@@ -191,6 +191,16 @@ win64-dist: win64 $(DIST_DIR)
 	zip -r $(WIN_DIST_ZIP) $(WIN_BUILD_DIR)
 
 
+win64-ext:
+	./targets/nwjs-shell-builder/nwjs-build.sh \
+	    --src=./ \
+	    --output-dir=./build/ \
+	    --name=ImageGrid.Viewer \
+	    --target="3" \
+	    --version="1.0.0" \
+	    --nw=0.14.3 \
+	    --build
+
 
 # nwjs mac
 # XXX BUG: rebuilding without cleaning will mess up folders...
