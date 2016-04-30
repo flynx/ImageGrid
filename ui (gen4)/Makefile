@@ -34,6 +34,7 @@ CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 LIB_DIR=lib
 EXT_LIB_DIR=ext-lib
 CSS_DIR=css
+FEATURES_DIR=features
 NW_PROJECT_FILE=package.json
 JS_FILES := $(wildcard *.js)
 HTML_FILES := $(wildcard *.html)
@@ -48,7 +49,7 @@ LOGS := *.log
 NODE_DIR=node_modules
 BUILD_DIR=build
 CHROME_APP_BUILD_DIR=build/Chrome-App/ImageGrid.Viewer
-WIN_BUILD_DIR=build/Win32
+WIN_BUILD_DIR=build/Win
 MAC_BUILD_DIR=build/MacOSX
 MAC_10_6_BUILD_DIR=build/MacOSX-10.6
 LINUX_IA32_BUILD_DIR=build/Linux-ia32
@@ -108,8 +109,8 @@ $(DIST_DIR):
 
 $(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) node-deps
 	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) \
-		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(CSS_DIR) \
-		$(NODE_DIR)
+		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
+		$(CSS_DIR) $(NODE_DIR)
 
 zip: $(APP_ZIP)
 
@@ -129,12 +130,12 @@ sharp: node-deps
 css: $(CSS_FILES)
 
 dev: css
-	#unzip -uj $(wildcard targets/node-webkit/node-webkit-*-win-ia32.zip) -d .
+	#unzip -uj $(wildcard targets/nwjs/nwjs-*-win-ia32.zip) -d .
 	#rm -f nwsnapshot.exe credits.html
 	#chmod +x *.{exe,dll}
 
 #dev-targets:
-#	mkdir -p targets/node-webkit
+#	mkdir -p targets/nwjs
 #	wget 
 
 
@@ -151,12 +152,12 @@ chrome-app: $(APP_ZIP) $(CHROME_APP_BUILD_DIR)
 	# this needs to be OS independent...
 	chrome --pack-extension=$(CHROME_APP_BUILD_DIR) --pack-extension-key=$(CHROME_APP_KEY)
 
-# node-webkit win32
+# nwjs win32
 win32: $(APP_ZIP) $(WIN_BUILD_DIR)
-	unzip -u targets/node-webkit/node-webkit-*-win-ia32.zip \
+	unzip -u targets/nwjs/nwjs-*-win-ia32.zip \
 		-d $(WIN_BUILD_DIR)
-	mv $(WIN_BUILD_DIR)/node-webkit*win-ia32/* $(WIN_BUILD_DIR)/	
-	rm -rf $(WIN_BUILD_DIR)/node-webkit*/	
+	mv $(WIN_BUILD_DIR)/nwjs*win-ia32/* $(WIN_BUILD_DIR)/	
+	rm -rf $(WIN_BUILD_DIR)/nwjs*/	
 	cat $(APP_ZIP) >> $(WIN_BUILD_DIR)/nw.exe
 	mv $(WIN_BUILD_DIR)/nw.exe $(WIN_BUILD_DIR)/$(APP_NAME).exe
 	chmod +x $(WIN_BUILD_DIR)/*.{exe,dll}
@@ -171,18 +172,38 @@ win32-dist: win32 $(DIST_DIR)
 
 
 
-# node-webkit mac
+# nwjs win32
+win64: $(APP_ZIP) $(WIN_BUILD_DIR)
+	unzip -u targets/nwjs/nwjs-*-win-x64.zip \
+		-d $(WIN_BUILD_DIR)
+	mv $(WIN_BUILD_DIR)/nwjs*win-x64/* $(WIN_BUILD_DIR)/	
+	rm -rf $(WIN_BUILD_DIR)/nwjs*/	
+	cat $(APP_ZIP) >> $(WIN_BUILD_DIR)/nw.exe
+	mv $(WIN_BUILD_DIR)/nw.exe $(WIN_BUILD_DIR)/$(APP_NAME).exe
+	chmod +x $(WIN_BUILD_DIR)/*.{exe,dll}
+	rm -f $(WIN_BUILD_DIR)/nwsnapshot.exe \
+		$(WIN_BUILD_DIR)/credits.html
+
+win64-dist: win64 $(DIST_DIR)
+	# XXX include vips...
+	# XXX build and include gid, buldcache...
+	# XXX include scripts/utils...
+	zip -r $(WIN_DIST_ZIP) $(WIN_BUILD_DIR)
+
+
+
+# nwjs mac
 # XXX BUG: rebuilding without cleaning will mess up folders...
 # XXX this is for 10.7+
 osx: $(APP_ZIP) $(MAC_BUILD_DIR) Info.plist
-	unzip -u $(wildcard targets/node-webkit/node-webkit-*-osx-ia32.zip) \
+	unzip -u $(wildcard targets/nwjs/nwjs-*-osx-ia32.zip) \
 		-d $(MAC_BUILD_DIR)
-	cp $(APP_ZIP) $(MAC_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
+	cp $(APP_ZIP) $(MAC_BUILD_DIR)/nwjs.app/Contents/Resources/app.nw
 	# XXX not sure if this is needed...
-	chmod +x $(MAC_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
+	chmod +x $(MAC_BUILD_DIR)/nwjs.app/Contents/Resources/app.nw
 	# XXX there is something wrong with the updated Info.plist, need to investigate...
-	cp Info.plist $(MAC_BUILD_DIR)/node-webkit.app/Contents/
-	mv $(MAC_BUILD_DIR)/node-webkit.app $(MAC_BUILD_DIR)/$(APP_NAME).app
+	cp Info.plist $(MAC_BUILD_DIR)/nwjs.app/Contents/
+	mv $(MAC_BUILD_DIR)/nwjs.app $(MAC_BUILD_DIR)/$(APP_NAME).app
 	# XXX TODO: add real credits...
 	rm -f $(MAC_BUILD_DIR)/nwsnapshot \
 		$(MAC_BUILD_DIR)/credits.html
@@ -190,14 +211,14 @@ osx: $(APP_ZIP) $(MAC_BUILD_DIR) Info.plist
 # XXX this is almost identical to osx...
 # XXX BUG: rebuilding without cleaning will mess up folders...
 osx-10.6: $(APP_ZIP) $(MAC_10_6_BUILD_DIR) Info.plist
-	unzip -u $(wildcard targets/node-webkit/node-webkit-*-osx10.6-ia32.zip) \
+	unzip -u $(wildcard targets/nwjs/nwjs-*-osx10.6-ia32.zip) \
 		-d $(MAC_10_6_BUILD_DIR)
-	cp $(APP_ZIP) $(MAC_10_6_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
+	cp $(APP_ZIP) $(MAC_10_6_BUILD_DIR)/nwjs.app/Contents/Resources/app.nw
 	# XXX not sure if this is needed...
-	chmod +x $(MAC_10_6_BUILD_DIR)/node-webkit.app/Contents/Resources/app.nw
+	chmod +x $(MAC_10_6_BUILD_DIR)/nwjs.app/Contents/Resources/app.nw
 	# XXX there is something wrong with the updated Info.plist, need to investigate...
-	cp Info.plist $(MAC_10_6_BUILD_DIR)/node-webkit.app/Contents/
-	mv $(MAC_10_6_BUILD_DIR)/node-webkit.app $(MAC_10_6_BUILD_DIR)/$(APP_NAME).app
+	cp Info.plist $(MAC_10_6_BUILD_DIR)/nwjs.app/Contents/
+	mv $(MAC_10_6_BUILD_DIR)/nwjs.app $(MAC_10_6_BUILD_DIR)/$(APP_NAME).app
 	# XXX TODO: add real credits...
 	rm -f $(MAC_10_6_BUILD_DIR)/nwsnapshot \
 		$(MAC_10_6_BUILD_DIR)/credits.html
@@ -212,10 +233,10 @@ osx-10.6-dist: osx $(DIST_DIR)
 
 
 
-# node-webkit linux-ia32
+# nwjs linux-ia32
 linux-ia32: $(APP_ZIP) $(LINUX_IA32_BUILD_DIR)
 	tar --strip-components 1 \
-		-xzf $(wildcard targets/node-webkit/node-webkit-*-linux-ia32.tar.gz) \
+		-xzf $(wildcard targets/nwjs/nwjs-*-linux-ia32.tar.gz) \
 		-C $(LINUX_IA32_BUILD_DIR)
 	cat $(APP_ZIP) >> $(LINUX_IA32_BUILD_DIR)/nw
 	mv $(LINUX_IA32_BUILD_DIR)/nw $(LINUX_IA32_BUILD_DIR)/$(APP_NAME)
@@ -229,10 +250,10 @@ linux-ia32-dist: linux-ia32 $(DIST_DIR)
 
 
 
-# node-webkit linux-x64
+# nwjs linux-x64
 linux-x64: $(APP_ZIP) $(LINUX_X64_BUILD_DIR)
 	tar --strip-components 1 \
-		-xzf $(wildcard targets/node-webkit/node-webkit-*-linux-x64.tar.gz) \
+		-xzf $(wildcard targets/nwjs/nwjs-*-linux-x64.tar.gz) \
 		-C $(LINUX_X64_BUILD_DIR)
 	cat $(APP_ZIP) >> $(LINUX_X64_BUILD_DIR)/nw
 	mv $(LINUX_X64_BUILD_DIR)/nw $(LINUX_X64_BUILD_DIR)/$(APP_NAME)
@@ -250,9 +271,9 @@ linux-x64-dist: linux-x64 $(DIST_DIR)
 # XXX iOS...
 
 
-all: win32 osx osx-10.6 linux-ia32 linux-x64
+all: win64 win32 osx osx-10.6 linux-ia32 linux-x64
 
-dist: win32-dist osx-dist
+dist: win64-dist win32-dist osx-dist
 
 
 #**********************************************************************

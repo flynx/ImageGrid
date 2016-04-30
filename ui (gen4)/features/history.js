@@ -12,6 +12,7 @@ var actions = require('lib/actions')
 var features = require('lib/features')
 
 var core = require('features/core')
+var widgets = require('features/ui-widgets')
 
 var overlay = require('lib/widget/overlay')
 var browse = require('lib/widget/browse')
@@ -399,7 +400,7 @@ var URLHistoryUIActions = actions.Actions({
 	// XXX need to check items...
 	// XXX use svg icons for buttons...
 	listURLHistory: ['History|File/Show history',
-		function(){
+		widgets.makeUIDialog(function(){
 			var that = this
 			var parent = this.preventClosing ? this.preventClosing() : null
 			var cur = this.location.path
@@ -418,66 +419,65 @@ var URLHistoryUIActions = actions.Actions({
 				to_remove = []
 			}
 
-			var o = overlay.Overlay(this.ribbons.viewer, 
-				browse.makeList(
-						null, 
-						Object.keys(this.url_history)
-							.reverse()
-							// NOTE: this might get a little slow for 
-							// 		very large sets...
-							.map(function(p){
-								return !that.checkURLFromHistory(p) ? 
-									'- ' + p 
-									: p 
-							}),
-						{
-							// add item buttons...
-							itemButtons: [
-								// move to top...
-								['&diams;', 
-									function(p){
-										var top = this.filter('*', false).first()
-										var cur = this.filter('"'+p+'"', false)
+			var o = browse.makeList(
+					null, 
+					Object.keys(this.url_history)
+						.reverse()
+						// NOTE: this might get a little slow for 
+						// 		very large sets...
+						.map(function(p){
+							return !that.checkURLFromHistory(p) ? 
+								'- ' + p 
+								: p 
+						}),
+					{
+						// add item buttons...
+						itemButtons: [
+							// move to top...
+							['&diams;', 
+								function(p){
+									var top = this.filter('*', false).first()
+									var cur = this.filter('"'+p+'"', false)
 
-										console.log('!!!', p)
+									console.log('!!!', p)
 
-										if(!top.is(cur)){
-											top.before(cur)
-											that.setTopURLHistory(p)
+									if(!top.is(cur)){
+										top.before(cur)
+										that.setTopURLHistory(p)
+									}
+								}],
+							// mark for removal...
+							['&times;', 
+								function(p){
+									var e = this.filter('"'+p+'"', false)
+										.toggleClass('strike-out')
+
+									if(e.hasClass('strike-out')){
+										to_remove.indexOf(p) < 0 
+											&& to_remove.push(p)
+
+									} else {
+										var i = to_remove.indexOf(p)
+										if(i >= 0){
+											to_remove.splice(i, 1)
 										}
-									}],
-								// mark for removal...
-								['&times;', 
-									function(p){
-										var e = this.filter('"'+p+'"', false)
-											.toggleClass('strike-out')
+									}
+								}],
+						],
+					})
+				.open(function(evt, path){ 
+					removeStriked('open')
 
-										if(e.hasClass('strike-out')){
-											to_remove.indexOf(p) < 0 
-												&& to_remove.push(p)
+					o.parent.close() 
 
-										} else {
-											var i = to_remove.indexOf(p)
-											if(i >= 0){
-												to_remove.splice(i, 1)
-											}
-										}
-									}],
-							],
-						})
-					.open(function(evt, path){ 
-						removeStriked('open')
+					// close the parent ui...
+					parent 
+						&& parent.close 
+						&& parent.close()
 
-						o.close() 
-
-						// close the parent ui...
-						parent 
-							&& parent.close 
-							&& parent.close()
-
-						that.openURLFromHistory(path)
-					}))
-				.close(function(){
+					that.openURLFromHistory(path)
+				})
+				.on('close', function(){
 					removeStriked('close')
 
 					parent 
@@ -485,21 +485,19 @@ var URLHistoryUIActions = actions.Actions({
 						&& parent.focus()
 				})
 
-			var list = o.client
-
 			/*
 			Object.keys(this.url_history).reverse().forEach(function(p){
-				that.checkURLFromHistory(p) || list.filter(p).addClass('disabled')
+				that.checkURLFromHistory(p) || o.filter(p).addClass('disabled')
 			})
 			*/
 
 			// select and highlight current path...
-			cur && list
+			cur && o
 				.select('"'+ cur +'"')
 					.addClass('highlighted')
 
 			return o
-		}],
+		})],
 })
 
 var URLHistoryUI = 

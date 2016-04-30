@@ -202,6 +202,9 @@ var SingleImageActions = actions.Actions({
 
 		// NOTE: setting this to null or to -1 will disable the feature...
 		'single-image-proportions-threshold': 2,
+
+		// XXX HACK...
+		'-single-image-redraw-on-focus': true,
 	},
 
 	toggleSingleImage: ['Interface/Toggle single image view', 
@@ -211,6 +214,11 @@ var SingleImageActions = actions.Actions({
 })
 
 
+// XXX HACK: we are forcing redraw of images in some conditions (when 
+// 		they are close to their original size) to compensate for chrome
+// 		rendering them blurry off screen in these conditions...
+// 		XXX I would not bother and leave this as-is but this makes the 
+// 			image jump in size slightly when redrawing...
 var SingleImageView =
 module.SingleImageView = core.ImageGridFeatures.Feature({
 	title: '',
@@ -235,7 +243,18 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 		// 			...if needed do a .reload() / ctrl-r
 		['focusImage',
 			function(){
-				if(this.toggleSingleImage('?') == 'on'){
+				var img = this.ribbons.getImage()
+				var d = Math.max(img.attr('preview-width')*1, img.attr('preview-width')*1)
+				var D = this.ribbons.getVisibleImageSize('max')
+
+				if(this.config['-single-image-redraw-on-focus']
+						// NOTE: redraw only when close to original preview
+						// 		size -- this is where chrome cheats and 
+						// 		shows images blurry...
+						// XXX this causes some images to jump a bit, aligning 
+						// 		to nearest pixel might fix this...
+						&& Math.abs(D-d)/D < 0.30
+						&& this.toggleSingleImage('?') == 'on'){
 					this.scale = this.scale
 				}
 			}],

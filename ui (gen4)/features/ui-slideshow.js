@@ -47,8 +47,10 @@ var SlideshowActions = actions.Actions({
 	},
 
 	// XXX use widgets.makeNestedConfigListEditor(...)???
-	slideshowIntervalDialog: ['Slideshow/Slideshow interval',
-		function(){
+	slideshowIntervalDialog: ['Slideshow/Slideshow interval...',
+		// XXX using both widgets.makeUIDialog(..) and widgets.makeConfigListEditor(..)
+		// 		is a bit too complicated...
+		widgets.makeUIDialog(function(){
 			var that = this
 
 			// suspend the timer if it's not suspended outside...
@@ -68,25 +70,28 @@ var SlideshowActions = actions.Actions({
 					callback: function(value){
 						that.config['slideshow-interval'] = value
 
-						o.close()
+						o.parent.close()
 					},
 				})
-				.close(function(){
+				.on('close', function(){
 					// reset the timer if it was not suspended outside...
 					suspended_timer || that.resetSlideshowTimer()
 				})
 
-			o.client.select(that.config['slideshow-interval'])
+			// XXX HACK: without a setTimeout(..) this will not select...
+			setTimeout(function(){
+				o.select(that.config['slideshow-interval'])
+			}, 0)
 
 			return o
-		}],
+		})],
 	// XXX BUG: there are still problems with focus...
 	// 		to reproduce:
 	// 			click on the first option with a mouse...
 	// 		result:
 	// 			the top dialog is not focused...
-	slideshowDialog: ['Slideshow/Slideshow settings and start',
-		function(){
+	slideshowDialog: ['Slideshow/Slideshow settings and start...',
+		widgets.makeUIDialog(function(){
 			var that = this
 
 			// suspend the timer if it's not suspended outside...
@@ -98,42 +103,38 @@ var SlideshowActions = actions.Actions({
 				return function(){
 					var txt = $(this).find('.text').first().text()
 					that[toggler]()
-					o.client.update()
-						.then(function(){ o.client.select(txt) })
+					o.update()
+						.then(function(){ o.select(txt) })
 					that.toggleSlideshow('?') == 'on' 
-						&& o.close()
+						&& o.parent.close()
 				}
 			}
 
-			var o = overlay.Overlay(this.ribbons.viewer, 
-				browse.makeLister(null, function(path, make){
+			var o = browse.makeLister(null, function(path, make){
 					make(['Interval: ', 
 							function(){ return that.config['slideshow-interval'] }])
 						.on('open', function(){
 							var txt = $(this).find('.text').first().text()
 
 							var oo = that.slideshowIntervalDialog()
-								.close(function(){
+								.on('close', function(){
 									// slideshow is running -- close directly...
 									if(that.toggleSlideshow('?') == 'on'){
-										o.close()
+										o.parent.close()
 
 									} else {
-										o.client.update()
+										o.update()
 											.then(function(){
-												o.client.select(txt)
-
-												// XXX this is ugly...
-												o.focus()
+												o.select(txt)
 											})
 									}
 								})
 
 							// update slideshow menu...
 							oo.client.open(function(){
-								o.client.update()
+								o.update()
 									.then(function(){
-										o.client.select(txt)
+										o.select(txt)
 									})
 							})
 						})
@@ -150,19 +151,19 @@ var SlideshowActions = actions.Actions({
 							return that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start' }])
 						.on('open', function(){
 							that.toggleSlideshow()
-							o.close()
+							o.parent.close()
 						})
-				}))
-				.close(function(){
+				})
+				.on('close', function(){
 					// reset the timer if it was not suspended outside...
 					suspended_timer || that.resetSlideshowTimer()
 				})
 
-			o.client.dom.addClass('metadata-view tail-action')
-			o.client.select(-1)
+			o.dom.addClass('metadata-view tail-action')
+			o.select(-1)
 
 			return o
-		}],
+		})],
 	
 	toggleSlideshowDirection: ['- Slideshow/Slideshow direction',
 		core.makeConfigToggler('slideshow-direction', ['forward', 'reverse'])],

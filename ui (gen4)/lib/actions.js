@@ -158,6 +158,19 @@ var normalizeTabs = function(str){
 }
 
 
+var doWithRootAction = 
+module.doWithRootAction = 
+function(func){
+	return function(name){
+		var handlers = (this.getHandlerList 
+				|| MetaActions.getHandlerList)
+			.call(this, name)
+
+		return func.call(this, handlers.pop(), name)
+	}
+}
+
+
 
 /*********************************************************************/
 
@@ -346,10 +359,19 @@ module.MetaActions = {
 	get actions(){
 		var res = []
 		for(var k in this){
-			// avoid recursion...
-			if(k == 'actions' || k == 'length'){
+			// avoid recursion, skip props...
+			var cur = this
+			var prop = Object.getOwnPropertyDescriptor(cur, k)
+			while(!prop && cur.__proto__ != null){
+				var cur = cur.__proto__
+				var prop = Object.getOwnPropertyDescriptor(cur, k)
+			}
+			if(prop.get != null){
 				continue
 			}
+			//if(k == 'actions' || k == 'length'){
+			//	continue
+			//}
 			// get only actions...
 			if(this[k] instanceof Action){
 				res.push(k)
@@ -491,17 +513,8 @@ module.MetaActions = {
 	// 		action can be or not be a toggler in different contexts.
 	//
 	// For more info on togglers see: lib/toggler.js
-	isToggler: function(name){
-		var handlers = (this.getHandlerList 
-				|| MetaActions.getHandlerList)
-			.call(this, name)
-
-		if(handlers.slice(-1)[0] instanceof toggler.Toggler){
-			return true
-		}
-
-		return false
-	},
+	isToggler: doWithRootAction(function(action){
+		return action instanceof toggler.Toggler }),
 
 
 	// Register an action callback...

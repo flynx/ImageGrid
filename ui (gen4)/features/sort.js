@@ -13,6 +13,7 @@ var features = require('lib/features')
 var toggler = require('lib/toggler')
 
 var core = require('features/core')
+var widgets = require('features/ui-widgets')
 
 var overlay = require('lib/widget/overlay')
 var browse = require('lib/widget/browse')
@@ -372,7 +373,7 @@ module.Sort = core.ImageGridFeatures.Feature({
 var SortUIActions = actions.Actions({
 	// XXX should we be able to edit modes??? 
 	sortDialog: ['Edit|Sort/Sort images...',
-		function(){
+		widgets.makeUIDialog(function(){
 			var that = this
 
 			var dfl = this.config['default-sort'] 
@@ -389,54 +390,54 @@ var SortUIActions = actions.Actions({
 				}
 			}
 
-			var o = overlay.Overlay(this.ribbons.viewer, 
-				browse.makeLister(null, function(path, make){
-					var cur = that.toggleImageSort('?')
+			var o = browse.makeLister(null, function(path, make){
+				var lister = this
+				var cur = that.toggleImageSort('?')
 
-					that.toggleImageSort('??').forEach(function(mode){
-						// skip 'none'...
-						if(mode == 'none'){
-							return
-						}
-						make(mode)
-							.on('open', function(){
-								that.toggleImageSort(null, mode, 
-									that.config['default-sort-order'] == 'reverse')
-								o.close()
-							})
-							.addClass(mode == cur ? 'highlighted' : '')
-							.addClass(mode == dfl ? 'default' : '')
-					})	
-
-					// Commands...
-					make('---')
-
-					make('Reverse images')
+				that.toggleImageSort('??').forEach(function(mode){
+					// skip 'none'...
+					if(mode == 'none'){
+						return
+					}
+					make(mode)
 						.on('open', function(){
-							that.reverseImages()
-							o.close()
+							that.toggleImageSort(null, mode, 
+								that.config['default-sort-order'] == 'reverse')
+							lister.parent.close()
 						})
-					/*
-					make('Reverse ribbons')
-						.on('open', function(){
-							that.reverseRibbons()
-							o.close()
-						})
-					*/
+						.addClass(mode == cur ? 'highlighted' : '')
+						.addClass(mode == dfl ? 'default' : '')
+				})	
 
-					// Settings...
-					make('---')
+				// Commands...
+				make('---')
 
-					make(['Default order: ', that.config['default-sort-order'] || 'ascending'])
-						.on('open', _makeTogglHandler('toggleDefaultSortOrder'))
-						.addClass('item-value-view')
-				}))
+				make('Reverse images')
+					.on('open', function(){
+						that.reverseImages()
+						lister.parent.close()
+					})
+				/*
+				make('Reverse ribbons')
+					.on('open', function(){
+						that.reverseRibbons()
+						o.close()
+					})
+				*/
+
+				// Settings...
+				make('---')
+
+				make(['Default order: ', that.config['default-sort-order'] || 'ascending'])
+					.on('open', _makeTogglHandler('toggleDefaultSortOrder'))
+					.addClass('item-value-view')
+			})
 
 			// select the current order...
-			o.client.select('"' + this.toggleImageSort('?') + '"')
+			o.select('"' + this.toggleImageSort('?') + '"')
 
 			return o
-		}]	
+		})]	
 })
 
 var SortUI = 

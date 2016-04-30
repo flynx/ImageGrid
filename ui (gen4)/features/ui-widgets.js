@@ -205,9 +205,7 @@ function(actions, list_key, options){
 				options.callback && options.callback.call(list, path)
 			}
 		})
-
-	var o = overlay.Overlay(actions.ribbons.viewer, list)
-		.close(function(){
+		.on('close', function(){
 			// prevent editing non-arrays...
 			if(!(actions.config[list_key] instanceof Array)){
 				return
@@ -230,7 +228,7 @@ function(actions, list_key, options){
 	
 	new_button && list.dom.addClass('tail-action')
 
-	return o
+	return list
 }
 
 
@@ -285,16 +283,139 @@ function(actions, parent, list_key, value_key, options){
 
 
 /*********************************************************************/
+// Dialogs and containers...
+
+var makeUIContainer =
+module.makeUIContainer = function(make){
+	var f = function(dialog){
+		var o = make.call(this, dialog)
+
+		// prevent the client event from bubbling up...
+		// XXX is this the right way to go???
+		o.client.on('close', function(evt){ evt.stopPropagation() })
+
+		// notify the client that we are closing...
+		o.close(function(){ o.client.trigger('close') })
+
+		return o
+	}
+	f.__container__ = true
+	return f
+}
+
+var makeUIDialog =
+module.makeUIDialog = function(make){
+	var f = function(){
+		var args = [].slice.call(arguments)
+
+		// see if the first arg is a container spec...
+		var container = this.uiContainers.indexOf(args[0]) >= 0 ?
+			args.shift()
+			: (this.config['ui-default-container'] || 'Overlay')
+
+		return this[container](make.apply(this, args))
+	}
+	f.__dialog__ = true
+	return f
+}
+
+
+//---------------------------------------------------------------------
+
+var DialogsActions = actions.Actions({
+	config: {
+		'ui-default-container': 'Overlay',
+	},
+
+	// a bit of introspection...
+	get uiContainers(){ 
+		return this.actions.filter(this.isUIContainer.bind(this)) },
+	get uiDialogs(){
+		return this.actions.filter(this.isUIDialog.bind(this)) },
+	get uiElements(){ 
+		return this.actions.filter(this.isUIElement.bind(this)) },
+
+	// get top overlay and overlay client...
+	get overlay(){ 
+		return overlay.getOverlay(this.viewer) },
+
+	// testers...
+	isUIContainer: ['- Interface/',
+		actions.doWithRootAction(function(action){
+			return action.__container__ == true })],
+	isUIDialog: ['- Interface/',
+		actions.doWithRootAction(function(action){
+			return action.__dialog__ == true })],
+	isUIElement: ['- Interface/',
+		actions.doWithRootAction(function(action){
+			return action.__dialog__ == true || action.__container__ == true })],
+
+
+	// container constructors...
+	// NOTE: there are not intended for direct use...
+	Overlay: ['- Interface/',
+		makeUIContainer(function(dialog){
+			var that = this
+			return overlay.Overlay(this.ribbons.viewer, dialog)
+				// XXX focus parent on exit...
+				.on('close', function(){
+					var o = that.overlay
+
+					o && o.focus()	
+				})
+		})],
+	// XXX
+	Panel: ['- Interface/',
+		makeUIContainer(function(dialog){
+			// XXX
+		})],
+
+	
+	listDialogs: ['Interface/List dialogs...',
+		makeUIDialog(function(){
+			var actions = this
+
+			return browse.makeLister(null, function(path, make){
+				var that = this
+
+				actions.uiDialogs.forEach(function(dialog){
+					make(actions.getDoc(dialog)[dialog][0].replace(/^- (.*)$/, '$1 (disabled)'))
+						.on('open', function(){
+							actions[dialog]()
+						})
+				})
+
+			})
+		})],
+})
+
+var Dialogs = 
+module.Dialogs = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-dialogs',
+	depends: [
+		'ui',
+	],
+
+	actions: DialogsActions,
+})
+
+
+
+/*********************************************************************/
 
 // NOTE: if the action returns an instance of overlay.Overlay this will
 // 		not close right away but rather bind to:
 // 			overlay.close			-> self.focus()
 // 			overlay.client.open		-> self.close()
+// XXX revise this...
 var makeActionLister = function(list, filter, pre_order){
 	pre_order = typeof(filter) == typeof(true) ? filter : pre_order
 	filter = typeof(filter) == typeof(true) ? null : filter
 
-	return function(path, inline_state){
+	return makeUIDialog(function(path, inline_state){
 		inline_state = inline_state == null ? 
 			this.config['actions-list-show-toggler-state-inline']
 			: inline_state
@@ -302,7 +423,7 @@ var makeActionLister = function(list, filter, pre_order){
 		var that = this
 		var paths = this.getPath()
 		var actions = {}
-		var o
+		var d
 
 		// pre-order the main categories...
 		if(pre_order){
@@ -331,9 +452,9 @@ var makeActionLister = function(list, filter, pre_order){
 				if(child instanceof overlay.Overlay){
 					closingPrevented = true
 					child
-						.on('close', function(){ o.focus() })
+						.on('close', function(){ d.parent.focus() })
 						.client
-							.on('open', function(){ o.close() })
+							.on('open', function(){ d.parent.close() })
 				}
 				return child
 			}
@@ -368,7 +489,7 @@ var makeActionLister = function(list, filter, pre_order){
 							/*
 							closingPrevented = true
 							// XXX need to re-render the overlay paths...
-							that.getOverlay().client
+							that.overlay.client
 								.pop()
 							*/
 						}
@@ -379,30 +500,25 @@ var makeActionLister = function(list, filter, pre_order){
 		var config = Object.create(that.config['browse-actions-settings'] || {})
 		config.path = path
 
-		// XXX get the correct parent...
-		o = overlay.Overlay(that.ribbons.viewer, 
-			list(null, actions, config)
-				.open(function(evt){ 
-					if(!closingPrevented){
-						o.close() 
-					}
-					closingPrevented = false
-				}))
+		d = list(null, actions, config)
+			.open(function(evt){ 
+				if(!closingPrevented){
+					d.parent.close() 
+				}
+				closingPrevented = false
+			})
 			// save show disabled state to .config...
-			.close(function(){
+			.on('close', function(){
 				var config = that.config['browse-actions-settings'] 
 
-				config.showDisabled = o.client.options.showDisabled
+				config.showDisabled = d.options.showDisabled
 			})
 
-		// XXX DEBUG
-		//window.LIST = o.client
-
-		//return o.client
-		return o
-	}
+		return d
+	})
 }
 
+// NOTE: yes, this is a funny name ;)
 var BrowseActionsActions = actions.Actions({
 	config: {
 		// NOTE: the slashes at the end are significant, of they are not
@@ -422,16 +538,9 @@ var BrowseActionsActions = actions.Actions({
 		},
 	},
 
-	// XXX move this to a generic modal overlay feature...
-	getOverlay: ['- Interface/Get overlay object',
-		function(o){
-			return overlay.getOverlay(o || this.viewer)
-		}],
-
-
-	browseActions: ['Interface/Browse actions',
+	browseActions: ['Interface/Browse actions...',
 		makeActionLister(browse.makePathList, true)],
-	listActions:['Interface/List actions',
+	listActions:['Interface/List actions...',
 		makeActionLister(browse.makeList, 
 			// format the doc to: <name> (<category>, ..)
 			// NOTE: this a bit naive...
@@ -450,7 +559,8 @@ module.BrowseActions = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-browse-actions',
 	depends: [
-		'ui'
+		'ui',
+		'ui-dialogs',
 	],
 
 	actions: BrowseActionsActions,
@@ -510,6 +620,46 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 // XXX make this not applicable to production...
 
 var WidgetTestActions = actions.Actions({
+
+	testBrowse: ['- Test/Demo new style dialog...',
+		makeUIDialog(function(){
+			var actions = this
+
+			console.log('>>> args:', [].slice.call(arguments))
+
+			return browse.makeLister(null, function(path, make){
+				var that = this
+
+				make('select last')
+					.on('open', function(){
+						that.select(-1)
+					})
+					
+				make('do nothing')
+
+				make('nested dialog...')
+					.on('open', function(){
+						actions.testBrowse()
+					})
+
+				make('---')
+
+				make('close parent')
+					.on('open', function(){
+						that.parent.close()
+					})
+
+				// XXX the parent is not yet set at this point...
+				//console.log('>>>', that.parent)
+			})
+			// NOTE: this is not a dialog event, it is defined by the 
+			// 		container to notify us that we are closing...
+			.on('close', function(){
+				console.log('Dialog closing...')
+			})
+		})],
+
+
 	// XXX this is just a test...
 	embededListerTest: ['Test/Lister test (embeded)/*',
 		function(path, make){
