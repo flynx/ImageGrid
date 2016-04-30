@@ -52,8 +52,9 @@ module.SortActions = actions.Actions({
 		// NOTE: 'Manual' mode is set after .shiftImageLeft(..)/.shiftImageRight(..)
 		// 		are called or when restoring a pre-existing .data.manual_order 
 		// 		via .toggleImageSort('Manual')
-		//
-		// XXX need a natural way to reverse these...
+		// NOTE: all sort methods are terminated with 'keep-position' so 
+		// 		as to prevent shuffling of images that are not usable with
+		// 		the previous methods in chain...
 		'sort-methods': {
 			'none': '',
 			// NOTE: this is descending by default...
@@ -98,15 +99,17 @@ module.SortActions = actions.Actions({
 
 			return a - b
 		},
-		// this will sort items via their index...
+		// This is specifically designed to terminate sort methods to prevent
+		// images that are not relevant to the previous order to stay in place
+		//
+		// XXX need to test how will this affect a set of images where part
+		// 		of the set is sortable an part is not...
 		'keep-position': function(a, b){
 			a = this.data.order.indexOf(a)
 			b = this.data.order.indexOf(b)
 
 			return a - b
 		},
-
-		'dummy': function(){ return 0 },
 	},
 	// Sort images...
 	//
@@ -156,11 +159,6 @@ module.SortActions = actions.Actions({
 	//
 	// XXX would be nice to be able to sort a list of gids or a section
 	// 		of images...
-	// XXX sorting with partial images will throw the images that do not
-	// 		exist or the ones that do not have the right attrs all over 
-	// 		the place...
-	// 		...should we pool the "unknowns" to one side with their 
-	// 		current order??
 	// XXX should this handle manual sort order???
 	sortImages: ['- Edit|Sort/Sort images',
 		function(method, reverse){ 
