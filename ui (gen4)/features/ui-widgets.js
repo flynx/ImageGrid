@@ -416,8 +416,6 @@ var DialogsActions = actions.Actions({
 
 
 	// container constructors...
-	//
-	// XXX pass options...
 	Overlay: ['- Interface/',
 		makeUIContainer(function(dialog, options){
 			var that = this
@@ -433,7 +431,11 @@ var DialogsActions = actions.Actions({
 	Drawer: ['- Interface/',
 		makeUIContainer(function(dialog, options){
 			return drawer.Drawer($('body'), dialog, options) })],
-	// XXX
+	
+	// XXX need to:
+	// 		- dock panels
+	// 		- save panel state (position, collapse, dock, ...)
+	// 		- restore panel state
 	Panel: ['- Interface/',
 		makeUIContainer(function(dialog, options){
 			// XXX
@@ -704,19 +706,20 @@ var WidgetTestActions = actions.Actions({
 		makeUIDialog('Drawer', 
 			function(h, txt){
 				return $('<div>')
-						.css({
-							position: 'relative',
-							background: 'white',
-							height: '300px',
-							padding: '20px',
-						})
-						.append($('<h1>')
-							.text(h || 'Drawer test...'))
-						.append($('<p>')
-							.text(txt || 'With some text.'))
+					.css({
+						position: 'relative',
+						background: 'white',
+						height: '300px',
+						padding: '20px',
+					})
+					.append($('<h1>')
+						.text(h || 'Drawer test...'))
+					.append($('<p>')
+						.text(txt || 'With some text.'))
 			},
 			// pass custom configuration to container...
 			{
+				background: 'white',
 				focusable: true,
 			})],
 	testBrowse: ['Test/Demo new style dialog...',

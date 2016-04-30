@@ -14,6 +14,7 @@ var toggler = require('lib/toggler')
 var keyboard = require('lib/keyboard')
 
 var core = require('features/core')
+var widgets = require('features/ui-widgets')
 
 var widget = require('lib/widget/widget')
 var browse = require('lib/widget/browse')
@@ -395,19 +396,14 @@ var KeyboardActions = actions.Actions({
 	// 		- insert the action name where not doc present...
 	// XXX cleanup CSS
 	showKeyboardBindings: ['Interface/Show keyboard bindings',
-		function(){
-			var widget = drawer.Drawer($('body'), 
-				keyboard.buildKeybindingsHelpHTML(this.__keyboard_config, this),
-				{
-					focusable: true,
-				})
-				.dom.find('.content')
-					// XXX move to CSS...
-					.css({
-						background: 'white',
-					})
-		}],
-
+		widgets.makeUIDialog('Drawer', 
+			function(){
+				return keyboard.buildKeybindingsHelpHTML(this.__keyboard_config, this)
+			},
+			{
+				background: 'white',
+				focusable: true,
+			})],
 })
 
 var Keyboard = 

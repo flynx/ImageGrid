@@ -59,6 +59,8 @@ var DrawerPrototype = {
 			'click',
 			'keydown',
 		],
+
+		background: null,
 	},
 
 	keyboard: {
@@ -141,6 +143,10 @@ var DrawerPrototype = {
 						}
 					})
 				})
+
+		if(options.background){
+			dom.find('.content').css('background', options.background)
+		}
 
 		// focus the client...
 		if(client.dom && client.focus){
