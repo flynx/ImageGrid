@@ -19,7 +19,6 @@ var ribbons = require('ribbons')
 var core = require('features/core')
 var base = require('features/base')
 
-// widgets...
 var widget = require('lib/widget/widget')
 var browse = require('lib/widget/browse')
 var overlay = require('lib/widget/overlay')
@@ -777,6 +776,39 @@ var WidgetTestActions = actions.Actions({
 				console.log('Dialog closing...')
 			})
 		})],
+
+
+	// XXX make this a toggler....
+	partitionByMonth: ['Test/',
+		function(){
+			var that = this
+
+			this.toggleImageSort('?') != 'Date' && this.sortImages('Date')
+
+			this.on('updateImage', function(_, gid){ this.placeMonthPartition(gid) })
+		}],
+	// XXX this should be .updateImage(..) in a real feature...
+	placeMonthPartition: ['Test/',
+		function(image){
+			var month = [
+				'January', 'February', 'March', 'April',
+				'May', 'June', 'July', 'August',
+				'September', 'October', 'November', 'December'
+			]
+
+			var gid = this.data.getImage(image)
+			var next = this.data.getImage(gid, 'next')
+
+			cur = this.images[gid]	
+			next = this.images[next]
+
+			if(cur && next && cur.birthtime.getMonth() != next.birthtime.getMonth()){
+				this.ribbons.getImageMarks(gid).filter('.partition').remove()
+				this.ribbons.getImage(gid)
+					.after(this.ribbons.setElemGID($('<div class="mark partition">'), gid)
+						.attr('text', month[next.birthtime.getMonth()]))
+			}
+		}],
 
 
 	// XXX this is just a test...

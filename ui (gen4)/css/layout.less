@@ -884,6 +884,28 @@ stretching in width... */
 	margin-left: -15px;
 }
 
+.mark.partition {
+	width: 0px;
+	height: @image-tile-size + 20;
+
+	overflow: visible;
+
+	border-right: solid 5px yellow;
+
+	margin-top: -20px;
+	margin-bottom: -5px;
+	margin-left: 0px;
+}
+.mark.partition:after {
+	display: block;
+	position: absolute;
+	top: -8px;
+	left: 10px;
+	content: attr(text);
+
+	color: yellow;
+}
+
 
 /****************************************************** Image info ***/
 .inline-image-info {
