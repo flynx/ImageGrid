@@ -239,7 +239,7 @@ function(actions, list_key, options){
 // 		can this be simpler???
 var makeNestedConfigListEditor = 
 module.makeNestedConfigListEditor =
-function(actions, parent, list_key, value_key, options){
+function(actions, list, list_key, value_key, options){
 	options = options || {}
 
 	return function(){
@@ -257,30 +257,29 @@ function(actions, parent, list_key, value_key, options){
 					actions.config[value_key] = value
 				}
 
-				o.close()
+				o.parent.close()
 			},
 		}
 		options.__proto__ = dfl_options
 
-		var o = makeConfigListEditor(actions, list_key, options) 
+		var o = makeConfigListEditor(actions, list_key, options)
 
 		// update slideshow menu...
-		o.client.open(function(){
-			parent.client.update()
-			parent.client.select(txt)
+		o.open(function(){
+			list.update()
+			list.select(txt)
 		})
 
-		o.close(function(){
-			// XXX this is ugly...
-			parent.focus()
-		})
+		actions.Overlay(o)
 
-		if(typeof(value_key) == typeof(function(){})){
-			o.client.select(value_key())
+		setTimeout(function(){
+			if(typeof(value_key) == typeof(function(){})){
+				o.select(value_key())
 
-		} else {
-			o.client.select(actions.config[value_key])
-		}
+			} else {
+				o.select(actions.config[value_key])
+			}
+		}, 0)
 	}
 }
 

@@ -445,22 +445,21 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 		menu is shown...
 	// XXX should the loader list be nested or open in overlay (as-is now)???
 	browsePath: ['File/Browse file system...',
-		function(base, callback){
+		widgets.makeUIDialog(function(base, callback){
 			var that = this
 			base = base || this.location.path || '/'
 
-			var o = overlay.Overlay(this.ribbons.viewer, 
-				browseWalk.makeWalk(
+			var o = browseWalk.makeWalk(
 						null, base, this.config['image-file-pattern'],
 						this.config['file-browser-settings'])
 					// path selected...
 					.open(function(evt, path){ 
-						var item = o.client.selected
+						var item = o.selected
 
 						// single loader...
 						if(callback && callback.constructor === Function){
 							// close self and parent...
-							o.close() 
+							o.parent.close() 
 
 							callback(path)
 
@@ -481,36 +480,35 @@ var FileSystemLoaderUIActions = actions.Actions({
 							}
 
 							// show user the list...
-							var so = overlay.Overlay(that.ribbons.viewer, 
-								browse.makeList(null, loaders)
-									// close self and parent...
-									.open(function(){
-										so.close()
-										o.close() 
-									}))
-									// closed menu...
-									.close(function(){
-										o.focus()
-										o.client.select(item)
-									})
+							var so = that.Overlay(browse.makeList(null, loaders)
+								// close self and parent...
+								.open(function(){
+									so.close()
+									o.parent.close() 
+								}))
+								// closed menu...
+								.close(function(){
+									//o.parent.focus()
+									o.select(item)
+								})
 							// select top element...
 							so.client.select(0)
 
 							return so
 						}
-					}))
+					})
 					// we closed the browser -- save settings to .config...
-					.close(function(){
+					.on('close', function(){
 
 						var config = that.config['file-browser-settings']
 
-						config.disableFiles = o.client.options.disableFiles
-						config.showDisabled = o.client.options.showDisabled
-						config.showNonTraversable = o.client.options.showNonTraversable
+						config.disableFiles = o.options.disableFiles
+						config.showDisabled = o.options.showDisabled
+						config.showNonTraversable = o.options.showNonTraversable
 					})
 
 			return o
-		}],
+		})],
 
 	// NOTE: if no path is passed (null) these behave just like .browsePath(..)
 	// 		with the appropriate callback otherwise it will just load 
@@ -602,7 +600,7 @@ module.FileSystemLoaderURLHistoryUI = core.ImageGridFeatures.Feature({
 		['browsePath', 
 			function(res){ 
 				var that = this
-				res.client.open(function(_, path){
+				res.open(function(_, path){
 					that.setTopURLHistory(path) 
 				})
 			}],
@@ -1288,7 +1286,7 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 		//	actions		- the actions object
 	// 		//	make		- browse item constructor 
 	// 		//					(see: browse.Browser.update(..) for more info)
-	// 		//	overlay		- the containing overlay object
+	// 		//	parent		- the parent dialog
 	// 		<key>: function(actions, make, overlay){ ... },
 	// 		...
 	// 	}
@@ -1296,31 +1294,31 @@ var FileSystemWriterUIActions = actions.Actions({
 	// NOTE: .__export_dialog_fields__ can be defined both in the feature
 	// 		as well as in the instance.
 	__export_dialog_fields__: {
-		'pattern': function(actions, make, overlay){
+		'pattern': function(actions, make, parent){
 			return make(['Filename pattern: ', 
 					function(){
 						return actions.config['export-preview-name-pattern'] || '%f' }])
 				.on('open', 
-					widgets.makeNestedConfigListEditor(actions, overlay,
+					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-preview-name-patterns',
 						'export-preview-name-pattern'))
 		},
-		'level_dir': function(actions, make, overlay){
+		'level_dir': function(actions, make, parent){
 			return make(['Level directory: ', 
 					function(){ 
 						return actions.config['export-level-directory-name'] || 'fav' }])
 				.on('open', 
-					widgets.makeNestedConfigListEditor(actions, overlay,
+					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-level-directory-names', 
 						'export-level-directory-name'))
 		},
-		'size': function(actions, make, overlay){
+		'size': function(actions, make, parent){
 			return make(['Image size: ', 
 					function(){ 
 						return actions.config['export-preview-size'] || 1000 }])
 				// XXX add validation???
 				.on('open', 
-					widgets.makeNestedConfigListEditor(actions, overlay,
+					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-preview-sizes',
 						'export-preview-size',
 						{
@@ -1329,7 +1327,7 @@ var FileSystemWriterUIActions = actions.Actions({
 
 		},
 		// XXX BUG: history closing errors -- non-critical...
-		'target_dir': function(actions, make, overlay){
+		'target_dir': function(actions, make, parent){
 			var elem = make(['To: ', 
 				function(){ return actions.config['export-path'] || './' }], 
 				{ buttons: [
@@ -1344,15 +1342,12 @@ var FileSystemWriterUIActions = actions.Actions({
 								actions.config['export-path'] = path
 								actions.config['export-paths'].splice(0, 0, path)
 
-								overlay.client.update()
-								overlay.client.select(txt)
-
-								// XXX ugly...
-								overlay.focus()
+								parent.update()
+								parent.select(txt)
 							})
 					}],
 					// XXX BUG: closing this breaks on parant.focus()...
-					['histroy', widgets.makeNestedConfigListEditor(actions, overlay,
+					['histroy', widgets.makeNestedConfigListEditor(actions, parent,
 						'export-paths',
 						'export-path',
 						{
@@ -1377,9 +1372,9 @@ var FileSystemWriterUIActions = actions.Actions({
 
 						})
 						.on('edit-aborted edit-done', function(evt, path){
-							overlay.client.update()
+							parent.update()
 								.then(function(){
-									overlay.client.select(path)
+									parent.select(path)
 								})
 						})
 				})
@@ -1387,54 +1382,57 @@ var FileSystemWriterUIActions = actions.Actions({
 	},
 	// XXX indicate export state: index, crop, image...
 	exportDialog: ['File/Export/Export optioons...',
-		function(){
+		widgets.makeUIDialog(function(){
 			var that = this
 
-			var o = overlay.Overlay(this.ribbons.viewer, 
-				browse.makeLister(null, function(path, make){
-					var mode = that.config['export-dialog-mode'] || 'Images only'
-					var data = that.config['export-dialog-modes'][mode].data
+			var o = browse.makeLister(null, function(path, make){
+				var dialog = this
+				var mode = that.config['export-dialog-mode'] || 'Images only'
+				var data = that.config['export-dialog-modes'][mode].data
 
-					// mode selector...
-					make(['Export mode: ', 
-							function(){ return that.config['export-dialog-mode'] || 'Directories' }])
-						.on('open', 
-							widgets.makeNestedConfigListEditor(that, o,
-								'export-dialog-modes',
-								'export-dialog-mode',
-								{
-									new_button: false,
-									itemButtons: [],
-								}))
+				// mode selector...
+				make(['Export mode: ', 
+						function(){ return that.config['export-dialog-mode'] || 'Directories' }])
+					.on('open', 
+						widgets.makeNestedConfigListEditor(that, o,
+							'export-dialog-modes',
+							'export-dialog-mode',
+							{
+								new_button: false,
+								itemButtons: [],
+							}))
 
-					// get the root and user fields...
-					var fields = that.__export_dialog_fields__ || {}
-					var base_fields = FileSystemWriterUIActions.__export_dialog_fields__ || {}
-					// build the fields...
-					data.forEach(function(k){
-						(fields[k] 
-								&& fields[k].call(that, that, make, o))
-							|| (base_fields[k] 
-									&& base_fields[k].call(that, that, make, o))
+				// get the root and user fields...
+				var fields = that.__export_dialog_fields__ || {}
+				var base_fields = FileSystemWriterUIActions.__export_dialog_fields__ || {}
+				// build the fields...
+				data.forEach(function(k){
+					(fields[k] 
+							&& fields[k].call(that, that, make, dialog))
+						|| (base_fields[k] 
+								&& base_fields[k].call(that, that, make, dialog))
+				})
+
+				// Start/stop action...
+				make([function(){
+						// XXX indicate export state: index, crop, image...
+						return 'Export'}]) 
+					.on('open', function(){
+						var mode = that.config['export-dialog-modes'][that.config['export-dialog-mode']]
+						that[mode.action](
+							that.config['export-path'] || that.location.path)
+						dialog.parent.close()
 					})
+			})
 
-					// Start/stop action...
-					make([function(){
-							// XXX indicate export state: index, crop, image...
-							return 'Export'}]) 
-						.on('open', function(){
-							var mode = that.config['export-dialog-modes'][that.config['export-dialog-mode']]
-							that[mode.action](
-								that.config['export-path'] || that.location.path)
-							o.close()
-						})
-				}))
+			o.dom.addClass('metadata-view tail-action')
 
-			o.client.dom.addClass('metadata-view tail-action')
-			o.client.select(-1)
+			setTimeout(function(){
+				o.select(-1)
+			}, 0)
 
 			return o
-		}],
+		})],
 })
 
 
