@@ -306,17 +306,25 @@ module.makeUIContainer = function(make){
 	return f
 }
 
+// XXX should this be self-applicable???
+// 		...this would need to detect if it's launched from a container...
 var makeUIDialog =
-module.makeUIDialog = function(make){
+module.makeUIDialog = function(make, bare){
 	var f = function(){
 		var args = [].slice.call(arguments)
 
-		// see if the first arg is a container spec...
-		var container = this.uiContainers.indexOf(args[0]) >= 0 ?
-			args.shift()
-			: (this.config['ui-default-container'] || 'Overlay')
+		// wrap an existing dialog...
+		if(bare){
+			return make.apply(this, args)
 
-		return this[container](make.apply(this, args)).client
+		} else {
+			// see if the first arg is a container spec...
+			var container = this.uiContainers.indexOf(args[0]) >= 0 ?
+				args.shift()
+				: (this.config['ui-default-container'] || 'Overlay')
+
+			return this[container](make.apply(this, args)).client
+		}
 	}
 	f.__dialog__ = true
 	return f

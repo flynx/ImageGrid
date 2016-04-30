@@ -395,7 +395,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 // XXX would need to delay the original action while the user is 
 // 		browsing...
 var makeBrowseProxy = function(action, callback){
-	return function(path, logger){
+	return widgets.makeUIDialog(function(path, logger){
 		var that = this
 		path = path || this.location.path
 		// XXX should we set a start path here to current???
@@ -405,7 +405,7 @@ var makeBrowseProxy = function(action, callback){
 				callback && callback.call(that, path)
 				return res
 			})
-	}
+	}, true)
 }
 
 
@@ -517,8 +517,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 		to start from.
 	// XXX should passing no path to this start browsing from the current
 	// 		path or from the root?
-	browseIndex: ['File/Load index', makeBrowseProxy('loadIndex')],
-	browseImages: ['File/Load images', makeBrowseProxy('loadImages')],
+	// XXX should these be dialog objects???
+	browseIndex: ['File/Load index...', makeBrowseProxy('loadIndex')],
+	browseImages: ['File/Load images...', makeBrowseProxy('loadImages')],
 })
 
 
