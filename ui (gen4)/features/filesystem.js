@@ -395,7 +395,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 // XXX would need to delay the original action while the user is 
 // 		browsing...
 var makeBrowseProxy = function(action, callback){
-	return widgets.makeUIDialog(function(path, logger){
+	return widgets.uiDialog(function(path, logger){
 		var that = this
 		path = path || this.location.path
 		// XXX should we set a start path here to current???
@@ -405,7 +405,7 @@ var makeBrowseProxy = function(action, callback){
 				callback && callback.call(that, path)
 				return res
 			})
-	}, true)
+	})
 }
 
 

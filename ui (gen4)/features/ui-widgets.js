@@ -288,10 +288,30 @@ function(actions, list, list_key, value_key, options){
 /*********************************************************************/
 // Dialogs and containers...
 
+// Mark an action as a container...
+//
+// NOTE: the marked action must comply with the container protocol
+// 		(see: makeUIContainer(..) for more info)
+var uiContainer =
+module.uiContainer = function(func){
+	func.__container__ = true
+	return func
+}
+
+// Make a container constructor wrapper...
+//
+// This will:
+// 	- mark the action as a container
+//
+// The container will:
+// 	- stop the client's close event from propagating up
+// 	- trigger the client's close event on close
+//
+// XXX pass options???
 var makeUIContainer =
 module.makeUIContainer = function(make){
-	var f = function(dialog){
-		var o = make.call(this, dialog)
+	return uiContainer(function(){
+		var o = make.apply(this, arguments)
 
 		// prevent the client event from bubbling up...
 		// XXX is this the right way to go???
@@ -301,34 +321,67 @@ module.makeUIContainer = function(make){
 		o.close(function(){ o.client.trigger('close') })
 
 		return o
-	}
-	f.__container__ = true
-	return f
+	})
 }
 
-// XXX should this be self-applicable???
-// 		...this would need to detect if it's launched from a container...
+
+// Mark action as a dialog...
+//
+var uiDialog =
+module.uiDialog = function(func){
+	func.__dialog__ = true
+	return func
+}
+
+// Make a dialog constructor wrapper...
+//
+// 	Make a dialog action...
+// 	 makeUIDialog(constructor)
+// 	 makeUIDialog(constructor, ...)
+// 		-> dialog
+//
+//	Make a dialog action with a specific default container...
+// 	 makeUIDialog(container, constructor)
+// 	 makeUIDialog(container, constructor, ...)
+// 		-> dialog
+//
+//
+// This dialog will:
+// 	- consume the first action argument if it's a container name to 
+// 		override the default container...
+// 	- if no container defined explicitly the default container is used
+//
+//
+// NOTE: arguments after the constructor will be passed to the container.
+//
+// XXX do we need a means to reuse containers, e.g. ??? 
 var makeUIDialog =
-module.makeUIDialog = function(make, bare){
-	var f = function(){
+module.makeUIDialog = function(a, b){
+	var args = [].slice.call(arguments)
+
+	// container name (optional)...
+	var dfl = typeof(args[0]) == typeof('str') ?
+			args.shift()
+			: null
+	// constructor...
+	var make = args.shift()
+	// rest of the args to be passed to the container...
+	var cargs = args
+
+	return uiDialog(function(){
 		var args = [].slice.call(arguments)
 
-		// wrap an existing dialog...
-		if(bare){
-			return make.apply(this, args)
+		// see if the first arg is a container spec...
+		var container = this.uiContainers.indexOf(args[0]) >= 0 ?
+			args.shift()
+			: (dfl || this.config['ui-default-container'] || 'Overlay')
 
-		} else {
-			// see if the first arg is a container spec...
-			var container = this.uiContainers.indexOf(args[0]) >= 0 ?
-				args.shift()
-				: (this.config['ui-default-container'] || 'Overlay')
-
-			return this[container](make.apply(this, args)).client
-		}
-	}
-	f.__dialog__ = true
-	return f
+		return this[container].apply(this, 
+				[make.apply(this, args)].concat(cargs))
+			.client
+	})
 }
+
 
 
 //---------------------------------------------------------------------
@@ -363,11 +416,12 @@ var DialogsActions = actions.Actions({
 
 
 	// container constructors...
-	// NOTE: there are not intended for direct use...
+	//
+	// XXX pass options...
 	Overlay: ['- Interface/',
-		makeUIContainer(function(dialog){
+		makeUIContainer(function(dialog, options){
 			var that = this
-			return overlay.Overlay(this.ribbons.viewer, dialog)
+			return overlay.Overlay(this.ribbons.viewer, dialog, options)
 				// XXX focus parent on exit...
 				.on('close', function(){
 					var o = that.overlay
@@ -375,9 +429,13 @@ var DialogsActions = actions.Actions({
 					o && o.focus()	
 				})
 		})],
+	// XXX should this use .ribbons.viewer as base???
+	Drawer: ['- Interface/',
+		makeUIContainer(function(dialog, options){
+			return drawer.Drawer($('body'), dialog, options) })],
 	// XXX
 	Panel: ['- Interface/',
-		makeUIContainer(function(dialog){
+		makeUIContainer(function(dialog, options){
 			// XXX
 			console.error('Panels are not yet implemented.')
 		})],
@@ -391,7 +449,9 @@ var DialogsActions = actions.Actions({
 				var that = this
 
 				actions.uiDialogs.forEach(function(dialog){
-					make(actions.getDoc(dialog)[dialog][0].replace(/^- (.*)$/, '$1 (disabled)'))
+					make(actions.getDoc(dialog)[dialog][0]
+							// mark item as disabled...
+							.replace(/^- (.*)$/, '$1 (disabled)'))
 						.on('open', function(){
 							actions[dialog]()
 						})
@@ -633,7 +693,33 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 var WidgetTestActions = actions.Actions({
 
-	testBrowse: ['- Test/Demo new style dialog...',
+	// Usage Examples:
+	// 	.testDrawer()						- show html in base drawer...
+	// 	.testDrawer('Header', 'paragraph')	- show html with custom text...
+	// 	.testDrawer('Overlay')				- show html in overlay...
+	// 	.testDrawer('Overlay', 'Header', 'paragraph')
+	// 										- show html in overlay with 
+	// 										  custom text...
+	testDrawer: ['Test/Drawer widget test...',
+		makeUIDialog('Drawer', 
+			function(h, txt){
+				return $('<div>')
+						.css({
+							position: 'relative',
+							background: 'white',
+							height: '300px',
+							padding: '20px',
+						})
+						.append($('<h1>')
+							.text(h || 'Drawer test...'))
+						.append($('<p>')
+							.text(txt || 'With some text.'))
+			},
+			// pass custom configuration to container...
+			{
+				focusable: true,
+			})],
+	testBrowse: ['Test/Demo new style dialog...',
 		makeUIDialog(function(){
 			var actions = this
 
@@ -709,25 +795,6 @@ var WidgetTestActions = actions.Actions({
 					}))
 
 			return o
-		}],
-	// XXX use this.ribbons.viewer as base...
-	drawerTest: ['Test/Drawer widget test',
-		function(){
-			// XXX use this.ribbons.viewer as base...
-			drawer.Drawer($('body'), 
-				$('<div>')
-					.css({
-						position: 'relative',
-						background: 'white',
-						height: '300px',
-					})
-					.append($('<h1>')
-						.text('Drawer test...'))
-					.append($('<p>')
-						.text('With some text.')),
-				{
-					focusable: true,
-				})
 		}],
 
 	// XXX needs cleanup...
