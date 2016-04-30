@@ -405,7 +405,7 @@ var SortUIActions = actions.Actions({
 								that.config['default-sort-order'] == 'reverse')
 							lister.parent.close()
 						})
-						.addClass(mode == cur ? 'highlighted' : '')
+						.addClass(mode == cur ? 'highlighted selected' : '')
 						.addClass(mode == dfl ? 'default' : '')
 				})	
 
@@ -432,9 +432,6 @@ var SortUIActions = actions.Actions({
 					.on('open', _makeTogglHandler('toggleDefaultSortOrder'))
 					.addClass('item-value-view')
 			})
-
-			// select the current order...
-			o.select('"' + this.toggleImageSort('?') + '"')
 
 			return o
 		})]	

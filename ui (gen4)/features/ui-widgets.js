@@ -163,28 +163,31 @@ function(actions, list_key, options){
 	var lst = actions.config[list_key]
 	lst = lst instanceof Array ? lst : Object.keys(lst)
 
-	var list = browse.makeList( null, 
-		lst.concat(new_button ? [ new_button ] : []), 
-		{itemButtons: options.itemButtons || [
-			// mark for removal...
-			['&times;', 
-				function(p){
-					var e = this.filter('"'+p+'"', false)
-						.toggleClass('strike-out')
+	var list = browse.makeList(null, 
+			lst.concat(new_button ? [ new_button ] : []), 
+			{
+				path: options.path,
+				itemButtons: options.itemButtons || [
+					// mark for removal...
+					['&times;', 
+						function(p){
+							var e = this.filter('"'+p+'"', false)
+								.toggleClass('strike-out')
 
-					if(e.hasClass('strike-out')){
-						to_remove.indexOf(p) < 0 
-							&& to_remove.push(p)
+							if(e.hasClass('strike-out')){
+								to_remove.indexOf(p) < 0 
+									&& to_remove.push(p)
 
-					} else {
-						var i = to_remove.indexOf(p)
-						if(i >= 0){
-							to_remove.splice(i, 1)
-						}
-					}
-				}],
-			// XXX add shift up/down/top/bottom and other buttons (optional)...
-		]})
+							} else {
+								var i = to_remove.indexOf(p)
+								if(i >= 0){
+									to_remove.splice(i, 1)
+								}
+							}
+						}],
+					// XXX add shift up/down/top/bottom and other buttons (optional)...
+				]
+			})
 		// select the new_button item...
 		.on('select', function(evt, elem){
 			if(new_button && $(elem).find('.text').text() == new_button){
@@ -304,7 +307,6 @@ module.uiContainer = function(func){
 // 	- mark the action as a container
 //
 // The container will:
-// 	- stop the client's close event from propagating up
 // 	- trigger the client's close event on close
 //
 // XXX pass options???
@@ -312,10 +314,6 @@ var makeUIContainer =
 module.makeUIContainer = function(make){
 	return uiContainer(function(){
 		var o = make.apply(this, arguments)
-
-		// prevent the client event from bubbling up...
-		// XXX is this the right way to go???
-		o.client.on('close', function(evt){ evt.stopPropagation() })
 
 		// notify the client that we are closing...
 		o.close(function(){ o.client.trigger('close') })
@@ -427,10 +425,23 @@ var DialogsActions = actions.Actions({
 					o && o.focus()	
 				})
 		})],
-	// XXX should this use .ribbons.viewer as base???
 	Drawer: ['- Interface/',
 		makeUIContainer(function(dialog, options){
-			return drawer.Drawer($('body'), dialog, options) })],
+			var parent = (options || {}).parentElement 
+			parent = parent ? $(parent) : this.ribbons.viewer 
+
+			var d = drawer.Drawer(
+					parent,
+					dialog, 
+					options)
+			// we need to clear other ui elements, like the status bar...
+			// XXX is this the right way to go???
+			d.dom.css({
+				'z-index': 5000,
+			})
+
+			return d
+		})],
 	
 	// XXX need to:
 	// 		- dock panels
@@ -737,6 +748,7 @@ var WidgetTestActions = actions.Actions({
 					})
 					
 				make('do nothing')
+					.addClass('selected')
 
 				make('nested dialog...')
 					.on('open', function(){
@@ -800,8 +812,8 @@ var WidgetTestActions = actions.Actions({
 			return o
 		}],
 
-	// XXX needs cleanup...
-	// XXX need a clean constructor strategy -- this and ui.js are a mess...
+
+	// XXX migrate to the dialog framework...
 	// XXX use this.ribbons.viewer as base...
 	// XXX BUG: when using this.ribbons.viewer as base some actions leak
 	// 		between the two viewers...

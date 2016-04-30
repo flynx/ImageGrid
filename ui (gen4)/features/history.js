@@ -419,52 +419,48 @@ var URLHistoryUIActions = actions.Actions({
 				to_remove = []
 			}
 
-			var o = browse.makeList(
-					null, 
-					Object.keys(this.url_history)
+			var o = browse.makeLister(null, 
+				function(path, make){
+					Object.keys(that.url_history)
 						.reverse()
 						// NOTE: this might get a little slow for 
 						// 		very large sets...
-						.map(function(p){
-							return !that.checkURLFromHistory(p) ? 
-								'- ' + p 
-								: p 
-						}),
-					{
-						// add item buttons...
-						itemButtons: [
-							// move to top...
-							['&diams;', 
-								function(p){
-									var top = this.filter('*', false).first()
-									var cur = this.filter('"'+p+'"', false)
+						.forEach(function(p){
+							make(p, {disabled: !that.checkURLFromHistory(p) })
+								.addClass(p == cur ? 'highlighted selected': '')
+						}) },
+				// add item buttons...
+				{ itemButtons: [
+						// move to top...
+						['&diams;', 
+							function(p){
+								var top = this.filter('*', false).first()
+								var cur = this.filter('"'+p+'"', false)
 
-									console.log('!!!', p)
+								if(!top.is(cur)){
+									top.before(cur)
+									that.setTopURLHistory(p)
+								}
+							}],
+						// mark for removal...
+						['&times;', 
+							function(p){
+								var e = this.filter('"'+p+'"', false)
+									.toggleClass('strike-out')
 
-									if(!top.is(cur)){
-										top.before(cur)
-										that.setTopURLHistory(p)
+								if(e.hasClass('strike-out')){
+									to_remove.indexOf(p) < 0 
+										&& to_remove.push(p)
+
+								} else {
+									var i = to_remove.indexOf(p)
+									if(i >= 0){
+										to_remove.splice(i, 1)
 									}
-								}],
-							// mark for removal...
-							['&times;', 
-								function(p){
-									var e = this.filter('"'+p+'"', false)
-										.toggleClass('strike-out')
-
-									if(e.hasClass('strike-out')){
-										to_remove.indexOf(p) < 0 
-											&& to_remove.push(p)
-
-									} else {
-										var i = to_remove.indexOf(p)
-										if(i >= 0){
-											to_remove.splice(i, 1)
-										}
-									}
-								}],
-						],
-					})
+								}
+							}],
+					],
+				})
 				.open(function(evt, path){ 
 					removeStriked('open')
 
@@ -484,19 +480,6 @@ var URLHistoryUIActions = actions.Actions({
 						&& parent.focus 
 						&& parent.focus()
 				})
-
-			/*
-			Object.keys(this.url_history).reverse().forEach(function(p){
-				that.checkURLFromHistory(p) || o.filter(p).addClass('disabled')
-			})
-			*/
-
-			// select and highlight current path...
-			setTimeout(function(){
-				cur && o
-					.select('"'+ cur +'"')
-						.addClass('highlighted')
-			}, 0)
 
 			return o
 		})],

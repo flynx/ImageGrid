@@ -299,6 +299,8 @@ var BrowserPrototype = {
 			'deselect',
 
 			//'keydown',
+
+			'close',
 		],
 
 
@@ -2148,7 +2150,10 @@ var BrowserPrototype = {
 		}
 
 		// load the initial state...
-		this.update(options.path || this.path || '/')
+		//this.update(options.path || this.path || '/')
+		// XXX is this the right way to go???
+		setTimeout(function(){ 
+			that.update(options.path || that.path || '/') }, 0)
 
 		if(this.options.nonPropagatedEvents != null){
 			this.on(this.options.nonPropagatedEvents.join(' '), 
