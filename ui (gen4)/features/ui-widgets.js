@@ -317,7 +317,7 @@ module.makeUIDialog = function(make){
 			args.shift()
 			: (this.config['ui-default-container'] || 'Overlay')
 
-		return this[container](make.apply(this, args))
+		return this[container](make.apply(this, args)).client
 	}
 	f.__dialog__ = true
 	return f
@@ -372,6 +372,7 @@ var DialogsActions = actions.Actions({
 	Panel: ['- Interface/',
 		makeUIContainer(function(dialog){
 			// XXX
+			console.error('Panels are not yet implemented.')
 		})],
 
 	

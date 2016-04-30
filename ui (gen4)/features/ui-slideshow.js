@@ -129,14 +129,13 @@ var SlideshowActions = actions.Actions({
 											})
 									}
 								})
-
-							// update slideshow menu...
-							oo.client.open(function(){
-								o.update()
-									.then(function(){
-										o.select(txt)
-									})
-							})
+								// update slideshow menu...
+								.open(function(){
+									o.update()
+										.then(function(){
+											o.select(txt)
+										})
+								})
 						})
 
 					make(['Direction: ', 
@@ -160,7 +159,8 @@ var SlideshowActions = actions.Actions({
 				})
 
 			o.dom.addClass('metadata-view tail-action')
-			o.select(-1)
+
+			setTimeout(function(){ o.select(-1) }, 0)
 
 			return o
 		})],
