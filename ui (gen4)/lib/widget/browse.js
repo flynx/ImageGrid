@@ -6,6 +6,7 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+/* XXX get rid of this ASAP...
 if(typeof(module) !== 'undefined' && module.exports){
 	var NW = true
 	var gui = require('nw.gui')
@@ -13,6 +14,7 @@ if(typeof(module) !== 'undefined' && module.exports){
 } else {
 	var NW = false
 }
+*/
 
 
 define(function(require){ var module = {}
@@ -634,6 +636,7 @@ var BrowserPrototype = {
 	},
 
 
+	/*
 	// Copy/Paste actions...
 	//
 	// XXX use 'Text' for IE...
@@ -670,6 +673,7 @@ var BrowserPrototype = {
 
 		return this
 	},
+	*/
 
 	// update (load) path...
 	// 	- build the path
