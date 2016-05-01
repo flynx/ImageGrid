@@ -206,8 +206,8 @@ var SingleImageActions = actions.Actions({
 		// Set scale 'units' for different viewes...
 		//
 		// NOTE: the units are actually properties used to get/set the values.
-		'single-image-scale-unit': 'screenwidth',
-		'ribbon-scale-unit': 'screenfit',
+		'single-image-scale-unit': 'screenfit',
+		'ribbon-scale-unit': 'screenwidth',
 
 		// The threshold from which the image block starts to tend to 
 		// screen proportions...
@@ -252,30 +252,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 	actions: SingleImageActions,
 
 	handlers:[
-		// XXX HACK: force browser to redraw off-screen images...
-		// 		...it appears that chrome cheats by not resizing off-screen
-		// 		images properly after changing scale...
-		// 		XXX this is still not perfect...
-		// 			...if needed do a .reload() / ctrl-r
-		// XXX try doing this a timeout after resize....
-		['focusImage',
-			function(){
-				var img = this.ribbons.getImage()
-				var d = Math.max(img.attr('preview-width')*1, img.attr('preview-width')*1)
-				var D = this.ribbons.getVisibleImageSize('max')
-
-				if(this.config['-single-image-redraw-on-focus']
-						// NOTE: redraw only when close to original preview
-						// 		size -- this is where chrome cheats and 
-						// 		shows images blurry...
-						// XXX this causes some images to jump a bit, aligning 
-						// 		to nearest pixel might fix this...
-						&& Math.abs(D-d)/D < 0.30
-						&& this.toggleSingleImage('?') == 'on'){
-					this.scale = this.scale
-				}
-			}],
-		['fitImage.post setScale.post',
+		['resizing.post',
 			function(){ 
 				// prevent this from doing anything while no viewer...
 				if(!this.ribbons 
@@ -321,6 +298,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 						if(state != pre_state){
 							this.config['ribbon-scale'] = 
 								this[this.config['ribbon-scale-unit']] 
+
 							this[this.config['single-image-scale-unit']] =
 								this.config['single-image-scale']
 									|| this[this.config['single-image-scale-unit']]
@@ -346,11 +324,49 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 						if(state != pre_state){
 							this.config['single-image-scale'] = 
 								this[this.config['single-image-scale-unit']]
+
 							this[this.config['ribbon-scale-unit']] =
 								this.config['ribbon-scale']
 									|| this[this.config['ribbon-scale-unit']] 
 						}
 					}
+				}
+			}],
+
+		// Force browser to redraw off-screen images...
+		//
+		// This appears that chrome cheats by not resizing off-screen
+		// images properly after changing scale...
+		//
+		// XXX this is still not perfect...
+		// 		...if needed do a .reload() / ctrl-r
+		[[
+			'resizing.post',
+			'toggleSingleImage.pre', 
+		], 
+			function(){ 
+				this.__did_resize = true 
+			}],
+		[[
+			'focusImage', 
+			'toggleSingleImage',
+		], 
+			function(){
+				var img = this.ribbons.getImage()
+				var d = Math.max(img.attr('preview-width')*1, img.attr('preview-width')*1)
+				var D = this.ribbons.getVisibleImageSize('max')
+
+				if(this.config['-single-image-redraw-on-focus']
+						&& this.toggleSingleImage('?') == 'on'
+						&& this.__did_resize
+						// only when close to original preview size
+						&& Math.abs(D-d)/D < 0.30){
+
+					// this forces chrome to redraw off-screen images...
+					this.scale = this.scale
+
+					// reset the resize flag...
+					delete this.__did_resize
 				}
 			}],
 	],

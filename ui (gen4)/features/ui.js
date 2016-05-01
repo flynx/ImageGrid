@@ -175,41 +175,60 @@ module.ViewerActions = actions.Actions({
 		'ribbon-focus-mode': 'visual',
 	},
 
-	// Images...
-	// XXX this seems like a hack...
-	// 		...should this be here???
-	get images(){
-		return this.ribbons != null ? this.ribbons.images : null
+	// Ribbons...
+	//
+	// NOTE: this expects that ribbons will maintain .parent.images...
+	// NOTE: when getting rid of ribbons need to also remove the .parent
+	// 		reference...
+	get ribbons(){
+		return this.__ribbons },
+	set ribbons(ribbons){
+		this.__ribbons = ribbons
+		ribbons.parent = this
 	},
-	// NOTE: if ribbons are null this will have no effect...
-	set images(value){
-		if(this.ribbons != null){
-			this.ribbons.images = value
+
+	// Current image data...
+	//
+	// XXX experimental...
+	get image(){
+		return this.images && this.images[this.current] },
+	set image(val){
+		if(this.images){
+			this.images[this.current] = val
 		}
 	},
 
+	// Scaling...
+	//
+	// Normal scale...
 	get scale(){
-		return this.ribbons != null ? this.ribbons.scale() : null
-	},
+		return this.ribbons != null ? this.ribbons.scale() : null },
 	set scale(s){
-		this.setScale(s)
-	},
-
+		this.setScale(s) },
+	
+	// Screen width in image blocks...
+	//
+	// NOTE: this will change depending on image block sizing...
+	// NOTE: this not usable for image blocks of different sizes...
 	get screenwidth(){
-		return this.ribbons != null ? this.ribbons.getScreenWidthImages() : null
-	},
+		return this.ribbons != null ? this.ribbons.getScreenWidthImages() : null },
 	set screenwidth(n){
-		this.fitImage(n)
-	},
+		this.fitImage(n, false) },
 
+	// Screen height in image blocks...
 	get screenheight(){
-		return this.ribbons != null ? this.ribbons.getScreenHeightRibbons() : null
-	},
+		return this.ribbons != null ? this.ribbons.getScreenHeightRibbons() : null },
 	set screenheight(n){
-		this.fitRibbon(n, false)
-	},
+		this.fitRibbon(n, false) },
 
-	// this is the size in image radii on the narrow side of the screen...
+	// Screen size in image radii on the narrow side of the screen...
+	//
+	// E.g.
+	//
+	// 						min(screenwidth, screenheight)	
+	// 		screenfit = --------------------------------------
+	// 						min(image.width, image.height)
+	//
 	get screenfit(){
 		if(!this.ribbons || !this.ribbons.viewer){
 			return null
@@ -569,16 +588,65 @@ module.ViewerActions = actions.Actions({
 			this.nextImage(w)
 		}],
 
-	// zooming...
+
+	// Zooming/scaling root action...
+	//
+	// Protocol:
+	// 	- all root zoom/scale action bust be wrapped in the .resizing action
+	//
+	// This will enable clients to attach to a single in/out point.
+	//
+	// NOTE: not intended for direct use...
+	resizing: ['- Zoom/', function(){}],
+
+	// Root zoom/sclae actions...
 	//
 	// XXX need to account for animations...
 	setScale: ['- Zoom/',
 		function(scale){
-			this.ribbons && scale && this.ribbons.scale(scale)
-
-			this.refresh()
+			this.resizing.chainCall(this, function(){
+				this.ribbons && scale && this.ribbons.scale(scale)
+				this.refresh()
+			})
+		}],
+	fitOrig: ['Zoom/Fit to original scale',
+		function(){ 
+			this.resizing.chainCall(this, function(){
+				this.ribbons.scale(1) 
+				this.refresh()
+			})
+		}],
+	// NOTE: if this gets a count argument it will fit count images, 
+	// 		default is one.
+	// NOTE: this will add .config['fit-overflow'] to odd counts if no 
+	// 		overflow if passed.
+	// 		...this is done to add ability to control scroll indication.
+	fitImage: ['Zoom/Fit image',
+		function(count, overflow){
+			this.resizing.chainCall(this, function(){
+				if(count != null){
+					overflow = overflow == false ? 0 : overflow
+					var o = overflow != null ? overflow 
+						: count % 2 != 1 ? 0
+						: (this.config['fit-overflow'] || 0)
+					count += o
+				}
+				this.ribbons.fitImage(count)
+				this.refresh()
+			})
+		}],
+	// NOTE: this does not accout for ribbon spacing...
+	fitRibbon: ['Zoom/Fit ribbon vertically',
+		function(count, whole){
+			this.resizing.chainCall(this, function(){
+				this.ribbons.fitRibbon(count, whole)
+				this.refresh()
+			})
 		}],
 
+
+	// Zooming...
+	//
 	// Zooming is done by multiplying the current scale by config['zoom-step']
 	// and rounding to nearest discrete number of images to fit on screen.
 	zoomIn: ['Zoom/Zoom in',
@@ -609,49 +677,17 @@ module.ViewerActions = actions.Actions({
 				this.scale /= (this.config['zoom-step'] || 1.2)
 			}
 		}],
-	fitOrig: ['Zoom/Fit to original scale',
-		function(){ 
-			this.ribbons.scale(1) 
-			this.refresh()
-		}],
-	// NOTE: if this gets a count argument it will fit count images, 
-	// 		default is one.
-	// NOTE: this will add .config['fit-overflow'] to odd counts if no 
-	// 		overflow if passed.
-	// 		...this is done to add ability to control scroll indication.
-	//
-	// XXX make these neutral to screen and image proportions...
-	fitImage: ['Zoom/Fit image',
-		function(count, overflow){
-			if(count != null){
-				overflow = overflow == false ? 0 : overflow
-				var o = overflow != null ? overflow 
-					: count % 2 != 1 ? 0
-					: (this.config['fit-overflow'] || 0)
-				count += o
-			}
-			this.ribbons.fitImage(count)
-			this.refresh()
-		}],
 
+	// Scale presets...
+	//
 	fitMax: ['Zoom/Fit the maximum number of images',
 		function(){ this.fitImage(this.config['max-screen-images']) }],
-
-	// XXX make this viewer/image proportion independent....
 	fitSmall: ['Zoom/Show small image',
 		function(){ this.screenfit = 4 }],
-	// XXX make this viewer/image proportion independent....
 	fitNormal: ['Zoom/Show normal image',
 		function(){ this.screenfit = 1.2 }],
 	fitScreen: ['Zoom/Fit image to screen',
 		function(){ this.screenfit = 1 }],
-
-
-	fitRibbon: ['Zoom/Fit ribbon vertically',
-		function(count, whole){
-			this.ribbons.fitRibbon(count, whole)
-			this.refresh()
-		}],
 
 
 	// NOTE: these work by getting the target position from .data...
@@ -1456,7 +1492,7 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 				this.updateRibbon('current', this.screenwidth / s || 1)
 				//this.preCacheJumpTargets()
 			}],
-		['fitImage.pre', 
+		['resizing.pre', 
 			function(n){
 				this.updateRibbon('current', n || 1)
 				//this.preCacheJumpTargets()
@@ -2088,7 +2124,7 @@ module.AutoSingleImage = core.ImageGridFeatures.Feature({
 	},
 
 	handlers: [
-		['fitImage.pre',
+		['resizing.pre',
 			function(count){
 				count = count || 1
 

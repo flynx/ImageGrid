@@ -300,6 +300,34 @@ var RibbonsPrototype = {
 	setElemGID: RibbonsClassPrototype.setElemGID,
 
 
+	get parent(){
+		return this.__parent
+	},
+	// NOTE: this will reset locally referenced .images to .parent.images
+	set parent(parent){
+		this.__parent = parent
+
+		delete this.__images
+	},
+
+	// maintain images in .parent.images if available...
+	//
+	// NOTE: images can be stored locally if no parent is set but will 
+	// 		get overridden as soon as .parent is set.
+	get images(){
+		return this.parent ? this.parent.images : this.__images
+	},
+	set images(images){
+		if(this.parent){
+			this.parent.images = images
+			delete this.__images
+
+		} else {
+			this.__images = images
+		}
+	},
+
+
 	// Helpers...
 
 	// Prevent CSS transitions...

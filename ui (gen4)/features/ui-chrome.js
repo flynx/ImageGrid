@@ -310,7 +310,8 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 		// 	- before animation when scaling up
 		// 	- after when scaling down
 		// This is done to make the visuals consistent...
-		['fitImage.pre fitRibbon.pre setScale.pre',
+		//['fitImage.pre fitRibbon.pre setScale.pre',
+		['resizing.pre',
 			function(w1){ 
 				var w0 = this.screenwidth
 				w1 = w1 || 1

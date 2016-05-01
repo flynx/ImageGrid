@@ -270,70 +270,14 @@ function Action(name, doc, ldoc, func){
 
 	// create the actual instance we will be returning...
 	var meth = function(){
-		var that = this
-		var args = args2array(arguments)
-		var res = this
-
-		var getHandlers = this.getHandlers || MetaActions.getHandlers
-		var isToggler = this.isToggler || MetaActions.isToggler
-
-		// get the handler list...
-		var handlers = getHandlers.call(this, name)
-
-		// special case: toggler -- do not handle special args...
-		if(isToggler.call(this, name)
-				&& args.length == 1 
-				&& (args[0] == '?' || args[0] == '??')){
-			return handlers.slice(-1)[0].pre.apply(this, args)
-		}
-
-		// handlers: pre phase...
-		handlers
-			// NOTE: current action will get included and called by the code 
-			// 		above and below, so no need to explicitly call func...
-			// NOTE: pre handlers are called FIFO, i.e. the last defined first... 
-			.map(function(a){
-				if(a.pre){
-					res = a.pre.apply(that, args)
-
-					// if a handler returns a function or a deferred, 
-					// register is as a post handler...
-					if(res 
-							&& res !== that 
-							&& (res instanceof Function 
-								|| res.resolve instanceof Function)){
-						a.post = res
-
-						// reset the result...
-						res = that
-					}
-				}
-				return a
-			})
-
-		// return this if nothing specific is returned...
-		res = res === undefined ? this : res
-		// the post handlers get the result as the first argument...
-		args.splice(0, 0, res)
-
-		// handlers: post phase...
-		handlers
-			// NOTE: post handlers are called LIFO -- last defined last...
-			.reverse()
-			.forEach(function(a){
-				a.post
-					&& (a.post.resolve ? 
-							a.post.resolve.apply(a.post, args)
-						: a.post.apply(that, args))
-			})
-
-		// action result...
-		return res
-	}
+		return meth.chainApply(this, null, arguments) }
 	meth.__proto__ = this.__proto__
 
 	// populate the action attributes...
-	meth.name = name
+	//meth.name = name
+	Object.defineProperty(meth, 'name', {
+		value: name,
+	})
 	meth.doc = doc
 	meth.long_doc = ldoc
 
@@ -344,6 +288,84 @@ function Action(name, doc, ldoc, func){
 // this will make action instances behave like real functions...
 Action.prototype.__proto__ = Function
 
+// XXX revise the structure....
+// 		...is it a better idea to define these in an object and assign that???
+Action.prototype.chainApply = function(context, inner, args){
+	args = [].slice.call(args || [])
+	var res = context
+	var outer = this.name
+
+	var getHandlers = context.getHandlers || MetaActions.getHandlers
+	var isToggler = context.isToggler || MetaActions.isToggler
+
+	// get the handler list...
+	var handlers = getHandlers.call(context, outer)
+
+	// special case: toggler -- do not handle special args...
+	if(isToggler.call(context, outer)
+			&& args.length == 1 
+			&& (args[0] == '?' || args[0] == '??')){
+		return handlers.slice(-1)[0].pre.apply(context, args)
+	}
+
+	// handlers: pre phase...
+	handlers
+		// NOTE: current action will get included and called by the code 
+		// 		above and below, so no need to explicitly call func...
+		// NOTE: pre handlers are called FIFO, i.e. the last defined first... 
+		.map(function(a){
+			if(a.pre){
+				res = a.pre.apply(context, args)
+
+				// if a handler returns a function or a deferred, 
+				// register is as a post handler...
+				if(res 
+						&& res !== context 
+						&& (res instanceof Function 
+							|| res.resolve instanceof Function)){
+					a.post = res
+
+					// reset the result...
+					res = context
+				}
+			}
+			return a
+		})
+
+	// call the inner action/function if preset....
+	if(inner){
+		//res = inner instanceof Function ? 
+		inner instanceof Function ? 
+				inner.call(context, args)
+			: inner instanceof Array && inner.length > 0 ? 
+				context[inner.pop()].chainCall(context, inner, args)
+			: typeof(inner) == typeof('str') ?
+				context[inner].chainCall(context, null, args)
+			: null
+	}
+
+	// return this if nothing specific is returned...
+	res = res === undefined ? context : res
+	// the post handlers get the result as the first argument...
+	args.splice(0, 0, res)
+
+	// handlers: post phase...
+	handlers
+		// NOTE: post handlers are called LIFO -- last defined last...
+		.reverse()
+		.forEach(function(a){
+			a.post
+				&& (a.post.resolve ? 
+						a.post.resolve.apply(a.post, args)
+					: a.post.apply(context, args))
+		})
+
+	// action result...
+	return res
+}
+Action.prototype.chainCall = function(context, inner){
+	return this.chainApply(context, inner, args2array(arguments).slice(2))
+}
 
 
 // A base action-set object...
@@ -403,7 +425,7 @@ module.MetaActions = {
 			// go up the proto chain...
 			while(cur.__proto__ != null){
 				if(cur[n] != null && cur[n].doc != null){
-					res[n] = [ cur[n].doc, cur[n].long_doc ]
+					res[n] = [ cur[n].doc, cur[n].long_doc, cur[n].name ]
 					break
 				}
 				cur = cur.__proto__
@@ -515,7 +537,6 @@ module.MetaActions = {
 	// For more info on togglers see: lib/toggler.js
 	isToggler: doWithRootAction(function(action){
 		return action instanceof toggler.Toggler }),
-
 
 	// Register an action callback...
 	//
@@ -704,6 +725,36 @@ module.MetaActions = {
 		return this
 	},
 
+	// Apply/call a function/action "inside" an action...
+	//
+	// 	.chainApply(outer, inner)
+	// 	.chainApply(outer, inner, arguments)
+	// 		-> result
+	//
+	// 	.chainCall(outer, inner)
+	// 	.chainCall(outer, inner, ..)
+	// 		-> result
+	//
+	//
+	// The inner action call is completely nested as base of the outer 
+	// action.
+	//
+	//		Outer action		o-------x		o-------x
+	//									v		^
+	//		Inner action				o---|---x
+	//
+	// The given arguments are passed as-is to both the outer and inner
+	// actions.
+	// The base inner action return value is passed to the outer action
+	// .post handlers.
+	//
+	// NOTE: these call the action's .chainApply(..) and .chainCall(..)
+	// 		methods, thus is not compatible with non-action methods...
+	// NOTE: .chianCall('action', ..) is equivalent to .action.chianCall(..)
+	chainApply: function(outer, inner, args){
+		return this[outer].chainApply(this, inner, args) },
+	chainCall: function(outer, inner){
+		return this[outer].chainApply(this, inner, args2array(arguments).slice(2)) },
 
 	// Get mixin object in inheritance chain...
 	//
