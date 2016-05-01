@@ -592,12 +592,36 @@ module.ViewerActions = actions.Actions({
 	// Zooming/scaling root action...
 	//
 	// Protocol:
-	// 	- all root zoom/scale action bust be wrapped in the .resizing action
+	// 	- a compliant action must be wrapped in the .resizing action
+	// 	- a compliant action must pass the sizing unit, value and 
+	// 		overflow to the wrapping action.
+	//
+	// Example:
+	//	actionName: ['...',
+	//		function(value){
+	//			this.resizing.chainCall(this, function(){
+	//
+	//				// action code...
+	//
+	//			}, 
+	//			// action unit...
+	//			'scale', 
+	//			// action value...
+	//			scale)
+	//		}],
+	//
 	//
 	// This will enable clients to attach to a single in/out point.
 	//
 	// NOTE: not intended for direct use...
-	resizing: ['- Zoom/', function(){}],
+	resizing: ['- Zoom/', function(unit, size, overflow){
+		// This is a resizing protocol root function.
+		//
+		// This will never be used directly, but will wrap protocol user
+		// functions.
+		//
+		// As an example see: .setScale(..)
+	}],
 
 	// Root zoom/sclae actions...
 	//
@@ -607,14 +631,14 @@ module.ViewerActions = actions.Actions({
 			this.resizing.chainCall(this, function(){
 				this.ribbons && scale && this.ribbons.scale(scale)
 				this.refresh()
-			})
+			}, 'scale', scale)
 		}],
 	fitOrig: ['Zoom/Fit to original scale',
 		function(){ 
 			this.resizing.chainCall(this, function(){
 				this.ribbons.scale(1) 
 				this.refresh()
-			})
+			}, 'scale', 1)
 		}],
 	// NOTE: if this gets a count argument it will fit count images, 
 	// 		default is one.
@@ -633,7 +657,7 @@ module.ViewerActions = actions.Actions({
 				}
 				this.ribbons.fitImage(count)
 				this.refresh()
-			})
+			}, 'screenwidth', count, overflow)
 		}],
 	// NOTE: this does not accout for ribbon spacing...
 	fitRibbon: ['Zoom/Fit ribbon vertically',
@@ -641,7 +665,7 @@ module.ViewerActions = actions.Actions({
 			this.resizing.chainCall(this, function(){
 				this.ribbons.fitRibbon(count, whole)
 				this.refresh()
-			})
+			}, 'screenheight', count, whole)
 		}],
 
 
@@ -1487,31 +1511,31 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 			function(_, target){
 				this.preCacheJumpTargets(target)
 			}],
-		['setScale.pre', 
-			function(s){
-				this.updateRibbon('current', this.screenwidth / s || 1)
-				//this.preCacheJumpTargets()
-			}],
-		['resizing.pre', 
-			function(n){
-				this.updateRibbon('current', n || 1)
-				//this.preCacheJumpTargets()
-			}],
-		['fitRibbon.pre', 
-			function(n){
-				n = n || 1
 
-				// convert target height in ribbons to width in images...
-				// NOTE: this does not account for compensation that 
-				// 		.updateRibbon(..) makes for fitting whole image
-				// 		counts, this is a small enough error so as not
-				// 		to waste time on...
-				var s = this.ribbons.scale()
-				var h = this.ribbons.getScreenHeightRibbons()
-				var w = this.ribbons.getScreenWidthImages()
-				var nw = w / (h/n)
+		['resizing.pre',
+			function(unit, size){
+				if(unit == 'scale'){
+					this.updateRibbon('current', this.screenwidth / size || 1)
 
-				this.updateRibbon('current', nw)
+				} else if(unit == 'screenwidth'){
+					this.updateRibbon('current', size || 1)
+
+				} else if(unit == 'screenheight'){
+					size = size || 1
+
+					// convert target height in ribbons to width in images...
+					// NOTE: this does not account for compensation that 
+					// 		.updateRibbon(..) makes for fitting whole image
+					// 		counts, this is a small enough error so as not
+					// 		to waste time on...
+					var s = this.ribbons.scale()
+					var h = this.ribbons.getScreenHeightRibbons()
+					var w = this.ribbons.getScreenWidthImages()
+					var nw = w / (h/size)
+
+					this.updateRibbon('current', nw)
+				}
+
 				//this.preCacheJumpTargets()
 			}],
 	],

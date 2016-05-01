@@ -87,6 +87,9 @@ var object = require('lib/object')
 // 		<action-set>.getDoc(<action-name>[, ..])
 // 				-> dict of action-name, doc
 //
+// 		<action-set>.a.getHandlerDocStr(<action-name>)
+// 				-> formated string of action handlers
+//
 // 		<action-set>.actions
 // 				-> list of action names
 //

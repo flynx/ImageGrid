@@ -18,6 +18,14 @@ var toggler = require('lib/toggler')
 
 /*********************************************************************/
 
+var protocolAction =
+module.protocol = function(protocol, func){
+	return function(){
+		this[protocol].chainCall(this, func, arguments)
+	}
+}
+
+
 // NOTE: if not state is set this assumes that the first state is the 
 // 		default...
 var makeConfigToggler = 
