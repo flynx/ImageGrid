@@ -257,6 +257,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 		// 		images properly after changing scale...
 		// 		XXX this is still not perfect...
 		// 			...if needed do a .reload() / ctrl-r
+		// XXX try doing this a timeout after resize....
 		['focusImage',
 			function(){
 				var img = this.ribbons.getImage()
@@ -388,9 +389,12 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 						return
 					}
 
-					this.scale = this.toggleSingleImage('?') == 'on' ? 
-						iscale 
-						: rscale
+					if(this.toggleSingleImage('?') == 'on'){
+						this[this.config['single-image-scale-unit']] = iscale
+
+					} else {
+						this[this.config['ribbon-scale-unit']] = rscale
+					}
 				}
 			}],
 	],
