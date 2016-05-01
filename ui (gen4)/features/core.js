@@ -227,6 +227,42 @@ module.LifeCycle = ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// Introspection...
+
+// Indicate that an action is not intended for direct use...
+//
+// NOTE: this will not do anything but mark the action.
+var notUserCallable =
+module.notUserCallable = function(func){
+	func.__not_user_callable__ = true
+	return func
+}
+
+
+var IntrospectionActions = actions.Actions({
+	// user-callable actions...
+	get useractions(){
+		return this.actions.filter(this.isUserCallable.bind(this)) },
+
+	// check if action is callable by user...
+	isUserCallable: ['- System/',
+		actions.doWithRootAction(function(action){
+			return action.__not_user_callable__ != true })],
+})
+
+
+var Introspection = 
+module.Introspection = ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'introspection',
+
+	actions: IntrospectionActions,
+})
+
+
+
+//---------------------------------------------------------------------
 // Workspace...
 //
 // Basic protocol:

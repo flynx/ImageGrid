@@ -925,6 +925,7 @@ module.ImageGroup = core.ImageGridFeatures.Feature({
 
 // full features base...
 core.ImageGridFeatures.Feature('base-full', [
+	'introspection',
 	'base',
 	'tags',
 	'sort',
