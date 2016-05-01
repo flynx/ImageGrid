@@ -95,7 +95,8 @@ function updateImageProportions(){
 	// outer diameter -- (m)ax
 	var dm = Math.max(h, w)
 	
-	var c = Math.min(this.screenwidth, this.screenheight)
+	//var c = Math.min(this.screenwidth, this.screenheight)
+	var c = this.screenfit 
 
 	// change proportions...
 	if(c < threshold){
@@ -196,10 +197,25 @@ function updateImageProportions(){
 
 var SingleImageActions = actions.Actions({
 	config: {
+		// View scale...
+		//
 		// NOTE: these will get overwritten if/when the user changes the scale...
 		'single-image-scale': null,
 		'ribbon-scale': null,
 
+		// Set scale 'units' for different viewes...
+		//
+		// NOTE: the units are actually properties used to get/set the values.
+		'single-image-scale-unit': 'screenwidth',
+		'ribbon-scale-unit': 'screenfit',
+
+		// The threshold from which the image block starts to tend to 
+		// screen proportions...
+		// 	- Above this the block is square.
+		// 	- At 1 the block is the same proportions as the screen.
+		// 	- between this and 1 the block is proportionally between a
+		// 		square and screen proportions.
+		//
 		// NOTE: setting this to null or to -1 will disable the feature...
 		'single-image-proportions-threshold': 2,
 
@@ -271,10 +287,12 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 				if(this.toggleSingleImage('?') == 'on'){
 					updateImageProportions.call(this)
 
-					this.config['single-image-scale'] = this.scale
+					this.config['single-image-scale'] = 
+						this[this.config['single-image-scale-unit']]
 
 				} else {
-					this.config['ribbon-scale'] = this.scale
+					this.config['ribbon-scale'] = 
+						this[this.config['ribbon-scale-unit']] 
 				}
 			}],
 		// update new images...
@@ -298,14 +316,16 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 					// singe image mode -- set image proportions...
 					if(state == 'on'){
-						updateImageProportions.call(this)
-
 						// update scale...
 						if(state != pre_state){
-							var s = this.scale
-							this.config['ribbon-scale'] = s
-							this.scale = this.config['single-image-scale'] || s
+							this.config['ribbon-scale'] = 
+								this[this.config['ribbon-scale-unit']] 
+							this[this.config['single-image-scale-unit']] =
+								this.config['single-image-scale']
+									|| this[this.config['single-image-scale-unit']]
 						}
+
+						updateImageProportions.call(this)
 
 					// ribbon mode -- restore original image size...
 					} else {
@@ -323,9 +343,11 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 						// update scale...
 						if(state != pre_state){
-							var s = this.scale
-							this.config['single-image-scale'] = s
-							this.scale = this.config['ribbon-scale'] || s
+							this.config['single-image-scale'] = 
+								this[this.config['single-image-scale-unit']]
+							this[this.config['ribbon-scale-unit']] =
+								this.config['ribbon-scale']
+									|| this[this.config['ribbon-scale-unit']] 
 						}
 					}
 				}
@@ -353,8 +375,10 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 				// 		we need to save these for when it is, thus avoiding
 				// 		stray actions overwriting the config with defaults
 				// 		when not finding a value in the viewer...
-				var rscale = this.config['ribbon-scale'] || this.scale
-				var iscale = this.config['single-image-scale'] || this.scale
+				var rscale = this.config['ribbon-scale']
+					|| this[this.config['ribbon-scale-unit']] 
+				var iscale = this.config['single-image-scale']
+					|| this[this.config['single-image-scale-unit']]
 
 				return function(){
 					// prevent this from doing anything while no viewer...

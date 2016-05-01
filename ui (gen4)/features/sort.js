@@ -22,6 +22,7 @@ var browse = require('lib/widget/browse')
 
 /*********************************************************************/
 
+// XXX add sorting on load....
 var SortActions = 
 module.SortActions = actions.Actions({
 	config: {
@@ -392,6 +393,9 @@ module.Sort = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX add ability to partition ribbons in different modes...
+// 		- by hour/day/month/year in date modes...
+// 		- ???
 var SortUIActions = actions.Actions({
 	// XXX should we be able to edit modes??? 
 	sortDialog: ['Edit|Sort/Sort images...',

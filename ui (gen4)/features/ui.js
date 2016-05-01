@@ -206,9 +206,34 @@ module.ViewerActions = actions.Actions({
 		return this.ribbons != null ? this.ribbons.getScreenHeightRibbons() : null
 	},
 	set screenheight(n){
-		this.fitRibbon(n)
+		this.fitRibbon(n, false)
 	},
 
+	// this is the size in image radii on the narrow side of the screen...
+	get screenfit(){
+		if(!this.ribbons || !this.ribbons.viewer){
+			return null
+		}
+		var viewer = this.ribbons.viewer
+		var W = viewer.width()
+		var H = viewer.height()
+
+		return W < H ?
+			this.screenwidth
+			: this.screenheight
+	},
+	set screenfit(n){
+		var viewer = this.ribbons.viewer
+		var W = viewer.width()
+		var H = viewer.height()
+
+		if(W < H){
+			this.screenwidth = n
+
+		} else {
+			this.screenheight = n
+		}
+	},
 
 	load: [
 		function(data){
@@ -614,17 +639,17 @@ module.ViewerActions = actions.Actions({
 
 	// XXX make this viewer/image proportion independent....
 	fitSmall: ['Zoom/Show small image',
-		function(){ this.fitImage(5, 0) }],
+		function(){ this.screenfit = 4 }],
 	// XXX make this viewer/image proportion independent....
 	fitNormal: ['Zoom/Show normal image',
-		function(){ this.fitImage(1.5, 0) }],
+		function(){ this.screenfit = 1.2 }],
 	fitScreen: ['Zoom/Fit image to screen',
-		function(){ this.fitImage(1, 0) }],
+		function(){ this.screenfit = 1 }],
 
 
 	fitRibbon: ['Zoom/Fit ribbon vertically',
-		function(count){
-			this.ribbons.fitRibbon(count)
+		function(count, whole){
+			this.ribbons.fitRibbon(count, whole)
 			this.refresh()
 		}],
 
