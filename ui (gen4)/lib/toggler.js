@@ -317,6 +317,7 @@ function(elem, state_accessor, states, callback_a, callback_b){
 		}
 	}
 
+
 	func.__proto__ = Toggler.prototype
 	func.constructor = Toggler
 

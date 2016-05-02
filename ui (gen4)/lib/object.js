@@ -166,8 +166,12 @@ function makeConstructor(name, a, b){
 		return obj
 	}
 
-	// this is here to make Chrome output more user friendly...
-	// skip for IE...
+	Object.defineProperty(_constructor, 'name', {
+		value: name,
+	})
+
+	// just in case the browser refuses to change the name, we'll make it
+	// a different offer ;)
 	if(_constructor.name == 'Constructor'){
 			// skip for chrome app...
 			//&& !(window.chrome && chrome.runtime && chrome.runtime.id)){

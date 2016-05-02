@@ -8,9 +8,9 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-args2array = require('lib/util').args2array
+var args2array = require('lib/util').args2array
 
-actions = require('lib/actions')
+var actions = require('lib/actions')
 
 
 

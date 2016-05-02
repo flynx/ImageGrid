@@ -470,6 +470,16 @@ var DialogsActions = actions.Actions({
 			// XXX
 			console.error('Not yet implemented.')
 		})],
+
+	// like panel but drop down from mouse location or specified position
+	DropDown: ['- Interface/',
+		makeUIContainer(function(dialog, options){
+			// XXX
+			console.error('Not yet implemented.')
+		})],
+
+	// XXX STUB -- need a real panel with real docking and closing 
+	// 		ability... 
 	// XXX need to:
 	// 		- dock panels
 	// 		- save panel state (position, collapse, dock, ...)
@@ -477,7 +487,30 @@ var DialogsActions = actions.Actions({
 	Panel: ['- Interface/',
 		makeUIContainer(function(dialog, options){
 			// XXX
-			console.error('Not yet implemented.')
+			//console.error('Not yet implemented.')
+
+			var panel = {
+				client: dialog,
+				dom: $('<div>')
+					.append(dialog.dom || dialog)
+					.appendTo(this.ribbons.viewer)
+					.draggable(),
+				close: function(func){
+					if(func){
+						this.dom.on('close', func)
+					} else {
+						this.dom.trigger('close')
+						this.dom.remove()
+					}
+					return this
+				},
+			}
+
+			dialog.on('blur', function(){
+				panel.close()
+			})
+
+			return panel
 		})],
 
 	

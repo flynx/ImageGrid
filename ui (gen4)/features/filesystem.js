@@ -24,6 +24,7 @@ var util = require('lib/util')
 
 var actions = require('lib/actions')
 var features = require('lib/features')
+var keyboard = require('lib/keyboard')
 
 var core = require('features/core')
 

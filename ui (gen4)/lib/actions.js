@@ -79,7 +79,7 @@ var object = require('lib/object')
 //
 //
 //
-// The action system provides three components:
+// The action system provides these components:
 //
 // 1) Documentation generation and introspection (MetaActions)
 //
@@ -126,6 +126,61 @@ var object = require('lib/object')
 //		but is implicit, and not dependant on the original containing 
 //		object name/reference ('O'), thus enabling an action to be 
 //		referenced and called from any object and still chain correctly.
+//
+//
+// 4) A mechanism to chain/wrap actions or an action and a function.
+// 	This enables us to call a callback or another action (inner) between 
+// 	the root action's (outer) pre and post stages.
+//
+//		Outer action				o-------x		o-------x
+//											v		^
+//		Inner action/callback				o---|---x
+//
+//	A trivial example:
+//
+//		actionSet.someAction.chainApply(actionsSet, 
+//			function(){
+//				// this gets run between someAction's pre and post 
+//				// stages...
+//			}, 
+//			args)
+//
+//	This is intended to implement protocols where a single action is
+//	intended to act as a hook point (outer) and multiple different 
+//	implementations (inner) within a single action set can be used as
+//	entry points.
+//
+//		// Protocol root action (outer) definition...
+//		protocolAction: [function(){}],
+//
+//		// Implementation actions (inner)...
+//		implementationAction1: [function(){
+//			return this.protocolAction.chainApply(this, function(){
+//				// ...
+//			}, ..)
+//		}]
+//
+//		implementationAction2: [function(){
+//			return this.protocolAction.chainApply(this, function(){
+//				// ...
+//			}, ..)
+//		}]
+//
+//	Now calling any of the 'implementation' actions will execute code
+//	in the following order:
+//		1) pre phase of protocol action (outer)
+//		2) implementation action (inner)
+//		3) post phase of protocol action (outer)
+//
+//	NOTE: this will not affect to protocol/signature of the outer action
+//		in any way.
+//	NOTE: both the inner and outer actions will get passed the same 
+//		arguments.
+//	NOTE: another use-case is testing/debugging actions.
+//	NOTE: this is effectively the inside-out of normal action overloading.
+//	NOTE: there is intentionally no shorthand for this feature, to avoid 
+//		confusion and to discourage the use of this feature unless
+//		really necessary.
 //
 //
 //
