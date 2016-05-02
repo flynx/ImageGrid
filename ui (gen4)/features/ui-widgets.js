@@ -430,6 +430,7 @@ var DialogsActions = actions.Actions({
 					o && o.focus()	
 				})
 		})],
+	// XXX should this be renamed to BottomDrawer???
 	Drawer: ['- Interface/',
 		makeUIContainer(function(dialog, options){
 			var parent = (options || {}).parentElement 
@@ -448,6 +449,27 @@ var DialogsActions = actions.Actions({
 			return d
 		})],
 	
+	// XXX not implemented yet...
+	TopDrawer: ['- Interface/',
+		makeUIContainer(function(dialog, options){
+			// XXX
+			console.error('Not yet implemented.')
+		})],
+	BottomDrawer: ['- Interface/',
+		makeUIContainer(function(dialog, options){
+			// XXX
+			console.error('Not yet implemented.')
+		})],
+	RightDrawer: ['- Interface/',
+		makeUIContainer(function(dialog, options){
+			// XXX
+			console.error('Not yet implemented.')
+		})],
+	LeftDrawer: ['- Interface/',
+		makeUIContainer(function(dialog, options){
+			// XXX
+			console.error('Not yet implemented.')
+		})],
 	// XXX need to:
 	// 		- dock panels
 	// 		- save panel state (position, collapse, dock, ...)
@@ -455,7 +477,7 @@ var DialogsActions = actions.Actions({
 	Panel: ['- Interface/',
 		makeUIContainer(function(dialog, options){
 			// XXX
-			console.error('Panels are not yet implemented.')
+			console.error('Not yet implemented.')
 		})],
 
 	
