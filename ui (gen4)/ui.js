@@ -11,6 +11,17 @@ window.nodejs = (typeof(process) === 'object' && process.features.uv)
 	: null
 
 
+// Add node_modules path outside of the packed nwjs code...
+//
+// This keeps the large node module set outside the zip thus speeding
+// up the loading process significantly...
+if(window.process || global.process && process.__nwjs){
+	var path = require('path')
+	require('app-module-path')
+		.addPath(path.dirname(process.execPath) + '/node_modules/')
+}
+
+
 // XXX for some reason requirejs does not fall back to node's require...
 if(nodejs){
 	var requirejs = require('requirejs')
