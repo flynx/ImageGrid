@@ -3,27 +3,23 @@
 *
 *
 **********************************************************************/
-
-window.nodejs = (typeof(process) === 'object' && process.features.uv) 
-	? {
-		require: window.require,
-	} 
-	: null
-
+// Pre-setup...
 
 // Add node_modules path outside of the packed nwjs code...
 //
 // This keeps the large node module set outside the zip thus speeding
 // up the loading process significantly...
-if(window.process || global.process && process.__nwjs){
+if((typeof(process) != 'undefined' ? process : {}).__nwjs){
 	var path = require('path')
 	require('app-module-path')
 		.addPath(path.dirname(process.execPath) + '/node_modules/')
 }
 
 
-// XXX for some reason requirejs does not fall back to node's require...
-if(nodejs){
+// Setup requirejs if we are in node/nw...
+//
+// NOTE: no need to do this in browser...
+if(typeof(process) != 'undefined'){
 	var requirejs = require('requirejs')
 
 	requirejs.config({
@@ -37,25 +33,13 @@ if(nodejs){
 
 
 
+/*********************************************************************/
+
 define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-var keyboard = require('lib/keyboard')
-var doc = keyboard.doc
-
-// compatibility...
-var browser = require('browser')
-var nw = require('nw')
-
-// XXX load only the actualy used here modules...
-var actions = require('lib/actions')
-var data = require('data')
-var ribbons = require('ribbons')
-
 var viewer = require('viewer')
-
-//var promise = require('promise')
 
 
 
@@ -104,7 +88,6 @@ $(function(){
 	// setup the viewer...
 	a
 		.load({ viewer: $('.viewer') })
-		.setEmptyMsg('Loading...')
 		.start()
 
 
@@ -118,13 +101,6 @@ $(function(){
 			// do not do for actual data...
 			//.syncTags()
 	}
-
-
-	// XXX calling a.clear() does not display this...
-	a.setEmptyMsg(
-		'Nothing loaded...',
-		'Press \'O\' to load, \'F1\' for help or \'?\' for keyboard mappings.')
-
 })
 
 

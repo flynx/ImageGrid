@@ -2374,11 +2374,6 @@ var RibbonsPrototype = {
 
 
 	setEmptyMsg: function(msg, help){
-		this.viewer
-			.attr({
-				'empty-msg': msg || '',
-				'empty-help': help || '',
-			})
 		this.getRibbonSet()
 			.attr({
 				'empty-msg': msg || '',

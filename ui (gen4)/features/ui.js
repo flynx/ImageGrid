@@ -374,10 +374,12 @@ module.ViewerActions = actions.Actions({
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config['ribbon-themes'] },
 			function(state){ this.config['ribbon-theme'] = state }) ],
+
+	/*
 	setEmptyMsg: ['- Interface/Set message to be displayed when nothing is loaded.',
 		function(msg, help){ this.ribbons 
-			&& this.ribbons.length > 0 
 			&& this.ribbons.setEmptyMsg(msg, help) }],
+	*/
 
 
 	// align modes...
