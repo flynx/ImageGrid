@@ -89,7 +89,9 @@ function(base){
 
 
 // XXX return a promise rather than an event emitter (???)
-function listJSON(path, pattern){
+var listJSON =
+module.listJSON =
+function(path, pattern){
 	pattern = pattern || '*'
 	return gGlob(path +'/'+ pattern +'.json')
 }
@@ -127,12 +129,215 @@ function loadJSON(path){
 }
 
 
+// Format:
+// 	{
+// 		<date>: [
+// 			<path>,
+// 			...
+// 		],
+//
+// 		...
+//
+// 		// root files -- no date...
+// 		root: [
+// 			<path>,
+// 			...
+// 		]
+// 	}
+//
+var groupByDate = 
+module.groupByDate = 
+function(list){
+	var res = {}
+
+	list
+		.forEach(function(n){
+			var b = pathlib.basename(n)
+			var s = b.split(/[-.]/g).slice(0, -1)
+
+			// no date set...
+			if(s.length == 1){
+				res.root = res.root || []
+				res.root.push(n)
+
+			} else {
+				res[s[0]] = res[s[0]] || []
+				res[s[0]].push(n)
+			}
+		})
+
+	return res
+}
+
+
+// Group file list by keyword...
+//
+// this will build a structure in the following format:
+// 	{
+// 		<keyword>: [
+// 			// diff files...
+// 			// NOTE: the first argument indicates 
+// 			//	if this is a diff or not, used to 
+// 			//	skip past the last base...
+// 			[true, <filename>],
+// 			...
+//
+// 			// base file (non-diff)
+// 			[false, <filename>]
+// 		],
+// 		...
+// 	}
+//
+// This is used to sequence, load and correctly merge 
+// the found JSON files.
+//
+// NOTE: all files past the first non-diff are skipped.
+var groupByKeyword = 
+module.groupByKeyword = 
+function(list, from_date, logger){
+	var index = {}
+	var queued = 0
+
+	var dates = groupByDate(list)
+
+	Object.keys(dates)
+		.sort()
+		.reverse()
+		// skip dates before from_date...
+		// NOTE: from_date is included...
+		.filter(function(d){ return from_date ? d <= from_date : true })
+		.forEach(function(d){
+			dates[d]
+				.sort()
+				.reverse()
+				.forEach(function(n){
+					var b = pathlib.basename(n)
+					var s = b.split(/[-.]/g).slice(0, -1)
+
+					// <timestamp>-<keyword>[-diff].json / diff / non-diff
+					// NOTE: all files without a timestamp are filtered out
+					// 		by groupByDate(..) into a .root section so we 
+					// 		do not need to worry about them here...
+					var k = s[1]
+					var d = s[2] == 'diff'
+
+					// new keyword...
+					if(index[k] == null){
+						index[k] = [[d, n]]
+						logger && logger.emit('queued', n)
+						queued += 1
+
+					// do not add anything past the latest non-diff 
+					// for each keyword...
+					} else if(index[k].slice(-1)[0][0] == true){
+						index[k].push([d, n])
+						logger && logger.emit('queued', n)
+						queued += 1
+					}
+				}) })
+
+	// add base files back where needed...
+	// <keyword>.json / non-diff
+	dates.root
+		.forEach(function(n){
+			var b = pathlib.basename(n)
+			var k = b.split(/\./g)[0]
+
+			// no diffs...
+			if(index[k] == null){
+				index[k] = [[false, n]]
+				logger && logger.emit('queued', n)
+				queued += 1
+
+			// add root file if no base is found...
+			} else if(index[k].slice(-1)[0][0] == true){
+				index[k].push([false, n])
+				logger && logger.emit('queued', n)
+				queued += 1
+			}
+		})
+
+	// remove the flags...
+	for(var k in index){
+		index[k] = index[k].map(function(e){ return e[1] })
+	}
+
+	// XXX revise...
+	index.__dates = Object.keys(dates)
+
+	logger && logger.emit('files-queued', queued, index)
+
+	return index
+}
+
+
+
+// XXX not yet working...
+// XXX handle errors....
+var loadSaveHistoryList =
+module.loadSaveHistoryList =
+function(path){
+	return new Promise(function(resolve, reject){
+		// direct index...
+		if(pathlib.basename(path) == index_dir){
+			listJSON(path)
+				// XXX handle errors...
+				.on('error', function(err){
+					logger && logger.emit('error', err)
+				})
+				.on('end', function(files){
+					var res = {}
+
+					resolve(Object.keys(groupByDate(files)))
+				})
+
+		// need to locate indexes...
+		} else {
+			var res = {}
+			var loaders = []
+
+			// XXX handle 'error' event...
+			listIndexes(path, index_dir)
+				// XXX handle errors...
+				.on('error', function(err){
+					logger && logger.emit('error', err)
+				})
+				// collect the found indexes...
+				.on('match', function(path){
+					loaders.push(loadSaveHistoryList(path) 
+						.then(function(obj){ 
+							// NOTE: considering that all the paths within
+							// 		the index are relative to the preview 
+							// 		dir (the parent dir to the index root)
+							// 		we do not need to include the index 
+							// 		itself in the base path...
+							var p = path.split(index_dir)[0]
+							res[p] = obj[path] 
+						}))
+				})
+				// done...
+				.on('end', function(paths){
+					// wait for all the loaders to complete...
+					Promise.all(loaders).then(function(){ resolve(res) })
+				})
+		}
+	})
+}
+
+
+
 // Load index(s)...
 //
 //	loadIndex(path)
 //		-> data
 //
 //	loadIndex(path, logger)
+//		-> data
+//
+//	loadIndex(path, index_dir, logger)
+//		-> data
+//
+//	loadIndex(path, index_dir, from_date, logger)
 //		-> data
 //
 //
@@ -201,8 +406,17 @@ function loadJSON(path){
 // XXX do a task version...
 var loadIndex =
 module.loadIndex = 
-function(path, index_dir, logger){
+function(path, index_dir, from_date, logger){
+	if(index_dir && index_dir.emit != null){
+		logger = index_dir
+		index_dir = from_date = null
+
+	} else if(from_date && from_date.emit != null){
+		logger = from_date
+		from_date = null
+	}
 	index_dir = index_dir || INDEX_DIR
+
 	// XXX should this be interactive (a-la EventEmitter) or as it is now 
 	// 		return the whole thing as a block (Promise)...
 	// 		NOTE: one way to do this is use the logger, it will get
@@ -221,98 +435,22 @@ function(path, index_dir, logger){
 				})
 				.on('end', function(files){
 					var res = {}
-					var index = {}
-					var root = {}
-					var queued = 0
 
-					logger && logger.emit('files-found', files.length, files)
-
-					// group by keyword...
-					//
-					// this will build a structure in the following format:
-					// 	{
-					// 		<keyword>: [
-					// 			// diff files...
-					// 			// NOTE: the first argument indicates 
-					// 			//	if this is a diff or not, used to 
-					// 			//	skip past the last base...
-					// 			[true, <filename>],
-					// 			...
-					//
-					// 			// base file (non-diff)
-					// 			[false, <filename>]
-					// 		],
-					// 		...
-					// 	}
-					//
-					// This is used to sequence, load and correctly merge 
-					// the found JSON files.
-					//
-					// NOTE: all files past the first non-diff are skipped.
-					files
-						.sort()
-						.reverse()
-						.forEach(function(n){
-							var b = pathlib.basename(n)
-							var s = b.split(/[-.]/g).slice(0, -1)
-
-							// <keyword>.json / non-diff
-							// NOTE: this is a special case, we add this to
-							// 		a separate index and then concat it to 
-							// 		the final list if needed...
-							if(s.length == 1){
-								var k = s[0]
-								root[k] = n 
-								return
-
-							// <timestamp>-<keyword>[-diff].json / diff / non-diff
-							} else {
-								var k = s[1]
-								var d = s[2] == 'diff'
-							}
-
-							// new keyword...
-							if(index[k] == null){
-								index[k] = [[d, n]]
-								logger && logger.emit('queued', n)
-								queued += 1
-
-							// do not add anything past the latest non-diff 
-							// for each keyword...
-							} else if(index[k].slice(-1)[0][0] == true){
-								index[k].push([d, n])
-								logger && logger.emit('queued', n)
-								queued += 1
-							}
-						})
-
-					// add base files back where needed...
-					Object.keys(root)
-						.forEach(function(k){
-							var n = root[k]
-
-							// no diffs...
-							if(index[k] == null){
-								index[k] = [[false, n]]
-								logger && logger.emit('queued', n)
-								queued += 1
-
-							// add root file if no base is found...
-							} else if(index[k].slice(-1)[0][0] == true){
-								index[k].push([false, n])
-								logger && logger.emit('queued', n)
-								queued += 1
-							}
-						})
-
-					logger && logger.emit('files-queued', queued, index)
+					// XXX need to pass a filter date to this...
+					var index = groupByKeyword(files, from_date, logger)
 	
 					// load...
 					Promise
 						.all(Object.keys(index).map(function(keyword){
 							// get relevant paths...
 							var diffs = index[keyword]
-							var latest = diffs.splice(-1)[0][1]
+							var latest = diffs.splice(-1)[0]
+
+							// XXX not sure about this...
+							if(keyword == '__dates'){
+								res.__dates = index.__dates
+								return
+							}
 
 							// NOTE: so far I really do not like how nested and
 							// 		unreadable the Promise/Deferred code becomes
@@ -333,7 +471,6 @@ function(path, index_dir, logger){
 									return Promise
 										// load diffs...
 										.all(diffs.map(function(p){
-											p = p[1]
 											return loadJSON(p)
 												// XXX handle errors...
 												// XXX we should abort loading this index...
@@ -352,8 +489,6 @@ function(path, index_dir, logger){
 											diffs
 												.reverse()
 												.forEach(function(p){
-													p = p[1]
-
 													var json = loading[p]
 
 													for(var n in json){
@@ -390,7 +525,7 @@ function(path, index_dir, logger){
 				})
 				// collect the found indexes...
 				.on('match', function(path){
-					loaders.push(loadIndex(path, index_dir, logger) 
+					loaders.push(loadIndex(path, index_dir, from_date, logger) 
 						.then(function(obj){ 
 							// NOTE: considering that all the paths within
 							// 		the index are relative to the preview 

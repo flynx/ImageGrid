@@ -84,6 +84,14 @@ var FileSystemLoaderActions = actions.Actions({
 	checkPath: ['- File/',
 		function(path){ return fse.existsSync(path) }],
 
+
+	loadSaveHistoryList: ['- File/',
+		function(path){
+			path = path || this.location.path
+
+			return file.loadSaveHistoryList(path)
+		}],
+
 	// NOTE: when passed no path this will not do anything...
 	//
 	// XXX how should .location be handled when merging indexes or
@@ -93,11 +101,15 @@ var FileSystemLoaderActions = actions.Actions({
 	// XXX should this return a promise??? ...a clean promise???
 	// XXX look inside...
 	loadIndex: ['- File/Load index',
-		function(path, logger){
+		function(path, from_date, logger){
 			var that = this
 
 			if(path == null){
 				return
+			}
+			if(from_date && from_date.emit != null){
+				logger = from_date
+				from_date = null
 			}
 
 			// XXX get a logger...
@@ -106,7 +118,7 @@ var FileSystemLoaderActions = actions.Actions({
 			// XXX make this load incrementally (i.e. and EventEmitter
 			// 		a-la glob)....
 			//file.loadIndex(path, this.config['index-dir'], logger)
-			return file.loadIndex(path, this.config['index-dir'], logger)
+			return file.loadIndex(path, this.config['index-dir'], from_date, logger)
 				.then(function(res){
 					// XXX if res is empty load raw...
 
@@ -148,6 +160,9 @@ var FileSystemLoaderActions = actions.Actions({
 					//for(var k in res){
 					for(var i=0; i < paths.length; i++){
 						var k = paths[i]
+
+						// XXX save dates...
+						res[k].__dates && console.log('DATES:', res[k].__dates)
 
 						// skip empty indexes...
 						// XXX should we rebuild  or list here???
