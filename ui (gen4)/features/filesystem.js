@@ -104,6 +104,8 @@ var FileSystemLoaderActions = actions.Actions({
 		}],
 
 	// NOTE: when passed no path this will not do anything...
+	// NOTE: this will add a .from field to .location, this will indicate
+	// 		the date starting from which saves are loaded.
 	//
 	// XXX how should .location be handled when merging indexes or
 	//		viewing multiple/clustered indexes???
@@ -221,7 +223,10 @@ var FileSystemLoaderActions = actions.Actions({
 					that.__location = {
 						path: loaded.length == 1 ? loaded[0] : path,
 						method: 'loadIndex',
-						from: from_date || 'all',
+					}
+
+					if(from_date){
+						that.__location.from = from_date
 					}
 				})
 		}],
@@ -554,7 +559,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// XXX handle named saves...
 	// XXX add ability to name a save...
 	// XXX need to handle saves when loaded a specific history position...
-	listSaveHistoryDialog: ['File/List save history...',
+	// XXX should this also list journal stuff or have the ability for
+	// 		extending???
+	listSaveHistoryDialog: ['File/History...',
 		widgets.makeUIDialog(function(){
 			var that = this
 
@@ -570,7 +577,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 				var from = that.location.from
 				from = from && Date.fromTimeStamp(from).toShortDate()
 
-				make('Load all')	
+				make('Latest')	
 					.on('open', function(){
 						that.reloadState()
 					})
@@ -603,8 +610,16 @@ var FileSystemLoaderUIActions = actions.Actions({
 										that.loadIndex(that.location.path, d)
 									})
 									// mark the current loaded position...
-									.addClass(txt == from ? 'highlighted selected' : '')
+									.addClass(txt == from ? 'selected' : '')
 							})
+
+						// loading may take a some time so we'll need to 
+						// update selection our selves...
+						//
+						// NOTE: here we will select 'Latest' if nothing
+						// 		was selected...
+						o.select()
+							.addClass('highlighted')
 					})
 			})
 			.on('open', function(){

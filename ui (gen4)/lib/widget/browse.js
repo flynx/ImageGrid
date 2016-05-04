@@ -554,6 +554,9 @@ var BrowserPrototype = {
 			.toArray()
 	},
 	set path(value){
+		this.update(value)
+
+		/*
 		// XXX check if path has changed...
 		value = this.path2list(value)
 		var cur = this.path
@@ -563,6 +566,7 @@ var BrowserPrototype = {
 			&& cur
 				.filter(function(e, i){ return e == value[i] }).length != cur.length
 			&& this.update(value)
+		*/
 	},
 
 	// String path...
@@ -2004,7 +2008,12 @@ var BrowserPrototype = {
 		if(path && (path.constructor == Array || /[\\\/]/.test(path))){
 			path = this.path2list(path)
 			var elem = path.slice(-1)[0]
-			this.path = path.slice(0, -1)
+
+			// only update path if it has changed...
+			if(this.path.filter(function(e, i){ return e == path[i] }).length != path.length - 1){
+				this.path = path.slice(0, -1)
+			}
+
 			elem = this.select('"'+ elem +'"')
 
 		// get path + selection...
