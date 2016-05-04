@@ -118,6 +118,9 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	// XXX not yet fully tested...
 	'system-journal',
+
+
+	'fail-safe-devtools',
 ])
 
 /*

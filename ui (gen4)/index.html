@@ -233,7 +233,9 @@ body {
 </style>
 
 <script>
-typeof(require) != 'undefined' && require('nw.gui').Window.get().showDevTools()
+window.__devtools_failsafe = setTimeout(function(){
+	typeof(require) != 'undefined' && nw.Window.get().showDevTools()
+}, 1000)
 </script>
 
 

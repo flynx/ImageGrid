@@ -1743,6 +1743,26 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 
 
 /*********************************************************************/
+
+var FailsafeDevTools = 
+module.FailsafeDevTools = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'fail-safe-devtools',
+
+	priority: 'low',
+
+	handlers: [
+		['start',
+			function(){
+				window.__devtools_failsafe && clearTimeout(window.__devtools_failsafe) }],
+	],
+})
+
+
+
+/*********************************************************************/
 // XXX experimental...
 
 // 		...not sure if this is the right way to go...
