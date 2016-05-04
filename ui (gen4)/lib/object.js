@@ -166,9 +166,12 @@ function makeConstructor(name, a, b){
 		return obj
 	}
 
+	/* XXX for some reason this works for the _constructor but all 
+	 * 		instances get the wrong name resolved...
 	Object.defineProperty(_constructor, 'name', {
 		value: name,
 	})
+	*/
 
 	// just in case the browser refuses to change the name, we'll make it
 	// a different offer ;)

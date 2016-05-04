@@ -765,6 +765,12 @@ var BrowserPrototype = {
 	// 		.itemButtons
 	//
 	//
+	// Finalize the dialog (optional)...
+	// 	- Call make.done() can optionally be called after all the itmes
+	// 		are created. This will update the dialog to align the 
+	// 		selected position.
+	// 		This is useful for dialogs with async loading items. 
+	//
 	//
 	// XXX need a way to handle path errors in the extension API...
 	// 		...for example, if .list(..) can't list or lists a different
@@ -1041,6 +1047,12 @@ var BrowserPrototype = {
 			}
 
 			return res
+		}
+
+		// align the dialog...
+		make.done = function(){
+			var s = l.find('.selected')			
+			s.length > 0 && that.select(s)
 		}
 
 		// build the list...
@@ -2170,7 +2182,9 @@ var BrowserPrototype = {
 			parent.append(dom)
 		}
 
-		// XXX is this the right way to go???
+		// Select the default path...
+		//
+		// NOTE: this may not work when the dialog is loaded async...
 		setTimeout(function(){ 
 			// load the initial state...
 			that.update(options.path || that.path || '/')

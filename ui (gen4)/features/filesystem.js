@@ -471,8 +471,6 @@ var FileSystemLoaderUIActions = actions.Actions({
 		},
 	},
 
-	// XXX for some reason the path list blinks (.update()???) when sub 
-	// 		menu is shown...
 	// XXX should the loader list be nested or open in overlay (as-is now)???
 	browsePath: ['File/Browse file system...',
 		widgets.makeUIDialog(function(base, callback){
@@ -554,6 +552,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// XXX add dialog to list sub-indexes...
 	// XXX
 
+	// NOTE: for multiple indexes this will show the combined history
+	// 		and selecting a postion will load all the participating 
+	// 		indexes to that date.
 	// NOTE: this will show nothing if .location.method is not loadIndex..
 	//
 	// XXX handle named saves...
@@ -610,12 +611,11 @@ var FileSystemLoaderUIActions = actions.Actions({
 										that.loadIndex(that.location.path, d)
 									})
 									// mark the current loaded position...
-									.addClass(txt == from ? 'selected' : '')
+									.addClass(txt == from ? 'selected highlighted' : '')
 							})
 
-						// loading may take a some time so we'll need to 
-						// update selection our selves...
-						//
+						make.done()
+
 						// NOTE: here we will select 'Latest' if nothing
 						// 		was selected...
 						o.select()
@@ -1533,6 +1533,8 @@ var FileSystemWriterUIActions = actions.Actions({
 						dialog.parent.close()
 					})
 					.addClass('selected')
+
+				make.done()
 			})
 
 			o.dom.addClass('metadata-view tail-action')

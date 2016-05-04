@@ -530,6 +530,7 @@ var DialogsActions = actions.Actions({
 						})
 				})
 
+				make.done()
 			})
 		})],
 })
@@ -822,8 +823,14 @@ var WidgetTestActions = actions.Actions({
 						that.parent.close()
 					})
 
-				// XXX the parent is not yet set at this point...
-				//console.log('>>>', that.parent)
+				// NOTE: the dialog's .parent is not yet set at this point...
+
+				// This will finalize the dialog...
+				//
+				// NOTE: this is not needed here as the dialog is drawn
+				// 		on sync, but for async dialogs this will align
+				// 		the selected field correctly.
+				make.done()
 			})
 			// NOTE: this is not a dialog event, it is defined by the 
 			// 		container to notify us that we are closing...
