@@ -264,6 +264,7 @@ function(list, from_date, logger){
 
 	// XXX revise...
 	index.__dates = Object.keys(dates)
+	index.__date = Object.keys(date)[0]
 
 	logger && logger.emit('files-queued', queued, index)
 
@@ -449,6 +450,10 @@ function(path, index_dir, from_date, logger){
 							// XXX not sure about this...
 							if(keyword == '__dates'){
 								res.__dates = index.__dates
+								return
+							}
+							if(keyword == '__date'){
+								res.__date = index.__date
 								return
 							}
 

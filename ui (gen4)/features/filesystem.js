@@ -162,7 +162,9 @@ var FileSystemLoaderActions = actions.Actions({
 						var k = paths[i]
 
 						// XXX save dates...
+						// XXX not sure if this is the right way to go....
 						res[k].__dates && console.log('DATES:', res[k].__dates)
+						res[k].__date && console.log('LOADED:', res[k].__date)
 
 						// skip empty indexes...
 						// XXX should we rebuild  or list here???
