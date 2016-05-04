@@ -132,6 +132,10 @@ var FileSystemLoaderActions = actions.Actions({
 			// 		a-la glob)....
 			//file.loadIndex(path, this.config['index-dir'], logger)
 			return file.loadIndex(path, this.config['index-dir'], from_date, logger)
+				.catch(function(err){
+					// XXX
+					console.error(err)
+				})
 				.then(function(res){
 					// XXX if res is empty load raw...
 
@@ -543,9 +547,6 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 		the given path (no UI) while .browsePath(..) will load the 
 	// 		UI in all cases but will treat the given path as a base path 
 	// 		to start from.
-	// XXX should passing no path to this start browsing from the current
-	// 		path or from the root?
-	// XXX should these be dialog objects???
 	browseIndex: ['File/Load index...', makeBrowseProxy('loadIndex')],
 	browseImages: ['File/Load images...', makeBrowseProxy('loadImages')],
 
@@ -570,6 +571,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 				//file.loadIndex(path, that.config['index-dir'], this.logger)
 				// XXX we need to prune the indexes -- avoid loading nested indexes...
 				file.listIndexes(path, index_dir)
+					.on('error', function(err){
+						console.error(err)
+					})
 					.on('end', function(res){
 
 						// we got the data, we can now remove the spinner...
@@ -599,8 +603,10 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 		and selecting a postion will load all the participating 
 	// 		indexes to that date.
 	// NOTE: this will show nothing if .location.method is not loadIndex..
+	// NOTE: this will drop all unsaved changes
+	// NOTE: this will set changes to all when loading a different state
+	// 		that the latest and to non otherwise....
 	//
-	// XXX should this affect .changes ???
 	// XXX handle named saves...
 	// XXX add ability to name a save...
 	// XXX need to handle saves (saveIndex(..) and friends) when loaded
@@ -627,12 +633,11 @@ var FileSystemLoaderUIActions = actions.Actions({
 				var from = that.location.from
 				from = from && Date.fromTimeStamp(from).toShortDate()
 
-				make('Latest')	
-					.on('open', function(){
-						that.reloadState()
-					})
+				if(that.changes !== false){
+					make('Unsaved state')	
 
-				make('---')
+					make('---')
+				}
 
 				// indicate that we are working...
 				var spinner = make($('<center><div class="loader"/></center>'))
@@ -657,6 +662,16 @@ var FileSystemLoaderUIActions = actions.Actions({
 						list
 							.sort()
 							.reverse()
+
+						// Special case: top save state is the default, 
+						// no need to mark anything for change...
+						var first = list.shift()
+						first && make(Date.fromTimeStamp(first).toShortDate())
+							.on('open', function(){
+								that.loadIndex(that.location.path, first)
+							})
+
+						list
 							.forEach(function(d){
 								var txt = Date.fromTimeStamp(d).toShortDate()
 
@@ -664,6 +679,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 								make(txt)
 									.on('open', function(){
 										that.loadIndex(that.location.path, d)
+											.then(function(){
+												that.markChanged('all')
+											})
 									})
 									// mark the current loaded position...
 									.addClass(txt == from ? 'selected highlighted' : '')

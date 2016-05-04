@@ -1816,8 +1816,9 @@ var BrowserPrototype = {
 		var cur = this.select('!')
 		var elem = this.select(!pattern ? '!'
 				: /-?[0-9]+/.test(pattern) ? pattern
-				// avoid keywords that .select(..) understands...
-				: '"'+pattern+'"' )
+				// XXX avoid keywords that .select(..) understands...
+				//: '"'+pattern+'"' )
+				: pattern)
 
 		// item not found...
 		if(elem.length == 0 && pattern != null){

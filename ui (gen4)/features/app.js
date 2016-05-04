@@ -105,6 +105,10 @@ var AppControlActions = actions.Actions({
 			}, this.config['window-delay-initial-display'] || 0)
 		}],
 	
+	minimize: ['Interface/Minimize',
+		function(){
+			nw.Window.get().minimize()
+		}],
 	toggleFullScreen: ['Interface/Toggle full screen mode',
 		toggler.CSSClassToggler(
 			function(){ return document.body }, 
@@ -215,6 +219,65 @@ module.AppControl = core.ImageGridFeatures.Feature({
 						// XXX add ...
 						
 				}
+			}],
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+// Fullscreen app control buttons...
+var FullScreenControllsActions = actions.Actions({
+	toggleFullScreenControls: ['Interface/',
+		toggler.Toggler(null,
+			function(){ 
+				return this.ribbons.viewer.find('.fullscreen-controls').length > 0 ? 'on' : 'off' },
+			['off', 'on'],
+			function(state){
+				// clear the controls....
+				this.ribbons.viewer.find('.fullscreen-controls').remove()
+
+				if(state == 'on'){
+					var that = this
+
+					$('<div>')
+						.addClass('fullscreen-controls')
+						// minimize....
+						.append($('<div>')
+							.addClass('button')
+							.html('_')
+							.click(function(){ that.minimize() }))
+						// fullscreen....
+						.append($('<div>')
+							.addClass('button')
+							.html('&square;')
+							.click(function(){ that.toggleFullScreen() }))
+						// close...
+						.append($('<div>')
+							.addClass('button close')
+							.html('&times;')
+							.click(function(){ that.close() }))
+						.appendTo(this.ribbons.viewer)
+				}
+			})],
+})
+
+var FullScreenControlls = 
+module.FullScreenControlls = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-fullscreen-controls',
+	depends: [
+		'ui-app-control',
+	],
+
+	actions: FullScreenControllsActions,
+
+	handlers: [
+		['toggleFullScreen', 
+			function(){
+				this.toggleFullScreenControls(this.toggleFullScreen('?'))
 			}],
 	],
 })
