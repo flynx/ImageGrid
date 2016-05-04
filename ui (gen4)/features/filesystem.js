@@ -79,6 +79,17 @@ var FileSystemLoaderActions = actions.Actions({
 	loaded_paths: null,
 
 
+	// XXX should this be more general???
+	reloadState: ['File/Reload viewer state...',
+		function(){
+			if(this.location 
+					&& this.location.method 
+					&& this.location.path){
+				return this[this.location.method](this.location.path)
+			}
+		}],
+
+
 	// XXX is this a hack???
 	// XXX need a more generic form...
 	checkPath: ['- File/',
@@ -161,11 +172,6 @@ var FileSystemLoaderActions = actions.Actions({
 					for(var i=0; i < paths.length; i++){
 						var k = paths[i]
 
-						// XXX save dates...
-						// XXX not sure if this is the right way to go....
-						res[k].__dates && console.log('DATES:', res[k].__dates)
-						res[k].__date && console.log('LOADED:', res[k].__date)
-
 						// skip empty indexes...
 						// XXX should we rebuild  or list here???
 						if(res[k].data == null || res[k].images == null){
@@ -215,6 +221,7 @@ var FileSystemLoaderActions = actions.Actions({
 					that.__location = {
 						path: loaded.length == 1 ? loaded[0] : path,
 						method: 'loadIndex',
+						from: from_date || 'all',
 					}
 				})
 		}],
@@ -538,6 +545,74 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// XXX should these be dialog objects???
 	browseIndex: ['File/Load index...', makeBrowseProxy('loadIndex')],
 	browseImages: ['File/Load images...', makeBrowseProxy('loadImages')],
+
+	// XXX add dialog to list sub-indexes...
+	// XXX
+
+	// NOTE: this will show nothing if .location.method is not loadIndex..
+	//
+	// XXX handle named saves...
+	// XXX add ability to name a save...
+	// XXX need to handle saves when loaded a specific history position...
+	listSaveHistoryDialog: ['File/List save history...',
+		widgets.makeUIDialog(function(){
+			var that = this
+
+			var o = browse.makeLister(null, function(path, make){
+				var dialog = this
+
+				// only search for history if we have an index loaded...
+				if(that.location.method != 'loadIndex'){
+					make('No history...', null, true)	
+					return
+				}
+
+				var from = that.location.from
+				from = from && Date.fromTimeStamp(from).toShortDate()
+
+				make('Load all')	
+					.on('open', function(){
+						that.reloadState()
+					})
+
+				make('---')
+
+				that.loadSaveHistoryList()
+					.catch(function(err){
+						// XXX
+						console.error(err)
+					})
+					.then(function(data){
+						var list = []
+
+						Object.keys(data).forEach(function(path){
+							Object.keys(data[path]).forEach(function(d){
+								list.push(d)
+							})
+						})
+
+						list
+							.sort()
+							.reverse()
+							.forEach(function(d){
+								var txt = Date.fromTimeStamp(d).toShortDate()
+
+								// XXX get the save name...
+								make(txt)
+									.on('open', function(){
+										that.loadIndex(that.location.path, d)
+									})
+									// mark the current loaded position...
+									.addClass(txt == from ? 'highlighted selected' : '')
+							})
+					})
+			})
+			.on('open', function(){
+				o.parent.close()
+			})
+
+			return o
+		})],
 })
 
 
@@ -1442,13 +1517,10 @@ var FileSystemWriterUIActions = actions.Actions({
 							that.config['export-path'] || that.location.path)
 						dialog.parent.close()
 					})
+					.addClass('selected')
 			})
 
 			o.dom.addClass('metadata-view tail-action')
-
-			setTimeout(function(){
-				o.select(-1)
-			}, 0)
 
 			return o
 		})],

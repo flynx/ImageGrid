@@ -554,7 +554,15 @@ var BrowserPrototype = {
 			.toArray()
 	},
 	set path(value){
-		this.update(value)
+		// XXX check if path has changed...
+		value = this.path2list(value)
+		var cur = this.path
+
+		// update only if path is different...
+		value.length == cur.length 
+			&& cur
+				.filter(function(e, i){ return e == value[i] }).length != cur.length
+			&& this.update(value)
 	},
 
 	// String path...

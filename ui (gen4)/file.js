@@ -145,6 +145,7 @@ function loadJSON(path){
 // 		]
 // 	}
 //
+// NOTE: this does not use the fs...
 var groupByDate = 
 module.groupByDate = 
 function(list){
@@ -170,6 +171,7 @@ function(list){
 }
 
 
+
 // Group file list by keyword...
 //
 // this will build a structure in the following format:
@@ -192,6 +194,7 @@ function(list){
 // the found JSON files.
 //
 // NOTE: all files past the first non-diff are skipped.
+// NOTE: this does not use the fs...
 var groupByKeyword = 
 module.groupByKeyword = 
 function(list, from_date, logger){
@@ -205,7 +208,7 @@ function(list, from_date, logger){
 		.reverse()
 		// skip dates before from_date...
 		// NOTE: from_date is included...
-		.filter(function(d){ return from_date ? d <= from_date : true })
+		.filter(function(d){ return from_date ? d <= from_date || d == 'root' : true })
 		.forEach(function(d){
 			dates[d]
 				.sort()
@@ -262,10 +265,6 @@ function(list, from_date, logger){
 		index[k] = index[k].map(function(e){ return e[1] })
 	}
 
-	// XXX revise...
-	index.__dates = Object.keys(dates)
-	index.__date = Object.keys(date)[0]
-
 	logger && logger.emit('files-queued', queued, index)
 
 	return index
@@ -273,11 +272,19 @@ function(list, from_date, logger){
 
 
 
-// XXX not yet working...
+// Load index data listed by timestamp... 
+//
+// NOTE: this returns data similar to groupByDate(..) but will replace 
+// 		the 'root' key with a timestamp...
+// NOTE: this will include the full history. this is different to what
+// 		groupByKeyword(..) does.
+//
 // XXX handle errors....
 var loadSaveHistoryList =
 module.loadSaveHistoryList =
-function(path){
+function(path, index_dir){
+	index_dir = index_dir || INDEX_DIR
+
 	return new Promise(function(resolve, reject){
 		// direct index...
 		if(pathlib.basename(path) == index_dir){
@@ -287,9 +294,16 @@ function(path){
 					logger && logger.emit('error', err)
 				})
 				.on('end', function(files){
-					var res = {}
+					var data = groupByDate(files)
 
-					resolve(Object.keys(groupByDate(files)))
+					// XXX should we mark the root timestamp in any way???
+					if('root' in data && data.root.length > 0){
+						// XXX handle stat error...
+						data[fse.statSync(data.root[0]).birthtime.getTimeStamp()] = data.root
+						delete data.root
+					}
+
+					resolve(data)
 				})
 
 		// need to locate indexes...
@@ -313,7 +327,7 @@ function(path){
 							// 		we do not need to include the index 
 							// 		itself in the base path...
 							var p = path.split(index_dir)[0]
-							res[p] = obj[path] 
+							res[p] = obj
 						}))
 				})
 				// done...

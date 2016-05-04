@@ -421,14 +421,21 @@ var URLHistoryUIActions = actions.Actions({
 
 			var o = browse.makeLister(null, 
 				function(path, make){
-					Object.keys(that.url_history)
+					var l = Object.keys(that.url_history)
 						.reverse()
 						// NOTE: this might get a little slow for 
 						// 		very large sets...
-						.forEach(function(p){
+						.map(function(p){
 							make(p, {disabled: !that.checkURLFromHistory(p) })
 								.addClass(p == cur ? 'highlighted selected': '')
-						}) },
+						})
+						.length
+
+					if(l == 0){
+						make('No history...', null, true)	
+							.find('.button').remove()
+					}
+				},
 				// add item buttons...
 				{ itemButtons: [
 						// move to top...
