@@ -25,6 +25,7 @@ var keyboard = require('lib/keyboard')
 var actions = require('lib/actions')
 var core = require('features/core')
 var base = require('features/base')
+var widgets = require('features/ui-widgets')
 
 var browse = require('lib/widget/browse')
 var overlay = require('lib/widget/overlay')
@@ -327,7 +328,8 @@ var MetadataUIActions = actions.Actions({
 	// XXX should we replace 'mode' with nested set of metadata???
 	// XXX make this support multiple images...
 	showMetadata: ['Image/Show metadata',
-		function(image, mode){
+		widgets.makeUIDialog(function(image, mode){
+		//function(image, mode){
 			var that = this
 			image = this.data.getImage(image)
 			mode = mode || 'disabled'
@@ -445,65 +447,65 @@ var MetadataUIActions = actions.Actions({
 			}
 
 			// XXX might be a good idea to directly bind ctrl-c to copy value...
-			var o = overlay.Overlay(this.ribbons.viewer, 
-				browse.makeList(
-						null,
-						_buildInfoList(image, metadata),
-						{
-							showDisabled: false,
-						})
-					// select value of current item...
-					.on('select', function(evt, elem){
-						if(that.config['metadata-auto-select-mode'] == 'on select'){
-							$(elem).find('.text').last().selectText()
-						}
+			var o = browse.makeList(
+					null,
+					_buildInfoList(image, metadata),
+					{
+						showDisabled: false,
 					})
-					// XXX start editing onkeydown...
-					.on('keydown', function(){
-						// XXX Enter + editable -> edit (only this???)
-					})
-					// path selected...
-					.open(function(evt, path){ 
-						var editable = RegExp(that.config['metadata-editable-fields']
-							.map(function(f){ return util.quoteRegExp(f) })
-							.join('|'))
+				// select value of current item...
+				.on('select', function(evt, elem){
+					if(that.config['metadata-auto-select-mode'] == 'on select'){
+						$(elem).find('.text').last().selectText()
+					}
+				})
+				// XXX start editing onkeydown...
+				.on('keydown', function(){
+					// XXX Enter + editable -> edit (only this???)
+				})
+				// path selected...
+				.open(function(evt, path){ 
+					var editable = RegExp(that.config['metadata-editable-fields']
+						.map(function(f){ return util.quoteRegExp(f) })
+						.join('|'))
 
-						var elem = o.client.filter(path).find('.text').last()
+					var elem = o.filter(path).find('.text').last()
 
-						// handle select...
-						if(that.config['metadata-auto-select-mode'] == 'on open'){
-							elem.selectText()
-						}
+					// handle select...
+					if(that.config['metadata-auto-select-mode'] == 'on open'){
+						elem.selectText()
+					}
 
-						// skip non-editable fields...
-						if(editable.test(path)){
-							elem
-								.prop('contenteditable', true)
-								.focus()
-								.keydown(function(){ 
-									event.stopPropagation() 
+					// skip non-editable fields...
+					if(editable.test(path)){
+						elem
+							.prop('contenteditable', true)
+							.focus()
+							.keydown(function(){ 
+								event.stopPropagation() 
 
-									var n = keyboard.toKeyName(event.keyCode)
+								var n = keyboard.toKeyName(event.keyCode)
 
-									// reset to original value...
-									if(n == 'Esc'){
-										// XXX
+								// reset to original value...
+								if(n == 'Esc'){
+									// XXX
 
-									// save value...
-									} else if(n == 'Enter' && event.ctrlKey){
-										event.preventDefault()
+								// save value...
+								} else if(n == 'Enter' && event.ctrlKey){
+									event.preventDefault()
 
-										// XXX
-									}
-								})
-						}
-					}))
-					.close(function(){
-						// XXX
-					})
-			o.client.dom.addClass('metadata-view')
+									// XXX
+								}
+							})
+					}
+				})
+				.on('close', function(){
+					// XXX
+				})
 
-			o.client.updateMetadata = function(metadata){
+			o.dom.addClass('metadata-view')
+
+			o.updateMetadata = function(metadata){
 				metadata = metadata || that.getMetadata()
 
 				// build new data set and update view...
@@ -514,7 +516,7 @@ var MetadataUIActions = actions.Actions({
 			}
 
 			return o
-		}]
+		})]
 })
 
 var MetadataUI = 
@@ -556,14 +558,12 @@ module.MetadataFSUI = core.ImageGridFeatures.Feature({
 				var that = this
 				var reader = this.readMetadata(image)
 
-				return reader && function(overlay){
-					var client = overlay.client
+				return reader && function(client){
 					var data = client.options.data
 
 					// add a loading indicator...
-					// NOTE: this will get removed when calling .updateMetadata()
+					// NOTE: this will get overwritten when calling .updateMetadata()
 					data.push('---')
-					//data.push($('<center>Loading...</center>'))
 					data.push($('<center><div class="loader"/></center>'))
 					client.update()
 

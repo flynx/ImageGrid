@@ -551,23 +551,9 @@ var BrowserPrototype = {
 		var skip = false
 		return this.dom.find('.path .dir:not(.cur)')
 			.map(function(i, e){ return $(e).text() })
-			.toArray()
-	},
+			.toArray() },
 	set path(value){
-		this.update(value)
-
-		/*
-		// XXX check if path has changed...
-		value = this.path2list(value)
-		var cur = this.path
-
-		// update only if path is different...
-		value.length == cur.length 
-			&& cur
-				.filter(function(e, i){ return e == value[i] }).length != cur.length
-			&& this.update(value)
-		*/
-	},
+		this.update(value) },
 
 	// String path...
 	//
@@ -960,7 +946,7 @@ var BrowserPrototype = {
 				.click(function(){
 					if(!$(this).hasClass('disabled')){
 						//that.push(quoteWS($(this).find('.text').text())) 
-						that.push($(this).find('.text').text())
+						that.push('"'+ $(this).find('.text').text() +'"')
 					}
 				})
 				// append text elements... 

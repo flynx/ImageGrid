@@ -549,20 +549,69 @@ var FileSystemLoaderUIActions = actions.Actions({
 	browseIndex: ['File/Load index...', makeBrowseProxy('loadIndex')],
 	browseImages: ['File/Load images...', makeBrowseProxy('loadImages')],
 
-	// XXX add dialog to list sub-indexes...
-	// XXX
+	browseSubIndexes: ['File/List sub-indexes...',
+		widgets.makeUIDialog(function(){
+			var that = this
+			var index_dir = this.config['index-dir']
+
+			var o = browse.makeLister(null, function(path, make){
+				var dialog = this
+				var path = that.location.path
+
+				if(that.location.method != 'loadIndex'){
+					make('No indexes loaded...', null, true)
+					return
+				}
+
+				// indicate that we are working...
+				var spinner = make($('<center><div class="loader"/></center>'))
+
+				// XXX we do not need to actually read anything....
+				//file.loadIndex(path, that.config['index-dir'], this.logger)
+				// XXX we need to prune the indexes -- avoid loading nested indexes...
+				file.listIndexes(path, index_dir)
+					.on('end', function(res){
+
+						// we got the data, we can now remove the spinner...
+						spinner.remove()
+
+						res.forEach(function(p){
+							// trim local paths and keep external paths as-is...
+							p = p.split(index_dir)[0]
+							var txt = p.split(path).pop()
+							txt = txt != p ? './'+pathlib.join('.', txt) : txt
+
+							make(txt)
+								.on('open', function(){
+									that.loadIndex(p)
+								})
+						})
+					})
+			})
+			.on('open', function(){
+				o.parent.close()
+			})
+
+			return o
+		})],
 
 	// NOTE: for multiple indexes this will show the combined history
 	// 		and selecting a postion will load all the participating 
 	// 		indexes to that date.
 	// NOTE: this will show nothing if .location.method is not loadIndex..
 	//
+	// XXX should this affect .changes ???
 	// XXX handle named saves...
 	// XXX add ability to name a save...
-	// XXX need to handle saves when loaded a specific history position...
+	// XXX need to handle saves (saveIndex(..) and friends) when loaded
+	// 		a specific history position...
+	// 		...in theory saving and old index will create an incremental
+	// 		save which should not damage the history and can be fixed 
+	// 		either by removing the actual .json files or simply loading
+	// 		from a previous position and re-saving... (XXX test)
 	// XXX should this also list journal stuff or have the ability for
 	// 		extending???
-	listSaveHistoryDialog: ['File/History...',
+	listSaveHistory: ['File/History...',
 		widgets.makeUIDialog(function(){
 			var that = this
 
@@ -585,6 +634,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 				make('---')
 
+				// indicate that we are working...
+				var spinner = make($('<center><div class="loader"/></center>'))
+
 				that.loadSaveHistoryList()
 					.catch(function(err){
 						// XXX
@@ -592,6 +644,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 					})
 					.then(function(data){
 						var list = []
+
+						// got the data, remove the spinner...
+						spinner.remove()
 
 						Object.keys(data).forEach(function(path){
 							Object.keys(data[path]).forEach(function(d){
@@ -618,8 +673,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 						// NOTE: here we will select 'Latest' if nothing
 						// 		was selected...
-						o.select()
+						dialog.select()
 							.addClass('highlighted')
+
 					})
 			})
 			.on('open', function(){

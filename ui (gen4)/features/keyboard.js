@@ -140,7 +140,7 @@ module.GLOBAL_KEYBOARD = {
 		H: {
 			default: 'flipHorizontal',
 			ctrl: 'listURLHistory',
-			'ctrl+shift': 'listSaveHistoryDialog',
+			'ctrl+shift': 'listSaveHistory',
 			alt: 'browseActions: "/History/" -- Open history menu',
 		},
 		V: 'flipVertical',
