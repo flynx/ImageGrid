@@ -475,6 +475,15 @@ var FileSystemLoaderUIActions = actions.Actions({
 		},
 	},
 
+	// Save comments...
+	//
+	// Format:
+	// 	{
+	// 		<timestamp>: <comment>
+	// 	}
+	savecomments: null,
+
+
 	// XXX should the loader list be nested or open in overlay (as-is now)???
 	browsePath: ['File/Browse file system...',
 		widgets.makeUIDialog(function(base, callback){
@@ -607,8 +616,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// NOTE: this will set changes to all when loading a different state
 	// 		that the latest and to non otherwise....
 	//
-	// XXX handle named saves...
-	// XXX add ability to name a save...
+	// XXX add comment editing...
 	// XXX need to handle saves (saveIndex(..) and friends) when loaded
 	// 		a specific history position...
 	// 		...in theory saving and old index will create an incremental
@@ -675,8 +683,17 @@ var FileSystemLoaderUIActions = actions.Actions({
 							.forEach(function(d){
 								var txt = Date.fromTimeStamp(d).toShortDate()
 
-								// XXX get the save name...
-								make(txt)
+								// get the save name...
+								var title = [txt]
+								var comment = that.savecomments && that.savecomments[d] 
+								//title.push(comment || '')
+								comment && title.push(comment)
+
+								// XXX is this the best format???
+								title = title.join(' - ')
+
+								make(title)
+									.attr('timestamp', d)
 									.on('open', function(){
 										that.loadIndex(that.location.path, d)
 											.then(function(){

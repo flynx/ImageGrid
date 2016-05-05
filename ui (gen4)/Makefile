@@ -168,6 +168,8 @@ win64: $(APP_ZIP) $(WIN_BUILD_DIR)
 	chmod +x $(WIN_BUILD_DIR)/*.{exe,dll}
 	cp -vR \
 		$(NODE_DIR) $(WIN_BUILD_DIR)
+	# XXX is this correct???
+	cp -vR "`which exiftool`" $(WIN_BUILD_DIR)
 	# cleanup nwjs-sdk...
 	rm -f $(WIN_BUILD_DIR)/nwsnapshot.exe \
 		$(WIN_BUILD_DIR)/payload.exe \

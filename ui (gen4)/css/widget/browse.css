@@ -217,7 +217,7 @@
 	font-style: italic;
 	font-weight: bold;
 }
-.browse-widget .list>div.highlighted .text:after {
+.browse-widget .list>div.highlighted .text:last-child:after {
 	content: ' *';
 }
 .browse-widget:not(.flat) .list div:not(.not-traversable) .text:after {
