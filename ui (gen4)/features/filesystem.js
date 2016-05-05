@@ -721,26 +721,6 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 			return o
 		})],
-
-
-	// save/resore .savecomments
-	// 
-	// NOTE: we are doing preparation for saving .savecomments to fs
-	// 		below in FileSystemLoaderUI.handlers.
-	// 		This is because defining the action here would make it run
-	// 		before the base action (which is defined later).
-	json: [function(){
-		return function(res){
-			if(this.savecomments != null){
-				res.savecomments = this.savecomments
-			}
-		}
-	}],
-	load: [function(data){
-		if(data.savecomments != null){
-			this.savecomments = data.savecomments
-		}
-	}]
 })
 
 
@@ -759,6 +739,23 @@ module.FileSystemLoaderUI = core.ImageGridFeatures.Feature({
 	actions: FileSystemLoaderUIActions,
 
 	handlers: [
+		// save/resore .savecomments
+		// 
+		['json',
+			function(res){
+				if(this.savecomments != null){
+					res.savecomments = this.savecomments
+				}
+			}],
+		['load',
+			function(_, data){
+				if(data.savecomments != null){
+					this.savecomments = data.savecomments
+				}
+			}],
+		// NOTE: defining this here enables us to actually post-bind to
+		// 		an action that is defined later or may not even be 
+		// 		available.
 		['prepareIndexForWrite',
 			function(res){
 				var source = res.raw.savecomments
