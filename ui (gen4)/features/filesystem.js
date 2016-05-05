@@ -481,6 +481,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 	{
 	// 		<timestamp>: <comment>
 	// 	}
+	//
+	// XXX need to save/restore these...
 	savecomments: null,
 
 
@@ -719,6 +721,26 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 			return o
 		})],
+
+
+	// save/resore .savecomments
+	// 
+	// NOTE: we are doing preparation for saving .savecomments to fs
+	// 		below in FileSystemLoaderUI.handlers.
+	// 		This is because defining the action here would make it run
+	// 		before the base action (which is defined later).
+	json: [function(){
+		return function(res){
+			if(this.savecomments != null){
+				res.savecomments = this.savecomments
+			}
+		}
+	}],
+	load: [function(data){
+		if(data.savecomments != null){
+			this.savecomments = data.savecomments
+		}
+	}]
 })
 
 
@@ -735,6 +757,16 @@ module.FileSystemLoaderUI = core.ImageGridFeatures.Feature({
 	],
 
 	actions: FileSystemLoaderUIActions,
+
+	handlers: [
+		['prepareIndexForWrite',
+			function(res){
+				var source = res.raw.savecomments
+				if(source && Object.keys(source).length > 0){
+					res.prepared.savecomments = source
+				}
+			}]
+	]
 })
 
 
