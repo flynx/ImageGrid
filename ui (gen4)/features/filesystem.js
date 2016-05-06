@@ -506,6 +506,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 	.setSaveComment(save, null)
 	// 		-> actions
 	//
+	// NOTE: "save" is the save format as returned by file.groupByDate(..),
+	// 		or .loadSaveHistoryList(..)
+	// 		...normally it is Date.timeStamp() compatible string.
 	setSaveComment: ['- File/Comment a save',
 		function(save, comment){
 			var comments = this.savecomments = this.savecomments || {}
