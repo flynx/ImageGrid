@@ -479,9 +479,55 @@ var FileSystemLoaderUIActions = actions.Actions({
 	//
 	// Format:
 	// 	{
-	// 		<timestamp>: <comment>
+	// 		// comment staged for next .saveIndex(..)...
+	// 		'current': <comment>,
+	//
+	// 		<timestamp>: <comment>,
+	// 		...
 	// 	}
 	savecomments: null,
+
+
+	// Comment a save...
+	//
+	// 	// Comment current save...
+	// 	.setSaveComment(comment)
+	// 		-> actions
+	//
+	// 	// reset current save comment...
+	// 	.setSaveComment(null)
+	// 		-> actions
+	//
+	// 	// Comment specific save...
+	// 	.setSaveComment(save, comment)
+	// 		-> actions
+	//
+	// 	// reset specific save comment...
+	// 	.setSaveComment(save, null)
+	// 		-> actions
+	//
+	setSaveComment: ['- File/Comment a save',
+		function(save, comment){
+			var comments = this.savecomments = this.savecomments || {}
+
+			// no explicit save given -- stage a comment for next save...
+			if(comment === undefined){
+				comment = save
+				save = 'current'
+			}
+
+			if(comment === undefined){
+				return
+
+			} else if(comment == null){
+				delete comments[save]
+
+			} else {
+				comments[save] = comment
+			}
+
+			this.markChanged('savecomments')
+		}],
 
 
 	// XXX should the loader list be nested or open in overlay (as-is now)???
@@ -625,6 +671,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 		from a previous position and re-saving... (XXX test)
 	// XXX should this also list journal stuff or have the ability for
 	// 		extending???
+	// XXX should this save the unsaved changes when switching to a version
+	// 		or discard them (current behavior)
+	// 		...saving might be logical...
 	listSaveHistory: ['File/History...',
 		widgets.makeUIDialog(function(){
 			var that = this
@@ -632,19 +681,33 @@ var FileSystemLoaderUIActions = actions.Actions({
 			var o = browse.makeLister(null, function(path, make){
 				var dialog = this
 
-				// only search for history if we have an index loaded...
-				if(that.location.method != 'loadIndex'){
-					make('No history...', null, true)	
-					return
-				}
-
 				var from = that.location.from
 				from = from && Date.fromTimeStamp(from).toShortDate()
 
 				if(that.changes !== false){
-					make('Unsaved state')	
+					var title = ['Unsaved state']
+
+					var comment = that.savecomments && that.savecomments['current'] 
+					//title.push(comment || '')
+					comment && title.push(comment)
+
+					// XXX is this the best format???
+					title = title.join(' - ')
+
+					make(title)	
 
 					make('---')
+				}
+
+				// only search for history if we have an index loaded...
+				if(that.location.method != 'loadIndex'){
+					make('No history...', null, true)	
+
+					// select the 'Unsaved' item...
+					dialog.select()
+						.addClass('highlighted')
+
+					return
 				}
 
 				// indicate that we are working...
@@ -710,7 +773,6 @@ var FileSystemLoaderUIActions = actions.Actions({
 						// 		was selected...
 						dialog.select()
 							.addClass('highlighted')
-
 					})
 			})
 			.on('open', function(){
@@ -742,7 +804,7 @@ module.FileSystemLoaderUI = core.ImageGridFeatures.Feature({
 		['json',
 			function(res){
 				if(this.savecomments != null){
-					res.savecomments = this.savecomments
+					res.savecomments = JSON.parse(JSON.stringify(this.savecomments))
 				}
 			}],
 		['load',
@@ -751,16 +813,38 @@ module.FileSystemLoaderUI = core.ImageGridFeatures.Feature({
 					this.savecomments = data.savecomments
 				}
 			}],
+		// Prepare comments for writing...
+		//
 		// NOTE: defining this here enables us to actually post-bind to
 		// 		an action that is defined later or may not even be 
 		// 		available.
 		['prepareIndexForWrite',
 			function(res){
-				var source = res.raw.savecomments
-				if(source && Object.keys(source).length > 0){
-					res.prepared.savecomments = source
+				var changed = this.changes == null 
+					|| this.changes.savecomments
+
+				if(changed){
+					var comments = res.raw.savecomments || {}
+
+					// set the 'current' comment to the correct date...
+					if(comments.current){
+						comments[res.date] = comments.current
+						delete comments.current
+					}
+
+					res.prepared.savecomments = comments
 				}
-			}]
+			}],
+		// replace .savecomments['current'] with .location.from...
+		['saveIndex',
+			function(){
+				var comments = this.savecomments
+
+				if(comments && comments.current){
+					comments[this.location.from] = comments.current
+					delete comments.current
+				}
+			}],
 	]
 })
 
@@ -994,7 +1078,7 @@ var FileSystemWriterActions = actions.Actions({
 	// 	1) .json() action
 	// 		- use this for global high level serialization format
 	// 		- the output of this is .load(..) compatible
-	// 	2) .prepareIndex(..) action
+	// 	2) .prepareIndexForWrite(..) action
 	// 		- use this for file system write preparation
 	// 		- this directly affects the index structure
 	//
@@ -1002,6 +1086,10 @@ var FileSystemWriterActions = actions.Actions({
 	//
 	// Returns:
 	// 	{
+	// 		// Timestamp...
+	// 		// NOTE: this is the timestamp used to write the index.
+	// 		date: <timestamp>,
+	//
 	// 		// This is the original json object, either the one passed as
 	// 		// an argument or the one returned by .json('base')
 	// 		raw: <original-json>,
@@ -1034,6 +1122,7 @@ var FileSystemWriterActions = actions.Actions({
 				: this.hasOwnProperty('changes') ? this.changes
 				: null
 			return {
+				date: window.Date.timeStamp(),
 				raw: json,
 				prepared: file.prepareIndex(json, changes),
 			}
@@ -1060,15 +1149,19 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX get real base path...
 			//path = path || this.location.path +'/'+ this.config['index-dir']
 
+			var indes = this.prepareIndexForWrite()
+
 			return file.writeIndex(
-					this.prepareIndexForWrite().prepared, 
+					index.prepared, 
 					// XXX should we check if index dir is present in path???
 					//path, 
 					path +'/'+ this.config['index-dir'], 
+					inex.date,
 					this.config['index-filename-template'], 
 					logger || this.logger)
 				.then(function(){
 					that.location.method = 'loadIndex'
+					that.location.from = date
 				})
 		}],
 

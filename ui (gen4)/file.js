@@ -825,11 +825,12 @@ var FILENAME = '${DATE}-${KEYWORD}.${EXT}'
 
 var writeIndex =
 module.writeIndex = 
-function(json, path, filename_tpl, logger){
+function(json, path, date, filename_tpl, logger){
 	filename_tpl = filename_tpl || FILENAME
 	// XXX for some reason this gets the unpatched node.js Date, so we 
 	// 		get the patched date explicitly...
-	var date = window.Date.timeStamp()
+	date = date || window.Date.timeStamp()
+
 	var files = []
 
 	// build the path if it does not exist...
