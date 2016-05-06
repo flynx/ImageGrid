@@ -473,6 +473,10 @@ var FileSystemLoaderUIActions = actions.Actions({
 			showNonTraversable: true,
 			showDisabled: true,
 		},
+
+		// if set true, if unsaved changes present when opening a save 
+		// history state, save the changes...
+		'auto-save-on-save-history-open': true,
 	},
 
 	// Save comments...
@@ -533,6 +537,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 		}],
 
 
+	// FS browser...
+	//
 	// XXX should the loader list be nested or open in overlay (as-is now)???
 	browsePath: ['File/Browse file system...',
 		widgets.makeUIDialog(function(base, callback){
@@ -600,6 +606,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 			return o
 		})],
 
+	// Browse indexes/images...
+	//
 	// NOTE: if no path is passed (null) these behave just like .browsePath(..)
 	// 		with the appropriate callback otherwise it will just load 
 	// 		the given path (no UI) while .browsePath(..) will load the 
@@ -657,11 +665,13 @@ var FileSystemLoaderUIActions = actions.Actions({
 			return o
 		})],
 
+	// List save history dialog...
+	//
 	// NOTE: for multiple indexes this will show the combined history
 	// 		and selecting a postion will load all the participating 
-	// 		indexes to that date.
-	// NOTE: this will show nothing if .location.method is not loadIndex..
-	// NOTE: this will drop all unsaved changes
+	// 		indexes to that specific date or closest earlier state.
+	// NOTE: this will show no history if .location.method is not loadIndex..
+	// NOTE: this will drop all unsaved changes when loading a state (XXX)
 	// NOTE: this will set changes to all when loading a different state
 	// 		that the latest and to non otherwise....
 	//
@@ -687,7 +697,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 				var from = that.location.from
 				from = from && Date.fromTimeStamp(from).toShortDate()
 
-				if(that.changes !== false){
+				if(that.changes !== false && !that.location.historic){
 					var title = ['Unsaved state']
 
 					var comment = that.savecomments && that.savecomments['current'] 
@@ -737,13 +747,42 @@ var FileSystemLoaderUIActions = actions.Actions({
 							.sort()
 							.reverse()
 
-						// Special case: top save state is the default, 
-						// no need to mark anything for change...
-						var first = list.shift()
-						first && make(Date.fromTimeStamp(first).toShortDate())
-							.on('open', function(){
-								that.loadIndex(that.location.path, first)
-							})
+						// Special case: unsaved state...
+						if(that.unsaved_index){
+							var title = ['Unsaved state']
+
+							var comment = that.savecomments && that.savecomments['current'] 
+							//title.push(comment || '')
+							comment && title.push(comment)
+
+							// XXX is this the best format???
+							title = title.join(' - ')
+
+							make(title)	
+								.on('open', function(){
+									var location = that.location
+
+									that.load(that.unsaved_index)
+
+									delete that.unsaved_index
+
+									delete location.historic
+									delete location.from
+
+									that.__location = location
+								})
+
+							make('---')
+
+						// Special case: top save state is the default...
+						// NOTE: no need to mark anything for change...
+						} else {
+							var first = list.shift()
+							first && make(Date.fromTimeStamp(first).toShortDate())
+								.on('open', function(){
+									that.loadIndex(that.location.path, first)
+								})
+						}
 
 						list
 							.forEach(function(d){
@@ -761,9 +800,19 @@ var FileSystemLoaderUIActions = actions.Actions({
 								make(title)
 									.attr('timestamp', d)
 									.on('open', function(){
+										// auto save...
+										if(that.config['auto-save-on-save-history-open' ]
+												&& that.changes !== false
+												&& !that.location.historic){
+											// XXX should we use a crop for this???
+											that.unsaved_index = that.json()
+										}
+
+										// NOTE: this will drop all unsaved changes...
 										that.loadIndex(that.location.path, d)
 											.then(function(){
 												that.markChanged('all')
+												that.location.historic = true
 											})
 									})
 									// mark the current loaded position...
