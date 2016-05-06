@@ -667,6 +667,30 @@ function(){
 // XXX make this merge if we locate more than one index...
 var buildIndex = 
 module.buildIndex = function(index, base_path){
+	var res = {}
+
+	// we'll handle these in a special way...
+	var special = [
+		'data',
+		'tags',
+		'bookmarked',
+		'marked',
+		'current',
+		'images',
+	]
+
+	// copy the rest as-is...
+	for(var k in index){
+		if(special.indexOf(k) > -1){
+			continue
+		}
+
+		res[k] = index[k]
+	}
+
+
+	// now do the special stuff...
+
 	var d = data.Data.fromJSON(index.data)
 
 	// buildup the data object...
@@ -703,10 +727,10 @@ module.buildIndex = function(index, base_path){
 		img.forEach(function(_, img){ img.base_path = base_path })
 	}
 
-	return {
-		data: d, 
-		images: img,
-	}
+	res.data = d
+	res.images = img
+
+	return res
 }
 
 

@@ -46,9 +46,11 @@ if(typeof(process) != 'undefined'){
 
 
 /*********************************************************************/
-// fs reader/loader...
+// Loader... 
 
 
+// NOTE: this will also manage .location.from
+//
 // XXX revise base path mechanics...
 // 		.loaded_paths
 var FileSystemLoaderActions = actions.Actions({
@@ -89,19 +91,10 @@ var FileSystemLoaderActions = actions.Actions({
 			}
 		}],
 
-
 	// XXX is this a hack???
 	// XXX need a more generic form...
 	checkPath: ['- File/',
 		function(path){ return fse.existsSync(path) }],
-
-
-	loadSaveHistoryList: ['- File/',
-		function(path){
-			path = path || this.location.path
-
-			return file.loadSaveHistoryList(path)
-		}],
 
 	// NOTE: when passed no path this will not do anything...
 	// NOTE: this will add a .from field to .location, this will indicate
@@ -414,17 +407,37 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 	suggested: [
 		'ui-fs-loader',
 		'fs-url-history',
+		'fs-save-history',
 	],
 
 	actions: FileSystemLoaderActions,
 
 	isApplicable: function(){ 
 		return this.runtime == 'node' || this.runtime == 'nw' },
+
+	handlers: [
+		// save/resore .savecomments
+		// 
+		['json',
+			function(res){
+				if(this.savecomments != null){
+					res.savecomments = JSON.parse(JSON.stringify(this.savecomments))
+				}
+			}],
+		['load',
+			function(_, data){
+				if(data.savecomments != null){
+					this.savecomments = data.savecomments
+				}
+			}],
+
+	],
 })
 
 
 
 //---------------------------------------------------------------------
+// Loader UI...
 
 // XXX would need to delay the original action while the user is 
 // 		browsing...
@@ -473,69 +486,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 			showNonTraversable: true,
 			showDisabled: true,
 		},
-
-		// if set true, if unsaved changes present when opening a save 
-		// history state, save the changes...
-		'auto-save-on-save-history-open': true,
 	},
-
-	// Save comments...
-	//
-	// Format:
-	// 	{
-	// 		// comment staged for next .saveIndex(..)...
-	// 		'current': <comment>,
-	//
-	// 		<timestamp>: <comment>,
-	// 		...
-	// 	}
-	savecomments: null,
-
-
-	// Comment a save...
-	//
-	// 	Comment current save...
-	// 	.setSaveComment(comment)
-	// 		-> actions
-	//
-	// 	Reset current save comment...
-	// 	.setSaveComment(null)
-	// 		-> actions
-	//
-	// 	Comment specific save...
-	// 	.setSaveComment(save, comment)
-	// 		-> actions
-	//
-	// 	Reset specific save comment...
-	// 	.setSaveComment(save, null)
-	// 		-> actions
-	//
-	// NOTE: "save" is the save format as returned by file.groupByDate(..),
-	// 		or .loadSaveHistoryList(..)
-	// 		...normally it is Date.timeStamp() compatible string.
-	setSaveComment: ['- File/Comment a save',
-		function(save, comment){
-			var comments = this.savecomments = this.savecomments || {}
-
-			// no explicit save given -- stage a comment for next save...
-			if(comment === undefined){
-				comment = save
-				save = 'current'
-			}
-
-			if(comment === undefined){
-				return
-
-			} else if(comment == null){
-				delete comments[save]
-
-			} else {
-				comments[save] = comment
-			}
-
-			this.markChanged('savecomments')
-		}],
-
 
 	// FS browser...
 	//
@@ -664,57 +615,220 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 			return o
 		})],
+})
+
+
+// XXX is this a good name???
+var FileSystemLoaderUI = 
+module.FileSystemLoaderUI = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-fs-loader',
+	depends: [
+		'ui',
+		'fs-loader'
+	],
+
+	actions: FileSystemLoaderUIActions,
+})
+
+
+
+//---------------------------------------------------------------------
+// Save History...
+
+var FileSystemSaveHistoryActions = actions.Actions({
+	// Save comments...
+	//
+	// Format:
+	// 	{
+	// 		// comment staged for next .saveIndex(..)...
+	// 		'current': <comment>,
+	//
+	// 		<timestamp>: <comment>,
+	// 		...
+	// 	}
+	savecomments: null,
+
+	// Comment a save...
+	//
+	// 	Comment current save...
+	// 	.setSaveComment(comment)
+	// 		-> actions
+	//
+	// 	Reset current save comment...
+	// 	.setSaveComment(null)
+	// 		-> actions
+	//
+	// 	Comment specific save...
+	// 	.setSaveComment(save, comment)
+	// 		-> actions
+	//
+	// 	Reset specific save comment...
+	// 	.setSaveComment(save, null)
+	// 		-> actions
+	//
+	// NOTE: "save" is the save format as returned by file.groupByDate(..),
+	// 		or .loadSaveHistoryList(..)
+	// 		...normally it is Date.timeStamp() compatible string.
+	setSaveComment: ['- File/Comment a save',
+		function(save, comment){
+			var comments = this.savecomments = this.savecomments || {}
+
+			// no explicit save given -- stage a comment for next save...
+			if(comment === undefined){
+				comment = save
+				save = 'current'
+			}
+
+			if(comment === undefined){
+				return
+
+			} else if(comment == null){
+				delete comments[save]
+
+			} else {
+				comments[save] = comment
+			}
+
+			this.markChanged('savecomments')
+		}],
+
+	loadSaveHistoryList: ['- File/',
+		function(path){
+			path = path || this.location.path
+
+			return file.loadSaveHistoryList(path)
+		}],
+})
+
+
+var FileSystemSaveHistory = 
+module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'fs-save-history',
+	depends: [
+		'fs-loader'
+	],
+	suggested: [
+		'ui-fs-save-history',
+	],
+
+	actions: FileSystemSaveHistoryActions,
+
+	handlers: [
+		// Prepare comments for writing...
+		//
+		// NOTE: defining this here enables us to actually post-bind to
+		// 		an action that is defined later or may not even be 
+		// 		available.
+		['prepareIndexForWrite',
+			function(res){
+				var changed = this.changes == null 
+					|| this.changes.savecomments
+
+				if(changed){
+					var comments = res.raw.savecomments || {}
+
+					// set the 'current' comment to the correct date...
+					if(comments.current){
+						comments[res.date] = comments.current
+						delete comments.current
+					}
+
+					res.prepared.savecomments = comments
+				}
+			}],
+		// replace .savecomments['current'] with .location.from...
+		//
+		// NOTE: this will also drop any unsaved changes from browsing 
+		// 		history...
+		['saveIndex',
+			function(res){
+				var that = this
+				var comments = this.savecomments
+
+				if(comments && comments.current){
+					res
+						.then(function(){
+							comments[that.location.from] = comments.current
+							delete comments.current
+						})
+				}
+
+				delete this.unsaved_index
+			}],
+	]
+})
+
+
+
+//---------------------------------------------------------------------
+// Save History UI...
+
+// XXX add comment editing...
+// XXX should this also list journal stuff or have the ability for extending???
+var FileSystemSaveHistoryUIActions = actions.Actions({
+	// Saved original index state before loading a state from history...
+	//
+	unsaved_index: null,
 
 	// List save history dialog...
 	//
-	// NOTE: for multiple indexes this will show the combined history
-	// 		and selecting a postion will load all the participating 
-	// 		indexes to that specific date or closest earlier state.
-	// NOTE: this will show no history if .location.method is not loadIndex..
-	// NOTE: this will drop all unsaved changes when loading a state (XXX)
-	// NOTE: this will set changes to all when loading a different state
+	//	.location.from			- set to timestamp of save state when 
+	//								selecting a non-top state.
+	//								NOTE: this may be set to last save 
+	//									state.
+	// 	.location.historic		- set to true when at a non-top state.
+	//
+	// For multiple indexes this will show the combined history and 
+	// selecting a postion will load all the participating indexes to 
+	// that specific date or closest earlier state.
+	//
+	// Unsaved changes will be saved to .unsaved_index when switching 
+	// from current to a historic state.
+	//
+	// NOTE: this will show no history if .location.method is not 'loadIndex'..
+	// NOTE: this will set changes to all when loading a historic state
 	// 		that the latest and to non otherwise....
 	//
 	// XXX add comment editing...
-	// XXX need to handle saves (saveIndex(..) and friends) when loaded
-	// 		a specific history position...
-	// 		...in theory saving and old index will create an incremental
-	// 		save which should not damage the history and can be fixed 
-	// 		either by removing the actual .json files or simply loading
-	// 		from a previous position and re-saving... (XXX test)
-	// XXX should this also list journal stuff or have the ability for
-	// 		extending???
-	// XXX should this save the unsaved changes when switching to a version
-	// 		or discard them (current behavior)
-	// 		...saving might be logical...
+	// XXX might be a good idea to show a diff of some kind or at least
+	// 		what .changed when writing a save...
 	listSaveHistory: ['File/History...',
 		widgets.makeUIDialog(function(){
 			var that = this
+
+			var _makeTitle = function(title, date, a){
+				title = [title]
+				date = date || 'current'
+				a = a || that
+
+				var comment = a.savecomments && a.savecomments[date] 
+				//title.push(comment || '')
+				comment && title.push(comment)
+
+				// XXX is this the best format???
+				return title.join(' - ')
+			}
 
 			var o = browse.makeLister(null, function(path, make){
 				var dialog = this
 
 				var from = that.location.from
-				from = from && Date.fromTimeStamp(from).toShortDate()
 
-				if(that.changes !== false && !that.location.historic){
-					var title = ['Unsaved state']
-
-					var comment = that.savecomments && that.savecomments['current'] 
-					//title.push(comment || '')
-					comment && title.push(comment)
-
-					// XXX is this the best format???
-					title = title.join(' - ')
-
-					make(title)	
+				if(that.changes !== false){
+					make(_makeTitle('Current state (unsaved)', 'current'))	
 
 					make('---')
 				}
 
 				// only search for history if we have an index loaded...
 				if(that.location.method != 'loadIndex'){
-					make('No history...', null, true)	
+					make('No history...', {disabled: true})	
 
 					// select the 'Unsaved' item...
 					dialog.select()
@@ -749,36 +863,21 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 						// Special case: unsaved state...
 						if(that.unsaved_index){
-							var title = ['Unsaved state']
+							var unsaved = that.unsaved_index
 
-							var comment = that.savecomments && that.savecomments['current'] 
-							//title.push(comment || '')
-							comment && title.push(comment)
-
-							// XXX is this the best format???
-							title = title.join(' - ')
-
-							make(title)	
+							make(_makeTitle('Original state (unsaved)', 'current', unsaved))	
 								.on('open', function(){
-									var location = that.location
-
-									that.load(that.unsaved_index)
+									that.load(unsaved)
 
 									delete that.unsaved_index
-
-									delete location.historic
-									delete location.from
-
-									that.__location = location
 								})
 
-							make('---')
-
-						// Special case: top save state is the default...
-						// NOTE: no need to mark anything for change...
-						} else {
+						// Special case: top save state is the default, 
+						// no need to mark anything for change, but only
+						// if nothing changed...
+						} else if(that.changes === false){
 							var first = list.shift()
-							first && make(Date.fromTimeStamp(first).toShortDate())
+							first && make(_makeTitle(Date.fromTimeStamp(first).toShortDate(), first))	
 								.on('open', function(){
 									that.loadIndex(that.location.path, first)
 								})
@@ -788,35 +887,32 @@ var FileSystemLoaderUIActions = actions.Actions({
 							.forEach(function(d){
 								var txt = Date.fromTimeStamp(d).toShortDate()
 
-								// get the save name...
-								var title = [txt]
-								var comment = that.savecomments && that.savecomments[d] 
-								//title.push(comment || '')
-								comment && title.push(comment)
-
-								// XXX is this the best format???
-								title = title.join(' - ')
-
-								make(title)
+								make(_makeTitle(Date.fromTimeStamp(d).toShortDate(), d))	
 									.attr('timestamp', d)
 									.on('open', function(){
 										// auto save...
-										if(that.config['auto-save-on-save-history-open' ]
-												&& that.changes !== false
+										if(that.changes !== false
 												&& !that.location.historic){
-											// XXX should we use a crop for this???
 											that.unsaved_index = that.json()
 										}
 
-										// NOTE: this will drop all unsaved changes...
 										that.loadIndex(that.location.path, d)
 											.then(function(){
 												that.markChanged('all')
+
 												that.location.historic = true
+
+												// remove 'current' comments
+												// from loaded state...
+												//
+												// NOTE: the original 'current'
+												// 		comment is saved to
+												// 		.unsaved_index
+												delete that.savecomments.current
 											})
 									})
 									// mark the current loaded position...
-									.addClass(txt == from ? 'selected highlighted' : '')
+									.addClass(d == from ? 'selected highlighted' : '')
 							})
 
 						make.done()
@@ -836,66 +932,23 @@ var FileSystemLoaderUIActions = actions.Actions({
 })
 
 
-// XXX is this a good name???
-var FileSystemLoaderUI = 
-module.FileSystemLoaderUI = core.ImageGridFeatures.Feature({
+var FileSystemSaveHistoryUI = 
+module.FileSystemSaveHistoryUI = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-fs-loader',
+	tag: 'ui-fs-save-history',
 	depends: [
 		'ui',
-		'fs-loader'
+		'fs-save-history',
 	],
 
-	actions: FileSystemLoaderUIActions,
+	actions: FileSystemSaveHistoryUIActions,
 
 	handlers: [
-		// save/resore .savecomments
-		// 
-		['json',
-			function(res){
-				if(this.savecomments != null){
-					res.savecomments = JSON.parse(JSON.stringify(this.savecomments))
-				}
-			}],
-		['load',
-			function(_, data){
-				if(data.savecomments != null){
-					this.savecomments = data.savecomments
-				}
-			}],
-		// Prepare comments for writing...
-		//
-		// NOTE: defining this here enables us to actually post-bind to
-		// 		an action that is defined later or may not even be 
-		// 		available.
-		['prepareIndexForWrite',
-			function(res){
-				var changed = this.changes == null 
-					|| this.changes.savecomments
-
-				if(changed){
-					var comments = res.raw.savecomments || {}
-
-					// set the 'current' comment to the correct date...
-					if(comments.current){
-						comments[res.date] = comments.current
-						delete comments.current
-					}
-
-					res.prepared.savecomments = comments
-				}
-			}],
-		// replace .savecomments['current'] with .location.from...
 		['saveIndex',
-			function(){
-				var comments = this.savecomments
-
-				if(comments && comments.current){
-					comments[this.location.from] = comments.current
-					delete comments.current
-				}
+			function(res){
+				delete this.unsaved_index
 			}],
 	]
 })
@@ -903,6 +956,7 @@ module.FileSystemLoaderUI = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// URL History...
 
 var pushToHistory = function(action, to_top, checker){
 	return [action, 
@@ -945,6 +999,7 @@ module.FileSystemLoaderURLHistory = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// URL History UI...
 
 // Opening the url via .browsePath(..) if url is in history will move 
 // it to top of list...
@@ -973,7 +1028,7 @@ module.FileSystemLoaderURLHistoryUI = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
-// fs writer...
+// Writer...
 
 var FileSystemWriterActions = actions.Actions({
 	config: {
@@ -1201,19 +1256,19 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX get real base path...
 			//path = path || this.location.path +'/'+ this.config['index-dir']
 
-			var indes = this.prepareIndexForWrite()
+			var index = this.prepareIndexForWrite()
 
 			return file.writeIndex(
 					index.prepared, 
 					// XXX should we check if index dir is present in path???
 					//path, 
 					path +'/'+ this.config['index-dir'], 
-					inex.date,
+					index.date,
 					this.config['index-filename-template'], 
 					logger || this.logger)
 				.then(function(){
 					that.location.method = 'loadIndex'
-					that.location.from = date
+					that.location.from = index.date
 				})
 		}],
 
@@ -1492,11 +1547,11 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 			function(res, path){
 				// NOTE: if saving to a different path than loaded do not
 				// 		drop the .changes flags...
-				if(path && path == this.location.path){
+				if(!path || path == this.location.path){
 					//this.markChanged('none')
 					var that = this
 					res.then(function(){
-						this.markChanged('none')
+						that.markChanged('none')
 					})
 				}
 			}],
@@ -1577,11 +1632,14 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 
 				this.markChanged.apply(this, changes)
 			}],
+
 	]
 })
 
 
 //---------------------------------------------------------------------
+// Writer UI...
+
 // XXX add writer UI feature...
 // 		- save as.. (browser)
 // 		- save if not base path present (browser)
@@ -1829,6 +1887,7 @@ core.ImageGridFeatures.Feature('fs', [
 	'fs-loader',
 	'fs-writer',
 ])
+
 
 
 /**********************************************************************

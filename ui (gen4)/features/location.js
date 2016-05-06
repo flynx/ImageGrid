@@ -43,6 +43,7 @@ var LocationActions = actions.Actions({
 	// 		to open the dir (open parent + select current) and not 
 	// 		within the dir
 	__location: null,
+
 	get location(){
 		this.__location = this.__location || {}
 
@@ -71,21 +72,20 @@ var LocationActions = actions.Actions({
 
 		// got an object...
 		} else {
-			var path = value.path
-			var method = value.method
-			var cur = value.current
+			value = JSON.parse(JSON.stringify(value))
+
+			var path = value.path = value.path
+
+			value.method = value.method
+			value.current = value.current
 		}
 
 		// normalize path if it's not root...
 		if(path != '/' && path != '\\'){
-			path = util.normalizePath(path)
+			value.path = util.normalizePath(path)
 		}
 
-		this.__location = {
-			path: path,
-			method: method,
-			current: cur,
-		}
+		this.__location = value 
 
 		var res = this[value.method || 'loadIndex'](path)
 
@@ -108,6 +108,21 @@ module.Location = core.ImageGridFeatures.Feature({
 	tag: 'location',
 
 	actions: LocationActions,
+
+	handlers: [
+		['json',
+			function(res){
+				if(this.location){
+					res.location = JSON.parse(JSON.stringify(this.location))
+				}
+			}],
+		['load',
+			function(_, data){
+				if(data.location){
+					this.__location = data.location
+				}
+			}],
+	],
 })
 
 
