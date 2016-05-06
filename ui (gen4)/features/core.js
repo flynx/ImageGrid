@@ -330,6 +330,8 @@ module.makeWorkspaceConfigLoader = function(keys, callback){
 
 var WorkspaceActions = actions.Actions({
 	config: {
+		'load-workspace': 'default',
+
 		'workspace': 'default',
 		'workspaces': {},
 	},
@@ -396,6 +398,28 @@ var WorkspaceActions = actions.Actions({
 		makeConfigToggler('workspace',
 			function(){ return Object.keys(this.config['workspaces']) },
 			function(state){ this.loadWorkspace(state) })],
+
+	pushWorkspace: ['- Workspace/',
+		function(name){
+			name = name || this.workspace
+			var stack = this.__workspace_stack = this.__workspace_stack || []
+
+			this.saveWorkspace()
+
+			this.workspace != name && this.loadWorkspace(name)
+			stack.push(name)
+		}],
+	popWorkspace: ['- Workspace/',
+		function(){
+			var stack = this.__workspace_stack
+
+			if(!stack || stack.length == 0){
+				return
+			}
+
+			this.saveWorkspace()
+			this.loadWorkspace(stack.pop())
+		}],
 })
 
 
@@ -412,8 +436,12 @@ module.Workspace = ImageGridFeatures.Feature({
 	actions: WorkspaceActions,
 
 	handlers: [
+		['start', 
+			function(){ 
+				this.loadWorkspace(this.config['load-workspace'] || 'default') }],
 		['stop', 
-			function(){ this.saveWorkspace() }],
+			function(){ 
+				this.saveWorkspace() }],
 	],
 })
 

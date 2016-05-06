@@ -307,7 +307,7 @@ var StatusBarActions = actions.Actions({
 
 				var bar = this.ribbons.viewer.find('.state-indicator-container.global-info') 
 				if(bar.length == 0){
-					bar = makeStateIndicator('global-info overlay-info') 
+					bar = makeStateIndicator('global-info overlay-info statusbar') 
 						.addClass(this.config['status-bar-mode'] || '')
 						.on('mouseover', function(){
 							var t = $(event.target)

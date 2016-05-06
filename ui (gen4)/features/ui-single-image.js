@@ -226,7 +226,22 @@ var SingleImageActions = actions.Actions({
 	toggleSingleImage: ['Interface/Toggle single image view', 
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
-			'single-image-mode') ],
+			'single-image-mode',
+			function(state){
+				if(state == 'on'){
+					this.pushWorkspace()
+
+					if(this.workspaces['single-image'] == null){
+						this.loadWorkspace('ui-chrome-hidden') 
+						this.saveWorkspace('single-image') 
+					}
+
+					this.loadWorkspace('single-image') 
+
+				} else {
+					this.popWorkspace()
+				}
+			})],
 })
 
 

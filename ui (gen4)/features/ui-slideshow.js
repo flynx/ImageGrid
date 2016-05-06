@@ -183,9 +183,11 @@ var SlideshowActions = actions.Actions({
 
 					// prepare for the slideshow...
 					} else {
+						// single image mode...
+						this.toggleSingleImage('on')
+
 						// save current workspace...
-						this.__pre_slideshow_workspace = this.workspace
-						this.saveWorkspace() 
+						this.pushWorkspace()
 
 						// construct the slideshow workspace if it does
 						// not exist...
@@ -199,9 +201,6 @@ var SlideshowActions = actions.Actions({
 
 						// load the slideshow workspace...
 						this.loadWorkspace('slideshow')
-				
-						// single image mode...
-						this.toggleSingleImage('on')
 					}
 
 					// start the timer... 
@@ -230,17 +229,13 @@ var SlideshowActions = actions.Actions({
 
 				// stop...
 				} else {
-					this.saveWorkspace('slideshow') 
-
 					// stop timer...
 					this.__slideshouw_timer
 						&& clearInterval(this.__slideshouw_timer)
 					delete this.__slideshouw_timer
 
 					// restore the original workspace...
-					this.__pre_slideshow_workspace &&
-						this.loadWorkspace(this.__pre_slideshow_workspace)
-					delete this.__pre_slideshow_workspace
+					this.popWorkspace()
 				}
 			})],
 
