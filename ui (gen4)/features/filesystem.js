@@ -481,8 +481,6 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 	{
 	// 		<timestamp>: <comment>
 	// 	}
-	//
-	// XXX need to save/restore these...
 	savecomments: null,
 
 
