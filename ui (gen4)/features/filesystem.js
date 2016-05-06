@@ -50,9 +50,6 @@ if(typeof(process) != 'undefined'){
 
 
 // NOTE: this will also manage .location.from
-//
-// XXX revise base path mechanics...
-// 		.loaded_paths
 var FileSystemLoaderActions = actions.Actions({
 	config: {
 		'index-dir': '.ImageGrid',
@@ -69,17 +66,10 @@ var FileSystemLoaderActions = actions.Actions({
 	clone: [function(full){
 		return function(res){
 			if(this.location){
-				res.location.path = this.location.path
-				res.location.method = this.location.method
-			}
-			if(this.loaded_paths){
-				res.loaded_paths = JSON.parse(JSON.stringify(this.loaded_paths))
+				res.__location = JSON.parse(JSON.stringify(this.__location))
 			}
 		}
 	}],
-
-	loaded_paths: null,
-
 
 	// XXX should this be more general???
 	reloadState: ['File/Reload viewer state...',
@@ -96,12 +86,14 @@ var FileSystemLoaderActions = actions.Actions({
 	checkPath: ['- File/',
 		function(path){ return fse.existsSync(path) }],
 
+	// 
+	// This maintains:
+	// 	.location.loaded		- list of loaded URLs...
+	//
 	// NOTE: when passed no path this will not do anything...
 	// NOTE: this will add a .from field to .location, this will indicate
 	// 		the date starting from which saves are loaded.
 	//
-	// XXX how should .location be handled when merging indexes or
-	//		viewing multiple/clustered indexes???
 	// XXX add a symmetric equivalent to .prepareIndexForWrite(..) so as 
 	// 		to enable features to load their data...
 	// XXX should this return a promise??? ...a clean promise???
@@ -216,9 +208,9 @@ var FileSystemLoaderActions = actions.Actions({
 
 					that.load(index)
 
-					that.loaded_paths = loaded
 					that.__location = {
-						path: loaded.length == 1 ? loaded[0] : path,
+						path: path,
+						loaded: loaded,
 						method: 'loadIndex',
 					}
 
@@ -389,7 +381,6 @@ var FileSystemLoaderActions = actions.Actions({
 
 	clear: [function(){
 		delete this.__location
-		delete this.loaded_paths
 	}],
 })
 
@@ -1240,7 +1231,15 @@ var FileSystemWriterActions = actions.Actions({
 	saveIndex: ['- File/',
 		function(path, logger){
 			var that = this
-			path = path || this.location.path
+
+			path = path || this.location.loaded
+			path = path.length == 1 ? path[0] : path 
+
+			// XXX
+			if(path instanceof Array){
+				console.error('saving to merged indexes not yet supported...')
+				return
+			}
 
 			// resolve relative paths...
 			if(/^(\.\.?[\\\/]|[^\\\/])/.test(path) 
