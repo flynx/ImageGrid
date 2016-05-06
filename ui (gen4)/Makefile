@@ -159,10 +159,11 @@ chrome-app: $(APP_ZIP) $(CHROME_APP_BUILD_DIR)
 # XXX include exiftool...
 # XXX include scripts/utils???
 win64: $(APP_ZIP) $(WIN_BUILD_DIR)
+	rm -rf $(WIN_BUILD_DIR)
 	unzip -u targets/nwjs/nwjs-*-win-x64.zip \
 		-d $(WIN_BUILD_DIR)
-	mv $(WIN_BUILD_DIR)/nwjs*win-x64/* $(WIN_BUILD_DIR)/	
-	rm -rf $(WIN_BUILD_DIR)/nwjs*/	
+	mv -uf $(WIN_BUILD_DIR)/nwjs*win-x64/* $(WIN_BUILD_DIR)/
+	rm -rf $(WIN_BUILD_DIR)/nwjs*/
 	cat $(APP_ZIP) >> $(WIN_BUILD_DIR)/nw.exe
 	mv $(WIN_BUILD_DIR)/nw.exe $(WIN_BUILD_DIR)/$(APP_NAME).exe
 	chmod +x $(WIN_BUILD_DIR)/*.{exe,dll}
