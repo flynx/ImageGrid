@@ -34,6 +34,10 @@
 
 	box-shadow: rgba(0, 0, 0, 0.1) 0.3em 0.3em 5em;
 }
+.drawer-widget.top .content {
+	top: auto;
+	margin-bottom: 100%;
+}
 .drawer-widget~.drawer-widget .content {
 	box-shadow: rgba(0, 0, 0, 0.05) 0.1em 0.1em 3em;
 }

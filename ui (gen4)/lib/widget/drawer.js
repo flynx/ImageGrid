@@ -19,7 +19,7 @@ var DrawerClassPrototype = {
 	make: function(obj, client, options){
 		var that = this
 		var overlay = $('<div>')
-			.addClass('drawer-widget')
+			.addClass('drawer-widget ' + (options.direction || 'bottom'))
 			.append($('<div>')
 				.addClass('content')
 				.click(function(){
@@ -60,6 +60,8 @@ var DrawerPrototype = {
 		],
 
 		background: null,
+
+		direction: 'bottom',
 	},
 
 	keyboard: {
@@ -115,30 +117,68 @@ var DrawerPrototype = {
 			.click(function(){
 				that.close()
 			})
-			.css({opacity: 0})
+			.css({ opacity: 0 })
+			.scrollTop(options.direction == 'bottom' ?  0
+				: options.direction == 'top' ?
+					dom.find('.content')[0].scrollHeight
+				: 0)
 			.animate({
-					scrollTop: Math.min(
-						client_dom.outerHeight(), 
-						// do not scroll more than the container height and
-						// keep a bit on top...
-						(parent.is('body') ? $(document) : parent)
-							.outerHeight()-options['fade-at'])+'px',
+					scrollTop: 
+						(options.direction == 'bottom' ?
+							Math.min(
+								client_dom.outerHeight(), 
+								// do not scroll more than the container height and
+								// keep a bit on top...
+								(parent.is('body') ? $(document) : parent)
+									.outerHeight()-options['fade-at']) + 'px'
+						// XXX this is wrong!
+						: options.direction == 'top' ?
+							(dom.find('.content')[0].scrollHeight
+							 	- dom.outerHeight()
+								+ options['fade-at']) + 'px'
+						: 0),
 					opacity: 1,
 				}, 
 				options['animate'],
 				function(){
 					dom.scroll(function(){
 						var st = $(this).scrollTop()
-						var h = Math.min(options['fade-at'], client_dom.outerHeight())
-						// start fading...
-						if(st < h){
-							dom.css({ opacity: Math.min(1, st/h) })
-						} else if(dom.css('opacity') < 1){
-							dom.css('opacity', 1)
-						}
-						// close drawer when scrolling to the top...
-						if(st < options['close-at']){
-							that.close()
+
+						// bottom drawer...
+						if(options.direction == 'bottom'){
+							var h = Math.min(options['fade-at'], client_dom.outerHeight())
+
+							// start fading...
+							if(st < h){
+								dom.css({ opacity: Math.min(1, st/h) })
+
+							} else if(dom.css('opacity') < 1){
+								dom.css('opacity', 1)
+							}
+
+							// close drawer when scrolling to the top...
+							if(st < options['close-at']){
+								that.close()
+							}
+
+						// top drawer...
+						} else if(options.direction == 'top'){
+							var h = dom.find('.content')[0].scrollHeight
+
+							// start fading...
+							// XXX not working yet...
+							if(st < h - options['fade-at']){
+								dom.css({ opacity: Math.min(1, st/h) })
+
+							} else if(dom.css('opacity') < 1){
+								dom.css('opacity', 1)
+							}
+
+							// close...
+							if(st > h - options['close-at']){
+								// XXX adapt close...
+								that.close()
+							}
 						}
 					})
 				})

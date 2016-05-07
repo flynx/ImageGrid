@@ -386,6 +386,28 @@ module.makeUIDialog = function(a, b){
 }
 
 
+var makeDrawer = function(direction){
+	return makeUIContainer(function(dialog, options){
+		var parent = (options || {}).parentElement 
+		parent = parent ? $(parent) : this.ribbons.viewer 
+
+		options.direction = direction || 'bottom'
+
+		var d = drawer.Drawer(
+				parent,
+				dialog, 
+				options)
+		// we need to clear other ui elements, like the status bar...
+		// XXX is this the right way to go???
+		d.dom.css({
+			'z-index': 5000,
+		})
+
+		return d
+	})
+}
+
+
 
 //---------------------------------------------------------------------
 
@@ -432,34 +454,14 @@ var DialogsActions = actions.Actions({
 		})],
 	// XXX should this be renamed to BottomDrawer???
 	Drawer: ['- Interface/',
-		makeUIContainer(function(dialog, options){
-			var parent = (options || {}).parentElement 
-			parent = parent ? $(parent) : this.ribbons.viewer 
-
-			var d = drawer.Drawer(
-					parent,
-					dialog, 
-					options)
-			// we need to clear other ui elements, like the status bar...
-			// XXX is this the right way to go???
-			d.dom.css({
-				'z-index': 5000,
-			})
-
-			return d
-		})],
+		makeDrawer('bottom')],
 	
 	// XXX not implemented yet...
 	TopDrawer: ['- Interface/',
-		makeUIContainer(function(dialog, options){
-			// XXX
-			console.error('Not yet implemented.')
-		})],
+		makeDrawer('top')],
 	BottomDrawer: ['- Interface/',
-		makeUIContainer(function(dialog, options){
-			// XXX
-			console.error('Not yet implemented.')
-		})],
+		makeDrawer('bottom')],
+
 	RightDrawer: ['- Interface/',
 		makeUIContainer(function(dialog, options){
 			// XXX
