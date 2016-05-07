@@ -79,7 +79,8 @@ var DrawerPrototype = {
 		if(handler == null){
 			var that = this
 			this.dom.animate({
-					scrollTop: 0,
+					scrollTop: this.options.direction == 'bottom'? 0 
+						: this.dom.find('.content')[0].scrollHeight,
 					opacity: 0,
 					filter: 'none',
 				}, 
@@ -131,7 +132,6 @@ var DrawerPrototype = {
 								// keep a bit on top...
 								(parent.is('body') ? $(document) : parent)
 									.outerHeight()-options['fade-at']) + 'px'
-						// XXX this is wrong!
 						: options.direction == 'top' ?
 							(dom.find('.content')[0].scrollHeight
 							 	- dom.outerHeight()
@@ -166,9 +166,8 @@ var DrawerPrototype = {
 							var h = dom.find('.content')[0].scrollHeight
 
 							// start fading...
-							// XXX fade-at needs to be a bit bigger
 							if(st > h - options['fade-at']){
-								dom.css({ opacity: Math.min(1, (h - options['fade-at'])/st) })
+								dom.css({ opacity: Math.min(1, (h - st)/options['fade-at']) })
 
 							} else if(dom.css('opacity') < 1){
 								dom.css('opacity', 1)
@@ -176,7 +175,6 @@ var DrawerPrototype = {
 
 							// close...
 							if(st > h - options['close-at']){
-								// XXX adapt close...
 								that.close()
 							}
 						}
