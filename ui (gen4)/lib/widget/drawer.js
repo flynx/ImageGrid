@@ -166,9 +166,9 @@ var DrawerPrototype = {
 							var h = dom.find('.content')[0].scrollHeight
 
 							// start fading...
-							// XXX not working yet...
-							if(st < h - options['fade-at']){
-								dom.css({ opacity: Math.min(1, st/h) })
+							// XXX fade-at needs to be a bit bigger
+							if(st > h - options['fade-at']){
+								dom.css({ opacity: Math.min(1, (h - options['fade-at'])/st) })
 
 							} else if(dom.css('opacity') < 1){
 								dom.css('opacity', 1)
