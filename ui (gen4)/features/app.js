@@ -54,6 +54,7 @@ var AppControlActions = actions.Actions({
 		}],
 	restoreWindowGeometry: ['- Interface/Restore window state',
 		function(){
+			var that = this
 			// or global.window.nwDispatcher.requireNwGui()
 			// (see: https://github.com/rogerwang/node-webkit/issues/707)
 			var win = nw.Window.get()
@@ -100,7 +101,7 @@ var AppControlActions = actions.Actions({
 
 				// XXX check if we are full screen...
 				if(cfg != null && cfg.fullscreen && !win.isFullscreen){
-					this.toggleFullScreen('on')
+					that.toggleFullScreen('on')
 				}
 			}, this.config['window-delay-initial-display'] || 0)
 		}],
