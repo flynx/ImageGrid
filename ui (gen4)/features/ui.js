@@ -1675,6 +1675,14 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 		//'ui-partial-ribbons',
 	],
 
+	config: {
+		// This can be:
+		// 	'silent'	- silently focus central image after pan
+		// 	true		- focus central image after pan
+		// 	null		- do nothing.
+		'focus-central-image': 'silent',
+	},
+
 	// XXX add setup/taredown...
 	// XXX add inertia...
 	// XXX hide current image indicator on drag...
@@ -1682,6 +1690,9 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 	// XXX add mode switching....
 	handlers: [
 		// setup ribbon dragging...
+		// XXX it is possible to drag over the loaded ribbon section with
+		// 		two fingers, need to force update somehow...
+		// 		...and need to try and make the update in a single frame...
 		// XXX drag in single image mode ONLY if image is larger than screen...
 		['updateRibbon', 
 			function(_, target){
@@ -1706,12 +1717,17 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 
 							var data = r.data('drag-data')
 
+							// we just started...
 							if(!data){
-
-								// XXX hide current image indicator...
-								// 		...make sure it shows up on select/navigation...
-								that.ribbons.viewer.find('.current-marker').hide()
-
+								// hide and remove current image indicator...
+								var m = that.ribbons.viewer
+									.find('.current-marker')
+										.velocity({opacity: 0}, {
+											duration: 100,
+											complete: function(){
+												m.remove()
+											},
+										})
 
 								var data = {
 									left: d.getOffset(this).left
@@ -1719,16 +1735,19 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 								r.data('drag-data', data)
 							}
 
+							// do the actual move...
 							d.setOffset(this, data.left + (g.deltaX / s))
 
+							// when done...
 							if(g.isFinal){
 								r.removeData('drag-data')
 
+								// XXX this seems to have trouble with off-screen images...
+								var central = that.ribbons.getImageByPosition('center', r)
+
 								// load stuff if needed...
-								that.updateRibbon(
-									that.ribbons.getImageByPosition('center', r))
-
-
+								that.updateRibbon(central)
+								
 								// XXX add inertia....
 								/*
 								console.log('!!!!', g.velocityX)
@@ -1736,6 +1755,15 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 									translateX: (data.left + g.deltaX + (g.velocityX * 10)) +'px'
 								}, 'easeInSine')
 								*/
+
+								// silently focus central image...
+								if(that.config['focus-central-image'] == 'silent'){
+									that.data.current = that.ribbons.getElemGID(central)
+
+								// focus central image in a normal manner...
+								} else if(that.config['focus-central-image']){
+									that.focusImage(that.ribbons.getElemGID(central))
+								}
 							}
 						})
 				}
