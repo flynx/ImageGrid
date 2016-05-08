@@ -235,6 +235,11 @@ var ExternalEditorUIActions = actions.Actions({
 					.on('open', function(){
 						var editors = that.config['external-editors']
 
+						// commit all fields...
+						dialog.dom
+							.find('.editable-field[contenteditable]')
+								.trigger('commit')
+
 						// updated editor...
 						if(editor_i >= 0){
 							that.config['external-editors'] = editors.slice()

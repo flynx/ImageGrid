@@ -267,11 +267,19 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 		],
 	// 	}
 	//
+	// This listens to these events triggerable by user:
+	// 	'commit'		- will commit changes and fire 'edit-done' with
+	// 						field text.
+	// 	'abort'			- will reset field and trigger 'edit-aborted'
+	// 						with original (before edit started) field text
+	//
 	// XXX should we just use form elements???
 	// 		...it's a trade-off, here we add editing functionality and fight
 	// 		a bit the original function, in an input we'll need to fight part
 	// 		of the editing functionality and add our own navigation...
 	// XXX move this to a more generic spot...
+	// XXX should this reset field to it's original state after 
+	// 		commit/abort???
 	jQuery.fn.makeEditable = function(options){
 		options = options || {}
 		var that = this
@@ -304,15 +312,14 @@ if(typeof(jQuery) != typeof(undefined)){
 					(options.reset_on_abort == null || options.reset_on_abort) 
 						&& that.text(original)
 
-					that
-						.trigger('edit-aborted', original)
+					that.trigger('abort')
 
 				// done -- single line...
 				} else if(n == 'Enter' 
 						&& !options.multiline){
 					event.preventDefault()
 
-					that.trigger('edit-done', that.text())
+					that.trigger('commit')
 
 				// done -- multiline...
 				} else if(n == 'Enter' 
@@ -320,8 +327,15 @@ if(typeof(jQuery) != typeof(undefined)){
 						&& options.multiline){
 					event.preventDefault()
 
-					that.trigger('edit-done', that.text())
+					that.trigger('commit')
 				}
+			})
+			// user triggerable events...
+			.on('abort', function(){
+				that.trigger('edit-aborted', original)
+			})
+			.on('commit', function(){
+				that.trigger('edit-done', that.text())
 			})
 
 		return this
