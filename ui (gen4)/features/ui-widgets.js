@@ -393,10 +393,13 @@ var makeDrawer = function(direction){
 
 		options.direction = direction || 'bottom'
 
-		var d = drawer.Drawer(
-				parent,
-				dialog, 
-				options)
+		var d = drawer.Drawer(parent, dialog, options)
+			// focus top modal on exit...
+			.on('close', function(){
+				var o = that.modal
+				o && o.focus()	
+			})
+
 		// we need to clear other ui elements, like the status bar...
 		// XXX is this the right way to go???
 		d.dom.css({
@@ -434,7 +437,7 @@ var DialogsActions = actions.Actions({
 	// 		null
 	get modal(){
 		var modal = this.ribbons.viewer
-			.find('modal-widget')
+			.find('.modal-widget')
 				.last()
 		return modal.data('widget-controller') 
 			|| (modal.length > 0 && modal) 
@@ -458,10 +461,9 @@ var DialogsActions = actions.Actions({
 		makeUIContainer(function(dialog, options){
 			var that = this
 			return overlay.Overlay(this.ribbons.viewer, dialog, options)
-				// XXX focus parent on exit...
+				// focus top modal on exit...
 				.on('close', function(){
-					var o = that.overlay
-
+					var o = that.modal
 					o && o.focus()	
 				})
 		})],
@@ -639,7 +641,7 @@ var makeActionLister = function(list, filter, pre_order){
 							/*
 							closingPrevented = true
 							// XXX need to re-render the overlay paths...
-							that.overlay.client
+							that.modal.client
 								.pop()
 							*/
 						}
