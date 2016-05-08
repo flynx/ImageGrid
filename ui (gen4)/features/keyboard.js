@@ -394,7 +394,7 @@ var KeyboardActions = actions.Actions({
 	// 		- remove the path component...
 	// 		- insert the action name where not doc present...
 	// XXX cleanup CSS
-	showKeyboardBindings: ['Interface/Show keyboard bindings',
+	showKeyboardBindings: ['Interface/Show keyboard bindings...',
 		widgets.makeUIDialog('Drawer', 
 			function(){
 				return keyboard.buildKeybindingsHelpHTML(this.__keyboard_config, this)

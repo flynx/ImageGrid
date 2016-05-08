@@ -16,7 +16,7 @@
 	transform-style: preserve-3d;
 
 	/* XXX try to avoid this... */
-	z-index: 9999;
+	z-index: 5000;
 }
 .overlay-widget~.overlay-widget {
 	background: rgba(0, 0, 0, 0.3);

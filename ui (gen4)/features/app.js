@@ -103,7 +103,7 @@ var AppControlActions = actions.Actions({
 				win.show()
 
 				// XXX check if we are full screen...
-				if(cfg != null && cfg.fullscreen && !win.isFullscreen){
+				if(cfg != null && cfg.fullscreen){
 					that.toggleFullScreen('on')
 				}
 			}, this.config['window-delay-initial-display'] || 0)
