@@ -171,11 +171,6 @@ var BrowserClassPrototype = {
 			.append($('<div>')
 				   .addClass('v-block list'))
 
-		// XXX make this part of the framework...
-		if(obj){
-			browser.data('widget-controller', obj)
-		}
-
 		return browser
 	},
 }

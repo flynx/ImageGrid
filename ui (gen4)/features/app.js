@@ -147,6 +147,8 @@ var AppControlActions = actions.Actions({
 					that.storeWindowGeometry() 
 				}, 500)
 			})],
+
+	// XXX add ability to use devtools on background page (node context)...
 	showDevTools: ['Interface|Development/Show Dev Tools',
 		function(){
 			nw.Window.get().showDevTools &&

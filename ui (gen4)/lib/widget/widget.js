@@ -59,6 +59,7 @@ var WidgetClassPrototype = {
 
 
 var WidgetPrototype = {
+	// NOTE: this must have .data('widget-controller', this) set...
 	dom: null,
 	client: null,
 
@@ -105,6 +106,8 @@ var WidgetPrototype = {
 		// build the dom...
 		if(this.constructor.make){
 			this.dom = this.constructor.make(this, options)
+
+			this.dom.data('widget-controller', this)
 		}
 
 		// XXX do we do this here???
@@ -148,6 +151,8 @@ var ContainerClassPrototype = {
 
 
 var ContainerPrototype = {
+	// NOTE: this must have .data('widget-controller', this) set...
+	dom: null,
 
 	focus: function(handler){
 		if(handler != null){
@@ -181,6 +186,8 @@ var ContainerPrototype = {
 		if(this.constructor.make){
 			this.dom = this.constructor
 				.make(this, client.dom || client, options)
+
+			this.dom.data('widget-controller', this)
 		}
 
 		// add keyboard handler...

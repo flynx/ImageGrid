@@ -19,7 +19,7 @@ var DrawerClassPrototype = {
 	make: function(obj, client, options){
 		var that = this
 		var overlay = $('<div>')
-			.addClass('drawer-widget modal-widget' + (options.direction || 'bottom'))
+			.addClass('drawer-widget modal-widget ' + (options.direction || 'bottom'))
 			.append($('<div>')
 				.addClass('content')
 				.click(function(){
@@ -29,11 +29,6 @@ var DrawerClassPrototype = {
 		
 		if(options.focusable){
 			overlay.attr('tabindex', 0)
-		}
-
-		// XXX make this part of the framework...
-		if(obj){
-			overlay.data('widget-controller', obj)
 		}
 
 		return overlay
@@ -80,8 +75,9 @@ var DrawerPrototype = {
 		if(handler == null){
 			var that = this
 			this.dom.animate({
-					scrollTop: this.options.direction == 'bottom'? 0 
-						: this.dom.find('.content')[0].scrollHeight,
+					scrollTop: this.options.direction == 'top'? 
+							this.dom.find('.content')[0].scrollHeight
+						: 0, 
 					opacity: 0,
 					filter: 'none',
 				}, 
@@ -120,24 +116,21 @@ var DrawerPrototype = {
 				that.close()
 			})
 			.css({ opacity: 0 })
-			.scrollTop(options.direction == 'bottom' ?  0
-				: options.direction == 'top' ?
+			.scrollTop(options.direction == 'top' ?
 					dom.find('.content')[0].scrollHeight
 				: 0)
 			.animate({
 					scrollTop: 
-						(options.direction == 'bottom' ?
-							Math.min(
+						(options.direction == 'top' ?
+							(dom.find('.content')[0].scrollHeight
+							 	- dom.outerHeight()
+								+ options['fade-at']) + 'px'
+						: Math.min(
 								client_dom.outerHeight(), 
 								// do not scroll more than the container height and
 								// keep a bit on top...
 								(parent.is('body') ? $(document) : parent)
-									.outerHeight()-options['fade-at']) + 'px'
-						: options.direction == 'top' ?
-							(dom.find('.content')[0].scrollHeight
-							 	- dom.outerHeight()
-								+ options['fade-at']) + 'px'
-						: 0),
+									.outerHeight()-options['fade-at']) + 'px'),
 					opacity: 1,
 				}, 
 				options['animate'],
@@ -145,25 +138,8 @@ var DrawerPrototype = {
 					dom.scroll(function(){
 						var st = $(this).scrollTop()
 
-						// bottom drawer...
-						if(options.direction == 'bottom'){
-							var h = Math.min(options['fade-at'], client_dom.outerHeight())
-
-							// start fading...
-							if(st < h){
-								dom.css({ opacity: Math.min(1, st/h) })
-
-							} else if(dom.css('opacity') < 1){
-								dom.css('opacity', 1)
-							}
-
-							// close drawer when scrolling to the top...
-							if(st < options['close-at']){
-								that.close()
-							}
-
 						// top drawer...
-						} else if(options.direction == 'top'){
+						if(options.direction == 'top'){
 							var h = dom.find('.content')[0].scrollHeight
 
 							// start fading...
@@ -176,6 +152,23 @@ var DrawerPrototype = {
 
 							// close...
 							if(st > h - options['close-at']){
+								that.close()
+							}
+
+						// bottom drawer...
+						} else if(options.direction == 'bottom'){
+							var h = Math.min(options['fade-at'], client_dom.outerHeight())
+
+							// start fading...
+							if(st < h){
+								dom.css({ opacity: Math.min(1, st/h) })
+
+							} else if(dom.css('opacity') < 1){
+								dom.css('opacity', 1)
+							}
+
+							// close drawer when scrolling to the top...
+							if(st < options['close-at']){
 								that.close()
 							}
 						}

@@ -42,11 +42,6 @@ var OverlayClassPrototype = {
 			overlay.attr('tabindex', 0)
 		}
 
-		// XXX make this part of the framework...
-		if(obj){
-			overlay.data('widget-controller', obj)
-		}
-
 		return overlay
 	},
 }
