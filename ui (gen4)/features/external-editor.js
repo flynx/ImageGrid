@@ -38,7 +38,7 @@ var ExternalEditorActions = actions.Actions({
 			{
 				// NOTE: empty means use app name...
 				title: 'System default',
-				// NOTE: empty means system to select editor...
+				// NOTE: empty means system default editor...
 				path: '',
 				// NOTE: empty is the same as '$TARGET'...
 				arguments: '',
@@ -58,7 +58,7 @@ var ExternalEditorActions = actions.Actions({
 	// 		...irfanview for instance does not understand '/' in paths 
 	// 		while windows in general have no problem...
 	// XXX target is not yet used...
-	openInExtenalEditor: ['Edit/Open with external editor',
+	openInExtenalEditor: ['Edit|Image/Open with external editor',
 		function(editor, image, type){
 			editor = editor || 0
 			editor = typeof(editor) == typeof('str') ?
@@ -69,6 +69,7 @@ var ExternalEditorActions = actions.Actions({
 
 			if(editor == null){
 				// XXX ERR???
+				console.error('Unknown editor')
 				return
 			}
 
@@ -84,6 +85,7 @@ var ExternalEditorActions = actions.Actions({
 			var img = this.images[this.data.getImage(image)]
 
 			if(img == null){
+				console.error('No image data')
 				return
 			}
 
@@ -92,8 +94,7 @@ var ExternalEditorActions = actions.Actions({
 			var full_path = img.base_path +'/'+ img.path
 
 			// XXX is this portable enough???
-			var path = requirejs('path')
-			full_path = path.normalize(full_path)
+			full_path = pathlib.normalize(full_path)
 
 			editor = editor
 				// XXX make '$' quotable....
@@ -128,12 +129,13 @@ module.ExternalEditor = core.ImageGridFeatures.Feature({
 })
 
 
+
 //---------------------------------------------------------------------
 
 var ExternalEditorUIActions = actions.Actions({
 	// XXX empty title -- use app name without ext...
 	externalEditorDialog: ['- Edit/',
-		function(editor){
+		widgets.makeUIDialog(function(editor){
 			var that = this
 
 			editor = editor || 0
@@ -158,103 +160,102 @@ var ExternalEditorUIActions = actions.Actions({
 
 			var editor_i = this.config['external-editors'].indexOf(editor)
 
-			var o = overlay.Overlay(this.ribbons.viewer, 
-				browse.makeLister(null, function(_, make){
-					make(['Title: ', function(){ return editor.title || '' }])
-						.on('open', function(){
-							event.preventDefault()
-							widgets.makeEditableItem(o.client, $(this),
-								$(this).find('.text').last(), 
-								function(_, text){ editor.title = text }) })
+			var dialog = browse.makeLister(null, function(_, make){
+				make(['Title: ', function(){ return editor.title || '' }])
+					.on('open', function(){
+						event.preventDefault()
+						widgets.makeEditableItem(dialog, $(this),
+							$(this).find('.text').last(), 
+							function(_, text){ editor.title = text }) })
 
-					make(['Path: ', function(){ return editor.path }], { 
-							buttons: [
-								['browse', function(p){
-									var e = this.filter('"'+p+'"', false)
-									var path = e.find('.text').last().text()
-									var txt = e.find('.text').first().text()
+				make(['Path: ', function(){ return editor.path }], { 
+						buttons: [
+							['browse', function(p){
+								var e = this.filter('"'+p+'"', false)
+								var path = e.find('.text').last().text()
+								var txt = e.find('.text').first().text()
 
-									var b = overlay.Overlay(that.ribbons.viewer, 
-										browseWalk.makeWalk(null, path, 
-												// XXX
-												'*+(exe|cmd|ps1|sh)',
-												{})
-											// path selected...
-											.open(function(evt, path){ 
-												editor.path = path
+								var b = overlay.Overlay(that.ribbons.viewer, 
+									browseWalk.makeWalk(null, path, 
+											// XXX
+											'*+(exe|cmd|ps1|sh)',
+											{})
+										// path selected...
+										.open(function(evt, path){ 
+											editor.path = path
 
-												b.close()
+											b.close()
 
-												o.client.update()
-													.then(function(){ o.client.select(txt+path) })
-											}))
-											.close(function(){
-												// XXX
-												that.getOverlay().focus()
-											})
-								}]
-							]
-						})
-						.on('open', function(){
-							event.preventDefault()
-							widgets.makeEditableItem(o.client, $(this),
-								$(this).find('.text').last(), 
-								function(_, text){ editor.path = text }) })
+											dialog.update()
+												.then(function(){ dialog.select(txt+path) })
+										}))
+										.close(function(){
+											// XXX
+											that.getOverlay().focus()
+										})
+							}]
+						]
+					})
+					.on('open', function(){
+						event.preventDefault()
+						widgets.makeEditableItem(dialog, $(this),
+							$(this).find('.text').last(), 
+							function(_, text){ editor.path = text }) })
 
-					make(['Arguments: ', function(){ return editor.arguments || '' }])
-						.on('open', function(){
-							event.preventDefault()
-							widgets.makeEditableItem(o.client, $(this),
-								$(this).find('.text').last(), 
-								function(_, text){ editor.arguments = text }) })
+				make(['Arguments: ', function(){ return editor.arguments || '' }])
+					.on('open', function(){
+						event.preventDefault()
+						widgets.makeEditableItem(dialog, $(this),
+							$(this).find('.text').last(), 
+							function(_, text){ editor.arguments = text }) })
 
-					make(['Target: ', 
-							function(){ 
-								return editor.target 
-									|| that.config['external-editor-targets'][0] }])
-						.on('open', 
-							widgets.makeNestedConfigListEditor(that, o,
-								'external-editor-targets',
-								function(val){ 
-									if(val == null){
-										return editor.target
-											|| that.config['external-editor-targets'][0]
+				make(['Target: ', 
+						function(){ 
+							return editor.target 
+								|| that.config['external-editor-targets'][0] }])
+					.on('open', 
+						widgets.makeNestedConfigListEditor(that, dialog.parent,
+							'external-editor-targets',
+							function(val){ 
+								if(val == null){
+									return editor.target
+										|| that.config['external-editor-targets'][0]
 
-									} else {
-										editor.target = val 
-											|| that.config['external-editor-targets'][0]
-									}
-								},
-								{
-									new_button: false,
-									itemButtons: [],
-								}))
+								} else {
+									editor.target = val 
+										|| that.config['external-editor-targets'][0]
+								}
+							},
+							{
+								new_button: false,
+								itemButtons: [],
+							}))
 
-					make(['Save'])
-						.on('open', function(){
-							var editors = that.config['external-editors']
+				make(['Save'])
+					.on('open', function(){
+						var editors = that.config['external-editors']
 
-							// updated editor...
-							if(editor_i >= 0){
-								that.config['external-editors'] = editors.slice()
+						// updated editor...
+						if(editor_i >= 0){
+							that.config['external-editors'] = editors.slice()
 
-							// new editor...
-							} else {
-								that.config['external-editors'] = editors.concat([editor])
-							}
+						// new editor...
+						} else {
+							that.config['external-editors'] = editors.concat([editor])
+						}
 
-							o.close()
-						})
-				}))
+						dialog.parent.close()
+					})
+			})
 
-			o.client.dom.addClass('metadata-view tail-action')
+			dialog.dom.addClass('metadata-view tail-action')
 
-			return o
-		}],
+			return dialog
+		})],
 	// XXX need to support $TARGET in args...
 	// 		...append if not present...
-	listExtenalEditors: ['Edit/List external editors',
-		function(){
+	listExtenalEditors: ['Edit|Image/Choose external editor...',
+		widgets.makeUIDialog(function(){
 			var that = this
 			var closingPrevented = false
 			var editors = this.config['external-editors'] || []
@@ -269,122 +270,122 @@ var ExternalEditorUIActions = actions.Actions({
 			var to_remove = []
 
 			// build the dialog...
-			var o = overlay.Overlay(this.ribbons.viewer, 
-				//browse.makeList(null, list, {
-				browse.makeLister(null, 
-					function(_, make){
-						editors
-							.forEach(function(e, i){
-								make([function(){ return e.title || pathlib.basename(e.path)}])
-									.on('open', function(){
-										that.openInExtenalEditor(i)
+			var dialog = browse.makeLister(null, 
+				function(_, make){
+
+					editors
+						.forEach(function(e, i){
+							make([function(){ return e.title || pathlib.basename(e.path)}])
+								.on('open', function(){
+									that.openInExtenalEditor(i)
+								})
+								.addClass(i == 0 ? 'selected' : '')
+						})
+
+					make(['Add new editor...'])
+						.on('open', function(){
+							closingPrevented = true
+							var b = overlay.Overlay(that.ribbons.viewer, 
+								browseWalk.makeWalk(
+										null, '/', 
+										// XXX
+										'*+(exe|cmd|ps1|sh)',
+										{})
+									// path selected...
+									.open(function(evt, path){ 
+										// add a pretty name...
+										editors.push({
+											path: path,
+										})
+										that.config['external-editors'] = editors
+
+										// is this the correct way to do this???
+										b.close()
+										dialog.update()//.close()
+										//that.listExtenalEditors()
+									}))
+									.close(function(){
+										dialog.parent.focus()
 									})
-							})
+							return b
+						})
+				}, 
+				{
+					// add item buttons...
+					itemButtons: [
+						// edit...
+						['edit', 
+							function(p){
+								that.externalEditorDialog(p)
+									.on('close', function(){
+										dialog.update()
+									})
+							}],
+						// move to top...
+						['&diams;', 
+							function(p){
+								var target = this.filter(0, false)
+								var cur = this.filter('"'+p+'"', false)
 
-						make(['Add new editor...'])
-							.on('open', function(){
-								closingPrevented = true
-								var b = overlay.Overlay(that.ribbons.viewer, 
-									browseWalk.makeWalk(
-											null, '/', 
-											// XXX
-											'*+(exe|cmd|ps1|sh)',
-											{})
-										// path selected...
-										.open(function(evt, path){ 
-											// add a pretty name...
-											editors.push({
-												path: path,
-											})
-											that.config['external-editors'] = editors
+								var i = _getEditor(p) 
 
-											// is this the correct way to do this???
-											b.close()
-											o.client.update()//.close()
-											//that.listExtenalEditors()
-										}))
-										.close(function(){
-											o.focus()
-										})
-								return b
-							})
-					}, 
-					{
-						// add item buttons...
-						itemButtons: [
-							// edit...
-							['edit', 
-								function(p){
-									that.externalEditorDialog(p)
-										.close(function(){
-											o.client.update()
-										})
-								}],
-							// move to top...
-							['&diams;', 
-								function(p){
-									var target = this.filter(0, false)
-									var cur = this.filter('"'+p+'"', false)
+								if(!target.is(cur)){
+									target.before(cur)
+									editors.splice(0, 0, editors.splice(i, 1)[0])
 
-									var i = _getEditor(p) 
+									that.config['external-editors'] = editors
+								}
+							}],
+						// set secondary editor...
+						// XXX make a simpler icon....
+						['<span style="letter-spacing: -4px; margin-left: -4px;">&diams;&diams;</span>', 
+							function(p){
+								var target = this.filter(1, false)
+								var cur = this.filter('"'+p+'"', false)
 
-									if(!target.is(cur)){
-										target.before(cur)
-										editors.splice(0, 0, editors.splice(i, 1)[0])
+								var i = _getEditor(p) 
 
-										that.config['external-editors'] = editors
-									}
-								}],
-							// set secondary editor...
-							// XXX make a simpler icon....
-							['<span style="letter-spacing: -4px; margin-left: -4px;">&diams;&diams;</span>', 
-								function(p){
-									var target = this.filter(1, false)
-									var cur = this.filter('"'+p+'"', false)
-
-									var i = _getEditor(p) 
-
-									if(!target.is(cur)){
-										if(target.prev().is(cur)){
-											target.after(cur)
-										} else {
-											target.before(cur)
-										}
-										editors.splice(1, 0, editors.splice(i, 1)[0])
-
-										that.config['external-editors'] = editors
-									}
-								}],
-							// mark for removal...
-							['&times;', 
-								function(p){
-									if(p == that.config['external-editor-default']){
-										return
-									}
-
-									var e = this.filter('"'+p+'"', false)
-										.toggleClass('strike-out')
-
-									if(e.hasClass('strike-out')){
-										to_remove.indexOf(p) < 0 
-											&& to_remove.push(p)
-
+								if(!target.is(cur)){
+									if(target.prev().is(cur)){
+										target.after(cur)
 									} else {
-										var i = to_remove.indexOf(p)
-										if(i >= 0){
-											to_remove.splice(i, 1)
-										}
+										target.before(cur)
 									}
-								}],
-						] })
-					.open(function(evt){ 
-						// close self if no dialog is triggered...
-						if(!closingPrevented){
-							o.close() 
-						}
-						closingPrevented = false
-					}))
-				.close(function(){
+									editors.splice(1, 0, editors.splice(i, 1)[0])
+
+									that.config['external-editors'] = editors
+								}
+							}],
+						// mark for removal...
+						['&times;', 
+							function(p){
+								if(p == that.config['external-editor-default']){
+									return
+								}
+
+								var e = this.filter('"'+p+'"', false)
+									.toggleClass('strike-out')
+
+								if(e.hasClass('strike-out')){
+									to_remove.indexOf(p) < 0 
+										&& to_remove.push(p)
+
+								} else {
+									var i = to_remove.indexOf(p)
+									if(i >= 0){
+										to_remove.splice(i, 1)
+									}
+								}
+							}],
+					] })
+				.open(function(evt){ 
+					// close self if no dialog is triggered...
+					if(!closingPrevented){
+						dialog.parent.close() 
+					}
+					closingPrevented = false
+				})
+				.on('close', function(){
 					// remove elements marked for removal...
 					to_remove.forEach(function(e){
 						if(e == that.config['external-editor-default']){
@@ -396,11 +397,10 @@ var ExternalEditorUIActions = actions.Actions({
 					})
 				})
 
-			o.client.select(0)
-			o.client.dom.addClass('editor-list tail-action')
+			dialog.dom.addClass('editor-list tail-action')
 
-			return o
-		}],
+			return dialog
+		})],
 })
 
 var ExternalEditorUI = 

@@ -7,6 +7,9 @@
 define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
+if(typeof(process) != 'undefined'){
+	var pathlib = requirejs('path')
+}
 
 var actions = require('lib/actions')
 var features = require('lib/features')
@@ -153,6 +156,19 @@ var AppControlActions = actions.Actions({
 		function(){
 			nw.Window.get().showDevTools &&
 				nw.Window.get().showDevTools()
+		}],
+
+	// XXX should this be here???
+	showInFolder: ['File|Image/Show in folder',
+		function(image){
+			image = this.images[this.data.getImage(image)]
+
+			var base = image.base_path || this.location.path
+			var filename = image.path
+
+			path = pathlib.normalize(base + '/' + filename)
+
+			nw.Shell.showItemInFolder(path)
 		}],
 })
 
