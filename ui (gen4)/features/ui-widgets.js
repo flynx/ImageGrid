@@ -424,9 +424,22 @@ var DialogsActions = actions.Actions({
 	get uiElements(){ 
 		return this.actions.filter(this.isUIElement.bind(this)) },
 
-	// get top overlay and overlay client...
-	get overlay(){ 
-		return overlay.getOverlay(this.viewer) },
+	// Get modal container...
+	//
+	// Protocol:
+	// 	- get the last modal widgets (CSS selector: .modal-widget)
+	// 	- return one of the following:
+	// 		.data('widget-controller')
+	// 		element
+	// 		null
+	get modal(){
+		var modal = this.ribbons.viewer
+			.find('modal-widget')
+				.last()
+		return modal.data('widget-controller') 
+			|| (modal.length > 0 && modal) 
+			|| null
+	},
 
 	// testers...
 	isUIContainer: ['- Interface/',
@@ -452,26 +465,14 @@ var DialogsActions = actions.Actions({
 					o && o.focus()	
 				})
 		})],
-	// XXX should this be renamed to BottomDrawer???
+
 	Drawer: ['- Interface/',
 		makeDrawer('bottom')],
-	
-	// XXX not implemented yet...
-	TopDrawer: ['- Interface/',
-		makeDrawer('top')],
 	BottomDrawer: ['- Interface/',
 		makeDrawer('bottom')],
+	TopDrawer: ['- Interface/',
+		makeDrawer('top')],
 
-	RightDrawer: ['- Interface/',
-		makeUIContainer(function(dialog, options){
-			// XXX
-			console.error('Not yet implemented.')
-		})],
-	LeftDrawer: ['- Interface/',
-		makeUIContainer(function(dialog, options){
-			// XXX
-			console.error('Not yet implemented.')
-		})],
 
 	// like panel but drop down from mouse location or specified position
 	DropDown: ['- Interface/',
@@ -491,6 +492,7 @@ var DialogsActions = actions.Actions({
 			// XXX
 			//console.error('Not yet implemented.')
 
+			// minimal container...
 			var panel = {
 				client: dialog,
 				dom: $('<div>')

@@ -19,7 +19,7 @@ var OverlayClassPrototype = {
 	make: function(obj, client, options){
 		var that = this
 		var overlay = $('<div>')
-			.addClass('overlay-widget')
+			.addClass('overlay-widget modal-widget')
 			.on(options.nonPropagatedEvents.join(' '), function(){
 				event.stopPropagation()
 			})

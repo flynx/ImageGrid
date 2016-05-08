@@ -58,8 +58,11 @@ module.SortActions = actions.Actions({
 		// 		the previous methods in chain...
 		'sort-methods': {
 			'none': '',
+			// NOTE: for when date resolution is not good enough this 
+			// 		also takes into account file sequence number...
 			// NOTE: this is descending by default...
-			'Date': 'metadata.createDate birthtime keep-position reverse',
+			'Date': 'metadata.createDate birthtime name-sequence keep-position reverse',
+			'Date (simple)': 'metadata.createDate birthtime keep-position reverse',
 			'File date': 'birthtime keep-position reverse',
 			'Name (XP-style)': 'name-leading-sequence name path keep-position',
 			'File sequence number': 'name-sequence name path keep-position',

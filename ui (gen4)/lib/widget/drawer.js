@@ -19,7 +19,7 @@ var DrawerClassPrototype = {
 	make: function(obj, client, options){
 		var that = this
 		var overlay = $('<div>')
-			.addClass('drawer-widget ' + (options.direction || 'bottom'))
+			.addClass('drawer-widget modal-widget' + (options.direction || 'bottom'))
 			.append($('<div>')
 				.addClass('content')
 				.click(function(){
@@ -41,6 +41,7 @@ var DrawerClassPrototype = {
 }
 
 
+// XXX add a non-modal version...
 var DrawerPrototype = {
 	dom: null,
 	client: null,
