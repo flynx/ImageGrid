@@ -1547,6 +1547,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 // Touch/Control...
 
 // Direct control mode...
+/*
 // XXX add vertical scroll...
 // XXX add pinch-zoom...
 // XXX disable drag in single image mode unless image is larger than the screen...
@@ -1652,6 +1653,91 @@ module.DirectControlGSAP = core.ImageGridFeatures.Feature({
 							that
 								.updateRibbon(c)
 						}})
+				}
+			}],
+	],
+})
+*/
+
+
+// XXX add zoom...
+// XXX add vertical pan to ribbon-set...
+var DirectControlHammer = 
+module.DirectControlHammer = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-direct-control-hammer',
+	exclusive: ['ui-direct-control'],
+	depends: [
+		'ui',
+		// this is only used to trigger reoad...
+		//'ui-partial-ribbons',
+	],
+
+	// XXX add setup/taredown...
+	// XXX add inertia...
+	// XXX hide current image indicator on drag...
+	// XXX add swipe up/down control...
+	// XXX add mode switching....
+	handlers: [
+		// setup ribbon dragging...
+		// XXX drag in single image mode ONLY if image is larger than screen...
+		['updateRibbon', 
+			function(_, target){
+				var that = this
+				var r = this.ribbons.getRibbon(target)
+
+				// setup dragging...
+				if(r.length > 0 && !r.hasClass('draggable')){
+
+					r
+						.addClass('draggable')
+						.hammer()
+						.on('pan', function(evt){
+							//evt.preventDefault()
+					
+							// XXX stop all previous animations...
+							//r.velocity("stop")
+
+							var d = that.ribbons.dom
+							var s = that.scale
+							var g = evt.gesture
+
+							var data = r.data('drag-data')
+
+							if(!data){
+
+								// XXX hide current image indicator...
+								// 		...make sure it shows up on select/navigation...
+								that.ribbons.viewer.find('.current-marker').hide()
+
+
+								var data = {
+									left: d.getOffset(this).left
+								}
+								r.data('drag-data', data)
+							}
+
+							d.setOffset(this, data.left + (g.deltaX / s))
+
+							if(g.isFinal){
+								r.removeData('drag-data')
+
+								// load stuff if needed...
+								that.updateRibbon(
+									that.ribbons.getImageByPosition('center', r))
+
+
+								// XXX add inertia....
+								/*
+								console.log('!!!!', g.velocityX)
+								r.velocity({
+									translateX: (data.left + g.deltaX + (g.velocityX * 10)) +'px'
+								}, 'easeInSine')
+								*/
+							}
+						})
 				}
 			}],
 	],

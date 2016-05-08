@@ -108,6 +108,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	// 		not sure why...
 	// 		...seems to be related to scaling
 	//'ui-direct-control-gsap',
+	'ui-direct-control-hammer',
 	'ui-indirect-control',
 
 	// experimental and optional features...

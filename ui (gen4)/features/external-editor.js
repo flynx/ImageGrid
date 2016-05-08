@@ -259,7 +259,7 @@ var ExternalEditorUIActions = actions.Actions({
 		})],
 	// XXX need to support $TARGET in args...
 	// 		...append if not present...
-	listExtenalEditors: ['Edit|Image/Choose external editor...',
+	listExtenalEditors: ['Edit|Image/Select external editor...',
 		widgets.makeUIDialog(function(){
 			var that = this
 			var closingPrevented = false
