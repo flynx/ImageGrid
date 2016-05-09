@@ -1546,6 +1546,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 /*********************************************************************/
 // Touch/Control...
 
+/*
 // XXX add zoom...
 // XXX add vertical pan to ribbon-set...
 var DirectControlHammer = 
@@ -1644,12 +1645,10 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 								that.updateRibbon(central)
 								
 								// XXX add inertia....
-								/* XXX 
-								console.log('!!!!', g.velocityX)
-								r.velocity({
-									translateX: (data.left + g.deltaX + (g.velocityX * 10)) +'px'
-								}, 'easeInSine')
-								*/
+								//console.log('!!!!', g.velocityX)
+								//r.velocity({
+								//	translateX: (data.left + g.deltaX + (g.velocityX * 10)) +'px'
+								//}, 'easeInSine')
 
 								// silently focus central image...
 								if(that.config['focus-central-image'] == 'silent'){
@@ -1751,12 +1750,13 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 			function(){ a.toggleSwipeHandling('off') }],
 	],
 })
+*/
 
 
 
 //---------------------------------------------------------------------
 
-// XXX still a stub....
+// XXX STUB: needs more thought.... 
 var ControlActions = actions.Actions({
 	config: {
 		'control-mode': 'indirect',
@@ -1769,7 +1769,7 @@ var ControlActions = actions.Actions({
 	},
 
 
-	// XXX not working correctly after cycling on -> off -> on...
+	// XXX .off(..) appears not to be working with hammer events...
 	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
 		toggler.Toggler(null,
 			function(){ 
@@ -1847,7 +1847,11 @@ var ControlActions = actions.Actions({
 
 									// silently focus central image...
 									if(that.config['focus-central-image'] == 'silent'){
-										that.data.current = that.ribbons.getElemGID(central)
+										var gid = that.ribbons.getElemGID(central)
+
+										// XXX is this the right way to do this???
+										that.data.focusImage(gid)
+										that.ribbons.focusImage(gid)
 										
 									// focus central image in a normal manner...
 									} else if(that.config['focus-central-image']){
@@ -1872,14 +1876,18 @@ var ControlActions = actions.Actions({
 				// off...
 				} else {
 					this.off('updateRibbon', handler)
+
 					this.data.ribbon_order.forEach(function(gid){
 						that.ribbons.getRibbon(gid)
-							.removeClass('draggable')
-							.off('pan')
+							//.removeClass('draggable')
+							// XXX this does not remove the hammer trigger
+							// 		...just the jQuery handler is cleared
+							//.off('pan')
 							.removeData('hammer')
 					})
 				}
 			})],
+	// XXX .off(..) appears not to be working with hammer events...
 	toggleSwipeHandling: ['Interface/Toggle swipe handling',
 		toggler.Toggler(null,
 			function(_, state){ 
@@ -1903,24 +1911,33 @@ var ControlActions = actions.Actions({
 					var h = viewer.data('hammer')
 					h.get('swipe').set({direction: Hammer.DIRECTION_ALL})
 
-					viewer
-						.on('swipeleft', function(){ that.__panning || that.nextImage() })
-						.on('swiperight', function(){ that.__panning || that.prevImage() })
-						.on('swipeup', function(){ that.__panning || that.shiftImageUp() })
-						.on('swipedown', function(){ that.__panning || that.shiftImageDown() })
+					if(!viewer.hasClass('swipable')){
+						viewer
+							.addClass('swipable')
+							.on('swipeleft', function(){ 
+								that.__panning || that.nextImage() })
+							.on('swiperight', function(){ 
+								that.__panning || that.prevImage() })
+							.on('swipeup', function(){ 
+								that.__panning || that.shiftImageUp() })
+							.on('swipedown', function(){ 
+								that.__panning || that.shiftImageDown() })
+					}
 
 				// off...
 				} else {
 					this.ribbons.viewer
-						.off('swipeleft')
-						.off('swiperight')
-						.off('swipeup')
-						.off('swipedown')
+						// XXX
+						//.off('swipeleft')
+						//.off('swiperight')
+						//.off('swipeup')
+						//.off('swipedown')
 						.removeData('hammer')
 				}
 			})],
 
 
+	// XXX we are not using this....
 	__control_mode_handlers__: {
 		indirect: 
 			function(state){
@@ -1930,7 +1947,6 @@ var ControlActions = actions.Actions({
 			function(state){
 			},
 	},
-
 	toggleControlMode: ['- Interface/',
 		toggler.Toggler(null,
 			function(){ return this.config['control-mode'] },
@@ -1985,7 +2001,8 @@ module.Control = core.ImageGridFeatures.Feature({
 			}],
 		['toggleSingleImage',
 			function(){
-				this.toggleRibbonPanHandling(this.toggleSingleImage('?') == 'off' ? 'on' : 'off')
+				this.toggleRibbonPanHandling(
+					this.toggleSingleImage('?') == 'off' ? 'on' : 'off')
 			}],
 	],
 })
