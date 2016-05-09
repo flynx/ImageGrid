@@ -399,12 +399,17 @@ var WorkspaceActions = actions.Actions({
 			function(){ return Object.keys(this.config['workspaces']) },
 			function(state){ this.loadWorkspace(state) })],
 
+	// XXX should we keep the stack unique???
 	pushWorkspace: ['- Workspace/',
 		function(name){
 			name = name || this.workspace
 			var stack = this.__workspace_stack = this.__workspace_stack || []
 
 			this.saveWorkspace()
+
+			if(stack.slice(-1)[0] == name){
+				return
+			}
 
 			this.workspace != name && this.loadWorkspace(name)
 			stack.push(name)
