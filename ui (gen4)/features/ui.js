@@ -1546,120 +1546,6 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 /*********************************************************************/
 // Touch/Control...
 
-// Direct control mode...
-/*
-// XXX add vertical scroll...
-// XXX add pinch-zoom...
-// XXX disable drag in single image mode unless image is larger than the screen...
-
-// XXX BUG: current image indicator gets shown in random places...
-// XXX BUG: this does it's work via css left which is both slow and 
-// 		messes up positioning...
-var DirectControljQ = 
-module.DirectControljQ = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-direct-control-jquery',
-	exclusive: ['ui-direct-control'],
-	depends: [
-		'ui',
-		// this is only used to trigger reoad...
-		//'ui-partial-ribbons',
-	],
-
-	// XXX add setup/taredown...
-	handlers: [
-		// setup ribbon dragging...
-		// XXX this is really sloooooow...
-		// XXX hide current image indicator as soon as the image is not visible...
-		// XXX inertia...
-		// XXX limit scroll to at least one image being on screen (center?)...
-		['updateRibbon', 
-			function(_, target){
-				var that = this
-				var r = this.ribbons.getRibbon(target)
-
-				var scale = 1
-
-				// setup dragging...
-				r.length > 0 
-					&& !r.hasClass('ui-draggable')
-					&& r.draggable({
-						axis: 'x',
-
-						start: function(evt, ui){
-							scale = that.ribbons.scale()	
-						},
-						// compensate for ribbon scale...
-						drag: function(evt, ui) {
-							// compensate for scale...
-							ui.position = {
-								left: ui.originalPosition.left 
-									+ (ui.position.left 
-										- ui.originalPosition.left) / scale,
-								top: ui.originalPosition.top 
-									+ (ui.position.top 
-										- ui.originalPosition.top) / scale,
-							}
-						},
-
-						stop: function(){
-							var c = that.ribbons.getImageByPosition('center', r)
-							that
-								.updateRibbon(c)
-								// XXX is this correct???
-								//.updateCurrentImageIndicator()
-						}
-					})
-			}],
-	],
-})
-
-
-// XXX BUG: this does not account for scale when setting the initial drag
-// 		position, resulting in a jump...
-// XXX do not use this for production -- GSAp has a bad license...
-var DirectControlGSAP = 
-module.DirectControlGSAP = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-direct-control-gsap',
-	exclusive: ['ui-direct-control'],
-	depends: [
-		'ui',
-		// this is only used to trigger reoad...
-		//'ui-partial-ribbons',
-	],
-
-	// XXX add setup/taredown...
-	handlers: [
-		// setup ribbon dragging...
-		['updateRibbon', 
-			function(_, target){
-				var that = this
-				var r = this.ribbons.getRibbon(target)
-
-				// setup dragging...
-				if(r.length > 0 && !r.hasClass('draggable')){
-					r.addClass('draggable')
-
-					Draggable.create(r, {
-						type: 'x',
-						cursor: 'auto',
-						onDragEnd: function(){
-							var c = that.ribbons.getImageByPosition('center', r)
-							that
-								.updateRibbon(c)
-						}})
-				}
-			}],
-	],
-})
-*/
-
-
 // XXX add zoom...
 // XXX add vertical pan to ribbon-set...
 var DirectControlHammer = 
@@ -1668,7 +1554,7 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'ui-direct-control-hammer',
-	exclusive: ['ui-direct-control'],
+	exclusive: ['ui-control'],
 	depends: [
 		'ui',
 		// this is only used to trigger reoad...
@@ -1688,11 +1574,16 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 	// XXX hide current image indicator on drag...
 	// XXX add swipe up/down control...
 	// XXX add mode switching....
+	// XXX BUG: after panning and silent focus, marking works correctly 
+	// 		but image is not updated -- mark not drawn...
 	handlers: [
 		// setup ribbon dragging...
 		// XXX it is possible to drag over the loaded ribbon section with
 		// 		two fingers, need to force update somehow...
 		// 		...and need to try and make the update in a single frame...
+		// 		Ways to go:
+		// 			- update on touchdown
+		// 			- update on liftoff
 		// XXX drag in single image mode ONLY if image is larger than screen...
 		['updateRibbon', 
 			function(_, target){
@@ -1701,13 +1592,12 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 
 				// setup dragging...
 				if(r.length > 0 && !r.hasClass('draggable')){
-
 					r
 						.addClass('draggable')
 						.hammer()
 						.on('pan', function(evt){
-							//evt.preventDefault()
-					
+							//evt.stopPropagation()
+
 							// XXX stop all previous animations...
 							//r.velocity("stop")
 
@@ -1715,11 +1605,15 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 							var s = that.scale
 							var g = evt.gesture
 
+							that.__panning = true
+
 							var data = r.data('drag-data')
 
 							// we just started...
 							if(!data){
 								// hide and remove current image indicator...
+								// NOTE: it will be reconstructed on 
+								// 		next .focusImage(..)
 								var m = that.ribbons.viewer
 									.find('.current-marker')
 										.velocity({opacity: 0}, {
@@ -1729,6 +1623,7 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 											},
 										})
 
+								// store initial position...
 								var data = {
 									left: d.getOffset(this).left
 								}
@@ -1749,7 +1644,7 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 								that.updateRibbon(central)
 								
 								// XXX add inertia....
-								/*
+								/* XXX 
 								console.log('!!!!', g.velocityX)
 								r.velocity({
 									translateX: (data.left + g.deltaX + (g.velocityX * 10)) +'px'
@@ -1759,11 +1654,15 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 								// silently focus central image...
 								if(that.config['focus-central-image'] == 'silent'){
 									that.data.current = that.ribbons.getElemGID(central)
-
+									
 								// focus central image in a normal manner...
 								} else if(that.config['focus-central-image']){
 									that.focusImage(that.ribbons.getElemGID(central))
 								}
+
+								setTimeout(function(){
+									delete that.__panning
+								}, 50)
 							}
 						})
 				}
@@ -1793,7 +1692,7 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-indirect-control',
 	// XXX is this correct???
-	exclusive: ['ui-direct-control'],
+	exclusive: ['ui-control'],
 	depends: ['ui'],
 
 	config: {
@@ -1853,6 +1752,243 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 	],
 })
 
+
+
+//---------------------------------------------------------------------
+
+// XXX still a stub....
+var ControlActions = actions.Actions({
+	config: {
+		'control-mode': 'indirect',
+
+		// This can be:
+		// 	'silent'	- silently focus central image after pan
+		// 	true		- focus central image after pan
+		// 	null		- do nothing.
+		'focus-central-image': 'silent',
+	},
+
+
+	// XXX not working correctly after cycling on -> off -> on...
+	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
+		toggler.Toggler(null,
+			function(){ 
+				return this.ribbons 
+					&& this.ribbons.viewer 
+					&& this.ribbons.getRibbon().data('hammer') ? 'handling-pan' : 'none' },
+			'handling-pan',
+			function(state){
+				var that = this
+				var handler = this.__pan_handler = this.__pan_handler || function(_, target){
+					// XXX
+					var that = this
+					var r = this.ribbons.getRibbon(target)
+
+					// setup dragging...
+					if(r.length > 0 && !r.hasClass('draggable')){
+						r
+							.addClass('draggable')
+							.hammer()
+							.on('pan', function(evt){
+								//evt.stopPropagation()
+
+								// XXX stop all previous animations...
+								//r.velocity("stop")
+
+								var d = that.ribbons.dom
+								var s = that.scale
+								var g = evt.gesture
+
+								that.__panning = true
+
+								var data = r.data('drag-data')
+
+								// we just started...
+								if(!data){
+									// hide and remove current image indicator...
+									// NOTE: it will be reconstructed on 
+									// 		next .focusImage(..)
+									var m = that.ribbons.viewer
+										.find('.current-marker')
+											.velocity({opacity: 0}, {
+												duration: 100,
+												complete: function(){
+													m.remove()
+												},
+											})
+
+									// store initial position...
+									var data = {
+										left: d.getOffset(this).left
+									}
+									r.data('drag-data', data)
+								}
+
+								// do the actual move...
+								d.setOffset(this, data.left + (g.deltaX / s))
+
+								// when done...
+								if(g.isFinal){
+									r.removeData('drag-data')
+
+									// XXX this seems to have trouble with off-screen images...
+									var central = that.ribbons.getImageByPosition('center', r)
+
+									// load stuff if needed...
+									that.updateRibbon(central)
+									
+									// XXX add inertia....
+									/* XXX 
+									console.log('!!!!', g.velocityX)
+									r.velocity({
+										translateX: (data.left + g.deltaX + (g.velocityX * 10)) +'px'
+									}, 'easeInSine')
+									*/
+
+									// silently focus central image...
+									if(that.config['focus-central-image'] == 'silent'){
+										that.data.current = that.ribbons.getElemGID(central)
+										
+									// focus central image in a normal manner...
+									} else if(that.config['focus-central-image']){
+										that.focusImage(that.ribbons.getElemGID(central))
+									}
+
+									setTimeout(function(){
+										delete that.__panning
+									}, 50)
+								}
+							})
+					}
+				}
+
+				// on...
+				if(state == 'on'){
+					this.on('updateRibbon', handler)
+					this.data.ribbon_order.forEach(function(gid){
+						handler.call(that, null, gid)
+					})
+
+				// off...
+				} else {
+					this.off('updateRibbon', handler)
+					this.data.ribbon_order.forEach(function(gid){
+						that.ribbons.getRibbon(gid)
+							.removeClass('draggable')
+							.off('pan')
+							.removeData('hammer')
+					})
+				}
+			})],
+	toggleSwipeHandling: ['Interface/Toggle swipe handling',
+		toggler.Toggler(null,
+			function(_, state){ 
+				return this.ribbons 
+					&& this.ribbons.viewer 
+					&& this.ribbons.viewer.data('hammer') ? 'handling-swipes' : 'none' },
+			'handling-swipes',
+			function(state){
+				// on...
+				if(state == 'on'){
+					var that = this
+					var viewer = this.ribbons.viewer
+
+					// prevent multiple handlers...
+					if(viewer.data('hammer') != null){
+						return
+					}
+
+					viewer.hammer()
+
+					var h = viewer.data('hammer')
+					h.get('swipe').set({direction: Hammer.DIRECTION_ALL})
+
+					viewer
+						.on('swipeleft', function(){ that.__panning || that.nextImage() })
+						.on('swiperight', function(){ that.__panning || that.prevImage() })
+						.on('swipeup', function(){ that.__panning || that.shiftImageUp() })
+						.on('swipedown', function(){ that.__panning || that.shiftImageDown() })
+
+				// off...
+				} else {
+					this.ribbons.viewer
+						.off('swipeleft')
+						.off('swiperight')
+						.off('swipeup')
+						.off('swipedown')
+						.removeData('hammer')
+				}
+			})],
+
+
+	__control_mode_handlers__: {
+		indirect: 
+			function(state){
+				this.toggleSwipeHandling(state)
+			},
+		direct:
+			function(state){
+			},
+	},
+
+	toggleControlMode: ['- Interface/',
+		toggler.Toggler(null,
+			function(){ return this.config['control-mode'] },
+			function(){ return Object.keys(this.__control_mode_handlers__ || [])
+				.concat(Object.keys(ControlActions.__control_mode_handlers__ || []))
+				.concat(['none'])
+				.unique() },
+			function(state){ 
+				var that = this
+
+				var _getHandler = function(name){
+					return (that.__control_mode_handlers__ || {})[name]
+						|| (ControlActions.__control_mode_handlers__ || {})[name]
+				}
+
+				// clear previous state...
+				var prev_state =this.toggleControlMode('?')
+				prev_state != 'none' && _getHandler(prev_state).call(this, 'off')
+
+				// set next state...
+				if(state != 'none'){
+					_getHandler(state).call(this, 'on')
+				}
+
+				this.config['control-mode'] = state
+			})],
+})
+
+
+var Control = 
+module.Control = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-control',
+	//exclusive: ['ui-control'],
+	depends: [
+		'ui'
+	],
+	actions: ControlActions,
+
+	handlers: [
+		['load',
+			function(){
+				this.toggleSwipeHandling('on')
+				this.toggleRibbonPanHandling('on')
+			}],
+		['stop',
+			function(){
+				this.toggleSwipeHandling('off')
+				this.toggleRibbonPanHandling('off')
+			}],
+		['toggleSingleImage',
+			function(){
+				this.toggleRibbonPanHandling(this.toggleSingleImage('?') == 'off' ? 'on' : 'off')
+			}],
+	],
+})
 
 
 
