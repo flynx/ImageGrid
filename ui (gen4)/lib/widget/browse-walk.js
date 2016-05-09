@@ -92,6 +92,8 @@ function(path, make){
 	var fullpath = false
 
 	// sync version of stat...
+	// XXX if we decide to keep this, then we'll need to cleanup the 
+	// 		code below...
 	var stat = function(path){
 		return new Promise(function(resolve, reject){
 			try {
