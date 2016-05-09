@@ -91,6 +91,18 @@ function(path, make){
 	// XXX expose these as config...
 	var fullpath = false
 
+	// sync version of stat...
+	var stat = function(path){
+		return new Promise(function(resolve, reject){
+			try {
+				resolve(fs.statSync(path))
+			} catch(err){
+				reject(err)
+			}
+		})
+	}
+
+	/*
 	var stat = function(path){
 		return new Promise(function(resolve, reject){
 			fs.stat.call(fs, path, function(err, res){
@@ -98,6 +110,7 @@ function(path, make){
 			})
 		})
 	}
+	*/
 
 	// get the drive list on windows...
 	if(os.type() == 'Windows_NT' && path == '/'){
@@ -164,48 +177,51 @@ function(path, make){
 						make(fullpath ? path + '../' : '../'))
 				}
 
-				files.map(function(file){
-					return stat(path +'/'+ file)
-						.catch(function(err){
-							make(fullpath 
-								? path +'/'+ file 
-								: file, null, true)
-						})
-						.then(function(res){
-							// can't read stat... (XXX ???)
-							if(res == null){
+				// XXX split out the making stage after the stat stage to
+				// 		be able to sort suff correctly...
+				files
+					.map(function(file){
+						return stat(path +'/'+ file)
+							.catch(function(err){
 								make(fullpath 
 									? path +'/'+ file 
 									: file, null, true)
-								return
-							}
+							})
+							.then(function(res){
+								// can't read stat... (XXX ???)
+								if(res == null){
+									make(fullpath 
+										? path +'/'+ file 
+										: file, null, true)
+									return
+								}
 
-							var dir = res.isDirectory()
-							var elem = res && make(fullpath 
-									? path +'/'+ file 
-									: file + (dir ? '/' : ''),
-								null,
-								that.options.disableFiles && !dir)
+								var dir = res.isDirectory()
+								var elem = res && make(fullpath 
+										? path +'/'+ file 
+										: file + (dir ? '/' : ''),
+									null,
+									that.options.disableFiles && !dir)
 
-							// count the number of files...
-							// NOTE: we do not care how long it will take
-							// 		so we'll not wait...
-							res && dir && _countDirFiles(path, file, elem)
-						})
-						// NOTE: we are not using promise.all(..) here because it
-						// 		triggers BEFORE the first make(..) is called...
-						// 		...not sure I fully understand why...
-						.then(function(){
-							// NOTE: this will get called for all results 
-							// 		including ones that generate errors, not 
-							// 		sure if this is a bug in .denodeify(..) 
-							// 		or by-design though...
-							res.push(file)
-							if(res.length == files.length){
-								resolve()
-							}
-						})
-				})
+								// count the number of files...
+								// NOTE: we do not care how long it will take
+								// 		so we'll not wait...
+								res && dir && _countDirFiles(path, file, elem)
+							})
+							// NOTE: we are not using promise.all(..) here because it
+							// 		triggers BEFORE the first make(..) is called...
+							// 		...not sure I fully understand why...
+							.then(function(){
+								// NOTE: this will get called for all results 
+								// 		including ones that generate errors, not 
+								// 		sure if this is a bug in .denodeify(..) 
+								// 		or by-design though...
+								res.push(file)
+								if(res.length == files.length){
+									resolve()
+								}
+							})
+					})
 			})
 		})
 	}
