@@ -1403,6 +1403,13 @@ module.Clickable = core.ImageGridFeatures.Feature({
 	tag: 'ui-clickable',
 	depends: ['ui'],
 
+	config: {
+		'click-threshold': {
+			t: 100,
+			d: 5,
+		},
+	},
+
 	handlers: [
 		// setup click targets...
 		// XXX click only if we did not drag...
@@ -1413,23 +1420,34 @@ module.Clickable = core.ImageGridFeatures.Feature({
 
 				// set the clicker only once...
 				if(!img.prop('clickable')){
-					var x, y
+					var x, y, t, last, threshold
 					img
 						.prop('clickable', true)
 						.on('mousedown touchstart', function(){ 
+							threshold = that.config['click-threshold']
 							x = event.clientX
 							y = event.clientY
 							t = Date.now()
 						})
 						.on('mouseup touchend', function(){ 
+							if(that.__control_in_progress){
+								return
+							}
+							// prevent another handler within a timeout...
+							// XXX not too sure about this...
+							if(t - last < threshold.t){
+								return
+							}
+							// constrain distance between down and up events...
 							if(x != null 
 								&& Math.max(
 									Math.abs(x - event.clientX), 
-									Math.abs(y - event.clientY)) < 5){
+									Math.abs(y - event.clientY)) < threshold.d){
 								// this will prevent double clicks...
 								x = null
 								y = null
 								that.focusImage(that.ribbons.getElemGID($(this)))
+								last = Date.now()
 							}
 						})
 				}
@@ -1545,6 +1563,16 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 
 /*********************************************************************/
 // Touch/Control...
+//
+//	.__control_in_progress
+// 		Long interactions can set .__control_in_progress a number while 
+// 		in progress and remove it when done.
+// 		Each new interaction should increment this when starting and 
+// 		decrement when done.
+// 		This should be removed when 0
+// 		This is to enable other events to handle the situation gracefully
+//
+// 		XXX how should multiple long interactions be handled??
 
 /*
 // XXX add zoom...
@@ -1606,12 +1634,13 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 							var s = that.scale
 							var g = evt.gesture
 
-							that.__panning = true
 
 							var data = r.data('drag-data')
 
 							// we just started...
 							if(!data){
+								that.__control_in_progress = (that.__control_in_progress || 0) + 1
+
 								// hide and remove current image indicator...
 								// NOTE: it will be reconstructed on 
 								// 		next .focusImage(..)
@@ -1660,7 +1689,10 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 								}
 
 								setTimeout(function(){
-									delete that.__panning
+									that.__control_in_progress -= 1
+									if(that.__control_in_progress <= 0){
+										delete that.__control_in_progress
+									}
 								}, 50)
 							}
 						})
@@ -1766,10 +1798,11 @@ var ControlActions = actions.Actions({
 		// 	true		- focus central image after pan
 		// 	null		- do nothing.
 		'focus-central-image': 'silent',
+
+		'ribbon-pan-threshold': 30,
 	},
 
 
-	// XXX .off(..) appears not to be working with hammer events...
 	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
 		toggler.Toggler(null,
 			function(){ 
@@ -1789,6 +1822,15 @@ var ControlActions = actions.Actions({
 						r
 							.addClass('draggable')
 							.hammer()
+
+						r.data('hammer')
+							.get('pan')
+								.set({
+									direction: Hammer.DIRECTION_HORIZONTAL,
+									threshold: this.config['ribbon-pan-threshold'],
+								})
+
+						r
 							.on('pan', function(evt){
 								//evt.stopPropagation()
 
@@ -1799,12 +1841,12 @@ var ControlActions = actions.Actions({
 								var s = that.scale
 								var g = evt.gesture
 
-								that.__panning = true
-
 								var data = r.data('drag-data')
 
 								// we just started...
 								if(!data){
+									that.__control_in_progress = (that.__control_in_progress || 0) + 1
+
 									// hide and remove current image indicator...
 									// NOTE: it will be reconstructed on 
 									// 		next .focusImage(..)
@@ -1819,13 +1861,23 @@ var ControlActions = actions.Actions({
 
 									// store initial position...
 									var data = {
-										left: d.getOffset(this).left
+										left: d.getOffset(this).left,
+										pointers: g.pointers.length,
 									}
 									r.data('drag-data', data)
 								}
 
 								// do the actual move...
 								d.setOffset(this, data.left + (g.deltaX / s))
+
+
+								// update ribbon when "pulling" with two fingers...
+								if(g.pointers.length != data.pointers){
+									data.pointers = g.pointers.length
+
+									// load stuff if needed...
+									that.updateRibbon(that.ribbons.getImageByPosition('center', r))
+								}
 
 								// when done...
 								if(g.isFinal){
@@ -1859,7 +1911,10 @@ var ControlActions = actions.Actions({
 									}
 
 									setTimeout(function(){
-										delete that.__panning
+										that.__control_in_progress -= 1
+										if(that.__control_in_progress <= 0){
+											delete that.__control_in_progress
+										}
 									}, 50)
 								}
 							})
@@ -1878,16 +1933,19 @@ var ControlActions = actions.Actions({
 					this.off('updateRibbon', handler)
 
 					this.data.ribbon_order.forEach(function(gid){
-						that.ribbons.getRibbon(gid)
-							//.removeClass('draggable')
+						var r = that.ribbons.getRibbon(gid)
+
+						r.data('hammer').destroy()
+
+						r
+							.removeClass('draggable')
 							// XXX this does not remove the hammer trigger
 							// 		...just the jQuery handler is cleared
-							//.off('pan')
+							.off('pan')
 							.removeData('hammer')
 					})
 				}
 			})],
-	// XXX .off(..) appears not to be working with hammer events...
 	toggleSwipeHandling: ['Interface/Toggle swipe handling',
 		toggler.Toggler(null,
 			function(_, state){ 
@@ -1896,10 +1954,11 @@ var ControlActions = actions.Actions({
 					&& this.ribbons.viewer.data('hammer') ? 'handling-swipes' : 'none' },
 			'handling-swipes',
 			function(state){
+				var viewer = this.ribbons.viewer
+
 				// on...
 				if(state == 'on'){
 					var that = this
-					var viewer = this.ribbons.viewer
 
 					// prevent multiple handlers...
 					if(viewer.data('hammer') != null){
@@ -1908,30 +1967,33 @@ var ControlActions = actions.Actions({
 
 					viewer.hammer()
 
-					var h = viewer.data('hammer')
-					h.get('swipe').set({direction: Hammer.DIRECTION_ALL})
+					viewer.data('hammer')
+						.get('swipe')
+							.set({direction: Hammer.DIRECTION_ALL})
 
 					if(!viewer.hasClass('swipable')){
 						viewer
 							.addClass('swipable')
 							.on('swipeleft', function(){ 
-								that.__panning || that.nextImage() })
+								that.__control_in_progress || that.nextImage() })
 							.on('swiperight', function(){ 
-								that.__panning || that.prevImage() })
+								that.__control_in_progress || that.prevImage() })
 							.on('swipeup', function(){ 
-								that.__panning || that.shiftImageUp() })
+								that.__control_in_progress || that.shiftImageUp() })
 							.on('swipedown', function(){ 
-								that.__panning || that.shiftImageDown() })
+								that.__control_in_progress || that.shiftImageDown() })
 					}
 
 				// off...
 				} else {
-					this.ribbons.viewer
-						// XXX
-						//.off('swipeleft')
-						//.off('swiperight')
-						//.off('swipeup')
-						//.off('swipedown')
+					viewer.data('hammer').destroy()
+
+					viewer
+						.removeClass('swipable')
+						.off('swipeleft')
+						.off('swiperight')
+						.off('swipeup')
+						.off('swipedown')
 						.removeData('hammer')
 				}
 			})],
