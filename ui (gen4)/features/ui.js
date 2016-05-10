@@ -1935,7 +1935,8 @@ var ControlActions = actions.Actions({
 					this.data.ribbon_order.forEach(function(gid){
 						var r = that.ribbons.getRibbon(gid)
 
-						r.data('hammer').destroy()
+						var h = r.data('hammer')
+						h && h.destroy()
 
 						r
 							.removeClass('draggable')
@@ -1986,7 +1987,8 @@ var ControlActions = actions.Actions({
 
 				// off...
 				} else {
-					viewer.data('hammer').destroy()
+					var h = viewer.data('hammer')
+					h && h.destroy()
 
 					viewer
 						.removeClass('swipable')

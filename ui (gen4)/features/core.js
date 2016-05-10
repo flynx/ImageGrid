@@ -8,7 +8,8 @@
 
 define(function(require){ var module = {}
 
-//var DEBUG = DEBUG != null ? DEBUG : true
+// XXX
+var DEBUG = typeof(DEBUG) != 'undefined' ? DEBUG : true
 
 var actions = require('lib/actions')
 var features = require('lib/features')
@@ -157,7 +158,10 @@ var LifeCycleActions = actions.Actions({
 					// in case something breaks exit...
 					// XXX not sure if this is correct...
 					} catch(e){
-						this.close(true)
+						console.log('ERROR:', e)
+
+						DEBUG || nw.App.quit()
+						//this.close(true)
 					}
 				}
 				nw.Window.get().on('close', this.__nw_stop_handler)
