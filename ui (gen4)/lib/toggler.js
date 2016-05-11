@@ -340,10 +340,6 @@ function CSSClassToggler(elem, classes, callback_a, callback_b){
 				: classes_set
 		classes = typeof(classes) == typeof('str') ? ['none', classes] : classes
 
-		if(classes == null){
-			console.log('!!!!!!')
-		}
-
 		// remove the dot from class names...
 		// NOTE: this is here because I've made the error of including a 
 		// 		leading "." almost every time I use this after I forget 
