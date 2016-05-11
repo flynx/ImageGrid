@@ -1830,94 +1830,93 @@ var ControlActions = actions.Actions({
 									threshold: this.config['ribbon-pan-threshold'],
 								})
 
-						r
-							.on('pan', function(evt){
-								//evt.stopPropagation()
+						r.on('pan', function(evt){
+							//evt.stopPropagation()
 
-								// XXX stop all previous animations...
-								//r.velocity("stop")
+							// XXX stop all previous animations...
+							//r.velocity("stop")
 
-								var d = that.ribbons.dom
-								var s = that.scale
-								var g = evt.gesture
+							var d = that.ribbons.dom
+							var s = that.scale
+							var g = evt.gesture
 
-								var data = r.data('drag-data')
+							var data = r.data('drag-data')
 
-								// we just started...
-								if(!data){
-									that.__control_in_progress = (that.__control_in_progress || 0) + 1
+							// we just started...
+							if(!data){
+								that.__control_in_progress = (that.__control_in_progress || 0) + 1
 
-									// hide and remove current image indicator...
-									// NOTE: it will be reconstructed on 
-									// 		next .focusImage(..)
-									var m = that.ribbons.viewer
-										.find('.current-marker')
-											.velocity({opacity: 0}, {
-												duration: 100,
-												complete: function(){
-													m.remove()
-												},
-											})
+								// hide and remove current image indicator...
+								// NOTE: it will be reconstructed on 
+								// 		next .focusImage(..)
+								var m = that.ribbons.viewer
+									.find('.current-marker')
+										.velocity({opacity: 0}, {
+											duration: 100,
+											complete: function(){
+												m.remove()
+											},
+										})
 
-									// store initial position...
-									var data = {
-										left: d.getOffset(this).left,
-										pointers: g.pointers.length,
-									}
-									r.data('drag-data', data)
+								// store initial position...
+								var data = {
+									left: d.getOffset(this).left,
+									pointers: g.pointers.length,
 								}
+								r.data('drag-data', data)
+							}
 
-								// do the actual move...
-								d.setOffset(this, data.left + (g.deltaX / s))
+							// do the actual move...
+							d.setOffset(this, data.left + (g.deltaX / s))
 
 
-								// update ribbon when "pulling" with two fingers...
-								if(g.pointers.length != data.pointers){
-									data.pointers = g.pointers.length
+							// update ribbon when "pulling" with two fingers...
+							if(g.pointers.length != data.pointers){
+								data.pointers = g.pointers.length
 
-									// load stuff if needed...
-									that.updateRibbon(that.ribbons.getImageByPosition('center', r))
-								}
+								// load stuff if needed...
+								that.updateRibbon(that.ribbons.getImageByPosition('center', r))
+							}
 
-								// when done...
-								if(g.isFinal){
-									r.removeData('drag-data')
+							// when done...
+							if(g.isFinal){
+								r.removeData('drag-data')
 
-									// XXX this seems to have trouble with off-screen images...
-									var central = that.ribbons.getImageByPosition('center', r)
+								// XXX this seems to have trouble with off-screen images...
+								var central = that.ribbons.getImageByPosition('center', r)
 
-									// load stuff if needed...
-									that.updateRibbon(central)
+								// load stuff if needed...
+								that.updateRibbon(central)
+								
+								// XXX add inertia....
+								/* XXX 
+								console.log('!!!!', g.velocityX)
+								r.velocity({
+									translateX: (data.left + g.deltaX + (g.velocityX * 10)) +'px'
+								}, 'easeInSine')
+								*/
+
+								// silently focus central image...
+								if(that.config['focus-central-image'] == 'silent'){
+									var gid = that.ribbons.getElemGID(central)
+
+									// XXX is this the right way to do this???
+									that.data.focusImage(gid)
+									that.ribbons.focusImage(gid)
 									
-									// XXX add inertia....
-									/* XXX 
-									console.log('!!!!', g.velocityX)
-									r.velocity({
-										translateX: (data.left + g.deltaX + (g.velocityX * 10)) +'px'
-									}, 'easeInSine')
-									*/
-
-									// silently focus central image...
-									if(that.config['focus-central-image'] == 'silent'){
-										var gid = that.ribbons.getElemGID(central)
-
-										// XXX is this the right way to do this???
-										that.data.focusImage(gid)
-										that.ribbons.focusImage(gid)
-										
-									// focus central image in a normal manner...
-									} else if(that.config['focus-central-image']){
-										that.focusImage(that.ribbons.getElemGID(central))
-									}
-
-									setTimeout(function(){
-										that.__control_in_progress -= 1
-										if(that.__control_in_progress <= 0){
-											delete that.__control_in_progress
-										}
-									}, 50)
+								// focus central image in a normal manner...
+								} else if(that.config['focus-central-image']){
+									that.focusImage(that.ribbons.getElemGID(central))
 								}
-							})
+
+								setTimeout(function(){
+									that.__control_in_progress -= 1
+									if(that.__control_in_progress <= 0){
+										delete that.__control_in_progress
+									}
+								}, 50)
+							}
+						})
 					}
 				}
 

@@ -233,9 +233,11 @@ body {
 </style>
 
 <script>
-window.__devtools_failsafe = setTimeout(function(){
-	typeof(require) != 'undefined' && nw.Window.get().showDevTools()
-}, 1000)
+if(window.require && window.nw){
+	window.__devtools_failsafe = setTimeout(function(){
+		nw.Window.get().showDevTools()
+	}, 1000)
+}
 </script>
 
 

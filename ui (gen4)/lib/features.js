@@ -102,19 +102,19 @@ module.FeatureProto = {
 		}
 
 		// merge config...
-		// XXX should this use inheritance???
-		// XXX do we need to clone .config?
+		// NOTE: this will merge the actual config in .config.__proto__
+		// 		keeping the .config clean for the user to lay with...
 		if(this.config != null 
 				|| (this.actions != null 
 					&& this.actions.config != null)){
 			var config = this.config = this.config || this.actions.config
 
 			if(actions.config == null){
-				actions.config = {}
+				actions.config = Object.create({})
 			}
 			Object.keys(config).forEach(function(n){
 				// NOTE: this will overwrite existing values...
-				actions.config[n] = config[n]
+				actions.config.__proto__[n] = config[n]
 			})
 		}
 
