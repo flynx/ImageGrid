@@ -47,6 +47,9 @@ var actions = require('lib/actions')
 // 					  and mixed out on .remove()
 // 	.config			- feature configuration, will be merged with base 
 // 					  object's .config
+// 					  NOTE: the final .config is an empty object with
+// 					  		.__proto__ set to the merged configuration
+// 					  		data...
 // 	.handlers		- feature event handlers (list | null)
 // 
 //
@@ -273,6 +276,14 @@ module.FeatureSet = {
 	// 				breaking either the dependency or priority ordering.
 	//
 	//
+	// Forcing a feature disabled:
+	// 
+	// If a feature is indicated with a leading '-' then it is forced 
+	// disabled and will not load.
+	// Disabled features are treated in the same way as inaplicable 
+	// features.
+	//
+	//
 	// Dependency sorting:
 	//
 	// These are order dependencies, i.e. for a dependency to be 
@@ -451,6 +462,15 @@ module.FeatureSet = {
 		// NOTE: this will not resolve all the conflicts...
 		lst = _sortDep(lst, missing, depth).unique()
 
+		// get disabled features...
+		var disabled = []
+		Object.keys(missing).forEach(function(n){
+			if(n[0] == '-'){
+				delete missing[n]
+				disabled.push(n.slice(1))
+			}
+		})
+
 		// clasify features...
 		var unapplicable = []
 		var conflicts = {}
@@ -459,6 +479,11 @@ module.FeatureSet = {
 			var e = that[n]
 			if(e == null){
 				return true
+			}
+
+			// disabled...
+			if(disabled.indexOf(n) >= 0){
+				return false
 			}
 
 			// check applicability...
@@ -472,11 +497,13 @@ module.FeatureSet = {
 				return true
 			}
 
-			// mark feature unapplicable if it depends on an unapplicable...
+			// mark feature unapplicable if it depends on an unapplicable
+			// or a disabled...
 			// NOTE: we need to do this once as features at this point
 			// 		are sorted by dependencies...
 			if(e.depends.filter(function(dep){
 						return unapplicable.indexOf(dep) > -1 
+							|| disabled.indexOf(dep) > -1 
 					}).length > 0){
 				unapplicable.push(n)
 				return false
@@ -533,6 +560,7 @@ module.FeatureSet = {
 
 		return {
 			features: lst,
+			disabled: disabled,
 			excluded: excluded,
 			missing: missing,
 			conflicts: conflicts,

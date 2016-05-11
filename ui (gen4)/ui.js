@@ -75,6 +75,10 @@ $(function(){
 		&& console.warn('Features excluded (%d):',
 			a.features.excluded.length, 
 			a.features.excluded)
+	a.features.disabled.length > 0 
+		&& console.log('Features disabled (%d):',
+			a.features.disabled.length, 
+			a.features.disabled)
 	console.log('Features not applicable (%d):', 
 		a.features.unapplicable.length, 
 		a.features.unapplicable)

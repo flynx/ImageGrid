@@ -89,7 +89,8 @@ module.QueueActions = actions.Actions({
 	taskFailed: ['', function(){}],
 	taskDone: ['', function(){}],
 
-	done: ['', function(){}],
+	done: ['', function(func){
+		func && this.on('done', func) }],
 
 
 	// Task manipulation actions...

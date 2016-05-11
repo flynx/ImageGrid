@@ -710,7 +710,7 @@ module.MetaActions = {
 				mode = mode[1]
 
 				// get the handlers...
-				var h = that._action_handlers[action]
+				var h = that._action_handlers[action] || []
 
 				// remove explicit handler...
 				if(typeof(handler) == 'function'){

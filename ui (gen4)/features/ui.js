@@ -1922,7 +1922,9 @@ var ControlActions = actions.Actions({
 
 				// on...
 				if(state == 'on'){
+					this.off('updateRibbon', handler)
 					this.on('updateRibbon', handler)
+
 					this.data.ribbon_order.forEach(function(gid){
 						handler.call(that, null, gid)
 					})

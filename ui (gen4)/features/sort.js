@@ -474,6 +474,7 @@ module.SortUI = core.ImageGridFeatures.Feature({
 	tag: 'ui-sort',
 	depends: [
 		'ui',
+		'sort',
 	],
 
 	actions: SortUIActions,
