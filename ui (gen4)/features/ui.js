@@ -1922,6 +1922,8 @@ var ControlActions = actions.Actions({
 
 				// on...
 				if(state == 'on'){
+					// NOTE: we are resetting this to avoid multiple setting
+					// 		handlers...
 					this.off('updateRibbon', handler)
 					this.on('updateRibbon', handler)
 

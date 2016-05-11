@@ -94,6 +94,12 @@ var FileSystemLoaderActions = actions.Actions({
 	// NOTE: this will add a .from field to .location, this will indicate
 	// 		the date starting from which saves are loaded.
 	//
+	// XXX BUG: if no <keyword>.json files exist this will not load 
+	// 		anything...
+	// 		To reproduce:
+	// 			.loadImages(..)
+	// 			.saveIndex()
+	// 			.loadIndex(..)
 	// XXX add a symmetric equivalent to .prepareIndexForWrite(..) so as 
 	// 		to enable features to load their data...
 	// XXX should this return a promise??? ...a clean promise???
@@ -642,6 +648,9 @@ var FileSystemSaveHistoryActions = actions.Actions({
 	// 	}
 	savecomments: null,
 
+	getSaveComment: ['- File/',
+		function(save){
+			return this.savecomments && this.savecomments[save || 'current'] || '' }],
 	// Comment a save...
 	//
 	// 	Comment current save...
@@ -1228,17 +1237,24 @@ var FileSystemWriterActions = actions.Actions({
 	
 	// NOTE: with no arguments this will save index to .location.path
 	// XXX should this return a promise??? ...a clean promise???
+	// XXX BUG: after .loadImages(..) and without arguments this produces
+	// 		a result that is not loaded....
 	saveIndex: ['- File/',
 		function(path, logger){
 			var that = this
 
 			path = path || this.location.loaded
-			path = path.length == 1 ? path[0] : path 
+			path = path && path.length == 1 ? path[0] : path 
 
 			// XXX
 			if(path instanceof Array){
 				console.error('saving to merged indexes not yet supported...')
 				return
+			}
+
+			// XXX
+			if(path == null && this.location.method != 'loadIndex'){
+				path = this.location.path
 			}
 
 			// resolve relative paths...
@@ -1644,22 +1660,31 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 // 		- save if not base path present (browser)
 var FileSystemWriterUIActions = actions.Actions({
 	config: {
-		'export-dialog-mode': 'Directories',
+		'export-dialog-mode': 'Full index',
 
 		'export-dialog-modes': {
-			'Images only': {
-				action: 'exportDirs',
+			// XXX is this the right title???
+			// XXX this is not yet working...
+			'Save index to current location': {
+				action: 'saveIndexHere',
 				data: [
-					'pattern',
-					'size',
-					'level_dir',
-					'target_dir',
+					'comment'
 				],
 			},
 			'Full index': {
 				action: 'exportIndex',
 				data: [
 					//'size',
+					'target_dir',
+					'comment',
+				],
+			},
+			'Images only': {
+				action: 'exportDirs',
+				data: [
+					'pattern',
+					'size',
+					'level_dir',
 					'target_dir',
 				],
 			},
@@ -1807,7 +1832,34 @@ var FileSystemWriterUIActions = actions.Actions({
 								})
 						})
 				})
-		}
+		},
+		'comment': function(actions, make, parent){
+			var elem = make(['Comment: ', 
+				// XXX get staged comment???
+				function(){ return actions.getSaveComment() }])
+				.on('open', function(){
+					event.preventDefault()
+
+					// XXX multiline???
+					var path = elem.find('.text').last()
+						.makeEditable({
+							multiline: true,
+							clear_on_edit: false,
+							abort_keys: [
+								'Esc',
+							],
+						})
+						.on('edit-done', function(_, text){
+							actions.setSaveComment(text)
+						})
+						.on('edit-aborted edit-done', function(evt, text){
+							parent.update()
+								.then(function(){
+									parent.select(text)
+								})
+						})
+				})
+		},
 	},
 	// XXX indicate export state: index, crop, image...
 	exportDialog: ['File/Export/Export optioons...',
@@ -1817,11 +1869,15 @@ var FileSystemWriterUIActions = actions.Actions({
 			var o = browse.makeLister(null, function(path, make){
 				var dialog = this
 				var mode = that.config['export-dialog-mode'] || 'Images only'
+				// if invalid mode get the first...
+				mode = !that.config['export-dialog-modes'][mode] ?
+					Object.keys(that.config['export-dialog-modes']).shift()
+					: mode
 				var data = that.config['export-dialog-modes'][mode].data
 
 				// mode selector...
 				make(['Export mode: ', 
-						function(){ return that.config['export-dialog-mode'] || 'Directories' }])
+						function(){ return mode }])
 					.on('open', 
 						widgets.makeNestedConfigListEditor(that, o,
 							'export-dialog-modes',
@@ -1849,7 +1905,7 @@ var FileSystemWriterUIActions = actions.Actions({
 					.on('open', function(){
 						var mode = that.config['export-dialog-modes'][that.config['export-dialog-mode']]
 						that[mode.action](
-							that.config['export-path'] || that.location.path)
+							that.config['export-path'] || undefined)
 						dialog.parent.close()
 					})
 					.addClass('selected')
