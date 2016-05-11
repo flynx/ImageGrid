@@ -237,11 +237,11 @@ function(list, from_date, logger){
 						logger && logger.emit('queued', n)
 						queued += 1
 					}
-				}) })
+				}) });
 
 	// add base files back where needed...
 	// <keyword>.json / non-diff
-	dates.root
+	(dates.root || [])
 		.forEach(function(n){
 			var b = pathlib.basename(n)
 			var k = b.split(/\./g)[0]
@@ -292,6 +292,7 @@ function(path, index_dir){
 				// XXX handle errors...
 				.on('error', function(err){
 					logger && logger.emit('error', err)
+					console.error(err)
 				})
 				.on('end', function(files){
 					var data = groupByDate(files)
@@ -316,6 +317,7 @@ function(path, index_dir){
 				// XXX handle errors...
 				.on('error', function(err){
 					logger && logger.emit('error', err)
+					console.error(err)
 				})
 				// collect the found indexes...
 				.on('match', function(path){
@@ -447,13 +449,14 @@ function(path, index_dir, from_date, logger){
 				// XXX handle errors...
 				.on('error', function(err){
 					logger && logger.emit('error', err)
+					console.error(err)
 				})
 				.on('end', function(files){
 					var res = {}
 
 					// XXX need to pass a filter date to this...
 					var index = groupByKeyword(files, from_date, logger)
-	
+
 					// load...
 					Promise
 						.all(Object.keys(index).map(function(keyword){
@@ -464,11 +467,11 @@ function(path, index_dir, from_date, logger){
 							// XXX not sure about this...
 							if(keyword == '__dates'){
 								res.__dates = index.__dates
-								return
+								return true
 							}
 							if(keyword == '__date'){
 								res.__date = index.__date
-								return
+								return true
 							}
 
 							// NOTE: so far I really do not like how nested and
@@ -495,6 +498,7 @@ function(path, index_dir, from_date, logger){
 												// XXX we should abort loading this index...
 												.catch(function(err){
 													logger && logger.emit('error', err)
+													console.error(err)
 												})
 												.then(function(json){
 													// NOTE: we can't merge here
@@ -541,6 +545,7 @@ function(path, index_dir, from_date, logger){
 				// XXX handle errors...
 				.on('error', function(err){
 					logger && logger.emit('error', err)
+					console.error(err)
 				})
 				// collect the found indexes...
 				.on('match', function(path){
@@ -861,6 +866,7 @@ function(json, path, date, filename_tpl, logger){
 	return ensureDir(path)
 		.catch(function(err){
 			logger && logger.emit('error', err)
+			console.error(err)
 		})
 		.then(function(){
 			logger && logger.emit('path', path)
@@ -885,6 +891,7 @@ function(json, path, date, filename_tpl, logger){
 							return writeFile(file, data, 'utf8')
 								.catch(function(err){
 									logger && logger.emit('error', err)
+									console.error(err)
 								})
 								.then(function(){
 									logger && logger.emit('written', file)
