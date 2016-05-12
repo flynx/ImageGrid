@@ -540,7 +540,6 @@ function(path, index_dir, from_date, logger){
 			var res = {}
 			var loaders = []
 
-			// XXX handle 'error' event...
 			listIndexes(path, index_dir)
 				// XXX handle errors...
 				.on('error', function(err){
@@ -549,6 +548,10 @@ function(path, index_dir, from_date, logger){
 				})
 				// collect the found indexes...
 				.on('match', function(path){
+					// XXX after finding an index, need to prevent loading of
+					// 		any indexes in that sub tree...
+					// 			shortest unique path blocks all children.
+					// XXX
 					loaders.push(loadIndex(path, index_dir, from_date, logger) 
 						.then(function(obj){ 
 							// NOTE: considering that all the paths within
