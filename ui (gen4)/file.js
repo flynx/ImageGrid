@@ -106,6 +106,24 @@ function(base, index_dir){
 }
 
 
+// NOTE: this is similar to listIndexes(..) but will return a promise and
+// 		skip all non-loadable nested indexes...
+var getIndexes =
+module.getIndexes = 
+function(base, index_dir, logger){
+	return new Promise(function(resolve, reject){
+		listIndexes(base, index_dir)
+			.on('error', function(err){
+				reject(err)
+			})
+			.on('end', function(paths){
+				// skip nested indexes...
+				resolve(skipNested(paths, index_dir, logger))
+			})
+	})
+}
+
+
 var listPreviews =
 module.listPreviews = 
 function(base){
@@ -336,17 +354,12 @@ function(path, index_dir, logger){
 		} else {
 			var res = {}
 
-			// XXX handle 'error' event...
-			listIndexes(path, index_dir)
-				// XXX handle errors...
-				.on('error', function(err){
+			getIndexes(path, index_dir, logger)
+				.catch(function(err){
 					logger && logger.emit('error', err)
 					console.error(err)
 				})
-				.on('end', function(paths){
-					// skip nested indexes...
-					paths = skipNested(paths, index_dir, logger)
-
+				.then(function(paths){
 					// start loading...
 					Promise.all(paths.map(function(p){
 						var path = pathlib.normalize(p +'/'+ index_dir) 
@@ -563,16 +576,12 @@ function(path, index_dir, from_date, logger){
 		} else {
 			var res = {}
 
-			listIndexes(path, index_dir)
-				// XXX handle errors...
-				.on('error', function(err){
+			getIndexes(path, index_dir, logger)
+				.catch(function(err){
 					logger && logger.emit('error', err)
 					console.error(err)
 				})
-				.on('end', function(paths){
-					// skip nested indexes...
-					paths = skipNested(paths, index_dir, logger)
-
+				.then(function(paths){
 					// start loading...
 					Promise.all(paths.map(function(p){
 						var path = pathlib.normalize(p +'/'+ index_dir) 
