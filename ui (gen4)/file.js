@@ -36,16 +36,10 @@ var INDEX_DIR = '.ImageGrid'
 
 
 /*********************************************************************/
-// Queue
-//
-// Task
-//
-
-
-
-/*********************************************************************/
 // helpers...
 
+// Skip nested indexes from tree...
+//
 var skipNested = function(paths, index_dir, logger){
 	paths = paths
 		.map(function(p){ return p.split(index_dir).shift() })
@@ -91,14 +85,17 @@ function(glob){ return guaranteeEvents('match end', glob) }
 
 var gGlob = 
 module.gGlob = function(){
-	return guaranteeGlobEvents(glob.apply(null, arguments))
-}
+	return guaranteeGlobEvents(glob.apply(null, arguments)) }
 
 
 /*********************************************************************/
 // Reader...
 
 
+// XXX would be nice to find a way to stop searching a sub tree as soon
+// 		as a match is found.
+// 		...this would be allot faster than getting the whole tree and 
+// 		then pruning through like it is done now...
 var listIndexes =
 module.listIndexes = 
 function(base, index_dir){
@@ -115,6 +112,9 @@ function(base, index_dir, logger){
 		listIndexes(base, index_dir)
 			.on('error', function(err){
 				reject(err)
+			})
+			.on('match', function(path){
+				logger && logger.emit('found', path)
 			})
 			.on('end', function(paths){
 				// skip nested indexes...
@@ -677,7 +677,6 @@ function(){
 }
 
 
-
 // Build a data and images objects from the json returned by loadIndex(..)
 //
 // Contrary to loadIndex(..) this expects a specific format of data:
@@ -934,7 +933,6 @@ function(json, path, date, filename_tpl, logger){
 			})
 		})
 }
-
 
 
 
