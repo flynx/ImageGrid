@@ -174,10 +174,18 @@ var transformEditor = function(){
 				: elem instanceof Array ? elem
 				: [elem]
 
+			var e
+			for(var i = 0; i < elem.length; i++){
+				e = elem[i]
+				e.style.transformOrigin = origin.join ? origin.join(' ') : origin
+				e.style.transform = transform
+			}
+			/*
 			elem.forEach(function(e){
 				e.style.transformOrigin = origin.join ? origin.join(' ') : origin
 				e.style.transform = transform
 			})
+			*/
 
 			return this
 		},
@@ -468,8 +476,8 @@ window.transformEditor = TransformEditor
 
 // jQuery API for the TransformEditor...
 jQuery.fn.transform = function(){
-	var that = this
-	var elem = $(this)[0]
+	var e = $(this)
+	var elem = e[0]
 
 	var args = args2array(arguments)
 	// normalize...
@@ -496,19 +504,22 @@ jQuery.fn.transform = function(){
 
 	// set state...
 	} else {
-		// load user inputs...
-		Object.keys(args).forEach(function(k){
-			if(!(k in transform)){
-				return
-			}
+		var v
 
-			transform[k].apply(transform, args[k] instanceof Array ? args[k] : [args[k]])
-		})
+		// load user inputs...
+		for(var k in args){
+			if(!(k in transform)){
+				continue
+			}
+			v = args[k]
+
+			transform[k].apply(transform, v instanceof Array ? v : [v])
+		}
 
 		transform.toElem(this)
 	}
 
-	return $(this)
+	return e
 }
 
 

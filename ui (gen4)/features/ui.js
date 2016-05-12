@@ -1803,6 +1803,7 @@ var ControlActions = actions.Actions({
 	},
 
 
+	// XXX this is really slow on IE...
 	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
 		toggler.Toggler(null,
 			function(){ 
@@ -1871,6 +1872,9 @@ var ControlActions = actions.Actions({
 
 
 							// update ribbon when "pulling" with two fingers...
+							//
+							// NOTE: this only happens when number of fingers
+							// 		changes, thus no lag should be noticeable...
 							if(g.pointers.length != data.pointers){
 								data.pointers = g.pointers.length
 

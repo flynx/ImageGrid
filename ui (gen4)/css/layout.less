@@ -4,12 +4,13 @@
 
 /******************************************************** Settings ***/
 
-@image-tile-size: 300px;
-// XXX current used version of node-webkit (0.8) is buggy with this...
-//	-- ribbons are not sized horizpntally correctly...
-// XXX these need the marks to be sized in a relative manner...
-//@image-tile-size: 100vmin;
+//@image-tile-size: 300px;
+//@image-tile-size: 600px;
+// Experimental...
+@image-tile-size: 50vmin;
 //@image-tile-size: 100vmax;
+
+@image-mark-size: @image-tile-size/60;
 
 // these are relative to image tile size...
 //@image-border: @image-tile-size/200;
@@ -17,10 +18,8 @@
 @ribbon-margin: @image-tile-size/30;
 @ribbon-mark-offset: @image-tile-size/200;
 
-
-// these are relative to dpi/scale...
-@ribbon-mark-size: 10px;
-@single-image-indicator-size: 10px;
+@ribbon-mark-size: @image-tile-size/30;
+@single-image-indicator-size: @image-tile-size/30;
 
 
 
@@ -298,7 +297,7 @@ button:hover {
 	position: absolute;
 	top: 0px;
 	right: 0px;
-	z-index: 9000;
+	z-index: 4000;
 
 	opacity: 0.4;
 
@@ -851,22 +850,27 @@ stretching in width... */
 	font-size: 0pt;
 	border: none;
 
-	width: 5px;
-	height: 5px;
+	width: @image-mark-size;
+	height: @image-mark-size;
 
 	top: auto;
-	bottom: 10px;
+	bottom: @image-tile-size/30;
 	left: auto;
-	right: 10px;
+	right: @image-tile-size/30;
 
-	box-shadow: 1px 1px 7px -1.3px rgba(0,0,0,0.8);
+	box-shadow: 
+		@image-tile-size/300
+		@image-tile-size/300
+		@image-tile-size/43
+		-@image-tile-size/231
+		rgba(0,0,0,0.8);
 
 	box-sizing: border-box;
 	border-radius: 50%;
 
 
 	background: blue;
-	left: -25px;
+	left: -@image-tile-size/12;
 }
 .marks-visible.single-image-mode.viewer .mark:before,
 .marks-visible.single-image-mode.viewer .mark:after {
@@ -875,28 +879,28 @@ stretching in width... */
 
 .mark.bookmark:after {
 	background: yellow;
-	left: -15px;
+	left: -@image-tile-size/20;
 }
 
 
 /* the selected tick... */
 .mark.selected:before,
 .mark.selected:after {
-	top: 10px;
-	left: -20px;
+	top: @image-tile-size/30;
+	left: -@image-tile-size/15;
 	bottom: auto;
 
-	border-radius: 3px;
+	border-radius: @image-tile-size/100;
 
 	.rotate(-45deg);
 }
 .mark.selected:before {
-	width: 3px;
-	height: 6px;
+	width: @image-tile-size/100;
+	height: @image-tile-size/50;
 }
 .mark.selected:after {
-	width: 12px;
-	height: 3px;
+	width: @image-tile-size/25;
+	height: @image-tile-size/100;
 }
 
 
