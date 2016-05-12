@@ -46,6 +46,31 @@ var INDEX_DIR = '.ImageGrid'
 /*********************************************************************/
 // helpers...
 
+var skipNested = function(paths, index_dir, logger){
+	paths = paths
+		.map(function(p){ return p.split(index_dir).shift() })
+		.sort(function(a, b){ return a.length - b.length })
+	for(var i=0; i < paths.length; i++){
+		var p = paths[i]
+
+		if(p == null){
+			continue
+		}
+
+		for(var j=i+1; j < paths.length; j++){
+			var o = paths[j].split(p)
+
+			if(o[0] == '' && o.length > 1){
+				logger && logger.emit('skipping', paths[j])
+				delete paths[j]
+			}
+		}
+	}
+	return paths
+		.filter(function(p){ return !!p })
+}
+
+
 // Guarantee that the 'end' and 'match' handlers will always get called 
 // with all results at least once...
 //
@@ -282,7 +307,7 @@ function(list, from_date, logger){
 // XXX handle errors....
 var loadSaveHistoryList =
 module.loadSaveHistoryList =
-function(path, index_dir){
+function(path, index_dir, logger){
 	index_dir = index_dir || INDEX_DIR
 
 	return new Promise(function(resolve, reject){
@@ -310,7 +335,6 @@ function(path, index_dir){
 		// need to locate indexes...
 		} else {
 			var res = {}
-			var loaders = []
 
 			// XXX handle 'error' event...
 			listIndexes(path, index_dir)
@@ -319,23 +343,23 @@ function(path, index_dir){
 					logger && logger.emit('error', err)
 					console.error(err)
 				})
-				// collect the found indexes...
-				.on('match', function(path){
-					loaders.push(loadSaveHistoryList(path) 
-						.then(function(obj){ 
-							// NOTE: considering that all the paths within
-							// 		the index are relative to the preview 
-							// 		dir (the parent dir to the index root)
-							// 		we do not need to include the index 
-							// 		itself in the base path...
-							var p = path.split(index_dir)[0]
-							res[p] = obj
-						}))
-				})
-				// done...
 				.on('end', function(paths){
-					// wait for all the loaders to complete...
-					Promise.all(loaders).then(function(){ resolve(res) })
+					// skip nested indexes...
+					paths = skipNested(paths, index_dir, logger)
+
+					// start loading...
+					Promise.all(paths.map(function(p){
+						var path = pathlib.normalize(p +'/'+ index_dir) 
+						return loadSaveHistoryList(path, index_dir)
+							.then(function(obj){ 
+								// NOTE: considering that all the paths within
+								// 		the index are relative to the preview 
+								// 		dir (the parent dir to the index root)
+								// 		we do not need to include the index 
+								// 		itself in the base path...
+								res[p] = obj
+							})
+					})).then(function(){ resolve(res) })
 				})
 		}
 	})
@@ -538,7 +562,6 @@ function(path, index_dir, from_date, logger){
 		// no explicit index given -- find all in sub tree...
 		} else {
 			var res = {}
-			var loaders = []
 
 			listIndexes(path, index_dir)
 				// XXX handle errors...
@@ -546,27 +569,23 @@ function(path, index_dir, from_date, logger){
 					logger && logger.emit('error', err)
 					console.error(err)
 				})
-				// collect the found indexes...
-				.on('match', function(path){
-					// XXX after finding an index, need to prevent loading of
-					// 		any indexes in that sub tree...
-					// 			shortest unique path blocks all children.
-					// XXX
-					loaders.push(loadIndex(path, index_dir, from_date, logger) 
-						.then(function(obj){ 
-							// NOTE: considering that all the paths within
-							// 		the index are relative to the preview 
-							// 		dir (the parent dir to the index root)
-							// 		we do not need to include the index 
-							// 		itself in the base path...
-							var p = path.split(index_dir)[0]
-							res[p] = obj[path] 
-						}))
-				})
-				// done...
 				.on('end', function(paths){
-					// wait for all the loaders to complete...
-					Promise.all(loaders).then(function(){ resolve(res) })
+					// skip nested indexes...
+					paths = skipNested(paths, index_dir, logger)
+
+					// start loading...
+					Promise.all(paths.map(function(p){
+						var path = pathlib.normalize(p +'/'+ index_dir) 
+						return loadIndex(path, index_dir, from_date, logger) 
+							.then(function(obj){ 
+								// NOTE: considering that all the paths within
+								// 		the index are relative to the preview 
+								// 		dir (the parent dir to the index root)
+								// 		we do not need to include the index 
+								// 		itself in the base path...
+								res[p] = obj[path] 
+							})
+					})).then(function(){ resolve(res) })
 				})
 		}
 	})
