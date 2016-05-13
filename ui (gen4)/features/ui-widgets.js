@@ -692,6 +692,215 @@ var BrowseActionsActions = actions.Actions({
 	},
 
 	browseActions: ['Interface/Browse actions...',
+		makeUIDialog(function(path){
+			var actions = this
+
+			// Action tree...
+			//
+			// Format:
+			// 	{
+			// 		<name>: <tree>,
+			//
+			// 		<name>: [
+			// 			<action-name>,
+			// 			<disabled>,
+			// 		],
+			//
+			// 		...
+			// 	}
+			//
+			// NOTE: this is created once per call, so to refresh the 
+			// 		actions tree we'll need to re-open the dialog...
+			var tree = {}
+
+			// pre-order the main categories...
+			// NOTE: pre_order can be a list of long paths...
+			var pre_order = this.config['action-category-order'] || []
+			pre_order.forEach(function(k){
+				var p = tree
+				k = k.split(/[\\\/]/g).filter(function(e){ return e.trim() != '' })
+				k.slice(0, -1).forEach(function(e){
+					p = p[e] = {}
+				})
+				p[k.pop()] = null
+			})
+
+			// buld the tree...
+			var _build = function(path, leaf, action, disabled, tree){
+				path = path.slice()
+				// build alternative paths...
+				path.shift().split(/\|/g)
+					.forEach(function(e){
+						// build branch element...
+						var branch = tree[e] = tree[e] || {}
+
+						// continue building sub-tree...
+						if(path.length > 0){
+							_build(path, leaf, action, disabled, branch)
+
+						// build leaf...
+						} else {
+							branch[leaf] = [action, disabled]
+						}
+					})
+			}
+			var paths = this.getPath()
+			Object.keys(paths).forEach(function(key){
+				// handle disabled flag...
+				var disabled = key.split(/^- /)
+				var path = disabled.pop()
+				disabled = disabled.length > 0
+
+				path = path.split(/[\\\/]/g)
+				var leaf = path.pop()
+
+				// start the build...
+				_build(path, leaf, paths[key][0], disabled, tree)
+			})
+
+			//console.log('!!!!!', tree)
+
+			var dialog = browse.makeLister(null, function(path, make){
+				var that = this
+				var cur = tree
+
+				// get level...
+				// NOTE: we need to get the level till first '*'...
+				// XXX account for NN:<text>
+				var rest = path.slice()
+				while(rest.length > 0 && !('*' in cur)){
+					cur = cur[rest.shift()] || {}
+				}
+
+				// render a level...
+
+				// toggler states...
+				// XXX can cur be an array in any other case???
+				if(cur instanceof Array 
+						&& actions.isToggler && actions.isToggler(cur[0])){
+					var action = cur[0]
+					var disabled = cur[1]
+					
+					var cur_state = actions[action]('?')
+					var states = actions[action]('??')
+
+					// handle on/off togglers...
+					// XXX should these directly return 'on'/'off'???
+					if(states.length == 2 
+							&& states.indexOf('none') >= 0 
+							&& (cur_state == 'on' || cur_state == 'off')){
+						states = ['on', 'off']
+					}
+
+					states.forEach(function(state){
+						make(state, { disabled: disabled })
+							.addClass(state == cur_state ? 'selected highlighted' : '')
+							.on('open', function(){
+								actions[action](state)
+								that.pop()
+							})
+					})
+
+				// lister...
+				} else if('*' in cur){
+					actions[cur['*'][0]](path, make)
+
+				// normal action...
+				} else {
+					var level = Object.keys(cur)
+					level
+						.slice()
+						// sort according to pattern: 'NN: <text>'
+						//	NN > 0		- is sorted above the non-prioritized
+						//					elements, the greater the number 
+						//					the higher the element
+						//	NN < 0		- is sorted below the non-prioritized
+						//					elements, the lower the number 
+						//					the lower the element
+						.sort(function(a, b){
+							var ai = /^(-?[0-9]+):/.exec(a)
+							ai = ai ? ai.pop()*1 : null
+							ai = ai > 0 ? -ai
+								: ai < 0 ? -ai + level.length
+								: level.indexOf(a)
+
+							var bi = /^(-?[0-9]+):/.exec(b)
+							bi = bi ? bi.pop()*1 : null
+							bi = bi > 0 ? -bi
+								: bi < 0 ? -bi + level.length
+								: level.indexOf(b)
+
+							return ai - bi
+						})
+						.forEach(function(key){
+							// remove the order...
+							var text = key.replace(/^(-?[0-9]+):/, '').trim()
+
+							if(cur[key] instanceof Array){
+								var action = cur[key][0]
+								var disabled = cur[key][1]
+
+								// toggler action...
+								if(actions.isToggler && actions.isToggler(action)){
+									make(text + '/', { 
+										disabled: disabled, 
+										buttons: [
+											[actions[action]('?'), 
+												function(){
+													actions[action]()
+													that.update()
+													that.select('"'+ text +'"')
+												}]
+										]})
+										.on('open', function(){
+											actions[action]()
+											that.update()
+											that.select('"'+ text +'"')
+										})
+
+								// normal action...
+								} else {
+									make(text, { disabled: disabled })
+										.on('open', function(){
+											var res = actions[action]()
+
+											// XXX check if res wants to handle closing...
+											// XXX
+
+											// XXX do we close the dialog here???
+											that.parent.close()
+										})
+								}
+
+							// dir...
+							// XXX should we render empty dirs???
+							//} else if(Object.keys(cur[key]).length > 0){
+							} else { 
+								make(text + '/')
+							}
+						})
+				}
+			}, {
+				path: path,
+
+				flat: false,
+				traversable: true,
+				pathPrefix: '/',
+				fullPathEdit: true,
+
+				showDisabled: actions.config['browse-actions-settings'].showDisabled,
+			})
+			// save show disabled state to .config...
+			.on('close', function(){
+				var config = actions.config['browse-actions-settings'] 
+
+				config.showDisabled = dialog.options.showDisabled
+			})
+
+			return dialog
+		})],
+
+	_browseActions: ['- Interface/Browse actions (old)...',
 		makeActionLister(browse.makePathList, true)],
 	listActions:['Interface/List actions...',
 		makeActionLister(browse.makeList, 
@@ -702,7 +911,6 @@ var BrowseActionsActions = actions.Actions({
 				var a = l.pop()
 				return a +' ('+ l.join(', ') +')'
 			})],
-
 })
 
 var BrowseActions = 
@@ -781,7 +989,7 @@ var WidgetTestActions = actions.Actions({
 	// 	.testDrawer('Overlay', 'Header', 'paragraph')
 	// 										- show html in overlay with 
 	// 										  custom text...
-	testDrawer: ['Test/Drawer widget test...',
+	testDrawer: ['Test/99: Drawer widget test...',
 		makeUIDialog('Drawer', 
 			function(h, txt){
 				return $('<div>')
@@ -801,7 +1009,7 @@ var WidgetTestActions = actions.Actions({
 				background: 'white',
 				focusable: true,
 			})],
-	testBrowse: ['Test/Demo new style dialog...',
+		testBrowse: ['Test/-99: Demo new style dialog...',
 		makeUIDialog(function(){
 			var actions = this
 
@@ -881,13 +1089,13 @@ var WidgetTestActions = actions.Actions({
 
 
 	// XXX this is just a test...
-	embededListerTest: ['Test/Lister test (embeded)/*',
+	embededListerTest: ['Test/50: Lister test (embeded)/*',
 		function(path, make){
 			make('a/')
 			make('b/')
 			make('c/')
 		}],
-	floatingListerTest: ['Test/Lister test (floating)...',
+	floatingListerTest: ['Test/50:Lister test (floating)...',
 		function(path){
 			// we got an argument and can exit...
 			if(path){

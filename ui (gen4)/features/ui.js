@@ -1870,6 +1870,18 @@ var ControlActions = actions.Actions({
 							// do the actual move...
 							d.setOffset(this, data.left + (g.deltaX / s))
 
+							/* XXX this seems to offer no speed advantages 
+							 * 		vs. .setOffset(..) but does not play
+							 * 		well with .updateRibbon(..)
+							$(this)
+								.velocity('stop')
+								.velocity({ 
+									translateX: data.left + (g.deltaX / s),
+									translateY: 0, 
+									translateZ: 0,
+								}, 0)
+							*/
+
 
 							// update ribbon when "pulling" with two fingers...
 							//
