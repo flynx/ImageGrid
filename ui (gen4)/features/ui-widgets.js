@@ -559,118 +559,6 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 /*********************************************************************/
 
-// NOTE: if the action returns an instance of overlay.Overlay this will
-// 		not close right away but rather bind to:
-// 			overlay.close			-> self.focus()
-// 			overlay.client.open		-> self.close()
-// XXX revise this...
-var makeActionLister = function(list, filter, pre_order){
-	pre_order = typeof(filter) == typeof(true) ? filter : pre_order
-	filter = typeof(filter) == typeof(true) ? null : filter
-
-	return makeUIDialog(function(path, inline_state){
-		inline_state = inline_state == null ? 
-			this.config['actions-list-show-toggler-state-inline']
-			: inline_state
-
-		var that = this
-		var paths = this.getPath()
-		var actions = {}
-		var d
-
-		// pre-order the main categories...
-		if(pre_order){
-			this.config['action-category-order'].forEach(function(k){
-				actions[k] = null
-			})
-		}
-
-		var closingPrevented = false
-
-		// build the action list...
-		Object.keys(paths).forEach(function(k){
-			var n = paths[k][0]
-			var k = filter ? filter(k, n) : k
-
-			// prepare for toggler stuff...
-			var isToggler = that.isToggler && that.isToggler(n) || false
-			if(isToggler){
-				var cur_state = that[n]('?')
-				k = k +(inline_state ? (' ('+ cur_state +')') : '')
-			}
-
-			// XXX this expects that .client will trigger an open event...
-			var waitFor = function(child){
-				// we got a widget, wait for it to close...
-				if(child instanceof overlay.Overlay){
-					closingPrevented = true
-					child
-						.on('close', function(){ d.parent.focus() })
-						.client
-							.on('open', function(){ d.parent.close() })
-				}
-				return child
-			}
-
-			// pass args to listers...
-			if(k.slice(-1) == '*'){
-				actions[k] = function(){ return waitFor(a[n].apply(a, arguments)) }
-
-			// ignore args of actions...
-			} else {
-				actions[k] = function(){ return waitFor(a[n]()) }
-			}
-
-			// toggler -- add state list...
-			if(isToggler){
-				var states = that[n]('??')
-
-				// bool toggler...
-				if(cur_state == 'on' || cur_state == 'off'){
-					states = ['off', 'on']
-				}
-
-				states.forEach(function(state){
-					actions[k +'/'+ state + (cur_state == state ? ' *': '')] =
-						function(){ 
-							that[n](state) 
-
-							// XXX this works but is not yet usable...
-							// 		reason: not being able to update path
-							// 			components without reconstructing
-							// 			the whole list...
-							/*
-							closingPrevented = true
-							// XXX need to re-render the overlay paths...
-							that.modal.client
-								.pop()
-							*/
-						}
-				})
-			}
-		})
-
-		var config = Object.create(that.config['browse-actions-settings'] || {})
-		config.path = path
-
-		d = list(null, actions, config)
-			.open(function(evt){ 
-				if(!closingPrevented){
-					d.parent.close() 
-				}
-				closingPrevented = false
-			})
-			// save show disabled state to .config...
-			.on('close', function(){
-				var config = that.config['browse-actions-settings'] 
-
-				config.showDisabled = d.options.showDisabled
-			})
-
-		return d
-	})
-}
-
 // NOTE: yes, this is a funny name ;)
 var BrowseActionsActions = actions.Actions({
 	config: {
@@ -691,9 +579,54 @@ var BrowseActionsActions = actions.Actions({
 		},
 	},
 
+	// Browse actions dialog...
+	//
+	// This uses action definition to build and present an action tree.
+	//
+	// This supports the following element syntax:
+	// 	- leading '- ' in path to indicate disabled element.
+	// 		Example: 
+	// 			'- Path/To/Element'			(disabled)
+	// 			'Path/To/Other element'		(enabled)
+	//
+	// 	- leading path element number followed by colon to indicate 
+	// 	  element priority on level.
+	// 		Example:
+	// 			'Path/99: To/50:Element'
+	// 	  NOTE: multiple path elements may have multiple priorities.
+	// 	  NOTE: an item with positive priority will be above and item 
+	// 	  		with less or no priority.
+	// 	  NOTE: an item with negative priority will be below any item 
+	// 	  		with greater or no priority.
+	//
+	//
+	// NOTE: if the action returns an instance of overlay.Overlay this
+	// 		will not close right away but rather bind to:
+	// 			overlay.close			-> self.focus()
+	// 			overlay.client.open		-> self.close()
+	// NOTE: we are not using the browse.PathList(..) here as we need 
+	// 		custom controls and special path handling...
+	//
+	// XXX can we do a deep search -- find any nested action???
 	browseActions: ['Interface/Browse actions...',
 		makeUIDialog(function(path){
 			var actions = this
+			var priority = /^(-?[0-9]+):/
+			var dialog
+
+			// XXX this expects that .client will trigger an open event...
+			var waitFor = function(child){
+				// we got a widget, wait for it to close...
+				if(child instanceof overlay.Overlay){
+					closingPrevented = true
+					child
+						.on('close', function(){ dialog.parent.focus() })
+						.client
+							.on('open', function(){ dialog.parent.close() })
+				}
+				return child
+			}
+
 
 			// Action tree...
 			//
@@ -758,21 +691,43 @@ var BrowseActionsActions = actions.Actions({
 				_build(path, leaf, paths[key][0], disabled, tree)
 			})
 
-			//console.log('!!!!!', tree)
-
-			var dialog = browse.makeLister(null, function(path, make){
+			// now for the dialog...
+			dialog = browse.makeLister(null, function(path, make){
 				var that = this
 				var cur = tree
 
 				// get level...
 				// NOTE: we need to get the level till first '*'...
-				// XXX account for NN:<text>
+				// NOTE: this needs to account for leading priority of 
+				// 		an element...
 				var rest = path.slice()
 				while(rest.length > 0 && !('*' in cur)){
-					cur = cur[rest.shift()] || {}
+					//cur = cur[rest.shift()] || {}
+
+					var p = rest.shift()
+
+					// direct match...
+					if(p in cur){
+						cur = cur[p]
+						continue
+
+					// check if it's a priority path... 
+					} else {
+						for(var e in cur){
+							if(e.replace(priority, '').trim() == p){
+								cur = cur[e]
+								break
+							}
+						}
+						cur = cur || {}
+						continue
+					}
+
+					// nothing found...
+					cur = {}
 				}
 
-				// render a level...
+				// render level...
 
 				// toggler states...
 				// XXX can cur be an array in any other case???
@@ -785,13 +740,14 @@ var BrowseActionsActions = actions.Actions({
 					var states = actions[action]('??')
 
 					// handle on/off togglers...
-					// XXX should these directly return 'on'/'off'???
+					// XXX should the toggler directly return 'on'/'off'???
 					if(states.length == 2 
 							&& states.indexOf('none') >= 0 
 							&& (cur_state == 'on' || cur_state == 'off')){
 						states = ['on', 'off']
 					}
 
+					// build states...
 					states.forEach(function(state){
 						make(state, { disabled: disabled })
 							.addClass(state == cur_state ? 'selected highlighted' : '')
@@ -810,7 +766,7 @@ var BrowseActionsActions = actions.Actions({
 					var level = Object.keys(cur)
 					level
 						.slice()
-						// sort according to pattern: 'NN: <text>'
+						// sort according to item priority: 'NN: <text>'
 						//	NN > 0		- is sorted above the non-prioritized
 						//					elements, the greater the number 
 						//					the higher the element
@@ -818,13 +774,13 @@ var BrowseActionsActions = actions.Actions({
 						//					elements, the lower the number 
 						//					the lower the element
 						.sort(function(a, b){
-							var ai = /^(-?[0-9]+):/.exec(a)
+							var ai = priority.exec(a)
 							ai = ai ? ai.pop()*1 : null
 							ai = ai > 0 ? -ai
 								: ai < 0 ? -ai + level.length
 								: level.indexOf(a)
 
-							var bi = /^(-?[0-9]+):/.exec(b)
+							var bi = priority.exec(b)
 							bi = bi ? bi.pop()*1 : null
 							bi = bi > 0 ? -bi
 								: bi < 0 ? -bi + level.length
@@ -834,13 +790,13 @@ var BrowseActionsActions = actions.Actions({
 						})
 						.forEach(function(key){
 							// remove the order...
-							var text = key.replace(/^(-?[0-9]+):/, '').trim()
+							var text = key.replace(priority, '').trim()
 
 							if(cur[key] instanceof Array){
 								var action = cur[key][0]
 								var disabled = cur[key][1]
 
-								// toggler action...
+								// toggler action -> add toggle button...
 								if(actions.isToggler && actions.isToggler(action)){
 									make(text + '/', { 
 										disabled: disabled, 
@@ -853,7 +809,9 @@ var BrowseActionsActions = actions.Actions({
 												}]
 										]})
 										.on('open', function(){
+											// XXX can this open a dialog???
 											actions[action]()
+
 											that.update()
 											that.select('"'+ text +'"')
 										})
@@ -862,13 +820,7 @@ var BrowseActionsActions = actions.Actions({
 								} else {
 									make(text, { disabled: disabled })
 										.on('open', function(){
-											var res = actions[action]()
-
-											// XXX check if res wants to handle closing...
-											// XXX
-
-											// XXX do we close the dialog here???
-											that.parent.close()
+											waitFor(actions[action]())
 										})
 								}
 
@@ -899,18 +851,6 @@ var BrowseActionsActions = actions.Actions({
 
 			return dialog
 		})],
-
-	_browseActions: ['- Interface/Browse actions (old)...',
-		makeActionLister(browse.makePathList, true)],
-	listActions:['Interface/List actions...',
-		makeActionLister(browse.makeList, 
-			// format the doc to: <name> (<category>, ..)
-			// NOTE: this a bit naive...
-			function(k){ 
-				var l = k.split(/[\\\/\|]/)
-				var a = l.pop()
-				return a +' ('+ l.join(', ') +')'
-			})],
 })
 
 var BrowseActions = 
