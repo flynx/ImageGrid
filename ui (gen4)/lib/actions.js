@@ -183,6 +183,17 @@ var object = require('lib/object')
 //		really necessary.
 //
 //
+// 5) .__call__(..) action
+// 	This action if defined is called for every action called. It behaves
+// 	like any other action but with a fixed signature, it always receives 
+// 	the action name as first argument and a list of action arguments as
+// 	the second arguments, and as normal a result on the post phase.
+//
+// 	NOTE: one should not call actions directly from within a __call__ 
+// 		handler as that will result in infinite recursion.
+// 		XXX need a way to prevent this...
+//
+//
 //
 /*********************************************************************/
 // helpers...
@@ -327,6 +338,8 @@ function Action(name, doc, ldoc, func){
 	}
 
 	// create the actual instance we will be returning...
+	//var meth = function(){
+	//	return meth.chainApply(this, null, arguments) }
 	var meth = function(){
 		return meth.chainApply(this, null, arguments) }
 	meth.__proto__ = this.__proto__
@@ -356,6 +369,11 @@ Action.prototype.chainApply = function(context, inner, args){
 	var getHandlers = context.getHandlers || MetaActions.getHandlers
 	var isToggler = context.isToggler || MetaActions.isToggler
 
+	// get .__call__(..) wrapper handler list...
+	var call_wrapper = outer != '__call__' && inner != '__call__' ? 
+		getHandlers.call(context, '__call__') 
+		: []
+
 	// get the handler list...
 	var handlers = getHandlers.call(context, outer)
 
@@ -365,6 +383,24 @@ Action.prototype.chainApply = function(context, inner, args){
 			&& (args[0] == '?' || args[0] == '??')){
 		return handlers.slice(-1)[0].pre.apply(context, args)
 	}
+
+	// wrapper handlers: pre phase...
+	call_wrapper = call_wrapper
+		.map(function(a){
+			if(a.pre){
+				res = a.pre.call(context, outer, args)
+
+				// if a handler returns a function or a deferred, 
+				// register is as a post handler...
+				if(res 
+						&& res !== context 
+						&& (res instanceof Function 
+							|| res.resolve instanceof Function)){
+					a.post = res
+				}
+			}
+			return a
+		})
 
 	// handlers: pre phase...
 	handlers
@@ -416,6 +452,17 @@ Action.prototype.chainApply = function(context, inner, args){
 				&& (a.post.resolve ? 
 						a.post.resolve.apply(a.post, args)
 					: a.post.apply(context, args))
+		})
+
+	// wrapper handlers: post phase...
+	call_wrapper
+		// NOTE: post handlers are called LIFO -- last defined last...
+		.reverse()
+		.forEach(function(a){
+			a.post
+				&& (a.post.resolve ? 
+						a.post.resolve.apply(a.post, res, outer, args.slice(1))
+					: a.post.call(context, res, outer, args.slice(1)))
 		})
 
 	// action result...
