@@ -1065,7 +1065,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 			}],
 
 		// XXX might be good to add some kind of metadata to journal...
-		journalPush: ['- Journal/Add an item to journal',
+		journalPush: ['- System/Journal/Add an item to journal',
 			function(data){
 				this.journal = (this.hasOwnProperty('journal') 
 						|| this.journal) ? 
@@ -1073,7 +1073,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 					: []
 				this.journal.push(data)
 			}],
-		clearJournal: ['Journal/Clear the action journal',
+		clearJournal: ['System/Journal/Clear the action journal',
 			function(){
 				if(this.journal){
 					// NOTE: overwriting here is better as it will keep
@@ -1086,7 +1086,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 					this.journal = null
 				}
 			}],
-		runJournal: ['- Journal/Run journal',
+		runJournal: ['- System/Journal/Run journal',
 			function(journal){
 				var that = this
 				journal.forEach(function(e){
@@ -1103,7 +1103,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 		// 		undoing something, and after some actions doing a 
 		// 		.redoLast(..)
 		// XXX this is not ready for production...
-		undoLast: ['Journal/Undo last',
+		undoLast: ['Edit/Undo last',
 			function(){
 				var journal = this.journal
 				this.rjournal = (this.hasOwnProperty('rjournal') 
@@ -1127,7 +1127,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 					}
 				}
 			}],
-		_redoLast: ['Journal/Redo last',
+		_redoLast: ['Edit/Redo last',
 			function(){
 				if(!this.rjournal || this.rjournal.length == 0){
 					return

@@ -562,20 +562,22 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 // NOTE: yes, this is a funny name ;)
 var BrowseActionsActions = actions.Actions({
 	config: {
-		// NOTE: the slashes at the end are significant, of they are not
-		// 		present the .toggleNonTraversableDrawing(..) will hide 
-		// 		these paths before they can get any content...
-		// 		XXX not sure if this is a bug or not...
 		'action-category-order': [
-			'File/',
-			'Edit/',
-			'Navigate/',
-		],
+			'99:File',
+			'80:Edit',
+			'70:Navigate',
+			'60:Image',
 
-		'actions-list-show-toggler-state-inline': true,
+			'-50:Interface',
+			'-60:Workspace',
+			'-70:System',
+			'-80:Development',
+			'-90:Test',
+		],
 
 		'browse-actions-settings': {
 			showDisabled: false,
+			showEmpty: false,
 		},
 	},
 
@@ -606,6 +608,12 @@ var BrowseActionsActions = actions.Actions({
 	// 			overlay.client.open		-> self.close()
 	// NOTE: we are not using the browse.PathList(..) here as we need 
 	// 		custom controls and special path handling...
+	// NOTE: this will keep the first instance title it encounters, this
+	// 		if a later instance includes a priority, it will be ignored.
+	// 		This may happen if several actions are in the same path and
+	// 		each one set a different priority in that path...
+	// 		...to avoid this use .config['action-category-order'] to set
+	// 		base order/priorities...
 	//
 	// XXX can we do a deep search -- find any nested action???
 	browseActions: ['Interface/Browse actions...',
@@ -614,18 +622,44 @@ var BrowseActionsActions = actions.Actions({
 			var priority = /^(-?[0-9]+):/
 			var dialog
 
-			// XXX this expects that .client will trigger an open event...
-			var waitFor = function(child){
-				// we got a widget, wait for it to close...
-				if(child instanceof overlay.Overlay){
-					closingPrevented = true
-					child
-						.on('close', function(){ dialog.parent.focus() })
-						.client
-							.on('open', function(){ dialog.parent.close() })
+			// returns:
+			// 	[<existing-text>, <new-level>]
+			var getItem = function(level, text){
+				// direct match...
+				if(text in level){
+					return [text, level[text]]
+
+				// check if it's a priority path... 
+				} else {
+					for(var e in level){
+						if(e.replace(priority, '').trim() == text){
+							return [e, level[e]]
+						}
+					}
 				}
-				return child
+				return []
 			}
+			// XXX this expects that .client will trigger an open event...
+			var waitFor = (function(child){
+				// we got a widget, wait for it to close...
+				if(child instanceof widget.Widget){
+					child
+						.on('open', function(){ dialog.parent.close() })
+						// XXX is this a hack???
+						// 		...for some reason when clicking child 
+						// 		loses focus while when opening via keyboard
+						// 		everything is OK...
+						.one('update', function(){ child.focus() })
+						.parent
+							.on('close', function(){ dialog.parent.focus() })
+
+				// if it's not a dialog, don't wait...
+				} else {
+					dialog.parent.close()
+				}
+
+				return child
+			}).bind(this)
 
 
 			// Action tree...
@@ -665,7 +699,9 @@ var BrowseActionsActions = actions.Actions({
 				path.shift().split(/\|/g)
 					.forEach(function(e){
 						// build branch element...
-						var branch = tree[e] = tree[e] || {}
+						//var branch = tree[e] = tree[e] || {}
+						var branch = getItem(tree, e)
+						branch = tree[branch[0] || e] = branch[1] || {}
 
 						// continue building sub-tree...
 						if(path.length > 0){
@@ -691,6 +727,8 @@ var BrowseActionsActions = actions.Actions({
 				_build(path, leaf, paths[key][0], disabled, tree)
 			})
 
+			//console.log('!!!!', tree)
+
 			// now for the dialog...
 			dialog = browse.makeLister(null, function(path, make){
 				var that = this
@@ -702,29 +740,7 @@ var BrowseActionsActions = actions.Actions({
 				// 		an element...
 				var rest = path.slice()
 				while(rest.length > 0 && !('*' in cur)){
-					//cur = cur[rest.shift()] || {}
-
-					var p = rest.shift()
-
-					// direct match...
-					if(p in cur){
-						cur = cur[p]
-						continue
-
-					// check if it's a priority path... 
-					} else {
-						for(var e in cur){
-							if(e.replace(priority, '').trim() == p){
-								cur = cur[e]
-								break
-							}
-						}
-						cur = cur || {}
-						continue
-					}
-
-					// nothing found...
-					cur = {}
+					cur = getItem(cur, rest.shift()).pop() || {}
 				}
 
 				// render level...
@@ -825,9 +841,9 @@ var BrowseActionsActions = actions.Actions({
 								}
 
 							// dir...
-							// XXX should we render empty dirs???
-							//} else if(Object.keys(cur[key]).length > 0){
-							} else { 
+							} else if(actions.config['browse-actions-settings'].showEmpty 
+									|| (cur[key] != null
+										&& Object.keys(cur[key]).length > 0)){
 								make(text + '/')
 							}
 						})
