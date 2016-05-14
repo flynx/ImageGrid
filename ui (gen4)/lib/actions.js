@@ -183,15 +183,19 @@ var object = require('lib/object')
 //		really necessary.
 //
 //
-// 5) .__call__(..) action
+// 5) .__call__ action / handler
 // 	This action if defined is called for every action called. It behaves
 // 	like any other action but with a fixed signature, it always receives 
 // 	the action name as first argument and a list of action arguments as
 // 	the second arguments, and as normal a result on the post phase.
 //
+// 	NOTE: it is not necessary to define the actual action, binding to a
+// 		handler will also work.
 // 	NOTE: one should not call actions directly from within a __call__ 
 // 		handler as that will result in infinite recursion.
 // 		XXX need a way to prevent this...
+// 	NOTE: one should use this with extreme care as this will introduce 
+// 		an overhead on all the actions if not done carefully.
 //
 //
 //

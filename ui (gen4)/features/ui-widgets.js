@@ -308,10 +308,12 @@ module.uiContainer = function(func){
 // The container will:
 // 	- trigger the client's close event on close
 //
+// XXX not sure how the click is handled here...
 // XXX pass options???
 var makeUIContainer =
 module.makeUIContainer = function(make){
 	return uiContainer(function(){
+		var that = this
 		var o = make.apply(this, arguments)
 
 		o
@@ -322,6 +324,10 @@ module.makeUIContainer = function(make){
 				// 		but it is less error prone to just in case also do
 				// 		this here...
 				.on('close', function(evt){ evt.stopPropagation() })
+				// Compensate for click focusing the parent dialog when
+				// a child is created...
+				// XXX is this the right way to go???
+				.on('click', function(evt){ that.modal.focus() })
 
 		return o
 	})
@@ -521,7 +527,7 @@ var DialogsActions = actions.Actions({
 		})],
 
 	
-	listDialogs: ['Interface/List dialogs...',
+	listDialogs: ['Interface/Dialog list...',
 		makeUIDialog(function(){
 			var actions = this
 
@@ -529,9 +535,15 @@ var DialogsActions = actions.Actions({
 				var that = this
 
 				actions.uiDialogs.forEach(function(dialog){
-					make(actions.getDoc(dialog)[dialog][0]
-							// mark item as disabled...
-							.replace(/^- (.*)$/, '$1 (disabled)'))
+					var doc = actions.getDoc(dialog)[dialog][0]
+					var txt = ((doc
+							.split(/[\\\/]/g)
+							.pop() || ('.'+ dialog +'(..)'))
+								// mark item as disabled...
+								+ (/^- .*$/.test(doc) ? ' (disabled)' : ''))
+						.replace(/^-?[0-9]+\s*:\s*/, '')
+						.trim()
+					make(txt)
 						.on('open', function(){
 							actions[dialog]()
 						})
@@ -576,6 +588,11 @@ var BrowseActionsActions = actions.Actions({
 	config: {
 		'action-category-order': [
 			'99:File',
+				// NOTE: we can order any sub-tree we want in the same 
+				// 		manner as the root...
+				// XXX for some reason only one of the following works...
+				'File/-80:Clear viewer',
+				'File/-90:Close viewer',
 			'80:Edit',
 			'70:Navigate',
 			'60:Image',
@@ -627,13 +644,15 @@ var BrowseActionsActions = actions.Actions({
 	// 		...to avoid this use .config['action-category-order'] to set
 	// 		base order/priorities...
 	//
-	// XXX can we do a deep search -- find any nested action???
+	// XXX can we do a deep search on '/' -- find any nested action???
 	browseActions: ['Interface/Actions...',
 		makeUIDialog(function(path){
 			var actions = this
-			var priority = /^(-?[0-9]+):/
+			var priority = /^(-?[0-9]+)\s*:\s*/
 			var dialog
 
+			// Get item from tree level taking into account additional 
+			// syntax like prioority...
 			// returns:
 			// 	[<existing-text>, <new-level>]
 			var getItem = function(level, text){
@@ -651,7 +670,8 @@ var BrowseActionsActions = actions.Actions({
 				}
 				return []
 			}
-			// XXX this expects that .client will trigger an open event...
+
+			// Wait for dialog...
 			var waitFor = (function(child){
 				// we got a widget, wait for it to close...
 				if(child instanceof widget.Widget){
@@ -673,6 +693,30 @@ var BrowseActionsActions = actions.Actions({
 				return child
 			}).bind(this)
 
+			// Tree builder...
+			var buildTree = function(path, leaf, action, disabled, tree){
+				path = path.slice()
+				// build leaf...
+				if(path.length == 0){
+					leaf.split(/\|/g)
+						.forEach(function(leaf){
+							var l = getItem(tree, leaf)[0]
+							tree[l || leaf] = action != null ? [action, disabled] : action
+						})
+					return
+				}
+				// build alternative paths...
+				var p = path.shift() || ''
+				p.split(/\|/g)
+					.forEach(function(e){
+						// build branch element...
+						var branch = getItem(tree, e)
+						branch = tree[branch[0] || e] = branch[1] || {}
+
+						// build sub-branch...
+						buildTree(path, leaf, action, disabled, branch)
+					})
+			}
 
 			// Action tree...
 			//
@@ -695,36 +739,14 @@ var BrowseActionsActions = actions.Actions({
 			// pre-order the main categories...
 			// NOTE: pre_order can be a list of long paths...
 			var pre_order = this.config['action-category-order'] || []
-			pre_order.forEach(function(k){
-				var p = tree
-				k = k.split(/[\\\/]/g).filter(function(e){ return e.trim() != '' })
-				k.slice(0, -1).forEach(function(e){
-					p = p[e] = {}
-				})
-				p[k.pop()] = null
+			pre_order.forEach(function(key){
+				var path = key.split(/[\\\/]/g)
+				var leaf = path.pop()
+
+				buildTree(path, leaf, null, null, tree)
 			})
 
 			// buld the tree...
-			var _build = function(path, leaf, action, disabled, tree){
-				path = path.slice()
-				// build alternative paths...
-				path.shift().split(/\|/g)
-					.forEach(function(e){
-						// build branch element...
-						//var branch = tree[e] = tree[e] || {}
-						var branch = getItem(tree, e)
-						branch = tree[branch[0] || e] = branch[1] || {}
-
-						// continue building sub-tree...
-						if(path.length > 0){
-							_build(path, leaf, action, disabled, branch)
-
-						// build leaf...
-						} else {
-							branch[leaf] = [action, disabled]
-						}
-					})
-			}
 			var paths = this.getPath()
 			Object.keys(paths).forEach(function(key){
 				// handle disabled flag...
@@ -735,8 +757,7 @@ var BrowseActionsActions = actions.Actions({
 				path = path.split(/[\\\/]/g)
 				var leaf = path.pop()
 
-				// start the build...
-				_build(path, leaf, paths[key][0], disabled, tree)
+				buildTree(path, leaf, paths[key][0], disabled, tree)
 			})
 
 			//console.log('!!!!', tree)
@@ -755,10 +776,11 @@ var BrowseActionsActions = actions.Actions({
 					cur = getItem(cur, rest.shift()).pop() || {}
 				}
 
-				// render level...
+				// render current level...
+				// NOTE: we can be at one of several level types, each 
+				// 		is rendered in a different way...
 
-				// toggler states...
-				// XXX can cur be an array in any other case???
+				// Level: toggler states -- get states and list them...
 				if(cur instanceof Array 
 						&& actions.isToggler && actions.isToggler(cur[0])){
 					var action = cur[0]
@@ -785,11 +807,13 @@ var BrowseActionsActions = actions.Actions({
 							})
 					})
 
-				// lister...
+				// Level: lister -- hand control to lister...
+				// NOTE: path might be a partial path, the rest of it is
+				// 		handled by the lister...
 				} else if('*' in cur){
 					actions[cur['*'][0]](path, make)
 
-				// normal action...
+				// Level: normal -- list actions...
 				} else {
 					var level = Object.keys(cur)
 					level
@@ -820,11 +844,12 @@ var BrowseActionsActions = actions.Actions({
 							// remove the order...
 							var text = key.replace(priority, '').trim()
 
+							// Item: action...
 							if(cur[key] instanceof Array){
 								var action = cur[key][0]
 								var disabled = cur[key][1]
 
-								// toggler action -> add toggle button...
+								// Action: toggler -> add toggle button...
 								if(actions.isToggler && actions.isToggler(action)){
 									make(text + '/', { 
 										disabled: disabled, 
@@ -844,7 +869,7 @@ var BrowseActionsActions = actions.Actions({
 											that.select('"'+ text +'"')
 										})
 
-								// normal action...
+								// Action: normal...
 								} else {
 									make(text, { disabled: disabled })
 										.on('open', function(){
@@ -852,7 +877,7 @@ var BrowseActionsActions = actions.Actions({
 										})
 								}
 
-							// dir...
+							// Item: dir...
 							} else if(actions.config['browse-actions-settings'].showEmpty 
 									|| (cur[key] != null
 										&& Object.keys(cur[key]).length > 0)){
