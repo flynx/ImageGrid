@@ -381,7 +381,7 @@ module.makeUIDialog = function(a, b){
 		var args = [].slice.call(arguments)
 
 		// see if the first arg is a container spec...
-		var container = this.uiContainers.indexOf(args[0]) >= 0 ?
+		var container = this.isUIContainer(args[0]) ?
 			args.shift()
 			: (dfl || this.config['ui-default-container'] || 'Overlay')
 
@@ -454,13 +454,16 @@ var DialogsActions = actions.Actions({
 	// testers...
 	isUIContainer: ['- Interface/',
 		actions.doWithRootAction(function(action){
-			return action.__container__ == true })],
+			return action != null
+				&& action.__container__ == true })],
 	isUIDialog: ['- Interface/',
 		actions.doWithRootAction(function(action){
-			return action.__dialog__ == true })],
+			return action != null 
+				&& action.__dialog__ == true })],
 	isUIElement: ['- Interface/',
 		actions.doWithRootAction(function(action){
-			return action.__dialog__ == true || action.__container__ == true })],
+			return action != null 
+				&& (action.__dialog__ == true || action.__container__ == true) })],
 
 
 	// container constructors...
