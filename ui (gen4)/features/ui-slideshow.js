@@ -78,6 +78,7 @@ var SlideshowActions = actions.Actions({
 					// reset the timer if it was not suspended outside...
 					suspended_timer || that.resetSlideshowTimer()
 				})
+
 			return o
 		})],
 	// XXX BUG: there are still problems with focus...
@@ -85,7 +86,7 @@ var SlideshowActions = actions.Actions({
 	// 			click on the first option with a mouse...
 	// 		result:
 	// 			the top dialog is not focused...
-	slideshowDialog: ['Slideshow/Slideshow settings and start...',
+	slideshowDialog: ['Slideshow/Slideshow...',
 		widgets.makeUIDialog(function(){
 			var that = this
 
@@ -154,7 +155,8 @@ var SlideshowActions = actions.Actions({
 					suspended_timer || that.resetSlideshowTimer()
 				})
 
-			o.dom.addClass('metadata-view tail-action')
+			o.dom
+				.addClass('metadata-view tail-action')
 
 			return o
 		})],

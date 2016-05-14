@@ -37,7 +37,7 @@
 	max-width: 80vw;
 	max-height: 90vh;
 
-	overflow: hidden;
+	/*overflow: hidden;*/
 
 	transform: translateY(-50%) translateX(-50%);
 
@@ -46,6 +46,24 @@
 .overlay-widget~.overlay-widget .content {
 	box-shadow: rgba(0, 0, 0, 0.05) 0.1em 0.1em 3em;
 }
+
+/* title */
+.content>*:before {
+	position: absolute;
+	content: attr(title);
+
+	bottom: 100%;
+
+	color: silver;
+
+	font-weight: 900;
+	font-style: italic;
+	font-size: x-large;
+	line-height: 85%;
+
+	opacity: 0.5;
+}
+
 
 /* NOTE: this does not include text... 
 		...need a way to go around this...

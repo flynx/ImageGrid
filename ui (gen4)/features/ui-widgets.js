@@ -553,6 +553,18 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 	],
 
 	actions: DialogsActions,
+
+	handlers: [
+		['__call__', 
+			function(res, action){
+				if(res instanceof jQuery || (res instanceof widget.Widget)){
+					var elem = (res.dom || res)
+
+					!elem.attr('title') && elem.attr('title',
+						(this.getDoc(action)[action].shift() || action).split(/[\\\/]/g).pop())
+				}
+			}],
+	],
 })
 
 
@@ -616,7 +628,7 @@ var BrowseActionsActions = actions.Actions({
 	// 		base order/priorities...
 	//
 	// XXX can we do a deep search -- find any nested action???
-	browseActions: ['Interface/Browse actions...',
+	browseActions: ['Interface/Actions...',
 		makeUIDialog(function(path){
 			var actions = this
 			var priority = /^(-?[0-9]+):/
@@ -965,7 +977,7 @@ var WidgetTestActions = actions.Actions({
 				background: 'white',
 				focusable: true,
 			})],
-		testBrowse: ['Test/-99: Demo new style dialog...',
+	testBrowse: ['Test/-99: Demo new style dialog...',
 		makeUIDialog(function(){
 			var actions = this
 
