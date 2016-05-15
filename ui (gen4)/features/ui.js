@@ -1820,7 +1820,7 @@ var ControlActions = actions.Actions({
 			// Not for direct use.
 		})],
 
-	// XXX this is really slow on IE...
+	// XXX this is really slow/buggy on IE and odd on FF...
 	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
 		toggler.Toggler(null,
 			function(){ 
@@ -1916,7 +1916,6 @@ var ControlActions = actions.Actions({
 
 							// when done...
 							if(g.isFinal){
-
 								var central = that.ribbons.getImageByPosition('center', r)
 
 								// check if central if off screen, if yes, 

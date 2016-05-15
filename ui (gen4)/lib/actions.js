@@ -79,10 +79,13 @@ var object = require('lib/object')
 //
 //
 //
-// The action system provides these components:
+// The action system main protocols:
 //
 // 1) Documentation generation and introspection (MetaActions)
 //
+// 		<action>.toString()
+// 				-> code of original action function
+// 	
 // 		<action-set>.getDoc()
 // 		<action-set>.getDoc(<action-name>[, ..])
 // 				-> dict of action-name, doc
@@ -95,7 +98,7 @@ var object = require('lib/object')
 //
 // 		<action-set>.length
 // 				-> number of actions
-// 	
+//
 //
 // 2) Event-like callbacks for actions (MetaActions, Action)
 //
@@ -128,7 +131,31 @@ var object = require('lib/object')
 //		referenced and called from any object and still chain correctly.
 //
 //
-// 4) A mechanism to chain/wrap actions or an action and a function.
+//
+// Secondary action protocols:
+//
+// 1) A mechanism to manually call the pre/post stages of an action
+// 
+// 		Pre phase...
+// 		 <action>.pre(<context>)
+// 		 <action>.pre(<context>, [<arg>, ..])
+// 			-> <call-data>
+//
+// 		Post phase...
+// 		 <action>.post(<context>, <call-data>)
+// 			-> <result>
+//
+// 	This is internally used to implement the action call as well as the
+// 	chaining callbacks (see below).
+//
+// 	All action protocol details apply.
+//
+// 	NOTE: there is not reliable way to call the post phase without first
+// 		calling the pre phase due to how the pre phase is defined (i.e.
+// 		pre phase functions can return post phase functions).
+//
+//
+// 2) A mechanism to chain/wrap actions or an action and a function.
 // 	This enables us to call a callback or another action (inner) between 
 // 	the root action's (outer) pre and post stages.
 //
@@ -183,7 +210,7 @@ var object = require('lib/object')
 //		really necessary.
 //
 //
-// 5) .__call__ action / handler
+// 3) .__call__ action / handler
 // 	This action if defined is called for every action called. It behaves
 // 	like any other action but with a fixed signature, it always receives 
 // 	the action name as first argument and a list of action arguments as
@@ -366,33 +393,6 @@ function Action(name, doc, ldoc, func){
 // this will make action instances behave like real functions...
 Action.prototype.__proto__ = Function
 
-// XXX revise the structure....
-// 		...is it a better idea to define these in an object and assign that???
-Action.prototype.chainApply = function(context, inner, args){
-	args = [].slice.call(args || [])
-	var res = context
-	var outer = this.name
-
-	var data = this.pre(context, args)
-
-	// call the inner action/function if preset....
-	if(inner){
-		//res = inner instanceof Function ? 
-		inner instanceof Function ? 
-				inner.call(context, args)
-			: inner instanceof Array && inner.length > 0 ? 
-				context[inner.pop()].chainCall(context, inner, args)
-			: typeof(inner) == typeof('str') ?
-				context[inner].chainCall(context, null, args)
-			: null
-	}
-
-	return this.post(context, data)
-}
-Action.prototype.chainCall = function(context, inner){
-	return this.chainApply(context, inner, args2array(arguments).slice(2))
-}
-
 // The pre/post stage runners...
 //
 // 	.pre(context, args)	
@@ -401,6 +401,9 @@ Action.prototype.chainCall = function(context, inner){
 // 	.post(context, data)
 // 		-> result
 //
+// XXX revise the structure....
+// 		...is it a better idea to define action methods in an object 
+// 		and assign that???
 Action.prototype.pre = function(context, args){
 	args = args || []
 
@@ -514,6 +517,36 @@ Action.prototype.post = function(context, data){
 
 	return res
 }
+
+// Chaining...
+Action.prototype.chainApply = function(context, inner, args){
+	args = [].slice.call(args || [])
+	var res = context
+	var outer = this.name
+
+	var data = this.pre(context, args)
+
+	// call the inner action/function if preset....
+	if(inner){
+		//res = inner instanceof Function ? 
+		inner instanceof Function ? 
+				inner.call(context, args)
+			: inner instanceof Array && inner.length > 0 ? 
+				context[inner.pop()].chainCall(context, inner, args)
+			: typeof(inner) == typeof('str') ?
+				context[inner].chainCall(context, null, args)
+			: null
+	}
+
+	return this.post(context, data)
+}
+Action.prototype.chainCall = function(context, inner){
+	return this.chainApply(context, inner, args2array(arguments).slice(2))
+}
+
+
+
+//---------------------------------------------------------------------
 
 // A base action-set object...
 //
