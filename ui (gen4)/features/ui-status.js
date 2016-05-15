@@ -500,6 +500,11 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 				}
 			}],
 
+		['ribbonPanning.post',
+			function(_, gid){
+				gid == this.data.getRibbon() && this.updateStatusBar()
+			}],
+
 		// Workspace...
 		['saveWorkspace',
 			core.makeWorkspaceConfigWriter(

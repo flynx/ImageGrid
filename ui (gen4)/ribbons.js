@@ -1027,7 +1027,7 @@ var RibbonsPrototype = {
 			// sort images by distance...
 			.sort(function(a, b){ return Math.abs(a[0]) - Math.abs(b[0]) })
 
-		var a = res[0][0]
+		var a = res[0] ? res[0][0] : null
 		var b = res[1] ? res[1][0] : null
 
 		// we have two images that are about the same distance from 
@@ -1041,7 +1041,8 @@ var RibbonsPrototype = {
 
 		// a single hit...
 		} else {
-			return res[0][1]
+			// NOTE: if no image is on screen this will get nothing...
+			return res[0] ? res[0][1] : null
 		}
 	},
 

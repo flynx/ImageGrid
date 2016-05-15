@@ -358,6 +358,9 @@ function Action(name, doc, ldoc, func){
 
 	meth.func = func
 
+	// make introspection be a bit better...
+	meth.toString = func.toString.bind(func)
+
 	return meth
 }
 // this will make action instances behave like real functions...
@@ -370,23 +373,59 @@ Action.prototype.chainApply = function(context, inner, args){
 	var res = context
 	var outer = this.name
 
+	var data = this.pre(context, args)
+
+	// call the inner action/function if preset....
+	if(inner){
+		//res = inner instanceof Function ? 
+		inner instanceof Function ? 
+				inner.call(context, args)
+			: inner instanceof Array && inner.length > 0 ? 
+				context[inner.pop()].chainCall(context, inner, args)
+			: typeof(inner) == typeof('str') ?
+				context[inner].chainCall(context, null, args)
+			: null
+	}
+
+	return this.post(context, data)
+}
+Action.prototype.chainCall = function(context, inner){
+	return this.chainApply(context, inner, args2array(arguments).slice(2))
+}
+
+// The pre/post stage runners...
+//
+// 	.pre(context, args)	
+// 		-> data
+//
+// 	.post(context, data)
+// 		-> result
+//
+Action.prototype.pre = function(context, args){
+	args = args || []
+
+	var res = context
+	var outer = this.name
+
 	var getHandlers = context.getHandlers || MetaActions.getHandlers
 	var isToggler = context.isToggler || MetaActions.isToggler
-
-	// get .__call__(..) wrapper handler list...
-	var call_wrapper = outer != '__call__' && inner != '__call__' ? 
-		getHandlers.call(context, '__call__') 
-		: []
 
 	// get the handler list...
 	var handlers = getHandlers.call(context, outer)
 
 	// special case: toggler -- do not handle special args...
+	// XXX should this be here???
 	if(isToggler.call(context, outer)
 			&& args.length == 1 
 			&& (args[0] == '?' || args[0] == '??')){
-		return handlers.slice(-1)[0].pre.apply(context, args)
+		return {
+			result: handlers.slice(-1)[0].pre.apply(context, args),
+		}
 	}
+
+	var call_wrapper = outer != '__call__' ? 
+		getHandlers.call(context, '__call__') 
+		: []
 
 	// wrapper handlers: pre phase...
 	call_wrapper = call_wrapper
@@ -430,25 +469,29 @@ Action.prototype.chainApply = function(context, inner, args){
 			return a
 		})
 
-	// call the inner action/function if preset....
-	if(inner){
-		//res = inner instanceof Function ? 
-		inner instanceof Function ? 
-				inner.call(context, args)
-			: inner instanceof Array && inner.length > 0 ? 
-				context[inner.pop()].chainCall(context, inner, args)
-			: typeof(inner) == typeof('str') ?
-				context[inner].chainCall(context, null, args)
-			: null
-	}
-
-	// return this if nothing specific is returned...
+	// return context if nothing specific is returned...
 	res = res === undefined ? context : res
+
+	return {
+		arguments: args,
+
+		wrapper: call_wrapper,
+		handlers: handlers,
+
+		result: res,
+	}
+}
+Action.prototype.post = function(context, data){
+	var res = data.result || context
+
+	var args = data.arguments || []
 	// the post handlers get the result as the first argument...
 	args.splice(0, 0, res)
 
+	var outer = this.name
+
 	// handlers: post phase...
-	handlers
+	data.handlers && data.handlers
 		// NOTE: post handlers are called LIFO -- last defined last...
 		.reverse()
 		.forEach(function(a){
@@ -459,7 +502,7 @@ Action.prototype.chainApply = function(context, inner, args){
 		})
 
 	// wrapper handlers: post phase...
-	call_wrapper
+	data.wrapper && data.wrapper
 		// NOTE: post handlers are called LIFO -- last defined last...
 		.reverse()
 		.forEach(function(a){
@@ -469,13 +512,8 @@ Action.prototype.chainApply = function(context, inner, args){
 					: a.post.call(context, res, outer, args.slice(1)))
 		})
 
-	// action result...
 	return res
 }
-Action.prototype.chainCall = function(context, inner){
-	return this.chainApply(context, inner, args2array(arguments).slice(2))
-}
-
 
 // A base action-set object...
 //

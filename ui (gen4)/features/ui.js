@@ -1800,8 +1800,25 @@ var ControlActions = actions.Actions({
 		'focus-central-image': 'silent',
 
 		'ribbon-pan-threshold': 30,
+		'control-in-progress-timeout': 100,
 	},
 
+	// Ribbon pan "event"...
+	//
+	// Protocol:
+	// 	- pre phase is called when pan is started.
+	//	- post phase is called when pan is finished.
+	//
+	// This is not intended to be called by user, instead it is 
+	// internally called by the pan handler.
+	//
+	// NOTE: more than one ribbon can be panned at once.
+	ribbonPanning: ['- Interface/',
+		core.notUserCallable(function(gid){
+			// This is ribbon pan event...
+			//
+			// Not for direct use.
+		})],
 
 	// XXX this is really slow on IE...
 	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
@@ -1817,6 +1834,9 @@ var ControlActions = actions.Actions({
 					// XXX
 					var that = this
 					var r = this.ribbons.getRibbon(target)
+					var rgid = this.ribbons.getElemGID(r)
+					var data = false
+					var post_handlers
 
 					// setup dragging...
 					if(r.length > 0 && !r.hasClass('draggable')){
@@ -1835,17 +1855,16 @@ var ControlActions = actions.Actions({
 							//evt.stopPropagation()
 
 							// XXX stop all previous animations...
-							//r.velocity("stop")
+							r.velocity("stop")
 
 							var d = that.ribbons.dom
-							var s = that.scale
 							var g = evt.gesture
-
-							var data = r.data('drag-data')
+							var s = that.scale
 
 							// we just started...
 							if(!data){
 								that.__control_in_progress = (that.__control_in_progress || 0) + 1
+								post_handlers = that.ribbonPanning.pre(that, [rgid])
 
 								// hide and remove current image indicator...
 								// NOTE: it will be reconstructed on 
@@ -1860,20 +1879,21 @@ var ControlActions = actions.Actions({
 										})
 
 								// store initial position...
-								var data = {
-									left: d.getOffset(this).left,
+								data = {
+									//left: d.getOffset(this).left,
+									left: $(this).transform('x'),
 									pointers: g.pointers.length,
 								}
-								r.data('drag-data', data)
 							}
 
 							// do the actual move...
-							d.setOffset(this, data.left + (g.deltaX / s))
+							//d.setOffset(this, data.left + (g.deltaX / s))
+							r.transform({x: data.left + (g.deltaX / s)})
 
 							/* XXX this seems to offer no speed advantages 
 							 * 		vs. .setOffset(..) but does not play
 							 * 		well with .updateRibbon(..)
-							$(this)
+							r	
 								.velocity('stop')
 								.velocity({ 
 									translateX: data.left + (g.deltaX / s),
@@ -1896,19 +1916,44 @@ var ControlActions = actions.Actions({
 
 							// when done...
 							if(g.isFinal){
-								r.removeData('drag-data')
 
-								// XXX this seems to have trouble with off-screen images...
 								var central = that.ribbons.getImageByPosition('center', r)
+
+								// check if central if off screen, if yes, 
+								// nudge it into user-accessible area...
+								//
+								// we are fully off screen -- focus first/last image...
+								if(central == null){
+									var gid = that.data.getImage(
+											r.offset().left < 0 ? -1 : 0, rgid)
+
+									that.centerImage(gid)
+									central = that.ribbons.getImage(gid)
+
+								// partly out the left -- show last image...
+								} else if(central.offset().left < 0){
+									r.transform({
+										x: r.transform('x') - (central.offset().left / s)
+									})
+
+								// partly out the right -- show first image...
+								} else if(central.offset().left + (central.width()*s) 
+										> that.ribbons.viewer.width()){
+									r.transform({
+										x: r.transform('x') 
+											+ (that.ribbons.viewer.width() 
+												- (central.offset().left 
+													+ central.width()*s)) / s
+									})
+								}
 
 								// load stuff if needed...
 								that.updateRibbon(central)
 								
+								/*
 								// XXX add inertia....
-								/* XXX 
-								console.log('!!!!', g.velocityX)
 								r.velocity({
-									translateX: (data.left + g.deltaX + (g.velocityX * 10)) +'px'
+									translateX: (data.left + ((g.deltaX + (g.velocityX * 10)) / s)) +'px'
 								}, 'easeInSine')
 								*/
 
@@ -1916,21 +1961,27 @@ var ControlActions = actions.Actions({
 								if(that.config['focus-central-image'] == 'silent'){
 									var gid = that.ribbons.getElemGID(central)
 
-									// XXX is this the right way to do this???
-									that.data.focusImage(gid)
-									that.ribbons.focusImage(gid)
+									that.data.focusImage(gid, rgid)
+									that.ribbons.focusImage(a.current)
 									
 								// focus central image in a normal manner...
 								} else if(that.config['focus-central-image']){
-									that.focusImage(that.ribbons.getElemGID(central))
+									var gid = that.ribbons.getElemGID(central)
+
+									that.data.focusImage(gid, rgid)
+									that.focusImage()
 								}
+
+								data = false
+
+								that.ribbonPanning.post(that, post_handlers)
 
 								setTimeout(function(){
 									that.__control_in_progress -= 1
 									if(that.__control_in_progress <= 0){
 										delete that.__control_in_progress
 									}
-								}, 50)
+								}, that.config['control-in-progress-timeout'] || 100)
 							}
 						})
 					}
