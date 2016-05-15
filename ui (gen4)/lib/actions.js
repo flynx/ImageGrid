@@ -401,6 +401,10 @@ Action.prototype.__proto__ = Function
 // 	.post(context, data)
 // 		-> result
 //
+//
+// NOTE: All the defaults should be handled by the pre stage, post will 
+// 		process data assuming that it is correct.
+//
 // XXX revise the structure....
 // 		...is it a better idea to define action methods in an object 
 // 		and assign that???
@@ -485,7 +489,7 @@ Action.prototype.pre = function(context, args){
 	}
 }
 Action.prototype.post = function(context, data){
-	var res = data.result || context
+	var res = data.result
 
 	var args = data.arguments || []
 	// the post handlers get the result as the first argument...
