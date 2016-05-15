@@ -575,8 +575,11 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 				if(res instanceof jQuery || (res instanceof widget.Widget)){
 					var elem = (res.dom || res)
 
-					!elem.attr('title') && elem.attr('title',
-						(this.getDoc(action)[action].shift() || action).split(/[\\\/]/g).pop())
+					!elem.attr('dialog-title') 
+						&& elem.attr(
+							'dialog-title',
+							(this.getDoc(action)[action].shift() || action)
+								.split(/[\\\/]/g).pop())
 				}
 			}],
 	],
@@ -587,15 +590,18 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 /*********************************************************************/
 
 // NOTE: yes, this is a funny name ;)
+//
+// XXX should we also add a hide-path config feature???
 var BrowseActionsActions = actions.Actions({
 	config: {
 		'action-category-order': [
 			'99:File',
 				// NOTE: we can order any sub-tree we want in the same 
 				// 		manner as the root...
-				// XXX for some reason only one of the following works...
 				'File/-80:Clear viewer',
 				'File/-90:Close viewer',
+				// NOTE: non existing elements will not get drawn...
+				//'File/-99:moo',
 			'80:Edit',
 			'70:Navigate',
 			'60:Image',

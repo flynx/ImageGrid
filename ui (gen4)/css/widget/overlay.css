@@ -50,7 +50,7 @@
 /* title */
 .content>*:before {
 	position: absolute;
-	content: attr(title);
+	content: attr(dialog-title);
 
 	bottom: 100%;
 
