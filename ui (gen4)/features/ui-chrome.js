@@ -153,6 +153,8 @@ var CurrentImageIndicatorActions = actions.Actions({
 
 		'current-image-indicator-hide-timeout': 250,
 
+		'current-image-indicator-restore-delay': 500,
+
 		// this can be:
 		// 	'hide'			- simply hide on next/prev screen action
 		// 					  and show on focus image.
@@ -336,6 +338,33 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 						})
 					}, this.config['current-image-shift-timeout'])
 				}
+			}],
+
+		// hide and remove current image indicator...
+		// NOTE: it will be reconstructed on 
+		// 		next .focusImage(..)
+		['ribbonPanning.pre',
+			function(){
+				this.__current_image_indicator_restore_timeout
+					&& clearTimeout(this.__current_image_indicator_restore_timeout)
+				delete this.__current_image_indicator_restore_timeout
+
+				var m = this.ribbons.viewer
+					.find('.current-marker')
+						.velocity({opacity: 0}, {
+							duration: 100,
+							complete: function(){
+								m.remove()
+							},
+						})
+
+			}],
+		['ribbonPanning.post',
+			function(){
+				var that = this
+				this.__current_image_indicator_restore_timeout = setTimeout(function(){
+					that.updateCurrentImageIndicator()
+				}, this.config['current-image-indicator-restore-delay'] || 500)
 			}],
 	],
 })

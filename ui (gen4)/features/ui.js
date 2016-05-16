@@ -1823,6 +1823,16 @@ var ControlActions = actions.Actions({
 		})],
 
 	// XXX still a bit lagging behind in chrome -- can we go faster??
+	// XXX idea: can we use scroll to place ribbons horizontally?
+	// 		...the bad side to this is that it will require us to add an
+	// 		extra container per ribbon and somehow disable the scrollbar
+	// 		without disabling scrolling...
+	// 		...this can also be applied to ribbon-set for vertical 
+	// 		scrolling...
+	// 		...setting margins would control the limits to scrolling...
+	// 		...the main advantage here is that the browser will do all 
+	// 		the heavy lifting and do it faster than we can ever hope to
+	// 		do it in JS...
 	// XXX this is really slow/buggy on IE and odd on FF...
 	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
 		toggler.Toggler(null,
@@ -1859,7 +1869,7 @@ var ControlActions = actions.Actions({
 					var r = this.ribbons.getRibbon(target)
 					var rgid = this.ribbons.getElemGID(r)
 
-					var data
+					var data = false
 					var post_handlers
 
 					// setup dragging...
@@ -1890,18 +1900,6 @@ var ControlActions = actions.Actions({
 							if(!data){
 								that.__control_in_progress = (that.__control_in_progress || 0) + 1
 								post_handlers = that.ribbonPanning.pre(that, [rgid])
-
-								// hide and remove current image indicator...
-								// NOTE: it will be reconstructed on 
-								// 		next .focusImage(..)
-								var m = that.ribbons.viewer
-									.find('.current-marker')
-										.velocity({opacity: 0}, {
-											duration: 100,
-											complete: function(){
-												m.remove()
-											},
-										})
 
 								// store initial position...
 								data = {
@@ -1961,65 +1959,71 @@ var ControlActions = actions.Actions({
 
 							// we are done...
 							if(g.isFinal){
-								var central = that.ribbons.getImageByPosition('center', r)
-
-								// check if central if off screen, if yes, 
-								// nudge it into user-accessible area...
-								//
-								// we are fully off screen -- focus first/last image...
-								if(central == null){
-									var gid = that.data.getImage(
-											r.offset().left < 0 ? -1 : 0, rgid)
-
-									that.centerImage(gid)
-									central = that.ribbons.getImage(gid)
-
-								// partly out the left -- show last image...
-								} else if(central.offset().left < 0){
-									r.transform({
-										x: r.transform('x') - (central.offset().left / s)
-									})
-
-								// partly out the right -- show first image...
-								} else if(central.offset().left + (central.width()*s) 
-										> that.ribbons.viewer.width()){
-									r.transform({
-										x: r.transform('x') 
-											+ (that.ribbons.viewer.width() 
-												- (central.offset().left 
-													+ central.width()*s)) / s
-									})
-								}
-
-								// load stuff if needed...
-								that.updateRibbon(central)
-								
-								// XXX add inertia....
-								/*
-								r.velocity({
-									translateX: (data.left + ((g.deltaX + (g.velocityX * 10)) / s)) +'px'
-								}, 'easeInSine')
-								*/
-
-								// see if we need to change focus...
-								var current_ribbon = that.data.getRibbon()
-								if(current_ribbon == rgid){
-									var gid = that.ribbons.getElemGID(central)
-									// silently focus central image...
-									if(that.config['focus-central-image'] == 'silent'){
-										that.data.focusImage(gid)
-										that.ribbons.focusImage(a.current)
-										
-									// focus central image in a normal manner...
-									} else if(that.config['focus-central-image']){
-										that.data.focusImage(gid)
-										that.focusImage()
-									}
-								}
-
 								data = false
 
-								that.ribbonPanning.post(that, post_handlers)
+								// XXX is this the correct way to do this???
+								requestAnimationFrame(function(){
+									var central = that.ribbons.getImageByPosition('center', r)
+
+									var rl = r.offset().left
+									var cl = central && central.offset().left
+									var w = central && central.width()
+									var W = that.ribbons.viewer.width()
+
+									// check if central if off screen, if yes, 
+									// nudge it into user-accessible area...
+									//
+									// we are fully off screen -- focus first/last image...
+									if(central == null){
+										var gid = that.data.getImage(rl < 0 ? -1 : 0, rgid)
+
+										that.centerImage(gid)
+										central = that.ribbons.getImage(gid)
+
+									// partly out the left -- show last image...
+									} else if(cl < 0){
+										r.transform({ 
+											x: r.transform('x') - (cl / s) 
+										})
+
+									// partly out the right -- show first image...
+									} else if(cl + (w*s) > W){
+										r.transform({
+											x: r.transform('x') + (W - (cl + w*s)) / s
+										})
+									}
+
+									// load stuff if needed...
+									that.updateRibbon(central)
+									
+									// XXX add inertia....
+									/*
+									r.velocity({
+										translateX: (data.left + ((g.deltaX + (g.velocityX * 10)) / s)) +'px'
+									}, 'easeInSine')
+									*/
+
+									// see if we need to change focus...
+									var current_ribbon = that.data.getRibbon()
+									if(current_ribbon == rgid){
+										var gid = that.ribbons.getElemGID(central)
+										// silently focus central image...
+										if(that.config['focus-central-image'] == 'silent'){
+											that.data.focusImage(gid)
+											that.ribbons.focusImage(a.current)
+											
+										// focus central image in a normal manner...
+										} else if(that.config['focus-central-image']){
+											that.data.focusImage(gid)
+											that.focusImage()
+										}
+									}
+
+									// this is not time-critical so do it outside the animation...
+									setTimeout(function(){
+										that.ribbonPanning.post(that, post_handlers)
+									}, 0)
+								})
 
 								setTimeout(function(){
 									that.__control_in_progress -= 1
