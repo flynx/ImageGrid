@@ -1046,12 +1046,11 @@ var getAnimationFrame = (window.requestAnimationFrame
 		})
 
 
-var cancelAnimationFrame = (window.cancelRequestAnimationFrame 
+var cancelAnimationFrame = (window.cancelAnimationFrame 
 		|| window.webkitCancelAnimationFrame 
-		|| window.webkitCancelRequestAnimationFrame 
-		|| window.mozCancelRequestAnimationFrame
-		|| window.oCancelRequestAnimationFrame
-		|| window.msCancelRequestAnimationFrame
+		|| window.mozCancelAnimationFrame
+		|| window.oCancelAnimationFrame
+		|| window.msCancelAnimationFrame
 		|| clearTimeout)
 
 

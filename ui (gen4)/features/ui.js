@@ -1801,6 +1801,8 @@ var ControlActions = actions.Actions({
 
 		'ribbon-pan-threshold': 30,
 		'control-in-progress-timeout': 100,
+
+		'animation-frame-renderer': true,
 	},
 
 	// Ribbon pan "event"...
@@ -1820,6 +1822,7 @@ var ControlActions = actions.Actions({
 			// Not for direct use.
 		})],
 
+	// XXX still a bit lagging behind in chrome -- can we go faster??
 	// XXX this is really slow/buggy on IE and odd on FF...
 	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
 		toggler.Toggler(null,
@@ -1830,12 +1833,33 @@ var ControlActions = actions.Actions({
 			'handling-pan',
 			function(state){
 				var that = this
+
+				// render framework...
+				// XXX make this global to handle other stuff...
+				// XXX does this offer any real advantages???
+				var render_data = {}
+				var render = function(){
+					for(var rgid in render_data){
+						var r = render_data[rgid]
+						delete render_data[rgid]
+
+						r.ribbon.transform({ x: r.x })
+					}
+					renderer = requestAnimationFrame(render)
+				}
+				var renderer
+
+
+				var stop_scroll = this.__scroll_prevnter = 
+					this.__scroll_prevnter || function(evt){ event.preventDefault() }
 				var handler = this.__pan_handler = this.__pan_handler || function(_, target){
 					// XXX
 					var that = this
+
 					var r = this.ribbons.getRibbon(target)
 					var rgid = this.ribbons.getElemGID(r)
-					var data = false
+
+					var data
 					var post_handlers
 
 					// setup dragging...
@@ -1851,6 +1875,7 @@ var ControlActions = actions.Actions({
 									threshold: this.config['ribbon-pan-threshold'],
 								})
 
+						r.on('touchmove mousemove', stop_scroll)
 						r.on('pan', function(evt){
 							//evt.stopPropagation()
 
@@ -1884,23 +1909,42 @@ var ControlActions = actions.Actions({
 									left: $(this).transform('x'),
 									pointers: g.pointers.length,
 								}
+
+								// restart the renderer...
+								renderer = renderer && cancelAnimationFrame(renderer)
+								if(that.config['animation-frame-renderer']){
+									renderer = requestAnimationFrame(render)
+								}
 							}
 
-							// do the actual move...
-							//d.setOffset(this, data.left + (g.deltaX / s))
-							r.transform({x: data.left + (g.deltaX / s)})
 
-							/* XXX this seems to offer no speed advantages 
-							 * 		vs. .setOffset(..) but does not play
-							 * 		well with .updateRibbon(..)
-							r	
-								.velocity('stop')
-								.velocity({ 
-									translateX: data.left + (g.deltaX / s),
-									translateY: 0, 
-									translateZ: 0,
-								}, 0)
-							*/
+							// animation frame render...
+							if(renderer){
+								// queue a render...
+								render_data[rgid] = {
+									ribbon: r,
+									x: data.left + (g.deltaX / s),
+								}
+
+							// inline render...
+							} else {
+								// do the actual move...
+								//d.setOffset(this, data.left + (g.deltaX / s))
+								r.transform({x: data.left + (g.deltaX / s)})
+
+								/* XXX this seems to offer no speed advantages 
+								 * 		vs. .setOffset(..) but does not play
+								 * 		well with .updateRibbon(..)
+								 *
+								r	
+									.velocity('stop')
+									.velocity({ 
+										translateX: data.left + (g.deltaX / s),
+										translateY: 0, 
+										translateZ: 0,
+									}, 0)
+								//*/
+							}
 
 
 							// update ribbon when "pulling" with two fingers...
@@ -1914,7 +1958,8 @@ var ControlActions = actions.Actions({
 								that.updateRibbon(that.ribbons.getImageByPosition('center', r))
 							}
 
-							// when done...
+
+							// we are done...
 							if(g.isFinal){
 								var central = that.ribbons.getImageByPosition('center', r)
 
@@ -1949,26 +1994,27 @@ var ControlActions = actions.Actions({
 								// load stuff if needed...
 								that.updateRibbon(central)
 								
-								/*
 								// XXX add inertia....
+								/*
 								r.velocity({
 									translateX: (data.left + ((g.deltaX + (g.velocityX * 10)) / s)) +'px'
 								}, 'easeInSine')
 								*/
 
-								// silently focus central image...
-								if(that.config['focus-central-image'] == 'silent'){
+								// see if we need to change focus...
+								var current_ribbon = that.data.getRibbon()
+								if(current_ribbon == rgid){
 									var gid = that.ribbons.getElemGID(central)
-
-									that.data.focusImage(gid, rgid)
-									that.ribbons.focusImage(a.current)
-									
-								// focus central image in a normal manner...
-								} else if(that.config['focus-central-image']){
-									var gid = that.ribbons.getElemGID(central)
-
-									that.data.focusImage(gid, rgid)
-									that.focusImage()
+									// silently focus central image...
+									if(that.config['focus-central-image'] == 'silent'){
+										that.data.focusImage(gid)
+										that.ribbons.focusImage(a.current)
+										
+									// focus central image in a normal manner...
+									} else if(that.config['focus-central-image']){
+										that.data.focusImage(gid)
+										that.focusImage()
+									}
 								}
 
 								data = false
@@ -2012,7 +2058,11 @@ var ControlActions = actions.Actions({
 							// XXX this does not remove the hammer trigger
 							// 		...just the jQuery handler is cleared
 							.off('pan')
+							.off('touchmove mousemove', stop_scroll)
 							.removeData('hammer')
+
+						// XXX can this be a spot for a race???
+						renderer = renderer && cancelAnimationFrame(renderer)
 					})
 				}
 			})],
