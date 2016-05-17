@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<style>
+.viewer {
+	display: inline-block;
+	border: solid 1px gray;
+
+	padding-top: 100px;
+	padding-bottom: 100px;
+}
+
+
+/* appears that there is no way to hide the scrollbar on FF */
+.ribbon-container {
+	position: relative;
+
+	height: 120px;
+	width: 600px;
+
+	overflow-x: scroll;
+	overflow-y: hidden;
+
+	-ms-overflow-style: none;
+
+	/*border: solid 1px gray;*/
+}
+.ribbon-container::-webkit-scrollbar { 
+    display: none; 
+}
+
+
+.ribbon {
+	position: relative;
+	display: inline-block;
+
+	height: 100px;
+	width: 1000px;
+
+	background: silver;
+	/*box-shadow: 0px 0px 25px -10px rgba(0,0,0,0.75);*/
+	box-shadow: 0px 0px 25px -10px rgba(0,0,0,1);
+
+	/* start/end markers... */
+	border-left: 100px solid gray;
+	border-right: 100px solid gray;
+
+	margin: 10px;
+
+	margin-left: 50%;
+	/* XXX for some reason this does not work as expected */
+	margin-right: 50%;
+}
+
+</style>
+
+<script src="../ext-lib/jquery.js"></script>
+<script src="../ext-lib/jquery-ui.js"></script>
+
+<script src="../lib/jli.js"></script>
+
+<script>
+
+</script>
+
+<body>
+
+<div class="viewer">
+	<div class="ribbon-set">
+		<div class="ribbon-container">
+			<div class="ribbon">
+			</div>
+		</div>
+		<div class="ribbon-container">
+			<div class="ribbon">
+			</div>
+		</div>
+		<div class="ribbon-container">
+			<div class="ribbon">
+			</div>
+		</div>
+	</div>
+</div>
+
+</body>
+</html>
