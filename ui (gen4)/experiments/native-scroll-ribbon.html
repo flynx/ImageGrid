@@ -31,6 +31,7 @@
 *	  (update width to fit viewer)
 */
 .ribbon-set {
+	position: relative;
 	display: inline-block;
 
 	/* This allways needs to be of viewer width, this mostly applies
@@ -40,6 +41,13 @@
 
 	padding-top: 50%;
 	padding-bottom: 50%;
+
+	margin-left: -50%;
+	left: 50%;
+
+
+	transform-origin: 50% 50%;
+	/*transform: scale(0.5);*/
 }
 
 
@@ -88,9 +96,35 @@
 <script src="../ext-lib/jquery.js"></script>
 <script src="../ext-lib/jquery-ui.js"></script>
 
+<script src="../ext-lib/velocity.min.js"></script>
+
 <script src="../lib/jli.js"></script>
 
 <script>
+
+// XXX these accumolate errors...
+var zoomIn = function(c){
+	c = c || 1.2
+	$('.ribbon-set')
+		.velocity('stop')
+		.css({
+		})
+		.velocity({
+			scale: '*='+c,
+			width: '/='+c,
+			'margin-left': '/='+c,
+		}, 300)
+}
+var zoomOut = function(c){
+	c = c || 1.2
+	$('.ribbon-set')
+		.velocity('stop')
+		.velocity({
+			scale: '/='+c,
+			width: '*='+c,
+			'margin-left': '*='+c,
+		}, 300)
+}
 
 </script>
 
