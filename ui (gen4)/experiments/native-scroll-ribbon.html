@@ -1,32 +1,64 @@
 <!DOCTYPE html>
 <html>
 <style>
+/* XXX appears that there is no way to hide the scrollbar on FF...
+*	...one way around this is to use something like iScroll/Scrolly
+*	on FF or where more control is needed...
+*/
 .viewer {
 	display: inline-block;
 	border: solid 1px gray;
 
-	padding-top: 100px;
-	padding-bottom: 100px;
+	width: 600px;
+	height: 500px;
+
+	overflow: hidden;
+
+	overflow-x: hidden;
+	overflow-y: scroll;
+
+	-ms-overflow-style: none;
+}
+.viewer::-webkit-scrollbar { 
+    display: none; 
 }
 
 
-/* appears that there is no way to hide the scrollbar on FF */
+
+/* This is to be used for:
+*	- vrtical positioning
+*	- scaling
+*	  (update width to fit viewer)
+*/
+.ribbon-set {
+	display: inline-block;
+
+	/* This allways needs to be of viewer width, this mostly applies
+	* to scaling...
+	*/
+	width: 100%;
+
+	padding-top: 50%;
+	padding-bottom: 50%;
+}
+
+
+
 .ribbon-container {
 	position: relative;
 
 	height: 120px;
-	width: 600px;
+	width: 100%;
 
 	overflow-x: scroll;
 	overflow-y: hidden;
 
 	-ms-overflow-style: none;
-
-	/*border: solid 1px gray;*/
 }
 .ribbon-container::-webkit-scrollbar { 
     display: none; 
 }
+
 
 
 .ribbon {
