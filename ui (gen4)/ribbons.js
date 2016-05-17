@@ -235,8 +235,13 @@ var RibbonsClassPrototype = {
 		var that = this
 		return $(gids.map(function(gid){
 			gid = gid != null ? gid+'' : gid
+
 			return that.setElemGID($('<div>')
 				.addClass('ribbon'), gid)[0]
+			//return $('<div>')
+			//	.addClass('ribbon-container')
+			//	.append(that.setElemGID($('<div>')
+			//		.addClass('ribbon'), gid))[0]
 		}))
 	},
 	// XXX NOTE: quots removal might render this incompatible with older data formats...
