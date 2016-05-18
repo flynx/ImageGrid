@@ -1,11 +1,41 @@
 <!DOCTYPE html>
 <html>
 <style>
+// mark the center...
+[mark-center]:before {
+	position: absolute;
+	display: block;
+	content: "";
+	width: 5px;
+	height: 5px;
+	right: 50%;
+	bottom: 50%;
+	border-right: solid 2px attr(mark-center);
+	border-bottom: solid 2px attr(mark-center);
+	margin-bottom: -1px;
+	margin-right: -1px;
+}
+[mark-center]:after {
+	position: absolute;
+	display: block;
+	content: "";
+	width: 5px;
+	height: 5px;
+	left: 50%;
+	top: 50%;
+	border-left: solid 2px attr(mark-center);
+	border-top: solid 2px attr(mark-center);
+	margin-left: -1px;
+	margin-top: -1px;
+}
+
+
 /* XXX appears that there is no way to hide the scrollbar on FF...
 *	...one way around this is to use something like iScroll/Scrolly
 *	on FF or where more control is needed...
 */
 .viewer {
+	position: relative;
 	display: inline-block;
 	border: solid 1px gray;
 
@@ -13,16 +43,28 @@
 	height: 500px;
 
 	overflow: hidden;
+}
+
+.scaler {
+	position: relative;
+	width: 100%;
+	height: 100%;
+
+	top: 50%;
+	left: 50%;
+	margin-top: -50%;
+	margin-left: -50%;
+
+	transform-origin: 50% 50%;
 
 	overflow-x: hidden;
 	overflow-y: scroll;
 
 	-ms-overflow-style: none;
 }
-.viewer::-webkit-scrollbar { 
+.scaler::-webkit-scrollbar { 
     display: none; 
 }
-
 
 
 /* This is to be used for:
@@ -41,13 +83,6 @@
 
 	padding-top: 50%;
 	padding-bottom: 50%;
-
-	margin-left: -50%;
-	left: 50%;
-
-
-	transform-origin: 50% 50%;
-	/*transform: scale(0.5);*/
 }
 
 
@@ -98,50 +133,126 @@
 
 <script src="../ext-lib/velocity.min.js"></script>
 
+<script src="../ext-lib/iscroll.js"></script>
+<script src="../ext-lib/iscroll-zoom.js"></script>
+
 <script src="../lib/jli.js"></script>
 
 <script>
 
+// XXX when setting origin at scales different from 1, we'll need to 
+//	adjust offset to compensate for the shift... 
+// XXX one other simplification might be adding a new element specifically
+//	dedicated to scaling...
+var centerOrigin = function(){
+	var H = $('.viewer').height()
+	var s = $('.viewer')[0].scrollTop
+
+	$('.ribbon-set').css({
+		'transform-origin': '50% '+ (s + H/2) +'px'
+	})
+}
+
 // XXX these accumolate errors...
 var zoomIn = function(c){
 	c = c || 1.2
-	$('.ribbon-set')
+	$('.scaler')
 		.velocity('stop')
-		.css({
-		})
 		.velocity({
 			scale: '*='+c,
 			width: '/='+c,
+			height: '/='+c,
 			'margin-left': '/='+c,
+			'margin-top': '/='+c,
 		}, 300)
 }
 var zoomOut = function(c){
 	c = c || 1.2
-	$('.ribbon-set')
+	$('.scaler')
 		.velocity('stop')
 		.velocity({
 			scale: '/='+c,
 			width: '*='+c,
+			height: '*='+c,
 			'margin-left': '*='+c,
+			'margin-top': '*='+c,
 		}, 300)
 }
+
+
+var ISCROLL = false
+
+
+$(function(){
+	var H = $('.viewer').height()
+	var W = $('.viewer').width()
+
+	// set margins to be parant and not content dependant...
+	$('.scaler')
+		.velocity({
+			'margin-left': -W/2,
+			'margin-top': -H/2,
+		}, 0)
+
+
+if(ISCROLL){
+	// setup iScroll...
+	$('.scaler').css({
+		overflow: 'hidden',
+	})
+	var scroll_view = new IScroll('.scaler', {
+		scrollX: false,
+		scrollY: true,
+
+		mouseWheel: true,
+		disableMouse: false,
+
+		eventPassthrough: 'horizontal',
+
+		// XXX for this to work correctly we'll need to:
+		//	1) position the element correctly -- now it jumps after zoom...
+	    	//	2) keep more of the element outside the view...
+		zoom: true,
+	})
+
+	window.scroll_ribbon = []
+	$('.ribbon-container')//.eq(0)
+		.css({
+			overflow: 'hidden',
+		})
+		.each(function(_, e){
+			console.log(e)
+			// XXX this calculates the scroll width incorrectly...
+			scroll_ribbon.push(new IScroll(e, {
+				scrollX: true,
+				scrollY: false,
+
+				disableMouse: false,
+				// XXX need this to work in a horizontal direction...
+				//mouseWheel: true,
+			}))
+		})
+}
+})
 
 </script>
 
 <body>
 
-<div class="viewer">
-	<div class="ribbon-set">
-		<div class="ribbon-container">
-			<div class="ribbon">
+<div class="viewer" mark-center="red">
+	<div class="scaler">
+		<div class="ribbon-set">
+			<div class="ribbon-container">
+				<div class="ribbon">
+				</div>
 			</div>
-		</div>
-		<div class="ribbon-container">
-			<div class="ribbon">
+			<div class="ribbon-container">
+				<div class="ribbon">
+				</div>
 			</div>
-		</div>
-		<div class="ribbon-container">
-			<div class="ribbon">
+			<div class="ribbon-container">
+				<div class="ribbon">
+				</div>
 			</div>
 		</div>
 	</div>

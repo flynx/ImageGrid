@@ -97,6 +97,32 @@ module.chainCmp = function(cmp_chain){
 } 
 
 
+// Get all the accessible keys...
+//
+// This is different to Object.keys(..) in that this will return keys
+// from all the prototypes while .keys(..) will only return the keys
+// defined in the last layer.
+Object.deepKeys = function(obj){
+	var res = []
+	while(obj != null){
+		res = res.concat(Object.keys(obj))
+		obj = obj.__proto__
+	}
+	return res.unique()
+}
+
+// Make a full key set copy of an object...
+//
+// NOTE: this will not deep-copy the values...
+Object.flatCopy = function(obj){
+	var res = {}
+	Object.deepKeys(obj).forEach(function(key){
+		res[key] = obj[key]
+	})
+	return res
+}
+
+
 // like .length but for sparse arrays will return the element count...
 // XXX make this a prop...
 /*
