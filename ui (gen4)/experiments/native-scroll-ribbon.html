@@ -14,6 +14,7 @@
 	margin-left: -1px;
 	margin-top: -1px;
 	opacity: 0.8;
+	z-index: 1;
 }
 .mark-center:before {
 	position: absolute;
@@ -28,6 +29,7 @@
 	margin-bottom: -1px;
 	margin-right: -1px;
 	opacity: 0.8;
+	z-index: 1;
 }
 
 
@@ -228,10 +230,11 @@ $(function(){
 
 if(ISCROLL){
 	// setup iScroll...
-	$('.scaler').css({
-		overflow: 'hidden',
-	})
-	var scroll_view = new IScroll('.scaler', {
+	$('.scaler')
+		.css({
+			overflow: 'hidden',
+		})
+	window.scroll_view = new IScroll('.scaler', {
 		// XXX setting this to false makes zoom reset x to 0 after it's done...
 		scrollX: false,
 		scrollY: true,
@@ -241,11 +244,23 @@ if(ISCROLL){
 
 		eventPassthrough: 'horizontal',
 
-		// XXX for this to work correctly we'll need to:
-		//	1) position the element correctly -- now it jumps after zoom...
-	    	//	2) keep more of the element outside the view...
 		zoom: true,
 	})
+
+	scroll_view
+		.on('zoomEnd', function(){
+			var v = $('.viewer')
+
+			var s = scroll_view.scale
+			var W = v.width()
+			var H = v.width()
+
+			var e = $('.ribbon-set')[0]
+
+			// XXX not yet correct...
+			e.style.width = (W / s) + 'px'
+			e.style.height = (H / s) + 'px'
+		})
 
 	window.scroll_ribbon = []
 	$('.ribbon-container')//.eq(0)
