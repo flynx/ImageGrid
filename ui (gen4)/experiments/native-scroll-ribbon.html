@@ -1,21 +1,7 @@
 <!DOCTYPE html>
 <html>
 <style>
-// mark the center...
-[mark-center]:before {
-	position: absolute;
-	display: block;
-	content: "";
-	width: 5px;
-	height: 5px;
-	right: 50%;
-	bottom: 50%;
-	border-right: solid 2px attr(mark-center);
-	border-bottom: solid 2px attr(mark-center);
-	margin-bottom: -1px;
-	margin-right: -1px;
-}
-[mark-center]:after {
+.mark-center:after {
 	position: absolute;
 	display: block;
 	content: "";
@@ -23,10 +9,25 @@
 	height: 5px;
 	left: 50%;
 	top: 50%;
-	border-left: solid 2px attr(mark-center);
-	border-top: solid 2px attr(mark-center);
+	border-left: solid 2px red;
+	border-top: solid 2px red;
 	margin-left: -1px;
 	margin-top: -1px;
+	opacity: 0.8;
+}
+.mark-center:before {
+	position: absolute;
+	display: block;
+	content: "";
+	width: 5px;
+	height: 5px;
+	right: 50%;
+	bottom: 50%;
+	border-bottom: solid 2px red;
+	border-right: solid 2px red;
+	margin-bottom: -1px;
+	margin-right: -1px;
+	opacity: 0.8;
 }
 
 
@@ -44,6 +45,8 @@
 
 	overflow: hidden;
 }
+
+
 
 .scaler {
 	position: relative;
@@ -65,6 +68,7 @@
 .scaler::-webkit-scrollbar { 
     display: none; 
 }
+
 
 
 /* This is to be used for:
@@ -126,6 +130,8 @@
 	margin-right: 50%;
 }
 
+
+
 </style>
 
 <script src="../ext-lib/jquery.js"></script>
@@ -140,6 +146,12 @@
 
 <script>
 
+var scale = function(){
+	var s = /scale\(([^\)]+)\)/.exec($('.scaler')[0].style.transform)
+	return s ? parseFloat(s.pop()) : 1
+}
+
+
 // XXX when setting origin at scales different from 1, we'll need to 
 //	adjust offset to compensate for the shift... 
 // XXX one other simplification might be adding a new element specifically
@@ -153,37 +165,47 @@ var centerOrigin = function(){
 	})
 }
 
+
 // XXX these accumolate errors...
 var zoomIn = function(c){
 	c = c || 1.2
+
+	centerOrigin()
 	$('.scaler')
 		.velocity('stop')
 		.velocity({
 			scale: '*='+c,
+
 			width: '/='+c,
 			height: '/='+c,
 			'margin-left': '/='+c,
 			'margin-top': '/='+c,
-		}, 300)
+		}, {
+			duration: 300,
+			easing: 'linear',
+		})
 }
 var zoomOut = function(c){
 	c = c || 1.2
+
+	centerOrigin()
 	$('.scaler')
 		.velocity('stop')
 		.velocity({
 			scale: '/='+c,
+
 			width: '*='+c,
 			height: '*='+c,
 			'margin-left': '*='+c,
 			'margin-top': '*='+c,
-		}, 300)
+		}, {
+			duration: 300,
+			easing: 'linear',
+		})
 }
 
 
-var ISCROLL = false
-
-
-$(function(){
+var setup = function(){
 	var H = $('.viewer').height()
 	var W = $('.viewer').width()
 
@@ -193,6 +215,15 @@ $(function(){
 			'margin-left': -W/2,
 			'margin-top': -H/2,
 		}, 0)
+}
+
+
+
+var ISCROLL = true
+
+
+$(function(){
+	setup()
 
 
 if(ISCROLL){
@@ -201,11 +232,12 @@ if(ISCROLL){
 		overflow: 'hidden',
 	})
 	var scroll_view = new IScroll('.scaler', {
+		// XXX setting this to false makes zoom reset x to 0 after it's done...
 		scrollX: false,
 		scrollY: true,
 
-		mouseWheel: true,
 		disableMouse: false,
+		mouseWheel: true,
 
 		eventPassthrough: 'horizontal',
 
@@ -228,7 +260,8 @@ if(ISCROLL){
 				scrollY: false,
 
 				disableMouse: false,
-				// XXX need this to work in a horizontal direction...
+				// XXX this only reads vertical mousewheel...
+				//	...need this to work in a horizontal direction...
 				//mouseWheel: true,
 			}))
 		})
@@ -239,7 +272,7 @@ if(ISCROLL){
 
 <body>
 
-<div class="viewer" mark-center="red">
+<div class="viewer mark-center">
 	<div class="scaler">
 		<div class="ribbon-set">
 			<div class="ribbon-container">
