@@ -228,8 +228,9 @@ $(function(){
 	setup()
 
 
+// setup iScroll...
 if(ISCROLL){
-	// setup iScroll...
+	// Vertical scroll and zoom...
 	$('.scaler')
 		.css({
 			overflow: 'hidden',
@@ -247,21 +248,41 @@ if(ISCROLL){
 		zoom: true,
 	})
 
-	scroll_view
-		.on('zoomEnd', function(){
-			var v = $('.viewer')
+	var t
+	$('.scaler').on('touchend mouseup', function(){
+		t = $('.ribbon-set')[0].style.transform
+	})
+	scroll_view.on('zoomEnd', function(){
+		var v = $('.viewer')
 
-			var s = scroll_view.scale
-			var W = v.width()
-			var H = v.width()
+		var s = scroll_view.scale
+		var W = v.width()
+		var H = v.width()
 
-			var e = $('.ribbon-set')[0]
+		var e = $('.ribbon-set')[0]
 
-			// XXX not yet correct...
-			e.style.width = (W / s) + 'px'
-			e.style.height = (H / s) + 'px'
+		// XXX compensate for offset -- scroll ribbons by to 
+		//	place them where they where under user's fingers...
+		console.log('>>>>', t)
+		scroll_ribbon.forEach(function(r){
+			// XXX ~(W/s - translateX)
 		})
 
+		e.style.width = (W / s) + 'px'
+		e.style.height = (H / s) + 'px'
+	})
+
+
+
+	// Ribbon scroll...
+	//
+	// Problems:
+	//	- iScroll does not account for margins when aclculating 
+	//	  scroll width, need to patch this on .update(..)...
+	//	- can't scroll ribbons independently
+	//		- two fingers will trigger zoom
+	//		- for some reason if touching two ribbons while
+	//		  zooming they will move in the same direction...
 	window.scroll_ribbon = []
 	$('.ribbon-container')//.eq(0)
 		.css({
