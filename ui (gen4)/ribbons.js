@@ -521,6 +521,13 @@ var RibbonsPrototype = {
 
 			this.dom.setScale(ribbon_set, scale)
 
+			/*
+			ribbon_set
+				.velocity('stop')
+				// XXX get the time from config...
+				.velocity({scale: scale}, 200)
+			*/
+
 			/* XXX not sure if this is needed yet...
 			// XXX fix a render bug in chrome 38...
 			var v = this.viewer[0]
@@ -2245,8 +2252,6 @@ var RibbonsPrototype = {
 				})
 			}
 		})
-
-		return this
 	},
 
 	// center a ribbon vertically...

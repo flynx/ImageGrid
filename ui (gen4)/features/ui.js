@@ -1423,13 +1423,13 @@ module.Clickable = core.ImageGridFeatures.Feature({
 					var x, y, t, last, threshold
 					img
 						.prop('clickable', true)
-						.on('mousedown touchstart', function(){ 
+						.on('mousedown touchstart', function(evt){ 
 							threshold = that.config['click-threshold']
-							x = event.clientX
-							y = event.clientY
+							x = evt.clientX
+							y = evt.clientY
 							t = Date.now()
 						})
-						.on('mouseup touchend', function(){ 
+						.on('mouseup touchend', function(evt){ 
 							if(that.__control_in_progress){
 								return
 							}
@@ -1441,8 +1441,8 @@ module.Clickable = core.ImageGridFeatures.Feature({
 							// constrain distance between down and up events...
 							if(x != null 
 								&& Math.max(
-									Math.abs(x - event.clientX), 
-									Math.abs(y - event.clientY)) < threshold.d){
+									Math.abs(x - evt.clientX), 
+									Math.abs(y - evt.clientY)) < threshold.d){
 								// this will prevent double clicks...
 								x = null
 								y = null
@@ -1787,6 +1787,26 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// Experiment: use native scroll for ribbons and view...
+// 	Factors:
+// 		+ the browser will do all the heavy lifting and do it faster 
+// 			than we can ever hope to do it in JS (assumption)
+// 		- will require us to add an extra container per ribbon 
+//
+// 	Experiment result:
+// 		- more uniform and fast across browsers 
+// 			(except FF -- can't disable scrollbars, need to cheat)
+// 		- less controllable (inertia, gestures, ...)
+// 		- is affected by scaling in a bad way -- paralax...
+//
+// 	Conclusion:
+// 		- this again brings us to using code to control the scroll
+// 		  which in turn defeats the original purpose of avoiding
+// 		  extra complexity...
+//
+// 	See: 
+// 		experiments/native-scroll-ribbon.html
+//
 
 // XXX STUB: needs more thought.... 
 var ControlActions = actions.Actions({
@@ -1824,26 +1844,10 @@ var ControlActions = actions.Actions({
 
 	// XXX still a bit lagging behind in chrome -- can we go faster??
 	// 		...appears similar to iScroll on chrome on desktop...
-	// XXX idea: can we use scroll to place ribbons horizontally?
-	// 		...the bad side to this is that it will require us to add an
-	// 		extra container per ribbon and somehow disable the scrollbar
-	// 		without disabling scrolling...
-	// 		...this can also be applied to ribbon-set for vertical 
-	// 		scrolling...
-	// 		...setting margins would control the limits to scrolling...
-	// 		...the main advantage here is that the browser will do all 
-	// 		the heavy lifting and do it faster than we can ever hope to
-	// 		do it in JS...
-	// 		Experiment result:
-	// 			- more uniform and fast across browsers 
-	// 				(except FF -- can't disable scrollbars, need to cheat)
-	// 			- less controllable
-	// 			- is affected by scaling in a bad way...
-	// 		Conclusion:
-	// 			- this again brings us to using code to control the scroll
-	// 			  which in turn defeats the original purpose of avoiding
-	// 			  extra complexity...
-	// XXX this is really slow/buggy on IE and odd on FF...
+	// XXX this is really slow/buggy on IE... 
+	// 		...found the problem, need to disable transitions for this 
+	// 		to work semi smoothly...
+	// XXX BUG: after fast panning a non centered image is selected...
 	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
 		toggler.Toggler(null,
 			function(){ 
@@ -1871,7 +1875,7 @@ var ControlActions = actions.Actions({
 
 
 				var stop_scroll = this.__scroll_prevnter = 
-					this.__scroll_prevnter || function(evt){ event.preventDefault() }
+					this.__scroll_prevnter || function(evt){ evt.preventDefault() }
 				var handler = this.__pan_handler = this.__pan_handler || function(_, target){
 					// XXX
 					var that = this
@@ -1900,7 +1904,7 @@ var ControlActions = actions.Actions({
 							//evt.stopPropagation()
 
 							// XXX stop all previous animations...
-							r.velocity("stop")
+							//r.velocity("stop")
 
 							var d = that.ribbons.dom
 							var g = evt.gesture
@@ -1910,6 +1914,9 @@ var ControlActions = actions.Actions({
 							if(!data){
 								that.__control_in_progress = (that.__control_in_progress || 0) + 1
 								post_handlers = that.ribbonPanning.pre(that, [rgid])
+
+								// XXX prevent IE from fighting transitions...
+								that.ribbons.preventTransitions(r)
 
 								// store initial position...
 								data = {
@@ -2006,12 +2013,11 @@ var ControlActions = actions.Actions({
 									// load stuff if needed...
 									that.updateRibbon(central)
 									
+									// XXX is this the right place for this???
+									that.ribbons.restoreTransitions(r)
+
 									// XXX add inertia....
-									/*
-									r.velocity({
-										translateX: (data.left + ((g.deltaX + (g.velocityX * 10)) / s)) +'px'
-									}, 'easeInSine')
-									*/
+									// XXX
 
 									// see if we need to change focus...
 									var current_ribbon = that.data.getRibbon()
@@ -2039,6 +2045,8 @@ var ControlActions = actions.Actions({
 									that.__control_in_progress -= 1
 									if(that.__control_in_progress <= 0){
 										delete that.__control_in_progress
+
+										//that.ribbonPanning.post(that, post_handlers)
 									}
 								}, that.config['control-in-progress-timeout'] || 100)
 							}
@@ -2080,6 +2088,13 @@ var ControlActions = actions.Actions({
 					})
 				}
 			})],
+
+	
+	togglePinchHandling: ['Interface/Toggle pinch zoom handling',
+		function(){
+		}],
+
+
 	toggleSwipeHandling: ['Interface/Toggle swipe handling',
 		toggler.Toggler(null,
 			function(_, state){ 
