@@ -1823,6 +1823,7 @@ var ControlActions = actions.Actions({
 		})],
 
 	// XXX still a bit lagging behind in chrome -- can we go faster??
+	// 		...appears similar to iScroll on chrome on desktop...
 	// XXX idea: can we use scroll to place ribbons horizontally?
 	// 		...the bad side to this is that it will require us to add an
 	// 		extra container per ribbon and somehow disable the scrollbar
@@ -1833,6 +1834,15 @@ var ControlActions = actions.Actions({
 	// 		...the main advantage here is that the browser will do all 
 	// 		the heavy lifting and do it faster than we can ever hope to
 	// 		do it in JS...
+	// 		Experiment result:
+	// 			- more uniform and fast across browsers 
+	// 				(except FF -- can't disable scrollbars, need to cheat)
+	// 			- less controllable
+	// 			- is affected by scaling in a bad way...
+	// 		Conclusion:
+	// 			- this again brings us to using code to control the scroll
+	// 			  which in turn defeats the original purpose of avoiding
+	// 			  extra complexity...
 	// XXX this is really slow/buggy on IE and odd on FF...
 	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
 		toggler.Toggler(null,
