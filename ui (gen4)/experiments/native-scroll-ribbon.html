@@ -221,7 +221,7 @@ var setup = function(){
 
 
 
-var ISCROLL = true
+var ISCROLL = false
 
 
 $(function(){
@@ -250,7 +250,9 @@ if(ISCROLL){
 
 	var t
 	$('.scaler').on('touchend mouseup', function(){
-		t = $('.ribbon-set')[0].style.transform
+		//t = $('.ribbon-set')[0].style.transform
+
+		t = $('.ribbon-set').offset().left
 	})
 	scroll_view.on('zoomEnd', function(){
 		var v = $('.viewer')
@@ -259,17 +261,26 @@ if(ISCROLL){
 		var W = v.width()
 		var H = v.width()
 
-		var e = $('.ribbon-set')[0]
+		var w = W/s
+		var h = H/s
+
+		var e = $('.ribbon-set')
 
 		// XXX compensate for offset -- scroll ribbons by to 
 		//	place them where they where under user's fingers...
-		console.log('>>>>', t)
-		scroll_ribbon.forEach(function(r){
-			// XXX ~(W/s - translateX)
+		// XXX this does not work...
+		/*
+		var d = (e.offset().left - t) * s
+		$('.ribbon').each(function(_, r){
+			$(r).velocity({
+				transformX: '+='+d,
+			}, 0)
 		})
+		*/
 
-		e.style.width = (W / s) + 'px'
-		e.style.height = (H / s) + 'px'
+		e = e[0]
+		e.style.width = w + 'px'
+		e.style.height = h + 'px'
 	})
 
 
@@ -283,6 +294,8 @@ if(ISCROLL){
 	//		- two fingers will trigger zoom
 	//		- for some reason if touching two ribbons while
 	//		  zooming they will move in the same direction...
+	//	- scrolling a ribbon does not account for scale...
+	//	  ...the same problem exists for native scroll...
 	window.scroll_ribbon = []
 	$('.ribbon-container')//.eq(0)
 		.css({
