@@ -300,14 +300,32 @@ var BrowserPrototype = {
 			'close',
 		],
 
-
-		// Separator element...
-	
-		// Element text as passed to make(..) to generate a separator
-		// element rather than a list element...
+		// Shorthand elements...
 		//
-		// NOTE: if null text checking is disabled...
-		elementSeparatorText: null,
+		// Format:
+		// 	{
+		// 		<key>: {
+		// 			class: <element-class-str>,
+		// 			html: <element-html-str>,
+		// 		},
+		// 		...
+		// 	}
+		//
+		// If make(..) gets passed <key> it will construct and element
+		// via <element-html-str> with an optional <element-class-str>
+		//
+		// NOTE: .class is optional...
+		// NOTE: set this to null to disable shorthands...
+		elementShorthand: {
+			'---': {
+				'class': 'separator',
+				'html': '<hr>'
+			},
+			'...': {
+				'class': 'separator',
+				'html': '<center><div class="loader"/></center>',
+			},
+		},
 
 		// Separator class...
 		//
@@ -315,11 +333,6 @@ var BrowserPrototype = {
 		// 		be treated as a separator and not as a list element.
 		// NOTE: to disable class checking set this to null
 		elementSeparatorClass: 'separator',
-
-		// Separator HTML code...
-		//
-		// NOTE: if this is null, then '<hr>' is used.
-		elementSeparatorHTML: '<hr>',
 	},
 
 	// XXX TEST: this should prevent event propagation...
@@ -873,15 +886,17 @@ var BrowserPrototype = {
 			buttons = buttons
 				|| (that.options.itemButtons && that.options.itemButtons.slice())
 
-			// special case separator...
-			if(p && (p == that.options.elementSeparatorText
+			// special case: shorthand...
+			if(p && (p in (that.options.elementShorthand || {})
 					|| (p.hasClass 
-						&& that.options.elementSeparatorClass 
-						&& p.hasClass(that.options.elementSeparatorClass)))){
+						&& p in that.options.elementShorthand
+						&& that.options.elementShorthand[p].class
+						&& p.hasClass(that.options.elementShorthand[p].class)))){
 				var res = p
+				var shorthand = that.options.elementShorthand[p]
 				if(typeof(res) == typeof('str')){
-					res = $(that.options.elementSeparatorHTML || '<hr>')
-						.addClass(that.options.elementSeparatorClass || '')
+					res = $(shorthand.html)
+						.addClass(shorthand.class || '')
 				}
 				res.appendTo(l)
 				return res
@@ -911,7 +926,7 @@ var BrowserPrototype = {
 				// XXX is this the correct way to do this???
 				var txt = p.text()
 				// XXX disable search???
-				console.warn('jQuery objects as browse list elements not yet fully supported.')
+				//console.warn('jQuery objects as browse list elements not yet fully supported.')
 
 			// str and other stuff...
 			} else {
@@ -2224,8 +2239,6 @@ ListerPrototype.options = {
 	skipDisabledItems: false,
 	// NOTE: to disable this set it to false or null
 	disableItemPattern: '^- ',
-
-	elementSeparatorText: '---',
 }
 // XXX should we inherit or copy options???
 // 		...inheriting might pose problems with deleting values reverting
@@ -2286,8 +2299,6 @@ ListPrototype.options = {
 	skipDisabledItems: false,
 	// NOTE: to disable this set it to false or null
 	disableItemPattern: '^- ',
-
-	elementSeparatorText: '---',
 
 	list: function(path, make){
 		var that = this

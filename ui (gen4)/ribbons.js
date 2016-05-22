@@ -2238,8 +2238,10 @@ var RibbonsPrototype = {
 
 				} else if((o == 0 || o == 180) && image_p != viewer_p){
 					image.css({
-						width: h,
-						height: w,
+						//width: h,
+						//height: w,
+						width: '',
+						height: '',
 
 						margin: '',
 					})
@@ -2248,7 +2250,10 @@ var RibbonsPrototype = {
 			// square image...
 			} else {
 				image.css({
-					'margin': '',
+					width: '',
+					height: '',
+
+					margin: '',
 				})
 			}
 		})

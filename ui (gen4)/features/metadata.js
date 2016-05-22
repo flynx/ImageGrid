@@ -564,7 +564,7 @@ module.MetadataFSUI = core.ImageGridFeatures.Feature({
 					// add a loading indicator...
 					// NOTE: this will get overwritten when calling .updateMetadata()
 					data.push('---')
-					data.push($('<center><div class="loader"/></center>'))
+					data.push('...')
 					client.update()
 
 					reader.then(function(data){

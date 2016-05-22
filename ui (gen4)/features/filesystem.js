@@ -594,7 +594,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 				}
 
 				// indicate that we are working...
-				var spinner = make($('<center><div class="loader"/></center>'))
+				var spinner = make('...')
 
 				// XXX we do not need to actually read anything....
 				//file.loadIndex(path, that.config['index-dir'], this.logger)
@@ -868,7 +868,7 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 				}
 
 				// indicate that we are working...
-				var spinner = make($('<center><div class="loader"/></center>'))
+				var spinner = make('...')
 
 				that.loadSaveHistoryList()
 					.catch(function(err){

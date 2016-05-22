@@ -17,8 +17,7 @@ var core = require('features/core')
 
 
 /*********************************************************************/
-// helper...
-
+//
 // Change image proportions depending on scale...
 //
 // A) Small image -- min(screenwidth, screenheight) > threshold
@@ -75,125 +74,6 @@ var core = require('features/core')
 //
 // NOTE: this in part does the same job as .ribbons.correctImageProportionsForRotation(..)
 //
-// XXX should this be an action???
-function updateImageProportions(){
-	var that = this
-	var threshold = this.config['single-image-proportions-threshold']
-
-	if(!threshold || threshold == -1){
-		return
-	}
-
-	var viewer = this.ribbons.viewer
-	var img = this.ribbons.getImage()
-
-	var w = img.outerWidth()
-	var h = img.outerHeight()
-
-	// inner diameter
-	var di = Math.min(h, w)
-	// outer diameter -- (m)ax
-	var dm = Math.max(h, w)
-	
-	//var c = Math.min(this.screenwidth, this.screenheight)
-	var c = this.screenfit 
-
-	// change proportions...
-	if(c < threshold){
-		var images = viewer.find('.ribbon .image')
-
-		var W = viewer.width()
-		var H = viewer.height()
-
-		// inner diameter
-		var Di = Math.min(W, H)
-		// outer diameter -- (m)ax
-		var Dm = Math.max(W, H)
-
-
-		// get dimensional scale....
-		var s = Di / di 
-		// image dimension delta...
-		var d = 
-			// the maximum difference between image and screen proportions...
-			(Dm / s - di) 
-				// coefficient: 0 : c == threshold  ->  1 : c == 1
-				* (threshold/c - 1)
-		// new size...
-		var n = di + d
-
-		// the amount to compensate ribbon offset for per image...
-		var x = n - dm
-
-
-		if(n == dm){
-			return
-		}
-
-		getAnimationFrame(function(){
-			that.ribbons.preventTransitions()
-
-			// horizontal viewer...
-			if(Di == H){
-				var a = 'width'
-				var b = 'height'
-
-			// vertical viewer...
-			} else {
-				var a = 'height'
-				var b = 'width'
-			}
-
-			images
-				.each(function(_, img){
-					var o = img.getAttribute('orientation')
-					o = o == null ? 0 : o
-
-					// rotated images...
-					if(o == 90 || o == 270){
-						img.style[a] = ''
-						img.style[b] = n + 'px'
-
-						img.style.margin = -(n - di)/2 +'px '+ (n - di)/2 +'px'
-
-					} else {
-						img.style[a] = n + 'px'
-						img.style[b] = ''
-
-						img.style.margin = ''
-					}
-				})
-		
-			that.ribbons
-				.centerImage()
-				.restoreTransitions(true)
-		})
-
-	// reset proportions to square...
-	} else if(w != h) {
-		var images = viewer.find('.ribbon .image')
-
-		getAnimationFrame(function(){
-			that.ribbons.preventTransitions()
-
-			images
-				.each(function(_, img){
-					img.style.width = ''
-					img.style.height = ''
-
-					img.style.margin = ''
-				})
-
-			that.ribbons
-				.centerImage()
-				.restoreTransitions(true)
-		})
-	}
-}
-
-
-
-//---------------------------------------------------------------------
 
 var SingleImageActions = actions.Actions({
 	config: {
@@ -222,6 +102,123 @@ var SingleImageActions = actions.Actions({
 		// XXX HACK...
 		'-single-image-redraw-on-focus': true,
 	},
+
+	updateImageProportions: ['- Interface/',
+		function(){
+			var that = this
+			var threshold = this.config['single-image-proportions-threshold']
+
+			if(!threshold || threshold == -1){
+				return
+			}
+
+			var viewer = this.ribbons.viewer
+			var img = this.ribbons.getImage()
+
+			var w = img.outerWidth()
+			var h = img.outerHeight()
+
+			// inner diameter
+			var di = Math.min(h, w)
+			// outer diameter -- (m)ax
+			var dm = Math.max(h, w)
+			
+			//var c = Math.min(this.screenwidth, this.screenheight)
+			var c = this.screenfit 
+
+			// change proportions...
+			if(c < threshold){
+				var images = viewer.find('.ribbon .image')
+
+				var W = viewer.width()
+				var H = viewer.height()
+
+				// inner diameter
+				var Di = Math.min(W, H)
+				// outer diameter -- (m)ax
+				var Dm = Math.max(W, H)
+
+
+				// get dimensional scale....
+				var s = Di / di 
+				// image dimension delta...
+				var d = 
+					// the maximum difference between image and screen proportions...
+					(Dm / s - di) 
+						// coefficient: 0 : c == threshold  ->  1 : c == 1
+						* (threshold/c - 1)
+				// new size...
+				var n = di + d
+
+				// the amount to compensate ribbon offset for per image...
+				var x = n - dm
+
+
+				if(n == dm){
+					return
+				}
+
+				getAnimationFrame(function(){
+					that.ribbons.preventTransitions()
+
+					// horizontal viewer...
+					if(Di == H){
+						var a = 'width'
+						var b = 'height'
+
+					// vertical viewer...
+					} else {
+						var a = 'height'
+						var b = 'width'
+					}
+
+					images
+						.each(function(_, img){
+							var o = img.getAttribute('orientation')
+							o = o == null ? 0 : o
+
+							// rotated images...
+							if(o == 90 || o == 270){
+								img.style[a] = ''
+								img.style[b] = n + 'px'
+
+								img.style.margin = -(n - di)/2 +'px '+ (n - di)/2 +'px'
+
+							} else {
+								img.style[a] = n + 'px'
+								img.style[b] = ''
+
+								img.style.margin = ''
+							}
+						})
+				
+					that.ribbons
+						.centerImage()
+						.restoreTransitions(true)
+				})
+
+			// reset proportions to square...
+			} else if(w != h) {
+				var images = viewer.find('.ribbon .image')
+
+				getAnimationFrame(function(){
+					that.ribbons.preventTransitions()
+
+					images
+						.each(function(_, img){
+							img.style.width = ''
+							img.style.height = ''
+
+							img.style.margin = ''
+						})
+
+					that.ribbons
+						.centerImage()
+						.restoreTransitions(true)
+				})
+			}
+		}],
+
 
 	toggleSingleImage: ['Interface/Toggle single image view', 
 		toggler.CSSClassToggler(
@@ -278,7 +275,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 				// singe image mode -- set image proportions...
 				if(this.toggleSingleImage('?') == 'on'){
-					updateImageProportions.call(this)
+					this.updateImageProportions()
 
 					this.config['single-image-scale'] = 
 						this[this.config['single-image-scale-unit']]
@@ -292,7 +289,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 		['resizeRibbon',
 			function(){
 				if(this.toggleSingleImage('?') == 'on'){
-					updateImageProportions.call(this)
+					this.updateImageProportions()
 				}
 			}],
 		// NOTE: this is not part of the actual action above because we 
@@ -319,7 +316,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 									|| this[this.config['single-image-scale-unit']]
 						}
 
-						updateImageProportions.call(this)
+						this.updateImageProportions()
 
 					// ribbon mode -- restore original image size...
 					} else {

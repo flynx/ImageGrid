@@ -107,7 +107,7 @@ var SharpActions = actions.Actions({
 			sizes = (this.config['preview-normalized'] ? 
 				sizes
 					.map(function(s){ 
-						return cfg_sizes.filter(function(c){ return c > s }).pop() || s })
+						return cfg_sizes.filter(function(c){ return c >= s }).pop() || s })
 				: sizes)
 					.unique()
 
