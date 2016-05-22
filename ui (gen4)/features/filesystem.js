@@ -46,6 +46,38 @@ if(typeof(process) != 'undefined'){
 
 
 /*********************************************************************/
+
+var FileSystemInfoActions = actions.Actions({
+	getImagePath: ['- System/',
+		function(gid, type){
+			gid = this.data.getImage(gid)
+
+			var img = this.images[gid]
+
+			return pathlib.join(img.base_path || this.location.path, img.path)
+		}],
+})
+
+
+var FileSystemInfo = 
+module.FileSystemInfo = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'fs-info',
+	depends: [
+		'location',
+	],
+
+	actions: FileSystemInfoActions,
+
+	isApplicable: function(){ 
+		return this.runtime == 'node' || this.runtime == 'nw' },
+})
+
+
+
+/*********************************************************************/
 // Loader... 
 
 
@@ -398,6 +430,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-loader',
 	depends: [
+		'fs-info',
 		'location',
 		'tasks',
 	],
@@ -411,24 +444,6 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 
 	isApplicable: function(){ 
 		return this.runtime == 'node' || this.runtime == 'nw' },
-
-	handlers: [
-		// save/resore .savecomments
-		// 
-		['json',
-			function(res){
-				if(this.savecomments != null){
-					res.savecomments = JSON.parse(JSON.stringify(this.savecomments))
-				}
-			}],
-		['load',
-			function(_, data){
-				if(data.savecomments != null){
-					this.savecomments = data.savecomments
-				}
-			}],
-
-	],
 })
 
 
@@ -720,6 +735,21 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 	actions: FileSystemSaveHistoryActions,
 
 	handlers: [
+		// save/resore .savecomments
+		// 
+		['json',
+			function(res){
+				if(this.savecomments != null){
+					res.savecomments = JSON.parse(JSON.stringify(this.savecomments))
+				}
+			}],
+		['load',
+			function(_, data){
+				if(data.savecomments != null){
+					this.savecomments = data.savecomments
+				}
+			}],
+
 		// Prepare comments for writing...
 		//
 		// NOTE: defining this here enables us to actually post-bind to
@@ -1939,6 +1969,7 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 core.ImageGridFeatures.Feature('fs', [
+	'fs-info',
 	'fs-loader',
 	'fs-writer',
 ])

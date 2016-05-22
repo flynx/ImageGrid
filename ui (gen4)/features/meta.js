@@ -52,6 +52,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui',
 	'keyboard',
 
+	'sharp',
+
 	'ui-ribbons-placement',
 
 	'ui-fullscreen-controls',

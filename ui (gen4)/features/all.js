@@ -35,6 +35,7 @@ require('features/demo')
 // node features...
 if(typeof(window) == 'undefined' || window.nodejs != null){
 	require('features/filesystem')
+	require('features/sharp')
 	require('features/cli')
 }
 

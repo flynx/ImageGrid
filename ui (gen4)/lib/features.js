@@ -487,7 +487,7 @@ module.FeatureSet = {
 			}
 
 			// check applicability...
-			if(!e.isApplicable.call(that, obj)){
+			if(e.isApplicable && !e.isApplicable.call(that, obj)){
 				unapplicable.push(n)
 				return false
 			}

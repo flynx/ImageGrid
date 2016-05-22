@@ -23,6 +23,7 @@
     "fs-walk": "0.0.1",
     "glob": "^4.0.6",
     "guarantee-events": "^1.0.0",
+    "openseadragon": "^2.1.0",
     "requirejs": "^2.1.23",
     "sharp": "^0.12.0"
   },
