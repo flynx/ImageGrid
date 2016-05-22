@@ -21,6 +21,7 @@ try{
 }
 
 if(typeof(process) != 'undefined'){
+	var cp = requirejs('child_process')
 	var fse = requirejs('fs-extra')
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
@@ -45,14 +46,28 @@ var SharpActions = actions.Actions({
 		'preview-normalized': true,
 
 		'preview-sizes': [
-			//1920,
-			//1280,
+			1920,
+			1280,
 			900,
 			350,
 			150,
 			75,
 		]
 	},
+
+	// XXX BUG (nw.js): this does not work until child_process.fork(..) is fixed...
+	startWorker: ['- Sharp/',
+		function(){
+			if(this.previewConstructorWorker){
+				return
+			}
+			this.previewConstructorWorker = cp.form('./worker/preview-constructor')
+		}],
+	stopWorker: ['- Sharp/',
+		function(){
+			this.previewConstructorWorker && this.previewConstructorWorker.kill()
+			delete this.previewConstructorWorker
+		}],
 
 	//	.makePreviews()
 	//	.makePreviews('current')
@@ -68,6 +83,7 @@ var SharpActions = actions.Actions({
 	//		-> actions
 	//
 	// XXX should this account for non-jpeg images???
+	// XXX do this in the background...
 	makePreviews: ['Sharp/Make image previews',
 		function(images, sizes, logger){
 			logger = logger || this.logger
@@ -173,6 +189,10 @@ module.Sharp = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ return !!sharp },
 
 	handlers: [
+		// XXX need to:
+		// 		- if image too large to set the preview to "loading..."
+		// 		- create previews...
+		// 		- update image...
 		['updateImage.pre',
 			function(gid){
 				var that = this
@@ -180,9 +200,18 @@ module.Sharp = core.ImageGridFeatures.Feature({
 					sharp(this.getImagePath(gid))
 						.metadata()
 						.then(function(metadata){
+							// current image is larger than any of the previews...
 							if(Math.max(metadata.width, metadata.height) 
 									> Math.max.apply(Math, that.config['preview-sizes'])){
-								that.makePreviews(gid)
+								// create the currently needed preview first...
+								that.makePreviews(gid, that.ribbons.getVisibleImageSize())
+									.then(function(){
+										// load the created preview...
+										that.ribbons.updateImage(gid)
+
+										// create the rest...
+										that.makePreviews(gid)
+									})
 							}
 						})
 				}
