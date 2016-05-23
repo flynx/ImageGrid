@@ -279,50 +279,55 @@ var FileSystemLoaderActions = actions.Actions({
 				method: 'loadImages',
 			}
 
-			glob(path + '/'+ this.config['image-file-pattern'], 
-					{stat: !!this.config['image-file-read-stat']})
-				.on('error', function(err){
-					console.log('!!!!', err)
-				})
-				/*
-				.on('match', function(img){
-					// XXX stat stuff...
-					fse.statSync(img)
-				})
-				*/
-				.on('end', function(lst){ 
-					that.loadURLs(lst, path)
-					// XXX do we need to normalize paths after we get them from glob??
-					//that.loadURLs(lst.map(pathlib.posix.normalize), path)
-					//that.loadURLs(lst
-					//	.map(function(p){ return util.normalizePath(p) }), path)
+			return new Promise(function(resolve, reject){
+				glob(path + '/'+ that.config['image-file-pattern'], 
+						{stat: !!that.config['image-file-read-stat']})
+					.on('error', function(err){
+						console.log('!!!!', err)
+						reject(err)
+					})
+					/*
+					.on('match', function(img){
+						// XXX stat stuff...
+						fse.statSync(img)
+					})
+					*/
+					.on('end', function(lst){ 
+						that.loadURLs(lst, path)
+						// XXX do we need to normalize paths after we get them from glob??
+						//that.loadURLs(lst.map(pathlib.posix.normalize), path)
+						//that.loadURLs(lst
+						//	.map(function(p){ return util.normalizePath(p) }), path)
 
-					if(!!that.config['image-file-read-stat']){
-						var stats = this.statCache
-						var p = pathlib.posix
+						if(!!that.config['image-file-read-stat']){
+							var stats = this.statCache
+							var p = pathlib.posix
 
-						that.images.forEach(function(gid, img){
-							var stat = stats[p.join(img.base_path, img.path)]
+							that.images.forEach(function(gid, img){
+								var stat = stats[p.join(img.base_path, img.path)]
 
-							img.atime = stat.atime
-							img.mtime = stat.mtime
-							img.ctime = stat.ctime
-							img.birthtime = stat.birthtime
+								img.atime = stat.atime
+								img.mtime = stat.mtime
+								img.ctime = stat.ctime
+								img.birthtime = stat.birthtime
 
-							img.size = stat.size
+								img.size = stat.size
 
-							// XXX do we need anything else???
-						})
-					}
+								// XXX do we need anything else???
+							})
+						}
 
-					// NOTE: we set it again because .loadURLs() does a clear
-					// 		before it starts loading...
-					// 		XXX is this a bug???
-					that.__location = {
-						path: path,
-						method: 'loadImages',
-					}
-				})
+						// NOTE: we set it again because .loadURLs() does a clear
+						// 		before it starts loading...
+						// 		XXX is this a bug???
+						that.__location = {
+							path: path,
+							method: 'loadImages',
+						}
+
+						resolve(that)
+					})
+			})
 		}],
 
 	// XXX auto-detect format or let the user chose...
@@ -1087,6 +1092,7 @@ var FileSystemWriterActions = actions.Actions({
 		// 		- vertical
 		// 		- horizontal
 		// 		- ...
+		// XXX this repeats sharp.SharpActions.config['preview-sizes']
 		'export-preview-sizes': [
 			'500',
 			'900',

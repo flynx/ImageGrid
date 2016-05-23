@@ -39,6 +39,7 @@ core.ImageGridFeatures.Feature('viewer-minimal', [
 	'image-bookmarks',
 
 	'fs',
+	'sharp',
 
 	'metadata',
 ])
@@ -51,8 +52,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'workspace',
 	'ui',
 	'keyboard',
-
-	'sharp',
 
 	'ui-ribbons-placement',
 

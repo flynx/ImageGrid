@@ -43,16 +43,36 @@ var base = require('features/base')
 // 		alone at first and then either create new instances or setup 
 // 		additional features as needed...
 
+
+
+var CLIActions = actions.Actions({
+	makeIndex: ['- System/',
+		function(path){
+			var that = this
+
+			return this.loadImages(path)
+				.then(function(){ return that.makePreviews('all') })
+				.then(function(){ return that.sortImages() })
+				//.then(function(){ return that.readAllMetadata() })
+				.then(function(){ return that.saveIndex() })
+		}],
+})
+
+
 var CLI = 
 module.CLI = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
 	tag: 'commandline',
-	depends: ['lifecycle'],
+	depends: [
+		'lifecycle'
+	],
 
 	isApplicable: function(){ 
 		return this.runtime == 'node' || this.runtime == 'nw' },
+
+	actions: CLIActions,
 
 	handlers: [
 		['start',
@@ -133,6 +153,45 @@ module.CLI = core.ImageGridFeatures.Feature({
 							.setup(that, ['viewer-minimal'])
 					})
 
+					.option('repl, --repl', 'start an ImageGrin REPL', function(){
+						//var repl = require('repl')
+
+						//var ig = core.ImageGridFeatures
+
+						repl.start({
+							prompt: 'ig> ',
+
+							input: process.stdin,
+							output: process.stdout,
+
+							ignoreUndefined: true,
+
+							/*
+							eval: function(str, context, filename, callback){
+								var res
+
+								var lst = str.split(/\s+/)
+								var cmd = lst.shift()
+
+								// we got an action...
+								if(cmd == 'var'){
+									eval(str, context, filename, callback)
+
+								// action...
+								} else if(cmd in ig){
+									ig[cmd].apply(ig, lst.map(eval))
+
+								// err
+								} else {
+									// XXX
+								}
+
+								callback(null, res)
+							},
+							*/
+						})
+					})
+
 					// XXX the problem with this is that it still tires 
 					// 		to find and run 'ig-index'...
 					/*
@@ -147,7 +206,9 @@ module.CLI = core.ImageGridFeatures.Feature({
 					.arguments('<action> [args]')
 					.action(function(action, args){
 						// XXX
-						console.log('>>>>', action, args)
+						//console.log('>>>>', action, args, !!that[action])
+
+						that[action](args)
 					})
 
 					.parse(argv)

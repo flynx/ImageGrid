@@ -1035,10 +1035,13 @@ var WidgetTestActions = actions.Actions({
 
 				make('---')
 
+
 				make('close parent')
 					.on('open', function(){
 						that.parent.close()
 					})
+
+				make('...')
 
 				// NOTE: the dialog's .parent is not yet set at this point...
 

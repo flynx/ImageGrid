@@ -45,6 +45,7 @@ var SharpActions = actions.Actions({
 
 		'preview-normalized': true,
 
+		// XXX this repeats filesystem.FileSystemWriterActions.config['export-preview-sizes']
 		'preview-sizes': [
 			1920,
 			1280,
@@ -100,30 +101,32 @@ var SharpActions = actions.Actions({
 				.sort()
 				.reverse()
 
-			sizes = sizes || cfg_sizes
-			sizes = sizes instanceof Array ? sizes : [sizes]
+			if(sizes){
+				sizes = sizes instanceof Array ? sizes : [sizes]
+				// normalize to preview size...
+				sizes = (this.config['preview-normalized'] ? 
+					sizes
+						.map(function(s){ 
+							return cfg_sizes.filter(function(c){ return c >= s }).pop() || s })
+					: sizes)
+						.unique()
 
-			// normalize to preview size...
-			sizes = (this.config['preview-normalized'] ? 
-				sizes
-					.map(function(s){ 
-						return cfg_sizes.filter(function(c){ return c >= s }).pop() || s })
-				: sizes)
-					.unique()
+			} else {
+				sizes = cfg_sizes
+			}
 
 			var that = this
 			return Promise.all(images.map(function(gid){
 				var data = that.images[gid]
-				var preview = data.preview = data.preview || {}
 				var path = that.getImagePath(gid)
 
-				var img = sharp(path)
+				var preview = data.preview = data.preview || {}
 
+				var img = sharp(path)
 				return img.metadata().then(function(metadata){
 					var orig_res = Math.max(metadata.width, metadata.height)
 
 					return Promise.all(sizes.map(function(res){
-
 						// skip if image is smaller than res...
 						if(res >= orig_res){
 							return 
@@ -193,6 +196,7 @@ module.Sharp = core.ImageGridFeatures.Feature({
 		// 		- if image too large to set the preview to "loading..."
 		// 		- create previews...
 		// 		- update image...
+		/*
 		['updateImage.pre',
 			function(gid){
 				var that = this
@@ -216,6 +220,7 @@ module.Sharp = core.ImageGridFeatures.Feature({
 						})
 				}
 			}]
+		//*/
 	],
 })
 
