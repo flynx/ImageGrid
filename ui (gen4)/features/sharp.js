@@ -57,14 +57,14 @@ var SharpActions = actions.Actions({
 	},
 
 	// XXX BUG (nw.js): this does not work until child_process.fork(..) is fixed...
-	startWorker: ['- Sharp/',
+	startPreviewWorker: ['- Sharp/',
 		function(){
 			if(this.previewConstructorWorker){
 				return
 			}
-			this.previewConstructorWorker = cp.form('./worker/preview-constructor.js')
+			this.previewConstructorWorker = cp.fork('./workers/preview-constructor.js')
 		}],
-	stopWorker: ['- Sharp/',
+	stopPreviewWorker: ['- Sharp/',
 		function(){
 			this.previewConstructorWorker && this.previewConstructorWorker.kill()
 			delete this.previewConstructorWorker
