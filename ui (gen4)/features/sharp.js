@@ -62,13 +62,14 @@ var SharpActions = actions.Actions({
 			if(this.previewConstructorWorker){
 				return
 			}
-			this.previewConstructorWorker = cp.form('./worker/preview-constructor')
+			this.previewConstructorWorker = cp.form('./worker/preview-constructor.js')
 		}],
 	stopWorker: ['- Sharp/',
 		function(){
 			this.previewConstructorWorker && this.previewConstructorWorker.kill()
 			delete this.previewConstructorWorker
 		}],
+
 
 	//	.makePreviews()
 	//	.makePreviews('current')
