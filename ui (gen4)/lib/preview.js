@@ -4,19 +4,16 @@
 *
 **********************************************************************/
 
-var sharp = require('sharp')
+define(function(require){ var module = {}
 
-var requirejs = require('requirejs')
-
+//var DEBUG = DEBUG != null ? DEBUG : true
 
 
 /*********************************************************************/
 
-process.on('message', function(m){
-	console.log('Got:', m)
-})
 
 
 
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
+return module })
