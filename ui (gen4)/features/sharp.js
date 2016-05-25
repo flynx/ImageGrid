@@ -63,7 +63,27 @@ var SharpActions = actions.Actions({
 			if(this.previewConstructorWorker){
 				return
 			}
-			this.previewConstructorWorker = cp.fork('./workers/preview-constructor.js')
+			this.previewConstructorWorker = cp.fork(
+				'./workers/preview-constructor.js', {
+					cwd: process.cwd(),
+				})
+				.on('message', function(res){
+					if(res.err){
+						// XXX
+						console.error(res)
+					
+					} else {
+						var ticket = res.ticket
+						if(res.status == 'completed'){
+							// XXX clear the listener...
+							// XXX
+						
+						} else {
+							// XXX get listener and pass it the res.data
+							// XXX
+						}
+					}
+				})
 		}],
 	stopPreviewWorker: ['- Sharp/',
 		function(){
@@ -142,28 +162,43 @@ var SharpActions = actions.Actions({
 			var path_tpl = that.config['preview-path-template']
 				.replace(/\$INDEX|\$\{INDEX\}/g, that.config['index-dir'] || '.ImageGrid')
 
-
-			// now do the work...
-			return Promise.all(Object.keys(data).map(function(base_path){
-				return preview.makePreviews(
-					data[base_path], 
-					sizes, 
-					base_path, 
-					path_tpl, 
-					function(err, data){
-						if(data.status == 'done' || data.status == 'skipped'){
-							// get/make preview list...
-							var preview = that.images[data.gid].preview =
-								that.images[data.gid].preview || {}
-
-							preview[data.res + 'px'] = data.path
-
-							that.markChanged(data.gid)
-						}	
-
-						logger && logger.emit(data.status, data.path)
+			// now do the work (async)...
+			if(this.previewConstructorWorker){
+				return Promise.all(Object.keys(data).map(function(base_path){
+					// XXX need feedback...
+					// XXX need to resolve the promises on completion...
+					// XXX need to update image data and mark images as changed...
+					that.previewConstructorWorker.send({
+						images: data[base_path], 
+						sizes: sizes, 
+						base_path: base_path, 
+						target_tpl: path_tpl, 
 					})
-			}))
+				}))
+
+			// now do the work (sync)...
+			} else {
+				return Promise.all(Object.keys(data).map(function(base_path){
+					return preview.makePreviews(
+						data[base_path], 
+						sizes, 
+						base_path, 
+						path_tpl, 
+						function(err, data){
+							if(data.status == 'done' || data.status == 'skipped'){
+								// get/make preview list...
+								var preview = that.images[data.gid].preview =
+									that.images[data.gid].preview || {}
+
+								preview[data.res + 'px'] = data.path
+
+								that.markChanged(data.gid)
+							}	
+
+							logger && logger.emit(data.status, data.path)
+						})
+				}))
+			}
 		}],
 })
 
