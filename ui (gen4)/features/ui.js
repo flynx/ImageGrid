@@ -2235,7 +2235,9 @@ module.FailsafeDevTools = core.ImageGridFeatures.Feature({
 	handlers: [
 		['start',
 			function(){
-				window.__devtools_failsafe && clearTimeout(window.__devtools_failsafe) }],
+				// NOTE: this is set in index.html
+				window.__devtools_failsafe 
+					&& clearTimeout(window.__devtools_failsafe) }],
 	],
 })
 

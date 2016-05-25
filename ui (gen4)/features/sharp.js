@@ -10,6 +10,7 @@ define(function(require){ var module = {}
 
 var actions = require('lib/actions')
 var features = require('lib/features')
+var preview = require('lib/preview')
 
 var core = require('features/core')
 
@@ -17,7 +18,7 @@ try{
 	var sharp = requirejs('sharp')
 
 } catch(err){
-	sharp = null
+	var sharp = null
 }
 
 if(typeof(process) != 'undefined'){
@@ -41,7 +42,7 @@ if(typeof(process) != 'undefined'){
 
 var SharpActions = actions.Actions({
 	config: {
-		'preview-path': '$INDEX/$RESOLUTIONpx',
+		'preview-path-template': '${INDEX}/${RESOLUTION}px/${GID} - ${NAME}.jpg',
 
 		'preview-normalized': true,
 
@@ -87,9 +88,12 @@ var SharpActions = actions.Actions({
 	// XXX should this account for non-jpeg images???
 	// XXX do this in the background...
 	makePreviews: ['Sharp/Make image previews',
-		function(images, sizes, logger){
+		function(images, sizes, base_path, logger){
+			var that = this
 			logger = logger || this.logger
 
+
+			// get/normalize images...
 			images = images || this.current
 			// keywords...
 			images = images == 'all' ? this.data.getImages('all')
@@ -97,7 +101,26 @@ var SharpActions = actions.Actions({
 				: images
 			images = images instanceof Array ? images : [images]
 
-			var cfg_sizes = this.config['preview-sizes'] || []
+			// NOTE: if base_path is not provided this will base the 
+			// 		previews in .base_path for each image, usually this
+			// 		is where the index resides but might not be the 
+			// 		case for compound indexes...
+			var data = {}
+			images.forEach(function(gid){
+				var img = that.images[gid]
+				var base = base_path || img.base_path || that.location.path
+
+				var d = data[base] = data[base] || []
+
+				d.push({
+					source: that.getImagePath(gid),
+					gid: gid,
+				})
+			})
+
+
+			// get/normalize sizes....
+			var cfg_sizes = this.config['preview-sizes'].slice() || []
 			cfg_sizes
 				.sort()
 				.reverse()
@@ -116,64 +139,30 @@ var SharpActions = actions.Actions({
 				sizes = cfg_sizes
 			}
 
-			var that = this
-			return Promise.all(images.map(function(gid){
-				var data = that.images[gid]
-				var path = that.getImagePath(gid)
+			var path_tpl = that.config['preview-path-template']
+				.replace(/\$INDEX|\$\{INDEX\}/g, that.config['index-dir'] || '.ImageGrid')
 
-				var preview = data.preview = data.preview || {}
 
-				var img = sharp(path)
-				return img.metadata().then(function(metadata){
-					var orig_res = Math.max(metadata.width, metadata.height)
+			// now do the work...
+			return Promise.all(Object.keys(data).map(function(base_path){
+				return preview.makePreviews(
+					data[base_path], 
+					sizes, 
+					base_path, 
+					path_tpl, 
+					function(err, data){
+						if(data.status == 'done' || data.status == 'skipped'){
+							// get/make preview list...
+							var preview = that.images[data.gid].preview =
+								that.images[data.gid].preview || {}
 
-					return Promise.all(sizes.map(function(res){
-						// skip if image is smaller than res...
-						if(res >= orig_res){
-							return 
-						}
+							preview[data.res + 'px'] = data.path
 
-						var ext = data.ext || ''
+							that.markChanged(data.gid)
+						}	
 
-						// build the target path...
-						var target = (that.config['preview-path'] || '$INDEX')
-							.replace(/\$INDEX|\$\{INDEX\}/g, that.config['index-dir'])
-							.replace(/\$RESOLUTION|\$\{RESOLUTION\}/g, res)
-						// XXX do we need to account for non-jpeg extensions???
-						var target = pathlib.join(target, gid +' - '+ data.name + ext)
-
-						var base = data.base_path || that.location.path
-						var path = pathlib.join(base, target)
-
-						logger && logger.emit('queued', target)
-
-						return ensureDir(pathlib.dirname(path))
-							.then(function(){
-								// check if image exists...
-								if(fse.existsSync(path)){
-									preview[res + 'px'] = target
-									that.markChanged(gid)
-
-									logger && logger.emit('skipped', target)
-
-									return
-								}
-							
-								return img.clone()
-									.resize(res, res)
-									.max()
-									.interpolateWith('nohalo')
-									.withMetadata()
-									.toFile(path)
-										.then(function(){
-											preview[res + 'px'] = target
-											that.markChanged(gid)
-
-											logger && logger.emit('done', target)
-										})
-							})
-					}))
-				})
+						logger && logger.emit(data.status, data.path)
+					})
 			}))
 		}],
 })
