@@ -57,9 +57,12 @@ var SharpActions = actions.Actions({
 		]
 	},
 
-	// XXX BUG (nw.js): this does not work until child_process.fork(..) is fixed...
+	// NOTE: post handlers are pushed in .makePreviews(..)
+	// XXX might be a good idea to make this a bit more generic...
+	// XXX might be a good idea to use tasks to throttle....
 	startPreviewWorker: ['- Sharp/',
 		function(){
+			var that = this
 			if(this.previewConstructorWorker){
 				return
 			}
@@ -74,16 +77,18 @@ var SharpActions = actions.Actions({
 					
 					} else {
 						var ticket = res.ticket
+						// clear listener...
 						if(res.status == 'completed'){
-							// XXX clear the listener...
-							// XXX
+							that.previewConstructorWorker.__post_handlers[res.ticket](null, 'completed')
+							delete that.previewConstructorWorker.__post_handlers[res.ticket]
 						
 						} else {
-							// XXX get listener and pass it the res.data
-							// XXX
+							that.previewConstructorWorker.__post_handlers[res.ticket](res.err, res.data)
 						}
 					}
 				})
+
+			this.previewConstructorWorker.__post_handlers = {}
 		}],
 	stopPreviewWorker: ['- Sharp/',
 		function(){
@@ -106,7 +111,6 @@ var SharpActions = actions.Actions({
 	//		-> actions
 	//
 	// XXX should this account for non-jpeg images???
-	// XXX do this in the background...
 	makePreviews: ['Sharp/Make image previews',
 		function(images, sizes, base_path, logger){
 			var that = this
@@ -162,17 +166,49 @@ var SharpActions = actions.Actions({
 			var path_tpl = that.config['preview-path-template']
 				.replace(/\$INDEX|\$\{INDEX\}/g, that.config['index-dir'] || '.ImageGrid')
 
+			var post_handler = function(err, data){
+				if(data.status == 'done' || data.status == 'skipped'){
+					// get/make preview list...
+					var preview = that.images[data.gid].preview =
+						that.images[data.gid].preview || {}
+
+					preview[data.res + 'px'] = data.path
+
+					that.markChanged(data.gid)
+				}	
+
+				logger && logger.emit(data.status, data.path)
+			}
+
 			// now do the work (async)...
 			if(this.previewConstructorWorker){
 				return Promise.all(Object.keys(data).map(function(base_path){
-					// XXX need feedback...
-					// XXX need to resolve the promises on completion...
-					// XXX need to update image data and mark images as changed...
-					that.previewConstructorWorker.send({
-						images: data[base_path], 
-						sizes: sizes, 
-						base_path: base_path, 
-						target_tpl: path_tpl, 
+					return new Promise(function(resolve, reject){
+						var ticket = Date.now()
+						while(ticket in that.previewConstructorWorker.__post_handlers){
+							ticket = Date.now()
+						}
+
+						that.previewConstructorWorker.send({
+							ticket: ticket,
+
+							images: data[base_path], 
+							sizes: sizes, 
+							base_path: base_path, 
+							target_tpl: path_tpl, 
+						})
+						that.previewConstructorWorker.__post_handlers[ticket] = function(err, data){
+							// XXX
+							if(err){
+								reject(err)
+							}
+							if(data == 'completed'){
+								resolve()
+
+							} else {
+								post_handler(err, data)
+							}
+						} 
 					})
 				}))
 
@@ -180,23 +216,7 @@ var SharpActions = actions.Actions({
 			} else {
 				return Promise.all(Object.keys(data).map(function(base_path){
 					return preview.makePreviews(
-						data[base_path], 
-						sizes, 
-						base_path, 
-						path_tpl, 
-						function(err, data){
-							if(data.status == 'done' || data.status == 'skipped'){
-								// get/make preview list...
-								var preview = that.images[data.gid].preview =
-									that.images[data.gid].preview || {}
-
-								preview[data.res + 'px'] = data.path
-
-								that.markChanged(data.gid)
-							}	
-
-							logger && logger.emit(data.status, data.path)
-						})
+						data[base_path], sizes, base_path, path_tpl, post_handler)
 				}))
 			}
 		}],
