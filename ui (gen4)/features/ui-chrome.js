@@ -51,7 +51,7 @@ var BoundsIndicatorsActions = actions.Actions({
 
 			if(indicator.length == 0){
 				indicator = $('<div>')
-					.addClass(cls.replace('.', '') +' '+ this.tag)
+					.addClass(cls.replace('.', ''))
 					.appendTo(this.ribbons.viewer)
 			}
 
