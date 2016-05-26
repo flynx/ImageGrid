@@ -42,19 +42,10 @@ if(typeof(process) != 'undefined'){
 
 var SharpActions = actions.Actions({
 	config: {
-		'preview-path-template': '${INDEX}/${RESOLUTION}px/${GID} - ${NAME}.jpg',
-
 		'preview-normalized': true,
 
-		// XXX this repeats filesystem.FileSystemWriterActions.config['export-preview-sizes']
-		'preview-sizes': [
-			1920,
-			1280,
-			900,
-			350,
-			150,
-			75,
-		]
+		// NOTE: this uses 'preview-sizes' and 'preview-path-template' 
+		// 		from filesystem.IndexFormat...
 	},
 
 	// NOTE: post handlers are pushed in .makePreviews(..)
@@ -222,6 +213,8 @@ var SharpActions = actions.Actions({
 		}],
 })
 
+
+// XXX need to auto-generate previews for very large images...
 var Sharp = 
 module.Sharp = core.ImageGridFeatures.Feature({
 	title: '',
@@ -230,6 +223,7 @@ module.Sharp = core.ImageGridFeatures.Feature({
 	tag: 'sharp',
 	depends: [
 		'location',
+		'index-format',
 	],
 
 	actions: SharpActions, 

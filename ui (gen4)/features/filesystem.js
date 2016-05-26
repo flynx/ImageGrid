@@ -47,6 +47,41 @@ if(typeof(process) != 'undefined'){
 
 /*********************************************************************/
 
+var IndexFormat = 
+module.IndexFormat = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'index-format',
+
+	config: {
+		'index-dir': '.ImageGrid',
+
+		'preview-sizes': [
+			75,
+			150,
+			350,
+			900,
+			1000,
+			1280,
+			1920,
+		],
+
+		// Supported fields:
+		// 	$INDEX			- index directory name
+		// 	$RESOLUTION		- preview resolution
+		// 	$GID			- image GID
+		// 	$NAME			- image name
+		//
+		// XXX make this used in loader too...
+		'preview-path-template': '${INDEX}/${RESOLUTION}px/${GID} - ${NAME}.jpg',
+	},
+})
+
+
+
+/*********************************************************************/
+
 var FileSystemInfoActions = actions.Actions({
 	getImagePath: ['- System/',
 		function(gid, type){
@@ -67,6 +102,7 @@ module.FileSystemInfo = core.ImageGridFeatures.Feature({
 	tag: 'fs-info',
 	depends: [
 		'location',
+		'index-format',
 	],
 
 	actions: FileSystemInfoActions,
@@ -84,8 +120,6 @@ module.FileSystemInfo = core.ImageGridFeatures.Feature({
 // NOTE: this will also manage .location.from
 var FileSystemLoaderActions = actions.Actions({
 	config: {
-		'index-dir': '.ImageGrid',
-
 		'image-file-pattern': '*+(jpg|jpeg|png|JPG|JPEG|PNG)',
 
 		'image-file-read-stat': true,
@@ -1085,7 +1119,6 @@ var FileSystemWriterActions = actions.Actions({
 			'select',
 		],
 
-		'export-preview-size': 1000,
 		// XXX add options to indicate:
 		// 		- long side
 		// 		- short side
@@ -1094,12 +1127,12 @@ var FileSystemWriterActions = actions.Actions({
 		// 		- ...
 		// XXX this repeats sharp.SharpActions.config['preview-sizes']
 		'export-preview-sizes': [
-			'500',
 			'900',
 			'1000',
 			'1280',
 			'1920',
 		],
+		'export-preview-size': 1000,
 	},
 
 	// This can be:
@@ -1565,7 +1598,8 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 	tag: 'fs-writer',
 	// NOTE: this is mostly because of the base path handling...
 	depends: [
-		'fs-loader'
+		'fs-loader',
+		'index-format',
 	],
 	suggested: [
 		'ui-fs-writer',
@@ -1975,6 +2009,7 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 core.ImageGridFeatures.Feature('fs', [
+	'index-format',
 	'fs-info',
 	'fs-loader',
 	'fs-writer',
