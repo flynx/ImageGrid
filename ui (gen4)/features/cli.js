@@ -50,6 +50,9 @@ var CLIActions = actions.Actions({
 		function(path){
 			var that = this
 
+			// XXX is this correct???
+			path = path || this.location.path
+
 			return this.loadImages(path)
 				.then(function(){ return that.makePreviews('all') })
 				.then(function(){ return that.sortImages() })

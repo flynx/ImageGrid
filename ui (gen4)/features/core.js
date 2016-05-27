@@ -11,6 +11,7 @@ define(function(require){ var module = {}
 // XXX
 var DEBUG = typeof(DEBUG) != 'undefined' ? DEBUG : true
 
+var object = require('lib/object')
 var actions = require('lib/actions')
 var features = require('lib/features')
 var toggler = require('lib/toggler')
@@ -57,10 +58,19 @@ function(attr, states, a, b){
 
 /*********************************************************************/
 
-// Root ImageGrid.viewer object...
+// Root ImageGrid.viewer object constructor...
 //
+var ImageGrid = object.makeConstructor('ImageGrid', actions.MetaActions)
+
+// Root ImageGrid feature set....
 var ImageGridFeatures =
-module.ImageGridFeatures = Object.create(features.FeatureSet)
+module.ImageGridFeatures = new features.FeatureSet()
+
+// setup base instance constructor...
+ImageGridFeatures.__actions__ = function(){
+	return actions.Actions(ImageGrid())
+}
+
 
 
 //---------------------------------------------------------------------

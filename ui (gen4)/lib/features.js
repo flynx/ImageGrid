@@ -11,6 +11,7 @@ define(function(require){ var module = {}
 var args2array = require('lib/util').args2array
 
 var actions = require('lib/actions')
+var object = require('lib/object')
 
 
 
@@ -231,9 +232,9 @@ Feature.prototype = FeatureProto
 Feature.prototype.constructor = Feature
 
 
-var FeatureSet =
-module.FeatureSet = {
+var FeatureSetProto = {
 	__feature__: Feature,
+	__actions__: actions.Actions,
 
 	// if true, .setup(..) will report things it's doing... 
 	__verbose__: null,
@@ -582,7 +583,8 @@ module.FeatureSet = {
 			obj = null
 		}
 
-		obj = obj || actions.Actions()
+		obj = obj || (this.__actions__ || actions.Actions)()
+
 		lst = lst.constructor !== Array ? [lst] : lst
 		var features = this.buildFeatureList(obj, lst)
 		lst = features.features
@@ -658,10 +660,15 @@ module.FeatureSet = {
 }
 
 
+var FeatureSet =
+module.FeatureSet = object.makeConstructor('FeatureSet', FeatureSetProto)
+
+
 //---------------------------------------------------------------------
 
 var Features =
-module.Features = Object.create(FeatureSet)
+module.Features = new FeatureSet()
+
 
 
 

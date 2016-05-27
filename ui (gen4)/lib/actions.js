@@ -1202,8 +1202,13 @@ module.MetaActions = {
 		if(this.__proto__.config && !Object.hasOwnProperty(this, 'config')){
 			this.config = Object.create(this.__proto__.config)
 		}
-	}
+	},
 }
+
+
+var ActionSet =
+module.ActionSet =
+object.makeConstructor('ActionSet', MetaActions)
 
 
 
@@ -1249,13 +1254,12 @@ module.MetaActions = {
 //
 // XXX add doc, ldoc, tags and save them to each action...
 // XXX is .config processing correct here???
-// XXX should this be a full fledged object???
 var Actions =
 module.Actions =
 function Actions(a, b){
 	var obj = b == null ? a : b
-	var proto = b == null ? MetaActions : a
-	obj = obj || {}
+	var proto = b == null ? b : a
+	obj = obj || new ActionSet()
 
 	// NOTE: this is intentionally done only for own attributes...
 	Object.keys(obj).forEach(function(k){
