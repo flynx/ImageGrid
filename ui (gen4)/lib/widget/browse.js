@@ -2195,25 +2195,6 @@ var BrowserPrototype = {
 }
 
 
-/*
-// nw.js copy/paste handling...
-//
-// XXX not sure if we actually need these...
-if(NW){
-	// override copy...
-	BrowserPrototype.keyboard.General.C = {
-		ctrl: 'copy!',
-	}
-	BrowserPrototype.keyboard.General.X = 'C'
-
-	// override paste...
-	BrowserPrototype.keyboard.General.V = {
-		ctrl: 'paste!',
-	}
-}
-*/
-
-
 var Browser = 
 module.Browser = 
 object.makeConstructor('Browser', 
@@ -2228,7 +2209,7 @@ Browser.prototype.__proto__ = widget.Widget.prototype
 
 /*********************************************************************/
 
-var ListerPrototype = Object.create(BrowserPrototype)
+var ListerPrototype = Object.create(Browser.prototype)
 ListerPrototype.options = {
 	pathPrefix: '', 
 	fullPathEdit: false,
@@ -2244,7 +2225,7 @@ ListerPrototype.options = {
 // 		...inheriting might pose problems with deleting values reverting
 // 		them to default instead of nulling them and mutable options might
 // 		get overwritten...
-ListerPrototype.options.__proto__ = BrowserPrototype.options
+ListerPrototype.options.__proto__ = Browser.prototype.options
 
 var Lister = 
 module.Lister = 
@@ -2287,7 +2268,7 @@ module.makeLister = function(elem, lister, options){
 // disable this feature set it to false|null.
 // 	
 // NOTE: this essentially a different default configuration of Browser...
-var ListPrototype = Object.create(BrowserPrototype)
+var ListPrototype = Object.create(Browser.prototype)
 ListPrototype.options = {
 
 	pathPrefix: '', 
@@ -2354,7 +2335,7 @@ ListPrototype.options = {
 // 		...inheriting might pose problems with deleting values reverting
 // 		them to default instead of nulling them and mutable options might
 // 		get overwritten...
-ListPrototype.options.__proto__ = BrowserPrototype.options
+ListPrototype.options.__proto__ = Browser.prototype.options
 
 var List = 
 module.List = 
@@ -2463,7 +2444,7 @@ module.makeList = makeBrowserMaker(List)
 // NOTE: currently only trailing '*' are supported.
 //
 // XXX add support for '*' and '**' glob patterns...
-var PathListPrototype = Object.create(BrowserPrototype)
+var PathListPrototype = Object.create(Browser.prototype)
 PathListPrototype.options = {
 
 	fullPathEdit: true,
@@ -2597,7 +2578,7 @@ PathListPrototype.options = {
 // 		...inheriting might pose problems with deleting values reverting
 // 		them to default instead of nulling them and mutable options might
 // 		get overwritten...
-PathListPrototype.options.__proto__ = BrowserPrototype.options
+PathListPrototype.options.__proto__ = Browser.prototype.options
 
 var PathList = 
 module.PathList = 

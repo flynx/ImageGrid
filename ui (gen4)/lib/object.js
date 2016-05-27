@@ -104,6 +104,10 @@ define(function(require){ var module = {}
 // 		- easy refactoring without touching the client code
 //
 //
+// NOTE: this sets the proto's .constructor attribute, this rendering it
+// 		not reusable, to use the same prototype for multiple objects clone
+// 		it via. Object.create(..) or copy it...
+//
 // XXX might be a good idea to be able to make an instance without 
 // 		initializing it...
 // 		...mainly for inheritance.
@@ -114,8 +118,6 @@ module.makeConstructor =
 function makeConstructor(name, a, b){
 	var proto = b == null ? a : b
 	var cls_proto = b == null ? b : a
-
-	proto = Object.create(proto)
 
 	var _constructor = function Constructor(){
 		/*

@@ -61,7 +61,8 @@ function(attr, states, a, b){
 // Root ImageGrid.viewer object constructor...
 //
 var ImageGrid = 
-module.ImageGrid = object.makeConstructor('ImageGrid', actions.MetaActions)
+module.ImageGrid = 
+	object.makeConstructor('ImageGrid', Object.create(actions.MetaActions))
 
 // Root ImageGrid feature set....
 var ImageGridFeatures =
