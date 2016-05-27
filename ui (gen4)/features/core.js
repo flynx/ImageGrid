@@ -60,16 +60,16 @@ function(attr, states, a, b){
 
 // Root ImageGrid.viewer object constructor...
 //
-var ImageGrid = object.makeConstructor('ImageGrid', actions.MetaActions)
+var ImageGrid = 
+module.ImageGrid = object.makeConstructor('ImageGrid', actions.MetaActions)
 
 // Root ImageGrid feature set....
 var ImageGridFeatures =
 module.ImageGridFeatures = new features.FeatureSet()
 
 // setup base instance constructor...
-ImageGridFeatures.__actions__ = function(){
-	return actions.Actions(ImageGrid())
-}
+ImageGridFeatures.__actions__ = 
+	function(){ return actions.Actions(ImageGrid()) }
 
 
 

@@ -54,51 +54,53 @@ $(function(){
 
 
 	// setup actions...
-	window.a = viewer.ImageGridFeatures
-		.setup([
-			'viewer-testing',
+	window.ig = 
+	window.ImageGrid = 
+		viewer.ImageGridFeatures
+			.setup([
+				'viewer-testing',
 
-			'demo',
+				'demo',
 
-			// XXX this is not for production...
-			'experiments',
-		])
+				// XXX this is not for production...
+				'experiments',
+			])
 
 
 	// used to switch experimental actions on (set to true) or off (unset or false)...
-	//a.experimental = true
+	//ig.experimental = true
 
 
 	// report stuff...
 	// XXX we also have .conflicts and .missing
-	a.features.excluded.length > 0 
+	ig.features.excluded.length > 0 
 		&& console.warn('Features excluded (%d):',
-			a.features.excluded.length, 
-			a.features.excluded)
-	a.features.disabled.length > 0 
+			ig.features.excluded.length, 
+			ig.features.excluded)
+	ig.features.disabled.length > 0 
 		&& console.log('Features disabled (%d):',
-			a.features.disabled.length, 
-			a.features.disabled)
+			ig.features.disabled.length, 
+			ig.features.disabled)
 	console.log('Features not applicable (%d):', 
-		a.features.unapplicable.length, 
-		a.features.unapplicable)
+		ig.features.unapplicable.length, 
+		ig.features.unapplicable)
 	console.log('Features loaded (%d):',
-		a.features.features.length, 
-		a.features.features)
+		ig.features.features.length, 
+		ig.features.features)
 
-	a.logger = a.logger || {emit: function(e, v){ console.log('    ', e, v) }}
+	ig.logger = ig.logger || {emit: function(e, v){ console.log('    ', e, v) }}
 
 
 	// setup the viewer...
-	a
+	ig
 		.load({ viewer: $('.viewer') })
 		.start()
 
 
 	// load some testing data if nothing else loaded...
-	if(!a.url_history || Object.keys(a.url_history).length == 0){
+	if(!ig.url_history || Object.keys(ig.url_history).length == 0){
 		// NOTE: we can (and do) load this in parts...
-		a.loadDemoIndex()
+		ig.loadDemoIndex()
 
 			// this is needed when loading legacy sources that do not have tags
 			// synced...

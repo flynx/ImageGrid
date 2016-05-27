@@ -174,8 +174,10 @@ actions.Actions({
 		}],
 	clear: ['File|Interface/Clear viewer',
 		function(){
-			delete this.data
-			delete this.images
+			//delete this.data
+			//delete this.images
+			this.data = null
+			this.images = null
 		}],
 
 	// NOTE: for complete isolation it is best to completely copy the 
@@ -1069,7 +1071,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 			function(data){
 				this.journal = (this.hasOwnProperty('journal') 
 						|| this.journal) ? 
-					this.journal 
+					this.journal || []
 					: []
 				this.journal.push(data)
 			}],
