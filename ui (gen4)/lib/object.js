@@ -115,6 +115,8 @@ function makeConstructor(name, a, b){
 	var proto = b == null ? a : b
 	var cls_proto = b == null ? b : a
 
+	proto = Object.create(proto)
+
 	var _constructor = function Constructor(){
 		/*
 		// XXX BUG: if the constructor is called from it's instance this will 

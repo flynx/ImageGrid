@@ -694,7 +694,7 @@ module.MetaActions = {
 	// XXX is this simpler to use than the original .getHandlerList(..)
 	// XXX rename this....
 	getHandlers: function(name){
-		return this.getHandlerList(name)
+		return (this.getHandlerList || MetaActions.getHandlerList).call(this, name)
 			.map(function(a){ 
 				var res = {
 					// action doc...
@@ -1303,9 +1303,12 @@ function Actions(a, b){
 var test =
 module.test =
 function test(){
+	// NOTE: this is needed only to add action methods to TestActions...
+	var BaseActions = new ActionSet()
+
 	var TestActions = 
 	module.TestActions = 
-	Actions({
+	Actions(BaseActions, {
 		testActionGen1: ['baisc test action...',
 			'some extra info',
 			function(){
