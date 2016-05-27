@@ -8,7 +8,7 @@
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-var requirejs = require('requirejs')
+global.requirejs = global.requirejs || require('requirejs')
 requirejs.config({
 	nodeRequire: require,
 	//baseUrl: __dirname,

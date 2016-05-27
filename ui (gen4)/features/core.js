@@ -11,6 +11,7 @@ define(function(require){ var module = {}
 // XXX
 var DEBUG = typeof(DEBUG) != 'undefined' ? DEBUG : true
 
+var util = require('lib/util')
 var object = require('lib/object')
 var actions = require('lib/actions')
 var features = require('lib/features')
@@ -92,8 +93,8 @@ if(typeof(process) != 'undefined'){
 		//global.Date = window.Date
 
 		// XXX this is less of a hack but it is still an implicit
-		patchDate(global.Date)
-		patchDate(window.Date)
+		util.patchDate(global.Date)
+		util.patchDate(window.Date)
 
 	// node...
 	} else {

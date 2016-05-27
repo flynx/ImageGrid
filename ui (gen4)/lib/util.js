@@ -141,6 +141,7 @@ Object.defineProperty(Array.prototype, 'len', {
 
 
 
+
 // convert JS arguments to Array...
 var args2array =
 module.args2array =
@@ -151,6 +152,7 @@ function(args){
 
 // Quote a string and convert to RegExp to match self literally.
 var quoteRegExp =
+RegExp.quoteRegExp =
 module.quoteRegExp =
 function(str){
 	return str.replace(/([\.\\\/\(\)\[\]\$\*\+\-\{\}\@\^\&\?\<\>])/g, '\\$1')
@@ -214,6 +216,92 @@ module.selectElemText = function(elem){
 	sel.removeAllRanges()
 	sel.addRange(range)
 }
+
+
+
+/*********************************************************************/
+// NOTE: repatching a date should not lead to any side effects as this
+// 		does not add any state...
+var patchDate =
+module.patchDate = function(date){
+	date = date || Date
+
+	date.prototype.toShortDate = function(){
+		var y = this.getFullYear()
+		var M = this.getMonth()+1
+		M = M < 10 ? '0'+M : M
+		var D = this.getDate()
+		D = D < 10 ? '0'+D : D
+		var H = this.getHours()
+		H = H < 10 ? '0'+H : H
+		var m = this.getMinutes()
+		m = m < 10 ? '0'+m : m
+		var s = this.getSeconds()
+		s = s < 10 ? '0'+s : s
+
+		return ''+y+'-'+M+'-'+D+' '+H+':'+m+':'+s
+	}
+	date.prototype.getTimeStamp = function(no_seconds){
+		var y = this.getFullYear()
+		var M = this.getMonth()+1
+		M = M < 10 ? '0'+M : M
+		var D = this.getDate()
+		D = D < 10 ? '0'+D : D
+		var H = this.getHours()
+		H = H < 10 ? '0'+H : H
+		var m = this.getMinutes()
+		m = m < 10 ? '0'+m : m
+		var s = this.getSeconds()
+		s = s < 10 ? '0'+s : s
+
+		return ''+y+M+D+H+m+s
+	}
+	date.prototype.setTimeStamp = function(ts){
+		ts = ts.replace(/[^0-9]*/g, '')
+		this.setFullYear(ts.slice(0, 4))
+		this.setMonth(ts.slice(4, 6)*1-1)
+		this.setDate(ts.slice(6, 8))
+		this.setHours(ts.slice(8, 10))
+		this.setMinutes(ts.slice(10, 12))
+		this.setSeconds(ts.slice(12, 14))
+		return this
+	}
+	date.timeStamp = function(){
+		return (new this()).getTimeStamp()
+	}
+	date.fromTimeStamp = function(ts){
+		return (new this()).setTimeStamp(ts)
+	}
+	// convert string time period to milliseconds...
+	date.str2ms = function(str, dfl){
+		dfl = dfl || 'ms'
+
+		if(typeof(str) == typeof(123)){
+			var val = str
+			str = dfl
+
+		} else {
+			var val = parseFloat(str)
+			str = str.trim()
+
+			// check if a unit is given...
+			str = str == val ? dfl : str
+		}
+		
+		var c = /(m(illi)?(-)?s(ec(ond(s)?)?)?)$/i.test(str) ? 1
+			: /s(ec(ond(s)?)?)?$/i.test(str) ? 1000
+			: /m(in(ute(s)?)?)?$/i.test(str) ? 1000*60
+			: /h(our(s)?)?$/i.test(str) ? 1000*60*60
+			: /d(ay(s)?)?$/i.test(str) ? 1000*60*60*24
+			: null
+
+		return c ? val * c : NaN
+	}
+
+	return date
+}
+// patch the root date...
+patchDate()
 
 
 

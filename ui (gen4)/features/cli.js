@@ -54,10 +54,14 @@ var CLIActions = actions.Actions({
 			path = path || this.location.path
 
 			return this.loadImages(path)
-				.then(function(){ return that.makePreviews('all') })
-				.then(function(){ return that.sortImages() })
-				//.then(function(){ return that.readAllMetadata() })
-				.then(function(){ return that.saveIndex() })
+				.then(function(){ 
+					that.makePreviews('all')
+					//that.readAllMetadata()
+					that
+						.sortImages()
+						// XXX for some reason this is not running from cli
+						.saveIndex(path)
+				})
 		}],
 })
 
@@ -209,7 +213,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 					.arguments('<action> [args]')
 					.action(function(action, args){
 						// XXX
-						//console.log('>>>>', action, args, !!that[action])
+						console.log('>>>>', action, args, !!that[action])
 
 						that[action](args)
 					})

@@ -309,7 +309,7 @@ module.ImagesClassPrototype = {
 		// XXX stub...
 		var i = 0
 		//var base_pattern = base ? RegExp('^' + base) : null 
-		var base_pattern = base ? RegExp('^' + quoteRegExp(base)) : null 
+		var base_pattern = base ? RegExp('^' + RegExp.quoteRegExp(base)) : null 
 		data.forEach(function(path){
 			// XXX need to normalize path...
 			var p = (base_pattern ? path.replace(base_pattern, './') : path)

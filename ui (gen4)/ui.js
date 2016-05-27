@@ -20,7 +20,13 @@ if((typeof(process) != 'undefined' ? process : {}).__nwjs){
 //
 // NOTE: no need to do this in browser...
 if(typeof(process) != 'undefined'){
+
 	var requirejs = require('requirejs')
+
+	global.requirejs = requirejs
+	if(typeof(window) != 'undefined'){
+		window.requirejs = requirejs
+	}
 
 	requirejs.config({
 		nodeRequire: require,
