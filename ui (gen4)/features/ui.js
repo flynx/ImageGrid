@@ -2026,7 +2026,7 @@ var ControlActions = actions.Actions({
 										// silently focus central image...
 										if(that.config['focus-central-image'] == 'silent'){
 											that.data.focusImage(gid)
-											that.ribbons.focusImage(a.current)
+											that.ribbons.focusImage(that.current)
 											
 										// focus central image in a normal manner...
 										} else if(that.config['focus-central-image']){

@@ -797,6 +797,13 @@ var BrowserPrototype = {
 			path = this.path2list(path)
 			var selection = path.pop()
 
+		// restore selection if path did not change...
+		} else if(path instanceof Array 
+				&& path.length == this.path.length
+				&& path.filter(function(e, i){ return e != this.path[i] }).length == 0){
+			var selection = this.selected
+
+		// no selection...
 		} else {
 			path = this.path2list(path)
 			var selection = null
