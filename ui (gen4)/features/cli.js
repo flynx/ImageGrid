@@ -55,12 +55,14 @@ var CLIActions = actions.Actions({
 
 			return this.loadImages(path)
 				.then(function(){ 
+					// save base index...
 					that.saveIndex(path)
 
+					// make the previews...
 					that.makePreviews('all')
 
 					//that.readAllMetadata()
-					//
+
 					that
 						.sortImages()
 						// XXX for some reason this is not running from cli

@@ -1,0 +1,39 @@
+
+Modules and RequireJS
+=====================
+
+Most of the system is loaded via browser context RequireJS loader, in 
+node/nw context node-specific stuff is loaded with a second node-enabled
+RequireJS instance or node require.
+
+This is done to:
+	- Minimize the difference between pure browser, nw and node 
+	  versions
+	- Enable devtools introspection on most modules.
+	  NOTE: his is mostly due to the inability to view the node 
+	 	context in nw.js devtools, when this is resolved this
+		point should be revised.
+
+
+Different loaders:
+------------------
+
+There are two RequireJS instances present in most contexts in nw.js 
+within the define(..) runner:
+	- require(..)		
+		Pure browser RequireJS instance, used to load local 
+		modules.
+
+	- requirejs(..)		
+		Node-enabled RequireJS instance, used to load node 
+		modules.
+		This is needed as the above require(..) overloads the 
+		node native loader.
+
+The future:
+-----------
+
+This seems a bit confusing, so at least the naming convention should be
+revised.
+
+
