@@ -26,7 +26,8 @@ if(typeof(process) != 'undefined'){
 	var fse = requirejs('fs-extra')
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
-	var file = requirejs('./file')
+
+	var file = require('file')
 }
 
 
@@ -36,6 +37,7 @@ if(typeof(process) != 'undefined'){
 if(typeof(process) != 'undefined'){
 	var ensureDir = file.denodeify(fse.ensureDir)
 }
+
 
 
 /*********************************************************************/

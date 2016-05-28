@@ -4,23 +4,23 @@
 *
 **********************************************************************/
 
-var pathlib = require('path')
-var events = require('events')
-
-var fse = require('fs-extra')
-var glob = require('glob')
-
-// XXX seems that we need different buids of this for use with node and nw...
-// XXX BUG: nw-gyp does not support msvs2015...
-//var sharp = require('sharp') 
-
-var guaranteeEvents = require('guarantee-events')
-
-
 define(function(require){ var module = {}
 
 
 //var DEBUG = DEBUG != null ? DEBUG : true
+
+if(typeof(process) != 'undefined'){
+	var pathlib = requirejs('path')
+	var events = requirejs('events')
+
+	var fse = requirejs('fs-extra')
+	var glob = requirejs('glob')
+
+	var guaranteeEvents = requirejs('guarantee-events')
+
+} else {
+	return module
+}
 
 var data = require('data')
 var images = require('images')

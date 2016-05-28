@@ -14,7 +14,8 @@ if(typeof(process) != 'undefined'){
 	var fse = requirejs('fs-extra')
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
-	var file = requirejs('./file')
+
+	var file = require('file')
 }
 
 var data = require('data')

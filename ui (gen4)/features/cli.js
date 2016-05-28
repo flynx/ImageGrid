@@ -55,8 +55,12 @@ var CLIActions = actions.Actions({
 
 			return this.loadImages(path)
 				.then(function(){ 
+					that.saveIndex(path)
+
 					that.makePreviews('all')
+
 					//that.readAllMetadata()
+					//
 					that
 						.sortImages()
 						// XXX for some reason this is not running from cli
@@ -87,7 +91,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 				var that = this
 				// get the arguments...
 				if(this.runtime == 'nw'){
-					var argv = requirejs('nw.gui').App.argv
+					var argv = nw.App.argv
 
 					// XXX appears to have a stray '--help' lodged in 
 					// 		all the time...

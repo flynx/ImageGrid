@@ -19,29 +19,24 @@ if((typeof(process) != 'undefined' ? process : {}).__nwjs){
 // Setup requirejs if we are in node/nw...
 //
 // NOTE: no need to do this in browser...
+//
+// XXX this will create a second requirejs instance with node 
+// 		compatibility...
+// 		...would be nice if we could avoid this...
+// XXX setting nodeRequire on existing requirejs will change how 
+// 		everything is loaded...
 if(typeof(process) != 'undefined'){
-
-	var requirejs = require('requirejs')
-
-	global.requirejs = requirejs
-	if(typeof(window) != 'undefined'){
-		window.requirejs = requirejs
-	}
-
-	requirejs.config({
-		nodeRequire: require,
-		//baseUrl: __dirname,
-
-		// XXX this does not work on direct filesystem access...
-		//urlArgs: 'bust='+Date.now(),
-	})
+	var requirejs = 
+	global.requirejs = 
+	window.requirejs = 
+		require('requirejs')
 }
-
 
 
 /*********************************************************************/
 
 define(function(require){ var module = {}
+//requirejs(['viewer'], function(viewer){
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
@@ -70,6 +65,12 @@ $(function(){
 
 				// XXX this is not for production...
 				'experiments',
+
+				// XXX BUG: disabling features on this level does not 
+				// 		work, yet works deeper down...
+				// 			Example:
+				// 				'-ui' // will throw an error:
+				// 					  //	Feature "-ui" not loaded...
 			])
 
 
@@ -120,3 +121,4 @@ $(function(){
 /**********************************************************************
 * vim:set ts=4 sw=4 :                                                */
 return module })
+//})

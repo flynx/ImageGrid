@@ -4,20 +4,16 @@
 *
 **********************************************************************/
 
-if(typeof(process) != 'undefined'){
-	var os = require('os')
-	var fs = require('fs')
-	var path = require('path')
-	var glob = require('glob')
-	var guaranteeEvents = require('guarantee-events')
-}
-
-
 define(function(require){ var module = {}
 
-// XXX HACK...
-// 		...for some reason this gets loaded in browser...
-if(typeof(process) == 'undefined'){
+if(typeof(process) != 'undefined'){
+	var os = requirejs('os')
+	var fs = requirejs('fs')
+	var path = requirejs('path')
+	var glob = requirejs('glob')
+	var guaranteeEvents = requirejs('guarantee-events')
+
+} else {
 	return module
 }
 
