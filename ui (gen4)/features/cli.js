@@ -109,6 +109,12 @@ module.CLI = core.ImageGridFeatures.Feature({
 					.version('0.0.1')
 					//.usage('[command] [options] ..')
 
+					.option('-v, --verbose', 'verbose mode', function(){
+						that.logger = { 
+							emit: function(){ console.log.apply(console, arguments) } 
+						}
+					})
+
 					// list features...
 					// XXX make this a core action... (???)
 					.option('lf, --list-features', 'list loaded features', function(){
@@ -164,8 +170,16 @@ module.CLI = core.ImageGridFeatures.Feature({
 							.setup(that, ['viewer-minimal'])
 					})
 
-					.option('repl, --repl', 'start an ImageGrin REPL', function(){
-						//var repl = require('repl')
+					.option('repl, --repl', 'start an ImageGrid REPL', function(){
+						var repl = requirejs('repl')
+
+						// setup the global ns...
+						global.ig =
+						global.ImageGrid = 
+							that
+
+						require('features/all')
+						global.ImageGridFeatures = core.ImageGridFeatures
 
 						//var ig = core.ImageGridFeatures
 
@@ -176,30 +190,6 @@ module.CLI = core.ImageGridFeatures.Feature({
 							output: process.stdout,
 
 							ignoreUndefined: true,
-
-							/*
-							eval: function(str, context, filename, callback){
-								var res
-
-								var lst = str.split(/\s+/)
-								var cmd = lst.shift()
-
-								// we got an action...
-								if(cmd == 'var'){
-									eval(str, context, filename, callback)
-
-								// action...
-								} else if(cmd in ig){
-									ig[cmd].apply(ig, lst.map(eval))
-
-								// err
-								} else {
-									// XXX
-								}
-
-								callback(null, res)
-							},
-							*/
 						})
 					})
 
@@ -217,7 +207,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 					.arguments('<action> [args]')
 					.action(function(action, args){
 						// XXX
-						console.log('>>>>', action, args, !!that[action])
+						//console.log('>>>>', action, args, !!that[action])
 
 						that[action](args)
 					})

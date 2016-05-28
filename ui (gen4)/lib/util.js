@@ -83,6 +83,12 @@ Array.prototype.setCmp = function(other){
 }
 
 
+var args2array =
+module.args2array =
+Array.fromArgs = 
+	function(args){ return [].slice.call(args) }
+
+
 module.chainCmp = function(cmp_chain){
 	return function(a, b, get, data){
 		var res
@@ -140,15 +146,6 @@ Object.defineProperty(Array.prototype, 'len', {
 });
 
 
-
-
-// convert JS arguments to Array...
-var args2array =
-module.args2array =
-function(args){
-	//return Array.apply(null, args)
-	return [].slice.call(args)
-}
 
 // Quote a string and convert to RegExp to match self literally.
 var quoteRegExp =

@@ -1301,7 +1301,7 @@ var FileSystemWriterActions = actions.Actions({
 				: this.hasOwnProperty('changes') ? this.changes
 				: null
 			return {
-				date: window.Date.timeStamp(),
+				date: Date.timeStamp(),
 				raw: json,
 				prepared: file.prepareIndex(json, changes),
 			}

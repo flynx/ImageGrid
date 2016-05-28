@@ -174,7 +174,7 @@ function(elem, state_accessor, states, callback_a, callback_b){
 		var bool_action = (state_set.length == 2 && state_set[0] == 'none')
 
 		// XXX is this correct???
-		var args = args2array(arguments).slice(2)
+		var args = [].slice.call(arguments).slice(2)
 
 		// option number...
 		if(typeof(action) == typeof(1)){
