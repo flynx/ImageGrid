@@ -130,14 +130,6 @@ var FileSystemLoaderActions = actions.Actions({
 		'load-first-index-only': false,
 	},
 
-	clone: [function(full){
-		return function(res){
-			if(this.location){
-				res.__location = JSON.parse(JSON.stringify(this.__location))
-			}
-		}
-	}],
-
 	// XXX should this be more general???
 	reloadState: ['File/Reload viewer state...',
 		function(){
@@ -328,6 +320,9 @@ var FileSystemLoaderActions = actions.Actions({
 					})
 					*/
 					.on('end', function(lst){ 
+						// XXX might be a good idea to make image paths relative to path...
+						//lst = lst.map(function(p){ return pathlib.relative(base, p) })
+
 						that.loadURLs(lst, path)
 						// XXX do we need to normalize paths after we get them from glob??
 						//that.loadURLs(lst.map(pathlib.posix.normalize), path)
@@ -456,10 +451,6 @@ var FileSystemLoaderActions = actions.Actions({
 					logger && logger.emit('loaded', lst)
 				})
 		}],
-
-	clear: [function(){
-		delete this.__location
-	}],
 })
 
 

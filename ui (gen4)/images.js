@@ -333,7 +333,7 @@ module.ImagesClassPrototype = {
 				ext: name[1],
 			}
 
-			// remove only of base path is given and in path...
+			// remove only if base path is given and in path...
 			if(base && base_pattern.test(path)){
 				images[gid].base_path = base
 			}

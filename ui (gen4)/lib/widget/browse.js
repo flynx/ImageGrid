@@ -1084,7 +1084,8 @@ var BrowserPrototype = {
 
 				// select the item...
 				if(selection){
-					that.select(selection)
+					//that.select(selection)
+					that.select('"'+ selection +'"')
 				}
 
 				// maintain focus within the widget...

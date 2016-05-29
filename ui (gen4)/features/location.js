@@ -110,6 +110,24 @@ module.Location = core.ImageGridFeatures.Feature({
 	actions: LocationActions,
 
 	handlers: [
+		['clone',
+			function(res){
+				if(this.location){
+					res.__location = JSON.parse(JSON.stringify(this.__location))
+				}
+			}],
+		['clear',
+			function(){
+				delete this.__location
+			}],
+
+		// 1) store .location
+		// 2) cleanup .images[..].base_path
+		//
+		// XXX might be good to make the .base_path relative to location 
+		// 		if possible...
+		// XXX not sure if this is the right place for .images[..].base_path 
+		// 		handling...
 		['json',
 			function(res){
 				if(this.location){
