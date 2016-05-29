@@ -124,6 +124,7 @@ var FileSystemLoaderActions = actions.Actions({
 		'image-file-pattern': '*+(jpg|jpeg|png|JPG|JPEG|PNG)',
 
 		'image-file-read-stat': true,
+		'image-file-skip-previews': true,
 
 		// XXX if true and multiple indexes found, load only the first 
 		// 		without merging...
@@ -161,7 +162,6 @@ var FileSystemLoaderActions = actions.Actions({
 	// 			.loadIndex(..)
 	// XXX add a symmetric equivalent to .prepareIndexForWrite(..) so as 
 	// 		to enable features to load their data...
-	// XXX should this return a promise??? ...a clean promise???
 	// XXX look inside...
 	loadIndex: ['- File/Load index',
 		function(path, from_date, logger){
@@ -182,10 +182,6 @@ var FileSystemLoaderActions = actions.Actions({
 			// 		a-la glob)....
 			//file.loadIndex(path, this.config['index-dir'], logger)
 			return file.loadIndex(path, this.config['index-dir'], from_date, logger)
-				.catch(function(err){
-					// XXX
-					console.error(err)
-				})
 				.then(function(res){
 					// XXX if res is empty load raw...
 
@@ -284,56 +280,61 @@ var FileSystemLoaderActions = actions.Actions({
 					}
 				})
 		}],
+
+	// Load images...
+	//
+	// This will:
+	// 	- load images from path
+	// 	- load basic stat data
+	// 	- load previews from path if they exist...
+	//
 	// XXX use the logger...
 	// XXX add a recursive option...
 	// 		...might also be nice to add sub-dirs to ribbons...
 	// XXX make image pattern more generic...
-	// XXX should this return a promise??? ...a clean promise???
 	loadImages: ['- File/Load images',
 		function(path, logger){
 			if(path == null){
 				return
 			}
 
+			// XXX get a logger...
+			logger = logger || this.logger
+
 			var that = this
+			path = util.normalizePath(path)
 
 			// NOTE: we set this before we start the load so as to let 
 			// 		clients know what we are loading and not force them
 			// 		to wait to find out...
 			// XXX not sure if this is the way to go...
+			var location = 
 			this.__location = {
 				path: path,
 				method: 'loadImages',
 			}
 
+			// get the image list...
 			return new Promise(function(resolve, reject){
 				glob(path + '/'+ that.config['image-file-pattern'], 
 						{stat: !!that.config['image-file-read-stat']})
 					.on('error', function(err){
-						console.log('!!!!', err)
+						console.error(err)
 						reject(err)
 					})
-					/*
-					.on('match', function(img){
-						// XXX stat stuff...
-						fse.statSync(img)
-					})
-					*/
 					.on('end', function(lst){ 
 						// XXX might be a good idea to make image paths relative to path...
 						//lst = lst.map(function(p){ return pathlib.relative(base, p) })
-
-						that.loadURLs(lst, path)
 						// XXX do we need to normalize paths after we get them from glob??
-						//that.loadURLs(lst.map(pathlib.posix.normalize), path)
-						//that.loadURLs(lst
-						//	.map(function(p){ return util.normalizePath(p) }), path)
+						//lst = lst.map(function(p){ return util.normalizePath(p) }), path)
+
+						var data = that.dataFromURLs(lst, path)
 
 						if(!!that.config['image-file-read-stat']){
 							var stats = this.statCache
 							var p = pathlib.posix
 
-							that.images.forEach(function(gid, img){
+							data.images.forEach(function(gid, img){
 								var stat = stats[p.join(img.base_path, img.path)]
 
 								img.atime = stat.atime
@@ -347,16 +348,39 @@ var FileSystemLoaderActions = actions.Actions({
 							})
 						}
 
-						// NOTE: we set it again because .loadURLs() does a clear
-						// 		before it starts loading...
-						// 		XXX is this a bug???
-						that.__location = {
-							path: path,
-							method: 'loadImages',
-						}
-
-						resolve(that)
+						// pass on the result...
+						resolve(data)
 					})
+			})
+			// load previews if they exist...
+			.then(function(data){
+				if(that.config['image-file-skip-previews']){
+					return data
+				}
+
+				var index_dir = that.config['index-dir']
+				var index_path = path +'/'+ index_dir
+
+				return file.loadPreviews(index_path, null, index_dir)
+					.then(function(previews){
+						previews = previews[index_path]
+						previews && Object.keys(previews).forEach(function(gid){
+							if(gid in data.images){
+								data.images[gid].preview = previews[gid].preview
+							}
+						})
+
+						return data
+					})
+			})
+			// load the data...
+			.then(function(data){
+				that.load(data)
+
+				// NOTE: we set it again because .load() does a .clear()
+				// 		before it starts loading which clears the .location
+				// 		too...
+				that.__location = location
 			})
 		}],
 
@@ -371,7 +395,7 @@ var FileSystemLoaderActions = actions.Actions({
 			//this.location.method = 'loadImages'
 		}],
 
-	// XXX should this return a promise??? ...a clean promise???
+	// XXX should this also try and load previews...
 	// XXX revise logger...
 	loadNewImages: ['File/Load new images',
 		function(path, logger){
@@ -383,6 +407,8 @@ var FileSystemLoaderActions = actions.Actions({
 			}
 
 			var that = this
+			path = util.normalizePath(path)
+
 
 			// cache the loaded images...
 			var loaded = this.images.map(function(gid, img){ return img.path })
@@ -537,7 +563,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 	browsePath: ['File/Browse file system...',
 		widgets.makeUIDialog(function(base, callback){
 			var that = this
+
 			base = base || this.location.path || '/'
+			base = util.normalizePath(base)
 
 			var o = browseWalk.makeWalk(
 						null, base, this.config['image-file-pattern'],
@@ -1027,7 +1055,7 @@ var pushToHistory = function(action, to_top, checker){
 			path = util.normalizePath(path)
 			if(path){
 				this.pushURLToHistory(
-					util.normalizePath(path), 
+					path, 
 					action, 
 					checker || 'checkPath') 
 			}
@@ -1308,6 +1336,7 @@ var FileSystemWriterActions = actions.Actions({
 
 			path = path || this.location.loaded
 			path = path && path.length == 1 ? path[0] : path 
+			path = util.normalizePath(path)
 
 			// XXX
 			if(path instanceof Array){
@@ -1377,6 +1406,7 @@ var FileSystemWriterActions = actions.Actions({
 
 			// XXX is this correct???
 			path = path || './exported'
+			path = util.normalizePath(path)
 
 			// XXX resolve env variables in path...
 			// XXX
@@ -1490,6 +1520,8 @@ var FileSystemWriterActions = actions.Actions({
 			logger = logger || this.logger
 			var that = this
 			var base_dir = this.location.path
+
+			path = util.normalizePath(path)
 
 			// XXX resolve env variables in path...
 			// XXX

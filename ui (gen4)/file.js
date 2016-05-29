@@ -25,6 +25,7 @@ if(typeof(process) != 'undefined'){
 var data = require('data')
 var images = require('images')
 
+var util = require('lib/util')
 var tasks = require('lib/tasks')
 
 
@@ -99,7 +100,7 @@ module.gGlob = function(){
 var listIndexes =
 module.listIndexes = 
 function(base, index_dir){
-	return gGlob(base +'/**/'+ index_dir || INDEX_DIR)
+	return gGlob(base +'/**/'+ (index_dir || INDEX_DIR))
 }
 
 
@@ -136,6 +137,7 @@ var listJSON =
 module.listJSON =
 function(path, pattern){
 	pattern = pattern || '*'
+	path = util.normalizePath(path)
 	return gGlob(path +'/'+ pattern +'.json')
 }
 
@@ -168,6 +170,7 @@ var ensureDir = denodeify(fse.ensureDir)
 
 // XXX handle errors...
 function loadJSON(path){
+	path = util.normalizePath(path)
 	return loadFile(path).then(JSON.parse)
 }
 
@@ -326,6 +329,7 @@ function(list, from_date, logger){
 var loadSaveHistoryList =
 module.loadSaveHistoryList =
 function(path, index_dir, logger){
+	path = util.normalizePath(path)
 	index_dir = index_dir || INDEX_DIR
 
 	return new Promise(function(resolve, reject){
@@ -461,6 +465,7 @@ function(path, index_dir, logger){
 var loadIndex =
 module.loadIndex = 
 function(path, index_dir, from_date, logger){
+	path = util.normalizePath(path)
 	if(index_dir && index_dir.emit != null){
 		logger = index_dir
 		index_dir = from_date = null
@@ -622,48 +627,66 @@ module.loadPreviews =
 function(base, previews, index_dir, absolute_path){
 	previews = previews || {}
 	index_dir = index_dir || INDEX_DIR
+	base = util.normalizePath(base)
 
-	return new Promise(function(resolve, reject){
-		listIndexes(base)
-			// XXX handle errors....
-			//.on('error', function(err){
-			//})
-			.on('match', function(base){
-				if(!(base in previews)){
-					previews[base] = {}
-				}
+	// we got an explicit index....
+	if(pathlib.basename(base) == index_dir){
+		return new Promise(function(resolve, reject){
+			if(!(base in previews)){
+				previews[base] = {}
+			}
 
-				var images = previews[base]
+			var images = previews[base]
 
-				listPreviews(base)
-					// XXX handle errors....
-					//.on('error', function(err){
-					//})
-					// preview name syntax:
-					// 	<res>px/<gid> - <orig-filename>.jpg
-					.on('match', function(path){
-						// get the data we need...
-						var gid = pathlib.basename(path).split(' - ')[0]
-						var res = pathlib.basename(pathlib.dirname(path))
+			listPreviews(base)
+				// XXX handle errors....
+				//.on('error', function(err){
+				//})
+				// preview name syntax:
+				// 	<res>px/<gid> - <orig-filename>.jpg
+				.on('match', function(path){
+					// get the data we need...
+					var gid = pathlib.basename(path).split(' - ')[0]
+					var res = pathlib.basename(pathlib.dirname(path))
 
-						// build the structure if it does not exist...
-						if(!(gid in images)){
-							images[gid] = {}
-						}
-						if(images[gid].preview == null){
-							images[gid].preview = {}
-						}
+					// build the structure if it does not exist...
+					if(!(gid in images)){
+						images[gid] = {}
+					}
+					if(images[gid].preview == null){
+						images[gid].preview = {}
+					}
 
-						// add a preview...
-						// NOTE: this will overwrite a previews if they are found in
-						// 		several locations...
-						images[gid].preview[res] = index_dir +'/'+ path.split(index_dir)[1]
-					})
-			})
-			.on('end', function(){
-				resolve(previews)
-			})
-	})
+					// add a preview...
+					// NOTE: this will overwrite a previews if they are found in
+					// 		several locations...
+					images[gid].preview[res] =
+						util.normalizePath(index_dir +'/'+ path.split(index_dir)[1])
+				})
+				.on('end', function(){
+					resolve(previews)
+				})
+		})
+
+	// find all sub indexes...
+	} else {
+		return new Promise(function(resolve, reject){
+			var queue = []
+			listIndexes(base, index_dir)
+				// XXX handle errors....
+				//.on('error', function(err){
+				//})
+				.on('match', function(base){
+					queue.push(loadPreviews(base, previews, index_dir, absolute_path))
+				})
+				.on('end', function(){
+					Promise.all(queue)
+						.then(function(){
+							resolve(previews)
+						})
+				})
+		})
+	}
 }
 
 
@@ -885,6 +908,7 @@ var FILENAME = '${DATE}-${KEYWORD}.${EXT}'
 var writeIndex =
 module.writeIndex = 
 function(json, path, date, filename_tpl, logger){
+	path = util.normalizePath(path)
 	filename_tpl = filename_tpl || FILENAME
 	// XXX for some reason this gets the unpatched node.js Date, so we 
 	// 		get the patched date explicitly...

@@ -196,18 +196,20 @@ actions.Actions({
 			return res
 		}],
 
+	dataFromURLs: ['- File/',
+		function(lst, base){
+			var imgs = images.Images.fromArray(lst, base)
+			return {
+				images: imgs,
+				data: data.Data.fromArray(imgs.keys()),
+			}
+		}],
+
 	// XXX should this be here???
 	// XXX should this use .load(..)
 	// 		...note if we use this it breaks, need to rethink...
 	loadURLs: ['- File/Load a URL list',
-		function(lst, base){
-			var imgs = images.Images.fromArray(lst, base)
-
-			this.load({
-				images: imgs,
-				data: data.Data.fromArray(imgs.keys()),
-			})
-		}],
+		function(lst, base){ this.load(this.dataFromURLs(lst, base)) }],
 
 	// XXX experimental...
 	// 		...the bad thing about this is that we can not extend this,

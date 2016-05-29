@@ -8,6 +8,7 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
+var util = require('lib/util')
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -16,6 +17,11 @@ var images = require('images')
 
 var core = require('features/core')
 var base = require('features/base')
+
+
+if(typeof(process) != 'undefined'){
+	var pathlib = requirejs('path')
+}
 
 
 
@@ -52,6 +58,8 @@ var CLIActions = actions.Actions({
 
 			// XXX is this correct???
 			path = path || this.location.path
+
+			path = util.normalizePath(path)
 
 			return this.loadImages(path)
 				.then(function(){ 

@@ -188,7 +188,7 @@ module.normalizePath =
 function(path){
 	return typeof(path) == typeof('str') ? path
 			// normalize the slashes...
-			.replace(/(\/)/g, '/')
+			.replace(/\\/g, '/')
 			// remove duplicate '/'
 			.replace(/(\/)\1+/g, '/')
 			// remove trailing '/'
