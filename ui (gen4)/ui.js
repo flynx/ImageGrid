@@ -30,6 +30,11 @@ if(typeof(process) != 'undefined'){
 	global.requirejs = 
 	window.requirejs = 
 		require('requirejs')
+
+	var nodeRequire =
+	global.nodeRequire = 
+	window.nodeRequire =
+		require
 }
 
 

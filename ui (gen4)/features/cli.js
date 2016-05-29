@@ -104,11 +104,12 @@ module.CLI = core.ImageGridFeatures.Feature({
 					var argv = process.argv
 				}
 
+				var package = requirejs('fs-extra').readJSONSync('./package.json')
 
 				var cli = requirejs('commander')
 				cli
-					// XXX get the version from config...
-					.version('0.0.1')
+					// XXX get the version from package.json...
+					.version(package.version)
 					//.usage('[command] [options] ..')
 
 					.option('-v, --verbose', 'verbose mode', function(){
@@ -191,8 +192,21 @@ module.CLI = core.ImageGridFeatures.Feature({
 							input: process.stdin,
 							output: process.stdout,
 
-							ignoreUndefined: true,
+							//ignoreUndefined: true,
 						})
+					})
+
+					// XXX this needs both a local/linked nwjs installed and an 
+					// 		appropriate nw version under it...
+					// 			npm install -g nwjs
+					// 			npm link nwjs
+					// 			nw install 0.14.5-sdk
+					.option('gui, --gui', 'start ImageGrid.Viewer', function(){
+						var path = requirejs('path')
+
+						requirejs('child_process')
+							.spawn(requirejs('nwjs'), [
+								path.dirname(process.argv[1]).replace(/\\/g, '/') + '/'])
 					})
 
 					// XXX the problem with this is that it still tires 

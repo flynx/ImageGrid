@@ -1,7 +1,7 @@
 {
   "name": "ImageGrid.Viewer.g4",
   "main": "index.html",
-  "version": "0.0.1",
+  "version": "4.0.0a",
   "window": {
     "title": "ImageGrid.Viewer (gen4)",
     "position": "center",
@@ -33,9 +33,11 @@
   },
   "devDependencies": {
     "less": "*",
-    "webdriverio": "^4.0.4"
+    "webdriverio": "^4.0.4",
+    "nwjs": "*"
   },
   "scripts": {
-    "build-css": "lessc css/layout.less css/layout.css"
+    "build-css": "lessc css/layout.less css/layout.css",
+    "start": "nw ."
   }
 }
