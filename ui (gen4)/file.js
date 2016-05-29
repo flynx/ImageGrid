@@ -366,7 +366,8 @@ function(path, index_dir, logger){
 				.then(function(paths){
 					// start loading...
 					Promise.all(paths.map(function(p){
-						var path = pathlib.normalize(p +'/'+ index_dir) 
+						//var path = pathlib.normalize(p +'/'+ index_dir) 
+						var path = util.normalizePath(p +'/'+ index_dir) 
 						return loadSaveHistoryList(path, index_dir)
 							.then(function(obj){ 
 								// NOTE: considering that all the paths within
@@ -466,6 +467,7 @@ var loadIndex =
 module.loadIndex = 
 function(path, index_dir, from_date, logger){
 	path = util.normalizePath(path)
+
 	if(index_dir && index_dir.emit != null){
 		logger = index_dir
 		index_dir = from_date = null
@@ -589,7 +591,8 @@ function(path, index_dir, from_date, logger){
 				.then(function(paths){
 					// start loading...
 					Promise.all(paths.map(function(p){
-						var path = pathlib.normalize(p +'/'+ index_dir) 
+						//var path = pathlib.normalize(p +'/'+ index_dir) 
+						var path = util.normalizePath(p +'/'+ index_dir) 
 						return loadIndex(path, index_dir, from_date, logger) 
 							.then(function(obj){ 
 								// NOTE: considering that all the paths within

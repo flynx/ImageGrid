@@ -170,6 +170,8 @@ var FileSystemLoaderActions = actions.Actions({
 			if(path == null){
 				return
 			}
+			path = util.normalizePath(path)
+
 			if(from_date && from_date.emit != null){
 				logger = from_date
 				from_date = null
@@ -281,6 +283,84 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
+	getImagesInPath: ['- File/',
+		function(path, read_stat, skip_preview_search, logger){
+			if(path == null){
+				return
+			}
+			read_stat = read_stat == null ?
+				this.config['image-file-read-stat']
+				: read_stat
+			skip_preview_search = skip_preview_search == null ?
+				this.config['image-file-skip-previews']
+				: skip_preview_search
+
+			// XXX get a logger...
+			logger = logger || this.logger
+
+			var that = this
+			path = util.normalizePath(path)
+
+			// get the image list...
+			return new Promise(function(resolve, reject){
+				glob(path + '/'+ that.config['image-file-pattern'], {stat: !!read_stat})
+					.on('error', function(err){
+						console.error(err)
+						reject(err)
+					})
+					.on('end', function(lst){ 
+						// XXX might be a good idea to make image paths relative to path...
+						//lst = lst.map(function(p){ return pathlib.relative(base, p) })
+						// XXX do we need to normalize paths after we get them from glob??
+						//lst = lst.map(function(p){ return util.normalizePath(p) }), path)
+
+						var imgs = images.Images.fromArray(lst, path)
+
+						if(!!read_stat){
+							var stats = this.statCache
+							var p = pathlib.posix
+
+							imgs.forEach(function(gid, img){
+								var stat = stats[p.join(img.base_path, img.path)]
+
+								img.atime = stat.atime
+								img.mtime = stat.mtime
+								img.ctime = stat.ctime
+								img.birthtime = stat.birthtime
+
+								img.size = stat.size
+
+								// XXX do we need anything else???
+							})
+						}
+
+						// pass on the result...
+						resolve(imgs)
+					})
+			})
+			// load previews if they exist...
+			.then(function(imgs){
+				if(skip_preview_search){
+					return imgs
+				}
+
+				var index_dir = that.config['index-dir']
+				var index_path = path +'/'+ index_dir
+
+				return file.loadPreviews(index_path, null, index_dir)
+					.then(function(previews){
+						previews = previews[index_path]
+						previews && Object.keys(previews).forEach(function(gid){
+							if(gid in imgs){
+								imgs[gid].preview = previews[gid].preview
+							}
+						})
+
+						return imgs
+					})
+			})
+		}],
+
 	// Load images...
 	//
 	// This will:
@@ -291,6 +371,7 @@ var FileSystemLoaderActions = actions.Actions({
 	// XXX use the logger...
 	// XXX add a recursive option...
 	// 		...might also be nice to add sub-dirs to ribbons...
+	// XXX add option to preserve/update .data
 	// XXX make image pattern more generic...
 	loadImages: ['- File/Load images',
 		function(path, logger){
@@ -315,73 +396,23 @@ var FileSystemLoaderActions = actions.Actions({
 			}
 
 			// get the image list...
-			return new Promise(function(resolve, reject){
-				glob(path + '/'+ that.config['image-file-pattern'], 
-						{stat: !!that.config['image-file-read-stat']})
-					.on('error', function(err){
-						console.error(err)
-						reject(err)
+			return this.getImagesInPath(
+					path, 
+					that.config['image-file-read-stat'],
+					that.config['image-file-skip-previews'],
+					logger)
+				// load the data...
+				.then(function(imgs){
+					that.load({
+						images: imgs,
+						data: data.Data.fromArray(imgs.keys()),
 					})
-					.on('end', function(lst){ 
-						// XXX might be a good idea to make image paths relative to path...
-						//lst = lst.map(function(p){ return pathlib.relative(base, p) })
-						// XXX do we need to normalize paths after we get them from glob??
-						//lst = lst.map(function(p){ return util.normalizePath(p) }), path)
 
-						var data = that.dataFromURLs(lst, path)
-
-						if(!!that.config['image-file-read-stat']){
-							var stats = this.statCache
-							var p = pathlib.posix
-
-							data.images.forEach(function(gid, img){
-								var stat = stats[p.join(img.base_path, img.path)]
-
-								img.atime = stat.atime
-								img.mtime = stat.mtime
-								img.ctime = stat.ctime
-								img.birthtime = stat.birthtime
-
-								img.size = stat.size
-
-								// XXX do we need anything else???
-							})
-						}
-
-						// pass on the result...
-						resolve(data)
-					})
-			})
-			// load previews if they exist...
-			.then(function(data){
-				if(that.config['image-file-skip-previews']){
-					return data
-				}
-
-				var index_dir = that.config['index-dir']
-				var index_path = path +'/'+ index_dir
-
-				return file.loadPreviews(index_path, null, index_dir)
-					.then(function(previews){
-						previews = previews[index_path]
-						previews && Object.keys(previews).forEach(function(gid){
-							if(gid in data.images){
-								data.images[gid].preview = previews[gid].preview
-							}
-						})
-
-						return data
-					})
-			})
-			// load the data...
-			.then(function(data){
-				that.load(data)
-
-				// NOTE: we set it again because .load() does a .clear()
-				// 		before it starts loading which clears the .location
-				// 		too...
-				that.__location = location
-			})
+					// NOTE: we set it again because .load() does a .clear()
+					// 		before it starts loading which clears the .location
+					// 		too...
+					that.__location = location
+				})
 		}],
 
 	// XXX auto-detect format or let the user chose...
