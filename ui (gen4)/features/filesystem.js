@@ -283,6 +283,11 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
+	// This will:
+	// 	- get images from path
+	// 	- get basic stat data
+	// 	- get previews from path if they exist
+	//
 	getImagesInPath: ['- File/',
 		function(path, read_stat, skip_preview_search, logger){
 			if(path == null){
@@ -363,11 +368,6 @@ var FileSystemLoaderActions = actions.Actions({
 
 	// Load images...
 	//
-	// This will:
-	// 	- load images from path
-	// 	- load basic stat data
-	// 	- load previews from path if they exist...
-	//
 	// XXX use the logger...
 	// XXX add a recursive option...
 	// 		...might also be nice to add sub-dirs to ribbons...
@@ -415,57 +415,46 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
-	// XXX auto-detect format or let the user chose...
-	// XXX should this return a promise??? ...a clean promise???
-	// XXX should the added section be marked or sorted???
-	loadPath: ['- File/Load path (STUB)',
-		function(path, logger){
-			// XXX check if this.config['index-dir'] exists, if yes then
-			// 		.loadIndex(..) else .loadImages(..)
-
-			//this.location.method = 'loadImages'
-		}],
-
-	// XXX should this also try and load previews...
 	// XXX revise logger...
+	// XXX test...
 	loadNewImages: ['File/Load new images',
 		function(path, logger){
 			path = path || this.location.path
-			logger = logger || this.logger
 
 			if(path == null){
 				return
 			}
 
 			var that = this
+			logger = logger || this.logger
 			path = util.normalizePath(path)
-
 
 			// cache the loaded images...
 			var loaded = this.images.map(function(gid, img){ return img.path })
-			var base_pattern = RegExp('^'+path)
+			//var base_pattern = RegExp('^'+path)
 
-			// find images...
-			glob(path + '/'+ this.config['image-file-pattern'],
-					{stat: !!this.config['image-file-read-stat']})
-				.on('end', function(lst){ 
-					var stats = this.statCache
-
-					// create a new images chunk...
-					lst = lst
-						// filter out loaded images...
-						.filter(function(p){
-							return loaded.indexOf(
-								util.normalizePath(p)
-									// remove the base path if it exists...
-									.replace(base_pattern, '')
-									// normalize the leading './'
-									.replace(/^[\/\\]+/, './')) < 0
-						})
-
+			return this.getImagesInPath(
+					path, 
+					that.config['image-file-read-stat'],
+					that.config['image-file-skip-previews'],
+					logger)
+				// load the data...
+				.then(function(imgs){
+					// remove the images we already have loaded...
+					imgs.forEach(function(gid, img){
+						// NOTE: we do not need to normalize anything as
+						// 		both the current path and loaded paths 
+						// 		came from the same code...
+						// XXX is this good enough???
+						// 		...might be a good idea to compare absolute
+						// 		paths...
+						if(loaded.index(img.path) > 0){
+							delete imgs[gid]
+						}	
+					})
 
 					// nothing new...
-					if(lst.length == 0){
+					if(img.length == 0){
 						// XXX
 						logger && logger.emit('loaded', [])
 						return
@@ -474,22 +463,8 @@ var FileSystemLoaderActions = actions.Actions({
 					// XXX
 					logger && logger.emit('queued', lst)
 
-					var new_images = images.Images.fromArray(lst, path)
-					var gids = new_images.keys()
+					var gids = imgs.keys()
 					var new_data = that.data.constructor.fromArray(gids)
-
-					new_images.forEach(function(gid, img){
-						var stat = stats[p.join(img.base_path, img.path)]
-
-						img.atime = stat.atime
-						img.mtime = stat.mtime
-						img.ctime = stat.ctime
-						img.birthtime = stat.birthtime
-
-						img.size = stat.size
-
-						// XXX do we need anything else???
-					})
 
 					// merge with index...
 					// NOTE: we are prepending new images to the start...
@@ -500,7 +475,7 @@ var FileSystemLoaderActions = actions.Actions({
 					that.data = new_data.join('top', that.data)
 					that.data.current = cur
 
-					that.images.join(new_images)
+					that.images.join(imgs)
 
 					that.reload()
 
