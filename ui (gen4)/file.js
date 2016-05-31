@@ -365,7 +365,7 @@ function(path, index_dir, logger){
 				})
 				.then(function(paths){
 					// start loading...
-					Promise.all(paths.map(function(p){
+					return Promise.all(paths.map(function(p){
 						//var path = pathlib.normalize(p +'/'+ index_dir) 
 						var path = util.normalizePath(p +'/'+ index_dir) 
 						return loadSaveHistoryList(path, index_dir)
@@ -377,8 +377,9 @@ function(path, index_dir, logger){
 								// 		itself in the base path...
 								res[p] = obj
 							})
-					})).then(function(){ resolve(res) })
+					}))
 				})
+				.then(function(){ resolve(res) })
 		}
 	})
 }

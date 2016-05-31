@@ -283,10 +283,14 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
+	// Get images in path...
+	//
 	// This will:
 	// 	- get images from path
 	// 	- get basic stat data
 	// 	- get previews from path if they exist
+	//
+	// Returns: Images object
 	//
 	getImagesInPath: ['- File/',
 		function(path, read_stat, skip_preview_search, logger){
@@ -371,7 +375,7 @@ var FileSystemLoaderActions = actions.Actions({
 	// XXX use the logger...
 	// XXX add a recursive option...
 	// 		...might also be nice to add sub-dirs to ribbons...
-	// XXX add option to preserve/update .data
+	// XXX add option to preserve/update .data (???)
 	// XXX make image pattern more generic...
 	loadImages: ['- File/Load images',
 		function(path, logger){
