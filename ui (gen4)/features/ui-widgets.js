@@ -1059,13 +1059,13 @@ var WidgetTestActions = actions.Actions({
 			})
 		})],
 
-	testTagCloud: ['Test/Demo cloud dialog...',
+	testBrowseCloud: ['Test/Demo cloud dialog...',
 		makeUIDialog(function(){
 			var actions = this
 
 			console.log('>>> args:', [].slice.call(arguments))
 
-			var res = browse.makeLister(null, function(path, make){
+			return browse.makeLister(null, function(path, make){
 				var that = this
 
 				var words = 'Lorem ipsum dolor sit amet, audiam sensibus '
@@ -1094,17 +1094,14 @@ var WidgetTestActions = actions.Actions({
 				// 		on sync, but for async dialogs this will align
 				// 		the selected field correctly.
 				make.done()
+			}, {
+				cloudView: true
 			})
 			// NOTE: this is not a dialog event, it is defined by the 
 			// 		container to notify us that we are closing...
 			.on('close', function(){
 				console.log('Dialog closing...')
 			})
-
-			res.dom
-				.addClass('cloud-view')
-
-			return res
 		})],
 
 	// XXX make this a toggler....

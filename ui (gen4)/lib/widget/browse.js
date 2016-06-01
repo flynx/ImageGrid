@@ -66,6 +66,17 @@ function makeBrowserMaker(constructor){
 }
 
 
+function makeSimpleAction(direction){
+	return function(elem){
+		if(elem != null){
+			this.select(elem)
+		}
+		this.navigate(direction)
+		return this
+	}
+}
+
+
 
 /*********************************************************************/
 
@@ -124,7 +135,7 @@ var BrowserClassPrototype = {
 	// Construct the dom...
 	make: function(obj, options){
 		var browser = $('<div>')
-			.addClass('browse-widget')
+			.addClass('browse-widget '+ ((options.cloudView || false) ? 'cloud-view' : ''))
 			// make thie widget focusable...
 			// NOTE: tabindex 0 means automatic tab indexing and -1 means 
 			//		focusable bot not tabable...
@@ -280,6 +291,9 @@ var BrowserPrototype = {
 		// elements.
 		// This is mainly used for flat list selectors.
 		flat: false,
+
+		// If set this will switch the browse dialog into cloud mode.
+		cloudView: false,
 
 		// List of events that will not get propagated outside the browser...
 		//
@@ -440,11 +454,11 @@ var BrowserPrototype = {
 			Up: 'up!',
 			Down: 'down!',
 			Left: {
-				default: 'pop!',
+				default: 'left!',
 				ctrl: 'update!: "/"',
 			},
 			Backspace: 'Left',
-			Right: 'push',
+			Right: 'right',
 			P: 'push',
 
 			// XXX
@@ -527,6 +541,18 @@ var BrowserPrototype = {
 			this.dom.removeClass('flat')
 		}
 		this.options.flat = value
+	},
+
+	get cloud(){
+		return this.dom.hasClass('cloud-view') || this.options.cloudView
+	},
+	set cloud(value){
+		if(value){
+			this.dom.addClass('cloud-view')
+		} else {
+			this.dom.removeClass('cloud-view')
+		}
+		this.options.cloudView = value
 	},
 
 	// XXX should these set both the options and dom???
@@ -1722,36 +1748,28 @@ var BrowserPrototype = {
 			// fall back to select...
 			: this.select(action, filtering)
 	},
+	
+	// shorthand actions...
+	next: makeSimpleAction('next'),
+	prev: makeSimpleAction('prev'),
 
-	// Select next/prev element...
-	next: function(elem){
+	up: makeSimpleAction('up'),
+	down: makeSimpleAction('down'),
+	left: function(elem){
 		if(elem != null){
 			this.select(elem)
 		}
-		this.navigate('next')
-		return this
+		return this.cloud ?
+			this.navigate('prev')
+			: this.pop()
 	},
-	prev: function(elem){
+	right: function(elem){
 		if(elem != null){
 			this.select(elem)
 		}
-		this.navigate('prev')
-		return this
-	},
-
-	up: function(elem){
-		if(elem != null){
-			this.select(elem)
-		}
-		this.navigate('up')
-		return this
-	},
-	down: function(elem){
-		if(elem != null){
-			this.select(elem)
-		}
-		this.navigate('down')
-		return this
+		return this.cloud ?
+			this.navigate('next')
+			: this.push()
 	},
 
 
