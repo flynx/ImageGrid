@@ -1058,7 +1058,6 @@ var WidgetTestActions = actions.Actions({
 				console.log('Dialog closing...')
 			})
 		})],
-
 	testBrowseCloud: ['Test/Demo cloud dialog...',
 		makeUIDialog(function(){
 			var actions = this
@@ -1080,23 +1079,22 @@ var WidgetTestActions = actions.Actions({
 					+'cu has corpora definitionem.'
 
 				words
-					.split(/\s/g)
+					.split(/\s+/g)
 					.unique()
 					.forEach(function(c){ 
 						make(c) 
+							// toggle opacity...
+							.on('open', function(){
+								var e = $(this).find('.text')
+								e.css('opacity', 
+									e.css('opacity') == 0.3 ? '' : 0.3)
+							})
 					})
 
-				// NOTE: the dialog's .parent is not yet set at this point...
-
-				// This will finalize the dialog...
-				//
-				// NOTE: this is not needed here as the dialog is drawn
-				// 		on sync, but for async dialogs this will align
-				// 		the selected field correctly.
 				make.done()
-			}, {
-				cloudView: true
-			})
+			}, 
+			// make the dialog a cloud...
+			{ cloudView: true })
 			// NOTE: this is not a dialog event, it is defined by the 
 			// 		container to notify us that we are closing...
 			.on('close', function(){
