@@ -1059,6 +1059,53 @@ var WidgetTestActions = actions.Actions({
 			})
 		})],
 
+	testTagCloud: ['Test/Demo cloud dialog...',
+		makeUIDialog(function(){
+			var actions = this
+
+			console.log('>>> args:', [].slice.call(arguments))
+
+			var res = browse.makeLister(null, function(path, make){
+				var that = this
+
+				var words = 'Lorem ipsum dolor sit amet, audiam sensibus '
+					+'an mea. Accusam blandit ius in, te magna dolorum '
+					+'moderatius pro, sit id dicant imperdiet definiebas. '
+					+'Ad duo quod mediocrem, movet laudem discere te mel, '
+					+'sea ipsum habemus gloriatur at. Sonet prodesset '
+					+'democritum in vis, brute vitae recusabo pri ad, '
+					+'--- '
+					+'latine civibus efficiantur at his. At duo lorem '
+					+'legimus, errem constituam contentiones sed ne, '
+					+'cu has corpora definitionem.'
+
+				words
+					.split(/\s/g)
+					.unique()
+					.forEach(function(c){ 
+						make(c) 
+					})
+
+				// NOTE: the dialog's .parent is not yet set at this point...
+
+				// This will finalize the dialog...
+				//
+				// NOTE: this is not needed here as the dialog is drawn
+				// 		on sync, but for async dialogs this will align
+				// 		the selected field correctly.
+				make.done()
+			})
+			// NOTE: this is not a dialog event, it is defined by the 
+			// 		container to notify us that we are closing...
+			.on('close', function(){
+				console.log('Dialog closing...')
+			})
+
+			res.dom
+				.addClass('cloud-view')
+
+			return res
+		})],
 
 	// XXX make this a toggler....
 	partitionByMonth: ['Test/',

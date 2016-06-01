@@ -303,6 +303,23 @@
 
 
 
+/****************************************************** Cloud List ***/
+
+.browse-widget.cloud-view .list>div {
+	display: inline-block;
+	border-radius: 10px;
+}
+
+.browse-widget.cloud-view .list>hr.separator {
+	display: block;
+}
+
+.browse-widget.cloud-view .list>div .text:first-child:before {
+	content: "";
+}
+
+
+
 /******************************************************** Theaming ***/
 
 /* Light */

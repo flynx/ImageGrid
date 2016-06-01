@@ -34,6 +34,7 @@ CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 LIB_DIR=lib
 EXT_LIB_DIR=ext-lib
 CSS_DIR=css
+DOMAIN_DIR=imagegrid
 FEATURES_DIR=features
 WORKERS_DIR=workers
 NW_PROJECT_FILE=package.json
@@ -112,7 +113,7 @@ $(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) $(NW_PROJECT_FILE) \
 	$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) \
 		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
-		$(WORKERS_DIR) $(CSS_DIR) \
+		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) \
 		$(NODE_DIR)/app-module-path
 
 zip: $(APP_ZIP)

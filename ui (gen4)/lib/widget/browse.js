@@ -437,8 +437,8 @@ var BrowserPrototype = {
 		General: {
 			pattern: '.browse-widget',
 
-			Up: 'prev!',
-			Down: 'next!',
+			Up: 'up!',
+			Down: 'down!',
 			Left: {
 				default: 'pop!',
 				ctrl: 'update!: "/"',
@@ -1671,7 +1671,52 @@ var BrowserPrototype = {
 			} else {
 				return this.select(to, filtering)
 			}
+
+		} else if(action == 'down' || action == 'up'){
+			var from = this.select('!', filtering)
+
+			// special case: nothing selected -> select first/last...
+			if(from.length == 0){
+				return this.navigate(action == 'down' ? 'first' : 'last')
+			}
+
+			var t = from.offset()
+			var l = t.left
+			t = t.top
+
+			// next lines...
+			var to = from[(action == 'down' ? 'next' : 'prev') +'All'](pattern)
+				.filter(function(_, e){ return $(e).offset().top != t })
+
+			// special case: nothing below -> select wrap | last/first...
+			if(to.length == 0){
+				// select first/last...
+				//return this.navigate(action == 'down' ? 'last' : 'first')
+
+				// wrap around....
+				to = this.filter('*').filter(pattern)
+
+				// when going up start from the bottom...
+				if(action == 'up'){
+					to = $(to.toArray().reverse())
+				} 
+			}
+			
+			t = to.eq(0).offset().top
+			to = to
+				// next line only...
+				.filter(function(_, e){ return $(e).offset().top == t })
+				// sort by distance...
+				// XXX this does not account for element width...
+				.sort(function(a, b){
+					return Math.abs(l - $(a).offset().left) 
+						- Math.abs(l - $(b).offset().left)
+				})
+				.first()
+
+			return this.select(to, filtering)
 		}
+
 		return action == 'first' ? this.select(0, filtering)
 			: action == 'last' ? this.select(-1, filtering)
 			// fall back to select...
@@ -1693,6 +1738,22 @@ var BrowserPrototype = {
 		this.navigate('prev')
 		return this
 	},
+
+	up: function(elem){
+		if(elem != null){
+			this.select(elem)
+		}
+		this.navigate('up')
+		return this
+	},
+	down: function(elem){
+		if(elem != null){
+			this.select(elem)
+		}
+		this.navigate('down')
+		return this
+	},
+
 
 	getTopVisibleElem: function(){
 		var elems = this.filter('*')
