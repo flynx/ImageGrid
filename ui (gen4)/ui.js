@@ -45,7 +45,7 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-var viewer = require('viewer')
+var viewer = require('imagegrid/viewer')
 
 
 

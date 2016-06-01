@@ -27,7 +27,7 @@ if(typeof(process) != 'undefined'){
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
 
-	var file = require('file')
+	var file = require('imagegrid/file')
 }
 
 

@@ -22,8 +22,8 @@ if(typeof(process) != 'undefined'){
 	return module
 }
 
-var data = require('data')
-var images = require('images')
+var data = require('imagegrid/data')
+var images = require('imagegrid/images')
 
 var util = require('lib/util')
 var tasks = require('lib/tasks')

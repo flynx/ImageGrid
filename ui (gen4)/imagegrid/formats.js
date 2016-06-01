@@ -68,7 +68,7 @@ function(data, cmp){
 //
 // NOTE: this will just convert the JSON format and will not construct 
 // 		the Data object...
-// NOTE: this uses require('data').Data().newGid(..) for ribbon gid 
+// NOTE: this uses require('imagegrid/data').Data().newGid(..) for ribbon gid 
 // 		generation...
 //
 module.VERSIONS['3.0'] =
@@ -76,7 +76,7 @@ function(data){
 	data = data.version < '2.0' ? module.VERSIONS['2.0'](data) : data
 
 	// XXX is this the right way to go???
-	var that = require('data').Data()
+	var that = require('imagegrid/data').Data()
 
 	var res = {}
 	res.version = '3.0'

@@ -15,11 +15,11 @@ if(typeof(process) != 'undefined'){
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
 
-	var file = require('file')
+	var file = require('imagegrid/file')
 }
 
-var data = require('data')
-var images = require('images')
+var data = require('imagegrid/data')
+var images = require('imagegrid/images')
 
 var util = require('lib/util')
 

@@ -20,8 +20,8 @@ var util = require('lib/util')
 var transform = require('lib/transform')
 var object = require('lib/object')
 
-var data = require('data')
-var images = require('images')
+var data = require('imagegrid/data')
+var images = require('imagegrid/images')
 
 
 var IMAGE = '.image:not(.clone)'

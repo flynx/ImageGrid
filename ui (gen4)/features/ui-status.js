@@ -13,9 +13,9 @@ var actions = require('lib/actions')
 var features = require('lib/features')
 var keyboard = require('lib/keyboard')
 
-var data = require('data')
-var images = require('images')
-var ribbons = require('ribbons')
+var data = require('imagegrid/data')
+var images = require('imagegrid/images')
+var ribbons = require('imagegrid/ribbons')
 
 var core = require('features/core')
 var base = require('features/base')

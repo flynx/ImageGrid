@@ -13,8 +13,8 @@ var actions = require('lib/actions')
 var features = require('lib/features')
 var toggler = require('lib/toggler')
 
-var data = require('data')
-var images = require('images')
+var data = require('imagegrid/data')
+var images = require('imagegrid/images')
 
 var core = require('features/core')
 

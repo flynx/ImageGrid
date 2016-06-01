@@ -11,10 +11,11 @@
 define(function(require){ var module = {}
 
 
+var sha1 = require('ext-lib/sha1')
+
 var object = require('lib/object')
 
-var formats = require('formats')
-var sha1 = require('./ext-lib/sha1')
+var formats = require('imagegrid/formats')
 
 
 module.DATA_VERSION = '3.0'

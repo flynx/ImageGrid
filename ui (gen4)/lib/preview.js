@@ -16,7 +16,7 @@ try{
 if(typeof(process) != 'undefined'){
 	var fse = requirejs('fs-extra')
 	var pathlib = requirejs('path')
-	var file = requirejs('./file')
+	var file = requirejs('imagegrid/file')
 }
 
 

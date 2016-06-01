@@ -8,7 +8,7 @@ define(function(require){ var module = {}
 
 //var DEBUG = DEBUG != null ? DEBUG : true
 
-var sha1 = require('./ext-lib/sha1')
+var sha1 = require('ext-lib/sha1')
 
 var object = require('lib/object')
 
