@@ -146,7 +146,8 @@ var FileSystemLoaderActions = actions.Actions({
 	checkPath: ['- File/',
 		function(path){ return fse.existsSync(path) }],
 
-	// 
+	// Load index...
+	//
 	// This maintains:
 	// 	.location.loaded		- list of loaded URLs...
 	//
@@ -309,6 +310,11 @@ var FileSystemLoaderActions = actions.Actions({
 	// 		.base_path...
 	// NOTE: if multiple sets of previews are located this will use the 
 	// 		last found and set image .base_path and .path accordingly...
+	//
+	// XXX should this accept a list of gids???
+	// XXX revise image .base_path and .path handling: should .base_path 
+	// 		and .path be set relative to .located.path or relative to 
+	// 		given path???
 	getPreviews: ['- File/',
 		function(pattern, path, images){
 			images = images || this.images
@@ -478,11 +484,13 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
+	// Load new images...
+	//
+	// This will prepend images in path (default .location.path) that 
+	// were not loaded in index...
+	//
 	// XXX revise logger...
-	// XXX does not work yet...
-	// 		- load: L:\mnt\Dropbox\Instagram\fav\ALL\
-	// 		- sort
-	// 		- .loadNewImages() -> will load one new image (that already existed)
+	// XXX revise alignment...
 	loadNewImages: ['File/Load new images',
 		function(path, logger){
 			path = path || this.location.path
@@ -514,7 +522,7 @@ var FileSystemLoaderActions = actions.Actions({
 						// XXX is this good enough???
 						// 		...might be a good idea to compare absolute
 						// 		paths...
-						if(loaded.indexOf(img.path) > 0){
+						if(loaded.indexOf(img.path) >= 0){
 							delete imgs[gid]
 						}	
 					})
@@ -538,7 +546,7 @@ var FileSystemLoaderActions = actions.Actions({
 					var cur = that.data.current
 					// XXX this does not seem to work...
 					//that.data = new_data.join(that.data)
-					that.data = new_data.join('base', that.data)
+					that.data = new_data.join('top', that.data)
 					that.data.current = cur
 
 					that.images.join(imgs)
