@@ -127,8 +127,9 @@ function(base, index_dir, logger){
 
 var listPreviews =
 module.listPreviews = 
-function(base){
-	return gGlob(base +'/*px/*jpg')
+function(base, img_pattern){
+	//return gGlob(base +'/*px/*jpg')
+	return gGlob(base +'/*px/'+(img_pattern || '*')+'.jpg')
 }
 
 
@@ -628,10 +629,11 @@ function(path, index_dir, from_date, logger){
 // XXX handle errors....
 var loadPreviews =
 module.loadPreviews =
-function(base, previews, index_dir, absolute_path){
+function(base, pattern, previews, index_dir, absolute_path){
 	previews = previews || {}
 	index_dir = index_dir || INDEX_DIR
 	base = util.normalizePath(base)
+	pattern = pattern || '*'
 
 	// we got an explicit index....
 	if(pathlib.basename(base) == index_dir){
@@ -642,7 +644,7 @@ function(base, previews, index_dir, absolute_path){
 
 			var images = previews[base]
 
-			listPreviews(base)
+			listPreviews(base, pattern)
 				// XXX handle errors....
 				//.on('error', function(err){
 				//})
@@ -681,7 +683,7 @@ function(base, previews, index_dir, absolute_path){
 				//.on('error', function(err){
 				//})
 				.on('match', function(base){
-					queue.push(loadPreviews(base, previews, index_dir, absolute_path))
+					queue.push(loadPreviews(base, pattern, previews, index_dir, absolute_path))
 				})
 				.on('end', function(){
 					Promise.all(queue)

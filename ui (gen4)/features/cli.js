@@ -62,16 +62,18 @@ var CLIActions = actions.Actions({
 			path = util.normalizePath(path)
 
 			return this.loadImages(path)
+				// save base index...
 				.then(function(){ 
-					// save base index...
-					that.saveIndex(path)
-
-					// make the previews...
-					that.makePreviews('all')
-
+					return that.saveIndex(path)
+				})
+				// make the previews...
+				.then(function(){
+					return that.makePreviews('all')
+				})
+				.then(function(){
 					//that.readAllMetadata()
 
-					that
+					return that
 						.sortImages()
 						// XXX for some reason this is not running from cli
 						.saveIndex(path)
@@ -112,12 +114,13 @@ module.CLI = core.ImageGridFeatures.Feature({
 					var argv = process.argv
 				}
 
-				var package = requirejs('fs-extra').readJSONSync('./package.json')
+				// XXX this is not portable...
+				//var package = requirejs('fs-extra').readJSONSync('./package.json')
 
 				var cli = requirejs('commander')
 				cli
 					// XXX get the version from package.json...
-					.version(package.version)
+					//.version(package.version)
 					//.usage('[command] [options] ..')
 
 					.option('-v, --verbose', 'verbose mode', function(){

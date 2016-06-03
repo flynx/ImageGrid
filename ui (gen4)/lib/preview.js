@@ -93,7 +93,8 @@ function(images, sizes, base_path, target_tpl, callback){
 								status: 'skipped', 
 								gid: gid, 
 								res: res, 
-								path: rel
+								path: rel,
+								orientation: metadata.orientation,
 							})
 
 							return
@@ -113,7 +114,8 @@ function(images, sizes, base_path, target_tpl, callback){
 										status: 'done', 
 										gid: gid, 
 										res: res, 
-										path: rel
+										path: rel,
+										orientation: metadata.orientation,
 									})
 								})
 					})

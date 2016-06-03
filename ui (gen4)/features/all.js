@@ -13,6 +13,7 @@ var core = require('features/core')
 
 require('features/base')
 require('features/sort')
+require('features/tags')
 require('features/location')
 require('features/history')
 require('features/app')

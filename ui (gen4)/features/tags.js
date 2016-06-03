@@ -31,10 +31,10 @@ module.PersistentTags = core.ImageGridFeatures.Feature({
 
 	tag: 'persistent-tags',
 	depends: [
-		// XXX
+		'base',
 	],
 
-	actions: TagCloudActions, 
+	actions: PersistentTagsActions, 
 
 	handlers: [],
 })
@@ -63,7 +63,7 @@ module.TagUI = core.ImageGridFeatures.Feature({
 	doc: '',
 
 	// XXX
-	tag: 'ui-tag',
+	tag: 'ui-tags',
 	depends: [
 		// XXX
 	],

@@ -38,6 +38,33 @@ if(typeof(process) != 'undefined'){
 	var ensureDir = file.denodeify(fse.ensureDir)
 }
 
+function normalizeOrientation(orientation){
+	return {
+		orientation: ({
+				0: 0,
+				1: 0,
+				2: 0,
+				3: 180,
+				4: 0,
+				5: 90,
+				6: 90,
+				7: 90, 
+				8: 270,
+			})[orientation],
+		flipped: ({
+				0: null,
+				1: null,
+				2: ['horizontal'],
+				3: null,
+				4: ['vertical'],
+				5: ['vertical'],
+				6: null,
+				7: ['horizontal'],
+				8: null,
+			})[orientation],
+	}
+}
+
 
 
 /*********************************************************************/
@@ -162,10 +189,18 @@ var SharpActions = actions.Actions({
 			var post_handler = function(err, data){
 				if(data.status == 'done' || data.status == 'skipped'){
 					// get/make preview list...
-					var preview = that.images[data.gid].preview =
-						that.images[data.gid].preview || {}
+					var img = that.images[data.gid]
+					var preview = img.preview =
+						img.preview || {}
 
+					// save previews...
 					preview[data.res + 'px'] = data.path
+
+					var o = normalizeOrientation(data.orientation)
+
+					// save orientation...
+					img.orientation = o.orientation
+					img.flipped = o.flipped
 
 					that.markChanged(data.gid)
 				}	
@@ -233,6 +268,35 @@ module.Sharp = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ return !!sharp },
 
 	handlers: [
+		// set orientation if not defined...
+		['updateImage',
+			function(_, gid){
+				var that = this
+				var img = this.images[gid]
+
+				if(img && img.orientation == null){
+					img.orientation = 0
+
+					sharp(this.getImagePath(gid))
+						.metadata()
+						.then(function(data){
+							var o = normalizeOrientation(data.orientation)
+
+							// NOTE: we need to set orientation to something
+							// 		or we'll check it again and again...
+							img.orientation = o.orientation || 0
+							img.flipped = o.flipped
+
+							that.markChanged(gid)
+
+							// update image to use the orientation...
+							// XXX this might be a source for recursion 
+							// 		as it triggers .updateImage(..) again...
+							that.ribbons && that.ribbons.updateImage(gid)
+						})
+				}
+			}],
+
 		// XXX need to:
 		// 		- if image too large to set the preview to "loading..."
 		// 		- create previews...

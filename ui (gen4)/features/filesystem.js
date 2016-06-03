@@ -124,7 +124,7 @@ var FileSystemLoaderActions = actions.Actions({
 		'image-file-pattern': '*+(jpg|jpeg|png|JPG|JPEG|PNG)',
 
 		'image-file-read-stat': true,
-		'image-file-skip-previews': true,
+		'image-file-skip-previews': false,
 
 		// XXX if true and multiple indexes found, load only the first 
 		// 		without merging...
@@ -283,12 +283,70 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
+	// Get image(s) previews...
+	//
+	//	Load current image previews...
+	//	.getPreviews()
+	//	.getPreviews('current')
+	//		-> promise
+	//
+	//	Load previews for specific image...
+	//	.getPreviews(gid)
+	//		-> promise
+	//
+	//	Load all image previews...
+	//	.getPreviews('*')
+	//	.getPreviews('all')
+	//		-> promise
+	//
+	//	Load previews that match glob pattern...
+	//	.getPreviews(pattern)
+	//		-> promise
+	//		NOTE: this is useful for finding previews for example by 
+	//			image name, e.g. .getPreviews('*' + ig.image[gid].name)
+	//
+	// NOTE: this will override image .preview and .base_path
+	// NOTE: if multiple sets of previews are located this will use the 
+	// 		last found and set image .base_path accordingly...
+	getPreviews: ['- File/',
+		function(pattern, path, images){
+			images = images || this.images
+			pattern = pattern == 'current' ? this.current + '*'
+				: pattern == 'all' ? '*'
+				// explicit gid...
+				: pattern in images ? pattern + '*'
+				// other pattern...
+				: pattern != null ? pattern
+				// default...
+				: this.current + '*'
+			path = path || this.location.path
+
+			var index_dir = this.config['index-dir']
+
+			return file.loadPreviews(path, pattern, null, index_dir)
+				.then(function(previews){
+					for(var l in previews){
+						var p = previews[l]
+						p && Object.keys(p).forEach(function(gid){
+							if(gid in images){
+								// XXX is this correct???
+								images[gid].base_path = pathlib.basename(l) == index_dir ? 
+									pathlib.dirname(l) 
+									: l
+								images[gid].preview = p[gid].preview
+							}
+						})
+					}
+					return images
+				})
+		}],
+
 	// Get images in path...
 	//
 	// This will:
 	// 	- get images from path
 	// 	- get basic stat data
-	// 	- get previews from path if they exist
+	// 	- get previews from path if they exist (.getPreviews(..))
 	//
 	// Returns: Images object
 	//
@@ -349,24 +407,13 @@ var FileSystemLoaderActions = actions.Actions({
 			})
 			// load previews if they exist...
 			.then(function(imgs){
-				if(skip_preview_search){
-					return imgs
-				}
-
 				var index_dir = that.config['index-dir']
 				var index_path = path +'/'+ index_dir
 
-				return file.loadPreviews(index_path, null, index_dir)
-					.then(function(previews){
-						previews = previews[index_path]
-						previews && Object.keys(previews).forEach(function(gid){
-							if(gid in imgs){
-								imgs[gid].preview = previews[gid].preview
-							}
-						})
-
-						return imgs
-					})
+				return !skip_preview_search ? 
+					//that.getPreviews('all', path, imgs)
+					that.getPreviews('all', index_path, imgs)
+					: imgs 
 			})
 		}],
 
