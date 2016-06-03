@@ -155,12 +155,6 @@ var FileSystemLoaderActions = actions.Actions({
 	// NOTE: this will add a .from field to .location, this will indicate
 	// 		the date starting from which saves are loaded.
 	//
-	// XXX BUG: if no <keyword>.json files exist this will not load 
-	// 		anything...
-	// 		To reproduce:
-	// 			.loadImages(..)
-	// 			.saveIndex()
-	// 			.loadIndex(..)
 	// XXX add a symmetric equivalent to .prepareIndexForWrite(..) so as 
 	// 		to enable features to load their data...
 	// XXX look inside...
