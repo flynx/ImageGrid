@@ -305,9 +305,10 @@ var FileSystemLoaderActions = actions.Actions({
 	//		NOTE: this is useful for finding previews for example by 
 	//			image name, e.g. .getPreviews('*' + ig.image[gid].name)
 	//
-	// NOTE: this will override image .preview and .base_path
+	// NOTE: this will override image .preview and may change .path and
+	// 		.base_path...
 	// NOTE: if multiple sets of previews are located this will use the 
-	// 		last found and set image .base_path accordingly...
+	// 		last found and set image .base_path and .path accordingly...
 	getPreviews: ['- File/',
 		function(pattern, path, images){
 			images = images || this.images
@@ -329,10 +330,21 @@ var FileSystemLoaderActions = actions.Actions({
 						var p = previews[l]
 						p && Object.keys(p).forEach(function(gid){
 							if(gid in images){
-								// XXX is this correct???
-								images[gid].base_path = pathlib.basename(l) == index_dir ? 
+								var base = pathlib.basename(l) == index_dir ? 
 									pathlib.dirname(l) 
 									: l
+
+								// update .path and .base_path if they change...
+								if(images[gid].base_path != base){
+									// XXX
+									console.warn('getPreviews(..): changing .base_path of image:', gid)
+
+									var rel = pathlib.relative(images[gid].base_path, base)
+
+									images[gid].path = pathlib.join(rel, images[gid].path) 
+									images[gid].base_path = base
+								}
+
 								images[gid].preview = p[gid].preview
 							}
 						})
@@ -467,7 +479,10 @@ var FileSystemLoaderActions = actions.Actions({
 		}],
 
 	// XXX revise logger...
-	// XXX test...
+	// XXX does not work yet...
+	// 		- load: L:\mnt\Dropbox\Instagram\fav\ALL\
+	// 		- sort
+	// 		- .loadNewImages() -> will load one new image (that already existed)
 	loadNewImages: ['File/Load new images',
 		function(path, logger){
 			path = path || this.location.path
@@ -499,20 +514,20 @@ var FileSystemLoaderActions = actions.Actions({
 						// XXX is this good enough???
 						// 		...might be a good idea to compare absolute
 						// 		paths...
-						if(loaded.index(img.path) > 0){
+						if(loaded.indexOf(img.path) > 0){
 							delete imgs[gid]
 						}	
 					})
 
 					// nothing new...
-					if(img.length == 0){
+					if(imgs.length == 0){
 						// XXX
 						logger && logger.emit('loaded', [])
 						return
 					}
 
 					// XXX
-					logger && logger.emit('queued', lst)
+					logger && logger.emit('queued', imgs)
 
 					var gids = imgs.keys()
 					var new_data = that.data.constructor.fromArray(gids)
@@ -523,7 +538,7 @@ var FileSystemLoaderActions = actions.Actions({
 					var cur = that.data.current
 					// XXX this does not seem to work...
 					//that.data = new_data.join(that.data)
-					that.data = new_data.join('top', that.data)
+					that.data = new_data.join('base', that.data)
 					that.data.current = cur
 
 					that.images.join(imgs)
@@ -531,7 +546,7 @@ var FileSystemLoaderActions = actions.Actions({
 					that.reload()
 
 					// XXX report that we are done...
-					logger && logger.emit('loaded', lst)
+					logger && logger.emit('loaded', imgs)
 				})
 		}],
 })
