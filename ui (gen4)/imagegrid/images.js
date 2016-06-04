@@ -662,7 +662,7 @@ module.ImagesPrototype = {
 
 
 	clone: function(){
-		return (new Images()).join(this)
+		return (new Images()).loadJSON(this.dumpJSON())
 	},
 	// NOTE: this will join the other data into the current object in-place,
 	// 		use .clone() to preserve current data...

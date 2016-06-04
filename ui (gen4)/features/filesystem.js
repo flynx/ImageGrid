@@ -125,10 +125,6 @@ var FileSystemLoaderActions = actions.Actions({
 
 		'image-file-read-stat': true,
 		'image-file-skip-previews': false,
-
-		// XXX if true and multiple indexes found, load only the first 
-		// 		without merging...
-		'load-first-index-only': false,
 	},
 
 	// XXX should this be more general???
@@ -161,6 +157,8 @@ var FileSystemLoaderActions = actions.Actions({
 	loadIndex: ['- File/Load index',
 		function(path, from_date, logger){
 			var that = this
+			// XXX get a logger...
+			logger = logger || this.logger
 
 			if(path == null){
 				return
@@ -171,9 +169,6 @@ var FileSystemLoaderActions = actions.Actions({
 				logger = from_date
 				from_date = null
 			}
-
-			// XXX get a logger...
-			logger = logger || this.logger
 
 			// XXX make this load incrementally (i.e. and EventEmitter
 			// 		a-la glob)....
@@ -231,8 +226,6 @@ var FileSystemLoaderActions = actions.Actions({
 
 						// load the first index...
 						if(index == null){
-							// XXX use the logger...
-							//console.log('LOADING:', k, res)
 							logger && logger.emit('base index', k, res)
 
 							index = part
@@ -252,29 +245,23 @@ var FileSystemLoaderActions = actions.Actions({
 						}
 
 						loaded.push(k)
-
-						// XXX do a better merge and remove this...
-						// 		...we either need to lazy-load clustered indexes
-						// 		or merge, in both cases base_path should reflet
-						// 		the fact that we have multiple indexes...
-						if(that.config['load-first-index-only']){
-							break
-						}
 					}
 
 					logger && logger.emit('load index', index)
 
-					that.load(index)
-
-					that.__location = {
+					// prepare the location data...
+					var location = {
 						path: path,
 						loaded: loaded,
 						method: 'loadIndex',
 					}
-
 					if(from_date){
-						that.__location.from = from_date
+						location.from = from_date
 					}
+
+					// this is the critical section, after this point we
+					// are doing the actual loading....
+					that.recoverableLoad(function(){ that.load(index) }, location) 
 				})
 		}],
 
@@ -441,22 +428,10 @@ var FileSystemLoaderActions = actions.Actions({
 			if(path == null){
 				return
 			}
-
-			// XXX get a logger...
 			logger = logger || this.logger
 
 			var that = this
 			path = util.normalizePath(path)
-
-			// NOTE: we set this before we start the load so as to let 
-			// 		clients know what we are loading and not force them
-			// 		to wait to find out...
-			// XXX not sure if this is the way to go...
-			var location = 
-			this.__location = {
-				path: path,
-				method: 'loadImages',
-			}
 
 			// get the image list...
 			return this.getImagesInPath(
@@ -466,15 +441,17 @@ var FileSystemLoaderActions = actions.Actions({
 					logger)
 				// load the data...
 				.then(function(imgs){
-					that.load({
-						images: imgs,
-						data: data.Data.fromArray(imgs.keys()),
-					})
+					that.recoverableLoad(function(){
 
-					// NOTE: we set it again because .load() does a .clear()
-					// 		before it starts loading which clears the .location
-					// 		too...
-					that.__location = location
+						that.load({
+							images: imgs,
+							data: data.Data.fromArray(imgs.keys()),
+						})
+
+					}, {
+						path: path,
+						method: 'loadImages',
+					})
 				})
 		}],
 
@@ -561,8 +538,8 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-loader',
 	depends: [
-		'fs-info',
 		'location',
+		'fs-info',
 		'tasks',
 	],
 	suggested: [
@@ -1156,8 +1133,6 @@ module.FileSystemLoaderURLHistory = core.ImageGridFeatures.Feature({
 	handlers: [
 		pushToHistory('loadImages'), 
 		pushToHistory('loadIndex'), 
-		pushToHistory('loadPath'), 
-		//pushToHistory('loadNewImages'), 
 	],
 })
 
@@ -1400,18 +1375,27 @@ var FileSystemWriterActions = actions.Actions({
 			}
 		}],
 	
+	// Save index...
+	//
+	// Returns:
+	// 	a promise, when resolved will get the location object as argument.
+	//
 	// NOTE: with no arguments this will save index to .location.path
+	//
 	// XXX should this return a promise??? ...a clean promise???
 	// XXX BUG: after .loadImages(..) and without arguments this produces
 	// 		a result that is not loaded....
 	saveIndex: ['- File/',
 		function(path, logger){
 			var that = this
+			// XXX get a logger...
+			logger = logger || this.logger
 
 			path = path || this.location.loaded
 			path = path && path.length == 1 ? path[0] : path 
 			path = util.normalizePath(path)
 
+			// merged index...
 			// XXX
 			if(path instanceof Array){
 				console.error('saving to merged indexes not yet supported...')
@@ -1431,12 +1415,12 @@ var FileSystemWriterActions = actions.Actions({
 				path = this.location.path +'/'+ path
 			}
 
-			// XXX get a logger...
-			logger = logger || this.logger
-
 			// XXX get real base path...
 			//path = path || this.location.path +'/'+ this.config['index-dir']
 
+			// NOTE: this will prevent us from overwriting the location
+			// 		after we have loaded something else...
+			var location = this.location
 			var index = this.prepareIndexForWrite()
 
 			return file.writeIndex(
@@ -1446,10 +1430,12 @@ var FileSystemWriterActions = actions.Actions({
 					path +'/'+ this.config['index-dir'], 
 					index.date,
 					this.config['index-filename-template'], 
-					logger || this.logger)
+					logger)
 				.then(function(){
-					that.location.method = 'loadIndex'
-					that.location.from = index.date
+					location.method = 'loadIndex'
+					location.from = index.date
+
+					return location
 				})
 		}],
 

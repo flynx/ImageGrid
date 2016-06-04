@@ -30,6 +30,10 @@ var core = require('features/core')
 // 		.path or .url
 
 var LocationActions = actions.Actions({
+	config: {
+		'recover-load-errors-to-previous-location': true,
+	},
+
 	// Format:
 	// 	{
 	// 		path: <base-path>,
@@ -60,6 +64,7 @@ var LocationActions = actions.Actions({
 
 		return this.__location
 	},
+	// XXX is 'loadIndex' a good default???
 	set location(value){
 		// got a path...
 		if(typeof(value) == typeof('str')){
@@ -87,6 +92,7 @@ var LocationActions = actions.Actions({
 
 		this.__location = value 
 
+		// XXX is 'loadIndex' a good default???
 		var res = this[value.method || 'loadIndex'](path)
 
 		// XXX load current...
@@ -99,6 +105,64 @@ var LocationActions = actions.Actions({
 			this.current = cur
 		}
 	},
+
+	// Wrap the loader and recover if it fails...
+	//
+	// 	.recoverableLoad(loader, new-location)
+	// 		-> actions
+	//
+	// NOTE: this avoids load loops by attempting to recover only once...
+	//
+	// XXX should this be used in .location setter? 
+	recoverableLoad: ['- Location/',
+		function(loader, location){
+			// this is the critical section, after this point we
+			// are doing the actual loading....
+			try {
+				// prepare to recover, just in case...
+				this.__recover = (this.__recover !== false 
+						&& this.config['recover-load-errors-to-previous-location']) ? 
+					this.location
+					: false
+
+				loader()
+				// NOTE: we are setting this after the load because the 
+				// 		loader may .clear() the viewer, thus clearing the
+				// 		.location too...
+				this.__location = location 
+
+				// all went well clear the recovery data...
+				delete this.__recover
+
+			// something bad happened, clear and handle it...
+			} catch(err){
+				this.clear()
+
+				console.error(err)
+
+				// recover to last location...
+				if(this.__recover){
+					var l = this.__recover
+
+					// NOTE: this will prevent us from entering
+					// 		a recover attempt loop...
+					// 		...if the recovery fails we will just
+					// 		clear and stop.
+					this.__recover = false
+
+					// do the loading...
+					this.location = l
+
+				// fail...
+				} else {
+					// clear the recovery data...
+					delete this.__recover
+
+					// fail...
+					throw err
+				}
+			}
+		}],
 })
 
 module.Location = core.ImageGridFeatures.Feature({

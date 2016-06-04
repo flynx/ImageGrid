@@ -361,23 +361,25 @@ module.URLHistoryFSWriter = core.ImageGridFeatures.Feature({
 
 	handlers: [
 		['saveIndex',
-			function(){ 
-				// push saved to top...
-				if(this.config['url-history-push-to-top-on-save']){
-					this.pushURLToHistory()
+			function(res){ 
+				var that = this
+				res.then(function(l){
+					// push saved to top...
+					if(that.config['url-history-push-to-top-on-save']){
+						that.pushURLToHistory(l.path, l.method)
 
-				// update...
-				} else {
-					var l = this.location
-					var e = this.url_history[l.path]
-					if(e != null){
-						e.open = l.method
-						this.saveURLHistory()
-
+					// update...
 					} else {
-						this.pushURLToHistory()
+						var e = that.url_history[l.path]
+						if(e != null){
+							e.open = l.method
+							that.saveURLHistory()
+
+						} else {
+							that.pushURLToHistory(l.path, l.method)
+						}
 					}
-				}
+				})
 			}], 
 	],
 })
