@@ -113,7 +113,8 @@ var LocationActions = actions.Actions({
 	//
 	// NOTE: this avoids load loops by attempting to recover only once...
 	//
-	// XXX should this be used in .location setter? 
+	// XXX should this be used in .location setter??? 
+	// XXX should this throw the error after recovering???
 	recoverableLoad: ['- Location/',
 		function(loader, location){
 			// this is the critical section, after this point we
