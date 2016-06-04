@@ -144,6 +144,9 @@ var FileSystemLoaderActions = actions.Actions({
 
 	// Load index...
 	//
+	// 	.loadIndex(path)
+	// 		-> promise
+	//
 	// This maintains:
 	// 	.location.loaded		- list of loaded URLs...
 	//
@@ -418,6 +421,11 @@ var FileSystemLoaderActions = actions.Actions({
 
 	// Load images...
 	//
+	// 	.loadImages(path)
+	// 		-> promise
+	//
+	// NOTE: if path is not given this will do nothing.
+	//
 	// XXX use the logger...
 	// XXX add a recursive option...
 	// 		...might also be nice to add sub-dirs to ribbons...
@@ -457,8 +465,18 @@ var FileSystemLoaderActions = actions.Actions({
 
 	// Load new images...
 	//
+	// 	Load new images from current path...
+	// 	.loadNewImages()
+	// 		-> promise
+	//
+	// 	Load new images from path...
+	// 	.loadNewImages(path)
+	// 		-> promise
+	//
 	// This will prepend images in path (default .location.path) that 
 	// were not loaded in index...
+	//
+	// NOTE: this will not load images that are already loaded.
 	//
 	// XXX revise logger...
 	// XXX revise alignment...
