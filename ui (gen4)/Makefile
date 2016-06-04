@@ -37,6 +37,7 @@ CSS_DIR=css
 DOMAIN_DIR=imagegrid
 FEATURES_DIR=features
 WORKERS_DIR=workers
+IMAGES_DIR=images
 NW_PROJECT_FILE=package.json
 JS_FILES := $(wildcard *.js)
 HTML_FILES := $(wildcard *.html)
@@ -113,7 +114,7 @@ $(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) $(NW_PROJECT_FILE) \
 	$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) \
 		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
-		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) \
+		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
 		$(NODE_DIR)/app-module-path
 
 zip: $(APP_ZIP)
