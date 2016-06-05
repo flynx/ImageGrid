@@ -2,6 +2,8 @@
   "name": "ImageGrid.Viewer.g4",
   "main": "index.html",
   "version": "4.0.0a",
+  "preferGlobal": true,
+  "chromium-args": "--disable-gpu-compositing",
   "window": {
     "title": "ImageGrid.Viewer (gen4)",
     "position": "center",
@@ -13,7 +15,6 @@
     "toolbar": false,
     "show": false
   },
-  "chromium-args": "--disable-gpu-compositing",
   "dependencies": {
     "app-module-path": "^1.0.6",
     "commander": "^2.9.0",
@@ -27,14 +28,16 @@
     "requirejs": "^2.1.23",
     "sharp": "^0.12.0"
   },
-  "preferGlobal": true,
-  "bin": {
-    "ig": "ig.js"
+  "optionalDependencies": {
+    "fswin": "*"
   },
   "devDependencies": {
     "less": "*",
     "webdriverio": "^4.0.4",
     "nwjs": "*"
+  },
+  "bin": {
+    "ig": "ig.js"
   },
   "scripts": {
     "build-css": "lessc css/layout.less css/layout.css",

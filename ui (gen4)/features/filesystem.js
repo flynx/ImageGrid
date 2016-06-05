@@ -15,6 +15,13 @@ if(typeof(process) != 'undefined'){
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
 
+	// Windows specific stuff...
+	try{
+		var fswin = requirejs('fswin')
+	}catch(err){
+		var fswin = null
+	}
+
 	var file = require('imagegrid/file')
 }
 
@@ -1432,14 +1439,21 @@ var FileSystemWriterActions = actions.Actions({
 			var location = this.location
 			var index = this.prepareIndexForWrite()
 
+			var full_path = path +'/'+ this.config['index-dir']
+
 			return file.writeIndex(
 					index.prepared, 
 					// XXX should we check if index dir is present in path???
 					//path, 
-					path +'/'+ this.config['index-dir'], 
+					full_path,
 					index.date,
 					this.config['index-filename-template'], 
 					logger)
+				.then(function(){
+					fswin && fswin.setAttributeSync(full_path, {
+						IS_HIDDEN: true,
+					})
+				})
 				.then(function(){
 					location.method = 'loadIndex'
 					location.from = index.date
@@ -1529,6 +1543,8 @@ var FileSystemWriterActions = actions.Actions({
 				// 		need for a base path...
 				delete img.base_path
 
+				var queue = []
+
 				// XXX copy img.path -- the main image, especially when no previews present....
 				// XXX
 
@@ -1549,7 +1565,7 @@ var FileSystemWriterActions = actions.Actions({
 							// 		...needs testing, if node's fs queues the io
 							// 		internally then we do not need to bother...
 							// XXX
-							ensureDir(pathlib.dirname(to))
+							queue.push(ensureDir(pathlib.dirname(to))
 								.catch(function(err){
 									logger && logger.emit('error', err) })
 								.then(function(){
@@ -1562,19 +1578,29 @@ var FileSystemWriterActions = actions.Actions({
 											logger && logger.emit('done', to) })
 										.catch(function(err){
 											logger && logger.emit('error', err) })
-								})
+								}))
 						})
 				}
 			})
 
 			// NOTE: if we are to use .saveIndex(..) here, do not forget
 			// 		to reset .changes
-			file.writeIndex(
-				this.prepareIndexForWrite(json, true).prepared, 
-				index_path, 
-				this.config['index-filename-template'], 
-				logger || this.logger)
-			
+			queue.push(file.writeIndex(
+					this.prepareIndexForWrite(json, true).prepared, 
+					index_path, 
+					this.config['index-filename-template'], 
+					logger || this.logger)
+				.then(function(){
+					fswin && fswin.setAttributeSync(index_path, {
+						IS_HIDDEN: true,
+					})
+				}))
+
+
+			return Promise.all(queue)
+				.then(function(){
+					return that.location
+				})
 		}],
 	
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
