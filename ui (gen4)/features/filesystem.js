@@ -547,6 +547,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 	tag: 'fs-loader',
 	depends: [
 		'location',
+		'recover',
 		'fs-info',
 		'tasks',
 	],

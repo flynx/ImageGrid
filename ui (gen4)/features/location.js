@@ -18,7 +18,6 @@ var core = require('features/core')
 
 
 /*********************************************************************/
-
 // XXX add url scheme support...
 // 		<method>://<path>#<current>?<other>
 // XXX add .hash support for in-location .current setting when no index
@@ -30,8 +29,6 @@ var core = require('features/core')
 
 var LocationActions = actions.Actions({
 	config: {
-		'recover-load-errors-to-previous-location': true,
-
 		'default-load-method': null,
 	},
 
@@ -143,100 +140,6 @@ var LocationActions = actions.Actions({
 			}
 
 			return res
-		}],
-
-	// Load index with recovery...
-	//
-	// This will:
-	// 	- save recovery data (.__recover)
-	// 	- load
-	// 	- clear recovery data (if load successful)
-	//
-	// NOTE: for more info on the load protocol see: base.BaseActions.load 
-	load: [
-		function(data){
-			var location = data.location
-
-			// prepare to recover, just in case...
-			this.__recover = (this.__recover !== false 
-					&& this.config['recover-load-errors-to-previous-location']) ? 
-				this.location
-				: false
-
-			return function(){
-				// NOTE: we are setting this after the load because the 
-				// 		loader may .clear() the viewer, thus clearing the
-				// 		.location too...
-				this.__location = location 
-
-				// all went well clear the recovery data...
-				delete this.__recover
-			}
-		}],
-
-	// Load data and recover on error... 
-	//
-	// This is the same as .load(..) but will monitor for load errors 
-	// and attempt to recover if it fails...
-	//
-	// NOTE: this avoids load loops by attempting to recover only once...
-	// NOTE: this is done as a wrapper because we can't catch errors in
-	// 		parent actions at this point...
-	loadOrRecover: ['- Location/',
-		function(data){
-			// this is the critical section, after this point we
-			// are doing the actual loading....
-			try {
-
-				this.load(data)
-
-			// something bad happened, clear and handle it...
-			} catch(err){
-				this.clear()
-
-				console.error(err)
-
-				// recover to last location...
-				if(this.__recover){
-					this.recover()
-
-				// fail...
-				} else {
-					// clear the recovery data...
-					delete this.__recover
-
-					// fail...
-					throw err
-				}
-			}
-		}],
-
-	// Recover from load error...
-	//
-	// This will:
-	//	- get recovery data if present
-	//	- load recovery data
-	//	- clear recovery data
-	//
-	// NOTE: if no recovery data present (.__recover) this will do nothing.
-	recover: ['- File/Recover from load error',
-		function(){
-			var l = this.__recover
-
-			// nothing to recover...
-			if(!l){
-				delete this.__recover
-				return
-			}
-
-			// NOTE: this will prevent us from entering
-			// 		a recover attempt loop...
-			// 		...if the recovery fails we will just
-			// 		clear and stop.
-			this.__recover = false
-
-			// do the loading...
-			this.location = l
 		}],
 })
 
