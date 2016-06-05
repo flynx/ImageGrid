@@ -11,16 +11,10 @@ define(function(require){ var module = {}
 // XXX this should not be imported!!!
 // 		...something wrong with requirejs(..)
 if(typeof(process) != 'undefined'){
+	var child_process = requirejs('child_process')
 	var fse = requirejs('fs-extra')
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
-
-	// Windows specific stuff...
-	try{
-		var fswin = requirejs('fswin')
-	}catch(err){
-		var fswin = null
-	}
 
 	var file = require('imagegrid/file')
 }
@@ -1450,9 +1444,10 @@ var FileSystemWriterActions = actions.Actions({
 					this.config['index-filename-template'], 
 					logger)
 				.then(function(){
-					fswin && fswin.setAttributeSync(full_path, {
-						IS_HIDDEN: true,
-					})
+					typeof(process) != 'undefined' 
+						&& process.platform == 'win32' 
+						&& child_process
+							.spawn('attrib', ['+h', full_path])
 				})
 				.then(function(){
 					location.method = 'loadIndex'
@@ -1591,16 +1586,14 @@ var FileSystemWriterActions = actions.Actions({
 					this.config['index-filename-template'], 
 					logger || this.logger)
 				.then(function(){
-					fswin && fswin.setAttributeSync(index_path, {
-						IS_HIDDEN: true,
-					})
+					typeof(process) != 'undefined' 
+						&& process.platform == 'win32' 
+						// XXX do we need to quote path???
+						&& child_process
+							.spawn('attrib', ['+h', index_path])
 				}))
 
-
 			return Promise.all(queue)
-				.then(function(){
-					return that.location
-				})
 		}],
 	
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
