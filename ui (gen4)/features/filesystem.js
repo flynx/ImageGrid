@@ -125,17 +125,9 @@ var FileSystemLoaderActions = actions.Actions({
 
 		'image-file-read-stat': true,
 		'image-file-skip-previews': false,
-	},
 
-	// XXX should this be more general???
-	reloadState: ['File/Reload viewer state...',
-		function(){
-			if(this.location 
-					&& this.location.method 
-					&& this.location.path){
-				return this[this.location.method](this.location.path)
-			}
-		}],
+		'default-load-method': 'loadIndex',
+	},
 
 	// XXX is this a hack???
 	// XXX need a more generic form...
@@ -253,18 +245,18 @@ var FileSystemLoaderActions = actions.Actions({
 					logger && logger.emit('load index', index)
 
 					// prepare the location data...
-					var location = {
+					index.location = {
 						path: path,
 						loaded: loaded,
 						method: 'loadIndex',
 					}
 					if(from_date){
-						location.from = from_date
+						index.location.from = from_date
 					}
 
 					// this is the critical section, after this point we
 					// are doing the actual loading....
-					that.recoverableLoad(function(){ that.load(index) }, location) 
+					that.loadOrRecover(index) 
 				})
 		}],
 
@@ -449,16 +441,14 @@ var FileSystemLoaderActions = actions.Actions({
 					logger)
 				// load the data...
 				.then(function(imgs){
-					that.recoverableLoad(function(){
+					that.loadOrRecover({
+						images: imgs,
+						data: data.Data.fromArray(imgs.keys()),
 
-						that.load({
-							images: imgs,
-							data: data.Data.fromArray(imgs.keys()),
-						})
-
-					}, {
-						path: path,
-						method: 'loadImages',
+						location: {
+							path: path,
+							method: 'loadImages',
+						}
 					})
 				})
 		}],

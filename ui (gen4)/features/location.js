@@ -19,19 +19,20 @@ var core = require('features/core')
 
 /*********************************************************************/
 
+// XXX add url scheme support...
+// 		<method>://<path>#<current>?<other>
 // XXX add .hash support for in-location .current setting when no index
 // 		available... 
-// XXX should this or LocationLocalStorage save/load location (now it's 
-// 		done by history)
 // XXX this should provide mechaincs to define location handlers, i.e.
 // 		a set for loader/saver per location type (.method)
 // XXX revise the wording...
-// 		.method?
 // 		.path or .url
 
 var LocationActions = actions.Actions({
 	config: {
 		'recover-load-errors-to-previous-location': true,
+
+		'default-load-method': null,
 	},
 
 	// Format:
@@ -39,6 +40,7 @@ var LocationActions = actions.Actions({
 	// 		path: <base-path>,
 	// 		method: <load-method>,
 	// 		current: <current-gid>,
+	// 		...
 	// 	}
 	//
 	// NOTE: these will remove the trailing '/' (or '\') from .path 
@@ -64,69 +66,104 @@ var LocationActions = actions.Actions({
 
 		return this.__location
 	},
-	// XXX is 'loadIndex' a good default???
+	// NOTE: this is a shorthand for .loadLocation(..)
+	// NOTE: the method is needed to enable us to get the action return
+	// 		value...
 	set location(value){
-		// got a path...
-		if(typeof(value) == typeof('str')){
-			var path = value
-			// XXX get a better reasonable default...
-			var method = this.__location 
-				&& this.__location.method 
-					|| undefined 
-			var cur = this.current
-
-		// got an object...
-		} else {
-			value = JSON.parse(JSON.stringify(value))
-
-			var path = value.path = value.path
-
-			value.method = value.method
-			value.current = value.current
-		}
-
-		// normalize path if it's not root...
-		if(path != '/' && path != '\\'){
-			value.path = util.normalizePath(path)
-		}
-
-		this.__location = value 
-
-		// XXX is 'loadIndex' a good default???
-		var res = this[value.method || 'loadIndex'](path)
-
-		// XXX load current...
-		if(res.then != null){
-			res.then(function(){
-				this.current = cur
-			})
-
-		} else {
-			this.current = cur
-		}
+		this.loadLocation(value)
 	},
 
-	// Wrap the loader and recover if it fails...
-	//
-	// 	.recoverableLoad(loader, new-location)
-	// 		-> actions
-	//
-	// NOTE: this avoids load loops by attempting to recover only once...
-	//
-	// XXX should this be used in .location setter??? 
-	// XXX should this throw the error after recovering???
-	recoverableLoad: ['- Location/',
-		function(loader, location){
-			// this is the critical section, after this point we
-			// are doing the actual loading....
-			try {
-				// prepare to recover, just in case...
-				this.__recover = (this.__recover !== false 
-						&& this.config['recover-load-errors-to-previous-location']) ? 
-					this.location
-					: false
 
-				loader()
+	// Load location...
+	//
+	// 	Reload current location...
+	// 	.loadLocation()
+	// 		-> result
+	//
+	//	Load new path using current location method and data...
+	//	.loadLocation(path)
+	// 		-> result
+	//
+	//	Load new location...
+	//	.loadLocation(location)
+	// 		-> result
+	// 		NOTE: this is almost the same as .location = location but
+	// 			here we can access the call return value.
+	//
+	// XXX not sure about where to set the .__location -- see inside...
+	loadLocation: ['File/Load location',
+		function(location){
+			location = location || this.location
+
+			// got a path -> load using current location data...
+			if(typeof(location) == typeof('str')){
+				location = {
+					path: path,
+					method: (this.__location && this.__location.method) 
+						|| this.config['default-load-method'],
+					current: this.current,
+				}
+
+			// got an object...
+			} else {
+				// clone the location...
+				location = JSON.parse(JSON.stringify(location))
+			}
+
+			var method = location.method 
+				|| this.location.method 
+				|| this.config['default-load-method']
+			var cur = location.current
+			var path = location.path
+
+			// normalize path if it's not root...
+			if(path != '/' && path != '\\'){
+				path = location.path = util.normalizePath(path)
+			}
+
+
+			// XXX ???
+			this.__location = location 
+
+			// NOTE: the method should set the proper location if it uses .clear()...
+			var res = method && this[method](path)
+
+
+			// load current...
+			if(cur){
+				if(res && res.then != null){
+					var that = this
+					res.then(function(){
+						that.current = cur
+					})
+
+				} else {
+					this.current = cur
+				}
+			}
+
+			return res
+		}],
+
+	// Load index with recovery...
+	//
+	// This will:
+	// 	- save recovery data (.__recover)
+	// 	- load
+	// 	- clear recovery data (if load successful)
+	//
+	// NOTE: for more info on the load protocol see: base.BaseActions.load 
+	load: [
+		function(data){
+			var location = data.location
+
+			// prepare to recover, just in case...
+			this.__recover = (this.__recover !== false 
+					&& this.config['recover-load-errors-to-previous-location']) ? 
+				this.location
+				: false
+
+			return function(){
 				// NOTE: we are setting this after the load because the 
 				// 		loader may .clear() the viewer, thus clearing the
 				// 		.location too...
@@ -134,6 +171,24 @@ var LocationActions = actions.Actions({
 
 				// all went well clear the recovery data...
 				delete this.__recover
+			}
+		}],
+
+	// Load data and recover on error... 
+	//
+	// This is the same as .load(..) but will monitor for load errors 
+	// and attempt to recover if it fails...
+	//
+	// NOTE: this avoids load loops by attempting to recover only once...
+	// NOTE: this is done as a wrapper because we can't catch errors in
+	// 		parent actions at this point...
+	loadOrRecover: ['- Location/',
+		function(data){
+			// this is the critical section, after this point we
+			// are doing the actual loading....
+			try {
+
+				this.load(data)
 
 			// something bad happened, clear and handle it...
 			} catch(err){
@@ -143,16 +198,7 @@ var LocationActions = actions.Actions({
 
 				// recover to last location...
 				if(this.__recover){
-					var l = this.__recover
-
-					// NOTE: this will prevent us from entering
-					// 		a recover attempt loop...
-					// 		...if the recovery fails we will just
-					// 		clear and stop.
-					this.__recover = false
-
-					// do the loading...
-					this.location = l
+					this.recover()
 
 				// fail...
 				} else {
@@ -163,6 +209,34 @@ var LocationActions = actions.Actions({
 					throw err
 				}
 			}
+		}],
+
+	// Recover from load error...
+	//
+	// This will:
+	//	- get recovery data if present
+	//	- load recovery data
+	//	- clear recovery data
+	//
+	// NOTE: if no recovery data present (.__recover) this will do nothing.
+	recover: ['- File/Recover from load error',
+		function(){
+			var l = this.__recover
+
+			// nothing to recover...
+			if(!l){
+				delete this.__recover
+				return
+			}
+
+			// NOTE: this will prevent us from entering
+			// 		a recover attempt loop...
+			// 		...if the recovery fails we will just
+			// 		clear and stop.
+			this.__recover = false
+
+			// do the loading...
+			this.location = l
 		}],
 })
 
