@@ -87,6 +87,8 @@ var LocationActions = actions.Actions({
 	// 		NOTE: this is almost the same as .location = location but
 	// 			here we can access the call return value.
 	//
+	// NOTE: .location will be set by the .load handler...
+	//
 	// XXX not sure about where to set the .__location -- see inside...
 	loadLocation: ['File/Load location',
 		function(location){
@@ -120,7 +122,7 @@ var LocationActions = actions.Actions({
 
 
 			// XXX ???
-			this.__location = location 
+			//this.__location = location 
 
 			// NOTE: the method should set the proper location if it uses .clear()...
 			var res = method && this[method](path)
@@ -187,9 +189,10 @@ module.Location = core.ImageGridFeatures.Feature({
 			}],
 		['load',
 			function(_, data){
-				if(data.location){
-					this.__location = data.location
-				}
+				// NOTE: we are setting this after the load because the 
+				// 		loader may .clear() the viewer, thus clearing the
+				// 		.location too...
+				this.__location = data.location
 			}],
 	],
 })

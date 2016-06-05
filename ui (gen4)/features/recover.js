@@ -30,8 +30,6 @@ var RecoverActions = actions.Actions({
 	// NOTE: for more info on the load protocol see: base.BaseActions.load 
 	load: [
 		function(data){
-			var location = data.location
-
 			// prepare to recover, just in case...
 			this.__recover = (this.__recover !== false 
 					&& this.config['recover-load-errors-to-previous-location']) ? 
@@ -39,10 +37,6 @@ var RecoverActions = actions.Actions({
 				: false
 
 			return function(){
-				// NOTE: we are setting this after the load because the 
-				// 		loader may .clear() the viewer, thus clearing the
-				// 		.location too...
-				this.__location = location 
 
 				// all went well clear the recovery data...
 				delete this.__recover
