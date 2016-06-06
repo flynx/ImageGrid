@@ -28,7 +28,7 @@
     "sharp": "^0.12.0"
   },
   "optionalDependencies": {
-    "flickrapi": "^0.3.28",
+    "flickrapi": "^0.3.28"
   },
   "devDependencies": {
     "less": "*",

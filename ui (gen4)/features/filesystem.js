@@ -1443,9 +1443,11 @@ var FileSystemWriterActions = actions.Actions({
 					index.date,
 					this.config['index-filename-template'], 
 					logger)
+				// set hidden file attribute on Windows...
 				.then(function(){
 					typeof(process) != 'undefined' 
-						&& process.platform == 'win32' 
+						&& (process.platform == 'win32' 
+							|| process.platform == 'win64')
 						&& child_process
 							.spawn('attrib', ['+h', full_path])
 				})
@@ -1473,20 +1475,25 @@ var FileSystemWriterActions = actions.Actions({
 	// Export current state as a full loadable index
 	//
 	// XXX resolve env variables in path...
-	// XXX what sould happen if no path is given???
+	// XXX what should happen if no path is given???
 	// XXX should this return a promise??? ...a clean promise???
 	// XXX add preview selection...
 	// XXX handle .image.path and other stack files...
 	// XXX local collections???
 	exportIndex: ['- File/Export/Export index',
-		function(path, logger){
+		function(path, max_size, include_orig, logger){
 			logger = logger || this.logger
+
+			// XXX if size is not given save all sizes...
+			//max_size = max_size || this.config['export-preview-size']
+			include_orig = include_orig || true
 
 			// XXX is this correct???
 			path = path || './exported'
 			path = util.normalizePath(path)
 
 			// XXX resolve env variables in path...
+			// 		...also add ImageGrid specifics: $IG_INDEX, ...
 			// XXX
 
 			// resolve relative paths...
@@ -1507,15 +1514,11 @@ var FileSystemWriterActions = actions.Actions({
 			gids = gids.compact()
 
 			// build .images with loaded images...
-			// XXX list of previews should be configurable (max size)
 			var images = {}
 			gids.forEach(function(gid){
 				var img = json.images[gid]
 				if(img){
 					images[gid] = json.images[gid]
-
-					// remove un-needed previews...
-					// XXX
 				}
 			})
 
@@ -1529,7 +1532,9 @@ var FileSystemWriterActions = actions.Actions({
 			// XXX should also optionally populate the base dir and nested favs...
 			var base_dir = this.location.path
 
-			gids.forEach(function(gid){
+			var queue = []
+
+			gids.map(function(gid){
 				var img = json.images[gid]
 				var img_base = img.base_path
 				var previews = img.preview
@@ -1538,16 +1543,16 @@ var FileSystemWriterActions = actions.Actions({
 				// 		need for a base path...
 				delete img.base_path
 
-				var queue = []
-
-				// XXX copy img.path -- the main image, especially when no previews present....
-				// XXX
-
 				if(previews || img.path){
 					Object.keys(previews || {})
+						// limit preview size...
+						.filter(function(res){ 
+							return !max_size || parseInt(res) <= max_size})
+						// get paths...
 						.map(function(res){ return decodeURI(previews[res]) })
-						// XXX should we copy this, especially if it's a hi-res???
-						.concat([img.path || null])
+						// XXX might be a good idea to include include 
+						// 		the max preview if hires is too large...
+						.concat(include_orig ? [img.path || null] : [])
 						.forEach(function(preview_path){
 							if(preview_path == null){
 								return
@@ -1561,6 +1566,7 @@ var FileSystemWriterActions = actions.Actions({
 							// 		internally then we do not need to bother...
 							// XXX
 							queue.push(ensureDir(pathlib.dirname(to))
+								// XXX do we need error handling here???
 								.catch(function(err){
 									logger && logger.emit('error', err) })
 								.then(function(){
@@ -1571,6 +1577,7 @@ var FileSystemWriterActions = actions.Actions({
 										// 		.then(..))
 										.then(function(){
 											logger && logger.emit('done', to) })
+										// XXX do we need error handling here???
 										.catch(function(err){
 											logger && logger.emit('error', err) })
 								}))
@@ -1585,9 +1592,11 @@ var FileSystemWriterActions = actions.Actions({
 					index_path, 
 					this.config['index-filename-template'], 
 					logger || this.logger)
+				// set hidden file attribute on Windows...
 				.then(function(){
 					typeof(process) != 'undefined' 
-						&& process.platform == 'win32' 
+						&& (process.platform == 'win32' 
+							|| process.platform == 'win64')
 						// XXX do we need to quote path???
 						&& child_process
 							.spawn('attrib', ['+h', index_path])
@@ -1630,17 +1639,17 @@ var FileSystemWriterActions = actions.Actions({
 			size = size || this.config['export-preview-size'] || 1000
 			pattern = pattern || this.config['export-preview-name-pattern'] || '%f'
 
-
 			// XXX need to abort on fatal errors...
-			this.data.ribbon_order
+			return Promise.all(this.data.ribbon_order
 				.slice()
 				.reverse()
-				.forEach(function(ribbon){
+				.map(function(ribbon){
 					// NOTE: this is here to keep the specific path local to 
 					// 		this scope...
 					var img_dir = to_dir
 
-					ensureDir(pathlib.dirname(img_dir))
+					var res = ensureDir(pathlib.dirname(img_dir))
+						// XXX do we need error handling here???
 						.catch(function(err){
 							logger && logger.emit('error', err) })
 						.then(function(){
@@ -1699,7 +1708,9 @@ var FileSystemWriterActions = actions.Actions({
 						})
 
 					to_dir += '/'+level_dir
-				})
+
+					return res
+				}))
 		}]
 })
 
@@ -1855,11 +1866,16 @@ var FileSystemWriterUIActions = actions.Actions({
 					'comment'
 				],
 			},
-			'Full index': {
+			'Current state as index': {
 				action: 'exportIndex',
 				data: [
-					//'size',
 					'target_dir',
+					// XXX need to add options to size: 'none',
+					// XXX use closest preview instead of hi-res when 
+					// 		this is set...
+					//'size_limit',
+					// XXX might be a good idea to include source data links
+					//'include_source_url', // bool
 					'comment',
 				],
 			},
@@ -1909,10 +1925,10 @@ var FileSystemWriterUIActions = actions.Actions({
 	// Export <mode> is set by:
 	// 		.config['export-mode']
 	//
-	// The fields used and their order is determined by:
+	// The fields used and their order is set by:
 	// 		.config['export-modes'][<mode>].data	(list)
 	//
-	// The action used to export is determined by:
+	// The action used to export is set by:
 	// 		.config['export-modes'][<mode>].action
 	//
 	//
@@ -1931,6 +1947,8 @@ var FileSystemWriterUIActions = actions.Actions({
 	//
 	// NOTE: .__export_dialog_fields__ can be defined both in the feature
 	// 		as well as in the instance.
+	// NOTE: the export action should get all of its arguments from config
+	// 		except for the export path...
 	__export_dialog_fields__: {
 		'pattern': function(actions, make, parent){
 			return make(['Filename pattern: ', 
@@ -2082,7 +2100,7 @@ var FileSystemWriterUIActions = actions.Actions({
 								&& base_fields[k].call(that, that, make, dialog))
 				})
 
-				// Start/stop action...
+				// Start action...
 				make([function(){
 						// XXX indicate export state: index, crop, image...
 						return 'Export'}]) 

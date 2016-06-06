@@ -159,7 +159,9 @@ function(actions, list_key, options){
 
 	var to_remove = []
 
-	var lst = actions.config[list_key]
+	var lst = list_key instanceof Function ? list_key() 
+		: list_key instanceof Array ? list_key 
+		: actions.config[list_key]
 	lst = lst instanceof Array ? lst : Object.keys(lst)
 
 	var list = browse.makeList(null, 
@@ -266,22 +268,22 @@ function(actions, list, list_key, value_key, options){
 
 		var o = makeConfigListEditor(actions, list_key, options)
 
-		// update slideshow menu...
+		// update menu...
 		o.open(function(){
 			list.update()
 			list.select(txt)
 		})
-
-		actions.Overlay(o)
-
-		setTimeout(function(){
+		// select default...
+		o.on('update', function(){
 			if(typeof(value_key) == typeof(function(){})){
 				o.select(value_key())
 
 			} else {
 				o.select(actions.config[value_key])
 			}
-		}, 0)
+		})
+
+		actions.Overlay(o)
 	}
 }
 
