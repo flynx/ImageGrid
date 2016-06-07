@@ -367,21 +367,29 @@ if(typeof(jQuery) != typeof(undefined)){
 	//
 	// Options format:
 	// 	{
+	// 		// activate (focus) element when done...
+	// 		activate: false,
+	//
+	// 		// set multi line edit mode...
 	// 		multiline: false,
 	//
+	// 		// reset value on abort...
 	// 		reset_on_abort: true,
 	//
+	// 		// blur element on abort/commit...
 	// 		blur_on_abort: false,
 	// 		blur_on_commit: false,
 	//
+	// 		// clear selection on abort/commit...
 	// 		clear_selection_on_abort: true,
 	// 		clear_selection_on_commit: true,
 	//
+	// 		// clear element value on edit...
 	// 		clear_on_edit: true,
 	//
+	// 		// Keys that will abort the edit...
 	// 		abort_keys: [
 	// 			'Esc',
-	// 			...
 	// 		],
 	// 	}
 	//
@@ -415,10 +423,10 @@ if(typeof(jQuery) != typeof(undefined)){
 			this.text('')
 		}
 
-		this
-			.prop('contenteditable', true)
-			// NOTE: this will also focus the element...
-			.selectText()
+		this.prop('contenteditable', true)
+
+		// NOTE: this will also focus the element...
+		options.activate && this.selectText()
 
 		// do not setup handlers more than once...
 		if(!this.hasClass('editable-field')){

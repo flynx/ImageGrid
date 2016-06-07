@@ -38,6 +38,7 @@ module.makeEditableItem =
 function(list, item, elem, callback, options){
 	return elem
 		.makeEditable({
+			activate: true,
 			clear_on_edit: false,
 		})
 		.on('edit-done', callback || function(){})
@@ -93,6 +94,7 @@ function(actions, list_key, options){
 	var _makeEditable = function(elem){
 		return $(elem).find('.text')
 			.makeEditable({
+				activate: true,
 				blur_on_abort: false,
 				blur_on_commit: false,
 			})

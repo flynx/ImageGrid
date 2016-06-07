@@ -87,7 +87,6 @@ var StatusBarActions = actions.Actions({
 	},
 
 	__statusbar_elements__: {
-		// XXX use .makeEditable(..)
 		index: function(item, gid, img){
 			var that = this
 			gid = gid || this.current
@@ -111,36 +110,15 @@ var StatusBarActions = actions.Actions({
 						: $('<span>')
 							.addClass('position editable')
 							.attr('info', 'Image position (click to edit)')
-							.prop('contenteditable', true)
-							.keydown(function(){
-								// keep this from affecting the viewer...
-								event.stopPropagation()
-
-								var n = keyboard.toKeyName(event.keyCode)
-
-								var i = parseInt($(this).text())
+							.makeEditable({ clear_on_edit: false })
+							// select image when done...
+							.on('edit-done', function(_, text){
+								var i = parseInt(text)
 								i = i >= 1 ? i-1
 									: i == null ? 'current'
 									: i
-
-								// lose focus and exit...
-								if(n == 'Esc' || n == 'Enter'){
-									event.preventDefault()
-
-									// get image on enter...
-									if(n == 'Enter'){
-										that.focusImage(i, 
-											item.hasClass('global') ? 'global' : undefined)
-									}
-
-									// clear selection....
-									window.getSelection().removeAllRanges()
-									$(this).blur()
-
-									that.updateStatusBar()
-
-									return false
-								}
+								that.focusImage(i, 
+									item.hasClass('global') ? 'global' : undefined)
 							})
 							// update image position...
 							// XXX this appears to be run in the node context...
@@ -210,14 +188,12 @@ var StatusBarActions = actions.Actions({
 				item = $('<span>')
 					.addClass('ribbon-number')
 					.attr('info', 'Current ribbon (click to edit)')
+					.makeEditable({ clear_on_edit: false })
+					.on('edit-done', function(_, text){
+						that.focusRibbon(text == '*' ? that.base : parseInt(text))
+					})
 					.click(function(){
-						$(this)
-							.makeEditable({ 
-								clear_on_edit: false 
-							})
-							.on('edit-done', function(_, text){
-								that.focusRibbon(text == '*' ? that.base : parseInt(text))
-							})
+						$(this).selectText()
 					})
 					.blur(function(){
 						that.updateStatusBar()
