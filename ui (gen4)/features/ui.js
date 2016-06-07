@@ -1008,7 +1008,7 @@ var ConfigLocalStorageActions = actions.Actions({
 			}
 		}],
 	// XXX need to load the reset config, and not just set it...
-	resetConfig: ['File/Reset configuration to default state',
+	resetConfig: ['File/Reset settings',
 		function(){
 			this.config = this.__base_config || this.config
 		}],
