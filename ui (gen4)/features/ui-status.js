@@ -181,7 +181,17 @@ var StatusBarActions = actions.Actions({
 		},
 		ribbon: function(item, gid, img){
 			var that = this
-			var n = this.data ? this.data.getRibbonOrder(gid || this.current) : '-'
+
+			// get ribbon number...
+			var n = (this.data && this.data.ribbon_order.length > 0) ? 
+				this.data.getRibbonOrder(gid || this.current) 
+				: '-'
+			// flag the base ribbon...
+			n += (this.data 
+					&& this.data.base 
+					&& this.data.getRibbon(gid) == this.base) ? 
+				'*' 
+				: ''
 
 			// make an element...
 			if(typeof(item) == typeof('str')){
@@ -200,7 +210,7 @@ var StatusBarActions = actions.Actions({
 					})
 			}
 
-			item.text(n + ((this.data && this.data.getRibbon(gid) == this.base) ? '*' : ''))
+			item.text(n) 
 
 			return item
 		},
@@ -449,6 +459,13 @@ var StatusBarActions = actions.Actions({
 				// XXX do this better...
 				this.ribbons.viewer.find('.global-info .index .position').focus().click()
 			}
+		}],
+	editStatusBarRibbon: ['- Interface/',
+		function(){
+			this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
+
+			// XXX do this better...
+			this.ribbons.viewer.find('.global-info .ribbon-number').focus().click()
 		}],
 	toggleStatusBarIndexMode: ['Interface/Status bar index mode',
 		toggler.CSSClassToggler(
