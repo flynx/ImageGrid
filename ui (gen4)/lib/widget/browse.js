@@ -143,7 +143,9 @@ var BrowserClassPrototype = {
 			.attr('tabindex', 0)
 			// focus the widget if something inside is clicked...
 			.click(function(){
-				$(this).focus()
+				if($(this).find(':focus').length == 0){
+					$(this).focus()
+				}
 			})
 
 		if(options.flat){
@@ -524,7 +526,17 @@ var BrowserPrototype = {
 	//trigger: widget.triggerEventWithSource,
 
 	// specific events...
-	focus: widget.proxyToDom('focus'),
+	focus: function(handler){
+		if(handler != null){
+			this.on('focus', handler)
+
+		// focus only if we do not have focus...
+		} else if(!this.dom.is(':focus') 
+				&& this.dom.find(':focus').length == 0) {
+			this.dom.focus()
+		}
+		return this
+	},
 	blur: widget.proxyToDom('blur'),
 
 
@@ -1118,7 +1130,6 @@ var BrowserPrototype = {
 				if(focus && browser.find(':focus').length == 0){
 					that.focus()
 				}
-
 			})
 	},
 

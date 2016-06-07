@@ -373,6 +373,9 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 		// set multi line edit mode...
 	// 		multiline: false,
 	//
+	// 		// clear element value on edit...
+	// 		clear_on_edit: false,
+	//
 	// 		// reset value on abort...
 	// 		reset_on_abort: true,
 	//
@@ -383,9 +386,6 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 		// clear selection on abort/commit...
 	// 		clear_selection_on_abort: true,
 	// 		clear_selection_on_commit: true,
-	//
-	// 		// clear element value on edit...
-	// 		clear_on_edit: true,
 	//
 	// 		// Keys that will abort the edit...
 	// 		abort_keys: [
@@ -419,11 +419,11 @@ if(typeof(jQuery) != typeof(undefined)){
 
 		var original = this.text()
 
-		if(options.clear_on_edit == null || options.clear_on_edit){
-			this.text('')
-		}
-
 		this.prop('contenteditable', true)
+
+		options.activate 
+			&& options.clear_on_edit 
+			&& this.text('')
 
 		// NOTE: this will also focus the element...
 		options.activate && this.selectText()
@@ -467,8 +467,15 @@ if(typeof(jQuery) != typeof(undefined)){
 						that.trigger('commit')
 					}
 				})
-				.on('blur', function(){
+				.blur(function(){
 					window.getSelection().removeAllRanges()
+				})
+				.on('focus click', function(evt){
+					evt.stopPropagation()
+					options.clear_on_edit 
+						&& $(this)
+							.text('')
+							.selectText()
 				})
 				// user triggerable events...
 				.on('abort', function(){

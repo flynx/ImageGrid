@@ -39,7 +39,6 @@ function(list, item, elem, callback, options){
 	return elem
 		.makeEditable({
 			activate: true,
-			clear_on_edit: false,
 		})
 		.on('edit-done', callback || function(){})
 		.on('edit-aborted edit-done', function(_, text){
@@ -95,6 +94,7 @@ function(actions, list_key, options){
 		return $(elem).find('.text')
 			.makeEditable({
 				activate: true,
+				clear_on_edit: true,
 				blur_on_abort: false,
 				blur_on_commit: false,
 			})

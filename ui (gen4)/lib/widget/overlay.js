@@ -129,11 +129,9 @@ var OverlayPrototype = {
 			.addClass('blur')
 			.append(this.dom)
 
-		// pass focus to the client...
+		// pass focus to the client if it is not focused already...
 		this.on('focus click', function(){
-			if(client.dom && client.focus){
-				client.focus()
-			}
+			client.focus && client.focus()
 		})
 
 		this.focus()

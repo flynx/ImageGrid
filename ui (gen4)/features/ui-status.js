@@ -110,7 +110,7 @@ var StatusBarActions = actions.Actions({
 						: $('<span>')
 							.addClass('position editable')
 							.attr('info', 'Image position (click to edit)')
-							.makeEditable({ clear_on_edit: false })
+							.makeEditable()
 							// select image when done...
 							.on('edit-done', function(_, text){
 								var i = parseInt(text)
@@ -188,7 +188,7 @@ var StatusBarActions = actions.Actions({
 				item = $('<span>')
 					.addClass('ribbon-number')
 					.attr('info', 'Current ribbon (click to edit)')
-					.makeEditable({ clear_on_edit: false })
+					.makeEditable()
 					.on('edit-done', function(_, text){
 						that.focusRibbon(text == '*' ? that.base : parseInt(text))
 					})

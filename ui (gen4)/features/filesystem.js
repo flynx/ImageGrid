@@ -2017,6 +2017,7 @@ var FileSystemWriterUIActions = actions.Actions({
 
 					var path = elem.find('.text').last()
 						.makeEditable({
+							activate: true,
 							clear_on_edit: false,
 							abort_keys: [
 								'Esc',
@@ -2046,6 +2047,7 @@ var FileSystemWriterUIActions = actions.Actions({
 					// XXX multiline???
 					var path = elem.find('.text').last()
 						.makeEditable({
+							activate: true,
 							multiline: true,
 							clear_on_edit: false,
 							abort_keys: [
