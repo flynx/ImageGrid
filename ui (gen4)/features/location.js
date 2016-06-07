@@ -9,11 +9,41 @@ define(function(require){ var module = {}
 //var DEBUG = DEBUG != null ? DEBUG : true
 
 var util = require('lib/util')
+var object = require('lib/object')
 
 var actions = require('lib/actions')
 var features = require('lib/features')
 
 var core = require('features/core')
+
+
+
+/*********************************************************************/
+// XXX experimental...
+
+// XXX need the other .location stuff to be visible/accessible...
+// 		...now this only shows path...
+var LocationProto = {
+	get path(){
+		return this.__actions.__location.path
+	},
+	set path(value){
+		this.__actions.location = value
+	},
+
+	
+	__init__: function(actions){
+		this.__actions = actions
+
+		// XXX this does not work...
+		// 		...the oother way around seems best:
+		// 			actions.__location.__proto__ = this
+		//this.__proto__ = actions.__location
+	},
+}
+
+var Location = object.makeConstructor('Location', LocationProto)
+
 
 
 
@@ -62,6 +92,7 @@ var LocationActions = actions.Actions({
 		this.__location.current = this.current
 
 		return this.__location
+		//return Location(this) 
 	},
 	// NOTE: this is a shorthand for .loadLocation(..)
 	// NOTE: the method is needed to enable us to get the action return
