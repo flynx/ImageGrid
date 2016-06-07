@@ -92,8 +92,12 @@ function(actions, list_key, options){
 
 	var _makeEditable = function(elem){
 		return $(elem).find('.text')
-			.makeEditable()
+			.makeEditable({
+				blur_on_abort: false,
+				blur_on_commit: false,
+			})
 			.on('edit-aborted', function(){
+				list.select(null)	
 				list.update()
 			})
 			.on('edit-done', function(evt, text){

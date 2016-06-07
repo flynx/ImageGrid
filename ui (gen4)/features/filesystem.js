@@ -1873,6 +1873,7 @@ var FileSystemWriterUIActions = actions.Actions({
 					// XXX need to add options to size: 'none',
 					// XXX use closest preview instead of hi-res when 
 					// 		this is set...
+					// XXX need to add option to save full index...
 					//'size_limit',
 					// XXX might be a good idea to include source data links
 					//'include_source_url', // bool

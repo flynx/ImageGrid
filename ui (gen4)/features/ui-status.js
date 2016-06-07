@@ -51,8 +51,11 @@ var StatusBarActions = actions.Actions({
 			'minimal',
 			'full',
 		],
+		// XXX make different configurations for different modes instead 
+		// 		of hiding some items... (???)
 		'status-bar-items': [
 			'index',
+			'ribbon',
 			'gid',
 			'path',
 
@@ -84,6 +87,7 @@ var StatusBarActions = actions.Actions({
 	},
 
 	__statusbar_elements__: {
+		// XXX use .makeEditable(..)
 		index: function(item, gid, img){
 			var that = this
 			gid = gid || this.current
@@ -106,7 +110,7 @@ var StatusBarActions = actions.Actions({
 						// editable...
 						: $('<span>')
 							.addClass('position editable')
-							.attr('info', 'Image position (click to edit image position)')
+							.attr('info', 'Image position (click to edit)')
 							.prop('contenteditable', true)
 							.keydown(function(){
 								// keep this from affecting the viewer...
@@ -197,7 +201,33 @@ var StatusBarActions = actions.Actions({
 
 			return item
 		},
+		ribbon: function(item, gid, img){
+			var that = this
+			var n = this.data ? this.data.getRibbonOrder(gid || this.current) : '-'
 
+			// make an element...
+			if(typeof(item) == typeof('str')){
+				item = $('<span>')
+					.addClass('ribbon-number')
+					.attr('info', 'Current ribbon (click to edit)')
+					.click(function(){
+						$(this)
+							.makeEditable({ 
+								clear_on_edit: false 
+							})
+							.on('edit-done', function(_, text){
+								that.focusRibbon(text == '*' ? that.base : parseInt(text))
+							})
+					})
+					.blur(function(){
+						that.updateStatusBar()
+					})
+			}
+
+			item.text(n + ((this.data && this.data.getRibbon(gid) == this.base) ? '*' : ''))
+
+			return item
+		},
 		// XXX handle path correctly...
 		gid: function(item, gid, img){
 			var that = this
@@ -248,7 +278,6 @@ var StatusBarActions = actions.Actions({
 			return item
 		},
 		path: 'gid',
-
 		// XXX show menu in the appropriate corner...
 		mark: function(item, gid, img){
 			gid = gid || this.current

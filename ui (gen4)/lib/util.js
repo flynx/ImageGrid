@@ -370,6 +370,13 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 		multiline: false,
 	//
 	// 		reset_on_abort: true,
+	//
+	// 		blur_on_abort: false,
+	// 		blur_on_commit: false,
+	//
+	// 		clear_selection_on_abort: true,
+	// 		clear_selection_on_commit: true,
+	//
 	// 		clear_on_edit: true,
 	//
 	// 		abort_keys: [
@@ -392,6 +399,13 @@ if(typeof(jQuery) != typeof(undefined)){
 	// XXX should this reset field to it's original state after 
 	// 		commit/abort???
 	jQuery.fn.makeEditable = function(options){
+		if(options == false){
+			this
+				.prop('contenteditable', false)
+
+			return this
+		}
+
 		options = options || {}
 		var that = this
 
@@ -403,51 +417,69 @@ if(typeof(jQuery) != typeof(undefined)){
 
 		this
 			.prop('contenteditable', true)
-			// make the element focusable and selectable...
-			.attr('tabindex', '0')
-			.addClass('editable-field')
 			// NOTE: this will also focus the element...
 			.selectText()
-			.keydown(function(){ 
-				if(!that.prop('contenteditable')){
-					return
-				}
 
-				event.stopPropagation() 
+		// do not setup handlers more than once...
+		if(!this.hasClass('editable-field')){
+			this
+				// make the element focusable and selectable...
+				.attr('tabindex', '0')
+				.addClass('editable-field')
+				.keydown(function(){ 
+					if(!that.prop('contenteditable')){
+						return
+					}
 
-				var n = keyboard.toKeyName(event.keyCode)
+					event.stopPropagation() 
 
-				// abort...
-				if((options.abort_keys || ['Esc']).indexOf(n) >= 0){
-					// reset original value...
-					(options.reset_on_abort == null || options.reset_on_abort) 
-						&& that.text(original)
+					var n = keyboard.toKeyName(event.keyCode)
 
-					that.trigger('abort')
+					// abort...
+					if((options.abort_keys || ['Esc']).indexOf(n) >= 0){
+						// reset original value...
+						(options.reset_on_abort == null || options.reset_on_abort) 
+							&& that.text(original)
 
-				// done -- single line...
-				} else if(n == 'Enter' 
-						&& !options.multiline){
-					event.preventDefault()
+						that.trigger('abort')
 
-					that.trigger('commit')
+					// done -- single line...
+					} else if(n == 'Enter' 
+							&& !options.multiline){
+						event.preventDefault()
 
-				// done -- multiline...
-				} else if(n == 'Enter' 
-						&& (event.ctrlKey || event.metaKey) 
-						&& options.multiline){
-					event.preventDefault()
+						that.trigger('commit')
 
-					that.trigger('commit')
-				}
-			})
-			// user triggerable events...
-			.on('abort', function(){
-				that.trigger('edit-aborted', original)
-			})
-			.on('commit', function(){
-				that.trigger('edit-done', that.text())
-			})
+					// done -- multiline...
+					} else if(n == 'Enter' 
+							&& (event.ctrlKey || event.metaKey) 
+							&& options.multiline){
+						event.preventDefault()
+
+						that.trigger('commit')
+					}
+				})
+				.on('blur', function(){
+					window.getSelection().removeAllRanges()
+				})
+				// user triggerable events...
+				.on('abort', function(){
+					that.trigger('edit-aborted', original)
+
+					options.clear_selection_on_abort !== false 
+						&& window.getSelection().removeAllRanges()
+
+					options.blur_on_abort !== false && this.blur() 
+				})
+				.on('commit', function(){
+					that.trigger('edit-done', that.text())
+
+					options.clear_selection_on_commit !== false 
+						&& window.getSelection().removeAllRanges()
+
+					options.blur_on_commit !== false && this.blur() 
+				})
+		}
 
 		return this
 	}
