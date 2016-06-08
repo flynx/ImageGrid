@@ -335,7 +335,8 @@ module.makeUIContainer = function(make){
 				// Compensate for click focusing the parent dialog when
 				// a child is created...
 				// XXX is this the right way to go???
-				.on('click', function(evt){ that.modal.focus() })
+				.on('click', function(evt){ 
+					that.modal && that.modal.focus() })
 
 		return o
 	})

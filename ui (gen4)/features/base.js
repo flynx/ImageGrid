@@ -691,6 +691,9 @@ module.CropActions = actions.Actions({
 
 	// load the crop stack if present...
 	load: [function(data){
+		// clear previous crop state...
+		delete this.crop_stack
+
 		if(data.crop_stack){
 			this.crop_stack = data.crop_stack.map(function(j){
 				return data.Data(j)
@@ -727,8 +730,7 @@ module.CropActions = actions.Actions({
 
 	// true if current viewer is cropped...
 	get cropped(){
-		return this.crop_stack != null
-	},
+		return this.crop_stack != null },
 
 	// crop...
 	//

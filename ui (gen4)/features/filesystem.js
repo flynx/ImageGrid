@@ -1214,6 +1214,14 @@ var FileSystemWriterActions = actions.Actions({
 			'1920',
 		],
 		'export-preview-size': 1000,
+
+		'export-preview-size-limits': [
+			'900',
+			'1000',
+			'1280',
+			'1920',
+		],
+		'export-preview-size-limit': 'no limit',
 	},
 
 	// This can be:
@@ -1484,8 +1492,8 @@ var FileSystemWriterActions = actions.Actions({
 		function(path, max_size, include_orig, logger){
 			logger = logger || this.logger
 
-			// XXX if size is not given save all sizes...
-			//max_size = max_size || this.config['export-preview-size']
+			max_size = parseInt(max_size || this.config['export-preview-size-limit']) || null
+			// XXX make this dependant on max_size....
 			include_orig = include_orig || true
 
 			// XXX is this correct???
@@ -1546,8 +1554,19 @@ var FileSystemWriterActions = actions.Actions({
 				if(previews || img.path){
 					Object.keys(previews || {})
 						// limit preview size...
+						// NOTE: also remove the preview resolution if 
+						// 		it's smaller...
 						.filter(function(res){ 
-							return !max_size || parseInt(res) <= max_size})
+							// no size limit or match...
+							if(!max_size || parseInt(res) <= max_size){
+								return true
+
+							// skip and remove...
+							} else {
+								delete previews[res]
+								return false
+							}
+						})
 						// get paths...
 						.map(function(res){ return decodeURI(previews[res]) })
 						// XXX might be a good idea to include include 
@@ -1585,11 +1604,15 @@ var FileSystemWriterActions = actions.Actions({
 				}
 			})
 
+			// prep the index...
+			var index = this.prepareIndexForWrite(json, true)
+
 			// NOTE: if we are to use .saveIndex(..) here, do not forget
 			// 		to reset .changes
 			queue.push(file.writeIndex(
-					this.prepareIndexForWrite(json, true).prepared, 
+					index.prepared,
 					index_path, 
+					index.date,
 					this.config['index-filename-template'], 
 					logger || this.logger)
 				// set hidden file attribute on Windows...
@@ -1597,7 +1620,6 @@ var FileSystemWriterActions = actions.Actions({
 					typeof(process) != 'undefined' 
 						&& (process.platform == 'win32' 
 							|| process.platform == 'win64')
-						// XXX do we need to quote path???
 						&& child_process
 							.spawn('attrib', ['+h', index_path])
 				}))
@@ -1874,7 +1896,7 @@ var FileSystemWriterUIActions = actions.Actions({
 					// XXX use closest preview instead of hi-res when 
 					// 		this is set...
 					// XXX need to add option to save full index...
-					//'size_limit',
+					'size_limit',
 					// XXX might be a good idea to include source data links
 					//'include_source_url', // bool
 					'comment',
@@ -1982,6 +2004,25 @@ var FileSystemWriterUIActions = actions.Actions({
 							sort: function(a, b){ return parseInt(a) - parseInt(b) },
 						}))
 
+		},
+		'size_limit': function(actions, make, parent){
+			return make(['Limit image size: ', 
+					function(){ 
+						return actions.config['export-preview-size-limit'] || 'no limit' }],
+					{ buttons: [
+						['&times;', function(p){
+							actions.config['export-preview-size-limit'] = 'no limit'
+							parent.update()
+						}],
+					] })
+				// XXX add validation???
+				.on('open', 
+					widgets.makeNestedConfigListEditor(actions, parent,
+						'export-preview-size-limits',
+						'export-preview-size-limit',
+						{
+							sort: function(a, b){ return parseInt(a) - parseInt(b) },
+						}))
 		},
 		// XXX BUG: history closing errors -- non-critical...
 		'target_dir': function(actions, make, parent){

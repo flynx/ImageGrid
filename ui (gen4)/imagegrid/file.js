@@ -18,7 +18,6 @@ if(typeof(process) != 'undefined'){
 
 	var guaranteeEvents = requirejs('guarantee-events')
 
-
 } else {
 	return module
 }
