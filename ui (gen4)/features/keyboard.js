@@ -133,7 +133,8 @@ module.GLOBAL_KEYBOARD = {
 		R: {
 			default: 'rotateCW',
 			shift: 'reverseImages',
-			ctrl: 'reload!',
+			ctrl: 'loadNewImages!',
+			'ctrl+alt': 'reload!',
 			'ctrl+shift': 'F5',
 		},
 		L: 'rotateCCW',

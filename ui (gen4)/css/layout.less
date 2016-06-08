@@ -1283,6 +1283,19 @@ stretching in width... */
 	opacity: 0.6;
 }
 */
+.overlay-info .ribbon-number[base] {
+	/* NOTE: we are using shadow instead of a border or underline 
+	 	here as we need to control both the uniform shading and
+	 	placement without overcomplicating things when having
+		to compensate for alignment... */
+	//border-bottom: solid 2px yellow;
+	box-shadow: 0 -2px 0 0 yellow inset;
+}
+
+/* changes */
+.overlay-info .changes {
+	cursor: default;
+}
 
 /* gid */
 .overlay-info .gid {

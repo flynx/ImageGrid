@@ -56,6 +56,7 @@ var StatusBarActions = actions.Actions({
 		'status-bar-items': [
 			'index',
 			'ribbon',
+			'changes',
 			'gid',
 			'path',
 
@@ -100,7 +101,7 @@ var StatusBarActions = actions.Actions({
 						// not-editable...
 						$('<span>')
 							.addClass('position')
-							.attr('info', 'Image position (click to toggle ribbon/global)')
+							.attr('info', 'Image number (click to toggle ribbon/global)')
 							// toggle index state...
 							.click(function(){
 								that.toggleStatusBarIndexMode()
@@ -109,7 +110,7 @@ var StatusBarActions = actions.Actions({
 						// editable...
 						: $('<span>')
 							.addClass('position editable')
-							.attr('info', 'Image position (click to edit)')
+							.attr('info', 'Image number (click to edit)')
 							.makeEditable()
 							// select image when done...
 							.on('edit-done', function(_, text){
@@ -143,7 +144,7 @@ var StatusBarActions = actions.Actions({
 							}))
 					.append($('<span>')
 						.addClass('length')
-						.attr('info', 'Image position (click to toggle ribbon/global)')
+						.attr('info', 'Image count (click to toggle ribbon/global)')
 						// toggle index state...
 						.click(function(){
 							that.toggleStatusBarIndexMode()
@@ -186,12 +187,6 @@ var StatusBarActions = actions.Actions({
 			var n = (this.data && this.data.ribbon_order.length > 0) ? 
 				this.data.getRibbonOrder(gid || this.current) 
 				: '-'
-			// flag the base ribbon...
-			n += (this.data 
-					&& this.data.base 
-					&& this.data.getRibbon(gid) == this.base) ? 
-				'*' 
-				: ''
 
 			// make an element...
 			if(typeof(item) == typeof('str')){
@@ -210,7 +205,29 @@ var StatusBarActions = actions.Actions({
 					})
 			}
 
-			item.text(n) 
+			item.html(n) 
+
+			// flag the base ribbon...
+			// NOTE: for some reason can't get jQuery .prop(..)/.removeProp(..)
+			// 		to work here...
+			if(this.data && this.data.base 
+					&& this.data.getRibbon(gid) == this.base){
+				item[0].setAttribute('base', '')
+
+			} else {
+				item[0].removeAttribute('base')
+			}
+
+			return item
+		},
+		changes: function(item, gid, img){
+			if(typeof(item) == typeof('str')){
+				item = $('<span>')
+					.addClass('changes')
+					.attr('info', 'Unsaved changes')
+			}
+
+			item.text(this.changes !== false ? '*' : '')
 
 			return item
 		},
@@ -504,7 +521,7 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 			function(){
 				this.toggleStatusBar(this.config['status-bar-mode'])
 			}],
-		['focusImage clear',
+		['focusImage clear markChanged',
 			function(){
 				this.updateStatusBar()
 			}],
