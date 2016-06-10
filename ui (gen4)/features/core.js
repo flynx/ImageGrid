@@ -306,7 +306,7 @@ module.makeWorkspaceConfigWriter = function(keys, callback){
 
 		keys = typeof(keys) == typeof(function(){}) ? keys() : keys
 
-		// store statusbar data...
+		// store data...
 		keys.forEach(function(key){
 			workspace[key] = JSON.parse(JSON.stringify(that.config[key]))
 		})
@@ -316,6 +316,7 @@ module.makeWorkspaceConfigWriter = function(keys, callback){
 }
 
 // XXX should this delete a prop if it's not in the loading workspace???
+// XXX only replace a prop if it has changed???
 var makeWorkspaceConfigLoader =
 module.makeWorkspaceConfigLoader = function(keys, callback){
 	return function(workspace){
