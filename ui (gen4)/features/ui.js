@@ -944,7 +944,7 @@ var ConfigLocalStorageActions = actions.Actions({
 
 	// XXX should we store this in something like .default_config and
 	// 		clone it???
-	// 		...do not think so, as the __base_config xhould always be set
+	// 		...do not think so, as the __base_config should always be set
 	// 		to the values set in code... (check this!)
 	__base_config: null,
 	__config_loaded: null,
