@@ -367,6 +367,7 @@ function(path, index_dir, logger){
 				.then(function(paths){
 					// start loading...
 					return Promise.all(paths.map(function(p){
+						p = util.normalizePath(p)
 						//var path = pathlib.normalize(p +'/'+ index_dir) 
 						var path = util.normalizePath(p +'/'+ index_dir) 
 						return loadSaveHistoryList(path, index_dir)
@@ -485,9 +486,14 @@ function(path, index_dir, from_date, logger){
 	// 		NOTE: one way to do this is use the logger, it will get
 	// 				each index data on an index event
 	return new Promise(function(resolve, reject){
+		// prepare the index_dir and path....
+		// NOTE: index_dir can be more than a single directory...
+		var i = util.normalizePath(index_dir).split(/[\\\/]/g)
+		var p = util.normalizePath(path).split(/[\\\/]/g).slice(-i.length)
+
 		// we've got an index...
 		// XXX do we need to check if if it's a dir???
-		if(pathlib.basename(path) == index_dir){
+		if(i.filter(function(e, j){ return e == p[j] }).length == i.length){
 
 			logger && logger.emit('path', path)
 
@@ -592,6 +598,7 @@ function(path, index_dir, from_date, logger){
 				.then(function(paths){
 					// start loading...
 					Promise.all(paths.map(function(p){
+						p = util.normalizePath(p)
 						//var path = pathlib.normalize(p +'/'+ index_dir) 
 						var path = util.normalizePath(p +'/'+ index_dir) 
 						return loadIndex(path, index_dir, from_date, logger) 
@@ -910,6 +917,9 @@ function(json, changes){
 
 var FILENAME = '${DATE}-${KEYWORD}.${EXT}'
 
+// NOTE: keyword in index can take the form <path>/<keyword>, in which 
+// 		case the keyword will be saved to the <path>/<file-format>
+// 		NOTE: loadIndex(..) at this point will ignore sub-paths...
 var writeIndex =
 module.writeIndex = 
 function(json, path, date, filename_tpl, logger){
@@ -935,7 +945,14 @@ function(json, path, date, filename_tpl, logger){
 			// 		be too many files...
 			return Promise
 				.all(Object.keys(json).map(function(keyword){
-					var file = path +'/'+ (filename_tpl
+					var data = JSON.stringify(json[keyword])
+
+					// get the sub-path and keyword...
+					var sub_path = keyword.split(/[\\\/]/g)
+					keyword = sub_path.pop()
+					sub_path = sub_path.join('/')
+
+					var file = path +'/'+ sub_path +'/'+ (filename_tpl
 						.replace('${DATE}', date)
 						.replace('${KEYWORD}', keyword)
 						.replace('${EXT}', 'json'))
@@ -943,7 +960,6 @@ function(json, path, date, filename_tpl, logger){
 					return ensureDir(pathlib.dirname(file))
 						.then(function(){
 							files.push(file)
-							var data = JSON.stringify(json[keyword])
 
 							logger && logger.emit('queued', file)
 

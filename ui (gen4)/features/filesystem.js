@@ -770,24 +770,147 @@ module.FileSystemLoaderUI = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// FS Comments... 
+
+// XXX split this to loader and writer???
+var FileSystemCommentsActions = actions.Actions({
+	// Format:
+	// 	{
+	// 		<keywork>: <data>,
+	// 		...
+	// 	}
+	__comments: null,
+
+	get comments(){
+		var comments = this.__comments = this.__comments || {}
+		return comments
+	},
+	set comments(value){
+		this.__comments = value
+	},
+
+	/* XXX we do not actually need this...
+	// XXX this will not save comments for merged indexes...
+	saveComments: ['- File/',
+		function(path, date, logger){
+			if(this.location.method != 'loadIndex' 
+				|| this.location.loaded.length > 1){
+				return
+			}
+
+			logger = logger || this.logger
+
+			var path = this.location.path
+			var comments_dir = this.config['index-dir'] +'/comments'
+			var data = JSON.parse(JSON.stringify(this.comments))
+
+			// XXX
+			return file.writeIndex(
+					data, 
+					path +'/'+ comments_dir,
+					date || Date.timeStamp(),
+					this.config['index-filename-template'], 
+					logger)
+		}],
+	//*/
+	// XXX at this point this makes no attempt to merge comments of 
+	// 		nested indexes...
+	// 		...until there is a generic merge protocol defined, clients
+	// 		should take care of merging for themselves...
+	loadComments: ['- File/',
+		function(path, date, logger){
+			if(this.location.method != 'loadIndex'){
+				return
+			}
+
+			logger = logger || this.logger
+
+			var that = this
+			var path = this.location.path
+			var comments_dir = this.config['index-dir'] +'/comments'
+
+			return file.loadIndex(path, this.config['index-dir'] +'/comments', date, logger)
+				// XXX should this merge the comments???
+				.then(function(res){
+					that.comments = res[path]
+
+					return res
+				})
+		}],
+})
+
+var FileSystemComments = 
+module.FileSystemComments = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'fs-comments',
+	depends: [
+		'fs-loader'
+	],
+	suggested: [
+	],
+
+	actions: FileSystemCommentsActions,
+
+	handlers: [
+		// save/resore .comments
+		['json',
+			function(res){
+				if(this.comments != null){
+					res.comments = JSON.parse(JSON.stringify(this.comments))
+				}
+			}],
+		['load',
+			function(_, data){
+				if(data.comments != null){
+					this.comments = data.comments
+				}
+			}],
+
+		['prepareIndexForWrite',
+			function(res){
+				var changed = this.changes == null 
+					|| this.changes.comments
+
+				if(changed){
+					var comments = res.raw.comments
+
+					Object.keys(comments).forEach(function(k){
+						res.index['comments/' + k] = comments[k]
+					})
+				}
+			}],
+		['loadIndex',
+			function(res){
+				var that = this
+				res.then(function(){
+					that.loadComments()
+				})
+			}],
+	],
+})
+
+
+
+//---------------------------------------------------------------------
 // Save History...
 
 var FileSystemSaveHistoryActions = actions.Actions({
 	// Save comments...
 	//
 	// Format:
-	// 	{
+	// 	.comments.save = {
 	// 		// comment staged for next .saveIndex(..)...
 	// 		'current': <comment>,
 	//
 	// 		<timestamp>: <comment>,
 	// 		...
 	// 	}
-	savecomments: null,
 
 	getSaveComment: ['- File/',
 		function(save){
-			return this.savecomments && this.savecomments[save || 'current'] || '' }],
+			return (this.comments.save && this.comments.save[save || 'current']) || '' }],
 	// Comment a save...
 	//
 	// 	Comment current save...
@@ -811,7 +934,7 @@ var FileSystemSaveHistoryActions = actions.Actions({
 	// 		...normally it is Date.timeStamp() compatible string.
 	setSaveComment: ['- File/Comment a save',
 		function(save, comment){
-			var comments = this.savecomments = this.savecomments || {}
+			var comments = this.comments.save = this.comments.save || {}
 
 			// no explicit save given -- stage a comment for next save...
 			if(comment === undefined){
@@ -829,7 +952,7 @@ var FileSystemSaveHistoryActions = actions.Actions({
 				comments[save] = comment
 			}
 
-			this.markChanged('savecomments')
+			this.markChanged('comments')
 		}],
 
 	loadSaveHistoryList: ['- File/',
@@ -848,7 +971,8 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-save-history',
 	depends: [
-		'fs-loader'
+		'fs-loader',
+		'fs-comments',
 	],
 	suggested: [
 		'ui-fs-save-history',
@@ -857,39 +981,6 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 	actions: FileSystemSaveHistoryActions,
 
 	handlers: [
-		// XXX save/load comments to:
-		// 		<index-dir>/comments/<timestamp>-save.json
-		// XXX might be a good idea to make this a more generic comment 
-		// 		framework...
-		// 			.comments.<type>	- specific comment set...
-		['saveIndex',
-			function(){
-				// XXX if .savecomments changed, save it...
-			}],
-		['loadIndex',
-			function(){
-				// XXX load save comments...
-			}],
-
-
-		// XXX legacy comment handling....
-		// 		...remove this as soon as the new scheme is done...
-
-		// save/resore .savecomments
-		// 
-		['json',
-			function(res){
-				if(this.savecomments != null){
-					res.savecomments = JSON.parse(JSON.stringify(this.savecomments))
-				}
-			}],
-		['load',
-			function(_, data){
-				if(data.savecomments != null){
-					this.savecomments = data.savecomments
-				}
-			}],
-
 		// Prepare comments for writing...
 		//
 		// NOTE: defining this here enables us to actually post-bind to
@@ -897,29 +988,24 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 		// 		available.
 		['prepareIndexForWrite',
 			function(res){
-				var changed = this.changes == null 
-					|| this.changes.savecomments
+				var changed = this.changes == null || this.changes.comments
 
 				if(changed){
-					var comments = res.raw.savecomments || {}
+					var comments = res.raw.comments && res.raw.comments.save || {}
 
 					// set the 'current' comment to the correct date...
 					if(comments.current){
 						comments[res.date] = comments.current
 						delete comments.current
 					}
-
-					res.prepared.savecomments = comments
 				}
 			}],
-		// replace .savecomments['current'] with .location.from...
-		//
-		// NOTE: this will also drop any unsaved changes from browsing 
-		// 		history...
+		// replace .comments.save['current'] with .location.from...
+		// drop unsaved changes...
 		['saveIndex',
 			function(res){
 				var that = this
-				var comments = this.savecomments
+				var comments = this.comments.save
 
 				if(comments && comments.current){
 					res
@@ -933,7 +1019,6 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 			}],
 	]
 })
-
 
 
 //---------------------------------------------------------------------
@@ -977,7 +1062,7 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 				date = date || 'current'
 				a = a || that
 
-				var comment = a.savecomments && a.savecomments[date] 
+				var comment = a.comments.save && a.comments.save[date] 
 				//title.push(comment || '')
 				comment && title.push(comment)
 
@@ -1078,7 +1163,7 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 												// NOTE: the original 'current'
 												// 		comment is saved to
 												// 		.unsaved_index
-												delete that.savecomments.current
+												delete that.comments.save.current
 											})
 									})
 									// mark the current loaded position...
@@ -1377,9 +1462,11 @@ var FileSystemWriterActions = actions.Actions({
 	// 		// an argument or the one returned by .json('base')
 	// 		raw: <original-json>,
 	//
-	// 		// this is the prepared object, the one that is going to be
+	// 		// this is the prepared index object, the one that is going to be
 	// 		// saved.
-	// 		prepared: <prepared-json>,
+	// 		index: <index-json>,
+	//
+	// 		...
 	// 	}
 	//
 	//
@@ -1389,7 +1476,7 @@ var FileSystemWriterActions = actions.Actions({
 	// 		...
 	// 	}
 	//
-	// The <prepared-json> is written out to a fs index in the following
+	// The <index-json> is written out to a fs index in the following
 	// way:
 	// 		<index-dir>/<timestamp>-<keyword>.json
 	//
@@ -1407,7 +1494,7 @@ var FileSystemWriterActions = actions.Actions({
 			return {
 				date: Date.timeStamp(),
 				raw: json,
-				prepared: file.prepareIndex(json, changes),
+				index: file.prepareIndex(json, changes),
 			}
 		}],
 	
@@ -1462,7 +1549,7 @@ var FileSystemWriterActions = actions.Actions({
 			var full_path = path +'/'+ this.config['index-dir']
 
 			return file.writeIndex(
-					index.prepared, 
+					index.index, 
 					// XXX should we check if index dir is present in path???
 					//path, 
 					full_path,
@@ -1481,7 +1568,8 @@ var FileSystemWriterActions = actions.Actions({
 					location.method = 'loadIndex'
 					location.from = index.date
 
-					return location
+					//return location
+					return index
 				})
 		}],
 
@@ -1628,7 +1716,7 @@ var FileSystemWriterActions = actions.Actions({
 			// NOTE: if we are to use .saveIndex(..) here, do not forget
 			// 		to reset .changes
 			queue.push(file.writeIndex(
-					index.prepared,
+					index.index,
 					index_path, 
 					index.date,
 					this.config['index-filename-template'], 
