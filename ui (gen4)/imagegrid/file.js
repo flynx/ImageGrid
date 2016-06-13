@@ -500,7 +500,6 @@ function(path, index_dir, from_date, logger){
 				.on('end', function(files){
 					var res = {}
 
-					// XXX need to pass a filter date to this...
 					var index = groupByKeyword(files, from_date, logger)
 
 					// load...
