@@ -857,6 +857,24 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 	actions: FileSystemSaveHistoryActions,
 
 	handlers: [
+		// XXX save/load comments to:
+		// 		<index-dir>/comments/<timestamp>-save.json
+		// XXX might be a good idea to make this a more generic comment 
+		// 		framework...
+		// 			.comments.<type>	- specific comment set...
+		['saveIndex',
+			function(){
+				// XXX if .savecomments changed, save it...
+			}],
+		['loadIndex',
+			function(){
+				// XXX load save comments...
+			}],
+
+
+		// XXX legacy comment handling....
+		// 		...remove this as soon as the new scheme is done...
+
 		// save/resore .savecomments
 		// 
 		['json',
