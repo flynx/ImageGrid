@@ -770,23 +770,89 @@ module.FileSystemLoaderUI = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
-// FS Comments... 
+// Comments...
+// XXX these are quite generic, might be a good idea to move them out of fs...
 
-// XXX split this to loader and writer???
-var FileSystemCommentsActions = actions.Actions({
+var CommentsActions = actions.Actions({
 	// Format:
 	// 	{
+	// 		// raw loaded comments...
+	// 		raw: {
+	// 			<path>: <comments>,
+	// 			...
+	// 		},
+	//
 	// 		<keywork>: <data>,
 	// 		...
 	// 	}
 	__comments: null,
 
 	get comments(){
-		var comments = this.__comments = this.__comments || {}
-		return comments
+		return this.__comments
 	},
 	set comments(value){
 		this.__comments = value
+	},
+})
+
+var Comments = 
+module.Comments = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'comments',
+
+	actions: CommentsActions,
+
+	handlers: [
+		// save/resore .comments
+		['json',
+			function(res){
+				if(this.comments != null){
+					res.comments = JSON.parse(JSON.stringify(this.comments))
+				}
+			}],
+		['load',
+			function(_, data){
+				if(data.comments != null){
+					this.comments = data.comments
+				}
+			}],
+
+		// prepare comments for saving to "comments/<keyword>"...
+		//
+		// NOTE: this will skip the 'raw' comment field...
+		['prepareIndexForWrite',
+			function(res){
+				var changed = this.changes == null 
+					|| this.changes.comments
+
+				if(changed && res.raw.comments){
+					var comments = res.raw.comments
+
+					Object.keys(comments)
+						// skip the raw field...
+						.filter(function(k){ return k != 'raw' })
+						.forEach(function(k){
+							res.index['comments/' + k] = comments[k]
+						})
+				}
+			}],
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+// FS Comments... 
+
+// XXX split this to loader and writer???
+// XXX might be good to split this to a generic API and a loader...
+var FileSystemCommentsActions = actions.Actions({
+	config: {
+		// This helps prevent the comment loading process from delaying
+		// showing the user the images...
+		'comments-delay-load': 300,
 	},
 
 	/* XXX we do not actually need this...
@@ -813,10 +879,6 @@ var FileSystemCommentsActions = actions.Actions({
 					logger)
 		}],
 	//*/
-	// XXX at this point this makes no attempt to merge comments of 
-	// 		nested indexes...
-	// 		...until there is a generic merge protocol defined, clients
-	// 		should take care of merging for themselves...
 	loadComments: ['- File/',
 		function(path, date, logger){
 			if(this.location.method != 'loadIndex'){
@@ -826,16 +888,34 @@ var FileSystemCommentsActions = actions.Actions({
 			logger = logger || this.logger
 
 			var that = this
-			var path = this.location.path
-			var comments_dir = this.config['index-dir'] +'/comments'
+			var loaded = this.location.loaded
 
-			return file.loadIndex(path, this.config['index-dir'] +'/comments', date, logger)
-				// XXX should this merge the comments???
-				.then(function(res){
-					that.comments = res[path]
+			// prepare empty comments...
+			// XXX should we reset or just merge???
+			this.comments = {
+				raw: {}
+			}
 
-					return res
-				})
+			return Promise.all(loaded.map(function(path){
+				var comments_dir = that.config['index-dir'] +'/comments'
+
+				return file.loadIndex(path, that.config['index-dir'] +'/comments', date, logger)
+					.then(function(res){
+
+						// if we have no sub-indexes just load the 
+						// comments as-is...
+						if(loaded.length == 1){
+							that.comments = JSON.parse(JSON.stringify(res[path]))
+							that.comments.raw = {path: res[path]}
+
+						// sub-indexes -> let the client merge their stuff...
+						} else {
+							that.comments.raw[path] = res[path]
+						} 
+
+						return res
+					})
+			}))
 		}],
 })
 
@@ -847,48 +927,21 @@ module.FileSystemComments = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-comments',
 	depends: [
-		'fs-loader'
-	],
-	suggested: [
+		'comments',
+		'fs-loader',
 	],
 
 	actions: FileSystemCommentsActions,
 
 	handlers: [
-		// save/resore .comments
-		['json',
-			function(res){
-				if(this.comments != null){
-					res.comments = JSON.parse(JSON.stringify(this.comments))
-				}
-			}],
-		['load',
-			function(_, data){
-				if(data.comments != null){
-					this.comments = data.comments
-				}
-			}],
-
-		// prepare comments for saving to "comments/<keyword>"...
-		['prepareIndexForWrite',
-			function(res){
-				var changed = this.changes == null 
-					|| this.changes.comments
-
-				if(changed){
-					var comments = res.raw.comments
-
-					Object.keys(comments).forEach(function(k){
-						res.index['comments/' + k] = comments[k]
-					})
-				}
-			}],
 		['loadIndex',
 			function(res){
 				var that = this
+
 				res.then(function(){
-					that.loadComments()
-				})
+					setTimeout(function(){
+						that.loadComments()
+					}, that.config['comments-delay-load'] || 0) })
 			}],
 	],
 })
@@ -904,15 +957,23 @@ var FileSystemSaveHistoryActions = actions.Actions({
 	// Format:
 	// 	.comments.save = {
 	// 		// comment staged for next .saveIndex(..)...
+	// 		//
+	// 		// NOTE: 'current' will get replaced with save timestamp...
 	// 		'current': <comment>,
 	//
 	// 		<timestamp>: <comment>,
 	// 		...
 	// 	}
 
+
+	// NOTE: if comments are not loaded yet this will break...
 	getSaveComment: ['- File/',
 		function(save){
+			this.comments == null 
+				&& console.error('Comments do not appear to be loaded yet...')
+
 			return (this.comments.save && this.comments.save[save || 'current']) || '' }],
+
 	// Comment a save...
 	//
 	// 	Comment current save...
@@ -934,8 +995,12 @@ var FileSystemSaveHistoryActions = actions.Actions({
 	// NOTE: "save" is the save format as returned by file.groupByDate(..),
 	// 		or .loadSaveHistoryList(..)
 	// 		...normally it is Date.timeStamp() compatible string.
+	// NOTE: if comments are not loaded yet this will break...
 	setSaveComment: ['- File/Comment a save',
 		function(save, comment){
+			this.comments == null 
+				&& console.error('Comments do not appear to be loaded yet...')
+
 			var comments = this.comments.save = this.comments.save || {}
 
 			// no explicit save given -- stage a comment for next save...
@@ -985,9 +1050,12 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 	handlers: [
 		// Prepare comments for writing...
 		//
+		// These will replace .comments.save['current'] with .location.from...
+		//
 		// NOTE: defining this here enables us to actually post-bind to
 		// 		an action that is defined later or may not even be 
 		// 		available.
+		// NOTE: 'loadIndex' will also drop any unsaved changes...
 		['prepareIndexForWrite',
 			function(res){
 				var changed = this.changes == null || this.changes.comments
@@ -1002,8 +1070,6 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 					}
 				}
 			}],
-		// replace .comments.save['current'] with .location.from...
-		// drop unsaved changes...
 		['saveIndex',
 			function(res){
 				var that = this
@@ -1019,14 +1085,32 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 						})
 				}
 
+				// drop unsaved changes...
 				delete this.unsaved_index
 			}],
 
-		// XXX merge comments...
-		// 		...not yet sure how...
-		['loadIndex',
+		// merge save comments...
+		['loadComments',
 			function(res){
-				// XXX
+				var that = this
+
+				res.then(function(){
+					// NOTE: if we loaded just one index the comments 
+					// 		are already loaded and we do not need to do
+					// 		anything...
+					if(that.location.loaded.length > 1){
+						var comments = that.comments
+						var raw = comments.raw
+
+						comments.save = {}
+
+						Object.keys(raw).forEach(function(path){
+							raw[path] && Object.keys(raw[path].save || {}).forEach(function(date){
+								comments.save[date] = raw[path].save[date]
+							})
+						})
+					}
+				})
 			}],
 	]
 })
