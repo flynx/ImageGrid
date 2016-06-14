@@ -839,6 +839,7 @@ var FileSystemCommentsActions = actions.Actions({
 		}],
 })
 
+
 var FileSystemComments = 
 module.FileSystemComments = core.ImageGridFeatures.Feature({
 	title: '',
@@ -868,6 +869,7 @@ module.FileSystemComments = core.ImageGridFeatures.Feature({
 				}
 			}],
 
+		// prepare comments for saving to "comments/<keyword>"...
 		['prepareIndexForWrite',
 			function(res){
 				var changed = this.changes == null 
@@ -1009,16 +1011,26 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 
 				if(comments && comments.current){
 					res
-						.then(function(){
+						.then(function(res){
 							comments[that.location.from] = comments.current
 							delete comments.current
+
+							return res
 						})
 				}
 
 				delete this.unsaved_index
 			}],
+
+		// XXX merge comments...
+		// 		...not yet sure how...
+		['loadIndex',
+			function(res){
+				// XXX
+			}],
 	]
 })
+
 
 
 //---------------------------------------------------------------------
