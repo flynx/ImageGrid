@@ -225,10 +225,17 @@ var CurrentImageIndicatorActions = actions.Actions({
 			var w = cur.outerWidth(true)
 			var h = cur.outerHeight(true)
 
-			// keep size same as the image...
-			if(marker.outerWidth() != w || marker.outerHeight() != h){
-				css.width = w
-				css.height = h
+			// accommodate for non-square images... 
+			// XXX this might have problems when scaling...
+			if(Math.floor(w) != Math.floor(h)){
+				css.width = w / scale
+				// XXX do we ever need to set height in a ribbon???
+				//css.height = h / scale
+
+			// square image -> let CSS do the work...
+			} else {
+				css.width = ''
+				css.height = ''
 			}
 
 			// update border...

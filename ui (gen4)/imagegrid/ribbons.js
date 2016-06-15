@@ -653,13 +653,16 @@ var RibbonsPrototype = {
 		}
 
 		// do the calc...
-		var res = dim == 'height' ? img.outerHeight(true) * scale
-			: dim == 'width' ? img.outerWidth(true) * scale
+		var res = dim == 'height' ? img.outerHeight(true)
+			: dim == 'width' ? img.outerWidth(true)
 			: dim == 'max' ?
-				Math.max(img.outerHeight(true), img.outerWidth(true)) * scale
+				Math.max(img.outerHeight(true), img.outerWidth(true))
 			: dim == 'min' ?
-				Math.min(img.outerHeight(true), img.outerWidth(true)) * scale
+				Math.min(img.outerHeight(true), img.outerWidth(true))
 			: null
+
+		// XXX needed for jQuery pre 3.0.0
+		//res = res ? res * scale : res
 
 		// remove the tmp image we created...
 		if(tmp != null){
@@ -1533,11 +1536,12 @@ var RibbonsPrototype = {
 		// compensate for new/removed images...
 		if(reference != null){
 			var ref = this.getImage(reference)
+			var scale = this.scale()
 
 			// align only if ref is loaded...
 			if(ref.length > 0){
 				var gid = this.getElemGID(ref)
-				var w = ref.outerWidth()
+				var w = ref.outerWidth() / scale
 
 				// calculate offset...
 				// NOTE: this will not work for non-square images...
@@ -1642,6 +1646,7 @@ var RibbonsPrototype = {
 		left = left || 0
 		right = right || 0
 		reference = this.getImage(reference)
+		var scale = this.scale()
 
 		var that = this
 
@@ -1687,7 +1692,7 @@ var RibbonsPrototype = {
 			// calculate the compensation...
 			// XXX this assumes that all widths are equal...
 			// 		...we can't calculate image with unless it is attached...
-			var l = -left * reference.outerWidth()
+			var l = -left * (reference.outerWidth() / scale)
 
 			// clear stuff...
 			$(marks)
@@ -1759,7 +1764,7 @@ var RibbonsPrototype = {
 			// calculate the compensation...
 			// XXX this assumes that all widths are equal...
 			// 		...we can't calculate image with unless it is attached...
-			var l = c * reference.outerWidth()
+			var l = c * (reference.outerWidth() / scale)
 
 			requestAnimationFrame(function(){
 				transitions || that.preventTransitions(ribbon)
@@ -2213,13 +2218,15 @@ var RibbonsPrototype = {
 
 		var viewer_p = W > H ? 'landscape' : 'portrait'
 
+		var scale = this.scale()
+
 		return $(images).each(function(i, e){
 			var image = $(this)
 			// orientation...
 			var o = image.attr('orientation')
 			o = o == null ? 0 : o
-			var w = image.outerWidth()
-			var h = image.outerHeight()
+			var w = image.outerWidth() / scale
+			var h = image.outerHeight() / scale
 
 			// non-square image...
 			if(w != h){
@@ -2279,7 +2286,7 @@ var RibbonsPrototype = {
 		var ro = ribbon_set.offset().top
 		// NOTE: this appears to account for margins...
 		var io = target.offset().top 
-		var h = target.outerHeight() 
+		var h = target.outerHeight() / scale 
 			+ parseFloat(target.css('margin-top'))
 			+ parseFloat(target.css('margin-bottom'))
 
@@ -2314,7 +2321,7 @@ var RibbonsPrototype = {
 		// NOTE: this appears to account for margins...
 		var il = target.offset().left 
 		var W = this.viewer.width() * scale
-		var w = (target.outerWidth()
+		var w = (target.outerWidth() / scale
 			+ parseFloat(target.css('margin-left'))
 			+ parseFloat(target.css('margin-right'))) * scale
 
