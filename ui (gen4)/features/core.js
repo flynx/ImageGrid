@@ -304,7 +304,7 @@ module.makeWorkspaceConfigWriter = function(keys, callback){
 	return function(workspace){
 		var that = this
 
-		keys = typeof(keys) == typeof(function(){}) ? keys() : keys
+		keys = typeof(keys) == typeof(function(){}) ? keys.call(this) : keys
 
 		// store data...
 		keys.forEach(function(key){
@@ -322,7 +322,7 @@ module.makeWorkspaceConfigLoader = function(keys, callback){
 	return function(workspace){
 		var that = this
 
-		keys = typeof(keys) == typeof(function(){}) ? keys() : keys
+		keys = typeof(keys) == typeof(function(){}) ? keys.call(this) : keys
 
 		// load data...
 		keys.forEach(function(key){

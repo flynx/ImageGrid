@@ -45,7 +45,7 @@ var makeStateIndicatorItem = function(container, type, text){
 // XXX revise how/where info is displayed...
 var StatusBarActions = actions.Actions({
 	config: {
-		'status-bar-mode': 'minimal',
+		'status-bar-mode': 'full',
 		'status-bar-modes': [
 			'none',
 			'minimal',
@@ -221,6 +221,10 @@ var StatusBarActions = actions.Actions({
 			return item
 		},
 		changes: function(item, gid, img){
+			if(this.changes === undefined){
+				return $()
+			}
+
 			if(typeof(item) == typeof('str')){
 				item = $('<span>')
 					.addClass('changes')
@@ -340,7 +344,9 @@ var StatusBarActions = actions.Actions({
 				var bar = this.ribbons.viewer.find('.state-indicator-container.global-info') 
 				if(bar.length == 0){
 					bar = makeStateIndicator('global-info overlay-info statusbar') 
-						.addClass(this.config['status-bar-mode'] || '')
+						.addClass(this.config['status-bar-mode'] 
+							|| this.config['status-bar-modes'][0] 
+							|| '')
 						.on('mouseover', function(){
 							var t = $(event.target)
 							
@@ -361,6 +367,10 @@ var StatusBarActions = actions.Actions({
 			function(){ return this.config['status-bar-modes'] },
 			// XXX check if we will be getting gid reliably...
 			function(state, bar, gid){ 
+				// do not do anything unless the status bar exists...
+				if(bar.length == 0){
+					return
+				}
 				var that = this
 				this.config['status-bar-mode'] = state 
 
@@ -550,16 +560,18 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 				function(){ return Object.keys(StatusBar.config) })],
 		['loadWorkspace',
 			core.makeWorkspaceConfigLoader(
-				function(){ return Object.keys(StatusBar.config) },
+				function(){ 
+					return Object.keys(StatusBar.config) },
 				function(workspace){
 					// XXX not sure about this protocol yet...
 					if(this.workspace == 'ui-chrome-hidden'){
 						this.toggleStatusBar('none')
-						return
-					}
 
-					'status-bar-mode' in workspace 
-						&& this.toggleStatusBar(workspace['status-bar-mode'])
+					} else {
+						'status-bar-mode' in workspace ?
+							this.toggleStatusBar(workspace['status-bar-mode'])
+							: this.toggleStatusBar(this.config['status-bar-mode'])
+					}
 				})],
 	],
 })

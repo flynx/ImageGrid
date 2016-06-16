@@ -80,8 +80,8 @@ var SingleImageActions = actions.Actions({
 		// View scale...
 		//
 		// NOTE: these will get overwritten if/when the user changes the scale...
-		'single-image-scale': null,
-		'ribbon-scale': null,
+		'single-image-scale': 1.2,
+		'ribbon-scale': 5,
 
 		// Set scale 'units' for different viewes...
 		//

@@ -316,9 +316,13 @@ module.ViewerActions = actions.Actions({
 		}],
 	// NOTE: this will trigger .updateImage hooks...
 	refresh: ['Interface/Refresh images without reloading',
-		function(gids){
+		function(gids, scale){
 			gids = gids || '*'
-			this.ribbons.updateImage(gids)
+			var size = scale != null ? 
+				this.ribbons.getVisibleImageSize('min', scale)
+				: null
+
+			this.ribbons.updateImage(gids, null, size)
 		}],
 	clear: [
 		function(){ this.ribbons && this.ribbons.clear() }],
@@ -647,14 +651,16 @@ module.ViewerActions = actions.Actions({
 		function(scale){
 			this.resizing.chainCall(this, function(){
 				this.ribbons && scale && this.ribbons.scale(scale)
-				this.refresh()
+				// NOTE: we pass explicit scale here to compensate for animation...
+				this.refresh('*', scale)
 			}, 'scale', scale)
 		}],
 	fitOrig: ['Zoom/Fit to original scale',
 		function(){ 
 			this.resizing.chainCall(this, function(){
 				this.ribbons.scale(1) 
-				this.refresh()
+				// NOTE: we pass explicit scale here to compensate for animation...
+				this.refresh('*', 1)
 			}, 'scale', 1)
 		}],
 	// NOTE: if this gets a count argument it will fit count images, 
@@ -673,15 +679,17 @@ module.ViewerActions = actions.Actions({
 					count += o
 				}
 				this.ribbons.fitImage(count)
-				this.refresh()
+				// NOTE: we pass explicit scale here to compensate for animation...
+				this.refresh('*', this.ribbons.getScreenWidthImages(1) / count)
 			}, 'screenwidth', count, overflow)
 		}],
-	// NOTE: this does not accout for ribbon spacing...
+	// NOTE: this does not account for ribbon spacing...
 	fitRibbon: ['Zoom/Fit ribbon vertically',
 		function(count, whole){
 			this.resizing.chainCall(this, function(){
 				this.ribbons.fitRibbon(count, whole)
-				this.refresh()
+				// NOTE: we pass explicit scale here to compensate for animation...
+				this.refresh('*', this.ribbons.getScreenHeightRibbons(1, whole) / count)
 			}, 'screenheight', count, whole)
 		}],
 

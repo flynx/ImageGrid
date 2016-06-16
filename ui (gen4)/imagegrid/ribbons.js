@@ -519,7 +519,16 @@ var RibbonsPrototype = {
 				this.origin(t, l)
 			}
 
+			// XXX experimental: not sure if this is the right place for this...
+			// 		...think this is a good place because its one spot 
+			// 		that gets used everywhere...
+			// 		...think this is a bad spot because we lose control ho many
+			// 		images of what size get loaded, and wee need to minimize 
+			// 		loading...
+			//this.updateImage('*', null, this.getVisibleImageSize('height', 1) * scale)
+
 			this.dom.setScale(ribbon_set, scale)
+
 
 			/*
 			ribbon_set
@@ -597,6 +606,7 @@ var RibbonsPrototype = {
 			} else {
 				var img = this.getImage(a)
 				var io = img.offset()
+				// XXX jQuery3: should we compensate for scale here???
 				var w = img.width()
 				var h = img.height()
 
@@ -635,7 +645,6 @@ var RibbonsPrototype = {
 	// XXX this might break when no images are loaded and proportions 
 	// 		are not square...
 	getVisibleImageSize: function(dim, scale, img){
-		scale = scale || this.scale()
 		dim = dim == null ? 'width' : dim
 		img = img || this.viewer.find(IMAGE)
 		var tmp
@@ -661,8 +670,10 @@ var RibbonsPrototype = {
 				Math.min(img.outerHeight(true), img.outerWidth(true))
 			: null
 
-		// XXX needed for jQuery pre 3.0.0
-		//res = res ? res * scale : res
+		// get size for given scale...
+		if(res && scale){
+			res = (res / this.scale()) * scale
+		}
 
 		// remove the tmp image we created...
 		if(tmp != null){
