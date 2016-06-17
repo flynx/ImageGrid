@@ -85,6 +85,7 @@ var StatusBarActions = actions.Actions({
 			'live-update-on-edit': false,
 		},
 
+		'status-bar-changes-text': '*',
 	},
 
 	__statusbar_elements__: {
@@ -231,7 +232,7 @@ var StatusBarActions = actions.Actions({
 					.attr('info', 'Unsaved changes')
 			}
 
-			item.text(this.changes !== false ? '*' : '')
+			item.html(this.changes !== false ? this.config['status-bar-changes-text'] || '*' : '')
 
 			return item
 		},
