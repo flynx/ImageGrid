@@ -171,7 +171,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 				return
 			}
 
-			var scale = this.ribbons.scale()
+			var scale = this.scale
 			var cur = this.ribbons.getImage(target)
 			// NOTE: cur may be unloaded...
 			var ribbon = this.ribbons.getRibbon(cur.length > 0 ? target : this.currentRibbon)
@@ -264,6 +264,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 		}],
 })
 
+
 var CurrentImageIndicator = 
 module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 	title: '',
@@ -315,19 +316,25 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 					}
 				}
 			}],
+
 		// Change border size in the appropriate spot in the animation:
 		// 	- before animation when scaling up
 		// 	- after when scaling down
 		// This is done to make the visuals consistent...
 		//['fitImage.pre fitRibbon.pre setScale.pre',
 		['resizing.pre',
-			function(w1){ 
-				var w0 = this.screenwidth
+			function(unit, w1){ 
+				var w0 = this[unit]
 				w1 = w1 || 1
-				return function(){
-					this.updateCurrentImageIndicator(null, w0 > w1 ? 'before' : 'after') 
-				}
+
+				w0 > w1 
+					&& this.updateCurrentImageIndicator(null, 'before') 
+					//&& console.log('BEFORE!!!!')
 			}],
+		['resizingDone',
+			function(){ 
+				this.updateCurrentImageIndicator(null, 'before') }],
+
 		['shiftImageLeft.pre shiftImageRight.pre',
 			function(){
 				this.ribbons.viewer.find('.current-marker').hide()
