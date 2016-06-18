@@ -264,7 +264,9 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 	actions: SingleImageActions,
 
 	handlers:[
-		['resizing.post',
+		// update config...
+		//['resizing.post',
+		['resizingDone',
 			function(){ 
 				// prevent this from doing anything while no viewer...
 				if(!this.ribbons 
@@ -277,12 +279,12 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 				if(this.toggleSingleImage('?') == 'on'){
 					this.updateImageProportions()
 
-					this.config['single-image-scale'] = 
-						this[this.config['single-image-scale-unit']]
+					this.config['single-image-scale'] 
+						= this[this.config['single-image-scale-unit']]
 
 				} else {
-					this.config['ribbon-scale'] = 
-						this[this.config['ribbon-scale-unit']] 
+					this.config['ribbon-scale'] 
+						= this[this.config['ribbon-scale-unit']] 
 				}
 			}],
 		// update new images...
@@ -308,11 +310,14 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 					if(state == 'on'){
 						// update scale...
 						if(state != pre_state){
-							this.config['ribbon-scale'] = 
-								this[this.config['ribbon-scale-unit']] 
+							// save ribbon state...
+							this.config['ribbon-scale']
+								= this[this.config['ribbon-scale-unit']] 
 
-							this[this.config['single-image-scale-unit']] =
-								this.config['single-image-scale']
+							// change state...
+							this[this.config['single-image-scale-unit']]
+								= this.config['single-image-scale']
+								= this.config['single-image-scale']
 									|| this[this.config['single-image-scale-unit']]
 						}
 
@@ -334,51 +339,17 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 						// update scale...
 						if(state != pre_state){
-							this.config['single-image-scale'] = 
-								this[this.config['single-image-scale-unit']]
+							// save single image view state...
+							this.config['single-image-scale']
+								= this[this.config['single-image-scale-unit']]
 
-							this[this.config['ribbon-scale-unit']] =
-								this.config['ribbon-scale']
+							// change state...
+							this[this.config['ribbon-scale-unit']]
+								= this.config['ribbon-scale']
+								= this.config['ribbon-scale']
 									|| this[this.config['ribbon-scale-unit']] 
 						}
 					}
-				}
-			}],
-
-		// Force browser to redraw off-screen images...
-		//
-		// This appears that chrome cheats by not resizing off-screen
-		// images properly after changing scale...
-		//
-		// XXX this is still not perfect...
-		// 		...if needed do a .reload() / ctrl-r
-		[[
-			'resizing.post',
-			'toggleSingleImage.pre', 
-		], 
-			function(){ 
-				this.__did_resize = true 
-			}],
-		[[
-			'focusImage', 
-			'toggleSingleImage',
-		], 
-			function(){
-				var img = this.ribbons.getImage()
-				var d = Math.max(img.attr('preview-width')*1, img.attr('preview-width')*1)
-				var D = this.ribbons.getVisibleImageSize('max')
-
-				if(this.config['-single-image-redraw-on-focus']
-						&& this.toggleSingleImage('?') == 'on'
-						&& this.__did_resize
-						// only when close to original preview size
-						&& Math.abs(D-d)/D < 0.30){
-
-					// this forces chrome to redraw off-screen images...
-					this.scale = this.scale
-
-					// reset the resize flag...
-					delete this.__did_resize
 				}
 			}],
 	],

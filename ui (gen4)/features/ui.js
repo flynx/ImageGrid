@@ -140,10 +140,17 @@ module.ViewerActions = actions.Actions({
 		// 		and current fit-overflow added.
 		'zoom-step': 1.2,
 
-		// added to odd number of images to fit to indicate scroll ability...
+		// Added to odd number of images to fit to indicate scroll ability...
 		// ...this effectively sets the closest distance an image can be from
 		// the viewer edge...
 		'fit-overflow': 0.2,
+
+		// Time to wait after resize is done for transitionend event to call
+		// .resizingDone(..) action.
+		//
+		// NOTE: this should be as short as possible but longer than the
+		// 		transition.
+		'resize-done-timeout': 300,
 
 		
 		// Theme to set on startup...
@@ -628,9 +635,11 @@ module.ViewerActions = actions.Actions({
 	//
 	// This will enable clients to attach to a single in/out point.
 	//
+	// NOTE: to account for CSS transitions use .resizingDone()
 	// NOTE: not intended for direct use...
 	//
 	// XXX hide from user action list... (???)
+	// XXX need to check if a transition is running and delay timeout...
 	resizing: ['- Zoom/Zoom/scale root protocol action (not for direct use)', 
 		'This is called by zoom/scale protocol compliant actions and '
 			+'intended for use as an trigger for handlers, and not as '
@@ -642,11 +651,54 @@ module.ViewerActions = actions.Actions({
 			// functions.
 			//
 			// As an example see: .setScale(..)
+
+			var that = this
+			// stop currently running transition...
+			this.ribbons.scale(this.ribbons.scale())
+
+			// transitionend handler...
+			if(!this.__resize_handler){
+				this.__resize_handler = function(){
+					that.__post_resize
+						&& that.resizingDone() 
+					delete that.__post_resize
+				}
+			}
+			this.ribbons.getRibbonSet()
+				.off('transitionend', this.__resize_handler)
+				.on('transitionend', this.__resize_handler)
+
+			// timeout handler...
+			this.__post_resize && clearTimeout(this.__post_resize)
+			return function(){
+				this.__post_resize = setTimeout(
+					this.__resize_handler, 
+					this.config['resize-done-timeout'] || 300)
+			}
+		})],
+
+	// Zooming/scaling post-transition action...
+	//
+	// NOTE: this will be called at least timeout after last resize action...
+	// NOTE: if several resize actions are called less than timeout apart 
+	// 		this will be called only once, after the last action.
+	// NOTE: not intended for direct use...
+	resizingDone: ['- Zoom/scale post-transition protocol action '
+			+'(not for direct use)',
+		'This is called after zoom/scale protocol compliant actions are '
+			+'done and intended for use as an trigger for handlers, and '
+			+'not as a user-callable acation.',
+		core.notUserCallable(function(){
+			// This is resizing protocol post resize action.
+			//
+			// This will be called either when a resize CSS transition 
+			// is done or after a timeout, which ever happens first.
+			//
+			// NOTE: if a transition is longer than the timeout this will
+			// 		be called before the transition is done.
 		})],
 
 	// Zoom/scale protocol actions...
-	//
-	// XXX need to account for animations...
 	setScale: ['- Zoom/',
 		function(scale){
 			this.resizing.chainCall(this, function(){
@@ -914,6 +966,9 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					delete this.__viewer_resize
 				}
 			}],
+		// force browser to redraw images after resize...
+		['resizingDone',
+			function(){ this.scale = this.scale }],
 		// manage the .crop-mode css class...
 		['crop uncrop',
 			function(){
