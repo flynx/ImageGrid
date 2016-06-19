@@ -98,9 +98,6 @@ var SingleImageActions = actions.Actions({
 		//
 		// NOTE: setting this to null or to -1 will disable the feature...
 		'single-image-proportions-threshold': 2,
-
-		// XXX HACK...
-		'-single-image-redraw-on-focus': true,
 	},
 
 	updateImageProportions: ['- Interface/',
