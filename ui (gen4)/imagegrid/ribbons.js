@@ -663,7 +663,6 @@ var RibbonsPrototype = {
 
 
 		// do the calc...
-		//* XXX is this fast enough???
 		scale = scale || this.scale()
 		var css = getComputedStyle(img[0])
 		var res = dim == 'height' ? parseFloat(css.height)
@@ -673,33 +672,6 @@ var RibbonsPrototype = {
 			: null
 		// get size for given scale...
 		res = res ? res * scale : res
-		//*/
-		
-		/* XXX this is very precise and fast but depends on scale...
-		// NOTE: this is the actual visible size...
-		var rect = img[0].getBoundingClientRect()
-		var res = dim == 'height' ? rect.height
-			: dim == 'width' ? rect.width
-			: dim == 'max' ?  Math.max(rect.height, rect.width)
-			: dim == 'min' ?  Math.min(rect.height, rect.width)
-			: null
-		// get size for given scale...
-		// XXX remove the dependency on .scale() here!
-		res = scale != null ? (res / this.scale() * scale) : res
-		//*/
-
-		/* XXX this does not depend on scale but is rounded to nearest pixel...
-		// XXX offsetX is rounded to nearest pixel...
-		img = img[0]
-		scale = scale || this.scale()
-		var res = dim == 'height' ? img.offsetHeight
-			: dim == 'width' ? img.offsetWidth
-			: dim == 'max' ?  Math.max(img.offsetHeight, img.offsetWidth)
-			: dim == 'min' ?  Math.min(img.offsetHeight, img.offsetWidth)
-			: null
-		// get size for given scale...
-		res = res && scale ? res * scale : res
-		//*/
 
 		// remove the tmp image we created...
 		if(tmp != null){
