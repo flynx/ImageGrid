@@ -641,7 +641,6 @@ var RibbonsPrototype = {
 	// NOTE: this is similar to vh, vw, vmin and vmax CSS3 units, but
 	// 		gets the visible size of the image tile in pixels.
 	//
-	// XXX try and make image size the product of vmin and scale...
 	// XXX this might break when no images are loaded and proportions 
 	// 		are not square...
 	getVisibleImageSize: function(dim, scale, img){
