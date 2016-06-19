@@ -164,14 +164,15 @@ var CurrentImageIndicatorActions = actions.Actions({
 	},
 
 	updateCurrentImageIndicator: ['- Interface/Update current image indicator',
-		function(target, update_border){
+		function(target, update_border, scale){
 			var ribbon_set = this.ribbons.getRibbonSet()
 
 			if(ribbon_set.length == 0){
 				return
 			}
 
-			var scale = this.scale
+			scale = scale || this.scale
+
 			var cur = this.ribbons.getImage(target)
 			// NOTE: cur may be unloaded...
 			var ribbon = this.ribbons.getRibbon(cur.length > 0 ? target : this.currentRibbon)
@@ -244,7 +245,8 @@ var CurrentImageIndicatorActions = actions.Actions({
 
 				// set border right away...
 				if(update_border == 'before'){
-					css.borderWidth = border
+					//css.borderWidth = border
+					marker.css({ borderWidth: border }) 
 
 				// set border with a delay...
 				// NOTE: this is to prevent the ugly border resize before
@@ -328,8 +330,11 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 				w1 = w1 || 1
 
 				w0 > w1 
-					&& this.updateCurrentImageIndicator(null, 'before') 
-					//&& console.log('BEFORE!!!!')
+					&& this.updateCurrentImageIndicator(null, 
+						'before', 
+						// NOTE: we need to get the target scale as we 
+						// 		have not started resizing yet...
+						(w0 / w1) * this.scale) 
 			}],
 		['resizingDone',
 			function(){ 
