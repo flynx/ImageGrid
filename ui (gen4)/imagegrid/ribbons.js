@@ -647,9 +647,9 @@ var RibbonsPrototype = {
 	getVisibleImageSize: function(dim, scale, img){
 		dim = dim == null ? 'width' : dim
 		img = img || this.viewer.find(IMAGE)
-		var tmp
 
 		// if no images are loaded create one temporarily....
+		var tmp
 		if(img.length == 0){
 			img = tmp = this.createImage('__tmp_image__')
 				.css({
@@ -661,19 +661,45 @@ var RibbonsPrototype = {
 				.appendTo(this.viewer)
 		}
 
-		// do the calc...
-		var res = dim == 'height' ? img.outerHeight(true)
-			: dim == 'width' ? img.outerWidth(true)
-			: dim == 'max' ?
-				Math.max(img.outerHeight(true), img.outerWidth(true))
-			: dim == 'min' ?
-				Math.min(img.outerHeight(true), img.outerWidth(true))
-			: null
 
+		// do the calc...
+		//* XXX is this fast enough???
+		scale = scale || this.scale()
+		var css = getComputedStyle(img[0])
+		var res = dim == 'height' ? parseFloat(css.height)
+			: dim == 'width' ? parseFloat(css.width)
+			: dim == 'max' ?  Math.max(parseFloat(css.height), parseFloat(css.width))
+			: dim == 'min' ?  Math.min(parseFloat(css.height), parseFloat(css.width))
+			: null
 		// get size for given scale...
-		if(res && scale){
-			res = (res / this.scale()) * scale
-		}
+		res = res ? res * scale : res
+		//*/
+		
+		/* XXX this is very precise and fast but depends on scale...
+		// NOTE: this is the actual visible size...
+		var rect = img[0].getBoundingClientRect()
+		var res = dim == 'height' ? rect.height
+			: dim == 'width' ? rect.width
+			: dim == 'max' ?  Math.max(rect.height, rect.width)
+			: dim == 'min' ?  Math.min(rect.height, rect.width)
+			: null
+		// get size for given scale...
+		// XXX remove the dependency on .scale() here!
+		res = scale != null ? (res / this.scale() * scale) : res
+		//*/
+
+		/* XXX this does not depend on scale but is rounded to nearest pixel...
+		// XXX offsetX is rounded to nearest pixel...
+		img = img[0]
+		scale = scale || this.scale()
+		var res = dim == 'height' ? img.offsetHeight
+			: dim == 'width' ? img.offsetWidth
+			: dim == 'max' ?  Math.max(img.offsetHeight, img.offsetWidth)
+			: dim == 'min' ?  Math.min(img.offsetHeight, img.offsetWidth)
+			: null
+		// get size for given scale...
+		res = res && scale ? res * scale : res
+		//*/
 
 		// remove the tmp image we created...
 		if(tmp != null){
@@ -684,19 +710,19 @@ var RibbonsPrototype = {
 	},
 
 	getScreenWidthImages: function(scale, min){
-		var scale = scale == null ? 1 : scale/this.scale()
+		scale = scale || this.scale()
 
 		var W = this.viewer.width()
-		var w = this.getVisibleImageSize(min ? 'min' : 'width') * scale
+		var w = this.getVisibleImageSize(min ? 'min' : 'width', scale)
 
 		return W/w
 	},
 	// XXX this does not account for ribbon spacing...
 	getScreenHeightRibbons: function(scale){
-		var scale = scale == null ? 1 : scale/this.scale()
+		scale = scale || this.scale()
 
 		var H = this.viewer.height()
-		var h = this.getVisibleImageSize('height') * scale
+		var h = this.getVisibleImageSize('height', scale)
 
 		return H/h
 	},
@@ -1547,12 +1573,11 @@ var RibbonsPrototype = {
 		// compensate for new/removed images...
 		if(reference != null){
 			var ref = this.getImage(reference)
-			var scale = this.scale()
 
 			// align only if ref is loaded...
 			if(ref.length > 0){
 				var gid = this.getElemGID(ref)
-				var w = ref.outerWidth() / scale
+				var w = this.getVisibleImageSize('width', 1, ref)
 
 				// calculate offset...
 				// NOTE: this will not work for non-square images...
@@ -1642,7 +1667,7 @@ var RibbonsPrototype = {
 
 	// Resize ribbon...
 	//
-	// 	.resizeRIbbon(ribbon, left, right)
+	// 	.resizeRibbon(ribbon, left, right)
 	// 		-> ribbons
 	//
 	// left/right can be:
@@ -1652,12 +1677,14 @@ var RibbonsPrototype = {
 	// NOTE: this is a less general but simpler/faster alternative to 
 	// 		.updateRibbon(..)
 	// NOTE: this needs the ribbon to exist...
-	resizeRIbbon: function(ribbon, left, right, transitions, reference){
+	resizeRibbon: function(ribbon, left, right, transitions, reference){
 		ribbon = this.getRibbon(ribbon)
 		left = left || 0
 		right = right || 0
 		reference = this.getImage(reference)
-		var scale = this.scale()
+		//scale = scale || this.scale()
+
+		var w = this.getVisibleImageSize('width', 1, reference)
 
 		var that = this
 
@@ -1688,7 +1715,6 @@ var RibbonsPrototype = {
 		// trim left...
 		// NOTE: this affects ribbon placement, thus we'll need to compensate...
 		if(left < 0){
-			var scale = this.scale()
 			var marks = []
 			// NOTE: we do not need to append or conserve previous unloaded
 			// 		images as we will need them only if we are trimming from 
@@ -1702,8 +1728,9 @@ var RibbonsPrototype = {
 
 			// calculate the compensation...
 			// XXX this assumes that all widths are equal...
-			// 		...we can't calculate image with unless it is attached...
-			var l = -left * (reference.outerWidth() / scale)
+			// 		...we can't calculate image width unless it is attached...
+			//var l = -left * (reference.outerWidth() / scale)
+			var l = -left * w 
 
 			// clear stuff...
 			$(marks)
@@ -1755,7 +1782,6 @@ var RibbonsPrototype = {
 		// grow left...
 		// NOTE: this affects ribbon placement, thus we'll need to compensate...
 		if(left.length > 0 || left > 0){
-			//var scale = this.scale()
 			var c = left.length || left
 
 			// build set of empty images...
@@ -1775,7 +1801,8 @@ var RibbonsPrototype = {
 			// calculate the compensation...
 			// XXX this assumes that all widths are equal...
 			// 		...we can't calculate image with unless it is attached...
-			var l = c * (reference.outerWidth() / scale)
+			//var l = c * (reference.outerWidth() / scale)
+			var l = c * w 
 
 			requestAnimationFrame(function(){
 				transitions || that.preventTransitions(ribbon)
