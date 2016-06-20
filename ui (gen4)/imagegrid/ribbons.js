@@ -2236,15 +2236,15 @@ var RibbonsPrototype = {
 
 		var viewer_p = W > H ? 'landscape' : 'portrait'
 
-		var scale = this.scale()
-
 		return $(images).each(function(i, e){
 			var image = $(this)
 			// orientation...
 			var o = image.attr('orientation')
 			o = o == null ? 0 : o
-			var w = image.outerWidth() / scale
-			var h = image.outerHeight() / scale
+
+			var s = getComputedStyle(image[0])
+			var w = parseFloat(s.width)
+			var h = parseFloat(s.height) 
 
 			// non-square image...
 			if(w != h){
@@ -2301,12 +2301,19 @@ var RibbonsPrototype = {
 
 		//this.origin(target)
 		
+		var o = target.attr('orientation')
+		o = o == null ? 0 : o
+
 		var ro = ribbon_set.offset().top
 		// NOTE: this appears to account for margins...
 		var io = target.offset().top 
-		var h = target.outerHeight() / scale 
-			+ parseFloat(target.css('margin-top'))
-			+ parseFloat(target.css('margin-bottom'))
+
+		// NOTE: we are not using .outerHeight(true) here as it returns 
+		// 		the visible size rather than the real size, so we'll 
+		// 		need to first divide by current scale and then multiply
+		// 		by the given scale which will introduce errors...
+		var s = getComputedStyle(target[0])
+		var h = parseFloat(o == 0 || o == 180 ? s.height : s.width) 
 
 		var t = (io - ro)/scale + h/2
 
@@ -2335,13 +2342,21 @@ var RibbonsPrototype = {
 			return this
 		}
 
+		var o = target.attr('orientation')
+		o = o == null ? 0 : o
+
 		var rl = ribbon.offset().left
 		// NOTE: this appears to account for margins...
 		var il = target.offset().left 
+
 		var W = this.viewer.width() * scale
-		var w = (target.outerWidth() / scale
-			+ parseFloat(target.css('margin-left'))
-			+ parseFloat(target.css('margin-right'))) * scale
+
+		// NOTE: we are not using .outerWidth(true) here as it returns 
+		// 		the visible size rather than the real size, so we'll 
+		// 		need to first divide by current scale and then multiply
+		// 		by the given scale which will introduce errors...
+		var s = getComputedStyle(target[0])
+		var w = parseFloat(o == 0 || o == 180 ? s.width : s.height) * scale
 
 		var image_offset = mode == 'before' ? w/2
 			: mode == 'after' ? -w/2

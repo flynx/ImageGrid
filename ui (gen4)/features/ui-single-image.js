@@ -112,8 +112,10 @@ var SingleImageActions = actions.Actions({
 			var viewer = this.ribbons.viewer
 			var img = this.ribbons.getImage()
 
-			var w = img.outerWidth()
-			var h = img.outerHeight()
+			//* XXX these do not account for margins....
+			var s = getComputedStyle(img[0])
+			var w = parseFloat(s.width)
+			var h = parseFloat(s.height)
 
 			// inner diameter
 			var di = Math.min(h, w)
