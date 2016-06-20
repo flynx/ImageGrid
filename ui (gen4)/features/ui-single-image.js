@@ -110,10 +110,16 @@ var SingleImageActions = actions.Actions({
 			}
 
 			var viewer = this.ribbons.viewer
-			var img = this.ribbons.getImage()
+			var images = viewer.find('.ribbon .image')
+			var img = this.ribbons.getImage()[0] || images[0]
+
+			// no images loaded...
+			if(!img){
+				return
+			}
 
 			//* XXX these do not account for margins....
-			var s = getComputedStyle(img[0])
+			var s = getComputedStyle(img)
 			var w = parseFloat(s.width)
 			var h = parseFloat(s.height)
 
@@ -127,8 +133,6 @@ var SingleImageActions = actions.Actions({
 
 			// change proportions...
 			if(c < threshold){
-				var images = viewer.find('.ribbon .image')
-
 				var W = viewer.width()
 				var H = viewer.height()
 
@@ -198,8 +202,6 @@ var SingleImageActions = actions.Actions({
 
 			// reset proportions to square...
 			} else if(w != h) {
-				var images = viewer.find('.ribbon .image')
-
 				getAnimationFrame(function(){
 					that.ribbons.preventTransitions()
 
