@@ -668,6 +668,14 @@ var RibbonsPrototype = {
 				.appendTo(this.viewer)
 		}
 
+		// account for image rotation...
+		// NOTE: this way we do not need to account for margins...
+		var o = img.attr('orientation')
+		o = o == null ? 0 : o
+		dim = o == 0 || o == 180 ? dim 
+			// swap width/height when image is rotated +/- 90deg...
+			: dim == 'height' ? 'width' 
+			: 'height'
 
 		// do the calc...
 		scale = scale || this.scale()

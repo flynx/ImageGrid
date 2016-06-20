@@ -111,17 +111,20 @@ var SingleImageActions = actions.Actions({
 
 			var viewer = this.ribbons.viewer
 			var images = viewer.find('.ribbon .image')
-			var img = this.ribbons.getImage()[0] || images[0]
 
 			// no images loaded...
-			if(!img){
+			if(images.length == 0){
 				return
 			}
 
-			//* XXX these do not account for margins....
+			/* XXX these do not account for margins....
+			var img = this.ribbons.getImage()[0] || images[0]
 			var s = getComputedStyle(img)
 			var w = parseFloat(s.width)
 			var h = parseFloat(s.height)
+			//*/
+			var w = this.ribbons.getVisibleImageSize('width', 1)
+			var h = this.ribbons.getVisibleImageSize('height', 1)
 
 			// inner diameter
 			var di = Math.min(h, w)
