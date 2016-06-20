@@ -25,6 +25,15 @@ var drawer = require('lib/widget/drawer')
 
 /*********************************************************************/
 
+// helper...
+function customScale(n){
+	return {
+		default: 'fitCustom: '+n,
+		'ctrl+shift': 'setCustomSize: '+n,
+	}
+}
+
+
 // XXX might be a good idea to be able ignore actions rather than keys...
 // XXX add this to the global doc...
 var GLOBAL_KEYBOARD =
@@ -72,8 +81,22 @@ module.GLOBAL_KEYBOARD = {
 		],
 
 		'#1': 'fitScreen',
-		'#2': 'fitNormal',
-		'#3': 'fitSmall',
+		'#2': {
+			default: 'fitNormal',
+			'ctrl+shift': 'setNormalScale',
+		},
+		'#3': {
+			default: 'fitSmall',
+			'ctrl+shift': 'setSmallScale',
+		},
+		'#4': customScale(4),
+		'#5': customScale(5),
+		'#6': customScale(6),
+		'#7': customScale(7),
+		'#8': customScale(8),
+		'#9': customScale(9),
+		'#0': customScale(0),
+
 
 		Esc: 'toggleSingleImage: "off" -- Exit single image view',
 

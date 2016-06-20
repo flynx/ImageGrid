@@ -783,13 +783,8 @@ module.ViewerActions = actions.Actions({
 	//
 	fitMax: ['Zoom/Fit the maximum number of images',
 		function(){ this.fitImage(this.config['max-screen-images']) }],
-	fitSmall: ['Zoom/Show small image',
-		function(){ this.screenfit = 4 }],
-	fitNormal: ['Zoom/Show normal image',
-		function(){ this.screenfit = 1.2 }],
 	fitScreen: ['Zoom/Fit image to screen',
 		function(){ this.screenfit = 1 }],
-
 
 	// NOTE: these work by getting the target position from .data...
 	shiftImageTo: [ 

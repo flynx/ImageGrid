@@ -83,6 +83,12 @@ var SingleImageActions = actions.Actions({
 		'single-image-scale': 1.2,
 		'ribbon-scale': 5,
 
+		// Scales for small and normal image sizes...
+		'fit-small-scale': 4,
+		'fit-normal-scale': 1.2,
+
+		'fit-custom-scale': {},
+
 		// Set scale 'units' for different viewes...
 		//
 		// NOTE: the units are actually properties used to get/set the values.
@@ -223,7 +229,6 @@ var SingleImageActions = actions.Actions({
 			}
 		}],
 
-
 	toggleSingleImage: ['Interface/Toggle single image view', 
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
@@ -243,6 +248,46 @@ var SingleImageActions = actions.Actions({
 					this.popWorkspace()
 				}
 			})],
+	
+
+	// basic single image view sizing...
+	fitSmall: ['Zoom/Show small image',
+		function(){ this.screenfit = this.config['fit-small-scale'] || 4 }],
+	fitNormal: ['Zoom/Show normal image',
+		function(){ this.screenfit = this.config['fit-normal-scale'] || 1.2 }],
+	setSmallScale: ['Zoom/Set small size to current',
+		function(){ this.config['fit-small-scale'] = this.screenfit }],
+	setNormalScale: ['Zoom/Set normal size to current',
+		function(){ this.config['fit-normal-scale'] = this.screenfit }],
+	
+	// XXX should we prevent setting sizes out of order???
+	// 		...i.e. key 8 sets bigger size than key 2
+	fitCustom: ['- Zoom/',
+		function(n){
+			if(n == null){
+				return
+			}
+
+			var s = this.config['fit-custom-scale'][n]
+
+			if(s == null){
+				return	
+			}
+
+			this.screenfit = s
+		}],
+	setCustomSize: ['- Zoom/',
+		function(n){
+			if(n == null){
+				return
+			}
+
+			var sizes = this.config['fit-custom-scale'] || {}
+			sizes[n] = this.screenfit
+
+			// NOTE: we are resetting this for it to be stored correctly...
+			this.config['fit-custom-scale'] = sizes
+		}],
 })
 
 
