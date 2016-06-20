@@ -28,8 +28,9 @@ var drawer = require('lib/widget/drawer')
 // helper...
 function customScale(n){
 	return {
-		default: 'fitCustom: '+n,
-		'ctrl+shift': 'setCustomSize: '+n,
+		default: 'fitCustom: '+n+' -- Set cutom image size',
+		'alt': 'setCustomSize: '+n+' -- Set current image size as custom',
+		'ctrl+shift': 'setCustomSize: '+n+' null -- Clear custom image size',
 	}
 }
 
@@ -80,14 +81,18 @@ module.GLOBAL_KEYBOARD = {
 			'#0', '#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
 		],
 
+
+		// zooming...
 		'#1': 'fitScreen',
 		'#2': {
 			default: 'fitNormal',
-			'ctrl+shift': 'setNormalScale',
+			'alt': 'setNormalScale',
+			'ctrl+shift': 'setNormalScale: null -- Reset normal size to default',
 		},
 		'#3': {
 			default: 'fitSmall',
-			'ctrl+shift': 'setSmallScale',
+			'alt': 'setSmallScale',
+			'ctrl+shift': 'setSmallScale: null -- Reset small size to default',
 		},
 		'#4': customScale(4),
 		'#5': customScale(5),

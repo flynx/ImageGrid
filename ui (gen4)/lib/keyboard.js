@@ -249,7 +249,7 @@ function parseActionCall(txt){
 	// parse arguments...
 	var args = JSON.parse('['+(
 		((c[1] || '')
-			.match(/"[^"]*"|'[^']*'|\{[^\}]*\}|\[[^\]]*\]|\d+|\d+\.\d*/gm) 
+			.match(/"[^"]*"|'[^']*'|\{[^\}]*\}|\[[^\]]*\]|\d+|\d+\.\d*|null/gm) 
 		|| [])
 		.join(','))+']')
 

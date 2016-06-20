@@ -253,12 +253,16 @@ var SingleImageActions = actions.Actions({
 	// basic single image view sizing...
 	fitSmall: ['Zoom/Show small image',
 		function(){ this.screenfit = this.config['fit-small-scale'] || 4 }],
+	setSmallScale: ['Zoom/Set small size to current',
+		function(value){ 
+			this.config['fit-small-scale']
+				= value === null ? 4 : (value || this.screenfit) }],
 	fitNormal: ['Zoom/Show normal image',
 		function(){ this.screenfit = this.config['fit-normal-scale'] || 1.2 }],
-	setSmallScale: ['Zoom/Set small size to current',
-		function(){ this.config['fit-small-scale'] = this.screenfit }],
 	setNormalScale: ['Zoom/Set normal size to current',
-		function(){ this.config['fit-normal-scale'] = this.screenfit }],
+		function(value){ 
+			this.config['fit-normal-scale'] 
+				= value === null ? 1.2 : (value || this.screenfit) }],
 	
 	fitCustom: ['- Zoom/Show cusotm size image',
 		function(n){
@@ -275,16 +279,29 @@ var SingleImageActions = actions.Actions({
 			this.screenfit = s
 		}],
 	setCustomSize: ['- Zoom/Set image cusotm size',
-		function(n){
+		function(n, value){
 			if(n == null){
 				return
 			}
 
-			var sizes = this.config['fit-custom-scale'] || {}
-			sizes[n] = this.screenfit
+			var sizes = this.config['fit-custom-scale']
+
+			// reset...
+			if(value === null){
+				if(sizes && n in sizes){
+					delete sizes[n]
+				}
+
+			// set...
+			} else {
+				sizes = sizes && JSON.parse(JSON.stringify(sizes)) || {}
+				sizes[n] = value || this.screenfit
+			}
 
 			// NOTE: we are resetting this for it to be stored correctly...
-			this.config['fit-custom-scale'] = sizes
+			if(sizes){
+				this.config['fit-custom-scale'] = sizes
+			}
 		}],
 })
 
