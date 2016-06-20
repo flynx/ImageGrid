@@ -37,7 +37,6 @@ var RIBBON = '.ribbon:not(.clone)'
 // Unpopulated:
 //
 //	<div class="viewer">
-//		<div class="ribbon-set"></div>
 //	</div>
 //
 //
@@ -52,10 +51,16 @@ var RIBBON = '.ribbon:not(.clone)'
 //			</div>
 //			<div class="ribbon">
 //				<div class="image" gid="c"></div>
+//
+//				<!-- current image -->
 //				<div class="current image" gid="d"></div>
+//
+//				<!-- image with mark... -->
 //				<div class="image" gid="e"></div>
 //				<div class="mark selected" gid="f"></div>
+//
 //				<div class="image" gid="g"></div>
+//
 //				...
 //			</div>
 //			...
@@ -366,12 +371,13 @@ var RibbonsPrototype = {
 		t.getAttribute('__prevent_transitions', 0)
 
 		target.addClass('no-transitions')
-		getComputedStyle(t).webkitTransition
-		getComputedStyle(t).mozTransition
-		getComputedStyle(t).msTransition
-		getComputedStyle(t).oTransition
-		getComputedStyle(t).transition
 
+		var s = getComputedStyle(t)
+		s.webkitTransition
+		s.mozTransition
+		s.msTransition
+		s.oTransition
+		s.transition
 
 		return this
 	},
@@ -427,6 +433,7 @@ var RibbonsPrototype = {
 			t.removeAttribute('__prevent_transitions')
 
 			target.removeClass('no-transitions')
+
 			var s = getComputedStyle(t)
 			s.webkitTransition
 			s.mozTransition
@@ -447,6 +454,7 @@ var RibbonsPrototype = {
 				t.removeAttribute('__prevent_transitions')
 
 				target.removeClass('no-transitions')
+
 				var s = getComputedStyle(t)
 				s.webkitTransition
 				s.mozTransition
@@ -1314,6 +1322,18 @@ var RibbonsPrototype = {
 
 	// Loading and updating...
 
+	// Replace image gid...
+	//
+	// XXX should this work for ribbon gids???
+	replaceGid: function(from, to){
+		var img = this.getImage(from)
+
+		img && img.length > 0 
+			&& this.setElemGID(img, to)
+
+		return this
+	},
+
 	// XXX is .__image_updaters the right way to go???
 	updateImageIndicators: function(gid, image){
 		gid = gid == null ? this.getElemGID() : gid
@@ -1331,6 +1351,7 @@ var RibbonsPrototype = {
 
 		return image
 	},
+
 	_loadImagePreviewURL: function(image, url){
 		url = util.path2url(url)
 		// pre-cache and load image...
@@ -1346,18 +1367,6 @@ var RibbonsPrototype = {
 		}
 		img.src = url
 		return img
-	},
-
-	// Replace image gid...
-	//
-	// XXX should this work for ribbon gids???
-	replaceGid: function(from, to){
-		var img = this.getImage(from)
-
-		img && img.length > 0 
-			&& this.setElemGID(img, to)
-
-		return this
 	},
 
 	// Update image(s)...
@@ -1496,7 +1505,7 @@ var RibbonsPrototype = {
 		}))
 	},
 
-	// Update a set of images in a ribbon...
+	// Update ribbon content...
 	//
 	// This will reuse the images that already exist, thus if updating or
 	// adding images to an already loaded set this should be very fast.
@@ -1796,7 +1805,7 @@ var RibbonsPrototype = {
 		return this
 	},
 
-	// Update a data object in ribbons...
+	// Update the data in ribbons...
 	//
 	// 	.updateData(data, settings)
 	// 		-> ribbons
