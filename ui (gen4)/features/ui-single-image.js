@@ -260,9 +260,7 @@ var SingleImageActions = actions.Actions({
 	setNormalScale: ['Zoom/Set normal size to current',
 		function(){ this.config['fit-normal-scale'] = this.screenfit }],
 	
-	// XXX should we prevent setting sizes out of order???
-	// 		...i.e. key 8 sets bigger size than key 2
-	fitCustom: ['- Zoom/',
+	fitCustom: ['- Zoom/Show cusotm size image',
 		function(n){
 			if(n == null){
 				return
@@ -276,7 +274,7 @@ var SingleImageActions = actions.Actions({
 
 			this.screenfit = s
 		}],
-	setCustomSize: ['- Zoom/',
+	setCustomSize: ['- Zoom/Set image cusotm size',
 		function(n){
 			if(n == null){
 				return
