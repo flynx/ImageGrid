@@ -84,14 +84,15 @@ module.GLOBAL_KEYBOARD = {
 
 		// zooming...
 		'#1': 'fitScreen',
+		// XXX should these also be implemented in the same way as 4-9???
 		'#2': {
 			default: 'fitNormal',
-			'alt': 'setNormalScale',
+			'alt': 'setNormalScale -- Set current image size as normal',
 			'ctrl+shift': 'setNormalScale: null -- Reset normal size to default',
 		},
 		'#3': {
 			default: 'fitSmall',
-			'alt': 'setSmallScale',
+			'alt': 'setSmallScale -- Set current image size as small',
 			'ctrl+shift': 'setSmallScale: null -- Reset small size to default',
 		},
 		'#4': customScale(4),

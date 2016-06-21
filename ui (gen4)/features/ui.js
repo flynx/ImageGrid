@@ -748,7 +748,7 @@ module.ViewerActions = actions.Actions({
 
 	// Zooming...
 	//
-	// Zooming is done by multiplying the current scale by config['zoom-step']
+	// Zooming is done by multiplying the current scale by .config['zoom-step']
 	// and rounding to nearest discrete number of images to fit on screen.
 	zoomIn: ['Zoom/Zoom in',
 		function(){ 
