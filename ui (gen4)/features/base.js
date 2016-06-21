@@ -518,23 +518,72 @@ actions.Actions({
 
 	// basic image editing...
 	//
-	// XXX should we have .rotate(..) and .flip(..) generic actions???
-	rotateCW: ['Image|Edit/', 
-		function(target){ 
+	// Rotate image...
+	//
+	//	Rotate current image clockwise...
+	//	.rotate()
+	//	.rotate('cw')
+	//		-> actions
+	//
+	//	Rotate current image counterclockwise...
+	//	.rotate('ccw')
+	//		-> actions
+	//
+	//	Rotate target image clockwise...
+	//	.rotate(target)
+	//	.rotate(target, 'cw')
+	//		-> actions
+	//
+	//	Rotate target image counterclockwise...
+	//	.rotate(target, 'ccw')
+	//		-> actions
+	//
+	//
+	// Flip is similar...
+	//
+	// 	Flip current image ('horizontal' is default)...
+	//	.flip()
+	//	.flip('horizontal')
+	//	.flip('vertical')
+	//		-> actions
+	//
+	//	Flip target...
+	//	.flip(target)
+	//	.flip(target, 'horizontal')
+	//	.flip(target, 'vertical')
+	//		-> actions
+	//
+	//
+	// NOTE: target must be .data.getImage(..) compatible, see it for docs...
+	rotate: ['- Image|Edit/Rotate image',
+		function(target, direction){
+			if(target == 'cw' || target == 'ccw'){
+				direction = target
+				target = null
+			}
 			this.images 
-				&& this.images.rotateImage(this.data.getImage(target), 'cw') }],
-	rotateCCW: ['Image|Edit/', 
-		function(target){ 
+				&& this.images.rotateImage(this.data.getImage(target), direction || 'cw')
+		}],
+	flip: ['- Flip|edit/Flip image',
+		function(target, direction){
+			if(target == 'vertical' || target == 'horizontal'){
+				direction = target
+				target = null
+			}
 			this.images 
-				&& this.images.rotateImage(this.data.getImage(target), 'ccw') }],
-	flipVertical: ['Image|Edit/',
-		function(target){ 
-			this.images 
-				&& this.images.flipImage(this.data.getImage(target), 'vertical') }],
-	flipHorizontal: ['Image|Edit/',
-		function(target){ 
-			this.images
-				&& this.images.flipImage(this.data.getImage(target), 'horizontal') }],
+				&& this.images.flipImage(this.data.getImage(target), direction || 'horizontal')
+		}],
+
+	// shorthands...
+	// NOTE: these are here mostly for the menus...
+	rotateCW: ['Image|Edit/Rotate image clockwise', 
+		function(target){ this.rotate(traget, 'cw') }],
+	rotateCCW: ['Image|Edit/Rotate image counterclockwise', 
+		function(target){ this.rotate(traget, 'ccw') }],
+	flipVertical: ['Image|Edit/Flip image vertically',
+		function(target){ this.flip(traget, 'vertical') }],
+	flipHorizontal: ['Image|Edit/Flip image horizontally',
+		function(target){ this.flip(traget, 'horizontal') }],
 })
 
 

@@ -88,12 +88,12 @@ module.GLOBAL_KEYBOARD = {
 		'#2': {
 			default: 'fitNormal',
 			'alt': 'setNormalScale -- Set current image size as normal',
-			'ctrl+shift': 'setNormalScale: null -- Reset normal size to default',
+			'ctrl+shift': 'setNormalScale: null -- Reset normal image size to default',
 		},
 		'#3': {
 			default: 'fitSmall',
 			'alt': 'setSmallScale -- Set current image size as small',
-			'ctrl+shift': 'setSmallScale: null -- Reset small size to default',
+			'ctrl+shift': 'setSmallScale: null -- Reset small image size to default',
 		},
 		'#4': customScale(4),
 		'#5': customScale(5),
