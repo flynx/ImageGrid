@@ -640,7 +640,7 @@ module.ViewerActions = actions.Actions({
 	//
 	// XXX hide from user action list... (???)
 	// XXX need to check if a transition is running and delay timeout...
-	resizing: ['- Zoom/Zoom/scale root protocol action (not for direct use)', 
+	resizing: ['- Zoom/scale root protocol action (not for direct use)', 
 		'This is called by zoom/scale protocol compliant actions and '
 			+'intended for use as an trigger for handlers, and not as '
 			+'a user-callable acation.',

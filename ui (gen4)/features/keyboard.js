@@ -285,6 +285,7 @@ module.GLOBAL_KEYBOARD = {
 		},
 		I: {
 			default: 'showMetadata',
+			alt: 'browseActions: "/Image/" -- Show image menu',
 			shift: 'toggleStatusBar',
 
 			ctrl: 'toggleMark!: "ribbon" -- Invert marks in ribbon',
