@@ -446,8 +446,8 @@ var FeatureSetProto = {
 		var l = lst.length
 		lst = lst
 			// remove undefined and non-features...
-			.filter(function(e){ return that[e] != null 
-				&& that[e] instanceof Feature })
+			.filter(function(e){ 
+				return that[e] != null && that[e] instanceof Feature })
 			// build the sort table: [ <priority>, <rev-index>, <elem> ]
 			// NOTE: <rev-index> is element number from the tail...
 			.map(function(e, i){ return [ -that[e].getPriority(), i, e ] })
@@ -577,7 +577,123 @@ var FeatureSetProto = {
 		lst = lst == null ? this.features : lst
 		lst = lst.constructor !== Array ? [lst] : lst
 
+		var disabled = [] 
+		var excluded = []
+		var missing = []
+		var conflicts = []
+		var unapplicable = []
 
+
+		// reverse dependency cache... 
+		var dependants = {}
+
+
+		// include all dependencies...
+		//
+		// NOTE: this should never fall into an infinite loop as we do 
+		// 		not include feature already seen...
+		// 		...unless there is an infinite number of features, but 
+		// 		I'll try to avoid that big a feature creep.
+		for(var i=0; i < lst.length; i++){
+			var k = lst[i]
+
+			// skip disabled features....
+			if(k[0] == '-'){
+				continue
+			}
+
+			var deps = that[k].depends || []
+			var refs = that[k].suggested || []
+
+			deps.forEach(function(n){
+				// expand lst with dependencies....
+				lst.indexOf(n) < 0 && lst.push(n)
+
+				// build reverse dependency index...
+				var d = dependants[n] = dependants[n] || []
+				d.indexOf(k) < 0 && d.push(k)
+			})
+
+			// expand lst with suggenstions....
+			refs.forEach(function(n){
+				lst.indexOf(n) < 0 && lst.push(n)
+			})
+		}
+
+		// sort features by priority or position...
+		lst = lst
+			// remove undefined and non-features...
+			.filter(function(e){ 
+				// feature disabled -> record and skip...
+				if(e[0] == '-'){
+					disabled.push(e.slice(1))
+					return false
+				}
+				// feature defined...
+				return that[e] != null 
+					// feature is a feature object...
+					&& that[e] instanceof Feature })
+			// remove disabled...
+			.filter(function(e){ return disabled.indexOf(e) < 0 })
+			// build the sort table: [ <priority>, <index>, <elem> ]
+			.map(function(e, i){ return [ that[e].getPriority(), i, e ] })
+			// do the sort...
+			// NOTE: for some reason JS compares lists as strings so we
+			// 		have to comare the list manually...
+			.sort(function(a, b){ return a[0] - b[0] || a[1] - b[1] })
+			// cleanup -- drop the sort table...
+			.map(function(e){ return e[2] })
+
+		// XXX remove not applicable...
+
+		// sort by dependency...
+		var l = lst.length
+		for(var i=0; i < lst.length; i++){
+			var k = lst[i]
+			var depends = that[k].depends || []
+
+			// list of dependencies to move...
+			var move = []
+
+			lst.slice(0, i).forEach(function(n, j){
+				// if n is a dependency of k, prepare to move...
+				if(depends.indexOf(n) >= 0){
+					delete lst[j] 
+					move.push(n)
+				}
+			})
+
+			// move the dependencies after k...
+			// NOTE: this will keep the order within the dependencies...
+			move.length > 0
+				&& lst.splice.apply(lst, [i+1, 0].concat(move))
+
+			// check for cyclic dependencies...
+			// XXX is this correct???
+			if(lst.length > 10*l){
+				// XXX the cycle should be the section from the last 
+				// 		undefined to the tail...
+				console.error('Feature cyclic dependency...')
+				break
+			}
+		}
+
+		// cleanup after sort...
+		lst = lst
+			// remove undefined and non-features...
+			.filter(function(e){ 
+				return that[e] != null && that[e] instanceof Feature })
+			.reverse()
+
+
+		return {
+			features: lst,
+			disabled: disabled,
+			excluded: excluded,
+			missing: missing,
+			conflicts: conflicts,
+			unapplicable: unapplicable,
+		}
 	},
 
 
