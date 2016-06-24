@@ -577,13 +577,13 @@ actions.Actions({
 	// shorthands...
 	// NOTE: these are here mostly for the menus...
 	rotateCW: ['Image|Edit/Rotate image clockwise', 
-		function(target){ this.rotate(traget, 'cw') }],
+		function(target){ this.rotate(target, 'cw') }],
 	rotateCCW: ['Image|Edit/Rotate image counterclockwise', 
-		function(target){ this.rotate(traget, 'ccw') }],
+		function(target){ this.rotate(target, 'ccw') }],
 	flipVertical: ['Image|Edit/Flip image vertically',
-		function(target){ this.flip(traget, 'vertical') }],
+		function(target){ this.flip(target, 'vertical') }],
 	flipHorizontal: ['Image|Edit/Flip image horizontally',
-		function(target){ this.flip(traget, 'horizontal') }],
+		function(target){ this.flip(target, 'horizontal') }],
 })
 
 

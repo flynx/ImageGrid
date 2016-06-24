@@ -901,6 +901,10 @@ var FileSystemCommentsActions = actions.Actions({
 
 				return file.loadIndex(path, that.config['index-dir'] +'/comments', date, logger)
 					.then(function(res){
+						// no comments present...
+						if(res[path] == null){
+							return res
+						}
 
 						// if we have no sub-indexes just load the 
 						// comments as-is...

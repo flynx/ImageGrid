@@ -569,6 +569,18 @@ var FeatureSetProto = {
 		}
 	},
 
+
+	buildFeatureList2: function(obj, lst){
+		var that = this
+		obj = obj || {}
+
+		lst = lst == null ? this.features : lst
+		lst = lst.constructor !== Array ? [lst] : lst
+
+
+	},
+
+
 	//
 	//	.setup(<actions>, [<feature>, ...])
 	//		-> <actions>
