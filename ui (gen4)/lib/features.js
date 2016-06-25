@@ -579,13 +579,25 @@ var FeatureSetProto = {
 
 		var disabled = [] 
 		var excluded = []
-		var missing = []
-		var conflicts = []
 		var unapplicable = []
+		var missing = {}
+		var conflicts = {}
 
 
 		// reverse dependency cache... 
 		var dependants = {}
+
+		// build dependency list...
+		var _buildDepList = function(n, seen){
+			seen = seen || []
+			return seen.indexOf(n) >= 0 ? []
+				: seen.push(n) && dependants[n] ? []
+					.concat.apply(
+						dependants[n], 
+						dependants[n]
+							.map(function(n){ return _buildDepList(n, seen) }))
+				: []
+		}
 
 
 		// include all dependencies...
@@ -597,8 +609,8 @@ var FeatureSetProto = {
 		for(var i=0; i < lst.length; i++){
 			var k = lst[i]
 
-			// skip disabled features....
-			if(k[0] == '-'){
+			// skip disabled or missing features....
+			if(k[0] == '-' || !that[k]){
 				continue
 			}
 
@@ -623,32 +635,81 @@ var FeatureSetProto = {
 		// sort features by priority or position...
 		lst = lst
 			// remove undefined and non-features...
-			.filter(function(e){ 
+			.filter(function(n){ 
 				// feature disabled -> record and skip...
-				if(e[0] == '-'){
-					disabled.push(e.slice(1))
+				if(n[0] == '-'){
+					disabled.push(n.slice(1))
 					return false
 				}
-				// feature defined...
-				return that[e] != null 
-					// feature is a feature object...
-					&& that[e] instanceof Feature })
+				var f = that[n]
+				// feature not defined or is not a feature...
+				if(f == null || !(f instanceof Feature)){
+					return false
+				}
+				// check applicability...
+				if(f.isApplicable && !f.isApplicable.call(that, obj)){
+					unapplicable.push(n)
+					return false
+				}
+				return true
+			})
 			// remove disabled...
 			.filter(function(e){ return disabled.indexOf(e) < 0 })
 			// build the sort table: [ <priority>, <index>, <elem> ]
 			.map(function(e, i){ return [ that[e].getPriority(), i, e ] })
 			// do the sort...
-			// NOTE: for some reason JS compares lists as strings so we
-			// 		have to comare the list manually...
+			// NOTE: JS compares lists as strings so we have to compare 
+			// 		the list manually...
 			.sort(function(a, b){ return a[0] - b[0] || a[1] - b[1] })
 			// cleanup -- drop the sort table...
 			.map(function(e){ return e[2] })
 
-		// XXX remove not applicable -> unapplicable...
-		// XXX remove dependants on not applicable and on disabled -> excluded...
+		// remove dependants on not applicable and on disabled...
+		var _unapplicable = unapplicable.slice()
+		var _disabled = disabled.slice()
+		// build the full lists of features to remove...
+		_unapplicable
+			.forEach(function(n){ _unapplicable = _unapplicable.concat(_buildDepList(n)) })
+		_disabled
+			.forEach(function(n){ _disabled = _disabled.concat(_buildDepList(n)) })
+		// clear...
+		// NOTE: in case of intersection disabled has priority...
+		lst = lst
+			.filter(function(n){
+				return _disabled.indexOf(n) >= 0 ?
+						disabled.push(n) && false
+					: _unapplicable.indexOf(n) >= 0 ?
+						unapplicable.push(n) && false
+					: true })
+
+		// XXX check exclusive -> excluded...
+		// XXX check missing...
+
 
 		// sort by dependency...
 		var l = lst.length
+		// get maximum possible length...
+		// ...the worst case length appears to be (for full reversal):
+		// 		S(2*(n-1) + 1)
+		// 			S = n => n > 0 ? 2*(n-1)+1 + S(n-1) : 0
+		// 			S = n => n > 0 ? 2*n-1 + S(n-1) : 0
+		//
+		// 		2 * S(n) - n
+		// 			S = n => n > 0 ? n + S(n-1) : 0
+		// 			f = n => 2 * S(n) - n
+		//
+		//		N^2 + C
+		//			S = n => n * n
+		//
+		// NOTE: this is the brute force way to check if we have a 
+		// 		dependency loop, need something faster...
+		//
+		// XXX is O(n^2) good enough worst case here?
+		// 		...at this point I think it is acceptable as we'll not 
+		// 		expect dependency graphs too saturated, and the average 
+		// 		complexity is far better...
+		var max = l * l
+
 		for(var i=0; i < lst.length; i++){
 			var k = lst[i]
 			var depends = that[k].depends || []
@@ -656,13 +717,15 @@ var FeatureSetProto = {
 			// list of dependencies to move...
 			var move = []
 
-			lst.slice(0, i).forEach(function(n, j){
-				// if n is a dependency of k, prepare to move...
-				if(depends.indexOf(n) >= 0){
-					delete lst[j] 
-					move.push(n)
-				}
-			})
+			lst
+				.slice(0, i)
+				.forEach(function(n, j){
+					// if n is a dependency of k, prepare to move...
+					if(depends.indexOf(n) >= 0){
+						delete lst[j] 
+						move.push(n)
+					}
+				})
 
 			// move the dependencies after k...
 			// NOTE: this will keep the order within the dependencies...
@@ -670,10 +733,15 @@ var FeatureSetProto = {
 				&& lst.splice.apply(lst, [i+1, 0].concat(move))
 
 			// check for cyclic dependencies...
-			// XXX is this correct???
-			if(lst.length > 10*l){
-				// XXX the cycle should be the section from the last 
-				// 		undefined to the tail...
+			// XXX loop signs:
+			// 		- the tail length stops changing -- we stop progressing to list end
+			// 		- the loop is packed
+			// 			- each element includes a set of dependencies
+			// 			- this set is of the same length when at a specific element
+			// 		- we only shift the same set of N elements over N iterations
+			// 		- ...
+			if(lst.length >= max){
+				// XXX get the actual cycle...
 				console.error('Feature cyclic dependency...')
 				break
 			}
