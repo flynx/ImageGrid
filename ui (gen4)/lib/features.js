@@ -585,23 +585,33 @@ var FeatureSetProto = {
 	//	Build a list of features for a specific set of root features and object...
 	//	.buildFeatureList(object, [feature, ..])
 	//		-> data
+	//		NOTE: to disable a feature and all of it's dependants prefix
+	//			it's tag with '-' in the list.
+	//			e.g. including 'some-feature' will include the feature
+	//			and its dependants while '-some-feature' will remove
+	//			it and it's dependants.
 	//
 	//
-	// This will:
-	// 	- include all dependencies for all given features (recursively)
-	// 	- include all suggested features by all the given features (recursively)
+	// This will build from user input a loadable list of features taking 
+	// into account feature dependencies, priorities and suggestions.
+	//
+	// Roughly this is done in this order starting with the given features:
+	// 	- include all dependencies (recursively)
+	// 	- include all suggested features (recursively)
 	// 	- sort features by priority
 	// 	- sort features by dependency
-	// 	- check for feature applicability and remove non-applicable features
-	// 	- remove features depending on non applicable features (recursively)
-	// 	- remove disabled features
-	// 	- remove features depending on disabled features (recursively)
+	// 	- check for feature applicability
+	// 	- remove non-applicable features and all dependants (recursively)
+	// 	- remove disabled features and all dependants (recursively)
 	// 	- check for missing features and dependencies
 	// 	XXX exclusivity check...
 	//
 	//
 	// Return format:
 	// 	{
+	// 		// list of input features...
+	// 		input: [ .. ],
+	//
 	//		// features in correct load order...
 	//		features: [ .. ],
 	//
@@ -610,6 +620,7 @@ var FeatureSetProto = {
 	//		// unapplicable features and their dependants...
 	//		unapplicable: [ .. ],
 	//
+	//		// XXX
 	//		excluded: [ .. ],
 	//
 	//		missing: {
@@ -624,12 +635,16 @@ var FeatureSetProto = {
 	//		},
 	// 	}
 	//
+	//
+	// NOTE: obj (action set) here is used only for applicability testing...
+	// NOTE: some feature applicability checks (.isApplicable(..)) may 
+	// 		require a real action set, thus for correct operation one 
+	// 		should be provided.
 	// NOTE: all feature sorting is done maintaining relative feature order
 	// 		when possible...
 	// NOTE: meta-features are not included in the list as they do not 
 	// 		need to be setup.
 	// 		...this is because they are not Feature objects.
-	// NOTE: obj here is used only for applicability testing...
 	//
 	// XXX should meta-features be MetaFeature objects???
 	// XXX might be a good idea to check if any of the explicitly listed 
