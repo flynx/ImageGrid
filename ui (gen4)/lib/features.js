@@ -570,13 +570,80 @@ var FeatureSetProto = {
 	},
 
 
+	// Build list of features...
+	//
+	//	Build list of all features for an empty object...
+	//	.buildFeatureList()
+	//	.buildFeatureList({})
+	//	.buildFeatureList({}, '*')
+	//		-> data
+	//
+	//	Build a list of features for a specific root feature and object...
+	//	.buildFeatureList(object, feature)
+	//		-> data
+	//
+	//	Build a list of features for a specific set of root features and object...
+	//	.buildFeatureList(object, [feature, ..])
+	//		-> data
+	//
+	//
+	// This will:
+	// 	- include all dependencies for all given features (recursively)
+	// 	- include all suggested features by all the given features (recursively)
+	// 	- sort features by priority
+	// 	- sort features by dependency
+	// 	- check for feature applicability and remove non-applicable features
+	// 	- remove features depending on non applicable features (recursively)
+	// 	- remove disabled features
+	// 	- remove features depending on disabled features (recursively)
+	// 	- check for missing features and dependencies
+	// 	XXX exclusivity check...
+	//
+	//
+	// Return format:
+	// 	{
+	//		// features in correct load order...
+	//		features: [ .. ],
+	//
+	//		// features disabled explicitly and their dependants...
+	//		disabled: [ .. ],
+	//		// unapplicable features and their dependants...
+	//		unapplicable: [ .. ],
+	//
+	//		excluded: [ .. ],
+	//
+	//		missing: {
+	//			// features explicitly given by user but missing...
+	//			USER: [ .. ],
+	//			// missing <feature> dependencies...
+	//			<feature>: [ .. ],
+	//			...
+	//		},
+	//		conflicts: {
+	//			XXX
+	//		},
+	// 	}
+	//
+	// NOTE: all feature sorting is done maintaining relative feature order
+	// 		when possible...
+	// NOTE: meta-features are not included in the list as they do not 
+	// 		need to be setup.
+	// 		...this is because they are not Feature objects.
+	// NOTE: obj here is used only for applicability testing...
+	//
+	// XXX should meta-features be MetaFeature objects???
+	// XXX might be a good idea to check if any of the explicitly listed 
+	// 		features exists and add them to missing if not...
+	// 		...this does not include features added via .suggested or 
+	// 		.depends...
 	buildFeatureList2: function(obj, lst){
 		var that = this
 		obj = obj || {}
 
-		lst = lst == null ? this.features : lst
+		lst = (lst == null || lst == '*') ? this.features : lst
 		lst = lst.constructor !== Array ? [lst] : lst
 
+		var input = lst.slice()
 		var disabled = [] 
 		var excluded = []
 		var unapplicable = []
@@ -600,12 +667,22 @@ var FeatureSetProto = {
 		}
 
 
+		// missing stage 1: check if all user included features exist...
+		// NOTE: we'll ignore missing disabled features too...
+		lst.forEach(function(n){
+			if(!that[n] && n[0] != '-'){
+				var m = missing['USER'] = missing['USER'] || []
+				m.push(n)
+			}
+		})
+
 		// include all dependencies...
 		//
 		// NOTE: this should never fall into an infinite loop as we do 
 		// 		not include feature already seen...
 		// 		...unless there is an infinite number of features, but 
 		// 		I'll try to avoid that big a feature creep.
+		// XXX should we check for dependency loops here???
 		for(var i=0; i < lst.length; i++){
 			var k = lst[i]
 
@@ -682,8 +759,20 @@ var FeatureSetProto = {
 						unapplicable.push(n) && false
 					: true })
 
+		// missing stage 2: dependencies...
+		lst.forEach(function(k){
+			(that[k].depends || []).forEach(function(d){
+				// NOTE: we do not need to check disabled or unapplicable
+				// 		here as if the feature depended on dropped feature
+				// 		it would have been already dropped too...
+				if(!that[k]){
+					var m = missing[k] = missing[k] || []
+					m.push(d)
+				}
+			})
+		})
+
 		// XXX check exclusive -> excluded...
-		// XXX check missing...
 
 
 		// sort by dependency...
@@ -756,12 +845,17 @@ var FeatureSetProto = {
 
 
 		return {
+			input: input,
+
 			features: lst,
+
 			disabled: disabled,
+			unapplicable: unapplicable,
+
 			excluded: excluded,
+
 			missing: missing,
 			conflicts: conflicts,
-			unapplicable: unapplicable,
 		}
 	},
 
