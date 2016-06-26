@@ -249,6 +249,7 @@ var FeatureSetProto = {
 	},
 
 
+	/*
 	// Build feature list...
 	//
 	// 	Build a list of all registered features
@@ -326,7 +327,7 @@ var FeatureSetProto = {
 	// XXX .buildFeatureList() is slow and can be a bottleneck for large
 	// 		numbers of features... might be a good idea to take a look at
 	// 		this sometime...
-	buildFeatureList: function(obj, lst, auto_include, depth){
+	_buildFeatureList: function(obj, lst, auto_include, depth){
 		var that = this
 		obj = obj || {}
 
@@ -568,6 +569,7 @@ var FeatureSetProto = {
 			unapplicable: unapplicable,
 		}
 	},
+	//*/
 
 
 	// Build list of features...
@@ -603,8 +605,8 @@ var FeatureSetProto = {
 	// 	- check for feature applicability
 	// 	- remove non-applicable features and all dependants (recursively)
 	// 	- remove disabled features and all dependants (recursively)
+	// 	- check and resolve exclusivity conflicts (XXX needs revision)
 	// 	- check for missing features and dependencies
-	// 	XXX exclusivity check...
 	//
 	//
 	// Return format:
@@ -620,7 +622,7 @@ var FeatureSetProto = {
 	//		// unapplicable features and their dependants...
 	//		unapplicable: [ .. ],
 	//
-	//		// XXX
+	//		// features removed due to exclusivity conflict...
 	//		excluded: [ .. ],
 	//
 	//		missing: {
@@ -651,7 +653,9 @@ var FeatureSetProto = {
 	// 		features exists and add them to missing if not...
 	// 		...this does not include features added via .suggested or 
 	// 		.depends...
-	buildFeatureList2: function(obj, lst){
+	// XXX not sure about handling excluded features (see inside)...
+	// XXX add dependency loops to .conflicts...
+	buildFeatureList: function(obj, lst){
 		var that = this
 		obj = obj || {}
 
@@ -787,8 +791,41 @@ var FeatureSetProto = {
 			})
 		})
 
-		// XXX check exclusive -> excluded...
+		// check exclusive -> excluded...
+		//
+		// NOTE: this is the right spot for this, just after priority 
+		// 		sorting and clearing but before dependency sorting.
+		//
+		// XXX do we need to clear dependencies pulled by excluded features???
+		// 		ways to go:
+		// 			- drop excluded and continue (current state)
+		// 			- disable excluded, add to original input and rebuild
+		// 			- err and let the user decide
+		var _exclusive = []
+		lst = lst.filter(function(n){
+			var e = that[n]
 
+			// keep non-exclusive stuff...
+			if(!e || e.exclusive == null){
+				return true
+			}
+
+			// count the number of exclusive features already present...
+			var res = e.exclusive
+				.filter(function(n){
+					if(_exclusive.indexOf(n) < 0){
+						_exclusive.push(n)
+						return false
+					}
+					return true
+				})
+				.length == 0
+
+			!res &&
+				excluded.push(n)
+
+			return res
+		})
 
 		// sort by dependency...
 		var l = lst.length
@@ -866,7 +903,6 @@ var FeatureSetProto = {
 
 			disabled: disabled,
 			unapplicable: unapplicable,
-
 			excluded: excluded,
 
 			missing: missing,
