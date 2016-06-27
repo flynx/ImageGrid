@@ -744,6 +744,9 @@ var FeatureSetProto = {
 				}
 				// check applicability...
 				if(f.isApplicable && !f.isApplicable.call(that, obj)){
+					// XXX not sure if this is the right place for this...
+					console.warn('Excluding unaplicable:', n, '(reccomended to exclude manually)')
+
 					unapplicable.push(n)
 					return false
 				}
