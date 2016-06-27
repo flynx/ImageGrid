@@ -66,7 +66,7 @@ var object = require('lib/object')
 //
 //
 // Feature applicability:
-// 	If feature.isApplicable(..) returns true then the feature will not be
+// 	If feature.isApplicable(..) returns false then the feature will not be
 // 	considered on setup...
 //
 //
