@@ -499,6 +499,7 @@ var FeatureSetProto = {
 
 			!res 
 				&& excluded.push(n)
+				// warn the user...
 				// XXX not sure if this is the right place for this...
 				&& console.warn(
 					'Excluding unaplicable:', n, '(reccomended to exclude manually)')

@@ -298,6 +298,9 @@ module.GLOBAL_KEYBOARD = {
 			default: 'toggleBookmark',
 			ctrl: 'toggleTheme!',
 			alt: 'browseActions: "/Bookmark/" -- Show bookmark menu',
+
+			// XXX not sure if this is the right way to go...
+			shift: 'setBaseRibbon',
 		},
 		E: {
 			default: 'openInExtenalEditor',
