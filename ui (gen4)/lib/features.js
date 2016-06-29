@@ -490,10 +490,6 @@ var FeatureSetProto = {
 			var res = e.exclusive
 				.filter(function(n){
 					if(_exclusive.indexOf(n) < 0){
-						// XXX not sure if this is the right place for this...
-						console.warn(
-							'Excluding unaplicable:', n, '(reccomended to exclude manually)')
-
 						_exclusive.push(n)
 						return false
 					}
@@ -501,8 +497,11 @@ var FeatureSetProto = {
 				})
 				.length == 0
 
-			!res &&
-				excluded.push(n)
+			!res 
+				&& excluded.push(n)
+				// XXX not sure if this is the right place for this...
+				&& console.warn(
+					'Excluding unaplicable:', n, '(reccomended to exclude manually)')
 
 			return res
 		})
