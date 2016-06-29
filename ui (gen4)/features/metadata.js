@@ -378,6 +378,7 @@ var MetadataUIActions = actions.Actions({
 				// fields that expect that image data is available...
 				var info = ['---']
 				if(img){
+					// some abstractions...
 					// XXX should these be here???
 					var _normalize = typeof(path) != 'undefined' ? 
 						path.normalize
@@ -387,27 +388,36 @@ var MetadataUIActions = actions.Actions({
 						: function(e){ return e.split(/[\\\/]/g).pop() }
 					var _dirname = typeof(path) != 'undefined' ?
 						function(e){ return path.normalize(path.dirname(e)) }
-						: function(e){ return _normalize(e.split(/[\\\/]/g).slice(0, -1).join('/')) }
+						: function(e){ 
+							return _normalize(e.split(/[\\\/]/g).slice(0, -1).join('/')) }
 
-					base = base.concat([
-						['File Name: ', 
-							_basename(img.path)],
-						['Parent Directory: ', 
-							_dirname((img.base_path || '.') +'/'+ img.path)],
-						['Full Path: ', 
-							_normalize((img.base_path || '.') +'/'+ img.path)],
+					// paths...
+					img.path 
+						&& base.push(['File Name: ', 
+							_basename(img.path)])
+						&& base.push(['Parent Directory: ', 
+							_dirname((img.base_path || '.') +'/'+ img.path)])
+						&& base.push(['Full Path: ', 
+							_normalize((img.base_path || '.') +'/'+ img.path)])
 
-						['Date created: ', img.birthtime 
-							&& new Date(img.birthtime).toShortDate()],
-						['- ctime: ', img.ctime && new Date(img.ctime).toShortDate()],
-						['- mtime: ', img.mtime && new Date(img.mtime).toShortDate()],
-						['- atime: ', img.atime && new Date(img.atime).toShortDate()],
-					])
-
-					// comment and tags...
-					info.push(['Comment: ', 
-						function(){ return img.comment || '' }]) 
+					// times...
+					img.birthtime 
+						&& base.push(['Date created: ', 
+							img.birthtime && new Date(img.birthtime).toShortDate()])
+					img.ctime
+						&& base.push(['- ctime: ', 
+							img.ctime && new Date(img.ctime).toShortDate()])
+					img.mtime
+						&& base.push(['- mtime: ',
+							img.mtime && new Date(img.mtime).toShortDate()])
+					img.atime
+						&& base.push(['- atime: ', 
+							img.atime && new Date(img.atime).toShortDate()])
 				}
+
+				// comment and tags...
+				info.push(['Comment: ', 
+					function(){ return img && img.comment || '' }]) 
 
 				info.push(['Tags: ', 
 					function(){ return that.data.getTags().join(', ') || '' }])
