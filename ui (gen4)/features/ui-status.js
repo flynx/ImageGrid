@@ -274,7 +274,8 @@ var StatusBarActions = actions.Actions({
 			// path...
 			// XXX use generic, platform independent path processing...
 			} else if(type == 'path'){
-				text = (img && ((img.base_path || '') +'/'+ img.path) || '---')
+				// XXX revise this...
+				text = (img && img.path && ((img.base_path || '') +'/'+ img.path) || '---')
 					// remove /./
 					.replace(/[\\\/]\.[\\\/]/, '/')
 				txt = img && ((img.name || '') + (img.ext || '')) || text.split(/[\\\/]/).pop()
