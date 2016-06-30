@@ -2257,24 +2257,27 @@ var RibbonsPrototype = {
 			// non-square image...
 			if(w != h){
 
+				// NOTE: we need to use the default (CSS) value when 
+				// 		possible, to avoid sizing issues...
+				var dfl_w = image[0].style.width == ''
+				var dfl_h = image[0].style.height == ''
+
 				var image_p = w > h ? 'landscape' : 'portrait'
 
 				// when the image is turned 90deg/270deg and its 
 				// proportions are the same as the screen...
 				if((o == 90 || o == 270) && image_p == viewer_p){
 					image.css({
-						width: h,
-						height: w,
+						width: dfl_h ? '' : h,
+						height: dfl_w ? '' : w,
 
 						margin: -((w - h)/2) +'px '+ (w - h)/2 + 'px'
 					})
 
 				} else if((o == 0 || o == 180) && image_p != viewer_p){
 					image.css({
-						//width: h,
-						//height: w,
-						width: '',
-						height: '',
+						width: dfl_h ? '' : h,
+						height: dfl_w ? '' : w,
 
 						margin: '',
 					})
