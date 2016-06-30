@@ -327,6 +327,8 @@ var FeatureSetProto = {
 	// XXX should meta-features be MetaFeature objects???
 	// XXX not sure about handling excluded features (see inside)...
 	// XXX add dependency loops to .conflicts...
+	// XXX might be a good idea to check dependency loops on feature 
+	// 		construction, too... (???)
 	buildFeatureList: function(obj, lst){
 		var that = this
 		obj = obj || {}
@@ -374,6 +376,9 @@ var FeatureSetProto = {
 		// 		...unless there is an infinite number of features, but 
 		// 		I'll try to avoid that big a feature creep.
 		// XXX should we check for dependency loops here???
+		// 		...this would have been simple if this was a recursion
+		// 		(just check if cur is in path), but here it is not 
+		// 		trivial...
 		for(var i=0; i < lst.length; i++){
 			var k = lst[i]
 
