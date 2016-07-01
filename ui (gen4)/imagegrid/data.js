@@ -2051,8 +2051,6 @@ var DataPrototype = {
 	// 		similar to .getImageOrder(..) default but different form
 	// 		.getImage(..)
 	// NOTE: if no target is given this will assume the current image.
-	//
-	// XXX do .eachImageList(..)
 	split: function(target){
 		if(arguments.length > 1){
 			target = Array.apply(null, arguments)
@@ -2073,9 +2071,10 @@ var DataPrototype = {
 			n.base = tail.base
 			n.ribbon_order = tail.ribbon_order.slice()
 			n.order = tail.order.splice(0, i)
-			for(var k in tail.ribbons){
-				n.ribbons[k] = tail.ribbons[k].splice(0, i)
-			}
+			tail.eachImageList(function(lst, key, set){
+				n[set] = n[set] || {}
+				n[set][key] = lst.splice(0, i)
+			})
 			n.current = n.order.indexOf(tail.current) >= 0 ? tail.current : n.order[0]
 			
 			res.push(n)
