@@ -2045,7 +2045,11 @@ var DataPrototype = {
 	// NOTE: this will not affect the original data object...
 	// NOTE: this might result in empty ribbons, if no images are in a 
 	// 		given ribbon in the section to be split...
-	// NOTE: target must be a .getImage(..) compatible value.
+	// NOTE: target must be a .getImage(..) compatible value, for 
+	// 		differences see next note.
+	// NOTE: if target is a number then it is treated as global index, 
+	// 		similar to .getImageOrder(..) default but different form
+	// 		.getImage(..)
 	// NOTE: if no target is given this will assume the current image.
 	//
 	// XXX do .eachImageList(..)
@@ -2062,8 +2066,8 @@ var DataPrototype = {
 
 		// NOTE: we modify tail here on each iteration...
 		target.forEach(function(i){
-			i = i >= that.order.length 
-				? tail.order.length
+			i = i >= that.order.length ? tail.order.length
+				: typeof(i) == typeof(123) ? tail.getImageOrder(that.getImage(i, 'global'))
 				: tail.getImageOrder(that.getImage(i))
 			var n = new Data()
 			n.base = tail.base
@@ -2230,7 +2234,7 @@ var DataPrototype = {
 		rest[0].setBase(0)
 
 		// join the resulting data to the base ribbon...
-		res = res.join(rest)
+		res = res[0].join(rest)
 
 		// transfer data to new data object...
 		res.current = this.current

@@ -584,6 +584,14 @@ actions.Actions({
 		function(target){ this.flip(target, 'vertical') }],
 	flipHorizontal: ['Image|Edit/Flip image horizontally',
 		function(target){ this.flip(target, 'horizontal') }],
+
+
+	// complex operations...
+	// XXX align to ribbon...
+	alignToRibbon: ['Edit/',
+		function(target, start, end){
+			this.data = this.data.alignToRibbon(target, start, end)
+		}],
 })
 
 

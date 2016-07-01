@@ -841,6 +841,7 @@ module.ViewerActions = actions.Actions({
 	flipHorizontal: [
 		function(target){ this.ribbons.flipHorizontal(target, 'view') }],
 
+	alignToRibbon: [ reloadAfter(true) ],
 
 	// tags...
 	tag: [ 
