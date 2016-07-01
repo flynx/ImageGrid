@@ -2177,14 +2177,13 @@ var DataPrototype = {
 					return
 				}
 
-				if(base[set] == null){
-					base[set] = {key: base.makeSparseImages(list)}
+				var s = base[set] = base[set] || {}
 
-				} else if(base[set][key] == null){
+				if(s[key] == null){
 					base[set][key] = base.makeSparseImages(list)
 
 				} else {
-					base[set][key] = base.makeSparseImages(base[set][key].concat(list))
+					s[key] = base.makeSparseImages(s[key].concat(list))
 				}
 			})
 		})

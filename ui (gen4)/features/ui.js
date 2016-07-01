@@ -841,6 +841,7 @@ module.ViewerActions = actions.Actions({
 	flipHorizontal: [
 		function(target){ this.ribbons.flipHorizontal(target, 'view') }],
 
+	// XXX this needs an interactive mode -- mark A, mark B, align between
 	alignToRibbon: [ reloadAfter(true) ],
 
 	// tags...
