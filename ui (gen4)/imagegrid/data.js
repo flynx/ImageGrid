@@ -2109,6 +2109,7 @@ var DataPrototype = {
 	// 		if it is needed to keep the original intact, just .clone() it...
 	//
 	// XXX test more complex cases...
+	// XXX add a 'gid' align mode...
 	join: function(){
 		var args = Array.apply(null, arguments)
 		var align = typeof(args[0]) == typeof('str') ? args.splice(0, 1)[0] : 'base'
@@ -2201,7 +2202,7 @@ var DataPrototype = {
 	// 		downward, needing a ribbon above the target to infer the 
 	// 		values.
 	//
-	// XXX test
+	// XXX test...
 	alignToRibbon: function(ribbon, start, end){
 		ribbon = ribbon == null ? this.base : this.getRibbon(ribbon)
 
