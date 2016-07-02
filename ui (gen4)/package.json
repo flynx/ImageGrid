@@ -25,7 +25,7 @@
     "guarantee-events": "^1.0.0",
     "openseadragon": "^2.1.0",
     "requirejs": "^2.1.23",
-    "sharp": "^0.12.0"
+    "sharp": "^0.15.0"
   },
   "optionalDependencies": {
     "flickrapi": "^0.3.28"

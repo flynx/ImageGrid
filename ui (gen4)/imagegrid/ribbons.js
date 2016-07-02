@@ -230,6 +230,7 @@ var RibbonsClassPrototype = {
 	createViewer: function(){
 		return $('<div>')
 			.addClass('viewer')
+			.attr('tabindex', 0)
 			//.append($('<div>')
 			//	.addClass('ribbon-set'))
 	},

@@ -104,9 +104,6 @@ function(images, sizes, base_path, target_tpl, callback){
 						return img.clone()
 							.resize(res, res)
 							.max()
-							// XXX this causes odd image errors 
-							// 		...white pixels in random black areas...	
-							//.interpolateWith('nohalo')
 							.withMetadata()
 							.toFile(full)
 								.then(function(){

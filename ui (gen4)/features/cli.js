@@ -93,7 +93,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 	],
 
 	isApplicable: function(){ 
-		return this.runtime == 'node' || this.runtime == 'nw' },
+		return this.runtime == 'node' /*|| this.runtime == 'nw'*/ },
 
 	actions: CLIActions,
 

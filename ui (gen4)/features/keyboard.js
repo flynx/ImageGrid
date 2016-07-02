@@ -396,7 +396,7 @@ var KeyboardActions = actions.Actions({
 					this.__keyboard_handler =
 						keyboard.makeKeyboardHandler(
 							function(){ return that.__keyboard_config },
-							function(k){ window.DEBUG && console.log(k) }, 
+							function(k){ window.DEBUG && console.log('KEY:', k) }, 
 							this)
 
 				// drop keys if repeating too fast...

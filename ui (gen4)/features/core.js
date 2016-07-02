@@ -189,6 +189,7 @@ var LifeCycleActions = actions.Actions({
 			// other...
 			} else {
 				// XXX
+				console.warn('Unknown runtime:', runtime)
 			}
 		}],
 	// unbind events...
@@ -202,16 +203,14 @@ var LifeCycleActions = actions.Actions({
 
 			// nw...
 			if(this.__nw_stop_handler && this.runtime == 'nw'){
-				//nw.Window.get().off('close', this.__nw_stop_handler)
+				nw.Window.get().removeAllListeners('close')
 				delete this.__nw_stop_handler
 			}
 
 			// node...
-			/* XXX there's no process.off(...)
 			if(this.__stop_handler && this.runtime == 'node'){
-				process.off('exit', this.__stop_handler)
+				process.removeAllListeners('exit')
 			}
-			*/
 
 			delete this.__stop_handler
 

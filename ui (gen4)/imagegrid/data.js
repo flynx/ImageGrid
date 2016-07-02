@@ -2227,7 +2227,7 @@ var DataPrototype = {
 
 		// split the data into three sections...
 		var res = this.split(start, end)
-		var rest = res.splice(1)
+		var rest = res.shift()
 
 		// set the base ribbon on the middle section...
 		rest[0].setBase(0)
