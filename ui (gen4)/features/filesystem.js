@@ -116,6 +116,216 @@ module.FileSystemInfo = core.ImageGridFeatures.Feature({
 
 
 /*********************************************************************/
+// Changes API... 
+
+var ChangesActions = actions.Actions({
+	// This can be:
+	// 	- null/undefined	- write all
+	// 	- true				- write all
+	// 	- false				- write nothing
+	// 	- {
+	//		// write/skip data...
+	//		data: <bool>,
+	//
+	//		// write/skip images or write a diff including the given 
+	//		// <gid>s only...
+	//		images: <bool> | [ <gid>, ... ],
+	//
+	//		// write/skip tags...
+	//		tags: <bool>,
+	//
+	//		// write/skip bookmarks...
+	//		bookmarked: <bool>,
+	//
+	//		// write/skip selected...
+	//		selected: <bool>,
+	// 	  }
+	//
+	// NOTE: in the complex format all fields ar optional; if a field 
+	// 		is not included it is not written (same as when set to false)
+	// NOTE: .current is written always.
+	chages: null,
+
+	clone: [function(full){
+			return function(res){
+				res.changes = null
+				if(full && this.hasOwnProperty('changes') && this.changes){
+					res.changes = JSON.parse(JSON.stringify(this.changes))
+				}
+			}
+		}],
+
+	// Mark data sections as changed...
+	//
+	//	Mark everything changed...
+	//	.markChanged('all')
+	//
+	//	Mark nothing changed...
+	//	.markChanged('none')
+	//
+	//	Mark a section changed...
+	//	.markChanged('data')
+	//	.markChanged('tags')
+	//	.markChanged('selected')
+	//	.markChanged('bookmarked')
+	//
+	//	Mark image changed...
+	//	.markChanged(<gid>, ...)
+	//	.markChanged([<gid>, ...])
+	//
+	//
+	// NOTE: when .changes is null (i.e. everything changed, marked via
+	// 		.markChanged('all')) then calling this with anything other 
+	// 		than 'none' will have no effect.
+	markChanged: ['- System/',
+		function(section){
+			var that = this
+			var args = section instanceof Array ? section : util.args2array(arguments)
+			//var changes = this.changes = 
+			var changes = 
+				this.hasOwnProperty('changes') ?
+					this.changes || {}
+					: {}
+
+			//console.log('CHANGED:', args)
+
+			// all...
+			if(args.length == 1 && args[0] == 'all'){
+				// NOTE: this is better than delete as it will shadow 
+				// 		the parent's changes in case we got cloned from
+				// 		a live instance...
+				//delete this.changes
+				this.changes = null
+
+			// none...
+			} else if(args.length == 1 && args[0] == 'none'){
+				this.changes = false 
+
+			// everything is marked changed, everything will be saved
+			// anyway...
+			// NOTE: to reset this use .markChanged('none') and then 
+			// 		manually add the desired changes...
+			} else if(this.changes == null){
+				return
+
+			} else {
+				var images = (changes.images || [])
+
+				args.forEach(function(arg){
+					var gid = that.data.getImage(arg)
+
+					// special case: image gid...
+					if(gid != -1 && gid != null){
+						images.push(gid)
+						images = images.unique()
+
+						changes.images = images
+						that.changes = changes
+
+					// all other keywords...
+					} else {
+						changes[arg] = true
+						that.changes = changes
+					}
+				})
+			}
+		}],
+})
+
+
+var Changes = 
+module.Changes = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'changes',
+	depends: [ ],
+
+	actions: ChangesActions,
+
+	handlers: [
+		// everything changed...
+		[[
+			'loadURLs',
+			'clear',
+		], 
+			function(){ 
+				this.markChanged('all') 
+			}],
+
+		// data...
+		[[
+			//'clear',
+			//'load',
+
+			'setBaseRibbon',
+
+			'shiftImageTo',
+			'shiftImageUp',
+			'shiftImageDown',
+			'shiftImageLeft',
+			'shiftImageRight',
+			'shiftRibbonUp',
+			'shiftRibbonDown',
+
+			'sortImages',
+			'reverseImages',
+			'reverseRibbons',
+
+			'group',
+			'ungroup',
+			'expandGroup',
+			'collapseGroup',
+		], 
+			function(_, target){ this.markChanged('data') }],
+
+		// image specific...
+		[[
+			'rotateCW',
+			'rotateCCW',
+			'flipHorizontal',
+			'flipVertical',
+		], 
+			function(_, target){ this.markChanged(target) }],
+
+		// tags and images...
+		// NOTE: tags are also stored in images...
+		['tag untag',
+			function(_, tags, gids){
+				var changes = []
+
+				gids = gids || [this.data.getImage()]
+				gids = gids.constructor !== Array ? [this.data.getImage(gids)] : gids
+
+				tags = tags || []
+				tags = tags.constructor !== Array ? [tags] : tags
+
+				// images...
+				changes = changes.concat(gids)
+
+				// tags...
+				if(tags.length > 0){
+					changes.push('tags')
+
+					// selected...
+					if(tags.indexOf('selected') >= 0){
+						changes.push('selected')
+					}
+
+					// bookmark...
+					if(tags.indexOf('bookmark') >= 0){
+						changes.push('bookmarked')
+					}
+				}
+
+				this.markChanged.apply(this, changes)
+			}],
+	],
+})
+
+
+
+/*********************************************************************/
 // Loader... 
 
 
@@ -511,7 +721,7 @@ var FileSystemLoaderActions = actions.Actions({
 					if(imgs.length == 0){
 						// XXX
 						logger && logger.emit('loaded', [])
-						return
+						return imgs
 					}
 
 					// XXX
@@ -535,6 +745,8 @@ var FileSystemLoaderActions = actions.Actions({
 
 					// XXX report that we are done...
 					logger && logger.emit('loaded', imgs)
+
+					return imgs
 				})
 		}],
 })
@@ -550,6 +762,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 		'location',
 		'recover',
 		'fs-info',
+		'changes',
 		'tasks',
 	],
 	suggested: [
@@ -562,6 +775,32 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 
 	isApplicable: function(){ 
 		return this.runtime == 'node' || this.runtime == 'nw' },
+
+	handlers: [
+		// clear changes when loading an index...
+		['loadIndex',
+			function(res, path){
+				if(path){
+					//this.markChanged('none')
+					var that = this
+					res.then(function(){
+						that.markChanged('none')
+					})
+				}
+			}],
+		// add new images to changes...
+		['loadNewImages',
+			function(res){
+				var that = this
+				res.then(function(imgs){
+					imgs 
+						&& imgs.length > 0 
+						&& that
+							.markChanged('data')
+							.markChanged(imgs.keys())
+				})
+			}],
+	],
 })
 
 
@@ -1042,6 +1281,7 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-save-history',
 	depends: [
+		'changes',
 		'fs-loader',
 		'fs-comments',
 	],
@@ -1295,6 +1535,7 @@ module.FileSystemSaveHistoryUI = core.ImageGridFeatures.Feature({
 	tag: 'ui-fs-save-history',
 	depends: [
 		'ui',
+		'changes',
 		'fs-save-history',
 	],
 
@@ -1427,116 +1668,6 @@ var FileSystemWriterActions = actions.Actions({
 		'export-preview-size-limit': 'no limit',
 	},
 
-	// This can be:
-	// 	- null/undefined	- write all
-	// 	- true				- write all
-	// 	- false				- write nothing
-	// 	- {
-	//		// write/skip data...
-	//		data: <bool>,
-	//
-	//		// write/skip images or write a diff including the given 
-	//		// <gid>s only...
-	//		images: <bool> | [ <gid>, ... ],
-	//
-	//		// write/skip tags...
-	//		tags: <bool>,
-	//
-	//		// write/skip bookmarks...
-	//		bookmarked: <bool>,
-	//
-	//		// write/skip selected...
-	//		selected: <bool>,
-	// 	  }
-	//
-	// NOTE: in the complex format all fields ar optional; if a field 
-	// 		is not included it is not written (same as when set to false)
-	// NOTE: .current is written always.
-	chages: null,
-
-	clone: [function(full){
-			return function(res){
-				res.changes = null
-				if(full && this.hasOwnProperty('changes') && this.changes){
-					res.changes = JSON.parse(JSON.stringify(this.changes))
-				}
-			}
-		}],
-
-	// Mark data sections as changed...
-	//
-	//	Mark everything changed...
-	//	.markChanged('all')
-	//
-	//	Mark nothing changed...
-	//	.markChanged('none')
-	//
-	//	Mark a section changed...
-	//	.markChanged('data')
-	//	.markChanged('tags')
-	//	.markChanged('selected')
-	//	.markChanged('bookmarked')
-	//
-	//	Mark image changed...
-	//	.markChanged(<gid>, ...)
-	//
-	//
-	// NOTE: when .changes is null (i.e. everything changed, marked via
-	// 		.markChanged('all')) then calling this with anything other 
-	// 		than 'none' will have no effect.
-	markChanged: ['- System/',
-		function(section){
-			var that = this
-			var args = util.args2array(arguments)
-			//var changes = this.changes = 
-			var changes = 
-				this.hasOwnProperty('changes') ?
-					this.changes || {}
-					: {}
-
-			//console.log('CHANGED:', args)
-
-			// all...
-			if(args.length == 1 && args[0] == 'all'){
-				// NOTE: this is better than delete as it will shadow 
-				// 		the parent's changes in case we got cloned from
-				// 		a live instance...
-				//delete this.changes
-				this.changes = null
-
-			// none...
-			} else if(args.length == 1 && args[0] == 'none'){
-				this.changes = false 
-
-			// everything is marked changed, everything will be saved
-			// anyway...
-			// NOTE: to reset this use .markChanged('none') and then 
-			// 		manually add the desired changes...
-			} else if(this.changes == null){
-				return
-
-			} else {
-				var images = (changes.images || [])
-
-				args.forEach(function(arg){
-					var gid = that.data.getImage(arg)
-
-					// special case: image gid...
-					if(gid != -1 && gid != null){
-						images.push(gid)
-						images = images.unique()
-
-						changes.images = images
-						that.changes = changes
-
-					// all other keywords...
-					} else {
-						changes[arg] = true
-						that.changes = changes
-					}
-				})
-			}
-		}],
 
 	// Convert json index to a format compatible with file.writeIndex(..)
 	//
@@ -1953,6 +2084,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 	depends: [
 		'fs-loader',
 		'index-format',
+		'changes',	
 	],
 	suggested: [
 		'ui-fs-writer',
@@ -1971,16 +2103,6 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 		// clear changes...
 		// XXX currently if no args are passed then nothing is 
 		// 		done here, this might change...
-		['loadIndex',
-			function(res, path){
-				if(path){
-					//this.markChanged('none')
-					var that = this
-					res.then(function(){
-						that.markChanged('none')
-					})
-				}
-			}],
 		['saveIndex',
 			function(res, path){
 				// NOTE: if saving to a different path than loaded do not
@@ -1993,85 +2115,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 					})
 				}
 			}],
-
-		// everything changed...
-		[[
-			'loadURLs',
-			'clear',
-		], 
-			function(){ 
-				this.markChanged('all') 
-			}],
-
-		// data...
-		[[
-			//'clear',
-			//'load',
-
-			'setBaseRibbon',
-
-			'shiftImageTo',
-			'shiftImageUp',
-			'shiftImageDown',
-			'shiftImageLeft',
-			'shiftImageRight',
-			'shiftRibbonUp',
-			'shiftRibbonDown',
-
-			'sortImages',
-			'reverseImages',
-			'reverseRibbons',
-
-			'group',
-			'ungroup',
-			'expandGroup',
-			'collapseGroup',
-		], 
-			function(_, target){ this.markChanged('data') }],
-
-		// image specific...
-		[[
-			'rotateCW',
-			'rotateCCW',
-			'flipHorizontal',
-			'flipVertical',
-		], 
-			function(_, target){ this.markChanged(target) }],
-
-		// tags and images...
-		// NOTE: tags are also stored in images...
-		['tag untag',
-			function(_, tags, gids){
-				var changes = []
-
-				gids = gids || [this.data.getImage()]
-				gids = gids.constructor !== Array ? [this.data.getImage(gids)] : gids
-
-				tags = tags || []
-				tags = tags.constructor !== Array ? [tags] : tags
-
-				// images...
-				changes = changes.concat(gids)
-
-				// tags...
-				if(tags.length > 0){
-					changes.push('tags')
-
-					// selected...
-					if(tags.indexOf('selected') >= 0){
-						changes.push('selected')
-					}
-
-					// bookmark...
-					if(tags.indexOf('bookmark') >= 0){
-						changes.push('bookmarked')
-					}
-				}
-
-				this.markChanged.apply(this, changes)
-			}],
-
-	]
+	],
 })
 
 
@@ -2379,6 +2423,7 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-fs-writer',
 	depends: [
+		'changes',	
 		'fs-writer', 
 		'ui-fs-loader',
 	],

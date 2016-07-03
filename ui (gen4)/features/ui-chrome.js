@@ -385,6 +385,13 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 					that.updateCurrentImageIndicator()
 				}, this.config['current-image-indicator-restore-delay'] || 500)
 			}],
+
+		// single image view...
+		['toggleSingleImage',
+			function(){
+				this.toggleSingleImage('?') == 'off'
+					&& this.updateCurrentImageIndicator()
+			}],
 	],
 })
 
