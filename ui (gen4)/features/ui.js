@@ -44,7 +44,9 @@ function(force, callback){
 var updateImagePosition =
 module.updateImagePosition =
 function updateImagePosition(actions, target){
-	if(actions.ribbons.getRibbonSet().length == 0){
+	var s = actions.ribbons.getRibbonSet()
+
+	if(s.length == 0){
 		return
 	}
 
@@ -57,7 +59,7 @@ function updateImagePosition(actions, target){
 	var source_order = actions.data.getImageOrder(target)
 
 	return function(){
-		actions.ribbons.preventTransitions()
+		actions.ribbons.preventTransitions(s)
 
 		// XXX hack...
 		if(target.constructor === Array){
@@ -102,7 +104,10 @@ function updateImagePosition(actions, target){
 
 		actions.focusImage()
 
-		actions.ribbons.restoreTransitions(true)
+		// XXX not sure why this does not work without a setTimeout(..)
+		//actions.ribbons.restoreTransitions(s, true)
+		setTimeout(function(){ 
+			actions.ribbons.restoreTransitions(s, true) }, 0)
 	}
 }
 

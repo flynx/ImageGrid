@@ -366,10 +366,10 @@ var RibbonsPrototype = {
 		// handle nesting...
 		var l = t.getAttribute('__prevent_transitions')
 		if(l != null){
-			t.getAttribute('__prevent_transitions', l+1)
+			t.setAttribute('__prevent_transitions', parseInt(l)+1)
 			return this
 		}
-		t.getAttribute('__prevent_transitions', 0)
+		t.setAttribute('__prevent_transitions', 0)
 
 		target.addClass('no-transitions')
 
@@ -428,7 +428,7 @@ var RibbonsPrototype = {
 			// handle nesting...
 			var l = t.getAttribute('__prevent_transitions')
 			if(l != null && !force && l != '0'){
-				t.getAttribute('__prevent_transitions', l-1)
+				t.setAttribute('__prevent_transitions', parseInt(l)-1)
 				return this
 			}
 			t.removeAttribute('__prevent_transitions')
@@ -449,7 +449,7 @@ var RibbonsPrototype = {
 				// handle nesting...
 				var l = t.getAttribute('__prevent_transitions')
 				if(l != null && !force && l != '0'){
-					t.getAttribute('__prevent_transitions', l-1)
+					t.setAttribute('__prevent_transitions', l-1)
 					return this
 				}
 				t.removeAttribute('__prevent_transitions')
