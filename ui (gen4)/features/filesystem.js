@@ -2049,9 +2049,9 @@ var FileSystemWriterActions = actions.Actions({
 									// tags...
 									// XXX test: %n%(b)b%(m)m%e
 									.replace(
-										/%\((.*)\)m/, tags.indexOf('selected') >= 0 ? '$1' : '')
+										/%\(([^)]*)\)m/, tags.indexOf('selected') >= 0 ? '$1' : '')
 									.replace(
-										/%\((.*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
+										/%\(([^)]*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
 
 									// metadata...
 									// XXX
