@@ -272,6 +272,8 @@ module.Changes = core.ImageGridFeatures.Feature({
 			'reverseImages',
 			'reverseRibbons',
 
+			'alignToRibbon',
+
 			'group',
 			'ungroup',
 			'expandGroup',

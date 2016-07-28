@@ -564,7 +564,7 @@ actions.Actions({
 			this.images 
 				&& this.images.rotateImage(this.data.getImage(target), direction || 'cw')
 		}],
-	flip: ['- Flip|edit/Flip image',
+	flip: ['- Flip|Edit/Flip image',
 		function(target, direction){
 			if(target == 'vertical' || target == 'horizontal'){
 				direction = target
@@ -588,7 +588,7 @@ actions.Actions({
 
 	// complex operations...
 	// XXX align to ribbon...
-	alignToRibbon: ['Edit/',
+	alignToRibbon: ['Ribbons|Edit/Align top ribbon to base',
 		function(target, start, end){
 			this.data = this.data.alignToRibbon(target, start, end)
 		}],
