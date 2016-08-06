@@ -163,6 +163,7 @@ module.GLOBAL_KEYBOARD = {
 			default: 'rotateCW',
 			shift: 'reverseImages',
 			ctrl: 'loadNewImages!',
+			alt: 'browseActions: "/Ribbon/" -- Open ribbon menu',
 			'ctrl+alt': 'reload!',
 			'ctrl+shift': 'F5',
 		},

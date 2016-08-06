@@ -481,13 +481,13 @@ actions.Actions({
 			this.focusImage()
 		}],
 
-	shiftRibbonUp: ['Edit/Shift ribbon up',
+	shiftRibbonUp: ['Ribbon|Edit|Sort/Shift ribbon up',
 		function(target){ 
 			this.data.shiftRibbonUp(target) 
 			// XXX is this the right way to go/???
 			this.focusImage()
 		}],
-	shiftRibbonDown: ['Edit/Shift ribbon down',
+	shiftRibbonDown: ['Ribbon|Edit|Sort/Shift ribbon down',
 		function(target){ 
 			this.data.shiftRibbonDown(target)
 			// XXX is this the right way to go/???
@@ -511,7 +511,7 @@ actions.Actions({
 	
 	reverseImages: ['Edit|Sort/Reverse image order',
 		function(){ this.data.reverseImages() }],
-	reverseRibbons: ['Edit|Sort/Reverse ribbon order',
+	reverseRibbons: ['Ribbon|Edit|Sort/Reverse ribbon order',
 		function(){ this.data.reverseRibbons() }],
 
 	// XXX align to ribbon...
@@ -564,7 +564,7 @@ actions.Actions({
 			this.images 
 				&& this.images.rotateImage(this.data.getImage(target), direction || 'cw')
 		}],
-	flip: ['- Flip|Edit/Flip image',
+	flip: ['- Image|Edit/Flip image',
 		function(target, direction){
 			if(target == 'vertical' || target == 'horizontal'){
 				direction = target
@@ -591,7 +591,7 @@ actions.Actions({
 	// 		- on init: select start/end/base
 	// 		- allow user to reset/move
 	// 		- on accept: run
-	alignToRibbon: ['Ribbons|Edit/Align top ribbon to base',
+	alignToRibbon: ['Ribbon|Edit/Align top ribbon to base',
 		function(target, start, end){
 			this.data = this.data.alignToRibbon(target, start, end)
 		}],
