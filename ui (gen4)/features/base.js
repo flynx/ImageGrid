@@ -587,7 +587,10 @@ actions.Actions({
 
 
 	// complex operations...
-	// XXX align to ribbon...
+	// XXX need interactive mode for this...
+	// 		- on init: select start/end/base
+	// 		- allow user to reset/move
+	// 		- on accept: run
 	alignToRibbon: ['Ribbons|Edit/Align top ribbon to base',
 		function(target, start, end){
 			this.data = this.data.alignToRibbon(target, start, end)

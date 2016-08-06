@@ -2216,28 +2216,53 @@ var DataPrototype = {
 			var above = this.getRibbon(r-1)
 		}
 
+		var that = this
+		// get the edge (left/right-most image) of the set of ribbons 
+		// above the above ribbon calculated above... (no pun intended)
+		var _getEdge = function(side){
+			return Math[side == 'left' ? 'min' : 'max'].apply(null, 
+				that.ribbon_order
+					.map(function(ribbon, i){ 
+						return i > r-1 
+							?  null
+							: that.getImageOrder(
+								side == 'left' ? 'first' : 'last', 
+								ribbon) })
+					// cleanup...
+					.filter(function(i){ 
+						return i != null }))
+		}
+
 		start = start == null 
-			? this.getImageOrder('first', above)
+			//? this.getImageOrder('first', above)
+			? _getEdge('left') 
 			: this.getImageOrder(start)
 		end = end == null 
 			// NOTE: we need to exclude the last image in ribbon from 
 			// 		the next section, this the offset.
-			? this.getImageOrder('last', above)+1
+			//? this.getImageOrder('last', above)+1
+			? _getEdge('right')+1
 			: this.getImageOrder(end)
 
 		// split the data into three sections...
 		var res = this.split(start, end)
-		var rest = res.slice(1)
 
 		// cleanup...
 		// XXX do we actually need this???
-		res.forEach(function(e){ e.clear('empty') })
+		res.forEach(function(e){ return e.clear('empty') })
 
 		// set the base ribbon on the middle section...
-		rest[0].setBase(0)
+		res[1].setBase(0)
+
+		// remove empty sections...
+		res = res.filter(function(e){ return e.length > 0 })
 
 		// join the resulting data to the base ribbon...
-		res = res[0].join(rest)
+		// NOTE: if we have only one non-empty section then nothing needs
+		// 		to be done...
+		if(res.length > 1){
+			res = res[0].join(res.slice(1))
+		}
 
 		// transfer data to new data object...
 		res.current = this.current
