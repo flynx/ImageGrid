@@ -8,7 +8,6 @@ function(require){ var module={} // makes module AMD/node compatible...
 /*********************************************************************/
 
 var args2array = require('lib/util').args2array
-var toggler = require('lib/toggler')
 var object = require('lib/object')
 
 
@@ -260,12 +259,13 @@ var normalizeTabs = function(str){
 var doWithRootAction = 
 module.doWithRootAction = 
 function(func){
-	return function(name){
+	return function(){
+		var args = args2array(arguments)
 		var handlers = (this.getHandlerList 
 				|| MetaActions.getHandlerList)
-			.call(this, name)
+			.apply(this, args)
 
-		return func.call(this, handlers.pop(), name)
+		return func.apply(this, [handlers.pop()].concat(args))
 	}
 }
 
@@ -329,10 +329,6 @@ function(func){
 // 	  root action return value and arguments are threaded back up the 
 // 	  action chain.
 //
-// NOTE: if the root handler is instance of Toggler (jli) and the action
-// 		is called with '?'/'??' as argument, then the toggler will be 
-// 		called with the argument and return the result bypassing the 
-// 		handlers.
 // NOTE: actions once defined do not depend on the inheritance hierarchy, 
 // 		other than the .getHandlerList(..) method. If this method is not 
 // 		found in the inheritance chain (i.e. the link to MetaActions)
@@ -413,19 +409,17 @@ Action.prototype.pre = function(context, args){
 	var res = context
 	var outer = this.name
 
-	var getHandlers = context.getHandlers || MetaActions.getHandlers
-	var isToggler = context.isToggler || MetaActions.isToggler
-
 	// get the handler list...
+	var getHandlers = context.getHandlers || MetaActions.getHandlers
 	var handlers = getHandlers.call(context, outer)
 
-	// special case: toggler -- do not handle special args...
-	// XXX should this be here???
-	if(isToggler.call(context, outer)
-			&& args.length == 1 
-			&& (args[0] == '?' || args[0] == '??')){
-		return {
-			result: handlers.slice(-1)[0].pre.apply(context, args),
+	// special case: see if we need to handle the call without handlers...
+	var preActionHandler = context.preActionHandler || MetaActions.preActionHandler
+	if(preActionHandler){
+		// XXX signature needs work...
+		var res = preActionHandler.call(context, outer, handlers, args)
+		if(res !== undefined){
+			return res
 		}
 	}
 
@@ -711,16 +705,19 @@ module.MetaActions = {
 			})
 	},
 
-	// Test if the action is a Toggler...
+	// Handler for cases when we need to avoid the pre/post handlers...
 	//
-	// NOTE: an action is considered a toggler only if it's base action
-	// 		is a toggler (instance of Toggler), thus, the same "top"
-	// 		action can be or not be a toggler in different contexts.
+	// Returns:
+	// 	- undefined		- handle the action normally.
+	// 	- object		- bypass action handlers.
 	//
-	// For more info on togglers see: lib/toggler.js
-	isToggler: doWithRootAction(function(action){
-		return action instanceof toggler.Toggler }),
+	// NOTE: the object result must be compatible with Action.pre(..) 
+	// 		return value...
+	// NOTE: this is mostly a stub, here for documentation reasons...
+	//preActionHandler: doWithRootAction(
+	//	function(action, name, handlers, args){ return null }),
 
+	
 	// Register an action callback...
 	//
 	//	Register a post action callback

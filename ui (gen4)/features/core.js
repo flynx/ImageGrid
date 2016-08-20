@@ -62,9 +62,42 @@ function(attr, states, a, b){
 
 // Root ImageGrid.viewer object constructor...
 //
+var ImageGridMetaActions =
+module.ImageGridMetaActions = {
+	// Test if the action is a Toggler...
+	//
+	isToggler: actions.doWithRootAction(function(action){
+		return action instanceof toggler.Toggler }),
+
+	// Handle special cases where we need to get the action result early,
+	// without calling handlers...
+	//
+	preActionHandler: actions.doWithRootAction(function(action, name, handlers, args){
+		// Special case: do not call handlers for toggler state queries...
+		//
+		// NOTE: if the root handler is instance of Toggler (jli) and 
+		// 		the action is called with '?'/'??' as argument, then the
+		// 		toggler will be called with the argument and return the
+		// 		result bypassing the handlers.
+		// NOTE: an action is considered a toggler only if it's base action
+		// 		is a toggler (instance of Toggler), thus, the same "top"
+		// 		action can be or not be a toggler in different contexts.
+		//
+		// For more info on togglers see: lib/toggler.js
+		if(this.isToggler(name)
+				&& args.length == 1 
+				&& (args[0] == '?' || args[0] == '??')){
+			return {
+				result: handlers.slice(-1)[0].pre.apply(this, args),
+			}
+		}
+	}),
+} 
+ImageGridMetaActions.__proto__ = actions.MetaActions
+
 var ImageGrid = 
 module.ImageGrid = 
-	object.makeConstructor('ImageGrid', Object.create(actions.MetaActions))
+	object.makeConstructor('ImageGrid', ImageGridMetaActions)
 
 // Root ImageGrid feature set....
 var ImageGridFeatures =
