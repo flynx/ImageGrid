@@ -3,10 +3,9 @@
 *
 *
 **********************************************************************/
-
-define(function(require){ var module = {}
-
-//var DEBUG = DEBUG != null ? DEBUG : true
+((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
+(function(require){ var module={} // make module AMD/node compatible...
+/*********************************************************************/
 
 var keyboard = require('../keyboard')
 var object = require('../object')
@@ -204,5 +203,4 @@ Drawer.prototype.__proto__ = widget.Container.prototype
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
-return module })
+* vim:set ts=4 sw=4 :                               */ return module })

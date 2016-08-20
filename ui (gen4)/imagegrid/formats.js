@@ -3,10 +3,9 @@
 *
 *
 **********************************************************************/
-(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
-function(require){ var module={} // makes module AMD/node compatible...
+((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
+(function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
-
 
 module.VERSIONS = []
 

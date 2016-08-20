@@ -3,7 +3,7 @@
 *
 *
 **********************************************************************/
-(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)(
 function(require){ var module={} // makes module AMD/node compatible...
 /*********************************************************************/
 
