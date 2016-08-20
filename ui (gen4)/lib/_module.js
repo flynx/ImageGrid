@@ -3,11 +3,11 @@
 *
 *
 **********************************************************************/
+(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+function(require){ var module={} // makes module AMD/node compatible...
+/*********************************************************************/
 
-define(function(require){ var module = {}
-console.log('>>> viewer')
 
-//var DEBUG = DEBUG != null ? DEBUG : true
 
 
 /*********************************************************************/
@@ -16,5 +16,4 @@ console.log('>>> viewer')
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
-return module })
+* vim:set ts=4 sw=4 :                               */ return module })
