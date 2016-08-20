@@ -3,10 +3,9 @@
 *
 *
 **********************************************************************/
-
-define(function(require){ var module = {}
-
-//var DEBUG = DEBUG != null ? DEBUG : true
+(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+function(require){ var module={} // makes module AMD/node compatible...
+/*********************************************************************/
 
 // XXX this should not be imported!!!
 // 		...something wrong with requirejs(..)
@@ -2447,5 +2446,4 @@ core.ImageGridFeatures.Feature('fs', [
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
-return module })
+* vim:set ts=4 sw=4 :                               */ return module })

@@ -3,10 +3,9 @@
 *
 *
 **********************************************************************/
-
-//var DEBUG = DEBUG != null ? DEBUG : true
-
-define(function(require){ var module = {}
+(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+function(require){ var module={} // makes module AMD/node compatible...
+/*********************************************************************/
 
 var args2array = require('lib/util').args2array
 var toggler = require('lib/toggler')

@@ -39,11 +39,9 @@ if(typeof(process) != 'undefined'){
 
 
 /*********************************************************************/
-
-define(function(require){ var module = {}
-//requirejs(['viewer'], function(viewer){
-
-//var DEBUG = DEBUG != null ? DEBUG : true
+(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+function(require){ var module={} // makes module AMD/node compatible...
+/*********************************************************************/
 
 var viewer = require('imagegrid/viewer')
 

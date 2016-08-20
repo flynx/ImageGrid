@@ -3,8 +3,9 @@
 *
 *
 **********************************************************************/
-
-define(function(require){ var module = {}
+(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+function(require){ var module={} // makes module AMD/node compatible...
+/*********************************************************************/
 
 if(typeof(process) != 'undefined'){
 	var os = requirejs('os')
@@ -350,5 +351,4 @@ module.makeGlobList = function(elem, pattern, prepare){
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
-return module })
+* vim:set ts=4 sw=4 :                               */ return module })

@@ -3,21 +3,9 @@
 *
 *
 **********************************************************************/
-
-//var DEBUG = DEBUG != null ? DEBUG : true
-
-/* XXX get rid of this ASAP...
-if(typeof(module) !== 'undefined' && module.exports){
-	var NW = true
-	var gui = require('nw.gui')
-
-} else {
-	var NW = false
-}
-*/
-
-
-define(function(require){ var module = {}
+(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+function(require){ var module={} // makes module AMD/node compatible...
+/*********************************************************************/
 
 
 //var promise = require('promise')
@@ -2690,5 +2678,4 @@ module.makePathList = makeBrowserMaker(PathList)
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
-return module })
+* vim:set ts=4 sw=4 :                               */ return module })

@@ -5,8 +5,9 @@
 *
 *
 **********************************************************************/
-
-define(function(require){ var module = {}
+(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+function(require){ var module={} // makes module AMD/node compatible...
+/*********************************************************************/
 
 // XXX
 var DEBUG = typeof(DEBUG) != 'undefined' ? DEBUG : true
@@ -527,5 +528,4 @@ module.Tasks = ImageGridFeatures.Feature({
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
-return module })
+* vim:set ts=4 sw=4 :                               */ return module })

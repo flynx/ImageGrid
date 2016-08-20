@@ -13,9 +13,9 @@ if(typeof(process) != 'undefined'){
 }
 
 
-define(function(require){ var module = {}
-
-//var DEBUG = DEBUG != null ? DEBUG : true
+(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+function(require){ var module={} // makes module AMD/node compatible...
+/*********************************************************************/
 
 var util = require('lib/util')
 var toggler = require('lib/toggler')
@@ -587,5 +587,4 @@ module.MetadataFSUI = core.ImageGridFeatures.Feature({
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
-return module })
+* vim:set ts=4 sw=4 :                               */ return module })

@@ -3,8 +3,9 @@
 *
 *
 **********************************************************************/
-
-define(function(require){ var module = {}
+(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+function(require){ var module={} // makes module AMD/node compatible...
+/*********************************************************************/
 
 
 
@@ -408,5 +409,4 @@ CSSClassToggler.prototype.__proto__ = Toggler.prototype
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
-return module })
+* vim:set ts=4 sw=4 :                               */ return module })

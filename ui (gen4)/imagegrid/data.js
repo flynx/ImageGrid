@@ -7,8 +7,9 @@
 * 	utils...
 *
 **********************************************************************/
-
-define(function(require){ var module = {}
+(typeof(define)[0]=='u'?function(f){module.exports=f(require)}:define)(
+function(require){ var module={} // makes module AMD/node compatible...
+/*********************************************************************/
 
 
 var sha1 = require('ext-lib/sha1')
@@ -2959,5 +2960,4 @@ module.Data = DataWithTags
 
 
 /**********************************************************************
-* vim:set ts=4 sw=4 :                                                */
-return module })
+* vim:set ts=4 sw=4 :                               */ return module })
