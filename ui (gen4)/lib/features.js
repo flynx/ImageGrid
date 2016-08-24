@@ -7,10 +7,14 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+// XXX
+// XXX replace this with ig-features
+// XXX
+
 var args2array = require('lib/util').args2array
 
-var actions = require('lib/actions')
 var object = require('lib/object')
+var actions = module.actions = require('lib/actions')
 
 
 

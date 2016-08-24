@@ -7,6 +7,10 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+// XXX
+// XXX replace this with ig-features/actions
+// XXX
+
 var args2array = require('lib/util').args2array
 var object = require('lib/object')
 
@@ -962,7 +966,7 @@ module.MetaActions = {
 	// NOTE: if 'all' is set them mixin all the actions available, 
 	// 		otherwise only mixin local actions...
 	// NOTE: this will override existing own attributes.
-	inlineMmixin: function(from, all, descriptors, all_attr_types){
+	inlineMixin: function(from, all, descriptors, all_attr_types){
 		// defaults...
 		descriptors = descriptors || true
 		all_attr_types = all_attr_types || false
@@ -1007,14 +1011,14 @@ module.MetaActions = {
 		return this
 	},
 
-	// Same as .inlineMmixin(..) but isolates a mixin in a seporate object
+	// Same as .inlineMixin(..) but isolates a mixin in a seporate object
 	// in the inheritance chain...
 	//
 	mixin: function(from, all, descriptors, all_attr_types){
 		var proto = Object.create(this.__proto__)
 
 		// mixinto an empty object
-		proto.inlineMmixin(from, all, descriptors, all_attr_types)
+		proto.inlineMixin(from, all, descriptors, all_attr_types)
 
 		// mark the mixin for simpler removal...
 		proto.__mixin_source = from

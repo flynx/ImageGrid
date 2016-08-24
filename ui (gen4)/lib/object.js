@@ -7,6 +7,11 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+return require('../node_modules/ig-object/object')
+
+// XXX
+// XXX replace this with ig-object
+// XXX
 
 
 /*********************************************************************/

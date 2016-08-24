@@ -15,6 +15,14 @@ requirejs.config({
 
 	// XXX this does not work on direct filesystem access...
 	//urlArgs: 'bust='+Date.now(),
+	
+	/*
+	paths: {
+		'lib/object': 'node_modules/ig-object',
+		'ig-object': 'node_modules/ig-object',
+		'object': 'node_modules/ig-object',
+	},	
+	//*/
 })
 var _require = require
 require = requirejs
