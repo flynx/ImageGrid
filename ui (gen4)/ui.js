@@ -28,7 +28,7 @@ var requirejs_cfg = {
 		// 		modules to lib/*, this way we'll need the map section below
 		// 		only...	(without automation this also sounds bad)
 		'lib/object': './node_modules/ig-object/object',
-		'lib/actions': './node_modules/ig-features/actions',
+		'lib/actions': './node_modules/ig-actions/actions',
 		'lib/features': './node_modules/ig-features/features',
 	},	
 	map: {
