@@ -15,6 +15,36 @@ if((typeof(process) != 'undefined' ? process : {}).__nwjs){
 		.addPath(path.dirname(process.execPath) + '/node_modules/')
 }
 
+//*
+// Setup modules loaded from npm...
+//
+// XXX for some reason this breaks in browser if run after the if below...
+// XXX not sure if this strategy is correct...
+// 		...most likely this is not actually a good idea, need to think of
+// 		a way of organizing things without so much manual hoop jumping...
+var requirejs_cfg = {
+	paths: {
+		// XXX one approach to avoid at least this section is to copy the
+		// 		modules to lib/*, this way we'll need the map section below
+		// 		only...	(without automation this also sounds bad)
+		'lib/object': './node_modules/ig-object/object',
+		'lib/actions': './node_modules/ig-features/actions',
+		'lib/features': './node_modules/ig-features/features',
+	},	
+	map: {
+		'*': {
+			// back-refs
+			// ...these enable the npm modules reference each other in 
+			// a cross-platform manner....
+			'ig-object': 'lib/object',
+			'ig-actions': 'lib/actions',
+			'ig-features': 'lib/features',
+		},
+	},
+}
+// config the browser version of requirejs...
+requirejs.config(requirejs_cfg)
+//*/
 
 // Setup requirejs if we are in node/nw...
 //
@@ -26,16 +56,25 @@ if((typeof(process) != 'undefined' ? process : {}).__nwjs){
 // XXX setting nodeRequire on existing requirejs will change how 
 // 		everything is loaded...
 if(typeof(process) != 'undefined'){
-	var requirejs = 
+	requirejs = 
 	global.requirejs = 
 	window.requirejs = 
+		// XXX for some reason we can't just use the browser requirejs 
+		// 		even if we pass it nodeRequire, it still can't pass the
+		// 		node stuff to node...
 		require('requirejs')
 
-	var nodeRequire =
+	// config the node version of requirejs...
+	requirejs.config(requirejs_cfg)
+
+	nodeRequire =
 	global.nodeRequire = 
 	window.nodeRequire =
 		require
 }
+
+
+
 
 
 /*********************************************************************/
