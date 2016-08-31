@@ -30,6 +30,8 @@ var requirejs_cfg = {
 		'lib/object': './node_modules/ig-object/object',
 		'lib/actions': './node_modules/ig-actions/actions',
 		'lib/features': './node_modules/ig-features/features',
+
+		//'lib/keyboard': './node_modules/ig-keyboard/keyboard',
 	},	
 	map: {
 		'*': {
@@ -39,6 +41,8 @@ var requirejs_cfg = {
 			'ig-object': 'lib/object',
 			'ig-actions': 'lib/actions',
 			'ig-features': 'lib/features',
+
+			//'ig-keyboard': 'lib/keyboard',
 		},
 	},
 }
