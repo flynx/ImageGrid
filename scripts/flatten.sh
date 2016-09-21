@@ -11,7 +11,7 @@ if ! [ -e "ALL" ] ; then
 	mkdir "ALL"
 fi
 
-find . -path ./ALL -prune -o -iregex ".*\(jpg\|png\|gif\)" -printf ./%P\\0 | while read -d '' f ; do
+find . -path ./ALL -prune -o -iregex ".*\.\(jpg\|png\|gif\)" -printf ./%P\\0 | while read -d '' f ; do
 	echo "$f"
 	to=${f//.\//}
 	mv "$f" "./ALL/${to//\// - }"
