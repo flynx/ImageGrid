@@ -1635,6 +1635,7 @@ var FileSystemWriterActions = actions.Actions({
 		'export-preview-name-pattern': '%f',
 		'export-preview-name-patterns': [
 			'%f',
+			'%i-%f',
 			'%n%(-bookmarked)b%e',
 			'%n%(-marked)m%e',
 		],
@@ -1965,6 +1966,25 @@ var FileSystemWriterActions = actions.Actions({
 			return Promise.all(queue)
 		}],
 	
+	// 
+	// Filename patterns:
+	// 	%f		- full file name (same as: %n%e)
+	// 	%n		- name without extension
+	// 	%e		- extension with leading dot
+	//
+	// 	%gid	- full image gid
+	// 	%g		- short gid (XXX set length in options)
+	//
+	// 	%i		- image index in ribbon
+	// 	%I		- global image index (XXX global or crop???)
+	//
+	// 	%t 		- total number of images in ribbon
+	// 	%T		- total number of images (XXX global or crop???)
+	//
+	// 	%(...)m	- add text in braces if image marked
+	// 	%(...)b	- add text in braces if image is bookmark
+	//
+	//
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX resolve env variables in path... (???)
 	// XXX make custom previews (option)...
@@ -1972,6 +1992,7 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX report errors...
 	// XXX stop the process on errors...
 	// XXX use tasks...
+	// XXX check global index ('%I') in crop...
 	exportDirs: ['- File/Export/Export ribbons as directories',
 		function(path, pattern, level_dir, size, logger){
 			logger = logger || this.logger
@@ -2013,6 +2034,10 @@ var FileSystemWriterActions = actions.Actions({
 						.catch(function(err){
 							logger && logger.emit('error', err) })
 						.then(function(){
+							// XXX revise...
+							var len = that.data.ribbons[ribbon].len
+							var total_len = that.data.length
+
 							that.data.ribbons[ribbon].forEach(function(gid){
 								var img = that.images[gid]
 								var img_name = pathlib.basename(img.path || (img.name + img.ext))
@@ -2032,6 +2057,14 @@ var FileSystemWriterActions = actions.Actions({
 								var ext = pathlib.extname(img_name)
 								var tags = that.data.getTags(gid)
 
+								var i = that.data.getImageOrder('ribbon', gid)
+								var I = that.data.getImageOrder('global', gid)
+
+								// pad indexes...
+								// XXX should these be optional???
+								i = ((('1e'+(len+'').length)*1 + i) + '').slice(1)
+								I = ((('1e'+(total_len+'').length)*1 + I) + '').slice(1)
+
 								var name = pattern
 									// file name...
 									.replace(/%f/, img_name)
@@ -2044,8 +2077,13 @@ var FileSystemWriterActions = actions.Actions({
 									.replace(/%g/, gid.slice(-7, -1))
 
 									// order...
-									.replace(/%i/, that.data.getImageOrder(gid))
-									.replace(/%I/, that.data.getImageOrder(gid, 'global'))
+									.replace(/%i/, i)
+									.replace(/%I/, I)
+
+									// totals...
+									// XXX revise...
+									.replace(/%t/, len)
+									.replace(/%T/, total_len)
 
 									// tags...
 									// XXX test: %n%(b)b%(m)m%e
