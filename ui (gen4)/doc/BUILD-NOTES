@@ -2,12 +2,15 @@
 Chromium flicker issue
 ----------------------
 
+The UI sometimes flickers -- at first blanks out to black then re-draws,
+this is most noticeable on white or gray backgrounds. 
+
 This appears to be GPU related.
 
 package.json:
 	"chromium-args": "--disable-gpu-compositing",
 
-This will fix the issue temporarily, but still need a better solution.
+This will fix the issue temporarily, but we still need a better solution.
 
 
 
@@ -33,7 +36,7 @@ Speedup loading of app
 ----------------------
 
 One of the ways to speed up the load times when packed is to store Node's
-modules ./node_modules in a speporate loaction, outside of the the app.zip
+modules ./node_modules in a separate location, outside of the app.zip
 or package.nw
 To enable require(..) to find them:
 	- > npm install --save app-module-path
