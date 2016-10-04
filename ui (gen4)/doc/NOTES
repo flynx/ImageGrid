@@ -6,13 +6,13 @@ Most of the system is loaded via browser context RequireJS loader, in
 node/nw context node-specific stuff is loaded with a second node-enabled
 RequireJS instance or node require.
 
-This is done to:
-	- Minimize the difference between pure browser, nw and node 
-	  versions
-	- Enable devtools introspection on most modules.
-	  NOTE: his is mostly due to the inability to view the node 
-	 	context in nw.js devtools, when this is resolved this
-		point should be revised.
+The ideal solution would be to use one require that sees both the browser
+and node contexts, the problem is exactly in this, the browser requirejs
+does not see either node or node modules while the node require loads code
+that is not visible to devtools unless it is running at that exact moment.
+
+Thus we are forced to use both mode requirejs loaders which may be 
+confusing at times.
 
 
 Different loaders:

@@ -26,8 +26,7 @@ Sharp
 
 To build sharp for a specific version of node:
 	cd ./node_modules/sharp/
-	node-gyp --target=v5.7.0 rebuild	# v5.7.0 is the version 
-						# of node used in nw.js
+	nw-gyp rebuild --target=0.17.4 --arch=x64
 
 
 Speedup loading of app

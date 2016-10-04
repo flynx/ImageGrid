@@ -2081,7 +2081,6 @@ var FileSystemWriterActions = actions.Actions({
 									.replace(/%I/, I)
 
 									// totals...
-									// XXX revise...
 									.replace(/%t/, len)
 									.replace(/%T/, total_len)
 
