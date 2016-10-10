@@ -604,11 +604,16 @@ module.ImagesPrototype = {
 			var o = direction == 'cw' || direction == 'ccw' 
 				? module.calcRelativeRotation(img.orientation, direction) 
 				: direction*1
+
+			/* XXX seting orientation to undefined does not save correctly (BUG?) 
 			if(o == 0){
 				delete img.orientation
 			} else {
 				img.orientation = o
 			}
+			//*/
+			img.orientation = o
+
 			// account for proportions...
 			//that.correctImageProportionsForRotation(img)
 			// XXX this is a bit of an overkill but it will update the 
