@@ -795,7 +795,9 @@ module.CropActions = actions.Actions({
 	//
 	crop: ['- Crop/Crop image list',
 		function(list, flatten){ 
-			list = list || this.data.order
+			//list = list || this.data.order
+			list = list || this.data.getImages()
+
 			if(this.crop_stack == null){
 				this.crop_stack = []
 			}
@@ -862,7 +864,10 @@ module.CropActions = actions.Actions({
 
 	// XXX save a crop (catalog)...
 	// XXX
-
+	
+	// XXX not sure if we actually need this...
+	cropFlatten: ['Crop/Flatten',
+		function(list){ this.crop(list, true) }],
 	cropRibbon: ['Crop/Crop current ribbon',
 		function(ribbon, flatten){
 			if(typeof(ribbon) == typeof(true)){
@@ -872,7 +877,7 @@ module.CropActions = actions.Actions({
 			ribbon = ribbon || 'current'
 			this.crop(this.data.getImages(ribbon), flatten)
 		}],
-	cropRibbonAndAbove: ['Crop/Crop current and above ribbons',
+	cropRibbonAndAbove: ['Crop/Crop out ribbons bellow',
 		function(ribbon, flatten){
 			if(typeof(ribbon) == typeof(true)){
 				flatten = ribbon
