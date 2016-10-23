@@ -78,8 +78,8 @@ var AppControlActions = actions.Actions({
 				}
 
 				// place on center of the screen...
-				var x = win.x = (W - w)/2
-				var y = win.y = (H - h)/2
+				var x = win.x = Math.round((W - w)/2)
+				var y = win.y = Math.round((H - h)/2)
 
 				if(s){
 					win.zoomLevel = s
