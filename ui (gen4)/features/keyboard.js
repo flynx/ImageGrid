@@ -81,6 +81,14 @@ module.GLOBAL_KEYBOARD = {
 		],
 
 
+		// NOTE: these are here so as to enable handling via the next 
+		// 		block, i.e. the Viewer
+		// 		...if not given, then the ignore above will shadow the 
+		// 		keys...
+		// NOTE: the 'nop' action does not exist, this it will get ignored
+		'(': 'nop',
+		')': 'nop',
+
 		// zooming...
 		'#1': 'fitScreen',
 		// XXX should these also be implemented in the same way as 4-9???
