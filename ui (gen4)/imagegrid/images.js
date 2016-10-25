@@ -488,7 +488,8 @@ module.ImagesPrototype = {
 		}
 
 		var s
-		var url = img_data.path
+		// XXX not sure about encodeURI(..) here...
+		var url = encodeURI(img_data.path)
 		var preview_size = 'Original'
 		var p = Infinity
 		var previews = img_data.preview || {}
