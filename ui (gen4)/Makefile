@@ -115,7 +115,8 @@ $(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) $(NW_PROJECT_FILE) \
 	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) \
 		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
-		$(NODE_DIR)/app-module-path
+		$(NODE_DIR)/app-module-path \
+		$(NODE_DIR)/ig-*
 
 zip: $(APP_ZIP)
 

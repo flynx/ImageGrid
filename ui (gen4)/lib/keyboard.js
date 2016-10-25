@@ -231,6 +231,8 @@ function dropRepeatingkeys(handler, max_rate){
 // 	- numbers
 // 	- strings
 // 	- non-nested arrays or objects
+//
+// XXX add support for suffix to return false...
 var parseActionCall =
 module.parseActionCall =
 function parseActionCall(txt){
@@ -661,6 +663,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
  * 		actionNmae!: 1 "2" [3, 4] {5:6, 7:8}
  * 						- same as above but calls event.preventDefault()
  *
+ *		XXX add support for suffix to return false...
  *
  *
  * NOTE: The handler will be called with keybindings as context (this).
