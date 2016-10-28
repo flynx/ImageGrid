@@ -143,7 +143,17 @@ $(function(){
 		ig.features.features.length, 
 		ig.features.features)
 
-	ig.logger = ig.logger || {emit: function(e, v){ console.log('    ', e, v) }}
+	ig.logger = ig.logger || {emit: function(e, v){ 
+		console.log('    ', e, v) 
+		
+		// XXX HACK...
+		if(e == 'queued'){
+			ig.showProgress('Progress', '+0', '+1')
+
+		} else if(e == 'loaded' || e == 'done'){
+			ig.showProgress('Progress', '+1')
+		}
+	}}
 
 
 	// setup the viewer...

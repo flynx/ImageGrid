@@ -1110,6 +1110,145 @@ var WidgetTestActions = actions.Actions({
 			})
 		})],
 
+
+	// Progress bar widget...
+	//
+	// 	Create progress bar...
+	// 	.testProgress('text')
+	//
+	// 	Update progress bar (value, max, msg)...
+	// 	.testProgress('text', 0, 10)
+	// 	.testProgress('text', 10, 50, 'message')
+	//
+	// 	Update progress bar value (has no effect if max is not set)...
+	// 	.testProgress('text', 10)
+	//
+	// 	Close progress bar...
+	// 	.testProgress('text', 'close')
+	//
+	// 	Relative progress modification...
+	// 	.testProgress('text', '+1')
+	// 	.testProgress('text', '+0', '+1')
+	//
+	//
+	// XXX should we report errors and stoppages??? (error state??)
+	// XXX multiple containers...
+	// XXX shorten the nested class names...
+	// XXX revise styles...
+	showProgress: ['Interface/- Show progress bar...',
+		function(text, value, max, msg){
+			var viewer = this.ribbons.viewer
+
+			// container...
+			var container = viewer.find('.progress-container')
+			container = container.length == 0 ?
+				$('<div/>')
+					.addClass('progress-container')
+					.appendTo(viewer)
+				: container
+
+			// widget...
+			var widget = container.find('.progress-bar[name="'+text+'"]')
+			// close action...
+			if(value == 'close'){
+				widget.trigger('progressClose')
+				return
+			}
+			widget = widget.length == 0 ?
+				$('<div/>')
+					.addClass('progress-bar')
+					.attr('name', text)
+					.text(text)
+					// close button...
+					.append($('<span class="close">&times;</span>')
+						.on('click', function(){ widget.trigger('progressClose') }))
+					// state...
+					.append($('<span/>')
+						.addClass('progress-details'))
+					// bar...
+					.append($('<progress/>'))
+					// events...
+					.on('progressClose', function(){ 
+						widget
+							.fadeOut(200, function(){
+								$(this).remove() 
+							})
+					})
+					.appendTo(container)
+				: widget
+
+			// reset closing timeout...
+			var timeout = widget.attr('close-timeout')
+			timeout && clearTimeout(JSON.parse(timeout))
+
+
+			var bar = widget.find('progress')
+			var state = widget.find('.progress-details')
+
+			// XXX stub???
+			max = max ? 
+					(typeof(max) == typeof('str') && /[+-][0-9]+/.test(max) ? 
+						parseInt(bar.attr('max') || 0) + parseInt(max)
+					: parseInt(max))
+				: bar.attr('max')
+
+			value = value ? 
+					(typeof(value) == typeof('str') && /[+-][0-9]+/.test(value) ? 
+						parseInt(bar.attr('value') || 0) + parseInt(value)
+					: parseInt(value))
+				: bar.attr('value')
+			// ignore value if not max is present + handle overflow...
+			value = max ? Math.min(value, max) : null
+
+			msg = msg ? ': '+msg : ''
+			msg = ' '+ msg 
+				+ (value && value >= max ? ' ('+max+' done)' 
+					: value && max && value != max ? ' ('+ value +' of '+ max +')'
+					: ' (ready)')
+
+			// update widget...
+			bar.attr({
+				value: value || '',
+				max: max || '',
+			})
+			state.text(msg)
+
+			// auto-close...
+			// XXX make this optional... 
+			if(value && value >= max){
+				widget.attr('close-timeout', 
+					JSON.stringify(setTimeout(function(){ 
+						widget.trigger('progressClose') 
+					}, 1000)))
+			}
+		}],
+
+	testProgress: ['Test/Demo progress bar...',
+		function(text){
+			var done = 0
+			var max = 10
+			var text = text || 'Progress bar demo'
+			var that = this
+
+			this.showProgress(text)
+
+			var step = function(){
+				that.showProgress(text, done++, max)
+
+				max = done < 8 ? max + 5 
+					: max <= 50 && done < 30 ? max + 2 
+					: done > 30 ? max - 3
+					: max
+
+				// NOTE: we add 10 here to compensate for changing max value...
+				done < max+10
+					&& setTimeout(step, 200) 
+			}
+
+			setTimeout(step, 1000)
+		}], 
+
+
 	// XXX make this a toggler....
 	partitionByMonth: ['Test/',
 		function(){
