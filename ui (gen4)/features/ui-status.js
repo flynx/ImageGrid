@@ -136,7 +136,7 @@ var StatusBarActions = actions.Actions({
 										item.hasClass('global') ? 'global' : undefined)
 								}
 							})
-							.click(function(){
+							.on('click focus', function(){
 								$(this).selectText()
 							})
 							.blur(function(){
@@ -197,7 +197,7 @@ var StatusBarActions = actions.Actions({
 					.on('edit-done', function(_, text){
 						that.focusRibbon(text == '*' ? that.base : parseInt(text))
 					})
-					.click(function(){
+					.on('click focus', function(){
 						$(this).selectText()
 					})
 					.blur(function(){
