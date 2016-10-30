@@ -1181,28 +1181,27 @@ var WidgetTestActions = actions.Actions({
 			var timeout = widget.attr('close-timeout')
 			timeout && clearTimeout(JSON.parse(timeout))
 
-
+			// get the widget parts we are updating...
 			var bar = widget.find('progress')
 			var state = widget.find('.progress-details')
 
 			// XXX stub???
-			max = max ? 
+			// normalize max and value...
+			max = max != null ? 
 					(typeof(max) == typeof('str') && /[+-][0-9]+/.test(max) ? 
 						parseInt(bar.attr('max') || 0) + parseInt(max)
 					: parseInt(max))
 				: bar.attr('max')
-
-			value = value ? 
+			value = value != null ? 
 					(typeof(value) == typeof('str') && /[+-][0-9]+/.test(value) ? 
 						parseInt(bar.attr('value') || 0) + parseInt(value)
 					: parseInt(value))
 				: bar.attr('value')
-			// ignore value if not max is present + handle overflow...
-			value = max ? Math.min(value, max) : null
 
+			// format the message...
 			msg = msg ? ': '+msg : ''
 			msg = ' '+ msg 
-				+ (value && value >= max ? ' ('+max+' done)' 
+				+ (value && value >= (max || 0) ? ' ('+value+' done)' 
 					: value && max && value != max ? ' ('+ value +' of '+ max +')'
 					: ' (ready)')
 
@@ -1215,14 +1214,15 @@ var WidgetTestActions = actions.Actions({
 
 			// auto-close...
 			// XXX make this optional... 
-			if(value && value >= max){
+			if(value && value >= (max || 0)){
 				widget.attr('close-timeout', 
 					JSON.stringify(setTimeout(function(){ 
 						widget.trigger('progressClose') 
 					}, 1000)))
 			}
-		}],
 
+			// XXX what should we return??? (state, self, controller?)
+		}],
 	testProgress: ['Test/Demo progress bar...',
 		function(text){
 			var done = 0

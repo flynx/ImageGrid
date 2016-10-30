@@ -150,7 +150,7 @@ $(function(){
 		if(e == 'queued'){
 			ig.showProgress('Progress', '+0', '+1')
 
-		} else if(e == 'loaded' || e == 'done'){
+		} else if(e == 'loaded' || e == 'done' || e == 'written'){
 			ig.showProgress('Progress', '+1')
 		}
 	}}
