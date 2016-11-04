@@ -40,6 +40,8 @@ var INDEX_DIR = '.ImageGrid'
 // Skip nested indexes from tree...
 //
 var skipNested = function(paths, index_dir, logger){
+	logger = logger && logger.push('Skipping nested')
+
 	paths = paths
 		.map(function(p){ return p.split(index_dir).shift() })
 		.sort(function(a, b){ return a.length - b.length })
@@ -107,6 +109,8 @@ function(base, index_dir){
 var getIndexes =
 module.getIndexes = 
 function(base, index_dir, logger){
+	logger = logger && logger.push('Searching')
+
 	return new Promise(function(resolve, reject){
 		listIndexes(base, index_dir)
 			.on('error', function(err){
@@ -243,6 +247,8 @@ function(list){
 var groupByKeyword = 
 module.groupByKeyword = 
 function(list, from_date, logger){
+	logger = logger && logger.push('Grouping by keyword')
+
 	var index = {}
 	var queued = 0
 
@@ -328,6 +334,8 @@ function(list, from_date, logger){
 var loadSaveHistoryList =
 module.loadSaveHistoryList =
 function(path, index_dir, logger){
+	logger = logger && logger.push('Save history')
+
 	path = util.normalizePath(path)
 	index_dir = index_dir || INDEX_DIR
 
@@ -467,6 +475,8 @@ function(path, index_dir, logger){
 var loadIndex =
 module.loadIndex = 
 function(path, index_dir, from_date, logger){
+	logger = logger && logger.push('Index')
+
 	path = util.normalizePath(path)
 
 	if(index_dir && index_dir.emit != null){
@@ -921,6 +931,8 @@ var FILENAME = '${DATE}-${KEYWORD}.${EXT}'
 var writeIndex =
 module.writeIndex = 
 function(json, path, date, filename_tpl, logger){
+	logger = logger && logger.push('Index')
+
 	path = util.normalizePath(path)
 	filename_tpl = filename_tpl || FILENAME
 	// XXX for some reason this gets the unpatched node.js Date, so we 

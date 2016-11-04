@@ -366,6 +366,7 @@ var FileSystemLoaderActions = actions.Actions({
 			var that = this
 			// XXX get a logger...
 			logger = logger || this.logger
+			logger = logger && logger.push('Load')
 
 			if(path == null){
 				return
@@ -570,6 +571,7 @@ var FileSystemLoaderActions = actions.Actions({
 
 			// XXX get a logger...
 			logger = logger || this.logger
+			//logger = logger && logger.push('getImagesInPath')
 
 			var that = this
 			path = util.normalizePath(path)
@@ -641,6 +643,7 @@ var FileSystemLoaderActions = actions.Actions({
 				return
 			}
 			logger = logger || this.logger
+			logger = logger && logger.push('Load images')
 
 			var that = this
 			path = util.normalizePath(path)
@@ -692,6 +695,7 @@ var FileSystemLoaderActions = actions.Actions({
 
 			var that = this
 			logger = logger || this.logger
+			logger = logger && logger.push('Load new images')
 			path = util.normalizePath(path)
 
 			// cache the loaded images...
@@ -1105,6 +1109,7 @@ var FileSystemCommentsActions = actions.Actions({
 			}
 
 			logger = logger || this.logger
+			logger = logger && logger.push('saveComments')
 
 			var path = this.location.path
 			var comments_dir = this.config['index-dir'] +'/comments'
@@ -1126,6 +1131,7 @@ var FileSystemCommentsActions = actions.Actions({
 			}
 
 			logger = logger || this.logger
+			logger = logger && logger.push('Load comments')
 
 			var that = this
 			var loaded = this.location.loaded
@@ -1746,6 +1752,7 @@ var FileSystemWriterActions = actions.Actions({
 			var that = this
 			// XXX get a logger...
 			logger = logger || this.logger
+			logger = logger && logger.push('Save')
 
 			path = path || this.location.loaded
 			path = path && path.length == 1 ? path[0] : path 
@@ -1830,6 +1837,7 @@ var FileSystemWriterActions = actions.Actions({
 	exportIndex: ['- File/Export/Export index',
 		function(path, max_size, include_orig, logger){
 			logger = logger || this.logger
+			logger = logger && logger.push('Export index')
 
 			max_size = parseInt(max_size || this.config['export-preview-size-limit']) || null
 			// XXX make this dependant on max_size....
@@ -1953,7 +1961,8 @@ var FileSystemWriterActions = actions.Actions({
 					index_path, 
 					index.date,
 					this.config['index-filename-template'], 
-					logger || this.logger)
+					logger)
+					//logger || this.logger)
 				// set hidden file attribute on Windows...
 				.then(function(){
 					typeof(process) != 'undefined' 
@@ -1996,6 +2005,7 @@ var FileSystemWriterActions = actions.Actions({
 	exportDirs: ['- File/Export/Export ribbons as directories',
 		function(path, pattern, level_dir, size, logger){
 			logger = logger || this.logger
+			logger = logger && logger.push('Export dirs')
 			var that = this
 			var base_dir = this.location.path
 

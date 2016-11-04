@@ -143,19 +143,44 @@ $(function(){
 		ig.features.features.length, 
 		ig.features.features)
 
-	ig.logger = ig.logger || {emit: function(e, v){ 
-		console.log('    ', e, v) 
-		
-		// XXX HACK -- need meaningful status...
-		if(e == 'queued' 
-				|| e == 'found'){
-			ig.showProgress('Progress', '+0', '+1')
+	// XXX STUB...
+	ig.logger = ig.logger || {
+		root: true,
+		message: null,
 
-		} else if(e == 'loaded' || e == 'done' || e == 'written' 
-				|| e == 'skipping' || e == 'index'){
-			ig.showProgress('Progress', '+1')
-		}
-	}}
+		emit: function(e, v){ 
+			var msg = this.message
+
+			// console...
+			console.log('    '+ ((msg && msg.concat('')) || []).join(': '), e, v) 
+			
+			// progress...
+			// XXX HACK -- need meaningful status...
+			if(e == 'queued' 
+					|| e == 'found'){
+				ig.showProgress(msg || ['Progress', e], '+0', '+1')
+
+			} else if(e == 'loaded' || e == 'done' || e == 'written' 
+					|| e == 'skipping' || e == 'index'){
+				ig.showProgress(msg || ['Progress', e], '+1')
+			}
+		},
+
+		push: function(msg){
+			if(msg == null){
+				return this
+			}
+
+			var logger = Object.create(this)
+			logger.root = false
+			logger.message = logger.message == null ? [msg] : logger.message.concat([msg])
+
+			return logger
+		},
+		pop: function(){
+			return !this.__proto__.root ? this.__proto__ : this	
+		},
+	}
 
 
 	// setup the viewer...
