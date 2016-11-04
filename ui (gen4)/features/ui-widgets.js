@@ -1136,8 +1136,11 @@ var WidgetTestActions = actions.Actions({
 	// XXX shorten the nested class names...
 	// XXX revise styles...
 	showProgress: ['- Interface/Show progress bar...',
-		function(text, value, max, msg){
+		function(text, value, max){
 			var viewer = this.ribbons.viewer
+
+			var msg = text instanceof Array ? text.slice(1).join(': ') : null
+			text = text instanceof Array ? text[0] : text
 
 			// container...
 			var container = viewer.find('.progress-container')

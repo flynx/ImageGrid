@@ -146,11 +146,13 @@ $(function(){
 	ig.logger = ig.logger || {emit: function(e, v){ 
 		console.log('    ', e, v) 
 		
-		// XXX HACK...
-		if(e == 'queued'){
+		// XXX HACK -- need meaningful status...
+		if(e == 'queued' 
+				|| e == 'found'){
 			ig.showProgress('Progress', '+0', '+1')
 
-		} else if(e == 'loaded' || e == 'done' || e == 'written'){
+		} else if(e == 'loaded' || e == 'done' || e == 'written' 
+				|| e == 'skipping' || e == 'index'){
 			ig.showProgress('Progress', '+1')
 		}
 	}}
