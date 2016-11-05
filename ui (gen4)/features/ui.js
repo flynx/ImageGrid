@@ -1146,14 +1146,18 @@ module.ConfigLocalStorage = core.ImageGridFeatures.Feature({
 		// 		first to run...
 		['start.pre',
 			function(){ 
-				this.logger && this.logger.emit('loaded', 'config')
+				this.logger && this.logger
+					.push('Startup')
+						.emit('loaded', 'config')
 				this
 					.loadStoredConfig() 
 					.toggleAutoStoreConfig('on')
 			}],
 		['stop.pre',
 			function(){ 
-				this.logger && this.logger.emit('stored', 'config')
+				this.logger && this.logger
+					.push('Shutdown')
+						.emit('stored', 'config')
 				this
 					.storeConfig() 
 					.toggleAutoStoreConfig('off')
