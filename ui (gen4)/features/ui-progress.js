@@ -42,10 +42,9 @@ var ProgressActions = actions.Actions({
 	// 	.testProgress('text', '+0', '+1')
 	//
 	//
-	// XXX move configuration to .config
 	// XXX should we report errors and stoppages??? (error state??)
 	// XXX multiple containers...
-	// XXX shorten the nested class names...
+	// XXX shorten the nested css class names...
 	// XXX revise styles...
 	showProgress: ['- Interface/Show progress bar...',
 		function(text, value, max){
@@ -154,7 +153,6 @@ module.Progress = core.ImageGridFeatures.Feature({
 
 	actions: ProgressActions, 
 })
-
 
 
 
