@@ -1238,9 +1238,9 @@ var WidgetTestActions = actions.Actions({
 					focusable: true,
 				})
 
-			var data = this.data.crop(a.data.getTaggedByAll(tag), true)
+			var data = this.data.crop(this.data.getTaggedByAll(tag), true)
 
-			var b = actions.Actions()
+			var b = new core.ImageGrid()
 
 			// used switch experimental actions on (set to true) or off (unset or false)...
 			//a.experimental = true
@@ -1268,7 +1268,6 @@ var WidgetTestActions = actions.Actions({
 				// synced...
 				// do not do for actual data...
 				//.syncTags()
-				.setEmptyMsg('No images bookmarked...')
 				.fitImage(1)
 
 				// link navigation...
