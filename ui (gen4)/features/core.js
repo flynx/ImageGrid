@@ -22,16 +22,21 @@ var toggler = require('lib/toggler')
 
 /*********************************************************************/
 
-var protocolAction =
+// Make a protocol implementation action...
+//
+// For more docs see: docs for actions.js and .chainApply(..)
+//
+// XXX might be good to move this to actions.js
+var protocol =
 module.protocol = function(protocol, func){
 	return function(){
-		this[protocol].chainCall(this, func, arguments)
+		return this[protocol].chainApply(this, func, arguments)
 	}
 }
 
 
-// NOTE: if not state is set this assumes that the first state is the 
-// 		default...
+// NOTE: if no toggler state is set this assumes that the first state 
+// 		is the default...
 var makeConfigToggler = 
 module.makeConfigToggler = 
 function(attr, states, a, b){
@@ -62,6 +67,9 @@ function(attr, states, a, b){
 
 // Root ImageGrid.viewer object constructor...
 //
+// This adds:
+// 	- toggler as action compatibility
+//
 var ImageGridMetaActions =
 module.ImageGridMetaActions = {
 	// Test if the action is a Toggler...
@@ -71,6 +79,9 @@ module.ImageGridMetaActions = {
 
 	// Handle special cases where we need to get the action result early,
 	// without calling handlers...
+	//
+	// These include:
+	// 	- toggler action special command handling (like: '?', '??', ..)
 	//
 	preActionHandler: actions.doWithRootAction(function(action, name, handlers, args){
 		// Special case: do not call handlers for toggler state queries...
