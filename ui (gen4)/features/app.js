@@ -263,13 +263,13 @@ var FullScreenControllsActions = actions.Actions({
 						.addClass('fullscreen-controls buttons')
 						// minimize....
 						.append($('<div>')
-							.addClass('button')
+							.addClass('button minimize')
 							.html('_')
 							.attr('info', 'Minimize')
 							.click(function(){ that.minimize() }))
 						// fullscreen....
 						.append($('<div>')
-							.addClass('button')
+							.addClass('button fullscreen allways-shown')
 							// square...
 							//.html('&square;')
 							// diagonal arrows...
@@ -315,7 +315,24 @@ module.FullScreenControlls = core.ImageGridFeatures.Feature({
 	handlers: [
 		['toggleFullScreen', 
 			function(){
-				this.toggleFullScreenControls(this.toggleFullScreen('?'))
+				this.toggleFullScreenControls('on')
+				var fullscreen = this.toggleFullScreen('?')
+				var buttons = this.ribbons.viewer.find('.fullscreen-controls')
+				
+				// fullscreen button...
+				buttons.find('.fullscreen.button')
+					.html(fullscreen == 'on' ? '&#8601;' : '&#8599;')
+					.attr('info', fullscreen == 'on' ? 'Exit fullscreen' : 'Fullscreen')
+
+				// XXX should this be done by css???
+				if(fullscreen == 'on'){
+					buttons.find('.button:not(.allways-shown)').show()
+
+				} else {
+					buttons.find('.button:not(.allways-shown)').hide()
+				}
+
+				//this.toggleFullScreenControls(fullScreen)
 			}],
 	],
 })
