@@ -566,7 +566,8 @@ var DialogsActions = actions.Actions({
 				make.done()
 			})
 		})],
-	toggleOverlayBlur: ['Interface/',
+
+	toggleOverlayBlur: ['Interface/Toggle dialog overlay blur',
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			'overlay-blur-enabled',
