@@ -45,10 +45,6 @@
 /* NOTE: this does not include text... 
 		...need a way to go around this...
 */
-.blur>* {
-	-webkit-filter: blur(2px) saturate(0.3);
-	filter: blur(2px) saturate(0.3);
-}
 .blur>.drawer-widget {
 	-webkit-filter: none;
 	filter: none;

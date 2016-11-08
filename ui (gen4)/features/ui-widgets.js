@@ -8,6 +8,7 @@
 /*********************************************************************/
 
 var keyboard = require('lib/keyboard')
+var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -432,6 +433,8 @@ var makeDrawer = function(direction){
 var DialogsActions = actions.Actions({
 	config: {
 		'ui-default-container': 'Overlay',
+
+		'ui-overlay-blur': 'on',
 	},
 
 	// a bit of introspection...
@@ -563,6 +566,11 @@ var DialogsActions = actions.Actions({
 				make.done()
 			})
 		})],
+	toggleOverlayBlur: ['Interface/',
+		toggler.CSSClassToggler(
+			function(){ return this.ribbons.viewer }, 
+			'overlay-blur-enabled',
+			function(state){ this.config['ui-overlay-blur'] = state }) ],
 })
 
 var Dialogs = 
@@ -578,6 +586,11 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 	actions: DialogsActions,
 
 	handlers: [
+		['start',
+			function(){
+				this.config['ui-overlay-blur']
+					&& this.toggleOverlayBlur(this.config['ui-overlay-blur'])
+			}],
 		['__call__', 
 			function(res, action){
 				if(res instanceof jQuery || (res instanceof widget.Widget)){
@@ -991,6 +1004,12 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 // XXX make this not applicable to production...
 
 var WidgetTestActions = actions.Actions({
+
+	testAction: ['- Test/',
+		function(){
+			console.log('>>>', [].slice.call(arguments))
+			return function(){
+				console.log('<<<', [].slice.call(arguments)) }}],
 
 	// Usage Examples:
 	// 	.testDrawer()						- show html in base drawer...

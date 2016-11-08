@@ -27,6 +27,8 @@ var toggler = require('lib/toggler')
 // For more docs see: docs for actions.js and .chainApply(..)
 //
 // XXX might be good to move this to actions.js
+// XXX might also be a good idea to mark the actual protocol definition
+// 		and not just the implementation...
 var protocol =
 module.protocol = function(protocol, func){
 	return function(){

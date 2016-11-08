@@ -70,15 +70,29 @@
 
 /* NOTE: this does not include text... 
 		...need a way to go around this...
+
 */
 .blur>* {
-	-webkit-filter: blur(2px) saturate(0.3);
-	filter: blur(2px) saturate(0.3);
+	/*-webkit-filter: blur(2px) saturate(0.3);
+	filter: blur(2px) saturate(0.3);*/
+	-webkit-filter: saturate(0.5) brightness(0.8);
+	filter: saturate(0.5) brightness(0.8);
 }
 .blur>.overlay-widget {
-	-webkit-filter: blur(0.8px) saturate(0.3);
-	filter: blur(0.8px) saturate(0.3);
+	/*-webkit-filter: blur(0.8px) saturate(0.3);
+	filter: blur(0.8px) saturate(0.3);*/
+	-webkit-filter: saturate(0.5) brightness(0.8);
+	filter: saturate(0.5) brightness(0.8);
 }
+.overlay-blur-enabled.blur>* {
+	-webkit-filter: blur(2px) saturate(0.5) brightness(0.8);
+	filter: blur(2px) saturate(0.5) brightness(0.8);
+}
+.overlay-blur-enabled.blur>.overlay-widget {
+	-webkit-filter: blur(0.8px) saturate(0.5) brightness(0.8);
+	filter: blur(0.8px) saturate(0.5) brightness(0.8);
+}
+
 .blur>.overlay-widget:last-child {
 	-webkit-filter: none;
 	filter: none;
