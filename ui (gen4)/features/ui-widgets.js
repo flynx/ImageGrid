@@ -30,6 +30,65 @@ var browseWalk = require('lib/widget/browse-walk')
 
 /*********************************************************************/
 
+// Format:
+// 	{
+// 		<button-text>: [
+// 			<class>, // optional
+// 			<info>, // optional
+// 			<code>,
+// 		],
+// 		...
+// 	}
+var makeButtonControls =
+module.makeButtonControls =
+function(context, cls, data){
+	// remove old versions...
+	context.ribbons.viewer.find('.'+cls).remove()
+
+	// make container...
+	var controls = $('<div>')
+		.addClass('buttons '+ cls)
+		.on('mouseover', function(){
+			var t = $(event.target)
+
+			var info = t.attr('info') || t.parents('[info]').attr('info') || ''
+
+			context.showStatusBarInfo(info)
+		})
+		.on('mouseout', function(){
+			context.showStatusBarInfo()
+		})
+
+	// make buttons...
+	Object.keys(data).forEach(function(k){
+		var e = data[k].slice()
+		var code = e.pop()
+
+		code = typeof(code) == typeof('str') ?
+			keyboard.parseActionCall(code) 
+			: code
+
+		var func = code instanceof Function ? 
+			code 
+			: function(){ 
+				context[code.action].apply(context, code.arguments) }
+
+		var cls = e[0] || code.action || '' 
+		var doc = e[1] || code.doc || e[0] || ''
+
+		controls
+			.append($('<div>')
+				.addClass('button ' + cls)
+				.html(k)
+				.attr('info', doc)
+				.click(func))
+	})
+
+	controls
+		.appendTo(context.ribbons.viewer)
+}
+
+
 // XXX make the selector more accurate...
 // 		...at this point this will select the first elem with text which
 // 		can be a different elem...
@@ -1004,9 +1063,16 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // XXX make this not applicable to production...
 
+
 var WidgetTestActions = actions.Actions({
 	config: {
-		'main-controls': 'on',
+		'main-controls-state': 'on',
+		'main-controls': {
+			'&#x2630;': ['menu',
+				'browseActions -- Show action menu...'],
+			'C<sub/>': ['crop',
+				'browseActions: "Crop/" -- Show crop menu...'],
+		},
 	},
 
 	testAction: ['- Test/',
@@ -1159,8 +1225,6 @@ var WidgetTestActions = actions.Actions({
 			setTimeout(step, 1000)
 		}], 
 
-	// XXX this essentially mirrors app's .toggleFullScreenControls(..)
-	// 		...need to make a buttons generator... 
 	// XXX move this out...
 	// XXX also see handlers....
 	toggleMainControls: ['Interface/',
@@ -1169,54 +1233,14 @@ var WidgetTestActions = actions.Actions({
 				return this.ribbons.viewer.find('.main-controls').length > 0 ? 'on' : 'off' },
 			['off', 'on'],
 			function(state){
-				// clear the controls....
-				this.ribbons.viewer.find('.main-controls').remove()
-
 				if(state == 'on'){
-					var that = this
+					var config = this.config['main-controls']
 
-					$('<div>')
-						.addClass('main-controls buttons')
-						// menu....
-						.append($('<div>')
-							.addClass('button')
-							.html('&#x2630;')
-							.attr('info', 'Show action menu...')
-							// XXX show this in status bar... (???)
-							.click(function(){ that.browseActions() }))
-						/* 
-						// XXX make the rest configurable... (???)
-						.append($('<div>')
-							.addClass('button')
-							.html('O')
-							.click(function(){  }))
-						.append($('<div>')
-							.addClass('button')
-							.html('H')
-							.click(function(){  }))
-						//*/
-						// crop menu/status....
-						.append($('<div>')
-							.addClass('button crop')
-							.html('C')
-							// crop status...
-							.append($('<sub/>')
-								.addClass('status'))
-							.attr('info', 'Show crop menu...')
-							.click(function(){ that.browseActions('Crop/') }))
+					config 
+						&& makeButtonControls(this, 'main-controls', config)
 
-						.on('mouseover', function(){
-							var t = $(event.target)
-
-							var info = t.attr('info') || t.parents('[info]').attr('info') || ''
-
-							that.showStatusBarInfo(info)
-						})
-						.on('mouseout', function(){
-							that.showStatusBarInfo()
-						})
-
-						.appendTo(this.ribbons.viewer)
+				} else {
+					this.ribbons.viewer.find('.main-controls').remove()
 				}
 			})],
 
@@ -1430,11 +1454,11 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 		// main controls stuff...
 		['start', 
 			function(){ 
-				this.toggleMainControls(this.config['main-controls'] || 'on') }],
+				this.toggleMainControls(this.config['main-controls-state'] || 'on') }],
 		['load reload', 
 			function(){
 				// update crop button status...
-				$('.main-controls.buttons .crop.button .status')
+				$('.main-controls.buttons .crop.button sub')
 					.text(this.crop_stack ? this.crop_stack.length : '') }]
 	],
 })

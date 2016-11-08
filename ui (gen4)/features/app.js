@@ -18,6 +18,8 @@ var toggler = require('lib/toggler')
 var core = require('features/core')
 var base = require('features/base')
 
+var widgets = require('features/ui-widgets')
+
 
 
 /*********************************************************************/
@@ -247,54 +249,31 @@ module.AppControl = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Fullscreen app control buttons...
 var FullScreenControllsActions = actions.Actions({
+	config: {
+		'fullscreen-controls': {
+			'_': ['minimize', 
+				'minimize -- Minimize'],
+			'&#8601;': ['fullscreen allways-shown', 
+				'toggleFullScreen -- Toggle fullscreen'],
+			'&times;': ['close', 
+				'close -- Quit'],
+		},
+	},
+
 	toggleFullScreenControls: ['Interface/',
 		toggler.Toggler(null,
 			function(){ 
 				return this.ribbons.viewer.find('.fullscreen-controls').length > 0 ? 'on' : 'off' },
 			['off', 'on'],
 			function(state){
-				// clear the controls....
-				this.ribbons.viewer.find('.fullscreen-controls').remove()
-
 				if(state == 'on'){
-					var that = this
+					var config = this.config['fullscreen-controls']
 
-					$('<div>')
-						.addClass('fullscreen-controls buttons')
-						// minimize....
-						.append($('<div>')
-							.addClass('button minimize')
-							.html('_')
-							.attr('info', 'Minimize')
-							.click(function(){ that.minimize() }))
-						// fullscreen....
-						.append($('<div>')
-							.addClass('button fullscreen allways-shown')
-							// square...
-							//.html('&square;')
-							// diagonal arrows...
-							.html('&#8601;')
-							.attr('info', 'Toggle fullscreen')
-							.click(function(){ that.toggleFullScreen() }))
-						// close...
-						.append($('<div>')
-							.addClass('button close')
-							.html('&times;')
-							.attr('info', 'Close')
-							.click(function(){ that.close() }))
+					config
+						&& widgets.makeButtonControls(this, 'fullscreen-controls', config)
 
-						.on('mouseover', function(){
-							var t = $(event.target)
-
-							var info = t.attr('info') || t.parents('[info]').attr('info') || ''
-
-							that.showStatusBarInfo(info)
-						})
-						.on('mouseout', function(){
-							that.showStatusBarInfo()
-						})
-
-						.appendTo(this.ribbons.viewer)
+				} else {
+					this.ribbons.viewer.find('.fullscreen-controls').remove()
 				}
 			})],
 })
@@ -316,6 +295,7 @@ module.FullScreenControlls = core.ImageGridFeatures.Feature({
 		['toggleFullScreen', 
 			function(){
 				this.toggleFullScreenControls('on')
+
 				var fullscreen = this.toggleFullScreen('?')
 				var buttons = this.ribbons.viewer.find('.fullscreen-controls')
 				
