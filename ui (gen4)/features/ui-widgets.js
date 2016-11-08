@@ -1005,6 +1005,9 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 // XXX make this not applicable to production...
 
 var WidgetTestActions = actions.Actions({
+	config: {
+		'main-controls': 'on',
+	},
 
 	testAction: ['- Test/',
 		function(){
@@ -1156,6 +1159,64 @@ var WidgetTestActions = actions.Actions({
 			setTimeout(step, 1000)
 		}], 
 
+	// XXX move this out...
+	// XXX also see handlers....
+	toggleMainControls: ['Interface/',
+		toggler.Toggler(null,
+			function(){ 
+				return this.ribbons.viewer.find('.main-controls').length > 0 ? 'on' : 'off' },
+			['off', 'on'],
+			function(state){
+				// clear the controls....
+				this.ribbons.viewer.find('.main-controls').remove()
+
+				if(state == 'on'){
+					var that = this
+
+					$('<div>')
+						.addClass('main-controls buttons')
+						// menu....
+						.append($('<div>')
+							.addClass('button')
+							.html('&#x2630;')
+							.attr('info', 'Show action menu...')
+							// XXX show this in status bar... (???)
+							.click(function(){ that.browseActions() }))
+						/* 
+						// XXX make the rest configurable... (???)
+						.append($('<div>')
+							.addClass('button')
+							.html('O')
+							.click(function(){  }))
+						.append($('<div>')
+							.addClass('button')
+							.html('H')
+							.click(function(){  }))
+						//*/
+						// crop menu/status....
+						.append($('<div>')
+							.addClass('button crop')
+							.html('C')
+							// crop status...
+							.append($('<sub/>')
+								.addClass('status'))
+							.attr('info', 'Show crop menu...')
+							.click(function(){ that.browseActions('Crop/') }))
+
+						.on('mouseover', function(){
+							var t = $(event.target)
+
+							var info = t.attr('info') || t.parents('[info]').attr('info') || ''
+
+							that.showStatusBarInfo(info)
+						})
+						.on('mouseout', function(){
+							that.showStatusBarInfo()
+						})
+
+						.appendTo(this.ribbons.viewer)
+				}
+			})],
 
 	// XXX make this a toggler....
 	partitionByMonth: ['Test/',
@@ -1362,6 +1423,18 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 	],
 
 	actions: WidgetTestActions,
+
+	handlers: [
+		// main controls stuff...
+		['start', 
+			function(){ 
+				this.toggleMainControls(this.config['main-controls'] || 'on') }],
+		['load reload', 
+			function(){
+				// update crop button status...
+				$('.main-controls.buttons .crop.button .status')
+					.text(this.crop_stack ? this.crop_stack.length : '') }]
+	],
 })
 
 

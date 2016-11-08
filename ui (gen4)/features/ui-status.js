@@ -509,6 +509,19 @@ var StatusBarActions = actions.Actions({
 
 				this.updateStatusBar()
 			})],
+
+	// XXX revise...
+	showStatusBarInfo: ['- Interface/',
+		function(text){
+			var bar = this.ribbons.viewer.find('.state-indicator-container.global-info') 
+
+			if(text){
+				bar.find('.info').text(text)
+
+			} else {
+				bar.find('.info').empty()
+			}
+		}],
 })
 
 var StatusBar = 

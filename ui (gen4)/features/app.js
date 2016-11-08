@@ -260,11 +260,12 @@ var FullScreenControllsActions = actions.Actions({
 					var that = this
 
 					$('<div>')
-						.addClass('fullscreen-controls')
+						.addClass('fullscreen-controls buttons')
 						// minimize....
 						.append($('<div>')
 							.addClass('button')
 							.html('_')
+							.attr('info', 'Minimize')
 							.click(function(){ that.minimize() }))
 						// fullscreen....
 						.append($('<div>')
@@ -273,12 +274,26 @@ var FullScreenControllsActions = actions.Actions({
 							//.html('&square;')
 							// diagonal arrows...
 							.html('&#8601;')
+							.attr('info', 'Toggle fullscreen')
 							.click(function(){ that.toggleFullScreen() }))
 						// close...
 						.append($('<div>')
 							.addClass('button close')
 							.html('&times;')
+							.attr('info', 'Close')
 							.click(function(){ that.close() }))
+
+						.on('mouseover', function(){
+							var t = $(event.target)
+
+							var info = t.attr('info') || t.parents('[info]').attr('info') || ''
+
+							that.showStatusBarInfo(info)
+						})
+						.on('mouseout', function(){
+							that.showStatusBarInfo()
+						})
+
 						.appendTo(this.ribbons.viewer)
 				}
 			})],
@@ -292,6 +307,7 @@ module.FullScreenControlls = core.ImageGridFeatures.Feature({
 	tag: 'ui-fullscreen-controls',
 	depends: [
 		'ui-app-control',
+		'ui-status',
 	],
 
 	actions: FullScreenControllsActions,
