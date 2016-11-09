@@ -31,6 +31,8 @@
 // 	- <index>		: 0 for 'off' and 1 for 'on' (see below)
 // 	- 'on'			: switch mode on -- add class
 // 	- 'off'			: switch mode off -- remove class
+// 	- 'next'		: switch to next state (default)
+// 	- 'prev'		: switch to previous state
 // 	- '!'			: reload current state, same as toggler(toggler('?'))
 // 	- '?'			: return current state ('on'|'off')
 // 	- '??'			: return a list of supported states
@@ -38,6 +40,8 @@
 // In forms 2 and 3, if class_list is a list of strings, the <action> can be:
 //  - <index>		: explicitly set the state to index in class_list
 //  - <class-name>	: explicitly set a class from the list
+// 	- 'next'		: switch to next state (default)
+// 	- 'prev'		: switch to previous state
 // 	- '!'			: reload current state, same as toggler(toggler('?'))
 // 	- '?'			: return current state ('on'|'off')
 // 	- '??'			: return a list of supported states
@@ -49,9 +53,6 @@
 // action argument given is invalid.
 //
 // NOTE: action '?' is handled internally and not passed to the callbacks.
-// NOTE: there is a special action 'next', passing it will have the same
-// 		effect as not passing any action -- we will change to the next 
-// 		state.
 // NOTE: if it is needed to apply this to an explicit target but with 
 // 		no explicit action, just pass 'next' as the second argument.
 // NOTE: a special class name 'none' means no class is set, if it is present 
@@ -168,7 +169,7 @@ function(elem, state_accessor, states, callback_a, callback_b){
 		if(typeof(states_getter) == typeof(function(){})){
 			// get the states...
 			var states = states_getter.call(this)
-			var states = typeof(states) == typeof('str') ? 
+			states = typeof(states) == typeof('str') ? 
 				['none', states] 
 				: states
 		}
@@ -195,7 +196,10 @@ function(elem, state_accessor, states, callback_a, callback_b){
 			return states
 
 		// we need to get the current state...
-		} else if(action == null || action == '?' || action == '!'){
+		} else if(action == null 
+				|| action == 'prev' 
+				|| action == '?' 
+				|| action == '!'){
 			// get current state...
 			var cur = state_accessor.call(this, e)
 
@@ -225,10 +229,18 @@ function(elem, state_accessor, states, callback_a, callback_b){
 
 		var state = bool_action ? states[action == 'off' ? 0 : 1] : action
 		// get the right class...
-		if(action == null){
-			var i = states.indexOf(cur)+1
-			i = i == -1 ? 0 : i
-			i = i == states.length ? 0 : i
+		if(action == null || action == 'prev'){
+			if(action == 'prev'){
+				var i = states.indexOf(cur)-1
+				i = i <= -1 ? states.length-1 : i
+
+			} else {
+				var i = states.indexOf(cur)+1
+				//i = i == -1 ? 0 : i
+				i = i == states.length ? 0 : i
+			}
+
+
 			state = states[i]
 
 			if(bool_action){

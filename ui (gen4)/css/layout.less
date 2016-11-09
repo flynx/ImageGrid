@@ -307,6 +307,13 @@ button:hover {
 
 	//z-index: 9999;
 }
+.light .buttons {
+	opacity: 0.5;
+}
+.dark .buttons {
+	opacity: 0.2;
+}
+
 .buttons:hover {
 	opacity: 1;
 }
@@ -316,8 +323,13 @@ button:hover {
 	display: inline-block;
 	color: silver;
 
-	width: 40px;
+	box-sizing: border-box;
+
+	min-width: 40px;
 	height: 40px;
+
+	padding-left: 5px;
+	padding-right: 5px;
 
 	text-align: center;
 	line-height: 40px;

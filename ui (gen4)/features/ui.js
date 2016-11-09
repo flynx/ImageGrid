@@ -162,8 +162,8 @@ module.ViewerActions = actions.Actions({
 
 		// Supported themes...
 		'themes': [
-			'gray', 
 			'dark', 
+			'gray', 
 			'light',
 		],
 
@@ -384,11 +384,24 @@ module.ViewerActions = actions.Actions({
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config.themes },
 			function(state){ this.config.theme = state }) ],
+	lighterTheme: ['Interface/Theme/Lighter',
+		function(){
+			var themes = this.config.themes
+			var i = themes.indexOf(this.toggleTheme('?'))
+			this.toggleTheme(Math.min(i+1, themes.length-1))
+		}],
+	darkerTheme: ['Interface/Theme/Darker',
+		function(){
+			var themes = this.config.themes
+			var i = themes.indexOf(this.toggleTheme('?'))
+			this.toggleTheme(Math.max(0, i-1))
+		}],
 	toggleRibbonTheme: ['Interface/Theme/Toggle ribbon theme', 
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config['ribbon-themes'] },
 			function(state){ this.config['ribbon-theme'] = state }) ],
+
 
 	/*
 	setEmptyMsg: ['- Interface/Set message to be displayed when nothing is loaded.',

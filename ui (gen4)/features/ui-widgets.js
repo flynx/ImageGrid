@@ -53,10 +53,12 @@ function(context, cls, data){
 
 			var info = t.attr('info') || t.parents('[info]').attr('info') || ''
 
-			context.showStatusBarInfo(info)
+			context.showStatusBarInfo
+				&& context.showStatusBarInfo(info)
 		})
 		.on('mouseout', function(){
-			context.showStatusBarInfo()
+			context.showStatusBarInfo
+				&& context.showStatusBarInfo()
 		})
 
 	// make buttons...
@@ -1061,20 +1063,78 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
-// XXX make this not applicable to production...
-
-
-var WidgetTestActions = actions.Actions({
+	
+var MainControlsActions = actions.Actions({
 	config: {
 		'main-controls-state': 'on',
 		'main-controls': {
 			'&#x2630;': ['menu',
-				'browseActions -- Show action menu...'],
+				'browseActions -- Action menu...'],
+			//'Crop<sub/>': ['crop',
 			'C<sub/>': ['crop',
-				'browseActions: "Crop/" -- Show crop menu...'],
+				'browseActions: "Crop/" -- Crop menu...'],
+			/*
+			//'Mark': ['marks',
+			'M': ['marks',
+				'browseActions: "Mark/" -- Mark menu...'],
+			//*/
 		},
 	},
 
+	toggleMainControls: ['Interface/',
+		toggler.Toggler(null,
+			function(){ 
+				return this.ribbons.viewer.find('.main-controls').length > 0 ? 'on' : 'off' },
+			['off', 'on'],
+			function(state){
+				if(state == 'on'){
+					var config = this.config['main-controls']
+
+					config 
+						&& makeButtonControls(this, 'main-controls', config)
+
+				} else {
+					this.ribbons.viewer.find('.main-controls').remove()
+				}
+			})],
+})
+
+var BrowseActions = 
+module.BrowseActions = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-main-controls',
+	depends: [
+		'ui',
+	],
+	suggested: [
+		// needed for reporting info in .makeButtonControls(..)
+		'ui-status-bar',
+	],
+
+	actions: MainControlsActions,
+
+	handlers: [
+		// main controls stuff...
+		['start', 
+			function(){ 
+				this.toggleMainControls(this.config['main-controls-state'] || 'on') }],
+		['load reload', 
+			function(){
+				// update crop button status...
+				$('.main-controls.buttons .crop.button sub')
+					.text(this.crop_stack ? this.crop_stack.length : '') }]
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+// XXX make this not applicable to production...
+
+
+var WidgetTestActions = actions.Actions({
 	testAction: ['- Test/',
 		function(){
 			console.log('>>>', [].slice.call(arguments))
@@ -1224,25 +1284,6 @@ var WidgetTestActions = actions.Actions({
 
 			setTimeout(step, 1000)
 		}], 
-
-	// XXX move this out...
-	// XXX also see handlers....
-	toggleMainControls: ['Interface/',
-		toggler.Toggler(null,
-			function(){ 
-				return this.ribbons.viewer.find('.main-controls').length > 0 ? 'on' : 'off' },
-			['off', 'on'],
-			function(state){
-				if(state == 'on'){
-					var config = this.config['main-controls']
-
-					config 
-						&& makeButtonControls(this, 'main-controls', config)
-
-				} else {
-					this.ribbons.viewer.find('.main-controls').remove()
-				}
-			})],
 
 	// XXX make this a toggler....
 	partitionByMonth: ['Test/',
@@ -1449,18 +1490,6 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 	],
 
 	actions: WidgetTestActions,
-
-	handlers: [
-		// main controls stuff...
-		['start', 
-			function(){ 
-				this.toggleMainControls(this.config['main-controls-state'] || 'on') }],
-		['load reload', 
-			function(){
-				// update crop button status...
-				$('.main-controls.buttons .crop.button sub')
-					.text(this.crop_stack ? this.crop_stack.length : '') }]
-	],
 })
 
 

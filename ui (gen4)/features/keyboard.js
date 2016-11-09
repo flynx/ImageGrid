@@ -266,9 +266,15 @@ module.GLOBAL_KEYBOARD = {
 		'#8':'fitImage: 8 -- Fit 8 images',
 		'#9': 'fitImage: 9 -- Fit 9 images',
 		
-		'+': 'zoomIn',
+		'+': {
+			default: 'zoomIn',
+			ctrl: 'lighterTheme!',
+		},
 		'=': '+',
-		'-': 'zoomOut',
+		'-': {
+			default: 'zoomOut',
+			ctrl: 'darkerTheme!',
+		},
 
 		F2: {
 			default: 'cropRibbon',
@@ -305,6 +311,8 @@ module.GLOBAL_KEYBOARD = {
 		B: {
 			default: 'toggleBookmark',
 			ctrl: 'toggleTheme!',
+			'ctrl+shift': 'toggleTheme!: "prev"',
+
 			alt: 'browseActions: "/Bookmark/" -- Show bookmark menu',
 
 			// XXX not sure if this is the right way to go...

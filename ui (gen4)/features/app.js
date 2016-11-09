@@ -286,7 +286,10 @@ module.FullScreenControlls = core.ImageGridFeatures.Feature({
 	tag: 'ui-fullscreen-controls',
 	depends: [
 		'ui-app-control',
-		'ui-status',
+	],
+	suggested: [
+		// needed for reporting info in .makeButtonControls(..)
+		'ui-status-bar',
 	],
 
 	actions: FullScreenControllsActions,

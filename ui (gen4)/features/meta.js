@@ -81,6 +81,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'external-editor',
 
 	// chrome...
+	'ui-main-controls',
 	'ui-progress',
 	'ui-status-log',
 	'ui-scale',
