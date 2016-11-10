@@ -42,12 +42,14 @@ var browseWalk = require('lib/widget/browse-walk')
 var makeButtonControls =
 module.makeButtonControls =
 function(context, cls, data){
+	cls = cls instanceof Array ? cls : cls.split(/\s+/g)
+
 	// remove old versions...
-	context.ribbons.viewer.find('.'+cls).remove()
+	context.ribbons.viewer.find('.'+ cls.join('.')).remove()
 
 	// make container...
 	var controls = $('<div>')
-		.addClass('buttons '+ cls)
+		.addClass('buttons '+ cls.join('.'))
 		.on('mouseover', function(){
 			var t = $(event.target)
 
@@ -89,6 +91,30 @@ function(context, cls, data){
 	controls
 		.appendTo(context.ribbons.viewer)
 }
+
+var makeButtonControlsToggler =
+module.makeButtonControlsToggler =
+function(cls, cfg){
+	cls = cls instanceof Array ? cls : cls.split(/\s+/g)
+	cfg = cfg || cls[0]
+
+	return toggler.Toggler(null,
+		function(){ 
+			return this.ribbons.viewer.find('.'+ cls.join('.')).length > 0 ? 'on' : 'off' },
+		['off', 'on'],
+		function(state){
+			if(state == 'on'){
+				var config = this.config[cfg]
+
+				config 
+					&& makeButtonControls(this, cls, config)
+
+			} else {
+				this.ribbons.viewer.find('.'+ cls.join('.')).remove()
+			}
+		})
+}
+
 
 
 // XXX make the selector more accurate...
@@ -1082,25 +1108,11 @@ var MainControlsActions = actions.Actions({
 	},
 
 	toggleMainControls: ['Interface/',
-		toggler.Toggler(null,
-			function(){ 
-				return this.ribbons.viewer.find('.main-controls').length > 0 ? 'on' : 'off' },
-			['off', 'on'],
-			function(state){
-				if(state == 'on'){
-					var config = this.config['main-controls']
-
-					config 
-						&& makeButtonControls(this, 'main-controls', config)
-
-				} else {
-					this.ribbons.viewer.find('.main-controls').remove()
-				}
-			})],
+		makeButtonControlsToggler('main-controls')],
 })
 
-var BrowseActions = 
-module.BrowseActions = core.ImageGridFeatures.Feature({
+var MainControls = 
+module.MainControls = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 

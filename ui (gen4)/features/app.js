@@ -261,21 +261,7 @@ var FullScreenControllsActions = actions.Actions({
 	},
 
 	toggleFullScreenControls: ['Interface/',
-		toggler.Toggler(null,
-			function(){ 
-				return this.ribbons.viewer.find('.fullscreen-controls').length > 0 ? 'on' : 'off' },
-			['off', 'on'],
-			function(state){
-				if(state == 'on'){
-					var config = this.config['fullscreen-controls']
-
-					config
-						&& widgets.makeButtonControls(this, 'fullscreen-controls', config)
-
-				} else {
-					this.ribbons.viewer.find('.fullscreen-controls').remove()
-				}
-			})],
+		widgets.makeButtonControlsToggler('fullscreen-controls')],
 })
 
 var FullScreenControlls = 
