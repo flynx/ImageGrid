@@ -92,15 +92,25 @@ function(context, cls, data){
 		.appendTo(context.ribbons.viewer)
 }
 
+// XXX write docs:
+// 		- cls can be 
+// 			- a single class (str)
+// 			- space separated multiple classes (str)
+// 			- list of classes
+// 		- if cfg is not given then cls[0] is used for it
+// 		- parent can be an element, a getter function or null (defaults to viewer)
 var makeButtonControlsToggler =
 module.makeButtonControlsToggler =
-function(cls, cfg){
+function(cls, cfg, parent){
 	cls = cls instanceof Array ? cls : cls.split(/\s+/g)
 	cfg = cfg || cls[0]
 
 	return toggler.Toggler(null,
 		function(){ 
-			return this.ribbons.viewer.find('.'+ cls.join('.')).length > 0 ? 'on' : 'off' },
+			parent = parent == null ? this.ribbons.viewer
+				: parent instanceof Function ? parent.call(this) 
+				: parent
+			return parent.find('.'+ cls.join('.')).length > 0 ? 'on' : 'off' },
 		['off', 'on'],
 		function(state){
 			if(state == 'on'){
