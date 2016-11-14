@@ -1936,6 +1936,9 @@ var FileSystemWriterActions = actions.Actions({
 								.catch(function(err){
 									logger && logger.emit('error', err) })
 								.then(function(){
+									// XXX
+									logger && logger.emit('queued', to)
+
 									return copy(from, to)
 										// XXX do we need to have both of this 
 										// 		and the above .catch(..) or can
@@ -2105,6 +2108,8 @@ var FileSystemWriterActions = actions.Actions({
 									// XXX
 
 								var to = img_dir +'/'+ name
+
+								logger && logger.emit('queued', to)
 
 								return copy(from, to)
 									.then(function(){
