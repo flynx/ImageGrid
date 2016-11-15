@@ -1100,7 +1100,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 	
-var ControlsActions = actions.Actions({
+var ButtonsActions = actions.Actions({
 	config: {
 		'main-buttons-state': 'on',
 		'main-buttons': {
@@ -1114,6 +1114,7 @@ var ControlsActions = actions.Actions({
 			'M': ['marks',
 				'browseActions: "Mark/" -- Mark menu...'],
 			//*/
+			//'<i>ImageGrid.Viewer</i>': ['title', ''],
 		},
 
 		// XXX not sure about these yet...
@@ -1121,23 +1122,48 @@ var ControlsActions = actions.Actions({
 		'secondary-buttons': {
 			/*
 			'Z<sub/>': ['zoom',
-				'browseActions: "Zoom/" -- Zoom out'],
+				'browseActions: "Zoom/" -- Zoom menu...'],
 			*/
 			'+': ['zoom-in',
 				'zoomIn -- Zoom in'],
 			'-': ['zoom-out',
 				'zoomOut -- Zoom out'],
 		},
+
+		'side-buttons-left-state': 'off',
+		'side-buttons-left': {
+			'-': ['zoom-out', 'zoomOut -- Zoom out'],
+			'^': ['up', 'shiftImageUp -- Shift image up'],
+			'<': ['left', 'prevImage -- Focus previous image'],
+			'v': ['down', 'shiftImageDown -- Shift image down'],
+		},
+		'side-buttons-right-state': 'off',
+		'side-buttons-right': {
+			'+': ['zoom-in', 'zoomIn -- Zoom in'],
+			'^': ['up', 'shiftImageUp -- Shift image up'],
+			'>': ['right', 'nextImage -- Focus next image'],
+			'v': ['down', 'shiftImageDown -- Shift image down'],
+		},
 	},
 
-	toggleMainButtons: ['Interface/',
+	toggleMainButtons: ['Interface/Toggle main buttons',
 		makeButtonControlsToggler('main-buttons')],
-	toggleSecondaryButtons: ['Interface/',
+	toggleSecondaryButtons: ['Interface/Toggle secondary buttons',
 		makeButtonControlsToggler('secondary-buttons')],
+
+	// XXX make this a toggler...
+	toggleSideButtons: ['Interface/', (function(){
+		var left = makeButtonControlsToggler('side-buttons-left')
+		var right = makeButtonControlsToggler('side-buttons-right')
+		return function(){
+			left.apply(this, arguments) 
+			return right.apply(this, arguments) 
+		}
+	})()],
 })
 
-var Controls = 
-module.Controls = core.ImageGridFeatures.Feature({
+var Buttons = 
+module.Buttons = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -1150,7 +1176,7 @@ module.Controls = core.ImageGridFeatures.Feature({
 		'ui-status-bar',
 	],
 
-	actions: ControlsActions,
+	actions: ButtonsActions,
 
 	handlers: [
 		['start', 

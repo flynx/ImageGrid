@@ -379,8 +379,47 @@ button:hover {
 }
 
 
+/* side buttons... */
+.side-buttons-left,
+.side-buttons-right {
+	width: 80px;
+	height: 100%;
 
+	background: rgba(0, 0, 0, 0.3);
 
+	z-index: 900;
+}
+.side-buttons-left {
+	left: 0px;
+}
+.side-buttons-right {
+	right: 0px;
+}
+
+.side-buttons-left .button,
+.side-buttons-right .button {
+	display: flex;
+	justify-content:center;
+	align-content:center;
+	flex-direction:column;
+
+	width: 80px;
+	height: 33.3%;
+}
+.side-buttons-left .button:nth-child(1),
+.side-buttons-left .button:nth-child(2),
+.side-buttons-right .button:nth-child(1),
+.side-buttons-right .button:nth-child(2) {
+	height: 16.65%;
+}
+.side-buttons-left .button,
+.side-buttons-right .button {
+	border-bottom: solid 1px rgba(255, 255, 255, 0.3);
+}
+.side-buttons-left .button:last-child,
+.side-buttons-right .button:last-child {
+	border-bottom: none; 
+}
 
 
 /********************************************************** Viewer ***/
@@ -1389,6 +1428,8 @@ stretching in width... */
 	overflow: hidden;
 
 	cursor: pointer;
+
+	z-index: 9999;
 }
 .up-indicator:after,
 .down-indicator:after {

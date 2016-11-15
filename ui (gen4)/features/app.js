@@ -260,7 +260,7 @@ var AppControllsActions = actions.Actions({
 		},
 	},
 
-	toggleAppButtons: ['Interface/',
+	toggleAppButtons: ['Interface/Toggle App control buttons',
 		widgets.makeButtonControlsToggler('app-buttons')],
 })
 
