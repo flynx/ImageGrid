@@ -1929,14 +1929,22 @@ var FileSystemWriterActions = actions.Actions({
 							// XXX use queue for progress reporting...
 							logger && logger.emit('queued', to)
 
-							// XXX do we queue these or let the OS handle it???
-							// 		...needs testing, if node's fs queues the io
-							// 		internally then we do not need to bother...
-							queue.push(copy(from, to)
-								.then(function(){
-									logger && logger.emit('done', to) })
-								.catch(function(err){
-									logger && logger.emit('error', err) }))
+							// destination exists...
+							if(fs.existsSync(to)){
+								logger && logger.emit('skipping', to)
+
+							// copy...
+							} else {
+								// XXX do we queue these or let the OS handle it???
+								// 		...needs testing, if node's fs queues the io
+								// 		internally then we do not need to bother...
+								queue.push(copy(from, to)
+									.then(function(){
+										logger && logger.emit('done', to) })
+									.catch(function(err){
+										logger && logger.emit('error', err)
+									}))
+							}
 						})
 				}
 			})
@@ -2098,11 +2106,17 @@ var FileSystemWriterActions = actions.Actions({
 
 								logger && logger.emit('queued', to)
 
-								return copy(from, to)
-									.then(function(){
-										logger && logger.emit('done', to) })
-									.catch(function(err){
-										logger && logger.emit('error', err) })
+								// destination exists...
+								if(fs.existsSync(to)){
+									logger && logger.emit('skipping', to)
+
+								} else {
+									return copy(from, to)
+										.then(function(){
+											logger && logger.emit('done', to) })
+										.catch(function(err){
+											logger && logger.emit('error', err) })
+								}
 							})
 						})
 
