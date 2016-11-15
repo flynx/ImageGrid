@@ -1130,19 +1130,19 @@ var ButtonsActions = actions.Actions({
 				'zoomOut -- Zoom out'],
 		},
 
-		'side-buttons-left-state': 'off',
+		'side-buttons-state': 'off',
+
 		'side-buttons-left': {
 			'-': ['zoom-out', 'zoomOut -- Zoom out'],
-			'^': ['up', 'shiftImageUp -- Shift image up'],
-			'<': ['left', 'prevImage -- Focus previous image'],
-			'v': ['down', 'shiftImageDown -- Shift image down'],
+			'&#8613;': ['up', 'shiftImageUp -- Shift image up'],
+			'&#10633;': ['left', 'prevImage -- Focus previous image'],
+			'&#8615;': ['down', 'shiftImageDown -- Shift image down'],
 		},
-		'side-buttons-right-state': 'off',
 		'side-buttons-right': {
 			'+': ['zoom-in', 'zoomIn -- Zoom in'],
-			'^': ['up', 'shiftImageUp -- Shift image up'],
-			'>': ['right', 'nextImage -- Focus next image'],
-			'v': ['down', 'shiftImageDown -- Shift image down'],
+			'&#8613;': ['up', 'shiftImageUp -- Shift image up'],
+			'&#10634;': ['right', 'nextImage -- Focus next image'],
+			'&#8615;': ['down', 'shiftImageDown -- Shift image down'],
 		},
 	},
 
@@ -1151,14 +1151,16 @@ var ButtonsActions = actions.Actions({
 	toggleSecondaryButtons: ['Interface/Toggle secondary buttons',
 		makeButtonControlsToggler('secondary-buttons')],
 
-	// XXX make this a toggler...
-	toggleSideButtons: ['Interface/', (function(){
+	toggleSideButtons: ['Interface/Toggle side buttons', (function(){
 		var left = makeButtonControlsToggler('side-buttons-left')
 		var right = makeButtonControlsToggler('side-buttons-right')
-		return function(){
-			left.apply(this, arguments) 
-			return right.apply(this, arguments) 
-		}
+
+		return core.makeConfigToggler('side-buttons-state', 
+			['on', 'off'], 
+			function(){
+				left.apply(this, arguments) 
+				right.apply(this, arguments) 
+			})
 	})()],
 })
 
@@ -1182,7 +1184,9 @@ module.Buttons = core.ImageGridFeatures.Feature({
 		['start', 
 			function(){ 
 				this.toggleMainButtons(this.config['main-buttons-state'] || 'on')
-				this.toggleSecondaryButtons(this.config['secondary-buttons-state'] || 'on') }],
+				this.toggleSecondaryButtons(this.config['secondary-buttons-state'] || 'on')
+				this.toggleSideButtons(this.config['side-buttons-state'] || 'on')
+		   	}],
 		['load reload', 
 			function(){
 				// update crop button status...

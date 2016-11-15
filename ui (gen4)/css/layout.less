@@ -385,7 +385,7 @@ button:hover {
 	width: 80px;
 	height: 100%;
 
-	background: rgba(0, 0, 0, 0.3);
+	background: rgba(0, 0, 0, 0.5);
 
 	z-index: 900;
 }
@@ -395,17 +395,38 @@ button:hover {
 .side-buttons-right {
 	right: 0px;
 }
-
 .side-buttons-left .button,
 .side-buttons-right .button {
 	display: flex;
-	justify-content:center;
-	align-content:center;
-	flex-direction:column;
+	justify-content: center;
+	align-content: center;
+	flex-direction: row;
+
+	padding: 10px;
+	line-height: 10px;
 
 	width: 80px;
 	height: 33.3%;
 }
+.side-buttons-left .button {
+	justify-content: flex-end;
+	align-content: flex-start;
+}
+.side-buttons-right .button {
+	justify-content: flex-start;
+	align-content: flex-start;
+}
+.side-buttons-left .button:first-child {
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: flex-end;
+}
+.side-buttons-right .button:first-child {
+	flex-direction: column;
+	justify-content: flex-end;
+	align-items: flex-start;
+}
+
 .side-buttons-left .button:nth-child(1),
 .side-buttons-left .button:nth-child(2),
 .side-buttons-right .button:nth-child(1),
