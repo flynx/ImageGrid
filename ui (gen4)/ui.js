@@ -147,14 +147,13 @@ $(function(){
 	ig.logger = ig.logger || {
 		root: true,
 		message: null,
+		log: null,
 
 		emit: function(e, v){ 
 			var msg = this.message
+			var log = this.log = this.log || []
 
-			// console...
-			console.log('    '+ ((msg && msg.concat('')) || []).join(': '), e, v) 
-			
-			// progress...
+			// report progress...
 			// XXX HACK -- need meaningful status...
 			if(e == 'queued' 
 					|| e == 'found'){
@@ -163,7 +162,19 @@ $(function(){
 			} else if(e == 'loaded' || e == 'done' || e == 'written' 
 					|| e == 'skipping' || e == 'index'){
 				ig.showProgress(msg || ['Progress', e], '+1')
+
+			// XXX STUB...
+			} else if(e == 'error' ){
+				ig.showProgress(['Error'].concat(msg), '+0', '+1')
+				console.log('    '+ (msg || []).join(': ') + ':', e, v) 
+
+			} else {
+				// console...
+				console.log('    '+ (msg || []).join(': ') + ':', e, v) 
 			}
+
+			// XXX
+			//log.push([msg, e, v])
 		},
 
 		push: function(msg){
@@ -174,6 +185,7 @@ $(function(){
 			var logger = Object.create(this)
 			logger.root = false
 			logger.message = logger.message == null ? [msg] : logger.message.concat([msg])
+			logger.log = this.log = this.log || []
 
 			return logger
 		},

@@ -1927,28 +1927,17 @@ var FileSystemWriterActions = actions.Actions({
 							var from = (img_base || base_dir) +'/'+ preview_path
 							var to = path +'/'+ preview_path
 
+							// XXX use queue for progress reporting...
+							logger && logger.emit('queued', to)
+
 							// XXX do we queue these or let the OS handle it???
 							// 		...needs testing, if node's fs queues the io
 							// 		internally then we do not need to bother...
-							// XXX
-							queue.push(ensureDir(pathlib.dirname(to))
-								// XXX do we need error handling here???
-								.catch(function(err){
-									logger && logger.emit('error', err) })
+							queue.push(copy(from, to)
 								.then(function(){
-									// XXX
-									logger && logger.emit('queued', to)
-
-									return copy(from, to)
-										// XXX do we need to have both of this 
-										// 		and the above .catch(..) or can
-										// 		we just use the one above (after
-										// 		.then(..))
-										.then(function(){
-											logger && logger.emit('done', to) })
-										// XXX do we need error handling here???
-										.catch(function(err){
-											logger && logger.emit('error', err) })
+									logger && logger.emit('done', to) })
+								.catch(function(err){
+									logger && logger.emit('error', err) 
 								}))
 						})
 				}
