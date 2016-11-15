@@ -1,0 +1,38 @@
+process-archive.sh
+
+	Dependencies:
+		- exiftool
+		- vips
+		- bc
+		- bash
+
+	XXX add self dependency check...
+
+
+process-archive.bat -- windows version of process-archive.sh (partial)
+
+
+sync-flash.sh
+
+	Dependencies:
+		- process-archive.sh
+		- bash
+	
+
+update-exif.sh
+
+	Dependencies:
+		- exiv2 (to be deprecated)
+
+
+flatten.sh
+
+
+vips-tn.sh
+
+cleannwcache.bat
+
+extract-metadata.sh
+
+
+

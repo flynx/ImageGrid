@@ -1830,7 +1830,6 @@ var FileSystemWriterActions = actions.Actions({
 	//
 	// XXX resolve env variables in path...
 	// XXX what should happen if no path is given???
-	// XXX should this return a promise??? ...a clean promise???
 	// XXX add preview selection...
 	// XXX handle .image.path and other stack files...
 	// XXX local collections???
@@ -1937,8 +1936,7 @@ var FileSystemWriterActions = actions.Actions({
 								.then(function(){
 									logger && logger.emit('done', to) })
 								.catch(function(err){
-									logger && logger.emit('error', err) 
-								}))
+									logger && logger.emit('error', err) }))
 						})
 				}
 			})
