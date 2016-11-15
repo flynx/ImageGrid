@@ -305,7 +305,7 @@ button:hover {
 
 	cursor: default;
 
-	//z-index: 9999;
+	z-index: 4000;
 }
 .light .buttons {
 	opacity: 0.5;
@@ -340,22 +340,42 @@ button:hover {
 }
 
 
-/* main controls... */
-.main-controls.buttons {
+/* main buttons... */
+.main-buttons.buttons {
 	top: 0px;
 	left: 0px;
-	z-index: 4000;
 }
 
 
-/* fullscreen controls... */
-.fullscreen-controls.buttons {
+/* secondary buttons... */
+/*
+.secondary-buttons.buttons {
+	top: 0px;
+	right: 25%;
+}
+*/
+.secondary-buttons.buttons {
+	top: 40px;
+	left: 0px;
+}
+.secondary-buttons.buttons .button {
+	display: block;
+}
+
+
+/* app buttons... */
+.app-buttons.buttons {
 	top: 0px;
 	right: 0px;
-	z-index: 4000;
+
+	z-index: 9999;
 }
-.fullscreen-controls .button.close:hover {
+.app-buttons .button.close:hover {
 	background: rgba(255, 0, 0, 0.8);
+}
+.blur .app-buttons.buttons {
+	-webkit-filter: none !important;
+	filter: none !important;
 }
 
 

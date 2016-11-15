@@ -1100,10 +1100,10 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 	
-var MainControlsActions = actions.Actions({
+var ControlsActions = actions.Actions({
 	config: {
-		'main-controls-state': 'on',
-		'main-controls': {
+		'main-buttons-state': 'on',
+		'main-buttons': {
 			'&#x2630;': ['menu',
 				'browseActions -- Action menu...'],
 			//'Crop<sub/>': ['crop',
@@ -1115,18 +1115,33 @@ var MainControlsActions = actions.Actions({
 				'browseActions: "Mark/" -- Mark menu...'],
 			//*/
 		},
+
+		// XXX not sure about these yet...
+		'secondary-buttons-state': 'off',
+		'secondary-buttons': {
+			/*
+			'Z<sub/>': ['zoom',
+				'browseActions: "Zoom/" -- Zoom out'],
+			*/
+			'+': ['zoom-in',
+				'zoomIn -- Zoom in'],
+			'-': ['zoom-out',
+				'zoomOut -- Zoom out'],
+		},
 	},
 
-	toggleMainControls: ['Interface/',
-		makeButtonControlsToggler('main-controls')],
+	toggleMainButtons: ['Interface/',
+		makeButtonControlsToggler('main-buttons')],
+	toggleSecondaryButtons: ['Interface/',
+		makeButtonControlsToggler('secondary-buttons')],
 })
 
-var MainControls = 
-module.MainControls = core.ImageGridFeatures.Feature({
+var Controls = 
+module.Controls = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-main-controls',
+	tag: 'ui-buttons',
 	depends: [
 		'ui',
 	],
@@ -1135,18 +1150,23 @@ module.MainControls = core.ImageGridFeatures.Feature({
 		'ui-status-bar',
 	],
 
-	actions: MainControlsActions,
+	actions: ControlsActions,
 
 	handlers: [
-		// main controls stuff...
 		['start', 
 			function(){ 
-				this.toggleMainControls(this.config['main-controls-state'] || 'on') }],
+				this.toggleMainButtons(this.config['main-buttons-state'] || 'on')
+				this.toggleSecondaryButtons(this.config['secondary-buttons-state'] || 'on') }],
 		['load reload', 
 			function(){
 				// update crop button status...
-				$('.main-controls.buttons .crop.button sub')
-					.text(this.crop_stack ? this.crop_stack.length : '') }]
+				$('.main-buttons.buttons .crop.button sub')
+					.text(this.crop_stack ? this.crop_stack.length : '') }],
+		['setScale', 
+			function(){
+				// update crop button status...
+				$('.secondary-buttons.buttons .zoom.button sub')
+					.text(Math.round(this.screenwidth)) }],
 	],
 })
 

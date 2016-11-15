@@ -248,9 +248,9 @@ module.AppControl = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 // Fullscreen app control buttons...
-var FullScreenControllsActions = actions.Actions({
+var AppControllsActions = actions.Actions({
 	config: {
-		'fullscreen-controls': {
+		'app-buttons': {
 			'_': ['minimize', 
 				'minimize -- Minimize'],
 			'&#8601;': ['fullscreen allways-shown', 
@@ -260,16 +260,16 @@ var FullScreenControllsActions = actions.Actions({
 		},
 	},
 
-	toggleFullScreenControls: ['Interface/',
-		widgets.makeButtonControlsToggler('fullscreen-controls')],
+	toggleAppButtons: ['Interface/',
+		widgets.makeButtonControlsToggler('app-buttons')],
 })
 
-var FullScreenControlls = 
-module.FullScreenControlls = core.ImageGridFeatures.Feature({
+var AppControlls = 
+module.AppControlls = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-fullscreen-controls',
+	tag: 'ui-app-buttons',
 	depends: [
 		'ui-app-control',
 	],
@@ -278,15 +278,15 @@ module.FullScreenControlls = core.ImageGridFeatures.Feature({
 		'ui-status-bar',
 	],
 
-	actions: FullScreenControllsActions,
+	actions: AppControllsActions,
 
 	handlers: [
 		['toggleFullScreen', 
 			function(){
-				this.toggleFullScreenControls('on')
+				this.toggleAppButtons('on')
 
 				var fullscreen = this.toggleFullScreen('?')
-				var buttons = this.ribbons.viewer.find('.fullscreen-controls')
+				var buttons = this.ribbons.viewer.find('.app-buttons')
 				
 				// fullscreen button...
 				buttons.find('.fullscreen.button')

@@ -54,8 +54,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'ui-ribbons-placement',
 
-	'ui-fullscreen-controls',
-
 	// features...
 	'ui-ribbon-auto-align',
 	//'ui-ribbon-align-to-order',
@@ -81,7 +79,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'external-editor',
 
 	// chrome...
-	'ui-main-controls',
+	'ui-app-buttons',
+	'ui-buttons',
 	'ui-progress',
 	'ui-status-log',
 	'ui-scale',
