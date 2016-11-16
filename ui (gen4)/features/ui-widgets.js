@@ -65,20 +65,30 @@ function(context, cls, data){
 
 	// make buttons...
 	Object.keys(data).forEach(function(k){
-		var e = data[k].slice()
-		var code = e.pop()
+		// spacer...
+		if(typeof(data[k]) == typeof('str') 
+				&& /--+/.test(data[k])){
+			k = '&nbsp;'
+			var cls = 'spacer'
+			var doc = ''
+			var func = function(){}
 
-		code = typeof(code) == typeof('str') ?
-			keyboard.parseActionCall(code) 
-			: code
+		// normal element...
+		} else {
+			var e = data[k].slice()
+			var code = e.pop()
+			code = typeof(code) == typeof('str') ?
+				keyboard.parseActionCall(code) 
+				: code
 
-		var func = code instanceof Function ? 
-			code 
-			: function(){ 
-				context[code.action].apply(context, code.arguments) }
+			var func = code instanceof Function ? 
+				code 
+				: function(){ 
+					context[code.action].apply(context, code.arguments) }
 
-		var cls = e[0] || code.action || '' 
-		var doc = e[1] || code.doc || e[0] || ''
+			var cls = e[0] || code.action || '' 
+			var doc = e[1] || code.doc || e[0] || ''
+		}
 
 		controls
 			.append($('<div>')
@@ -1104,30 +1114,25 @@ var ButtonsActions = actions.Actions({
 	config: {
 		'main-buttons-state': 'on',
 		'main-buttons': {
-			'&#x2630;': ['menu',
-				'browseActions -- Action menu...'],
-			//'Crop<sub/>': ['crop',
-			'C<sub/>': ['crop',
-				'browseActions: "Crop/" -- Crop menu...'],
-			/*
-			//'Mark': ['marks',
-			'M': ['marks',
-				'browseActions: "Mark/" -- Mark menu...'],
-			//*/
+			'&#x2630;': ['menu', 'browseActions -- Action menu...'],
+			'C<sub/>': ['crop', 'browseActions: "Crop/" -- Crop menu...'],
+			//'M': ['marks', 'browseActions: "Mark/" -- Mark menu...'],
 			//'<i>ImageGrid.Viewer</i>': ['title', ''],
+			//'t': ['touch', 'toggleSideButtons -- Toggle touch ui'],
+			//'&#9965;': ['ui-settings', 'browseActions: "Interface/" -- Interface settings...'],
 		},
 
 		// XXX not sure about these yet...
 		'secondary-buttons-state': 'off',
 		'secondary-buttons': {
-			/*
-			'Z<sub/>': ['zoom',
-				'browseActions: "Zoom/" -- Zoom menu...'],
-			*/
-			'+': ['zoom-in',
-				'zoomIn -- Zoom in'],
-			'-': ['zoom-out',
-				'zoomOut -- Zoom out'],
+			//'Z<sub/>': ['zoom', 'browseActions: "Zoom/" -- Zoom menu...'],
+			//'+': ['zoom-in', 'zoomIn -- Zoom in'],
+			//'-': ['zoom-out', 'zoomOut -- Zoom out'],
+			//'&#9965;': ['ui-settings', 'browseActions: "Interface/" -- Interface settings...'],
+		},
+
+		'app-buttons': {
+			'&#9965;': ['ui-settings', 'browseActions: "Interface/" -- Interface settings...'],
 		},
 
 		'side-buttons-state': 'off',
@@ -1135,13 +1140,13 @@ var ButtonsActions = actions.Actions({
 		'side-buttons-left': {
 			'-': ['zoom-out', 'zoomOut -- Zoom out'],
 			'&#8613;': ['up', 'shiftImageUp -- Shift image up'],
-			'&#10633;': ['left', 'prevImage -- Focus previous image'],
+			'&#10633;': ['left', 'prevImage -- Previous image'],
 			'&#8615;': ['down', 'shiftImageDown -- Shift image down'],
 		},
 		'side-buttons-right': {
 			'+': ['zoom-in', 'zoomIn -- Zoom in'],
 			'&#8613;': ['up', 'shiftImageUp -- Shift image up'],
-			'&#10634;': ['right', 'nextImage -- Focus next image'],
+			'&#10634;': ['right', 'nextImage -- Next image'],
 			'&#8615;': ['down', 'shiftImageDown -- Shift image down'],
 		},
 	},
@@ -1150,18 +1155,21 @@ var ButtonsActions = actions.Actions({
 		makeButtonControlsToggler('main-buttons')],
 	toggleSecondaryButtons: ['Interface/Toggle secondary buttons',
 		makeButtonControlsToggler('secondary-buttons')],
+	toggleAppButtons: ['Interface/Toggle App buttons',
+		makeButtonControlsToggler('app-buttons')],
 
-	toggleSideButtons: ['Interface/Toggle side buttons', (function(){
-		var left = makeButtonControlsToggler('side-buttons-left')
-		var right = makeButtonControlsToggler('side-buttons-right')
+	toggleSideButtons: ['Interface/Toggle side buttons', 
+		(function(){
+			var left = makeButtonControlsToggler('side-buttons-left')
+			var right = makeButtonControlsToggler('side-buttons-right')
 
-		return core.makeConfigToggler('side-buttons-state', 
-			['on', 'off'], 
-			function(){
-				left.apply(this, arguments) 
-				right.apply(this, arguments) 
-			})
-	})()],
+			return core.makeConfigToggler('side-buttons-state', 
+				['on', 'off'], 
+				function(){
+					left.apply(this, arguments) 
+					right.apply(this, arguments) 
+				})
+		})()],
 })
 
 var Buttons = 
@@ -1181,10 +1189,11 @@ module.Buttons = core.ImageGridFeatures.Feature({
 	actions: ButtonsActions,
 
 	handlers: [
-		['start', 
+		['start.pre', 
 			function(){ 
 				this.toggleMainButtons(this.config['main-buttons-state'] || 'on')
 				this.toggleSecondaryButtons(this.config['secondary-buttons-state'] || 'on')
+				this.toggleAppButtons('on')
 				this.toggleSideButtons(this.config['side-buttons-state'] || 'on')
 		   	}],
 		['load reload', 

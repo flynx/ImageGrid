@@ -251,6 +251,9 @@ module.AppControl = core.ImageGridFeatures.Feature({
 var AppControllsActions = actions.Actions({
 	config: {
 		'app-buttons': {
+			// XXX not sure about this...
+			'&#9965;': ['ui-settings allways-shown', 
+				'browseActions: "Interface/" -- Interface settings...'],
 			'_': ['minimize', 
 				'minimize -- Minimize'],
 			'&#8601;': ['fullscreen allways-shown', 
@@ -260,8 +263,6 @@ var AppControllsActions = actions.Actions({
 		},
 	},
 
-	toggleAppButtons: ['Interface/Toggle App control buttons',
-		widgets.makeButtonControlsToggler('app-buttons')],
 })
 
 var AppControlls = 

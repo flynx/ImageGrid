@@ -298,7 +298,9 @@ button:hover {
 
 .buttons {
 	display: block;
-	position: absolute;
+	position: relative;
+	float: left;
+
 	opacity: 0.4;
 
 	size: 30px;
@@ -307,17 +309,15 @@ button:hover {
 
 	z-index: 4000;
 }
+.buttons:hover {
+	opacity: 1;
+}
 .light .buttons {
 	opacity: 0.5;
 }
 .dark .buttons {
 	opacity: 0.2;
 }
-
-.buttons:hover {
-	opacity: 1;
-}
-
 
 .buttons .button {
 	display: inline-block;
@@ -338,6 +338,17 @@ button:hover {
 	color: white;
 	background: rgba(0, 0, 0, 0.5);
 }
+.buttons .button.spacer:hover {
+	background: transparent;
+}
+
+
+.buttons .button.ui-settings {
+	opacity: 0.5;
+}
+.buttons .button.ui-settings:hover {
+	opacity: 1;
+}
 
 
 /* main buttons... */
@@ -345,15 +356,21 @@ button:hover {
 	top: 0px;
 	left: 0px;
 }
+.main-buttons.buttons:hover {
+	opacity: 1;
+}
+
 
 
 /* secondary buttons... */
-/*
 .secondary-buttons.buttons {
 	top: 0px;
-	right: 25%;
+	float: right;
 }
-*/
+.secondary-buttons.buttons:hover {
+	opacity: 1;
+}
+/*
 .secondary-buttons.buttons {
 	top: 40px;
 	left: 0px;
@@ -361,14 +378,18 @@ button:hover {
 .secondary-buttons.buttons .button {
 	display: block;
 }
+*/
 
 
 /* app buttons... */
 .app-buttons.buttons {
-	top: 0px;
-	right: 0px;
+	float: right;
+	margin-left: 40px;
 
 	z-index: 9999;
+}
+.app-buttons.buttons:hover {
+	opacity: 1;
 }
 .app-buttons .button.close:hover {
 	background: rgba(255, 0, 0, 0.8);
@@ -382,8 +403,12 @@ button:hover {
 /* side buttons... */
 .side-buttons-left,
 .side-buttons-right {
+	position: absolute;
+	float: auto;
 	width: 80px;
 	height: 100%;
+
+	font-size: larger;
 
 	background: rgba(0, 0, 0, 0.5);
 
@@ -444,6 +469,15 @@ button:hover {
 	border-bottom: none; 
 }
 
+.light .side-buttons-left,
+.light .side-buttons-right {
+	opacity: 0.3;
+	background: rgba(0, 0, 0, 0.3);
+}
+.light .side-buttons-left .button,
+.light .side-buttons-right .button {
+	color: white;
+}
 .single-image-mode .side-buttons-left,
 .single-image-mode .side-buttons-right {
 	opacity: 0.1;
