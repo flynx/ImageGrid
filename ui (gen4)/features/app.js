@@ -18,8 +18,6 @@ var toggler = require('lib/toggler')
 var core = require('features/core')
 var base = require('features/base')
 
-var widgets = require('features/ui-widgets')
-
 
 
 /*********************************************************************/
@@ -262,7 +260,6 @@ var AppControllsActions = actions.Actions({
 				'close -- Quit'],
 		},
 	},
-
 })
 
 var AppControlls = 
@@ -273,6 +270,7 @@ module.AppControlls = core.ImageGridFeatures.Feature({
 	tag: 'ui-app-buttons',
 	depends: [
 		'ui-app-control',
+		'ui-buttons',
 	],
 	suggested: [
 		// needed for reporting info in .makeButtonControls(..)
