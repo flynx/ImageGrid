@@ -1155,7 +1155,7 @@ var ButtonsActions = actions.Actions({
 		makeButtonControlsToggler('main-buttons')],
 	toggleSecondaryButtons: ['Interface/Toggle secondary buttons',
 		makeButtonControlsToggler('secondary-buttons')],
-	toggleAppButtons: ['Interface/Toggle App buttons',
+	toggleAppButtons: ['Interface/Toggle app buttons',
 		makeButtonControlsToggler('app-buttons')],
 	toggleSideButtons: ['Interface/Toggle side buttons', 
 		(function(){

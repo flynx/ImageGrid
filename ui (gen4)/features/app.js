@@ -280,7 +280,7 @@ module.AppControlls = core.ImageGridFeatures.Feature({
 	actions: AppControllsActions,
 
 	handlers: [
-		['toggleFullScreen', 
+		['start.pre toggleFullScreen', 
 			function(){
 				this.toggleAppButtons('on')
 
