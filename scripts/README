@@ -1,4 +1,5 @@
 process-archive.sh
+	Processes and prepares the archive folder for viewing.
 
 	Dependencies:
 		- exiftool
@@ -13,6 +14,7 @@ process-archive.bat -- windows version of process-archive.sh (partial)
 
 
 sync-flash.sh
+	Syncs a camera flash card to an archive folder.
 
 	Dependencies:
 		- process-archive.sh
@@ -20,12 +22,16 @@ sync-flash.sh
 	
 
 update-exif.sh
+	Updates processed preview metadata from appropriate .PSD files.
 
 	Dependencies:
 		- exiv2 (to be deprecated)
 
 
 flatten.sh
+	Flatten flickr/instagram favorite folder structure created by 
+	ifttt appropriately renaming files.
+		./<author>/<filename> -> ./ALL/<author> - <filename>
 
 
 vips-tn.sh

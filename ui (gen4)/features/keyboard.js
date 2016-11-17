@@ -358,7 +358,7 @@ module.GLOBAL_KEYBOARD = {
 			shift: 'toggleStatusBarIndexMode!',
 
 			// XXX for debug...
-			ctrl: function(){ $('.viewer').toggleClass('visible-gid') },
+			//ctrl: function(){ $('.viewer').toggleClass('visible-gid') },
 		},
 
 		'?': 'showKeyboardBindings',
