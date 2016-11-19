@@ -103,6 +103,11 @@ var SingleImageActions = actions.Actions({
 		//
 		// NOTE: setting this to null or to -1 will disable the feature...
 		'single-image-proportions-threshold': 2,
+
+		// Sets ribbon align mode in single image mode...
+		// 
+		// NOTE: if this is null use the workspace value.
+		'single-image-ribbon-focus-mode': 'order',
 	},
 
 	updateImageProportions: ['- Interface/',
@@ -415,6 +420,25 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 					}
 				}
 			}],
+
+		// Workspace...
+		// 	...set ribbon focus mode to order (default) in single image mode...
+		['saveWorkspace',
+			core.makeWorkspaceConfigWriter(['ribbon-focus-mode'])],
+		['loadWorkspace',
+			core.makeWorkspaceConfigLoader(
+				['ribbon-focus-mode'],
+				function(workspace){
+					if(this.workspace == 'single-image'){
+						var mode = this.config['single-image-ribbon-focus-mode'] 
+							|| workspace['ribbon-focus-mode']
+							|| 'order'
+						this.toggleRibbonFocusMode(mode)
+
+					} else if('ribbon-focus-mode' in workspace) {
+						this.toggleRibbonFocusMode(workspace['ribbon-focus-mode'])
+					}
+				})],
 	],
 })
 

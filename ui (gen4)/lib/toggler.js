@@ -130,6 +130,8 @@
 // 		later is enough, but as strict mode is not stable enough (sometimes
 // 		works and sometimes does not), we can not reliably pass the element
 // 		via 'this'.
+// XXX add .toString(..) to resulting function to print the source of all
+// 		the handlers...
 var Toggler =
 module.Toggler =
 function(elem, state_accessor, states, callback_a, callback_b){

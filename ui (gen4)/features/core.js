@@ -44,20 +44,19 @@ module.makeConfigToggler =
 function(attr, states, a, b){
 
 	var pre = a
-	var post = b || function(action){ action != null && this.focusImage() }
+	// XXX is this a good default???
+	//var post = b || function(action){ action != null && this.focusImage() }
+	var post = b
 
 	return toggler.Toggler(null,
 		function(_, action){
 			var lst = states.constructor === Array ? states : states.call(this)
-
-			//console.log('action', action)
 
 			if(action == null){
 				return this.config[attr] || lst[lst.indexOf('none')] || lst[0]
 
 			} else {
 				this.config[attr] = action
-				//this.focusImage()
 			}
 		},
 		states, pre, post)
