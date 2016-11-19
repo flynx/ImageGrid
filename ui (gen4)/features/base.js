@@ -62,8 +62,14 @@ actions.Actions({
 		// XXX should this be here???
 		version: 'gen4',
 
+		// Number of steps to change default direction...
+		//
 		// see .direction for details...
 		'steps-to-change-direction': 3,
+		// If true, shift up/down will count as a left/right move...
+		//
+		// see .direction for details...
+		'shifts-affect-direction': true,
 
 		// Determines the image selection mode when focusing or moving 
 		// between ribbons...
@@ -117,33 +123,52 @@ actions.Actions({
 
 	// Default direction...
 	//
-	// This can be 'left' or 'right', other values are ignored.
-	//
-	// The system has inertial direction change, after >N steps of 
+	// The system delays inertial direction change -- after >N steps of 
 	// movement in one direction it takes N steps to reverse the default
 	// direction.
-	// The number of steps (N) is set in:
-	// 		.config['steps-to-change-direction']
 	//
-	// NOTE: to force direction change append a '!' to the direction.
-	// 		e.g. X.direction = 'left!'
+	// This can be 'left' or 'right', other values are ignored.
+	//
+	// Assigning '!' to this is the same as assigning (repeating) the 
+	// last assigned value again.
+	//
+	// Assigning 'left!' or 'right!' ('!' appended) will reset the counter
+	// and force direction change.
+	//
+	// Configuration (.config):
+	// 	'steps-to-change-direction' 	
+	// 		Sets the number of steps to change direction (N)
+	//
+	//	'shifts-affect-direction'
+	//		If true, add last direction change before vertical shift to 
+	//		direction counter (N)
+	//		This makes the direction change after several shifts up/down
+	//		"backwards" a bit faster.
+	//
 	get direction(){
 		return this._direction >= 0 ? 'right'
 			: this._direction < 0 ? 'left'
 			: 'right'
 	},
 	set direction(value){
+		// repeat last direction...
+		if(value == '!'){
+			this.direction = this._direction_last || 'right'
+
 		// force direction change...
-		if(value.slice(-1) == '!'){
-			this._direction = value == 'left!' ? -1
+		} else if(typeof(value) == typeof('str') 
+				&& value.slice(-1) == '!'){
+			value = this._direction = value == 'left!' ? -1
 				: value == 'right!' ? 0
 				: this._direction
+			this._direction_last = value >= 0 ? 'right' : 'left'
 
 		// 'update' direction...
 		} else {
 			value = value == 'left' ? -1 
 				: value == 'right' ? 1
 				: 0
+			this._direction_last = value >= 0 ? 'right' : 'left'
 			var d = (this._direction || 0) + value
 			var s = this.config['steps-to-change-direction']
 			s = s < 1 ? 1 : s
@@ -424,6 +449,7 @@ actions.Actions({
 
 				this.data.shiftImageUp(cur)
 				this.focusImage(next)
+				this.config['shifts-affect-direction'] && (this.direction = '!')
 
 			// if a specific target is given, just shift it...
 			} else {
@@ -447,6 +473,7 @@ actions.Actions({
 
 				this.data.shiftImageDown(cur)
 				this.focusImage(next)
+				this.config['shifts-affect-direction'] && (this.direction = '!')
 
 			// if a specific target is given, just shift it...
 			} else {
