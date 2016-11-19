@@ -362,6 +362,7 @@ module.makeWorkspaceConfigWriter = function(keys, callback){
 
 // XXX should this delete a prop if it's not in the loading workspace???
 // XXX only replace a prop if it has changed???
+// XXX handle defaults -- when a workspace was just created...
 var makeWorkspaceConfigLoader =
 module.makeWorkspaceConfigLoader = function(keys, callback){
 	return function(workspace){
@@ -390,6 +391,7 @@ module.makeWorkspaceConfigLoader = function(keys, callback){
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+// XXX need a way to handle defaults...
 var WorkspaceActions = actions.Actions({
 	config: {
 		'load-workspace': 'default',
