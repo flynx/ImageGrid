@@ -1190,9 +1190,13 @@ module.Buttons = core.ImageGridFeatures.Feature({
 	handlers: [
 		['start.pre', 
 			function(){ 
+				this.toggleAppButtons('on')
+		   	}],
+		// NOTE: these need to be loaded AFTER the .config has been loaded...
+		['start', 
+			function(){ 
 				this.toggleMainButtons(this.config['main-buttons-state'] || 'on')
 				this.toggleSecondaryButtons(this.config['secondary-buttons-state'] || 'on')
-				this.toggleAppButtons('on')
 				this.toggleSideButtons(this.config['side-buttons-state'] || 'on')
 		   	}],
 		['load reload', 
