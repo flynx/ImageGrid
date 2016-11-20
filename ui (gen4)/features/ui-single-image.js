@@ -428,8 +428,6 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 		// Workspace...
 		// 	...set ribbon focus mode to order (default) in single image mode...
-		//
-		// XXX move these to ui-partial-ribbons???
 		['saveWorkspace',
 			core.makeWorkspaceConfigWriter(
 				function(){ 
