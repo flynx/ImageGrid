@@ -286,6 +286,32 @@ module.LifeCycle = ImageGridFeatures.Feature({
 })
 
 
+//---------------------------------------------------------------------
+
+var UtilActions = actions.Actions({
+	mergeConfig: ['- System/', 
+		function(config){
+			config = config instanceof Function ? config.call(this)
+				: typeof(config) == typeof('str') ? this.config[config]
+				: config
+			var that = this
+			Object.keys(config).forEach(function(key){
+				that.config[key] = config[key]
+			})
+		}],
+})
+
+
+var Util = 
+module.Util = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'util',
+
+	actions: UtilActions,
+})
+
 
 //---------------------------------------------------------------------
 // Introspection...
@@ -349,10 +375,10 @@ module.makeWorkspaceConfigWriter = function(keys, callback){
 	return function(workspace){
 		var that = this
 
-		keys = typeof(keys) == typeof(function(){}) ? keys.call(this) : keys
+		var data = keys instanceof Function ? keys.call(this) : keys
 
 		// store data...
-		keys.forEach(function(key){
+		data.forEach(function(key){
 			workspace[key] = JSON.parse(JSON.stringify(that.config[key]))
 		})
 
@@ -368,10 +394,10 @@ module.makeWorkspaceConfigLoader = function(keys, callback){
 	return function(workspace){
 		var that = this
 
-		keys = typeof(keys) == typeof(function(){}) ? keys.call(this) : keys
+		var data = keys instanceof Function ? keys.call(this) : keys
 
 		// load data...
-		keys.forEach(function(key){
+		data.forEach(function(key){
 			// the key exists...
 			if(key in workspace){
 				that.config[key] = JSON.parse(JSON.stringify(workspace[key]))
@@ -401,16 +427,12 @@ var WorkspaceActions = actions.Actions({
 	},
 
 	get workspace(){
-		return this.config.workspace
-	},
+		return this.config.workspace },
 	set workspace(value){
-		this.loadWorkspace(value)
-	},
+		this.loadWorkspace(value) },
 
 	get workspaces(){
-		return this.config.workspaces
-	},
-
+		return this.config.workspaces },
 
 	getWorkspace: ['- Workspace/',
 		function(){ return this.saveWorkspace(null) }],

@@ -246,15 +246,8 @@ var SingleImageActions = actions.Actions({
 
 					if(this.workspaces['single-image'] == null){
 						this.loadWorkspace('ui-chrome-hidden') 
-
-						// setup defaults...
-						var that = this
-						var defaults = this.config['single-image-config-defaults'] || {}
-						Object.keys(defaults)
-							.forEach(function(key){ 
-								that.config[key] = JSON.parse(JSON.stringify(defaults[key])) })
-
-						this.saveWorkspace('single-image') 
+						this.mergeConfig('single-image-config-defaults')
+						this.saveWorkspace('single-image')
 					}
 
 					this.loadWorkspace('single-image') 
@@ -333,7 +326,8 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-single-image',
 	depends: [
-		'ui'
+		'ui',
+		'util',
 	],
 	suggested: [
 		'ui-single-image-local-storage',
@@ -434,12 +428,16 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 		// Workspace...
 		// 	...set ribbon focus mode to order (default) in single image mode...
+		//
+		// XXX move these to ui-partial-ribbons???
 		['saveWorkspace',
 			core.makeWorkspaceConfigWriter(
-				Object.keys(SingleImageActions.config['single-image-config-defaults']))],
+				function(){ 
+					return Object.keys(this.config['single-image-config-defaults'] || {}) })],
 		['loadWorkspace',
 			core.makeWorkspaceConfigLoader(
-				Object.keys(SingleImageActions.config['single-image-config-defaults']),
+				function(){ 
+					return Object.keys(this.config['single-image-config-defaults'] || {}) },
 				// NOTE: considering that 'ribbon-focus-mode' is handled 
 				// 		by a toggler that can have things bound to it, 
 				// 		active is the way to go here...
