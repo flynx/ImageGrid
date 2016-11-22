@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<style>
+
+
+/* size/proportions do not matter... */
+.viewer {
+	position: relative;
+
+	width: 80vw;
+	height: 80vh;
+
+	overflow: hidden;
+
+	background: gray;
+}
+.viewer:after {
+	position: absolute;
+	content: "";
+
+	font-size: 0pt;
+
+	box-sizing: border-box;
+	width: 16px;
+	height: 16px;
+	top: 50%;
+	left: 50%;
+	margin-top: -8px;
+	margin-left: -8px;
+
+	border: solid 3px blue;
+}
+
+
+/* 
+- center this to viewer vertically and horizontally 
+   	-- top, left corner is center of viewer... 
+- align vertically to center current ribbon (manual)
+*/
+.ribbon-set {
+	position: relative;
+
+	top: 50%;
+	left: 50%;
+
+	transform-origin: top left;
+
+	transition: all 0.1s linear;
+}
+.ribbon-mover {
+	position: relative;
+
+	top: 0px;
+	left: 0px;
+
+	transition: all 0.1s linear;
+}
+
+/* 
+- align image horizontally relative to ribbon-set left (manual)
+*/
+.ribbon {
+	position: relative;
+	display: block;
+	height: auto;
+	/*min-width: 0px;*/
+	width: auto;
+	overflow: visible;
+	white-space: nowrap;
+	font-size: 0;
+
+	float: left;
+	clear: both;
+
+	background: black;
+
+	transition: all 0.1s linear;
+
+	/* XXX use vmin here... */
+	margin-top: 2.5px;
+	margin-bottom: 2.5px;
+	/*
+	margin-top: 0.5vmin;
+	margin-bottom: 0.5vmin;
+	*/
+}
+
+
+/* horizontal size/proportions do not matter... */
+.image {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+	text-align:left;
+	font-size: 12pt;
+	overflow: hidden;
+
+	/* XXX use vmin here... */
+	width: 50px;
+	height: 50px;
+	/*
+	width: 10vmin;
+	height: 10vmin;
+	*/
+
+	box-sizing: border-box;
+
+	color: white;
+
+	background: no-repeat 50% transparent;
+	background-size: contain;
+	box-sizing: border-box;
+	border: solid gray 1px;
+	background-color: silver;
+}
+.current.image {
+	/*border: solid red 5px;*/
+}
+
+
+</style>
+
+<script src="../ext-lib/jquery.js"></script>
+<script src="../ext-lib/jquery-ui.js"></script>
+
+<script src="../lib/jli.js"></script>
+
+<script>
+$(function(){
+
+	// XXX needed when using vmin for image sizing...
+	/*
+	$(window)
+		.resize(function(){
+			$('.current.image').click()
+		})
+	*/
+
+	$('.image')
+		.click(function(){
+			$('.current.image').removeClass('current')
+
+			var image = $(this)
+			var ribbon = image.parents('.ribbon').first()
+			var ribbon_mover = ribbon.parents('.ribbon-mover').first()
+			var ribbon_set = ribbon_mover.parents('.ribbon-set').first()
+			
+			image
+				.addClass('current')
+
+			var scale = ribbon_set.attr('scale') || 1
+			var angle = ribbon_set.attr('angle') || 0
+
+			var l = image[0].offsetLeft
+			var t = ribbon[0].offsetTop
+			var w = image[0].offsetWidth
+			var h = ribbon[0].offsetHeight
+
+			ribbon.css('transform', 'translateX(-'+ (l + w/2) +'px)')
+			ribbon_set.css('transform', 
+					'scale('+ scale +') '
+					+'rotate('+ angle +'deg)')
+			ribbon_mover.css('transform', 'translateY(-'+ (t + h/2) +'px)')
+		})
+
+
+
+	$('.zoom-reset')
+		.click(function(){
+			var ribbon_set = $('.ribbon-set')
+			ribbon_set.attr('scale', '1')
+			$('.current.image').click()
+		})
+	$('.zoom-in')
+		.click(function(){
+			var ribbon_set = $('.ribbon-set')
+			var scale = (ribbon_set.attr('scale') || 1) * 1.2
+			ribbon_set.attr('scale', scale)
+			$('.current.image').click()
+		})
+	$('.zoom-out')
+		.click(function(){
+			var ribbon_set = $('.ribbon-set')
+			var scale = (ribbon_set.attr('scale') || 1) / 1.2
+			ribbon_set.attr('scale', scale)
+			$('.current.image').click()
+		})
+
+
+
+	$('.rotate-reset')
+		.click(function(){
+			var ribbon_set = $('.ribbon-set')
+			ribbon_set.attr('angle', '0')
+			$('.current.image').click()
+		})
+	$('.rotate-cw')
+		.click(function(){
+			var ribbon_set = $('.ribbon-set')
+			var angle = parseInt(ribbon_set.attr('angle') || 0) + 10
+			ribbon_set.attr('angle', angle)
+			$('.current.image').click()
+		})
+	$('.rotate-ccw')
+		.click(function(){
+			var ribbon_set = $('.ribbon-set')
+			var angle = parseInt(ribbon_set.attr('angle') || 0) - 10 
+			ribbon_set.attr('angle', angle)
+			$('.current.image').click()
+		})
+
+
+
+	$('.current.image').click()
+})
+</script>
+
+<body>
+
+
+<button class="zoom-in">+</button>
+<button class="zoom-reset">1x</button>
+<button class="zoom-out">-</button>
+&nbsp;
+<button class="rotate-cw">&#8635;</button>
+<button class="rotate-reset">0&deg;</button>
+<button class="rotate-ccw">&#8634;</button>
+&nbsp;
+<button class="rotate-reset zoom-reset">0&deg; 1x</button>
+
+
+<div class="viewer">
+	<div class="ribbon-set">
+		<div class="ribbon-mover">
+			<div class="ribbon">
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+			</div>
+			<div class="ribbon">
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="current image"/> </div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+			</div>
+			<div class="ribbon">
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+				<div class="image"></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+</body>
+</html>
+<!-- vim:set ts=4 sw=4 spell : -->
