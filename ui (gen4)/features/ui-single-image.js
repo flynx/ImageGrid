@@ -123,6 +123,8 @@ var SingleImageActions = actions.Actions({
 			}
 
 			var viewer = this.ribbons.viewer
+
+			var ribbon = this.ribbons.getRibbon()
 			var images = viewer.find('.ribbon .image')
 
 			// no images loaded...
@@ -200,13 +202,11 @@ var SingleImageActions = actions.Actions({
 							if(o == 90 || o == 270){
 								img.style[a] = ''
 								img.style[b] = n + 'px'
-
 								img.style.margin = -(n - di)/2 +'px '+ (n - di)/2 +'px'
 
 							} else {
 								img.style[a] = n + 'px'
 								img.style[b] = ''
-
 								img.style.margin = ''
 							}
 						})
@@ -225,7 +225,6 @@ var SingleImageActions = actions.Actions({
 						.each(function(_, img){
 							img.style.width = ''
 							img.style.height = ''
-
 							img.style.margin = ''
 						})
 
@@ -398,17 +397,21 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 					// ribbon mode -- restore original image size...
 					} else {
+						this.ribbons.preventTransitions()
+
 						// reset image container size...
 						this.ribbons.viewer.find('.image:not(.clone)')
 							.each(function(_, img){
 								img.style.width = ''
 								img.style.height = ''
-
 								img.style.margin = ''
 							})
 
 						// align ribbons...
-						this.alignRibbons('now')
+						this
+							.alignRibbons('now')
+							.ribbons
+								.restoreTransitions(true)
 
 						// update scale...
 						if(state != pre_state){
