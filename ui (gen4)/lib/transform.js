@@ -533,6 +533,14 @@ jQuery.fn.scale = function(value){
 		return $(this).transform('scale')
 	}
 }
+jQuery.fn.rotate = function(value){
+	if(arguments.length > 0){
+		return $(this).transform({rotate: args2array(arguments)})
+
+	} else {
+		return $(this).transform('rotate')
+	}
+}
 // get element scale... 
 jQuery.fn.rscale = function(){
 	var res = 1

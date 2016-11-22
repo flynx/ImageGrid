@@ -516,8 +516,25 @@ var RibbonsPrototype = {
 		return this
 	},
 
-	// XXX add angle...
-	// XXX
+	// Rotate...
+	//
+	rotate: function(angle){
+		// get...
+		if(arguments.length == 0){
+			return this.getRibbonSet().rotate()
+		}
+
+		// set...
+		var ribbon_set = this.getRibbonSet()  
+
+		if(ribbon_set.length == 0){
+			return this
+		}
+
+		ribbon_set.rotate(angle)
+
+		return this
+	},
 	
 	// Get visible image tile size...
 	//
