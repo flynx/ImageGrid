@@ -14,6 +14,7 @@
 
 	background: gray;
 }
+/* center marker */
 .viewer:after {
 	position: absolute;
 	content: "";
@@ -21,14 +22,15 @@
 	font-size: 0pt;
 
 	box-sizing: border-box;
-	width: 16px;
-	height: 16px;
+	width: 8px;
+	height: 8px;
 	top: 50%;
 	left: 50%;
-	margin-top: -8px;
-	margin-left: -8px;
+	margin-top: -4px;
+	margin-left: -4px;
 
-	border: solid 3px blue;
+	border: solid 2px rgba(0, 0, 255, 0.3);
+	border-radius: 50%;
 }
 
 
@@ -131,8 +133,6 @@
 <script src="../ext-lib/jquery.js"></script>
 <script src="../ext-lib/jquery-ui.js"></script>
 
-<script src="../lib/jli.js"></script>
-
 <script>
 $(function(){
 
@@ -172,9 +172,21 @@ $(function(){
 		})
 
 
+
+	$('.ribbon-set')
+		.draggable()
+	$('.drag-reset')
+		.click(function(){
+			$('.ribbon-set').css({
+				top: '',
+				left: '',
+			})
+		})
+
+
+
 	var ribbon_scale
 	var single_scale
-
 	$('.single-image-toggle')
 		.click(function(){
 			var ribbon_set = $('.ribbon-set')
@@ -195,6 +207,7 @@ $(function(){
 
 			$('.current.image').click()
 		})
+
 
 
 	$('.zoom-reset')
@@ -249,7 +262,7 @@ $(function(){
 
 <body>
 
-<button class="single-image-toggle">&#128915;</button>
+<button class="single-image-toggle">&#9635;</button>
 &nbsp;
 <button class="zoom-in">+</button>
 <button class="zoom-reset">1x</button>
@@ -259,7 +272,9 @@ $(function(){
 <button class="rotate-reset">0&deg;</button>
 <button class="rotate-cw">&#8635;</button>
 &nbsp;
-<button class="rotate-reset zoom-reset">0&deg; 1x</button>
+<button class="drag-reset">(0,0)</button>
+&nbsp;
+<button class="rotate-reset zoom-reset drag-reset">reset all</button>
 
 
 <div class="viewer">
@@ -274,7 +289,7 @@ $(function(){
 			<div class="ribbon">
 				<div class="image"></div>
 				<div class="image"></div>
-				<div class="current image"/> </div>
+				<div class="current image"/></div>
 				<div class="image"></div>
 				<div class="image"></div>
 				<div class="image"></div>
