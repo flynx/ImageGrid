@@ -764,6 +764,7 @@ var RibbonsPrototype = {
 	// 	.getRibbonSet(true)
 	// 		-> ribbon-set
 	//
+	// XXX revise...
 	getRibbonSet: function(create){
 		// ribbon set...
 		var ribbon_set = this.viewer.find('.ribbon-set')
@@ -1860,14 +1861,9 @@ var RibbonsPrototype = {
 	// NOTE: another way to remove a ribbon or an image just to use 
 	// 		.getRibbon(..).remove() and .getImage(...).remove() respectivly.
 	clear: function(gids){
-		if(gids == 'full'){
-			this.getRibbonSet().remove()
-
 		// clear all...
-		} else if(gids == null || gids == '*'){
-			this.preventTransitions()
-			this.dom.setOffset(this.getRibbonSet(), 0, 0).children().detach()
-			this.restoreTransitions()
+		if(gids == 'full' || gids == '*' || gids == null){
+			this.getRibbonSet().remove()
 
 		// clear one or more gids...
 		} else {
