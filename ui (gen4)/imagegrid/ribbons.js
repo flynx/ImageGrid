@@ -765,14 +765,22 @@ var RibbonsPrototype = {
 	// 		-> ribbon-set
 	//
 	getRibbonSet: function(create){
+		// ribbon set...
 		var ribbon_set = this.viewer.find('.ribbon-set')
-		if(ribbon_set.length == 0 && create){
+		if(create && ribbon_set.length == 0){
 			ribbon_set = $('<div/>')
 				.addClass('ribbon-set')
-				.append($('<div/>')
-					.addClass('ribbon-locator'))
 				.appendTo(this.viewer)
 		}
+
+		// ribbon locator...
+		var locator = ribbon_set.find('.ribbon-locator')
+		if(create && locator.length == 0){
+			ribbon_set
+				.append($('<div/>')
+					.addClass('ribbon-locator'))
+		}
+
 		return ribbon_set
 	},
 	getRibbonLocator: function(create){
