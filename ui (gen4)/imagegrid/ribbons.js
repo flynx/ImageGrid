@@ -515,6 +515,9 @@ var RibbonsPrototype = {
 
 		return this
 	},
+
+	// XXX add angle...
+	// XXX
 	
 	// Get visible image tile size...
 	//
@@ -1030,7 +1033,7 @@ var RibbonsPrototype = {
 		// gid...
 		} else if(typeof(target) == typeof('str')){
 			//return this.viewer.find('.ribbon[gid="'+JSON.stringify(target)+'"]')
-			var r = this.viewer.find('.ribbon[gid='+JSON.stringify(target)+']')
+			var r = this.viewer.find('.ribbon[gid='+JSON.stringify(target)+']:not(.clone)')
 			// if no ribbon is found, try and get an image and it's ribbon...
 			return r.length == 0 
 				? this.getImage(target).parents('.ribbon').first()
@@ -1105,6 +1108,7 @@ var RibbonsPrototype = {
 			ribbon_set.append(ribbon)
 
 		} else if(i == -1 || i > position) {
+			// XXX need to compensate for offset???
 			ribbons.eq(position).before(ribbon)
 
 		// for placing after need to account for target ribbon removal...
@@ -2185,9 +2189,16 @@ var RibbonsPrototype = {
 	},
 
 	// center a ribbon vertically...
+	//
+	// 	Center current ribbon...
+	// 	.centerRibbon()
+	// 		-> Ribbons
+	//
+	// 	Center specific ribbon...
+	// 	.centerRibbon(image)
+	// 	.centerRibbon(ribbon)
+	// 		-> Ribbons
 	// 
-	// XXX custom align point woud also be nice... 
-	// 		(top, bottom, center, %, px)
 	centerRibbon: function(target){
 		var ribbon = this.getRibbon(target)
 		var locator = this.getRibbonLocator() 
@@ -2207,8 +2218,20 @@ var RibbonsPrototype = {
 
 	// center an image horizontally...
 	// 
-	// XXX custom align point would also be nice... 
-	// 		(top, bottom, center, %, px)
+	// 	Center current ribbon/image...
+	// 	.centerImage()
+	// 		-> Ribbons
+	//
+	// 	Center specific image...
+	// 	.centerImage(image)
+	// 	.centerImage(image, 'center')
+	// 		-> Ribbons
+	//
+	// 	Center ribbon before/after an image...
+	// 	.centerImage(image, 'before')
+	// 	.centerImage(image, 'after')
+	// 		-> Ribbons
+	//
 	centerImage: function(target, mode){
 		target = this.getImage(target)
 		var ribbon = this.getRibbon(target)

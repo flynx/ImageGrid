@@ -43,7 +43,7 @@ function(force, callback){
 var updateImagePosition =
 module.updateImagePosition =
 function updateImagePosition(actions, target){
-	var s = actions.ribbons.getRibbonSet()
+	var s = actions.ribbons.getRibbonLocator()
 
 	if(s.length == 0){
 		return
@@ -90,7 +90,8 @@ function updateImagePosition(actions, target){
 				to = actions.data.getRibbon(target)
 
 				if(actions.ribbons.getRibbon(to).length == 0){
-					actions.ribbons.placeRibbon(to, actions.data.getRibbonOrder(target))
+					actions.ribbons
+						.placeRibbon(to, actions.data.getRibbonOrder(target))
 				}
 
 				actions.ribbons.placeImage(target, to)
