@@ -397,16 +397,15 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 
 					// ribbon mode -- restore original image size...
 					} else {
-						this.ribbons.preventTransitions()
-
-						// reset image container size...
-						this.ribbons.viewer.find('.image:not(.clone)')
-							.each(function(_, img){
-								img.style.width = ''
-								img.style.height = ''
-								img.style.margin = ''
-							})
-
+						this.ribbons
+							.preventTransitions()
+							// reset image container size...
+							.viewer.find('.image:not(.clone)')
+								.each(function(_, img){
+									img.style.width = ''
+									img.style.height = ''
+									img.style.margin = ''
+								})
 						this
 							// align ribbons...
 							.alignRibbons('now')
