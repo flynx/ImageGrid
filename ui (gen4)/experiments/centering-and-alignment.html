@@ -49,7 +49,7 @@
 
 	transition: transform 0.1s linear;
 }
-.ribbon-mover {
+.ribbon-locator {
 	position: relative;
 
 	top: 0px;
@@ -150,8 +150,8 @@ $(function(){
 
 			var image = $(this)
 			var ribbon = image.parents('.ribbon').first()
-			var ribbon_mover = ribbon.parents('.ribbon-mover').first()
-			var ribbon_set = ribbon_mover.parents('.ribbon-set').first()
+			var ribbon_locator = ribbon.parents('.ribbon-locator').first()
+			var ribbon_set = ribbon_locator.parents('.ribbon-set').first()
 			
 			image
 				.addClass('current')
@@ -160,15 +160,21 @@ $(function(){
 			var angle = ribbon_set.attr('angle') || 0
 
 			var l = image[0].offsetLeft
-			var t = ribbon[0].offsetTop
 			var w = image[0].offsetWidth
+
+			var t = ribbon[0].offsetTop
 			var h = ribbon[0].offsetHeight
 
+			// centering image...
 			ribbon.css('transform', 'translateX(-'+ (l + w/2) +'px)')
+
+			// view angle and scale...
 			ribbon_set.css('transform', 
 					'scale('+ scale +') '
 					+'rotate('+ angle +'deg)')
-			ribbon_mover.css('transform', 'translateY(-'+ (t + h/2) +'px)')
+
+			// centering ribbons...
+			ribbon_locator.css('transform', 'translateY(-'+ (t + h/2) +'px)')
 		})
 
 
@@ -279,7 +285,7 @@ $(function(){
 
 <div class="viewer">
 	<div class="ribbon-set">
-		<div class="ribbon-mover">
+		<div class="ribbon-locator">
 			<div class="ribbon">
 				<div class="image"></div>
 				<div class="image"></div>

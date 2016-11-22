@@ -547,8 +547,6 @@ module.ViewerActions = actions.Actions({
 			this
 				.centerImage(target)
 				.centerRibbon(target)
-				.ribbons
-					.origin(target)
 		}],
 
 	focusImage: [
@@ -769,8 +767,6 @@ module.ViewerActions = actions.Actions({
 	// and rounding to nearest discrete number of images to fit on screen.
 	zoomIn: ['Zoom/Zoom in',
 		function(){ 
-			this.ribbons.origin()
-
 			var d = (this.config['zoom-step'] || 1.2)
 
 			// limit scaling to screen dimensions...
@@ -784,8 +780,6 @@ module.ViewerActions = actions.Actions({
 		}],
 	zoomOut: ['Zoom/Zoom out',
 		function(){ 
-			this.ribbons.origin()
-
 			var max = this.config['max-screen-images']
 
 			if(max && max < (this.screenwidth * (this.config['zoom-step'] || 1.2))){

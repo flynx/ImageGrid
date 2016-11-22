@@ -493,146 +493,27 @@ var RibbonsPrototype = {
 	//
 	// 	Set scale...
 	// 	.scale(<scale>)
-	// 	.scale(<scale>, <image>|'current'|'closest')
-	// 	.scale(<scale>, 'top'|'center'|'bottom'|<px>|%, 'left'|'center'|'right'|<px>|%)
 	// 		-> <ribbons>
 	//
 	// NOTE: this will also set origin...
 	//
 	// XXX if chrome 38 renders images blurry uncomment the fix...
-	scale: function(scale, t, l){
+	scale: function(scale){
 		// get...
 		if(arguments.length == 0){
 			return this.dom.getScale(this.getRibbonSet()) || 1
+		}
 
 		// set...
-		} else {
-			var ribbon_set = this.getRibbonSet()  
+		var ribbon_set = this.getRibbonSet()  
 
-			if(ribbon_set.length == 0){
-				return this
-			}
-
-			// default origin -- center...
-			if(t == null && l == null){
-				this.origin('center', 'center')
-
-			// an image...
-			} else if(l == null){
-				t = t == 'current' ? this.getImage()
-					: t == 'closest' ? this.getImageByPosition()
-					: t
-				this.origin(t)
-
-			// explicit...
-			} else {
-				this.origin(t, l)
-			}
-
-			// XXX experimental: not sure if this is the right place for this...
-			// 		...think this is a good place because its one spot 
-			// 		that gets used everywhere...
-			// 		...think this is a bad spot because we lose control ho many
-			// 		images of what size get loaded, and wee need to minimize 
-			// 		loading...
-			//this.updateImage('*', null, this.getVisibleImageSize('height', 1) * scale)
-
-			this.dom.setScale(ribbon_set, scale)
-
-
-			/*
-			ribbon_set
-				.velocity('stop')
-				// XXX get the time from config...
-				.velocity({scale: scale}, 200)
-			*/
-
-			/* XXX not sure if this is needed yet...
-			// XXX fix a render bug in chrome 38...
-			var v = this.viewer[0]
-			if(v.style.transform == ''){
-				v.style.transform = 'translateZ(0)'
-			} else {
-				v.style.transform = ''
-			}
-			*/
-
+		if(ribbon_set.length == 0){
 			return this
 		}
-	},
-	
-	// Origin...
-	//
-	// 	Get origin...
-	// 	.origin()
-	// 		-> <origin>
-	//
-	//	Set origin to center of image:
-	//	.origin(image)
-	//		-> ribbons
-	//
-	//	Set origin to screen coordinates:
-	//	.origin(x|%|'left'|'center'|'right', x|%|'top'|'center'|'bottom')
-	//		-> ribbons
-	//
-	// NOTE: this will also compensate for scaling.
-	//
-	// XXX DEBUG: remove point updating when not needed...
-	origin: function(a, b){
-		// get...
-		if(arguments.length == 0){
-			return this.dom.getOrigin(this.getRibbonSet())
 
-		// set...
-		} else {
-			var ribbon_set = this.getRibbonSet()
+		this.dom.setScale(ribbon_set, scale)
 
-			if(ribbon_set.length == 0){
-				return this
-			}
-
-			var ro = ribbon_set.offset()
-			var s = this.scale()
-
-			if(a != null && b != null){
-				var vo = this.viewer.offset()
-
-				a = a == 'left' ? 0
-					: a == 'right' ? this.viewer.width()
-					: a == 'center' ? this.viewer.width()/2
-					: /[0-9.]*%/.test(a) ? this.viewer.width()*(parseFloat(a)/100)
-					: a
-
-				b = b == 'top' ? 0
-					: b == 'bottom' ? this.viewer.height()
-					: b == 'center' ? this.viewer.height()/2
-					: /[0-9.]*%/.test(b) ? this.viewer.height()*(parseFloat(b)/100)
-					: b
-
-				var l = (a - ro.left)/s + vo.left
-				var t = (b - ro.top)/s + vo.top
-
-			// image...
-			} else {
-				var img = this.getImage(a)
-				var io = img.offset()
-				// XXX jQuery3: should we compensate for scale here???
-				var w = img.width()
-				var h = img.height()
-
-				var l = (io.left - ro.left)/s + w/2
-				var t = (io.top - ro.top)/s + h/2
-			}
-
-			this.dom.shiftOrigin(ribbon_set, l, t)
-
-			// XXX DEBUG: remove when done...
-			if($('.point').length > 0){
-				this.dom.setOffset($('.point'), l, t)
-			}
-
-			return this
-		}
+		return this
 	},
 	
 	// Get visible image tile size...
@@ -868,9 +749,15 @@ var RibbonsPrototype = {
 		if(ribbon_set.length == 0 && create){
 			ribbon_set = $('<div/>')
 				.addClass('ribbon-set')
+				.append($('<div/>')
+					.addClass('ribbon-locator'))
 				.appendTo(this.viewer)
 		}
 		return ribbon_set
+	},
+	getRibbonLocator: function(create){
+		return this.getRibbonSet(create)
+			.find('.ribbon-locator')
 	},
 
 	// Get image...
@@ -1196,7 +1083,7 @@ var RibbonsPrototype = {
 		var ribbon = this.getRibbon(target)
 		var i = this.getRibbonOrder(ribbon)
 		ribbon = ribbon.length == 0 ? this.createRibbon(target) : ribbon
-		var ribbon_set = this.getRibbonSet(true) 
+		var ribbon_set = this.getRibbonLocator(true) 
 
 		var ribbons = this.viewer.find(RIBBON)
 
@@ -2299,83 +2186,46 @@ var RibbonsPrototype = {
 
 	// center a ribbon vertically...
 	// 
-	// XXX offset and scale are not used...
 	// XXX custom align point woud also be nice... 
 	// 		(top, bottom, center, %, px)
-	// XXX need to account for margins...
-	centerRibbon: function(target, offset, scale){
-		target = this.getImage(target)
-		scale = scale || this.scale()
-		var ribbon_set = this.getRibbonSet() 
+	centerRibbon: function(target){
+		var ribbon = this.getRibbon(target)
+		var locator = this.getRibbonLocator() 
 
-		if(ribbon_set.length == 0 || target.length == 0){
+		if(locator.length == 0 || ribbon.length == 0){
 			return this
 		}
 
-		//this.origin(target)
-		
-		var o = target.attr('orientation')
-		o = o == null ? 0 : o
+		var t = ribbon[0].offsetTop
+		var h = ribbon[0].offsetHeight
 
-		var ro = ribbon_set.offset().top
-		// NOTE: this appears to account for margins...
-		var io = target.offset().top 
-
-		// NOTE: we are not using .outerHeight(true) here as it returns 
-		// 		the visible size rather than the real size, so we'll 
-		// 		need to first divide by current scale and then multiply
-		// 		by the given scale which will introduce errors...
-		var s = getComputedStyle(target[0])
-		var h = parseFloat(o == 0 || o == 180 ? s.height : s.width) 
-
-		var t = (io - ro)/scale + h/2
-
-		var offset = this.dom.relativeOffset(this.viewer, ribbon_set, {
-			top: t,
-			left: 0,
-		}).top
-		
-		this.dom.setOffset(ribbon_set, 0, offset)
+		//locator.css('transform', 'translateY(-'+ (t + h/2) +'px)')
+		locator.transform({x: 0, y: -(t + h/2), z: 0}) 
 
 		return this
 	},
 
 	// center an image horizontally...
 	// 
-	// XXX offset is not used...
 	// XXX custom align point would also be nice... 
 	// 		(top, bottom, center, %, px)
-	// XXX need to account for margins...
-	centerImage: function(target, mode, offset, scale){
+	centerImage: function(target, mode){
 		target = this.getImage(target)
-		scale = scale || this.scale()
 		var ribbon = this.getRibbon(target)
 
 		if(ribbon.length == 0){
 			return this
 		}
 
-		var o = target.attr('orientation')
-		o = o == null ? 0 : o
+		var l = target[0].offsetLeft
+		var w = target[0].offsetWidth
 
-		var rl = ribbon.offset().left
-		// NOTE: this appears to account for margins...
-		var il = target.offset().left 
+		var image_offset = mode == 'before' ? 0
+			: mode == 'after' ? w
+			: w/2
 
-		var W = this.viewer.width() * scale
-
-		// NOTE: we are not using .outerWidth(true) here as it returns 
-		// 		the visible size rather than the real size, so we'll 
-		// 		need to first divide by current scale and then multiply
-		// 		by the given scale which will introduce errors...
-		var s = getComputedStyle(target[0])
-		var w = parseFloat(o == 0 || o == 180 ? s.width : s.height) * scale
-
-		var image_offset = mode == 'before' ? w/2
-			: mode == 'after' ? -w/2
-			: 0
-
-		this.dom.setOffset(ribbon, ((rl + ((W-w)/2 + image_offset) - il) / scale))
+		//ribbon.css('transform', 'translateX(-'+ (l + image_offset) +'px)')
+		ribbon.transform({x: -(l + image_offset), y: 0, z: 0}) 
 
 		return this
 	},
@@ -2384,7 +2234,7 @@ var RibbonsPrototype = {
 	//
 	// If n is given this will fit n images (default: 1)
 	//
-	// NOTE: this will never scale the view in a wat that an image 
+	// NOTE: this will never scale the view in a way that an image 
 	// 		overflows either in height nor width.
 	//
 	// XXX might be useful to set origin before scaling...
@@ -2442,6 +2292,7 @@ var RibbonsPrototype = {
 	},
 
 
+	// XXX
 	setEmptyMsg: function(msg, help){
 		this.getRibbonSet()
 			.attr({

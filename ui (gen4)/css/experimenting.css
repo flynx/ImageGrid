@@ -63,6 +63,13 @@ body {
 	-o-transition: all 0.1s linear, transform 0.1s linear;
 	transition: all 0.1s linear, transform 0.1s linear;
 }
+.viewer:not(.no-transitions) .ribbon-locator:not(.no-transitions) {
+	-webkit-transition: all 0.1s linear, transform 0.1s linear;
+	-moz-transition: all 0.1s linear, transform 0.1s linear;
+	-ms-transition: all 0.1s linear, transform 0.1s linear;
+	-o-transition: all 0.1s linear, transform 0.1s linear;
+	transition: all 0.1s linear, transform 0.1s linear;
+}
 
 .viewer:not(.no-transitions) .ribbon:not(.no-transitions) {
 	-webkit-transition: all 0.1s ease-out;
