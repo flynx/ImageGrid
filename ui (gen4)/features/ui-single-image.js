@@ -407,8 +407,8 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 								img.style.margin = ''
 							})
 
-						// align ribbons...
 						this
+							// align ribbons...
 							.alignRibbons('now')
 							.ribbons
 								.restoreTransitions(true)
