@@ -437,8 +437,8 @@ module.ViewerActions = actions.Actions({
 			// 		data into ribbons based on target gid... i.e. first
 			// 		we know the section we need then align it vertically...
 			this
-				.centerImage(gid, null, null, scale)
-				.centerRibbon(gid, null, null, scale)
+				.centerImage(gid)
+				.centerRibbon(gid)
 
 			var that = this
 			var _align = function(){
@@ -495,8 +495,8 @@ module.ViewerActions = actions.Actions({
 
 			// align current ribbon...
 			this
-				.centerRibbon(gid)
 				.centerImage(gid)
+				.centerRibbon(gid)
 
 			var that = this
 			//setTimeout(function(){
@@ -1283,8 +1283,8 @@ module.AutoAlignRibbons = core.ImageGridFeatures.Feature({
 				// XXX is this correct???
 				} else {
 					this
-						.centerRibbon(target, null, null, scale)
-						.centerImage(target, null, null, scale)
+						.centerRibbon(target)
+						.centerImage(target)
 				}
 			}],
 		toggleRibbonAlignMode : ['Interface/Toggle ribbon align mode',
