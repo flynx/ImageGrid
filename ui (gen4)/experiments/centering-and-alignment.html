@@ -45,7 +45,7 @@
 
 	transform-origin: top left;
 
-	transition: all 0.1s linear;
+	transition: transform 0.1s linear;
 }
 .ribbon-mover {
 	position: relative;
@@ -53,7 +53,7 @@
 	top: 0px;
 	left: 0px;
 
-	transition: all 0.1s linear;
+	transition: transform 0.1s linear;
 }
 
 /* 
@@ -74,7 +74,7 @@
 
 	background: black;
 
-	transition: all 0.1s linear;
+	transition: transform 0.1s linear;
 
 	/* XXX use vmin here... */
 	margin-top: 2.5px;
@@ -115,6 +115,14 @@
 }
 .current.image {
 	/*border: solid red 5px;*/
+}
+
+
+.single-image-mode .ribbon {
+	background: transparent;
+}
+.single-image-mode .image:not(.current) {
+	visibility: hidden;
 }
 
 
@@ -163,6 +171,30 @@ $(function(){
 			ribbon_mover.css('transform', 'translateY(-'+ (t + h/2) +'px)')
 		})
 
+
+	var ribbon_scale
+	var single_scale
+
+	$('.single-image-toggle')
+		.click(function(){
+			var ribbon_set = $('.ribbon-set')
+
+			if($('.viewer').hasClass('single-image-mode')){
+				single_scale = ribbon_set.attr('scale') || 5
+			} else {
+				ribbon_scale = ribbon_set.attr('scale') || 1
+			}
+
+			$('.viewer').toggleClass('single-image-mode')
+
+			if($('.viewer').hasClass('single-image-mode')){
+				ribbon_set.attr('scale', single_scale || 5)
+			} else {
+				ribbon_set.attr('scale', ribbon_scale || 1)
+			}
+
+			$('.current.image').click()
+		})
 
 
 	$('.zoom-reset')
@@ -217,7 +249,8 @@ $(function(){
 
 <body>
 
-
+<button class="single-image-toggle">&#128915;</button>
+&nbsp;
 <button class="zoom-in">+</button>
 <button class="zoom-reset">1x</button>
 <button class="zoom-out">-</button>
