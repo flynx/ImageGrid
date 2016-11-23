@@ -58,7 +58,7 @@ function(context, cls, data){
 			context.showStatusBarInfo
 				&& context.showStatusBarInfo(info)
 		})
-		.on('mouseout', function(){
+		.on('mouseout click', function(){
 			context.showStatusBarInfo
 				&& context.showStatusBarInfo()
 		})
