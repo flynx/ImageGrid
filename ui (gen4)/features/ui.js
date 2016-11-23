@@ -860,7 +860,7 @@ module.ViewerActions = actions.Actions({
 	// ribbon rotation...
 	ribbonRotation: ['- Interface/', 
 		function(a){ 
-			if(a){
+			if(arguments.length > 0){
 				this.ribbons.rotate(a)
 
 			} else {
@@ -871,6 +871,8 @@ module.ViewerActions = actions.Actions({
 		function(a){ this.ribbonRotation('+='+ (a || 10)) }],
 	rotateRibbonCCW: ['Interface/Rotate ribbon coounter clockwise', 
 		function(a){ this.ribbonRotation('-='+ (a || 10)) }],
+		resetRibbonRotation: ['Interface/Reset ribbon rotation',
+			function(){ this.ribbonRotation(0) }],
 
 
 	// tags...
