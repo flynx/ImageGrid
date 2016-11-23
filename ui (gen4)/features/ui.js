@@ -176,6 +176,8 @@ module.ViewerActions = actions.Actions({
 			'transparent-ribbon',
 		],
 
+		'ribbon-rotation-step': 10,
+
 		// XXX BUG: for some reason this get's shadowed by base.config...
 		'ribbon-focus-modes': [
 			'visual',	// select image closest visually 
@@ -867,10 +869,23 @@ module.ViewerActions = actions.Actions({
 				return this.ribbons.rotate() || 0
 			}
 		}],
+
+	// Rotate ribbon CW/CCW...
+	//
+	// 	Rotate ribbon (default step)
+	// 	.rotateRibbonCW()
+	//
+	// 	Rotate ribbon by step...
+	// 	.rotateRibbonCW(5)
+	//
+	// NOTE: default step is set by .config['ribbon-rotation-step']
 	rotateRibbonCW: ['Interface/Rotate ribbon clockwise', 
-		function(a){ this.ribbonRotation('+='+ (a || 10)) }],
+		function(a){ 
+			this.ribbonRotation('+='+ (a || this.config['ribbon-rotation-step'] || 10)) }],
 	rotateRibbonCCW: ['Interface/Rotate ribbon coounter clockwise', 
-		function(a){ this.ribbonRotation('-='+ (a || 10)) }],
+		function(a){ 
+			this.ribbonRotation('-='+ (a || this.config['ribbon-rotation-step'] || 10)) }],
+
 		resetRibbonRotation: ['Interface/Reset ribbon rotation',
 			function(){ this.ribbonRotation(0) }],
 

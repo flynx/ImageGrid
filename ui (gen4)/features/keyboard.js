@@ -182,6 +182,16 @@ module.GLOBAL_KEYBOARD = {
 			alt: 'browseActions: "/History/" -- Open history menu',
 		},
 		V: 'flipVertical',
+
+		// tilt...
+		// XXX experimental, not sure if wee need this with a keyboard...
+		T: {
+			default: 'rotateRibbonCCW -- Tilt ribbons counter clock wise',
+			shift: 'rotateRibbonCW -- Tilt ribbons clock wise',
+
+			alt: 'resetRibbonRotation -- Reset ribbon tilt',
+		},
+
 		P: {
 			'ctrl+shift': 'F12',
 		},
