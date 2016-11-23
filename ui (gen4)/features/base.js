@@ -583,6 +583,9 @@ actions.Actions({
 	// NOTE: target must be .data.getImage(..) compatible, see it for docs...
 	rotate: ['- Image|Edit/Rotate image',
 		function(target, direction){
+			if(arguments.length == 0){
+				return this.image && this.image.orientation || 0
+			}
 			if(target == 'cw' || target == 'ccw'){
 				direction = target
 				target = null

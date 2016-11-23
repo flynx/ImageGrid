@@ -518,6 +518,22 @@ var RibbonsPrototype = {
 
 	// Rotate...
 	//
+	//	Get ribbon rotation angle...
+	//	.rotate()
+	//		-> angle
+	//
+	//	Rotate to angle...
+	//	.rotate(20)
+	//	.rotate(-10)
+	//		-> ribbons
+	//
+	//	Rotate by angle...
+	//	.rotate('-=20')
+	//	.rotate('+=30')
+	//		-> ribbons
+	//
+	// NOTE: the angles are not base 360 normalised...
+	// NOTE: units are ignored and the final angle is always in deg.
 	rotate: function(angle){
 		// get...
 		if(arguments.length == 0){
@@ -530,6 +546,12 @@ var RibbonsPrototype = {
 		if(ribbon_set.length == 0){
 			return this
 		}
+
+		angle = typeof(angle) == typeof('str')
+			? (/^\+=/.test(angle) ? (ribbon_set.rotate() || 0) + parseFloat(angle.slice(2))
+				:/^\-=/.test(angle) ? (ribbon_set.rotate() || 0) - parseFloat(angle.slice(2))
+				: parseFloat(angle))
+			: angle
 
 		ribbon_set.rotate(angle)
 

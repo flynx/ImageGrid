@@ -856,6 +856,23 @@ module.ViewerActions = actions.Actions({
 	// XXX this needs an interactive mode -- mark A, mark B, align between
 	alignToRibbon: [ reloadAfter(true) ],
 
+
+	// ribbon rotation...
+	ribbonRotation: ['- Interface/', 
+		function(a){ 
+			if(a){
+				this.ribbons.rotate(a)
+
+			} else {
+				return this.ribbons.rotate() || 0
+			}
+		}],
+	rotateRibbonCW: ['Interface/Rotate ribbon clockwise', 
+		function(a){ this.ribbonRotation('+='+ (a || 10)) }],
+	rotateRibbonCCW: ['Interface/Rotate ribbon coounter clockwise', 
+		function(a){ this.ribbonRotation('-='+ (a || 10)) }],
+
+
 	// tags...
 	tag: [ 
 		function(tags, gids){ 
