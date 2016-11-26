@@ -165,6 +165,11 @@
 	display: inline-block;
 	float:left;
 }
+.browse-widget .list .button-container {
+	display: inline-block;
+	float: right;
+	white-space: nowrap;
+}
 .browse-widget .list .button {
 	display: inline-block;
 	float:right;

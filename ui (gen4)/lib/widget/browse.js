@@ -1029,6 +1029,11 @@ var BrowserPrototype = {
 					}))
 			}
 
+			// button container...
+			var btn = $('<span/>')
+				.addClass('button-container')
+				.appendTo(res)
+
 			// custom buttons...
 			buttons && buttons
 				// make the order consistent for the user -- first
@@ -1039,7 +1044,8 @@ var BrowserPrototype = {
 					var html = e[0]
 					var func = e[1]
 
-					res.append($('<div>')
+					//res.append($('<div>')
+					btn.append($('<div>')
 						.addClass('button')
 						.html(html)
 						.click(function(evt){
