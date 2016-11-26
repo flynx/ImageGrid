@@ -39,10 +39,12 @@ module.protocol = function(protocol, func){
 
 // NOTE: if no toggler state is set this assumes that the first state 
 // 		is the default...
+// NOTE: default states is [false, true]
 var makeConfigToggler = 
 module.makeConfigToggler = 
 function(attr, states, a, b){
 
+	states = states || [false, true]
 	var pre = a
 	// XXX is this a good default???
 	//var post = b || function(action){ action != null && this.focusImage() }
@@ -50,10 +52,15 @@ function(attr, states, a, b){
 
 	return toggler.Toggler(null,
 		function(_, action){
-			var lst = states.constructor === Array ? states : states.call(this)
+			var lst = states.constructor === Array ? states 
+				: states instanceof Function ? states.call(this)
+				: states
 
 			if(action == null){
-				return this.config[attr] || lst[lst.indexOf('none')] || lst[0]
+				var cfg = this.config[attr]
+				return cfg == null ? 
+					(lst[lst.indexOf('none')] || lst[0])
+					: cfg 
 
 			} else {
 				this.config[attr] = action

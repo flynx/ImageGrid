@@ -860,6 +860,7 @@ module.ViewerActions = actions.Actions({
 
 
 	// ribbon rotation...
+	//
 	ribbonRotation: ['- Interface/', 
 		function(a){ 
 			if(arguments.length > 0){

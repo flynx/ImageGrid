@@ -110,9 +110,11 @@ var SingleImageActions = actions.Actions({
 		// 		workspace...
 		'single-image-config-defaults': {
 			'ribbon-focus-mode': 'order',
+			'shifts-affect-direction': 'off',
 		},
 	},
 
+	// XXX make this accept args for debuging...
 	updateImageProportions: ['- Interface/',
 		function(){
 			var that = this

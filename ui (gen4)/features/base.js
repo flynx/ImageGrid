@@ -69,7 +69,7 @@ actions.Actions({
 		// If true, shift up/down will count as a left/right move...
 		//
 		// see .direction for details...
-		'shifts-affect-direction': true,
+		'shifts-affect-direction': 'on',
 
 		// Determines the image selection mode when focusing or moving 
 		// between ribbons...
@@ -140,7 +140,7 @@ actions.Actions({
 	// 		Sets the number of steps to change direction (N)
 	//
 	//	'shifts-affect-direction'
-	//		If true, add last direction change before vertical shift to 
+	//		If 'on', add last direction change before vertical shift to 
 	//		direction counter (N)
 	//		This makes the direction change after several shifts up/down
 	//		"backwards" a bit faster.
@@ -449,7 +449,7 @@ actions.Actions({
 
 				this.data.shiftImageUp(cur)
 				this.focusImage(next)
-				this.config['shifts-affect-direction'] && (this.direction = '!')
+				this.config['shifts-affect-direction'] == 'on' && (this.direction = '!')
 
 			// if a specific target is given, just shift it...
 			} else {
@@ -473,7 +473,7 @@ actions.Actions({
 
 				this.data.shiftImageDown(cur)
 				this.focusImage(next)
-				this.config['shifts-affect-direction'] && (this.direction = '!')
+				this.config['shifts-affect-direction'] == 'on' && (this.direction = '!')
 
 			// if a specific target is given, just shift it...
 			} else {
@@ -506,6 +506,9 @@ actions.Actions({
 			this.data.shiftImageRight(target) 
 			this.focusImage()
 		}],
+
+	toggleShiftsAffectDirection: ['Interface/Shifts affect direction',
+		core.makeConfigToggler('shifts-affect-direction', ['off', 'on'])],
 
 	shiftRibbonUp: ['Ribbon|Edit|Sort/Shift ribbon up',
 		function(target){ 
