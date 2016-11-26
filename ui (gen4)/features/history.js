@@ -74,19 +74,22 @@ var URLHistoryActions = actions.Actions({
 			delete this.url_history[url]
 			this.url_history[url] = data
 		}],
+	// NOTE: if clear is not true then this will update a history item 
+	// 		rather than fully rewriting it...
 	pushURLToHistory: ['- History/',
-		function(url, open, check){
+		function(url, open, check, clear){
 			var l = this.config['url-history-length'] || -1
 
 			if(l == 0){
 				return
 			}
 
-			url = url || this.location.path
-			open = open || this.location.method
-			check = check || 'checkPath'
-
 			this.url_history = this.url_history || {}
+			var item = !clear ? (this.url_history[url] || {}) : {}
+
+			url = url || this.location.path
+			open = item.open = open || this.location.method
+			check = item.check = check || 'checkPath'
 
 			// remove the old value...
 			if(url in this.url_history && this.config['url-history-push-up-on-open']){
@@ -94,10 +97,11 @@ var URLHistoryActions = actions.Actions({
 			}
 
 			// push url to history...
-			this.url_history[url] = {
+			this.url_history[url] = item
+			/*this.url_history[url] = {
 				open: open,
 				check: check,
-			}
+			}*/
 
 			// update history length...
 			if(l > 0){
@@ -420,18 +424,44 @@ var URLHistoryUIActions = actions.Actions({
 				to_remove = []
 			}
 
+			// XXX
+
 			var o = browse.makeLister(null, 
 				function(path, make){
-					var l = Object.keys(that.url_history)
-						.reverse()
-						// NOTE: this might get a little slow for 
-						// 		very large sets...
-						.map(function(p){
+					var l = 0
+					var history = Object.keys(that.url_history).reverse()
+
+					// pinned items...
+					history
+						.filter(function(p){
+							return that.url_history[p].pinned 
+						}) 
+						.forEach(function(p){
+							// prevent from drawing again...
+							history.splice(history.indexOf(p), 1)
+
 							make(p, {disabled: !that.checkURLFromHistory(p) })
 								.addClass(p == cur ? 'highlighted selected': '')
-						})
-						.length
+								.addClass('pinned')
 
+							l++
+						})
+
+					// separator...
+					make('---')
+						.addClass('pinned-separator')
+
+					// history...
+					history 
+						// NOTE: this might get a little slow for 
+						// 		very large sets...
+						.forEach(function(p){
+							make(p, {disabled: !that.checkURLFromHistory(p) })
+								.addClass(p == cur ? 'highlighted selected': '')
+							l++
+						})
+
+					// empty history...
 					if(l == 0){
 						make('No history...', null, true)	
 							.find('.button').remove()
@@ -442,12 +472,57 @@ var URLHistoryUIActions = actions.Actions({
 						// move to top...
 						['&diams;', 
 							function(p){
-								var top = this.filter('*', false).first()
 								var cur = this.filter('"'+p+'"', false)
+
+								var top = cur.hasClass('pinned') ?
+									this.filter('*', false).first()
+									: this.filter('*', false)
+										.filter(':not(.pinned)').first()
 
 								if(!top.is(cur)){
 									top.before(cur)
 									that.setTopURLHistory(p)
+								}
+							}],
+						// pin to top...
+						// XXX should this be standard functionality???
+						// XXX should this .setTopURLHistory(..)???
+						['<span class="pin-set">&#9679;</span>'
+						+'<span class="pin-unset">&#9675;</span>', 
+							function(p){
+								var cur = this.filter('"'+p+'"', false)
+								var top_unpinned = this.filter('*', false)
+									.filter(':not(.pinned)').first()
+								var sep = this.dom.find('.list>.pinned-separator')
+
+								// change state...
+								// pinned...
+								if(cur.hasClass('pinned')){
+									cur.removeClass('pinned')
+									delete that.url_history[p].pinned
+
+								// not pinned...
+								} else {
+									cur.addClass('pinned')
+									that.url_history[p].pinned = true
+								}
+
+								// place...
+								// special case: everything is pinned -- place last...
+								if(top_unpinned.length == 0){
+									this.filter('*', false).last()
+										.after(cur)
+										.after(sep)
+
+								// place after last pinned...
+								} else {
+									top_unpinned
+										.before(cur)
+
+									// place the separator...
+									cur.hasClass('pinned') ? 
+											cur.after(sep) 
+										: cur.before(sep)
 								}
 							}],
 						// mark for removal...

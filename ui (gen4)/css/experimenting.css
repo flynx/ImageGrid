@@ -128,6 +128,24 @@ body {
 }
 
 
+/* browse pinned items... */
+.browse-widget .list>div:not(.pinned) .pin-set {
+	display: none;
+}
+.browse-widget .list>div.pinned .pin-unset {
+	display: none;
+}
+/*
+.browse-widget .list>div.pinned + :not(.pinned) {
+    border-top: solid 1px rgba(255, 255, 255, 0.3);
+}
+*/
+.browse-widget .list .pinned-separator:first-child,
+.browse-widget .list .pinned-separator:last-child {
+	display: none;
+}
+
+
 /* Metadata viewer */
 .item-value-view .text:first-child,
 .browse-widget.metadata-view .list>div .text:first-child {
