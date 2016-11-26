@@ -201,6 +201,35 @@ body {
 }
 
 
+/* scrollbar setup... */
+.browse-widget ::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+.browse-widget ::-webkit-scrollbar-button {
+	display: none;
+}
+.browse-widget ::-webkit-scrollbar-track {
+}
+.browse-widget ::-webkit-scrollbar-track-piece {
+	background: transparent;
+}
+.browse-widget ::-webkit-scrollbar-track-piece {
+	background: rgba(0, 0, 0, 0.05);
+}
+.browse-widget ::-webkit-scrollbar-thumb {
+	background: rgba(0, 0, 0, 0.15);
+}
+.browse-widget ::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 0, 0, 0.3);
+}
+.browse-widget ::-webkit-scrollbar-corner {
+}
+.browse-widget ::-webkit-resizer {
+}
+
+
+
 /* DEBUG stuff... */
 .container-center {
 	position: absolute;
