@@ -430,6 +430,16 @@ actions.Actions({
 	//
 	// NOTE: for all of these, current/ribbon image is a default...
 
+	// NOTE: resetting this option will clear the last direction...
+	toggleShiftsAffectDirection: ['Interface/Shifts affect direction',
+		core.makeConfigToggler('shifts-affect-direction', 
+			['off', 'on'],
+			function(action){
+				if(action == 'on'){
+					delete this._direction_last
+				}
+			})],
+
 	// XXX to be used for things like mark/place and dragging...
 	// XXX revise...
 	shiftImageTo: ['- Edit|Sort/',
@@ -509,16 +519,6 @@ actions.Actions({
 			this.data.shiftImageRight(target) 
 			this.focusImage()
 		}],
-
-	// NOTE: resetting this option will clear the last direction...
-	toggleShiftsAffectDirection: ['Interface/Shifts affect direction',
-		core.makeConfigToggler('shifts-affect-direction', 
-			['off', 'on'],
-			function(action){
-				if(action == 'on'){
-					delete this._direction_last
-				}
-			})],
 
 	shiftRibbonUp: ['Ribbon|Edit|Sort/Shift ribbon up',
 		function(target){ 
