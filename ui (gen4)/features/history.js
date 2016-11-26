@@ -564,9 +564,6 @@ var URLHistoryUIActions = actions.Actions({
 						&& parent.focus()
 				})
 
-			o.dom
-				.attr('title', 'Location history...')
-
 			return o
 		})],
 })
