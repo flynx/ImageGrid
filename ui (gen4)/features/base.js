@@ -153,7 +153,10 @@ actions.Actions({
 	set direction(value){
 		// repeat last direction...
 		if(value == '!'){
-			this.direction = this._direction_last || 'right'
+			if(this._direction_last == null){
+				return
+			}
+			this.direction = this._direction_last
 
 		// force direction change...
 		} else if(typeof(value) == typeof('str') 
@@ -507,8 +510,15 @@ actions.Actions({
 			this.focusImage()
 		}],
 
+	// NOTE: resetting this option will clear the last direction...
 	toggleShiftsAffectDirection: ['Interface/Shifts affect direction',
-		core.makeConfigToggler('shifts-affect-direction', ['off', 'on'])],
+		core.makeConfigToggler('shifts-affect-direction', 
+			['off', 'on'],
+			function(action){
+				if(action == 'on'){
+					delete this._direction_last
+				}
+			})],
 
 	shiftRibbonUp: ['Ribbon|Edit|Sort/Shift ribbon up',
 		function(target){ 
