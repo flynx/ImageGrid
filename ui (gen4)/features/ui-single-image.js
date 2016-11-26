@@ -436,16 +436,21 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 			core.makeWorkspaceConfigWriter(
 				function(){ 
 					return Object.keys(this.config['single-image-config-defaults'] || {}) })],
+		// XXX not sure if manual calling of togglers is the right way 
+		// 		to go here + it's redundant...
+		// 		...the reasoning is that togglers can be bound to, so we
+		// 		need to call the bound code...
 		['loadWorkspace',
 			core.makeWorkspaceConfigLoader(
 				function(){ 
 					return Object.keys(this.config['single-image-config-defaults'] || {}) },
-				// NOTE: considering that 'ribbon-focus-mode' is handled 
-				// 		by a toggler that can have things bound to it, 
-				// 		active is the way to go here...
+				// NOTE: options toggled by togglers are triggered here...
+				// 		XXX do not like this -- manual...
 				function(workspace){
 					'ribbon-focus-mode' in workspace
 						&& this.toggleRibbonFocusMode(workspace['ribbon-focus-mode'])
+					'shifts-affect-directio' in workspace
+						&& this.toggleShiftsAffectDirection(workspace['shifts-affect-directio'])
 				})],
 	],
 })
