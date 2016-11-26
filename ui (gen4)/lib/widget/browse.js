@@ -840,7 +840,29 @@ var BrowserPrototype = {
 		var l = browser.find('.list').empty()
 
 		// set the path prefix...
-		p.attr('prefix', this.options.pathPrefix)
+		p
+			.attr('prefix', this.options.pathPrefix)
+			.scroll(function(){
+				// handle path scroll..
+				if(p[0].offsetWidth < p[0].scrollWidth){
+					// scroll all the way to the right...
+					p.addClass('scrolling')
+
+					// left out of view...
+					p[0].scrollLeft > 0 ? 
+						p.addClass('left') 
+						: p.removeClass('left')
+
+					// right out of view...
+					p[0].scrollLeft + p[0].offsetWidth + 5 <= p[0].scrollWidth ? 
+						p.addClass('right') 
+						: p.removeClass('right')
+
+				// keep left aligned...
+				} else {
+					p.removeClass('scrolling')
+				}
+			})
 
 		var c = []
 		// fill the path field...
@@ -889,9 +911,8 @@ var BrowserPrototype = {
 
 
 		// handle path scroll..
-		var e = p.children().last()
 		// scroll to the end when wider than view...
-		if(e.length > 0 && p.width() < p[0].scrollWidth){
+		if(p[0].offsetWidth < p[0].scrollWidth){
 			// scroll all the way to the right...
 			p.scrollLeft(p[0].scrollWidth)
 
@@ -1652,6 +1673,17 @@ var BrowserPrototype = {
 			browser.attr('value', elem.find('.text').text())
 
 			this.trigger('select', elem)
+
+			// handle path scroll -- scroll to the end when wider than view...
+			var p = browser.find('.path')
+			if(p[0].offsetWidth < p[0].scrollWidth){
+				// scroll all the way to the right...
+				p.scrollLeft(p[0].scrollWidth)
+
+			// keep left aligned...
+			} else {
+				p.scrollLeft(0)
+			}
 
 			return elem
 		}
