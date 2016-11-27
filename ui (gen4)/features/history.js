@@ -9,6 +9,7 @@
 
 var actions = require('lib/actions')
 var features = require('lib/features')
+var toggler = require('lib/toggler')
 
 var core = require('features/core')
 var widgets = require('features/ui-widgets')
@@ -151,6 +152,26 @@ var URLHistoryActions = actions.Actions({
 				return null
 			}
 		}],
+	toggleURLPinned: ['History/',
+		toggler.Toggler(
+			function(){ return this.location.path },
+			function(url, action){
+				var e = this.url_history[url]
+
+				// get state...
+				if(action == null){
+					return e && e.pinned ? 'on' : 'off'
+
+				// change state -> 'on'...
+				} else if(action == 'on'){
+					e.pinned = true
+
+				// change state -> 'off'...
+				} else if(action == 'off'){
+					delete e.pinned
+				}
+			}, 
+			['off', 'on'])],
 	openURLFromHistory: ['- History/',
 		function(url, open){
 			this.url_history = this.url_history || {}
@@ -401,6 +422,13 @@ var URLHistoryUIActions = actions.Actions({
 		// 	- [ 'open', 'close' ]	- explicitly select event
 		'url-history-list-clear': ['open', 'close'],
 	},
+	// XXX pinned items are sorted differently on load and on pin -- i.e.
+	// 		a newly pinned item is added to the end of the pin list while
+	// 		when loaded it will show up in it's correct relative order 
+	// 		in the list...
+	// 		...not sure if this is the right way to go but:
+	// 			- not sure that pinning should re-order items
+	// 			- not sure if keeping pin order separately is a good idee...
 	// XXX make availabilyty checking live (now on open dialog)...
 	// XXX need to check items...
 	// XXX use svg icons for buttons...
@@ -487,6 +515,7 @@ var URLHistoryUIActions = actions.Actions({
 						// pin to top...
 						// XXX should this be standard functionality???
 						// XXX should this .setTopURLHistory(..)???
+						// XXX should we get pinned state via .toggleURLPinned(url, '?') here???
 						['<span class="pin-set">&#9679;</span>'
 						+'<span class="pin-unset">&#9675;</span>', 
 							function(p){
@@ -499,12 +528,14 @@ var URLHistoryUIActions = actions.Actions({
 								// pinned...
 								if(cur.hasClass('pinned')){
 									cur.removeClass('pinned')
-									delete that.url_history[p].pinned
+									//delete that.url_history[p].pinned
+									that.toggleURLPinned(p, 'off')
 
 								// not pinned...
 								} else {
 									cur.addClass('pinned')
-									that.url_history[p].pinned = true
+									//that.url_history[p].pinned = true
+									that.toggleURLPinned(p, 'on')
 								}
 
 								// place...
