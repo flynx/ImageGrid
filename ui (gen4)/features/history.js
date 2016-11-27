@@ -462,7 +462,13 @@ var URLHistoryUIActions = actions.Actions({
 					// pinned items...
 					history
 						.filter(function(p){
-							return that.url_history[p].pinned 
+							// NOTE: yes direct access is faster, but 
+							// 		calling the toggler (common API) here
+							// 		will isolate the level knowledge to a
+							// 		single point which will simplify things
+							// 		if anything changes...
+							//return that.url_history[p].pinned 
+							return that.toggleURLPinned(p, '?') == 'on'
 						}) 
 						.forEach(function(p){
 							// prevent from drawing again...
@@ -515,7 +521,6 @@ var URLHistoryUIActions = actions.Actions({
 						// pin to top...
 						// XXX should this be standard functionality???
 						// XXX should this .setTopURLHistory(..)???
-						// XXX should we get pinned state via .toggleURLPinned(url, '?') here???
 						['<span class="pin-set">&#9679;</span>'
 						+'<span class="pin-unset">&#9675;</span>', 
 							function(p){
@@ -528,13 +533,11 @@ var URLHistoryUIActions = actions.Actions({
 								// pinned...
 								if(cur.hasClass('pinned')){
 									cur.removeClass('pinned')
-									//delete that.url_history[p].pinned
 									that.toggleURLPinned(p, 'off')
 
 								// not pinned...
 								} else {
 									cur.addClass('pinned')
-									//that.url_history[p].pinned = true
 									that.toggleURLPinned(p, 'on')
 								}
 
