@@ -31,18 +31,11 @@ var base = require('features/base')
 // 		Array
 //
 // NOTE: of no data is defined this will not have any effect...
+// NOTE: we are not using the vanilla toggler here as it can't handle 
+// 		toggling independently multiple elements...
 function makeTagTogglerAction(tag){
-	var t = function(target, action){
-		if(target == '?' || target == '??'|| target == 'on' || target == 'off'){
-			var x = action
-			action = target
-			target = x
-		}
-		// special case: no data...
-		if(this.data == null){
-			return action == '??' ? ['on', 'off'] : 'off'
-		}
-
+	// get actual target gids...
+	var _getTarget = function(target){
 		target = target || 'current'
 		target = target == 'all' 
 				|| target == 'loaded' 
@@ -50,89 +43,64 @@ function makeTagTogglerAction(tag){
 					? this.data.getImages(target)
 			: target == 'ribbon' ? this.data.getImages('current')
 			: target
-		target = target.constructor !== Array ? [target] : target
+		return target.constructor !== Array ? [target] : target
+	}
 
-		// on...
-		if(action == 'on'){
-			this.tag(tag, target)
-			var res = 'on'
+	// the toggler...
+	var _tagToggler = toggler.Toggler('current',
+		function(target, action){
+			target = _getTarget.call(this, target)
+			// get state...
+			if(action == null){
+				var res = this.data.toggleTag(tag, target, '?')
+				return res.length == 1 ? res[0] : res
 
-		// off...
-		} else if(action == 'off'){
-			this.untag(tag, target)
-			var res = 'off'
+			} else if(action == 'on'){
+				this.tag(tag, target)
+			} else if(action == 'off'){
+				this.untag(tag, target)
+			}
+		}, 
+		['off', 'on'])
 
-		// ?
-		} else if(action == '?'){
-			var res = this.data.toggleTag(tag, target, '?')
-			res = res.length == 1 ? res[0] : res
+	// the action...
+	var action = function(target, action){
+		// special case: no data...
+		if(this.data == null){
+			return action == '??' ? ['off', 'on'] : 'off'
 
-		// ??
-		} else if(action == '??'){
-			res = ['on', 'off']
-
-		// next...
-		} else {
+		// special case: multiple targets and toggle action...
+		} else if((target == 'all' || target == 'loaded' || target == 'ribbon' 
+					|| target instanceof Array) 
+				&& (action == null || action == 'next' || action == 'prev' 
+					|| action == '!')){
 			var res = []
 			var that = this
+			target = _getTarget.call(this, target)
 			target.forEach(function(t){
-				if(that.data.getTags(t).indexOf(tag) < 0){
+				if((that.data.getTags(t).indexOf(tag) < 0) 
+						// invert check if action is '!'...
+						+ (action == '!' ? -1 : 0)){
 					that.tag(tag, t)
 					res.push('on')
+
 				} else {
 					that.untag(tag, t)
 					res.push('off')
 				}
 			})
-			res = res.length == 1 ? res[0] : res
-
+			return res.length == 1 ? res[0] : res
 		}
 
-		return res 
+		// normal case...
+		return _tagToggler.call(this, target, action)
 	}
 
 	// cheating a bit...
-	t.__proto__ = toggler.Toggler.prototype
-	t.constructor = toggler.Toggler
-
-	return t
+	action.__proto__ = toggler.Toggler.prototype
+	action.constructor = toggler.Toggler
+	return action
 }
-/* XXX this toggler is not fully compatible with the Toggler interface
- * 		thus, we either need to update the Toggler to suppor multiple 
- * 		values or keep this...
-function makeTagTogglerAction(tag){
-	return toggler.Toggler(null,
-		function(target, action){
-			// get the target...
-			target = target || 'current'
-			target = target == 'all' 
-					|| target == 'loaded' 
-					|| target in this.data.ribbons 
-						? this.data.getImages(target)
-				: target == 'ribbon' ? this.data.getImages('current')
-				: target
-			target = target.constructor !== Array ? [target] : target
-
-			// get state...
-			if(action == null){
-				var res = this.data.toggleTag(tag, target, '?')
-
-				return res.constructor == Array ? res
-					: res == 'on' ? tag 
-					: 'none'
-
-			// on...
-			} else if(action == tag){
-				this.tag(tag, target)
-
-			// off...
-			} else {
-				this.untag(tag, target)
-			}
-		},
-		tag)
-}
-*/
 
 
 
