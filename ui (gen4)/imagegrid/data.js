@@ -705,6 +705,11 @@ var DataPrototype = {
 				this.makeSparseImages(list)
 			: this.ribbons[this.getRibbon(list)]
 
+		// special case: nothing to chose from...
+		if(list == null || list.length == 0){
+			return null
+		}
+
 		// order -> gid special case...
 		var i
 		if(typeof(target) == typeof(123)){
