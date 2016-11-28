@@ -18,8 +18,6 @@ var actions = require('lib/actions')
 var features = require('lib/features')
 var toggler = require('lib/toggler')
 
-var data = require('imagegrid/data')
-
 
 
 /*********************************************************************/
@@ -82,13 +80,6 @@ function(attr, states, a, b){
 //
 var ImageGridMetaActions =
 module.ImageGridMetaActions = {
-	// XXX experimental...
-	get data(){ 
-		var d = this.__data = this.__data || data.Data() 
-		return d 
-	},
-	set data(value){ this.__data = value },
-
 	// Test if the action is a Toggler...
 	//
 	isToggler: actions.doWithRootAction(function(action){

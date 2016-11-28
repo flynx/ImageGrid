@@ -97,6 +97,14 @@ actions.Actions({
 	// 		so to avoid recursion do not use these in the specific 
 	// 		actions...
 	
+	// Data...
+	get data(){ 
+		var d = this.__data = this.__data || data.Data() 
+		return d 
+	},
+	set data(value){ 
+		this.__data = value },
+	
 	// Base ribbon...
 	get base(){
 		return this.data.base
