@@ -1203,14 +1203,15 @@ module.Buttons = core.ImageGridFeatures.Feature({
 				this.toggleSecondaryButtons(this.config['secondary-buttons-state'] || 'on')
 				this.toggleSideButtons(this.config['side-buttons-state'] || 'on')
 		   	}],
-		['load reload', 
+
+		// update crop button status...
+		['load clear reload', 
 			function(){
-				// update crop button status...
 				$('.main-buttons.buttons .crop.button sub')
 					.text(this.crop_stack ? this.crop_stack.length : '') }],
+		// update zoom button status...
 		['setScale', 
 			function(){
-				// update crop button status...
 				$('.secondary-buttons.buttons .zoom.button sub')
 					.text(Math.round(this.screenwidth)) }],
 	],

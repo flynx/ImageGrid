@@ -83,7 +83,10 @@ function(attr, states, a, b){
 var ImageGridMetaActions =
 module.ImageGridMetaActions = {
 	// XXX experimental...
-	get data(){ return this.__data || data.Data() },
+	get data(){ 
+		var d = this.__data = this.__data || data.Data() 
+		return d 
+	},
 	set data(value){ this.__data = value },
 
 	// Test if the action is a Toggler...

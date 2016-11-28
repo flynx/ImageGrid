@@ -805,6 +805,9 @@ module.CropActions = actions.Actions({
 			})
 		}
 	}],
+	clear: [function(){ 
+		delete this.crop_stack }],
+
 	// store the root crop state instead of the current view...
 	//
 	// modes supported:
@@ -841,11 +844,6 @@ module.CropActions = actions.Actions({
 	//
 	crop: ['- Crop/Crop image list',
 		function(list, flatten){ 
-			if(this.data.length == 0){
-				return
-			}
-
-			//list = list || this.data.order
 			list = list || this.data.getImages()
 
 			if(this.crop_stack == null){
@@ -917,9 +915,12 @@ module.CropActions = actions.Actions({
 	
 	// XXX not sure if we actually need this...
 	cropFlatten: ['Crop/Flatten',
-		function(list){ this.crop(list, true) }],
+		function(list){ this.data.length > 0 && this.crop(list, true) }],
 	cropRibbon: ['Crop/Crop current ribbon',
 		function(ribbon, flatten){
+			if(this.data.length == 0){
+				return
+			}
 			if(typeof(ribbon) == typeof(true)){
 				flatten = ribbon
 				ribbon = null
@@ -929,6 +930,9 @@ module.CropActions = actions.Actions({
 		}],
 	cropRibbonAndAbove: ['Crop/Crop out ribbons bellow',
 		function(ribbon, flatten){
+			if(this.data.length == 0){
+				return
+			}
 			if(typeof(ribbon) == typeof(true)){
 				flatten = ribbon
 				ribbon = null
@@ -955,6 +959,9 @@ module.CropActions = actions.Actions({
 	// XXX should this be here???
 	cropTagged: ['Tag|Crop/Crop tagged images',
 		function(tags, mode, flatten){
+			if(this.data.length == 0){
+				return
+			}
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
 			this.crop(this.data[selector](tags), flatten)
 		}],
