@@ -1568,6 +1568,9 @@ var DataPrototype = {
 	// XXX needs better docs...
 	shiftImage: function(from, target, mode, direction){
 		from = from == null || from == 'current' ? this.current : from
+		if(from == null){
+			return
+		}
 		from = from.constructor !== Array ? [from] : from
 
 		var place
@@ -1613,7 +1616,8 @@ var DataPrototype = {
 	// NOTE: if base ribbon is removed this will try and reset it to the
 	// 		ribbon above or the top ribbon...
 	shiftImageUp: function(gid){ 
-		var g = gid.constructor === Array ? gid[0] : gid
+		gid = gid || this.current
+		var g = gid && gid.constructor === Array ? gid[0] : gid
 		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
 		if(r == 0){
@@ -1621,6 +1625,9 @@ var DataPrototype = {
 			this.newRibbon(g)
 		}
 		var res = this.shiftImage(gid, r-1, 'vertical') 
+		if(res == null){
+			return
+		}
 		// clear empty ribbon...
 		r = r == 0 ? 1 : r
 		if(this.ribbons[this.ribbon_order[r]].len == 0){
@@ -1629,13 +1636,17 @@ var DataPrototype = {
 		return res
 	},
 	shiftImageDown: function(gid){ 
-		var g = gid.constructor === Array ? gid[0] : gid
+		gid = gid || this.current
+		var g = gid && gid.constructor === Array ? gid[0] : gid
 		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
 		if(r == this.ribbon_order.length-1){
 			this.newRibbon(g, 'below')
 		}
 		var res = this.shiftImage(gid, r+1, 'vertical') 
+		if(res == null){
+			return
+		}
 		// clear empty ribbon...
 		if(this.ribbons[this.ribbon_order[r]].len == 0){
 			this.clear(this.ribbon_order[r])

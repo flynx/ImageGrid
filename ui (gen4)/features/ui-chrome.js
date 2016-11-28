@@ -20,9 +20,9 @@ var core = require('features/core')
 // helper...
 function didAdvance(indicator){
 	return function(){
-		var img = this.data.current
+		var img = this.data ? this.data.current : null
 		return function(){
-			if(img == this.data.current){
+			if(img == null || img == this.data.current){
 				this.flashIndicator(indicator)
 			}
 		}

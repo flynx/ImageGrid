@@ -99,7 +99,7 @@ actions.Actions({
 	
 	// Base ribbon...
 	get base(){
-		return this.data == null ? null : this.data.base
+		return this.data.base
 	},
 	set base(value){
 		this.setBaseRibbon(value)
@@ -107,7 +107,7 @@ actions.Actions({
 
 	// Current image...
 	get current(){
-		return this.data == null ? null : this.data.current
+		return this.data.current
 	},
 	set current(value){
 		this.focusImage(value)
@@ -115,7 +115,7 @@ actions.Actions({
 
 	// Current ribbon...
 	get currentRibbon(){
-		return this.data == null ? null : this.data.getRibbon()
+		return this.data.getRibbon()
 	},
 	set currentRibbon(value){
 		this.focusRibbon(value)
@@ -275,8 +275,7 @@ actions.Actions({
 	// basic navigation...
 	//
 	focusImage: ['- Navigate/Focus image',
-		function(img, list){
-			this.data.focusImage(img, list) }],
+		function(img, list){ this.data.focusImage(img, list) }],
 	// Focuses a ribbon by selecting an image in it...
 	//
 	// modes supported:
@@ -290,6 +289,10 @@ actions.Actions({
 	focusRibbon: ['- Navigate/Focus Ribbon',
 		function(target, mode){
 			var data = this.data
+			if(data == null){
+				return
+			}
+
 			var r = data.getRibbon(target)
 			if(r == null){
 				return
@@ -741,7 +744,7 @@ module.TagsActions = actions.Actions({
 		function(source, mode){
 			// can't do anything if either .data or .images are not 
 			// defined...
-			if(this.data == null || this.images == null){
+			if(this.images == null){
 				return
 			}
 
@@ -838,6 +841,10 @@ module.CropActions = actions.Actions({
 	//
 	crop: ['- Crop/Crop image list',
 		function(list, flatten){ 
+			if(this.data.length == 0){
+				return
+			}
+
 			//list = list || this.data.order
 			list = list || this.data.getImages()
 
@@ -929,8 +936,11 @@ module.CropActions = actions.Actions({
 			ribbon = ribbon || this.data.getRibbon()
 
 			var data = this.data
-			var that = this
+			if(data == null){
+				return
+			}
 
+			var that = this
 			var i = data.ribbon_order.indexOf(ribbon)
 			var ribbons = data.ribbon_order.slice(0, i)
 			var images = ribbons

@@ -429,6 +429,10 @@ module.ViewerActions = actions.Actions({
 			var ribbons = this.ribbons
 			var data = this.data
 
+			if(data == null){
+				return
+			}
+
 			// XXX handle raw dom elements...
 			var gid = target instanceof jQuery 
 				? ribbons.getElemGID(target)
@@ -489,6 +493,10 @@ module.ViewerActions = actions.Actions({
 
 			var ribbons = this.ribbons
 			var data = this.data
+
+			if(data == null){
+				return
+			}
 
 			// XXX handle raw dom elements...
 			var gid = target instanceof jQuery 
