@@ -960,6 +960,9 @@ var RibbonsPrototype = {
 		// center of an element...
 		} else if(typeof(target) != typeof(123)){
 			target = $(target)
+			if(target.length == 0){
+				return $()
+			}
 			var w = target.hasClass('image') ? 
 				this.getVisibleImageSize('width', null, target) : 
 				target.outerWidth()
