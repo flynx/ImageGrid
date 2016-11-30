@@ -254,7 +254,7 @@ var transformEditor = function(){
 					var unit = args[i] || ''
 					data[i] = typeof(arg) == typeof(123) 
 							|| (typeof(arg) == typeof('str') 
-								&& /^[0-9\.]+$/.test(arg)) ? arg + unit
+								&& /^-?[0-9\.]+$/.test(arg)) ? arg + unit
 						: arg == '' ? neutral + unit
 						: arg
 					res[i] = arg
@@ -272,7 +272,7 @@ var transformEditor = function(){
 					.map(function(arg, i){
 						var unit = args[i] || ''
 						return arg.slice(-unit.length) == unit 
-								|| /^[0-9\.]+$/.test(arg)?
+								|| /^-?[0-9\.]+$/.test(arg)?
 							parseFloat(arg)
 							: arg
 					})

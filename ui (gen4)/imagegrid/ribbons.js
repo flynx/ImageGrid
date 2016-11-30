@@ -1492,6 +1492,8 @@ var RibbonsPrototype = {
 		// get/create the ribbon...
 		var r = this.getRibbon(ribbon)
 
+		var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
+
 		if(r.length == 0){
 			place = true
 			// no such ribbon exists, then create and append it in the end...
@@ -1509,14 +1511,15 @@ var RibbonsPrototype = {
 			// align only if ref is loaded...
 			if(ref.length > 0){
 				var gid = this.getElemGID(ref)
-				var w = this.getVisibleImageSize('width', 1, ref)
+				var w = this.getVisibleImageSize('width', 1, ref) / W * 100
 
 				// calculate offset...
 				// NOTE: this will not work for non-square images...
 				var dl = loaded.index(ref) - gids.indexOf(gid)
 
 				if(dl != 0){
-					this.dom.setOffset(r, this.dom.getOffset(r).left + dl * w)
+					var x = parseFloat(r.transform('translate3d')[0]) + w * dl
+					r.transform({x: x + 'vmin', y: 0, z: 0})
 				}
 			}
 		}
@@ -1609,13 +1612,17 @@ var RibbonsPrototype = {
 	// NOTE: this is a less general but simpler/faster alternative to 
 	// 		.updateRibbon(..)
 	// NOTE: this needs the ribbon to exist...
+	//
+	// XXX revize offset compensation + cleanup...
+	// 		...at this point offset compensation animates...
 	resizeRibbon: function(ribbon, left, right, transitions, reference){
 		ribbon = this.getRibbon(ribbon)
 		left = left || 0
 		right = right || 0
 		reference = this.getImage(reference)
 		//scale = scale || this.scale()
-
+		
+		var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
 		var w = this.getVisibleImageSize('width', 1, reference)
 
 		var that = this
@@ -1662,7 +1669,7 @@ var RibbonsPrototype = {
 			// XXX this assumes that all widths are equal...
 			// 		...we can't calculate image width unless it is attached...
 			//var l = -left * (reference.outerWidth() / scale)
-			var l = -left * w 
+			//var l = -left * w
 
 			// clear stuff...
 			$(marks)
@@ -1671,14 +1678,23 @@ var RibbonsPrototype = {
 			requestAnimationFrame(function(){
 				transitions || that.preventTransitions(ribbon)
 
+				var a = images[-left].offsetLeft
+
 				unloaded
 					.detach()
 					.removeClass('moving current')
 					// blank out images to prevent wrong image flashing 
 					// when reusing...
 					.css('background-image', 'none')
+
 				// compensate for the offset...
-				that.dom.setOffset(ribbon, that.dom.getOffset(ribbon).left + l)
+				//that.dom.setOffset(ribbon, that.dom.getOffset(ribbon).left + l)
+
+				var b = images[-left].offsetLeft
+				var d = ((a - b) / W) * 100
+				var x = parseFloat(ribbon.transform('translate3d')[0]) + d
+
+				ribbon.transform({x: x + 'vmin', y: 0, z: 0})
 
 				transitions || that.restoreTransitions(ribbon, true)
 			})
@@ -1734,10 +1750,13 @@ var RibbonsPrototype = {
 			// XXX this assumes that all widths are equal...
 			// 		...we can't calculate image with unless it is attached...
 			//var l = c * (reference.outerWidth() / scale)
-			var l = c * w 
+			//var l = c * w 
 
 			requestAnimationFrame(function(){
 				transitions || that.preventTransitions(ribbon)
+
+				// XXX is this the correct reference item -- can it be deleted above???
+				var a = images[0].offsetLeft
 
 				ribbon.prepend(loading)
 
@@ -1748,7 +1767,14 @@ var RibbonsPrototype = {
 				})
 
 				// compensate for the offset...
-				that.dom.setOffset(ribbon, that.dom.getOffset(ribbon).left - l)
+				//that.dom.setOffset(ribbon, that.dom.getOffset(ribbon).left - l)
+
+				// XXX is this the correct reference item -- can it be deleted above???
+				var b = images[0].offsetLeft
+				var d = ((a - b) / W) * 100
+				var x = parseFloat(ribbon.transform('translate3d')[0]) + d
+
+				ribbon.transform({x: x + 'vmin', y: 0, z: 0})
 
 				transitions || that.restoreTransitions(ribbon, true)
 			})
@@ -2289,12 +2315,20 @@ var RibbonsPrototype = {
 		var l = target[0].offsetLeft
 		var w = target[0].offsetWidth
 
+
 		var image_offset = mode == 'before' ? 0
 			: mode == 'after' ? w
 			: w/2
 
+		// relative offset to vmin...
+		var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
+		var x = (-(l + image_offset)/W)*100 + 'vmin'
+
+		// absolute offset...
+		//var x = -(l + image_offset)
+
 		//ribbon.css('transform', 'translateX(-'+ (l + image_offset) +'px)')
-		ribbon.transform({x: -(l + image_offset), y: 0, z: 0}) 
+		ribbon.transform({x: x, y: 0, z: 0}) 
 
 		return this
 	},

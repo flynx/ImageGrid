@@ -555,9 +555,11 @@ module.ViewerActions = actions.Actions({
 		}],
 	centerViewer: ['- Interface/Center the viewer',
 		function(target){
+			/*
 			this
 				.centerImage(target)
 				.centerRibbon(target)
+			*/
 		}],
 
 	focusImage: [

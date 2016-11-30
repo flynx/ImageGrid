@@ -257,9 +257,15 @@ var CurrentImageIndicatorActions = actions.Actions({
 				}
 			}
 
+			/* // set absolute offset...
 			this.ribbons.dom.setOffset(marker, 
 					cur[0].offsetLeft - (parseFloat(cur[0].style.marginLeft) || 0), 
 					0)
+			*/
+			// set relative offset...
+			var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
+			var x = ((cur[0].offsetLeft - (parseFloat(cur[0].style.marginLeft) || 0))/W)*100 + 'vmin'
+			marker.transform({x: x, y: 0, z: 0})
 
 			marker.css(css)
 		}],
