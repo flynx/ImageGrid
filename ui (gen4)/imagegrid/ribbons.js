@@ -1620,7 +1620,6 @@ var RibbonsPrototype = {
 		left = left || 0
 		right = right || 0
 		reference = this.getImage(reference)
-		//scale = scale || this.scale()
 		
 		var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
 		var w = this.getVisibleImageSize('width', 1, reference)
@@ -2314,6 +2313,7 @@ var RibbonsPrototype = {
 
 		var l = target[0].offsetLeft
 		var w = target[0].offsetWidth
+		//var w = this.getVisibleImageSize('width', 1, target)
 
 
 		var image_offset = mode == 'before' ? 0
