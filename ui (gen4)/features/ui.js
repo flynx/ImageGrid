@@ -553,14 +553,27 @@ module.ViewerActions = actions.Actions({
 			// align current ribbon...
 			this.ribbons.centerRibbon(target)
 		}],
+
 	centerViewer: ['- Interface/Center the viewer',
 		function(target){
-			/*
 			this
 				.centerImage(target)
 				.centerRibbon(target)
-			*/
 		}],
+
+	// This is called by the window resize event handler...
+	//
+	// NOTE: since the centering is passive (done in CSS) we do not need
+	// 		to do anything here, but this is needed for legacy or 
+	// 		compatibility code that needs to update stuff when resizing 
+	// 		viewer...
+	// 		To see the list of handlers call:
+	// 			.getHandlerDocStr('resizingWindow')
+	resizingWindow: ['- Interface/',
+		core.notUserCallable(function(){
+			// This is the window resize event...
+		})],
+	
 
 	focusImage: [
 		function(target, list){
@@ -1000,7 +1013,7 @@ module.Viewer = core.ImageGridFeatures.Feature({
 						// this will prevent centering calls from overlapping...
 						that.__centering_on_resize = true
 
-						that.centerViewer()
+						that.resizingWindow()
 
 						delete that.__centering_on_resize
 					}

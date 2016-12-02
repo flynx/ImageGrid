@@ -135,12 +135,6 @@ var SingleImageActions = actions.Actions({
 				return
 			}
 
-			/* XXX these do not account for margins....
-			var img = this.ribbons.getImage()[0] || images[0]
-			var s = getComputedStyle(img)
-			var w = parseFloat(s.width)
-			var h = parseFloat(s.height)
-			//*/
 			var w = this.ribbons.getVisibleImageSize('width', 1)
 			var h = this.ribbons.getVisibleImageSize('height', 1)
 
@@ -173,6 +167,9 @@ var SingleImageActions = actions.Actions({
 						* (threshold/c - 1)
 				// new size...
 				var n = di + d
+				/*/ XXX for some reason 'vmin' ignores scale...
+				var n = ((di + d) / di) * 100
+				//*/
 
 				// XXX not sure why we need to get animation frame here...
 				getAnimationFrame(function(){
@@ -199,9 +196,16 @@ var SingleImageActions = actions.Actions({
 								img.style[a] = ''
 								img.style[b] = n + 'px'
 								img.style.margin = -(n - di)/2 +'px '+ (n - di)/2 +'px'
+								/*/ XXX for some reason 'vmin' ignores scale...
+								img.style[b] = n + 'vmin'
+								img.style.margin = -(n - 100)/2 +'vmin '+ (n - 100)/2 +'vmin'
+								//*/
 
 							} else {
 								img.style[a] = n + 'px'
+								/*/ XXX for some reason 'vmin' ignores scale...
+								img.style[a] = n + 'vmin'
+								//*/
 								img.style[b] = ''
 								img.style.margin = ''
 							}
@@ -334,7 +338,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 	handlers:[
 		// update config...
 		//['resizing.post',
-		['resizingDone',
+		['resizingDone resizingWindow',
 			function(){ 
 				// prevent this from doing anything while no viewer...
 				if(!this.ribbons 
