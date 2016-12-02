@@ -115,6 +115,7 @@ var SingleImageActions = actions.Actions({
 	},
 
 	// XXX make this accept args for debuging...
+	// XXX should this size images via vmin rather than px???
 	updateImageProportions: ['- Interface/',
 		function(){
 			var that = this
@@ -173,14 +174,7 @@ var SingleImageActions = actions.Actions({
 				// new size...
 				var n = di + d
 
-				// the amount to compensate ribbon offset for per image...
-				var x = n - dm
-
-
-				if(n == dm){
-					return
-				}
-
+				// XXX not sure why we need to get animation frame here...
 				getAnimationFrame(function(){
 					that.ribbons.preventTransitions()
 
