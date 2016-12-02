@@ -1518,7 +1518,7 @@ var RibbonsPrototype = {
 				var dl = loaded.index(ref) - gids.indexOf(gid)
 
 				if(dl != 0){
-					var x = parseFloat(r.transform('translate3d')[0]) + w * dl
+					var x = parseFloat((r.transform('translate3d') || [0])[0]) + w * dl
 					r.transform({x: x + 'vmin', y: 0, z: 0})
 				}
 			}
@@ -1691,7 +1691,7 @@ var RibbonsPrototype = {
 
 				var b = images[-left].offsetLeft
 				var d = ((a - b) / W) * 100
-				var x = parseFloat(ribbon.transform('translate3d')[0]) + d
+				var x = parseFloat((ribbon.transform('translate3d') || [0])[0]) + d
 
 				ribbon.transform({x: x + 'vmin', y: 0, z: 0})
 
@@ -1771,7 +1771,7 @@ var RibbonsPrototype = {
 				// XXX is this the correct reference item -- can it be deleted above???
 				var b = images[0].offsetLeft
 				var d = ((a - b) / W) * 100
-				var x = parseFloat(ribbon.transform('translate3d')[0]) + d
+				var x = parseFloat((ribbon.transform('translate3d') || [0])[0]) + d
 
 				ribbon.transform({x: x + 'vmin', y: 0, z: 0})
 
