@@ -246,7 +246,7 @@ module.AppControl = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 // Fullscreen app control buttons...
-var AppControllsActions = actions.Actions({
+var AppButtonsActions = actions.Actions({
 	config: {
 		'app-buttons': {
 			// XXX not sure about this...
@@ -262,8 +262,8 @@ var AppControllsActions = actions.Actions({
 	},
 })
 
-var AppControlls = 
-module.AppControlls = core.ImageGridFeatures.Feature({
+var AppButtons = 
+module.AppButtons = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -277,13 +277,15 @@ module.AppControlls = core.ImageGridFeatures.Feature({
 		'ui-status-bar',
 	],
 
-	actions: AppControllsActions,
+	actions: AppButtonsActions,
 
 	handlers: [
-		['start.pre toggleFullScreen', 
+		['start.pre', 
 			function(){
 				this.toggleAppButtons('on')
-
+			}],
+		['start toggleFullScreen', 
+			function(){
 				var fullscreen = this.toggleFullScreen('?')
 				var buttons = this.ribbons.viewer.find('.app-buttons')
 				
