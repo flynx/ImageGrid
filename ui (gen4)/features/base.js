@@ -122,10 +122,10 @@ actions.Actions({
 	},
 
 	// Current ribbon...
-	get currentRibbon(){
+	get current_ribbon(){
 		return this.data.getRibbon()
 	},
-	set currentRibbon(value){
+	set current_ribbon(value){
 		this.focusRibbon(value)
 	},
 

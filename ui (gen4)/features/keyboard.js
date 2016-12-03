@@ -378,6 +378,16 @@ module.GLOBAL_KEYBOARD = {
 
 
 /*********************************************************************/
+
+var stoppableKeyboardRepeat = function(handler, check){
+	return function(evt){
+		return check() && handler(evt)
+	}
+}
+
+
+
+/*********************************************************************/
 // XXX add a key binding list UI...
 // XXX add loading/storing of kb bindings...
 
@@ -388,17 +398,42 @@ var KeyboardActions = actions.Actions({
 		//
 		// Set this to -1 or null to run keys without any limitations.
 		'max-key-repeat-rate': 0,
+
+		'keyboard-repeat-pause-check': 100,
 	},
 
 	get keyboard(){
 		return this.__keyboard_config
 	},
 
+	pauseKeyboardRepeat: ['- Interface/',
+		function(){
+			this.__keyboard_repeat_paused = true
+		}],
+
 	toggleKeyboardHandling: ['- Interface/Toggle keyboard handling',
 		toggler.Toggler(null, function(_, state){ 
 			if(state == null){
 				return this.__keyboard_handler ? 'on' : 'off'
 			}
+
+			// repeat stop checker...
+			var check = (function(){
+				if(this.config['keyboard-repeat-pause-check'] > 0
+						&& this.__keyboard_repeat_paused){
+					var that = this
+					this.__keyboard_repeat_pause_timeout 
+						&& clearTimeout(this.__keyboard_repeat_pause_timeout)
+
+					this.__keyboard_repeat_pause_timeout = setTimeout(function(){
+						delete that.__keyboard_repeat_paused
+						delete that.__keyboard_repeat_pause_timeout 
+					}, this.config['keyboard-repeat-pause-check'] || 100)
+
+					return false
+				}
+				return true
+			}).bind(this)
 
 			// XXX this does not work yet...
 			//var target = this.ribbons.viewer
@@ -420,24 +455,28 @@ var KeyboardActions = actions.Actions({
 					//this.ribbons.viewer
 					var handler = 
 					this.__keyboard_handler =
-						keyboard.makeKeyboardHandler(
-							function(){ return that.__keyboard_config },
-							function(k){ window.DEBUG && console.log('KEY:', k) }, 
-							this)
+						stoppableKeyboardRepeat(
+							keyboard.makeKeyboardHandler(
+								function(){ return that.__keyboard_config },
+								function(k){ window.DEBUG && console.log('KEY:', k) }, 
+								this),
+							check)
 
 				// drop keys if repeating too fast...
 				// NOTE: this is done for smoother animations...
 				} else {
 					var handler = 
 					this.__keyboard_handler =
-						keyboard.dropRepeatingkeys(
-							keyboard.makeKeyboardHandler(
-								function(){ return that.__keyboard_config },
-								function(k){ window.DEBUG && console.log(k) },
-								this), 
-							function(){ 
-								return that.config['max-key-repeat-rate']
-							})
+						stoppableKeyboardRepeat(
+							keyboard.dropRepeatingkeys(
+								keyboard.makeKeyboardHandler(
+									function(){ return that.__keyboard_config },
+									function(k){ window.DEBUG && console.log(k) },
+									this), 
+								function(){ 
+									return that.config['max-key-repeat-rate']
+								}),
+							check)
 				}
 
 				target.keydown(handler)
@@ -484,7 +523,21 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 				this.__keyboard_config = this.keyboard || GLOBAL_KEYBOARD
 
 				this.toggleKeyboardHandling('on')
-			}]
+			}],
+
+		// pause keyboard repeat...
+		['shiftImageUp.pre shiftImageDown.pre',
+			function(){
+				var r = this.current_ribbon
+
+				return function(){
+					// pause repeat if shifting last image out of the ribbon... 
+					if(this.data.ribbons[r] == null 
+							|| this.data.ribbons[r].len == 0){
+						this.pauseKeyboardRepeat()
+					}
+				}
+			}],
 	],
 })
 
