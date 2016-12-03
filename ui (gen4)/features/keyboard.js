@@ -400,6 +400,21 @@ var KeyboardActions = actions.Actions({
 		'max-key-repeat-rate': 0,
 
 		'keyboard-repeat-pause-check': 100,
+
+		// Sets the target element to which the keyboard event handler 
+		// is bound...
+		//
+		// Supported values:
+		// 	'window'			- window element
+		// 	'document'			- document element
+		// 	'viewer'			- the viewer (default)
+		// 	null				- default element
+		// 	<css selector>		- any css selector
+		//
+		// NOTE: this value is not live, to update the target restart 
+		// 		the handler by cycling the toggler off and on...
+		// NOTE: the target element must be focusable...
+		'keyboard-event-source': 'window',
 	},
 
 	get keyboard(){
@@ -407,9 +422,8 @@ var KeyboardActions = actions.Actions({
 	},
 
 	pauseKeyboardRepeat: ['- Interface/',
-		function(){
-			this.__keyboard_repeat_paused = true
-		}],
+		function(){ 
+			this.__keyboard_repeat_paused = true }],
 
 	toggleKeyboardHandling: ['- Interface/Toggle keyboard handling',
 		toggler.Toggler(null, function(_, state){ 
@@ -435,13 +449,18 @@ var KeyboardActions = actions.Actions({
 				return true
 			}).bind(this)
 
-			// XXX this does not work yet...
-			//var target = this.ribbons.viewer
-			var target = $(document)
-
 			// start/reset keyboard handling...
 			if(state == 'on'){
 				var that = this
+
+				// NOTE: the target element must be focusable...
+				var target =
+				this.__keyboard_event_source =
+					this.config['keyboard-event-source'] == null 
+						|| this.config['keyboard-event-source'] == 'viewer' ? this.ribbons.viewer
+					: this.config['keyboard-event-source'] == 'window' ? $(window)
+					: this.config['keyboard-event-source'] == 'document' ? $(document)
+					: $(this.config['keyboard-event-source'])
 
 				// need to reset...
 				if(this.__keyboard_handler != null){
@@ -483,8 +502,12 @@ var KeyboardActions = actions.Actions({
 
 			// stop keyboard handling...
 			} else {
-				target.off('keydown', this.__keyboard_handler)
+				this.__keyboard_event_source
+					&& this.__keyboard_event_source
+						.off('keydown', this.__keyboard_handler)
+
 				delete this.__keyboard_handler
+				delete this.__keyboard_event_source
 			}
 		},
 		['on', 'off'])],
