@@ -1957,7 +1957,63 @@ var ControlActions = actions.Actions({
 		'control-in-progress-timeout': 100,
 
 		'animation-frame-renderer': true,
+
+		// if true and ribbon is panned off screen, the image will be 
+		// centered, else behave just like partially off screen...
+		'center-off-screen-paned-images': false,
 	},
+
+	makeRibbonVisible: ['- Interface/Make ribbon visible if it is off screen',
+		function(target, center_off_screen){
+			var r = this.ribbons.getRibbon(target)
+			var rgid = this.ribbons.getElemGID(r)
+
+			var central = this.ribbons.getImageByPosition('center', r)
+
+			var rl = r.offset().left
+
+			if(!center_off_screen){
+				var gid = this.data.getImage(rl < 0 ? -1 : 0, rgid)
+				var central = this.ribbons.getImage(gid)
+			}
+
+			var cl = central && central.offset().left
+			var w = central && central.outerWidth(true)
+			var W = this.ribbons.viewer.width()
+			var vmin = Math.min(
+				document.body.offsetWidth, 
+				document.body.offsetHeight)
+
+			// check if central if off screen, if yes, 
+			// nudge it into user-accessible area...
+			//
+			// we are fully off screen -- focus first/last image...
+			if(central == null){
+				var gid = this.data.getImage(rl < 0 ? -1 : 0, rgid)
+
+				this.centerImage(gid)
+				central = this.ribbons.getImage(gid)
+
+			// partly out the left -- show last image...
+			} else if(cl < 0){
+				var s = this.scale
+				r.transform({ 
+					x: (parseFloat((r.transform('translate3d') || [0])[0]) 
+						- ((cl / s) / vmin * 100)) + 'vmin'
+				})
+
+			// partly out the right -- show first image...
+			} else if(cl + w > W){
+				var s = this.scale
+				r.transform({
+					x: (parseFloat((r.transform('translate3d') || [0])[0]) 
+						+ (((W - (cl + w)) / s) / vmin * 100)) + 'vmin'
+				})
+			}
+
+			// load stuff if needed...
+			this.updateRibbon(central)
+		}],
 
 	// Ribbon pan "event"...
 	//
@@ -1981,7 +2037,6 @@ var ControlActions = actions.Actions({
 	// XXX this is really slow/buggy on IE... 
 	// 		...found the problem, need to disable transitions for this 
 	// 		to work semi smoothly...
-	// XXX BUG: after fast panning a non centered image is selected...
 	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
 		toggler.Toggler(null,
 			function(){ 
@@ -2116,40 +2171,8 @@ var ControlActions = actions.Actions({
 
 								// XXX is this the correct way to do this???
 								requestAnimationFrame(function(){
-									var central = that.ribbons.getImageByPosition('center', r)
-
-									var rl = r.offset().left
-									var cl = central && central.offset().left
-									var w = central && central.outerWidth(true)
-									var W = that.ribbons.viewer.width()
-
-									// check if central if off screen, if yes, 
-									// nudge it into user-accessible area...
-									//
-									// we are fully off screen -- focus first/last image...
-									if(central == null){
-										var gid = that.data.getImage(rl < 0 ? -1 : 0, rgid)
-
-										that.centerImage(gid)
-										central = that.ribbons.getImage(gid)
-
-									// partly out the left -- show last image...
-									} else if(cl < 0){
-										r.transform({ 
-											x: (parseFloat((r.transform('translate3d') || [0])[0]) 
-												- ((cl / s) / vmin * 100)) + 'vmin'
-										})
-
-									// partly out the right -- show first image...
-									} else if(cl + w > W){
-										r.transform({
-											x: (parseFloat((r.transform('translate3d') || [0])[0]) 
-												+ (((W - (cl + w)) / s) / vmin * 100)) + 'vmin'
-										})
-									}
-
-									// load stuff if needed...
-									that.updateRibbon(central)
+									that.makeRibbonVisible(r, 
+										that.config['center-off-screen-paned-images'])
 									
 									// XXX is this the right place for this???
 									that.ribbons.restoreTransitions(r)
@@ -2160,6 +2183,7 @@ var ControlActions = actions.Actions({
 									// see if we need to change focus...
 									var current_ribbon = that.data.getRibbon()
 									if(current_ribbon == rgid){
+										var central = that.ribbons.getImageByPosition('center', r)
 										var gid = that.ribbons.getElemGID(central)
 										// silently focus central image...
 										if(that.config['focus-central-image'] == 'silent'){
@@ -2353,6 +2377,15 @@ module.Control = core.ImageGridFeatures.Feature({
 			function(){
 				this.toggleRibbonPanHandling(
 					this.toggleSingleImage('?') == 'off' ? 'on' : 'off')
+			}],
+			
+		// if panned image is off screen, center it...
+		['setScale',
+			function(){
+				var that = this
+				Object.keys(this.data.ribbons).forEach(function(r){
+					that.makeRibbonVisible(r)
+				})
 			}],
 	],
 })
