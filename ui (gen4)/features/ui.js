@@ -2120,7 +2120,7 @@ var ControlActions = actions.Actions({
 
 									var rl = r.offset().left
 									var cl = central && central.offset().left
-									var w = central && central.width()
+									var w = central && central.outerWidth(true)
 									var W = that.ribbons.viewer.width()
 
 									// check if central if off screen, if yes, 
@@ -2141,12 +2141,10 @@ var ControlActions = actions.Actions({
 										})
 
 									// partly out the right -- show first image...
-									} else if(cl + (w*s) > W){
+									} else if(cl + w > W){
 										r.transform({
-											//x: r.transform('x') + (W - (cl + w*s)) / s
-											// XXX use vmin...
 											x: (parseFloat((r.transform('translate3d') || [0])[0]) 
-												+ (((W - (cl + w*s)) / s) / vmin * 100)) + 'vmin'
+												+ (((W - (cl + w)) / s) / vmin * 100)) + 'vmin'
 										})
 									}
 
