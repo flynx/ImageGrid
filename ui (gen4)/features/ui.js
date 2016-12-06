@@ -2043,6 +2043,7 @@ var ControlActions = actions.Actions({
 							var d = that.ribbons.dom
 							var g = evt.gesture
 							var s = that.scale
+							var vmin = Math.min(document.body.offsetWidth, document.body.offsetHeight)
 
 							// we just started...
 							if(!data){
@@ -2055,7 +2056,7 @@ var ControlActions = actions.Actions({
 								// store initial position...
 								data = {
 									//left: d.getOffset(this).left,
-									left: $(this).transform('x'),
+									left: parseFloat(($(this).transform('translate3d') || [0])[0])/100 * vmin,
 									pointers: g.pointers.length,
 								}
 
@@ -2072,14 +2073,15 @@ var ControlActions = actions.Actions({
 								// queue a render...
 								render_data[rgid] = {
 									ribbon: r,
-									x: data.left + (g.deltaX / s),
+									x: ((data.left + (g.deltaX / s)) / vmin * 100) + 'vmin',
 								}
 
 							// inline render...
 							} else {
 								// do the actual move...
-								//d.setOffset(this, data.left + (g.deltaX / s))
-								r.transform({x: data.left + (g.deltaX / s)})
+								r.transform({
+									x: ((data.left + (g.deltaX / s)) / vmin * 100) + 'vmin',
+								})
 
 								/* XXX this seems to offer no speed advantages 
 								 * 		vs. .setOffset(..) but does not play
@@ -2134,13 +2136,17 @@ var ControlActions = actions.Actions({
 									// partly out the left -- show last image...
 									} else if(cl < 0){
 										r.transform({ 
-											x: r.transform('x') - (cl / s) 
+											x: (parseFloat((r.transform('translate3d') || [0])[0]) 
+												- ((cl / s) / vmin * 100)) + 'vmin'
 										})
 
 									// partly out the right -- show first image...
 									} else if(cl + (w*s) > W){
 										r.transform({
-											x: r.transform('x') + (W - (cl + w*s)) / s
+											//x: r.transform('x') + (W - (cl + w*s)) / s
+											// XXX use vmin...
+											x: (parseFloat((r.transform('translate3d') || [0])[0]) 
+												+ (((W - (cl + w*s)) / s) / vmin * 100)) + 'vmin'
 										})
 									}
 

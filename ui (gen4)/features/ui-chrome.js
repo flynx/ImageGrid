@@ -165,6 +165,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 	updateCurrentImageIndicator: ['- Interface/Update current image indicator',
 		function(target, update_border, scale){
 			var ribbon_set = this.ribbons.getRibbonSet()
+			var locator = this.ribbons.getRibbonLocator()
 
 			if(ribbon_set.length == 0){
 				return
@@ -303,17 +304,18 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 		// 		only on next/prev screen)... 
 		// 		...still not sure why .preventTransitions(m) did not
 		// 		do the job.
+		//
+		// XXX BUG: sometimes this is out of sync with ribbon update resulting
+		// 		in the marker positioned in the wrong spot...
 		['resizeRibbon.pre',
 			function(target, s){
 				var m = this.ribbons.viewer.find('.current-marker')
 				// only update if marker exists and we are in current ribbon...
 				if(m.length != 0 && this.currentRibbon == this.data.getRibbon(target)){
-					//this.ribbons.preventTransitions(m)
 					m.hide()
 
 					return function(){
 						this.updateCurrentImageIndicator(target, false)
-						//this.ribbons.restoreTransitions(m, true)
 						m
 							.show()
 							// NOTE: keeping display in inline style will
