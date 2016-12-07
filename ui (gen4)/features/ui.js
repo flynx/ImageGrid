@@ -1972,7 +1972,7 @@ var ControlActions = actions.Actions({
 
 			var rl = r.offset().left
 
-			if(!center_off_screen){
+			if(!center_off_screen && central == null){
 				var gid = this.data.getImage(rl < 0 ? -1 : 0, rgid)
 				var central = this.ribbons.getImage(gid)
 			}
@@ -2384,7 +2384,7 @@ module.Control = core.ImageGridFeatures.Feature({
 			function(){
 				var that = this
 				Object.keys(this.data.ribbons).forEach(function(r){
-					that.makeRibbonVisible(r)
+					//that.makeRibbonVisible(r)
 				})
 			}],
 	],
