@@ -3,7 +3,6 @@
   "main": "index.html",
   "version": "4.0.0a",
   "preferGlobal": true,
-  "chromium-args": "--disable-gpu-compositing",
   "window": {
     "title": "ImageGrid.Viewer (gen4)",
     "position": "center",
