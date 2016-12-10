@@ -398,16 +398,19 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 				}, this.config['current-image-indicator-restore-delay'] || 500)
 			}],
 
-		// single image view...
+		// single image view -- fade in indicator after exit...
 		['toggleSingleImage',
 			function(){
 				if(this.toggleSingleImage('?') == 'off'){
 					var m = this.ribbons.viewer.find('.current-marker')
-					this.ribbons.preventTransitions(m)
+					m.hide()
 
 					this.updateCurrentImageIndicator()
 
-					this.ribbons.restoreTransitions(m)
+					m
+						.delay(150)
+						.fadeIn(200, function(){ 
+							m.css({display: ''})})
 				}
 			}],
 	],
