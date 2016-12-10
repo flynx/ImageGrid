@@ -279,7 +279,9 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'ui-current-image-indicator',
-	depends: ['ui'],
+	depends: [
+		'ui',
+	],
 
 	actions: CurrentImageIndicatorActions,
 
@@ -304,14 +306,18 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 		// 		only on next/prev screen)... 
 		// 		...still not sure why .preventTransitions(m) did not
 		// 		do the job.
-		//
-		// XXX BUG: sometimes this is out of sync with ribbon update resulting
-		// 		in the marker positioned in the wrong spot...
 		['resizeRibbon.pre',
 			function(target, s){
 				var m = this.ribbons.viewer.find('.current-marker')
+				var c = this.current
+				var r = this.currentRibbon
+
 				// only update if marker exists and we are in current ribbon...
-				if(m.length != 0 && this.currentRibbon == this.data.getRibbon(target)){
+				if(m.length != 0
+						&& (target == c 
+							|| target == r 
+							|| this.data.getRibbon(target) == r
+							|| target == null)){
 					m.hide()
 
 					return function(){
@@ -330,7 +336,6 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 		// 	- before animation when scaling up
 		// 	- after when scaling down
 		// This is done to make the visuals consistent...
-		//['fitImage.pre fitRibbon.pre setScale.pre',
 		['resizing.pre',
 			function(unit, w1){ 
 				var w0 = this[unit]
@@ -396,8 +401,14 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 		// single image view...
 		['toggleSingleImage',
 			function(){
-				this.toggleSingleImage('?') == 'off'
-					&& this.updateCurrentImageIndicator()
+				if(this.toggleSingleImage('?') == 'off'){
+					var m = this.ribbons.viewer.find('.current-marker')
+					this.ribbons.preventTransitions(m)
+
+					this.updateCurrentImageIndicator()
+
+					this.ribbons.restoreTransitions(m)
+				}
 			}],
 	],
 })
