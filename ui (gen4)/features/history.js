@@ -79,6 +79,7 @@ var URLHistoryActions = actions.Actions({
 	// 		rather than fully rewriting it...
 	pushURLToHistory: ['- History/',
 		function(url, open, check, clear){
+			url = url || this.location.path
 			var l = this.config['url-history-length'] || -1
 
 			if(l == 0){
@@ -88,7 +89,6 @@ var URLHistoryActions = actions.Actions({
 			this.url_history = this.url_history || {}
 			var item = !clear ? (this.url_history[url] || {}) : {}
 
-			url = url || this.location.path
 			open = item.open = open || this.location.method
 			check = item.check = check || 'checkPath'
 
