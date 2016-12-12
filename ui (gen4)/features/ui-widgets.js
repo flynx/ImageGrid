@@ -548,6 +548,34 @@ var DialogsActions = actions.Actions({
 		'ui-overlay-blur': 'on',
 	},
 
+	// introspection...
+	// XXX should these be more like .getDoc(..) and support lists of actions???
+	getDocPath: ['- Interface/',
+		function(action, clean, join){
+			clean = clean == null ? true : clean
+			join = join == null ? '/' : join
+			var path = (this.getDoc(action)[action].shift() || action)
+				.split(/[\\\/]/g)
+				// remove priority...
+				.map(function(e){
+					return clean ? e.replace(/^[-+]?[0-9]+:\s*/, '') : e })
+			return join ? path.join('/') : path
+		}],
+	getDocBaseDir: ['- Interface/',
+		function(action, clean, join){
+			clean = clean == null ? true : clean
+			join = join == null ? '/' : join
+			var path = this.getDocPath(action, clean, false)
+				// drop the title...
+				.slice(0, -1)
+			return join ? path.join('/') : path
+		}],
+	getDocTitle: ['- Interface/',
+		function(action, clean){
+			clean = clean == null ? true : clean
+		   	return this.getDocPath(action, clean, false).pop() 
+		}],
+
 	// a bit of introspection...
 	get uiContainers(){ 
 		return this.actions.filter(this.isUIContainer.bind(this)) },
@@ -709,10 +737,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 					var elem = (res.dom || res)
 
 					!elem.attr('dialog-title') 
-						&& elem.attr(
-							'dialog-title',
-							(this.getDoc(action)[action].shift() || action)
-								.split(/[\\\/]/g).pop())
+						&& elem.attr('dialog-title', this.getDocTitle(action))
 				}
 			}],
 	],
