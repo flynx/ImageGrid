@@ -25,21 +25,21 @@ var ProgressActions = actions.Actions({
 	// Progress bar widget...
 	//
 	// 	Create progress bar...
-	// 	.testProgress('text')
+	// 	.showProgress('text')
 	//
 	// 	Update progress bar (value, max, msg)...
-	// 	.testProgress('text', 0, 10)
-	// 	.testProgress('text', 10, 50, 'message')
+	// 	.showProgress('text', 0, 10)
+	// 	.showProgress('text', 10, 50, 'message')
 	//
 	// 	Update progress bar value (has no effect if max is not set)...
-	// 	.testProgress('text', 10)
+	// 	.showProgress('text', 10)
 	//
 	// 	Close progress bar...
-	// 	.testProgress('text', 'close')
+	// 	.showProgress('text', 'close')
 	//
 	// 	Relative progress modification...
-	// 	.testProgress('text', '+1')
-	// 	.testProgress('text', '+0', '+1')
+	// 	.showProgress('text', '+1')
+	// 	.showProgress('text', '+0', '+1')
 	//
 	//
 	// XXX should we report errors and stoppages??? (error state??)

@@ -179,6 +179,58 @@ function normalizeModifiers(c, m, a, s){
 }
 
 
+
+// supported action format:
+// 	<actio-name>[!][: <args>][-- <doc>]
+//
+// <args> can contain space seporated:
+// 	- numbers
+// 	- strings
+// 	- non-nested arrays or objects
+//
+// XXX add support for suffix to return false...
+var parseActionCall =
+module.parseActionCall =
+function parseActionCall(txt){
+	// split off the doc...
+	var c = txt.split('--')
+	var doc = (c[1] || '').trim()
+	// the actual code...
+	c = c[0].split(':')
+
+	// action and no default flag...
+	var action = c[0].trim()
+	var no_default = action.slice(-1) == '!'
+	action = no_default ? action.slice(0, -1) : action
+
+	// parse arguments...
+	var args = JSON.parse('['+(
+		((c[1] || '')
+			.match(/"[^"]*"|'[^']*'|\{[^\}]*\}|\[[^\]]*\]|\d+|\d+\.\d*|null/gm) 
+		|| [])
+		.join(','))+']')
+
+	return {
+		action: action,
+		arguments: args,
+		doc: doc,
+		'no-default': no_default,
+	}
+}
+
+
+
+// Event handler wrapper to stop handling keys if check callback does 
+// not pass (returns false)...
+var stoppableKeyboardRepeat = 
+module.stoppableKeyboardRepeat = 
+function(handler, check){
+	return function(evt){
+		return check() && handler(evt)
+	}
+}
+
+
 // Event handler wrapper that will drop identical keys repeating at rate
 // greater than max_rate
 //
@@ -222,45 +274,6 @@ function dropRepeatingkeys(handler, max_rate){
 	}
 }
 
-
-
-// supported action format:
-// 	<actio-name>[!][: <args>][-- <doc>]
-//
-// <args> can contain space seporated:
-// 	- numbers
-// 	- strings
-// 	- non-nested arrays or objects
-//
-// XXX add support for suffix to return false...
-var parseActionCall =
-module.parseActionCall =
-function parseActionCall(txt){
-	// split off the doc...
-	var c = txt.split('--')
-	var doc = (c[1] || '').trim()
-	// the actual code...
-	c = c[0].split(':')
-
-	// action and no default flag...
-	var action = c[0].trim()
-	var no_default = action.slice(-1) == '!'
-	action = no_default ? action.slice(0, -1) : action
-
-	// parse arguments...
-	var args = JSON.parse('['+(
-		((c[1] || '')
-			.match(/"[^"]*"|'[^']*'|\{[^\}]*\}|\[[^\]]*\]|\d+|\d+\.\d*|null/gm) 
-		|| [])
-		.join(','))+']')
-
-	return {
-		action: action,
-		arguments: args,
-		doc: doc,
-		'no-default': no_default,
-	}
-}
 
 
 /* Key handler getter

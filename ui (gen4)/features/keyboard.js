@@ -378,16 +378,6 @@ module.GLOBAL_KEYBOARD = {
 
 
 /*********************************************************************/
-
-var stoppableKeyboardRepeat = function(handler, check){
-	return function(evt){
-		return check() && handler(evt)
-	}
-}
-
-
-
-/*********************************************************************/
 // XXX add a key binding list UI...
 // XXX add loading/storing of kb bindings...
 
@@ -474,7 +464,7 @@ var KeyboardActions = actions.Actions({
 					//this.ribbons.viewer
 					var handler = 
 					this.__keyboard_handler =
-						stoppableKeyboardRepeat(
+						keyboard.stoppableKeyboardRepeat(
 							keyboard.makeKeyboardHandler(
 								function(){ return that.__keyboard_config },
 								function(k){ window.DEBUG && console.log('KEY:', k) }, 
@@ -486,7 +476,7 @@ var KeyboardActions = actions.Actions({
 				} else {
 					var handler = 
 					this.__keyboard_handler =
-						stoppableKeyboardRepeat(
+						keyboard.stoppableKeyboardRepeat(
 							keyboard.dropRepeatingkeys(
 								keyboard.makeKeyboardHandler(
 									function(){ return that.__keyboard_config },
