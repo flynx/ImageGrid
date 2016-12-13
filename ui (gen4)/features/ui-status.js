@@ -84,6 +84,8 @@ var StatusBarActions = actions.Actions({
 			'live-update-on-edit': false,
 		},
 
+		'status-bar-ribbon-count': true,
+
 		'status-bar-changes-text': '*',
 	},
 
@@ -187,7 +189,9 @@ var StatusBarActions = actions.Actions({
 			var n = (this.data && this.data.ribbon_order.length > 0) ? 
 				this.data.getRibbonOrder(gid || this.current) 
 				: '-'
-			var t = this.data ? this.data.ribbon_order.length : null
+			var t = (this.config['status-bar-ribbon-count'] && this.data) ?
+			   	this.data.ribbon_order.length 
+				: null
 
 			// make an element...
 			if(typeof(item) == typeof('str')){
@@ -198,7 +202,7 @@ var StatusBarActions = actions.Actions({
 						.attr('info', 'Current ribbon (click to edit)')
 						.makeEditable()
 						.on('edit-done', function(_, text){
-							that.focusRibbon(text == '*' ? that.base : parseInt(text))
+							that.focusRibbon(text == '*' ? that.base : parseInt(text)-1)
 						})
 						.focus(function(){
 							$(this).selectText()
@@ -213,7 +217,7 @@ var StatusBarActions = actions.Actions({
 
 			item
 				.find('.ribbon-number')
-					.html(n) 
+					.html(n+1) 
 					.end()
 				.find('.ribbon-count')
 					.html(t || '') 
