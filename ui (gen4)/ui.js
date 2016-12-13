@@ -113,6 +113,7 @@ $(function(){
 				'experiments',
 
 				//'-commandline',
+				//'-ui-partial-ribbons',
 
 				// XXX BUG: disabling features on this level does not 
 				// 		work, yet works deeper down...

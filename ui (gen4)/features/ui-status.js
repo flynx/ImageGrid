@@ -187,25 +187,36 @@ var StatusBarActions = actions.Actions({
 			var n = (this.data && this.data.ribbon_order.length > 0) ? 
 				this.data.getRibbonOrder(gid || this.current) 
 				: '-'
+			var t = this.data ? this.data.ribbon_order.length : null
 
 			// make an element...
 			if(typeof(item) == typeof('str')){
 				item = $('<span>')
-					.addClass('ribbon-number')
-					.attr('info', 'Current ribbon (click to edit)')
-					.makeEditable()
-					.on('edit-done', function(_, text){
-						that.focusRibbon(text == '*' ? that.base : parseInt(text))
-					})
-					.focus(function(){
-						$(this).selectText()
-					})
-					.blur(function(){
-						that.updateStatusBar()
-					})
+					.addClass('ribbon-index')
+					.append($('<span>')
+						.addClass('ribbon-number')
+						.attr('info', 'Current ribbon (click to edit)')
+						.makeEditable()
+						.on('edit-done', function(_, text){
+							that.focusRibbon(text == '*' ? that.base : parseInt(text))
+						})
+						.focus(function(){
+							$(this).selectText()
+						})
+						.blur(function(){
+							that.updateStatusBar()
+						}))
+					.append($('<span>')
+						.addClass('ribbon-count')
+						.attr('info', 'Number of ribbons'))
 			}
 
-			item.html(n) 
+			item
+				.find('.ribbon-number')
+					.html(n) 
+					.end()
+				.find('.ribbon-count')
+					.html(t || '') 
 
 			// flag the base ribbon...
 			// NOTE: for some reason can't get jQuery .prop(..)/.removeProp(..)

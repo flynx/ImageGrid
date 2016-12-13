@@ -1394,13 +1394,20 @@ stretching in width... */
 	opacity: 0.6;
 }
 */
-.overlay-info .ribbon-number[base] {
+.overlay-info .ribbon-index[base] {
 	/* NOTE: we are using shadow instead of a border or underline 
 	 	here as we need to control both the uniform shading and
 	 	placement without overcomplicating things when having
 		to compensate for alignment... */
 	//border-bottom: solid 2px yellow;
 	box-shadow: 0 -2px 0 0 yellow inset;
+}
+.overlay-info .ribbon-count {
+	opacity: 0.3;
+	font-size: small;
+}
+.overlay-info .ribbon-count:before {
+	content: "/";
 }
 
 /* changes */
