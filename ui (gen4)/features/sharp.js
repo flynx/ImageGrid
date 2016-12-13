@@ -134,6 +134,7 @@ var SharpActions = actions.Actions({
 		function(images, sizes, base_path, logger){
 			var that = this
 			logger = logger || this.logger
+			logger = logger && logger.push('Previews')
 
 
 			// get/normalize images...
