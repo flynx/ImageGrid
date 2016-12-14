@@ -161,7 +161,13 @@ $(function(){
 				ig.showProgress(msg || ['Progress', e], '+0', '+1')
 
 			} else if(e == 'loaded' || e == 'done' || e == 'written' 
-					|| e == 'skipping' || e == 'index'){
+					|| e == 'index'){
+				ig.showProgress(msg || ['Progress', e], '+1')
+
+			} else if(e == 'skipping' || e == 'skipped'){
+				// XXX if everything is skipped the indicator does not 
+				// 		get hidden...
+				//ig.showProgress(msg || ['Progress', e], '+0', '-1')
 				ig.showProgress(msg || ['Progress', e], '+1')
 
 			// XXX STUB...
