@@ -212,7 +212,7 @@ var StatusBarActions = actions.Actions({
 						}))
 					.append($('<span>')
 						.addClass('ribbon-count')
-						.attr('info', 'Number of ribbons'))
+						.attr('info', 'Ribbon count'))
 			}
 
 			item
