@@ -791,6 +791,25 @@ stretching in width... */
 }
 
 
+
+/* image separators... */
+.ribbon-image-separators.viewer .image {
+	box-shadow: 
+		9px 4px 0 -8px rgba(128,128,128,0.2), 
+		-9px 4px 0 -8px rgba(128,128,128,0.2);
+}
+.ribbon-image-separators.viewer .image[orientation="90"],
+.ribbon-image-separators.viewer .image[orientation="270"] {
+	box-shadow: 
+		4px 9px 0 -8px rgba(128,128,128,0.2), 
+		4px -9px 0 -8px rgba(128,128,128,0.2);
+}
+.ribbon-image-separators.single-image-mode.viewer .image {
+	box-shadow: none;
+}
+
+
+
 /* default backgrounds */
 /* XXX not sure if we need these... 
 .image {

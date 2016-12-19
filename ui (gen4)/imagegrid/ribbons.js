@@ -576,40 +576,57 @@ var RibbonsPrototype = {
 	//
 	// XXX this might break when no images are loaded and proportions 
 	// 		are not square...
-	getVisibleImageSize: function(dim, scale, img){
+	getVisibleImageSize: function(dim, scale, img, force){
 		dim = dim == null ? 'width' : dim
 		img = img || this.viewer.find(IMAGE)
 
-		// if no images are loaded create one temporarily....
 		var tmp
-		if(img.length == 0){
-			img = tmp = this.createImage('__tmp_image__')
-				.css({
-					position: 'absolute',
-					visibility: 'hidden',
-					top: '-200%',
-					left: '-200%',
-				})
-				.appendTo(this.viewer)
-		}
 
-		// account for image rotation...
-		// NOTE: this way we do not need to account for margins...
-		var o = img.attr('orientation')
-		o = o == null ? 0 : o
-		dim = o == 0 || o == 180 ? dim 
-			// swap width/height when image is rotated +/- 90deg...
-			: dim == 'height' ? 'width' 
-			: 'height'
+// 		// XXX size cache -- not sure if this needs to be cached...
+//		var res = (this.__visible_image_size_cache || {})[dim]
+//
+//		if(this.__visible_image_size_cache == false 
+//				|| img.length > 0 
+//				|| force 
+//				|| res == null){
 
-		// do the calc...
-		scale = scale || this.scale()
-		var css = getComputedStyle(img[0])
-		var res = dim == 'height' ? parseFloat(css.height)
-			: dim == 'width' ? parseFloat(css.width)
-			: dim == 'max' ?  Math.max(parseFloat(css.height), parseFloat(css.width))
-			: dim == 'min' ?  Math.min(parseFloat(css.height), parseFloat(css.width))
-			: null
+			// if no images are loaded create one temporarily....
+			if(img.length == 0){
+				img = tmp = this.createImage('__tmp_image__')
+					.css({
+						position: 'absolute',
+						visibility: 'hidden',
+						top: '-200%',
+						left: '-200%',
+					})
+					.appendTo(this.viewer)
+			}
+
+			// account for image rotation...
+			// NOTE: this way we do not need to account for margins...
+			var o = img.attr('orientation')
+			o = o == null ? 0 : o
+			dim = o == 0 || o == 180 ? dim 
+				// swap width/height when image is rotated +/- 90deg...
+				: dim == 'height' ? 'width' 
+				: 'height'
+
+			// do the calc...
+			scale = scale || this.scale()
+			var css = getComputedStyle(img[0])
+			var res = dim == 'height' ? parseFloat(css.height)
+				: dim == 'width' ? parseFloat(css.width)
+				: dim == 'max' ?  Math.max(parseFloat(css.height), parseFloat(css.width))
+				: dim == 'min' ?  Math.min(parseFloat(css.height), parseFloat(css.width))
+				: null
+
+// 			// XXX size cache -- not sure if this needs to be cached...
+//			if(this.__visible_image_size_cache != false){
+//				var cache = this.__visible_image_size_cache = this.__visible_image_size_cache || {}
+//				cache[dim] = res
+//			}
+//		}
+
 		// get size for given scale...
 		res = res ? res * scale : res
 
@@ -1385,7 +1402,7 @@ var RibbonsPrototype = {
 					})
 			}
 
-			// if not images data defined drop out...
+			// if no images data defined drop out...
 			if(that.images == null){
 				return image[0]
 			}
@@ -1447,7 +1464,11 @@ var RibbonsPrototype = {
 			}
 
 			// NOTE: this only has effect on non-square image blocks...
-			// XXX this needs the loaded image, thus should be done right after preview loading...
+			// XXX this needs the loaded image, thus should be done right
+			// 		after preview loading...
+			// XXX preview loading is async, is this the right 
+			// 		place for this??
+			// 		...this is also done in .rotateImage(..) above...
 			that.correctImageProportionsForRotation(image)
 
 			// marks and other indicators...
@@ -1548,6 +1569,7 @@ var RibbonsPrototype = {
 		$(unload_marks)
 			.remove()
 
+		var images = []
 		$(gids).each(function(i, gid){
 			// support for sparse ribbons...
 			if(gid == null){
@@ -1590,8 +1612,11 @@ var RibbonsPrototype = {
 				}
 			}
 
-			that.updateImage(img)
+			images.push(img[0])
 		})
+
+		// XXX this appears to be the bottleneck on large numbers of images...
+		this.updateImage($(images))
 
 		if(place){
 			this.placeRibbon(r, this.viewer.find(RIBBON).length)
@@ -2199,6 +2224,8 @@ var RibbonsPrototype = {
 	//
 	// NOTE: this is not needed for square image blocks.
 	// NOTE: if an image block is square, this will remove the margins.
+	//
+	// XXX this does the same job as features/ui-single-image.js' .updateImageProportions(..)
 	correctImageProportionsForRotation: function(images){
 		// XXX
 		var W = this.viewer.innerWidth()

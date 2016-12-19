@@ -176,6 +176,8 @@ module.ViewerActions = actions.Actions({
 			'transparent-ribbon',
 		],
 
+		'ribbon-image-separators': 'on',
+
 		'ribbon-rotation-step': 10,
 
 		// XXX BUG: for some reason this get's shadowed by base.config...
@@ -404,6 +406,11 @@ module.ViewerActions = actions.Actions({
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config['ribbon-themes'] },
 			function(state){ this.config['ribbon-theme'] = state }) ],
+	toggleRibbonImageSepators: ['Interface/Theme/Toggle ribbon image separators', 
+		toggler.CSSClassToggler(
+			function(){ return this.ribbons.viewer }, 
+			'ribbon-image-separators',
+			function(state){ this.config['ribbon-image-separators'] = state }) ],
 
 
 	/*
@@ -1003,6 +1010,8 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					&& this.toggleTheme(this.config.theme)
 				this.config['ribbon-theme'] 
 					&& this.toggleRibbonTheme(this.config['ribbon-theme'])
+				this.config['ribbon-image-separators'] 
+					&& this.toggleRibbonImageSepators(this.config['ribbon-image-separators'])
 
 				// center viewer on resize events...
 				if(!this.__viewer_resize){

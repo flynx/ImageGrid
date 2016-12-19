@@ -175,7 +175,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 
 			var cur = this.ribbons.getImage(target)
 			// NOTE: cur may be unloaded...
-			var ribbon = this.ribbons.getRibbon(cur.length > 0 ? target : this.currentRibbon)
+			var ribbon = this.ribbons.getRibbon(cur.length > 0 ? target : this.current_ribbon)
 
 			var marker = ribbon.find('.current-marker')
 
@@ -310,12 +310,20 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 			function(target, s){
 				var m = this.ribbons.viewer.find('.current-marker')
 				var c = this.current
-				var r = this.currentRibbon
+				var r = this.current_ribbon
 
 				// only update if marker exists and we are in current ribbon...
 				if(m.length != 0
-						&& (target == c 
+						// XXX not sure if target handling here is the 
+						// 		right way to go -- we manually check things
+						// 		when .data.getImage(..) nad friends to this
+						// 		better and in one spot...
+						// 		...the down side is that they are slower...
+						&& (target == 'current' 
+							|| target == c
 							|| target == r 
+							// XXX this seems to be slow enough to push 
+							// 		the frame-rate down...
 							|| this.data.getRibbon(target) == r
 							|| target == null)){
 					m.hide()
