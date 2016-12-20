@@ -30,9 +30,9 @@ var AppControlActions = actions.Actions({
 	},
 
 	// XXX revise these...
-	close: ['File|Interface/Close viewer',
+	close: ['File|Window/Close viewer',
 		function(){ window.close() }],
-	storeWindowGeometry: ['- Interface/Store window state',
+	storeWindowGeometry: ['- Window/Store window state',
 		function(){
 			// store window parameters (size, state)...
 			var win = nw.Window.get()
@@ -55,7 +55,7 @@ var AppControlActions = actions.Actions({
 				}
 			}
 		}],
-	restoreWindowGeometry: ['- Interface/Restore window state',
+	restoreWindowGeometry: ['- Window/Restore window state',
 		function(){
 			var that = this
 			// or global.window.nwDispatcher.requireNwGui()
@@ -109,11 +109,11 @@ var AppControlActions = actions.Actions({
 			}, this.config['window-delay-initial-display'] || 0)
 		}],
 	
-	minimize: ['Interface/Minimize',
+	minimize: ['Window/Minimize',
 		function(){
 			nw.Window.get().minimize()
 		}],
-	toggleFullScreen: ['Interface/Toggle full screen mode',
+	toggleFullScreen: ['Window/Toggle full screen mode',
 		toggler.CSSClassToggler(
 			function(){ return document.body }, 
 			'.full-screen-mode',

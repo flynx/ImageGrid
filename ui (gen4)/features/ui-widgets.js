@@ -680,7 +680,7 @@ var DialogsActions = actions.Actions({
 		})],
 
 	
-	listDialogs: ['Interface/Dialog list...',
+	listDialogs: ['Interface/Dialog/Dialog list...',
 		makeUIDialog(function(){
 			var actions = this
 
@@ -812,7 +812,7 @@ var BrowseActionsActions = actions.Actions({
 	// 		base order/priorities...
 	//
 	// XXX can we do a deep search on '/' -- find any nested action???
-	browseActions: ['Interface/Actions...',
+	browseActions: ['Interface/Dialog/Actions...',
 		makeUIDialog(function(path){
 			var actions = this
 			var priority = /^(-?[0-9]+)\s*:\s*/
