@@ -168,6 +168,9 @@ var CurrentImageIndicatorActions = actions.Actions({
 			var locator = this.ribbons.getRibbonLocator()
 			var shifting_ribbon = false
 
+			// NOTE: we will update only the attrs that need to be updated...
+			var css = {}
+
 			if(ribbon_set.length == 0){
 				return
 			}
@@ -217,7 +220,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 
 				// add marker to current ribbon...
 				} else {
-					shifting_ribbon = true
+					css.display = ''
 					marker
 						// NOTE: this will prevent animating the marker 
 						// 		in odd ways when switching ribbons...
@@ -225,9 +228,6 @@ var CurrentImageIndicatorActions = actions.Actions({
 						.appendTo(ribbon)
 				}
 			}
-
-			// NOTE: we will update only the attrs that need to be updated...
-			var css = shifting_ribbon ? { display: '' } : {}
 
 			var w = cur.outerWidth(true)
 			var h = cur.outerHeight(true)
