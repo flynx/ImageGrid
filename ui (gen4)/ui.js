@@ -115,6 +115,8 @@ $(function(){
 				//'-commandline',
 				//'-ui-partial-ribbons',
 
+				'-ui-clickable',
+
 				// XXX BUG: disabling features on this level does not 
 				// 		work, yet works deeper down...
 				// 			Example:

@@ -166,6 +166,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 		function(target, update_border, scale){
 			var ribbon_set = this.ribbons.getRibbonSet()
 			var locator = this.ribbons.getRibbonLocator()
+			var shifting_ribbon = false
 
 			if(ribbon_set.length == 0){
 				return
@@ -216,12 +217,17 @@ var CurrentImageIndicatorActions = actions.Actions({
 
 				// add marker to current ribbon...
 				} else {
-					marker.appendTo(ribbon)
+					shifting_ribbon = true
+					marker
+						// NOTE: this will prevent animating the marker 
+						// 		in odd ways when switching ribbons...
+						.css({ display: 'none' })
+						.appendTo(ribbon)
 				}
 			}
 
 			// NOTE: we will update only the attrs that need to be updated...
-			var css = {}
+			var css = shifting_ribbon ? { display: '' } : {}
 
 			var w = cur.outerWidth(true)
 			var h = cur.outerHeight(true)

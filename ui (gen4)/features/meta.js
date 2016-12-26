@@ -103,7 +103,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-slideshow',
 
 	// ui control...
-	'ui-clickable',
+	//'ui-clickable',
 	//'ui-direct-control-jquery',
 	// XXX BUG: on touch down and first move this gets offset by a distance
 	// 		not sure why...

@@ -1537,6 +1537,7 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 /*********************************************************************/
 // Mouse...
 
+/*
 // XXX add setup/taredown...
 var Clickable = 
 module.Clickable = core.ImageGridFeatures.Feature({
@@ -1597,6 +1598,7 @@ module.Clickable = core.ImageGridFeatures.Feature({
 			}],
 	],
 })
+*/
 
 
 
@@ -1972,6 +1974,72 @@ var ControlActions = actions.Actions({
 		'center-off-screen-paned-images': false,
 	},
 
+	toggleImageClickHandling: ['Interface/Toggle image click handling',
+		toggler.Toggler(null,
+			function(){ 
+				return this.ribbons 
+					&& this.ribbons.viewer 
+					//&& this.ribbons.getRibbon().data('hammer') ? 'handling-click' : 'none' },
+					&& this.ribbons.getRibbon().hasClass('clickable') ? 'handling-click' : 'none' },
+			'handling-click',
+			function(state){
+				var that = this
+
+				var setup = this.__click_handler_setup = this.__click_handler_setup 
+					|| function(_, target){
+						var r = that.ribbons.getRibbon(target)
+						if(r.length > 0 && !r.hasClass('clickable')){
+
+							r.data('hammer') == null 
+								&& r.hammer()
+
+							r
+								.addClass('clickable')
+								.on('tap', handler)
+								.data('hammer')
+									.get('tap')
+										.set({
+											//interval: 1,
+											time: 500,
+										})
+						}
+					}
+				var handler = setup.handler = setup.handler 
+					|| function(){
+						that.focusImage(that.ribbons.getElemGID($(event.target)))
+					}
+
+
+				// on...
+				if(state == 'on'){
+					this.off('updateRibbon', setup)
+					this.on('updateRibbon', setup)
+
+					this.data.ribbon_order.forEach(function(gid){
+						setup.call(this, null, gid)
+					})
+
+				// off...
+				} else {
+					this.off('updateRibbon', setup)
+
+					this.data.ribbon_order.forEach(function(gid){
+						var r = that.ribbons.getRibbon(gid)
+
+						// XXX
+						//var h = r.data('hammer')
+						//h && h.destroy()
+
+						r
+							.removeClass('clickable')
+							// XXX this does not remove the hammer trigger
+							// 		...just the jQuery handler is cleared
+							.off('tap')
+							//.removeData('hammer')
+					})
+				}
+			})],
+
 	makeRibbonVisible: ['- Interface/Make ribbon visible if it is off screen',
 		function(target, center_off_screen){
 			var r = this.ribbons.getRibbon(target)
@@ -2051,7 +2119,8 @@ var ControlActions = actions.Actions({
 			function(){ 
 				return this.ribbons 
 					&& this.ribbons.viewer 
-					&& this.ribbons.getRibbon().data('hammer') ? 'handling-pan' : 'none' },
+					//&& this.ribbons.getRibbon().data('hammer') ? 'handling-pan' : 'none' },
+					&& this.ribbons.getRibbon().hasClass('draggable') ? 'handling-pan' : 'none' },
 			'handling-pan',
 			function(state){
 				var that = this
@@ -2072,179 +2141,183 @@ var ControlActions = actions.Actions({
 				var renderer
 
 
-				var stop_scroll = this.__scroll_prevnter = 
-					this.__scroll_prevnter || function(evt){ evt.preventDefault() }
-				var handler = this.__pan_handler = this.__pan_handler || function(_, target){
-					// XXX
-					var that = this
+				var stop_scroll = this.__scroll_prevnter = this.__scroll_prevnter 
+					|| function(evt){ evt.preventDefault() }
+				var setup = this.__pan_handler_setup = this.__pan_handler_setup 
+					|| function(_, target){
+						// XXX
+						var that = this
 
-					var r = this.ribbons.getRibbon(target)
-					var rgid = this.ribbons.getElemGID(r)
+						var r = this.ribbons.getRibbon(target)
+						var rgid = this.ribbons.getElemGID(r)
 
-					var data = false
-					var post_handlers
+						var data = false
+						var post_handlers
 
-					// setup dragging...
-					if(r.length > 0 && !r.hasClass('draggable')){
-						r
-							.addClass('draggable')
-							.hammer()
+						// setup dragging...
+						if(r.length > 0 && !r.hasClass('draggable')){
 
-						r.data('hammer')
-							.get('pan')
-								.set({
-									direction: Hammer.DIRECTION_HORIZONTAL,
-									threshold: this.config['ribbon-pan-threshold'],
-								})
+							r.data('hammer') == null 
+								&& r.hammer()
 
-						r.on('touchmove mousemove', stop_scroll)
-						r.on('pan', function(evt){
-							//evt.stopPropagation()
+							r
+								.addClass('draggable')
+								.data('hammer')
+									.get('pan')
+										.set({
+											direction: Hammer.DIRECTION_HORIZONTAL,
+											threshold: this.config['ribbon-pan-threshold'],
+										})
 
-							// XXX stop all previous animations...
-							//r.velocity("stop")
+							r.on('touchmove mousemove', stop_scroll)
+							r.on('pan', function(evt){
+								//evt.stopPropagation()
 
-							var d = that.ribbons.dom
-							var g = evt.gesture
-							var s = that.scale
-							var vmin = Math.min(document.body.offsetWidth, document.body.offsetHeight)
+								// XXX stop all previous animations...
+								//r.velocity("stop")
 
-							// we just started...
-							if(!data){
-								that.__control_in_progress = (that.__control_in_progress || 0) + 1
-								post_handlers = that.ribbonPanning.pre(that, [rgid])
+								var d = that.ribbons.dom
+								var g = evt.gesture
+								var s = that.scale
+								var vmin = Math.min(document.body.offsetWidth, document.body.offsetHeight)
 
-								// XXX prevent IE from fighting transitions...
-								that.ribbons.preventTransitions(r)
+								// we just started...
+								if(!data){
+									that.__control_in_progress = (that.__control_in_progress || 0) + 1
+									post_handlers = that.ribbonPanning.pre(that, [rgid])
 
-								// store initial position...
-								data = {
-									//left: d.getOffset(this).left,
-									left: parseFloat(($(this).transform('translate3d') || [0])[0])/100 * vmin,
-									pointers: g.pointers.length,
+									// XXX prevent IE from fighting transitions...
+									that.ribbons.preventTransitions(r)
+
+									// store initial position...
+									data = {
+										//left: d.getOffset(this).left,
+										left: parseFloat(($(this).transform('translate3d') || [0])[0])/100 * vmin,
+										pointers: g.pointers.length,
+									}
+
+									// restart the renderer...
+									renderer = renderer && cancelAnimationFrame(renderer)
+									if(that.config['animation-frame-renderer']){
+										renderer = requestAnimationFrame(render)
+									}
 								}
 
-								// restart the renderer...
-								renderer = renderer && cancelAnimationFrame(renderer)
-								if(that.config['animation-frame-renderer']){
-									renderer = requestAnimationFrame(render)
+
+								// animation frame render...
+								if(renderer){
+									// queue a render...
+									render_data[rgid] = {
+										ribbon: r,
+										x: ((data.left + (g.deltaX / s)) / vmin * 100) + 'vmin',
+									}
+
+								// inline render...
+								} else {
+									// do the actual move...
+									r.transform({
+										x: ((data.left + (g.deltaX / s)) / vmin * 100) + 'vmin',
+									})
+
+									/* XXX this seems to offer no speed advantages 
+									 * 		vs. .setOffset(..) but does not play
+									 * 		well with .updateRibbon(..)
+									 *
+									r	
+										.velocity('stop')
+										.velocity({ 
+											translateX: data.left + (g.deltaX / s),
+											translateY: 0, 
+											translateZ: 0,
+										}, 0)
+									//*/
 								}
-							}
 
 
-							// animation frame render...
-							if(renderer){
-								// queue a render...
-								render_data[rgid] = {
-									ribbon: r,
-									x: ((data.left + (g.deltaX / s)) / vmin * 100) + 'vmin',
+								// update ribbon when "pulling" with two fingers...
+								//
+								// NOTE: this only happens when number of fingers
+								// 		changes, thus no lag should be noticeable...
+								if(g.pointers.length != data.pointers){
+									data.pointers = g.pointers.length
+
+									// load stuff if needed...
+									that.updateRibbon(that.ribbons.getImageByPosition('center', r))
 								}
 
-							// inline render...
-							} else {
-								// do the actual move...
-								r.transform({
-									x: ((data.left + (g.deltaX / s)) / vmin * 100) + 'vmin',
-								})
 
-								/* XXX this seems to offer no speed advantages 
-								 * 		vs. .setOffset(..) but does not play
-								 * 		well with .updateRibbon(..)
-								 *
-								r	
-									.velocity('stop')
-									.velocity({ 
-										translateX: data.left + (g.deltaX / s),
-										translateY: 0, 
-										translateZ: 0,
-									}, 0)
-								//*/
-							}
+								// we are done...
+								if(g.isFinal){
+									data = false
 
+									// XXX is this the correct way to do this???
+									requestAnimationFrame(function(){
+										that.makeRibbonVisible(r, 
+											that.config['center-off-screen-paned-images'])
+										
+										// XXX is this the right place for this???
+										that.ribbons.restoreTransitions(r)
 
-							// update ribbon when "pulling" with two fingers...
-							//
-							// NOTE: this only happens when number of fingers
-							// 		changes, thus no lag should be noticeable...
-							if(g.pointers.length != data.pointers){
-								data.pointers = g.pointers.length
+										// XXX add inertia....
+										// XXX
 
-								// load stuff if needed...
-								that.updateRibbon(that.ribbons.getImageByPosition('center', r))
-							}
-
-
-							// we are done...
-							if(g.isFinal){
-								data = false
-
-								// XXX is this the correct way to do this???
-								requestAnimationFrame(function(){
-									that.makeRibbonVisible(r, 
-										that.config['center-off-screen-paned-images'])
-									
-									// XXX is this the right place for this???
-									that.ribbons.restoreTransitions(r)
-
-									// XXX add inertia....
-									// XXX
-
-									// see if we need to change focus...
-									var current_ribbon = that.data.getRibbon()
-									if(current_ribbon == rgid){
-										var central = that.ribbons.getImageByPosition('center', r)
-										var gid = that.ribbons.getElemGID(central)
-										// silently focus central image...
-										if(that.config['focus-central-image'] == 'silent'){
-											that.data.focusImage(gid)
-											that.ribbons.focusImage(that.current)
-											
-										// focus central image in a normal manner...
-										} else if(that.config['focus-central-image']){
-											that.data.focusImage(gid)
-											that.focusImage()
+										// see if we need to change focus...
+										var current_ribbon = that.data.getRibbon()
+										if(current_ribbon == rgid){
+											var central = that.ribbons.getImageByPosition('center', r)
+											var gid = that.ribbons.getElemGID(central)
+											// silently focus central image...
+											if(that.config['focus-central-image'] == 'silent'){
+												that.data.focusImage(gid)
+												that.ribbons.focusImage(that.current)
+												
+											// focus central image in a normal manner...
+											} else if(that.config['focus-central-image']){
+												that.data.focusImage(gid)
+												that.focusImage()
+											}
 										}
-									}
 
-									// this is not time-critical so do it outside the animation...
+										// this is not time-critical so do it outside the animation...
+										setTimeout(function(){
+											that.ribbonPanning.post(that, post_handlers)
+										}, 0)
+									})
+
 									setTimeout(function(){
-										that.ribbonPanning.post(that, post_handlers)
-									}, 0)
-								})
+										that.__control_in_progress -= 1
+										if(that.__control_in_progress <= 0){
+											delete that.__control_in_progress
 
-								setTimeout(function(){
-									that.__control_in_progress -= 1
-									if(that.__control_in_progress <= 0){
-										delete that.__control_in_progress
-
-										//that.ribbonPanning.post(that, post_handlers)
-									}
-								}, that.config['control-in-progress-timeout'] || 100)
-							}
-						})
+											//that.ribbonPanning.post(that, post_handlers)
+										}
+									}, that.config['control-in-progress-timeout'] || 100)
+								}
+							})
+						}
 					}
-				}
 
 				// on...
 				if(state == 'on'){
 					// NOTE: we are resetting this to avoid multiple setting
 					// 		handlers...
-					this.off('updateRibbon', handler)
-					this.on('updateRibbon', handler)
+					this.off('updateRibbon', setup)
+					this.on('updateRibbon', setup)
 
 					this.data.ribbon_order.forEach(function(gid){
-						handler.call(that, null, gid)
+						setup.call(that, null, gid)
 					})
 
 				// off...
 				} else {
-					this.off('updateRibbon', handler)
+					this.off('updateRibbon', setup)
 
 					this.data.ribbon_order.forEach(function(gid){
 						var r = that.ribbons.getRibbon(gid)
 
-						var h = r.data('hammer')
-						h && h.destroy()
+						// XXX
+						//var h = r.data('hammer')
+						//h && h.destroy()
 
 						r
 							.removeClass('draggable')
@@ -2252,7 +2325,8 @@ var ControlActions = actions.Actions({
 							// 		...just the jQuery handler is cleared
 							.off('pan')
 							.off('touchmove mousemove', stop_scroll)
-							.removeData('hammer')
+							// XXX
+							//.removeData('hammer')
 
 						// XXX can this be a spot for a race???
 						renderer = renderer && cancelAnimationFrame(renderer)
@@ -2374,11 +2448,13 @@ module.Control = core.ImageGridFeatures.Feature({
 	handlers: [
 		['load',
 			function(){
+				this.toggleImageClickHandling('on')
 				this.toggleSwipeHandling('on')
 				this.toggleRibbonPanHandling('on')
 			}],
 		['stop',
 			function(){
+				this.toggleImageClickHandling('off')
 				this.toggleSwipeHandling('off')
 				this.toggleRibbonPanHandling('off')
 			}],
