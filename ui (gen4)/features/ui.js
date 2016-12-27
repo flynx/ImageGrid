@@ -412,7 +412,6 @@ module.ViewerActions = actions.Actions({
 			'ribbon-image-separators',
 			function(state){ this.config['ribbon-image-separators'] = state }) ],
 
-
 	/*
 	setEmptyMsg: ['- Interface/Set message to be displayed when nothing is loaded.',
 		function(msg, help){ this.ribbons 

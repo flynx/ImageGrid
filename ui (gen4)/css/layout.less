@@ -408,6 +408,8 @@ button:hover {
 	width: 80px;
 	height: 100%;
 
+	opacity: 0.4;
+
 	font-size: larger;
 
 	background: rgba(0, 0, 0, 0.5);
@@ -415,6 +417,10 @@ button:hover {
 	width: 120px;
 
 	z-index: 900;
+}
+.side-buttons-left:hover,
+.side-buttons-right:hover {
+	opacity: 0.4;
 }
 .side-buttons-left {
 	left: 0px;
@@ -1039,6 +1045,7 @@ stretching in width... */
 
 
 /* XXX these are still experimental... */
+// XXX these need to be updated...
 .mark.brace-opening {
 	width: @image-tile-size / 15;
 	height: @image-tile-size + 10;
@@ -1064,27 +1071,39 @@ stretching in width... */
 	margin-left: -15px;
 }
 
+
 .mark.partition {
-	width: 0px;
-	height: @image-tile-size + 20;
+	width: @image-border;
+	height: @image-tile-size;
 
 	overflow: visible;
 
-	border-right: solid 5px yellow;
-
-	margin-top: -20px;
-	margin-bottom: -5px;
 	margin-left: 0px;
+}
+.mark.partition:before {
+	display: block;
+	position: absolute;
+	content: "";
+
+	width: @image-border;
+	height: 102%;
+
+	background: yellow;
+
+	margin-top: -@image-tile-size / 50;
+	margin-bottom: 0px;
 }
 .mark.partition:after {
 	display: block;
 	position: absolute;
-	top: -8px;
-	left: 10px;
+	left: @image-border * 2;
 	content: attr(text);
 
 	color: yellow;
+
+	margin-top: -@image-tile-size / 24;
 }
+
 
 
 /****************************************************** Image info ***/

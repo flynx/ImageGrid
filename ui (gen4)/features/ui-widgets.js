@@ -1592,6 +1592,19 @@ var WidgetTestActions = actions.Actions({
 		function(){ this.showTaggedInDrawer('bookmark') }],
 	showSelectedInDrawer: ['Test/Show selected in drawer',
 		function(){ this.showTaggedInDrawer('selected') }],
+
+
+	makePartitionAfter: ['Test/Make Partition after image',
+		function(image, text){
+			var attrs = {}
+			if(text){
+				attrs.text = text
+			}
+			this.ribbons.getImage(this.data.getImage(image))
+				.after($('<span>')
+					.addClass('mark partition')
+					.attr(attrs))
+		}],
 })
 
 var WidgetTest = 
