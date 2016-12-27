@@ -1596,14 +1596,49 @@ var WidgetTestActions = actions.Actions({
 
 	makePartitionAfter: ['Test/Make Partition after image',
 		function(image, text){
-			var attrs = {}
+			var gid = this.data.getImage(image || 'current')
+			var attrs = {
+				gid: gid
+			}
 			if(text){
 				attrs.text = text
 			}
-			this.ribbons.getImage(this.data.getImage(image))
+			this.ribbons.getImage(gid)
 				.after($('<span>')
 					.addClass('mark partition')
 					.attr(attrs))
+		}],
+	openBrace: ['Test/Open brace',
+		function(image){
+			var gid = this.data.getImage(image || 'current')
+			var r = this.ribbons.getRibbon(this.data.getRibbon(gid))
+
+			this.ribbons.getImage(gid)
+				.before($('<span>')
+					.addClass('mark brace-open')
+					.attr('gid', gid))
+
+			// XXX this does not work for non-current images ...
+			this.ribbons.preventTransitions(r)
+			// XXX is this correct here???
+			this.focusImage()
+			this.ribbons.restoreTransitions(r)
+		}],
+	closeBrace: ['Test/Close brace',
+		function(image){
+			var gid = this.data.getImage(image || 'current')
+			var r = this.ribbons.getRibbon(this.data.getRibbon(gid))
+
+			this.ribbons.getImage(gid)
+				.after($('<span>')
+					.addClass('mark brace-close')
+					.attr('gid', gid))
+
+			// XXX this does not work for non-current images ...
+			this.ribbons.preventTransitions(r)
+			// XXX is this correct here???
+			this.focusImage()
+			this.ribbons.restoreTransitions(r)
 		}],
 })
 
