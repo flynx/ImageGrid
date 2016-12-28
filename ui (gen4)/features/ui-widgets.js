@@ -1608,15 +1608,33 @@ var WidgetTestActions = actions.Actions({
 					.addClass('mark partition')
 					.attr(attrs))
 		}],
-	openBrace: ['Test/Open brace',
-		function(image){
-			var gid = this.data.getImage(image || 'current')
-			var r = this.ribbons.getRibbon(this.data.getRibbon(gid))
 
-			this.ribbons.getImage(gid)
-				.before($('<span>')
-					.addClass('mark brace-open')
-					.attr('gid', gid))
+
+	// 	.makeBrace('open')
+	// 	.makeBrace('open', image)
+	// 	.makeBrace('close')
+	// 	.makeBrace('close', image)
+	//
+	// XXX this should not be here...
+	makeBrace: ['- Test/Range/',
+		function(type, gid){
+			var cls = type == 'open' ? 'brace-open' : 'brace-close'
+			var r = this.ribbons.viewer.find('.ribbon')
+
+			var brace = this.ribbons.getRibbon(gid).find('.mark.'+cls)
+
+			if(brace.length == 0){
+				brace = $('<span>')
+					.addClass('mark brace '+cls)
+
+			} else if(brace.length > 1){
+				brace = brace.detach().first()
+			}
+
+			brace
+				.attr('gid', gid)
+
+			this.ribbons.getImage(gid)[type == 'open' ? 'before' : 'after'](brace)
 
 			// XXX this does not work for non-current images ...
 			this.ribbons.preventTransitions(r)
@@ -1624,21 +1642,122 @@ var WidgetTestActions = actions.Actions({
 			this.focusImage()
 			this.ribbons.restoreTransitions(r)
 		}],
-	closeBrace: ['Test/Close brace',
+
+	__range: null,
+
+	// XXX add "brace off screen" indicators....
+	updateRangeIndicators: ['- Test/Range/',
+		function(){
+			var range = this.__range
+
+			// XXX not sure if this sweeping action is the right way to 
+			// 		go but it sure makes things simpler...
+			if(range == null){
+				this.ribbons.viewer
+					.find('.ribbon .mark.brace')
+						.remove()
+
+			} else {
+				var that = this
+
+				this.data.ribbon_order.forEach(function(r){
+					var a = that.data.getImage(range[0], 'after', r)
+					var b = that.data.getImage(range[1], 'before', r)
+
+					// only draw braces if some part of the ribbon is 
+					// in range...
+					if(a != null && b != null){
+						that
+							.makeBrace('open', a)
+							.makeBrace('close', b)
+
+					// remove braces from ribbon...
+					} else {
+						that.ribbons.getRibbon(r)
+							.find('.mark.brace')
+								.remove()
+					}
+				})
+			}
+		}],
+	clearRange: ['Test/Range/Clear range',
 		function(image){
-			var gid = this.data.getImage(image || 'current')
-			var r = this.ribbons.getRibbon(this.data.getRibbon(gid))
+			var r = this.ribbons.viewer.find('.ribbon')
 
-			this.ribbons.getImage(gid)
-				.after($('<span>')
-					.addClass('mark brace-close')
-					.attr('gid', gid))
+			delete this.__range
+			this.updateRangeIndicators()
+		}],
+	// procedure:
+	// 	- set brace 
+	// 		when no braces set:
+	// 			- sets two braces around target image
+	// 		When a brace is set:
+	// 			- check brace orientation and set open/close to target
+	// 	- update braces on all ribbons
+	setRangeBorder: ['Test/Range/Set range border',
+		function(image, type){
+			var image = this.data.getImage(image)
+			var range = this.__range = this.__range || []
+			
+			// no range...
+			if(range.length == 0){
+				range.push(image)
+				range.push(image)
 
-			// XXX this does not work for non-current images ...
-			this.ribbons.preventTransitions(r)
-			// XXX is this correct here???
-			this.focusImage()
-			this.ribbons.restoreTransitions(r)
+			// range set...
+			} else {
+				var a = this.data.getImageOrder(range[0])
+				var b = this.data.getImageOrder(range[1])
+				var t = this.data.getImageOrder(image)
+
+
+				var i = 
+					// type/range conflict...
+					type == 'close' && t < a ? null
+					: type == 'open' && t > b ? null
+					// extend left/right...
+					: t <= a ? 0 
+					: t >= b ? 1
+					// set left/right limit...
+					: type == 'open' ? 0
+					: type == 'close' ? 1
+					// narrow to the closest brace...
+					: a - t < b - t ? 0
+					: 1
+
+				if(i == null){
+					return
+				}
+
+				range[i] = image
+			}
+
+			this.updateRangeIndicators()
+		}],
+	openRange: ['Test/Range/Open range',
+		function(image){ this.setRangeBorder(image, 'open') }],
+	closeRange: ['Test/Range/Close range',
+		function(image){ this.setRangeBorder(image, 'close') }],
+
+	cropRange: ['Test/Range|Crop/Crop range',
+		function(){
+			var range = this.__range
+			var order = this.data.order
+
+			range 
+				&& this.crop(order.slice(
+					order.indexOf(range[0]), 
+					order.indexOf(range[1])+1))
+		}],
+	cropRangeOut: ['Test/Range|Crop/Crop out range',
+		function(){
+			var range = this.__range
+			var order = this.data.order
+
+			range 
+				&& this.crop(order
+					.slice(0, order.indexOf(range[0])-1)
+					.concat(order.slice(order.indexOf(range[1])+1)))
 		}],
 })
 
@@ -1653,6 +1772,46 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 	],
 
 	actions: WidgetTestActions,
+
+	handlers: [
+		// Range stuff...
+		['updateImage', 
+			function(_, gid){
+				var range = this.__range
+
+				if(this.ribbons && range && gid){
+					var r = this.data.getRibbon(gid)
+
+					var a = gid == range[0] ? 
+						this.makeBrace('open', gid)
+						: this.data.getImage(range[0], 'after', r)
+					
+					var b = gid == range[1] ? 
+						this.makeBrace('close', gid)
+						: this.data.getImage(range[1], 'before', r)
+
+					if(a != null && b != null){
+						gid == a 
+							&& this.makeBrace('open', gid)
+
+						gid == b
+							&& this.makeBrace('close', gid)
+					}
+				}
+			}],
+		['shiftImage.pre',
+			function(gid){ 
+				var range = this.__range
+
+				if(this.ribbons && range){
+					this.ribbons.getImageMarks(gid).filter('.brace').remove()
+
+					return function(){
+						this.updateRangeIndicators() 
+					}
+				}
+			}], 
+	],
 })
 
 

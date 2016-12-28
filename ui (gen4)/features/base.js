@@ -451,6 +451,18 @@ actions.Actions({
 				}
 			})],
 
+
+	// NOTE: this does not retain direction information, handle individual
+	// 		actions if that info is needed.
+	// NOTE: to make things clean, this is triggered in action handlers 
+	// 		below...
+	shiftImage: ['- Interface/Image shift (do not use directly)',
+		core.notUserCallable(function(gid){
+			// This is the image shift protocol root function
+			//
+			// Not for direct use.
+		})],
+
 	// XXX to be used for things like mark/place and dragging...
 	// XXX revise...
 	shiftImageTo: ['- Edit|Sort/',
@@ -665,6 +677,17 @@ module.Base = core.ImageGridFeatures.Feature({
 	*/
 
 	actions: BaseActions,
+
+	handlers: [
+		[[
+			'shiftImageTo',
+			'shiftImageUp',
+			'shiftImageDown',
+			'shiftImageLeft',
+			'shiftImageRight',
+		], 
+			function(){ this.shiftImage.apply(this, [].slice(arguments, 1))}],
+	],
 })
 
 

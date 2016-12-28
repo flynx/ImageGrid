@@ -240,8 +240,16 @@ module.GLOBAL_KEYBOARD = {
 		')': 'nextImageInOrder',
 		',': 'prevMarked',
 		'.': 'nextMarked',
-		'[': 'prevBookmarked',
-		']': 'nextBookmarked',
+		'[': {
+			default: 'prevBookmarked',
+			// XXX experimental
+			shift: 'openRange',
+		},
+		']': {
+			default: 'nextBookmarked',
+			// XXX experimental
+			shift: 'closeRange',
+		},
 		Up: {
 			default: 'prevRibbon',
 			shift: 'shiftImageUp',
@@ -317,6 +325,8 @@ module.GLOBAL_KEYBOARD = {
 
 			'meta+alt': 'showDevTools',
 		},
+		// XXX experimental...
+		'*': 'setRangeBorder',
 		
 		B: {
 			default: 'toggleBookmark',
