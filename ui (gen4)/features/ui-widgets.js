@@ -1610,13 +1610,35 @@ var WidgetTestActions = actions.Actions({
 		}],
 
 
+})
+
+var WidgetTest = 
+module.WidgetTest = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-widget-test',
+	depends: [
+		'ui-browse-actions',
+	],
+
+	actions: WidgetTestActions,
+})
+
+
+
+//---------------------------------------------------------------------
+// XXX move this to a more appropriate place...
+
+var RangeActions = actions.Actions({
+
 	// 	.makeBrace('open')
 	// 	.makeBrace('open', image)
 	// 	.makeBrace('close')
 	// 	.makeBrace('close', image)
 	//
 	// XXX this should not be here...
-	makeBrace: ['- Test/Range/',
+	makeBrace: ['- Range/',
 		function(type, gid){
 			var cls = type == 'open' ? 'brace-open' : 'brace-close'
 			var r = this.ribbons.viewer.find('.ribbon')
@@ -1643,16 +1665,16 @@ var WidgetTestActions = actions.Actions({
 			this.ribbons.restoreTransitions(r)
 		}],
 
-	__range: null,
-
 	// XXX add "brace off screen" indicators....
-	updateRangeIndicators: ['- Test/Range/',
+	updateRangeIndicators: ['- Range/',
 		function(){
-			var range = this.__range
+			var update = false
+			var range = this.data.__range
 
 			// XXX not sure if this sweeping action is the right way to 
 			// 		go but it sure makes things simpler...
 			if(range == null){
+				update = true
 				this.ribbons.viewer
 					.find('.ribbon .mark.brace')
 						.remove()
@@ -1673,18 +1695,29 @@ var WidgetTestActions = actions.Actions({
 
 					// remove braces from ribbon...
 					} else {
+						update = true
 						that.ribbons.getRibbon(r)
 							.find('.mark.brace')
 								.remove()
 					}
 				})
 			}
+
+			if(update){
+				var r = this.ribbons.viewer.find('.ribbon')
+
+				// XXX this does not work for non-current images ...
+				this.ribbons.preventTransitions(r)
+				// XXX is this correct here???
+				this.focusImage()
+				this.ribbons.restoreTransitions(r)
+			}
 		}],
-	clearRange: ['Test/Range/Clear range',
+	clearRange: ['Range/Clear range',
 		function(image){
 			var r = this.ribbons.viewer.find('.ribbon')
 
-			delete this.__range
+			delete this.data.__range
 			this.updateRangeIndicators()
 		}],
 	// procedure:
@@ -1694,10 +1727,10 @@ var WidgetTestActions = actions.Actions({
 	// 		When a brace is set:
 	// 			- check brace orientation and set open/close to target
 	// 	- update braces on all ribbons
-	setRangeBorder: ['Test/Range/Set range border',
+	setRangeBorder: ['Range/Set range border',
 		function(image, type){
 			var image = this.data.getImage(image)
-			var range = this.__range = this.__range || []
+			var range = this.data.__range = this.data.__range || []
 			
 			// no range...
 			if(range.length == 0){
@@ -1734,14 +1767,14 @@ var WidgetTestActions = actions.Actions({
 
 			this.updateRangeIndicators()
 		}],
-	openRange: ['Test/Range/Open range',
+	openRange: ['Range/Open range',
 		function(image){ this.setRangeBorder(image, 'open') }],
-	closeRange: ['Test/Range/Close range',
+	closeRange: ['Range/Close range',
 		function(image){ this.setRangeBorder(image, 'close') }],
 
-	cropRange: ['Test/Range|Crop/Crop range',
+	cropRange: ['Range|Crop/Crop range',
 		function(){
-			var range = this.__range
+			var range = this.data.__range
 			var order = this.data.order
 
 			range 
@@ -1749,9 +1782,9 @@ var WidgetTestActions = actions.Actions({
 					order.indexOf(range[0]), 
 					order.indexOf(range[1])+1))
 		}],
-	cropRangeOut: ['Test/Range|Crop/Crop out range',
+	cropRangeOut: ['Range|Crop/Crop out range',
 		function(){
-			var range = this.__range
+			var range = this.data.__range
 			var order = this.data.order
 
 			range 
@@ -1761,23 +1794,28 @@ var WidgetTestActions = actions.Actions({
 		}],
 })
 
-var WidgetTest = 
-module.WidgetTest = core.ImageGridFeatures.Feature({
+
+var Range = 
+module.Range = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-widget-test',
+	tag: 'ui-range',
 	depends: [
-		'ui-browse-actions',
+		'ui',
 	],
 
-	actions: WidgetTestActions,
+	actions: RangeActions,
 
 	handlers: [
-		// Range stuff...
+		[[
+			'crop',
+			'reload',
+		], 
+			function(){ this.updateRangeIndicators() }],
 		['updateImage', 
 			function(_, gid){
-				var range = this.__range
+				var range = this.data.__range
 
 				if(this.ribbons && range && gid){
 					var r = this.data.getRibbon(gid)
@@ -1801,7 +1839,7 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 			}],
 		['shiftImage.pre',
 			function(gid){ 
-				var range = this.__range
+				var range = this.data.__range
 
 				if(this.ribbons && range){
 					this.ribbons.getImageMarks(gid).filter('.brace').remove()
@@ -1811,9 +1849,87 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 					}
 				}
 			}], 
+
+		// show/hide off-screen indicators...
+		// XXX STUB...
+		[[
+			'focusImage',
+			'setScale',
+			'updateRangeIndicators',
+		],
+			function(_, gid){
+				gid = gid || this.current
+				var that = this
+				var locator = this.ribbons.getRibbonLocator()
+				var range = this.data.__range
+
+				if(!this.ribbons || !range){
+					locator.find('.range-offscreen-indicator').remove()
+					return
+				}
+
+				var Wr = this.ribbons.viewer.width()
+				var W = (Wr / this.scale) / 2
+
+				var _make = function(gid, ribbon, direction){
+					var t = ribbon[0].offsetTop 
+					var h = ribbon[0].offsetHeight / 2
+
+					var css = {}
+
+					// XXX STUB...
+					css = {
+						display: 'none',
+						position: 'fixed',
+						width: '100px',
+						height: '100px',
+						marginTop: '-50px',
+						background: 'blue',
+						zIndex: 9000,
+						transition: 'all 0.1s ease',
+					}
+
+					var indicator = locator
+						.find('.range-offscreen-indicator.'+direction+'[gid="'+gid+'"]')
+
+					if(direction == 'left'){
+						var brace = ribbon.find('.mark.brace-open')
+					   	if(brace.length == 0 || brace.offset().left >= 0){
+							return indicator.remove()
+						}
+
+					} else if(direction == 'right'){
+						var brace = ribbon.find('.mark.brace-close')
+					   	if(brace.length == 0 || brace.offset().left < Wr){
+							return indicator.remove()
+						}
+					}
+
+					if(indicator.length == 0){
+						locator.append($('<div>')
+							.addClass('range-offscreen-indicator '+direction)
+							.attr('gid', gid))
+					}
+
+					css.left = (direction == 'left'? -W : W-100) + 'px'
+					css.top = (t + h) + 'px'
+
+					return indicator
+						.css(css)
+						.show(0)
+				}
+
+				setTimeout(function(){
+					that.data.ribbon_order.forEach(function(gid){
+						var ribbon = that.ribbons.getRibbon(gid)
+
+						_make(gid, ribbon, 'left')
+						_make(gid, ribbon, 'right')
+					})
+				}, 400)
+			}],
 	],
 })
-
 
 
 

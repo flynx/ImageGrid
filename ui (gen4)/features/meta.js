@@ -69,6 +69,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	//'ui-indirect-control',
 
 	'marks',
+	'ui-range',
 
 	// local storage + url...
 	'config-local-storage',
