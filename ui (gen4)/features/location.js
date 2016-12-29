@@ -120,7 +120,7 @@ var LocationActions = actions.Actions({
 	// NOTE: .location will be set by the .load handler...
 	//
 	// XXX not sure about where to set the .__location -- see inside...
-	loadLocation: ['File/Load location',
+	loadLocation: ['- File/Load location',
 		function(location){
 			location = location || this.location
 

@@ -157,28 +157,30 @@ var StatusBarActions = actions.Actions({
 				var type = item.attr('type')
 			}
 
-			// update...
 			// NOTE: using .toggleStatusBarIndexMode(..) here will fall
 			// 		into an infinite recursion...
 			var cls = (that.config['status-bar-index'] || {})['mode'] || 'normal'
-			item
-				.addClass(cls)
-				.removeClass(cls != 'normal' ? 'normal' : 'global')
 
 			// global index...
 			if(cls == 'global'){
-				item.find('.position:not(:focus)')
-					.text(this.data ? this.data.getImageOrder(gid)+1 : 0)
-				item.find('.length')
-					.text('/'+ (this.data ? this.data.length : 0))
+				var i = this.data ? this.data.getImageOrder(gid) : -1
+				var l = this.data ? this.data.length : 0
 
 			// ribbon index...
 			} else {
-				item.find('.position:not(:focus)')
-					.text(this.data ? this.data.getImageOrder('ribbon', gid)+1 : 0)
-				item.find('.length')
-					.text('/'+ (this.data ? this.data.getImages(gid).len : 0))
+				var i = this.data ? this.data.getImageOrder('ribbon', gid) : -1
+				var l = this.data ? this.data.getImages(gid).len : 0
 			}
+
+			// update...
+			item
+				.addClass(cls)
+				.removeClass(cls != 'normal' ? 'normal' : 'global')
+				.find('.position:not(:focus)')
+					.text(i >= 0 ? i+1 : '-')
+					.end()
+				.find('.length')
+					.text(l > 0 ? ('/' + l) : '')
 
 			return item
 		},
@@ -188,7 +190,7 @@ var StatusBarActions = actions.Actions({
 			// get ribbon number...
 			var n = (this.data && this.data.ribbon_order.length > 0) ? 
 				this.data.getRibbonOrder(gid || this.current) 
-				: '-'
+				: null
 			var t = (this.config['status-bar-ribbon-count'] && this.data) ?
 			   	this.data.ribbon_order.length 
 				: null
@@ -217,7 +219,7 @@ var StatusBarActions = actions.Actions({
 
 			item
 				.find('.ribbon-number')
-					.html(n+1) 
+					.html(n != null ? n+1 : '-') 
 					.end()
 				.find('.ribbon-count')
 					.html(t || '') 

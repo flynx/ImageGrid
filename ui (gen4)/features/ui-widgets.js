@@ -763,6 +763,14 @@ var BrowseActionsActions = actions.Actions({
 			'80:Edit',
 			'70:Navigate',
 			'60:Image',
+			'50:Crop',
+				'Crop/80:Crop marked images',
+				'Crop/80:Crop bookmarked images',
+				'Crop/70:Flatten',
+				// ...
+				'Crop/-80:Uncrop and keep crop image order',
+				'Crop/-81:Uncrop all',
+				'Crop/-82:Uncrop',
 
 			'-50:Interface',
 			'-60:Workspace',
@@ -796,6 +804,20 @@ var BrowseActionsActions = actions.Actions({
 	// 	  		with less or no priority.
 	// 	  NOTE: an item with negative priority will be below any item 
 	// 	  		with greater or no priority.
+	//
+	//
+	// An action can also be disabled dynamically:
+	// 	- .isDisabled() action method is called with actions as base if
+	// 		action is not disabled.
+	//		Example:
+	//			someAction: ['Path/To/Some action',
+	//				{isDisabled: function(){ ... }},
+	//				function(){
+	//					...
+	//				}],
+	//
+	//		NOTE: disabling an action path has priority over the action
+	//			.isDisabled() predicate...
 	//
 	//
 	// NOTE: if the action returns an instance of overlay.Overlay this
@@ -913,18 +935,25 @@ var BrowseActionsActions = actions.Actions({
 				buildTree(path, leaf, null, null, tree)
 			})
 
-			// buld the tree...
+			// build the tree...
 			var paths = this.getPath()
 			Object.keys(paths).forEach(function(key){
 				// handle disabled flag...
+				var action = paths[key][0]
 				var disabled = key.split(/^- /)
 				var path = disabled.pop()
 				disabled = disabled.length > 0
 
+				// prepare to handle disabled action predicate...
+				disabled = (!disabled && actions[action].isDisabled) ?
+					actions[action].isDisabled 
+					: disabled
+
+
 				path = path.split(/[\\\/]/g)
 				var leaf = path.pop()
 
-				buildTree(path, leaf, paths[key][0], disabled, tree)
+				buildTree(path, leaf, action, disabled, tree)
 			})
 
 			//console.log('!!!!', tree)
@@ -952,7 +981,12 @@ var BrowseActionsActions = actions.Actions({
 						&& actions.isToggler && actions.isToggler(cur[0])){
 					var action = cur[0]
 					var disabled = cur[1]
-					
+
+					// handle disabled predicate...
+					disabled = disabled instanceof Function ? 
+						disabled.call(actions) 
+						: disabled
+
 					var cur_state = actions[action]('?')
 					var states = actions[action]('??')
 
@@ -1015,6 +1049,11 @@ var BrowseActionsActions = actions.Actions({
 							if(cur[key] instanceof Array){
 								var action = cur[key][0]
 								var disabled = cur[key][1]
+
+								// handle disabled predicate...
+								disabled = disabled instanceof Function ? 
+									disabled.call(actions) 
+									: disabled
 
 								// Action: toggler -> add toggle button...
 								if(actions.isToggler && actions.isToggler(action)){
@@ -1625,311 +1664,6 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 	actions: WidgetTestActions,
 })
 
-
-
-//---------------------------------------------------------------------
-// XXX move this to a more appropriate place...
-
-var RangeActions = actions.Actions({
-
-	// 	.makeBrace('open')
-	// 	.makeBrace('open', image)
-	// 	.makeBrace('close')
-	// 	.makeBrace('close', image)
-	//
-	// XXX this should not be here...
-	makeBrace: ['- Range/',
-		function(type, gid){
-			var cls = type == 'open' ? 'brace-open' : 'brace-close'
-			var r = this.ribbons.viewer.find('.ribbon')
-
-			var brace = this.ribbons.getRibbon(gid).find('.mark.'+cls)
-
-			if(brace.length == 0){
-				brace = $('<span>')
-					.addClass('mark brace '+cls)
-
-			} else if(brace.length > 1){
-				brace = brace.detach().first()
-			}
-
-			brace
-				.attr('gid', gid)
-
-			this.ribbons.getImage(gid)[type == 'open' ? 'before' : 'after'](brace)
-
-			// XXX this does not work for non-current images ...
-			this.ribbons.preventTransitions(r)
-			// XXX is this correct here???
-			this.focusImage()
-			this.ribbons.restoreTransitions(r)
-		}],
-
-	// XXX add "brace off screen" indicators....
-	updateRangeIndicators: ['- Range/',
-		function(){
-			var update = false
-			var range = this.data.__range
-
-			// XXX not sure if this sweeping action is the right way to 
-			// 		go but it sure makes things simpler...
-			if(range == null){
-				update = true
-				this.ribbons.viewer
-					.find('.ribbon .mark.brace')
-						.remove()
-
-			} else {
-				var that = this
-
-				this.data.ribbon_order.forEach(function(r){
-					var a = that.data.getImage(range[0], 'after', r)
-					var b = that.data.getImage(range[1], 'before', r)
-
-					// only draw braces if some part of the ribbon is 
-					// in range...
-					if(a != null && b != null){
-						that
-							.makeBrace('open', a)
-							.makeBrace('close', b)
-
-					// remove braces from ribbon...
-					} else {
-						update = true
-						that.ribbons.getRibbon(r)
-							.find('.mark.brace')
-								.remove()
-					}
-				})
-			}
-
-			if(update){
-				var r = this.ribbons.viewer.find('.ribbon')
-
-				// XXX this does not work for non-current images ...
-				this.ribbons.preventTransitions(r)
-				// XXX is this correct here???
-				this.focusImage()
-				this.ribbons.restoreTransitions(r)
-			}
-		}],
-	clearRange: ['Range/Clear range',
-		function(image){
-			var r = this.ribbons.viewer.find('.ribbon')
-
-			delete this.data.__range
-			this.updateRangeIndicators()
-		}],
-	// procedure:
-	// 	- set brace 
-	// 		when no braces set:
-	// 			- sets two braces around target image
-	// 		When a brace is set:
-	// 			- check brace orientation and set open/close to target
-	// 	- update braces on all ribbons
-	setRangeBorder: ['Range/Set range border',
-		function(image, type){
-			var image = this.data.getImage(image)
-			var range = this.data.__range = this.data.__range || []
-			
-			// no range...
-			if(range.length == 0){
-				range.push(image)
-				range.push(image)
-
-			// range set...
-			} else {
-				var a = this.data.getImageOrder(range[0])
-				var b = this.data.getImageOrder(range[1])
-				var t = this.data.getImageOrder(image)
-
-
-				var i = 
-					// type/range conflict...
-					type == 'close' && t < a ? null
-					: type == 'open' && t > b ? null
-					// extend left/right...
-					: t <= a ? 0 
-					: t >= b ? 1
-					// set left/right limit...
-					: type == 'open' ? 0
-					: type == 'close' ? 1
-					// narrow to the closest brace...
-					: a - t < b - t ? 0
-					: 1
-
-				if(i == null){
-					return
-				}
-
-				range[i] = image
-			}
-
-			this.updateRangeIndicators()
-		}],
-	openRange: ['Range/Open range',
-		function(image){ this.setRangeBorder(image, 'open') }],
-	closeRange: ['Range/Close range',
-		function(image){ this.setRangeBorder(image, 'close') }],
-
-	cropRange: ['Range|Crop/Crop range',
-		function(){
-			var range = this.data.__range
-			var order = this.data.order
-
-			range 
-				&& this.crop(order.slice(
-					order.indexOf(range[0]), 
-					order.indexOf(range[1])+1))
-		}],
-	cropRangeOut: ['Range|Crop/Crop out range',
-		function(){
-			var range = this.data.__range
-			var order = this.data.order
-
-			range 
-				&& this.crop(order
-					.slice(0, order.indexOf(range[0])-1)
-					.concat(order.slice(order.indexOf(range[1])+1)))
-		}],
-})
-
-
-var Range = 
-module.Range = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-range',
-	depends: [
-		'ui',
-	],
-
-	actions: RangeActions,
-
-	handlers: [
-		[[
-			'crop',
-			'reload',
-		], 
-			function(){ this.updateRangeIndicators() }],
-		['updateImage', 
-			function(_, gid){
-				var range = this.data.__range
-
-				if(this.ribbons && range && gid){
-					var r = this.data.getRibbon(gid)
-
-					var a = gid == range[0] ? 
-						this.makeBrace('open', gid)
-						: this.data.getImage(range[0], 'after', r)
-					
-					var b = gid == range[1] ? 
-						this.makeBrace('close', gid)
-						: this.data.getImage(range[1], 'before', r)
-
-					if(a != null && b != null){
-						gid == a 
-							&& this.makeBrace('open', gid)
-
-						gid == b
-							&& this.makeBrace('close', gid)
-					}
-				}
-			}],
-		['shiftImage.pre',
-			function(gid){ 
-				var range = this.data.__range
-
-				if(this.ribbons && range){
-					this.ribbons.getImageMarks(gid).filter('.brace').remove()
-
-					return function(){
-						this.updateRangeIndicators() 
-					}
-				}
-			}], 
-
-		// show/hide off-screen indicators...
-		// XXX STUB...
-		[[
-			'focusImage',
-			'setScale',
-			'updateRangeIndicators',
-		],
-			function(_, gid){
-				gid = gid || this.current
-				var that = this
-				var locator = this.ribbons.getRibbonLocator()
-				var range = this.data.__range
-
-				if(!this.ribbons || !range){
-					locator.find('.range-offscreen-indicator').remove()
-					return
-				}
-
-				var Wr = this.ribbons.viewer.width()
-				var W = (Wr / this.scale) / 2
-
-				var _make = function(gid, ribbon, direction){
-					var t = ribbon[0].offsetTop 
-					var h = ribbon[0].offsetHeight / 2
-
-					var css = {}
-
-					// XXX STUB...
-					css = {
-						display: 'none',
-						position: 'fixed',
-						width: '100px',
-						height: '100px',
-						marginTop: '-50px',
-						background: 'blue',
-						zIndex: 9000,
-						transition: 'all 0.1s ease',
-					}
-
-					var indicator = locator
-						.find('.range-offscreen-indicator.'+direction+'[gid="'+gid+'"]')
-
-					if(direction == 'left'){
-						var brace = ribbon.find('.mark.brace-open')
-					   	if(brace.length == 0 || brace.offset().left >= 0){
-							return indicator.remove()
-						}
-
-					} else if(direction == 'right'){
-						var brace = ribbon.find('.mark.brace-close')
-					   	if(brace.length == 0 || brace.offset().left < Wr){
-							return indicator.remove()
-						}
-					}
-
-					if(indicator.length == 0){
-						locator.append($('<div>')
-							.addClass('range-offscreen-indicator '+direction)
-							.attr('gid', gid))
-					}
-
-					css.left = (direction == 'left'? -W : W-100) + 'px'
-					css.top = (t + h) + 'px'
-
-					return indicator
-						.css(css)
-						.show(0)
-				}
-
-				setTimeout(function(){
-					that.data.ribbon_order.forEach(function(gid){
-						var ribbon = that.ribbons.getRibbon(gid)
-
-						_make(gid, ribbon, 'left')
-						_make(gid, ribbon, 'right')
-					})
-				}, 400)
-			}],
-	],
-})
 
 
 

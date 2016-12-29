@@ -133,6 +133,17 @@ module.GLOBAL_KEYBOARD = {
 		},
 	},
 
+	'Range': {
+		doc: 'Range editing',
+		pattern: '.brace',
+
+		// XXX add:
+		// 		- range navigation
+		// 		- range manipulation
+
+		Esc: 'clearRange',
+	},
+
 	// XXX add "save as collection..." (???)
 	// XXX cleanup...
 	'Viewer': {

@@ -889,7 +889,7 @@ module.CropActions = actions.Actions({
 				this.data = this.data.crop(list, flatten)
 			}
 		}],
-	uncrop: ['Crop/Uncrop ribbons',
+	uncrop: ['Crop/Uncrop',
 		function(level, restore_current, keep_crop_order){
 			level = level || 1
 
@@ -936,7 +936,7 @@ module.CropActions = actions.Actions({
 	// 		- the order is simple and already done above...
 	// 		- I think that levels should be relative to images, the 
 	// 		  only problem here is how to deal with new ribbons...
-	mergeCrop: ['Crop|Edit/Merge crop',
+	mergeCrop: ['- Crop|Edit/Merge crop',
 		function(){
 			// XXX
 		}],

@@ -47,6 +47,12 @@ body {
 	z-index: 5000;
 }
 
+
+.viewer:not(.no-transitions) .range-offscreen-indicator:not(.no-transitions) {
+	transition: all 0.1s linear;
+}
+
+
 /* basic animation... */
 .viewer:not(.no-transitions) {
 	-webkit-transition: background-color 0.8s ease;

@@ -1772,6 +1772,30 @@ stretching in width... */
 }
 
 
+.range-offscreen-indicator {
+	display: none;
+	position: fixed;
+
+	width: @image-tile-size / 16;
+	height: @image-tile-size / 4;
+
+	margin-top: -@image-tile-size / 8;
+
+	box-sizing: border-box;
+
+	border-top: solid @image-tile-size / 8 transparent;
+	border-bottom: solid @image-tile-size / 8 transparent;
+}
+.range-offscreen-indicator.left {
+	border-right: solid @image-tile-size / 16 yellow;
+	border-left: solid @image-border * 2 transparent;
+}
+.range-offscreen-indicator.right {
+
+	border-left: solid @image-tile-size / 16 yellow;
+	border-right: solid @image-border * 2 transparent;
+}
+
 
 
 /*************************************************** Progress bars ***/
