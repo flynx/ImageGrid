@@ -931,6 +931,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 						config.showDisabled = o.options.showDisabled
 						config.showNonTraversable = o.options.showNonTraversable
 					})
+					
+			o.dom.addClass('file-browser')
 
 			return o
 		})],

@@ -236,6 +236,32 @@ body {
 
 
 
+/* Dialog highlight experiment... */
+.browse-widget {
+	border-bottom: solid 7px rgba(100, 100, 100, 0.5);
+}
+/*
+.light .browse-widget {
+	border-bottom: solid 7px rgba(100, 100, 100, 0.5);
+}
+.dark .browse-widget {
+	border-bottom: solid 7px rgba(100, 100, 100, 0.5);
+}
+*/
+
+.browse-widget.file-browser {
+	border-bottom: solid 7px rgba(255, 255, 0, 0.5);
+}
+/*
+.light .browse-widget.file-browser {
+	border-bottom: solid 7px rgba(255, 255, 0, 0.5);
+}
+.dark .browse-widget.file-browser {
+	border-bottom: solid 7px rgba(255, 255, 0, 0.5);
+}
+*/
+
+
 /* DEBUG stuff... */
 .container-center {
 	position: absolute;
