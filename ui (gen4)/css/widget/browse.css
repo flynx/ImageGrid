@@ -285,6 +285,9 @@
 .browse-widget .list>div.disabled {
 	opacity: 0.3;
 }
+.browse-widget .list>div.hidden {
+	font-style: italic;
+}
 
 
 /* numbers... */

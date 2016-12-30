@@ -1036,12 +1036,9 @@ var BrowserPrototype = {
 				// append text elements... 
 				.append(p)
 
-			if(!traversable){
-				res.addClass('not-traversable')
-			} 
-			if(disabled){
-				res.addClass('disabled')
-			}
+			!traversable && res.addClass('not-traversable')
+			disabled && res.addClass('disabled')
+			hidden && res.addClass('hidden')
 
 			// buttons...
 			// action (open)...
@@ -1968,7 +1965,7 @@ var BrowserPrototype = {
 	push: function(pattern){
 		var browser = this.dom 
 		var cur = this.select('!')
-		var elem = this.select(!pattern ? '!'
+		var elem = this.filter(!pattern ? '!'
 				: /-?[0-9]+/.test(pattern) ? pattern
 				// XXX avoid keywords that .select(..) understands...
 				//: '"'+pattern+'"' )
@@ -1976,6 +1973,11 @@ var BrowserPrototype = {
 
 		// item not found...
 		if(elem.length == 0 && pattern != null){
+			return this
+		}
+
+		// item disabled...
+		if(elem.hasClass('disabled')){
 			return this
 		}
 
@@ -1987,8 +1989,11 @@ var BrowserPrototype = {
 
 		// if not traversable call the action...
 		if(!this.traversable || elem.hasClass('not-traversable')){
+			this.select(elem)
 			return this.action()
 		}
+
+		this.select(elem)
 
 		var path = this.path
 		// XXX do we need qotes here???
