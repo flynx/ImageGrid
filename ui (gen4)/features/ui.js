@@ -798,6 +798,8 @@ module.ViewerActions = actions.Actions({
 	// Zooming is done by multiplying the current scale by .config['zoom-step']
 	// and rounding to nearest discrete number of images to fit on screen.
 	zoomIn: ['Zoom/Zoom in',
+		{browseMode: function(){
+			return Math.min(this.screenwidth, this.screenheight) <= 1 && 'disabled' }},
 		function(){ 
 			var d = (this.config['zoom-step'] || 1.2)
 
@@ -811,6 +813,8 @@ module.ViewerActions = actions.Actions({
 			}
 		}],
 	zoomOut: ['Zoom/Zoom out',
+		{browseMode: function(){
+			return this.screenwidth >= this.config['max-screen-images'] && 'disabled' }},
 		function(){ 
 			var max = this.config['max-screen-images']
 

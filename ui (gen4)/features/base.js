@@ -1031,6 +1031,8 @@ module.ImageGroupActions = actions.Actions({
 	group: ['- Group|Edit/Group images', 
 		function(gids, group){ this.data.group(gids, group) }],
 	ungroup: ['Group|Edit/Ungroup images', 
+		{browseMode: function(){
+			return this.data.getGroup() == null && 'disabled' }},
 		function(gids, group){ this.data.ungroup(gids, group) }],
 
 	// direction can be:
@@ -1066,11 +1068,17 @@ module.ImageGroupActions = actions.Actions({
 		function(){ this.group(this.data.getImages(this.data.getTaggedByAny('marked'))) }],
 
 	expandGroup: ['Group/Expand group', 
+		{browseMode: function(){
+			return this.data.getGroup() == null && 'disabled' }},
 		function(target){ this.data.expandGroup(target || this.current) }],
 	collapseGroup: ['Group/Collapse group', 
+		{browseMode: function(){
+			return this.data.getGroup() == null && 'disabled' }},
 		function(target){ this.data.collapseGroup(target || this.current) }],
 
 	cropGroup: ['Crop|Group/Crop group', 
+		{browseMode: function(){
+			return this.data.getGroup() == null && 'disabled' }},
 		function(target){ this.crop(this.data.cropGroup(target || this.current)) }],
 })
 
@@ -1273,6 +1281,8 @@ module.Journal = core.ImageGridFeatures.Feature({
 		// 		.redoLast(..)
 		// XXX this is not ready for production...
 		undoLast: ['Edit/Undo last',
+			{browseMode: function(){ 
+				return (this.journal && this.journal.length > 0) || 'disabled' }},
 			function(){
 				var journal = this.journal
 				this.rjournal = (this.hasOwnProperty('rjournal') 
@@ -1296,7 +1306,9 @@ module.Journal = core.ImageGridFeatures.Feature({
 					}
 				}
 			}],
-		_redoLast: ['Edit/Redo last',
+		redoLast: ['Edit/Redo last',
+			{browseMode: function(){ 
+				return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
 			function(){
 				if(!this.rjournal || this.rjournal.length == 0){
 					return
