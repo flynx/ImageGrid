@@ -186,8 +186,6 @@ var RangeActions = actions.Actions({
 					.concat(order.slice(order.indexOf(range[1])+1)))
 				: this.crop()
 		}],
-
-	uncrop: [function(){}],
 })
 
 
