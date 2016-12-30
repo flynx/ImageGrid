@@ -873,7 +873,7 @@ module.CropActions = actions.Actions({
 
 	// crop...
 	//
-	crop: ['- Crop/Crop image list',
+	crop: ['Crop/Crop',
 		function(list, flatten){ 
 			list = list || this.data.getImages()
 

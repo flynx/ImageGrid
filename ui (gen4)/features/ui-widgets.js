@@ -766,7 +766,10 @@ var BrowseActionsActions = actions.Actions({
 			'50:Crop',
 				'Crop/80:Crop marked images',
 				'Crop/80:Crop bookmarked images',
-				'Crop/70:Flatten',
+				// NOTE: we can also add separators here...
+				//'Crop/70:---',
+				'Crop/60:Crop',
+				'Crop/50:Flatten',
 				// ...
 				'Crop/-80:Uncrop and keep crop image order',
 				'Crop/-81:Uncrop all',
@@ -775,7 +778,8 @@ var BrowseActionsActions = actions.Actions({
 			'-50:Interface',
 			'-60:Workspace',
 			'-70:System',
-			'-80:Development',
+			'-80:---',
+			'-90:Development',
 			'-90:Test',
 		],
 
@@ -1109,6 +1113,10 @@ var BrowseActionsActions = actions.Actions({
 									|| (cur[key] != null
 										&& Object.keys(cur[key]).length > 0)){
 								make(text + '/')
+
+							// item: line...
+							} else if(text == '---'){
+								make(text)
 							}
 						})
 				}

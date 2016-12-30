@@ -336,6 +336,13 @@
 }
 
 
+/* hide first/last separators... */
+.browse-widget .list>hr.separator:first-child,
+.browse-widget .list>hr.separator:last-child {
+	display: none;
+}
+
+
 
 /****************************************************** Cloud List ***/
 
