@@ -780,7 +780,8 @@ var BrowseActionsActions = actions.Actions({
 		],
 
 		'browse-actions-settings': {
-			showDisabled: false,
+			showDisabled: true,
+			showHidden: false,
 			showEmpty: false,
 		},
 	},
@@ -790,9 +791,9 @@ var BrowseActionsActions = actions.Actions({
 	// This uses action definition to build and present an action tree.
 	//
 	// This supports the following element syntax:
-	// 	- leading '- ' in path to indicate disabled element.
+	// 	- leading '- ' in path to indicate a hidden/disabled element.
 	// 		Example: 
-	// 			'- Path/To/Element'			(disabled)
+	// 			'- Path/To/Element'			(disabled/hidden)
 	// 			'Path/To/Other element'		(enabled)
 	//
 	// 	- leading path element number followed by colon to indicate 
@@ -806,18 +807,23 @@ var BrowseActionsActions = actions.Actions({
 	// 	  		with greater or no priority.
 	//
 	//
-	// An action can also be disabled dynamically:
-	// 	- .isDisabled() action method is called with actions as base if
-	// 		action is not disabled.
+	// Action mode (disabled/hidden) and also be controlled dynamically:
+	// 	- .browseMode() action method is called with actions as base.
 	//		Example:
 	//			someAction: ['Path/To/Some action',
-	//				{isDisabled: function(){ ... }},
+	//				{browseMode: function(){ ... }},
 	//				function(){
 	//					...
 	//				}],
+	//		.browseMode() can return:
+	//			'disabled'		- item will be disabled.
+	//			'hidden'		- item will be both hidden and disabled.
 	//
-	//		NOTE: disabling an action path has priority over the action
-	//			.isDisabled() predicate...
+	//		NOTE: disabling in path has priority over .browseMode(), thus
+	//			it is possible to hide/disable an enabled item but not
+	//			possible to enable a disabled by default path.
+	//		NOTE: .browseMode() can be defined in any action in chain,
+	//			though only the last one is called...
 	//
 	//
 	// NOTE: if the action returns an instance of overlay.Overlay this
@@ -883,14 +889,14 @@ var BrowseActionsActions = actions.Actions({
 			}).bind(this)
 
 			// Tree builder...
-			var buildTree = function(path, leaf, action, disabled, tree){
+			var buildTree = function(path, leaf, action, mode, tree){
 				path = path.slice()
 				// build leaf...
 				if(path.length == 0){
 					leaf.split(/\|/g)
 						.forEach(function(leaf){
 							var l = getItem(tree, leaf)[0]
-							tree[l || leaf] = action != null ? [action, disabled] : action
+							tree[l || leaf] = action != null ? [action, mode] : action
 						})
 					return
 				}
@@ -903,7 +909,7 @@ var BrowseActionsActions = actions.Actions({
 						branch = tree[branch[0] || e] = branch[1] || {}
 
 						// build sub-branch...
-						buildTree(path, leaf, action, disabled, branch)
+						buildTree(path, leaf, action, mode, branch)
 					})
 			}
 
@@ -915,7 +921,8 @@ var BrowseActionsActions = actions.Actions({
 			//
 			// 		<name>: [
 			// 			<action-name>,
-			// 			<disabled>,
+			// 			// mode...
+			// 			'disabled' | 'hidden',
 			// 		],
 			//
 			// 		...
@@ -938,22 +945,16 @@ var BrowseActionsActions = actions.Actions({
 			// build the tree...
 			var paths = this.getPath()
 			Object.keys(paths).forEach(function(key){
-				// handle disabled flag...
+				// handle mode flag...
 				var action = paths[key][0]
-				var disabled = key.split(/^- /)
-				var path = disabled.pop()
-				disabled = disabled.length > 0
-
-				// prepare to handle disabled action predicate...
-				disabled = (!disabled && actions[action].isDisabled) ?
-					actions[action].isDisabled 
-					: disabled
-
+				var mode = key.split(/^- /)
+				var path = mode.pop()
+				mode = mode.length > 0 ? 'hidden' : null
 
 				path = path.split(/[\\\/]/g)
 				var leaf = path.pop()
 
-				buildTree(path, leaf, action, disabled, tree)
+				buildTree(path, leaf, action, mode, tree)
 			})
 
 			//console.log('!!!!', tree)
@@ -980,12 +981,13 @@ var BrowseActionsActions = actions.Actions({
 				if(cur instanceof Array 
 						&& actions.isToggler && actions.isToggler(cur[0])){
 					var action = cur[0]
-					var disabled = cur[1]
+					var mode = cur[1]
 
-					// handle disabled predicate...
-					disabled = disabled instanceof Function ? 
-						disabled.call(actions) 
-						: disabled
+					// handle live modes...
+					if(mode == null){
+						var m = actions.getAttr(action, 'browseMode')
+						mode = m ? m.call(actions) : mode
+					}
 
 					var cur_state = actions[action]('?')
 					var states = actions[action]('??')
@@ -1000,12 +1002,19 @@ var BrowseActionsActions = actions.Actions({
 
 					// build states...
 					states.forEach(function(state){
-						make(state, { disabled: disabled })
+						make(state, { 
+								// NOTE: if something is hidden 
+								// 		it is also disabled...
+								// 		...this is by design.
+								disabled: mode == 'hidden' || mode == 'disabled',
+								hidden: mode == 'hidden',
+							})
 							.addClass(state == cur_state ? 'selected highlighted' : '')
 							.on('open', function(){
 								actions[action](state)
 								that.pop()
 							})
+							.addClass(mode == 'hidden' ? mode : '')
 					})
 
 				// Level: lister -- hand control to lister...
@@ -1048,17 +1057,22 @@ var BrowseActionsActions = actions.Actions({
 							// Item: action...
 							if(cur[key] instanceof Array){
 								var action = cur[key][0]
-								var disabled = cur[key][1]
+								var mode = cur[key][1]
 
-								// handle disabled predicate...
-								disabled = disabled instanceof Function ? 
-									disabled.call(actions) 
-									: disabled
+								// handle live modes...
+								if(mode == null){
+									var m = actions.getAttr(action, 'browseMode')
+									mode = m ? m.call(actions) : mode
+								}
 
 								// Action: toggler -> add toggle button...
 								if(actions.isToggler && actions.isToggler(action)){
 									make(text + '/', { 
-										disabled: disabled, 
+										// NOTE: if something is hidden 
+										// 		it is also disabled...
+										// 		...this is by design.
+										disabled: mode == 'hidden' || mode == 'disabled',
+									   	hidden: mode == 'hidden', 
 										buttons: [
 											[actions[action]('?'), 
 												function(){
@@ -1067,6 +1081,7 @@ var BrowseActionsActions = actions.Actions({
 													that.select('"'+ text +'"')
 												}]
 										]})
+										.addClass(mode == 'hidden' ? mode : '')
 										.on('open', function(){
 											// XXX can this open a dialog???
 											actions[action]()
@@ -1077,7 +1092,13 @@ var BrowseActionsActions = actions.Actions({
 
 								// Action: normal...
 								} else {
-									make(text, { disabled: disabled })
+									make(text, {
+											// NOTE: if something is hidden 
+											// 		it is also disabled...
+											// 		...this is by design.
+											disabled: mode == 'hidden' || mode == 'disabled',
+									   		hidden: mode == 'hidden',
+										})
 										.on('open', function(){
 											waitFor(actions[action]())
 										})
@@ -1100,12 +1121,14 @@ var BrowseActionsActions = actions.Actions({
 				fullPathEdit: true,
 
 				showDisabled: actions.config['browse-actions-settings'].showDisabled,
+				showHidden: actions.config['browse-actions-settings'].showHidden,
 			})
 			// save show disabled state to .config...
 			.on('close', function(){
 				var config = actions.config['browse-actions-settings'] 
 
 				config.showDisabled = dialog.options.showDisabled
+				config.showHidden = dialog.options.showHidden
 			})
 
 			return dialog

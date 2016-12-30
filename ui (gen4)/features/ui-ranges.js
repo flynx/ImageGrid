@@ -100,9 +100,8 @@ var RangeActions = actions.Actions({
 			}
 		}],
 	clearRange: ['Range/Clear range',
-		// XXX not sure if it is best to hide things or make them do a 
-		// 		sensible default thing...
-		//{isDisabled: function(){ return !this.data.__range }},
+		// XXX not sure if this is the right way to go...
+		{browseMode: function(){ return !this.data.__range && 'disabled' }},
 		function(image){
 			var r = this.ribbons.viewer.find('.ribbon')
 
@@ -162,9 +161,8 @@ var RangeActions = actions.Actions({
 		function(image){ this.setRangeBorder(image, 'close') }],
 
 	cropRange: ['Range|Crop/Crop range',
-		// XXX not sure if it is best to hide things or make them do a 
-		// 		sensible default thing...
-		//{isDisabled: function(){ return !this.data.__range }},
+		// XXX not sure if this is the right way to go...
+		{browseMode: function(){ return !this.data.__range && 'disabled' }},
 		function(){
 			var range = this.data.__range
 			var order = this.data.order
@@ -176,9 +174,8 @@ var RangeActions = actions.Actions({
 				: this.crop([])
 		}],
 	cropRangeOut: ['Range|Crop/Crop out range',
-		// XXX not sure if it is best to hide things or make them do a 
-		// 		sensible default thing...
-		//{isDisabled: function(){ return !this.data.__range }},
+		// XXX not sure if this is the right way to go...
+		{browseMode: function(){ return !this.data.__range && 'disabled' }},
 		function(){
 			var range = this.data.__range
 			var order = this.data.order
@@ -189,6 +186,8 @@ var RangeActions = actions.Actions({
 					.concat(order.slice(order.indexOf(range[1])+1)))
 				: this.crop()
 		}],
+
+	uncrop: [function(){}],
 })
 
 

@@ -890,6 +890,8 @@ module.CropActions = actions.Actions({
 			}
 		}],
 	uncrop: ['Crop/Uncrop',
+		{browseMode: function(){ 
+			return (this.crop_stack && this.crop_stack.length > 0) || 'disabled' }},
 		function(level, restore_current, keep_crop_order){
 			level = level || 1
 
@@ -927,16 +929,22 @@ module.CropActions = actions.Actions({
 			}
 		}],
 	uncropAll: ['Crop/Uncrop all',
+		{browseMode: function(){ 
+			return (this.crop_stack && this.crop_stack.length > 0) || 'disabled' }},
 		function(restore_current){ this.uncrop('all', restore_current) }],
 	// XXX see if we need to do this on this level??
 	// 		...might be a good idea to do this in data...
 	uncropAndKeepOrder: ['Crop|Edit/Uncrop and keep crop image order',
+		{browseMode: function(){ 
+			return (this.crop_stack && this.crop_stack.length > 0) || 'disabled' }},
 		function(level, restore_current){ this.uncrop(level, restore_current, true) }],
 	// XXX same as uncrop but will also try and merge changes...
 	// 		- the order is simple and already done above...
 	// 		- I think that levels should be relative to images, the 
 	// 		  only problem here is how to deal with new ribbons...
 	mergeCrop: ['- Crop|Edit/Merge crop',
+		{browseMode: function(){ 
+			return (this.crop_stack && this.crop_stack.length > 0) || 'disabled' }},
 		function(){
 			// XXX
 		}],

@@ -233,6 +233,9 @@ var BrowserPrototype = {
 		// 		affected...
 		showDisabled: true,
 
+		// XXX
+		showHidden: false,
+
 		// Enable/disable disabled drawing...
 		// 
 		// If false these will disable the corresponding methods.
@@ -245,6 +248,9 @@ var BrowserPrototype = {
 		// 		items with .disabled CSS class set manually will not be 
 		// 		affected...
 		toggleDisabledDrawing: true,
+
+		// XXX
+		toggleHiddenDrawing: true,
 
 		// Group traversable elements...
 		//
@@ -469,6 +475,7 @@ var BrowserPrototype = {
 			},
 
 			D: 'toggleDisabledDrawing',
+			H: 'toggleHiddenDrawing',
 			T: 'toggleNonTraversableDrawing',
 
 			// XXX should these use .select(..)???
@@ -662,6 +669,16 @@ var BrowserPrototype = {
 			return this
 		}
 		this.options.showDisabled = !this.options.showDisabled
+		this.update()
+		cur && this.select(cur)
+		return this
+	},
+	toggleHiddenDrawing: function(){
+		var cur = this.selected 
+		if(this.options.toggleHiddenDrawing == false){
+			return this
+		}
+		this.options.showHidden = !this.options.showHidden
 		this.update()
 		cur && this.select(cur)
 		return this
@@ -929,12 +946,14 @@ var BrowserPrototype = {
 
 		// XXX revise signature... 
 		var make = function(p, traversable, disabled, buttons){
+			var hidden = false
 			// options passed as an object...
 			if(traversable != null && typeof(traversable) == typeof({})){
 				var opts = traversable
 				traversable = opts.traversable
 				disabled = opts.disabled
 				buttons = opts.buttons
+				hidden = opts.hidden
 			}
 
 			buttons = buttons
@@ -1000,7 +1019,8 @@ var BrowserPrototype = {
 			// skip drawing of non-traversable or disabled elements if
 			// .showNonTraversable or .showDisabled are false respectively...
 			if((!traversable && !that.options.showNonTraversable)
-					|| (disabled && !that.options.showDisabled)){
+					|| (disabled && !that.options.showDisabled)
+					|| (hidden && !that.options.showHidden)){
 				return $()
 			}
 
