@@ -636,6 +636,9 @@ module.ImagesPrototype = {
 		var that = this
 		gids.forEach(function(key){
 			var img = that[key]
+			if(img == null){
+				img = that[key] = {}
+			}
 			var o = img.orientation
 			var d = direction
 

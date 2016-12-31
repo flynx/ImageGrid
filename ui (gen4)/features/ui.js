@@ -894,7 +894,7 @@ module.ViewerActions = actions.Actions({
 
 	// ribbon rotation...
 	//
-	ribbonRotation: ['- Interface/', 
+	ribbonRotation: ['- Interface|Ribbon/', 
 		function(a){ 
 			if(arguments.length > 0){
 				this.ribbons.rotate(a)
@@ -913,14 +913,14 @@ module.ViewerActions = actions.Actions({
 	// 	.rotateRibbonCW(5)
 	//
 	// NOTE: default step is set by .config['ribbon-rotation-step']
-	rotateRibbonCW: ['Interface/Rotate ribbon clockwise', 
+	rotateRibbonCW: ['Interface|Ribbon/Rotate ribbon clockwise', 
 		function(a){ 
 			this.ribbonRotation('+='+ (a || this.config['ribbon-rotation-step'] || 10)) }],
-	rotateRibbonCCW: ['Interface/Rotate ribbon coounter clockwise', 
+	rotateRibbonCCW: ['Interface|Ribbon/Rotate ribbon coounter clockwise', 
 		function(a){ 
 			this.ribbonRotation('-='+ (a || this.config['ribbon-rotation-step'] || 10)) }],
 
-		resetRibbonRotation: ['Interface/Reset ribbon rotation',
+		resetRibbonRotation: ['Interface|Ribbon/Reset ribbon rotation',
 			function(){ this.ribbonRotation(0) }],
 
 

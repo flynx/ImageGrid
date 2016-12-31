@@ -201,6 +201,7 @@ actions.Actions({
 	//
 	// XXX do we need to call .syncTags(..) here???
 	load: ['- File|Interface/',
+		{journal: true},
 		function(d){
 			this.clear()
 
@@ -208,6 +209,7 @@ actions.Actions({
 			this.data = data.Data(d.data)
 		}],
 	clear: ['File|Interface/Clear viewer',
+		{journal: true},
 		function(){
 			//delete this.data
 			//delete this.images
@@ -244,6 +246,7 @@ actions.Actions({
 	// XXX should this use .load(..)
 	// 		...note if we use this it breaks, need to rethink...
 	loadURLs: ['- File/Load a URL list',
+		{journal: true},
 		function(lst, base){ this.load(this.dataFromURLs(lst, base)) }],
 
 	// XXX experimental...
@@ -265,6 +268,7 @@ actions.Actions({
 		}],
 
 	replaceGid: ['- System/Replace image gid',
+		{journal: true},
 		function(from, to){
 			from = this.data.getImage(from)
 
@@ -333,7 +337,9 @@ actions.Actions({
 
 			this.focusImage(t, r)
 		}],
+	// XXX add undo...
 	setBaseRibbon: ['Edit/Set base ribbon',
+		{journal: true},
 		function(target){ this.data.setBase(target) }],
 
 	// shorthands...
@@ -572,8 +578,10 @@ actions.Actions({
 
 	
 	reverseImages: ['Edit|Sort/Reverse image order',
+		{undo: 'reverseImages'},
 		function(){ this.data.reverseImages() }],
 	reverseRibbons: ['Ribbon|Edit|Sort/Reverse ribbon order',
+		{undo: 'reverseRibbons'},
 		function(){ this.data.reverseRibbons() }],
 
 	// XXX align to ribbon...
@@ -642,12 +650,16 @@ actions.Actions({
 	// shorthands...
 	// NOTE: these are here mostly for the menus...
 	rotateCW: ['Image|Edit/Rotate image clockwise', 
+		{undo: 'rotateCCW'},
 		function(target){ this.rotate(target, 'cw') }],
 	rotateCCW: ['Image|Edit/Rotate image counterclockwise', 
+		{undo: 'rotateCW'},
 		function(target){ this.rotate(target, 'ccw') }],
 	flipVertical: ['Image|Edit/Flip image vertically',
+		{undo: 'flipVertical'},
 		function(target){ this.flip(target, 'vertical') }],
 	flipHorizontal: ['Image|Edit/Flip image horizontally',
+		{undo: 'flipHorizontal'},
 		function(target){ this.flip(target, 'horizontal') }],
 
 
@@ -657,6 +669,7 @@ actions.Actions({
 	// 		- allow user to reset/move
 	// 		- on accept: run
 	alignToRibbon: ['Ribbon|Edit/Align top ribbon to base',
+		{journal: true},
 		function(target, start, end){
 			this.data = this.data.alignToRibbon(target, start, end)
 		}],
@@ -700,6 +713,7 @@ module.TagsActions = actions.Actions({
 	//
 	// XXX mark updated...
 	tag: ['- Tag/Tag image(s)',
+		{journal: true},
 		function(tags, gids){
 			gids = gids || this.current
 			gids = gids.constructor !== Array ? [gids] : gids
@@ -726,6 +740,7 @@ module.TagsActions = actions.Actions({
 		}],
 	// XXX mark updated...
 	untag: ['- Tag/Untag image(s)',
+		{journal: true},
 		function(tags, gids){
 			gids = gids || this.current
 			gids = gids.constructor !== Array ? [gids] : gids
@@ -772,6 +787,7 @@ module.TagsActions = actions.Actions({
 	// 		'images' and 'reset' as all .data tags will be lost on first 
 	// 		pass...
 	syncTags: ['Tag/Synchoronize tags between data and images',
+		{journal: true},
 		function(source, mode){
 			// can't do anything if either .data or .images are not 
 			// defined...
@@ -799,7 +815,6 @@ module.TagsActions = actions.Actions({
 		makeTagWalker('prev')],
 	nextTagged: ['- Navigate/Next image tagged with tag',
 		makeTagWalker('next')],
-
 })
 
 
@@ -873,7 +888,9 @@ module.CropActions = actions.Actions({
 
 	// crop...
 	//
+	// XXX check undo... do we actually need it???
 	crop: ['Crop/Crop',
+		{undo: 'uncrop'},
 		function(list, flatten){ 
 			list = list || this.data.getImages()
 
@@ -934,16 +951,18 @@ module.CropActions = actions.Actions({
 		function(restore_current){ this.uncrop('all', restore_current) }],
 	// XXX see if we need to do this on this level??
 	// 		...might be a good idea to do this in data...
-	uncropAndKeepOrder: ['Crop|Edit/Uncrop and keep crop image order',
-		{browseMode: function(){ 
+	uncropAndKeepOrder: ['Crop|Edit/Uncrop and keep crop image order', {
+		journal: true,
+		browseMode: function(){ 
 			return (this.crop_stack && this.crop_stack.length > 0) || 'disabled' }},
 		function(level, restore_current){ this.uncrop(level, restore_current, true) }],
 	// XXX same as uncrop but will also try and merge changes...
 	// 		- the order is simple and already done above...
 	// 		- I think that levels should be relative to images, the 
 	// 		  only problem here is how to deal with new ribbons...
-	mergeCrop: ['- Crop|Edit/Merge crop',
-		{browseMode: function(){ 
+	mergeCrop: ['- Crop|Edit/Merge crop', {
+		journal: true,
+		browseMode: function(){ 
 			return (this.crop_stack && this.crop_stack.length > 0) || 'disabled' }},
 		function(){
 			// XXX
@@ -1029,8 +1048,10 @@ module.ImageGroupActions = actions.Actions({
 	// grouping...
 	// XXX need to tell .images about this...
 	group: ['- Group|Edit/Group images', 
+		{journal: true},
 		function(gids, group){ this.data.group(gids, group) }],
 	ungroup: ['Group|Edit/Ungroup images', 
+		{journal: true},
 		{browseMode: function(){
 			return this.data.getGroup() == null && 'disabled' }},
 		function(gids, group){ this.data.ungroup(gids, group) }],
@@ -1039,6 +1060,7 @@ module.ImageGroupActions = actions.Actions({
 	// 	'next'
 	// 	'prev'
 	groupTo: ['- Group|Edit/Group to', 
+		{journal: true},
 		function(target, direction){
 			target = this.data.getImage(target)
 			var other = this.data.getImage(target, direction == 'next' ? 1 : -1)
@@ -1059,25 +1081,30 @@ module.ImageGroupActions = actions.Actions({
 		}],
 	// shorthands to .groupTo(..)
 	groupBack: ['Group|Edit/Group target image with the image or group before it', 
+		{journal: true},
 		function(target){ this.groupTo(target, 'prev') }],
 	groupForward: ['Group|Edit/Group target image with the image or group after it', 
+		{journal: true},
 		function(target){ this.groupTo(target, 'next') }],
 
 	// NOTE: this will only group loaded images...
 	groupMarked: ['Group|Mark/Group loaded marked images', 
+		{journal: true},
 		function(){ this.group(this.data.getImages(this.data.getTaggedByAny('marked'))) }],
 
 	expandGroup: ['Group/Expand group', 
 		{browseMode: function(){
 			return this.data.getGroup() == null && 'disabled' }},
 		function(target){ this.data.expandGroup(target || this.current) }],
-	collapseGroup: ['Group/Collapse group', 
-		{browseMode: function(){
+	collapseGroup: ['Group/Collapse group', {
+		journal: true,
+		browseMode: function(){
 			return this.data.getGroup() == null && 'disabled' }},
 		function(target){ this.data.collapseGroup(target || this.current) }],
 
-	cropGroup: ['Crop|Group/Crop group', 
-		{browseMode: function(){
+	cropGroup: ['Crop|Group/Crop group', {
+		journal: true,
+		browseMode: function(){
 			return this.data.getGroup() == null && 'disabled' }},
 		function(target){ this.crop(this.data.cropGroup(target || this.current)) }],
 })
@@ -1167,12 +1194,10 @@ function logImageShift(action){
 // 		<action>: <undo-action> | <undo-function> | null,
 // 		...
 // 	}
+//
+// XXX automate this:
+// 		- on start -> get all actions with .journal or .undo
 var journalActions = {
-	clear: null,
-	load: null,
-
-	setBaseRibbon: null,
-
 	// XXX need to account for position change, i.e. if action had no 
 	// 		effect then do nothing...
 	// 		...take target position before and after...
@@ -1184,26 +1209,6 @@ var journalActions = {
 	shiftImageRight: 'shiftImageLeft',
 	shiftRibbonUp: 'shiftRibbonDown',
 	shiftRibbonDown: 'shiftRibbonUp',
-
-	rotateCW: 'rotateCCW',
-	rotateCCW: 'rotateCW',
-	flipHorizontal: 'flipHorizontal',
-	flipVertical: 'flipVertical',
-
-	sortImages: null,
-	reverseImages: 'reverseImages',
-	reverseRibbons: 'reverseRibbons',
-
-	crop: null,
-	uncrop: null,
-
-	tag: null, 
-	untag: null,
-
-	group: null,
-	ungroup: null,
-	expandGroup: null,
-	collapseGroup: null,
 
 	runJournal: null,
 }
@@ -1224,12 +1229,54 @@ module.Journal = core.ImageGridFeatures.Feature({
 
 	tag: 'system-journal',
 
-	depends: ['base'],
+	depends: [
+		'base'
+	],
 
 	actions: actions.Actions({
 
 		journal: null,
 		rjournal: null,
+
+		journalable: null,
+
+		updateJournalableActions: ['System/Update list of journalable actions',
+			function(){
+				var that = this
+
+				var handler = function(action){
+					return function(){
+						var cur = this.current
+						var args = args2array(arguments)
+
+						return function(){
+							this.journalPush({
+								type: 'basic',
+
+								action: action, 
+								args: args,
+								// the current image before the action...
+								current: cur, 
+								// the target (current) image after action...
+								target: this.current, 
+							})
+						}
+					}
+				}
+
+				this.journalable = this.actions
+					.filter(function(action){
+						return !!that.getAttr(action, 'undo') 
+							|| !!that.getAttr(action, 'journal') 
+					})
+					// reset the handler
+					.map(function(action){
+						that
+							.off(action+'.pre', 'journal-handler')
+							.on(action+'.pre', 'journal-handler', handler(action))
+						return action
+					})
+			}],
 
 		clone: [function(full){
 				return function(res){
@@ -1264,6 +1311,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 				}
 			}],
 		runJournal: ['- System/Journal/Run journal',
+			//{journal: true},
 			function(journal){
 				var that = this
 				journal.forEach(function(e){
@@ -1293,8 +1341,32 @@ module.Journal = core.ImageGridFeatures.Feature({
 				for(var i = journal.length-1; i >= 0; i--){
 					var a = journal[i]
 
+					// see if the actions has an explicit undo attr...
+					var undo = this.getAttr(a.action, 'undo')
+
+					// general undo...
+					if(undo){
+						// XXX should this be done here unconditionally???
+						this.focusImage(a.current)
+
+						var undo = undo instanceof Function ?
+								// pass the action name...
+								undo.apply(this, [a.action].concat(a.args))
+							: typeof(undo) == typeof('str') ? 
+								// pass journal structure as-is...
+								this[undo].apply(this, a)
+							: null
+
+						// XXX should we focus a.target here???
+
+						// pop the undo command...
+						this.journal.pop()
+						this.rjournal.push(journal.splice(i, 1)[0])
+						break
+
 					// we undo only a very specific set of actions...
-					if(a.undo && a.type == 'shift' && a.args.length == 0){
+					// XXX move this to an undo action handler... 
+					} else if(a.undo && a.type == 'shift' && a.args.length == 0){
 						this
 							.focusImage(a.current)
 							[a.undo].call(this, a.target)
@@ -1328,6 +1400,9 @@ module.Journal = core.ImageGridFeatures.Feature({
 	// 		handler, thus enabling us to define a single handler rather
 	// 		than generating a custom handler per action...
 	handlers: [
+		['start',
+			function(){ this.updateJournalableActions() }],
+
 		logImageShift('shiftImageTo'),
 		logImageShift('shiftImageUp'),
 		logImageShift('shiftImageDown'),
@@ -1336,45 +1411,30 @@ module.Journal = core.ImageGridFeatures.Feature({
 		logImageShift('shiftRibbonUp'),
 		logImageShift('shiftRibbonDown'),
 
-	].concat([
-			'clear',
-			'load',
-
-			'setBaseRibbon',
-
-			'rotateCW',
-			'rotateCCW',
-			'flipHorizontal',
-			'flipVertical',
-
-			'sortImages',
-			'reverseImages',
-			'reverseRibbons',
-
-			'crop',
-			'uncrop',
-
-			'tag', 
-			'untag',
-
-			'group',
-			'ungroup',
-			'expandGroup',
-			'collapseGroup',
-
-			//'runJournal',
+	// basic operations...
+	]/*.concat([
+			// XXX legacy???
 		].map(function(action){
 			return [
 				action+'.pre', 
 				function(){
-					this.journalPush({
-						type: 'basic',
-						current: this.current, 
-						action: action, 
-						args: args2array(arguments),
-					})
+					var cur = this.current
+					var args = args2array(arguments)
+
+					return function(){
+						this.journalPush({
+							type: 'basic',
+
+							current: cur, 
+							target: this.current, 
+							action: action, 
+							args: args,
+
+							undo: journalActions[action],
+						})
+					}
 				}]
-		})), 
+		})),//*/ 
 })
 
 
