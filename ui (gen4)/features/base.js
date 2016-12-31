@@ -50,6 +50,14 @@ function(direction, dfl_tag){
 }
 
 
+// XXX why can't this just be a string action name e.g. {undo: 'shiftImageDown'} ???
+// 		....technically we'll jump to the right image anyway...
+// 		...it appears that this and a string undo animate differently...
+var undoShift = function(undo){
+	return function(a){ 
+		this[undo](a.args.length == 0 ? a.current : a.args[0]) }}
+
+
 
 /*********************************************************************/
 
@@ -471,13 +479,17 @@ actions.Actions({
 
 	// XXX to be used for things like mark/place and dragging...
 	// XXX revise...
+	// XXX undo
 	shiftImageTo: ['- Edit|Sort/',
+		{undo: function(a){ this.shiftImageTo(a.args[1], a.args[0]) }},
 		function(target, to){ this.data.shiftImageTo(target, to) }],
 	
 	shiftImageUp: ['Edit/Shift image up',
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
+		// XXX can this be simply a {undo: 'shiftImageDown'} ???
+		{undo: undoShift('shiftImageDown')},
 		function(target){ 
 			// by default we need to focus another image in the same ribbon...
 			if(target == null){
@@ -502,6 +514,7 @@ actions.Actions({
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
+		{undo: undoShift('shiftImageUp')},
 		function(target){ 
 			// by default we need to focus another image in the same ribbon...
 			if(target == null){
@@ -522,17 +535,20 @@ actions.Actions({
 				this.data.shiftImageDown(target)
 			}
 		}],
+	// XXX undo...
 	shiftImageUpNewRibbon: ['Edit/Shift image up to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target)
 			this.shiftImageUp(target)
 		}],
+	// XXX undo...
 	shiftImageDownNewRibbon: ['Edit/Shift image down to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target, 'below')
 			this.shiftImageDown(target)
 		}],
 	shiftImageLeft: ['Edit|Sort/Shift image left',
+		{undo: undoShift('shiftImageRight')},
 		function(target){ 
 			if(target == null){
 				this.direction = 'left'
@@ -541,6 +557,7 @@ actions.Actions({
 			this.focusImage()
 		}],
 	shiftImageRight: ['Edit|Sort/Shift image right',
+		{undo: undoShift('shiftImageLeft')},
 		function(target){ 
 			if(target == null){
 				this.direction = 'right'
@@ -550,12 +567,14 @@ actions.Actions({
 		}],
 
 	shiftRibbonUp: ['Ribbon|Edit|Sort/Shift ribbon up',
+		{undo: undoShift('shiftRibbonDown')},
 		function(target){ 
 			this.data.shiftRibbonUp(target) 
 			// XXX is this the right way to go/???
 			this.focusImage()
 		}],
 	shiftRibbonDown: ['Ribbon|Edit|Sort/Shift ribbon down',
+		{undo: undoShift('shiftRibbonUp')},
 		function(target){ 
 			this.data.shiftRibbonDown(target)
 			// XXX is this the right way to go/???
@@ -564,12 +583,14 @@ actions.Actions({
 
 	// these operate on the current image...
 	travelImageUp: ['Edit/Travel with the current image up (Shift up and keep focus)',
+		{undo: undoShift('travelImageDown')},
 		function(target){
 			target = target || this.current
 			this.shiftImageUp(target)
 			this.focusImage(target)
 		}],
 	travelImageDown: ['Edit/Travel with the current image down (Shift down and keep focus)',
+		{undo: undoShift('travelImageUp')},
 		function(target){
 			target = target || this.current
 			this.shiftImageDown(target)
@@ -1143,6 +1164,7 @@ core.ImageGridFeatures.Feature('base-full', [
 //---------------------------------------------------------------------
 // Journal...
 
+/*
 function logImageShift(action){
 	return [action.slice(-4) != '.pre' ? 
 			action + '.pre' 
@@ -1160,16 +1182,6 @@ function logImageShift(action){
 				var rn = this.data.getRibbon(target)
 
 				if(o == on || r == rn){ 
-					/*
-					this.journalPush(
-						this.current, 
-						action, 
-						args,
-						{
-							before: [r, o],
-							after: [rn, on],
-						})
-					*/
 					this.journalPush({
 						type: 'shift',
 						current: current, 
@@ -1212,6 +1224,7 @@ var journalActions = {
 
 	runJournal: null,
 }
+//*/
 
 
 // XXX is this the right level for this???
@@ -1346,35 +1359,33 @@ module.Journal = core.ImageGridFeatures.Feature({
 
 					// general undo...
 					if(undo){
-						// XXX should this be done here unconditionally???
 						this.focusImage(a.current)
 
 						var undo = undo instanceof Function ?
 								// pass the action name...
-								undo.apply(this, [a.action].concat(a.args))
+								undo.call(this, a)
 							: typeof(undo) == typeof('str') ? 
 								// pass journal structure as-is...
 								this[undo].apply(this, a)
 							: null
 
-						// XXX should we focus a.target here???
-
 						// pop the undo command...
 						this.journal.pop()
 						this.rjournal.push(journal.splice(i, 1)[0])
 						break
 
-					// we undo only a very specific set of actions...
+					/*/ we undo only a very specific set of actions...
 					// XXX move this to an undo action handler... 
 					} else if(a.undo && a.type == 'shift' && a.args.length == 0){
 						this
 							.focusImage(a.current)
-							[a.undo].call(this, a.target)
+							[a.undo](a.target)
 
 						// pop the undo command...
 						this.journal.pop()
 						this.rjournal.push(journal.splice(i, 1)[0])
 						break
+						//*/
 					}
 				}
 			}],
@@ -1403,6 +1414,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 		['start',
 			function(){ this.updateJournalableActions() }],
 
+		/*
 		logImageShift('shiftImageTo'),
 		logImageShift('shiftImageUp'),
 		logImageShift('shiftImageDown'),
@@ -1410,6 +1422,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 		logImageShift('shiftImageRight'),
 		logImageShift('shiftRibbonUp'),
 		logImageShift('shiftRibbonDown'),
+		*/
 
 	// basic operations...
 	]/*.concat([
