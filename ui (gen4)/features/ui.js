@@ -1504,6 +1504,12 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 	tag: 'ui-animation',
 	depends: ['ui'],
 
+	config: {
+		// XXX make this duration...
+		'shadow-animation-delay': 200,
+		'shadow-animation-start-delay': 0,
+	},
+
 	handlers: [
 		//['shiftImageUp.pre shiftImageDown.pre '
 		//		+'travelImageUp.pre travelImageDown.pre', 
@@ -1515,7 +1521,10 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 						&& this.toggleSingleImage('?') == 'on'){
 					return
 				}
-				var s = this.ribbons.makeShadow(target, true)
+				var s = this.ribbons.makeShadow(target, true, 
+					// XXX make this duration...
+					this.config['shadow-animation-delay'],
+					this.config['shadow-animation-start-delay'])
 				return function(){ s() }
 			}],
 		// NOTE: this will keep the shadow in place -- the shadow will not
@@ -1528,7 +1537,10 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 						&& this.toggleSingleImage('?') == 'on'){
 					return
 				}
-				var s = this.ribbons.makeShadow(target)
+				var s = this.ribbons.makeShadow(target, undefined,
+					// XXX make this duration...
+					this.config['shadow-animation-delay'],
+					this.config['shadow-animation-start-delay'])
 				return function(){ s() }
 			}],
 	],

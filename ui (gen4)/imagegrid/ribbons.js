@@ -690,12 +690,15 @@ var RibbonsPrototype = {
 	// NOTE: multiple shadows of different images are supported...
 	// NOTE: the .shadow element is essentially a ribbon.
 	//
+	// XXX add duration configuration...
 	// XXX should we also have a ribbon shadow???
 	// XXX when this cant find a target it will return an empty function,
 	// 		not sure if this is correct...
 	// XXX should we use transforms instead of css positions???
-	makeShadow: function(target, animate, delay){
+	makeShadow: function(target, animate, delay, start_delay){
 		delay = delay || 200
+		start_delay = start_delay || 10
+
 		var img = this.getImage(target)
 
 		if(img.length == 0){
@@ -773,10 +776,20 @@ var RibbonsPrototype = {
 				var vo = that.viewer.offset()
 				var io = img.offset()
 				if(animate){
-					shadow.css({
-						top: io.top - vo.top,
-						left: io.left - vo.left,
-					})
+					if(start_delay){
+						setTimeout(function(){
+							shadow.css({
+								top: io.top - vo.top,
+								left: io.left - vo.left,
+							})
+						}, start_delay)
+
+					} else {
+						shadow.css({
+							top: io.top - vo.top,
+							left: io.left - vo.left,
+						})
+					}
 				}
 				setTimeout(function(){
 					// remove only the item with the correct ticket...

@@ -50,9 +50,18 @@ function(direction, dfl_tag){
 }
 
 
-// XXX why can't this just be a string action name e.g. {undo: 'shiftImageDown'} ???
-// 		....technically we'll jump to the right image anyway...
-// 		...it appears that this and a string undo animate differently...
+// Generate an undo function for shift operations...
+//
+// NOTE: {undo: 'shiftImageDown'}, will not do here because we need to 
+// 		pass an argument to the shift action, as without an argument 
+// 		these actions will shift focus to a different image in the same 
+// 		ribbon...
+// 			.shiftImageDown(x)
+// 				shift image x without changing focus, i.e. the focused
+// 				image before the action will stay focused after.
+// 			.focusImage(x).shiftImageDown()
+// 				focus image x, then shift it down (current image default)
+// 				this will shift focus to .direction of current image.
 var undoShift = function(undo){
 	return function(a){ 
 		this[undo](a.args.length == 0 ? a.current : a.args[0]) }}
@@ -479,7 +488,7 @@ actions.Actions({
 
 	// XXX to be used for things like mark/place and dragging...
 	// XXX revise...
-	// XXX undo
+	// XXX undo...
 	shiftImageTo: ['- Edit|Sort/',
 		{undo: function(a){ this.shiftImageTo(a.args[1], a.args[0]) }},
 		function(target, to){ this.data.shiftImageTo(target, to) }],
@@ -488,7 +497,6 @@ actions.Actions({
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
-		// XXX can this be simply a {undo: 'shiftImageDown'} ???
 		{undo: undoShift('shiftImageDown')},
 		function(target){ 
 			// by default we need to focus another image in the same ribbon...
@@ -535,13 +543,13 @@ actions.Actions({
 				this.data.shiftImageDown(target)
 			}
 		}],
-	// XXX undo...
+	// NOTE: we do not need undo here because it will be handled by 
+	// 		corresponding normal shift operations...
 	shiftImageUpNewRibbon: ['Edit/Shift image up to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target)
 			this.shiftImageUp(target)
 		}],
-	// XXX undo...
 	shiftImageDownNewRibbon: ['Edit/Shift image down to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target, 'below')
@@ -1164,69 +1172,6 @@ core.ImageGridFeatures.Feature('base-full', [
 //---------------------------------------------------------------------
 // Journal...
 
-/*
-function logImageShift(action){
-	return [action.slice(-4) != '.pre' ? 
-			action + '.pre' 
-			: action,
-		function(target){
-			target = this.data.getImage(target)
-			var args = args2array(arguments)
-
-			var o = this.data.getImageOrder(target)
-			var r = this.data.getRibbon(target)
-			var current = this.current
-
-			return function(){
-				var on = this.data.getImageOrder(target)
-				var rn = this.data.getRibbon(target)
-
-				if(o == on || r == rn){ 
-					this.journalPush({
-						type: 'shift',
-						current: current, 
-						target: target,
-						action: action, 
-						args: args,
-						undo: journalActions[action],
-						diff: {
-							before: [r, o],
-							after: [rn, on],
-						},
-					})
-				}
-				
-			}
-		}]
-}
-
-
-// Format:
-// 	{
-// 		<action>: <undo-action> | <undo-function> | null,
-// 		...
-// 	}
-//
-// XXX automate this:
-// 		- on start -> get all actions with .journal or .undo
-var journalActions = {
-	// XXX need to account for position change, i.e. if action had no 
-	// 		effect then do nothing...
-	// 		...take target position before and after...
-	shiftImageTo: null,
-
-	shiftImageUp: 'shiftImageDown',
-	shiftImageDown: 'shiftImageUp',
-	shiftImageLeft: 'shiftImageRight',
-	shiftImageRight: 'shiftImageLeft',
-	shiftRibbonUp: 'shiftRibbonDown',
-	shiftRibbonDown: 'shiftRibbonUp',
-
-	runJournal: null,
-}
-//*/
-
-
 // XXX is this the right level for this???
 // 		...data seems to be a better candidate...
 // XXX would be great to add a mechanism define how to reverse actions...
@@ -1373,19 +1318,6 @@ module.Journal = core.ImageGridFeatures.Feature({
 						this.journal.pop()
 						this.rjournal.push(journal.splice(i, 1)[0])
 						break
-
-					/*/ we undo only a very specific set of actions...
-					// XXX move this to an undo action handler... 
-					} else if(a.undo && a.type == 'shift' && a.args.length == 0){
-						this
-							.focusImage(a.current)
-							[a.undo](a.target)
-
-						// pop the undo command...
-						this.journal.pop()
-						this.rjournal.push(journal.splice(i, 1)[0])
-						break
-						//*/
 					}
 				}
 			}],
@@ -1401,53 +1333,16 @@ module.Journal = core.ImageGridFeatures.Feature({
 			}],
 	}),
 
-	// log state, action and its args... 
 	// XXX need to drop journal on save...
 	// XXX rotate/truncate journal???
 	// XXX need to check that all the listed actions are clean -- i.e.
 	// 		running the journal will produce the same results as user 
 	// 		actions that generated the journal.
-	// XXX would be good if we could know the name of the action in the 
-	// 		handler, thus enabling us to define a single handler rather
-	// 		than generating a custom handler per action...
 	handlers: [
+		// log state, action and its args... 
 		['start',
 			function(){ this.updateJournalableActions() }],
-
-		/*
-		logImageShift('shiftImageTo'),
-		logImageShift('shiftImageUp'),
-		logImageShift('shiftImageDown'),
-		logImageShift('shiftImageLeft'),
-		logImageShift('shiftImageRight'),
-		logImageShift('shiftRibbonUp'),
-		logImageShift('shiftRibbonDown'),
-		*/
-
-	// basic operations...
-	]/*.concat([
-			// XXX legacy???
-		].map(function(action){
-			return [
-				action+'.pre', 
-				function(){
-					var cur = this.current
-					var args = args2array(arguments)
-
-					return function(){
-						this.journalPush({
-							type: 'basic',
-
-							current: cur, 
-							target: this.current, 
-							action: action, 
-							args: args,
-
-							undo: journalActions[action],
-						})
-					}
-				}]
-		})),//*/ 
+	],
 })
 
 
