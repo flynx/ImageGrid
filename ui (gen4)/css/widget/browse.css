@@ -10,6 +10,10 @@
 	background: gray;
 	/*color: rgba(255,255,255,0.8);*/
 	color: white;
+
+	/* XXX for some reason this does not work..
+	transition: all 0.5s linear;
+	*/
 }
 /*
 .browse-widget:not(:focus) {

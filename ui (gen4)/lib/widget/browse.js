@@ -343,6 +343,23 @@ var BrowserPrototype = {
 		// 		be treated as a separator and not as a list element.
 		// NOTE: to disable class checking set this to null
 		elementSeparatorClass: 'separator',
+
+		// Hold browse widget's size between updates...
+		//
+		// This prevents the element from collapsing and then growing 
+		// again on slowish loads.
+		//
+		// Supported values:
+		// 	- null/false/undefined	- feature disabled
+		// 	- number				- number of milliseconds to hold size
+		// 								before timing out
+		// 	- true					- hold till first make is called
+		// 								without a timeout.
+		//
+		// NOTE: recommended values are about the same value till the 
+		// 		first make(..) is called, but obviously this should be 
+		// 		as short as possible -- under 20-50ms.
+		holdSize: 10,
 	},
 
 	// XXX TEST: this should prevent event propagation...
@@ -852,6 +869,27 @@ var BrowserPrototype = {
 			var selection = null
 		}
 
+		// prevent the browser from collapsing and then growing on 
+		// slow-ish loads...
+		if(this.options.holdSize){
+			var _freeSize = function(){
+				browser.height('')
+				browser.width('')
+			}
+
+			// cleanup, just in case...
+			_freeSize()
+
+			// only fix the size if we are not empty...
+			if(browser.find('.list').children().length > 0){
+				browser.height(browser.height())
+				browser.width(browser.width())
+			}
+			// reset after a timeout...
+			typeof(this.options.holdSize) == typeof(123) 
+				&& setTimeout(_freeSize, this.options.holdSize)
+		}
+
 		// clear the ui...
 		var p = browser.find('.path').empty()
 		var l = browser.find('.list').empty()
@@ -943,10 +981,18 @@ var BrowserPrototype = {
 		// fill the children list...
 		// NOTE: this will be set to true if make(..) is called at least once...
 		var interactive = false
+		var size_freed = false
 
 		// XXX revise signature... 
 		var make = function(p, traversable, disabled, buttons){
 			var hidden = false
+
+			if(that.options.holdSize){
+				// we've started, no need to hold the size any more... 
+				// ...and we do not need to do this more than once.
+				size_freed = !size_freed ? !_freeSize() : true
+			}
+
 			// options passed as an object...
 			if(traversable != null && typeof(traversable) == typeof({})){
 				var opts = traversable
@@ -1965,8 +2011,9 @@ var BrowserPrototype = {
 	push: function(pattern){
 		var browser = this.dom 
 		var cur = this.select('!')
-		var elem = this.filter(!pattern ? '!'
-				: /-?[0-9]+/.test(pattern) ? pattern
+		var elem = arguments.length == 0 ? 
+			cur 
+			: this.filter(/-?[0-9]+/.test(pattern) ? pattern
 				// XXX avoid keywords that .select(..) understands...
 				//: '"'+pattern+'"' )
 				: pattern)
