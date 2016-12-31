@@ -376,12 +376,12 @@ module.GLOBAL_KEYBOARD = {
 
 		// XXX still experimental...
 		U: {
-			default: 'undoLast',
-			shift: 'redoLast',
+			default: 'undo',
+			shift: 'redo',
 		},
 		Z: {
-			ctrl: 'undoLast',
-			'ctrl+shift': 'redoLast',
+			ctrl: 'undo',
+			'ctrl+shift': 'redo',
 		},
 
 		G: {

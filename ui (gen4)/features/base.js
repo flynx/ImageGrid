@@ -545,6 +545,8 @@ actions.Actions({
 		}],
 	// NOTE: we do not need undo here because it will be handled by 
 	// 		corresponding normal shift operations...
+	// XXX .undoLast(..) on these for some reason skips...
+	// 		...e.g. two shifts are undone with three calls to .undoLast()...
 	shiftImageUpNewRibbon: ['Edit/Shift image up to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target)
@@ -1286,7 +1288,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 		// 		undoing something, and after some actions doing a 
 		// 		.redoLast(..)
 		// XXX this is not ready for production...
-		undoLast: ['Edit/Undo last',
+		undo: ['Edit/Undo',
 			{browseMode: function(){ 
 				return (this.journal && this.journal.length > 0) || 'disabled' }},
 			function(){
@@ -1321,7 +1323,8 @@ module.Journal = core.ImageGridFeatures.Feature({
 					}
 				}
 			}],
-		redoLast: ['Edit/Redo last',
+		// XXX this is not final -- needs careful revision...
+		redo: ['Edit/Redo last',
 			{browseMode: function(){ 
 				return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
 			function(){
