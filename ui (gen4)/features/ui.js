@@ -964,7 +964,8 @@ module.ViewerActions = actions.Actions({
 
 	// XXX experimental: not sure if this is the right way to go...
 	// XXX make this play nice with crops...
-	toggleRibbonList: ['Interface/Toggle ribbons as images view',
+	// 		...should this be a crop???
+	toggleRibbonList: ['Interface|Ribbon/Toggle ribbons as images view',
 		function(){
 			if(this._full_data == null){
 				// XXX do a better name here...
