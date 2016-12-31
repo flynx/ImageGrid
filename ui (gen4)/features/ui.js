@@ -921,6 +921,8 @@ module.ViewerActions = actions.Actions({
 			this.ribbonRotation('-='+ (a || this.config['ribbon-rotation-step'] || 10)) }],
 
 		resetRibbonRotation: ['Interface|Ribbon/Reset ribbon rotation',
+			{browseMode: function(){
+				return this.ribbonRotation() == 0 && 'disabled' }},
 			function(){ this.ribbonRotation(0) }],
 
 

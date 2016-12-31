@@ -819,6 +819,18 @@ var BrowseActionsActions = actions.Actions({
 	//				function(){
 	//					...
 	//				}],
+	//			someOtherAction: ['Path/To/Some action',
+	//				// alias
+	//				{browseMode: 'someAction'},
+	//				function(){
+	//					...
+	//				}],
+	//
+	//		.browseMode can be:
+	//			<function>			- action method.
+	//			<action-name>		- alias, name of action to get the
+	//									method from.
+	//
 	//		.browseMode() can return:
 	//			'disabled'		- item will be disabled.
 	//			'hidden'		- item will be both hidden and disabled.
@@ -868,6 +880,24 @@ var BrowseActionsActions = actions.Actions({
 					}
 				}
 				return []
+			}
+
+			var getMode = function(action){
+				var m = action
+				var visited = [m]
+
+				// handle aliases...
+				do {
+					m = actions.getAttr(m, 'browseMode')
+					// check for loops...
+					if(m && visited[m] != null){
+						m = null
+						break
+					}
+					visited.push(m)
+				} while(typeof(m) == typeof('str'))
+
+				return m ? m.call(actions) : undefined
 			}
 
 			// Wait for dialog...
@@ -988,10 +1018,7 @@ var BrowseActionsActions = actions.Actions({
 					var mode = cur[1]
 
 					// handle live modes...
-					if(mode == null){
-						var m = actions.getAttr(action, 'browseMode')
-						mode = m ? m.call(actions) : mode
-					}
+					mode = mode || getMode(action)
 
 					var cur_state = actions[action]('?')
 					var states = actions[action]('??')
@@ -1064,10 +1091,7 @@ var BrowseActionsActions = actions.Actions({
 								var mode = cur[key][1]
 
 								// handle live modes...
-								if(mode == null){
-									var m = actions.getAttr(action, 'browseMode')
-									mode = m ? m.call(actions) : mode
-								}
+								mode = mode || getMode(action)
 
 								// Action: toggler -> add toggle button...
 								if(actions.isToggler && actions.isToggler(action)){

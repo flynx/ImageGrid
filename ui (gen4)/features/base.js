@@ -355,26 +355,38 @@ actions.Actions({
 			this.focusImage(t, r)
 		}],
 	// XXX add undo...
-	setBaseRibbon: ['Edit/Set base ribbon',
-		{journal: true},
+	setBaseRibbon: ['Edit|Ribbon/Set base ribbon', {
+		journal: true,
+		browseMode: function(target){ 
+			return this.current_ribbon == this.base && 'disabled' }},
 		function(target){ this.data.setBase(target) }],
 
 	// shorthands...
 	// XXX do we reset direction on these???
 	firstImage: ['Navigate/First image in current ribbon',
+		{browseMode: function(target){ 
+			return this.data.getImageOrder('ribbon', target) == 0 && 'disabled' }},
 		function(all){ this.focusImage(all == null ? 'first' : 0) }],
 	lastImage: ['Navigate/Last image in current ribbon',
+		{browseMode: function(target){ 
+			return this.data.getImageOrder('ribbon', target) 
+				== this.data.getImageOrder('ribbon', -1) && 'disabled' }},
 		function(all){ this.focusImage(all == null ? 'last' : -1) }],
 	// XXX these break if image at first/last position are not loaded (crop, group, ...)
 	// XXX do we actually need these???
 	firstGlobalImage: ['Navigate/First image globally',
+		{browseMode: function(){ 
+			return this.data.getImageOrder() == 0 && 'disabled' }},
 		function(){ this.firstImage(true) }],
 	lastGlobalImage: ['Navigate/Last image globally',
+		{browseMode: function(){ 
+			return this.data.getImageOrder() == this.data.getImageOrder(-1) && 'disabled' }},
 		function(){ this.lastImage(true) }],
 
 	// XXX skip unloaded images... (groups?)
 	// XXX the next two are almost identical...
 	prevImage: ['Navigate/Previous image',
+		{browseMode: 'firstImage'},
 		function(a){ 
 			// keep track of traverse direction...
 			this.direction = 'left'
@@ -390,6 +402,7 @@ actions.Actions({
 			}
 		}],
 	nextImage: ['Navigate/Next image',
+		{browseMode: 'lastImage'},
 		function(a){ 
 			// keep track of traverse direction...
 			this.direction = 'right'
@@ -451,12 +464,19 @@ actions.Actions({
 		}],
 
 	firstRibbon: ['Navigate/First ribbon',
+		{browseMode: function(target){ 
+			return this.data.getRibbonOrder(target) == 0 && 'disabled'}},
 		function(){ this.focusRibbon('first') }],
 	lastRibbon: ['Navigate/Last ribbon',
+		{browseMode: function(target){ 
+			return this.data.getRibbonOrder(target) 
+				== this.data.getRibbonOrder(-1) && 'disabled'}},
 		function(){ this.focusRibbon('last') }],
 	prevRibbon: ['Navigate/Previous ribbon',
+		{browseMode: 'firstRibbon'}, 
 		function(){ this.focusRibbon('before') }],
 	nextRibbon: ['Navigate/Next ribbon',
+		{browseMode: 'lastRibbon'},
 		function(){ this.focusRibbon('after') }],
 
 
@@ -489,11 +509,11 @@ actions.Actions({
 	// XXX to be used for things like mark/place and dragging...
 	// XXX revise...
 	// XXX undo...
-	shiftImageTo: ['- Edit|Sort/',
+	shiftImageTo: ['- Edit|Sort|Image/',
 		{undo: function(a){ this.shiftImageTo(a.args[1], a.args[0]) }},
 		function(target, to){ this.data.shiftImageTo(target, to) }],
 	
-	shiftImageUp: ['Edit/Shift image up',
+	shiftImageUp: ['Edit|Image/Shift image up',
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
@@ -518,7 +538,7 @@ actions.Actions({
 				this.data.shiftImageUp(target)
 			}
 		}],
-	shiftImageDown: ['Edit/Shift image down',
+	shiftImageDown: ['Edit|Image/Shift image down',
 		'If implicitly shifting current image (i.e. no arguments), focus '
 			+'will shift to the next or previous image in the current '
 			+'ribbon depending on current direction.',
@@ -547,18 +567,19 @@ actions.Actions({
 	// 		corresponding normal shift operations...
 	// XXX .undoLast(..) on these for some reason skips...
 	// 		...e.g. two shifts are undone with three calls to .undoLast()...
-	shiftImageUpNewRibbon: ['Edit/Shift image up to a new empty ribbon',
+	shiftImageUpNewRibbon: ['Edit|Ribbon/Shift image up to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target)
 			this.shiftImageUp(target)
 		}],
-	shiftImageDownNewRibbon: ['Edit/Shift image down to a new empty ribbon',
+	shiftImageDownNewRibbon: ['Edit|Ribbon/Shift image down to a new empty ribbon',
 		function(target){
 			this.data.newRibbon(target, 'below')
 			this.shiftImageDown(target)
 		}],
-	shiftImageLeft: ['Edit|Sort/Shift image left',
-		{undo: undoShift('shiftImageRight')},
+	shiftImageLeft: ['Edit|Sort|Image/Shift image left', {
+		undo: undoShift('shiftImageRight'),
+		browseMode: 'prevImage'}, 
 		function(target){ 
 			if(target == null){
 				this.direction = 'left'
@@ -566,8 +587,9 @@ actions.Actions({
 			this.data.shiftImageLeft(target) 
 			this.focusImage()
 		}],
-	shiftImageRight: ['Edit|Sort/Shift image right',
-		{undo: undoShift('shiftImageLeft')},
+	shiftImageRight: ['Edit|Sort|Image/Shift image right', {
+		undo: undoShift('shiftImageLeft'),
+		browseMode: 'nextImage'}, 
 		function(target){ 
 			if(target == null){
 				this.direction = 'right'
@@ -576,15 +598,17 @@ actions.Actions({
 			this.focusImage()
 		}],
 
-	shiftRibbonUp: ['Ribbon|Edit|Sort/Shift ribbon up',
-		{undo: undoShift('shiftRibbonDown')},
+	shiftRibbonUp: ['Ribbon|Edit|Sort/Shift ribbon up', {
+		undo: undoShift('shiftRibbonDown'),
+		browseMode: 'prevRibbon'}, 
 		function(target){ 
 			this.data.shiftRibbonUp(target) 
 			// XXX is this the right way to go/???
 			this.focusImage()
 		}],
-	shiftRibbonDown: ['Ribbon|Edit|Sort/Shift ribbon down',
-		{undo: undoShift('shiftRibbonUp')},
+	shiftRibbonDown: ['Ribbon|Edit|Sort/Shift ribbon down', {
+		undo: undoShift('shiftRibbonUp'),
+		browseMode: 'nextRibbon'}, 
 		function(target){ 
 			this.data.shiftRibbonDown(target)
 			// XXX is this the right way to go/???
@@ -977,15 +1001,13 @@ module.CropActions = actions.Actions({
 			}
 		}],
 	uncropAll: ['Crop/Uncrop all',
-		{browseMode: function(){ 
-			return (this.crop_stack && this.crop_stack.length > 0) || 'disabled' }},
+		{browseMode: 'uncrop'},
 		function(restore_current){ this.uncrop('all', restore_current) }],
 	// XXX see if we need to do this on this level??
 	// 		...might be a good idea to do this in data...
 	uncropAndKeepOrder: ['Crop|Edit/Uncrop and keep crop image order', {
 		journal: true,
-		browseMode: function(){ 
-			return (this.crop_stack && this.crop_stack.length > 0) || 'disabled' }},
+		browseMode: 'uncrop'}, 
 		function(level, restore_current){ this.uncrop(level, restore_current, true) }],
 	// XXX same as uncrop but will also try and merge changes...
 	// 		- the order is simple and already done above...
@@ -993,8 +1015,7 @@ module.CropActions = actions.Actions({
 	// 		  only problem here is how to deal with new ribbons...
 	mergeCrop: ['- Crop|Edit/Merge crop', {
 		journal: true,
-		browseMode: function(){ 
-			return (this.crop_stack && this.crop_stack.length > 0) || 'disabled' }},
+		browseMode: 'uncrop'}, 
 		function(){
 			// XXX
 		}],
@@ -1124,19 +1145,16 @@ module.ImageGroupActions = actions.Actions({
 		function(){ this.group(this.data.getImages(this.data.getTaggedByAny('marked'))) }],
 
 	expandGroup: ['Group/Expand group', 
-		{browseMode: function(){
-			return this.data.getGroup() == null && 'disabled' }},
+		{browseMode: 'ungroup'}, 
 		function(target){ this.data.expandGroup(target || this.current) }],
 	collapseGroup: ['Group/Collapse group', {
 		journal: true,
-		browseMode: function(){
-			return this.data.getGroup() == null && 'disabled' }},
+		browseMode: 'ungroup'}, 
 		function(target){ this.data.collapseGroup(target || this.current) }],
 
 	cropGroup: ['Crop|Group/Crop group', {
 		journal: true,
-		browseMode: function(){
-			return this.data.getGroup() == null && 'disabled' }},
+		browseMode: 'ungroup'}, 
 		function(target){ this.crop(this.data.cropGroup(target || this.current)) }],
 })
 
@@ -1324,7 +1342,7 @@ module.Journal = core.ImageGridFeatures.Feature({
 				}
 			}],
 		// XXX this is not final -- needs careful revision...
-		redo: ['Edit/Redo last',
+		redo: ['Edit/Redo',
 			{browseMode: function(){ 
 				return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
 			function(){
