@@ -106,8 +106,7 @@ actions.Actions({
 	
 	// XXX
 	get version(){
-		return this.config.version
-	},
+		return this.config.version },
 
 	// basic state...
 	// NOTE: the setters in the following use the appropriate actions
@@ -124,27 +123,21 @@ actions.Actions({
 	
 	// Base ribbon...
 	get base(){
-		return this.data.base
-	},
+		return this.data.base },
 	set base(value){
-		this.setBaseRibbon(value)
-	},
+		this.setBaseRibbon(value) },
 
 	// Current image...
 	get current(){
-		return this.data.current
-	},
+		return this.data.current },
 	set current(value){
-		this.focusImage(value)
-	},
+		this.focusImage(value) },
 
 	// Current ribbon...
 	get current_ribbon(){
-		return this.data.getRibbon()
-	},
+		return this.data.getRibbon() },
 	set current_ribbon(value){
-		this.focusRibbon(value)
-	},
+		this.focusRibbon(value) },
 
 	// Default direction...
 	//
@@ -568,11 +561,13 @@ actions.Actions({
 	// XXX .undoLast(..) on these for some reason skips...
 	// 		...e.g. two shifts are undone with three calls to .undoLast()...
 	shiftImageUpNewRibbon: ['Edit|Ribbon/Shift image up to a new empty ribbon',
+		{journal: true},
 		function(target){
 			this.data.newRibbon(target)
 			this.shiftImageUp(target)
 		}],
 	shiftImageDownNewRibbon: ['Edit|Ribbon/Shift image down to a new empty ribbon',
+		{journal: true},
 		function(target){
 			this.data.newRibbon(target, 'below')
 			this.shiftImageDown(target)
@@ -680,7 +675,9 @@ actions.Actions({
 	//
 	//
 	// NOTE: target must be .data.getImage(..) compatible, see it for docs...
+	// XXX correct undo???
 	rotate: ['- Image|Edit/Rotate image',
+		{journal: true},
 		function(target, direction){
 			if(arguments.length == 0){
 				return this.image && this.image.orientation || 0
@@ -693,6 +690,7 @@ actions.Actions({
 				&& this.images.rotateImage(this.data.getImage(target), direction || 'cw')
 		}],
 	flip: ['- Image|Edit/Flip image',
+		{journal: true},
 		function(target, direction){
 			if(target == 'vertical' || target == 'horizontal'){
 				direction = target
@@ -726,8 +724,7 @@ actions.Actions({
 	alignToRibbon: ['Ribbon|Edit/Align top ribbon to base',
 		{journal: true},
 		function(target, start, end){
-			this.data = this.data.alignToRibbon(target, start, end)
-		}],
+			this.data = this.data.alignToRibbon(target, start, end) }],
 })
 
 
