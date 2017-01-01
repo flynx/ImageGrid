@@ -384,6 +384,39 @@ module.Introspection = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 // Journal...
+//
+// This feature logs actions that either have the journal attribute set 
+// to true or have an undo method/alias...
+// 
+//	Example:
+// 		someAction: ['Path/to/Some action',
+// 			// just journal the action, but it can't be undone...
+// 			{journal: true},
+// 			function(){ 
+// 				... 
+// 			}],
+//
+// 		otherAction: ['Path/to/Other action',
+// 			// journal and provide undo functionality...
+// 			{undo: function(){ 
+// 				...
+// 			}},
+// 			function(){ 
+// 				... 
+// 			}],
+//
+// 		someOtherAction: ['Path/to/Some other action',
+// 			// use .otherAction(..) to undo...
+// 			{undo: 'otherAction'},
+// 			function(){ 
+// 				... 
+// 			}],
+//
+// NOTE: .undo has priority over .journal, so there is no point of 
+// 		defining both .journal and .undo action attributes, one is 
+// 		enough.
+//
+//
 
 // XXX would be great to add a mechanism define how to reverse actions...
 // 		...one way to do this at this point is to revert to last state
