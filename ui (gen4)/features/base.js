@@ -1,6 +1,19 @@
 /**********************************************************************
 * 
-* All the base features...
+* Base features...
+*
+* Features:
+* 	- base
+* 		map to data and images
+* 	- crop
+* 	- tags
+* 	- groups
+* 		XXX experimental...
+*
+* Meta Features:
+* 	- base-full
+* 		combines the above features into one
+*
 *
 *
 **********************************************************************/
@@ -20,35 +33,6 @@ var core = require('features/core')
 
 
 /*********************************************************************/
-// Helpers and meta stuff...
-
-// mode can be:
-// 	"ribbon"	- next marked in current ribbon (default)
-// 	"all"		- next marked in sequence
-//
-// XXX add support for tag lists...
-var makeTagWalker =
-module.makeTagWalker =
-function(direction, dfl_tag){
-	var meth = direction == 'next' ? 'nextImage' : 'prevImage'
-
-	return function(tag, mode){
-		mode = mode == null ? 'all' : mode
-		tag = tag || dfl_tag
-
-		// account for no tags or no images tagged...
-		var lst = this.data.tags != null ? this.data.tags[tag] : []
-		lst = lst || []
-
-		if(mode == 'ribbon'){
-			this[meth](this.data.getImages(lst, 'current'))
-
-		} else {
-			this[meth](lst)
-		}
-	}
-}
-
 
 // Generate an undo function for shift operations...
 //
@@ -67,8 +51,7 @@ var undoShift = function(undo){
 		this[undo](a.args.length == 0 ? a.current : a.args[0]) }}
 
 
-
-/*********************************************************************/
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 // XXX split this into read and write actions...
 var BaseActions = 
@@ -759,6 +742,36 @@ module.Base = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Tags...
 
+// mode can be:
+// 	"ribbon"	- next marked in current ribbon (default)
+// 	"all"		- next marked in sequence
+//
+// XXX add support for tag lists...
+var makeTagWalker =
+module.makeTagWalker =
+function(direction, dfl_tag){
+	var meth = direction == 'next' ? 'nextImage' : 'prevImage'
+
+	return function(tag, mode){
+		mode = mode == null ? 'all' : mode
+		tag = tag || dfl_tag
+
+		// account for no tags or no images tagged...
+		var lst = this.data.tags != null ? this.data.tags[tag] : []
+		lst = lst || []
+
+		if(mode == 'ribbon'){
+			this[meth](this.data.getImages(lst, 'current'))
+
+		} else {
+			this[meth](lst)
+		}
+	}
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 var TagsActions = 
 module.TagsActions = actions.Actions({
 	// tags...
@@ -1183,186 +1196,6 @@ core.ImageGridFeatures.Feature('base-full', [
 	'image-group',
 	'tasks',
 ])
-
-
-
-//---------------------------------------------------------------------
-// Journal...
-
-// XXX is this the right level for this???
-// 		...data seems to be a better candidate...
-// XXX would be great to add a mechanism define how to reverse actions...
-// 		...one way to do this at this point is to revert to last state
-// 		and re-run the journal until the desired event...
-// XXX need to define a clear journaling strategy in the lines of:
-// 		- save state clears journal and adds a state load action
-// 		- .load(..) clears journal
-// XXX needs careful testing...
-var Journal = 
-module.Journal = core.ImageGridFeatures.Feature({
-	title: 'Action Journal',
-
-	tag: 'system-journal',
-
-	depends: [
-		'base'
-	],
-
-	actions: actions.Actions({
-
-		journal: null,
-		rjournal: null,
-
-		journalable: null,
-
-		updateJournalableActions: ['System/Update list of journalable actions',
-			function(){
-				var that = this
-
-				var handler = function(action){
-					return function(){
-						var cur = this.current
-						var args = args2array(arguments)
-
-						return function(){
-							this.journalPush({
-								type: 'basic',
-
-								action: action, 
-								args: args,
-								// the current image before the action...
-								current: cur, 
-								// the target (current) image after action...
-								target: this.current, 
-							})
-						}
-					}
-				}
-
-				this.journalable = this.actions
-					.filter(function(action){
-						return !!that.getAttr(action, 'undo') 
-							|| !!that.getAttr(action, 'journal') 
-					})
-					// reset the handler
-					.map(function(action){
-						that
-							.off(action+'.pre', 'journal-handler')
-							.on(action+'.pre', 'journal-handler', handler(action))
-						return action
-					})
-			}],
-
-		clone: [function(full){
-				return function(res){
-					res.rjournal = null
-					res.journal = null
-					if(full && this.hasOwnProperty('journal') && this.journal){
-						res.journal = JSON.parse(JSON.stringify(this.journal))
-					}
-				}
-			}],
-
-		// XXX might be good to add some kind of metadata to journal...
-		journalPush: ['- System/Journal/Add an item to journal',
-			function(data){
-				this.journal = (this.hasOwnProperty('journal') 
-						|| this.journal) ? 
-					this.journal || []
-					: []
-				this.journal.push(data)
-			}],
-		clearJournal: ['System/Journal/Clear the action journal',
-			function(){
-				if(this.journal){
-					// NOTE: overwriting here is better as it will keep
-					// 		shadowing the parent's .journal in case we 
-					// 		are cloned.
-					// NOTE: either way this will have no effect as we 
-					// 		only use the local .journal but the user may
-					// 		get confused...
-					//delete this.journal
-					this.journal = null
-				}
-			}],
-		runJournal: ['- System/Journal/Run journal',
-			//{journal: true},
-			function(journal){
-				var that = this
-				journal.forEach(function(e){
-					// load state...
-					that
-						.focusImage(e.current)
-						// run action...
-						[e.action].apply(that, e.args)
-				})
-			}],
-
-		// XXX need to clear the rjournal as soon as we do something...
-		// 		...at this point it is really easy to mess things up by
-		// 		undoing something, and after some actions doing a 
-		// 		.redoLast(..)
-		// XXX this is not ready for production...
-		undo: ['Edit/Undo',
-			{browseMode: function(){ 
-				return (this.journal && this.journal.length > 0) || 'disabled' }},
-			function(){
-				var journal = this.journal
-				this.rjournal = (this.hasOwnProperty('rjournal') 
-						|| this.rjournal) ? 
-					this.rjournal 
-					: []
-
-				for(var i = journal.length-1; i >= 0; i--){
-					var a = journal[i]
-
-					// see if the actions has an explicit undo attr...
-					var undo = this.getAttr(a.action, 'undo')
-
-					// general undo...
-					if(undo){
-						this.focusImage(a.current)
-
-						var undo = undo instanceof Function ?
-								// pass the action name...
-								undo.call(this, a)
-							: typeof(undo) == typeof('str') ? 
-								// pass journal structure as-is...
-								this[undo].apply(this, a)
-							: null
-
-						// pop the undo command...
-						this.journal.pop()
-						this.rjournal.push(journal.splice(i, 1)[0])
-						break
-					}
-				}
-			}],
-		// XXX this is not final -- needs careful revision...
-		redo: ['Edit/Redo',
-			{browseMode: function(){ 
-				return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
-			function(){
-				if(!this.rjournal || this.rjournal.length == 0){
-					return
-				}
-
-				this.runJournal([this.rjournal.pop()])
-			}],
-	}),
-
-	// XXX need to drop journal on save...
-	// XXX rotate/truncate journal???
-	// XXX need to check that all the listed actions are clean -- i.e.
-	// 		running the journal will produce the same results as user 
-	// 		actions that generated the journal.
-	handlers: [
-		// log state, action and its args... 
-		['start',
-			function(){ this.updateJournalableActions() }],
-	],
-})
-
 
 
 

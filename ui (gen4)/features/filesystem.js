@@ -1034,11 +1034,9 @@ var CommentsActions = actions.Actions({
 	__comments: null,
 
 	get comments(){
-		return this.__comments
-	},
+		return this.__comments },
 	set comments(value){
-		this.__comments = value
-	},
+		this.__comments = value },
 })
 
 var Comments = 

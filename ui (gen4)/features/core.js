@@ -1,7 +1,31 @@
 /**********************************************************************
 * 
-* Core features that setup the life-cycle and the base interfaces for 
-* features to use...
+* Core features...
+* 	Setup the life-cycle and the base interfaces for features to use...
+*
+* Defined here:
+* 	- protocol action constructor
+* 	- config value toggler constructor
+* 	- meta actions
+* 		- .isToggler(..) predicate
+* 		- .preActionHandler(..) used to toggler special args
+* 	- ImageGrid root object/constructor
+* 	- ImageGridFeatures object
+*
+*
+* Features:
+* 	- lifecycle
+* 		base life-cycle events (start/stop/..)
+* 	- util
+* 	- introspection
+* 	- journal
+* 		action journaling and undo/redo functionality
+* 		XXX needs revision...
+* 	- workspace
+* 		XXX needs revision...
+* 	- tasks
+* 		XXX not yet used
+*
 *
 *
 **********************************************************************/
@@ -333,6 +357,8 @@ module.notUserCallable = function(func){
 }
 
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 var IntrospectionActions = actions.Actions({
 	// user-callable actions...
 	get useractions(){
@@ -352,6 +378,198 @@ module.Introspection = ImageGridFeatures.Feature({
 	tag: 'introspection',
 
 	actions: IntrospectionActions,
+})
+
+
+
+//---------------------------------------------------------------------
+// Journal...
+
+// XXX would be great to add a mechanism define how to reverse actions...
+// 		...one way to do this at this point is to revert to last state
+// 		and re-run the journal until the desired event...
+// XXX need to define a clear journaling strategy in the lines of:
+// 		- save state clears journal and adds a state load action
+// 		- .load(..) clears journal
+// XXX needs careful testing...
+var JournalActions = actions.Actions({
+
+	clone: [function(full){
+			return function(res){
+				res.rjournal = null
+				res.journal = null
+				if(full && this.hasOwnProperty('journal') && this.journal){
+					res.journal = JSON.parse(JSON.stringify(this.journal))
+				}
+			}
+		}],
+
+	journal: null,
+	rjournal: null,
+
+	journalable: null,
+
+	updateJournalableActions: ['System/Update list of journalable actions',
+		function(){
+			var that = this
+
+			var handler = function(action){
+				return function(){
+					var cur = this.current
+					var args = args2array(arguments)
+
+					return function(){
+						this.journalPush({
+							type: 'basic',
+
+							action: action, 
+							args: args,
+							// the current image before the action...
+							current: cur, 
+							// the target (current) image after action...
+							target: this.current, 
+						})
+					}
+				}
+			}
+
+			this.journalable = this.actions
+				.filter(function(action){
+					return !!that.getAttr(action, 'undo') 
+						|| !!that.getAttr(action, 'journal') 
+				})
+				// reset the handler
+				.map(function(action){
+					that
+						.off(action+'.pre', 'journal-handler')
+						.on(action+'.pre', 'journal-handler', handler(action))
+					return action
+				})
+		}],
+
+	journalPush: ['- System/Journal/Add an item to journal',
+		function(data){
+			// clear the reverse journal...
+			this.rjournal
+				&& (this.rjournal = null)
+
+			this.journal = (this.hasOwnProperty('journal') || this.journal) ? 
+				this.journal || []
+				: []
+			this.journal.push(data)
+		}],
+	clearJournal: ['System/Journal/Clear the action journal',
+		function(){
+			// NOTE: overwriting here is better as it will keep
+			// 		shadowing the parent's .journal in case we 
+			// 		are cloned.
+			// NOTE: either way this will have no effect as we 
+			// 		only use the local .journal but the user may
+			// 		get confused...
+			//delete this.journal
+			this.journal
+				&& (this.journal = null)
+			this.rjournal
+				&& (this.rjournal = null)
+		}],
+	runJournal: ['- System/Journal/Run journal',
+		//{journal: true},
+		function(journal){
+			var that = this
+			journal.forEach(function(e){
+				// load state...
+				that
+					.focusImage(e.current)
+					// run action...
+					[e.action].apply(that, e.args)
+			})
+		}],
+
+	// XXX needs very careful revision...
+	// 		- should this be thread safe??? (likely not)
+	// 		- should the undo action have side-effects on the 
+	// 			journal/rjournal or should we clean them out??? 
+	// 			(currently cleaned)
+	undo: ['Edit/Undo',
+		{browseMode: function(){ 
+			return (this.journal && this.journal.length > 0) || 'disabled' }},
+		function(){
+			var journal = this.journal.slice() || []
+
+			var rjournal = this.rjournal = 
+				(this.hasOwnProperty('rjournal') || this.rjournal) ? 
+					this.rjournal || [] 
+					: []
+
+			for(var i = journal.length-1; i >= 0; i--){
+				var a = journal[i]
+
+				// see if the action has an explicit undo attr...
+				var undo = this.getAttr(a.action, 'undo')
+
+				// general undo...
+				if(undo){
+					// restore focus to where it was when the action 
+					// was called...
+					this.focusImage(a.current)
+
+					// call the undo method/action...
+					// NOTE: this is likely to have side-effect on the 
+					// 		journal and maybe even rjournal...
+					// NOTE: these side-effects are cleaned out later.
+					var undo = undo instanceof Function ?
+							// pass the action name...
+							undo.call(this, a)
+						: typeof(undo) == typeof('str') ? 
+							// pass journal structure as-is...
+							this[undo].apply(this, a)
+						: null
+
+					// push the undone command to the reverse journal...
+					rjournal.push(journal.splice(i, 1)[0])
+
+					// restore journal state...
+					// NOTE: calling the undo action would have cleared
+					// 		the rjournal and added stuff to the journal
+					// 		so we will need to restore things...
+					this.journal = journal
+					this.rjournal = rjournal
+
+					break
+				}
+			}
+		}],
+	redo: ['Edit/Redo',
+		{browseMode: function(){ 
+			return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
+		function(){
+			if(!this.rjournal || this.rjournal.length == 0){
+				return
+			}
+
+			this.runJournal([this.rjournal.pop()])
+		}],
+})
+
+
+var Journal = 
+module.Journal = ImageGridFeatures.Feature({
+	title: 'Action Journal',
+
+	tag: 'journal',
+
+	actions: JournalActions,
+
+	// XXX need to drop journal on save...
+	// XXX rotate/truncate journal???
+	// XXX need to check that all the listed actions are clean -- i.e.
+	// 		running the journal will produce the same results as user 
+	// 		actions that generated the journal.
+	handlers: [
+		// log state, action and its args... 
+		['start',
+			function(){ this.updateJournalableActions() }],
+	],
 })
 
 
@@ -419,7 +637,6 @@ module.makeWorkspaceConfigLoader = function(keys, callback){
 		callback && callback.call(this, workspace)
 	}
 }
-
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 

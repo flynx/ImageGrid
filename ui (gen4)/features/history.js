@@ -48,11 +48,9 @@ var URLHistoryActions = actions.Actions({
 	// NOTE: though functions are supported they are not recommended as
 	// 		we can not stringify them to JSON...
 	get url_history(){
-		return this.hasOwnProperty('__url_history') ? this.__url_history : undefined
-	},
+		return this.hasOwnProperty('__url_history') ? this.__url_history : undefined },
 	set url_history(value){
-		this.__url_history = value
-	},
+		this.__url_history = value },
 
 
 	clone: [function(full){
@@ -495,7 +493,7 @@ var URLHistoryUIActions = actions.Actions({
 							l++
 						})
 
-					// empty history...
+					// history is empty...
 					if(l == 0){
 						make('No history...', null, true)	
 							.find('.button').remove()

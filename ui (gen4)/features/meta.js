@@ -52,7 +52,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui',
 	'keyboard',
 
-	'ui-ribbons-placement',
+	//'ui-ribbons-placement',
 
 	// features...
 	'ui-ribbon-auto-align',
@@ -121,7 +121,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-app-control',
 
 	// XXX not yet fully tested...
-	'system-journal',
+	'journal',
 
 
 	'fail-safe-devtools',

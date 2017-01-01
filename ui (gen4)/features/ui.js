@@ -1,5 +1,41 @@
 /**********************************************************************
 * 
+* User Interface Features...
+*
+* Features:
+* 	- ui
+* 		maps ribbons to base (data + images)
+*	- config-local-storage
+*		maintain configuration state in local storage
+*	- ui-url-hash
+*		handle .location.hash
+*	- ui-ribbon-auto-align
+*		handle ribbon alignment...
+*		- ui-ribbon-align-to-order
+*		- ui-ribbon-align-to-first
+*		- ui-ribbon-manual-align
+*	- ui-animation
+*		manage UI non-css animations...
+*	- ui-autohide-cursor
+*	- ui-control
+*		control mechanics (touch/mouse)
+*
+* Dev Features:
+*	- fail-safe-devtools
+*		starts devtools if for some reason the main ui fails to start.
+*
+* Experimental Features:
+*	- ui-ribbons-placement
+*		manage different low level ribbon placement mechanics
+*		XXX experimental...
+*	- auto-single-image
+*	- auto-ribbon
+*
+* Legacy: 
+*	- ui-clickable
+*	- ui-direct-control-hammer
+*	- ui-indirect-control
+*
 *
 *
 **********************************************************************/
@@ -21,7 +57,6 @@ var base = require('features/base')
 
 
 /*********************************************************************/
-
 
 var reloadAfter =
 module.reloadAfter =
@@ -2058,6 +2093,7 @@ var ControlActions = actions.Actions({
 				}
 			})],
 
+	// XXX revise name...
 	makeRibbonVisible: ['- Interface/Make ribbon visible if it is off screen',
 		function(target, center_off_screen){
 			var r = this.ribbons.getRibbon(target)
