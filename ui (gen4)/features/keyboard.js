@@ -561,7 +561,9 @@ var KeyboardActions = actions.Actions({
 	// XXX argument #3 is not yet used (see: lib/keyboard.js)...
 	getKeyboardModes: ['- Interface/',
 		function(){
-			return keyboard.getApplicableModes(this.keyboard, null, this.ribbons.viewer) }],
+			return this.__keyboard_event_source ?
+				keyboard.getApplicableModes(this.keyboard, null, this.__keyboard_event_source)
+	   			: [] }],
 
 	// XXX need to pre-process the docs...
 	// 		- remove the path component...
