@@ -261,6 +261,30 @@ body {
 }
 */
 
+/* XXX experimental key mappings... */
+.browse-widget.show-keys .list>div:after {
+	display: inline;
+	position: relative;
+	content: attr(keys);
+
+	float: right;
+	margin-left: 0.5em;
+	margin-right: 0.5em;
+
+	opacity: 0.3;
+	font-style: italic;
+}
+.browse-widget.show-keys .list>div.disabled:after {
+	opacity: 0.5;
+}
+
+.browse-widget.show-keys .list>div:hover:after {
+	opacity: 0.5;
+}
+.browse-widget.show-keys .list>div.disabled:hover:after {
+	opacity: 1;
+}
+
 
 /* DEBUG stuff... */
 .container-center {

@@ -788,6 +788,8 @@ var BrowseActionsActions = actions.Actions({
 			showHidden: false,
 			showEmpty: false,
 		},
+
+		'browse-actions-keys': true,
 	},
 
 	// Browse actions dialog...
@@ -862,6 +864,21 @@ var BrowseActionsActions = actions.Actions({
 			var priority = /^(-?[0-9]+)\s*:\s*/
 			var dialog
 
+			// get keys for each action...
+			var keys = this.getKeysForAction ? this.getKeysForAction('*') : {}
+			var modes = this.getKeyboardModes ? this.getKeyboardModes() : []
+
+			// Get keys for action...
+			var getKeys = function(action){
+				var k = keys[action] || {}
+				return Object.keys(k)
+					// keep only the applicable modes...
+					.filter(function(m){ return modes.indexOf(m) >= 0 })
+					.map(function(m){ return k[m] })
+					.reduce(function(a, b){ return a.concat(b) }, [])
+					.join(' / ')
+			}
+
 			// Get item from tree level taking into account additional 
 			// syntax like prioority...
 			// returns:
@@ -882,13 +899,14 @@ var BrowseActionsActions = actions.Actions({
 				return []
 			}
 
+			// Get action browse mode (disabled or hidden)...
 			var getMode = function(action){
 				var m = action
 				var visited = [m]
 
 				// handle aliases...
 				do {
-					m = actions.getAttr(m, 'browseMode')
+					m = actions.getActionAttr(m, 'browseMode')
 					// check for loops...
 					if(m && visited[m] != null){
 						m = null
@@ -1040,12 +1058,15 @@ var BrowseActionsActions = actions.Actions({
 								disabled: mode == 'hidden' || mode == 'disabled',
 								hidden: mode == 'hidden',
 							})
-							.addClass(state == cur_state ? 'selected highlighted' : '')
+							.attr('keys', getKeys(action))
+							.addClass([
+									state == cur_state ? 'selected highlighted' : '',
+									mode == 'hidden' ? mode : ''
+								].join(' '))
 							.on('open', function(){
 								actions[action](state)
 								that.pop()
 							})
-							.addClass(mode == 'hidden' ? mode : '')
 					})
 
 				// Level: lister -- hand control to lister...
@@ -1107,8 +1128,10 @@ var BrowseActionsActions = actions.Actions({
 													actions[action]()
 													that.update()
 													that.select('"'+ text +'"')
-												}]
+												}],
+											//[getKeys(action)],
 										]})
+										.attr('keys', getKeys(action))
 										.addClass(mode == 'hidden' ? mode : '')
 										.on('open', function(){
 											// XXX can this open a dialog???
@@ -1127,6 +1150,7 @@ var BrowseActionsActions = actions.Actions({
 											disabled: mode == 'hidden' || mode == 'disabled',
 									   		hidden: mode == 'hidden',
 										})
+										.attr('keys', getKeys(action))
 										.on('open', function(){
 											waitFor(actions[action]())
 										})
@@ -1145,6 +1169,8 @@ var BrowseActionsActions = actions.Actions({
 						})
 				}
 			}, {
+				cls: 'browse-actions',
+
 				path: path,
 
 				flat: false,
@@ -1163,8 +1189,20 @@ var BrowseActionsActions = actions.Actions({
 				config.showHidden = dialog.options.showHidden
 			})
 
+			this.config['browse-actions-keys'] 
+				&& dialog.dom.addClass('show-keys')
+
 			return dialog
 		})],
+
+	toggleBrowseActionKeys: ['Interface/Show keys in menu',
+		core.makeConfigToggler(
+			'browse-actions-keys', 
+			[true, false],
+			function(state){
+				this.modal.client.dom.hasClass('browse-actions')
+					&& this.modal.client.dom[state ? 'addClass' : 'removeClass']('show-keys')
+			})],
 })
 
 var BrowseActions = 
@@ -1176,6 +1214,9 @@ module.BrowseActions = core.ImageGridFeatures.Feature({
 	depends: [
 		'ui',
 		'ui-dialogs',
+	],
+	suggested: [
+		'keyboard',
 	],
 
 	actions: BrowseActionsActions,

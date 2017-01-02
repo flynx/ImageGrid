@@ -868,13 +868,20 @@ var FileSystemLoaderUIActions = actions.Actions({
 	browsePath: ['File/Browse file system...',
 		widgets.makeUIDialog(function(base, callback){
 			var that = this
+			var cfg = this.config['file-browser-settings']
 
 			base = base || this.location.path || '/'
 			base = util.normalizePath(base)
 
 			var o = browseWalk.makeWalk(
 						null, base, this.config['image-file-pattern'],
-						this.config['file-browser-settings'])
+						{
+							cls: 'file-browser',
+
+							disableFiles: cfg.disableFiles,
+							showNonTraversable: cfg.showNonTraversable,
+							showDisabled: cfg.showDisabled,
+						})
 					// path selected...
 					.open(function(evt, path){ 
 						var item = o.selected
@@ -932,8 +939,6 @@ var FileSystemLoaderUIActions = actions.Actions({
 						config.showNonTraversable = o.options.showNonTraversable
 					})
 					
-			o.dom.addClass('file-browser')
-
 			return o
 		})],
 

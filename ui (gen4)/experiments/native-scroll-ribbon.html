@@ -1,5 +1,30 @@
 <!DOCTYPE html>
 <html>
+<!--
+//---------------------------------------------------------------------
+// Experiment: use native scroll for ribbons and view...
+// 	Factors:
+// 		+ the browser will do all the heavy lifting and do it faster 
+// 			than we can ever hope to do it in JS (assumption)
+// 		- will require us to add an extra container per ribbon 
+//
+// 	Experiment result:
+// 		- more uniform and fast across browsers 
+// 			(except FF - can't disable scrollbars, need to cheat)
+// 		- less controllable (inertia, gestures, ...)
+// 		- is affected by scaling in a bad way - paralax...
+//
+// 	Conclusion:
+// 		- this again brings us to using code to control the scroll
+// 		  which in turn defeats the original purpose of avoiding
+// 		  extra complexity...
+//
+// 	See: 
+// 		experiments/native-scroll-ribbon.html
+//
+
+-->
+
 <style>
 .mark-center:after {
 	position: absolute;

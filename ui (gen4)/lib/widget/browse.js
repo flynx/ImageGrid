@@ -140,6 +140,10 @@ var BrowserClassPrototype = {
 			browser.addClass('flat')
 		}
 
+		if(options.cls){
+			browser.addClass(options.cls)
+		}
+
 		// path...
 		var path = $('<div>')
 			.addClass('v-block path')
@@ -189,6 +193,9 @@ var BrowserPrototype = {
 
 	// option defaults and doc...
 	options: {
+		// CSS classes to add to widget...
+		cls: null,
+
 		// Initial path...
 		//path: null,
 

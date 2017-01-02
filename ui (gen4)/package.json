@@ -23,11 +23,11 @@
     "glob": "^4.0.6",
     "guarantee-events": "^1.0.0",
     "ig-features": "^2.0.0",
-    "ig-actions": "^1.9.0",
+    "ig-actions": "^2.0.0",
     "ig-object": "^1.0.1",
     "openseadragon": "^2.1.0",
     "requirejs": "^2.1.23",
-    "sharp": "^0.15.0"
+    "sharp": "^0.17.0"
   },
   "optionalDependencies": {
     "flickrapi": "^0.3.28"

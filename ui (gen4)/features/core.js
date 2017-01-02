@@ -468,8 +468,8 @@ var JournalActions = actions.Actions({
 
 			this.journalable = this.actions
 				.filter(function(action){
-					return !!that.getAttr(action, 'undo') 
-						|| !!that.getAttr(action, 'journal') 
+					return !!that.getActionAttr(action, 'undo') 
+						|| !!that.getActionAttr(action, 'journal') 
 				})
 				// reset the handler
 				.map(function(action){
@@ -538,7 +538,7 @@ var JournalActions = actions.Actions({
 				var a = journal[i]
 
 				// see if the action has an explicit undo attr...
-				var undo = this.getAttr(a.action, 'undo')
+				var undo = this.getActionAttr(a.action, 'undo')
 
 				// general undo...
 				if(undo){

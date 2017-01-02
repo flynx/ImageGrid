@@ -429,8 +429,7 @@ var KeyboardActions = actions.Actions({
 	},
 
 	get keyboard(){
-		return this.__keyboard_config
-	},
+		return this.__keyboard_config },
 
 	pauseKeyboardRepeat: ['- Interface/',
 		function(){ 
@@ -522,6 +521,47 @@ var KeyboardActions = actions.Actions({
 			}
 		},
 		['on', 'off'])],
+
+	// Format:
+	// 	{
+	// 		<action>: {
+	// 			<mode>: [
+	// 				<key>,
+	// 				...
+	// 			],
+	// 			...
+	// 		},
+	// 		...
+	// 	}
+	//
+	getKeysForAction: ['- Interface/',
+		function(actions){
+			actions = arguments.length == null || actions == '*' ? this.actions 
+				: arguments.length > 1 ? [].slice.call(arguments) 
+				: actions
+			actions = actions instanceof Array ? actions : [actions]
+
+			var paths = this.getPath(actions)
+			var help = keyboard.buildKeybindingsHelp(this.keyboard, null, this)
+
+			var res = {}
+
+			Object.keys(paths).map(function(k){
+				var action = paths[k][0]
+				var keys = keyboard.getKeysByDoc(k, help)
+
+				if(Object.keys(keys).length > 0){
+					res[action] = keys
+				}
+			})
+
+			return res
+		}],
+
+	// XXX argument #3 is not yet used (see: lib/keyboard.js)...
+	getKeyboardModes: ['- Interface/',
+		function(){
+			return keyboard.getApplicableModes(this.keyboard, null, this.ribbons.viewer) }],
 
 	// XXX need to pre-process the docs...
 	// 		- remove the path component...

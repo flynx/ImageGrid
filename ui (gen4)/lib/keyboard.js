@@ -137,6 +137,36 @@ function doc(text, func){
 }
 
 
+// Get list of applicable modes...
+//
+// XXX elem is not used...
+var getApplicableModes =
+module.getApplicableModes =
+function getApplicableModes(keybindings, modes, elem){
+	return Object.keys(keybindings)
+		.filter(function(title){ 
+
+			if(keybindings[title].pattern != null){
+				var mode = keybindings[title].pattern
+			} else {
+				var mode = title
+			}
+
+			// check if we need to skip this mode...
+			return modes == 'all'
+				// explicit mode match...
+				|| modes == mode
+				// 'any' means we need to check the mode...
+				|| (modes == 'any'
+					// '*' always matches...
+					&& mode == '*'
+					// match the mode...
+					// XXX is this too global???
+					|| $(mode).length != 0)
+		})
+}
+
+
 // Build or normalize a modifier string. 
 //
 // Acceptable argument sets:
@@ -369,6 +399,9 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 	shifted_keys = shifted_keys || _SHIFT_KEYS
 	actions = actions || {}
 
+	// XXX too global -- need to pass some context...
+	var applicable_modes = getApplicableModes(keybindings, modes)
+
 	if(typeof(key) == typeof(123)){
 		key = key
 		chr = toKeyName(key)
@@ -403,22 +436,10 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 		}
 
 		// older version compatibility...
-		if(keybindings[title].pattern != null){
-			var mode = keybindings[title].pattern
-		} else {
-			var mode = title
-		}
+		var mode = keybindings[title].pattern || title
 
 		// check if we need to skip this mode...
-		if( !(modes == 'all'
-			// explicit mode match...
-			|| modes == mode
-			// 'any' means we need to check the mode...
-			|| (modes == 'any'
-				// '*' always matches...
-				&& mode == '*'
-				// match the mode...
-				|| $(mode).length != 0))){
+		if(applicable_modes.indexOf(title) < 0){
 			continue
 		}
 

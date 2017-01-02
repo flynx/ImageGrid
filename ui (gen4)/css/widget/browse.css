@@ -210,6 +210,8 @@
 	padding-left: 10px;
 	padding-right: 10px;
 	box-sizing: border-box;
+	/* XXX not sure about this yet... */
+	background-color: rgba(0, 0, 0, 0.1);
 }
 .browse-widget .list .button:hover {
 	opacity: 0.9;
