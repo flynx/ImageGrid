@@ -1142,10 +1142,10 @@ module.ImageGroupActions = actions.Actions({
 			}
 		}],
 	// shorthands to .groupTo(..)
-	groupBack: ['Group|Edit/Group target image with the image or group before it', 
+	groupBack: ['Group|Edit/Group backwards', 
 		{journal: true},
 		function(target){ this.groupTo(target, 'prev') }],
-	groupForward: ['Group|Edit/Group target image with the image or group after it', 
+	groupForward: ['Group|Edit/Group forwards', 
 		{journal: true},
 		function(target){ this.groupTo(target, 'next') }],
 

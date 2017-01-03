@@ -262,7 +262,7 @@ body {
 */
 
 /* XXX experimental key mappings... */
-.browse-widget.show-keys .list>div:after {
+.browse-widget.browse-actions.show-keys .list>div:after {
 	display: inline;
 	position: relative;
 	content: attr(keys);
@@ -274,16 +274,22 @@ body {
 	opacity: 0.3;
 	font-style: italic;
 }
-.browse-widget.show-keys .list>div.disabled:after {
+.browse-widget.browse-actions.show-keys .list>div.disabled:after {
 	opacity: 0.5;
 }
 
-.browse-widget.show-keys .list>div:hover:after {
+.browse-widget.browse-actions.show-keys .list>div:hover:after {
 	opacity: 0.5;
 }
-.browse-widget.show-keys .list>div.disabled:hover:after {
+.browse-widget.browse-actions.show-keys .list>div.disabled:hover:after {
 	opacity: 1;
 }
+
+/* make buttons a bit different in action browser... */
+.browse-widget.browse-actions.show-keys .list .button {
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
 
 
 /* DEBUG stuff... */

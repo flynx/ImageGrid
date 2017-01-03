@@ -763,7 +763,8 @@ var BrowseActionsActions = actions.Actions({
 			'80:Edit',
 			'70:Navigate',
 			'60:Image',
-			'50:Crop',
+			'50:Ribbon',
+			'40:Crop',
 				'Crop/80:Crop marked images',
 				'Crop/80:Crop bookmarked images',
 				// NOTE: we can also add separators here...
