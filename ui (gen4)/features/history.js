@@ -549,10 +549,11 @@ var URLHistoryUIActions = actions.Actions({
 						// move to top...
 						['&diams;', 
 							function(p){
-								// XXX this is a tad slower, is "simpler" worth it?
-								//that.setTopURLHistory(p)
-								//o.redraw()
+								that.setTopURLHistory(p)
+								o.redraw(p)
 
+								/* XXX this is a tad faster, is the added 
+								// 		complexity worth it??
 								var cur = this.filter('"'+p+'"', false)
 
 								var top = cur.hasClass('pinned') ?
@@ -564,6 +565,7 @@ var URLHistoryUIActions = actions.Actions({
 									top.before(cur)
 									that.setTopURLHistory(p)
 								}
+								//*/
 							}],
 						// pin to top...
 						// XXX should this be standard functionality???
@@ -636,10 +638,13 @@ var URLHistoryUIActions = actions.Actions({
 			// 		because this will only change positions of a view dom 
 			// 		elements while .update(..) will redraw the while thing...
 			// NOTE: this also uses fs_state for caching...
-			o.redraw = function(){
+			o.redraw = function(path){
 				var list = o.dom.find('.list')
 				makeHistoryList(fs_state)
 					.forEach(function(elem, i){
+						if(path && path != elem[0]){
+							return
+						}
 						// move...
 						if(list.children().eq(i).attr('path') != elem[0]){
 							list.children().eq(i)
