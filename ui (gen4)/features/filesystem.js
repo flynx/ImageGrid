@@ -860,8 +860,16 @@ var FileSystemLoaderUIActions = actions.Actions({
 			showNonTraversable: true,
 			showDisabled: true,
 
+			//actionButton: '&ctdot;', 		// down then left arrow (long)
+			//actionButton: '&#11168;', 	// down then left arrow (long)
+			//actionButton: '&#9657;',		// right-pointing white triangle
+			//actionButton: '&#9721;',		// ne white triangle
+			//actionButton: '&#8599;',		// ne arrow
+			//actionButton: '&#11171;', 	// up then right arrow
+			//actionButton: '&#187;',			// right-pointing double angle
+											// quotation mark
 			// XXX not sure about this...
-			actionButton: '&#128194;',
+			//actionButton: '&#128194;',	// folder icon (color)
 		},
 	},
 
