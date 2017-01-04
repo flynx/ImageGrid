@@ -334,9 +334,7 @@ module.makeWalk = function(elem, path, fileCountPattern, rest){
 		WalkPrototype.options.fileCountPattern
 		: fileCountPattern
 
-	var w = Walk(elem, opts)
-
-	return w
+	return Walk(elem, opts)
 }
 
 

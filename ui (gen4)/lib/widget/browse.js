@@ -1008,6 +1008,7 @@ var BrowserPrototype = {
 		// XXX revise signature... 
 		var make = function(p, traversable, disabled, buttons){
 			var hidden = false
+			var push_on_open = false
 
 			if(that.options.holdSize){
 				// we've started, no need to hold the size any more... 

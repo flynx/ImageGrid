@@ -865,10 +865,22 @@ var BrowseActionsActions = actions.Actions({
 			var priority = /^(-?[0-9]+)\s*:\s*/
 			var dialog
 
+			// prepare the config...
+			var cfg = {
+				cls: 'browse-actions',
+
+				path: path,
+
+				flat: false,
+				traversable: true,
+				pathPrefix: '/',
+				fullPathEdit: true,
+			}
+			cfg.__proto__ = this.config['browse-actions-settings']
+
 			// get keys for each action...
 			var keys = this.getKeysForAction ? this.getKeysForAction('*') : {}
 			var modes = this.getKeyboardModes ? this.getKeyboardModes() : []
-
 			// Get keys for action...
 			var getKeys = function(action){
 				var k = keys[action] || {}
@@ -1172,19 +1184,8 @@ var BrowseActionsActions = actions.Actions({
 							}
 						})
 				}
-			}, {
-				cls: 'browse-actions',
-
-				path: path,
-
-				flat: false,
-				traversable: true,
-				pathPrefix: '/',
-				fullPathEdit: true,
-
-				showDisabled: actions.config['browse-actions-settings'].showDisabled,
-				showHidden: actions.config['browse-actions-settings'].showHidden,
-			})
+			},
+			 cfg)
 			// save show disabled state to .config...
 			.on('close', function(){
 				var config = actions.config['browse-actions-settings'] 
