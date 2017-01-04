@@ -1161,7 +1161,10 @@ var BrowseActionsActions = actions.Actions({
 							} else if(actions.config['browse-actions-settings'].showEmpty 
 									|| (cur[key] != null
 										&& Object.keys(cur[key]).length > 0)){
-								make(text + '/')
+								make(text + '/', 
+									{
+										push_on_open: true
+									})
 
 							// item: line...
 							} else if(text == '---'){

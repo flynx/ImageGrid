@@ -810,20 +810,33 @@ var BrowserPrototype = {
 	//
 	//	options format:
 	//	{
-	//		traversable: ..,
-	//		disabled: ..,
-	//		buttons: ..,
+	//		// If true make the element traversable...
+	//		traversable: <bool>,
+	//
+	//		// If true disable the element...
+	//		disabled: <bool>,
+	//
+	//		// If true hide the element...
+	//		hidden: <bool>,
+	//
+	//		// If true the open event will also pass the element to open...
+	//		//
+	//		// This is useful for opening traversable elements both on 
+	//		// pressing Enter or Left keys...
+	//		push_on_open: <bool>,
+	//
+	//		// element button spec...
+	//		buttons: <bottons>,
 	//	}
 	//
-	//	buttons format (optional):
+	//	<buttons> format (optional):
 	//	[ 
 	//		[<html>, <func>], 
 	//		... 
 	//	]
 	//
 	// NOTE: buttons will override .options.itemButtons, if this is not
-	// 		desired simply append the custom buttons to a copy of 
-	// 		.itemButtons
+	// 		desired simply copy .itemButtons and modify it...
 	//
 	//
 	// Finalize the dialog (optional)...
@@ -1006,7 +1019,9 @@ var BrowserPrototype = {
 				traversable = opts.traversable
 				disabled = opts.disabled
 				buttons = opts.buttons
+
 				hidden = opts.hidden
+				push_on_open = opts.push_on_open
 			}
 
 			buttons = buttons
@@ -1092,6 +1107,7 @@ var BrowserPrototype = {
 			!traversable && res.addClass('not-traversable')
 			disabled && res.addClass('disabled')
 			hidden && res.addClass('hidden')
+			push_on_open && res.attr('push-on-open', 'on')
 
 			// buttons...
 			// action (open)...
@@ -2201,6 +2217,9 @@ var BrowserPrototype = {
 	// The .options.open(..), if defined, will always get the full path 
 	// as first argument.
 	//
+	// If 'push-on-open' attribute is set on an element, then this will 
+	// also pass the element to .push(..)
+	//
 	// NOTE: if nothing is selected this will do nothing...
 	// NOTE: internally this is never called directly, instead a pre-open
 	// 		stage is used to execute default behavior not directly 
@@ -2254,7 +2273,7 @@ var BrowserPrototype = {
 		var res = m ? m.apply(this, args) : this
 		res = res || this
 
-		// XXX do we strigify the path???
+		// XXX do we stringify the path???
 		// XXX should we use .strPath here???
 		path = this.options.pathPrefix + path.join('/')
 
@@ -2265,6 +2284,13 @@ var BrowserPrototype = {
 					type: 'open',
 					source: this,
 				}, path)
+
+			// push an element if attr is set... 
+			// NOTE: a good way to do this is to check if we have any 
+			// 		handlers bound, but so var I've found no non-hack-ish
+			// 		ways to do this...
+			elem.attr('push-on-open') == 'on'
+				&& this.push(elem)
 
 		} else {
 			this.trigger('open', path)
