@@ -431,21 +431,13 @@ var URLHistoryUIActions = actions.Actions({
 		// 			- will lose the item from view if list is long
 		'url-history-focus-on-pin': false,
 	},
-	// XXX pinned items are sorted differently on load and on pin -- i.e.
-	// 		a newly pinned item is added to the end of the pin list while
-	// 		when loaded it will show up in it's correct relative order 
-	// 		in the list...
-	// 		...not sure if this is the right way to go but:
-	// 			- not sure that pinning should re-order items
-	// 			- not sure if keeping pin order separately is a good idee...
-	// XXX make availabilyty checking live (now on open dialog)...
-	// XXX need to check items...
 	// XXX use svg icons for buttons...
 	listURLHistory: ['History|File/Location history...',
 		widgets.makeUIDialog(function(){
 			var that = this
 			var parent = this.preventClosing ? this.preventClosing() : null
 			var cur = this.location.path
+			var state = {}
 
 			var to_remove = []
 
@@ -483,7 +475,16 @@ var URLHistoryUIActions = actions.Actions({
 							// prevent from drawing again...
 							history.splice(history.indexOf(p), 1)
 
-							make(p, {disabled: !that.checkURLFromHistory(p) })
+							// see of we need a full refresh or use the last state...
+							if(p in state){
+								var d = state[p]
+
+							} else {
+								var d = !that.checkURLFromHistory(p)
+								state[p] = d
+							}
+
+							make(p, {disabled: d })
 								.addClass(p == cur ? 'highlighted selected': '')
 								.addClass('pinned')
 
@@ -499,7 +500,16 @@ var URLHistoryUIActions = actions.Actions({
 						// NOTE: this might get a little slow for 
 						// 		very large sets...
 						.forEach(function(p){
-							make(p, {disabled: !that.checkURLFromHistory(p) })
+							// see of we need a full refresh or use the last state...
+							if(p in state){
+								var d = state[p]
+
+							} else {
+								var d = !that.checkURLFromHistory(p)
+								state[p] = d
+							}
+
+							make(p, {disabled: d })
 								.addClass(p == cur ? 'highlighted selected': '')
 							l++
 						})
@@ -529,7 +539,6 @@ var URLHistoryUIActions = actions.Actions({
 							}],
 						// pin to top...
 						// XXX should this be standard functionality???
-						// XXX should this .setTopURLHistory(..)???
 						['<span class="pin-set">&#9679;</span>'
 						+'<span class="pin-unset">&#9675;</span>', 
 							function(p){
@@ -552,7 +561,8 @@ var URLHistoryUIActions = actions.Actions({
 									&& o.select(cur)
 
 								// place...
-								o.update()
+								// NOTE: this will not re-check the dirs...
+								o.redraw()
 							}],
 						// mark for removal...
 						['&times;', 
@@ -592,6 +602,23 @@ var URLHistoryUIActions = actions.Actions({
 						&& parent.focus 
 						&& parent.focus()
 				})
+
+			// Monkey-patch: keep .update(..) functionality but add a 
+			// .redraw(..) method that will call the update but not 
+			// re-check if paths exist...
+			//
+			// NOTE: this should not affect the API in any way...
+			//
+			// enable full refresh...
+			var _update = o.update
+			o.update = function(){
+				state = {}
+				_update.apply(this, arguments)
+			}
+			// just redraw...
+			o.redraw = function(){
+				_update.apply(this, arguments)
+			}
 
 			return o
 		})],
