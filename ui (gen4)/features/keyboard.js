@@ -536,13 +536,18 @@ var KeyboardActions = actions.Actions({
 	//
 	getKeysForAction: ['- Interface/',
 		function(actions){
-			actions = arguments.length == null || actions == '*' ? this.actions 
+			actions = arguments.length == 0 || actions == '*' ? this.actions 
 				: arguments.length > 1 ? [].slice.call(arguments) 
 				: actions
 			actions = actions instanceof Array ? actions : [actions]
 
 			var paths = this.getPath(actions)
-			var help = keyboard.buildKeybindingsHelp(this.keyboard, null, this)
+			var help = keyboard.buildKeybindingsHelp(
+				this.keyboard, 
+				null, 
+				this,
+				function(action){
+					return Object.keys(this.getPath(action))[0] })
 
 			var res = {}
 
@@ -572,7 +577,11 @@ var KeyboardActions = actions.Actions({
 	showKeyboardBindings: ['Interface/Show keyboard bindings...',
 		widgets.makeUIDialog('Drawer', 
 			function(){
-				return keyboard.buildKeybindingsHelpHTML(this.__keyboard_config, this)
+				return keyboard.buildKeybindingsHelpHTML(
+					this.__keyboard_config, 
+					this, 
+					function(action){
+						return Object.keys(this.getPath(action))[0] })
 			},
 			{
 				background: 'white',

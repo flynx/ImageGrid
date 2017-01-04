@@ -810,7 +810,7 @@ function makeKeyboardHandler(keybindings, unhandled, actions){
 // XXX do we show overloaded keys???
 var buildKeybindingsHelp =
 module.buildKeybindingsHelp =
-function buildKeybindingsHelp(keybindings, shifted_keys, actions){
+function buildKeybindingsHelp(keybindings, shifted_keys, actions, doc_getter){
 	shifted_keys = shifted_keys == null ? _SHIFT_KEYS : shifted_keys
 	var res = {}
 	var mode, title
@@ -860,6 +860,10 @@ function buildKeybindingsHelp(keybindings, shifted_keys, actions){
 					// XXX do we show ignored keys???
 					var doc = 'Ignored'
 					//continue
+
+				// custom doc getter...
+				} else if(doc_getter && handler.action){
+					var doc = doc_getter.call(actions, handler.action)
 
 				// standard object doc...
 				} else if('doc' in handler){
@@ -967,8 +971,8 @@ function getKeysByDoc(doc, help){
 //
 var buildKeybindingsHelpHTML =
 module.buildKeybindingsHelpHTML =
-function buildKeybindingsHelpHTML(keybindings, actions){
-	var doc = buildKeybindingsHelp(keybindings, null, actions)
+function buildKeybindingsHelpHTML(keybindings, actions, doc_getter){
+	var doc = buildKeybindingsHelp(keybindings, null, actions, doc_getter)
 
 	var res = '<table class="keyboard-help">'
 	for(var mode in doc){
