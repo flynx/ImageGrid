@@ -1759,7 +1759,9 @@ var FileSystemWriterActions = actions.Actions({
 			logger = logger || this.logger
 			logger = logger && logger.push('Save')
 
-			path = path || this.location.loaded
+			path = path 
+				|| this.location.loaded 
+				|| this.location.path
 			path = path && path.length == 1 ? path[0] : path 
 			path = util.normalizePath(path)
 

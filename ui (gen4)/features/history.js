@@ -419,6 +419,17 @@ var URLHistoryUIActions = actions.Actions({
 		// 	- flase					- never remove
 		// 	- [ 'open', 'close' ]	- explicitly select event
 		'url-history-list-clear': ['open', 'close'],
+
+		// If true pushing the pin item button will also focus the item
+		//
+		// NOTE: Both settings have their pluses and minuses:
+		// 		enabled (true)
+		// 			+ will keep the item on screen
+		// 			- will lose context
+		// 		disabled (false)
+		// 			+ will keep context
+		// 			- will lose the item from view if list is long
+		'url-history-focus-on-pin': false,
 	},
 	// XXX pinned items are sorted differently on load and on pin -- i.e.
 	// 		a newly pinned item is added to the end of the pin list while
@@ -523,9 +534,6 @@ var URLHistoryUIActions = actions.Actions({
 						+'<span class="pin-unset">&#9675;</span>', 
 							function(p){
 								var cur = this.filter('"'+p+'"', false)
-								var top_unpinned = this.filter('*', false)
-									.filter(':not(.pinned)').first()
-								var sep = this.dom.find('.list>.pinned-separator')
 
 								// change state...
 								// pinned...
@@ -539,23 +547,12 @@ var URLHistoryUIActions = actions.Actions({
 									that.toggleURLPinned(p, 'on')
 								}
 
+								// focus...
+								that.config['url-history-focus-on-pin']
+									&& o.select(cur)
+
 								// place...
-								// special case: everything is pinned -- place last...
-								if(top_unpinned.length == 0){
-									this.filter('*', false).last()
-										.after(cur)
-										.after(sep)
-
-								// place after last pinned...
-								} else {
-									top_unpinned
-										.before(cur)
-
-									// place the separator...
-									cur.hasClass('pinned') ? 
-											cur.after(sep) 
-										: cur.before(sep)
-								}
+								o.update()
 							}],
 						// mark for removal...
 						['&times;', 
