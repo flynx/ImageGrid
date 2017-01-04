@@ -563,8 +563,7 @@ var BrowserPrototype = {
 
 	// XXX should these set both the options and dom???
 	get flat(){
-		return !this.dom.hasClass('flat') || this.options.flat
-	},
+		return !this.dom.hasClass('flat') || this.options.flat },
 	set flat(value){
 		if(value){
 			this.dom.addClass('flat')
@@ -575,8 +574,7 @@ var BrowserPrototype = {
 	},
 
 	get cloud(){
-		return this.dom.hasClass('cloud-view') || this.options.cloudView
-	},
+		return this.dom.hasClass('cloud-view') || this.options.cloudView },
 	set cloud(value){
 		if(value){
 			this.dom.addClass('cloud-view')
@@ -588,8 +586,7 @@ var BrowserPrototype = {
 
 	// XXX should these set both the options and dom???
 	get traversable(){
-		return !this.dom.hasClass('not-traversable') && this.options.traversable
-	},
+		return !this.dom.hasClass('not-traversable') && this.options.traversable },
 	set traversable(value){
 		if(value){
 			this.dom.removeClass('not-traversable')
@@ -630,11 +627,9 @@ var BrowserPrototype = {
 	//
 	// XXX need to append '/' only if traversable...
 	get strPath(){
-		return this.options.pathPrefix + this.path.join('/') + '/'
-	},
+		return this.options.pathPrefix + this.path.join('/') + '/' },
 	set strPath(value){
-		this.path = value
-	},
+		this.path = value },
 
 	// Get/set path with selection...
 	//
@@ -643,11 +638,9 @@ var BrowserPrototype = {
 	// 		.strPath
 	// NOTE: the setter is just a shorthand to .path setter for uniformity...
 	get selectionPath(){
-		return this.strPath + (this.selected || '')
-	},
+		return this.strPath + (this.selected || '') },
 	set selectionPath(value){
-		this.path = value
-	},
+		this.path = value },
 
 	// Get/set current selection (text)...
 	//
@@ -661,8 +654,7 @@ var BrowserPrototype = {
 		return e.find('.text').text()
 	},
 	set selected(value){
-		return this.select(value)
-	},
+		return this.select(value) },
 
 
 	// NOTE: if .options.traversable is false this will have no effect.
@@ -829,7 +821,9 @@ var BrowserPrototype = {
 	//		//			.attr('push-on-open', 'on')
 	//		//	or:
 	//		//		make(...)
-	//		//			.on('open', function(){ browser.push(this) })
+	//		//			.on('open', function(){ 
+	//		//				// X here is the browser object...
+	//		//				X.push(this) })
 	//		//
 	//		push_on_open: <bool>,
 	//

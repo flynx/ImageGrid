@@ -431,14 +431,16 @@ var URLHistoryUIActions = actions.Actions({
 		// 			- will lose the item from view if list is long
 		'url-history-focus-on-pin': false,
 	},
+
 	// XXX use svg icons for buttons...
 	listURLHistory: ['History|File/Location history...',
 		widgets.makeUIDialog(function(){
 			var that = this
 			var parent = this.preventClosing ? this.preventClosing() : null
 			var cur = this.location.path
-			var state = {}
 
+			// caches...
+			var fs_state = {}
 			var to_remove = []
 
 			// remove stirked out elements...
@@ -453,78 +455,104 @@ var URLHistoryUIActions = actions.Actions({
 				to_remove = []
 			}
 
-			// XXX
+			var makeHistoryList = function(fs_state){
+				fs_state = fs_state || {}
+				var history = Object.keys(that.url_history).reverse()
+
+				// pinned items...
+				var list = history
+					.filter(function(p){
+						// NOTE: yes direct access is faster, but 
+						// 		calling the toggler (common API) here
+						// 		will isolate the level knowledge to a
+						// 		single point which will simplify things
+						// 		if anything changes...
+						//return that.url_history[p].pinned 
+						return that.toggleURLPinned(p, '?') == 'on'
+					}) 
+					.map(function(p){
+						// prevent from drawing again...
+						history.splice(history.indexOf(p), 1)
+
+						// see of we need a full refresh or use the 
+						// last fs_state...
+						if(p in fs_state){
+							// XXX need to make this faster...
+							var d = fs_state[p]
+
+						} else {
+							var d = !that.checkURLFromHistory(p)
+							fs_state[p] = d
+						}
+
+						return [p,
+							[p == cur ? 'highlighted selected': '', 'pinned'].join(' '),
+							{ disabled: d }
+						]
+					})
+
+				// separator...
+				list.push([ '---', 'pinned-separator', {}])
+
+				// history...
+				list = list.concat(history 
+					// NOTE: this might get a little slow for 
+					// 		very large sets...
+					.map(function(p){
+						// see of we need a full refresh or use the 
+						// last fs_state...
+						if(p in fs_state){
+							// XXX need to make this faster...
+							var d = fs_state[p]
+
+						} else {
+							var d = !that.checkURLFromHistory(p)
+							fs_state[p] = d
+						}
+
+						return [p, 
+							p == cur ? 'highlighted selected': '',
+							{disabled: d},
+						]
+					}))
+
+				// history is empty...
+				if(list.length == 0){
+					list.push([
+						'No history...', 
+						{
+							disabled: true, 
+							buttons: [],
+						}
+					])
+				}
+
+				return list
+			}
 
 			var o = browse.makeLister(null, 
 				function(path, make){
-					var l = 0
-					var history = Object.keys(that.url_history).reverse()
+					makeHistoryList()
+						.forEach(function(elem){
+							var e = elem.slice()
+							var path = e.shift()
+							var cfg = e.pop()
+							var cls = e.pop() || ''
 
-					// pinned items...
-					history
-						.filter(function(p){
-							// NOTE: yes direct access is faster, but 
-							// 		calling the toggler (common API) here
-							// 		will isolate the level knowledge to a
-							// 		single point which will simplify things
-							// 		if anything changes...
-							//return that.url_history[p].pinned 
-							return that.toggleURLPinned(p, '?') == 'on'
-						}) 
-						.forEach(function(p){
-							// prevent from drawing again...
-							history.splice(history.indexOf(p), 1)
-
-							// see of we need a full refresh or use the last state...
-							if(p in state){
-								var d = state[p]
-
-							} else {
-								var d = !that.checkURLFromHistory(p)
-								state[p] = d
-							}
-
-							make(p, {disabled: d })
-								.addClass(p == cur ? 'highlighted selected': '')
-								.addClass('pinned')
-
-							l++
+							make(path, cfg)
+								.attr('path', path)
+								.addClass(cls)
 						})
-
-					// separator...
-					make('---')
-						.addClass('pinned-separator')
-
-					// history...
-					history 
-						// NOTE: this might get a little slow for 
-						// 		very large sets...
-						.forEach(function(p){
-							// see of we need a full refresh or use the last state...
-							if(p in state){
-								var d = state[p]
-
-							} else {
-								var d = !that.checkURLFromHistory(p)
-								state[p] = d
-							}
-
-							make(p, {disabled: d })
-								.addClass(p == cur ? 'highlighted selected': '')
-							l++
-						})
-
-					// history is empty...
-					if(l == 0){
-						make('No history...', null, true)	
-							.find('.button').remove()
-					}
 				},
 				// add item buttons...
 				{ itemButtons: [
 						// move to top...
 						['&diams;', 
 							function(p){
+								// XXX this is a tad slower, is "simpler" worth it?
+								//that.setTopURLHistory(p)
+								//o.redraw()
+
 								var cur = this.filter('"'+p+'"', false)
 
 								var top = cur.hasClass('pinned') ?
@@ -561,7 +589,6 @@ var URLHistoryUIActions = actions.Actions({
 									&& o.select(cur)
 
 								// place...
-								// NOTE: this will not re-check the dirs...
 								o.redraw()
 							}],
 						// mark for removal...
@@ -603,21 +630,24 @@ var URLHistoryUIActions = actions.Actions({
 						&& parent.focus()
 				})
 
-			// Monkey-patch: keep .update(..) functionality but add a 
-			// .redraw(..) method that will call the update but not 
-			// re-check if paths exist...
+			// Monkey-patch: fast redraw...
 			//
-			// NOTE: this should not affect the API in any way...
-			//
-			// enable full refresh...
-			var _update = o.update
-			o.update = function(){
-				state = {}
-				_update.apply(this, arguments)
-			}
-			// just redraw...
+			// NOTE: this is substantially faster than calling .update()
+			// 		because this will only change positions of a view dom 
+			// 		elements while .update(..) will redraw the while thing...
+			// NOTE: this also uses fs_state for caching...
 			o.redraw = function(){
-				_update.apply(this, arguments)
+				var list = o.dom.find('.list')
+				makeHistoryList(fs_state)
+					.forEach(function(elem, i){
+						// move...
+						if(list.children().eq(i).attr('path') != elem[0]){
+							list.children().eq(i)
+								.before(list
+									.find('[path="'+elem[0]+'"]'))
+						}
+					})
+		   		return this
 			}
 
 			return o
