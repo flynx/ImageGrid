@@ -823,6 +823,14 @@ var BrowserPrototype = {
 	//		//
 	//		// This is useful for opening traversable elements both on 
 	//		// pressing Enter or Left keys...
+	//		//
+	//		// This is equivalent to:
+	//		//		make(...)
+	//		//			.attr('push-on-open', 'on')
+	//		//	or:
+	//		//		make(...)
+	//		//			.on('open', function(){ browser.push(this) })
+	//		//
 	//		push_on_open: <bool>,
 	//
 	//		// element button spec...
