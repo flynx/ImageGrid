@@ -235,7 +235,7 @@ var SingleImageActions = actions.Actions({
 			}
 		}],
 
-	toggleSingleImage: ['Interface/Toggle single image view', 
+	toggleSingleImage: ['Interface/Single image view', 
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			'single-image-mode',

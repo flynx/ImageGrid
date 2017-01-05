@@ -349,7 +349,7 @@ var StatusBarActions = actions.Actions({
 
 	// NOTE: to reset the status bar cycle through 'none' mode to 
 	// 		reconstruct all the items.
-	toggleStatusBar: ['Interface/Toggle status bar modes',
+	toggleStatusBar: ['Interface/Status bar mode',
 		toggler.CSSClassToggler(
 			// get/construct status bar...
 			// XXX change class...

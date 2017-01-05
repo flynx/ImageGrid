@@ -499,7 +499,7 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 				handler = function(n, no_default, args, doc){ 
 					if(no_default){
 						var f = function(){ 
-							event.preventDefault()
+							event && event.preventDefault()
 							return actions[n].apply(actions, args) 
 						}
 					} else {
@@ -845,6 +845,7 @@ function buildKeybindingsHelp(keybindings, shifted_keys, actions, doc_getter){
 
 				var handler = getKeyHandlers(key, mod, keybindings, 'all', null, actions)[pattern]
 
+
 				// no handler...
 				// NOTE: handler is present in config but not present
 				// 		in actions...
@@ -862,8 +863,14 @@ function buildKeybindingsHelp(keybindings, shifted_keys, actions, doc_getter){
 					//continue
 
 				// custom doc getter...
+				// XXX need to document this...
 				} else if(doc_getter && handler.action){
-					var doc = doc_getter.call(actions, handler.action)
+					var doc = doc_getter.call(
+						actions, 
+						handler.action,
+						handler.args, 
+						handler.no_default,
+						handler.doc)
 
 				// standard object doc...
 				} else if('doc' in handler){

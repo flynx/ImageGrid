@@ -297,7 +297,7 @@ module.SortActions = actions.Actions({
 	//
 	// XXX should we merge manual order handling with .sortImages(..)???
 	// XXX currently this will not toggle past 'none'
-	toggleImageSort: ['- Edit|Sort/Toggle image sort method',
+	toggleImageSort: ['- Edit|Sort/Image sort method',
 		toggler.Toggler(null,
 			function(){ 
 				return (this.data 

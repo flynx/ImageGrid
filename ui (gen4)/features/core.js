@@ -737,7 +737,7 @@ var WorkspaceActions = actions.Actions({
 		}],
 
 	// NOTE: this will not save the current workspace...
-	toggleWorkspace: ['Workspace/Toggle Workspace',
+	toggleWorkspace: ['Workspace/workspace',
 		makeConfigToggler('workspace',
 			function(){ return Object.keys(this.config['workspaces']) },
 			function(state){ this.loadWorkspace(state) })],

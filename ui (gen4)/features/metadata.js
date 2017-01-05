@@ -318,7 +318,7 @@ var MetadataUIActions = actions.Actions({
 		],
 	},
 
-	toggleMetadataAutoSelect: ['Interface/Toggle metadata value auto-select',
+	toggleMetadataAutoSelect: ['Interface/Metadata value auto-select',
 		core.makeConfigToggler('metadata-auto-select-mode', 
 			function(){ return this.config['metadata-auto-select-modes'] })],
 

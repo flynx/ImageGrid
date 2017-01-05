@@ -185,7 +185,7 @@ actions.Actions({
 		}
 	},
 
-	toggleRibbonFocusMode : ['Interface/Toggle ribbon focus mode',
+	toggleRibbonFocusMode : ['Interface/Ribbon focus mode',
 		core.makeConfigToggler('ribbon-focus-mode', 
 			function(){ return this.config['ribbon-focus-modes'] })],
 

@@ -133,10 +133,10 @@ var ImageMarkActions = actions.Actions({
 	// 	Invert marks on current ribbon
 	// 	.toggleMark('ribbon')
 	//
-	toggleMark: ['Mark|Image/Toggle image mark',
+	toggleMark: ['Mark|Image/Image mark',
 		makeTagTogglerAction('selected')],
 	// XXX
-	toggleMarkBlock: ['Mark/Toggle block marks',
+	toggleMarkBlock: ['Mark/Block marks',
 		'A block is a set of adjacent images either marked on unmarked '
 			+'in the same way',
 		function(target){
@@ -211,13 +211,13 @@ var ImageBookmarkActions = actions.Actions({
 		return this.data.tags['bookmark'].slice()
 	},
 
-	toggleBookmark: ['Bookmark|Image/Toggle image bookmark',
+	toggleBookmark: ['Bookmark|Image/Image bookmark',
 		makeTagTogglerAction('bookmark')],
 	// action can be:
 	// 	'on'	- toggle all on
 	// 	'off'	- toggle all off
 	// 	'next'	- toggle each image to next state
-	toggleBookmarkOnMarked: ['Bookmark|Mark/Toggle bookmark on maked images',
+	toggleBookmarkOnMarked: ['Bookmark|Mark/Bookmark on maked images',
 		function(action){ 
 			return this.toggleBookmark(this.data.getTaggedByAny('selected'), action) 
 		}],

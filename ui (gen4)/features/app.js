@@ -113,7 +113,7 @@ var AppControlActions = actions.Actions({
 		function(){
 			nw.Window.get().minimize()
 		}],
-	toggleFullScreen: ['Window/Toggle full screen mode',
+	toggleFullScreen: ['Window/Full screen mode',
 		toggler.CSSClassToggler(
 			function(){ return document.body }, 
 			'.full-screen-mode',

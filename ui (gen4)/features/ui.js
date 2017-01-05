@@ -413,7 +413,7 @@ module.ViewerActions = actions.Actions({
 
 	// General UI stuff...
 	// NOTE: this is applicable to all uses...
-	toggleTheme: ['Interface/Theme/Toggle viewer theme', 
+	toggleTheme: ['Interface/Theme/Viewer theme', 
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config.themes },
@@ -430,12 +430,12 @@ module.ViewerActions = actions.Actions({
 			var i = themes.indexOf(this.toggleTheme('?'))
 			this.toggleTheme(Math.max(0, i-1))
 		}],
-	toggleRibbonTheme: ['Interface/Theme/Toggle ribbon theme', 
+	toggleRibbonTheme: ['Interface/Theme/Ribbon theme', 
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config['ribbon-themes'] },
 			function(state){ this.config['ribbon-theme'] = state }) ],
-	toggleRibbonImageSepators: ['Interface/Theme/Toggle ribbon image separators', 
+	toggleRibbonImageSepators: ['Interface/Theme/Ribbon image separators', 
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			'ribbon-image-separators',
@@ -994,7 +994,7 @@ module.ViewerActions = actions.Actions({
 	// XXX experimental: not sure if this is the right way to go...
 	// XXX make this play nice with crops...
 	// 		...should this be a crop???
-	toggleRibbonList: ['Interface|Ribbon/Toggle ribbons as images view',
+	toggleRibbonList: ['Interface|Ribbon/Ribbons as images view',
 		function(){
 			if(this._full_data == null){
 				// XXX do a better name here...
@@ -1389,7 +1389,7 @@ module.AutoAlignRibbons = core.ImageGridFeatures.Feature({
 						.centerImage(target)
 				}
 			}],
-		toggleRibbonAlignMode : ['Interface/Toggle ribbon align mode',
+		toggleRibbonAlignMode : ['Interface/Ribbon align mode',
 			core.makeConfigToggler('ribbon-align-mode', 
 				function(){ return this.config['ribbon-align-modes'] })],
 	}),
@@ -1609,7 +1609,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 	},
 
 	actions: actions.Actions({
-		toggleAutoHideCursor: ['Interface/Toggle cursor auto hiding',
+		toggleAutoHideCursor: ['Interface/Cursor auto hiding',
 			toggler.CSSClassToggler(
 				function(){ return this.ribbons.viewer }, 
 				'cursor-hidden',
@@ -1724,7 +1724,7 @@ var ControlActions = actions.Actions({
 		'center-off-screen-paned-images': false,
 	},
 
-	toggleImageClickHandling: ['Interface/Toggle image click handling',
+	toggleImageClickHandling: ['Interface/Image click handling',
 		toggler.Toggler(null,
 			function(){ 
 				return this.ribbons 
@@ -1865,7 +1865,7 @@ var ControlActions = actions.Actions({
 	// XXX this is really slow/buggy on IE... 
 	// 		...found the problem, need to disable transitions for this 
 	// 		to work semi smoothly...
-	toggleRibbonPanHandling: ['Interface/Toggle ribbon pan handling',
+	toggleRibbonPanHandling: ['Interface/Ribbon pan handling',
 		toggler.Toggler(null,
 			function(){ 
 				return this.ribbons 
@@ -2086,12 +2086,12 @@ var ControlActions = actions.Actions({
 			})],
 
 	
-	togglePinchHandling: ['Interface/Toggle pinch zoom handling',
+	togglePinchHandling: ['Interface/Pinch zoom handling',
 		function(){
 		}],
 
 
-	toggleSwipeHandling: ['Interface/Toggle swipe handling',
+	toggleSwipeHandling: ['Interface/Swipe handling',
 		toggler.Toggler(null,
 			function(_, state){ 
 				return this.ribbons 

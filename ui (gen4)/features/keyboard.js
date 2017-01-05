@@ -435,7 +435,7 @@ var KeyboardActions = actions.Actions({
 		function(){ 
 			this.__keyboard_repeat_paused = true }],
 
-	toggleKeyboardHandling: ['- Interface/Toggle keyboard handling',
+	toggleKeyboardHandling: ['- Interface/Keyboard handling',
 		toggler.Toggler(null, function(_, state){ 
 			if(state == null){
 				return this.__keyboard_handler ? 'on' : 'off'
@@ -524,41 +524,54 @@ var KeyboardActions = actions.Actions({
 
 	// Format:
 	// 	{
-	// 		<action>: {
-	// 			<mode>: [
-	// 				<key>,
-	// 				...
-	// 			],
+	// 		<action>: [
+	// 			<key>,
 	// 			...
-	// 		},
+	// 		],
 	// 		...
 	// 	}
 	//
+	// XXX this does not check overloading between modes...
 	getKeysForAction: ['- Interface/',
-		function(actions){
-			actions = arguments.length == 0 || actions == '*' ? this.actions 
-				: arguments.length > 1 ? [].slice.call(arguments) 
-				: actions
-			actions = actions instanceof Array ? actions : [actions]
+		function(actions, modes){
+			actions = actions == '*' ? null : actions
+			actions = !actions || actions instanceof Array ? actions : [actions]
 
-			var paths = this.getPath(actions)
+			modes = modes || null
+			modes = !modes || modes instanceof Array ? modes : [modes]
+			modes = modes || this.getKeyboardModes()
+
+			// XXX does this handle overloading???
 			var help = keyboard.buildKeybindingsHelp(
 				this.keyboard, 
 				null, 
 				this,
-				function(action){
-					return Object.keys(this.getPath(action))[0] })
-
+				// get full doc compatible with get path...
+				function(action, args){
+					// NOTE: we do not care about the actual args 
+					// 		here, all we need is for this to mismatch
+					// 		if args exist...
+					//return args.length == 0 ? Object.keys(this.getPath(action))[0] : '--' })
+					return args.length == 0 ? action : '--' })
 			var res = {}
 
-			Object.keys(paths).map(function(k){
-				var action = paths[k][0]
-				var keys = keyboard.getKeysByDoc(k, help)
-
-				if(Object.keys(keys).length > 0){
-					res[action] = keys
-				}
-			})
+			// build the result...
+			Object.keys(help)
+				// filter modes...
+				.filter(function(mode){ return modes.indexOf(mode) >= 0 })
+				.forEach(function(mode){
+					Object.keys(help[mode])
+						// keep only the actions given...
+						.filter(function(action){
+							return action != '--' 
+								&& action != 'doc' 
+								&& (!actions 
+									|| actions.indexOf(action) >= 0)
+						})
+						.forEach(function(action){
+							res[action] = (res[action] || []).concat(help[mode][action])
+						})
+				})
 
 			return res
 		}],
@@ -587,6 +600,54 @@ var KeyboardActions = actions.Actions({
 				background: 'white',
 				focusable: true,
 			})],
+
+
+	// XXX build a dialog like this:
+	//
+	//		+---------------------------------------------------+
+	// 		+- <mode> ----------------------------- ^ v - edit -+
+	// 		| <action-code>			<key> / <key>	^ v - edit	|
+	// 		| <action-code>			<key> / <key>	^ v - edit	|
+	// 		| ...												|
+	// 		| 												[+]	|
+	// 		+- <mode> ----------------------------- ^ v - edit -+
+	// 		| <action-code>			<key> / <key>	^ v - edit	|
+	// 		| ...												|
+	// 		| 												[+]	|
+	//		+---------------------------------------------------+
+	//
+	// 		* will need to sort modes
+	// 		* will need to sort actions
+	// 		* might be good to do an action editor dialog
+	// 		* add ability to disable key without deleting
+	// 		* use the same mechanics to show the keys as in .browseActions(..)
+	//
+	browseKeyboardBindings: ['- Interface/',
+		widgets.makeUIDialog(function(path){
+
+			// Format:
+			// 	{
+			// 		<mode>: {
+			// 			<action-code>: [ <key>, ... ],
+			// 			...
+			// 		},
+			// 		...
+			// 	}
+			var keys = keyboard.buildKeybindingsHelp(
+				this.keyboard, 
+				null, 
+				this,
+				// get full doc compatible with get path...
+				function(action, args, no_default, doc){
+					return action
+						+ (no_default ? '!' : '')
+						+ (args.length > 0 ?
+							': '+ args.map(JSON.stringify).join(' ')
+							: '') 
+				})
+
+			// XXX
+		})],
 })
 
 var Keyboard = 

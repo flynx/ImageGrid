@@ -616,7 +616,7 @@ module.PassiveBaseRibbonIndicator = core.ImageGridFeatures.Feature({
 	},
 
 	actions: actions.Actions({
-		togglePassiveBaseRibbonIndicator: ['Interface/Toggle passive base ribbon indicator',
+		togglePassiveBaseRibbonIndicator: ['Interface/Passive base ribbon indicator',
 			toggler.CSSClassToggler(
 				function(){ return this.ribbons.viewer }, 
 				'show-passive-base-ribbon-indicator',
@@ -651,7 +651,7 @@ var UIScaleActions = actions.Actions({
 	// XXX need to account for scale in PartialRibbons
 	// XXX should this be browser API???
 	// XXX this does not re-scale the ribbons correctly in nw0.13
-	toggleInterfaceScale: ['Interface/Toggle interface modes',
+	toggleInterfaceScale: ['Interface/Interface modes',
 		core.makeConfigToggler('ui-scale-mode', 
 			function(){ return Object.keys(this.config['ui-scale-modes']) },
 			function(state){ 

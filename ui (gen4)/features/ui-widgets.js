@@ -706,7 +706,7 @@ var DialogsActions = actions.Actions({
 			})
 		})],
 
-	toggleOverlayBlur: ['Interface/Toggle dialog overlay blur',
+	toggleOverlayBlur: ['Interface/Dialog overlay blur',
 		toggler.CSSClassToggler(
 			function(){ return this.ribbons.viewer }, 
 			'overlay-blur-enabled',
@@ -879,18 +879,10 @@ var BrowseActionsActions = actions.Actions({
 			cfg.__proto__ = this.config['browse-actions-settings']
 
 			// get keys for each action...
-			var keys = this.getKeysForAction ? this.getKeysForAction('*') : {}
-			var modes = this.getKeyboardModes ? this.getKeyboardModes() : []
+			var keys = this.getKeysForAction ? this.getKeysForAction() : {}
 			// Get keys for action...
 			var getKeys = function(action){
-				var k = keys[action] || {}
-				return Object.keys(k)
-					// keep only the applicable modes...
-					.filter(function(m){ return modes.indexOf(m) >= 0 })
-					.map(function(m){ return k[m] })
-					.reduce(function(a, b){ return a.concat(b) }, [])
-					.join(' / ')
-			}
+				return (keys[action] || []).join(' / ') }
 
 			// Get item from tree level taking into account additional 
 			// syntax like prioority...
@@ -1320,13 +1312,13 @@ var ButtonsActions = actions.Actions({
 		},
 	},
 
-	toggleMainButtons: ['Interface/Toggle main buttons',
+	toggleMainButtons: ['Interface/Main buttons',
 		makeButtonControlsToggler('main-buttons')],
-	toggleSecondaryButtons: ['Interface/Toggle secondary buttons',
+	toggleSecondaryButtons: ['Interface/Secondary buttons',
 		makeButtonControlsToggler('secondary-buttons')],
-	toggleAppButtons: ['Interface/Toggle app buttons',
+	toggleAppButtons: ['Interface/App buttons',
 		makeButtonControlsToggler('app-buttons')],
-	toggleSideButtons: ['Interface/Toggle side buttons', 
+	toggleSideButtons: ['Interface/Side buttons', 
 		(function(){
 			var left = makeButtonControlsToggler('side-buttons-left')
 			var right = makeButtonControlsToggler('side-buttons-right')
