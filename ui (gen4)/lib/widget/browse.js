@@ -795,6 +795,10 @@ var BrowserPrototype = {
 	//								the text.
 	//								NOTE: empty strings will get replaced 
 	//									with &nbsp;
+	//								NOTE: if one of the items or constructor
+	//									returns is "$BUTTONS" then this
+	//									item will get replaced with the 
+	//									button container
 	//	- DOM/jQuery			- an element to be used as an item
 	//
 	//	Both traversable and disabled are optional and can take bool 
@@ -1059,10 +1063,13 @@ var BrowserPrototype = {
 				var txt = p.join('')
 				// XXX check if traversable...
 				p = $(p.map(function(t){
-					return $('<span>')
-						.addClass('text')
-						// here we also replace empty strings with &nbsp;...
-						[t ? 'text' : 'html'](t || '&nbsp;')[0]
+					return t == '$BUTTONS' ?
+						$('<span/>')
+							.addClass('button-container')[0]
+						: $('<span>')
+							.addClass('text')
+							// here we also replace empty strings with &nbsp;...
+							[t ? 'text' : 'html'](t || '&nbsp;')[0]
 				}))
 
 			// jQuery or dom...
@@ -1113,9 +1120,17 @@ var BrowserPrototype = {
 			push_on_open && res.attr('push-on-open', 'on')
 
 			// buttons...
+			// button container...
+			var btn = res.find('.button-container')
+			btn = btn.length == 0 ? 
+				$('<span/>')
+					.addClass('button-container')
+					.appendTo(res)
+				: btn
+
 			// action (open)...
 			if(traversable && that.options.actionButton){
-				res.append($('<div>')
+				btn.append($('<div>')
 					.addClass('button')
 					.html(that.options.actionButton === true ? 
 						'&check;' 
@@ -1128,7 +1143,7 @@ var BrowserPrototype = {
 			}
 			// push...
 			if(traversable && that.options.pushButton){
-				res.append($('<div>')
+				btn.append($('<div>')
 					.addClass('button')
 					.html(that.options.pushButton ?
 						'p' 
@@ -1138,11 +1153,6 @@ var BrowserPrototype = {
 						that.push('"'+ txt +'"')
 					}))
 			}
-
-			// button container...
-			var btn = $('<span/>')
-				.addClass('button-container')
-				.appendTo(res)
 
 			// custom buttons...
 			buttons && buttons

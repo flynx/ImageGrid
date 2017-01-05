@@ -622,8 +622,10 @@ var KeyboardActions = actions.Actions({
 	// 		* add ability to disable key without deleting
 	// 		* use the same mechanics to show the keys as in .browseActions(..)
 	//
-	browseKeyboardBindings: ['- Interface/',
+	// XXX do not hide modes on search...
+	browseKeyboardBindings: ['Interface/Keyboard bindings editor (EXPERIMENTAL)...',
 		widgets.makeUIDialog(function(path){
+			var actions = this
 
 			// Format:
 			// 	{
@@ -646,7 +648,69 @@ var KeyboardActions = actions.Actions({
 							: '') 
 				})
 
-			// XXX
+			var dialog = browse.makeLister(null, 
+				function(path, make){
+					Object.keys(keys)
+						.forEach(function(mode){
+							// section heading...
+							make(keys[mode].doc ? 
+									$('<span>')
+										// NOTE: at this time adding a br
+										// 		is faster and simpler than
+										// 		doing this in CSS...
+										// XXX revise...
+										.html(mode + '<br>')
+										.append($('<span>')
+											.addClass('doc')
+											.html(keys[mode].doc))
+									: mode)
+								.addClass('mode')
+
+							// bindings...
+							Object.keys(keys[mode])
+								.forEach(function(action){
+									action != 'doc' 
+										// NOTE: wee need the button 
+										// 		spec to be searchable, 
+										// 		thus we are not using 
+										// 		the keys attr as in
+										// 		.browseActions(..)
+										&& make([action, '$BUTTONS']
+												.concat(keys[mode][action]
+													.join(' / ')))
+											.addClass('key')
+								})
+
+							// add new binding/section...
+							var elem = make('new', {
+								buttons: [
+									// XXX
+									['key', 
+										function(){
+											//elem.before( XXX )
+										}],
+									// XXX
+									['mode', 
+										function(){
+											//elem.after( XXX )
+										}],
+								]})
+								.addClass('new')
+						})
+				}, {
+					cls: 'key-bindings',
+
+					itemButtons: [
+						// XXX
+						['^', function(){}],
+						// XXX
+						['v', function(){}],
+						// XXX
+						['edit', function(){}],
+					],
+				})
+
+			return dialog
 		})],
 })
 

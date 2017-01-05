@@ -292,6 +292,58 @@ body {
 
 
 
+/* key binding editor... */
+.browse-widget.key-bindings .list>.mode {
+	color: white;
+	font-weight: bold;
+	background: rgba(0, 0, 0, 0.5);
+}
+.browse-widget.key-bindings .list>.mode .doc {
+	margin-left: 1em;
+
+	color: white;
+	font-weight: normal;
+	font-size: small;
+	font-style: italic;
+
+	opacity: 0.8;
+}
+.browse-widget.key-bindings .list>.mode.selected {
+	color: white;
+	font-weight: bold;
+	background: rgba(0, 0, 0, 0.7);
+}
+
+.browse-widget.key-bindings .list>.key {
+}
+.browse-widget.key-bindings .list>.key .button {
+	background-color: rgba(0, 0, 0, 0.1);
+}
+.browse-widget.key-bindings .list>.key:after,
+.browse-widget.key-bindings .list>.key .text:not(:first-child) {
+	display: inline;
+	position: relative;
+	content: attr(keys);
+
+	float: right;
+	margin-left: 1em;
+	margin-right: 1em;
+
+	opacity: 0.8;
+	font-style: italic;
+}
+
+.browse-widget.key-bindings .list>.new {
+	font-style: italic;
+}
+.browse-widget.key-bindings .list>.new:not(.selected) {
+	opacity: 0.3;
+}
+.browse-widget.key-bindings .list>.new.selected {
+}
+
+
+
 /* DEBUG stuff... */
 .container-center {
 	position: absolute;
