@@ -860,7 +860,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 			showNonTraversable: true,
 			showDisabled: true,
 
-			//actionButton: '&ctdot;', 		// down then left arrow (long)
+			//actionButton: '&ctdot;', 		// "..."
 			//actionButton: '&#11168;', 	// down then left arrow (long)
 			//actionButton: '&#9657;',		// right-pointing white triangle
 			//actionButton: '&#9721;',		// ne white triangle

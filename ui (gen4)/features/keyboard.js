@@ -689,12 +689,14 @@ var KeyboardActions = actions.Actions({
 					cls: 'key-bindings',
 
 					itemButtons: [
-						// XXX
-						['^', function(){}],
-						// XXX
-						['v', function(){}],
-						// XXX
-						['edit', function(){}],
+						// XXX up
+						['&#9206;', function(){}],
+						// XXX down
+						['&#9207;', function(){}],
+						// XXX edit
+						['&ctdot;', function(){}],
+						//['edit', function(){}],
+						//['&#128393;', function(){}],
 					],
 				})
 
