@@ -610,6 +610,7 @@ var KeyboardActions = actions.Actions({
 	// 		* add ability to disable key (???)
 	// XXX key editor:
 	//
+	// 		[ mode ]
 	// 		[  action (text with dataset)  ] [  args (text field)  ] no default: [_]
 	//		---
 	//		<list of keys>
@@ -693,7 +694,7 @@ var KeyboardActions = actions.Actions({
 								.addClass('new')
 						})
 				}, {
-					cls: 'key-bindings',
+					cls: 'key-bindings no-item-numbers',
 
 					itemButtons: [
 						// XXX up

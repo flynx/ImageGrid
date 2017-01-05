@@ -298,6 +298,9 @@ body {
 	font-weight: bold;
 	background: rgba(0, 0, 0, 0.5);
 }
+.browse-widget.key-bindings .list>.mode span:first-child {
+	margin-left: -0.5em;
+}
 .browse-widget.key-bindings .list>.mode .doc {
 	margin-left: 1em;
 
@@ -314,7 +317,8 @@ body {
 	background: rgba(0, 0, 0, 0.7);
 }
 
-.browse-widget.key-bindings .list>.key {
+.browse-widget.key-bindings .list>div:not(.selected):not(.mode):nth-child(even) {
+	background: rgba(0, 0, 0, 0.03);
 }
 .browse-widget.key-bindings .list>.key .button {
 	background-color: rgba(0, 0, 0, 0.1);
@@ -341,6 +345,15 @@ body {
 }
 .browse-widget.key-bindings .list>.new.selected {
 }
+
+/* dark theme... */
+.dark .browse-widget.key-bindings .list>.mode {
+	background: rgba(255, 255, 255, 0.1);
+}
+.dark .browse-widget.key-bindings .list>div:not(.selected):not(.mode):nth-child(even) {
+	background: rgba(255, 255, 255, 0.03);
+}
+
 
 
 
