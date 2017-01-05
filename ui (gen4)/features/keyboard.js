@@ -608,6 +608,13 @@ var KeyboardActions = actions.Actions({
 	// 		* action editor dialog
 	// 		* mode editor dialog
 	// 		* add ability to disable key (???)
+	// XXX key editor:
+	//
+	// 		[  action (text with dataset)  ] [  args (text field)  ] no default: [_]
+	//		---
+	//		<list of keys>
+	//		new
+	//
 	// XXX do not hide modes on search...
 	browseKeyboardBindings: ['Interface/Keyboard bindings editor (EXPERIMENTAL)...',
 		widgets.makeUIDialog(function(path){
@@ -693,7 +700,7 @@ var KeyboardActions = actions.Actions({
 						['&#9206;', function(){}],
 						// XXX down
 						['&#9207;', function(){}],
-						// XXX edit
+						// XXX edit -- launch the editor...
 						['&ctdot;', function(){}],
 						//['edit', function(){}],
 						//['&#128393;', function(){}],
