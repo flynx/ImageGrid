@@ -615,8 +615,8 @@ var KeyboardActions = actions.Actions({
 	//		---
 	//		<list of keys>
 	//		new
-	//
-	// XXX do not hide modes on search...
+	// XXX add view mode (read only)...
+	// XXX BUG sections with doc do not show up in title...
 	browseKeyboardBindings: ['Interface/Keyboard bindings editor (EXPERIMENTAL)...',
 		widgets.makeUIDialog(function(path){
 			var actions = this
@@ -662,6 +662,16 @@ var KeyboardActions = actions.Actions({
 								//.addClass('mode not-searchable')
 								.addClass('mode not-filterd-out')
 
+							// unpropagated keys...
+							make(['Unpropagated keys:',
+									// NOTE: this blank is so as to avoid
+									// 		sticking the action and keys 
+									// 		together in path...
+									' ',
+									'$BUTTONS',
+									(actions.keyboard[mode].ignore || []).join(' / ')])
+								.addClass('ignore')
+
 							// bindings...
 							Object.keys(keys[mode])
 								.forEach(function(action){
@@ -671,9 +681,8 @@ var KeyboardActions = actions.Actions({
 										// 		thus we are not using 
 										// 		the keys attr as in
 										// 		.browseActions(..)
-										&& make([action, '$BUTTONS']
-												.concat(keys[mode][action]
-													.join(' / ')))
+										&& make([action, ' ', '$BUTTONS']
+												.concat(keys[mode][action].join(' / ')))
 											.addClass('key')
 								})
 
@@ -697,10 +706,14 @@ var KeyboardActions = actions.Actions({
 					cls: 'key-bindings no-item-numbers',
 
 					itemButtons: [
+						// NOTE: ordering within one section is purely 
+						// 		aesthetic and has no function...
+						// XXX do wee actually need ordering???
 						// XXX up
-						['&#9206;', function(){}],
+						//['&#9206;', function(){}],
 						// XXX down
-						['&#9207;', function(){}],
+						//['&#9207;', function(){}],
+
 						// XXX edit -- launch the editor...
 						['&ctdot;', function(){}],
 						//['edit', function(){}],

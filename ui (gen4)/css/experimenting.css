@@ -317,17 +317,31 @@ body {
 	background: rgba(0, 0, 0, 0.7);
 }
 
+.browse-widget.key-bindings .list>.ignore .text:first-child {
+	font-weight: bold;
+	font-style: italic;
+}
+.browse-widget.key-bindings .list>.ignore .text:not(:first-child) {
+	display: inline;
+	position: relative;
+
+	float: right;
+	margin-left: 1em;
+	margin-right: 1em;
+
+	opacity: 0.8;
+	font-style: italic;
+}
+
 .browse-widget.key-bindings .list>div:not(.selected):not(.mode):nth-child(even) {
 	background: rgba(0, 0, 0, 0.03);
 }
 .browse-widget.key-bindings .list>.key .button {
 	background-color: rgba(0, 0, 0, 0.1);
 }
-.browse-widget.key-bindings .list>.key:after,
 .browse-widget.key-bindings .list>.key .text:not(:first-child) {
 	display: inline;
 	position: relative;
-	content: attr(keys);
 
 	float: right;
 	margin-left: 1em;
