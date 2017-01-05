@@ -549,6 +549,13 @@ var DialogsActions = actions.Actions({
 	},
 
 	// introspection...
+	get uiContainers(){ 
+		return this.actions.filter(this.isUIContainer.bind(this)) },
+	get uiDialogs(){
+		return this.actions.filter(this.isUIDialog.bind(this)) },
+	get uiElements(){ 
+		return this.actions.filter(this.isUIElement.bind(this)) },
+
 	// XXX should these be more like .getDoc(..) and support lists of actions???
 	getDocPath: ['- Interface/',
 		function(action, clean, join){
@@ -575,14 +582,6 @@ var DialogsActions = actions.Actions({
 			clean = clean == null ? true : clean
 		   	return this.getDocPath(action, clean, false).pop() 
 		}],
-
-	// a bit of introspection...
-	get uiContainers(){ 
-		return this.actions.filter(this.isUIContainer.bind(this)) },
-	get uiDialogs(){
-		return this.actions.filter(this.isUIDialog.bind(this)) },
-	get uiElements(){ 
-		return this.actions.filter(this.isUIElement.bind(this)) },
 
 	// Get modal container...
 	//
@@ -627,14 +626,12 @@ var DialogsActions = actions.Actions({
 					o && o.focus()	
 				})
 		})],
-
 	Drawer: ['- Interface/',
 		makeDrawer('bottom')],
 	BottomDrawer: ['- Interface/',
 		makeDrawer('bottom')],
 	TopDrawer: ['- Interface/',
 		makeDrawer('top')],
-
 
 	// like panel but drop down from mouse location or specified position
 	DropDown: ['- Interface/',
@@ -733,11 +730,13 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 			}],
 		['__call__', 
 			function(res, action){
-				if(res instanceof jQuery || (res instanceof widget.Widget)){
-					var elem = (res.dom || res)
+				//if(res instanceof jQuery || res instanceof widget.Widget){
+				//	var elem = (res.dom || res)
+				if(res instanceof widget.Widget){
+					var elem = res.dom
 
-					!elem.attr('dialog-title') 
-						&& elem.attr('dialog-title', this.getDocTitle(action))
+					!elem.attr('keep-dialog-title') 
+						elem.attr('dialog-title', this.getDocTitle(action))
 				}
 			}],
 	],

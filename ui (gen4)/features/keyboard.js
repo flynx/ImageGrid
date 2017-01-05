@@ -608,6 +608,7 @@ var KeyboardActions = actions.Actions({
 	// 		* action editor dialog
 	// 		* mode editor dialog
 	// 		* add ability to disable key (???)
+	// 		* ignore flag/list...
 	// XXX key editor:
 	//
 	// 		[ mode ]
@@ -617,8 +618,8 @@ var KeyboardActions = actions.Actions({
 	//		new
 	// XXX add view mode (read only)...
 	// XXX BUG sections with doc do not show up in title...
-	browseKeyboardBindings: ['Interface/Keyboard bindings editor (EXPERIMENTAL)...',
-		widgets.makeUIDialog(function(path){
+	browseKeyboardBindings: ['Interface/Keyboard bindings...',
+		widgets.makeUIDialog(function(path, edit){
 			var actions = this
 
 			// Format:
@@ -646,6 +647,8 @@ var KeyboardActions = actions.Actions({
 				function(path, make){
 					Object.keys(keys)
 						.forEach(function(mode){
+							var ignored = actions.keyboard[mode].ignore || []
+
 							// section heading...
 							make(keys[mode].doc ? 
 									$('<span>')
@@ -662,6 +665,7 @@ var KeyboardActions = actions.Actions({
 								//.addClass('mode not-searchable')
 								.addClass('mode not-filterd-out')
 
+							/* XXX not sure if we need this like this...
 							// unpropagated keys...
 							make(['Unpropagated keys:',
 									// NOTE: this blank is so as to avoid
@@ -669,12 +673,14 @@ var KeyboardActions = actions.Actions({
 									// 		together in path...
 									' ',
 									'$BUTTONS',
-									(actions.keyboard[mode].ignore || []).join(' / ')])
+									(ignored).join(' / ')])
 								.addClass('ignore')
+							//*/
 
 							// bindings...
 							Object.keys(keys[mode])
 								.forEach(function(action){
+									action == 'Ignored' && console.log('!!!!!!!')
 									action != 'doc' 
 										// NOTE: wee need the button 
 										// 		spec to be searchable, 
@@ -682,53 +688,75 @@ var KeyboardActions = actions.Actions({
 										// 		the keys attr as in
 										// 		.browseActions(..)
 										&& make([action, ' ', '$BUTTONS']
-												.concat(keys[mode][action].join(' / ')))
-											.addClass('key')
+												.concat(keys[mode][action]
+													// mark key if it is in ignored...
+													.map(function(s){ 
+														s = s.split('+')
+														var k = s.pop() 
+														s.push(k 
+															+ (ignored.indexOf(k) >= 0 ?
+																'*' 
+																: ''))
+												   		return s.join('+') })
+													.join(' / ')))
+											.addClass('key'
+												+ (action == 'Ignored' ? ' ignored' : ''))
 								})
 
-							// add new binding/section...
-							var elem = make('new', {
-								buttons: [
-									// XXX
-									['key', 
-										function(){
-											//elem.before( XXX )
-										}],
-									// XXX
-									['mode', 
-										function(){
-											//elem.after( XXX )
-										}],
-								]})
-								.addClass('new')
+							// controls...
+							if(edit){
+								var elem = make('new', {
+									buttons: [
+										// XXX
+										['key', 
+											function(){
+												//elem.before( XXX )
+											}],
+										// XXX
+										['mode', 
+											function(){
+												//elem.after( XXX )
+											}],
+									]})
+									.addClass('new')
+							}
 						})
 				}, {
-					cls: 'key-bindings no-item-numbers',
+					cls: [
+						'key-bindings',
+						'no-item-numbers',
+						(edit ? 'edit' : 'browse'),
+					].join(' '),
 
-					itemButtons: [
-						// NOTE: ordering within one section is purely 
-						// 		aesthetic and has no function...
-						// XXX do wee actually need ordering???
-						// XXX up
-						//['&#9206;', function(){}],
-						// XXX down
-						//['&#9207;', function(){}],
+					itemButtons: edit ?
+					   	[
+							// NOTE: ordering within one section is purely 
+							// 		aesthetic and has no function...
+							// XXX do wee actually need ordering???
+							// XXX up
+							//['&#9206;', function(){}],
+							// XXX down
+							//['&#9207;', function(){}],
 
-						// XXX edit -- launch the editor...
-						['&ctdot;', function(){}],
-						//['edit', function(){}],
-						//['&#128393;', function(){}],
-					],
+							// XXX edit -- launch the editor...
+							['&ctdot;', function(){}],
+							//['edit', function(){}],
+							//['&#128393;', function(){}],
+						]
+						: [],
 				})
 
 			return dialog
 		})],
+	// XXX place this in /Doc/.. (???)
+	editKeyboardBindings: ['Interface/Keyboard bindings editor...',
+		widgets.uiDialog(function(path){ 
+			return this.browseKeyboardBindings(path, true) })],
 
 	// XXX
 	resetKeyBindings: ['Interface/Restore default key bindings',
-		function(){
-			// XXX
-		}]
+		function(){ 
+			this.__keyboard_config = GLOBAL_KEYBOARD }]
 })
 
 var Keyboard = 
