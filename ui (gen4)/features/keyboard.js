@@ -602,26 +602,12 @@ var KeyboardActions = actions.Actions({
 			})],
 
 
-	// XXX build a dialog like this:
-	//
-	//		+---------------------------------------------------+
-	// 		+- <mode> ----------------------------- ^ v - edit -+
-	// 		| <action-code>			<key> / <key>	^ v - edit	|
-	// 		| <action-code>			<key> / <key>	^ v - edit	|
-	// 		| ...												|
-	// 		| 												[+]	|
-	// 		+- <mode> ----------------------------- ^ v - edit -+
-	// 		| <action-code>			<key> / <key>	^ v - edit	|
-	// 		| ...												|
-	// 		| 												[+]	|
-	//		+---------------------------------------------------+
-	//
-	// 		* will need to sort modes
-	// 		* will need to sort actions
-	// 		* might be good to do an action editor dialog
-	// 		* add ability to disable key without deleting
-	// 		* use the same mechanics to show the keys as in .browseActions(..)
-	//
+	// XXX Things not to forget: 
+	// 		* sort modes
+	// 		* sort actions
+	// 		* action editor dialog
+	// 		* mode editor dialog
+	// 		* add ability to disable key (???)
 	// XXX do not hide modes on search...
 	browseKeyboardBindings: ['Interface/Keyboard bindings editor (EXPERIMENTAL)...',
 		widgets.makeUIDialog(function(path){
@@ -664,7 +650,9 @@ var KeyboardActions = actions.Actions({
 											.addClass('doc')
 											.html(keys[mode].doc))
 									: mode)
-								.addClass('mode')
+								// XXX should sections be searchable???
+								//.addClass('mode not-searchable')
+								.addClass('mode not-filterd-out')
 
 							// bindings...
 							Object.keys(keys[mode])
@@ -712,6 +700,12 @@ var KeyboardActions = actions.Actions({
 
 			return dialog
 		})],
+
+	// XXX
+	resetKeyBindings: ['Interface/Restore default key bindings',
+		function(){
+			// XXX
+		}]
 })
 
 var Keyboard = 

@@ -1310,6 +1310,12 @@ var BrowserPrototype = {
 	// disabled elements. If <ignore_disabled> is false then disabled 
 	// elements will be searched too.
 	//
+	// If an item has .not-searchable class set, then it will neither be
+	// searched nor filtered out.
+	//
+	// If an item has .not-filtered-out class set, then it will not be 
+	// hidden on filtering (see: .filterList(..)).
+	//
 	// NOTE: this will filter every item loaded regardless of visibility.
 	//
 	//
@@ -1345,7 +1351,7 @@ var BrowserPrototype = {
 		var that = this
 		var browser = this.dom
 
-		var elems = browser.find('.list>div' 
+		var elems = browser.find('.list>div:not(.not-searchable)' 
 			+ (this.options.elementSeparatorClass ? 
 				':not('+ this.options.elementSeparatorClass +')'
 				: '')
@@ -1446,6 +1452,9 @@ var BrowserPrototype = {
 	//
 	// Use .filterList('*') to clear filter and show all elements.
 	//
+	// If an item has .not-filtered-out class set, then it will not be 
+	// hidden on filtering. 
+	//
 	// NOTE: see .filter(..) for docs on actual filtering.
 	// NOTE: this does not affect any UI modes, for list filtering mode
 	// 		see: .toggleFilter(..)...
@@ -1480,9 +1489,9 @@ var BrowserPrototype = {
 			this.filter(pattern,
 					// rejected...
 					function(i, e){
-						e
-							.addClass('filtered-out')
-							.removeClass('selected')
+						!e.hasClass('not-filterd-out')
+							&& e.addClass('filtered-out')
+						e.removeClass('selected')
 					},
 					// NOTE: setting this to true will not remove disabled
 					// 		elements from view as they will neither get 
