@@ -50,7 +50,7 @@ module.GLOBAL_KEYBOARD = {
 		ignore: [
 			'Esc',
 			'Up', 'Down', 'Enter',
-			'R', 'L', 'G',
+			'R', 'L', 'G', 'T',
 		],
 
 		Esc: 'toggleSlideshow: "off" -- Exit slideshow',
@@ -648,6 +648,7 @@ var KeyboardActions = actions.Actions({
 					Object.keys(keys)
 						.forEach(function(mode){
 							var ignored = actions.keyboard[mode].ignore || []
+							var bound_ignored = []
 
 							// section heading...
 							make(keys[mode].doc ? 
@@ -660,48 +661,65 @@ var KeyboardActions = actions.Actions({
 										.append($('<span>')
 											.addClass('doc')
 											.html(keys[mode].doc))
-									: mode)
-								// XXX should sections be searchable???
-								//.addClass('mode not-searchable')
-								.addClass('mode not-filterd-out')
+									: mode, 
+									{ 
+										not_filtered_out: true,
+										// XXX should sections be searchable???
+										//not_searchable: true,
+									})
+								.addClass('mode')
 
-							/* XXX not sure if we need this like this...
-							// unpropagated keys...
-							make(['Unpropagated keys:',
+							// bindings...
+							var c = 0
+							Object.keys(keys[mode]).forEach(function(action){
+								action != 'doc' 
+									// NOTE: wee need the button spec to be
+									// 		searchable, thus we are not using 
+									// 		the keys attr as in .browseActions(..)
+									&& make([action, ' ', '$BUTTONS']
+											.concat($('<span>')
+												.addClass('text')
+												.html(keys[mode][action]
+													// mark key if it is in ignored...
+													.map(function(s){ 
+														s = s.split('+')
+														var k = s.pop() 
+														var i = ignored.indexOf(k)
+														i >= 0 
+															&& bound_ignored
+																.push(ignored[i])
+														s.push(k 
+															+ (i >= 0 ?  '<sup>*</sup>' : ''))
+														return s.join('+') })
+													.join(' / '))))
+										.addClass('key '
+											+ (action == 'IGNORE' ? 'ignored' : ''))
+									&& c++
+							})
+
+							// no keys in view mode...
+							// XXX is adding info stuff like this a correct 
+							// 		thing to do in code?
+							c == 0 && !edit 
+								&& make('No bindings...', 
+									{
+										disabled: true,
+										hide_on_search: true,
+									})
+									.addClass('info')
+
+							// unpropagated and unbound keys...
+							make(['Unpropagated and unbound keys:',
 									// NOTE: this blank is so as to avoid
 									// 		sticking the action and keys 
 									// 		together in path...
 									' ',
 									'$BUTTONS',
-									(ignored).join(' / ')])
-								.addClass('ignore')
-							//*/
-
-							// bindings...
-							Object.keys(keys[mode])
-								.forEach(function(action){
-									action == 'Ignored' && console.log('!!!!!!!')
-									action != 'doc' 
-										// NOTE: wee need the button 
-										// 		spec to be searchable, 
-										// 		thus we are not using 
-										// 		the keys attr as in
-										// 		.browseActions(..)
-										&& make([action, ' ', '$BUTTONS']
-												.concat(keys[mode][action]
-													// mark key if it is in ignored...
-													.map(function(s){ 
-														s = s.split('+')
-														var k = s.pop() 
-														s.push(k 
-															+ (ignored.indexOf(k) >= 0 ?
-																'*' 
-																: ''))
-												   		return s.join('+') })
-													.join(' / ')))
-											.addClass('key'
-												+ (action == 'Ignored' ? ' ignored' : ''))
-								})
+									ignored
+										.filter(function(k){ 
+											return bound_ignored.indexOf(k) == -1 })
+										.join(' / ')])
+								.addClass('ignore-list')
 
 							// controls...
 							if(edit){
@@ -721,6 +739,19 @@ var KeyboardActions = actions.Actions({
 									.addClass('new')
 							}
 						})
+
+					// notes...
+					// XXX is adding info stuff like this a correct 
+					// 		thing to do in code?
+					make('---')
+					make($('<span>')
+							.addClass('text')
+							.html('<sup>*</sup> keys not propogated to next section.'), 
+						{ 
+							disabled: true ,
+							hide_on_search: true,
+						})
+						.addClass('info')
 				}, {
 					cls: [
 						'key-bindings',

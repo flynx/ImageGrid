@@ -831,6 +831,24 @@ var BrowserPrototype = {
 	//		//
 	//		push_on_open: <bool>,
 	//
+	// 		// If true this element will be uncondionally hidden on search...
+	// 		//
+	// 		// NOTE: this is equivalent to setting .hide-on-search class
+	// 		//		on the element...
+	//		hide_on_search: <bool>,
+	//
+	//		// If true the item will not get searched...
+	//		//
+	// 		// NOTE: this is equivalent to setting .not-searchable class
+	// 		//		on the element...
+	//		not_searchable: <bool>,
+	//
+	//		// If true item will not get hidden on filtering... 
+	//		//
+	// 		// NOTE: this is equivalent to setting .not-filtered-out class
+	// 		//		on the element...
+	//		not_filtered_out: <bool>,
+	//
 	//		// element button spec...
 	//		buttons: <bottons>,
 	//	}
@@ -1011,8 +1029,9 @@ var BrowserPrototype = {
 
 		// XXX revise signature... 
 		var make = function(p, traversable, disabled, buttons){
+			var opts = {}
+
 			var hidden = false
-			var push_on_open = false
 
 			if(that.options.holdSize){
 				// we've started, no need to hold the size any more... 
@@ -1022,13 +1041,12 @@ var BrowserPrototype = {
 
 			// options passed as an object...
 			if(traversable != null && typeof(traversable) == typeof({})){
-				var opts = traversable
+				opts = traversable
+
 				traversable = opts.traversable
 				disabled = opts.disabled
 				buttons = opts.buttons
-
 				hidden = opts.hidden
-				push_on_open = opts.push_on_open
 			}
 
 			buttons = buttons
@@ -1063,9 +1081,11 @@ var BrowserPrototype = {
 				var txt = p.join('')
 				// XXX check if traversable...
 				p = $(p.map(function(t){
-					return t == '$BUTTONS' ?
-						$('<span/>')
-							.addClass('button-container')[0]
+					return t == '$BUTTONS' ? 
+							$('<span/>')
+								.addClass('button-container')[0]
+						: t instanceof jQuery ?
+							t[0]
 						: $('<span>')
 							.addClass('text')
 							// here we also replace empty strings with &nbsp;...
@@ -1114,10 +1134,17 @@ var BrowserPrototype = {
 				// append text elements... 
 				.append(p)
 
-			!traversable && res.addClass('not-traversable')
-			disabled && res.addClass('disabled')
-			hidden && res.addClass('hidden')
-			push_on_open && res.attr('push-on-open', 'on')
+			res.addClass([
+				!traversable ? 'not-traversable' : '',
+				disabled ? 'disabled' : '',
+				hidden ? 'hidden' : '',
+				opts.hide_on_search ? 'hide-on-search' : '',
+				(opts.hide_on_search || opts.not_searchable) ? 'not-searchable' : '',
+				opts.not_filtered_out ? 'not_filtered_out' : '',
+			].join(' '))
+
+			opts.push_on_open && res.attr('push-on-open', 'on')
+
 
 			// buttons...
 			// button container...
@@ -1464,7 +1491,7 @@ var BrowserPrototype = {
 		var browser = this.dom
 
 		// show all...
-		if(pattern == null || pattern.trim() == '*'){
+		if(pattern == null || pattern.trim() == '*' || pattern == ''){
 			browser.find('.filtered-out')
 				.removeClass('filtered-out')
 			// clear the highlighting...
@@ -1473,6 +1500,10 @@ var BrowserPrototype = {
 
 		// basic filter...
 		} else {
+			// hide stuff that needs to be unconditionally hidden...
+			browser.find('.hide-on-search')
+				.addClass('filtered-out')
+
 			var p = RegExp('(' 
 				+ pattern
 					.trim()
@@ -1491,6 +1522,7 @@ var BrowserPrototype = {
 					function(i, e){
 						!e.hasClass('not-filterd-out')
 							&& e.addClass('filtered-out')
+
 						e.removeClass('selected')
 					},
 					// NOTE: setting this to true will not remove disabled

@@ -859,7 +859,7 @@ function buildKeybindingsHelp(keybindings, shifted_keys, actions, doc_getter){
 
 				if(handler == 'IGNORE'){
 					// XXX do we show ignored keys???
-					var doc = 'Ignored'
+					var doc = handler
 					//continue
 
 				// custom doc getter...

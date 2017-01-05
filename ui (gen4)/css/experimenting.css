@@ -317,8 +317,15 @@ body {
 	background: rgba(0, 0, 0, 0.7);
 }
 
-.browse-widget.key-bindings .list>.ignore .text:first-child {
+.browse-widget.key-bindings .list>.ignore-list .text:first-child {
 	font-weight: bold;
+	font-style: italic;
+}
+.browse-widget.key-bindings .list>.ignored .text:first-child {
+	font-style: italic;
+	font-weight: bold;
+}
+.browse-widget.key-bindings .list>.info {
 	font-style: italic;
 }
 
@@ -336,10 +343,6 @@ body {
 /* NOTE: the last element is a space... */
 .browse-widget.key-bindings.browse .list>div .text:last-child {
 	margin-right: 0em;
-}
-.browse-widget.key-bindings.browse .list>.ignored .text:first-child {
-	font-style: italic;
-	font-weight: bold;
 }
 
 .browse-widget.key-bindings .list>div:not(.selected):not(.mode):nth-child(even) {
