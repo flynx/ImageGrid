@@ -71,23 +71,6 @@ var OverlayPrototype = {
 		},
 	},
 
-	// custom events...
-	close: function(handler){
-		// trigger the event...
-		if(handler == null){
-			this.dom.detach()
-			if(this.parent.children('.overlay-widget').length == 0){
-				this.parent.removeClass('blur')
-			}
-			this.trigger('close')
-
-		// register a handler...
-		} else {
-			this.on('close', handler)
-		}
-		return this
-	},
-
 	__init__: function(parent, client, options){
 		var that = this
 
@@ -128,10 +111,18 @@ var OverlayPrototype = {
 			.addClass('blur')
 			.append(this.dom)
 
-		// pass focus to the client if it is not focused already...
-		this.on('focus click', function(){
-			client.focus && client.focus()
-		})
+		this
+			// pass focus to the client if it is not focused already...
+			.on('focus click', function(){
+				client.focus && client.focus()
+			})
+			// close...
+			.close(function(){
+				that.dom.detach()
+				if(that.parent.children('.overlay-widget').length == 0){
+					that.parent.removeClass('blur')
+				}
+			})
 
 		this.focus()
 

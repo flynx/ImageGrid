@@ -312,9 +312,9 @@ var BrowserPrototype = {
 			'select',
 			'deselect',
 
-			//'keydown',
+			'keydown',
 
-			'close',
+			//'close',
 		],
 
 		// Shorthand elements...
@@ -1140,7 +1140,7 @@ var BrowserPrototype = {
 				hidden ? 'hidden' : '',
 				opts.hide_on_search ? 'hide-on-search' : '',
 				(opts.hide_on_search || opts.not_searchable) ? 'not-searchable' : '',
-				opts.not_filtered_out ? 'not_filtered_out' : '',
+				opts.not_filtered_out ? 'not-filtered-out' : '',
 			].join(' '))
 
 			opts.push_on_open && res.attr('push-on-open', 'on')
@@ -1520,7 +1520,7 @@ var BrowserPrototype = {
 			this.filter(pattern,
 					// rejected...
 					function(i, e){
-						!e.hasClass('not-filterd-out')
+						!e.hasClass('not-filtered-out')
 							&& e.addClass('filtered-out')
 
 						e.removeClass('selected')

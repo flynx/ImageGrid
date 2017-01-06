@@ -85,6 +85,20 @@ var WidgetPrototype = {
 	deligate: proxyToDom('deligate'),
 	undeligate: proxyToDom('undeligate'),
 
+	// custom events...
+	close: function(handler){
+		// trigger...
+		if(handler == null){
+			this.parent.close 
+				&& this.parent.close()
+			this.trigger('close')
+
+		// register new handler...
+		} else {
+			this.on('close', handler)
+		}
+		return this
+	},
 
 	// XXX this will not:
 	// 		- attach dom to parent... (???)
@@ -117,11 +131,12 @@ var WidgetPrototype = {
 
 		// add keyboard handler...
 		if(this.keyboard && this.dom){
-			this.dom.keydown(
-				keyboard.makeKeyboardHandler(
-					this.keyboard,
-					options.logKeys,
-					this))
+			this.dom
+				.keydown(
+					keyboard.makeKeyboardHandler(
+						this.keyboard,
+						options.logKeys,
+						this))
 		}
 
 		if(this.options.nonPropagatedEvents != null){
