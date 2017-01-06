@@ -134,6 +134,13 @@ body {
 }
 
 
+/*********************************************************************/
+
+.browse-widget.cloud-view .list>div {
+	font-size: small;
+}
+
+
 /* browse pinned items... */
 .browse-widget .list>div:not(.pinned) .pin-set {
 	display: none;
