@@ -90,6 +90,13 @@ module._SHIFT_KEYS = {
 }
 
 
+var _UNSHIFT_KEYS = 
+module._UNSHIFT_KEYS = {}
+for(var k in _SHIFT_KEYS){
+	_UNSHIFT_KEYS[_SHIFT_KEYS[k]] = k
+}
+
+
 // build a reverse map of _SPECIAL_KEYS
 var _KEY_CODES =
 module._KEY_CODES = {}
@@ -143,6 +150,8 @@ function doc(text, func){
 var getApplicableModes =
 module.getApplicableModes =
 function getApplicableModes(keybindings, modes, elem){
+	modes = modes || 'any'
+
 	return Object.keys(keybindings)
 		.filter(function(title){ 
 
@@ -155,13 +164,13 @@ function getApplicableModes(keybindings, modes, elem){
 			// check if we need to skip this mode...
 			return modes == 'all'
 				// explicit mode match...
-				|| modes == mode
+				|| modes == mode || modes == title
 				// 'any' means we need to check the mode...
 				|| (modes == 'any'
 					// '*' always matches...
 					&& mode == '*'
 					// match the mode...
-					// XXX is this too global???
+					// XXX is this too global??? -- use elem...
 					|| $(mode).length != 0)
 		})
 }
@@ -423,6 +432,10 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 			continue
 		}
 
+		// older version compatibility...
+		//var mode = keybindings[title].pattern || title
+		var mode = title
+
 		// If a key is ignored then look no further...
 		if(did_ignore){
 			if(modes != 'all'){
@@ -434,9 +447,6 @@ function getKeyHandlers(key, modifiers, keybindings, modes, shifted_keys, action
 				}
 			}
 		}
-
-		// older version compatibility...
-		var mode = keybindings[title].pattern || title
 
 		// check if we need to skip this mode...
 		if(applicable_modes.indexOf(title) < 0){
@@ -818,32 +828,23 @@ function buildKeybindingsHelp(keybindings, shifted_keys, actions, doc_getter){
 	for(var title in keybindings){
 		mode = keybindings[title]
 
-		// older version compatibility...
-		if(keybindings[title].pattern != null){
-			var pattern = keybindings[title].pattern
-		} else {
-			var pattern = title
-			// titles and docs...
-			var title = mode.title == null ? pattern : mode.title
-		}
-
-		res[title] = {
-			doc: mode.doc == null ? '' : mode.doc
-		}
-		section = res[title]
+		var section = 
+			res[title] = {
+				doc: mode.doc == null ? '' : mode.doc
+			}
 
 		// handlers...
 		for(var key in mode){
 			if(KEYBOARD_SYSTEM_ATTRS.indexOf(key) >= 0){
 				continue
 			}
-			var modifiers = getKeyHandlers(key, '?', keybindings, 'all', null, actions)[pattern]
+			var modifiers = getKeyHandlers(key, '?', keybindings, 'all', null, actions)[title]
 			modifiers = modifiers == 'none' || modifiers == undefined ? [''] : modifiers
 
 			for(var i=0; i < modifiers.length; i++){
 				var mod = modifiers[i]
 
-				var handler = getKeyHandlers(key, mod, keybindings, 'all', null, actions)[pattern]
+				var handler = getKeyHandlers(key, mod, keybindings, 'all', null, actions)[title]
 
 
 				// no handler...

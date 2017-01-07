@@ -136,6 +136,34 @@ body {
 
 /*********************************************************************/
 
+/* scrollbar setup... */
+.browse-widget ::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+.browse-widget ::-webkit-scrollbar-button {
+	display: none;
+}
+.browse-widget ::-webkit-scrollbar-track {
+}
+.browse-widget ::-webkit-scrollbar-track-piece {
+	background: transparent;
+}
+.browse-widget ::-webkit-scrollbar-track-piece {
+	background: rgba(0, 0, 0, 0.05);
+}
+.browse-widget ::-webkit-scrollbar-thumb {
+	background: rgba(0, 0, 0, 0.15);
+}
+.browse-widget ::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 0, 0, 0.3);
+}
+.browse-widget ::-webkit-scrollbar-corner {
+}
+.browse-widget ::-webkit-resizer {
+}
+
+
 .browse-widget.cloud-view .list>div {
 	font-size: small;
 }
@@ -214,34 +242,6 @@ body {
 }
 
 
-/* scrollbar setup... */
-.browse-widget ::-webkit-scrollbar {
-	width: 10px;
-	height: 10px;
-}
-.browse-widget ::-webkit-scrollbar-button {
-	display: none;
-}
-.browse-widget ::-webkit-scrollbar-track {
-}
-.browse-widget ::-webkit-scrollbar-track-piece {
-	background: transparent;
-}
-.browse-widget ::-webkit-scrollbar-track-piece {
-	background: rgba(0, 0, 0, 0.05);
-}
-.browse-widget ::-webkit-scrollbar-thumb {
-	background: rgba(0, 0, 0, 0.15);
-}
-.browse-widget ::-webkit-scrollbar-thumb:hover {
-	background: rgba(0, 0, 0, 0.3);
-}
-.browse-widget ::-webkit-scrollbar-corner {
-}
-.browse-widget ::-webkit-resizer {
-}
-
-
 
 /* Dialog highlight experiment... */
 .browse-widget {
@@ -300,6 +300,13 @@ body {
 
 
 /* key binding editor... */
+.browse-widget.key-bindings .list>div:not(.selected):not(.mode):nth-child(even) {
+	background: rgba(0, 0, 0, 0.03);
+}
+.browse-widget.key-bindings .list>div .button {
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
 .browse-widget.key-bindings .list>.mode {
 	color: white;
 	font-weight: bold;
@@ -352,12 +359,6 @@ body {
 	margin-right: 0em;
 }
 
-.browse-widget.key-bindings .list>div:not(.selected):not(.mode):nth-child(even) {
-	background: rgba(0, 0, 0, 0.03);
-}
-.browse-widget.key-bindings .list>.key .button {
-	background-color: rgba(0, 0, 0, 0.1);
-}
 
 .browse-widget.key-bindings .list>.new {
 	font-style: italic;
