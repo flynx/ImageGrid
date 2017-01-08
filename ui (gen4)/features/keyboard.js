@@ -892,11 +892,9 @@ var Keyboard2HandlerProto = {
 				.concat([ k, c ])
 				.unique()
 
-			var dropped = (mode == 'applicable' || mode == '?') ? false : null
-			modes.forEach(function(m){
-				if(dropped == true){
-					return
-				}
+			var drop = mode == 'applicable' || mode == '?'
+			for(var i=0; i < modes.length; i++){
+				var m = modes[i]
 
 				var bindings = keyboard[m]
 
@@ -905,20 +903,28 @@ var Keyboard2HandlerProto = {
 					keys
 						.filter(function(k){ return bindings[k] })[0])
 
+				// handle explicit IGNORE...
+				if(drop && handler == 'IGNORE'){
+					break
+				}
+
+				// we got a match...
 				if(handler){
 					res[m] = handler
 				}
 
-
-				dropped = dropped === false 
-					&& (bindings.drop == '*'
+				// if key in .drop then ignore the rest...
+				if(drop 
+						&& (bindings.drop == '*'
 						// XXX should this be more flexible by adding a
 						// 		specific key combo?
 						// 		... if yes, we'll need to differentiate 
 						// 		between X meaning drop only X and drop
 						// 		all combos with X...
-						|| (bindings.drop || []).indexOf(k))
-			})
+						|| (bindings.drop || []).indexOf(k) >= 0)){
+					break
+				}
+			}
 
 			return (typeof(mode) == typeof('str') 
 					&& ['*', 'applicable', '?'].indexOf(mode) < 0) ? 
@@ -958,6 +964,7 @@ var Keyboard2HandlerProto = {
 }
 
 
+/*/ XXX for testing...
 var kb = window.kb = Object.create(Keyboard2HandlerProto)
 kb.keyboard = GLOBAL_KEYBOARD2
 kb.isModeApplicable = function(mode, context){
@@ -965,6 +972,51 @@ kb.isModeApplicable = function(mode, context){
 	return !pattern 
 		|| pattern == '*' 
 		|| $(this.keyboard[mode].pattern).length > 0
+}
+//*/
+
+
+// XXX this is not compatible with GLOBAL_KEYBOARD use GLOBAL_KEYBOARD2!!
+function makeKeyboardHandler(keyboard, unhandled, actions){
+	var kb = Object.create(Keyboard2HandlerProto)
+	kb.keyboard = keyboard
+	// XXX this is specific to ImageGrid ...
+	kb.isModeApplicable = function(mode, context){
+		var pattern = this.keyboard[mode].pattern
+		return !pattern 
+			|| pattern == '*' 
+			|| $(this.keyboard[mode].pattern).length > 0
+	}
+
+	return function(evt){
+		var res
+		var did_handling = false
+		var key = kb.event2key(evt)
+		var handlers = kb.handler('applicable', key)
+
+		Object.keys(handlers).forEach(function(mode){
+			// XXX do we need this???
+			if(res === false){
+				return
+			}
+
+			var h = keyboard.parseActionCall(handlers[mode])
+
+			if(h && h.action in actions){
+				did_handling = true
+
+				h.no_default 
+					&& evt.preventDefault()
+
+				// call the handler...
+				res = actions[h.action].apply(actions, h.args)
+			} 
+		})
+
+		unhandled 
+			&& !did_handling 
+			&& unhandled.call(actions, evt)
+	}
 }
 
 
