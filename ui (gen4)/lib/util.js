@@ -12,8 +12,9 @@
 /*********************************************************************/
 
 String.prototype.capitalize = function(){
-	return this[0].toUpperCase() + this.slice(1)
-}
+	return this == '' ? 
+		this 
+		: this[0].toUpperCase() + this.slice(1) }
 
 
 // XXX not sure if this has to be a utility or a method...

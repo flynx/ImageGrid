@@ -398,180 +398,573 @@ module.GLOBAL_KEYBOARD = {
 
 
 /*********************************************************************/
+// + simpler to group bindings
+// - harder to automate binding creation (e.g. via customScale(..))
+// 
+var GLOBAL_KEYBOARD2 =
+module.GLOBAL_KEYBOARD2 = {
+	'Global': {
+		doc: 'Global bindings that take priority over other sections.',
+		pattern: '*',
 
-var KeyboardHandlerProto = {
+	},
+
+	'Slideshow': {
+		pattern: '.slideshow-running',
+		drop: [
+			'Esc',
+			'Up', 'Down', 'Enter',
+			'R', 'L', 'G', 'T',
+		],
+
+		Esc: 'toggleSlideshow: "off" -- Exit slideshow',
+		Enter: 'slideshowDialog',
+
+		Left: 'resetSlideshowTimer',
+		Right: 'resetSlideshowTimer',
+		Home: 'resetSlideshowTimer',
+		End: 'resetSlideshowTimer',
+
+		T: 'slideshowIntervalDialog',
+		R: 'toggleSlideshowDirection',
+		L: 'toggleSlideshowLooping',
+	},
+
+	// XXX do we need to prevent up/down navigation here, it may get confusing?
+	// XXX do we need to disable fast sorting here???
+	'Single Image': {
+		pattern: '.single-image-mode',
+		drop: [
+			'Esc',
+
+			// do not crop in single image mode...
+			'C', 'F2',
+
+			// zooming...
+			'#0', '#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
+		],
+
+
+		// NOTE: these are here so as to enable handling via the next 
+		// 		block, i.e. the Viewer
+		// 		...if not given, then the ignore above will shadow the 
+		// 		keys...
+		// NOTE: the 'nop' action does not exist, this it will get ignored
+		'(': 'nop',
+		')': 'nop',
+
+		// zooming...
+		'#1': 'fitScreen',
+		// XXX should these also be implemented in the same way as 4-9???
+		'#2': 'fitNormal',
+		'alt+#2': 'setNormalScale -- Set current image size as normal',
+		'ctrl+shift+#2': 'setNormalScale: null -- Reset normal image size to default',
+		'#3': 'fitSmall',
+		'alt+#3': 'setSmallScale -- Set current image size as small',
+		'ctrl+shift+#3': 'setSmallScale: null -- Reset small image size to default',
+		/*/ XXX
+		'#4': customScale(4),
+		'#5': customScale(5),
+		'#6': customScale(6),
+		'#7': customScale(7),
+		'#8': customScale(8),
+		'#9': customScale(9),
+		'#0': customScale(0),
+		*/
+
+
+		Esc: 'toggleSingleImage: "off" -- Exit single image view',
+
+		// ignore sorting and reversing...
+		// XXX not sure about these yet, especially reversing...
+		shift_R: 'IGNORE',
+		shift_S: 'IGNORE',
+	},
+
+	// XXX add "save as collection..."
+	'Cropped': {
+		pattern: '.crop-mode',
+
+		Esc: 'uncrop',
+		'ctrl+Esc': 'uncropAll',
+	},
+
+	'Range': {
+		doc: 'Range editing',
+		pattern: '.brace',
+
+		// XXX add:
+		// 		- range navigation
+		// 		- range manipulation
+
+		Esc: 'clearRange',
+	},
+
+	// XXX add "save as collection..." (???)
+	// XXX cleanup...
+	'Viewer': {
+		doc: 'NOTE: binding priority is the same as the order of sections '+
+			'on this page.',
+		pattern: '*',
+
+		alt_X: 'close',
+
+		alt_F4: 'close',
+		meta_Q: 'close',
+		// XXX
+		F5: keyboard.doc('Full reload viewer', 
+			function(){ 
+				//a.stop()
+				/*
+				killAllWorkers()
+					.done(function(){
+						reload() 
+					})
+				*/
+				location.reload()
+				return false
+			}),
+		F12: 'showDevTools',
+		// NOTE: these are for systems where F** keys are not available 
+		// 		or do other stuff...
+		R: 'rotateCW',
+		shift_R: 'reverseImages',
+		ctrl_R: 'loadNewImages!',
+		alt_R: 'browseActions: "/Ribbon/" -- Open ribbon menu',
+		ctrl_alt_R: 'reload!',
+		ctrl_shift_R: 'F5',
+		L: 'rotateCCW',
+		H: 'flipHorizontal',
+		ctrl_H: 'listURLHistory',
+		ctrl_shift_H: 'listSaveHistory',
+		alt_H: 'browseActions: "/History/" -- Open history menu',
+		V: 'flipVertical',
+
+		// tilt...
+		// XXX experimental, not sure if wee need this with a keyboard...
+		T: 'rotateRibbonCCW -- Tilt ribbons counter clock wise',
+		shift_T: 'rotateRibbonCW -- Tilt ribbons clock wise',
+		alt_T: 'resetRibbonRotation -- Reset ribbon tilt',
+
+		ctrl_shift_p: 'F12',
+
+		// NOTE: this is handled by the wrapper at this point, so we do 
+		// 		not have to do anything here...
+		F11: 'toggleFullScreen', 
+		ctrl_F: 'F11',
+		meta_F: 'F11',
+
+		// XXX testing...
+
+		Enter: 'toggleSingleImage',
+
+		Home: 'firstImage',
+		ctrl_Home: 'firstGlobalImage',
+		shift_Home: 'firstRibbon',
+		End: 'lastImage',
+		ctrl_End: 'lastGlobalImage',
+		shift_End: 'lastRibbon',
+		Left: 'prevImage',
+		alt_Left: 'shiftImageLeft!',
+		ctrl_Left: 'prevScreen',
+		// XXX need to prevent default on mac + browser...
+		meta_Left: 'prevScreen',
+		PgUp: 'prevScreen',
+		PgDown: 'nextScreen',
+		Right: 'nextImage',
+		alt_Right: 'shiftImageRight!',
+		ctrl_Right: 'nextScreen',
+		// XXX need to prevent default on mac + browser...
+		meta_Right: 'nextScreen',
+		Space: 'Right',
+		Backspace: 'Left',
+		'(': 'prevImageInOrder',
+		')': 'nextImageInOrder',
+		',': 'prevMarked',
+		'.': 'nextMarked',
+		'[': 'prevBookmarked',
+		// XXX experimental
+		'{': 'openRange',
+		']': 'nextBookmarked',
+		// XXX experimental
+		'}': 'closeRange',
+		Up: 'prevRibbon',
+		shift_Up: 'shiftImageUp',
+		alt_shift_Up: 'travelImageUp',
+		ctrl_shift_Up: 'shiftImageUpNewRibbon',
+		Down: 'nextRibbon',
+		shift_Down: 'shiftImageDown',
+		alt_shift_Down: 'travelImageDown',
+		ctrl_shift_Down: 'shiftImageDownNewRibbon',
+
+		'#0': 'fitMax',
+		'#1': 'fitImage',
+		'shift+#1': 'fitRibbon',
+		'ctrl+#1': 'fitOrig!',
+		'#2': 'fitImage: 2 -- Fit 2 Images',
+		'#3': 'fitImage: 3 -- Fit 3 images',
+		'shift+#3': 'fitRibbon: 3.5 -- Fit 3.5 ribbons',
+		'#4': 'fitImage: 4 -- Fit 4 images',
+		'#5': 'fitImage: 5 -- Fit 5 images',
+		'shift+#5': 'fitRibbon: 5.5 -- Fit 5.5 ribbons',
+		'#6': 'fitImage: 6 -- Fit 6 images',
+		'#7': 'fitImage: 7 -- Fit 7 images',
+		'#8':'fitImage: 8 -- Fit 8 images',
+		'#9': 'fitImage: 9 -- Fit 9 images',
+		
+		'+': 'zoomIn',
+		'ctrl++': 'lighterTheme!',
+		'=': '+',
+		'-': 'zoomOut',
+		'ctrl+-': 'darkerTheme!',
+		'_': '-',
+
+		F2: 'cropRibbon',
+		shift_F2: 'cropRibbonAndAbove',
+		ctrl_F2: 'cropMarked',
+		alt_F2: 'cropBookmarked',
+
+		// marking...
+		M: 'toggleMark',
+		alt_M: 'browseActions: "/Mark/" -- Show mark menu',
+		alt_A: 'browseActions',
+		alt_shift_A: 'listActions',
+		ctrl_A: 'toggleMark!: "ribbon" "on" -- Mark all images in ribbon',
+		ctrl_D: 'toggleMark!: "ribbon" "off" -- Unmark all images in ribbon',
+		I: 'showMetadata',
+		alt_I: 'browseActions: "/Image/" -- Show image menu',
+		shift_I: 'toggleStatusBar',
+
+		ctrl_I: 'toggleMark!: "ribbon" -- Invert marks in ribbon',
+		ctrl_shift_I: 'showMetadata: "current" "full" -- Show full metadata',
+
+		meta_alt_I: 'showDevTools',
+
+		// XXX experimental...
+		'*': 'setRangeBorder',
+		
+		B: 'toggleBookmark',
+		ctrl_R: 'toggleTheme!',
+		ctrl_shift_R: 'toggleTheme!: "prev"',
+		alt_R: 'browseActions: "/Bookmark/" -- Show bookmark menu',
+		// XXX not sure if this is the right way to go...
+		shift_R: 'setBaseRibbon',
+		E: 'openInExtenalEditor',
+		shift_E: 'openInExtenalEditor: 1 -- Open in alternative editor',
+		alt_E: 'listExtenalEditors',
+		C: 'browseActions: "/Crop/" -- Show crop menu',
+		// do the default copy thing...
+		// NOTE: this stops the default: handler from getting the ctrl:
+		// 		key case...
+		ctrl_C: '',
+		O: 'browsePath',
+		S: 'slideshowDialog',
+		//shift_S: 'sortImages: "Date" -- Sort images by date',
+		shift_S: 'sortImages -- Sort images',
+		//alt_S: 'browseActions: "/Sort/"',
+		alt_S: 'sortDialog',
+		// XXX need to make this save to base_path if it exists and
+		// 		ask the user if it does not... now it always asks.
+		ctrl_S: 'saveIndexHere',
+		ctrl_shift_S: 'exportDialog',
+
+		// XXX still experimental...
+		U: 'undo',
+		shift_U: 'redo',
+		ctrl_Z: 'undo',
+		ctrl_shift_Z: 'redo',
+		G: 'editStatusBarIndex!',
+		shift_G: 'toggleStatusBarIndexMode!',
+		// XXX for debug...
+		//ctrl_G: function(){ $('.viewer').toggleClass('visible-gid') },
+		'?': 'showKeyboardBindings',
+	},
+}
+
+// Format:
+// 	{
+// 		<mode>: {
+// 			doc: <doc>,
+// 			drop: [ <key>, ... ] | '*',
+//
+//			<alias>: <handler>,
+//
+//			<key>: <handler>,
+//			<key>: <alias>,
+// 		},
+// 		...
+// 	}
+var Keyboard2HandlerProto = {
+	key_separators: ['+', '-', '_'],
+	modifiers: ['ctrl', 'alt', 'meta', 'shift'],
+	service_fields: ['doc', 'drop'],
+
 	// object/function
 	keyboard: null,
+	// XXX is this needed???
 	context: null,
 
 	// helpers...
-	shifted: function(key){
+	event2key: function(evt){
+		evt = evt || event
+
+		var key = []
+		evt.ctrlKey && key.push('ctrl')
+		evt.altKey && key.push('alt')
+		evt.metaKey && key.push('meta')
+		evt.shiftKey && key.push('shift')
+		key.push(this.code2key(evt.keyCode))
+
+		return key
 	},
+	key2code: function(key){
+		return key in keyboard._KEY_CODES ?
+			keyboard._KEY_CODES[key]
+			: key.charCodeAt(0) },
+	code2key: function(code){
+		var name = String.fromCharCode(code)
+		return code in keyboard._SPECIAL_KEYS ? keyboard._SPECIAL_KEYS[code]
+			: name != '' ? name 
+			: null },
+	shifted: function(key){
+		var output = key instanceof Array ? 'array' : 'string'
+		key = this.normalizeKey(this.splitKey(key)).slice()
+		var k = key.pop()
+
+		var s = (key.indexOf('shift') >= 0 ? 
+				keyboard._SHIFT_KEYS[k]
+				: keyboard._UNSHIFT_KEYS[k])
+			|| null
+
+		var res = s == null ? key
+			: (key.indexOf('shift') >= 0 ?
+					key.filter(function(k){ return k != 'shift' })
+					: key.concat(['shift']))
+		res.push(s)
+
+		return s == null ? null 
+			: output == 'string' ? res.join(this.key_separators[0]) 
+			: res
+	},
+	// XXX handle .key_separators as keys...
+	splitKey: function(key){
+		return key instanceof Array ? 
+			key 
+			: key
+				//.slice(0, -1)
+				.split(RegExp('['+this.key_separators.join('\\')+']'))
+				//.concat(key.slice(-1))
+   				.filter(function(c){ return c != '' }) },
+	normalizeKey: function(key){
+		var output = key instanceof Array ? 'array' : 'string'
+		var modifiers = this.modifiers
+		// sort modifiers via .modifiers and keep the key last...
+		key = this.splitKey(key)
+			.sort(function(a, b){
+				a = modifiers.indexOf(a)
+				b = modifiers.indexOf(b)
+				return a >= 0 && b >= 0 ? a - b
+					: a < 0 ? 1
+					: -1 })
+		key.push(key.pop().capitalize())
+		return output == 'array' ? key : key.join(this.key_separators[0] || '+')
+	},
+
+	/*/ XXX not sure if this is needed...
+	normalizeBindings: function(keyboard){
+		keyboard = keyboard || this.keyboard 
+		var that = this
+		var service_fields = this.service_fields
+		Object.keys(keyboard).forEach(function(mode){
+			mode = keyboard[mode]
+			
+			Object.keys(mode).forEach(function(key){
+				// skip service fields...
+				if(service_fields.indexOf(key) >= 0){
+					return
+				}
+
+				var n = that.normalizeKey(key)
+
+				if(n != key){
+					// duplicate key...
+					if(n in mode){
+						console.warn('duplicate keys: "'+ n +'" and "'+ k +'"')
+					}
+
+					mode[n] = mode[key]
+					delete mode[key]
+				}
+			})
+		})
+		return keyboard
+	},
+	//*/
+
+	//isModeApplicable: function(mode, context){ return true },
 
 	// get keys for handler...
 	//
 	keys: function(handler){
+		var res = {}
+		var keyboard = this.keyboard
+
+		Object.keys(keyboard).forEach(function(mode){
+			var bindings = keyboard[mode]
+			var keys = Object.keys(bindings)
+				// filter out the handler...
+				.filter(function(key){ 
+					return handler instanceof Function ? 
+						handler(bindings[key]) 
+						: handler == bindings[key] })
+				// walk aliases...
+				.map(function(key){
+					var seen = []
+					while(bindings[key] in bindings){
+						key = bindings[key]
+						if(seen.indexOf(key) >= 0){
+							return null
+						}
+						seen.push(key)
+					}
+					return key
+				})
+				// clear out the loops from last stage...
+				.filter(function(key){ return !!key })
+
+			if(keys.length > 0){
+				res[mode] = keys
+			}
+		})
+		return res
 	},
 
 	// get/set handler for key...
 	//
-	handler: function(mode, key, action){
+	handler: function(mode, key, handler){
 		var that = this
+		var keyboard = this.keyboard
+		var key_separators = this.key_separators
 
-		// XXX normalize key...
-		var full_key = key
-		var modifiers = key.split('+')
-		key = modifiers.pop()
+		key = this.normalizeKey(this.splitKey(key))
+		var shift_key = this.shifted(key)
 
-		var code = keyboard.toKeyCode(key)
-		var args = [].slice.call(arguments).slice(3)
+		// match candidates...
+		var keys = key_separators
+			// full key...
+			.map(function(s){ return key.join(s) })
+			// full shift key...
+			.concat(shift_key ? 
+				key_separators
+					.map(function(s){ return shift_key.join(s) }) 
+				: [])
 
-		// set handler...
-		if(action){
-			modes = modes instanceof Array ? modes : [modes]
-			// ignore all but the first mode...
-			modes = modes.slice(0, 1)
+		// get modes...
+		var modes = mode == '*' ? Object.keys(keyboard)
+			: mode == 'applicable' || mode == '?' ? this.modes()
+			: mode instanceof Array ? mode
+			: [mode]
 
-		// get handler...
-		} else {
-			var shift_key = (modifiers.indexOf('shift') >= 0 ? 
-					keyboard._SHIFT_KEYS[key]
-					: keyboard._UNSHIFT_KEYS[key])
-				|| '' 
-			var shift_modifiers = shift_key != '' 
-				&& (((modifiers.indexOf('shift') >= 0 ?
-					modifiers.filter(function(k){ return k != 'shift' })
-					: modifiers.concat(['shift'])))
-				|| modifiers).join('+')
-			var full_shift_key = shift_modifiers == '' ? 
-				shift_key 
-				: shift_modifiers +'+'+ shift_key
+		var walkAliases = function(bindings, handler){
+			// walk aliases...
+			var seen = []
+			while(handler in bindings){
+				handler = bindings[handler]
 
-			var any = modes == 'any'
-			modes = any ? this.getKeyboardModes()
-				: modes == '*' ? Object.keys(this.keyboard) 
-				: modes
-			modes = modes instanceof Array ? modes : [modes]
-
-			// filter modes...
-			var ignore = false
-			modes = any ? 
-				modes
-					.filter(function(mode){
-						if(ignore){
-							return false
-						}
-
-						var i = that.keyboard[mode].ignore || []
-
-						ignore = i.indexOf(full_key) >= 0
-							|| i.indexOf(key) >= 0
-							|| i.indexOf(shift_key) >= 0
-							|| i.indexOf(full_shift_key) >= 0
-							|| i.indexOf(code) >= 0
-
-						return true
-					})
-				: modes
+				// check for loops...
+				if(seen.indexOf(handler) >= 0){
+					handler = null
+					break
+				}
+				seen.push(handler)
+			}
+			return handler
 		}
 
-		modifiers = modifiers.join('+')
+		// get...
+		if(handler === undefined){
+			var res = {}
+			var k = key.slice(-1)[0]
+			var c = this.key2code(k) 
 
+			// also test single key and code if everything else fails...
+			keys = keys
+				.concat([ k, c ])
+				.unique()
 
-		// search modes...
-		var res = {}
-		ignore = false
-		modes
-			.forEach(function(mode){
-				if(ignore){
-					return false
+			var dropped = (mode == 'applicable' || mode == '?') ? false : null
+			modes.forEach(function(m){
+				if(dropped == true){
+					return
 				}
 
-				var bindings = that.keyboard[mode]
+				var bindings = keyboard[m]
 
-				if(action){
-					var match = 'direct'
-					var alias = code in bindings ? code : key
+				handler = walkAliases(
+					bindings, 
+					keys
+						.filter(function(k){ return bindings[k] })[0])
 
-				} else {
-					// direct match...
-					var match = 'direct'
-					var alias = full_key in bindings ? full_key 
-						: key in bindings ? key 
-						: null
-					// shift key match...
-					match = alias == null ? 'shifted' : match
-					alias = alias == null ? 
-						(full_shift_key in bindings ? full_shift_key 
-							: shift_key in bindings ? shift_key 
-							: null)
-						: alias
-					// code match...
-					match = alias == null ? 'code' : match
-					alias = alias == null ? 
-						(code in bindings ? code : null)
-						: alias
+				if(handler){
+					res[m] = handler
 				}
 
-				var mod = (match == 'code' || match == 'direct') ? 
-					modifiers 
-					: shift_modifiers
-				mod = mod == '' ? 'default' : mod
 
-				var handler = alias
-
-				// spin through aliases...
-				// XXX do we look for aliases in this mode only or in all modes?
-				var seen = []
-				while(handler in bindings){
-					// handler loop...
-					if(seen.indexOf(handler) >= 0){
-						return null
-					}
-					
-					alias = handler
-					handler = bindings[alias]
-					seen.push(alias)
-
-					// go into the map structure...
-					if(!action && typeof(handler) != typeof('str')){
-						handler = handler[mod]
-					}
-				}
-
-				// set the action...
-				if(action){
-					if(handler == null || typeof(handler) == typeof('str')){
-						bindings[alias] = modifiers.length == 0 ?
-							action
-							: { modifiers : action }
-
-					} else if(modifiers.length == 0){
-						handler['default'] = action
-
-					} else {
-						handler[modifiers] = action
-					}
-
-				// get the action...
-				} else {
-					if(handler){
-						res[mode] = handler
-					}
-
-					ignore = any && handler == 'IGNORE'
-				}
+				dropped = dropped === false 
+					&& (bindings.drop == '*'
+						// XXX should this be more flexible by adding a
+						// 		specific key combo?
+						// 		... if yes, we'll need to differentiate 
+						// 		between X meaning drop only X and drop
+						// 		all combos with X...
+						|| (bindings.drop || []).indexOf(k))
 			})
 
-		return !action ? 
-			(modes.length == 1 ? res[modes[0]] : res) || null
-			: undefined
+			return (typeof(mode) == typeof('str') 
+					&& ['*', 'applicable', '?'].indexOf(mode) < 0) ? 
+				res[mode]
+				: res
+
+		// set / remove...
+		} else {
+			modes.forEach(function(m){
+				var bindings = keyboard[m]
+
+				// remove all matching keys...
+				keys
+					.unique()
+					.forEach(function(k){
+						delete bindings[k]
+					})
+
+				// set handler if given...
+				if(handler && handler != ''){
+					keyboard[mode][key] = handler
+				}
+			})
+		}
+
+		return this
 	},
 
 	// get applicable modes...
 	//
 	modes: function(context){
-	},
+		var that = this
+		return Object.keys(this.keyboard)
+			.filter(function(mode){ 
+				return !that.isModeApplicable 
+					|| that.isModeApplicable(mode, context || this.context) }) },
+}
+
+
+var kb = window.kb = Object.create(Keyboard2HandlerProto)
+kb.keyboard = GLOBAL_KEYBOARD2
+kb.isModeApplicable = function(mode, context){
+	var pattern = this.keyboard[mode].pattern
+	return !pattern 
+		|| pattern == '*' 
+		|| $(this.keyboard[mode].pattern).length > 0
 }
 
 
@@ -977,6 +1370,156 @@ var KeyboardActions = actions.Actions({
 	// XXX do we look for aliases in this mode only or in all modes?
 	getKeyHandler: ['- Interface/',
 		function(modes, key, action){
+			var that = this
+
+			// XXX normalize key...
+			var full_key = key
+			var modifiers = key.split('+')
+			key = modifiers.pop()
+
+			var code = keyboard.toKeyCode(key)
+			var args = [].slice.call(arguments).slice(3)
+
+			// set handler...
+			if(action){
+				modes = modes instanceof Array ? modes : [modes]
+				// ignore all but the first mode...
+				modes = modes.slice(0, 1)
+
+			// get handler...
+			} else {
+				var shift_key = (modifiers.indexOf('shift') >= 0 ? 
+						keyboard._SHIFT_KEYS[key]
+						: keyboard._UNSHIFT_KEYS[key])
+					|| '' 
+				var shift_modifiers = shift_key != '' 
+					&& (((modifiers.indexOf('shift') >= 0 ?
+						modifiers.filter(function(k){ return k != 'shift' })
+						: modifiers.concat(['shift'])))
+					|| modifiers).join('+')
+				var full_shift_key = shift_modifiers == '' ? 
+					shift_key 
+					: shift_modifiers +'+'+ shift_key
+
+				var any = modes == 'any'
+				modes = any ? this.getKeyboardModes()
+					: modes == '*' ? Object.keys(this.keyboard) 
+					: modes
+				modes = modes instanceof Array ? modes : [modes]
+
+				// filter modes...
+				var ignore = false
+				modes = any ? 
+					modes
+						.filter(function(mode){
+							if(ignore){
+								return false
+							}
+
+							var i = that.keyboard[mode].ignore || []
+
+							ignore = i.indexOf(full_key) >= 0
+								|| i.indexOf(key) >= 0
+								|| i.indexOf(shift_key) >= 0
+								|| i.indexOf(full_shift_key) >= 0
+								|| i.indexOf(code) >= 0
+
+							return true
+						})
+					: modes
+			}
+
+			modifiers = modifiers.join('+')
+
+
+			// search modes...
+			var res = {}
+			ignore = false
+			modes
+				.forEach(function(mode){
+					if(ignore){
+						return false
+					}
+
+					var bindings = that.keyboard[mode]
+
+					if(action){
+						var match = 'direct'
+						var alias = code in bindings ? code : key
+
+					} else {
+						// direct match...
+						var match = 'direct'
+						var alias = full_key in bindings ? full_key 
+							: key in bindings ? key 
+							: null
+						// shift key match...
+						match = alias == null ? 'shifted' : match
+						alias = alias == null ? 
+							(full_shift_key in bindings ? full_shift_key 
+								: shift_key in bindings ? shift_key 
+								: null)
+							: alias
+						// code match...
+						match = alias == null ? 'code' : match
+						alias = alias == null ? 
+							(code in bindings ? code : null)
+							: alias
+					}
+
+					var mod = (match == 'code' || match == 'direct') ? 
+						modifiers 
+						: shift_modifiers
+					mod = mod == '' ? 'default' : mod
+
+					var handler = alias
+
+					// spin through aliases...
+					// XXX do we look for aliases in this mode only or in all modes?
+					var seen = []
+					while(handler in bindings){
+						// handler loop...
+						if(seen.indexOf(handler) >= 0){
+							return null
+						}
+						
+						alias = handler
+						handler = bindings[alias]
+						seen.push(alias)
+
+						// go into the map structure...
+						if(!action && typeof(handler) != typeof('str')){
+							handler = handler[mod]
+						}
+					}
+
+					// set the action...
+					if(action){
+						if(handler == null || typeof(handler) == typeof('str')){
+							bindings[alias] = modifiers.length == 0 ?
+								action
+								: { modifiers : action }
+
+						} else if(modifiers.length == 0){
+							handler['default'] = action
+
+						} else {
+							handler[modifiers] = action
+						}
+
+					// get the action...
+					} else {
+						if(handler){
+							res[mode] = handler
+						}
+
+						ignore = any && handler == 'IGNORE'
+					}
+				})
+
+			return !action ? 
+				(modes.length == 1 ? res[modes[0]] : res) || null
+				: undefined
 		}],
 	// XXX move this to lib/keyboard.js
 	// XXX not done yet...
