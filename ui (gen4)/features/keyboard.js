@@ -472,7 +472,6 @@ module.GLOBAL_KEYBOARD2 = {
 		'#0': customScale(0),
 		*/
 
-
 		Esc: 'toggleSingleImage: "off" -- Exit single image view',
 
 		// ignore sorting and reversing...
@@ -486,7 +485,7 @@ module.GLOBAL_KEYBOARD2 = {
 		pattern: '.crop-mode',
 
 		Esc: 'uncrop',
-		'ctrl+Esc': 'uncropAll',
+		ctrl_Esc: 'uncropAll',
 	},
 
 	'Range': {
@@ -508,9 +507,9 @@ module.GLOBAL_KEYBOARD2 = {
 		pattern: '*',
 
 		alt_X: 'close',
-
 		alt_F4: 'close',
 		meta_Q: 'close',
+
 		// XXX
 		F5: keyboard.doc('Full reload viewer', 
 			function(){ 
@@ -524,21 +523,45 @@ module.GLOBAL_KEYBOARD2 = {
 				location.reload()
 				return false
 			}),
+
 		F12: 'showDevTools',
 		// NOTE: these are for systems where F** keys are not available 
 		// 		or do other stuff...
-		R: 'rotateCW',
-		shift_R: 'reverseImages',
-		ctrl_R: 'loadNewImages!',
-		alt_R: 'browseActions: "/Ribbon/" -- Open ribbon menu',
-		ctrl_alt_R: 'reload!',
-		ctrl_shift_R: 'F5',
-		L: 'rotateCCW',
-		H: 'flipHorizontal',
+		meta_alt_I: 'F12',
+		ctrl_shift_p: 'F12',
+
+
+		// dialogs...
+		// XXX should this be all here or in respective sections???
+		alt_A: 'browseActions',
+
+		//alt_S: 'browseActions: "/Sort/"',
+		alt_shift_A: 'listActions',
+
+
+		// open/save...
+		O: 'browsePath',
+		ctrl_S: 'saveIndexHere',
+		ctrl_shift_S: 'exportDialog',
+
+
+		// external editors...
+		// XXX not sure if this is the right way to go...
+		E: 'openInExtenalEditor',
+		shift_E: 'openInExtenalEditor: 1 -- Open in alternative editor',
+		alt_E: 'listExtenalEditors',
+
+
+		// history...
 		ctrl_H: 'listURLHistory',
 		ctrl_shift_H: 'listSaveHistory',
+
+		U: 'undo',
+		ctrl_Z: 'undo',
+		shift_U: 'redo',
+		ctrl_shift_Z: 'redo',
 		alt_H: 'browseActions: "/History/" -- Open history menu',
-		V: 'flipVertical',
+
 
 		// tilt...
 		// XXX experimental, not sure if wee need this with a keyboard...
@@ -546,7 +569,6 @@ module.GLOBAL_KEYBOARD2 = {
 		shift_T: 'rotateRibbonCW -- Tilt ribbons clock wise',
 		alt_T: 'resetRibbonRotation -- Reset ribbon tilt',
 
-		ctrl_shift_p: 'F12',
 
 		// NOTE: this is handled by the wrapper at this point, so we do 
 		// 		not have to do anything here...
@@ -554,9 +576,46 @@ module.GLOBAL_KEYBOARD2 = {
 		ctrl_F: 'F11',
 		meta_F: 'F11',
 
-		// XXX testing...
+		ctrl_R: 'loadNewImages!',
+		ctrl_alt_R: 'reload!',
+		ctrl_shift_R: 'F5',
 
+
+		// modes... 
 		Enter: 'toggleSingleImage',
+		S: 'slideshowDialog',
+
+
+		// statusbar...
+		shift_I: 'toggleStatusBar',
+		G: 'editStatusBarIndex!',
+		shift_G: 'toggleStatusBarIndexMode!',
+
+
+		// theme...
+		ctrl_R: 'toggleTheme!',
+		ctrl_shift_R: 'toggleTheme!: "prev"',
+		'ctrl+-': 'darkerTheme!',
+		'ctrl++': 'lighterTheme!',
+
+
+		// navigation...
+		Left: 'prevImage',
+		Backspace: 'Left',
+		Right: 'nextImage',
+		Space: 'Right',
+
+		'(': 'prevImageInOrder',
+		')': 'nextImageInOrder',
+
+		PgUp: 'prevScreen',
+		ctrl_Left: 'prevScreen',
+		// XXX need to prevent default on mac + browser...
+		meta_Left: 'prevScreen',
+		PgDown: 'nextScreen',
+		ctrl_Right: 'nextScreen',
+		// XXX need to prevent default on mac + browser...
+		meta_Right: 'nextScreen',
 
 		Home: 'firstImage',
 		ctrl_Home: 'firstGlobalImage',
@@ -564,38 +623,51 @@ module.GLOBAL_KEYBOARD2 = {
 		End: 'lastImage',
 		ctrl_End: 'lastGlobalImage',
 		shift_End: 'lastRibbon',
-		Left: 'prevImage',
-		alt_Left: 'shiftImageLeft!',
-		ctrl_Left: 'prevScreen',
-		// XXX need to prevent default on mac + browser...
-		meta_Left: 'prevScreen',
-		PgUp: 'prevScreen',
-		PgDown: 'nextScreen',
-		Right: 'nextImage',
-		alt_Right: 'shiftImageRight!',
-		ctrl_Right: 'nextScreen',
-		// XXX need to prevent default on mac + browser...
-		meta_Right: 'nextScreen',
-		Space: 'Right',
-		Backspace: 'Left',
-		'(': 'prevImageInOrder',
-		')': 'nextImageInOrder',
-		',': 'prevMarked',
-		'.': 'nextMarked',
-		'[': 'prevBookmarked',
-		// XXX experimental
-		'{': 'openRange',
-		']': 'nextBookmarked',
-		// XXX experimental
-		'}': 'closeRange',
+
 		Up: 'prevRibbon',
+		Down: 'nextRibbon',
+
+
+		// shifting...
 		shift_Up: 'shiftImageUp',
 		alt_shift_Up: 'travelImageUp',
 		ctrl_shift_Up: 'shiftImageUpNewRibbon',
-		Down: 'nextRibbon',
+
 		shift_Down: 'shiftImageDown',
 		alt_shift_Down: 'travelImageDown',
 		ctrl_shift_Down: 'shiftImageDownNewRibbon',
+
+		alt_Left: 'shiftImageLeft!',
+		alt_Right: 'shiftImageRight!',
+
+		shift_R: 'setBaseRibbon',
+
+
+		// editing...
+		R: 'rotateCW',
+		L: 'rotateCCW',
+		H: 'flipHorizontal',
+		V: 'flipVertical',
+
+
+		// ribbon image stuff...
+		alt_I: 'browseActions: "/Image/" -- Show image menu',
+		alt_R: 'browseActions: "/Ribbon/" -- Open ribbon menu',
+
+
+		// ranges...
+		// XXX experimental
+		// XXX add border jumping to Home/End...
+		'{': 'openRange',
+		'}': 'closeRange',
+		'*': 'setRangeBorder',
+
+
+		// zooming...
+		'+': 'zoomIn',
+		'=': '+',
+		'-': 'zoomOut',
+		'_': '-',
 
 		'#0': 'fitMax',
 		'#1': 'fitImage',
@@ -612,69 +684,55 @@ module.GLOBAL_KEYBOARD2 = {
 		'#8':'fitImage: 8 -- Fit 8 images',
 		'#9': 'fitImage: 9 -- Fit 9 images',
 		
-		'+': 'zoomIn',
-		'ctrl++': 'lighterTheme!',
-		'=': '+',
-		'-': 'zoomOut',
-		'ctrl+-': 'darkerTheme!',
-		'_': '-',
 
+		// cropping...
 		F2: 'cropRibbon',
 		shift_F2: 'cropRibbonAndAbove',
 		ctrl_F2: 'cropMarked',
 		alt_F2: 'cropBookmarked',
+		C: 'browseActions: "/Crop/" -- Show crop menu',
+
+
+		// metadata...
+		I: 'showMetadata',
+		ctrl_shift_I: 'showMetadata: "current" "full" -- Show full metadata',
+
 
 		// marking...
 		M: 'toggleMark',
-		alt_M: 'browseActions: "/Mark/" -- Show mark menu',
-		alt_A: 'browseActions',
-		alt_shift_A: 'listActions',
 		ctrl_A: 'toggleMark!: "ribbon" "on" -- Mark all images in ribbon',
 		ctrl_D: 'toggleMark!: "ribbon" "off" -- Unmark all images in ribbon',
-		I: 'showMetadata',
-		alt_I: 'browseActions: "/Image/" -- Show image menu',
-		shift_I: 'toggleStatusBar',
-
 		ctrl_I: 'toggleMark!: "ribbon" -- Invert marks in ribbon',
-		ctrl_shift_I: 'showMetadata: "current" "full" -- Show full metadata',
+		',': 'prevMarked',
+		'.': 'nextMarked',
+		alt_M: 'browseActions: "/Mark/" -- Show mark menu',
 
-		meta_alt_I: 'showDevTools',
 
-		// XXX experimental...
-		'*': 'setRangeBorder',
-		
+		// bookmarking...
 		B: 'toggleBookmark',
-		ctrl_R: 'toggleTheme!',
-		ctrl_shift_R: 'toggleTheme!: "prev"',
-		alt_R: 'browseActions: "/Bookmark/" -- Show bookmark menu',
-		// XXX not sure if this is the right way to go...
-		shift_R: 'setBaseRibbon',
-		E: 'openInExtenalEditor',
-		shift_E: 'openInExtenalEditor: 1 -- Open in alternative editor',
-		alt_E: 'listExtenalEditors',
-		C: 'browseActions: "/Crop/" -- Show crop menu',
+		'[': 'prevBookmarked',
+		']': 'nextBookmarked',
+		alt_B: 'browseActions: "/Bookmark/" -- Show bookmark menu',
+
+
+
+		// copy/paste...
 		// do the default copy thing...
 		// NOTE: this stops the default: handler from getting the ctrl:
 		// 		key case...
 		ctrl_C: '',
-		O: 'browsePath',
-		S: 'slideshowDialog',
+
+
+		// sort...
 		//shift_S: 'sortImages: "Date" -- Sort images by date',
 		shift_S: 'sortImages -- Sort images',
-		//alt_S: 'browseActions: "/Sort/"',
-		alt_S: 'sortDialog',
 		// XXX need to make this save to base_path if it exists and
 		// 		ask the user if it does not... now it always asks.
-		ctrl_S: 'saveIndexHere',
-		ctrl_shift_S: 'exportDialog',
+		shift_R: 'reverseImages',
+		alt_S: 'sortDialog',
 
-		// XXX still experimental...
-		U: 'undo',
-		shift_U: 'redo',
-		ctrl_Z: 'undo',
-		ctrl_shift_Z: 'redo',
-		G: 'editStatusBarIndex!',
-		shift_G: 'toggleStatusBarIndexMode!',
+
+		// doc...
 		// XXX for debug...
 		//ctrl_G: function(){ $('.viewer').toggleClass('visible-gid') },
 		'?': 'showKeyboardBindings',
