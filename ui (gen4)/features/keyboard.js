@@ -392,6 +392,8 @@ module.GLOBAL_KEYBOARD = {
 		},
 
 		'?': 'showKeyboardBindings',
+
+		W: 'testAction',
 	},
 }	
 
@@ -400,7 +402,12 @@ module.GLOBAL_KEYBOARD = {
 /*********************************************************************/
 // + simpler to group bindings
 // - harder to automate binding creation (e.g. via customScale(..))
-// 
+
+var keyboard2 = require('lib/keyboard2')
+
+
+// XXX do we want to add sub-sections to better organize keys for 
+// 		documentation???
 var GLOBAL_KEYBOARD2 =
 module.GLOBAL_KEYBOARD2 = {
 	'Global': {
@@ -612,6 +619,7 @@ module.GLOBAL_KEYBOARD2 = {
 		ctrl_Left: 'prevScreen',
 		// XXX need to prevent default on mac + browser...
 		meta_Left: 'prevScreen',
+
 		PgDown: 'nextScreen',
 		ctrl_Right: 'nextScreen',
 		// XXX need to prevent default on mac + browser...
@@ -736,346 +744,17 @@ module.GLOBAL_KEYBOARD2 = {
 		// XXX for debug...
 		//ctrl_G: function(){ $('.viewer').toggleClass('visible-gid') },
 		'?': 'showKeyboardBindings',
+
+
+		W: 'testAction',
 	},
 }
 
-// Format:
-// 	{
-// 		<mode>: {
-// 			doc: <doc>,
-// 			drop: [ <key>, ... ] | '*',
-//
-//			<alias>: <handler>,
-//
-//			<key>: <handler>,
-//			<key>: <alias>,
-// 		},
-// 		...
-// 	}
-var Keyboard2HandlerProto = {
-	key_separators: ['+', '-', '_'],
-	modifiers: ['ctrl', 'alt', 'meta', 'shift'],
-	service_fields: ['doc', 'drop'],
 
-	// object/function
-	keyboard: null,
-	// XXX is this needed???
-	context: null,
+//keyboard = keyboard2
+//GLOBAL_KEYBOARD = GLOBAL_KEYBOARD2
 
-	// helpers...
-	event2key: function(evt){
-		evt = evt || event
-
-		var key = []
-		evt.ctrlKey && key.push('ctrl')
-		evt.altKey && key.push('alt')
-		evt.metaKey && key.push('meta')
-		evt.shiftKey && key.push('shift')
-		key.push(this.code2key(evt.keyCode))
-
-		return key
-	},
-	key2code: function(key){
-		return key in keyboard._KEY_CODES ?
-			keyboard._KEY_CODES[key]
-			: key.charCodeAt(0) },
-	code2key: function(code){
-		var name = String.fromCharCode(code)
-		return code in keyboard._SPECIAL_KEYS ? keyboard._SPECIAL_KEYS[code]
-			: name != '' ? name 
-			: null },
-	shifted: function(key){
-		var output = key instanceof Array ? 'array' : 'string'
-		key = this.normalizeKey(this.splitKey(key)).slice()
-		var k = key.pop()
-
-		var s = (key.indexOf('shift') >= 0 ? 
-				keyboard._SHIFT_KEYS[k]
-				: keyboard._UNSHIFT_KEYS[k])
-			|| null
-
-		var res = s == null ? key
-			: (key.indexOf('shift') >= 0 ?
-					key.filter(function(k){ return k != 'shift' })
-					: key.concat(['shift']))
-		res.push(s)
-
-		return s == null ? null 
-			: output == 'string' ? res.join(this.key_separators[0]) 
-			: res
-	},
-	// XXX handle .key_separators as keys...
-	splitKey: function(key){
-		return key instanceof Array ? 
-			key 
-			: key
-				//.slice(0, -1)
-				.split(RegExp('['+this.key_separators.join('\\')+']'))
-				//.concat(key.slice(-1))
-   				.filter(function(c){ return c != '' }) },
-	normalizeKey: function(key){
-		var output = key instanceof Array ? 'array' : 'string'
-		var modifiers = this.modifiers
-		// sort modifiers via .modifiers and keep the key last...
-		key = this.splitKey(key)
-			.sort(function(a, b){
-				a = modifiers.indexOf(a)
-				b = modifiers.indexOf(b)
-				return a >= 0 && b >= 0 ? a - b
-					: a < 0 ? 1
-					: -1 })
-		key.push(key.pop().capitalize())
-		return output == 'array' ? key : key.join(this.key_separators[0] || '+')
-	},
-
-	/*/ XXX not sure if this is needed...
-	normalizeBindings: function(keyboard){
-		keyboard = keyboard || this.keyboard 
-		var that = this
-		var service_fields = this.service_fields
-		Object.keys(keyboard).forEach(function(mode){
-			mode = keyboard[mode]
-			
-			Object.keys(mode).forEach(function(key){
-				// skip service fields...
-				if(service_fields.indexOf(key) >= 0){
-					return
-				}
-
-				var n = that.normalizeKey(key)
-
-				if(n != key){
-					// duplicate key...
-					if(n in mode){
-						console.warn('duplicate keys: "'+ n +'" and "'+ k +'"')
-					}
-
-					mode[n] = mode[key]
-					delete mode[key]
-				}
-			})
-		})
-		return keyboard
-	},
-	//*/
-
-	//isModeApplicable: function(mode, context){ return true },
-
-	// get keys for handler...
-	//
-	keys: function(handler){
-		var res = {}
-		var keyboard = this.keyboard
-
-		Object.keys(keyboard).forEach(function(mode){
-			var bindings = keyboard[mode]
-			var keys = Object.keys(bindings)
-				// filter out the handler...
-				.filter(function(key){ 
-					return handler instanceof Function ? 
-						handler(bindings[key]) 
-						: handler == bindings[key] })
-				// walk aliases...
-				.map(function(key){
-					var seen = []
-					while(bindings[key] in bindings){
-						key = bindings[key]
-						if(seen.indexOf(key) >= 0){
-							return null
-						}
-						seen.push(key)
-					}
-					return key
-				})
-				// clear out the loops from last stage...
-				.filter(function(key){ return !!key })
-
-			if(keys.length > 0){
-				res[mode] = keys
-			}
-		})
-		return res
-	},
-
-	// get/set handler for key...
-	//
-	handler: function(mode, key, handler){
-		var that = this
-		var keyboard = this.keyboard
-		var key_separators = this.key_separators
-
-		key = this.normalizeKey(this.splitKey(key))
-		var shift_key = this.shifted(key)
-
-		// match candidates...
-		var keys = key_separators
-			// full key...
-			.map(function(s){ return key.join(s) })
-			// full shift key...
-			.concat(shift_key ? 
-				key_separators
-					.map(function(s){ return shift_key.join(s) }) 
-				: [])
-
-		// get modes...
-		var modes = mode == '*' ? Object.keys(keyboard)
-			: mode == 'applicable' || mode == '?' ? this.modes()
-			: mode instanceof Array ? mode
-			: [mode]
-
-		var walkAliases = function(bindings, handler){
-			// walk aliases...
-			var seen = []
-			while(handler in bindings){
-				handler = bindings[handler]
-
-				// check for loops...
-				if(seen.indexOf(handler) >= 0){
-					handler = null
-					break
-				}
-				seen.push(handler)
-			}
-			return handler
-		}
-
-		// get...
-		if(handler === undefined){
-			var res = {}
-			var k = key.slice(-1)[0]
-			var c = this.key2code(k) 
-
-			// also test single key and code if everything else fails...
-			keys = keys
-				.concat([ k, c ])
-				.unique()
-
-			var drop = mode == 'applicable' || mode == '?'
-			for(var i=0; i < modes.length; i++){
-				var m = modes[i]
-
-				var bindings = keyboard[m]
-
-				handler = walkAliases(
-					bindings, 
-					keys
-						.filter(function(k){ return bindings[k] })[0])
-
-				// handle explicit IGNORE...
-				if(drop && handler == 'IGNORE'){
-					break
-				}
-
-				// we got a match...
-				if(handler){
-					res[m] = handler
-				}
-
-				// if key in .drop then ignore the rest...
-				if(drop 
-						&& (bindings.drop == '*'
-						// XXX should this be more flexible by adding a
-						// 		specific key combo?
-						// 		... if yes, we'll need to differentiate 
-						// 		between X meaning drop only X and drop
-						// 		all combos with X...
-						|| (bindings.drop || []).indexOf(k) >= 0)){
-					break
-				}
-			}
-
-			return (typeof(mode) == typeof('str') 
-					&& ['*', 'applicable', '?'].indexOf(mode) < 0) ? 
-				res[mode]
-				: res
-
-		// set / remove...
-		} else {
-			modes.forEach(function(m){
-				var bindings = keyboard[m]
-
-				// remove all matching keys...
-				keys
-					.unique()
-					.forEach(function(k){
-						delete bindings[k]
-					})
-
-				// set handler if given...
-				if(handler && handler != ''){
-					keyboard[mode][key] = handler
-				}
-			})
-		}
-
-		return this
-	},
-
-	// get applicable modes...
-	//
-	modes: function(context){
-		var that = this
-		return Object.keys(this.keyboard)
-			.filter(function(mode){ 
-				return !that.isModeApplicable 
-					|| that.isModeApplicable(mode, context || this.context) }) },
-}
-
-
-/*/ XXX for testing...
-var kb = window.kb = Object.create(Keyboard2HandlerProto)
-kb.keyboard = GLOBAL_KEYBOARD2
-kb.isModeApplicable = function(mode, context){
-	var pattern = this.keyboard[mode].pattern
-	return !pattern 
-		|| pattern == '*' 
-		|| $(this.keyboard[mode].pattern).length > 0
-}
-//*/
-
-
-// XXX this is not compatible with GLOBAL_KEYBOARD use GLOBAL_KEYBOARD2!!
-function makeKeyboardHandler(keyboard, unhandled, actions){
-	var kb = Object.create(Keyboard2HandlerProto)
-	kb.keyboard = keyboard
-	// XXX this is specific to ImageGrid ...
-	kb.isModeApplicable = function(mode, context){
-		var pattern = this.keyboard[mode].pattern
-		return !pattern 
-			|| pattern == '*' 
-			|| $(this.keyboard[mode].pattern).length > 0
-	}
-
-	return function(evt){
-		var res
-		var did_handling = false
-		var key = kb.event2key(evt)
-		var handlers = kb.handler('applicable', key)
-
-		Object.keys(handlers).forEach(function(mode){
-			// XXX do we need this???
-			if(res === false){
-				return
-			}
-
-			var h = keyboard.parseActionCall(handlers[mode])
-
-			if(h && h.action in actions){
-				did_handling = true
-
-				h.no_default 
-					&& evt.preventDefault()
-
-				// call the handler...
-				res = actions[h.action].apply(actions, h.args)
-			} 
-		})
-
-		unhandled 
-			&& !did_handling 
-			&& unhandled.call(actions, evt)
-	}
-}
+window.kb = keyboard2.Keyboard(GLOBAL_KEYBOARD2, keyboard2.checkGlobalMode)
 
 
 
@@ -1475,7 +1154,7 @@ var KeyboardActions = actions.Actions({
 	// XXX
 	resetKeyBindings: ['Interface/Restore default key bindings',
 		function(){ 
-			this.__keyboard_config = GLOBAL_KEYBOARD }],
+			thiis.__keyboard_config = GLOBAL_KEYBOARD }],
 
 	// XXX do we look for aliases in this mode only or in all modes?
 	getKeyHandler: ['- Interface/',
