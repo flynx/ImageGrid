@@ -469,15 +469,35 @@ module.GLOBAL_KEYBOARD2 = {
 		'#3': 'fitSmall',
 		'alt+#3': 'setSmallScale -- Set current image size as small',
 		'ctrl+shift+#3': 'setSmallScale: null -- Reset small image size to default',
-		/*/ XXX
-		'#4': customScale(4),
-		'#5': customScale(5),
-		'#6': customScale(6),
-		'#7': customScale(7),
-		'#8': customScale(8),
-		'#9': customScale(9),
-		'#0': customScale(0),
-		*/
+
+		// NOTE: these are the same, the only difference is the number...
+		'#4': 'fitCustom: 4 -- Set cutom image size',
+		'alt+#4': 'setCustomSize: 4 -- Set current image size as custom',
+		'ctrl+shift+#4': 'setCustomSize: 4 null -- Clear custom image size',
+
+		'#5': 'fitCustom: 5 -- Set cutom image size',
+		'alt+#5': 'setCustomSize: 5 -- Set current image size as custom',
+		'ctrl+shift+#5': 'setCustomSize: 5 null -- Clear custom image size',
+
+		'#6': 'fitCustom: 6 -- Set cutom image size',
+		'alt+#6': 'setCustomSize: 6 -- Set current image size as custom',
+		'ctrl+shift+#6': 'setCustomSize: 6 null -- Clear custom image size',
+
+		'#7': 'fitCustom: 7 -- Set cutom image size',
+		'alt+#7': 'setCustomSize: 7 -- Set current image size as custom',
+		'ctrl+shift+#7': 'setCustomSize: 7 null -- Clear custom image size',
+
+		'#8': 'fitCustom: 8 -- Set cutom image size',
+		'alt+#8': 'setCustomSize: 8 -- Set current image size as custom',
+		'ctrl+shift+#8': 'setCustomSize: 8 null -- Clear custom image size',
+
+		'#9': 'fitCustom: 9 -- Set cutom image size',
+		'alt+#9': 'setCustomSize: 9 -- Set current image size as custom',
+		'ctrl+shift+#9': 'setCustomSize: 9 null -- Clear custom image size',
+
+		'#0': 'fitCustom: 0 -- Set cutom image size',
+		'alt+#0': 'setCustomSize: 0 -- Set current image size as custom',
+		'ctrl+shift+#0': 'setCustomSize: 0 null -- Clear custom image size',
 
 		Esc: 'toggleSingleImage: "off" -- Exit single image view',
 
