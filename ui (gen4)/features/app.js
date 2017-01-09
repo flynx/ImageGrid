@@ -24,7 +24,8 @@ var base = require('features/base')
 
 var AppControlActions = actions.Actions({
 	config: {
-		'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
+		//'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
+		'window-title': '${FILENAME} - ImageGrid.Viewer (${VERSION})',
 
 		'window-delay-initial-display': 200,
 	},

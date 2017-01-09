@@ -976,7 +976,6 @@ var KeyboardActions = actions.Actions({
 	//		---
 	//		<list of keys>
 	//		new
-	// XXX add view mode (read only)...
 	// XXX BUG sections with doc do not show up in title...
 	// XXX BUG:
 	// 		ig.bindKey('Global', 'X', 'editKeyboardBindings')
@@ -985,6 +984,7 @@ var KeyboardActions = actions.Actions({
 	// 		ig.bindKey('Global', 'X', 'editKeyboardBindings')
 	// 		ig.editKeyboardBindings()
 	// 			-> shows two keys ctrl-Z and ctrl-shift-Z instead of Z
+	// XXX sub-group by path (???)
 	browseKeyboardBindings: ['Interface/Keyboard bindings...',
 		widgets.makeUIDialog(function(path, edit){
 			var actions = this
