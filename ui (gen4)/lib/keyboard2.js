@@ -381,11 +381,19 @@ var KeyboardHandlerPrototype = {
 	// get keys for handler...
 	//
 	// NOTE: this will also return non-key aliases...
+	// NOTE: to match several compatible handlers, pass a list of handlers,
+	// 		the result for each will be merged into one common list.
+	//
+	// XXX passing a list of handlers will yield a single list of kyes...
+	// 		...should this list be split into handlers???
 	keys: function(handler){
 		var that = this
 		var res = {}
 		var keyboard = this.keyboard
 		var key_separators = KEY_SEPARATORS 
+		handler = arguments.length > 1 ? [].slice.call(arguments)
+			: handler instanceof Array ? handler 
+			: [handler]
 
 		var walkAliases = function(res, rev, bindings, key, mod){
 			mod = mod || []
@@ -412,7 +420,10 @@ var KeyboardHandlerPrototype = {
 				rev[bindings[key]] = (rev[bindings[key]] || []).concat([key]) 
 			})
 
-			var keys = (rev[handler] || []).map(that.normalizeKey.bind(that))
+			var keys = []
+			handler.forEach(function(h){
+				keys = keys.concat((rev[h] || []).map(that.normalizeKey.bind(that)))
+			})
 
 			// find all reachable keys from the ones we just found in reverse...
 			keys.slice().forEach(function(key){
