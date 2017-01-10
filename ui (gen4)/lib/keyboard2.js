@@ -106,7 +106,7 @@ for(var k in SPECIAL_KEYS){
 
 /*********************************************************************/
 
-// documentation wrapper...
+// Documentation wrapper...
 var doc =
 module.doc =
 function doc(text, func){
@@ -116,7 +116,9 @@ function doc(text, func){
 }
 
 
-// supported action format:
+// Parse action call format...
+// 
+// supported format:
 // 	<actio-name>[!][: <args>][-- <doc>]
 //
 // <args> can contain space seporated:
@@ -126,6 +128,8 @@ function doc(text, func){
 //
 // XXX should this be here???
 // XXX add support for suffix to return false / stop_propagation...
+// XXX should this handle calls??? 
+// 		i.e. have .call(..) / .apply(..) methods???
 var parseActionCall =
 module.parseActionCall =
 function parseActionCall(txt){
@@ -596,17 +600,15 @@ var KeyboardHandlerPrototype = {
 	// 	- search for key code without modifiers
 	// 		- if an alias is found it is first checked with and then 
 	// 			without modifiers
-	//
-	// XXX getting '(' yields a different result from 'shift-#9'
 	handler: function(mode, key, handler){
 		var that = this
 		var keyboard = this.keyboard
 		var key_separators = KEY_SEPARATORS  
 
-		if(arguments.length == 0){
+		if(mode == null){
 			return null
 		}
-		if(arguments.length == 1 && this.isKey(mode)){
+		if(key == null && this.isKey(mode)){
 			key = mode
 			mode = '*'
 		}
@@ -753,6 +755,7 @@ var KeyboardHandlerPrototype = {
 			: Object.keys(this.keyboard) },
 
 
+	// init base data...
 	__init__: function(keyboard, is_mode_applicable){
 		this.keyboard = keyboard
 
@@ -770,8 +773,11 @@ object.makeConstructor('Keyboard',
 
 
 
+
 /*********************************************************************/
 
+// Base event handler wrapper of Keyboard...
+//
 var makeKeyboardHandler =
 module.makeKeyboardHandler =
 function makeKeyboardHandler(keyboard, unhandled, actions){
@@ -835,6 +841,7 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 
 // Event handler wrapper to stop handling keys if check callback does 
 // not pass (returns false)...
+//
 var stoppableKeyboardRepeat = 
 module.stoppableKeyboardRepeat = 
 function(handler, check){

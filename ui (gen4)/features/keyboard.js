@@ -435,6 +435,7 @@ var KeyboardActions = actions.Actions({
 	get keyboard(){
 		return this.__keyboard_object },
 
+
 	pauseKeyboardRepeat: ['- Interface/',
 		function(){ 
 			this.__keyboard_repeat_paused = true }],
@@ -558,6 +559,7 @@ var KeyboardActions = actions.Actions({
 	// 	}
 	//
 	// XXX this does not check overloading between modes...
+	// XXX do we need this???
 	getKeysForAction: ['- Interface/',
 		function(actions, modes){
 			var that = this
@@ -599,26 +601,6 @@ var KeyboardActions = actions.Actions({
 
 			return res
 		}],
-
-
-	// XXX move to gen2
-	// XXX need to pre-process the docs...
-	// 		- remove the path component...
-	// 		- insert the action name where not doc present...
-	// XXX cleanup CSS
-	showKeyboardBindings: ['Interface/Show keyboard bindings...',
-		widgets.makeUIDialog('Drawer', 
-			function(){
-				return keyboard.buildKeybindingsHelpHTML(
-					this.__keyboard_config, 
-					this, 
-					function(action){
-						return Object.keys(this.getPath(action))[0] })
-			},
-			{
-				background: 'white',
-				focusable: true,
-			})],
 
 
 	// XXX Things not to forget: 
@@ -805,203 +787,30 @@ var KeyboardActions = actions.Actions({
 		function(){ 
 			thiis.__keyboard_config = GLOBAL_KEYBOARD }],
 
-	// XXX do we look for aliases in this mode only or in all modes?
-	getKeyHandler: ['- Interface/',
-		function(modes, key, action){
-			var that = this
-
-			// XXX normalize key...
-			var full_key = key
-			var modifiers = key.split('+')
-			key = modifiers.pop()
-
-			var code = keyboard.toKeyCode(key)
-			var args = [].slice.call(arguments).slice(3)
-
-			// set handler...
-			if(action){
-				modes = modes instanceof Array ? modes : [modes]
-				// ignore all but the first mode...
-				modes = modes.slice(0, 1)
-
-			// get handler...
-			} else {
-				var shift_key = (modifiers.indexOf('shift') >= 0 ? 
-						keyboard._SHIFT_KEYS[key]
-						: keyboard._UNSHIFT_KEYS[key])
-					|| '' 
-				var shift_modifiers = shift_key != '' 
-					&& (((modifiers.indexOf('shift') >= 0 ?
-						modifiers.filter(function(k){ return k != 'shift' })
-						: modifiers.concat(['shift'])))
-					|| modifiers).join('+')
-				var full_shift_key = shift_modifiers == '' ? 
-					shift_key 
-					: shift_modifiers +'+'+ shift_key
-
-				var any = modes == 'any'
-				modes = any ? this.keyboard.modes()
-					: modes == '*' ? Object.keys(this.keybindigs) 
-					: modes
-				modes = modes instanceof Array ? modes : [modes]
-
-				// filter modes...
-				var ignore = false
-				modes = any ? 
-					modes
-						.filter(function(mode){
-							if(ignore){
-								return false
-							}
-
-							var i = that.keybindigs[mode].ignore || []
-
-							ignore = i.indexOf(full_key) >= 0
-								|| i.indexOf(key) >= 0
-								|| i.indexOf(shift_key) >= 0
-								|| i.indexOf(full_shift_key) >= 0
-								|| i.indexOf(code) >= 0
-
-							return true
-						})
-					: modes
-			}
-
-			modifiers = modifiers.join('+')
+	keyHandler: ['- Interface/',
+		function(mode, key, action){ 
+			return this.keyboard.handler(mode, key, action) }],
 
 
-			// search modes...
-			var res = {}
-			ignore = false
-			modes
-				.forEach(function(mode){
-					if(ignore){
-						return false
-					}
 
-					var bindings = that.keybindigs[mode]
-
-					if(action){
-						var match = 'direct'
-						var alias = code in bindings ? code : key
-
-					} else {
-						// direct match...
-						var match = 'direct'
-						var alias = full_key in bindings ? full_key 
-							: key in bindings ? key 
-							: null
-						// shift key match...
-						match = alias == null ? 'shifted' : match
-						alias = alias == null ? 
-							(full_shift_key in bindings ? full_shift_key 
-								: shift_key in bindings ? shift_key 
-								: null)
-							: alias
-						// code match...
-						match = alias == null ? 'code' : match
-						alias = alias == null ? 
-							(code in bindings ? code : null)
-							: alias
-					}
-
-					var mod = (match == 'code' || match == 'direct') ? 
-						modifiers 
-						: shift_modifiers
-					mod = mod == '' ? 'default' : mod
-
-					var handler = alias
-
-					// spin through aliases...
-					// XXX do we look for aliases in this mode only or in all modes?
-					var seen = []
-					while(handler in bindings){
-						// handler loop...
-						if(seen.indexOf(handler) >= 0){
-							return null
-						}
-						
-						alias = handler
-						handler = bindings[alias]
-						seen.push(alias)
-
-						// go into the map structure...
-						if(!action && typeof(handler) != typeof('str')){
-							handler = handler[mod]
-						}
-					}
-
-					// set the action...
-					if(action){
-						if(handler == null || typeof(handler) == typeof('str')){
-							bindings[alias] = modifiers.length == 0 ?
-								action
-								: { modifiers : action }
-
-						} else if(modifiers.length == 0){
-							handler['default'] = action
-
-						} else {
-							handler[modifiers] = action
-						}
-
-					// get the action...
-					} else {
-						if(handler){
-							res[mode] = handler
-						}
-
-						ignore = any && handler == 'DROP'
-					}
-				})
-
-			return !action ? 
-				(modes.length == 1 ? res[modes[0]] : res) || null
-				: undefined
-		}],
-	// XXX move this to lib/keyboard.js
-	// XXX not done yet...
-	bindKey: ['- Interface/',
-		function(mode, key, action){
-			var modifiers = key.split('+')
-			key = modifiers.pop()
-			modifiers = modifiers.join('+')
-			var code = keyboard.toKeyCode(key)
-			var args = [].slice.call(arguments).slice(3)
-			action = action 
-					+ (args.length > 0 ? 
-						': '+ args.map(JSON.stringify).join(' ')
-						: '')
-			var bindings = this.keybindigs[mode]
-
-			var alias = code in bindings ? code : key
-			var handler = bindings[key] || bindings[code]
-
-			// spin through aliases...
-			var seen = []
-			while(handler in bindings){
-				// handler loop...
-				if(seen.indexOf(handler) >= 0){
-					return null
-				}
-				
-				alias = handler
-				handler = bindings[alias]
-				seen.push(alias)
-			}
-
-			if(handler == null || typeof(handler) == typeof('str')){
-				bindings[alias] = modifiers.length == 0 ?
-					action
-					: { modifiers : action }
-
-			} else if(modifiers.length == 0){
-				handler['default'] = action
-
-			} else {
-				handler[modifiers] = action
-			}
-		}],
+	// XXX move to gen2
+	// XXX need to pre-process the docs...
+	// 		- remove the path component...
+	// 		- insert the action name where not doc present...
+	// XXX cleanup CSS
+	showKeyboardBindings: ['Interface/Show keyboard bindings...',
+		widgets.makeUIDialog('Drawer', 
+			function(){
+				return keyboard.buildKeybindingsHelpHTML(
+					this.__keyboard_config, 
+					this, 
+					function(action){
+						return Object.keys(this.getPath(action))[0] })
+			},
+			{
+				background: 'white',
+				focusable: true,
+			})],
 })
 
 var Keyboard = 
