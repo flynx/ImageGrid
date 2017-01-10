@@ -125,7 +125,7 @@ function doc(text, func){
 // 	- non-nested arrays or objects
 //
 // XXX should this be here???
-// XXX add support for suffix to return false...
+// XXX add support for suffix to return false / stop_propagation...
 var parseActionCall =
 module.parseActionCall =
 function parseActionCall(txt){
@@ -151,7 +151,8 @@ function parseActionCall(txt){
 		action: action,
 		arguments: args,
 		doc: doc,
-		'no-default': no_default,
+		no_default: no_default,
+		stop_propagation: false,
 	}
 }
 
@@ -160,6 +161,7 @@ function parseActionCall(txt){
 //---------------------------------------------------------------------
 // Helpers...
 
+// Form standard key string from keyboard event...
 var event2key =
 module.event2key =
 function event2key(evt){
@@ -176,6 +178,7 @@ function event2key(evt){
 }
 
 
+// Get key code from key name...
 var key2code =
 module.key2code =
 function key2code(key){
@@ -184,6 +187,7 @@ function key2code(key){
 		: key.charCodeAt(0) }
 
 
+// Get key name from key code...
 var code2key =
 module.code2key =
 function code2key(code){
@@ -193,6 +197,7 @@ function code2key(code){
 		: null }
 
 
+// Check if string is a standard key string...
 var isKey =
 module.isKey = 
 function isKey(key){
@@ -208,6 +213,11 @@ function isKey(key){
 }
 
 
+// Split key...
+//
+// NOTE: if this gets an array, it will get returned as-is... 
+// NOTE: no checks are made on the key, use isKey(..) in conjunction 
+// 		with normalizeKey(..) for checking...
 var splitKey =
 module.splitKey = 
 function splitKey(key){
@@ -222,7 +232,9 @@ function splitKey(key){
 			.filter(function(c){ return c != '' }) }
 
 
-// NOTE: this will not check if a key is a key...
+// Normalize key string/array...
+// 
+// NOTE: this will not check if a key is a key use isKey(..) for that.
 var normalizeKey =
 module.normalizeKey = 
 function normalizeKey(key){
@@ -255,6 +267,11 @@ function normalizeKey(key){
 }
 
 
+// Get shifted key if available...
+// 
+// Examples:
+// 	- '{' 		-> 'shift+['
+// 	- ')'		-> 'shift+#0'
 var shifted =
 module.shifted = 
 function shifted(key){
@@ -278,19 +295,6 @@ function shifted(key){
 			res.join(KEY_SEPARATORS[0] || '+') 
 		: res
 }
-
-
-
-//---------------------------------------------------------------------
-
-var checkGlobalMode =
-module.checkGlobalMode =
-function checkGlobalMode(mode, keyboard, context){
-	var pattern = keyboard[mode].pattern
-	return !pattern 
-		|| pattern == '*' 
-		|| $(keyboard[mode].pattern).length > 0
-}	
 
 
 
@@ -328,6 +332,14 @@ var KeyboardHandlerPrototype = {
 	// 		},
 	// 		...
 	// 	}
+	//
+	// Reserved special handlers:
+	// 	- DROP			- drop checking of key
+	// 						NOTE: this will prevent handling next sections
+	// 							for this key.
+	// 	- NEXT_SECTION	- force check next section, this has priority 
+	// 						over .drop
+	//
 	__keyboard: null,
 	get keyboard(){
 		return this.__keyboard instanceof Function ? 
@@ -337,7 +349,7 @@ var KeyboardHandlerPrototype = {
 		this.__keyboard = value },
 
 	// XXX is this needed???
-	context: null,
+	//context: null,
 
 	// utils...
 	event2key: KeyboardHandlerClassPrototype.event2key,
@@ -382,11 +394,26 @@ var KeyboardHandlerPrototype = {
 	//isModeApplicable: function(mode, keyboard, context){ return true },
 	//isModeApplicable: checkGlobalMode,
 
-	// get keys for handler...
+	// Get keys for handler...
 	//
-	// NOTE: this will also return non-key aliases...
-	// NOTE: to match several compatible handlers, pass a list of handlers,
-	// 		the result for each will be merged into one common list.
+	// 	List all handlers...
+	// 	.keys()
+	// 	.keys('*')
+	//		-> keys
+	//
+	//	List keys for handler...
+	//	.keys(handler)
+	//		-> keys
+	//
+	//	List keys for given handlers...
+	//	.keys(handler, ...)
+	//	.keys([handler, ...])
+	//		-> keys
+	//
+	//	List keys for handlers that pass the func predicate...
+	//	.keys(func)
+	//		-> keys
+	//
 	//
 	// Format:
 	// 	{
@@ -397,17 +424,23 @@ var KeyboardHandlerPrototype = {
 	// 		...
 	// 	}
 	//
+	//
+	// NOTE: this will also return non-key aliases...
+	// NOTE: to match several compatible handlers, pass a list of handlers,
+	// 		the result for each will be merged into one common list.
 	keys: function(handler){
 		var that = this
 		var res = {}
 		var keyboard = this.keyboard
 		var key_separators = KEY_SEPARATORS 
+		var service_fields = this.service_fields 
+			|| this.constructor.service_fields
+
 		handler = arguments.length > 1 ? [].slice.call(arguments)
+			: handler == null ? '*'
 			: handler == '*' || handler instanceof Function ? handler
 			: handler instanceof Array ? handler 
 			: [handler]
-		var service_fields = this.service_fields 
-			|| this.constructor.service_fields
 
 		var walkAliases = function(res, rev, bindings, key, mod){
 			mod = mod || []
@@ -547,6 +580,13 @@ var KeyboardHandlerPrototype = {
 	// 		-> this 
 	//
 	//
+	// Format:
+	// 	{
+	// 		<mode>: <handler>,
+	// 		...
+	// 	}
+	//
+	//
 	// Search order:
 	// 	- search for full key
 	// 	- search for shifted key if applicable
@@ -613,7 +653,7 @@ var KeyboardHandlerPrototype = {
 		var shift_key = this.shifted(key)
 
 		// match candidates...
-		var keys = genKeys(key, shift_key) 
+		var keys = genKeys(key, shift_key).unique()
 
 		// get modes...
 		var modes = mode == '*' ? Object.keys(keyboard)
@@ -628,12 +668,6 @@ var KeyboardHandlerPrototype = {
 			var c = this.key2code(k) 
 
 			var mod = genKeys(key.slice(0, -1).concat(''))
-
-			// also test single key and code if everything else fails...
-			// XXX make this an option...
-			keys = keys
-			//	.concat([k, c])
-				.unique()
 
 			var drop = mode == 'test' || mode == '?'
 			for(var i=0; i < modes.length; i++){
@@ -654,7 +688,7 @@ var KeyboardHandlerPrototype = {
 						mod)
 				}
 
-				// handle explicit DROP...
+				// explicit DROP -- ignore next sections...
 				if(drop && handler == 'DROP'){
 					break
 				}
@@ -690,11 +724,10 @@ var KeyboardHandlerPrototype = {
 				var bindings = keyboard[m]
 
 				// remove all matching keys...
-				keys
-					.unique()
-					.forEach(function(k){
-						delete bindings[k]
-					})
+				// NOTE: if key with modifiers, then this will remove only 
+				// 		the full matched keys and shifted matches but will 
+				// 		leave the key without modifiers as-is...
+				keys.forEach(function(k){ delete bindings[k] })
 
 				// set handler if given...
 				if(handler && handler != ''){
@@ -718,6 +751,7 @@ var KeyboardHandlerPrototype = {
 							that.keyboard, 
 							context || that.context) })
 			: Object.keys(this.keyboard) },
+
 
 	__init__: function(keyboard, is_mode_applicable){
 		this.keyboard = keyboard
@@ -744,7 +778,8 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 
 	var kb = keyboard instanceof Keyboard ? 
 		keyboard 
-		: Keyboard(keyboard, checkGlobalMode)
+		//: Keyboard(keyboard, checkGlobalMode)
+		: Keyboard(keyboard)
 
 	return function(evt){
 		var res = undefined
@@ -758,17 +793,31 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 				return
 			}
 
-			var h = parseActionCall(handlers[mode])
+			var handler = handlers[mode]
 
-			if(h && h.action in actions){
-				did_handling = true
+			// raw function handler...
+			if(handler instanceof Function){
+				res = handler.call(actions)
 
-				h.no_default 
-					&& evt.preventDefault()
+			// action call syntax...
+			} else {
+				var h = parseActionCall(handler)
 
-				// call the handler...
-				res = actions[h.action].apply(actions, h.args)
-			} 
+				if(h && h.action in actions){
+					did_handling = true
+
+					h.no_default 
+						&& evt.preventDefault()
+
+					// call the handler...
+					res = actions[h.action].apply(actions, h.args)
+
+					if(h.stop_propagation){
+						res = false
+						evt.stopPropagation()
+					}
+				} 
+			}
 		})
 
 		unhandled 

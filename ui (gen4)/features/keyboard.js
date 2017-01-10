@@ -10,7 +10,8 @@
 var actions = require('lib/actions')
 var features = require('lib/features')
 var toggler = require('lib/toggler')
-var keyboard = require('lib/keyboard')
+// XXX
+var keyboard = require('lib/keyboard2')
 
 var core = require('features/core')
 var widgets = require('features/ui-widgets')
@@ -24,393 +25,7 @@ var drawer = require('lib/widget/drawer')
 
 /*********************************************************************/
 
-// helper...
-function customScale(n){
-	return {
-		default: 'fitCustom: '+n+' -- Set cutom image size',
-		'alt': 'setCustomSize: '+n+' -- Set current image size as custom',
-		'ctrl+shift': 'setCustomSize: '+n+' null -- Clear custom image size',
-	}
-}
-
-
-// XXX might be a good idea to be able ignore actions rather than keys...
-// XXX add this to the global doc...
 var GLOBAL_KEYBOARD =
-window.GLOBAL_KEYBOARD =
-module.GLOBAL_KEYBOARD = {
-	'Global': {
-		doc: 'Global bindings that take priority over other sections.',
-		pattern: '*',
-
-	},
-
-	'Slideshow': {
-		pattern: '.slideshow-running',
-		ignore: [
-			'Esc',
-			'Up', 'Down', 'Enter',
-			'R', 'L', 'G', 'T',
-		],
-
-		Esc: 'toggleSlideshow: "off" -- Exit slideshow',
-		Enter: 'slideshowDialog',
-
-		Left: 'resetSlideshowTimer',
-		Right: 'resetSlideshowTimer',
-		Home: 'resetSlideshowTimer',
-		End: 'resetSlideshowTimer',
-
-		T: 'slideshowIntervalDialog',
-		R: 'toggleSlideshowDirection',
-		L: 'toggleSlideshowLooping',
-	},
-
-	// XXX do we need to prevent up/down navigation here, it may get confusing?
-	// XXX do we need to disable fast sorting here???
-	'Single Image': {
-		pattern: '.single-image-mode',
-		ignore: [
-			'Esc',
-
-			// do not crop in single image mode...
-			'C', 'F2',
-
-			// zooming...
-			'#0', '#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
-		],
-
-
-		// NOTE: these are here so as to enable handling via the next 
-		// 		block, i.e. the Viewer
-		// 		...if not given, then the ignore above will shadow the 
-		// 		keys...
-		// NOTE: the 'nop' action does not exist, this it will get ignored
-		'(': 'nop',
-		')': 'nop',
-
-		// zooming...
-		'#1': 'fitScreen',
-		// XXX should these also be implemented in the same way as 4-9???
-		'#2': {
-			default: 'fitNormal',
-			'alt': 'setNormalScale -- Set current image size as normal',
-			'ctrl+shift': 'setNormalScale: null -- Reset normal image size to default',
-		},
-		'#3': {
-			default: 'fitSmall',
-			'alt': 'setSmallScale -- Set current image size as small',
-			'ctrl+shift': 'setSmallScale: null -- Reset small image size to default',
-		},
-		'#4': customScale(4),
-		'#5': customScale(5),
-		'#6': customScale(6),
-		'#7': customScale(7),
-		'#8': customScale(8),
-		'#9': customScale(9),
-		'#0': customScale(0),
-
-
-		Esc: 'toggleSingleImage: "off" -- Exit single image view',
-
-		// ignore sorting and reversing...
-		// XXX not sure about these yet, especially reversing...
-		R: {
-			shift: 'IGNORE',
-		},
-		S: {
-			shift: 'IGNORE',
-		},
-	},
-
-	// XXX add "save as collection..."
-	'Cropped': {
-		pattern: '.crop-mode',
-
-		Esc: {
-			default: 'uncrop',
-			ctrl: 'uncropAll',
-		},
-	},
-
-	'Range': {
-		doc: 'Range editing',
-		pattern: '.brace',
-
-		// XXX add:
-		// 		- range navigation
-		// 		- range manipulation
-
-		Esc: 'clearRange',
-	},
-
-	// XXX add "save as collection..." (???)
-	// XXX cleanup...
-	'Viewer': {
-		doc: 'NOTE: binding priority is the same as the order of sections '+
-			'on this page.',
-		pattern: '*',
-
-		X: {
-			alt: 'close',
-		},
-
-		F4: {
-			alt: 'close',
-		},
-		Q: {
-			meta: 'close',
-		},
-		// XXX
-		F5: keyboard.doc('Full reload viewer', 
-			function(){ 
-				//a.stop()
-				/*
-				killAllWorkers()
-					.done(function(){
-						reload() 
-					})
-				*/
-				location.reload()
-				return false
-			}),
-		F12: 'showDevTools',
-		// NOTE: these are for systems where F** keys are not available 
-		// 		or do other stuff...
-		R: {
-			default: 'rotateCW',
-			shift: 'reverseImages',
-			ctrl: 'loadNewImages!',
-			alt: 'browseActions: "/Ribbon/" -- Open ribbon menu',
-			'ctrl+alt': 'reload!',
-			'ctrl+shift': 'F5',
-		},
-		L: 'rotateCCW',
-		H: {
-			default: 'flipHorizontal',
-			ctrl: 'listURLHistory',
-			'ctrl+shift': 'listSaveHistory',
-			alt: 'browseActions: "/History/" -- Open history menu',
-		},
-		V: 'flipVertical',
-
-		// tilt...
-		// XXX experimental, not sure if wee need this with a keyboard...
-		T: {
-			default: 'rotateRibbonCCW -- Tilt ribbons counter clock wise',
-			shift: 'rotateRibbonCW -- Tilt ribbons clock wise',
-
-			alt: 'resetRibbonRotation -- Reset ribbon tilt',
-		},
-
-		P: {
-			'ctrl+shift': 'F12',
-		},
-
-		// NOTE: this is handled by the wrapper at this point, so we do 
-		// 		not have to do anything here...
-		F11: 'toggleFullScreen', 
-		F: {
-			ctrl: 'F11',
-			meta: 'F11',
-		},
-
-		// XXX testing...
-
-		Enter: 'toggleSingleImage',
-
-		Home: {
-			default: 'firstImage',
-			ctrl: 'firstGlobalImage',
-			shift: 'firstRibbon',
-		},
-		End: {
-			default: 'lastImage',
-			ctrl: 'lastGlobalImage',
-			shift: 'lastRibbon',
-		},
-		Left: {
-			default: 'prevImage',
-			alt: 'shiftImageLeft!',
-			ctrl: 'prevScreen',
-			// XXX need to prevent default on mac + browser...
-			meta: 'prevScreen',
-		},
-		PgUp: 'prevScreen',
-		PgDown: 'nextScreen',
-		Right: {
-			default: 'nextImage',
-			alt: 'shiftImageRight!',
-			ctrl: 'nextScreen',
-			// XXX need to prevent default on mac + browser...
-			meta: 'nextScreen',
-		},
-		Space: 'Right',
-		Backspace: 'Left',
-		'(': 'prevImageInOrder',
-		')': 'nextImageInOrder',
-		',': 'prevMarked',
-		'.': 'nextMarked',
-		'[': {
-			default: 'prevBookmarked',
-			// XXX experimental
-			shift: 'openRange',
-		},
-		']': {
-			default: 'nextBookmarked',
-			// XXX experimental
-			shift: 'closeRange',
-		},
-		Up: {
-			default: 'prevRibbon',
-			shift: 'shiftImageUp',
-			'alt+shift': 'travelImageUp',
-			'ctrl+shift': 'shiftImageUpNewRibbon',
-		},
-		Down: {
-			default: 'nextRibbon',
-			shift: 'shiftImageDown',
-			'alt+shift': 'travelImageDown',
-			'ctrl+shift': 'shiftImageDownNewRibbon',
-		},
-
-		'#0': 'fitMax',
-		'#1': {
-			default: 'fitImage',
-			shift: 'fitRibbon',
-			ctrl: 'fitOrig!',
-		},
-		'#2': 'fitImage: 2 -- Fit 2 Images',
-		'#3': {
-			default: 'fitImage: 3 -- Fit 3 images',
-			shift: 'fitRibbon: 3.5 -- Fit 3.5 ribbons',
-		},
-		'#4': 'fitImage: 4 -- Fit 4 images',
-		'#5': {
-			default: 'fitImage: 5 -- Fit 5 images',
-			shift: 'fitRibbon: 5.5 -- Fit 5.5 ribbons',
-		},
-		'#6': 'fitImage: 6 -- Fit 6 images',
-		'#7': 'fitImage: 7 -- Fit 7 images',
-		'#8':'fitImage: 8 -- Fit 8 images',
-		'#9': 'fitImage: 9 -- Fit 9 images',
-		
-		'+': {
-			default: 'zoomIn',
-			ctrl: 'lighterTheme!',
-		},
-		'=': '+',
-		'-': {
-			default: 'zoomOut',
-			ctrl: 'darkerTheme!',
-		},
-
-		F2: {
-			default: 'cropRibbon',
-			shift: 'cropRibbonAndAbove',
-			ctrl: 'cropMarked',
-			alt: 'cropBookmarked',
-		},
-
-		// marking...
-		M: {
-			default: 'toggleMark',
-			alt: 'browseActions: "/Mark/" -- Show mark menu',
-		},
-		A: {
-			alt: 'browseActions',
-			'alt+shift': 'listActions',
-
-			ctrl: 'toggleMark!: "ribbon" "on" -- Mark all images in ribbon',
-		},
-		D: {
-			ctrl: 'toggleMark!: "ribbon" "off" -- Unmark all images in ribbon',
-		},
-		I: {
-			default: 'showMetadata',
-			alt: 'browseActions: "/Image/" -- Show image menu',
-			shift: 'toggleStatusBar',
-
-			ctrl: 'toggleMark!: "ribbon" -- Invert marks in ribbon',
-			'ctrl+shift': 'showMetadata: "current" "full" -- Show full metadata',
-
-			'meta+alt': 'showDevTools',
-		},
-		// XXX experimental...
-		'*': 'setRangeBorder',
-		
-		B: {
-			default: 'toggleBookmark',
-			ctrl: 'toggleTheme!',
-			'ctrl+shift': 'toggleTheme!: "prev"',
-
-			alt: 'browseActions: "/Bookmark/" -- Show bookmark menu',
-
-			// XXX not sure if this is the right way to go...
-			shift: 'setBaseRibbon',
-		},
-		E: {
-			default: 'openInExtenalEditor',
-			shift: 'openInExtenalEditor: 1 -- Open in alternative editor',
-			alt: 'listExtenalEditors',
-		},
-		C: {
-			default: 'browseActions: "/Crop/" -- Show crop menu',
-			// do the default copy thing...
-			// NOTE: this stops the default: handler from getting the ctrl:
-			// 		key case...
-			ctrl: '',
-		},
-		O: 'browsePath',
-		S: {
-			default: 'slideshowDialog',
-			//shift: 'sortImages: "Date" -- Sort images by date',
-			shift: 'sortImages -- Sort images',
-			//alt: 'browseActions: "/Sort/"',
-			alt: 'sortDialog',
-			// XXX need to make this save to base_path if it exists and
-			// 		ask the user if it does not... now it always asks.
-			ctrl: 'saveIndexHere',
-			'ctrl+shift': 'exportDialog',
-		},
-
-		// XXX still experimental...
-		U: {
-			default: 'undo',
-			shift: 'redo',
-		},
-		Z: {
-			ctrl: 'undo',
-			'ctrl+shift': 'redo',
-		},
-
-		G: {
-			default: 'editStatusBarIndex!',
-			shift: 'toggleStatusBarIndexMode!',
-
-			// XXX for debug...
-			//ctrl: function(){ $('.viewer').toggleClass('visible-gid') },
-		},
-
-		'?': 'showKeyboardBindings',
-
-		W: 'testAction',
-	},
-}	
-
-
-
-/*********************************************************************/
-// + simpler to group bindings
-// - harder to automate binding creation (e.g. via customScale(..))
-
-var keyboard2 = require('lib/keyboard2')
-
-
-// XXX do we want to add sub-sections to better organize keys for 
-// 		documentation???
-var GLOBAL_KEYBOARD2 =
-window.GLOBAL_KEYBOARD2 =
 module.GLOBAL_KEYBOARD2 = {
 	'Global': {
 		doc: 'Global bindings that take priority over other sections.',
@@ -770,10 +385,17 @@ module.GLOBAL_KEYBOARD2 = {
 }
 
 
-keyboard = keyboard2
-GLOBAL_KEYBOARD = GLOBAL_KEYBOARD2
+//---------------------------------------------------------------------
 
-window.kb = keyboard2.Keyboard(GLOBAL_KEYBOARD2, keyboard2.checkGlobalMode)
+// XXX DEBUG: remove when done...
+window.kb = keyboard.Keyboard(
+	GLOBAL_KEYBOARD, 
+	function checkGlobalMode(mode, keyboard, context){
+		var pattern = keyboard[mode].pattern
+		return !pattern 
+			|| pattern == '*' 
+			|| $(keyboard[mode].pattern).length > 0 })
+
 
 
 
@@ -979,6 +601,7 @@ var KeyboardActions = actions.Actions({
 		}],
 
 
+	// XXX move to gen2
 	// XXX need to pre-process the docs...
 	// 		- remove the path component...
 	// 		- insert the action name where not doc present...
@@ -1013,13 +636,6 @@ var KeyboardActions = actions.Actions({
 	//		<list of keys>
 	//		new
 	// XXX BUG sections with doc do not show up in title...
-	// XXX BUG:
-	// 		ig.bindKey('Global', 'X', 'editKeyboardBindings')
-	// 		ig.editKeyboardBindings()
-	// 			-> shows alt-X instead of X
-	// 		ig.bindKey('Global', 'X', 'editKeyboardBindings')
-	// 		ig.editKeyboardBindings()
-	// 			-> shows two keys ctrl-Z and ctrl-shift-Z instead of Z
 	// XXX sub-group by path (???)
 	browseKeyboardBindings: ['Interface/Keyboard bindings...',
 		widgets.makeUIDialog(function(path, edit){
