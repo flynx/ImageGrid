@@ -335,7 +335,7 @@ body {
 	font-weight: bold;
 	font-style: italic;
 }
-.browse-widget.key-bindings .list>.ignored .text:first-child {
+.browse-widget.key-bindings .list>.special-action .text:first-child {
 	font-style: italic;
 	font-weight: bold;
 }
@@ -357,6 +357,15 @@ body {
 /* NOTE: the last element is a space... */
 .browse-widget.key-bindings.browse .list>div .text:last-child {
 	margin-right: 0em;
+}
+
+/* key doc... */
+.browse-widget.key-bindings .list>.key[doc]:after {
+	display: inline;
+	content: " -- " attr(doc);
+	font-style: italic;
+	opacity: 0.5;
+	margin-left: 0.5em;
 }
 
 

@@ -945,6 +945,7 @@ var BrowseActionsActions = actions.Actions({
 			}).bind(this)
 
 			// Tree builder...
+			// XXX normalize actions -- whitespace, '!', args...
 			var buildTree = function(path, leaf, action, mode, tree){
 				path = path.slice()
 				// build leaf...
@@ -1062,7 +1063,8 @@ var BrowseActionsActions = actions.Actions({
 								disabled: mode == 'hidden' || mode == 'disabled',
 								hidden: mode == 'hidden',
 							})
-							.attr('keys', getKeys(action))
+							// XXX need to normalize state -- comments, whitespace, etc...
+							.attr('keys', getKeys(action +': "'+ state +'"'))
 							.addClass([
 									state == cur_state ? 'selected highlighted' : '',
 									mode == 'hidden' ? mode : ''

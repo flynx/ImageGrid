@@ -37,8 +37,9 @@ function customScale(n){
 // XXX might be a good idea to be able ignore actions rather than keys...
 // XXX add this to the global doc...
 var GLOBAL_KEYBOARD =
+window.GLOBAL_KEYBOARD =
 module.GLOBAL_KEYBOARD = {
-	'Global':{
+	'Global': {
 		doc: 'Global bindings that take priority over other sections.',
 		pattern: '*',
 
@@ -409,6 +410,7 @@ var keyboard2 = require('lib/keyboard2')
 // XXX do we want to add sub-sections to better organize keys for 
 // 		documentation???
 var GLOBAL_KEYBOARD2 =
+window.GLOBAL_KEYBOARD2 =
 module.GLOBAL_KEYBOARD2 = {
 	'Global': {
 		doc: 'Global bindings that take priority over other sections.',
@@ -452,13 +454,9 @@ module.GLOBAL_KEYBOARD2 = {
 		],
 
 
-		// NOTE: these are here so as to enable handling via the next 
-		// 		block, i.e. the Viewer
-		// 		...if not given, then the ignore above will shadow the 
-		// 		keys...
-		// NOTE: the 'nop' action does not exist, this it will get ignored
-		'(': 'nop',
-		')': 'nop',
+		// handle in next section...
+		'(': 'NEXT_SECTION',
+		')': 'NEXT_SECTION',
 
 		// zooming...
 		'#1': 'fitScreen',
@@ -503,8 +501,8 @@ module.GLOBAL_KEYBOARD2 = {
 
 		// ignore sorting and reversing...
 		// XXX not sure about these yet, especially reversing...
-		shift_R: 'IGNORE',
-		shift_S: 'IGNORE',
+		shift_R: 'DROP',
+		shift_S: 'DROP',
 	},
 
 	// XXX add "save as collection..."
@@ -749,6 +747,7 @@ module.GLOBAL_KEYBOARD2 = {
 		// NOTE: this stops the default: handler from getting the ctrl:
 		// 		key case...
 		ctrl_C: '',
+		ctrl_V: '',
 
 
 		// sort...
@@ -771,8 +770,8 @@ module.GLOBAL_KEYBOARD2 = {
 }
 
 
-//keyboard = keyboard2
-//GLOBAL_KEYBOARD = GLOBAL_KEYBOARD2
+keyboard = keyboard2
+GLOBAL_KEYBOARD = GLOBAL_KEYBOARD2
 
 window.kb = keyboard2.Keyboard(GLOBAL_KEYBOARD2, keyboard2.checkGlobalMode)
 
@@ -808,8 +807,11 @@ var KeyboardActions = actions.Actions({
 		'keyboard-event-source': 'window',
 	},
 
-	get keyboard(){
+	// XXX do we need these as wrappers???
+	get keybindigs(){
 		return this.__keyboard_config },
+	get keyboard(){
+		return this.__keyboard_object },
 
 	pauseKeyboardRepeat: ['- Interface/',
 		function(){ 
@@ -839,6 +841,25 @@ var KeyboardActions = actions.Actions({
 				return true
 			}).bind(this)
 
+			//* XXX gen2
+			var kb = this.__keyboard_object = 
+				this.__keyboard_object 
+					|| keyboard.Keyboard(
+						function(){ return that.__keyboard_config },
+						function(mode, keyboard, context){ 
+							var pattern = keyboard[mode].pattern || mode
+							var target = that.ribbons.viewer
+							return !pattern 
+								|| pattern == '*' 
+								// XXX legacy...
+								//|| $(pattern).length > 0
+								// XXX can we join these into one search???
+								|| target.is(pattern)
+								|| target.find(pattern).length > 0
+						})
+			kb.service_fields = kb.constructor.service_fields.concat(['pattern'])
+			//*/
+
 			// start/reset keyboard handling...
 			if(state == 'on'){
 				var that = this
@@ -866,7 +887,8 @@ var KeyboardActions = actions.Actions({
 					this.__keyboard_handler =
 						keyboard.stoppableKeyboardRepeat(
 							keyboard.makeKeyboardHandler(
-								function(){ return that.__keyboard_config },
+								this.keyboard,
+								//function(){ return that.__keyboard_config },
 								function(k){ window.DEBUG && console.log('KEY:', k) }, 
 								this),
 							check)
@@ -879,7 +901,8 @@ var KeyboardActions = actions.Actions({
 						keyboard.stoppableKeyboardRepeat(
 							keyboard.dropRepeatingkeys(
 								keyboard.makeKeyboardHandler(
-									function(){ return that.__keyboard_config },
+									this.keyboard,
+									//function(){ return that.__keyboard_config },
 									function(k){ window.DEBUG && console.log(k) },
 									this), 
 								function(){ 
@@ -896,6 +919,7 @@ var KeyboardActions = actions.Actions({
 					&& this.__keyboard_event_source
 						.off('keydown', this.__keyboard_handler)
 
+				//delete this.__keyboard_object
 				delete this.__keyboard_handler
 				delete this.__keyboard_event_source
 			}
@@ -914,54 +938,46 @@ var KeyboardActions = actions.Actions({
 	// XXX this does not check overloading between modes...
 	getKeysForAction: ['- Interface/',
 		function(actions, modes){
+			var that = this
 			actions = actions == '*' ? null : actions
 			actions = !actions || actions instanceof Array ? actions : [actions]
 
 			modes = modes || null
 			modes = !modes || modes instanceof Array ? modes : [modes]
-			modes = modes || this.getKeyboardModes()
+			modes = modes || this.keyboard.modes()
 
-			// XXX does this handle overloading???
-			var help = keyboard.buildKeybindingsHelp(
-				this.keyboard, 
-				null, 
-				this,
-				// get full doc compatible with get path...
-				function(action, args){
-					// NOTE: we do not care about the actual args 
-					// 		here, all we need is for this to mismatch
-					// 		if args exist...
-					//return args.length == 0 ? Object.keys(this.getPath(action))[0] : '--' })
-					return args.length == 0 ? action : '--' })
+			var keys = this.keyboard.keys('*')
+			
 			var res = {}
 
 			// build the result...
-			Object.keys(help)
+			Object.keys(keys)
 				// filter modes...
 				.filter(function(mode){ return modes.indexOf(mode) >= 0 })
 				.forEach(function(mode){
-					Object.keys(help[mode])
+					Object.keys(keys[mode])
+						// parse the actions...
+						// NOTE: this will ignore the no_defaults flag...
+						.map(function(action){ 
+							action = keyboard.parseActionCall(action.doc || action)
+					   		return (action.arguments.length == 0 
+									&& action.action in that) ? 
+								action.action 
+								: '--'})
 						// keep only the actions given...
 						.filter(function(action){
-							return action != '--' 
-								&& action != 'doc' 
+							return action != '--'
 								&& (!actions 
 									|| actions.indexOf(action) >= 0)
 						})
 						.forEach(function(action){
-							res[action] = (res[action] || []).concat(help[mode][action])
+							res[action] = (res[action] || []).concat(keys[mode][action])
 						})
 				})
 
 			return res
 		}],
 
-	// XXX argument #3 is not yet used (see: lib/keyboard.js)...
-	getKeyboardModes: ['- Interface/',
-		function(){
-			return this.__keyboard_event_source ?
-				keyboard.getApplicableModes(this.keyboard, null, this.__keyboard_event_source)
-	   			: [] }],
 
 	// XXX need to pre-process the docs...
 	// 		- remove the path component...
@@ -1008,37 +1024,19 @@ var KeyboardActions = actions.Actions({
 	browseKeyboardBindings: ['Interface/Keyboard bindings...',
 		widgets.makeUIDialog(function(path, edit){
 			var actions = this
+			var keybindigs = this.keybindigs
 
-			// Format:
-			// 	{
-			// 		<mode>: {
-			// 			<action-code>: [ <key>, ... ],
-			// 			...
-			// 		},
-			// 		...
-			// 	}
-			var keys = keyboard.buildKeybindingsHelp(
-				this.keyboard, 
-				null, 
-				this,
-				// get full doc compatible with get path...
-				function(action, args, no_default, doc){
-					return action
-						+ (no_default ? '!' : '')
-						+ (args.length > 0 ?
-							': '+ args.map(JSON.stringify).join(' ')
-							: '') 
-				})
+			var keys = this.keyboard.keys('*')
 
 			var dialog = browse.makeLister(null, 
 				function(path, make){
-					Object.keys(keys)
+					Object.keys(keybindigs)
 						.forEach(function(mode){
-							var ignored = actions.keyboard[mode].ignore || []
+							var dropped = keybindigs[mode].drop || []
 							var bound_ignored = []
 
 							// section heading...
-							make(keys[mode].doc ? 
+							make(keybindigs[mode].doc ? 
 									$('<span>')
 										// NOTE: at this time adding a br
 										// 		is faster and simpler than
@@ -1047,7 +1045,7 @@ var KeyboardActions = actions.Actions({
 										.html(mode + '<br>')
 										.append($('<span>')
 											.addClass('doc')
-											.html(keys[mode].doc))
+											.html(keybindigs[mode].doc))
 									: mode, 
 									{ 
 										not_filtered_out: true,
@@ -1058,30 +1056,45 @@ var KeyboardActions = actions.Actions({
 
 							// bindings...
 							var c = 0
-							Object.keys(keys[mode]).forEach(function(action){
-								action != 'doc' 
-									// NOTE: wee need the button spec to be
-									// 		searchable, thus we are not using 
-									// 		the keys attr as in .browseActions(..)
-									&& make([action, ' ', '$BUTTONS']
-											.concat($('<span>')
-												.addClass('text')
-												.html(keys[mode][action]
-													// mark key if it is in ignored...
-													.map(function(s){ 
-														s = s.split('+')
-														var k = s.pop() 
-														var i = ignored.indexOf(k)
-														i >= 0 
-															&& bound_ignored
-																.push(ignored[i])
-														s.push(k 
-															+ (i >= 0 ?  '<sup>*</sup>' : ''))
-														return s.join('+') })
-													.join(' / '))))
-										.addClass('key '
-											+ (action == 'IGNORE' ? 'ignored' : ''))
-									&& c++
+							Object.keys(keys[mode] || {}).forEach(function(action){
+
+								var o = keyboard.parseActionCall(action)
+								var doc = o.doc
+								var code = o.action 
+									+ (o.no_default ? '!' : '') 
+									+ (o.arguments.length > 0 ? 
+										(': '+ o.arguments.map(JSON.stringify).join(' '))
+										: '')
+
+								// NOTE: wee need the button spec to be
+								// 		searchable, thus we are not using 
+								// 		the keys attr as in .browseActions(..)
+								make([code, ' ', '$BUTTONS']
+										.concat($('<span>')
+											.addClass('text')
+											.html(keys[mode][action]
+												// mark key if it is in dropped...
+												.map(function(s){ 
+													s = s.split('+')
+													var k = s.pop() 
+													var i = dropped.indexOf(k)
+													i >= 0 
+														&& bound_ignored
+															.push(dropped[i])
+													s.push(k 
+														+ (i >= 0 ?  '<sup>*</sup>' : ''))
+													return s.join('+') })
+												.join(' / '))))
+									.attr('doc', 
+										doc.trim() != '' ? 
+											doc 
+											: (actions.keyboard.special_handlers[action] 
+												|| null))
+									.addClass('key '
+										+ (action in actions.keyboard.special_handlers ?
+										   	'special-action' 
+											: ''))
+								c++
 							})
 
 							// no keys in view mode...
@@ -1102,7 +1115,7 @@ var KeyboardActions = actions.Actions({
 									// 		together in path...
 									' ',
 									'$BUTTONS',
-									ignored
+									dropped
 										.filter(function(k){ 
 											return bound_ignored.indexOf(k) == -1 })
 										.join(' / ')])
@@ -1211,8 +1224,8 @@ var KeyboardActions = actions.Actions({
 					: shift_modifiers +'+'+ shift_key
 
 				var any = modes == 'any'
-				modes = any ? this.getKeyboardModes()
-					: modes == '*' ? Object.keys(this.keyboard) 
+				modes = any ? this.keyboard.modes()
+					: modes == '*' ? Object.keys(this.keybindigs) 
 					: modes
 				modes = modes instanceof Array ? modes : [modes]
 
@@ -1225,7 +1238,7 @@ var KeyboardActions = actions.Actions({
 								return false
 							}
 
-							var i = that.keyboard[mode].ignore || []
+							var i = that.keybindigs[mode].ignore || []
 
 							ignore = i.indexOf(full_key) >= 0
 								|| i.indexOf(key) >= 0
@@ -1250,7 +1263,7 @@ var KeyboardActions = actions.Actions({
 						return false
 					}
 
-					var bindings = that.keyboard[mode]
+					var bindings = that.keybindigs[mode]
 
 					if(action){
 						var match = 'direct'
@@ -1322,7 +1335,7 @@ var KeyboardActions = actions.Actions({
 							res[mode] = handler
 						}
 
-						ignore = any && handler == 'IGNORE'
+						ignore = any && handler == 'DROP'
 					}
 				})
 
@@ -1343,7 +1356,7 @@ var KeyboardActions = actions.Actions({
 					+ (args.length > 0 ? 
 						': '+ args.map(JSON.stringify).join(' ')
 						: '')
-			var bindings = this.keyboard[mode]
+			var bindings = this.keybindigs[mode]
 
 			var alias = code in bindings ? code : key
 			var handler = bindings[key] || bindings[code]
@@ -1391,7 +1404,7 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 		['start',
 			function(){
 				var that = this
-				this.__keyboard_config = this.keyboard || GLOBAL_KEYBOARD
+				this.__keyboard_config = this.keybindigs || GLOBAL_KEYBOARD
 
 				this.toggleKeyboardHandling('on')
 			}],

@@ -310,6 +310,10 @@ var KeyboardHandlerClassPrototype = {
 
 var KeyboardHandlerPrototype = {
 	//service_fields: ['doc', 'drop'],
+	special_handlers: {
+		DROP: 'drop key', 
+		NEXT_SECTION: 'handle key in next section',
+	},
 
 	// Format:
 	// 	{
@@ -384,16 +388,26 @@ var KeyboardHandlerPrototype = {
 	// NOTE: to match several compatible handlers, pass a list of handlers,
 	// 		the result for each will be merged into one common list.
 	//
-	// XXX passing a list of handlers will yield a single list of kyes...
-	// 		...should this list be split into handlers???
+	// Format:
+	// 	{
+	// 		<mode>: {
+	// 			<handler>: [ <key>, ... ],
+	// 			...
+	// 		},
+	// 		...
+	// 	}
+	//
 	keys: function(handler){
 		var that = this
 		var res = {}
 		var keyboard = this.keyboard
 		var key_separators = KEY_SEPARATORS 
 		handler = arguments.length > 1 ? [].slice.call(arguments)
+			: handler == '*' || handler instanceof Function ? handler
 			: handler instanceof Array ? handler 
 			: [handler]
+		var service_fields = this.service_fields 
+			|| this.constructor.service_fields
 
 		var walkAliases = function(res, rev, bindings, key, mod){
 			mod = mod || []
@@ -415,36 +429,123 @@ var KeyboardHandlerPrototype = {
 
 			// build a reverse index...
 			var rev = {}
-			// XXX this will not work for handlers that are not strings...
-			Object.keys(bindings).forEach(function(key){
-				rev[bindings[key]] = (rev[bindings[key]] || []).concat([key]) 
-			})
+			// NOTE: this will not work for handlers that are not strings 
+			// 		and have no .doc...
+			Object.keys(bindings)
+				.filter(function(key){ 
+					return service_fields.indexOf(key) < 0 })
+				.forEach(function(key){
+					var h = bindings[key]
+					h = typeof(h) == typeof('str') ? h
+						: (h.doc || h.name)
+					rev[h] = (rev[h] || [])
+						.concat((rev[bindings[key]] || []).concat([key]))
+						.unique()
+				})
 
-			var keys = []
-			handler.forEach(function(h){
-				keys = keys.concat((rev[h] || []).map(that.normalizeKey.bind(that)))
-			})
+			var seen = []
+			var handlers = handler == '*' ?  Object.keys(rev) 
+				: handler instanceof Function ? 
+					Object.keys(rev)
+						.filter(handler)
+				: handler
 
-			// find all reachable keys from the ones we just found in reverse...
-			keys.slice().forEach(function(key){
-				walkAliases(keys, rev, bindings, key)
+			handlers
+				.forEach(function(h){
+					var keys = (rev[h] || []).map(that.normalizeKey.bind(that))
 
-				var mod = that.splitKey(key)
-				var k = mod.pop()
+					// find all reachable keys from the ones we just found in reverse...
+					keys.slice()
+						.filter(function(key){ return seen.indexOf(key) < 0 })
+						.forEach(function(key){
+							// direct aliases...
+							walkAliases(keys, rev, bindings, key)
 
-				k != key 
-					&& walkAliases(keys, rev, bindings, k, mod)
-			})
+							var mod = that.splitKey(key)
+							var k = mod.pop()
 
-			if(keys.length > 0){
-				res[mode] = keys
-			}
+							// aliases with modifiers...
+							k != key 
+								&& walkAliases(keys, rev, bindings, k, mod)
+
+							seen.push(seen)
+						})
+
+					if(keys.length > 0){
+						var m = res[mode] = res[mode] || {}
+						m[h] = keys
+					}
+				})
 		})
 
 		return res
 	},
 
-	// get/set handler for key...
+	// Get/set/unset handler for key...
+	//
+	// In general if handler is not passed this will get the handlers,
+	// if a handler is given this will set the handler, if the passed 
+	// handler is either null or '' then it will be unbound.
+	//
+	// 	Get handler for key in all modes...
+	// 	.handler(key)
+	// 	.handler('*', key)
+	// 		-> key-spec
+	//
+	// 	Get handlers for key in applicable modes...
+	// 	.handler('?', key)
+	// 	.handler('test', key)
+	// 		-> key-spec
+	//
+	// 	Get handler for key in a specific mode...
+	// 	.handler(mode, key)
+	// 		-> key-spec
+	//
+	// 	Get handler for key in a specific list of modes...
+	// 	.handler([mode, ..], key)
+	// 		-> key-spec
+	//
+	//
+	// 	Bind handler to key in specific mode...
+	// 	.handler(mode, key, handler)
+	// 		-> this
+	//
+	// 	Bind handler to key in all modes...
+	// 	.handler('*', key, handler)
+	// 		-> this
+	//
+	// 	Bind handler to key in applicable modes...
+	// 	.handler('?', key, handler)
+	// 	.handler('test', key, handler)
+	// 		-> this
+	//
+	// 	Bind handler to key in a specific list of modes...
+	// 	.handler([mode, ..], key, handler)
+	// 		-> this 
+	//
+	//
+	// 	Unbind handler from key in specific mode...
+	// 	.handler(mode, key, null)
+	// 	.handler(mode, key, '')
+	// 		-> this
+	//
+	// 	Unbind handler from key in all modes...
+	// 	.handler('*', key, null)
+	// 	.handler('*', key, '')
+	// 		-> this
+	//
+	// 	Unbind handler from key in applicable modes...
+	// 	.handler('?', key, null)
+	// 	.handler('?', key, '')
+	// 	.handler('test', key, null)
+	// 	.handler('test', key, '')
+	// 		-> this
+	//
+	// 	Unbind handler from key in a specific list of modes...
+	// 	.handler([mode, ..], key, null)
+	// 	.handler([mode, ..], key, '')
+	// 		-> this 
+	//
 	//
 	// Search order:
 	// 	- search for full key
@@ -456,10 +557,20 @@ var KeyboardHandlerPrototype = {
 	// 		- if an alias is found it is first checked with and then 
 	// 			without modifiers
 	//
+	// XXX getting '(' yields a different result from 'shift-#9'
 	handler: function(mode, key, handler){
 		var that = this
 		var keyboard = this.keyboard
 		var key_separators = KEY_SEPARATORS  
+
+		if(arguments.length == 0){
+			return null
+		}
+		if(arguments.length == 1 && this.isKey(mode)){
+			key = mode
+			mode = '*'
+		}
+
 
 		var genKeys = function(key, shift_key){
 			// match candidates...
@@ -506,7 +617,7 @@ var KeyboardHandlerPrototype = {
 
 		// get modes...
 		var modes = mode == '*' ? Object.keys(keyboard)
-			: mode == 'applicable' || mode == '?' ? this.modes()
+			: mode == 'test' || mode == '?' ? this.modes()
 			: mode instanceof Array ? mode
 			: [mode]
 
@@ -524,7 +635,7 @@ var KeyboardHandlerPrototype = {
 			//	.concat([k, c])
 				.unique()
 
-			var drop = mode == 'applicable' || mode == '?'
+			var drop = mode == 'test' || mode == '?'
 			for(var i=0; i < modes.length; i++){
 				var m = modes[i]
 
@@ -543,8 +654,8 @@ var KeyboardHandlerPrototype = {
 						mod)
 				}
 
-				// handle explicit IGNORE...
-				if(drop && handler == 'IGNORE'){
+				// handle explicit DROP...
+				if(drop && handler == 'DROP'){
 					break
 				}
 
@@ -555,6 +666,8 @@ var KeyboardHandlerPrototype = {
 
 				// if key in .drop then ignore the rest...
 				if(drop 
+						// explicit go to next section...
+						&& handler != 'NEXT_SECTION'
 						&& (bindings.drop == '*'
 							// XXX should this be more flexible by adding a
 							// 		specific key combo?
@@ -567,7 +680,7 @@ var KeyboardHandlerPrototype = {
 			}
 
 			return (typeof(mode) == typeof('str') 
-					&& ['*', 'applicable', '?'].indexOf(mode) < 0) ? 
+					&& ['*', 'test', '?'].indexOf(mode) < 0) ? 
 				res[mode]
 				: res
 
@@ -638,7 +751,7 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 		var did_handling = false
 
 		var key = kb.event2key(evt)
-		var handlers = kb.handler('applicable', key)
+		var handlers = kb.handler('test', key)
 
 		Object.keys(handlers).forEach(function(mode){
 			if(res === false){
@@ -669,6 +782,7 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 
 
 //---------------------------------------------------------------------
+// handler wrappers...
 
 // Event handler wrapper to stop handling keys if check callback does 
 // not pass (returns false)...
