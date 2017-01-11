@@ -519,8 +519,8 @@ module.SingleImageAutoHideCursor = core.ImageGridFeatures.Feature({
 	],
 
 	config: {
-		'cursor-autohide-single-image-view': 'on',
-		'cursor-autohide-ribbon-view': 'off',
+		'cursor-autohide-on-timeout-single-image-view': 'on',
+		'cursor-autohide-on-timeout-ribbon-view': 'off',
 	},
 
 	handlers: [
@@ -528,8 +528,8 @@ module.SingleImageAutoHideCursor = core.ImageGridFeatures.Feature({
 		['load',
 			function(){
 				var mode = this.toggleSingleImage('?') == 'on' ? 
-					'cursor-autohide-single-image-view'
-					: 'cursor-autohide-ribbon-view'
+					'cursor-autohide-on-timeout-single-image-view'
+					: 'cursor-autohide-on-timeout-ribbon-view'
 
 				this.toggleAutoHideCursorTimeout(this.config[mode] || 'off')
 			}],
@@ -537,8 +537,8 @@ module.SingleImageAutoHideCursor = core.ImageGridFeatures.Feature({
 		['toggleAutoHideCursorTimeout',
 			function(){
 				var mode = this.toggleSingleImage('?') == 'on' ? 
-					'cursor-autohide-single-image-view'
-					: 'cursor-autohide-ribbon-view'
+					'cursor-autohide-on-timeout-single-image-view'
+					: 'cursor-autohide-on-timeout-ribbon-view'
 
 				this.config[mode] = this.toggleAutoHideCursorTimeout('?')
 			}],
@@ -546,13 +546,13 @@ module.SingleImageAutoHideCursor = core.ImageGridFeatures.Feature({
 		['toggleSingleImage', 
 			function(){
 				if(this.toggleSingleImage('?') == 'on'){
-					this.toggleAutoHideCursorTimeout(this.config['cursor-autohide-single-image-view'])
+					this.toggleAutoHideCursorTimeout(this.config['cursor-autohide-on-timeout-single-image-view'])
 
 				} else {
-					this.toggleAutoHideCursorTimeout(this.config['cursor-autohide-ribbon-view'])
+					this.toggleAutoHideCursorTimeout(this.config['cursor-autohide-on-timeout-ribbon-view'])
 
 					// XXX for some reason this is not working...
-					this.toggleHiddenCursor(this.config['cursor-autohide-ribbon-view'])
+					this.toggleHiddenCursor(this.config['cursor-autohide-on-timeout-ribbon-view'])
 				}
 			}],
 	]

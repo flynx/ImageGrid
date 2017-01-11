@@ -1590,7 +1590,6 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 // 		and show it on next timeout/mousemove.
 // 		This will not stop watching the cursor, this setting the prop back
 // 		on will re-enable autohide.
-// 		XXX needs testing...
 // NOTE: chrome 49 + devtools open appears to prevent the cursor from 
 // 		being hidden...
 var AutoHideCursor = 
@@ -1605,7 +1604,8 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 
 	config: {
 		'cursor-autohide': 'on',
-		'cursor-autohide-on-timeout': 'on',
+		'cursor-autohide-on-timeout': 'off',
+		'cursor-autohide-on-keyboard': 'on',
 
 		'cursor-autohide-timeout': 1000,
 		'cursor-show-threshold': 10,
@@ -1667,8 +1667,6 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 				function(state){
 					var that = this
 
-					console.log('!!!!!', state)
-
 					var viewer = this.ribbons.viewer
 					// NOTE: this is handled by the keyboard feature...
 					var kb_target = this.__keyboard_event_source || $(window)
@@ -1680,7 +1678,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 						var x, y
 						var timer
 						var timeout = 
-							that.config['cursor-autohide-on-timeout'] != 'off' ?
+							that.toggleAutoHideCursorTimeout('?') == 'on' ?
 								(that.config['cursor-autohide-timeout'] || 1000)
 								: -1
 
@@ -1693,7 +1691,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 
 									// hide on timeout...
 									var timeout = 
-										that.config['cursor-autohide-on-timeout'] != 'off' ?
+										that.toggleAutoHideCursorTimeout('?') == 'on' ?
 											(that.config['cursor-autohide-timeout'] || 1000)
 											: -1
 									if(timeout && timeout > 0){
@@ -1727,7 +1725,8 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 										return
 									}
 
-									that.toggleHiddenCursor('on')
+									that.toggleAutoHideCursorKeyboard('?') == 'on'
+										&& that.toggleHiddenCursor('on')
 
 									return true
 								})
@@ -1763,6 +1762,10 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 				})],
 		toggleAutoHideCursorTimeout: ['Interface/Hide cursor on timeout',
 			core.makeConfigToggler('cursor-autohide-on-timeout', 
+				['on', 'off'],
+				function(){ this.toggleAutoHideCursor('!') })],
+		toggleAutoHideCursorKeyboard: ['Interface/Hide cursor on keyboard',
+			core.makeConfigToggler('cursor-autohide-on-keyboard', 
 				['on', 'off'],
 				function(){ this.toggleAutoHideCursor('!') })],
 	}),
