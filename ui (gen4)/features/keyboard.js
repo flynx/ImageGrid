@@ -126,6 +126,8 @@ module.GLOBAL_KEYBOARD2 = {
 
 		Esc: 'uncrop',
 		ctrl_Esc: 'uncropAll',
+
+		W: 'testAction2 -- XXX DEBUG: remove when done...',
 	},
 
 	'Range': {
@@ -381,7 +383,7 @@ module.GLOBAL_KEYBOARD2 = {
 		'?': 'browseKeyboardBindings',
 
 
-		W: 'testAction',
+		W: 'testAction -- XXX DEBUG: remove when done...',
 	},
 }
 
