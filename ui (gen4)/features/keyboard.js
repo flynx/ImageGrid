@@ -732,10 +732,13 @@ var KeyboardActions = actions.Actions({
 											doc 
 											: (actions.keyboard.special_handlers[action] 
 												|| null))
-									.addClass('key '
+									.addClass('key'
+										// special stuff...
 										+ (action in actions.keyboard.special_handlers ?
-										   	'special-action' 
-											: ''))
+										   	' special-action' 
+											: '')
+										// aliases...
+										+ (o.action in actions ? '' : ' non-action'))
 								c++
 							})
 

@@ -367,6 +367,12 @@ body {
 	opacity: 0.5;
 	margin-left: 0.5em;
 }
+.browse-widget.key-bindings.edit .list>.key.non-action:before {
+	display: inline;
+	content: " (non-action) ";
+	opacity: 0.5;
+	margin-left: 0.5em;
+}
 
 
 .browse-widget.key-bindings .list>.new {

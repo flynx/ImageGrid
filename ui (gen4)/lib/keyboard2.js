@@ -364,39 +364,7 @@ var KeyboardHandlerPrototype = {
 	normalizeKey: KeyboardHandlerClassPrototype.normalizeKey,
 	isKey: KeyboardHandlerClassPrototype.isKey,
 
-	/*/ XXX not sure if this is needed...
-	normalizeBindings: function(keyboard){
-		keyboard = keyboard || this.keyboard 
-		var that = this
-		var service_fields = this.service_fields
-		Object.keys(keyboard).forEach(function(mode){
-			mode = keyboard[mode]
-			
-			Object.keys(mode).forEach(function(key){
-				// skip service fields...
-				if(service_fields.indexOf(key) >= 0){
-					return
-				}
-
-				var n = that.normalizeKey(key)
-
-				if(n != key){
-					// duplicate key...
-					if(n in mode){
-						console.warn('duplicate keys: "'+ n +'" and "'+ k +'"')
-					}
-
-					mode[n] = mode[key]
-					delete mode[key]
-				}
-			})
-		})
-		return keyboard
-	},
-	//*/
-
 	//isModeApplicable: function(mode, keyboard, context){ return true },
-	//isModeApplicable: checkGlobalMode,
 
 	// Get keys for handler...
 	//
