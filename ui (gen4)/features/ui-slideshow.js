@@ -241,11 +241,11 @@ var SlideshowActions = actions.Actions({
 			})],
 
 	// NOTE: these can be used as pause and resume...
-	resetSlideshowTimer: ['- Slideshow/',
+	resetSlideshowTimer: ['- Slideshow/Reset slideshow timer',
 		function(){
 			this.__slideshouw_timer && this.toggleSlideshow('on')
 		}],
-	suspendSlideshowTimer: ['- Slideshow/',
+	suspendSlideshowTimer: ['- Slideshow/Suspend slideshow timer',
 		function(){
 			if(this.__slideshouw_timer){
 				clearInterval(this.__slideshouw_timer)
