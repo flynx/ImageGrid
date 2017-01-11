@@ -62,7 +62,7 @@ var OverlayPrototype = {
 	},
 
 	// XXX for some reason this does not work...
-	keyboard: {
+	keybindings: {
 		General: {
 			//pattern: '.overlay-widget',
 			pattern: '*',

@@ -70,6 +70,7 @@ var WidgetPrototype = {
 		],
 	},
 
+	keybindings: null,
 	keyboard: null,
 
 	// XXX triggering events from here and from jQuery/dom has a 
@@ -130,7 +131,22 @@ var WidgetPrototype = {
 		*/
 
 		// add keyboard handler...
-		if(this.keyboard && this.dom){
+		if(this.keybindings && this.dom){
+			var kb = this.keyboard = 
+				this.keyboard || keyboard.Keyboard(
+					function(){ return that.keybindings },
+					function(mode, keyboard, context){ 
+						var pattern = keyboard[mode].pattern || mode
+						var target = that.dom
+						return !pattern 
+							|| pattern == '*' 
+							// XXX can we join these into one search???
+							|| target.is(pattern)
+							|| target.find(pattern).length > 0
+					})
+			kb.service_fields = kb.constructor.service_fields
+				.concat(['pattern'])
+				.unique()
 			this.dom
 				.keydown(
 					keyboard.makeKeyboardHandler(
@@ -204,12 +220,28 @@ var ContainerPrototype = {
 		}
 
 		// add keyboard handler...
-		if(this.keyboard && this.dom){
-			this.dom.keydown(
-				keyboard.makeKeyboardHandler(
-					this.keyboard,
-					options.logKeys,
-					this))
+		if(this.keybindings && this.dom){
+			var kb = this.keyboard = 
+				this.keyboard || keyboard.Keyboard(
+					function(){ return that.keybindings },
+					function(mode, keyboard, context){ 
+						var pattern = keyboard[mode].pattern || mode
+						var target = that.dom
+						return !pattern 
+							|| pattern == '*' 
+							// XXX can we join these into one search???
+							|| target.is(pattern)
+							|| target.find(pattern).length > 0
+					})
+			kb.service_fields = kb.constructor.service_fields
+				.concat(['pattern'])
+				.unique()
+			this.dom
+				.keydown(
+					keyboard.makeKeyboardHandler(
+						this.keyboard,
+						options.logKeys,
+						this))
 		}
 
 		if(this.options.nonPropagatedEvents != null){

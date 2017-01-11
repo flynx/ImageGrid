@@ -10,8 +10,7 @@
 var actions = require('lib/actions')
 var features = require('lib/features')
 var toggler = require('lib/toggler')
-// XXX
-var keyboard = require('lib/keyboard2')
+var keyboard = require('lib/keyboard')
 
 var core = require('features/core')
 var widgets = require('features/ui-widgets')

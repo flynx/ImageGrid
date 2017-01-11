@@ -441,7 +441,7 @@ if(typeof(jQuery) != typeof(undefined)){
 
 					event.stopPropagation() 
 
-					var n = keyboard.toKeyName(event.keyCode)
+					var n = keyboard.code2key(event.keyCode)
 
 					// abort...
 					if((options.abort_keys || ['Esc']).indexOf(n) >= 0){

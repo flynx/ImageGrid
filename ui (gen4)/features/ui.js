@@ -40,7 +40,7 @@
 var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
-var keyboard = require('lib/keyboard2')
+var keyboard = require('lib/keyboard')
 
 var data = require('imagegrid/data')
 var images = require('imagegrid/images')

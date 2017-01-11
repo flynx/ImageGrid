@@ -372,114 +372,48 @@ var BrowserPrototype = {
 	// XXX TEST: this should prevent event propagation...
 	// XXX should we have things like ctrl-<number> for fast selection 
 	// 		in filter mode???
-	keyboard: {
+	keybindings: {
 		// XXX this is the same as FullPathEdit, should we combine the two?
 		ItemEdit: {
-			pattern: '.browse-widget .list .text[contenteditable]',
+			pattern: '.list .text[contenteditable]',
 
 			// keep text editing action from affecting the selection...
-			ignore: [
-					'Backspace',
-					'Up',
-					'Down',
-					'Left',
-					'Right',
-					'Home',
-					'End',
-					'Enter',
-					'Esc',
-					'/',
-					'A',
-					'P',
-					'O',
-					'T', 'D',
-					'H',
+			drop: '*',
 
-					// let the system handle copy paste...
-					'C', 'V', 'X',
-
-					// enter numbers as-is...
-					'#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
-				],
-
-			// XXX
 			Enter: 'push!',
 			Esc: 'update!',
 		},
 
 		FullPathEdit: {
-			pattern: '.browse-widget .path[contenteditable]',
+			pattern: '.path[contenteditable]',
 
 			// keep text editing action from affecting the selection...
-			ignore: [
-					'Backspace',
-					'Up',
-					'Down',
-					'Left',
-					'Right',
-					'Home',
-					'End',
-					'Enter',
-					'Esc',
-					'/',
-					'A',
-					'P',
-					'O',
-					'T', 'D',
-					'H',
-
-					// let the system handle copy paste...
-					'C', 'V', 'X',
-
-					// enter numbers as-is...
-					'#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
-				],
+			drop: '*',
 
 			Enter: 'stopFullPathEdit!',
 			Esc: 'abortFullPathEdit!',
 		},
 
 		Filter: {
-			pattern: '.browse-widget .path div.cur[contenteditable]',
+			pattern: '.path div.cur[contenteditable]',
 
 			// keep text editing action from affecting the selection...
-			ignore: [
-					'Backspace',
-					'Left',
-					'Right',
-					'Home',
-					'End',
-					'Enter',
-					'Esc',
-					'/',
-					'A',
-					'P',
-					'O',
-					'T', 'D',
-					'H',
+			drop: '*',
+			
+			Up: 'NEXT_SECTION',
+			Down: 'NEXT_SECTION',
 
-					// let the system handle copy paste...
-					'C', 'V', 'X',
-
-					// enter numbers as-is...
-					'#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
-				],
-
-			// XXX should this be an action or a push????
-			//Enter: 'action!',
 			Enter: 'push!',
 			Esc: 'stopFilter!',
 		},
 
 		General: {
-			pattern: '.browse-widget',
+			pattern: '*',
 
 			Up: 'up!',
 			Down: 'down!',
-			Left: {
-				default: 'left!',
-				ctrl: 'update!: "/"',
-			},
+			Left: 'left!',
+			ctrl_Left: 'update!: "/"',
 			Backspace: 'Left',
 			Right: 'right',
 			P: 'push',
@@ -497,9 +431,7 @@ var BrowserPrototype = {
 
 			'/': 'startFilter!',
 
-			A: {
-				ctrl: 'startFullPathEdit!',
-			},
+			ctrl_A: 'startFullPathEdit!',
 
 			D: 'toggleDisabledDrawing',
 			H: 'toggleHiddenDrawing',
