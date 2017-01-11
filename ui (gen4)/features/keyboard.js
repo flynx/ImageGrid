@@ -402,10 +402,8 @@ window.kb = keyboard.Keyboard(
 
 
 /*********************************************************************/
-// XXX add a key binding list UI...
 // XXX add loading/storing of kb bindings...
 
-// XXX add introspection and doc actions...
 var KeyboardActions = actions.Actions({
 	config: {
 		// limit key repeat to one per N milliseconds.
@@ -648,8 +646,9 @@ var KeyboardActions = actions.Actions({
 		widgets.makeUIDialog(function(path, edit, get_text){
 			var actions = this
 			var keybindings = this.keybindings
+			var kb = this.keyboard
 
-			var keys = this.keyboard.keys('*')
+			var keys = kb.keys('*')
 
 			// get doc...
 			get_text = get_text === undefined && !edit ? 
@@ -707,6 +706,10 @@ var KeyboardActions = actions.Actions({
 											(': '+ o.arguments.map(JSON.stringify).join(' '))
 											: '')
 								}
+								var hidden = !edit 
+									&& !(o.action in actions) 
+									&& !(kb.handler(mode, keys[mode][action][0])
+										instanceof Function)
 
 								// NOTE: wee need the button spec to be
 								// 		searchable, thus we are not using 
@@ -726,15 +729,20 @@ var KeyboardActions = actions.Actions({
 													s.push(k 
 														+ (i >= 0 ?  '<sup>*</sup>' : ''))
 													return s.join('+') })
-												.join(' / '))))
+												.join(' / '))),
+									{
+										// hide stuff that is not an action...
+										hidden: hidden,	
+										disabled: hidden,	
+									})
 									.attr('doc', 
 										doc.trim() != '' ? 
 											doc 
-											: (actions.keyboard.special_handlers[action] 
+											: (kb.special_handlers[action] 
 												|| null))
 									.addClass('key'
 										// special stuff...
-										+ (action in actions.keyboard.special_handlers ?
+										+ (action in kb.special_handlers ?
 										   	' special-action' 
 											: '')
 										// aliases...
