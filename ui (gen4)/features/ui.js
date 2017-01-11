@@ -418,13 +418,13 @@ module.ViewerActions = actions.Actions({
 			function(){ return this.ribbons.viewer }, 
 			function(){ return this.config.themes },
 			function(state){ this.config.theme = state }) ],
-	lighterTheme: ['Interface/Theme/Lighter',
+	lighterTheme: ['Interface/Theme/Lighter theme',
 		function(){
 			var themes = this.config.themes
 			var i = themes.indexOf(this.toggleTheme('?'))
 			this.toggleTheme(Math.min(i+1, themes.length-1))
 		}],
-	darkerTheme: ['Interface/Theme/Darker',
+	darkerTheme: ['Interface/Theme/Darker theme',
 		function(){
 			var themes = this.config.themes
 			var i = themes.indexOf(this.toggleTheme('?'))
@@ -1604,12 +1604,15 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 	],
 
 	config: {
+		'cursor-autohide': 'on',
+		'cursor-autohide-on-timeout': 'on',
+
 		'cursor-autohide-timeout': 1000,
-		'cursor-autohide-threshold': 10,
+		'cursor-show-threshold': 10,
 	},
 
 	actions: actions.Actions({
-		toggleAutoHideCursor: ['Interface/Cursor auto hiding',
+		toggleHiddenCursor: ['Interface/Cursor hidden',
 			toggler.CSSClassToggler(
 				function(){ return this.ribbons.viewer }, 
 				'cursor-hidden',
@@ -1617,19 +1620,15 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 					var that = this
 					var viewer = this.ribbons.viewer
 
-					// setup...
 					if(state == 'on'){
 						var x, y
-						var timer
-						var timeout = this.config['cursor-autohide-timeout'] || 1000
 
+						// auto-show -- on mouse move greater than threshold...
 						var handler 
-							= this.__cursor_autohide_handler 
-							= (this.__cursor_autohide_handler 
+							= this.__cursor_show_handler 
+							= (this.__cursor_show_handler 
 								|| function(){
-									timer && clearTimeout(timer)
-
-									var threshold = that.config['cursor-autohide-threshold'] || 0
+									var threshold = that.config['cursor-show-threshold'] || 0
 									x = x || event.clientX
 									y = y || event.clientY
 
@@ -1638,50 +1637,141 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 										if(Math.max(Math.abs(x - event.clientX), 
 												Math.abs(y - event.clientY)) > threshold){
 											x = y = null
-											that.ribbons.viewer
-												.removeClass('cursor-hidden')
+											that.toggleHiddenCursor('off')
 										}
 
 									// show right away -- no threshold...
 									} else {
-										that.ribbons.viewer
-											.removeClass('cursor-hidden')
+										that.toggleHiddenCursor('off')
 									}
+								})
 
-									var timeout = that.config['cursor-autohide-timeout'] || 1000
+						viewer
+							// hide the cursor...
+							.addClass('cursor-hidden')
+							// reset handler...
+							.off('mousemove', handler)
+							.mousemove(handler)
+
+					// show...
+					} else {
+						viewer
+							.removeClass('cursor-hidden')
+							.off('mousemove', this.__cursor_show_handler)
+					}
+				})],
+		toggleAutoHideCursor: ['Interface/Cursor auto hiding',
+			toggler.CSSClassToggler(
+				function(){ return this.ribbons.viewer }, 
+				'cursor-autohide',
+				function(state){
+					var that = this
+
+					console.log('!!!!!', state)
+
+					var viewer = this.ribbons.viewer
+					// NOTE: this is handled by the keyboard feature...
+					var kb_target = this.__keyboard_event_source || $(window)
+
+					this.config['cursor-autohide'] = state
+
+					// setup...
+					if(state == 'on'){
+						var x, y
+						var timer
+						var timeout = 
+							that.config['cursor-autohide-on-timeout'] != 'off' ?
+								(that.config['cursor-autohide-timeout'] || 1000)
+								: -1
+
+						// hide on timeout...
+						var mouse_handler 
+							= this.__cursor_autohide_mouse_handler 
+							= (this.__cursor_autohide_mouse_handler 
+								|| function(){
+									timer && clearTimeout(timer)
+
+									// hide on timeout...
+									var timeout = 
+										that.config['cursor-autohide-on-timeout'] != 'off' ?
+											(that.config['cursor-autohide-timeout'] || 1000)
+											: -1
 									if(timeout && timeout > 0){
 										timer = setTimeout(function(){
 											var viewer = that.ribbons.viewer
 
-											if(!viewer.prop('cursor-autohide')){
-												viewer.removeClass('cursor-hidden')
+											// auto-hide is off -- restore...
+											if(!viewer.hasClass('cursor-autohide')){
+												that.toggleHiddenCursor('off') 
 												return
 											}
 
-											timer && viewer.addClass('cursor-hidden')
+											timer && that.toggleHiddenCursor('on') 
 										}, timeout)
 									}
+								})
+
+						// hide on key...
+						// XXX should be usable with mouse, e.g. don't 
+						// 		hide cursor while moving mous with shift
+						// 		pressed...
+						var key_handler 
+							= this.__cursor_autohide_key_handler 
+							= (this.__cursor_autohide_key_handler 
+								|| function(){
+									var viewer = that.ribbons.viewer
+
+									// auto-hide is off -- restore...
+									if(!viewer.hasClass('cursor-autohide')){
+										that.toggleHiddenCursor('off') 
+										return
+									}
+
+									that.toggleHiddenCursor('on')
+
+									return true
 								})
 
 						// do the base setup...
 						!viewer.prop('cursor-autohide')
 							&& viewer
-								.prop('cursor-autohide', true)
-								.addClass('cursor-hidden')
 								// prevent multiple handlers...
-								.off('mousemove', this.__cursor_autohide_handler)
-								.mousemove(handler)
+								.off('mousemove', this.__cursor_autohide_mouse_handler)
+								.on('mousemove', mouse_handler)
+							&& kb_target 
+								.on('keydown', key_handler)
+
+						// hide the cursor right away only if timeout is set...
+						timeout 
+							&& timeout > 0 
+							&& this.toggleHiddenCursor('on')
 
 					// teardown...
 					} else {
-						viewer
-							.off('mousemove', this.__cursor_autohide_handler)
-							.prop('cursor-autohide', false)
-							.removeClass('cursor-hidden')
-						delete this.__cursor_autohide_handler
+						this.__cursor_autohide_mouse_handler
+							&& viewer
+								.off('mousemove', this.__cursor_autohide_mouse_handler)
+						delete this.__cursor_autohide_mouse_handler
+
+						this.__cursor_autohide_key_handler
+							&& kb_target 
+								.off('keydown', this.__cursor_autohide_key_handler)
+						delete this.__cursor_autohide_key_handler
+
+						this.toggleHiddenCursor('off')
 					}
 				})],
+		toggleAutoHideCursorTimeout: ['Interface/Hide cursor on timeout',
+			core.makeConfigToggler('cursor-autohide-on-timeout', 
+				['on', 'off'],
+				function(){ this.toggleAutoHideCursor('!') })],
 	}),
+
+	handlers: [
+		['start',
+			function(){
+				this.toggleAutoHideCursor(this.config['cursor-autohide'] || 'on') }],
+	],
 })
 
 
@@ -1730,7 +1820,9 @@ var ControlActions = actions.Actions({
 				return this.ribbons 
 					&& this.ribbons.viewer 
 					//&& this.ribbons.getRibbon().data('hammer') ? 'handling-click' : 'none' },
-					&& this.ribbons.getRibbon().hasClass('clickable') ? 'handling-click' : 'none' },
+					&& this.ribbons.getRibbon().hasClass('clickable') ? 
+						'handling-click' 
+						: 'none' },
 			'handling-click',
 			function(state){
 				var that = this

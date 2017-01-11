@@ -521,8 +521,6 @@ module.SingleImageAutoHideCursor = core.ImageGridFeatures.Feature({
 	config: {
 		'cursor-autohide-single-image-view': 'on',
 		'cursor-autohide-ribbon-view': 'off',
-
-		//'cursor-autohide-on-navigate': true, 
 	},
 
 	handlers: [
@@ -533,43 +531,30 @@ module.SingleImageAutoHideCursor = core.ImageGridFeatures.Feature({
 					'cursor-autohide-single-image-view'
 					: 'cursor-autohide-ribbon-view'
 
-				this.toggleAutoHideCursor(this.config[mode] || 'off')
+				this.toggleAutoHideCursorTimeout(this.config[mode] || 'off')
 			}],
 		// store state for each mode...
-		['toggleAutoHideCursor',
+		['toggleAutoHideCursorTimeout',
 			function(){
 				var mode = this.toggleSingleImage('?') == 'on' ? 
 					'cursor-autohide-single-image-view'
 					: 'cursor-autohide-ribbon-view'
 
-				this.config[mode] = this.toggleAutoHideCursor('?')
+				this.config[mode] = this.toggleAutoHideCursorTimeout('?')
 			}],
 		// restore state per mode...
 		['toggleSingleImage', 
 			function(){
 				if(this.toggleSingleImage('?') == 'on'){
-					this.toggleAutoHideCursor(this.config['cursor-autohide-single-image-view'])
+					this.toggleAutoHideCursorTimeout(this.config['cursor-autohide-single-image-view'])
 
 				} else {
-					this.toggleAutoHideCursor(this.config['cursor-autohide-ribbon-view'])
+					this.toggleAutoHideCursorTimeout(this.config['cursor-autohide-ribbon-view'])
+
+					// XXX for some reason this is not working...
+					this.toggleHiddenCursor(this.config['cursor-autohide-ribbon-view'])
 				}
 			}],
-		/* XXX for some reason this does not work...
-		// autohide on navigation...
-		['focusImage', 
-			function(){
-				//if(this.config['cursor-autohide-on-navigate'] 
-				//		&& this.toggleAutoHideCursor('?') == 'on'){
-				//	this.toggleAutoHideCursor('on')
-				//}
-				if(this.config['cursor-autohide-on-navigate'] 
-						&& this.toggleAutoHideCursor('?') == 'on'
-						&& this.ribbons.viewer.prop('cursor-autohide')){
-					this.ribbons.viewer
-						.addClass('cursor-hidden')
-				}
-			}],
-		*/
 	]
 })
 

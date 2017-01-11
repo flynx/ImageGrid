@@ -14,7 +14,7 @@ var object = require('lib/object')
 /*********************************************************************/
 
 var MODIFIERS =
-module.MODIFIERS = [ 'ctrl', 'alt', 'meta', 'shift' ]
+module.MODIFIERS = [ 'ctrl', 'meta', 'alt', 'shift' ]
 
 
 var KEY_SEPARATORS =
@@ -166,6 +166,12 @@ function parseActionCall(txt){
 // Helpers...
 
 // Form standard key string from keyboard event...
+//
+// Format:
+// 	"[ctrl+][meta+][alt+][shift+]<key>"
+// 	
+// 	<key> - string returned by code2key(..)
+// 	
 var event2key =
 module.event2key =
 function event2key(evt){
@@ -365,6 +371,12 @@ var KeyboardHandlerPrototype = {
 	isKey: KeyboardHandlerClassPrototype.isKey,
 
 	//isModeApplicable: function(mode, keyboard, context){ return true },
+	
+	// XXX merge configs...
+	// 		- need to match and order groups (use 1'st as reference)...
+	// 		- need to create new set w/o changing the originals...
+	merge: function(){
+	},
 
 	// Get keys for handler...
 	//

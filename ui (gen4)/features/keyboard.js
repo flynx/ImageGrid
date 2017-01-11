@@ -50,8 +50,8 @@ module.GLOBAL_KEYBOARD2 = {
 		End: 'resetSlideshowTimer',
 
 		T: 'slideshowIntervalDialog',
-		R: 'toggleSlideshowDirection',
-		L: 'toggleSlideshowLooping',
+		R: 'toggleSlideshowDirection -- Reverse slideshow direction',
+		L: 'toggleSlideshowLooping -- Toggle slideshow looping',
 	},
 
 	// XXX do we need to prevent up/down navigation here, it may get confusing?
@@ -574,8 +574,8 @@ var KeyboardActions = actions.Actions({
 				// NOTE: the target element must be focusable...
 				var target =
 				this.__keyboard_event_source =
-					this.config['keyboard-event-source'] == null 
-						|| this.config['keyboard-event-source'] == 'viewer' ? this.ribbons.viewer
+					this.config['keyboard-event-source'] ? $(window)
+					: this.config['keyboard-event-source'] == 'viewer' ? this.ribbons.viewer
 					: this.config['keyboard-event-source'] == 'window' ? $(window)
 					: this.config['keyboard-event-source'] == 'document' ? $(document)
 					: $(this.config['keyboard-event-source'])

@@ -393,6 +393,7 @@ var BrowserPrototype = {
 					'P',
 					'O',
 					'T', 'D',
+					'H',
 
 					// let the system handle copy paste...
 					'C', 'V', 'X',
@@ -425,6 +426,7 @@ var BrowserPrototype = {
 					'P',
 					'O',
 					'T', 'D',
+					'H',
 
 					// let the system handle copy paste...
 					'C', 'V', 'X',
@@ -454,6 +456,7 @@ var BrowserPrototype = {
 					'P',
 					'O',
 					'T', 'D',
+					'H',
 
 					// let the system handle copy paste...
 					'C', 'V', 'X',

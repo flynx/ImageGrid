@@ -168,7 +168,7 @@ function(elem, state_accessor, states, callback_a, callback_b){
 
 		// see if we got an explicit state list or need to use a getter...
 		var states = state_set
-		if(typeof(states_getter) == typeof(function(){})){
+		if(states_getter instanceof Function){
 			// get the states...
 			var states = states_getter.call(this)
 			states = typeof(states) == typeof('str') ? 
@@ -278,7 +278,7 @@ function(elem, state_accessor, states, callback_a, callback_b){
 
 	// XXX these are broken -- this is wrong...
 	// 		...do not see how to fix this now in a good way...
-	if(typeof(states_getter) == typeof(function(){})){
+	if(states_getter instanceof Function){
 		Object.defineProperty(func, 'states', {
 			get: function(){ return states_getter.apply(this) },
 		})
@@ -287,7 +287,7 @@ function(elem, state_accessor, states, callback_a, callback_b){
 				if(func.__doc != null){
 					return func.__doc
 				}
-				var states = typeof(states_getter) == typeof(function(){}) ?
+				var states = states_getter instanceof Function ?
 					states_getter.apply(this)
 					: state_set
 

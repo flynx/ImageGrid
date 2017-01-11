@@ -1413,7 +1413,7 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 	// XXX add comment editing...
 	// XXX might be a good idea to show a diff of some kind or at least
 	// 		what .changed when writing a save...
-	listSaveHistory: ['File/History...',
+	listSaveHistory: ['File/Edit history...',
 		widgets.makeUIDialog(function(){
 			var that = this
 
