@@ -496,7 +496,7 @@ var StatusBarActions = actions.Actions({
 
 	// XXX should these be here???
 	// XXX should this show a dialog???
-	editStatusBarIndex: ['- Interface/',
+	editStatusBarIndex: ['- Interface/Edit image focus position in statusbar',
 		function(){
 			if((this.config['status-bar-index'] || {} )['editable']){
 				this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
@@ -505,7 +505,7 @@ var StatusBarActions = actions.Actions({
 				this.ribbons.viewer.find('.global-info .index .position').focus().click()
 			}
 		}],
-	editStatusBarRibbon: ['- Interface/',
+	editStatusBarRibbon: ['- Interface/Edit ribbon focus position in statusbar',
 		function(){
 			this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
 

@@ -775,9 +775,10 @@ var BrowseActionsActions = actions.Actions({
 				'Crop/-81:Uncrop all',
 				'Crop/-82:Uncrop',
 
-			'-50:Interface',
-			'-60:Workspace',
-			'-70:System',
+			'-40:Interface',
+			'-50:Workspace',
+			'-60:System',
+			'-70:Help',
 			'-80:---',
 			'-90:Development',
 			'-90:Test',

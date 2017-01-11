@@ -855,5 +855,67 @@ module.Tasks = ImageGridFeatures.Feature({
 
 
 
+//---------------------------------------------------------------------
+// Self test framework...
+
+var selfTest =
+module.selfTest = function(func){
+	func.__self_test__ = true
+	return func
+}
+
+var SelfTestActions = actions.Actions({
+	config: {
+		'run-selftest-on-start': true,
+	},
+
+	runSelfTest: ['System/Run self test',
+		selfTest(function(mode){
+			var that = this
+			var logger = this.logger && this.logger.push('Self test')
+
+			var tests = this.actions
+				.filter(function(action){ 
+					return action != 'runSelfTest'
+			   			&& (that[action].func.__self_test__ 
+							|| that.getActionAttr(action, 'self_test'))})
+
+			logger 
+				&& tests.forEach(function(action){ 
+					logger.emit('found', action) })
+
+
+			tests.forEach(function(action){
+				that[action]()
+
+				logger.emit('done', action)
+			})
+		})],
+})
+
+var SelfTest = 
+module.SelfTest = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'self-test',
+	depends: [
+		'lifecycle'	
+	],
+	priority: 'low',
+
+	actions: SelfTestActions, 
+
+	handlers: [
+		['start',
+			function(){ 
+				this.config['run-selftest-on-start'] 
+					&& this.runSelfTest() }]
+	],
+})
+
+
+
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                               */ return module })

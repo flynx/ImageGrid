@@ -153,7 +153,7 @@ module.GLOBAL_KEYBOARD2 = {
 		meta_Q: 'close',
 
 		// XXX
-		F5: keyboard.doc('Full reload viewer', 
+		F5: keyboard.doc('Reload viewer (full)', 
 			function(){ 
 				//a.stop()
 				/*
@@ -437,6 +437,40 @@ var KeyboardActions = actions.Actions({
 	get keyboard(){
 		return this.__keyboard_object },
 
+	testKeyboardDoc: ['- Interface/',
+		{self_test: true},
+		function(){
+			var that = this
+			var keys = this.keyboard.keys()
+
+			var index = {}
+			Object.keys(keys).forEach(function(mode){
+				Object.keys(keys[mode]).forEach(function(code){
+					if(code == ''){
+						return
+					}
+
+					var a = keyboard.parseActionCall(code)
+					var doc = a.doc || that.getDocTitle(a.action) || null
+
+					// check if we have no doc...
+					if(doc == null || doc == ''){
+						console.warn('Action has no doc: "'
+							+ a.action +'" at: "'+ code +'"') 
+					}
+
+					// see if two actions have the same doc...
+					if(index[doc] && index[doc] != a.action){
+						console.warn('Actions have same title: "' 
+							+ index[doc] +'" and "'+ a.action
+							+'" at: "'+ code +'"')
+					}
+
+					index[doc] = a.action
+				})
+			})
+		}],
+
 	// XXX need a clean deep copy to restore...
 	resetKeyBindings: ['Interface/Restore default key bindings',
 		function(){ 
@@ -444,7 +478,12 @@ var KeyboardActions = actions.Actions({
 
 	keyHandler: ['- Interface/Get or set key handler',
 		function(mode, key, action){ 
-			return this.keyboard.handler(mode, key, action) }],
+			var res = this.keyboard.handler(mode, key, action) 
+			// return res only if we get a handler...
+			if(!action){
+				return res
+			}
+		}],
 
 	// Get normalized, flat set of actions and keys that trigger them...
 	//
@@ -575,9 +614,8 @@ var KeyboardActions = actions.Actions({
 				// NOTE: the target element must be focusable...
 				var target =
 				this.__keyboard_event_source =
-					(this.config['keyboard-event-source'] 
-							|| this.config['keyboard-event-source'] == 'window') ? 
-						$(window)
+					this.config['keyboard-event-source'] == null ? this.ribbons.viewer 
+					: this.config['keyboard-event-source'] == 'window' ? $(window)
 					: this.config['keyboard-event-source'] == 'viewer' ? this.ribbons.viewer
 					: this.config['keyboard-event-source'] == 'document' ? $(document)
 					: $(this.config['keyboard-event-source'])
@@ -646,7 +684,8 @@ var KeyboardActions = actions.Actions({
 	//		new key
 	// XXX BUG sections with doc do not show up in title...
 	// XXX sub-group by path (???)
-	browseKeyboardBindings: ['Interface/Keyboard bindings...',
+	// XXX place this in /Doc/.. (???)
+	browseKeyboardBindings: ['Interface|Help/Keyboard bindings...',
 		widgets.makeUIDialog(function(path, edit, get_text){
 			var actions = this
 			var keybindings = this.keybindings
@@ -836,7 +875,6 @@ var KeyboardActions = actions.Actions({
 
 			return dialog
 		})],
-	// XXX place this in /Doc/.. (???)
 	editKeyboardBindings: ['Interface/Keyboard bindings editor...',
 		widgets.uiDialog(function(path){ 
 			return this.browseKeyboardBindings(path, true) })],
@@ -860,6 +898,7 @@ var KeyboardActions = actions.Actions({
 				background: 'white',
 				focusable: true,
 			})],
+
 })
 
 var Keyboard = 
@@ -870,6 +909,9 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 	tag: 'keyboard',
 	depends: [
 		'ui'
+	],
+	suggested: [
+		'self-test',
 	],
 
 	actions: KeyboardActions, 
@@ -896,6 +938,10 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 					}
 				}
 			}],
+
+		['keyHandler',
+			function(res, mode, key, action){
+				action && this.checkKeyboardDoc() }],
 	],
 })
 
