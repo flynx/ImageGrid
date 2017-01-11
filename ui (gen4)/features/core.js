@@ -25,6 +25,8 @@
 * 		XXX needs revision...
 * 	- tasks
 * 		XXX not yet used
+* 	- self-test
+* 		basic framework for running test actions at startup...
 *
 *
 *

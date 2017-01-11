@@ -591,24 +591,11 @@ var KeyboardActions = actions.Actions({
 				return true
 			}).bind(this)
 
-			//* XXX gen2
 			var kb = this.__keyboard_object = 
 				this.__keyboard_object 
-					|| keyboard.Keyboard(
+					|| keyboard.KeyboardWithCSSModes(
 						function(){ return that.__keyboard_config },
-						function(mode, keyboard, context){ 
-							var pattern = keyboard[mode].pattern || mode
-							var target = that.ribbons.viewer
-							return !pattern 
-								|| pattern == '*' 
-								// XXX legacy...
-								//|| $(pattern).length > 0
-								// XXX can we join these into one search???
-								|| target.is(pattern)
-								|| target.find(pattern).length > 0
-						})
-			kb.service_fields = kb.constructor.service_fields.concat(['pattern'])
-			//*/
+						function(){ return that.ribbons.viewer })
 
 			// start/reset keyboard handling...
 			if(state == 'on'){

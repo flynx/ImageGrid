@@ -163,7 +163,7 @@ function parseActionCall(txt){
 
 
 //---------------------------------------------------------------------
-// Helpers...
+// Helpers and utility functions...
 
 // Form standard key string from keyboard event...
 //
@@ -311,9 +311,11 @@ function shifted(key){
 
 
 
-//---------------------------------------------------------------------
 
-var KeyboardHandlerClassPrototype = {
+/*********************************************************************/
+// Generic keyboard handler...
+
+var KeyboardClassPrototype = {
 	service_fields: ['doc', 'drop'],
 
 	event2key: event2key,
@@ -325,7 +327,7 @@ var KeyboardHandlerClassPrototype = {
 	shifted: shifted
 }
 
-var KeyboardHandlerPrototype = {
+var KeyboardPrototype = {
 	//service_fields: ['doc', 'drop'],
 	special_handlers: {
 		DROP: 'drop key', 
@@ -365,13 +367,13 @@ var KeyboardHandlerPrototype = {
 	//context: null,
 
 	// utils...
-	event2key: KeyboardHandlerClassPrototype.event2key,
-	key2code: KeyboardHandlerClassPrototype.key2code,
-	code2key: KeyboardHandlerClassPrototype.code2key,
-	shifted: KeyboardHandlerClassPrototype.shifted,
-	splitKey: KeyboardHandlerClassPrototype.splitKey,
-	normalizeKey: KeyboardHandlerClassPrototype.normalizeKey,
-	isKey: KeyboardHandlerClassPrototype.isKey,
+	event2key: KeyboardClassPrototype.event2key,
+	key2code: KeyboardClassPrototype.key2code,
+	code2key: KeyboardClassPrototype.code2key,
+	shifted: KeyboardClassPrototype.shifted,
+	splitKey: KeyboardClassPrototype.splitKey,
+	normalizeKey: KeyboardClassPrototype.normalizeKey,
+	isKey: KeyboardClassPrototype.isKey,
 
 	//isModeApplicable: function(mode, keyboard, context){ return true },
 	
@@ -751,8 +753,47 @@ var KeyboardHandlerPrototype = {
 var Keyboard = 
 module.Keyboard = 
 object.makeConstructor('Keyboard', 
-		KeyboardHandlerClassPrototype, 
-		KeyboardHandlerPrototype)
+		KeyboardClassPrototype, 
+		KeyboardPrototype)
+
+
+//---------------------------------------------------------------------
+// Keyboard handler with modes identified by CSS selectors...
+
+var KeyboardWithCSSModesPrototype = {
+	service_fields: ['doc', 'drop', 'pattern'],
+
+	isModeApplicable: function(mode, keyboard, context){ 
+		var pattern = keyboard[mode].pattern || mode
+		context = context || this.context
+		return !pattern 
+			|| pattern == '*' 
+			// XXX can we join these into one search???
+			|| context.is(pattern)
+			|| context.find(pattern).length > 0
+	},
+
+	__init__: function(keyboard, context){
+		object.superMethod(KeyboardWithCSSModes, '__init__').call(this, keyboard)
+		
+		if(context instanceof Function){
+			Object.defineProperty(this, 'context', {
+				get: context,
+			})
+
+		} else {
+			this.context = context
+		}
+	},
+}
+
+var KeyboardWithCSSModes = 
+module.KeyboardWithCSSModes = 
+object.makeConstructor('KeyboardWithCSSModes', 
+		KeyboardClassPrototype, 
+		KeyboardWithCSSModesPrototype)
+// inherit from Keyboard...
+KeyboardWithCSSModes.prototype.__proto__ = Keyboard.prototype
 
 
 
