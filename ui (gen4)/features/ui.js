@@ -40,6 +40,7 @@
 var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
+var keyboard = require('lib/keyboard2')
 
 var data = require('imagegrid/data')
 var images = require('imagegrid/images')
@@ -1603,6 +1604,10 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 	],
 
 	config: {
+		'cursor-autohide-ignore-keys': [
+			'shift', 'ctrl', 'alt', 'meta',
+		],
+
 		'cursor-autohide': 'on',
 		'cursor-autohide-on-timeout': 'off',
 		'cursor-autohide-on-keyboard': 'on',
@@ -1675,7 +1680,6 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 
 					// setup...
 					if(state == 'on'){
-						var x, y
 						var timer
 						var timeout = 
 							that.toggleAutoHideCursorTimeout('?') == 'on' ?
@@ -1716,8 +1720,13 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 						var key_handler 
 							= this.__cursor_autohide_key_handler 
 							= (this.__cursor_autohide_key_handler 
-								|| function(){
+								|| function(evt){
 									var viewer = that.ribbons.viewer
+
+									// get key...
+									var key = keyboard.normalizeKey(
+											keyboard.event2key(evt))
+										.join('+')
 
 									// auto-hide is off -- restore...
 									if(!viewer.hasClass('cursor-autohide')){
@@ -1725,7 +1734,10 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 										return
 									}
 
-									that.toggleAutoHideCursorKeyboard('?') == 'on'
+									// hide if mode is on and non-ignored key...
+									(that.config['cursor-autohide-ignore-keys'] 
+									 		|| []).indexOf(key) < 0
+										&& that.toggleAutoHideCursorKeyboard('?') == 'on'
 										&& that.toggleHiddenCursor('on')
 
 									return true

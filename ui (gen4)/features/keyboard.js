@@ -391,7 +391,7 @@ module.GLOBAL_KEYBOARD2 = {
 
 //---------------------------------------------------------------------
 
-// XXX DEBUG: remove when done...
+/*/ XXX DEBUG: remove when done...
 window.kb = keyboard.Keyboard(
 	GLOBAL_KEYBOARD, 
 	function checkGlobalMode(mode, keyboard, context){
@@ -399,6 +399,7 @@ window.kb = keyboard.Keyboard(
 		return !pattern 
 			|| pattern == '*' 
 			|| $(keyboard[mode].pattern).length > 0 })
+//*/
 
 
 
@@ -574,9 +575,10 @@ var KeyboardActions = actions.Actions({
 				// NOTE: the target element must be focusable...
 				var target =
 				this.__keyboard_event_source =
-					this.config['keyboard-event-source'] ? $(window)
+					(this.config['keyboard-event-source'] 
+							|| this.config['keyboard-event-source'] == 'window') ? 
+						$(window)
 					: this.config['keyboard-event-source'] == 'viewer' ? this.ribbons.viewer
-					: this.config['keyboard-event-source'] == 'window' ? $(window)
 					: this.config['keyboard-event-source'] == 'document' ? $(document)
 					: $(this.config['keyboard-event-source'])
 

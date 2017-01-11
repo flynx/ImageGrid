@@ -260,16 +260,19 @@ function normalizeKey(key){
 	key = splitKey(key)
 		.slice()
 		.sort(function(a, b){
-			a = modifiers.indexOf(a)
-			b = modifiers.indexOf(b)
+			a = modifiers.indexOf(a.toLowerCase())
+			b = modifiers.indexOf(b.toLowerCase())
 			return a >= 0 && b >= 0 ? a - b
 				: a < 0 ? 1
 				: -1 })
 
 	var k = key.pop()
-	k = parseInt(k) ? code2key(parseInt(k)) : k.capitalize()
-	key = key.unique()
+	k = parseInt(k) ? code2key(parseInt(k)) : k
+	k = modifiers.indexOf(k.toLowerCase()) >= 0 ? 
+		k.toLowerCase() 
+		: k.capitalize()
 	key.push(k)
+	key = key.unique()
 
 	return output == 'array' ? 
 		key 
