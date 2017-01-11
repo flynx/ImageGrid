@@ -460,8 +460,12 @@ var KeyboardActions = actions.Actions({
 					}
 
 					// see if two actions have the same doc...
+					//
+					// This problem can be fixed by:
+					// 	- setting a different doc in .keybindings...
+					// 	- updating action doc...
 					if(index[doc] && index[doc] != a.action){
-						console.warn('Actions have same title: "' 
+						console.warn('Actions have same doc/title: "' 
 							+ index[doc] +'" and "'+ a.action
 							+'" at: "'+ code +'"')
 					}
