@@ -201,7 +201,7 @@ actions.Actions({
 			this.images = images.Images(d.images)
 			this.data = data.Data(d.data)
 		}],
-	clear: ['File|Interface/Clear viewer',
+	clear: ['File/Clear',
 		{journal: true},
 		function(){
 			//delete this.data

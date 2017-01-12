@@ -840,7 +840,7 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 						&& evt.preventDefault()
 
 					// call the handler...
-					res = actions[h.action].apply(actions, h.args)
+					res = actions[h.action].apply(actions, h.arguments)
 
 					if(h.stop_propagation){
 						res = false

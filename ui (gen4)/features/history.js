@@ -517,7 +517,9 @@ var URLHistoryUIActions = actions.Actions({
 					}))
 
 				// history is empty...
-				if(list.length == 0){
+				// NOTE: the length here is 1 because we need to account
+				// 		for the separator...
+				if(list.length == 1){
 					list.push([
 						'No history...', 
 						{

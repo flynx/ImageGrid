@@ -234,8 +234,8 @@ module.GLOBAL_KEYBOARD2 = {
 
 
 		// theme...
-		ctrl_R: 'toggleTheme!',
-		ctrl_shift_R: 'toggleTheme!: "prev"',
+		ctrl_B: 'toggleTheme!',
+		ctrl_shift_B: 'toggleTheme!: "prev"',
 		'ctrl+-': 'darkerTheme!',
 		'ctrl++': 'lighterTheme!',
 
