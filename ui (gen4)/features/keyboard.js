@@ -69,8 +69,8 @@ module.GLOBAL_KEYBOARD2 = {
 
 
 		// handle in next section...
-		'(': 'NEXT_SECTION',
-		')': 'NEXT_SECTION',
+		'(': 'NEXT',
+		')': 'NEXT',
 
 		// zooming...
 		'#1': 'fitScreen',
@@ -388,21 +388,6 @@ module.GLOBAL_KEYBOARD2 = {
 
 
 
-//---------------------------------------------------------------------
-
-/*/ XXX DEBUG: remove when done...
-window.kb = keyboard.Keyboard(
-	GLOBAL_KEYBOARD, 
-	function checkGlobalMode(mode, keyboard, context){
-		var pattern = keyboard[mode].pattern
-		return !pattern 
-			|| pattern == '*' 
-			|| $(keyboard[mode].pattern).length > 0 })
-//*/
-
-
-
-
 /*********************************************************************/
 // XXX add loading/storing of kb bindings...
 
@@ -429,6 +414,14 @@ var KeyboardActions = actions.Actions({
 		// 		the handler by cycling the toggler off and on...
 		// NOTE: the target element must be focusable...
 		'keyboard-event-source': 'window',
+
+		// If true enable .keyPressed(..) action calling on keyboard 
+		// activity...
+		//
+		// NOTE: if updated the keyboard handler will need to be restarted
+		// 		for changes to take effect.
+		// XXX EXPERIMENTAL
+		'keyboard-key-pressed-action': false,
 	},
 
 	get keybindings(){
@@ -569,6 +562,8 @@ var KeyboardActions = actions.Actions({
 
 	toggleKeyboardHandling: ['- Interface/Keyboard handling',
 		toggler.Toggler(null, function(_, state){ 
+			var that = this
+
 			if(state == null){
 				return this.__keyboard_handler ? 'on' : 'off'
 			}
@@ -591,6 +586,24 @@ var KeyboardActions = actions.Actions({
 				return true
 			}).bind(this)
 
+			// pass keys pressed to .keyPressed(..) action...
+			// XXX EXPERIMENTAL...
+			var keyPressdCall = function(handler){
+				return that.config['keyboard-key-pressed-action'] ?
+					function(evt){
+						var e = that.keyPressed.pre(
+							that, 
+							[keyboard.joinKey(keyboard.event2key(evt))])
+
+						var res = handler.apply(that, arguments)
+						e.result = res
+
+						that.keyPressed.post(that, e)
+						return res
+					}
+					: handler
+			}
+
 			var kb = this.__keyboard_object = 
 				this.__keyboard_object 
 					|| keyboard.KeyboardWithCSSModes(
@@ -599,8 +612,6 @@ var KeyboardActions = actions.Actions({
 
 			// start/reset keyboard handling...
 			if(state == 'on'){
-				var that = this
-
 				// NOTE: the target element must be focusable...
 				var target =
 				this.__keyboard_event_source =
@@ -611,41 +622,35 @@ var KeyboardActions = actions.Actions({
 					: $(this.config['keyboard-event-source'])
 
 				// need to reset...
-				if(this.__keyboard_handler != null){
-					target.off('keydown', this.__keyboard_handler)
-				}
+				this.__keyboard_handler
+					&& target.off('keydown', this.__keyboard_handler)
+
+				// make the base handler...
+				var handler = 
+					keyboard.stoppableKeyboardRepeat(
+						// XXX EXPERIMENTAL...
+						keyPressdCall(
+							keyboard.makeKeyboardHandler(
+								this.keyboard,
+								function(k){ window.DEBUG && console.log('KEY:', k) }, 
+								this)),
+							check)
 
 				// setup base keyboard for devel, in case something breaks...
 				// This branch does not drop keys...
 				if(this.config['max-key-repeat-rate'] < 0 
 						|| this.config['max-key-repeat-rate'] == null){
-					//this.ribbons.viewer
-					var handler = 
-					this.__keyboard_handler =
-						keyboard.stoppableKeyboardRepeat(
-							keyboard.makeKeyboardHandler(
-								this.keyboard,
-								//function(){ return that.__keyboard_config },
-								function(k){ window.DEBUG && console.log('KEY:', k) }, 
-								this),
-							check)
+					this.__keyboard_handler = handler
 
 				// drop keys if repeating too fast...
 				// NOTE: this is done for smoother animations...
 				} else {
-					var handler = 
+					handler = 
 					this.__keyboard_handler =
-						keyboard.stoppableKeyboardRepeat(
-							keyboard.dropRepeatingkeys(
-								keyboard.makeKeyboardHandler(
-									this.keyboard,
-									//function(){ return that.__keyboard_config },
-									function(k){ window.DEBUG && console.log(k) },
-									this), 
-								function(){ 
-									return that.config['max-key-repeat-rate']
-								}),
-							check)
+						keyboard.dropRepeatingkeys(
+							handler,
+							function(){ 
+								return that.config['max-key-repeat-rate'] })
 				}
 
 				target.keydown(handler)
@@ -662,6 +667,21 @@ var KeyboardActions = actions.Actions({
 			}
 		},
 		['on', 'off'])],
+
+	// XXX EXPERIMENTAL: event for actions to be able to handle keys...
+	// 		...not working yet...
+	// XXX not sure if we need this...
+	// 		...the main reason being that this may be a way to bypass the
+	// 		.keyboard handler and config and handle keys within an action
+	// 		if overdone this can be a mess...
+	keyPressed: ['- Interface/Key pressed event',
+		'This is called by the keyboard handler when a key is pressed, '
+			+'the key is passed as argument.',
+		core.notUserCallable(function(key){
+			// This is the keyboard hook protocol root function
+			//
+			// Not for direct use.
+		})],
 
 
 	// interface stuff...
@@ -715,7 +735,7 @@ var KeyboardActions = actions.Actions({
 									{ 
 										not_filtered_out: true,
 										// XXX should sections be searchable???
-										//not_searchable: true,
+										not_searchable: true,
 									})
 								.addClass('mode')
 

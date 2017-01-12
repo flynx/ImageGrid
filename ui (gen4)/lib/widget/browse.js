@@ -380,6 +380,10 @@ var BrowserPrototype = {
 			// keep text editing action from affecting the selection...
 			drop: '*',
 
+			// XXX not sure about this...
+			Up: 'NEXT',
+			Down: 'NEXT',
+
 			Enter: 'push!',
 			Esc: 'update!',
 		},
@@ -400,8 +404,8 @@ var BrowserPrototype = {
 			// keep text editing action from affecting the selection...
 			drop: '*',
 			
-			Up: 'NEXT_SECTION',
-			Down: 'NEXT_SECTION',
+			Up: 'NEXT',
+			Down: 'NEXT',
 
 			Enter: 'push!',
 			Esc: 'stopFilter!',

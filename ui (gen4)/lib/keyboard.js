@@ -182,7 +182,12 @@ function event2key(evt){
 	evt.altKey && key.push('alt')
 	evt.metaKey && key.push('meta')
 	evt.shiftKey && key.push('shift')
-	key.push(code2key(evt.keyCode))
+
+	var k = code2key(evt.keyCode)
+
+	// add the key if it's not already in, this can happen if we just 
+	// pressed a modifier key...
+	key.indexOf(k.toLowerCase()) < 0 && key.push(k)
 
 	return key
 }
@@ -241,6 +246,12 @@ function splitKey(key){
 			.concat(sep.indexOf(key.slice(-1)) >= 0 ? key.slice(-1) : [])
 			.filter(function(c){ return c != '' }) }
 
+var joinKey =
+module.joinKey = 
+function joinKey(key){
+	return key instanceof Array ? 
+		key.join(KEY_SEPARATORS[0] || '+') 
+		: key }
 
 // Normalize key string/array...
 // 
@@ -276,7 +287,7 @@ function normalizeKey(key){
 
 	return output == 'array' ? 
 		key 
-		: key.join(KEY_SEPARATORS[0] || '+')
+		: joinKey(key)
 }
 
 
@@ -305,7 +316,7 @@ function shifted(key){
 
 	return s == null ? null 
 		: output == 'string' ? 
-			res.join(KEY_SEPARATORS[0] || '+') 
+			joinKey(res)
 		: res
 }
 
@@ -314,6 +325,63 @@ function shifted(key){
 
 /*********************************************************************/
 // Generic keyboard handler...
+// 
+// Key binding format:
+//	{
+//		<section-title>: {
+//			doc: <section-doc>,
+//
+//			// list of keys to drop after this section is done.
+//			//
+//			// Setting this to '*' will drop all keys...
+//			//
+//			// NOTE: these keys will be handled in current section.
+//			// NOTE: these keys will not get propagated to the next 
+//			//		matching section...
+//			// NOTE: it is possible to override this and explicitly pass
+//			//		a key to the next section via 'NEXT' (see below).
+//			drop: [ <key>, ... ] | '*',
+//
+//			// Key mapped to action...
+//			//
+//			// NOTE: the system poses no restrictions on action format,
+//			//		but it is recommended to stick to strings or use the
+//			//		doc(..) wrapper...
+//			<key>: <action>,
+//
+//			// Key mapped to an alias...
+//			//
+//			// An alias is any string that is also a key in bindings, it
+//			// can be just a string or a key, when matching the string of
+//			// aliases will be resolved till either an action (non-alias)
+//			// is found or a loop is detected.
+//			//
+//			// NOTE: in case of a loop, nothing will get called...
+//			<key>: <alias> | <key>,
+//
+//			// Alias-action mapping...
+//			<alias>: <action>,
+//
+//			// Explicitly drop key...
+//			//
+//			// NOTE: this is similar in effect to .drop
+//			<key>: 'DROP',
+//
+//			// Explicitly pass key to next section...
+//			//
+//			// This can be useful when it is needed to drop all keys 
+//			// except for a small sub-group, this can be dune by setting
+//			// .drop to '*' (drop all) and explicitly setting the keys to
+//			// be propagated to 'NEXT'.
+//			//
+//			// NOTE: his takes precedence over .drop 
+//			<key>: 'NEXT',
+//
+//			...
+//		},
+//		...
+//	}
+//
 
 var KeyboardClassPrototype = {
 	service_fields: ['doc', 'drop'],
@@ -323,6 +391,7 @@ var KeyboardClassPrototype = {
 	code2key: code2key,
 	isKey: isKey,
 	splitKey: splitKey,
+	joinKey: joinKey,
 	normalizeKey: normalizeKey,
 	shifted: shifted
 }
@@ -331,7 +400,7 @@ var KeyboardPrototype = {
 	//service_fields: ['doc', 'drop'],
 	special_handlers: {
 		DROP: 'drop key', 
-		NEXT_SECTION: 'handle key in next section',
+		NEXT: 'handle key in next section',
 	},
 
 	// Format:
@@ -349,11 +418,11 @@ var KeyboardPrototype = {
 	// 	}
 	//
 	// Reserved special handlers:
-	// 	- DROP			- drop checking of key
-	// 						NOTE: this will prevent handling next sections
-	// 							for this key.
-	// 	- NEXT_SECTION	- force check next section, this has priority 
-	// 						over .drop
+	// 	- DROP		- drop checking of key
+	// 					NOTE: this will prevent handling next sections
+	// 						for this key.
+	// 	- NEXT		- force check next section, this has priority 
+	// 					over .drop
 	//
 	__keyboard: null,
 	get keyboard(){
@@ -372,6 +441,7 @@ var KeyboardPrototype = {
 	code2key: KeyboardClassPrototype.code2key,
 	shifted: KeyboardClassPrototype.shifted,
 	splitKey: KeyboardClassPrototype.splitKey,
+	joinKey: KeyboardClassPrototype.joinKey,
 	normalizeKey: KeyboardClassPrototype.normalizeKey,
 	isKey: KeyboardClassPrototype.isKey,
 
@@ -435,10 +505,10 @@ var KeyboardPrototype = {
 			mod = mod || []
 			if(key in rev){
 				rev[key].forEach(function(k){
-					k = that.normalizeKey(mod
-						.concat(that.splitKey(k))
-						.unique()
-						.join(key_separators[0]))
+					k = that.normalizeKey(
+						that.joinKey(mod
+							.concat(that.splitKey(k))
+							.unique()))
 					res.indexOf(k) < 0 
 						&& res.push(k)
 						&& walkAliases(res, rev, bindings, k, mod)
@@ -688,7 +758,7 @@ var KeyboardPrototype = {
 				// if key in .drop then ignore the rest...
 				if(drop 
 						// explicit go to next section...
-						&& handler != 'NEXT_SECTION'
+						&& handler != 'NEXT'
 						&& (bindings.drop == '*'
 							// XXX should this be more flexible by adding a
 							// 		specific key combo?
