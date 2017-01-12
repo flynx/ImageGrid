@@ -668,6 +668,9 @@ var KeyboardActions = actions.Actions({
 		},
 		['on', 'off'])],
 
+	// NOTE: at this point this is disabled by default, set
+	//		.config['keyboard-key-pressed-action'] to true and restart
+	//		the handler via .toggleKeyboardHandling('!') for this to work
 	// XXX EXPERIMENTAL: event for actions to be able to handle keys...
 	// 		...not working yet...
 	// XXX not sure if we need this...
