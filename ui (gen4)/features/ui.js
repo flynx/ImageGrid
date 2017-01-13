@@ -1668,6 +1668,31 @@ module.Cursor = core.ImageGridFeatures.Feature({
 							.off('mousemove', this.__cursor_show_handler)
 					}
 				})],
+
+		// Toggle global auto-hiding the cursor...
+		//
+		// The cursor can hidden by the following user actions:
+		//
+		// 	- keyboard activity
+		// 		toggled by: 
+		// 			.toggleAutoHideCursorKeyboard(..)
+		// 		hide delay is set by:
+		// 			.config['cursor-keyboard-hide-timeout']
+		// 		list of keys that will not hide the cursor is set via:
+		// 			.config['cursor-autohide-ignore-keys']
+		//
+		// 	- mouse inactivity
+		// 		toggled by:
+		// 			.toggleAutoHideCursorTimeout(..)
+		// 		inactivity period (timeout) is set by:
+		// 			.config['cursor-autohide-timeout']
+		//
+		//
+		// Moving the mouse will prevent it from being hidden by either
+		// action.
+		// The amount of movement required (threshold in pixels):
+		// 	.config['cursor-show-threshold']
+		//
 		toggleAutoHideCursor: ['Interface/Cursor auto-hide',
 			toggler.CSSClassToggler(
 				function(){ return this.ribbons.viewer }, 
