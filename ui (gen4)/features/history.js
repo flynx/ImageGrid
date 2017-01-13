@@ -671,8 +671,54 @@ module.URLHistoryUI = core.ImageGridFeatures.Feature({
 		'ui',
 		'url-history',
 	],
+	suggested: [
+		'ui-url-history-browsable',
+	],
 
 	actions: URLHistoryUIActions,
+})
+
+
+
+//---------------------------------------------------------------------
+
+var URLHistoryUIBrowsable = 
+module.URLHistoryUIBrowsable = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-url-history-browsable',
+	depends: [
+		'ui',
+		'url-history',
+		'ui-fs-loader',
+	],
+
+	handlers: [
+		['listURLHistory', 
+			function(dialog){
+				var that = this
+
+				// this will take care of any number of child dialogs...
+				var onOpen = function(){
+					// we are the top dialog --> close...
+					if(that.modal.client === dialog){
+						dialog.close() 
+
+					// child dialog, ask to close us when opening...
+					} else {
+						that.modal.client.open(onOpen)
+					}
+				}
+
+				dialog.browsePath = function(){
+					that.browsePath(this.selected).open(onOpen) }
+
+				// clone the bindings so as not to mess up the global browser...
+				dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
+
+				dialog.keyboard.handler('General', 'O', 'browsePath')
+			}]],
 })
 
 

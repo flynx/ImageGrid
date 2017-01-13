@@ -52,21 +52,14 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui',
 	'keyboard',
 
-	//'ui-ribbons-placement',
-
 	// features...
 	'ui-ribbon-auto-align',
-	//'ui-ribbon-align-to-order',
-	//'ui-ribbon-align-to-first',
-	//'ui-ribbon-manual-align',
 	
+	'ui-cursor',
+	'ui-animation',
+
 	'ui-single-image',
 	'ui-partial-ribbons',
-
-	// XXX
-	//'ui-keyboard-control',
-	//'ui-direct-control',
-	//'ui-indirect-control',
 
 	'marks',
 	'ui-range',

@@ -330,7 +330,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 	],
 	suggested: [
 		'ui-single-image-local-storage',
-		'ui-single-image-autohide-cursor',
+		'ui-single-image-cursor',
 	],
 
 	actions: SingleImageActions,
@@ -507,14 +507,14 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 // NOTE: chrome 49 + devtools open appears to prevent the cursor from being hidden...
 //
 // XXX hiding cursor on navigation for some reason does not work...
-var SingleImageAutoHideCursor = 
-module.SingleImageAutoHideCursor = core.ImageGridFeatures.Feature({
+var SingleImageCursor = 
+module.SingleImageCursor = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-single-image-autohide-cursor',
+	tag: 'ui-single-image-cursor',
 	depends: [
-		'ui-autohide-cursor',
+		'ui-cursor',
 		'ui-single-image',
 	],
 

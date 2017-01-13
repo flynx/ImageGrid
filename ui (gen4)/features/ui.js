@@ -16,7 +16,7 @@
 *		- ui-ribbon-manual-align
 *	- ui-animation
 *		manage UI non-css animations...
-*	- ui-autohide-cursor
+*	- ui-cursor
 *	- ui-control
 *		touch/mouse control mechanics
 *
@@ -1593,27 +1593,30 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 // 		on will re-enable autohide.
 // NOTE: chrome 49 + devtools open appears to prevent the cursor from 
 // 		being hidden...
-var AutoHideCursor = 
-module.AutoHideCursor = core.ImageGridFeatures.Feature({
+var Cursor = 
+module.Cursor = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-autohide-cursor',
+	tag: 'ui-cursor',
 	depends: [
 		'ui'
 	],
 
 	config: {
 		'cursor-autohide-ignore-keys': [
-			'shift', 'ctrl', 'alt', 'meta',
+			'shift', 'ctrl', 'alt', 'meta', 
+			'F5',
 		],
 
 		'cursor-autohide': 'on',
 		'cursor-autohide-on-timeout': 'off',
 		'cursor-autohide-on-keyboard': 'on',
 
-		'cursor-autohide-timeout': 1000,
 		'cursor-show-threshold': 10,
+
+		'cursor-autohide-timeout': 1000,
+		'cursor-keyboard-hide-timeout': 200,
 	},
 
 	actions: actions.Actions({
@@ -1665,7 +1668,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 							.off('mousemove', this.__cursor_show_handler)
 					}
 				})],
-		toggleAutoHideCursor: ['Interface/Cursor auto hiding',
+		toggleAutoHideCursor: ['Interface/Cursor auto-hide',
 			toggler.CSSClassToggler(
 				function(){ return this.ribbons.viewer }, 
 				'cursor-autohide',
@@ -1680,7 +1683,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 
 					// setup...
 					if(state == 'on'){
-						var timer
+						var m_timer
 						var timeout = 
 							that.toggleAutoHideCursorTimeout('?') == 'on' ?
 								(that.config['cursor-autohide-timeout'] || 1000)
@@ -1691,7 +1694,9 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 							= this.__cursor_autohide_mouse_handler 
 							= (this.__cursor_autohide_mouse_handler 
 								|| function(){
-									timer && clearTimeout(timer)
+									m_timer && clearTimeout(m_timer)
+									kb_timer && clearTimeout(kb_timer)
+									kb_timer = null
 
 									// hide on timeout...
 									var timeout = 
@@ -1699,7 +1704,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 											(that.config['cursor-autohide-timeout'] || 1000)
 											: -1
 									if(timeout && timeout > 0){
-										timer = setTimeout(function(){
+										m_timer = setTimeout(function(){
 											var viewer = that.ribbons.viewer
 
 											// auto-hide is off -- restore...
@@ -1708,38 +1713,43 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 												return
 											}
 
-											timer && that.toggleHiddenCursor('on') 
+											m_timer && that.toggleHiddenCursor('on') 
 										}, timeout)
 									}
 								})
 
 						// hide on key...
-						// XXX should be usable with mouse, e.g. don't 
-						// 		hide cursor while moving mous with shift
-						// 		pressed...
+						var kb_timer
 						var key_handler 
 							= this.__cursor_autohide_key_handler 
 							= (this.__cursor_autohide_key_handler 
 								|| function(evt){
-									var viewer = that.ribbons.viewer
-
-									// get key...
-									var key = keyboard.normalizeKey(
-											keyboard.event2key(evt))
-										.join('+')
-
-									// auto-hide is off -- restore...
-									if(!viewer.hasClass('cursor-autohide')){
-										that.toggleHiddenCursor('off') 
-										return
+									// prevent creating more than one timer at a time...
+									if(kb_timer){
+										return true
 									}
+									// avoid this from delaying the keyboard handler...
+									kb_timer = setTimeout(function(){
+										kb_timer = null
+										var viewer = that.ribbons.viewer
 
-									// hide if mode is on and non-ignored key...
-									(that.config['cursor-autohide-ignore-keys'] 
-									 		|| []).indexOf(key) < 0
-										&& that.toggleAutoHideCursorKeyboard('?') == 'on'
-										&& that.toggleHiddenCursor('on')
+										// get key...
+										var key = keyboard.normalizeKey(
+												keyboard.event2key(evt))
+											.join('+')
 
+										// auto-hide is off -- restore...
+										if(!viewer.hasClass('cursor-autohide')){
+											that.toggleHiddenCursor('off') 
+											return
+										}
+
+										// hide if mode is on and non-ignored key...
+										(that.config['cursor-autohide-ignore-keys'] 
+												|| []).indexOf(key) < 0
+											&& that.toggleAutoHideCursorKeyboard('?') == 'on'
+											&& that.toggleHiddenCursor('on')
+									}, that.config['cursor-keyboard-hide-timeout'] || 15)
 									return true
 								})
 
@@ -1772,6 +1782,7 @@ module.AutoHideCursor = core.ImageGridFeatures.Feature({
 						this.toggleHiddenCursor('off')
 					}
 				})],
+
 		toggleAutoHideCursorTimeout: ['Interface/Hide cursor on timeout',
 			core.makeConfigToggler('cursor-autohide-on-timeout', 
 				['on', 'off'],
