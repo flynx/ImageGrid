@@ -744,6 +744,14 @@ var KeyboardActions = actions.Actions({
 						.forEach(function(mode){
 							var dropped = keybindings[mode].drop || []
 							var bound_ignored = []
+							var buttons = edit ? 
+								[
+									// XXX up
+									['&#9206;', function(){}],
+									// XXX down
+									['&#9207;', function(){}],
+								].concat(dialog.options.itemButtons)
+								: undefined
 
 							// section heading...
 							make(keybindings[mode].doc ? 
@@ -761,13 +769,7 @@ var KeyboardActions = actions.Actions({
 										not_filtered_out: true,
 										// XXX should sections be searchable???
 										not_searchable: true,
-
-										buttons: [
-											// XXX up
-											['&#9206;', function(){}],
-											// XXX down
-											['&#9207;', function(){}],
-										].concat(dialog.options.itemButtons),
+										buttons: buttons,
 									})
 								.attr('mode', mode)
 								.addClass('mode')
