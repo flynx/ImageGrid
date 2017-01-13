@@ -515,7 +515,8 @@ module.makeUIDialog = function(a, b){
 var makeDrawer = function(direction){
 	return makeUIContainer(function(dialog, options){
 		var that = this
-		var parent = (options || {}).parentElement 
+		options = options || {}
+		var parent = options.parentElement 
 		parent = parent ? $(parent) : this.ribbons.viewer 
 
 		options.direction = direction || 'bottom'
