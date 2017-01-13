@@ -800,6 +800,15 @@ var BrowserPrototype = {
 	//
 	// NOTE: buttons will override .options.itemButtons, if this is not
 	// 		desired simply copy .itemButtons and modify it...
+	// 			Example:
+	// 				make(.., {
+	// 					buttons: [
+	//
+	// 						...
+	//
+	// 					// dialog here refers to the browse object...
+	// 					].concat(dialog.options.itemButtons),
+	// 				})
 	//
 	//
 	// Finalize the dialog (optional)...
@@ -1140,11 +1149,11 @@ var BrowserPrototype = {
 
 							// action name...
 							if(typeof(func) == typeof('str')){
-								that[func](txt)
+								that[func](txt, res)
 
 							// handler...
 							} else {
-								func.call(that, txt)
+								func.call(that, txt, res)
 							}
 						}))
 				})

@@ -573,9 +573,7 @@ var URLHistoryUIActions = actions.Actions({
 						// XXX should this be standard functionality???
 						['<span class="pin-set">&#9679;</span>'
 						+'<span class="pin-unset">&#9675;</span>', 
-							function(p){
-								var cur = this.filter('"'+p+'"', false)
-
+							function(p, cur){
 								// change state...
 								// pinned...
 								if(cur.hasClass('pinned')){
@@ -597,11 +595,10 @@ var URLHistoryUIActions = actions.Actions({
 							}],
 						// mark for removal...
 						['&times;', 
-							function(p){
-								var e = this.filter('"'+p+'"', false)
-									.toggleClass('strike-out')
+							function(p, cur){
+								cur.toggleClass('strike-out')
 
-								if(e.hasClass('strike-out')){
+								if(cur.hasClass('strike-out')){
 									to_remove.indexOf(p) < 0 
 										&& to_remove.push(p)
 

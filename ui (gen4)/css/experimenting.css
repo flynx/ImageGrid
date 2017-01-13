@@ -331,7 +331,7 @@ body {
 	background: rgba(0, 0, 0, 0.7);
 }
 
-.browse-widget.key-bindings .list>.ignore-list .text:first-child {
+.browse-widget.key-bindings .list>.drop-list .text:first-child {
 	font-weight: bold;
 	font-style: italic;
 }

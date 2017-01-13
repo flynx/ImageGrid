@@ -717,12 +717,6 @@ var KeyboardActions = actions.Actions({
 
 	// Interface stuff ------------------------------------------------
 
-	// XXX key editor:
-	// 		[ mode ]
-	// 		[  action (text with dataset)  ] [  args (text field)  ] no default: [_]
-	//		---
-	//		<list of keys>
-	//		new key
 	// XXX BUG sections with doc do not show up in title...
 	// XXX sub-group by path (???)
 	// XXX place this in /Doc/.. (???)
@@ -767,14 +761,20 @@ var KeyboardActions = actions.Actions({
 										not_filtered_out: true,
 										// XXX should sections be searchable???
 										not_searchable: true,
+
+										buttons: [
+											// XXX up
+											['&#9206;', function(){}],
+											// XXX down
+											['&#9207;', function(){}],
+										].concat(dialog.options.itemButtons),
 									})
+								.attr('mode', mode)
 								.addClass('mode')
 
 							// bindings...
 							var c = 0
 							Object.keys(keys[mode] || {}).forEach(function(action){
-
-								action instanceof Function && console.log('!!!!!')
 
 								var o = keyboard.parseActionCall(action)
 
@@ -819,11 +819,14 @@ var KeyboardActions = actions.Actions({
 										hidden: hidden,	
 										disabled: hidden,	
 									})
-									.attr('doc', 
-										doc.trim() != '' ? 
+									.attr({
+										'mode': mode,
+										'code': action,
+										'doc': doc.trim() != '' ? 
 											doc 
 											: (kb.special_handlers[action] 
-												|| null))
+												|| null),
+									})
 									.addClass('key'
 										// special stuff...
 										+ (action in kb.special_handlers ?
@@ -856,7 +859,8 @@ var KeyboardActions = actions.Actions({
 										.filter(function(k){ 
 											return bound_ignored.indexOf(k) == -1 })
 										.join(' / ')])
-								.addClass('ignore-list')
+								.addClass('drop-list')
+								.attr('mode', mode)
 
 							// controls...
 							if(edit){
@@ -866,11 +870,16 @@ var KeyboardActions = actions.Actions({
 										['key', 
 											function(){
 												//elem.before( XXX )
+												actions.editKeyBinding(mode)
+												// XXX update when done???
 											}],
 										// XXX
 										['mode', 
 											function(){
 												//elem.after( XXX )
+												// XXX need to pass order info...
+												actions.editKeyboardMode()
+												// XXX update when done???
 											}],
 									]})
 									.addClass('new')
@@ -907,7 +916,18 @@ var KeyboardActions = actions.Actions({
 							//['&#9207;', function(){}],
 
 							// XXX edit -- launch the editor...
-							['&ctdot;', function(){}],
+							// 		...do we actually need this as a button????
+							['&ctdot;', function(_, cur){
+								// key...
+								if(cur.hasClass('key')){
+									actions.editKeyBinding(cur.attr('mode'), cur.attr('code'))
+
+								// mode...
+								} else if(cur.hasClass('mode')){
+									actions.editKeyboardMode(cur.attr('mode'))
+								}
+							}],
+							//*/
 							//['edit', function(){}],
 							//['&#128393;', function(){}],
 						]
@@ -916,9 +936,92 @@ var KeyboardActions = actions.Actions({
 
 			return dialog
 		})],
+	// XXX BUG: for some reason modes are unclickable...
 	editKeyboardBindings: ['Interface/Keyboard bindings editor...',
 		widgets.uiDialog(function(path){ 
-			return this.browseKeyboardBindings(path, true) })],
+			var that = this
+			var dialog = this.browseKeyboardBindings(path, true)
+				// XXX should this be only a button thing (done in .browseKeyboardBindings(..))
+				// 		or also the main action???
+	   			.open(function(){
+					var cur = dialog.select('!')
+
+					// key...
+					if(cur.hasClass('key')){
+						that.editKeyBinding(cur.attr('mode'), cur.attr('code'))
+
+					// mode...
+					// XXX BUG: for some reason modes are unclickable...
+					} else if(cur.hasClass('mode')){
+						that.editKeyboardMode(cur.attr('mode'))
+
+					} else if(cur.hasClass('drop-list')){
+						that.editKeyboardModeDroppedKeys(cur.attr('mode'))
+					}
+				}) 
+			return dialog
+		})],
+
+	// XXX key editor:
+	// 		[ mode ]
+	// 		[  action (text with dataset)  ] [  args (text field)  ] no default: [_]
+	//		---
+	//		<list of keys>
+	//		new key
+	// XXX
+	editKeyBinding: ['- Interface/Key binding editor...',
+		widgets.makeUIDialog(function(mode, code){
+			var that = this
+			// XXX
+			var dialog = browse.makeLister(null, 
+				function(path, make){
+					// XXX make editable...
+					make(['Mode:', mode || ''])
+					// XXX make editable...
+					make(['Code:', code || ''])
+
+					make('---')
+
+					// list the keys...
+					that.keyboard.keys(code)[mode][code]
+						.forEach(function(key){
+							// XXX make editable...
+							make(key, { buttons: [
+								['&times;', function(){}],
+							], })
+						})
+
+					make('New key')
+						// XXX stub...
+						.css({ fontStyle: 'italic' })
+
+					make('---')
+					
+					make('', { buttons: [
+						['Delete mapping', function(){}],
+					], })
+				})
+
+			return dialog
+		})],
+	// XXX
+	editKeyboardMode: ['- Interface/keyboard mode editor...',
+		widgets.makeUIDialog(function(mode){
+			var that = this
+			var dialog = browse.makeLister(null, 
+				function(path, make){
+					make(['Mode:', mode || ''])
+					make(['Doc:', that.keybindings[mode].doc || ''])
+					make(['Pattern:', that.keybindings[mode].pattern || mode])
+				})
+
+			return dialog
+		})],
+	// XXX
+	editKeyboardModeDroppedKeys: ['- Interface/keyboard mode dropped key editor...',
+		widgets.makeUIDialog(function(mode){
+			// XXX
+		})],
 
 
 	// XXX move to gen2
@@ -926,7 +1029,7 @@ var KeyboardActions = actions.Actions({
 	// 		- remove the path component...
 	// 		- insert the action name where not doc present...
 	// XXX cleanup CSS
-	showKeyboardBindings: ['Interface/Show keyboard bindings...',
+	showKeyboardBindings: ['- Interface/Show keyboard bindings...',
 		widgets.makeUIDialog('Drawer', 
 			function(){
 				return keyboard.buildKeybindingsHelpHTML(
