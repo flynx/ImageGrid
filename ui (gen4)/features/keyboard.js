@@ -985,7 +985,12 @@ var KeyboardActions = actions.Actions({
 					make('---')
 
 					// list the keys...
-					that.keyboard.keys(code)[mode][code]
+					var keys = that.keyboard.keys(code)
+					keys = mode in keys ? 
+						keys[mode][code]
+						: [] 
+
+					keys
 						.forEach(function(key){
 							// XXX make editable...
 							make(key, { buttons: [
@@ -1015,6 +1020,12 @@ var KeyboardActions = actions.Actions({
 					make(['Mode:', mode || ''])
 					make(['Doc:', that.keybindings[mode].doc || ''])
 					make(['Pattern:', that.keybindings[mode].pattern || mode])
+
+					make('---')
+
+					make('', { buttons: [
+						['Delete mode', function(){}],
+					], })
 				})
 
 			return dialog
@@ -1022,7 +1033,37 @@ var KeyboardActions = actions.Actions({
 	// XXX
 	editKeyboardModeDroppedKeys: ['- Interface/keyboard mode dropped key editor...',
 		widgets.makeUIDialog(function(mode){
-			// XXX
+			var that = this
+
+			var dialog = browse.makeLister(null, 
+				function(path, make){
+					make(['Mode:', mode || ''])
+
+					make('---')
+
+					var drop = that.keybindings[mode].drop || []
+					drop = drop == '*' ? [drop] : drop
+
+					drop
+						.forEach(function(key){
+							// XXX make editable...
+							make(key, { buttons: [
+								['&times;', function(){}],
+							], })
+						})
+
+					make('New key')
+						// XXX stub...
+						.css({ fontStyle: 'italic' })
+
+					make('---')
+
+					make('', { buttons: [
+						['Clear dropped keys', function(){}],
+					], })
+				})
+
+			return dialog
 		})],
 
 
