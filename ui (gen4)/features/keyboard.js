@@ -282,7 +282,7 @@ module.GLOBAL_KEYBOARD2 = {
 		alt_Left: 'shiftImageLeft!',
 		alt_Right: 'shiftImageRight!',
 
-		shift_R: 'setBaseRibbon',
+		shift_B: 'setBaseRibbon',
 
 
 		// editing...
