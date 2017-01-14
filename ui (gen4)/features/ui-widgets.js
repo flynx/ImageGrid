@@ -144,21 +144,89 @@ function(cls, cfg, parent){
 // XXX make the selector more accurate...
 // 		...at this point this will select the first elem with text which
 // 		can be a different elem...
-var makeEditableItem =
-module.makeEditableItem =
-function(list, item, elem, callback, options){
+var editItem =
+module.editItem =
+function(list, elem, callback, options){
 	return elem
-		.makeEditable({
-			activate: true,
-		})
+		.makeEditable(options 
+			|| {
+				activate: true,
+				clear_on_edit: true,
+				blur_on_abort: false,
+				blur_on_commit: false,
+			})
 		.on('edit-done', callback || function(){})
 		.on('edit-aborted edit-done', function(_, text){
 			list.update()
 				// XXX make the selector more accurate...
 				// 		...at this point this will select the first elem
 				// 		with text which can be a different elem...
-				.then(function(){ list.select(item.text()) })
+				.then(function(){ list.select(elem.text()) })
 		})
+}
+
+
+var makeRemoveItemButton = 
+module.makeRemoveItemButton = 
+function makeRemoveItemButton(list, html){
+	return [html || '&times;', 
+		function(p, e){
+			e.toggleClass('strike-out')
+
+			if(e.hasClass('strike-out')){
+				list.indexOf(p) < 0 
+					&& list.push(p)
+
+			} else {
+				var i = list.indexOf(p)
+				if(i >= 0){
+					list.splice(i, 1)
+				}
+			}
+		}]
+}
+
+
+var makeConfirmActionItem =
+module.makeConfirmActionItem =
+function makeConfirmActionItem(elem, callback, timeout, confirm_text){
+	confirm_text = confirm_text ? 
+		confirm_text 
+		: 'Confirm '+ elem.text().toLowerCase() +'?'
+	var text
+
+	return elem
+		.addClass('action')
+		.on('open', function(){
+			var item = $(this)
+			var elem = item.find('.text')
+
+			// ready to delete...
+			if(elem.text() != confirm_text){
+				text = elem.text()
+
+				elem.text(confirm_text)
+
+				item.addClass('warn')
+
+				// reset...
+				setTimeout(function(){
+					elem.text(text)
+
+					item.removeClass('warn')
+				}, timeout || 2000)
+
+			// confirmed...
+			} else {
+				callback && callback()
+			}
+		})
+}
+
+
+var makeNewEditableItem =
+module.makeNewEditableItem =
+function makeNewEditableItem(elem){
 }
 
 
@@ -190,15 +258,15 @@ function(list, item, elem, callback, options){
 // 	}
 //
 // XXX add sort buttons: up/down/top/bottom...
-// XXX make this more generic...
 // XXX currently using this also requires the use of makeUIDialog(..),
 // 		can this be simpler???
-var makeConfigListEditor = 
-module.makeConfigListEditor =
-function(actions, list_key, options){
+// XXX this is generic, move to browse...
+var makeListEditor = 
+module.makeListEditor =
+function(list, options){
 	options = options || {}
 
-	var new_button = options.new_button
+	var new_button = options.new_button || true
 	new_button = new_button === true ? 'New...' : new_button
 
 	var _makeEditable = function(elem){
@@ -210,15 +278,15 @@ function(actions, list_key, options){
 				blur_on_commit: false,
 			})
 			.on('edit-aborted', function(){
-				list.select(null)	
-				list.update()
+				dialog.select(null)	
+				dialog.update()
 			})
 			.on('edit-done', function(evt, text){
 				var txt = $(this).text()
 
 				// invalid format...
 				if(options.check && !options.check(txt)){
-					list.update()
+					dialog.update()
 					return
 				}
 
@@ -226,83 +294,76 @@ function(actions, list_key, options){
 				if(options.length_limit 
 					&& (lst.length >= options.length_limit)){
 
-					options.callback && options.callback.call(list, txt)
+					options.callback && options.callback.call(dialog, txt)
 
 					return
 				}
 
 				// prevent editing non-arrays...
-				if(!(actions.config[list_key] instanceof Array)){
+				if(!editable || !lst){
 					return
 				}
 
-				// save the new version...
-				actions.config[list_key] = actions.config[list_key].slice()
 				// add new value and sort list...
-				actions.config[list_key]
-					.push(txt)
+				lst.push(txt)
 
 				// unique...
 				if(options.unique == null || options.unique === true){
-					actions.config[list_key] = actions.config[list_key]
-						.unique()
+					lst = lst.unique()
 
 				// unique normalized...
-				} else if( typeof(options.unique) == typeof(function(){})){
-					actions.config[list_key] = actions.config[list_key]
-						.unique(options.unique) 
+				} else if(typeof(options.unique) == typeof(function(){})){
+					lst = lst.unique(options.unique) 
 				}
 
 				// sort...
 				if(options.sort){
-					actions.config[list_key] = actions.config[list_key]
+					lst = lst
 						.sort(typeof(options.sort) == typeof(function(){}) ? 
 							options.sort 
 							: undefined)
 				}
 
+				_write(lst)
+
 				// update the list data...
-				list.options.data 
-					= actions.config[list_key]
-						.concat(new_button ? [ new_button ] : [])
+				dialog.options.data = lst.concat(new_button ? [ new_button ] : [])
 
 				// update list and select new value...
-				list.update()
+				dialog.update()
 					.done(function(){
-						list.select('"'+txt+'"')
+						dialog.select('"'+txt+'"')
 					})
 			})
+	}
+	var _write = function(lst){
+		// write back the list...
+		return list instanceof Function ?
+			// call the writer...
+			list(lst) 
+			// in-place replace list elements...
+			// NOTE: this is necessary as not everything we do with lst
+			// 		is in-place...
+			: list.splice.apply(list, [0, list.length].concat(lst))
 	}
 
 	var to_remove = []
 
-	var lst = list_key instanceof Function ? list_key() 
-		: list_key instanceof Array ? list_key 
-		: actions.config[list_key]
-	lst = lst instanceof Array ? lst : Object.keys(lst)
+	var lst = list instanceof Function ? 
+		list() 
+		: list
+	var editable = lst instanceof Array
 
-	var list = browse.makeList(null, 
+	// view objects...
+	lst = !editable ? Object.keys(lst) : lst.slice()
+
+	var dialog = browse.makeList(null, 
 			lst.concat(new_button ? [ new_button ] : []), 
 			{
 				path: options.path,
 				itemButtons: options.itemButtons || [
 					// mark for removal...
-					['&times;', 
-						function(p){
-							var e = this.filter('"'+p+'"', false)
-								.toggleClass('strike-out')
-
-							if(e.hasClass('strike-out')){
-								to_remove.indexOf(p) < 0 
-									&& to_remove.push(p)
-
-							} else {
-								var i = to_remove.indexOf(p)
-								if(i >= 0){
-									to_remove.splice(i, 1)
-								}
-							}
-						}],
+					makeRemoveItemButton(to_remove)
 					// XXX add shift up/down/top/bottom and other buttons (optional)...
 				]
 			})
@@ -315,43 +376,71 @@ function(actions, list_key, options){
 		// restore striked-out items...
 		.on('update', function(){
 			to_remove.forEach(function(e){
-				list.filter('"'+ e +'"')
+				dialog.filter('"'+ e +'"')
 					.toggleClass('strike-out')
 			})
 		})
 		.open(function(evt, path){
 			// we clicked the 'New' button -- select it...
 			if(new_button && (path == new_button || path == '')){
-				list.select(new_button)
+				dialog.select(new_button)
 
 			} else {
-				options.callback && options.callback.call(list, path)
+				options.callback && options.callback.call(dialog, path)
 			}
 		})
 		.on('close', function(){
 			// prevent editing non-arrays...
-			if(!(actions.config[list_key] instanceof Array)){
+			if(!editable){
 				return
 			}
 
 			// remove striked items...
 			to_remove.forEach(function(e){
-				var lst = actions.config[list_key].slice()
 				lst.splice(lst.indexOf(e), 1)
 
-				actions.config[list_key] = lst
+				_write(lst)
 			})
 
 			// sort...
 			if(options.sort){
-				actions.config[list_key] = actions.config[list_key]
-					.sort(options.sort !== true ? options.sort : undefined)
+				lst.sort(options.sort !== true ? options.sort : undefined)
+
+				_write(lst)
 			}
 		})
 	
-	new_button && list.dom.addClass('tail-action')
+	// XXX
+	new_button && dialog.dom.addClass('tail-action')
 
-	return list
+	return dialog
+}
+
+
+
+//---------------------------------------------------------------------
+
+var makeConfigListEditor = 
+module.makeConfigListEditor =
+function(actions, path, options){
+	path = path.split('.')
+	var key = path.pop()
+
+	return makeListEditor(function(lst){
+		var target = actions.config
+		path.forEach(function(p){
+			target = target[p] = target[p] || {}
+		})
+
+		// get...
+		if(lst === undefined){
+			return target[key]
+
+		// set...
+		} else {
+			target[key] = lst
+		}
+	}, options)
 }
 
 
@@ -372,7 +461,7 @@ function(actions, list, list_key, value_key, options){
 			// NOTE: this is called when adding a new value and 
 			// 		list maximum length is reached...
 			callback: function(value){
-				if(typeof(value_key) == typeof(function(){})){
+				if(value_key instanceof Function){
 					value_key(value)
 				} else {
 					actions.config[value_key] = value
@@ -392,7 +481,7 @@ function(actions, list, list_key, value_key, options){
 		})
 		// select default...
 		o.on('update', function(){
-			if(typeof(value_key) == typeof(function(){})){
+			if(value_key instanceof Function){
 				o.select(value_key())
 
 			} else {

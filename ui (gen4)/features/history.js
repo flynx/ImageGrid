@@ -594,21 +594,7 @@ var URLHistoryUIActions = actions.Actions({
 								o.redraw()
 							}],
 						// mark for removal...
-						['&times;', 
-							function(p, cur){
-								cur.toggleClass('strike-out')
-
-								if(cur.hasClass('strike-out')){
-									to_remove.indexOf(p) < 0 
-										&& to_remove.push(p)
-
-								} else {
-									var i = to_remove.indexOf(p)
-									if(i >= 0){
-										to_remove.splice(i, 1)
-									}
-								}
-							}],
+						widgets.makeRemoveItemButton(to_remove)
 					],
 				})
 				.open(function(evt, path){ 

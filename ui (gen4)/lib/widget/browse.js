@@ -1131,6 +1131,7 @@ var BrowserPrototype = {
 
 			// custom buttons...
 			buttons && buttons
+				.slice()
 				// make the order consistent for the user -- first
 				// in list, first in item (from left), and should
 				// be added last...

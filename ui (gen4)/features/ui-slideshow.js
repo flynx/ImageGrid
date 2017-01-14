@@ -148,14 +148,14 @@ var SlideshowActions = actions.Actions({
 							o.parent.close()
 						})
 						.addClass('selected')
+				},
+				{
+					cls: 'metadata-view tail-action',
 				})
 				.on('close', function(){
 					// reset the timer if it was not suspended outside...
 					suspended_timer || that.resetSlideshowTimer()
 				})
-
-			o.dom
-				.addClass('metadata-view tail-action')
 
 			return o
 		})],

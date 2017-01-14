@@ -241,6 +241,26 @@ body {
 	display: none;
 }
 
+/* new item... */
+.browse-widget .list>.action {
+	margin-top: 0.2em;
+	border-top: solid 1px rgba(255,255,255, 0.2);
+}
+.browse-widget .list>.action .text {
+	font-style: italic;
+}
+/* do not show top border if after another action or separator... */
+.browse-widget .list>.action+.action,
+.browse-widget .list>.separator+.action {
+	border-top: none;
+}
+
+/* do not show top border if after another action or separator... */
+.browse-widget .list>.warn {
+	background-color: yellow !important;
+	color: red !important;
+	font-weight: bolder !important;
+}
 
 
 /* Dialog highlight experiment... */
