@@ -1048,12 +1048,6 @@ var KeyboardActions = actions.Actions({
 			return dialog
 		})],
 
-	// XXX key editor:
-	// 		[ mode ]
-	// 		[  action (text with dataset)  ] [  args (text field)  ] no default: [_]
-	//		---
-	//		<list of keys>
-	//		new key
 	// XXX need a way to abort edits...
 	editKeyBinding: ['- Interface/Key mapping...',
 		widgets.makeUIDialog(function(mode, code){
@@ -1071,7 +1065,7 @@ var KeyboardActions = actions.Actions({
 					// list the keys...
 					var keys = that.keyboard.keys(code)
 					keys = mode in keys ? 
-						keys[mode][code]
+						(keys[mode][code] || [])
 						: [] 
 
 					var to_remove = []
@@ -1083,7 +1077,7 @@ var KeyboardActions = actions.Actions({
 							], })
 						})
 
-					var new_button = make.Action('New key')
+					var new_button = make.Action('New key...')
 						.on('open', function(){ 
 							widgets.editItem(dialog, new_button)
 						})
@@ -1142,7 +1136,7 @@ var KeyboardActions = actions.Actions({
 			var that = this
 
 			// XXX need a way to set a special '*' key...
-			var dialog = widgets.makeListEditor(function(keys){
+			var dialog = browse.makeListEditor(function(keys){
 				// get...
 				if(keys === undefined){
 					return that.keybindings[mode].drop || []
