@@ -594,7 +594,7 @@ var URLHistoryUIActions = actions.Actions({
 								o.redraw()
 							}],
 						// mark for removal...
-						widgets.makeRemoveItemButton(to_remove)
+						browse.buttons.markForRemoval(to_remove)
 					],
 				})
 				.open(function(evt, path){ 

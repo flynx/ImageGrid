@@ -67,6 +67,118 @@ function makeSimpleAction(direction){
 
 
 /*********************************************************************/
+// collections of helpers...
+
+//---------------------------------------------------------------------
+// NOTE: all item constructors/helpers abide by either the new-style 
+// 		make protocol, i.e. make(content[, options]) or their own...
+var Items = module.items = function(){}
+
+// NOTE: this is the same as make('---'[, options])
+Items.Separator = 
+function(options){
+	return this('---', options) }
+
+Items.Action = 
+function(text, options){
+	return this(text, options)
+		.addClass('action') }
+
+Items.ConfirmAction = 
+function(text, options){
+	options = options || {}
+
+	var elem = this.Action(text, options)
+
+	var callback = options.callback
+	var timeout = options.timeout || 2000
+	var confirm_text = options.confirm_text ? 
+		options.confirm_text 
+		: 'Confirm '+ elem.text().toLowerCase() +'?'
+	var text
+
+	return elem 
+		.on('open', function(){
+			var item = $(this)
+			var elem = item.find('.text')
+
+			// ready to delete...
+			if(elem.text() != confirm_text){
+				text = elem.text()
+
+				elem.text(confirm_text)
+
+				item.addClass('warn')
+
+				// reset...
+				setTimeout(function(){
+					elem.text(text)
+
+					item.removeClass('warn')
+				}, timeout)
+
+			// confirmed...
+			} else {
+				callback && callback()
+			}
+		})
+}
+
+// XXX
+Items.Selectable =
+function(text, options){
+}
+
+// XXX
+Items.Editable =
+function(text, options){
+}
+
+// XXX
+Items.SelectableField =
+function(text, options){
+}
+
+// XXX
+Items.EditableField =
+function(text, options){
+}
+
+
+
+//---------------------------------------------------------------------
+// Browse item buttons (button constructors)...
+
+var Buttons = 
+Items.buttons =
+module.buttons = {
+	// Mark an item for removal and add it to a list of marked items...
+	//
+	markForRemoval: function(list, html){
+		return [html || '&times;', 
+			function(p, e){
+				e.toggleClass('strike-out')
+
+				if(list == null){
+					return
+				}
+
+				if(e.hasClass('strike-out')){
+					list.indexOf(p) < 0 
+						&& list.push(p)
+
+				} else {
+					var i = list.indexOf(p)
+					i >= 0
+						&& list.splice(i, 1)
+				}
+			}]
+	},
+}
+
+
+
+/*********************************************************************/
 
 // NOTE: the widget itself does not need a title, that's the job for
 //		a container widget (dialog, field, ...)
@@ -421,6 +533,13 @@ var BrowserPrototype = {
 			Backspace: 'Left',
 			Right: 'right',
 			P: 'push',
+
+			// XXX should these also select buttons???
+			Tab: 'down!',
+			shift_Tab: 'up!',
+
+			// XXX is this correct??
+			ctrl_Tab: 'nop!',
 
 			// XXX
 			PgUp: 'prevPage!',
@@ -988,7 +1107,7 @@ var BrowserPrototype = {
 			}
 
 			// options passed as an object...
-			if(traversable != null && typeof(traversable) == typeof({})){
+			if(traversable != null && typeof(traversable) != typeof(true)){
 				opts = traversable
 
 				traversable = opts.traversable
@@ -1179,6 +1298,8 @@ var BrowserPrototype = {
 
 			return res
 		}
+
+		make.__proto__ = Items
 
 		// align the dialog...
 		make.done = function(){

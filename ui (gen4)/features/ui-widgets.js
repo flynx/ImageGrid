@@ -166,70 +166,6 @@ function(list, elem, callback, options){
 }
 
 
-var makeRemoveItemButton = 
-module.makeRemoveItemButton = 
-function makeRemoveItemButton(list, html){
-	return [html || '&times;', 
-		function(p, e){
-			e.toggleClass('strike-out')
-
-			if(e.hasClass('strike-out')){
-				list.indexOf(p) < 0 
-					&& list.push(p)
-
-			} else {
-				var i = list.indexOf(p)
-				if(i >= 0){
-					list.splice(i, 1)
-				}
-			}
-		}]
-}
-
-
-var makeConfirmActionItem =
-module.makeConfirmActionItem =
-function makeConfirmActionItem(elem, callback, timeout, confirm_text){
-	confirm_text = confirm_text ? 
-		confirm_text 
-		: 'Confirm '+ elem.text().toLowerCase() +'?'
-	var text
-
-	return elem
-		.addClass('action')
-		.on('open', function(){
-			var item = $(this)
-			var elem = item.find('.text')
-
-			// ready to delete...
-			if(elem.text() != confirm_text){
-				text = elem.text()
-
-				elem.text(confirm_text)
-
-				item.addClass('warn')
-
-				// reset...
-				setTimeout(function(){
-					elem.text(text)
-
-					item.removeClass('warn')
-				}, timeout || 2000)
-
-			// confirmed...
-			} else {
-				callback && callback()
-			}
-		})
-}
-
-
-var makeNewEditableItem =
-module.makeNewEditableItem =
-function makeNewEditableItem(elem){
-}
-
-
 //
 // Options format:
 // 	{
@@ -363,7 +299,7 @@ function(list, options){
 				path: options.path,
 				itemButtons: options.itemButtons || [
 					// mark for removal...
-					makeRemoveItemButton(to_remove)
+					browse.buttons.markForRemoval(to_remove)
 					// XXX add shift up/down/top/bottom and other buttons (optional)...
 				]
 			})
@@ -444,6 +380,10 @@ function(actions, path, options){
 }
 
 
+// XXX do we actually need this???
+// 		...this essentially adds:
+// 		- callbacks to parent to update
+// 		- some defaults...
 // XXX should this be more generic...
 // XXX currently using this also requires the use of makeUIDialog(..),
 // 		can this be simpler???

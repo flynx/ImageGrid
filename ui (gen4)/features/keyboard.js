@@ -866,6 +866,7 @@ var KeyboardActions = actions.Actions({
 										disabled: true,
 										hide_on_search: true,
 									})
+									.attr('mode', mode)
 									.addClass('info')
 
 							// unpropagated and unbound keys...
@@ -890,6 +891,7 @@ var KeyboardActions = actions.Actions({
 								var elem = make('new', {
 										buttons: options.mode_actions,
 									})
+									.attr('mode', mode)
 									.addClass('new')
 							}
 						})
@@ -917,10 +919,29 @@ var KeyboardActions = actions.Actions({
 
 			return dialog
 		})],
+	// XXX do we need a binding to add new keys to current mode from the 
+	// 		keyboard???
 	// XXX BUG: for some reason modes are unclickable...
 	editKeyboardBindings: ['Interface/Keyboard bindings editor...',
 		widgets.uiDialog(function(path){ 
 			var that = this
+			var bindings = this.keybindings
+
+			var sortModes = function(list){
+				var ordered = {}
+				list.find('[mode]')
+					.map(function(){ return $(this).attr('mode')})
+					.toArray()
+					.unique()
+					.forEach(function(mode){
+						ordered[mode] = bindings[mode]
+					})
+				// reorder only if we moved all the modes...
+				if(Object.keys(bindings).length == Object.keys(ordered).length){
+					that.__keyboard_config = ordered
+				}
+			}
+
 			var dialog = this.browseKeyboardBindings(
 				path, 
 				{
@@ -930,11 +951,39 @@ var KeyboardActions = actions.Actions({
 
 					// mode...
 					mode_buttons: [
-						// XXX up
+						// up...
 						['&#9206;', function(_, cur){
+								var mode = cur.attr('mode')
+								var elems = cur.parent().find('[mode="'+mode+'"]')
+								var prev = elems.first().prev('[mode]').attr('mode')
+
+								// move only if we have somewhere to move...
+								if(prev){
+									cur.parent().find('[mode="'+prev+'"]')
+										.first()
+										.before(elems)
+									dialog.select(elems.first())
+
+									// do the actual section ordering...
+									sortModes(cur.parent())
+								}
 							}],
-						// XXX down
+						// down...
 						['&#9207;', function(_, cur){
+								var mode = cur.attr('mode')
+								var elems = cur.parent().find('[mode="'+mode+'"]')
+								var next = elems.last().next('[mode]').attr('mode')
+
+								// move only if we have somewhere to move...
+								if(next){
+									cur.parent().find('[mode="'+next+'"]')
+										.last()
+										.after(elems)
+									dialog.select(elems.first())
+
+									// do the actual section ordering...
+									sortModes(cur.parent())
+								}
 							}],
 						['&ctdot;', function(_, cur){
 							that.editKeyboardMode(cur.attr('mode'))
@@ -945,6 +994,7 @@ var KeyboardActions = actions.Actions({
 							//elem.before( XXX )
 							that.editKeyBinding(cur.attr('mode'))
 								.close(function(){ dialog.update() }) }],
+						// XXX place element...
 						['mode', function(_, cur){
 							//elem.after( XXX )
 							// XXX need to pass order info...
@@ -952,6 +1002,7 @@ var KeyboardActions = actions.Actions({
 								.close(function(){ dialog.update() }) }],
 					],
 
+					/*/ XXX do we need this???
 					// keys...
 					key_buttons: [
 						['&ctdot;', function(_, cur){
@@ -965,6 +1016,7 @@ var KeyboardActions = actions.Actions({
 							that.editKeyboardModeDroppedKeys(cur.attr('mode'))
 								.close(function(){ dialog.update() }) }],
 					],
+					//*/
 				})
 				// XXX should this be only a button thing (done in .browseKeyboardBindings(..))
 				// 		or also the main action???
@@ -1027,23 +1079,24 @@ var KeyboardActions = actions.Actions({
 						.forEach(function(key){
 							// XXX make editable...
 							make(key, { buttons: [
-								widgets.makeRemoveItemButton(to_remove),
+								browse.buttons.markForRemoval(to_remove)
 							], })
 						})
 
-					var new_button = make('New key')
-						.addClass('action')
+					var new_button = make.Action('New key')
 						.on('open', function(){ 
 							widgets.editItem(dialog, new_button)
 						})
 
 					make('---')
 					
-					widgets.makeConfirmActionItem(make('Delete'),
-						function(){
+					make.ConfirmAction('Delete', {
+						callback: function(){
 							// XXX
 							dialog.close()
-						}, that.config['confirm-delete-timeout'] || 2000)
+						}, 
+						timeout: that.config['confirm-delete-timeout'] || 2000,
+					})
 				},
 				{
 					cls: 'metadata-view',
@@ -1066,13 +1119,15 @@ var KeyboardActions = actions.Actions({
 
 					make('---')
 
-					widgets.makeConfirmActionItem(make('Delete'),
-						function(){
+					make.ConfirmAction('Delete', {
+						callback: function(){
 							if(mode in that.keybindings){
 								delete that.keybindings[mode]
 							}
 							dialog.close()
-						}, that.config['confirm-delete-timeout'] || 2000)
+						}, 
+						timeout: that.config['confirm-delete-timeout'] || 2000,
+					})
 				},
 				{
 					cls: 'metadata-view',
