@@ -420,14 +420,6 @@ var KeyboardActions = actions.Actions({
 		// .pauseKeyboardRepeat(..) is called...
 		'keyboard-repeat-pause-check': 100,
 
-		// If 'on' enable .keyPressed(..) action calling on keyboard 
-		// activity...
-		//
-		// NOTE: if updated the keyboard handler will need to be restarted
-		// 		for changes to take effect.
-		// XXX EXPERIMENTAL
-		'keyboard-key-pressed-action': 'off',
-
 		// XXX make this generic...
 		'confirm-delete-timeout': 2000,
 	},
@@ -569,6 +561,23 @@ var KeyboardActions = actions.Actions({
 
 	// keyboard handling ----------------------------------------------
 
+	// Handle key / keyboard event...
+	//
+	//	Handle key...
+	//	.keyPress(<key>)
+	//
+	//	Handle key and call func if key is not bound...
+	//	.keyPress(<key>, <func>)
+	//
+	//	Handle key event...
+	//	.keyPress(<event>)
+	//
+	//	Handle key and call func if key is not bound...
+	//	.keyPress(<event>, <func>)
+	//
+	//
+	// NOTE: care must be taken when using binding to this (especially 
+	// 		the .pre stage) as this may introduce a lag into user input.
 	keyPress: ['- Interface/Handle key or keyboard event',
 		function(key, no_match){
 			var that = this
@@ -651,25 +660,6 @@ var KeyboardActions = actions.Actions({
 				return true
 			}).bind(this)
 
-			// pass keys pressed to .keyPressed(..) action...
-			/*/ XXX EXPERIMENTAL...
-			var keyPressdCall = function(handler){
-				return that.config['keyboard-key-pressed-action'] == 'on' ?
-					function(evt){
-						var e = that.keyPressed.pre(
-							that, 
-							[evt, keyboard.joinKey(keyboard.event2key(evt))])
-
-						var res = handler.apply(that, arguments)
-						e.result = res
-
-						that.keyPressed.post(that, e)
-						return res
-					}
-					: handler
-			}
-			//*/
-
 			var kb = this.__keyboard_object = 
 				this.__keyboard_object 
 					|| keyboard.KeyboardWithCSSModes(
@@ -695,30 +685,12 @@ var KeyboardActions = actions.Actions({
 				var handler = 
 					keyboard.stoppableKeyboardRepeat(
 						this.keyPress.bind(this),
-						check)
-				/*
-				var handler = 
-					keyboard.stoppableKeyboardRepeat(
+						/*/ log unbound keys...
 						function(evt){ 
 							return that.keyPress(evt, function(evt, k){ 
 								window.DEBUG && console.log('KEY:', k) }) },
+						//*/
 						check)
-				//*/
-				/*
-				var handler = 
-					keyboard.stoppableKeyboardRepeat(
-						// XXX EXPERIMENTAL...
-						keyPressdCall(
-							//this.keyPress.bind(this)),
-							function(evt){ 
-								return that.keyPress(evt, function(evt, k){ 
-									window.DEBUG && console.log('KEY:', k) }) }),
-							//keyboard.makeKeyboardHandler(
-							//	this.keyboard,
-							//	function(k){ window.DEBUG && console.log('KEY:', k) }, 
-							//	this)),
-							check)
-				//*/
 
 				// setup base keyboard for devel, in case something breaks...
 				// This branch does not drop keys...
@@ -758,41 +730,6 @@ var KeyboardActions = actions.Actions({
 	// event.
 	pauseKeyboardRepeat: ['- Interface/',
 		function(){ this.__keyboard_repeat_paused = true }],
-
-	// Keyboard activity event...
-	//
-	// This is triggered when a key passes to .keyboard. The .pre stage
-	// is run before the key is handled, .post is run just after.
-	//
-	// Option .config['keyboard-key-pressed-action'] controls if this is
-	// called, when false the functionality is disabled.
-	//
-	// Care must be taken when using binding to this (especially the 
-	// .pre stage) as this may introduce a lag into user input.
-	//
-	// NOTE: updates to .config['keyboard-key-pressed-action'] will take
-	// 		effect after handler restart via .toggleKeyboardHandling('!') 
-	// 		or cycling it off and back on...
-	// NOTE: his is called by the handler created in .toggleKeyboardHandling(..)
-	//
-	// XXX EXPERIMENTAL: event for actions to be able to handle keys...
-	// 		...not working yet...
-	// XXX not sure if we need this...
-	// 		...the main reason being that this may be a way to bypass the
-	// 		.keyboard handler and config and handle keys within an action
-	// 		if overdone this can be a mess...
-	keyPressed: ['- Interface/Key pressed event',
-		'This is called by the keyboard handler when a key is pressed, '
-			+'the actual event and key are passed as argument.',
-		core.notUserCallable(function(evt, key){
-			// This is the keyboard hook protocol root function
-			//
-			// Not for direct use.
-		})],
-	toggleKeyPressedHandling: ['Interface/keyPressed event',
-		core.makeConfigToggler('keyboard-key-pressed-action',
-			['off', 'on'],
-			function(){ this.toggleKeyboardHandling('!') })],
 
 
 	// Interface stuff ------------------------------------------------
