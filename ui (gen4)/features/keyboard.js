@@ -154,7 +154,7 @@ module.GLOBAL_KEYBOARD2 = {
 		meta_Q: 'close',
 
 		// XXX
-		F5: 'reload!: "full"',
+		F5: 'reload!: "full" -- Reload viewer (full)',
 		/*F5: keyboard.doc('Reload viewer (full)', 
 			function(){ 
 				//a.stop()
@@ -569,6 +569,62 @@ var KeyboardActions = actions.Actions({
 
 	// keyboard handling ----------------------------------------------
 
+	keyPress: ['- Interface/Handle key or keyboard event',
+		function(key, no_match){
+			var that = this
+			var did_handling = false
+			var res
+			var evt = event
+
+			//if(key instanceof Event || key instanceof $.Event){
+			if(typeof(key) != typeof('str')){
+				evt = key
+				key = keyboard.event2key(evt)
+			}
+
+			var handlers = this.keyboard.handler('?', key)
+
+			Object.keys(handlers).forEach(function(mode){
+				if(res === false){
+					return
+				}
+
+				var handler = handlers[mode]
+
+				// raw function handler...
+				if(handler instanceof Function){
+					res = handler.call(that)
+
+				// action call syntax...
+				} else {
+					var h = keyboard.parseActionCall(handler)
+
+					if(h && h.action in that){
+						did_handling = true
+
+						evt 
+							&& h.no_default 
+							&& evt.preventDefault()
+
+						// call the handler...
+						res = that[h.action].apply(that, h.arguments)
+
+						evt 
+							&& h.stop_propagation
+							&& evt.stopPropagation()
+							&& (res = false)
+					} 
+				}
+			})
+
+			no_match 
+				&& !did_handling 
+				&& no_match.call(this, evt, key)
+
+			// XXX not sure if this is the right way to go...
+			return res
+		}],
+
 	toggleKeyboardHandling: ['- Interface/Keyboard handling',
 		toggler.Toggler(null, function(_, state){ 
 			var that = this
@@ -596,7 +652,7 @@ var KeyboardActions = actions.Actions({
 			}).bind(this)
 
 			// pass keys pressed to .keyPressed(..) action...
-			// XXX EXPERIMENTAL...
+			/*/ XXX EXPERIMENTAL...
 			var keyPressdCall = function(handler){
 				return that.config['keyboard-key-pressed-action'] == 'on' ?
 					function(evt){
@@ -612,6 +668,7 @@ var KeyboardActions = actions.Actions({
 					}
 					: handler
 			}
+			//*/
 
 			var kb = this.__keyboard_object = 
 				this.__keyboard_object 
@@ -637,13 +694,31 @@ var KeyboardActions = actions.Actions({
 				// make the base handler...
 				var handler = 
 					keyboard.stoppableKeyboardRepeat(
+						this.keyPress.bind(this),
+						check)
+				/*
+				var handler = 
+					keyboard.stoppableKeyboardRepeat(
+						function(evt){ 
+							return that.keyPress(evt, function(evt, k){ 
+								window.DEBUG && console.log('KEY:', k) }) },
+						check)
+				//*/
+				/*
+				var handler = 
+					keyboard.stoppableKeyboardRepeat(
 						// XXX EXPERIMENTAL...
 						keyPressdCall(
-							keyboard.makeKeyboardHandler(
-								this.keyboard,
-								function(k){ window.DEBUG && console.log('KEY:', k) }, 
-								this)),
+							//this.keyPress.bind(this)),
+							function(evt){ 
+								return that.keyPress(evt, function(evt, k){ 
+									window.DEBUG && console.log('KEY:', k) }) }),
+							//keyboard.makeKeyboardHandler(
+							//	this.keyboard,
+							//	function(k){ window.DEBUG && console.log('KEY:', k) }, 
+							//	this)),
 							check)
+				//*/
 
 				// setup base keyboard for devel, in case something breaks...
 				// This branch does not drop keys...
