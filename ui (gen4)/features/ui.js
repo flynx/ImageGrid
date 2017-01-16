@@ -331,6 +331,18 @@ module.ViewerActions = actions.Actions({
 	// 		- we depend on the internals of a custom add-on feature
 	reload: ['Interface/Reload viewer',
 		function(force){
+			// full reload...
+			if(force == 'full'){
+				//this.stop()
+				/*
+				killAllWorkers()
+					.done(function(){
+						reload() 
+					})
+				*/
+				location.reload()
+			}
+
 			this.ribbons.preventTransitions()
 
 			// NOTE: this essentially sets the update threshold to 0...

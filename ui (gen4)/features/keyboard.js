@@ -154,18 +154,18 @@ module.GLOBAL_KEYBOARD2 = {
 		meta_Q: 'close',
 
 		// XXX
-		F5: keyboard.doc('Reload viewer (full)', 
+		F5: 'reload!: "full"',
+		/*F5: keyboard.doc('Reload viewer (full)', 
 			function(){ 
 				//a.stop()
-				/*
-				killAllWorkers()
-					.done(function(){
-						reload() 
-					})
-				*/
+				//killAllWorkers()
+				//	.done(function(){
+				//		reload() 
+				//	})
 				location.reload()
 				return false
 			}),
+		//*/
 
 		F12: 'showDevTools',
 		// NOTE: these are for systems where F** keys are not available 
