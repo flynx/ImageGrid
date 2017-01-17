@@ -576,7 +576,7 @@ var KeyboardActions = actions.Actions({
 	//	.keyPress(<event>, <func>)
 	//
 	//
-	// NOTE: care must be taken when using binding to this (especially 
+	// NOTE: care must be taken when using or binding to this (especially 
 	// 		the .pre stage) as this may introduce a lag into user input.
 	keyPress: ['- Interface/Handle key or keyboard event',
 		function(key, no_match){
@@ -734,22 +734,74 @@ var KeyboardActions = actions.Actions({
 
 	// Interface stuff ------------------------------------------------
 
+	// Keyboard bindings viewer...
+	//
 	// options format:
 	// 	{
+	//		// Classes to add to the dialog...
 	//		cls: 'edit',
-	//		show_non_actions: true,
-	//		empty_section_text: false,
 	//
-	// 		mode_buttons:
-	//		mode_actions:
+	//		// If true, show non-actions in the list...
+	//		// This would include:
+	//		//	- aliases
+	//		//	- special handlers (like: DROP, NEXT, ...) 
+	//		//	- actions of features not loaded or not available
+	//		show_non_actions: false,
 	//
-	// 		key_buttons:
+	//		// If true will show the placeholder text in sections that 
+	//		// contain no mappings...
+	//		//
+	//		// This can also be a string, which will be shown as empty 
+	//		// section text.
+	//		empty_section_text: true,
 	//
-	//		drop_buttons:
+	//		// Function used to get/generate text to represent an action
+	//		// in the list.
+	//		//
+	//		// If not defined or false action doc will be used if 
+	//		// available.
+	//		get_key_text: <function>,
 	//
+	//
+	// 		// Button structures for different sections...
+	// 		//
+	// 		// All of these must confirm to the lib/widget/browse buttons
+	// 		// format:
+	// 		//	{
+	// 		//		[<html>: <func>],
+	// 		//		...
+	// 		//	}
+	// 		//
+	// 		// (see: browse.Browser.update(..) doc for more info)
+	// 		//
+	// 		// Mode section title...
+	// 		mode_buttons: <buttons>,
+	//
+	// 		// Mode actions...
+	// 		//
+	// 		// If false or undefined the element will not be shown.
+	// 		//
+	// 		// NOTE: these are shown at the end of a section.
+	//		mode_actions: <buttons>,
+	//
+	// 		// Key binding buttons...
+	// 		key_buttons: <buttons>,
+	//
+	//		// Dropped key list buttons...
+	//		drop_buttons: <buttons>,
 	// 	}
 	//
+	// NOTE: this is designed to be a viewer by default but provide enough
+	// 		configurability to support editing without actually including
+	// 		any editing mechanics.
+	// 		This should separate the editing mechanics from the actual 
+	// 		view layout while at the same time keeping it consistent.
+	// 		The main drawback could be that this will complicate the 
+	// 		layout development until (if) it stabilizes.
+	//
+	// XXX path parameter is not used...
 	// XXX BUG sections with doc do not show up in title...
+	// XXX slow on update...
 	// XXX sub-group by path (???)
 	browseKeyboardBindings: ['Interface|Help/Keyboard bindings...',
 		widgets.makeUIDialog(function(path, options){
