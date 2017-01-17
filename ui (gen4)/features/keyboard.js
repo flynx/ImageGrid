@@ -579,6 +579,7 @@ var KeyboardActions = actions.Actions({
 	// NOTE: care must be taken when using or binding to this (especially 
 	// 		the .pre stage) as this may introduce a lag into user input.
 	keyPress: ['- Interface/Handle key or keyboard event',
+		{ keepDialogTitle: true },
 		function(key, no_match){
 			var that = this
 			var did_handling = false

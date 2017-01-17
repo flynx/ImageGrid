@@ -2784,6 +2784,12 @@ var BrowserPrototype = {
 		}
 
 		// load the initial state...
+		//
+		// NOTE: this used to be run in the timeout below, it turned out
+		// 		to be a really bad idea mainly because the events bound 
+		// 		in .list(..) turned out to be bound AFTER the events bound 
+		// 		in the function that called the constructor, which messed
+		// 		up the triggering order...
 		that.update(options.path || that.path || '/')
 
 		// Select the default path...

@@ -579,7 +579,8 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 					var elem = res.dom
 
 					!elem.attr('keep-dialog-title') 
-						elem.attr('dialog-title', this.getDocTitle(action))
+						&& !this.getActionAttr(action, 'keepDialogTitle')
+						&& elem.attr('dialog-title', this.getDocTitle(action))
 				}
 			}],
 	],
