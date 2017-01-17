@@ -1224,7 +1224,6 @@ var KeyboardActions = actions.Actions({
 
 			return dialog
 		})],
-	// XXX BUG: for some reason we are adding one key at a time only...
 	// XXX revise:
 	// 		- '*' toggle
 	// 		- done/cancel
