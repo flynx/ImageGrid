@@ -393,6 +393,8 @@ module.GLOBAL_KEYBOARD2 = {
 
 /*********************************************************************/
 // XXX add loading/storing of kb bindings...
+// XXX experimenting with new style of doc strings, usable from the 
+// 		system... (for details see: core.doc)
 
 var KeyboardActions = actions.Actions({
 	config: {
@@ -429,9 +431,8 @@ var KeyboardActions = actions.Actions({
 	get keyboard(){
 		return this.__keyboard_object },
 
-
-	// Self-test action...
 	testKeyboardDoc: ['- Interface/',
+		core.doc`Self-test action...`,
 		{self_test: true},
 		function(){
 			var that = this
@@ -471,12 +472,10 @@ var KeyboardActions = actions.Actions({
 
 
 	// Key bindings ---------------------------------------------------
-
 	// XXX need a clean deep copy to restore...
 	resetKeyBindings: ['Interface/Restore default key bindings',
 		function(){ 
 			thiis.__keyboard_config = GLOBAL_KEYBOARD }],
-
 	keyHandler: ['- Interface/Get or set key handler',
 		function(mode, key, action){ 
 			var res = this.keyboard.handler(mode, key, action) 
@@ -485,24 +484,24 @@ var KeyboardActions = actions.Actions({
 				return res
 			}
 		}],
-
-	// Get normalized, flat set of actions and keys that trigger them...
-	//
-	// Format:
-	// 	{
-	// 		<action>: [
-	// 			<key>,
-	// 			...
-	// 		],
-	// 		...
-	// 	}
-	//
-	// NOTE: this does not check overloading between modes i.e. if two
-	// 		actions in two different modes are bound to the same key 
-	// 		only one is shown...
-	// 		XXX is this a bug???
-	// 			...at this point can't find when this produces inconsistencies...
 	getKeysForAction: ['- Interface/',
+		core.doc`Get normalized, flat set of actions and keys that trigger them...
+		
+		Format:
+			{
+				<action>: [
+					<key>,
+					...
+				],
+				...
+			}
+		
+		NOTE: this does not check overloading between modes i.e. if two
+			actions in two different modes are bound to the same key 
+			only one is shown...
+			XXX is this a bug???
+				...at this point can't find when this produces inconsistencies...
+		`,
 		function(actions, modes){
 			var that = this
 			var res = {}
@@ -560,25 +559,25 @@ var KeyboardActions = actions.Actions({
 
 
 	// keyboard handling ----------------------------------------------
-
-	// Handle key / keyboard event...
-	//
-	//	Handle key...
-	//	.keyPress(<key>)
-	//
-	//	Handle key and call func if key is not bound...
-	//	.keyPress(<key>, <func>)
-	//
-	//	Handle key event...
-	//	.keyPress(<event>)
-	//
-	//	Handle key and call func if key is not bound...
-	//	.keyPress(<event>, <func>)
-	//
-	//
-	// NOTE: care must be taken when using or binding to this (especially 
-	// 		the .pre stage) as this may introduce a lag into user input.
 	keyPress: ['- Interface/Handle key or keyboard event',
+		core.doc`Handle key / keyboard event...
+	
+			Handle key...
+			.keyPress(<key>)
+		
+			Handle key and call func if key is not bound...
+			.keyPress(<key>, <func>)
+		
+			Handle key event...
+			.keyPress(<event>)
+		
+			Handle key and call func if key is not bound...
+			.keyPress(<event>, <func>)
+	
+	
+		NOTE: care must be taken when using or binding to this (especially 
+	 		the .pre stage) as this may introduce a lag into user input.
+		`,
 		{ keepDialogTitle: true },
 		function(key, no_match){
 			var that = this
@@ -634,7 +633,6 @@ var KeyboardActions = actions.Actions({
 			// XXX not sure if this is the right way to go...
 			return res
 		}],
-
 	toggleKeyboardHandling: ['- Interface/Keyboard handling',
 		toggler.Toggler(null, function(_, state){ 
 			var that = this
@@ -724,87 +722,85 @@ var KeyboardActions = actions.Actions({
 			}
 		},
 		['on', 'off'])],
+	pauseKeyboardRepeat: ['- Interface/Drop keys until none are pressed for a timout',
+		core.doc`Drop keys until non are pressed for a timeout...
 
-	// Drop keys until non are pressed for a timeout...
-	//
-	// This is useful for stopping repeating (held down) keys after some
-	// event.
-	pauseKeyboardRepeat: ['- Interface/',
+		This is useful for stopping repeating (held down) keys after some
+		event.`,
 		function(){ this.__keyboard_repeat_paused = true }],
 
 
 	// Interface stuff ------------------------------------------------
 
-	// Keyboard bindings viewer...
-	//
-	// options format:
-	// 	{
-	//		// Classes to add to the dialog...
-	//		cls: 'edit',
-	//
-	//		// If true, show non-actions in the list...
-	//		// This would include:
-	//		//	- aliases
-	//		//	- special handlers (like: DROP, NEXT, ...) 
-	//		//	- actions of features not loaded or not available
-	//		show_non_actions: false,
-	//
-	//		// If true will show the placeholder text in sections that 
-	//		// contain no mappings...
-	//		//
-	//		// This can also be a string, which will be shown as empty 
-	//		// section text.
-	//		empty_section_text: true,
-	//
-	//		// Function used to get/generate text to represent an action
-	//		// in the list.
-	//		//
-	//		// If not defined or false action doc will be used if 
-	//		// available.
-	//		get_key_text: <function>,
-	//
-	//
-	// 		// Button structures for different sections...
-	// 		//
-	// 		// All of these must confirm to the lib/widget/browse buttons
-	// 		// format:
-	// 		//	{
-	// 		//		[<html>: <func>],
-	// 		//		...
-	// 		//	}
-	// 		//
-	// 		// (see: browse.Browser.update(..) doc for more info)
-	// 		//
-	// 		// Mode section title...
-	// 		mode_buttons: <buttons>,
-	//
-	// 		// Mode actions...
-	// 		//
-	// 		// If false or undefined the element will not be shown.
-	// 		//
-	// 		// NOTE: these are shown at the end of a section.
-	//		mode_actions: <buttons>,
-	//
-	// 		// Key binding buttons...
-	// 		key_buttons: <buttons>,
-	//
-	//		// Dropped key list buttons...
-	//		drop_buttons: <buttons>,
-	// 	}
-	//
-	// NOTE: this is designed to be a viewer by default but provide enough
-	// 		configurability to support editing without actually including
-	// 		any editing mechanics.
-	// 		This should separate the editing mechanics from the actual 
-	// 		view layout while at the same time keeping it consistent.
-	// 		The main drawback could be that this will complicate the 
-	// 		layout development until (if) it stabilizes.
-	//
-	// XXX path parameter is not used...
 	// XXX BUG sections with doc do not show up in title...
 	// XXX slow on update...
 	// XXX sub-group by path (???)
 	browseKeyboardBindings: ['Interface|Help/Keyboard bindings...',
+		core.doc`Keyboard bindings viewer...
+	
+		options format:
+			{
+				// Classes to add to the dialog...
+				cls: 'edit',
+		
+				// If true, show non-actions in the list...
+				// This would include:
+				//	- aliases
+				//	- special handlers (like: DROP, NEXT, ...) 
+				//	- actions of features not loaded or not available
+				show_non_actions: false,
+		
+				// If true will show the placeholder text in sections that 
+				// contain no mappings...
+				//
+				// This can also be a string, which will be shown as empty 
+				// section text.
+				empty_section_text: true,
+		
+				// Function used to get/generate text to represent an action
+				// in the list.
+				//
+				// If not defined or false action doc will be used if 
+				// available.
+				get_key_text: <function>,
+		
+		
+				// Button structures for different sections...
+				//
+				// All of these must confirm to the lib/widget/browse buttons
+				// format:
+				//	{
+				//		[<html>: <func>],
+				//		...
+				//	}
+				//
+				// (see: browse.Browser.update(..) doc for more info)
+				//
+				// Mode section title...
+				mode_buttons: <buttons>,
+		
+				// Mode actions...
+				//
+				// If false or undefined the element will not be shown.
+				//
+				// NOTE: these are shown at the end of a section.
+				mode_actions: <buttons>,
+		
+				// Key binding buttons...
+				key_buttons: <buttons>,
+		
+				// Dropped key list buttons...
+				drop_buttons: <buttons>,
+			}
+	
+		NOTE: this is designed to be a viewer by default but provide enough
+			configurability to support editing without actually including
+			any editing mechanics.
+			This should separate the editing mechanics from the actual 
+			view layout while at the same time keeping it consistent.
+			The main drawback could be that this will complicate the 
+			layout development until (if) it stabilizes.
+		`,
 		widgets.makeUIDialog(function(path, options){
 			options = options || {}
 
@@ -812,19 +808,20 @@ var KeyboardActions = actions.Actions({
 			var keybindings = this.keybindings
 			var kb = this.keyboard
 
-			var keys = kb.keys('*')
-
 			// get doc...
-			var getKeyText = options.get_key_text 
-				|| function(action){
+			var getKeyText = options.get_key_text === undefined ?
+				function(action){
 					var doc = action.doc ? action.doc
 						: action.action in this ? this.getDocTitle(action.action)
 						: action.action 
 					return doc.length == 0 ? action.action : doc
 				}
+				: options.get_key_text
 
 			var dialog = browse.makeLister(null, 
 				function(path, make){
+					var keys = kb.keys('*')
+
 					Object.keys(keybindings)
 						.forEach(function(mode){
 							var dropped = keybindings[mode].drop || []
@@ -996,6 +993,9 @@ var KeyboardActions = actions.Actions({
 	// 		keyboard???
 	// XXX BUG: for some reason modes are unclickable...
 	editKeyboardBindings: ['Interface/Keyboard bindings editor...',
+		core.doc`Similar to .browseKeyboardBindings(..) but adds editing functionality...
+		
+		For more details see: .browseKeyboardBindings(..)`,
 		widgets.uiDialog(function(path){ 
 			var that = this
 			var bindings = this.keybindings
@@ -1021,6 +1021,7 @@ var KeyboardActions = actions.Actions({
 					cls: 'edit',
 					show_non_actions: true,
 					empty_section_text: false,
+					get_key_text: false,
 
 					// mode...
 					mode_buttons: [
@@ -1116,17 +1117,10 @@ var KeyboardActions = actions.Actions({
 
 					sub_dialog 
 						&& sub_dialog
-							// XXX for some magical reason this is triggered BEFORE
-							// 		the base event handler...
-							// 		...seems that there's an async something hidden
-							// 		in the middle, need to check this! (XXX)
-							//.close(function(){ dialog.update() })
-							.close(function(){ 
-								setTimeout(function(){ dialog.update() }, 0) })
+							.close(function(){ dialog.update() })
 				}) 
 			return dialog
 		})],
-
 	// XXX need a way to abort edits...
 	editKeyBinding: ['- Interface/Key mapping...',
 		widgets.makeUIDialog(function(mode, code){
@@ -1137,6 +1131,7 @@ var KeyboardActions = actions.Actions({
 			keys = mode in keys ? 
 				(keys[mode][code] || [])
 				: [] 
+			var orig_keys = keys.slice()
 
 			var dialog = browse.makeLister(null, 
 				function(path, make){
@@ -1146,8 +1141,6 @@ var KeyboardActions = actions.Actions({
 					make(['Code:', code || ''])
 
 					make('---')
-
-					var to_remove = []
 
 					make.EditableList(keys)
 
@@ -1162,8 +1155,22 @@ var KeyboardActions = actions.Actions({
 					cls: 'metadata-view',
 				})
 				// save the keys...
+				// XXX at this point this does not account for changes 
+				// 		in mode or code...
 				.on('close', function(){
-					// XXX
+					// remove keys...
+					orig_keys
+						.filter(function(k){ return keys.indexOf(k) < 0 })
+						.forEach(function(k){
+							that.keyHandler(mode, k, '')
+						})
+
+					// add keys...
+					keys
+						.filter(function(k){ return orig_keys.indexOf(k) < 0 })
+						.forEach(function(k){
+							that.keyHandler(mode, k, code)
+						})
 				})
 
 			return dialog
@@ -1199,7 +1206,7 @@ var KeyboardActions = actions.Actions({
 
 			return dialog
 		})],
-	// XXX revise...
+	// XXX revise:
 	// 		- '*' toggle
 	// 		- done/cancel
 	editKeyboardModeDroppedKeys: ['- Interface/Dropped keys...',
@@ -1327,9 +1334,11 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 				}
 			}],
 
+		/*
 		['keyHandler',
 			function(res, mode, key, action){
-				action && this.checkKeyboardDoc() }],
+				action && this.testKeyboardDoc() }],
+		//*/
 	],
 })
 

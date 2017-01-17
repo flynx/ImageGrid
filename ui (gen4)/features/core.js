@@ -349,11 +349,61 @@ module.Util = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Introspection...
 
+// Normalize doc strings...
+// 
+// This will remove indent padding from all lines in a doc string.
+// 
+// This is useful for documenting actions using ES6 template/multi-line
+// strings and keep them sane in terms of indent...
+// 
+// 	Example:
+// 		someAction: ['Test/Some action title',
+// 			doc`This is an example...
+// 			mult-iline...
+// 			...doc string that will be normalized and look the same but`
+// 			without the indent...`,
+// 			function(){ ... }]
+// 			
+// NOTE: this will ignore the first line's indent so it can be started 
+// 		right at the string start.
+var doc = 
+module.doc =
+function(strings, ...values){
+	var lines = strings
+		.map(function(s, i){ return s + (values[i] || '') })
+		.join('')
+		.split(/\n/g)
+
+	// get the common whitespae offset...
+	var l = -1
+	lines.forEach(function(line, i){ 
+		if(line.trim().length == 0){
+			return
+		}
+
+		// get the indent...
+		var a = line.length - line.trimLeft().length
+
+		// if line 0 is not indented, ignore it...
+		if(i == 0 && a == 0){
+			return
+		}
+
+		l = l < 0 ? a : Math.min(l, a)
+	})
+
+	return lines
+		.map(function(line, i){ return i == 0 ? line : line.slice(l) })
+		.join('\n')
+}
+
+
 // Indicate that an action is not intended for direct use...
 //
 // NOTE: this will not do anything but mark the action.
 var notUserCallable =
-module.notUserCallable = function(func){
+module.notUserCallable = 
+function(func){
 	func.__not_user_callable__ = true
 	return func
 }
@@ -368,10 +418,9 @@ var IntrospectionActions = actions.Actions({
 
 	// check if action is callable by user...
 	isUserCallable: ['- System/',
+		doc`Test if an action is used callable.`,
 		actions.doWithRootAction(function(action){
 			return action.__not_user_callable__ != true })],
-
-
 })
 
 

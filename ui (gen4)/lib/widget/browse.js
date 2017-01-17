@@ -127,20 +127,27 @@ function(text, options){
 // XXX
 Items.Selectable =
 function(text, options){
+	// XXX
 }
 
 // make Editable on select element...
 //
 // options format:
 // 	{
+//		// show as action (via. .Action(..))
+// 		action: <bool>,
+//
+//		// If true, clear text when item is selected...
 //		clear_on_edit: true,
 //
-// 		editaborted: 
-// 		editdone:
+// 		// Called when editing is abrted... 
+// 		editaborted: <func>,
 //
-// 		action: <bool>,
+// 		// Called when editing is done...
+// 		editdone: <func>,
+//
+// 		...
 // 	}
-// XXX
 Items.Editable =
 function(text, options){
 	options = options || {}
@@ -171,11 +178,13 @@ function(text, options){
 // XXX
 Items.SelectableField =
 function(text, options){
+	// XXX
 }
 
 // XXX
 Items.EditableField =
 function(text, options){
+	// XXX
 }
 
 
