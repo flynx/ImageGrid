@@ -274,7 +274,7 @@ function(list, options){
 		: list
 	var editable = lst instanceof Array
 	// view objects...
-	lst = !editable ? Object.keys(lst) : lst.slice()
+	lst = !editable ? Object.keys(lst) : lst
 
 	// add the 'x' button if not disabled...
 	var buttons = options.buttons = (options.buttons || []).slice()
@@ -339,7 +339,7 @@ function(list, options){
 						: undefined)
 			}
 
-			write(list, lst)
+			lst = write(list, lst)
 
 			// update list and select new value...
 			dialog.update()

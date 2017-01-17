@@ -1125,6 +1125,7 @@ var KeyboardActions = actions.Actions({
 	editKeyBinding: ['- Interface/Key mapping...',
 		widgets.makeUIDialog(function(mode, code){
 			var that = this
+			var abort = false
 
 			// list the keys (cache)...
 			var keys = that.keyboard.keys(code)
@@ -1149,6 +1150,12 @@ var KeyboardActions = actions.Actions({
 					make.ConfirmAction('Delete', {
 						callback: function(){ dialog.close() }, 
 						timeout: that.config['confirm-delete-timeout'] || 2000,
+						buttons: [
+							['Cancel', function(){ 
+								abort = true
+								make.dialog.close()
+							}],
+						],
 					})
 				},
 				{
@@ -1158,6 +1165,10 @@ var KeyboardActions = actions.Actions({
 				// XXX at this point this does not account for changes 
 				// 		in mode or code...
 				.on('close', function(){
+					if(abort){
+						return
+					}
+
 					// remove keys...
 					orig_keys
 						.filter(function(k){ return keys.indexOf(k) < 0 })
@@ -1180,6 +1191,7 @@ var KeyboardActions = actions.Actions({
 	editKeyboardMode: ['- Interface/Mode...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
+			var abort = false
 
 			var dialog = browse.makeLister(null, 
 				function(path, make){
@@ -1198,6 +1210,12 @@ var KeyboardActions = actions.Actions({
 							dialog.close()
 						}, 
 						timeout: that.config['confirm-delete-timeout'] || 2000,
+						buttons: [
+							['Cancel', function(){ 
+								abort = true
+								make.dialog.close()
+							}],
+						],
 					})
 				},
 				{
@@ -1206,32 +1224,19 @@ var KeyboardActions = actions.Actions({
 
 			return dialog
 		})],
+	// XXX BUG: for some reason we are adding one key at a time only...
 	// XXX revise:
 	// 		- '*' toggle
 	// 		- done/cancel
 	editKeyboardModeDroppedKeys: ['- Interface/Dropped keys...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
-			//var abort = false
-			var abort = true
-			var drop = that.keybindings[mode].drop || []
+			var abort = false
+			var drop = (that.keybindings[mode].drop || []).slice()
 
 			return browse.makeLister(null, 
 				function(path, make){
 					var drop_all 
-
-					// '*' toggler...
-					// XXX should this close the dialog???
-					make.ConfirmAction('Drop all keys', {
-						callback: function(){ 
-							drop_all = '*'
-							
-							make.dialog.close() 
-						}, 
-						timeout: that.config['confirm-delete-timeout'] || 2000,
-					})
-
-					make('---')
 
 					// the list editor...
 					make.EditableList(function(keys){
@@ -1248,24 +1253,24 @@ var KeyboardActions = actions.Actions({
 						unique: true
 					})
 
-					make('---')
+					make.Separator()
 
-					//make.Action('Cancel')
-					//	.on('open', function(){
-					//		abort = true
-					//		make.dialog.close()
-					//	})
-					make.Action('Done', {
+					// '*' toggler...
+					// XXX should this close the dialog???
+					make.ConfirmAction('Drop all keys', {
+						callback: function(){ 
+							drop_all = '*'
+							
+							make.dialog.close() 
+						}, 
+						timeout: that.config['confirm-delete-timeout'] || 2000,
 						buttons: [
 							['Cancel', function(){ 
+								abort = true
 								make.dialog.close()
 							}],
-						]})
-						.on('open', function(){
-							abort = false
-							make.dialog.close()
-						})
-
+						],
+					})
 				})
 				.on('close', function(){
 					if(!abort){
