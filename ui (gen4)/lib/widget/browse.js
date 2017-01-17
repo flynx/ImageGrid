@@ -129,9 +129,43 @@ Items.Selectable =
 function(text, options){
 }
 
+// make Editable on select element...
+//
+// options format:
+// 	{
+//		clear_on_edit: true,
+//
+// 		editaborted: 
+// 		editdone:
+//
+// 		action: <bool>,
+// 	}
 // XXX
 Items.Editable =
 function(text, options){
+	options = options || {}
+	var dialog = this.dialog
+	var elem = (options.action ? this.Action : this).call(this, text, options)
+		.on('select', function(){
+			var editable = elem.find('.text')
+				.makeEditable({
+					activate: true,
+					clear_on_edit: options.clear_on_edit,
+					blur_on_abort: false,
+					blur_on_commit: false,
+				})
+				// deselect on abort...
+				.on('edit-aborted', function(){
+					dialog.select(null)	
+					dialog.update()
+				})
+
+			options.editaborted
+				&& editable.on('edit-aborted', options.editaborted)
+			options.editdone
+				&& editable.on('edit-done', options.editdone)
+		})
+	return elem
 }
 
 // XXX
@@ -145,38 +179,86 @@ function(text, options){
 }
 
 
+// Make list of elements...
+//
 Items.List =
 function(list, options){
 	var make = this
+	var res = []
 	list.forEach(function(e){
-		make(e, options)
+		res.push(make(e, options)[0])
 	})
+	return $(res)
 }
 
 
+// Make editable list of elements...
+//
+// This will edit the passed list in-place.
+//
 // options format:
 // 	{
+// 		new_button: <text>|<bool>,
+//
+// 		// if true, disable delete item button...
 // 		no_delete_button: <bool>,
 //
-// 		editdone: function(lst){ .. },
-// 		// XXX
-// 		changed: function(lst){ .. },
+// 		length_limit: <number>,
+//
+// 		// check input value...
+// 		check: function(value){ ... },
+//
+// 		// if true only unique values will be stored...
+// 		// if a function this will be used to normalize the values before
+// 		// uniqueness check is performed...
+// 		unique: <bool>|function(value){ ... },
+//
+// 		// if true sort values...
+// 		// if function will be used as cmp for sorting...
+// 		sort: <bool> || function(a, b){ ... },
+//
+// 		// this is called when a new value is added via new_button but 
+// 		// list length limit is reached...
+// 		overflow: function(selected){ ... },
+//
+// 		// see: itemButtons doc in browse.js for more info...
+// 		itemButtons: [..]
+//
 // 		...
 // 	}
 //
+// NOTE: this will return a list of elements with the new button...
 // NOTE: this will push a remove button to the end of the button list,
 // 		this can be disabled by setting .no_delete_button to false in 
 // 		options...
+//
+// XXX add sort buttons: up/down/top/bottom...
 Items.EditableList =
 function(list, options){
 	var make = this
 	var dialog = make.dialog
 
-	var editdone = options.editdone
-	// XXX
-	var changed = options.changed
+	var write = function(list, lst){
+		// write back the list...
+		return list instanceof Function ?
+			// call the writer...
+			list(lst) 
+			// in-place replace list elements...
+			// NOTE: this is necessary as not everything we do with lst
+			// 		is in-place...
+			: list.splice.apply(list, [0, list.length].concat(lst))
+	}
 
 	var to_remove = []
+
+	// make a copy of options, to keep it safe from changes we are going
+	// to make...
+	options = options || {}
+	var opts = {}
+	for(var k in options){
+		opts[k] = options[k]
+	}
+	options = opts
 
 	var lst = list instanceof Function ? 
 		list() 
@@ -185,134 +267,114 @@ function(list, options){
 	// view objects...
 	lst = !editable ? Object.keys(lst) : lst.slice()
 
-	var buttons = options.buttons = options.buttons || []
+	// add the 'x' button if not disabled...
+	var buttons = options.buttons = (options.buttons || []).slice()
 	!options.no_delete_button
 		&& buttons.push(Buttons.markForRemoval(to_remove))
 
-	// XXX make this generic...
-	var _makeEditable = function(elem){
-		return $(elem).find('.text')
-			.makeEditable({
-				activate: true,
-				clear_on_edit: true,
-				blur_on_abort: false,
-				blur_on_commit: false,
-			})
-			.on('edit-aborted', function(){
-				dialog.select(null)	
-				dialog.update()
-			})
-			.on('edit-done', function(evt, text){
-				var txt = $(this).text()
-
-				// invalid format...
-				if(options.check && !options.check(txt)){
-					dialog.update()
-					return
-				}
-
-				// list length limit
-				if(options.length_limit 
-					&& (lst.length >= options.length_limit)){
-
-					options.callback && options.callback.call(dialog, txt)
-
-					return
-				}
-
-				// prevent editing non-arrays...
-				if(!editable || !lst){
-					return
-				}
-
-				// add new value and sort list...
-				lst.push(txt)
-
-				// unique...
-				if(options.unique == null || options.unique === true){
-					lst = lst.unique()
-
-				// unique normalized...
-				} else if(options.unique instanceof Function){
-					lst = lst.unique(options.unique) 
-				}
-
-				// sort...
-				if(options.sort){
-					lst = lst
-						.sort(options.sort instanceof Function ? 
-							options.sort 
-							: undefined)
-				}
-
-				changed 
-					&& changed(lst)
-
-				// update the list data...
-				//dialog.options.data = lst.concat(new_button ? [ new_button ] : [])
-
-				// update list and select new value...
-				dialog.update()
-					.done(function(){
-						dialog.select('"'+txt+'"')
-					})
-			})
-	}
 
 	// make the list...
-	make.List(lst, options)
+	var res = make.List(lst, options).toArray()
 	
 	// new button...
 	var new_button = options.new_button || true
 	new_button = new_button === true ? 'New...' : new_button
-	make(new_button)
-		// make editable...
-		// XXX check signature...
-		.on('select', function(evt, p, e){
-			_makeEditable(e)
+	res.push(make.Editable(
+		new_button, 
+		{
+			action: true, 
+			clear_on_edit: true,
 		})
+		// update list on edit done...
+		.on('edit-done', function(evt, text){
+			var txt = $(this).text()
 
-	// dialog handlers...
-	dialog
-		.open(function(evt, path){
-			// we clicked the 'New' button -- select it...
-			if(new_button && (path == new_button || path == '')){
-				dialog.select(new_button)
-
-			} else if(options.callback){
-				options.callback.call(dialog, path)
-			}
-		})
-		// update the striked-out items (to_remove)...
-		.on('update', function(){
-			to_remove.forEach(function(e){
-				dialog.filter('"'+ e +'"')
-					.toggleClass('strike-out')
-			})
-		})
-		// clear the to_remove items + save list...
-		.on('close', function(){
-			// prevent editing non-arrays...
-			if(!editable){
+			// invalid format...
+			if(options.check && !options.check(txt)){
+				dialog.update()
 				return
 			}
 
-			// remove items...
-			to_remove.forEach(function(e){
-				lst.splice(lst.indexOf(e), 1)
-			})
+			// list length limit
+			if(options.length_limit 
+				&& (lst.length >= options.length_limit)){
+
+				options.overflow 
+					&& options.overflow.call(dialog, txt)
+
+				return
+			}
+
+			// prevent editing non-arrays...
+			if(!editable || !lst){
+				return
+			}
+
+			// add new value and sort list...
+			lst.push(txt)
+
+			// unique...
+			if(options.unique == null || options.unique === true){
+				lst = lst.unique()
+
+			// unique normalized...
+			} else if(options.unique instanceof Function){
+				lst = lst.unique(options.unique) 
+			}
 
 			// sort...
 			if(options.sort){
-				lst.sort(options.sort !== true ? options.sort : undefined)
+				lst = lst
+					.sort(options.sort instanceof Function ? 
+						options.sort 
+						: undefined)
 			}
 
-			write 
-				&& write(lst)
-		})
+			write(list, lst)
+
+			// update list and select new value...
+			dialog.update()
+				.done(function(){
+					dialog.select('"'+txt+'"')
+				})
+		}))
+
+
+	// dialog handlers...
+	// NOTE: we bind these only once per dialog...
+	if(dialog.__editable_list_handlers == null){
+		dialog.__editable_list_handlers = true
+		dialog
+			// update the striked-out items (to_remove)...
+			.on('update', function(){
+				to_remove.forEach(function(e){
+					dialog.filter('"'+ e +'"')
+						.toggleClass('strike-out')
+				})
+			})
+			// clear the to_remove items + save list...
+			.on('close', function(){
+				// prevent editing non-arrays...
+				if(!editable){
+					return
+				}
+
+				// remove items...
+				to_remove.forEach(function(e){
+					lst.splice(lst.indexOf(e), 1)
+				})
+
+				// sort...
+				if(options.sort){
+					lst.sort(options.sort !== true ? options.sort : undefined)
+				}
+
+				write(list, lst)
+			})
+	}
+
+	return $(res)
 }
-
-
 
 
 
@@ -345,6 +407,7 @@ module.buttons = {
 			}]
 	},
 }
+
 
 
 
@@ -655,16 +718,17 @@ var BrowserPrototype = {
 	// XXX should we have things like ctrl-<number> for fast selection 
 	// 		in filter mode???
 	keybindings: {
-		// XXX this is the same as FullPathEdit, should we combine the two?
 		ItemEdit: {
 			pattern: '.list .text[contenteditable]',
 
 			// keep text editing action from affecting the selection...
 			drop: '*',
 
-			// XXX not sure about this...
-			Up: 'NEXT',
-			Down: 'NEXT',
+			// XXX this does not seem to work...
+			Up: 'NEXT!',
+			Down: 'NEXT!',
+			Tab: 'NEXT!',
+			shift_Tab: 'NEXT!',
 
 			Enter: 'push!',
 			Esc: 'update!',
@@ -686,8 +750,10 @@ var BrowserPrototype = {
 			// keep text editing action from affecting the selection...
 			drop: '*',
 			
-			Up: 'NEXT',
-			Down: 'NEXT',
+			Up: 'NEXT!',
+			Down: 'NEXT!',
+			Tab: 'NEXT!',
+			shift_Tab: 'NEXT!',
 
 			Enter: 'push!',
 			Esc: 'stopFilter!',
@@ -1390,6 +1456,9 @@ var BrowserPrototype = {
 				.append(p)
 
 			res.addClass([
+				// XXX use the same algorithm as .select(..)
+				selection && res.text() == selection ? 'selected' : '',
+
 				!traversable ? 'not-traversable' : '',
 				disabled ? 'disabled' : '',
 				hidden ? 'hidden' : '',
@@ -1523,7 +1592,6 @@ var BrowserPrototype = {
 
 				// select the item...
 				if(selection){
-					//that.select(selection)
 					that.select('"'+ selection +'"')
 				}
 
@@ -2715,13 +2783,13 @@ var BrowserPrototype = {
 			parent.append(dom)
 		}
 
+		// load the initial state...
+		that.update(options.path || that.path || '/')
+
 		// Select the default path...
 		//
 		// NOTE: this may not work when the dialog is loaded async...
 		setTimeout(function(){ 
-			// load the initial state...
-			that.update(options.path || that.path || '/')
-
 			// in case we have a manually selected item but that was 
 			// not aligned...
 			that.selected && that.select()
@@ -2855,7 +2923,7 @@ ListPrototype.options = {
 					}
 				}
 
-				var e = make(n, null, disable)
+				var e = make(n, {disabled: disable})
 
 				if(data !== keys && that.options.data[k] != null){
 					e.on('open', function(){ 
@@ -3131,187 +3199,16 @@ module.makePathList = makeBrowserMaker(PathList)
 
 // Make an list/Array editor...
 //
-// Options format:
-// 	{
-// 		new_button: <text>|<bool>,
 //
-// 		length_limit: <number>,
-//
-// 		// check input value...
-// 		check: function(value){ ... },
-//
-// 		// if true only unique values will be stored...
-// 		// if a function this will be used to normalize the values before
-// 		// uniqueness check is performed...
-// 		unique: <bool>|function(value){ ... },
-//
-// 		// if true sort values...
-// 		// if function will be used as cmp for sorting...
-// 		sort: <bool> || function(a, b){ ... },
-//
-// 		// this is called when a new value is added via new_button but 
-// 		// list length limit is reached...
-// 		callback: function(selected){ ... },
-//
-// 		// see: itemButtons doc in browse.js for more info...
-// 		itemButtons: [..]
-// 	}
-//
-// XXX add sort buttons: up/down/top/bottom...
-// XXX this is generic, move to browse...
+// For options format see: List.EditableList(..)
 var makeListEditor = 
 module.makeListEditor =
 function(list, options){
-	options = options || {}
-
-	var new_button = options.new_button || true
-	new_button = new_button === true ? 'New...' : new_button
-
-	var _makeEditable = function(elem){
-		return $(elem).find('.text')
-			.makeEditable({
-				activate: true,
-				clear_on_edit: true,
-				blur_on_abort: false,
-				blur_on_commit: false,
-			})
-			.on('edit-aborted', function(){
-				dialog.select(null)	
-				dialog.update()
-			})
-			.on('edit-done', function(evt, text){
-				var txt = $(this).text()
-
-				// invalid format...
-				if(options.check && !options.check(txt)){
-					dialog.update()
-					return
-				}
-
-				// list length limit
-				if(options.length_limit 
-					&& (lst.length >= options.length_limit)){
-
-					options.callback && options.callback.call(dialog, txt)
-
-					return
-				}
-
-				// prevent editing non-arrays...
-				if(!editable || !lst){
-					return
-				}
-
-				// add new value and sort list...
-				lst.push(txt)
-
-				// unique...
-				if(options.unique == null || options.unique === true){
-					lst = lst.unique()
-
-				// unique normalized...
-				} else if(typeof(options.unique) == typeof(function(){})){
-					lst = lst.unique(options.unique) 
-				}
-
-				// sort...
-				if(options.sort){
-					lst = lst
-						.sort(typeof(options.sort) == typeof(function(){}) ? 
-							options.sort 
-							: undefined)
-				}
-
-				_write(lst)
-
-				// update the list data...
-				dialog.options.data = lst.concat(new_button ? [ new_button ] : [])
-
-				// update list and select new value...
-				dialog.update()
-					.done(function(){
-						dialog.select('"'+txt+'"')
-					})
-			})
-	}
-	var _write = function(lst){
-		// write back the list...
-		return list instanceof Function ?
-			// call the writer...
-			list(lst) 
-			// in-place replace list elements...
-			// NOTE: this is necessary as not everything we do with lst
-			// 		is in-place...
-			: list.splice.apply(list, [0, list.length].concat(lst))
-	}
-
-	var to_remove = []
-
-	var lst = list instanceof Function ? 
-		list() 
-		: list
-	var editable = lst instanceof Array
-
-	// view objects...
-	lst = !editable ? Object.keys(lst) : lst.slice()
-
-	var dialog = makeList(null, 
-			lst.concat(new_button ? [ new_button ] : []), 
-			{
-				path: options.path,
-				itemButtons: options.itemButtons || [
-					// mark for removal...
-					Buttons.markForRemoval(to_remove),
-					// XXX add shift up/down/top/bottom and other buttons (optional)...
-				]
-			})
-		// select the new_button item...
-		.on('select', function(evt, elem){
-			if(new_button && $(elem).find('.text').text() == new_button){
-				_makeEditable(elem)
-			}
-		})
-		.open(function(evt, path){
-			// we clicked the 'New' button -- select it...
-			if(new_button && (path == new_button || path == '')){
-				dialog.select(new_button)
-
-			} else {
-				options.callback && options.callback.call(dialog, path)
-			}
-		})
-		// restore striked-out items...
-		.on('update', function(){
-			to_remove.forEach(function(e){
-				dialog.filter('"'+ e +'"')
-					.toggleClass('strike-out')
-			})
-		})
-		.on('close', function(){
-			// prevent editing non-arrays...
-			if(!editable){
-				return
-			}
-
-			// remove striked items...
-			to_remove.forEach(function(e){
-				lst.splice(lst.indexOf(e), 1)
-
-				_write(lst)
-			})
-
-			// sort...
-			if(options.sort){
-				lst.sort(options.sort !== true ? options.sort : undefined)
-
-				_write(lst)
-			}
-		})
-	
-	// XXX
-	new_button && dialog.dom.addClass('tail-action')
-
-	return dialog
+	return makeLister(null, 
+		function(path, make){
+			make.EditableList(list, options)
+		}, 
+		options)
 }
 
 

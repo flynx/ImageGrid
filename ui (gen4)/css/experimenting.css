@@ -250,6 +250,7 @@ body {
 	font-style: italic;
 }
 /* do not show top border if after another action or separator... */
+.browse-widget .list>.action:first-child,
 .browse-widget .list>.action+.action,
 .browse-widget .list>.separator+.action {
 	border-top: none;

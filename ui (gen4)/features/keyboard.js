@@ -884,17 +884,22 @@ var KeyboardActions = actions.Actions({
 										.concat($('<span>')
 											.addClass('text')
 											.html(keys[mode][action]
-												// mark key if it is in dropped...
+												// mark key if it's dropped...
 												.map(function(s){ 
-													s = s.split('+')
-													var k = s.pop() 
-													var i = dropped.indexOf(k)
-													i >= 0 
-														&& bound_ignored
-															.push(dropped[i])
-													s.push(k 
-														+ (i >= 0 ?  '<sup>*</sup>' : ''))
-													return s.join('+') })
+													if(dropped == '*'){
+														s += '<sup>*</sup>'
+													} else {
+														s = s.split('+')
+														var k = s.pop() 
+														var i = dropped.indexOf(k)
+														i >= 0 
+															&& bound_ignored
+																.push(dropped[i])
+														s.push(k + (i >= 0 ?  '<sup>*</sup>' : ''))
+														s = s.join('+')
+													}
+													return s 
+												})
 												.join(' / '))),
 									{
 										// hide stuff that is not an action...
@@ -940,10 +945,12 @@ var KeyboardActions = actions.Actions({
 									// 		together in path...
 									' ',
 									'$BUTTONS',
-									dropped
-										.filter(function(k){ 
-											return bound_ignored.indexOf(k) == -1 })
-										.join(' / ')],
+									dropped == '*' ? 
+										dropped 
+										: dropped
+											.filter(function(k){ 
+												return bound_ignored.indexOf(k) == -1 })
+											.join(' / ')],
 								{
 									buttons: options.drop_buttons,
 								})
@@ -974,6 +981,7 @@ var KeyboardActions = actions.Actions({
 						.addClass('info')
 				}, 
 				{
+					path: path,
 					cls: [
 						'key-bindings',
 						'no-item-numbers',
@@ -1107,7 +1115,13 @@ var KeyboardActions = actions.Actions({
 
 					sub_dialog 
 						&& sub_dialog
-							.close(function(){ dialog.update() })
+							// XXX for some magical reason this is triggered BEFORE
+							// 		the base event handler...
+							// 		...seems that there's an async something hidden
+							// 		in the middle, need to check this! (XXX)
+							//.close(function(){ dialog.update() })
+							.close(function(){ 
+								setTimeout(function(){ dialog.update() }, 0) })
 				}) 
 			return dialog
 		})],
@@ -1116,7 +1130,13 @@ var KeyboardActions = actions.Actions({
 	editKeyBinding: ['- Interface/Key mapping...',
 		widgets.makeUIDialog(function(mode, code){
 			var that = this
-			// XXX
+
+			// list the keys (cache)...
+			var keys = that.keyboard.keys(code)
+			keys = mode in keys ? 
+				(keys[mode][code] || [])
+				: [] 
+
 			var dialog = browse.makeLister(null, 
 				function(path, make){
 					// XXX make editable...
@@ -1126,38 +1146,23 @@ var KeyboardActions = actions.Actions({
 
 					make('---')
 
-					// list the keys...
-					var keys = that.keyboard.keys(code)
-					keys = mode in keys ? 
-						(keys[mode][code] || [])
-						: [] 
-
 					var to_remove = []
-					keys
-						.forEach(function(key){
-							// XXX make editable...
-							make(key, { buttons: [
-								browse.buttons.markForRemoval(to_remove)
-							], })
-						})
 
-					var new_button = make.Action('New key...')
-						.on('open', function(){ 
-							widgets.editItem(dialog, new_button)
-						})
+					make.EditableList(keys)
 
 					make('---')
 					
 					make.ConfirmAction('Delete', {
-						callback: function(){
-							// XXX
-							dialog.close()
-						}, 
+						callback: function(){ dialog.close() }, 
 						timeout: that.config['confirm-delete-timeout'] || 2000,
 					})
 				},
 				{
 					cls: 'metadata-view',
+				})
+				// save the keys...
+				.on('close', function(){
+					// XXX
 				})
 
 			return dialog
@@ -1193,28 +1198,72 @@ var KeyboardActions = actions.Actions({
 
 			return dialog
 		})],
-	// XXX need a way to abort edits...
-	// XXX need a way to set a special '*' key...
+	// XXX revise...
+	// 		- '*' toggle
+	// 		- done/cancel
 	editKeyboardModeDroppedKeys: ['- Interface/Dropped keys...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
+			//var abort = false
+			var abort = true
+			var drop = that.keybindings[mode].drop || []
 
-			// XXX need a way to set a special '*' key...
-			var dialog = browse.makeListEditor(function(keys){
-				// get...
-				if(keys === undefined){
-					return that.keybindings[mode].drop || []
+			return browse.makeLister(null, 
+				function(path, make){
+					var drop_all 
 
-				// set...
-				} else {
-					that.keybindings[mode].drop = keys
-				}
-			}, 
-			{
-				unique: true,
-			})
+					// '*' toggler...
+					// XXX should this close the dialog???
+					make.ConfirmAction('Drop all keys', {
+						callback: function(){ 
+							drop_all = '*'
+							
+							make.dialog.close() 
+						}, 
+						timeout: that.config['confirm-delete-timeout'] || 2000,
+					})
 
-			return dialog
+					make('---')
+
+					// the list editor...
+					make.EditableList(function(keys){
+						// get...
+						if(keys === undefined){
+							return drop && drop != '*' ? drop : []
+
+						// set...
+						} else {
+							drop = drop_all ? '*' : keys
+						}
+					}, 
+					{
+						unique: true
+					})
+
+					make('---')
+
+					//make.Action('Cancel')
+					//	.on('open', function(){
+					//		abort = true
+					//		make.dialog.close()
+					//	})
+					make.Action('Done', {
+						buttons: [
+							['Cancel', function(){ 
+								make.dialog.close()
+							}],
+						]})
+						.on('open', function(){
+							abort = false
+							make.dialog.close()
+						})
+
+				})
+				.on('close', function(){
+					if(!abort){
+						that.keybindings[mode].drop = drop
+					}
+				})
 		})],
 
 
