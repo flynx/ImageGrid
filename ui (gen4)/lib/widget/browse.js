@@ -145,6 +145,176 @@ function(text, options){
 }
 
 
+Items.List =
+function(list, options){
+	var make = this
+	list.forEach(function(e){
+		make(e, options)
+	})
+}
+
+
+// options format:
+// 	{
+// 		no_delete_button: <bool>,
+//
+// 		editdone: function(lst){ .. },
+// 		// XXX
+// 		changed: function(lst){ .. },
+// 		...
+// 	}
+//
+// NOTE: this will push a remove button to the end of the button list,
+// 		this can be disabled by setting .no_delete_button to false in 
+// 		options...
+Items.EditableList =
+function(list, options){
+	var make = this
+	var dialog = make.dialog
+
+	var editdone = options.editdone
+	// XXX
+	var changed = options.changed
+
+	var to_remove = []
+
+	var lst = list instanceof Function ? 
+		list() 
+		: list
+	var editable = lst instanceof Array
+	// view objects...
+	lst = !editable ? Object.keys(lst) : lst.slice()
+
+	var buttons = options.buttons = options.buttons || []
+	!options.no_delete_button
+		&& buttons.push(Buttons.markForRemoval(to_remove))
+
+	// XXX make this generic...
+	var _makeEditable = function(elem){
+		return $(elem).find('.text')
+			.makeEditable({
+				activate: true,
+				clear_on_edit: true,
+				blur_on_abort: false,
+				blur_on_commit: false,
+			})
+			.on('edit-aborted', function(){
+				dialog.select(null)	
+				dialog.update()
+			})
+			.on('edit-done', function(evt, text){
+				var txt = $(this).text()
+
+				// invalid format...
+				if(options.check && !options.check(txt)){
+					dialog.update()
+					return
+				}
+
+				// list length limit
+				if(options.length_limit 
+					&& (lst.length >= options.length_limit)){
+
+					options.callback && options.callback.call(dialog, txt)
+
+					return
+				}
+
+				// prevent editing non-arrays...
+				if(!editable || !lst){
+					return
+				}
+
+				// add new value and sort list...
+				lst.push(txt)
+
+				// unique...
+				if(options.unique == null || options.unique === true){
+					lst = lst.unique()
+
+				// unique normalized...
+				} else if(options.unique instanceof Function){
+					lst = lst.unique(options.unique) 
+				}
+
+				// sort...
+				if(options.sort){
+					lst = lst
+						.sort(options.sort instanceof Function ? 
+							options.sort 
+							: undefined)
+				}
+
+				changed 
+					&& changed(lst)
+
+				// update the list data...
+				//dialog.options.data = lst.concat(new_button ? [ new_button ] : [])
+
+				// update list and select new value...
+				dialog.update()
+					.done(function(){
+						dialog.select('"'+txt+'"')
+					})
+			})
+	}
+
+	// make the list...
+	make.List(lst, options)
+	
+	// new button...
+	var new_button = options.new_button || true
+	new_button = new_button === true ? 'New...' : new_button
+	make(new_button)
+		// make editable...
+		// XXX check signature...
+		.on('select', function(evt, p, e){
+			_makeEditable(e)
+		})
+
+	// dialog handlers...
+	dialog
+		.open(function(evt, path){
+			// we clicked the 'New' button -- select it...
+			if(new_button && (path == new_button || path == '')){
+				dialog.select(new_button)
+
+			} else if(options.callback){
+				options.callback.call(dialog, path)
+			}
+		})
+		// update the striked-out items (to_remove)...
+		.on('update', function(){
+			to_remove.forEach(function(e){
+				dialog.filter('"'+ e +'"')
+					.toggleClass('strike-out')
+			})
+		})
+		// clear the to_remove items + save list...
+		.on('close', function(){
+			// prevent editing non-arrays...
+			if(!editable){
+				return
+			}
+
+			// remove items...
+			to_remove.forEach(function(e){
+				lst.splice(lst.indexOf(e), 1)
+			})
+
+			// sort...
+			if(options.sort){
+				lst.sort(options.sort !== true ? options.sort : undefined)
+			}
+
+			write 
+				&& write(lst)
+		})
+}
+
+
+
+
 
 //---------------------------------------------------------------------
 // Browse item buttons (button constructors)...
@@ -588,19 +758,37 @@ var BrowserPrototype = {
 		return this.constructor.path2list.apply(this, arguments) 
 	},
 
-	// Trigger jQuery events on Browser...
+	// Trigger jQuery events on Item then bubble to Browser...
 	//
-	// This will pass the Browser instance to .source attribute of the
-	// event object triggered.
+	// This will extend the event object with:
+	// 	.source		- Browser instance that triggered the event
+	// 	.type		- event type/name
+	// 	.args		- arguments passed to trigger
+	//
 	//
 	// NOTE: event propagation for some events is disabled by binding 
 	// 		to them handlers that stop propagation in .__init__(..).
 	// 		The list of non-propagated events in defined in 
 	// 		.options.nonPropagatedEvents
-	//
-	// XXX triggering events from here and from jQuery/dom has a 
-	// 		different effect...
-	//trigger: widget.triggerEventWithSource,
+	trigger: function(event){
+		var elem = this.select('!')
+
+		// NOTE: this will propagate up to the dialog...
+		if(elem.length > 0){
+			var args = [].slice.call(arguments).slice(1)
+			elem.trigger({
+				type: arguments[0],
+				source: this,
+				args: args,
+			}, args)
+
+		// no items selected -- trigger event on main ui...
+		} else {
+			object.superMethod(Browser, 'trigger').apply(this, arguments)
+		}
+
+		return this
+	},
 
 	// specific events...
 	focus: function(handler){
@@ -1306,6 +1494,8 @@ var BrowserPrototype = {
 			var s = l.find('.selected')			
 			s.length > 0 && that.select(s)
 		}
+
+		make.dialog = this
 
 		// build the list...
 		var res = list.call(this, path, make)
@@ -2402,22 +2592,15 @@ var BrowserPrototype = {
 		path = this.options.pathPrefix + path.join('/')
 
 		// trigger the 'open' events...
-		if(elem.length > 0){
-			// NOTE: this will bubble up to the browser root...
-			elem.trigger({
-					type: 'open',
-					source: this,
-				}, path)
+		this.trigger('open', path)
 
+		if(elem.length > 0){
 			// push an element if attr is set... 
 			// NOTE: a good way to do this is to check if we have any 
 			// 		handlers bound, but so var I've found no non-hack-ish
 			// 		ways to do this...
 			elem.attr('push-on-open') == 'on'
 				&& this.push(elem)
-
-		} else {
-			this.trigger('open', path)
 		}
 
 		return res
@@ -3078,7 +3261,7 @@ function(list, options){
 				path: options.path,
 				itemButtons: options.itemButtons || [
 					// mark for removal...
-					Buttons.markForRemoval(to_remove)
+					Buttons.markForRemoval(to_remove),
 					// XXX add shift up/down/top/bottom and other buttons (optional)...
 				]
 			})
@@ -3088,13 +3271,6 @@ function(list, options){
 				_makeEditable(elem)
 			}
 		})
-		// restore striked-out items...
-		.on('update', function(){
-			to_remove.forEach(function(e){
-				dialog.filter('"'+ e +'"')
-					.toggleClass('strike-out')
-			})
-		})
 		.open(function(evt, path){
 			// we clicked the 'New' button -- select it...
 			if(new_button && (path == new_button || path == '')){
@@ -3103,6 +3279,13 @@ function(list, options){
 			} else {
 				options.callback && options.callback.call(dialog, path)
 			}
+		})
+		// restore striked-out items...
+		.on('update', function(){
+			to_remove.forEach(function(e){
+				dialog.filter('"'+ e +'"')
+					.toggleClass('strike-out')
+			})
 		})
 		.on('close', function(){
 			// prevent editing non-arrays...
