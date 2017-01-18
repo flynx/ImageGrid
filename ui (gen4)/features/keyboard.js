@@ -120,7 +120,7 @@ module.GLOBAL_KEYBOARD2 = {
 	},
 
 	// XXX add "save as collection..."
-	'Cropped': {
+	'Crop': {
 		pattern: '.crop-mode',
 
 		Esc: 'uncrop',
@@ -580,58 +580,12 @@ var KeyboardActions = actions.Actions({
 		`,
 		{ keepDialogTitle: true },
 		function(key, no_match){
-			var that = this
-			var did_handling = false
-			var res
-			var evt = event
-
-			//if(key instanceof Event || key instanceof $.Event){
-			if(typeof(key) != typeof('str')){
-				evt = key
-				key = keyboard.event2key(evt)
-			}
-
-			var handlers = this.keyboard.handler('?', key)
-
-			Object.keys(handlers).forEach(function(mode){
-				if(res === false){
-					return
-				}
-
-				var handler = handlers[mode]
-
-				// raw function handler...
-				if(handler instanceof Function){
-					res = handler.call(that)
-
-				// action call syntax...
-				} else {
-					var h = keyboard.parseActionCall(handler)
-
-					if(h && h.action in that){
-						did_handling = true
-
-						evt 
-							&& h.no_default 
-							&& evt.preventDefault()
-
-						// call the handler...
-						res = that[h.action].apply(that, h.arguments)
-
-						evt 
-							&& h.stop_propagation
-							&& evt.stopPropagation()
-							&& (res = false)
-					} 
-				}
-			})
-
-			no_match 
-				&& !did_handling 
-				&& no_match.call(this, evt, key)
-
-			// XXX not sure if this is the right way to go...
-			return res
+			// get/set the handler...
+			var handler = this.__key_press_handler = 
+				this.__key_press_handler 
+					|| keyboard.makeKeyboardHandler(this.keyboard, null, this)
+			// do the call...
+			return handler(key, no_match)
 		}],
 	toggleKeyboardHandling: ['- Interface/Keyboard handling',
 		toggler.Toggler(null, function(_, state){ 
@@ -1121,7 +1075,7 @@ var KeyboardActions = actions.Actions({
 				}) 
 			return dialog
 		})],
-	// XXX need a way to abort edits...
+	// XXX make fields editable...
 	editKeyBinding: ['- Interface/Key mapping...',
 		widgets.makeUIDialog(function(mode, code){
 			var that = this
@@ -1187,7 +1141,6 @@ var KeyboardActions = actions.Actions({
 			return dialog
 		})],
 	// XXX make fields editable...
-	// XXX need a way to abort edits...
 	editKeyboardMode: ['- Interface/Mode...',
 		widgets.makeUIDialog(function(mode){
 			var that = this

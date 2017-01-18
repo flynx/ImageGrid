@@ -872,6 +872,22 @@ KeyboardWithCSSModes.prototype.__proto__ = Keyboard.prototype
 
 // Base event handler wrapper of Keyboard...
 //
+// This will produce a handler that can be used in one of two ways:
+// 	- event handler
+// 		- an event is passed as the only argument 
+// 		- the function can be used directly as an event handler
+// 	- direct key handler
+// 		- a key and optionally a no_match handler are passed
+// 		
+// 	Example:
+// 		var handler = makeKeyboardHandler(kb, null, action)
+// 		
+// 		// event handler...
+// 		$(window).keydown(handler)
+// 		
+// 		// used directly...
+// 		handler('ctrl_C', function(k){ console.log('Not bound:', k) })
+// 		
 var makeKeyboardHandler =
 module.makeKeyboardHandler =
 function makeKeyboardHandler(keyboard, unhandled, actions){
@@ -881,11 +897,18 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 		//: Keyboard(keyboard, checkGlobalMode)
 		: Keyboard(keyboard)
 
-	return function(evt){
-		var res = undefined
+	return function(key, no_match){
+		no_match = no_match || unhandled
 		var did_handling = false
+		var evt = event
+		var res
 
-		var key = kb.event2key(evt)
+		//if(key instanceof Event || key instanceof $.Event){
+		if(typeof(key) != typeof('str')){
+			evt = key
+			key = kb.event2key(evt)
+		}
+
 		var handlers = kb.handler('test', key)
 
 		Object.keys(handlers).forEach(function(mode){
@@ -906,23 +929,24 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 				if(h && h.action in actions){
 					did_handling = true
 
-					h.no_default 
+					evt 
+						&& h.no_default 
 						&& evt.preventDefault()
 
 					// call the handler...
 					res = actions[h.action].apply(actions, h.arguments)
 
-					if(h.stop_propagation){
-						res = false
-						evt.stopPropagation()
-					}
+					evt 
+						&& h.stop_propagation
+						&& evt.stopPropagation()
+						&& (res = false)
 				} 
 			}
 		})
 
-		unhandled 
+		no_match 
 			&& !did_handling 
-			&& unhandled.call(actions, evt)
+			&& no_match.call(actions, evt, key)
 
 		return res
 	}
