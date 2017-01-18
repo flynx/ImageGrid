@@ -217,9 +217,6 @@ function(list, options){
 //
 // 		length_limit: <number>,
 //
-// 		// list of items to mark for removal...
-// 		to_remove: [ ... ],
-//
 //		// called when an item is opend...
 //		//
 //		// NOTE: this is simpler that binding to the global open event 
@@ -229,11 +226,19 @@ function(list, options){
 // 		// check input value...
 // 		check: function(value){ ... },
 //
+// 		// normalize new input value...
+// 		//
+// 		// NOTE: this will replace the input with normalized value.
 // 		normalize: function(value){ ... },
 //
 // 		// if true only unique values will be stored...
+// 		//
 // 		// if a function this will be used to normalize the values before
 // 		// uniqueness check is performed...
+// 		//
+// 		// NOTE: this (if a function) is different from normalize above 
+// 		//		in that this will not store the normalized value, rather 
+// 		//		just use it for uniqueness testing...
 // 		unique: <bool> | function(value){ ... },
 //
 // 		// if true sort values...
@@ -277,7 +282,7 @@ function(list, options){
 			|| lst
 	}
 
-	var to_remove = options.to_remove = options.to_remove || []
+	var to_remove = dialog.__to_remove = dialog.__to_remove || []
 
 	// make a copy of options, to keep it safe from changes we are going
 	// to make...
@@ -297,6 +302,8 @@ function(list, options){
 	// 		or discrete and not done as they come in...
 	lst = !editable ? Object.keys(lst) : lst.slice()
 
+	dialog.__list = lst
+
 	// add the 'x' button if not disabled...
 	var buttons = options.buttons = (options.buttons || []).slice()
 	!options.no_delete_button
@@ -309,7 +316,7 @@ function(list, options){
 	// mark items for removal -- if a list is given by user...
 	to_remove.forEach(function(e){
 		dialog.filter('"'+ e +'"')
-			.toggleClass('strike-out')
+			.addClass('strike-out')
 	})
 
 	options.itemopen
@@ -339,6 +346,8 @@ function(list, options){
 				dialog.update()
 				return
 			}
+
+			lst = dialog.__list
 
 			// list length limit
 			if(options.length_limit 
@@ -377,6 +386,8 @@ function(list, options){
 
 			lst = write(list, lst)
 
+			dialog.__list = lst
+
 			// update list and select new value...
 			dialog.update()
 				.done(function(){
@@ -394,7 +405,7 @@ function(list, options){
 			.on('update', function(){
 				to_remove.forEach(function(e){
 					dialog.filter('"'+ e +'"')
-						.toggleClass('strike-out')
+						.addClass('strike-out')
 				})
 			})
 			// clear the to_remove items + save list...
@@ -403,6 +414,8 @@ function(list, options){
 				if(!editable){
 					return
 				}
+
+				lst = dialog.__list
 
 				// remove items...
 				to_remove.forEach(function(e){

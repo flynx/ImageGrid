@@ -103,6 +103,28 @@ for(var k in SPECIAL_KEYS){
 }
 
 
+// This is used to identify and correct key notation...
+// NOTE: the keys here are intentionally lowercase...
+var SPECIAL_KEY_ALTERNATIVE_TITLES = {
+	1: '#1', 2: '#2', 3: '#3', 4: '#4', 5: '#5', 
+	6: '#6', 7: '#7', 8: '#8', 9: '#9', 0: '#0',
+
+	ctl: 'Ctrl', control: 'Ctrl',
+
+	'capslock': 'Caps Lock',
+
+	'page up': 'PgUp', 'pageup': 'PgUp',
+
+	'page down': 'PgDown', 'pagedown': 'PgDown',
+
+	insert: 'Ins',
+
+	delete: 'Del',
+
+	'bkspace' : 'Backspace', 'back space' : 'Backspace',
+
+	windows: 'Win',
+}
 var SPECIAL_KEYS_DICT = {}
 for(var k in SPECIAL_KEYS){
 	SPECIAL_KEYS_DICT[SPECIAL_KEYS[k].toLowerCase()] = SPECIAL_KEYS[k]
@@ -255,12 +277,14 @@ function splitKey(key){
 			.concat(sep.indexOf(key.slice(-1)) >= 0 ? key.slice(-1) : [])
 			.filter(function(c){ return c != '' }) }
 
+
 var joinKey =
 module.joinKey = 
 function joinKey(key){
 	return key instanceof Array ? 
 		key.join(KEY_SEPARATORS[0] || '+') 
 		: key }
+
 
 // Normalize key string/array...
 // 
@@ -294,6 +318,7 @@ function normalizeKey(key){
 	}
 
 	// get the propper name...
+	k = SPECIAL_KEY_ALTERNATIVE_TITLES[k.toLowerCase()] || k
 	k = SPECIAL_KEYS_DICT[k.toLowerCase()] || k
 
 	k = modifiers.indexOf(k.toLowerCase()) >= 0 ? 
