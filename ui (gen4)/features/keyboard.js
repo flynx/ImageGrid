@@ -1202,7 +1202,10 @@ var KeyboardActions = actions.Actions({
 						}
 					}, 
 					{
-						unique: true
+						unique: true,
+
+						normalize: keyboard.normalizeKey,
+						check: keyboard.isKey,
 					})
 
 					make.Separator()

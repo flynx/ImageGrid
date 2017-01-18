@@ -103,6 +103,12 @@ for(var k in SPECIAL_KEYS){
 }
 
 
+var SPECIAL_KEYS_DICT = {}
+for(var k in SPECIAL_KEYS){
+	SPECIAL_KEYS_DICT[SPECIAL_KEYS[k].toLowerCase()] = SPECIAL_KEYS[k]
+}
+
+
 
 /*********************************************************************/
 
@@ -216,6 +222,9 @@ function code2key(code){
 var isKey =
 module.isKey = 
 function isKey(key){
+	if(!key || key.length == 0 || key.trim() == ''){
+		return false
+	}
 	var modifiers = MODIFIERS 
 
 	var mod = normalizeKey(splitKey(key))
@@ -279,6 +288,14 @@ function normalizeKey(key){
 
 	var k = key.pop()
 	k = parseInt(k) ? code2key(parseInt(k)) : k
+
+	if(!k){
+		return k
+	}
+
+	// get the propper name...
+	k = SPECIAL_KEYS_DICT[k.toLowerCase()] || k
+
 	k = modifiers.indexOf(k.toLowerCase()) >= 0 ? 
 		k.toLowerCase() 
 		: k.capitalize()
@@ -758,7 +775,8 @@ var KeyboardPrototype = {
 				// if key in .drop then ignore the rest...
 				if(drop 
 						// explicit go to next section...
-						&& handler != 'NEXT'
+						&& (!handler 
+							|| handler.slice(0, 4) != 'NEXT')
 						&& (bindings.drop == '*'
 							// XXX should this be more flexible by adding a
 							// 		specific key combo?

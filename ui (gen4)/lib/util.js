@@ -383,6 +383,11 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 		blur_on_abort: false,
 	// 		blur_on_commit: false,
 	//
+	// 		// restore focus before disabling the editor...
+	// 		keep_focus_on_parent: true,
+	//
+	// 		stop_propagation: false,
+	//
 	// 		// clear selection on abort/commit...
 	// 		clear_selection_on_abort: true,
 	// 		clear_selection_on_commit: true,
@@ -399,6 +404,10 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 	'abort'			- will reset field and trigger 'edit-aborted'
 	// 						with original (before edit started) field text
 	//
+	//
+	// NOTE: removing tabindex will reset focus, so this will attempt to 
+	// 		focus the first [tabindex] element up the tree...
+	//
 	// XXX should we just use form elements???
 	// 		...it's a trade-off, here we add editing functionality and fight
 	// 		a bit the original function, in an input we'll need to fight part
@@ -407,15 +416,24 @@ if(typeof(jQuery) != typeof(undefined)){
 	// XXX should this reset field to it's original state after 
 	// 		commit/abort???
 	jQuery.fn.makeEditable = function(options){
+		var that = this
+
 		if(options == false){
 			this
-				.prop('contenteditable', false)
+				.removeProp('contenteditable')
+				.removeProp('tabindex')
+				.removeClass('editable-field')
+
+			var events = this.data('editable-field-events')
+			for(var e in events){
+				this.off(e, events[e])
+			}
+			this.removeData('editable-field-events')
 
 			return this
 		}
 
 		options = options || {}
-		var that = this
 
 		var original = this.text()
 
@@ -430,11 +448,12 @@ if(typeof(jQuery) != typeof(undefined)){
 
 		// do not setup handlers more than once...
 		if(!this.hasClass('editable-field')){
+			var events = {}
 			this
 				// make the element focusable and selectable...
 				.attr('tabindex', '0')
 				.addClass('editable-field')
-				.keydown(function(){ 
+				.keydown(events.keydown = function(evt){ 
 					if(!that.prop('contenteditable')){
 						return
 					}
@@ -445,10 +464,6 @@ if(typeof(jQuery) != typeof(undefined)){
 
 					// abort...
 					if((options.abort_keys || ['Esc']).indexOf(n) >= 0){
-						// reset original value...
-						(options.reset_on_abort == null || options.reset_on_abort) 
-							&& that.text(original)
-
 						that.trigger('abort')
 
 					// done -- single line...
@@ -465,12 +480,16 @@ if(typeof(jQuery) != typeof(undefined)){
 						event.preventDefault()
 
 						that.trigger('commit')
+
+					// continue handling...
+					} else {
+						$(this).parent().trigger(evt)
 					}
 				})
-				.blur(function(){
+				.blur(events.blur = function(){
 					window.getSelection().removeAllRanges()
 				})
-				.on('focus click', function(evt){
+				.on('focus click', events['focus click'] = function(evt){
 					evt.stopPropagation()
 					options.clear_on_edit 
 						&& $(this)
@@ -478,22 +497,46 @@ if(typeof(jQuery) != typeof(undefined)){
 							.selectText()
 				})
 				// user triggerable events...
-				.on('abort', function(){
+				.on('abort', events.abort = function(){
 					that.trigger('edit-aborted', original)
 
 					options.clear_selection_on_abort !== false 
 						&& window.getSelection().removeAllRanges()
 
-					options.blur_on_abort !== false && this.blur() 
+					// reset original value...
+					options.reset_on_abort !== false
+						&& that.text(original)
+
+					options.blur_on_abort !== false 
+						&& this.blur() 
+
+					// restore focus on parent...
+					options.keep_focus_on_parent !== false
+						&& that.parents('[tabindex]').first().focus()
+
+					that.makeEditable(false)
 				})
-				.on('commit', function(){
+				.on('commit', events.commit = function(){
 					that.trigger('edit-done', that.text())
 
 					options.clear_selection_on_commit !== false 
 						&& window.getSelection().removeAllRanges()
 
-					options.blur_on_commit !== false && this.blur() 
+					// reset original value...
+					options.reset_on_commit !== false
+						&& that.text(original)
+
+					options.blur_on_commit !== false 
+						&& this.blur() 
+
+					// restore focus on parent...
+					options.keep_focus_on_parent !== false
+						&& that.parents('[tabindex]').first().focus()
+
+					that.makeEditable(false)
 				})
+
+			this.data('editable-field-events', events)
 		}
 
 		return this

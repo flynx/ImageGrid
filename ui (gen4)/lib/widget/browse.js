@@ -152,9 +152,10 @@ Items.Editable =
 function(text, options){
 	options = options || {}
 	var dialog = this.dialog
+	var editable 
 	var elem = (options.action ? this.Action : this).call(this, text, options)
 		.on('select', function(){
-			var editable = elem.find('.text')
+			editable = elem.find('.text')
 				.makeEditable({
 					activate: true,
 					clear_on_edit: options.clear_on_edit,
@@ -164,13 +165,15 @@ function(text, options){
 				// deselect on abort...
 				.on('edit-aborted', function(){
 					dialog.select(null)	
-					dialog.update()
 				})
 
 			options.editaborted
 				&& editable.on('edit-aborted', options.editaborted)
 			options.editdone
 				&& editable.on('edit-done', options.editdone)
+		})
+		.on('deselect', function(){
+			editable.trigger('abort')
 		})
 	return elem
 }
@@ -223,10 +226,12 @@ function(list, options){
 // 		// check input value...
 // 		check: function(value){ ... },
 //
+// 		normalize: function(value){ ... },
+//
 // 		// if true only unique values will be stored...
 // 		// if a function this will be used to normalize the values before
 // 		// uniqueness check is performed...
-// 		unique: <bool>|function(value){ ... },
+// 		unique: <bool> | function(value){ ... },
 //
 // 		// if true sort values...
 // 		// if function will be used as cmp for sorting...
@@ -266,7 +271,7 @@ function(list, options){
 			|| lst
 	}
 
-	var to_remove = []
+	var to_remove = options.to_remove = options.to_remove || []
 
 	// make a copy of options, to keep it safe from changes we are going
 	// to make...
@@ -312,6 +317,10 @@ function(list, options){
 		// update list on edit done...
 		.on('edit-done', function(evt, text){
 			var txt = $(this).text()
+
+			txt = options.normalize ? 
+				options.normalize(txt) 
+				: txt
 
 			// invalid format...
 			if(options.check && !options.check(txt)){
@@ -748,7 +757,6 @@ var BrowserPrototype = {
 			// keep text editing action from affecting the selection...
 			drop: '*',
 
-			// XXX this does not seem to work...
 			Up: 'NEXT!',
 			Down: 'NEXT!',
 			Tab: 'NEXT!',
@@ -2117,6 +2125,7 @@ var BrowserPrototype = {
 			elems = elems
 				.filter('.selected')
 				.removeClass('selected')
+				.trigger('deselect')
 			this.trigger('deselect', elems)
 			return $()
 		}
