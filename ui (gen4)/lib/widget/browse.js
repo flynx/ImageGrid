@@ -217,6 +217,9 @@ function(list, options){
 //
 // 		length_limit: <number>,
 //
+// 		// list of items to mark for removal...
+// 		to_remove: [ ... ],
+//
 //		// called when an item is opend...
 //		//
 //		// NOTE: this is simpler that binding to the global open event 
@@ -251,6 +254,9 @@ function(list, options){
 // NOTE: this will push a remove button to the end of the button list,
 // 		this can be disabled by setting .no_delete_button to false in 
 // 		options...
+// NOTE: this is not designed to be used multiple times in one dialog, 
+// 		if multiple lists need to be edited use multiple (nested) 
+// 		dialogs (one per list)...
 //
 // XXX add sort buttons: up/down/top/bottom...
 Items.EditableList =
@@ -299,6 +305,12 @@ function(list, options){
 
 	// make the list...
 	var res = make.List(lst, options)
+
+	// mark items for removal -- if a list is given by user...
+	to_remove.forEach(function(e){
+		dialog.filter('"'+ e +'"')
+			.toggleClass('strike-out')
+	})
 
 	options.itemopen
 		&& res.on('open', function(){ options.itemopen(dialog.selected) })
