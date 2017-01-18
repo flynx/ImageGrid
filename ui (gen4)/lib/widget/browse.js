@@ -94,7 +94,7 @@ function(text, options){
 	var timeout = options.timeout || 2000
 	var confirm_text = options.confirm_text ? 
 		options.confirm_text 
-		: 'Confirm '+ elem.text().toLowerCase() +'?'
+		: 'Confirm '+ elem.find('.text').text().toLowerCase() +'?'
 	var text
 
 	return elem 

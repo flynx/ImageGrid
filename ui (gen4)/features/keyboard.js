@@ -1151,7 +1151,7 @@ var KeyboardActions = actions.Actions({
 						callback: function(){ dialog.close() }, 
 						timeout: that.config['confirm-delete-timeout'] || 2000,
 						buttons: [
-							['Cancel', function(){ 
+							['Cancel edit', function(){ 
 								abort = true
 								make.dialog.close()
 							}],
@@ -1211,7 +1211,7 @@ var KeyboardActions = actions.Actions({
 						}, 
 						timeout: that.config['confirm-delete-timeout'] || 2000,
 						buttons: [
-							['Cancel', function(){ 
+							['Cancel edit', function(){ 
 								abort = true
 								make.dialog.close()
 							}],
@@ -1264,7 +1264,7 @@ var KeyboardActions = actions.Actions({
 						}, 
 						timeout: that.config['confirm-delete-timeout'] || 2000,
 						buttons: [
-							['Cancel', function(){ 
+							['Cancel edit', function(){ 
 								abort = true
 								make.dialog.close()
 							}],
