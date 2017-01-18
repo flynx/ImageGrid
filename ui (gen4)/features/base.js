@@ -103,6 +103,9 @@ actions.Actions({
 	},
 	set data(value){ 
 		this.__data = value },
+
+	get length(){
+		return this.data.length },
 	
 	// Base ribbon...
 	get base(){
