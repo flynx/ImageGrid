@@ -214,6 +214,12 @@ function(list, options){
 //
 // 		length_limit: <number>,
 //
+//		// called when an item is opend...
+//		//
+//		// NOTE: this is simpler that binding to the global open event 
+//		//		and filtering through the results...
+//		itemopen: function(value){ ... },
+//
 // 		// check input value...
 // 		check: function(value){ ... },
 //
@@ -249,13 +255,15 @@ function(list, options){
 
 	var write = function(list, lst){
 		// write back the list...
-		return list instanceof Function ?
-			// call the writer...
-			list(lst) 
-			// in-place replace list elements...
-			// NOTE: this is necessary as not everything we do with lst
-			// 		is in-place...
-			: list.splice.apply(list, [0, list.length].concat(lst))
+		return (list instanceof Function ?
+				// call the writer...
+				list(lst) 
+				// in-place replace list elements...
+				// NOTE: this is necessary as not everything we do with lst
+				// 		is in-place...
+				: list.splice.apply(list, [0, list.length].concat(lst)))
+			// in case the list(..) returns nothing...
+			|| lst
 	}
 
 	var to_remove = []
@@ -274,7 +282,9 @@ function(list, options){
 		: list
 	var editable = lst instanceof Array
 	// view objects...
-	lst = !editable ? Object.keys(lst) : lst
+	// NOTE: we .slice() here to make the changes a bit better packaged
+	// 		or discrete and not done as they come in...
+	lst = !editable ? Object.keys(lst) : lst.slice()
 
 	// add the 'x' button if not disabled...
 	var buttons = options.buttons = (options.buttons || []).slice()
@@ -283,7 +293,12 @@ function(list, options){
 
 
 	// make the list...
-	var res = make.List(lst, options).toArray()
+	var res = make.List(lst, options)
+
+	options.itemopen
+		&& res.on('open', function(){ options.itemopen(dialog.selected) })
+
+	res = res.toArray()
 	
 	// new button...
 	var new_button = options.new_button || true

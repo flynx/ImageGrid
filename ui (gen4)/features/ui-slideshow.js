@@ -67,9 +67,12 @@ var SlideshowActions = actions.Actions({
 						return Date.str2ms(a) - Date.str2ms(b) },
 					// NOTE: this is called when adding a new value and 
 					// 		list maximum length is reached...
-					callback: function(value){
+					overflow: function(value){
 						that.config['slideshow-interval'] = value
-
+						o.parent.close()
+					},
+					itemopen: function(value){
+						that.config['slideshow-interval'] = value
 						o.parent.close()
 					},
 				})
