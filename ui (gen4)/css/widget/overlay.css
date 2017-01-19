@@ -61,10 +61,7 @@
 	font-size: x-large;
 	line-height: 85%;
 
-	opacity: 0.4;
-}
-.content>*:focus:before {
-	opacity: 0.6
+	opacity: 0.6;
 }
 
 

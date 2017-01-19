@@ -263,6 +263,8 @@
 	content: "/";
 }
 
+.browse-widget .list>div.selected:focus,
+.browse-widget .list>div.selected :focus,
 .browse-widget:focus .list>div.selected,
 .browse-widget .path>.dir:hover,
 .browse-widget .list>div:hover {
@@ -273,6 +275,8 @@
 .browse-widget .list>div.selected {
 	background: rgba(0, 0, 0, 0.08);
 }
+.browse-widget .list>div.selected:focus,
+.browse-widget .list>div.selected :focus,
 .browse-widget:focus .list>div.selected {
 	background: rgba(0, 0, 0, 0.08);
 	box-shadow: rgba(0, 0, 0, 0.2) 0.1em 0.1em 0.2em; 
@@ -388,6 +392,8 @@
 	color: rgba(255, 255, 255, 0.8);
 }
 /* XXX can we make this simpler??? */
+.dark .browse-widget .list div.selected:focus,
+.dark .browse-widget .list div.selected :focus,
 .dark .browse-widget:focus .list div.selected,
 .dark .browse-widget .path .dir:hover,
 .dark .browse-widget .list div:hover {
@@ -396,6 +402,8 @@
 .dark .browse-widget .list div.selected {
 	background: rgba(255, 255, 255, 0.1);
 }
+.dark .browse-widget .list div.selected:focus,
+.dark .browse-widget .list div.selected :focus,
 .dark .browse-widget:focus .list div.selected {
 	background: rgba(255, 255, 255, 0.1);
 }
