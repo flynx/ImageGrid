@@ -421,15 +421,19 @@ var KeyboardActions = actions.Actions({
 		// The amount of keyboard "quiet" time to wait for when
 		// .pauseKeyboardRepeat(..) is called...
 		'keyboard-repeat-pause-check': 100,
-
-		// XXX make this generic...
-		'confirm-delete-timeout': 2000,
 	},
 
 	get keybindings(){
 		return this.__keyboard_config },
 	get keyboard(){
-		return this.__keyboard_object },
+		var that = this
+		// XXX should this be here on in start event???
+		var kb = this.__keyboard_object = 
+			this.__keyboard_object 
+				|| keyboard.KeyboardWithCSSModes(
+					function(){ return that.__keyboard_config },
+					function(){ return that.ribbons.viewer })
+		return kb },
 
 	testKeyboardDoc: ['- Interface/',
 		core.doc`Self-test action...`,
@@ -613,11 +617,7 @@ var KeyboardActions = actions.Actions({
 				return true
 			}).bind(this)
 
-			var kb = this.__keyboard_object = 
-				this.__keyboard_object 
-					|| keyboard.KeyboardWithCSSModes(
-						function(){ return that.__keyboard_config },
-						function(){ return that.ribbons.viewer })
+			var kb = this.keyboard
 
 			// start/reset keyboard handling...
 			if(state == 'on'){
@@ -682,14 +682,71 @@ var KeyboardActions = actions.Actions({
 		This is useful for stopping repeating (held down) keys after some
 		event.`,
 		function(){ this.__keyboard_repeat_paused = true }],
+})
 
+var Keyboard = 
+module.Keyboard = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'keyboard',
+	depends: [
+		'ui',
+	],
+	suggested: [
+		'self-test',
+		'keyboard-ui',
+	],
+
+	actions: KeyboardActions, 
+
+	handlers: [
+		['start',
+			function(){
+				var that = this
+				this.__keyboard_config = this.keybindings || GLOBAL_KEYBOARD
+
+				this.toggleKeyboardHandling('on')
+			}],
+
+		// pause keyboard repeat...
+		['shiftImageUp.pre shiftImageDown.pre',
+			function(){
+				var r = this.current_ribbon
+
+				return function(){
+					// pause repeat if shifting last image out of the ribbon... 
+					if(this.data.ribbons[r] == null 
+							|| this.data.ribbons[r].len == 0){
+						this.pauseKeyboardRepeat()
+					}
+				}
+			}],
+
+		/*
+		['keyHandler',
+			function(res, mode, key, action){
+				action && this.testKeyboardDoc() }],
+		//*/
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+
+var KeyboardUIActions = actions.Actions({
+	config: {
+		// NOTE: this is defined in ui-dialogs
+		//'ui-confirm-timeout': 2000,
+	},
 
 	// Interface stuff ------------------------------------------------
-
 	// XXX BUG sections with doc do not show up in title...
+	// XXX BUG: for some reason modes are unclickable...
 	// XXX slow on update...
 	// XXX sub-group by path (???)
-	browseKeyboardBindings: ['Interface|Help/Keyboard bindings...',
+	browseKeyboardBindings: ['Help/Keyboard bindings...',
 		core.doc`Keyboard bindings viewer...
 	
 		options format:
@@ -945,7 +1002,6 @@ var KeyboardActions = actions.Actions({
 		})],
 	// XXX do we need a binding to add new keys to current mode from the 
 	// 		keyboard???
-	// XXX BUG: for some reason modes are unclickable...
 	editKeyboardBindings: ['Interface/Keyboard bindings editor...',
 		core.doc`Similar to .browseKeyboardBindings(..) but adds editing functionality...
 		
@@ -1103,7 +1159,7 @@ var KeyboardActions = actions.Actions({
 					
 					make.ConfirmAction('Delete', {
 						callback: function(){ dialog.close() }, 
-						timeout: that.config['confirm-delete-timeout'] || 2000,
+						timeout: that.config['ui-confirm-timeout'] || 2000,
 						buttons: [
 							['Cancel edit', function(){ 
 								abort = true
@@ -1162,7 +1218,7 @@ var KeyboardActions = actions.Actions({
 							}
 							dialog.close()
 						}, 
-						timeout: that.config['confirm-delete-timeout'] || 2000,
+						timeout: that.config['ui-confirm-timeout'] || 2000,
 						buttons: [
 							['Cancel edit', function(){ 
 								abort = true
@@ -1218,7 +1274,7 @@ var KeyboardActions = actions.Actions({
 							
 							make.dialog.close() 
 						}, 
-						timeout: that.config['confirm-delete-timeout'] || 2000,
+						timeout: that.config['ui-confirm-timeout'] || 2000,
 						buttons: [
 							['Cancel edit', function(){ 
 								abort = true
@@ -1253,53 +1309,21 @@ var KeyboardActions = actions.Actions({
 				background: 'white',
 				focusable: true,
 			})],
-
 })
 
-var Keyboard = 
-module.Keyboard = core.ImageGridFeatures.Feature({
+
+var KeyboardUI = 
+module.KeyboardUI = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'keyboard',
+	tag: 'keyboard-ui',
 	depends: [
-		'ui'
-	],
-	suggested: [
-		'self-test',
+		'keyboard',
+		'ui-dialogs',
 	],
 
-	actions: KeyboardActions, 
-
-	handlers: [
-		['start',
-			function(){
-				var that = this
-				this.__keyboard_config = this.keybindings || GLOBAL_KEYBOARD
-
-				this.toggleKeyboardHandling('on')
-			}],
-
-		// pause keyboard repeat...
-		['shiftImageUp.pre shiftImageDown.pre',
-			function(){
-				var r = this.current_ribbon
-
-				return function(){
-					// pause repeat if shifting last image out of the ribbon... 
-					if(this.data.ribbons[r] == null 
-							|| this.data.ribbons[r].len == 0){
-						this.pauseKeyboardRepeat()
-					}
-				}
-			}],
-
-		/*
-		['keyHandler',
-			function(res, mode, key, action){
-				action && this.testKeyboardDoc() }],
-		//*/
-	],
+	actions: KeyboardUIActions,
 })
 
 

@@ -389,6 +389,9 @@ var DialogsActions = actions.Actions({
 		'ui-default-container': 'Overlay',
 
 		'ui-overlay-blur': 'on',
+
+		// used by UI to set the user confirm action timeout...
+		'ui-confirm-timeout': 2000,
 	},
 
 	// introspection...
