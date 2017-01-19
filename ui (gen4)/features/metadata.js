@@ -289,8 +289,8 @@ var MetadataUIActions = actions.Actions({
 		'metadata-editable-fields': [
 			//'Artist',
 			//'Copyright',
-			//'Comment',
-			//'Tags',
+			'Comment',
+			'Tags',
 		],
 		'metadata-field-order': [
 			// base
@@ -475,11 +475,17 @@ var MetadataUIActions = actions.Actions({
 				})
 				// path selected...
 				.open(function(evt, path){ 
-					var editable = RegExp(that.config['metadata-editable-fields']
-						.map(function(f){ return util.quoteRegExp(f) })
-						.join('|'))
+					event.preventDefault()
 
-					var elem = o.filter(path).find('.text').last()
+					var editable = that.config['metadata-editable-fields']
+
+					var text = o.filter(path).find('.text')
+
+					var field = text.first().text()
+						.trim()
+						// remove the trailing ':'
+						.slice(0, -1)
+					var elem = text.last()
 
 					// handle select...
 					if(that.config['metadata-auto-select-mode'] == 'on open'){
@@ -487,26 +493,13 @@ var MetadataUIActions = actions.Actions({
 					}
 
 					// skip non-editable fields...
-					if(editable.test(path)){
-						elem
-							.prop('contenteditable', true)
-							.focus()
-							.keydown(function(){ 
-								event.stopPropagation() 
-
-								var n = keyboard.toKeyName(event.keyCode)
-
-								// reset to original value...
-								if(n == 'Esc'){
-									// XXX
-
-								// save value...
-								} else if(n == 'Enter' && event.ctrlKey){
-									event.preventDefault()
-
-									// XXX
-								}
-							})
+					if(editable.indexOf(field) >= 0){
+						elem.makeEditable({
+							activate: true,
+							clear_on_edit: false,
+							//blur_on_abort: false,
+							//blur_on_commit: false,
+						})
 					}
 				})
 				.on('close', function(){

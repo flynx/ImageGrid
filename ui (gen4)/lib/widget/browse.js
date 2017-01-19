@@ -124,10 +124,38 @@ function(text, options){
 		})
 }
 
-// XXX
-Items.Selectable =
+// make items with auto selected text on select...
+//
+// options format:
+// 	{
+// 		select_text: <number> | <string> | 'first' | 'last',
+//
+// 		...
+// 	}
+//
+Items.Selected =
 function(text, options){
-	// XXX
+	var elem = (options.action ? this.Action : this).call(this, text, options)
+		.on('select', function(){
+			var text = elem.find('.text')
+
+			if(options.select_text == 'first' || options.select_text == 'last'){
+				text[options.selected_index]()
+					.selectText()
+
+			} else if(typeof(options.select_text) == typeof('str')){
+				elem.find(options.selected_index)
+					.selectText()
+
+			} else if(typeof(options.select_text) == typeof(123)){
+				text.eq(options.selected_index)
+					.selectText()
+
+			} else {
+				text.selectText()
+			}
+		})
+	return elem
 }
 
 // make Editable on select element...
@@ -181,7 +209,6 @@ function(text, options){
 // XXX
 Items.SelectableField =
 function(text, options){
-	// XXX
 }
 
 // XXX
