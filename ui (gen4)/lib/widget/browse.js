@@ -133,6 +133,7 @@ function(text, options){
 // 		...
 // 	}
 //
+// NOTE: this need selection enabled in CSS...
 Items.Selected =
 function(text, options){
 	var elem = (options.action ? this.Action : this).call(this, text, options)
@@ -2869,23 +2870,22 @@ var BrowserPrototype = {
 		}
 
 		// load the initial state...
-		//
-		// NOTE: this used to be run in the timeout below, it turned out
-		// 		to be a really bad idea mainly because the events bound 
-		// 		in .list(..) turned out to be bound AFTER the events bound 
-		// 		in the function that called the constructor, which messed
-		// 		up the triggering order...
-		that.update(options.path || that.path || '/')
-
-		// Select the default path...
-		//
-		// NOTE: this may not work when the dialog is loaded async...
-		setTimeout(function(){ 
-			// in case we have a manually selected item but that was 
-			// not aligned...
-			that.selected && that.select()
-		}, 0)
-
+		// NOTE: path can be a number so simply or-ing here is a bad idea...
+		var path = options.path != null ? options.path : that.path
+		typeof(path) == typeof(123) ?
+			// select item number...
+			that
+				.update()
+				.then(function(){ 
+					that.select(path) })
+			// select path...
+			: that
+				.update(path || '/')
+				// Select the default path...
+				.then(function(){ 
+					// in case we have a manually selected item but that was 
+					// not aligned...
+					that.selected && that.select() })
 	},
 }
 

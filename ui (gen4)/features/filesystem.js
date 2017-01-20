@@ -921,7 +921,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 							var so = that.Overlay(
 								browse.makeList(null, loaders, 
 									{
-										path: Object.keys(loaders)[0]
+										// select first...
+										//path: Object.keys(loaders)[0],
+										path: 0,
 									})
 									// close self and parent...
 									.open(function(){
