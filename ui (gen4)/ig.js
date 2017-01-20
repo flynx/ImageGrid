@@ -16,13 +16,23 @@ requirejs.config({
 	// XXX this does not work on direct filesystem access...
 	//urlArgs: 'bust='+Date.now(),
 	
-	/*
 	paths: {
-		'lib/object': 'node_modules/ig-object',
-		'ig-object': 'node_modules/ig-object',
-		'object': 'node_modules/ig-object',
+		'lib/object': 'node_modules/ig-object/object',
+		'lib/actions': 'node_modules/ig-actions/actions',
+		'lib/features': 'node_modules/ig-features/features',
 	},	
-	//*/
+	map: {
+		'*': {
+			// back-refs
+			// ...these enable the npm modules reference each other in 
+			// a cross-platform manner....
+			'ig-object': 'lib/object',
+			'ig-actions': 'lib/actions',
+			'ig-features': 'lib/features',
+
+			//'ig-keyboard': 'lib/keyboard',
+		},
+	},
 })
 var _require = require
 require = requirejs
