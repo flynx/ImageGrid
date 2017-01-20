@@ -918,16 +918,16 @@ var FileSystemLoaderUIActions = actions.Actions({
 							}
 
 							// show user the list...
-							var so = that.Overlay(browse.makeList(null, loaders)
-								.on('update', function(){
-									// select top element...
-									so.client.select(0)
-								})
-								// close self and parent...
-								.open(function(){
-									so.close()
-									o.parent.close() 
-								}))
+							var so = that.Overlay(
+								browse.makeList(null, loaders, 
+									{
+										path: Object.keys(loaders)[0]
+									})
+									// close self and parent...
+									.open(function(){
+										so.close()
+										o.parent.close() 
+									}))
 								// closed menu...
 								.close(function(){
 									//o.parent.focus()
