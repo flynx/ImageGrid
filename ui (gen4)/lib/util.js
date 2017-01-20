@@ -367,7 +367,9 @@ if(typeof(jQuery) != typeof(undefined)){
 	//
 	// Options format:
 	// 	{
-	// 		// activate (focus) element when done...
+	// 		// activate (focus) element...
+	// 		//
+	// 		// NOTE: this will also select the element text...
 	// 		activate: false,
 	//
 	// 		// set multi line edit mode...
@@ -385,8 +387,6 @@ if(typeof(jQuery) != typeof(undefined)){
 	//
 	// 		// restore focus before disabling the editor...
 	// 		keep_focus_on_parent: true,
-	//
-	// 		stop_propagation: false,
 	//
 	// 		// clear selection on abort/commit...
 	// 		clear_selection_on_abort: true,
@@ -444,7 +444,8 @@ if(typeof(jQuery) != typeof(undefined)){
 			&& this.text('')
 
 		// NOTE: this will also focus the element...
-		options.activate && this.selectText()
+		options.activate 
+			&& this.selectText()
 
 		// do not setup handlers more than once...
 		if(!this.hasClass('editable-field')){

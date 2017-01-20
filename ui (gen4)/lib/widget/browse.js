@@ -166,8 +166,28 @@ function(text, options){
 //		// show as action (via. .Action(..))
 // 		action: <bool>,
 //
+// 		// if true, set multi-line mode...
+// 		//
+// 		// (see: util.makeEditable(..) for more info)
+// 		multiline: false,
+//
+// 		// .text element index to edit...
+//		//
+// 		// NOTE: by default this will select all the elements, if there
+// 		//		are more than one, this may result in an odd element 
+// 		//		state...
+// 		editable_index: <number>,
+//
+// 		// item event to start the edit on...
+// 		start_on: 'select',
+//
+// 		// if true, trigger abort on deselect...
+// 		abort_on_deselect: true,
+//
 //		// If true, clear text when item is selected...
-//		clear_on_edit: true,
+//		//
+// 		// (see: util.makeEditable(..) for more info)
+//		clear_on_edit: false,
 //
 // 		// Called when editing is abrted... 
 // 		editaborted: <func>,
@@ -177,33 +197,51 @@ function(text, options){
 //
 // 		...
 // 	}
+//
+// XXX add option to select the element on start...
 Items.Editable =
 function(text, options){
 	options = options || {}
 	var dialog = this.dialog
 	var editable 
+	var start_on = options.start_on || 'select'
+
 	var elem = (options.action ? this.Action : this).call(this, text, options)
-		.on('select', function(){
+		.on(start_on, function(){
 			editable = elem.find('.text')
+
+			// get the specific .text element...
+			editable = options.editable_index != null ? 
+				editable.eq(options.editable_index)
+				: editable 
+
+			// edit the element...
+			editable
 				.makeEditable({
 					activate: true,
 					clear_on_edit: options.clear_on_edit,
 					blur_on_abort: false,
 					blur_on_commit: false,
+					multiline: options.multiline,
 				})
-				// deselect on abort...
+
+			// deselect on abort -- if we started with a select...
+			start_on == 'select' && editable
 				.on('edit-aborted', function(){
 					dialog.select(null)	
 				})
 
+			// edit event handlers...
 			options.editaborted
 				&& editable.on('edit-aborted', options.editaborted)
 			options.editdone
 				&& editable.on('edit-done', options.editdone)
 		})
 		.on('deselect', function(){
-			editable.trigger('abort')
+			editable.trigger(
+				options.abort_on_deselect !== false ? 'abort' : 'commit')
 		})
+
 	return elem
 }
 
@@ -628,6 +666,9 @@ var BrowserPrototype = {
 		cls: null,
 
 		// Initial path...
+		//
+		// NOTE: this can be a number indicating the item to select when
+		// 		load is done.
 		//path: null,
 
 		//show_path: true,

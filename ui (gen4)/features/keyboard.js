@@ -25,7 +25,7 @@ var drawer = require('lib/widget/drawer')
 /*********************************************************************/
 
 var GLOBAL_KEYBOARD =
-module.GLOBAL_KEYBOARD2 = {
+module.GLOBAL_KEYBOARD = {
 	'Global': {
 		doc: 'Global bindings that take priority over other sections.',
 		pattern: '*',
