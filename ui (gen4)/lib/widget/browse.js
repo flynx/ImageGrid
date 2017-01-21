@@ -139,21 +139,22 @@ function(text, options){
 	var elem = (options.action ? this.Action : this).call(this, text, options)
 		.on('select', function(){
 			var text = elem.find('.text')
+
 			// get the specific .text element...
-			// select index...
-			typeof(options.select_text) == typeof(123) ?
-				text.eq(options.select_text)
-					.selectText()
-			// first/last
-			: (options.select_text == 'first' || options.select_text == 'last') ?
-				text[options.select_text]()
-					.selectText()
-			// selector...
-			: typeof(options.select_text) == typeof('str') ?
-				elem.find(options.select_text)
-					.selectText()
-			// all...
-			: text.selectText()
+			text = 
+				// select index...
+				typeof(options.select_text) == typeof(123) ?
+					text.eq(options.select_text)
+				// first/last
+				: (options.select_text == 'first' || options.select_text == 'last') ?
+					text[options.select_text]()
+				// selector...
+				: typeof(options.select_text) == typeof('str') ?
+					elem.find(options.select_text)
+				// all...
+				: text
+
+			text.selectText()
 		})
 	return elem
 }
