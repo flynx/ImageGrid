@@ -431,7 +431,13 @@ var KeyboardActions = actions.Actions({
 		var kb = this.__keyboard_object = 
 			this.__keyboard_object 
 				|| keyboard.KeyboardWithCSSModes(
-					function(){ return that.__keyboard_config },
+					function(data){ 
+						if(data){
+							that.__keyboard_config = data
+						} else {
+							return that.__keyboard_config
+						}
+					},
 					function(){ return that.ribbons.viewer })
 		return kb },
 
@@ -815,8 +821,7 @@ var KeyboardUIActions = actions.Actions({
 		widgets.makeUIDialog(function(path, options){
 			options = options || {}
 
-			var actions = this
-			var keybindings = this.keybindings
+			var that = this
 			var kb = this.keyboard
 
 			// get doc...
@@ -832,6 +837,7 @@ var KeyboardUIActions = actions.Actions({
 			var dialog = browse.makeLister(null, 
 				function(path, make){
 					var keys = kb.keys('*')
+					var keybindings = that.keybindings
 
 					Object.keys(keybindings)
 						.forEach(function(mode){
@@ -867,7 +873,7 @@ var KeyboardUIActions = actions.Actions({
 
 								if(getKeyText){
 									var doc = ''
-									var text = getKeyText.call(actions, o)
+									var text = getKeyText.call(that, o)
 
 								} else {
 									var doc = o.doc
@@ -880,7 +886,7 @@ var KeyboardUIActions = actions.Actions({
 
 								var hidden = !options.show_non_actions
 									// hide all non-actions...
-									&& !(o.action in actions
+									&& !(o.action in that
 										// except: functions represented by their doc...
 										|| keybindings[mode][action] == null
 											&& kb.handler(mode, keys[mode][action][0]) 
@@ -931,7 +937,7 @@ var KeyboardUIActions = actions.Actions({
 										   	' special-action' 
 											: '')
 										// aliases...
-										+ (o.action in actions ? '' : ' non-action'))
+										+ (o.action in that ? '' : ' non-action'))
 								c++
 							})
 
@@ -1008,21 +1014,13 @@ var KeyboardUIActions = actions.Actions({
 		For more details see: .browseKeyboardBindings(..)`,
 		widgets.uiDialog(function(path){ 
 			var that = this
-			var bindings = this.keybindings
 
 			var sortModes = function(list){
-				var ordered = {}
-				list.find('[mode]')
-					.map(function(){ return $(this).attr('mode')})
-					.toArray()
-					.unique()
-					.forEach(function(mode){
-						ordered[mode] = bindings[mode]
-					})
-				// reorder only if we moved all the modes...
-				if(Object.keys(bindings).length == Object.keys(ordered).length){
-					that.__keyboard_config = ordered
-				}
+				that.keyboard.sortModes(
+					list.find('[mode]')
+						.map(function(){ return $(this).attr('mode')})
+						.toArray()
+						.unique())
 			}
 
 			var dialog = this.browseKeyboardBindings(
@@ -1131,11 +1129,12 @@ var KeyboardUIActions = actions.Actions({
 				}) 
 			return dialog
 		})],
-	// XXX make fields editable...
+	// XXX add datalist...
 	editKeyBinding: ['- Interface/Key mapping...',
 		widgets.makeUIDialog(function(mode, code){
 			var that = this
 			var abort = false
+			var orig_code = code
 
 			// list the keys (cache)...
 			var keys = that.keyboard.keys(code)
@@ -1146,10 +1145,34 @@ var KeyboardUIActions = actions.Actions({
 
 			var dialog = browse.makeLister(null, 
 				function(path, make){
-					// XXX make editable...
+					var cfg = {
+						start_on: 'open',
+						edit_text: 'last',
+						clear_on_edit: false,
+						reset_on_commit: false,
+					}
+
+					// XXX make editable???
 					make(['Mode:', mode || ''])
-					// XXX make editable...
-					make(['Code:', code || ''])
+
+					make.Editable(['Code:', code || ''], {
+							start_on: 'open',
+							edit_text: 'last',
+							clear_on_edit: false,
+							reset_on_commit: false,
+							buttons: [
+								['&ctdot;', function(evt, elem){
+									var dialog = that.listDialog(that.actions)
+										.on('open', function(evt, action){
+											code = action
+											elem.find('.text').last().text(action)
+											dialog.close()
+										})
+								}],
+							],
+						})
+						.on('edit-commit', 
+							function(evt, text){ code = text })
 
 					make('---')
 
@@ -1172,8 +1195,6 @@ var KeyboardUIActions = actions.Actions({
 					cls: 'metadata-view',
 				})
 				// save the keys...
-				// XXX at this point this does not account for changes 
-				// 		in mode or code...
 				.on('close', function(){
 					if(abort){
 						return
@@ -1186,28 +1207,45 @@ var KeyboardUIActions = actions.Actions({
 							that.keyHandler(mode, k, '')
 						})
 
+					keys = code == orig_code ?
+						keys.filter(function(k){ orig_keys.indexOf(k) < 0 })
+						: keys
+
 					// add keys...
 					keys
-						.filter(function(k){ return orig_keys.indexOf(k) < 0 })
 						.forEach(function(k){
-							that.keyHandler(mode, k, code)
-						})
+							that.keyHandler(mode, k, code) })
 				})
 
 			return dialog
 		})],
-	// XXX make fields editable...
 	editKeyboardMode: ['- Interface/Mode...',
 		widgets.makeUIDialog(function(mode){
 			var that = this
 			var abort = false
+			var doc = (that.keybindings[mode] || {}).doc
+			var pattern = (that.keybindings[mode] || {}).pattern || mode
+
+			var orig_mode = mode
 
 			var dialog = browse.makeLister(null, 
 				function(path, make){
-					// XXX make these editable....
-					make(['Mode:', mode || ''])
-					make(['Doc:', (that.keybindings[mode] || {}).doc || ''])
-					make(['Pattern:', (that.keybindings[mode] || {}).pattern || mode])
+					var cfg = {
+						start_on: 'open',
+						edit_text: 'last',
+						clear_on_edit: false,
+						reset_on_commit: false,
+					}
+
+					make.Editable(['Mode:', mode || ''], cfg)
+						.on('edit-commit', 
+							function(evt, text){ mode = text })
+					make.Editable(['Doc:', doc || ''], cfg)
+						.on('edit-commit', 
+							function(evt, text){ doc = text })
+					make.Editable(['Pattern:', pattern], cfg)
+						.on('edit-commit', 
+							function(evt, text){ pattern = text })
 
 					make('---')
 
@@ -1229,6 +1267,26 @@ var KeyboardUIActions = actions.Actions({
 				},
 				{
 					cls: 'metadata-view',
+				})
+				.on('close', function(){
+					if(abort){
+						return
+					}
+
+					that.keybindings[orig_mode].doc = doc
+					that.keybindings[orig_mode].pattern = pattern
+
+					// update mode name if it changed... 
+					if(mode != orig_mode){
+						var order = Object.keys(that.keybindings)
+						order[order.indexOf(orig_mode)] = mode
+
+						var data = that.keybindings[orig_mode]
+						delete that.keybindings[orig_mode]
+						that.keybindings[mode] = data
+
+						that.keyboard.sortModes(order)
+					}
 				})
 
 			return dialog

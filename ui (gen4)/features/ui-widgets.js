@@ -522,7 +522,14 @@ var DialogsActions = actions.Actions({
 			return panel
 		})],
 
+
+	listDialog: ['- Interface/', 
+		makeUIDialog(function(list, options){
+
+			return browse.makeList(null, list, options)
+		})],
 	
+
 	listDialogs: ['Interface/Dialog/Dialog list...',
 		makeUIDialog(function(){
 			var actions = this

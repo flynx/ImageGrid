@@ -204,35 +204,37 @@ Items.Editable =
 function(text, options){
 	options = options || {}
 	var dialog = this.dialog
-	var editable 
 	var start_on = options.start_on || 'select'
 
-	var elem = (options.action ? this.Action : this).call(this, text, options)
-		.on(start_on, function(){
-			editable = elem.find('.text')
+	var getEditable = function(){
+		var editable = elem.find('.text')
+		// get the specific .text element...
+		// index...
+		return typeof(options.edit_text) == typeof(123) ? 
+				editable.eq(options.edit_text)
+			// first/last...
+			: (options.edit_text == 'first' || options.edit_text == 'last') ?
+				editable[options.edit_text]()
+			// selecter...
+			: typeof(options.edit_text) == typeof('str') ?
+				editable.filter(options.edit_text)
+			// all...
+			: editable }
 
-			// get the specific .text element...
-			editable = 
-				// index...
-				typeof(options.edit_text) == typeof(123) ? 
-					editable.eq(options.edit_text)
-				// first/last...
-				: (options.edit_text == 'first' || options.edit_text == 'last') ?
-					editable[options.edit_text]()
-				// selecter...
-				: typeof(options.edit_text) == typeof('str') ?
-					editable.filter(options.edit_text)
-				// all...
-				: editable 
+	var elem = (options.action ? this.Action : this).call(this, text, options)
+		.on(start_on, function(evt){
+			event.preventDefault()
 
 			// edit the element...
-			editable
+			var editable = getEditable()
 				.makeEditable({
 					activate: true,
-					clear_on_edit: options.clear_on_edit,
 					blur_on_abort: false,
 					blur_on_commit: false,
 					multiline: options.multiline,
+					clear_on_edit: options.clear_on_edit,
+					reset_on_commit: options.reset_on_commit,
+					reset_on_abort: options.reset_on_abort,
 				})
 
 			// deselect on abort -- if we started with a select...
@@ -248,22 +250,13 @@ function(text, options){
 				&& editable.on('edit-commit', options.editdone)
 		})
 		.on('deselect', function(){
-			editable.trigger(
-				options.abort_on_deselect !== false ? 'edit-abort' : 'edit-commit')
+			//editable && editable.trigger(
+			getEditable()
+				.trigger(
+					options.abort_on_deselect !== false ? 'edit-abort' : 'edit-commit')
 		})
 
 	return elem
-}
-
-// XXX
-Items.SelectableField =
-function(text, options){
-}
-
-// XXX
-Items.EditableField =
-function(text, options){
-	// XXX
 }
 
 
@@ -478,9 +471,7 @@ function(list, options){
 			clear_on_edit: true,
 		})
 		// update list on edit done...
-		.on('edit-commit', function(evt, text){
-			var txt = $(this).text()
-
+		.on('edit-commit', function(evt, txt){
 			txt = options.normalize ? 
 				options.normalize(txt) 
 				: txt

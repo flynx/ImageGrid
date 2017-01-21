@@ -404,6 +404,17 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 	'edit-abort'		- will reset field, this is passed the 
 	// 							original text before the edit.
 	//
+	// These events get passed the relevant text, but the element is 
+	// likely to be already reset to a different state, to get the 
+	// element before any state change is started use one of the 
+	// following variants:
+	// 	'edit-committing'	- triggered within 'edit-commit' but before
+	// 							anything is changed, gets passed the final
+	// 							text (same as 'edit-commit')
+	// 	'edit-aborting'		- triggered within 'edit-abort' but before 
+	// 							anything is changed, gets passed the 
+	// 							original text value (same as 'edit-abort')
+	//
 	//
 	// NOTE: removing tabindex will reset focus, so this will attempt to 
 	// 		focus the first [tabindex] element up the tree...
@@ -476,7 +487,7 @@ if(typeof(jQuery) != typeof(undefined)){
 
 						that.trigger('edit-commit', that.text())
 
-					// done -- multiline...
+					// done -- multi-line...
 					} else if(n == 'Enter' 
 							&& (event.ctrlKey || event.metaKey) 
 							&& options.multiline){
@@ -500,14 +511,15 @@ if(typeof(jQuery) != typeof(undefined)){
 							.selectText()
 				})
 				// user triggerable events...
-				.on('edit-abort', events['edit-abort'] = function(){
+				.on('edit-abort', events['edit-abort'] = function(evt, text){
+					that.trigger('edit-aborting', text)
+
 					options.clear_selection_on_abort !== false 
 						&& window.getSelection().removeAllRanges()
 
 					// reset original value...
 					options.reset_on_abort !== false
 						&& that.text(original)
-
 					options.blur_on_abort !== false 
 						&& this.blur() 
 
@@ -517,14 +529,15 @@ if(typeof(jQuery) != typeof(undefined)){
 
 					that.makeEditable(false)
 				})
-				.on('edit-commit', events['edit-commit'] = function(){
+				.on('edit-commit', events['edit-commit'] = function(evt, text){
+					that.trigger('edit-committing', text)
+
 					options.clear_selection_on_commit !== false 
 						&& window.getSelection().removeAllRanges()
 
 					// reset original value...
 					options.reset_on_commit !== false
 						&& that.text(original)
-
 					options.blur_on_commit !== false 
 						&& this.blur() 
 

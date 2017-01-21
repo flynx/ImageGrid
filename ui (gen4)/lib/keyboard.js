@@ -466,13 +466,21 @@ var KeyboardPrototype = {
 	// 	- NEXT		- force check next section, this has priority 
 	// 					over .drop
 	//
+	// NOTE: if .__keyboard is set to a function, it will be used both as
+	// 		a getter and as a setter via the .keyboard prop, to overwrite
+	// 		write to .__keyboard directly...
 	__keyboard: null,
 	get keyboard(){
 		return this.__keyboard instanceof Function ? 
 			this.__keyboard() 
 			: this.__keyboard },
 	set keyboard(value){
-		this.__keyboard = value },
+		if(this.__keyboard instanceof Function){
+			this.__keyboard(value) 
+		} else {
+			this.__keyboard = value
+		}
+	},
 
 	// XXX is this needed???
 	//context: null,
@@ -493,6 +501,48 @@ var KeyboardPrototype = {
 	// 		- need to match and order groups (use 1'st as reference)...
 	// 		- need to create new set w/o changing the originals...
 	merge: function(){
+	},
+
+
+	// Sort modes...
+	//
+	// 	Sort via cmp function...
+	// 	.sortModes(func)
+	// 		-> this
+	//
+	// 	Sort to the same order as list...
+	// 	.sortModes(list)
+	// 		-> this
+	//
+	//
+	// NOTE: calling this with no arguments will have no effect.
+	//
+	// XXX should this update the kb in-place???
+	sortModes: function(cmp){
+		var ordered = {}
+		var bindings = this.keyboard
+
+		if(cmp == null){
+			return
+		}
+
+		cmp = cmp instanceof Function ?
+			Object.keys(bindings).sort(cmp)
+			: cmp
+				.concat(Object.keys(bindings))
+				.unique()
+
+		cmp
+			.forEach(function(mode){
+				ordered[mode] = bindings[mode]
+			})
+
+		// reorder only if we moved all the modes...
+		if(Object.keys(bindings).length == Object.keys(ordered).length){
+			this.keyboard = ordered
+		}
+
+		return this
 	},
 
 	// Get keys for handler...
