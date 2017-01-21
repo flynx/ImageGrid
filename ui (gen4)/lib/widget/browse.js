@@ -282,7 +282,6 @@ function(text, options){
 //	]
 //
 // or:
-//
 // 	{
 // 		<item-lext>: <function>,
 // 	}
@@ -290,8 +289,13 @@ function(text, options){
 //
 // options format:
 // 	{
+// 		// pattern used to match and disable items...
+// 		//
+// 		// NOTE: this is used via .replace(..) so the match will get 
+// 		//		removed from the item text, unless prevented via regexp.
 // 		disableItemPattern: <pattern>,
 //
+// 		// if true, disabled items will not get created...
 // 		skipDisabledItems: false,
 //
 // 		...
@@ -312,10 +316,10 @@ function(data, options){
 		if(pattern){
 			txt = k instanceof Array ? k[0] : k
 
-			var t = txt.replace(pattern, '')
-
 			// item matches disabled pattern...
-			if(t != txt){
+			if(pattern.test(txt)){
+				var t = txt.replace(pattern, '')
+
 				opts.disabled = true	
 
 				txt = k instanceof Array ? 
@@ -3061,7 +3065,7 @@ module.makeLister = function(elem, lister, options){
 
 // Flat list...
 //
-// This expects a data option set with the following formats:
+// This expects a data option set with one of the following formats:
 // 	{
 // 		<option-text>: <callback>,
 // 		...
@@ -3078,6 +3082,7 @@ module.makeLister = function(elem, lister, options){
 // disable this feature set it to false|null.
 // 	
 // NOTE: this essentially a different default configuration of Browser...
+// NOTE: this is essentially a wrapper around make.List(...)
 var ListPrototype = Object.create(Browser.prototype)
 ListPrototype.options = {
 
@@ -3104,18 +3109,16 @@ ListPrototype.options = {
 		}
 		_make.__proto__ = make
 
-		_make.List(data, {
-			disableItemPattern: this.options.disableItemPattern,
-			skipDisabledItems: this.options.skipDisabledItems,
-		})
+		// build the list...
+		_make
+			.List(data, {
+				disableItemPattern: this.options.disableItemPattern,
+				skipDisabledItems: this.options.skipDisabledItems,
+			})
 
 		return res
 	},
 }
-// XXX should we inherit or copy options???
-// 		...inheriting might pose problems with deleting values reverting
-// 		them to default instead of nulling them and mutable options might
-// 		get overwritten...
 ListPrototype.options.__proto__ = Browser.prototype.options
 
 var List = 
@@ -3355,10 +3358,6 @@ PathListPrototype.options = {
 		}
 	},
 }
-// XXX should we inherit or copy options???
-// 		...inheriting might pose problems with deleting values reverting
-// 		them to default instead of nulling them and mutable options might
-// 		get overwritten...
 PathListPrototype.options.__proto__ = Browser.prototype.options
 
 var PathList = 
