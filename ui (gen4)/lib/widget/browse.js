@@ -302,7 +302,7 @@ function(data, options){
 	var pattern = options.disableItemPattern
 		&& RegExp(options.disableItemPattern) 
 
-	data.forEach(function(k){
+	keys.forEach(function(k){
 		var txt = k
 		var opts = Object.create(options)
 

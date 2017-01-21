@@ -1129,7 +1129,7 @@ var KeyboardUIActions = actions.Actions({
 				}) 
 			return dialog
 		})],
-	// XXX add datalist...
+	// XXX add action completion...
 	editKeyBinding: ['- Interface/Key mapping...',
 		widgets.makeUIDialog(function(mode, code){
 			var that = this
@@ -1155,6 +1155,8 @@ var KeyboardUIActions = actions.Actions({
 					// XXX make editable???
 					make(['Mode:', mode || ''])
 
+					// XXX add completion...
+					// 		...datalist seems not to work with non input fields...
 					make.Editable(['Code:', code || ''], {
 							start_on: 'open',
 							edit_text: 'last',
@@ -1162,12 +1164,21 @@ var KeyboardUIActions = actions.Actions({
 							reset_on_commit: false,
 							buttons: [
 								['&ctdot;', function(evt, elem){
-									var dialog = that.listDialog(that.actions)
-										.on('open', function(evt, action){
+									// highlight the current action...
+									var a = keyboard.parseActionCall(code)
+									var p = a.action in that ? 
+										that.getDocPath(a.action)
+										: ''
+									// use the action menu to select actions...
+									var dialog = that.browseActions(p, {
+										no_disabled: true,
+										no_hidden: true,
+										callback: function(action){
 											code = action
 											elem.find('.text').last().text(action)
 											dialog.close()
-										})
+										},
+									})
 								}],
 							],
 						})
@@ -1195,6 +1206,7 @@ var KeyboardUIActions = actions.Actions({
 					cls: 'metadata-view',
 				})
 				// save the keys...
+				// XXX for some reason when Esc this is called twice...
 				.on('close', function(){
 					if(abort){
 						return
@@ -1207,12 +1219,12 @@ var KeyboardUIActions = actions.Actions({
 							that.keyHandler(mode, k, '')
 						})
 
-					keys = code == orig_code ?
+					var new_keys = code == orig_code ?
 						keys.filter(function(k){ orig_keys.indexOf(k) < 0 })
 						: keys
 
 					// add keys...
-					keys
+					new_keys
 						.forEach(function(k){
 							that.keyHandler(mode, k, code) })
 				})

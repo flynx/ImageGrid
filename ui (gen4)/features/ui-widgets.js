@@ -408,10 +408,14 @@ var DialogsActions = actions.Actions({
 			clean = clean == null ? true : clean
 			join = join == null ? '/' : join
 			var path = (this.getDoc(action)[action].shift() || action)
+			path = clean ? path.replace(/^- /, '') : path
+			path = path
 				.split(/[\\\/]/g)
 				// remove priority...
 				.map(function(e){
-					return clean ? e.replace(/^[-+]?[0-9]+:\s*/, '') : e })
+					return clean ? 
+						e.replace(/^[-+]?[0-9]+:\s*/, '') 
+						: e })
 			return join ? path.join('/') : path
 		}],
 	getDocBaseDir: ['- Interface/',
@@ -478,14 +482,12 @@ var DialogsActions = actions.Actions({
 		makeDrawer('bottom')],
 	TopDrawer: ['- Interface/',
 		makeDrawer('top')],
-
 	// like panel but drop down from mouse location or specified position
 	DropDown: ['- Interface/',
 		makeUIContainer(function(dialog, options){
 			// XXX
 			console.error('Not yet implemented.')
 		})],
-
 	// XXX STUB -- need a real panel with real docking and closing 
 	// 		ability... 
 	// XXX need to:
@@ -523,11 +525,10 @@ var DialogsActions = actions.Actions({
 		})],
 
 
-	listDialog: ['- Interface/', 
+	// Helper for creating lists fast...
+	showList: ['- Interface/', 
 		makeUIDialog(function(list, options){
-
-			return browse.makeList(null, list, options)
-		})],
+			return browse.makeList(null, list, options) })],
 	
 
 	listDialogs: ['Interface/Dialog/Dialog list...',
@@ -699,6 +700,14 @@ var BrowseActionsActions = actions.Actions({
 	//			though only the last one is called...
 	//
 	//
+	// options format:
+	// 	{
+	// 		callback: <function>,
+	// 		no_disabled: false,
+	// 		no_hidden: false,
+	// 	}
+	//
+	//
 	// NOTE: if the action returns an instance of overlay.Overlay this
 	// 		will not close right away but rather bind to:
 	// 			overlay.close			-> self.focus()
@@ -714,10 +723,11 @@ var BrowseActionsActions = actions.Actions({
 	//
 	// XXX can we do a deep search on '/' -- find any nested action???
 	browseActions: ['Interface/Dialog/Actions...',
-		makeUIDialog(function(path){
+		makeUIDialog(function(path, options){
 			var actions = this
 			var priority = /^(-?[0-9]+)\s*:\s*/
 			var dialog
+			options = options || {}
 
 			// prepare the config...
 			var cfg = {
@@ -793,7 +803,7 @@ var BrowseActionsActions = actions.Actions({
 
 				// if it's not a dialog, don't wait...
 				} else {
-					dialog.parent.close()
+					dialog.close()
 				}
 
 				return child
@@ -909,14 +919,18 @@ var BrowseActionsActions = actions.Actions({
 						states = ['on', 'off']
 					}
 
-					// build states...
+					// build toggler states...
 					states.forEach(function(state){
 						make(state, { 
 								// NOTE: if something is hidden 
 								// 		it is also disabled...
 								// 		...this is by design.
-								disabled: mode == 'hidden' || mode == 'disabled',
-								hidden: mode == 'hidden',
+								disabled: options.no_disabled ? 
+									false 
+									: (mode == 'hidden' || mode == 'disabled'),
+								hidden: options.no_hidden ? 
+									false
+									: mode == 'hidden',
 							})
 							// XXX need to normalize state -- comments, whitespace, etc...
 							.attr('keys', getKeys(action +': "'+ state +'"'))
@@ -925,7 +939,9 @@ var BrowseActionsActions = actions.Actions({
 									mode == 'hidden' ? mode : ''
 								].join(' '))
 							.on('open', function(){
-								actions[action](state)
+								options.callback ?
+									options.callback.call(actions, action)
+									: actions[action](state)
 								that.pop()
 							})
 					})
@@ -981,8 +997,12 @@ var BrowseActionsActions = actions.Actions({
 										// NOTE: if something is hidden 
 										// 		it is also disabled...
 										// 		...this is by design.
-										disabled: mode == 'hidden' || mode == 'disabled',
-									   	hidden: mode == 'hidden', 
+										disabled: options.no_disabled ? 
+											false 
+											: (mode == 'hidden' || mode == 'disabled'),
+										hidden: options.no_hidden ? 
+											false
+											: mode == 'hidden',
 										buttons: [
 											[actions[action]('?'), 
 												function(){
@@ -995,8 +1015,9 @@ var BrowseActionsActions = actions.Actions({
 										.attr('keys', getKeys(action))
 										.addClass(mode == 'hidden' ? mode : '')
 										.on('open', function(){
-											// XXX can this open a dialog???
-											actions[action]()
+											options.callback ?
+												options.callback.call(actions, action)
+												: actions[action]()
 
 											that.update()
 											that.select('"'+ text +'"')
@@ -1008,12 +1029,18 @@ var BrowseActionsActions = actions.Actions({
 											// NOTE: if something is hidden 
 											// 		it is also disabled...
 											// 		...this is by design.
-											disabled: mode == 'hidden' || mode == 'disabled',
-									   		hidden: mode == 'hidden',
+											disabled: options.no_disabled ? 
+												false 
+												: (mode == 'hidden' || mode == 'disabled'),
+									   		hidden: options.no_hidden ? 
+												false
+												: mode == 'hidden',
 										})
 										.attr('keys', getKeys(action))
 										.on('open', function(){
-											waitFor(actions[action]())
+											options.callback ?
+												options.callback.call(actions, action)
+												: waitFor(actions[action]())
 										})
 								}
 
@@ -1021,10 +1048,7 @@ var BrowseActionsActions = actions.Actions({
 							} else if(actions.config['browse-actions-settings'].showEmpty 
 									|| (cur[key] != null
 										&& Object.keys(cur[key]).length > 0)){
-								make(text + '/', 
-									{
-										push_on_open: true
-									})
+								make(text + '/', { push_on_open: true })
 
 							// item: line...
 							} else if(text == '---'){
