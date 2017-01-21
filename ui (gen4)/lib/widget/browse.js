@@ -269,13 +269,77 @@ function(text, options){
 
 // Make list of elements...
 //
+//
+// data format:
+//	[
+//		// single text element...
+//		<item-text>,
+//
+//		// multi-text element...
+//		[<item-text>, ...],
+//
+//		...
+//	]
+//
+// or:
+//
+// 	{
+// 		<item-lext>: <function>,
+// 	}
+//
+//
+// options format:
+// 	{
+// 		disableItemPattern: <pattern>,
+//
+// 		skipDisabledItems: false,
+//
+// 		...
+// 	}
+//
 Items.List =
-function(list, options){
+function(data, options){
 	var make = this
 	var res = []
-	list.forEach(function(e){
-		res.push(make(e, options)[0])
+	var keys = data instanceof Array ? data : Object.keys(data)
+	var pattern = options.disableItemPattern
+		&& RegExp(options.disableItemPattern) 
+
+	data.forEach(function(k){
+		var txt = k
+		var opts = Object.create(options)
+
+		if(pattern){
+			txt = k instanceof Array ? k[0] : k
+
+			var t = txt.replace(pattern, '')
+
+			// item matches disabled pattern...
+			if(t != txt){
+				opts.disabled = true	
+
+				txt = k instanceof Array ? 
+					[t].concat(k.slice(1)) 
+					: t
+
+				if(options.skipDisabledItems){
+					return
+				}
+
+			// no match -- restore text...
+			} else {
+				txt = k
+			}
+		}
+
+		var elem = make(txt, opts)
+
+		keys !== data && data[k]
+			&& elem.on('open', data[k])
+
+		res.push(elem[0])
 	})
+
 	return $(res)
 }
 
@@ -2997,7 +3061,7 @@ module.makeLister = function(elem, lister, options){
 
 // Flat list...
 //
-// This expects a data option set with the following format:
+// This expects a data option set with the following formats:
 // 	{
 // 		<option-text>: <callback>,
 // 		...
@@ -3030,51 +3094,22 @@ ListPrototype.options = {
 	list: function(path, make){
 		var that = this
 		var data = this.options.data
-		var keys = data.constructor == Array ? data : Object.keys(data)
-		var pattern = this.options.disableItemPattern 
-			&& RegExp(this.options.disableItemPattern)
 
-		return keys
-			.map(function(k){
-				var disable = null
-				var n = k
+		var res = []
 
-				// XXX make this support list args as well...
-				if(pattern){
-					var t = typeof(n) == typeof('str') ? n : n[0]
+		// this is here to get the modified titles...
+		var _make = function(txt){
+			res.push(txt)
+			return make.apply(make, arguments)
+		}
+		_make.__proto__ = make
 
-					if(typeof(t) == typeof('str')){
-						var tt = t.replace(pattern, '')
-						if(t != tt){
-							disable = true
+		_make.List(data, {
+			disableItemPattern: this.options.disableItemPattern,
+			skipDisabledItems: this.options.skipDisabledItems,
+		})
 
-							if(typeof(k) == typeof('str')){
-								n = tt
-
-							} else {
-								// NOTE: here we want to avoid .data contamination
-								// 		so we'll make a copy...
-								n = n.slice()
-								n[0] = tt
-							}
-
-							if(that.options.skipDisabledItems){
-								return
-							}
-						}
-					}
-				}
-
-				var e = make(n, {disabled: disable})
-
-				if(data !== keys && that.options.data[k] != null){
-					e.on('open', function(){ 
-						return that.options.data[k].apply(this, arguments)
-					})
-				}
-
-				return k
-			})
+		return res
 	},
 }
 // XXX should we inherit or copy options???
