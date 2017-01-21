@@ -420,8 +420,8 @@ if(typeof(jQuery) != typeof(undefined)){
 
 		if(options == false){
 			this
-				.removeProp('contenteditable')
-				.removeProp('tabindex')
+				.removeAttr('contenteditable')
+				.removeAttr('tabindex')
 				.removeClass('editable-field')
 
 			var events = this.data('editable-field-events')
