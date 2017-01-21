@@ -399,22 +399,23 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 	}
 	//
 	// This listens to these events triggerable by user:
-	// 	'commit'		- will commit changes and fire 'edit-done' with
-	// 						field text.
-	// 	'abort'			- will reset field and trigger 'edit-aborted'
-	// 						with original (before edit started) field text
+	// 	'edit-commit'		- will commit changes, this is passed the 
+	// 							new text just edited.
+	// 	'edit-abort'		- will reset field, this is passed the 
+	// 							original text before the edit.
 	//
 	//
 	// NOTE: removing tabindex will reset focus, so this will attempt to 
 	// 		focus the first [tabindex] element up the tree...
 	//
+	// XXX add option to select the element on start or just focus it...
+	// XXX multiline fields need to retain original function of arrows 
+	// 		until we are at last line, then pass it through...
 	// XXX should we just use form elements???
 	// 		...it's a trade-off, here we add editing functionality and fight
 	// 		a bit the original function, in an input we'll need to fight part
 	// 		of the editing functionality and add our own navigation...
 	// XXX move this to a more generic spot...
-	// XXX should this reset field to it's original state after 
-	// 		commit/abort???
 	jQuery.fn.makeEditable = function(options){
 		var that = this
 
@@ -465,14 +466,14 @@ if(typeof(jQuery) != typeof(undefined)){
 
 					// abort...
 					if((options.abort_keys || ['Esc']).indexOf(n) >= 0){
-						that.trigger('abort')
+						that.trigger('edit-abort', original)
 
 					// done -- single line...
 					} else if(n == 'Enter' 
 							&& !options.multiline){
 						event.preventDefault()
 
-						that.trigger('commit')
+						that.trigger('edit-commit', that.text())
 
 					// done -- multiline...
 					} else if(n == 'Enter' 
@@ -480,7 +481,7 @@ if(typeof(jQuery) != typeof(undefined)){
 							&& options.multiline){
 						event.preventDefault()
 
-						that.trigger('commit')
+						that.trigger('edit-commit', that.text())
 
 					// continue handling...
 					} else {
@@ -498,9 +499,7 @@ if(typeof(jQuery) != typeof(undefined)){
 							.selectText()
 				})
 				// user triggerable events...
-				.on('abort', events.abort = function(){
-					that.trigger('edit-aborted', original)
-
+				.on('edit-abort', events['edit-abort'] = function(){
 					options.clear_selection_on_abort !== false 
 						&& window.getSelection().removeAllRanges()
 
@@ -517,9 +516,7 @@ if(typeof(jQuery) != typeof(undefined)){
 
 					that.makeEditable(false)
 				})
-				.on('commit', events.commit = function(){
-					that.trigger('edit-done', that.text())
-
+				.on('edit-commit', events['edit-commit'] = function(){
 					options.clear_selection_on_commit !== false 
 						&& window.getSelection().removeAllRanges()
 

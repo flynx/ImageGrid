@@ -128,7 +128,7 @@ function(text, options){
 //
 // options format:
 // 	{
-// 		select_text: <number> | <string> | 'first' | 'last',
+// 		select_text: <number> | 'first' | 'last' | <selector>,
 //
 // 		...
 // 	}
@@ -139,22 +139,21 @@ function(text, options){
 	var elem = (options.action ? this.Action : this).call(this, text, options)
 		.on('select', function(){
 			var text = elem.find('.text')
-
-			if(options.select_text == 'first' || options.select_text == 'last'){
-				text[options.selected_index]()
+			// get the specific .text element...
+			// select index...
+			typeof(options.select_text) == typeof(123) ?
+				text.eq(options.select_text)
 					.selectText()
-
-			} else if(typeof(options.select_text) == typeof('str')){
-				elem.find(options.selected_index)
+			// first/last
+			: (options.select_text == 'first' || options.select_text == 'last') ?
+				text[options.select_text]()
 					.selectText()
-
-			} else if(typeof(options.select_text) == typeof(123)){
-				text.eq(options.selected_index)
+			// selector...
+			: typeof(options.select_text) == typeof('str') ?
+				elem.find(options.select_text)
 					.selectText()
-
-			} else {
-				text.selectText()
-			}
+			// all...
+			: text.selectText()
 		})
 	return elem
 }
@@ -176,7 +175,8 @@ function(text, options){
 // 		// NOTE: by default this will select all the elements, if there
 // 		//		are more than one, this may result in an odd element 
 // 		//		state...
-// 		editable_index: <number>,
+// 		// NOTE: the selector is used to filter text elements...
+// 		edit_text: <number> | 'first' | 'last' | <selector>,
 //
 // 		// item event to start the edit on...
 // 		start_on: 'select',
@@ -198,7 +198,7 @@ function(text, options){
 // 		...
 // 	}
 //
-// XXX add option to select the element on start...
+// XXX add option to select the element on start or just focus it...
 Items.Editable =
 function(text, options){
 	options = options || {}
@@ -211,8 +211,17 @@ function(text, options){
 			editable = elem.find('.text')
 
 			// get the specific .text element...
-			editable = options.editable_index != null ? 
-				editable.eq(options.editable_index)
+			editable = 
+				// index...
+				typeof(options.edit_text) == typeof(123) ? 
+					editable.eq(options.edit_text)
+				// first/last...
+				: (options.edit_text == 'first' || options.edit_text == 'last') ?
+					editable[options.edit_text]()
+				// selecter...
+				: typeof(options.edit_text) == typeof('str') ?
+					editable.filter(options.edit_text)
+				// all...
 				: editable 
 
 			// edit the element...
@@ -227,19 +236,19 @@ function(text, options){
 
 			// deselect on abort -- if we started with a select...
 			start_on == 'select' && editable
-				.on('edit-aborted', function(){
+				.on('edit-abort', function(){
 					dialog.select(null)	
 				})
 
 			// edit event handlers...
 			options.editaborted
-				&& editable.on('edit-aborted', options.editaborted)
+				&& editable.on('edit-abort', options.editaborted)
 			options.editdone
-				&& editable.on('edit-done', options.editdone)
+				&& editable.on('edit-commit', options.editdone)
 		})
 		.on('deselect', function(){
 			editable.trigger(
-				options.abort_on_deselect !== false ? 'abort' : 'commit')
+				options.abort_on_deselect !== false ? 'edit-abort' : 'edit-commit')
 		})
 
 	return elem
@@ -400,7 +409,7 @@ function(list, options){
 			clear_on_edit: true,
 		})
 		// update list on edit done...
-		.on('edit-done', function(evt, text){
+		.on('edit-commit', function(evt, text){
 			var txt = $(this).text()
 
 			txt = options.normalize ? 
