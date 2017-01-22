@@ -67,8 +67,26 @@ function makeSimpleAction(direction){
 
 
 /*********************************************************************/
-// collections of helpers...
-
+// Collections of helpers...
+//
+// NOTE: from a design perspective all of these constructors can and 
+// 		will be called on each refresh, so maintaining state should if
+// 		state is needed should be done outside of the actual call.
+// 		For this reason closures can be used but only for state 
+// 		relevant within a single call.
+// 		So the possible ways to store the outer state:
+// 			- threaded through the arguments
+// 				Example:
+// 					first argument of make.EditableList(..)
+// 			- make.dialog attributes
+// 				Example:
+// 					temporary state of make.EditableList(..)
+// 			- config
+// 				this requires that the config is saved and maintained 
+// 				by the caller
+// 				This approach is not recommended.
+//
+//
 //---------------------------------------------------------------------
 // NOTE: all item constructors/helpers abide by either the new-style 
 // 		make protocol, i.e. make(content[, options]) or their own...
@@ -391,6 +409,14 @@ function(data, options){
 //
 // 		...
 // 	}
+//
+//
+// Temporary state is stored in the dialog object:
+// 	.__list			- cached input list
+// 	.__to_remove	- list of items to remove
+// 	.__editable_list_handlers
+// 					- indicator that the dialog handlers are set up
+//
 //
 // NOTE: this will return a list of elements with the new button...
 // NOTE: this will push a remove button to the end of the button list,
