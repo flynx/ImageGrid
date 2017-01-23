@@ -668,6 +668,73 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
+	//	
+	//	.loadImagesAsRibbon(path[, logger])
+	//		-> promise
+	//
+	//	.loadImagesAsRibbon(path, 'above'[, logger])
+	//	.loadImagesAsRibbon(path, 'below'[, logger])
+	//		-> promise
+	//
+	// NOTE: this does not touch .location
+	//
+	// XXX EXPERIMENTAL...
+	// XXX should this be usable only in crops???
+	// 		....also would be a good idea to add things like .removeRibbon(..)...
+	loadImagesAsRibbon: ['- File/Load images into ribbon',
+		function(path, direction, logger){
+			var that = this
+			if(path == null){
+				return
+			}
+
+			if(logger === undefined 
+					&& direction 
+					&& typeof(direction) != typeof('str')){
+				logger = direction
+				direction = null
+			}
+
+			direction = direction || 'below'
+
+			console.log('>>>>', direction)
+
+			logger = logger || this.logger
+			logger = logger && logger.push('Load images to ribbon')
+
+			return this.getImagesInPath(
+					path, 
+					that.config['image-file-read-stat'],
+					that.config['image-file-skip-previews'],
+					logger)
+				// load the data...
+				.then(function(imgs){
+					that.clearLoaction()
+
+					var d = that.data
+					var nd = data.Data.fromArray(imgs.keys())
+
+					var r = d.getRibbon()
+
+					// splice the order...
+					d.order.splice.apply(d.order, 
+						[d.order.indexOf(d.current)+1, 0]
+							.concat(nd.order))
+
+					// new ribbon and data...
+					var n = d.newRibbon(r, direction)
+					d.ribbons[n] = nd.ribbons[nd.ribbon_order[0]]
+
+					// sort elements within the new ribbon...
+					d.updateImagePositions()
+
+					// join images...
+					that.images.join(imgs)
+
+					that.reload(true)
+				})
+		}],
+
 	// Load new images...
 	//
 	// 	Load new images from current path...
@@ -846,6 +913,14 @@ var FileSystemLoaderUIActions = actions.Actions({
 	config: {
 		// list of loaders to complete .browsePath(..) action
 		//
+		// The loader can be action name or a keyboard.parseActionCall(..) 
+		// compatible syntax.
+		//
+		// If an argument string containing "$PATH" is passed then it 
+		// will be replaces by the selected path...
+		// 	Example:
+		// 		'someAction: "$PATH" -- doc'
+		//
 		// NOTE: these will be displayed in the same order as they appear
 		// 		in the list.
 		// NOTE: the first one is auto-selected.
@@ -853,6 +928,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 			'loadIndex',
 			'loadImages',
 			//'loadPath',
+			'---',
+			'loadImagesAsRibbon: "$PATH" "above" -- Load images to new ribbon above',
+			'loadImagesAsRibbon: "$PATH" "below" -- Load images to new ribbon below',
 		],
 
 		'file-browser-settings': {
@@ -911,8 +989,29 @@ var FileSystemLoaderUIActions = actions.Actions({
 							} else {
 								var loaders = {}
 								that.config['path-loaders'].forEach(function(m){
-									loaders[that.getDoc(m)[m][0].split('/').pop()] = function(){ 
-										return that[m](path) 
+									var a = keyboard.parseActionCall(m)
+
+									if(a.action in that){
+										var args = a.arguments
+										// empty args...
+										args = args.length == 0 ? 
+											[path] 
+											: args
+										// replace the path placeholder...
+										var i = args.indexOf('$PATH')
+										i >= 0
+											&& args.splice(i, 1, path)
+
+										// the callback...
+										loaders[a.doc != '' ? 
+												a.doc 
+												: that.getDocTitle(a.action)] =
+											function(){
+												return that[a.action].apply(that, a.arguments) }
+
+									// non-actions...
+									} else {
+										loaders[m] = null
 									}
 								})
 							}
@@ -2232,7 +2331,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				this.saveIndex() 
 
 			} else {
-				this.browseSaveIndex()
+				this.browseExportIndex()
 			}
 		}],
 	// XXX should this be a UI action???

@@ -454,7 +454,6 @@ var URLHistoryUIActions = actions.Actions({
 				})
 				to_remove = []
 			}
-
 			var makeHistoryList = function(fs_state){
 				fs_state = fs_state || {}
 				var history = Object.keys(that.url_history).reverse()
@@ -531,6 +530,19 @@ var URLHistoryUIActions = actions.Actions({
 
 				return list
 			}
+			// this will take care of any number of child dialogs...
+			// XXX should this be generic???
+			var onOpen = function(){
+				// we are the top dialog --> close...
+				if(that.modal.client === o){
+					o.close() 
+
+				// child dialog, ask to close us when opening...
+				} else {
+					that.modal.client.open(onOpen)
+				}
+			}
+
 
 			var o = browse.makeLister(null, 
 				function(path, make){
@@ -548,6 +560,8 @@ var URLHistoryUIActions = actions.Actions({
 				},
 				// add item buttons...
 				{ itemButtons: [
+						['<span class="show-on-hover">&#8599;</span>', 
+							function(p){ o.browsePath(p) }],
 						// move to top...
 						['&diams;', 
 							function(p){
@@ -640,6 +654,13 @@ var URLHistoryUIActions = actions.Actions({
 		   		return this
 			}
 
+			// handle 'O' button to browse path...
+			o.browsePath = function(p){
+				that.browsePath(p || this.selected).open(onOpen) }
+			// clone the bindings so as not to mess up the global browser...
+			o.keybindings = JSON.parse(JSON.stringify(o.keybindings))
+			o.keyboard.handler('General', 'O', 'browsePath')
+
 			return o
 		})],
 })
@@ -654,54 +675,7 @@ module.URLHistoryUI = core.ImageGridFeatures.Feature({
 		'ui',
 		'url-history',
 	],
-	suggested: [
-		'ui-url-history-browsable',
-	],
-
 	actions: URLHistoryUIActions,
-})
-
-
-
-//---------------------------------------------------------------------
-
-var URLHistoryUIBrowsable = 
-module.URLHistoryUIBrowsable = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-url-history-browsable',
-	depends: [
-		'ui',
-		'url-history',
-		'ui-fs-loader',
-	],
-
-	handlers: [
-		['listURLHistory', 
-			function(dialog){
-				var that = this
-
-				// this will take care of any number of child dialogs...
-				var onOpen = function(){
-					// we are the top dialog --> close...
-					if(that.modal.client === dialog){
-						dialog.close() 
-
-					// child dialog, ask to close us when opening...
-					} else {
-						that.modal.client.open(onOpen)
-					}
-				}
-
-				dialog.browsePath = function(){
-					that.browsePath(this.selected).open(onOpen) }
-
-				// clone the bindings so as not to mess up the global browser...
-				dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
-
-				dialog.keyboard.handler('General', 'O', 'browsePath')
-			}]],
 })
 
 

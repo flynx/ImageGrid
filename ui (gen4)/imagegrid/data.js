@@ -158,9 +158,20 @@ var DataPrototype = {
 	//
 	// 	.current (gid)
 	// 		gid of the current image
+	// 		
+	// 		NOTE: if no current image is set explicitly this defaults 
+	// 			to first image in first ribbon, or first in .order.
+	//
 	//
 	// 	.base (gid)
 	// 		gid of the base ribbon
+	//
+	// 		NOTE: if no base ribbon is explicitly set, this defaults to
+	// 			last ribbon.
+	// 			This may not seem logical at first but this is by design
+	// 			behavior, the goal is to keep all sets not explicitly
+	// 			aligned (i.e. sorted) be misaligned by default.
+	//
 	//
 	// 	.order
 	// 		List of image gids setting the image order
@@ -171,11 +182,13 @@ var DataPrototype = {
 	//	 	NOTE: this list may contain gids not loaded at the moment, 
 	//	 		a common case for this is when data is cropped.
 	//
+	//
 	// 	.ribbon_order
 	// 		List of ribbon gids setting the ribbon order.
 	//
 	// 		format:
 	// 			[ gid, .. ]
+	//
 	//
 	// 	.ribbons
 	// 		Dict of ribbons, indexed by ribbon gid, each ribbon is a 
@@ -189,16 +202,17 @@ var DataPrototype = {
 	//
 	/*****************************************************************/
 
-	// XXX is this a good name for this??? (see: object.js)
-	__init__: function(json){
-		// load initial state...
-		if(json != null){
-			this.loadJSON(json)
-		} else {
-			this._reset()
-		}
-		return this
-	},
+	get current(){
+		return this.__current = this.__current 
+			|| this.getImages(this.ribbon_order[0])[0]
+			|| this.order[0] },
+	set current(value){
+		this.__current = value },
+
+	get base(){
+		return this.__base || this.ribbon_order.slice(-1)[0] },
+	set base(value){
+		this.__base = value },
 
 
 
@@ -432,7 +446,7 @@ var DataPrototype = {
 
 					// no more ribbons left...
 					if(that.ribbon_order.length == 0){
-						that.base = null
+						delete that.__base
 
 					// shift base up or to first image...
 					} else if(that.base == gid){
@@ -449,7 +463,7 @@ var DataPrototype = {
 					})
 
 					if(that.current == gid){
-						that.current = null
+						delete that.__current
 					}
 				}
 			})
@@ -1082,8 +1096,7 @@ var DataPrototype = {
 	},
 	// same as .getRibbon(..) but returns ribbon order...
 	getRibbonOrder: function(target, offset){
-		return this.ribbon_order.indexOf(this.getRibbon(target, offset))
-	},
+		return this.ribbon_order.indexOf(this.getRibbon(target, offset)) },
 
 
 
@@ -1313,8 +1326,7 @@ var DataPrototype = {
 	},
 
 	reverseRibbons: function(){
-		this.ribbon_order.reverse()
-	},
+		this.ribbon_order.reverse() },
 
 
 	// Gather gids into a connected section...
@@ -2479,8 +2491,9 @@ var DataPrototype = {
 	// Reset the state to empty...
 	//
 	_reset: function(){
-		this.base = null
-		this.current = null
+		delete this.__base
+		delete this.__current
+
 		this.order = [] 
 		this.ribbon_order = [] 
 		this.ribbons = {}
@@ -2553,6 +2566,20 @@ var DataPrototype = {
 			res = JSON.stringify(res)
 		}
 		return res
+	},
+	
+
+
+	/*****************************************************************/
+	// XXX is this a good name for this??? (see: object.js)
+	__init__: function(json){
+		// load initial state...
+		if(json != null){
+			this.loadJSON(json)
+		} else {
+			this._reset()
+		}
+		return this
 	},
 }
 
@@ -2972,6 +2999,7 @@ object.makeConstructor('DataWithTags',
 
 var Data =
 module.Data = DataWithTags
+
 
 
 

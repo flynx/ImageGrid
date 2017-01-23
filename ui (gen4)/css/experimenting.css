@@ -263,6 +263,19 @@ body {
 	font-weight: bolder !important;
 }
 
+.browse-widget .list>div .show-on-hover {
+	opacity: 0;
+}
+.browse-widget .list>div:hover .show-on-hover {
+	opacity: inherit;
+}
+.browse-widget .list>div .show-on-select {
+	opacity: 0;
+}
+.browse-widget .list>.selected .show-on-select {
+	opacity: inherit;
+}
+
 
 /* Dialog highlight experiment... */
 .browse-widget {

@@ -101,6 +101,10 @@ var LocationActions = actions.Actions({
 	},
 
 
+	clearLoaction: ['File/Clear location',
+		function(){ delete this.__location }],
+
+
 	// Load location...
 	//
 	// 	Reload current location...
@@ -191,9 +195,7 @@ module.Location = core.ImageGridFeatures.Feature({
 				}
 			}],
 		['clear',
-			function(){
-				delete this.__location
-			}],
+			function(){ this.clearLoaction() }],
 
 		// 1) store .location
 		// 2) cleanup .images[..].base_path

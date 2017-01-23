@@ -204,13 +204,14 @@ actions.Actions({
 			this.images = images.Images(d.images)
 			this.data = data.Data(d.data)
 		}],
+	// XXX should this clear or load empty???
 	clear: ['File/Clear',
 		{journal: true},
 		function(){
-			//delete this.data
-			//delete this.images
-			this.data = null
-			this.images = null
+			//this.data = null
+			//this.images = null
+			this.data = new data.DataWithTags()
+			this.images = new images.Images() 
 		}],
 
 	// NOTE: for complete isolation it is best to completely copy the 

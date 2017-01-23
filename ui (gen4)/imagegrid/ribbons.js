@@ -1125,8 +1125,7 @@ var RibbonsPrototype = {
 	// Like .getRibbon(..) but returns ribbon index instead of the actual 
 	// ribbon object...
 	getRibbonOrder: function(target){
-		return this.viewer.find(RIBBON).index(this.getRibbon(target))
-	},
+		return this.viewer.find(RIBBON).index(this.getRibbon(target)) },
 
 
 	// Basic manipulation...
@@ -2090,8 +2089,7 @@ var RibbonsPrototype = {
 	// Get image rotation...
 	//
 	getImageRotation: function(target){
-		return (this.getImage(target).attr('orientation') || 0)*1
-	},
+		return (this.getImage(target).attr('orientation') || 0)*1 },
 	// Rotate an image...
 	//
 	// Rotate image clockwise:

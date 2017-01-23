@@ -348,22 +348,8 @@ module.ImagesClassPrototype = {
 
 var ImagesPrototype =
 module.ImagesPrototype = {
-
-	// XXX is this a good name for this??? (see: object.js)
-	__init__: function(json){
-		// load initial state...
-		if(json != null){
-			this.loadJSON(json)
-		} else {
-			this._reset()
-		}
-		return this
-	},
-
-
 	get length(){
-		return Object.keys(this).length
-	},
+		return Object.keys(this).length },
 
 	// Generic iterators...
 	//
@@ -435,8 +421,7 @@ module.ImagesPrototype = {
 	},
 
 	keys: function(){
-		return Object.keys(this)
-	},
+		return Object.keys(this) },
 
 	// Build an image index relative to an attribute...
 	//
@@ -670,8 +655,7 @@ module.ImagesPrototype = {
 
 
 	clone: function(){
-		return (new Images()).loadJSON(this.dumpJSON())
-	},
+		return (new Images()).loadJSON(this.dumpJSON()) },
 	// NOTE: this will join the other data into the current object in-place,
 	// 		use .clone() to preserve current data...
 	join: function(other){
@@ -701,6 +685,18 @@ module.ImagesPrototype = {
 	},
 
 	_reset: function(){
+	},
+
+
+	// XXX is this a good name for this??? (see: object.js)
+	__init__: function(json){
+		// load initial state...
+		if(json != null){
+			this.loadJSON(json)
+		} else {
+			this._reset()
+		}
+		return this
 	},
 }
 
