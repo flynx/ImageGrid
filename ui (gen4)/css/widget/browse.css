@@ -354,6 +354,23 @@
 	display: none;
 }
 
+/* Show item part on hover... */
+.browse-widget .list>div .show-on-hover {
+	opacity: 0;
+}
+.browse-widget .list>div:hover .show-on-hover {
+	opacity: inherit;
+}
+
+/* Show item part on select... */
+.browse-widget .list>div .show-on-select {
+	opacity: 0;
+}
+.browse-widget .list>.selected .show-on-select {
+	opacity: inherit;
+}
+
+
 
 
 /****************************************************** Cloud List ***/

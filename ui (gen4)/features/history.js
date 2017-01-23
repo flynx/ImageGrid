@@ -560,28 +560,15 @@ var URLHistoryUIActions = actions.Actions({
 				},
 				// add item buttons...
 				{ itemButtons: [
+						// open...
 						['<span class="show-on-hover">&#8599;</span>', 
 							function(p){ o.browsePath(p) }],
 						// move to top...
+						//['<span class="show-on-hover">&diams;</span>', 
 						['&diams;', 
 							function(p){
 								that.setTopURLHistory(p)
 								o.redraw(p)
-
-								/* XXX this is a tad faster, is the added 
-								// 		complexity worth it??
-								var cur = this.filter('"'+p+'"', false)
-
-								var top = cur.hasClass('pinned') ?
-									this.filter('*', false).first()
-									: this.filter('*', false)
-										.filter(':not(.pinned)').first()
-
-								if(!top.is(cur)){
-									top.before(cur)
-									that.setTopURLHistory(p)
-								}
-								//*/
 							}],
 						// pin to top...
 						// XXX should this be standard functionality???
