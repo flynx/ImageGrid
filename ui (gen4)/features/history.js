@@ -560,44 +560,44 @@ var URLHistoryUIActions = actions.Actions({
 				},
 				// add item buttons...
 				{ itemButtons: [
-						// open...
-						['<span class="show-on-hover">&#8599;</span>', 
-							function(p){ o.browsePath(p) }],
-						// move to top...
-						//['<span class="show-on-hover">&diams;</span>', 
-						['&diams;', 
-							function(p){
-								that.setTopURLHistory(p)
-								o.redraw(p)
-							}],
-						// pin to top...
-						// XXX should this be standard functionality???
-						['<span class="pin-set">&#9679;</span>'
-						+'<span class="pin-unset">&#9675;</span>', 
-							function(p, cur){
-								// change state...
-								// pinned...
-								if(cur.hasClass('pinned')){
-									cur.removeClass('pinned')
-									that.toggleURLPinned(p, 'off')
+					// open...
+					['<span class="show-on-hover">&#8599;</span>', 
+						function(p){ 
+							o.browsePath(p) }],
+					// move to top...
+					//['<span class="show-on-hover">&diams;</span>', 
+					['&diams;', 
+						function(p){
+							that.setTopURLHistory(p)
+							o.redraw(p)
+						}],
+					// pin to top...
+					// XXX should this be standard functionality???
+					['<span class="pin-set">&#9679;</span>'
+					+'<span class="pin-unset">&#9675;</span>', 
+						function(p, cur){
+							// change state...
+							// pinned...
+							if(cur.hasClass('pinned')){
+								cur.removeClass('pinned')
+								that.toggleURLPinned(p, 'off')
 
-								// not pinned...
-								} else {
-									cur.addClass('pinned')
-									that.toggleURLPinned(p, 'on')
-								}
+							// not pinned...
+							} else {
+								cur.addClass('pinned')
+								that.toggleURLPinned(p, 'on')
+							}
 
-								// focus...
-								that.config['url-history-focus-on-pin']
-									&& o.select(cur)
+							// focus...
+							that.config['url-history-focus-on-pin']
+								&& o.select(cur)
 
-								// place...
-								o.redraw()
-							}],
-						// mark for removal...
-						browse.buttons.markForRemoval(to_remove)
-					],
-				})
+							// place...
+							o.redraw()
+						}],
+					// mark for removal...
+					browse.buttons.markForRemoval(to_remove) 
+				] })
 				.open(function(evt, path){ 
 					removeStriked('open')
 
