@@ -1709,7 +1709,7 @@ var BrowserPrototype = {
 						: that.options.actionButton)
 					.click(function(evt){
 						evt.stopPropagation()
-						that.select('"'+ txt +'"')
+						that.select(res)
 						that.action()
 					}))
 			}
@@ -1722,7 +1722,8 @@ var BrowserPrototype = {
 						: that.options.pushButton)
 					.click(function(evt){
 						evt.stopPropagation()
-						that.push('"'+ txt +'"')
+						//that.push('"'+ txt +'"')
+						that.push(res)
 					}))
 			}
 

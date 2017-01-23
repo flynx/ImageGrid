@@ -697,8 +697,6 @@ var FileSystemLoaderActions = actions.Actions({
 
 			direction = direction || 'below'
 
-			console.log('>>>>', direction)
-
 			logger = logger || this.logger
 			logger = logger && logger.push('Load images to ribbon')
 
@@ -1007,7 +1005,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 												a.doc 
 												: that.getDocTitle(a.action)] =
 											function(){
-												return that[a.action].apply(that, a.arguments) }
+												return that[a.action].apply(that, args) }
 
 									// non-actions...
 									} else {
