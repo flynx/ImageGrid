@@ -530,18 +530,6 @@ var URLHistoryUIActions = actions.Actions({
 
 				return list
 			}
-			// this will take care of any number of child dialogs...
-			// XXX should this be generic???
-			var onOpen = function(){
-				// we are the top dialog --> close...
-				if(that.modal.client === o){
-					o.close() 
-
-				// child dialog, ask to close us when opening...
-				} else {
-					that.modal.client.open(onOpen)
-				}
-			}
 
 
 			var o = browse.makeLister(null, 
@@ -601,21 +589,12 @@ var URLHistoryUIActions = actions.Actions({
 				.open(function(evt, path){ 
 					removeStriked('open')
 
-					o.parent.close() 
-
-					// close the parent ui...
-					parent 
-						&& parent.close 
-						&& parent.close()
+					o.close() 
 
 					that.openURLFromHistory(path)
 				})
 				.on('close', function(){
 					removeStriked('close')
-
-					parent 
-						&& parent.focus 
-						&& parent.focus()
 				})
 
 			// Monkey-patch: fast redraw...
@@ -643,7 +622,11 @@ var URLHistoryUIActions = actions.Actions({
 
 			// handle 'O' button to browse path...
 			o.browsePath = function(p){
-				that.browsePath(p || this.selected).open(onOpen) }
+				that.browsePath(p || this.selected)
+					.close(function(evt, reason){
+						reason != 'reject'
+							&& o.close(reason)
+					}) }
 			// clone the bindings so as not to mess up the global browser...
 			o.keybindings = JSON.parse(JSON.stringify(o.keybindings))
 			o.keyboard.handler('General', 'O', 'browsePath')

@@ -87,16 +87,20 @@ var WidgetPrototype = {
 	undeligate: proxyToDom('undeligate'),
 
 	// custom events...
-	close: function(handler){
+	//
+	// NOTE: this can be passed a string that can be used as a reason 
+	// 		for closing... 
+	close: function(a){
 		// trigger...
-		if(handler == null){
+		if(a == null || typeof(a) == typeof('str')){
+			a = a || 'accept'
 			this.parent.close 
-				&& this.parent.close()
-			this.trigger('close')
+				&& this.parent.close(a)
+			this.trigger('close', a)
 
 		// register new handler...
 		} else {
-			this.on('close', handler)
+			this.on('close', a)
 		}
 		return this
 	},

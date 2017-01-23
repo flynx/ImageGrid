@@ -973,7 +973,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 						// single loader...
 						if(callback && callback.constructor === Function){
 							// close self and parent...
-							o.parent.close() 
+							o.close() 
 
 							callback(path)
 
@@ -1014,12 +1014,12 @@ var FileSystemLoaderUIActions = actions.Actions({
 								})
 							}
 
-							// show user the list...
+							// show user the loader list...
 							var so = that.showList(loaders, { path: 0 })
 								// close self and parent...
 								.open(function(){
 									so.close()
-									o.parent.close() 
+									o.close() 
 								})
 
 							return so
@@ -1091,7 +1091,7 @@ var FileSystemLoaderUIActions = actions.Actions({
 					})
 			})
 			.on('open', function(){
-				o.parent.close()
+				o.close()
 			})
 
 			return o
@@ -1627,7 +1627,7 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 					})
 			})
 			.on('open', function(){
-				o.parent.close()
+				o.close()
 			})
 
 			return o
@@ -2556,10 +2556,11 @@ var FileSystemWriterUIActions = actions.Actions({
 						// XXX indicate export state: index, crop, image...
 						return 'Export'}]) 
 					.on('open', function(){
-						var mode = that.config['export-dialog-modes'][that.config['export-dialog-mode']]
+						var mode = 
+							that.config['export-dialog-modes'][that.config['export-dialog-mode']]
 						that[mode.action](
 							that.config['export-path'] || undefined)
-						dialog.parent.close()
+						dialog.close()
 					})
 					.addClass('selected')
 

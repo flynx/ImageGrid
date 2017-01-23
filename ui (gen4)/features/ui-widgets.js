@@ -220,7 +220,8 @@ function(actions, list, list_key, value_key, options){
 					actions.config[value_key] = value
 				}
 
-				o.parent.close()
+				// XXX revise...
+				o.close()
 			},
 		}
 		options.__proto__ = dfl_options
@@ -279,7 +280,7 @@ module.makeUIContainer = function(make){
 
 		o
 			// notify the client that we are closing...
-			.close(function(){ o.client.trigger('close') })
+			.close(function(){ o.client.trigger('close', 'reject') })
 			.client
 				// NOTE: strictly this is the responsibility of the client
 				// 		but it is less error prone to just in case also do
@@ -510,7 +511,7 @@ var DialogsActions = actions.Actions({
 					if(func){
 						this.dom.on('close', func)
 					} else {
-						this.dom.trigger('close')
+						this.dom.trigger('close', 'reject')
 						this.dom.remove()
 					}
 					return this
@@ -518,7 +519,7 @@ var DialogsActions = actions.Actions({
 			}
 
 			dialog.on('blur', function(){
-				panel.close()
+				panel.close('reject')
 			})
 
 			return panel
@@ -792,14 +793,16 @@ var BrowseActionsActions = actions.Actions({
 				// we got a widget, wait for it to close...
 				if(child instanceof widget.Widget){
 					child
-						.on('open', function(){ dialog.parent.close() })
+						//.on('open', function(){ dialog.close() })
+						.on('close', function(evt, reason){ 
+							reason != 'reject'
+								&& dialog.close(reason) 
+						})
 						// XXX is this a hack???
 						// 		...for some reason when clicking child 
 						// 		loses focus while when opening via keyboard
 						// 		everything is OK...
-						.one('update', function(){ child.focus() })
-						.parent
-							.on('close', function(){ dialog.parent.focus() })
+						//.one('update', function(){ child.focus() })
 
 				// if it's not a dialog, don't wait...
 				} else {

@@ -67,7 +67,7 @@ var OverlayPrototype = {
 			//pattern: '.overlay-widget',
 			pattern: '*',
 
-			Esc: 'close',
+			Esc: 'close: "reject"',
 		},
 	},
 
@@ -99,7 +99,7 @@ var OverlayPrototype = {
 		this.dom
 			.click(function(){
 				if(that.options.closeOnUnFocusedClick || focused){
-					that.close()
+					that.close('reject')
 
 				// don't make the user wait if they really wants to close...
 				} else {

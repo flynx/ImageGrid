@@ -69,11 +69,11 @@ var SlideshowActions = actions.Actions({
 					// 		list maximum length is reached...
 					overflow: function(value){
 						that.config['slideshow-interval'] = value
-						o.parent.close()
+						o.close()
 					},
 					itemopen: function(value){
 						that.config['slideshow-interval'] = value
-						o.parent.close()
+						o.close()
 					},
 				})
 				.on('close', function(){
@@ -97,14 +97,14 @@ var SlideshowActions = actions.Actions({
 			suspended_timer || this.suspendSlideshowTimer()
 
 			// XXX might be a good idea to make this generic...
-			var _makeTogglHandler = function(toggler){
+			var _makeToggleHandler = function(toggler){
 				return function(){
 					var txt = $(this).find('.text').first().text()
 					that[toggler]()
 					o.update()
 						.then(function(){ o.select(txt) })
 					that.toggleSlideshow('?') == 'on' 
-						&& o.parent.close()
+						&& o.close()
 				}
 			}
 
@@ -118,7 +118,7 @@ var SlideshowActions = actions.Actions({
 								.on('close', function(){
 									// slideshow is running -- close directly...
 									if(that.toggleSlideshow('?') == 'on'){
-										o.parent.close()
+										o.close()
 
 									} else {
 										o.update()
@@ -138,17 +138,17 @@ var SlideshowActions = actions.Actions({
 
 					make(['Direction: ', 
 							function(){ return that.config['slideshow-direction'] }])
-						.on('open', _makeTogglHandler('toggleSlideshowDirection'))
+						.on('open', _makeToggleHandler('toggleSlideshowDirection'))
 					make(['Looping: ', 
 							function(){ return that.config['slideshow-looping'] }])
-						.on('open', _makeTogglHandler('toggleSlideshowLooping'))
+						.on('open', _makeToggleHandler('toggleSlideshowLooping'))
 
 					// Start/stop...
 					make([function(){ 
 							return that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start' }])
 						.on('open', function(){
 							that.toggleSlideshow()
-							o.parent.close()
+							o.close()
 						})
 						.addClass('selected')
 				},

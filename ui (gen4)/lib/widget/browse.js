@@ -1007,7 +1007,7 @@ var BrowserPrototype = {
 
 			Enter: 'action',
 			O: 'action',
-			Esc: 'close',
+			Esc: 'close: "reject"',
 
 			'/': 'startFilter!',
 
