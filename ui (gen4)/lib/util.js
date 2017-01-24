@@ -392,8 +392,12 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 		clear_selection_on_abort: true,
 	// 		clear_selection_on_commit: true,
 	//
+	// 		// If false unhandled key events will not be propagated to 
+	// 		// parents...
 	// 		propagate_unhandled_keys: true,
 	//
+	// 		// If false the element editable state will not be reset to
+	// 		// the original when edit is done...
 	// 		reset_on_done: true,
 	//
 	// 		// Keys that will abort the edit...
