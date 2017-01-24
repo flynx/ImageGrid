@@ -210,7 +210,11 @@ var StatusBarActions = actions.Actions({
 							reset_on_done: false,
 						})
 						.on('edit-commit', function(_, text){
-							that.focusRibbon(text == '*' ? that.base : parseInt(text)-1)
+							var i = parseInt(text)
+							i = i >= 1 ? i-1
+								: i == null ? 'current'
+								: i
+							that.focusRibbon(text == '*' ? that.base : i)
 						})
 						.focus(function(){
 							$(this).selectText()

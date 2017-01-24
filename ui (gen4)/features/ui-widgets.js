@@ -591,6 +591,7 @@ var DialogsActions = actions.Actions({
 			return res
 		})],
 
+
 	listDialogs: ['Interface/Dialog/Dialog list...',
 		makeUIDialog(function(){
 			var actions = this
