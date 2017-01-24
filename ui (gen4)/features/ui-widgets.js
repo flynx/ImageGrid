@@ -532,13 +532,22 @@ var DialogsActions = actions.Actions({
 			return browse.makeList(null, list, options) })],
 
 
+	// Show doc for action...
+	//
 	// XXX this needs to:
 	// 		- be a widget
 	// 		- handle focus
 	// 		- handle keyboard
 	// 		- handle search...
+	// 		- format action links/references...
+	// 		- markdown???
 	// 		- ...
-	showDoc: ['- Interface/Action help',
+	// XXX use pWiki???
+	// XXX should we have navigation???
+	// 		...i.e. opening links is done in the viewer and we have 
+	// 		ability to go back and forth...
+	// XXX STUB...
+	showDoc: ['Help/Action help...',
 		makeUIDialog(function(actions){
 			actions = actions || this.actions
 			actions = actions instanceof Array ? actions : [actions]
@@ -550,24 +559,37 @@ var DialogsActions = actions.Actions({
 			actions.forEach(function(action){
 				res.append($('<div class="action">')
 					.prop('tabindex', true)
-					.append($('<h2>').text(doc[action][2]))
-					.append($('<i>').text(doc[action][0]))
+					.append($('<h2>')
+						.text(doc[action][2]))
+					.append($('<i>')
+						.text(doc[action][0]))
 					.append($('<hr>'))
-					.append($('<pre>').html((doc[action][1] || '')
-						.replace(/&/g, '&amp;')
-						.replace(/</g, '&lt;')
-						.replace(/>/g, '&gt;')
-						// normalize tabs...
-						.replace(/ {0,3}\t/g, '    ')
-						// comments...
-						.replace(/(\/\/.*)\n/g, '<span class="comment">$1</span>\n')
-						.replace(/NOTE:/g, '<b>NOTE:</b>')
+					.append($('<pre>')
+						.html((doc[action][1] || '')
+							// html stuff...
+							.replace(/&/g, '&amp;')
+							.replace(/</g, '&lt;')
+							.replace(/>/g, '&gt;')
+							// normalize tabs -- convert tabs and tabbed 
+							// spaces into 4 spaces...
+							// NOTE: the code internally uses only tabs, 
+							// 		but this will help make the view 
+							// 		consistent.
+							.replace(/ {0,3}\t/g, '    ')
+							// comments...
+							.replace(/(\/\/.*)\n/g, '<span class="comment">$1</span>\n')
+							// notes...
+							.replace(/NOTE:/g, '<b>NOTE:</b>')
+							.replace(/XXX/g, '<span class="warning">XXX</span>')
+
+							// action links...
+							.replace(/(\s)(\.([\w_]+[\w\d_]*)\([^)]*\))/g, 
+								'$1<a href="#" onclick="ig.showDoc(\'$3\')">$2</a>')
 					)))
 			})
 
 			return res
 		})],
-	
 
 	listDialogs: ['Interface/Dialog/Dialog list...',
 		makeUIDialog(function(){

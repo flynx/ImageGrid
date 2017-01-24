@@ -431,10 +431,6 @@ body {
 
 	background: white;
 }
-.help-dialog .comment {
-	color: gray;
-	font-style: italic;
-}
 
 /* scrollbar setup... */
 .help-dialog::-webkit-scrollbar {
@@ -461,6 +457,16 @@ body {
 .help-dialog::-webkit-scrollbar-corner {
 }
 .help-dialog::-webkit-resizer {
+}
+
+
+.help-dialog .comment {
+	color: gray;
+	font-style: italic;
+}
+.help-dialog .warning {
+	color: blue;
+	background: yellow;
 }
 
 

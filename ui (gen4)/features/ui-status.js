@@ -113,9 +113,12 @@ var StatusBarActions = actions.Actions({
 						: $('<span>')
 							.addClass('position editable')
 							.attr('info', 'Image number (click to edit)')
-							.makeEditable()
+							.makeEditable({
+								propagate_unhandled_keys: false,
+								reset_on_done: false,
+							})
 							// select image when done...
-							.on('edit-done', function(_, text){
+							.on('edit-commit', function(_, text){
 								var i = parseInt(text)
 								i = i >= 1 ? i-1
 									: i == null ? 'current'
@@ -202,8 +205,11 @@ var StatusBarActions = actions.Actions({
 					.append($('<span>')
 						.addClass('ribbon-number')
 						.attr('info', 'Current ribbon (click to edit)')
-						.makeEditable()
-						.on('edit-done', function(_, text){
+						.makeEditable({
+							propagate_unhandled_keys: false,
+							reset_on_done: false,
+						})
+						.on('edit-commit', function(_, text){
 							that.focusRibbon(text == '*' ? that.base : parseInt(text)-1)
 						})
 						.focus(function(){

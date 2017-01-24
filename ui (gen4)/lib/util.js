@@ -392,6 +392,10 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 		clear_selection_on_abort: true,
 	// 		clear_selection_on_commit: true,
 	//
+	// 		propagate_unhandled_keys: true,
+	//
+	// 		reset_on_done: true,
+	//
 	// 		// Keys that will abort the edit...
 	// 		abort_keys: [
 	// 			'Esc',
@@ -496,7 +500,7 @@ if(typeof(jQuery) != typeof(undefined)){
 						that.trigger('edit-commit', that.text())
 
 					// continue handling...
-					} else {
+					} else if(options.propagate_unhandled_keys !== false){
 						$(this).parent().trigger(evt)
 					}
 				})
@@ -527,7 +531,8 @@ if(typeof(jQuery) != typeof(undefined)){
 					options.keep_focus_on_parent !== false
 						&& that.parents('[tabindex]').first().focus()
 
-					that.makeEditable(false)
+					options.reset_on_done !== false
+						&& that.makeEditable(false)
 				})
 				.on('edit-commit', events['edit-commit'] = function(evt, text){
 					that.trigger('edit-committing', text)
@@ -545,7 +550,8 @@ if(typeof(jQuery) != typeof(undefined)){
 					options.keep_focus_on_parent !== false
 						&& that.parents('[tabindex]').first().focus()
 
-					that.makeEditable(false)
+					options.reset_on_done !== false
+						&& that.makeEditable(false)
 				})
 
 			this.data('editable-field-events', events)
