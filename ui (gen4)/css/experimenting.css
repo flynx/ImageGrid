@@ -419,6 +419,53 @@ body {
 
 
 
+/* help... */
+.help-dialog {
+	max-width: 80vw;
+	max-height: 80vh;
+
+	overflow: auto;
+
+	padding: 1em;
+	padding-bottom: 2em;
+
+	background: white;
+}
+.help-dialog .comment {
+	color: gray;
+	font-style: italic;
+}
+
+/* scrollbar setup... */
+.help-dialog::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+.help-dialog::-webkit-scrollbar-button {
+	display: none;
+}
+.help-dialog::-webkit-scrollbar-track {
+}
+.help-dialog::-webkit-scrollbar-track-piece {
+	background: transparent;
+}
+.help-dialog::-webkit-scrollbar-track-piece {
+	background: rgba(0, 0, 0, 0.05);
+}
+.help-dialog::-webkit-scrollbar-thumb {
+	background: rgba(0, 0, 0, 0.15);
+}
+.help-dialog::-webkit-scrollbar-thumb:hover {
+	background: rgba(0, 0, 0, 0.3);
+}
+.help-dialog::-webkit-scrollbar-corner {
+}
+.help-dialog::-webkit-resizer {
+}
+
+
+
+
 
 /* DEBUG stuff... */
 .container-center {

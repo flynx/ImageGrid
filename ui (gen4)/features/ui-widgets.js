@@ -530,6 +530,43 @@ var DialogsActions = actions.Actions({
 	showList: ['- Interface/', 
 		makeUIDialog(function(list, options){
 			return browse.makeList(null, list, options) })],
+
+
+	// XXX this needs to:
+	// 		- be a widget
+	// 		- handle focus
+	// 		- handle keyboard
+	// 		- handle search...
+	// 		- ...
+	showDoc: ['- Interface/Action help',
+		makeUIDialog(function(actions){
+			actions = actions || this.actions
+			actions = actions instanceof Array ? actions : [actions]
+
+			var doc = this.getDoc(actions)
+			var res = $('<div>')
+				.addClass('help-dialog')
+
+			actions.forEach(function(action){
+				res.append($('<div class="action">')
+					.prop('tabindex', true)
+					.append($('<h2>').text(doc[action][2]))
+					.append($('<i>').text(doc[action][0]))
+					.append($('<hr>'))
+					.append($('<pre>').html((doc[action][1] || '')
+						.replace(/&/g, '&amp;')
+						.replace(/</g, '&lt;')
+						.replace(/>/g, '&gt;')
+						// normalize tabs...
+						.replace(/ {0,3}\t/g, '    ')
+						// comments...
+						.replace(/(\/\/.*)\n/g, '<span class="comment">$1</span>\n')
+						.replace(/NOTE:/g, '<b>NOTE:</b>')
+					)))
+			})
+
+			return res
+		})],
 	
 
 	listDialogs: ['Interface/Dialog/Dialog list...',
@@ -1008,7 +1045,10 @@ var BrowseActionsActions = actions.Actions({
 												}],
 											//[getKeys(action)],
 										]})
-										.attr('keys', getKeys(action))
+										.attr({
+											keys: getKeys(action),
+											action: action,
+										})
 										.addClass(mode == 'hidden' ? mode : '')
 										.on('open', function(){
 											options.callback ?
@@ -1032,7 +1072,10 @@ var BrowseActionsActions = actions.Actions({
 												false
 												: mode == 'hidden',
 										})
-										.attr('keys', getKeys(action))
+										.attr({
+											keys: getKeys(action),
+											action: action,
+										})
 										.on('open', function(){
 											options.callback ?
 												options.callback.call(actions, action)
@@ -1064,6 +1107,17 @@ var BrowseActionsActions = actions.Actions({
 
 			this.config['browse-actions-keys'] 
 				&& dialog.dom.addClass('show-keys')
+
+			// handle '?' button to browse path...
+			dialog.showDoc = function(){
+				var action = dialog.select('!').attr('action')
+				action 
+					&& actions.showDoc(action)
+			}
+			// clone the bindings so as not to mess up the global browser...
+			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
+			dialog.keyboard.handler('General', '?', 'showDoc')
+
 
 			return dialog
 		})],
