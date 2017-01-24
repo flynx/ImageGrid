@@ -793,16 +793,9 @@ var BrowseActionsActions = actions.Actions({
 				// we got a widget, wait for it to close...
 				if(child instanceof widget.Widget){
 					child
-						//.on('open', function(){ dialog.close() })
 						.on('close', function(evt, reason){ 
 							reason != 'reject'
-								&& dialog.close(reason) 
-						})
-						// XXX is this a hack???
-						// 		...for some reason when clicking child 
-						// 		loses focus while when opening via keyboard
-						// 		everything is OK...
-						//.one('update', function(){ child.focus() })
+								&& dialog.close(reason) })
 
 				// if it's not a dialog, don't wait...
 				} else {
