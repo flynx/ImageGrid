@@ -396,6 +396,7 @@ module.GLOBAL_KEYBOARD = {
 // XXX experimenting with new style of doc strings, usable from the 
 // 		system... (for details see: core.doc)
 
+// XXX need a clean deep copy to restore...
 var KeyboardActions = actions.Actions({
 	config: {
 		// Sets the target element to which the keyboard event handler 
@@ -487,6 +488,84 @@ var KeyboardActions = actions.Actions({
 		function(){ 
 			thiis.__keyboard_config = GLOBAL_KEYBOARD }],
 	keyHandler: ['- Interface/Get or set key handler',
+		// XXX this is essentially a copy of the docs for keyboard.handler(..), 
+		// 		find a way to reuse...
+		core.doc`Get/set/unset handler for key...
+
+		In general if handler is not passed this will get the handlers,
+		if a handler is given this will set the handler, if the passed 
+		handler is either null or '' then it will be unbound.
+
+			Get handler for key in all modes...
+			.keyHandler(<key>)
+			.keyHandler('*', <key>)
+				-> <info> 
+
+			Get handlers for key in applicable modes...
+			.keyHandler('?', <key>)
+			.keyHandler('test', <key>)
+				-> <info> 
+
+			Get handler for key in a specific mode...
+			.keyHandler(<mode>, <key>)
+				-> <info> 
+
+			Get handler for key in a specific list of modes...
+			.keyHandler([ <mode>, .. ], <key>)
+				-> <info> 
+
+
+			Bind handler to key in specific mode...
+			.keyHandler(mode, key, handler)
+				-> this
+		
+			Bind handler to key in all modes...
+			.keyHandler('*', key, handler)
+				-> this
+		
+			Bind handler to key in applicable modes...
+			.keyHandler('?', key, handler)
+			.keyHandler('test', key, handler)
+				-> this
+		
+			Bind handler to key in a specific list of modes...
+			.keyHandler([mode, ..], key, handler)
+				-> this 
+		
+		
+			Unbind handler from key in specific mode...
+			.keyHandler(mode, key, null)
+			.keyHandler(mode, key, '')
+				-> this
+		
+			Unbind handler from key in all modes...
+			.keyHandler('*', key, null)
+			.keyHandler('*', key, '')
+				-> this
+		
+			Unbind handler from key in applicable modes...
+			.keyHandler('?', key, null)
+			.keyHandler('?', key, '')
+			.keyHandler('test', key, null)
+			.keyHandler('test', key, '')
+				-> this
+		
+			Unbind handler from key in a specific list of modes...
+			.keyHandler([mode, ..], key, null)
+			.keyHandler([mode, ..], key, '')
+				-> this 
+		
+		
+		<info> format:
+			{
+				<mode>: <handler>,
+				...
+			}
+
+
+		NOTE: this is essentially aproxy to .keyboard.handler(..) for 
+				more info see its docs.
+		`,
 		function(mode, key, action){ 
 			var res = this.keyboard.handler(mode, key, action) 
 			// return res only if we get a handler...
@@ -743,14 +822,13 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 
 var KeyboardUIActions = actions.Actions({
 	config: {
-		// NOTE: this is defined in ui-dialogs
+		// NOTE: this is defined in ui-dialogs feature...
 		//'ui-confirm-timeout': 2000,
 	},
 
-	// Interface stuff ------------------------------------------------
 	// XXX BUG sections with doc do not show up in title...
-	// XXX BUG: for some reason modes are unclickable...
-	// XXX slow on update...
+	// XXX BUG: for some reason modes are not clickable and not selected
+	// 		via .select(..) with pattern...
 	// XXX sub-group by path (???)
 	browseKeyboardBindings: ['Help/Keyboard bindings...',
 		core.doc`Keyboard bindings viewer...
@@ -1015,6 +1093,7 @@ var KeyboardUIActions = actions.Actions({
 		For more details see: .browseKeyboardBindings(..)`,
 		widgets.uiDialog(function(path){ 
 			var that = this
+			var to_select
 
 			var sortModes = function(list){
 				that.keyboard.sortModes(
@@ -1071,19 +1150,26 @@ var KeyboardUIActions = actions.Actions({
 						// XXX make this work on click...
 						// XXX focus resulting mode...
 						['&ctdot;', function(_, cur){
-							that.editKeyboardMode(cur.attr('mode'))
+							that.editKeyboardMode(
+									cur.attr('mode'),
+									function(e){ to_select = e })
 								.close(function(){ dialog.update() }) }],
 					],
 					mode_actions: [
 						// XXX focus resulting key...
 						['key', function(_, cur){
-							that.editKeyBinding(cur.attr('mode'))
+							that.editKeyBinding(
+									cur.attr('mode'), 
+									null, 
+									function(e){ to_select = e })
 								.close(function(){ dialog.update() }) }],
 						// XXX place element...
 						// XXX focus resulting mode...
 						['mode', function(_, cur){
 							// XXX need to pass order info...
-							that.editKeyboardMode()
+							that.editKeyboardMode(
+									null, 
+									function(e){ to_select = e })
 								.close(function(){ dialog.update() }) }],
 					],
 				})
@@ -1096,13 +1182,19 @@ var KeyboardUIActions = actions.Actions({
 					// key...
 					if(cur.hasClass('key')){
 						sub_dialog = that
-							.editKeyBinding(cur.attr('mode'), cur.attr('code'))
+							.editKeyBinding(
+								cur.attr('mode'), 
+								cur.attr('code'),
+								function(e){ to_select = e })
 
 					// mode...
 					// XXX BUG: for some reason modes are unclickable...
 					} else if(cur.hasClass('mode')){
 						sub_dialog = that
-							.editKeyboardMode(cur.attr('mode'))
+							.editKeyboardMode(
+								cur.attr('mode'), 
+								null, 
+								function(e){ to_select = e })
 
 					// dropped...
 					} else if(cur.hasClass('drop-list')){
@@ -1114,11 +1206,18 @@ var KeyboardUIActions = actions.Actions({
 						&& sub_dialog
 							.close(function(){ dialog.update() })
 				}) 
+				// select updated/new items...
+				.on('update', function(){
+					to_select 
+						// XXX this does not work for modes...
+						&& dialog.select(to_select)
+					to_select = null
+				})
 			return dialog
 		})],
 	// XXX add action completion...
 	editKeyBinding: ['- Interface/Key mapping...',
-		widgets.makeUIDialog(function(mode, code){
+		widgets.makeUIDialog(function(mode, code, callback){
 			var that = this
 			var abort = false
 			var orig_code = code
@@ -1222,12 +1321,15 @@ var KeyboardUIActions = actions.Actions({
 					new_keys
 						.forEach(function(k){
 							that.keyHandler(mode, k, code) })
+
+					callback 
+						&& callback.call(that, code)
 				})
 
 			return dialog
 		})],
 	editKeyboardMode: ['- Interface/Mode...',
-		widgets.makeUIDialog(function(mode){
+		widgets.makeUIDialog(function(mode, callback){
 			var that = this
 			var abort = false
 			var doc = (that.keybindings[mode] || {}).doc
@@ -1295,6 +1397,9 @@ var KeyboardUIActions = actions.Actions({
 
 						that.keyboard.sortModes(order)
 					}
+
+					callback 
+						&& callback.call(that, mode)
 				})
 
 			return dialog
