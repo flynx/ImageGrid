@@ -2456,7 +2456,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						'export-paths',
 						'export-path',
 						{
-							new_button: false,
+							new_item: false,
 						})],
 				]})
 				// XXX make this editable???
@@ -2536,7 +2536,7 @@ var FileSystemWriterUIActions = actions.Actions({
 							'export-dialog-modes',
 							'export-dialog-mode',
 							{
-								new_button: false,
+								new_item: false,
 								itemButtons: [],
 							}))
 

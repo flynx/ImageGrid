@@ -209,7 +209,7 @@ function(actions, list, list_key, value_key, options){
 		var txt = $(this).find('.text').first().text()
 
 		var dfl_options = {
-			new_button: 'New...',
+			new_item: 'New...',
 			length_limit: 10,
 			// NOTE: this is called when adding a new value and 
 			// 		list maximum length is reached...

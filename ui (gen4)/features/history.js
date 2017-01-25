@@ -532,6 +532,10 @@ var URLHistoryUIActions = actions.Actions({
 			}
 
 
+			// NOTE: this partially re-implements browse.Items.EditableList(..)
+			// 		but since we have the pinned items we can't use it directly
+			// 		...and since .EditableList(..) can't be used twice per 
+			// 		dialog we can't work around this...
 			var o = browse.makeLister(null, 
 				function(path, make){
 					makeHistoryList()

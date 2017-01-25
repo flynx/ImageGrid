@@ -59,7 +59,7 @@ var SlideshowActions = actions.Actions({
 			var button_text = 'New...'
 			var o = widgets.makeConfigListEditor(that, 'slideshow-intervals', {
 					path: that.config['slideshow-interval'],
-					new_button: button_text,
+					new_item: button_text,
 					length_limit: that.config['slideshow-interval-max-count'],
 					check: Date.str2ms,
 					unique: Date.str2ms,

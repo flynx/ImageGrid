@@ -365,7 +365,7 @@ function(data, options){
 //
 // options format:
 // 	{
-// 		new_button: <text>|<bool>,
+// 		new_item: <text>|<bool>,
 //
 // 		// if true, disable delete item button...
 // 		no_delete_button: <bool>,
@@ -400,12 +400,49 @@ function(data, options){
 // 		// if function will be used as cmp for sorting...
 // 		sort: <bool> || function(a, b){ ... },
 //
-// 		// this is called when a new value is added via new_button but 
+// 		// this is called when a new value is added via new_item but 
 // 		// list length limit is reached...
 // 		overflow: function(selected){ ... },
 //
-// 		// see: itemButtons doc in browse.js for more info...
-// 		itemButtons: [..]
+//		// special buttons...
+//		//
+//		// NOTE: these can be used only if .sort if not set.
+//		//
+//		// Item order editing (up/down) 
+//		item_order_buttons: false,
+//		// Up button html...
+//		shift_up_button: <html> | null,
+//		// Down button html...
+//		shift_down_button: <html> | null,
+//
+//		// move to top/bottom buttons, if not false the button is enabled, 
+//		// if not bool the value is set as button html.
+//		to_top_button: false | true | <html>,
+//		to_bottom_button: false | true | <html>,
+//
+// 		// item buttons...
+// 		buttons: [
+// 			// placeholders that if given will be replace with the corresponding
+// 			// special button...
+// 			// NOTE: placeholders for disabled or not activated buttons 
+// 			//		will get removed.
+// 			// NOTE: if button is enabled but no placeholder is preset
+// 			//		it will be appended to the button list.
+// 			//
+// 			// up...
+// 			'UP',
+// 			// down...
+// 			'DOWN',
+// 			// move to top...
+// 			'TO_TOP',
+// 			// move to bottom...
+// 			'TO_BOTTOM'
+// 			// remove item...
+// 			'REMOVE'
+//
+// 			// see: itemButtons doc in browse.js for more info...
+// 			..
+// 		],
 //
 // 		...
 // 	}
@@ -467,10 +504,86 @@ function(list, options){
 
 	dialog.__list = lst
 
-	// add the 'x' button if not disabled...
 	var buttons = options.buttons = (options.buttons || []).slice()
+	var _buttons = {}
+
+	// XXX add top/bottom/up/down buttons...
+	// XXX add placeholders ($REMOVE, $UP, $DOWN, ...) in user buttons 
+	// 		to reorder these...
+	if(!options.sort){
+		var move = function(p, offset){
+			var l = dialog.__list
+			var i = l.indexOf(p)
+
+			// not in list...
+			if(i < 0
+					// first element...
+					|| (i == 0 && offset < 0) 
+					// last element...
+					|| (i >= l.length-1 && offset > 0)){
+				return false
+			}
+
+			var j = i + offset
+			j = j < 0 ? 0
+				: j >= l.length ? l.length-1
+				: j
+
+			// update list...
+			l.splice(j, 0, l.splice(i, 1)[0])
+
+			// XXX ???
+			return j - i
+		}
+
+		// up/down...
+		options.item_order_buttons
+			&& (_buttons['UP'] = [options.shift_up_button || '&#9206;',
+				function(p, e){
+					move(p, -1)
+						&& e.prev().before(e) }])
+			&& (_buttons['DOWN'] = [options.shift_down_button || '&#9207;',
+				function(p, e){
+					move(p, 1)
+						&& e.next().after(e) }])
+
+		// top...
+		options.to_top_button
+			&& (_buttons['TO_TOP'] = [options.to_top_button === true ?
+					'&#10514;'
+					: options.to_top_button,
+				function(p, e){
+					var d = move(p, -dialog.__list.length)
+					d && e.prevAll().eq(Math.abs(d+1)).before(e)
+				}])
+
+		// bottom...
+		options.to_bottom_button
+			&& (_buttons['TO_BOTTOM'] = [options.to_bottom_button === true ? 
+					'&#10515;' 
+					: options.to_bottom_button,
+				function(p, e){
+					var d = move(p, dialog.__list.length)
+					d && e.nextAll().eq(Math.abs(d)).before(e)
+				}])
+
+	}
+
+	// add the 'x' button if not disabled...
 	!options.no_delete_button
-		&& buttons.push(Buttons.markForRemoval(to_remove))
+		&& (_buttons['REMOVE'] = Buttons.markForRemoval(to_remove))
+
+	// add the buttons...
+	Object.keys(_buttons).forEach(function(key){
+		var i = buttons.indexOf(key)
+		i < 0 ?
+			buttons.push(_buttons[key])
+			: buttons.splice(i, 1, _buttons[key])
+	})
+	// clear out the unused button placeholders...
+	buttons = buttons
+		.filter(function(b){ 
+			return ['UP', 'DOWN', 'TO_TOP', 'TO_BOTTOM', 'REMOVE'].indexOf(b) < 0 })
 
 
 	// make the list...
@@ -488,74 +601,75 @@ function(list, options){
 	res = res.toArray()
 	
 	// new button...
-	var new_button = options.new_button || true
-	new_button = new_button === true ? 'New...' : new_button
-	res.push(make.Editable(
-		new_button, 
-		{
-			action: true, 
-			clear_on_edit: true,
-		})
-		// update list on edit done...
-		.on('edit-commit', function(evt, txt){
-			txt = options.normalize ? 
-				options.normalize(txt) 
-				: txt
+	if(options.new_item !== false){
+		var new_item = options.new_item || true
+		new_item = new_item === true ? 'New...' : new_item
+		res.push(make.Editable(
+			new_item, 
+			{
+				action: true, 
+				clear_on_edit: true,
+			})
+			// update list on edit done...
+			.on('edit-commit', function(evt, txt){
+				txt = options.normalize ? 
+					options.normalize(txt) 
+					: txt
 
-			// invalid format...
-			if(options.check && !options.check(txt)){
+				// invalid format...
+				if(options.check && !options.check(txt)){
+					dialog.update()
+					return
+				}
+
+				lst = dialog.__list
+
+				// list length limit
+				if(options.length_limit 
+					&& (lst.length >= options.length_limit)){
+
+					options.overflow 
+						&& options.overflow.call(dialog, txt)
+
+					return
+				}
+
+				// prevent editing non-arrays...
+				if(!editable || !lst){
+					return
+				}
+
+				// add new value and sort list...
+				lst.push(txt)
+
+				// unique...
+				if(options.unique == null || options.unique === true){
+					lst = lst.unique()
+
+				// unique normalized...
+				} else if(options.unique instanceof Function){
+					lst = lst.unique(options.unique) 
+				}
+
+				// sort...
+				if(options.sort){
+					lst = lst
+						.sort(options.sort instanceof Function ? 
+							options.sort 
+							: undefined)
+				}
+
+				lst = write(list, lst)
+
+				dialog.__list = lst
+
+				// update list and select new value...
 				dialog.update()
-				return
-			}
-
-			lst = dialog.__list
-
-			// list length limit
-			if(options.length_limit 
-				&& (lst.length >= options.length_limit)){
-
-				options.overflow 
-					&& options.overflow.call(dialog, txt)
-
-				return
-			}
-
-			// prevent editing non-arrays...
-			if(!editable || !lst){
-				return
-			}
-
-			// add new value and sort list...
-			lst.push(txt)
-
-			// unique...
-			if(options.unique == null || options.unique === true){
-				lst = lst.unique()
-
-			// unique normalized...
-			} else if(options.unique instanceof Function){
-				lst = lst.unique(options.unique) 
-			}
-
-			// sort...
-			if(options.sort){
-				lst = lst
-					.sort(options.sort instanceof Function ? 
-						options.sort 
-						: undefined)
-			}
-
-			lst = write(list, lst)
-
-			dialog.__list = lst
-
-			// update list and select new value...
-			dialog.update()
-				.done(function(){
-					dialog.select('"'+txt+'"')
-				})
-		}))
-
+					.done(function(){
+						dialog.select('"'+txt+'"')
+					})
+			}))
+	}
 
 	// dialog handlers...
 	// NOTE: we bind these only once per dialog...
