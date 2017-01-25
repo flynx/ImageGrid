@@ -974,7 +974,7 @@ var KeyboardUIActions = actions.Actions({
 
 							// controls...
 							if(options.mode_actions){
-								var elem = make('new', {
+								var elem = make('New:', {
 										buttons: options.mode_actions,
 									})
 									.attr('mode', mode)
@@ -1006,8 +1006,9 @@ var KeyboardUIActions = actions.Actions({
 
 			return dialog
 		})],
-	// XXX do we need a binding to add new keys to current mode from the 
+	// XXX do we need a bindings to add new keys to current mode from the 
 	// 		keyboard???
+	// XXX focus updated/new items to editable field... 
 	editKeyboardBindings: ['Interface/Keyboard bindings editor...',
 		core.doc`Similar to .browseKeyboardBindings(..) but adds editing functionality...
 		
@@ -1067,38 +1068,24 @@ var KeyboardUIActions = actions.Actions({
 									sortModes(cur.parent())
 								}
 							}],
+						// XXX make this work on click...
+						// XXX focus resulting mode...
 						['&ctdot;', function(_, cur){
 							that.editKeyboardMode(cur.attr('mode'))
 								.close(function(){ dialog.update() }) }],
 					],
 					mode_actions: [
+						// XXX focus resulting key...
 						['key', function(_, cur){
-							//elem.before( XXX )
 							that.editKeyBinding(cur.attr('mode'))
 								.close(function(){ dialog.update() }) }],
 						// XXX place element...
+						// XXX focus resulting mode...
 						['mode', function(_, cur){
-							//elem.after( XXX )
 							// XXX need to pass order info...
 							that.editKeyboardMode()
 								.close(function(){ dialog.update() }) }],
 					],
-
-					/*/ XXX do we need this???
-					// keys...
-					key_buttons: [
-						['&ctdot;', function(_, cur){
-							that.editKeyBinding(cur.attr('mode'), cur.attr('code'))
-								.close(function(){ dialog.update() }) }],
-					],
-
-					// dropped key list...
-					drop_buttons: [
-						['&ctdot;', function(_, cur){
-							that.editKeyboardModeDroppedKeys(cur.attr('mode'))
-								.close(function(){ dialog.update() }) }],
-					],
-					//*/
 				})
 				// XXX should this be only a button thing (done in .browseKeyboardBindings(..))
 				// 		or also the main action???
@@ -1187,12 +1174,20 @@ var KeyboardUIActions = actions.Actions({
 
 					make('---')
 
-					make.EditableList(keys)
+					make.EditableList(keys, {
+						unique: true,
+
+						normalize: keyboard.normalizeKey,
+						check: keyboard.isKey,
+					})
 
 					make('---')
 					
 					make.ConfirmAction('Delete', {
-						callback: function(){ dialog.close() }, 
+						callback: function(){
+							keys = []
+							dialog.close() 
+						}, 
 						timeout: that.config['ui-confirm-timeout'] || 2000,
 						buttons: [
 							['Cancel edit', function(){ 
@@ -1285,15 +1280,16 @@ var KeyboardUIActions = actions.Actions({
 						return
 					}
 
-					that.keybindings[orig_mode].doc = doc
-					that.keybindings[orig_mode].pattern = pattern
+					var data = that.keybindings[orig_mode] || {}
+
+					data.doc = doc
+					data.pattern = pattern
 
 					// update mode name if it changed... 
 					if(mode != orig_mode){
 						var order = Object.keys(that.keybindings)
 						order[order.indexOf(orig_mode)] = mode
 
-						var data = that.keybindings[orig_mode]
 						delete that.keybindings[orig_mode]
 						that.keybindings[mode] = data
 
@@ -1303,9 +1299,6 @@ var KeyboardUIActions = actions.Actions({
 
 			return dialog
 		})],
-	// XXX revise:
-	// 		- '*' toggle
-	// 		- done/cancel
 	editKeyboardModeDroppedKeys: ['- Interface/Dropped keys...',
 		widgets.makeUIDialog(function(mode){
 			var that = this

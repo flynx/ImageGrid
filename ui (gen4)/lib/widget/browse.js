@@ -382,7 +382,7 @@ function(data, options){
 // 	.EditableList(<func>, <options>)
 // 		-> <items>
 //
-// This will edit the passed list in-place.
+// This will edit the input list in-place but only when closing the dialog.
 //
 //
 // options format:
@@ -552,7 +552,7 @@ function(list, options){
 			// update list...
 			l.splice(j, 0, l.splice(i, 1)[0])
 
-			// XXX ???
+			// return the shift distance... 
 			return j - i
 		}
 
