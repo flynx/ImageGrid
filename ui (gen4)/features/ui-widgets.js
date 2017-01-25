@@ -605,6 +605,7 @@ var DialogsActions = actions.Actions({
 					.append($('<div>')
 						.text('Features: ' + that.getHandlerSourceTags(action).join(', ')))
 					.append($('<hr>'))
+					// parse the action doc...
 					.append($('<pre>')
 						.html((doc[action][1] || '')
 							// html stuff...
@@ -625,7 +626,11 @@ var DialogsActions = actions.Actions({
 
 							// action links...
 							.replace(/(\s)(\.([\w_]+[\w\d_]*)\([^)]*\))/g, 
-								'$1<a href="#" onclick="ig.showDoc(\'$3\')">$2</a>')
+								function(match, a, b, c){
+									return c == action ?
+										`${a}<i>${b}</i>`
+										: `${a}<a href="#" onclick="ig.showDoc(\'${c}\')">${b}</a>`
+								})
 					)))
 			})
 
