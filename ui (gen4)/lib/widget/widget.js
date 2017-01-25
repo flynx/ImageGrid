@@ -63,6 +63,8 @@ var WidgetPrototype = {
 
 	options: {
 		nonPropagatedEvents: [
+			'start',
+
 			'click',
 			'keydown',
 
@@ -88,6 +90,12 @@ var WidgetPrototype = {
 
 	// custom events...
 	//
+	start: function(handler){
+		handler ?
+			this.on('start', handler)
+			:this.trigger('start')
+		return this
+	}, 
 	// NOTE: this can be passed a string that can be used as a reason 
 	// 		for closing... 
 	close: function(a){

@@ -2389,7 +2389,9 @@ var FileSystemWriterUIActions = actions.Actions({
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-preview-name-patterns',
-						'export-preview-name-pattern'))
+						'export-preview-name-pattern', {
+							length_limit: 10,
+						}))
 		},
 		'level_dir': function(actions, make, parent){
 			return make(['Level directory: ', 
@@ -2398,7 +2400,9 @@ var FileSystemWriterUIActions = actions.Actions({
 				.on('open', 
 					widgets.makeNestedConfigListEditor(actions, parent,
 						'export-level-directory-names', 
-						'export-level-directory-name'))
+						'export-level-directory-name', {
+							length_limit: 10,
+						}))
 		},
 		'size': function(actions, make, parent){
 			return make(['Image size: ', 
@@ -2410,6 +2414,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						'export-preview-sizes',
 						'export-preview-size',
 						{
+							length_limit: 10,
 							sort: function(a, b){ return parseInt(a) - parseInt(b) },
 						}))
 
@@ -2430,6 +2435,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						'export-preview-size-limits',
 						'export-preview-size-limit',
 						{
+							length_limit: 10,
 							sort: function(a, b){ return parseInt(a) - parseInt(b) },
 						}))
 		},
@@ -2458,6 +2464,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						'export-paths',
 						'export-path',
 						{
+							length_limit: 10,
 							new_item: false,
 						})],
 				]})
@@ -2473,13 +2480,13 @@ var FileSystemWriterUIActions = actions.Actions({
 								'Esc',
 							],
 						})
-						.on('edit-done', function(_, path){
+						.on('edit-commit', function(_, path){
 							actions.config['export-path'] = path
 							actions.config['export-paths'].indexOf(path) < 0
 								&& actions.config['export-paths'].splice(0, 0, path)
 
 						})
-						.on('edit-aborted edit-done', function(evt, path){
+						.on('edit-abort edit-commit', function(evt, path){
 							parent.update()
 								.then(function(){
 									parent.select(path)
@@ -2504,10 +2511,10 @@ var FileSystemWriterUIActions = actions.Actions({
 								'Esc',
 							],
 						})
-						.on('edit-done', function(_, text){
+						.on('edit-commit', function(_, text){
 							actions.setSaveComment(text)
 						})
-						.on('edit-aborted edit-done', function(evt, text){
+						.on('edit-abort edit-commit', function(evt, text){
 							parent.update()
 								.then(function(){
 									parent.select(text)
@@ -2538,6 +2545,7 @@ var FileSystemWriterUIActions = actions.Actions({
 							'export-dialog-modes',
 							'export-dialog-mode',
 							{
+								length_limit: 10,
 								new_item: false,
 								itemButtons: [],
 							}))

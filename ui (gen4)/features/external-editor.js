@@ -228,6 +228,7 @@ var ExternalEditorUIActions = actions.Actions({
 							},
 							{
 								new_item: false,
+								length_limit: 10,
 								itemButtons: [],
 							}))
 

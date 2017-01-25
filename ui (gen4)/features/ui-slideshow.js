@@ -45,49 +45,42 @@ var SlideshowActions = actions.Actions({
 		],
 	},
 
-	// XXX use widgets.makeNestedConfigListEditor(...)???
 	slideshowIntervalDialog: ['Slideshow/Slideshow interval...',
-		// XXX using both widgets.makeUIDialog(..) and widgets.makeConfigListEditor(..)
-		// 		is a bit too complicated...
-		widgets.makeUIDialog(function(){
+		widgets.makeUIDialog(function(parent){
 			var that = this
-
-			// suspend the timer if it's not suspended outside...
-			var suspended_timer = this.__slideshouw_timer == 'suspended'
-			suspended_timer || this.suspendSlideshowTimer()
-
-			var button_text = 'New...'
-			var o = widgets.makeConfigListEditor(that, 'slideshow-intervals', {
-					path: that.config['slideshow-interval'],
-					new_item: button_text,
+			var dialog = widgets.makeConfigListEditor(
+				that, 
+				'slideshow-intervals',
+				'slideshow-interval', 
+				{
 					length_limit: that.config['slideshow-interval-max-count'],
 					check: Date.str2ms,
 					unique: Date.str2ms,
 					sort: function(a, b){
 						return Date.str2ms(a) - Date.str2ms(b) },
-					// NOTE: this is called when adding a new value and 
-					// 		list maximum length is reached...
-					overflow: function(value){
-						that.config['slideshow-interval'] = value
-						o.close()
-					},
-					itemopen: function(value){
-						that.config['slideshow-interval'] = value
-						o.close()
-					},
+				})
+				.on('start', function(){
+					// suspend the timer if it's not suspended outside...
+					this.__slideshouw_timer == 'suspended'
+						|| this.suspendSlideshowTimer()
 				})
 				.on('close', function(){
 					// reset the timer if it was not suspended outside...
-					suspended_timer || that.resetSlideshowTimer()
-				})
+					this.__slideshouw_timer == 'suspended'
+						|| that.resetSlideshowTimer()
 
-			return o
+					if(parent){
+						var txt = parent.select('!').find('.text').first().text()
+
+						parent.update()
+							.then(function(){ 
+								txt != ''
+									&& parent.select(txt)
+							})
+					}
+				})
+			return dialog
 		})],
-	// XXX BUG: there are still problems with focus...
-	// 		to reproduce:
-	// 			click on the first option with a mouse...
-	// 		result:
-	// 			the top dialog is not focused...
 	slideshowDialog: ['Slideshow/Slideshow...',
 		widgets.makeUIDialog(function(){
 			var that = this
@@ -112,29 +105,7 @@ var SlideshowActions = actions.Actions({
 					make(['Interval: ', 
 							function(){ return that.config['slideshow-interval'] }])
 						.on('open', function(){
-							var txt = $(this).find('.text').first().text()
-
-							var oo = that.slideshowIntervalDialog()
-								.on('close', function(){
-									// slideshow is running -- close directly...
-									if(that.toggleSlideshow('?') == 'on'){
-										o.close()
-
-									} else {
-										o.update()
-											.then(function(){
-												o.select(txt)
-											})
-									}
-								})
-								// update slideshow menu...
-								.open(function(){
-									o.update()
-										.then(function(){
-											o.select(txt)
-										})
-								})
-						})
+							that.slideshowIntervalDialog(make.dialog) })
 
 					make(['Direction: ', 
 							function(){ return that.config['slideshow-direction'] }])
@@ -150,14 +121,15 @@ var SlideshowActions = actions.Actions({
 							that.toggleSlideshow()
 							o.close()
 						})
-						.addClass('selected')
 				},
 				{
+					path: that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start',
 					cls: 'metadata-view tail-action',
 				})
 				.on('close', function(){
 					// reset the timer if it was not suspended outside...
-					suspended_timer || that.resetSlideshowTimer()
+					suspended_timer 
+						|| that.resetSlideshowTimer()
 				})
 
 			return o

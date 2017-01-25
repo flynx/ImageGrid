@@ -155,8 +155,8 @@ function(list, elem, callback, options){
 				blur_on_abort: false,
 				blur_on_commit: false,
 			})
-		.on('edit-done', callback || function(){})
-		.on('edit-aborted edit-done', function(_, text){
+		.on('edit-commit', callback || function(){})
+		.on('edit-abort edit-commit', function(_, text){
 			list.update()
 				// XXX make the selector more accurate...
 				// 		...at this point this will select the first elem
@@ -169,37 +169,87 @@ function(list, elem, callback, options){
 
 //---------------------------------------------------------------------
 
+// Edit list in .config...
+//
+// This will update value_path in .config with the opened item value.
+// 
 var makeConfigListEditor = 
 module.makeConfigListEditor =
-function(actions, path, options){
+function(actions, path, value_path, options){
 	path = path.split('.')
 	var key = path.pop()
 
-	return browse.makeListEditor(function(lst){
+	options = options ? Object.create(options) : {}
+
+	var stateValue = function(value){
+		var path = value_path instanceof Function ?
+			value_path(value)
+			: value_path.split('.')
+
+		var key = path.pop()
+
 		var target = actions.config
 		path.forEach(function(p){
 			target = target[p] = target[p] || {}
 		})
 
-		// get...
-		if(lst === undefined){
-			return target[key]
+		if(value){
+			target[key] = value
 
-		// set...
 		} else {
-			target[key] = lst
+			return target[key]
 		}
-	}, options)
+	}
+	var save = function(value){
+		stateValue(value)
+		dialog.close()
+	}
+
+	if(value_path 
+			&& (options.overflow == null 
+				|| options.overflow == 'save')){
+		options.overflow = save
+	}
+
+	// set the path...
+	if(value_path && !options.path){
+		options.path = stateValue()
+	}
+
+	var dialog = browse.makeListEditor(function(lst){
+			var target = actions.config
+			path.forEach(function(p){
+				target = target[p] = target[p] || {}
+			})
+
+			// get...
+			if(lst === undefined){
+				return target[key]
+
+			// set...
+			} else {
+				target[key] = lst
+			}
+		}, options)
+
+
+	value_path
+		&& dialog.open(function(){
+			save(dialog.selected)
+		})
+
+	return dialog
 }
 
 
-// XXX do we actually need this???
-// 		...this essentially adds:
-// 		- callbacks to parent to update
-// 		- some defaults...
-// XXX should this be more generic...
-// XXX currently using this also requires the use of makeUIDialog(..),
-// 		can this be simpler???
+// Wrapper around makeListEditor(..) enabling it to be used as an event
+// item handler...
+//
+// For example this returns a function directly usable as list item event
+// handler...
+//
+// NOTE: this will select the element in the parent dialog via it's first 
+// 		.text element...
 var makeNestedConfigListEditor = 
 module.makeNestedConfigListEditor =
 function(actions, list, list_key, value_key, options){
@@ -209,41 +259,29 @@ function(actions, list, list_key, value_key, options){
 		var txt = $(this).find('.text').first().text()
 
 		var dfl_options = {
-			new_item: 'New...',
-			length_limit: 10,
+			path: value_key instanceof Function ?
+				value_key()
+				: actions.config[value_key],
 			// NOTE: this is called when adding a new value and 
 			// 		list maximum length is reached...
-			callback: function(value){
-				if(value_key instanceof Function){
-					value_key(value)
-				} else {
-					actions.config[value_key] = value
-				}
-
-				// XXX revise...
-				o.close()
-			},
+			overflow: 'save', 
 		}
 		options.__proto__ = dfl_options
 
-		var o = makeConfigListEditor(actions, list_key, options)
-
-		// update menu...
-		o.open(function(){
-			list.update()
-			list.select(txt)
-		})
-		// select default...
-		o.on('update', function(){
-			if(value_key instanceof Function){
-				o.select(value_key())
-
-			} else {
-				o.select(actions.config[value_key])
-			}
-		})
+		var o = makeConfigListEditor(actions, list_key, value_key, options)
+			// update parent menu...
+			.open(function(){
+				list 
+					&& list.update()
+						.then(function(){ 
+							txt != ''
+								&& list.select(txt) 
+						})
+			})
 
 		actions.Overlay(o)
+
+		return o
 	}
 }
 
