@@ -309,9 +309,11 @@ function(text, options){
 // 		// if true, disabled items will not get created...
 // 		skipDisabledItems: false,
 //
+// 		// see: make(..) for additional option info.
 // 		...
 // 	}
 //
+// XXX should this 
 Items.List =
 function(data, options){
 	var make = this
@@ -361,34 +363,53 @@ function(data, options){
 
 // Make editable list of elements...
 //
+// This is like .List(..) but adds functionality to add, remove and 
+// manually sort list items.
+// 
+// 	Show list items...
+// 	.EditableList([ <item>, .. ])
+// 	.EditableList([ <item>, .. ], <options>)
+// 		-> <items>
+//
+// 	Show object keys...
+// 	NOTE: editing buttons are disabled.
+// 	.EditableList({ <item>: <value>, .. })
+// 	.EditableList({ <item>: <value>, .. }, <options>)
+// 		-> <items>
+//
+// 	Show list provided via getter/setter function items...
+// 	.EditableList(<func>)
+// 	.EditableList(<func>, <options>)
+// 		-> <items>
+//
 // This will edit the passed list in-place.
+//
 //
 // options format:
 // 	{
+// 		// If true (default), display the "new..." item, if string set 
+// 		// it as item text...
 // 		new_item: <text>|<bool>,
-//
-// 		// if true, disable delete item button...
-// 		no_delete_button: <bool>,
 //
 // 		length_limit: <number>,
 //
-//		// called when an item is opend...
+//		// Called when an item is opend...
 //		//
 //		// NOTE: this is simpler that binding to the global open event 
 //		//		and filtering through the results...
 //		itemopen: function(value){ ... },
 //
-// 		// check input value...
+// 		// Check input value...
 // 		check: function(value){ ... },
 //
-// 		// normalize new input value...
+// 		// Normalize new input value...
 // 		//
 // 		// NOTE: this will replace the input with normalized value.
 // 		normalize: function(value){ ... },
 //
-// 		// if true only unique values will be stored...
+// 		// If true only unique values will be stored...
 // 		//
-// 		// if a function this will be used to normalize the values before
+// 		// If a function this will be used to normalize the values before
 // 		// uniqueness check is performed...
 // 		//
 // 		// NOTE: this (if a function) is different from normalize above 
@@ -396,51 +417,55 @@ function(data, options){
 // 		//		just use it for uniqueness testing...
 // 		unique: <bool> | function(value){ ... },
 //
-// 		// if true sort values...
-// 		// if function will be used as cmp for sorting...
+// 		// If true sort values...
+// 		// If function will be used as cmp for sorting...
 // 		sort: <bool> || function(a, b){ ... },
 //
-// 		// this is called when a new value is added via new_item but 
+// 		// This is called when a new value is added via new_item but 
 // 		// list length limit is reached...
 // 		overflow: function(selected){ ... },
 //
-//		// special buttons...
+//		// Special buttons...
 //		//
 //		// NOTE: these can be used only if .sort if not set.
 //		//
 //		// Item order editing (up/down) 
 //		item_order_buttons: false,
-//		// Up button html...
+//		// Up button html... (default: '&#9206;')
 //		shift_up_button: <html> | null,
-//		// Down button html...
+//		// Down button html... (default: '&#9207;')
 //		shift_down_button: <html> | null,
 //
-//		// move to top/bottom buttons, if not false the button is enabled, 
+//		// Move to top/bottom buttons, if not false the button is enabled, 
 //		// if not bool the value is set as button html.
+//		// Defaults when enabled: '&#10514;' and '&#10515;' respectively.
 //		to_top_button: false | true | <html>,
 //		to_bottom_button: false | true | <html>,
 //
-// 		// item buttons...
+// 		// Delete item button...
+// 		delete_button: true | false | <html>,
+//
+// 		// Item buttons...
 // 		buttons: [
-// 			// placeholders that if given will be replace with the corresponding
+// 			// Placeholders that if given will be replace with the corresponding
 // 			// special button...
 // 			// NOTE: placeholders for disabled or not activated buttons 
 // 			//		will get removed.
 // 			// NOTE: if button is enabled but no placeholder is preset
 // 			//		it will be appended to the button list.
 // 			//
-// 			// up...
+// 			// Up...
 // 			'UP',
-// 			// down...
+// 			// Down...
 // 			'DOWN',
-// 			// move to top...
+// 			// Move to top...
 // 			'TO_TOP',
-// 			// move to bottom...
+// 			// Move to bottom...
 // 			'TO_BOTTOM'
-// 			// remove item...
+// 			// Remove item...
 // 			'REMOVE'
 //
-// 			// see: itemButtons doc in browse.js for more info...
+// 			// See: itemButtons doc in browse.js for more info...
 // 			..
 // 		],
 //
@@ -455,15 +480,12 @@ function(data, options){
 // 					- indicator that the dialog handlers are set up
 //
 //
-// NOTE: this will return a list of elements with the new button...
-// NOTE: this will push a remove button to the end of the button list,
-// 		this can be disabled by setting .no_delete_button to false in 
-// 		options...
+// NOTE: this uses .List(..) internally, see it's doc for additional 
+// 		info.
 // NOTE: this is not designed to be used multiple times in one dialog, 
 // 		if multiple lists need to be edited use multiple (nested) 
 // 		dialogs (one per list)...
 //
-// XXX add sort buttons: up/down/top/bottom...
 Items.EditableList =
 function(list, options){
 	var make = this
@@ -507,10 +529,8 @@ function(list, options){
 	var buttons = options.buttons = (options.buttons || []).slice()
 	var _buttons = {}
 
-	// XXX add top/bottom/up/down buttons...
-	// XXX add placeholders ($REMOVE, $UP, $DOWN, ...) in user buttons 
-	// 		to reorder these...
-	if(!options.sort){
+	// manual sorting buttons...
+	if(editable && !options.sort){
 		var move = function(p, offset){
 			var l = dialog.__list
 			var i = l.indexOf(p)
@@ -569,9 +589,14 @@ function(list, options){
 
 	}
 
-	// add the 'x' button if not disabled...
-	!options.no_delete_button
-		&& (_buttons['REMOVE'] = Buttons.markForRemoval(to_remove))
+	// 'x' button if not disabled...
+	editable 
+		&& options.delete_button !== false
+		&& (_buttons['REMOVE'] = Buttons.markForRemoval(
+				to_remove, 
+				options.delete_button !== true ? 
+					options.delete_button 
+					: undefined))
 
 	// add the buttons...
 	Object.keys(_buttons).forEach(function(key){
