@@ -587,6 +587,7 @@ var DialogsActions = actions.Actions({
 	// XXX STUB...
 	showDoc: ['Help/Action help...',
 		makeUIDialog(function(actions){
+			var that = this
 			actions = actions || this.actions
 			actions = actions instanceof Array ? actions : [actions]
 
@@ -601,6 +602,8 @@ var DialogsActions = actions.Actions({
 						.text(doc[action][2]))
 					.append($('<i>')
 						.text(doc[action][0]))
+					.append($('<div>')
+						.text('Features: ' + that.getHandlerSourceTags(action).join(', ')))
 					.append($('<hr>'))
 					.append($('<pre>')
 						.html((doc[action][1] || '')
