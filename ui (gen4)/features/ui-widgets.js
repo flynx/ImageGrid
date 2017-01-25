@@ -1179,7 +1179,6 @@ var BrowseActionsActions = actions.Actions({
 			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
 			dialog.keyboard.handler('General', '?', 'showDoc')
 
-
 			return dialog
 		})],
 

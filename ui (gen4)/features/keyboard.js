@@ -994,6 +994,7 @@ var KeyboardUIActions = actions.Actions({
 									.attr({
 										'mode': mode,
 										'code': action,
+										'action': o.action,
 										'doc': doc.trim() != '' ? 
 											doc 
 											: (kb.special_handlers[action] 
@@ -1071,6 +1072,16 @@ var KeyboardUIActions = actions.Actions({
 						options.cls,
 					].join(' '),
 				})
+
+			// handle '?' button to browse path...
+			dialog.showDoc = function(){
+				var action = dialog.select('!').attr('action')
+				action 
+					&& that.showDoc(action)
+			}
+			// clone the bindings so as not to mess up the global browser...
+			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
+			dialog.keyboard.handler('General', '?', 'showDoc')
 
 			return dialog
 		})],
@@ -1203,6 +1214,20 @@ var KeyboardUIActions = actions.Actions({
 						&& dialog.select(to_select)
 					to_select = null
 				})
+
+			dialog.newKey = function(){
+				that.editKeyBinding(this.select('!').attr('mode')
+					|| Object.keys(that.keybindings)[0]) }
+			dialog.newMode = function(){ 
+				that.editKeyboardMode() }
+
+			// clone the bindings so as not to mess up the global browser...
+			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
+			dialog.keyboard
+				.handler('General', 'N', 'newKey')
+				.handler('General', 'K', 'newKey')
+				.handler('General', 'M', 'newMode')
+
 			return dialog
 		})],
 	// XXX add action completion... (???)
@@ -1254,6 +1279,11 @@ var KeyboardUIActions = actions.Actions({
 											elem.find('.text').last().text(action)
 											dialog.close()
 										},
+									})
+									
+									dialog.dom.attr({
+										'dialog-title': 'Action picker...',
+										'keep-dialog-title': true,
 									})
 								}],
 							],
@@ -1315,6 +1345,14 @@ var KeyboardUIActions = actions.Actions({
 					callback 
 						&& callback.call(that, code)
 				})
+
+			dialog.abort = function(){
+				abort = true
+				this.close()
+			}
+			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
+			dialog.keyboard
+				.handler('General', 'Q', 'abort')
 
 			return dialog
 		})],
@@ -1392,6 +1430,14 @@ var KeyboardUIActions = actions.Actions({
 						&& callback.call(that, mode)
 				})
 
+			dialog.abort = function(){
+				abort = true
+				this.close()
+			}
+			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
+			dialog.keyboard
+				.handler('General', 'Q', 'abort')
+
 			return dialog
 		})],
 	editKeyboardModeDroppedKeys: ['- Interface/Dropped keys...',
@@ -1400,7 +1446,7 @@ var KeyboardUIActions = actions.Actions({
 			var abort = false
 			var drop = (that.keybindings[mode].drop || []).slice()
 
-			return browse.makeLister(null, 
+			var dialog = browse.makeLister(null, 
 				function(path, make){
 					var drop_all 
 
@@ -1446,6 +1492,16 @@ var KeyboardUIActions = actions.Actions({
 						that.keybindings[mode].drop = drop
 					}
 				})
+
+			dialog.abort = function(){
+				abort = true
+				this.close()
+			}
+			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
+			dialog.keyboard
+				.handler('General', 'Q', 'abort')
+
+			return dialog
 		})],
 
 
