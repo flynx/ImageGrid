@@ -623,13 +623,12 @@ var DialogsActions = actions.Actions({
 							// notes...
 							.replace(/NOTE:/g, '<b>NOTE:</b>')
 							.replace(/XXX/g, '<span class="warning">XXX</span>')
-
 							// action links...
 							.replace(/(\s)(\.([\w_]+[\w\d_]*)\([^)]*\))/g, 
 								function(match, a, b, c){
 									return c == action ?
 										`${a}<i>${b}</i>`
-										: `${a}<a href="#" onclick="ig.showDoc(\'${c}\')">${b}</a>`
+										: `${a}<a href="#" onclick="ig.showDoc('${c}')">${b}</a>`
 								})
 					)))
 			})
