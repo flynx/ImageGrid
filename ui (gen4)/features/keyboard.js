@@ -1077,6 +1077,7 @@ var KeyboardUIActions = actions.Actions({
 			dialog.showDoc = function(){
 				var action = dialog.select('!').attr('action')
 				action 
+					&& action in that 
 					&& that.showDoc(action)
 			}
 			// clone the bindings so as not to mess up the global browser...
