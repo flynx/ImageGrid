@@ -826,9 +826,6 @@ var KeyboardUIActions = actions.Actions({
 		//'ui-confirm-timeout': 2000,
 	},
 
-	// XXX BUG sections with doc do not show up in title...
-	// XXX BUG: for some reason modes are not clickable and not selected
-	// 		via .select(..) with pattern...
 	// XXX sub-group by path (???)
 	browseKeyboardBindings: ['Help/Keyboard bindings...',
 		core.doc`Keyboard bindings viewer...
@@ -922,25 +919,18 @@ var KeyboardUIActions = actions.Actions({
 							var dropped = keybindings[mode].drop || []
 							var bound_ignored = []
 
+							var attrs = {mode: mode}
+							keybindings[mode].doc
+								&& (attrs['doc'] = keybindings[mode].doc)
+
 							// section heading (mode)...
-							make(keybindings[mode].doc ? 
-									$('<span>')
-										// NOTE: at this time adding a br
-										// 		is faster and simpler than
-										// 		doing this in CSS...
-										// XXX revise...
-										.html(mode + '<br>')
-										.append($('<span>')
-											.addClass('doc')
-											.html(keybindings[mode].doc))
-									: mode, 
-									{ 
-										not_filtered_out: true,
-										// XXX should sections be searchable???
-										not_searchable: true,
-										buttons: options.mode_buttons,
-									})
-								.attr('mode', mode)
+							make(mode, { 
+									not_filtered_out: true,
+									// XXX should sections be searchable???
+									//not_searchable: true,
+									buttons: options.mode_buttons,
+								})
+								.attr(attrs)
 								.addClass('mode')
 
 							// bindings...
@@ -1086,7 +1076,7 @@ var KeyboardUIActions = actions.Actions({
 		})],
 	// XXX do we need a bindings to add new keys to current mode from the 
 	// 		keyboard???
-	// XXX focus updated/new items to editable field... 
+	// XXX focus updated/new items to editable field + make it more reliable... 
 	editKeyboardBindings: ['Interface/Keyboard bindings editor...',
 		core.doc`Similar to .browseKeyboardBindings(..) but adds editing functionality...
 		
@@ -1215,7 +1205,7 @@ var KeyboardUIActions = actions.Actions({
 				})
 			return dialog
 		})],
-	// XXX add action completion...
+	// XXX add action completion... (???)
 	editKeyBinding: ['- Interface/Key mapping...',
 		widgets.makeUIDialog(function(mode, code, callback){
 			var that = this

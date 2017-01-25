@@ -335,15 +335,18 @@ body {
 .browse-widget.key-bindings .list>.mode span:first-child {
 	margin-left: -0.5em;
 }
-.browse-widget.key-bindings .list>.mode .doc {
-	margin-left: 1em;
+/* doc */
+.not-traversable.not-filtered-out.mode[doc]:after {
+	display: block;
+	content: attr(doc);
 
-	color: white;
-	font-weight: normal;
+	whitespace: pre;
 	font-size: small;
 	font-style: italic;
 
-	opacity: 0.8;
+	margin-top: 2em;
+
+	opacity: 0.5;
 }
 .browse-widget.key-bindings .list>.mode.selected {
 	color: white;

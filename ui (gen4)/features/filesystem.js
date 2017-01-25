@@ -668,7 +668,8 @@ var FileSystemLoaderActions = actions.Actions({
 				})
 		}],
 
-	//	
+	// Load images to new ribbon...
+	//
 	//	.loadImagesAsRibbon(path[, logger])
 	//		-> promise
 	//
@@ -676,11 +677,12 @@ var FileSystemLoaderActions = actions.Actions({
 	//	.loadImagesAsRibbon(path, 'below'[, logger])
 	//		-> promise
 	//
-	// NOTE: this does not touch .location
+	// NOTE: this will clear .location
 	//
 	// XXX EXPERIMENTAL...
 	// XXX should this be usable only in crops???
 	// 		....also would be a good idea to add things like .removeRibbon(..)...
+	// XXX should this be a crop???
 	loadImagesAsRibbon: ['- File/Load images into ribbon',
 		function(path, direction, logger){
 			var that = this
