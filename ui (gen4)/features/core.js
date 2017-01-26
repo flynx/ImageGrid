@@ -14,10 +14,10 @@
 *
 *
 * Features:
+* 	- introspection
 * 	- lifecycle
 * 		base life-cycle events (start/stop/..)
 * 	- util
-* 	- introspection
 * 	- journal
 * 		action journaling and undo/redo functionality
 * 		XXX needs revision...
@@ -400,7 +400,7 @@ var LifeCycleActions = actions.Actions({
 			// System ready event...
 			//
 			// Not intended for direct use, use .declareReady() to initiate.
-			this.logger && this.logger.emit('start')
+			this.logger && this.logger.emit('ready')
 		})],
 	// NOTE: this calls .ready() once per session.
 	declareReady: ['- System/Declare system ready', 
@@ -418,8 +418,6 @@ var LifeCycleActions = actions.Actions({
 		function(){
 			return this.__ready_announce_requested = (this.__ready_announce_requested || 0) + 1
 		}],
-
-	// unbind events...
 	stop: ['- System/', 
 		function(){
 			// browser & nw...

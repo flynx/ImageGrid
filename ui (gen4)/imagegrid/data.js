@@ -2306,18 +2306,29 @@ var DataPrototype = {
 	// NOTE: this will not crop the .order...
 	crop: function(list, flatten){
 		var crop = this.clone()
-		list = crop.makeSparseImages(list)
+		list = list == null || list == '*' ? 
+			'*' 
+			: crop.makeSparseImages(list)
 
 		if(!flatten){
+			if(list == '*'){
+				return crop 
+			}
 			// place images in ribbons...
 			for(var k in crop.ribbons){
-				crop.ribbons[k] = crop.makeSparseImages(crop.ribbons[k].filter(function(_, i){
-					return list[i] != null
-				}))
+				crop.ribbons[k] = crop.makeSparseImages(
+						crop.ribbons[k]
+							.filter(function(_, i){ return list[i] != null }))
 			}
 
 		// flatten the crop...
 		} else {
+			list = list == '*' ? 
+				crop.makeSparseImages(
+					crop.ribbon_order
+						.map(function(r){ return crop.ribbons[r] })
+						.reduce(function(a, b){ return a.concat(b) }, []))
+				: list
 			crop.ribbons = {}
 			crop.ribbon_order = []
 			crop.ribbons[crop.newRibbon()] = list

@@ -1040,7 +1040,7 @@ module.CropActions = actions.Actions({
 	// XXX not sure if we actually need this...
 	cropFlatten: ['Crop/Flatten',
 		function(list){ this.data.length > 0 && this.crop(list, true) }],
-	cropRibbon: ['Crop/Crop current ribbon',
+	cropRibbon: ['Crop/Crop ribbon',
 		function(ribbon, flatten){
 			if(this.data.length == 0){
 				return
@@ -1052,7 +1052,38 @@ module.CropActions = actions.Actions({
 			ribbon = ribbon || 'current'
 			this.crop(this.data.getImages(ribbon), flatten)
 		}],
-	cropRibbonAndAbove: ['Crop/Crop out ribbons bellow',
+	cropOutRibbon: ['Crop/Crop ribbon out',
+		function(ribbon, flatten){
+			ribbon = ribbon || this.current_ribbon
+			ribbon = ribbon instanceof Array ? ribbon : [ribbon]
+
+			// build the crop...
+			var crop = this.data.crop()
+
+			// ribbon order...
+			crop.ribbon_order = crop.ribbon_order
+				.filter(function(r){ return ribbon.indexOf(r) })
+
+			// ribbons...
+			ribbon.forEach(function(r){ delete crop.ribbons[r] })
+
+			// focus image...
+			var cr = this.current_ribbon
+			if(ribbon.indexOf(cr) >= 0){
+				var i = this.data.getRibbonOrder(cr)
+				var r = this.data.ribbon_order
+					.slice(i+1)
+					.concat(this.data.ribbon_order.slice(0, i))
+					.filter(function(r){ return crop.ribbons[r] && crop.ribbons[r].len > 0 })
+					.shift()
+				crop.focusImage(
+					crop.getImage(this.current, 'after', r)
+						|| crop.getImage(this.current, 'before', r))
+			}
+
+			this.crop(crop, flatten)
+		}],
+	cropOutRibbonsBelow: ['Crop/Crop out ribbons bellow',
 		function(ribbon, flatten){
 			if(this.data.length == 0){
 				return

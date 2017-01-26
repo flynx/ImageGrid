@@ -331,7 +331,8 @@ module.GLOBAL_KEYBOARD = {
 
 		// cropping...
 		F2: 'cropRibbon',
-		shift_F2: 'cropRibbonAndAbove',
+		D: 'cropOutRibbon',
+		shift_F2: 'cropOutRibbonsBelow',
 		ctrl_F2: 'cropMarked',
 		alt_F2: 'cropBookmarked',
 		C: 'browseActions: "/Crop/" -- Crop menu...',
