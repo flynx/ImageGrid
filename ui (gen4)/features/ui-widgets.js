@@ -386,8 +386,14 @@ module.makeUIDialog = function(a, b){
 			args.shift()
 			: (dfl || this.config['ui-default-container'] || 'Overlay')
 
+		var dialog = make.apply(this, args)
+
+		if(!dialog){
+			return dialog
+		}
+
 		return this[container].apply(this, 
-				[make.apply(this, args)].concat(cargs))
+				[dialog].concat(cargs))
 			.client
 	})
 }

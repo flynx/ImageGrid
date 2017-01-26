@@ -443,7 +443,7 @@ var KeyboardActions = actions.Actions({
 		return kb },
 
 	testKeyboardDoc: ['- Interface/',
-		core.doc`Self-test action...`,
+		core.doc`Self-test action keyboard configuration.`,
 		{self_test: true},
 		function(){
 			var that = this
@@ -485,6 +485,7 @@ var KeyboardActions = actions.Actions({
 	// Key bindings ---------------------------------------------------
 	// XXX need a clean deep copy to restore...
 	resetKeyBindings: ['Interface/Restore default key bindings',
+		core.doc`Restore default keyboard bindings`,
 		function(){ 
 			thiis.__keyboard_config = GLOBAL_KEYBOARD }],
 	keyHandler: ['- Interface/Get or set key handler',
@@ -677,6 +678,7 @@ var KeyboardActions = actions.Actions({
 			return handler(key, no_match)
 		}],
 	toggleKeyboardHandling: ['- Interface/Keyboard handling',
+		core.doc`Toggle keyboard handling on/off`,
 		toggler.Toggler(null, function(_, state){ 
 			var that = this
 
@@ -829,6 +831,10 @@ var KeyboardUIActions = actions.Actions({
 	// XXX sub-group by path (???)
 	browseKeyboardBindings: ['Help/Keyboard bindings...',
 		core.doc`Keyboard bindings viewer...
+
+
+		This adds several keyboard bindings to the dialog:
+			?		- show current action doc, if available.
 	
 		options format:
 			{
@@ -1086,13 +1092,19 @@ var KeyboardUIActions = actions.Actions({
 
 			return dialog
 		})],
-	// XXX do we need a bindings to add new keys to current mode from the 
-	// 		keyboard???
-	// XXX focus updated/new items to editable field + make it more reliable... 
 	editKeyboardBindings: ['Interface/Keyboard bindings editor...',
-		core.doc`Similar to .browseKeyboardBindings(..) but adds editing functionality...
+		core.doc`Keyboard bindings editor...
 		
-		For more details see: .browseKeyboardBindings(..)`,
+		This is similar to .browseKeyboardBindings(..) but adds editing
+		functionality...
+
+		This adds several keyboard bindings to the dialog:
+			N / K	- add new key binding to current mode.
+			M		- add new mode.
+		
+		NOTE: current mode is the one where focus/selection is, if no 
+			item is selected first mode is assumed.
+		NOTE: for more details see: .browseKeyboardBindings(..)`,
 		widgets.uiDialog(function(path){ 
 			var that = this
 			var to_select
@@ -1233,6 +1245,15 @@ var KeyboardUIActions = actions.Actions({
 		})],
 	// XXX add action completion... (???)
 	editKeyBinding: ['- Interface/Key mapping...',
+		core.doc`Key mapping editor...
+
+		Changes made in the editor are applied only when the dialog is 
+		closed, so it is possible to cancel any edit within the dialog
+		by either pressing Q or the "Cancel edits" button.
+		
+		This adds several keyboard bindings to the dialog:
+			Q		- quit without saving changes.
+		`,
 		widgets.makeUIDialog(function(mode, code, callback){
 			var that = this
 			var abort = false
@@ -1358,13 +1379,34 @@ var KeyboardUIActions = actions.Actions({
 			return dialog
 		})],
 	editKeyboardMode: ['- Interface/Mode...',
+		core.doc`Mode editor...
+
+			Create new mode...
+			.editKeyboardMode()
+				-> dialog
+
+			Edit/create mode by <name>...
+			.editKeyboardMode(<name>)
+				-> dialog
+
+
+		Changes made in the editor are applied only when the dialog is 
+		closed, so it is possible to cancel any edit within the dialog
+		by either pressing Q or the "Cancel edits" button.
+		
+		This adds several keyboard bindings to the dialog:
+			Q		- quit without saving changes.
+
+
+		NOTE: empty mode name will not get saved.
+		`,
 		widgets.makeUIDialog(function(mode, callback){
 			var that = this
 			var abort = false
 			var doc = (that.keybindings[mode] || {}).doc
 			var pattern = (that.keybindings[mode] || {}).pattern || mode
 
-			var orig_mode = mode
+			var orig_mode = mode in that.keybindings ? mode : null
 
 			var dialog = browse.makeLister(null, 
 				function(path, make){
@@ -1377,10 +1419,10 @@ var KeyboardUIActions = actions.Actions({
 
 					make.Editable(['Mode:', mode || ''], cfg)
 						.on('edit-commit', 
-							function(evt, text){ mode = text })
+							function(evt, text){ mode = text.trim() })
 					make.Editable(['Doc:', doc || ''], cfg)
 						.on('edit-commit', 
-							function(evt, text){ doc = text })
+							function(evt, text){ doc = text.trim() })
 					make.Editable(['Pattern:', pattern], cfg)
 						.on('edit-commit', 
 							function(evt, text){ pattern = text })
@@ -1417,11 +1459,14 @@ var KeyboardUIActions = actions.Actions({
 					data.pattern = pattern
 
 					// update mode name if it changed... 
-					if(mode != orig_mode){
+					if(mode != orig_mode && mode != ''){
 						var order = Object.keys(that.keybindings)
-						order[order.indexOf(orig_mode)] = mode
 
-						delete that.keybindings[orig_mode]
+						if(orig_mode){
+							order[order.indexOf(orig_mode)] = mode
+							delete that.keybindings[orig_mode]
+						}
+
 						that.keybindings[mode] = data
 
 						that.keyboard.sortModes(order)
@@ -1442,9 +1487,36 @@ var KeyboardUIActions = actions.Actions({
 			return dialog
 		})],
 	editKeyboardModeDroppedKeys: ['- Interface/Dropped keys...',
+		core.doc`Edit keys dropped after a mode...
+
+			Edit the first mode...
+			.editKeyboardModeDroppedKeys()
+				-> dialog
+
+			Edit a specific mode...
+			.editKeyboardModeDroppedKeys(<mode>)
+				-> dialog
+				-> false
+				NOTE: if a mode does not exist this will not create a 
+					dialog and will return false.
+
+		Changes made in the editor are applied only when the dialog is 
+		closed, so it is possible to cancel any edit within the dialog
+		by either pressing Q or the "Cancel edits" button.
+		
+		This adds several keyboard bindings to the dialog:
+			Q		- quit without saving changes.
+		`,
 		widgets.makeUIDialog(function(mode){
 			var that = this
 			var abort = false
+
+			mode = mode || Object.keys(that.keybindings)[0]
+
+			if(!(mode in that.keybindings)){
+				return false
+			}
+
 			var drop = (that.keybindings[mode].drop || []).slice()
 
 			var dialog = browse.makeLister(null, 
