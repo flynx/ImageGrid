@@ -107,6 +107,10 @@ var AppControlActions = actions.Actions({
 				if(cfg != null && cfg.fullscreen){
 					that.toggleFullScreen('on')
 				}
+
+				// declare we are ready...
+				$(function(){ that.declareReady() })
+
 			}, this.config['window-delay-initial-display'] || 0)
 		}],
 	
@@ -198,14 +202,14 @@ module.AppControl = core.ImageGridFeatures.Feature({
 
 	// XXX show main window...
 	handlers: [
+		['start.pre',
+			function(){ 
+				// we are going to declare ready ourselves...
+				this.requestReadyAnnounce()
+			}],
 		['start',
 			function(){ 
-				// XXX this messes up ribbon scale...
-				// 		...to close/fast?
-				//this.toggleInterfaceScale('!')
-				
 				this.restoreWindowGeometry()
-
 			}],
 		[[
 			'close.pre',

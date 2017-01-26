@@ -201,152 +201,6 @@ if(typeof(process) != 'undefined'){
 
 
 /*********************************************************************/
-// System life-cycle...
-
-// XXX should this be a generic library thing???
-// XXX should his have state???
-// 		...if so, should this be a toggler???
-var LifeCycleActions = actions.Actions({
-	start: ['- System/', 
-		function(){
-			var that = this
-			this.logger && this.logger.emit('start')
-
-			// NOTE: jQuery currently provides no way to check if an event
-			// 		is bound so we'll need to keep track manually...
-			if(this.__stop_handler == null){
-				var stop = this.__stop_handler = function(){ that.stop() }
-
-			} else {
-				return
-			}
-
-			// set the runtime...
-			var runtime = this.runtime = ImageGridFeatures.runtime
-
-			// nw.js...
-			if(runtime == 'nw'){
-				// this handles both reload and close...
-				$(window).on('beforeunload', stop)
-
-				// NOTE: we are using both events as some of them do not
-				// 		get triggered in specific conditions and some do,
-				// 		for example, this gets triggered when the window's
-				// 		'X' is clicked while does not on reload...
-				this.__nw_stop_handler = function(){
-					var w = this
-					try{
-						that
-							// wait till ALL the handlers finish before 
-							// exiting...
-							.on('stop.post', function(){
-								// XXX might be broken in nw13 -- test!!!
-								//w.close(true)
-								nw.App.quit()
-							})
-							.stop()
-
-					// in case something breaks exit...
-					// XXX not sure if this is correct...
-					} catch(e){
-						console.log('ERROR:', e)
-
-						DEBUG || nw.App.quit()
-						//this.close(true)
-					}
-				}
-				nw.Window.get().on('close', this.__nw_stop_handler)
-
-			// node.js...
-			} else if(runtime == 'node'){
-				process.on('exit', stop)
-
-			// browser...
-			} else if(runtime == 'browser'){
-				$(window).on('beforeunload', stop)
-
-			// other...
-			} else {
-				// XXX
-				console.warn('Unknown runtime:', runtime)
-			}
-		}],
-	// unbind events...
-	stop: ['- System/', 
-		function(){
-			// browser & nw...
-			if(this.__stop_handler 
-					&& (this.runtime == 'browser' || this.runtime == 'nw')){
-				$(window).off('beforeunload', this.__stop_handler)
-			}
-
-			// nw...
-			if(this.__nw_stop_handler && this.runtime == 'nw'){
-				nw.Window.get().removeAllListeners('close')
-				delete this.__nw_stop_handler
-			}
-
-			// node...
-			if(this.__stop_handler && this.runtime == 'node'){
-				process.removeAllListeners('exit')
-			}
-
-			delete this.__stop_handler
-
-			this.logger && this.logger.emit('stop')
-		}],
-
-	/*
-	// XXX need a clear protocol for this...
-	// 		something like:
-	// 			- clear state
-	// 			- load state
-	reset: ['System/',
-		function(){
-		}],
-	*/
-})
-
-var LifeCycle = 
-module.LifeCycle = ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'lifecycle',
-	priority: 'high',
-
-	actions: LifeCycleActions,
-})
-
-
-//---------------------------------------------------------------------
-
-var UtilActions = actions.Actions({
-	mergeConfig: ['- System/', 
-		function(config){
-			config = config instanceof Function ? config.call(this)
-				: typeof(config) == typeof('str') ? this.config[config]
-				: config
-			var that = this
-			Object.keys(config).forEach(function(key){
-				that.config[key] = config[key]
-			})
-		}],
-})
-
-
-var Util = 
-module.Util = ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'util',
-
-	actions: UtilActions,
-})
-
-
-//---------------------------------------------------------------------
 // Introspection...
 
 // Normalize doc strings...
@@ -433,6 +287,212 @@ module.Introspection = ImageGridFeatures.Feature({
 	actions: IntrospectionActions,
 })
 
+
+
+//---------------------------------------------------------------------
+// System life-cycle...
+
+// XXX should this be a generic library thing???
+// XXX should his have state???
+// 		...if so, should this be a toggler???
+var LifeCycleActions = actions.Actions({
+	start: ['- System/', 
+		function(){
+			var that = this
+			this.logger && this.logger.emit('start')
+
+			// NOTE: jQuery currently provides no way to check if an event
+			// 		is bound so we'll need to keep track manually...
+			if(this.__stop_handler == null){
+				var stop = this.__stop_handler = function(){ that.stop() }
+
+			} else {
+				return
+			}
+
+			// set the runtime...
+			var runtime = this.runtime = ImageGridFeatures.runtime
+
+			// nw.js...
+			if(runtime == 'nw'){
+				// this handles both reload and close...
+				$(window).on('beforeunload', stop)
+
+				// NOTE: we are using both events as some of them do not
+				// 		get triggered in specific conditions and some do,
+				// 		for example, this gets triggered when the window's
+				// 		'X' is clicked while does not on reload...
+				this.__nw_stop_handler = function(){
+					var w = this
+					try{
+						that
+							// wait till ALL the handlers finish before 
+							// exiting...
+							.on('stop.post', function(){
+								// XXX might be broken in nw13 -- test!!!
+								//w.close(true)
+								nw.App.quit()
+							})
+							.stop()
+
+					// in case something breaks exit...
+					// XXX not sure if this is correct...
+					} catch(e){
+						console.log('ERROR:', e)
+
+						DEBUG || nw.App.quit()
+						//this.close(true)
+					}
+				}
+				nw.Window.get().on('close', this.__nw_stop_handler)
+
+
+			// node.js...
+			} else if(runtime == 'node'){
+				process.on('exit', stop)
+
+			// browser...
+			} else if(runtime == 'browser'){
+				$(window).on('beforeunload', stop)
+
+			// other...
+			} else {
+				// XXX
+				console.warn('Unknown runtime:', runtime)
+			}
+
+			// handler ready event...
+			// ...if no one requested to do it.
+			if(this.__ready_announce_requested == null
+					|| this.__ready_announce_requested <= 0){
+				if(runtime == 'nw'){
+					$(function(){ that.declareReady() })
+
+				} else if(runtime == 'node'){
+					this.declareReady()
+
+				} else if(runtime == 'browser'){
+					$(function(){ that.declareReady() })
+
+				} else {
+					this.declareReady()
+				}
+			}
+		}],
+
+	ready: ['- System/System ready event',
+		doc`Ready protocol event
+
+		The ready event is fired right after start is done.
+
+		Any feature can request to announce 'ready' itself when it is 
+		done by calling .requestReadyAnnounce().
+		If .requestReadyAnnounce() is called, then the caller is required
+		to also call .declareReady().
+		.ready() will actually be triggered only after when .declareReady()
+		is called the same number of times as .requestReadyAnnounce().
+
+		NOTE: at this point the system does not track the caller 
+			"honesty", so it is the caller's responsibility to follow
+			the protocol.
+		`,
+	   	notUserCallable(function(){
+			// System ready event...
+			//
+			// Not intended for direct use, use .declareReady() to initiate.
+			this.logger && this.logger.emit('start')
+		})],
+	// NOTE: this calls .ready() once per session.
+	declareReady: ['- System/Declare system ready', 
+		function(){
+			this.__ready_announce_requested
+				&& (this.__ready_announce_requested -= 1)
+
+			if(!this.__ready_announce_requested 
+					|| this.__ready_announce_requested == 0){
+				this.__ready = this.__ready || !!this.ready() 
+				delete this.__ready_announce_requested
+			}
+		}],
+	requestReadyAnnounce: ['- System/',
+		function(){
+			return this.__ready_announce_requested = (this.__ready_announce_requested || 0) + 1
+		}],
+
+	// unbind events...
+	stop: ['- System/', 
+		function(){
+			// browser & nw...
+			if(this.__stop_handler 
+					&& (this.runtime == 'browser' || this.runtime == 'nw')){
+				$(window).off('beforeunload', this.__stop_handler)
+			}
+
+			// nw...
+			if(this.__nw_stop_handler && this.runtime == 'nw'){
+				nw.Window.get().removeAllListeners('close')
+				delete this.__nw_stop_handler
+			}
+
+			// node...
+			if(this.__stop_handler && this.runtime == 'node'){
+				process.removeAllListeners('exit')
+			}
+
+			delete this.__ready
+			delete this.__stop_handler
+
+			this.logger && this.logger.emit('stop')
+		}],
+
+	/*
+	// XXX need a clear protocol for this...
+	// 		something like:
+	// 			- clear state
+	// 			- load state
+	reset: ['System/',
+		function(){
+		}],
+	*/
+})
+
+var LifeCycle = 
+module.LifeCycle = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'lifecycle',
+	priority: 'high',
+
+	actions: LifeCycleActions,
+})
+
+
+//---------------------------------------------------------------------
+
+var UtilActions = actions.Actions({
+	mergeConfig: ['- System/', 
+		function(config){
+			config = config instanceof Function ? config.call(this)
+				: typeof(config) == typeof('str') ? this.config[config]
+				: config
+			var that = this
+			Object.keys(config).forEach(function(key){
+				that.config[key] = config[key]
+			})
+		}],
+})
+
+
+var Util = 
+module.Util = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'util',
+
+	actions: UtilActions,
+})
 
 
 //---------------------------------------------------------------------

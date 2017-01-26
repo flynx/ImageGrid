@@ -331,8 +331,9 @@ module.URLHistoryLocalStorage = core.ImageGridFeatures.Feature({
 
 	// NOTE: loading is done by the .url_history prop...
 	handlers: [
-		['start',
+		['ready',
 			function(){ this.loadLastSavedBasePath() }], 
+
 		['stop.pre',
 			function(){ this.saveURLHistory() }], 
 

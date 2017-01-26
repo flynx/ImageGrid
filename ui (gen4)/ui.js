@@ -205,19 +205,21 @@ $(function(){
 	// setup the viewer...
 	ig
 		.load({ viewer: $('.viewer') })
+		.on('ready', function(){
+			// load some testing data if nothing else loaded...
+			if(!this.url_history || Object.keys(this.url_history).length == 0){
+				// NOTE: we can (and do) load this in parts...
+				this.loadDemoIndex()
+
+				// this is needed when loading legacy sources that do not have tags
+				// synced...
+				// do not do for actual data...
+				//.syncTags()
+			}
+		})
 		.start()
 
 
-	// load some testing data if nothing else loaded...
-	if(!ig.url_history || Object.keys(ig.url_history).length == 0){
-		// NOTE: we can (and do) load this in parts...
-		ig.loadDemoIndex()
-
-			// this is needed when loading legacy sources that do not have tags
-			// synced...
-			// do not do for actual data...
-			//.syncTags()
-	}
 })
 
 
