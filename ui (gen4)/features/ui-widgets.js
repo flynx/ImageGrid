@@ -1419,6 +1419,7 @@ var WidgetTestActions = actions.Actions({
 				background: 'white',
 				focusable: true,
 			})],
+	// XXX show new features...
 	testBrowse: ['Test/-99: Demo new style dialog...',
 		makeUIDialog(function(){
 			var actions = this
@@ -1509,7 +1510,48 @@ var WidgetTestActions = actions.Actions({
 				console.log('Dialog closing...')
 			})
 		})],
+	testList: ['Test/-99: Demo new style dialog...',
+		makeUIDialog(function(){
+			var actions = this
 
+			// NOTE: passing things other than strings into a list editor
+			// 		is not supported...
+			var numbers = ['1', '2', '3', '4']
+			var letters = ['a', 'b', 'c', 'd']
+
+			return browse.makeLister(null, function(path, make){
+				var that = this
+
+				make.Heading('Letters:', {
+					doc: 'List editor with all the buttons enabled...',
+				})
+				make.EditableList(numbers, { 
+					list_id: 'numbers',
+					item_order_buttons: true,
+					to_top_button: true,
+					to_bottom_button: true,
+				})
+
+				make.Heading('Numbers:')
+				make.EditableList(letters, { list_id: 'letters' })
+
+				// NOTE: the dialog's .parent is not yet set at this point...
+
+				// This will finalize the dialog...
+				//
+				// NOTE: this is not needed here as the dialog is drawn
+				// 		on sync, but for async dialogs this will align
+				// 		the selected field correctly.
+				make.done()
+			})
+			// NOTE: this is not a dialog event, it is defined by the 
+			// 		container to notify us that we are closing...
+			.on('close', function(){
+				console.log(core.doc`Lists:
+				- Numbers: ${numbers.join(', ')}
+				- Letters: ${letters.join(', ')}`)
+			})
+		})],
 
 	testProgress: ['Test/Demo progress bar...',
 		function(text){

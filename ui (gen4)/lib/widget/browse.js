@@ -97,11 +97,59 @@ Items.Separator =
 function(options){
 	return this('---', options) }
 
+// NOTE: this is the same as make('...'[, options])
+Items.Sepinner = 
+function(options){
+	return this('...', options) }
+
+// Heading...
+//
+// options format:
+// 	{
+// 		doc: <text>,
+//
+// 		...
+// 	}
+//
+Items.Heading = 
+function(text, options){
+	var attrs = (options && options.doc) ? {doc: options.doc} : {}
+	return this(text, options)
+		.attr(attrs)
+		.addClass('heading') }
+
+// Action...
+//
+// XXX should this have a callback???
 Items.Action = 
 function(text, options){
 	return this(text, options)
 		.addClass('action') }
 
+// Action requiring confirmation...
+//
+// options format:
+// 	{
+// 		// A callback to be called when action is confirmed...
+// 		callback: <function>,
+//
+// 		// Time (ms) to wait for confirm before resetting...
+// 		timeout: '2000ms',
+//
+// 		// Text to use as confirm message...
+// 		//
+// 		// Supported placeholders:
+// 		//	${text}		- item text
+// 		//	${text:l}	- item text in lowercase
+// 		//	${text:u}	- item text in uppercase
+// 		//	${text:c}	- item text capitalized
+//		//
+// 		confirm_text: 'Confirm ${text}?',
+//
+// 		...
+// 	}
+//
+// XXX doc...
 Items.ConfirmAction = 
 function(text, options){
 	options = options || {}
@@ -110,10 +158,11 @@ function(text, options){
 
 	var callback = options.callback
 	var timeout = options.timeout || 2000
-	var confirm_text = options.confirm_text ? 
-		options.confirm_text 
-		: 'Confirm '+ elem.find('.text').text().toLowerCase() +'?'
-	var text
+	var confirm_text = (options.confirm_text || 'Confirm ${text:l}?') 
+		.replace(/\$\{text\}/, text)
+		.replace(/\$\{text:l\}/, text.toLowerCase())
+		.replace(/\$\{text:u\}/, text.toUpperCase())
+		.replace(/\$\{text:c\}/, text.capitalize())
 
 	return elem 
 		.on('open', function(){
@@ -142,10 +191,13 @@ function(text, options){
 		})
 }
 
-// make items with auto selected text on select...
+// Item with auto selected text on select...
 //
 // options format:
 // 	{
+// 		// XXX make this generic, something like cls: ...
+// 		action: false,
+//
 // 		select_text: <number> | 'first' | 'last' | <selector>,
 //
 // 		...
@@ -177,7 +229,7 @@ function(text, options){
 	return elem
 }
 
-// make Editable on select element...
+// Editable item or it's part...
 //
 // options format:
 // 	{
@@ -263,12 +315,13 @@ function(text, options){
 					reset_on_commit: options.reset_on_commit,
 					reset_on_abort: options.reset_on_abort,
 				})
+				// XXX not sure about this...
+				.on('blur', function(){ dialog.select(null)	})
 
 			// deselect on abort -- if we started with a select...
-			start_on == 'select' && editable
-				.on('edit-abort', function(){
-					dialog.select(null)	
-				})
+			start_on == 'select' 
+				&& editable
+					.on('edit-abort', function(){ dialog.select(null) })
 
 			// edit event handlers...
 			options.editaborted
@@ -291,7 +344,7 @@ function(text, options){
 }
 
 
-// Make list of elements...
+// List of elements...
 //
 //
 // data format:
@@ -373,7 +426,7 @@ function(data, options){
 }
 
 
-// Make editable list of elements...
+// Editable list of elements...
 //
 // This is like .List(..) but adds functionality to add, remove and 
 // manually sort list items.
@@ -401,7 +454,8 @@ function(data, options){
 // 	{
 // 		// List identifier, used when multiple lists are drawn in one 
 // 		// dialog...
-// 		// XXX not used yet...
+// 		//
+// 		// NOTE: if multiple editable lists are drawn this is required.
 // 		list_id: <text>,
 //
 // 		// If true (default), display the "new..." item, if string set 
@@ -499,18 +553,8 @@ function(data, options){
 //
 // NOTE: this uses .List(..) internally, see it's doc for additional 
 // 		info.
-// NOTE: this is not designed to be used multiple times in one dialog, 
-// 		if multiple lists need to be edited use multiple (nested) 
-// 		dialogs (one per list)...
+// NOTE: the list must contain strings.
 //
-// XXX should this be usable more than once per dialog???
-// 		...would need to:
-// 			- identify and route actions to correct list
-// 			- optionally route actions to list combinations
-//			- identify lists (item attr -> list index)
-//			- store list data by list identifier...
-//			- take care of cases where lists are re-ordered or not 
-//				drawn in some cases -- can't simply use index as id...
 Items.EditableList =
 function(list, options){
 	var make = this
@@ -531,6 +575,7 @@ function(list, options){
 
 	dialog.__list = dialog.__list || {}
 	dialog.__to_remove = dialog.__to_remove || {}
+	dialog.__editable_list_handlers = dialog.__editable_list_handlers || {}
 
 	var id = options.list_id || 'default' 
 
@@ -643,6 +688,7 @@ function(list, options){
 
 	// make the list...
 	var res = make.List(lst, options)
+		.attr('list-id', id)
 
 	// mark items for removal -- if a list is given by user...
 	to_remove.forEach(function(e){
@@ -728,8 +774,8 @@ function(list, options){
 
 	// dialog handlers...
 	// NOTE: we bind these only once per dialog...
-	if(dialog.__editable_list_handlers == null){
-		dialog.__editable_list_handlers = true
+	if(dialog.__editable_list_handlers[id] == null){
+		dialog.__editable_list_handlers[id] = true
 		dialog
 			// update the striked-out items (to_remove)...
 			.on('update', function(){
@@ -1837,11 +1883,8 @@ var BrowserPrototype = {
 			var res = $('<div>')
 				// handle clicks ONLY when not disabled...
 				.click(function(){
-					if(!$(this).hasClass('disabled')){
-						//that.push(quoteWS($(this).find('.text').text())) 
-						that.push('"'+ $(this).find('.text').text() +'"')
-					}
-				})
+					!$(this).hasClass('disabled')
+						&& that.push($(this)) })
 				// append text elements... 
 				.append(p)
 

@@ -241,21 +241,6 @@ body {
 	display: none;
 }
 
-/* new item... */
-.browse-widget .list>.action {
-	margin-top: 0.2em;
-	border-top: solid 1px rgba(255,255,255, 0.2);
-}
-.browse-widget .list>.action .text {
-	font-style: italic;
-}
-/* do not show top border if after another action or separator... */
-.browse-widget .list>.action:first-child,
-.browse-widget .list>.action+.action,
-.browse-widget .list>.separator+.action {
-	border-top: none;
-}
-
 /* do not show top border if after another action or separator... */
 .browse-widget .list>.warn {
 	background-color: yellow !important;
@@ -327,33 +312,6 @@ body {
 	background-color: rgba(0, 0, 0, 0.1);
 }
 
-.browse-widget.key-bindings .list>.mode {
-	color: white;
-	font-weight: bold;
-	background: rgba(0, 0, 0, 0.5);
-}
-.browse-widget.key-bindings .list>.mode span:first-child {
-	margin-left: -0.5em;
-}
-/* doc */
-.not-traversable.not-filtered-out.mode[doc]:after {
-	display: block;
-	content: attr(doc);
-
-	whitespace: pre;
-	font-size: small;
-	font-style: italic;
-
-	margin-top: 2em;
-
-	opacity: 0.5;
-}
-.browse-widget.key-bindings .list>.mode.selected {
-	color: white;
-	font-weight: bold;
-	background: rgba(0, 0, 0, 0.7);
-}
-
 .browse-widget.key-bindings .list>.drop-list .text:first-child {
 	font-weight: bold;
 	font-style: italic;
@@ -407,10 +365,8 @@ body {
 .browse-widget.key-bindings .list>.new.selected {
 }
 
+
 /* dark theme... */
-.dark .browse-widget.key-bindings .list>.mode {
-	background: rgba(255, 255, 255, 0.1);
-}
 .dark .browse-widget.key-bindings .list>div:not(.selected):not(.mode):nth-child(even) {
 	background: rgba(255, 255, 255, 0.03);
 }

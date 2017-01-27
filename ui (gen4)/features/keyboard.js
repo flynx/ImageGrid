@@ -926,18 +926,16 @@ var KeyboardUIActions = actions.Actions({
 							var dropped = keybindings[mode].drop || []
 							var bound_ignored = []
 
-							var attrs = {mode: mode}
-							keybindings[mode].doc
-								&& (attrs['doc'] = keybindings[mode].doc)
 
 							// section heading (mode)...
-							make(mode, { 
+							make.Heading(mode, { 
+									doc: keybindings[mode].doc,
 									not_filtered_out: true,
 									// XXX should sections be searchable???
 									//not_searchable: true,
 									buttons: options.mode_buttons,
 								})
-								.attr(attrs)
+								.attr({ mode: mode })
 								.addClass('mode')
 
 							// bindings...
