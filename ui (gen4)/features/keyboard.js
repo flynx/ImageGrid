@@ -1233,8 +1233,6 @@ var KeyboardUIActions = actions.Actions({
 			dialog.newMode = function(){ 
 				that.editKeyboardMode() }
 
-			// clone the bindings so as not to mess up the global browser...
-			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
 			dialog.keyboard
 				.handler('General', 'N', 'newKey')
 				.handler('General', 'K', 'newKey')
@@ -1371,7 +1369,6 @@ var KeyboardUIActions = actions.Actions({
 				abort = true
 				this.close()
 			}
-			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
 			dialog.keyboard
 				.handler('General', 'Q', 'abort')
 
@@ -1479,7 +1476,6 @@ var KeyboardUIActions = actions.Actions({
 				abort = true
 				this.close()
 			}
-			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
 			dialog.keyboard
 				.handler('General', 'Q', 'abort')
 
@@ -1569,7 +1565,6 @@ var KeyboardUIActions = actions.Actions({
 				abort = true
 				this.close()
 			}
-			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
 			dialog.keyboard
 				.handler('General', 'Q', 'abort')
 

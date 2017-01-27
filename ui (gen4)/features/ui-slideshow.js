@@ -102,21 +102,21 @@ var SlideshowActions = actions.Actions({
 			}
 
 			var o = browse.makeLister(null, function(path, make){
-					make(['Interval: ', 
+					make(['$Interval: ', 
 							function(){ return that.config['slideshow-interval'] }])
 						.on('open', function(){
 							that.slideshowIntervalDialog(make.dialog) })
 
-					make(['Direction: ', 
+					make(['$Direction: ', 
 							function(){ return that.config['slideshow-direction'] }])
 						.on('open', _makeToggleHandler('toggleSlideshowDirection'))
-					make(['Looping: ', 
+					make(['$Looping: ', 
 							function(){ return that.config['slideshow-looping'] }])
 						.on('open', _makeToggleHandler('toggleSlideshowLooping'))
 
 					// Start/stop...
 					make([function(){ 
-							return that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start' }])
+							return that.toggleSlideshow('?') == 'on' ? '$Stop' : '$Start' }])
 						.on('open', function(){
 							that.toggleSlideshow()
 							o.close()

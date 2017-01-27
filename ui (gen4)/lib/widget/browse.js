@@ -880,7 +880,7 @@ var BrowserClassPrototype = {
 		}
 
 		path = path
-			// clear the '..'...
+			// clear the '..' and markers...
 			// NOTE: we reverse to avoid setting elements with negative
 			// 		indexes if we have a leading '..'
 			.reverse()
@@ -1273,15 +1273,20 @@ var BrowserPrototype = {
 	},
 
 
-	// Call the constructor's .path2list(..)..
+	// Call the constructor's .path2list(..) and clear out shortcut markers...
 	//
 	// See: BrowserClassPrototype.path2list(..) for docs...
 	path2list: function(path){ 
+		var marker = this.options.itemShortcutMarker 
+		marker = marker && RegExp(marker, 'g')
 		// if list is flat we do not need to split it, just format...
-		if(this.options.flat && path && path.constructor !== Array){
-			return path == '' || path.length == 0 ? [] : [path]
+		if(this.options.flat && path && path instanceof Array){
+			return (path == '' || path.length == 0) ? [] : [path]
 		}
-		return this.constructor.path2list.apply(this, arguments) 
+		return this.constructor
+			.path2list.apply(this, arguments) 
+			.map(function(e){ 
+				return marker ? e.replace(marker, '$1') : e })
 	},
 
 	// Trigger jQuery events on Item then bubble to Browser...
@@ -1820,9 +1825,9 @@ var BrowserPrototype = {
 				delete item_shortcuts[k]
 			}
 		})
-		var item_shortcut_marker = this.options.itemShortcutMarker || /&(\w)/
+		var item_shortcut_marker = this.options.itemShortcutMarker
 		item_shortcut_marker = item_shortcut_marker ? 
-			RegExp(item_shortcut_marker) 
+			RegExp(item_shortcut_marker, 'g') 
 			: null
 
 		// XXX revise signature... 
@@ -1850,7 +1855,10 @@ var BrowserPrototype = {
 			buttons = buttons
 				|| (that.options.itemButtons && that.options.itemButtons.slice())
 
-			// special case: shorthand...
+
+			// NOTE: this is becoming a bit big, so here the code is 
+			// 		split into more wieldable sections...
+			//------------------------ special case: shorthand item ---
 			if(p && (p in (that.options.elementShorthand || {})
 					|| (p.hasClass 
 						&& p in that.options.elementShorthand
@@ -1866,6 +1874,7 @@ var BrowserPrototype = {
 				return res
 			}
 
+			//------------------------------------------- item text ---
 			// array of str/func/dom...
 			if(p.constructor === Array){
 				// resolve handlers...
@@ -1910,7 +1919,7 @@ var BrowserPrototype = {
 						.text(p.replace(dir, ''))
 			}
 
-			// keyboard shortcuts...
+			//---------------------------------- keyboard shortcuts ---
 			if(item_shortcuts){
 				// key set in options...
 				opts.shortcut_key && !item_shortcuts[opts.shortcut_key]
@@ -1944,7 +1953,9 @@ var BrowserPrototype = {
 										+'</span>' })) })
 				}
 			}
+			//---------------------------------------------------------
 
+			// tell the lister that we have started in interactive mode...
 			interactive = true
 
 			// skip drawing of non-traversable or disabled elements if
@@ -1955,31 +1966,31 @@ var BrowserPrototype = {
 				return $()
 			}
 
-			// build list item...
+			//------------------------------------------ build item ---
 			var res = $('<div>')
 				// handle clicks ONLY when not disabled...
 				.click(function(){
 					!$(this).hasClass('disabled')
 						&& that.push($(this)) })
+				.addClass([
+					'item',
+					// XXX use the same algorithm as .select(..)
+					selection && res.text() == selection ? 'selected' : '',
+
+					!traversable ? 'not-traversable' : '',
+					disabled ? 'disabled' : '',
+					hidden ? 'hidden' : '',
+					opts.hide_on_search ? 'hide-on-search' : '',
+					(opts.hide_on_search || opts.not_searchable) ? 'not-searchable' : '',
+					opts.not_filtered_out ? 'not-filtered-out' : '',
+				].join(' '))
 				// append text elements... 
 				.append(p)
 
-			res.addClass([
-				'item',
-				// XXX use the same algorithm as .select(..)
-				selection && res.text() == selection ? 'selected' : '',
+			opts.push_on_open 
+				&& res.attr('push-on-open', 'on')
 
-				!traversable ? 'not-traversable' : '',
-				disabled ? 'disabled' : '',
-				hidden ? 'hidden' : '',
-				opts.hide_on_search ? 'hide-on-search' : '',
-				(opts.hide_on_search || opts.not_searchable) ? 'not-searchable' : '',
-				opts.not_filtered_out ? 'not-filtered-out' : '',
-			].join(' '))
-
-			opts.push_on_open && res.attr('push-on-open', 'on')
-
-			// buttons...
+			//--------------------------------------------- buttons ---
 			// button container...
 			var btn = res.find('.button-container')
 			btn = btn.length == 0 ? 
@@ -1988,7 +1999,7 @@ var BrowserPrototype = {
 					.appendTo(res)
 				: btn
 
-			// action (open)...
+			// action (open) button...
 			if(traversable && that.options.actionButton){
 				btn.append($('<div>')
 					.addClass('button')
@@ -2001,7 +2012,8 @@ var BrowserPrototype = {
 						that.action()
 					}))
 			}
-			// push...
+
+			// push button...
 			if(traversable && that.options.pushButton){
 				btn.append($('<div>')
 					.addClass('button')
@@ -2045,7 +2057,7 @@ var BrowserPrototype = {
 						}))
 				})
 
-			// place in list...
+			//--------------------------------------- place in list ---
 			// as-is...
 			if(!sort_traversable || sort_traversable == 'none'){
 				res.appendTo(l)
@@ -2062,6 +2074,7 @@ var BrowserPrototype = {
 					res.appendTo(l)
 				}
 			}
+			//---------------------------------------------------------
 
 			return res
 		}
@@ -3564,15 +3577,23 @@ PathListPrototype.options = {
 		// Supported patterns:
 		// 	A		- matches A exactly
 		// 	A|B		- matches either A or B
+		// 	shortcut marker
+		// 			- see .options.itemShortcutMarker
+		//
+		// NOTE: only the second argument is checked for '|' patterns...
 		var match = function(a, path){
+			var marker = that.options.itemShortcutMarker 
+			marker = marker && RegExp(marker, 'g')
+			path = marker ? e.replace(marker, '$1') : path
 			// NOTE: might be good to make this recursive when expanding
 			// 		pattern support...
 			return a
 					.split('|')
+					.map(function(e){ 
+						return marker ? e.replace(marker, '$1') : e })
 					.filter(function(e){ 
-						return e == path
-					}).length > 0
-		}
+						return e == path })
+					.length > 0 }
 
 		// get the '*' listers...
 		var lister = keys

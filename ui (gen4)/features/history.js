@@ -632,8 +632,6 @@ var URLHistoryUIActions = actions.Actions({
 						reason != 'reject'
 							&& o.close(reason)
 					}) }
-			// clone the bindings so as not to mess up the global browser...
-			o.keybindings = JSON.parse(JSON.stringify(o.keybindings))
 			o.keyboard.handler('General', 'O', 'browsePath')
 
 			return o

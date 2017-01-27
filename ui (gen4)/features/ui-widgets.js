@@ -721,18 +721,19 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 var BrowseActionsActions = actions.Actions({
 	config: {
 		'action-category-order': [
-			'99:File',
+			//'99:File',
+			'99:$File',
 				// NOTE: we can order any sub-tree we want in the same 
 				// 		manner as the root...
 				'File/-80:Clear viewer',
 				'File/-90:Close viewer',
 				// NOTE: non existing elements will not get drawn...
 				//'File/-99:moo',
-			'80:Edit',
-			'70:Navigate',
-			'60:Image',
-			'50:Ribbon',
-			'40:Crop',
+			'80:$Edit',
+			'70:$Navigate',
+			'60:$Image',
+			'50:$Ribbon',
+			'40:$Crop',
 				'Crop/80:Crop marked images',
 				'Crop/80:Crop bookmarked images',
 				// NOTE: we can also add separators here...
@@ -745,9 +746,9 @@ var BrowseActionsActions = actions.Actions({
 				'Crop/-82:Uncrop',
 
 			'-40:Interface',
-			'-50:Workspace',
+			'-50:$Workspace',
 			'-60:System',
-			'-70:Help',
+			'-70:$Help',
 			'-80:---',
 			'-90:Development',
 			'-90:Test',
@@ -760,6 +761,8 @@ var BrowseActionsActions = actions.Actions({
 		},
 
 		'browse-actions-keys': true,
+
+		'browse-actions-shortcut-marker': '\\$(\\w)',
 	},
 
 	// Browse actions dialog...
@@ -840,6 +843,8 @@ var BrowseActionsActions = actions.Actions({
 		makeUIDialog(function(path, options){
 			var actions = this
 			var priority = /^(-?[0-9]+)\s*:\s*/
+			var marker = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
+			marker = marker || RegExp(marker, 'g')
 			var dialog
 			options = options || {}
 
@@ -853,6 +858,8 @@ var BrowseActionsActions = actions.Actions({
 				traversable: true,
 				pathPrefix: '/',
 				fullPathEdit: true,
+
+				item_shortcut_marker: marker,
 			}
 			cfg.__proto__ = this.config['browse-actions-settings']
 
@@ -874,7 +881,10 @@ var BrowseActionsActions = actions.Actions({
 				// check if it's a priority path... 
 				} else {
 					for(var e in level){
-						if(e.replace(priority, '').trim() == text){
+						var n = e.replace(priority, '')
+						n = (marker ? n.replace(marker, '$1') : n).trim()
+
+						if(n == text){
 							return [e, level[e]]
 						}
 					}
@@ -1163,7 +1173,15 @@ var BrowseActionsActions = actions.Actions({
 							} else if(actions.config['browse-actions-settings'].showEmpty 
 									|| (cur[key] != null
 										&& Object.keys(cur[key]).length > 0)){
+								var p = '/'+ path.concat([text]).join('/') +'/'
+								p = marker ? p.replace(marker, '$1') : p
 								make(text + '/', { push_on_open: true })
+									.attr({
+										keys: [
+											getKeys('browseActions: "'+ p +'"'), 
+											getKeys('browseActions!: "'+ p +'"'), 
+										].filter(function(e){ return e.trim() != '' }).join(' / '),
+									})
 
 							// item: line...
 							} else if(text == '---'){
@@ -1190,8 +1208,6 @@ var BrowseActionsActions = actions.Actions({
 				action 
 					&& actions.showDoc(action)
 			}
-			// clone the bindings so as not to mess up the global browser...
-			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
 			dialog.keyboard.handler('General', '?', 'showDoc')
 
 			return dialog
