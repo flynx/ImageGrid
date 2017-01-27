@@ -208,6 +208,14 @@ function(text, options){
 // 		// (see: util.makeEditable(..) for more info)
 //		clear_on_edit: false,
 //
+//		// Events to stop propagating up...
+//		//
+//		// This is useful to prevent actions that start should an edit 
+//		// from triggering something else in the dialog...
+//		//
+//		// If false, nothing will get stopped...
+//		stop_propagation: 'open',
+//
 // 		// Called when editing is abrted... 
 // 		editaborted: <func>,
 //
@@ -223,6 +231,7 @@ function(text, options){
 	options = options || {}
 	var dialog = this.dialog
 	var start_on = options.start_on || 'select'
+	var stop_propagation = options.stop_propagation === false ? false : 'open'
 
 	var getEditable = function(){
 		var editable = elem.find('.text')
@@ -274,6 +283,10 @@ function(text, options){
 					options.abort_on_deselect !== false ? 'edit-abort' : 'edit-commit')
 		})
 
+	stop_propagation
+		&& elem
+			.on(stop_propagation, function(e){ e.stopPropagation() })
+
 	return elem
 }
 
@@ -313,7 +326,6 @@ function(text, options){
 // 		...
 // 	}
 //
-// XXX should this 
 Items.List =
 function(data, options){
 	var make = this
@@ -387,6 +399,11 @@ function(data, options){
 //
 // options format:
 // 	{
+// 		// List identifier, used when multiple lists are drawn in one 
+// 		// dialog...
+// 		// XXX not used yet...
+// 		list_id: <text>,
+//
 // 		// If true (default), display the "new..." item, if string set 
 // 		// it as item text...
 // 		new_item: <text>|<bool>,
@@ -486,6 +503,14 @@ function(data, options){
 // 		if multiple lists need to be edited use multiple (nested) 
 // 		dialogs (one per list)...
 //
+// XXX should this be usable more than once per dialog???
+// 		...would need to:
+// 			- identify and route actions to correct list
+// 			- optionally route actions to list combinations
+//			- identify lists (item attr -> list index)
+//			- store list data by list identifier...
+//			- take care of cases where lists are re-ordered or not 
+//				drawn in some cases -- can't simply use index as id...
 Items.EditableList =
 function(list, options){
 	var make = this
@@ -504,7 +529,12 @@ function(list, options){
 			|| lst
 	}
 
-	var to_remove = dialog.__to_remove = dialog.__to_remove || []
+	dialog.__list = dialog.__list || {}
+	dialog.__to_remove = dialog.__to_remove || {}
+
+	var id = options.list_id || 'default' 
+
+	var to_remove = dialog.__to_remove[id] = dialog.__to_remove[id] || []
 
 	// make a copy of options, to keep it safe from changes we are going
 	// to make...
@@ -524,7 +554,7 @@ function(list, options){
 	// 		or discrete and not done as they come in...
 	lst = !editable ? Object.keys(lst) : lst.slice()
 
-	dialog.__list = lst
+	dialog.__list[id] = lst
 
 	var buttons = options.buttons = (options.buttons || []).slice()
 	var _buttons = {}
@@ -532,7 +562,7 @@ function(list, options){
 	// manual sorting buttons...
 	if(editable && !options.sort){
 		var move = function(p, offset){
-			var l = dialog.__list
+			var l = dialog.__list[id]
 			var i = l.indexOf(p)
 
 			// not in list...
@@ -573,7 +603,7 @@ function(list, options){
 					'&#10514;'
 					: options.to_top_button,
 				function(p, e){
-					var d = move(p, -dialog.__list.length)
+					var d = move(p, -dialog.__list[id].length)
 					d && e.prevAll().eq(Math.abs(d+1)).before(e)
 				}])
 
@@ -583,7 +613,7 @@ function(list, options){
 					'&#10515;' 
 					: options.to_bottom_button,
 				function(p, e){
-					var d = move(p, dialog.__list.length)
+					var d = move(p, dialog.__list[id].length)
 					d && e.nextAll().eq(Math.abs(d)).before(e)
 				}])
 
@@ -647,7 +677,7 @@ function(list, options){
 					return
 				}
 
-				lst = dialog.__list
+				lst = dialog.__list[id]
 
 				// list length limit
 				if(options.length_limit 
@@ -686,7 +716,7 @@ function(list, options){
 
 				lst = write(list, lst)
 
-				dialog.__list = lst
+				dialog.__list[id] = lst
 
 				// update list and select new value...
 				dialog.update()
@@ -715,7 +745,7 @@ function(list, options){
 					return
 				}
 
-				lst = dialog.__list
+				lst = dialog.__list[id]
 
 				// remove items...
 				to_remove.forEach(function(e){

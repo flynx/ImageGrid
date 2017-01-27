@@ -959,6 +959,41 @@ module.CropActions = actions.Actions({
 	//
 	// XXX check undo... do we actually need it???
 	crop: ['Crop/Crop',
+		core.doc`Crop current state and push it to the crop stack
+
+		A crop is a copy of the data state. When a crop is made the old 
+		state is pushed to the crop stack and a new state is set in it 
+		its place.
+
+		If true (flatten) is passed as the last argument the crop will 
+		be flattened, i.e. ribbons will be merged.
+
+		This is the base crop action/event, so this should be called by
+		any action implementing a crop.
+			
+			Make a full crop...
+			.crop()
+			.crop(true)
+				-> this
+
+			Make a crop keeping only the list of images...
+			.crop(images)
+			.crop(images, true)
+				-> this
+
+			Make a crop and use the given data object...
+			NOTE: data must be an instance of data.Data
+			.crop(data)
+			.crop(data, true)
+				-> this
+
+		NOTE: this is used as a basis for all the crop operations, so 
+			there is no need to bind to anything but this to handle a 
+			crop unless specific action is required for a specific crop
+			operation.
+		NOTE: this is an in-place operation, to make a crop in a new 
+			instance use .clone().crop(..)
+		`,
 		{undo: 'uncrop'},
 		function(list, flatten){ 
 			list = list || this.data.getImages()

@@ -1090,9 +1090,12 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					delete this.__viewer_resize
 				}
 			}],
-		// force browser to redraw images after resize...
+		/*/ force browser to redraw images after resize...
+		// NOTE: this fixes a bug where images are not always updated 
+		// 		when off-screen...
 		['resizingDone',
 			function(){ this.scale = this.scale }],
+		//*/
 		// manage the .crop-mode css class...
 		['crop uncrop',
 			function(){

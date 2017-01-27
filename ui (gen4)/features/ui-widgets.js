@@ -481,7 +481,7 @@ var DialogsActions = actions.Actions({
 	// Get modal container...
 	//
 	// Protocol:
-	// 	- get the last modal widgets (CSS selector: .modal-widget)
+	// 	- get the last (top) modal widgets (CSS selector: .modal-widget)
 	// 	- return one of the following:
 	// 		.data('widget-controller')
 	// 		element
@@ -609,7 +609,9 @@ var DialogsActions = actions.Actions({
 					.append($('<i>')
 						.text(doc[action][0]))
 					.append($('<div>')
-						.text('Features: ' + that.getHandlerSourceTags(action).join(', ')))
+						.text('Features: ' 
+							+ that.getHandlerSourceTags(action)
+								.join(', ')))
 					.append($('<hr>'))
 					// parse the action doc...
 					.append($('<pre>')
