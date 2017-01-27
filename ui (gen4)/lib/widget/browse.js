@@ -1164,7 +1164,7 @@ var BrowserPrototype = {
 		// NOTE: recommended values are about the same value till the 
 		// 		first make(..) is called, but obviously this should be 
 		// 		as short as possible -- under 20-50ms.
-		holdSize: 10,
+		holdSize: 20,
 	},
 
 	// XXX TEST: this should prevent event propagation...
@@ -1972,20 +1972,23 @@ var BrowserPrototype = {
 				.click(function(){
 					!$(this).hasClass('disabled')
 						&& that.push($(this)) })
-				.addClass([
-					'item',
-					// XXX use the same algorithm as .select(..)
-					selection && res.text() == selection ? 'selected' : '',
-
-					!traversable ? 'not-traversable' : '',
-					disabled ? 'disabled' : '',
-					hidden ? 'hidden' : '',
-					opts.hide_on_search ? 'hide-on-search' : '',
-					(opts.hide_on_search || opts.not_searchable) ? 'not-searchable' : '',
-					opts.not_filtered_out ? 'not-filtered-out' : '',
-				].join(' '))
 				// append text elements... 
 				.append(p)
+
+			// NOTE: this is not done inline because we need access to 
+			// 		res below...
+			res.addClass([
+				'item',
+				// XXX use the same algorithm as .select(..)
+				selection && res.text() == selection ? 'selected' : '',
+
+				!traversable ? 'not-traversable' : '',
+				disabled ? 'disabled' : '',
+				hidden ? 'hidden' : '',
+				opts.hide_on_search ? 'hide-on-search' : '',
+				(opts.hide_on_search || opts.not_searchable) ? 'not-searchable' : '',
+				opts.not_filtered_out ? 'not-filtered-out' : '',
+			].join(' '))
 
 			opts.push_on_open 
 				&& res.attr('push-on-open', 'on')
