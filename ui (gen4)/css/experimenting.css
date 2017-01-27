@@ -164,9 +164,20 @@ body {
 }
 
 
-.browse-widget .list .keyboard-shortcut {
-	text-decoration: underline;
+.keyboard-shortcut {
+	text-decoration: none !important;
+	position: relative;
 }
+.keyboard-shortcut:after {
+	content: "";
+	position: absolute;
+	display: block;
+	width: 100%;
+	margin-top: -0.2em;
+	border-top: solid 0.1em silver;
+	opacity: 1;
+}
+
 
 
 .browse-widget.cloud-view .list .item {

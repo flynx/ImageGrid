@@ -405,7 +405,6 @@
 .browse-widget .list .item.heading.selected {
 	background: rgba(0, 0, 0, 0.7);
 }
-
 /* dark theme... */
 .dark .browse-widget .list>.heading {
 	background: rgba(255, 255, 255, 0.1);
