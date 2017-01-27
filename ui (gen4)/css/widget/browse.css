@@ -215,7 +215,7 @@
 	opacity: 0.9;
 	background-color: rgba(0, 0, 0, 0.2);
 }
-.browse-widget .list>div {
+.browse-widget .list .item {
 	padding: 5px;
 	padding-left: 15px;
 	padding-right: 15px;
@@ -233,7 +233,7 @@
 	/*white-space: nowrap;*/
 	overflow: hidden;
 }
-.browse-widget .list>div[count]:after {
+.browse-widget .list .item[count]:after {
 	display: inline-block;
 
 	content: "(" attr(count) ")";
@@ -245,39 +245,39 @@
 	opacity: 0.4;
 }
 /* highlight seach... */
-.browse-widget .list>div .text b {
+.browse-widget .list .item .text b {
 	background-color: rgba(0, 0, 255, 0.5);
 }
-.browse-widget .list>div.strike-out .text {
+.browse-widget .list .item.strike-out .text {
 	text-decoration: line-through;
 	opacity: 0.3;
 }
-.browse-widget .list>div.highlighted {
+.browse-widget .list .item.highlighted {
 	font-style: italic;
 	font-weight: bold;
 }
-.browse-widget .list>div.highlighted .text:last-child:after {
+.browse-widget .list .item.highlighted .text:last-child:after {
 	content: ' *';
 }
 .browse-widget:not(.flat) .list div:not(.not-traversable) .text:after {
 	content: "/";
 }
 
-.browse-widget .list>div.selected:focus,
-.browse-widget .list>div.selected :focus,
-.browse-widget:focus .list>div.selected,
+.browse-widget .list .item.selected:focus,
+.browse-widget .list .item.selected :focus,
+.browse-widget:focus .list .item.selected,
 .browse-widget .path>.dir:hover,
-.browse-widget .list>div:hover {
+.browse-widget .list .item:hover {
 	background: rgba(0, 0, 0, 0.05);
 
 	opacity: 0.9;
 }
-.browse-widget .list>div.selected {
+.browse-widget .list .item.selected {
 	background: rgba(0, 0, 0, 0.08);
 }
-.browse-widget .list>div.selected:focus,
-.browse-widget .list>div.selected :focus,
-.browse-widget:focus .list>div.selected {
+.browse-widget .list .item.selected:focus,
+.browse-widget .list .item.selected :focus,
+.browse-widget:focus .list .item.selected {
 	background: rgba(0, 0, 0, 0.08);
 	box-shadow: rgba(0, 0, 0, 0.2) 0.1em 0.1em 0.2em; 
 
@@ -285,16 +285,16 @@
 }
 
 /* XXX need to make the next two different...  */
-.browse-widget .list>div.filtered-out {
+.browse-widget .list .item.filtered-out {
 	opacity: 0.5;
 }
-.browse-widget:not(.show-filtered-out) .list>div.filtered-out {
+.browse-widget:not(.show-filtered-out) .list .item.filtered-out {
 	display: none;	
 }
-.browse-widget .list>div.disabled {
+.browse-widget .list .item.disabled {
 	opacity: 0.3;
 }
-.browse-widget .list>div.hidden {
+.browse-widget .list .item.hidden {
 	font-style: italic;
 }
 
@@ -306,41 +306,44 @@
 	float: left;
 	font-size: small;
 }
-.browse-widget.filtering .list>div .text:first-child:before {
+.browse-widget.filtering .list .item .text:first-child:before {
 	display: none;
 }
 
-.browse-widget .list>div .text:first-child:before {
+.browse-widget .list .item .text:first-child:before {
 	width: 12px;
 	margin-left: -15px;
 }
 
-.browse-widget:not(.no-item-numbers) .list>div:nth-of-type(1) .text:first-child:before {
+.browse-widget:not(.no-item-numbers) .list .item:nth-of-type(1) .text:first-child:before {
 	content: "1";
 }
-.browse-widget:not(.no-item-numbers) .list>div:nth-of-type(2) .text:first-child:before {
+.browse-widget:not(.no-item-numbers) .list .item:nth-of-type(2) .text:first-child:before {
 	content: "2";
 }
-.browse-widget:not(.no-item-numbers) .list>div:nth-of-type(3) .text:first-child:before {
+.browse-widget:not(.no-item-numbers) .list .item:nth-of-type(3) .text:first-child:before {
 	content: "3";
 }
-.browse-widget:not(.no-item-numbers) .list>div:nth-of-type(4) .text:first-child:before {
+.browse-widget:not(.no-item-numbers) .list .item:nth-of-type(4) .text:first-child:before {
 	content: "4";
 }
-.browse-widget:not(.no-item-numbers) .list>div:nth-of-type(5) .text:first-child:before {
+.browse-widget:not(.no-item-numbers) .list .item:nth-of-type(5) .text:first-child:before {
 	content: "5";
 }
-.browse-widget:not(.no-item-numbers) .list>div:nth-of-type(6) .text:first-child:before {
+.browse-widget:not(.no-item-numbers) .list .item:nth-of-type(6) .text:first-child:before {
 	content: "6";
 }
-.browse-widget:not(.no-item-numbers) .list>div:nth-of-type(7) .text:first-child:before {
+.browse-widget:not(.no-item-numbers) .list .item:nth-of-type(7) .text:first-child:before {
 	content: "7";
 }
-.browse-widget:not(.no-item-numbers) .list>div:nth-of-type(8) .text:first-child:before {
+.browse-widget:not(.no-item-numbers) .list .item:nth-of-type(8) .text:first-child:before {
 	content: "8";
 }
-.browse-widget:not(.no-item-numbers) .list>div:nth-of-type(9) .text:first-child:before {
+.browse-widget:not(.no-item-numbers) .list .item:nth-of-type(9) .text:first-child:before {
 	content: "9";
+}
+.browse-widget:not(.no-item-numbers) .list .item:nth-of-type(10) .text:first-child:before {
+	content: "0";
 }
 
 .browse-widget .list>hr.separator {
@@ -396,10 +399,10 @@
 
 	opacity: 0.5;
 }
-.browse-widget .list>div.heading:hover {
+.browse-widget .list .item.heading:hover {
 	background: rgba(0, 0, 0, 0.6);
 }
-.browse-widget .list>div.heading.selected {
+.browse-widget .list .item.heading.selected {
 	background: rgba(0, 0, 0, 0.7);
 }
 
@@ -410,15 +413,15 @@
 
 
 /* Show item part on hover... */
-.browse-widget .list>div .show-on-hover {
+.browse-widget .list .item .show-on-hover {
 	opacity: 0;
 }
-.browse-widget .list>div:hover .show-on-hover {
+.browse-widget .list .item:hover .show-on-hover {
 	opacity: inherit;
 }
 
 /* Show item part on select... */
-.browse-widget .list>div .show-on-select {
+.browse-widget .list .item .show-on-select {
 	opacity: 0;
 }
 .browse-widget .list>.selected .show-on-select {
@@ -430,7 +433,7 @@
 
 /****************************************************** Cloud List ***/
 
-.browse-widget.cloud-view .list>div {
+.browse-widget.cloud-view .list .item {
 	display: inline-block;
 	border-radius: 10px;
 }
@@ -439,7 +442,7 @@
 	display: block;
 }
 
-.browse-widget.cloud-view .list>div .text:first-child:before {
+.browse-widget.cloud-view .list .item .text:first-child:before {
 	content: "";
 }
 

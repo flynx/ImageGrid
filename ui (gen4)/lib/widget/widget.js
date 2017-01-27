@@ -123,6 +123,8 @@ var WidgetPrototype = {
 		parent = this.parent = $(parent || 'body')
 		options = options || {}
 
+		this.keybindings = JSON.parse(JSON.stringify(this.keybindings))
+
 		// merge options...
 		var opts = Object.create(this.options)
 		Object.keys(options).forEach(function(n){ opts[n] = options[n] })
@@ -201,8 +203,11 @@ var ContainerPrototype = {
 	// 		the client...
 	__init__: function(parent, client, options){
 		var that = this
+
 		parent = this.parent = $(parent || 'body')
 		options = options || {}
+
+		this.keybindings = JSON.parse(JSON.stringify(this.keybindings))
 
 		this.client = client
 		client.parent = this

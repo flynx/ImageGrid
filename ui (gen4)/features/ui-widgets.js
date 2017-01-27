@@ -1386,7 +1386,7 @@ module.Buttons = core.ImageGridFeatures.Feature({
 
 
 var WidgetTestActions = actions.Actions({
-	testAction: ['- Test/',
+	testAction: ['Test/Test action',
 		function(){
 			console.log('>>>', [].slice.call(arguments))
 			return function(){
@@ -1399,7 +1399,7 @@ var WidgetTestActions = actions.Actions({
 	// 	.testDrawer('Overlay', 'Header', 'paragraph')
 	// 										- show html in overlay with 
 	// 										  custom text...
-	testDrawer: ['Test/99: Drawer widget test...',
+	testDrawer: ['Test/99: D$rawer widget test...',
 		makeUIDialog('Drawer', 
 			function(h, txt){
 				return $('<div>')
@@ -1420,7 +1420,7 @@ var WidgetTestActions = actions.Actions({
 				focusable: true,
 			})],
 	// XXX show new features...
-	testBrowse: ['Test/-99: Demo new style dialog...',
+	testBrowse: ['Test/-99: Demo $new style dialog...',
 		makeUIDialog(function(){
 			var actions = this
 
@@ -1429,7 +1429,7 @@ var WidgetTestActions = actions.Actions({
 			return browse.makeLister(null, function(path, make){
 				var that = this
 
-				make('select last')
+				make('select last') 
 					.on('open', function(){
 						that.select(-1)
 					})
@@ -1437,7 +1437,10 @@ var WidgetTestActions = actions.Actions({
 				make('do nothing')
 					.addClass('selected')
 
-				make('nested dialog...')
+				make('nested dialog...',
+					{
+						shortcut_key: 'n',
+					})
 					.on('open', function(){
 						actions.testBrowse()
 					})
@@ -1445,7 +1448,7 @@ var WidgetTestActions = actions.Actions({
 				make('---')
 
 
-				make('close parent')
+				make('$close parent')
 					.on('open', function(){
 						that.parent.close()
 					})
@@ -1467,7 +1470,7 @@ var WidgetTestActions = actions.Actions({
 				console.log('Dialog closing...')
 			})
 		})],
-	testBrowseCloud: ['Test/Demo cloud dialog...',
+	testBrowseCloud: ['Test/Demo $cloud dialog...',
 		makeUIDialog(function(){
 			var actions = this
 
@@ -1510,7 +1513,7 @@ var WidgetTestActions = actions.Actions({
 				console.log('Dialog closing...')
 			})
 		})],
-	testList: ['Test/-99: Demo new style dialog...',
+	testList: ['Test/-99: Demo new style $lists in dialog...',
 		makeUIDialog(function(){
 			var actions = this
 
@@ -1553,7 +1556,7 @@ var WidgetTestActions = actions.Actions({
 			})
 		})],
 
-	testProgress: ['Test/Demo progress bar...',
+	testProgress: ['Test/Demo $progress bar...',
 		function(text){
 			var done = 0
 			var max = 10

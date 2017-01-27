@@ -851,7 +851,8 @@ var KeyboardPrototype = {
 				if(drop 
 						// explicit go to next section...
 						&& (!handler 
-							|| handler.slice(0, 4) != 'NEXT')
+							|| (typeof(handler) == typeof('str') 
+								&& handler.slice(0, 4) != 'NEXT'))
 						&& (bindings.drop == '*'
 							// XXX should this be more flexible by adding a
 							// 		specific key combo?

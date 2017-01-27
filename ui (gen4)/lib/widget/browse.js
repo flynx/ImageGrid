@@ -1049,6 +1049,22 @@ var BrowserPrototype = {
 		// 	'last'					- group traversable items at bottom
 		sortTraversable: null,
 
+		// Create item shortcuts...
+		//
+		// If false, no shortcuts will be created.
+		setItemShortcuts: true,
+
+		// Item shortcut text marker...
+		//
+		// This can be a regexp string pattern or a RegExp object. This 
+		// should contain one group containing the key. 
+		// Everything outside the last group will be cleaned out of the
+		// text...
+		//
+		// NOTE: it is best to keep this HTML compatible, this makes the
+		// 		use of chars like '&' not to be recommended...
+		itemShortcutMarker: '\\$(\\w)',
+
 		// Controls the display of the action button on each list item...
 		//
 		// Possible values:
@@ -1204,7 +1220,7 @@ var BrowserPrototype = {
 			ctrl_Left: 'update!: "/"',
 			Backspace: 'Left',
 			Right: 'right',
-			P: 'push',
+			//P: 'push',
 
 			// XXX should these also select buttons???
 			Tab: 'down!',
@@ -1221,16 +1237,16 @@ var BrowserPrototype = {
 			End: 'navigate!: "last"',
 
 			Enter: 'action',
-			O: 'action',
+			//O: 'action',
 			Esc: 'close: "reject"',
 
 			'/': 'startFilter!',
 
 			ctrl_A: 'startFullPathEdit!',
 
-			D: 'toggleDisabledDrawing',
-			H: 'toggleHiddenDrawing',
-			T: 'toggleNonTraversableDrawing',
+			ctrl_D: 'toggleDisabledDrawing',
+			ctrl_H: 'toggleHiddenDrawing',
+			ctrl_T: 'toggleNonTraversableDrawing',
 
 			// XXX should these use .select(..)???
 			// XXX should these be relative to visible area or absolute 
@@ -1245,6 +1261,14 @@ var BrowserPrototype = {
 			'#7': 'push!: "6!"',
 			'#8': 'push!: "7!"',
 			'#9': 'push!: "8!"',
+			'#0': 'push!: "9!"',
+		},
+
+		ItemShortcuts: {
+			doc: 'Item shortcuts',
+			pattern: '*',
+
+
 		},
 	},
 
@@ -1266,7 +1290,6 @@ var BrowserPrototype = {
 	// 	.source		- Browser instance that triggered the event
 	// 	.type		- event type/name
 	// 	.args		- arguments passed to trigger
-	//
 	//
 	// NOTE: event propagation for some events is disabled by binding 
 	// 		to them handlers that stop propagation in .__init__(..).
@@ -1599,6 +1622,9 @@ var BrowserPrototype = {
 	//
 	//		// element button spec...
 	//		buttons: <bottons>,
+	//
+	//		// shortcut key to open the item...
+	//		shortcut_key: <key>,
 	//	}
 	//
 	//	<buttons> format (optional):
@@ -1784,6 +1810,21 @@ var BrowserPrototype = {
 		var interactive = false
 		var size_freed = false
 
+		// clear previous shortcuts...
+		var item_shortcuts = this.options.setItemShortcuts ? 
+			(this.keybindings.ItemShortcuts = this.keybindings.ItemShortcuts || {})
+			: null
+		// clear the shortcuts...
+		Object.keys(item_shortcuts).forEach(function(k){
+			if(k != 'doc' && k != 'pattern'){
+				delete item_shortcuts[k]
+			}
+		})
+		var item_shortcut_marker = this.options.itemShortcutMarker || /&(\w)/
+		item_shortcut_marker = item_shortcut_marker ? 
+			RegExp(item_shortcut_marker) 
+			: null
+
 		// XXX revise signature... 
 		var make = function(p, traversable, disabled, buttons){
 			var opts = {}
@@ -1825,7 +1866,7 @@ var BrowserPrototype = {
 				return res
 			}
 
-			// array of str/func...
+			// array of str/func/dom...
 			if(p.constructor === Array){
 				// resolve handlers...
 				p = p.map(function(e){ 
@@ -1869,6 +1910,41 @@ var BrowserPrototype = {
 						.text(p.replace(dir, ''))
 			}
 
+			// keyboard shortcuts...
+			if(item_shortcuts){
+				// key set in options...
+				opts.shortcut_key && !item_shortcuts[opts.shortcut_key]
+					&& that.keyboard.handler(
+						'ItemShortcuts', 
+						opts.shortcut_key, 
+						function(){ that.push(res) })
+
+				// text marker...
+				if(item_shortcut_marker){
+					var _replace = function(){
+						// get the last group...
+						var key = [].slice.call(arguments).slice(-3)[0]
+						!item_shortcuts[key]
+							&& that.keyboard.handler(
+								'ItemShortcuts', 
+								key,
+								function(){ that.push(res) })
+						return key 
+					}
+
+					txt = txt.replace(item_shortcut_marker, _replace)
+
+					p.filter('.text')
+						.each(function(_, e){
+							e = $(e)
+							e.html(e.html().replace(item_shortcut_marker, 
+								function(){ 
+									return '<span class="keyboard-shortcut">'
+										+_replace.apply(this, arguments) 
+										+'</span>' })) })
+				}
+			}
+
 			interactive = true
 
 			// skip drawing of non-traversable or disabled elements if
@@ -1889,6 +1965,7 @@ var BrowserPrototype = {
 				.append(p)
 
 			res.addClass([
+				'item',
 				// XXX use the same algorithm as .select(..)
 				selection && res.text() == selection ? 'selected' : '',
 
@@ -1901,7 +1978,6 @@ var BrowserPrototype = {
 			].join(' '))
 
 			opts.push_on_open && res.attr('push-on-open', 'on')
-
 
 			// buttons...
 			// button container...
@@ -2140,7 +2216,7 @@ var BrowserPrototype = {
 		var that = this
 		var browser = this.dom
 
-		var elems = browser.find('.list>div:not(.not-searchable)' 
+		var elems = browser.find('.list .item:not(.not-searchable)' 
 			+ (this.options.elementSeparatorClass ? 
 				':not('+ this.options.elementSeparatorClass +')'
 				: '')
@@ -2498,7 +2574,7 @@ var BrowserPrototype = {
 	// NOTE: this uses .filter(..) for string and regexp matching...
 	select: function(elem, filtering){
 		var browser = this.dom
-		var pattern = '.list>div'
+		var pattern = '.list .item'
 			+ (this.options.elementSeparatorClass ? 
 				':not('+ this.options.elementSeparatorClass +')'
 				: '')
@@ -2619,7 +2695,7 @@ var BrowserPrototype = {
 	// .navigate('next') will simply navigate to the next element while
 	// .select('next') / .filter('next') will yield that element by name.
 	navigate: function(action, filtering){
-		var pattern = '.list>div'
+		var pattern = '.list .item'
 			+ (this.options.elementSeparatorClass ? 
 				':not('+ this.options.elementSeparatorClass +')'
 				: '')

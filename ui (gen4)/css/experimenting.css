@@ -164,20 +164,25 @@ body {
 }
 
 
-.browse-widget.cloud-view .list>div {
+.browse-widget .list .keyboard-shortcut {
+	text-decoration: underline;
+}
+
+
+.browse-widget.cloud-view .list .item {
 	font-size: small;
 }
 
 
 /* browse pinned items... */
-.browse-widget .list>div:not(.pinned) .pin-set {
+.browse-widget .list .item:not(.pinned) .pin-set {
 	display: none;
 }
-.browse-widget .list>div.pinned .pin-unset {
+.browse-widget .list .item.pinned .pin-unset {
 	display: none;
 }
 /*
-.browse-widget .list>div.pinned + :not(.pinned) {
+.browse-widget .list .item.pinned + :not(.pinned) {
     border-top: solid 1px rgba(255, 255, 255, 0.3);
 }
 */
@@ -189,12 +194,12 @@ body {
 
 /* Metadata viewer */
 .item-value-view .text:first-child,
-.browse-widget.metadata-view .list>div .text:first-child {
+.browse-widget.metadata-view .list .item .text:first-child {
 	width: 50%;
 	font-weight: bold;
 }
 .item-value-view .text:nth-child(2),
-.browse-widget.metadata-view .list>div .text:nth-child(2) {
+.browse-widget.metadata-view .list .item .text:nth-child(2) {
 	font-style: italic;
 
 	-moz-user-select: auto;
@@ -208,36 +213,36 @@ body {
 
 
 /* External Editor List */
-.browse-widget.editor-list .list>div:first-child .text:after {
+.browse-widget.editor-list .list .item:first-child .text:after {
 	content: "(primary)";
 	margin-left: 5px;
 	opacity: 0.5;
 	font-style: italic;
 }
 /* XXX this is ugly -- use a class... */
-.browse-widget.editor-list .list>div:first-child .button:nth-child(4) {
+.browse-widget.editor-list .list .item:first-child .button:nth-child(4) {
 	opacity: 0.1;
 }
-.browse-widget.editor-list .list>div:nth-child(2):not(:last-child) .text:after {
+.browse-widget.editor-list .list .item:nth-child(2):not(:last-child) .text:after {
 	content: "(secondary)";
 	margin-left: 5px;
 	opacity: 0.5;
 	font-style: italic;
 }
 /* XXX this is ugly -- use a class... */
-.browse-widget.editor-list .list>div:nth-child(2) .button:nth-child(3) {
+.browse-widget.editor-list .list .item:nth-child(2) .button:nth-child(3) {
 	opacity: 0.1;
 }
 
 /* slideshow interval list... */
-.browse-widget.tail-action .list>div:last-child {
+.browse-widget.tail-action .list .item:last-child {
 	margin-top: 0.2em;
 	border-top: solid 1px rgba(255,255,255, 0.2);
 }
-.browse-widget.tail-action .list>div:last-child .text {
+.browse-widget.tail-action .list .item:last-child .text {
 	font-style: italic;
 }
-.browse-widget.tail-action .list>div:last-child .button {
+.browse-widget.tail-action .list .item:last-child .button {
 	display: none;
 }
 
@@ -274,7 +279,7 @@ body {
 */
 
 /* XXX experimental key mappings... */
-.browse-widget.browse-actions.show-keys .list>div:after {
+.browse-widget.browse-actions.show-keys .list .item:after {
 	display: inline;
 	position: relative;
 	content: attr(keys);
@@ -286,14 +291,14 @@ body {
 	opacity: 0.3;
 	font-style: italic;
 }
-.browse-widget.browse-actions.show-keys .list>div.disabled:after {
+.browse-widget.browse-actions.show-keys .list .item.disabled:after {
 	opacity: 0.5;
 }
 
-.browse-widget.browse-actions.show-keys .list>div:hover:after {
+.browse-widget.browse-actions.show-keys .list .item:hover:after {
 	opacity: 0.5;
 }
-.browse-widget.browse-actions.show-keys .list>div.disabled:hover:after {
+.browse-widget.browse-actions.show-keys .list .item.disabled:hover:after {
 	opacity: 1;
 }
 
@@ -305,10 +310,10 @@ body {
 
 
 /* key binding editor... */
-.browse-widget.key-bindings .list>div:not(.selected):not(.mode):nth-child(even) {
+.browse-widget.key-bindings .list .item:not(.selected):not(.mode):nth-child(even) {
 	background: rgba(0, 0, 0, 0.03);
 }
-.browse-widget.key-bindings .list>div .button {
+.browse-widget.key-bindings .list .item .button {
 	background-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -324,7 +329,7 @@ body {
 	font-style: italic;
 }
 
-.browse-widget.key-bindings .list>div .text:not(:first-child) {
+.browse-widget.key-bindings .list .item .text:not(:first-child) {
 	display: inline;
 	position: relative;
 
@@ -336,7 +341,7 @@ body {
 	font-style: italic;
 }
 /* NOTE: the last element is a space... */
-.browse-widget.key-bindings.browse .list>div .text:last-child {
+.browse-widget.key-bindings.browse .list .item .text:last-child {
 	margin-right: 0em;
 }
 
@@ -367,7 +372,7 @@ body {
 
 
 /* dark theme... */
-.dark .browse-widget.key-bindings .list>div:not(.selected):not(.mode):nth-child(even) {
+.dark .browse-widget.key-bindings .list .item:not(.selected):not(.mode):nth-child(even) {
 	background: rgba(255, 255, 255, 0.03);
 }
 
