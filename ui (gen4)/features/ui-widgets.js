@@ -594,7 +594,7 @@ var DialogsActions = actions.Actions({
 	showDoc: ['Help/Action help...',
 		makeUIDialog(function(actions){
 			var that = this
-			actions = actions || this.actions
+			actions = actions || this.actions.sort()
 			actions = actions instanceof Array ? actions : [actions]
 
 			var doc = this.getDoc(actions)

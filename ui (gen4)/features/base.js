@@ -467,19 +467,8 @@ actions.Actions({
 	prevImage: ['Navigate/Previous image',
 		core.doc`Focus previous image
 
-			Focus previous image...
-			.prevImage()
-
-			Focus image at <offset> to the left...
-			.prevImage(<offset>)
-
-			Focus previous image in <ribbon>...
-			.prevImage(<ribbon>)
-
-			Focus previous image globally...
-			.prevImage('global')
-
 		NOTE: this also modifies .direction
+		NOTE: this is .symmetrical to .nextImage(..) see it for docs.
 		`,
 		{browseMode: 'firstImage'},
 		function(a){ 
@@ -499,7 +488,19 @@ actions.Actions({
 	nextImage: ['Navigate/Next image',
 		core.doc`Focus next image...
 
-		NOTE: this is .symmetrical to .prevImage(..) see it for docs.
+			Focus next image...
+			.nextImage()
+
+			Focus image at <offset> to the right...
+			.nextImage(<offset>)
+
+			Focus next image in <ribbon>...
+			.nextImage(<ribbon>)
+
+			Focus next image globally...
+			.nextImage('global')
+
+		NOTE: this also modifies .direction
 		`,
 		{browseMode: 'lastImage'},
 		function(a){ 
