@@ -284,7 +284,73 @@ actions.Actions({
 	// basic navigation...
 	//
 	focusImage: ['- Navigate/Focus image',
-		function(img, list){ this.data.focusImage(img, list) }],
+		core.doc`Focus image...
+
+			Focus current image...
+			.focusImage()
+			.focusImage('current')
+
+			Focus next/prev image in current ribbon...
+			.focusImage('next')
+			.focusImage('prev')
+
+			Focus next/prev image globally...
+			.focusImage('next', 'global')
+			.focusImage('prev', 'global')
+
+			Focus image...
+			.focusImage(<image>)
+
+			Focus image at <order> in current ribbon...
+			.focusImage(<image>, 'ribbon')
+
+			Focus image at <order> in specific ribbon...
+			.focusImage(<image>, <ribbon>)
+
+			Focus image globally...
+			.focusImage(<image>, 'global')
+
+			Focus image from list...
+			NOTE: this takes account of list order.
+			.focusImage(<image>, [ <gid>, .. ])
+
+
+		In the above, <image> can be:
+			<gid>		- explicit image gid
+			<order>		- image order.
+			'next'		- next image relative to current
+			'prev'		- previous image relative to current
+
+		<ribbon> can be ribbon gid.
+
+		Order can be positive, zero based and counted from the left, or
+		negative, -1-based and counted from the right, e.g. 0 is the 
+		first image and -1 is the last.
+
+		If given image is not present in the requested context (ribbon,
+		global), this will focus on the closest image that is loaded.
+
+			Examples:
+				// focus second to last image...
+				.focusImage(-2)
+
+				// focus first image globally...
+				.focusImage(0, 'global')
+
+				// focus next image...
+				.focusImage('next')
+
+				// focus next image globally, i.e. we can jump to other
+				// ribbons...
+				.focusImage('next', 'global')
+
+
+		NOTE: this is a simplified version of the doc, for more details see:
+			.data.focusImage(..) and .data.getImage(), also note that this 
+			has a slightly different signature to the above, this is done
+			for simplicity...
+		`,
+		function(img, list){ this.data.focusImage.apply(this.data, arguments) }],
 	// Focuses a ribbon by selecting an image in it...
 	//
 	// modes supported:
@@ -344,21 +410,54 @@ actions.Actions({
 	// shorthands...
 	// XXX do we reset direction on these???
 	firstImage: ['Navigate/First image in current ribbon',
+		core.doc`Focus first image
+			
+			Focus first image in current ribbon...
+			.firstImage()
+				
+			Focus first image globally...
+			.firstImage(true)
+			.firstImage('global')
+
+		Shorthand for:
+			.focusImage(0)
+			.focusImage(0, 'global')
+		`,
 		{browseMode: function(target){ 
 			return this.data.getImageOrder('ribbon', target) == 0 && 'disabled' }},
-		function(all){ this.focusImage(all == null ? 'first' : 0) }],
+		function(all){ this.focusImage(0, all == null ? 'ribbon' : 'global') }],
 	lastImage: ['Navigate/Last image in current ribbon',
+		core.doc`Focus last image...
+
+		Shorthand for:
+			.focusImage(-1)
+			.focusImage(-1, 'global')
+
+		NOTE: this is symmetrical to .firstImage(..) see docs for that.
+		`,
 		{browseMode: function(target){ 
 			return this.data.getImageOrder('ribbon', target) 
 				== this.data.getImageOrder('ribbon', -1) && 'disabled' }},
-		function(all){ this.focusImage(all == null ? 'last' : -1) }],
+		function(all){ this.focusImage(-1, all == null ? 'ribbon' : 'global') }],
 	// XXX these break if image at first/last position are not loaded (crop, group, ...)
 	// XXX do we actually need these???
 	firstGlobalImage: ['Navigate/First image globally',
+		core.doc`Get first image globally...
+
+		Shorthand for:
+			.firstImage('global')
+		`,
 		{browseMode: function(){ 
 			return this.data.getImageOrder() == 0 && 'disabled' }},
 		function(){ this.firstImage(true) }],
 	lastGlobalImage: ['Navigate/Last image globally',
+		core.doc`Get last image globally...
+
+		Shorthand for:
+			.lastImage('global')
+
+		NOTE: this symmetrical to .firstGlobalImage(..) see docs for that.
+		`,
 		{browseMode: function(){ 
 			return this.data.getImageOrder() == this.data.getImageOrder(-1) && 'disabled' }},
 		function(){ this.lastImage(true) }],
@@ -366,6 +465,22 @@ actions.Actions({
 	// XXX skip unloaded images... (groups?)
 	// XXX the next two are almost identical...
 	prevImage: ['Navigate/Previous image',
+		core.doc`Focus previous image
+
+			Focus previous image...
+			.prevImage()
+
+			Focus image at <offset> to the left...
+			.prevImage(<offset>)
+
+			Focus previous image in <ribbon>...
+			.prevImage(<ribbon>)
+
+			Focus previous image globally...
+			.prevImage('global')
+
+		NOTE: this also modifies .direction
+		`,
 		{browseMode: 'firstImage'},
 		function(a){ 
 			// keep track of traverse direction...
@@ -382,6 +497,10 @@ actions.Actions({
 			}
 		}],
 	nextImage: ['Navigate/Next image',
+		core.doc`Focus next image...
+
+		NOTE: this is .symmetrical to .prevImage(..) see it for docs.
+		`,
 		{browseMode: 'lastImage'},
 		function(a){ 
 			// keep track of traverse direction...

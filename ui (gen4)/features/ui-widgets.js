@@ -578,6 +578,7 @@ var DialogsActions = actions.Actions({
 
 	// Show doc for action...
 	//
+	// XXX STUB...
 	// XXX this needs to:
 	// 		- be a widget
 	// 		- handle focus
@@ -590,7 +591,6 @@ var DialogsActions = actions.Actions({
 	// XXX should we have navigation???
 	// 		...i.e. opening links is done in the viewer and we have 
 	// 		ability to go back and forth...
-	// XXX STUB...
 	showDoc: ['Help/Action help...',
 		makeUIDialog(function(actions){
 			var that = this
