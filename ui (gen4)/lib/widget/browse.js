@@ -1675,6 +1675,9 @@ var BrowserPrototype = {
 	// 		sub-paths
 	// 		...this will also need to indicate a way to split the path 
 	// 		and when to 'pop' the sub browser...
+	// XXX should we use the button tag for item buttons???
+	// 		...tried it, seems that with buttons we get some css overridden
+	// 		by Chrome, needs more work than just replacing a tag...
 	update: function(path, list){
 		path = path || this.path
 		var browser = this.dom
@@ -1684,6 +1687,7 @@ var BrowserPrototype = {
 
 		var deferred = $.Deferred()
 
+		//-------------------------- prepare the path and selection ---
 		// string path and terminated with '/' -- no selection...
 		if(typeof(path) == typeof('str') && !/[\\\/]/.test(path.trim().slice(-1))){
 			path = this.path2list(path)
@@ -1701,6 +1705,7 @@ var BrowserPrototype = {
 			var selection = null
 		}
 
+		//-------------------------------------- prepare for update ---
 		// prevent the browser from collapsing and then growing on 
 		// slow-ish loads...
 		if(this.options.holdSize){
@@ -1726,6 +1731,7 @@ var BrowserPrototype = {
 		var p = browser.find('.path').empty()
 		var l = browser.find('.list').empty()
 
+		//---------------------------------------------- setup path ---
 		// set the path prefix...
 		p
 			.attr('prefix', this.options.pathPrefix)
@@ -1808,6 +1814,7 @@ var BrowserPrototype = {
 			p.scrollLeft(0)
 		}
 
+		//---------------------------------------------------- make ---
 		var sort_traversable = this.options.sortTraversable
 		var section_tail
 		// fill the children list...
@@ -1815,6 +1822,7 @@ var BrowserPrototype = {
 		var interactive = false
 		var size_freed = false
 
+		//---------------------- prepare for new keyboard shortcuts ---
 		// clear previous shortcuts...
 		var item_shortcuts = this.options.setItemShortcuts ? 
 			(this.keybindings.ItemShortcuts = this.keybindings.ItemShortcuts || {})
@@ -1830,6 +1838,7 @@ var BrowserPrototype = {
 			RegExp(item_shortcut_marker, 'g') 
 			: null
 
+		//--------------------------------------------- define make ---
 		// XXX revise signature... 
 		var make = function(p, traversable, disabled, buttons){
 			var opts = {}
@@ -2025,7 +2034,6 @@ var BrowserPrototype = {
 						: that.options.pushButton)
 					.click(function(evt){
 						evt.stopPropagation()
-						//that.push('"'+ txt +'"')
 						that.push(res)
 					}))
 			}
@@ -2041,7 +2049,6 @@ var BrowserPrototype = {
 					var html = e[0]
 					var func = e[1]
 
-					//res.append($('<div>')
 					btn.append($('<div>')
 						.addClass('button')
 						.html(html)
@@ -2083,16 +2090,14 @@ var BrowserPrototype = {
 		}
 
 		make.__proto__ = Items
-
 		// align the dialog...
 		make.done = function(){
 			var s = l.find('.selected')			
 			s.length > 0 && that.select(s)
 		}
-
 		make.dialog = this
 
-		// build the list...
+		//------------------------------------------ build the list ---
 		var res = list.call(this, path, make)
 
 		// second API: make is not called and .list(..) returns an Array
@@ -2101,6 +2106,7 @@ var BrowserPrototype = {
 			res.forEach(make)
 		} 
 
+		// -------------------------------- notify that we are done ---
 		// wait for the render...
 		if(res && res.then){
 			res.then(function(){ deferred.resolve() })
@@ -2126,6 +2132,7 @@ var BrowserPrototype = {
 					that.focus()
 				}
 			})
+		//-------------------------------------------------------------
 	},
 
 	// Filter the item list...
