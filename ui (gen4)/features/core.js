@@ -272,7 +272,10 @@ var IntrospectionActions = actions.Actions({
 
 	// check if action is callable by user...
 	isUserCallable: ['- System/',
-		doc`Test if an action is used callable.`,
+		doc`Test if an action is used callable.
+
+			.isUserCallable(<action-name>)
+		`,
 		actions.doWithRootAction(function(action){
 			return action.__not_user_callable__ != true })],
 })
@@ -292,11 +295,31 @@ module.Introspection = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // System life-cycle...
 
-// XXX should this be a generic library thing???
 // XXX should his have state???
 // 		...if so, should this be a toggler???
 var LifeCycleActions = actions.Actions({
 	start: ['- System/', 
+		doc`Start core action/event
+
+			.start()
+
+		This action triggers system start, sets up basic runtime, prepares
+		for shutdown (stop) and handles the .ready() event.
+
+		Attributes set here:
+			.runtime		- indicates the runtime ImageGrid is running.
+								this currently supports:
+									node, browser, nw, unknown
+
+		This will trigger .declareReady() if no action called 
+		.requestReadyAnnounce()
+
+		NOTE: .runtime attribute will not be available on the .pre handler
+			phase.
+		NOTE: .requestReadyAnnounce() should be called exclusively on the
+			.pre handler phase as this will check and trigger the .ready()
+			event before the .post phase starts.
+		`,
 		function(){
 			var that = this
 			this.logger && this.logger.emit('start')
@@ -381,7 +404,7 @@ var LifeCycleActions = actions.Actions({
 		}],
 
 	ready: ['- System/System ready event',
-		doc`Ready protocol event
+		doc`Ready core event
 
 		The ready event is fired right after start is done.
 
@@ -404,6 +427,17 @@ var LifeCycleActions = actions.Actions({
 		})],
 	// NOTE: this calls .ready() once per session.
 	declareReady: ['- System/Declare system ready', 
+		doc`Declare ready state
+
+			.declareReady()
+
+		This will call .ready() but only in the following conditions:
+			- .requestReadyAnnounce() has not been called.
+			- .requestReadyAnnounce() has been called the same number of
+				times as .declareReady()
+
+		NOTE: this will call .ready() only once per start/stop cycle.
+		`,
 		function(){
 			this.__ready_announce_requested
 				&& (this.__ready_announce_requested -= 1)
@@ -415,10 +449,43 @@ var LifeCycleActions = actions.Actions({
 			}
 		}],
 	requestReadyAnnounce: ['- System/',
+		doc`Request to announce the .ready() event.
+
+			.requestReadyAnnounce()
+
+		This enables a feature to delay the .ready() call until it is 
+		ready, this is useful for async or long stuff that can block
+		or slow down the .ready() phase.
+
+		To indicate readiness, .declareReady() should be used.
+
+		The system will call .ready() automatically when the last 
+		subscriber who called .requestReadyAnnounce() calls 
+		.declareReady(), i.e. .declareReady() must be called at least
+		as many times as .requestReadyAnnounce()
+
+		The actual .ready() should never get called directly.
+
+		NOTE: if this is called, .ready() will not get triggered 
+			automatically by the system.
+		`,
 		function(){
 			return this.__ready_announce_requested = (this.__ready_announce_requested || 0) + 1
 		}],
+
 	stop: ['- System/', 
+		doc`Stop core action
+
+			.stop()
+
+		This will cleanup and unbind stop events.
+
+		The goal of this is to prepare for system shutdown.
+
+		NOTE: it is good practice for the bound handlers to set the 
+			system to a state from which their corresponding start/ready
+			handlers can run cleanly.
+		`,
 		function(){
 			// browser & nw...
 			if(this.__stop_handler 
@@ -442,16 +509,6 @@ var LifeCycleActions = actions.Actions({
 
 			this.logger && this.logger.emit('stop')
 		}],
-
-	/*
-	// XXX need a clear protocol for this...
-	// 		something like:
-	// 			- clear state
-	// 			- load state
-	reset: ['System/',
-		function(){
-		}],
-	*/
 })
 
 var LifeCycle = 
@@ -470,6 +527,8 @@ module.LifeCycle = ImageGridFeatures.Feature({
 
 var UtilActions = actions.Actions({
 	mergeConfig: ['- System/', 
+		doc`Merge a config object into .config
+		`,
 		function(config){
 			config = config instanceof Function ? config.call(this)
 				: typeof(config) == typeof('str') ? this.config[config]
@@ -635,6 +694,17 @@ var JournalActions = actions.Actions({
 	// 			journal/rjournal or should we clean them out??? 
 	// 			(currently cleaned)
 	undo: ['Edit/Undo',
+		doc`Undo last action from .journal that can be undone
+
+			.undo()
+
+		This will shift the action from .journal to .rjournal preparing 
+		it for .redo()
+
+		NOTE: this will remove all the non undoable actions from the 
+			.journal up until and including the undone action.
+		NOTE: only the undone action is pushed to .rjournal
+		`,
 		{browseMode: function(){ 
 			return (this.journal && this.journal.length > 0) || 'disabled' }},
 		function(){
@@ -684,6 +754,12 @@ var JournalActions = actions.Actions({
 			}
 		}],
 	redo: ['Edit/Redo',
+		doc`Redo an action from .rjournal
+
+			.redo()
+
+		Essentially this will remove and re-run the last action in .rjournal
+		`,
 		{browseMode: function(){ 
 			return (this.rjournal && this.rjournal.length > 0) || 'disabled' }},
 		function(){
