@@ -210,6 +210,8 @@
 	padding-left: 10px;
 	padding-right: 10px;
 	box-sizing: border-box;
+
+	/*border: solid 1px rgba(255,255,255, 0.3);*/
 }
 .browse-widget .list .button:hover {
 	opacity: 0.9;

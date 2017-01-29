@@ -167,6 +167,7 @@ body {
 .keyboard-shortcut {
 	text-decoration: none !important;
 	position: relative;
+	display: inline-block;
 }
 .keyboard-shortcut:after {
 	content: "";
@@ -315,7 +316,7 @@ body {
 
 /* make buttons a bit different in action browser... */
 .browse-widget.browse-actions.show-keys .list .button {
-	background-color: rgba(0, 0, 0, 0.1);
+	background-color: rgba(0, 0, 0, 0.12);
 }
 
 
@@ -325,7 +326,7 @@ body {
 	background: rgba(0, 0, 0, 0.03);
 }
 .browse-widget.key-bindings .list .item .button {
-	background-color: rgba(0, 0, 0, 0.1);
+	background-color: rgba(0, 0, 0, 0.12);
 }
 
 .browse-widget.key-bindings .list>.drop-list .text:first-child {

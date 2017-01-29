@@ -1951,13 +1951,11 @@ var BrowserPrototype = {
 
 				// text marker...
 				if(item_shortcut_marker){
-					var did_register = false
 					var _replace = function(){
 						// get the last group...
 						var key = [].slice.call(arguments).slice(-3)[0]
 						!item_shortcuts[key]
 							// NOTE: this is a side-effect...
-							&& (did_register = true)
 							&& that.keyboard.handler(
 								'ItemShortcuts', 
 								key,
@@ -1967,14 +1965,16 @@ var BrowserPrototype = {
 
 					txt = txt.replace(item_shortcut_marker, _replace)
 
+					var registered = []
 					p.filter('.text')
 						.each(function(_, e){
 							e = $(e)
 							e.html(e.html().replace(item_shortcut_marker, 
 								function(){ 
-									did_register = false
 									var k = _replace.apply(this, arguments) 
-									return !did_register ?
+									var mark = !!(registered.indexOf(k) < 0 
+										&& registered.push(k))
+									return mark ?
 										`<span class="keyboard-shortcut">${k}</span>`
 										: k
 								}))
