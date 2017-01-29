@@ -721,7 +721,6 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 var BrowseActionsActions = actions.Actions({
 	config: {
 		'action-category-order': [
-			//'99:File',
 			'99:$File',
 				// NOTE: we can order any sub-tree we want in the same 
 				// 		manner as the root...
@@ -734,16 +733,16 @@ var BrowseActionsActions = actions.Actions({
 			'60:$Image',
 			'50:$Ribbon',
 			'40:$Crop',
-				'Crop/80:Crop marked images',
-				'Crop/80:Crop bookmarked images',
+				'Crop/80:Crop $marked images',
+				'Crop/80:Crop $bookmarked images',
 				// NOTE: we can also add separators here...
 				//'Crop/70:---',
 				'Crop/60:Crop',
-				'Crop/50:Flatten',
+				'Crop/50:$Flatten',
 				// ...
 				'Crop/-80:Uncrop and keep crop image order',
 				'Crop/-81:Uncrop all',
-				'Crop/-82:Uncrop',
+				'Crop/-82:$Uncrop',
 
 			'-40:Interface',
 			'-50:$Workspace',
