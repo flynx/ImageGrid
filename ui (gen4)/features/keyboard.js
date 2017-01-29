@@ -394,8 +394,6 @@ module.GLOBAL_KEYBOARD = {
 
 /*********************************************************************/
 // XXX add loading/storing of kb bindings...
-// XXX experimenting with new style of doc strings, usable from the 
-// 		system... (for details see: core.doc)
 
 // XXX need a clean deep copy to restore...
 var KeyboardActions = actions.Actions({
@@ -1572,7 +1570,7 @@ var KeyboardUIActions = actions.Actions({
 		})],
 
 
-	// XXX move to gen2
+	/*/ XXX move to gen2
 	// XXX need to pre-process the docs...
 	// 		- remove the path component...
 	// 		- insert the action name where not doc present...
@@ -1590,6 +1588,7 @@ var KeyboardUIActions = actions.Actions({
 				background: 'white',
 				focusable: true,
 			})],
+	//*/
 })
 
 

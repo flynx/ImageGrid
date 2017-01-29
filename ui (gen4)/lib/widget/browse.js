@@ -1237,7 +1237,9 @@ var BrowserPrototype = {
 			End: 'navigate!: "last"',
 
 			Enter: 'action',
+			Space: 'Enter',
 			//O: 'action',
+
 			Esc: 'close: "reject"',
 
 			'/': 'startFilter!',
@@ -1676,8 +1678,9 @@ var BrowserPrototype = {
 	// 		...this will also need to indicate a way to split the path 
 	// 		and when to 'pop' the sub browser...
 	// XXX should we use the button tag for item buttons???
-	// 		...tried it, seems that with buttons we get some css overridden
-	// 		by Chrome, needs more work than just replacing a tag...
+	// 		...basically for this to work we need to either reset or override
+	// 		user-agent-stylesheet...
+	// 		to override just set most of the affected options to inherit...
 	update: function(path, list){
 		path = path || this.path
 		var browser = this.dom
