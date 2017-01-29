@@ -1167,7 +1167,7 @@ var BrowserPrototype = {
 		holdSize: 20,
 	},
 
-	// XXX TEST: this should prevent event propagation...
+	// XXX need a way to access buttons...
 	// XXX should we have things like ctrl-<number> for fast selection 
 	// 		in filter mode???
 	keybindings: {
@@ -1561,9 +1561,8 @@ var BrowserPrototype = {
 	//
 	//	item format:
 	//	- str					- item text
-	//								NOTE: if text is '---' then a 
-	//									separator item is created, it is
-	//									not selectable (default: <hr>).
+	//								NOTE: see: .options.elementShorthand
+	//									for shorthands for common elements
 	//									
 	//	- [str/func, ... ]		- item elements
 	//								Each of the elements is individually
@@ -1581,6 +1580,16 @@ var BrowserPrototype = {
 	//
 	//	Both traversable and disabled are optional and can take bool 
 	//	values.
+	//
+	//	If item matches .options.itemShortcutMarker (default: /\$(\w)/)
+	//	then the char after the '$' will be used as a keyboard shortcut
+	//	for this item the char wrapped in a span (class: .keyboard-shortcut),
+	//	and the marker (in this case '$') will be cleaned out.
+	//	Also see: item.options.shortcut_key below.
+	//
+	//	NOTE: only the first occurrence of key will get registered...
+	//	NOTE: shortcuts can't override Browse shortcuts...
+	//
 	//
 	//	options format:
 	//	{
@@ -1942,10 +1951,13 @@ var BrowserPrototype = {
 
 				// text marker...
 				if(item_shortcut_marker){
+					var did_register = false
 					var _replace = function(){
 						// get the last group...
 						var key = [].slice.call(arguments).slice(-3)[0]
 						!item_shortcuts[key]
+							// NOTE: this is a side-effect...
+							&& (did_register = true)
 							&& that.keyboard.handler(
 								'ItemShortcuts', 
 								key,
@@ -1960,9 +1972,13 @@ var BrowserPrototype = {
 							e = $(e)
 							e.html(e.html().replace(item_shortcut_marker, 
 								function(){ 
-									return '<span class="keyboard-shortcut">'
-										+_replace.apply(this, arguments) 
-										+'</span>' })) })
+									did_register = false
+									var k = _replace.apply(this, arguments) 
+									return !did_register ?
+										`<span class="keyboard-shortcut">${k}</span>`
+										: k
+								}))
+						})
 				}
 			}
 			//---------------------------------------------------------

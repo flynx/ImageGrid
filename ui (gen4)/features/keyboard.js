@@ -821,6 +821,7 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX make these usable for any keyboard handler, not just the builtin...
 var KeyboardUIActions = actions.Actions({
 	config: {
 		// NOTE: this is defined in ui-dialogs feature...
@@ -828,6 +829,7 @@ var KeyboardUIActions = actions.Actions({
 	},
 
 	// XXX sub-group by path (???)
+	// XXX make this usable for other other handlers...
 	browseKeyboardBindings: ['Help/Keyboard bindings...',
 		core.doc`Keyboard bindings viewer...
 
@@ -917,7 +919,7 @@ var KeyboardUIActions = actions.Actions({
 			var dialog = browse.makeLister(null, 
 				function(path, make){
 					var keys = kb.keys('*')
-					var keybindings = that.keybindings
+					var keybindings = kb.keyboard
 
 					Object.keys(keybindings)
 						.forEach(function(mode){
@@ -1227,7 +1229,7 @@ var KeyboardUIActions = actions.Actions({
 
 			dialog.newKey = function(){
 				that.editKeyBinding(this.select('!').attr('mode')
-					|| Object.keys(that.keybindings)[0]) }
+					|| Object.keys(kb.keyboard)[0]) }
 			dialog.newMode = function(){ 
 				that.editKeyboardMode() }
 
