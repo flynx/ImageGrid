@@ -1550,7 +1550,7 @@ var WidgetTestActions = actions.Actions({
 			return browse.makeLister(null, function(path, make){
 				var that = this
 
-				make.Heading('Letters:', {
+				make.Heading('Numbers:', {
 					doc: 'List editor with all the buttons enabled...',
 				})
 				make.EditableList(numbers, { 
@@ -1560,7 +1560,7 @@ var WidgetTestActions = actions.Actions({
 					to_bottom_button: true,
 				})
 
-				make.Heading('Numbers:', {
+				make.Heading('Letters:', {
 					doc: 'Sortable list, use sort handle to the right to sort...'
 				})
 				make.EditableList(letters, { 

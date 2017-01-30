@@ -20,12 +20,6 @@ var widget = require('./widget')
 /*********************************************************************/
 // Helpers...
 
-// XXX why do we need this???
-var quoteWS = function(str){
-	return str.replace(/(\s)/g, '\\$1')
-}
-
-
 // Quote a string and convert to RegExp to match self literally.
 // XXX this depends on jli.quoteRegExp(..)
 function toRegExp(str){
@@ -91,6 +85,7 @@ function makeSimpleAction(direction){
 // NOTE: all item constructors/helpers abide by either the new-style 
 // 		make protocol, i.e. make(content[, options]) or their own...
 var Items = module.items = function(){}
+
 
 // NOTE: this is the same as make('---'[, options])
 Items.Separator = 
@@ -510,6 +505,7 @@ function(data, options){
 // 		//	false	- disable
 // 		//
 // 		// NOTE: this will force .groupList to true.
+// 		// NOTE: this depends on jquery-ui's Sortable...
 // 		sortable: false,
 //
 // 		// This is called when a new value is added via new_item but 
@@ -873,29 +869,30 @@ function(list, options){
 
 var Buttons = 
 Items.buttons =
-module.buttons = {
-	// Mark an item for removal and add it to a list of marked items...
-	//
-	markForRemoval: function(list, html){
-		return [html || '&times;', 
-			function(p, e){
-				e.toggleClass('strike-out')
+module.buttons = {}
 
-				if(list == null){
-					return
-				}
 
-				if(e.hasClass('strike-out')){
-					list.indexOf(p) < 0 
-						&& list.push(p)
+// Mark an item for removal and add it to a list of marked items...
+//
+Buttons.markForRemoval = function(list, html){
+	return [html || '&times;', 
+		function(p, e){
+			e.toggleClass('strike-out')
 
-				} else {
-					var i = list.indexOf(p)
-					i >= 0
-						&& list.splice(i, 1)
-				}
-			}]
-	},
+			if(list == null){
+				return
+			}
+
+			if(e.hasClass('strike-out')){
+				list.indexOf(p) < 0 
+					&& list.push(p)
+
+			} else {
+				var i = list.indexOf(p)
+				i >= 0
+					&& list.splice(i, 1)
+			}
+		}]
 }
 
 
@@ -1023,6 +1020,14 @@ var BrowserClassPrototype = {
 // XXX might be a good idea to add a ctrl-c/copy handler...
 // 		...copy path by default but overloadable with something like 
 // 		.getCopyValue() which would return .strPath by default...
+// XXX feels a bit over-complicated...
+// 		...might be a good idea to split this into:
+// 			- base 
+// 				- structure 
+// 				- path/traversable
+// 				- navigation (mouse/keyboard)
+// 			- search/filtering
+// 			- buttons
 var BrowserPrototype = {
 	dom: null,
 
@@ -1406,6 +1411,16 @@ var BrowserPrototype = {
 		}
 		this.options.flat = value
 	},
+	get traversable(){
+		return !this.dom.hasClass('not-traversable') && this.options.traversable },
+	set traversable(value){
+		if(value){
+			this.dom.removeClass('not-traversable')
+		} else {
+			this.dom.addClass('not-traversable')
+		}
+		this.options.traversable = value
+	},
 
 	get cloud(){
 		return this.dom.hasClass('cloud-view') || this.options.cloudView },
@@ -1416,18 +1431,6 @@ var BrowserPrototype = {
 			this.dom.removeClass('cloud-view')
 		}
 		this.options.cloudView = value
-	},
-
-	// XXX should these set both the options and dom???
-	get traversable(){
-		return !this.dom.hasClass('not-traversable') && this.options.traversable },
-	set traversable(value){
-		if(value){
-			this.dom.removeClass('not-traversable')
-		} else {
-			this.dom.addClass('not-traversable')
-		}
-		this.options.traversable = value
 	},
 
 	// Get/set the listed path...
@@ -1535,8 +1538,7 @@ var BrowserPrototype = {
 	},
 
 
-	/*
-	// Copy/Paste actions...
+	/*/ Copy/Paste actions...
 	//
 	// XXX use 'Text' for IE...
 	copy: function(){
@@ -1572,7 +1574,7 @@ var BrowserPrototype = {
 
 		return this
 	},
-	*/
+	//*/
 
 	// update (load) path...
 	// 	- build the path
@@ -1851,13 +1853,6 @@ var BrowserPrototype = {
 			.on('blur', function(){
 				that.toggleFilter('off')
 			})
-			/* XXX does the right thing (replaces the later .focus(..) 
-			 * 		and .keyup(..)) but does not work in IE...
-			.on('input', function(){
-				//that.filterList(quoteWS($(this).text()))
-				that.filterList($(this).text())
-			})
-			*/
 			// only update if text changed...
 			.focus(function(){
 				txt = $(this).text()
@@ -1881,6 +1876,7 @@ var BrowserPrototype = {
 		} else {
 			p.scrollLeft(0)
 		}
+
 
 		//---------------------------------------------------- make ---
 		var sort_traversable = this.options.sortTraversable
@@ -2171,6 +2167,7 @@ var BrowserPrototype = {
 			s.length > 0 && that.select(s)
 		}
 		make.dialog = this
+
 
 		//------------------------------------------ build the list ---
 		var res = list.call(this, path, make)
@@ -3128,8 +3125,6 @@ var BrowserPrototype = {
 
 		var path = this.path
 
-		//path.push(quoteWS(elem.find('.text').text()))
-		//path.push('"'+ elem.find('.text').text() +'"')
 		path.push(elem.find('.text').text())
 
 		var res = this.open(path)

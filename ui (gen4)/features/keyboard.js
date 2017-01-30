@@ -1277,6 +1277,7 @@ var KeyboardUIActions = actions.Actions({
 							reset_on_commit: false,
 							buttons: [
 								['&ctdot;', function(evt, elem){
+									code = code || ''
 									// highlight the current action...
 									var a = keyboard.parseActionCall(code)
 									var p = a.action in that ? 
