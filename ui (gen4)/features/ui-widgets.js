@@ -447,6 +447,7 @@ var DialogsActions = actions.Actions({
 	get uiElements(){ 
 		return this.actions.filter(this.isUIElement.bind(this)) },
 
+	// XXX this knows about action priority and shortcut marker...
 	// XXX should these be more like .getDoc(..) and support lists of actions???
 	getDocPath: ['- Interface/',
 		function(action, clean, join){
@@ -459,7 +460,9 @@ var DialogsActions = actions.Actions({
 				// remove priority...
 				.map(function(e){
 					return clean ? 
-						e.replace(/^[-+]?[0-9]+:\s*/, '') 
+						e
+							.replace(/^[-+]?[0-9]+:\s*/, '')
+							.replace(/\$(\w)/g, '$1')
 						: e })
 			return join ? path.join('/') : path
 		}],
@@ -743,7 +746,7 @@ var BrowseActionsActions = actions.Actions({
 				'Crop/-80:Uncrop and keep crop image order',
 				'Crop/-81:Uncrop all',
 				'Crop/-82:$Uncrop',
-
+			// ...
 			'-40:Interface',
 			'-50:$Workspace',
 			'-60:System',
@@ -1505,18 +1508,25 @@ var WidgetTestActions = actions.Actions({
 					+'legimus, errem constituam contentiones sed ne, '
 					+'cu has corpora definitionem.'
 
+				var res = []
 				words
 					.split(/\s+/g)
 					.unique()
 					.forEach(function(c){ 
-						make(c) 
+						var e = make(c) 
 							// toggle opacity...
 							.on('open', function(){
 								var e = $(this).find('.text')
 								e.css('opacity', 
 									e.css('opacity') == 0.3 ? '' : 0.3)
 							})
+						res.push(e[0])
 					})
+
+				$(res).parent()
+					.append($('<div>')
+						.sortable()
+						.append($(res)))
 
 				make.done()
 			}, 
@@ -1551,7 +1561,10 @@ var WidgetTestActions = actions.Actions({
 				})
 
 				make.Heading('Numbers:')
-				make.EditableList(letters, { list_id: 'letters' })
+				make.EditableList(letters, { 
+					list_id: 'letters', 
+					sortable: 'y',
+				})
 
 				// NOTE: the dialog's .parent is not yet set at this point...
 

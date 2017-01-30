@@ -193,6 +193,19 @@ body {
 .browse-widget .list .item.pinned .pin-unset {
 	display: none;
 }
+
+
+.browse-widget .list .item .sort-handle {
+	display: inline-block;
+	float: right;
+
+	padding-left: 0.2em;
+	padding-right: 0.5em;
+
+	opacity: 0.2;
+}
+
+
 /*
 .browse-widget .list .item.pinned + :not(.pinned) {
     border-top: solid 1px rgba(255, 255, 255, 0.3);

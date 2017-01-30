@@ -302,7 +302,7 @@ function(text, options){
 
 	var elem = (options.action ? this.Action : this).call(this, text, options)
 		.on(start_on, function(evt){
-			event.preventDefault()
+			event && event.preventDefault()
 
 			// edit the element...
 			var editable = getEditable()
@@ -375,6 +375,9 @@ function(text, options){
 // 		// if true, disabled items will not get created...
 // 		skipDisabledItems: false,
 //
+// 		// if true, group the items into a <span> element...
+// 		groupList: true,
+//
 // 		// see: make(..) for additional option info.
 // 		...
 // 	}
@@ -421,6 +424,12 @@ function(data, options){
 
 		res.push(elem[0])
 	})
+
+	options.groupList !== false
+		&& $(res).parent()
+			.append($('<div>')
+				.addClass('item-group')
+				.append($(res)))
 
 	return $(res)
 }
@@ -491,6 +500,17 @@ function(data, options){
 // 		// If true sort values...
 // 		// If function will be used as cmp for sorting...
 // 		sort: <bool> || function(a, b){ ... },
+//
+// 		// Make list sortable...
+// 		//
+// 		// This can be:
+// 		//	true	- enable sort (both x and y axis)
+// 		//	'y'		- sort only in y axis
+// 		//	'x'		- sort only in x axis
+// 		//	false	- disable
+// 		//
+// 		// NOTE: this will force .groupList to true.
+// 		sortable: false,
 //
 // 		// This is called when a new value is added via new_item but 
 // 		// list length limit is reached...
@@ -685,10 +705,38 @@ function(list, options){
 		.filter(function(b){ 
 			return ['UP', 'DOWN', 'TO_TOP', 'TO_BOTTOM', 'REMOVE'].indexOf(b) < 0 })
 
+	// if we are sortable then we will need to also be grouped...
+	options.sortable
+		&& (options.groupList = true)
 
 	// make the list...
 	var res = make.List(lst, options)
 		.attr('list-id', id)
+
+	// make sortable...
+	if(options.sortable){
+		// add sort handle...
+		res.find('.button-container')
+			.before($('<span>')
+				.addClass('sort-handle')
+				.html('&#x2630;'))
+		// make the block sortable...
+		res.parent().sortable({
+			handle: '.sort-handle',
+			axis: options.sortable === true ? false : options.sortable,
+			forcePlaceholderSize: true,
+			containment: 'parent',
+			tolerance: 'pointer',
+			update: function(evt, ui){
+				var order = ui.item.parent()
+					.find('.item')
+						.map(function(){ return $(this).find('.text').text() })
+						.toArray()
+				var l = dialog.__list[id]
+				l.splice.apply(l, [0, l.length].concat(order))
+			},
+		})
+	}
 
 	// mark items for removal -- if a list is given by user...
 	to_remove.forEach(function(e){
@@ -2748,7 +2796,9 @@ var BrowserPrototype = {
 			return this.select(null, filtering)
 
 		} else if(action == 'next' || action == 'prev'){
-			var to = this.select('!', filtering)[action+'All'](pattern).first()
+			var all = this.filter('*')
+			//var to = this.select('!', filtering)[action+'All'](pattern).first()
+			var to = all.eq(all.index(this.select('!', filtering)) + (action == 'next' ? 1 : -1))
 			// range check and overflow...
 			if(to.length == 0){
 				action = action == 'next' ? 'first' : 'last'
@@ -2758,6 +2808,7 @@ var BrowserPrototype = {
 
 		} else if(action == 'down' || action == 'up'){
 			var from = this.select('!', filtering)
+			var all = this.filter('*')
 
 			// special case: nothing selected -> select first/last...
 			if(from.length == 0){
@@ -2769,7 +2820,10 @@ var BrowserPrototype = {
 			t = t.top
 
 			// next lines...
-			var to = from[(action == 'down' ? 'next' : 'prev') +'All'](pattern)
+			//var to = from[(action == 'down' ? 'next' : 'prev') +'All'](pattern)
+			var to = (action == 'down' ?
+					all.slice(all.index(from))
+					: $(all.slice(0, all.index(from)).toArray().reverse()))
 				.filter(function(_, e){ return $(e).offset().top != t })
 
 			// special case: nothing below -> select wrap | last/first...
