@@ -2314,7 +2314,7 @@ var BrowserPrototype = {
 		var that = this
 		var browser = this.dom
 
-		var elems = browser.find('.list .item:not(.not-searchable)' 
+		var elems = browser.find('.list .item' 
 			+ (this.options.elementSeparatorClass ? 
 				':not('+ this.options.elementSeparatorClass +')'
 				: '')
@@ -2432,7 +2432,7 @@ var BrowserPrototype = {
 				.removeClass('filtered-out')
 			// clear the highlighting...
 			browser.find('.list b')
-				.replaceWith(function() { return this.innerHTML })
+				.replaceWith(function(){ return this.innerHTML })
 
 		// basic filter...
 		} else {
@@ -2457,9 +2457,13 @@ var BrowserPrototype = {
 					// rejected...
 					function(i, e){
 						!e.hasClass('not-filtered-out')
-							&& e.addClass('filtered-out')
+							&& e
+								.addClass('filtered-out')
+								.removeClass('selected')
 
-						e.removeClass('selected')
+						// clear selection...
+						e.find('b')
+							.replaceWith(function(){ return this.innerHTML })
 					},
 					// NOTE: setting this to true will not remove disabled
 					// 		elements from view as they will neither get 
@@ -2467,6 +2471,8 @@ var BrowserPrototype = {
 					// 		thus it will require manual setting of the
 					// 		.filtered-out class
 					false)
+				// skip non-searchable...
+				.filter(':not(.not-searchable)')
 				// passed...
 				.removeClass('filtered-out')
 				// NOTE: this will mess up (clear) any highlighting that was 
