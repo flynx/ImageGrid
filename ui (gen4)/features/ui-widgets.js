@@ -287,6 +287,8 @@ function(actions, list, list_key, value_key, options){
 
 
 
+
+
 /*********************************************************************/
 // Dialogs and containers...
 
@@ -575,8 +577,71 @@ var DialogsActions = actions.Actions({
 
 	// Helper for creating lists fast...
 	showList: ['- Interface/', 
+		core.doc`Show list dialog...
+
+			.showList(<list>, <options>)
+				-> dialog
+
+		See browse.makeList(..) / browse.Items.List(..) for more info.
+		`,
 		makeUIDialog(function(list, options){
 			return browse.makeList(null, list, options) })],
+	showActionList: ['- Interface/', 
+		core.doc`Show list of actions dialog...
+
+			.showActionList(<list>, <options>)
+				-> dialog
+
+		Like .showList(..) but understands keyboard.parseActionCall(..) syntax,
+
+		Options format:
+			{
+				// arguments and what to replace them with, this is used
+				// to define templates in the list and pass real values 
+				// via the dict.
+				args_dict: {
+					<arg>: <value>,
+					...
+				},
+
+				// Same format .showList(..) understands...
+				...
+			}
+		
+		`,
+		makeUIDialog(function(list, options){
+			var that = this
+			list = list instanceof Function ? list.call(this) : list
+			options = options || {}
+			var args_dict = options.args_dict || {}
+
+			var loaders = {}
+
+			list.forEach(function(m){
+				var a = keyboard.parseActionCall(m)
+
+				if(a.action in that){
+					var args = a.arguments
+						.map(function(a){ 
+							return args_dict[a] !== undefined ? 
+								args_dict[a] 
+								: a })
+
+					// the callback...
+					loaders[a.doc != '' ? 
+							a.doc 
+							: that.getDocTitle(a.action)] =
+						function(){
+							return that[a.action].apply(that, args) }
+
+				// non-actions...
+				} else {
+					loaders[m] = null
+				}
+			})
+
+			return browse.makeList(null, loaders, options)
+		})],
 
 
 	// Show doc for action...

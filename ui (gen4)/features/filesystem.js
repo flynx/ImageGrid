@@ -925,9 +925,9 @@ var FileSystemLoaderUIActions = actions.Actions({
 		// 		in the list.
 		// NOTE: the first one is auto-selected.
 		'path-loaders': [
-			'loadIndex',
-			'loadImages',
-			//'loadPath',
+			'loadIndex: "$PATH"',
+			'loadImages: "$PATH"',
+			//'loadPath: "$PATH"',
 			'---',
 			'loadImagesAsRibbon: "$PATH" "above" -- Load images to new ribbon above',
 			'loadImagesAsRibbon: "$PATH" "below" -- Load images to new ribbon below',
@@ -981,43 +981,14 @@ var FileSystemLoaderUIActions = actions.Actions({
 
 						// list of loaders...
 						} else {
-							// user-provided list...
-							if(callback){
-								var loaders = callback
-
-							// build the loaders list from .config...
-							} else {
-								var loaders = {}
-								that.config['path-loaders'].forEach(function(m){
-									var a = keyboard.parseActionCall(m)
-
-									if(a.action in that){
-										var args = a.arguments
-										// empty args...
-										args = args.length == 0 ? 
-											[path] 
-											: args
-										// replace the path placeholder...
-										var i = args.indexOf('$PATH')
-										i >= 0
-											&& args.splice(i, 1, path)
-
-										// the callback...
-										loaders[a.doc != '' ? 
-												a.doc 
-												: that.getDocTitle(a.action)] =
-											function(){
-												return that[a.action].apply(that, args) }
-
-									// non-actions...
-									} else {
-										loaders[m] = null
-									}
-								})
-							}
-
 							// show user the loader list...
-							var so = that.showList(loaders, { path: 0 })
+							var so = that.showActionList(
+									callback 
+										|| that.config['path-loaders'],
+									{
+										path: 0,
+										args_dict: { '$PATH': path },
+									})
 								// close self and parent...
 								.open(function(){
 									so.close()
