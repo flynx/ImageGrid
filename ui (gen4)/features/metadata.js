@@ -343,9 +343,13 @@ var MetadataUIActions = actions.Actions({
 
 			// helpers...
 			var _cmp = function(a, b){
-				a = field_order.indexOf(a[0].replace(/^- |: $/g, ''))
+				a = field_order.indexOf(a[0]
+					.replace(/\$(\w)/g, '$1')
+					.replace(/^- |: $/g, ''))
 				a = a == -1 ? x : a
-				b = field_order.indexOf(b[0].replace(/^- |: $/g, ''))
+				b = field_order.indexOf(b[0]
+					.replace(/\$(\w)/g, '$1')
+					.replace(/^- |: $/g, ''))
 				b = b == -1 ? x : b
 				return a - b
 			}
@@ -354,7 +358,7 @@ var MetadataUIActions = actions.Actions({
 				// XXX move these to an info feature...
 				// base fields...
 				var base = [
-					['GID: ', image],
+					['$GID: ', image],
 					// NOTE: these are 1-based and not 0-based...
 					['Index (ribbon): ', 
 						that.data.getImageOrder('ribbon', image) + 1
@@ -393,11 +397,11 @@ var MetadataUIActions = actions.Actions({
 
 					// paths...
 					img.path 
-						&& base.push(['File Name: ', 
+						&& base.push(['File $Name: ', 
 							_basename(img.path)])
-						&& base.push(['Parent Directory: ', 
+						&& base.push(['Parent $Directory: ', 
 							_dirname((img.base_path || '.') +'/'+ img.path)])
-						&& base.push(['Full Path: ', 
+						&& base.push(['Full $Path: ', 
 							_normalize((img.base_path || '.') +'/'+ img.path)])
 
 					// times...
@@ -416,10 +420,10 @@ var MetadataUIActions = actions.Actions({
 				}
 
 				// comment and tags...
-				info.push(['Comment: ', 
+				info.push(['$Comment: ', 
 					function(){ return img && img.comment || '' }]) 
 
-				info.push(['Tags: ', 
+				info.push(['$Tags: ', 
 					function(){ return that.data.getTags().join(', ') || '' }])
 
 				// build fields...

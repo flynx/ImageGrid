@@ -371,7 +371,7 @@ function(text, options){
 // 		skipDisabledItems: false,
 //
 // 		// if true, group the items into a <span> element...
-// 		groupList: true,
+// 		groupList: false,
 //
 // 		// see: make(..) for additional option info.
 // 		...
@@ -420,7 +420,7 @@ function(data, options){
 		res.push(elem[0])
 	})
 
-	options.groupList !== false
+	options.groupList
 		&& $(res).parent()
 			.append($('<div>')
 				.addClass('item-group')

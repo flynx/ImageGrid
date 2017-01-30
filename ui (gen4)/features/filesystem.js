@@ -2538,7 +2538,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				var data = that.config['export-dialog-modes'][mode].data
 
 				// mode selector...
-				make(['Export mode: ', 
+				make(['Export $mode: ', 
 						function(){ return mode }])
 					.on('open', 
 						widgets.makeNestedConfigListEditor(that, o,
@@ -2564,7 +2564,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				// Start action...
 				make([function(){
 						// XXX indicate export state: index, crop, image...
-						return 'Export'}]) 
+						return '$Export'}]) 
 					.on('open', function(){
 						var mode = 
 							that.config['export-dialog-modes'][that.config['export-dialog-mode']]

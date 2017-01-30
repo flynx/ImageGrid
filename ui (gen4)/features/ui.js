@@ -2249,6 +2249,8 @@ var ControlActions = actions.Actions({
 		}],
 
 
+	// XXX make the enable handling check a bit more general...
+	// 		...allow ui features to control this...
 	toggleSwipeHandling: ['Interface/Swipe handling',
 		toggler.Toggler(null,
 			function(_, state){ 
@@ -2272,7 +2274,13 @@ var ControlActions = actions.Actions({
 
 					viewer.data('hammer')
 						.get('swipe')
-							.set({direction: Hammer.DIRECTION_ALL})
+							.set({
+								direction: Hammer.DIRECTION_ALL,
+								// do not handle swipes when a modal 
+								// dialog is open...
+								// XXX make this more general...
+								enable: function(){ return !that.modal },
+							})
 
 					if(!viewer.hasClass('swipable')){
 						viewer
