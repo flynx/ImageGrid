@@ -1160,13 +1160,6 @@ var KeyboardUIActions = actions.Actions({
 									sortModes(cur.parent())
 								}
 							}],
-						// XXX make this work on click...
-						// XXX focus resulting mode...
-						['&ctdot;', function(_, cur){
-							that.editKeyboardMode(
-									cur.attr('mode'),
-									function(e){ to_select = e })
-								.close(function(){ dialog.update() }) }],
 					],
 					mode_actions: [
 						// XXX focus resulting key...
@@ -1201,7 +1194,6 @@ var KeyboardUIActions = actions.Actions({
 								function(e){ to_select = e })
 
 					// mode...
-					// XXX BUG: for some reason modes are unclickable...
 					} else if(cur.hasClass('mode')){
 						sub_dialog = that
 							.editKeyboardMode(
@@ -1217,7 +1209,8 @@ var KeyboardUIActions = actions.Actions({
 
 					sub_dialog 
 						&& sub_dialog
-							.close(function(){ dialog.update() })
+							.close(function(evt, mode){ 
+								mode != 'cancel' && dialog.update() })
 				}) 
 				// select updated/new items...
 				.on('update', function(){
@@ -1330,7 +1323,7 @@ var KeyboardUIActions = actions.Actions({
 						buttons: [
 							['Cancel edit', function(){ 
 								abort = true
-								make.dialog.close()
+								make.dialog.close('cancel')
 							}],
 						],
 					})
@@ -1436,7 +1429,7 @@ var KeyboardUIActions = actions.Actions({
 						buttons: [
 							['Cancel edit', function(){ 
 								abort = true
-								make.dialog.close()
+								make.dialog.close('cancel')
 							}],
 						],
 					})
@@ -1474,7 +1467,7 @@ var KeyboardUIActions = actions.Actions({
 
 			dialog.abort = function(){
 				abort = true
-				this.close()
+				this.close('cancel')
 			}
 			dialog.keyboard
 				.handler('General', 'Q', 'abort')
@@ -1550,7 +1543,7 @@ var KeyboardUIActions = actions.Actions({
 						buttons: [
 							['Cancel edit', function(){ 
 								abort = true
-								make.dialog.close()
+								make.dialog.close('cancel')
 							}],
 						],
 					})

@@ -318,7 +318,7 @@ module.makeUIContainer = function(make){
 
 		o
 			// notify the client that we are closing...
-			.close(function(){ o.client.trigger('close', 'reject') })
+			.close(function(evt, mode){ o.client.trigger('close', mode) })
 			.client
 				// NOTE: strictly this is the responsibility of the client
 				// 		but it is less error prone to just in case also do
@@ -1560,7 +1560,9 @@ var WidgetTestActions = actions.Actions({
 					to_bottom_button: true,
 				})
 
-				make.Heading('Numbers:')
+				make.Heading('Numbers:', {
+					doc: 'Sortable list, use sort handle to the right to sort...'
+				})
 				make.EditableList(letters, { 
 					list_id: 'letters', 
 					sortable: 'y',

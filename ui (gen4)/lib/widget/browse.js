@@ -566,6 +566,7 @@ function(data, options){
 //
 // Temporary state is stored in the dialog object:
 // 	.__list			- cached input list
+// 	.__editable		- list editable status
 // 	.__to_remove	- list of items to remove
 // 	.__editable_list_handlers
 // 					- indicator that the dialog handlers are set up
@@ -594,6 +595,7 @@ function(list, options){
 	}
 
 	dialog.__list = dialog.__list || {}
+	dialog.__editable = dialog.__editable || {}
 	dialog.__to_remove = dialog.__to_remove || {}
 	dialog.__editable_list_handlers = dialog.__editable_list_handlers || {}
 
@@ -610,16 +612,22 @@ function(list, options){
 	}
 	options = opts
 
-	var lst = list instanceof Function ? 
-		list() 
-		: list
-	var editable = lst instanceof Array
-	// view objects...
-	// NOTE: we .slice() here to make the changes a bit better packaged
-	// 		or discrete and not done as they come in...
-	lst = !editable ? Object.keys(lst) : lst.slice()
+	if(id in dialog.__list){
+		var lst = dialog.__list[id]
+		var editable = dialog.__editable[id]
 
-	dialog.__list[id] = lst
+	} else {
+		var lst = list instanceof Function ? 
+			list() 
+			: list
+		var editable = dialog.__editable[id] = lst instanceof Array
+		// view objects...
+		// NOTE: we .slice() here to make the changes a bit better packaged
+		// 		or discrete and not done as they come in...
+		lst = !editable ? Object.keys(lst) : lst.slice()
+
+		dialog.__list[id] = lst
+	}
 
 	var buttons = options.buttons = (options.buttons || []).slice()
 	var _buttons = {}
