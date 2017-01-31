@@ -864,6 +864,68 @@ function(list, options){
 
 
 
+// XXX should this be a single list or two lists???
+// 		...with a single list it's simpler to play with items w/o full updates...
+// XXX add a fast redraw mode to .update(..)
+// 		- do not clear items
+// 		- if args did not change:
+// 			- check if cur item is the same 
+// 				...same text, options, signature to make(..)???
+// 			- if the same, keep the element
+// 			- if different find and place
+// 			- if nothing found, create
+Items.EditablePinnedList =
+function(list, pins, options){
+	options = options || {}
+
+	// buttons...
+	var buttons = options.buttons = (options.buttons || []).slice()
+	// XXX pin/unpin button...
+	var pin = [
+		'<span class="pin-set">&#9679;</span>'
+		+'<span class="pin-unset">&#9675;</span>', 
+			function(p, cur){
+				// XXX toggle pin...
+				// XXX also check pins length limit...
+			}]
+	var i = buttons.indexOf('$PIN')
+	i < 0 ? 
+		buttons.push(pin)
+		: (buttons[i] = pin) 
+
+	// options for pins...
+	var pins_options = {
+		list_id: options.pins_id || 'pins',
+		cls: (options.cls || '') + ' pinned',
+		new_item: false,
+		length_limit: options.pins_lenght_limit || 10,
+	}
+	pins_options.__proto__ = options
+
+	var sortable = pins_options.sortable = options.pins_sortable !== false || true
+	sortable 
+		|| pins.sort(function(a, b){
+			// XXX
+		})
+
+	// build the list...
+	var res = this.EditableList(pins, pins_options)
+		.toArray()
+
+	res.push(this.Separator())
+
+	res.concat(this.EditableList(
+			// remove pinned from list...
+			// XXX should these be removed or hidden???
+			list.filter(function(e){ return pins.indexOf(e) >= 0 }), 
+			options)
+		.toArray())
+
+	return $(res)
+}
+
+
+
 //---------------------------------------------------------------------
 // Browse item buttons (button constructors)...
 
