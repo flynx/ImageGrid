@@ -1635,6 +1635,14 @@ var WidgetTestActions = actions.Actions({
 
 				make.EditableList(['x', 'y', 'z'])
 
+		make.Separator()
+		// BUG: this does not respond well to clicks...
+		make.Editable('action + clear', {
+			//start_on: 'select',	
+			clear_on_edit: true,
+		})
+	
+
 
 				// NOTE: the dialog's .parent is not yet set at this point...
 

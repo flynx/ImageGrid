@@ -754,7 +754,7 @@ function(list, options){
 		&& res.on('open', function(){ options.itemopen(dialog.selected) })
 
 	res = res.toArray()
-	
+
 	// new button...
 	if(options.new_item !== false){
 		var new_item = options.new_item || true
