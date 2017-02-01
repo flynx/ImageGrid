@@ -1607,6 +1607,8 @@ var WidgetTestActions = actions.Actions({
 		makeUIDialog(function(){
 			var actions = this
 
+			var editable_list = ['x', 'y', 'z']
+
 			return browse.makeLister(null, function(path, make){
 				var that = this
 
@@ -1630,7 +1632,7 @@ var WidgetTestActions = actions.Actions({
 				make.List(['a', 'b', 'c'])
 
 				make.Heading(' Editable list:')
-				make.EditableList(['x', 'y', 'z'])
+				make.EditableList(editable_list)
 
 				// NOTE: the dialog's .parent is not yet set at this point...
 
