@@ -1603,7 +1603,54 @@ var WidgetTestActions = actions.Actions({
 				console.log('Dialog closing...')
 			})
 		})],
-	testList: ['Test/-99: Demo new style $lists in dialog...',
+	testBrowsrItems: ['Test/-99: Demo browse $items...',
+		makeUIDialog(function(){
+			var actions = this
+
+			return browse.makeLister(null, function(path, make){
+				var that = this
+
+				make.Heading('Heading:', {
+					doc: 'Heading doc string...',
+				})
+
+				make('Normal item')
+
+				make.Editable('Select to edit...')
+
+				make.Editable('Enter to edit (cleared)...', {
+					start_on: 'open',
+					clear_on_edit: true,
+				})
+
+				e = make.Editable('Nested editable...')
+				e.parent().append($('<div>').append(e))
+
+				// this is the same as make('...')
+				make.Separator()
+
+				make.List(['a', 'b', 'c'])
+
+				make.Separator()
+
+				make.EditableList(['x', 'y', 'z'])
+
+
+				// NOTE: the dialog's .parent is not yet set at this point...
+
+				// This will finalize the dialog...
+				//
+				// NOTE: this is not needed here as the dialog is drawn
+				// 		on sync, but for async dialogs this will align
+				// 		the selected field correctly.
+				make.done()
+			})
+			// NOTE: this is not a dialog event, it is defined by the 
+			// 		container to notify us that we are closing...
+			.on('close', function(){
+			})
+		})],
+	testList: ['Test/-99: Demo $lists editors in dialog...',
 		makeUIDialog(function(){
 			var actions = this
 

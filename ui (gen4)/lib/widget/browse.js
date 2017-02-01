@@ -382,6 +382,7 @@ function(data, options){
 	var make = this
 	var res = []
 	var keys = data instanceof Array ? data : Object.keys(data)
+	options = options || {}
 	var pattern = options.disableItemPattern
 		&& RegExp(options.disableItemPattern) 
 
@@ -595,6 +596,7 @@ function(list, options){
 	dialog.__to_remove = dialog.__to_remove || {}
 	dialog.__editable_list_handlers = dialog.__editable_list_handlers || {}
 
+	options = options || {}
 	var id = options.list_id || 'default' 
 
 	var to_remove = dialog.__to_remove[id] = dialog.__to_remove[id] || []
@@ -936,8 +938,6 @@ function(list, pins, options){
 		|| (options.sort instanceof Function ? 
 			pins.sort(options.sort) 
 			: pins.sortAs(list))
-
-	console.log('>>>>', pins, list)
 
 	// build the list...
 	var res = this.EditableList(pins, pins_options)
