@@ -3208,6 +3208,9 @@ var BrowserPrototype = {
 	//
 	// This opens (.open(..)) the selected item and if none are selected
 	// selects the default (.select()) and exits.
+	//
+	// NOTE: this ignores items with empty text...
+	// 		XXX not sure about this...
 	action: function(){
 		var elem = this.select('!')
 
@@ -3219,9 +3222,14 @@ var BrowserPrototype = {
 
 		var path = this.path
 
-		path.push(elem.find('.text').text())
+		var txt = elem.find('.text').text()
 
-		var res = this.open(path)
+		// if text is empty, skip action...
+		if(txt != ''){
+			path.push(elem.find('.text').text())
+
+			var res = this.open(path)
+		}
 
 		return res
 	},
