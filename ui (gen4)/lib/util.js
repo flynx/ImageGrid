@@ -474,6 +474,7 @@ if(typeof(jQuery) != typeof(undefined)){
 
 		options.activate 
 			&& options.clear_on_edit 
+			// XXX this for some reason breaks on click...
 			&& this.text('')
 
 		// NOTE: this will also focus the element...

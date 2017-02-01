@@ -1636,9 +1636,9 @@ var WidgetTestActions = actions.Actions({
 				make.EditableList(['x', 'y', 'z'])
 
 		make.Separator()
-		// BUG: this does not respond well to clicks...
-		make.Editable('action + clear', {
-			//start_on: 'select',	
+		// XXX BUG: this does not respond well to clicks...
+		// 		...this occurs on click ig 'start_on' is 'select' (default)
+		make.Editable('Editable (bug)', {
 			clear_on_edit: true,
 		})
 	
