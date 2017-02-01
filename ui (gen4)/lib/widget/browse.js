@@ -586,7 +586,9 @@ function(list, options){
 				// in-place replace list elements...
 				// NOTE: this is necessary as not everything we do with lst
 				// 		is in-place...
-				: list.splice.apply(list, [0, list.length].concat(lst)))
+				: list.splice.apply(list, [0, list.length].concat(lst))) 
+					// we need to return the list itself...
+					&& lst
 			// in case the list(..) returns nothing...
 			|| lst
 	}
@@ -814,9 +816,8 @@ function(list, options){
 							: undefined)
 				}
 
-				lst = write(list, lst)
+				lst = dialog.__list[id] = write(list, lst)
 
-				dialog.__list[id] = lst
 
 				// update list and select new value...
 				dialog.update()

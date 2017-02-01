@@ -1634,6 +1634,12 @@ var WidgetTestActions = actions.Actions({
 				make.Heading(' Editable list:')
 				make.EditableList(editable_list)
 
+				make.Heading('More:')
+				make.Action('Editable list demos...')
+					.on('open', function(){ actions.testList() })
+				make.Action('Pinned list demo...')
+					.on('open', function(){ actions.testPinnedList() })
+
 				// NOTE: the dialog's .parent is not yet set at this point...
 
 				// This will finalize the dialog...
