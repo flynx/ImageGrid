@@ -1629,8 +1629,7 @@ var WidgetTestActions = actions.Actions({
 				make.Heading('List:')
 				make.List(['a', 'b', 'c'])
 
-				make.Separator()
-
+				make.Heading(' Editable list:')
 				make.EditableList(['x', 'y', 'z'])
 
 				// NOTE: the dialog's .parent is not yet set at this point...
