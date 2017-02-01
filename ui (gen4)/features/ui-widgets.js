@@ -1638,6 +1638,7 @@ var WidgetTestActions = actions.Actions({
 		make.Separator()
 		// XXX BUG: this does not respond well to clicks...
 		// 		...this occurs on click ig 'start_on' is 'select' (default)
+		// 		for some reason this triggers .update() on the dialog...
 		make.Editable('Editable (bug)', {
 			clear_on_edit: true,
 		})
