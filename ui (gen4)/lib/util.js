@@ -89,6 +89,18 @@ Array.fromArgs =
 	function(args){ return [].slice.call(args) }
 
 
+Array.prototype.sortAs = function(other){
+	return this.sort(function(a, b){
+		var i = other.indexOf(a)
+		var j = other.indexOf(b)
+		return i < 0 && j < 0 ? 0
+			: i < 0 ? 1
+			: j < 0 ? -1
+			: i - j
+	})
+}
+
+
 module.chainCmp = function(cmp_chain){
 	return function(a, b, get, data){
 		var res

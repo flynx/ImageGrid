@@ -876,7 +876,15 @@ function(list, options){
 // 			- if nothing found, create
 Items.EditablePinnedList =
 function(list, pins, options){
+	var that = this
 	options = options || {}
+	var id = options.list_id
+	var pins_id = id + '-pins'
+	var dialog = this.dialog
+
+	if(dialog.__list){
+		pins = dialog.__list[pins_id] || pins
+	}
 
 	// buttons...
 	var buttons = options.buttons = (options.buttons || []).slice()
@@ -885,8 +893,29 @@ function(list, pins, options){
 		'<span class="pin-set">&#9679;</span>'
 		+'<span class="pin-unset">&#9675;</span>', 
 			function(p, cur){
-				// XXX toggle pin...
-				// XXX also check pins length limit...
+				// pin...
+				if(!cur.hasClass('pinned')){
+					// XXX check pins length limit...
+					pins.splice(0, 0, p)
+					// sort pins...
+					sortable
+						|| (options.sort instanceof Function ? 
+							pins.sort(options.sort) 
+							: pins.sortAs(list))
+
+					// XXX pin event???
+
+				// unpin...
+				} else {
+					pins.splice(pins.indexOf(p), 1)
+
+					// XXX unpin event???
+				}
+
+				// XXX redraw...
+
+				// XXX this is slow...
+				that.dialog.update()
 			}]
 	var i = buttons.indexOf('$PIN')
 	i < 0 ? 
@@ -895,21 +924,24 @@ function(list, pins, options){
 
 	// options for pins...
 	var pins_options = {
-		list_id: options.pins_id || 'pins',
-		cls: (options.cls || '') + ' pinned',
+		list_id: pins_id,
+		//cls: (options.cls || '') + ' pinned',
 		new_item: false,
 		length_limit: options.pins_lenght_limit || 10,
 	}
 	pins_options.__proto__ = options
 
 	var sortable = pins_options.sortable = options.pins_sortable !== false || true
-	sortable 
-		|| pins.sort(function(a, b){
-			// XXX
-		})
+	sortable
+		|| (options.sort instanceof Function ? 
+			pins.sort(options.sort) 
+			: pins.sortAs(list))
+
+	console.log('>>>>', pins, list)
 
 	// build the list...
 	var res = this.EditableList(pins, pins_options)
+		.addClass('pinned')
 		.toArray()
 
 	res.push(this.Separator())
@@ -917,7 +949,7 @@ function(list, pins, options){
 	res.concat(this.EditableList(
 			// remove pinned from list...
 			// XXX should these be removed or hidden???
-			list.filter(function(e){ return pins.indexOf(e) >= 0 }), 
+			list.filter(function(e){ return pins.indexOf(e) < 0 }), 
 			options)
 		.toArray())
 

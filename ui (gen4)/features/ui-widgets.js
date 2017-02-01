@@ -1650,6 +1650,39 @@ var WidgetTestActions = actions.Actions({
 				- Letters: ${letters.join(', ')}`)
 			})
 		})],
+	testPinnedList: ['Test/-99: Demo $pinned lists in dialog...',
+		makeUIDialog(function(){
+			var actions = this
+
+			// NOTE: passing things other than strings into a list editor
+			// 		is not supported...
+			var pins = ['a', 'b']
+			var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+
+			return browse.makeLister(null, function(path, make){
+				var that = this
+
+				make.Heading('Numbers:', {
+					doc: 'List editor with all the buttons enabled...',
+				})
+				make.EditablePinnedList(letters, pins, { 
+					list_id: 'letters',
+				})
+
+				// NOTE: the dialog's .parent is not yet set at this point...
+
+				// This will finalize the dialog...
+				//
+				// NOTE: this is not needed here as the dialog is drawn
+				// 		on sync, but for async dialogs this will align
+				// 		the selected field correctly.
+				make.done()
+			})
+			// NOTE: this is not a dialog event, it is defined by the 
+			// 		container to notify us that we are closing...
+			.on('close', function(){
+			})
+		})],
 
 	testProgress: ['Test/Demo $progress bar...',
 		function(text){
