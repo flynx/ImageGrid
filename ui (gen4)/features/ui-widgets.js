@@ -1644,7 +1644,6 @@ var WidgetTestActions = actions.Actions({
 		})
 	
 
-
 				// NOTE: the dialog's .parent is not yet set at this point...
 
 				// This will finalize the dialog...
