@@ -1616,33 +1616,22 @@ var WidgetTestActions = actions.Actions({
 
 				make('Normal item')
 
-				make.Editable('Select to edit...')
+				// this is the same as make('...')
+				make.Separator()
 
-				make.Editable('Enter to edit (cleared)...', {
+				make.Editable('Editable (Select to edit)')
+
+				make.Editable('Editable (Enter to edit, cleared)...', {
 					start_on: 'open',
 					clear_on_edit: true,
 				})
 
-				e = make.Editable('Nested editable...')
-				e.parent().append($('<div>').append(e))
-
-				// this is the same as make('...')
-				make.Separator()
-
+				make.Heading('List:')
 				make.List(['a', 'b', 'c'])
 
 				make.Separator()
 
 				make.EditableList(['x', 'y', 'z'])
-
-		make.Separator()
-		// XXX BUG: this does not respond well to clicks...
-		// 		...this occurs on click ig 'start_on' is 'select' (default)
-		// 		for some reason this triggers .update() on the dialog...
-		make.Editable('Editable (bug)', {
-			clear_on_edit: true,
-		})
-	
 
 				// NOTE: the dialog's .parent is not yet set at this point...
 
