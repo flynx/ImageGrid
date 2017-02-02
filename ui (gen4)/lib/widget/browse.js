@@ -624,7 +624,7 @@ function(list, options){
 	}
 	options = opts
 
-	if(id in dialog.__list){
+	if(id in dialog.__list && id in dialog.__editable){
 		var lst = dialog.__list[id]
 		var editable = dialog.__editable[id]
 
@@ -906,15 +906,18 @@ function(list, options){
 Items.EditablePinnedList =
 function(list, pins, options){
 	var that = this
+	pins = pins || []
 	options = options || {}
 	var id = options.list_id
 	var pins_id = id + '-pins'
 	var dialog = this.dialog
 
 	// prepare the cache...
-	if(dialog.__list){
-		pins = dialog.__list[pins_id] || pins
-	}
+	// XXX check if either list/pins is a function...
+	dialog.__list = dialog.__list || {}
+	list = dialog.__list[id] = dialog.__list[id] || list
+	pins = dialog.__list[pins_id] = dialog.__list[pins_id] || pins
+
 	// link the to_remove lists of pins and the main list...
 	dialog.__to_remove = dialog.__to_remove || {}
 	if(dialog.__to_remove[id] == null){
@@ -929,6 +932,10 @@ function(list, pins, options){
 		'<span class="pin-set">&#9679;</span>'
 		+'<span class="pin-unset">&#9675;</span>', 
 			function(p, cur){
+				// XXX if this line's not here, for some reason on first
+				// 		run this sees the wrong instance of pins...
+				var pins = dialog.__list[pins_id]
+
 				// pin...
 				if(!cur.hasClass('pinned')){
 					// XXX check pins length limit...
@@ -947,7 +954,7 @@ function(list, pins, options){
 				// XXX this is slow...
 				that.dialog.update()
 			}]
-	var i = buttons.indexOf('$PIN')
+	var i = buttons.indexOf('PIN')
 	i < 0 ? 
 		buttons.push(pin)
 		: (buttons[i] = pin) 
@@ -974,7 +981,9 @@ function(list, pins, options){
 		.addClass('pinned')
 		.toArray()
 
-	res.push(this.Separator()[0])
+	res.length > 0 
+		&& list.length > 0
+		&& res.push(this.Separator()[0])
 
 	res.concat(this.EditableList(
 			// remove pinned from list...
