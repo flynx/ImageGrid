@@ -348,48 +348,49 @@
 	content: "0";
 }
 
-.browse-widget .list>hr.separator {
+.browse-widget .list hr.separator {
 	opacity: 0.3;
 }
 
 
 /* hide first/last separators... */
-.browse-widget .list>hr.separator:first-child,
-.browse-widget .list>hr.separator:last-child {
+.browse-widget .list hr.separator:first-child,
+.browse-widget .list hr.separator:last-child {
 	display: none;
 }
 
 
 /* Action... */
-.browse-widget .list>.action {
+.browse-widget .list .action {
 	margin-top: 0.2em;
 	border-top: solid 1px rgba(255,255,255, 0.2);
 }
-.browse-widget .list>.action .text {
+.browse-widget .list .action .text {
 	font-style: italic;
 }
 /* do not show top border if after another action or separator... */
-.browse-widget .list>.action:first-child,
-.browse-widget .list>.action+.action,
-.browse-widget .list>.separator+.action {
+.browse-widget .list .action:first-child,
+.browse-widget .list .action+.action,
+.browse-widget .list .heading+.action,
+.browse-widget .list .separator+.action {
 	border-top: none;
 }
 
 
 /* Heading... */
-.browse-widget .list>.heading {
+.browse-widget .list .heading {
 	color: white;
 	font-weight: bold;
 	background: rgba(0, 0, 0, 0.5);
 }
-.browse-widget .list>.heading:not(:first-child) {
+.browse-widget .list .heading:not(:first-child) {
 	margin-top: 0.5em;
 }
-.browse-widget .list>.heading span:first-child {
+.browse-widget .list .heading span:first-child {
 	margin-left: -0.5em;
 }
 /* doc */
-.browse-widget .list>.heading[doc]:after {
+.browse-widget .list .heading[doc]:after {
 	display: block;
 	content: attr(doc);
 
@@ -408,7 +409,7 @@
 	background: rgba(0, 0, 0, 0.7);
 }
 /* dark theme... */
-.dark .browse-widget .list>.heading {
+.dark .browse-widget .list .heading {
 	background: rgba(255, 255, 255, 0.1);
 }
 
@@ -425,7 +426,7 @@
 .browse-widget .list .item .show-on-select {
 	opacity: 0;
 }
-.browse-widget .list>.selected .show-on-select {
+.browse-widget .list .selected .show-on-select {
 	opacity: inherit;
 }
 
@@ -439,7 +440,7 @@
 	border-radius: 10px;
 }
 
-.browse-widget.cloud-view .list>hr.separator {
+.browse-widget.cloud-view .list hr.separator {
 	display: block;
 }
 

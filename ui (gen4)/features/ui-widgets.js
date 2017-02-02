@@ -1616,17 +1616,19 @@ var WidgetTestActions = actions.Actions({
 					doc: 'Heading doc string...',
 				})
 
-				make('Normal item')
+				make.Group([
+					make('Normal item'),
 
-				// this is the same as make('...')
-				make.Separator()
+					// this is the same as make('...')
+					make.Separator(),
 
-				make.Editable('Editable (Select to edit)')
+					make.Editable('Editable (Select to edit)'),
 
-				make.Editable('Editable (Enter to edit, cleared)...', {
-					start_on: 'open',
-					clear_on_edit: true,
-				})
+					make.Editable('Editable (Enter to edit, cleared)...', {
+						start_on: 'open',
+						clear_on_edit: true,
+					}),
+				])
 
 				make.Heading('List:')
 				make.List(['a', 'b', 'c'])

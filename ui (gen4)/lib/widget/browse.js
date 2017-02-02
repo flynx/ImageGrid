@@ -354,6 +354,7 @@ function(text, options){
 //			make.Heading('Group'),
 //			make('---'),
 //			make('Group item'),
+//			...
 //		])
 //
 Items.Group =
