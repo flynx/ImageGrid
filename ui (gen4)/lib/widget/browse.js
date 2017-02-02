@@ -944,7 +944,7 @@ function(list, pins, options){
 					sortable
 						|| (options.sort instanceof Function ? 
 							pins.sort(options.sort) 
-							: pins.sortAs(list))
+							: pins.sortAs(dialog.__list[id]))
 
 				// unpin...
 				} else {
@@ -970,11 +970,14 @@ function(list, pins, options){
 		isItemDisabled: null,
 	}
 	pins_options.__proto__ = options
-	var sortable = pins_options.sortable = options.pins_sortable !== false || true
-	sortable
-		|| (options.sort instanceof Function ? 
-			pins.sort(options.sort) 
-			: pins.sortAs(list))
+	var sortable = pins_options.sortable = 
+		options.pins_sortable === undefined 
+			|| options.pins_sortable
+	if(!sortable){
+		 pins_options.sort = options.sort instanceof Function ? 
+			options.sort
+			: pins.sortAs(dialog.__list[id])
+	}
 
 	//---------------------------------------------- build the list ---
 	var res = this.EditableList(pins, pins_options)
@@ -982,7 +985,6 @@ function(list, pins, options){
 		.toArray()
 
 	res.length > 0 
-		&& list.length > 0
 		&& res.push(this.Separator()[0])
 
 	res.concat(this.EditableList(

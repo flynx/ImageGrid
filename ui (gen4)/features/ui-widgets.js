@@ -1707,7 +1707,7 @@ var WidgetTestActions = actions.Actions({
 
 			// NOTE: passing things other than strings into a list editor
 			// 		is not supported...
-			var pins = ['a', 'b']
+			var pins = ['b', 'a']
 			var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 
 			return browse.makeLister(null, function(path, make){
@@ -1718,6 +1718,7 @@ var WidgetTestActions = actions.Actions({
 				})
 				make.EditablePinnedList(letters, pins, { 
 					list_id: 'letters',
+					//pins_sortable: false,
 				})
 
 				// NOTE: the dialog's .parent is not yet set at this point...
