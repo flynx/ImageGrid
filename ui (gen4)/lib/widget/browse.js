@@ -317,7 +317,7 @@ function(text, options){
 			start_on == 'select' 
 				&& editable
 					.on('edit-abort', function(){ dialog.select(null) })
-
+			
 			// edit event handlers...
 			options.editaborted
 				&& editable.on('edit-abort', options.editaborted)
@@ -336,6 +336,39 @@ function(text, options){
 			.on(stop_propagation, function(e){ e.stopPropagation() })
 
 	return elem
+}
+
+
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Group items...
+//
+// 	.Group([<item>, ...])
+// 		-> <group>
+//
+// This will return a group element, to get the items use .children()
+//
+//
+// Usage example:
+// 		make.Group([
+//			make.Heading('Group'),
+//			make('---'),
+//			make('Group item'),
+//		])
+//
+Items.Group =
+function(list){
+	var res = []
+	list.forEach(function(e){ 
+		e instanceof jQuery ? (res = res.concat(e.toArray()))
+			: e instanceof Array ? (res = res.concat(e))
+			: res.push(e)
+	})
+	var group = $('<div>')
+		.addClass('item-group')
+		.appendTo($(res).parent())
+		.append($(res))
+	return group
 }
 
 
@@ -433,13 +466,9 @@ function(data, options){
 		res.push(elem[0])
 	})
 
-	options.groupList
-		&& $(res).parent()
-			.append($('<div>')
-				.addClass('item-group')
-				.append($(res)))
-
-	return $(res)
+	return options.groupList ?
+		make.Group(res).children()
+		: $(res)
 }
 
 
@@ -585,6 +614,7 @@ function(data, options){
 // 		info.
 // NOTE: the list must contain strings.
 //
+// XXX should id be the first argument??
 Items.EditableList =
 function(list, options){
 	var make = this
@@ -879,6 +909,11 @@ function(list, options){
 
 
 
+// Editable list of pinnable elements...
+//
+// This is like .EditableList(..) but adds the ability to pin items to 
+// the top sub-list and maintain that sub-list order independently or 
+// keep it the same as the main list...
 //
 // Format:
 // 	{
@@ -893,16 +928,9 @@ function(list, options){
 // 		...
 // 	}
 //
+// XXX should id be the first argument??
 // XXX should this be a single list or two lists???
 // 		...with a single list it's simpler to play with items w/o full updates...
-// XXX add a fast redraw mode to .update(..)
-// 		- do not clear items
-// 		- if args did not change:
-// 			- check if cur item is the same 
-// 				...same text, options, signature to make(..)???
-// 			- if the same, keep the element
-// 			- if different find and place
-// 			- if nothing found, create
 Items.EditablePinnedList =
 function(list, pins, options){
 	var that = this
@@ -923,6 +951,11 @@ function(list, pins, options){
 	if(dialog.__to_remove[id] == null){
 		dialog.__to_remove[id] = dialog.__to_remove[pins_id] = []
 	}
+
+	// XXX redraw....
+	// 		- sort			- within one list this is trivial (history.js)
+	// 		- pin/unpin 	- remove item from one list and update the 
+	// 							other... (can we update a sub-list?)
 
 	//------------------------------------ setup options: main/pins ---
 	// buttons...
@@ -1162,6 +1195,14 @@ var BrowserClassPrototype = {
 // 				- navigation (mouse/keyboard)
 // 			- search/filtering
 // 			- buttons
+// XXX add a fast redraw mode to .update(..) (???)
+// 		- do not clear items
+// 		- if args did not change:
+// 			- check if cur item is the same 
+// 				...same text, options, signature to make(..)???
+// 			- if the same, keep the element
+// 			- if different find and place
+// 			- if nothing found, create
 var BrowserPrototype = {
 	dom: null,
 
@@ -3689,6 +3730,22 @@ module.makeList = makeBrowserMaker(List)
 
 /*********************************************************************/
 
+// Make an list/Array editor...
+//
+//
+// For options format see: Items.EditableList(..)
+var makeListEditor = 
+module.makeListEditor =
+function(list, options){
+	return makeLister(null, 
+		function(path, make){
+			make.EditableList(list, options) }, 
+		options) }
+
+
+
+/*********************************************************************/
+
 // This is similar to List(..) but will parse paths in keys...
 //
 // Path grammar:
@@ -3929,24 +3986,6 @@ object.makeConstructor('PathList',
 
 var makePathList = 
 module.makePathList = makeBrowserMaker(PathList)
-
-
-
-/*********************************************************************/
-
-// Make an list/Array editor...
-//
-//
-// For options format see: List.EditableList(..)
-var makeListEditor = 
-module.makeListEditor =
-function(list, options){
-	return makeLister(null, 
-		function(path, make){
-			make.EditableList(list, options)
-		}, 
-		options)
-}
 
 
 
