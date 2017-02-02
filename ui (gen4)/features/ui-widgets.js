@@ -1732,6 +1732,9 @@ var WidgetTestActions = actions.Actions({
 			// NOTE: this is not a dialog event, it is defined by the 
 			// 		container to notify us that we are closing...
 			.on('close', function(){
+				console.log(core.doc`Lists:
+				- Pins: ${pins.join(', ')}
+				- Letters: ${letters.join(', ')}`)
 			})
 		})],
 

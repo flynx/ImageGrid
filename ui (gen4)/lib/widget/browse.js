@@ -361,11 +361,12 @@ function(text, options){
 //
 // options format:
 // 	{
-// 		// pattern used to match and disable items...
-// 		//
-// 		// NOTE: this is used via .replace(..) so the match will get 
-// 		//		removed from the item text, unless prevented via regexp.
-// 		disableItemPattern: <pattern>,
+// 		// test if item is disabled... 
+//		//
+// 		// NOTE: if this is a string or regexp, this is used via 
+// 		//		.replace(..) so the match will get removed from the item 
+// 		//		text, unless prevented via regexp.
+// 		isItemDisabled: <pattern> | <function>,
 //
 // 		// if true, disabled items will not get created...
 // 		skipDisabledItems: false,
@@ -383,21 +384,32 @@ function(data, options){
 	var res = []
 	var keys = data instanceof Array ? data : Object.keys(data)
 	options = options || {}
-	var pattern = options.disableItemPattern
-		&& RegExp(options.disableItemPattern) 
+	var test = typeof(options.isItemDisabled) == typeof('str') ?
+		RegExp(options.isItemDisabled) 
+		: options.isItemDisabled
 
 	keys.forEach(function(k){
 		var txt = k
 		var opts = Object.create(options)
 
-		if(pattern){
+		if(test){
 			txt = k instanceof Array ? k[0] : k
 
-			// item matches disabled pattern...
-			if(pattern.test(txt)){
-				var t = txt.replace(pattern, '')
+			// item passes disabled predicate...
+			if(test instanceof Function 
+					&& test(txt)){
+				opts.disabled = true
 
-				opts.disabled = true	
+				if(options.skipDisabledItems){
+					return
+				}
+
+			// item matches disabled test...
+			} else if(test instanceof RegExp 
+					&& test.test(txt)){
+				var t = txt.replace(test, '')
+
+				opts.disabled = true
 
 				txt = k instanceof Array ? 
 					[t].concat(k.slice(1)) 
@@ -867,6 +879,20 @@ function(list, options){
 
 
 
+//
+// Format:
+// 	{
+// 		// equivalent to .length_limit option in .List(..) but applies 
+// 		// only to pins...
+// 		pins_length_limit: .. ,
+//
+// 		// equivalent to .sortable option in .List(..) but applies only
+// 		// to pins...
+// 		pins_sortable: .. ,
+//
+// 		...
+// 	}
+//
 // XXX should this be a single list or two lists???
 // 		...with a single list it's simpler to play with items w/o full updates...
 // XXX add a fast redraw mode to .update(..)
@@ -885,13 +911,20 @@ function(list, pins, options){
 	var pins_id = id + '-pins'
 	var dialog = this.dialog
 
+	// prepare the cache...
 	if(dialog.__list){
 		pins = dialog.__list[pins_id] || pins
 	}
+	// link the to_remove lists of pins and the main list...
+	dialog.__to_remove = dialog.__to_remove || {}
+	if(dialog.__to_remove[id] == null){
+		dialog.__to_remove[id] = dialog.__to_remove[pins_id] = []
+	}
 
+	//------------------------------------ setup options: main/pins ---
 	// buttons...
 	var buttons = options.buttons = (options.buttons || []).slice()
-	// XXX pin/unpin button...
+	// pin/unpin button...
 	var pin = [
 		'<span class="pin-set">&#9679;</span>'
 		+'<span class="pin-unset">&#9675;</span>', 
@@ -906,16 +939,10 @@ function(list, pins, options){
 							pins.sort(options.sort) 
 							: pins.sortAs(list))
 
-					// XXX pin event???
-
 				// unpin...
 				} else {
 					pins.splice(pins.indexOf(p), 1)
-
-					// XXX unpin event???
 				}
-
-				// XXX redraw...
 
 				// XXX this is slow...
 				that.dialog.update()
@@ -924,33 +951,34 @@ function(list, pins, options){
 	i < 0 ? 
 		buttons.push(pin)
 		: (buttons[i] = pin) 
+	options.isItemDisabled = function(e){ return pins.indexOf(e) >= 0 }
+	options.skipDisabledItems = options.skipDisabledItems !== false ? true : false
 
-	// options for pins...
+	//----------------------------------------- setup options: pins ---
 	var pins_options = {
 		list_id: pins_id,
-		//cls: (options.cls || '') + ' pinned',
 		new_item: false,
-		length_limit: options.pins_lenght_limit || 10,
+		length_limit: options.pins_length_limit || 10,
+
+		isItemDisabled: null,
 	}
 	pins_options.__proto__ = options
-
 	var sortable = pins_options.sortable = options.pins_sortable !== false || true
 	sortable
 		|| (options.sort instanceof Function ? 
 			pins.sort(options.sort) 
 			: pins.sortAs(list))
 
-	// build the list...
+	//---------------------------------------------- build the list ---
 	var res = this.EditableList(pins, pins_options)
 		.addClass('pinned')
 		.toArray()
 
-	res.push(this.Separator())
+	res.push(this.Separator()[0])
 
 	res.concat(this.EditableList(
 			// remove pinned from list...
-			// XXX should these be removed or hidden???
-			list.filter(function(e){ return pins.indexOf(e) < 0 }), 
+			list, 
 			options)
 		.toArray())
 
@@ -3547,7 +3575,7 @@ ListerPrototype.options = {
 	// XXX not sure if we need these...
 	skipDisabledItems: false,
 	// NOTE: to disable this set it to false or null
-	disableItemPattern: '^- ',
+	isItemDisabled: '^- ',
 }
 // XXX should we inherit or copy options???
 // 		...inheriting might pose problems with deleting values reverting
@@ -3592,7 +3620,7 @@ module.makeLister = function(elem, lister, options){
 // 	]
 //
 // If <option-test> starts with a '- ' then it will be added disabled,
-// to control the pattern use the .disableItemPattern option, and to 
+// to control the pattern use the .isItemDisabled option, and to 
 // disable this feature set it to false|null.
 // 	
 // NOTE: this essentially a different default configuration of Browser...
@@ -3608,7 +3636,7 @@ ListPrototype.options = {
 	// XXX not sure if we need these...
 	skipDisabledItems: false,
 	// NOTE: to disable this set it to false or null
-	disableItemPattern: '^- ',
+	isItemDisabled: '^- ',
 
 	list: function(path, make){
 		var that = this
@@ -3626,7 +3654,7 @@ ListPrototype.options = {
 		// build the list...
 		_make
 			.List(data, {
-				disableItemPattern: this.options.disableItemPattern,
+				isItemDisabled: this.options.isItemDisabled,
 				skipDisabledItems: this.options.skipDisabledItems,
 			})
 
@@ -3717,7 +3745,7 @@ module.makeList = makeBrowserMaker(List)
 // 		the one used is the longest match.
 // NOTE: if path is receded with '- ' ('- a|b/c') then the basename of 
 // 		that path will be disabled, to control the pattern use
-// 		.disableItemPattern and to disable this feature set it to false.
+// 		.isItemDisabled and to disable this feature set it to false.
 //
 //
 // Handler format:
@@ -3752,14 +3780,14 @@ PathListPrototype.options = {
 	// XXX not sure if we need these...
 	skipDisabledItems: false,
 	// NOTE: to disable this set it to false or null
-	disableItemPattern: '^- ',
+	isItemDisabled: '^- ',
 
 	list: function(path, make){
 		var that = this
 		var data = this.options.data
 		var keys = data.constructor == Array ? data : Object.keys(data)
-		var pattern = this.options.disableItemPattern 
-			&& RegExp(this.options.disableItemPattern)
+		var pattern = this.options.isItemDisabled 
+			&& RegExp(this.options.isItemDisabled)
 
 		if(pattern && this.options.skipDisabledItems){
 			keys = keys.filter(function(k){ return !pattern.test(k) })
