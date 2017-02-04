@@ -173,6 +173,13 @@ var MetadataReaderActions = actions.Actions({
 			// XXX make this a global API...
 			var q = this.__reader_queue = this.__reader_queue || tasks.Queue()
 
+			var logger = this.logger && this.logger.push('Read metadata')
+
+			// XXX is this the right way to go???
+			q.on('taskQueued', function(t){ logger.emit('queued', t) })
+			q.on('taskDone', function(t){ logger.emit('done', t) })
+			q.on('taskFailed', function(t){ logger.emit('error', t) })
+
 			var read = function(gid){ 
 				return function(){ return that.readMetadata(gid) } }
 
