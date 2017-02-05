@@ -419,6 +419,8 @@ var URLHistoryUIActions = actions.Actions({
 		// 	- true | undefined		- always remove
 		// 	- flase					- never remove
 		// 	- [ 'open', 'close' ]	- explicitly select event
+		//
+		// XXX do we need this???
 		'url-history-list-clear': ['open', 'close'],
 
 		// If true pushing the pin item button will also focus the item
@@ -635,6 +637,127 @@ var URLHistoryUIActions = actions.Actions({
 			o.keyboard.handler('General', 'O', 'browsePath')
 
 			return o
+		})],
+
+	// XXX need to sort pins...
+	// XXX need to save pins...
+	// XXX 'to top' button???
+	listURLHistory2: ['History|File/Location history (new)...',
+		widgets.makeUIDialog(function(){
+			var that = this
+
+			var data
+			var cur = this.location.path
+			var to_remove = []
+
+			// save state:
+			// 	- save pins and pin order... (XXX)
+			// 	- remove stirked out elements...
+			var save = function(){
+				// XXX save pins/order...
+				data.pins.forEach(function(p){
+					//that.toggleURLPinned('on')
+				})
+
+				// remove items...
+				to_remove.forEach(function(e){
+					that.dropURLFromHistory(e)
+				})
+				to_remove = []
+			}
+			var makeHistoryList = function(fs_state){
+				fs_state = fs_state || {}
+				var history = Object.keys(that.url_history).reverse()
+
+				// XXX need pin order...
+				var pinned = []
+				var list = history 
+					// NOTE: this might get a little slow for 
+					// 		very large sets...
+					.map(function(p){
+						// pinned items...
+						// NOTE: yes direct access is faster, but 
+						// 		calling the toggler (common API) here
+						// 		will isolate the level knowledge to a
+						// 		single point which will simplify things
+						// 		if anything changes...
+						//that.url_history[p].pinned ?
+						// XXX need pin order...
+						that.toggleURLPinned(p, '?') == 'on' ?
+							// XXX
+							pinned.push(p)
+							: null
+
+						return p
+					})
+
+				return {
+					paths: list,
+					pins: pinned,
+				}
+			}
+			var makeDisabledChecker = function(fs_state){
+				return function(url){
+					// see of we need a full refresh or use the 
+					// last fs_state...
+					if(url in fs_state){
+						var d = fs_state[url]
+
+					} else {
+						var d = !that.checkURLFromHistory(url)
+						fs_state[url] = d
+					}
+					return d
+				}
+			}
+
+			// persistent state...
+			var fs_state = {}
+
+			var dialog = browse.makeLister(null, function(path, make){
+
+				// live update...
+				data = data == null ? makeHistoryList(fs_state) : data
+
+				// empty list...
+				if(data.paths.length == 0){
+					make.Action('No history...', {disabled: true})
+
+				} else {
+					make.EditablePinnedList(data.paths, data.pins, { 
+						list_id: 'history',
+						new_item: false,
+						pins_sortable: true,
+
+						isItemDisabled: makeDisabledChecker(fs_state),
+
+						to_remove: to_remove,
+					})
+				}
+
+				make
+					.done()
+					// highlight the current item...
+					.then(function(){
+						dialog
+							.filter(`"${cur}"`)
+							.addClass('highlighted') })
+			}, 
+			{
+				selected: cur,
+			})
+			.open(function(evt, path){ 
+				save()
+
+				dialog.close() 
+
+				that.openURLFromHistory(path)
+			})
+			.on('close', function(){
+				save()
+			})
+
+			return dialog
 		})],
 })
 

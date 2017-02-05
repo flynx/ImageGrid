@@ -395,15 +395,17 @@ function(list){
 //
 // options format:
 // 	{
-// 		// test if item is disabled... 
+// 		// test if item is disabled/hidden... 
 //		//
 // 		// NOTE: if this is a string or regexp, this is used via 
 // 		//		.replace(..) so the match will get removed from the item 
 // 		//		text, unless prevented via regexp.
 // 		isItemDisabled: <pattern> | <function>,
+// 		isItemHidden: <pattern> | <function>,
 //
-// 		// if true, disabled items will not get created...
+// 		// if true, disabled/hidden items will not get created...
 // 		skipDisabledItems: false,
+// 		skipHiddenItems: false,
 //
 // 		// if true, group the items into a <span> element...
 // 		groupList: false,
@@ -418,48 +420,56 @@ function(data, options){
 	var res = []
 	var keys = data instanceof Array ? data : Object.keys(data)
 	options = options || {}
-	var test = typeof(options.isItemDisabled) == typeof('str') ?
-		RegExp(options.isItemDisabled) 
-		: options.isItemDisabled
+
+	var predicates = {
+		disabled: typeof(options.isItemDisabled) == typeof('str') ?
+			RegExp(options.isItemDisabled) 
+			: options.isItemDisabled,
+		hidden: typeof(options.isItemHidden) == typeof('str') ?
+			RegExp(options.isItemHidden) 
+			: options.isItemHidden,
+	}
 
 	keys.forEach(function(k){
-		var txt = k
+		var txt
 		var opts = Object.create(options)
 
-		if(test){
-			txt = k instanceof Array ? k[0] : k
+		Object.keys(predicates).forEach(function(p){
+			var test = predicates[p]
 
-			// item passes disabled predicate...
-			if(test instanceof Function 
-					&& test(txt)){
-				opts.disabled = true
+			if(test){
+				// check only the first item...
+				txt = txt || (k instanceof Array ? k[0] : k)
 
-				if(options.skipDisabledItems){
-					return
+				// item passes disabled predicate...
+				if(test instanceof Function 
+						&& test(txt)){
+					opts[p] = true
+
+				// item matches disabled test...
+				} else if(test instanceof RegExp 
+						&& test.test(txt)){
+					var t = txt.replace(test, '')
+
+					opts.disabled = true
+
+					txt = k instanceof Array ? 
+						[t].concat(k.slice(1)) 
+						: t
+
+				// no match -- restore text...
+				} else {
+					txt = k
 				}
-
-			// item matches disabled test...
-			} else if(test instanceof RegExp 
-					&& test.test(txt)){
-				var t = txt.replace(test, '')
-
-				opts.disabled = true
-
-				txt = k instanceof Array ? 
-					[t].concat(k.slice(1)) 
-					: t
-
-				if(options.skipDisabledItems){
-					return
-				}
-
-			// no match -- restore text...
-			} else {
-				txt = k
 			}
+		})
+
+		if((opts.disabled && opts.skipDisabledItems) 
+				|| (opts.hidden && opts.skipHiddenItems)){
+			return
 		}
 
-		var elem = make(txt, opts)
+		var elem = make(txt || k, opts)
 
 		keys !== data && data[k]
 			&& elem.on('open', data[k])
@@ -555,6 +565,10 @@ function(data, options){
 // 		// list length limit is reached...
 // 		overflow: function(selected){ ... },
 //
+// 		// list if items to remove, if not given this will be maintained 
+// 		// internally
+// 		to_remove: null | <list>,
+//
 //		// Special buttons...
 //		//
 //		// NOTE: these can be used only if .sort if not set.
@@ -644,7 +658,10 @@ function(list, options){
 	options = options || {}
 	var id = options.list_id || 'default' 
 
-	var to_remove = dialog.__to_remove[id] = dialog.__to_remove[id] || []
+	var to_remove = dialog.__to_remove[id] = 
+		options.to_remove 
+			|| dialog.__to_remove[id] 
+			|| []
 
 	// make a copy of options, to keep it safe from changes we are going
 	// to make...
@@ -893,7 +910,9 @@ function(list, options){
 
 				// remove items...
 				to_remove.forEach(function(e){
-					lst.splice(lst.indexOf(e), 1)
+					var i = lst.indexOf(e)
+					i >= 0 
+						&& lst.splice(i, 1)
 				})
 
 				// sort...
@@ -992,8 +1011,8 @@ function(list, pins, options){
 	i < 0 ? 
 		buttons.push(pin)
 		: (buttons[i] = pin) 
-	options.isItemDisabled = function(e){ return pins.indexOf(e) >= 0 }
-	options.skipDisabledItems = options.skipDisabledItems !== false ? true : false
+	options.isItemHidden = function(e){ return pins.indexOf(e) >= 0 }
+	options.skipHiddenItems = options.skipHiddenItems !== false ? true : false
 
 	//----------------------------------------- setup options: pins ---
 	var pins_options = {
@@ -1001,7 +1020,7 @@ function(list, pins, options){
 		new_item: false,
 		length_limit: options.pins_length_limit || 10,
 
-		isItemDisabled: null,
+		isItemHidden: null,
 	}
 	pins_options.__proto__ = options
 	var sortable = pins_options.sortable = 
@@ -1217,6 +1236,7 @@ var BrowserPrototype = {
 		// NOTE: this can be a number indicating the item to select when
 		// 		load is done.
 		//path: null,
+		//selected: null,
 
 		//show_path: true,
 		
@@ -1935,7 +1955,8 @@ var BrowserPrototype = {
 
 		//-------------------------- prepare the path and selection ---
 		// string path and terminated with '/' -- no selection...
-		if(typeof(path) == typeof('str') && !/[\\\/]/.test(path.trim().slice(-1))){
+		if(typeof(path) == typeof('str') 
+				&& !/[\\\/]/.test(path.trim().slice(-1))){
 			path = this.path2list(path)
 			var selection = path.pop()
 
@@ -2341,6 +2362,7 @@ var BrowserPrototype = {
 		make.done = function(){
 			var s = l.find('.selected')			
 			s.length > 0 && that.select(s)
+			return deferred
 		}
 		make.dialog = this
 
@@ -3586,6 +3608,7 @@ var BrowserPrototype = {
 		// load the initial state...
 		// NOTE: path can be a number so simply or-ing here is a bad idea...
 		var path = options.path != null ? options.path : that.path
+		var selected = options.selected
 		typeof(path) == typeof(123) ?
 			// select item number...
 			that
@@ -3597,9 +3620,16 @@ var BrowserPrototype = {
 				.update(path || '/')
 				// Select the default path...
 				.then(function(){ 
-					// in case we have a manually selected item but that was 
-					// not aligned...
-					that.selected && that.select() })
+					// explicit config selection...
+					// NOTE: this takes precedence over the path syntax...
+					// XXX not sure if we need this...
+					// 		...currently this is used only when path is 
+					// 		a list and we need to also select an item...
+					selected ? that.select(selected) 
+						// we have a manually selected item but that was 
+						// not aligned...
+						: that.selected ? that.select()
+						: null })
 	},
 }
 
