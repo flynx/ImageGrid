@@ -757,6 +757,16 @@ var URLHistoryUIActions = actions.Actions({
 				save()
 			})
 
+			// handle 'O' button to browse path...
+			dialog.browsePath = function(p){
+				this.selected 
+					&& that.browsePath(p || this.selected)
+						.close(function(evt, reason){
+							reason != 'reject'
+								&& dialog.close(reason)
+						}) }
+			dialog.keyboard.handler('General', 'O', 'browsePath')
+
 			return dialog
 		})],
 })
