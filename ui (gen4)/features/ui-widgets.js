@@ -805,7 +805,7 @@ var BrowseActionsActions = actions.Actions({
 				'Crop/80:Crop $bookmarked images',
 				// NOTE: we can also add separators here...
 				//'Crop/70:---',
-				'Crop/60:Crop',
+				'Crop/60:$Crop',
 				'Crop/50:$Flatten',
 				// ...
 				'Crop/-80:Uncrop and keep crop image order',
