@@ -733,6 +733,15 @@ var URLHistoryUIActions = actions.Actions({
 						isItemDisabled: makeDisabledChecker(fs_state),
 
 						to_remove: to_remove,
+
+						// XXX should the normal items have a "to top" button???
+						buttons: [
+							// open...
+							['<span class="show-on-hover">&#8599;</span>', 
+								function(p){ dialog.browsePath(p) }],
+							'PIN',
+							'REMOVE',
+						],
 					})
 				}
 
