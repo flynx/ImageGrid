@@ -720,36 +720,52 @@ function(list, options){
 		}
 
 		// up/down...
-		options.item_order_buttons
-			&& (_buttons['UP'] = [options.shift_up_button || '&#9206;',
+		if(options.item_order_buttons 
+				|| buttons.indexOf('UP') >= 0){
+			_buttons['UP'] = [
+				options.shift_up_button || '&#9206;',
 				function(p, e){
 					move(p, -1)
-						&& e.prev().before(e) }])
-			&& (_buttons['DOWN'] = [options.shift_down_button || '&#9207;',
+						&& e.prev().before(e) }
+			]
+		}
+		if(options.item_order_buttons 
+				|| buttons.indexOf('DOWN') >= 0){
+			_buttons['DOWN'] = [
+				options.shift_down_button || '&#9207;',
 				function(p, e){
 					move(p, 1)
-						&& e.next().after(e) }])
+						&& e.next().after(e) }
+			]
+		}
 
 		// top...
-		options.to_top_button
-			&& (_buttons['TO_TOP'] = [options.to_top_button === true ?
+		var i = buttons.indexOf('TO_TOP')
+		if(options.to_top_button || i >= 0){
+			_buttons['TO_TOP'] = [
+				(options.to_top_button === true || i >= 0) ?
 					'&#10514;'
 					: options.to_top_button,
 				function(p, e){
 					var d = move(p, -dialog.__list[id].length)
 					d && e.prevAll().eq(Math.abs(d+1)).before(e)
-				}])
+				}
+			]
+		}
 
 		// bottom...
-		options.to_bottom_button
-			&& (_buttons['TO_BOTTOM'] = [options.to_bottom_button === true ? 
+		var i = buttons.indexOf('TO_BOTTOM')
+		if(options.to_bottom_button || i >= 0){
+			_buttons['TO_BOTTOM'] = [
+				(options.to_bottom_button === true || i >= 0) ? 
 					'&#10515;' 
 					: options.to_bottom_button,
 				function(p, e){
 					var d = move(p, dialog.__list[id].length)
 					d && e.nextAll().eq(Math.abs(d)).before(e)
-				}])
-
+				}
+			]
+		}
 	}
 
 	// 'x' button if not disabled...
@@ -769,8 +785,8 @@ function(list, options){
 			: buttons.splice(i, 1, _buttons[key])
 	})
 	// clear out the unused button placeholders...
-	buttons = buttons
-		.filter(function(b){ 
+	buttons = options.buttons = 
+		buttons.filter(function(b){ 
 			return ['UP', 'DOWN', 'TO_TOP', 'TO_BOTTOM', 'REMOVE'].indexOf(b) < 0 })
 
 	// if we are sortable then we will need to also be grouped...
