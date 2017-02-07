@@ -625,6 +625,8 @@ function(data, options){
 // 					- indicator that the dialog handlers are set up
 //
 //
+// NOTE: if at least one order button is present this will set 
+// 		.groupList to true
 // NOTE: this uses .List(..) internally, see it's doc for additional 
 // 		info.
 // NOTE: the list must contain strings.
@@ -765,7 +767,7 @@ function(list, options){
 				: options.to_bottom_button,
 			function(p, e){
 				var d = move(p, dialog.__list[id].length)
-				d && e.nextAll().eq(Math.abs(d)).before(e)
+				d && e.nextAll().eq(Math.abs(d-1)).after(e)
 			}],
 		REMOVE: Buttons.markForRemoval(
 			to_remove, 
