@@ -690,104 +690,102 @@ function(list, options){
 	}
 
 	var buttons = options.buttons = (options.buttons || []).slice()
-	var _buttons = {}
 
-	// manual sorting buttons...
+	// options buttons...
+	// NOTE: the order here is important...
 	if(editable && !options.sort){
-		var move = function(p, offset){
-			var l = dialog.__list[id]
-			var i = l.indexOf(p)
-
-			// not in list...
-			if(i < 0
-					// first element...
-					|| (i == 0 && offset < 0) 
-					// last element...
-					|| (i >= l.length-1 && offset > 0)){
-				return false
-			}
-
-			var j = i + offset
-			j = j < 0 ? 0
-				: j >= l.length ? l.length-1
-				: j
-
-			// update list...
-			l.splice(j, 0, l.splice(i, 1)[0])
-
-			// return the shift distance... 
-			return j - i
-		}
-
 		// up/down...
-		if(options.item_order_buttons 
-				|| buttons.indexOf('UP') >= 0){
-			_buttons['UP'] = [
-				options.shift_up_button || '&#9206;',
-				function(p, e){
-					move(p, -1)
-						&& e.prev().before(e) }
-			]
-		}
-		if(options.item_order_buttons 
-				|| buttons.indexOf('DOWN') >= 0){
-			_buttons['DOWN'] = [
-				options.shift_down_button || '&#9207;',
-				function(p, e){
-					move(p, 1)
-						&& e.next().after(e) }
-			]
-		}
+		options.item_order_buttons 
+			&& buttons.indexOf('UP') < 0
+			&& buttons.push('UP')
+		options.item_order_buttons 
+			&& buttons.indexOf('DOWN') < 0
+			&& buttons.push('DOWN')
 
-		// top...
-		var i = buttons.indexOf('TO_TOP')
-		if(options.to_top_button || i >= 0){
-			_buttons['TO_TOP'] = [
-				(options.to_top_button === true || i >= 0) ?
-					'&#10514;'
-					: options.to_top_button,
-				function(p, e){
-					var d = move(p, -dialog.__list[id].length)
-					d && e.prevAll().eq(Math.abs(d+1)).before(e)
-				}
-			]
-		}
-
-		// bottom...
-		var i = buttons.indexOf('TO_BOTTOM')
-		if(options.to_bottom_button || i >= 0){
-			_buttons['TO_BOTTOM'] = [
-				(options.to_bottom_button === true || i >= 0) ? 
-					'&#10515;' 
-					: options.to_bottom_button,
-				function(p, e){
-					var d = move(p, dialog.__list[id].length)
-					d && e.nextAll().eq(Math.abs(d)).before(e)
-				}
-			]
-		}
+		// top/bottom...
+		options.to_top_button
+			&& buttons.indexOf('TO_TOP') < 0
+			&& buttons.push('TO_TOP')
+		options.to_bottom_button
+			&& buttons.indexOf('TO_BOTTOM') < 0
+			&& buttons.push('TO_BOTTOM')
 	}
-
-	// 'x' button if not disabled...
+	// 'x' button...
 	editable 
 		&& options.delete_button !== false
-		&& (_buttons['REMOVE'] = Buttons.markForRemoval(
-				to_remove, 
-				options.delete_button !== true ? 
-					options.delete_button 
-					: undefined))
+		&& buttons.indexOf('REMOVE') < 0
+		&& buttons.push('REMOVE')
 
-	// add the buttons...
-	Object.keys(_buttons).forEach(function(key){
-		var i = buttons.indexOf(key)
-		i < 0 ?
-			buttons.push(_buttons[key])
-			: buttons.splice(i, 1, _buttons[key])
-	})
-	// clear out the unused button placeholders...
+	var move = function(p, offset){
+		var l = dialog.__list[id]
+		var i = l.indexOf(p)
+
+		// not in list...
+		if(i < 0
+				// first element...
+				|| (i == 0 && offset < 0) 
+				// last element...
+				|| (i >= l.length-1 && offset > 0)){
+			return false
+		}
+
+		var j = i + offset
+		j = j < 0 ? 0
+			: j >= l.length ? l.length-1
+			: j
+
+		// update list...
+		l.splice(j, 0, l.splice(i, 1)[0])
+
+		// return the shift distance... 
+		return j - i
+	}
+	var __buttons = {
+		UP: [options.shift_up_button || '&#9206;',
+			function(p, e){
+				move(p, -1)
+					&& e.prev().before(e) }],
+		DOWN: [options.shift_down_button || '&#9207;',
+			function(p, e){
+				move(p, 1)
+					&& e.next().after(e) }],
+		TO_TOP: [
+			(options.to_top_button === true
+			 		|| buttons.indexOf('TO_TOP') >= 0) ? 
+				'&#10514;'
+				: options.to_top_button,
+			function(p, e){
+				var d = move(p, -dialog.__list[id].length)
+				d && e.prevAll().eq(Math.abs(d+1)).before(e)
+			}],
+		TO_BOTTOM: [
+			(options.to_bottom_button === true 
+			 		|| buttons.indexOf('TO_BOTTOM') >= 0) ? 
+				'&#10515;' 
+				: options.to_bottom_button,
+			function(p, e){
+				var d = move(p, dialog.__list[id].length)
+				d && e.nextAll().eq(Math.abs(d)).before(e)
+			}],
+		REMOVE: Buttons.markForRemoval(
+			to_remove, 
+			options.delete_button !== true ? 
+				options.delete_button 
+				: undefined)
+	}
+
+	// replace the button placeholders...
 	buttons = options.buttons = 
-		buttons.filter(function(b){ 
-			return ['UP', 'DOWN', 'TO_TOP', 'TO_BOTTOM', 'REMOVE'].indexOf(b) < 0 })
+		buttons
+			.map(function(button){
+				return button in __buttons ? 
+						__buttons[button]
+					: button[1] in __buttons ? 
+						[button[0], __buttons[button[1]][1]]
+					: button.slice() })
+			// clear out the unused button placeholders...
+			.filter(function(b){ 
+				return ['UP', 'DOWN', 'TO_TOP', 'TO_BOTTOM', 'REMOVE'].indexOf(b) < 0 })
 
 	// if we are sortable then we will need to also be grouped...
 	options.sortable
@@ -1037,6 +1035,8 @@ function(list, pins, options){
 		length_limit: options.pins_length_limit || 10,
 
 		isItemHidden: null,
+
+		buttons: options.buttons.slice(),
 	}
 	pins_options.__proto__ = options
 	var sortable = pins_options.sortable = 

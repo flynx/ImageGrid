@@ -1684,11 +1684,6 @@ var WidgetTestActions = actions.Actions({
 				make.EditableList(letters, { 
 					list_id: 'letters', 
 					sortable: 'y',
-
-					buttons: [
-						'TO_TOP',
-						'UP',
-					],
 				})
 
 				// NOTE: the dialog's .parent is not yet set at this point...
@@ -1726,11 +1721,10 @@ var WidgetTestActions = actions.Actions({
 				make.EditablePinnedList(letters, pins, { 
 					list_id: 'letters',
 					//pins_sortable: false,
-					/*buttons: [
-						'PIN',
-						'REMOVE',
+					buttons: [
+						'UP',
+						'TO_BOTTOM',
 					],
-					//*/
 				})
 
 				// NOTE: the dialog's .parent is not yet set at this point...
