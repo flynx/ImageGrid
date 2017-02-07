@@ -778,11 +778,17 @@ function(list, options){
 	buttons = options.buttons = 
 		buttons
 			.map(function(button){
-				return button in __buttons ? 
+				var res = button in __buttons ? 
 						__buttons[button]
 					: button[1] in __buttons ? 
 						[button[0], __buttons[button[1]][1]]
-					: button.slice() })
+					: button.slice() 
+				// group if at least one sort button is present...
+				if(res !== button){
+					options.groupList = true
+				}
+				return res
+			})
 			// clear out the unused button placeholders...
 			.filter(function(b){ 
 				return ['UP', 'DOWN', 'TO_TOP', 'TO_BOTTOM', 'REMOVE'].indexOf(b) < 0 })
