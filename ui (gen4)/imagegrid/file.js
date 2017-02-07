@@ -12,7 +12,9 @@ if(typeof(process) != 'undefined'){
 	var events = requirejs('events')
 
 	var fse = requirejs('fs-extra')
+
 	var glob = requirejs('glob')
+	var wglob = requirejs('wildglob')
 
 	var guaranteeEvents = requirejs('guarantee-events')
 
@@ -87,6 +89,7 @@ function(glob){ return guaranteeEvents('match end', glob) }
 var gGlob = 
 module.gGlob = function(){
 	return guaranteeGlobEvents(glob.apply(null, arguments)) }
+
 
 
 /*********************************************************************/

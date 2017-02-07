@@ -14,6 +14,7 @@ if(typeof(process) != 'undefined'){
 	var fse = requirejs('fs-extra')
 	var pathlib = requirejs('path')
 	var glob = requirejs('glob')
+	var wglob = requirejs('wildglob')
 
 	var file = require('imagegrid/file')
 }

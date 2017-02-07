@@ -781,6 +781,7 @@ var KeyboardPrototype = {
 
 				handler = modifiers
 						.filter(function(m){
+							console.log('>>>>', handler)
 							return handler.indexOf(m) < 0
 								&& seen.indexOf(m+handler) < 0
 								&& m+handler in bindings })

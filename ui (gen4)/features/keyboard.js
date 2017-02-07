@@ -244,6 +244,7 @@ module.GLOBAL_KEYBOARD = {
 
 		// navigation...
 		Left: 'prevImage',
+		shift_Space: 'Left',
 		Backspace: 'Left',
 		Right: 'nextImage',
 		Space: 'Right',
