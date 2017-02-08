@@ -956,8 +956,8 @@ function(list, options){
 // Editable list of pinnable elements...
 //
 // This is like .EditableList(..) but adds the ability to pin items to 
-// the top sub-list and maintain that sub-list order independently or 
-// keep it the same as the main list...
+// the top sub-list and either maintain that sub-list order independently
+// or keep it the same as the main list...
 //
 // Format:
 // 	{
