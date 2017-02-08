@@ -763,10 +763,11 @@ function(list, options){
 				: options.to_top_button,
 			function(p, e){
 				var d = move(p, -dialog.__list[id].length)
-				d 
-					&& e.prevAll().eq(Math.abs(d+1)).before(e)
-					// XXX hackish...
+				d != null
+					//&& e.prevAll().eq(Math.abs(d+1)).before(e)
+					&& e.prevAll().last().before(e)
 					&& dialog
+						// XXX hackish...
 						.updateItemNumbers()
 						.trigger('to_top_button', p, e)
 			}],
@@ -777,10 +778,11 @@ function(list, options){
 				: options.to_bottom_button,
 			function(p, e){
 				var d = move(p, dialog.__list[id].length)
-				d 
-					&& e.nextAll().eq(Math.abs(d-1)).after(e)
-					// XXX hackish...
+				d != null
+					//&& e.nextAll().eq(Math.abs(d-1)).after(e)
+					&& e.nextAll().last().after(e)
 					&& dialog
+						// XXX hackish...
 						.updateItemNumbers()
 						.trigger('to_bottom_button', p, e)
 			}],
