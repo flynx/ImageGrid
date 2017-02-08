@@ -718,6 +718,7 @@ var URLHistoryUIActions = actions.Actions({
 			//		be set to false on state update...
 			var state_saved = false
 
+			var to_sort = []
 			var to_remove = []
 			// cached fs state...
 			var fs_state = {}
@@ -748,7 +749,8 @@ var URLHistoryUIActions = actions.Actions({
 				to_remove = []
 
 				// sort history...
-				that.sortURLHistory(urls)
+				//that.sortURLHistory(urls)
+				that.sortURLHistory(to_sort)
 				// toggle pins...
 				pins
 					.concat(orig_pins || [])
@@ -847,6 +849,9 @@ var URLHistoryUIActions = actions.Actions({
 			})
 			.on('close', function(){
 				save()
+			})
+			.on('to_top_button', function(evt, p, e){
+				to_sort.splice(0, 0, p)
 			})
 
 			// handle 'O' button to browse path...

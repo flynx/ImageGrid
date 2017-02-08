@@ -745,13 +745,17 @@ function(list, options){
 				move(p, -1)
 					&& e.prev().before(e)
 					// XXX hackish...
-					&& dialog.updateItemNumbers() }],
+					&& dialog
+						.updateItemNumbers()
+						.trigger('up_button', p, e) }],
 		DOWN: [options.shift_down_button || '&#9207;',
 			function(p, e){
 				move(p, 1)
 					&& e.next().after(e)
 					// XXX hackish...
-					&& dialog.updateItemNumbers() }],
+					&& dialog
+						.updateItemNumbers()
+						.trigger('down_button', p, e) }],
 		TO_TOP: [
 			(options.to_top_button === true
 			 		|| buttons.indexOf('TO_TOP') >= 0) ? 
@@ -762,7 +766,9 @@ function(list, options){
 				d 
 					&& e.prevAll().eq(Math.abs(d+1)).before(e)
 					// XXX hackish...
-					&& dialog.updateItemNumbers()
+					&& dialog
+						.updateItemNumbers()
+						.trigger('to_top_button', p, e)
 			}],
 		TO_BOTTOM: [
 			(options.to_bottom_button === true 
@@ -774,7 +780,9 @@ function(list, options){
 				d 
 					&& e.nextAll().eq(Math.abs(d-1)).after(e)
 					// XXX hackish...
-					&& dialog.updateItemNumbers()
+					&& dialog
+						.updateItemNumbers()
+						.trigger('to_bottom_button', p, e)
 			}],
 		REMOVE: Buttons.markForRemoval(
 			to_remove, 
