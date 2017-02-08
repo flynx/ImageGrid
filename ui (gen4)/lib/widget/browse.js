@@ -961,20 +961,23 @@ function(list, options){
 //
 // Format:
 // 	{
-// 		// equivalent to .length_limit option in .List(..) but applies 
+// 		// Equivalent to .length_limit option in .List(..) but applies 
 // 		// only to pins...
 // 		pins_length_limit: .. ,
 //
-// 		// equivalent to .sortable option in .List(..) but applies only
+// 		// Equivalent to .sortable option in .List(..) but applies only
 // 		// to pins...
 // 		pins_sortable: .. ,
+//
+// 		// Equivalent to .buttons option in .List(..) but applies only 
+// 		// to pins...
+// 		// If this is not given the same buttons are used for both lists.
+// 		pins_buttons: .. ,
 //
 // 		...
 // 	}
 //
 // XXX should id be the first argument??
-// XXX should this be a single list or two lists???
-// 		...with a single list it's simpler to play with items w/o full updates...
 Items.EditablePinnedList =
 function(list, pins, options){
 	var that = this
@@ -1046,7 +1049,7 @@ function(list, pins, options){
 
 		isItemHidden: null,
 
-		buttons: options.buttons.slice(),
+		buttons: (options.pins_buttons || options.buttons).slice(),
 	}
 	pins_options.__proto__ = options
 	var sortable = pins_options.sortable = 

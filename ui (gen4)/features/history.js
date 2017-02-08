@@ -641,7 +641,6 @@ var URLHistoryUIActions = actions.Actions({
 
 	// XXX need to sort pins...
 	// XXX need to save pins...
-	// XXX 'to top' button???
 	listURLHistory2: ['History|File/Location history (new)...',
 		widgets.makeUIDialog(function(){
 			var that = this
@@ -738,7 +737,7 @@ var URLHistoryUIActions = actions.Actions({
 							// open...
 							['<span class="show-on-hover">&#8599;</span>', 
 								function(p){ dialog.browsePath(p) }],
-							// XXX should the normal items have a "to top" button???
+							// XXX should the pins have a "to top" button???
 							['&diams;', 'TO_TOP'],
 							'PIN',
 							'REMOVE',
