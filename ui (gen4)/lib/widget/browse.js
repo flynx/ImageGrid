@@ -815,10 +815,16 @@ function(list, options){
 	// make sortable...
 	if(options.sortable){
 		// add sort handle...
+		res.find('.text:first-child')
+			.before($('<span>')
+				.addClass('sort-handle')
+				.html('&#x2630;'))
+		/*
 		res.find('.button-container')
 			.before($('<span>')
 				.addClass('sort-handle')
 				.html('&#x2630;'))
+		//*/
 		// make the block sortable...
 		res.parent().sortable({
 			handle: '.sort-handle',
@@ -1014,6 +1020,7 @@ function(list, pins, options){
 	//------------------------------------ setup options: main/pins ---
 	// buttons...
 	var buttons = options.buttons = (options.buttons || []).slice()
+	var pins_buttons = (options.pins_buttons || buttons).slice()
 	// pin/unpin button...
 	var pin = [
 		'<span class="pin-set">&#9679;</span>'
@@ -1041,10 +1048,13 @@ function(list, pins, options){
 				// XXX this is slow...
 				that.dialog.update()
 			}]
-	var i = buttons.indexOf('PIN')
-	i < 0 ? 
-		buttons.push(pin)
-		: (buttons[i] = pin) 
+	;[buttons, pins_buttons]
+		.forEach(function(b){
+			var i = b.indexOf('PIN')
+			i < 0 ? 
+				b.push(pin)
+				: (b[i] = pin) 
+		})
 	options.isItemHidden = function(e){ return pins.indexOf(e) >= 0 }
 	options.skipHiddenItems = options.skipHiddenItems !== false ? true : false
 
@@ -1056,7 +1066,7 @@ function(list, pins, options){
 
 		isItemHidden: null,
 
-		buttons: (options.pins_buttons || options.buttons).slice(),
+		buttons: pins_buttons,
 	}
 	pins_options.__proto__ = options
 	var sortable = pins_options.sortable = 
