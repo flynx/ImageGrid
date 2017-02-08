@@ -490,6 +490,7 @@ var URLHistoryUIActions = actions.Actions({
 		// 	- [ 'open', 'close' ]	- explicitly select event
 		//
 		// XXX do we need this???
+		// XXX used only in .listURLHistoryOld(..)
 		'url-history-list-clear': ['open', 'close'],
 
 		// If true pushing the pin item button will also focus the item
@@ -748,7 +749,7 @@ var URLHistoryUIActions = actions.Actions({
 				to_remove = []
 
 				// sort history...
-				that.sortURLHistory(to_sort)
+				that.sortURLHistory(to_sort, true)
 				// toggle pins...
 				pins
 					.concat(orig_pins || [])
@@ -847,6 +848,10 @@ var URLHistoryUIActions = actions.Actions({
 			})
 			.on('close', function(){
 				save()
+			})
+			.on('pin_button', function(evt, p, e){
+				that.config['url-history-focus-on-pin'] 
+					&& dialog.select(e)
 			})
 			.on('to_top_button', function(evt, p, e){
 				to_sort.splice(0, 0, p)

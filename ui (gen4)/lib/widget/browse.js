@@ -1067,7 +1067,11 @@ function(list, pins, options){
 				}
 
 				// XXX this is slow...
-				that.dialog.update()
+				that.dialog
+					.update()
+					.then(function(){
+						that.dialog.trigger('pin_button', p, cur)
+					})
 			}]
 	;[buttons, pins_buttons]
 		.forEach(function(b){
