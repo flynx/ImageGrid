@@ -695,7 +695,7 @@ function(list, options){
 
 	var buttons = options.buttons = (options.buttons || []).slice()
 
-	// options buttons...
+	// buttons: options...
 	// NOTE: the order here is important...
 	if(editable && !options.sort){
 		// up/down...
@@ -714,7 +714,7 @@ function(list, options){
 			&& buttons.indexOf('TO_BOTTOM') < 0
 			&& buttons.push('TO_BOTTOM')
 	}
-	// 'x' button...
+	// remove...
 	editable 
 		&& options.delete_button !== false
 		&& buttons.indexOf('REMOVE') < 0
@@ -779,19 +779,31 @@ function(list, options){
 	}
 
 	// replace the button placeholders...
+	// NOTE: only the first button instance is used, also not that all
+	// 		the config buttons are pushed to the end of the list thus
+	// 		they will be overridden buy user buttons...
+	var seen = []
 	buttons = options.buttons = 
 		buttons
 			.map(function(button){
+				var key = button instanceof Array ? button[1] : button
+				// skip seen buttons...
+				if(seen.indexOf(key) >= 0){
+					return key
+				}
 				var res = button in __buttons ? 
 						__buttons[button]
 					: button[1] in __buttons ? 
 						[button[0], __buttons[button[1]][1]]
-					: button.slice() 
+					: button
 				// group if at least one sort button is present...
 				if(res !== button){
 					options.groupList = true
+
+					// avoid duplicates...
+					seen.push(key)
 				}
-				return res
+				return res.slice()
 			})
 			// clear out the unused button placeholders...
 			.filter(function(b){ 
