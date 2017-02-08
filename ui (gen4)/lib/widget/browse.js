@@ -2485,7 +2485,7 @@ var BrowserPrototype = {
 			.find('[shortcut-number]')
 				.removeAttr('shortcut-number')
 		!clear 
-			&& this.filter('*')
+			&& this.filter('*', false)
 				.slice(0, 10)
 				.each(function(i){ 
 					$(this).attr('shortcut-number', (i+1)%10) })

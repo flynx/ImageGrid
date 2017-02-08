@@ -733,15 +733,6 @@ var URLHistoryUIActions = actions.Actions({
 
 						to_remove: to_remove,
 
-						/*/ XXX not sure if this is the right way...
-						pins_buttons: [
-							// open...
-							['<span class="show-on-hover">&#8599;</span>', 
-								function(p){ dialog.browsePath(p) }],
-							'PIN',
-							'REMOVE',
-						],
-						//*/
 						buttons: [
 							// open...
 							['<span class="show-on-hover">&#8599;</span>', 
