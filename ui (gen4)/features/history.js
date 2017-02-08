@@ -732,7 +732,6 @@ var URLHistoryUIActions = actions.Actions({
 				state_saved = true
 
 				var pins = data.pins
-				var urls = data.urls
 
 				// remove items...
 				to_remove.forEach(function(e){
@@ -741,15 +740,14 @@ var URLHistoryUIActions = actions.Actions({
 					var i = pins.indexOf(e)
 					i >= 0
 						&& pins.splice(i, 1)
-					// urls...
-					i = urls.indexOf(e)
+					// urls to be sorted...
+					i = to_sort.indexOf(e)
 					i >= 0
-						&& urls.splice(i, 1)
+						&& to_sort.splice(i, 1)
 				})
 				to_remove = []
 
 				// sort history...
-				//that.sortURLHistory(urls)
 				that.sortURLHistory(to_sort)
 				// toggle pins...
 				pins
