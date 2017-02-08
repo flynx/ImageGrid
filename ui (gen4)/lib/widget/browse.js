@@ -697,27 +697,22 @@ function(list, options){
 
 	// buttons: options...
 	// NOTE: the order here is important...
+	// NOTE: user-added buttons take priority over these, so we do not 
+	// 		need to check if a button already exists...
 	if(editable && !options.sort){
 		// up/down...
 		options.item_order_buttons 
-			&& buttons.indexOf('UP') < 0
 			&& buttons.push('UP')
-		options.item_order_buttons 
-			&& buttons.indexOf('DOWN') < 0
 			&& buttons.push('DOWN')
-
 		// top/bottom...
 		options.to_top_button
-			&& buttons.indexOf('TO_TOP') < 0
 			&& buttons.push('TO_TOP')
 		options.to_bottom_button
-			&& buttons.indexOf('TO_BOTTOM') < 0
 			&& buttons.push('TO_BOTTOM')
 	}
 	// remove...
 	editable 
 		&& options.delete_button !== false
-		&& buttons.indexOf('REMOVE') < 0
 		&& buttons.push('REMOVE')
 
 	var move = function(p, offset){
