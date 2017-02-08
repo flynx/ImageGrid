@@ -2465,16 +2465,30 @@ var BrowserPrototype = {
 		//-------------------------------------------------------------
 	},
 
+	// Update item shortcut key number hints...
+	//
+	// 	Update hints...
+	// 	.updateItemNumbers()
+	// 		-> this
+	//
+	// 	Clear hints...
+	// 	.updateItemNumbers(true)
+	// 		-> this
+	//
+	// This should be called every time the list is modified manually, 
+	// the automatic side of things is taken care of by .update(..)...
+	//
 	// XXX hackish -- move this back to CSS as soon as :nth-match(..) gets
 	// 		enough support...
-	updateItemNumbers: function(){
+	updateItemNumbers: function(clear){
 		this.dom
 			.find('[shortcut-number]')
 				.removeAttr('shortcut-number')
-		this.filter('*')
-			.slice(0, 10)
-			.each(function(i){ 
-				$(this).attr('shortcut-number', (i+1)%10) })
+		!clear 
+			&& this.filter('*')
+				.slice(0, 10)
+				.each(function(i){ 
+					$(this).attr('shortcut-number', (i+1)%10) })
 		return this
 	},
 
