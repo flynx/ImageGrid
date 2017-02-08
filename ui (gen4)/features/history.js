@@ -44,7 +44,8 @@ var URLHistoryActions = actions.Actions({
 	// 		...
 	// 	}
 	//
-	// NOTE: last opened url is last...
+	// NOTE: last opened url is last in object, i.e. the keys are in 
+	// 		reverse order...
 	// NOTE: though functions are supported they are not recommended as
 	// 		we can not stringify them to JSON...
 	get url_history(){
@@ -62,6 +63,7 @@ var URLHistoryActions = actions.Actions({
 		}
 	}],
 
+	// NOTE: this updates .url_history in-place...
 	setTopURLHistory: ['- History/',
 		function(url){
 			var data = this.url_history[url]
@@ -72,6 +74,41 @@ var URLHistoryActions = actions.Actions({
 
 			delete this.url_history[url]
 			this.url_history[url] = data
+		}],
+	// NOTE: this will overwrite .url_history object...
+	// XXX should this be in-place or overwrite by default???
+	sortURLHistory: ['- History/',
+		function(order, in_place){
+			var that = this
+			var data = this.url_history
+			var ordered = {}
+
+			if(in_place){
+				order
+					.unique()
+					.reverse()
+					.forEach(function(url){
+						that.setTopURLHistory(url) })
+
+			} else {
+				order
+					.concat(
+						Object.keys(data)
+							.reverse())
+					.unique()
+					.reverse()
+					.forEach(function(url){
+						url in data
+							&& (ordered[url] = data[url]) })
+
+				// sanity check...
+				if(Object.keys(data).length != Object.keys(ordered).length){
+					console.error('Something went wrong with sort:', ordered)
+					return
+				}
+
+				this.url_history = ordered
+			}
 		}],
 	// NOTE: if clear is not true then this will update a history item 
 	// 		rather than fully rewriting it...
@@ -150,6 +187,38 @@ var URLHistoryActions = actions.Actions({
 				return null
 			}
 		}],
+	pinnedURLOrder: ['- History/',
+		core.doc`Get/set history pin order
+
+			Get pin order...
+			.pinURLOrder(<url>)
+				-> order
+
+			Set pin order...
+			.pinURLOrder(<url>, <order>)
+				-> this
+
+			Set pin order to 'auto'...
+			.pinURLOrder(<url>, 'auto')
+				-> this
+
+		Auto-ordered pins are sorted in the same order as .url_history
+
+		NOTE: this will not reset the pin, use .toggleURLPinned(..) for that
+		`,
+		function(url, order){
+			var e = this.url_history[url]
+			// get...
+			if(order == null){
+				return e.pinned === true ? 'auto'
+					: 'pinned' in e ? e.pinned
+					: null
+
+			// set...
+			} else {
+				e.pinned = order == 'auto' ? true : order
+			}
+		}],
 	toggleURLPinned: ['History/',
 		toggler.Toggler(
 			function(){ return this.location.path },
@@ -158,7 +227,7 @@ var URLHistoryActions = actions.Actions({
 
 				// get state...
 				if(action == null){
-					return e && e.pinned ? 'on' : 'off'
+					return (e && e.pinned != null) ? 'on' : 'off'
 
 				// change state -> 'on'...
 				} else if(action == 'on'){
@@ -435,8 +504,7 @@ var URLHistoryUIActions = actions.Actions({
 		'url-history-focus-on-pin': false,
 	},
 
-	// XXX use svg icons for buttons...
-	listURLHistory: ['History|File/Location history...',
+	listURLHistoryOld: ['History|File/Location history (old)...',
 		widgets.makeUIDialog(function(){
 			var that = this
 			var parent = this.preventClosing ? this.preventClosing() : null
@@ -639,111 +707,126 @@ var URLHistoryUIActions = actions.Actions({
 			return o
 		})],
 
-	// XXX need to sort pins...
-	// XXX need to save pins...
-	listURLHistory2: ['History|File/Location history (new)...',
+	// XXX add option to force full update on dialog.update() (???)
+	listURLHistory: ['History|File/Location history...',
 		widgets.makeUIDialog(function(){
 			var that = this
-
 			var data
+			var orig_pins
 			var cur = this.location.path
-			var to_remove = []
+			// NOTE: if doing intermediate/live saves this would need to
+			//		be set to false on state update...
+			var state_saved = false
 
-			// save state:
-			// 	- save pins and pin order... (XXX)
-			// 	- remove stirked out elements...
+			var to_remove = []
+			// cached fs state...
+			var fs_state = {}
+
+			// NOTE: this would require the dialog to be updated if it's
+			// 		not closed...
 			var save = function(){
-				// XXX save pins/order...
-				data.pins.forEach(function(p){
-					//that.toggleURLPinned('on')
-				})
+				if(state_saved){
+					return
+				}
+				state_saved = true
+
+				var pins = data.pins
+				var urls = data.urls
 
 				// remove items...
 				to_remove.forEach(function(e){
 					that.dropURLFromHistory(e)
+					// pins...
+					var i = pins.indexOf(e)
+					i >= 0
+						&& pins.splice(i, 1)
+					// urls...
+					i = urls.indexOf(e)
+					i >= 0
+						&& urls.splice(i, 1)
 				})
 				to_remove = []
+
+				// sort history...
+				that.sortURLHistory(urls)
+				// toggle pins...
+				pins
+					.concat(orig_pins || [])
+					.unique()
+					.forEach(function(p){
+						pins.indexOf(p) < 0 		
+							&& that.toggleURLPinned(p, 'off')
+						orig_pins.indexOf(p) < 0 		
+							&& that.toggleURLPinned(p, 'on')
+					})
+				// sort pins...
+				pins
+					.forEach(function(p, i){
+						that.pinnedURLOrder(p, i) })
 			}
 			var makeHistoryList = function(fs_state){
 				fs_state = fs_state || {}
 				var history = Object.keys(that.url_history).reverse()
+				var pinned_auto = []
+				var pinned_sorted = []
 
-				// XXX need pin order...
-				var pinned = []
 				var list = history 
 					// NOTE: this might get a little slow for 
 					// 		very large sets...
 					.map(function(p){
 						// pinned items...
-						// NOTE: yes direct access is faster, but 
-						// 		calling the toggler (common API) here
-						// 		will isolate the level knowledge to a
-						// 		single point which will simplify things
-						// 		if anything changes...
-						//that.url_history[p].pinned ?
-						// XXX need pin order...
-						that.toggleURLPinned(p, '?') == 'on' ?
-							// XXX
-							pinned.push(p)
+						var pin = that.pinnedURLOrder(p)
+						pin == 'auto' ? pinned_auto.push(p)
+							// prepare for sort...
+							: pin != null ? pinned_sorted.push([p, pin])
 							: null
-
 						return p
 					})
 
+				// sort pins...
+				pinned_sorted = pinned_sorted
+					.sort(function(a, b){ return a[1] - b[1] })
+					.map(function(e){ return e[0] })
+
 				return {
-					paths: list,
-					pins: pinned,
+					urls: list,
+					pins: pinned_sorted.concat(pinned_auto),
 				}
 			}
 			var makeDisabledChecker = function(fs_state){
 				return function(url){
-					// see of we need a full refresh or use the 
-					// last fs_state...
-					if(url in fs_state){
-						var d = fs_state[url]
-
-					} else {
-						var d = !that.checkURLFromHistory(url)
-						fs_state[url] = d
-					}
-					return d
-				}
-			}
-
-			// persistent state...
-			var fs_state = {}
+					// see of we need a full refresh or use the last fs_state...
+					return url in fs_state ?
+						fs_state[url]
+						: (fs_state[url] = !that.checkURLFromHistory(url)) } }
 
 			var dialog = browse.makeLister(null, function(path, make){
-
 				// live update...
-				// XXX add option to force full update...
+				// XXX add option to force full update???
 				data = data == null ? makeHistoryList(fs_state) : data
+				orig_pins = orig_pins == null ? data.pins.slice() : orig_pins
 
-				// empty list...
-				if(data.paths.length == 0){
+				// special case: empty list...
+				if(data.urls.length == 0){
 					make.Action('No history...', {disabled: true})
+					return
+				} 
 
-				} else {
-					make.EditablePinnedList(data.paths, data.pins, { 
-						list_id: 'history',
-						new_item: false,
-						pins_sortable: true,
-
-						isItemDisabled: makeDisabledChecker(fs_state),
-
-						to_remove: to_remove,
-
-						buttons: [
-							// open...
-							['<span class="show-on-hover">&#8599;</span>', 
-								function(p){ dialog.browsePath(p) }],
-							['&diams;', 'TO_TOP'],
-							'PIN',
-							'REMOVE',
-						],
-					})
-				}
-
+				make.EditablePinnedList(data.urls, data.pins, { 
+					list_id: 'history',
+					new_item: false,
+					pins_sortable: true,
+					isItemDisabled: makeDisabledChecker(fs_state),
+					to_remove: to_remove,
+					buttons: [
+						// open...
+						['<span class="show-on-hover">&#8599;</span>', 
+							function(p){ dialog.browsePath(p) }],
+						['&diams;', 'TO_TOP'],
+						'PIN',
+						'REMOVE',
+					],
+				})
 				make
 					.done()
 					// highlight the current item...
@@ -753,13 +836,13 @@ var URLHistoryUIActions = actions.Actions({
 							.addClass('highlighted') })
 			}, 
 			{
+				// NOTE: we are not using path: here because it will parse
+				// 		the current element as a path, and we need it as-is... 
 				selected: cur,
 			})
 			.open(function(evt, path){ 
 				save()
-
 				dialog.close() 
-
 				that.openURLFromHistory(path)
 			})
 			.on('close', function(){
