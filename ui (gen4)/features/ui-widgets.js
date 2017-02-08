@@ -1721,10 +1721,6 @@ var WidgetTestActions = actions.Actions({
 				make.EditablePinnedList(letters, pins, { 
 					list_id: 'letters',
 					//pins_sortable: false,
-					buttons: [
-						'UP',
-						'TO_BOTTOM',
-					],
 				})
 
 				// NOTE: the dialog's .parent is not yet set at this point...

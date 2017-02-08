@@ -739,7 +739,7 @@ var URLHistoryUIActions = actions.Actions({
 							['<span class="show-on-hover">&#8599;</span>', 
 								function(p){ dialog.browsePath(p) }],
 							// XXX should the normal items have a "to top" button???
-							'TO_TOP',
+							['&diams;', 'TO_TOP'],
 							'PIN',
 							'REMOVE',
 						],
