@@ -743,11 +743,15 @@ function(list, options){
 		UP: [options.shift_up_button || '&#9206;',
 			function(p, e){
 				move(p, -1)
-					&& e.prev().before(e) }],
+					&& e.prev().before(e)
+					// XXX hackish...
+					&& dialog.updateItemNumbers() }],
 		DOWN: [options.shift_down_button || '&#9207;',
 			function(p, e){
 				move(p, 1)
-					&& e.next().after(e) }],
+					&& e.next().after(e)
+					// XXX hackish...
+					&& dialog.updateItemNumbers() }],
 		TO_TOP: [
 			(options.to_top_button === true
 			 		|| buttons.indexOf('TO_TOP') >= 0) ? 
@@ -755,7 +759,10 @@ function(list, options){
 				: options.to_top_button,
 			function(p, e){
 				var d = move(p, -dialog.__list[id].length)
-				d && e.prevAll().eq(Math.abs(d+1)).before(e)
+				d 
+					&& e.prevAll().eq(Math.abs(d+1)).before(e)
+					// XXX hackish...
+					&& dialog.updateItemNumbers()
 			}],
 		TO_BOTTOM: [
 			(options.to_bottom_button === true 
@@ -764,7 +771,10 @@ function(list, options){
 				: options.to_bottom_button,
 			function(p, e){
 				var d = move(p, dialog.__list[id].length)
-				d && e.nextAll().eq(Math.abs(d-1)).after(e)
+				d 
+					&& e.nextAll().eq(Math.abs(d-1)).after(e)
+					// XXX hackish...
+					&& dialog.updateItemNumbers()
 			}],
 		REMOVE: Buttons.markForRemoval(
 			to_remove, 
@@ -839,6 +849,7 @@ function(list, options){
 						.toArray()
 				var l = dialog.__list[id]
 				l.splice.apply(l, [0, l.length].concat(order))
+				dialog.updateItemNumbers()
 			},
 		})
 	}
@@ -2447,8 +2458,24 @@ var BrowserPrototype = {
 				if(focus && browser.find(':focus').length == 0){
 					that.focus()
 				}
+
+				// XXX hackish...
+				that.updateItemNumbers()
 			})
 		//-------------------------------------------------------------
+	},
+
+	// XXX hackish -- move this back to CSS as soon as :nth-match(..) gets
+	// 		enough support...
+	updateItemNumbers: function(){
+		this.dom
+			.find('[shortcut-number]')
+				.removeAttr('shortcut-number')
+		this.filter('*')
+			.slice(0, 10)
+			.each(function(i){ 
+				$(this).attr('shortcut-number', (i+1)%10) })
+		return this
 	},
 
 	// Filter the item list...

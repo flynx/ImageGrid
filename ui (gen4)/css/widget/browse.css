@@ -317,7 +317,13 @@
 	margin-left: -15px;
 }
 
-/* XXX these are messed up with groups... */
+/* XXX use :nth-match(..) ass soon as it gets enough support... */
+.browse-widget:not(.no-item-numbers) .list .item:not(.heading):before {
+	content: attr(shortcut-number);
+}
+
+/* XXX these are messed up with groups, use :nth-match(..) ass soon as it gets enough support... */
+/*
 .browse-widget:not(.no-item-numbers) .list .item:nth-of-type(1):before {
 	content: "1";
 }
@@ -348,6 +354,7 @@
 .browse-widget:not(.no-item-numbers) .list .item:nth-of-type(10):before {
 	content: "0";
 }
+*/
 
 .browse-widget .list hr.separator {
 	opacity: 0.3;
