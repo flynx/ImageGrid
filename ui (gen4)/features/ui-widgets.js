@@ -947,11 +947,14 @@ var BrowseActionsActions = actions.Actions({
 
 				// check if it's a priority path... 
 				} else {
+					var t = text.replace(priority, '')
+					t = (marker ? t.replace(marker, '$1') : t).trim()
+
 					for(var e in level){
 						var n = e.replace(priority, '')
 						n = (marker ? n.replace(marker, '$1') : n).trim()
 
-						if(n == text){
+						if(n == t){
 							return [e, level[e]]
 						}
 					}

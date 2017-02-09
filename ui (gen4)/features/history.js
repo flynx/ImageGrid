@@ -850,8 +850,7 @@ var URLHistoryUIActions = actions.Actions({
 				save()
 			})
 			.on('pin_button', function(evt, p, e){
-				that.config['url-history-focus-on-pin'] 
-					&& dialog.select(e)
+				dialog.select(that.config['url-history-focus-on-pin'] ? p : '!')
 			})
 			.on('to_top_button', function(evt, p, e){
 				to_sort.splice(0, 0, p)
