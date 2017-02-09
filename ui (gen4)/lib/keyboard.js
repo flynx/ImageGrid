@@ -781,10 +781,10 @@ var KeyboardPrototype = {
 
 				handler = modifiers
 						.filter(function(m){
-							console.log('>>>>', handler)
-							return handler.indexOf(m) < 0
-								&& seen.indexOf(m+handler) < 0
-								&& m+handler in bindings })
+							return handler instanceof Function 
+								|| (handler.indexOf(m) < 0
+									&& seen.indexOf(m+handler) < 0
+									&& m+handler in bindings) })
 						.map(function(m){ return m+handler })[0]
 					|| handler
 

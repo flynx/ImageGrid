@@ -1592,12 +1592,16 @@ var BrowserPrototype = {
 			'#8': 'push!: "7!"',
 			'#9': 'push!: "8!"',
 			'#0': 'push!: "9!"',
+
+			// handlers for standard shortcuts...
+			ctrl_C: function(){ console.log('!!!!!') },
+
+
 		},
 
 		ItemShortcuts: {
 			doc: 'Item shortcuts',
 			pattern: '*',
-
 
 		},
 	},
