@@ -2267,7 +2267,8 @@ var BrowserPrototype = {
 					&& that.keyboard.handler(
 						'ItemShortcuts', 
 						opts.shortcut_key, 
-						function(){ that.push(res) })
+						//function(){ that.push(res) })
+						function(){ that.select(res) })
 
 				// text marker...
 				if(item_shortcut_marker){
@@ -2279,7 +2280,8 @@ var BrowserPrototype = {
 							&& that.keyboard.handler(
 								'ItemShortcuts', 
 								key,
-								function(){ that.push(res) })
+								//function(){ that.push(res) })
+								function(){ that.action(res) })
 						return key 
 					}
 
@@ -3416,8 +3418,8 @@ var BrowserPrototype = {
 	//
 	// NOTE: this ignores items with empty text...
 	// 		XXX not sure about this...
-	action: function(){
-		var elem = this.select('!')
+	action: function(elem){
+		elem = this.select(elem || '!')
 
 		// nothing selected, select first and exit...
 		if(elem.length == 0){
