@@ -846,15 +846,11 @@ var URLHistoryUIActions = actions.Actions({
 				dialog.close() 
 				that.openURLFromHistory(path)
 			})
-			.on('close', function(){
-				save()
-			})
+			.on('close', save)
 			.on('pin_button', function(evt, p, e){
-				dialog.select(that.config['url-history-focus-on-pin'] ? p : '!')
-			})
+				dialog.select(that.config['url-history-focus-on-pin'] ? p : '!') })
 			.on('to_top_button', function(evt, p, e){
-				to_sort.splice(0, 0, p)
-			})
+				to_sort.splice(0, 0, p) })
 
 			// handle 'O' button to browse path...
 			dialog.browsePath = function(p){
