@@ -365,6 +365,7 @@ var FileSystemLoaderActions = actions.Actions({
 	loadIndex: ['- File/Load index',
 		function(path, from_date, logger){
 			var that = this
+			var index_dir = util.normalizePath(this.config['index-dir'])
 			// XXX get a logger...
 			logger = logger || this.logger
 			logger = logger && logger.push('Load')
@@ -382,7 +383,7 @@ var FileSystemLoaderActions = actions.Actions({
 			// XXX make this load incrementally (i.e. and EventEmitter
 			// 		a-la glob)....
 			//file.loadIndex(path, this.config['index-dir'], logger)
-			return file.loadIndex(path, this.config['index-dir'], from_date, logger)
+			return file.loadIndex(path, index_dir, from_date, logger)
 				.then(function(res){
 					// XXX if res is empty load raw...
 

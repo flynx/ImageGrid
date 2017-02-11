@@ -502,9 +502,11 @@ function(path, index_dir, from_date, logger){
 		var i = util.normalizePath(index_dir).split(/[\\\/]/g)
 		var p = util.normalizePath(path).split(/[\\\/]/g).slice(-i.length)
 
+		var explicit_index_dir = (i.filter(function(e, j){ return e == p[j] }).length == i.length)
+
 		// we've got an index...
 		// XXX do we need to check if if it's a dir???
-		if(i.filter(function(e, j){ return e == p[j] }).length == i.length){
+		if(explicit_index_dir){
 
 			logger && logger.emit('path', path)
 
@@ -601,6 +603,23 @@ function(path, index_dir, from_date, logger){
 		} else {
 			var res = {}
 
+			// special case: root index...
+			if(fse.existsSync(path +'/'+ index_dir)){
+				var n = path +'/'+ index_dir
+
+				return loadIndex(n, index_dir, from_date, logger) 
+					.then(function(obj){ 
+						// NOTE: considering that all the paths within
+						// 		the index are relative to the preview 
+						// 		dir (the parent dir to the index root)
+						// 		we do not need to include the index 
+						// 		itself in the base path...
+						res[path] = obj[n] 
+						resolve(res)
+					})
+			}
+
+			// full search...
 			getIndexes(path, index_dir, logger)
 				.catch(function(err){
 					logger && logger.emit('error', err)
