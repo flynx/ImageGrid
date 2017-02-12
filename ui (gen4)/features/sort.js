@@ -22,6 +22,7 @@ var browse = require('lib/widget/browse')
 /*********************************************************************/
 
 // XXX add sorting on load....
+// XXX keep a cached sort order for each method in .data...
 var SortActions = 
 module.SortActions = actions.Actions({
 	config: {
@@ -309,7 +310,7 @@ module.SortActions = actions.Actions({
 			function(){ 
 				return Object.keys(this.config['sort-methods'])
 					.concat((this.data 
-							&& (this.data.manual_order 
+							&& ((this.data.sort_cache || {})['Manual'] 
 								|| this.data.sort_method == 'Manual')) ? 
 						['Manual'] 
 						: [])},
@@ -317,20 +318,21 @@ module.SortActions = actions.Actions({
 			function(mode){ 
 				return !!this.images 
 					&& (mode != 'none' 
-						|| (mode == 'Manual' && this.data.manual_order)) },
+						|| (mode == 'Manual' && (this.data.sort_cache || {})['Manual'])) },
 			// XXX need to refactor the toggler a bit to make the 
 			// 		signature simpler... (???)
 			function(mode, _, reverse){ 
 				reverse = reverse == 'reverse' || reverse
+				var cache = this.data.sort_cache = this.data.sort_cache || {}
 
 				// save manual order...
 				if(this.data.sort_method == 'Manual'){
-					this.data.manual_order = this.data.order.slice()
+					cache['Manual'] = this.data.order.slice()
 				}
 
 				// special case: manual order...
 				if(mode == 'Manual'){
-					this.data.order = this.data.manual_order.slice()
+					this.data.order = cache['Manual'].slice()
 					this.sortImages('update' + (reverse ? ' reverse' : ''))
 					this.data.sort_method = mode
 
@@ -341,29 +343,31 @@ module.SortActions = actions.Actions({
 
 	// Store/load sort data:
 	// 	.data.sort_method		- current sort mode (optional)
-	// 	.data.manual_order		- manual sort order (optional)
+	// 	.data.sort_cache		- manual sort order (optional)
 	load: [function(data){
 		return function(){
 			if(data.data && data.data.sort_method){
 				this.data.sort_method = data.data.sort_method
 			}
 
-			if(data.data && data.data.manual_order){
-				this.data.manual_order = data.data.manual_order
+			if(data.data && data.data.sort_cache){
+				this.data.sort_cache = data.data.sort_cache
 			}
 		}
 	}],
+	// XXX should .sort_cache be stored separately???
 	json: [function(){
 		return function(res){
 			if(this.data.sort_method){
 				res.data.sort_method = this.data.sort_method
 			}
 
-			if(this.data.manual_order){
-				res.data.manual_order = this.data.manual_order
+			if(this.data.sort_cache){
+				res.data.sort_cache = this.data.sort_cache
 
 			} else if(this.toggleImageSort('?') == 'Manual'){
-				res.data.manual_order = this.data.order
+				res.data.sort_cache = res.data.sort_cache || {}
+				res.data.sort_cache['Manual'] = this.data.order
 			}
 		}
 	}],
