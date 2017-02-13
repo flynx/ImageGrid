@@ -202,7 +202,7 @@ var SharpActions = actions.Actions({
 					img.orientation = o.orientation
 					img.flipped = o.flipped
 
-					that.markChanged(data.gid)
+					that.markChanged('images', [data.gid])
 				}	
 
 				logger && logger.emit(data.status, data.path)
@@ -287,7 +287,7 @@ module.Sharp = core.ImageGridFeatures.Feature({
 							img.orientation = o.orientation || 0
 							img.flipped = o.flipped
 
-							that.markChanged(gid)
+							that.markChanged('images', [gid])
 
 							// update image to use the orientation...
 							// XXX this might be a source for recursion 

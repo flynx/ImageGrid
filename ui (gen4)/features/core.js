@@ -21,6 +21,8 @@
 * 	- journal
 * 		action journaling and undo/redo functionality
 * 		XXX needs revision...
+* 	- changes
+* 		change tracking
 * 	- workspace
 * 		XXX needs revision...
 * 	- tasks
@@ -29,6 +31,8 @@
 * 		basic framework for running test actions at startup...
 *
 *
+* XXX some actions use the .clone(..) action/protocol, should this be 
+* 	defined here???
 *
 **********************************************************************/
 ((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
@@ -790,6 +794,129 @@ module.Journal = ImageGridFeatures.Feature({
 		['start',
 			function(){ this.updateJournalableActions() }],
 	],
+})
+
+
+
+//---------------------------------------------------------------------
+// Changes API... 
+
+var ChangesActions = actions.Actions({
+	// This can be:
+	// 	- null/undefined	- write all
+	// 	- true				- write all
+	// 	- false				- write nothing
+	// 	- {
+	//		// write/skip data...
+	//		data: <bool>,
+	//
+	//		// write/skip images or write a diff including the given 
+	//		// <gid>s only...
+	//		images: <bool> | [ <gid>, ... ],
+	//
+	//		// write/skip tags...
+	//		tags: <bool>,
+	//
+	//		// write/skip bookmarks...
+	//		bookmarked: <bool>,
+	//
+	//		// write/skip selected...
+	//		selected: <bool>,
+	//
+	//		// feature specific custom flags...
+	//		...
+	// 	  }
+	//
+	// NOTE: in the complex format all fields ar optional; if a field 
+	// 		is not included it is not written (same as when set to false)
+	// NOTE: .current is written always.
+	chages: null,
+
+	clone: [function(full){
+			return function(res){
+				res.changes = null
+				if(full && this.hasOwnProperty('changes') && this.changes){
+					res.changes = JSON.parse(JSON.stringify(this.changes))
+				}
+			}
+		}],
+
+	markChanged: ['- System/',
+		doc`Mark data sections as changed...
+
+			Mark everything changed...
+			.markChanged('all')
+
+			Mark nothing changed...
+			.markChanged('none')
+
+			Mark section(s) as changed...
+			.markChanged(<section>)
+			.markChanged(<section>, ..)
+			.markChanged([<section>, ..])
+
+			Mark item(s) of section as changed...
+			.markChanged(<section>, [<item>, .. ])
+
+		NOTE: when .changes is null (i.e. everything changed, marked via
+				.markChanged('all')) then calling this with anything other 
+				than 'none' will have no effect.
+		`,
+		function(section, items){
+			var that = this
+			var args = section instanceof Array ? 
+				section 
+				: util.args2array(arguments)
+			//var changes = this.changes = 
+			var changes = 
+				this.hasOwnProperty('changes') ?
+					this.changes || {}
+					: {}
+
+			// all...
+			if(args.length == 1 && args[0] == 'all'){
+				// NOTE: this is better than delete as it will shadow 
+				// 		the parent's changes in case we got cloned from
+				// 		a live instance...
+				//delete this.changes
+				this.changes = null
+
+			// none...
+			} else if(args.length == 1 && args[0] == 'none'){
+				this.changes = false 
+
+			// everything is marked changed, everything will be saved
+			// anyway...
+			// NOTE: to reset this use .markChanged('none') and then 
+			// 		manually add the desired changes...
+			} else if(this.changes == null){
+				return
+
+			// section items...
+			} else if(items instanceof Array) {
+				changes[section] = (changes[section] || []).concat(items)
+				this.changes = changes
+
+			// section(s)...
+			} else {
+				args.forEach(function(arg){
+					changes[arg] = true
+				})
+				this.changes = changes
+			}
+		}],
+})
+
+
+var Changes = 
+module.Changes = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'changes',
+	depends: [ ],
+
+	actions: ChangesActions,
 })
 
 

@@ -157,7 +157,7 @@ var MetadataReaderActions = actions.Actions({
 							that.images[gid].metadata = m
 
 							// XXX
-							that.markChanged && that.markChanged(gid)
+							that.markChanged && that.markChanged('images', [gid])
 						}
 
 						resolve(data)

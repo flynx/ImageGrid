@@ -248,10 +248,6 @@ var StatusBarActions = actions.Actions({
 			return item
 		},
 		changes: function(item, gid, img){
-			if(this.changes === undefined){
-				return $()
-			}
-
 			if(typeof(item) == typeof('str')){
 				item = $('<span>')
 					.addClass('changes')

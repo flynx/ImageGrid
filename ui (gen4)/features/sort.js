@@ -350,8 +350,8 @@ module.SortActions = actions.Actions({
 				this.data.sort_method = data.data.sort_method
 			}
 
-			if(data.data && data.data.sort_cache){
-				this.data.sort_cache = data.data.sort_cache
+			if(data.data && data.sort_cache){
+				this.data.sort_cache = data.sort_cache
 			}
 		}
 	}],
@@ -363,11 +363,12 @@ module.SortActions = actions.Actions({
 			}
 
 			if(this.data.sort_cache){
-				res.data.sort_cache = this.data.sort_cache
+				res.sort_cache = this.data.sort_cache
+			}
 
-			} else if(this.toggleImageSort('?') == 'Manual'){
-				res.data.sort_cache = res.data.sort_cache || {}
-				res.data.sort_cache['Manual'] = this.data.order
+			if(this.toggleImageSort('?') == 'Manual'){
+				res.sort_cache = res.sort_cache || {}
+				res.sort_cache['Manual'] = this.data.order.slice()
 			}
 		}
 	}],
@@ -380,6 +381,7 @@ module.Sort = core.ImageGridFeatures.Feature({
 	tag: 'sort',
 	depends: [
 		'base',
+		'changes',
 	],
 	suggested: [
 		'ui-sort',
@@ -392,6 +394,21 @@ module.Sort = core.ImageGridFeatures.Feature({
 			function(){
 				this.data.sort_method = 'Manual'
 			}],
+
+		['prepareIndexForWrite',
+			function(res){
+				var changed = this.changes == null 
+					|| this.changes.sort_cache
+
+				if(changed && res.raw.sort_cache){
+					res.index['sort_cache'] = res.raw.sort_cache 
+				}
+			}],
+
+		// manage changes...
+		// XXX also need to mark 'sort_cache'
+		['sortImages',
+			function(_, target){ this.markChanged('data') }],
 	],
 })
 

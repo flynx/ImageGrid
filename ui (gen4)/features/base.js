@@ -840,13 +840,16 @@ module.Base = core.ImageGridFeatures.Feature({
 	title: 'ImageGrid base',
 
 	tag: 'base',
-	/* XXX ???
+	depends: [
+		'changes',
+	],
+	/*
 	suggested: [
 		'tags',
 		'sort',
 		'tasks',
 	],
-	*/
+	//*/
 
 	actions: BaseActions,
 
@@ -859,6 +862,45 @@ module.Base = core.ImageGridFeatures.Feature({
 			'shiftImageRight',
 		], 
 			function(){ this.shiftImage.apply(this, [].slice(arguments, 1))}],
+
+		// manage changes...
+		// everything changed...
+		[[
+			'claer',
+			'loadURLs', 
+		],
+			function(){ this.markChanged('all') }],
+
+		// data...
+		[[
+			//'load',
+
+			'setBaseRibbon',
+
+			'shiftImageTo',
+			'shiftImageUp',
+			'shiftImageDown',
+			'shiftImageLeft',
+			'shiftImageRight',
+			'shiftRibbonUp',
+			'shiftRibbonDown',
+
+			'reverseImages',
+			'reverseRibbons',
+
+			'alignToRibbon',
+		], 
+			function(_, target){ this.markChanged('data') }],
+
+		// image specific...
+		[[
+			'rotateCW',
+			'rotateCCW',
+			'flipHorizontal',
+			'flipVertical',
+		], 
+			function(_, target){ this.markChanged('images', [that.data.getImage(target)]) }],
+
 	],
 })
 
@@ -1014,9 +1056,42 @@ module.Tags = core.ImageGridFeatures.Feature({
 	tag: 'tags',
 	depends: [
 		'base',
+		'changes',
 	],
 
 	actions: TagsActions,
+
+	handlers: [
+		// tags and images...
+		// NOTE: tags are also stored in images...
+		['tag untag',
+			function(_, tags, gids){
+				var that = this
+				var changes = []
+
+				gids = gids || [this.data.getImage()]
+				gids = gids.constructor !== Array ? 
+					[this.data.getImage(gids)] 
+					: gids
+						.map(function(e){ return that.data.getImage(e) })
+
+				tags = tags || []
+				tags = tags.constructor !== Array ? [tags] : tags
+
+				// tags...
+				if(tags.length > 0){
+					this.markChanged('tags')
+
+					tags.indexOf('selected') >= 0
+						&& this.markChanged('selected')
+
+					tags.indexOf('bookmark') >= 0
+						&& this.markChanged('bookmarked')
+				}
+
+				this.markChanged('images', gids)
+			}],
+	],
 })
 
 
@@ -1366,9 +1441,20 @@ module.ImageGroup = core.ImageGridFeatures.Feature({
 	tag: 'image-group',
 	depends: [
 		'base',
+		'changes',
 	],
 
 	actions: ImageGroupActions,
+
+	handlers: [
+		[[
+			'group',
+			'ungroup',
+			'expandGroup',
+			'collapseGroup',
+		], 
+			function(_, target){ this.markChanged('data') }],
+	],
 })
 
 
