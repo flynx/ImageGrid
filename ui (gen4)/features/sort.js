@@ -370,9 +370,7 @@ module.SortActions = actions.Actions({
 				// saved sort order...
 				} else if(this.data.sort_order 
 						&& mode in this.data.sort_order){
-					this.data.order = this.data.sort_order[mode].slice()
-					this.sortImages('update' + (reverse ? ' reverse' : ''))
-					this.data.sort_method = mode
+					this.loadOrder(mode, reverse)
 
 				} else {
 					this.sortImages(sort)
@@ -381,13 +379,19 @@ module.SortActions = actions.Actions({
 
 	// XXX add drop/load actions...
 	saveOrder: ['- Sort/',
-		function(method){
-			method = method || this.data.sort_method
-
-			if(method){
+		function(title){
+			if(title){
 				var cache = this.data.sort_order = this.data.sort_order || {}
-
-				cache[method] = this.data.order.slice()
+				cache[title] = this.data.order.slice()
+			}
+		}],
+	loadOrder: ['- Srot/',
+		function(title, reverse){
+			var order = (this.data.sort_order || {})[title]
+			if(order){
+				this.data.order = order.slice()
+				this.sortImages('update' + (reverse ? ' reverse' : ''))
+				this.data.sort_method = mode
 			}
 		}],
 
