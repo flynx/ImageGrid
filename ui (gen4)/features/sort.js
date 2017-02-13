@@ -79,40 +79,53 @@ module.SortActions = actions.Actions({
 	//
 	// Format:
 	// 	{
-	// 		<method-name>: function(a, b){ ... },
+	// 		<method-name>: function(){
+	// 			...
+	// 			return function(a, b){ ... }
+	// 		},
 	// 		...
 	// 	}
+	//
+	// The methods are cmp constructors rather than direct cmp functions
+	// to enable index construction and other more complicated sort 
+	// approaches...
 	//
 	// NOTE: the cmp function is called in the actions context.
 	//
 	// XXX add sequence number with overflow...
 	__sort_methods__: {
-		'name-leading-sequence': function(a, b){
-			a = this.images.getImageNameLeadingSeq(a)
-			a = typeof(a) == typeof('str') ? 0 : a
-			b = this.images.getImageNameLeadingSeq(b)
-			b = typeof(b) == typeof('str') ? 0 : b
+		'name-leading-sequence': function(){
+			return function(a, b){
+				a = this.images.getImageNameLeadingSeq(a)
+				a = typeof(a) == typeof('str') ? 0 : a
+				b = this.images.getImageNameLeadingSeq(b)
+				b = typeof(b) == typeof('str') ? 0 : b
 
-			return a - b
+				return a - b
+			}
 		},
-		'name-sequence': function(a, b){
-			a = this.images.getImageNameSeq(a)
-			a = typeof(a) == typeof('str') ? 0 : a
-			b = this.images.getImageNameSeq(b)
-			b = typeof(b) == typeof('str') ? 0 : b
+		'name-sequence': function(){
+			return function(a, b){
+				a = this.images.getImageNameSeq(a)
+				a = typeof(a) == typeof('str') ? 0 : a
+				b = this.images.getImageNameSeq(b)
+				b = typeof(b) == typeof('str') ? 0 : b
 
-			return a - b
+				return a - b
+			}
 		},
 		// This is specifically designed to terminate sort methods to prevent
 		// images that are not relevant to the previous order to stay in place
 		//
 		// XXX need to test how will this affect a set of images where part
 		// 		of the set is sortable an part is not...
-		'keep-position': function(a, b){
-			a = this.data.order.indexOf(a)
-			b = this.data.order.indexOf(b)
+		'keep-position': function(){
+			return function(a, b){
+				a = this.data.order.indexOf(a)
+				b = this.data.order.indexOf(b)
 
-			return a - b
+				return a - b
+			}
 		},
 	},
 	// Sort images...
@@ -222,10 +235,10 @@ module.SortActions = actions.Actions({
 				// remove duplicate methods...
 				.unique()
 				.map(function(m){
-					return SortActions.__sort_methods__[m] 
+					return (SortActions.__sort_methods__[m]
 						|| (that.__sort_methods__ && that.__sort_methods__[m])
 						// sort by attr path...
-						|| (function(){
+						|| function(){
 							var p = m.split(/\./g)
 							var _get = function(obj){
 								if(obj == null){
@@ -254,7 +267,7 @@ module.SortActions = actions.Actions({
 								} else {
 									return +1
 								}
-							}})() 
+							}}).call(that) 
 				})
 
 			// prepare the cmp function...
@@ -327,19 +340,45 @@ module.SortActions = actions.Actions({
 
 				// save manual order...
 				if(this.data.sort_method == 'Manual'){
-					cache['Manual'] = this.data.order.slice()
+					this.cacheOrder()
 				}
 
-				// special case: manual order...
-				if(mode == 'Manual'){
-					this.data.order = cache['Manual'].slice()
-					this.sortImages('update' + (reverse ? ' reverse' : ''))
-					this.data.sort_method = mode
+				var sort = `"${mode}"`+ (reverse ? ' reverse' : '')
+
+				// cached order...
+				// XXX use load cache action...
+				if(mode in cache
+						|| sort in cache){
+					var order = (cache[mode] || cache[sort]).slice()
+					// invalid cache...
+					if(order.length != this.data.order.length){
+						// XXX should we drop the cache here???
+						// XXX
+						this.sortImages(sort)
+
+					// load cache...
+					} else {
+						this.data.order = order 
+						this.sortImages('update' + (reverse ? ' reverse' : ''))
+						this.data.sort_method = mode
+					}
 
 				} else {
-					this.sortImages('"'+mode+'"' + (reverse ? ' reverse' : ''))
+					this.sortImages(sort)
 				}
 			})],
+
+	// XXX add drop/load cache actions...
+	cacheOrder: ['- Sort/',
+		function(){
+			var method = this.data.sort_method
+
+			if(method){
+				var cache = this.data.sort_cache = this.data.sort_cache || {}
+
+				cache[method] = this.data.order.slice()
+			}
+		}],
 
 	// Store/load sort data:
 	// 	.data.sort_method		- current sort mode (optional)
