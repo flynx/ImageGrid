@@ -322,11 +322,11 @@ module.SortActions = actions.Actions({
 					|| 'none' },
 			function(){ 
 				return Object.keys(this.config['sort-methods'])
-					.concat((this.data 
-							&& ((this.data.sort_cache || {})['Manual'] 
-								|| this.data.sort_method == 'Manual')) ? 
-						['Manual'] 
-						: [])},
+					// manual...
+					.concat(this.data.sort_method == 'Manual' ? ['Manual'] : [])
+					// list saved sorts...
+					.concat(Object.keys(this.data.sort_order || {}))
+					.unique()},
 			// prevent setting 'none' as mode...
 			function(mode){ 
 				return !!this.images 
@@ -337,9 +337,13 @@ module.SortActions = actions.Actions({
 			function(mode, _, reverse){ 
 				reverse = reverse == 'reverse' || reverse
 				var cache = this.data.sort_cache = this.data.sort_cache || {}
+				var method = this.data.sort_method
 
-				// save manual order...
-				if(this.data.sort_method == 'Manual'){
+				// cache sort order...
+				if(method == 'Manual'){
+					this.saveOrder(method)
+
+				} else if(method && !(method in cache)){
 					this.cacheOrder()
 				}
 
@@ -350,10 +354,10 @@ module.SortActions = actions.Actions({
 				if(mode in cache
 						|| sort in cache){
 					var order = (cache[mode] || cache[sort]).slice()
-					// invalid cache...
+					// invalid cache -> sort...
 					if(order.length != this.data.order.length){
-						// XXX should we drop the cache here???
-						// XXX
+						// drop the cached order...
+						delete cache[ mode in cache ? mode : sort ]
 						this.sortImages(sort)
 
 					// load cache...
@@ -363,12 +367,31 @@ module.SortActions = actions.Actions({
 						this.data.sort_method = mode
 					}
 
+				// saved sort order...
+				} else if(this.data.sort_order 
+						&& mode in this.data.sort_order){
+					this.data.order = this.data.sort_order[mode].slice()
+					this.sortImages('update' + (reverse ? ' reverse' : ''))
+					this.data.sort_method = mode
+
 				} else {
 					this.sortImages(sort)
 				}
 			})],
 
-	// XXX add drop/load cache actions...
+	// XXX add drop/load actions...
+	saveOrder: ['- Sort/',
+		function(method){
+			method = method || this.data.sort_method
+
+			if(method){
+				var cache = this.data.sort_order = this.data.sort_order || {}
+
+				cache[method] = this.data.order.slice()
+			}
+		}],
+
+	// XXX add drop/load actions...
 	cacheOrder: ['- Sort/',
 		function(){
 			var method = this.data.sort_method
@@ -389,6 +412,9 @@ module.SortActions = actions.Actions({
 				this.data.sort_method = data.data.sort_method
 			}
 
+			if(data.data && data.sort_order){
+				this.data.sort_order = data.sort_order
+			}
 			if(data.data && data.sort_cache){
 				this.data.sort_cache = data.sort_cache
 			}
@@ -401,13 +427,16 @@ module.SortActions = actions.Actions({
 				res.data.sort_method = this.data.sort_method
 			}
 
+			if(this.data.sort_order){
+				res.sort_order = this.data.sort_order
+			}
 			if(this.data.sort_cache){
 				res.sort_cache = this.data.sort_cache
 			}
 
 			if(this.toggleImageSort('?') == 'Manual'){
-				res.sort_cache = res.sort_cache || {}
-				res.sort_cache['Manual'] = this.data.order.slice()
+				res.sort_order = res.sort_order || {}
+				res.sort_order['Manual'] = this.data.order.slice()
 			}
 		}
 	}],
@@ -439,6 +468,9 @@ module.Sort = core.ImageGridFeatures.Feature({
 				var changed = this.changes == null 
 					|| this.changes.sort_cache
 
+				if(changed && res.raw.sort_order){
+					res.index['sort_order'] = res.raw.sort_order 
+				}
 				if(changed && res.raw.sort_cache){
 					res.index['sort_cache'] = res.raw.sort_cache 
 				}
