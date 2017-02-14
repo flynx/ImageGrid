@@ -159,6 +159,8 @@
 
 	overflow-y: auto;
 	overflow-x: hidden;
+
+	will-change: scroll-position;
 }
 /*
 .browse-widget .list:before {

@@ -541,12 +541,16 @@ button:hover {
 		...this is because .ribbon-set will both be used for scaling 
 		and aligning... */
 	.origin(top, left);
+
+	will-change: transform;
 }
 .ribbon-locator {
 	position: relative;
 
 	top: 0;
 	left: 0;
+
+	will-change: transform;
 }
 
 
@@ -574,6 +578,8 @@ stretching in width... */
 
 	margin-top: @ribbon-margin;
 	margin-bottom: @ribbon-margin;
+
+	will-change: transform;
 }
 .ribbon:empty {
 	display: none;

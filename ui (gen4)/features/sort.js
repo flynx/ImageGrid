@@ -536,7 +536,7 @@ var SortUIActions = actions.Actions({
 				// Commands...
 				make('---')
 
-				make('Reverse images')
+				make('$Reverse images')
 					.on('open', function(){
 						that.reverseImages()
 						lister.parent.close()

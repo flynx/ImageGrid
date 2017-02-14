@@ -383,6 +383,7 @@ body {
 	content: " (non-action) ";
 	opacity: 0.5;
 	margin-left: 0.5em;
+	float: none;
 }
 
 
