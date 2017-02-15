@@ -380,10 +380,9 @@ module.SortActions = actions.Actions({
 	// XXX add drop/load actions...
 	saveOrder: ['- Sort/',
 		function(title){
-			if(title){
-				var cache = this.data.sort_order = this.data.sort_order || {}
-				cache[title] = this.data.order.slice()
-			}
+			title = title || 'Manual'
+			var cache = this.data.sort_order = this.data.sort_order || {}
+			cache[title] = this.data.order.slice()
 		}],
 	loadOrder: ['- Srot/',
 		function(title, reverse){
@@ -413,35 +412,32 @@ module.SortActions = actions.Actions({
 	// 	.data.sort_cache		- cached sort order (optional)
 	load: [function(data){
 		return function(){
-			if(data.data && data.data.sort_method){
-				this.data.sort_method = data.data.sort_method
-			}
+			var that = this
 
-			if(data.data && data.sort_order){
-				this.data.sort_order = data.sort_order
-			}
-			if(data.data && data.sort_cache){
-				this.data.sort_cache = data.sort_cache
-			}
+			data.data
+				&& ['sort_method', 'sort_order', 'sort_cache']
+					.forEach(function(attr){
+						if(data.data[attr]){
+							that.data[attr] = data.data[attr]
+						}
+					})
 		}
 	}],
-	// XXX should .sort_cache be stored separately???
 	json: [function(){
 		return function(res){
-			if(this.data.sort_method){
-				res.data.sort_method = this.data.sort_method
-			}
+			var that = this
 
-			if(this.data.sort_order){
-				res.sort_order = this.data.sort_order
-			}
-			if(this.data.sort_cache){
-				res.sort_cache = this.data.sort_cache
-			}
+			;['sort_method', 'sort_order', 'sort_cache']
+				.forEach(function(attr){
+					if(that.data[attr]){
+						res.data[attr] = that.data[attr]
+					}
+				})
 
+			// special case: unsaved manual order...
 			if(this.toggleImageSort('?') == 'Manual'){
-				res.sort_order = res.sort_order || {}
-				res.sort_order['Manual'] = this.data.order.slice()
+				res.data.sort_order = res.sort_order || {}
+				res.data.sort_order['Manual'] = this.data.order.slice()
 			}
 		}
 	}],
@@ -489,6 +485,11 @@ module.Sort = core.ImageGridFeatures.Feature({
 
 				save('sort_order')
 				save('sort_cache')
+			}],
+		['prepareJSONForLoad',
+			function(res){
+				// XXX
+				//res.data.sort_cache = res.sort_cache
 			}],
 
 		// manage changes...

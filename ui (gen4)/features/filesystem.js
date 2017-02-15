@@ -130,6 +130,16 @@ var FileSystemLoaderActions = actions.Actions({
 		'default-load-method': 'loadIndex',
 	},
 
+	// NOTE: this is the reverse of .prepareIndexForWrite(..)
+	//
+	// XXX do we need both this and file.buildIndex(..), we essentially create
+	// 		a Data object and then create it again in .load()...
+	prepareJSONForLoad: ['- File/Prepare JSON for loading',
+		function(json, base_path){ 
+			// XXX move the code up here from file.js...
+			return file.buildIndex(json, base_path) }],
+
+
 	// XXX is this a hack???
 	// XXX need a more generic form...
 	checkPath: ['- File/',
@@ -147,8 +157,6 @@ var FileSystemLoaderActions = actions.Actions({
 	// NOTE: this will add a .from field to .location, this will indicate
 	// 		the date starting from which saves are loaded.
 	//
-	// XXX do we need both this and file.buildIndex(..), we essentially create
-	// 		a Data object and then create it again in .load()...
 	// XXX look inside...
 	loadIndex: ['- File/Load index',
 		function(path, from_date, logger){
@@ -220,7 +228,7 @@ var FileSystemLoaderActions = actions.Actions({
 							continue
 						}
 
-						var part = file.buildIndex(res[k], k)
+						var part = that.prepareJSONForLoad(res[k], k)
 
 						// load the first index...
 						if(index == null){
@@ -1588,6 +1596,7 @@ var FileSystemWriterActions = actions.Actions({
 	//
 	// For more info see file.writeIndex(..) and file.loadIndex(..).
 	//
+	// NOTE: this is the reverse of .prepareJSONForLoad(..)	
 	prepareIndexForWrite: ['- File/Prepare index for writing',
 		function(json, full){
 			json = json || this.json('base')
@@ -1600,7 +1609,7 @@ var FileSystemWriterActions = actions.Actions({
 				index: file.prepareIndex(json, changes),
 			}
 		}],
-	
+
 	// Save index...
 	//
 	// Returns:
