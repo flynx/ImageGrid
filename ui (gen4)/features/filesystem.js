@@ -84,6 +84,92 @@ module.IndexFormat = core.ImageGridFeatures.Feature({
 
 /*********************************************************************/
 
+var ExportFormatActions = actions.Actions({
+	// Convert json index to a format compatible with file.writeIndex(..)
+	//
+	// This is here so as other features can participate in index
+	// preparation...
+	// There are several stages features can control the output format:
+	// 	1) .json() action
+	// 		- use this for global high level serialization format
+	// 		- the output of this is .load(..) compatible
+	// 	2) .prepareIndexForWrite(..) action
+	// 		- use this for file system write preparation
+	// 		- this directly affects the index structure
+	//
+	// This will get the base index, ignoring the cropped state.
+	//
+	// Returns:
+	// 	{
+	// 		// Timestamp...
+	// 		// NOTE: this is the timestamp used to write the index.
+	// 		date: <timestamp>,
+	//
+	//		// normalized changes...
+	//		// 	- true			- everything changed
+	//		//	- false			- nothing changes/disabled
+	//		/	- <object>		- specific changes
+	// 		changes: <changes>,
+	//
+	// 		// This is the original json object, either the one passed as
+	// 		// an argument or the one returned by .json('base')
+	// 		raw: <original-json>,
+	//
+	// 		// this is the prepared index object, the one that is going to be
+	// 		// saved.
+	// 		index: <index-json>,
+	//
+	// 		...
+	// 	}
+	//
+	//
+	// The format for the <prapared-json> is as follows:
+	// 	{
+	// 		<keyword>: <data>,
+	// 		...
+	// 	}
+	//
+	// The <index-json> is written out to a fs index in the following
+	// way:
+	// 		<index-dir>/<timestamp>-<keyword>.json
+	//
+	// 	<index-dir>		- taken from .config['index-dir'] (default: '.ImageGrid')
+	// 	<timestamp>		- as returned by Date.timeStamp() (see: jli)
+	//
+	prepareIndexForWrite: ['- File/Prepare index for writing',
+		function(json, full){
+			json = json || this.json('base')
+			var changes = full ? null 
+				: this.hasOwnProperty('changes') ? this.changes
+				: null
+			changes = changes === null ? true : changes
+			return {
+				date: Date.timeStamp(),
+				changes: changes,
+				raw: json,
+				index: {},
+			}
+		}],
+	// XXX should this return {} or json???
+	prepareJSONForLoad: ['- File/Prepare JSON for loading',
+		function(json, base_path){ return {} }],
+})
+
+
+var ExportFormat = 
+module.ExportFormat = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'export-format',
+
+	actions: ExportFormatActions,
+})
+
+
+
+/*********************************************************************/
+
 var FileSystemInfoActions = actions.Actions({
 	getImagePath: ['- System/',
 		function(gid, type){
@@ -129,16 +215,6 @@ var FileSystemLoaderActions = actions.Actions({
 
 		'default-load-method': 'loadIndex',
 	},
-
-	// NOTE: this is the reverse of .prepareIndexForWrite(..)
-	//
-	// XXX do we need both this and file.buildIndex(..), we essentially create
-	// 		a Data object and then create it again in .load()...
-	prepareJSONForLoad: ['- File/Prepare JSON for loading',
-		function(json, base_path){ 
-			// XXX move the code up here from file.js...
-			return file.buildIndex(json, base_path) }],
-
 
 	// XXX is this a hack???
 	// XXX need a more generic form...
@@ -629,6 +705,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-loader',
 	depends: [
+		'export-format',
 		'location',
 		'recover',
 		'fs-info',
@@ -943,10 +1020,10 @@ module.Comments = core.ImageGridFeatures.Feature({
 		// 		doing anything on .prepareJSONForLoad(..)
 		['prepareIndexForWrite',
 			function(res, _, full){
-				var changed = this.changes == null 
-					|| this.changes.comments
+				var changed = res.changes === true
+					|| res.changes.comments
 
-				if((full || changed) && res.raw.comments){
+				if(changed && res.raw.comments){
 					var comments = res.raw.comments
 
 					Object.keys(comments)
@@ -1183,10 +1260,10 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 		// 		available.
 		// NOTE: 'loadIndex' will also drop any unsaved changes...
 		['prepareIndexForWrite',
-			function(res, _, full){
-				var changed = this.changes == null || this.changes.comments
+			function(res){
+				var changed = res.changes === true || res.changes.comments
 
-				if(full || changed){
+				if(changed){
 					var comments = res.raw.comments && res.raw.comments.save || {}
 
 					// set the 'current' comment to the correct date...
@@ -1551,67 +1628,6 @@ var FileSystemWriterActions = actions.Actions({
 		'export-preview-size-limit': 'no limit',
 	},
 
-
-	// Convert json index to a format compatible with file.writeIndex(..)
-	//
-	// This is here so as other features can participate in index
-	// preparation...
-	// There are several stages features can control the output format:
-	// 	1) .json() action
-	// 		- use this for global high level serialization format
-	// 		- the output of this is .load(..) compatible
-	// 	2) .prepareIndexForWrite(..) action
-	// 		- use this for file system write preparation
-	// 		- this directly affects the index structure
-	//
-	// This will get the base index, ignoring the cropped state.
-	//
-	// Returns:
-	// 	{
-	// 		// Timestamp...
-	// 		// NOTE: this is the timestamp used to write the index.
-	// 		date: <timestamp>,
-	//
-	// 		// This is the original json object, either the one passed as
-	// 		// an argument or the one returned by .json('base')
-	// 		raw: <original-json>,
-	//
-	// 		// this is the prepared index object, the one that is going to be
-	// 		// saved.
-	// 		index: <index-json>,
-	//
-	// 		...
-	// 	}
-	//
-	//
-	// The format for the <prapared-json> is as follows:
-	// 	{
-	// 		<keyword>: <data>,
-	// 		...
-	// 	}
-	//
-	// The <index-json> is written out to a fs index in the following
-	// way:
-	// 		<index-dir>/<timestamp>-<keyword>.json
-	//
-	// 	<index-dir>		- taken from .config['index-dir'] (default: '.ImageGrid')
-	// 	<timestamp>		- as returned by Date.timeStamp() (see: jli)
-	//
-	// For more info see file.writeIndex(..) and file.loadIndex(..).
-	//
-	// NOTE: this is the reverse of .prepareJSONForLoad(..)	
-	prepareIndexForWrite: ['- File/Prepare index for writing',
-		function(json, full){
-			json = json || this.json('base')
-			var changes = full ? null 
-				: this.hasOwnProperty('changes') ? this.changes
-				: null
-			return {
-				date: Date.timeStamp(),
-				raw: json,
-				index: file.prepareIndex(json, changes),
-			}
-		}],
 
 	// Save index...
 	//

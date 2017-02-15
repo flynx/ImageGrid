@@ -923,17 +923,69 @@ module.Base = core.ImageGridFeatures.Feature({
 
 		['prepareIndexForWrite', 
 			function(res){
+				// we save .current unconditionally...
 				res.index.current = res.raw.data.current
 
-				// XXX .data
-				// XXX .images
+				var changes = res.changes
+
+				// data...
+				if(changes === true || changes.data){
+					res.index.data = res.raw.data
+				}
+
+				// images (full)...
+				if(changes === true || changes.images === true){
+					res.index.images = res.raw.images
+
+				// images-diff...
+				} else if(changes && changes.images){
+					var diff = res.index['images-diff'] = {}
+					changes.images.forEach(function(gid){
+						diff[gid] = res.raw.images[gid]
+					})
+				}
 			}],
 		['prepareJSONForLoad',
-			function(res, json){
-				res.data.current = json.current || res.data.current
+			function(res, json, base_path){
+				console.log('>>>>', res, json, base_path)
 
-				// XXX .data
-				// XXX .images
+				// build data and images...
+				// XXX do we actually need to build stuff here, shouldn't
+				// 		.load(..) take care of this???
+				var d = data.Data.fromJSON(json.data)
+
+				d.current = json.current || d.current
+
+				var img = images.Images(json.images)
+
+				if(base_path){
+					d.base_path = base_path
+					// XXX STUB remove ASAP... 
+					// 		...need a real way to handle base dir, possible
+					// 		approaches:
+					// 			1) .base_path attr in image, set on load and 
+					// 				do not save (or ignore on load)...
+					// 				if exists prepend to all paths...
+					// 				- more to do in view-time
+					// 				+ more flexible
+					// 			2) add/remove on load/save (approach below)
+					// 				+ less to do in real time
+					// 				- more processing on load/save
+					img.forEach(function(_, img){ img.base_path = base_path })
+				}
+
+				// extra stuff...
+				// ...this will restore stuff stored in the data but not 
+				// explicitly restored above...
+				// XXX do we need this???
+				Object.keys(json.data).forEach(function(k){
+					if(d[k] === undefined){
+						d[k] = json.data[k]
+					}
+				})
+
+				res.data = d
+				res.images = img
 			}],
 	],
 })
@@ -1130,19 +1182,19 @@ module.Tags = core.ImageGridFeatures.Feature({
 		//
 		// XXX see if this can be automated...
 		['prepareIndexForWrite', 
-			function(res, _, full){
-				var changes = this.changes
+			function(res){
+				var changes = res.changes
 
-				if((full || changes == null || changes.tags) && res.raw.data.tags){
+				if((changes === true || changes.tags) && res.raw.data.tags){
 					res.index.tags = res.raw.data.tags
 				}
 
-				if((full || changes == null || changes.selected) 
+				if((changes === true || changes.selected) 
 						&& res.raw.data.tags
 						&& res.raw.data.tags.selected){
 					res.index.marked = res.raw.data.tags.selected
 				}
-				if((full || changes == null || changes.bookmarked) 
+				if((changes === true || changes.bookmarked) 
 						&& res.raw.data.tags
 						&& res.raw.data.tags.bookmark){
 					res.index.bookmarked = [

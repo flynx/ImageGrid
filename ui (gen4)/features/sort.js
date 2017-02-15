@@ -467,14 +467,14 @@ module.Sort = core.ImageGridFeatures.Feature({
 		// maintain .sort_order and .sort_cache separately from .data in
 		// the store...
 		['prepareIndexForWrite',
-			function(res, _, full){
-				var c = this.changes
+			function(res){
+				var c = res.changes
 
 				;['sort_order', 'sort_cache']
 					.forEach(function(attr){
-						if((full || c == null || c[attr]) && res.raw.data[attr]){
+						if((c === true || c[attr]) && res.raw.data[attr]){
 							// full save...
-							if(full || c == null){
+							if(c === true){
 								res.index[attr] = res.raw.data[attr] 
 
 							// build diff...
