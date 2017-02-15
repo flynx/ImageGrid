@@ -468,28 +468,34 @@ module.Sort = core.ImageGridFeatures.Feature({
 			function(res, _, full){
 				var c = this.changes
 
-				var save = function(attr){
-					if((full || c == null || c[attr]) && res.raw[attr]){
-						// full save...
-						if(full || c == null){
-							res.index[attr] = res.raw[attr] 
+				;['sort_order', 'sort_cache']
+					.forEach(function(attr){
+						if((full || c == null || c[attr]) && res.raw.data[attr]){
+							// full save...
+							if(full || c == null){
+								res.index[attr] = res.raw.data[attr] 
 
-						// build diff...
-						} else {
-							var diff = {}
-							c[attr].forEach(function(k){ diff[k] = res.raw[attr][k] })
-							res.index[attr +'-diff'] = diff
+							// build diff...
+							} else {
+								var diff = {}
+								c[attr].forEach(function(k){ 
+									diff[k] = res.raw.data[attr][k] })
+								res.index[attr +'-diff'] = diff
+							}
+
+							// cleanup...
+							delete res.index.data[attr]
 						}
-					}
-				}
-
-				save('sort_order')
-				save('sort_cache')
+					})
 			}],
 		['prepareJSONForLoad',
 			function(res){
-				// XXX
-				//res.data.sort_cache = res.sort_cache
+				['sort_order', 'sort_cache']
+					.forEach(function(attr){
+						if(res[attr]){
+							res.data[attr] = res[attr]
+						}
+					})
 			}],
 
 		// manage changes...
