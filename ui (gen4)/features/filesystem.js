@@ -147,8 +147,8 @@ var FileSystemLoaderActions = actions.Actions({
 	// NOTE: this will add a .from field to .location, this will indicate
 	// 		the date starting from which saves are loaded.
 	//
-	// XXX add a symmetric equivalent to .prepareIndexForWrite(..) so as 
-	// 		to enable features to load their data...
+	// XXX do we need both this and file.buildIndex(..), we essentially create
+	// 		a Data object and then create it again in .load()...
 	// XXX look inside...
 	loadIndex: ['- File/Load index',
 		function(path, from_date, logger){
