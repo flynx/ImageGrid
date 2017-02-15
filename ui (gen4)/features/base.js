@@ -947,11 +947,10 @@ module.Base = core.ImageGridFeatures.Feature({
 			}],
 		['prepareJSONForLoad',
 			function(res, json, base_path){
-				console.log('>>>>', res, json, base_path)
-
 				// build data and images...
 				// XXX do we actually need to build stuff here, shouldn't
 				// 		.load(..) take care of this???
+				//var d = json.data
 				var d = data.Data.fromJSON(json.data)
 
 				d.current = json.current || d.current

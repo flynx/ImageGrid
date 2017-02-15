@@ -2530,6 +2530,7 @@ var DataPrototype = {
 	// NOTE: this loads in-place, use .fromJSON(..) to create new data...
 	// XXX should this process defaults for unset values???
 	loadJSON: function(data){
+		var that = this
 		data = typeof(data) == typeof('str') ? JSON.parse(data) : data
 		data = formats.updateData(data)
 		this.base = data.base
@@ -2538,7 +2539,6 @@ var DataPrototype = {
 		this.ribbon_order = data.ribbon_order.slice()
 
 		// make sparse lists...
-		var that = this
 		this.__gid_lists.forEach(function(s){
 			if(data[s] == null){
 				return

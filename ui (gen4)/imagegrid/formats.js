@@ -139,11 +139,20 @@ module.getLatestUpdaterVersion = function(){
 // format.
 // NOTE: if data is already in the latest format this will return it 
 // 		as-is.
-module.updateData = function(data){
+module.updateData = function(data, clean){
 	var v = module.getLatestUpdaterVersion()
-	return data.version < v
+	var res = data.version < v
 		? module.VERSIONS[v](data) 
 		: data
+
+	!clean
+		&& Object.keys(data).forEach(function(k){
+			if(res[k] == null){
+				res[k] = data[k]
+			}
+		})
+
+	return res
 }
 
 
