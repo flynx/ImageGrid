@@ -921,6 +921,20 @@ module.Base = core.ImageGridFeatures.Feature({
 		], 
 			function(_, target){ this.markChanged('images', [this.data.getImage(target)]) }],
 
+		['prepareIndexForWrite', 
+			function(res){
+				res.index.current = res.raw.data.current
+
+				// XXX .data
+				// XXX .images
+			}],
+		['prepareJSONForLoad',
+			function(res, json){
+				res.data.current = json.current || res.data.current
+
+				// XXX .data
+				// XXX .images
+			}],
 	],
 })
 
