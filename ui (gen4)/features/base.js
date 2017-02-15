@@ -599,7 +599,14 @@ actions.Actions({
 	// 		actions if that info is needed.
 	// NOTE: to make things clean, this is triggered in action handlers 
 	// 		below...
+	// XXX do we need a vertical shift event??
 	shiftImage: ['- Interface/Image shift (do not use directly)',
+		core.notUserCallable(function(gid){
+			// This is the image shift protocol root function
+			//
+			// Not for direct use.
+		})],
+	shiftImageOrder: ['- Interface/Image horizontal shift (do not use directly)',
 		core.notUserCallable(function(gid){
 			// This is the image shift protocol root function
 			//
@@ -611,7 +618,7 @@ actions.Actions({
 	// XXX undo...
 	shiftImageTo: ['- Edit|Sort|Image/',
 		{undo: function(a){ this.shiftImageTo(a.args[1], a.args[0]) }},
-		function(target, to){ this.data.shiftImageTo(target, to) }],
+		function(target, to){ this.data.shiftImage(target, to) }],
 	
 	shiftImageUp: ['Edit|Image/Shift image up',
 		'If implicitly shifting current image (i.e. no arguments), focus '
@@ -862,6 +869,19 @@ module.Base = core.ImageGridFeatures.Feature({
 			'shiftImageRight',
 		], 
 			function(){ this.shiftImage.apply(this, [].slice(arguments, 1))}],
+		// horizontal shifting...
+		[[
+			'shiftImageLeft',
+			'shiftImageRight',
+		], 
+			function(){ this.shiftImageOrder.apply(this, [].slice(arguments, 1))}],
+		['shiftImageTo.pre',
+			function(a){
+				var i = this.data.getImageOrder(a)
+				return function(){
+					// only trigger if order changed...
+					i != this.data.getImageOrder(a)
+						&& this.shiftImageOrder.apply(this, [].slice(arguments, 1)) } }],
 
 		// manage changes...
 		// everything changed...

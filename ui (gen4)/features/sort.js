@@ -391,7 +391,7 @@ module.SortActions = actions.Actions({
 			if(order){
 				this.data.order = order.slice()
 				this.sortImages('update' + (reverse ? ' reverse' : ''))
-				this.data.sort_method = mode
+				this.data.sort_method = title
 			}
 		}],
 
@@ -409,7 +409,8 @@ module.SortActions = actions.Actions({
 
 	// Store/load sort data:
 	// 	.data.sort_method		- current sort mode (optional)
-	// 	.data.sort_cache		- manual sort order (optional)
+	// 	.data.sort_order		- saved sort order (optional)
+	// 	.data.sort_cache		- cached sort order (optional)
 	load: [function(data){
 		return function(){
 			if(data.data && data.data.sort_method){
@@ -493,6 +494,15 @@ module.Sort = core.ImageGridFeatures.Feature({
 		// manage changes...
 		['sortImages',
 			function(_, target){ this.markChanged('data') }],
+		// NOTE: this always saves to 'Manual' this is correct regardless
+		// 		of save mode as in the current logic, the only mode that 
+		// 		results from a manual shift is a manual sort...
+		// 		XXX this may pose a problem with saved sorts, the question
+		// 			is whether a saved mode can be edited or just saved or
+		// 			updated...
+		['shiftImageOrder',
+			function(){ this.markChanged('sort_order', ['Manual']) }],
+
 		['saveOrder', 
 			function(_, title){ this.markChanged('sort_order', [title]) }],
 		['cacheOrder', 

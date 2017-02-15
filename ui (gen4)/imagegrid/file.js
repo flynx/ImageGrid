@@ -827,6 +827,15 @@ module.buildIndex = function(index, base_path){
 		img.forEach(function(_, img){ img.base_path = base_path })
 	}
 
+	// extra stuff...
+	// ...this will restore stuff stored in the data but not explicitly
+	// restored above...
+	Object.keys(index.data).forEach(function(k){
+		if(d[k] === undefined){
+			d[k] = index.data[k]
+		}
+	})
+
 	res.data = d
 	res.images = img
 

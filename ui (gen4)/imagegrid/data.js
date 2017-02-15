@@ -2587,6 +2587,7 @@ var DataPrototype = {
 		// load initial state...
 		if(json != null){
 			this.loadJSON(json)
+
 		} else {
 			this._reset()
 		}
