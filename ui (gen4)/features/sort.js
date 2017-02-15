@@ -469,21 +469,34 @@ module.Sort = core.ImageGridFeatures.Feature({
 
 		['prepareIndexForWrite',
 			function(res){
-				var changed = this.changes == null 
-					|| this.changes.sort_cache
+				var c = this.changes
 
-				if(changed && res.raw.sort_order){
-					res.index['sort_order'] = res.raw.sort_order 
+				var save = function(attr){
+					if((c == null || c[attr]) && res.raw[attr]){
+						// full save...
+						if(c == null){
+							res.index[attr] = res.raw[attr] 
+
+						// build diff...
+						} else {
+							var diff = {}
+							c[attr].forEach(function(k){ diff[k] = res.raw[attr][k] })
+							res.index[attr +'-diff'] = diff
+						}
+					}
 				}
-				if(changed && res.raw.sort_cache){
-					res.index['sort_cache'] = res.raw.sort_cache 
-				}
+
+				save('sort_order')
+				save('sort_cache')
 			}],
 
 		// manage changes...
-		// XXX also need to mark 'sort_cache'
 		['sortImages',
 			function(_, target){ this.markChanged('data') }],
+		['saveOrder', 
+			function(_, title){ this.markChanged('sort_order', [title]) }],
+		['cacheOrder', 
+			function(){ this.markChanged('sort_cache', [this.data.sort_method]) }],
 	],
 })
 

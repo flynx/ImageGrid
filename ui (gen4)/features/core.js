@@ -858,9 +858,11 @@ var ChangesActions = actions.Actions({
 			Mark item(s) of section as changed...
 			.markChanged(<section>, [<item>, .. ])
 
+		NOTE: when marking section items, the new items will be added to
+			the set of already marked items.
 		NOTE: when .changes is null (i.e. everything changed, marked via
-				.markChanged('all')) then calling this with anything other 
-				than 'none' will have no effect.
+			.markChanged('all')) then calling this with anything other 
+			than 'none' will have no effect.
 		`,
 		function(section, items){
 			var that = this
@@ -894,7 +896,7 @@ var ChangesActions = actions.Actions({
 
 			// section items...
 			} else if(items instanceof Array) {
-				changes[section] = (changes[section] || []).concat(items)
+				changes[section] = (changes[section] || []).concat(items).unique()
 				this.changes = changes
 
 			// section(s)...

@@ -899,7 +899,7 @@ module.Base = core.ImageGridFeatures.Feature({
 			'flipHorizontal',
 			'flipVertical',
 		], 
-			function(_, target){ this.markChanged('images', [that.data.getImage(target)]) }],
+			function(_, target){ this.markChanged('images', [this.data.getImage(target)]) }],
 
 	],
 })
