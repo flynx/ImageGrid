@@ -469,13 +469,13 @@ module.Sort = core.ImageGridFeatures.Feature({
 			}],
 
 		['prepareIndexForWrite',
-			function(res){
+			function(res, _, full){
 				var c = this.changes
 
 				var save = function(attr){
-					if((c == null || c[attr]) && res.raw[attr]){
+					if((full || c == null || c[attr]) && res.raw[attr]){
 						// full save...
-						if(c == null){
+						if(full || c == null){
 							res.index[attr] = res.raw[attr] 
 
 						// build diff...
