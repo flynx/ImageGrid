@@ -938,6 +938,9 @@ module.Comments = core.ImageGridFeatures.Feature({
 		// prepare comments for saving to "comments/<keyword>"...
 		//
 		// NOTE: this will skip the 'raw' comment field...
+		// NOTE: we do not change the .json() format here, so we do not 
+		// 		need to do anything special to restore, i.e. no need for
+		// 		doing anything on .prepareJSONForLoad(..)
 		['prepareIndexForWrite',
 			function(res, _, full){
 				var changed = this.changes == null 

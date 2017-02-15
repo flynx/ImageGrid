@@ -464,6 +464,8 @@ module.Sort = core.ImageGridFeatures.Feature({
 				this.data.sort_method = 'Manual'
 			}],
 
+		// maintain .sort_order and .sort_cache separately from .data in
+		// the store...
 		['prepareIndexForWrite',
 			function(res, _, full){
 				var c = this.changes

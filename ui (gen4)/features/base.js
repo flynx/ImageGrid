@@ -1111,6 +1111,7 @@ module.Tags = core.ImageGridFeatures.Feature({
 
 				this.markChanged('images', gids)
 			}],
+
 		// XXX
 		['prepareIndexForWrite', 
 			function(res, _, full){
@@ -1119,6 +1120,10 @@ module.Tags = core.ImageGridFeatures.Feature({
 				// 		- ..tags.selected -> .selected
 				// 		- ..tags.bookmark -> .bookmarked
 				// XXX will need a symmetrical action to reverse all of this...
+			}],
+		['prepareJSONForLoad',
+			function(res){
+				// XXX
 			}],
 	],
 })
