@@ -931,11 +931,11 @@ module.Comments = core.ImageGridFeatures.Feature({
 		//
 		// NOTE: this will skip the 'raw' comment field...
 		['prepareIndexForWrite',
-			function(res){
+			function(res, _, full){
 				var changed = this.changes == null 
 					|| this.changes.comments
 
-				if(changed && res.raw.comments){
+				if((full || changed) && res.raw.comments){
 					var comments = res.raw.comments
 
 					Object.keys(comments)
@@ -1172,10 +1172,10 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 		// 		available.
 		// NOTE: 'loadIndex' will also drop any unsaved changes...
 		['prepareIndexForWrite',
-			function(res){
+			function(res, _, full){
 				var changed = this.changes == null || this.changes.comments
 
-				if(changed){
+				if(full || changed){
 					var comments = res.raw.comments && res.raw.comments.save || {}
 
 					// set the 'current' comment to the correct date...
