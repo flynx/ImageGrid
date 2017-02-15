@@ -1112,18 +1112,48 @@ module.Tags = core.ImageGridFeatures.Feature({
 				this.markChanged('images', gids)
 			}],
 
-		// XXX
+		// store .tags and .tags.selected / .tags.bookmark separately from .data...
+		//
+		// XXX see if this can be automated...
 		['prepareIndexForWrite', 
 			function(res, _, full){
-				// XXX move code here from file.buildIndex(..)
-				// 		- res.raw.tags -> res.index.tags
-				// 		- ..tags.selected -> .selected
-				// 		- ..tags.bookmark -> .bookmarked
-				// XXX will need a symmetrical action to reverse all of this...
+				var changes = this.changes
+
+				if((full || changes == null || changes.tags) && res.raw.data.tags){
+					res.index.tags = res.raw.data.tags
+				}
+
+				if((full || changes == null || changes.selected) 
+						&& res.raw.data.tags
+						&& res.raw.data.tags.selected){
+					res.index.marked = res.raw.data.tags.selected
+				}
+				if((full || changes == null || changes.bookmarked) 
+						&& res.raw.data.tags
+						&& res.raw.data.tags.bookmark){
+					res.index.bookmarked = [
+						res.raw.data.tags.bookmark || [],
+						{},
+					]
+				}
+
+				// cleanup...
+				if(res.index.data && res.index.data.tags){
+					delete res.index.data.tags.selected
+					delete res.index.data.tags.bookmark
+					//delete res.index.data.tags.bookmark_data
+					delete res.index.data.tags
+				}
 			}],
 		['prepareJSONForLoad',
-			function(res){
-				// XXX
+			function(res, json){
+				res.data.tags = json.tags || {}
+
+				res.data.tags.selected = json.marked || []
+				res.data.tags.bookmark = json.bookmarked ? json.bookmarked[0] : []
+				//res.data.tags.bookmark_data = json.bookmarked ? json.bookmarked[1] : {}
+
+				res.data.sortTags()
 			}],
 	],
 })

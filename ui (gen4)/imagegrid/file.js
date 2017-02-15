@@ -795,13 +795,6 @@ module.buildIndex = function(index, base_path){
 	// buildup the data object...
 	// NOTE: this is mostly to attach stuff that is stored in separate files...
 	
-	// XXX move this to tags/marks/bookmarks...
-	// .tags + bookmarks + selection...
-	d.tags = index.tags || {} 
-	d.tags.bookmark = index.bookmarked ? index.bookmarked[0] : []
-	d.tags.selected = index.marked || []
-	d.sortTags()
-
 	// .current...
 	d.current = index.current || d.current
 
@@ -907,37 +900,6 @@ function(json, changes){
 	// data...
 	if(changes === true || changes && changes.data){
 		res.data = json.data
-	}
-
-	// tags...
-	if((changes === true || changes) && json.data.tags != null){
-		// NOTE: we write the whole set ONLY if an item is true or undefined
-		// 		i.e. not false...
-		if(changes === true || changes.bookmarked){
-			res.bookmarked = [
-				json.data.tags.bookmark || [], 
-				// NOTE: this is for bookmark metadata line comments, text,
-				// 		tags, ... etc.
-				// XXX currently this is not used...
-				json.data.bookmark_data || {},
-			]
-		}
-
-		if(changes === true || changes.selected){
-			res.marked = json.data.tags.selected || []
-		}
-
-		if(changes === true || changes.tags){
-			res.tags = json.data.tags
-		}
-
-		// clean out some stuff from data...
-		if(res.data){
-			delete res.data.tags.bookmark
-			delete res.data.tags.bookmark_data
-			delete res.data.tags.selected
-			delete res.data.tags
-		}
 	}
 
 	if(changes === true || changes && changes.images === true){
