@@ -85,58 +85,80 @@ module.IndexFormat = core.ImageGridFeatures.Feature({
 /*********************************************************************/
 
 var ExportFormatActions = actions.Actions({
-	// Convert json index to a format compatible with file.writeIndex(..)
-	//
-	// This is here so as other features can participate in index
-	// preparation...
-	// There are several stages features can control the output format:
-	// 	1) .json() action
-	// 		- use this for global high level serialization format
-	// 		- the output of this is .load(..) compatible
-	// 	2) .prepareIndexForWrite(..) action
-	// 		- use this for file system write preparation
-	// 		- this directly affects the index structure
-	//
-	// This will get the base index, ignoring the cropped state.
-	//
-	// Returns:
-	// 	{
-	// 		// Timestamp...
-	// 		// NOTE: this is the timestamp used to write the index.
-	// 		date: <timestamp>,
-	//
-	//		// normalized changes...
-	//		// 	- true			- everything changed
-	//		//	- false			- nothing changes/disabled
-	//		/	- <object>		- specific changes
-	// 		changes: <changes>,
-	//
-	// 		// This is the original json object, either the one passed as
-	// 		// an argument or the one returned by .json('base')
-	// 		raw: <original-json>,
-	//
-	// 		// this is the prepared index object, the one that is going to be
-	// 		// saved.
-	// 		index: <index-json>,
-	//
-	// 		...
-	// 	}
-	//
-	//
-	// The format for the <prapared-json> is as follows:
-	// 	{
-	// 		<keyword>: <data>,
-	// 		...
-	// 	}
-	//
-	// The <index-json> is written out to a fs index in the following
-	// way:
-	// 		<index-dir>/<timestamp>-<keyword>.json
-	//
-	// 	<index-dir>		- taken from .config['index-dir'] (default: '.ImageGrid')
-	// 	<timestamp>		- as returned by Date.timeStamp() (see: jli)
-	//
 	prepareIndexForWrite: ['- File/Prepare index for writing',
+		core.doc`Convert json index to a format compatible with file.writeIndex(..)
+
+			Prepare current state...
+			.prepareIndexForWrite()
+				-> data
+				NOTE: this will account for .changes 
+					(see: core.Changes.markChanged(..))
+
+			Prepare a specific state...
+			.prepareIndexForWrite(json)
+				-> data
+
+			Prepare a full state (current/specific)...
+			.prepareIndexForWrite(null, true)
+			.prepareIndexForWrite(json, true)
+				-> data
+				NOTE: this will disregard .changes
+
+
+		This is here so as other features can participate in index
+		preparation...
+		This is done in two stages:
+			1) .json(..) action
+				- serialise the state in a consistent manner,
+				- compatible with .load(..) action
+				- defines the global high level serialization format
+			2) .prepareIndexForWrite(..) action
+				- takes the output of .json(..) and converts to a format 
+					ready for writing/serialization...
+				- compatible with .prepareJSONForLoad(..)
+				- this directly affects the index structure 
+					(see: file.writeIndex(..))
+
+		This will get the base index, ignoring the cropped state.
+
+		Returns:
+			{
+				// Timestamp...
+				// NOTE: this is the timestamp used to write the index.
+				date: <timestamp>,
+
+				// normalized changes...
+				// 	- true			- everything changed
+				//	- false			- nothing changes/disabled
+				/	- <object>		- specific changes
+				changes: <changes>,
+
+				// This is the original json object, either the one passed as
+				// an argument or the one returned by .json('base')
+				raw: <original-json>,
+
+				// this is the prepared index object, the one that is going to be
+				// saved.
+				index: <index-json>,
+
+				...
+			}
+
+
+		The format for the <prapared-json> is as follows:
+			{
+				<keyword>: <data>,
+				...
+			}
+
+		The <index-json> is written out to a fs index in the following
+		way:
+				<index-dir>/<timestamp>-<keyword>.json
+
+			<index-dir>		- taken from .config['index-dir'] (default: '.ImageGrid')
+			<timestamp>		- as returned by Date.timeStamp() (see: jli)
+
+		`,
 		function(json, full){
 			json = json || this.json('base')
 			var changes = full ? null 
@@ -152,6 +174,21 @@ var ExportFormatActions = actions.Actions({
 		}],
 	// XXX should this return {} or json???
 	prepareJSONForLoad: ['- File/Prepare JSON for loading',
+		core.doc`Prepare JSON for loading...
+
+			.prepareJSONForLoad(json)
+			.prepareJSONForLoad(json, base_path)
+				-> data
+
+		Prepare the loaded JSON data to be loaded via the .load(..) action.
+
+		It is the participating action's responsibility to transfer the 
+		data from the input json to the result object.
+
+		NOTE: this is a symmetrical function to .prepareIndexForWrite(..),
+			see it for more info.
+		NOTE: also see: file.loadIndex(..) and file.loadIndex(..)
+		`,
 		function(json, base_path){ return {} }],
 })
 
@@ -159,7 +196,7 @@ var ExportFormatActions = actions.Actions({
 var ExportFormat = 
 module.ExportFormat = core.ImageGridFeatures.Feature({
 	title: '',
-	doc: '',
+	doc: 'Convert state serialization data to/from the write format.',
 
 	tag: 'export-format',
 
