@@ -276,7 +276,7 @@ var IntrospectionActions = actions.Actions({
 
 	// check if action is callable by user...
 	isUserCallable: ['- System/',
-		doc`Test if an action is used callable.
+		doc`Test if an action is callable by user.
 
 			.isUserCallable(<action-name>)
 		`,

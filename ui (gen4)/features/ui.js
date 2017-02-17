@@ -609,15 +609,16 @@ module.ViewerActions = actions.Actions({
 				.centerRibbon(target)
 		}],
 
-	// This is called by the window resize event handler...
-	//
-	// NOTE: since the centering is passive (done in CSS) we do not need
-	// 		to do anything here, but this is needed for legacy or 
-	// 		compatibility code that needs to update stuff when resizing 
-	// 		viewer...
-	// 		To see the list of handlers call:
-	// 			.getHandlerDocStr('resizingWindow')
 	resizingWindow: ['- Interface/',
+		core.doc`This is called by the window resize event handler...
+		
+		NOTE: since the centering is passive (done in CSS) we do not need
+			to do anything here, but this is needed for legacy or 
+			compatibility code that needs to update stuff when resizing 
+			viewer...
+			To see the list of handlers call:
+				.getHandlerDocStr('resizingWindow')
+		`,
 		core.notUserCallable(function(){
 			// This is the window resize event...
 		})],
@@ -695,44 +696,45 @@ module.ViewerActions = actions.Actions({
 		}],
 
 
-	// Zooming/scaling root action...
-	//
-	// Protocol:
-	// 	- a compliant action must be wrapped in the .resizing action
-	// 	- a compliant action must pass the sizing unit, value and 
-	// 		overflow to the wrapping action.
-	//
-	// Supported units:
-	// 	- scale
-	// 	- screenwidth
-	// 	- screenheight
-	//
-	// Example:
-	//	actionName: ['...',
-	//		function(value){
-	//			this.resizing.chainCall(this, function(){
-	//
-	//				// action code...
-	//
-	//			}, 
-	//			// action unit...
-	//			'scale', 
-	//			// action value...
-	//			scale)
-	//		}],
-	//
-	//
-	// This will enable clients to attach to a single in/out point.
-	//
-	// NOTE: to account for CSS transitions use .resizingDone()
-	// NOTE: not intended for direct use...
-	//
 	// XXX hide from user action list... (???)
 	// XXX need to check if a transition is running and delay timeout...
-	resizing: ['- Zoom/scale root protocol action (not for direct use)', 
-		'This is called by zoom/scale protocol compliant actions and '
-			+'intended for use as an trigger for handlers, and not as '
-			+'a user-callable acation.',
+	resizing: ['- Zoom/Scale root protocol action (not for direct use)', 
+		core.doc`Zooming/scaling root action...
+
+		This is called by zoom/scale protocol compliant actions and
+		intended for use as an trigger for handlers, and not as
+		a user-callable action.
+		
+		Protocol:
+			- a compliant action must be wrapped in the .resizing action
+			- a compliant action must pass the sizing unit, value and 
+				overflow to the wrapping action.
+		
+		Supported units:
+			- scale
+			- screenwidth
+			- screenheight
+		
+		Example:
+			actionName: ['Action doc...',
+				function(value){
+					this.resizing.chainCall(this, function(){
+			
+						// action code...
+			
+					}, 
+					// action unit...
+					'scale', 
+					// action value...
+					value)
+				}],
+		
+		
+		This will enable clients to attach to a single in/out point.
+		
+		NOTE: to account for CSS transitions use .resizingDone()
+		NOTE: not intended for direct use...
+		`,
 		core.notUserCallable(function(unit, size, overflow){
 			// This is a resizing protocol root function.
 			//
@@ -766,17 +768,18 @@ module.ViewerActions = actions.Actions({
 			}
 		})],
 
-	// Zooming/scaling post-transition action...
-	//
-	// NOTE: this will be called at least timeout after last resize action...
-	// NOTE: if several resize actions are called less than timeout apart 
-	// 		this will be called only once, after the last action.
-	// NOTE: not intended for direct use...
-	resizingDone: ['- Zoom/scale post-transition protocol action '
-			+'(not for direct use)',
-		'This is called after zoom/scale protocol compliant actions are '
-			+'done and intended for use as an trigger for handlers, and '
-			+'not as a user-callable acation.',
+	resizingDone: ['- Zoom/scale post-transition protocol action (not for direct use)',
+		core.doc`Zooming/scaling post-transition action...
+	
+		This is called after zoom/scale protocol compliant actions are
+		done and intended for use as an trigger for handlers, and
+		not as a user-callable action.
+
+		NOTE: this will be called at least timeout after last resize action...
+		NOTE: if several resize actions are called less than timeout apart 
+			this will be called only once, after the last action.
+		NOTE: not intended for direct use...
+		`,
 		core.notUserCallable(function(){
 			// This is resizing protocol post resize action.
 			//

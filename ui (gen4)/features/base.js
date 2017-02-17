@@ -621,9 +621,12 @@ actions.Actions({
 		function(target, to){ this.data.shiftImage(target, to) }],
 	
 	shiftImageUp: ['Edit|Image/Shift image up',
-		'If implicitly shifting current image (i.e. no arguments), focus '
-			+'will shift to the next or previous image in the current '
-			+'ribbon depending on current direction.',
+		core.doc`Shift image up...
+
+		NOTE: If implicitly shifting current image (i.e. no arguments), focus
+			will shift to the next or previous image in the current
+			ribbon depending on current direction.
+		`,
 		{undo: undoShift('shiftImageDown')},
 		function(target){ 
 			// by default we need to focus another image in the same ribbon...
@@ -646,9 +649,12 @@ actions.Actions({
 			}
 		}],
 	shiftImageDown: ['Edit|Image/Shift image down',
-		'If implicitly shifting current image (i.e. no arguments), focus '
-			+'will shift to the next or previous image in the current '
-			+'ribbon depending on current direction.',
+		core.doc`Shift image down...
+
+		NOTE: If implicitly shifting current image (i.e. no arguments), focus
+			will shift to the next or previous image in the current
+			ribbon depending on current direction.
+		`,
 		{undo: undoShift('shiftImageUp')},
 		function(target){ 
 			// by default we need to focus another image in the same ribbon...
