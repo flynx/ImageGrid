@@ -49,13 +49,7 @@ if(typeof(process) != 'undefined'){
 
 /*********************************************************************/
 
-var IndexFormat = 
-module.IndexFormat = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'index-format',
-
+var IndexFormatActions = actions.Actions({
 	config: {
 		'index-dir': '.ImageGrid',
 
@@ -78,13 +72,7 @@ module.IndexFormat = core.ImageGridFeatures.Feature({
 		// XXX make this used in loader too...
 		'preview-path-template': '${INDEX}/${RESOLUTION}px/${GID} - ${NAME}.jpg',
 	},
-})
 
-
-
-/*********************************************************************/
-
-var ExportFormatActions = actions.Actions({
 	prepareIndexForWrite: ['- File/Prepare index for writing',
 		core.doc`Convert json index to a format compatible with file.writeIndex(..)
 
@@ -193,14 +181,14 @@ var ExportFormatActions = actions.Actions({
 })
 
 
-var ExportFormat = 
-module.ExportFormat = core.ImageGridFeatures.Feature({
+var IndexFormat = 
+module.IndexFormat = core.ImageGridFeatures.Feature({
 	title: '',
-	doc: 'Convert state serialization data to/from the write format.',
+	doc: '',
 
-	tag: 'export-format',
+	tag: 'index-format',
 
-	actions: ExportFormatActions,
+	actions: IndexFormatActions,
 })
 
 
@@ -742,7 +730,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-loader',
 	depends: [
-		'export-format',
+		'index-format',
 		'location',
 		'recover',
 		'fs-info',
