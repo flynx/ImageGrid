@@ -58,12 +58,12 @@ var PeerActions = actions.Actions({
 
 	// event...
 	peerConnected: ['- Peer/',
-		core.notUserCallable(function(){
+		core.notUserCallable(function(id){
 			// XXX
 		})],
 	// event...
 	peerDisconnected: ['- Peer/',
-		core.notUserCallable(function(){
+		core.notUserCallable(function(id){
 			// XXX
 		})],
 
@@ -72,20 +72,20 @@ var PeerActions = actions.Actions({
 			// XXX
 		}],
 	peerSpec: ['- Peer/',
-		function(){
+		function(id){
 			// XXX
 		}],
 	peerProxy: ['- Peer/',
-		function(){
+		function(id){
 			// XXX
 		}],
 
 	peerCall: ['- Peer/',
-		function(){
+		function(id, action){
 			// XXX
 		}],
 	peerApply: ['- Peer/',
-		function(){
+		function(id, action, args){
 			// XXX
 		}],
 
