@@ -280,6 +280,9 @@ var IntrospectionActions = actions.Actions({
 
 			.isUserCallable(<action-name>)
 		`,
+		// XXX should this check only the root action or the whole set???
+		//function(action){ 
+		//	return this.getActionAttr(action, '__not_user_callable__') != true }],
 		actions.doWithRootAction(function(action){
 			return action.__not_user_callable__ != true })],
 })

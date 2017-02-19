@@ -22,7 +22,9 @@ var core = require('features/core')
 // 		Protocols:
 // 			- child_process
 // 			- http
-// 			- rpc/mq
+// 			- rpc
+// 			- mq
+// 			- ...
 var PeerActions = actions.Actions({
 
 	// XXX need more control...
@@ -32,8 +34,18 @@ var PeerActions = actions.Actions({
 
 	getPeerActions: ['- Peer/',
 		function(id){
-			// XXX
+			var that = this
+			return this.actions.filter(id ? 
+				function(action){
+					return that.getActionAttr(action, '__peer__') == id }
+				// get all peer actions...
+				: function(action){
+					return that.getActionAttr(action, '__peer__') })
 		}],
+	// XXX should this also check props???
+	isPeerAction: ['- Peer/',
+		function(name){
+			return !!this.getActionAttr(name, '__peer__') }],
 
 	peerCreate: ['- Peer/',
 		function(){
@@ -48,12 +60,12 @@ var PeerActions = actions.Actions({
 	peerConnected: ['- Peer/',
 		core.notUserCallable(function(){
 			// XXX
-		}],
+		})],
 	// event...
 	peerDisconnected: ['- Peer/',
 		core.notUserCallable(function(){
 			// XXX
-		}],
+		})],
 
 	peerList: ['- Peer/',
 		function(){
