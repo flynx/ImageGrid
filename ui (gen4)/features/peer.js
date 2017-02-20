@@ -27,6 +27,15 @@ var core = require('features/core')
 // 			- ...
 var PeerActions = actions.Actions({
 
+	// Format:
+	// 	{
+	// 		<id>: <spec>,
+	// 	}
+	//
+	// XXX <spec> format???
+	//		...should flow from the protocol definition and architecture...
+	__peers: null,
+
 	// XXX need more control...
 	// 		- get proxies to specific peer...
 	get peeractions(){
