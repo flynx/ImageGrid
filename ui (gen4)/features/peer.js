@@ -34,6 +34,11 @@ var PeerActions = actions.Actions({
 	//
 	// XXX <spec> format???
 	//		...should flow from the protocol definition and architecture...
+	// XXX Q: should peer adapter be a feature that defines/extnds a set 
+	// 		of actions???
+	// 		...e.g. base peerCreate(..) defines the protocol but does 
+	// 		nothing, while each implementation checks if the url is 
+	// 		compatible and handles it accordingly...
 	__peers: null,
 
 	// XXX need more control...
@@ -77,9 +82,7 @@ var PeerActions = actions.Actions({
 		})],
 
 	peerList: ['- Peer/',
-		function(){
-			// XXX
-		}],
+		function(){ return Object.keys(this.__peers || {}) }],
 	peerSpec: ['- Peer/',
 		function(id){
 			// XXX
@@ -102,7 +105,20 @@ var PeerActions = actions.Actions({
 	// XXX also proxy descriptors???
 	peerMixin: ['- Peer/',
 		function(id, actions){
+			var that = this
+			var spec = this.peerSpec(id)
 			// XXX
+			actions = actions || Object.keys(spec.actions)
+			actions.forEach(function(action){
+				if(that[action]){
+					return
+				}
+
+				// XXX
+				var action_spec = []
+
+				that[action] = actions.Action(action, action_spec)
+			})
 		}],
 	// XXX should this be .peerMixout(..)
 	peerMixout: ['- Peer/',
