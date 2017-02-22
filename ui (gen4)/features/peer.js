@@ -61,15 +61,23 @@ var PeerActions = actions.Actions({
 		function(name){
 			return !!this.getActionAttr(name, '__peer__') }],
 
+	//
+	// The overloading action should connect on the pre-stage...
+	//
+	// XXX should this be sync or async???
 	// XXX this should create or connect to a peer depending on protocol...
+	// XXX the events should get called on the peer too -- who is 
+	// 		responsible for this???
 	peerConnect: ['- Peer/',
 		function(id, options){
-			// XXX
+			id in this.__peers
+				&& this.peerConnected(id)
 			return id
 		}],
 	peerDisconnect: ['- Peer/',
 		function(id){
-			// XXX
+			!(id in this.__peers)
+				&& this.peerDisconnected(id)
 		}],
 
 	// event...
