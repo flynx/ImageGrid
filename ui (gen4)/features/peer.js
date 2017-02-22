@@ -62,23 +62,17 @@ var PeerActions = actions.Actions({
 			return !!this.getActionAttr(name, '__peer__') }],
 
 	//
-	// The overloading action should connect on the pre-stage...
+	// NOTE: it is the responsibility of the overloading action to trigger
+	// 		the appropriate events...
 	//
 	// XXX should this be sync or async???
 	// XXX this should create or connect to a peer depending on protocol...
 	// XXX the events should get called on the peer too -- who is 
 	// 		responsible for this???
 	peerConnect: ['- Peer/',
-		function(id, options){
-			id in this.__peers
-				&& this.peerConnected(id)
-			return id
-		}],
+		function(id, options){ return id }],
 	peerDisconnect: ['- Peer/',
-		function(id){
-			!(id in this.__peers)
-				&& this.peerDisconnected(id)
-		}],
+		function(id){ }],
 
 	// event...
 	peerConnected: ['- Peer/',
@@ -154,6 +148,16 @@ module.Peer = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var ChildProcessPeerActions = actions.Actions({
+
+	peerConnect: ['- Peer/',
+		function(id, options){
+			// XXX
+		}],
+	peerDisconnect: ['- Peer/',
+		function(id){
+			// XXX
+		}],
+
 })
 
 
