@@ -97,6 +97,7 @@ var PeerActions = actions.Actions({
 			// XXX
 		}],
 
+	// XXX how should we handler the return value?
 	peerCall: ['- Peer/',
 		function(id, action){
 			// XXX
@@ -160,7 +161,7 @@ var ChildProcessPeerActions = actions.Actions({
 
 	peerCall: ['- Peer/',
 		function(id, action){
-			// XXX
+			// XXX 
 		}],
 	peerApply: ['- Peer/',
 		function(id, action, args){
