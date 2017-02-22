@@ -61,12 +61,14 @@ var PeerActions = actions.Actions({
 		function(name){
 			return !!this.getActionAttr(name, '__peer__') }],
 
-	peerCreate: ['- Peer/',
-		function(){
-			// XXX
-		}],
+	// XXX this should create or connect to a peer depending on protocol...
 	peerConnect: ['- Peer/',
-		function(){
+		function(id, options){
+			// XXX
+			return id
+		}],
+	peerDisconnect: ['- Peer/',
+		function(id){
 			// XXX
 		}],
 
@@ -83,6 +85,7 @@ var PeerActions = actions.Actions({
 
 	peerList: ['- Peer/',
 		function(){ return Object.keys(this.__peers || {}) }],
+	// XXX format spec!!!
 	peerSpec: ['- Peer/',
 		function(id){
 			// XXX
