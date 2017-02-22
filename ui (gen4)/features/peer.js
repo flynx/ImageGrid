@@ -158,6 +158,14 @@ var ChildProcessPeerActions = actions.Actions({
 			// XXX
 		}],
 
+	peerCall: ['- Peer/',
+		function(id, action){
+			// XXX
+		}],
+	peerApply: ['- Peer/',
+		function(id, action, args){
+			// XXX
+		}],
 })
 
 
@@ -167,6 +175,9 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'child-process-peer',
+	depends: [
+		'peer',
+	],
 
 	actions: ChildProcessPeerActions, 
 })
