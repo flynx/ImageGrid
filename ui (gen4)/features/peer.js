@@ -25,6 +25,8 @@ var core = require('features/core')
 // 			- rpc (???)
 // 			- mq (???)
 // 			- ...
+// XXX should this do "sync"???
+// XXX should the couch api be implemented over this of independently???
 var PeerActions = actions.Actions({
 
 	// Format:
