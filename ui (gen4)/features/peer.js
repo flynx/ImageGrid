@@ -22,8 +22,8 @@ var core = require('features/core')
 // 		Protocols:
 // 			- child_process
 // 			- http
-// 			- rpc
-// 			- mq
+// 			- rpc (???)
+// 			- mq (???)
 // 			- ...
 var PeerActions = actions.Actions({
 
