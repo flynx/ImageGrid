@@ -21,7 +21,8 @@ var core = require('features/core')
 // XXX this is a generic API, add ability to define protocols...
 // 		Protocols:
 // 			- child_process
-// 			- http
+// 			- PeerJS
+// 			- https
 // 			- rpc (???)
 // 			- mq (???)
 // 			- ...
