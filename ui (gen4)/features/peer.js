@@ -143,10 +143,30 @@ module.Peer = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'child',
+	tag: 'peer',
 
 	actions: PeerActions, 
 })
+
+
+
+
+//---------------------------------------------------------------------
+
+var ChildProcessPeerActions = actions.Actions({
+})
+
+
+var ChildProcessPeer = 
+module.ChildProcessPeer = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'child-process-peer',
+
+	actions: ChildProcessPeerActions, 
+})
+
 
 
 
