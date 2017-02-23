@@ -101,6 +101,7 @@ function(data){
 
 	// we set the base to the first ribbon...
 	res.base = data.base == null ? res.ribbon_order[0] : res.base
+
 	return res
 }
 
@@ -147,7 +148,7 @@ module.updateData = function(data, clean){
 
 	!clean
 		&& Object.keys(data).forEach(function(k){
-			if(res[k] == null){
+			if(res[k] === undefined){
 				res[k] = data[k]
 			}
 		})

@@ -979,16 +979,6 @@ module.Base = core.ImageGridFeatures.Feature({
 					img.forEach(function(_, img){ img.base_path = base_path })
 				}
 
-				// extra stuff...
-				// ...this will restore stuff stored in the data but not 
-				// explicitly restored above...
-				// XXX do we need this???
-				Object.keys(json.data).forEach(function(k){
-					if(d[k] === undefined){
-						d[k] = json.data[k]
-					}
-				})
-
 				res.data = d
 				res.images = img
 			}],

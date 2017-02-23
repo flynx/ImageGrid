@@ -2529,7 +2529,7 @@ var DataPrototype = {
 	//
 	// NOTE: this loads in-place, use .fromJSON(..) to create new data...
 	// XXX should this process defaults for unset values???
-	loadJSON: function(data){
+	loadJSON: function(data, clean){
 		var that = this
 		data = typeof(data) == typeof('str') ? JSON.parse(data) : data
 		data = formats.updateData(data)
@@ -2550,6 +2550,15 @@ var DataPrototype = {
 				that[s][k] = that.makeSparseImages(data[s][k])
 			}
 		})
+
+		// extra data...
+		!clean
+			&& Object.keys(data).forEach(function(k){
+				if(k != 'version' && that[k] === undefined){
+					that[k] = data[k]
+				}
+			})
+
 		return this
 	},
 
@@ -2559,7 +2568,7 @@ var DataPrototype = {
 	// 		the result...
 	dumpJSON: function(mode){
 		var res = {
-			varsion: module.DATA_VERSION,
+			version: module.DATA_VERSION,
 			base: this.base,
 			current: this.current,
 			order: this.order.slice(),
