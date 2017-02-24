@@ -1980,6 +1980,10 @@ var WidgetTestActions = actions.Actions({
 		}],
 
 
+	// action constructor for testing...
+	makeAction: ['- Test/',
+		function(name){
+			this[name] = actions.Action.apply(actions.Action, arguments) }],
 })
 
 var WidgetTest = 

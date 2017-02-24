@@ -14,17 +14,108 @@ var features = require('lib/features')
 
 var core = require('features/core')
 
+var object = require('lib/object')
+
 
 
 /*********************************************************************/
 // helpers...
 
+// XXX can we make this an instance of Promise for passing the
+// 		x instanceof Promise test???
+var CooperativePromisePrototype = {
+	__base: null,
+	__promise: null,
+
+	// XXX error if already set...
+	set: function(promise){
+		if(this.__promise == null){
+			// setting a non-promise...
+			if(promise.catch == null && promise.then == null){
+				Object.defineProperty(this, '__promise', {
+					value: false,
+					enumerable: false,
+				})
+				this.__resolve(promise)
+				
+			// setting a promise...
+			} else {
+				Object.defineProperty(this, '__promise', {
+					value: promise,
+					enumerable: false,
+				})
+
+				// connect the base and the set promises...
+				promise.catch(this.__reject.bind(this))
+				promise.then(this.__resolve.bind(this))
+
+				// cleanup...
+				delete this.__base
+			}
+
+			// cleanup...
+			delete this.__resolve
+			delete this.__reject
+
+		} else {
+			// XXX throw err???
+			console.error('Setting a cooperative promise twice', this)
+		}
+	},
+
+	// Promise API...
+	catch: function(func){
+		return (this.__promise || this.__base).catch(func) },
+	then: function(func){
+		return (this.__promise || this.__base).then(func) },
+
+	__init__: function(){
+		var that = this
+		var base = new Promise(function(resolve, reject){
+			Object.defineProperties(that, {
+				__resolve: {
+					value: resolve,
+					enumerable: false,
+					configurable: true,
+				},
+				__reject: {
+					value: reject,
+					enumerable: false,
+					configurable: true,
+				},
+			})
+		})
+
+		Object.defineProperty(this, '__base', {
+			value: base,
+			enumerable: false,
+			configurable: true,
+		})
+	},
+}
+
+var CooperativePromise =
+object.makeConstructor('CooperativePromise', 
+	Promise,
+	CooperativePromisePrototype)
+
+
+
+//---------------------------------------------------------------------
+	
 // XXX should this parse out the protocol???
 // 		...technically we no longer need it....
+/*
 var makeProtocolHandiler = function(protocol, func){
 	return function(id){
 		return id.startsWith(protocol + ':')
 			&& func.apply(this, arguments) } } 
+//*/
+
+var makeProtocolHandiler = function(protocol, func){
+	return function(id){
+		return id.startsWith(protocol + ':')
+			&& function(res){ res.set(func.apply(this, arguments)) } } } 
 
 
 
@@ -88,9 +179,9 @@ var PeerActions = actions.Actions({
 	// XXX the events should get called on the peer too -- who is 
 	// 		responsible for this???
 	peerConnect: ['- Peer/',
-		function(id, options){ return id }],
+		function(id, options){ return new CooperativePromise() }],
 	peerDisconnect: ['- Peer/',
-		function(id){ }],
+		function(id){ return new CooperativePromise() }],
 
 	// event...
 	peerConnected: ['- Peer/',
@@ -115,15 +206,10 @@ var PeerActions = actions.Actions({
 			// XXX
 		}],
 
-	// XXX how should we handler the return value?
 	peerCall: ['- Peer/',
-		function(id, action){
-			// XXX
-		}],
+		function(id, action){ return new CooperativePromise() }],
 	peerApply: ['- Peer/',
-		function(id, action, args){
-			// XXX
-		}],
+		function(id, action, args){ return new CooperativePromise() }],
 
 	// XXX if no actions are given, proxy all...
 	// XXX also proxy descriptors???
@@ -174,6 +260,7 @@ var ChildProcessPeerActions = actions.Actions({
 			// XXX need a cooperative way to pass this to the root method return...
 			return new Promise((function(resolve, reject){
 				// already connected...
+				// XXX check if child is alive...
 				if(id in this.__peers){
 					return resolve(id) 
 				}
@@ -186,6 +273,7 @@ var ChildProcessPeerActions = actions.Actions({
 		makeProtocolHandiler('child', function(id){
 			// XXX need a cooperative way to pass this to the root method return...
 			return new Promise((function(resolve, reject){
+				var that = this
 				// already disconnected...
 				if(this.__peers[id] == null){
 					return resolve(id) 
@@ -196,6 +284,8 @@ var ChildProcessPeerActions = actions.Actions({
 					.then(function(){
 						// XXX terminate child...
 						// XXX
+
+						delete that.__peers[id]
 					})
 			}).bind(this))
 		})],
