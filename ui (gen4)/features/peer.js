@@ -21,6 +21,25 @@ var object = require('lib/object')
 /*********************************************************************/
 // helpers...
 
+// Cooperative promise object...
+// 
+// This is like a promise but is not resolved internally, rather this 
+// resolves (is set) via a different promise of value passed to it via 
+// the .set(..) method...
+// 
+// Example:
+// 	// create a promise...
+// 	var p = (new CooperativePromise())
+// 		// bind normally...
+// 		.then(function(){ .. })
+// 		
+// 	// this will resolve p and trigger all the .then(..) callbacks...
+// 	p.set(new Promise(function(resolve, reject){ resolve() }))
+// 	
+// Note that .set(..) can be passed any value, passing a non-promise has
+// the same effect as passing the same value to resolve(..) of a Promise
+// object...
+// 
 // XXX can we make this an instance of Promise for passing the
 // 		x instanceof Promise test???
 var CooperativePromisePrototype = {
@@ -103,15 +122,6 @@ object.makeConstructor('CooperativePromise',
 
 //---------------------------------------------------------------------
 	
-// XXX should this parse out the protocol???
-// 		...technically we no longer need it....
-/*
-var makeProtocolHandiler = function(protocol, func){
-	return function(id){
-		return id.startsWith(protocol + ':')
-			&& func.apply(this, arguments) } } 
-//*/
-
 var makeProtocolHandiler = function(protocol, func){
 	return function(id){
 		return id.startsWith(protocol + ':')
