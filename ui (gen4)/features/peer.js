@@ -17,6 +17,18 @@ var core = require('features/core')
 
 
 /*********************************************************************/
+// helpers...
+
+// XXX should this parse out the protocol???
+// 		...technically we no longer need it....
+var makeProtocolHandiler = function(protocol, func){
+	return function(id){
+		return id.startsWith(protocol + ':')
+			&& func.apply(this, arguments) } } 
+
+
+
+/*********************************************************************/
 
 // XXX this is a generic API, add ability to define protocols...
 // 		Protocols:
@@ -154,25 +166,54 @@ module.Peer = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX all the return values here will be ignored -- need a way to figure
+// 		out a cooperative mechanic to return promises...
 var ChildProcessPeerActions = actions.Actions({
-
 	peerConnect: ['- Peer/',
-		function(id, options){
-			// XXX
-		}],
+		makeProtocolHandiler('child', function(id, options){
+			// XXX need a cooperative way to pass this to the root method return...
+			return new Promise((function(resolve, reject){
+				// already connected...
+				if(id in this.__peers){
+					return resolve(id) 
+				}
+
+				// XXX run ig.js in child_process + add peer feature to setup...
+				// XXX
+			}).bind(this))
+		})],
 	peerDisconnect: ['- Peer/',
-		function(id){
-			// XXX
-		}],
+		makeProtocolHandiler('child', function(id){
+			// XXX need a cooperative way to pass this to the root method return...
+			return new Promise((function(resolve, reject){
+				// already disconnected...
+				if(this.__peers[id] == null){
+					return resolve(id) 
+				}
+
+				// trigger stop...
+				this.peerCall(id, 'stop')
+					.then(function(){
+						// XXX terminate child...
+						// XXX
+					})
+			}).bind(this))
+		})],
 
 	peerCall: ['- Peer/',
-		function(id, action){
-			// XXX 
-		}],
+		makeProtocolHandiler('child', function(id, action){
+			// XXX need a cooperative way to pass this to the root method return...
+			return new Promise((function(resolve, reject){
+				// XXX
+			}).bind(this))
+		})],
 	peerApply: ['- Peer/',
-		function(id, action, args){
-			// XXX
-		}],
+		makeProtocolHandiler('child', function(id, action, args){
+			// XXX need a cooperative way to pass this to the root method return...
+			return new Promise((function(resolve, reject){
+				// XXX
+			}).bind(this))
+		})],
 })
 
 
@@ -185,6 +226,9 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 	depends: [
 		'peer',
 	],
+
+	isApplicable: function(){ 
+		return this.runtime == 'nw' || this.runtime == 'node' },
 
 	actions: ChildProcessPeerActions, 
 })
