@@ -40,6 +40,7 @@ var object = require('lib/object')
 // the same effect as passing the same value to resolve(..) of a Promise
 // object...
 // 
+// XXX should this be a separate package???
 // XXX can we make this an instance of Promise for passing the
 // 		x instanceof Promise test???
 var CooperativePromisePrototype = {
@@ -114,18 +115,23 @@ var CooperativePromisePrototype = {
 }
 
 var CooperativePromise =
+module.CooperativePromise =
 object.makeConstructor('CooperativePromise', 
 	Promise,
 	CooperativePromisePrototype)
 
 
-
 //---------------------------------------------------------------------
 	
-var makeProtocolHandiler = function(protocol, func){
+// XXX would be nice to list the protocols supported by the action in 
+// 		an action attr...
+var makeProtocolHandler =
+module.makeProtocolHandler =
+function(protocol, func){
 	return function(id){
 		return id.startsWith(protocol + ':')
-			&& function(res){ res.set(func.apply(this, arguments)) } } } 
+			&& function(res){ 
+				res.set(func.apply(this, [].slice.call(arguments, 1))) }}} 
 
 
 
@@ -204,6 +210,11 @@ var PeerActions = actions.Actions({
 			// XXX
 		})],
 
+	peerCall: ['- Peer/',
+		function(id, action){ return new CooperativePromise() }],
+	peerApply: ['- Peer/',
+		function(id, action, args){ return new CooperativePromise() }],
+
 	peerList: ['- Peer/',
 		function(){ return Object.keys(this.__peers || {}) }],
 	// XXX format spec!!!
@@ -215,11 +226,6 @@ var PeerActions = actions.Actions({
 		function(id){
 			// XXX
 		}],
-
-	peerCall: ['- Peer/',
-		function(id, action){ return new CooperativePromise() }],
-	peerApply: ['- Peer/',
-		function(id, action, args){ return new CooperativePromise() }],
 
 	// XXX if no actions are given, proxy all...
 	// XXX also proxy descriptors???
@@ -266,7 +272,7 @@ module.Peer = core.ImageGridFeatures.Feature({
 // 		out a cooperative mechanic to return promises...
 var ChildProcessPeerActions = actions.Actions({
 	peerConnect: ['- Peer/',
-		makeProtocolHandiler('child', function(id, options){
+		makeProtocolHandler('child', function(id, options){
 			// XXX need a cooperative way to pass this to the root method return...
 			return new Promise((function(resolve, reject){
 				// already connected...
@@ -280,7 +286,7 @@ var ChildProcessPeerActions = actions.Actions({
 			}).bind(this))
 		})],
 	peerDisconnect: ['- Peer/',
-		makeProtocolHandiler('child', function(id){
+		makeProtocolHandler('child', function(id){
 			// XXX need a cooperative way to pass this to the root method return...
 			return new Promise((function(resolve, reject){
 				var that = this
@@ -301,14 +307,14 @@ var ChildProcessPeerActions = actions.Actions({
 		})],
 
 	peerCall: ['- Peer/',
-		makeProtocolHandiler('child', function(id, action){
+		makeProtocolHandler('child', function(id, action){
 			// XXX need a cooperative way to pass this to the root method return...
 			return new Promise((function(resolve, reject){
 				// XXX
 			}).bind(this))
 		})],
 	peerApply: ['- Peer/',
-		makeProtocolHandiler('child', function(id, action, args){
+		makeProtocolHandler('child', function(id, action, args){
 			// XXX need a cooperative way to pass this to the root method return...
 			return new Promise((function(resolve, reject){
 				// XXX
