@@ -9,6 +9,10 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+if(typeof(process) != 'undefined'){
+	var child_process = requirejs('child_process')
+}
+
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -259,6 +263,9 @@ module.Peer = core.ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'peer',
+	suggested: [
+		'child-process-peer',
+	],
 
 	actions: PeerActions, 
 })
@@ -271,23 +278,44 @@ module.Peer = core.ImageGridFeatures.Feature({
 // XXX all the return values here will be ignored -- need a way to figure
 // 		out a cooperative mechanic to return promises...
 var ChildProcessPeerActions = actions.Actions({
+	// XXX do better message handling...
 	peerConnect: ['- Peer/',
 		makeProtocolHandler('child', function(id, options){
-			// XXX need a cooperative way to pass this to the root method return...
 			return new Promise((function(resolve, reject){
 				// already connected...
 				// XXX check if child is alive...
-				if(id in this.__peers){
+				if(this.__peers 
+						&& id in this.__peers 
+						&& this.__peers[id].peer.connected){
 					return resolve(id) 
 				}
 
-				// XXX run ig.js in child_process + add peer feature to setup...
-				// XXX
+				this.__peers = this.__peers || {}
+
+				var p = this.__peers[id] = {
+					id: id,
+					peer: child_process.fork('ig.js'),
+				}
+				var peer = p.peer
+
+				// XXX setup message handlers...
+				// 		...should be about the same as in setup below...
+				// XXX use a standard handler....
+				peer.on('message', (function(msg){
+					if(msg.type == 'action-call-result'){
+						var callback = (this.__peer_result_callbacks || {})[msg.id]
+
+						callback 
+							&& (delete this.__peer_result_callbacks[msg.id])
+							&& callback(msg.value, msg.error)
+					}
+				}).bind(this))
+
+				resolve(id)
 			}).bind(this))
 		})],
 	peerDisconnect: ['- Peer/',
 		makeProtocolHandler('child', function(id){
-			// XXX need a cooperative way to pass this to the root method return...
 			return new Promise((function(resolve, reject){
 				var that = this
 				// already disconnected...
@@ -295,29 +323,37 @@ var ChildProcessPeerActions = actions.Actions({
 					return resolve(id) 
 				}
 
-				// trigger stop...
-				this.peerCall(id, 'stop')
-					.then(function(){
-						// XXX terminate child...
-						// XXX
+				// terminate child...
+				that.__peers[id].peer.kill()
+				delete that.__peers[id]
 
-						delete that.__peers[id]
-					})
 			}).bind(this))
 		})],
 
 	peerCall: ['- Peer/',
 		makeProtocolHandler('child', function(id, action){
-			// XXX need a cooperative way to pass this to the root method return...
 			return new Promise((function(resolve, reject){
 				// XXX
 			}).bind(this))
 		})],
 	peerApply: ['- Peer/',
 		makeProtocolHandler('child', function(id, action, args){
-			// XXX need a cooperative way to pass this to the root method return...
 			return new Promise((function(resolve, reject){
-				// XXX
+				// XXX is this the right way to go???
+				var call_id = id +'-'+ Date.now()
+
+				// do the call...
+				this.__peers[id].peer.send({
+					id: call_id, 
+					type: 'action-call',
+					action: action,
+					args: args,
+				})
+
+				// handle return value...
+				var handlers = this.__peer_result_callbacks = this.__peer_result_callbacks || {}
+				handlers[call_id] = function(res, err){ err ? reject(err) : resolve(res) }
+
 			}).bind(this))
 		})],
 })
@@ -344,6 +380,10 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 		['start', 
 			function(){
 				var that = this
+
+				// XXX do we need to handle stdout/stderr here???
+
+				// XXX need to handle both the child and parent processes...
 				process.on('message', function(msg){
 					// Handle action call...
 					//
@@ -360,13 +400,36 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 					// 		ignore_return: <bool>,
 					// 	}
 					if(msg.type == 'action-call' && msg.action in that){
-						var res = that[msg.action].apply(that, msg.args || [])
+						if(msg.action in that){
+							try{
+								// do the call...
+								var res = that[msg.action].apply(that, msg.args || [])
 
-						if(!msg.ignore_return){
+								// return the value...
+								if(!msg.ignore_return){
+									process.send({
+										type: 'action-call-result',
+										id: msg.id,
+										value: res === that ? null : res,
+									})
+								}
+
+							// error...
+							} catch(err){
+								process.send({
+									type: 'action-call-result',
+									id: msg.id,
+									// XXX is this serializable???
+									error: err,
+								})
+							}
+
+						// error: action does not exist...
+						} else {
 							process.send({
 								type: 'action-call-result',
 								id: msg.id,
-								value: res === that ? null : res,
+								error: `Action "${msg.action}" does not exist.`,
 							})
 						}
 						
@@ -383,7 +446,7 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 
 						callback 
 							&& (delete this.__peer_result_callbacks[msg.id])
-							&& callback(msg.value)
+							&& callback(msg.value, msg.error)
 
 					// Handle logger calls...
 					// 

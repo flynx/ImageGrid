@@ -34,6 +34,8 @@ core.ImageGridFeatures.Feature('viewer-minimal', [
 	'lifecycle',
 	'base-full',
 
+	'peer',
+
 	'image-marks',
 	'image-bookmarks',
 
@@ -47,6 +49,8 @@ core.ImageGridFeatures.Feature('viewer-minimal', [
 core.ImageGridFeatures.Feature('viewer-testing', [
 	'viewer-commandline',
 	'viewer-minimal',
+
+	'peer',
 
 	'workspace',
 	'ui',

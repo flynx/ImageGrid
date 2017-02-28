@@ -61,7 +61,10 @@ module.ImageGridFeatures =
 
 // setup actions and start...
 ImageGridFeatures
-	.setup(['viewer-commandline'])
+	.setup([
+		'viewer-testing',
+		'viewer-commandline',
+	])
 	.start()
 
 
