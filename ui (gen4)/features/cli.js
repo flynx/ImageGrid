@@ -123,8 +123,22 @@ module.CLI = core.ImageGridFeatures.Feature({
 					//.usage('[command] [options] ..')
 
 					.option('-v, --verbose', 'verbose mode', function(){
+						// XXX use a standard logger...
 						that.logger = { 
-							emit: function(){ console.log.apply(console, arguments) } 
+							root: true,
+							push: function(){ 
+								var o = Object.create(this) 
+								o.root = false
+								o.__prefix = (this.__prefix || []).concat([].slice.call(arguments))
+								return o
+							},
+							pop: function(){
+								return this.root ? this : this.__proto__
+							},
+							emit: function(){ 
+								console.log.apply(console, 
+									(this.__prefix || []).concat([].slice.call(arguments)))
+							}, 
 						}
 					})
 
