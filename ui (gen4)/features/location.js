@@ -210,7 +210,7 @@ module.Location = core.ImageGridFeatures.Feature({
 					var l = res.location = JSON.parse(JSON.stringify(this.location))
 					
 					// cleanup base_path...
-					Object.keys(res.images).forEach(function(gid){
+					Object.keys(res.images || {}).forEach(function(gid){
 						var img = res.images[gid]
 
 						if(l.path == img.base_path){
