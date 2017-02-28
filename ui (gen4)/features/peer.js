@@ -343,7 +343,59 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 		// 		parent...
 		['start', 
 			function(){
-				// XXX
+				var that = this
+				process.on('message', function(msg){
+					// Handle action call...
+					//
+					// Format:
+					// 	{
+					// 		type: 'action-call',
+					//
+					// 		id: <id>,
+					//
+					// 		action: <action-name>,
+					//
+					// 		args: [<arg>, .. ] | null,
+					//
+					// 		ignore_return: <bool>,
+					// 	}
+					if(msg.type == 'action-call' && msg.action in that){
+						var res = that[msg.action].apply(that, msg.args || [])
+
+						if(!msg.ignore_return){
+							process.send({
+								type: 'action-call-result',
+								id: msg.id,
+								value: res === that ? null : res,
+							})
+						}
+						
+					// Handle action call result...
+					// 
+					// Format:
+					// {
+					// 		type: 'action-call-result',
+					// 		id: <id>,
+					// 		value: <object> | null,
+					// }
+					} else if(msg.type == 'action-call-result'){
+						var callback = (this.__peer_result_callbacks || {})[msg.id]
+
+						callback 
+							&& (delete this.__peer_result_callbacks[msg.id])
+							&& callback(msg.value)
+
+					// Handle logger calls...
+					// 
+					// Format:
+					// 	{
+					// 		type: 'logger-emit',
+					// 		value: [ .. ],
+					// 	}
+					} else if(msg.type == 'logger-emit' && this.logger){
+						this.logger.emit.apply(this.logger, msg.value)
+					}
+				})
 			}],
 	],
 })
