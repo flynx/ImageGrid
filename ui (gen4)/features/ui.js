@@ -2408,6 +2408,9 @@ module.FailsafeDevTools = core.ImageGridFeatures.Feature({
 	tag: 'fail-safe-devtools',
 
 	priority: 'low',
+	depends: [
+		'ui',
+	],
 
 	handlers: [
 		['start',
