@@ -314,6 +314,8 @@ var ChildProcessPeerActions = actions.Actions({
 				resolve(id)
 			}).bind(this))
 		})],
+	// XXX should this call .stop() on the child???
+	// 		...does the child handle kill gracefully???
 	peerDisconnect: ['- Peer/',
 		makeProtocolHandler('child', function(id){
 			return new Promise((function(resolve, reject){
@@ -330,6 +332,10 @@ var ChildProcessPeerActions = actions.Actions({
 			}).bind(this))
 		})],
 
+	// XXX can we do sync???
+	// 		...this would be useful to 100% match the action api and 
+	// 		make the thing transparent...
+	// XXX can we do prop access???
 	peerCall: ['- Peer/',
 		makeProtocolHandler('child', function(id, action){
 			return new Promise((function(resolve, reject){
