@@ -377,13 +377,16 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 	handlers: [
 		// XXX check if we are a child and setup communications with the
 		// 		parent...
+		// 		...checking if child is simple:
+		// 			process.send != null -> child
 		['start', 
 			function(){
 				var that = this
 
 				// XXX do we need to handle stdout/stderr here???
-
 				// XXX need to handle both the child and parent processes...
+				// 		...make this reusable...
+			
 				process.on('message', function(msg){
 					// Handle action call...
 					//
@@ -404,8 +407,6 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 							try{
 								// do the call...
 								var res = that[msg.action].apply(that, msg.args || [])
-
-								// XXX check if res is a promise/promise-like...
 
 								// return the value...
 								if(!msg.ignore_return){
