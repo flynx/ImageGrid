@@ -409,11 +409,30 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 
 								// return the value...
 								if(!msg.ignore_return){
-									process.send({
-										type: 'action-call-result',
-										id: msg.id,
-										value: res === that ? null : res,
-									})
+									res.then ?
+										// promise result...
+										res
+											.then(function(res){
+												process.send({
+													type: 'action-call-result',
+													id: msg.id,
+													value: res,
+												})
+											})
+											.catch(function(err){
+												process.send({
+													type: 'action-call-result',
+													id: msg.id,
+													error: err,
+												})
+											})
+										// normal result...
+										: process
+											.send({
+												type: 'action-call-result',
+												id: msg.id,
+												value: res === that ? null : res,
+											})
 								}
 
 							// error...
