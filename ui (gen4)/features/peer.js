@@ -203,12 +203,13 @@ var PeerActions = actions.Actions({
 	peerDisconnect: ['- Peer/',
 		function(id){ return new CooperativePromise() }],
 
-	// event...
+	// events...
+	// XXX do proper docs...
+	// XXX do we need these???
 	peerConnected: ['- Peer/',
 		core.notUserCallable(function(id){
 			// XXX
 		})],
-	// event...
 	peerDisconnected: ['- Peer/',
 		core.notUserCallable(function(id){
 			// XXX
@@ -221,6 +222,7 @@ var PeerActions = actions.Actions({
 
 	peerList: ['- Peer/',
 		function(){ return Object.keys(this.__peers || {}) }],
+	// XXX do we need these???
 	// XXX format spec!!!
 	peerSpec: ['- Peer/',
 		function(id){
@@ -384,7 +386,7 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 		// XXX check if we are a child and setup communications with the
 		// 		parent...
 		// 		...checking if child is simple:
-		// 			process.send != null -> child
+		// 			process.send != null // -> child
 		['start', 
 			function(){
 				var that = this
