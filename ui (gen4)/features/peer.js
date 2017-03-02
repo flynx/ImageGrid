@@ -337,7 +337,7 @@ var ChildProcessPeerActions = actions.Actions({
 	// XXX can we do sync???
 	// 		...this would be useful to 100% match the action api and 
 	// 		make the thing transparent...
-	// XXX can we do prop access???
+	// XXX prop access???
 	peerCall: ['- Peer/',
 		makeProtocolHandler('child', function(id, action){
 			return new Promise((function(resolve, reject){
