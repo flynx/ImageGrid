@@ -287,6 +287,9 @@ module.GLOBAL_KEYBOARD = {
 
 		shift_B: 'setBaseRibbon',
 
+		alt_PgUp: 'shiftRibbonUp',
+		alt_PgDown: 'shiftRibbonDown',
+
 
 		// editing...
 		R: 'rotateCW',

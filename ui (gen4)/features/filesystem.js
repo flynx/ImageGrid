@@ -2355,7 +2355,10 @@ var FileSystemWriterUIActions = actions.Actions({
 				make(['Export $mode: ', 
 						function(){ return mode }])
 					.on('open', 
-						widgets.makeNestedConfigListEditor(that, o,
+						// XXX for some reason o is initially undefined when
+						// 		it should be set to the dialog...
+						//widgets.makeNestedConfigListEditor(that, o,
+						widgets.makeNestedConfigListEditor(that, make.dialog,
 							'export-dialog-modes',
 							'export-dialog-mode',
 							{
