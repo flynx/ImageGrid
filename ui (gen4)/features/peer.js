@@ -338,11 +338,11 @@ var ChildProcessPeerActions = actions.Actions({
 	// 		...this would be useful to 100% match the action api and 
 	// 		make the thing transparent...
 	// XXX prop access???
+	// XXX test...
 	peerCall: ['- Peer/',
 		makeProtocolHandler('child', function(id, action){
-			return new Promise((function(resolve, reject){
-				// XXX
-			}).bind(this))
+			var args = [].slice.call(arguments, 2)
+			return this.peerApply(ig, action, args)
 		})],
 	peerApply: ['- Peer/',
 		makeProtocolHandler('child', function(id, action, args){
