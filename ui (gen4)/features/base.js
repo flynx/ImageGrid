@@ -246,18 +246,22 @@ actions.Actions({
 		{journal: true},
 		function(lst, base){ this.load(this.dataFromURLs(lst, base)) }],
 
-	// XXX experimental...
-	// 		...the bad thing about this is that we can not extend this,
-	// 		adding new items to the resulting structure...
 	// XXX is this the correct way to go???
 	// 		...can we save simple attribute values???
 	json: ['- File/Dump state as JSON object',
-		'This will collect JSON data from every available attribute '
-			+'supporting the .dumpJSON() method.',
+		core.doc`Dump state as JSON object
+
+		This will collect JSON data from every available attribute supporting
+		the .dumpJSON() method.
+
+		NOTE: this will ignore attributes starting with '__'.
+		`,
 		function(mode){
 			var res = {}
 			for(var k in this){
-				if(this[k] != null && this[k].dumpJSON != null){
+				if(!k.startsWith('__') 
+						&& this[k] != null 
+						&& this[k].dumpJSON != null){
 					res[k] = this[k].dumpJSON()
 				}
 			}

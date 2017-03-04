@@ -216,7 +216,11 @@ var PeerActions = actions.Actions({
 		})],
 
 	peerCall: ['- Peer/',
-		function(id, action){ return new CooperativePromise() }],
+		//function(id, action){ return new CooperativePromise() }],
+		function(id, action){
+			var args = [].slice.call(arguments, 2)
+			return this.peerApply(id, action, args)
+		}],
 	peerApply: ['- Peer/',
 		function(id, action, args){ return new CooperativePromise() }],
 
@@ -338,11 +342,6 @@ var ChildProcessPeerActions = actions.Actions({
 	// 		...this would be useful to 100% match the action api and 
 	// 		make the thing transparent...
 	// XXX prop access???
-	peerCall: ['- Peer/',
-		makeProtocolHandler('child', function(id, action){
-			var args = [].slice.call(arguments, 2)
-			return this.peerApply(id, action, args)
-		})],
 	peerApply: ['- Peer/',
 		makeProtocolHandler('child', function(id, action, args){
 			return new Promise((function(resolve, reject){
