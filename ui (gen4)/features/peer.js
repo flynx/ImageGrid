@@ -175,7 +175,7 @@ var PeerActions = actions.Actions({
 	get peeractions(){
 		return this.getPeerActions() },
 
-	getPeerActions: ['- Peer/',
+	getPeerActions: ['- System/Peer/',
 		function(id){
 			var that = this
 			return this.actions.filter(id ? 
@@ -186,7 +186,7 @@ var PeerActions = actions.Actions({
 					return that.getActionAttr(action, '__peer__') })
 		}],
 	// XXX should this also check props???
-	isPeerAction: ['- Peer/',
+	isPeerAction: ['- System/Peer/',
 		function(name){
 			return !!this.getActionAttr(name, '__peer__') }],
 
@@ -198,68 +198,64 @@ var PeerActions = actions.Actions({
 	// XXX this should create or connect to a peer depending on protocol...
 	// XXX the events should get called on the peer too -- who is 
 	// 		responsible for this???
-	peerConnect: ['- Peer/',
+	peerConnect: ['- System/Peer/',
 		function(id, options){ return new CooperativePromise() }],
-	peerDisconnect: ['- Peer/',
+	peerDisconnect: ['- System/Peer/',
 		function(id){ return new CooperativePromise() }],
 
 	// events...
 	// XXX do proper docs...
 	// XXX do we need these???
-	peerConnected: ['- Peer/',
+	peerConnected: ['- System/Peer/',
 		core.notUserCallable(function(id){
 			// XXX
 		})],
-	peerDisconnected: ['- Peer/',
+	peerDisconnected: ['- System/Peer/',
 		core.notUserCallable(function(id){
 			// XXX
 		})],
 
-	peerCall: ['- Peer/',
-		//function(id, action){ return new CooperativePromise() }],
+	// NOTE: .peerCall(..) is just a front-end to .peerApply(..) so there
+	// 		is no need to reload it...
+	peerCall: ['- System/Peer/',
 		function(id, action){
 			var args = [].slice.call(arguments, 2)
 			return this.peerApply(id, action, args)
 		}],
-	peerApply: ['- Peer/',
+	peerApply: ['- System/Peer/',
 		function(id, action, args){ return new CooperativePromise() }],
 
-	peerList: ['- Peer/',
+	peerList: ['- System/Peer/',
 		function(){ return Object.keys(this.__peers || {}) }],
+
+	// XXX there seem to be two ways to go with peers:
+	//		- proxy a set of actions...
+	//			+ simple
+	//			- non-transparent in most cases...
+	//				...considering that all peer calls are async, making this
+	//				transparent for actions that do not return a promise
+	//				will be problematic...
+	//		- custom actions that communicate with a peer...
+	//			+ no need to be compatible with existing actions
+	//			- manual...
+	//		Need to play around with use-cases and see what fits best...
 	// XXX do we need these???
 	// XXX format spec!!!
-	peerSpec: ['- Peer/',
+	peerSpec: ['- System/Peer/',
 		function(id){
 			// XXX
 		}],
-	peerProxy: ['- Peer/',
-		function(id){
-			// XXX
-		}],
+	peerProxy: ['- System/Peer/',
+		function(id, action, target){
+			target = target || action
 
-	// XXX if no actions are given, proxy all...
-	// XXX also proxy descriptors???
-	peerMixin: ['- Peer/',
-		function(id, actions){
-			var that = this
-			var spec = this.peerSpec(id)
-			// XXX
-			actions = actions || Object.keys(spec.actions)
-			actions.forEach(function(action){
-				if(that[action]){
-					return
-				}
-
-				// XXX
-				var action_spec = []
-
-				that[action] = actions.Action(action, action_spec)
-			})
-		}],
-	// XXX should this be .peerMixout(..)
-	peerMixout: ['- Peer/',
-		function(id, actions){
-			// XXX
+			this[action] = actions.Action.apply(actions.Action, [
+				action,
+				`- System/Peer/Proxy to action ${target} of peer "${id}"`,
+				{ __peer__: true },
+				function(){ 
+					return this.peerApply(id, target, arguments) },
+			]) 
 		}],
 })
 
@@ -285,7 +281,7 @@ module.Peer = core.ImageGridFeatures.Feature({
 // 		out a cooperative mechanic to return promises...
 var ChildProcessPeerActions = actions.Actions({
 	// XXX do better message handling...
-	peerConnect: ['- Peer/',
+	peerConnect: ['- System/Peer/',
 		makeProtocolHandler('child', function(id, options){
 			return new Promise((function(resolve, reject){
 				// already connected...
@@ -322,12 +318,12 @@ var ChildProcessPeerActions = actions.Actions({
 		})],
 	// XXX should this call .stop() on the child???
 	// 		...does the child handle kill gracefully???
-	peerDisconnect: ['- Peer/',
+	peerDisconnect: ['- System/Peer/',
 		makeProtocolHandler('child', function(id){
 			return new Promise((function(resolve, reject){
 				var that = this
 				// already disconnected...
-				if(this.__peers[id] == null){
+				if(this.__peers == null || this.__peers[id] == null){
 					return resolve(id) 
 				}
 
@@ -342,11 +338,15 @@ var ChildProcessPeerActions = actions.Actions({
 	// 		...this would be useful to 100% match the action api and 
 	// 		make the thing transparent...
 	// XXX prop access???
-	peerApply: ['- Peer/',
+	peerApply: ['- System/Peer/',
 		makeProtocolHandler('child', function(id, action, args){
 			return new Promise((function(resolve, reject){
 				// XXX is this the right way to go???
 				var call_id = id +'-'+ Date.now()
+
+				if(this.__peers == null || this.__peers[id] == null){
+					return reject(`Peer "${id}" is not connected.`)
+				}
 
 				// do the call...
 				this.__peers[id].peer.send({
@@ -411,8 +411,18 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 					if(msg.type == 'action-call' && msg.action in that){
 						if(msg.action in that){
 							try{
+								var cur = that
+								var prev = that
+								msg.action
+									.split(/\./g)
+									.forEach(function(a){ 
+										prev = cur
+										cur = cur[a] 
+									})
+
 								// do the call...
-								var res = that[msg.action].apply(that, msg.args || [])
+								//var res = that[msg.action].apply(that, msg.args || [])
+								var res = cur.apply(prev, msg.args || [])
 
 								// return the value...
 								if(!msg.ignore_return){
@@ -440,6 +450,15 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 												id: msg.id,
 												value: res === that ? null : res,
 											})
+
+								// notify parent that we are done...
+								// XXX do we actually need this???
+								} else {
+									process
+										.send({
+											type: 'action-call-result',
+											id: msg.id,
+										})
 								}
 
 							// error...

@@ -281,6 +281,9 @@ var IntrospectionActions = actions.Actions({
 			.isUserCallable(<action-name>)
 		`,
 		// XXX should this check only the root action or the whole set???
+		// 		...in other words: can we make an action non-user-callable
+		// 		anywhere other than the root action?
+		// 		IMO no...
 		//function(action){ 
 		//	return this.getActionAttr(action, '__not_user_callable__') != true }],
 		actions.doWithRootAction(function(action){
