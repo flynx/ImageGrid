@@ -160,7 +160,7 @@ function(protocol, func){
 //			+ no need to be compatible with existing actions
 //			- manual...
 //		Need to play around with use-cases and see what fits best...
-// XXX should this do "sync"???
+// XXX should/can this do "sync"???
 // XXX should the couch api be implemented over this of independently???
 var PeerActions = actions.Actions({
 
