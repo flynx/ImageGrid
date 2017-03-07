@@ -170,10 +170,7 @@ var PeerActions = actions.Actions({
 	// 	}
 	//
 	// XXX <spec> format???
-	//		...should flow from the protocol definition and architecture...
-	// XXX should url and id be the same thing???
-	// 		...this might simplify things, and to make things pretty 
-	// 		implementing aliases will do the trick...
+	// XXX id/url aliases...
 	// XXX Q: should peer adapter be a feature that defines/extnds a set 
 	// 		of actions???
 	// 		...e.g. base peerCreate(..) defines the protocol but does 
