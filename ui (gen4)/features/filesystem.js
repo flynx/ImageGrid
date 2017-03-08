@@ -330,15 +330,10 @@ var FileSystemLoaderActions = actions.Actions({
 						}
 
 						// build the data from images...
-						// XXX
 						if(res[k].data == null){
-							var g = data.Data().newGid()
 							res[k].data = {
 								order: Object.keys(res[k].images),
-								//ribbons: {},
-								//ribbon_order: [g],
 							}
-							//res[k].data.ribbons[g] = res[k].data.order.slice()
 						}
 
 						var part = that.prepareJSONForLoad(res[k], k)
