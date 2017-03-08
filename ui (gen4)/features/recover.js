@@ -54,31 +54,39 @@ var RecoverActions = actions.Actions({
 	// 		parent actions at this point...
 	loadOrRecover: ['- Location/',
 		function(data){
-			// this is the critical section, after this point we
-			// are doing the actual loading....
-			try {
+			var that = this
+			return new Promise(function(resolve, reject){
+				// this is the critical section, after this point we
+				// are doing the actual loading....
+				try {
 
-				this.load(data)
+					that.load(data)
 
-			// something bad happened, clear and handle it...
-			} catch(err){
-				this.clear()
+					resolve(data)
 
-				console.error(err)
+				// something bad happened, clear and handle it...
+				} catch(err){
+					that.clear()
 
-				// recover to last location...
-				if(this.__recover){
-					this.recover()
+					console.error(err)
 
-				// fail...
-				} else {
-					// clear the recovery data...
-					delete this.__recover
+					// recover to last location...
+					if(that.__recover){
+						that.recover()
+
+						reject('recovered')
 
 					// fail...
-					throw err
+					} else {
+						// clear the recovery data...
+						delete that.__recover
+
+						// fail...
+						//throw err
+						reject(err)
+					}
 				}
-			}
+			})
 		}],
 
 	// Recover from load error...

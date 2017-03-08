@@ -563,14 +563,17 @@ var FileSystemLoaderActions = actions.Actions({
 				// load the data...
 				.then(function(imgs){
 					that.loadOrRecover({
-						images: imgs,
-						data: data.Data.fromArray(imgs.keys()),
+							images: imgs,
+							data: data.Data.fromArray(imgs.keys()),
 
-						location: {
-							path: path,
-							method: 'loadImages',
-						}
-					})
+							location: {
+								path: path,
+								method: 'loadImages',
+							}
+						})
+						.then(function(){
+							delete that.changes
+						})
 				})
 		}],
 
