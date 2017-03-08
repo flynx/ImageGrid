@@ -358,8 +358,8 @@ var PartialRibbonsActions = actions.Actions({
 var PartialRibbons = 
 module.PartialRibbons = core.ImageGridFeatures.Feature({
 	title: 'Partial Ribbons',
-	doc: 'Maintains partially loaded ribbons, this enables very lage '
-		+'image sets to be hadled eficiently.',
+	doc: core.doc`Maintains partially loaded ribbons, this enables very large
+	image sets to be handled efficiently.`,
 
 	// NOTE: partial ribbons needs to be setup first...
 	// 		...the reasons why things break otherwise is not too clear.
@@ -415,9 +415,6 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 
 				//this.preCacheJumpTargets()
 			}],
-
-
-
 	],
 })
 

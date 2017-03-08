@@ -43,6 +43,14 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 	actions: PartialRibbonsActions, 
 
 	handlers: [
+		['focusImage.pre centerImage.pre', 
+			function(target, list){
+				// XXX
+			}],
+		['resizing.pre',
+			function(unit, size){
+				// XXX
+			}],
 	],
 })
 
