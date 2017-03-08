@@ -3146,6 +3146,9 @@ var BrowserPrototype = {
 			if(to.length == 0){
 				// select first/last...
 				//return this.navigate(action == 'down' ? 'last' : 'first')
+				
+				// XXX stop keyboard repeat...
+				// XXX
 
 				// wrap around....
 				to = this.filter('*').filter(pattern)
