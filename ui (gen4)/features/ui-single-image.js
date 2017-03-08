@@ -428,6 +428,11 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 				}
 			}],
 
+		['imageClick.pre',
+			function(gid){
+				gid == this.current
+					&& this.toggleSingleImage() }],
+
 		// Workspace...
 		// 	...set ribbon focus mode to order (default) in single image mode...
 		['saveWorkspace',

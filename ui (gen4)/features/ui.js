@@ -621,6 +621,8 @@ module.ViewerActions = actions.Actions({
 		`,
 		core.notUserCallable(function(){
 			// This is the window resize event...
+			//
+			// Not for direct use.
 		})],
 	
 
@@ -1883,6 +1885,21 @@ var ControlActions = actions.Actions({
 		'center-off-screen-paned-images': false,
 	},
 
+	imageClick: ['- Interface/Image click event',
+		core.doc`Image click event
+
+		The .pre(..) stage of the event is called before the clicked 
+		image is focused and the .post(..) stage is called after focusing
+		is done.
+
+		NOTE: this does not account for animation.
+		`,
+		core.notUserCallable(function(){
+			// This is image clicked event...
+			//
+			// Not for direct use.
+		})],
+
 	toggleImageClickHandling: ['Interface/Image click handling',
 		toggler.Toggler(null,
 			function(){ 
@@ -1917,7 +1934,11 @@ var ControlActions = actions.Actions({
 					}
 				var handler = setup.handler = setup.handler 
 					|| function(){
-						that.focusImage(that.ribbons.getElemGID($(event.target)))
+						var gid = that.ribbons.getElemGID($(event.target))
+
+						that.imageClick.chainCall(that, 
+							function(){ that.focusImage(gid) }, 
+							gid)
 					}
 
 

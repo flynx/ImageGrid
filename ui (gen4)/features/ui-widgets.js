@@ -1365,6 +1365,16 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 var ButtonsActions = actions.Actions({
 	config: {
 		'main-buttons-state': 'on',
+		// Format:
+		// 	{
+		// 		<html>: [
+		// 			<css-class>,
+		// 			// Button info (optional)
+		// 			<info>,
+		// 			<code>,
+		// 		],
+		// 		...
+		// 	}
 		'main-buttons': {
 			'&#x2630;': ['menu', 'browseActions -- Action menu...'],
 			'C<sub/>': ['crop', 'browseActions: "Crop/" -- Crop menu...'],
@@ -1372,6 +1382,7 @@ var ButtonsActions = actions.Actions({
 			//'<i>ImageGrid.Viewer</i>': ['title', ''],
 			//'t': ['touch', 'toggleSideButtons -- Toggle touch ui'],
 			//'&#9965;': ['ui-settings', 'browseActions: "Interface/" -- Interface settings...'],
+			'&#9974;': ['single-image', 'toggleSingleImage -- View mode'],
 		},
 
 		// XXX not sure about these yet...
