@@ -673,10 +673,16 @@ var KeyboardActions = actions.Actions({
 		`,
 		{ keepDialogTitle: true },
 		function(key, no_match){
+			var that = this
 			// get/set the handler...
 			var handler = this.__key_press_handler = 
 				this.__key_press_handler 
-					|| keyboard.makeKeyboardHandler(this.keyboard, null, this)
+					//|| keyboard.makeKeyboardHandler(this.keyboard, null, this)
+					|| keyboard.makePausableKeyboardHandler(
+						this.keyboard, 
+						null, 
+						this, 
+						function(){ return that.config['keyboard-repeat-pause-check'] })
 			// do the call...
 			return handler(key, no_match)
 		}],
@@ -688,24 +694,6 @@ var KeyboardActions = actions.Actions({
 			if(state == null){
 				return this.__keyboard_handler ? 'on' : 'off'
 			}
-
-			// repeat stop checker...
-			var check = (function(){
-				if(this.config['keyboard-repeat-pause-check'] > 0
-						&& this.__keyboard_repeat_paused){
-					var that = this
-					this.__keyboard_repeat_pause_timeout 
-						&& clearTimeout(this.__keyboard_repeat_pause_timeout)
-
-					this.__keyboard_repeat_pause_timeout = setTimeout(function(){
-						delete that.__keyboard_repeat_paused
-						delete that.__keyboard_repeat_pause_timeout 
-					}, this.config['keyboard-repeat-pause-check'] || 100)
-
-					return false
-				}
-				return true
-			}).bind(this)
 
 			var kb = this.keyboard
 
@@ -725,15 +713,7 @@ var KeyboardActions = actions.Actions({
 					&& target.off('keydown', this.__keyboard_handler)
 
 				// make the base handler...
-				var handler = 
-					keyboard.stoppableKeyboardRepeat(
-						this.keyPress.bind(this),
-						/*/ log unbound keys...
-						function(evt){ 
-							return that.keyPress(evt, function(evt, k){ 
-								window.DEBUG && console.log('KEY:', k) }) },
-						//*/
-						check)
+				var handler = this.keyPress.bind(this)
 
 				// setup base keyboard for devel, in case something breaks...
 				// This branch does not drop keys...
@@ -771,7 +751,10 @@ var KeyboardActions = actions.Actions({
 
 		This is useful for stopping repeating (held down) keys after some
 		event.`,
-		function(){ this.__keyboard_repeat_paused = true }],
+		function(){ 
+			this.config['keyboard-repeat-pause-check'] > 0
+				&& this.keyboard.pauseRepeat
+				&& this.keyboard.pauseRepeat() }],
 })
 
 var Keyboard = 

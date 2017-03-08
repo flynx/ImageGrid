@@ -1050,6 +1050,48 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 
 
 //---------------------------------------------------------------------
+// Pausable base event handler wrapper of Keyboard...
+//
+// This is the same as .makeKeyboardHandler(..) but adds ability to 
+// pause repeating key handling...
+// 
+// This will extend the keyboard object by adding:
+// 		.pauseRepeat() 		- will pause repeating keys...
+// 		
+var makePausableKeyboardHandler =
+module.makePausableKeyboardHandler =
+function makePausableKeyboardHandler(keyboard, unhandled, actions, check_interval){
+
+	var kb = keyboard instanceof Keyboard ? 
+		keyboard 
+		//: Keyboard(keyboard, checkGlobalMode)
+		: Keyboard(keyboard)
+
+	kb.pauseRepeat = function(){ this.__repeat_paused = true }
+
+	return stoppableKeyboardRepeat(
+		makeKeyboardHandler(kb, unhandled, actions), 
+		function(){
+			if(kb.__repeat_paused){
+				var that = this
+				kb.__repeat_pause_timeout 
+					&& clearTimeout(kb.__repeat_pause_timeout)
+
+				kb.__repeat_pause_timeout = setTimeout(function(){
+					delete kb.__repeat_paused
+					delete kb.__repeat_pause_timeout 
+				}, (check_interval instanceof Function ?
+					check_interval.call(actions) 
+					: (check_interval || 100)))
+
+				return false
+			}
+			return true
+		})
+}
+
+
+//---------------------------------------------------------------------
 // handler wrappers...
 
 // Event handler wrapper to stop handling keys if check callback does 
