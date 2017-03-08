@@ -13,6 +13,26 @@ module.VERSIONS = []
 
 /*********************************************************************/
 
+var completeData = 
+module.completeData =
+function(data){
+	// XXX is this the right way to go???
+	var that = require('imagegrid/data').Data()
+
+	var ribbons = data.ribbons = data.ribbons || {}
+
+	if(Object.keys(ribbons).length == 0){
+		ribbons[that.newGid()] = data.order.slice()
+	}
+
+	data.ribbon_order = data.ribbon_order || Object.keys(ribbons)
+
+	return data
+}
+
+
+
+/*********************************************************************/
 
 // Convert legacy Gen1 data format to Gen3 format version 2.0+
 //
@@ -21,6 +41,8 @@ module.VERSIONS = []
 //module.convertDataGen1 =
 module.VERSIONS['2.0'] =
 function(data, cmp){
+	//data = data.version < '2.0' ? module.VERSIONS['2.0'](data) : data
+
 	var res = {
 		data: {
 			version: '2.0',
@@ -125,7 +147,11 @@ function(data){
 // Get latest updater version...
 //
 module.getLatestUpdaterVersion = function(){
-	return Object.keys(module.VERSIONS).sort().pop()
+	return Object.keys(module.VERSIONS)
+		.map(function(v){ return [v, parseFloat(v)] })
+		.sort(function(a, b){ return a[1] - b[1]  })
+		.map(function(e){ return e[0] })
+		.pop()
 }
 
 
@@ -144,7 +170,7 @@ module.updateData = function(data, clean){
 	var v = module.getLatestUpdaterVersion()
 	var res = data.version < v
 		? module.VERSIONS[v](data) 
-		: data
+		: completeData(data)
 
 	!clean
 		&& Object.keys(data).forEach(function(k){
