@@ -16,27 +16,34 @@ var core = require('features/core')
 
 /*********************************************************************/
 
-var FeatureActions = actions.Actions({
-	emptyAction: ['- Demo/Empty action',
-		function(){
+var PartialRibbonsActions = actions.Actions({
+	updateRibbon: ['- Interface/Update partial ribbon size', 
+		function(target, w, size, threshold){
+			// XXX
+		}],
+	resizeRibbon: ['- Interface/Resize ribbon to n images',
+		function(target, size){
 			// XXX
 		}],
 })
 
-var Feature = 
-module.Feature = core.ImageGridFeatures.Feature({
+var PartialRibbons = 
+module.PartialRibbons = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	// XXX
-	tag: 'feature-tag',
+	priority: 'high',
+
+	tag: 'ui-partial-ribbons-2',
+	exclusive: ['ui-partial-ribbons'],
 	depends: [
-		// XXX
+		'ui',
 	],
 
-	actions: FeatureActions, 
+	actions: PartialRibbonsActions, 
 
-	handlers: [],
+	handlers: [
+	],
 })
 
 

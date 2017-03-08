@@ -366,7 +366,10 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 	priority: 'high',
 
 	tag: 'ui-partial-ribbons',
-	depends: ['ui'],
+	exclusive: ['ui-partial-ribbons'],
+	depends: [
+		'ui'
+	],
 
 
 	actions: PartialRibbonsActions,
