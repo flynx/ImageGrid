@@ -1493,6 +1493,8 @@ var BrowserPrototype = {
 		// 		first make(..) is called, but obviously this should be 
 		// 		as short as possible -- under 20-50ms.
 		holdSize: 20,
+
+		keyboardRepeatPause: 100,
 	},
 
 	// XXX need a way to access buttons...
@@ -3115,9 +3117,17 @@ var BrowserPrototype = {
 			var all = this.filter('*')
 			//var to = this.select('!', filtering)[action+'All'](pattern).first()
 			var to = all.eq(all.index(this.select('!', filtering)) + (action == 'next' ? 1 : -1))
+
+			// stop keyboard repeat...
+			to.length == 1
+				&& this.options.keyboardRepeatPause > 0
+				&& this.keyboard.pauseRepeat 
+				&& this.keyboard.pauseRepeat()
+
 			// range check and overflow...
 			if(to.length == 0){
 				action = action == 'next' ? 'first' : 'last'
+
 			} else {
 				return this.select(to, filtering)
 			}
@@ -3142,14 +3152,17 @@ var BrowserPrototype = {
 					: $(all.slice(0, all.index(from)).toArray().reverse()))
 				.filter(function(_, e){ return $(e).offset().top != t })
 
+			// stop keyboard repeat...
+			to.length == 1
+				&& this.options.keyboardRepeatPause > 0
+				&& this.keyboard.pauseRepeat 
+				&& this.keyboard.pauseRepeat()
+
 			// special case: nothing below -> select wrap | last/first...
 			if(to.length == 0){
 				// select first/last...
 				//return this.navigate(action == 'down' ? 'last' : 'first')
 				
-				// XXX stop keyboard repeat...
-				// XXX
-
 				// wrap around....
 				to = this.filter('*').filter(pattern)
 

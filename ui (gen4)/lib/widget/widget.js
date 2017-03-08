@@ -62,6 +62,8 @@ var WidgetPrototype = {
 	client: null,
 
 	options: {
+		keyboardRepeatPause: 100,
+
 		nonPropagatedEvents: [
 			'start',
 
@@ -152,10 +154,11 @@ var WidgetPrototype = {
 						function(){ return that.dom })
 			this.dom
 				.keydown(
-					keyboard.makeKeyboardHandler(
+					keyboard.makePausableKeyboardHandler(
 						this.keyboard,
 						options.logKeys,
-						this))
+						this,
+						function(){ return this.options.keyboardRepeatPause }))
 		}
 
 		if(this.options.nonPropagatedEvents != null){
@@ -233,10 +236,11 @@ var ContainerPrototype = {
 						function(){ return that.dom })
 			this.dom
 				.keydown(
-					keyboard.makeKeyboardHandler(
+					keyboard.makePausableKeyboardHandler(
 						this.keyboard,
 						options.logKeys,
-						this))
+						this,
+						function(){ return this.options.keyboardRepeatPause }))
 		}
 
 		if(this.options.nonPropagatedEvents != null){
