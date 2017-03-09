@@ -428,10 +428,29 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 				}
 			}],
 
+		// current image clicked...
+		['imageBlockClick.pre',
+			function(gid){
+				if(gid == this.current
+						&& this.toggleSingleImage('?') == 'off'){
+					// indicate that we have handled the click...
+					this.__clicked_block = true
+					this.toggleSingleImage() 
+				}
+			}],
+		['imageBlockClick.pre',
+			function(gid){
+				delete this.__clicked_block
+			}],
 		['imageClick.pre',
 			function(gid){
 				gid == this.current
-					&& this.toggleSingleImage() }],
+					&& this.toggleSingleImage('?') == 'on'
+					// only handle the click if it was not handled in 
+					// imageBlockClick...
+					&& !this.__clicked_block
+					&& this.toggleSingleImage() 
+			}],
 
 		// Workspace...
 		// 	...set ribbon focus mode to order (default) in single image mode...

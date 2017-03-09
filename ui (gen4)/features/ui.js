@@ -1885,8 +1885,14 @@ var ControlActions = actions.Actions({
 		'center-off-screen-paned-images': false,
 	},
 
-	imageClick: ['- Interface/Image click event',
-		core.doc`Image click event
+	// Image click events...
+	imageBlockClick: ['- Interface/Image block click event',
+		core.doc`Image block click event
+
+		This is triggered on any click on an image block.
+
+		imageClick event if triggered is triggers between the .pre()/.post()
+		stages of this event.
 
 		The .pre(..) stage of the event is called before the clicked 
 		image is focused and the .post(..) stage is called after focusing
@@ -1894,7 +1900,24 @@ var ControlActions = actions.Actions({
 
 		NOTE: this does not account for animation.
 		`,
-		core.notUserCallable(function(){
+		core.notUserCallable(function(gid, x, y){
+			// This is image clicked event...
+			//
+			// Not for direct use.
+		})],
+	imageClick: ['- Interface/Image click event',
+		core.doc`Image click event
+
+		This is triggered only if the click/tap is made within the actual 
+		image.
+
+		The .pre(..) stage of the event is called before the clicked 
+		image is focused and the .post(..) stage is called after focusing
+		is done.
+
+		NOTE: this does not account for animation.
+		`,
+		core.notUserCallable(function(gid, x, y){
 			// This is image clicked event...
 			//
 			// Not for direct use.
@@ -1934,11 +1957,60 @@ var ControlActions = actions.Actions({
 					}
 				var handler = setup.handler = setup.handler 
 					|| function(){
-						var gid = that.ribbons.getElemGID($(event.target))
+						var img = $(event.target)
+						var gid = that.ribbons.getElemGID(img)
 
-						that.imageClick.chainCall(that, 
-							function(){ that.focusImage(gid) }, 
-							gid)
+						// sanity check: only handle clicks on images...
+						if(!img.hasClass('image')){
+							return
+						}
+
+						// get the offset within the image...
+						// NOTE: this does not account for border width, this
+						// 		clicks on the top/left border will result in 
+						// 		negative values...
+						var x = event.offsetX
+						var y = event.offsetY
+						var W = img[0].offsetWidth
+						var H = img[0].offsetHeight
+
+						// get preview size...
+						// NOTE: this is not normalized to image block size...
+						// NOTE: we do not need to account for orientation 
+						// 		because the margins will take care of it for
+						// 		us...
+						// 		XXX not fully sure if the reason here is
+						// 			correct, but the thing works...
+						var w = img.attr('preview-width')
+						var h = img.attr('preview-height')
+
+						// normalize preview size to image block size...
+						var s = Math.min(W/w, H/h)
+						w *= s
+						h *= s
+
+						// preview offsets within the block...
+						var dw = (W-w)/2
+						var dh = (H-h)/2
+
+						// check if we clicked the image...
+						var clicked_image = 
+							(x >= dw && x <= W-dw)
+							&& (y >= dh && y <= H-dh)
+
+						that.imageBlockClick
+							.chainCall(that, 
+								function(){ 
+									clicked_image ?
+										// trigger this only if we clicked
+										// within the image...
+										that.imageClick
+											.chainCall(that, 
+												function(){ that.focusImage(gid) }, 
+												gid, x, y)
+										: that.focusImage(gid)
+								},
+								gid, x, y)
 					}
 
 
