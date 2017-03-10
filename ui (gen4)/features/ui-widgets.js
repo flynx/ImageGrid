@@ -1382,7 +1382,7 @@ var ButtonsActions = actions.Actions({
 			//'<i>ImageGrid.Viewer</i>': ['title', ''],
 			//'t': ['touch', 'toggleSideButtons -- Toggle touch ui'],
 			//'&#9965;': ['ui-settings', 'browseActions: "Interface/" -- Interface settings...'],
-			'&#9974;': ['single-image', 'toggleSingleImage -- View mode'],
+			'&#9974;': ['view', 'toggleSingleImage -- Single image / ribbon toggle'],
 		},
 
 		// XXX not sure about these yet...
