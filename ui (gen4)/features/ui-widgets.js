@@ -1378,10 +1378,7 @@ var ButtonsActions = actions.Actions({
 		'main-buttons': {
 			'&#x2630;': ['menu', 'browseActions -- Action menu...'],
 			'C<sub/>': ['crop', 'browseActions: "Crop/" -- Crop menu...'],
-			//'M': ['marks', 'browseActions: "Mark/" -- Mark menu...'],
-			//'t': ['touch', 'toggleSideButtons -- Toggle touch ui'],
 			'&#9974;': ['view', 'toggleSingleImage -- Single image / ribbon toggle'],
-			//'<i>ImageGrid.Viewer</i>': ['title', ''],
 		},
 
 		// XXX not sure about these yet...
