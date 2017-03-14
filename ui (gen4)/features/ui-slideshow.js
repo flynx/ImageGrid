@@ -179,6 +179,9 @@ var SlideshowActions = actions.Actions({
 						this.loadWorkspace('slideshow')
 					}
 
+					// XXX
+					this.config['single-image-toggle-on-click'] = false
+
 					// start the timer... 
 					this.__slideshouw_timer = setInterval(function(){
 						var cur = that.current

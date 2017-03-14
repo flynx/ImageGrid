@@ -112,6 +112,8 @@ var SingleImageActions = actions.Actions({
 			'ribbon-focus-mode': 'order',
 			'shifts-affect-direction': 'off',
 		},
+
+		'single-image-toggle-on-click': true,
 	},
 
 	// XXX make this accept args for debuging...
@@ -432,6 +434,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 		['imageBlockClick.pre',
 			function(gid){
 				if(gid == this.current
+						&& this.config['single-image-toggle-on-click']
 						&& this.toggleSingleImage('?') == 'off'){
 					// indicate that we have handled the click...
 					this.__clicked_block = true
@@ -445,6 +448,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 		['imageClick.pre',
 			function(gid){
 				gid == this.current
+					&& this.config['single-image-toggle-on-click']
 					&& this.toggleSingleImage('?') == 'on'
 					// only handle the click if it was not handled in 
 					// imageBlockClick...

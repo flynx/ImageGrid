@@ -1378,7 +1378,7 @@ var ButtonsActions = actions.Actions({
 		'main-buttons': {
 			'&#x2630;': ['menu', 'browseActions -- Action menu...'],
 			'C<sub/>': ['crop', 'browseActions: "Crop/" -- Crop menu...'],
-			'&#9974;': ['view', 'toggleSingleImage -- Single image / ribbon toggle'],
+			//'&#9974;': ['view', 'toggleSingleImage -- Single image / ribbon toggle'],
 		},
 
 		// XXX not sure about these yet...
