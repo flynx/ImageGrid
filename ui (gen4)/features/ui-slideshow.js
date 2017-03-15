@@ -45,6 +45,9 @@ var SlideshowActions = actions.Actions({
 		],
 	},
 
+	resetSlideshowWorkspace: ['Slideshow/Reset workspace',
+		function(){ delete this.workspaces['slideshow'] }],
+
 	slideshowIntervalDialog: ['Slideshow/Slideshow interval...',
 		widgets.makeUIDialog(function(parent){
 			var that = this
@@ -179,8 +182,10 @@ var SlideshowActions = actions.Actions({
 						this.loadWorkspace('slideshow')
 					}
 
-					// XXX
-					this.config['single-image-toggle-on-click'] = false
+					// disable getting in/out of single image mode via clicks... 
+					if(this.config['single-image-toggle-on-click']){
+						this.config['single-image-toggle-on-click'] = false
+					}
 
 					// start the timer... 
 					this.__slideshouw_timer = setInterval(function(){
@@ -260,10 +265,24 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 				} 
 			}],
 
-		// build the slideshow workspace for the first time if it's not
-		// present yet (is null)...
+		// - build the slideshow workspace for the first time if it's not
+		// 		present yet (is null)...
+		// - restore .config['single-image-toggle-on-click']
 		['loadWorkspace.pre',
 			function(workspace){
+				// going out of slideshow -> restore settings...
+				var data = this.workspaces[workspace] || {} 
+				if(this.workspace == 'slideshow'){
+					if(!('single-image-toggle-on-click' in data)){
+						delete this.config['single-image-toggle-on-click']
+
+					} else {
+						this.config['single-image-toggle-on-click'] = 
+							data['single-image-toggle-on-click']
+					}
+				}
+
+				// going into slideshow for first time -> setup...
 				if(workspace == 'slideshow' && this.workspaces['slideshow'] == null){
 					return function(){
 						this.loadWorkspace('ui-chrome-hidden') 
