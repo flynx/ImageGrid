@@ -41,6 +41,7 @@ module.GLOBAL_KEYBOARD = {
 		],
 
 		Esc: 'toggleSlideshow: "off" -- Exit slideshow',
+		Space: 'Esc',
 		Enter: 'slideshowDialog',
 
 		Left: 'resetSlideshowTimer',
