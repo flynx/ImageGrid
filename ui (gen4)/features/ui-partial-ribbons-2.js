@@ -15,6 +15,7 @@ var core = require('features/core')
 
 
 /*********************************************************************/
+// XXX do we need to do most of the work here on in imagegrid/data.js???
 
 var PartialRibbonsActions = actions.Actions({
 	updateRibbon: ['- Interface/Update partial ribbon size', 
