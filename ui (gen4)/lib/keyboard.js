@@ -1058,6 +1058,8 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 // This will extend the keyboard object by adding:
 // 		.pauseRepeat() 		- will pause repeating keys...
 // 		
+// XXX should we drop only when the same key is repeating or any keys 
+// 		repeating (as is now)???
 var makePausableKeyboardHandler =
 module.makePausableKeyboardHandler =
 function makePausableKeyboardHandler(keyboard, unhandled, actions, check_interval){
@@ -1067,23 +1069,25 @@ function makePausableKeyboardHandler(keyboard, unhandled, actions, check_interva
 		//: Keyboard(keyboard, checkGlobalMode)
 		: Keyboard(keyboard)
 
-	kb.pauseRepeat = function(){ this.__repeat_paused = true }
+	kb.pauseRepeat = function(){
+		this.__repeat_pause_timeout
+			&& clearTimeout(this.__repeat_pause_timeout)
+
+		this.__repeat_pause_timeout = setTimeout(
+			function(){
+				delete kb.__repeat_pause_timeout 
+			},
+			(check_interval instanceof Function ?
+				check_interval.call(actions) 
+				: (check_interval || 100)))
+	}
+
 
 	return stoppableKeyboardRepeat(
 		makeKeyboardHandler(kb, unhandled, actions), 
 		function(){
-			if(kb.__repeat_paused){
-				var that = this
-				kb.__repeat_pause_timeout 
-					&& clearTimeout(kb.__repeat_pause_timeout)
-
-				kb.__repeat_pause_timeout = setTimeout(function(){
-					delete kb.__repeat_paused
-					delete kb.__repeat_pause_timeout 
-				}, (check_interval instanceof Function ?
-					check_interval.call(actions) 
-					: (check_interval || 100)))
-
+			if(kb.__repeat_pause_timeout){
+				kb.pauseRepeat()
 				return false
 			}
 			return true
