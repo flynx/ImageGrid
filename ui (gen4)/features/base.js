@@ -624,6 +624,7 @@ actions.Actions({
 		{undo: function(a){ this.shiftImageTo(a.args[1], a.args[0]) }},
 		function(target, to){ this.data.shiftImage(target, to) }],
 	
+	// XXX BUG: this messes up direction handling...
 	shiftImageUp: ['Edit|Image/Shift image up',
 		core.doc`Shift image up...
 
