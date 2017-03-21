@@ -154,6 +154,7 @@ actions.Actions({
 			: this._direction < 0 ? 'left'
 			: 'right'
 	},
+	// XXX possible bug with .direction = '!'...
 	set direction(value){
 		// repeat last direction...
 		if(value == '!'){
@@ -624,7 +625,7 @@ actions.Actions({
 		{undo: function(a){ this.shiftImageTo(a.args[1], a.args[0]) }},
 		function(target, to){ this.data.shiftImage(target, to) }],
 	
-	// XXX BUG: this messes up direction handling...
+	// XXX BUG: this messes up .medirection handling...
 	shiftImageUp: ['Edit|Image/Shift image up',
 		core.doc`Shift image up...
 
