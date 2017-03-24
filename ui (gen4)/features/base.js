@@ -162,6 +162,9 @@ actions.Actions({
 				return
 			}
 			this.direction = this._direction_last
+			// NOTE: this stabilizes the .direction, preventing repeating
+			// 		the last explicitly set value over and over again...
+			this._direction_last = this.direction
 
 		// force direction change...
 		} else if(typeof(value) == typeof('str') 
@@ -625,9 +628,6 @@ actions.Actions({
 		{undo: function(a){ this.shiftImageTo(a.args[1], a.args[0]) }},
 		function(target, to){ this.data.shiftImage(target, to) }],
 	
-	// XXX BUG: this messes up .direction handling...
-	// 		to repeat:
-	// 			- 
 	shiftImageUp: ['Edit|Image/Shift image up',
 		core.doc`Shift image up...
 
@@ -649,7 +649,8 @@ actions.Actions({
 
 				this.data.shiftImageUp(cur)
 				this.focusImage(next)
-				this.config['shifts-affect-direction'] == 'on' && (this.direction = '!')
+				this.config['shifts-affect-direction'] == 'on' 
+					&& (this.direction = '!')
 
 			// if a specific target is given, just shift it...
 			} else {
