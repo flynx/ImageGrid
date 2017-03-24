@@ -626,6 +626,8 @@ actions.Actions({
 		function(target, to){ this.data.shiftImage(target, to) }],
 	
 	// XXX BUG: this messes up .direction handling...
+	// 		to repeat:
+	// 			- 
 	shiftImageUp: ['Edit|Image/Shift image up',
 		core.doc`Shift image up...
 
