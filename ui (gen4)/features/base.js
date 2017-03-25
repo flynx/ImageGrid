@@ -154,7 +154,6 @@ actions.Actions({
 			: this._direction < 0 ? 'left'
 			: 'right'
 	},
-	// XXX possible bug with .direction = '!'...
 	set direction(value){
 		// repeat last direction...
 		if(value == '!'){
