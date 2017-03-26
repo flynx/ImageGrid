@@ -137,7 +137,8 @@ body {
 /*********************************************************************/
 
 .image-bw {
-	filter: saturate(0);
+	/*filter: saturate(0);*/
+	filter: grayscale(1);
 }
 .image-show-shadows {
 	filter: contrast(0.8) brightness(3) contrast(1.5);

@@ -2519,7 +2519,6 @@ module.FailsafeDevTools = core.ImageGridFeatures.Feature({
 
 
 /*********************************************************************/
-// XXX experimental...
 
 var PreviewFilters
 module.PreviewFilters = core.ImageGridFeatures.Feature({
@@ -2599,6 +2598,11 @@ module.PreviewFilters = core.ImageGridFeatures.Feature({
 			function(){ this.togglePreviewFilter('No filters') }],
 	],
 })
+
+
+
+/*********************************************************************/
+// XXX experimental...
 
 // 		...not sure if this is the right way to go...
 // XXX need to get the minimal size and not the width as results will 
