@@ -136,6 +136,17 @@ body {
 
 /*********************************************************************/
 
+.image-bw {
+	filter: saturate(0);
+}
+.image-show-shadows {
+	filter: contrast(0.8) brightness(3) contrast(1.5);
+}
+
+
+
+/*********************************************************************/
+
 /* scrollbar setup... */
 .browse-widget ::-webkit-scrollbar {
 	width: 10px;

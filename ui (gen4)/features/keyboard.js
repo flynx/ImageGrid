@@ -383,6 +383,10 @@ module.GLOBAL_KEYBOARD = {
 		alt_S: 'sortDialog',
 
 
+		// filters...
+		';': 'togglePreviewFilter: "Show shadows" -- Preview shadows',
+		"'": 'togglePreviewFilter: "Black and white" -- Preview black and white',
+
 		// doc...
 		// XXX for debug...
 		//ctrl_G: function(){ $('.viewer').toggleClass('visible-gid') },

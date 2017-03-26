@@ -77,6 +77,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'external-editor',
 
+	'ui-preview-filters',
+
 	// chrome...
 	'ui-app-buttons',
 	'ui-buttons',

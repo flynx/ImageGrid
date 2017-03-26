@@ -2521,6 +2521,85 @@ module.FailsafeDevTools = core.ImageGridFeatures.Feature({
 /*********************************************************************/
 // XXX experimental...
 
+var PreviewFilters
+module.PreviewFilters = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-preview-filters',
+	depends: [ 
+		'ui' 
+	],
+
+	config: {
+		'preview-filters': {
+			'Black and white': 'image-bw',
+			'Show shadows': 'image-show-shadows',
+			'No filters': 'none',
+		},
+	},
+
+	actions: actions.Actions({
+		togglePreviewFilter: ['Image/Preview filter',
+			core.doc`Toggle image preview filter
+
+			This is different to normal togglers in that toggling an explicit
+			state repeatedly will toggle between that state and 'No filters'
+			effectively toggling the filter on and off...
+
+				// toggle through all the filters...
+				.togglePreviewFilter()
+					-> state
+
+				// toggle 'Show shadows' on/off...
+				.togglePreviewFilter('Show shadows')
+					-> state
+
+				// togglue current filter off if applied... 
+				.togglePreviewFilter('!')
+					-> state
+
+			`,
+			toggler.Toggler(null,
+				function(_, state){ 
+					var filters = this.config['preview-filters']
+					var img = this.ribbons.getImage()
+
+					// get state...
+					if(state == null){
+						for(var s in filters){
+							if(img.hasClass(filters[s])){
+								return s
+							}
+						}
+						return 'No filters'
+					}
+
+					// clear filters...
+					var cls = filters[state]
+					var classes = Object.values(filters)
+						.filter(function(c){ return c != cls })
+					this.ribbons.viewer
+						.find('.'+ classes.join(', .'))
+							.removeClass(classes.join(' '))
+
+					// toggle filter...
+					if(state in filters){
+						img.toggleClass(cls)
+					}
+
+					return img.hasClass(cls) ? state : 'No filters'
+				},
+				function(){ 
+					return Object.keys(this.config['preview-filters']) })],
+	}),
+
+	handlers: [
+		['focusImage',
+			function(){ this.togglePreviewFilter('No filters') }],
+	],
+})
+
 // 		...not sure if this is the right way to go...
 // XXX need to get the minimal size and not the width as results will 
 // 		depend on viewer format...
