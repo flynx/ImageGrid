@@ -124,7 +124,8 @@ function(cls, cfg, parent){
 			parent = parent == null ? this.ribbons.viewer
 				: parent instanceof Function ? parent.call(this) 
 				: parent
-			return parent.find('.'+ cls.join('.')).length > 0 ? 'on' : 'off' },
+			return parent.find('.'+ cls.join('.')).length > 0 ? 'on' : 'off' 
+		},
 		['off', 'on'],
 		function(state){
 			if(state == 'on'){
