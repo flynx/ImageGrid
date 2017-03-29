@@ -207,12 +207,29 @@ module.ImageMarks = core.ImageGridFeatures.Feature({
 
 	tag: 'image-marks',
 
-	depends: ['base'],
+	depends: [
+		'base'
+	],
+	suggested: [
+		'ui-image-marks',
+	],
 
 	actions: ImageMarkActions,
+})
+
+
+var ImageMarksUI = 
+module.ImageMarksUI = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-image-marks',
+
+	depends: [
+		'ui'
+	],
 
 	handlers: [
-		// obey the shiftImage protocol...
 		[[
 			'shiftMarkedUp.pre',
 			'shiftMarkedDown.pre',
@@ -222,14 +239,14 @@ module.ImageMarks = core.ImageGridFeatures.Feature({
 				var marked = this.markedInRibbon(ribbon)
 
 				// need to shift focus...
+				// XXX this still results in odd alignment problems in some cases...
 				if(marked.indexOf(this.current) >= 0){
-					var l = this.ribbons.getRibbonLocator()
 					var direction = this.direction == 'right' ? 'next' : 'prev'
 
 					var getNext = function(direction){
 						var next = that.data.getImage(direction)
 						while(next != null && marked.indexOf(next) >= 0){
-							next = that.data.getImage(direction)
+							next = that.data.getImage(next, direction)
 						}
 						return next
 					}
@@ -237,6 +254,7 @@ module.ImageMarks = core.ImageGridFeatures.Feature({
 					var next = getNext(direction) 
 						|| getNext(direction == 'next' ? 'prev' : 'next')
 
+					var l = this.ribbons.getRibbonLocator()
 					next != null 
 						&& this.ribbons.preventTransitions(l)
 						&& this.focusImage(next)
@@ -259,7 +277,6 @@ module.ImageMarks = core.ImageGridFeatures.Feature({
 		}],
 	],
 })
-
 
 
 //---------------------------------------------------------------------

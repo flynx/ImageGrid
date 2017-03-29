@@ -89,11 +89,16 @@ function updateImagePosition(actions, target){
 
 	return function(){
 		actions.ribbons.preventTransitions(s)
+		var end = function(){
+			// XXX not sure why this does not work without a setTimeout(..)
+			//actions.ribbons.restoreTransitions(s, true)
+			setTimeout(function(){ 
+				actions.ribbons.restoreTransitions(s, true) }, 0) }
 
-		// XXX hack...
-		if(target.constructor === Array){
+		// XXX hack???
+		if(target instanceof Array){
 			actions.reload()
-			return
+			return end()
 		}
 
 		var target_ribbon = actions.data.getRibbon(target)
@@ -101,7 +106,7 @@ function updateImagePosition(actions, target){
 		// nothing changed...
 		if(source_ribbon == target_ribbon 
 				&& actions.data.getImageOrder(target) == source_order){
-			return
+			return end()
 		}
 
 		// place image at position...
@@ -134,10 +139,7 @@ function updateImagePosition(actions, target){
 
 		actions.focusImage()
 
-		// XXX not sure why this does not work without a setTimeout(..)
-		//actions.ribbons.restoreTransitions(s, true)
-		setTimeout(function(){ 
-			actions.ribbons.restoreTransitions(s, true) }, 0)
+		return end()
 	}
 }
 
@@ -880,15 +882,6 @@ module.ViewerActions = actions.Actions({
 	fitScreen: ['Zoom/Fit image to screen',
 		function(){ this.screenfit = 1 }],
 
-	// NOTE: these work by getting the target position from .data...
-	/*
-	shiftImageTo: [ 
-		function(target){ return updateImagePosition(this, target) }],
-	shiftImageUp: [ 
-		function(target){ return updateImagePosition(this, target) }],
-	shiftImageDown: [
-		function(target){ return updateImagePosition(this, target) }],
-	//*/
 	shiftImageLeft: [
 		function(target){ this.ribbons.placeImage(target, -1) }],
 	shiftImageRight: [
