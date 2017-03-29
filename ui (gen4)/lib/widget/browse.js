@@ -2175,6 +2175,7 @@ var BrowserPrototype = {
 		item_shortcut_marker = item_shortcut_marker ? 
 			RegExp(item_shortcut_marker, 'g') 
 			: null
+		var registered_shortcuts = []
 
 		//--------------------------------------------- define make ---
 		// XXX revise signature... 
@@ -2281,7 +2282,7 @@ var BrowserPrototype = {
 					var _replace = function(){
 						// get the last group...
 						var key = [].slice.call(arguments).slice(-3)[0]
-						!item_shortcuts[key]
+						!item_shortcuts[keyboard.normalizeKey(key)]
 							// NOTE: this is a side-effect...
 							&& that.keyboard.handler(
 								'ItemShortcuts', 
@@ -2291,17 +2292,18 @@ var BrowserPrototype = {
 						return key 
 					}
 
-					txt = txt.replace(item_shortcut_marker, _replace)
+					// clean out markers from text...
+					txt = txt.replace(item_shortcut_marker, '$1')
 
-					var registered = []
 					p.filter('.text')
 						.each(function(_, e){
 							e = $(e)
 							e.html(e.html().replace(item_shortcut_marker, 
 								function(){ 
 									var k = _replace.apply(this, arguments) 
-									var mark = !!(registered.indexOf(k) < 0 
-										&& registered.push(k))
+									// only mark the first occurrence...
+									var mark = !!(registered_shortcuts.indexOf(k) < 0 
+										&& registered_shortcuts.push(k))
 									return mark ?
 										`<span class="keyboard-shortcut">${k}</span>`
 										: k
