@@ -198,19 +198,18 @@ var ImageMarkActions = actions.Actions({
 		`,
 		function(target){
 			target = this.data.getImage(target)
-			var order = this.data.order
-			var c = order.indexOf(target)
 
 			var ribbon = this.data.makeSparseImages(this.data.getImages(target))
 			var marked = this.data.makeSparseImages(this.markedInRibbon(target))
 
+			var c = ribbon.indexOf(target)
 			var state = !!marked[c]
 
 			var block = [target]
 
 			// pre block...
 			var i = c-1
-			while(i >= 0 && !!marked[i] == state){
+			while(i >= 0 && (!ribbon[i] || !!marked[i] == state)){
 				ribbon[i] 
 					&& block.splice(0, 0, ribbon[i])
 				i--
@@ -218,7 +217,7 @@ var ImageMarkActions = actions.Actions({
 
 			// post block...
 			var i = c+1
-			while(i < ribbon.length && !!marked[i] == state){
+			while(i < ribbon.length && (!ribbon[i] || !!marked[i] == state)){
 				ribbon[i] 
 					&& block.push(ribbon[i])
 				i++
