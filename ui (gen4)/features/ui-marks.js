@@ -192,15 +192,35 @@ var ImageMarkActions = actions.Actions({
 	//
 	toggleMark: ['Mark|Image/Image $mark',
 		makeTagTogglerAction('selected')],
-	// XXX
-	toggleMarkBlock: ['Mark/$Block marks',
-		'A block is a set of adjacent images either marked on unmarked '
-			+'in the same way',
+	toggleMarkBlock: ['Mark/Mark $block',
+		core.doc`A block is a set of adjacent images either marked on unmarked
+		in the same way
+		`,
 		function(target){
-			var cur = this.toggleMark(target, '?')
+			target = this.data.getImage(target)
+			var order = this.data.order
+			var c = order.indexOf(target)
+			var marked = this.data.makeSparseImages(this.markedInRibbon(target))
+			var state = !!marked[c]
 
-			// get all the next/prev gids until we get a state other than cur...
-			// XXX
+			var block = [target]
+
+			// pre block...
+			var i = c-1
+			while(i < marked.length && !!marked[i] == state){
+				block.splice(0, 0, order[i])
+				i--
+			}
+
+			// post block...
+			var i = c+1
+			while(i >= 0 && !!marked[i] == state){
+				block.push(order[i])
+				i++
+			}
+
+			// do the marking...
+			return this.toggleMark(block, state ? 'off' : 'on')
 		}],
 
 	markTagged: ['- Mark/Mark images by tags',
