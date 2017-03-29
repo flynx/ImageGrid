@@ -110,15 +110,45 @@ function makeTagTogglerAction(tag){
 // 	- 'down'
 var shiftMarked = function(direction){
 	return function(ribbon){
+		var that = this
 		var marked = this.markedInRibbon(ribbon)
+		var next 
 
-		this['shiftImage'+ direction.capitalize()](marked)
+		// need to shift focus...
+		if(marked.indexOf(this.current) >= 0){
+			var d = this.direction == 'right' ? 'next' : 'prev'
+
+			var getNext = function(direction){
+				var next = that.data.getImage(direction)
+				while(next != null && marked.indexOf(next) >= 0){
+					next = that.data.getImage(next, direction)
+				}
+				return next
+			}
+
+			next = getNext(d) 
+				|| getNext(d == 'next' ? 'prev' : 'next')
+
+			next != null 
+				&& this.data.focusImage(next)
+		}
+
+		// shift the image...
+		this.data['shiftImage'+ direction.capitalize()](marked)
 
 		// obey the shiftImage protocol...
-		// XXX should this be in handlers???
 		this.shiftImage.apply(this, marked)
 	}
 }
+
+
+// NOTE: this is specific to shiftMarkedUp/shiftMarkedDown...
+var undoShift = function(undo){
+	return function(a){ 
+		this[undo](this.data.getRibbon(
+			undo == 'shiftMarkedUp' ? 'next' : 'prev',
+			a.args.length == 0 ? a.current : a.args[0])) }}
+
 
 
 //---------------------------------------------------------------------
@@ -192,9 +222,12 @@ var ImageMarkActions = actions.Actions({
 	cropMarked: ['Mark|Crop/Crop $marked images',
 		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
 
+	// XXX add undo...
 	shiftMarkedUp: ['Mark|Ribbon/Shift marked up',
+		{undo: undoShift('shiftMarkedDown')},
 		shiftMarked('up')],
 	shiftMarkedDown: ['Mark|Ribbon/Shift marked down',
+		{undo: undoShift('shiftMarkedUp')},
 		shiftMarked('down')],
 })
 
@@ -217,7 +250,6 @@ module.ImageMarks = core.ImageGridFeatures.Feature({
 	actions: ImageMarkActions,
 })
 
-
 var ImageMarksUI = 
 module.ImageMarksUI = core.ImageGridFeatures.Feature({
 	title: '',
@@ -226,43 +258,17 @@ module.ImageMarksUI = core.ImageGridFeatures.Feature({
 	tag: 'ui-image-marks',
 
 	depends: [
-		'ui'
+		'ui',
+		'image-marks',
 	],
 
 	handlers: [
+		// XXX is a full reload a good thing here???
 		[[
-			'shiftMarkedUp.pre',
-			'shiftMarkedDown.pre',
+			'shiftMarkedUp',
+			'shiftMarkedDown',
 		], 
-			function(ribbon){ 
-				var that = this
-				var marked = this.markedInRibbon(ribbon)
-
-				// need to shift focus...
-				// XXX this still results in odd alignment problems in some cases...
-				if(marked.indexOf(this.current) >= 0){
-					var direction = this.direction == 'right' ? 'next' : 'prev'
-
-					var getNext = function(direction){
-						var next = that.data.getImage(direction)
-						while(next != null && marked.indexOf(next) >= 0){
-							next = that.data.getImage(next, direction)
-						}
-						return next
-					}
-
-					var next = getNext(direction) 
-						|| getNext(direction == 'next' ? 'prev' : 'next')
-
-					var l = this.ribbons.getRibbonLocator()
-					next != null 
-						&& this.ribbons.preventTransitions(l)
-						&& this.focusImage(next)
-						&& this.ribbons.restoreTransitions(l)
-				}
-				
-				return ui.updateImagePosition(this, marked) 
-			}],
+			function(ribbon){ this.reload(true) }],
 
 		// XXX is this the right way to go???
 		['updateImage', function(_, gid, img){
@@ -322,9 +328,28 @@ module.ImageBookmarks = core.ImageGridFeatures.Feature({
 
 	tag: 'image-bookmarks',
 
-	depends: ['base'],
+	depends: [
+		'base'
+	],
+	suggested: [
+		'ui-image-bookmarks',
+	],
 
 	actions: ImageBookmarkActions,
+
+})
+
+var ImageBookmarksUI = 
+module.ImageBookmarksUI = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-image-bookmarks',
+
+	depends: [
+		'ui',
+		'image-bookmarks',
+	],
 
 	handlers: [
 		// XXX is this the right way to go???
@@ -340,7 +365,6 @@ module.ImageBookmarks = core.ImageGridFeatures.Feature({
 		}],
 	],
 })
-
 
 
 //---------------------------------------------------------------------
