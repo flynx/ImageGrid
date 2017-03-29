@@ -209,7 +209,10 @@ var ImageMarkActions = actions.Actions({
 
 			// pre block...
 			var i = c-1
-			while(i >= 0 && (!ribbon[i] || !!marked[i] == state)){
+			while(i >= 0 
+					// NOTE: we are avoiding mixing up a tag not set condition
+					// 		with image i not in ribbon...
+					&& (!ribbon[i] || !!marked[i] == state)){
 				ribbon[i] 
 					&& block.splice(0, 0, ribbon[i])
 				i--
@@ -217,7 +220,10 @@ var ImageMarkActions = actions.Actions({
 
 			// post block...
 			var i = c+1
-			while(i < ribbon.length && (!ribbon[i] || !!marked[i] == state)){
+			while(i < ribbon.length 
+					// NOTE: we are avoiding mixing up a tag not set condition
+					// 		with image i not in ribbon...
+					&& (!ribbon[i] || !!marked[i] == state)){
 				ribbon[i] 
 					&& block.push(ribbon[i])
 				i++
@@ -237,7 +243,6 @@ var ImageMarkActions = actions.Actions({
 			})
 		}],
 
-	// XXX do we need first/last marked???
 	prevMarked: ['Mark|Navigate/Previous marked image',
 		function(mode){ this.prevTagged('selected', mode) }],
 	nextMarked: ['Mark|Navigate/Next marked image',
