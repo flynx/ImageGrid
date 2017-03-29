@@ -881,12 +881,14 @@ module.ViewerActions = actions.Actions({
 		function(){ this.screenfit = 1 }],
 
 	// NOTE: these work by getting the target position from .data...
+	/*
 	shiftImageTo: [ 
 		function(target){ return updateImagePosition(this, target) }],
 	shiftImageUp: [ 
 		function(target){ return updateImagePosition(this, target) }],
 	shiftImageDown: [
 		function(target){ return updateImagePosition(this, target) }],
+	//*/
 	shiftImageLeft: [
 		function(target){ this.ribbons.placeImage(target, -1) }],
 	shiftImageRight: [
@@ -1101,6 +1103,16 @@ module.Viewer = core.ImageGridFeatures.Feature({
 		['resizingDone',
 			function(){ this.scale = this.scale }],
 		//*/
+
+		[[
+			'shiftImageTo.pre',
+			'shiftImageUp.pre',
+			'shiftImageDown.pre',
+		], 
+			function(target){ 
+				return updateImagePosition(this, target) }],
+
+
 		// manage the .crop-mode css class...
 		['crop uncrop',
 			function(){
