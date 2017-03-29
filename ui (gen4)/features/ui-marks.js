@@ -16,6 +16,7 @@ var images = require('imagegrid/images')
 
 var core = require('features/core')
 var base = require('features/base')
+var ui = require('features/ui')
 
 
 
@@ -103,6 +104,22 @@ function makeTagTogglerAction(tag){
 }
 
 
+// 
+// Direction can be:
+// 	- 'up'
+// 	- 'down'
+var shiftMarked = function(direction){
+	return function(ribbon){
+		var marked = this.markedInRibbon(ribbon)
+
+		this['shiftImage'+ direction.capitalize()](marked)
+
+		// obey the shiftImage protocol...
+		// XXX should this be in handlers???
+		this.shiftImage.apply(this, marked)
+	}
+}
+
 
 //---------------------------------------------------------------------
 
@@ -119,6 +136,16 @@ var ImageMarkActions = actions.Actions({
 		}
 		return this.data.tags['selected'].slice()
 	},
+
+	markedInRibbon: ['- Mark|Ribbon/',
+		function(ribbon){
+			var ribbon = this.data.getRibbon(ribbon)
+			var images = this.data.makeSparseImages(this.data.getImages(ribbon))
+
+			return this.data.makeSparseImages(this.marked)
+				// NOTE: this will also filter out undefined positions...
+				.filter(function(img, i){ return images[i] != null })
+		}],
 
 	// Common use-cases:
 	// 	Toggle mark on current image
@@ -164,6 +191,11 @@ var ImageMarkActions = actions.Actions({
 
 	cropMarked: ['Mark|Crop/Crop $marked images',
 		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
+
+	shiftMarkedUp: ['Mark|Ribbon/Shift marked up',
+		shiftMarked('up')],
+	shiftMarkedDown: ['Mark|Ribbon/Shift marked down',
+		shiftMarked('down')],
 })
 
 
@@ -180,6 +212,40 @@ module.ImageMarks = core.ImageGridFeatures.Feature({
 	actions: ImageMarkActions,
 
 	handlers: [
+		// obey the shiftImage protocol...
+		[[
+			'shiftMarkedUp.pre',
+			'shiftMarkedDown.pre',
+		], 
+			function(ribbon){ 
+				var that = this
+				var marked = this.markedInRibbon(ribbon)
+
+				// need to shift focus...
+				if(marked.indexOf(this.current) >= 0){
+					var l = this.ribbons.getRibbonLocator()
+					var direction = this.direction == 'right' ? 'next' : 'prev'
+
+					var getNext = function(direction){
+						var next = that.data.getImage(direction)
+						while(next != null && marked.indexOf(next) >= 0){
+							next = that.data.getImage(direction)
+						}
+						return next
+					}
+
+					var next = getNext(direction) 
+						|| getNext(direction == 'next' ? 'prev' : 'next')
+
+					next != null 
+						&& this.ribbons.preventTransitions(l)
+						&& this.focusImage(next)
+						&& this.ribbons.restoreTransitions(l)
+				}
+				
+				return ui.updateImagePosition(this, marked) 
+			}],
+
 		// XXX is this the right way to go???
 		['updateImage', function(_, gid, img){
 			// update only when ribbons are preset... 
