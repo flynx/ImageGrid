@@ -222,7 +222,6 @@ var ImageMarkActions = actions.Actions({
 	cropMarked: ['Mark|Crop/Crop $marked images',
 		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
 
-	// XXX add undo...
 	shiftMarkedUp: ['Mark|Ribbon/Shift marked up',
 		{undo: undoShift('shiftMarkedDown')},
 		shiftMarked('up')],
