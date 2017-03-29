@@ -219,15 +219,15 @@ var ImageMarkActions = actions.Actions({
 	nextMarked: ['Mark|Navigate/Next marked image',
 		function(mode){ this.nextTagged('selected', mode) }],
 
-	cropMarked: ['Mark|Crop/Crop $marked images',
-		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
-
-	shiftMarkedUp: ['Mark|Ribbon/Shift marked up',
+	shiftMarkedUp: ['Mark|Ribbon/Shift marked $up',
 		{undo: undoShift('shiftMarkedDown')},
 		shiftMarked('up')],
-	shiftMarkedDown: ['Mark|Ribbon/Shift marked down',
+	shiftMarkedDown: ['Mark|Ribbon/Shift marked $down',
 		{undo: undoShift('shiftMarkedUp')},
 		shiftMarked('down')],
+
+	cropMarked: ['Mark|Crop/Crop $marked images',
+		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
 })
 
 

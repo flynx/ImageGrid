@@ -263,9 +263,7 @@ function(elem, state_accessor, states, callback_a, callback_b){
 		}
 
 		// update the element...
-		//state_accessor.call(this, e, state)
 		var res = state_accessor.call(this, e, state)
-		//action = res !== undefined ? res : action
 
 		// post callback...
 		if(callback_post != null){
