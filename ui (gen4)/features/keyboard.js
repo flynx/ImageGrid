@@ -278,10 +278,12 @@ module.GLOBAL_KEYBOARD = {
 		shift_Up: 'shiftImageUp',
 		alt_shift_Up: 'travelImageUp',
 		ctrl_shift_Up: 'shiftImageUpNewRibbon',
+		ctrl_Up: 'shiftMarkedUp',
 
 		shift_Down: 'shiftImageDown',
 		alt_shift_Down: 'travelImageDown',
 		ctrl_shift_Down: 'shiftImageDownNewRibbon',
+		ctrl_Down: 'shiftMarkedDown',
 
 		alt_Left: 'shiftImageLeft!',
 		alt_Right: 'shiftImageRight!',
@@ -351,6 +353,7 @@ module.GLOBAL_KEYBOARD = {
 		// marking...
 		M: 'toggleMark',
 		ctrl_A: 'toggleMark!: "ribbon" "on" -- Mark all images in ribbon',
+		ctrl_shift_A: 'toggleMarkBlock!',
 		ctrl_D: 'toggleMark!: "ribbon" "off" -- Unmark all images in ribbon',
 		ctrl_I: 'toggleMark!: "ribbon" -- Invert marks in ribbon',
 		',': 'prevMarked',

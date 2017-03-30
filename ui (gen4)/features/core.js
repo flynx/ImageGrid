@@ -631,18 +631,25 @@ var JournalActions = actions.Actions({
 					var cur = this.current
 					var args = args2array(arguments)
 
-					return function(){
-						this.journalPush({
-							type: 'basic',
+					var data = {
+						type: 'basic',
 
-							action: action, 
-							args: args,
-							// the current image before the action...
-							current: cur, 
-							// the target (current) image after action...
-							target: this.current, 
-						})
+						action: action, 
+						args: args,
+						// the current image before the action...
+						current: cur, 
+						// the target (current) image after action...
+						target: this.current, 
 					}
+
+					// test if we need to journal this action signature...
+					var test = that.getActionAttr(action, 'undoable')
+					if(test && !test.call(that, data)){
+						return
+					}
+
+					// journal after the action is done...
+					return function(){ this.journalPush(data) }
 				}
 			}
 

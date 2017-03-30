@@ -104,6 +104,24 @@ function makeTagTogglerAction(tag){
 }
 
 
+var undoTag = function(action){
+	return {
+		// do not journal calls that have no side-effects, e.g. toggler 
+		// introspection...
+		// XXX should this be a generic predicate???
+		undoable: function(a){
+			return a.args.indexOf('?') < 0 
+				&& a.args.indexOf('??') < 0 },
+		undo: function(a){
+			this[action].apply(this, 
+				// XXX is argument handling here too optimistic???
+				a.args.map(function(e){ 
+					return e == 'on' ? 'off' 
+						: e == 'off' ? 'on'
+						: e })) },
+	} }
+
+
 // 
 // Direction can be:
 // 	- 'up'
@@ -190,7 +208,9 @@ var ImageMarkActions = actions.Actions({
 	// 	Invert marks on current ribbon
 	// 	.toggleMark('ribbon')
 	//
+	// 
 	toggleMark: ['Mark|Image/Image $mark',
+		undoTag('toggleMark'),
 		makeTagTogglerAction('selected')],
 	toggleMarkBlock: ['Mark/Mark $block',
 		core.doc`A block is a set of adjacent images either marked on unmarked
@@ -329,6 +349,7 @@ var ImageBookmarkActions = actions.Actions({
 	},
 
 	toggleBookmark: ['Bookmark|Image/Image $bookmark',
+		undoTag('toggleBookmark'),
 		makeTagTogglerAction('bookmark')],
 	// action can be:
 	// 	'on'	- toggle all on
