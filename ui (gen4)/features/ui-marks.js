@@ -104,6 +104,7 @@ function makeTagTogglerAction(tag){
 }
 
 
+// XXX should this co-exist with undoable tags??? 
 var undoTag = function(action){
 	return {
 		// do not journal calls that have no side-effects, e.g. toggler 
