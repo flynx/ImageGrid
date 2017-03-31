@@ -104,7 +104,13 @@ function makeTagTogglerAction(tag){
 }
 
 
-// XXX should this co-exist with undoable tags??? 
+// Build a tag toggler undo set of attrs...
+// 
+// This will add:
+// 	'undoable'		- predicate to check if we need to undo, to handle 
+// 						introspection calls correctly...
+// 	'undo'			- undo function...
+// 	
 var undoTag = function(action){
 	return {
 		// do not journal calls that have no side-effects, e.g. toggler 
