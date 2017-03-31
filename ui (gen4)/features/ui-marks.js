@@ -123,10 +123,16 @@ var undoTag = function(action){
 	} }
 
 
+// Shift marked image action constructor...
 // 
-// Direction can be:
-// 	- 'up'
-// 	- 'down'
+// 	Shift marked images up/down
+// 	shiftMarked('up')
+// 	shiftMarked('down')
+// 		-> action
+// 
+// The resulting action affects only images in current ribbon...
+// 
+// NOTE: this specific to marked/selected images...
 var shiftMarked = function(direction){
 	return function(ribbon){
 		var that = this
