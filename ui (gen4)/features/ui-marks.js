@@ -173,6 +173,8 @@ var shiftMarked = function(direction){
 }
 
 
+// Shift undo function constructor...
+// 
 // NOTE: this is specific to shiftMarkedUp/shiftMarkedDown...
 var undoShift = function(undo){
 	return function(a){ 
