@@ -117,15 +117,32 @@ var undoTag = function(action){
 		// introspection...
 		// XXX should this be a generic predicate???
 		undoable: function(a){
+			// handle ribbon-wide operations...
+			// NOTE: this is specific to .toggleMark(..)
+			if(a.args[0] == 'ribbon' && action == 'toggleMark'){
+				a.state = this.markedInRibbon()
+				return true
+			}
+			// skip introspection...
 			return a.args.indexOf('?') < 0 
-				&& a.args.indexOf('??') < 0 },
+				&& a.args.indexOf('??') < 0
+		},
 		undo: function(a){
-			this[action].apply(this, 
-				// XXX is argument handling here too optimistic???
-				a.args.map(function(e){ 
-					return e == 'on' ? 'off' 
-						: e == 'off' ? 'on'
-						: e })) },
+			// restore state...
+			if(a.state){
+				this[action]('ribbon', 'off')
+				this[action](a.state, 'on')
+
+			// reverse state...
+			} else {
+				this[action].apply(this, 
+					// XXX is argument handling here too optimistic???
+					a.args.map(function(e){ 
+						return e == 'on' ? 'off' 
+							: e == 'off' ? 'on'
+							: e })) 
+			}
+		},
 	} }
 
 
@@ -223,7 +240,6 @@ var ImageMarkActions = actions.Actions({
 	// 	Invert marks on current ribbon
 	// 	.toggleMark('ribbon')
 	//
-	// 
 	toggleMark: ['Mark|Image/Image $mark',
 		undoTag('toggleMark'),
 		makeTagTogglerAction('selected')],
