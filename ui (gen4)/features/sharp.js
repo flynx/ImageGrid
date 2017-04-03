@@ -117,6 +117,9 @@ var SharpActions = actions.Actions({
 
 
 	//	.makePreviews()
+	//	.makePreviews('all')
+	//		-> actions
+	//
 	//	.makePreviews('current')
 	//		-> actions
 	//
@@ -126,11 +129,8 @@ var SharpActions = actions.Actions({
 	//	.makePreviews([gid, gid, ..])
 	//		-> actions
 	//
-	//	.makePreviews('all')
-	//		-> actions
-	//
 	// XXX should this account for non-jpeg images???
-	makePreviews: ['Sharp/Make image previews',
+	makePreviews: ['Sharp|File/Make image previews',
 		function(images, sizes, base_path, logger){
 			var that = this
 			logger = logger || this.logger
@@ -138,7 +138,8 @@ var SharpActions = actions.Actions({
 
 
 			// get/normalize images...
-			images = images || this.current
+			//images = images || this.current
+			images = images || 'all'
 			// keywords...
 			images = images == 'all' ? this.data.getImages('all')
 				: images == 'current' ? this.current
