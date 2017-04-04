@@ -116,21 +116,25 @@ var SharpActions = actions.Actions({
 		}],
 
 
-	//	.makePreviews()
-	//	.makePreviews('all')
-	//		-> actions
-	//
-	//	.makePreviews('current')
-	//		-> actions
-	//
-	//	.makePreviews(gid)
-	//		-> actions
-	//
-	//	.makePreviews([gid, gid, ..])
-	//		-> actions
-	//
 	// XXX should this account for non-jpeg images???
-	makePreviews: ['Sharp|File/Make image previews',
+	makePreviews: ['Sharp|File/Make image $previews',
+		core.doc`Make image previews
+
+			Make previews for all images...
+			.makePreviews()
+			.makePreviews('all')
+				-> actions
+
+			Make previews for current image...
+			.makePreviews('current')
+				-> actions
+
+			Make previews for specific image(s)...
+			.makePreviews(gid)
+			.makePreviews([gid, gid, ..])
+				-> actions
+	
+		`,
 		function(images, sizes, base_path, logger){
 			var that = this
 			logger = logger || this.logger
