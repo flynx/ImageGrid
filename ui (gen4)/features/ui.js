@@ -1928,6 +1928,7 @@ var ControlActions = actions.Actions({
 			// Not for direct use.
 		})],
 
+	// XXX do not do anything on viewer focus... (???)
 	toggleImageClickHandling: ['Interface/Image click handling',
 		toggler.Toggler(null,
 			function(){ 
