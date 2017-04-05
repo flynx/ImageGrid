@@ -101,7 +101,7 @@ var OverlayPrototype = {
 				if(that.options.closeOnUnFocusedClick || focused){
 					that.close('reject')
 
-				// don't make the user wait if they really wants to close...
+				// don't make the user wait if they really want to close...
 				} else {
 					focused = true
 				}
