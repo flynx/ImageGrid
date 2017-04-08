@@ -164,7 +164,7 @@ var AppControlActions = actions.Actions({
 		}],
 
 	// XXX should this be here???
-	showInFolder: ['File|Image/Show in folder',
+	showInFolder: ['File|Image/Show in $folder',
 		function(image){
 			image = this.images[this.data.getImage(image)]
 
