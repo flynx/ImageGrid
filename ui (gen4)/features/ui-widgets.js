@@ -1329,6 +1329,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 		['updateImage',
 			function(_, gid){
 				var that = this
+
 				var img = this.ribbons.getImage(gid)
 
 				!img.data('context-menu') 
@@ -1338,10 +1339,10 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 							event.preventDefault()
 							event.stopPropagation()
 
-							var gid = that.ribbons.getElemGID(img)
+							var g = gid || that.ribbons.getElemGID(img)
 
 							that
-								.focusImage(gid)
+								.focusImage(g)
 								.browseActions('/Image/')
 						})
 			}],
