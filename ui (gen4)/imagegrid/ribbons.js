@@ -1525,8 +1525,6 @@ var RibbonsPrototype = {
 		// get/create the ribbon...
 		var r = this.getRibbon(ribbon)
 
-		var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
-
 		if(r.length == 0){
 			place = true
 			// no such ribbon exists, then create and append it in the end...
@@ -1544,6 +1542,7 @@ var RibbonsPrototype = {
 			// align only if ref is loaded...
 			if(ref.length > 0){
 				var gid = this.getElemGID(ref)
+				var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
 				var w = this.getVisibleImageSize('width', 1, ref) / W * 100
 
 				// calculate offset...
@@ -1633,6 +1632,45 @@ var RibbonsPrototype = {
 		if(place){
 			this.placeRibbon(r, this.viewer.find(RIBBON).length)
 		}
+
+		return this
+	},
+
+	// NOTE: reference must be both present in the loaded ribbon and in
+	// 		the given gids...
+	updateRibbonInPlace: function(gids, ribbon, reference){
+		var that = this
+		var r = this.getRibbon(ribbon)
+		var loaded = r.find(IMAGE)
+
+		// update offset...
+		if(reference != null){
+			var ref = this.getImage(reference)
+
+			// align only if ref is loaded...
+			if(ref.length > 0){
+				var gid = this.getElemGID(ref)
+				var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
+				var w = this.getVisibleImageSize('width', 1, ref) / W * 100
+
+				// calculate offset...
+				// NOTE: this will not work for non-square images...
+				var dl = loaded.index(ref) - gids.indexOf(gid)
+
+				if(dl != 0){
+					var x = parseFloat((r.transform('translate3d') || [0])[0]) + w * dl
+					r.transform({x: x + 'vmin', y: 0, z: 0})
+				}
+			}
+		}
+
+		// update gids...
+		$(gids.slice(0, loaded.length-1))
+			.each(function(i, gid){ 
+				gid && that.setElemGID(loaded.eq(i), gid) })
+
+		// update images...
+		this.updateImage(loaded)
 
 		return this
 	},
