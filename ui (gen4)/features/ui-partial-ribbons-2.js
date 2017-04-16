@@ -15,6 +15,17 @@ var core = require('features/core')
 
 
 /*********************************************************************/
+// XXX update sequence:
+// 		- if target is loaded more than 1 screen width off the edge:
+// 			- jump (animate)
+// 			- update ribbon
+// 		- if target is not loaded or too close to edge:
+// 			- update ribbon to place current at ~1 screen off the edge in 
+// 				the opposite direction...
+// 			- load target partially (1/2 ribbon) ~1 screen off the other edge
+// 			- jump (animate)
+// 			- update ribbon to place target at center of ribbon
+// 		...this all feels a bit too complicated...
 // XXX do we need to do most of the work here on in imagegrid/data.js???
 // 		...another question would be if we can do this using existing 
 // 		functionality?
