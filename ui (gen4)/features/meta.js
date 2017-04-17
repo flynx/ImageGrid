@@ -63,8 +63,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-animation',
 
 	'ui-single-image',
-	'ui-partial-ribbons',
-	//'ui-partial-ribbons-2',
+	//'ui-partial-ribbons',
+	'ui-partial-ribbons-2',
 
 	'marks',
 	'ui-range',

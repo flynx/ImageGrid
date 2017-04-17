@@ -850,6 +850,13 @@ var DataPrototype = {
 	//	.getImages(gid|order|ribbon, count, 'before')
 	//		-> list 
 	//
+	//	Get count images around target padding with available images:
+	//	.getImages(gid|order|ribbon, count, 'total')
+	//		NOTE: this is like 'around' above, but will always try to 
+	//			return count images, e.g. when target is closer than 
+	//			count/2 to start or end of ribbon, the resulting list 
+	//			will get padded from the opposite side if available...
+	//		-> list
 	//
 	// If no image is given the current image/ribbon is assumed as target.
 	//
@@ -930,10 +937,9 @@ var DataPrototype = {
 		var i = list.indexOf(target)
 
 		// prepare to slice the list...
-		if(mode == 'around'){
-			count = count/2
-			var pre = Math.floor(count)
-			var post = Math.ceil(count) - 1
+		if(mode == 'around' || mode == 'total'){
+			var pre = Math.floor(count/2)
+			var post = Math.ceil(count/2) - 1
 
 		} else if(mode == 'before'){
 			var pre = count - 1 
@@ -952,20 +958,38 @@ var DataPrototype = {
 
 		// pre...
 		for(var n = i-1; n >= 0 && pre > 0; n--){
-			if(n in list){
-				res.push(list[n])
-				pre--
-			}
+			// NOTE: list may be sparse so we skip the items that are not
+			// 		present and count only the ones we add...
+			n in list
+				&& res.push(list[n])
+				&& pre--
 		}
 
 		res.reverse()
 
 		// post...
+		// NOTE: this will also pad the tail if needed if mode is 'total'
+		post = mode == 'total' ? post + pre : post
 		for(var n = i+1; n < list.length && post > 0; n++){
-			if(n in list){
-				res.push(list[n])
-				post--
+			n in list
+				&& res.push(list[n])
+				&& post--
+		}
+
+		// pad to total...
+		// NOTE: we only need to pad the head here as the tail is padded
+		// 		in the post section...
+		if(mode == 'total' && post > 0){
+			var pad = count - res.length
+			var i = list.indexOf(res[0])
+
+			res.reverse()
+			for(var n = i-1; n >= 0 && pad > 0; n--){
+				n in list
+					&& res.push(list[n])
+					&& pad--
 			}
+			res.reverse()
 		}
 
 		return res

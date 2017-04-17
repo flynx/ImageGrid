@@ -1665,7 +1665,7 @@ var RibbonsPrototype = {
 		}
 
 		// update gids...
-		$(gids.slice(0, loaded.length-1))
+		$(gids.slice(0, loaded.length))
 			.each(function(i, gid){ 
 				gid && that.setElemGID(loaded.eq(i), gid) })
 
