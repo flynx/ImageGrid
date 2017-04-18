@@ -21,14 +21,20 @@ var core = require('features/core')
 
 var PartialRibbonsActions = actions.Actions({
 	config: {
+		// Number of screen widths to load...
 		'ribbon-size-screens': 7,
 
-		// the amount of screen widths to keep around the current image...
+		// Amount of screen widths to keep around the current image...
 		'ribbon-update-threshold': 1.2,
 
-		// the oversize multiplier limit when we resize the ribbon down...
+		// Oversize multiplier limit when we resize the ribbon down...
 		'ribbon-resize-threshold': 2,
+
+		// Sets size of ribbons in single image mode...
+		'ribbons-resize-single-image': 13,
 	},
+
+	// XXX preload???
 
 	updateRibbon: ['- Interface/Update partial ribbon size', 
 		function(target, w, size, threshold){
@@ -73,15 +79,52 @@ var PartialRibbonsActions = actions.Actions({
 			var na = gids.slice(gids.indexOf(target)+1).length
 			var pa = gids.slice(0, gids.indexOf(target)).length
 
-			//console.log(`-- loaded: ${loaded} size: ${size}`)
-
 			// full resize...
-			// ribbon not loaded...
-			if(r.length == 0
+			if(threshold == 0
+					// ribbon not loaded...
+					|| img.length == 0
 					// ribbon shorter than we expect...
 					|| (loaded < size && na + pa > loaded)
+					// ribbon too long...
 					|| loaded > size * threshold){
+				console.log('RESIZE')
 				this.resizeRibbon(target, size)
+			//*/
+
+			/*/ XXX long jump condition......
+			if(img.length != 0 
+					&& (r.length == 0
+						// ribbon shorter than we expect...
+						|| (loaded < size && na + pa > loaded)
+						// ribbon too long...
+						|| loaded > size * threshold)){
+				console.log('RESIZE')
+				this.resizeRibbon(target, size)
+
+			// image is off screen -- align off then animate...
+			// 		1) initial state
+			// 			T	<-	[---|---x---|---------------]
+			// 		2) load new state but align off screen 
+			// 					[-------T-------|-------|---]
+			// 		3) animate
+			// 					[---|---T---|---------------]
+			// XXX this makes the draw worse...
+			} else if(img.length == 0 ){
+				console.log('LONG-JUMP')
+				r.length == 0 ?
+					// ribbon not loaded...
+					this.resizeRibbon(target, size)
+					// simply update...
+					: this.ribbons
+						.preventTransitions(r)
+						.updateRibbonInPlace(
+							gids,
+							r_gid, 
+							data.getImageOrder(this.current) > data.getImageOrder(target) ?
+								gids[gids.length - w]
+								: gids[w])
+						.restoreTransitions(r, true)
+			//*/
 
 			// in-place update...
 			// passed threshold on the right...
@@ -90,6 +133,7 @@ var PartialRibbonsActions = actions.Actions({
 					|| (pl < update_threshold && pa > pl) 
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + update_threshold){
+				console.log('UPDATE')
 				r.length == 0 ?
 					// ribbon not loaded...
 					this.resizeRibbon(target, size)
@@ -113,36 +157,6 @@ var PartialRibbonsActions = actions.Actions({
 						.restoreTransitions(r, true)
 			}
 		}],
-	resizeRibbon: ['- Interface/Resize ribbon to n images',
-		function(target, size){
-			size = size 
-				|| (this.config['ribbon-size-screens'] * this.screenwidth)
-				|| (5 * this.screenwidth)
-			var data = this.data
-			var ribbons = this.ribbons
-
-			// localize transition prevention... 
-			// NOTE: we can't get ribbon via target directly here as
-			// 		the target might not be loaded...
-			var r_gid = data.getRibbon(target)
-			if(r_gid == null){
-				return
-			}
-			// NOTE: for the initial load this may be empty...
-			var r = ribbons.getRibbon(r_gid)
-
-			// XXX do we need to for example ignore unloaded (r.length == 0)
-			// 		ribbons here, for example not load ribbons too far off 
-			// 		screen??
-			
-			ribbons
-				.preventTransitions(r)
-				.updateRibbon(
-					data.getImages(target, size, 'total'), 
-					r_gid,
-					target)
-				.restoreTransitions(r, true)
-		}],
 })
 
 var PartialRibbons = 
@@ -156,6 +170,9 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 	exclusive: ['ui-partial-ribbons'],
 	depends: [
 		'ui',
+	],
+	suggested: [
+		'ui-partial-ribbons-precache',
 	],
 
 	actions: PartialRibbonsActions, 
@@ -172,7 +189,13 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 			}],
 		['resizing.post',
 			function(_, unit, size){
-				if(unit == 'scale'){
+				// keep constant size in single image...
+				if(this.toggleSingleImage && this.toggleSingleImage('?') == 'on'){
+					this.updateRibbon(
+						'current', 
+						this.config['ribbons-resize-single-image'] || 13)
+
+				} else if(unit == 'scale'){
 					this.updateRibbon('current', this.screenwidth / size || 1)
 
 				} else if(unit == 'screenwidth'){

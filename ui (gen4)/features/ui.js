@@ -426,6 +426,41 @@ module.ViewerActions = actions.Actions({
 		})],
 
 
+	// NOTE: this not used directly, mainly designed as a utility to be 
+	// 		used for various partial ribbon implementations...
+	// XXX do we handle off-screen ribbons here???
+	resizeRibbon: ['- Interface/Resize ribbon to n images',
+		function(target, size){
+			size = size 
+				|| (this.config['ribbon-size-screens'] * this.screenwidth)
+				|| (5 * this.screenwidth)
+			var data = this.data
+			var ribbons = this.ribbons
+
+			// localize transition prevention... 
+			// NOTE: we can't get ribbon via target directly here as
+			// 		the target might not be loaded...
+			var r_gid = data.getRibbon(target)
+			if(r_gid == null){
+				return
+			}
+			// NOTE: for the initial load this may be empty...
+			var r = ribbons.getRibbon(r_gid)
+
+			// XXX do we need to for example ignore unloaded (r.length == 0)
+			// 		ribbons here, for example not load ribbons too far off 
+			// 		screen??
+			
+			ribbons
+				.preventTransitions(r)
+				.updateRibbon(
+					data.getImages(target, size, 'total'), 
+					r_gid,
+					target)
+				.restoreTransitions(r, true)
+		}],
+
+
 	// General UI stuff...
 	// NOTE: this is applicable to all uses...
 	toggleTheme: ['Interface/Theme/Viewer theme', 
