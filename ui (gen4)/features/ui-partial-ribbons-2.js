@@ -68,10 +68,10 @@ var PartialRibbonsActions = actions.Actions({
 			var loaded = nl + pl + 1
 
 			// next/prev available...
-			// NOTE: we subtract 1 to remove the current and make these 
-			// 		compatible with: nl, pl
-			var na = this.data.getImages(target, size, 'after').length - 1
-			var pa = this.data.getImages(target, size, 'before').length - 1
+			// NOTE: we do not include target in counts...
+			var gids = this.data.getImages(target, size, 'total')
+			var na = gids.slice(gids.indexOf(target)+1).length
+			var pa = gids.slice(0, gids.indexOf(target)).length
 
 			//console.log(`-- loaded: ${loaded} size: ${size}`)
 
@@ -81,18 +81,15 @@ var PartialRibbonsActions = actions.Actions({
 					// ribbon shorter than we expect...
 					|| (loaded < size && na + pa > loaded)
 					|| loaded > size * threshold){
-				//console.log(`RESIZE: ${loaded} -> ${size}`)
 				this.resizeRibbon(target, size)
 
-			// soft-update...
-			} else if(na + pa < nl + pl
-					// passed threshold on the right...
-					|| (nl < update_threshold && na > nl) 
+			// in-place update...
+			// passed threshold on the right...
+			} else if((nl < update_threshold && na > nl) 
 					// passed threshold on the left...
 					|| (pl < update_threshold && pa > pl) 
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + update_threshold){
-				//console.log('UPDATE')
 				r.length == 0 ?
 					// ribbon not loaded...
 					this.resizeRibbon(target, size)
@@ -100,8 +97,18 @@ var PartialRibbonsActions = actions.Actions({
 					: this.ribbons
 						.preventTransitions(r)
 						.updateRibbonInPlace(
-							this.data.getImages(target, loaded, 'total'), 
-							r_gid,
+							gids,
+							r_gid, 
+							// XXX this makes the animation of the ribbon 
+							// 		a bit smoother but messes up the indicator 
+							// 		a bit...
+							// 		...this needs the update process to happen 
+							// 		very fast comparing to the animation itself
+							// 		to stay in sync...
+							//gids.indexOf(this.current) >= 0 ? 'current' : target)
+							// XXX STUB: this makes the ribbon animation a bit
+							// 		jumpy but does not touch the indicator 
+							// 		animation...
 							target)
 						.restoreTransitions(r, true)
 			}
@@ -163,10 +170,29 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 
 				this.updateRibbon(target)
 			}],
-		['resizing.pre',
-			function(unit, size){
-				// XXX
-				this.updateRibbon()
+		['resizing.post',
+			function(_, unit, size){
+				if(unit == 'scale'){
+					this.updateRibbon('current', this.screenwidth / size || 1)
+
+				} else if(unit == 'screenwidth'){
+					this.updateRibbon('current', size || 1)
+
+				} else if(unit == 'screenheight'){
+					size = size || 1
+
+					// convert target height in ribbons to width in images...
+					// NOTE: this does not account for compensation that 
+					// 		.updateRibbon(..) makes for fitting whole image
+					// 		counts, this is a small enough error so as not
+					// 		to waste time on...
+					var s = this.ribbons.scale()
+					var h = this.ribbons.getScreenHeightRibbons()
+					var w = this.ribbons.getScreenWidthImages()
+					var nw = w / (h/size)
+
+					this.updateRibbon('current', nw)
+				}
 			}],
 	],
 })
