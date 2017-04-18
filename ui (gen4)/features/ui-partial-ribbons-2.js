@@ -15,9 +15,6 @@ var core = require('features/core')
 
 
 /*********************************************************************/
-// XXX do we need to do most of the work here on in imagegrid/data.js???
-// 		...another question would be if we can do this using existing 
-// 		functionality?
 
 var PartialRibbonsActions = actions.Actions({
 	config: {
@@ -31,10 +28,8 @@ var PartialRibbonsActions = actions.Actions({
 		'ribbon-resize-threshold': 2,
 
 		// Sets size of ribbons in single image mode...
-		'ribbons-resize-single-image': 13,
+		'ribbons-resize-single-image': 21,
 	},
-
-	// XXX preload???
 
 	updateRibbon: ['- Interface/Update partial ribbon size', 
 		function(target, w, size, threshold){
@@ -87,7 +82,7 @@ var PartialRibbonsActions = actions.Actions({
 					|| (loaded < size && na + pa > loaded)
 					// ribbon too long...
 					|| loaded > size * threshold){
-				console.log('RESIZE')
+				//console.log('RESIZE')
 				this.resizeRibbon(target, size)
 			//*/
 
@@ -133,9 +128,11 @@ var PartialRibbonsActions = actions.Actions({
 					|| (pl < update_threshold && pa > pl) 
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + update_threshold){
-				console.log('UPDATE')
-				r.length == 0 ?
-					// ribbon not loaded...
+				//console.log('UPDATE')
+				(r.length == 0 
+					|| (this.toggleSingleImage 
+						&& this.toggleSingleImage('?') == 'on')) ?
+					// resize...
 					this.resizeRibbon(target, size)
 					// simply update...
 					: this.ribbons
