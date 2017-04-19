@@ -1665,6 +1665,7 @@ var RibbonsPrototype = {
 		}
 
 		// update gids...
+		//var update = []
 		var unload_marks = []
 		gids
 			.slice(0, loaded.length)
@@ -1678,7 +1679,9 @@ var RibbonsPrototype = {
 						unload_marks.concat(that.getImageMarks(g).toArray())
 						: unload_marks
 
-					gid && that.setElemGID(img, gid)
+					gid
+						&& that.setElemGID(img, gid)
+						//&& update.push(img[0])
 				}
 			})
 		$(unload_marks)
@@ -1686,6 +1689,7 @@ var RibbonsPrototype = {
 
 		// update images...
 		this.updateImage(loaded)
+		//this.updateImage($(update))
 
 		return this
 	},

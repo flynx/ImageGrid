@@ -32,7 +32,7 @@ var PartialRibbonsActions = actions.Actions({
 	},
 
 	updateRibbon: ['- Interface/Update partial ribbon size', 
-		function(target, w, size, threshold){
+		function(target, w, size, threshold, preload){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
 				// NOTE: data.getImage(..) can return null at start or end
@@ -49,6 +49,7 @@ var PartialRibbonsActions = actions.Actions({
 					|| this.config['ribbon-resize-threshold'] 
 					|| 2)
 			var update_threshold = (this.config['ribbon-update-threshold'] || 2)  * w
+			preload = preload === undefined ? true : preload
 			var data = this.data
 			var ribbons = this.ribbons
 
@@ -129,19 +130,44 @@ var PartialRibbonsActions = actions.Actions({
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + update_threshold){
 				//console.log('UPDATE')
-				// XXX a bit jumpy, need to make this work sync within 
-				// 		as close to a single frame as possible...
-				// 		XXX .preventTransitions(..) seems not to have the 
-				// 			desired effect...
-				// 		...might also be a good idea to update the indicator
-				// 		or give it an event to update to...
-				(r.length == 0 
+				// resize...
+				if(r.length == 0 
 					|| (this.toggleSingleImage 
-						&& this.toggleSingleImage('?') == 'on')) ?
-					// resize...
+						&& this.toggleSingleImage('?') == 'on')){
 					this.resizeRibbon(target, size)
-					// simply update...
-					: this.ribbons
+
+				// simply update...
+				} else {
+					// preload...
+					var c = gids.indexOf(data.getImage('current', r_gid))
+					var t = gids.indexOf(target)
+					if(preload 
+							// we are going to shift ribbon in view...
+							&& c >= 0 
+							// the distance is greater than screen width...
+							&& Math.abs(t - pl) > w){
+						console.log('PRELOAD')
+
+						// preload head...
+						if(c > t){
+							preload = gids.slice(0, pl+w)
+							gids = preload.slice().fill(false)
+								.concat(gids.slice(pl+w))
+
+						// preload tail...
+						} else {
+							preload = gids.slice(0, t+w).fill(false)
+								.concat(gids.slice(t+w))
+							gids = gids.slice(0, t+w)
+						}
+
+						// XXX this seems to block the animation....
+						this.ribbons
+							.updateRibbonInPlace(preload, r_gid)
+					}
+
+					// main update...
+					this.ribbons
 						.preventTransitions(r)
 						.updateRibbonInPlace(
 						//.updateRibbon(
@@ -159,6 +185,7 @@ var PartialRibbonsActions = actions.Actions({
 							// 		animation...
 							target)
 						.restoreTransitions(r, true)
+				}
 			}
 		}],
 })
