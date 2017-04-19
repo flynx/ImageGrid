@@ -129,6 +129,8 @@ var PartialRibbonsActions = actions.Actions({
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + update_threshold){
 				//console.log('UPDATE')
+				// XXX a bit jumpy, need to make this work sync within 
+				// 		as close to a single frame as possible...
 				(r.length == 0 
 					|| (this.toggleSingleImage 
 						&& this.toggleSingleImage('?') == 'on')) ?
