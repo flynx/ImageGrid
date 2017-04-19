@@ -131,6 +131,10 @@ var PartialRibbonsActions = actions.Actions({
 				//console.log('UPDATE')
 				// XXX a bit jumpy, need to make this work sync within 
 				// 		as close to a single frame as possible...
+				// 		XXX .preventTransitions(..) seems not to have the 
+				// 			desired effect...
+				// 		...might also be a good idea to update the indicator
+				// 		or give it an event to update to...
 				(r.length == 0 
 					|| (this.toggleSingleImage 
 						&& this.toggleSingleImage('?') == 'on')) ?
@@ -153,8 +157,8 @@ var PartialRibbonsActions = actions.Actions({
 							// 		jumpy but does not touch the indicator 
 							// 		animation...
 							target)
-						.restoreTransitions(r, true)
-						//.restoreTransitions(r)
+						//.restoreTransitions(r, true)
+						.restoreTransitions(r)
 			}
 		}],
 })

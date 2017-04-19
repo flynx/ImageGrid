@@ -97,11 +97,11 @@ body {
 
 /* XXX should this be !important */
 .no-transitions {
-	-webkit-transition: none;
-	-moz-transition: none;
-	-ms-transition: none;
-	-o-transition: none;
-	transition: none;
+	-webkit-transition: none !important;
+	-moz-transition: none !important;
+	-ms-transition: none !important;
+	-o-transition: none !important;
+	transition: none !important;
 }
 
 /* XXX think of a way not to use !important */
