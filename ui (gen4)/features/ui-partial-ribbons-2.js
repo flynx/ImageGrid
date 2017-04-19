@@ -154,6 +154,7 @@ var PartialRibbonsActions = actions.Actions({
 							// 		animation...
 							target)
 						.restoreTransitions(r, true)
+						//.restoreTransitions(r)
 			}
 		}],
 })
