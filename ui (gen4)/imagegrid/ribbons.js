@@ -1638,8 +1638,6 @@ var RibbonsPrototype = {
 
 	// NOTE: reference must be both present in the loaded ribbon and in
 	// 		the given gids...
-	// XXX need to clean out marks of unloaded images...
-	// XXX need to sync the offset and image loading...
 	updateRibbonInPlace: function(gids, ribbon, reference){
 		var that = this
 		var r = this.getRibbon(ribbon)
@@ -1667,10 +1665,24 @@ var RibbonsPrototype = {
 		}
 
 		// update gids...
+		var unload_marks = []
 		gids
 			.slice(0, loaded.length)
 			.forEach(function(gid, i){ 
-				gid && that.setElemGID(loaded.eq(i), gid) })
+				if(gid !== undefined){
+					var img = loaded.eq(i)
+
+					// cleanup marks...
+					var g = that.getElemGID(img)
+					unload_marks = gids.indexOf(g) < 0 ?
+						unload_marks.concat(that.getImageMarks(g).toArray())
+						: unload_marks
+
+					gid && that.setElemGID(img, gid)
+				}
+			})
+		$(unload_marks)
+			.remove()
 
 		// update images...
 		this.updateImage(loaded)

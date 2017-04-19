@@ -144,6 +144,7 @@ var PartialRibbonsActions = actions.Actions({
 					: this.ribbons
 						.preventTransitions(r)
 						.updateRibbonInPlace(
+						//.updateRibbon(
 							gids,
 							r_gid, 
 							// XXX this makes the animation of the ribbon 
@@ -157,8 +158,7 @@ var PartialRibbonsActions = actions.Actions({
 							// 		jumpy but does not touch the indicator 
 							// 		animation...
 							target)
-						//.restoreTransitions(r, true)
-						.restoreTransitions(r)
+						.restoreTransitions(r, true)
 			}
 		}],
 })
