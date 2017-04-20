@@ -60,6 +60,11 @@ var PartialRibbonsActions = actions.Actions({
 			var data = this.data
 			var ribbons = this.ribbons
 
+			var t = Date.now()
+			this.__last_update = this.__last_update || t
+			var timeout = this.config['ribbons-in-place-update-timeout']
+
+
 			// localize transition prevention... 
 			// NOTE: we can't get ribbon via target directly here as
 			// 		the target might not be loaded...
@@ -90,7 +95,7 @@ var PartialRibbonsActions = actions.Actions({
 					|| (loaded < size && na + pa > loaded)
 					// ribbon too long...
 					|| loaded > size * threshold){
-				//console.log('RESIZE')
+				console.log('RESIZE')
 				this.resizeRibbon(target, size)
 
 			// more complex cases...
@@ -100,23 +105,22 @@ var PartialRibbonsActions = actions.Actions({
 					|| (pl < update_threshold && pa > pl) 
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + update_threshold){
-				var t = Date.now()
 				// resize mode...
 				if(this.config['ribbons-in-place-update-mode'] == 'resize'
 						// no ribbon loaded...
 						|| r.length == 0 
 						// only if we are going slow...
-						|| t - (this.__last_update || 0) 
-							> (this.config['ribbons-in-place-update-timeout'] || 200)
+						|| (timeout != null 
+							&& (t - this.__last_update > timeout))
 						// full screen...
 						|| (this.toggleSingleImage 
 							&& this.toggleSingleImage('?') == 'on')){
-					//console.log('RESIZE')
+					//console.log('RESIZE', t-this.__last_update)
 					this.resizeRibbon(target, size)
 
 				// in-place update...
 				} else {
-					//console.log('UPDATE')
+					//console.log('UPDATE', t - this.__last_update)
 					var c = gids.indexOf(data.getImage('current', r_gid))
 					var t = gids.indexOf(target)
 
@@ -125,8 +129,9 @@ var PartialRibbonsActions = actions.Actions({
 						.updateRibbonInPlace(gids, r_gid, target)
 						.restoreTransitions(r, true)
 				}
-				this.__last_update = t 
 			}
+
+			this.__last_update = t 
 		}],
 })
 
