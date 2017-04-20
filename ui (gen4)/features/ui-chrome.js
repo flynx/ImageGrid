@@ -150,8 +150,6 @@ var CurrentImageIndicatorActions = actions.Actions({
 
 		'current-image-indicator-fadein': 500,
 
-		'current-image-indicator-hide-timeout': 250,
-
 		'current-image-indicator-restore-delay': 500,
 
 		// this can be:
@@ -431,6 +429,51 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 })
 
 
+// XXX is it a good idea to used the same timers for all instances???
+var makeIndicatorHiderOnFastAction = function(hide_timeout){
+	return function(){ 
+		var that = this
+		var m = this.ribbons.viewer.find('.current-marker')
+		var t = this.config[hide_timeout]
+
+		var cur = this.current
+
+		var hide = function(){
+			delete that.__current_indicator_t0
+			m.css({ opacity: 0 })
+		}
+		var show = function(){
+			delete that.__current_indicator_t0
+			m.animate({ opacity: 1 })
+		}
+
+		return function(){
+			// delay fadeout...
+			if(cur != this.current 
+					&& m.css('opacity') == 1
+					&& this.__current_indicator_t0 == null){
+				this.__current_indicator_t0 = setTimeout(hide, t)
+			}
+
+			// cancel/delay previous fadein...
+			this.__current_indicator_t1 != null
+				&& clearTimeout(this.__current_indicator_t1)
+
+			// cancel fadeout and do fadein...
+			this.__current_indicator_t1 = setTimeout(function(){
+				delete that.__current_indicator_t1
+
+				// cancel fadeout...
+				that.__current_indicator_t0 != null
+					&& clearTimeout(that.__current_indicator_t0)
+				delete that.__current_indicator_t0
+
+				show()
+			}, t-50)
+		}
+	}
+}
+
 var CurrentImageIndicatorHideOnFastScreenNav = 
 module.CurrentImageIndicatorHideOnFastScreenNav = core.ImageGridFeatures.Feature({
 	title: '',
@@ -445,54 +488,26 @@ module.CurrentImageIndicatorHideOnFastScreenNav = core.ImageGridFeatures.Feature
 	],
 	exclusive: ['ui-current-image-indicator-hide'],
 
+	config: {
+		'current-image-indicator-screen-hide-threshold': 100,
+
+		'current-image-indicator-hide-threshold': 250,
+	},
 
 	handlers: [
-		// hide indicator on screen next/prev...
-		//
-		// XXX experimental -- not sure if we need this...
-		// XXX need to think about the trigger mechanics here and make 
-		// 		them more natural...
-		['prevScreen.pre nextScreen.pre',
-			function(){ 
-				var m = this.ribbons.viewer.find('.current-marker')
-				var t = this.config['current-image-indicator-hide-timeout']
-
-				var cur = this.current
-
-				return function(){
-					var that = this
-
-					// delay fadeout...
-					if(cur != this.current 
-							&& m.css('opacity') == 1
-							&& this.__current_indicator_t0 == null){
-						this.__current_indicator_t0 = setTimeout(function(){
-							delete that.__current_indicator_t0
-
-							m.css({ opacity: 0 })
-						}, t)
-					}
-
-					// cancel/delay previous fadein...
-					if(this.__current_indicator_t1 != null){
-						clearTimeout(this.__current_indicator_t1)
-					}
-
-					// cancel fadeout and do fadein...
-					this.__current_indicator_t1 = setTimeout(function(){
-						delete that.__current_indicator_t1
-
-						// cancel fadeout...
-						if(that.__current_indicator_t0 != null){
-							clearTimeout(that.__current_indicator_t0)
-							delete that.__current_indicator_t0
-						} 
-
-						// show...
-						m.animate({ opacity: '1' })
-					}, t-50)
-				}
-			}],
+		// hide indicator on next/prev...
+		[[
+			'prevImage.pre',
+			'nextImage.pre',
+		],
+			makeIndicatorHiderOnFastAction(
+				'current-image-indicator-hide-threshold')],
+		[[
+			'prevImage.pre',
+			'nextImage.pre',
+		],
+			makeIndicatorHiderOnFastAction(
+				'current-image-indicator-screen-hide-threshold')],
 	],
 })
 
