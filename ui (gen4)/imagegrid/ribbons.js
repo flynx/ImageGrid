@@ -1642,6 +1642,7 @@ var RibbonsPrototype = {
 		var that = this
 		var r = this.getRibbon(ribbon)
 		var loaded = r.find(IMAGE)
+		gids = gids.slice(0, loaded.length)
 
 		// update offset...
 		if(reference != null){
@@ -1665,10 +1666,8 @@ var RibbonsPrototype = {
 		}
 
 		// update gids...
-		//var update = []
 		var unload_marks = []
 		gids
-			.slice(0, loaded.length)
 			.forEach(function(gid, i){ 
 				if(gid !== undefined){
 					var img = loaded.eq(i)
@@ -1679,17 +1678,13 @@ var RibbonsPrototype = {
 						unload_marks.concat(that.getImageMarks(g).toArray())
 						: unload_marks
 
-					gid
-						&& that.setElemGID(img, gid)
-						//&& update.push(img[0])
+					// XXX for some reason this is smoother than:
+					// 		gid && that.updateImage(img, gid)
+					gid && that.updateImage(that.setElemGID(img, gid))
 				}
 			})
 		$(unload_marks)
 			.remove()
-
-		// update images...
-		this.updateImage(loaded)
-		//this.updateImage($(update))
 
 		return this
 	},

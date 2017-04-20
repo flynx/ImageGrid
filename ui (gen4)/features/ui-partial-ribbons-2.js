@@ -29,6 +29,13 @@ var PartialRibbonsActions = actions.Actions({
 
 		// Sets size of ribbons in single image mode...
 		'ribbons-resize-single-image': 21,
+
+		// can be:
+		// 	'hybrid'
+		// 	'resize'
+		'ribbons-in-place-update-mode': 'resize',
+
+		'ribbons-in-place-update-timeout': 200,
 	},
 
 	updateRibbon: ['- Interface/Update partial ribbon size', 
@@ -85,107 +92,40 @@ var PartialRibbonsActions = actions.Actions({
 					|| loaded > size * threshold){
 				//console.log('RESIZE')
 				this.resizeRibbon(target, size)
-			//*/
 
-			/*/ XXX long jump condition......
-			if(img.length != 0 
-					&& (r.length == 0
-						// ribbon shorter than we expect...
-						|| (loaded < size && na + pa > loaded)
-						// ribbon too long...
-						|| loaded > size * threshold)){
-				console.log('RESIZE')
-				this.resizeRibbon(target, size)
-
-			// image is off screen -- align off then animate...
-			// 		1) initial state
-			// 			T	<-	[---|---x---|---------------]
-			// 		2) load new state but align off screen 
-			// 					[-------T-------|-------|---]
-			// 		3) animate
-			// 					[---|---T---|---------------]
-			// XXX this makes the draw worse...
-			} else if(img.length == 0 ){
-				console.log('LONG-JUMP')
-				r.length == 0 ?
-					// ribbon not loaded...
-					this.resizeRibbon(target, size)
-					// simply update...
-					: this.ribbons
-						.preventTransitions(r)
-						.updateRibbonInPlace(
-							gids,
-							r_gid, 
-							data.getImageOrder(this.current) > data.getImageOrder(target) ?
-								gids[gids.length - w]
-								: gids[w])
-						.restoreTransitions(r, true)
-			//*/
-
-			// in-place update...
+			// more complex cases...
 			// passed threshold on the right...
 			} else if((nl < update_threshold && na > nl) 
 					// passed threshold on the left...
 					|| (pl < update_threshold && pa > pl) 
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + update_threshold){
-				//console.log('UPDATE')
-				// resize...
-				if(r.length == 0 
-					|| (this.toggleSingleImage 
-						&& this.toggleSingleImage('?') == 'on')){
+				var t = Date.now()
+				// resize mode...
+				if(this.config['ribbons-in-place-update-mode'] == 'resize'
+						// no ribbon loaded...
+						|| r.length == 0 
+						// only if we are going slow...
+						|| t - (this.__last_update || 0) 
+							> (this.config['ribbons-in-place-update-timeout'] || 200)
+						// full screen...
+						|| (this.toggleSingleImage 
+							&& this.toggleSingleImage('?') == 'on')){
+					//console.log('RESIZE')
 					this.resizeRibbon(target, size)
 
-				// simply update...
+				// in-place update...
 				} else {
-					// preload...
+					//console.log('UPDATE')
 					var c = gids.indexOf(data.getImage('current', r_gid))
 					var t = gids.indexOf(target)
-					if(preload 
-							// we are going to shift ribbon in view...
-							&& c >= 0 
-							// the distance is greater than screen width...
-							&& Math.abs(t - pl) > w){
-						console.log('PRELOAD')
 
-						// preload head...
-						if(c > t){
-							preload = gids.slice(0, pl+w)
-							gids = preload.slice().fill(false)
-								.concat(gids.slice(pl+w))
-
-						// preload tail...
-						} else {
-							preload = gids.slice(0, t+w).fill(false)
-								.concat(gids.slice(t+w))
-							gids = gids.slice(0, t+w)
-						}
-
-						// XXX this seems to block the animation....
-						this.ribbons
-							.updateRibbonInPlace(preload, r_gid)
-					}
-
-					// main update...
-					this.ribbons
+					ribbons
 						.preventTransitions(r)
-						.updateRibbonInPlace(
-						//.updateRibbon(
-							gids,
-							r_gid, 
-							// XXX this makes the animation of the ribbon 
-							// 		a bit smoother but messes up the indicator 
-							// 		a bit...
-							// 		...this needs the update process to happen 
-							// 		very fast comparing to the animation itself
-							// 		to stay in sync...
-							//gids.indexOf(this.current) >= 0 ? 'current' : target)
-							// XXX STUB: this makes the ribbon animation a bit
-							// 		jumpy but does not touch the indicator 
-							// 		animation...
-							target)
+						.updateRibbonInPlace(gids, r_gid, target)
 						.restoreTransitions(r, true)
 				}
+				this.__last_update = t 
 			}
 		}],
 })

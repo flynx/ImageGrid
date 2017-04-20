@@ -313,7 +313,7 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 		// 		...still not sure why .preventTransitions(m) did not
 		// 		do the job.
 		['resizeRibbon.pre',
-			function(target, s){
+			function(target){
 				var m = this.ribbons.viewer.find('.current-marker')
 				var c = this.current
 				var r = this.current_ribbon

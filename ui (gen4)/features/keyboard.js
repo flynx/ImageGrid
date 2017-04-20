@@ -429,7 +429,7 @@ var KeyboardActions = actions.Actions({
 		// limit key repeat to one per N milliseconds.
 		//
 		// Set this to -1 or null to run keys without any limitations.
-		'max-key-repeat-rate': 0,
+		'keyboard-max-key-repeat-rate': 0,
 
 		// The amount of keyboard "quiet" time to wait for when
 		// .pauseKeyboardRepeat(..) is called...
@@ -726,8 +726,8 @@ var KeyboardActions = actions.Actions({
 
 				// setup base keyboard for devel, in case something breaks...
 				// This branch does not drop keys...
-				if(this.config['max-key-repeat-rate'] < 0 
-						|| this.config['max-key-repeat-rate'] == null){
+				if(this.config['keyboard-max-key-repeat-rate'] < 0 
+						|| this.config['keyboard-max-key-repeat-rate'] == null){
 					this.__keyboard_handler = handler
 
 				// drop keys if repeating too fast...
@@ -738,7 +738,7 @@ var KeyboardActions = actions.Actions({
 						keyboard.dropRepeatingkeys(
 							handler,
 							function(){ 
-								return that.config['max-key-repeat-rate'] })
+								return that.config['keyboard-max-key-repeat-rate'] })
 				}
 
 				target.keydown(handler)
