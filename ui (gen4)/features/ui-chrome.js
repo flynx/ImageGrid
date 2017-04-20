@@ -438,21 +438,15 @@ var makeIndicatorHiderOnFastAction = function(hide_timeout){
 
 		var cur = this.current
 
-		var hide = function(){
-			delete that.__current_indicator_t0
-			m.css({ opacity: 0 })
-		}
-		var show = function(){
-			delete that.__current_indicator_t0
-			m.animate({ opacity: 1 })
-		}
-
 		return function(){
 			// delay fadeout...
 			if(cur != this.current 
 					&& m.css('opacity') == 1
 					&& this.__current_indicator_t0 == null){
-				this.__current_indicator_t0 = setTimeout(hide, t)
+				this.__current_indicator_t0 = setTimeout(function(){
+					delete that.__current_indicator_t0
+					m.css({ opacity: 0 })
+				}, t)
 			}
 
 			// cancel/delay previous fadein...
@@ -468,7 +462,8 @@ var makeIndicatorHiderOnFastAction = function(hide_timeout){
 					&& clearTimeout(that.__current_indicator_t0)
 				delete that.__current_indicator_t0
 
-				show()
+				// show...
+				m.animate({ opacity: 1 })
 			}, t-50)
 		}
 	}
@@ -489,25 +484,17 @@ module.CurrentImageIndicatorHideOnFastScreenNav = core.ImageGridFeatures.Feature
 	exclusive: ['ui-current-image-indicator-hide'],
 
 	config: {
-		'current-image-indicator-screen-hide-threshold': 100,
+		'current-image-indicator-hide-threshold': 100,
 
-		'current-image-indicator-hide-threshold': 250,
+		'current-image-indicator-screen-hide-threshold': 100,
 	},
 
 	handlers: [
 		// hide indicator on next/prev...
-		[[
-			'prevImage.pre',
-			'nextImage.pre',
-		],
-			makeIndicatorHiderOnFastAction(
-				'current-image-indicator-hide-threshold')],
-		[[
-			'prevImage.pre',
-			'nextImage.pre',
-		],
-			makeIndicatorHiderOnFastAction(
-				'current-image-indicator-screen-hide-threshold')],
+		['prevImage.pre nextImage.pre',
+			makeIndicatorHiderOnFastAction('current-image-indicator-hide-threshold')],
+		['prevScreen.pre nextScreen.pre',
+			makeIndicatorHiderOnFastAction('current-image-indicator-screen-hide-threshold')],
 	],
 })
 

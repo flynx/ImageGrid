@@ -64,7 +64,6 @@ var PartialRibbonsActions = actions.Actions({
 			this.__last_update = this.__last_update || t
 			var timeout = this.config['ribbons-in-place-update-timeout']
 
-
 			// localize transition prevention... 
 			// NOTE: we can't get ribbon via target directly here as
 			// 		the target might not be loaded...
@@ -195,7 +194,6 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 			}],
 	],
 })
-
 
 
 
