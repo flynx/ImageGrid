@@ -61,7 +61,7 @@ var PartialRibbonsActions = actions.Actions({
 			var ribbons = this.ribbons
 
 			var t = Date.now()
-			this.__last_update = this.__last_update || t
+			this.__last_ribbon_update = this.__last_ribbon_update || t
 			var timeout = this.config['ribbons-in-place-update-timeout']
 
 			// localize transition prevention... 
@@ -94,7 +94,7 @@ var PartialRibbonsActions = actions.Actions({
 					|| (loaded < size && na + pa > loaded)
 					// ribbon too long...
 					|| loaded > size * threshold){
-				console.log('RESIZE')
+				//console.log('RESIZE')
 				this.resizeRibbon(target, size)
 
 			// more complex cases...
@@ -110,16 +110,30 @@ var PartialRibbonsActions = actions.Actions({
 						|| r.length == 0 
 						// only if we are going slow...
 						|| (timeout != null 
-							&& (t - this.__last_update > timeout))
+							&& (t - this.__last_ribbon_update > timeout))
 						// full screen...
 						|| (this.toggleSingleImage 
 							&& this.toggleSingleImage('?') == 'on')){
-					//console.log('RESIZE', t-this.__last_update)
+					//console.log('RESIZE', t-this.__last_ribbon_update)
 					this.resizeRibbon(target, size)
 
 				// in-place update...
+				// XXX this is faster than .resizeRibbon(..) but it's not
+				// 		used unconditionally because I can't get rid or
+				// 		sync up images being replaced...
+				// 		...note that .resizeRibbon(..) is substantially 
+				// 		slower (updates DOM), i.e. introduces a lag, but
+				// 		the results look OK...
+				//
+				// 		Approaches:
+				// 			- preloading a target section off-screen
+				// 				...results in two freezes instead of one
+				// 			- CSS will-change: background-image (???)
+				// 			- revise .updateImage(..)
+				//
+				// 		Q: can this be done within 1/60s???
 				} else {
-					//console.log('UPDATE', t - this.__last_update)
+					//console.log('UPDATE', t - this.__last_ribbon_update)
 					var c = gids.indexOf(data.getImage('current', r_gid))
 					var t = gids.indexOf(target)
 
@@ -130,7 +144,7 @@ var PartialRibbonsActions = actions.Actions({
 				}
 			}
 
-			this.__last_update = t 
+			this.__last_ribbon_update = t 
 		}],
 })
 

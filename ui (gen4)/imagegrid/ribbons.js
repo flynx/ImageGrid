@@ -1667,8 +1667,10 @@ var RibbonsPrototype = {
 
 		// update gids...
 		var unload_marks = []
-		gids
-			.forEach(function(gid, i){ 
+		for(var i = 0; i < gids.length; i++){
+			var gid = gids[i]
+		//gids
+		//	.forEach(function(gid, i){ 
 				if(gid !== undefined){
 					var img = loaded.eq(i)
 
@@ -1682,7 +1684,8 @@ var RibbonsPrototype = {
 					// 		gid && that.updateImage(img, gid)
 					gid && that.updateImage(that.setElemGID(img, gid))
 				}
-			})
+		//	})
+		}
 		$(unload_marks)
 			.remove()
 
