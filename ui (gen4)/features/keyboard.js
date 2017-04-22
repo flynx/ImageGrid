@@ -178,6 +178,9 @@ module.GLOBAL_KEYBOARD = {
 		// dialogs...
 		// XXX should this be all here or in respective sections???
 		alt_A: 'browseActions',
+		alt_F: 'browseActions: "/File/" -- File menu...',
+		alt_E: 'browseActions: "/Edit/" -- Edit menu...',
+		alt_N: 'browseActions: "/Navigate/" -- Navigate menu...',
 
 		//alt_S: 'browseActions: "/Sort/" -- Sort menu...',
 		alt_shift_A: 'listActions',
@@ -193,7 +196,7 @@ module.GLOBAL_KEYBOARD = {
 		// XXX not sure if this is the right way to go...
 		E: 'openInExtenalEditor',
 		shift_E: 'openInExtenalEditor: 1 -- Open in alternative editor',
-		alt_E: 'listExtenalEditors',
+		ctrl_E: 'listExtenalEditors',
 
 
 		// history...
