@@ -782,10 +782,12 @@ var KeyboardPrototype = {
 		// 		- shifted keys first
 		// 		- modifiers are skipped in order, left to right
 		// XXX carefully revise key search order...
-		var keyCombinations = function(key, shift_key){
+		var keyCombinations = function(key, shift_key, remove_single_keys){
 			if(key.length <= 1){
-				return key
+				//return shift_key ? [key, shift_key] : [key]
+				return key 
 			}
+			var k = remove_single_keys ? 1 : 0 
 			// generate recursively, breadth first...
 			var _combinations = function(level, res){
 				var next = []
@@ -799,7 +801,10 @@ var KeyboardPrototype = {
 								.map(function(_, i){
 									var s = elem.slice()
 									s.splice(i, 1)
-									s.length > 0 
+									// NOTE: we do not include single keys
+									// 		as they are searched separately...
+									//s.length > 0 
+									s.length > k 
 										&& next.push(s)
 								})
 					})
@@ -845,9 +850,12 @@ var KeyboardPrototype = {
 
 		// match candidates...
 		//var keys = joinKeys(key, shift_key).unique()
-		var keys = keyCombinations(key, shift_key)
+		// NOTE: we are skipping single keys from list as they are searched
+		// 		separately...
+		var keys = keyCombinations(key, shift_key, true)
 
-		console.log(keys)
+		// XXX
+		//console.log(keys, '--', joinKeys(key, shift_key).unique())
 
 		// get modes...
 		var modes = mode == '*' ? Object.keys(keyboard)
@@ -862,7 +870,7 @@ var KeyboardPrototype = {
 			var c = this.key2code(k) 
 
 			//var mod = joinKeys(key.slice(0, -1).concat(''))
-			var mod = keyCombinations(key.slice(0, -1).concat(''))
+			var mod = keyCombinations(key.slice(0, -1).concat(''), null, true)
 
 			var drop = mode == 'test' || mode == '?'
 			for(var i=0; i < modes.length; i++){
