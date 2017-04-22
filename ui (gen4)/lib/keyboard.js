@@ -777,27 +777,29 @@ var KeyboardPrototype = {
 						.map(function(s){ return shift_key.join(s) }) 
 					: [])
 	   			.unique() }
-		var normalize = this.normalizeKey
+		// NOTE: the generated list is in the following order:
+		// 		- longest chain first
+		// 		- shifted keys first
+		// 		- modifiers are skipped in order, left to right
+		// XXX carefully revise key search order...
 		var keyCombinations = function(key, shift_key){
 			if(key.length <= 1){
 				return key
 			}
+			// generate recursively, breadth first...
 			var _combinations = function(level, res){
 				var next = []
 				level
 					.map(function(elem){
-						var c = normalize(elem)
-						c = typeof(c) == typeof('str') ? c : c.join('+++')
+						var c = elem.join('+++')
 						res.indexOf(c) < 0
 							&& res.push(c)
 							&& elem
-								//.reverse()
 								.slice(0, -1)
 								.map(function(_, i){
 									var s = elem.slice()
 									s.splice(i, 1)
 									s.length > 0 
-										//&& next.push(s.reverse())
 										&& next.push(s)
 								})
 					})
@@ -805,11 +807,11 @@ var KeyboardPrototype = {
 					&& _combinations(next, res)
 				return res
 			}
-			return _combinations(shift_key ? [key, shift_key] : [key], [])
-				// XXX is there a better way???
-				//.map(function(e){ return e.split(/\+\+\+/g).concat(key.slice(-1)) })
-				.map(function(e){ return joinKeys(e.split(/\+\+\+/g)) })
-				.reduce(function(a, b){ return a.concat(b) }, [])
+			return _combinations(shift_key && shift_key.length > 0 ?
+				[key, shift_key] 
+				: [key], [])
+					.map(function(e){ return joinKeys(e.split(/\+\+\+/g)) })
+					.reduce(function(a, b){ return a.concat(b) }, [])
 		}
 		var walkAliases = function(bindings, handler, modifiers){
 			var seen = []
@@ -844,6 +846,8 @@ var KeyboardPrototype = {
 		// match candidates...
 		//var keys = joinKeys(key, shift_key).unique()
 		var keys = keyCombinations(key, shift_key)
+
+		console.log(keys)
 
 		// get modes...
 		var modes = mode == '*' ? Object.keys(keyboard)
