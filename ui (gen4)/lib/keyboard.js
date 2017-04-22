@@ -14,7 +14,8 @@ var object = require('lib/object')
 /*********************************************************************/
 
 var MODIFIERS =
-module.MODIFIERS = [ 'ctrl', 'meta', 'alt', 'shift' ]
+//module.MODIFIERS = [ 'ctrl', 'meta', 'alt', 'shift' ]
+module.MODIFIERS = [ 'caps', 'ctrl', 'meta', 'alt', 'shift' ]
 
 
 var KEY_SEPARATORS =
@@ -204,12 +205,17 @@ var event2key =
 module.event2key =
 function event2key(evt){
 	evt = evt || event
+	// NOTE: we do not care about the jQuery wrapper here...
+	evt = evt.originalEvent || evt
 
 	var key = []
 	evt.ctrlKey && key.push('ctrl')
 	evt.altKey && key.push('alt')
 	evt.metaKey && key.push('meta')
 	evt.shiftKey && key.push('shift')
+	evt.getModifierState 
+		&& evt.getModifierState('CapsLock') 
+		&& key.push('caps')
 
 	var k = code2key(evt.keyCode)
 
@@ -760,8 +766,7 @@ var KeyboardPrototype = {
 			mode = '*'
 		}
 
-
-		var genKeys = function(key, shift_key){
+		var joinKeys = function(key, shift_key){
 			// match candidates...
 			return key_separators
 				// full key...
@@ -772,6 +777,40 @@ var KeyboardPrototype = {
 						.map(function(s){ return shift_key.join(s) }) 
 					: [])
 	   			.unique() }
+		var normalize = this.normalizeKey
+		var keyCombinations = function(key, shift_key){
+			if(key.length <= 1){
+				return key
+			}
+			var _combinations = function(level, res){
+				var next = []
+				level
+					.map(function(elem){
+						var c = normalize(elem)
+						c = typeof(c) == typeof('str') ? c : c.join('+++')
+						res.indexOf(c) < 0
+							&& res.push(c)
+							&& elem
+								//.reverse()
+								.slice(0, -1)
+								.map(function(_, i){
+									var s = elem.slice()
+									s.splice(i, 1)
+									s.length > 0 
+										//&& next.push(s.reverse())
+										&& next.push(s)
+								})
+					})
+				next.length > 0 
+					&& _combinations(next, res)
+				return res
+			}
+			return _combinations(shift_key ? [key, shift_key] : [key], [])
+				// XXX is there a better way???
+				//.map(function(e){ return e.split(/\+\+\+/g).concat(key.slice(-1)) })
+				.map(function(e){ return joinKeys(e.split(/\+\+\+/g)) })
+				.reduce(function(a, b){ return a.concat(b) }, [])
+		}
 		var walkAliases = function(bindings, handler, modifiers){
 			var seen = []
 			var modifiers = modifiers || []
@@ -803,7 +842,8 @@ var KeyboardPrototype = {
 		var shift_key = this.shifted(key)
 
 		// match candidates...
-		var keys = genKeys(key, shift_key).unique()
+		//var keys = joinKeys(key, shift_key).unique()
+		var keys = keyCombinations(key, shift_key)
 
 		// get modes...
 		var modes = mode == '*' ? Object.keys(keyboard)
@@ -817,7 +857,8 @@ var KeyboardPrototype = {
 			var k = key.slice(-1)[0]
 			var c = this.key2code(k) 
 
-			var mod = genKeys(key.slice(0, -1).concat(''))
+			//var mod = joinKeys(key.slice(0, -1).concat(''))
+			var mod = keyCombinations(key.slice(0, -1).concat(''))
 
 			var drop = mode == 'test' || mode == '?'
 			for(var i=0; i < modes.length; i++){
@@ -983,6 +1024,11 @@ KeyboardWithCSSModes.prototype.__proto__ = Keyboard.prototype
 // 		// used directly...
 // 		handler('ctrl_C', function(k){ console.log('Not bound:', k) })
 // 		
+// NOTE: the handler will also set the .capslock attribute on the 
+// 		keyboard object and update it on each key press...
+// NOTE: if .capslock is false means that either it is not on or 
+// 		undetectable...
+// NOTE: before any key is pressed the .capslock is set to undefined
 var makeKeyboardHandler =
 module.makeKeyboardHandler =
 function makeKeyboardHandler(keyboard, unhandled, actions){
@@ -991,6 +1037,7 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 		keyboard 
 		//: Keyboard(keyboard, checkGlobalMode)
 		: Keyboard(keyboard)
+	kb.capslock = undefined
 
 	return function(key, no_match){
 		no_match = no_match || unhandled
@@ -1002,6 +1049,8 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 		if(typeof(key) != typeof('str')){
 			evt = key
 			key = kb.event2key(evt)
+
+			kb.capslock = key.indexOf('caps') >= 0
 		}
 
 		var handlers = kb.handler('test', key)

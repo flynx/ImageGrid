@@ -62,6 +62,7 @@ var StatusBarActions = actions.Actions({
 			// separates left/right aligned elements...
 			'---',
 
+			'edit-mode',
 			'mark',
 			'bookmark',
 		],
@@ -90,7 +91,39 @@ var StatusBarActions = actions.Actions({
 	},
 
 	__statusbar_elements__: {
+		/* item template...
+		item: function(item){
+			// cleanup...
+			if(item == null){
+				// XXX
+				return
+			}
+
+			// setup the item DOM...
+			if(typeof(item) == typeof('str')){
+				var type = item
+				item = $('<span>')
+					.addClass('item-example')
+					.attr('type', item)
+					.text('example')
+
+			// get stuff from the item...
+			} else {
+				var type = item.attr('type')
+			}
+
+			// update the item...
+			// XXX
+
+			return item
+		},
+		*/
 		index: function(item, gid, img){
+			// cleanup...
+			if(item == null){
+				return 
+			}
+
 			var that = this
 			gid = gid || this.current
 
@@ -188,6 +221,11 @@ var StatusBarActions = actions.Actions({
 			return item
 		},
 		ribbon: function(item, gid, img){
+			// cleanup...
+			if(item == null){
+				return 
+			}
+
 			var that = this
 
 			// get ribbon number...
@@ -248,6 +286,11 @@ var StatusBarActions = actions.Actions({
 			return item
 		},
 		changes: function(item, gid, img){
+			// cleanup...
+			if(item == null){
+				return 
+			}
+
 			if(typeof(item) == typeof('str')){
 				item = $('<span>')
 					.addClass('changes')
@@ -260,6 +303,11 @@ var StatusBarActions = actions.Actions({
 		},
 		// XXX handle path correctly...
 		gid: function(item, gid, img){
+			// cleanup...
+			if(item == null){
+				return 
+			}
+
 			var that = this
 			gid = gid || this.current
 			img = img || (this.images && gid in this.images && this.images[gid])
@@ -309,8 +357,54 @@ var StatusBarActions = actions.Actions({
 			return item
 		},
 		path: 'gid',
+		'edit-mode': function(item){
+			// cleanup...
+			if(item == null){
+				this.__edit_mode_indicator_update
+					&& this.off('keyPress', this.__edit_mode_indicator_update)
+				delete this.__edit_mode_indicator_update
+				return
+			}
+
+			var update = this.__edit_mode_indicator_update = this.__edit_mode_indicator_update 
+				|| (function(){
+					var caps = this.keyboard.capslock
+					caps = typeof(event) != 'undefined' && event.getModifierState ? 
+						event.getModifierState('CapsLock')
+						: caps
+					item
+						.attr('info', 'Edit mode ' 
+							+ (caps ? 'on' : 'off')
+							+ ' (Click to update / Press CapsLock to toggle)')
+						[caps ? 'addClass' : 'removeClass']('on')
+				}).bind(this)
+
+
+			if(typeof(item) == typeof('str')){
+				var type = item
+				item = $('<span>')
+					.addClass('capslock-state expanding-text')
+					.append($('<span class="shown">')
+						.text('E'))
+					.append($('<span class="hidden">')
+						.text('Edit mode'))
+					.click(update)
+
+				// XXX need a way to cleanly unhandle this...
+				this.on('keyPress', update)
+			}
+
+			update()
+
+			return item
+		},
 		// XXX show menu in the appropriate corner...
 		mark: function(item, gid, img){
+			// cleanup...
+			if(item == null){
+				return 
+			}
+
 			gid = gid || this.current
 			var that = this
 
@@ -398,40 +492,56 @@ var StatusBarActions = actions.Actions({
 				var that = this
 				this.config['status-bar-mode'] = state 
 
+				var _getHandler = function(key){
+					var elems = that.__statusbar_elements__ || {}
+					var base_elems = StatusBarActions.__statusbar_elements__ || {}
+
+					var handler = elems[key] || base_elems[key]
+
+					if(handler == null){
+						return
+					}
+
+					// handle aliases...
+					var seen = []
+					while(typeof(handler) == typeof('str')){
+						seen.push(handler)
+						var handler = elems[handler] || base_elems[handler]
+						// check for loops...
+						if(seen.indexOf(handler) >= 0){
+							console.error('state indicator alias loop detected at:', key)
+							handler = null
+							break
+						}
+					}
+
+					return handler
+				}
+
 				// destroy...
 				if(state == 'none'){
+					// notify items that they are removed...
+					bar.children()
+						.each(function(i, item){
+							item = $(item)
+							var type = item.attr('type') 
+
+							if(type == null){
+								return
+							}
+
+							var handler = _getHandler(type)
+
+							if(handler != null){
+								handler.call(that, null) 
+							}
+						})
 					bar.empty()
 
 				// build/update...
 				} else {
 					gid = gid || this.current
 					var img = this.images && this.images[gid]
-
-					var _getHandler = function(key){
-						var elems = that.__statusbar_elements__ || {}
-						var base_elems = StatusBarActions.__statusbar_elements__ || {}
-
-						var handler = elems[key] || base_elems[key]
-
-						if(handler == null){
-							return
-						}
-
-						// handle aliases...
-						var seen = []
-						while(typeof(handler) == typeof('str')){
-							seen.push(handler)
-							var handler = elems[handler] || base_elems[handler]
-							// check for loops...
-							if(seen.indexOf(handler) >= 0){
-								console.error('state indicator alias loop detected at:', key)
-								handler = null
-								break
-							}
-						}
-
-						return handler
-					}
 
 					// build...
 					if(bar.children().length <= 0){

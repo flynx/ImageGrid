@@ -64,7 +64,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'ui-single-image',
 	//'ui-partial-ribbons',
-	// XXX this is still experimental but seems to already work faster...
 	'ui-partial-ribbons-2',
 
 	'marks',

@@ -1482,6 +1482,23 @@ stretching in width... */
 	opacity: 1;
 }
 
+/* Capslock indicator.. */
+.overlay-info .capslock-state {
+	font-size: small;
+	font-style: italic;
+	margin: 0px 10pt;
+}
+.overlay-info .capslock-state:not(.on) {
+	opacity: 0.2;
+}
+.overlay-info .capslock-state.on {
+	color: yellow;
+	opacity: 0.6;
+}
+.overlay-info .capslock-state:hover {
+	opacity: 1
+}
+
 
 
 /*************************************************** Global status ***/

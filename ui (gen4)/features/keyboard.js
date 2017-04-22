@@ -271,16 +271,20 @@ module.GLOBAL_KEYBOARD = {
 		shift_End: 'lastRibbon',
 
 		Up: 'prevRibbon',
+		caps_shift_Up: 'prevRibbon',
 		Down: 'nextRibbon',
+		caps_shift_Down: 'nextRibbon',
 
 
 		// shifting...
 		shift_Up: 'shiftImageUp',
+		caps_Up: 'shiftImageUp',
 		alt_shift_Up: 'travelImageUp',
 		ctrl_shift_Up: 'shiftImageUpNewRibbon',
 		ctrl_Up: 'shiftMarkedUp',
 
 		shift_Down: 'shiftImageDown',
+		caps_Down: 'shiftImageDown',
 		alt_shift_Down: 'travelImageDown',
 		ctrl_shift_Down: 'shiftImageDownNewRibbon',
 		ctrl_Down: 'shiftMarkedDown',
