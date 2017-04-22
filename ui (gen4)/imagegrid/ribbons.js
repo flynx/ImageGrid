@@ -1373,12 +1373,23 @@ var RibbonsPrototype = {
 	//
 	// XXX this depends on .images...
 	// 		...a good candidate to move to images, but not yet sure...
-	updateImage: function(image, gid, size, sync){
+	// XXX things to inline:
+	// 		.gid
+	// 		.style.backgroundImage
+	//
+	// 		.getImageMarks(..)
+	//
+	// 		.rotateImage(..)
+	// 		.flipImage(..)
+	// 		._loadImagePreviewURL(..)
+	// 		.correctImageProportionsForRotation(..)
+	//
+	// 		.updateImageIndicators(..)
+	_updateImage: function(image, gid, size, sync){
 		image = (image == '*' ? this.viewer.find(IMAGE)
 			: image == null 
 				|| typeof(image) == typeof('str') ? this.getImage(image)
 			: $(image))
-		var lst = image.toArray()
 		sync = sync == null ? this.load_img_sync : sync
 		size = size == null ? this.getVisibleImageSize('max') : size
 
@@ -1441,8 +1452,12 @@ var RibbonsPrototype = {
 			}
 
 			// image state...
-			that.rotateImage(image, img_data.orientation == null ? 0 : img_data.orientation)
-			that.flipImage(image, img_data.flipped == null ? [] : img_data.flipped)
+			//that.rotateImage(image, img_data.orientation == null ? 0 : img_data.orientation)
+			//that.flipImage(image, img_data.flipped == null ? [] : img_data.flipped)
+			image.attr({
+				orientation: img_data.orientation == null ? '' : img_data.orientation*1,
+				flipped: (img_data.flipped == null ? [] : img_data.flipped).join(', '),
+			})
 
 			// preview...
 			var p_url = that.images.getBestPreview(img_data.id, size, img_data, true).url
@@ -1487,6 +1502,147 @@ var RibbonsPrototype = {
 			that.updateImageIndicators(gid, image)
 
 			return image[0]
+		}))
+	},
+	updateImage: function(image, gid, size, sync, callback){
+		var that = this
+		image = (image == '*' ? this.viewer.find(IMAGE)
+			: image == null 
+				|| typeof(image) == typeof('str') ? this.getImage(image)
+			: $(image))
+		sync = sync == null ? this.load_img_sync : sync
+		size = size == null ? this.getVisibleImageSize('max') : size
+
+		var update = {}
+		//var marks = {}
+
+		// build update data...
+		image.map(function(_, image){
+			image = typeof(image) == typeof('str') ? 
+				that.getImage(image) 
+				: $(image)
+			if(image.length == 0){
+				return
+			}
+			var old_gid = that.getElemGID(image)
+			var data = update[old_gid] = {
+				image: image,
+				attrs: {},
+				style: {},
+			}
+			var reset_preview = false
+			//var will_change = []
+
+			// same image -- update...
+			if(old_gid == gid || gid == null){
+				// XXX BUG: we are actually ignoring gid...
+				var gid = old_gid
+
+			// reuse for different image -- reconstruct...
+			} else {
+				// remove old marks...
+				if(typeof(old_gid) == typeof('str')){
+					// XXX
+					//marks[old_gid] = that.getImageMarks(old_gid)
+					that.getImageMarks(old_gid).remove()
+				}
+				// reset gid...
+				data.attrs = {
+					gid: JSON.stringify(gid)
+						// this removes the extra quots...
+						.replace(/^"(.*)"$/g, '$1'),
+				}
+				reset_preview = true
+			}
+			data.gid = gid
+
+			// if no images data defined drop out...
+			if(that.images == null){
+				return 
+			}
+
+			// image data...
+			var img_data = that.images[gid] || images.IMAGE_DATA
+			// if we are a group, get the cover...
+			// NOTE: groups can be nested...
+			var seen = []
+			while(img_data.type == 'group'){
+				// error, recursive group...
+				if(seen.indexOf(img_data.id) >= 0){
+					img_data = images.IMAGE_DATA
+					console.error('Recursive group:', gid)
+					break
+				}
+				seen.push(img_data.id)
+				img_data = that.images[img_data.cover]
+			}
+
+			// image state...
+			data.attrs.orientation = img_data.orientation == null ? '' : img_data.orientation*1
+			data.attrs.flipped = (img_data.flipped == null ? [] : img_data.flipped).join(', ')
+			//will_change.push('transform')
+
+			// stage background image update...
+			var p_url = that.images.getBestPreview(img_data.id, size, img_data, true).url
+			if(old_gid != gid 
+					// the new preview (p_url) is different to current...
+					// NOTE: this may not work correctly for relative urls...
+					|| image.css('background-image').indexOf(util.path2url(p_url)) < 0){
+				//will_change.push('background-image')
+				reset_preview
+					&& (image[0].style.backgroundImage = '')
+
+				// sync...
+				if(sync){
+					that._loadImagePreviewURL(image, p_url)
+
+				// async...
+				// NOTE: storing the url in .data() makes the image load the 
+				// 		last requested preview and in a case when we manage to 
+				// 		call updateImage(...) on the same element multiple times 
+				// 		before the previews get loaded...
+				// 		...setting the data().loading is sync while loading an 
+				// 		image is not, and if several loads are done in sequence
+				// 		there is no guarantee that they will happen in the same
+				// 		order as requested...
+				} else {
+					image.data().loading = p_url
+					setTimeout(function(){ 
+						that._loadImagePreviewURL(image, image.data().loading)
+					}, 0)
+				}
+			}
+
+			callback 
+				&& callback.call(that, image, data)
+
+			//image[0].style.willChange = will_change.join(', ')
+		})
+
+		// clear marks...
+		//Object.values(marks)
+		//	.forEach(function(m){ m.remove() })
+
+		var W = this.viewer.innerWidth()
+		var H = this.viewer.innerHeight()
+
+		// do the update...
+		return $(Object.keys(update).map(function(gid){
+			var data = update[gid]
+			var img = data.image
+			var _img = img[0]
+			var attrs = data.attrs
+			var css = data.style
+
+			attrs && img.attr(attrs)
+			css && img.css(css)
+
+			that.correctImageProportionsForRotation(img, W, H)
+			that.updateImageIndicators(data.gid, img)
+
+			//_img.style.willChange = '' 
+
+			return _img
 		}))
 	},
 
@@ -2292,63 +2448,68 @@ var RibbonsPrototype = {
 	// NOTE: if an image block is square, this will remove the margins.
 	//
 	// XXX this does the same job as features/ui-single-image.js' .updateImageProportions(..)
-	correctImageProportionsForRotation: function(images){
-		// XXX
-		var W = this.viewer.innerWidth()
-		var H = this.viewer.innerHeight()
+	_calcImageProportions: function(image, W, H, w, h, o){
+		image = image instanceof jQuery ? image[0] : image
+
+		//var s = (!w || !h) ? getComputedStyle(image) : null
+		//w = w || parseFloat(s.width)
+		//h = h || parseFloat(s.height) 
+		w = w || image.offsetWidth 
+		h = h || image.offsetHeight 
+
+		// non-square image...
+		if(w != h){
+			W = W || this.viewer.innerWidth()
+			H = H || this.viewer.innerHeight()
+			o = o || image.getAttribute('orientation') || 0
+
+			var viewer_p = W > H ? 'landscape' : 'portrait'
+
+			// NOTE: we need to use the default (CSS) value when 
+			// 		possible, to avoid sizing issues...
+			var dfl_w = image.style.width == ''
+			var dfl_h = image.style.height == ''
+
+			var image_p = w > h ? 'landscape' : 'portrait'
+
+			// when the image is turned 90deg/270deg and its 
+			// proportions are the same as the screen...
+			if((o == 90 || o == 270) && image_p == viewer_p){
+				return {
+					width: dfl_h ? '' : h,
+					height: dfl_w ? '' : w,
+					margin: -((w - h)/2) +'px '+ (w - h)/2 + 'px',
+				}
+
+			} else if((o == 0 || o == 180) && image_p != viewer_p){
+				return {
+					width: dfl_h ? '' : h,
+					height: dfl_w ? '' : w,
+					margin: '',
+				}
+			}
+
+		// square image...
+		} else {
+			return {
+				width: '',
+				height: '',
+				margin: '',
+			}
+		}
+	},
+	correctImageProportionsForRotation: function(images, W, H){
+		var that = this
+		W = W || this.viewer.innerWidth()
+		H = H || this.viewer.innerHeight()
 
 		var images = images || this.viewer.find(IMAGE)
 
-		var viewer_p = W > H ? 'landscape' : 'portrait'
-
 		return $(images).each(function(i, e){
-			var image = $(this)
-			// orientation...
-			var o = image.attr('orientation')
-			o = o == null ? 0 : o
+			var data = that._calcImageProportions(this, W, H)
 
-			var s = getComputedStyle(image[0])
-			var w = parseFloat(s.width)
-			var h = parseFloat(s.height) 
-
-			// non-square image...
-			if(w != h){
-
-				// NOTE: we need to use the default (CSS) value when 
-				// 		possible, to avoid sizing issues...
-				var dfl_w = image[0].style.width == ''
-				var dfl_h = image[0].style.height == ''
-
-				var image_p = w > h ? 'landscape' : 'portrait'
-
-				// when the image is turned 90deg/270deg and its 
-				// proportions are the same as the screen...
-				if((o == 90 || o == 270) && image_p == viewer_p){
-					image.css({
-						width: dfl_h ? '' : h,
-						height: dfl_w ? '' : w,
-
-						margin: -((w - h)/2) +'px '+ (w - h)/2 + 'px'
-					})
-
-				} else if((o == 0 || o == 180) && image_p != viewer_p){
-					image.css({
-						width: dfl_h ? '' : h,
-						height: dfl_w ? '' : w,
-
-						margin: '',
-					})
-				}
-
-			// square image...
-			} else {
-				image.css({
-					width: '',
-					height: '',
-
-					margin: '',
-				})
-			}
+			data 
+				&& $(this).css(data)
 		})
 	},
 
