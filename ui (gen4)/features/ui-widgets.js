@@ -812,7 +812,11 @@ var BrowseActionsActions = actions.Actions({
 				'Crop/-80:Uncrop and keep crop image order',
 				'Crop/-81:Uncrop all',
 				'Crop/-82:$Uncrop',
+			'$Mark',
+			'$Bookmark',
+
 			// ...
+
 			'-40:Interface',
 			'-50:$Workspace',
 			'-60:System',
