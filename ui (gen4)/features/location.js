@@ -177,6 +177,75 @@ var LocationActions = actions.Actions({
 
 			return res
 		}],
+
+	// XXX need a way to get save method...
+	// 		- rename .location.method to .location.load and add .location.save 
+	// 		- treat method as protocol and add a method registry API
+	// 			this is more flexible as we can add as many methods per
+	// 			protocol as we need and add a command action:
+	// 				- execute command in current protocol
+	// 					.locationCall("command", ...)
+	// 				- execute command in specific protocol
+	// 					.locationCall('protocol:command', ..)
+	// 				- show current protocol
+	// 					.locationCall("?")
+	// 				- list commands
+	// 					.locationCall("??")
+	// 					.locationCall('protocol:??')
+	// 			we can implicitly define protocols via action attrs:
+	// 				loadIndex: ['...',
+	// 					{locationProtocol: 'file:load'},
+	// 					function(){ ... }],
+	locationDispatch: ['- File/',
+		function(spec){
+			spec = spec instanceof Array ? spec : spec.split(':')
+			var args = [].slice.call(arguments, 1)
+
+			var action = spec.pop()
+			var protocol = spec.shift() || this.location.method
+
+			// format:
+			// 	{
+			// 		'protocol:method': 'actionName',
+			// 		...
+			// 	}
+			var cache = this.__location_protocol_cache = 
+				this.__location_protocol_cache || this.cacheLocationProtocols()
+
+			// get protocol...
+			if(action == '?'){
+				return protocol
+
+			// get available methods for protocol...
+			} else if(action == '??'){
+				return Object.keys(cache)
+					.filter(function(e){ return e.startsWith(protocol + ':') })
+					.map(function(e){ return e.split(':').pop() })
+			
+			// list all protocols...
+			} else if(protocol == '??' && action == '*'){
+				return Object.keys(cache)
+					.map(function(e){ return e.split(':').pop() })
+					.unique()
+
+			// list protocols implementing specific action...
+			} else if(protocol == '??'){
+				return Object.keys(cache)
+					.filter(function(e){ return e.endsWith(':'+ action) })
+					.map(function(e){ return e.split(':')[0] })
+					.unique()
+
+			// call method...
+			} else {
+				// XXX args???
+				this[cache[protocol +':'+ action]].call(this)
+			}
+		}],
+	saveLocation: ['- File/Save location',
+		function(location){
+			// XXX
+			this.locationDispatch('save')
+		}],
 })
 
 module.Location = core.ImageGridFeatures.Feature({

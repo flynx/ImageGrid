@@ -340,8 +340,11 @@ body {
 }
 
 /* make buttons a bit different in action browser... */
-.browse-widget.browse-actions.show-keys .list .button {
+.browse-widget.browse-actions .list .button {
 	background-color: rgba(0, 0, 0, 0.12);
+}
+.dark .browse-widget.browse-actions .list .button {
+	background-color: rgba(255, 255, 255, 0.2);
 }
 
 

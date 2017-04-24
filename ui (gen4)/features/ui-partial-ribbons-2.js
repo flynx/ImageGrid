@@ -132,6 +132,8 @@ var PartialRibbonsActions = actions.Actions({
 				// 			- revise .updateImage(..)
 				//
 				// 		Q: can this be done within 1/60s???
+				// XXX one approach here might be:
+				// 		wait for images to preload and only then update...
 				} else {
 					//console.log('UPDATE', t - this.__last_ribbon_update)
 					var c = gids.indexOf(data.getImage('current', r_gid))

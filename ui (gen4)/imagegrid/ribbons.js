@@ -1504,6 +1504,7 @@ var RibbonsPrototype = {
 			return image[0]
 		}))
 	},
+	// XXX add options for images to preload and only then do the update...
 	updateImage: function(image, gid, size, sync, callback){
 		var that = this
 		image = (image == '*' ? this.viewer.find(IMAGE)
