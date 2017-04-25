@@ -226,6 +226,27 @@ var LocationActions = actions.Actions({
 			})
 			return res
 		}],
+	// XXX how do we call the dispatched actions and all the matching 
+	// 		pattern actions???
+	// 			One way to go would be:
+	// 				.dispatch('location:*:save', ..)
+	// 					-> 'location:?'					- get the default for '*'
+	// 					-> 'location:*:save' (pre)
+	// 					-> 'location:file:save'			- forms the return value
+	// 					-> 'location:*:save' (post)
+	//
+	// 			...this should the same as calling (???):
+	// 				.loadLocation(..)
+	// XXX sanity check: how is this different for what Action(..) does???
+	// 		...the only thing this adds is a way not to call some of the 
+	// 		overloading actions via a simple pattern matching mechanism...
+	// 			Example:
+	// 				.dispatch('location:file:save', ..)
+	// 					-> calls only the "save" actions that match the 
+	// 						location:file protocol ignoring all other 
+	// 						implementations...
+	// 		...for pure actions this is also possible by manually checking
+	// 		some condition and doing nothing if not matched...
 	dispatch: ['- File/',
 		core.doc`
 

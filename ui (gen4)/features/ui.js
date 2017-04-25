@@ -2388,6 +2388,8 @@ var ControlActions = actions.Actions({
 				}
 			})],
 
+	// Ribbon/viewer wheel...
+	//
 	// XXX need:
 	// 		- prevent ribbon from scrolling off screen...
 	// 		- handle acceleration -- stop and update just before scrolling off the edge...
@@ -2396,9 +2398,11 @@ var ControlActions = actions.Actions({
 	// 		...this will prevent losing control of the ribbon when it goes out
 	// 		from under the cursor...
 	// 		...detect via cursor within the vertical band of the ribbon...
+	// XXX BUG?: acceleration seems to be increasing with time...
+	// XXX add a "ribbonWheeling" ( ;) ) event a-la ribbonPanning...
 	toggleMouseWheelHandling: ['Interface/Mouse wheel handling',
 		toggler.Toggler(null,
-			function(){ 
+			function(){
 				return this.ribbons 
 					&& this.ribbons.viewer 
 					&& this.ribbons.viewer.hasClass('mouse-wheel-scroll') ?
@@ -2497,6 +2501,7 @@ var ControlActions = actions.Actions({
 	
 	togglePinchHandling: ['Interface/Pinch zoom handling',
 		function(){
+			// XXX
 		}],
 
 
