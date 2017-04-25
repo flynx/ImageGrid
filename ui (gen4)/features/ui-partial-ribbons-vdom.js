@@ -42,7 +42,6 @@ var core = require('features/core')
 window.vdom = vdom
 
 
-
 //---------------------------------------------------------------------
 
 // attribute hooks...
@@ -57,7 +56,6 @@ function VALUE(value){
 VALUE.prototype.hook = function(elem, prop){
     this.value != '' 
 		&& elem.setAttribute(prop, this.value) }
-
 
 
 //---------------------------------------------------------------------
@@ -121,7 +119,11 @@ function(gid, data, images){
 	var image = (images || {})[gid] || {}
 	var current = data.current == gid ? '.current' : ''
 
-	gid = JSON.stringify(gid).slice(1, -1)
+	// XXX stuff needed to get a preview:
+	// 		- image tile size -- .ribbons.getVisibleImageSize(..)
+	// 		- preview url -- .ribbons.getBestPreview(..)
+	// 		- actual preview size -- w and h
+	// XXX need a strategy on how to update images...
 
 	return vdom.h('div.image'+current, {
 		key: 'image-'+gid,
@@ -131,20 +133,34 @@ function(gid, data, images){
 		orientation: new VALUE(image.orientation),
 		flipped: new VALUE(image.flipped),
 
-		// XXX preview stuff???
+		// XXX preview stuff...
+		//'preview-width': new VALUE(w),
+		//'preview-height': new VALUE(h),
+		//style: {
+		//	backgroundImage: 'url('+ url +')',
+		//}
 	})
 }
 
-// XXX
+// XXX get marks...
 var makeImageMarks = 
 window.makeImageMarks =
 function(gid, data, images){
-	gid = JSON.stringify(gid).slice(1, -1)
+	// XXX get marks...
 	var marks = []
 
-	// XXX
-
 	return marks
+		.map(function(type){
+			return makeImageMark(gid, type, data, images) })
+}
+
+var makeImageMark = 
+window.makeImageMark =
+function(gid, type, data, images){
+	return vdom.h('div.mark'+(type || ''), {
+		key: 'mark-'+gid,
+		gid: new GID(gid),
+	})
 }
 
 
@@ -320,6 +336,10 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 	actions: PartialRibbonsActions, 
 
 	handlers: [
+		['start',
+			function(){
+				console.warn(
+					'EXPERIMENTAL: starting virtual-dom version of partial ribbons...') }],
 		['focusImage.pre centerImage.pre', 
 			function(target, list){
 				// NOTE: we have to do this as we are called BEFORE the 
