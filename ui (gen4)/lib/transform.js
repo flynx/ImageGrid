@@ -299,7 +299,11 @@ var transformEditor = function(){
 
 			var aliases = Object.keys(spec)
 
-			var r = reduce == 'sum' ? function(a, b){ return a + b }
+			var r = reduce == 'sum' ? function(a, b){ 
+				return a == 0 ? b 
+					: b == 0 ? a
+					: a == 0 && b == 0 ? 0
+					: a + b }
 				: reduce == 'mul' ? function(a, b){ return a * b }
 				: reduce == 'last' ? function(a, b){ return b != null ? b : a }
 				: reduce

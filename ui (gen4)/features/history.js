@@ -342,7 +342,7 @@ var URLHistoryLocalStorageActions = actions.Actions({
 		}
 	}],
 
-	saveURLHistory: ['History/',
+	storeURLHistory: ['History/',
 		function(){
 			var history = this.config['url-history-local-storage-key']
 			if(history != null){
@@ -350,9 +350,9 @@ var URLHistoryLocalStorageActions = actions.Actions({
 					JSON.stringify(this.url_history) 
 			}
 
-			this.saveLocation()
+			this.storeLocation()
 		}],
-	saveLocation: ['History/',
+	storeLocation: ['History/',
 		function(){
 			var loaded = this.config['url-history-loaded-local-storage-key']
 
@@ -404,16 +404,16 @@ module.URLHistoryLocalStorage = core.ImageGridFeatures.Feature({
 			function(){ this.loadLastSavedBasePath() }], 
 
 		['stop.pre',
-			function(){ this.saveURLHistory() }], 
+			function(){ this.storeURLHistory() }], 
 
 		// save base_path...
 		['load', 
-			function(){ this.location && this.location.path && this.saveLocation() }],
+			function(){ this.location && this.location.path && this.storeLocation() }],
 
 		// save...
 		['pushURLToHistory dropURLFromHistory setTopURLHistory', 
 			function(){ 
-				this.saveURLHistory()
+				this.storeURLHistory()
 			}],
 		// clear...
 		['clearURLHistory.pre',
@@ -465,7 +465,7 @@ module.URLHistoryFSWriter = core.ImageGridFeatures.Feature({
 						var e = that.url_history[l.path]
 						if(e != null){
 							e.open = l.method
-							that.saveURLHistory()
+							that.storeURLHistory()
 
 						} else {
 							that.pushURLToHistory(l.path, l.method)

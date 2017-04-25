@@ -97,8 +97,7 @@ var LocationActions = actions.Actions({
 	// NOTE: the method is needed to enable us to get the action return
 	// 		value...
 	set location(value){
-		this.loadLocation(value)
-	},
+		this.loadLocation(value) },
 
 
 	clearLoaction: ['File/Clear location',
@@ -178,74 +177,124 @@ var LocationActions = actions.Actions({
 			return res
 		}],
 
-	// XXX need a way to get save method...
-	// 		- rename .location.method to .location.load and add .location.save 
-	// 		- treat method as protocol and add a method registry API
-	// 			this is more flexible as we can add as many methods per
-	// 			protocol as we need and add a command action:
-	// 				- execute command in current protocol
-	// 					.locationCall("command", ...)
-	// 				- execute command in specific protocol
-	// 					.locationCall('protocol:command', ..)
-	// 				- show current protocol
-	// 					.locationCall("?")
-	// 				- list commands
-	// 					.locationCall("??")
-	// 					.locationCall('protocol:??')
-	// 			we can implicitly define protocols via action attrs:
-	// 				loadIndex: ['...',
-	// 					{locationProtocol: 'file:load'},
-	// 					function(){ ... }],
-	locationDispatch: ['- File/',
+	// XXX
+	// XXX should these have the same effect as .dispatch('location:*:load', location)???
+	// 		...another way to put it is should we call this from dispatch?
+	// 			...feels like yes -- this will turn into another Action-like
+	// 			protocol...
+	// 				...or we can use this to wrap the actual matching action...
+	_loadLocation: ['- File/Save location',
+		{protocol: 'location:*:load'},
+		function(location){
+			this.location.method = this.locationMethod(location)
+			this.dispatch('location:*:load', location) 
+		}],
+	_saveLocation: ['- File/Save location',
+		{protocol: 'location:*:save'},
+		function(location){
+			this.location.method = this.locationMethod(location)
+			this.dispatch('location:*:save', location) }],
+	_locationMethod: ['- File/',
+		{protocol: 'location:?'},
+		function(location){ 
+			return (location || this.location).method || null }],
+
+
+	// format:
+	// 	{
+	// 		'protocol:method': 'actionName',
+	//
+	// 		'family:protocol:method': 'actionName',
+	//
+	// 		'family:*': 'actionName',
+	// 		...
+	// 	}
+	get protocols(){
+		var cache = this.__location_protocol_cache = this.__location_protocol_cache 
+			|| this.cacheProtocols()
+		return cache
+	},
+	cacheProtocols: ['- File/',
+		function(){
+			var that = this
+			var res = {}
+			this.actions.forEach(function(n){
+				var proto = that.getActionAttr(n, 'protocol')
+				if(proto){
+					res[proto] = n
+				}
+			})
+			return res
+		}],
+	dispatch: ['- File/',
+		core.doc`
+
+			Execute command in specific protocol...
+			.dispatch('protocol:command', ..)
+			.dispatch('family:protocol:command', ..)
+				-> result
+
+			XXX defaults...
+
+			XXX introspection...
+		`,
 		function(spec){
-			spec = spec instanceof Array ? spec : spec.split(':')
 			var args = [].slice.call(arguments, 1)
+			spec = spec instanceof Array ? spec : spec.split(':')
 
-			var action = spec.pop()
-			var protocol = spec.shift() || this.location.method
+			var cache = this.protocols
+			var protocols = Object.keys(cache)
 
-			// format:
-			// 	{
-			// 		'protocol:method': 'actionName',
-			// 		...
-			// 	}
-			var cache = this.__location_protocol_cache = 
-				this.__location_protocol_cache || this.cacheLocationProtocols()
+			// get all matching paths...
+			var matches = protocols.slice()
+				.map(function(p){ return p.split(':') })
+			spec.forEach(function(e, i){
+				matches = matches
+					.filter(function(p){ return e == '*' || p[i] == e }) })
+			matches = matches
+				// remove matches ending with '*'... (XXX ???)
+				.filter(function(p){ return p.slice(-1)[0] != '*' })
+				.map(function(p){ return p.join(':') })
 
-			// get protocol...
-			if(action == '?'){
-				return protocol
+			// fill in the gaps...
+			var i = spec.indexOf('*')
+			while(spec.indexOf('*') >= 0){
+				var handler = cache[spec.slice(0, i).concat('?').join(':')]
+				if(handler){
+					spec[i] = this[handler].apply(this, args)
+					i = spec.indexOf('*')
 
-			// get available methods for protocol...
-			} else if(action == '??'){
-				return Object.keys(cache)
-					.filter(function(e){ return e.startsWith(protocol + ':') })
-					.map(function(e){ return e.split(':').pop() })
-			
-			// list all protocols...
-			} else if(protocol == '??' && action == '*'){
-				return Object.keys(cache)
-					.map(function(e){ return e.split(':').pop() })
-					.unique()
+				// error...
+				// XXX how do we break out of this???
+				} else {
+					throw ('No default defined for: '+ spec.slice(0, i+1).join(':'))
+				}
+			}
 
-			// list protocols implementing specific action...
-			} else if(protocol == '??'){
-				return Object.keys(cache)
-					.filter(function(e){ return e.endsWith(':'+ action) })
-					.map(function(e){ return e.split(':')[0] })
-					.unique()
+			// introspection...
+			// XXX this supports only one '??'
+			var i = spec.indexOf('??')
+			if(i >= 0){
+				var head = spec.slice(0, i).join(':')
+				var tail = spec.slice(i+1).join(':')
+				console.log(head, tail)
+				return protocols
+					.filter(function(p){
+						return p.startsWith(head) 
+							&& (tail == '' 
+								|| (p.endsWith(tail)
+									&& p.length > (head.length + tail.length + 2))) })
 
 			// call method...
 			} else {
-				// XXX args???
-				this[cache[protocol +':'+ action]].call(this)
+				var m = spec.join(':')
+				console.log('>>>', m)
+
+				// XXX take all the matches and chain call them...
+				return this[cache[m]].apply(this, args)
 			}
 		}],
-	saveLocation: ['- File/Save location',
-		function(location){
-			// XXX
-			this.locationDispatch('save')
-		}],
+
 })
 
 module.Location = core.ImageGridFeatures.Feature({

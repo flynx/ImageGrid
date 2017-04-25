@@ -64,6 +64,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'ui-single-image',
 	//'ui-partial-ribbons',
+	// XXX this still has problems...
 	'ui-partial-ribbons-2',
 
 	'marks',

@@ -1927,6 +1927,8 @@ var ControlActions = actions.Actions({
 		// if true and ribbon is panned off screen, the image will be 
 		// centered, else behave just like partially off screen...
 		'center-off-screen-paned-images': false,
+
+		'mouse-wheel-scale': 0.5,
 	},
 
 	// Image click events...
@@ -2386,6 +2388,112 @@ var ControlActions = actions.Actions({
 				}
 			})],
 
+	// XXX need:
+	// 		- prevent ribbon from scrolling off screen...
+	// 		- handle acceleration -- stop and update just before scrolling off the edge...
+	// 		- update...
+	// XXX might be a good idea to use the viewer instead of ribbons as source...
+	// 		...this will prevent losing control of the ribbon when it goes out
+	// 		from under the cursor...
+	// 		...detect via cursor within the vertical band of the ribbon...
+	toggleMouseWheelHandling: ['Interface/Mouse wheel handling',
+		toggler.Toggler(null,
+			function(){ 
+				return this.ribbons 
+					&& this.ribbons.viewer 
+					&& this.ribbons.viewer.hasClass('mouse-wheel-scroll') ?
+						'handling-mouse-wheel' 
+						: 'none' },
+			'handling-mouse-wheel',
+			function(state){
+				var that = this
+
+				/*
+				var focus_central = function(rgid){
+					// see if we need to change focus...
+					var current_ribbon = that.data.getRibbon()
+					if(current_ribbon == rgid){
+						var central = that.ribbons.getImageByPosition('center', r)
+						var gid = that.ribbons.getElemGID(central)
+						// silently focus central image...
+						if(that.config['focus-central-image'] == 'silent'){
+							that.data.focusImage(gid)
+							that.ribbons.focusImage(that.current)
+							
+						// focus central image in a normal manner...
+						} else if(that.config['focus-central-image']){
+							that.data.focusImage(gid)
+							that.focusImage()
+						}
+					}
+				}
+				*/
+
+				var setup = this.__wheel_handler_setup = this.__wheel_handler_setup 
+					|| function(_, target){
+						var that = this
+
+						var r = this.ribbons.getRibbon(target)
+						var rgid = this.ribbons.getElemGID(r)
+
+						// XXX vertical scroll...
+						this.ribbons.viewer
+							.on('wheel', function(){
+							})
+
+						// horizontal scroll...
+						r.on('wheel', function(){
+							event.preventDefault()
+
+							var s = that.config['mouse-wheel-scale'] || 1
+							var vmin = Math.min(document.body.offsetWidth, document.body.offsetHeight)
+							var left = parseFloat(($(this).transform('translate3d') || [0])[0])/100 * vmin
+
+							// XXX inertia problem -- it's too easy to scroll a ribbon off the screen...
+							// 		try:
+							// 			- limit speed
+							// 			- limit distance 
+							// 				1-2 screens -> stop for timeout before continue
+							// 				...need to keep track of "scroll sessions"
+
+							// XXX prevent scroll off screen....
+
+							// XXX prevent scroll off loaded edge...
+							
+							// XXX focus_central(rgid) when scroll slows down...
+							// 		(small deltaX or longer time between triggerings)...
+
+							// XXX do we need to do requestAnimationFrame(..) render...
+							// 		...see toggleRibbonPanHandling(..) for an implementation...
+
+							// do the actual move...
+							r.transform({
+								x: ((left - (event.deltaX * s)) / vmin * 100) + 'vmin',
+							})
+						})
+
+					}
+
+				// on...
+				if(state == 'on'){
+					this.ribbons.viewer.addClass('mouse-wheel-scroll')
+					// NOTE: we are resetting this to avoid multiple setting
+					// 		handlers...
+					this.off('updateRibbon', setup)
+					this.on('updateRibbon', setup)
+
+					this.data.ribbon_order.forEach(function(gid){
+						setup.call(that, null, gid) })
+
+				// off...
+				} else {
+					this.ribbons.viewer.removeClass('mouse-wheel-scroll')
+					this.off('updateRibbon', setup)
+
+					this.data.ribbon_order.forEach(function(gid){
+						that.ribbons.getRibbon(gid).off('wheel') })
+				}
+			})],
 	
 	togglePinchHandling: ['Interface/Pinch zoom handling',
 		function(){

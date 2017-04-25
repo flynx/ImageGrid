@@ -35,7 +35,10 @@ var PartialRibbonsActions = actions.Actions({
 		// 	'resize'
 		'ribbons-in-place-update-mode': 'resize',
 
-		'ribbons-in-place-update-timeout': 200,
+		'ribbons-in-place-update-timeout': 100,
+
+		// XXX
+		'ribbon-update-timeout': 120,
 	},
 
 	updateRibbon: ['- Interface/Update partial ribbon size', 
@@ -63,6 +66,7 @@ var PartialRibbonsActions = actions.Actions({
 			var t = Date.now()
 			this.__last_ribbon_update = this.__last_ribbon_update || t
 			var timeout = this.config['ribbons-in-place-update-timeout']
+			var	update_timeout = this.config['ribbon-update-timeout']
 
 			// localize transition prevention... 
 			// NOTE: we can't get ribbon via target directly here as
@@ -93,8 +97,10 @@ var PartialRibbonsActions = actions.Actions({
 					// ribbon shorter than we expect...
 					|| (loaded < size && na + pa > loaded)
 					// ribbon too long...
-					|| loaded > size * threshold){
-				//console.log('RESIZE')
+					|| loaded > size * threshold
+					// passed hard threshold -- too close to edge...
+					|| (nl < w && na > nl) || (pl < w && pa > pl)){
+				//console.log('RESIZE (sync)')
 				this.resizeRibbon(target, size)
 
 			// more complex cases...
@@ -104,7 +110,7 @@ var PartialRibbonsActions = actions.Actions({
 					|| (pl < update_threshold && pa > pl) 
 					// loaded more than we need by threshold...
 					|| nl + pl + 1 > size + update_threshold){
-				// resize mode...
+				// resize...
 				if(this.config['ribbons-in-place-update-mode'] == 'resize'
 						// no ribbon loaded...
 						|| r.length == 0 
@@ -114,26 +120,36 @@ var PartialRibbonsActions = actions.Actions({
 						// full screen...
 						|| (this.toggleSingleImage 
 							&& this.toggleSingleImage('?') == 'on')){
-					//console.log('RESIZE', t-this.__last_ribbon_update)
-					this.resizeRibbon(target, size)
+					return function(){
+						var that = this
+						// sync update...
+						if(update_timeout == null){
+							//console.log('RESIZE (post)', t-this.__last_ribbon_update)
+							this.resizeRibbon(target, size)
+
+						// async update...
+						} else {
+							this.__update_timeout
+								&& clearTimeout(this.__update_timeout)
+							this.__update_timeout = setTimeout(function(){ 
+								//console.log('RESIZE (timeout)', t-this.__last_ribbon_update)
+								delete that.__update_timeout
+								that.resizeRibbon(target, size) 
+							}, update_timeout)
+						}
+					}
 
 				// in-place update...
 				// XXX this is faster than .resizeRibbon(..) but it's not
-				// 		used unconditionally because I can't get rid or
+				// 		used unconditionally because I can't get rid of
 				// 		sync up images being replaced...
 				// 		...note that .resizeRibbon(..) is substantially 
 				// 		slower (updates DOM), i.e. introduces a lag, but
 				// 		the results look OK...
-				//
-				// 		Approaches:
-				// 			- preloading a target section off-screen
-				// 				...results in two freezes instead of one
-				// 			- CSS will-change: background-image (???)
-				// 			- revise .updateImage(..)
-				//
-				// 		Q: can this be done within 1/60s???
-				// XXX one approach here might be:
-				// 		wait for images to preload and only then update...
+				// XXX approaches to try:
+				// 		- wait for images to preload and only then update...
+				// 		- preload images in part of a ribbon and when ready update...
+				// 			...this is like the first but we wait for less images...
 				} else {
 					//console.log('UPDATE', t - this.__last_ribbon_update)
 					var c = gids.indexOf(data.getImage('current', r_gid))
