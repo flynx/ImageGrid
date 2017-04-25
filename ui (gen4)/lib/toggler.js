@@ -107,8 +107,13 @@
 // 	state_accessor(<elem>, <new-state>)
 // 		-> <new-state>
 //
-// `this' within <state_accessor> is set to toggler's context.
-//
+// `this' within state_accessor is set to toggler's context.
+// 
+// The value returned by state_accessor is returned by the toggler. To pass
+// control over the return value back to the Toggler logic when setting 
+// the state (i.e. when <new_state> is passed) state_accessor has to 
+// return null.
+// 
 // NOTE: for single state toggling, 'none' will get passed to 
 // 		state_accessor to indicate an "empty" state...
 // NOTE: if elem is a function it will be called in the same context as
@@ -257,7 +262,7 @@ function(elem, state_accessor, states, callback_a, callback_b){
 		// pre callback...
 		if(callback_pre != null){
 			if(callback_pre.apply(this, [action, e].concat(args)) === false){
-				//return
+				// return current state...
 				return func.call(this, '?')
 			}
 		}
