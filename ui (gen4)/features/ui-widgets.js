@@ -832,7 +832,7 @@ var BrowseActionsActions = actions.Actions({
 			showEmpty: false,
 		},
 
-		'browse-actions-keys': true,
+		'browse-actions-keys': 'on',
 
 		'browse-actions-shortcut-marker': '\\$(\\w)',
 	},
@@ -1291,10 +1291,10 @@ var BrowseActionsActions = actions.Actions({
 	toggleBrowseActionKeys: ['Interface/Show keys in menu',
 		core.makeConfigToggler(
 			'browse-actions-keys', 
-			[true, false],
+			['on', 'off'],
 			function(state){
 				this.modal.client.dom.hasClass('browse-actions')
-					&& this.modal.client.dom[state ? 'addClass' : 'removeClass']('show-keys')
+					&& this.modal.client.dom[state == 'on' ? 'addClass' : 'removeClass']('show-keys')
 			})],
 })
 

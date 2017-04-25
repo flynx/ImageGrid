@@ -1249,7 +1249,8 @@ var ConfigLocalStorageActions = actions.Actions({
 		}],
 
 	toggleAutoStoreConfig: ['File/Store configuration',
-		toggler.Toggler(null, function(_, state){ 
+		toggler.Toggler(null, 
+			function(_, state){ 
 				if(state == null){
 					return this.__auto_save_config_timer || 'none'
 
@@ -1972,13 +1973,17 @@ var ControlActions = actions.Actions({
 	// XXX do not do anything on viewer focus... (???)
 	toggleImageClickHandling: ['Interface/Image click handling',
 		toggler.Toggler(null,
-			function(){ 
-				return this.ribbons 
-					&& this.ribbons.viewer 
-					//&& this.ribbons.getRibbon().data('hammer') ? 'handling-click' : 'none' },
-					&& this.ribbons.getRibbon().hasClass('clickable') ? 
+			function(_, new_state){ 
+				return new_state ?
+						// NOTE: we are not setting the state here, so
+						// 		nothing to do...
+						null
+					: (this.ribbons 
+							&& this.ribbons.viewer 
+							//&& this.ribbons.getRibbon().data('hammer') ? 'handling-click' : 'none' },
+							&& this.ribbons.getRibbon().hasClass('clickable')) ? 
 						'handling-click' 
-						: 'none' },
+					: 'none' },
 			'handling-click',
 			function(state){
 				var that = this
@@ -2170,11 +2175,16 @@ var ControlActions = actions.Actions({
 	// 		to work semi smoothly...
 	toggleRibbonPanHandling: ['Interface/Ribbon pan handling',
 		toggler.Toggler(null,
-			function(){ 
-				return this.ribbons 
-					&& this.ribbons.viewer 
-					//&& this.ribbons.getRibbon().data('hammer') ? 'handling-pan' : 'none' },
-					&& this.ribbons.getRibbon().hasClass('draggable') ? 'handling-pan' : 'none' },
+			function(_, new_state){ 
+				return new_state ?
+						// NOTE: we are not setting the state here, so there's 
+						// 		nothing to do...
+						null
+					: (this.ribbons 
+							&& this.ribbons.viewer 
+							&& this.ribbons.getRibbon().hasClass('draggable')) ?  
+						'handling-pan' 
+					: 'none' },
 			'handling-pan',
 			function(state){
 				var that = this
@@ -2402,12 +2412,16 @@ var ControlActions = actions.Actions({
 	// XXX add a "ribbonWheeling" ( ;) ) event a-la ribbonPanning...
 	toggleMouseWheelHandling: ['Interface/Mouse wheel handling',
 		toggler.Toggler(null,
-			function(){
-				return this.ribbons 
-					&& this.ribbons.viewer 
-					&& this.ribbons.viewer.hasClass('mouse-wheel-scroll') ?
+			function(_, new_state){
+				return new_state ?
+						// NOTE: we are not setting the state here, so there's 
+						// 		nothing to do...
+						null
+					: (this.ribbons 
+						&& this.ribbons.viewer 
+						&& this.ribbons.viewer.hasClass('mouse-wheel-scroll')) ?
 						'handling-mouse-wheel' 
-						: 'none' },
+					: 'none' },
 			'handling-mouse-wheel',
 			function(state){
 				var that = this
@@ -2510,9 +2524,13 @@ var ControlActions = actions.Actions({
 	toggleSwipeHandling: ['Interface/Swipe handling',
 		toggler.Toggler(null,
 			function(_, state){ 
-				return this.ribbons 
-					&& this.ribbons.viewer 
-					&& this.ribbons.viewer.data('hammer') ? 'handling-swipes' : 'none' },
+				return state ?
+						null
+					: (this.ribbons 
+							&& this.ribbons.viewer 
+							&& this.ribbons.viewer.data('hammer')) ? 
+						'handling-swipes' 
+					: 'none' },
 			'handling-swipes',
 			function(state){
 				var viewer = this.ribbons.viewer
@@ -2579,7 +2597,7 @@ var ControlActions = actions.Actions({
 	},
 	toggleControlMode: ['- Interface/',
 		toggler.Toggler(null,
-			function(){ return this.config['control-mode'] },
+			function(_, state){ return state == null ? null : this.config['control-mode'] },
 			function(){ return Object.keys(this.__control_mode_handlers__ || [])
 				.concat(Object.keys(ControlActions.__control_mode_handlers__ || []))
 				.concat(['none'])
