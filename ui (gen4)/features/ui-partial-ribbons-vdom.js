@@ -62,6 +62,7 @@ VALUE.prototype.hook = function(elem, prop){
 //---------------------------------------------------------------------
 
 var VirtualDOMRibbonsClassPrototype = {
+	// XXX ???
 }
 
 // XXX need a way to link this to the context...
@@ -72,17 +73,28 @@ var VirtualDOMRibbonsPrototype = {
 	// XXX this is a circular ref -- I do not like it...
 	imagegrid: null,
 
+	// XXX ???
+	count: null,
+	scale: null,
+	target: null,
+
 	// constructors...
-	// XXX get vertical offset and scale...
+	// XXX should these be here or be stateless and in VirtualDOMRibbonsClassPrototype???
+	// XXX calc offset (x)...
+	// XXX get scale...
+	// XXX calc/get count if not given explicitly...
+	// XXX Q: do we need to set align target and current image separately...
+	// XXX use a dict for args...
 	makeView: function(target, count, scale){
 		var data = this.imagegrid.data
 		var images = this.imagegrid.images
 
-		// XXX calculate count...
-		count = count || 30
+		// XXX calculate count (use config)...
+		count = count || this.imagegrid.screenwidth * 5
 
-		// XXX offset and scale...
+		// XXX get scale...
 		var s = scale || this.imagegrid.scale
+		// XXX calc offset...
 		var x = 0
 
 		var ribbons = data.ribbon_order
@@ -104,9 +116,9 @@ var VirtualDOMRibbonsPrototype = {
 			ribbons)
 		])
 	},
-	// XXX calc/get count if not given explicitly...
 	// XXX calc offset (y)...
 	// XXX should we setup handlers here???
+	// XXX use a dict for args...
 	makeRibbon: function(gid, count, target){
 		var data = this.imagegrid.data
 		var images = this.imagegrid.images
@@ -138,8 +150,9 @@ var VirtualDOMRibbonsPrototype = {
 		},
 		imgs)
 	},
-	// XXX handle previews -- hook???
 	// NOTE: at this point this does not account for previews at all...
+	// XXX handle previews -- hook???
+	// XXX use a dict for args...
 	makeImage: function(gid){
 		var data = this.imagegrid.data
 		var images = this.imagegrid.images || {}
@@ -170,6 +183,7 @@ var VirtualDOMRibbonsPrototype = {
 		})
 	},
 	// XXX get marks...
+	// XXX use a dict for args...
 	makeImageMarks: function(gid){
 		// XXX get marks...
 		var marks = []
@@ -184,6 +198,7 @@ var VirtualDOMRibbonsPrototype = {
 			gid: new GID(gid),
 		})
 	},
+
 
 	
 	__init__: function(imagegrid){
