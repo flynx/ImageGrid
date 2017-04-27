@@ -74,17 +74,20 @@ var VirtualDOMRibbonsPrototype = {
 
 	// constructors...
 	// XXX get vertical offset and scale...
-	makeView: function(count){
-		var data = imagegrid.data
-		var images = imagegrid.images
+	makeView: function(target, count, scale){
+		var data = this.imagegrid.data
+		var images = this.imagegrid.images
 
-		// XXX
-		var s = 1
+		// XXX calculate count...
+		count = count || 30
+
+		// XXX offset and scale...
+		var s = scale || this.imagegrid.scale
 		var x = 0
 
 		var ribbons = data.ribbon_order
 			.map(function(gid){
-				return makeRibbon(gid, data, images, count) })
+				return this.makeRibbon(gid, count, target) })
 
 		return vdom.h('div.ribbon-set', {
 			key: 'ribbon-set',
@@ -104,22 +107,24 @@ var VirtualDOMRibbonsPrototype = {
 	// XXX calc/get count if not given explicitly...
 	// XXX calc offset (y)...
 	// XXX should we setup handlers here???
-	makeRibbon: function(gid, count){
-		var data = imagegrid.data
-		var images = imagegrid.images
+	makeRibbon: function(gid, count, target){
+		var data = this.imagegrid.data
+		var images = this.imagegrid.images
 
 		var imgs = []
 
-		// XXX
+		// XXX align via target...
 		var y = 0
 
 		data.getImages(gid, count, 'total')
 			.forEach(function(gid){
-				imgs.push(makeImage(gid, data, images))
-				makeImageMarks(gid, data, images)
+				imgs.push(this.makeImage(gid))
+
+				this.makeImageMarks(gid)
 					.forEach(function(mark){ 
 						imgs.push(mark) })
 			})
+
 		return vdom.h('div.ribbon', {
 			key: 'ribbon-'+gid,
 
@@ -136,8 +141,8 @@ var VirtualDOMRibbonsPrototype = {
 	// XXX handle previews -- hook???
 	// NOTE: at this point this does not account for previews at all...
 	makeImage: function(gid){
-		var data = imagegrid.data
-		var images = imagegrid.images || {}
+		var data = this.imagegrid.data
+		var images = this.imagegrid.images || {}
 
 		var image = images[gid] || {}
 		var current = data.current == gid ? '.current' : ''
@@ -171,7 +176,7 @@ var VirtualDOMRibbonsPrototype = {
 
 		return marks
 			.map(function(type){
-				return makeImageMark(gid, type, data, images) })
+				return makeImageMark(gid, type) })
 	},
 	makeImageMark: function(gid, type){
 		return vdom.h('div.mark'+(type || ''), {
