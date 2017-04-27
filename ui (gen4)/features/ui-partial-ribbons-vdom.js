@@ -9,6 +9,7 @@
 
 var vdom = require('ext-lib/virtual-dom')
 
+var object = require('lib/object')
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -60,108 +61,130 @@ VALUE.prototype.hook = function(elem, prop){
 
 //---------------------------------------------------------------------
 
-// XXX get vertical offset and scale...
-var makeView = 
-window.makeView =
-function(data, images, count){
-	// XXX
-	var s = 1
-	var x = 0
+// XXX need a way to link this to the context...
+var VirtualDOMRibbonsPrototype = {
 
-	var ribbons = data.ribbon_order
-		.map(function(gid){
-			return makeRibbon(gid, data, images, count) })
+	virtualdom: null,
+	// XXX this is a circular ref -- I do not like it...
+	imagegrid: null,
 
-	return vdom.h('div.ribbon-set', {
-		key: 'ribbon-set',
-		style: {
-			transform: 'scale('+ s +', '+ s +')',
-		}
-	}, [
-		vdom.h('div.ribbon-locator', {
-			key: 'ribbon-locator',
+	// constructors...
+	// XXX get vertical offset and scale...
+	makeView: function(count){
+		var data = imagegrid.data
+		var images = imagegrid.images
+
+		// XXX
+		var s = 1
+		var x = 0
+
+		var ribbons = data.ribbon_order
+			.map(function(gid){
+				return makeRibbon(gid, data, images, count) })
+
+		return vdom.h('div.ribbon-set', {
+			key: 'ribbon-set',
 			style: {
-				transform: 'translate3d(0px, '+ x +'px, 0px)',
+				transform: 'scale('+ s +', '+ s +')',
+			}
+		}, [
+			vdom.h('div.ribbon-locator', {
+				key: 'ribbon-locator',
+				style: {
+					transform: 'translate3d(0px, '+ x +'px, 0px)',
+				},
+			},
+			ribbons)
+		])
+	},
+	// XXX calc/get count if not given explicitly...
+	// XXX calc offset (y)...
+	// XXX should we setup handlers here???
+	makeRibbon: function(gid, count){
+		var data = imagegrid.data
+		var images = imagegrid.images
+
+		var imgs = []
+
+		// XXX
+		var y = 0
+
+		data.getImages(gid, count, 'total')
+			.forEach(function(gid){
+				imgs.push(makeImage(gid, data, images))
+				makeImageMarks(gid, data, images)
+					.forEach(function(mark){ 
+						imgs.push(mark) })
+			})
+		return vdom.h('div.ribbon', {
+			key: 'ribbon-'+gid,
+
+			gid: new GID(gid),
+
+			// XXX events, hammer, ...???
+
+			style: {
+				transform: 'translate3d('+ y +'px, 0px, 0px)',
 			},
 		},
-		ribbons)
-	])
-}
-
-
-// XXX calc/get count...
-var makeRibbon = 
-window.makeRibbon =
-function(gid, data, images, count){
-	var imgs = []
-
-	data.getImages(gid, count, 'total')
-		.forEach(function(gid){
-			imgs.push(makeImage(gid, data, images))
-			makeImageMarks(gid, data, images)
-				.forEach(function(mark){ 
-					imgs.push(mark) })
-		})
-	return vdom.h('div.ribbon', {
-		key: 'ribbon-'+gid,
-
-		gid: new GID(gid),
+		imgs)
 	},
-	imgs)
-}
+	// XXX handle previews -- hook???
+	// NOTE: at this point this does not account for previews at all...
+	makeImage: function(gid){
+		var data = imagegrid.data
+		var images = imagegrid.images || {}
 
+		var image = images[gid] || {}
+		var current = data.current == gid ? '.current' : ''
 
-// XXX handle previews -- hook???
-// NOTE: at this point this does not account for previews at all...
-var makeImage = 
-window.makeImage =
-function(gid, data, images){
-	var image = (images || {})[gid] || {}
-	var current = data.current == gid ? '.current' : ''
+		// XXX stuff needed to get a preview:
+		// 		- image tile size -- .ribbons.getVisibleImageSize(..)
+		// 		- preview url -- .ribbons.getBestPreview(..)
+		// 		- actual preview size -- w and h
+		// XXX need a strategy on how to update images...
 
-	// XXX stuff needed to get a preview:
-	// 		- image tile size -- .ribbons.getVisibleImageSize(..)
-	// 		- preview url -- .ribbons.getBestPreview(..)
-	// 		- actual preview size -- w and h
-	// XXX need a strategy on how to update images...
+		return vdom.h('div.image'+current, {
+			key: 'image-'+gid,
 
-	return vdom.h('div.image'+current, {
-		key: 'image-'+gid,
+			gid: new GID(gid),
 
-		gid: new GID(gid),
+			orientation: new VALUE(image.orientation),
+			flipped: new VALUE(image.flipped),
 
-		orientation: new VALUE(image.orientation),
-		flipped: new VALUE(image.flipped),
-
-		// XXX preview stuff...
-		//'preview-width': new VALUE(w),
-		//'preview-height': new VALUE(h),
-		//style: {
-		//	backgroundImage: 'url('+ url +')',
-		//}
-	})
-}
-
-// XXX get marks...
-var makeImageMarks = 
-window.makeImageMarks =
-function(gid, data, images){
+			// XXX preview stuff...
+			//'preview-width': new VALUE(w),
+			//'preview-height': new VALUE(h),
+			//style: {
+			//	backgroundImage: 'url('+ url +')',
+			//}
+		})
+	},
 	// XXX get marks...
-	var marks = []
+	makeImageMarks: function(gid){
+		// XXX get marks...
+		var marks = []
 
-	return marks
-		.map(function(type){
-			return makeImageMark(gid, type, data, images) })
+		return marks
+			.map(function(type){
+				return makeImageMark(gid, type, data, images) })
+	},
+	makeImageMark: function(gid, type){
+		return vdom.h('div.mark'+(type || ''), {
+			key: 'mark-'+gid,
+			gid: new GID(gid),
+		})
+	},
+
+	
+	__init__: function(imagegrid){
+		this.imagegrid = imagegrid
+	},
 }
 
-var makeImageMark = 
-window.makeImageMark =
-function(gid, type, data, images){
-	return vdom.h('div.mark'+(type || ''), {
-		key: 'mark-'+gid,
-		gid: new GID(gid),
-	})
-}
+var VirtualDOMRibbons =
+module.VirtualDOMRibbons =
+object.makeConstructor('VirtualDOMRibbons', VirtualDOMRibbonsPrototype)
 
 
 
@@ -191,6 +214,10 @@ var PartialRibbonsActions = actions.Actions({
 		// XXX
 		'ribbon-update-timeout': 120,
 	},
+
+	get virtualdom(){
+		return (this.__virtual_dom = this.__virtual_dom || VirtualDOMRibbons(this)) },
+
 
 	updateRibbon: ['- Interface/Update partial ribbon size', 
 		function(target, w, size, threshold, preload){
