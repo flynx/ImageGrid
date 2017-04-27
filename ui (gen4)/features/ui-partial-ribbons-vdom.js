@@ -61,10 +61,14 @@ VALUE.prototype.hook = function(elem, prop){
 
 //---------------------------------------------------------------------
 
+var VirtualDOMRibbonsClassPrototype = {
+}
+
 // XXX need a way to link this to the context...
 var VirtualDOMRibbonsPrototype = {
 
-	virtualdom: null,
+	dom: null,
+	vdom: null,
 	// XXX this is a circular ref -- I do not like it...
 	imagegrid: null,
 
@@ -184,7 +188,9 @@ var VirtualDOMRibbonsPrototype = {
 
 var VirtualDOMRibbons =
 module.VirtualDOMRibbons =
-object.makeConstructor('VirtualDOMRibbons', VirtualDOMRibbonsPrototype)
+object.makeConstructor('VirtualDOMRibbons', 
+	VirtualDOMRibbonsClassPrototype,
+	VirtualDOMRibbonsPrototype)
 
 
 
