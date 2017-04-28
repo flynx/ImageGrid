@@ -60,6 +60,16 @@ VALUE.prototype.hook = function(elem, prop){
 		&& elem.setAttribute(prop, this.value) }
 
 
+function PREVIEW(ig, gid, url){
+	this.ig = ig
+	this.gid = gid
+	this.url = url
+}
+PREVIEW.prototype.hook = function(elem, prop){
+	this.ig.ribbons._loadImagePreviewURL(elem, this.url)
+}
+
+
 //---------------------------------------------------------------------
 
 var VirtualDOMRibbonsClassPrototype = {
@@ -103,8 +113,9 @@ var VirtualDOMRibbonsPrototype = {
 
 	// constructors...
 	// XXX should these be here or be stateless and in VirtualDOMRibbonsClassPrototype???
-	// XXX Q: do we need to set align target and current image separately...
 	makeView: function(state){
+		state = state || {}
+		var that = this
 		var ig = this.imagegrid
 
 		var target = state.target || ig.current
@@ -123,7 +134,7 @@ var VirtualDOMRibbonsPrototype = {
 
 		var ribbons = data.ribbon_order
 			.map(function(gid){
-				return this.makeRibbon(gid, count, target) })
+				return that.makeRibbon(gid, count, state) })
 
 		return vdom.h('div.ribbon-set', {
 			key: 'ribbon-set',
@@ -141,37 +152,44 @@ var VirtualDOMRibbonsPrototype = {
 			ribbons)
 		])
 	},
-	// XXX calc offset (y)...
+	// XXX calc offset (x)...
 	// XXX should we setup handlers here???
 	makeRibbon: function(gid, count, state){
+		state = state || {}
+		var that = this
 		var ig = this.imagegrid
 		var data = ig.data
 		var images = ig.images
-
+		var base = data.base == gid ? '.base' : ''
 		var imgs = []
 
-		var x = state.ribbons && state.ribbons[gid]
-		x = x || (this.state.ribbons && this.state.ribbons[gid])
-		x = x || 0
+		this.state = this.state || {}
 		this.state.ribbons = this.state.ribbons || {}
-		this.state.ribbons[gid] = x
+
+		var x = this.state.ribbons[gid] = 
+			(state.ribbons && state.ribbons[gid])
+				|| this.state.ribbons[gid]
+				// XXX calculate new offset...
+				|| parseFloat(ig.ribbons.getRibbon(gid).transform('x'))
 
 		data.getImages(gid, count, 'total')
 			.forEach(function(gid){
-				imgs.push(this.makeImage(gid))
+				imgs.push(that.makeImage(gid))
 
-				this.makeImageMarks(gid)
+				that.makeImageMarks(gid)
 					.forEach(function(mark){ 
 						imgs.push(mark) })
 			})
 
-		return vdom.h('div.ribbon', {
+		return vdom.h('div.ribbon'+base, {
 			key: 'ribbon-'+gid,
-
-			gid: new GID(gid),
 
 			// XXX events, hammer, ...???
 
+			attributes: {
+				gid: JSON.stringify(gid)
+					.replace(/^"(.*)"$/g, '$1'),
+			},
 			style: {
 				transform: 'translate3d('+ x +'vmin, 0px, 0px)',
 			},
@@ -179,67 +197,99 @@ var VirtualDOMRibbonsPrototype = {
 		imgs)
 	},
 	// NOTE: at this point this does not account for previews at all...
-	// XXX handle previews -- hook???
-	makeImage: function(gid){
+	makeImage: function(gid, size){
+		var ig = this.imagegrid
+		size = this.state.tile_size = size 
+			|| this.state.tile_size 
+			|| ig.ribbons.getVisibleImageSize('max')
 		var data = this.imagegrid.data
 		var images = this.imagegrid.images || {}
-
-		var image = images[gid] || {}
 		var current = data.current == gid ? '.current' : ''
 
-		// XXX stuff needed to get a preview:
-		// 		- image tile size -- .ribbons.getVisibleImageSize(..)
-		// 		- preview url -- .ribbons.getBestPreview(..)
-		// 		- actual preview size -- w and h
-		// XXX need a strategy on how to update images...
+		var image = images[gid] || {}
+		var seen = []
+		while(image.type == 'group'){
+			// error, recursive group...
+			if(seen.indexOf(image.id) >= 0){
+				image = images.IMAGE_DATA
+				console.error('Recursive group:', gid)
+				break
+			}
+			seen.push(image.id)
+
+			image = that.images[image.cover]
+		}
+		var url = ig.images.getBestPreview(gid, size, image, true).url
 
 		return vdom.h('div.image'+current, {
 			key: 'image-'+gid,
 
-			gid: new GID(gid),
+			attributes: {
+				gid: JSON.stringify(gid)
+					.replace(/^"(.*)"$/g, '$1'),
+				orientation: image.orientation,
+				flipped: image.flipped,
 
-			orientation: new VALUE(image.orientation),
-			flipped: new VALUE(image.flipped),
-
-			// XXX preview stuff...
-			//'preview-width': new VALUE(w),
-			//'preview-height': new VALUE(h),
-			//style: {
-			//	backgroundImage: 'url('+ url +')',
-			//}
+				//'preview-width': w,
+				//'preview-height': h,
+			},
+			style: {
+				backgroundImage: 'url("'+ url +'")',
+			}
 		})
 	},
 	// XXX get marks...
 	makeImageMarks: function(gid){
-		// XXX get marks...
+		var that = this
 		var marks = []
+		var tags = this.imagegrid.data.getTags(gid)
+
+		// XXX STUB: make this extensible...
+		tags.indexOf('bookmark') >= 0 
+			&& marks.push('bookmark')
+		tags.indexOf('selected') >= 0 
+			&& marks.push('selected')
 
 		return marks
 			.map(function(type){
-				return makeImageMark(gid, type) })
+				return that.makeImageMark(gid, type) })
 	},
 	makeImageMark: function(gid, type){
-		return vdom.h('div.mark'+(type || ''), {
+		return vdom.h('div.mark.'+(type || ''), {
 			key: 'mark-'+gid,
-			gid: new GID(gid),
+			attributes: {
+				gid: JSON.stringify(gid)
+					.replace(/^"(.*)"$/g, '$1'),
+			},
 		})
 	},
+	// XXX add ability to hook in things like current image marker...
 
 
-	// XXX Q: do we actually need to align things here???
-	// 		...intuitively, yes, on the other hand (in the static case)
-	// 		we just need to load in the same image alignment as current, 
-	// 		but this might require us to hook into the construction 
-	// 		process to add alignment in the last moment...
-	// 		...an alternative (no) approach would require to overload not
-	// 		just .updateRibbon(..) but also .centerRibbon(..) / .centerImage(..)
-	// 		and friends...
-	update: function(target, count, scale){
-		this.vdom = this.makeView(target, count, scale)
+	// XXX update .state...
+	update: function(){
+
 	},
-	// XXX sync .vdom to DOM...
+	// NOTE: virtual-dom architecture is designed around a fast-render-on-demand
+	// 		concept, so we build the state on demand...
 	sync: function(){
-		// XXX
+		var dom = this.dom = this.dom || this.imagegrid.ribbons.getRibbonSet()
+
+		// build initial state...
+		if(this.vdom == null){
+			var n = this.vdom = this.makeView(this.state || {})
+			var v = vdom.create(n)
+			dom.replaceWith(v)
+			this.dom = v
+
+		// patch state...
+		} else {
+			var n = this.makeView(this.state || {})
+			vdom.patch(dom, vdom.diff(this.vdom, n))
+			this.vdom = n
+		}
+
+		return this
 	},
 	
 	__init__: function(imagegrid){

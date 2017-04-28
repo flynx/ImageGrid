@@ -1323,7 +1323,6 @@ var RibbonsPrototype = {
 		// collect marks...
 		image.after(this.getImageMarks(gid))
 
-
 		if(this.__image_updaters != null){
 			this.__image_updaters.forEach(function(update){
 				update(gid, image)
@@ -1338,10 +1337,9 @@ var RibbonsPrototype = {
 		// pre-cache and load image...
 		// NOTE: this will make images load without a blackout...
 		var img = new Image()
+		var i = image instanceof jQuery ? image[0] : image
 		img.onload = function(){
-			var i = image[0]
 			i.style.backgroundImage = 'url("'+ url +'")',
-
 			// NOTE: these do not account for rotation...
 			i.setAttribute('preview-width', img.width)
 			i.setAttribute('preview-height', img.height)

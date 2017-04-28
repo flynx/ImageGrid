@@ -927,13 +927,16 @@ var DataPrototype = {
 
 		// NOTE: list can be null if we got an image gid or ribbon order...
 		// get the ribbon gids...
-		list = list || this.ribbons[this.getRibbon(target)] || []
+		list = list 
+			|| this.ribbons[this.getRibbon(target)] 
+			|| []
 
 		if(count == null){
 			return list.compact()
 		}
 
-		target = this.getImage(target)
+		target = this.getImage(target) 
+			|| this.getImage(target, 'after')
 		var i = list.indexOf(target)
 
 		// prepare to slice the list...
