@@ -40,6 +40,7 @@ var core = require('features/core')
 // 			
 //---------------------------------------------------------------------
 
+// XXX DEBUG: remove when not needed...
 window.vdom = vdom
 
 
@@ -65,7 +66,6 @@ var VirtualDOMRibbonsClassPrototype = {
 	// XXX ???
 }
 
-// XXX need a way to link this to the context...
 var VirtualDOMRibbonsPrototype = {
 
 	dom: null,
@@ -78,24 +78,48 @@ var VirtualDOMRibbonsPrototype = {
 	scale: null,
 	target: null,
 
+	// Format:
+	// 	{
+	// 		count: <count>,
+	//
+	// 		scale: <scale>,
+	//
+	// 		top: <offset>,
+	// 		ribbons: {
+	// 			<gid>: <offset>,
+	// 			...
+	// 		},
+	// 	}
+	state: null,
+
+	// XXX the complete set of data this needs to render a state:
+	// 		Big stuff:
+	// 		- ribbon order, content (.data.ribbons and .data.ribbon_order)
+	// 		Small stuff:
+	// 		- current (.current)
+	// 		- vertical offset (.centerRibbon(..))
+	// 		- horizontal offset per ribbon (.centerImage(..))
+	// 		- marks (.__image_updaters and API)
+
 	// constructors...
 	// XXX should these be here or be stateless and in VirtualDOMRibbonsClassPrototype???
-	// XXX calc offset (x)...
-	// XXX get scale...
-	// XXX calc/get count if not given explicitly...
 	// XXX Q: do we need to set align target and current image separately...
-	// XXX use a dict for args...
-	makeView: function(target, count, scale){
-		var data = this.imagegrid.data
-		var images = this.imagegrid.images
+	makeView: function(state){
+		var ig = this.imagegrid
 
-		// XXX calculate count (use config)...
-		count = count || this.imagegrid.screenwidth * 5
+		var target = state.target || ig.current
 
-		// XXX get scale...
-		var s = scale || this.imagegrid.scale
-		// XXX calc offset...
-		var x = 0
+		this.state = this.state || {}
+		var count = state.count = state.count
+			|| ig.screenwidth * (ig.config['ribbon-size-screens'] || 9)
+		var s = state.scale = state.scale 
+			|| ig.scale
+		var top = state.top = state.top 
+			|| this.state.top 
+			|| ig.ribbons.getRibbonLocator().transform('y') 
+
+		var data = ig.data
+		var images = ig.images
 
 		var ribbons = data.ribbon_order
 			.map(function(gid){
@@ -110,7 +134,8 @@ var VirtualDOMRibbonsPrototype = {
 			vdom.h('div.ribbon-locator', {
 				key: 'ribbon-locator',
 				style: {
-					transform: 'translate3d(0px, '+ x +'px, 0px)',
+					// XXX should this be in vh???
+					transform: 'translate3d(0px, '+ top +'px, 0px)',
 				},
 			},
 			ribbons)
@@ -118,15 +143,18 @@ var VirtualDOMRibbonsPrototype = {
 	},
 	// XXX calc offset (y)...
 	// XXX should we setup handlers here???
-	// XXX use a dict for args...
-	makeRibbon: function(gid, count, target){
-		var data = this.imagegrid.data
-		var images = this.imagegrid.images
+	makeRibbon: function(gid, count, state){
+		var ig = this.imagegrid
+		var data = ig.data
+		var images = ig.images
 
 		var imgs = []
 
-		// XXX align via target...
-		var y = 0
+		var x = state.ribbons && state.ribbons[gid]
+		x = x || (this.state.ribbons && this.state.ribbons[gid])
+		x = x || 0
+		this.state.ribbons = this.state.ribbons || {}
+		this.state.ribbons[gid] = x
 
 		data.getImages(gid, count, 'total')
 			.forEach(function(gid){
@@ -145,14 +173,13 @@ var VirtualDOMRibbonsPrototype = {
 			// XXX events, hammer, ...???
 
 			style: {
-				transform: 'translate3d('+ y +'px, 0px, 0px)',
+				transform: 'translate3d('+ x +'vmin, 0px, 0px)',
 			},
 		},
 		imgs)
 	},
 	// NOTE: at this point this does not account for previews at all...
 	// XXX handle previews -- hook???
-	// XXX use a dict for args...
 	makeImage: function(gid){
 		var data = this.imagegrid.data
 		var images = this.imagegrid.images || {}
@@ -183,7 +210,6 @@ var VirtualDOMRibbonsPrototype = {
 		})
 	},
 	// XXX get marks...
-	// XXX use a dict for args...
 	makeImageMarks: function(gid){
 		// XXX get marks...
 		var marks = []
@@ -200,6 +226,21 @@ var VirtualDOMRibbonsPrototype = {
 	},
 
 
+	// XXX Q: do we actually need to align things here???
+	// 		...intuitively, yes, on the other hand (in the static case)
+	// 		we just need to load in the same image alignment as current, 
+	// 		but this might require us to hook into the construction 
+	// 		process to add alignment in the last moment...
+	// 		...an alternative (no) approach would require to overload not
+	// 		just .updateRibbon(..) but also .centerRibbon(..) / .centerImage(..)
+	// 		and friends...
+	update: function(target, count, scale){
+		this.vdom = this.makeView(target, count, scale)
+	},
+	// XXX sync .vdom to DOM...
+	sync: function(){
+		// XXX
+	},
 	
 	__init__: function(imagegrid){
 		this.imagegrid = imagegrid
@@ -245,8 +286,16 @@ var PartialRibbonsActions = actions.Actions({
 		return (this.__virtual_dom = this.__virtual_dom || VirtualDOMRibbons(this)) },
 
 
+	// XXX
+	centerImage: [
+		function(target, align, offset, scale){
+		}],
+	centerRibbon: [
+		function(target){
+		}],
+
 	updateRibbon: ['- Interface/Update partial ribbon size', 
-		function(target, w, size, threshold, preload){
+		function(target, w, size, threshold){
 			target = target instanceof jQuery 
 				? this.ribbons.getElemGID(target)
 				// NOTE: data.getImage(..) can return null at start or end
@@ -263,7 +312,6 @@ var PartialRibbonsActions = actions.Actions({
 					|| this.config['ribbon-resize-threshold'] 
 					|| 2)
 			var update_threshold = (this.config['ribbon-update-threshold'] || 2)  * w
-			preload = preload === undefined ? true : preload
 			var data = this.data
 			var ribbons = this.ribbons
 
@@ -344,16 +392,6 @@ var PartialRibbonsActions = actions.Actions({
 					}
 
 				// in-place update...
-				// XXX this is faster than .resizeRibbon(..) but it's not
-				// 		used unconditionally because I can't get rid of
-				// 		sync up images being replaced...
-				// 		...note that .resizeRibbon(..) is substantially 
-				// 		slower (updates DOM), i.e. introduces a lag, but
-				// 		the results look OK...
-				// XXX approaches to try:
-				// 		- wait for images to preload and only then update...
-				// 		- preload images in part of a ribbon and when ready update...
-				// 			...this is like the first but we wait for less images...
 				} else {
 					//console.log('UPDATE', t - this.__last_ribbon_update)
 					var c = gids.indexOf(data.getImage('current', r_gid))
