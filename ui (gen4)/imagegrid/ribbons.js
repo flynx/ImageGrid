@@ -211,6 +211,26 @@ module.DOMAdapter = {
 /*********************************************************************/
 
 var RibbonsClassPrototype = {
+	// utils...
+	px2v: function(px, mode){
+		var ref = mode == 'vw' ? 
+				document.body.offsetWidth
+			: mode == 'vh' ? 
+				document.body.offsetHeight
+			: mode == 'vmin' ? 
+				Math.min(document.body.offsetWidth, document.body.offsetHeight)
+			: mode == 'vmax' ? 
+				Math.max(document.body.offsetWidth, document.body.offsetHeight)
+			: null
+		return ref ? 
+			(px / ref) * 100 
+			: ref
+	},
+	px2vw: function(px){ return this.px2v(px, 'vw') },
+	px2vh: function(px){ return this.px2v(px, 'vh') },
+	px2vmin: function(px){ return this.px2v(px, 'vmin') },
+	px2vmax: function(px){ return this.px2v(px, 'vmax') },
+
 	// Generic getters...
 	getElemGID: function(elem){
 		return JSON.parse('"' 
@@ -267,6 +287,7 @@ var RibbonsClassPrototype = {
 		return this.setElemGID($('<div class="mark">')
 			.addClass(cls), gid)
 	},
+
 } 
 
 
@@ -300,6 +321,13 @@ var RibbonsPrototype = {
 
 	// DOM Adapter...
 	dom: DOMAdapter,
+	
+	// utils...
+	px2v: RibbonsClassPrototype.px2v,
+	px2vw: RibbonsClassPrototype.px2vw,
+	px2vh: RibbonsClassPrototype.px2vh,
+	px2vmin: RibbonsClassPrototype.px2vmin,
+	px2vmax: RibbonsClassPrototype.px2vmax,
 	
 	// Constructors...
 	createViewer: RibbonsClassPrototype.createViewer,
@@ -2574,8 +2602,7 @@ var RibbonsPrototype = {
 			: w/2
 
 		// relative offset to vmin...
-		var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
-		var x = (-(l + image_offset)/W)*100 + 'vmin'
+		var x = -this.px2vmin(l + image_offset) + 'vmin'
 
 		// absolute offset...
 		//var x = -(l + image_offset)

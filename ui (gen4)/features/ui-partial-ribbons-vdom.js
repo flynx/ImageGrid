@@ -124,30 +124,30 @@ var VirtualDOMRibbonsPrototype = {
 			ribbons)
 		])
 	},
-	// XXX calc offset (x) -- the only thing left to be fully usable...
 	// XXX setup handlers (???)
 	// XXX current image marker (???)
 	makeRibbon: function(gid, count, state){
 		state = state || {}
 		var that = this
 		var ig = this.imagegrid
+		var current = ig.current
+		var size = this.state.tile_size = state.tile_size
+			|| this.state.tile_size 
+			|| ig.ribbons.getVisibleImageSize('max')
+		var scale = state.scale = state.scale 
+			|| ig.scale
 		var data = ig.data
 		var images = ig.images
+		var ribbons = ig.ribbons
 		var base = data.base == gid ? '.base' : ''
 		var imgs = []
 
 		this.state = this.state || {}
 		this.state.ribbons = this.state.ribbons || {}
 
-		var x = this.state.ribbons[gid] = 
-			(state.ribbons && state.ribbons[gid])
-				|| this.state.ribbons[gid]
-				// XXX calculate new offset
-				// 		...this will work only for cases where nothing 
-				// 		changes...
-				|| parseFloat(ig.ribbons.getRibbon(gid).transform('x'))
-
-		data.getImages(gid, count, 'total')
+		// build the images...
+		var gids = data.getImages(gid, count, 'total')
+		gids
 			.forEach(function(gid){
 				// image...
 				imgs.push(that.makeImage(gid))
@@ -156,6 +156,23 @@ var VirtualDOMRibbonsPrototype = {
 				that.makeImageMarks(gid)
 					.forEach(function(mark){ imgs.push(mark) })
 			})
+
+		// calculate offset...
+		// XXX this accounts for only one offset mode...
+		// 		...make this extensible...
+		// XXX this only aligns to .current...
+		size = ribbons.px2vmin(size / scale)
+		var ref = data.getImage(current, 'before', gids)
+		var offset = ref == current ? size / 2 
+			: ref != null ? size 
+			: 0
+		ref = ref || data.getImage(current, 'after', gids)
+		var l = gids.indexOf(ref)
+		var x = //this.state.ribbons[gid] = 
+			(state.ribbons && state.ribbons[gid])
+				|| this.state.ribbons[gid]
+				//|| parseFloat(ig.ribbons.getRibbon(gid).transform('x'))
+				|| (-(l * size) - offset)
 
 		return vdom.h('div.ribbon'+base, {
 			key: 'ribbon-'+gid,
@@ -233,7 +250,7 @@ var VirtualDOMRibbonsPrototype = {
 	},
 	makeImageMark: function(gid, type){
 		return vdom.h('div.mark.'+(type || ''), {
-			key: 'mark-'+gid,
+			key: 'mark-'+type+'-'+gid,
 			attributes: {
 				gid: JSON.stringify(gid)
 					.replace(/^"(.*)"$/g, '$1'),
