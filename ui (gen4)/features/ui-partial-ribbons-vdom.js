@@ -46,20 +46,7 @@ window.vdom = vdom
 
 //---------------------------------------------------------------------
 
-// attribute hooks...
-function GID(value){
-	this.value = JSON.stringify(value)
-		.replace(/^"(.*)"$/g, '$1') }
-GID.prototype.hook = function(elem, prop){
-    elem.setAttribute(prop, this.value) }
-
-function VALUE(value){
-	this.value = value || '' }
-VALUE.prototype.hook = function(elem, prop){
-    this.value != '' 
-		&& elem.setAttribute(prop, this.value) }
-
-
+// hooks...
 function PREVIEW(ig, gid, url){
 	this.ig = ig
 	this.gid = gid
@@ -77,16 +64,11 @@ var VirtualDOMRibbonsClassPrototype = {
 }
 
 var VirtualDOMRibbonsPrototype = {
-
-	dom: null,
-	vdom: null,
 	// XXX this is a circular ref -- I do not like it...
 	imagegrid: null,
 
-	// XXX ???
-	count: null,
-	scale: null,
-	target: null,
+	dom: null,
+	vdom: null,
 
 	// Format:
 	// 	{
@@ -102,17 +84,7 @@ var VirtualDOMRibbonsPrototype = {
 	// 	}
 	state: null,
 
-	// XXX the complete set of data this needs to render a state:
-	// 		Big stuff:
-	// 		- ribbon order, content (.data.ribbons and .data.ribbon_order)
-	// 		Small stuff:
-	// 		- current (.current)
-	// 		- vertical offset (.centerRibbon(..))
-	// 		- horizontal offset per ribbon (.centerImage(..))
-	// 		- marks (.__image_updaters and API)
-
 	// constructors...
-	// XXX should these be here or be stateless and in VirtualDOMRibbonsClassPrototype???
 	makeView: function(state){
 		state = state || {}
 		var that = this
@@ -152,8 +124,9 @@ var VirtualDOMRibbonsPrototype = {
 			ribbons)
 		])
 	},
-	// XXX calc offset (x)...
-	// XXX should we setup handlers here???
+	// XXX calc offset (x) -- the only thing left to be fully usable...
+	// XXX setup handlers (???)
+	// XXX current image marker (???)
 	makeRibbon: function(gid, count, state){
 		state = state || {}
 		var that = this
@@ -169,16 +142,19 @@ var VirtualDOMRibbonsPrototype = {
 		var x = this.state.ribbons[gid] = 
 			(state.ribbons && state.ribbons[gid])
 				|| this.state.ribbons[gid]
-				// XXX calculate new offset...
+				// XXX calculate new offset
+				// 		...this will work only for cases where nothing 
+				// 		changes...
 				|| parseFloat(ig.ribbons.getRibbon(gid).transform('x'))
 
 		data.getImages(gid, count, 'total')
 			.forEach(function(gid){
+				// image...
 				imgs.push(that.makeImage(gid))
 
+				// marks...
 				that.makeImageMarks(gid)
-					.forEach(function(mark){ 
-						imgs.push(mark) })
+					.forEach(function(mark){ imgs.push(mark) })
 			})
 
 		return vdom.h('div.ribbon'+base, {
@@ -196,7 +172,8 @@ var VirtualDOMRibbonsPrototype = {
 		},
 		imgs)
 	},
-	// NOTE: at this point this does not account for previews at all...
+	// XXX setup image handlers...
+	// 		...or move them up to viewer or some other spot (viewer?)...
 	makeImage: function(gid, size){
 		var ig = this.imagegrid
 		size = this.state.tile_size = size 
@@ -238,7 +215,7 @@ var VirtualDOMRibbonsPrototype = {
 			}
 		})
 	},
-	// XXX get marks...
+	// XXX STUB: make marks handling more extensible... (???)
 	makeImageMarks: function(gid){
 		var that = this
 		var marks = []
@@ -263,17 +240,15 @@ var VirtualDOMRibbonsPrototype = {
 			},
 		})
 	},
+
 	// XXX add ability to hook in things like current image marker...
 
-
-	// XXX update .state...
-	update: function(){
-
-	},
 	// NOTE: virtual-dom architecture is designed around a fast-render-on-demand
 	// 		concept, so we build the state on demand...
 	sync: function(){
-		var dom = this.dom = this.dom || this.imagegrid.ribbons.getRibbonSet()
+		var dom = this.dom = this.dom 
+			// get/create the ribbon-set...
+			|| this.imagegrid.ribbons.getRibbonSet(true)
 
 		// build initial state...
 		if(this.vdom == null){
@@ -292,6 +267,7 @@ var VirtualDOMRibbonsPrototype = {
 		return this
 	},
 	
+
 	__init__: function(imagegrid){
 		this.imagegrid = imagegrid
 	},
