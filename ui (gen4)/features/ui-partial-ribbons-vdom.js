@@ -77,6 +77,7 @@ var VirtualDOMRibbonsPrototype = {
 	// 		scale: <scale>,
 	//
 	// 		top: <offset>,
+	//
 	// 		ribbons: {
 	// 			<gid>: <offset>,
 	// 			...
@@ -85,6 +86,7 @@ var VirtualDOMRibbonsPrototype = {
 	state: null,
 
 	// constructors...
+	// XXX calculate top...
 	makeView: function(state){
 		state = state || {}
 		var that = this
@@ -99,6 +101,7 @@ var VirtualDOMRibbonsPrototype = {
 			|| ig.scale
 		var top = state.top = state.top 
 			|| this.state.top 
+			// XXX do a real calculation...
 			|| ig.ribbons.getRibbonLocator().transform('y') 
 
 		var data = ig.data
@@ -109,13 +112,13 @@ var VirtualDOMRibbonsPrototype = {
 				return that.makeRibbon(gid, count, state) })
 
 		return vdom.h('div.ribbon-set', {
-			key: 'ribbon-set',
+			//key: 'ribbon-set',
 			style: {
 				transform: 'scale('+ s +', '+ s +')',
 			}
 		}, [
 			vdom.h('div.ribbon-locator', {
-				key: 'ribbon-locator',
+				//key: 'ribbon-locator',
 				style: {
 					// XXX should this be in vh???
 					transform: 'translate3d(0px, '+ top +'px, 0px)',
@@ -126,6 +129,7 @@ var VirtualDOMRibbonsPrototype = {
 	},
 	// XXX setup handlers (???)
 	// XXX current image marker (???)
+	// XXX STUB: make aligning more extensible... (???)
 	makeRibbon: function(gid, count, state){
 		state = state || {}
 		var that = this
@@ -143,14 +147,19 @@ var VirtualDOMRibbonsPrototype = {
 		var imgs = []
 
 		this.state = this.state || {}
-		this.state.ribbons = this.state.ribbons || {}
+		//this.state.ribbons = this.state.ribbons || {}
+		
+		// XXX
+		var size = this.state.tile_size = 
+			this.state.tile_size 
+				|| ig.ribbons.getVisibleImageSize('max')
 
 		// build the images...
 		var gids = data.getImages(gid, count, 'total')
 		gids
 			.forEach(function(gid){
 				// image...
-				imgs.push(that.makeImage(gid))
+				imgs.push(that.makeImage(gid, size))
 
 				// marks...
 				that.makeImageMarks(gid)
@@ -168,14 +177,10 @@ var VirtualDOMRibbonsPrototype = {
 			: 0
 		ref = ref || data.getImage(current, 'after', gids)
 		var l = gids.indexOf(ref)
-		var x = //this.state.ribbons[gid] = 
-			(state.ribbons && state.ribbons[gid])
-				|| this.state.ribbons[gid]
-				//|| parseFloat(ig.ribbons.getRibbon(gid).transform('x'))
-				|| (-(l * size) - offset)
+		var x = (-(l * size) - offset)
 
 		return vdom.h('div.ribbon'+base, {
-			key: 'ribbon-'+gid,
+			//key: 'ribbon-'+gid,
 
 			// XXX events, hammer, ...???
 
@@ -191,10 +196,12 @@ var VirtualDOMRibbonsPrototype = {
 	},
 	// XXX setup image handlers...
 	// 		...or move them up to viewer or some other spot (viewer?)...
+	// XXX update image previews...
 	makeImage: function(gid, size){
 		var ig = this.imagegrid
-		size = this.state.tile_size = size 
-			|| this.state.tile_size 
+		//size = this.state.tile_size = size 
+		size = size 
+			|| this.state.tile_size
 			|| ig.ribbons.getVisibleImageSize('max')
 		var data = this.imagegrid.data
 		var images = this.imagegrid.images || {}
@@ -216,7 +223,7 @@ var VirtualDOMRibbonsPrototype = {
 		var url = ig.images.getBestPreview(gid, size, image, true).url
 
 		return vdom.h('div.image'+current, {
-			key: 'image-'+gid,
+			//key: 'image-'+gid,
 
 			attributes: {
 				gid: JSON.stringify(gid)
@@ -250,7 +257,7 @@ var VirtualDOMRibbonsPrototype = {
 	},
 	makeImageMark: function(gid, type){
 		return vdom.h('div.mark.'+(type || ''), {
-			key: 'mark-'+type+'-'+gid,
+			//key: 'mark-'+type+'-'+gid,
 			attributes: {
 				gid: JSON.stringify(gid)
 					.replace(/^"(.*)"$/g, '$1'),
@@ -259,31 +266,52 @@ var VirtualDOMRibbonsPrototype = {
 	},
 
 	// XXX add ability to hook in things like current image marker...
+	
+	clear: function(){
+		delete this.state
+		delete this.dom
+		delete this.vdom
+		return this
+	},
 
 	// NOTE: virtual-dom architecture is designed around a fast-render-on-demand
 	// 		concept, so we build the state on demand...
-	sync: function(){
+	sync: function(target, size){
 		var dom = this.dom = this.dom 
 			// get/create the ribbon-set...
 			|| this.imagegrid.ribbons.getRibbonSet(true)
+		var state = this.state ? Object.create(this.state) : {}
+		target && (state.target = target)
+		size && (state.count = size)
 
 		// build initial state...
 		if(this.vdom == null){
-			var n = this.vdom = this.makeView(this.state || {})
+			var n = this.vdom = this.makeView(state)
 			var v = vdom.create(n)
 			dom.replaceWith(v)
 			this.dom = v
 
 		// patch state...
 		} else {
-			var n = this.makeView(this.state || {})
-			vdom.patch(dom, vdom.diff(this.vdom, n))
+			var n = this.makeView(state)
+			var diff = vdom.diff(this.vdom, n)
+			vdom.patch(dom, diff)
 			this.vdom = n
 		}
 
 		return this
 	},
-	
+	// XXX should this do a full or partial .clear()???
+	reset: function(){
+		delete this.dom
+		delete this.vdom
+		if(this.state){ 
+			delete this.state.tile_size 
+		}
+
+		return this
+			.sync()
+	},
 
 	__init__: function(imagegrid){
 		this.imagegrid = imagegrid
@@ -330,13 +358,6 @@ var PartialRibbonsActions = actions.Actions({
 
 
 	// XXX
-	centerImage: [
-		function(target, align, offset, scale){
-		}],
-	centerRibbon: [
-		function(target){
-		}],
-
 	updateRibbon: ['- Interface/Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
@@ -350,104 +371,15 @@ var PartialRibbonsActions = actions.Actions({
 			size = (size 
 				|| this.config['ribbon-size-screens'] 
 				|| 9) * w
-			threshold = threshold == 0 ? threshold
-				: (threshold 
-					|| this.config['ribbon-resize-threshold'] 
-					|| 2)
-			var update_threshold = (this.config['ribbon-update-threshold'] || 2)  * w
-			var data = this.data
-			var ribbons = this.ribbons
 
-			var t = Date.now()
-			this.__last_ribbon_update = this.__last_ribbon_update || t
-			var timeout = this.config['ribbons-in-place-update-timeout']
-			var	update_timeout = this.config['ribbon-update-timeout']
+			size = 5
 
-			// localize transition prevention... 
-			// NOTE: we can't get ribbon via target directly here as
-			// 		the target might not be loaded...
-			var r_gid = data.getRibbon(target)
-			if(r_gid == null){
-				return
+			// XXX add threshold test -- we do not need this on every action...
+			// XXX this messes up align when exiting single image view...
+			// XXX this does not work out of the box...
+			return function(){
+				this.virtualdom.sync(target, size)
 			}
-			// NOTE: for the initial load this may be empty...
-			var r = ribbons.getRibbon(r_gid)
-
-			// next/prev loaded... 
-			var img = this.ribbons.getImage(target)
-			var nl = img.nextAll('.image:not(.clone)').length
-			var pl = img.prevAll('.image:not(.clone)').length
-			var loaded = nl + pl + 1
-
-			// next/prev available...
-			// NOTE: we do not include target in counts...
-			var gids = this.data.getImages(target, size, 'total')
-			var na = gids.slice(gids.indexOf(target)+1).length
-			var pa = gids.slice(0, gids.indexOf(target)).length
-
-			// full resize...
-			if(threshold == 0
-					// ribbon not loaded...
-					|| img.length == 0
-					// ribbon shorter than we expect...
-					|| (loaded < size && na + pa > loaded)
-					// ribbon too long...
-					|| loaded > size * threshold
-					// passed hard threshold -- too close to edge...
-					|| (nl < w && na > nl) || (pl < w && pa > pl)){
-				//console.log('RESIZE (sync)')
-				this.resizeRibbon(target, size)
-
-			// more complex cases...
-			// passed threshold on the right...
-			} else if((nl < update_threshold && na > nl) 
-					// passed threshold on the left...
-					|| (pl < update_threshold && pa > pl) 
-					// loaded more than we need by threshold...
-					|| nl + pl + 1 > size + update_threshold){
-				// resize...
-				if(this.config['ribbons-in-place-update-mode'] == 'resize'
-						// no ribbon loaded...
-						|| r.length == 0 
-						// only if we are going slow...
-						|| (timeout != null 
-							&& (t - this.__last_ribbon_update > timeout))
-						// full screen...
-						|| (this.toggleSingleImage 
-							&& this.toggleSingleImage('?') == 'on')){
-					return function(){
-						var that = this
-						// sync update...
-						if(update_timeout == null){
-							//console.log('RESIZE (post)', t-this.__last_ribbon_update)
-							this.resizeRibbon(target, size)
-
-						// async update...
-						} else {
-							this.__update_timeout
-								&& clearTimeout(this.__update_timeout)
-							this.__update_timeout = setTimeout(function(){ 
-								//console.log('RESIZE (timeout)', t-this.__last_ribbon_update)
-								delete that.__update_timeout
-								that.resizeRibbon(target, size) 
-							}, update_timeout)
-						}
-					}
-
-				// in-place update...
-				} else {
-					//console.log('UPDATE', t - this.__last_ribbon_update)
-					var c = gids.indexOf(data.getImage('current', r_gid))
-					var t = gids.indexOf(target)
-
-					ribbons
-						.preventTransitions(r)
-						.updateRibbonInPlace(gids, r_gid, target)
-						.restoreTransitions(r, true)
-				}
-			}
-
-			this.__last_ribbon_update = t 
 		}],
 })
 
@@ -472,8 +404,14 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 	handlers: [
 		['start',
 			function(){
-				console.warn(
-					'EXPERIMENTAL: starting virtual-dom version of partial ribbons...') }],
+				console.warn('EXPERIMENTAL: '
+					+'starting virtual-dom version of partial ribbons...') }],
+
+		['clear',
+			function(){ this.virtualdom.clear() }],
+		['fitImage',
+			function(){ delete this.virtualdom.state.tile_size }],
+
 		['focusImage.pre centerImage.pre', 
 			function(target, list){
 				// NOTE: we have to do this as we are called BEFORE the 
@@ -482,36 +420,6 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 				target = list != null ? target = this.data.getImage(target, list) : target
 
 				this.updateRibbon(target)
-			}],
-		['resizing.post',
-			function(_, unit, size){
-				// keep constant size in single image...
-				if(this.toggleSingleImage && this.toggleSingleImage('?') == 'on'){
-					this.updateRibbon(
-						'current', 
-						this.config['ribbons-resize-single-image'] || 13)
-
-				} else if(unit == 'scale'){
-					this.updateRibbon('current', this.screenwidth / size || 1)
-
-				} else if(unit == 'screenwidth'){
-					this.updateRibbon('current', size || 1)
-
-				} else if(unit == 'screenheight'){
-					size = size || 1
-
-					// convert target height in ribbons to width in images...
-					// NOTE: this does not account for compensation that 
-					// 		.updateRibbon(..) makes for fitting whole image
-					// 		counts, this is a small enough error so as not
-					// 		to waste time on...
-					var s = this.ribbons.scale()
-					var h = this.ribbons.getScreenHeightRibbons()
-					var w = this.ribbons.getScreenWidthImages()
-					var nw = w / (h/size)
-
-					this.updateRibbon('current', nw)
-				}
 			}],
 	],
 })

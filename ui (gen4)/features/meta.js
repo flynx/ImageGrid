@@ -64,9 +64,13 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'ui-single-image',
 	//'ui-partial-ribbons',
-	// XXX this still has problems...
-	//'ui-partial-ribbons-2',
+	'ui-partial-ribbons-2',
+	// XXX EXPERIMENTAL...
 	'ui-partial-ribbons-vdom',
+		'-ui-partial-ribbons-2',
+		// XXX this conflicts with ui-partial-ribbons-vdom...
+		'-ui-current-image-indicator',
+		//*/
 
 	'marks',
 	'ui-range',
@@ -93,6 +97,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 		// NOTE: only one of these can be set...
 		'ui-current-image-indicator-hide-on-fast-screen-nav',
 		//'ui-current-image-indicator-hide-on-screen-nav',
+	//*/
 	//'ui-base-ribbon-indicator',
 	'ui-passive-base-ribbon-indicator',
 	'ui-status-bar',
