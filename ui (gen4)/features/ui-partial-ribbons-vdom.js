@@ -109,7 +109,7 @@ var VirtualDOMRibbonsPrototype = {
 
 		var ribbons = data.ribbon_order
 			.map(function(gid){
-				return that.makeRibbon(gid, count, state) })
+				return that.makeRibbon(gid, target, count, state) })
 
 		return vdom.h('div.ribbon-set', {
 			//key: 'ribbon-set',
@@ -130,11 +130,12 @@ var VirtualDOMRibbonsPrototype = {
 	// XXX setup handlers (???)
 	// XXX current image marker (???)
 	// XXX STUB: make aligning more extensible... (???)
-	makeRibbon: function(gid, count, state){
+	makeRibbon: function(gid, target, count, state){
 		state = state || {}
 		var that = this
 		var ig = this.imagegrid
 		var current = ig.current
+		target = target || state.target || current
 		var size = this.state.tile_size = state.tile_size
 			|| this.state.tile_size 
 			|| ig.ribbons.getVisibleImageSize('max')
@@ -154,8 +155,19 @@ var VirtualDOMRibbonsPrototype = {
 			this.state.tile_size 
 				|| ig.ribbons.getVisibleImageSize('max')
 
+		// calculate offset...
+		// XXX this accounts for only one offset mode...
+		// 		...make this extensible...
+		var vsize = ribbons.px2vmin(size / scale)
+		var ref = data.getImage(target, 'before', gid)
+		var offset = ref == target ? vsize / 2 
+			: ref != null ? vsize 
+			: 0
+		ref = ref || data.getImage(target, 'after', gid)
+
 		// build the images...
-		var gids = data.getImages(gid, count, 'total')
+		//var gids = data.getImages(gid, count, 'total')
+		var gids = data.getImages(ref, count, 'total')
 		gids
 			.forEach(function(gid){
 				// image...
@@ -166,18 +178,9 @@ var VirtualDOMRibbonsPrototype = {
 					.forEach(function(mark){ imgs.push(mark) })
 			})
 
-		// calculate offset...
-		// XXX this accounts for only one offset mode...
-		// 		...make this extensible...
-		// XXX this only aligns to .current...
-		size = ribbons.px2vmin(size / scale)
-		var ref = data.getImage(current, 'before', gids)
-		var offset = ref == current ? size / 2 
-			: ref != null ? size 
-			: 0
-		ref = ref || data.getImage(current, 'after', gids)
+		// continue offset calculation...
 		var l = gids.indexOf(ref)
-		var x = (-(l * size) - offset)
+		var x = (-(l * vsize) - offset)
 
 		return vdom.h('div.ribbon'+base, {
 			//key: 'ribbon-'+gid,
@@ -280,6 +283,7 @@ var VirtualDOMRibbonsPrototype = {
 		var dom = this.dom = this.dom 
 			// get/create the ribbon-set...
 			|| this.imagegrid.ribbons.getRibbonSet(true)
+
 		var state = this.state ? Object.create(this.state) : {}
 		target && (state.target = target)
 		size && (state.count = size)
@@ -377,9 +381,8 @@ var PartialRibbonsActions = actions.Actions({
 			// XXX add threshold test -- we do not need this on every action...
 			// XXX this messes up align when exiting single image view...
 			// XXX this does not work out of the box...
-			return function(){
-				this.virtualdom.sync(target, size)
-			}
+			//this.virtualdom.sync(target, size)
+			this.virtualdom.sync(this.current, size)
 		}],
 })
 
@@ -409,18 +412,11 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 
 		['clear',
 			function(){ this.virtualdom.clear() }],
-		['fitImage',
+		['fitImage toggleSingleImage',
 			function(){ delete this.virtualdom.state.tile_size }],
 
-		['focusImage.pre centerImage.pre', 
-			function(target, list){
-				// NOTE: we have to do this as we are called BEFORE the 
-				// 		actual focus change happens...
-				// XXX is there a better way to do this???
-				target = list != null ? target = this.data.getImage(target, list) : target
-
-				this.updateRibbon(target)
-			}],
+		['focusImage.post', 
+			function(_, target){ this.updateRibbon(target) }],
 	],
 })
 
