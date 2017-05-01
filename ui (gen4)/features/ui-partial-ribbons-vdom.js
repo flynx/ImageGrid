@@ -57,6 +57,13 @@ PREVIEW.prototype.hook = function(elem, prop){
 }
 
 
+function FORCE(value){
+	this.value = value
+}
+FORCE.prototype.hook = function(elem, prop){
+	elem.style[prop] = this.value
+}
+
 //---------------------------------------------------------------------
 
 var VirtualDOMRibbonsClassPrototype = {
@@ -191,9 +198,12 @@ var VirtualDOMRibbonsPrototype = {
 				gid: JSON.stringify(gid)
 					.replace(/^"(.*)"$/g, '$1'),
 			},
+			/*/ XXX
 			style: {
+				// XXX calling .centerImage(..) prevents this from updating...
 				transform: 'translate3d('+ x +'vmin, 0px, 0px)',
 			},
+			//*/
 		},
 		imgs)
 	},
@@ -381,8 +391,10 @@ var PartialRibbonsActions = actions.Actions({
 			// XXX add threshold test -- we do not need this on every action...
 			// XXX this messes up align when exiting single image view...
 			// XXX this does not work out of the box...
-			//this.virtualdom.sync(target, size)
-			this.virtualdom.sync(this.current, size)
+			//this.virtualdom.sync(this.current, size)
+
+			this.virtualdom.sync(target, size)
+			this.centerViewer(target)
 		}],
 })
 
@@ -415,8 +427,25 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 		['fitImage toggleSingleImage',
 			function(){ delete this.virtualdom.state.tile_size }],
 
-		['focusImage.post', 
-			function(_, target){ this.updateRibbon(target) }],
+		['focusImage.pre', 
+			function(target){ 
+				var img = this.ribbons.getImage(target)
+
+				// in-place update...
+				// XXX this is very rigid, need to make this more 
+				// 		flexible and not hinder fast nav...
+				if(img.length > 0){
+					setTimeout((function(){
+						this.ribbons.preventTransitions()
+						this.updateRibbon(this.current) 
+						this.ribbons.restoreTransitions()
+					}).bind(this), 200)
+
+				// long-jump...
+				} else {
+					this.updateRibbon(target) 
+				}
+			}],
 	],
 })
 
