@@ -345,6 +345,9 @@ object.makeConstructor('VirtualDOMRibbons',
 var PartialRibbonsActions = actions.Actions({
 	config: {
 		// Number of screen widths to load...
+		//
+		// NOTE: for all jump animations to run this must be at least 3
+		// 		screen widths...
 		'ribbon-size-screens': 7,
 
 		// Amount of screen widths to keep around the current image...
@@ -389,9 +392,6 @@ var PartialRibbonsActions = actions.Actions({
 			size = 5
 
 			// XXX add threshold test -- we do not need this on every action...
-			// XXX this messes up align when exiting single image view...
-			// XXX this does not work out of the box...
-			//this.virtualdom.sync(this.current, size)
 
 			this.virtualdom.sync(target, size)
 			this.centerViewer(target)
