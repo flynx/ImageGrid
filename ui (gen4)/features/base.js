@@ -57,7 +57,6 @@ var undoShift = function(undo){
 var BaseActions = 
 module.BaseActions = 
 actions.Actions({
-
 	config: {
 		// XXX should this be here???
 		version: 'gen4',
@@ -857,20 +856,20 @@ actions.Actions({
 
 
 var Base =
-module.Base = core.ImageGridFeatures.Feature({
+module.Base = 
+core.ImageGridFeatures.Feature({
 	title: 'ImageGrid base',
 
 	tag: 'base',
 	depends: [
 		'changes',
 	],
-	/*
 	suggested: [
-		'tags',
-		'sort',
-		'tasks',
+		'base-edit',
+		//'tags',
+		//'sort',
+		//'tasks',
 	],
-	//*/
 
 	actions: BaseActions,
 
@@ -992,6 +991,32 @@ module.Base = core.ImageGridFeatures.Feature({
 			}],
 	],
 })
+
+
+//---------------------------------------------------------------------
+// Edit...
+var BaseEditActions = 
+module.BaseEditActions = 
+actions.Actions({
+	config: {
+	},
+
+	// XXX
+})
+
+var BaseEdit =
+module.BaseEdit = 
+core.ImageGridFeatures.Feature({
+	title: 'ImageGrid base editor',
+
+	tag: 'base-edit',
+	depends: [
+		'base',
+	],
+
+	actions: BaseEditActions,
+})
+
 
 
 //---------------------------------------------------------------------

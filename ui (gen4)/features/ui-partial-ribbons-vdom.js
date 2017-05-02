@@ -65,6 +65,11 @@ FORCE.prototype.hook = function(elem, prop){
 }
 
 //---------------------------------------------------------------------
+//
+//	- take care of DOM construction and update...
+//	- alignment is done via .centerRibbon(..) / .centerImage(..)
+//	- preview updates (XXX)
+//		- update onload (a-la .ribbons._loadImagePreviewURL(..))
 
 var VirtualDOMRibbonsClassPrototype = {
 	// XXX ???
@@ -341,6 +346,17 @@ object.makeConstructor('VirtualDOMRibbons',
 
 
 /*********************************************************************/
+// XXX TODO:
+// 		- shifting images
+// 			- use .virtualdom.sync() + shadow animation instead of .ribbons.*
+// 			- would be nice to make this an alternative feature...
+// 				...split out ribbon editing into a feature and do two 
+// 				implementations, the original and virtualdom...
+// 		- current image indicator...
+// 		- custom align: .alignByOrder(..) / .alignByFirst(..) / ..
+// 		- ribbon rotation: .ribbonRotation(..) / .rotateRibbonCW(..) / ..
+// 		- cropping???
+// 		
 
 var PartialRibbonsActions = actions.Actions({
 	config: {
@@ -372,9 +388,8 @@ var PartialRibbonsActions = actions.Actions({
 				|| this.config['ribbon-size-screens'] 
 				|| 9) * w
 
+			// XXX DEBUG
 			size = 5
-
-			// XXX add threshold test -- we do not need this on every action...
 
 			this.virtualdom.sync(target, size)
 			this.centerViewer(target)

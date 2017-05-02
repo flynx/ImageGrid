@@ -710,12 +710,6 @@ module.ViewerActions = actions.Actions({
 				this.focusImage(t, r)
 			}
 		}],
-	setBaseRibbon: [
-		function(target){
-			var r = this.data.getRibbon(target)
-			r =  r == null ? this.ribbons.getRibbon(target) : r
-			this.ribbons.setBaseRibbon(r)
-		}],
 
 	// NOTE: these prioritize whole images, i.e. each image will at least
 	// 		once be fully shown.
@@ -917,58 +911,6 @@ module.ViewerActions = actions.Actions({
 	fitScreen: ['Zoom/Fit image to screen',
 		function(){ this.screenfit = 1 }],
 
-	shiftImageLeft: [
-		function(target){ this.ribbons.placeImage(target, -1) }],
-	shiftImageRight: [
-		function(target){ this.ribbons.placeImage(target, 1) }],
-
-	/*
-	// XXX how should these animate???
-	travelImageUp: [
-		function(){
-		}],
-	travelImageDown: [
-		function(){
-		}],
-	*/
-
-	shiftRibbonUp: [
-		function(target){
-			target = this.ribbons.getRibbon(target)
-			var i = this.ribbons.getRibbonOrder(target)
-			if(i > 0){
-				this.ribbons.placeRibbon(target, i-1)
-			}
-		}],
-	shiftRibbonDown: [
-		function(target){
-			target = this.ribbons.getRibbon(target)
-			var i = this.ribbons.getRibbonOrder(target)
-			if(i < this.data.ribbon_order.length-1){
-				this.ribbons.placeRibbon(target, i+1)
-			}
-		}],
-
-	reverseImages: [ reloadAfter() ],
-	reverseRibbons: [ reloadAfter() ],
-	sortImages: [ reloadAfter(true) ],
-
-	// basic image editing...
-	//
-	// XXX should we have .rotate(..) and .flip(..) generic actions???
-	rotateCW: [ 
-		function(target){ this.ribbons.rotateCW(target) }],
-	rotateCCW: [ 
-		function(target){ this.ribbons.rotateCCW(target) }],
-	flipVertical: [ 
-		function(target){ this.ribbons.flipVertical(target, 'view') }],
-	flipHorizontal: [
-		function(target){ this.ribbons.flipHorizontal(target, 'view') }],
-
-	// XXX this needs an interactive mode -- mark A, mark B, align between
-	alignToRibbon: [ reloadAfter(true) ],
-
-
 	// ribbon rotation...
 	//
 	ribbonRotation: ['- Interface|Ribbon/', 
@@ -1001,42 +943,6 @@ module.ViewerActions = actions.Actions({
 		{browseMode: function(){
 			return this.ribbonRotation() == 0 && 'disabled' }},
 		function(){ this.ribbonRotation(0) }],
-
-
-	// tags...
-	tag: [ 
-		function(tags, gids){ 
-			gids = gids != null && gids.constructor !== Array ? [gids] : gids
-			return function(){
-				//this.ribbons.updateImage(gids) 
-				this.refresh(gids)
-			}
-		}],
-	untag: [
-		function(tags, gids){ 
-			gids = gids != null && gids.constructor !== Array ? [gids] : gids
-			return function(){
-				//this.ribbons.updateImage(gids) 
-				this.refresh(gids)
-			}
-		}],
-
-
-	// group stuff...
-	group: [ reloadAfter(true) ],
-	ungroup: [ reloadAfter(true) ],
-	groupTo: [ reloadAfter(true) ],
-	groupMarked: [ reloadAfter(true) ],
-	expandGroup: [ reloadAfter(true) ],
-	collapseGroup: [ reloadAfter(true) ],
-
-
-	// XXX BUG? reloadAfter() here does not remove some images...
-	crop: [ reloadAfter(true) ],
-	// XXX BUG? reloadAfter() produces an align error...
-	uncrop: [ reloadAfter(true) ],
-	// XXX might be a good idea to do this in a new viewer in an overlay...
-	cropGroup: [ reloadAfter() ],
 
 
 	// XXX experimental: not sure if this is the right way to go...
@@ -1074,6 +980,10 @@ module.Viewer = core.ImageGridFeatures.Feature({
 		'base',
 		'workspace',
 		'introspection',
+	],
+	suggested: [
+		// XXX is this the right way???
+		'ui-edit',
 	],
 
 	actions: ViewerActions,
@@ -1149,6 +1059,127 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					: 'removeClass']('crop-mode')
 			}],
 	],
+})
+
+
+//---------------------------------------------------------------------
+
+// XXX Q: should this be further split into groups and tags???
+var ViewerEditActions = 
+module.ViewerEditActions = 
+actions.Actions({
+	config: {
+	},
+
+	setBaseRibbon: [
+		function(target){
+			var r = this.data.getRibbon(target)
+			r =  r == null ? this.ribbons.getRibbon(target) : r
+			this.ribbons.setBaseRibbon(r)
+		}],
+
+	shiftImageLeft: [
+		function(target){ this.ribbons.placeImage(target, -1) }],
+	shiftImageRight: [
+		function(target){ this.ribbons.placeImage(target, 1) }],
+
+	/*
+	// XXX how should these animate???
+	travelImageUp: [
+		function(){
+		}],
+	travelImageDown: [
+		function(){
+		}],
+	*/
+
+	shiftRibbonUp: [
+		function(target){
+			target = this.ribbons.getRibbon(target)
+			var i = this.ribbons.getRibbonOrder(target)
+			if(i > 0){
+				this.ribbons.placeRibbon(target, i-1)
+			}
+		}],
+	shiftRibbonDown: [
+		function(target){
+			target = this.ribbons.getRibbon(target)
+			var i = this.ribbons.getRibbonOrder(target)
+			if(i < this.data.ribbon_order.length-1){
+				this.ribbons.placeRibbon(target, i+1)
+			}
+		}],
+
+	reverseImages: [ reloadAfter() ],
+	reverseRibbons: [ reloadAfter() ],
+	sortImages: [ reloadAfter(true) ],
+
+	// basic image editing...
+	//
+	// XXX should we have .rotate(..) and .flip(..) generic actions???
+	rotateCW: [ 
+		function(target){ this.ribbons.rotateCW(target) }],
+	rotateCCW: [ 
+		function(target){ this.ribbons.rotateCCW(target) }],
+	flipVertical: [ 
+		function(target){ this.ribbons.flipVertical(target, 'view') }],
+	flipHorizontal: [
+		function(target){ this.ribbons.flipHorizontal(target, 'view') }],
+
+	// XXX this needs an interactive mode -- mark A, mark B, align between
+	alignToRibbon: [ reloadAfter(true) ],
+
+
+	// tags...
+	tag: [ 
+		function(tags, gids){ 
+			gids = gids != null && gids.constructor !== Array ? [gids] : gids
+			return function(){
+				//this.ribbons.updateImage(gids) 
+				this.refresh(gids)
+			}
+		}],
+	untag: [
+		function(tags, gids){ 
+			gids = gids != null && gids.constructor !== Array ? [gids] : gids
+			return function(){
+				//this.ribbons.updateImage(gids) 
+				this.refresh(gids)
+			}
+		}],
+
+
+	// group stuff...
+	group: [ reloadAfter(true) ],
+	ungroup: [ reloadAfter(true) ],
+	groupTo: [ reloadAfter(true) ],
+	groupMarked: [ reloadAfter(true) ],
+	expandGroup: [ reloadAfter(true) ],
+	collapseGroup: [ reloadAfter(true) ],
+
+
+	// XXX BUG? reloadAfter() here does not remove some images...
+	crop: [ reloadAfter(true) ],
+	// XXX BUG? reloadAfter() produces an align error...
+	uncrop: [ reloadAfter(true) ],
+	// XXX might be a good idea to do this in a new viewer in an overlay...
+	cropGroup: [ reloadAfter() ],
+})
+
+var ViewerEdit =
+module.ViewerEdit = 
+core.ImageGridFeatures.Feature({
+	title: 'Graphical User Interface',
+
+	tag: 'ui-edit',
+
+	depends: [
+		'base-edit',
+		'ui',
+	],
+
+	actions: ViewerEditActions,
+
 })
 
 
