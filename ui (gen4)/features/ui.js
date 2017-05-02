@@ -1041,28 +1041,12 @@ module.Viewer = core.ImageGridFeatures.Feature({
 		['resizingDone',
 			function(){ this.scale = this.scale }],
 		//*/
-
-		[[
-			'shiftImageTo.pre',
-			'shiftImageUp.pre',
-			'shiftImageDown.pre',
-		], 
-			function(target){ 
-				return updateImagePosition(this, target) }],
-
-
-		// manage the .crop-mode css class...
-		['crop uncrop',
-			function(){
-				this.ribbons.viewer[this.cropped ? 
-						'addClass' 
-					: 'removeClass']('crop-mode')
-			}],
 	],
 })
 
 
 //---------------------------------------------------------------------
+// Viewer edit actions...
 
 // XXX Q: should this be further split into groups and tags???
 var ViewerEditActions = 
@@ -1175,11 +1159,33 @@ core.ImageGridFeatures.Feature({
 
 	depends: [
 		'base-edit',
+		'tags',
+		'sort',
+		'crop',
+		'image-group',
 		'ui',
 	],
 
 	actions: ViewerEditActions,
 
+	handlers: [
+		[[
+			'shiftImageTo.pre',
+			'shiftImageUp.pre',
+			'shiftImageDown.pre',
+		], 
+			function(target){ 
+				return updateImagePosition(this, target) }],
+
+
+		// manage the .crop-mode css class...
+		['crop uncrop',
+			function(){
+				this.ribbons.viewer[this.cropped ? 
+					'addClass' 
+					: 'removeClass']('crop-mode')
+			}],
+	],
 })
 
 

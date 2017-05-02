@@ -993,8 +993,10 @@ core.ImageGridFeatures.Feature({
 })
 
 
+
 //---------------------------------------------------------------------
 // Edit...
+
 var BaseEditActions = 
 module.BaseEditActions = 
 actions.Actions({
