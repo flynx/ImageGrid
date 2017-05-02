@@ -350,24 +350,7 @@ var PartialRibbonsActions = actions.Actions({
 		// 		screen widths...
 		'ribbon-size-screens': 7,
 
-		// Amount of screen widths to keep around the current image...
-		'ribbon-update-threshold': 1.2,
 
-		// Oversize multiplier limit when we resize the ribbon down...
-		'ribbon-resize-threshold': 2,
-
-		// Sets size of ribbons in single image mode...
-		'ribbons-resize-single-image': 21,
-
-		// can be:
-		// 	'hybrid'
-		// 	'resize'
-		'ribbons-in-place-update-mode': 'resize',
-
-		'ribbons-in-place-update-timeout': 100,
-
-		// XXX
-		'ribbon-update-timeout': 120,
 	},
 
 	get virtualdom(){
@@ -427,6 +410,7 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 		['fitImage toggleSingleImage',
 			function(){ delete this.virtualdom.state.tile_size }],
 
+		// XXX account for fast navigation...
 		['focusImage.pre', 
 			function(target){ 
 				var img = this.ribbons.getImage(target)
