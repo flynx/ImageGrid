@@ -179,11 +179,11 @@ var CurrentImageIndicatorActions = actions.Actions({
 			// NOTE: cur may be unloaded...
 			var ribbon = this.ribbons.getRibbon(cur.length > 0 ? target : this.current_ribbon)
 
-			var marker = ribbon.find('.current-marker')
+			var marker = ribbon_set.find('.current-marker')
 
 			// remove marker if current image is not loaded...
 			if(cur.length == 0){
-				marker.remove()
+				marker.hide()
 				return
 			}
 
@@ -191,41 +191,6 @@ var CurrentImageIndicatorActions = actions.Actions({
 			var border = this.config['current-image-border']
 			var min_border = this.config['current-image-min-border']
 			var border_timeout = this.config['current-image-border-timeout']
-			var fadein = this.config['current-image-indicator-fadein']
-
-			// no marker found -- either in different ribbon or not created yet...
-			if(marker.length == 0){
-				// get marker globally...
-				marker = this.ribbons.viewer.find('.current-marker')
-
-				// no marker exists -- create a marker...
-				if(marker.length == 0){
-					var marker = $('<div/>')
-						.addClass('current-marker ui-current-image-indicator')
-						.css({
-							opacity: '0',
-							// NOTE: these are not used for positioning
-							// 		but are needed for correct absolute
-							// 		placement...
-							top: '0px',
-							left: '0px',
-						})
-						.appendTo(ribbon)
-						.animate({
-							'opacity': 1
-						}, fadein)
-					this.ribbons.dom.setOffset(marker, 0, 0)
-
-				// add marker to current ribbon...
-				} else {
-					css.display = ''
-					marker
-						// NOTE: this will prevent animating the marker 
-						// 		in odd ways when switching ribbons...
-						.css({ display: 'none' })
-						.appendTo(ribbon)
-				}
-			}
 
 			var w = cur.outerWidth(true)
 			var h = cur.outerHeight(true)
@@ -262,16 +227,6 @@ var CurrentImageIndicatorActions = actions.Actions({
 				}
 			}
 
-			/* // set absolute offset...
-			this.ribbons.dom.setOffset(marker, 
-					cur[0].offsetLeft - (parseFloat(cur[0].style.marginLeft) || 0), 
-					0)
-			*/
-			// set relative offset...
-			var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
-			var x = ((cur[0].offsetLeft - (parseFloat(cur[0].style.marginLeft) || 0))/W)*100 + 'vmin'
-			marker.transform({x: x, y: 0, z: 0})
-
 			marker.css(css)
 		}],
 })
@@ -290,59 +245,23 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 	actions: CurrentImageIndicatorActions,
 
 	handlers: [
+		['load', 
+			function(){
+				var fadein = this.config['current-image-indicator-fadein']
+				this.ribbons.viewer.find('.current-marker')
+					.css({
+						display: 'block',
+						opacity: 0,
+					})
+					.delay(100)
+					.animate({
+						opacity: 1
+					}, fadein)
+			}],
+
 		// move marker to current image...
 		['focusImage.post',
 			function(){ this.updateCurrentImageIndicator() }],
-		// prevent animations when focusing ribbons...
-		['focusRibbon.pre',
-			function(){
-				var m = this.ribbons.viewer.find('.current-marker')
-				this.ribbons.preventTransitions(m)
-				return function(){
-					this.ribbons.restoreTransitions(m)
-				}
-			}],
-		// this is here to compensate for position change on ribbon 
-		// resize...
-		// NOTE: hide/show of indicator on resize appears to have solved
-		// 		the jumpy animation issue.
-		// 		this might cause some blinking on slow resizes (visible 
-		// 		only on next/prev screen)... 
-		// 		...still not sure why .preventTransitions(m) did not
-		// 		do the job.
-		['resizeRibbon.pre',
-			function(target){
-				var m = this.ribbons.viewer.find('.current-marker')
-				var c = this.current
-				var r = this.current_ribbon
-
-				// only update if marker exists and we are in current ribbon...
-				if(m.length != 0
-						// XXX not sure if target handling here is the 
-						// 		right way to go -- we manually check things
-						// 		when .data.getImage(..) nad friends to this
-						// 		better and in one spot...
-						// 		...the down side is that they are slower...
-						&& (target == 'current' 
-							|| target == c
-							|| target == r 
-							// XXX this seems to be slow enough to push 
-							// 		the frame-rate down...
-							|| this.data.getRibbon(target) == r
-							|| target == null)){
-					m.hide()
-
-					return function(){
-						this.updateCurrentImageIndicator(target, false)
-						m
-							.show()
-							// NOTE: keeping display in inline style will
-							// 		prevent the element from being hidden
-							// 		by css...
-							.css({display: ''})
-					}
-				}
-			}],
 
 		// Change border size in the appropriate spot in the animation:
 		// 	- before animation when scaling up
@@ -364,25 +283,6 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 			function(){ 
 				this.updateCurrentImageIndicator(null, 'before') }],
 
-		['shiftImageLeft.pre shiftImageRight.pre',
-			function(){
-				this.ribbons.viewer.find('.current-marker').hide()
-				if(this._current_image_indicator_timeout != null){
-					clearTimeout(this._current_image_indicator_timeout)
-					delete this._current_image_indicator_timeout
-				}
-				return function(){
-					var ribbons = this.ribbons
-					var fadein = this.config['current-image-indicator-fadein']
-					this._current_image_indicator_timeout = setTimeout(function(){ 
-						var m = ribbons.viewer.find('.current-marker')
-						m.fadeIn(fadein, function(){
-							m.css({display: ''})
-						})
-					}, this.config['current-image-shift-timeout'])
-				}
-			}],
-
 		// hide and remove current image indicator...
 		// NOTE: it will be reconstructed on 
 		// 		next .focusImage(..)
@@ -392,21 +292,19 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 					&& clearTimeout(this.__current_image_indicator_restore_timeout)
 				delete this.__current_image_indicator_restore_timeout
 
-				var m = this.ribbons.viewer
+				this.ribbons.viewer
 					.find('.current-marker')
-						.velocity({opacity: 0}, {
-							duration: 100,
-							complete: function(){
-								m.remove()
-							},
-						})
-
+						.velocity({opacity: 0}, { duration: 100 })
 			}],
 		['ribbonPanning.post',
 			function(){
 				var that = this
 				this.__current_image_indicator_restore_timeout = setTimeout(function(){
 					that.updateCurrentImageIndicator()
+
+					that.ribbons.viewer
+						.find('.current-marker')
+							.velocity({opacity: 1}, { duration: 100 })
 				}, this.config['current-image-indicator-restore-delay'] || 500)
 			}],
 
@@ -414,15 +312,13 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 		['toggleSingleImage',
 			function(){
 				if(this.toggleSingleImage('?') == 'off'){
-					var m = this.ribbons.viewer.find('.current-marker')
-					m.hide()
+					this.ribbons.viewer.find('.current-marker')
+							.delay(150)
+							.animate({opacity: 1}, 100)
 
-					this.updateCurrentImageIndicator()
-
-					m
-						.delay(150)
-						.fadeIn(200, function(){ 
-							m.css({display: ''})})
+				} else {
+					this.ribbons.viewer.find('.current-marker')
+						.css({ opacity: 0 })
 				}
 			}],
 	],

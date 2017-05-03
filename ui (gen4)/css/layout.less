@@ -684,10 +684,16 @@ stretching in width... */
 
 
 .current-marker {
+	display: none;
 	position: absolute;
 	border: solid 5px red;
 	background: none;
 	z-index: 100;
+
+	top: 0;
+	left: 0;
+	margin-top: -@image-tile-size / 2;
+	margin-left: -@image-tile-size / 2;
 
 	/* pass events through... (do we need IE10-?) */
 	pointer-events: none;

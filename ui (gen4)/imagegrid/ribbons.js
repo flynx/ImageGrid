@@ -287,7 +287,6 @@ var RibbonsClassPrototype = {
 		return this.setElemGID($('<div class="mark">')
 			.addClass(cls), gid)
 	},
-
 } 
 
 
@@ -341,12 +340,10 @@ var RibbonsPrototype = {
 
 
 	get parent(){
-		return this.__parent
-	},
+		return this.__parent },
 	// NOTE: this will reset locally referenced .images to .parent.images
 	set parent(parent){
 		this.__parent = parent
-
 		delete this.__images
 	},
 
@@ -355,8 +352,7 @@ var RibbonsPrototype = {
 	// NOTE: images can be stored locally if no parent is set but will 
 	// 		get overridden as soon as .parent is set.
 	get images(){
-		return this.parent ? this.parent.images : this.__images
-	},
+		return this.parent ? this.parent.images : this.__images },
 	set images(images){
 		if(this.parent){
 			this.parent.images = images
@@ -2564,13 +2560,7 @@ var RibbonsPrototype = {
 		var t = ribbon[0].offsetTop
 		var h = ribbon[0].offsetHeight
 
-		//locator.css('transform', 'translateY(-'+ (t + h/2) +'px)')
-		//locator.transform({x: 0, y: -(t + h/2), z: 0}) 
-		locator.transform({
-			x: 0, 
-			y: this.px2vh(-(t + h/2)) + 'vh', 
-			z: 0,
-		}) 
+		locator.transform({ x: 0, y: this.px2vh(-(t + h/2)) + 'vh', z: 0 }) 
 
 		return this
 	},
@@ -2601,21 +2591,12 @@ var RibbonsPrototype = {
 
 		var l = target[0].offsetLeft
 		var w = target[0].offsetWidth
-		//var w = this.getVisibleImageSize('width', 1, target)
-
 
 		var image_offset = mode == 'before' ? 0
 			: mode == 'after' ? w
 			: w/2
 
-		// relative offset to vmin...
-		var x = -this.px2vmin(l + image_offset) + 'vmin'
-
-		// absolute offset...
-		//var x = -(l + image_offset)
-
-		//ribbon.css('transform', 'translateX(-'+ (l + image_offset) +'px)')
-		ribbon.transform({x: x, y: 0, z: 0}) 
+		ribbon.transform({x: -this.px2vmin(l + image_offset) + 'vmin', y: 0, z: 0}) 
 
 		return this
 	},
@@ -2679,16 +2660,6 @@ var RibbonsPrototype = {
 		this.scale(scale)
 
 		return this
-	},
-
-
-	// XXX
-	setEmptyMsg: function(msg, help){
-		this.getRibbonSet()
-			.attr({
-				'empty-msg': msg || '',
-				'empty-help': help || '',
-			})
 	},
 } 
 

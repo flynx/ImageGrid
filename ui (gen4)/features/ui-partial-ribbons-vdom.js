@@ -46,6 +46,100 @@ window.vdom = vdom
 
 //---------------------------------------------------------------------
 
+var Ribbons = {
+	//dom: null,
+
+	// utils...
+	px2v: null,
+	px2vw: null,
+	px2vh: null,
+	px2vmin: null,
+	px2vmax: null,
+	preventTransitions: null,
+	restoreTransitions: null,
+	noTransitions: null,
+	noTransitionsDeep: null,
+	getElemGID: null,
+	setElemGID: null,
+	replaceGid: null,
+
+	makeShadow: null,
+
+	parent: null,
+	images: null,
+
+	scale: null,
+	rotate: null,
+
+	getVisibleImageSize: null,
+	getScreenWidthImages: null,
+	getScreenHeightRibbons: null,
+
+	// element getters...
+	//getRibbonSet: null,
+	//getRibbonLocator: null,
+	//getImage: null,
+	//getImageMarks: null,
+	//getImageByPosition: null,
+	//getRibbon: null,
+	//getRibbonOrder: null,
+	
+	// XXX
+	addImageEventHandler: function(evt, handler){
+	},
+	addRibbonEventHandler: function(evt, handler){
+	},
+
+	//placeRibbon: null,
+	//placeImage: null,
+
+	updateImageIndicators: null,
+	_loadImagePreviewURL: null,
+	//load_img_sync: null,
+	updateImage: null,
+
+	//updateRibbon: null,
+	//updateRibbonInPlace: null,
+	//resizeRibbon: null,
+
+	//updateData: null,
+
+	//clearEmptyRibbons: null,
+
+	//focusImage: null,
+
+	//setBaseRibbon: null,
+
+	//toggleImageMark: null,
+
+	//rotateImage: null,
+	//getImageRotation: null,
+	//rotateCW: null,
+	//rotateCCW: null,
+	//flipImage: null,
+	//getImageFlip: null,
+	//flipVertical: null,
+	//flipHorizontal: null,
+
+	// XXX
+	_calcImageProportions: null,
+	correctImageProportionsForRotation: null,
+
+	centerRibbon: null,
+	centerImage: null,
+
+	fitImage: null,
+	fitRibbon: null,
+
+	clear: null,
+	//clone: null,
+
+	__init__: null,
+}
+
+
+//---------------------------------------------------------------------
+
 // hooks...
 function PREVIEW(ig, gid, url){
 	this.ig = ig
@@ -92,7 +186,6 @@ var VirtualDOMRibbonsPrototype = {
 	state: null,
 
 	// constructors...
-	// XXX calculate top...
 	makeView: function(state){
 		state = state || {}
 		var that = this
@@ -105,10 +198,6 @@ var VirtualDOMRibbonsPrototype = {
 			|| ig.screenwidth * (ig.config['ribbon-size-screens'] || 9)
 		var s = state.scale = state.scale 
 			|| ig.scale
-		var top = state.top = state.top 
-			|| this.state.top 
-			// XXX do a real calculation...
-			|| ig.ribbons.getRibbonLocator().transform('y') 
 
 		var data = ig.data
 		var images = ig.images
@@ -117,21 +206,21 @@ var VirtualDOMRibbonsPrototype = {
 			.map(function(gid){
 				return that.makeRibbon(gid, target, count, state) })
 
-		return vdom.h('div.ribbon-set', {
-			//key: 'ribbon-set',
-			style: {
-				transform: 'scale('+ s +', '+ s +')',
-			}
-		}, [
-			vdom.h('div.ribbon-locator', {
-				//key: 'ribbon-locator',
+		return vdom.h('div.ribbon-set', 
+			{
+				//key: 'ribbon-set',
 				style: {
-					// XXX should this be in vh???
-					transform: 'translate3d(0px, '+ top +'px, 0px)',
-				},
-			},
-			ribbons)
-		])
+					transform: 'scale('+ s +', '+ s +')',
+				}
+			}, [
+				vdom.h('div.current-marker'),
+				// ribbon locator...
+				vdom.h('div.ribbon-locator', 
+					{
+						//key: 'ribbon-locator',
+					},
+					ribbons),
+			])
 	},
 	// XXX setup handlers (???)
 	// XXX current image marker (???)
@@ -184,10 +273,6 @@ var VirtualDOMRibbonsPrototype = {
 					.forEach(function(mark){ imgs.push(mark) })
 			})
 
-		// continue offset calculation...
-		var l = gids.indexOf(ref)
-		var x = (-(l * vsize) - offset)
-
 		return vdom.h('div.ribbon'+base, {
 			//key: 'ribbon-'+gid,
 
@@ -197,20 +282,13 @@ var VirtualDOMRibbonsPrototype = {
 				gid: JSON.stringify(gid)
 					.replace(/^"(.*)"$/g, '$1'),
 			},
-			/*/ XXX
-			style: {
-				// XXX calling .centerImage(..) prevents this from updating...
-				transform: 'translate3d('+ x +'vmin, 0px, 0px)',
-			},
-			//*/
 		},
 		imgs)
 	},
 	// XXX setup image handlers...
-	// 		...or move them up to viewer or some other spot (viewer?)...
 	// XXX update image previews...
-	// XXX update image proportions for rotation...
-	makeImage: function(gid, size, state){
+	// XXX update image proportions for rotated images... (???)
+	makeImage: function(gid, size){
 		var ig = this.imagegrid
 		//size = this.state.tile_size = size 
 		size = size 
@@ -220,6 +298,7 @@ var VirtualDOMRibbonsPrototype = {
 		var images = this.imagegrid.images || {}
 		var current = data.current == gid ? '.current' : ''
 
+		// resolve group preview cover...
 		var image = images[gid] || {}
 		var seen = []
 		while(image.type == 'group'){
@@ -239,7 +318,7 @@ var VirtualDOMRibbonsPrototype = {
 			// XXX BUG:
 			// 		- setting this makes the images some times not change previews...
 			// 		- removing this breaks .current class setting...
-			//key: 'image-'+gid,
+			key: 'image-'+gid,
 
 			attributes: {
 				gid: JSON.stringify(gid)
@@ -247,19 +326,18 @@ var VirtualDOMRibbonsPrototype = {
 				orientation: image.orientation,
 				flipped: image.flipped,
 
-				//'preview-width': w,
-				//'preview-height': h,
+				// XXX preview size -- get this onload from image...
+				//'preview-width': ..,
+				//'preview-height': ..,
 			},
 			style: {
-				//width: '',
-				//height: '',
-				//margin: '',
-
+				// XXX need to update this onload if changing preview 
+				// 		of same image...
 				backgroundImage: 'url("'+ url +'")',
 			}
 		})
 	},
-	// XXX STUB: make marks handling more extensible... (???)
+	// XXX STUB: make marks handling extensible... (???)
 	makeImageMarks: function(gid){
 		var that = this
 		var marks = []
@@ -273,20 +351,67 @@ var VirtualDOMRibbonsPrototype = {
 
 		return marks
 			.map(function(type){
-				return that.makeImageMark(gid, type) })
-	},
-	makeImageMark: function(gid, type){
-		return vdom.h('div.mark.'+(type || ''), {
-			key: 'mark-'+type+'-'+gid,
-			attributes: {
-				gid: JSON.stringify(gid)
-					.replace(/^"(.*)"$/g, '$1'),
-			},
-		})
+				return vdom.h('div.mark.'+(type || ''), {
+					key: 'mark-'+type+'-'+gid,
+					attributes: {
+						gid: JSON.stringify(gid)
+							.replace(/^"(.*)"$/g, '$1'),
+					},
+				})
+			})
 	},
 
 	// XXX add ability to hook in things like current image marker...
 	
+
+	// XXX these need .getImage(..) / .getRibbon(..) / .getRibbonLocator(..)
+	centerRibbon: function(target){
+		var ribbon = this.getRibbon(target)
+		var locator = this.getRibbonLocator() 
+
+		if(locator.length != 0 && ribbon.length != 0){
+			var t = ribbon[0].offsetTop
+			var h = ribbon[0].offsetHeight
+
+			locator.transform({ x: 0, y: this.px2vh(-(t + h/2)) + 'vh', z: 0 }) 
+		}
+		return this
+	},
+	centerImage: function(target, mode){
+		target = this.getImage(target)
+		var ribbon = this.getRibbon(target)
+
+		if(ribbon.length != 0){
+			var l = target[0].offsetLeft
+			var w = target[0].offsetWidth
+
+			var image_offset = mode == 'before' ? 0
+				: mode == 'after' ? w
+				: w/2
+
+			ribbon.transform({x: -this.px2vmin(l + image_offset) + 'vmin', y: 0, z: 0}) 
+		}
+		return this
+	},
+
+	scale: function(scale){
+		if(scale){
+			this.state.scale = scale
+			this.sync()
+
+		} else {
+			return this.imagegrid.scale
+		}
+	},
+
+	// XXX not sure how to proceed with these...
+	setImageHandler: function(evt, handler){
+	},
+	setRibbonHandler: function(evt, handler){
+	},
+
+
+
 	clear: function(){
 		delete this.state
 		delete this.dom
@@ -349,6 +474,7 @@ object.makeConstructor('VirtualDOMRibbons',
 
 /*********************************************************************/
 // XXX TODO:
+// 		- image size/proportions (single image view)
 // 		- shifting images/ribbons
 // 			- use .virtualdom.sync() + shadow animation instead of .ribbons.*
 // 			- would be nice to make this an alternative feature...
@@ -444,17 +570,25 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 				var img = this.ribbons.getImage(target)
 
 				// in-place update...
-				// XXX this is very rigid, need to make this more 
-				// 		flexible and not hinder fast nav...
 				if(img.length > 0){
-					setTimeout((function(){
-						this.ribbons.preventTransitions()
-						this.updateRibbon(this.current) 
-						this.ribbons.restoreTransitions()
-					}).bind(this), 200)
+					// XXX need to account for running out of images and
+					// 		not only on the current ribbon...
+					if(!this.__partial_ribbon_update){
+						this.__partial_ribbon_update = setTimeout((function(){
+							delete this.__partial_ribbon_update
+							this.ribbons.preventTransitions()
+							this.updateRibbon(this.current) 
+							this.ribbons.restoreTransitions()
+						}).bind(this), 150)
+					}
 
 				// long-jump...
 				} else {
+					if(this.__partial_ribbon_update){
+						clearTimeout(this.__partial_ribbon_update)
+						delete this.__partial_ribbon_update
+					}
+
 					this.updateRibbon(target) 
 				}
 			}],

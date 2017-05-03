@@ -491,12 +491,6 @@ module.ViewerActions = actions.Actions({
 			'ribbon-image-separators',
 			function(state){ this.config['ribbon-image-separators'] = state }) ],
 
-	/*
-	setEmptyMsg: ['- Interface/Set message to be displayed when nothing is loaded.',
-		function(msg, help){ this.ribbons 
-			&& this.ribbons.setEmptyMsg(msg, help) }],
-	*/
-
 
 	// align modes...
 	// XXX these should also affect up/down navigation...
@@ -698,13 +692,13 @@ module.ViewerActions = actions.Actions({
 		function(){
 			// NOTE: the 0.2 is added to compensate for alignment/scaling
 			// 		errors -- 2.99 images wide counts as 3 while 2.5 as 2.
-			var w = Math.floor(this.ribbons.getScreenWidthImages() + 0.2)
+			var w = Math.floor(this.screenwidth + 0.2)
 			w += (w % 2) - 1
 			this.prevImage(w)
 		}],
 	nextScreen: ['Navigate/Screen width forward',
 		function(){
-			var w = Math.floor(this.ribbons.getScreenWidthImages() + 0.2)
+			var w = Math.floor(this.screenwidth + 0.2)
 			w += (w % 2) - 1
 			this.nextImage(w)
 		}],

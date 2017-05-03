@@ -52,6 +52,21 @@ Object.keys(demo_data.ribbons).forEach(function(k){
 	demo_data.order = demo_data.order.concat(demo_data.ribbons[k]) 
 })
 
+var demo_images =
+module.demo_images = {
+	a: {
+		orientation: 90,
+	},
+	f: {
+		orientation: 270,
+	},
+	2: {
+		orientation: 270,
+	},
+	z: {
+		flipped: ['horizontal'],
+	},
+}
 
 
 /*********************************************************************/
@@ -71,7 +86,8 @@ module.Demo = core.ImageGridFeatures.Feature({
 			function(){
 				this.load({
 					data: data.Data(demo_data),
-					images: images.Images(),
+					//images: images.Images(),
+					images: images.Images(demo_images),
 				})
 			}],
 	})

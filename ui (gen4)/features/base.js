@@ -406,13 +406,6 @@ actions.Actions({
 
 			this.focusImage(t, r)
 		}],
-	// XXX add undo...
-	setBaseRibbon: ['Edit|Ribbon/Set base ribbon', {
-		journal: true,
-		browseMode: function(target){ 
-			return this.current_ribbon == this.base && 'disabled' }},
-		function(target){ this.data.setBase(target) }],
-
 	// shorthands...
 	// XXX do we reset direction on these???
 	firstImage: ['Navigate/First image in current ribbon',
@@ -584,11 +577,115 @@ actions.Actions({
 	nextRibbon: ['Navigate/Next ribbon',
 		{browseMode: 'lastRibbon'},
 		function(){ this.focusRibbon('after') }],
+})
 
+
+var Base =
+module.Base = 
+core.ImageGridFeatures.Feature({
+	title: 'ImageGrid base',
+
+	tag: 'base',
+	depends: [
+		'changes',
+	],
+	suggested: [
+		'base-edit',
+		//'tags',
+		//'sort',
+		//'tasks',
+	],
+
+	actions: BaseActions,
+
+	handlers: [
+		// manage changes...
+		// everything changed...
+		[[
+			'claer',
+			'loadURLs', 
+		],
+			function(){ this.markChanged('all') }],
+
+		['prepareIndexForWrite', 
+			function(res){
+				// we save .current unconditionally...
+				res.index.current = res.raw.data.current
+
+				var changes = res.changes
+
+				// data...
+				if(changes === true || changes.data){
+					res.index.data = res.raw.data
+				}
+
+				// images (full)...
+				if(changes === true || changes.images === true){
+					res.index.images = res.raw.images
+
+				// images-diff...
+				} else if(changes && changes.images){
+					var diff = res.index['images-diff'] = {}
+					changes.images.forEach(function(gid){
+						diff[gid] = res.raw.images[gid]
+					})
+				}
+			}],
+		['prepareJSONForLoad',
+			function(res, json, base_path){
+				// build data and images...
+				// XXX do we actually need to build stuff here, shouldn't
+				// 		.load(..) take care of this???
+				//var d = json.data
+				var d = data.Data.fromJSON(json.data)
+
+				d.current = json.current || d.current
+
+				var img = images.Images(json.images)
+
+				if(base_path){
+					d.base_path = base_path
+					// XXX STUB remove ASAP... 
+					// 		...need a real way to handle base dir, possible
+					// 		approaches:
+					// 			1) .base_path attr in image, set on load and 
+					// 				do not save (or ignore on load)...
+					// 				if exists prepend to all paths...
+					// 				- more to do in view-time
+					// 				+ more flexible
+					// 			2) add/remove on load/save (approach below)
+					// 				+ less to do in real time
+					// 				- more processing on load/save
+					img.forEach(function(_, img){ img.base_path = base_path })
+				}
+
+				res.data = d
+				res.images = img
+			}],
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+// Edit...
+
+var BaseEditActions = 
+module.BaseEditActions = 
+actions.Actions({
+	config: {
+	},
 
 	// basic ribbon editing...
 	//
 	// NOTE: for all of these, current/ribbon image is a default...
+
+	// XXX add undo...
+	setBaseRibbon: ['Edit|Ribbon/Set base ribbon', {
+		journal: true,
+		browseMode: function(target){ 
+			return this.current_ribbon == this.base && 'disabled' }},
+		function(target){ this.data.setBase(target) }],
 
 	// NOTE: resetting this option will clear the last direction...
 	toggleShiftsAffectDirection: ['Interface/Shifts affect direction',
@@ -761,7 +858,16 @@ actions.Actions({
 		{undo: 'reverseRibbons'},
 		function(){ this.data.reverseRibbons() }],
 
-	// XXX align to ribbon...
+	// complex operations...
+	// XXX need interactive mode for this...
+	// 		- on init: select start/end/base
+	// 		- allow user to reset/move
+	// 		- on accept: run
+	alignToRibbon: ['Ribbon|Edit/Align top ribbon to base',
+		{journal: true},
+		function(target, start, end){
+			this.data = this.data.alignToRibbon(target, start, end) }],
+
 
 	// basic image editing...
 	//
@@ -841,37 +947,19 @@ actions.Actions({
 	flipHorizontal: ['Image|Edit/Flip image horizontally',
 		{undo: 'flipHorizontal'},
 		function(target){ this.flip(target, 'horizontal') }],
-
-
-	// complex operations...
-	// XXX need interactive mode for this...
-	// 		- on init: select start/end/base
-	// 		- allow user to reset/move
-	// 		- on accept: run
-	alignToRibbon: ['Ribbon|Edit/Align top ribbon to base',
-		{journal: true},
-		function(target, start, end){
-			this.data = this.data.alignToRibbon(target, start, end) }],
 })
 
-
-var Base =
-module.Base = 
+var BaseEdit =
+module.BaseEdit = 
 core.ImageGridFeatures.Feature({
-	title: 'ImageGrid base',
+	title: 'ImageGrid base editor',
 
-	tag: 'base',
+	tag: 'base-edit',
 	depends: [
-		'changes',
-	],
-	suggested: [
-		'base-edit',
-		//'tags',
-		//'sort',
-		//'tasks',
+		'base',
 	],
 
-	actions: BaseActions,
+	actions: BaseEditActions,
 
 	handlers: [
 		[[
@@ -897,13 +985,6 @@ core.ImageGridFeatures.Feature({
 						&& this.shiftImageOrder.apply(this, [].slice(arguments, 1)) } }],
 
 		// manage changes...
-		// everything changed...
-		[[
-			'claer',
-			'loadURLs', 
-		],
-			function(){ this.markChanged('all') }],
-
 		// data...
 		[[
 			//'load',
@@ -933,90 +1014,7 @@ core.ImageGridFeatures.Feature({
 			'flipVertical',
 		], 
 			function(_, target){ this.markChanged('images', [this.data.getImage(target)]) }],
-
-		['prepareIndexForWrite', 
-			function(res){
-				// we save .current unconditionally...
-				res.index.current = res.raw.data.current
-
-				var changes = res.changes
-
-				// data...
-				if(changes === true || changes.data){
-					res.index.data = res.raw.data
-				}
-
-				// images (full)...
-				if(changes === true || changes.images === true){
-					res.index.images = res.raw.images
-
-				// images-diff...
-				} else if(changes && changes.images){
-					var diff = res.index['images-diff'] = {}
-					changes.images.forEach(function(gid){
-						diff[gid] = res.raw.images[gid]
-					})
-				}
-			}],
-		['prepareJSONForLoad',
-			function(res, json, base_path){
-				// build data and images...
-				// XXX do we actually need to build stuff here, shouldn't
-				// 		.load(..) take care of this???
-				//var d = json.data
-				var d = data.Data.fromJSON(json.data)
-
-				d.current = json.current || d.current
-
-				var img = images.Images(json.images)
-
-				if(base_path){
-					d.base_path = base_path
-					// XXX STUB remove ASAP... 
-					// 		...need a real way to handle base dir, possible
-					// 		approaches:
-					// 			1) .base_path attr in image, set on load and 
-					// 				do not save (or ignore on load)...
-					// 				if exists prepend to all paths...
-					// 				- more to do in view-time
-					// 				+ more flexible
-					// 			2) add/remove on load/save (approach below)
-					// 				+ less to do in real time
-					// 				- more processing on load/save
-					img.forEach(function(_, img){ img.base_path = base_path })
-				}
-
-				res.data = d
-				res.images = img
-			}],
 	],
-})
-
-
-
-//---------------------------------------------------------------------
-// Edit...
-
-var BaseEditActions = 
-module.BaseEditActions = 
-actions.Actions({
-	config: {
-	},
-
-	// XXX
-})
-
-var BaseEdit =
-module.BaseEdit = 
-core.ImageGridFeatures.Feature({
-	title: 'ImageGrid base editor',
-
-	tag: 'base-edit',
-	depends: [
-		'base',
-	],
-
-	actions: BaseEditActions,
 })
 
 
