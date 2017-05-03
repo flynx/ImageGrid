@@ -199,6 +199,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 			var min_border = this.config['current-image-min-border']
 			var border_timeout = this.config['current-image-border-timeout']
 
+			/*/ XXX at this point we do not need size updating...
 			var w = cur.outerWidth(true)
 			var h = cur.outerHeight(true)
 
@@ -214,6 +215,7 @@ var CurrentImageIndicatorActions = actions.Actions({
 				css.width = ''
 				css.height = ''
 			}
+			//*/
 
 			// update border...
 			if(update_border !== false){
@@ -318,8 +320,8 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 			function(){
 				if(this.toggleSingleImage('?') == 'off'){
 					this.ribbons.viewer.find('.current-marker')
-							.delay(150)
-							.animate({opacity: 1}, 100)
+						.delay(150)
+						.animate({opacity: 1}, 100)
 
 				} else {
 					this.ribbons.viewer.find('.current-marker')
@@ -333,6 +335,10 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 // XXX is it a good idea to used the same timers for all instances???
 var makeIndicatorHiderOnFastAction = function(hide_timeout){
 	return function(){ 
+		if(this.toggleSingleImage('?') == 'on'){
+			return
+		}
+
 		var that = this
 		var m = this.ribbons.viewer.find('.current-marker')
 		var t = this.config[hide_timeout]
