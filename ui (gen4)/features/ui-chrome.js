@@ -245,6 +245,7 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 	actions: CurrentImageIndicatorActions,
 
 	handlers: [
+		// show the indicator...
 		['load', 
 			function(){
 				var fadein = this.config['current-image-indicator-fadein']
@@ -258,10 +259,6 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 						opacity: 1
 					}, fadein)
 			}],
-
-		// move marker to current image...
-		['focusImage.post',
-			function(){ this.updateCurrentImageIndicator() }],
 
 		// Change border size in the appropriate spot in the animation:
 		// 	- before animation when scaling up
