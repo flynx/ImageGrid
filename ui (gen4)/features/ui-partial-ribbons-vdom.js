@@ -186,7 +186,7 @@ var VirtualDOMRibbonsPrototype = {
 	state: null,
 
 	// constructors...
-	makeView: function(state){
+	makeView: function(state, initial){
 		state = state || {}
 		var that = this
 		var ig = this.imagegrid
@@ -204,7 +204,7 @@ var VirtualDOMRibbonsPrototype = {
 
 		var ribbons = data.ribbon_order
 			.map(function(gid){
-				return that.makeRibbon(gid, target, count, state) })
+				return that.makeRibbon(gid, target, count, state, initial) })
 
 		return vdom.h('div.ribbon-set', 
 			{
@@ -226,7 +226,7 @@ var VirtualDOMRibbonsPrototype = {
 	},
 	// XXX setup handlers (???)
 	// XXX STUB: make aligning more extensible... (???)
-	makeRibbon: function(gid, target, count, state){
+	makeRibbon: function(gid, target, count, state, initial){
 		state = state || {}
 		var that = this
 		var ig = this.imagegrid
@@ -274,6 +274,9 @@ var VirtualDOMRibbonsPrototype = {
 					.forEach(function(mark){ imgs.push(mark) })
 			})
 
+		// XXX not sure about this...
+		var style = initial ? { transform: 'translate3d(120vw, 0, 0)' } : {}
+
 		return vdom.h('div.ribbon'+base, {
 			//key: 'ribbon-'+gid,
 
@@ -283,6 +286,8 @@ var VirtualDOMRibbonsPrototype = {
 				gid: JSON.stringify(gid)
 					.replace(/^"(.*)"$/g, '$1'),
 			},
+
+			style: style,
 		},
 		imgs)
 	},
@@ -438,7 +443,7 @@ var VirtualDOMRibbonsPrototype = {
 
 		// build initial state...
 		if(this.vdom == null){
-			var n = this.vdom = this.makeView(state)
+			var n = this.vdom = this.makeView(state, true)
 			var v = vdom.create(n)
 			dom.replaceWith(v)
 			this.dom = v
@@ -454,6 +459,7 @@ var VirtualDOMRibbonsPrototype = {
 		return this
 	},
 	// XXX should this do a full or partial .clear()???
+	// XXX BUG: current image indicator resets but does not get shown...
 	reset: function(){
 		delete this.dom
 		delete this.vdom
@@ -481,13 +487,13 @@ object.makeConstructor('VirtualDOMRibbons',
 /*********************************************************************/
 // XXX TODO:
 // 		- image size/proportions (single image view)
+// 		- marking...
 // 		- shifting images/ribbons
 // 			- use .virtualdom.sync() + shadow animation instead of .ribbons.*
 // 			- would be nice to make this an alternative feature...
 // 				...split out ribbon editing into a feature and do two 
 // 				implementations, the original and virtualdom...
 // 		- current image indicator...
-// 		- custom align: .alignByOrder(..) / .alignByFirst(..) / ..
 // 		- ribbon rotation: .ribbonRotation(..) / .rotateRibbonCW(..) / ..
 // 		- cropping???
 // 		
@@ -571,7 +577,6 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 			function(){ delete this.virtualdom.state.tile_size }],
 
 		// XXX account for fast navigation...
-		// XXX sync with .alignRibbons(..) correctly...
 		['focusImage.pre', 
 			function(target){ 
 				var img = this.ribbons.getImage(target)
@@ -583,12 +588,15 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 					if(!this.__partial_ribbon_update){
 						this.__partial_ribbon_update = setTimeout((function(){
 							delete this.__partial_ribbon_update
-
 							this.ribbons.preventTransitions()
+
 							this
 								.updateRibbon(this.current)
-								// XXX HACK???
+								// NOTE: we are doing this manually because we
+								// 		are running after the handler is done 
+								// 		thus missing the base call...
 								.alignRibbons(null, null, true)
+
 							this.ribbons.restoreTransitions()
 						}).bind(this), 150)
 					}
