@@ -1449,60 +1449,6 @@ module.URLHash = core.ImageGridFeatures.Feature({
 
 
 
-
-/*********************************************************************/
-// Adds user management of different back-ends for low level ribbon 
-// alignment and placement...
-var RibbonsPlacement = 
-module.RibbonsPlacement = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-ribbons-placement',
-	depends: [ 'ui' ],
-
-	config: {
-		// NOTE: the adapter names bust be registered in the ribbons module
-		// 		...not sure if this is good, but it's how it works now...
-		'ui-ribbons-placement-modes': {
-			'legacy': 'legacyDOMAdapter',
-			'new': 'DOMAdapter',
-		},
-		'ui-ribbons-placement-mode': 'new',
-	},
-
-	actions: actions.Actions({
-		toggleRibbonsPlacementMode: ['- Interface/',
-			toggler.Toggler(null, function(_, state){ 
-					if(state == null){
-						return this.config['ui-ribbons-placement-mode']
-					}
-
-					this.config['ui-ribbons-placement-mode'] = state
-					var modes = this.config['ui-ribbons-placement-modes']
-
-					this.ribbons.dom = ribbons[modes[state]]
-
-					// NOTE: this will lose any state/configuration that
-					// 		was stored in ribbon dom...
-					this.ribbons.clear('full')
-					this.reload(true)
-				},
-				function(){ 
-					return Object.keys(this.config['ui-ribbons-placement-modes']) } )],
-	}),
-
-	handlers: [
-		['setup', 
-			function(){
-				this.toggleRibbonsPlacementMode(this.config['ui-ribbons-placement-mode'])
-			}],
-	]
-})
-
-
-
-
 /*********************************************************************/
 // Animation...
 
@@ -1557,7 +1503,6 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 			}],
 	],
 })
-
 
 
 

@@ -79,24 +79,6 @@ var RIBBON = '.ribbon:not(.clone)'
 // XXX think if a way to manage animation timings...
 // XXX not sure if this is the right way to go...
 
-var legacyDOMAdapter =
-module.legacyDOMAdapter = {
-	getOrigin: getElementOrigin,
-	// XXX this is not used here...
-	setOrigin: setElementOrigin, 
-
-	getScale: getElementScale,
-	setScale: setElementScale,
-
-	getOffset: getElementOffset,
-	setOffset: setElementOffset,
-
-	// a bit higher level...
-	shiftOrigin: shiftOriginTo,
-	relativeOffset: getRelativeOffset,
-}
-
-
 var DOMAdapter =
 module.DOMAdapter = {
 	getOrigin: function(elem){
