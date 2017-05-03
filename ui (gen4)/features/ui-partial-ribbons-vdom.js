@@ -57,12 +57,6 @@ PREVIEW.prototype.hook = function(elem, prop){
 }
 
 
-function FORCE(value){
-	this.value = value
-}
-FORCE.prototype.hook = function(elem, prop){
-	elem.style[prop] = this.value
-}
 
 //---------------------------------------------------------------------
 //
@@ -215,7 +209,8 @@ var VirtualDOMRibbonsPrototype = {
 	// XXX setup image handlers...
 	// 		...or move them up to viewer or some other spot (viewer?)...
 	// XXX update image previews...
-	makeImage: function(gid, size){
+	// XXX update image proportions for rotation...
+	makeImage: function(gid, size, state){
 		var ig = this.imagegrid
 		//size = this.state.tile_size = size 
 		size = size 
@@ -241,6 +236,9 @@ var VirtualDOMRibbonsPrototype = {
 		var url = ig.images.getBestPreview(gid, size, image, true).url
 
 		return vdom.h('div.image'+current, {
+			// XXX BUG:
+			// 		- setting this makes the images some times not change previews...
+			// 		- removing this breaks .current class setting...
 			//key: 'image-'+gid,
 
 			attributes: {
@@ -253,6 +251,10 @@ var VirtualDOMRibbonsPrototype = {
 				//'preview-height': h,
 			},
 			style: {
+				//width: '',
+				//height: '',
+				//margin: '',
+
 				backgroundImage: 'url("'+ url +'")',
 			}
 		})
@@ -275,7 +277,7 @@ var VirtualDOMRibbonsPrototype = {
 	},
 	makeImageMark: function(gid, type){
 		return vdom.h('div.mark.'+(type || ''), {
-			//key: 'mark-'+type+'-'+gid,
+			key: 'mark-'+type+'-'+gid,
 			attributes: {
 				gid: JSON.stringify(gid)
 					.replace(/^"(.*)"$/g, '$1'),
@@ -347,7 +349,7 @@ object.makeConstructor('VirtualDOMRibbons',
 
 /*********************************************************************/
 // XXX TODO:
-// 		- shifting images
+// 		- shifting images/ribbons
 // 			- use .virtualdom.sync() + shadow animation instead of .ribbons.*
 // 			- would be nice to make this an alternative feature...
 // 				...split out ribbon editing into a feature and do two 
@@ -389,9 +391,20 @@ var PartialRibbonsActions = actions.Actions({
 				|| 9) * w
 
 			// XXX DEBUG
-			size = 5
+			//size = 5
 
+			// XXX for some reason this does not set the .current class 
+			// 		on the right image...
 			this.virtualdom.sync(target, size)
+
+			// XXX HACK: this fixes a bug in virtual-dom where .current
+			// 		is not synced correctly...
+			// 		...one theory I have is that we change the class 
+			// 		manually, dom gets diffed and no change is detected
+			// 		then the object gets recycled and the .current class
+			// 		ends up on a different element...
+			this.ribbons.focusImage(target)
+
 			this.centerViewer(target)
 		}],
 })

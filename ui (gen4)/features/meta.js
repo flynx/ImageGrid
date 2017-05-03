@@ -63,10 +63,12 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-animation',
 
 	'ui-single-image',
-	//'ui-partial-ribbons',
-	'ui-partial-ribbons-2',
-	/*/ XXX EXPERIMENTAL...
+	'ui-partial-ribbons',
+	// XXX has bugs...
+	//'ui-partial-ribbons-2',
+	// XXX EXPERIMENTAL...
 	'ui-partial-ribbons-vdom',
+		'-ui-partial-ribbons',
 		'-ui-partial-ribbons-2',
 		// XXX this conflicts with ui-partial-ribbons-vdom...
 		'-ui-current-image-indicator',

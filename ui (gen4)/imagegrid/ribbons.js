@@ -2481,8 +2481,10 @@ var RibbonsPrototype = {
 		//var s = (!w || !h) ? getComputedStyle(image) : null
 		//w = w || parseFloat(s.width)
 		//h = h || parseFloat(s.height) 
-		w = w || image.offsetWidth 
-		h = h || image.offsetHeight 
+		//w = this.px2vmin(w || image.offsetWidth)
+		//h = this.px2vmin(h || image.offsetHeight)
+		w = w || image.offsetWidth
+		h = h || image.offsetHeight
 
 		// non-square image...
 		if(w != h){
@@ -2503,15 +2505,15 @@ var RibbonsPrototype = {
 			// proportions are the same as the screen...
 			if((o == 90 || o == 270) && image_p == viewer_p){
 				return {
-					width: dfl_h ? '' : h,
-					height: dfl_w ? '' : w,
-					margin: -((w - h)/2) +'px '+ (w - h)/2 + 'px',
+					width: dfl_h ? '' : (this.px2vmin(h) + 'vmin'),
+					height: dfl_w ? '' : (this.px2vmin(w) + 'vmin'),
+					margin: this.px2vmin(-((w - h)/2)) +'vmin '+ this.px2vmin((w - h)/2) + 'vmin',
 				}
 
 			} else if((o == 0 || o == 180) && image_p != viewer_p){
 				return {
-					width: dfl_h ? '' : h,
-					height: dfl_w ? '' : w,
+					width: dfl_h ? '' : (this.px2vmin(h) + 'vmin'),
+					height: dfl_w ? '' : (this.px2vmin(w) + 'vmin'),
 					margin: '',
 				}
 			}
@@ -2563,7 +2565,12 @@ var RibbonsPrototype = {
 		var h = ribbon[0].offsetHeight
 
 		//locator.css('transform', 'translateY(-'+ (t + h/2) +'px)')
-		locator.transform({x: 0, y: -(t + h/2), z: 0}) 
+		//locator.transform({x: 0, y: -(t + h/2), z: 0}) 
+		locator.transform({
+			x: 0, 
+			y: this.px2vh(-(t + h/2)) + 'vh', 
+			z: 0,
+		}) 
 
 		return this
 	},

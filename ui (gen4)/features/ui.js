@@ -665,27 +665,8 @@ module.ViewerActions = actions.Actions({
 
 	focusImage: [
 		function(target, list){
-			var ribbons = this.ribbons
-			var data = this.data
-
-			// NOTE: we do not need to do anything in the alternative 
-			// 		case as it's done in data/Client, so we'll just 
-			// 		peek there later...
-			if(data == null){
-				target = ribbons.focusImage(target)
-				var gid = ribbons.getElemGID(target)
-			}
-
 			return function(){
-				if(data != null){
-					// use the data for all the heavy lifting...
-					// NOTE: this will prevent sync errors...
-					var gid = data.getImage()
-
-					target = ribbons.focusImage(gid)
-				}
-			}
-		}],
+				this.ribbons.focusImage(this.data != null ? this.current : target) } }],
 	focusRibbon: [
 		function(target, mode){
 			mode = mode || this.config['ribbon-focus-mode']
