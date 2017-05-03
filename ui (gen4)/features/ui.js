@@ -9,11 +9,6 @@
 *		maintain configuration state in local storage
 *	- ui-url-hash
 *		handle .location.hash
-*	- ui-ribbon-auto-align
-*		unify and handle ribbon alignment...
-*		- ui-ribbon-align-to-order
-*		- ui-ribbon-align-to-first
-*		- ui-ribbon-manual-align
 *	- ui-animation
 *		manage UI non-css animations...
 *	- ui-cursor
@@ -221,6 +216,22 @@ module.ViewerActions = actions.Actions({
 			'last',		// select last image
 		],
 		'ribbon-focus-mode': 'visual',
+
+		// control ribbon alignment...
+		//
+		// NOTE: when this is null then 'ribbon-focus-mode' will be used...
+		// NOTE: this supports the same modes as 'ribbon-focus-mode'...
+		'ribbon-align-modes': {
+			none: null,		// use .config['ribbon-focus-mode']'s value
+			visual: 'alignByOrder',
+			order: 'alignByOrder',
+			first: 'alignByFirst',
+			//last,
+			manual: null,
+		},
+		'ribbon-align-mode': null,
+
+		'ribbon-align-delay': 50,
 	},
 
 	// Ribbons...
@@ -492,6 +503,32 @@ module.ViewerActions = actions.Actions({
 			function(state){ this.config['ribbon-image-separators'] = state }) ],
 
 
+	// ribbon aligning...
+	alignRibbons: ['Interface/Align ribbons',
+		function(target, scale, now){
+			if(target == 'now'){
+				now = true
+				target = null
+			}
+			var mode = this.config['ribbon-align-mode'] 
+				|| this.config['ribbon-focus-mode']
+			var modes = this.config['ribbon-align-modes']
+
+			if(mode in modes && mode != 'manual'){
+				this[modes[mode]](target, scale, now)
+
+			// manual...
+			// XXX is this correct???
+			} else {
+				this
+					.centerRibbon(target)
+					.centerImage(target)
+			}
+		}],
+	toggleRibbonAlignMode : ['Interface/Ribbon align mode',
+		core.makeConfigToggler('ribbon-align-mode', 
+			function(){ return Object.keys(this.config['ribbon-align-modes']) })],
+
 	// align modes...
 	// XXX these should also affect up/down navigation...
 	// 		...navigate by proximity (closest to center) rather than by
@@ -527,7 +564,7 @@ module.ViewerActions = actions.Actions({
 
 			var that = this
 			var _align = function(){
-				this._align_timeout = null
+				this.__align_timeout = null
 				// align other ribbons...
 				var ribbon = data.getRibbon(gid)
 				for(var r in data.ribbons){
@@ -559,11 +596,11 @@ module.ViewerActions = actions.Actions({
 
 			} else {
 				// if we are going fast we might skip an update... 
-				if(this._align_timeout != null){
-					clearTimeout(this._align_timeout)
-					this._align_timeout = null
+				if(this.__align_timeout != null){
+					clearTimeout(this.__align_timeout)
+					this.__align_timeout = null
 				}
-				this._align_timeout = setTimeout(_align, 50)
+				this.__align_timeout = setTimeout(_align, this.config['ribbon-align-delay'])
 			}
 		}],
 	alignByFirst: ['Interface/Align ribbons except current to first image',
@@ -1016,6 +1053,9 @@ module.Viewer = core.ImageGridFeatures.Feature({
 		['resizingDone',
 			function(){ this.scale = this.scale }],
 		//*/
+
+		['focusImage.post', 
+			function(){ this.alignRibbons() }],
 	],
 })
 
@@ -1411,140 +1451,6 @@ module.URLHash = core.ImageGridFeatures.Feature({
 
 
 /*********************************************************************/
-// Ribbons...
-
-// XXX manual align needs more work...
-var AutoAlignRibbons = 
-module.AutoAlignRibbons = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-ribbon-auto-align',
-	depends: ['ui'],
-	exclusive: ['ui-ribbon-align'],
-
-	config: {
-		// control ribbon alignment...
-		//
-		// NOTE: when this is null then 'ribbon-focus-mode' will be used...
-		// NOTE: this supports the same modes as 'ribbon-focus-mode'...
-		'ribbon-align-modes': [
-			'none',		// use .config['ribbon-focus-mode']'s value
-			'visual',
-			'order',
-			'first',
-			//'last',
-			'manual',
-		],
-		'ribbon-align-mode': null,
-	},
-
-	actions: actions.Actions({
-		alignRibbons: ['Interface/Align ribbons',
-			function(target, scale, now){
-				if(target == 'now'){
-					now = true
-					target = null
-				}
-				var mode = this.config['ribbon-align-mode'] 
-					|| this.config['ribbon-focus-mode']
-
-				if(mode == 'visual' || mode == 'order'){
-					this.alignByOrder(target, scale, now) 
-
-				} else if(mode == 'first'){
-					this.alignByFirst(target, scale, now)
-
-				// manual...
-				// XXX is this correct???
-				} else {
-					this
-						.centerRibbon(target)
-						.centerImage(target)
-				}
-			}],
-		toggleRibbonAlignMode : ['Interface/Ribbon align mode',
-			core.makeConfigToggler('ribbon-align-mode', 
-				function(){ return this.config['ribbon-align-modes'] })],
-	}),
-
-	handlers: [
-		['focusImage.post', 
-			function(){ this.alignRibbons() }],
-	],
-})
-
-
-// XXX should .alignByOrder(..) be a feature-specific action or global 
-// 		as it is now???
-var AlignRibbonsToImageOrder = 
-module.AlignRibbonsToImageOrder = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-ribbon-align-to-order',
-	depends: ['ui'],
-	exclusive: ['ui-ribbon-align'],
-
-	config: {
-		//'ribbon-focus-mode': 'order',
-		'ribbon-focus-mode': 'visual',
-	},
-
-	handlers: [
-		['focusImage.post', function(){ this.alignByOrder() }]
-	],
-})
-
-
-var AlignRibbonsToFirstImage = 
-module.AlignRibbonsToFirstImage = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-ribbon-align-to-first',
-	depends: ['ui'],
-	exclusive: ['ui-ribbon-align'],
-
-	config: {
-		'ribbon-focus-mode': 'first',
-	},
-
-	handlers: [
-		['focusImage.post', function(){ this.alignByFirst() }],
-	],
-})
-
-// XXX needs more work...
-// XXX need to save position in some way, ad on each load the same 
-// 		initial state will get loaded...
-// 		...also would need an initial state...
-var ManualAlignRibbons = 
-module.ManualAlignRibbons = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-ribbon-manual-align',
-	depends: ['ui'],
-	exclusive: ['ui-ribbon-align'],
-
-	config: {
-		'ribbon-focus-mode': 'visual',
-	},
-
-	handlers: [
-		['focusImage.post', function(){ 
-			this
-				.centerRibbon()
-				.centerImage()
-		}],
-	],
-})
-
-
-
-//---------------------------------------------------------------------
-
 // Adds user management of different back-ends for low level ribbon 
 // alignment and placement...
 var RibbonsPlacement = 

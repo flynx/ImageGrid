@@ -57,8 +57,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'keyboard',
 
 	// features...
-	'ui-ribbon-auto-align',
-	
 	'ui-cursor',
 	'ui-animation',
 

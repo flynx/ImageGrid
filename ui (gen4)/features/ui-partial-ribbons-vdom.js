@@ -225,7 +225,6 @@ var VirtualDOMRibbonsPrototype = {
 			])
 	},
 	// XXX setup handlers (???)
-	// XXX current image marker (???)
 	// XXX STUB: make aligning more extensible... (???)
 	makeRibbon: function(gid, target, count, state){
 		state = state || {}
@@ -415,14 +414,19 @@ var VirtualDOMRibbonsPrototype = {
 
 
 	clear: function(){
+		this.dom
+			&& this.dom.remove()
+
 		delete this.state
 		delete this.dom
 		delete this.vdom
+
 		return this
 	},
 
 	// NOTE: virtual-dom architecture is designed around a fast-render-on-demand
 	// 		concept, so we build the state on demand...
+	// XXX get scale from config on initial load...
 	sync: function(target, size){
 		var dom = this.dom = this.dom 
 			// get/create the ribbon-set...
@@ -567,6 +571,7 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 			function(){ delete this.virtualdom.state.tile_size }],
 
 		// XXX account for fast navigation...
+		// XXX sync with .alignRibbons(..) correctly...
 		['focusImage.pre', 
 			function(target){ 
 				var img = this.ribbons.getImage(target)
@@ -578,8 +583,12 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 					if(!this.__partial_ribbon_update){
 						this.__partial_ribbon_update = setTimeout((function(){
 							delete this.__partial_ribbon_update
+
 							this.ribbons.preventTransitions()
-							this.updateRibbon(this.current) 
+							this
+								.updateRibbon(this.current)
+								// XXX HACK???
+								.alignRibbons(null, null, true)
 							this.ribbons.restoreTransitions()
 						}).bind(this), 150)
 					}

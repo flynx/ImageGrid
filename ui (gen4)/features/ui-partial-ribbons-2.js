@@ -41,6 +41,7 @@ var PartialRibbonsActions = actions.Actions({
 		'ribbon-update-timeout': 120,
 	},
 
+	// XXX trigger .alignRibbons(..) in correct spot...
 	updateRibbon: ['- Interface/Update partial ribbon size', 
 		function(target, w, size, threshold, preload){
 			target = target instanceof jQuery 
