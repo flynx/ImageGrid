@@ -187,6 +187,13 @@ var CurrentImageIndicatorActions = actions.Actions({
 				return
 			}
 
+			// create marker if it does not exist...
+			if(marker.length == 0 && ribbon_set.length > 0){
+				$('<div/>')
+					.addClass('current-marker')
+					.prependTo(ribbon_set)
+			}
+
 			// get config...
 			var border = this.config['current-image-border']
 			var min_border = this.config['current-image-min-border']
@@ -249,6 +256,7 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 		['load', 
 			function(){
 				var fadein = this.config['current-image-indicator-fadein']
+				this.updateCurrentImageIndicator()
 				this.ribbons.viewer.find('.current-marker')
 					.css({
 						display: 'block',

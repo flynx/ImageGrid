@@ -213,7 +213,9 @@ var VirtualDOMRibbonsPrototype = {
 					transform: 'scale('+ s +', '+ s +')',
 				}
 			}, [
+				// current image indicator...
 				vdom.h('div.current-marker'),
+
 				// ribbon locator...
 				vdom.h('div.ribbon-locator', 
 					{
