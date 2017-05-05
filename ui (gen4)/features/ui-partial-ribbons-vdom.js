@@ -486,16 +486,15 @@ object.makeConstructor('VirtualDOMRibbons',
 
 /*********************************************************************/
 // XXX TODO:
-// 		- image size/proportions (single image view)
+// 		- image update (try and avoid external edits and to it in .virtualdom)
+// 			- image size/proportions (single image view)...
+// 			- preview update...
 // 		- marking...
 // 		- shifting images/ribbons
 // 			- use .virtualdom.sync() + shadow animation instead of .ribbons.*
 // 			- would be nice to make this an alternative feature...
 // 				...split out ribbon editing into a feature and do two 
 // 				implementations, the original and virtualdom...
-// 		- current image indicator...
-// 		- ribbon rotation: .ribbonRotation(..) / .rotateRibbonCW(..) / ..
-// 		- cropping???
 // 		
 
 var PartialRibbonsActions = actions.Actions({

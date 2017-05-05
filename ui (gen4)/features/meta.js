@@ -66,7 +66,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-partial-ribbons-2',
 		'-ui-partial-ribbons',
 	//*/
-	/*/ XXX EXPERIMENTAL...
+	// XXX EXPERIMENTAL...
 	'ui-partial-ribbons-vdom',
 		'-ui-partial-ribbons',
 		'-ui-partial-ribbons-2',
