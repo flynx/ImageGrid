@@ -497,6 +497,7 @@ object.makeConstructor('VirtualDOMRibbons',
 // 			- would be nice to make this an alternative feature...
 // 				...split out ribbon editing into a feature and do two 
 // 				implementations, the original and virtualdom...
+// 				
 // 		
 
 var PartialRibbonsActions = actions.Actions({
