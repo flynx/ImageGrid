@@ -486,14 +486,13 @@ object.makeConstructor('VirtualDOMRibbons',
 
 /*********************************************************************/
 // XXX TODO:
-// 		- image update (try and avoid external edits and to it in .virtualdom)
+// 		- image update (try and avoid external edits and do it in .virtualdom)
 // 			- image size/proportions (single image view)...
 // 			- preview update...
 // 		- marking
-// 			...use .virtualdom.sync(), now a stray div is created (in 
-// 			.updateImage()??)
 // 		- shifting images/ribbons
 // 			- use .virtualdom.sync() + shadow animation instead of .ribbons.*
+// 				...the added marker div messes up virtual-dom...
 // 			- would be nice to make this an alternative feature...
 // 				...split out ribbon editing into a feature and do two 
 // 				implementations, the original and virtualdom...
