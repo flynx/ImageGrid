@@ -68,8 +68,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	//*/
 	// XXX EXPERIMENTAL: virtual-dom based ribbons...
 	'ui-partial-ribbons-vdom',
-		'-ui-image-marks',
-		'-ui-image-bookmarks',
+		//'-ui-image-marks',
+		//'-ui-image-bookmarks',
 		'-ui-partial-ribbons',
 		'-ui-partial-ribbons-2',
 	//*/

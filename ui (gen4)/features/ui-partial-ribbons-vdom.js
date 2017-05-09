@@ -489,15 +489,14 @@ object.makeConstructor('VirtualDOMRibbons',
 // 		- image update (try and avoid external edits and do it in .virtualdom)
 // 			- image size/proportions (single image view)...
 // 			- preview update...
-// 		- marking
 // 		- shifting images/ribbons
 // 			- use .virtualdom.sync() + shadow animation instead of .ribbons.*
 // 				...the added marker div messes up virtual-dom...
 // 			- would be nice to make this an alternative feature...
 // 				...split out ribbon editing into a feature and do two 
 // 				implementations, the original and virtualdom...
+// 		- ranges and make marks more modular...
 // 				
-// 		
 
 var PartialRibbonsActions = actions.Actions({
 	config: {
@@ -559,6 +558,11 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 	exclusive: ['ui-partial-ribbons'],
 	depends: [
 		'ui',
+
+		// disabled stuff...
+		// XXX is this the right spot for these...
+		'-ui-image-marks',
+		'-ui-image-bookmarks',
 	],
 	suggested: [
 		'ui-partial-ribbons-precache',
