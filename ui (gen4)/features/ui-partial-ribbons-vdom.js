@@ -612,6 +612,12 @@ module.PartialRibbons = core.ImageGridFeatures.Feature({
 					this.updateRibbon(target) 
 				}
 			}],
+
+		// marks...
+		[[
+			'toggleMark',
+			'toggleBookmark',
+		], function(){ this.virtualdom.sync() }],
 	],
 })
 
