@@ -334,12 +334,13 @@ module.makeUIContainer = function(make){
 						// 		and keys are no longer tracked...
 						// 		XXX is this the right way to go???
 						// 			To reproduce:
-						// 				- alt-F
-						// 				- /load	-> serach
-						// 				- Enter	-> loads demo data but the viewer
-						// 							is in a state where the window
-						// 							is in focus but keys are not 
-						// 							tracked...
+						// 			- comment this line and .focus() in return...
+						// 			- alt-F
+						// 			- /load	-> serach
+						// 			- Enter	-> loads demo data but the viewer
+						// 						is in a state where the window
+						// 						is in focus but keys are not 
+						// 						tracked...
 						: that.ribbons.viewer.focus()
 				})
 				// Compensate for click focusing the parent dialog when
