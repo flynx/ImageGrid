@@ -326,7 +326,22 @@ module.makeUIContainer = function(make){
 				// NOTE: strictly this is the responsibility of the client
 				// 		but it is less error prone to just in case also do
 				// 		this here...
-				.on('close', function(evt){ evt.stopPropagation() })
+				.on('close', function(evt){ 
+					evt.stopPropagation() 
+					that.modal ? 
+						that.modal.focus()
+						// NOTE: this fixes a bug where the UI loses focus
+						// 		and keys are no longer tracked...
+						// 		XXX is this the right way to go???
+						// 			To reproduce:
+						// 				- alt-F
+						// 				- /load	-> serach
+						// 				- Enter	-> loads demo data but the viewer
+						// 							is in a state where the window
+						// 							is in focus but keys are not 
+						// 							tracked...
+						: that.ribbons.viewer.focus()
+				})
 				// Compensate for click focusing the parent dialog when
 				// a child is created...
 				// XXX is this the right way to go???
@@ -334,6 +349,10 @@ module.makeUIContainer = function(make){
 					that.modal && that.modal.focus() })
 
 		return o
+			// focus the new dialog...
+			// NOTE: fixes the same bug as .client.on('close', ...) above, 
+			// 		see note for that...
+			.focus()
 	})
 }
 
