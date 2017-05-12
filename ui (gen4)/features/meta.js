@@ -62,7 +62,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'ui-single-image',
 	'ui-partial-ribbons',
-	/*/ XXX has bugs...
+	/*/ XXX has bugs -- non-current ribbons are not always aligned...
 	'ui-partial-ribbons-2',
 		'-ui-partial-ribbons',
 	//*/
