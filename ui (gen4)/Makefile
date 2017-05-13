@@ -11,7 +11,7 @@
 
 APP_NAME=ImageGrid.Viewer
 
-NODE_VERSION=v5.10.0
+NODE_VERSION=`node --version`
 
 
 # process LESS files to CSS...
@@ -67,6 +67,8 @@ WIN_DIST_ZIP=$(DIST_DIR)/$(APP_NAME)-win64.zip
 MAC_DIST_ZIP=$(DIST_DIR)/$(APP_NAME)-osx.zip
 MAC_10_6_DIST_ZIP=$(DIST_DIR)/$(APP_NAME)-osx10.6.zip
 
+APP_DATE=$(BUILD_DIR)/DATE
+APP_NODE=$(BUILD_DIR)/NODE
 
 APP_ZIP=$(BUILD_DIR)/package.nw
 
@@ -109,12 +111,19 @@ $(IOS_BUILD_DIR):
 $(DIST_DIR):
 	mkdir -p $(DIST_DIR)
 
+# build info...
+# XXX add build version...
+$(APP_DATE):
+	date "+%Y%m%d %H%M" > $(APP_DATE)
+$(APP_NODE):
+	echo "$(NODE_VERSION)" > $(APP_NODE)
 
 $(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) $(NW_PROJECT_FILE) \
-	$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
+	$(JS_FILES) $(CSS_FILES) $(HTML_FILES) $(APP_DATE) $(APP_NODE)
 	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) \
 		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
+		$(APP_DATE) $(APP_NODE) \
 		$(NODE_DIR)/app-module-path \
 		$(NODE_DIR)/ig-*
 
