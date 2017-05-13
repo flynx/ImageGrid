@@ -231,12 +231,12 @@ body {
 
 /* Metadata viewer */
 .item-value-view .text:first-child,
-.browse-widget.metadata-view .list .item .text:first-child {
+.browse-widget.table-view .list .item .text:first-child {
 	width: 50%;
 	font-weight: bold;
 }
 .item-value-view .text:nth-child(2),
-.browse-widget.metadata-view .list .item .text:nth-child(2) {
+.browse-widget.table-view .list .item .text:nth-child(2) {
 	font-style: italic;
 
 	-moz-user-select: auto;

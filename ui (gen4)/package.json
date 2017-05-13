@@ -27,6 +27,7 @@
     "ig-object": "^1.0.1",
     "openseadragon": "^2.1.0",
     "requirejs": "^2.1.23",
+    "requirejs-plugins": "^1.0.2",
     "sharp": "^0.17.0",
     "wildglob": "^0.1.1"
   },

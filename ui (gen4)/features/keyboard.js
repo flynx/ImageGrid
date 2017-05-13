@@ -1333,7 +1333,7 @@ var KeyboardUIActions = actions.Actions({
 					})
 				},
 				{
-					cls: 'metadata-view',
+					cls: 'table-view',
 				})
 				// save the keys...
 				// XXX for some reason when Esc this is called twice...
@@ -1439,7 +1439,7 @@ var KeyboardUIActions = actions.Actions({
 					})
 				},
 				{
-					cls: 'metadata-view',
+					cls: 'table-view',
 				})
 				.on('close', function(){
 					if(abort){

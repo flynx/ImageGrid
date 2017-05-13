@@ -24,6 +24,9 @@ if((typeof(process) != 'undefined' ? process : {}).__nwjs){
 // 		a way of organizing things without so much manual hoop jumping...
 var requirejs_cfg = {
 	paths: {
+		//text: 'node_modules/requirejs-plugins/lib/text',
+		//json: 'node_modules/requirejs-plugins/src/json',
+
 		// XXX one approach to avoid at least this section is to copy the
 		// 		modules to lib/*, this way we'll need the map section below
 		// 		only...	(without automation this also sounds bad)
@@ -114,12 +117,6 @@ $(function(){
 
 				//'-commandline',
 				//'-ui-partial-ribbons',
-
-				// XXX BUG: disabling features on this level does not 
-				// 		work, yet works deeper down...
-				// 			Example:
-				// 				'-ui' // will throw an error:
-				// 					  //	Feature "-ui" not loaded...
 			])
 
 
@@ -144,6 +141,8 @@ $(function(){
 		ig.features.features.length, 
 		ig.features.features)
 
+
+	// setup logger...
 	// XXX STUB...
 	ig.logger = ig.logger || {
 		root: true,

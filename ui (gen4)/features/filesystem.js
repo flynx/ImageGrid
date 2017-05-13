@@ -2404,7 +2404,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				make.done()
 			})
 
-			o.dom.addClass('metadata-view tail-action')
+			o.dom.addClass('table-view tail-action')
 
 			return o
 		})],

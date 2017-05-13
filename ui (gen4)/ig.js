@@ -17,6 +17,9 @@ requirejs.config({
 	//urlArgs: 'bust='+Date.now(),
 	
 	paths: {
+		//text: 'node_modules/requirejs-plugins/lib/text',
+		//json: 'node_modules/requirejs-plugins/src/json',
+
 		'lib/object': 'node_modules/ig-object/object',
 		'lib/actions': 'node_modules/ig-actions/actions',
 		'lib/features': 'node_modules/ig-features/features',

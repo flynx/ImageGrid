@@ -517,7 +517,7 @@ var MetadataUIActions = actions.Actions({
 					// XXX
 				})
 
-			o.dom.addClass('metadata-view')
+			o.dom.addClass('table-view')
 
 			o.updateMetadata = function(metadata){
 				metadata = metadata || that.getMetadata()

@@ -254,7 +254,7 @@ var ExternalEditorUIActions = actions.Actions({
 					})
 			})
 
-			dialog.dom.addClass('metadata-view tail-action')
+			dialog.dom.addClass('table-view tail-action')
 
 			return dialog
 		})],

@@ -792,9 +792,13 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 				if(res instanceof widget.Widget){
 					var elem = res.dom
 
-					!elem.attr('keep-dialog-title') 
-						&& !this.getActionAttr(action, 'keepDialogTitle')
-						&& elem.attr('dialog-title', this.getDocTitle(action))
+					var title = this.getActionAttr(action, 'dialogTitle')
+
+					title ?
+						elem.attr('dialog-title', title)
+						: !elem.attr('keep-dialog-title') 
+							&& !this.getActionAttr(action, 'keepDialogTitle')
+							&& elem.attr('dialog-title', this.getDocTitle(action))
 				}
 			}],
 	],
@@ -1316,6 +1320,32 @@ var BrowseActionsActions = actions.Actions({
 				this.modal.client.dom.hasClass('browse-actions')
 					&& this.modal.client.dom[state == 'on' ? 'addClass' : 'removeClass']('show-keys')
 			})],
+
+	// XXX is this the right way to go???
+	about: ['Help/About...',
+		{'dialogTitle': 'ImageGrid.Viewer'},
+		makeUIDialog(function(path, options){
+			return browse.makeList(
+				null,
+				[
+					// XXX get this from package.json...
+					['Version:', '4.0.0a'],
+
+					// XXX build date...
+
+					'---',
+
+					['License:', 'Pre Release'],
+
+					// XXX include other lib list and license info...
+					// XXX
+
+					// XXX include nw credits.html...
+					// XXX
+				], {
+					cls: 'table-view'
+				})
+		})],
 })
 
 var BrowseActions = 

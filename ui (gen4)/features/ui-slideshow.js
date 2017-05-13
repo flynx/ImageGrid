@@ -127,7 +127,7 @@ var SlideshowActions = actions.Actions({
 				},
 				{
 					path: that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start',
-					cls: 'metadata-view tail-action',
+					cls: 'table-view tail-action',
 				})
 				.on('close', function(){
 					// reset the timer if it was not suspended outside...
