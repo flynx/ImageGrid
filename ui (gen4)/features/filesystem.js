@@ -740,11 +740,12 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-loader',
 	depends: [
+		'base',
+		'edit',
 		'index-format',
 		'location',
 		'recover',
 		'fs-info',
-		'changes',
 		'tasks',
 	],
 	suggested: [
@@ -1275,7 +1276,6 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-save-history',
 	depends: [
-		'changes',
 		'fs-loader',
 		'fs-comments',
 	],
@@ -1529,7 +1529,6 @@ module.FileSystemSaveHistoryUI = core.ImageGridFeatures.Feature({
 	tag: 'ui-fs-save-history',
 	depends: [
 		'ui',
-		'changes',
 		'fs-save-history',
 	],
 
@@ -2067,7 +2066,6 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 	depends: [
 		'fs-loader',
 		'index-format',
-		'changes',	
 	],
 	suggested: [
 		'ui-fs-writer',
@@ -2418,7 +2416,6 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-fs-writer',
 	depends: [
-		'changes',	
 		'fs-writer', 
 		'ui-fs-loader',
 	],

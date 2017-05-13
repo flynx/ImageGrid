@@ -50,6 +50,16 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'viewer-commandline',
 	'viewer-minimal',
 
+	// read-only mode...
+	// XXX at this point this needs some more tuneup, the following 
+	// 		features are completely disabled when 'edit' is not present
+	// 			- sort
+	// 			- ...
+	// 		...should be split into view/edit sub-features...
+	// XXX might also be a good idea to make basic marking and bookmarking
+	// 		editable (save to localStorage???)
+	//'-edit',
+
 	'peer',
 
 	'workspace',
@@ -73,7 +83,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 		'-ui-partial-ribbons',
 		'-ui-partial-ribbons-2',
 	//*/
-
+	
 	'marks',
 	'ui-range',
 
@@ -81,7 +91,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'config-local-storage',
 	'ui-url-hash',
 	'url-history',
-
 
 	'external-editor',
 

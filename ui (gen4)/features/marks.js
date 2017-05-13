@@ -203,7 +203,6 @@ var undoShift = function(undo){
 
 //---------------------------------------------------------------------
 
-// XXX .toggleMarkBlock(..) not done yet...
 var ImageMarkActions = actions.Actions({
 
 	// a shorthand...
@@ -227,6 +226,39 @@ var ImageMarkActions = actions.Actions({
 				.filter(function(img, i){ return images[i] != null })
 		}],
 
+	prevMarked: ['Mark|Navigate/Previous marked image',
+		function(mode){ this.prevTagged('selected', mode) }],
+	nextMarked: ['Mark|Navigate/Next marked image',
+		function(mode){ this.nextTagged('selected', mode) }],
+
+	cropMarked: ['Mark|Crop/Crop $marked images',
+		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
+})
+
+
+// NOTE: this is usable without ribbons...
+var ImageMarks = 
+module.ImageMarks = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'image-marks',
+
+	depends: [
+		'base',
+	],
+	suggested: [
+		'image-marks-edit',
+		'ui-image-marks',
+	],
+
+	actions: ImageMarkActions,
+})
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+var ImageMarkEditActions = actions.Actions({
 	// Common use-cases:
 	// 	Toggle mark on current image
 	// 	.toggleMark()
@@ -294,40 +326,32 @@ var ImageMarkActions = actions.Actions({
 			})
 		}],
 
-	prevMarked: ['Mark|Navigate/Previous marked image',
-		function(mode){ this.prevTagged('selected', mode) }],
-	nextMarked: ['Mark|Navigate/Next marked image',
-		function(mode){ this.nextTagged('selected', mode) }],
-
 	shiftMarkedUp: ['Mark|Ribbon/Shift marked $up',
 		{undo: undoShift('shiftMarkedDown')},
 		shiftMarked('up')],
 	shiftMarkedDown: ['Mark|Ribbon/Shift marked $down',
 		{undo: undoShift('shiftMarkedUp')},
 		shiftMarked('down')],
-
-	cropMarked: ['Mark|Crop/Crop $marked images',
-		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
 })
 
-
-// NOTE: this is usable without ribbons...
-var ImageMarks = 
-module.ImageMarks = core.ImageGridFeatures.Feature({
+var ImageEditMarks = 
+module.ImageEditMarks = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'image-marks',
+	tag: 'image-marks-edit',
 
 	depends: [
-		'base'
+		'tags-edit',
 	],
 	suggested: [
-		'ui-image-marks',
 	],
 
-	actions: ImageMarkActions,
+	actions: ImageMarkEditActions,
 })
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var ImageMarksUI = 
 module.ImageMarksUI = core.ImageGridFeatures.Feature({
@@ -353,7 +377,9 @@ module.ImageMarksUI = core.ImageGridFeatures.Feature({
 		['updateImage', function(_, gid, img){
 			// update only when ribbons are preset... 
 			if(this.ribbons != null){
-				if(this.toggleMark(gid, '?') == 'on'){
+				// NOTE: we are not using .toggleMark(..) here as this 
+				// 		does not need to depend on the 'edit' feature...
+				if(this.data.toggleTag('selected', gid, '?') == 'on'){
 					this.ribbons.toggleImageMark(gid, 'selected', 'on')
 				} else {
 					this.ribbons.toggleImageMark(gid, 'selected', 'off')
@@ -379,18 +405,6 @@ var ImageBookmarkActions = actions.Actions({
 		return this.data.tags['bookmark'].slice()
 	},
 
-	toggleBookmark: ['Bookmark|Image/Image $bookmark',
-		undoTag('toggleBookmark'),
-		makeTagTogglerAction('bookmark')],
-	// action can be:
-	// 	'on'	- toggle all on
-	// 	'off'	- toggle all off
-	// 	'next'	- toggle each image to next state
-	toggleBookmarkOnMarked: ['Bookmark|Mark/Bookmark on maked images',
-		function(action){ 
-			return this.toggleBookmark(this.data.getTaggedByAny('selected'), action) 
-		}],
-
 	prevBookmarked: ['Bookmark|Navigate/Previous bookmarked image',
 		function(mode){ this.prevTagged('bookmark', mode) }],
 	nextBookmarked: ['Bookmark|Navigate/Next bookmarked image',
@@ -409,15 +423,53 @@ module.ImageBookmarks = core.ImageGridFeatures.Feature({
 	tag: 'image-bookmarks',
 
 	depends: [
-		'base'
+		'base',
 	],
 	suggested: [
+		'image-bookmarks-edit',
 		'ui-image-bookmarks',
 	],
 
 	actions: ImageBookmarkActions,
 
 })
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+var ImageBookmarkEditActions = actions.Actions({
+	toggleBookmark: ['Bookmark|Image/Image $bookmark',
+		undoTag('toggleBookmark'),
+		makeTagTogglerAction('bookmark')],
+	// action can be:
+	// 	'on'	- toggle all on
+	// 	'off'	- toggle all off
+	// 	'next'	- toggle each image to next state
+	toggleBookmarkOnMarked: ['Bookmark|Mark/Bookmark on maked images',
+		function(action){ 
+			return this.toggleBookmark(this.data.getTaggedByAny('selected'), action) 
+		}],
+})
+
+var ImageBookmarksEdit = 
+module.ImageBookmarksEdit = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'image-bookmarks-edit',
+
+	depends: [
+		'tags-edit',
+	],
+	suggested: [
+		'ui-image-bookmarks',
+	],
+
+	actions: ImageBookmarkEditActions,
+})
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var ImageBookmarksUI = 
 module.ImageBookmarksUI = core.ImageGridFeatures.Feature({
@@ -436,7 +488,7 @@ module.ImageBookmarksUI = core.ImageGridFeatures.Feature({
 		['updateImage', function(_, gid, img){
 			// update only when ribbons are preset... 
 			if(this.ribbons != null){
-				if(this.toggleBookmark(gid, '?') == 'on'){
+				if(this.data.toggleTag('bookmark', gid, '?') == 'on'){
 					this.ribbons.toggleImageMark(gid, 'bookmark', 'on')
 				} else {
 					this.ribbons.toggleImageMark(gid, 'bookmark', 'off')

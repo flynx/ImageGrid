@@ -1173,7 +1173,7 @@ core.ImageGridFeatures.Feature({
 	tag: 'ui-edit',
 
 	depends: [
-		'base-edit',
+		'edit',
 		'tags',
 		'sort',
 		'crop',

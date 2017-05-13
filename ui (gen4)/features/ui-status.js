@@ -297,7 +297,13 @@ var StatusBarActions = actions.Actions({
 					.attr('info', 'Unsaved changes')
 			}
 
-			item.html(this.changes !== false ? this.config['status-bar-changes-text'] || '*' : '')
+			//item.html(this.changes !== false ? 
+			//	this.config['status-bar-changes-text'] || '*' 
+			//	: '')
+			// XXX not yet sure about .hasOwnProperty(..) here...
+			item.html(this.hasOwnProperty('changes') && this.changes !== false ? 
+				this.config['status-bar-changes-text'] || '*' 
+				: '')
 
 			return item
 		},

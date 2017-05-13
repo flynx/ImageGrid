@@ -476,6 +476,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 					'ribbon-focus-mode' in workspace
 						&& this.toggleRibbonFocusMode(workspace['ribbon-focus-mode'])
 					'shifts-affect-direction' in workspace
+						&& this.toggleShiftsAffectDirection
 						&& this.toggleShiftsAffectDirection(workspace['shifts-affect-direction'])
 				})],
 	],

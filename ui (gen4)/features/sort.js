@@ -23,6 +23,7 @@ var browse = require('lib/widget/browse')
 
 // XXX add sorting on load....
 // XXX keep a cached sort order for each method in .data...
+// XXX should this be split into edit/view???
 var SortActions = 
 module.SortActions = actions.Actions({
 	config: {
@@ -450,7 +451,8 @@ module.Sort = core.ImageGridFeatures.Feature({
 	tag: 'sort',
 	depends: [
 		'base',
-		'changes',
+		// XXX should we split this to edit/view???
+		'edit',
 	],
 	suggested: [
 		'ui-sort',

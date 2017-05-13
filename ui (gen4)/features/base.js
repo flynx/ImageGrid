@@ -587,10 +587,9 @@ core.ImageGridFeatures.Feature({
 
 	tag: 'base',
 	depends: [
-		'changes',
 	],
 	suggested: [
-		'base-edit',
+		'edit',
 		//'tags',
 		//'sort',
 		//'tasks',
@@ -599,14 +598,6 @@ core.ImageGridFeatures.Feature({
 	actions: BaseActions,
 
 	handlers: [
-		// manage changes...
-		// everything changed...
-		[[
-			'claer',
-			'loadURLs', 
-		],
-			function(){ this.markChanged('all') }],
-
 		['prepareIndexForWrite', 
 			function(res){
 				// we save .current unconditionally...
@@ -954,9 +945,10 @@ module.BaseEdit =
 core.ImageGridFeatures.Feature({
 	title: 'ImageGrid base editor',
 
-	tag: 'base-edit',
+	tag: 'edit',
 	depends: [
 		'base',
+		'changes',
 	],
 
 	actions: BaseEditActions,
@@ -985,6 +977,13 @@ core.ImageGridFeatures.Feature({
 						&& this.shiftImageOrder.apply(this, [].slice(arguments, 1)) } }],
 
 		// manage changes...
+		// everything changed...
+		[[
+			'claer',
+			'loadURLs', 
+		],
+			function(){ this.markChanged('all') }],
+
 		// data...
 		[[
 			//'load',
@@ -1054,6 +1053,32 @@ function(direction, dfl_tag){
 
 var TagsActions = 
 module.TagsActions = actions.Actions({
+	prevTagged: ['- Navigate/Previous image tagged with tag',
+		makeTagWalker('prev')],
+	nextTagged: ['- Navigate/Next image tagged with tag',
+		makeTagWalker('next')],
+})
+
+var Tags =
+module.Tags = core.ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'tags',
+	depends: [
+		'base',
+	],
+	suggested: [
+		'tags-edit',
+	],
+
+	actions: TagsActions,
+})
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+var TagsEditActions = 
+module.TagsEditActions = actions.Actions({
 	// tags...
 	//
 	// XXX mark updated...
@@ -1156,24 +1181,19 @@ module.TagsActions = actions.Actions({
 			}
 		}],
 	
-	prevTagged: ['- Navigate/Previous image tagged with tag',
-		makeTagWalker('prev')],
-	nextTagged: ['- Navigate/Next image tagged with tag',
-		makeTagWalker('next')],
 })
 
-
-var Tags =
-module.Tags = core.ImageGridFeatures.Feature({
+var TagsEdit =
+module.TagsEdit = core.ImageGridFeatures.Feature({
 	title: '',
 
-	tag: 'tags',
+	tag: 'tags-edit',
 	depends: [
-		'base',
-		'changes',
+		'tags',
+		'edit',
 	],
 
-	actions: TagsActions,
+	actions: TagsEditActions,
 
 	handlers: [
 		// tags and images...
@@ -1249,6 +1269,118 @@ module.Tags = core.ImageGridFeatures.Feature({
 
 				res.data.sortTags()
 			}],
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+// Image Group...
+
+var ImageGroupActions =
+module.ImageGroupActions = actions.Actions({
+	expandGroup: ['Group/Expand group', 
+		{browseMode: 'ungroup'}, 
+		function(target){ this.data.expandGroup(target || this.current) }],
+	collapseGroup: ['Group/Collapse group', {
+		journal: true,
+		browseMode: 'ungroup'}, 
+		function(target){ this.data.collapseGroup(target || this.current) }],
+
+	cropGroup: ['Crop|Group/Crop group', {
+		journal: true,
+		browseMode: 'ungroup'}, 
+		function(target){ this.crop(this.data.cropGroup(target || this.current)) }],
+})
+
+var ImageGroup =
+module.ImageGroup = core.ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'image-group',
+	depends: [
+		'base',
+	],
+	suggested: [
+		'image-group-edit',
+	],
+
+	actions: ImageGroupActions,
+})
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+var ImageEditGroupActions =
+module.ImageEditGroupActions = actions.Actions({
+	// grouping...
+	// XXX need to tell .images about this...
+	group: ['- Group|Edit/Group images', 
+		{journal: true},
+		function(gids, group){ this.data.group(gids, group) }],
+	ungroup: ['Group|Edit/Ungroup images', 
+		{journal: true},
+		{browseMode: function(){
+			return this.data.getGroup() == null && 'disabled' }},
+		function(gids, group){ this.data.ungroup(gids, group) }],
+
+	// direction can be:
+	// 	'next'
+	// 	'prev'
+	groupTo: ['- Group|Edit/Group to', 
+		{journal: true},
+		function(target, direction){
+			target = this.data.getImage(target)
+			var other = this.data.getImage(target, direction == 'next' ? 1 : -1)
+
+			// we are start/end of ribbon...
+			if(other == null){
+				return
+			}
+			
+			// add into an existing group...
+			if(this.data.isGroup(other)){
+				this.group(target, other)
+
+			// new group...
+			} else {
+				this.group([target, other])
+			}
+		}],
+	// shorthands to .groupTo(..)
+	groupBack: ['Group|Edit/Group backwards', 
+		{journal: true},
+		function(target){ this.groupTo(target, 'prev') }],
+	groupForward: ['Group|Edit/Group forwards', 
+		{journal: true},
+		function(target){ this.groupTo(target, 'next') }],
+
+	// NOTE: this will only group loaded images...
+	groupMarked: ['Group|Mark/Group loaded marked images', 
+		{journal: true},
+		function(){ this.group(this.data.getImages(this.data.getTaggedByAny('marked'))) }],
+})
+
+var ImageEditGroup =
+module.ImageEditGroup = core.ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'image-group-edit',
+	depends: [
+		'image-group',
+		'edit',
+	],
+
+	actions: ImageEditGroupActions,
+
+	handlers: [
+		[[
+			'group',
+			'ungroup',
+			'expandGroup',
+			'collapseGroup',
+		], 
+			function(_, target){ this.markChanged('data') }],
 	],
 })
 
@@ -1521,98 +1653,6 @@ module.Crop = core.ImageGridFeatures.Feature({
 	],
 
 	actions: CropActions,
-})
-
-
-
-//---------------------------------------------------------------------
-// Image Group...
-
-var ImageGroupActions =
-module.ImageGroupActions = actions.Actions({
-	// grouping...
-	// XXX need to tell .images about this...
-	group: ['- Group|Edit/Group images', 
-		{journal: true},
-		function(gids, group){ this.data.group(gids, group) }],
-	ungroup: ['Group|Edit/Ungroup images', 
-		{journal: true},
-		{browseMode: function(){
-			return this.data.getGroup() == null && 'disabled' }},
-		function(gids, group){ this.data.ungroup(gids, group) }],
-
-	// direction can be:
-	// 	'next'
-	// 	'prev'
-	groupTo: ['- Group|Edit/Group to', 
-		{journal: true},
-		function(target, direction){
-			target = this.data.getImage(target)
-			var other = this.data.getImage(target, direction == 'next' ? 1 : -1)
-
-			// we are start/end of ribbon...
-			if(other == null){
-				return
-			}
-			
-			// add into an existing group...
-			if(this.data.isGroup(other)){
-				this.group(target, other)
-
-			// new group...
-			} else {
-				this.group([target, other])
-			}
-		}],
-	// shorthands to .groupTo(..)
-	groupBack: ['Group|Edit/Group backwards', 
-		{journal: true},
-		function(target){ this.groupTo(target, 'prev') }],
-	groupForward: ['Group|Edit/Group forwards', 
-		{journal: true},
-		function(target){ this.groupTo(target, 'next') }],
-
-	// NOTE: this will only group loaded images...
-	groupMarked: ['Group|Mark/Group loaded marked images', 
-		{journal: true},
-		function(){ this.group(this.data.getImages(this.data.getTaggedByAny('marked'))) }],
-
-	expandGroup: ['Group/Expand group', 
-		{browseMode: 'ungroup'}, 
-		function(target){ this.data.expandGroup(target || this.current) }],
-	collapseGroup: ['Group/Collapse group', {
-		journal: true,
-		browseMode: 'ungroup'}, 
-		function(target){ this.data.collapseGroup(target || this.current) }],
-
-	cropGroup: ['Crop|Group/Crop group', {
-		journal: true,
-		browseMode: 'ungroup'}, 
-		function(target){ this.crop(this.data.cropGroup(target || this.current)) }],
-})
-
-
-var ImageGroup =
-module.ImageGroup = core.ImageGridFeatures.Feature({
-	title: '',
-
-	tag: 'image-group',
-	depends: [
-		'base',
-		'changes',
-	],
-
-	actions: ImageGroupActions,
-
-	handlers: [
-		[[
-			'group',
-			'ungroup',
-			'expandGroup',
-			'collapseGroup',
-		], 
-			function(_, target){ this.markChanged('data') }],
-	],
 })
 
 
