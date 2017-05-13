@@ -185,6 +185,9 @@ var CurrentImageIndicatorActions = actions.Actions({
 			if(cur.length == 0){
 				marker.hide()
 				return
+
+			} else {
+				marker.show()
 			}
 
 			// create marker if it does not exist...
