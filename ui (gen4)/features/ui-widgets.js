@@ -1322,19 +1322,22 @@ var BrowseActionsActions = actions.Actions({
 			})],
 
 	// XXX is this the right way to go???
-	about: ['Help/About...',
+	about: ['Help/$About...',
 		{'dialogTitle': 'ImageGrid.Viewer'},
 		makeUIDialog(function(path, options){
 			return browse.makeList(
 				null,
 				[
+					// XXX add  basic description (About)...
+
 					// XXX get this from package.json...
 					['Version:', '4.0.0a'],
-
-					// XXX build date...
+					// XXX
+					['Build:', '-'],
 
 					'---',
 
+					// XXX load the license file...
 					['License:', 'Pre Release'],
 
 					// XXX include other lib list and license info...
@@ -1476,7 +1479,7 @@ var ButtonsActions = actions.Actions({
 		makeButtonControlsToggler('secondary-buttons')],
 	toggleAppButtons: ['Interface/App buttons',
 		makeButtonControlsToggler('app-buttons')],
-	toggleSideButtons: ['Interface/Side buttons', 
+	toggleSideButtons: ['Interface/Touch buttons', 
 		(function(){
 			var left = makeButtonControlsToggler('side-buttons-left')
 			var right = makeButtonControlsToggler('side-buttons-right')
