@@ -17,7 +17,7 @@ var core = require('features/core')
 
 /*********************************************************************/
 
-var ReactActions = actions.Actions({
+var RenderActions = actions.Actions({
 	load: [
 		function(){
 			// XXX
@@ -97,18 +97,19 @@ var ReactActions = actions.Actions({
 		}],
 })
 
-var React = 
-module.React = core.ImageGridFeatures.Feature({
+var Render = 
+module.Render = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-react-render',
+	// XXX
+	tag: 'ui-xxx-render',
 	exclusive: ['ui-render'],
 	depends: [
 		// XXX
 	],
 
-	actions: ReactActions, 
+	actions: RenderActions, 
 
 	handlers: [
 		// XXX

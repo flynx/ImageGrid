@@ -329,6 +329,7 @@ actions.Actions({
 			}
 		}],
 
+
 	// Zoom/scale protocol...
 	resizing: [
 		core.notUserCallable(function(unit, size, overflow){
@@ -586,7 +587,7 @@ core.ImageGridFeatures.Feature({
 
 // XXX try using .ribbons.resizeRibbon(..) for basic tasks...
 // XXX try a strategy: load more in the direction of movement by an offset...
-// XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
+// XXX .updateRibbon(..) is not signature compatible with data.updateRibbon(..)
 var PartialRibbonsActions = 
 actions.Actions({
 	config: {
@@ -686,14 +687,6 @@ actions.Actions({
 		}],
 })
 
-// NOTE: I do not fully understand it yet, but PartialRibbons must be 
-// 		setup BEFORE RibbonAlignToFirst, otherwise the later will break
-// 		on shifting an image to a new ribbon...
-// 			To reproduce:
-// 				- setupe RibbonAlignToFirst first
-// 				- go to top ribbon
-// 				- shift image up
-// 		XXX The two should be completely independent.... (???)
 var PartialRibbons = 
 module.PartialRibbons = 
 core.ImageGridFeatures.Feature({

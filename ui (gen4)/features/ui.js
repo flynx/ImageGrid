@@ -51,20 +51,6 @@ var base = require('features/base')
 // This requires a 'ui-render' family feature to be present
 //
 // 	Expected render API is:
-//		Center image horizontally...
-//		.centerImage(target, align, offset, scale){
-//			-> this
-//
-//		Center ribbon vertically...
-//		.centerRibbon(target)
-//			-> this
-//
-//		Get/set ribbon rotation...
-//		.ribbonRotation()
-//			-> angle
-//		.ribbonRotation(angle)
-//			-> this
-//
 //		Get/set view scale...
 //		.viewScale()
 //		.viewScale('?')
@@ -82,6 +68,20 @@ var base = require('features/base')
 //		.fitRibbon('?')
 //			-> screenheight
 //		.fitRibbon(count, whole)
+//			-> this
+//
+//		Center image horizontally...
+//		.centerImage(target, align, offset, scale){
+//			-> this
+//
+//		Center ribbon vertically...
+//		.centerRibbon(target)
+//			-> this
+//
+//		Get/set ribbon rotation...
+//		.ribbonRotation()
+//			-> angle
+//		.ribbonRotation(angle)
 //			-> this
 //
 // 	Expected render events:
@@ -626,18 +626,18 @@ module.ViewerActions = actions.Actions({
 	// NOTE: these are here for documentation purpose...
 	//
 	// XXX should these check if they are a base feature and if so err???
-	centerImage: ['- Interface/Center an image in ribbon horizontally',
-		function(target, align, offset, scale){ }],
-	centerRibbon: ['- Interface/Center a ribbon vertically',
-		function(target){ }],
-	ribbonRotation: ['- Interface|Ribbon/', 
-		function(angle){ }],
 	viewScale: ['- Zoom/',
 		function(scale){ }],
 	fitImage: ['Zoom/Fit image',
 		function(count, overflow){ }],
 	fitRibbon: ['Zoom/Fit ribbon vertically',
 		function(count, whole){ }],
+	centerImage: ['- Interface/Center an image in ribbon horizontally',
+		function(target, align, offset, scale){ }],
+	centerRibbon: ['- Interface/Center a ribbon vertically',
+		function(target){ }],
+	ribbonRotation: ['- Interface|Ribbon/', 
+		function(angle){ }],
 })
 
 var Viewer =
