@@ -224,7 +224,7 @@ module.ViewerActions = actions.Actions({
 	// 						min(image.width, image.height)
 	//
 	get screenfit(){
-		if(!this.ribbons || !this.dom){
+		if(!this.dom){
 			return null
 		}
 		var viewer = this.dom
@@ -968,6 +968,7 @@ module.URLHash = core.ImageGridFeatures.Feature({
 
 // XXX at this point this does not support target lists...
 // XXX shift up/down to new ribbon is not too correct...
+// XXX depends on .ribbons...
 var ShiftAnimation =
 module.ShiftAnimation = core.ImageGridFeatures.Feature({
 	title: '',
@@ -1287,6 +1288,7 @@ module.Cursor = core.ImageGridFeatures.Feature({
 // 		system-wide...
 
 // XXX STUB: needs more thought.... 
+// XXX depends on .ribbons...
 var ControlActions = actions.Actions({
 	config: {
 		'control-mode': 'indirect',
@@ -2073,6 +2075,7 @@ module.FailsafeDevTools = core.ImageGridFeatures.Feature({
 
 /*********************************************************************/
 
+// XXX depends on .ribbons...
 var PreviewFilters
 module.PreviewFilters = core.ImageGridFeatures.Feature({
 	title: '',
