@@ -41,7 +41,9 @@ var core = require('features/core')
 //---------------------------------------------------------------------
 
 // XXX DEBUG: remove when not needed...
-window.vdom = vdom
+if(typeof(window) != 'undefined'){
+	window.vdom = vdom
+}
 
 
 //---------------------------------------------------------------------

@@ -20,6 +20,11 @@ require('features/history')
 require('features/app')
 require('features/peer')
 require('features/ui')
+// XXX
+require('features/ui-ribbons')
+require('features/ui-virtual-dom')
+require('features/ui-react')
+// XXX
 require('features/ui-partial-ribbons-precache')
 require('features/ui-partial-ribbons')
 require('features/ui-partial-ribbons-2')

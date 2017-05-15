@@ -66,6 +66,11 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui',
 	'keyboard',
 
+	// XXX
+	'ui-ribbons-render',
+	'ui-vdom-render',
+	'ui-react-render',
+
 	// features...
 	'ui-cursor',
 	'ui-animation',

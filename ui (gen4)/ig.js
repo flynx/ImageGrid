@@ -19,6 +19,9 @@ requirejs.config({
 	paths: {
 		//text: 'node_modules/requirejs-plugins/lib/text',
 		//json: 'node_modules/requirejs-plugins/src/json',
+		
+		//react: 'node_modules/react/dist/react-with-addons.min.js',
+		//'react-dom': 'node_modules/react-dom/dist/react-dom.min.js',
 
 		'lib/object': 'node_modules/ig-object/object',
 		'lib/actions': 'node_modules/ig-actions/actions',

@@ -1311,7 +1311,7 @@ module.FileSystemSaveHistory = core.ImageGridFeatures.Feature({
 		['saveIndex',
 			function(res){
 				var that = this
-				var comments = this.comments.save
+				var comments = this.comments && this.comments.save
 
 				if(comments && comments.current){
 					res

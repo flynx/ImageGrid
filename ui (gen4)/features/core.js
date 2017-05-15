@@ -629,7 +629,7 @@ var JournalActions = actions.Actions({
 			var handler = function(action){
 				return function(){
 					var cur = this.current
-					var args = args2array(arguments)
+					var args = util.args2array(arguments)
 
 					var data = {
 						type: 'basic',
