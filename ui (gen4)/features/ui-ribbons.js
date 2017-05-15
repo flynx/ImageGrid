@@ -97,6 +97,7 @@ function updateImagePosition(actions, target){
 
 
 /*********************************************************************/
+// Base ribbons viewer...
 
 var RibbonsActions = 
 actions.Actions({
@@ -457,6 +458,7 @@ core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// Edit...
 
 var RibbonsEditActions = 
 actions.Actions({

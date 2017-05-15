@@ -4,7 +4,7 @@
 *
 * Features:
 * 	- ui
-* 		maps ribbons to base feature (data + images)
+* 		implements basic ui actions...
 *	- config-local-storage
 *		maintain configuration state in local storage
 *	- ui-url-hash
@@ -39,7 +39,6 @@ var keyboard = require('lib/keyboard')
 
 var data = require('imagegrid/data')
 var images = require('imagegrid/images')
-var ribbons = require('imagegrid/ribbons')
 
 var core = require('features/core')
 var base = require('features/base')
@@ -49,6 +48,53 @@ var base = require('features/base')
 /*********************************************************************/
 // Viewer (widget/interface)...
 //
+// This requires a 'ui-render' family feature to be present
+//
+// 	Expected render API is:
+//		Center image horizontally...
+//		.centerImage(target, align, offset, scale){
+//			-> this
+//
+//		Center ribbon vertically...
+//		.centerRibbon(target)
+//			-> this
+//
+//		Get/set ribbon rotation...
+//		.ribbonRotation()
+//			-> angle
+//		.ribbonRotation(angle)
+//			-> this
+//
+//		Get/set view scale...
+//		.viewScale()
+//		.viewScale('?')
+//			-> scale
+//		.viewScale(scale)
+//			-> this
+//
+//		Get/set screen width (measured in image blocks)...
+//		.fitImage('?')
+//			-> screenwidth
+//		.fitImage(count, overflow)
+//			-> this
+//
+//		Get/set screen height (measured in image blocks)...
+//		.fitRibbon('?')
+//			-> screenheight
+//		.fitRibbon(count, whole)
+//			-> this
+//
+// 	Expected render events:
+//		Pre/post wrap the resize animation...
+//		.resizing(unit, size, overflow)
+//
+// 	Optional render API:
+//		Update ribbon...
+//		.updateRibbon(target)
+//			-> this
+//
+//
+//
 // Workspaces:
 // 	ui-chrome-hidden		- all features handling chrome elements 
 // 								should hide all the chrome when this 
@@ -56,13 +102,14 @@ var base = require('features/base')
 // 								NOTE: other workspace functionality 
 // 									should be handled without change.
 //
+//
+//
 // NOTE: this uses the base feature API but does not need it imported...
 //
 // XXX need a way to neutrally scale images and store that scale...
 // 		- fit N images/ribbons is neutral but might mean different things 
 // 			depending on image and viewer proportions
 // 		- .scale is a bad way to go...
-// XXX remove dependency on .ribbons
 var ViewerActions = 
 module.ViewerActions = actions.Actions({
 	config: {
@@ -253,29 +300,6 @@ module.ViewerActions = actions.Actions({
 		}],
 
 
-	// Renderer API...
-	/*/ XXX do we need these here???
-	centerImage: ['- Interface/Center an image in ribbon horizontally',
-		function(target, align, offset, scale){
-		}],
-	centerRibbon: ['- Interface/Center a ribbon vertically',
-		function(target){
-		}],
-	ribbonRotation: ['- Interface|Ribbon/', 
-		function(a){ 
-		}],
-	viewScale: ['- Zoom/',
-		function(scale){
-		}],
-	fitImage: ['Zoom/Fit image',
-		function(count, overflow){
-		}],
-	fitRibbon: ['Zoom/Fit ribbon vertically',
-		function(count, whole){
-		}],
-	//*/
-
-
 	// ribbon aligning and centering...
 	centerViewer: ['- Interface/Center the viewer',
 		function(target){
@@ -313,7 +337,6 @@ module.ViewerActions = actions.Actions({
 	// 		order...
 	// XXX skip off-screen ribbons (???)
 	// XXX should the timeout be configurable???
-	// XXX remove dependency on .ribbons
 	alignByOrder: ['Interface/Align ribbons by image order',
 		function(target, scale, now){
 			if(target == 'now'){
@@ -321,17 +344,13 @@ module.ViewerActions = actions.Actions({
 				target = null
 			}
 
-			var ribbons = this.ribbons
 			var data = this.data
 
 			if(data == null){
 				return
 			}
 
-			// XXX handle raw dom elements...
-			var gid = target instanceof jQuery 
-				? ribbons.getElemGID(target)
-				: data.getImage(target)
+			var gid = data.getImage(target)
 
 			// align current ribbon...
 			// NOTE: the ordering of calls here makes it simpler to load
@@ -386,17 +405,13 @@ module.ViewerActions = actions.Actions({
 		function(target){
 			target = target == 'now' ? null : target
 
-			var ribbons = this.ribbons
 			var data = this.data
 
 			if(data == null){
 				return
 			}
 
-			// XXX handle raw dom elements...
-			var gid = target instanceof jQuery 
-				? ribbons.getElemGID(target)
-				: data.getImage(target)
+			var gid = data.getImage(target)
 
 			// align current ribbon...
 			this
@@ -603,6 +618,26 @@ module.ViewerActions = actions.Actions({
 
 			this.reload()
 		}],
+
+
+	// Renderer API...
+	//
+	// NOTE: these are expected to be implemented by the renderer...
+	// NOTE: these are here for documentation purpose...
+	//
+	// XXX should these check if they are a base feature and if so err???
+	centerImage: ['- Interface/Center an image in ribbon horizontally',
+		function(target, align, offset, scale){ }],
+	centerRibbon: ['- Interface/Center a ribbon vertically',
+		function(target){ }],
+	ribbonRotation: ['- Interface|Ribbon/', 
+		function(angle){ }],
+	viewScale: ['- Zoom/',
+		function(scale){ }],
+	fitImage: ['Zoom/Fit image',
+		function(count, overflow){ }],
+	fitRibbon: ['Zoom/Fit ribbon vertically',
+		function(count, whole){ }],
 })
 
 var Viewer =
