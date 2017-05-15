@@ -458,7 +458,7 @@ var KeyboardActions = actions.Actions({
 							return that.__keyboard_config
 						}
 					},
-					function(){ return that.ribbons.viewer })
+					function(){ return that.dom })
 		return kb },
 
 	testKeyboardDoc: ['- Interface/',
@@ -718,9 +718,9 @@ var KeyboardActions = actions.Actions({
 				// NOTE: the target element must be focusable...
 				var target =
 				this.__keyboard_event_source =
-					this.config['keyboard-event-source'] == null ? this.ribbons.viewer 
+					this.config['keyboard-event-source'] == null ? this.dom 
 					: this.config['keyboard-event-source'] == 'window' ? $(window)
-					: this.config['keyboard-event-source'] == 'viewer' ? this.ribbons.viewer
+					: this.config['keyboard-event-source'] == 'viewer' ? this.dom
 					: this.config['keyboard-event-source'] == 'document' ? $(document)
 					: $(this.config['keyboard-event-source'])
 

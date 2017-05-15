@@ -7,6 +7,7 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+var object = require('lib/object')
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -16,7 +17,29 @@ var core = require('features/core')
 
 /*********************************************************************/
 
+var ViewerClassPrototype = {
+}
+
+
+var ViewerPrototype = {
+	sync: function(){
+	},
+}
+
+
+var Viewer =
+module.Viewer =
+object.makeConstructor('Viewer', 
+	ViewerClassPrototype,
+	ViewerPrototype)
+
+
+
+/*********************************************************************/
+
 var ReactActions = actions.Actions({
+	get viewer(){
+	},
 })
 
 var React = 

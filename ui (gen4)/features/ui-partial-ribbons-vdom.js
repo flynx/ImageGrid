@@ -435,9 +435,7 @@ var VirtualDOMRibbonsPrototype = {
 	// 		concept, so we build the state on demand...
 	// XXX get scale from config on initial load...
 	sync: function(target, size){
-		var dom = this.dom = this.dom 
-			// get/create the ribbon-set...
-			|| this.imagegrid.ribbons.getRibbonSet(true)
+		var dom = this.dom
 
 		var state = this.state ? Object.create(this.state) : {}
 		target && (state.target = target)
@@ -447,7 +445,7 @@ var VirtualDOMRibbonsPrototype = {
 		if(this.vdom == null){
 			var n = this.vdom = this.makeView(state, true)
 			var v = vdom.create(n)
-			dom.replaceWith(v)
+			this.imagegrid.dom.append(v)
 			this.dom = v
 
 		// patch state...

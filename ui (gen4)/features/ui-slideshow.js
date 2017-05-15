@@ -145,7 +145,7 @@ var SlideshowActions = actions.Actions({
 
 	toggleSlideshow: ['Slideshow/Slideshow quick toggle',
 		toggler.CSSClassToggler(
-			function(){ return this.ribbons.viewer }, 
+			function(){ return this.dom }, 
 			'slideshow-running',
 			function(state){
 				// start...

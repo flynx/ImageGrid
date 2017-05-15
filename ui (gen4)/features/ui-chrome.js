@@ -46,12 +46,12 @@ var BoundsIndicatorsActions = actions.Actions({
 				bottom: '.bottom-indicator',
 			}[direction]
 
-			var indicator = this.ribbons.viewer.find(cls)
+			var indicator = this.dom.find(cls)
 
 			if(indicator.length == 0){
 				indicator = $('<div>')
 					.addClass(cls.replace('.', ''))
-					.appendTo(this.ribbons.viewer)
+					.appendTo(this.dom)
 			}
 
 			return indicator
@@ -262,7 +262,7 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 			function(){
 				var fadein = this.config['current-image-indicator-fadein']
 				this.updateCurrentImageIndicator()
-				this.ribbons.viewer.find('.current-marker')
+				this.dom.find('.current-marker')
 					.css({
 						display: 'block',
 						opacity: 0,
@@ -302,7 +302,7 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 					&& clearTimeout(this.__current_image_indicator_restore_timeout)
 				delete this.__current_image_indicator_restore_timeout
 
-				this.ribbons.viewer
+				this.dom
 					.find('.current-marker')
 						.velocity({opacity: 0}, { duration: 100 })
 			}],
@@ -312,7 +312,7 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 				this.__current_image_indicator_restore_timeout = setTimeout(function(){
 					that.updateCurrentImageIndicator()
 
-					that.ribbons.viewer
+					that.dom
 						.find('.current-marker')
 							.velocity({opacity: 1}, { duration: 100 })
 				}, this.config['current-image-indicator-restore-delay'] || 500)
@@ -322,12 +322,12 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 		['toggleSingleImage',
 			function(){
 				if(this.toggleSingleImage('?') == 'off'){
-					this.ribbons.viewer.find('.current-marker')
+					this.dom.find('.current-marker')
 						.delay(150)
 						.animate({opacity: 1}, 100)
 
 				} else {
-					this.ribbons.viewer.find('.current-marker')
+					this.dom.find('.current-marker')
 						.css({ opacity: 0 })
 				}
 			}],
@@ -343,7 +343,7 @@ var makeIndicatorHiderOnFastAction = function(hide_timeout){
 		}
 
 		var that = this
-		var m = this.ribbons.viewer.find('.current-marker')
+		var m = this.dom.find('.current-marker')
 		var t = this.config[hide_timeout]
 
 		var cur = this.current
@@ -431,13 +431,13 @@ module.CurrentImageIndicatorHideOnScreenNav = core.ImageGridFeatures.Feature({
 		// NOTE: we use .pre events here to see if we have moved...
 		['prevScreen.post nextScreen.post',
 			function(){ 
-				var m = this.ribbons.viewer.find('.current-marker')
+				var m = this.dom.find('.current-marker')
 
 				m.css({ opacity: 0 })
 			}],
 		['focusImage.post',
 			function(){ 
-				var m = this.ribbons.viewer.find('.current-marker')
+				var m = this.dom.find('.current-marker')
 
 				m.css({ opacity: '' })
 			}],
@@ -464,7 +464,7 @@ var updateBaseRibbonIndicator = function(img){
 	}
 
 	if(m.length == 0){
-		m = this.ribbons.viewer.find('.base-ribbon-marker')
+		m = this.dom.find('.base-ribbon-marker')
 
 		// make the indicator...
 		if(m.length == 0){
@@ -478,7 +478,7 @@ var updateBaseRibbonIndicator = function(img){
 
 	// XXX this is wrong -- need to calculate the offset after the move and not now...
 	if(base.offset().left < 0){
-		m.css('left', (img.position().left + img.width()/2 - this.ribbons.viewer.width()/2) / scale)
+		m.css('left', (img.position().left + img.width()/2 - this.dom.width()/2) / scale)
 
 	} else {
 		m.css('left', '')
@@ -530,7 +530,7 @@ module.PassiveBaseRibbonIndicator = core.ImageGridFeatures.Feature({
 	actions: actions.Actions({
 		togglePassiveBaseRibbonIndicator: ['Interface/Passive base ribbon indicator',
 			toggler.CSSClassToggler(
-				function(){ return this.ribbons.viewer }, 
+				function(){ return this.dom }, 
 				'show-passive-base-ribbon-indicator',
 				function(state){ 
 					this.config['ui-show-passive-base-ribbon-indicator'] = state == 'on' }) ],

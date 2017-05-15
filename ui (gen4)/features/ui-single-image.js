@@ -127,7 +127,7 @@ var SingleImageActions = actions.Actions({
 				return
 			}
 
-			var viewer = this.ribbons.viewer
+			var viewer = this.dom
 
 			var ribbon = this.ribbons.getRibbon()
 			var images = viewer.find('.ribbon .image')
@@ -239,7 +239,7 @@ var SingleImageActions = actions.Actions({
 
 	toggleSingleImage: ['Interface/Single image view', 
 		toggler.CSSClassToggler(
-			function(){ return this.ribbons.viewer }, 
+			function(){ return this.dom }, 
 			'single-image-mode',
 			function(state){
 				if(state == 'on'){
@@ -344,7 +344,7 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 			function(){ 
 				// prevent this from doing anything while no viewer...
 				if(!this.ribbons 
-						|| !this.ribbons.viewer 
+						|| !this.dom 
 						|| this.ribbons.getRibbonSet().length == 0){
 					return
 				}
@@ -510,7 +510,7 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 				return function(){
 					// prevent this from doing anything while no viewer...
 					if(!this.ribbons 
-							|| !this.ribbons.viewer 
+							|| !this.dom 
 							|| this.ribbons.getRibbonSet().length == 0){
 						return
 					}

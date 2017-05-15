@@ -132,7 +132,7 @@ var AppControlActions = actions.Actions({
 					this.ribbons.preventTransitions()
 
 					// hide the viewer to hide any animation crimes...
-					this.ribbons.viewer[0].style.visibility = 'hidden'
+					this.dom[0].style.visibility = 'hidden'
 
 					// XXX async...
 					// 		...this complicates things as we need to do the next
@@ -146,7 +146,7 @@ var AppControlActions = actions.Actions({
 							.ribbons
 								.restoreTransitions()
 
-						that.ribbons.viewer[0].style.visibility = ''
+						that.dom[0].style.visibility = ''
 					}, 100)
 				}
 
@@ -292,7 +292,7 @@ module.AppButtons = core.ImageGridFeatures.Feature({
 		['start toggleFullScreen', 
 			function(){
 				var fullscreen = this.toggleFullScreen('?')
-				var buttons = this.ribbons.viewer.find('.app-buttons')
+				var buttons = this.dom.find('.app-buttons')
 				
 				// fullscreen button...
 				buttons.find('.fullscreen.button')

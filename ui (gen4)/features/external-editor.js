@@ -175,7 +175,7 @@ var ExternalEditorUIActions = actions.Actions({
 								var path = e.find('.text').last().text()
 								var txt = e.find('.text').first().text()
 
-								var b = overlay.Overlay(that.ribbons.viewer, 
+								var b = overlay.Overlay(that.dom, 
 									browseWalk.makeWalk(null, path, 
 											// XXX
 											'*+(exe|cmd|ps1|sh)',
@@ -291,7 +291,7 @@ var ExternalEditorUIActions = actions.Actions({
 					make(['Add new editor...'])
 						.on('open', function(){
 							closingPrevented = true
-							var b = overlay.Overlay(that.ribbons.viewer, 
+							var b = overlay.Overlay(that.dom, 
 								browseWalk.makeWalk(
 										null, '/', 
 										// XXX

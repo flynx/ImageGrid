@@ -45,7 +45,7 @@ function(context, cls, data){
 	cls = cls instanceof Array ? cls : cls.split(/\s+/g)
 
 	// remove old versions...
-	context.ribbons.viewer.find('.'+ cls.join('.')).remove()
+	context.dom.find('.'+ cls.join('.')).remove()
 
 	// make container...
 	var controls = $('<div>')
@@ -103,7 +103,7 @@ function(context, cls, data){
 	})
 
 	controls
-		.appendTo(context.ribbons.viewer)
+		.appendTo(context.dom)
 }
 
 // XXX write docs:
@@ -121,7 +121,7 @@ function(cls, cfg, parent){
 
 	return toggler.Toggler(null,
 		function(){ 
-			parent = parent == null ? this.ribbons.viewer
+			parent = parent == null ? this.dom
 				: parent instanceof Function ? parent.call(this) 
 				: parent
 			return parent.find('.'+ cls.join('.')).length > 0 ? 'on' : 'off' 
@@ -135,7 +135,7 @@ function(cls, cfg, parent){
 					&& makeButtonControls(this, cls, config)
 
 			} else {
-				this.ribbons.viewer.find('.'+ cls.join('.')).remove()
+				this.dom.find('.'+ cls.join('.')).remove()
 			}
 		})
 }
@@ -341,7 +341,7 @@ module.makeUIContainer = function(make){
 						// 						is in a state where the window
 						// 						is in focus but keys are not 
 						// 						tracked...
-						: that.ribbons.viewer.focus()
+						: that.dom.focus()
 				})
 				// Compensate for click focusing the parent dialog when
 				// a child is created...
@@ -427,7 +427,7 @@ var makeDrawer = function(direction){
 		var that = this
 		options = options || {}
 		var parent = options.parentElement 
-		parent = parent ? $(parent) : this.ribbons.viewer 
+		parent = parent ? $(parent) : this.dom 
 
 		options.direction = direction || 'bottom'
 
@@ -513,7 +513,7 @@ var DialogsActions = actions.Actions({
 	// 		element
 	// 		null
 	get modal(){
-		var modal = this.ribbons.viewer
+		var modal = this.dom
 			.find('.modal-widget')
 				.last()
 		return modal.data('widget-controller') 
@@ -540,7 +540,7 @@ var DialogsActions = actions.Actions({
 	Overlay: ['- Interface/',
 		makeUIContainer(function(dialog, options){
 			var that = this
-			return overlay.Overlay(this.ribbons.viewer, dialog, options)
+			return overlay.Overlay(this.dom, dialog, options)
 				// focus top modal on exit...
 				.on('close', function(){
 					var o = that.modal
@@ -575,7 +575,7 @@ var DialogsActions = actions.Actions({
 				client: dialog,
 				dom: $('<div>')
 					.append(dialog.dom || dialog)
-					.appendTo(this.ribbons.viewer)
+					.appendTo(this.dom)
 					.draggable(),
 				close: function(func){
 					if(func){
@@ -762,7 +762,7 @@ var DialogsActions = actions.Actions({
 
 	toggleOverlayBlur: ['Interface/Dialog overlay blur',
 		toggler.CSSClassToggler(
-			function(){ return this.ribbons.viewer }, 
+			function(){ return this.dom }, 
 			'overlay-blur-enabled',
 			function(state){ this.config['ui-overlay-blur'] = state }) ],
 })
@@ -1406,7 +1406,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 		['load',
 			function(){
 				var that = this
-				var viewer = this.ribbons.viewer
+				var viewer = this.dom
 
 				!viewer.data('context-menu') 
 					&& viewer
@@ -1528,7 +1528,7 @@ module.Buttons = core.ImageGridFeatures.Feature({
 				$('.main-buttons.buttons .crop.button sub')
 					.text(this.crop_stack ? this.crop_stack.length : '') }],
 		// update zoom button status...
-		['setScale', 
+		['viewScale', 
 			function(){
 				$('.secondary-buttons.buttons .zoom.button sub')
 					.text(Math.round(this.screenwidth)) }],
@@ -1897,7 +1897,7 @@ var WidgetTestActions = actions.Actions({
 				make('c/')
 			}
 
-			var o = overlay.Overlay(this.ribbons.viewer, 
+			var o = overlay.Overlay(this.dom, 
 				browse.makePathList(null, {
 					'a/*': list,
 					'b/*': list,
@@ -1914,8 +1914,8 @@ var WidgetTestActions = actions.Actions({
 
 
 	// XXX migrate to the dialog framework...
-	// XXX use this.ribbons.viewer as base...
-	// XXX BUG: when using this.ribbons.viewer as base some actions leak
+	// XXX use this.dom as base...
+	// XXX BUG: when using this.dom as base some actions leak
 	// 		between the two viewers...
 	showTaggedInDrawer: ['- Test/Show tagged in drawer',
 		function(tag){
@@ -1928,7 +1928,7 @@ var WidgetTestActions = actions.Actions({
 					height: H,
 					background: 'black',
 				})
-			// XXX use this.ribbons.viewer as base...
+			// XXX use this.dom as base...
 			// XXX when using viewer zoom and other stuff get leaked...
 			var widget = drawer.Drawer($('body'), 
 				$('<div>')

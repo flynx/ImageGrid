@@ -48,7 +48,7 @@ var ProgressActions = actions.Actions({
 	// XXX revise styles...
 	showProgress: ['- Interface/Show progress bar...',
 		function(text, value, max){
-			var viewer = this.ribbons.viewer
+			var viewer = this.dom
 			var that = this
 
 			var msg = text instanceof Array ? text.slice(1).join(': ') : null

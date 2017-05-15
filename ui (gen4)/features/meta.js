@@ -66,10 +66,14 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui',
 	'keyboard',
 
+	// XXX BUG?: should this be indicated as a missing dependency???
+	'missing-feature',
+
 	// XXX
 	'ui-ribbons-render',
 	'ui-vdom-render',
-	'ui-react-render',
+	//'ui-react-render',
+	//*/
 
 	// features...
 	'ui-cursor',

@@ -102,22 +102,27 @@ $(function(){
 	m = Object.keys(m).filter(function(e){ return m[e] != null })
 	console.log('Modules (%d):', m.length, m)
 
+	try {
+		// setup actions...
+		window.ig = 
+		window.ImageGrid = 
+			viewer.ImageGridFeatures
+				.setup([
+					'viewer-testing',
 
-	// setup actions...
-	window.ig = 
-	window.ImageGrid = 
-		viewer.ImageGridFeatures
-			.setup([
-				'viewer-testing',
+					'demo',
 
-				'demo',
+					// XXX this is not for production...
+					'experiments',
 
-				// XXX this is not for production...
-				'experiments',
+					//'-commandline',
+					//'-ui-partial-ribbons',
+				])
 
-				//'-commandline',
-				//'-ui-partial-ribbons',
-			])
+	} catch(err){
+		console.error(err)
+		return
+	}
 
 
 	// used to switch experimental actions on (set to true) or off (unset or false)...
@@ -130,6 +135,9 @@ $(function(){
 		&& console.warn('Features excluded (%d):',
 			ig.features.excluded.length, 
 			ig.features.excluded)
+	Object.keys(ig.features.missing).length > 0
+		&& console.warn('Features disabled (%d):',
+			ig.features.missing)
 	ig.features.disabled.length > 0 
 		&& console.log('Features disabled (%d):',
 			ig.features.disabled.length, 

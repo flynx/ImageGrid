@@ -27,7 +27,7 @@ var RangeActions = actions.Actions({
 	makeBrace: ['- Range/',
 		function(type, gid){
 			var cls = type == 'open' ? 'brace-open' : 'brace-close'
-			var r = this.ribbons.viewer.find('.ribbon')
+			var r = this.dom.find('.ribbon')
 
 			var brace = this.ribbons.getRibbon(gid).find('.mark.'+cls)
 
@@ -61,7 +61,7 @@ var RangeActions = actions.Actions({
 			// 		go but it sure makes things simpler...
 			if(range == null){
 				update = true
-				this.ribbons.viewer
+				this.dom
 					.find('.ribbon .mark.brace')
 						.remove()
 
@@ -90,7 +90,7 @@ var RangeActions = actions.Actions({
 			}
 
 			if(update){
-				var r = this.ribbons.viewer.find('.ribbon')
+				var r = this.dom.find('.ribbon')
 
 				// XXX this does not work for non-current images ...
 				this.ribbons.preventTransitions(r)
@@ -103,7 +103,7 @@ var RangeActions = actions.Actions({
 		// XXX not sure if this is the right way to go...
 		{browseMode: function(){ return !this.data.__range && 'disabled' }},
 		function(image){
-			var r = this.ribbons.viewer.find('.ribbon')
+			var r = this.dom.find('.ribbon')
 
 			delete this.data.__range
 			this.updateRangeIndicators()
@@ -246,7 +246,7 @@ module.Range = core.ImageGridFeatures.Feature({
 
 		// show/hide off-screen indicators...
 		// XXX STUB: should we animate indicators???
-		['setScale.pre',
+		['viewScale.pre',
 			function(scale){
 				var range = this.data.__range
 				if(!this.ribbons || !range){
@@ -259,7 +259,7 @@ module.Range = core.ImageGridFeatures.Feature({
 			}],
 		[[
 			'focusImage',
-			'setScale',
+			'viewScale',
 			'updateRangeIndicators',
 		],
 			function(_, gid){
@@ -273,7 +273,7 @@ module.Range = core.ImageGridFeatures.Feature({
 					return
 				}
 
-				var Wr = this.ribbons.viewer.width()
+				var Wr = this.dom.width()
 				var W = (Wr / this.scale) / 2
 
 				var a = this.data.getImageOrder(range[0])

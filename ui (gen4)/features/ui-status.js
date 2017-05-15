@@ -33,7 +33,7 @@ var makeStateIndicatorItem = function(container, type, text){
 	var item = $('<div>')
 			.addClass('item '+ type || '')
 			.attr('text', text)
-	this.ribbons.viewer.find('.state-indicator-container.'+container)
+	this.dom.find('.state-indicator-container.'+container)
 		.append(item)
 	return item
 }
@@ -461,11 +461,11 @@ var StatusBarActions = actions.Actions({
 			// XXX change class...
 			function(){ 
 				// no viewer yet...
-				if(!this.ribbons || !this.ribbons.viewer){
+				if(!this.ribbons || !this.dom){
 					return $()
 				}
 
-				var bar = this.ribbons.viewer.find('.state-indicator-container.global-info') 
+				var bar = this.dom.find('.state-indicator-container.global-info') 
 				if(bar.length == 0){
 					bar = makeStateIndicator('global-info overlay-info statusbar') 
 						.addClass(this.config['status-bar-mode'] 
@@ -484,7 +484,7 @@ var StatusBarActions = actions.Actions({
 						.on('mouseout', function(){
 							bar.find('.info').empty()
 						})
-						.appendTo(this.ribbons.viewer)
+						.appendTo(this.dom)
 				}
 				return bar
 			}, 
@@ -624,7 +624,7 @@ var StatusBarActions = actions.Actions({
 				this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
 
 				// XXX do this better...
-				this.ribbons.viewer.find('.global-info .index .position').focus().click()
+				this.dom.find('.global-info .index .position').focus().click()
 			}
 		}],
 	editStatusBarRibbon: ['- Interface/Edit ribbon focus position in statusbar',
@@ -632,11 +632,11 @@ var StatusBarActions = actions.Actions({
 			this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
 
 			// XXX do this better...
-			this.ribbons.viewer.find('.global-info .ribbon-number').focus().click()
+			this.dom.find('.global-info .ribbon-number').focus().click()
 		}],
 	toggleStatusBarIndexMode: ['Interface/Status bar index mode',
 		toggler.CSSClassToggler(
-			function(){ return this.ribbons.viewer.find('.global-info .index') },
+			function(){ return this.dom.find('.global-info .index') },
 			['normal', 'global'],
 			function(state){
 				this.toggleStatusBar('?') == 'none' && this.toggleStatusBar()
@@ -652,7 +652,7 @@ var StatusBarActions = actions.Actions({
 	// XXX revise...
 	showStatusBarInfo: ['- Interface/',
 		function(text){
-			var bar = this.ribbons.viewer.find('.state-indicator-container.global-info') 
+			var bar = this.dom.find('.state-indicator-container.global-info') 
 
 			if(text){
 				bar.find('.info').text(text)

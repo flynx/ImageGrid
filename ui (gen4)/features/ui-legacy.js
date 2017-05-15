@@ -153,7 +153,7 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 								// hide and remove current image indicator...
 								// NOTE: it will be reconstructed on 
 								// 		next .focusImage(..)
-								var m = that.ribbons.viewer
+								var m = that.dom
 									.find('.current-marker')
 										.velocity({opacity: 0}, {
 											duration: 100,
@@ -245,14 +245,14 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 
 					if(state == null){
 						return (this.ribbons 
-								&& this.ribbons.viewer 
-								&& this.ribbons.viewer.data('hammer')) 
+								&& this.dom 
+								&& this.dom.data('hammer')) 
 							|| 'none'
 
 					// on...
 					} else if(state == 'handling-swipes'){
 						var that = this
-						var viewer = this.ribbons.viewer
+						var viewer = this.dom
 
 						// prevent multiple handlers...
 						if(viewer.data('hammer') != null){
@@ -272,7 +272,7 @@ module.IndirectControl = core.ImageGridFeatures.Feature({
 
 					// off...
 					} else {
-						this.ribbons.viewer
+						this.dom
 							.off('swipeleft')
 							.off('swiperight')
 							.off('swipeup')

@@ -22,7 +22,7 @@
 * Experimental Features:
 *	- ui-ribbons-placement
 *		manage different low level ribbon placement mechanics
-*		XXX experimental...
+*		XXX EXPERIMENTAL...
 *	- auto-single-image
 *	- auto-ribbon
 *
@@ -234,21 +234,11 @@ module.ViewerActions = actions.Actions({
 		'ribbon-align-delay': 50,
 	},
 
-	// Ribbons...
-	//
-	// NOTE: this expects that ribbons will maintain .parent.images...
-	// NOTE: when getting rid of ribbons need to also remove the .parent
-	// 		reference...
-	get ribbons(){
-		return this.__ribbons },
-	set ribbons(ribbons){
-		this.__ribbons = ribbons
-		ribbons.parent = this
-	},
+	// Viewer dom... 
+	dom: null,
 
 	// Current image data...
 	//
-	// XXX experimental...
 	get image(){
 		return this.images && this.images[this.current] },
 	set image(val){
@@ -259,28 +249,21 @@ module.ViewerActions = actions.Actions({
 
 	// Scaling...
 	//
-	// Normal scale...
+	// NOTE: .screenwidth / .screenheight are measured in square image blocks...
 	get scale(){
-		return this.ribbons != null ? this.ribbons.scale() : null },
+		return this.viewScale() },
 	set scale(s){
-		this.setScale(s) },
-	
-	// Screen width in image blocks...
-	//
-	// NOTE: this will change depending on image block sizing...
-	// NOTE: this not usable for image blocks of different sizes...
+		this.viewScale(s) },
 	get screenwidth(){
-		return this.ribbons != null ? this.ribbons.getScreenWidthImages() : null },
+		return this.fitImage('?') },
 	set screenwidth(n){
 		this.fitImage(n, false) },
-
-	// Screen height in image blocks...
 	get screenheight(){
-		return this.ribbons != null ? this.ribbons.getScreenHeightRibbons() : null },
+		return this.fitRibbon('?') },
 	set screenheight(n){
 		this.fitRibbon(n, false) },
 
-	// Screen size in image radii on the narrow side of the screen...
+	// Screen size in image "radii" on the narrow side of the screen...
 	//
 	// E.g.
 	//
@@ -289,10 +272,10 @@ module.ViewerActions = actions.Actions({
 	// 						min(image.width, image.height)
 	//
 	get screenfit(){
-		if(!this.ribbons || !this.ribbons.viewer){
+		if(!this.ribbons || !this.dom){
 			return null
 		}
-		var viewer = this.ribbons.viewer
+		var viewer = this.dom
 		var W = viewer.width()
 		var H = viewer.height()
 
@@ -301,7 +284,7 @@ module.ViewerActions = actions.Actions({
 			: this.screenheight
 	},
 	set screenfit(n){
-		var viewer = this.ribbons.viewer
+		var viewer = this.dom
 		var W = viewer.width()
 		var H = viewer.height()
 
@@ -313,170 +296,12 @@ module.ViewerActions = actions.Actions({
 		}
 	},
 
-	load: [
-		function(data){
-			return function(){
-				// recycle the viewer if one is not given specifically...
-				var viewer = data.viewer
-				viewer = viewer == null && this.ribbons != null 
-					? this.ribbons.viewer 
-					: viewer
-
-				if(this.ribbons == null){
-					this.ribbons = ribbons.Ribbons(viewer, this.images)
-					// XXX is this correct???
-					this.ribbons.__image_updaters = [this.updateImage.bind(this)]
-
-				} else {
-					this.ribbons.clear()
-					this.ribbons.images = this.images
-				}
-
-				this.reload()
-			}
-		}],
-	// NOTE: this will pass the .ribbons.updateData(..) a custom ribbon 
-	// 		updater if one is defined here as .updateRibbon(target) action
-	//
-	// XXX HACK: two sins:
-	// 		- actions.updateRibbon(..) and ribbons.updateRibbon(..)
-	// 		  are NOT signature compatible...
-	// 		- we depend on the internals of a custom add-on feature
-	reload: ['Interface/Reload viewer',
-		function(force){
-			// full reload...
-			if(force == 'full'){
-				//this.stop()
-				/*
-				killAllWorkers()
-					.done(function(){
-						reload() 
-					})
-				*/
-				location.reload()
-			}
-
-			this.ribbons.preventTransitions()
-
-			// NOTE: this essentially sets the update threshold to 0...
-			// XXX this should be a custom arg...
-			force = force ? 0 : null
-
-			return function(){
-				// see if we've got a custom ribbon updater...
-				var that = this
-				var settings = this.updateRibbon != null 
-					// XXX this should be: { updateRibbon: this.updateRibbon.bind(this) }
-					? { updateRibbon: function(_, ribbon){ 
-							return that.updateRibbon(ribbon, null, null, force) 
-						} }
-					: null
-
-				this.ribbons.updateData(this.data, settings)
-
-				this
-					// XXX should this be here???
-					.refresh()
-					.focusImage()
-
-				// XXX HACK to make browser redraw images...
-				this.scale = this.scale
-
-				this.ribbons.restoreTransitions()
-			}
-		}],
-	// NOTE: this will trigger .updateImage hooks...
-	refresh: ['Interface/Refresh images without reloading',
-		function(gids, scale){
-			gids = gids || '*'
-			var size = scale != null ? 
-				this.ribbons.getVisibleImageSize('min', scale)
-				: null
-
-			this.ribbons.updateImage(gids, null, size)
-		}],
-	clear: [
-		function(){ this.ribbons && this.ribbons.clear() }],
-	clone: [function(full){
-		return function(res){
-			if(this.ribbons){
-				// NOTE: this is a bit wasteful as .ribbons will clone 
-				// 		their ref to .images that we will throw away...
-				res.ribbons = this.ribbons.clone()
-				res.ribbons.images = res.images
-			} 
-		}
-	}],
-
-
-	replaceGid: [
-		function(from, to){
-			return function(res){
-				res && this.ribbons.replaceGid(from, to)
-			}
-		}],
-
-	// This is called by .ribbons, the goal is to use it to hook into 
-	// image updating from features and extensions...
-	//
-	// NOTE: not intended for calling manually, use .refresh(..) instead...
-	//
-	// XXX experimental...
-	// 		...need this to get triggered by .ribbons
-	// 		at this point manually triggering this will not do anything...
-	// XXX problem: need to either redesign this or distinguish from 
-	// 		other actions as I keep calling it expecting results...
-	// XXX hide from user action list... (???)
-	updateImage: ['- Interface/Update image (do not use directly)',
-		'This is called by .refresh(..) and intended for use as an '
-			+'trigger for handlers, and not as a user-callable acation.',
-		core.notUserCallable(function(gid, image){
-			// This is the image update protocol root function
-			//
-			// Not for direct use.
-		})],
-
-
-	// NOTE: this not used directly, mainly designed as a utility to be 
-	// 		used for various partial ribbon implementations...
-	// XXX do we handle off-screen ribbons here???
-	resizeRibbon: ['- Interface/Resize ribbon to n images',
-		function(target, size){
-			size = size 
-				|| (this.config['ribbon-size-screens'] * this.screenwidth)
-				|| (5 * this.screenwidth)
-			var data = this.data
-			var ribbons = this.ribbons
-
-			// localize transition prevention... 
-			// NOTE: we can't get ribbon via target directly here as
-			// 		the target might not be loaded...
-			var r_gid = data.getRibbon(target)
-			if(r_gid == null){
-				return
-			}
-			// NOTE: for the initial load this may be empty...
-			var r = ribbons.getRibbon(r_gid)
-
-			// XXX do we need to for example ignore unloaded (r.length == 0)
-			// 		ribbons here, for example not load ribbons too far off 
-			// 		screen??
-			
-			ribbons
-				.preventTransitions(r)
-				.updateRibbon(
-					data.getImages(target, size, 'total'), 
-					r_gid,
-					target)
-				.restoreTransitions(r, true)
-		}],
-
 
 	// General UI stuff...
 	// NOTE: this is applicable to all uses...
 	toggleTheme: ['Interface/Theme/Viewer theme', 
 		toggler.CSSClassToggler(
-			function(){ return this.ribbons.viewer }, 
+			function(){ return this.dom }, 
 			function(){ return this.config.themes },
 			function(state){ this.config.theme = state }) ],
 	lighterTheme: ['Interface/Theme/Lighter theme',
@@ -493,17 +318,65 @@ module.ViewerActions = actions.Actions({
 		}],
 	toggleRibbonTheme: ['Interface/Theme/Ribbon theme', 
 		toggler.CSSClassToggler(
-			function(){ return this.ribbons.viewer }, 
+			function(){ return this.dom }, 
 			function(){ return this.config['ribbon-themes'] },
 			function(state){ this.config['ribbon-theme'] = state }) ],
 	toggleRibbonImageSepators: ['Interface/Theme/Ribbon image separators', 
 		toggler.CSSClassToggler(
-			function(){ return this.ribbons.viewer }, 
+			function(){ return this.dom }, 
 			'ribbon-image-separators',
 			function(state){ this.config['ribbon-image-separators'] = state }) ],
 
 
-	// ribbon aligning...
+	// Navigation...
+	//
+	// NOTE: these prioritize whole images, i.e. each image will at least
+	// 		once be fully shown.
+	prevScreen: ['Navigate/Screen width back',
+		function(){
+			// NOTE: the 0.2 is added to compensate for alignment/scaling
+			// 		errors -- 2.99 images wide counts as 3 while 2.5 as 2.
+			var w = Math.floor(this.screenwidth + 0.2)
+			w += (w % 2) - 1
+			this.prevImage(w)
+		}],
+	nextScreen: ['Navigate/Screen width forward',
+		function(){
+			var w = Math.floor(this.screenwidth + 0.2)
+			w += (w % 2) - 1
+			this.nextImage(w)
+		}],
+
+
+	// Renderer API...
+	/*/ XXX do we need these here???
+	centerImage: ['- Interface/Center an image in ribbon horizontally',
+		function(target, align, offset, scale){
+		}],
+	centerRibbon: ['- Interface/Center a ribbon vertically',
+		function(target){
+		}],
+	ribbonRotation: ['- Interface|Ribbon/', 
+		function(a){ 
+		}],
+	viewScale: ['- Zoom/',
+		function(scale){
+		}],
+	fitImage: ['Zoom/Fit image',
+		function(count, overflow){
+		}],
+	fitRibbon: ['Zoom/Fit ribbon vertically',
+		function(count, whole){
+		}],
+	//*/
+
+
+	// ribbon aligning and centering...
+	centerViewer: ['- Interface/Center the viewer',
+		function(target){
+			this
+				.centerImage(target)
+				.centerRibbon(target) }],
 	alignRibbons: ['Interface/Align ribbons',
 		function(target, scale, now){
 			if(target == 'now'){
@@ -535,6 +408,7 @@ module.ViewerActions = actions.Actions({
 	// 		order...
 	// XXX skip off-screen ribbons (???)
 	// XXX should the timeout be configurable???
+	// XXX remove dependency on .ribbons
 	alignByOrder: ['Interface/Align ribbons by image order',
 		function(target, scale, now){
 			if(target == 'now'){
@@ -649,34 +523,8 @@ module.ViewerActions = actions.Actions({
 			//}, 0)
 		}],
 
-	// NOTE: this will align only a single image...
-	// XXX do we need these low level primitives here???
-	centerImage: ['- Interface/Center an image in ribbon horizontally',
-		function(target, align, offset, scale){
-			target = target instanceof jQuery 
-				? this.ribbons.getElemGID(target)
-				: target
 
-			// align current ribbon...
-			this.ribbons.centerImage(target, align, offset, scale)
-		}],
-	centerRibbon: ['- Interface/Center a ribbon vertically',
-		function(target){
-			target = target instanceof jQuery 
-				? this.ribbons.getElemGID(target)
-				: target
-
-			// align current ribbon...
-			this.ribbons.centerRibbon(target)
-		}],
-
-	centerViewer: ['- Interface/Center the viewer',
-		function(target){
-			this
-				.centerImage(target)
-				.centerRibbon(target)
-		}],
-
+	// Viewer/window resize event...
 	resizingWindow: ['- Interface/',
 		core.doc`This is called by the window resize event handler...
 		
@@ -692,57 +540,13 @@ module.ViewerActions = actions.Actions({
 			//
 			// Not for direct use.
 		})],
-	
-
-	focusImage: [
-		function(target, list){
-			return function(){
-				this.ribbons.focusImage(this.data != null ? this.current : target) } }],
-	focusRibbon: [
-		function(target, mode){
-			mode = mode || this.config['ribbon-focus-mode']
-
-			var c = this.data.getRibbonOrder()
-			var i = this.data.getRibbonOrder(target)
-			// NOTE: we are not changing the direction here based on 
-			// 		this.direction as swap will confuse the user...
-			var direction = c < i ? 'before' : 'after'
-
-			if(mode == 'visual'){
-				var ribbons = this.ribbons
-				var r = this.data.getRibbon(target)
-				var t = ribbons.getImageByPosition('current', r)
-
-				if(t.length > 1){
-					t = t.eq(direction == 'before' ? 0 : 1)
-				}
-
-				t = ribbons.getElemGID(t)
-
-				this.focusImage(t, r)
-			}
-		}],
-
-	// NOTE: these prioritize whole images, i.e. each image will at least
-	// 		once be fully shown.
-	prevScreen: ['Navigate/Screen width back',
-		function(){
-			// NOTE: the 0.2 is added to compensate for alignment/scaling
-			// 		errors -- 2.99 images wide counts as 3 while 2.5 as 2.
-			var w = Math.floor(this.screenwidth + 0.2)
-			w += (w % 2) - 1
-			this.prevImage(w)
-		}],
-	nextScreen: ['Navigate/Screen width forward',
-		function(){
-			var w = Math.floor(this.screenwidth + 0.2)
-			w += (w % 2) - 1
-			this.nextImage(w)
-		}],
 
 
-	// XXX hide from user action list... (???)
-	// XXX need to check if a transition is running and delay timeout...
+	// Zoom/scale protocol...
+	//
+	// Events...
+	// NOTE: the implementation needs to call .resizingDone(..) when all 
+	// 		animations are done...
 	resizing: ['- Zoom/Scale root protocol action (not for direct use)', 
 		core.doc`Zooming/scaling root action...
 
@@ -785,34 +589,7 @@ module.ViewerActions = actions.Actions({
 			//
 			// This will never be used directly, but will wrap protocol user
 			// functions.
-			//
-			// As an example see: .setScale(..)
-
-			var that = this
-			// stop currently running transition...
-			this.ribbons.scale(this.ribbons.scale())
-
-			// transitionend handler...
-			if(!this.__resize_handler){
-				this.__resize_handler = function(){
-					that.__post_resize
-						&& that.resizingDone() 
-					delete that.__post_resize
-				}
-			}
-			this.ribbons.getRibbonSet()
-				.off('transitionend', this.__resize_handler)
-				.on('transitionend', this.__resize_handler)
-
-			// timeout handler...
-			this.__post_resize && clearTimeout(this.__post_resize)
-			return function(){
-				this.__post_resize = setTimeout(
-					this.__resize_handler, 
-					this.config['resize-done-timeout'] || 300)
-			}
 		})],
-
 	resizingDone: ['- Zoom/scale post-transition protocol action (not for direct use)',
 		core.doc`Zooming/scaling post-transition action...
 	
@@ -835,56 +612,6 @@ module.ViewerActions = actions.Actions({
 			// 		be called before the transition is done.
 		})],
 
-	// Zoom/scale protocol actions...
-	setScale: ['- Zoom/',
-		function(scale){
-			this.resizing.chainCall(this, function(){
-				this.ribbons && scale && this.ribbons.scale(scale)
-				// NOTE: we pass explicit scale here to compensate for animation...
-				this.refresh('*', scale)
-			}, 'scale', scale)
-		}],
-	fitOrig: ['Zoom/Fit to original scale',
-		function(){ 
-			this.resizing.chainCall(this, function(){
-				this.ribbons.scale(1) 
-				// NOTE: we pass explicit scale here to compensate for animation...
-				this.refresh('*', 1)
-			}, 'scale', 1)
-		}],
-	// NOTE: if this gets a count argument it will fit count images, 
-	// 		default is one.
-	// NOTE: this will add .config['fit-overflow'] to odd counts if no 
-	// 		overflow if passed.
-	// 		...this is done to add ability to control scroll indication.
-	fitImage: ['Zoom/Fit image',
-		function(count, overflow){
-			this.resizing.chainCall(this, function(){
-				if(count != null){
-					overflow = overflow == false ? 0 : overflow
-					var o = overflow != null ? overflow 
-						: count % 2 != 1 ? 0
-						: (this.config['fit-overflow'] || 0)
-					count += o
-				}
-				this.ribbons.fitImage(count)
-				// NOTE: we pass explicit scale here to compensate for animation...
-				this.refresh('*', this.ribbons.getScreenWidthImages(1) / count)
-			}, 'screenwidth', count, overflow)
-		}],
-	// NOTE: this does not account for ribbon spacing...
-	fitRibbon: ['Zoom/Fit ribbon vertically',
-		function(count, whole){
-			this.resizing.chainCall(this, function(){
-				this.ribbons.fitRibbon(count, whole)
-				// NOTE: we pass explicit scale here to compensate for animation...
-				this.refresh('*', this.ribbons.getScreenHeightRibbons(1, whole) / count)
-			}, 'screenheight', count, whole)
-		}],
-
-
-	// Zooming...
-	//
 	// Zooming is done by multiplying the current scale by .config['zoom-step']
 	// and rounding to nearest discrete number of images to fit on screen.
 	zoomIn: ['Zoom/Zoom in',
@@ -917,24 +644,16 @@ module.ViewerActions = actions.Actions({
 		}],
 
 	// Scale presets...
-	//
+	fitOrig: ['Zoom/Fit to original scale',
+		function(){ this.viewScale(1) }],
 	fitMax: ['Zoom/Fit the maximum number of images',
-		function(){ this.fitImage(this.config['max-screen-images']) }],
+		function(){ this.screenwidth = this.config['max-screen-images'] }],
 	fitScreen: ['Zoom/Fit image to screen',
 		function(){ this.screenfit = 1 }],
 
-	// ribbon rotation...
+
+	// Ribbon rotation...
 	//
-	ribbonRotation: ['- Interface|Ribbon/', 
-		function(a){ 
-			if(arguments.length > 0){
-				this.ribbons.rotate(a)
-
-			} else {
-				return this.ribbons.rotate() || 0
-			}
-		}],
-
 	// Rotate ribbon CW/CCW...
 	//
 	// 	Rotate ribbon (default step)
@@ -957,7 +676,7 @@ module.ViewerActions = actions.Actions({
 		function(){ this.ribbonRotation(0) }],
 
 
-	// XXX experimental: not sure if this is the right way to go...
+	// XXX EXPERIMENTAL: not sure if this is the right way to go...
 	// XXX make this play nice with crops...
 	// 		...should this be a crop???
 	toggleRibbonList: ['Interface|Ribbon/Ribbons as images view',
@@ -992,6 +711,7 @@ module.Viewer = core.ImageGridFeatures.Feature({
 		'base',
 		'workspace',
 		'introspection',
+		'ui-render',
 	],
 	suggested: [
 		// XXX is this the right way???
@@ -1196,7 +916,7 @@ core.ImageGridFeatures.Feature({
 		// manage the .crop-mode css class...
 		['crop uncrop',
 			function(){
-				this.ribbons.viewer[this.cropped ? 
+				this.dom[this.cropped ? 
 					'addClass' 
 					: 'removeClass']('crop-mode')
 			}],
@@ -1546,11 +1266,11 @@ module.Cursor = core.ImageGridFeatures.Feature({
 	actions: actions.Actions({
 		toggleHiddenCursor: ['Interface/Cursor hidden',
 			toggler.CSSClassToggler(
-				function(){ return this.ribbons.viewer }, 
+				function(){ return this.dom }, 
 				'cursor-hidden',
 				function(state){
 					var that = this
-					var viewer = this.ribbons.viewer
+					var viewer = this.dom
 
 					if(state == 'on'){
 						var x, y
@@ -1619,12 +1339,12 @@ module.Cursor = core.ImageGridFeatures.Feature({
 		//
 		toggleAutoHideCursor: ['Interface/Cursor auto-hide',
 			toggler.CSSClassToggler(
-				function(){ return this.ribbons.viewer }, 
+				function(){ return this.dom }, 
 				'cursor-autohide',
 				function(state){
 					var that = this
 
-					var viewer = this.ribbons.viewer
+					var viewer = this.dom
 					// NOTE: this is handled by the keyboard feature...
 					var kb_target = this.__keyboard_event_source || $(window)
 
@@ -1654,7 +1374,7 @@ module.Cursor = core.ImageGridFeatures.Feature({
 											: -1
 									if(timeout && timeout > 0){
 										m_timer = setTimeout(function(){
-											var viewer = that.ribbons.viewer
+											var viewer = that.dom
 
 											// auto-hide is off -- restore...
 											if(!viewer.hasClass('cursor-autohide')){
@@ -1680,7 +1400,7 @@ module.Cursor = core.ImageGridFeatures.Feature({
 									// avoid this from delaying the keyboard handler...
 									kb_timer = setTimeout(function(){
 										kb_timer = null
-										var viewer = that.ribbons.viewer
+										var viewer = that.dom
 
 										// get key...
 										var key = keyboard.normalizeKey(
@@ -1842,7 +1562,7 @@ var ControlActions = actions.Actions({
 						// 		nothing to do...
 						null
 					: (this.ribbons 
-							&& this.ribbons.viewer 
+							&& this.dom 
 							//&& this.ribbons.getRibbon().data('hammer') ? 'handling-click' : 'none' },
 							&& this.ribbons.getRibbon().hasClass('clickable')) ? 
 						'handling-click' 
@@ -1978,7 +1698,7 @@ var ControlActions = actions.Actions({
 
 			var cl = central && central.offset().left
 			var w = central && central.outerWidth(true)
-			var W = this.ribbons.viewer.width()
+			var W = this.dom.width()
 			var vmin = Math.min(
 				document.body.offsetWidth, 
 				document.body.offsetHeight)
@@ -2044,7 +1764,7 @@ var ControlActions = actions.Actions({
 						// 		nothing to do...
 						null
 					: (this.ribbons 
-							&& this.ribbons.viewer 
+							&& this.dom 
 							&& this.ribbons.getRibbon().hasClass('draggable')) ?  
 						'handling-pan' 
 					: 'none' },
@@ -2281,8 +2001,8 @@ var ControlActions = actions.Actions({
 						// 		nothing to do...
 						null
 					: (this.ribbons 
-						&& this.ribbons.viewer 
-						&& this.ribbons.viewer.hasClass('mouse-wheel-scroll')) ?
+						&& this.dom 
+						&& this.dom.hasClass('mouse-wheel-scroll')) ?
 						'handling-mouse-wheel' 
 					: 'none' },
 			'handling-mouse-wheel',
@@ -2318,7 +2038,7 @@ var ControlActions = actions.Actions({
 						var rgid = this.ribbons.getElemGID(r)
 
 						// XXX vertical scroll...
-						this.ribbons.viewer
+						this.dom
 							.on('wheel', function(){
 							})
 
@@ -2357,7 +2077,7 @@ var ControlActions = actions.Actions({
 
 				// on...
 				if(state == 'on'){
-					this.ribbons.viewer.addClass('mouse-wheel-scroll')
+					this.dom.addClass('mouse-wheel-scroll')
 					// NOTE: we are resetting this to avoid multiple setting
 					// 		handlers...
 					this.off('updateRibbon', setup)
@@ -2368,7 +2088,7 @@ var ControlActions = actions.Actions({
 
 				// off...
 				} else {
-					this.ribbons.viewer.removeClass('mouse-wheel-scroll')
+					this.dom.removeClass('mouse-wheel-scroll')
 					this.off('updateRibbon', setup)
 
 					this.data.ribbon_order.forEach(function(gid){
@@ -2390,13 +2110,13 @@ var ControlActions = actions.Actions({
 				return state ?
 						null
 					: (this.ribbons 
-							&& this.ribbons.viewer 
-							&& this.ribbons.viewer.data('hammer')) ? 
+							&& this.dom 
+							&& this.dom.data('hammer')) ? 
 						'handling-swipes' 
 					: 'none' },
 			'handling-swipes',
 			function(state){
-				var viewer = this.ribbons.viewer
+				var viewer = this.dom
 
 				// on...
 				if(state == 'on'){
@@ -2520,7 +2240,7 @@ module.Control = core.ImageGridFeatures.Feature({
 			}],
 			
 		// if panned image is off screen, center it...
-		['setScale',
+		['viewScale',
 			function(){
 				var that = this
 				Object.keys(this.data.ribbons).forEach(function(r){
@@ -2617,7 +2337,7 @@ module.PreviewFilters = core.ImageGridFeatures.Feature({
 					var cls = filters[state]
 					var classes = Object.values(filters)
 						.filter(function(c){ return c != cls })
-					this.ribbons.viewer
+					this.dom
 						.find('.'+ classes.join(', .'))
 							.removeClass(classes.join(' '))
 
@@ -2641,7 +2361,7 @@ module.PreviewFilters = core.ImageGridFeatures.Feature({
 
 
 /*********************************************************************/
-// XXX experimental...
+// XXX EXPERIMENTAL...
 
 // 		...not sure if this is the right way to go...
 // XXX need to get the minimal size and not the width as results will 
