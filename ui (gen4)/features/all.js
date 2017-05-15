@@ -26,7 +26,6 @@ require('features/ui-virtual-dom')
 require('features/ui-react')
 // XXX
 require('features/ui-partial-ribbons-precache')
-require('features/ui-partial-ribbons')
 require('features/ui-partial-ribbons-2')
 require('features/ui-partial-ribbons-vdom')
 require('features/ui-single-image')

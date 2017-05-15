@@ -71,6 +71,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	// XXX
 	'ui-ribbons-render',
+	'ui-partial-ribbons-render',
 	'ui-vdom-render',
 	//'ui-react-render',
 	//*/

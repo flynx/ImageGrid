@@ -47,101 +47,6 @@ var base = require('features/base')
 
 
 /*********************************************************************/
-
-var reloadAfter =
-module.reloadAfter =
-function(force, callback){
-	return function(){
-		return function(){
-			// NOTE: this may seem like cheating, but .reload() should
-			// 		be very efficient, reusing all of the items loaded...
-			this.reload(force)
-
-			callback && callback.apply(this, arguments)
-		}
-	}
-}
-
-
-// XXX make this compatible with multiple images...
-// XXX for muptiple targets this will just do a .reload()...
-var updateImagePosition =
-module.updateImagePosition =
-function updateImagePosition(actions, target){
-	var s = actions.ribbons.getRibbonLocator()
-
-	if(s.length == 0){
-		return
-	}
-
-	target = target || actions.current
-	target = target instanceof jQuery 
-		? actions.ribbons.getElemGID(target) 
-		: target
-
-	var source_ribbon = actions.ribbons.getElemGID(actions.ribbons.getRibbon(target))
-	var source_order = actions.data.getImageOrder(target)
-
-	return function(){
-		actions.ribbons.preventTransitions(s)
-		var end = function(){
-			// XXX not sure why this does not work without a setTimeout(..)
-			//actions.ribbons.restoreTransitions(s, true)
-			setTimeout(function(){ 
-				actions.ribbons.restoreTransitions(s, true) }, 0) }
-
-		// XXX hack???
-		if(target instanceof Array){
-			actions.reload()
-			return end()
-		}
-
-		var target_ribbon = actions.data.getRibbon(target)
-
-		// nothing changed...
-		if(source_ribbon == target_ribbon 
-				&& actions.data.getImageOrder(target) == source_order){
-			return end()
-		}
-
-		// place image at position...
-		var to = actions.data.getImage(target, 'next')
-		if(to != null){
-			actions.ribbons.placeImage(target, to, 'before')
-
-		} else {
-			// place image after position...
-			to = actions.data.getImage(target, 'prev')
-			if(to != null){
-				actions.ribbons.placeImage(target, to, 'after')
-
-			// new ribbon...
-			} else {
-				to = actions.data.getRibbon(target)
-
-				if(actions.ribbons.getRibbon(to).length == 0){
-					actions.ribbons
-						.placeRibbon(to, actions.data.getRibbonOrder(target))
-				}
-
-				actions.ribbons.placeImage(target, to)
-			}
-		}
-
-		if(actions.data.getImages(source_ribbon).length == 0){
-			actions.ribbons.getRibbon(source_ribbon).remove()
-		}
-
-		actions.focusImage()
-
-		return end()
-	}
-}
-
-
-
-/*********************************************************************/
-
 // Viewer (widget/interface)...
 //
 // Workspaces:
@@ -153,11 +58,11 @@ function updateImagePosition(actions, target){
 //
 // NOTE: this uses the base feature API but does not need it imported...
 //
-// XXX split this into read and write actions...
 // XXX need a way to neutrally scale images and store that scale...
 // 		- fit N images/ribbons is neutral but might mean different things 
 // 			depending on image and viewer proportions
 // 		- .scale is a bad way to go...
+// XXX remove dependency on .ribbons
 var ViewerActions = 
 module.ViewerActions = actions.Actions({
 	config: {
@@ -714,8 +619,6 @@ module.Viewer = core.ImageGridFeatures.Feature({
 		'ui-render',
 	],
 	suggested: [
-		// XXX is this the right way???
-		'ui-edit',
 	],
 
 	actions: ViewerActions,
@@ -776,150 +679,6 @@ module.Viewer = core.ImageGridFeatures.Feature({
 
 		['focusImage.post', 
 			function(){ this.alignRibbons() }],
-	],
-})
-
-
-//---------------------------------------------------------------------
-// Viewer edit actions...
-
-// XXX Q: should this be further split into groups and tags???
-var ViewerEditActions = 
-module.ViewerEditActions = 
-actions.Actions({
-	config: {
-	},
-
-	setBaseRibbon: [
-		function(target){
-			var r = this.data.getRibbon(target)
-			r =  r == null ? this.ribbons.getRibbon(target) : r
-			this.ribbons.setBaseRibbon(r)
-		}],
-
-	shiftImageLeft: [
-		function(target){ this.ribbons.placeImage(target, -1) }],
-	shiftImageRight: [
-		function(target){ this.ribbons.placeImage(target, 1) }],
-
-	/*
-	// XXX how should these animate???
-	travelImageUp: [
-		function(){
-		}],
-	travelImageDown: [
-		function(){
-		}],
-	*/
-
-	shiftRibbonUp: [
-		function(target){
-			target = this.ribbons.getRibbon(target)
-			var i = this.ribbons.getRibbonOrder(target)
-			if(i > 0){
-				this.ribbons.placeRibbon(target, i-1)
-			}
-		}],
-	shiftRibbonDown: [
-		function(target){
-			target = this.ribbons.getRibbon(target)
-			var i = this.ribbons.getRibbonOrder(target)
-			if(i < this.data.ribbon_order.length-1){
-				this.ribbons.placeRibbon(target, i+1)
-			}
-		}],
-
-	reverseImages: [ reloadAfter() ],
-	reverseRibbons: [ reloadAfter() ],
-	sortImages: [ reloadAfter(true) ],
-
-	// basic image editing...
-	//
-	// XXX should we have .rotate(..) and .flip(..) generic actions???
-	rotateCW: [ 
-		function(target){ this.ribbons.rotateCW(target) }],
-	rotateCCW: [ 
-		function(target){ this.ribbons.rotateCCW(target) }],
-	flipVertical: [ 
-		function(target){ this.ribbons.flipVertical(target, 'view') }],
-	flipHorizontal: [
-		function(target){ this.ribbons.flipHorizontal(target, 'view') }],
-
-	// XXX this needs an interactive mode -- mark A, mark B, align between
-	alignToRibbon: [ reloadAfter(true) ],
-
-
-	// tags...
-	tag: [ 
-		function(tags, gids){ 
-			gids = gids != null && gids.constructor !== Array ? [gids] : gids
-			return function(){
-				//this.ribbons.updateImage(gids) 
-				this.refresh(gids)
-			}
-		}],
-	untag: [
-		function(tags, gids){ 
-			gids = gids != null && gids.constructor !== Array ? [gids] : gids
-			return function(){
-				//this.ribbons.updateImage(gids) 
-				this.refresh(gids)
-			}
-		}],
-
-
-	// group stuff...
-	group: [ reloadAfter(true) ],
-	ungroup: [ reloadAfter(true) ],
-	groupTo: [ reloadAfter(true) ],
-	groupMarked: [ reloadAfter(true) ],
-	expandGroup: [ reloadAfter(true) ],
-	collapseGroup: [ reloadAfter(true) ],
-
-
-	// XXX BUG? reloadAfter() here does not remove some images...
-	crop: [ reloadAfter(true) ],
-	// XXX BUG? reloadAfter() produces an align error...
-	uncrop: [ reloadAfter(true) ],
-	// XXX might be a good idea to do this in a new viewer in an overlay...
-	cropGroup: [ reloadAfter() ],
-})
-
-var ViewerEdit =
-module.ViewerEdit = 
-core.ImageGridFeatures.Feature({
-	title: 'Graphical User Interface',
-
-	tag: 'ui-edit',
-
-	depends: [
-		'edit',
-		'tags',
-		'sort',
-		'crop',
-		'image-group',
-		'ui',
-	],
-
-	actions: ViewerEditActions,
-
-	handlers: [
-		[[
-			'shiftImageTo.pre',
-			'shiftImageUp.pre',
-			'shiftImageDown.pre',
-		], 
-			function(target){ 
-				return updateImagePosition(this, target) }],
-
-
-		// manage the .crop-mode css class...
-		['crop uncrop',
-			function(){
-				this.dom[this.cropped ? 
-					'addClass' 
-					: 'removeClass']('crop-mode')
-			}],
 	],
 })
 

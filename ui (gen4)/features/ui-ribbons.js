@@ -18,8 +18,88 @@ var ribbons = require('imagegrid/ribbons')
 
 
 /*********************************************************************/
+// helpers...
 
-var RibbonsActions = actions.Actions({
+// XXX make this compatible with multiple images...
+// XXX for muptiple targets this will just do a .reload()...
+var updateImagePosition =
+function updateImagePosition(actions, target){
+	var s = actions.ribbons.getRibbonLocator()
+
+	if(s.length == 0){
+		return
+	}
+
+	target = target || actions.current
+	target = target instanceof jQuery 
+		? actions.ribbons.getElemGID(target) 
+		: target
+
+	var source_ribbon = actions.ribbons.getElemGID(actions.ribbons.getRibbon(target))
+	var source_order = actions.data.getImageOrder(target)
+
+	return function(){
+		actions.ribbons.preventTransitions(s)
+		var end = function(){
+			// XXX not sure why this does not work without a setTimeout(..)
+			//actions.ribbons.restoreTransitions(s, true)
+			setTimeout(function(){ 
+				actions.ribbons.restoreTransitions(s, true) }, 0) }
+
+		// XXX hack???
+		if(target instanceof Array){
+			actions.reload()
+			return end()
+		}
+
+		var target_ribbon = actions.data.getRibbon(target)
+
+		// nothing changed...
+		if(source_ribbon == target_ribbon 
+				&& actions.data.getImageOrder(target) == source_order){
+			return end()
+		}
+
+		// place image at position...
+		var to = actions.data.getImage(target, 'next')
+		if(to != null){
+			actions.ribbons.placeImage(target, to, 'before')
+
+		} else {
+			// place image after position...
+			to = actions.data.getImage(target, 'prev')
+			if(to != null){
+				actions.ribbons.placeImage(target, to, 'after')
+
+			// new ribbon...
+			} else {
+				to = actions.data.getRibbon(target)
+
+				if(actions.ribbons.getRibbon(to).length == 0){
+					actions.ribbons
+						.placeRibbon(to, actions.data.getRibbonOrder(target))
+				}
+
+				actions.ribbons.placeImage(target, to)
+			}
+		}
+
+		if(actions.data.getImages(source_ribbon).length == 0){
+			actions.ribbons.getRibbon(source_ribbon).remove()
+		}
+
+		actions.focusImage()
+
+		return end()
+	}
+}
+
+
+
+/*********************************************************************/
+
+var RibbonsActions = 
+actions.Actions({
 
 	get dom(){
 		return this.ribbons ? this.ribbons.viewer : undefined },
@@ -351,14 +431,12 @@ var RibbonsActions = actions.Actions({
 				return this.ribbons.rotate() || 0
 			}
 		}],
-
-	// XXX move all the stuff from UI that binds actions to ribbons...
-	// XXX
 })
 
 
 var Ribbons = 
-module.Ribbons = core.ImageGridFeatures.Feature({
+module.Ribbons = 
+core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
@@ -379,51 +457,307 @@ module.Ribbons = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
-// XXX
 
-var PartialRibbonsActions = actions.Actions({
+var RibbonsEditActions = 
+actions.Actions({
+	setBaseRibbon: [
+		function(target){
+			var r = this.data.getRibbon(target)
+			r =  r == null ? this.ribbons.getRibbon(target) : r
+			this.ribbons.setBaseRibbon(r)
+		}],
+	shiftImageLeft: [
+		function(target){ this.ribbons.placeImage(target, -1) }],
+	shiftImageRight: [
+		function(target){ this.ribbons.placeImage(target, 1) }],
+	shiftRibbonUp: [
+		function(target){
+			target = this.ribbons.getRibbon(target)
+			var i = this.ribbons.getRibbonOrder(target)
+			if(i > 0){
+				this.ribbons.placeRibbon(target, i-1)
+			}
+		}],
+	shiftRibbonDown: [
+		function(target){
+			target = this.ribbons.getRibbon(target)
+			var i = this.ribbons.getRibbonOrder(target)
+			if(i < this.data.ribbon_order.length-1){
+				this.ribbons.placeRibbon(target, i+1)
+			}
+		}],
+
+	// basic image editing...
+	//
+	// XXX should we have .rotate(..) and .flip(..) generic actions???
+	rotateCW: [ 
+		function(target){ this.ribbons.rotateCW(target) }],
+	rotateCCW: [ 
+		function(target){ this.ribbons.rotateCCW(target) }],
+	flipVertical: [ 
+		function(target){ this.ribbons.flipVertical(target, 'view') }],
+	flipHorizontal: [
+		function(target){ this.ribbons.flipHorizontal(target, 'view') }],
+
+	// tags...
+	tag: [ 
+		function(tags, gids){ 
+			gids = gids != null && gids.constructor !== Array ? [gids] : gids
+			return function(){
+				//this.ribbons.updateImage(gids) 
+				this.refresh(gids)
+			}
+		}],
+	untag: [
+		function(tags, gids){ 
+			gids = gids != null && gids.constructor !== Array ? [gids] : gids
+			return function(){
+				//this.ribbons.updateImage(gids) 
+				this.refresh(gids)
+			}
+		}],
 })
-
-var PartialRibbons = 
-module.PartialRibbons = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-partial-ribbons-render',
-	exclusive: ['ui-render'],
-	depends: [
-		// XXX this will need to reuse part of the actions defined in Ribbons...
-	],
-	suggested: [
-		'ui-ribbons-edit-render',
-	],
-
-	actions: PartialRibbonsActions, 
-
-	handlers: [],
-})
-
-
-//---------------------------------------------------------------------
-
-var RibbonsEditActions = actions.Actions({
-})
-
 
 var RibbonsEdit = 
-module.RibbonsEdit = core.ImageGridFeatures.Feature({
+module.RibbonsEdit = 
+core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
 	tag: 'ui-ribbons-edit-render',
 	depends: [
 		'edit',
+		'tags',
+		'sort',
+		'crop',
+		'image-group',
+		'ui-ribbons-render',
 	],
 
 	actions: RibbonsEditActions, 
 
-	handlers: [],
+	handlers: [
+		[[
+			'shiftImageTo.pre',
+			'shiftImageUp.pre',
+			'shiftImageDown.pre',
+		], 
+			function(target){ 
+				return updateImagePosition(this, target) }],
+
+
+		// manage the .crop-mode css class...
+		['crop uncrop',
+			function(){
+				this.dom[this.cropped ? 
+					'addClass' 
+					: 'removeClass']('crop-mode')
+			}],
+
+		// reloading and updating...
+		[[
+			'sortImages',
+			'alignToRibbon',
+			'group',
+			'ungroup',
+			'groupTo',
+			'groupMarked',
+			'expandGroup',
+			'collapseGroup',
+			'crop',
+			'uncrop',
+		], 
+			function(target){ return this.reload(true) }],
+		[[
+			'reverseImages',
+			'reverseRibbons',
+			'cropGroup',
+		], 
+			function(target){ return this.reload() }],
+	],
 })
+
+
+
+/*********************************************************************/
+// Partial ribbons...
+
+// XXX try using .ribbons.resizeRibbon(..) for basic tasks...
+// XXX try a strategy: load more in the direction of movement by an offset...
+// XXX updateRibbon(..) is not signature compatible with data.updateRibbon(..)
+var PartialRibbonsActions = 
+actions.Actions({
+	config: {
+		// Number of screen widths to load...
+		'ribbon-size-screens': 7,
+
+		// Number of screen widths to edge to trigger reload...
+		'ribbon-resize-threshold': 1.5,
+
+		// Timeout before a non-forced ribbon size update happens after
+		// the action...
+		// NOTE: if set to null, the update will be sync...
+		'ribbon-update-timeout': 120,
+	},
+
+	// NOTE: this will force sync resize if one of the following is true:
+	// 		- the target is not loaded
+	// 		- we are less than screen width from the edge
+	// 		- threshold is set to 0
+	// XXX this is not signature compatible with data.updateRibbon(..)
+	// XXX do not do anything for off-screen ribbons...
+	updateRibbon: ['- Interface/Update partial ribbon size', 
+		function(target, w, size, threshold){
+			target = target instanceof jQuery 
+				? this.ribbons.getElemGID(target)
+				// NOTE: data.getImage(..) can return null at start or end
+				// 		of ribbon, thus we need to account for this...
+				: (this.data.getImage(target)
+					|| this.data.getImage(target, 'after'))
+
+			w = w || this.screenwidth
+
+			// get config data and normalize...
+			size = (size 
+				|| this.config['ribbon-size-screens'] 
+				|| 5) * w
+			threshold = threshold == 0 ? threshold
+				: (threshold 
+					|| this.config['ribbon-resize-threshold'] 
+					|| 1) * w
+
+			var timeout = this.config['ribbon-update-timeout']
+
+			// next/prev loaded... 
+			var img = this.ribbons.getImage(target)
+			var nl = img.nextAll('.image:not(.clone)').length
+			var pl = img.prevAll('.image:not(.clone)').length
+
+			// next/prev available...
+			// NOTE: we subtract 1 to remove the current and make these 
+			// 		compatible with: nl, pl
+			var na = this.data.getImages(target, size, 'after').length - 1
+			var pa = this.data.getImages(target, size, 'before').length - 1
+
+			// do the update...
+			// no threshold means force load...
+			if(threshold == 0 
+					// the target is not loaded...
+					|| img.length == 0
+					// passed hard threshold on the right...
+					|| (nl < w && na > nl) 
+					// passed hard threshold on the left...
+					|| (pl < w && pa > pl)){
+
+				this.resizeRibbon(target, size)
+
+			// do a late resize...
+			// loaded more than we need (crop?)...
+			} else if(na + pa < nl + pl
+					// passed threshold on the right...
+					|| (nl < threshold && na > nl) 
+					// passed threshold on the left...
+					|| (pl < threshold && pa > pl) 
+					// loaded more than we need by threshold...
+					|| nl + pl + 1 > size + threshold){
+
+				return function(){
+					// sync update...
+					if(timeout == null){
+						this.resizeRibbon(target, size)
+
+					// async update...
+					} else {
+						// XXX need to check if we are too close to the edge...
+						var that = this
+						//setTimeout(function(){ that.resizeRibbon(target, size) }, 0)
+						if(this.__update_timeout){
+							clearTimeout(this.__update_timeout)
+						}
+						this.__update_timeout = setTimeout(function(){ 
+							delete that.__update_timeout
+							that.resizeRibbon(target, size) 
+						}, timeout)
+					}
+				}
+			}
+		}],
+})
+
+// NOTE: I do not fully understand it yet, but PartialRibbons must be 
+// 		setup BEFORE RibbonAlignToFirst, otherwise the later will break
+// 		on shifting an image to a new ribbon...
+// 			To reproduce:
+// 				- setupe RibbonAlignToFirst first
+// 				- go to top ribbon
+// 				- shift image up
+// 		XXX The two should be completely independent.... (???)
+var PartialRibbons = 
+module.PartialRibbons = 
+core.ImageGridFeatures.Feature({
+	title: 'Partial Ribbons',
+	doc: core.doc`Maintains partially loaded ribbons, this enables very large
+	image sets to be handled efficiently.`,
+
+	// NOTE: partial ribbons needs to be setup first...
+	// 		...the reasons why things break otherwise is not too clear.
+	priority: 'high',
+
+	tag: 'ui-partial-ribbons',
+	exclusive: ['ui-partial-ribbons'],
+	depends: [
+		'ui'
+	],
+	suggested: [
+		'ui-partial-ribbons-precache',
+	],
+
+
+	actions: PartialRibbonsActions,
+
+	handlers: [
+		['focusImage.pre centerImage.pre', 
+			function(target, list){
+				// NOTE: we have to do this as we are called BEFORE the 
+				// 		actual focus change happens...
+				// XXX is there a better way to do this???
+				target = list != null ? target = this.data.getImage(target, list) : target
+
+				this.updateRibbon(target)
+			}],
+		['resizing.pre',
+			function(unit, size){
+				// keep constant size in single image...
+				if(this.toggleSingleImage && this.toggleSingleImage('?') == 'on'){
+					this.updateRibbon(
+						'current', 
+						this.config['ribbons-resize-single-image'] || 13)
+
+				} else if(unit == 'scale'){
+					this.updateRibbon('current', this.screenwidth / size || 1)
+
+				} else if(unit == 'screenwidth'){
+					this.updateRibbon('current', size || 1)
+
+				} else if(unit == 'screenheight'){
+					size = size || 1
+
+					// convert target height in ribbons to width in images...
+					// NOTE: this does not account for compensation that 
+					// 		.updateRibbon(..) makes for fitting whole image
+					// 		counts, this is a small enough error so as not
+					// 		to waste time on...
+					var s = this.ribbons.scale()
+					var h = this.ribbons.getScreenHeightRibbons()
+					var w = this.ribbons.getScreenWidthImages()
+					var nw = w / (h/size)
+
+					this.updateRibbon('current', nw)
+				}
+			}],
+	],
+})
+
 
 
 
