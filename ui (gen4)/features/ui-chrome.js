@@ -298,14 +298,17 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 		// 		next .focusImage(..)
 		['ribbonPanning.pre',
 			function(){
+				/* XXX do we need to restore after pan??? 
 				this.__current_image_indicator_restore_timeout
 					&& clearTimeout(this.__current_image_indicator_restore_timeout)
 				delete this.__current_image_indicator_restore_timeout
+				//*/
 
 				this.dom
 					.find('.current-marker')
 						.velocity({opacity: 0}, { duration: 100 })
 			}],
+		/* XXX do we need to restore after pan??? 
 		['ribbonPanning.post',
 			function(){
 				var that = this
@@ -317,6 +320,7 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 							.velocity({opacity: 1}, { duration: 100 })
 				}, this.config['current-image-indicator-restore-delay'] || 500)
 			}],
+		//*/
 
 		// single image view -- fade in indicator after exit...
 		['toggleSingleImage',
