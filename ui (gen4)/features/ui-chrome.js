@@ -294,11 +294,9 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 				this.updateCurrentImageIndicator(null, 'before') }],
 
 		// hide and remove current image indicator...
-		// NOTE: it will be reconstructed on 
-		// 		next .focusImage(..)
 		['ribbonPanning.pre',
 			function(){
-				/* XXX do we need to restore after pan??? 
+				//* XXX do we need to restore after pan??? 
 				this.__current_image_indicator_restore_timeout
 					&& clearTimeout(this.__current_image_indicator_restore_timeout)
 				delete this.__current_image_indicator_restore_timeout
@@ -308,19 +306,33 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 					.find('.current-marker')
 						.velocity({opacity: 0}, { duration: 100 })
 			}],
-		/* XXX do we need to restore after pan??? 
+		// XXX need to animate this...
+		['centerImage.pre',
+			function(){
+				var m = this.dom.find('.current-marker')[0]
+				m 
+					&& (m.style.marginLeft = '')
+			}],
 		['ribbonPanning.post',
 			function(){
 				var that = this
 				this.__current_image_indicator_restore_timeout = setTimeout(function(){
 					that.updateCurrentImageIndicator()
 
-					that.dom
-						.find('.current-marker')
-							.velocity({opacity: 1}, { duration: 100 })
+					var cur = that.ribbons.getImage()
+					var marker = that.dom.find('.current-marker')
+
+					marker[0].style.marginLeft = ''
+
+					var m = -marker[0].offsetWidth/2 
+					var d = (marker.offset().left - cur.offset().left) / that.scale
+
+					marker[0].style.marginLeft = (m - d) + 'px'
+
+					marker
+						.velocity({opacity: 1}, { duration: 100 })
 				}, this.config['current-image-indicator-restore-delay'] || 500)
 			}],
-		//*/
 
 		// single image view -- fade in indicator after exit...
 		['toggleSingleImage',
@@ -458,7 +470,7 @@ module.CurrentImageIndicatorHideOnScreenNav = core.ImageGridFeatures.Feature({
 
 // XXX make this an action...
 var updateBaseRibbonIndicator = function(img){
-	var scale = this.ribbons.scale()
+	var scale = this.scale
 	var base = this.ribbons.getRibbon('base')
 	img = this.ribbons.getImage(img)
 	var m = base.find('.base-ribbon-marker')
