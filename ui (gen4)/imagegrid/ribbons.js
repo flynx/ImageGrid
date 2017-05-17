@@ -214,18 +214,24 @@ var RibbonsClassPrototype = {
 	px2vmax: function(px){ return this.px2v(px, 'vmax') },
 
 	// Generic getters...
-	getElemGID: function(elem){
-		return JSON.parse('"' 
-			+ (elem instanceof jQuery ? 
-					elem.attr('gid') 
-				: elem.getAttribute('gid'))
-			+ '"')
-	},
-	setElemGID: function(elem, gid){
-		return $(elem)
-			.attr('gid', JSON.stringify(gid)
-					// this removes the extra quots...
-					.replace(/^"(.*)"$/g, '$1'))
+	elemGID: function(elem, gid){
+		// get gid...
+		return (gid == null || gid == '?') ?
+				JSON.parse('"' 
+					+ (elem instanceof jQuery ? 
+							elem.attr('gid') 
+						: elem.getAttribute('gid'))
+					+ '"')
+			// remove gid...
+			: gid == '' ? 
+				$(elem)
+					.removesAttr('gid')
+			// set gid...
+			: $(elem)
+				.attr('gid', 
+					JSON.stringify(gid)
+						// this removes the extra quots...
+						.replace(/^"(.*)"$/g, '$1'))
 	},
 
 	// DOM Constructors...
@@ -245,11 +251,11 @@ var RibbonsClassPrototype = {
 		return $(gids.map(function(gid){
 			gid = gid != null ? gid+'' : gid
 
-			return that.setElemGID($('<div>')
+			return that.elemGID($('<div>')
 				.addClass('ribbon'), gid)[0]
 			//return $('<div>')
 			//	.addClass('ribbon-container')
-			//	.append(that.setElemGID($('<div>')
+			//	.append(that.elemGID($('<div>')
 			//		.addClass('ribbon'), gid))[0]
 		}))
 	},
@@ -260,13 +266,13 @@ var RibbonsClassPrototype = {
 		var that = this
 		return $(gids.map(function(gid){
 			gid = gid != null ? gid+'' : gid
-			return that.setElemGID($('<div>')
+			return that.elemGID($('<div>')
 					.addClass('image'), gid)[0]
 		}))
 	},
 	createMark: function(cls, gid){
 		gid = gid != null ? gid+'' : gid
-		return this.setElemGID($('<div class="mark">')
+		return this.elemGID($('<div class="mark">')
 			.addClass(cls), gid)
 	},
 } 
@@ -317,8 +323,7 @@ var RibbonsPrototype = {
 	createMark: RibbonsClassPrototype.createMark,
 
 	// Generic getters...
-	getElemGID: RibbonsClassPrototype.getElemGID,
-	setElemGID: RibbonsClassPrototype.setElemGID,
+	elemGID: RibbonsClassPrototype.elemGID,
 
 
 	get parent(){
@@ -712,7 +717,7 @@ var RibbonsPrototype = {
 			return function(){}
 		}
 
-		var gid = this.getElemGID(img)
+		var gid = this.elemGID(img)
 		var s = this.scale()
 		var vo = this.viewer.offset()
 		var io = img.offset()
@@ -934,7 +939,7 @@ var RibbonsPrototype = {
 	getImageMarks: function(img, cls){
 		img = img || this.getImage()
 		gid = typeof(img) == typeof('str') ? img : null
-		gid = gid == null ? this.getElemGID(img) : gid
+		gid = gid == null ? this.elemGID(img) : gid
 
 		var marks = this.viewer.find('.mark[gid='+JSON.stringify(gid)+']')
 
@@ -1316,14 +1321,14 @@ var RibbonsPrototype = {
 		var img = this.getImage(from)
 
 		img && img.length > 0 
-			&& this.setElemGID(img, to)
+			&& this.elemGID(img, to)
 
 		return this
 	},
 
 	// XXX is .__image_updaters the right way to go???
 	updateImageIndicators: function(gid, image){
-		gid = gid == null ? this.getElemGID() : gid
+		gid = gid == null ? this.elemGID() : gid
 		image = image == null ? this.getImage() : $(image)
 
 		// collect marks...
@@ -1406,7 +1411,7 @@ var RibbonsPrototype = {
 			if(image.length == 0){
 				return
 			}
-			var old_gid = that.getElemGID(image)
+			var old_gid = that.elemGID(image)
 
 			// same image -- update...
 			if(old_gid == gid || gid == null){
@@ -1529,7 +1534,7 @@ var RibbonsPrototype = {
 			if(image.length == 0){
 				return
 			}
-			var old_gid = that.getElemGID(image)
+			var old_gid = that.elemGID(image)
 			var data = update[old_gid] = {
 				image: image,
 				attrs: {},
@@ -1702,7 +1707,7 @@ var RibbonsPrototype = {
 
 			// align only if ref is loaded...
 			if(ref.length > 0){
-				var gid = this.getElemGID(ref)
+				var gid = this.elemGID(ref)
 				var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
 				var w = this.getVisibleImageSize('width', 1, ref) / W * 100
 
@@ -1722,7 +1727,7 @@ var RibbonsPrototype = {
 		var unload_marks = []
 		loaded = loaded
 			.filter(function(i, img){ 
-				var g = that.getElemGID(img)
+				var g = that.elemGID(img)
 				if(gids.indexOf(g) >= 0){
 					return true
 				}
@@ -1754,7 +1759,7 @@ var RibbonsPrototype = {
 			if(img.length == 0){
 				img = unloaded.length > 0 
 					// reuse an image we just detached...
-					? that.setElemGID(unloaded.pop(), gid) 
+					? that.elemGID(unloaded.pop(), gid) 
 					// create a new image...
 					: that.createImage(gid)
 			}
@@ -1762,7 +1767,7 @@ var RibbonsPrototype = {
 			// see of we are loaded in the right position...
 			// NOTE: loaded is maintained current later, thus it always 
 			// 		contains a set of images representative of the ribbon...
-			var g = loaded.length > i ? that.getElemGID(loaded.eq(i)) : null
+			var g = loaded.length > i ? that.elemGID(loaded.eq(i)) : null
 
 			// check if we need to reattach the image...
 			if(gid != g){
@@ -1811,7 +1816,7 @@ var RibbonsPrototype = {
 
 			// align only if ref is loaded...
 			if(ref.length > 0){
-				var gid = this.getElemGID(ref)
+				var gid = this.elemGID(ref)
 				var W = Math.min(document.body.offsetWidth, document.body.offsetHeight)
 				var w = this.getVisibleImageSize('width', 1, ref) / W * 100
 
@@ -1836,14 +1841,14 @@ var RibbonsPrototype = {
 					var img = loaded.eq(i)
 
 					// cleanup marks...
-					var g = that.getElemGID(img)
+					var g = that.elemGID(img)
 					unload_marks = gids.indexOf(g) < 0 ?
 						unload_marks.concat(that.getImageMarks(g).toArray())
 						: unload_marks
 
 					// XXX for some reason this is smoother than:
 					// 		gid && that.updateImage(img, gid)
-					gid && that.updateImage(that.setElemGID(img, gid))
+					gid && that.updateImage(that.elemGID(img, gid))
 				}
 		//	})
 		}
@@ -1889,7 +1894,7 @@ var RibbonsPrototype = {
 				// remove marks...
 				.each(function(_, img){
 					marks = marks.concat(
-						that.getImageMarks(that.getElemGID(img)).toArray())
+						that.getImageMarks(that.elemGID(img)).toArray())
 				})
 				
 			// clear stuff...
@@ -1914,7 +1919,7 @@ var RibbonsPrototype = {
 				// remove marks...
 				.each(function(_, img){
 					marks = marks.concat(
-						that.getImageMarks(that.getElemGID(img)).toArray())
+						that.getImageMarks(that.elemGID(img)).toArray())
 				})
 
 			// calculate the compensation...
@@ -1965,7 +1970,7 @@ var RibbonsPrototype = {
 			// update images...
 			right instanceof Array && right.forEach(function(gid, i){
 				var img = loading.eq(i)
-				that.setElemGID(img, gid) 
+				that.elemGID(img, gid) 
 				// XXX for some reason this does not add indicators...
 				that.updateImage(img)
 			})
@@ -1993,7 +1998,7 @@ var RibbonsPrototype = {
 			// update images...
 			left instanceof Array && left.forEach(function(gid, i){
 				var img = loading.eq(i)
-				that.setElemGID(img, gid) 
+				that.elemGID(img, gid) 
 				// XXX for some reason this does not add indicators...
 				that.updateImage(img)
 			})
@@ -2122,7 +2127,7 @@ var RibbonsPrototype = {
 
 				that.viewer.find(RIBBON).each(function(){
 					var r = $(this)
-					if(ribbons.indexOf(that.getElemGID(r)) < 0){
+					if(ribbons.indexOf(that.elemGID(r)) < 0){
 						r.remove()
 					}
 				})
@@ -2270,7 +2275,7 @@ var RibbonsPrototype = {
 
 		// get marked state...
 		if(action == '?'){
-			var gid = this.getElemGID(image)
+			var gid = this.elemGID(image)
 			var res = 0
 			cls.forEach(function(cls){
 				res += that.getImageMarks(gid, cls).length != 0 ? 1 : 0
@@ -2281,7 +2286,7 @@ var RibbonsPrototype = {
 		// set the marks...
 		image.each(function(){
 			var image = $(this)
-			var gid = that.getElemGID(image)
+			var gid = that.elemGID(image)
 			cls.forEach(function(cls){
 				var mark = that.getImageMarks(gid, cls)
 

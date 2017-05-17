@@ -17,10 +17,37 @@ var core = require('features/core')
 
 /*********************************************************************/
 
+var RibbonsClassPrototype = {
+}
+
+
+var RibbonsPrototype = {
+	getImage: function(){
+		// XXX
+	},
+	getImageByPosition: function(){
+		// XXX
+	},
+	getRibbon: function(){
+		// XXX
+	},
+}
+
+
+var Ribbons =
+module.Ribbons =
+object.makeConstructor('Ribbons', 
+	RibbonsClassPrototype,
+	RibbonsPrototype)
+
+
+
+/*********************************************************************/
+
 var RenderActions = actions.Actions({
 	load: [
 		function(){
-			// XXX
+			// XXX setup .ribbons
 		}],
 	reload: [
 		function(){

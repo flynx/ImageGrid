@@ -1396,7 +1396,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 							event.preventDefault()
 							event.stopPropagation()
 
-							var g = gid || that.ribbons.getElemGID(img)
+							var g = gid || that.ribbons.elemGID(img)
 
 							that
 								.focusImage(g)
@@ -1867,7 +1867,7 @@ var WidgetTestActions = actions.Actions({
 			if(cur && next && cur.birthtime.getMonth() != next.birthtime.getMonth()){
 				this.ribbons.getImageMarks(gid).filter('.partition').remove()
 				this.ribbons.getImage(gid)
-					.after(this.ribbons.setElemGID($('<div class="mark partition">'), gid)
+					.after(this.ribbons.elemGID($('<div class="mark partition">'), gid)
 						.attr('text', month[next.birthtime.getMonth()]))
 			}
 		}],

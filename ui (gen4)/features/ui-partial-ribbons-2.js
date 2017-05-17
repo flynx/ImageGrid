@@ -45,7 +45,7 @@ var PartialRibbonsActions = actions.Actions({
 	updateRibbon: ['- Interface/Update partial ribbon size', 
 		function(target, w, size, threshold, preload){
 			target = target instanceof jQuery 
-				? this.ribbons.getElemGID(target)
+				? this.ribbons.elemGID(target)
 				// NOTE: data.getImage(..) can return null at start or end
 				// 		of ribbon, thus we need to account for this...
 				: (this.data.getImage(target)

@@ -18,28 +18,6 @@ var core = require('features/core')
 
 
 /*********************************************************************/
-
-/*/ XXX
-var ViewerClassPrototype = {
-}
-
-
-var ViewerPrototype = {
-	sync: function(){
-	},
-}
-
-
-var Viewer =
-module.Viewer =
-object.makeConstructor('Viewer', 
-	ViewerClassPrototype,
-	ViewerPrototype)
-//*/
-
-
-//---------------------------------------------------------------------
-//
 //	- take care of DOM construction and update...
 //	- alignment is done via .centerRibbon(..) / .centerImage(..)
 //	- preview updates (XXX)
@@ -51,7 +29,7 @@ var VirtualDOMRibbonsClassPrototype = {
 
 var VirtualDOMRibbonsPrototype = {
 	// XXX this is a circular ref -- I do not like it...
-	imagegrid: null,
+	parent: null,
 
 	dom: null,
 	vdom: null,
@@ -77,9 +55,13 @@ var VirtualDOMRibbonsPrototype = {
 	},
 	restoreTransitions: function(){
 	},
-	getElemGID: function(){
+	elemGID: function(){
 	},
 	getImage: function(){
+	},
+	getImageByPosition: function(){
+	},
+	getRibbon: function(){
 	},
 	getVisibleImageSize: function(){
 	},
@@ -87,13 +69,14 @@ var VirtualDOMRibbonsPrototype = {
 	},
 	px2vmin: function(){
 	},
+	// ...
 
 
 	// constructors...
 	makeView: function(state, initial){
 		state = state || {}
 		var that = this
-		var ig = this.imagegrid
+		var ig = this.parent
 
 		var target = state.target || ig.current
 
@@ -133,7 +116,7 @@ var VirtualDOMRibbonsPrototype = {
 	makeRibbon: function(gid, target, count, state, initial){
 		state = state || {}
 		var that = this
-		var ig = this.imagegrid
+		var ig = this.parent
 		var current = ig.current
 		target = target || state.target || current
 		var size = this.state.tile_size = state.tile_size
@@ -201,13 +184,13 @@ var VirtualDOMRibbonsPrototype = {
 	// XXX update image previews...
 	// XXX update image proportions for rotated images... (???)
 	makeImage: function(gid, size){
-		var ig = this.imagegrid
+		var ig = this.parent
 		//size = this.state.tile_size = size 
 		size = size 
 			|| this.state.tile_size
 			|| this.getVisibleImageSize('max')
-		var data = this.imagegrid.data
-		var images = this.imagegrid.images || {}
+		var data = this.parent.data
+		var images = this.parent.images || {}
 		var current = data.current == gid ? '.current' : ''
 
 		// resolve group preview cover...
@@ -253,7 +236,7 @@ var VirtualDOMRibbonsPrototype = {
 	makeImageMarks: function(gid){
 		var that = this
 		var marks = []
-		var tags = this.imagegrid.data.getTags(gid)
+		var tags = this.parent.data.getTags(gid)
 
 		// XXX STUB: make this extensible...
 		tags.indexOf('bookmark') >= 0 
@@ -312,7 +295,7 @@ var VirtualDOMRibbonsPrototype = {
 			this.sync()
 
 		} else {
-			return this.imagegrid.scale
+			return this.parent.scale
 		}
 	},
 
@@ -349,7 +332,7 @@ var VirtualDOMRibbonsPrototype = {
 		if(this.vdom == null){
 			var n = this.vdom = this.makeView(state, true)
 			var v = vdom.create(n)
-			this.imagegrid.dom.append(v)
+			this.parent.dom.append(v)
 			this.dom = v
 
 		// patch state...
@@ -375,8 +358,8 @@ var VirtualDOMRibbonsPrototype = {
 			.sync()
 	},
 
-	__init__: function(imagegrid){
-		this.imagegrid = imagegrid
+	__init__: function(parent){
+		this.parent = parent || this.parent
 	},
 }
 
@@ -388,9 +371,7 @@ object.makeConstructor('VirtualDOMRibbons',
 
 
 
-
-
-/*********************************************************************/
+//---------------------------------------------------------------------
 
 var VirtualDomActions = actions.Actions({
 
@@ -398,10 +379,8 @@ var VirtualDomActions = actions.Actions({
 		return this.__dom },
 	set dom(value){
 		this.__dom = value},
-	get virtualdom(){
-		return (this.__virtual_dom = this.__virtual_dom || VirtualDOMRibbons(this)) },
 
-
+	// XXX setup .ribbons...
 	load: [
 		function(data){
 			return function(){
@@ -411,9 +390,10 @@ var VirtualDomActions = actions.Actions({
 
 				if(this.dom == null){
 					this.dom = viewer
+					this.ribbons = new VirtualDOMRibbons()
 
 				} else {
-					this.virtualdom.clear()
+					this.ribbons.clear()
 				}
 
 				this.reload()
@@ -421,13 +401,13 @@ var VirtualDomActions = actions.Actions({
 		}],
 	reload: ['Interface/Reload viewer',
 		function(){
-			this.virtualdom.reset()
+			this.ribbons.reset()
 			this.focusImage()
 		}],
 	// XXX this ignores it's args...
 	refresh: ['Interface/Refresh images without reloading',
 		function(gids, scale){
-			this.virtualdom.sync()
+			this.ribbons.sync()
 			this.focusImage()
 		}],
 
@@ -436,7 +416,7 @@ var VirtualDomActions = actions.Actions({
 	updateRibbon: ['- Interface/Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
-				? this.virtualdom.getElemGID(target)
+				? this.ribbons.elemGID(target)
 				// NOTE: data.getImage(..) can return null at start or end
 				// 		of ribbon, thus we need to account for this...
 				: (this.data.getImage(target)
@@ -452,7 +432,7 @@ var VirtualDomActions = actions.Actions({
 
 			// XXX for some reason this does not set the .current class 
 			// 		on the right image...
-			this.virtualdom.sync(target, size)
+			this.ribbons.sync(target, size)
 
 			// XXX HACK: this fixes a bug in virtual-dom where .current
 			// 		is not synced correctly...
@@ -460,7 +440,7 @@ var VirtualDomActions = actions.Actions({
 			// 		manually, dom gets diffed and no change is detected
 			// 		then the object gets recycled and the .current class
 			// 		ends up on a different element...
-			this.virtualdom.focusImage(target)
+			this.ribbons.focusImage(target)
 
 			this.centerViewer(target)
 		}],
@@ -481,14 +461,14 @@ module.VirtualDom = core.ImageGridFeatures.Feature({
 
 	handlers: [
 		['clear',
-			function(){ this.virtualdom.clear() }],
+			function(){ this.ribbons.clear() }],
 		['fitImage toggleSingleImage',
-			function(){ delete this.virtualdom.state.tile_size }],
+			function(){ delete this.ribbons.state.tile_size }],
 
 		// XXX account for fast navigation...
 		['focusImage.pre', 
 			function(target){ 
-				var img = this.virtualdom.getImage(target)
+				var img = this.ribbons.getImage(target)
 
 				// in-place update...
 				if(img.length > 0){
@@ -497,7 +477,7 @@ module.VirtualDom = core.ImageGridFeatures.Feature({
 					if(!this.__partial_ribbon_update){
 						this.__partial_ribbon_update = setTimeout((function(){
 							delete this.__partial_ribbon_update
-							this.virtualdom.preventTransitions()
+							this.ribbons.preventTransitions()
 
 							this
 								.updateRibbon(this.current)
@@ -506,7 +486,7 @@ module.VirtualDom = core.ImageGridFeatures.Feature({
 								// 		thus missing the base call...
 								.alignRibbons(null, null, true)
 
-							this.virtualdom.restoreTransitions()
+							this.ribbons.restoreTransitions()
 						}).bind(this), 150)
 					}
 
@@ -526,7 +506,7 @@ module.VirtualDom = core.ImageGridFeatures.Feature({
 			'toggleMark',
 			'toggleBookmark',
 		//], function(){ this.updateRibbon() }],
-		], function(){ this.virtualdom.sync() }],
+		], function(){ this.ribbons.sync() }],
 	],
 })
 

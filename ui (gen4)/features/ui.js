@@ -93,6 +93,24 @@ var base = require('features/base')
 //		.updateRibbon(target)
 //			-> this
 //
+//	Generic .ribbons API (introspection):
+//		.ribbons.getImage(..)
+//			-> image
+//
+//		.ribbons.getImageByPosition(..)
+//			-> image
+//
+//		.ribbons.getRibbon(..)
+//			-> ribbon
+//
+//		.ribbons.elemGID(..)
+//			-> gid
+//
+//	XXX do we need these???
+//		.ribbons.focusImage(..)
+//	XXX Avoid using methods that expose specific non-generic structure:
+//		.ribbons.getRibbonSet(..)
+//		.ribbons.getRibbonLocator(..)
 //
 //
 // Workspaces:
@@ -188,6 +206,17 @@ module.ViewerActions = actions.Actions({
 
 	// Viewer dom... 
 	dom: null,
+
+	// NOTE: this expects that ribbons will maintain .parent.images...
+	// NOTE: when getting rid of ribbons need to also remove the .parent
+	// 		reference...
+	get ribbons(){
+		return this.__ribbons },
+	set ribbons(ribbons){
+		this.__ribbons = ribbons
+		ribbons.parent = this
+	},
+
 
 	// Current image data...
 	//
@@ -1390,7 +1419,7 @@ var ControlActions = actions.Actions({
 				var handler = setup.handler = setup.handler 
 					|| function(){
 						var img = $(event.target)
-						var gid = that.ribbons.getElemGID(img)
+						var gid = that.ribbons.elemGID(img)
 
 						// sanity check: only handle clicks on images...
 						if(!img.hasClass('image')){
@@ -1483,7 +1512,7 @@ var ControlActions = actions.Actions({
 	makeRibbonVisible: ['- Interface/Make ribbon visible if it is off screen',
 		function(target, center_off_screen){
 			var r = this.ribbons.getRibbon(target)
-			var rgid = this.ribbons.getElemGID(r)
+			var rgid = this.ribbons.elemGID(r)
 
 			var central = this.ribbons.getImageByPosition('center', r)
 
@@ -1595,7 +1624,7 @@ var ControlActions = actions.Actions({
 						var that = this
 
 						var r = this.ribbons.getRibbon(target)
-						var rgid = this.ribbons.getElemGID(r)
+						var rgid = this.ribbons.elemGID(r)
 
 						var data = false
 						var post_handlers
@@ -1711,7 +1740,7 @@ var ControlActions = actions.Actions({
 										var current_ribbon = that.data.getRibbon()
 										if(current_ribbon == rgid){
 											var central = that.ribbons.getImageByPosition('center', r)
-											var gid = that.ribbons.getElemGID(central)
+											var gid = that.ribbons.elemGID(central)
 											// silently focus central image...
 											if(that.config['focus-central-image'] == 'silent'){
 												that.data.focusImage(gid)
@@ -1815,7 +1844,7 @@ var ControlActions = actions.Actions({
 					var current_ribbon = that.data.getRibbon()
 					if(current_ribbon == rgid){
 						var central = that.ribbons.getImageByPosition('center', r)
-						var gid = that.ribbons.getElemGID(central)
+						var gid = that.ribbons.elemGID(central)
 						// silently focus central image...
 						if(that.config['focus-central-image'] == 'silent'){
 							that.data.focusImage(gid)
@@ -1835,7 +1864,7 @@ var ControlActions = actions.Actions({
 						var that = this
 
 						var r = this.ribbons.getRibbon(target)
-						var rgid = this.ribbons.getElemGID(r)
+						var rgid = this.ribbons.elemGID(r)
 
 						// XXX vertical scroll...
 						this.dom

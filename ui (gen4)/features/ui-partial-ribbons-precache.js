@@ -109,7 +109,7 @@ var PreCacheActions = actions.Actions({
 	preCacheJumpTargets: ['- Interface/Pre-cache potential jump target images',
 		function(target, sources, radius, size){
 			target = target instanceof jQuery 
-				? this.ribbons.getElemGID(target)
+				? this.ribbons.elemGID(target)
 				// NOTE: data.getImage(..) can return null at start or end
 				// 		of ribbon, thus we need to account for this...
 				: (this.data.getImage(target)

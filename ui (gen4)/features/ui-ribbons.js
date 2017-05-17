@@ -32,10 +32,10 @@ function updateImagePosition(actions, target){
 
 	target = target || actions.current
 	target = target instanceof jQuery 
-		? actions.ribbons.getElemGID(target) 
+		? actions.ribbons.elemGID(target) 
 		: target
 
-	var source_ribbon = actions.ribbons.getElemGID(actions.ribbons.getRibbon(target))
+	var source_ribbon = actions.ribbons.elemGID(actions.ribbons.getRibbon(target))
 	var source_order = actions.data.getImageOrder(target)
 
 	return function(){
@@ -105,18 +105,6 @@ actions.Actions({
 	get dom(){
 		return this.ribbons ? this.ribbons.viewer : undefined },
 	
-
-	// NOTE: this expects that ribbons will maintain .parent.images...
-	// NOTE: when getting rid of ribbons need to also remove the .parent
-	// 		reference...
-	// XXX remove...
-	get ribbons(){
-		return this.__ribbons },
-	set ribbons(ribbons){
-		this.__ribbons = ribbons
-		ribbons.parent = this
-	},
-
 
 	load: [
 		function(data){
@@ -283,7 +271,7 @@ actions.Actions({
 	centerImage: ['- Interface/Center an image in ribbon horizontally',
 		function(target, align, offset, scale){
 			target = target instanceof jQuery 
-				? this.ribbons.getElemGID(target)
+				? this.ribbons.elemGID(target)
 				: target
 
 			// align current ribbon...
@@ -292,7 +280,7 @@ actions.Actions({
 	centerRibbon: ['- Interface/Center a ribbon vertically',
 		function(target){
 			target = target instanceof jQuery 
-				? this.ribbons.getElemGID(target)
+				? this.ribbons.elemGID(target)
 				: target
 
 			// align current ribbon...
@@ -323,7 +311,7 @@ actions.Actions({
 					t = t.eq(direction == 'before' ? 0 : 1)
 				}
 
-				t = ribbons.getElemGID(t)
+				t = ribbons.elemGID(t)
 
 				this.focusImage(t, r)
 			}
@@ -612,7 +600,7 @@ actions.Actions({
 	updateRibbon: ['- Interface/Update partial ribbon size', 
 		function(target, w, size, threshold){
 			target = target instanceof jQuery 
-				? this.ribbons.getElemGID(target)
+				? this.ribbons.elemGID(target)
 				// NOTE: data.getImage(..) can return null at start or end
 				// 		of ribbon, thus we need to account for this...
 				: (this.data.getImage(target)

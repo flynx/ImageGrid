@@ -70,7 +70,7 @@ module.Clickable = core.ImageGridFeatures.Feature({
 								// this will prevent double clicks...
 								x = null
 								y = null
-								that.focusImage(that.ribbons.getElemGID($(this)))
+								that.focusImage(that.ribbons.elemGID($(this)))
 								last = Date.now()
 							}
 						})
@@ -190,11 +190,11 @@ module.DirectControlHammer = core.ImageGridFeatures.Feature({
 
 								// silently focus central image...
 								if(that.config['focus-central-image'] == 'silent'){
-									that.data.current = that.ribbons.getElemGID(central)
+									that.data.current = that.ribbons.elemGID(central)
 									
 								// focus central image in a normal manner...
 								} else if(that.config['focus-central-image']){
-									that.focusImage(that.ribbons.getElemGID(central))
+									that.focusImage(that.ribbons.elemGID(central))
 								}
 
 								setTimeout(function(){
