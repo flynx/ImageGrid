@@ -109,7 +109,7 @@ var base = require('features/base')
 //	XXX do we need these???
 //		.ribbons.focusImage(..)
 //	XXX Avoid using methods that expose specific non-generic structure:
-//		.ribbons.getRibbonSet(..)
+//		.ribbons.getRibbonSet(..) ???
 //		.ribbons.getRibbonLocator(..)
 //
 //
