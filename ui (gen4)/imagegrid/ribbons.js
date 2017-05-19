@@ -74,123 +74,6 @@ var RIBBON = '.ribbon:not(.clone)'
 //
 //
 /*********************************************************************/
-// Low Level dom access...
-//
-// XXX think if a way to manage animation timings...
-// XXX not sure if this is the right way to go...
-
-var DOMAdapter =
-module.DOMAdapter = {
-	getOrigin: function(elem){
-		var o = $(elem).origin() || [0, 0] 
-		return { left: o[0], top: o[1], }
-	},
-	setOrigin: function(elem, left, top){
-		return $(elem).origin(left, top, 0)
-	},
-	setOriginSync: function(elem, x, y, z){
-		x = x == null ? '50%' : x
-		y = y == null ? '50%' : y
-		z = z == null ? '0' : z
-		var value = x +' '+ y +' '+ z
-
-		elem = $(elem)
-		var e = elem[0]
-
-		e.style.display = 'none'
-		// now kick the browser into recognition of our changes NOW ;)
-		getComputedStyle(e).display
-
-		e.style['-o-transform-origin'] =  value
-		e.style['-ms-transform-origin'] =  value
-		e.style['-moz-transform-origin'] =  value
-		e.style['-webkit-transform-origin'] =  value
-		e.style['transform-origin'] = value
-
-		e.style.display = ''
-		getComputedStyle(e).display
-
-		return $(elem)
-	},
-
-	getScale: function(elem){ 
-		return $(elem).scale() || 1 },
-	setScale: function(elem, scale){
-		return $(elem).scale(scale || 1) },
-
-	getOffset: function(elem){
-		var o = $(elem).transform('x', 'y') 
-		return { left: o.x, top: o.y, }
-	},
-	setOffset: function(elem, left, top){
-		return $(elem).transform({x: left || 0, y: top || 0, z: 0}) 
-	},
-
-	shiftOrigin: function(elem, left, top, scale){
-		var o = this.getOrigin(elem)
-		var scale = scale || this.getScale(elem)
-		var offset = this.getOffset(elem)
-
-		// calculate the offset change and compensate...
-		var cl = offset.left + ((o.left - o.left*scale) - (left - left*scale))
-		var ct = offset.top + ((o.top - o.top*scale) - (top - top*scale))
-
-		this.setOffset(elem, cl, ct)
-
-		return this.setOriginSync(elem, left+'px', top+'px')
-	},
-	// see docs in jli.js
-	relativeOffset: function(container, block, point){
-		point = point == null ? {} : point
-		var l = point.left
-		var t = point.top
-		var scale = point.scale
-
-		// get the input data...
-		var s = this.getScale(block) || 1
-		var o = this.getOrigin(block)
-		// get only the value we need...
-		var W = container.width()
-		var H = container.height()
-		// we need this to make everything relative to the container...
-		var co = container.offset()
-		var offset = this.getOffset(block)
-		var bo = block.offset()
-
-		scale = scale == 'screen' ? 1 
-			: scale == 'elem' ? s
-			: scale == null ? s
-			: scale
-
-		// normalize the l,t to element scale...
-		if(l != null && t != null){
-
-			// get only the value we need...
-			// NOTE: width and height are used to calculate the correction
-			//		due to origin/scale...
-			var w = block.width()
-			var h = block.height()
-			o = {
-				// target offset scale...
-				top: t*scale 
-					// set origin to top left corner of element (compensate
-					// for scaling)...
-					+ (h - h*s) / (h / o.top), 
-				left: l*scale 
-					+ (w - w*s) / (w / o.left),
-			}
-		}
-
-		return {
-			top: offset.top + (H/2 - offset.top) - o.top,
-			left: offset.left + (W/2 - offset.left) - o.left,
-		}
-	},
-}
-
-
-
-/*********************************************************************/
 
 var RibbonsClassPrototype = {
 	// utils...
@@ -278,8 +161,10 @@ var RibbonsClassPrototype = {
 } 
 
 
-// NOTE: this is a low level interface, not a set of actions...
-var RibbonsPrototype = {
+
+//---------------------------------------------------------------------
+	
+var IntrospectiveRibbonsPrototype = {
 	//
 	//	.viewer (jQuery object)
 	//
@@ -292,35 +177,13 @@ var RibbonsPrototype = {
 		this.images = images
 	},
 
-	// XXX
-	clone: function(){
-		var o = new this.constructor()
-		if(this.viewer){
-			// XXX does this completely detach from the orriginal???
-			// XXX do we need to reattach something???
-			o.viewer = this.viewer.clone()
-		}
-		if(this.images){
-			o.images = this.images.clone()
-		}
-		return o
-	},
-
-	// DOM Adapter...
-	dom: DOMAdapter,
-	
 	// utils...
 	px2v: RibbonsClassPrototype.px2v,
 	px2vw: RibbonsClassPrototype.px2vw,
 	px2vh: RibbonsClassPrototype.px2vh,
 	px2vmin: RibbonsClassPrototype.px2vmin,
 	px2vmax: RibbonsClassPrototype.px2vmax,
-	
-	// Constructors...
-	createViewer: RibbonsClassPrototype.createViewer,
-	createRibbon: RibbonsClassPrototype.createRibbon,
-	createImage: RibbonsClassPrototype.createImage,
-	createMark: RibbonsClassPrototype.createMark,
+
 
 	// Generic getters...
 	elemGID: RibbonsClassPrototype.elemGID,
@@ -351,151 +214,6 @@ var RibbonsPrototype = {
 	},
 
 
-	// Helpers...
-
-	// Prevent CSS transitions...
-	//
-	// 	Prevent transitions globally (.viewer):
-	// 	.preventTransitions()
-	// 		-> data
-	//
-	// 	Prevent transitions on elem:
-	// 	.preventTransitions(elem)
-	// 		-> data
-	//
-	//
-	// NOTE: this will set a .no-transitions CSS class and force 
-	// 		recalculation on the given element
-	// NOTE: for this to have effect proper CSS configuration is needed.
-	preventTransitions: function(target){
-		target = target || this.viewer
-		//prevent_nested = prevent_nested || false
-		if(target.length == 0){
-			return this
-		}
-		var t = target[0]
-
-		// handle nesting...
-		var l = t.getAttribute('__prevent_transitions')
-		if(l != null){
-			t.setAttribute('__prevent_transitions', parseInt(l)+1)
-			return this
-		}
-		t.setAttribute('__prevent_transitions', 0)
-
-		target.addClass('no-transitions')
-
-		var s = getComputedStyle(t)
-		s.webkitTransition
-		s.mozTransition
-		s.msTransition
-		s.oTransition
-		s.transition
-
-		return this
-	},
-
-	// Restore CSS transitions...
-	//
-	// This is a companion to .preventTransitions(..)
-	//
-	// 	Restore transitions globally (.viewer):
-	// 	.restoreTransitions()
-	// 		-> data
-	//
-	// 	Restore transitions on elem: 
-	// 	.restoreTransitions(elem)
-	// 		-> data
-	//
-	// 	Restore transitions on elem (force sync): 
-	// 	.restoreTransitions(elem, true)
-	// 		-> data
-	//
-	// 	Force restore transitions: 
-	// 	.restoreTransitions(.., .., true)
-	// 		-> data
-	//
-	// When at least one .preventTransitions(..) is called with 
-	// prevent_nested set to true, this will be a no-op on all nested
-	// levels.
-	// This can be overridden via setting the force to true.
-	//
-	// NOTE: the implementation of this method might seem ugly, but the 
-	// 		code is speed-critical, thus we access the DOM directly and
-	// 		the two branches are unrolled...
-	restoreTransitions: function(target, now, force){
-		if(target === true || target === false){
-			now = target
-			target = this.viewer
-		} else {
-			target = target || this.viewer
-		}
-		if(target.length == 0){
-			return this
-		}
-		var t = target[0]
-
-		// sync...
-		if(now){
-			// handle nesting...
-			var l = t.getAttribute('__prevent_transitions')
-			if(l != null && !force && l != '0'){
-				t.setAttribute('__prevent_transitions', parseInt(l)-1)
-				return this
-			}
-			t.removeAttribute('__prevent_transitions')
-
-			target.removeClass('no-transitions')
-
-			var s = getComputedStyle(t)
-			s.webkitTransition
-			s.mozTransition
-			s.msTransition
-			s.oTransition
-			s.transition
-
-		// on next exec frame...
-		} else {
-			var that = this
-			setTimeout(function(){
-				// handle nesting...
-				var l = t.getAttribute('__prevent_transitions')
-				if(l != null && !force && l != '0'){
-					t.setAttribute('__prevent_transitions', l-1)
-					return this
-				}
-				t.removeAttribute('__prevent_transitions')
-
-				target.removeClass('no-transitions')
-
-				var s = getComputedStyle(t)
-				s.webkitTransition
-				s.mozTransition
-				s.msTransition
-				s.oTransition
-				s.transition
-			}, 0)
-		}
-
-		return this
-	},
-
-	// Shorthand wrappers of the above...
-	//
-	// XXX do we need custom target support here???
-	noTransitions: function(func){
-		this.preventTransitions()
-		func.apply(this, args2array(arguments).slice(1))
-		this.restoreTransitions(true)
-		return this
-	},
-	noTransitionsDeep: function(func){
-		this.preventTransitions(null, true)
-		func.apply(this, args2array(arguments).slice(1))
-		this.restoreTransitions(true)
-		return this
-	},
-
 	// Scale...
 	//
 	// 	Get scale...
@@ -512,7 +230,7 @@ var RibbonsPrototype = {
 	scale: function(scale){
 		// get...
 		if(arguments.length == 0){
-			return this.dom.getScale(this.getRibbonSet()) || 1
+			return this.getRibbonSet().scale() || 1
 		}
 
 		// set...
@@ -522,53 +240,12 @@ var RibbonsPrototype = {
 			return this
 		}
 
-		this.dom.setScale(ribbon_set, scale)
+		ribbon_set.scale(scale)
 
 		return this
 	},
 
-	// Rotate...
-	//
-	//	Get ribbon rotation angle...
-	//	.rotate()
-	//		-> angle
-	//
-	//	Rotate to angle...
-	//	.rotate(20)
-	//	.rotate(-10)
-	//		-> ribbons
-	//
-	//	Rotate by angle...
-	//	.rotate('-=20')
-	//	.rotate('+=30')
-	//		-> ribbons
-	//
-	// NOTE: the angles are not base 360 normalised...
-	// NOTE: units are ignored and the final angle is always in deg.
-	rotate: function(angle){
-		// get...
-		if(arguments.length == 0){
-			return this.getRibbonSet().rotate()
-		}
 
-		// set...
-		var ribbon_set = this.getRibbonSet()  
-
-		if(ribbon_set.length == 0){
-			return this
-		}
-
-		angle = typeof(angle) == typeof('str')
-			? (/^\+=/.test(angle) ? (ribbon_set.rotate() || 0) + parseFloat(angle.slice(2))
-				:/^\-=/.test(angle) ? (ribbon_set.rotate() || 0) - parseFloat(angle.slice(2))
-				: parseFloat(angle))
-			: angle
-
-		ribbon_set.rotate(angle)
-
-		return this
-	},
-	
 	// Get visible image tile size...
 	//
 	//	.getVisibleImageSize()
@@ -666,154 +343,6 @@ var RibbonsPrototype = {
 
 		return H/h
 	},
-
-	// Make a "shadow" image for use with image oriented animations...
-	//
-	//	.makeShadow([<image>][, <animate>][, <delay>])
-	//		-> <finalize>
-	//
-	// A shadow is a clone of <image> placed directly above it while it 
-	// is hidden (transparent), calling <finalize> will remove the shadwo
-	// and restore the original image, if <animate> is set then the shadow
-	// will be moved to the image location, and <delay> sets the time delay
-	// to provision for shadow animations.
-	//
-	// <finalize> is a function, that when called will remove the shadow
-	// and restore image state.
-	//
-	// <image> is the target image to clone
-	//
-	// <animate> if is set, <finalize> will shift the shadow to target 
-	// image offset before removing it (default: false).
-	//
-	// <delay> sets the delay before the shadow is removed and the target 
-	// state is restored (default: 200).
-	//
-	//
-	// NOTE: if a previous shadow if the same image exists this will recycle
-	// 		the existing shadow and cancel it's removal.
-	// 		...this is useful for when a second consecutive action with
-	// 		the same image is issued before the previous has time to
-	// 		complete, recycling the shadow will enable a single flowing 
-	// 		animation for such series of commands.
-	// 		Example: several fast consecutive horizontal shifts will result
-	// 			in a single shadow "flowing" through the ribbon.
-	// NOTE: multiple shadows of different images are supported...
-	// NOTE: the .shadow element is essentially a ribbon.
-	//
-	// XXX add duration configuration...
-	// XXX should we also have a ribbon shadow???
-	// XXX when this cant find a target it will return an empty function,
-	// 		not sure if this is correct...
-	// XXX should we use transforms instead of css positions???
-	makeShadow: function(target, animate, delay, start_delay){
-		delay = delay || 200
-		start_delay = start_delay || 10
-
-		var img = this.getImage(target)
-
-		if(img.length == 0){
-			// XXX is this correct???
-			return function(){}
-		}
-
-		var gid = this.elemGID(img)
-		var s = this.scale()
-		var vo = this.viewer.offset()
-		var io = img.offset()
-
-		// get the shadow if it exists...
-		var shadow = this.viewer.find('.shadow[gid="'+gid+'"]')
-
-		// recycle the shadow...
-		if(shadow.length > 0){
-			// cancel previous shadow removal ticket...
-			var ticket = shadow.attr('ticket') + 1
-			shadow
-				// reset ticket...
-				// NOTE: this is a possible race condition... (XXX)
-				.attr('ticket', ticket)
-				// place it over the current image...
-				.css({
-					top: io.top - vo.top,
-					left: io.left - vo.left,
-				})
-
-		// create a new shadow...
-		} else {
-			// removal ticket...
-			var ticket = 0
-
-			// make a shadow element...
-			// ...we need to scale it to the current scale...
-			var shadow = this.dom.setScale(
-				$('<div>')
-					.addClass('shadow ribbon clone')
-					.attr({
-						gid: gid,
-						ticket: ticket,
-					})
-					.append(
-						// clone the target into the shadow..
-						img
-							.clone()
-							.addClass('clone')
-							.removeClass('current')
-							.attr('gid', null)),
-					s)
-				// place it over the current image...
-				.css({
-					top: io.top - vo.top,
-					left: io.left - vo.left,
-				})
-				.append(this.getImageMarks(img)
-						.clone()
-						.attr('gid', null))
-				// place in the viewer...
-				// NOTE: placing the shadow in the viewer is a compromise that
-				// 		lets us do simpler positioning 
-				.appendTo(this.viewer)
-		}
-
-		img.addClass('moving')
-		var that = this
-
-		// function to clear the shadow...
-		return function(){
-			// remove only the item with the correct ticket...
-			if(ticket == shadow.attr('ticket')){
-				var s = that.scale()
-				var img = that.getImage(gid)
-				var vo = that.viewer.offset()
-				var io = img.offset()
-				if(animate){
-					if(start_delay){
-						setTimeout(function(){
-							shadow.css({
-								top: io.top - vo.top,
-								left: io.left - vo.left,
-							})
-						}, start_delay)
-
-					} else {
-						shadow.css({
-							top: io.top - vo.top,
-							left: io.left - vo.left,
-						})
-					}
-				}
-				setTimeout(function(){
-					// remove only the item with the correct ticket...
-					if(ticket == shadow.attr('ticket')){
-						img.removeClass('moving')
-						shadow.remove()
-					}
-				}, delay)
-			}
-			return img
-		}
-	},
-
 
 	// Contextual getters...
 	
@@ -1137,6 +666,383 @@ var RibbonsPrototype = {
 	// ribbon object...
 	getRibbonOrder: function(target){
 		return this.viewer.find(RIBBON).index(this.getRibbon(target)) },
+
+
+	getImageRotation: function(target){
+		return (this.getImage(target).attr('orientation') || 0)*1 },
+	getImageFlip: function(target){
+		return (this.getImage(target).attr('flipped') || '')
+			.split(',')
+			.map(function(e){ return e.trim() })
+			.filter(function(e){ return e != '' })
+	},
+
+}
+
+var IntrospectiveRibbons = 
+module.IntrospectiveRibbons = 
+object.makeConstructor('IntrospectiveRibbons', 
+		RibbonsClassPrototype, 
+		IntrospectiveRibbonsPrototype)
+
+
+
+//---------------------------------------------------------------------
+
+// NOTE: this is a low level interface, not a set of actions...
+var RibbonsPrototype = {
+	// XXX
+	clone: function(){
+		var o = new this.constructor()
+		if(this.viewer){
+			// XXX does this completely detach from the orriginal???
+			// XXX do we need to reattach something???
+			o.viewer = this.viewer.clone()
+		}
+		if(this.images){
+			o.images = this.images.clone()
+		}
+		return o
+	},
+
+	// Constructors...
+	createViewer: RibbonsClassPrototype.createViewer,
+	createRibbon: RibbonsClassPrototype.createRibbon,
+	createImage: RibbonsClassPrototype.createImage,
+	createMark: RibbonsClassPrototype.createMark,
+
+	// Helpers...
+
+	// Prevent CSS transitions...
+	//
+	// 	Prevent transitions globally (.viewer):
+	// 	.preventTransitions()
+	// 		-> data
+	//
+	// 	Prevent transitions on elem:
+	// 	.preventTransitions(elem)
+	// 		-> data
+	//
+	//
+	// NOTE: this will set a .no-transitions CSS class and force 
+	// 		recalculation on the given element
+	// NOTE: for this to have effect proper CSS configuration is needed.
+	preventTransitions: function(target){
+		target = target || this.viewer
+		//prevent_nested = prevent_nested || false
+		if(target.length == 0){
+			return this
+		}
+		var t = target[0]
+
+		// handle nesting...
+		var l = t.getAttribute('__prevent_transitions')
+		if(l != null){
+			t.setAttribute('__prevent_transitions', parseInt(l)+1)
+			return this
+		}
+		t.setAttribute('__prevent_transitions', 0)
+
+		target.addClass('no-transitions')
+
+		var s = getComputedStyle(t)
+		s.webkitTransition
+		s.mozTransition
+		s.msTransition
+		s.oTransition
+		s.transition
+
+		return this
+	},
+
+	// Restore CSS transitions...
+	//
+	// This is a companion to .preventTransitions(..)
+	//
+	// 	Restore transitions globally (.viewer):
+	// 	.restoreTransitions()
+	// 		-> data
+	//
+	// 	Restore transitions on elem: 
+	// 	.restoreTransitions(elem)
+	// 		-> data
+	//
+	// 	Restore transitions on elem (force sync): 
+	// 	.restoreTransitions(elem, true)
+	// 		-> data
+	//
+	// 	Force restore transitions: 
+	// 	.restoreTransitions(.., .., true)
+	// 		-> data
+	//
+	// When at least one .preventTransitions(..) is called with 
+	// prevent_nested set to true, this will be a no-op on all nested
+	// levels.
+	// This can be overridden via setting the force to true.
+	//
+	// NOTE: the implementation of this method might seem ugly, but the 
+	// 		code is speed-critical, thus we access the DOM directly and
+	// 		the two branches are unrolled...
+	restoreTransitions: function(target, now, force){
+		if(target === true || target === false){
+			now = target
+			target = this.viewer
+		} else {
+			target = target || this.viewer
+		}
+		if(target.length == 0){
+			return this
+		}
+		var t = target[0]
+
+		// sync...
+		if(now){
+			// handle nesting...
+			var l = t.getAttribute('__prevent_transitions')
+			if(l != null && !force && l != '0'){
+				t.setAttribute('__prevent_transitions', parseInt(l)-1)
+				return this
+			}
+			t.removeAttribute('__prevent_transitions')
+
+			target.removeClass('no-transitions')
+
+			var s = getComputedStyle(t)
+			s.webkitTransition
+			s.mozTransition
+			s.msTransition
+			s.oTransition
+			s.transition
+
+		// on next exec frame...
+		} else {
+			var that = this
+			setTimeout(function(){
+				// handle nesting...
+				var l = t.getAttribute('__prevent_transitions')
+				if(l != null && !force && l != '0'){
+					t.setAttribute('__prevent_transitions', l-1)
+					return this
+				}
+				t.removeAttribute('__prevent_transitions')
+
+				target.removeClass('no-transitions')
+
+				var s = getComputedStyle(t)
+				s.webkitTransition
+				s.mozTransition
+				s.msTransition
+				s.oTransition
+				s.transition
+			}, 0)
+		}
+
+		return this
+	},
+
+	// Shorthand wrappers of the above...
+	//
+	// XXX do we need custom target support here???
+	noTransitions: function(func){
+		this.preventTransitions()
+		func.apply(this, args2array(arguments).slice(1))
+		this.restoreTransitions(true)
+		return this
+	},
+	noTransitionsDeep: function(func){
+		this.preventTransitions(null, true)
+		func.apply(this, args2array(arguments).slice(1))
+		this.restoreTransitions(true)
+		return this
+	},
+
+	// Rotate...
+	//
+	//	Get ribbon rotation angle...
+	//	.rotate()
+	//		-> angle
+	//
+	//	Rotate to angle...
+	//	.rotate(20)
+	//	.rotate(-10)
+	//		-> ribbons
+	//
+	//	Rotate by angle...
+	//	.rotate('-=20')
+	//	.rotate('+=30')
+	//		-> ribbons
+	//
+	// NOTE: the angles are not base 360 normalised...
+	// NOTE: units are ignored and the final angle is always in deg.
+	rotate: function(angle){
+		// get...
+		if(arguments.length == 0){
+			return this.getRibbonSet().rotate()
+		}
+
+		// set...
+		var ribbon_set = this.getRibbonSet()  
+
+		if(ribbon_set.length == 0){
+			return this
+		}
+
+		angle = typeof(angle) == typeof('str')
+			? (/^\+=/.test(angle) ? (ribbon_set.rotate() || 0) + parseFloat(angle.slice(2))
+				:/^\-=/.test(angle) ? (ribbon_set.rotate() || 0) - parseFloat(angle.slice(2))
+				: parseFloat(angle))
+			: angle
+
+		ribbon_set.rotate(angle)
+
+		return this
+	},
+	
+	// Make a "shadow" image for use with image oriented animations...
+	//
+	//	.makeShadow([<image>][, <animate>][, <delay>])
+	//		-> <finalize>
+	//
+	// A shadow is a clone of <image> placed directly above it while it 
+	// is hidden (transparent), calling <finalize> will remove the shadwo
+	// and restore the original image, if <animate> is set then the shadow
+	// will be moved to the image location, and <delay> sets the time delay
+	// to provision for shadow animations.
+	//
+	// <finalize> is a function, that when called will remove the shadow
+	// and restore image state.
+	//
+	// <image> is the target image to clone
+	//
+	// <animate> if is set, <finalize> will shift the shadow to target 
+	// image offset before removing it (default: false).
+	//
+	// <delay> sets the delay before the shadow is removed and the target 
+	// state is restored (default: 200).
+	//
+	//
+	// NOTE: if a previous shadow if the same image exists this will recycle
+	// 		the existing shadow and cancel it's removal.
+	// 		...this is useful for when a second consecutive action with
+	// 		the same image is issued before the previous has time to
+	// 		complete, recycling the shadow will enable a single flowing 
+	// 		animation for such series of commands.
+	// 		Example: several fast consecutive horizontal shifts will result
+	// 			in a single shadow "flowing" through the ribbon.
+	// NOTE: multiple shadows of different images are supported...
+	// NOTE: the .shadow element is essentially a ribbon.
+	//
+	// XXX add duration configuration...
+	// XXX should we also have a ribbon shadow???
+	// XXX when this cant find a target it will return an empty function,
+	// 		not sure if this is correct...
+	// XXX should we use transforms instead of css positions???
+	makeShadow: function(target, animate, delay, start_delay){
+		delay = delay || 200
+		start_delay = start_delay || 10
+
+		var img = this.getImage(target)
+
+		if(img.length == 0){
+			// XXX is this correct???
+			return function(){}
+		}
+
+		var gid = this.elemGID(img)
+		var s = this.scale()
+		var vo = this.viewer.offset()
+		var io = img.offset()
+
+		// get the shadow if it exists...
+		var shadow = this.viewer.find('.shadow[gid="'+gid+'"]')
+
+		// recycle the shadow...
+		if(shadow.length > 0){
+			// cancel previous shadow removal ticket...
+			var ticket = shadow.attr('ticket') + 1
+			shadow
+				// reset ticket...
+				// NOTE: this is a possible race condition... (XXX)
+				.attr('ticket', ticket)
+				// place it over the current image...
+				.css({
+					top: io.top - vo.top,
+					left: io.left - vo.left,
+				})
+
+		// create a new shadow...
+		} else {
+			// removal ticket...
+			var ticket = 0
+
+			// make a shadow element...
+			// ...we need to scale it to the current scale...
+			var shadow = $('<div>')
+				.addClass('shadow ribbon clone')
+				.attr({
+					gid: gid,
+					ticket: ticket,
+				})
+				.append(
+					// clone the target into the shadow..
+					img
+						.clone()
+						.addClass('clone')
+						.removeClass('current')
+						.attr('gid', null))
+				.scale(s)
+				// place it over the current image...
+				.css({
+					top: io.top - vo.top,
+					left: io.left - vo.left,
+				})
+				.append(this.getImageMarks(img)
+						.clone()
+						.attr('gid', null))
+				// place in the viewer...
+				// NOTE: placing the shadow in the viewer is a compromise that
+				// 		lets us do simpler positioning 
+				.appendTo(this.viewer)
+		}
+
+		img.addClass('moving')
+		var that = this
+
+		// function to clear the shadow...
+		return function(){
+			// remove only the item with the correct ticket...
+			if(ticket == shadow.attr('ticket')){
+				var s = that.scale()
+				var img = that.getImage(gid)
+				var vo = that.viewer.offset()
+				var io = img.offset()
+				if(animate){
+					if(start_delay){
+						setTimeout(function(){
+							shadow.css({
+								top: io.top - vo.top,
+								left: io.left - vo.left,
+							})
+						}, start_delay)
+
+					} else {
+						shadow.css({
+							top: io.top - vo.top,
+							left: io.left - vo.left,
+						})
+					}
+				}
+				setTimeout(function(){
+					// remove only the item with the correct ticket...
+					if(ticket == shadow.attr('ticket')){
+						img.removeClass('moving')
+						shadow.remove()
+					}
+				}, delay)
+			}
+			return img
+		}
+	},
 
 
 	// Basic manipulation...
@@ -1945,8 +1851,6 @@ var RibbonsPrototype = {
 					.css('background-image', 'none')
 
 				// compensate for the offset...
-				//that.dom.setOffset(ribbon, that.dom.getOffset(ribbon).left + l)
-
 				var b = images[-left].offsetLeft
 				var d = ((a - b) / W) * 100
 				var x = parseFloat((ribbon.transform('translate3d') || [0])[0]) + d
@@ -2024,8 +1928,6 @@ var RibbonsPrototype = {
 				})
 
 				// compensate for the offset...
-				//that.dom.setOffset(ribbon, that.dom.getOffset(ribbon).left - l)
-
 				// XXX is this the correct reference item -- can it be deleted above???
 				var b = images[0].offsetLeft
 				var d = ((a - b) / W) * 100
@@ -2307,10 +2209,6 @@ var RibbonsPrototype = {
 		return image
 	},
 
-	// Get image rotation...
-	//
-	getImageRotation: function(target){
-		return (this.getImage(target).attr('orientation') || 0)*1 },
 	// Rotate an image...
 	//
 	// Rotate image clockwise:
@@ -2359,14 +2257,6 @@ var RibbonsPrototype = {
 		return this
 	},
 
-	// Get image flip...
-	//
-	getImageFlip: function(target){
-		return (this.getImage(target).attr('flipped') || '')
-			.split(',')
-			.map(function(e){ return e.trim() })
-			.filter(function(e){ return e != '' })
-	},
 	// Flip an image...
 	//
 	// Flip image relative to view:
@@ -2650,15 +2540,15 @@ var RibbonsPrototype = {
 	},
 } 
 
+RibbonsPrototype.__proto__ = IntrospectiveRibbonsPrototype
 
-
-/*********************************************************************/
 
 var Ribbons = 
 module.Ribbons = 
 object.makeConstructor('Ribbons', 
 		RibbonsClassPrototype, 
 		RibbonsPrototype)
+
 
 
 
