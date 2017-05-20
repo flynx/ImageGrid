@@ -39,8 +39,9 @@
   },
   "devDependencies": {
     "less": "*",
+    "nwjs": "*",
     "webdriverio": "^4.0.4",
-    "nwjs": "*"
+    "webpack": "^2.5.1"
   },
   "bin": {
     "ig": "ig.js"

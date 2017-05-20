@@ -72,6 +72,8 @@ module.GLOBAL_KEYBOARD = {
 		// handle in next section...
 		'(': 'NEXT',
 		')': 'NEXT',
+		'^': 'NEXT',
+		'$': 'NEXT',
 
 		// zooming...
 		'#1': 'fitScreen',
@@ -269,9 +271,11 @@ module.GLOBAL_KEYBOARD = {
 		Home: 'firstImage',
 		ctrl_Home: 'firstGlobalImage',
 		shift_Home: 'firstRibbon',
+		'^': 'Home',
 		End: 'lastImage',
 		ctrl_End: 'lastGlobalImage',
 		shift_End: 'lastRibbon',
+		'$': 'End',
 
 		Up: 'prevRibbon',
 		caps_shift_Up: 'prevRibbon',
