@@ -2416,8 +2416,8 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-fs-writer',
 	depends: [
-		'fs-writer', 
 		'ui-fs-loader',
+		'fs-writer', 
 	],
 
 	actions: FileSystemWriterUIActions,

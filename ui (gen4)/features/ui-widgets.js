@@ -1547,10 +1547,10 @@ var WidgetTestActions = actions.Actions({
 			console.log('>>>', [].slice.call(arguments))
 			return function(){
 				console.log('<<<', [].slice.call(arguments)) }}],
-
 	testActionDisabled: ['Test/$Disabled test action',
 		{browseMode: function(){ return 'disabled' }},
-		function(){}],
+		function(){ 
+			console.log('Disabled action called:', [].slice.call(arguments)) }],
 
 	// Usage Examples:
 	// 	.testDrawer()						- show html in base drawer...
@@ -2069,7 +2069,6 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 	depends: [
 		'ui-browse-actions',
 	],
-
 	actions: WidgetTestActions,
 })
 

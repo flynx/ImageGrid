@@ -41,6 +41,7 @@ require('features/metadata')
 require('features/meta')
 
 require('features/experimental')
+require('features/tests')
 require('features/demo')
 
 // node features...

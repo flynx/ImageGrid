@@ -152,6 +152,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'fail-safe-devtools',
 
+	'tests',
 	'-experiments',
 ])
 
