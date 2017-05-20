@@ -3034,13 +3034,14 @@ var BrowserPrototype = {
 
 			// clear selection...
 			this.select(null, filtering)
-			if(!filtering){
-				browser.find('.path .dir.cur').text(elem.find('.text').text())
-			}
 
 			// XXX not sure if this is correct...
 			if(elem.hasClass('disabled')){
 				return $()
+			}
+
+			if(!filtering){
+				browser.find('.path .dir.cur').text(elem.find('.text').text())
 			}
 
 			// handle scroll position...
@@ -3451,7 +3452,7 @@ var BrowserPrototype = {
 
 		// nothing selected, select first and exit...
 		if(elem.length == 0){
-			this.select()
+			//this.select()
 			return this
 		}
 
