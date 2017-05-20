@@ -1559,6 +1559,8 @@ module.CropActions = actions.Actions({
 	
 	// XXX not sure if we actually need this...
 	cropFlatten: ['Crop/Flatten',
+		{browseMode: function(){ 
+			return this.data.ribbon_order.length <= 1 && 'disabled' }},
 		function(list){ this.data.length > 0 && this.crop(list, true) }],
 	cropRibbon: ['Crop/Crop ribbon',
 		function(ribbon, flatten){

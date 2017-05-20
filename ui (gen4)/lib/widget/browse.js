@@ -2982,6 +2982,7 @@ var BrowserPrototype = {
 	// NOTE: 'none' will always return an empty jQuery object, to get 
 	// 		the selection state before deselecting use .select('!')
 	// NOTE: this uses .filter(..) for string and regexp matching...
+	// NOTE: this will not select disabled elements (XXX)
 	select: function(elem, filtering){
 		var browser = this.dom
 		var pattern = '.list .item'
@@ -3035,6 +3036,11 @@ var BrowserPrototype = {
 			this.select(null, filtering)
 			if(!filtering){
 				browser.find('.path .dir.cur').text(elem.find('.text').text())
+			}
+
+			// XXX not sure if this is correct...
+			if(elem.hasClass('disabled')){
+				return $()
 			}
 
 			// handle scroll position...
@@ -3455,7 +3461,8 @@ var BrowserPrototype = {
 
 		// if text is empty, skip action...
 		if(txt != ''){
-			path.push(elem.find('.text').text())
+			//path.push(elem.find('.text').text())
+			path.push(txt)
 
 			var res = this.open(path)
 		}

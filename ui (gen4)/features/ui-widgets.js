@@ -1548,6 +1548,10 @@ var WidgetTestActions = actions.Actions({
 			return function(){
 				console.log('<<<', [].slice.call(arguments)) }}],
 
+	testActionDisabled: ['Test/$Disabled test action',
+		{browseMode: function(){ return 'disabled' }},
+		function(){}],
+
 	// Usage Examples:
 	// 	.testDrawer()						- show html in base drawer...
 	// 	.testDrawer('Header', 'paragraph')	- show html with custom text...

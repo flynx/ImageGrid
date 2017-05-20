@@ -213,7 +213,8 @@ var ImageMarkActions = actions.Actions({
 				|| !('selected' in this.data.tags)){
 			return []
 		}
-		return this.data.tags['selected'].slice()
+		//return this.data.tags['selected'].slice()
+		return this.data.getImages(this.data.tags['selected'])
 	},
 
 	markedInRibbon: ['- Mark|Ribbon/',
@@ -232,6 +233,8 @@ var ImageMarkActions = actions.Actions({
 		function(mode){ this.nextTagged('selected', mode) }],
 
 	cropMarked: ['Mark|Crop/Crop $marked images',
+		{browseMode: function(target){ 
+			return this.marked.length == 0 && 'disabled' }},
 		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
 })
 
@@ -402,7 +405,8 @@ var ImageBookmarkActions = actions.Actions({
 				|| !('bookmark' in this.data.tags)){
 			return []
 		}
-		return this.data.tags['bookmark'].slice()
+		//return this.data.tags['bookmark'].slice()
+		return this.data.getImages(this.data.tags['bookmark'])
 	},
 
 	prevBookmarked: ['Bookmark|Navigate/Previous bookmarked image',
@@ -411,6 +415,8 @@ var ImageBookmarkActions = actions.Actions({
 		function(mode){ this.nextTagged('bookmark', mode) }],
 
 	cropBookmarked: ['Bookmark|Crop/Crop $bookmarked images',
+		{browseMode: function(target){ 
+			return this.bookmarked.length == 0 && 'disabled' }},
 		function(flatten){ this.cropTagged('bookmark', 'any', flatten) }],
 })
 
