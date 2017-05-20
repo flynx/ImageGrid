@@ -15,6 +15,8 @@ var features = require('lib/features')
 
 var core = require('features/core')
 
+var ribbons = require('imagegrid/ribbons')
+
 
 
 /*********************************************************************/
@@ -26,7 +28,9 @@ var core = require('features/core')
 var VirtualDOMRibbonsClassPrototype = {
 	// XXX ???
 }
+VirtualDOMRibbonsClassPrototype.__proto__ = ribbons.BaseRibbons.prototype.__proto__
 
+// XXX make this ribbons.BaseRibbons compatible....
 var VirtualDOMRibbonsPrototype = {
 	// XXX this is a circular ref -- I do not like it...
 	parent: null,
@@ -48,29 +52,6 @@ var VirtualDOMRibbonsPrototype = {
 	// 		},
 	// 	}
 	state: null,
-
-
-	// XXX reuse these from ribbons???
-	preventTransitions: function(){
-	},
-	restoreTransitions: function(){
-	},
-	elemGID: function(){
-	},
-	getImage: function(){
-	},
-	getImageByPosition: function(){
-	},
-	getRibbon: function(){
-	},
-	getVisibleImageSize: function(){
-	},
-	focusImage: function(){
-	},
-	px2vmin: function(){
-	},
-	// ...
-
 
 	// constructors...
 	makeView: function(state, initial){
@@ -362,6 +343,8 @@ var VirtualDOMRibbonsPrototype = {
 		this.parent = parent || this.parent
 	},
 }
+VirtualDOMRibbonsPrototype.__proto__ = ribbons.BaseRibbons.prototype
+
 
 var VirtualDOMRibbons =
 module.VirtualDOMRibbons =

@@ -1,6 +1,13 @@
 /**********************************************************************
 * 
 *
+* Features:
+* 	- ui-ribbons-render
+* 	- ui-ribbons-edit-render
+* 	- ui-partial-ribbons
+*	- ui-animation
+*		manage UI non-css animations...
+*
 *
 **********************************************************************/
 ((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
@@ -433,9 +440,10 @@ core.ImageGridFeatures.Feature({
 	tag: 'ui-ribbons-render',
 	exclusive: ['ui-render'],
 	depends: [
-		// XXX
+		'base',
 	],
 	suggested: [
+		'ui-animation',
 		'ui-ribbons-edit-render',
 	],
 
@@ -737,6 +745,66 @@ core.ImageGridFeatures.Feature({
 
 					this.updateRibbon('current', nw)
 				}
+			}],
+	],
+})
+
+
+
+/*********************************************************************/
+// Animation...
+
+// XXX at this point this does not support target lists...
+// XXX shift up/down to new ribbon is not too correct...
+// XXX depends on .ribbons.makeShadow(..)...
+var ShiftAnimation =
+module.ShiftAnimation = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-animation',
+	depends: [
+		'ui-ribbons-render',
+	],
+
+	config: {
+		// XXX make this duration...
+		'shadow-animation-delay': 200,
+		'shadow-animation-start-delay': 0,
+	},
+
+	handlers: [
+		//['shiftImageUp.pre shiftImageDown.pre '
+		//		+'travelImageUp.pre travelImageDown.pre', 
+		['shiftImageUp.pre shiftImageDown.pre',
+			function(target){
+				// XXX do not do target lists...
+				if(target != null && target.constructor === Array 
+						// do not animate in single image mode...
+						&& this.toggleSingleImage('?') == 'on'){
+					return
+				}
+				var s = this.ribbons.makeShadow(target, true, 
+					// XXX make this duration...
+					this.config['shadow-animation-delay'],
+					this.config['shadow-animation-start-delay'])
+				return function(){ s() }
+			}],
+		// NOTE: this will keep the shadow in place -- the shadow will not
+		// 		go to the mountain, the mountain will come to the shadow ;)
+		['shiftImageLeft.pre shiftImageRight.pre', 
+			function(target){
+				// XXX do not do target lists...
+				if(target != null && target.constructor === Array
+						// do not animate in single image mode...
+						&& this.toggleSingleImage('?') == 'on'){
+					return
+				}
+				var s = this.ribbons.makeShadow(target, undefined,
+					// XXX make this duration...
+					this.config['shadow-animation-delay'],
+					this.config['shadow-animation-start-delay'])
+				return function(){ s() }
 			}],
 	],
 })

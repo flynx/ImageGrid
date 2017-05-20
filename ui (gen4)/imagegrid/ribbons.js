@@ -33,7 +33,7 @@ var RIBBON = '.ribbon:not(.clone)'
 
 /*********************************************************************/
 //
-// This expects the following HTML structure...
+// This expects/builds the following HTML structure...
 //
 // Unpopulated:
 //
@@ -45,37 +45,43 @@ var RIBBON = '.ribbon:not(.clone)'
 //
 //	<div class="viewer">
 //		<div class="ribbon-set">
-//			<div class="ribbon">
-//				<div class="image" gid="a"></div>
-//				<div class="image" gid="b"></div>
+//			<div class="ribbon-locator">
+//				<div class="ribbon">
+//					<div class="image" gid="a"></div>
+//					<div class="image" gid="b"></div>
+//					...
+//				</div>
+//				<div class="ribbon">
+//					<div class="image" gid="c"></div>
+//
+//					<!-- current image -->
+//					<div class="current image" gid="d"></div>
+//
+//					<!-- image with mark... -->
+//					<div class="image" gid="e"></div>
+//					<div class="mark selected" gid="f"></div>
+//
+//					<div class="image" gid="g"></div>
+//
+//					...
+//				</div>
 //				...
 //			</div>
-//			<div class="ribbon">
-//				<div class="image" gid="c"></div>
-//
-//				<!-- current image -->
-//				<div class="current image" gid="d"></div>
-//
-//				<!-- image with mark... -->
-//				<div class="image" gid="e"></div>
-//				<div class="mark selected" gid="f"></div>
-//
-//				<div class="image" gid="g"></div>
-//
-//				...
-//			</div>
-//			...
 //		</div>
 //	</div>
 //
 //
 // NOTE: there can be only one .ribbon-set element.
+// NOTE: other elements can exist in the structure, but as long as they
+// 		use different CSS classes they are ignored by the system, note 
+// 		that such elements may affect alignment and placement though this
+// 		should be obvious ;)
 //
 //
 //
 /*********************************************************************/
 
-var RibbonsClassPrototype = {
+var BaseRibbonsClassPrototype = {
 	// utils...
 	px2v: function(px, mode){
 		var ref = mode == 'vw' ? 
@@ -116,55 +122,9 @@ var RibbonsClassPrototype = {
 						// this removes the extra quots...
 						.replace(/^"(.*)"$/g, '$1'))
 	},
-
-	// DOM Constructors...
-	// NOTE: these will return unattached objects...
-	createViewer: function(){
-		return $('<div>')
-			.addClass('viewer')
-			.attr('tabindex', 0)
-			//.append($('<div>')
-			//	.addClass('ribbon-set'))
-	},
-	// XXX NOTE: quots removal might render this incompatible with older data formats...
-	createRibbon: function(gids){
-		gids = gids || []
-		gids = gids.constructor !== Array ? [gids] : gids
-		var that = this
-		return $(gids.map(function(gid){
-			gid = gid != null ? gid+'' : gid
-
-			return that.elemGID($('<div>')
-				.addClass('ribbon'), gid)[0]
-			//return $('<div>')
-			//	.addClass('ribbon-container')
-			//	.append(that.elemGID($('<div>')
-			//		.addClass('ribbon'), gid))[0]
-		}))
-	},
-	// XXX NOTE: quots removal might render this incompatible with older data formats...
-	createImage: function(gids){
-		gids = gids || []
-		gids = gids.constructor !== Array ? [gids] : gids
-		var that = this
-		return $(gids.map(function(gid){
-			gid = gid != null ? gid+'' : gid
-			return that.elemGID($('<div>')
-					.addClass('image'), gid)[0]
-		}))
-	},
-	createMark: function(cls, gid){
-		gid = gid != null ? gid+'' : gid
-		return this.elemGID($('<div class="mark">')
-			.addClass(cls), gid)
-	},
 } 
 
-
-
-//---------------------------------------------------------------------
-	
-var IntrospectiveRibbonsPrototype = {
+var BaseRibbonsPrototype = {
 	//
 	//	.viewer (jQuery object)
 	//
@@ -178,15 +138,15 @@ var IntrospectiveRibbonsPrototype = {
 	},
 
 	// utils...
-	px2v: RibbonsClassPrototype.px2v,
-	px2vw: RibbonsClassPrototype.px2vw,
-	px2vh: RibbonsClassPrototype.px2vh,
-	px2vmin: RibbonsClassPrototype.px2vmin,
-	px2vmax: RibbonsClassPrototype.px2vmax,
+	px2v: BaseRibbonsClassPrototype.px2v,
+	px2vw: BaseRibbonsClassPrototype.px2vw,
+	px2vh: BaseRibbonsClassPrototype.px2vh,
+	px2vmin: BaseRibbonsClassPrototype.px2vmin,
+	px2vmax: BaseRibbonsClassPrototype.px2vmax,
 
 
 	// Generic getters...
-	elemGID: RibbonsClassPrototype.elemGID,
+	elemGID: BaseRibbonsClassPrototype.elemGID,
 
 
 	get parent(){
@@ -668,28 +628,216 @@ var IntrospectiveRibbonsPrototype = {
 		return this.viewer.find(RIBBON).index(this.getRibbon(target)) },
 
 
+	// Image info...
+	//
+	// NOTE: these are simply shorthands to image attr access...
 	getImageRotation: function(target){
 		return (this.getImage(target).attr('orientation') || 0)*1 },
 	getImageFlip: function(target){
 		return (this.getImage(target).attr('flipped') || '')
 			.split(',')
 			.map(function(e){ return e.trim() })
-			.filter(function(e){ return e != '' })
+			.filter(function(e){ return e != '' }) },
+
+
+	// UI manipulation...
+	
+	// Compensate for viewer proportioned and rotated images.
+	//
+	// This will set the margins so as to make the rotated image offset the
+	// same space as it is occupying visually...
+	//
+	// NOTE: this is not needed for square image blocks.
+	// NOTE: if an image block is square, this will remove the margins.
+	//
+	// XXX this does the same job as features/ui-single-image.js' .updateImageProportions(..)
+	_calcImageProportions: function(image, W, H, w, h, o){
+		image = image instanceof jQuery ? image[0] : image
+
+		//var s = (!w || !h) ? getComputedStyle(image) : null
+		//w = w || parseFloat(s.width)
+		//h = h || parseFloat(s.height) 
+		//w = this.px2vmin(w || image.offsetWidth)
+		//h = this.px2vmin(h || image.offsetHeight)
+		w = w || image.offsetWidth
+		h = h || image.offsetHeight
+
+		// non-square image...
+		if(w != h){
+			W = W || this.viewer.innerWidth()
+			H = H || this.viewer.innerHeight()
+			o = o || image.getAttribute('orientation') || 0
+
+			var viewer_p = W > H ? 'landscape' : 'portrait'
+
+			// NOTE: we need to use the default (CSS) value when 
+			// 		possible, to avoid sizing issues...
+			var dfl_w = image.style.width == ''
+			var dfl_h = image.style.height == ''
+
+			var image_p = w > h ? 'landscape' : 'portrait'
+
+			// when the image is turned 90deg/270deg and its 
+			// proportions are the same as the screen...
+			if((o == 90 || o == 270) && image_p == viewer_p){
+				return {
+					width: dfl_h ? '' : (this.px2vmin(h) + 'vmin'),
+					height: dfl_w ? '' : (this.px2vmin(w) + 'vmin'),
+					margin: this.px2vmin(-((w - h)/2)) +'vmin '+ this.px2vmin((w - h)/2) + 'vmin',
+				}
+
+			} else if((o == 0 || o == 180) && image_p != viewer_p){
+				return {
+					width: dfl_h ? '' : (this.px2vmin(h) + 'vmin'),
+					height: dfl_w ? '' : (this.px2vmin(w) + 'vmin'),
+					margin: '',
+				}
+			}
+
+		// square image...
+		} else {
+			return {
+				width: '',
+				height: '',
+				margin: '',
+			}
+		}
+	},
+	correctImageProportionsForRotation: function(images, W, H){
+		var that = this
+		W = W || this.viewer.innerWidth()
+		H = H || this.viewer.innerHeight()
+
+		var images = images || this.viewer.find(IMAGE)
+
+		return $(images).each(function(i, e){
+			var data = that._calcImageProportions(this, W, H)
+
+			data 
+				&& $(this).css(data)
+		})
+	},
+
+	// center a ribbon vertically...
+	//
+	// 	Center current ribbon...
+	// 	.centerRibbon()
+	// 		-> Ribbons
+	//
+	// 	Center specific ribbon...
+	// 	.centerRibbon(image)
+	// 	.centerRibbon(ribbon)
+	// 		-> Ribbons
+	// 
+	centerRibbon: function(target){
+		var ribbon = this.getRibbon(target)
+		var locator = this.getRibbonLocator() 
+
+		if(locator.length == 0 || ribbon.length == 0){
+			return this
+		}
+
+		var t = ribbon[0].offsetTop
+		var h = ribbon[0].offsetHeight
+
+		locator.transform({ x: 0, y: this.px2vh(-(t + h/2)) + 'vh', z: 0 }) 
+
+		return this
+	},
+
+	// center an image horizontally...
+	// 
+	// 	Center current ribbon/image...
+	// 	.centerImage()
+	// 		-> Ribbons
+	//
+	// 	Center specific image...
+	// 	.centerImage(image)
+	// 	.centerImage(image, 'center')
+	// 		-> Ribbons
+	//
+	// 	Center ribbon before/after an image...
+	// 	.centerImage(image, 'before')
+	// 	.centerImage(image, 'after')
+	// 		-> Ribbons
+	//
+	centerImage: function(target, mode){
+		target = this.getImage(target)
+		var ribbon = this.getRibbon(target)
+
+		if(ribbon.length == 0){
+			return this
+		}
+
+		var l = target[0].offsetLeft
+		var w = target[0].offsetWidth
+
+		var image_offset = mode == 'before' ? 0
+			: mode == 'after' ? w
+			: w/2
+
+		ribbon.transform({x: -this.px2vmin(l + image_offset) + 'vmin', y: 0, z: 0}) 
+
+		return this
 	},
 
 }
 
-var IntrospectiveRibbons = 
-module.IntrospectiveRibbons = 
-object.makeConstructor('IntrospectiveRibbons', 
-		RibbonsClassPrototype, 
-		IntrospectiveRibbonsPrototype)
+var BaseRibbons = 
+module.BaseRibbons = 
+object.makeConstructor('BaseRibbons', 
+	BaseRibbonsClassPrototype, 
+	BaseRibbonsPrototype)
 
 
 
 //---------------------------------------------------------------------
 
-// NOTE: this is a low level interface, not a set of actions...
+var RibbonsClassPrototype = {
+	// DOM Constructors...
+	// NOTE: these will return unattached objects...
+	createViewer: function(){
+		return $('<div>')
+			.addClass('viewer')
+			.attr('tabindex', 0)
+			//.append($('<div>')
+			//	.addClass('ribbon-set'))
+	},
+	// XXX NOTE: quots removal might render this incompatible with older data formats...
+	createRibbon: function(gids){
+		gids = gids || []
+		gids = gids.constructor !== Array ? [gids] : gids
+		var that = this
+		return $(gids.map(function(gid){
+			gid = gid != null ? gid+'' : gid
+
+			return that.elemGID($('<div>')
+				.addClass('ribbon'), gid)[0]
+			//return $('<div>')
+			//	.addClass('ribbon-container')
+			//	.append(that.elemGID($('<div>')
+			//		.addClass('ribbon'), gid))[0]
+		}))
+	},
+	// XXX NOTE: quots removal might render this incompatible with older data formats...
+	createImage: function(gids){
+		gids = gids || []
+		gids = gids.constructor !== Array ? [gids] : gids
+		var that = this
+		return $(gids.map(function(gid){
+			gid = gid != null ? gid+'' : gid
+			return that.elemGID($('<div>')
+					.addClass('image'), gid)[0]
+		}))
+	},
+	createMark: function(cls, gid){
+		gid = gid != null ? gid+'' : gid
+		return this.elemGID($('<div class="mark">')
+			.addClass(cls), gid)
+	},
+}
+RibbonsClassPrototype.__proto__ = BaseRibbonsClassPrototype
+
 var RibbonsPrototype = {
 	// XXX
 	clone: function(){
@@ -2337,147 +2485,6 @@ var RibbonsPrototype = {
 		return this.flipImage(target, 'horizontal', reference) },
 
 
-	// UI manipulation...
-	
-	// Compensate for viewer proportioned and rotated images.
-	//
-	// This will set the margins so as to make the rotated image offset the
-	// same space as it is occupying visually...
-	//
-	// NOTE: this is not needed for square image blocks.
-	// NOTE: if an image block is square, this will remove the margins.
-	//
-	// XXX this does the same job as features/ui-single-image.js' .updateImageProportions(..)
-	_calcImageProportions: function(image, W, H, w, h, o){
-		image = image instanceof jQuery ? image[0] : image
-
-		//var s = (!w || !h) ? getComputedStyle(image) : null
-		//w = w || parseFloat(s.width)
-		//h = h || parseFloat(s.height) 
-		//w = this.px2vmin(w || image.offsetWidth)
-		//h = this.px2vmin(h || image.offsetHeight)
-		w = w || image.offsetWidth
-		h = h || image.offsetHeight
-
-		// non-square image...
-		if(w != h){
-			W = W || this.viewer.innerWidth()
-			H = H || this.viewer.innerHeight()
-			o = o || image.getAttribute('orientation') || 0
-
-			var viewer_p = W > H ? 'landscape' : 'portrait'
-
-			// NOTE: we need to use the default (CSS) value when 
-			// 		possible, to avoid sizing issues...
-			var dfl_w = image.style.width == ''
-			var dfl_h = image.style.height == ''
-
-			var image_p = w > h ? 'landscape' : 'portrait'
-
-			// when the image is turned 90deg/270deg and its 
-			// proportions are the same as the screen...
-			if((o == 90 || o == 270) && image_p == viewer_p){
-				return {
-					width: dfl_h ? '' : (this.px2vmin(h) + 'vmin'),
-					height: dfl_w ? '' : (this.px2vmin(w) + 'vmin'),
-					margin: this.px2vmin(-((w - h)/2)) +'vmin '+ this.px2vmin((w - h)/2) + 'vmin',
-				}
-
-			} else if((o == 0 || o == 180) && image_p != viewer_p){
-				return {
-					width: dfl_h ? '' : (this.px2vmin(h) + 'vmin'),
-					height: dfl_w ? '' : (this.px2vmin(w) + 'vmin'),
-					margin: '',
-				}
-			}
-
-		// square image...
-		} else {
-			return {
-				width: '',
-				height: '',
-				margin: '',
-			}
-		}
-	},
-	correctImageProportionsForRotation: function(images, W, H){
-		var that = this
-		W = W || this.viewer.innerWidth()
-		H = H || this.viewer.innerHeight()
-
-		var images = images || this.viewer.find(IMAGE)
-
-		return $(images).each(function(i, e){
-			var data = that._calcImageProportions(this, W, H)
-
-			data 
-				&& $(this).css(data)
-		})
-	},
-
-	// center a ribbon vertically...
-	//
-	// 	Center current ribbon...
-	// 	.centerRibbon()
-	// 		-> Ribbons
-	//
-	// 	Center specific ribbon...
-	// 	.centerRibbon(image)
-	// 	.centerRibbon(ribbon)
-	// 		-> Ribbons
-	// 
-	centerRibbon: function(target){
-		var ribbon = this.getRibbon(target)
-		var locator = this.getRibbonLocator() 
-
-		if(locator.length == 0 || ribbon.length == 0){
-			return this
-		}
-
-		var t = ribbon[0].offsetTop
-		var h = ribbon[0].offsetHeight
-
-		locator.transform({ x: 0, y: this.px2vh(-(t + h/2)) + 'vh', z: 0 }) 
-
-		return this
-	},
-
-	// center an image horizontally...
-	// 
-	// 	Center current ribbon/image...
-	// 	.centerImage()
-	// 		-> Ribbons
-	//
-	// 	Center specific image...
-	// 	.centerImage(image)
-	// 	.centerImage(image, 'center')
-	// 		-> Ribbons
-	//
-	// 	Center ribbon before/after an image...
-	// 	.centerImage(image, 'before')
-	// 	.centerImage(image, 'after')
-	// 		-> Ribbons
-	//
-	centerImage: function(target, mode){
-		target = this.getImage(target)
-		var ribbon = this.getRibbon(target)
-
-		if(ribbon.length == 0){
-			return this
-		}
-
-		var l = target[0].offsetLeft
-		var w = target[0].offsetWidth
-
-		var image_offset = mode == 'before' ? 0
-			: mode == 'after' ? w
-			: w/2
-
-		ribbon.transform({x: -this.px2vmin(l + image_offset) + 'vmin', y: 0, z: 0}) 
-
-		return this
-	},
-
 	// Fit image to view...
 	//
 	// If n is given this will fit n images (default: 1)
@@ -2539,15 +2546,13 @@ var RibbonsPrototype = {
 		return this
 	},
 } 
-
-RibbonsPrototype.__proto__ = IntrospectiveRibbonsPrototype
-
+RibbonsPrototype.__proto__ = BaseRibbonsPrototype
 
 var Ribbons = 
 module.Ribbons = 
 object.makeConstructor('Ribbons', 
-		RibbonsClassPrototype, 
-		RibbonsPrototype)
+	RibbonsClassPrototype, 
+	RibbonsPrototype)
 
 
 

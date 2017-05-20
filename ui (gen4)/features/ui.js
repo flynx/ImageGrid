@@ -9,8 +9,6 @@
 *		maintain configuration state in local storage
 *	- ui-url-hash
 *		handle .location.hash
-*	- ui-animation
-*		manage UI non-css animations...
 *	- ui-cursor
 *	- ui-control
 *		touch/mouse control mechanics
@@ -48,9 +46,11 @@ var base = require('features/base')
 /*********************************************************************/
 // Viewer (widget/interface)...
 //
+//
 // This requires a 'ui-render' family feature to be present
 //
 // 	Expected render API is:
+//		XXX do we actually need this or should we directly use .ribbons.scale()???
 //		Get/set view scale...
 //		.viewScale()
 //		.viewScale('?')
@@ -93,7 +93,7 @@ var base = require('features/base')
 //		.updateRibbon(target)
 //			-> this
 //
-//	Generic .ribbons API (introspection):
+//	Base .ribbons API (see: ribbons.BaseRibbons):
 //		.ribbons.getImage(..)
 //			-> image
 //
@@ -231,6 +231,7 @@ module.ViewerActions = actions.Actions({
 	// Scaling...
 	//
 	// NOTE: .screenwidth / .screenheight are measured in square image blocks...
+	// XXX do we actually need this or should we directly use .ribbons.scale()???
 	get scale(){
 		return this.viewScale() },
 	set scale(s){
@@ -749,15 +750,6 @@ module.Viewer = core.ImageGridFeatures.Feature({
 
 
 /*********************************************************************/
-// User interfaces for different base features...
-
-
-// XXX tag dialogs...
-// XXX
-
-
-
-/*********************************************************************/
 // Utilities and Services...
 
 var ConfigLocalStorageActions = actions.Actions({
@@ -986,64 +978,6 @@ module.URLHash = core.ImageGridFeatures.Feature({
 						this.current = h
 					}
 				}
-			}],
-	],
-})
-
-
-
-/*********************************************************************/
-// Animation...
-
-// XXX at this point this does not support target lists...
-// XXX shift up/down to new ribbon is not too correct...
-// XXX depends on .ribbons...
-var ShiftAnimation =
-module.ShiftAnimation = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-animation',
-	depends: ['ui'],
-
-	config: {
-		// XXX make this duration...
-		'shadow-animation-delay': 200,
-		'shadow-animation-start-delay': 0,
-	},
-
-	handlers: [
-		//['shiftImageUp.pre shiftImageDown.pre '
-		//		+'travelImageUp.pre travelImageDown.pre', 
-		['shiftImageUp.pre shiftImageDown.pre',
-			function(target){
-				// XXX do not do target lists...
-				if(target != null && target.constructor === Array 
-						// do not animate in single image mode...
-						&& this.toggleSingleImage('?') == 'on'){
-					return
-				}
-				var s = this.ribbons.makeShadow(target, true, 
-					// XXX make this duration...
-					this.config['shadow-animation-delay'],
-					this.config['shadow-animation-start-delay'])
-				return function(){ s() }
-			}],
-		// NOTE: this will keep the shadow in place -- the shadow will not
-		// 		go to the mountain, the mountain will come to the shadow ;)
-		['shiftImageLeft.pre shiftImageRight.pre', 
-			function(target){
-				// XXX do not do target lists...
-				if(target != null && target.constructor === Array
-						// do not animate in single image mode...
-						&& this.toggleSingleImage('?') == 'on'){
-					return
-				}
-				var s = this.ribbons.makeShadow(target, undefined,
-					// XXX make this duration...
-					this.config['shadow-animation-delay'],
-					this.config['shadow-animation-start-delay'])
-				return function(){ s() }
 			}],
 	],
 })
@@ -1310,6 +1244,7 @@ module.Cursor = core.ImageGridFeatures.Feature({
 // 		XXX how should multiple long interactions be handled??
 // 		XXX revise...
 //
+// NOTE: modifies .ribbons -- event handlers, attrs, classes... (XXX)
 // NOTE: for legacy stuff see: features/ui-legacy.js
 //
 // XXX add option to block click actions on focus...
@@ -1317,7 +1252,6 @@ module.Cursor = core.ImageGridFeatures.Feature({
 // 		system-wide...
 
 // XXX STUB: needs more thought.... 
-// XXX depends on .ribbons...
 var ControlActions = actions.Actions({
 	config: {
 		'control-mode': 'indirect',
@@ -2109,7 +2043,7 @@ module.FailsafeDevTools = core.ImageGridFeatures.Feature({
 
 /*********************************************************************/
 
-// XXX depends on .ribbons...
+// NOTE: this updates the current image block CSS...
 var PreviewFilters
 module.PreviewFilters = core.ImageGridFeatures.Feature({
 	title: '',

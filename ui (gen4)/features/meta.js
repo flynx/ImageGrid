@@ -78,7 +78,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	// features...
 	'ui-cursor',
-	'ui-animation',
 
 	'ui-single-image',
 	'ui-partial-ribbons',
@@ -112,7 +111,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-progress',
 	'ui-status-log',
 	'ui-scale',
-	'ui-animation',
 	'ui-bounds-indicators',
 	'ui-current-image-indicator',
 		// NOTE: only one of these can be set...
