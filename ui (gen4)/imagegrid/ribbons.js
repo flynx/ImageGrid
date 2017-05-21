@@ -737,10 +737,14 @@ var BaseRibbonsPrototype = {
 			return this
 		}
 
+		// NOTE: we need to use the same unit here as is used to size 
+		// 		the image blocks...
+		var unit = 'vmin'
+
 		var t = ribbon[0].offsetTop
 		var h = ribbon[0].offsetHeight
 
-		locator.transform({ x: 0, y: this.px2vh(-(t + h/2)) + 'vh', z: 0 }) 
+		locator.transform({ x: 0, y: this.px2v(-(t + h/2), unit) + unit, z: 0 }) 
 
 		return this
 	},
