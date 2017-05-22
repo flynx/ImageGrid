@@ -26,7 +26,7 @@ var ribbons = require('imagegrid/ribbons')
 //		- update onload (a-la .ribbons._loadImagePreviewURL(..))
 
 var VirtualDOMRibbonsClassPrototype = {
-	// XXX ???
+	// XXX
 }
 VirtualDOMRibbonsClassPrototype.__proto__ = ribbons.BaseRibbons.prototype.__proto__
 
