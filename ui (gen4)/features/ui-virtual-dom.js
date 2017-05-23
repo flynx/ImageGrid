@@ -24,6 +24,7 @@ var ribbons = require('imagegrid/ribbons')
 //	- alignment is done via .centerRibbon(..) / .centerImage(..)
 //	- preview updates (XXX)
 //		- update onload (a-la .ribbons._loadImagePreviewURL(..))
+//		
 
 var VirtualDOMRibbonsClassPrototype = {
 	// XXX
