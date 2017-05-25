@@ -20,6 +20,14 @@ var ribbons = require('imagegrid/ribbons')
 
 
 /*********************************************************************/
+// TODO:
+//	- "dry run test" -- empty render feature that if use would not break
+//		anything but not draw anything either... (use this as template)
+//	- virtual-dom feature
+//	- preact / react feature
+// 
+// 
+// 
 //	- take care of DOM construction and update...
 //	- alignment is done via .centerRibbon(..) / .centerImage(..)
 //	- preview updates (XXX)
