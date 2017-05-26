@@ -40,7 +40,7 @@ object.makeConstructor('Ribbons',
 
 var RenderActions = actions.Actions({
 	load: [
-		function(){
+		function(data){
 			// XXX setup .ribbons
 		}],
 	reload: [
@@ -123,7 +123,6 @@ module.Render = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	// XXX
 	tag: 'ui-blank-render',
 	exclusive: ['ui-render'],
 	depends: [

@@ -70,6 +70,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'missing-feature',
 
 	// XXX
+	//'ui-blank-render',
 	'ui-ribbons-render',
 	'ui-partial-ribbons-render',
 	'ui-vdom-render',
