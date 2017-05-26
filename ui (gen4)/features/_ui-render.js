@@ -13,25 +13,19 @@ var features = require('lib/features')
 
 var core = require('features/core')
 
+var ribbons = require('imagegrid/ribbons')
 
 
 /*********************************************************************/
 
 var RibbonsClassPrototype = {
 }
+RibbonsClassPrototype.__proto__ = ribbons.BaseRibbons.prototype.__proto__
 
 
 var RibbonsPrototype = {
-	getImage: function(){
-		// XXX
-	},
-	getImageByPosition: function(){
-		// XXX
-	},
-	getRibbon: function(){
-		// XXX
-	},
 }
+RibbonsPrototype.__proto__ = ribbons.BaseRibbons.prototype
 
 
 var Ribbons =
@@ -130,7 +124,7 @@ module.Render = core.ImageGridFeatures.Feature({
 	doc: '',
 
 	// XXX
-	tag: 'ui-xxx-render',
+	tag: 'ui-blank-render',
 	exclusive: ['ui-render'],
 	depends: [
 		// XXX
