@@ -71,6 +71,9 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	// XXX
 	//'ui-blank-render',
+	// XXX BUG: features: this pulls in all the suggestions that depend
+	// 		regardless of weather they depend on it or not:
+	// 			'ui-partial-ribbons'
 	'ui-ribbons-render',
 	'ui-partial-ribbons-render',
 	'ui-vdom-render',
@@ -81,6 +84,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-cursor',
 
 	'ui-single-image',
+
+	// XXX remove this... (at this point this is here only to keep load order consistent)
 	'ui-partial-ribbons',
 	/*/ XXX has bugs -- non-current ribbons are not always aligned...
 	'ui-partial-ribbons-2',

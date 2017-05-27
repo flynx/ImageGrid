@@ -173,6 +173,151 @@ var BaseRibbonsPrototype = {
 		}
 	},
 
+	// Helpers...
+
+	// Prevent CSS transitions...
+	//
+	// 	Prevent transitions globally (.viewer):
+	// 	.preventTransitions()
+	// 		-> data
+	//
+	// 	Prevent transitions on elem:
+	// 	.preventTransitions(elem)
+	// 		-> data
+	//
+	//
+	// NOTE: this will set a .no-transitions CSS class and force 
+	// 		recalculation on the given element
+	// NOTE: for this to have effect proper CSS configuration is needed.
+	preventTransitions: function(target){
+		target = target || this.viewer
+		//prevent_nested = prevent_nested || false
+		if(target.length == 0){
+			return this
+		}
+		var t = target[0]
+
+		// handle nesting...
+		var l = t.getAttribute('__prevent_transitions')
+		if(l != null){
+			t.setAttribute('__prevent_transitions', parseInt(l)+1)
+			return this
+		}
+		t.setAttribute('__prevent_transitions', 0)
+
+		target.addClass('no-transitions')
+
+		var s = getComputedStyle(t)
+		s.webkitTransition
+		s.mozTransition
+		s.msTransition
+		s.oTransition
+		s.transition
+
+		return this
+	},
+
+	// Restore CSS transitions...
+	//
+	// This is a companion to .preventTransitions(..)
+	//
+	// 	Restore transitions globally (.viewer):
+	// 	.restoreTransitions()
+	// 		-> data
+	//
+	// 	Restore transitions on elem: 
+	// 	.restoreTransitions(elem)
+	// 		-> data
+	//
+	// 	Restore transitions on elem (force sync): 
+	// 	.restoreTransitions(elem, true)
+	// 		-> data
+	//
+	// 	Force restore transitions: 
+	// 	.restoreTransitions(.., .., true)
+	// 		-> data
+	//
+	// When at least one .preventTransitions(..) is called with 
+	// prevent_nested set to true, this will be a no-op on all nested
+	// levels.
+	// This can be overridden via setting the force to true.
+	//
+	// NOTE: the implementation of this method might seem ugly, but the 
+	// 		code is speed-critical, thus we access the DOM directly and
+	// 		the two branches are unrolled...
+	restoreTransitions: function(target, now, force){
+		if(target === true || target === false){
+			now = target
+			target = this.viewer
+		} else {
+			target = target || this.viewer
+		}
+		if(target.length == 0){
+			return this
+		}
+		var t = target[0]
+
+		// sync...
+		if(now){
+			// handle nesting...
+			var l = t.getAttribute('__prevent_transitions')
+			if(l != null && !force && l != '0'){
+				t.setAttribute('__prevent_transitions', parseInt(l)-1)
+				return this
+			}
+			t.removeAttribute('__prevent_transitions')
+
+			target.removeClass('no-transitions')
+
+			var s = getComputedStyle(t)
+			s.webkitTransition
+			s.mozTransition
+			s.msTransition
+			s.oTransition
+			s.transition
+
+		// on next exec frame...
+		} else {
+			var that = this
+			setTimeout(function(){
+				// handle nesting...
+				var l = t.getAttribute('__prevent_transitions')
+				if(l != null && !force && l != '0'){
+					t.setAttribute('__prevent_transitions', l-1)
+					return this
+				}
+				t.removeAttribute('__prevent_transitions')
+
+				target.removeClass('no-transitions')
+
+				var s = getComputedStyle(t)
+				s.webkitTransition
+				s.mozTransition
+				s.msTransition
+				s.oTransition
+				s.transition
+			}, 0)
+		}
+
+		return this
+	},
+
+	// Shorthand wrappers of the above...
+	//
+	// XXX do we need custom target support here???
+	noTransitions: function(func){
+		this.preventTransitions()
+		func.apply(this, args2array(arguments).slice(1))
+		this.restoreTransitions(true)
+		return this
+	},
+	noTransitionsDeep: function(func){
+		this.preventTransitions(null, true)
+		func.apply(this, args2array(arguments).slice(1))
+		this.restoreTransitions(true)
+		return this
+	},
+
 
 	// Scale...
 	//
@@ -862,151 +1007,6 @@ var RibbonsPrototype = {
 	createRibbon: RibbonsClassPrototype.createRibbon,
 	createImage: RibbonsClassPrototype.createImage,
 	createMark: RibbonsClassPrototype.createMark,
-
-	// Helpers...
-
-	// Prevent CSS transitions...
-	//
-	// 	Prevent transitions globally (.viewer):
-	// 	.preventTransitions()
-	// 		-> data
-	//
-	// 	Prevent transitions on elem:
-	// 	.preventTransitions(elem)
-	// 		-> data
-	//
-	//
-	// NOTE: this will set a .no-transitions CSS class and force 
-	// 		recalculation on the given element
-	// NOTE: for this to have effect proper CSS configuration is needed.
-	preventTransitions: function(target){
-		target = target || this.viewer
-		//prevent_nested = prevent_nested || false
-		if(target.length == 0){
-			return this
-		}
-		var t = target[0]
-
-		// handle nesting...
-		var l = t.getAttribute('__prevent_transitions')
-		if(l != null){
-			t.setAttribute('__prevent_transitions', parseInt(l)+1)
-			return this
-		}
-		t.setAttribute('__prevent_transitions', 0)
-
-		target.addClass('no-transitions')
-
-		var s = getComputedStyle(t)
-		s.webkitTransition
-		s.mozTransition
-		s.msTransition
-		s.oTransition
-		s.transition
-
-		return this
-	},
-
-	// Restore CSS transitions...
-	//
-	// This is a companion to .preventTransitions(..)
-	//
-	// 	Restore transitions globally (.viewer):
-	// 	.restoreTransitions()
-	// 		-> data
-	//
-	// 	Restore transitions on elem: 
-	// 	.restoreTransitions(elem)
-	// 		-> data
-	//
-	// 	Restore transitions on elem (force sync): 
-	// 	.restoreTransitions(elem, true)
-	// 		-> data
-	//
-	// 	Force restore transitions: 
-	// 	.restoreTransitions(.., .., true)
-	// 		-> data
-	//
-	// When at least one .preventTransitions(..) is called with 
-	// prevent_nested set to true, this will be a no-op on all nested
-	// levels.
-	// This can be overridden via setting the force to true.
-	//
-	// NOTE: the implementation of this method might seem ugly, but the 
-	// 		code is speed-critical, thus we access the DOM directly and
-	// 		the two branches are unrolled...
-	restoreTransitions: function(target, now, force){
-		if(target === true || target === false){
-			now = target
-			target = this.viewer
-		} else {
-			target = target || this.viewer
-		}
-		if(target.length == 0){
-			return this
-		}
-		var t = target[0]
-
-		// sync...
-		if(now){
-			// handle nesting...
-			var l = t.getAttribute('__prevent_transitions')
-			if(l != null && !force && l != '0'){
-				t.setAttribute('__prevent_transitions', parseInt(l)-1)
-				return this
-			}
-			t.removeAttribute('__prevent_transitions')
-
-			target.removeClass('no-transitions')
-
-			var s = getComputedStyle(t)
-			s.webkitTransition
-			s.mozTransition
-			s.msTransition
-			s.oTransition
-			s.transition
-
-		// on next exec frame...
-		} else {
-			var that = this
-			setTimeout(function(){
-				// handle nesting...
-				var l = t.getAttribute('__prevent_transitions')
-				if(l != null && !force && l != '0'){
-					t.setAttribute('__prevent_transitions', l-1)
-					return this
-				}
-				t.removeAttribute('__prevent_transitions')
-
-				target.removeClass('no-transitions')
-
-				var s = getComputedStyle(t)
-				s.webkitTransition
-				s.mozTransition
-				s.msTransition
-				s.oTransition
-				s.transition
-			}, 0)
-		}
-
-		return this
-	},
-
-	// Shorthand wrappers of the above...
-	//
-	// XXX do we need custom target support here???
-	noTransitions: function(func){
-		this.preventTransitions()
-		func.apply(this, args2array(arguments).slice(1))
-		this.restoreTransitions(true)
-		return this
-	},
-	noTransitionsDeep: function(func){
-		this.preventTransitions(null, true)
-		func.apply(this, args2array(arguments).slice(1))
-		this.restoreTransitions(true)
-		return this
-	},
 
 	// Rotate...
 	//

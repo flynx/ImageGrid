@@ -440,11 +440,14 @@ core.ImageGridFeatures.Feature({
 	tag: 'ui-ribbons-render',
 	exclusive: ['ui-render'],
 	depends: [
+		// XXX BUG: for some reason this causes a dependency conflict...
+		//'ui',
 		'base',
 	],
 	suggested: [
 		'ui-animation',
 		'ui-ribbons-edit-render',
+		'ui-partial-ribbons',
 	],
 
 	actions: RibbonsActions, 
@@ -697,7 +700,8 @@ core.ImageGridFeatures.Feature({
 	tag: 'ui-partial-ribbons',
 	exclusive: ['ui-partial-ribbons'],
 	depends: [
-		'ui'
+		//'ui',
+		'ui-ribbons-render',
 	],
 	suggested: [
 		'ui-partial-ribbons-precache',

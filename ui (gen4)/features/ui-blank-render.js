@@ -16,14 +16,17 @@ var core = require('features/core')
 var ribbons = require('imagegrid/ribbons')
 
 
+
 /*********************************************************************/
 
 var RibbonsClassPrototype = {
+	// XXX
 }
 RibbonsClassPrototype.__proto__ = ribbons.BaseRibbons.prototype.__proto__
 
 
 var RibbonsPrototype = {
+	// XXX
 }
 RibbonsPrototype.__proto__ = ribbons.BaseRibbons.prototype
 
@@ -37,11 +40,35 @@ object.makeConstructor('Ribbons',
 
 
 /*********************************************************************/
+// XXX things that do not yet work with this:
+// 		.nextRibbon(..) / .prevRibbon(..)
+// 		
 
 var RenderActions = actions.Actions({
+	get dom(){
+		return this.ribbons ? this.ribbons.viewer : undefined },
+
 	load: [
 		function(data){
-			// XXX setup .ribbons
+			return function(){
+				// XXX setup .ribbons
+				var viewer = data.viewer
+				viewer = viewer == null && this.ribbons != null 
+					? this.dom 
+					: viewer
+
+				if(this.ribbons == null){
+					this.ribbons = Ribbons(viewer, this.images)
+					// XXX is this correct???
+					//this.ribbons.__image_updaters = [this.updateImage.bind(this)]
+
+				} else {
+					//this.ribbons.clear()
+					this.ribbons.images = this.images
+				}
+
+				this.reload()
+			}
 		}],
 	reload: [
 		function(){
@@ -102,6 +129,8 @@ var RenderActions = actions.Actions({
 				// XXX set size...
 			}, 'screenheight', count, whole)
 		}],
+
+	// XXX do we need updateImage here???
 
 	centerImage: ['- Interface/Center an image in ribbon horizontally',
 		function(target, align, offset, scale){ 

@@ -119,6 +119,8 @@ $(function(){
 					//'-ui-partial-ribbons',
 				])
 
+		window.ImageGridFeatures = viewer.ImageGridFeatures
+
 	} catch(err){
 		console.error(err)
 		return
