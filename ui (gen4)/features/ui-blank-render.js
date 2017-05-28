@@ -42,6 +42,7 @@ object.makeConstructor('Ribbons',
 /*********************************************************************/
 // XXX things that do not yet work with this:
 // 		.nextRibbon(..) / .prevRibbon(..)
+// XXX need to sort out feature dependency ordering...
 // 		
 
 var RenderActions = actions.Actions({
