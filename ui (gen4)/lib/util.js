@@ -46,6 +46,8 @@ Array.prototype.compact = function(){
 
 // return an array with duplicate elements removed...
 //
+// NOTE: we are not using an Object as an index here as an Array can 
+// 		contain any type of item while Object keys can only be strings...
 Array.prototype.unique = function(normalize){
 	if(normalize){
 		var cache = this.map(function(e){ return normalize(e) })
