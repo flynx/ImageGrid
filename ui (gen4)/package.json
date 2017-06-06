@@ -41,7 +41,7 @@
     "less": "*",
     "nwjs": "*",
     "webdriverio": "^4.0.4",
-    "webpack": "^2.5.1"
+    "webpack": "^2.6.1"
   },
   "bin": {
     "ig": "ig.js"
