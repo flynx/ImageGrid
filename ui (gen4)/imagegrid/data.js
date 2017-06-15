@@ -207,7 +207,7 @@ var DataPrototype = {
 			|| this.getImages(this.ribbon_order[0])[0]
 			|| this.order[0] },
 	set current(value){
-		this.__current = value },
+		this.focusImage(value) },
 
 	get base(){
 		return this.__base || this.ribbon_order.slice(-1)[0] },
@@ -1135,8 +1135,12 @@ var DataPrototype = {
 	// info...
 	focusImage: function(target, mode, list){
 		var current = this.getImage(target, mode, list)
+		// in case no args are given other than target...
+		if(target && current == null && mode == null && list == null){
+			current = this.getImage(target, 'after')
+		}
 		if(this.order.indexOf(current) >= 0){
-			this.current = current
+			this.__current = current
 		}
 		return this
 	},	
@@ -2561,7 +2565,6 @@ var DataPrototype = {
 		data = typeof(data) == typeof('str') ? JSON.parse(data) : data
 		data = formats.updateData(data)
 		this.base = data.base
-		this.current = data.current
 		this.order = data.order.slice()
 		this.ribbon_order = data.ribbon_order.slice()
 
@@ -2577,6 +2580,8 @@ var DataPrototype = {
 				that[s][k] = that.makeSparseImages(data[s][k])
 			}
 		})
+
+		this.current = data.current
 
 		// extra data...
 		!clean
