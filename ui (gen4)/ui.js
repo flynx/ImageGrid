@@ -95,6 +95,62 @@ var viewer = require('imagegrid/viewer')
 
 /*********************************************************************/
 
+
+// XXX would be nice to load a directory tree as ribbons...
+// XXX get the real URLs from node/nw version...
+// XXX HACK-ish...
+function handleDrop(evt){
+	event.stopPropagation()
+	event.preventDefault()
+
+	var files = event.dataTransfer.files
+	var lst = {}
+
+	// files is a FileList of File objects. List some properties.
+	var output = []
+	for (var i = 0, f; f = files[i]; i++) {
+		// only images...
+		if (!f.type.match('image.*')) {
+			continue
+		}
+
+		lst[f.name] = {
+			// XXX get the metadata...
+		}
+
+		var reader = new FileReader()
+
+		reader.onload = (function(f){
+			return function(e){
+				// update the data and reload...
+				var gid = lst[f.name].gid
+				ig.images[gid].path = e.target.result
+				ig.ribbons.updateImage(gid)
+			} })(f)
+
+		reader.readAsDataURL(f)
+	}
+
+	ig.loadURLs(Object.keys(lst))
+
+	// add the generated stuff to the list -- this will help us id the 
+	// images when they are loaded later...
+	ig.images.forEach(function(gid, img){
+		lst[img.path].gid = gid
+		img.name = img.path
+	})
+}
+function handleDragOver(evt) {
+	evt.stopPropagation()
+	evt.preventDefault()
+	// Explicitly show this is a copy...
+	evt.dataTransfer.dropEffect = 'copy'
+}
+
+
+
+/*********************************************************************/
+
 $(function(){
 
 	// list all loaded modules...
@@ -209,6 +265,13 @@ $(function(){
 			return !this.__proto__.root ? this.__proto__ : this	
 		},
 	}
+
+
+	// XXX drop files...
+	$('.viewer')[0]
+		.addEventListener('dragover', handleDragOver, false);
+	$('.viewer')[0]
+		.addEventListener('drop', handleDrop, false)
 
 
 	// setup the viewer...

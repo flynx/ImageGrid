@@ -175,7 +175,7 @@ var path2url =
 module.path2url =
 function(path){
 	// test if we have a schema, and if yes return as-is...
-	if(/^(http|https|file|[\w-]*):[\\\/]{2}/.test(path)){
+	if(/^(data|http|https|file|[\w-]*):[\\\/]{2}/.test(path)){
 		return path
 	}
 	// skip encoding windows drives...

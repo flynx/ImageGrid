@@ -311,7 +311,9 @@ module.ImagesClassPrototype = {
 		var base_pattern = base ? RegExp('^' + RegExp.quoteRegExp(base)) : null 
 		data.forEach(function(path){
 			// XXX need to normalize path...
-			var p = (base_pattern ? path.replace(base_pattern, './') : path)
+			var p = path.startsWith('data') ? 
+				path 
+				: (base_pattern ? path.replace(base_pattern, './') : path)
 					.replace(/([\/\\])\1+/g, '/')
 			// XXXX
 			var gid = hash('I'+i+':'+p)
