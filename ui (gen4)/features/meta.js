@@ -108,6 +108,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'url-history',
 
 	'external-editor',
+	'ui-drag-n-drop',
 
 	'ui-preview-filters',
 
