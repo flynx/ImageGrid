@@ -110,7 +110,8 @@ var MetadataReaderActions = actions.Actions({
 				return false
 			}
 
-			var full_path = path.normalize(img.base_path +'/'+ img.path)
+			//var full_path = path.normalize(img.base_path +'/'+ img.path)
+			var full_path = this.getImagePath(gid)
 
 			return new Promise(function(resolve, reject){
 				if(!force && img.metadata){
@@ -207,6 +208,7 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-metadata',
 	depends: [
+		'fs-info',
 		'metadata',
 	],
 

@@ -196,14 +196,6 @@ module.IndexFormat = core.ImageGridFeatures.Feature({
 /*********************************************************************/
 
 var FileSystemInfoActions = actions.Actions({
-	getImagePath: ['- System/',
-		function(gid, type){
-			gid = this.data.getImage(gid)
-
-			var img = this.images[gid]
-
-			return pathlib.join(img.base_path || this.location.path, img.path)
-		}],
 })
 
 

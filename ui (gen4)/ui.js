@@ -105,6 +105,7 @@ function handleDrop(evt){
 
 	var files = event.dataTransfer.files
 	var lst = {}
+	var paths = []
 
 	// files is a FileList of File objects. List some properties.
 	var output = []
@@ -114,31 +115,40 @@ function handleDrop(evt){
 			continue
 		}
 
-		lst[f.name] = {
+		if(f.path){
+			paths.push(f.path)
+
+		} else {
 			// XXX get the metadata...
+			lst[f.name] = {}
+
+			var reader = new FileReader()
+
+			reader.onload = (function(f){
+				return function(e){
+					// update the data and reload...
+					var gid = lst[f.name].gid
+					ig.images[gid].path = e.target.result
+					ig.ribbons.updateImage(gid)
+				} })(f)
+
+			reader.readAsDataURL(f)
 		}
-
-		var reader = new FileReader()
-
-		reader.onload = (function(f){
-			return function(e){
-				// update the data and reload...
-				var gid = lst[f.name].gid
-				ig.images[gid].path = e.target.result
-				ig.ribbons.updateImage(gid)
-			} })(f)
-
-		reader.readAsDataURL(f)
 	}
 
-	ig.loadURLs(Object.keys(lst))
+	if(paths.length > 0){
+		ig.loadURLs(paths)
 
-	// add the generated stuff to the list -- this will help us id the 
-	// images when they are loaded later...
-	ig.images.forEach(function(gid, img){
-		lst[img.path].gid = gid
-		img.name = img.path
-	})
+	} else {
+		ig.loadURLs(Object.keys(lst))
+
+		// add the generated stuff to the list -- this will help us id the 
+		// images when they are loaded later...
+		ig.images.forEach(function(gid, img){
+			lst[img.path].gid = gid
+			img.name = img.path
+		})
+	}
 }
 function handleDragOver(evt) {
 	evt.stopPropagation()

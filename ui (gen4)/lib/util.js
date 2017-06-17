@@ -179,11 +179,12 @@ function(path){
 		return path
 	}
 	// skip encoding windows drives...
-	var drive = path.split(/^([a-z]:[\\\/])/i)
-	path = drive.pop()
-	drive = drive.pop() || ''
-	return drive + (path
+	path = path
 		.split(/[\\\/]/g)
+	drive = path[0].endsWith(':') ?
+		path.shift() + '/'
+		: ''
+	return drive + (path
 		// XXX these are too aggressive...
 		//.map(encodeURI)
 		//.map(encodeURIComponent)

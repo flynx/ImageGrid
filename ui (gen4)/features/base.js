@@ -270,6 +270,16 @@ actions.Actions({
 			return res
 		}],
 
+	getImagePath: ['- System/',
+		function(gid, type){
+			gid = this.data.getImage(gid)
+
+			var img = this.images[gid]
+
+			return img == null ?
+				null
+				: this.images.getImagePath(gid, this.location.path)
+		}],
 	replaceGid: ['- System/Replace image gid',
 		{journal: true},
 		function(from, to){
