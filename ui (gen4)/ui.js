@@ -135,7 +135,7 @@ $(function(){
 
 
 	// report stuff...
-	// XXX we also have .conflicts and .missing
+	/* XXX legacy features...
 	ig.features.excluded.length > 0 
 		&& console.warn('Features excluded (%d):',
 			ig.features.excluded.length, 
@@ -147,12 +147,29 @@ $(function(){
 		&& console.log('Features disabled (%d):',
 			ig.features.disabled.length, 
 			ig.features.disabled)
-	console.log('Features not applicable (%d):', 
-		ig.features.unapplicable.length, 
-		ig.features.unapplicable)
+	//*/
 	console.log('Features loaded (%d):',
 		ig.features.features.length, 
 		ig.features.features)
+	console.log('Features disabled (%d):', 
+		ig.features.disabled.length, 
+		ig.features.disabled)
+	console.log('Features not applicable (%d):', 
+		ig.features.unapplicable.length, 
+		ig.features.unapplicable)
+
+	ig.features.excluded.length > 0 
+		&& console.warn('Features excluded (%d):',
+			ig.features.excluded.length, 
+			ig.features.excluded)
+
+	// NOTE: fatal errors will get reported by setup...
+	if(ig.features.error){
+		var err = ig.features.error
+		err.missing.length > 0
+			&& console.warn('Features disabled (%d):', 
+				err.missing)
+	}
 
 
 	// setup logger...
