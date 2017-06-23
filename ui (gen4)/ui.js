@@ -105,6 +105,17 @@ $(function(){
 	m = Object.keys(m).filter(function(e){ return m[e] != null })
 	console.log('Modules (%d):', m.length, m)
 
+	/*/ self-test...
+	var test = viewer.ImageGridFeatures.buildFeatureList()
+	if(test.error){
+		// report loops...
+		var err = test.error
+		err.loops.forEach(function(loop){
+			console.warn('Self-test: Feature dependency loops detected:\n\t'
+				+ loop.join('\n\t\t-> ')) })
+	}
+	//*/
+
 	try {
 		// setup actions...
 		window.ig = 
@@ -135,19 +146,6 @@ $(function(){
 
 
 	// report stuff...
-	/* XXX legacy features...
-	ig.features.excluded.length > 0 
-		&& console.warn('Features excluded (%d):',
-			ig.features.excluded.length, 
-			ig.features.excluded)
-	Object.keys(ig.features.missing).length > 0
-		&& console.warn('Features disabled (%d):',
-			ig.features.missing)
-	ig.features.disabled.length > 0 
-		&& console.log('Features disabled (%d):',
-			ig.features.disabled.length, 
-			ig.features.disabled)
-	//*/
 	console.log('Features loaded (%d):',
 		ig.features.features.length, 
 		ig.features.features)
