@@ -154,14 +154,14 @@ $(function(){
 		ig.features.unapplicable)
 
 	ig.features.excluded.length > 0 
-		&& console.log('Excluded features:',
+		&& console.warn('Excluded features:',
 			ig.features.excluded)
 
 	// NOTE: fatal errors will get reported by setup...
 	if(ig.features.error){
 		var err = ig.features.error
 		err.missing_suggested.length > 0
-			&& console.log('Missing suggested features:', 
+			&& console.warn('Missing suggested features:', 
 				err.missing_suggested)
 		err.missing.length > 0
 			&& console.warn('Missing dependencies:', 

@@ -66,14 +66,11 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui',
 	'keyboard',
 
-	// missing suggested feature test...
-	'missing-feature',
-
+	// XXX use one...
 	'ui-ribbons-render',
 	'ui-vdom-render',
-	//'ui-react-render',
+	'ui-react-render',
 	'ui-blank-render',
-	//*/
 
 	// features...
 	'ui-cursor',
@@ -156,6 +153,9 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'-tests',
 	'-experiments',
+
+	// missing suggested feature test...
+	'missing-feature',
 ])
 
 /*
