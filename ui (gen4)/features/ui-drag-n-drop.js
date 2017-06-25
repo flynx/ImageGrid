@@ -27,6 +27,8 @@ module.DragAndDrop = core.ImageGridFeatures.Feature({
 	],
 
 	handlers: [
+		// XXX add type/handler registry -- might be a good idea to add 
+		// 		an action attribute/handler...
 		// XXX would be nice to load a directory tree as ribbons...
 		// XXX HACK-ish...
 		['start', function(){
@@ -78,7 +80,7 @@ module.DragAndDrop = core.ImageGridFeatures.Feature({
 					// images when they are loaded later...
 					that.images.forEach(function(gid, img){
 						lst[img.path].gid = gid
-						img.name = img.path
+						img.name = img.path.split('.').slice(0, -1).join('.')
 					})
 				}
 			}

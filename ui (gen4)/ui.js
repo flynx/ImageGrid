@@ -103,7 +103,7 @@ $(function(){
 	// list all loaded modules...
 	var m = requirejs.s.contexts._.defined
 	m = Object.keys(m).filter(function(e){ return m[e] != null })
-	console.log('Modules (%d):', m.length, m)
+	console.log('Modules:', m)
 
 	/*/ self-test...
 	var test = viewer.ImageGridFeatures.buildFeatureList()
@@ -146,26 +146,25 @@ $(function(){
 
 
 	// report stuff...
-	console.log('Features loaded (%d):',
-		ig.features.features.length, 
+	console.log('Loaded features:',
 		ig.features.features)
-	console.log('Features disabled (%d):', 
-		ig.features.disabled.length, 
+	console.log('Disabled features:', 
 		ig.features.disabled)
-	console.log('Features not applicable (%d):', 
-		ig.features.unapplicable.length, 
+	console.log('Not applicable features:', 
 		ig.features.unapplicable)
 
 	ig.features.excluded.length > 0 
-		&& console.warn('Features excluded (%d):',
-			ig.features.excluded.length, 
+		&& console.log('Excluded features:',
 			ig.features.excluded)
 
 	// NOTE: fatal errors will get reported by setup...
 	if(ig.features.error){
 		var err = ig.features.error
+		err.missing_suggested.length > 0
+			&& console.log('Missing suggested features:', 
+				err.missing_suggested)
 		err.missing.length > 0
-			&& console.warn('Features disabled (%d):', 
+			&& console.warn('Missing dependencies:', 
 				err.missing)
 	}
 

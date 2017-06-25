@@ -66,18 +66,13 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui',
 	'keyboard',
 
-	// XXX BUG?: should this be indicated as a missing dependency???
+	// missing suggested feature test...
 	'missing-feature',
 
-	// XXX
-	//'ui-blank-render',
-	// XXX BUG: features: this pulls in all the suggestions that depend
-	// 		regardless of weather they depend on it or not:
-	// 			'ui-partial-ribbons'
 	'ui-ribbons-render',
-	'ui-partial-ribbons-render',
 	'ui-vdom-render',
 	//'ui-react-render',
+	'ui-blank-render',
 	//*/
 
 	// features...
