@@ -35,6 +35,8 @@ var requirejs_cfg = {
 		'lib/features': './node_modules/ig-features/features',
 
 		//'lib/keyboard': './node_modules/ig-keyboard/keyboard',
+		
+		'ext-lib/preact': './node_modules/preact/dist/preact',
 	},	
 	map: {
 		'*': {
@@ -100,10 +102,11 @@ var viewer = require('imagegrid/viewer')
 
 $(function(){
 
-	// list all loaded modules...
+	/*/ list all loaded modules...
 	var m = requirejs.s.contexts._.defined
 	m = Object.keys(m).filter(function(e){ return m[e] != null })
 	console.log('Modules:', m)
+	//*/
 
 	/*/ self-test...
 	var test = viewer.ImageGridFeatures.buildFeatureList()

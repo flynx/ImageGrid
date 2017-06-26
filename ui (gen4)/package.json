@@ -23,7 +23,7 @@
     "glob": "^4.0.6",
     "guarantee-events": "^1.0.0",
     "ig-actions": "^3.0.0",
-    "ig-features": "^3.1.7",
+    "ig-features": "^3.1.8",
     "ig-object": "^1.0.1",
     "openseadragon": "^2.1.0",
     "preact": "^8.1.0",
@@ -31,7 +31,7 @@
     "react-dom": "^15.6.1",
     "requirejs": "^2.1.23",
     "requirejs-plugins": "^1.0.2",
-    "sharp": "^0.17.0",
+    "sharp": "^0.17.3",
     "wildglob": "^0.1.1"
   },
   "optionalDependencies": {

@@ -40,10 +40,8 @@ object.makeConstructor('Ribbons',
 
 
 /*********************************************************************/
-// XXX things that do not yet work with this:
-// 		.nextRibbon(..) / .prevRibbon(..)
-// XXX need to sort out feature dependency ordering...
-// 		
+// NOTE: some features that depend on ribbon geometry will not work 
+// 		with this...
 
 var RenderActions = actions.Actions({
 	get dom(){
