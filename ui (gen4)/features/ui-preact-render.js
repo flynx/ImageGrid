@@ -7,6 +7,17 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+// XXX should we guard against loading in node???
+if(typeof(window) == 'undefined'){
+	return
+}
+
+// NOTE: this needs preact.js to be loaded by index.html
+if(typeof(preact) == 'undefined'){
+	console.error('Preact.js required but not present.')
+}
+var h = preact.h
+
 var object = require('lib/object')
 var actions = require('lib/actions')
 var features = require('lib/features')
@@ -15,8 +26,6 @@ var core = require('features/core')
 
 var ribbons = require('imagegrid/ribbons')
 
-require('ext-lib/preact')
-var h = preact.h
 
 
 /*********************************************************************/

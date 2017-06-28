@@ -7,6 +7,11 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+if(typeof(window) == 'undefined'){
+	return
+}
+
+
 var vdom = require('ext-lib/virtual-dom')
 
 var object = require('lib/object')

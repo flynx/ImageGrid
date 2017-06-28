@@ -7,6 +7,12 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+// XXX should we guard against loading in node???
+if(typeof(window) == 'undefined'){
+	return
+}
+
+
 var object = require('lib/object')
 var actions = require('lib/actions')
 var features = require('lib/features')
