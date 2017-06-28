@@ -67,18 +67,17 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'keyboard',
 
 	// XXX use one...
+	//'ui-blank-render',
 	'ui-ribbons-render',
-	'ui-vdom-render',
-	'ui-react-render',
-	'ui-blank-render',
+	'ui-preact-render',
+	//'ui-vdom-render',
+	//'ui-react-render',
 
 	// features...
 	'ui-cursor',
 
 	'ui-single-image',
 
-	// XXX remove this... (at this point this is here only to keep load order consistent)
-	//'ui-partial-ribbons',
 	/*/ XXX has bugs -- non-current ribbons are not always aligned...
 	'ui-partial-ribbons-2',
 		'-ui-partial-ribbons',

@@ -23,6 +23,7 @@ require('features/ui')
 // XXX
 require('features/ui-blank-render')
 require('features/ui-ribbons')
+require('features/ui-preact-render')
 require('features/ui-virtual-dom')
 require('features/ui-react')
 // XXX

@@ -36,7 +36,7 @@ var requirejs_cfg = {
 
 		//'lib/keyboard': './node_modules/ig-keyboard/keyboard',
 		
-		'ext-lib/preact': './node_modules/preact/dist/preact',
+		'ext-lib/preact': './node_modules/preact/dist/preact.dev',
 	},	
 	map: {
 		'*': {
