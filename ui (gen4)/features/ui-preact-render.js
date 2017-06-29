@@ -18,6 +18,7 @@ if(typeof(preact) == 'undefined'){
 }
 var h = preact.h
 
+
 var object = require('lib/object')
 var actions = require('lib/actions')
 var features = require('lib/features')
