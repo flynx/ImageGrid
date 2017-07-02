@@ -828,7 +828,7 @@ var UIIntrospectionActions = actions.Actions({
 							make(tag)
 						}) }
 
-				draw('Loaded', that.features.features)
+				draw('Loaded (in order)', that.features.features)
 				draw('Excluded', that.features.excluded)
 				draw('Disabled', that.features.disabled)
 				draw('Not applicable', that.features.unapplicable)
