@@ -2421,12 +2421,16 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-core.ImageGridFeatures.Feature('fs', [
-	'index-format',
-	'fs-info',
-	'fs-loader',
-	'fs-writer',
-])
+core.ImageGridFeatures.Feature({
+	tag: 'fs', 
+	suggested: [
+		'index-format',
+		'fs-info',
+		'fs-loader',
+		'fs-writer',
+	],
+	isApplicable: FileSystemInfo.isApplicable,
+})
 
 
 

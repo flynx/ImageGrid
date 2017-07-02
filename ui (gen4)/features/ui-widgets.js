@@ -665,75 +665,6 @@ var DialogsActions = actions.Actions({
 		})],
 
 
-	// Show doc for action...
-	//
-	// XXX STUB...
-	// XXX this needs to:
-	// 		- be a widget
-	// 		- handle focus
-	// 		- handle keyboard
-	// 		- handle search...
-	// 		- format action links/references...
-	// 		- markdown???
-	// 		- ...
-	// XXX use pWiki???
-	// XXX should we have navigation???
-	// 		...i.e. opening links is done in the viewer and we have 
-	// 		ability to go back and forth...
-	showDoc: ['Help/Action help...',
-		makeUIDialog(function(actions){
-			var that = this
-			actions = actions || this.actions.sort()
-			actions = actions instanceof Array ? actions : [actions]
-
-			var doc = this.getDoc(actions)
-			var res = $('<div>')
-				.addClass('help-dialog')
-
-			actions.forEach(function(action){
-				res.append($('<div class="action">')
-					.prop('tabindex', true)
-					.append($('<h2>')
-						.text(doc[action][2]))
-					.append($('<i>')
-						.text(doc[action][0]))
-					.append($('<div>')
-						.text('Features: ' 
-							+ that.getHandlerSourceTags(action)
-								.join(', ')))
-					.append($('<hr>'))
-					// parse the action doc...
-					.append($('<pre>')
-						.html((doc[action][1] || '')
-							// html stuff...
-							.replace(/&/g, '&amp;')
-							.replace(/</g, '&lt;')
-							.replace(/>/g, '&gt;')
-							// normalize tabs -- convert tabs and tabbed 
-							// spaces into 4 spaces...
-							// NOTE: the code internally uses only tabs, 
-							// 		but this will help make the view 
-							// 		consistent.
-							.replace(/ {0,3}\t/g, '    ')
-							// comments...
-							.replace(/(\/\/.*)\n/g, '<span class="comment">$1</span>\n')
-							// notes...
-							.replace(/NOTE:/g, '<b>NOTE:</b>')
-							.replace(/XXX/g, '<span class="warning">XXX</span>')
-							// action links...
-							.replace(/(\s)(\.([\w_]+[\w\d_]*)\([^)]*\))/g, 
-								function(match, a, b, c){
-									return c == action ?
-										`${a}<i>${b}</i>`
-										: `${a}<a href="#" onclick="ig.showDoc('${c}')">${b}</a>`
-								})
-					)))
-			})
-
-			return res
-		})],
-
-
 	listDialogs: ['Interface/Dialog/Dialog list...',
 		makeUIDialog(function(){
 			var actions = this
@@ -808,6 +739,160 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 /*********************************************************************/
 
+var UIIntrospectionActions = actions.Actions({
+	// Show doc for action...
+	//
+	// XXX STUB...
+	// XXX this needs to:
+	// 		- be a widget
+	// 		- handle focus
+	// 		- handle keyboard
+	// 		- handle search...
+	// 		- format action links/references...
+	// 		- markdown???
+	// 		- ...
+	// XXX use pWiki???
+	// XXX should we have navigation???
+	// 		...i.e. opening links is done in the viewer and we have 
+	// 		ability to go back and forth...
+	showDoc: ['Help/Action help...',
+		makeUIDialog(function(actions){
+			var that = this
+			actions = actions || this.actions.sort()
+			actions = actions instanceof Array ? actions : [actions]
+
+			var doc = this.getDoc(actions)
+			var res = $('<div>')
+				.addClass('help-dialog')
+
+			actions.forEach(function(action){
+				res.append($('<div class="action">')
+					.prop('tabindex', true)
+					.append($('<h2>')
+						.text(doc[action][2]))
+					.append($('<i>')
+						.text(doc[action][0]))
+					.append($('<div>')
+						.text('Features: ' 
+							+ that.getHandlerSourceTags(action)
+								.join(', ')))
+					.append($('<hr>'))
+					// parse the action doc...
+					.append($('<pre>')
+						.html((doc[action][1] || '')
+							// html stuff...
+							.replace(/&/g, '&amp;')
+							.replace(/</g, '&lt;')
+							.replace(/>/g, '&gt;')
+							// normalize tabs -- convert tabs and tabbed 
+							// spaces into 4 spaces...
+							// NOTE: the code internally uses only tabs, 
+							// 		but this will help make the view 
+							// 		consistent.
+							.replace(/ {0,3}\t/g, '    ')
+							// comments...
+							.replace(/(\/\/.*)\n/g, '<span class="comment">$1</span>\n')
+							// notes...
+							.replace(/NOTE:/g, '<b>NOTE:</b>')
+							.replace(/XXX/g, '<span class="warning">XXX</span>')
+							// action links...
+							.replace(/(\s)(\.([\w_]+[\w\d_]*)\([^)]*\))/g, 
+								function(match, a, b, c){
+									return c == action ?
+										`${a}<i>${b}</i>`
+										: `${a}<a href="#" onclick="ig.showDoc('${c}')">${b}</a>`
+								})
+					)))
+			})
+
+			return res
+		})],
+
+	// XXX show more info about features:
+	// 		.title
+	// 		.doc
+	// 		.module
+	// 		...
+	showFeatures: ['System/Features...',
+		core.doc`Show feature load information...`,
+		makeUIDialog(function(){
+			var that = this
+			return browse.makeLister(null, function(path, make){
+				var features = that.features || {}
+
+				// XXX get feature doc...
+				var draw = function(heading, list){
+					make.Heading(heading)
+					;(list || [])
+						.forEach(function(tag){
+							make(tag)
+						}) }
+
+				draw('Loaded', that.features.features)
+				draw('Excluded', that.features.excluded)
+				draw('Disabled', that.features.disabled)
+				draw('Not applicable', that.features.unapplicable)
+
+				if(features.error){
+					var error = features.error
+					error.missing_suggested && error.missing_suggested.length > 0
+						&& draw('Missing (non-critical)', error.missing_suggested)
+					error.missing && error.missing.length > 0
+						&& draw('Missing (critical)', error.missing)
+					// XXX loops...
+					// XXX conflicts...
+				}
+			})
+		})],
+
+	// XXX is this the right way to go???
+	// XXX should this pe a separate feature???
+	about: ['Help/$About...',
+		{'dialogTitle': 'ImageGrid.Viewer'},
+		makeUIDialog(function(path, options){
+			return browse.makeList(
+				null,
+				[
+					// XXX add  basic description (About)...
+
+					// XXX get this from package.json...
+					['Version:', '4.0.0a'],
+					// XXX
+					['Build:', '-'],
+
+					'---',
+
+					// XXX load the license file...
+					['License:', 'Pre Release'],
+
+					// XXX include other lib list and license info...
+					// XXX
+
+					// XXX include nw credits.html...
+					// XXX
+				], {
+					cls: 'table-view'
+				})
+		})],
+})
+
+var UIIntrospection = 
+module.UIIntrospection = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-introspection',
+	depends: [
+		'ui',
+		'ui-dialogs',
+	],
+
+	actions: UIIntrospectionActions,
+})
+
+
+
+//---------------------------------------------------------------------
 // NOTE: yes, this is a funny name ;)
 //
 // XXX should we also add a hide-path config feature???
@@ -1321,34 +1406,6 @@ var BrowseActionsActions = actions.Actions({
 					&& this.modal.client.dom[state == 'on' ? 'addClass' : 'removeClass']('show-keys')
 			})],
 
-	// XXX is this the right way to go???
-	about: ['Help/$About...',
-		{'dialogTitle': 'ImageGrid.Viewer'},
-		makeUIDialog(function(path, options){
-			return browse.makeList(
-				null,
-				[
-					// XXX add  basic description (About)...
-
-					// XXX get this from package.json...
-					['Version:', '4.0.0a'],
-					// XXX
-					['Build:', '-'],
-
-					'---',
-
-					// XXX load the license file...
-					['License:', 'Pre Release'],
-
-					// XXX include other lib list and license info...
-					// XXX
-
-					// XXX include nw credits.html...
-					// XXX
-				], {
-					cls: 'table-view'
-				})
-		})],
 })
 
 var BrowseActions = 
@@ -1842,7 +1899,6 @@ var WidgetTestActions = actions.Actions({
 
 			setTimeout(step, 1000)
 		}], 
-
 
 	// XXX make this a toggler....
 	partitionByMonth: ['Test/',

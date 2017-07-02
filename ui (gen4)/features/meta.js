@@ -64,6 +64,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'workspace',
 	'ui',
+	'ui-introspection',
 	'keyboard',
 
 	// XXX use one...
