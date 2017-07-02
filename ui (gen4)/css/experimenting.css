@@ -314,6 +314,11 @@ body {
 	border-bottom: solid 7px rgba(255, 255, 0, 0.5);
 }
 */
+/* XXX not sure about these... */
+.browse-widget.save-history,
+.browse-widget.location-history {
+	border-bottom: solid 7px rgba(0, 0, 255, 0.2);
+}
 
 /* XXX experimental key mappings... */
 .browse-widget.browse-actions.show-keys .list .item:after {

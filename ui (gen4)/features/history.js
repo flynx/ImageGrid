@@ -623,6 +623,7 @@ var URLHistoryUIActions = actions.Actions({
 							.addClass('highlighted') })
 			}, 
 			{
+				cls: 'location-history',
 				// NOTE: we are not using path: here because it will parse
 				// 		the current element as a path, and we need it as-is... 
 				selected: cur,

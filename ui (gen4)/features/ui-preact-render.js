@@ -30,6 +30,49 @@ var ribbons = require('imagegrid/ribbons')
 
 
 /*********************************************************************/
+// Preact Components...
+// 
+// XXX at this point this is an experiment...
+// XXX Questions:
+// 		- do we do align in the Preact render or outside?
+// 		- do we update preview in Preact render or outside?
+// 		
+
+// render:
+// 	- ribbon-set
+// 	- ribbon-locator
+// 	- current-indicator (???)
+class IGRibbonSet extends preact.Component {
+	render(props, state){
+	}
+}
+
+// render:
+// 	- ribbon
+// 	- images
+// 	- image marks
+class IGRibbon extends preact.Component {
+	render(props, state){
+	}
+}
+
+// render:
+// 	- image
+class IGImage extends preact.Component {
+	render(props, state){
+	}
+}
+
+// render:
+// 	- image mark
+class IGImageMark extends preact.Component {
+	render(props, state){
+	}
+}
+
+
+
+//---------------------------------------------------------------------
 
 var RibbonsClassPrototype = {
 	// XXX

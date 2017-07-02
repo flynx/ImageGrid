@@ -1503,6 +1503,8 @@ var FileSystemSaveHistoryUIActions = actions.Actions({
 						dialog.select()
 							.addClass('highlighted')
 					})
+			}, {
+				cls: 'save-history',
 			})
 			.on('open', function(){
 				o.close()
