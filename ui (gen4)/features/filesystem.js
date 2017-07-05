@@ -2421,6 +2421,10 @@ module.FileSystemWriterUI = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// NOTE: this is not a trivial meta-feature purely for aesthetic reasons,
+// 		when the fs stuff is not applicable it's really confusing to see
+// 		an 'fs' feature loaded in the feature list... at least to me ;)
+// 		XXX should we do anything about this?
 core.ImageGridFeatures.Feature({
 	tag: 'fs', 
 	suggested: [

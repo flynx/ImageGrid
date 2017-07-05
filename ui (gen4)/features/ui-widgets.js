@@ -755,6 +755,7 @@ var UIIntrospectionActions = actions.Actions({
 	// XXX should we have navigation???
 	// 		...i.e. opening links is done in the viewer and we have 
 	// 		ability to go back and forth...
+	// XXX might be a good idea to also show feature doc...
 	showDoc: ['Help/Action help...',
 		makeUIDialog(function(actions){
 			var that = this
@@ -808,12 +809,23 @@ var UIIntrospectionActions = actions.Actions({
 			return res
 		})],
 
+	// XXX might be a good idea to add feature doc/help browser like showDoc(..)
 	// XXX show more info about features:
 	// 		.title
 	// 		.doc
 	// 		.module
+	// 		.depends (+ depended on by ..)
+	// 		.suggested
 	// 		...
-	showFeatures: ['System/Features...',
+	// XXX might be nice to load/unload features from here...
+	// 		this can be done by add explicitly to input (with or without
+	// 		the '-' prefix and) and reloading (re-running setup(..))...
+	// XXX not sure where to put this -- help or system?
+	// 		...if we add feature doc browsing it's help, of feature 
+	// 		loading/unloading then system...
+	// 		...might be a good idea to split the two functions, like the 
+	// 		keyboard help/edit UI's...
+	showFeatures: ['Help|System/Features...',
 		core.doc`Show feature load information...`,
 		makeUIDialog(function(){
 			var that = this
