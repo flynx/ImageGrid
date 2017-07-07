@@ -472,6 +472,7 @@ var DialogsActions = actions.Actions({
 
 	// XXX this knows about action priority and shortcut marker...
 	// XXX should these be more like .getDoc(..) and support lists of actions???
+	// XXX should these be here or someplace in base (base-introspection)???
 	getDocPath: ['- Interface/',
 		function(action, clean, join){
 			clean = clean == null ? true : clean
@@ -886,6 +887,12 @@ var UIIntrospectionActions = actions.Actions({
 					cls: 'table-view'
 				})
 		})],
+
+
+	// XXX EXPERIMENTAL...
+	featureGraph: ['- Help/Generate feature graph (graphviz format)',
+		function(){
+			return this.features.FeatureSet.gvGraph(this.features.features) }],
 })
 
 var UIIntrospection = 
@@ -1429,6 +1436,7 @@ module.BrowseActions = core.ImageGridFeatures.Feature({
 	depends: [
 		'ui',
 		'ui-dialogs',
+		'ui-introspection',
 	],
 	suggested: [
 		'keyboard',
