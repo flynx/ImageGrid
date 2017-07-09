@@ -404,8 +404,9 @@ module.makeUIDialog = function(a, b){
 	return uiDialog(function(){
 		var args = [].slice.call(arguments)
 
+
 		// see if the first arg is a container spec...
-		var container = this.isUIContainer(args[0]) ?
+		var container = !(args[0] instanceof Array) && this.isUIContainer(args[0]) ?
 			args.shift()
 			: (dfl || this.config['ui-default-container'] || 'Overlay')
 
@@ -740,6 +741,36 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 /*********************************************************************/
 
+var doc2html =
+module.doc2html =
+function(doc, skip_linking){
+	skip_linking = skip_linking || []
+	return doc
+		// html stuff...
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		// normalize tabs -- convert tabs and tabbed 
+		// spaces into 4 spaces...
+		// NOTE: the code internally uses only tabs, 
+		// 		but this will help make the view 
+		// 		consistent.
+		.replace(/ {0,3}\t/g, '    ')
+		// comments...
+		.replace(/(\/\/.*)\n/g, '<span class="comment">$1</span>\n')
+		// notes...
+		.replace(/NOTE:/g, '<b>NOTE:</b>')
+		.replace(/XXX/g, '<span class="warning">XXX</span>')
+		// action links...
+		.replace(/(\s)(\.([\w_]+[\w\d_]*)\([^)]*\))/g, 
+			function(match, a, b, c){
+				return (skip_linking == '*' || skip_linking.indexOf(c) >= 0) ?
+					`${a}<i>${b}</i>`
+					: `${a}<a href="#" onclick="ig.showDoc('${c}')">${b}</a>`
+			})
+}
+
+
 var UIIntrospectionActions = actions.Actions({
 	// Show doc for action...
 	//
@@ -764,6 +795,7 @@ var UIIntrospectionActions = actions.Actions({
 			actions = actions instanceof Array ? actions : [actions]
 
 			var doc = this.getDoc(actions)
+
 			var res = $('<div>')
 				.addClass('help-dialog')
 
@@ -781,30 +813,92 @@ var UIIntrospectionActions = actions.Actions({
 					.append($('<hr>'))
 					// parse the action doc...
 					.append($('<pre>')
-						.html((doc[action][1] || '')
-							// html stuff...
-							.replace(/&/g, '&amp;')
-							.replace(/</g, '&lt;')
-							.replace(/>/g, '&gt;')
-							// normalize tabs -- convert tabs and tabbed 
-							// spaces into 4 spaces...
-							// NOTE: the code internally uses only tabs, 
-							// 		but this will help make the view 
-							// 		consistent.
-							.replace(/ {0,3}\t/g, '    ')
-							// comments...
-							.replace(/(\/\/.*)\n/g, '<span class="comment">$1</span>\n')
-							// notes...
-							.replace(/NOTE:/g, '<b>NOTE:</b>')
-							.replace(/XXX/g, '<span class="warning">XXX</span>')
-							// action links...
-							.replace(/(\s)(\.([\w_]+[\w\d_]*)\([^)]*\))/g, 
-								function(match, a, b, c){
-									return c == action ?
-										`${a}<i>${b}</i>`
-										: `${a}<a href="#" onclick="ig.showDoc('${c}')">${b}</a>`
+						.html(doc2html(doc[action][1] || '', [action]))) 
+					// NOTE: we are quoting action in an array here to prevent
+					// 		dialog actions from messing up the call...
+					.append($(`<a href="#" onclick="ig.showCode(['${action}'])">code...</a>`)) )
+			})
+
+			return res
+		})],
+
+	showCode: ['- Help/',
+		makeUIDialog(function(action){
+			action = action instanceof Array ? action[0] : action
+			return $('<div>')
+				.addClass('help-dialog')
+				.append($('<div class="action">')
+					.append($('<pre>')
+						.text(this.getHandlerDocStr(action))) )
+		})],
+
+	// XXX not final...
+	showFeatureDoc: ['Help/Feature help...',
+		makeUIDialog(function(features){
+			features = features || this.features.features
+			features = features == '*' ? this.features.FeatureSet.features
+				: features instanceof Array ? features
+				: [features]
+
+			var that = this
+			var featureset = this.features.FeatureSet
+			var res = $('<div>')
+				.addClass('help-dialog')
+
+			var tag2lnk = function(tag){
+				return tag != '-'?
+					`<a href="#" onclick="ig.showFeatureDoc('${tag}')">${tag}</a>`
+					: '-'
+			}
+
+			features.forEach(function(tag){
+				var feature = featureset[tag.startsWith('-') ? tag.slice(1) : tag]
+
+				// skip unknown tags...
+				if(feature == null){
+					return
+				}
+
+				res.append($('<div class="feature">')
+					.prop('tabindex', true)
+					.append($('<h2>')
+						.text(feature.title || tag))
+					.append($('<i>')
+						.html(that.features.features.indexOf(tag) < 0 ? 
+								'not loaded' 
+								: 'loaded')) 
+					.append($('<div>')
+						.html('Tag: '+ tag2lnk(tag) )) 
+					.append($('<div>')
+						.html('Priority: '+ (feature.getPriority ? 
+							feature.getPriority(true)
+							: (feature.priority || 'normal') )))
+					// list exclusive features...
+					.append($('<div>')
+						.html('Exclusive tag: ' 
+							+ (feature.exclusive || ['-'])
+								.map(function(tag){
+									if(tag == '-'){
+										return tag
+									}
+									var tags = featureset.getExclusive(tag)[tag].join('\', \'')
+									return `<a href="#" onclick="ig.showFeatureDoc(['${tags}'])">${tag}</a>`
 								})
-					)))
+								.join(', ')))
+					.append($('<div>')
+						.html('Depends: ' 
+							+ (feature.depends || ['-'])
+								.map(tag2lnk)
+								.join(', ')))
+					.append($('<div>')
+						.html('Suggests: ' 
+							+ (feature.suggested || ['-'])
+								.map(tag2lnk)
+								.join(', ')))
+					// doc...
+					.append($('<hr>'))
+					.append($('<pre>')
+						.html(doc2html(feature.doc || ''))) )
 			})
 
 			return res
@@ -839,6 +933,7 @@ var UIIntrospectionActions = actions.Actions({
 					;(list || [])
 						.forEach(function(tag){
 							make(tag)
+								.on('open', function(){ that.showFeatureDoc(tag) })
 						}) }
 
 				draw('Loaded (in order)', that.features.features)
@@ -891,6 +986,7 @@ var UIIntrospectionActions = actions.Actions({
 
 	// XXX EXPERIMENTAL...
 	featureGraph: ['- Help/Generate feature graph (graphviz format)',
+		core.doc`Generate feature dependency graph in the graphviz format.`,
 		function(){
 			return this.features.FeatureSet.gvGraph(this.features.features) }],
 })
