@@ -821,8 +821,7 @@ var UIIntrospectionActions = actions.Actions({
 
 			return res
 		})],
-
-	showCode: ['- Help/',
+	showCode: ['- Help/Show action code...',
 		makeUIDialog(function(action){
 			action = action instanceof Array ? action[0] : action
 			return $('<div>')
@@ -833,6 +832,7 @@ var UIIntrospectionActions = actions.Actions({
 		})],
 
 	// XXX not final...
+	// XXX should we list feature actions???
 	showFeatureDoc: ['Help/Feature help...',
 		makeUIDialog(function(features){
 			features = features || this.features.features
@@ -924,7 +924,8 @@ var UIIntrospectionActions = actions.Actions({
 		core.doc`Show feature load information...`,
 		makeUIDialog(function(){
 			var that = this
-			return browse.makeLister(null, function(path, make){
+
+			var dialog = browse.makeLister(null, function(path, make){
 				var features = that.features || {}
 
 				// XXX get feature doc...
@@ -933,6 +934,7 @@ var UIIntrospectionActions = actions.Actions({
 					;(list || [])
 						.forEach(function(tag){
 							make(tag)
+								.attr('feature', tag)
 								.on('open', function(){ that.showFeatureDoc(tag) })
 						}) }
 
@@ -951,6 +953,16 @@ var UIIntrospectionActions = actions.Actions({
 					// XXX conflicts...
 				}
 			})
+
+			// handle '?' button to browse path...
+			dialog.showDoc = function(){
+				var feature = dialog.select('!').attr('feature')
+				feature 
+					&& that.showFeatureDoc(feature)
+			}
+			dialog.keyboard.handler('General', '?', 'showDoc')
+
+			return dialog
 		})],
 
 	// XXX is this the right way to go???
