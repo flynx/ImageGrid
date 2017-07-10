@@ -3678,6 +3678,13 @@ var BrowserPrototype = {
 		return m ? m.apply(this, arguments) : []
 	},
 
+	// Run a function in the context of the object...
+	//
+	run: function(func){
+		var res = func ? func.call(this) : undefined
+		return res === undefined ? this : res
+	},
+
 	// XXX need to get a container -- UI widget API....
 	// XXX paste does not work on IE yet...
 	// XXX handle copy...

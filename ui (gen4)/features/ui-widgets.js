@@ -741,6 +741,19 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 /*********************************************************************/
 
+// XXX do not use the global ig for link click handling...
+var action2lnk =
+module.action2lnk =
+function(action){
+   return `<a href="#" onclick="ig.showDoc('${action}')">${action}</a>` }
+
+// XXX do not use the global ig for link click handling...
+var feature2lnk =
+module.feature2lnk =
+function(tag){
+   return `<a href="#" onclick="ig.showFeatureDoc('${tag}')">${tag}</a>` }
+
+// XXX do not use the global ig for link click handling...
 var doc2html =
 module.doc2html =
 function(doc, skip_linking){
@@ -807,8 +820,9 @@ var UIIntrospectionActions = actions.Actions({
 					.append($('<i>')
 						.text(doc[action][0]))
 					.append($('<div>')
-						.text('Features: ' 
+						.html('Features: ' 
 							+ that.getHandlerSourceTags(action)
+								.map(feature2lnk)
 								.join(', ')))
 					.append($('<hr>'))
 					// parse the action doc...
@@ -830,9 +844,6 @@ var UIIntrospectionActions = actions.Actions({
 					.append($('<pre>')
 						.text(this.getHandlerDocStr(action))) )
 		})],
-
-	// XXX not final...
-	// XXX should we list feature actions???
 	showFeatureDoc: ['Help/Feature help...',
 		makeUIDialog(function(features){
 			features = features || this.features.features
@@ -846,10 +857,7 @@ var UIIntrospectionActions = actions.Actions({
 				.addClass('help-dialog')
 
 			var tag2lnk = function(tag){
-				return tag != '-'?
-					`<a href="#" onclick="ig.showFeatureDoc('${tag}')">${tag}</a>`
-					: '-'
-			}
+				return tag != '-'? feature2lnk(tag) : '-' }
 
 			features.forEach(function(tag){
 				var feature = featureset[tag.startsWith('-') ? tag.slice(1) : tag]
@@ -869,6 +877,7 @@ var UIIntrospectionActions = actions.Actions({
 								: 'loaded')) 
 					.append($('<div>')
 						.html('Tag: '+ tag2lnk(tag) )) 
+
 					.append($('<div>')
 						.html('Priority: '+ (feature.getPriority ? 
 							feature.getPriority(true)
@@ -895,6 +904,30 @@ var UIIntrospectionActions = actions.Actions({
 							+ (feature.suggested || ['-'])
 								.map(tag2lnk)
 								.join(', ')))
+
+					// list actions, props and handlers...
+					.append($('<hr>'))
+					.append($('<div>')
+						.html('Props: <i>not implemented</i>'))
+					.append($('<div>')
+						.html('Actions: ' 
+							+ Object.keys(feature.actions || {'-': null})
+								.filter(function(n){ 
+									return n == '-' 
+										|| (Object.getOwnPropertyDescriptor(feature.actions, n) || {}).value instanceof actions.Action })
+								.map(function(n){
+									return n == '-' ? n : action2lnk(n) })
+								.join(', ')))
+					.append($('<div>')
+						.html('Handlers: '
+							+ (feature.handlers || [['-']])
+								.map(function(h){ return h[0] instanceof Array ? h[0] : [h[0]] })
+								.reduce(function(a, b){ return a.concat(b) }, [])
+								.unique()
+								.map(function(n){
+									return n == '-' ? n : action2lnk(n) })
+								.join(', ')))
+
 					// doc...
 					.append($('<hr>'))
 					.append($('<pre>')
@@ -925,44 +958,44 @@ var UIIntrospectionActions = actions.Actions({
 		makeUIDialog(function(){
 			var that = this
 
-			var dialog = browse.makeLister(null, function(path, make){
-				var features = that.features || {}
+			return browse
+				.makeLister(null, function(path, make){
+					var features = that.features || {}
 
-				// XXX get feature doc...
-				var draw = function(heading, list){
-					make.Heading(heading)
-					;(list || [])
-						.forEach(function(tag){
-							make(tag)
-								.attr('feature', tag)
-								.on('open', function(){ that.showFeatureDoc(tag) })
-						}) }
+					// XXX get feature doc...
+					var draw = function(heading, list){
+						make.Heading(heading)
+						;(list || [])
+							.forEach(function(tag){
+								make(tag)
+									.attr('feature', tag)
+									.on('open', function(){ that.showFeatureDoc(tag) })
+							}) }
 
-				draw('Loaded (in order)', that.features.features)
-				draw('Excluded', that.features.excluded)
-				draw('Disabled', that.features.disabled)
-				draw('Not applicable', that.features.unapplicable)
+					draw('Loaded (in order)', that.features.features)
+					draw('Excluded', that.features.excluded)
+					draw('Disabled', that.features.disabled)
+					draw('Not applicable', that.features.unapplicable)
 
-				if(features.error){
-					var error = features.error
-					error.missing_suggested && error.missing_suggested.length > 0
-						&& draw('Missing (non-critical)', error.missing_suggested)
-					error.missing && error.missing.length > 0
-						&& draw('Missing (critical)', error.missing)
-					// XXX loops...
-					// XXX conflicts...
-				}
-			})
-
-			// handle '?' button to browse path...
-			dialog.showDoc = function(){
-				var feature = dialog.select('!').attr('feature')
-				feature 
-					&& that.showFeatureDoc(feature)
-			}
-			dialog.keyboard.handler('General', '?', 'showDoc')
-
-			return dialog
+					if(features.error){
+						var error = features.error
+						error.missing_suggested && error.missing_suggested.length > 0
+							&& draw('Missing (non-critical)', error.missing_suggested)
+						error.missing && error.missing.length > 0
+							&& draw('Missing (critical)', error.missing)
+						// XXX loops...
+						// XXX conflicts...
+					}
+				})
+				.run(function(){
+					// handle '?' button to browse path...
+					this.showDoc = function(){
+						var feature = this.select('!').attr('feature')
+						feature 
+							&& that.showFeatureDoc(feature)
+					}
+					this.keyboard.handler('General', '?', 'showDoc')
+				})
 		})],
 
 	// XXX is this the right way to go???
@@ -1509,17 +1542,18 @@ var BrowseActionsActions = actions.Actions({
 				config.showDisabled = dialog.options.showDisabled
 				config.showHidden = dialog.options.showHidden
 			})
+			.run(function(){
+				actions.config['browse-actions-keys'] 
+					&& this.dom.addClass('show-keys')
 
-			this.config['browse-actions-keys'] 
-				&& dialog.dom.addClass('show-keys')
-
-			// handle '?' button to browse path...
-			dialog.showDoc = function(){
-				var action = dialog.select('!').attr('action')
-				action 
-					&& actions.showDoc(action)
-			}
-			dialog.keyboard.handler('General', '?', 'showDoc')
+				// handle '?' button to browse path...
+				this.showDoc = function(){
+					var action = this.select('!').attr('action')
+					action 
+						&& this.showDoc(action)
+				}
+				this.keyboard.handler('General', '?', 'showDoc')
+			})
 
 			return dialog
 		})],
@@ -1532,7 +1566,6 @@ var BrowseActionsActions = actions.Actions({
 				this.modal.client.dom.hasClass('browse-actions')
 					&& this.modal.client.dom[state == 'on' ? 'addClass' : 'removeClass']('show-keys')
 			})],
-
 })
 
 var BrowseActions = 
