@@ -938,13 +938,9 @@ var UIIntrospectionActions = actions.Actions({
 		})],
 
 	// XXX might be a good idea to add feature doc/help browser like showDoc(..)
-	// XXX show more info about features:
+	// XXX show more info about features...
 	// 		.title
-	// 		.doc
-	// 		.module
-	// 		.depends (+ depended on by ..)
-	// 		.suggested
-	// 		...
+	// 		.doc (short)
 	// XXX might be nice to load/unload features from here...
 	// 		this can be done by add explicitly to input (with or without
 	// 		the '-' prefix and) and reloading (re-running setup(..))...
