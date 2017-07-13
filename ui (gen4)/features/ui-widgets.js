@@ -753,9 +753,25 @@ module.feature2lnk =
 function(tag){
    return `<a href="#" onclick="ig.showFeatureDoc('${tag}')">${tag}</a>` }
 
-// XXX do not use the global ig for link click handling...
-var doc2html =
-module.doc2html =
+// XXX needs more cleanup...
+var features2lnk =
+module.features2lnk =
+function(features, text){
+	features = new RegExp(
+			'( )('
+			+(features
+				.sort(function(a, b){ return b.length - a.length })
+				.join('|'))
+			+')([, ]?)', 
+		'g')
+	return text
+		.replace(features, function(match, a, b, c){
+			return a + feature2lnk(b) + c
+		})
+}
+
+var js2html =
+module.js2html =
 function(doc, skip_linking){
 	skip_linking = skip_linking || []
 	return doc
@@ -774,6 +790,14 @@ function(doc, skip_linking){
 		// notes...
 		.replace(/NOTE:/g, '<b>NOTE:</b>')
 		.replace(/XXX/g, '<span class="warning">XXX</span>')
+}
+	
+// XXX do not use the global ig for link click handling...
+var doc2html =
+module.doc2html =
+function(doc, skip_linking){
+	skip_linking = skip_linking || []
+	return js2html(doc)
 		// action links...
 		.replace(/(\s)(\.([\w_]+[\w\d_]*)\([^)]*\))/g, 
 			function(match, a, b, c){
@@ -835,14 +859,19 @@ var UIIntrospectionActions = actions.Actions({
 
 			return res
 		})],
+	// XXX make hypertext...
 	showCode: ['- Help/Show action code...',
 		makeUIDialog(function(action){
 			action = action instanceof Array ? action[0] : action
+			var features = this.features.FeatureSet.features 
+					|| this.features.features 
+					|| []
 			return $('<div>')
 				.addClass('help-dialog')
 				.append($('<div class="action">')
 					.append($('<pre>')
-						.text(this.getHandlerDocStr(action))) )
+						//.text(this.getHandlerDocStr(action))) )
+						.html(features2lnk(features, js2html(this.getHandlerDocStr(action))))) ) 
 		})],
 	showFeatureDoc: ['Help/Feature help...',
 		makeUIDialog(function(features){
