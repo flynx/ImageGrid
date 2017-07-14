@@ -758,11 +758,11 @@ var features2lnk =
 module.features2lnk =
 function(features, text){
 	features = new RegExp(
-			'( )('
+			'(\\s)('
 			+(features
 				.sort(function(a, b){ return b.length - a.length })
 				.join('|'))
-			+')([, ]?)', 
+			+')([,\\s]?)', 
 		'g')
 	return text
 		.replace(features, function(match, a, b, c){
