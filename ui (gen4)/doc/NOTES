@@ -37,3 +37,50 @@ This seems a bit confusing, so at least the naming convention should be
 revised.
 
 
+
+Runtimes
+========
+
+ImageGrid.Viewer can be run in a number of runtimes on multiple platforms.
+
+Browser
+-------
+
+npm install
+index.html
+
+
+
+Node.js
+-------
+
+npm install
+node ig.js --help
+
+
+
+NW.js
+-----
+
+npm install
+npm start
+
+
+
+Electron
+--------
+
+XXX EXPERIMENTAL -- mostly runs in restricted (browser-like) mode...
+
+npm install
+electron e.js
+
+
+
+Cordova/PhoneGap
+----------------
+
+XXX
+
+
+

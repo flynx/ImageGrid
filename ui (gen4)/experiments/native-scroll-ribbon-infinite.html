@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<!--
+//---------------------------------------------------------------------
+// Experiment: use native scroll for ribbons and view...
+// 	Factors:
+// 		+ the browser will do all the heavy lifting and do it faster 
+// 			than we can ever hope to do it in JS (assumption)
+// 		- will require us to add an extra container per ribbon 
+//
+// 	Experiment result:
+// 		- more uniform and fast across browsers 
+// 			(except FF - can't disable scrollbars, need to cheat)
+// 		- less controllable (inertia, gestures, ...)
+// 		- is affected by scaling in a bad way - paralax...
+//
+// 	Conclusion:
+// 		- this again brings us to using code to control the scroll
+// 		  which in turn defeats the original purpose of avoiding
+// 		  extra complexity...
+//
+// 	See: 
+// 		experiments/native-scroll-ribbon.html
+//
+
+-->
+
+<style>
+.mark-center:after {
+	position: absolute;
+	display: block;
+	content: "";
+	width: 5px;
+	height: 5px;
+	left: 50%;
+	top: 50%;
+	border-left: solid 2px red;
+	border-top: solid 2px red;
+	margin-left: -1px;
+	margin-top: -1px;
+	opacity: 0.8;
+	z-index: 1;
+}
+.mark-center:before {
+	position: absolute;
+	display: block;
+	content: "";
+	width: 5px;
+	height: 5px;
+	right: 50%;
+	bottom: 50%;
+	border-bottom: solid 2px red;
+	border-right: solid 2px red;
+	margin-bottom: -1px;
+	margin-right: -1px;
+	opacity: 0.8;
+	z-index: 1;
+}
+
+
+/* XXX appears that there is no way to hide the scrollbar on FF...
+*	...one way around this is to use something like iScroll/Scrolly
+*	on FF or where more control is needed...
+*/
+.viewer {
+	position: relative;
+	display: inline-block;
+	border: solid 1px gray;
+
+	width: 600px;
+	height: 500px;
+
+	overflow: hidden;
+}
+
+
+
+.scaler {
+	position: relative;
+	width: 100%;
+	height: 100%;
+
+	top: 50%;
+	left: 50%;
+	margin-top: -50%;
+	margin-left: -50%;
+
+	transform-origin: 50% 50%;
+
+	overflow-x: hidden;
+	overflow-y: scroll;
+
+	-ms-overflow-style: none;
+}
+.scaler::-webkit-scrollbar { 
+    display: none; 
+}
+
+
+
+/* This is to be used for:
+*	- vrtical positioning
+*	- scaling
+*	  (update width to fit viewer)
+*/
+.ribbon-set {
+	position: relative;
+	display: inline-block;
+
+	/* This allways needs to be of viewer width, this mostly applies
+	* to scaling...
+	*/
+	width: 100%;
+
+	padding-top: 50%;
+	padding-bottom: 50%;
+}
+
+
+
+.ribbon-container {
+	position: relative;
+
+	height: 120px;
+	width: 100%;
+
+	overflow-x: scroll;
+	overflow-y: hidden;
+
+	-ms-overflow-style: none;
+}
+.ribbon-container::-webkit-scrollbar { 
+    display: none; 
+}
+.ribbon-container:before {
+	position: absolute;
+	content: attr(n);
+}
+
+
+.ribbon {
+	position: relative;
+	display: inline-block;
+
+	height: 100px;
+	width: auto;
+
+	white-space: nowrap;
+	overflow: visible;
+
+	background: silver;
+	/*box-shadow: 0px 0px 25px -10px rgba(0,0,0,0.75);*/
+	box-shadow: 0px 0px 25px -10px rgba(0,0,0,1);
+
+	/* start/end markers... */
+	/*border-left: 100px solid gray;
+	border-right: 100px solid gray;*/
+
+	margin: 10px;
+
+	margin-left: 50%;
+	/* XXX for some reason this does not work as expected */
+	margin-right: 50%;
+}
+
+
+.image {
+	position: relative;
+	display: inline-block;
+
+	width: 100px;
+	height: 100px;
+
+	outline: solid blue 1px;
+
+	background: silver;
+}
+.image:after {
+	content: attr(n);
+	opacity: 0.5;
+}
+
+
+
+</style>
+
+<script src="../ext-lib/jquery.js"></script>
+<script src="../ext-lib/jquery-ui.js"></script>
+
+<script src="../ext-lib/velocity.min.js"></script>
+
+<script src="../lib/jli.js"></script>
+
+<script>
+
+var scale = function(){
+	var s = /scale\(([^\)]+)\)/.exec($('.scaler')[0].style.transform)
+	return s ? parseFloat(s.pop()) : 1
+}
+
+
+// XXX when setting origin at scales different from 1, we'll need to 
+//	adjust offset to compensate for the shift... 
+// XXX one other simplification might be adding a new element specifically
+//	dedicated to scaling...
+var centerOrigin = function(){
+	var H = $('.viewer').height()
+	var s = $('.viewer')[0].scrollTop
+
+	$('.ribbon-set').css({
+		'transform-origin': '50% '+ (s + H/2) +'px'
+	})
+}
+
+
+// XXX these accumolate errors...
+var zoomIn = function(c){
+	c = c || 1.2
+
+	centerOrigin()
+	$('.scaler')
+		.velocity('stop')
+		.velocity({
+			scale: '*='+c,
+
+			width: '/='+c,
+			height: '/='+c,
+			'margin-left': '/='+c,
+			'margin-top': '/='+c,
+		}, {
+			duration: 300,
+			easing: 'linear',
+		})
+}
+var zoomOut = function(c){
+	c = c || 1.2
+
+	centerOrigin()
+	$('.scaler')
+		.velocity('stop')
+		.velocity({
+			scale: '/='+c,
+
+			width: '*='+c,
+			height: '*='+c,
+			'margin-left': '*='+c,
+			'margin-top': '*='+c,
+		}, {
+			duration: 300,
+			easing: 'linear',
+		})
+}
+
+
+var setup = function(){
+	var H = $('.viewer').height()
+	var W = $('.viewer').width()
+
+	var ribbon_set = $('.ribbon-set')[0]
+
+
+	// XXX need to calculate this considering scale...
+	var threshold = 300
+	var ribbon_count = 10
+	var image_count = 10
+
+
+	var ribbon_container = document.createElement('div')
+	ribbon_container.classList.add('ribbon-container')
+	var ribbon = document.createElement('div')
+	ribbon.classList.add('ribbon')
+	var image = document.createElement('div')
+	image.classList.add('image')
+
+	var makeImage = function(n){
+		var i = image.cloneNode()
+		i.setAttribute('n', n)
+		return i
+	}
+
+	var makeRibbon = function(n){
+		var rc = ribbon_container.cloneNode()
+		var r = ribbon.cloneNode() 
+		for(var i=0; i < image_count; i++){
+			r.appendChild(makeImage(i))
+		}
+		rc.appendChild(r)
+		rc.setAttribute('n', n)
+		return rc
+	}
+
+	for(var i=0; i < ribbon_count; i++){
+		ribbon_set.appendChild(makeRibbon(i))
+	}
+
+
+	// set margins to be parant and not content dependant...
+	$('.scaler')
+		.velocity({
+			'margin-left': -W/2,
+			'margin-top': -H/2,
+		}, 0)
+		.scroll(function(){
+			var sh = this.scrollHeight
+			var st = this.scrollTop
+
+			// XXX for some reason removing/adding items from/to
+			//	the top does not require compensating here...
+			//	...need to re-read my CSS ;)
+
+			// top limit...
+			if( st < threshold ){
+				var c = ribbon_set.children
+				var n = c[0].getAttribute('n')
+
+				// add ribbon...
+				if(n > 0){
+					ribbon_set.prepend(makeRibbon(--n))
+
+					// remove ribbon from bottom...
+					if(c.length > ribbon_count){
+						c[c.length - 1].remove()
+					}
+				}
+
+			// bottom limit...
+			} else if( sh - (st + H) < threshold ){
+				var c = ribbon_set.children
+				var n = c[c.length-1].getAttribute('n')
+
+				// add ribbon...
+				ribbon_set.appendChild(makeRibbon(++n))
+
+				// remove ribon from top...
+				if(c.length > ribbon_count){
+					c[0].remove()
+				}
+			}
+		})
+}
+
+
+$(function(){
+	setup()
+
+
+})
+
+</script>
+
+<body>
+
+<div class="viewer mark-center">
+	<div class="scaler">
+		<div class="ribbon-set">
+		</div>
+	</div>
+</div>
+
+</body>
+</html>

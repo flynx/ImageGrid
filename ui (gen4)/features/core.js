@@ -164,8 +164,12 @@ ImageGridFeatures.__actions__ =
 // nw or node...
 if(typeof(process) != 'undefined'){
 
+	// Electron...
+	if(process.versions['electron'] != null){
+		ImageGridFeatures.runtime = 'electron'
+
 	// nw.js 0.13+
-	if(typeof(nw) != 'undefined'){
+	} else if(typeof(nw) != 'undefined'){
 		ImageGridFeatures.runtime = 'nw'
 
 		// NOTE: jli is patching the Date object and with two separate 

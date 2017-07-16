@@ -38,6 +38,10 @@ if(window.require && window.nw){
 }
 </script>
 
+<!-- Electron related fix -->
+<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
+
 
 <!-- jQuery -->
 <script src="ext-lib/jquery.js"></script>
@@ -64,6 +68,12 @@ if(window.require && window.nw){
 <script src="ext-lib/jquery.hammer.js"></script>
 
 <script src="lib/jli.js"></script>
+
+
+
+<!-- Electron related unfix -->
+<script>if (window.module) module = window.module;</script>
+
 
 <script data-main="ui" src="ext-lib/require.js"></script>
 

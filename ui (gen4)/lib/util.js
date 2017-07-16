@@ -8,7 +8,6 @@
 /*********************************************************************/
 
 
-
 /*********************************************************************/
 
 String.prototype.capitalize = function(){
@@ -157,6 +156,10 @@ Object.defineProperty(Array.prototype, 'len', {
 		return Object.keys(this).length
 	},
 	set : function(val){},
+
+	// NOTE: this is hear to enable running this module multiple times 
+	// 		without any side-effects...
+	configurable: true,
 });
 
 
