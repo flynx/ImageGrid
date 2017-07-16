@@ -2,25 +2,6 @@
 <html>
 <!--
 //---------------------------------------------------------------------
-// Experiment: use native scroll for ribbons and view...
-// 	Factors:
-// 		+ the browser will do all the heavy lifting and do it faster 
-// 			than we can ever hope to do it in JS (assumption)
-// 		- will require us to add an extra container per ribbon 
-//
-// 	Experiment result:
-// 		- more uniform and fast across browsers 
-// 			(except FF - can't disable scrollbars, need to cheat)
-// 		- less controllable (inertia, gestures, ...)
-// 		- is affected by scaling in a bad way - paralax...
-//
-// 	Conclusion:
-// 		- this again brings us to using code to control the scroll
-// 		  which in turn defeats the original purpose of avoiding
-// 		  extra complexity...
-//
-// 	See: 
-// 		experiments/native-scroll-ribbon.html
 //
 
 -->
@@ -120,6 +101,7 @@
 
 .ribbon-container {
 	position: relative;
+	display: block;
 
 	height: 120px;
 	width: 100%;
@@ -300,13 +282,20 @@ var setup = function(){
 			'margin-left': -W/2,
 			'margin-top': -H/2,
 		}, 0)
+		// XXX make this generic...
 		.scroll(function(){
 			var sh = this.scrollHeight
 			var st = this.scrollTop
 
 			// XXX for some reason removing/adding items from/to
 			//	the top does not require compensating here...
-			//	...need to re-read my CSS ;)
+			//	...it appears that if scrollTop is more than 
+			//	the removed height then element positions do 
+			//	not change...
+			//	- chrome only???
+			//		...does not seam to work on other browsers
+			//	- vertical scroll only??? 
+			//		...can't repeat for horizontal scroll
 
 			// top limit...
 			if( st < threshold ){
@@ -315,6 +304,7 @@ var setup = function(){
 
 				// add ribbon...
 				if(n > 0){
+					// XXX compesate...
 					ribbon_set.prepend(makeRibbon(--n))
 
 					// remove ribbon from bottom...
@@ -333,6 +323,7 @@ var setup = function(){
 
 				// remove ribon from top...
 				if(c.length > ribbon_count){
+					// XXX compesate...
 					c[0].remove()
 				}
 			}
