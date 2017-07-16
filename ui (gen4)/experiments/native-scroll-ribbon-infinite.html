@@ -234,6 +234,21 @@ var zoomOut = function(c){
 }
 
 
+var makeScrollHandler = function(container, items, make, options){
+	options = options || {}
+
+	return function(evt){
+
+		// top limit...
+		if(true){
+
+		// bottom limit...
+		} else if(true){
+		}
+	}
+}
+
+
 var setup = function(){
 	var H = $('.viewer').height()
 	var W = $('.viewer').width()
@@ -259,7 +274,6 @@ var setup = function(){
 		i.setAttribute('n', n)
 		return i
 	}
-
 	var makeRibbon = function(n){
 		var rc = ribbon_container.cloneNode()
 		var r = ribbon.cloneNode() 
@@ -333,8 +347,6 @@ var setup = function(){
 
 $(function(){
 	setup()
-
-
 })
 
 </script>
