@@ -249,7 +249,7 @@ var makeScrollHandler = function(items, make, options){
 	options = options || {}
 
 	var direction = options.direction || 'vertical'
-	var threshold = options.threshold || 300
+	//var threshold = options.threshold || 
 	var _container = options.container || 'this'
 
 	// XXX should we do an initial load here???
@@ -280,6 +280,9 @@ var makeScrollHandler = function(items, make, options){
 			var elem_size_attr = 'offsetWidth'
 		}
 
+		// XXX
+		var threshold = visible_size
+
 		var dom_items = container.children
 
 		// head limit -- add items to the head...
@@ -292,21 +295,24 @@ var makeScrollHandler = function(items, make, options){
 
 			// make the item(s)...
 			if(e){
-				// XXX make this direction-agnostic...
-				var pre = dom_items[0][elem_offset_attr]
+				// XXX need to account for situations where the whole thing is replaced...
+				var c = dom_items[0]
+				var pre = c[elem_offset_attr]
 
 				container.prepend(make(e))
 
 				// compensate offset for added items...
-				// XXX make this direction-agnostic...
-				var post = dom_items[0][elem_offset_attr]
-				container[elem_scroll_attr] += pre - post
+				var d = c[elem_offset_attr] - pre
+				// XXX need to do this only if the browser is not compensating...
+				if(direction == 'horizontal'){
+					this[elem_scroll_attr] += d 
+				}
 
 				// remove hidden items from tail...
 				var t = offset + visible_size + threshold
 				;[].slice.call(dom_items)
 					// XXX add threshold / items-to-keep-offscreen limit ...
-					// XXX make this direction-agnostic...
+					// XXX this is wrong for horizontal scroll...
 					.filter(function(e){ return e[elem_offset_attr] > t })
 					// XXX can we remove these in one go???
 					.forEach(function(e){ e.remove() })
@@ -322,23 +328,30 @@ var makeScrollHandler = function(items, make, options){
 				: items[i]
 
 			if(e){
-				// XXX make this direction-agnostic...
 				container.append(make(e))
 
-				var pre = dom_items[0][elem_offset_attr]
+				//var clone = container.cloneNode(true)
+				//container.replaceWith(clone)
+
+				// XXX need to account for situations where the whole thing is replaced...
+				var c = dom_items[dom_items.length-1]
+				var pre = c[elem_offset_attr]
 
 				// remove hidden items for head...
 				;[].slice.call(dom_items)
 					// XXX add threshold / items-to-keep-offscreen limit ...
-					// XXX make this direction-agnostic...
 					.filter(function(e){ return e[elem_offset_attr] + e[elem_size_attr] < offset })
 					// XXX can we remove these in one go???
 					.forEach(function(e){ e.remove() })
 
 				// compensate offset for removed items...
-				// XXX make this direction-agnostic...
-				var post = dom_items[0][elem_offset_attr]
-				container[elem_scroll_attr] += pre - post
+				var d = c[elem_offset_attr] - pre
+				// XXX need to do this only if the browser is not compensating...
+				if(direction == 'horizontal'){
+					this[elem_scroll_attr] += d 
+				}
+
+				//container.replaceWith(container)
 			}
 		}
 	}
@@ -386,6 +399,7 @@ var setup = function(){
 			{
 				container: r, 
 				direction: 'horizontal',
+				threshold: 300,
 			}))
 
 		return rc
@@ -408,7 +422,10 @@ var setup = function(){
 		.scroll(makeScrollHandler(
 			function(n){ return n >= 0 ? n : undefined },
 			makeRibbon,
-			{ container: ribbon_set, }))
+			{ 
+				container: ribbon_set,
+				threshold: 300,
+			}))
 }
 
 
