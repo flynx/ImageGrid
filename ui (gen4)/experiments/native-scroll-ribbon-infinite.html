@@ -116,7 +116,7 @@
 }
 .ribbon-container:before {
 	position: absolute;
-	content: attr(n);
+	content: attr(index);
 }
 
 
@@ -158,7 +158,7 @@
 	background: silver;
 }
 .image:after {
-	content: attr(n);
+	content: attr(index);
 	opacity: 0.5;
 }
 
@@ -234,16 +234,112 @@ var zoomOut = function(c){
 }
 
 
-var makeScrollHandler = function(container, items, make, options){
+//	items			- list of items, each item must be make(..) compatible
+//						...this can also be a function and return multiple 
+//						items (XXX)
+//	make			- item DOM constructor
+//
+// Options:
+// 	container		- element that actually contains the items (default: 'this')
+//	direction		- scroll direction (default: 'vertical') 
+//	threshold		- 
+//
+// XXX horizontal scroll is still buggy -- mostly in thresholds...
+var makeScrollHandler = function(items, make, options){
 	options = options || {}
 
+	var direction = options.direction || 'vertical'
+	var threshold = options.threshold || 300
+	var _container = options.container || 'this'
+
+	// XXX should we do an initial load here???
+
 	return function(evt){
+		var container = _container == 'this' ? 
+				this
+			: typeof(_container) == typeof('str') ? 
+				this.querySelector(_container) 
+			: _container
 
-		// top limit...
-		if(true){
+		if(direction == 'vertical'){
+			var size = this.scrollHeight 
+			var offset = this.scrollTop
+			var visible_size = this.offsetHeight
 
-		// bottom limit...
-		} else if(true){
+			var elem_scroll_attr = 'scrollTop'
+			var elem_offset_attr = 'offsetTop'
+			var elem_size_attr = 'offsetHeight'
+
+		} else {
+			var size = this.scrollWidth
+			var offset = this.scrollLeft
+			var visible_size = this.offsetWidth
+
+			var elem_scroll_attr = 'scrollLeft'
+			var elem_offset_attr = 'offsetLeft'
+			var elem_size_attr = 'offsetWidth'
+		}
+
+		var dom_items = container.children
+
+		// head limit -- add items to the head...
+		if(offset < threshold){
+			var i = parseInt(dom_items[0].getAttribute('index')) - 1
+			var e = items instanceof Function ? 
+				items(i) 
+				// XXX make this support multiple items...
+				: items[i]
+
+			// make the item(s)...
+			if(e){
+				// XXX make this direction-agnostic...
+				var pre = dom_items[0][elem_offset_attr]
+
+				container.prepend(make(e))
+
+				// compensate offset for added items...
+				// XXX make this direction-agnostic...
+				var post = dom_items[0][elem_offset_attr]
+				container[elem_scroll_attr] += pre - post
+
+				// remove hidden items from tail...
+				var t = offset + visible_size + threshold
+				;[].slice.call(dom_items)
+					// XXX add threshold / items-to-keep-offscreen limit ...
+					// XXX make this direction-agnostic...
+					.filter(function(e){ return e[elem_offset_attr] > t })
+					// XXX can we remove these in one go???
+					.forEach(function(e){ e.remove() })
+			}
+		}
+
+		// tail limit -- add items to the tail...
+		if( size - (offset + visible_size) < threshold ){
+			var i = parseInt(dom_items[dom_items.length-1].getAttribute('index')) + 1
+			var e = items instanceof Function ?
+				items(i) 
+				// XXX make this support multiple items...
+				: items[i]
+
+			if(e){
+				// XXX make this direction-agnostic...
+				container.append(make(e))
+
+				var pre = dom_items[0][elem_offset_attr]
+
+				// remove hidden items for head...
+				;[].slice.call(dom_items)
+					// XXX add threshold / items-to-keep-offscreen limit ...
+					// XXX make this direction-agnostic...
+					.filter(function(e){ return e[elem_offset_attr] + e[elem_size_attr] < offset })
+					// XXX can we remove these in one go???
+					.forEach(function(e){ e.remove() })
+
+				// compensate offset for removed items...
+				// XXX make this direction-agnostic...
+				var post = dom_items[0][elem_offset_attr]
+				container[elem_scroll_attr] += pre - post
+			}
 		}
 	}
 }
@@ -271,23 +367,36 @@ var setup = function(){
 
 	var makeImage = function(n){
 		var i = image.cloneNode()
-		i.setAttribute('n', n)
+		i.setAttribute('index', n)
 		return i
 	}
 	var makeRibbon = function(n){
-		var rc = ribbon_container.cloneNode()
 		var r = ribbon.cloneNode() 
 		for(var i=0; i < image_count; i++){
 			r.appendChild(makeImage(i))
 		}
+
+		var rc = ribbon_container.cloneNode()
 		rc.appendChild(r)
-		rc.setAttribute('n', n)
+		rc.setAttribute('index', n)
+
+		$(rc).scroll(makeScrollHandler(
+			function(n){ return n >= 0 ? n : undefined },
+			makeImage,
+			{
+				container: r, 
+				direction: 'horizontal',
+			}))
+
 		return rc
 	}
 
+
+	var fragment = document.createDocumentFragment()
 	for(var i=0; i < ribbon_count; i++){
-		ribbon_set.appendChild(makeRibbon(i))
+		fragment.appendChild(makeRibbon(i))
 	}
+	ribbon_set.appendChild(fragment)
 
 
 	// set margins to be parant and not content dependant...
@@ -296,52 +405,10 @@ var setup = function(){
 			'margin-left': -W/2,
 			'margin-top': -H/2,
 		}, 0)
-		// XXX make this generic...
-		.scroll(function(){
-			var sh = this.scrollHeight
-			var st = this.scrollTop
-
-			// XXX for some reason removing/adding items from/to
-			//	the top does not require compensating here...
-			//	...it appears that if scrollTop is more than 
-			//	the removed height then element positions do 
-			//	not change...
-			//	- chrome only???
-			//		...does not seam to work on other browsers
-			//	- vertical scroll only??? 
-			//		...can't repeat for horizontal scroll
-
-			// top limit...
-			if( st < threshold ){
-				var c = ribbon_set.children
-				var n = c[0].getAttribute('n')
-
-				// add ribbon...
-				if(n > 0){
-					// XXX compesate...
-					ribbon_set.prepend(makeRibbon(--n))
-
-					// remove ribbon from bottom...
-					if(c.length > ribbon_count){
-						c[c.length - 1].remove()
-					}
-				}
-
-			// bottom limit...
-			} else if( sh - (st + H) < threshold ){
-				var c = ribbon_set.children
-				var n = c[c.length-1].getAttribute('n')
-
-				// add ribbon...
-				ribbon_set.appendChild(makeRibbon(++n))
-
-				// remove ribon from top...
-				if(c.length > ribbon_count){
-					// XXX compesate...
-					c[0].remove()
-				}
-			}
-		})
+		.scroll(makeScrollHandler(
+			function(n){ return n >= 0 ? n : undefined },
+			makeRibbon,
+			{ container: ribbon_set, }))
 }
 
 
@@ -362,3 +429,4 @@ $(function(){
 
 </body>
 </html>
+<!-- vim:set sw=4 ts=4 : -->
