@@ -55,7 +55,7 @@ function updateImagePosition(actions, target){
 
 		// XXX hack???
 		if(target instanceof Array){
-			actions.reload()
+			actions.reload(true)
 			return end()
 		}
 

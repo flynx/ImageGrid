@@ -228,8 +228,12 @@ var ImageMarkActions = actions.Actions({
 		}],
 
 	prevMarked: ['Mark|Navigate/Previous marked image',
+		{browseMode: function(target){ 
+			return this.data.getImage('current', 'before', this.marked) == null && 'disabled' }},
 		function(mode){ this.prevTagged('selected', mode) }],
 	nextMarked: ['Mark|Navigate/Next marked image',
+		{browseMode: function(target){ 
+			return this.data.getImage('current', 'after', this.marked) == null && 'disabled' }},
 		function(mode){ this.nextTagged('selected', mode) }],
 
 	cropMarked: ['Mark|Crop/Crop $marked images',
@@ -319,6 +323,10 @@ var ImageMarkEditActions = actions.Actions({
 			return this.toggleMark(block, state ? 'off' : 'on')
 		}],
 
+	unmarkAll: ['Mark/$Unmark all',
+		{browseMode: 'cropMarked'},
+		function(){ this.toggleMark(this.marked) }],
+
 	markTagged: ['- Mark/Mark images by tags',
 		function(tags, mode){
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
@@ -330,11 +338,24 @@ var ImageMarkEditActions = actions.Actions({
 		}],
 
 	shiftMarkedUp: ['Mark|Ribbon/Shift marked $up',
-		{undo: undoShift('shiftMarkedDown')},
+		{undo: undoShift('shiftMarkedDown'),
+			browseMode: 'cropMarked'},
 		shiftMarked('up')],
 	shiftMarkedDown: ['Mark|Ribbon/Shift marked $down',
-		{undo: undoShift('shiftMarkedUp')},
+		{undo: undoShift('shiftMarkedUp'),
+			browseMode: 'cropMarked'},
 		shiftMarked('down')],
+
+	// XXX undo...
+	shiftMarkedAfter: ['Mark|Ribbon/Shift marked after image',
+		{browseMode: 'cropMarked'},
+		function(target){
+			this.shiftMarkedTo(this.marked, target || 'current', 'after') }],
+	// XXX undo...
+	shiftMarkedBefore: ['Mark|Ribbon/Shift marked before image',
+		{browseMode: 'cropMarked'},
+		function(target){
+			this.shiftMarkedTo(this.marked, target || 'current', 'before') }],
 })
 
 var ImageEditMarks = 
@@ -410,8 +431,12 @@ var ImageBookmarkActions = actions.Actions({
 	},
 
 	prevBookmarked: ['Bookmark|Navigate/Previous bookmarked image',
+		{browseMode: function(target){ 
+			return this.data.getImage('current', 'before', this.bookmarked) == null && 'disabled' }},
 		function(mode){ this.prevTagged('bookmark', mode) }],
 	nextBookmarked: ['Bookmark|Navigate/Next bookmarked image',
+		{browseMode: function(target){ 
+			return this.data.getImage('current', 'after', this.bookmarked) == null && 'disabled' }},
 		function(mode){ this.nextTagged('bookmark', mode) }],
 
 	cropBookmarked: ['Bookmark|Crop/Crop $bookmarked images',
@@ -451,7 +476,8 @@ var ImageBookmarkEditActions = actions.Actions({
 	// 	'on'	- toggle all on
 	// 	'off'	- toggle all off
 	// 	'next'	- toggle each image to next state
-	toggleBookmarkOnMarked: ['Bookmark|Mark/Bookmark on maked images',
+	toggleBookmarkOnMarked: ['Bookmark|Mark/Toggle bookmark on maked images',
+		{browseMode: 'cropMarked'},
 		function(action){ 
 			return this.toggleBookmark(this.data.getTaggedByAny('selected'), action) 
 		}],

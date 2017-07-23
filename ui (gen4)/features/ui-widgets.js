@@ -1575,7 +1575,7 @@ var BrowseActionsActions = actions.Actions({
 				this.showDoc = function(){
 					var action = this.select('!').attr('action')
 					action 
-						&& this.showDoc(action)
+						&& actions.showDoc(action)
 				}
 				this.keyboard.handler('General', '?', 'showDoc')
 			})

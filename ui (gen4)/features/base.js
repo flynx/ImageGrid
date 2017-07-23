@@ -722,7 +722,7 @@ actions.Actions({
 	// XXX undo...
 	shiftImageTo: ['- Edit|Sort|Image/',
 		{undo: function(a){ this.shiftImageTo(a.args[1], a.args[0]) }},
-		function(target, to){ this.data.shiftImage(target, to) }],
+		function(target, to, mode){ this.data.shiftImage(target, to, mode) }],
 	
 	shiftImageUp: ['Edit|Image/Shift image up',
 		core.doc`Shift image up...
@@ -1366,9 +1366,17 @@ module.ImageEditGroupActions = actions.Actions({
 		function(target){ this.groupTo(target, 'next') }],
 
 	// NOTE: this will only group loaded images...
+	// XXX should this be someplace in marks-depended feature???
 	groupMarked: ['Group|Mark/Group loaded marked images', 
-		{journal: true},
-		function(){ this.group(this.data.getImages(this.data.getTaggedByAny('marked'))) }],
+		{journal: true,
+			// XXX should this depend on marks more directly???
+			browseMode: function(){ 
+				return (this.data.tags 
+						&& this.data.tags.selected 
+						&& this.data.tags.selected.length > 0) 
+					|| 'disabled' }},
+		function(){ 
+			this.group(this.data.getImages(this.data.getTaggedByAny('selected'))) }],
 })
 
 var ImageEditGroup =
