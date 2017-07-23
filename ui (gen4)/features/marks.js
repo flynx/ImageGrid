@@ -257,6 +257,7 @@ module.ImageMarks = core.ImageGridFeatures.Feature({
 	suggested: [
 		'image-marks-edit',
 		'ui-image-marks',
+		'image-marks-groups',
 	],
 
 	actions: ImageMarkActions,
@@ -377,6 +378,35 @@ module.ImageEditMarks = core.ImageGridFeatures.Feature({
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+var ImageMarkGroupActions = actions.Actions({
+	// NOTE: this will only group loaded images...
+	groupMarked: ['Group|Mark/-99:Group loaded marked images', 
+		{journal: true,
+			browseMode: 'cropMarked'}, 
+		function(){ 
+			this.group(this.data.getImages(this.marked)) }],
+})
+
+var ImageMarkGroup = 
+module.ImageMarkGroup = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'image-marks-groups',
+
+	depends: [
+		'image-marks-edit',
+		'image-group-edit',
+	],
+	suggested: [
+	],
+
+	actions: ImageMarkGroupActions,
+})
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 var ImageMarksUI = 
 module.ImageMarksUI = core.ImageGridFeatures.Feature({
 	title: '',
@@ -476,7 +506,7 @@ var ImageBookmarkEditActions = actions.Actions({
 	// 	'on'	- toggle all on
 	// 	'off'	- toggle all off
 	// 	'next'	- toggle each image to next state
-	toggleBookmarkOnMarked: ['Bookmark|Mark/Toggle bookmark on maked images',
+	toggleBookmarkOnMarked: ['Bookmark|Mark/-99:Toggle bookmark on maked images',
 		{browseMode: 'cropMarked'},
 		function(action){ 
 			return this.toggleBookmark(this.data.getTaggedByAny('selected'), action) 
@@ -529,6 +559,7 @@ module.ImageBookmarksUI = core.ImageGridFeatures.Feature({
 		}],
 	],
 })
+
 
 
 //---------------------------------------------------------------------

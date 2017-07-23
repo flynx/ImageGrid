@@ -1365,18 +1365,6 @@ module.ImageEditGroupActions = actions.Actions({
 		{journal: true},
 		function(target){ this.groupTo(target, 'next') }],
 
-	// NOTE: this will only group loaded images...
-	// XXX should this be someplace in marks-depended feature???
-	groupMarked: ['Group|Mark/Group loaded marked images', 
-		{journal: true,
-			// XXX should this depend on marks more directly???
-			browseMode: function(){ 
-				return (this.data.tags 
-						&& this.data.tags.selected 
-						&& this.data.tags.selected.length > 0) 
-					|| 'disabled' }},
-		function(){ 
-			this.group(this.data.getImages(this.data.getTaggedByAny('selected'))) }],
 })
 
 var ImageEditGroup =
@@ -1387,6 +1375,8 @@ module.ImageEditGroup = core.ImageGridFeatures.Feature({
 	depends: [
 		'image-group',
 		'edit',
+	],
+	suggested: [
 	],
 
 	actions: ImageEditGroupActions,
