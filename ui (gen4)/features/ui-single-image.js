@@ -338,6 +338,10 @@ module.SingleImageView = core.ImageGridFeatures.Feature({
 	actions: SingleImageActions,
 
 	handlers:[
+		['load.pre',
+			function(){ 
+				this.toggleSingleImage('?') == 'on'
+					&& this.toggleSingleImage('off') }],
 		// update config...
 		//['resizing.post',
 		['resizingDone resizingWindow',

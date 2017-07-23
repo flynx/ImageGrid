@@ -170,8 +170,7 @@ var AppControlActions = actions.Actions({
 
 			var base = image.base_path || this.location.path
 			var filename = image.path
-
-			path = pathlib.normalize(base + '/' + filename)
+			var path = pathlib.normalize(base + '/' + filename)
 
 			nw.Shell.showItemInFolder(path)
 		}],

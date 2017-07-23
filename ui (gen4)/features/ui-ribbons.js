@@ -770,6 +770,9 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 	depends: [
 		'ui-ribbons-render',
 	],
+	// NOTE: this will allow the animations to start as early as possible
+	// 		in the action call...
+	priority: 'high',
 
 	config: {
 		// XXX make this duration...

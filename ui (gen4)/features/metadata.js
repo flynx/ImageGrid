@@ -4,18 +4,18 @@
 *
 **********************************************************************/
 
-// XXX this is a hack...
-// 		...need a way to escape these so as not to load them in browser...
-if(typeof(process) != 'undefined'){
-	var fs = require('fs')
-	var path = require('path')
-	var exiftool = require('exiftool')
-}
-
-
 ((typeof define)[0]=='u'?function(f){module.exports=f(require)}:define)
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
+
+// XXX this is a hack...
+// 		...need a way to escape these so as not to load them in browser...
+if(typeof(process) != 'undefined'){
+	var fs = requirejs('fs')
+	var path = requirejs('path')
+	var exiftool = requirejs('exiftool')
+}
+
 
 var util = require('lib/util')
 var toggler = require('lib/toggler')
@@ -168,7 +168,7 @@ var MetadataReaderActions = actions.Actions({
 		}],
 
 	// XXX STUB: add support for this to .readMetadata(..)
-	readAllMetadata: ['- Image/Read all metadata',
+	readAllMetadata: ['File/Read all metadata',
 		function(){
 			var that = this
 			// XXX make this a global API...
