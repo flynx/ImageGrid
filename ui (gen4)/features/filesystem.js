@@ -1852,7 +1852,7 @@ var FileSystemWriterActions = actions.Actions({
 							logger && logger.emit('queued', to)
 
 							// destination exists...
-							if(fs.existsSync(to)){
+							if(fse.existsSync(to)){
 								logger && logger.emit('skipping', to)
 
 							// copy...
@@ -2029,7 +2029,7 @@ var FileSystemWriterActions = actions.Actions({
 								logger && logger.emit('queued', to)
 
 								// destination exists...
-								if(fs.existsSync(to)){
+								if(fse.existsSync(to)){
 									logger && logger.emit('skipping', to)
 
 								} else {
