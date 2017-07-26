@@ -41,8 +41,30 @@ var ribbons = require('imagegrid/ribbons')
 // 	- ribbon-set
 // 	- ribbon-locator
 // 	- current-indicator (???)
+// 
+// * this is static and only created once...
 class IGRibbonSet extends preact.Component {
 	render(props, state){
+
+		// XXX need:
+		// 		- scale
+		// 		- ribbons
+
+		var ribbons = data.ribbon_order
+			.map(function(gid){ return h(IGRibbon, {
+				ribbon: gid,
+				// XXX
+			}) })
+
+		return h('div.ribbon-set', 
+			{
+				style: {
+					transform: 'scale('+ s +', '+ s +')',
+				},
+			}, [
+				h('div.current-marker'),
+				h('div.ribbon-locator', null, ribbons),
+			])
 	}
 }
 

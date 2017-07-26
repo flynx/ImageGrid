@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<style>
+
+.ribbon {
+	position: relative;
+	display: block;
+	float: left;
+	clear: left;
+
+	white-space: nowrap;
+	overflow: visible;
+
+	margin: 5px 0px;
+
+	width: auto;
+}
+.base.ribbon {
+	border-bottom: solid 5px red;
+}
+
+.image {
+	position: relative;
+	display: inline-block;
+
+	width: 100px;
+	height: 100px;
+
+	outline: solid 1px blue;
+	background: silver;
+}
+.current.image {
+	background: gray;
+}
+
+.mark {
+	position: absolute;
+}
+
+</style>
+
+<script src="../ext-lib/jquery.js"></script>
+<script src="../ext-lib/jquery-ui.js"></script>
+
+<!-- preact.js -->
+<script src="../node_modules/preact/dist/preact.min.js"></script>
+
+
+<script src="../lib/jli.js"></script>
+
+<script>
+
+var h = preact.h
+
+
+var stub_data = {
+	ribbon_order: ['ra', 'rb', 'rc'],
+	ribbons: {
+		ra: [].slice.call('abcde'),
+		rb: [].slice.call('fghijklm'),
+		rc: [].slice.call('opqrstuvwxyz'),
+	},
+	order: [].slice.call('abcdefghijklmopqrstuvwxyz'),
+
+	tags: {
+		a: [].slice.call('ahdtu'),
+		b: [].slice.call('adxz'),
+	},
+
+	current: 'a',
+	base: 'rb',
+}
+
+
+// XXX needs vertical align...
+class IGRibbonSet extends preact.Component {
+	render(props, state){
+		var data = props.data
+		var ribbons = data.ribbon_order.map(function(gid){
+			return h(IGRibbon, {
+				gid: gid, 
+				current: data.current, 
+				base: data.base, 
+				data: data
+			}) })
+		var s = props.scale || 1
+
+		return h('div',
+			{
+				className: 'ribbon-set', 
+				style: {
+					transform: 'scale('+ s +', '+ s +')',
+				},
+			}, [
+				h('div', {className: 'current-marker'}),
+				h('div', {className: 'ribbon-locator'}, ribbons),
+			])
+	}
+}
+
+// render:
+// 	- ribbon
+// 	- images
+// 	- image marks
+//
+// XXX needs horizontal align...
+class IGRibbon extends preact.Component {
+	render(props, state){
+		var data = props.data
+		var ribbon = props.gid
+
+		var images = data.ribbons[ribbon].map(function(gid){
+			return h(IGImage, { 
+				gid: gid, 
+				data: data 
+			})})
+
+		var base = data.base == ribbon ? ['base'] : [] 
+
+		return h('div',
+			{
+				classList: ['ribbon'].concat(base).join(' '),
+
+				gid: props.gid,
+				style: {
+					// XXX offset...
+				},
+			}, images)
+	}
+}
+
+// render:
+// 	- image
+class IGImage extends preact.Component {
+	render(props, state){
+		var data = props.data
+
+		return h('div',
+			{
+				classList: ['image']
+					.concat(data.current == props.gid ? ['current'] : [])
+					.join(' '),
+				gid: props.gid || '',
+				style: {
+					// XXX background-image...
+				},
+			}, [
+				props.gid
+			])
+	}
+}
+
+// render:
+// 	- image mark
+class IGImageMark extends preact.Component {
+	render(props, state){
+		return h('div',
+			{
+				classList: ['mark'],
+				gid: props.gid,
+			})
+	}
+}
+
+
+var ribbon_set_dom
+
+function render(data, images, scale){
+	//preact.render(ribbon_set, document.body)
+	ribbon_set_dom = preact.render(
+		h(IGRibbonSet, {
+			data: data || stub_data,
+			images: images || {},
+			scale: scale || 1,
+		}), 
+		document.getElementById('viewer'),
+		ribbon_set_dom)
+}
+
+
+
+$(function(){ render() })
+
+
+</script>
+
+<body>
+
+	<div id="viewer"/>
+
+</body>
+</html>
+<!-- vim:set ts=4 sw=4 : -->
