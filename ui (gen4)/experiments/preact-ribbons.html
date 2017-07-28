@@ -134,18 +134,25 @@ class IGRibbon extends preact.Component {
 class IGImage extends preact.Component {
 	render(props, state){
 		var data = props.data
+		var gid = props.gid
 
 		return h('div',
 			{
 				classList: ['image']
-					.concat(data.current == props.gid ? ['current'] : [])
+					.concat(data.current == gid ? ['current'] : [])
 					.join(' '),
-				gid: props.gid || '',
+				gid: gid || '',
 				style: {
 					// XXX background-image...
 				},
+
+				// XXX experiemnt...
+				onClick: function(evt){ 
+					data.current = gid 
+					render()
+				}
 			}, [
-				props.gid
+				gid
 			])
 	}
 }
