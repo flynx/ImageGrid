@@ -153,7 +153,7 @@ actions.Actions({
 						reload() 
 					})
 				*/
-				location.reload()
+				return location.reload()
 			}
 
 			this.ribbons.preventTransitions()
@@ -295,6 +295,8 @@ actions.Actions({
 		}],
 
 
+	// XXX should these be here, in ui or in ribbons???
+	// XXX these are identical to features/ui-preact-render.js
 	focusImage: [
 		function(target, list){
 			return function(){

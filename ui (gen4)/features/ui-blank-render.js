@@ -26,13 +26,26 @@ var ribbons = require('imagegrid/ribbons')
 /*********************************************************************/
 
 var RibbonsClassPrototype = {
+	// This is needed to calculate image size when no images are loaded... 
+	createImage: function(){
+		// XXX
+	},
+
 	// XXX
 }
 RibbonsClassPrototype.__proto__ = ribbons.BaseRibbons.prototype.__proto__
 
 
 var RibbonsPrototype = {
+	viewer: null,
+
+	createImage: RibbonsClassPrototype.createImage,
+
 	// XXX
+	
+	__init__: function(viewer, images){
+		// XXX
+	},
 }
 RibbonsPrototype.__proto__ = ribbons.BaseRibbons.prototype
 
@@ -77,14 +90,36 @@ var RenderActions = actions.Actions({
 		}],
 	reload: [
 		function(){
+			// full reload...
+			if(force == 'full'){
+				//this.stop()
+				/*
+				killAllWorkers()
+					.done(function(){
+						reload() 
+					})
+				*/
+				return location.reload()
+			}
+
+			if(!this.ribbons){
+				return
+			}
+
 			// XXX
 		}],
 	refresh: [
 		function(){
+			if(!this.ribbons){
+				return
+			}
 			// XXX
 		}],
 	clear: [
 		function(){
+			if(!this.ribbons){
+				return
+			}
 			// XXX
 		}],
 
@@ -106,6 +141,9 @@ var RenderActions = actions.Actions({
 
 	viewScale: ['- Zoom/',
 		function(scale){ 
+			if(!this.ribbons){
+				return
+			}
 			if(scale == null || scale == '?'){
 				return // XXX get scale...
 			}
@@ -116,22 +154,43 @@ var RenderActions = actions.Actions({
 		}],
 	fitImage: ['Zoom/Fit image',
 		function(count, overflow){ 
+			if(!this.ribbons){
+				return
+			}
 			if(count == '?'){
 				return // XXX get size...
 			}
 
 			this.resizing.chainCall(this, function(){
+				if(count != null){
+					overflow = overflow == false ? 0 : overflow
+					var o = overflow != null ? overflow 
+						: count % 2 != 1 ? 0
+						: (this.config['fit-overflow'] || 0)
+					count += o
+				}
+
+				// set the scale...
+				// XXX
+
+				// refresh image previews...
 				// XXX
 			}, 'screenwidth', count, overflow)
 		}],
 	fitRibbon: ['Zoom/Fit ribbon vertically',
 		function(count, whole){ 
+			if(!this.ribbons){
+				return
+			}
 			if(count == '?'){
 				return // XXX get size...
 			}
 
 			this.resizing.chainCall(this, function(){
 				// XXX set size...
+
+				// XXX refresh image previews...
+				
 			}, 'screenheight', count, whole)
 		}],
 
@@ -139,15 +198,24 @@ var RenderActions = actions.Actions({
 
 	centerImage: ['- Interface/Center an image in ribbon horizontally',
 		function(target, align, offset, scale){ 
+			if(!this.ribbons){
+				return
+			}
 			// XXX
 		}],
 	centerRibbon: ['- Interface/Center a ribbon vertically',
 		function(target){ 
+			if(!this.ribbons){
+				return
+			}
 			// XXX
 		}],
 
 	ribbonRotation: ['- Interface|Ribbon/', 
 		function(angle){ 
+			if(!this.ribbons){
+				return
+			}
 			// XXX
 		}],
 })

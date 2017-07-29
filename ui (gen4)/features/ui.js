@@ -1314,6 +1314,7 @@ var ControlActions = actions.Actions({
 
 	// XXX do not do anything on viewer focus... (???)
 	// XXX depends on .ribbons...
+	// XXX uses: .focusImage(..)
 	toggleImageClickHandling: ['Interface/Image click handling',
 		toggler.Toggler(null,
 			function(_, new_state){ 
@@ -1518,6 +1519,7 @@ var ControlActions = actions.Actions({
 	// 		...found the problem, need to disable transitions for this 
 	// 		to work semi smoothly...
 	// XXX depends on .ribbons...
+	// XXX uses: .focusImage(..)
 	toggleRibbonPanHandling: ['Interface/Ribbon pan handling',
 		toggler.Toggler(null,
 			function(_, new_state){ 
@@ -1756,6 +1758,7 @@ var ControlActions = actions.Actions({
 	// XXX BUG?: acceleration seems to be increasing with time...
 	// XXX add a "ribbonWheeling" ( ;) ) event a-la ribbonPanning...
 	// XXX depends on .ribbons...
+	// XXX uses: .focusImage(..)
 	toggleMouseWheelHandling: ['Interface/Mouse wheel handling',
 		toggler.Toggler(null,
 			function(_, new_state){

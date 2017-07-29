@@ -19,6 +19,7 @@
 	border-bottom: solid 5px red;
 }
 
+.mark,
 .image {
 	position: relative;
 	display: inline-block;
@@ -28,14 +29,37 @@
 
 	outline: solid 1px blue;
 	background: silver;
+
+	vertical-align: middle;
+}
+.image:after {
+	content: attr(gid);
 }
 .current.image {
 	background: gray;
 }
 
 .mark {
-	position: absolute;
+	margin-left: -100px;
+	background: none;
+
+	pointer-events: none;
 }
+.mark:after {
+	position: absolute;
+	content: "";
+	top: 0;
+	right: 0;
+	
+	width: 0;
+	height: 0;
+	border: solid 10px red;
+	border-bottom-color: transparent;
+	border-left-color: transparent;
+
+	pointer-events: auto;
+}
+
 
 </style>
 
@@ -63,7 +87,7 @@ var stub_data = {
 	order: [].slice.call('abcdefghijklmopqrstuvwxyz'),
 
 	tags: {
-		a: [].slice.call('ahdtu'),
+		selected: [].slice.call('ahdtu'),
 		b: [].slice.call('adxz'),
 	},
 
@@ -109,11 +133,23 @@ class IGRibbon extends preact.Component {
 		var data = props.data
 		var ribbon = props.gid
 
-		var images = data.ribbons[ribbon].map(function(gid){
-			return h(IGImage, { 
-				gid: gid, 
-				data: data 
-			})})
+		var images = data.ribbons[ribbon]
+			.map(function(gid){
+				var marks = data.tags.selected.indexOf(gid) >= 0 ?
+					h(IGImageMark, {
+						gid: gid,
+						type: 'selected',
+						data: data,
+					})
+					: []
+				return [
+					h(IGImage, { 
+						gid: gid, 
+						data: data, 
+					})].concat(marks)
+				})
+			.reduce(function(a, b){ return a.concat(b) })
+			.filter(function(a){ return !!a })
 
 		var base = data.base == ribbon ? ['base'] : [] 
 
@@ -146,14 +182,22 @@ class IGImage extends preact.Component {
 					// XXX background-image...
 				},
 
-				// XXX experiemnt...
+				// XXX STUB
 				onClick: function(evt){ 
+					// toggle tag...
+					if(data.current == gid){
+						var selected = data.tags.selected = data.tags.selected || []
+						selected.indexOf(gid) < 0 ?
+							selected.push(gid)
+							: selected.splice(selected.indexOf(gid), 1)
+					}
+
+					// set current...
 					data.current = gid 
+
 					render()
-				}
-			}, [
-				gid
-			])
+				},
+			})
 	}
 }
 
@@ -161,10 +205,22 @@ class IGImage extends preact.Component {
 // 	- image mark
 class IGImageMark extends preact.Component {
 	render(props, state){
+		var gid = props.gid
+		var type = props.type
+		var data = props.data
+
 		return h('div',
 			{
-				classList: ['mark'],
-				gid: props.gid,
+				classList: ['mark'].concat([type]).join(' '),
+				gid: gid,
+
+				// XXX STUB...
+				//		...and there is no way to add the mark back...
+				onClick: function(evt){
+					data.tags[type].splice(data.tags[type].indexOf(gid), 1)
+
+					render()
+				},
 			})
 	}
 }

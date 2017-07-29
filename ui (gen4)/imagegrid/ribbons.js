@@ -350,7 +350,6 @@ var BaseRibbonsPrototype = {
 		return this
 	},
 
-
 	// Get visible image tile size...
 	//
 	//	.getVisibleImageSize()
@@ -369,6 +368,7 @@ var BaseRibbonsPrototype = {
 	//
 	// XXX this might break when no images are loaded and proportions 
 	// 		are not square...
+	// XXX this depends on .createImage(..)
 	getVisibleImageSize: function(dim, scale, img, force){
 		dim = dim == null ? 'width' : dim
 		img = img || this.viewer.find(IMAGE)
@@ -385,7 +385,7 @@ var BaseRibbonsPrototype = {
 
 			// if no images are loaded create one temporarily....
 			if(img.length == 0){
-				img = tmp = this.createImage('__tmp_image__')
+				img = tmp = $(this.createImage('__tmp_image__'))
 					.css({
 						position: 'absolute',
 						visibility: 'hidden',
@@ -448,6 +448,68 @@ var BaseRibbonsPrototype = {
 
 		return H/h
 	},
+
+	// Fit image to view...
+	//
+	// If n is given this will fit n images (default: 1)
+	//
+	// NOTE: this will never scale the view in a way that an image 
+	// 		overflows either in height nor width.
+	//
+	// XXX might be useful to set origin before scaling...
+	fitImage: function(n, min){
+		n = n || 1
+
+		// NOTE: this is width oriented...
+		var scale = this.getScreenWidthImages(1, min) / n
+
+		// check bounds...
+		var H = this.viewer.height()
+		var h = this.getVisibleImageSize('height', 1)
+
+		// n images will be higher than the viewer, adjust for height...
+		if(h*scale >= H){
+			scale = H/h 
+		}
+
+		this
+			.scale(scale)
+			//.centerRibbon(null, null, scale)
+			//.centerImage(null, null, null, scale)
+		
+		return this
+	},
+	// NOTE: if fit_whole_images is true (default) this will fit a discrete
+	// 		number of images in width...
+	// XXX this does not account for ribbon spacing...
+	fitRibbon: function(n, fit_whole_images){
+		n = n || 1
+		fit_whole_images = fit_whole_images == null ? true : false
+
+		var scale = this.getScreenHeightRibbons(1) / n
+
+		var w = this.getVisibleImageSize('width', 1)
+		var W = this.viewer.width()
+
+		// n ribbons will be wider than the viewer...
+		if(w*scale >= W){
+			scale = W/w
+		}
+
+		// shift the scale to the point where screen width is a whole 
+		// number of images...
+		if(fit_whole_images){
+			var d = this.getScreenWidthImages(scale)
+			d = d / Math.ceil(d)
+
+			scale *= d
+		}
+
+		this.scale(scale)
+
+		return this
+	},
+
 
 	// Contextual getters...
 	
@@ -2489,66 +2551,6 @@ var RibbonsPrototype = {
 		return this.flipImage(target, 'horizontal', reference) },
 
 
-	// Fit image to view...
-	//
-	// If n is given this will fit n images (default: 1)
-	//
-	// NOTE: this will never scale the view in a way that an image 
-	// 		overflows either in height nor width.
-	//
-	// XXX might be useful to set origin before scaling...
-	fitImage: function(n, min){
-		n = n || 1
-
-		// NOTE: this is width oriented...
-		var scale = this.getScreenWidthImages(1, min) / n
-
-		// check bounds...
-		var H = this.viewer.height()
-		var h = this.getVisibleImageSize('height', 1)
-
-		// n images will be higher than the viewer, adjust for height...
-		if(h*scale >= H){
-			scale = H/h 
-		}
-
-		this
-			.scale(scale)
-			//.centerRibbon(null, null, scale)
-			//.centerImage(null, null, null, scale)
-		
-		return this
-	},
-	// NOTE: if fit_whole_images is true (default) this will fit a discrete
-	// 		number of images in width...
-	// XXX this does not account for ribbon spacing...
-	fitRibbon: function(n, fit_whole_images){
-		n = n || 1
-		fit_whole_images = fit_whole_images == null ? true : false
-
-		var scale = this.getScreenHeightRibbons(1) / n
-
-		var w = this.getVisibleImageSize('width', 1)
-		var W = this.viewer.width()
-
-		// n ribbons will be wider than the viewer...
-		if(w*scale >= W){
-			scale = W/w
-		}
-
-		// shift the scale to the point where screen width is a whole 
-		// number of images...
-		if(fit_whole_images){
-			var d = this.getScreenWidthImages(scale)
-			d = d / Math.ceil(d)
-
-			scale *= d
-		}
-
-		this.scale(scale)
-
-		return this
-	},
 } 
 RibbonsPrototype.__proto__ = BaseRibbonsPrototype
 
