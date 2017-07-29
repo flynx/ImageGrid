@@ -234,6 +234,17 @@ module.Render = core.ImageGridFeatures.Feature({
 	actions: RenderActions, 
 
 	handlers: [
+		[[
+			'shiftImageTo',
+			'shiftImageUp',
+			'shiftImageDown',
+			'shiftImageLeft',
+			'shiftImageRight',
+		], function(){
+			// XXX stub...
+			//this.reload()
+		}],
+
 		// XXX
 	],
 })
