@@ -1000,11 +1000,9 @@ core.ImageGridFeatures.Feature({
 
 			'setBaseRibbon',
 
-			'shiftImageTo',
-			'shiftImageUp',
-			'shiftImageDown',
-			'shiftImageLeft',
-			'shiftImageRight',
+			// NOTE: this takes care of the shiftImage* actions...
+			'shiftImage',
+
 			'shiftRibbonUp',
 			'shiftRibbonDown',
 
