@@ -491,6 +491,21 @@ var KeyboardPrototype = {
 	// XXX is this needed???
 	//context: null,
 
+
+	// string handler parser...
+	// 
+	// Return format:
+	// {
+	//		action: <str>,
+	//		arguments: <array>,
+	//		doc: <str> || null,
+	//		no_default: <bool>,
+	//		stop_propagation: <bool>,
+	// }
+	//
+	parseStringHandler: parseActionCall,
+
+
 	// utils...
 	event2key: KeyboardClassPrototype.event2key,
 	key2code: KeyboardClassPrototype.key2code,
@@ -1041,6 +1056,9 @@ KeyboardWithCSSModes.prototype.__proto__ = Keyboard.prototype
 // NOTE: if .capslock is false means that either it is not on or 
 // 		undetectable...
 // NOTE: before any key is pressed the .capslock is set to undefined
+// 
+// XXX not sure if handler calling mechanics should be outside of the 
+// 		Keyboard object...
 var makeKeyboardHandler =
 module.makeKeyboardHandler =
 function makeKeyboardHandler(keyboard, unhandled, actions){
@@ -1079,8 +1097,8 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 				res = handler.call(actions)
 
 			// action call syntax...
-			} else {
-				var h = parseActionCall(handler)
+			} else if(kb.parseStringHandler){
+				var h = kb.parseStringHandler(handler)
 
 				if(h && h.action in actions){
 					did_handling = true

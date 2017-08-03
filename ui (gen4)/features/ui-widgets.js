@@ -2295,7 +2295,6 @@ var WidgetTestActions = actions.Actions({
 					.attr(attrs))
 		}],
 
-
 	// action constructor for testing...
 	makeAction: ['- Test/',
 		function(name){
