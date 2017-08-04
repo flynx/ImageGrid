@@ -33,7 +33,9 @@ module.Alias = core.ImageGridFeatures.Feature({
 			function(_, alias, target){
 				console.log(alias, target)
 				// remove alias...
-				if(target === null || target === false){
+				// XXX is this test enough??? ...see ActionSet.alias(..)
+				if(arguments.length == 3 
+						&& (target === null || target === false)){
 					var aliases = this.config.aliases || {}
 
 					delete aliases[alias]
