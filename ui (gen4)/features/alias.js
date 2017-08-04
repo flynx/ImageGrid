@@ -29,9 +29,20 @@ module.Alias = core.ImageGridFeatures.Feature({
 	},
 
 	handlers: [
+		// load aliases...
+		['start',
+			function(){
+				var that = this
+				var aliases = this.config.aliases || {}
+
+				Object.keys(aliases)
+					.forEach(function(alias){
+						that.alias(alias, aliases[alias]) })
+			}],
+		// store aliases in .config.aliases
+		// XXX should we guard from overriding actions???
 		['alias',
 			function(_, alias, target){
-				console.log(alias, target)
 				// remove alias...
 				// XXX is this test enough??? ...see ActionSet.alias(..)
 				if(arguments.length == 3 
