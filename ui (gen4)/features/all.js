@@ -19,6 +19,7 @@ require('features/recover')
 require('features/history')
 require('features/app')
 require('features/peer')
+require('features/alias')
 require('features/ui')
 // XXX
 require('features/ui-blank-render')

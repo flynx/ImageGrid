@@ -50,6 +50,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'viewer-commandline',
 	'viewer-minimal',
 
+	'alias',
+
 	// read-only mode...
 	// XXX at this point this needs some more tuneup, the following 
 	// 		features are completely disabled when 'edit' is not present

@@ -802,6 +802,9 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 				var that = this
 				this.__keyboard_config = this.keybindings || GLOBAL_KEYBOARD
 
+				// string action call parser...
+				this.parseStringHandler = this.parseStringAction
+
 				this.toggleKeyboardHandling('on')
 			}],
 

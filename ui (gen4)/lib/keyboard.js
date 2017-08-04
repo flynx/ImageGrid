@@ -159,6 +159,7 @@ function doc(text, func){
 // XXX add support for suffix to return false / stop_propagation...
 // XXX should this handle calls??? 
 // 		i.e. have .call(..) / .apply(..) methods???
+// XXX this is the same as actions.parseStringAction(..), reuse in a logical manner...
 var parseActionCall =
 module.parseActionCall =
 function parseActionCall(txt){
@@ -503,6 +504,8 @@ var KeyboardPrototype = {
 	//		stop_propagation: <bool>,
 	// }
 	//
+	// XXX should this be a Keyboard thing or a context thing???
+	// XXX revise name...
 	parseStringHandler: parseActionCall,
 
 
@@ -1097,8 +1100,11 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 				res = handler.call(actions)
 
 			// action call syntax...
-			} else if(kb.parseStringHandler){
-				var h = kb.parseStringHandler(handler)
+			// XXX should this be a Keyboard thing or a context thing???
+			} else if(actions.parseStringHandler || kb.parseStringHandler){
+			//} else if(kb.parseStringHandler){
+				var h = (actions.parseStringHandler || kb.parseStringHandler)(handler)
+				//var h = kb.parseStringHandler(handler)
 
 				if(h && h.action in actions){
 					did_handling = true

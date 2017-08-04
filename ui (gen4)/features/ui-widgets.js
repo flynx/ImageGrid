@@ -2295,6 +2295,10 @@ var WidgetTestActions = actions.Actions({
 					.attr(attrs))
 		}],
 
+	// XXX does not work -- see actions.Actions(..) for details...
+	testAlias: ['Test/Action alias',
+		'focusImage: "prev"'],
+
 	// action constructor for testing...
 	makeAction: ['- Test/',
 		function(name){
