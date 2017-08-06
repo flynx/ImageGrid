@@ -22,6 +22,9 @@ module.Alias = core.ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'alias',
+	suggested: [
+		'ui-alias',
+	],
 
 	config: {
 		//aliases: {
@@ -62,6 +65,34 @@ module.Alias = core.ImageGridFeatures.Feature({
 					aliases[alias] = target
 				}
 			}]],
+})
+
+
+
+//---------------------------------------------------------------------
+
+var UIAliasActions = actions.Actions({
+	// XXX list aliases....
+	// XXX
+
+	// XXX edit alias...
+	// XXX
+})
+
+var UIAlias = 
+module.UIAlias = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-alias',
+	depends: [
+		'alias',
+		'ui',
+	],
+
+	actions: UIAliasActions, 
+
+	handlers: [],
 })
 
 
