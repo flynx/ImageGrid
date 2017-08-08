@@ -12,6 +12,10 @@ var features = require('lib/features')
 
 var core = require('features/core')
 
+var widgets = require('features/ui-widgets')
+
+var browse = require('lib/widget/browse')
+
 
 
 /*********************************************************************/
@@ -72,11 +76,15 @@ module.Alias = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var UIAliasActions = actions.Actions({
-	// XXX list aliases....
-	// XXX
+	browseAliases: ['System/Aliases...',
+		widgets.makeUIDialog(function(){
+			// XXX
+		}],
 
-	// XXX edit alias...
-	// XXX
+	editAlias: ['- System/Edit alias...',
+		widgets.makeUIDialog(function(alias){
+			// XXX
+		}],
 })
 
 var UIAlias = 
@@ -94,6 +102,7 @@ module.UIAlias = core.ImageGridFeatures.Feature({
 
 	handlers: [],
 })
+
 
 
 
