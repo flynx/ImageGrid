@@ -298,6 +298,7 @@
 .browse-widget .list .item.disabled {
 	opacity: 0.3;
 }
+.browse-widget .list .item.empty-msg,
 .browse-widget .list .item.hidden {
 	font-style: italic;
 }

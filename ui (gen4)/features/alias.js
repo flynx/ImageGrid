@@ -78,13 +78,59 @@ module.Alias = core.ImageGridFeatures.Feature({
 var UIAliasActions = actions.Actions({
 	browseAliases: ['System/Aliases...',
 		widgets.makeUIDialog(function(){
-			// XXX
-		}],
+			var that = this
+			return browse.makeLister(null, 
+				function(path, make){
+					var aliases = that.config.aliases || {}
+
+					var names = Object.keys(aliases)
+
+					names.length > 0 ?
+						names
+							.forEach(function(name){
+								make([name, aliases[name]])
+									.on('open', function(){ that.editAlias(name) })
+							})
+						: make.Empty()
+				}, {
+					cls: 'table-view',
+				})
+		})],
 
 	editAlias: ['- System/Edit alias...',
 		widgets.makeUIDialog(function(alias){
-			// XXX
-		}],
+			var that = this
+			return browse.makeLister(null, 
+				function(path, make){
+					make.Editable(['Alias:', alias], 
+						{
+							start_on: 'open',
+							edit_text: 'last',
+							clear_on_edit: false,
+							reset_on_commit: false,
+						})
+						.on('edit-commit', 
+							function(evt, text){ 
+						   	})
+
+					make.Editable(['Code:', that.config.aliases[alias]], 
+						{
+							start_on: 'open',
+							edit_text: 'last',
+							clear_on_edit: false,
+							reset_on_commit: false,
+						})
+						.on('edit-commit', 
+							function(evt, text){ 
+						   	})
+
+					make('---')
+
+					make.ConfirmAction('Delete', {})
+				}, {
+					cls: 'table-view',
+				})
+		})],
 })
 
 var UIAlias = 

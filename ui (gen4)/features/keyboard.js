@@ -1029,11 +1029,7 @@ var KeyboardUIActions = actions.Actions({
 							// XXX is adding info stuff like this a correct 
 							// 		thing to do in code?
 							c == 0 && options.empty_section_text !== false
-								&& make(options.empty_section_text || 'No bindings...', 
-									{
-										disabled: true,
-										hide_on_search: true,
-									})
+								&& make.Empty(options.empty_section_text || 'No bindings...')
 									.attr('mode', mode)
 									.addClass('info')
 

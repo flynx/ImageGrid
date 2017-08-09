@@ -86,6 +86,23 @@ function makeSimpleAction(direction){
 // 		make protocol, i.e. make(content[, options]) or their own...
 var Items = module.items = function(){}
 
+// Empty list place holder...
+//
+// XXX should this be in CSS???
+Items.Empty = 
+function(msg, options){
+	options = options || {}
+	options.disabled = options.disabled !== undefined ? 
+		options.disabled 
+		: true
+	options.hide_on_search = options.hide_on_search !== undefined ?
+		options.hide_on_search
+		: true
+	msg = msg || options.message || 'Empty...'
+	return this(msg, options)
+		.addClass('empty-msg')
+}
+
 
 // NOTE: this is the same as make('---'[, options])
 Items.Separator = 
