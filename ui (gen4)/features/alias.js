@@ -106,8 +106,6 @@ module.Alias = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var UIAliasActions = actions.Actions({
-	// XXX add run button (???) 
-	// XXX show alias docs (???)
 	// XXX should this update the parent???
 	browseAliases: ['System/Aliases...',
 		widgets.makeUIDialog(function(){
@@ -166,6 +164,7 @@ var UIAliasActions = actions.Actions({
 	// NOTE: this does not include an attr editor by design...
 	//
 	// XXX should we set white-space: pre on doc here or in css???
+	// XXX multiline doc edit does not work...
 	// XXX edit key bindings (???)
 	editAlias: ['- System/Edit alias...',
 		widgets.makeUIDialog(function(alias){
@@ -196,7 +195,12 @@ var UIAliasActions = actions.Actions({
 								data.splice(0, 0, text)
 							}
 						})
-					make.Editable(['Doc:', that.getActionAttr(alias, 'long_doc')], item_opts)
+					var doc_opts = {
+						// XXX this does not work???
+						multiline: true,
+					}
+					doc_opts.__proto__ = item_opts
+					make.Editable(['Doc:', that.getActionAttr(alias, 'long_doc')], doc_opts)
 						.on('edit-commit', function(evt, text){ 
 							// existing .doc and .long_doc -> replace .long_doc...
 							if(data.length > 2 
@@ -261,18 +265,6 @@ var UIAliasActions = actions.Actions({
 					that.alias.apply(that, [name].concat(data))
 				})
 		})],
-
-
-	/* XXX do we need this???
-	_browseAliases: ['System/Aliases/*', 
-		function(path, make){
-			var that = this
-			this.aliases.forEach(function(alias){
-				make(alias)
-					.on('open', function(){ that[alias]() })
-			})
-		}],
-	//*/
 })
 
 var UIAlias = 
