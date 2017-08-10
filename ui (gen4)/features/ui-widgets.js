@@ -1131,6 +1131,10 @@ var BrowseActionsActions = actions.Actions({
 		'browse-actions-shortcut-marker': '\\$(\\w)',
 	},
 
+	// Hide alias action...
+	alias: ['- System/', ''],
+
+
 	// Browse actions dialog...
 	//
 	// This uses action definition to build and present an action tree.

@@ -22,7 +22,7 @@
     "fs-walk": "^0.0.1",
     "glob": "^4.0.6",
     "guarantee-events": "^1.0.0",
-    "ig-actions": "^3.5.3",
+    "ig-actions": "^3.5.4",
     "ig-features": "^3.2.6",
     "ig-object": "^1.0.1",
     "openseadragon": "^2.3.0",

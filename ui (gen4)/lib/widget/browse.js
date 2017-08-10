@@ -272,6 +272,9 @@ function(text, options){
 // 		// (see: util.makeEditable(..) for more info)
 //		clear_on_edit: false,
 //
+//		// Keep item selection after abort/commit...
+//		keep_selection: true,
+//
 //		// Events to stop propagating up...
 //		//
 //		// This is useful to prevent actions that start should an edit 
@@ -296,6 +299,7 @@ function(text, options){
 	var dialog = this.dialog
 	var start_on = options.start_on || 'select'
 	var stop_propagation = options.stop_propagation === false ? false : 'open'
+	var keep_selection = options.keep_selection === undefined ? true : false
 
 	var getEditable = function(){
 		var editable = elem.find('.text')
@@ -327,8 +331,11 @@ function(text, options){
 					reset_on_commit: options.reset_on_commit,
 					reset_on_abort: options.reset_on_abort,
 				})
-				// XXX not sure about this...
-				.on('blur', function(){ dialog.select(null)	})
+
+			!keep_selection
+				// deselect on abort/commit...
+				&& editable
+					.on('blur', function(){ dialog.select(null)	})
 
 			// deselect on abort -- if we started with a select...
 			start_on == 'select' 
