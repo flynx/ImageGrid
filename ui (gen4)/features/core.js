@@ -1189,6 +1189,11 @@ module.Tasks = ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 // Self test framework...
 
+// Indicate an action to be a self-test action...
+// 
+// Self test actions are run by .selfTest(..)
+// 
+// XXX should we set an action attr or a func attr here???
 var selfTest =
 module.selfTest = function(func){
 	func.__self_test__ = true
@@ -1200,14 +1205,14 @@ var SelfTestActions = actions.Actions({
 		'run-selftest-on-start': true,
 	},
 
-	runSelfTest: ['System/Run self test',
+	selfTest: ['System/Run self test',
 		selfTest(function(mode){
 			var that = this
 			var logger = this.logger && this.logger.push('Self test')
 
 			var tests = this.actions
 				.filter(function(action){ 
-					return action != 'runSelfTest'
+					return action != 'selfTest'
 			   			&& (that[action].func.__self_test__ 
 							|| that.getActionAttr(action, 'self_test'))})
 
@@ -1241,7 +1246,7 @@ module.SelfTest = ImageGridFeatures.Feature({
 		['start',
 			function(){ 
 				this.config['run-selftest-on-start'] 
-					&& this.runSelfTest() }]
+					&& this.selfTest() }]
 	],
 })
 

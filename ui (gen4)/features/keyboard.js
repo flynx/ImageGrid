@@ -1252,7 +1252,6 @@ var KeyboardUIActions = actions.Actions({
 		`,
 		widgets.makeUIDialog(function(mode, code, callback){
 			var that = this
-			var abort = false
 			var orig_code = code
 
 			// list the keys (cache)...
@@ -1329,7 +1328,6 @@ var KeyboardUIActions = actions.Actions({
 						timeout: that.config['ui-confirm-timeout'] || 2000,
 						buttons: [
 							['Cancel edit', function(){ 
-								abort = true
 								make.dialog.close('cancel')
 							}],
 						],
@@ -1340,8 +1338,8 @@ var KeyboardUIActions = actions.Actions({
 				})
 				// save the keys...
 				// XXX for some reason when Esc this is called twice...
-				.on('close', function(){
-					if(abort){
+				.on('close', function(_, m){
+					if(m == 'cancel'){
 						return
 					}
 
@@ -1366,8 +1364,7 @@ var KeyboardUIActions = actions.Actions({
 				})
 
 			dialog.abort = function(){
-				abort = true
-				this.close()
+				this.close('cancel')
 			}
 			dialog.keyboard
 				.handler('General', 'Q', 'abort')
@@ -1398,7 +1395,6 @@ var KeyboardUIActions = actions.Actions({
 		`,
 		widgets.makeUIDialog(function(mode, callback){
 			var that = this
-			var abort = false
 			var doc = (that.keybindings[mode] || {}).doc
 			var pattern = (that.keybindings[mode] || {}).pattern || mode
 
@@ -1435,7 +1431,6 @@ var KeyboardUIActions = actions.Actions({
 						timeout: that.config['ui-confirm-timeout'] || 2000,
 						buttons: [
 							['Cancel edit', function(){ 
-								abort = true
 								make.dialog.close('cancel')
 							}],
 						],
@@ -1444,8 +1439,8 @@ var KeyboardUIActions = actions.Actions({
 				{
 					cls: 'table-view',
 				})
-				.on('close', function(){
-					if(abort){
+				.on('close', function(_, m){
+					if(m == 'cancel'){
 						return
 					}
 
@@ -1473,7 +1468,6 @@ var KeyboardUIActions = actions.Actions({
 				})
 
 			dialog.abort = function(){
-				abort = true
 				this.close('cancel')
 			}
 			dialog.keyboard
@@ -1504,7 +1498,6 @@ var KeyboardUIActions = actions.Actions({
 		`,
 		widgets.makeUIDialog(function(mode){
 			var that = this
-			var abort = false
 
 			mode = mode || Object.keys(that.keybindings)[0]
 
@@ -1549,21 +1542,19 @@ var KeyboardUIActions = actions.Actions({
 						timeout: that.config['ui-confirm-timeout'] || 2000,
 						buttons: [
 							['Cancel edit', function(){ 
-								abort = true
 								make.dialog.close('cancel')
 							}],
 						],
 					})
 				})
-				.on('close', function(){
-					if(!abort){
+				.on('close', function(_, m){
+					if(m != 'cancel'){
 						that.keybindings[mode].drop = drop
 					}
 				})
 
 			dialog.abort = function(){
-				abort = true
-				this.close()
+				this.close('cancel')
 			}
 			dialog.keyboard
 				.handler('General', 'Q', 'abort')

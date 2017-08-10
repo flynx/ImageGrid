@@ -321,7 +321,7 @@ body {
 }
 
 /* XXX experimental key mappings... */
-.browse-widget.browse-actions.show-keys .list .item:after {
+.browse-widget.show-keys .list .item:after {
 	display: inline;
 	position: relative;
 	content: attr(keys);
@@ -333,14 +333,14 @@ body {
 	opacity: 0.3;
 	font-style: italic;
 }
-.browse-widget.browse-actions.show-keys .list .item.disabled:after {
+.browse-widget.show-keys .list .item.disabled:after {
 	opacity: 0.5;
 }
 
-.browse-widget.browse-actions.show-keys .list .item:hover:after {
+.browse-widget.show-keys .list .item:hover:after {
 	opacity: 0.5;
 }
-.browse-widget.browse-actions.show-keys .list .item.disabled:hover:after {
+.browse-widget.show-keys .list .item.disabled:hover:after {
 	opacity: 1;
 }
 

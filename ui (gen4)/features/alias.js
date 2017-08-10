@@ -72,7 +72,33 @@ module.Alias = core.ImageGridFeatures.Feature({
 
 					aliases[alias] = args
 				}
-			}]],
+			}],
+
+		/*/ XXX not sure if this is the correct way to go...
+		['selfTest',
+			function(){
+				var alias = [
+					'testRuntimeAlias', 
+					'Test/',
+					core.doc`Rumtime-defined test alias.
+						
+						NOTE: this will get overwritten on start.`,
+					'focusImage: "next"',
+				]
+
+				this.alias.apply(this, alias)
+
+				if(!this.config.aliases
+						|| !(alias[0] in this.config.aliases)
+						|| this.config.aliases[alias[0]].length != alias.length-1
+						|| this.config.aliases[alias[0]].filter(function(e, i){ return e != alias[i+1] }).length > 0){
+					console.error('Alias save fail:',
+						'\n  written:', alias,
+						'\n  saved:', [alias[0]].concat((this.config.aliases || {})[alias[0]]))
+				}
+			}],
+		//*/
+	],
 })
 
 
@@ -82,12 +108,17 @@ module.Alias = core.ImageGridFeatures.Feature({
 var UIAliasActions = actions.Actions({
 	// XXX add run button (???) 
 	// XXX show alias docs (???)
-	// XXX show key bindings
-	// XXX edit key bindings (???)
 	// XXX should this update the parent???
 	browseAliases: ['System/Aliases...',
 		widgets.makeUIDialog(function(){
 			var that = this
+
+			// get keys for each action...
+			var keys = that.getKeysForAction ? that.getKeysForAction() : {}
+			// Get keys for action...
+			var getKeys = function(action){
+				return (keys[action] || []).join(' / ') }
+
 			return browse.makeLister(null, 
 				function(path, make){
 					var dialog = this
@@ -98,7 +129,12 @@ var UIAliasActions = actions.Actions({
 					names.length > 0 ?
 						names
 							.forEach(function(name){
-								make([name, (aliases[name]).slice(-1)[0]])
+								//make([name, (aliases[name]).slice(-1)[0]])
+								make([name])
+									.attr({
+										keys: getKeys(name),
+										action: name,
+									})
 									.on('open', function(){ 
 										that.editAlias(name) 
 											.on('close', function(){ dialog.update() })
@@ -114,18 +150,32 @@ var UIAliasActions = actions.Actions({
 								.on('close', function(){ dialog.update() })
 						})
 				}, {
-					cls: 'table-view',
+					cls: 'table-view show-keys',
+				})
+				.run(function(){
+					// XXX this is a copy from .browseActions(..)
+					this.showDoc = function(){
+						var action = this.select('!').attr('action')
+						action 
+							&& that.showDoc(action)
+					}
+					this.keyboard.handler('General', '?', 'showDoc')
 				})
 		})],
 
 	// NOTE: this does not include an attr editor by design...
+	//
+	// XXX should we set white-space: pre on doc here or in css???
+	// XXX edit key bindings (???)
 	editAlias: ['- System/Edit alias...',
 		widgets.makeUIDialog(function(alias){
 			var that = this
+
+			var name = alias
+			var data = ((that.config.aliases || {})[alias] || ['']).slice()
+
 			return browse.makeLister(null, 
 				function(path, make){
-					var dialog = this
-
 					var item_opts = {
 						start_on: 'open',
 						edit_text: 'last',
@@ -134,70 +184,81 @@ var UIAliasActions = actions.Actions({
 						// XXX bug -- error + clear field???
 						//abort_on_deselect: false, 
 					}
-					var data = (that.config.aliases || {})[alias] || ['']
 
 					// doc fields...
 					make.Editable(['Path:', that.getActionAttr(alias, 'doc')], item_opts)
-						.on('edit-commit', 
-							function(evt, text){ 
-								if(data.length > 1 && typeof(data[0]) == typeof('str')){
-									data[0] = text
+						.on('edit-commit', function(evt, text){ 
+							if(data.length > 1 && typeof(data[0]) == typeof('str')){
+								data[0] = text
 
-								// no previous docs...
-								} else {
-									data.splice(0, 0, text)
-								}
-
-								that.alias.apply(that, [alias].concat(data))
-						   	})
+							// no previous docs...
+							} else {
+								data.splice(0, 0, text)
+							}
+						})
 					make.Editable(['Doc:', that.getActionAttr(alias, 'long_doc')], item_opts)
-						.on('edit-commit', 
-							function(evt, text){ 
-								// existing .doc and .long_doc -> replace .long_doc...
-								if(data.length > 2 
-										&& typeof(data[0]) == typeof('str')
-										&& typeof(data[1] == typeof('str'))){
-									data[1] = text
+						.on('edit-commit', function(evt, text){ 
+							// existing .doc and .long_doc -> replace .long_doc...
+							if(data.length > 2 
+									&& typeof(data[0]) == typeof('str')
+									&& typeof(data[1] == typeof('str'))){
+								data[1] = text
 
-								// existing .doc -> add .long_doc only...
-								} else if(data.length > 1 && typeof(data[0]) == typeof('str')){
-									data.splice(1, 0, text)
+							// existing .doc -> add .long_doc only...
+							} else if(data.length > 1 && typeof(data[0]) == typeof('str')){
+								data.splice(1, 0, text)
 
-								// no previous docs -> add empty .doc and set .long_doc...
-								} else {
-									data.splice(0, 0, '', text)
-								}
-
-								that.alias.apply(that, [alias].concat(data))
-						   	})
+							// no previous docs -> add empty .doc and set .long_doc...
+							} else {
+								data.splice(0, 0, '', text)
+							}
+						})
+						// XXX HACK???
+						.find('.text').last()
+							.css({'white-space': 'pre'})
 
 					make('---')
 
 					// alias fields...
 					make.Editable(['Alias:', alias || ''], item_opts)
-						.on('edit-commit', 
-							function(evt, text){ 
-								that.alias(alias, null)
-								that.alias.apply(that, [text].concat(data))
-								alias = text
-						   	})
+						.on('edit-commit', function(evt, text){ 
+							name = text
+						})
 					make.Editable(['Code:', ((that.config.aliases || {})[alias] || ['']).slice(-1)[0]], item_opts)
-						.on('edit-commit', 
-							function(evt, text){ 
-								data[data.length-1] = text
-								that.alias.apply(that, [alias].concat(data))
-							})
+						.on('edit-commit', function(evt, text){ 
+							data[data.length-1] = text
+						})
 
 					make('---')
 
+					// delete / cancel...
 					make.ConfirmAction('Delete', {
 						callback: function(){
-							that.alias(alias, null)
-							dialog.close()
+							data = [null]
+							make.dialog.close()
 						},
+						buttons: [
+							['Cancel edit', function(){ 
+								make.dialog.close('cancel')
+							}],
+						],
 					})
 				}, {
 					cls: 'table-view',
+				})
+				.on('close', function(_, mode){
+					// do not save on cancel...
+					if(mode == 'cancel'){
+						return
+					}
+
+					// renaming the alias -> clear the old value...
+					if(name != alias){
+						that.alias(alias, null)
+					}
+
+					// save the alias...
+					that.alias.apply(that, [name].concat(data))
 				})
 		})],
 
