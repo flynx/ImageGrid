@@ -355,6 +355,17 @@ var FileSystemLoaderActions = actions.Actions({
 
 					logger && logger.emit('load index', index)
 
+
+					// XXX BUG?: some times we reach this point with index
+					// 		equaling null
+					// 		...we are not fixing this here as the cause of 
+					// 		this issue is likely someplace else and that 
+					// 		needs investigating...
+					// XXX REMOVE WHEN ISSUE FIXED...
+					!index
+						&& console.error('Failed to load index from:', paths)
+
+
 					// prepare the location data...
 					index.location = {
 						path: path,
