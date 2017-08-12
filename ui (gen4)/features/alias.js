@@ -10,11 +10,10 @@
 var actions = require('lib/actions')
 var features = require('lib/features')
 
-var core = require('features/core')
-
-var widgets = require('features/ui-widgets')
-
 var browse = require('lib/widget/browse')
+
+var core = require('features/core')
+var widgets = require('features/ui-widgets')
 
 
 
@@ -47,7 +46,10 @@ module.Alias = core.ImageGridFeatures.Feature({
 						that.alias.apply(that, [alias].concat(aliases[alias])) })
 			}],
 		// store aliases in .config.aliases
-		// XXX should we guard from overriding actions???
+		//
+		// NOTE: this does not guard from overriding anything...
+		// NOTE: there should not be any actions in the base action-set 
+		// 		other than the ones created by .alias(..).
 		['alias',
 			function(_, alias, target){
 				var args = [].slice.call(arguments, 1)
