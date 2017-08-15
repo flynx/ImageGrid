@@ -33,6 +33,7 @@ core.ImageGridFeatures.Feature('viewer-commandline', [
 core.ImageGridFeatures.Feature('viewer-minimal', [
 	'lifecycle',
 	'base-full',
+	'collections',
 
 	'peer',
 
