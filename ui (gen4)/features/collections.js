@@ -26,6 +26,8 @@ var CollectionActions = actions.Actions({
 
 	get collection(){
 		return this.location.collection },
+	set collection(value){
+		this.loadCollection(value) },
 
 
 	// XXX might be a good idea to make collection loading part of the 
@@ -57,9 +59,8 @@ var CollectionActions = actions.Actions({
 	saveCollection: ['- Collections/Save collection',
 		core.doc`Save current state to collection`,
 		function(collection){
-			collection = collection || this.location.collection
+			collection = collection || this.collection
 
-			// XXX should there be a default???
 			if(collection == null){
 				return
 			}
@@ -69,6 +70,7 @@ var CollectionActions = actions.Actions({
 			collections[collection] = {
 				title: collection,
 
+				// XXX we need to trim .order to only the current images???
 				data: this.data.clone(),
 			}
 		}],
@@ -77,6 +79,10 @@ var CollectionActions = actions.Actions({
 	inCollections: ['- Image/',
 		core.doc`Get list of collections containing item`,
 		function(gid){
+			var that = this
+			return Object.keys(this.collections || {})
+				.filter(function(c){
+					return that.collections[c].data.order.indexOf(gid) >= 0 })
 		}],
 	toCollection: ['- Collections/',
 		core.doc`Add items to collection`,
@@ -94,6 +100,7 @@ var CollectionActions = actions.Actions({
 
 			console.log('>>>', gids)
 
+			// XXX add to collection...
 			// XXX
 		}],
 
