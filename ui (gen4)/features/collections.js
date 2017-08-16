@@ -147,7 +147,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 // XXX show collections in image metadata...
 var UICollectionActions = actions.Actions({
 	// XXX highlight current collections....
-	browseCollections: ['Collections/Collections...',
+	browseCollections: ['Collections|Crop/Collections...',
 		widgets.makeUIDialog(function(gid){
 			var that = this
 			gid = gid != null ? this.data.getImage(gid) : gid

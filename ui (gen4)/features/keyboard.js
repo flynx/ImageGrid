@@ -357,6 +357,10 @@ module.GLOBAL_KEYBOARD = {
 		C: 'browseActions: "/Crop/" -- Crop menu...',
 
 
+		// collections...
+		alt_C: 'browseCollections',
+
+
 		// metadata...
 		I: 'showMetadata',
 		ctrl_shift_I: 'showMetadata: "current" "full" -- Show full metadata',
