@@ -130,6 +130,7 @@ var UIAliasActions = actions.Actions({
 					var names = Object.keys(aliases)
 
 					names.length > 0 ?
+						// XXX for some reason this does not get updated on dialog.update()
 						make.EditableList(names, 
 							{
 								new_item: false,
@@ -172,9 +173,7 @@ var UIAliasActions = actions.Actions({
 				})
 				.close(function(){
 					to_remove.forEach(function(alias){
-						that.alias(alias, null)
-					})
-				})
+						that.alias(alias, null) }) })
 		})],
 
 	// NOTE: this does not include an attr editor by design...
