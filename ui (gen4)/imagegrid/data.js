@@ -2552,6 +2552,15 @@ var DataPrototype = {
 		return this
 	},
 
+	// Remove unloaded gids...
+	//
+	// This removes:
+	// 	- images from .data that are not in any ribbon
+	removeUnloadedGids: function(){
+		this.order = this.getImages('loaded')
+		return this
+	},
+
 
 
 	/****************************************** JSON serialization ***/

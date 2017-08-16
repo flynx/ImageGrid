@@ -336,6 +336,7 @@ var MetadataUIActions = actions.Actions({
 	//
 	// XXX should we replace 'mode' with nested set of metadata???
 	// XXX make this support multiple images...
+	// XXX add support for .metadataSection(make) action to construct a section...
 	showMetadata: ['Image/Metadata...',
 		widgets.makeUIDialog(function(image, mode){
 		//function(image, mode){

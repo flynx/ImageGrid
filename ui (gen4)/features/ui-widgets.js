@@ -1361,7 +1361,7 @@ var BrowseActionsActions = actions.Actions({
 			Object.keys(paths).forEach(function(key){
 				// handle mode flag...
 				var action = paths[key][0]
-				var mode = key.split(/^- /)
+				var mode = key.split(/^-\s*/)
 				var path = mode.pop()
 				mode = mode.length > 0 ? 'hidden' : null
 

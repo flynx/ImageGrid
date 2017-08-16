@@ -569,6 +569,10 @@ function(data, options){
 // 		//		just use it for uniqueness testing...
 // 		unique: <bool> | function(value){ ... },
 //
+// 		// called when new item is added to list...
+//		//
+// 		itemadded: function(value){ ... },
+//
 // 		// If true sort values...
 // 		// If function will be used as cmp for sorting...
 // 		sort: <bool> || function(a, b){ ... },
@@ -589,7 +593,7 @@ function(data, options){
 // 		// list length limit is reached...
 // 		overflow: function(selected){ ... },
 //
-// 		// list if items to remove, if not given this will be maintained 
+// 		// list of items to remove, if not given this will be maintained 
 // 		// internally
 // 		to_remove: null | <list>,
 //
@@ -938,6 +942,11 @@ function(list, options){
 					return
 				}
 
+				// check if item pre-existed...
+				var preexisted = lst.indexOf(options.unique instanceof Function ? 
+					options.unique(txt) 
+					: txt) >= 0
+
 				// add new value and sort list...
 				lst.push(txt)
 
@@ -949,6 +958,10 @@ function(list, options){
 				} else if(options.unique instanceof Function){
 					lst = lst.unique(options.unique) 
 				}
+
+				options.itemadded
+					&& !(options.unique && preexisted)
+					&& options.itemadded.call(dialog, txt)
 
 				// sort...
 				if(options.sort){
@@ -2018,7 +2031,7 @@ var BrowserPrototype = {
 	//
 	//
 	// Finalize the dialog (optional)...
-	// 	- Call make.done() can optionally be called after all the itmes
+	// 	- Call make.done() can optionally be called after all the items
 	// 		are created. This will update the dialog to align the 
 	// 		selected position.
 	// 		This is useful for dialogs with async loading items. 
