@@ -434,6 +434,9 @@ function(list){
 // 		// if true, group the items into a <span> element...
 // 		groupList: false,
 //
+// 		// process each dom element...
+// 		each: <function>,
+//
 // 		// see: make(..) for additional option info.
 // 		...
 // 	}
@@ -497,6 +500,9 @@ function(data, options){
 
 		keys !== data && data[k]
 			&& elem.on('open', data[k])
+
+		opts.each
+			&& opts.each(txt || k, elem)
 
 		res.push(elem[0])
 	})

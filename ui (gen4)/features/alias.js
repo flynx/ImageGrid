@@ -109,6 +109,7 @@ module.Alias = core.ImageGridFeatures.Feature({
 
 var UIAliasActions = actions.Actions({
 	// XXX should this update the parent???
+	// XXX updating this does not work yet...
 	browseAliases: ['System/Aliases...',
 		widgets.makeUIDialog(function(){
 			var that = this
@@ -119,6 +120,8 @@ var UIAliasActions = actions.Actions({
 			var getKeys = function(action){
 				return (keys[action] || []).join(' / ') }
 
+			var to_remove = []
+
 			return browse.makeLister(null, 
 				function(path, make){
 					var dialog = this
@@ -127,18 +130,24 @@ var UIAliasActions = actions.Actions({
 					var names = Object.keys(aliases)
 
 					names.length > 0 ?
-						names
-							.forEach(function(name){
-								//make([name, (aliases[name]).slice(-1)[0]])
-								make([name])
-									.attr({
-										keys: getKeys(name),
-										action: name,
-									})
-									.on('open', function(){ 
-										that.editAlias(name) 
-											.on('close', function(){ dialog.update() })
-									})
+						make.EditableList(names, 
+							{
+								new_item: false,
+								to_remove: to_remove,
+
+								itemopen: function(name){
+									that.editAlias(name) 
+										.on('close', function(){ dialog.update() })
+									dialog.close()
+								},
+
+								each: function(name, elem){
+									$(elem)
+										.attr({
+											keys: getKeys(name),
+											action: name,
+										})
+								}
 							})
 						: make.Empty()
 
@@ -160,6 +169,11 @@ var UIAliasActions = actions.Actions({
 							&& that.showDoc(action)
 					}
 					this.keyboard.handler('General', '?', 'showDoc')
+				})
+				.close(function(){
+					to_remove.forEach(function(alias){
+						that.alias(alias, null)
+					})
 				})
 		})],
 
