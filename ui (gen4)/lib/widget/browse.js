@@ -712,24 +712,19 @@ function(list, options){
 	}
 	options = opts
 
-	/*
-	if(id in dialog.__list && id in dialog.__editable){
-		var lst = dialog.__list[id]
-		var editable = dialog.__editable[id]
+	var lst = list instanceof Function ? 
+		list() 
+		: list
+	var editable = dialog.__editable[id] = lst instanceof Array 
+		// keep editable state...
+		&& dialog.__editable[id]
 
-	} else {
-	//*/
-		var lst = list instanceof Function ? 
-			list() 
-			: list
-		var editable = dialog.__editable[id] = lst instanceof Array && dialog.__editable[id]
-		// view objects...
-		// NOTE: we .slice() here to make the changes a bit better packaged
-		// 		or discrete and not done as they come in...
-		lst = lst instanceof Array ? lst.slice() : Object.keys(lst)
+	// view objects...
+	// NOTE: we .slice() here to make the changes a bit better packaged
+	// 		or discrete and not done as they come in...
+	lst = lst instanceof Array ? lst.slice() : Object.keys(lst)
 
-		dialog.__list[id] = lst
-	//}
+	dialog.__list[id] = lst
 
 	var buttons = options.buttons = (options.buttons || []).slice()
 
