@@ -25,6 +25,18 @@ var widgets = require('features/ui-widgets')
 // XXX things we need to do to collections:
 // 		- add images from current state
 // 		- remove images (from collection)
+// XXX might be a good idea to make collection loading part of the 
+// 		.load(..) protocol...
+// 		...this could be done via a url suffix, as a shorthand.
+// 		something like:
+// 			/path/to/index:collection
+// 				-> /path/to/index/sub/path/.ImageGrid/collections/collection
+// XXX loading collections by direct path would require us to look 
+// 		in the containing index for missing parts (*images.json, ...)
+// XXX saving a local collection would require us to save to two 
+// 		locations:
+// 			- collection specific stuff (data) to collection path
+// 			- global stuff (images, tags, ...) to base index...
 var CollectionActions = actions.Actions({
 
 	collections: null,
@@ -34,19 +46,6 @@ var CollectionActions = actions.Actions({
 	set collection(value){
 		this.loadCollection(value) },
 
-
-	// XXX might be a good idea to make collection loading part of the 
-	// 		.load(..) protocol...
-	// 		...this could be done via a url suffix, as a shorthand.
-	// 		something like:
-	// 			/path/to/index:collection
-	// 				-> /path/to/index/sub/path/.ImageGrid/collections/collection
-	// XXX loading collections by direct path would require us to look 
-	// 		in the containing index for missing parts (*images.json, ...)
-	// XXX saving a local collection would require us to save to two 
-	// 		locations:
-	// 			- collection specific stuff (data) to collection path
-	// 			- global stuff (images, tags, ...) to base index...
 	loadCollection: ['- Collections/',
 		function(collection){
 			if(collection == null 
@@ -124,11 +123,17 @@ var CollectionActions = actions.Actions({
 
 			collection = collection || this.collection
 
-			// XXX add to collection...
-			// XXX
+			if(collection == null){
+				return
+			}
+
+			// add to collection...
+			var data = this.data.constructor.fromArray(gids)
+
+			return this.joinCollect(null, collection, data)
 		}],
 	joinCollect: ['- Collections/Merge to collection',
-		core.doc`Merge current state to collection
+		core.doc`Merge/Join current state to collection
 
 			Join current state into collection
 			.joinCollect(collection)
@@ -138,20 +143,32 @@ var CollectionActions = actions.Actions({
 			.joinCollect(align, collection)
 				-> this
 
+			Join data to collection with specific alignment
+			.joinCollect(align, collection, data)
+				-> this
+
 		This is like .collect(..) but will preserve topology.
 		
 		NOTE: for align docs see Data.join(..)
+		NOTE: if align is set to null or not given then it will be set 
+			to default value.
 		`,
-		function(align, collection){
-			collection = collection == null ? align : collection
+		function(align, collection, data){
+			collection = arguments.length == 1 ? align : collection
 			if(collection == null){
 				return
 			}
+			// if only collection is given, reset align to null...
+			align = align === collection ? null : align
+
 			this.collections && this.collections[collection] ?
-				this.collections[collection].data.join(align, this.data.clone())
+				this.collections[collection].data.join(align, data || this.data.clone())
 				: this.saveCollection(collection)
 		}],
 
+	// XXX do we actually need this???
+	// 		...a way to delete stuff from collections is to crop out 
+	// 		and overwrite...
 	uncollect: ['- Collections/',
 		function(gids, collection){
 			// XXX
@@ -288,7 +305,6 @@ var UICollectionActions = actions.Actions({
 				this.collect(gids || this.current, title) }) })],
 	addLoadedToCollection: ['Collections/$Add loaded images to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
-	// XXX for some reason joining two one ribbon states produces two ribbons...
 	joinToCollection: ['Collections/$Merge view to collection...',
 		widgets.uiDialog(function(){
 			return this.browseCollections(function(title){
@@ -321,7 +337,11 @@ module.UICollection = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
-// XXX
+// XXX Things to try/do:
+// 		- save collection on exit/write (?)
+// 		- lazy load collections (load list, lazy-load data)
+// 		- load directories as collections...
+// 		- export collections to directories...
 var FileSystemCollection = 
 module.FileSystemCollection = core.ImageGridFeatures.Feature({
 	title: '',
