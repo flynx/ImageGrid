@@ -358,7 +358,8 @@ module.GLOBAL_KEYBOARD = {
 
 
 		// collections...
-		alt_C: 'browseCollections',
+		//alt_C: 'browseCollections',
+		alt_C: 'browseActions: "/Collections/" -- Collections menu...',
 
 
 		// metadata...

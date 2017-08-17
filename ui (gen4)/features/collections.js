@@ -7,6 +7,8 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+var data = require('imagegrid/data')
+
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -58,9 +60,18 @@ var CollectionActions = actions.Actions({
 			// XXX need to clear this when exiting crop...
 			this.location.collection = collection
 		}],
-	saveCollection: ['- Collections/Save collection',
-		core.doc`Save current state to collection`,
-		function(collection){
+	saveCollection: ['- Collections/',
+		core.doc`Save current state to collection
+
+			Save Current state as collection
+			.saveCollection(collection)
+				-> this
+
+			Save new empty collection
+			.saveCollection(collection, true)
+				-> this
+		`,
+		function(collection, empty){
 			collection = collection || this.collection
 
 			if(collection == null){
@@ -73,11 +84,15 @@ var CollectionActions = actions.Actions({
 				title: collection,
 
 				// XXX we need to trim .order to only the current images???
-				data: this.data
-					.clone()
-					.removeUnloadedGids(),
+				data: empty ? 
+					(new this.data.constructor())
+					: this.data
+						.clone()
+						.removeUnloadedGids(),
 			}
 		}],
+	newCollection: ['- Collections/',
+		function(collection){ return this.saveCollection(collection, true) }],
 
 	inCollections: ['- Image/',
 		core.doc`Get list of collections containing item`,
@@ -90,11 +105,15 @@ var CollectionActions = actions.Actions({
 		}],
 
 	collect: ['- Collections/',
-		core.doc`Add items to collection`,
+		core.doc`Add items to collection
+
+		NOTE: this will not account for item topology.`,
 		function(gids, collection){
 			var that = this
 
-			gids = gids instanceof Array ? gids : [gids]
+			gids = gids == 'loaded' ? this.data.getImages('loaded')
+				: gids instanceof Array ? gids 
+				: [gids]
 			gids = gids
 				.map(function(gid){ 
 					return gid in that.data.ribbons ? 
@@ -108,6 +127,31 @@ var CollectionActions = actions.Actions({
 			// XXX add to collection...
 			// XXX
 		}],
+	joinCollect: ['- Collections/Merge to collection',
+		core.doc`Merge current state to collection
+
+			Join current state into collection
+			.joinCollect(collection)
+				-> this
+
+			Join current state with specific alignment into collection
+			.joinCollect(align, collection)
+				-> this
+
+		This is like .collect(..) but will preserve topology.
+		
+		NOTE: for align docs see Data.join(..)
+		`,
+		function(align, collection){
+			collection = collection == null ? align : collection
+			if(collection == null){
+				return
+			}
+			this.collections && this.collections[collection] ?
+				this.collections[collection].data.join(align, this.data.clone())
+				: this.saveCollection(collection)
+		}],
+
 	uncollect: ['- Collections/',
 		function(gids, collection){
 			// XXX
@@ -147,28 +191,27 @@ module.Collection = core.ImageGridFeatures.Feature({
 // XXX show collections in image metadata...
 var UICollectionActions = actions.Actions({
 	// XXX highlight current collections....
-	browseCollections: ['Collections|Crop/Collections...',
-		widgets.makeUIDialog(function(gid){
+	browseCollections: ['Collections|Crop/$Collec$tions...',
+		widgets.makeUIDialog(function(action){
 			var that = this
-			gid = gid != null ? this.data.getImage(gid) : gid
-
 			var to_remove = []
 
 			return browse.makeLister(null, 
 				function(path, make){
 					var dialog = this
 
-					//var collections = Object.keys(that.collections || {})
-					var collections = that.inCollections(gid || null)
+					var collections = Object.keys(that.collections || {})
 
 					make.EditableList(collections, 
 						{
 							unique: true,
 							to_remove: to_remove,
 							itemopen: function(title){
-								that.loadCollection(title)
-								gid
-									&& that.focusImage(gid)
+								var gid = that.current
+								action ?
+									action.call(that, title)
+									: that.loadCollection(title)
+								that.focusImage(gid)
 								dialog.close()
 							},
 							normalize: function(title){ 
@@ -177,7 +220,9 @@ var UICollectionActions = actions.Actions({
 								return title.length > 0 },
 
 							itemadded: function(title){
-								that.saveCollection(title) },
+								action ?
+									that.newCollection(title)
+									: that.saveCollection(title) },
 						})
 				})
 				.close(function(){
@@ -230,6 +275,25 @@ var UICollectionActions = actions.Actions({
 					}) 
 				})
 		})],
+
+
+	// XXX should we warn the user when overwriting???
+	saveAsCollection: ['Collections/$Save as collection...',
+		widgets.uiDialog(function(){
+			return this.browseCollections(function(title){
+				this.saveCollection(title) }) })],
+	addToCollection: ['Collections|Image/Add $image to collection...',
+		widgets.uiDialog(function(gids){
+			return this.browseCollections(function(title){
+				this.collect(gids || this.current, title) }) })],
+	addLoadedToCollection: ['Collections/$Add loaded images to collection...',
+		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
+	// XXX for some reason joining two one ribbon states produces two ribbons...
+	joinToCollection: ['Collections/$Merge view to collection...',
+		widgets.uiDialog(function(){
+			return this.browseCollections(function(title){
+				this.joinCollect(title) }) })],
+
 
 	// XXX this is not used by metadata yet...
 	metadataSection: ['- Image/',

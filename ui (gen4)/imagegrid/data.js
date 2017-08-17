@@ -209,8 +209,10 @@ var DataPrototype = {
 	set current(value){
 		this.focusImage(value) },
 
+	// XXX should this default to top or bottom ribbon???
 	get base(){
-		return this.__base || this.ribbon_order.slice(-1)[0] },
+		//return this.__base || this.ribbon_order.slice(-1)[0] },
+		return this.__base || this.ribbon_order[0] },
 	set base(value){
 		this.__base = value },
 
@@ -2172,7 +2174,10 @@ var DataPrototype = {
 	// XXX add a 'gid' align mode...
 	join: function(){
 		var args = Array.apply(null, arguments)
-		var align = typeof(args[0]) == typeof('str') ? args.splice(0, 1)[0] : 'base'
+		var align = typeof(args[0]) == typeof('str') || args[0] == null ? 
+			args.shift() 
+			: 'base'
+		align = align || 'base'
 		args = args[0].constructor === Array ? args[0] : args
 
 		var base = this
@@ -2248,8 +2253,10 @@ var DataPrototype = {
 			})
 		})
 
-		// XXX this is slow-ish...
-		base.removeDuplicateGIDs()
+		base
+			// XXX this is slow-ish...
+			.removeDuplicateGIDs()
+			.removeEmptyRibbons()
 
 		return base
 	},
@@ -2545,10 +2552,42 @@ var DataPrototype = {
 
 	// Remove duplicate gids...
 	//
+	// If a gid is in more than one ribbon, this will keep the top 
+	// occurrence only...
+	//
+	// NOTE: this may result in empty ribbons...
 	// NOTE: this is slow-ish...
 	removeDuplicateGIDs: function(){
+		var that = this
 		this.removeDuplicates(this.order)
 		this.updateImagePositions()
+		// if a gid is in more than one ribbon keep only the top occurence...
+		this.order.forEach(function(gid, i){
+			var found = false
+			that.ribbon_order.forEach(function(r){
+				r = that.ribbons[r]
+
+				if(found){
+					delete r[i]
+
+				} else if(r[i] != null){
+					found = true
+				}
+			})
+		})
+		return this
+	},
+	// Remove empty ribbons...
+	removeEmptyRibbons: function(){
+		var that = this
+		this.ribbon_order = this.ribbon_order
+			.filter(function(r){ 
+				if(that.ribbons[r].len == 0){
+					delete that.ribbons[r]
+					return false
+				} 
+				return true
+			})
 		return this
 	},
 
@@ -2558,6 +2597,7 @@ var DataPrototype = {
 	// 	- images from .data that are not in any ribbon
 	removeUnloadedGids: function(){
 		this.order = this.getImages('loaded')
+		this.updateImagePositions()
 		return this
 	},
 
