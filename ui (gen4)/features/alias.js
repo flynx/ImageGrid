@@ -129,6 +129,8 @@ var UIAliasActions = actions.Actions({
 
 					var names = Object.keys(aliases)
 
+					console.log('>>>>>>>>>>>', names)
+
 					names.length > 0 ?
 						// XXX for some reason this does not get updated on dialog.update()
 						make.EditableList(names, 
@@ -143,6 +145,7 @@ var UIAliasActions = actions.Actions({
 								},
 
 								each: function(name, elem){
+									console.log('>>>>', name)
 									$(elem)
 										.attr({
 											keys: getKeys(name),
