@@ -1357,7 +1357,7 @@ var KeyboardUIActions = actions.Actions({
 						})
 
 					var new_keys = code == orig_code ?
-						keys.filter(function(k){ orig_keys.indexOf(k) < 0 })
+						keys.filter(function(k){ return orig_keys.indexOf(k) < 0 })
 						: keys
 
 					// add keys...

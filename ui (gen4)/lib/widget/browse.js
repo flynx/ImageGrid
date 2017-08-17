@@ -457,8 +457,6 @@ function(data, options){
 			: options.isItemHidden,
 	}
 
-	console.log('LIST:', keys)
-
 	keys.forEach(function(k){
 		var txt
 		var opts = Object.create(options)
@@ -715,11 +713,7 @@ function(list, options){
 	var lst = list instanceof Function ? 
 		list() 
 		: list
-	var editable = dialog.__editable[id] = lst instanceof Array 
-		// keep editable state...
-		&& dialog.__editable[id]
-
-	// view objects...
+	var editable = dialog.__editable[id] = lst instanceof Array
 	// NOTE: we .slice() here to make the changes a bit better packaged
 	// 		or discrete and not done as they come in...
 	lst = lst instanceof Array ? lst.slice() : Object.keys(lst)
