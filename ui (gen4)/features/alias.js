@@ -108,9 +108,10 @@ module.Alias = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var UIAliasActions = actions.Actions({
-	// XXX should this update the parent???
-	// XXX updating this does not work yet...
 	browseAliases: ['System/Aliases...',
+		core.doc`Action alias list
+
+			NOTE: this may affect the action menu, to see changes update the menu.`,
 		widgets.makeUIDialog(function(){
 			var that = this
 
@@ -129,10 +130,7 @@ var UIAliasActions = actions.Actions({
 
 					var names = Object.keys(aliases)
 
-					console.log('>>>>>>>>>>>', names)
-
 					names.length > 0 ?
-						// XXX for some reason this does not get updated on dialog.update()
 						make.EditableList(names, 
 							{
 								new_item: false,
@@ -145,7 +143,6 @@ var UIAliasActions = actions.Actions({
 								},
 
 								each: function(name, elem){
-									console.log('>>>>', name)
 									$(elem)
 										.attr({
 											keys: getKeys(name),

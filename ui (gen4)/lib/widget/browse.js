@@ -668,6 +668,10 @@ function(data, options){
 // NOTE: the list must contain strings.
 //
 // XXX should id be the first argument??
+// XXX TEST: potential problem: when reloading the list this will 
+// 		overwrite the .__list[id] cache, with the input list, this may
+// 		result in losing the edited state if the lists were not synced
+// 		properly...
 Items.EditableList =
 function(list, options){
 	var make = this
