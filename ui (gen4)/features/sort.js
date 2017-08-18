@@ -66,10 +66,9 @@ module.SortActions = actions.Actions({
 			'Date (simple)': 'metadata.createDate birthtime keep-position reverse',
 			'File date': 'birthtime keep-position reverse',
 			'Name (XP-style)': 'name-leading-sequence name path keep-position',
+			'File sequence number with overflow': 'name-sequence-overflow name path keep-position',
 			'File sequence number': 'name-sequence name path keep-position',
 			'Name': 'name path keep-position',
-			// XXX sequence number with overflow...
-			//'File sequence number with overflow': 'name-leading-sequence name path',
 		},
 	},
 
@@ -93,7 +92,7 @@ module.SortActions = actions.Actions({
 	//
 	// NOTE: the cmp function is called in the actions context.
 	//
-	// XXX add sequence number with overflow...
+	// XXX add progress...
 	__sort_methods__: {
 		'name-leading-sequence': function(){
 			return function(a, b){
@@ -114,6 +113,54 @@ module.SortActions = actions.Actions({
 
 				return a - b
 			}
+		},
+		// XXX this will actually sort twice, once full sort and then a 
+		// 		fast lookup-table sort...
+		// 		...the second stage is not needed!!!
+		'name-sequence-overflow': function(){
+			var that = this
+
+			var gap = -1
+			var l = 0
+
+			// XXX add progress reporting...
+			var lst = this.images
+				.map(function(gid){ 
+					return [gid, that.images.getImageNameSeq(gid)] })
+				// sort by sequence...
+				.sort(function(a, b){ 
+					a = a[1]
+					a = typeof(a) == typeof('str') ? 0 : a
+					b = b[1]
+					b = typeof(b) == typeof('str') ? 0 : b
+
+					return a - b 
+				})
+				// find largest gaps...
+				.map(function(e, i, lst){
+					var c = (lst[i+1] || e)[1] - e[1]
+					if(c > l){
+						l = c
+						gap = i
+					}
+					return e
+				})
+
+			// rotate index blocks...
+			if(l > 0){
+				var tail = lst.splice(gap+1, lst.length)
+				lst = tail.concat(lst)
+			}
+
+			// build the actual lookup table...
+			var index = {}
+			lst.forEach(function(e, i){
+				index[e[0]] = i
+			})
+
+			// return the lookup cmp...
+			return function(a, b){
+				return index[a] - index[b] }
 		},
 		// This is specifically designed to terminate sort methods to prevent
 		// images that are not relevant to the previous order to stay in place
