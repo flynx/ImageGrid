@@ -182,8 +182,47 @@ var CollectionActions = actions.Actions({
 			// XXX
 			delete this.collections[collection]
 		}],
+
+	// manage serialization and loading...
+	// XXX make this reflect the format automatically...
+	load: [function(json){
+		var collections = {}
+		var c = json.collections || {}
+
+		Object.keys(c).forEach(function(title){
+				// XXX make this reflect the format automatically...
+			collections[title] = {
+				title: title,
+
+				data: data.Data.fromJSON(c[title].data)
+			}
+		})
+
+		if(Object.keys(collections).length > 0){
+			this.collections = collections
+		}
+	}],
+	json: [function(){ return function(res){
+		var collections = this.collections
+		if(collections){
+			res.collections = {}
+			Object.keys(this.collections).forEach(function(title){
+				// XXX make this reflect the format automatically...
+				res.collections[title] = {
+					title: title,
+
+					data: collections[title].data.dumpJSON()
+				}
+			})
+		}
+	} }],
+	clear: [function(){
+		delete this.collections
+	}],
 })
 
+// XXX manage format...
+// XXX manage changes...
 var Collection = 
 module.Collection = core.ImageGridFeatures.Feature({
 	title: '',
@@ -228,7 +267,6 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 // XXX show collections in image metadata...
 var UICollectionActions = actions.Actions({
-	// XXX highlight current collections....
 	browseCollections: ['Collections|Crop/$Collec$tions...',
 		widgets.makeUIDialog(function(action){
 			var that = this
@@ -237,6 +275,11 @@ var UICollectionActions = actions.Actions({
 			return browse.makeLister(null, 
 				function(path, make){
 					var dialog = this
+						.on('update', function(){
+							that.collection
+								&& dialog.filter(JSON.stringify(that.collection))
+									.addClass('highlighted')
+						})
 
 					var collections = Object.keys(that.collections || {})
 
@@ -262,6 +305,9 @@ var UICollectionActions = actions.Actions({
 									that.newCollection(title)
 									: that.saveCollection(title) },
 						})
+				}, {
+					// focus current collection...
+					selected: that.collection,
 				})
 				.close(function(){
 					to_remove.forEach(function(title){ 
@@ -270,7 +316,6 @@ var UICollectionActions = actions.Actions({
 				})
 		})],
 	// XXX add kb handler???
-	// XXX highlight current collections....
 	// XXX this is very similar to .browseCollections(..), is this a problem???
 	browseImageCollections: ['Image/Collections...',
 		{dialogTitle: 'Image Collections...'},
@@ -283,6 +328,11 @@ var UICollectionActions = actions.Actions({
 			return browse.makeLister(null, 
 				function(path, make){
 					var dialog = this
+						.on('update', function(){
+							that.collection
+								&& dialog.filter(JSON.stringify(that.collection))
+									.addClass('highlighted')
+						})
 
 					var all = Object.keys(that.collections || {})
 					var collections = that.inCollections(gid || null)
