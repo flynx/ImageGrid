@@ -23,8 +23,10 @@ var widgets = require('features/ui-widgets')
 // XXX should collections be in the Crop menu????
 
 // XXX things we need to do to collections:
-// 		- add images from current state
-// 		- remove images (from collection)
+// 		- remove images (from collection) ????
+// 		- auto-collections
+// 			- tags -- adding/removing images adds/removes tags
+// 			- ribbons -- top / bottom / n-m / top+2 / ..
 // XXX might be a good idea to make collection loading part of the 
 // 		.load(..) protocol...
 // 		...this could be done via a url suffix, as a shorthand.
@@ -55,9 +57,6 @@ var CollectionActions = actions.Actions({
 			}
 
 			this.crop(this.collections[collection].data)
-
-			// XXX need to clear this when exiting crop...
-			this.location.collection = collection
 		}],
 	saveCollection: ['- Collections/',
 		core.doc`Save current state to collection
@@ -87,7 +86,10 @@ var CollectionActions = actions.Actions({
 					(new this.data.constructor())
 					: this.data
 						.clone()
-						.removeUnloadedGids(),
+						.removeUnloadedGids()
+						.run(function(){
+							this.collection = collection
+						}),
 			}
 		}],
 	newCollection: ['- Collections/',
@@ -166,13 +168,14 @@ var CollectionActions = actions.Actions({
 				: this.saveCollection(collection)
 		}],
 
-	// XXX do we actually need this???
+	/*/ XXX do we actually need this???
 	// 		...a way to delete stuff from collections is to crop out 
 	// 		and overwrite...
 	uncollect: ['- Collections/',
 		function(gids, collection){
 			// XXX
 		}],
+	//*/
 
 	removeCollection: ['- Collections/',
 		function(collection){
@@ -198,7 +201,25 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 	actions: CollectionActions, 
 
-	handlers: [],
+	handlers: [
+		// maintain the .collection state...
+		// XXX not yet sure if this is the right way to go...
+		['loadCollection',
+			function(_, collection){
+				if(this.collections && collection in this.collections){
+					this.data.collection = this.location.collection = collection
+				}
+			}],
+		['uncrop',
+			function(){
+				var collection = this.location.collection = this.data.collection
+
+				// cleanup...
+				if(collection == null){
+					delete this.location.collection
+				}
+			}],
+	],
 })
 
 
@@ -293,7 +314,7 @@ var UICollectionActions = actions.Actions({
 				})
 		})],
 
-
+	// Collections actions with collection selection...
 	// XXX should we warn the user when overwriting???
 	saveAsCollection: ['Collections/$Save as collection...',
 		widgets.uiDialog(function(){
@@ -309,7 +330,6 @@ var UICollectionActions = actions.Actions({
 		widgets.uiDialog(function(){
 			return this.browseCollections(function(title){
 				this.joinCollect(title) }) })],
-
 
 	// XXX this is not used by metadata yet...
 	metadataSection: ['- Image/',

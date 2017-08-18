@@ -219,7 +219,7 @@ var DataPrototype = {
 
 
 	/******************************************************* Utils ***/
-	
+
 	// Make a sparse list of image gids...
 	//
 	// This uses .order as the base for ordering the list.

@@ -25,6 +25,14 @@ Object.get = function(obj, name, dfl){
 	return val
 }
 
+Object.defineProperty(Object.prototype, 'run', {
+	enumerable: false,
+	value: function(func){
+		var res = func ? func.call(this) : undefined
+		return res === undefined ? this : res
+	},
+})
+
 
 // Compact a sparse array...
 //
