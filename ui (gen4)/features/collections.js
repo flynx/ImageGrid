@@ -265,6 +265,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX do we need a collection button (like crop button?) ???
 // XXX show collections in image metadata...
 var UICollectionActions = actions.Actions({
 	browseCollections: ['Collections|Crop/$Collec$tions...',
