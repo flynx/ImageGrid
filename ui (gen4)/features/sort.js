@@ -120,6 +120,7 @@ module.SortActions = actions.Actions({
 		'name-sequence-overflow': function(){
 			var that = this
 
+			// gap and gap length...
 			var gap = -1
 			var l = 0
 
@@ -147,6 +148,7 @@ module.SortActions = actions.Actions({
 				})
 
 			// rotate index blocks...
+			// XXX this does not work for lists without a gap -- one item gets pushed to the tail...
 			if(l > 0){
 				var tail = lst.splice(gap+1, lst.length)
 				lst = tail.concat(lst)
