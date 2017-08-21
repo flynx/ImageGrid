@@ -122,7 +122,7 @@ module.SortActions = actions.Actions({
 
 			// gap and gap length...
 			var gap = -1
-			var l = 0
+			var l = 1
 
 			// XXX add progress reporting...
 			var lst = this.images
@@ -148,8 +148,7 @@ module.SortActions = actions.Actions({
 				})
 
 			// rotate index blocks...
-			// XXX this does not work for lists without a gap -- one item gets pushed to the tail...
-			if(l > 0){
+			if(l > 1){
 				var tail = lst.splice(gap+1, lst.length)
 				lst = tail.concat(lst)
 			}
