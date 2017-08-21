@@ -1964,6 +1964,9 @@ var BrowserPrototype = {
 	//
 	//	options format:
 	//	{
+	//		// item css class...
+	//		cls: <str>,
+	//
 	//		// If true make the element traversable...
 	//		traversable: <bool>,
 	//
@@ -2012,6 +2015,12 @@ var BrowserPrototype = {
 	//
 	//		// shortcut key to open the item...
 	//		shortcut_key: <key>,
+	//
+	//		// event handlers...
+	//		events: {
+	//			<event>: <handler>,
+	//			...
+	//		},
 	//	}
 	//
 	//	<buttons> format (optional):
@@ -2386,6 +2395,9 @@ var BrowserPrototype = {
 				opts.hide_on_search ? 'hide-on-search' : '',
 				(opts.hide_on_search || opts.not_searchable) ? 'not-searchable' : '',
 				opts.not_filtered_out ? 'not-filtered-out' : '',
+				
+				// extra user classes...
+				opts.cls || '',
 			].join(' '))
 
 			opts.push_on_open 
@@ -2455,6 +2467,11 @@ var BrowserPrototype = {
 							}
 						}))
 				})
+
+			//--------------------------------- user event handlers ---
+			Object.keys(opts.events || {})
+				.forEach(function(evt){
+					res.on(evt, opts.events[evt]) })
 
 			//--------------------------------------- place in list ---
 			// as-is...

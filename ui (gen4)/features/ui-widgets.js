@@ -837,7 +837,7 @@ var UIIntrospectionActions = actions.Actions({
 				.addClass('help-dialog')
 
 			actions.forEach(function(action){
-				res.append($('<div class="action">')
+				res.append($('<div class="action doc">')
 					.prop('tabindex', true)
 					.append($('<h2>')
 						.text(doc[action][2]))
@@ -1131,7 +1131,10 @@ var BrowseActionsActions = actions.Actions({
 		'browse-actions-shortcut-marker': '\\$(\\w)',
 	},
 
-	// Hide alias action...
+	// Hide .alias(..) action from the browser...
+	//
+	// NOTE: we need to do this as .alias(..) is defined in actions and
+	// 		has no concept of the naming protocols used in ImageGrid.Viewer
 	alias: ['- System/', ''],
 
 

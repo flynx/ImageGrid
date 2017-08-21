@@ -22,7 +22,7 @@ var browse = require('lib/widget/browse')
 /*********************************************************************/
 
 // XXX add sorting on load....
-// XXX keep a cached sort order for each method in .data...
+// XXX save sort cache??? 
 // XXX should this be split into edit/view???
 var SortActions = 
 module.SortActions = actions.Actions({
@@ -62,13 +62,13 @@ module.SortActions = actions.Actions({
 			// NOTE: for when date resolution is not good enough this 
 			// 		also takes into account file sequence number...
 			// NOTE: this is descending by default...
-			'Date': 'metadata.createDate birthtime name-sequence keep-position reverse',
-			'Date (simple)': 'metadata.createDate birthtime keep-position reverse',
+			//'Date': 'metadata.createDate birthtime name-sequence keep-position reverse',
+			'Date': 'metadata.createDate birthtime keep-position reverse',
 			'File date': 'birthtime keep-position reverse',
-			'Name (XP-style)': 'name-leading-sequence name path keep-position',
-			'File sequence number with overflow': 'name-sequence-overflow name path keep-position',
+			'File sequence number (with overflow)': 'name-sequence-overflow name path keep-position',
 			'File sequence number': 'name-sequence name path keep-position',
 			'Name': 'name path keep-position',
+			'Name (XP-style)': 'name-leading-sequence name path keep-position',
 		},
 	},
 
@@ -93,7 +93,13 @@ module.SortActions = actions.Actions({
 	// NOTE: the cmp function is called in the actions context.
 	//
 	// XXX add progress...
+	// XXX add doc support -- make this an action-set???...
 	__sort_methods__: {
+		// XXX make sequence sort methods compatible with repeating numbers,
+		// 		i.e. for file names like DSC_1234 sorting more than 10K files
+		// 		should split the repeating numbers by some other means, like
+		// 		date...
+		// NOTE: these will not sort items that have no seq in name...
 		'name-leading-sequence': function(){
 			return function(a, b){
 				a = this.images.getImageNameLeadingSeq(a)
@@ -114,9 +120,9 @@ module.SortActions = actions.Actions({
 				return a - b
 			}
 		},
-		// XXX this will actually sort twice, once full sort and then a 
-		// 		fast lookup-table sort...
-		// 		...the second stage is not needed!!!
+		// NOTE: this will actually sort twice, stage one build sort index and
+		// 		second stage is a O(n) lookup cmp...
+		// 		XXX not sure if this is the best way to go...
 		'name-sequence-overflow': function(){
 			var that = this
 
@@ -128,6 +134,9 @@ module.SortActions = actions.Actions({
 			var lst = this.images
 				.map(function(gid){ 
 					return [gid, that.images.getImageNameSeq(gid)] })
+				// keep only items with actual sequence numbers...
+				.filter(function(e){
+					return typeof(e[1]) == typeof(123) })
 				// sort by sequence...
 				.sort(function(a, b){ 
 					a = a[1]
@@ -147,6 +156,8 @@ module.SortActions = actions.Actions({
 					return e
 				})
 
+			console.log('>>>>', lst, l, gap)
+
 			// rotate index blocks...
 			if(l > 1){
 				var tail = lst.splice(gap+1, lst.length)
@@ -161,8 +172,10 @@ module.SortActions = actions.Actions({
 
 			// return the lookup cmp...
 			return function(a, b){
-				return index[a] - index[b] }
+				// XXX is 0 as alternative here the correct way to go???
+				return (index[a] || 0) - (index[b] || 0) }
 		},
+
 		// This is specifically designed to terminate sort methods to prevent
 		// images that are not relevant to the previous order to stay in place
 		//
@@ -322,7 +335,7 @@ module.SortActions = actions.Actions({
 			// prepare the cmp function...
 			var cmp = method.length == 1 ? 
 				method[0] 
-				// chain compare -- return first non equal (0) result...
+				// chain compare -- return first non equal (non-0) result...
 				: function(a, b){
 					var res = 0
 					for(var i=0; i < method.length; i++){
@@ -577,7 +590,25 @@ module.Sort = core.ImageGridFeatures.Feature({
 // 		- by hour/day/month/year in date modes...
 // 		- ???
 var SortUIActions = actions.Actions({
+	showSortMethodDoc: ['- Sort/',
+		widgets.makeUIDialog(function(method){
+			var data = this.config['sort-methods'][method]
+
+			return $('<div class="help-dialog">')
+				.append($('<div class="sort-method">')
+					.prop('tabindex', true)
+					.append($('<h2>')
+						.text(method))
+					.append($('<hr>'))
+					// parse the action doc...
+					.append($('<pre>')
+						.text(
+							'Sort order:\n  '
+							+data.replace(/\s+/g, '\n  '))))
+		})],
+
 	// XXX should we be able to edit modes??? 
+	// XXX should this be a toggler???
 	sortDialog: ['Edit|Sort/Sort images...',
 		widgets.makeUIDialog(function(){
 			var that = this
@@ -605,14 +636,17 @@ var SortUIActions = actions.Actions({
 					if(mode == 'none'){
 						return
 					}
-					make(mode)
+					make(mode, {
+						cls: [
+							(mode == cur ? 'highlighted selected' : ''),
+							(mode == dfl ? 'default' : ''),
+						].join(' '),
+					})
 						.on('open', function(){
 							that.toggleImageSort(null, mode, 
 								that.config['default-sort-order'] == 'reverse')
 							lister.parent.close()
 						})
-						.addClass(mode == cur ? 'highlighted selected' : '')
-						.addClass(mode == dfl ? 'default' : '')
 				})	
 
 				// Commands...
@@ -623,13 +657,6 @@ var SortUIActions = actions.Actions({
 						that.reverseImages()
 						lister.parent.close()
 					})
-				/*
-				make('Reverse ribbons')
-					.on('open', function(){
-						that.reverseRibbons()
-						lister.parent.close()
-					})
-				*/
 
 				// Settings...
 				make('---')
@@ -637,6 +664,16 @@ var SortUIActions = actions.Actions({
 				make(['Default order: ', that.config['default-sort-order'] || 'ascending'])
 					.on('open', _makeTogglHandler('toggleDefaultSortOrder'))
 					.addClass('item-value-view')
+			})
+			.run(function(){
+				// handle '?' button to browse path...
+				this.showDoc = function(){
+					var method = this.select('!').text()
+					method 
+						&& method in that.config['sort-methods']
+						&& that.showSortMethodDoc(method)
+				}
+				this.keyboard.handler('General', '?', 'showDoc')
 			})
 
 			return o

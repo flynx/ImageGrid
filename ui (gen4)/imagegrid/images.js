@@ -509,8 +509,13 @@ module.ImagesPrototype = {
 	},
 
 	// Get image filename...
+	//
+	// NOTE: this will default to gid if not filename (.path) is set... (???)
 	getImageFileName: function(gid, do_unescape){
 		do_unescape = do_unescape == null ? true : do_unescape
+		if(!this[gid] || !this[gid].path){
+			return gid
+		}
 		if(do_unescape){
 			return unescape(this[gid].path.split('/').pop())
 		} else {
@@ -518,7 +523,12 @@ module.ImagesPrototype = {
 		}
 	},
 	// Get the first sequence of numbers in the file name...
+	//
+	// NOTE: if no filenmae (.path) is set, this will return gid... (???)
 	getImageNameSeq: function(gid){
+		if(!this[gid] || !this[gid].path){
+			return gid
+		}
 		var n = this.getImageFileName(gid)
 		var r = /([0-9]+)/m.exec(n)
 		return r == null ? n : parseInt(r[1])
@@ -526,6 +536,9 @@ module.ImagesPrototype = {
 	// Get the sequence of numbers in the file name but only if it is 
 	// at the filename start...
 	getImageNameLeadingSeq: function(gid){
+		if(!this[gid] || !this[gid].path){
+			return gid
+		}
 		var n = this.getImageFileName(gid)
 		var r = /^([0-9]+)/g.exec(n)
 		return r == null ? n : parseInt(r[1])
