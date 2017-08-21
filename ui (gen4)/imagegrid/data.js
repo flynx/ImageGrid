@@ -2550,6 +2550,21 @@ var DataPrototype = {
 		return this
 	},
 
+	// Remove empty ribbons...
+	//
+	removeEmptyRibbons: function(){
+		var that = this
+		this.ribbon_order = this.ribbon_order
+			.filter(function(r){ 
+				if(that.ribbons[r].len == 0){
+					delete that.ribbons[r]
+					return false
+				} 
+				return true
+			})
+		return this
+	},
+
 	// Remove duplicate gids...
 	//
 	// If a gid is in more than one ribbon, this will keep the top 
@@ -2577,27 +2592,52 @@ var DataPrototype = {
 		})
 		return this
 	},
-	// Remove empty ribbons...
-	removeEmptyRibbons: function(){
-		var that = this
-		this.ribbon_order = this.ribbon_order
-			.filter(function(r){ 
-				if(that.ribbons[r].len == 0){
-					delete that.ribbons[r]
-					return false
-				} 
-				return true
-			})
-		return this
-	},
 
 	// Remove unloaded gids...
 	//
 	// This removes:
 	// 	- images from .data that are not in any ribbon
-	removeUnloadedGids: function(){
+	//
+	// NOTE: this may result in empty ribbons...
+	removeUnloadedGIDs: function(){
 		this.order = this.getImages('loaded')
 		this.updateImagePositions()
+		return this
+	},
+
+	// Remove GIDs...
+	//
+	// NOTE: this may result in empty ribbons...
+	removeGIDs: function(gids, direction){
+		var that = this
+		gids = gids || []
+		gids = (gids instanceof Array ? gids : [gids])
+			.map(function(gid){ return that.getImage(gid) })
+
+		if(gids.length == 0){
+			return
+		}
+
+		var order = this.order.filter(function(g){ return gids.indexOf(g) < 0 })
+
+		// handle current image...
+		if(gids.indexOf(this.current) >= 0){
+			var r = this.getImages('current')
+				.filter(function(g){ return order.indexOf(g) >= 0 })
+
+			// attempt to first get next/prev within the current ribbon...
+			r = r.length > 0 ? r : order
+
+			var cur = this.getImage(this.current, direction || 'before', r)
+				|| this.getImage(this.current, direction == 'after' ? 'before' : 'after', r)
+
+			this.current = cur
+		}
+
+		this.order = order
+		this
+			.updateImagePositions()
+
 		return this
 	},
 

@@ -9,6 +9,7 @@
 
 var data = require('imagegrid/data')
 
+var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -86,7 +87,7 @@ var CollectionActions = actions.Actions({
 					(new this.data.constructor())
 					: this.data
 						.clone()
-						.removeUnloadedGids()
+						.removeUnloadedGIDs()
 						.run(function(){
 							this.collection = collection
 						}),
@@ -99,6 +100,7 @@ var CollectionActions = actions.Actions({
 		core.doc`Get list of collections containing item`,
 		function(gid){
 			var that = this
+			gid = this.data.getImage(gid)
 			return Object.keys(this.collections || {})
 				.filter(function(c){
 					return !gid 
@@ -120,7 +122,7 @@ var CollectionActions = actions.Actions({
 					return gid in that.data.ribbons ? 
 						// when adding a ribbon gid expand to images...
 						that.data.ribbons[gid].compact()
-						: [gid] })
+						: [that.data.getImage(gid)] })
 				.reduce(function(a, b){ return a.concat(b) }, [])
 
 			collection = collection || this.collection
@@ -168,14 +170,42 @@ var CollectionActions = actions.Actions({
 				: this.saveCollection(collection)
 		}],
 
-	/*/ XXX do we actually need this???
+	// XXX do we actually need this???
 	// 		...a way to delete stuff from collections is to crop out 
 	// 		and overwrite...
-	uncollect: ['- Collections/',
+	// XXX should this reload???
+	uncollect: ['Collections|Image/$Uncollect image',
+		{browseMode: function(){ return !this.collection && 'disabled' }},
 		function(gids, collection){
-			// XXX
+			var that = this
+
+			gids = gids == 'loaded' ? this.data.getImages('loaded')
+				: gids instanceof Array ? gids 
+				: [gids]
+			gids = gids
+				.map(function(gid){ 
+					return gid in that.data.ribbons ? 
+						// when adding a ribbon gid expand to images...
+						that.data.ribbons[gid].compact()
+						: [that.data.getImage(gid)] })
+				.reduce(function(a, b){ return a.concat(b) }, [])
+
+			collection = collection || this.collection
+
+			if(collection == null){
+				return
+			}
+
+			if(this.collection == collection){
+				this.data
+					.removeGIDs(gids)
+					.removeEmptyRibbons()
+			}
+
+			this.collections[collection].data
+				.removeGIDs(gids)
+				.removeEmptyRibbons()
 		}],
-	//*/
 
 	removeCollection: ['- Collections/',
 		function(collection){
@@ -316,15 +346,16 @@ var UICollectionActions = actions.Actions({
 					}) 
 				})
 		})],
-	// XXX add kb handler???
-	// XXX this is very similar to .browseCollections(..), is this a problem???
-	browseImageCollections: ['Image/Collections...',
+	browseImageCollections: ['Image/$Collections...',
 		{dialogTitle: 'Image Collections...'},
 		widgets.makeUIDialog(function(gid){
 			var that = this
 			gid = this.data.getImage(gid)
 
-			var to_remove = []
+			var all
+			var collections
+
+			var to_remove
 
 			return browse.makeLister(null, 
 				function(path, make){
@@ -335,14 +366,19 @@ var UICollectionActions = actions.Actions({
 									.addClass('highlighted')
 						})
 
-					var all = Object.keys(that.collections || {})
-					var collections = that.inCollections(gid || null)
+					all = Object.keys(that.collections || {})
+
+					collections = collections 
+						|| that.inCollections(gid || null)
 
 					// build the disabled list...
-					all.forEach(function(title){
-						collections.indexOf(title) < 0
-							&& to_remove.push(title)
-					})
+					if(!to_remove){
+						to_remove = []
+						all.forEach(function(title){
+							collections.indexOf(title) < 0
+								&& to_remove.push(title)
+						})
+					}
 
 					all.length > 0 ?
 						make.EditableList(all, 
@@ -350,15 +386,23 @@ var UICollectionActions = actions.Actions({
 								new_item: false,
 								to_remove: to_remove,
 								itemopen: function(title){
-									that.loadCollection(title)
-									gid
-										&& that.focusImage(gid)
-									dialog.close()
+									var i = to_remove.indexOf(title)
+
+									i >= 0 ? 
+										to_remove.splice(i, 1) 
+										: to_remove.push(title)
+
+									dialog.update()
 								},
 							})
 						: make.Empty()
 				})
 				.close(function(){
+					all.forEach(function(title){
+						collections.indexOf(title) < 0
+							&& to_remove.indexOf(title) < 0
+							&& that.collect(gid, title)
+					})
 					to_remove.forEach(function(title){ 
 						that.uncollect(gid, title)
 					}) 
@@ -402,7 +446,13 @@ module.UICollection = core.ImageGridFeatures.Feature({
 
 	actions: UICollectionActions, 
 
-	handlers: [],
+	handlers: [
+		['uncollect',
+			function(_, gids, collection){
+				(collection == null || this.collection == collection)
+					&& this.reload(true)
+			}],
+	],
 })
 
 
