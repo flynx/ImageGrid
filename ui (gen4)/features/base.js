@@ -1474,9 +1474,14 @@ module.CropActions = actions.Actions({
 
 			Make a crop and use the given data object...
 			NOTE: data must be an instance of data.Data
+			NOTE: this will overwrite data.tags with this.data.tags
 			.crop(data)
-			.crop(data, true)
 				-> this
+
+			Make a crop and use the given data object but keep data.tags...
+			.crop(data, false)
+				-> this
+
 
 		NOTE: this is used as a basis for all the crop operations, so 
 			there is no need to bind to anything but this to handle a 
@@ -1489,13 +1494,15 @@ module.CropActions = actions.Actions({
 		function(list, flatten){ 
 			list = list || this.data.getImages()
 
-			if(this.crop_stack == null){
-				this.crop_stack = []
-			}
+			this.crop_stack = this.crop_stack || []
 			this.crop_stack.push(this.data)
 
 			if(list instanceof data.Data){
-				this.data = list 
+				if(flatten === false){
+					list.tags = this.data.tags
+				}
+
+				this.data = list
 
 			} else {
 				this.data = this.data.crop(list, flatten)

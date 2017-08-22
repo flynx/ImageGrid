@@ -24,7 +24,6 @@ var widgets = require('features/ui-widgets')
 // XXX should collections be in the Crop menu????
 
 // XXX things we need to do to collections:
-// 		- remove images (from collection) ????
 // 		- auto-collections
 // 			- tags -- adding/removing images adds/removes tags
 // 			- ribbons -- top / bottom / n-m / top+2 / ..
@@ -40,8 +39,21 @@ var widgets = require('features/ui-widgets')
 // 		locations:
 // 			- collection specific stuff (data) to collection path
 // 			- global stuff (images, tags, ...) to base index...
+// XXX handle tags here???
+// 		...keep them global or local to collection???
+// 		global sounds better...
 var CollectionActions = actions.Actions({
 
+	// Format:
+	// 	{
+	// 		<title>: {
+	// 			title: <title>,
+	// 			gid: <gid>,
+	// 			data: <data>,
+	// 			...
+	// 		},
+	// 		...
+	// 	}
 	collections: null,
 
 	get collection(){
@@ -49,7 +61,30 @@ var CollectionActions = actions.Actions({
 	set collection(value){
 		this.loadCollection(value) },
 
+	// XXX need a way to prevent multiple loads...
+	// 		...checking if .collection is set to collection is logical but
+	// 		may prevent reloading of collections -- i.e. loading a collection
+	// 		anew if it is already loaded...
+	// XXX doc the protocol...
 	loadCollection: ['- Collections/',
+		core.doc`Load collection...
+
+		This will get collection data and crop into it.
+			
+		If .data for a collection is not available this will do nothing, 
+		this enables extending actions to handle the collection in 
+		different ways.
+
+		The extending action if compatible must:
+			- construct data
+			- load data via:
+				this.crop(data)
+			- when done call:
+				this.collectionLoaded(collection)
+
+		XXX would be good to have a way to check if loading was done 
+			within this .loadCollection(..) call...
+		`,
 		function(collection){
 			if(collection == null 
 					|| this.collections == null 
@@ -57,8 +92,33 @@ var CollectionActions = actions.Actions({
 				return
 			}
 
-			this.crop(this.collections[collection].data)
+			var data = this.collections[collection].data
+
+			data
+				&& this.crop(data)
+				&& this.collectionLoaded(collection)	
 		}],
+
+	collectionLoaded: ['- Collections/',
+		core.doc`This is called by .loadCollection(..) or one of the 
+		overloading actions when collection load is done...
+		
+		`,
+		core.notUserCallable(function(collection){
+			// This is the window resize event...
+			//
+			// Not for direct use.
+			this.data.collection = this.location.collection = collection
+		})],
+	collectionUnloaded: ['- Collections/',
+		core.doc`This is called when unloading a collection.
+		`,
+		core.notUserCallable(function(collection){
+			// This is the window resize event...
+			//
+			// Not for direct use.
+		})],
+
 	saveCollection: ['- Collections/',
 		core.doc`Save current state to collection
 
@@ -71,6 +131,7 @@ var CollectionActions = actions.Actions({
 				-> this
 		`,
 		function(collection, empty){
+			var that = this
 			collection = collection || this.collection
 
 			if(collection == null){
@@ -82,15 +143,15 @@ var CollectionActions = actions.Actions({
 			collections[collection] = {
 				title: collection,
 
-				// XXX we need to trim .order to only the current images???
-				data: empty ? 
-					(new this.data.constructor())
-					: this.data
-						.clone()
-						.removeUnloadedGIDs()
-						.run(function(){
-							this.collection = collection
-						}),
+				// NOTE: we do not need to care about tags here as they 
+				// 		will get overwritten on load...
+				data: (empty ? 
+						(new this.data.constructor())
+						: this.data
+							.crop())
+					.run(function(){
+						this.collection = collection
+					}),
 			}
 		}],
 	newCollection: ['- Collections/',
@@ -104,7 +165,8 @@ var CollectionActions = actions.Actions({
 			return Object.keys(this.collections || {})
 				.filter(function(c){
 					return !gid 
-						|| that.collections[c].data.order.indexOf(gid) >= 0 })
+						|| that.collections[c].data.getImage(gid) })
+						//|| that.collections[c].data.order.indexOf(gid) >= 0 })
 		}],
 
 	collect: ['- Collections/',
@@ -196,14 +258,27 @@ var CollectionActions = actions.Actions({
 				return
 			}
 
+			// NOTE: we are not using .data.updateImagePositions(gids, 'hide') 
+			// 		here because it will remove the gids from everything
+			// 		while we need them removed only from ribbons...
+			var hideGIDs = function(){
+				var d = this
+				gids.forEach(function(gid){
+					var i = d.order.indexOf(gid)
+					Object.keys(d.ribbons).forEach(function(r){
+						delete d.ribbons[r][i]
+					})
+				})
+			}
+
 			if(this.collection == collection){
 				this.data
-					.removeGIDs(gids)
+					.run(hideGIDs)
 					.removeEmptyRibbons()
 			}
 
 			this.collections[collection].data
-				.removeGIDs(gids)
+				.run(hideGIDs)
 				.removeEmptyRibbons()
 		}],
 
@@ -216,15 +291,19 @@ var CollectionActions = actions.Actions({
 	// manage serialization and loading...
 	// XXX make this reflect the format automatically...
 	load: [function(json){
+		var that = this
 		var collections = {}
 		var c = json.collections || {}
 
 		Object.keys(c).forEach(function(title){
-				// XXX make this reflect the format automatically...
+			var data = data.Data
+				.fromJSON(c[title].data)
+
+			// XXX make this reflect the format automatically...
 			collections[title] = {
 				title: title,
 
-				data: data.Data.fromJSON(c[title].data)
+				data: data,
 			}
 		})
 
@@ -237,17 +316,22 @@ var CollectionActions = actions.Actions({
 		if(collections){
 			res.collections = {}
 			Object.keys(this.collections).forEach(function(title){
+				var data = collections[title].data.dumpJSON()
+				delete data.tags
+
 				// XXX make this reflect the format automatically...
 				res.collections[title] = {
 					title: title,
 
-					data: collections[title].data.dumpJSON()
+					data: data, 
 				}
 			})
 		}
 	} }],
 	clear: [function(){
+		this.collectionUnloaded('*')
 		delete this.collections
+		delete this.location.collection
 	}],
 })
 
@@ -272,15 +356,18 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 	handlers: [
 		// maintain the .collection state...
-		// XXX not yet sure if this is the right way to go...
-		['loadCollection',
-			function(_, collection){
-				if(this.collections && collection in this.collections){
-					this.data.collection = this.location.collection = collection
-				}
-			}],
-		['uncrop',
+		['uncrop.pre',
 			function(){
+				var collection = this.collection
+				return function(){
+					collection != this.data.collection
+						&& this.collectionUnloaded(collection) }
+			}],
+		['collectionLoaded',
+			function(){
+			}],
+		['collectionUnloaded',
+			function(collection){
 				var collection = this.location.collection = this.data.collection
 
 				// cleanup...
@@ -426,10 +513,11 @@ var UICollectionActions = actions.Actions({
 			return this.browseCollections(function(title){
 				this.joinCollect(title) }) })],
 
-	// XXX this is not used by metadata yet...
+	/*/ XXX this is not used by metadata yet...
 	metadataSection: ['- Image/',
 		function(gid, make){
 		}],
+	//*/
 })
 
 
@@ -463,6 +551,13 @@ module.UICollection = core.ImageGridFeatures.Feature({
 // 		- lazy load collections (load list, lazy-load data)
 // 		- load directories as collections...
 // 		- export collections to directories...
+
+// XXX lazy load collections...
+var FileSystemCollectionActions = actions.Actions({
+
+})
+
+
 var FileSystemCollection = 
 module.FileSystemCollection = core.ImageGridFeatures.Feature({
 	title: '',
@@ -470,11 +565,61 @@ module.FileSystemCollection = core.ImageGridFeatures.Feature({
 
 	tag: 'fs-collections',
 	depends: [
+		'index-format',
 		'fs',
 		'collections',
 	],
 
-	handlers: [],
+	actions: FileSystemCollectionActions,
+
+	handlers: [
+		// XXX maintain changes...
+		// XXX
+		[[
+			'collect',
+			'joinCollect',
+			'uncollect',
+
+			'saveCollection',
+
+			'removeCollection',
+		], 
+			function(){
+				// XXX mark changed collections...
+				// XXX added/removed collection -> mark collection index as changed...
+			}],
+
+		// XXX handle removed collections -- move to trash (???)
+		// 		...might be a good idea to add something like index gc API...
+		['prepareIndexForWrite',
+			function(res, _, full){
+				var changed = full == true 
+					|| res.changes === true
+					|| res.changes.collections
+
+				if(changed && res.raw.collections){
+					// select the actual changed collection list...
+					changed = changed === true ? 
+						Object.keys(res.raw.collections)
+						: changed
+
+					// collection index...
+					res.index['collection-index'] = Object.keys(this.collections)
+
+					Object.keys(changed)
+						// skip the raw field...
+						.filter(function(k){ return changed.indexOf(k) >= 0 })
+						.forEach(function(k){
+							// XXX use collection gid...
+							res.index['collections/' + k] = res.raw.collections[k]
+						})
+				}
+			}],
+		['prepareJSONForLoad',
+			function(res, json){
+				// XXX
+			}],
+	],
 })
 
 

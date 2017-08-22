@@ -1293,8 +1293,10 @@ var DataPrototype = {
 	//
 	// XXX needs more thought....
 	// 		do we need to move images by this???
-	updateImagePositions: function(from, mode){
+	updateImagePositions: function(from, mode, direction){
 		from = from != null && from.constructor !== Array ? [from] : from
+
+		var r = this.getRibbon('current')
 
 		this.eachImageList(function(cur, key, set){
 			set = this[set]
@@ -1322,6 +1324,11 @@ var DataPrototype = {
 				set[key] = this.makeSparseImages(from, cur)
 			}
 		})
+
+		// maintain focus...
+		if(from.indexOf(this.current) >= 0){
+			this.focusImage('r')
+		}
 
 		return this
 	},
@@ -2550,6 +2557,10 @@ var DataPrototype = {
 		return this
 	},
 
+
+
+	/***************************************** Cleanup and removal ***/
+
 	// Remove empty ribbons...
 	//
 	removeEmptyRibbons: function(){
@@ -2608,6 +2619,8 @@ var DataPrototype = {
 	// Remove GIDs...
 	//
 	// NOTE: this may result in empty ribbons...
+	// NOTE: to remove gids from lists but keep them in order use:
+	// 		.updateImagePositions(gids, 'hide')
 	removeGIDs: function(gids, direction){
 		var that = this
 		gids = gids || []
@@ -2628,15 +2641,12 @@ var DataPrototype = {
 			// attempt to first get next/prev within the current ribbon...
 			r = r.length > 0 ? r : order
 
-			var cur = this.getImage(this.current, direction || 'before', r)
+			this.current = this.getImage(this.current, direction || 'before', r)
 				|| this.getImage(this.current, direction == 'after' ? 'before' : 'after', r)
-
-			this.current = cur
 		}
 
 		this.order = order
-		this
-			.updateImagePositions()
+		this.updateImagePositions()
 
 		return this
 	},

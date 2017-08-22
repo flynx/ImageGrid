@@ -33,7 +33,6 @@ core.ImageGridFeatures.Feature('viewer-commandline', [
 core.ImageGridFeatures.Feature('viewer-minimal', [
 	'lifecycle',
 	'base-full',
-	'collections',
 
 	'peer',
 
@@ -50,6 +49,12 @@ core.ImageGridFeatures.Feature('viewer-minimal', [
 core.ImageGridFeatures.Feature('viewer-testing', [
 	'viewer-commandline',
 	'viewer-minimal',
+
+	'collections',
+
+	// XXX remove when done testing...
+	'-fs-collections',
+
 
 	'alias',
 
