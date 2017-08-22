@@ -741,7 +741,8 @@ var DataPrototype = {
 			// invalid gid...
 			// XXX need a better way to report errors...
 			if(i == -1){
-				return -1
+				//return -1
+				return undefined
 			}
 		}
 
@@ -1326,7 +1327,7 @@ var DataPrototype = {
 		})
 
 		// maintain focus...
-		if(from.indexOf(this.current) >= 0){
+		if(from && from.indexOf(this.current) >= 0){
 			this.focusImage('r')
 		}
 

@@ -42,6 +42,7 @@ var widgets = require('features/ui-widgets')
 // XXX handle tags here???
 // 		...keep them global or local to collection???
 // 		global sounds better...
+// XXX undo...
 var CollectionActions = actions.Actions({
 
 	// Format:
@@ -49,6 +50,8 @@ var CollectionActions = actions.Actions({
 	// 		<title>: {
 	// 			title: <title>,
 	// 			gid: <gid>,
+	//
+	// 			// base collection format -- raw data...
 	// 			data: <data>,
 	// 			...
 	// 		},
@@ -61,11 +64,36 @@ var CollectionActions = actions.Actions({
 	set collection(value){
 		this.loadCollection(value) },
 
-	// XXX need a way to prevent multiple loads...
-	// 		...checking if .collection is set to collection is logical but
-	// 		may prevent reloading of collections -- i.e. loading a collection
-	// 		anew if it is already loaded...
-	// XXX doc the protocol...
+	// Format:
+	// 	{
+	// 		<format>: <action-name>,
+	// 		...
+	// 	}
+	//
+	// NOTE: the 'data' handler is always first...
+	get collection_handlers(){
+		var handlers = this.__collection_handlers || {}
+
+		if(Object.keys(handlers).length == 0){
+			var that = this
+			handlers['data'] = null
+			this.actions.forEach(function(action){
+				var fmt = that.getActionAttr(action, 'collectionFormat')
+				if(fmt){
+					handlers[fmt] = action
+				}
+			})
+		}
+
+		return handlers
+	},
+
+	collectionDataLoader: ['- Collections/',
+		core.doc`Collection data loader`,
+		{collectionFormat: 'data'},
+		function(title, data){ 
+			return new Promise(function(resolve){ resolve(data.data) }) }],
+
 	loadCollection: ['- Collections/',
 		core.doc`Load collection...
 
@@ -75,28 +103,58 @@ var CollectionActions = actions.Actions({
 		this enables extending actions to handle the collection in 
 		different ways.
 
-		The extending action if compatible must:
-			- construct data
-			- load data via:
-				this.crop(data)
-			- when done call:
-				this.collectionLoaded(collection)
+		Protocol:
+		- collection format handlers: .collection_handlers
+			- built from actions that define .collectionFormat attr to 
+			  contain the target format string.
+		- format is determined by matching it to a key in .collections[collection]
+			e.g. 'data' is applicable if .collections[collection].data is not null
+		- the format key's value is passed to the handler action
+		- the handler is expected to return a promise
+		- only the first matching handler is called
+		- the data handler is always first to get checked
 
-		XXX would be good to have a way to check if loading was done 
-			within this .loadCollection(..) call...
+		For an example handler see:
+			.collectionDataLoader(..)
+
+
+		The .data handler is always first to enable caching, i.e. once some
+		non-data handler is done, it can set the .data which will be loaded
+		directly the next time.
+		To invalidate such a cache .data should simply be deleted.
 		`,
 		function(collection){
+			var that = this
 			if(collection == null 
 					|| this.collections == null 
 					|| !(collection in this.collections)){
 				return
 			}
 
-			var data = this.collections[collection].data
+			var data = this.collections[collection]
+			var handlers = this.collection_handlers
 
-			data
-				&& this.crop(data)
-				&& this.collectionLoaded(collection)	
+			// XXX might be good to sort handlers...
+			// XXX
+
+			for(var format in handlers){
+				if(data[format]){
+					return this[handlers[format]](collection, data)
+						.then(function(data){
+							data
+								&& that.crop.chainCall(that, function(){
+									// NOTE: the collection and .data may have different
+									// 		orders and/or sets of elements, this we need 
+									// 		to sync, and do it BEFORE all the rendering 
+									// 		happens...
+									that.data.updateImagePositions()
+								}, data)
+								// NOTE: we need this to sync the possible different 
+								// 		states (order, ...) of the collection and .data...
+								&& that.collectionLoaded(collection)	
+						})
+				}
+			}
 		}],
 
 	collectionLoaded: ['- Collections/',
@@ -148,9 +206,14 @@ var CollectionActions = actions.Actions({
 				data: (empty ? 
 						(new this.data.constructor())
 						: this.data
-							.crop())
+							.clone()
+							.removeUnloadedGIDs())
 					.run(function(){
 						this.collection = collection
+						// NOTE: we are doing this manually after .removeUnloadedGIDs(..)
+						// 		as the later will mess-up the structures 
+						// 		inherited from the main .data, namely tags...
+						this.tags = that.data.tags
 					}),
 			}
 		}],
@@ -166,7 +229,6 @@ var CollectionActions = actions.Actions({
 				.filter(function(c){
 					return !gid 
 						|| that.collections[c].data.getImage(gid) })
-						//|| that.collections[c].data.order.indexOf(gid) >= 0 })
 		}],
 
 	collect: ['- Collections/',
@@ -258,7 +320,7 @@ var CollectionActions = actions.Actions({
 				return
 			}
 
-			// NOTE: we are not using .data.updateImagePositions(gids, 'hide') 
+			/*/ NOTE: we are not using .data.updateImagePositions(gids, 'hide') 
 			// 		here because it will remove the gids from everything
 			// 		while we need them removed only from ribbons...
 			var hideGIDs = function(){
@@ -270,15 +332,18 @@ var CollectionActions = actions.Actions({
 					})
 				})
 			}
+			//*/
 
 			if(this.collection == collection){
 				this.data
-					.run(hideGIDs)
+					//.run(hideGIDs)
+					.removeGIDs(gids)
 					.removeEmptyRibbons()
 			}
 
 			this.collections[collection].data
-				.run(hideGIDs)
+				//.run(hideGIDs)
+				.removeGIDs(gids)
 				.removeEmptyRibbons()
 		}],
 
@@ -329,11 +394,13 @@ var CollectionActions = actions.Actions({
 		}
 	} }],
 	clear: [function(){
-		this.collectionUnloaded('*')
+		this.collection
+			&& this.collectionUnloaded('*')
 		delete this.collections
 		delete this.location.collection
 	}],
 })
+
 
 // XXX manage format...
 // XXX manage changes...
@@ -360,20 +427,26 @@ module.Collection = core.ImageGridFeatures.Feature({
 			function(){
 				var collection = this.collection
 				return function(){
-					collection != this.data.collection
+					collection != null 
+						&& collection != this.data.collection
 						&& this.collectionUnloaded(collection) }
 			}],
 		['collectionLoaded',
 			function(){
+				console.log('COLLECTION: LOADED')
 			}],
 		['collectionUnloaded',
-			function(collection){
+			function(_, collection){
 				var collection = this.location.collection = this.data.collection
 
 				// cleanup...
 				if(collection == null){
 					delete this.location.collection
 				}
+
+				console.log('COLLECTION: UNLOADED')
+
+				this.data.updateImagePositions()
 			}],
 	],
 })
@@ -551,10 +624,27 @@ module.UICollection = core.ImageGridFeatures.Feature({
 // 		- lazy load collections (load list, lazy-load data)
 // 		- load directories as collections...
 // 		- export collections to directories...
+// 		- collection history...
 
-// XXX lazy load collections...
 var FileSystemCollectionActions = actions.Actions({
 
+	// Format:
+	// 	{
+	// 		path: <string>,
+	// 		...
+	// 	}
+	collections: null,
+
+	collectionPathLoader: ['- Collections/',
+		{collectionFormat: 'path'},
+		function(data, loader){ 
+			// XXX
+		}],
+
+	loadPathCollections: ['- Collections/',
+		function(){
+			// XXX
+		}],
 })
 
 
