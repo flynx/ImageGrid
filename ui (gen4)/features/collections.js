@@ -53,6 +53,7 @@ var CollectionActions = actions.Actions({
 	//
 	// 			// base collection format -- raw data...
 	// 			data: <data>,
+	//
 	// 			...
 	// 		},
 	// 		...
@@ -66,11 +67,12 @@ var CollectionActions = actions.Actions({
 
 	// Format:
 	// 	{
+	// 		// NOTE: this is always the first handler...
+	// 		'data': <action-name>,
+	//
 	// 		<format>: <action-name>,
 	// 		...
 	// 	}
-	//
-	// NOTE: the 'data' handler is always first...
 	get collection_handlers(){
 		var handlers = this.__collection_handlers || {}
 
@@ -89,7 +91,16 @@ var CollectionActions = actions.Actions({
 	},
 
 	collectionDataLoader: ['- Collections/',
-		core.doc`Collection data loader`,
+		core.doc`Collection data loader
+		
+			.collectionDataLoader(title, data)
+				-> promise
+		
+		The resulting promise will resolve to a Data object that will get
+		loaded as the collection.
+
+		data is of the .collections item format.
+		`,
 		{collectionFormat: 'data'},
 		function(title, data){ 
 			return new Promise(function(resolve){ resolve(data.data) }) }],
@@ -157,6 +168,7 @@ var CollectionActions = actions.Actions({
 			}
 		}],
 
+	// events...
 	collectionLoaded: ['- Collections/',
 		core.doc`This is called by .loadCollection(..) or one of the 
 		overloading actions when collection load is done...
@@ -219,6 +231,11 @@ var CollectionActions = actions.Actions({
 		}],
 	newCollection: ['- Collections/',
 		function(collection){ return this.saveCollection(collection, true) }],
+	// XXX should we do anything special if collection is loaded???
+	removeCollection: ['- Collections/',
+		function(collection){
+			delete this.collections[collection]
+		}],
 
 	inCollections: ['- Image/',
 		core.doc`Get list of collections containing item`,
@@ -280,6 +297,8 @@ var CollectionActions = actions.Actions({
 		NOTE: for align docs see Data.join(..)
 		NOTE: if align is set to null or not given then it will be set 
 			to default value.
+		NOTE: this will join to the left (prepend) of the collections, this is 
+			different from how basic .join(..) works (appends)
 		`,
 		function(align, collection, data){
 			collection = arguments.length == 1 ? align : collection
@@ -289,15 +308,16 @@ var CollectionActions = actions.Actions({
 			// if only collection is given, reset align to null...
 			align = align === collection ? null : align
 
-			this.collections && this.collections[collection] ?
-				this.collections[collection].data.join(align, data || this.data.clone())
-				: this.saveCollection(collection)
-		}],
+			if(this.collections && this.collections[collection]){
+				//this.collections[collection].data.join(align, data || this.data.clone())
+				this.collections[collection].data = (data || this.data)
+					.clone()
+					.join(align, this.collections[collection].data)
 
-	// XXX do we actually need this???
-	// 		...a way to delete stuff from collections is to crop out 
-	// 		and overwrite...
-	// XXX should this reload???
+			} else {
+				this.saveCollection(collection)
+			}
+		}],
 	uncollect: ['Collections|Image/$Uncollect image',
 		{browseMode: function(){ return !this.collection && 'disabled' }},
 		function(gids, collection){
@@ -345,12 +365,6 @@ var CollectionActions = actions.Actions({
 				//.run(hideGIDs)
 				.removeGIDs(gids)
 				.removeEmptyRibbons()
-		}],
-
-	removeCollection: ['- Collections/',
-		function(collection){
-			// XXX
-			delete this.collections[collection]
 		}],
 
 	// manage serialization and loading...
@@ -402,8 +416,6 @@ var CollectionActions = actions.Actions({
 })
 
 
-// XXX manage format...
-// XXX manage changes...
 var Collection = 
 module.Collection = core.ImageGridFeatures.Feature({
 	title: '',
@@ -641,13 +653,15 @@ var FileSystemCollectionActions = actions.Actions({
 			// XXX
 		}],
 
-	loadPathCollections: ['- Collections/',
-		function(){
+	importCollectionsFromPath: ['- Collections|File/Import collections from path',
+		function(path){
 			// XXX
 		}],
 })
 
 
+// XXX manage format...
+// XXX manage changes...
 var FileSystemCollection = 
 module.FileSystemCollection = core.ImageGridFeatures.Feature({
 	title: '',
