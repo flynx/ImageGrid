@@ -1275,13 +1275,11 @@ var ControlActions = actions.Actions({
 	},
 
 	// Image click events...
-	imageBlockClick: ['- Interface/Image block click event',
-		core.doc`Image block click event
+	imageOuterBlockClick: ['- Interface/Image outer block click event',
+		core.doc`Image outer block click event
 
-		This is triggered on any click on an image block.
-
-		imageClick event if triggered is run between the .pre()/.post()
-		stages of this event.
+		This is triggered on click on an image block but outside of the
+		actual image.
 
 		The .pre(..) stage of the event is called before the clicked 
 		image is focused and the .post(..) stage is called after focusing
@@ -1294,11 +1292,13 @@ var ControlActions = actions.Actions({
 			//
 			// Not for direct use.
 		})],
-	imageOuterBlockClick: ['- Interface/Image block click event',
-		core.doc`Image outer block click event
+	imageBlockClick: ['- Interface/Image block click event',
+		core.doc`Image block click event
 
-		This is triggered on click on an image block but outside of the
-		actual image.
+		This is triggered on any click on an image block.
+
+		imageClick event if triggered is run between the .pre()/.post()
+		stages of this event.
 
 		The .pre(..) stage of the event is called before the clicked 
 		image is focused and the .post(..) stage is called after focusing
@@ -1330,13 +1330,11 @@ var ControlActions = actions.Actions({
 		})],
 
 	// Image menu events...
-	imageBlockMenu: ['- Interface/Image block menu event',
-		core.doc`Image block menu event
+	imageOuterBlockMenu: ['- Interface/Image outer block menu event',
+		core.doc`Image outer block menu event
 
-		This is triggered on any click on an image block.
-
-		imageMenu event if triggered is run between the .pre()/.post()
-		stages of this event.
+		This is triggered on menu on an image block but outside of the
+		actual image.
 
 		The .pre(..) stage of the event is called before the clicked 
 		image is focused and the .post(..) stage is called after focusing
@@ -1349,11 +1347,13 @@ var ControlActions = actions.Actions({
 			//
 			// Not for direct use.
 		})],
-	imageOuterBlockMenu: ['- Interface/Image block menu event',
+	imageBlockMenu: ['- Interface/Image block menu event',
 		core.doc`Image block menu event
 
-		This is triggered on menu on an image block but outside of the
-		actual image.
+		This is triggered on any click on an image block.
+
+		imageMenu event if triggered is run between the .pre()/.post()
+		stages of this event.
 
 		The .pre(..) stage of the event is called before the clicked 
 		image is focused and the .post(..) stage is called after focusing
@@ -1531,6 +1531,7 @@ var ControlActions = actions.Actions({
 							// XXX this does not remove the hammer trigger
 							// 		...just the jQuery handler is cleared
 							.off('tap')
+							.off('contextmenu', menuHandler)
 							//.removeData('hammer')
 					})
 				}
