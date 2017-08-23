@@ -1681,6 +1681,7 @@ module.BrowseActions = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX use image instead of image block in single image mode...
 var ContextActionMenu = 
 module.ContextActionMenu = core.ImageGridFeatures.Feature({
 	title: '',
@@ -1692,25 +1693,28 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 	],
 
 	handlers: [
-		['updateImage',
+		['imageMenu.pre',
 			function(_, gid){
-				var that = this
+				event.preventDefault()
+				event.stopPropagation()
 
-				var img = this.ribbons.getImage(gid)
+				this
+					.focusImage(gid)
+					.browseActions('/Image/')
+			}],
+		['imageOuterBlockMenu.pre',
+			function(_, gid){
+				// only show image menu in ribbon mode...
+				if(this.toggleSingleImage && this.toggleSingleImage('?') == 'on'){
+					return
+				}
 
-				!img.data('context-menu') 
-					&& img
-						.data('context-menu', true)
-						.on('contextmenu', function(){
-							event.preventDefault()
-							event.stopPropagation()
+				event.preventDefault()
+				event.stopPropagation()
 
-							var g = gid || that.ribbons.elemGID(img)
-
-							that
-								.focusImage(g)
-								.browseActions('/Image/')
-						})
+				this
+					.focusImage(gid)
+					.browseActions('/Image/')
 			}],
 		['load',
 			function(){
