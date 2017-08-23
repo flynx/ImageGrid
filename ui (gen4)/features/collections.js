@@ -22,6 +22,9 @@ var widgets = require('features/ui-widgets')
 
 /*********************************************************************/
 // XXX should collections be in the Crop menu????
+// 		...essentially a collection is a saved crop, so this would be 
+// 		logical, would simplify control, etc.
+// 		
 
 // XXX things we need to do to collections:
 // 		- auto-collections
@@ -583,17 +586,17 @@ var UICollectionActions = actions.Actions({
 
 	// Collections actions with collection selection...
 	// XXX should we warn the user when overwriting???
-	saveAsCollection: ['Collections/$Save as collection...',
+	saveAsCollection: ['Collections|Crop/$Save as collection...',
 		widgets.uiDialog(function(){
 			return this.browseCollections(function(title){
 				this.saveCollection(title) }) })],
-	addToCollection: ['Collections|Image/Add $image to collection...',
+	addToCollection: ['Collections|Crop|Image/Add $image to collection...',
 		widgets.uiDialog(function(gids){
 			return this.browseCollections(function(title){
 				this.collect(gids || this.current, title) }) })],
-	addLoadedToCollection: ['Collections/$Add loaded images to collection...',
+	addLoadedToCollection: ['Collections|Crop/$Add loaded images to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
-	joinToCollection: ['Collections/$Merge view to collection...',
+	joinToCollection: ['Collections|Crop/$Merge view to collection...',
 		widgets.uiDialog(function(){
 			return this.browseCollections(function(title){
 				this.joinCollect(title) }) })],

@@ -1085,11 +1085,11 @@ var BrowseActionsActions = actions.Actions({
 	config: {
 		'action-category-order': [
 			'99:$File',
-				// NOTE: we can order any sub-tree we want in the same 
-				// 		manner as the root...
+				// We can order any sub-tree we want in the same manner 
+				// as the root...
 				'File/-80:Clear viewer',
 				'File/-90:Close viewer',
-				// NOTE: non existing elements will not get drawn...
+				// Non existing elements will not get drawn...
 				//'File/-99:moo',
 			'80:$Edit',
 			'70:$Navigate',
@@ -1098,11 +1098,29 @@ var BrowseActionsActions = actions.Actions({
 			'40:$Crop',
 				'Crop/80:Crop $marked images',
 				'Crop/80:Crop $bookmarked images',
-				// NOTE: we can also add separators here...
-				//'Crop/70:---',
 				'Crop/60:$Crop',
-				'Crop/50:$Flatten',
+				'Crop/60:$Flatten',
+
+				// Path patterns...
+				// 
+				// Patters must contain ".*" and are case-insensitive...
+				// 
+				// NOTE: patterns are used to override priorities of all
+				// 		the matching paths...
+				'Crop/60:crop .*ribbon.*',
+				'Crop/50:crop.*',
+			
+				// We can also add separators here...
+				'Crop/11:---',
+
+				'Crop/10:.*collection.*',
+
+				'Crop/09:---',
+
+				// The rest of the elements in the path will get added 
+				// between the positive and negative prioritized items...
 				// ...
+
 				'Crop/-80:Uncrop and keep crop image order',
 				'Crop/-81:Uncrop all',
 				'Crop/-82:$Uncrop',
@@ -1215,9 +1233,12 @@ var BrowseActionsActions = actions.Actions({
 	browseActions: ['Interface/Dialog/Actions...',
 		makeUIDialog(function(path, options){
 			var actions = this
-			var priority = /^(-?[0-9]+)\s*:\s*/
-			var marker = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
-			marker = marker || RegExp(marker, 'g')
+
+			var PRIORITY = /^(-?[0-9]+)\s*:\s*/
+
+			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
+			MARKER = MARKER || RegExp(MARKER, 'g')
+
 			var dialog
 			options = options || {}
 
@@ -1232,7 +1253,7 @@ var BrowseActionsActions = actions.Actions({
 				pathPrefix: '/',
 				fullPathEdit: true,
 
-				item_shortcut_marker: marker,
+				item_shortcut_marker: MARKER,
 			}
 			cfg.__proto__ = this.config['browse-actions-settings']
 
@@ -1246,22 +1267,36 @@ var BrowseActionsActions = actions.Actions({
 			// syntax like prioority...
 			// returns:
 			// 	[<existing-text>, <new-level>]
+			//
+			// XXX this may mess up the ordering of items when using 
+			// 		item patterns...
 			var getItem = function(level, text){
 				// direct match...
 				if(text in level){
 					return [text, level[text]]
 
-				// check if it's a priority path... 
+				// check if it's a priority path or a pattern... 
 				} else {
-					var t = text.replace(priority, '')
-					t = (marker ? t.replace(marker, '$1') : t).trim()
+					var t = text.replace(PRIORITY, '')
+					t = (MARKER ? t.replace(MARKER, '$1') : t).trim()
 
 					for(var e in level){
-						var n = e.replace(priority, '')
-						n = (marker ? n.replace(marker, '$1') : n).trim()
+						var n = e.replace(PRIORITY, '')
+						n = (MARKER ? n.replace(MARKER, '$1') : n).trim()
 
 						if(n == t){
 							return [e, level[e]]
+						}
+
+						// check pattern...
+						var p = /\.\*/.test(n) ? new RegExp('^'+ n +'$', 'i') : null
+
+						if(p && p.test(t)){
+							// override item priority from pattern...
+							var pr = PRIORITY.exec(e)
+							pr = pr ? pr.pop() + ':' : ''
+
+							return [pr + text.replace(PRIORITY, ''), level[e]]
 						}
 					}
 				}
@@ -1310,6 +1345,7 @@ var BrowseActionsActions = actions.Actions({
 				path = path.slice()
 				// build leaf...
 				if(path.length == 0){
+					// handle "|" in leavs...
 					leaf.split(/\|/g)
 						.forEach(function(leaf){
 							var l = getItem(tree, leaf)[0]
@@ -1351,7 +1387,17 @@ var BrowseActionsActions = actions.Actions({
 
 			// pre-order the main categories...
 			// NOTE: pre_order can be a list of long paths...
-			var pre_order = this.config['action-category-order'] || []
+			var s = ''
+			var pre_order = (this.config['action-category-order'] || [])
+				.map(function(p, i){
+					// make all separators unique...
+					// ...this will prevent us from losing or merging them.
+					if(p.trimRight().endsWith('---')){
+						s += '-'
+						p = p.trimRight() + s
+					}
+					return p
+				})
 			pre_order.forEach(function(key){
 				var path = key.split(/[\\\/]/g)
 				var leaf = path.pop()
@@ -1459,24 +1505,28 @@ var BrowseActionsActions = actions.Actions({
 						//	NN < 0		- is sorted below the non-prioritized
 						//					elements, the lower the number 
 						//					the lower the element
+						// other		- keep order
 						.sort(function(a, b){
-							var ai = priority.exec(a)
+							var ai = PRIORITY.exec(a)
 							ai = ai ? ai.pop()*1 : null
 							ai = ai > 0 ? -ai
 								: ai < 0 ? -ai + level.length
-								: level.indexOf(a)
+								: 0 //level.indexOf(a)
 
-							var bi = priority.exec(b)
+							var bi = PRIORITY.exec(b)
 							bi = bi ? bi.pop()*1 : null
 							bi = bi > 0 ? -bi
 								: bi < 0 ? -bi + level.length
-								: level.indexOf(b)
+								: 0 //level.indexOf(b)
 
-							return ai - bi
+							var o = ai - bi
+							return o == 0 ? 
+								level.indexOf(a) - level.indexOf(b) 
+								: o
 						})
 						.forEach(function(key){
 							// remove the order...
-							var text = key.replace(priority, '').trim()
+							var text = key.replace(PRIORITY, '').trim()
 
 							// Item: action...
 							if(cur[key] instanceof Array){
@@ -1550,7 +1600,7 @@ var BrowseActionsActions = actions.Actions({
 									|| (cur[key] != null
 										&& Object.keys(cur[key]).length > 0)){
 								var p = '/'+ path.concat([text]).join('/') +'/'
-								p = marker ? p.replace(marker, '$1') : p
+								p = MARKER ? p.replace(MARKER, '$1') : p
 								make(text + '/', { push_on_open: true })
 									.attr({
 										keys: [
@@ -1560,8 +1610,8 @@ var BrowseActionsActions = actions.Actions({
 									})
 
 							// item: line...
-							} else if(text == '---'){
-								make(text)
+							} else if(/---+/.test(text)){
+								make('---')
 							}
 						})
 				}

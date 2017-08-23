@@ -360,6 +360,7 @@ module.GLOBAL_KEYBOARD = {
 		// collections...
 		//alt_C: 'browseCollections',
 		alt_C: 'browseActions: "/Collections/" -- Collections menu...',
+		shift_O: 'browseCollections',
 
 
 		// metadata...
