@@ -1098,8 +1098,8 @@ var BrowseActionsActions = actions.Actions({
 			'40:$Crop',
 				'Crop/80:Crop $marked images',
 				'Crop/80:Crop $bookmarked images',
-				'Crop/60:$Crop',
-				'Crop/60:$Flatten',
+				'Crop/70:$Crop',
+				'Crop/70:$Flatten',
 
 				// Path patterns...
 				// 
@@ -1107,8 +1107,13 @@ var BrowseActionsActions = actions.Actions({
 				// 
 				// NOTE: patterns are used to override priorities of all
 				// 		the matching paths...
+				// NOTE: intersecting patterns are handled in order of 
+				// 		occurrence thus a more general pattern may 
+				// 		"shadow" all the compatible but less general 
+				// 		patterns after it...
+				// 		XXX this may get fixed in the future, but currently
+				// 			this is not a bug...
 				'Crop/60:crop .*ribbon.*',
-				'Crop/50:crop.*',
 
 				// The rest of the elements in the path will get added 
 				// between the positive and negative prioritized items...
