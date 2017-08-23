@@ -446,7 +446,7 @@ module.SortActions = actions.Actions({
 			var cache = this.data.sort_order = this.data.sort_order || {}
 			cache[title] = this.data.order.slice()
 		}],
-	loadOrder: ['- Srot/',
+	loadOrder: ['- Sort/',
 		function(title, reverse){
 			var order = (this.data.sort_order || {})[title]
 			if(order){

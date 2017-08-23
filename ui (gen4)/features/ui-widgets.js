@@ -1109,17 +1109,21 @@ var BrowseActionsActions = actions.Actions({
 				// 		the matching paths...
 				'Crop/60:crop .*ribbon.*',
 				'Crop/50:crop.*',
-			
-				// We can also add separators here...
-				'Crop/11:---',
-
-				'Crop/10:.*collection.*',
-
-				'Crop/09:---',
 
 				// The rest of the elements in the path will get added 
 				// between the positive and negative prioritized items...
 				// ...
+			
+				// We can also add separators here...
+				// NOTE: the separator is the only element in a level 
+				// 		that can be used multiple times.
+				// 		...any other elements with identical text will 
+				// 		get overwritten by the last occurrence...
+				'Crop/-50:---',
+
+				'Crop/-60:.*collection.*',
+
+				'Crop/-70:---',
 
 				'Crop/-80:Uncrop and keep crop image order',
 				'Crop/-81:Uncrop all',
