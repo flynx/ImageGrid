@@ -47,6 +47,11 @@ var widgets = require('features/ui-widgets')
 // 		global sounds better...
 // XXX undo...
 var CollectionActions = actions.Actions({
+	config: {
+		// XXX add default collection list to config...
+		'default-collections': [
+		],
+	},
 
 	// Format:
 	// 	{
@@ -470,6 +475,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX make collections sortable...
 // XXX do we need a collection button (like crop button?) ???
 // XXX show collections in image metadata...
 var UICollectionActions = actions.Actions({
