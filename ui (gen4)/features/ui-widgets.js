@@ -1520,18 +1520,17 @@ var BrowseActionsActions = actions.Actions({
 							ai = ai ? ai.pop()*1 : null
 							ai = ai > 0 ? -ai
 								: ai < 0 ? -ai + level.length
-								: 0 //level.indexOf(a)
+								: 0
 
 							var bi = PRIORITY.exec(b)
 							bi = bi ? bi.pop()*1 : null
 							bi = bi > 0 ? -bi
 								: bi < 0 ? -bi + level.length
-								: 0 //level.indexOf(b)
+								: 0
 
-							var o = ai - bi
-							return o == 0 ? 
+							return ai == bi ? 
 								level.indexOf(a) - level.indexOf(b) 
-								: o
+								: ai - bi
 						})
 						.forEach(function(key){
 							// remove the order...
