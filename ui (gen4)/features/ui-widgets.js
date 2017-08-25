@@ -1693,7 +1693,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 	handlers: [
 		['imageMenu.pre',
-			function(_, gid){
+			function(gid){
 				event.preventDefault()
 				event.stopPropagation()
 
@@ -1727,7 +1727,8 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 							event.preventDefault()
 							event.stopPropagation()
 
-							that.browseActions()
+							that.focused
+								&& that.browseActions()
 						})
 			}],
 	],

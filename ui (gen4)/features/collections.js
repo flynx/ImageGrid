@@ -498,6 +498,7 @@ var UICollectionActions = actions.Actions({
 					make.EditableList(collections, 
 						{
 							unique: true,
+							sortable: 'y',
 							to_remove: to_remove,
 							itemopen: function(title){
 								var gid = that.current

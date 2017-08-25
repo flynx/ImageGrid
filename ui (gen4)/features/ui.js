@@ -154,6 +154,10 @@ module.ViewerActions = actions.Actions({
 		// 		transition.
 		'resize-done-timeout': 300,
 
+		// The timeout to wait after window focus before setting .focused 
+		// to true.
+		'window-focus-timeout': 200,
+
 		
 		// Theme to set on startup...
 		'theme': null,
@@ -227,6 +231,14 @@ module.ViewerActions = actions.Actions({
 			this.images[this.current] = val
 		}
 	},
+
+	// Focus...
+	//
+	// This is true when window is focused and false when not + 200ms 
+	// after focusing.
+	// This enables the used to ignore events that lead to window focus.
+	get focused(){
+		return !!this.__focus_lock.state },
 
 	// Scaling...
 	//
@@ -735,6 +747,36 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					delete this.__viewer_resize
 				}
 			}],
+
+		// focus-lock...
+		['start',
+			function(){
+				var that = this
+				var focus_lock = this.__focus_lock = this.__focus_lock || {}
+				var focused = focus_lock.state = focus_lock.state || document.hasFocus()
+				var unlock = focus_lock.unlock = focus_lock.unlock 
+					|| function(){ setTimeout(
+							function(){ focus_lock.state = true },
+							that.config['window-focus-timeout'] || 0) }
+				var lock = focus_lock.lock = focus_lock.lock 
+					|| function(){ focus_lock.state = false }
+
+				$(window)
+					.focus(unlock)
+					.blur(lock)
+			}],
+		['stop',
+			function(){
+				var focus_lock = this.__focus_lock = this.__focus_lock || {}
+				var unlock = focus_lock.unlock 
+				var lock = focus_lock.lock
+
+				unlock 
+					&& $(window).off('focus', unlock)
+				lock 
+					&& $(window).off('blur', lock)
+			}],
+
 		/*/ force browser to redraw images after resize...
 		// NOTE: this fixes a bug where images are not always updated 
 		// 		when off-screen...
@@ -1281,9 +1323,10 @@ var ControlActions = actions.Actions({
 		This is triggered on click on an image block but outside of the
 		actual image.
 
-		The .pre(..) stage of the event is called before the clicked 
-		image is focused and the .post(..) stage is called after focusing
-		is done.
+		imageBlockClick event is triggered and run between the .pre()/.post()
+		stages of this event.
+
+		imageClick is not triggered.
 
 		NOTE: this does not account for animation.
 		`,
@@ -1330,15 +1373,18 @@ var ControlActions = actions.Actions({
 		})],
 
 	// Image menu events...
+	//
+	// NOTE: these will not focus an image...
 	imageOuterBlockMenu: ['- Interface/Image outer block menu event',
 		core.doc`Image outer block menu event
 
 		This is triggered on menu on an image block but outside of the
 		actual image.
 
-		The .pre(..) stage of the event is called before the clicked 
-		image is focused and the .post(..) stage is called after focusing
-		is done.
+		imageBlockMenu event is triggered and run between the .pre()/.post()
+		stages of this event.
+
+		imageMenu is not triggered.
 
 		NOTE: this does not account for animation.
 		`,
@@ -1355,10 +1401,6 @@ var ControlActions = actions.Actions({
 		imageMenu event if triggered is run between the .pre()/.post()
 		stages of this event.
 
-		The .pre(..) stage of the event is called before the clicked 
-		image is focused and the .post(..) stage is called after focusing
-		is done.
-
 		NOTE: this does not account for animation.
 		`,
 		core.notUserCallable(function(gid, x, y){
@@ -1372,10 +1414,6 @@ var ControlActions = actions.Actions({
 		This is triggered only if the click/tap is made within the actual 
 		image.
 
-		The .pre(..) stage of the event is called before the clicked 
-		image is focused and the .post(..) stage is called after focusing
-		is done.
-
 		NOTE: this does not account for animation.
 		`,
 		core.notUserCallable(function(gid, x, y){
@@ -1383,7 +1421,6 @@ var ControlActions = actions.Actions({
 			//
 			// Not for direct use.
 		})],
-
 
 	// XXX do not do anything on viewer focus... (???)
 	// XXX depends on .ribbons...
@@ -1468,7 +1505,7 @@ var ControlActions = actions.Actions({
 					return (x >= dw && x <= W-dw)
 						&& (y >= dh && y <= H-dh)
 				}
-				var makeImageHandler = function(outerBlockEvt, blockEvt, imageEvt){
+				var makeImageHandler = function(outerBlockEvt, blockEvt, imageEvt, focus){
 					return function(){
 						var img = img || $(event.target)
 						var gid = that.ribbons.elemGID(img)
@@ -1477,20 +1514,35 @@ var ControlActions = actions.Actions({
 
 						var clicked_image = isImageClicked(event, img)
 
+						// ignore clicks when focusing window...
+						if(!that.focused){
+							return
+						}
+
 						var inner = function(){
-							that[blockEvt]
-								.chainCall(that, 
-									function(){ 
-										clicked_image ?
+							focus ?
+								that[blockEvt]
+									.chainCall(that, 
+										function(){ 
+											clicked_image ?
+												// trigger this only if we clicked
+												// within the image...
+												that[imageEvt]
+													.chainCall(that, 
+														function(){ that.focusImage(gid) }, 
+														gid, x, y)
+												: that.focusImage(gid)
+										},
+										gid, x, y)
+								: that[blockEvt]
+									.chainCall(that, 
+										function(){ 
 											// trigger this only if we clicked
 											// within the image...
-											that[imageEvt]
-												.chainCall(that, 
-													function(){ that.focusImage(gid) }, 
-													gid, x, y)
-											: that.focusImage(gid)
-									},
-									gid, x, y)
+											clicked_image
+												&& that[imageEvt](gid, x, y)
+										},
+										gid, x, y)
 						}
 
 						!clicked_image ?
@@ -1500,11 +1552,11 @@ var ControlActions = actions.Actions({
 					}
 				}
 
+				// the main handlers...
 				var tapHandler = setup.tapHandler = setup.tapHandler 
-					|| makeImageHandler('imageOuterBlockClick', 'imageBlockClick', 'imageClick')
+					|| makeImageHandler('imageOuterBlockClick', 'imageBlockClick', 'imageClick', true)
 				var menuHandler = setup.menuHandler = setup.menuHandler 
-					|| makeImageHandler('imageOuterBlockMenu', 'imageBlockMenu', 'imageMenu')
-
+					|| makeImageHandler('imageOuterBlockMenu', 'imageBlockMenu', 'imageMenu', false)
 
 				// on...
 				if(state == 'on'){
@@ -2095,6 +2147,7 @@ module.Control = core.ImageGridFeatures.Feature({
 				this.toggleSwipeHandling('off')
 				this.toggleRibbonPanHandling('off')
 			}],
+
 		['toggleSingleImage',
 			function(){
 				this.toggleRibbonPanHandling(
