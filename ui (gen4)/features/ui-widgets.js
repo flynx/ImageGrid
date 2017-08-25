@@ -1169,11 +1169,9 @@ var BrowseActionsActions = actions.Actions({
 	//
 	// This uses action definition to build and present an action tree.
 	//
-	// This supports the following element syntax:
-	// 	- leading '- ' in path to indicate a hidden/disabled element.
-	// 		Example: 
-	// 			'- Path/To/Element'			(disabled/hidden)
-	// 			'Path/To/Other element'		(enabled)
+	// This supports the following element (action doc) syntax:
+	// 	- '/' separated action path (action short doc) to indicate the
+	// 	  path to action.
 	//
 	// 	- leading path element number followed by colon to indicate 
 	// 	  element priority on level.
@@ -1184,6 +1182,13 @@ var BrowseActionsActions = actions.Actions({
 	// 	  		with less or no priority.
 	// 	  NOTE: an item with negative priority will be below any item 
 	// 	  		with greater or no priority.
+	//
+	// 	- leading '-' in path to indicate a hidden/disabled element.
+	// 		Example: 
+	// 			'- Path/To/Element'			(disabled/hidden)
+	// 			'- 99:Path/To/Element'		(disabled/hidden)
+	// 			'Path/To/Other element'		(enabled)
+	//
 	//
 	//
 	// Action mode (disabled/hidden) and also be controlled dynamically:
@@ -1715,6 +1720,10 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 					.focusImage(gid)
 					.browseActions('/Image/')
 			}],
+
+		// NOTE: we are using load here and not 'start' because at start
+		// 		there may be no viewer yet...
+		// 		XXX is this a bug???
 		['load',
 			function(){
 				var that = this
