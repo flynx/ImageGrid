@@ -199,12 +199,24 @@ actions.Actions({
 	//
 	// XXX do we need to call .syncTags(..) here???
 	load: ['- File|Interface/',
+		core.doc`Load state...
+		
+		Loading is done in two stages:
+			- A cleanup stage (pre)
+				In most cases nothing is needed on this stage because 
+				the base .load(..) will call .clear()
+			- the load stage (post)
+				This is where all the loading should be handled in most 
+				situations.
+		`,
 		{journal: true},
 		function(d){
 			this.clear()
 
-			this.images = images.Images(d.images)
-			this.data = data.Data(d.data)
+			return function(){
+				this.images = images.Images(d.images)
+				this.data = data.Data(d.data)
+			}
 		}],
 	// XXX should this clear or load empty???
 	clear: ['File/Clear',
@@ -1402,13 +1414,12 @@ module.CropActions = actions.Actions({
 
 	// load the crop stack if present...
 	load: [function(data){
-		// clear previous crop state...
-		delete this.crop_stack
-
-		if(data.crop_stack){
-			this.crop_stack = data.crop_stack.map(function(j){
-				return data.Data(j)
-			})
+		return function(){
+			if(data.crop_stack){
+				this.crop_stack = data.crop_stack.map(function(j){
+					return data.Data(j)
+				})
+			}
 		}
 	}],
 	clear: [function(){ 

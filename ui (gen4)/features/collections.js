@@ -68,10 +68,40 @@ var CollectionActions = actions.Actions({
 	// 	}
 	collections: null,
 
+
 	get collection(){
 		return this.location.collection },
 	set collection(value){
 		this.loadCollection(value) },
+
+	get collection_order(){
+		if(this.collections == null){
+			return null
+		}
+
+		var collections = this.collections
+		var keys = Object.keys(collections)
+		var order = this.__collection_order = this.__collection_order || []
+
+		// add unsorted things to the head of the list...
+		var res = keys
+			.concat(order)
+			.reverse()
+			.unique()
+			.reverse()
+
+		// remove stuff not present...
+		if(res.length > keys.length){
+			res = res.filter(function(e){ return e in collections })
+		}
+
+		this.__collection_order.splice.apply(this.__collection_order, 
+			[0, this.__collection_order.length].concat(res))
+
+		return this.__collection_order
+	},
+	set collection_order(value){
+		this.__collection_order = value },
 
 	// Format:
 	// 	{
@@ -250,7 +280,8 @@ var CollectionActions = actions.Actions({
 		function(gid){
 			var that = this
 			gid = this.data.getImage(gid)
-			return Object.keys(this.collections || {})
+			//return Object.keys(this.collections || {})
+			return this.collection_order
 				.filter(function(c){
 					return !gid 
 						|| that.collections[c].data.getImage(gid) })
@@ -381,28 +412,40 @@ var CollectionActions = actions.Actions({
 		var that = this
 		var collections = {}
 		var c = json.collections || {}
-
+		var order = json.collection_order || Object.keys(c)
+			
 		Object.keys(c).forEach(function(title){
-			var data = data.Data
+			var d = data.Data
 				.fromJSON(c[title].data)
 
 			// XXX make this reflect the format automatically...
 			collections[title] = {
 				title: title,
 
-				data: data,
+				data: d,
 			}
 		})
 
-		if(Object.keys(collections).length > 0){
-			this.collections = collections
+		return function(){
+			if(Object.keys(collections).length > 0){
+				this.collection_order = order
+				this.collections = collections
+			}
 		}
 	}],
+	// NOTE: we do not store .collection_order here, because we order 
+	// 		the collections in the object.
+	// 		...when saving a partial collection set, for example in
+	// 		.prepareIndexForWrite(..) it would be necessary to add it 
+	// 		in to maintain the correct order when merging... (XXX)
 	json: [function(){ return function(res){
 		var collections = this.collections
+
 		if(collections){
+			var order = this.collection_order
+
 			res.collections = {}
-			Object.keys(this.collections).forEach(function(title){
+			order.forEach(function(title){
 				var data = collections[title].data.dumpJSON()
 				delete data.tags
 
@@ -419,6 +462,7 @@ var CollectionActions = actions.Actions({
 		this.collection
 			&& this.collectionUnloaded('*')
 		delete this.collections
+		delete this.__collection_order
 		delete this.location.collection
 	}],
 })
@@ -493,7 +537,8 @@ var UICollectionActions = actions.Actions({
 									.addClass('highlighted')
 						})
 
-					var collections = Object.keys(that.collections || {})
+					//var collections = Object.keys(that.collections || {})
+					var collections = that.collection_order = that.collection_order || []
 
 					make.EditableList(collections, 
 						{
@@ -513,6 +558,7 @@ var UICollectionActions = actions.Actions({
 							check: function(title){ 
 								return title.length > 0 },
 
+							// XXX should this be "on close"???
 							itemadded: function(title){
 								action ?
 									that.newCollection(title)
@@ -548,7 +594,8 @@ var UICollectionActions = actions.Actions({
 									.addClass('highlighted')
 						})
 
-					all = Object.keys(that.collections || {})
+					//all = Object.keys(that.collections || {})
+					all = that.collection_order = that.collection_order || []
 
 					collections = collections 
 						|| that.inCollections(gid || null)
