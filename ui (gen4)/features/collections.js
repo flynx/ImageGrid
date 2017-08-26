@@ -74,6 +74,7 @@ var CollectionActions = actions.Actions({
 	set collection(value){
 		this.loadCollection(value) },
 
+	// XXX should this check consistency???
 	get collection_order(){
 		if(this.collections == null){
 			return null

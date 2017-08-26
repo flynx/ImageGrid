@@ -2152,7 +2152,7 @@ var FileSystemWriterUIActions = actions.Actions({
 
 	// XXX this needs feedback...
 	// XXX should this return a promise???
-	saveIndexHere: ['File/Save',
+	saveIndexHere: ['File/$Save',
 		function(){ 
 			if(this.location.path){ 
 				this.saveIndex() 
@@ -2172,10 +2172,10 @@ var FileSystemWriterUIActions = actions.Actions({
 				.saveIndexHere()}],
 
 	// XXX need to be able to make dirs...
-	browseExportIndex: ['File/Export/Export Index to...',
+	browseExportIndex: ['File/Export/Export Index...',
 		makeBrowseProxy('exportIndex')],
 	// XXX need to be able to make dirs...
-	browseExportDirs: ['File/Export/Export Images to...',
+	browseExportDirs: ['File/Export/Export Images...',
 		makeBrowseProxy('exportDirs')],
 
 
@@ -2351,7 +2351,7 @@ var FileSystemWriterUIActions = actions.Actions({
 		},
 	},
 	// XXX indicate export state: index, crop, image...
-	exportDialog: ['File/Export/Export optioons...',
+	exportDialog: ['File/Export/$Export...',
 		widgets.makeUIDialog(function(){
 			var that = this
 

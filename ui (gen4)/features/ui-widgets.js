@@ -1736,8 +1736,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 							event.preventDefault()
 							event.stopPropagation()
 
-							that.focused
-								&& that.browseActions()
+							that.browseActions()
 						})
 			}],
 	],

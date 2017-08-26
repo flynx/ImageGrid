@@ -10,6 +10,7 @@
 *	- ui-url-hash
 *		handle .location.hash
 *	- ui-cursor
+	- ui-unfocused-lock
 *	- ui-control
 *		touch/mouse control mechanics
 *
@@ -154,10 +155,6 @@ module.ViewerActions = actions.Actions({
 		// 		transition.
 		'resize-done-timeout': 300,
 
-		// The timeout to wait after window focus before setting .focused 
-		// to true.
-		'window-focus-timeout': 200,
-
 		
 		// Theme to set on startup...
 		'theme': null,
@@ -231,14 +228,6 @@ module.ViewerActions = actions.Actions({
 			this.images[this.current] = val
 		}
 	},
-
-	// Focus...
-	//
-	// This is true when window is focused and false when not + 200ms 
-	// after focusing.
-	// This enables the used to ignore events that lead to window focus.
-	get focused(){
-		return !!this.__focus_lock.state },
 
 	// Scaling...
 	//
@@ -748,35 +737,6 @@ module.Viewer = core.ImageGridFeatures.Feature({
 				}
 			}],
 
-		// focus-lock...
-		['start',
-			function(){
-				var that = this
-				var focus_lock = this.__focus_lock = this.__focus_lock || {}
-				var focused = focus_lock.state = focus_lock.state || document.hasFocus()
-				var unlock = focus_lock.unlock = focus_lock.unlock 
-					|| function(){ setTimeout(
-							function(){ focus_lock.state = true },
-							that.config['window-focus-timeout'] || 0) }
-				var lock = focus_lock.lock = focus_lock.lock 
-					|| function(){ focus_lock.state = false }
-
-				$(window)
-					.focus(unlock)
-					.blur(lock)
-			}],
-		['stop',
-			function(){
-				var focus_lock = this.__focus_lock = this.__focus_lock || {}
-				var unlock = focus_lock.unlock 
-				var lock = focus_lock.lock
-
-				unlock 
-					&& $(window).off('focus', unlock)
-				lock 
-					&& $(window).off('blur', lock)
-			}],
-
 		/*/ force browser to redraw images after resize...
 		// NOTE: this fixes a bug where images are not always updated 
 		// 		when off-screen...
@@ -1272,6 +1232,94 @@ module.Cursor = core.ImageGridFeatures.Feature({
 
 
 /*********************************************************************/
+// Lock mouse when unfocused...
+
+var LockUnfocusedActions = actions.Actions({
+	config: {
+		'lock-unfocused': 'on',
+
+		// The timeout to wait after window focus before setting .focused 
+		// to true.
+		'window-focus-timeout': 200,
+	},
+
+	// Focus...
+	//
+	// This is true when window is focused and false when not + 200ms 
+	// after focusing.
+	// This enables the used to ignore events that lead to window focus.
+	get focused(){
+		return that.dom.find('.lock-clicks').length > 0 },
+
+	toggleUnfocusedLock: ['Interface/Lock unfocused viewer',
+		core.doc`Toggle unfocused viewer locking...
+
+		NOTE: this defines the handlers on window.`,
+		core.makeConfigToggler('lock-unfocused',
+			['off', 'on'],
+			function(state){
+				var that = this
+				var handlers = this.__focus_lock_handlers = this.__focus_lock_handlers || {}
+				var unlock = handlers.unlock = handlers.unlock
+					|| function(){ 
+						setTimeout(function(){ 
+							that.dom.find('.lock-clicks').remove() 
+						}, that.config['window-focus-timeout'] || 0) }
+				var lock = handlers.lock = handlers.lock
+					|| function(){
+						that.dom.find('.lock-clicks').length == 0
+							&& that.dom
+								.append($('<div>')
+									.addClass('lock-clicks')
+									.on('click contextmenu',function(evt){
+										evt.stopPropagation()
+										evt.preventDefault()
+									})) }
+
+				// we reset the handlers to avoid multiple triggers...
+				$(window)
+					.off('focus', unlock)
+					.off('blur', lock)
+
+				// setup...
+				if(state == 'on'){
+					$(window)
+						.focus(unlock)
+						.blur(lock)
+
+					// setup initial state...
+					document.hasFocus() ? unlock() : lock()
+
+				// tare down...
+				} else {
+					unlock()
+					delete this.__focus_lock_handlers
+				}
+			})],
+})
+
+var LockUnfocused = 
+module.LockUnfocused = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-unfocused-lock',
+	depends: [
+		'ui'
+	],
+
+	actions: LockUnfocusedActions,
+
+	handlers: [
+		['start',
+			function(){
+				this.toggleUnfocusedLock('!') }],
+	],
+})
+
+
+
+/*********************************************************************/
 // Touch/Control...
 //
 //	.__control_in_progress
@@ -1513,11 +1561,6 @@ var ControlActions = actions.Actions({
 						var y = event.offsetY
 
 						var clicked_image = isImageClicked(event, img)
-
-						// ignore clicks when focusing window...
-						if(!that.focused){
-							return
-						}
 
 						var inner = function(){
 							focus ?
