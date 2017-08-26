@@ -1254,7 +1254,10 @@ var LockUnfocusedActions = actions.Actions({
 	toggleUnfocusedLock: ['Interface/Lock unfocused viewer',
 		core.doc`Toggle unfocused viewer locking...
 
-		NOTE: this defines the handlers on window.`,
+		When enabled this will prevent mouse, touch and context menu events
+		from reaching the viewer.
+
+		NOTE: this defines the focus/blur handlers on the window object.`,
 		core.makeConfigToggler('lock-unfocused',
 			['off', 'on'],
 			function(state){
