@@ -214,8 +214,12 @@ actions.Actions({
 			this.clear()
 
 			return function(){
-				this.images = images.Images(d.images)
-				this.data = data.Data(d.data)
+				this.images = d.images instanceof images.Images ? 
+					d.images 
+					: images.Images(d.images)
+				this.data = d.data instanceof data.Data ? 
+					d.data 
+					: data.Data(d.data)
 			}
 		}],
 	// XXX should this clear or load empty???
@@ -1447,8 +1451,25 @@ module.CropActions = actions.Actions({
 					&& this.crop_stack 
 					&& this.crop_stack.length > 0){
 				res.crop_stack = this.crop_stack.map(function(c){
-					return c.dumpJSON()
+					return c
+						.dumpJSON()
+						.run(function(){
+							delete this.tags })
 				})
+			}
+		}
+	}],
+	load: [function(state){
+		return function(){
+			var that = this
+
+			if(state.crop_stack){
+				that.crop_stack = (state.crop_stack || [])
+					.map(function(d){
+						return d instanceof data.Data ? d : data.Data(d) })
+
+				// merge the tags...
+				that.crop_stack.forEach(function(d){ d.tags = that.data.tags })
 			}
 		}
 	}],
@@ -1666,6 +1687,8 @@ module.CropActions = actions.Actions({
 			var selector = mode == 'any' ? 'getTaggedByAny' : 'getTaggedByAll'
 			this.crop(this.data[selector](tags), flatten)
 		}],
+
+
 })
 
 

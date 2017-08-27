@@ -26,6 +26,8 @@ var widgets = require('features/ui-widgets')
 // 		logical, would simplify control, etc.
 // 		
 
+var MAIN_COLLECTION_TITLE = 'All'
+
 // XXX things we need to do to collections:
 // 		- auto-collections
 // 			- tags -- adding/removing images adds/removes tags
@@ -200,6 +202,34 @@ var CollectionActions = actions.Actions({
 			var collection_data = this.collections[collection]
 			var handlers = this.collection_handlers
 
+			// main view -> save it...
+			if(this.collection == null){
+				this.collections[MAIN_COLLECTION_TITLE] = {
+					title: MAIN_COLLECTION_TITLE,
+					data: this.data,
+					crop_stack: this.crop_stack,
+				}
+			}
+
+			// load main collection...
+			if(collection == MAIN_COLLECTION_TITLE){
+				var state = this.collections[MAIN_COLLECTION_TITLE]
+
+				this.load({
+					data: state.data,
+					crop_stack: state.crop_stack,
+
+					// keep the collections...
+					collections: this.collections,
+					collection_order: this.collection_order,
+				})
+
+				delete this.collections[MAIN_COLLECTION_TITLE]
+
+				return new Promise(function(resolve){ resolve(data) })
+			}
+
+			// load collection...
 			for(var format in handlers){
 				if(collection_data[format]){
 					return this[handlers[format]](collection, collection_data)
@@ -216,13 +246,15 @@ var CollectionActions = actions.Actions({
 								|| that.data.getImage(current, data.order)
 								|| data.current
 
-							that.crop.chainCall(that, function(){
-								// NOTE: the collection and .data may have different
-								// 		orders and/or sets of elements, this we need 
-								// 		to sync, and do it BEFORE all the rendering 
-								// 		happens...
-								this.data.updateImagePositions()
-							}, data)
+							// XXX
+							//data.tags = that.data.tags
+
+							that.load({
+								data: data,
+
+								collections: that.collections,
+								collection_order: that.collection_order,
+							})
 
 							// NOTE: we need this to sync the possible different 
 							// 		states (order, ...) of the collection and .data...
@@ -268,7 +300,7 @@ var CollectionActions = actions.Actions({
 			var that = this
 			collection = collection || this.collection
 
-			if(collection == null){
+			if(collection == null || collection == MAIN_COLLECTION_TITLE){
 				return
 			}
 
@@ -433,23 +465,45 @@ var CollectionActions = actions.Actions({
 		}],
 
 	// manage serialization and loading...
-	// XXX make this reflect the format automatically...
+	//
+	// NOTE: this will handle collection title and data only, the rest 
+	// 		is copied in as-is.
+	// 		It is the responsibility of the extending features to transform
+	// 		their data on load as needed.
 	load: [function(json){
 		var that = this
 		var collections = {}
 		var c = json.collections || {}
 		var order = json.collection_order || Object.keys(c)
+
+		if((json.location || {}).collection){
+			this.location.collection = json.location.collection
+		}
 			
 		Object.keys(c).forEach(function(title){
-			var d = data.Data
-				.fromJSON(c[title].data)
+			var d = c[title].data instanceof data.Data ?
+				c[title].data
+				: data.Data
+					.fromJSON(c[title].data
+					.run(function(){
+						this.tags = this.tags || that.data.tags
+					}))
 
-			// XXX make this reflect the format automatically...
-			collections[title] = {
+			var state = collections[title] = {
 				title: title,
 
 				data: d,
 			}
+
+			// copy the rest of collection data as-is...
+			Object.keys(c[title])
+				.forEach(function(key){
+					if(key in state){
+						return
+					}
+
+					state[key] = c[title][key]
+				})
 		})
 
 		return function(){
@@ -459,32 +513,74 @@ var CollectionActions = actions.Actions({
 			}
 		}
 	}],
+	//
+	// Supported modes:
+	// 	current (default) 	- ignore collections
+	// 	base				- save only base data in each collection and
+	// 							the main collection is saved as current
+	// 	full				- full current state.
+	// 	
 	// NOTE: we do not store .collection_order here, because we order 
 	// 		the collections in the object.
 	// 		...when saving a partial collection set, for example in
 	// 		.prepareIndexForWrite(..) it would be necessary to add it 
 	// 		in to maintain the correct order when merging... (XXX)
-	// XXX make this reflect the format automatically...
-	json: [function(){ return function(res){
+	// NOTE: currently this only stores title and data, it is the 
+	// 		responsibility of extending features to store their specific 
+	// 		data in collections...
+	json: [function(mode){ return function(res){
+		mode = mode || 'current'
+
 		var collections = this.collections
 
-		if(collections){
+		// NOTE: if mode is 'current' ignore collections...
+		if(mode != 'current' && collections){
 			var order = this.collection_order
+
+			// in base mode save the main view as current...
+			if(mode == 'base' && this.collection){
+				var main = collections[MAIN_COLLECTION_TITLE]
+				res.data =  (main.crop_stack ? 
+						(main.crop_stack[0] || main.data)
+						: main.data)
+					.dumpJSON()
+
+				delete res.location.collection
+			}
 
 			res.collections = {}
 			order.forEach(function(title){
-				var data = collections[title].data.dumpJSON()
+				// in base mode skip the main collection...
+				if(mode == 'base' && title == MAIN_COLLECTION_TITLE){
+					return
+				}
+
+				var state = collections[title]
+
+				var data = ((mode == 'base' && state.crop_stack) ? 
+						(state.crop_stack[0] || state.data)
+						: state.data)
+					.dumpJSON()
 				delete data.tags
 
-				// XXX make this reflect the format automatically...
-				res.collections[title] = {
+				var s = res.collections[title] = {
 					title: title,
-
 					data: data, 
+				}
+
+				// handle .crop_stack of collection...
+				// NOTE: in base mode, crop_stack is ignored...
+				if(mode != 'base' && state.crop_stack){
+					s.crop_stack = state.crop_stack
+						.map(function(d){ return d.dumpJSON() })
 				}
 			})
 		}
 	} }],
+	// XXX
+	clone: [function(){
+		// XXX
+	}],
 	clear: [function(){
 		this.collection
 			&& this.collectionUnloaded('*')
@@ -503,6 +599,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 	tag: 'collections',
 	depends: [
 		'base',
+		'location',
 		'crop',
 	],
 	suggested: [
@@ -631,10 +728,12 @@ var UICollectionActions = actions.Actions({
 								action ?
 									that.newCollection(title)
 									: that.saveCollection(title) },
+
+							disabled: action ? [MAIN_COLLECTION_TITLE] : false,
 						})
 				}, {
 					// focus current collection...
-					selected: that.collection,
+					selected: that.collection || MAIN_COLLECTION_TITLE,
 				})
 				.close(function(){
 					to_remove.forEach(function(title){ 

@@ -437,6 +437,10 @@ function(list){
 // 		// process each dom element...
 // 		each: <function>,
 //
+// 		// if true disable all items, if list then disable all items 
+// 		// from that list...
+// 		disabled: <bool> | [ <item>, ... ],
+//
 // 		// see: make(..) for additional option info.
 // 		...
 // 	}
@@ -490,6 +494,10 @@ function(data, options){
 				}
 			}
 		})
+
+		if(opts.disabled && opts.disabled instanceof Array){
+			opts.disabled = opts.disabled.indexOf(txt || k) >= 0
+		}
 
 		if((opts.disabled && opts.skipDisabledItems) 
 				|| (opts.hidden && opts.skipHiddenItems)){
