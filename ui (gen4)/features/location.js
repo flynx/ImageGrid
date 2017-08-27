@@ -345,12 +345,12 @@ var LocationActions = actions.Actions({
 			// 		.location too...
 			this.__location = data.location
 		}}],
-	clone: [
-		function(res){
+	clone: [function(){
+		return function(res){
 			if(this.location){
 				res.__location = JSON.parse(JSON.stringify(this.__location))
 			}
-		}],
+		}}],
 	clear: [function(){ 
 		this.clearLoaction() }],
 })

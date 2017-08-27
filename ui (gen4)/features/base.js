@@ -235,18 +235,14 @@ actions.Actions({
 	// NOTE: for complete isolation it is best to completely copy the 
 	// 		.config...
 	clone: ['- File/',
-		function(full){
-			var res = actions.MetaActions.clone.call(this, full)
-
+		function(full){ return function(res){
 			if(this.data){
 				res.data = this.data.clone()
 			} 
 			if(this.images){
 				res.images = this.images.clone()
 			}
-
-			return res
-		}],
+		} }],
 
 	dataFromURLs: ['- File/',
 		function(lst, base){
@@ -613,6 +609,7 @@ core.ImageGridFeatures.Feature({
 
 	tag: 'base',
 	depends: [
+		'serialization',
 	],
 	suggested: [
 		'edit',

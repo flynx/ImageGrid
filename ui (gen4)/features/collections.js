@@ -464,8 +464,6 @@ var CollectionActions = actions.Actions({
 				.removeEmptyRibbons()
 		}],
 
-	// manage serialization and loading...
-	//
 	// NOTE: this will handle collection title and data only, the rest 
 	// 		is copied in as-is.
 	// 		It is the responsibility of the extending features to transform
@@ -577,10 +575,6 @@ var CollectionActions = actions.Actions({
 			})
 		}
 	} }],
-	// XXX
-	clone: [function(){
-		// XXX
-	}],
 	clear: [function(){
 		this.collection
 			&& this.collectionUnloaded('*')
@@ -588,6 +582,35 @@ var CollectionActions = actions.Actions({
 		delete this.__collection_order
 		delete this.location.collection
 	}],
+
+	clone: [function(full){
+		return function(res){
+			if(this.collections){
+				var cur = this.collections
+
+				if(this.collection){
+					res.location.collection = this.collection
+				}
+
+				collections = res.collections = {}
+				this.collection_order
+					.forEach(function(title){
+						var c = collections[title] = {
+							title: title,
+						}
+
+						if(cur[title].data){
+							c.data = cur[title].data.clone()
+						}
+
+						if(cur[title].crop_stack){
+							c.crop_stack = cur[title].crop_stack
+								.map(function(d){ return d.clone() })
+						}
+					})
+			}
+
+		} }],
 })
 
 

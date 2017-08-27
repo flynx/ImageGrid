@@ -17,6 +17,8 @@
 * 	- introspection
 * 	- lifecycle
 * 		base life-cycle events (start/stop/..)
+*	- serialization
+*		base methods to handle loading, serialization and cloning...
 * 	- util
 * 	- journal
 * 		action journaling and undo/redo functionality
@@ -539,6 +541,29 @@ module.LifeCycle = ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+var SerializationActions = actions.Actions({
+	clone: ['- System/',
+		function(full){ return actions.MetaActions.clone.call(this, full) }],
+	json: ['- System/',
+		function(){ return {} }],
+	load: ['- System/',
+		function(){ }],
+	clear: ['- Sustem/',
+		function(){ }],
+})
+
+var Serialization = 
+module.Serialization = ImageGridFeatures.Feature({
+	title: '',
+
+	tag: 'serialization',
+
+	actions: SerializationActions,
+})
+
+
+//---------------------------------------------------------------------
+
 var UtilActions = actions.Actions({
 	mergeConfig: ['- System/', 
 		doc`Merge a config object into .config
@@ -553,7 +578,6 @@ var UtilActions = actions.Actions({
 			})
 		}],
 })
-
 
 var Util = 
 module.Util = ImageGridFeatures.Feature({
@@ -798,6 +822,9 @@ module.Journal = ImageGridFeatures.Feature({
 	title: 'Action Journal',
 
 	tag: 'journal',
+	depends: [
+		'serialization',
+	],
 
 	actions: JournalActions,
 
@@ -933,7 +960,9 @@ module.Changes = ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'changes',
-	depends: [ ],
+	depends: [
+		'serialization',
+	],
 
 	actions: ChangesActions,
 })
