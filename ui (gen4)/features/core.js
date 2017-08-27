@@ -547,7 +547,7 @@ var SerializationActions = actions.Actions({
 	json: ['- System/',
 		function(){ return {} }],
 	load: ['- System/',
-		function(){ }],
+		function(data, merge){ !merge && this.clear() }],
 	clear: ['- Sustem/',
 		function(){ }],
 })

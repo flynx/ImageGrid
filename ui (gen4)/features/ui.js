@@ -746,6 +746,17 @@ module.Viewer = core.ImageGridFeatures.Feature({
 
 		['focusImage.post', 
 			function(){ this.alignRibbons() }],
+
+		// manage the .crop-mode css class...
+		// XXX this is not the right spot for this...
+		// 		...but this is a bit too small for a stand-alone feature...
+		['crop uncrop',
+			function(){
+				this.dom[this.cropped ? 
+					'addClass' 
+					: 'removeClass']('crop-mode')
+			}],
+
 	],
 })
 

@@ -549,15 +549,6 @@ core.ImageGridFeatures.Feature({
 			function(target){ 
 				return updateImagePosition(this, target) }],
 
-
-		// manage the .crop-mode css class...
-		['crop uncrop',
-			function(){
-				this.dom[this.cropped ? 
-					'addClass' 
-					: 'removeClass']('crop-mode')
-			}],
-
 		// reloading and updating...
 		[[
 			'sortImages',

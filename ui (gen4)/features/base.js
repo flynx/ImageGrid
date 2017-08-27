@@ -211,15 +211,17 @@ actions.Actions({
 		`,
 		{journal: true},
 		function(d){
-			this.clear()
-
 			return function(){
-				this.images = d.images instanceof images.Images ? 
-					d.images 
-					: images.Images(d.images)
-				this.data = d.data instanceof data.Data ? 
-					d.data 
-					: data.Data(d.data)
+				if(d.images){
+					this.images = d.images instanceof images.Images ? 
+						d.images 
+						: images.Images(d.images)
+				}
+				if(d.data){
+					this.data = d.data instanceof data.Data ? 
+						d.data 
+						: data.Data(d.data)
+				}
 			}
 		}],
 	// XXX should this clear or load empty???
@@ -271,15 +273,15 @@ actions.Actions({
 		NOTE: this will ignore attributes starting with '__'.
 		`,
 		function(mode){
-			var res = {}
-			for(var k in this){
-				if(!k.startsWith('__') 
-						&& this[k] != null 
-						&& this[k].dumpJSON != null){
-					res[k] = this[k].dumpJSON()
+			return function(res){
+				for(var k in this){
+					if(!k.startsWith('__') 
+							&& this[k] != null 
+							&& this[k].dumpJSON != null){
+						res[k] = this[k].dumpJSON()
+					}
 				}
 			}
-			return res
 		}],
 
 	getImagePath: ['- System/',

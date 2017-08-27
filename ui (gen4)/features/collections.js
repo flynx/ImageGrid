@@ -50,6 +50,13 @@ var MAIN_COLLECTION_TITLE = 'All'
 // XXX undo...
 var CollectionActions = actions.Actions({
 	config: {
+		// can be:
+		// 	'all'		- save crop state for all collections (default)
+		// 	'main'		- save crop state for main state only
+		// 	'none'		- do not save crop state
+		'collection-save-crop-state': 'all',
+
+
 		// XXX add default collection list to config...
 		'default-collections': [
 		],
@@ -153,10 +160,6 @@ var CollectionActions = actions.Actions({
 		function(title, data){ 
 			return new Promise(function(resolve){ resolve(data.data) }) }],
 
-	// XXX should a collection have its own crop stack???
-	// 		...this would be logical as the base collection is persistent
-	// 		and crop state indicates that uncropping will lose the state...
-	// XXX should this be a crop or just use the same mechanic as crops???
 	loadCollection: ['- Collections/',
 		core.doc`Load collection...
 
@@ -195,38 +198,38 @@ var CollectionActions = actions.Actions({
 					|| !(collection in this.collections)){
 				return
 			}
+			var crop_mode = this.config['collection-save-crop-state'] || 'all'
 
 			var current = this.current
 			var ribbon = this.current_ribbon
 
+			var prev = this.collection
 			var collection_data = this.collections[collection]
 			var handlers = this.collection_handlers
 
+			// save current collection state...
 			// main view -> save it...
 			if(this.collection == null){
-				this.collections[MAIN_COLLECTION_TITLE] = {
+				var main = this.collections[MAIN_COLLECTION_TITLE] = {
 					title: MAIN_COLLECTION_TITLE,
-					data: this.data,
-					crop_stack: this.crop_stack,
 				}
-			}
 
-			// load main collection...
-			if(collection == MAIN_COLLECTION_TITLE){
-				var state = this.collections[MAIN_COLLECTION_TITLE]
+				// mode 'none' -> do not save crop state...
+				if(crop_mode == 'none'){
+					//this.saveCollection(this.collection, 'base')
+					main.data = (this.crop_stack || [])[0] || this.data
 
-				this.load({
-					data: state.data,
-					crop_stack: state.crop_stack,
+				// modes 'all' and 'main' -> save crop state...
+				} else {
+					//this.saveCollection(this.collection, 'crop')
+					main.data = this.data
+					main.crop_stack = this.crop_stack
+				}
 
-					// keep the collections...
-					collections: this.collections,
-					collection_order: this.collection_order,
-				})
-
-				delete this.collections[MAIN_COLLECTION_TITLE]
-
-				return new Promise(function(resolve){ resolve(data) })
+			} else if(crop_mode == 'all'){
+				this.saveCollection(this.collection, 'crop')
+				//this.collections[this.collection].data = this.data
+				//this.collections[this.collection].crop_stack = this.crop_stack
 			}
 
 			// load collection...
@@ -240,25 +243,51 @@ var CollectionActions = actions.Actions({
 
 							// current...
 							data.current = data.getImage(current) 
-								// current is not in collection -> try and keep the ribbon context...
-								|| that.data.getImage(current, data.getImages(that.data.getImages(ribbon)))
+								// current is not in collection -> try and keep 
+								// the ribbon context...
+								|| that.data.getImage(
+									current, 
+									data.getImages(that.data.getImages(ribbon)))
 								// get closest image from collection...
 								|| that.data.getImage(current, data.order)
 								|| data.current
 
-							// XXX
-							//data.tags = that.data.tags
+							data.tags = that.data.tags
+
+							// NOTE: tags and other position dependant 
+							// 		data needs to be updated as collections
+							// 		may contain different numbers/orders of
+							// 		images...
+							data.updateImagePositions()
 
 							that.load({
 								data: data,
 
+								crop_stack: collection_data.crop_stack,
+
 								collections: that.collections,
 								collection_order: that.collection_order,
-							})
+							}, true)
 
-							// NOTE: we need this to sync the possible different 
-							// 		states (order, ...) of the collection and .data...
-							that.collectionLoaded(collection)	
+							// maintain the .collection state...
+							if(collection == MAIN_COLLECTION_TITLE){
+								// no need to maintain the main data in two 
+								// locations...
+								delete that.collections[MAIN_COLLECTION_TITLE]
+								delete this.location.collection
+
+							} else {
+								that.data.collection = that.location.collection = collection
+								// cleanup...
+								if(collection == null){
+									delete this.location.collection
+								}
+							}
+
+							// collection events...
+							that
+								.collectionUnloaded(prev || MAIN_COLLECTION_TITLE)
+								.collectionLoaded(collection)	
 						})
 				}
 			}
@@ -274,7 +303,6 @@ var CollectionActions = actions.Actions({
 			// This is the window resize event...
 			//
 			// Not for direct use.
-			this.data.collection = this.location.collection = collection
 		})],
 	collectionUnloaded: ['- Collections/',
 		core.doc`This is called when unloading a collection.
@@ -285,48 +313,89 @@ var CollectionActions = actions.Actions({
 			// Not for direct use.
 		})],
 
+	// XXX saving into current collection will leave the viewer in an 
+	// 		inconsistent state:
+	// 			- collection X is indicated as loaded
+	// 			- collection X has different state than what is loaded
+	// 		...not sure how to deal with this yet...
 	saveCollection: ['- Collections/',
 		core.doc`Save current state to collection
+
+			Save Current state to current collection
+			.saveCollection()
+			.saveCollection('current')
+				-> this
+				NOTE: this will do nothing if no collection is loaded.
 
 			Save Current state as collection
 			.saveCollection(collection)
 				-> this
 
 			Save new empty collection
-			.saveCollection(collection, true)
+			.saveCollection(collection, 'empty')
 				-> this
+
+			Save current crop state to collection
+			.saveCollection(collection, 'crop')
+				-> this
+
+			Save top depth crops from current crop stack to collection
+			.saveCollection(collection, depth)
+				-> this
+
+			Save base crop state to collection
+			.saveCollection(collection, 'base')
+				-> this
+
 		`,
-		function(collection, empty){
+		function(collection, mode){
 			var that = this
 			collection = collection || this.collection
+			collection = collection == 'current' ? this.collection : collection
 
 			if(collection == null || collection == MAIN_COLLECTION_TITLE){
 				return
 			}
 
+			var depth = typeof(mode) == typeof(123) ? mode : null
+			mode = depth == 0 ? null 
+				: depth ? 'crop' 
+				: mode
+
 			var collections = this.collections = this.collections || {}
 
-			collections[collection] = {
+			var state = collections[collection] = {
 				title: collection,
 
 				// NOTE: we do not need to care about tags here as they 
 				// 		will get overwritten on load...
-				data: (empty ? 
-						(new this.data.constructor())
-						: this.data
-							.clone()
+				data: (mode == 'empty' ? 
+							(new this.data.constructor())
+						: mode == 'base' && this.crop_stack ? 
+							(this.crop_stack[0] || this.data.clone())
+						: mode == 'crop' ? 
+							this.data.clone()
+						: this.data.clone()
 							.removeUnloadedGIDs())
 					.run(function(){
 						this.collection = collection
+
 						// NOTE: we are doing this manually after .removeUnloadedGIDs(..)
 						// 		as the later will mess-up the structures 
 						// 		inherited from the main .data, namely tags...
-						this.tags = that.data.tags
+						//this.tags = that.data.tags
 					}),
+			}
+
+			if(mode == 'crop' && this.crop_stack && depth != 0){
+				depth = depth || this.crop_stack.length
+				depth = this.crop_stack.length - Math.min(depth, this.crop_stack.length)
+
+				state.crop_stack = this.crop_stack.slice(depth)
 			}
 		}],
 	newCollection: ['- Collections/',
-		function(collection){ return this.saveCollection(collection, true) }],
+		function(collection){ return this.saveCollection(collection, 'empty') }],
 	// XXX should we do anything special if collection is loaded???
 	removeCollection: ['- Collections/',
 		function(collection){
@@ -633,27 +702,6 @@ module.Collection = core.ImageGridFeatures.Feature({
 	actions: CollectionActions, 
 
 	handlers: [
-		// maintain the .collection state...
-		['uncrop.pre',
-			function(){
-				var collection = this.collection
-				return function(){
-					collection != null 
-						&& collection != this.data.collection
-						&& this.collectionUnloaded(collection) }
-			}],
-		['collectionUnloaded',
-			function(_, collection){
-				var collection = this.location.collection = this.data.collection
-
-				// cleanup...
-				if(collection == null){
-					delete this.location.collection
-				}
-
-				this.data.updateImagePositions()
-			}],
-
 		// XXX maintain changes...
 		// 		- collection-level: mark collections as changed...
 		// 		- in-collection:
@@ -867,10 +915,23 @@ module.UICollection = core.ImageGridFeatures.Feature({
 	actions: UICollectionActions, 
 
 	handlers: [
+		// update view when removing from current collection...
 		['uncollect',
 			function(_, gids, collection){
 				(collection == null || this.collection == collection)
 					&& this.reload(true)
+			}],
+
+		// maintain crop viewer state when loading/unloading collections...
+		['collectionLoaded collectionUnloaded',
+			function(){
+				this.dom[this.collection ? 
+					'addClass' 
+					: 'removeClass']('collection-mode')
+
+				this.dom[this.cropped ? 
+					'addClass' 
+					: 'removeClass']('crop-mode')
 			}],
 	],
 })

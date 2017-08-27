@@ -119,14 +119,26 @@ module.GLOBAL_KEYBOARD = {
 		shift_S: 'DROP',
 	},
 
-	// XXX add "save as collection..."
 	'Crop': {
 		pattern: '.crop-mode',
 
+		drop: [
+			'Esc',
+		],
+
 		Esc: 'uncrop',
-		ctrl_Esc: 'uncropAll',
+		shift_Esc: 'uncropAll',
+
+		// XXX
+		//ctrl_S: 'saveAsCollection',
 
 		W: 'testAction2 -- XXX DEBUG: remove when done...',
+	},
+
+	'Collection': {
+		pattern: '.collection-mode',
+
+		Esc: 'loadCollection: "All"',
 	},
 
 	'Range': {
