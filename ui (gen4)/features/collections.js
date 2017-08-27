@@ -923,8 +923,11 @@ module.UICollection = core.ImageGridFeatures.Feature({
 			}],
 
 		// maintain crop viewer state when loading/unloading collections...
-		['collectionLoaded collectionUnloaded',
+		['load clear reload collectionLoaded collectionUnloaded',
 			function(){
+				if(!this.dom){
+					return
+				}
 				this.dom[this.collection ? 
 					'addClass' 
 					: 'removeClass']('collection-mode')

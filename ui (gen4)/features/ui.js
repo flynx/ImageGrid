@@ -750,8 +750,11 @@ module.Viewer = core.ImageGridFeatures.Feature({
 		// manage the .crop-mode css class...
 		// XXX this is not the right spot for this...
 		// 		...but this is a bit too small for a stand-alone feature...
-		['crop uncrop',
+		['load reload clear crop uncrop',
 			function(){
+				if(!this.dom){
+					return
+				}
 				this.dom[this.cropped ? 
 					'addClass' 
 					: 'removeClass']('crop-mode')
