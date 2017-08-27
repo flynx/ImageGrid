@@ -1232,10 +1232,49 @@ module.Cursor = core.ImageGridFeatures.Feature({
 
 
 /*********************************************************************/
-// Lock mouse when unfocused...
+// Touch/Control...
+//
+//	.__control_in_progress
+// 		Long interactions can set .__control_in_progress a number while 
+// 		in progress and remove it when done.
+// 		Each new interaction should increment this when starting and 
+// 		decrement when done.
+// 		This should be removed when 0
+//
+// 		This is to enable other events to handle the situation gracefully
+//
+// 		XXX how should multiple long interactions be handled??
+// 		XXX revise...
+//
+// NOTE: modifies .ribbons -- event handlers, attrs, classes... (XXX)
+// NOTE: for legacy stuff see: features/ui-legacy.js
+//
+// XXX add option to block click actions on focus...
+// 		...this is already done in widget.overlay, but I think should be
+// 		system-wide...
 
-var LockUnfocusedActions = actions.Actions({
+// XXX STUB: needs more thought.... 
+var ControlActions = actions.Actions({
 	config: {
+		'control-mode': 'indirect',
+
+		// This can be:
+		// 	'silent'	- silently focus central image after pan
+		// 	true		- focus central image after pan
+		// 	null		- do nothing.
+		'focus-central-image': 'silent',
+
+		'ribbon-pan-threshold': 30,
+		'control-in-progress-timeout': 100,
+
+		'animation-frame-renderer': true,
+
+		// if true and ribbon is panned off screen, the image will be 
+		// centered, else behave just like partially off screen...
+		'center-off-screen-paned-images': false,
+
+		'mouse-wheel-scale': 0.5,
+
 		'lock-unfocused': 'on',
 
 		// The timeout to wait after window focus before unlocking the 
@@ -1243,6 +1282,7 @@ var LockUnfocusedActions = actions.Actions({
 		'window-focus-timeout': 200,
 	},
 
+	// Lock unfocused viewer...
 	toggleUnfocusedLock: ['Interface/Lock unfocused viewer',
 		core.doc`Toggle unfocused viewer locking...
 
@@ -1291,73 +1331,6 @@ var LockUnfocusedActions = actions.Actions({
 					delete this.__focus_lock_handlers
 				}
 			})],
-})
-
-var LockUnfocused = 
-module.LockUnfocused = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-unfocused-lock',
-	depends: [
-		'ui'
-	],
-
-	actions: LockUnfocusedActions,
-
-	handlers: [
-		['start',
-			function(){
-				this.toggleUnfocusedLock('!') }],
-	],
-})
-
-
-
-/*********************************************************************/
-// Touch/Control...
-//
-//	.__control_in_progress
-// 		Long interactions can set .__control_in_progress a number while 
-// 		in progress and remove it when done.
-// 		Each new interaction should increment this when starting and 
-// 		decrement when done.
-// 		This should be removed when 0
-//
-// 		This is to enable other events to handle the situation gracefully
-//
-// 		XXX how should multiple long interactions be handled??
-// 		XXX revise...
-//
-// NOTE: modifies .ribbons -- event handlers, attrs, classes... (XXX)
-// NOTE: for legacy stuff see: features/ui-legacy.js
-//
-// XXX add option to block click actions on focus...
-// 		...this is already done in widget.overlay, but I think should be
-// 		system-wide...
-
-// XXX STUB: needs more thought.... 
-var ControlActions = actions.Actions({
-	config: {
-		'control-mode': 'indirect',
-
-		// This can be:
-		// 	'silent'	- silently focus central image after pan
-		// 	true		- focus central image after pan
-		// 	null		- do nothing.
-		'focus-central-image': 'silent',
-
-		'ribbon-pan-threshold': 30,
-		'control-in-progress-timeout': 100,
-
-		'animation-frame-renderer': true,
-
-		// if true and ribbon is panned off screen, the image will be 
-		// centered, else behave just like partially off screen...
-		'center-off-screen-paned-images': false,
-
-		'mouse-wheel-scale': 0.5,
-	},
 
 	// Image click events...
 	imageOuterBlockClick: ['- Interface/Image outer block click event',
@@ -2173,6 +2146,10 @@ module.Control = core.ImageGridFeatures.Feature({
 	actions: ControlActions,
 
 	handlers: [
+		['start',
+			function(){
+				this.toggleUnfocusedLock('!') 
+			}],
 		['load',
 			function(){
 				this.toggleImageClickHandling('on')

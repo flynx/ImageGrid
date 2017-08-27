@@ -84,7 +84,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	// features...
 	'ui-cursor',
-	'ui-unfocused-lock',
 
 	'ui-single-image',
 
