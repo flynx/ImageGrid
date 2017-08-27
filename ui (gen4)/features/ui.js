@@ -1238,18 +1238,10 @@ var LockUnfocusedActions = actions.Actions({
 	config: {
 		'lock-unfocused': 'on',
 
-		// The timeout to wait after window focus before setting .focused 
-		// to true.
+		// The timeout to wait after window focus before unlocking the 
+		// viewer 
 		'window-focus-timeout': 200,
 	},
-
-	// Focus...
-	//
-	// This is true when window is focused and false when not + 200ms 
-	// after focusing.
-	// This enables the used to ignore events that lead to window focus.
-	get focused(){
-		return that.dom.find('.lock-clicks').length > 0 },
 
 	toggleUnfocusedLock: ['Interface/Lock unfocused viewer',
 		core.doc`Toggle unfocused viewer locking...
