@@ -1761,7 +1761,9 @@ var ButtonsActions = actions.Actions({
 		// 	}
 		'main-buttons': {
 			'&#x2630;': ['menu', 'browseActions -- Action menu...'],
+			'&#9714;<sub/>': ['collections', 'browseCollections -- Collections...'],
 			'C<sub/>': ['crop', 'browseActions: "Crop/" -- Crop menu...'],
+			//'&#9636;<sub/>': ['collections', 'browseCollections -- Collections...'],
 			//'&#9974;': ['view', 'toggleSingleImage -- Single image / ribbon toggle'],
 		},
 
@@ -1847,7 +1849,27 @@ module.Buttons = core.ImageGridFeatures.Feature({
 		['load clear reload', 
 			function(){
 				$('.main-buttons.buttons .crop.button sub')
-					.text(this.crop_stack ? this.crop_stack.length : '') }],
+					// XXX should this be here or in CSS???
+					.css({
+						'display': 'inline-block',
+						'width': '0px',
+						'overflow': 'visible',
+					})
+					.text(this.crop_stack ? this.crop_stack.length : '') 
+			}],
+		// update collection button status...
+		['load clear reload collectionLoaded collectionUnloaded', 
+			function(){
+				$('.main-buttons.buttons .collections.button sub')
+					// XXX should this be here or in CSS???
+					.css({
+						'display': 'inline-block',
+						'width': '0px',
+						'overflow': 'visible',
+						'color': 'yellow',
+					})
+					.html(this.collection ? '&#9679;' : '')
+		   	}],
 		// update zoom button status...
 		['viewScale', 
 			function(){

@@ -59,6 +59,8 @@ var CollectionActions = actions.Actions({
 	// 			title: <title>,
 	// 			gid: <gid>,
 	//
+	// 			crop_stack: [ .. ],
+	//
 	// 			// base collection format -- raw data...
 	// 			data: <data>,
 	//
@@ -112,6 +114,8 @@ var CollectionActions = actions.Actions({
 	// 		<format>: <action-name>,
 	// 		...
 	// 	}
+	//
+	// XXX should these get auto-sorted???
 	get collection_handlers(){
 		var handlers = this.__collection_handlers || {}
 
@@ -139,11 +143,18 @@ var CollectionActions = actions.Actions({
 		loaded as the collection.
 
 		data is of the .collections item format.
+
+		This will not clone .data, this all changes made to it are 
+		persistent.
 		`,
 		{collectionFormat: 'data'},
 		function(title, data){ 
 			return new Promise(function(resolve){ resolve(data.data) }) }],
 
+	// XXX should a collection have its own crop stack???
+	// 		...this would be logical as the base collection is persistent
+	// 		and crop state indicates that uncropping will lose the state...
+	// XXX should this be a crop or just use the same mechanic as crops???
 	loadCollection: ['- Collections/',
 		core.doc`Load collection...
 
@@ -172,6 +183,8 @@ var CollectionActions = actions.Actions({
 		non-data handler is done, it can set the .data which will be loaded
 		directly the next time.
 		To invalidate such a cache .data should simply be deleted.
+
+		NOTE: cached collection state is persistent.
 		`,
 		function(collection){
 			var that = this
@@ -181,27 +194,39 @@ var CollectionActions = actions.Actions({
 				return
 			}
 
-			var data = this.collections[collection]
+			var current = this.current
+			var ribbon = this.current_ribbon
+
+			var collection_data = this.collections[collection]
 			var handlers = this.collection_handlers
 
-			// XXX might be good to sort handlers...
-			// XXX
-
 			for(var format in handlers){
-				if(data[format]){
-					return this[handlers[format]](collection, data)
+				if(collection_data[format]){
+					return this[handlers[format]](collection, collection_data)
 						.then(function(data){
-							data
-								&& that.crop.chainCall(that, function(){
-									// NOTE: the collection and .data may have different
-									// 		orders and/or sets of elements, this we need 
-									// 		to sync, and do it BEFORE all the rendering 
-									// 		happens...
-									that.data.updateImagePositions()
-								}, data)
-								// NOTE: we need this to sync the possible different 
-								// 		states (order, ...) of the collection and .data...
-								&& that.collectionLoaded(collection)	
+							if(!data){
+								return
+							}
+
+							// current...
+							data.current = data.getImage(current) 
+								// current is not in collection -> try and keep the ribbon context...
+								|| that.data.getImage(current, data.getImages(that.data.getImages(ribbon)))
+								// get closest image from collection...
+								|| that.data.getImage(current, data.order)
+								|| data.current
+
+							that.crop.chainCall(that, function(){
+								// NOTE: the collection and .data may have different
+								// 		orders and/or sets of elements, this we need 
+								// 		to sync, and do it BEFORE all the rendering 
+								// 		happens...
+								this.data.updateImagePositions()
+							}, data)
+
+							// NOTE: we need this to sync the possible different 
+							// 		states (order, ...) of the collection and .data...
+							that.collectionLoaded(collection)	
 						})
 				}
 			}
@@ -497,10 +522,6 @@ module.Collection = core.ImageGridFeatures.Feature({
 						&& collection != this.data.collection
 						&& this.collectionUnloaded(collection) }
 			}],
-		['collectionLoaded',
-			function(){
-				console.log('COLLECTION: LOADED')
-			}],
 		['collectionUnloaded',
 			function(_, collection){
 				var collection = this.location.collection = this.data.collection
@@ -510,9 +531,56 @@ module.Collection = core.ImageGridFeatures.Feature({
 					delete this.location.collection
 				}
 
-				console.log('COLLECTION: UNLOADED')
-
 				this.data.updateImagePositions()
+			}],
+
+		// XXX maintain changes...
+		// 		- collection-level: mark collections as changed...
+		// 		- in-collection:
+		// 			- save/restore parent changes when loading/exiting collections
+		// 			- move collection chnages to collections
+		[[
+			'collect',
+			'joinCollect',
+			'uncollect',
+
+			'saveCollection',
+
+			'removeCollection',
+		], 
+			function(){
+				// XXX mark changed collections...
+				// XXX added/removed collection -> mark collection index as changed...
+			}],
+
+
+		['prepareIndexForWrite', 
+			function(res, _, full){
+				var changed = full == true 
+					|| res.changes === true
+					|| res.changes.collections
+
+				if(changed && res.raw.collections){
+					// select the actual changed collection list...
+					changed = changed === true ? 
+						Object.keys(res.raw.collections)
+						: changed
+
+					// collection index...
+					res.index['collection-index'] = Object.keys(this.collections)
+
+					Object.keys(changed)
+						// skip the raw field...
+						.filter(function(k){ return changed.indexOf(k) >= 0 })
+						.forEach(function(k){
+							// XXX use collection gid...
+							res.index['collections/' + k] = res.raw.collections[k]
+						})
+				}
+			}],
+		['prepareJSONForLoad',
+			function(res, json, base_path){
+				// XXX
 			}],
 	],
 })
@@ -521,8 +589,6 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-// XXX make collections sortable...
-// XXX do we need a collection button (like crop button?) ???
 // XXX show collections in image metadata...
 var UICollectionActions = actions.Actions({
 	browseCollections: ['Collections|Crop/$Collec$tions...',
@@ -740,52 +806,6 @@ module.FileSystemCollection = core.ImageGridFeatures.Feature({
 	actions: FileSystemCollectionActions,
 
 	handlers: [
-		// XXX maintain changes...
-		// XXX
-		[[
-			'collect',
-			'joinCollect',
-			'uncollect',
-
-			'saveCollection',
-
-			'removeCollection',
-		], 
-			function(){
-				// XXX mark changed collections...
-				// XXX added/removed collection -> mark collection index as changed...
-			}],
-
-		// XXX handle removed collections -- move to trash (???)
-		// 		...might be a good idea to add something like index gc API...
-		['prepareIndexForWrite',
-			function(res, _, full){
-				var changed = full == true 
-					|| res.changes === true
-					|| res.changes.collections
-
-				if(changed && res.raw.collections){
-					// select the actual changed collection list...
-					changed = changed === true ? 
-						Object.keys(res.raw.collections)
-						: changed
-
-					// collection index...
-					res.index['collection-index'] = Object.keys(this.collections)
-
-					Object.keys(changed)
-						// skip the raw field...
-						.filter(function(k){ return changed.indexOf(k) >= 0 })
-						.forEach(function(k){
-							// XXX use collection gid...
-							res.index['collections/' + k] = res.raw.collections[k]
-						})
-				}
-			}],
-		['prepareJSONForLoad',
-			function(res, json){
-				// XXX
-			}],
 	],
 })
 
