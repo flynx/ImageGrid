@@ -79,7 +79,6 @@ var CollectionActions = actions.Actions({
 	// 	}
 	collections: null,
 
-
 	get collection(){
 		return this.location.collection },
 	set collection(value){
@@ -399,6 +398,9 @@ var CollectionActions = actions.Actions({
 	// XXX should we do anything special if collection is loaded???
 	removeCollection: ['- Collections/',
 		function(collection){
+			if(collection == MAIN_COLLECTION_TITLE){
+				return
+			}
 			delete this.collections[collection]
 		}],
 
@@ -419,6 +421,10 @@ var CollectionActions = actions.Actions({
 
 		NOTE: this will not account for item topology.`,
 		function(gids, collection){
+			collection = collection || this.collection
+			if(collection == null || collection == MAIN_COLLECTION_TITLE){
+				return
+			}
 			var that = this
 
 			gids = gids == 'loaded' ? this.data.getImages('loaded')
@@ -431,12 +437,6 @@ var CollectionActions = actions.Actions({
 						that.data.ribbons[gid].compact()
 						: [that.data.getImage(gid)] })
 				.reduce(function(a, b){ return a.concat(b) }, [])
-
-			collection = collection || this.collection
-
-			if(collection == null){
-				return
-			}
 
 			// add to collection...
 			var data = this.data.constructor.fromArray(gids)
@@ -468,7 +468,7 @@ var CollectionActions = actions.Actions({
 		`,
 		function(align, collection, data){
 			collection = arguments.length == 1 ? align : collection
-			if(collection == null){
+			if(collection == null || collection == MAIN_COLLECTION_TITLE){
 				return
 			}
 			// if only collection is given, reset align to null...
@@ -487,6 +487,11 @@ var CollectionActions = actions.Actions({
 	uncollect: ['Collections|Image/$Uncollect image',
 		{browseMode: function(){ return !this.collection && 'disabled' }},
 		function(gids, collection){
+			collection = collection || this.collection
+			if(collection == null || collection == MAIN_COLLECTION_TITLE){
+				return
+			}
+
 			var that = this
 
 			gids = gids == 'loaded' ? this.data.getImages('loaded')
@@ -499,12 +504,6 @@ var CollectionActions = actions.Actions({
 						that.data.ribbons[gid].compact()
 						: [that.data.getImage(gid)] })
 				.reduce(function(a, b){ return a.concat(b) }, [])
-
-			collection = collection || this.collection
-
-			if(collection == null){
-				return
-			}
 
 			/*/ NOTE: we are not using .data.updateImagePositions(gids, 'hide') 
 			// 		here because it will remove the gids from everything
@@ -533,6 +532,9 @@ var CollectionActions = actions.Actions({
 				.removeEmptyRibbons()
 		}],
 
+
+	// Serialization...
+	//
 	// NOTE: this will handle collection title and data only, the rest 
 	// 		is copied in as-is.
 	// 		It is the responsibility of the extending features to transform
@@ -651,7 +653,6 @@ var CollectionActions = actions.Actions({
 		delete this.__collection_order
 		delete this.location.collection
 	}],
-
 	clone: [function(full){
 		return function(res){
 			if(this.collections){
@@ -793,6 +794,12 @@ var UICollectionActions = actions.Actions({
 								return title.trim() },
 							check: function(title){ 
 								return title.length > 0 },
+
+							// remove the 'x' button from main collection...
+							// XXX is this the correct way to go???
+							each: function(title){
+								title == MAIN_COLLECTION_TITLE
+									&& this.find('.button-container').remove() },
 
 							// XXX should this be "on close"???
 							itemadded: function(title){

@@ -256,7 +256,7 @@
 	text-decoration: line-through;
 	opacity: 0.3;
 }
-.browse-widget .list .item.highlighted {
+.browse-widget .list .item.highlighted .text {
 	font-style: italic;
 	font-weight: bold;
 }
