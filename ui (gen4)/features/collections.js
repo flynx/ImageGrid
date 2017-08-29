@@ -26,7 +26,7 @@ var widgets = require('features/ui-widgets')
 // 		logical, would simplify control, etc.
 // 		
 
-var MAIN_COLLECTION_TITLE = 'All'
+var MAIN_COLLECTION_TITLE = 'ALL'
 
 // XXX things we need to do to collections:
 // 		- auto-collections
@@ -101,18 +101,29 @@ var CollectionActions = actions.Actions({
 			.unique()
 			.reverse()
 
+		// keep MAIN_COLLECTION_TITLE out of the collection order...
+		var m = res.indexOf(MAIN_COLLECTION_TITLE)
+		m >= 0
+			&& res.splice(m, 1)
+
 		// remove stuff not present...
 		if(res.length > keys.length){
 			res = res.filter(function(e){ return e in collections })
 		}
 
-		this.__collection_order.splice.apply(this.__collection_order, 
-			[0, this.__collection_order.length].concat(res))
+		this.__collection_order.splice(0, this.__collection_order.length, ...res)
 
 		return this.__collection_order
 	},
 	set collection_order(value){
 		this.__collection_order = value },
+
+	get collections_length(){
+		var c = (this.collections || {})
+		return MAIN_COLLECTION_TITLE in c ? 
+			Object.keys(c).length - 1
+			: Object.keys(c).length
+	},
 
 	// Format:
 	// 	{
@@ -207,6 +218,7 @@ var CollectionActions = actions.Actions({
 			var handlers = this.collection_handlers
 
 			// save current collection state...
+			//
 			// main view -> save it...
 			if(this.collection == null){
 				var main = this.collections[MAIN_COLLECTION_TITLE] = {
@@ -222,13 +234,12 @@ var CollectionActions = actions.Actions({
 				} else {
 					//this.saveCollection(this.collection, 'crop')
 					main.data = this.data
-					main.crop_stack = this.crop_stack
+					main.crop_stack = this.crop_stack 
+						&& this.crop_stack.slice()
 				}
 
 			} else if(crop_mode == 'all'){
 				this.saveCollection(this.collection, 'crop')
-				//this.collections[this.collection].data = this.data
-				//this.collections[this.collection].crop_stack = this.crop_stack
 			}
 
 			// load collection...
@@ -257,15 +268,21 @@ var CollectionActions = actions.Actions({
 							// 		data needs to be updated as collections
 							// 		may contain different numbers/orders of
 							// 		images...
-							data.updateImagePositions()
+							// XXX
+							//data.updateImagePositions()
+							data.sortTags()
 
 							that.load({
 								data: data,
 
-								crop_stack: collection_data.crop_stack,
+								crop_stack: collection_data.crop_stack
+									&& collection_data.crop_stack.slice(),
 
-								collections: that.collections,
-								collection_order: that.collection_order,
+								// NOTE: we do not need to pass collections 
+								// 		and order here as they stay in from 
+								// 		the last .load(..) in merge mode...
+								//collections: that.collections,
+								//collection_order: that.collection_order,
 							}, true)
 
 							// maintain the .collection state...
@@ -375,15 +392,15 @@ var CollectionActions = actions.Actions({
 						: mode == 'crop' ? 
 							this.data.clone()
 						: this.data.clone()
-							.removeUnloadedGIDs())
-					.run(function(){
-						this.collection = collection
+							.run(function(){
+								this.collection = collection
 
-						// NOTE: we are doing this manually after .removeUnloadedGIDs(..)
-						// 		as the later will mess-up the structures 
-						// 		inherited from the main .data, namely tags...
-						//this.tags = that.data.tags
-					}),
+								// optimization: 
+								// 		avoid processing .tags as we'll 
+								// 		overwrite them anyway later...
+								delete this.tags 
+							})
+							.removeUnloadedGIDs()),
 			}
 
 			if(mode == 'crop' && this.crop_stack && depth != 0){
@@ -410,10 +427,11 @@ var CollectionActions = actions.Actions({
 			var that = this
 			gid = this.data.getImage(gid)
 			//return Object.keys(this.collections || {})
-			return this.collection_order
+			return (this.collection_order || [])
 				.filter(function(c){
-					return !gid 
-						|| that.collections[c].data.getImage(gid) })
+					return c != MAIN_COLLECTION_TITLE
+						&& (!gid 
+							|| that.collections[c].data.getImage(gid)) })
 		}],
 
 	collect: ['- Collections/',
@@ -484,6 +502,7 @@ var CollectionActions = actions.Actions({
 				this.saveCollection(collection)
 			}
 		}],
+	// XXX BUG: .uncollect(..) from crop messes up global tags...
 	uncollect: ['Collections|Image/$Uncollect image',
 		{browseMode: function(){ return !this.collection && 'disabled' }},
 		function(gids, collection){
@@ -505,31 +524,30 @@ var CollectionActions = actions.Actions({
 						: [that.data.getImage(gid)] })
 				.reduce(function(a, b){ return a.concat(b) }, [])
 
-			/*/ NOTE: we are not using .data.updateImagePositions(gids, 'hide') 
-			// 		here because it will remove the gids from everything
-			// 		while we need them removed only from ribbons...
-			var hideGIDs = function(){
-				var d = this
-				gids.forEach(function(gid){
-					var i = d.order.indexOf(gid)
-					Object.keys(d.ribbons).forEach(function(r){
-						delete d.ribbons[r][i]
-					})
-				})
-			}
-			//*/
-
 			if(this.collection == collection){
+				// need to keep this from updating .tags...
+				// XXX this seems a bit hacky...
+				var tags = this.data.tags
+				delete this.data.tags
+
 				this.data
-					//.run(hideGIDs)
+					.removeGIDs(gids)
+					.removeEmptyRibbons()
+					.run(function(){
+						this.tags = tags
+						this.sortTags()
+					})
+			}
+
+			// NOTE: we do both this and the above iff data is cloned...
+			// NOTE: if tags are saved to the collection it means that 
+			// 		those tags are local to the collection and we do not 
+			// 		need to protect them...
+			if(this.data !== this.collections[collection].data){
+				this.collections[collection].data
 					.removeGIDs(gids)
 					.removeEmptyRibbons()
 			}
-
-			this.collections[collection].data
-				//.run(hideGIDs)
-				.removeGIDs(gids)
-				.removeEmptyRibbons()
 		}],
 
 
@@ -541,6 +559,7 @@ var CollectionActions = actions.Actions({
 	// 		their data on load as needed.
 	load: [function(json){
 		var that = this
+
 		var collections = {}
 		var c = json.collections || {}
 		var order = json.collection_order || Object.keys(c)
@@ -550,6 +569,7 @@ var CollectionActions = actions.Actions({
 		}
 			
 		Object.keys(c).forEach(function(title){
+			// load data...
 			var d = c[title].data instanceof data.Data ?
 				c[title].data
 				: data.Data
@@ -562,6 +582,18 @@ var CollectionActions = actions.Actions({
 				title: title,
 
 				data: d,
+			}
+
+			// NOTE: this can be done lazily when loading each collection
+			// 		but doing so will make the system more complex and 
+			// 		confuse (or complicate) some code that expects 
+			// 		.collections[*].crop_stack[*] to be instances of Data.
+			if(c[title].crop_stack){
+				state.crop_stack = c[title].crop_stack
+					.map(function(c){ 
+						return c instanceof data.Data ? 
+							c 
+							: data.Data(c) })
 			}
 
 			// copy the rest of collection data as-is...
@@ -761,6 +793,10 @@ module.Collection = core.ImageGridFeatures.Feature({
 // XXX show collections in image metadata...
 var UICollectionActions = actions.Actions({
 	browseCollections: ['Collections|Crop/$Collec$tions...',
+		core.doc`Collection list...
+
+		NOTE: collections are added live and not on dialog close...
+		`,
 		widgets.makeUIDialog(function(action){
 			var that = this
 			var to_remove = []
@@ -774,34 +810,66 @@ var UICollectionActions = actions.Actions({
 									.addClass('highlighted')
 						})
 
+					var openHandler = function(_, title){
+						var gid = that.current
+						action ?
+							action.call(that, title)
+							: that.loadCollection(title)
+						that.focusImage(gid)
+						dialog.close()
+					}
+					var setCroppedState = function(title){
+						// indicate collection crop...
+						var cs = 
+							title == (that.collection || MAIN_COLLECTION_TITLE) ? 
+								that.crop_stack
+							: (that.collections || {})[title] ?
+								that.collections[title].crop_stack
+							: null
+						cs
+							&& this.find('.text').last()
+								.attr('cropped', cs.length)
+					}
+
 					//var collections = Object.keys(that.collections || {})
 					var collections = that.collection_order = that.collection_order || []
 
+					// main collection...
+					!action && collections.indexOf(MAIN_COLLECTION_TITLE) < 0
+						&& make([
+								MAIN_COLLECTION_TITLE,
+							], 
+							{ events: {
+								update: function(_, title){
+									// make this look almost like a list element...
+									// XXX hack???
+									$(this).find('.text:first-child')
+										.before($('<span>')
+											.css('color', 'transparent')
+											.addClass('sort-handle')
+											.html('&#x2630;'))
+									setCroppedState
+										.call($(this), title)
+								},
+								open: openHandler,
+							}})
+
+					// collection list...
 					make.EditableList(collections, 
 						{
 							unique: true,
 							sortable: 'y',
 							to_remove: to_remove,
-							itemopen: function(title){
-								var gid = that.current
-								action ?
-									action.call(that, title)
-									: that.loadCollection(title)
-								that.focusImage(gid)
-								dialog.close()
-							},
+
+							itemopen: openHandler,
+
 							normalize: function(title){ 
 								return title.trim() },
 							check: function(title){ 
 								return title.length > 0 },
 
-							// remove the 'x' button from main collection...
-							// XXX is this the correct way to go???
-							each: function(title){
-								title == MAIN_COLLECTION_TITLE
-									&& this.find('.button-container').remove() },
+							each: setCroppedState, 
 
-							// XXX should this be "on close"???
 							itemadded: function(title){
 								action ?
 									that.newCollection(title)
@@ -810,6 +878,7 @@ var UICollectionActions = actions.Actions({
 							disabled: action ? [MAIN_COLLECTION_TITLE] : false,
 						})
 				}, {
+					cls: 'collection-list',
 					// focus current collection...
 					selected: that.collection || MAIN_COLLECTION_TITLE,
 				})
@@ -869,7 +938,7 @@ var UICollectionActions = actions.Actions({
 									dialog.update()
 								},
 							})
-						: make.Empty()
+						: make.Empty('No collections...')
 				})
 				.close(function(){
 					all.forEach(function(title){

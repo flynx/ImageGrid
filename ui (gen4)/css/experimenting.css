@@ -258,6 +258,14 @@ body {
 	cursor: text;
 }
 
+/* Collection list */
+.browse-widget.collection-list .list .item .text[cropped]:after {
+	content: "(cropped)";
+	margin-left: 5px;
+	opacity: 0.5;
+	font-style: italic;
+}
+
 
 /* External Editor List */
 .browse-widget.editor-list .list .item:first-child .text:after {

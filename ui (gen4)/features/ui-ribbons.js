@@ -567,6 +567,7 @@ core.ImageGridFeatures.Feature({
 			'reverseImages',
 			'reverseRibbons',
 			'cropGroup',
+			'syncTags',
 		], 
 			function(target){ return this.reload() }],
 	],

@@ -1846,8 +1846,14 @@ module.Buttons = core.ImageGridFeatures.Feature({
 		   	}],
 
 		// update crop button status...
-		['load clear reload', 
+		[[
+			'load',
+			'clear',
+			'reload',
+		], 
 			function(){
+				var l = (this.crop_stack || []).length
+
 				$('.main-buttons.buttons .crop.button sub')
 					// XXX should this be here or in CSS???
 					.css({
@@ -1855,11 +1861,38 @@ module.Buttons = core.ImageGridFeatures.Feature({
 						'width': '0px',
 						'overflow': 'visible',
 					})
-					.text(this.crop_stack ? this.crop_stack.length : '') 
+					.text(l == 0 ? ''
+						: l > 99 ? '99+'
+						: l) 
 			}],
 		// update collection button status...
-		['load clear reload collectionLoaded collectionUnloaded', 
+		[[
+			'load', 
+			'clear', 
+			'reload', 
+			'saveCollection',
+			'collectionLoaded', 
+			'collectionUnloaded', 
+		], 
 			function(){
+				$('.main-buttons.buttons .collections.button')
+					.css({
+						'color': this.collection ? 'yellow' : '',
+						//'text-decoration': this.collection ? 'underline': '',
+					})
+
+				var l = this.collections_length
+				$('.main-buttons.buttons .collections.button sub')
+					.css({
+						'display': 'inline-block',
+						'width': '0px',
+						'overflow': 'visible',
+						//'color': this.collection ? 'yellow' : '',
+					})
+					.text(l > 99 ?  '99+' 
+						: l == 0 ? ''
+						: l)
+				/*
 				$('.main-buttons.buttons .collections.button sub')
 					// XXX should this be here or in CSS???
 					.css({
@@ -1869,6 +1902,7 @@ module.Buttons = core.ImageGridFeatures.Feature({
 						'color': 'yellow',
 					})
 					.html(this.collection ? '&#9679;' : '')
+				//*/
 		   	}],
 		// update zoom button status...
 		['viewScale', 

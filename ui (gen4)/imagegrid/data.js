@@ -222,9 +222,44 @@ var DataPrototype = {
 
 	// Make a sparse list of image gids...
 	//
+	// 	Make sparse list out of gids...
+	// 	.makeSparseImages(gids)
+	// 		-> list
+	//
+	// 	Make sparse list out of gids and drop gids not in .order...
+	// 	.makeSparseImages(gids, true)
+	// 	.makeSparseImages(gids, null, null, true)
+	// 		-> list
+	// 		NOTE: this sets drop_non_order_gids...
+	//
+	// 	Plase gids into their .order positions into target...
+	// 	.makeSparseImages(gids, target)
+	// 		-> list
+	// 		NOTE: items in target on given gid .order positions will 
+	// 			get overwritten...
+	//
+	// 	Plase gids into their .order positions into target and reposition 
+	// 	overwritten target items...
+	// 	.makeSparseImages(gids, target, true)
+	// 		-> list
+	// 		NOTE: this sets keep_target_items...
+	//
+	// 	Plase gids into their .order positions into target and reposition 
+	// 	overwritten target items and drop gids not in .order...
+	// 	.makeSparseImages(gids, target, true, true)
+	// 		-> list
+	// 		NOTE: this sets keep_target_items and drop_non_order_gids...
+	//
+	//
 	// This uses .order as the base for ordering the list.
 	//
-	// If target is given then it will get updated with the input gids.
+	// By default items in gids that are not present in .order are 
+	// appended to the output/target tail after .order.length, which ever
+	// is greater (this puts these items out of reach of further calls 
+	// of .makeSparseImages(..)). 
+	// Setting drop_non_order_gids to true will drop these items from 
+	// output.
+	//
 	//
 	// NOTE: this can be used to re-sort sections of a target ribbon, 
 	// 		but care must be taken not to overwrite existing data...
@@ -234,44 +269,65 @@ var DataPrototype = {
 	// 		(see next for more info).
 	// 		Another way to deal with this is to .makeSparseImages(target)
 	// 		before using it as a target.
-	// NOTE: if keep_target_items is set items that are overwritten in 
-	// 		the target will get pushed to gids.
-	// 		This flag has no effect if target is an empty list (default).
-	makeSparseImages: function(gids, target, keep_target_items){
+	// NOTE: keep_target_items has no effect if target is not given...
+	makeSparseImages: function(gids, target, keep_target_items, drop_non_order_gids){
+		if(arguments.length == 2 && target === true){
+			drop_non_order_gids = true
+			target = null
+		}
+		// avoid mutating gids...
+		gids = gids === target || keep_target_items ? 
+			gids.slice() 
+			: gids
 		target = target == null ? [] : target
-		keep_target_items = keep_target_items == null ? false : keep_target_items
+
 		order = this.order
 
-		// avoid directly updating self...
-		if(gids === target){
-			gids = gids.slice()
-		}
+		var rest = []
 
-		gids.forEach(function(e, i){
-			// if the element is in its place alredy do nothing...
-			if(e == order[i] && e == target[i]){
-				return
+		for(var i=0; i < gids.length; i++){
+			var e = gids[i]
+
+			// skip undefined...
+			if(e === undefined 
+					// if the element is in its place alredy do nothing...
+					|| (e == order[i] && e == target[i])){
+				continue
 			}
-			
-			// NOTE: try and avoid the expensive .indexOf(..) as much as
-			// 		possible...
-			i = e != order[i] ? order.indexOf(e) : i
 
-			if(i >= 0){
-				var o = target[i]
+			// try and avoid the expensive .indexOf(..) as much as possible...
+			var j = e != order[i] ? order.indexOf(e) : i
+
+			if(j >= 0){
 				// save overwritten target items if keep_target_items 
 				// is set...
-				if(keep_target_items 
-						&& o != null 
-						// if the items is already in gids, forget it...
-						// NOTE: this is to avoid juggling loops...
-						&& gids.indexOf(o) < 0){
-					gids.push(o)
-				}
+				var o = target[j]
+				keep_target_items 
+					&& o != null 
+					// if the item is already in gids, forget it...
+					// NOTE: this is to avoid juggling loops...
+					&& gids.indexOf(o) < 0
+					// look at o again later...
+					// NOTE: we should not loop endlessly here as target
+					// 		will eventually get exhausted...
+					&& gids.push(o)
 
-				target[i] = e
+				target[j] = e
+
+			// handle elements in gids that are not in .order
+			} else if(!drop_non_order_gids){
+				rest.push(e)
 			}
-		})
+		}
+
+		// avoid duplicating target items...
+		rest = rest
+			.filter(function(e){ return target.indexOf(e) < 0 })
+
+		if(rest.length > 0){
+			target.length = Math.max(order.length, target.length)
+			target.splice(target.length, 0, ...rest)
+		}
 
 		return target
 	},
@@ -1271,21 +1327,30 @@ var DataPrototype = {
 	//	.updateImagePositions()
 	//		-> data
 	//
-	//	Reposition item(s)
+	//	Full sort and remove items not in .order
+	//	.updateImagePositions('remove')
+	//		-> data
+	//
+	//	Reposition specific item(s)...
 	//	.updateImagePositions(gid|index)
+	//	.updateImagePositions([gid|index, .. ])
 	//		-> data
 	//
-	//	Reposition item(s) and the item(s) they replace
+	//	Reposition item(s) and the item(s) they replace...
 	//	.updateImagePositions(gid|index, 'keep')
+	//	.updateImagePositions([gid|index, ..], 'keep')
 	//		-> data
 	//
-	//	Hide item(s) from lists
+	//	Hide item(s) from lists...
 	//	.updateImagePositions(gid|index, 'hide')
+	//	.updateImagePositions([gid|index, ..], 'hide')
 	//		-> data
 	//
-	//	Remove item(s) from lists
+	//	Remove item(s) from lists...
 	//	.updateImagePositions(gid|index, 'remove')
+	//	.updateImagePositions([gid|index, ..], 'remove')
 	//		-> data
+	//
 	//
 	// NOTE: hide will not change the order of other items while remove 
 	// 		will do a full sort...
@@ -1295,6 +1360,10 @@ var DataPrototype = {
 	// XXX needs more thought....
 	// 		do we need to move images by this???
 	updateImagePositions: function(from, mode, direction){
+		if(['keep', 'hide', 'remove'].indexOf(from) >= 0){
+			mode = from
+			from = null
+		}
 		from = from != null && from.constructor !== Array ? [from] : from
 
 		var r = this.getRibbon('current')
@@ -1304,7 +1373,9 @@ var DataPrototype = {
 
 			// resort...
 			if(from == null){
-				set[key] = this.makeSparseImages(cur)
+				set[key] = mode == 'remove' ? 
+					this.makeSparseImages(cur, true)
+					: this.makeSparseImages(cur)
 
 			// remove/hide elements...
 			} else if(mode == 'remove' || mode == 'hide'){
@@ -1313,7 +1384,7 @@ var DataPrototype = {
 				})
 				// if we are removing we'll also need to resort...
 				if(mode == 'remove'){
-					set[key] = this.makeSparseImages(cur)
+					set[key] = this.makeSparseImages(cur, true)
 				}
 
 			// place and keep existing...
@@ -1328,7 +1399,7 @@ var DataPrototype = {
 
 		// maintain focus...
 		if(from && from.indexOf(this.current) >= 0){
-			this.focusImage('r')
+			this.focusImage(r)
 		}
 
 		return this
@@ -2613,7 +2684,7 @@ var DataPrototype = {
 	// NOTE: this may result in empty ribbons...
 	removeUnloadedGIDs: function(){
 		this.order = this.getImages('loaded')
-		this.updateImagePositions()
+		this.updateImagePositions('remove')
 		return this
 	},
 
@@ -2647,7 +2718,8 @@ var DataPrototype = {
 		}
 
 		this.order = order
-		this.updateImagePositions()
+
+		this.updateImagePositions('remove')
 
 		return this
 	},

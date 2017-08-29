@@ -56,6 +56,10 @@ var demo_images =
 module.demo_images = {
 	a: {
 		orientation: 90,
+		tags: ['test'],
+	},
+	d: {
+		tags: ['test', 'bookmark']
 	},
 	f: {
 		orientation: 270,
@@ -67,6 +71,13 @@ module.demo_images = {
 		flipped: ['horizontal'],
 	},
 }
+
+// sync tags with images...
+//demo_data = data.Data(demo_data)
+//	.tagsToImages(demo_images, 'merge')
+//	.tagsFromImages(demo_images, 'merge')
+//	.dumpJSON()
+
 
 
 /*********************************************************************/

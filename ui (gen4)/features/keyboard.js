@@ -138,7 +138,7 @@ module.GLOBAL_KEYBOARD = {
 	'Collection': {
 		pattern: '.collection-mode',
 
-		Esc: 'loadCollection: "All" -- Load all images',
+		Esc: 'loadCollection: "ALL" -- Load all images',
 	},
 
 	'Range': {

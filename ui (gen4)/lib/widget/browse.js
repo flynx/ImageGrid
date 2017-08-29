@@ -559,11 +559,11 @@ function(data, options){
 //
 // 		length_limit: <number>,
 //
-//		// Called when an item is opend...
+//		// Item open event handler...
 //		//
 //		// NOTE: this is simpler that binding to the global open event 
 //		//		and filtering through the results...
-//		itemopen: function(value){ ... },
+//		itemopen: function(evt, value){ ... },
 //
 // 		// Check input value...
 // 		check: function(value){ ... },
@@ -910,7 +910,7 @@ function(list, options){
 	})
 
 	options.itemopen
-		&& res.on('open', function(){ options.itemopen(dialog.selected) })
+		&& res.on('open', function(evt){ options.itemopen(evt, dialog.selected) })
 
 	res = res.toArray()
 
@@ -2026,6 +2026,13 @@ var BrowserPrototype = {
 	//
 	//		// event handlers...
 	//		events: {
+	//			// item-specific update events...
+	//			//
+	//			// item added to dom by .update(..)...
+	//			// NOTE: this is not propagated up, thus it will not trigger
+	//			//		the list update.
+	//			update: <handler>,
+	//
 	//			<event>: <handler>,
 	//			...
 	//		},
@@ -2477,6 +2484,7 @@ var BrowserPrototype = {
 				})
 
 			//--------------------------------- user event handlers ---
+			res.on('update', function(evt){ evt.stopPropagation() })
 			Object.keys(opts.events || {})
 				.forEach(function(evt){
 					res.on(evt, opts.events[evt]) })
@@ -2498,8 +2506,11 @@ var BrowserPrototype = {
 					res.appendTo(l)
 				}
 			}
-			//---------------------------------------------------------
+			
+			//------------------------------- item lifecycle events ---
+			res.trigger('update', txt)
 
+			//---------------------------------------------------------
 			return res
 		}
 

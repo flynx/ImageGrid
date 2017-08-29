@@ -1112,6 +1112,9 @@ module.TagsEditActions = actions.Actions({
 			gids = gids.constructor !== Array ? [gids] : gids
 			tags = tags.constructor !== Array ? [tags] : tags
 
+			var that = this
+			gids = gids.map(function(gid){ return that.data.getImage(gid) })
+
 			// data...
 			this.data.tag(tags, gids)
 
@@ -1190,7 +1193,9 @@ module.TagsEditActions = actions.Actions({
 
 			source = source || 'both'
 			mode = mode || 'merge'
-			images = this.images
+
+			var images = this.images
+
 			if(typeof(source) != typeof('str')){
 				images = source
 				source = 'images'
@@ -1415,16 +1420,6 @@ module.CropActions = actions.Actions({
 
 	crop_stack: null,
 
-	// load the crop stack if present...
-	load: [function(data){
-		return function(){
-			if(data.crop_stack){
-				this.crop_stack = data.crop_stack.map(function(j){
-					return data.Data(j)
-				})
-			}
-		}
-	}],
 	clear: [function(){ 
 		delete this.crop_stack }],
 
@@ -1458,17 +1453,29 @@ module.CropActions = actions.Actions({
 			}
 		}
 	}],
+	// load the crop stack if present...
 	load: [function(state){
 		return function(){
 			var that = this
 
+			if(!('crop_stack' in state)){
+				return
+			}
+
+			// load...
 			if(state.crop_stack){
-				that.crop_stack = (state.crop_stack || [])
-					.map(function(d){
-						return d instanceof data.Data ? d : data.Data(d) })
+				this.crop_stack = state.crop_stack
+					.map(function(d){ 
+						return d instanceof data.Data ? 
+							d 
+							: data.Data(d) })
 
 				// merge the tags...
-				that.crop_stack.forEach(function(d){ d.tags = that.data.tags })
+				this.crop_stack.forEach(function(d){ d.tags = that.data.tags })
+
+			// remove...
+			} else {
+				delete this.crop_stack
 			}
 		}
 	}],
