@@ -502,7 +502,6 @@ var CollectionActions = actions.Actions({
 				this.saveCollection(collection)
 			}
 		}],
-	// XXX BUG: .uncollect(..) from crop messes up global tags...
 	uncollect: ['Collections|Image/$Uncollect image',
 		{browseMode: function(){ return !this.collection && 'disabled' }},
 		function(gids, collection){
@@ -928,7 +927,7 @@ var UICollectionActions = actions.Actions({
 							{
 								new_item: false,
 								to_remove: to_remove,
-								itemopen: function(title){
+								itemopen: function(_, title){
 									var i = to_remove.indexOf(title)
 
 									i >= 0 ? 
