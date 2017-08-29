@@ -460,6 +460,11 @@ var DataPrototype = {
 	// 	.clear('empty')
 	// 		-> data
 	//
+	// 	Clear images from .order that are not in any ribbon...
+	// 	.clear('unloaded')
+	// 		-> data
+	//		NOTE: this may result in empty ribbons...
+	//
 	// 	Clear duplicate gids...
 	// 	.clear('dup')
 	// 	.clear('duplicates')
@@ -467,8 +472,9 @@ var DataPrototype = {
 	//
 	// 	Clear gid(s) form data...
 	// 	.clear(gid)
-	// 	.clear([gid, gid, ..])
+	// 	.clear([gid, ..])
 	// 		-> data
+	// 		NOTE: gid can be either image or ribbon gid in any order...
 	//
 	//
 	// Two extra arguments are considered:
@@ -496,6 +502,12 @@ var DataPrototype = {
 		if(gids == '*' || gids == 'all'){
 			this._reset()
 
+		// clear empty ribbons only...
+		} else if(gids == 'unloaded'){
+			this.order = this.getImages('loaded')
+			this.updateImagePositions('remove')
+
+		// clear duplicates...
 		} else if(gids == 'dup' || gids == 'duplicates'){
 			// horizontal...
 			this.removeDuplicates(this.order)
@@ -601,76 +613,45 @@ var DataPrototype = {
 		return this
 	},
 
-	// Remove duplicate gids...
-	//
-	// If a gid is in more than one ribbon, this will keep the top 
-	// occurrence only...
-	//
-	// NOTE: this may result in empty ribbons...
-	// NOTE: this is slow-ish...
-	removeDuplicateGIDs: function(){
-		var that = this
-
-		// horizontal...
-		this.removeDuplicates(this.order)
-		this.updateImagePositions()
-
-		// vertical...
-		// if a gid is in more than one ribbon keep only the top occurence...
-		this.order.forEach(function(gid, i){
-			var found = false
-			that.ribbon_order.forEach(function(r){
-				r = that.ribbons[r]
-
-				if(found){
-					delete r[i]
-
-				} else if(r[i] != null){
-					found = true
-				}
-			})
-		})
-		return this
-	},
-
-	// Remove unloaded gids...
-	//
-	// This removes:
-	// 	- images from .data that are not in any ribbon
-	//
-	// NOTE: this may result in empty ribbons...
-	removeUnloadedGIDs: function(){
-		this.order = this.getImages('loaded')
-		this.updateImagePositions('remove')
-		return this
-	},
-
 	// Replace image gid...
 	//
-	// XXX should this work for ribbon gids???
+	// NOTE: if to exists then it will get overwritten.
 	replaceGid: function(from, to){
-		from = this.getImage(from)
-		var i = this.getImageOrder(from)
+		if(from in this.ribbons){
+			// ribbons...
+			var ribbon = this.ribbons[from]
+			delete this.ribbons[from]
+			this.ribbons[to] = ribbon
 
-		var t = this.getImage(to)
+			// ribbon order...
+			this.ribbon_order.splice(this.ribbon_order.indexOf(from), 1, to)
 
-		if(t != -1 && t != null){
-			return
-		}
+			// base ribbon...
+			this.__base = this.__base == from ? to : this.__base
 
-		// current...
-		if(from == this.current){
-			this.current = to
-		}
-		// order...
-		this.order[i] = to
-		// image lists...
-		this.eachImageList(function(list){
-			if(list[i] != null){
-				list[i] = to
+		} else {
+			from = this.getImage(from)
+			var i = this.getImageOrder(from)
+
+			var t = this.getImage(to)
+
+			if(t != -1 && t != null){
+				return
 			}
-		})
 
+			// current...
+			if(from == this.current){
+				this.current = to
+			}
+			// order...
+			this.order[i] = to
+			// image lists...
+			this.eachImageList(function(list){
+				if(list[i] != null){
+					list[i] = to
+				}
+			})
+		}
 		return this
 	},
 
@@ -2444,7 +2425,8 @@ var DataPrototype = {
 
 		base
 			// XXX this is slow-ish...
-			.removeDuplicateGIDs()
+			//.removeDuplicateGIDs()
+			.clear('duplicates')
 			.clear('empty')
 
 		return base

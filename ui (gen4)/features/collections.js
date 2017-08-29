@@ -400,7 +400,7 @@ var CollectionActions = actions.Actions({
 								// 		overwrite them anyway later...
 								delete this.tags 
 							})
-							.removeUnloadedGIDs()),
+							.clear('unloaded')),
 			}
 
 			if(mode == 'crop' && this.crop_stack && depth != 0){
