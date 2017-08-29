@@ -200,6 +200,7 @@ var DataPrototype = {
 	// 		NOTE: ribbons are sparse...
 	// 		NOTE: ribbons can be compact when serialized...
 	//
+	//
 	/*****************************************************************/
 
 	get current(){
@@ -358,19 +359,33 @@ var DataPrototype = {
 
 	// Iterate through image lists...
 	//
+	// 	.eachImageList(func)
+	// 		-> this
+	//
+	//
 	// This accepts a function:
-	// 	func(list, key, set)
+	// 		func(list, key, set)
 	//
 	// Where:
-	// 	list		- the sparse list of gids
-	// 	key			- the list key in set
-	// 	set			- the set name
+	// 		list	- the sparse list of gids
+	// 		key		- the list key in set
+	// 		set		- the set name
 	//
 	// The function is called in the context of the data object.
 	//
 	// The arguments can be used to access the list directly like this:
 	// 	this[set][key]	-> list
 	//
+	//
+	// Set order attribute is used if available to determine the key 
+	// iteration order.
+	// For 'ribbons' the order is determined as follows:
+	// 		.ribbons_order + any missing keys
+	// 		.ribbon_order + any missing keys
+	// 		Object.keys(this[ribbons])
+	//
+	// XXX not sure if we should keep .<set>_order processing as-is, 
+	// 		might a good idea just to drop it...
 	eachImageList: function(func){
 		var that = this
 		this.__gid_lists.forEach(function(k){
@@ -378,9 +393,15 @@ var DataPrototype = {
 			if(lst == null){
 				return
 			}
-			Object.keys(lst).forEach(function(l){
-				func.call(that, lst[l], l, k)
-			})
+			var keys = (that[k + '_order'] 
+					|| that[k.replace(/s$/, '') + '_order'] 
+					|| [])
+				.concat(Object.keys(lst))
+				.unique()
+			//Object.keys(lst)
+			keys
+				.forEach(function(l){
+					func.call(that, lst[l], l, k) })
 		})
 		return this
 	},
@@ -426,19 +447,25 @@ var DataPrototype = {
 		return gid
 	},
 	
+
 	// Clear elements from data...
 	//
-	// 	Clear all data:
+	// 	Clear all data...
 	// 	.clear()
 	// 	.clear('*')
 	// 	.clear('all')
 	// 		-> data
 	//
-	// 	Clear empty ribbons:
+	// 	Clear empty ribbons...
 	// 	.clear('empty')
 	// 		-> data
 	//
-	// 	Clear gid(s) form data:
+	// 	Clear duplicate gids...
+	// 	.clear('dup')
+	// 	.clear('duplicates')
+	// 		-> data
+	//
+	// 	Clear gid(s) form data...
 	// 	.clear(gid)
 	// 	.clear([gid, gid, ..])
 	// 		-> data
@@ -459,12 +486,8 @@ var DataPrototype = {
 	// 		cleared...
 	// 		thus setting appropriate .base and .current values is the 
 	// 		responsibility of the caller.
-	//
-	// XXX not sure this should be here...
-	// XXX should this reset .base and .current to appropriate values 
-	// 		other than null?
-	// XXX should this return this or the removed gids???
 	clear: function(gids, deep, clear_empty){
+		var that = this
 		gids = gids || 'all'
 		deep = deep == null ? true : false
 		clear_empty = clear_empty == null ? true : false 
@@ -472,6 +495,28 @@ var DataPrototype = {
 		// clear all data...
 		if(gids == '*' || gids == 'all'){
 			this._reset()
+
+		} else if(gids == 'dup' || gids == 'duplicates'){
+			// horizontal...
+			this.removeDuplicates(this.order)
+			this.updateImagePositions()
+
+			// vertical...
+			// if a gid is in more than one ribbon keep only the top 
+			// occurrence...
+			this.order.forEach(function(gid, i){
+				var found = false
+				that.ribbon_order.forEach(function(r){
+					r = that.ribbons[r]
+
+					if(found){
+						delete r[i]
+
+					} else if(r[i] != null){
+						found = true
+					}
+				})
+			})
 
 		// clear empty ribbons only...
 		} else if(gids == 'empty'){
@@ -483,55 +528,120 @@ var DataPrototype = {
 
 		// clear gids...
 		} else {
-			gids = gids.constructor === Array ? gids : [gids]
-			var that = this
-			gids.forEach(function(gid){
-				var r = that.ribbon_order.indexOf(gid)
-				var i = that.order.indexOf(gid)
-				// gid is a ribbon...
-				if(r >= 0){
-					// clear from order...
-					that.ribbon_order.splice(r, 1)
+			var ribbons = []
+			gids = gids instanceof Array ? gids : [gids]
+			// split ribbon and image gids...
+			gids = gids
+				.filter(function(gid){
+					return gid in that.ribbons ?
+						!ribbons.push(gid)
+						: true })
 
-					// clear from ribbons...
-					var images = that.ribbons[gid]
-					delete that.ribbons[gid]
 
-					// remove ribbon images...
-					if(deep){
-						images.forEach(function(gid){ that.clear(gid) })
-					}
+			// remove ribbons...
+			ribbons.forEach(function(gid){
+				var i = that.ribbon_order.indexOf(gid)
 
-					// no more ribbons left...
-					if(that.ribbon_order.length == 0){
-						delete that.__base
+				// clear from order...
+				that.ribbon_order.splice(i, 1)
 
-					// shift base up or to first image...
-					} else if(that.base == gid){
-						that.setBase(Math.max(0, r-1))
-					}
+				// clear from ribbons...
+				var images = that.ribbons[gid]
+				delete that.ribbons[gid]
 
-				// gid is an image...
-				} else if(i >= 0) {
-					// remove from order...
-					that.order.splice(i, 1)
+				// remove ribbon images...
+				if(deep){
+					gids = gids.concat(images)
+				}
 
-					that.eachImageList(function(lst){
-						lst.splice(i, 1)
-					})
+				// no more ribbons left...
+				if(that.ribbon_order.length == 0){
+					delete that.__base
 
-					if(that.current == gid){
-						delete that.__current
-					}
+				// shift base up or to first image...
+				} else if(that.base == gid){
+					that.setBase(Math.max(0, i-1))
 				}
 			})
 
-			// cleanup...
-			if(clear_empty){
-				this.clear('empty')
+
+			// remove images...
+			var order = this.order
+				.filter(function(g){ return gids.indexOf(g) < 0 })
+
+			// handle current image...
+			if(gids.indexOf(this.current) >= 0){
+				var r = this.getImages('current')
+					.filter(function(g){ return order.indexOf(g) >= 0 })
+
+				// attempt to first get next/prev within the current ribbon...
+				r = r.length > 0 ? r : order
+
+				this.current = 
+					this.getImage(this.current, 'after', r)
+					|| this.getImage(this.current, 'before', r)
 			}
+
+			// do the actual removal...
+			// NOTE: splicing fixed image indexes is faster than 
+			// 		.updateImagePositions('remove')
+			gids.forEach(function(gid){
+				var i = that.order.indexOf(gid)
+				that.eachImageList(function(lst){ 
+					lst.splice(i, 1) })
+			})
+			this.order = order
+
+
+			// cleanup...
+			clear_empty
+				&& this.clear('empty')
 		}
 
+		return this
+	},
+
+	// Remove duplicate gids...
+	//
+	// If a gid is in more than one ribbon, this will keep the top 
+	// occurrence only...
+	//
+	// NOTE: this may result in empty ribbons...
+	// NOTE: this is slow-ish...
+	removeDuplicateGIDs: function(){
+		var that = this
+
+		// horizontal...
+		this.removeDuplicates(this.order)
+		this.updateImagePositions()
+
+		// vertical...
+		// if a gid is in more than one ribbon keep only the top occurence...
+		this.order.forEach(function(gid, i){
+			var found = false
+			that.ribbon_order.forEach(function(r){
+				r = that.ribbons[r]
+
+				if(found){
+					delete r[i]
+
+				} else if(r[i] != null){
+					found = true
+				}
+			})
+		})
+		return this
+	},
+
+	// Remove unloaded gids...
+	//
+	// This removes:
+	// 	- images from .data that are not in any ribbon
+	//
+	// NOTE: this may result in empty ribbons...
+	removeUnloadedGIDs: function(){
+		this.order = this.getImages('loaded')
+		this.updateImagePositions('remove')
 		return this
 	},
 
@@ -2335,7 +2445,7 @@ var DataPrototype = {
 		base
 			// XXX this is slow-ish...
 			.removeDuplicateGIDs()
-			.removeEmptyRibbons()
+			.clear('empty')
 
 		return base
 	},
@@ -2625,101 +2735,6 @@ var DataPrototype = {
 		this.order = [] 
 		this.ribbon_order = [] 
 		this.ribbons = {}
-
-		return this
-	},
-
-
-
-	/***************************************** Cleanup and removal ***/
-
-	// Remove empty ribbons...
-	//
-	removeEmptyRibbons: function(){
-		var that = this
-		this.ribbon_order = this.ribbon_order
-			.filter(function(r){ 
-				if(that.ribbons[r].len == 0){
-					delete that.ribbons[r]
-					return false
-				} 
-				return true
-			})
-		return this
-	},
-
-	// Remove duplicate gids...
-	//
-	// If a gid is in more than one ribbon, this will keep the top 
-	// occurrence only...
-	//
-	// NOTE: this may result in empty ribbons...
-	// NOTE: this is slow-ish...
-	removeDuplicateGIDs: function(){
-		var that = this
-		this.removeDuplicates(this.order)
-		this.updateImagePositions()
-		// if a gid is in more than one ribbon keep only the top occurence...
-		this.order.forEach(function(gid, i){
-			var found = false
-			that.ribbon_order.forEach(function(r){
-				r = that.ribbons[r]
-
-				if(found){
-					delete r[i]
-
-				} else if(r[i] != null){
-					found = true
-				}
-			})
-		})
-		return this
-	},
-
-	// Remove unloaded gids...
-	//
-	// This removes:
-	// 	- images from .data that are not in any ribbon
-	//
-	// NOTE: this may result in empty ribbons...
-	removeUnloadedGIDs: function(){
-		this.order = this.getImages('loaded')
-		this.updateImagePositions('remove')
-		return this
-	},
-
-	// Remove GIDs...
-	//
-	// NOTE: this may result in empty ribbons...
-	// NOTE: to remove gids from lists but keep them in order use:
-	// 		.updateImagePositions(gids, 'hide')
-	removeGIDs: function(gids, direction){
-		var that = this
-		gids = gids || []
-		gids = (gids instanceof Array ? gids : [gids])
-			.map(function(gid){ return that.getImage(gid) })
-
-		if(gids.length == 0){
-			return
-		}
-
-		var order = this.order.filter(function(g){ return gids.indexOf(g) < 0 })
-
-		// handle current image...
-		if(gids.indexOf(this.current) >= 0){
-			var r = this.getImages('current')
-				.filter(function(g){ return order.indexOf(g) >= 0 })
-
-			// attempt to first get next/prev within the current ribbon...
-			r = r.length > 0 ? r : order
-
-			this.current = this.getImage(this.current, direction || 'before', r)
-				|| this.getImage(this.current, direction == 'after' ? 'before' : 'after', r)
-		}
-
-		this.order = order
-
-		this.updateImagePositions('remove')
 
 		return this
 	},

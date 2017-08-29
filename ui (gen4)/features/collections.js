@@ -530,8 +530,7 @@ var CollectionActions = actions.Actions({
 				delete this.data.tags
 
 				this.data
-					.removeGIDs(gids)
-					.removeEmptyRibbons()
+					.clear(gids)
 					.run(function(){
 						this.tags = tags
 						this.sortTags()
@@ -544,8 +543,7 @@ var CollectionActions = actions.Actions({
 			// 		need to protect them...
 			if(this.data !== this.collections[collection].data){
 				this.collections[collection].data
-					.removeGIDs(gids)
-					.removeEmptyRibbons()
+					.clear(gids)
 			}
 		}],
 
