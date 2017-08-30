@@ -47,6 +47,7 @@ var MAIN_COLLECTION_TITLE = 'ALL'
 // XXX handle tags here???
 // 		...keep them global or local to collection???
 // 		global sounds better...
+// XXX local tags: bookmarked, selected...
 // XXX undo...
 var CollectionActions = actions.Actions({
 	config: {
@@ -56,6 +57,13 @@ var CollectionActions = actions.Actions({
 		// 	'none'		- do not save crop state
 		'collection-save-crop-state': 'all',
 
+		// List of tags to be stored in a collection, unique to it...
+		//
+		// XXX this is not used yet...
+		'collection-local-tags': [
+			'bookmark',
+			'selected',
+		],
 
 		// XXX add default collection list to config...
 		'default-collections': [
@@ -170,6 +178,7 @@ var CollectionActions = actions.Actions({
 		function(title, data){ 
 			return new Promise(function(resolve){ resolve(data.data) }) }],
 
+	// XXX load local_tags...
 	loadCollection: ['- Collections/',
 		core.doc`Load collection...
 
@@ -219,27 +228,23 @@ var CollectionActions = actions.Actions({
 
 			// save current collection state...
 			//
-			// main view -> save it...
+			// main view...
 			if(this.collection == null){
-				var main = this.collections[MAIN_COLLECTION_TITLE] = {
-					title: MAIN_COLLECTION_TITLE,
-				}
+				var tags = this.data.tags
 
-				// mode 'none' -> do not save crop state...
-				if(crop_mode == 'none'){
-					//this.saveCollection(this.collection, 'base')
-					main.data = (this.crop_stack || [])[0] || this.data
+				this.saveCollection(
+					MAIN_COLLECTION_TITLE, 
+					crop_mode == 'none' ? 
+						'base' 
+						: 'crop', 
+					true)
 
-				// modes 'all' and 'main' -> save crop state...
-				} else {
-					//this.saveCollection(this.collection, 'crop')
-					main.data = this.data
-					main.crop_stack = this.crop_stack 
-						&& this.crop_stack.slice()
-				}
+				// keep the tags...
+				this.collections[MAIN_COLLECTION_TITLE].data.tags = tags
 
-			} else if(crop_mode == 'all'){
-				this.saveCollection(this.collection, 'crop')
+			// collection...
+			} else {
+				this.saveCollection(this.collection, crop_mode == 'all' ? 'crop': null)
 			}
 
 			// load collection...
@@ -263,6 +268,9 @@ var CollectionActions = actions.Actions({
 								|| data.current
 
 							data.tags = that.data.tags
+
+							// XXX load local_tags...
+							// XXX
 
 							// NOTE: tags and other position dependant 
 							// 		data needs to be updated as collections
@@ -364,12 +372,14 @@ var CollectionActions = actions.Actions({
 				-> this
 
 		`,
-		function(collection, mode){
+		function(collection, mode, force){
 			var that = this
 			collection = collection || this.collection
 			collection = collection == 'current' ? this.collection : collection
 
-			if(collection == null || collection == MAIN_COLLECTION_TITLE){
+			if(!force 
+					&& (collection == null 
+						|| collection == MAIN_COLLECTION_TITLE)){
 				return
 			}
 
@@ -379,6 +389,14 @@ var CollectionActions = actions.Actions({
 				: mode
 
 			var collections = this.collections = this.collections || {}
+
+			// prepare local lags...
+			//var local_tags = {}
+			// XXX
+			var local_tags = (collections[collection] || {}).local_tags || {}
+			;(this.config['collection-local-tags'] || [])
+				.forEach(function(tag){ 
+					local_tags[tag] = local_tags[tag] || [] })
 
 			var state = collections[collection] = {
 				title: collection,
@@ -393,7 +411,13 @@ var CollectionActions = actions.Actions({
 							this.data.clone()
 						: this.data.clone()
 							.run(function(){
+								var d = this
 								this.collection = collection
+
+								// save local tags...
+								Object.keys(local_tags)
+									.forEach(function(tag){ 
+										local_tags[tag] = (d.tags[tag] || []).slice() })
 
 								// optimization: 
 								// 		avoid processing .tags as we'll 
@@ -401,6 +425,8 @@ var CollectionActions = actions.Actions({
 								delete this.tags 
 							})
 							.clear('unloaded')),
+
+				local_tags: local_tags,
 			}
 
 			if(mode == 'crop' && this.crop_stack && depth != 0){
@@ -554,6 +580,8 @@ var CollectionActions = actions.Actions({
 	// 		is copied in as-is.
 	// 		It is the responsibility of the extending features to transform
 	// 		their data on load as needed.
+	//
+	// XXX handle local_tags...
 	load: [function(json){
 		var that = this
 
@@ -626,6 +654,8 @@ var CollectionActions = actions.Actions({
 	// NOTE: currently this only stores title and data, it is the 
 	// 		responsibility of extending features to store their specific 
 	// 		data in collections...
+	//
+	// XXX handle local_tags...
 	json: [function(mode){ return function(res){
 		mode = mode || 'current'
 
@@ -634,6 +664,11 @@ var CollectionActions = actions.Actions({
 		// NOTE: if mode is 'current' ignore collections...
 		if(mode != 'current' && collections){
 			var order = this.collection_order
+			// NOTE: .collection_order does not return MAIN_COLLECTION_TITLE 
+			// 		so we have to add it in manually...
+			order = MAIN_COLLECTION_TITLE in collections ?
+				order.concat([MAIN_COLLECTION_TITLE])
+				: order
 
 			// in base mode save the main view as current...
 			if(mode == 'base' && this.collection){
