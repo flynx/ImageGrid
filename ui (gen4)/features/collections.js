@@ -675,13 +675,6 @@ var CollectionActions = actions.Actions({
 			})
 		}
 	} }],
-	clear: [function(){
-		this.collection
-			&& this.collectionUnloaded('*')
-		delete this.collections
-		delete this.__collection_order
-		delete this.location.collection
-	}],
 	clone: [function(full){
 		return function(res){
 			if(this.collections){
@@ -710,6 +703,18 @@ var CollectionActions = actions.Actions({
 			}
 
 		} }],
+
+	clear: [function(){
+		this.collection
+			&& this.collectionUnloaded('*')
+		delete this.collections
+		delete this.__collection_order
+		delete this.location.collection
+	}],
+
+	// Config...
+	toggleCollectionCropRetention: ['Interface/Collection crop save mode',
+		core.makeConfigToggler('collection-save-crop-state', ['all', 'main', 'none'])],
 })
 
 
