@@ -1707,7 +1707,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 					.browseActions('/Image/')
 			}],
 		['imageOuterBlockMenu.pre',
-			function(_, gid){
+			function(gid){
 				// only show image menu in ribbon mode...
 				if(this.toggleSingleImage && this.toggleSingleImage('?') == 'on'){
 					return
