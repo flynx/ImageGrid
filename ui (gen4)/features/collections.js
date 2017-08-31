@@ -424,6 +424,17 @@ var CollectionActions = actions.Actions({
 								// optimization: 
 								// 		avoid processing .tags as we'll 
 								// 		overwrite them anyway later...
+								//
+								// XXX not sure if this has any merit 
+								// 		here as we do not "save" changes 
+								// 		to loaded collections unless we 
+								// 		overwrite them -- they are edited 
+								// 		in-place
+								//		...so we'll need to either clean 
+								//		out tags on unload, or forget 
+								//		about it completely...
+								//		see:
+								//			.collectionUnloaded()
 								delete this.tags 
 							})
 							.clear('unloaded')),
@@ -774,6 +785,18 @@ module.Collection = core.ImageGridFeatures.Feature({
 	actions: CollectionActions, 
 
 	handlers: [
+		// XXX needs testing (json/load)...
+		// 		also see .saveCollection(..)
+		['collectionUnloaded',
+			function(_, title){
+				if(title != MAIN_COLLECTION_TITLE 
+						&& title in this.collections 
+						&& 'data' in this.collections[title]){
+					// cleanup...
+					delete this.collections[title].data.tags
+				}
+			}],
+
 		// XXX maintain changes...
 		// 		- collection-level: mark collections as changed...
 		// 		- in-collection:
