@@ -236,9 +236,7 @@ var CollectionActions = actions.Actions({
 
 				this.saveCollection(
 					MAIN_COLLECTION_TITLE, 
-					crop_mode == 'none' ? 
-						'base' 
-						: 'crop', 
+					crop_mode == 'none' ?  'base' : 'crop', 
 					true)
 
 				// keep the tags...
@@ -246,7 +244,9 @@ var CollectionActions = actions.Actions({
 
 			// collection...
 			} else {
-				this.saveCollection(this.collection, crop_mode == 'all' ? 'crop': null)
+				this.saveCollection(
+					this.collection, 
+					crop_mode == 'all' ? 'crop': null)
 			}
 
 			// load collection...
