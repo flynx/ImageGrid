@@ -785,6 +785,11 @@ module.Collection = core.ImageGridFeatures.Feature({
 	actions: CollectionActions, 
 
 	handlers: [
+		// XXX should we move all the tag handling to collectionLoaded() 
+		// 		and .collectionUnloaded() events???
+		// 		...this would make the main action code simpler and free
+		// 		us from complex code refactoring if we need to change 
+		// 		things up later...
 		// XXX needs testing (json/load)...
 		// 		also see .saveCollection(..)
 		['collectionUnloaded',
