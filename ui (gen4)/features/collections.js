@@ -44,11 +44,8 @@ var MAIN_COLLECTION_TITLE = 'ALL'
 // 		locations:
 // 			- collection specific stuff (data) to collection path
 // 			- global stuff (images, tags, ...) to base index...
-// XXX handle tags here???
-// 		...keep them global or local to collection???
-// 		global sounds better...
 // XXX local tags:
-// 		- save		- done, test
+// 		- save		- done
 // 		- load		- done
 // 		- save/merge use...
 // XXX tag actions:
@@ -796,7 +793,9 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 	image-specific tags, keywords and meta-information stored in tags 
 	global, i.e. connected to specific image and not collection. 
 
-	Global tags are stored in .data.tags and cleared out of collections
+	Global tags are stored in .data.tags and cleared out of from the 
+	collection's: 
+		.collections[<title>].data
 
 
 	Collection local tags:
