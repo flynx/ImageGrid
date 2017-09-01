@@ -64,14 +64,6 @@ var CollectionActions = actions.Actions({
 		// 	'none'		- do not save crop state
 		'collection-save-crop-state': 'all',
 
-		// List of tags to be stored in a collection, unique to it...
-		//
-		// NOTE: the rest of the tags are shared between all collections
-		'collection-local-tags': [
-			'bookmark',
-			'selected',
-		],
-
 		// XXX add default collection list to config...
 		'default-collections': [
 		],
@@ -724,11 +716,116 @@ module.Collection = core.ImageGridFeatures.Feature({
 		'crop',
 	],
 	suggested: [
+		'collection-tags',
 		'ui-collections',
 		'fs-collections',
 	],
 
 	actions: CollectionActions, 
+
+	handlers: [
+		// XXX maintain changes...
+		// 		- collection-level: mark collections as changed...
+		// 		- in-collection:
+		// 			- save/restore parent changes when loading/exiting collections
+		// 			- move collection chnages to collections
+		[[
+			'collect',
+			'joinCollect',
+			'uncollect',
+
+			'saveCollection',
+
+			'removeCollection',
+		], 
+			function(){
+				// XXX mark changed collections...
+				// XXX added/removed collection -> mark collection index as changed...
+			}],
+
+
+		['prepareIndexForWrite', 
+			function(res, _, full){
+				var changed = full == true 
+					|| res.changes === true
+					|| res.changes.collections
+
+				if(changed && res.raw.collections){
+					// select the actual changed collection list...
+					changed = changed === true ? 
+						Object.keys(res.raw.collections)
+						: changed
+
+					// collection index...
+					res.index['collection-index'] = Object.keys(this.collections)
+
+					Object.keys(changed)
+						// skip the raw field...
+						.filter(function(k){ return changed.indexOf(k) >= 0 })
+						.forEach(function(k){
+							// XXX use collection gid...
+							res.index['collections/' + k] = res.raw.collections[k]
+						})
+				}
+			}],
+		['prepareJSONForLoad',
+			function(res, json, base_path){
+				// XXX
+			}],
+	],
+})
+
+
+//---------------------------------------------------------------------
+
+var CollectionTags = 
+module.CollectionTags = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: core.doc`Collection tag handling
+	=======================
+
+	What this does:
+	- Makes tags global through all collections
+	- Handles local tags per collection
+
+
+	Global tags:
+	------------
+
+	Global tags are shared through all the collections, this helps keep
+	image-specific tags, keywords and meta-information stored in tags 
+	global, i.e. connected to specific image and not collection. 
+
+	Global tags are stored in .data.tags and cleared out of collections
+
+
+	Collection local tags:
+	----------------------
+
+	Local tags are listed in .config['collection-local-tags'], this makes
+	selection, bookmarking and other process related tags local to each 
+	collection.
+
+	Collection-local tags are stored in .collections[<title>].local_tags
+	and overwrite the corresponding tags in .data.tags on collection load.
+
+	`,
+
+	tag: 'collection-tags',
+
+	depends: [
+		'collections',
+	],
+
+	config: {
+		// List of tags to be stored in a collection, unique to it...
+		//
+		// NOTE: the rest of the tags are shared between all collections
+		'collection-local-tags': [
+			'bookmark',
+			'selected',
+		],
+	},
 
 	handlers: [
 		// handle tags...
@@ -828,56 +925,6 @@ module.Collection = core.ImageGridFeatures.Feature({
 							// root .data...
 							delete rc[title].data.tags
 						})
-			}],
-
-
-		// XXX maintain changes...
-		// 		- collection-level: mark collections as changed...
-		// 		- in-collection:
-		// 			- save/restore parent changes when loading/exiting collections
-		// 			- move collection chnages to collections
-		[[
-			'collect',
-			'joinCollect',
-			'uncollect',
-
-			'saveCollection',
-
-			'removeCollection',
-		], 
-			function(){
-				// XXX mark changed collections...
-				// XXX added/removed collection -> mark collection index as changed...
-			}],
-
-
-		['prepareIndexForWrite', 
-			function(res, _, full){
-				var changed = full == true 
-					|| res.changes === true
-					|| res.changes.collections
-
-				if(changed && res.raw.collections){
-					// select the actual changed collection list...
-					changed = changed === true ? 
-						Object.keys(res.raw.collections)
-						: changed
-
-					// collection index...
-					res.index['collection-index'] = Object.keys(this.collections)
-
-					Object.keys(changed)
-						// skip the raw field...
-						.filter(function(k){ return changed.indexOf(k) >= 0 })
-						.forEach(function(k){
-							// XXX use collection gid...
-							res.index['collections/' + k] = res.raw.collections[k]
-						})
-				}
-			}],
-		['prepareJSONForLoad',
-			function(res, json, base_path){
-				// XXX
 			}],
 	],
 })
