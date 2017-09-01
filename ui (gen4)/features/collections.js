@@ -48,9 +48,12 @@ var MAIN_COLLECTION_TITLE = 'ALL'
 // 		...keep them global or local to collection???
 // 		global sounds better...
 // XXX local tags:
-// 		- save -- done, test
-// 		- load
+// 		- save		- done, test
+// 		- load		- done
 // 		- save/merge use...
+// XXX tag actions:
+// 		- .collectmarked(..)
+// 		- ...
 // XXX selection/tag based .collect()/.uncollect() actions...
 // XXX undo...
 var CollectionActions = actions.Actions({
@@ -524,19 +527,9 @@ var CollectionActions = actions.Actions({
 						: [that.data.getImage(gid)] })
 				.reduce(function(a, b){ return a.concat(b) }, [])
 
-			if(this.collection == collection){
-				// need to keep this from updating .tags...
-				// XXX this seems a bit hacky...
-				var tags = this.data.tags
-				delete this.data.tags
-
-				this.data
-					.clear(gids)
-					.run(function(){
-						this.tags = tags
-						this.sortTags()
-					})
-			}
+			// remove from the loaded state...
+			this.collection == collection
+				&& this.data.clear(gids)
 
 			// NOTE: we do both this and the above iff data is cloned...
 			// NOTE: if tags are saved to the collection it means that 
@@ -570,11 +563,7 @@ var CollectionActions = actions.Actions({
 			// load data...
 			var d = c[title].data instanceof data.Data ?
 				c[title].data
-				: data.Data
-					.fromJSON(c[title].data
-					.run(function(){
-						this.tags = this.tags || that.data.tags
-					}))
+				: data.Data.fromJSON(c[title].data)
 
 			var state = collections[title] = {
 				title: title,
@@ -665,7 +654,6 @@ var CollectionActions = actions.Actions({
 						(state.crop_stack[0] || state.data)
 						: state.data)
 					.dumpJSON()
-				delete data.tags
 
 				var s = res.collections[title] = {
 					title: title,
@@ -743,7 +731,9 @@ module.Collection = core.ImageGridFeatures.Feature({
 	actions: CollectionActions, 
 
 	handlers: [
+		// handle tags...
 		// XXX should tag handling get moved to a separate feature???
+		//
 		// move tags between collections...
 		['collectionLoading.pre',
 			function(title){
@@ -767,16 +757,15 @@ module.Collection = core.ImageGridFeatures.Feature({
 					this.data.sortTags()
 				}
 			}],
-		// remove tags from unloaded collections except for main...
+		// remove tags from unloaded collections...
 		['collectionUnloaded',
 			function(_, title){
-				if(title != MAIN_COLLECTION_TITLE 
-						&& title in this.collections 
+				if(title in this.collections 
 						&& 'data' in this.collections[title]){
 					delete this.collections[title].data.tags
 				}
 			}],
-		// remove tags when saving, except for main collection...
+		// remove tags when saving...
 		['saveCollection.pre',
 			function(title, mode, force){
 				var that = this
@@ -800,10 +789,19 @@ module.Collection = core.ImageGridFeatures.Feature({
 								: []
 						})
 
-					// keep tags only for main collection...
-					if(title != MAIN_COLLECTION_TITLE){
-						delete this.collections[title].data.tags
-					}
+					delete this.collections[title].data.tags
+				}
+			}],
+		// prevent .uncollect(..) from removing global tags...
+		// XXX this seems a bit hacky (???)
+		['uncollect.pre',
+			function(_, gids, title){
+				var tags = this.data.tags
+				delete this.data.tags
+
+				return function(){
+					this.data.tags = tags
+					this.data.sortTags()
 				}
 			}],
 		// save .local_tags to json...
@@ -821,10 +819,14 @@ module.Collection = core.ImageGridFeatures.Feature({
 							var tags = c[title].local_tags
 							var rtags = rc[title].local_tags = {}
 
+							// compact the local tags...
 							Object.keys(c[title].local_tags)
 								.forEach(function(tag){
-									rtags[tag] = tags[tag].compact()
-								})
+									rtags[tag] = tags[tag].compact() })
+
+							// no need to save the tags in more than the
+							// root .data...
+							delete rc[title].data.tags
 						})
 			}],
 
