@@ -780,7 +780,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 var CollectionTags = 
 module.CollectionTags = core.ImageGridFeatures.Feature({
-	title: '',
+	title: 'Collection tag handling',
 	doc: core.doc`Collection tag handling
 	=======================
 
@@ -821,6 +821,8 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 		// List of tags to be stored in a collection, unique to it...
 		//
 		// NOTE: the rest of the tags are shared between all collections
+		// NOTE: to disable local tags either delete this, set it to null
+		// 		or to an empty list.
 		'collection-local-tags': [
 			'bookmark',
 			'selected',
@@ -828,9 +830,6 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 	},
 
 	handlers: [
-		// handle tags...
-		// XXX should tag handling get moved to a separate feature???
-		//
 		// move tags between collections...
 		['collectionLoading.pre',
 			function(title){
@@ -868,7 +867,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 				var that = this
 				var local_tag_names = this.config['collection-local-tags'] || []
 
-				// do not du anything for main collection unless force is true...
+				// do not do anything for main collection unless force is true...
 				if(title == MAIN_COLLECTION_TITLE && !force){
 					return
 				}
@@ -893,10 +892,18 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 		// XXX this seems a bit hacky (???)
 		['uncollect.pre',
 			function(_, gids, title){
+				var that = this
+				var local_tag_names = this.config['collection-local-tags'] || []
+
+				// prevent global tag removal...
 				var tags = this.data.tags
 				delete this.data.tags
 
 				return function(){
+					// update local tags...
+					local_tag_names.forEach(function(tag){
+						tags[tag] = that.data.makeSparseImages(tags[tag], true) })
+
 					this.data.tags = tags
 					this.data.sortTags()
 				}
