@@ -62,6 +62,8 @@ var CollectionActions = actions.Actions({
 		'collection-save-crop-state': 'all',
 
 		// List of tags to be stored in a collection, unique to it...
+		//
+		// NOTE: the rest of the tags are shared between all collections
 		'collection-local-tags': [
 			'bookmark',
 			'selected',
@@ -180,7 +182,6 @@ var CollectionActions = actions.Actions({
 		function(title, data){ 
 			return new Promise(function(resolve){ resolve(data.data) }) }],
 
-	// XXX load local_tags...
 	loadCollection: ['- Collections/',
 		core.doc`Load collection...
 
@@ -232,15 +233,10 @@ var CollectionActions = actions.Actions({
 			//
 			// main view...
 			if(this.collection == null){
-				var tags = this.data.tags
-
 				this.saveCollection(
 					MAIN_COLLECTION_TITLE, 
 					crop_mode == 'none' ?  'base' : 'crop', 
 					true)
-
-				// keep the tags...
-				this.collections[MAIN_COLLECTION_TITLE].data.tags = tags
 
 			// collection...
 			} else {
@@ -269,60 +265,57 @@ var CollectionActions = actions.Actions({
 								|| that.data.getImage(current, data.order)
 								|| data.current
 
-							data.tags = that.data.tags
-
-							// XXX load local_tags...
-							// XXX
-
-							// NOTE: tags and other position dependant 
-							// 		data needs to be updated as collections
-							// 		may contain different numbers/orders of
-							// 		images...
-							// XXX
-							//data.updateImagePositions()
-							data.sortTags()
-
-							that.load({
-								data: data,
-
-								crop_stack: collection_data.crop_stack
-									&& collection_data.crop_stack.slice(),
-
-								// NOTE: we do not need to pass collections 
-								// 		and order here as they stay in from 
-								// 		the last .load(..) in merge mode...
-								//collections: that.collections,
-								//collection_order: that.collection_order,
-							}, true)
-
-							// maintain the .collection state...
-							if(collection == MAIN_COLLECTION_TITLE){
-								// no need to maintain the main data in two 
-								// locations...
-								delete that.collections[MAIN_COLLECTION_TITLE]
-								delete this.location.collection
-
-							} else {
-								that.data.collection = that.location.collection = collection
-								// cleanup...
-								if(collection == null){
-									delete this.location.collection
-								}
-							}
-
-							// collection events...
 							that
-								.collectionUnloaded(prev || MAIN_COLLECTION_TITLE)
-								.collectionLoaded(collection)	
+								.collectionLoading.chainCall(that, 
+									function(){
+										// do the actual load...
+										that.load.chainCall(that, 
+											function(){
+												that.collectionUnloaded(
+													prev || MAIN_COLLECTION_TITLE)
+											}, {
+												data: data,
+
+												crop_stack: collection_data.crop_stack
+													&& collection_data.crop_stack.slice(),
+
+												// NOTE: we do not need to pass collections 
+												// 		and order here as they stay in from 
+												// 		the last .load(..) in merge mode...
+												//collections: that.collections,
+												//collection_order: that.collection_order,
+											}, true)
+
+										// maintain the .collection state...
+										if(collection == MAIN_COLLECTION_TITLE){
+											// no need to maintain the main data in two 
+											// locations...
+											delete that.collections[MAIN_COLLECTION_TITLE]
+											delete this.location.collection
+
+										} else {
+											that.data.collection = 
+												that.location.collection = 
+												collection
+											// cleanup...
+											if(collection == null){
+												delete this.location.collection
+											}
+										}
+									}, 
+									collection)
 						})
 				}
 			}
 		}],
 
 	// events...
-	collectionLoaded: ['- Collections/',
+	collectionLoading: ['- Collections/',
 		core.doc`This is called by .loadCollection(..) or one of the 
 		overloading actions when collection load is done...
+
+		The .pre phase is called just before the load and the .post phase 
+		just after.
 		
 		`,
 		core.notUserCallable(function(collection){
@@ -392,14 +385,6 @@ var CollectionActions = actions.Actions({
 
 			var collections = this.collections = this.collections || {}
 
-			// prepare local lags...
-			//var local_tags = {}
-			// XXX
-			var local_tags = (collections[collection] || {}).local_tags || {}
-			;(this.config['collection-local-tags'] || [])
-				.forEach(function(tag){ 
-					local_tags[tag] = local_tags[tag] || [] })
-
 			var state = collections[collection] = {
 				title: collection,
 
@@ -415,31 +400,8 @@ var CollectionActions = actions.Actions({
 							.run(function(){
 								var d = this
 								this.collection = collection
-
-								// save local tags...
-								Object.keys(local_tags)
-									.forEach(function(tag){ 
-										local_tags[tag] = (d.tags[tag] || []).slice() })
-
-								// optimization: 
-								// 		avoid processing .tags as we'll 
-								// 		overwrite them anyway later...
-								//
-								// XXX not sure if this has any merit 
-								// 		here as we do not "save" changes 
-								// 		to loaded collections unless we 
-								// 		overwrite them -- they are edited 
-								// 		in-place
-								//		...so we'll need to either clean 
-								//		out tags on unload, or forget 
-								//		about it completely...
-								//		see:
-								//			.collectionUnloaded()
-								delete this.tags 
 							})
 							.clear('unloaded')),
-
-				local_tags: local_tags,
 			}
 
 			if(mode == 'crop' && this.crop_stack && depth != 0){
@@ -593,8 +555,6 @@ var CollectionActions = actions.Actions({
 	// 		is copied in as-is.
 	// 		It is the responsibility of the extending features to transform
 	// 		their data on load as needed.
-	//
-	// XXX handle local_tags...
 	load: [function(json){
 		var that = this
 
@@ -667,8 +627,6 @@ var CollectionActions = actions.Actions({
 	// NOTE: currently this only stores title and data, it is the 
 	// 		responsibility of extending features to store their specific 
 	// 		data in collections...
-	//
-	// XXX handle local_tags...
 	json: [function(mode){ return function(res){
 		mode = mode || 'current'
 
@@ -785,22 +743,91 @@ module.Collection = core.ImageGridFeatures.Feature({
 	actions: CollectionActions, 
 
 	handlers: [
-		// XXX should we move all the tag handling to collectionLoaded() 
-		// 		and .collectionUnloaded() events???
-		// 		...this would make the main action code simpler and free
-		// 		us from complex code refactoring if we need to change 
-		// 		things up later...
-		// XXX needs testing (json/load)...
-		// 		also see .saveCollection(..)
+		// XXX should tag handling get moved to a separate feature???
+		// move tags between collections...
+		['collectionLoading.pre',
+			function(title){
+				var that = this
+				var local_tag_names = this.config['collection-local-tags'] || []
+				var tags = this.data.tags
+
+				// NOTE: this is done at the .pre stage as we need to grab 
+				// 		the tags BEFORE the data gets cleared (in the case 
+				// 		of MAIN_COLLECTION_TITLE)...
+				var local_tags = (this.collections[title] || {}).local_tags || {}
+
+				return function(){
+					// load local_tags...
+					local_tag_names
+						.forEach(function(tag){ 
+							tags[tag] = local_tags[tag] || [] 
+						})
+
+					this.data.tags = tags
+					this.data.sortTags()
+				}
+			}],
+		// remove tags from unloaded collections except for main...
 		['collectionUnloaded',
 			function(_, title){
 				if(title != MAIN_COLLECTION_TITLE 
 						&& title in this.collections 
 						&& 'data' in this.collections[title]){
-					// cleanup...
 					delete this.collections[title].data.tags
 				}
 			}],
+		// remove tags when saving, except for main collection...
+		['saveCollection.pre',
+			function(title, mode, force){
+				var that = this
+				var local_tag_names = this.config['collection-local-tags'] || []
+
+				// do not du anything for main collection unless force is true...
+				if(title == MAIN_COLLECTION_TITLE && !force){
+					return
+				}
+
+				// we need this to prevent copy of tags on first save...
+				var new_set = !(title in (this.collections || {}))
+
+				return function(){
+					// save local tags...
+					var local_tags = this.collections[title].local_tags = {}
+					local_tag_names
+						.forEach(function(tag){ 
+							local_tags[tag] = (!new_set || title == MAIN_COLLECTION_TITLE) ? 
+								(that.data.tags[tag] || []) 
+								: []
+						})
+
+					// keep tags only for main collection...
+					if(title != MAIN_COLLECTION_TITLE){
+						delete this.collections[title].data.tags
+					}
+				}
+			}],
+		// save .local_tags to json...
+		// NOTE: we do not need to explicitly load anything as .load() 
+		// 		will load everything we need and .collectionLoading(..)
+		// 		will .sortTags() for us...
+		['json',
+			function(res, mode){
+				var c = this.collections
+				var rc = res.collections
+
+				rc
+					&& Object.keys(rc || {})
+						.forEach(function(title){
+							var tags = c[title].local_tags
+							var rtags = rc[title].local_tags = {}
+
+							Object.keys(c[title].local_tags)
+								.forEach(function(tag){
+									rtags[tag] = tags[tag].compact()
+								})
+						})
+			}],
+
 
 		// XXX maintain changes...
 		// 		- collection-level: mark collections as changed...
@@ -1058,6 +1085,13 @@ module.UICollection = core.ImageGridFeatures.Feature({
 	actions: UICollectionActions, 
 
 	handlers: [
+		// we need to do this as we transfer tags after everything is 
+		// loaded...
+		['collectionLoading',
+			function(){
+				this.reload() 
+			}],
+
 		// update view when removing from current collection...
 		['uncollect',
 			function(_, gids, collection){
@@ -1066,7 +1100,7 @@ module.UICollection = core.ImageGridFeatures.Feature({
 			}],
 
 		// maintain crop viewer state when loading/unloading collections...
-		['load clear reload collectionLoaded collectionUnloaded',
+		['load clear reload collectionLoading collectionUnloaded',
 			function(){
 				if(!this.dom){
 					return
