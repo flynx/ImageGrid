@@ -1761,7 +1761,7 @@ var ButtonsActions = actions.Actions({
 		// 	}
 		'main-buttons': {
 			'&#x2630;': ['menu', 'browseActions -- Action menu...'],
-			'&#9714;<sub/>': ['collections', 'browseCollections -- Collections...'],
+			'&#9714;<sub/><sup/>': ['collections', 'browseCollections -- Collections...'],
 			'C<sub/>': ['crop', 'browseActions: "Crop/" -- Crop menu...'],
 			//'&#9636;<sub/>': ['collections', 'browseCollections -- Collections...'],
 			//'&#9974;': ['view', 'toggleSingleImage -- Single image / ribbon toggle'],
@@ -1871,6 +1871,7 @@ module.Buttons = core.ImageGridFeatures.Feature({
 			'clear', 
 			'reload', 
 			'saveCollection',
+			'removeCollection',
 			'collectionLoaded', 
 			'collectionUnloaded', 
 		], 
@@ -1882,12 +1883,25 @@ module.Buttons = core.ImageGridFeatures.Feature({
 					})
 
 				var l = this.collections_length
+
+				// current collection unsaved indicator...
+				$('.main-buttons.buttons .collections.button sup')
+					.css({
+						'display': 'inline-block',
+						'position': 'absolute',
+						'margin-top': '-0.3em',
+						'overflow': 'visible',
+					})
+					.text((this.collection && !(this.collection in this.collections)) ? 
+						'*' 
+						: '')
+
+				// collection count... 
 				$('.main-buttons.buttons .collections.button sub')
 					.css({
 						'display': 'inline-block',
 						'width': '0px',
 						'overflow': 'visible',
-						//'color': this.collection ? 'yellow' : '',
 					})
 					.text(l > 99 ?  '99+' 
 						: l == 0 ? ''

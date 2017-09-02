@@ -140,7 +140,7 @@ var CollectionActions = actions.Actions({
 	//
 	// XXX should these get auto-sorted???
 	get collection_handlers(){
-		var handlers = this.__collection_handlers || {}
+		var handlers = this.__collection_handlers = this.__collection_handlers || {}
 
 		if(Object.keys(handlers).length == 0){
 			var that = this
@@ -153,9 +153,15 @@ var CollectionActions = actions.Actions({
 			})
 		}
 
+		// cleanup...
+		if(handlers['data'] == null){
+			delete handlers['data']
+		}
+
 		return handlers
 	},
 
+	/*/ XXX do we actually need this????
 	collectionDataLoader: ['- Collections/',
 		core.doc`Collection data loader
 		
@@ -173,7 +179,10 @@ var CollectionActions = actions.Actions({
 		{collectionFormat: 'data'},
 		function(title, data){ 
 			return new Promise(function(resolve){ resolve(data.data) }) }],
+	//*/
 
+	// XXX revise loader protocol...
+	// 		...should it be cooperative???
 	loadCollection: ['- Collections/',
 		core.doc`Load collection...
 
@@ -204,6 +213,8 @@ var CollectionActions = actions.Actions({
 		To invalidate such a cache .data should simply be deleted.
 
 		NOTE: cached collection state is persistent.
+		NOTE: when current collection is removed from .collections this 
+			will not save state when loading another collection...
 		`,
 		function(collection){
 			var that = this
@@ -224,6 +235,8 @@ var CollectionActions = actions.Actions({
 			// save current collection state...
 			//
 			// main view...
+			// NOTE: we save here unconditionally because MAIN_COLLECTION_TITLE
+			// 		is stored ONLY when we load some other collection...
 			if(this.collection == null){
 				this.saveCollection(
 					MAIN_COLLECTION_TITLE, 
@@ -231,74 +244,79 @@ var CollectionActions = actions.Actions({
 					true)
 
 			// collection...
-			} else {
+			// NOTE: we only save if the current collection exists, it 
+			// 		may not exist if it was just removed...
+			} else if(this.collection in this.collections){
 				this.saveCollection(
 					this.collection, 
 					crop_mode == 'all' ? 'crop': null)
 			}
 
 			// load collection...
-			for(var format in handlers){
-				if(collection_data[format]){
-					return this[handlers[format]](collection, collection_data)
-						.then(function(data){
-							if(!data){
-								return
-							}
+			Promise
+				.all(Object.keys(handlers)
+					.filter(function(format){ 
+						return format == '*' || collection_data[format] })
+					.map(function(format){
+						return that[handlers[format]](collection, collection_data) }))
+				.then(function(){
+					var data = collection_data.data
 
-							// current...
-							data.current = data.getImage(current) 
-								// current is not in collection -> try and keep 
-								// the ribbon context...
-								|| that.data.getImage(
-									current, 
-									data.getImages(that.data.getImages(ribbon)))
-								// get closest image from collection...
-								|| that.data.getImage(current, data.order)
-								|| data.current
+					if(!data){
+						return
+					}
 
-							that
-								.collectionLoading.chainCall(that, 
+					// current...
+					data.current = data.getImage(current) 
+						// current is not in collection -> try and keep 
+						// the ribbon context...
+						|| that.data.getImage(
+							current, 
+							data.getImages(that.data.getImages(ribbon)))
+						// get closest image from collection...
+						|| that.data.getImage(current, data.order)
+						|| data.current
+
+					that
+						.collectionLoading.chainCall(that, 
+							function(){
+								// do the actual load...
+								that.load.chainCall(that, 
 									function(){
-										// do the actual load...
-										that.load.chainCall(that, 
-											function(){
-												that.collectionUnloaded(
-													prev || MAIN_COLLECTION_TITLE)
-											}, {
-												data: data,
+										that.collectionUnloaded(
+											prev || MAIN_COLLECTION_TITLE)
+									}, {
+										data: data,
 
-												crop_stack: collection_data.crop_stack
-													&& collection_data.crop_stack.slice(),
+										crop_stack: collection_data.crop_stack
+											&& collection_data.crop_stack.slice(),
 
-												// NOTE: we do not need to pass collections 
-												// 		and order here as they stay in from 
-												// 		the last .load(..) in merge mode...
-												//collections: that.collections,
-												//collection_order: that.collection_order,
-											}, true)
+										// NOTE: we do not need to pass collections 
+										// 		and order here as they stay in from 
+										// 		the last .load(..) in merge mode...
+										//collections: that.collections,
+										//collection_order: that.collection_order,
+									}, true)
 
-										// maintain the .collection state...
-										if(collection == MAIN_COLLECTION_TITLE){
-											// no need to maintain the main data in two 
-											// locations...
-											delete that.collections[MAIN_COLLECTION_TITLE]
-											delete this.location.collection
+								// maintain the .collection state...
+								if(collection == MAIN_COLLECTION_TITLE){
+									// no need to maintain the main data in two 
+									// locations...
+									delete that.collections[MAIN_COLLECTION_TITLE]
+									delete this.location.collection
 
-										} else {
-											that.data.collection = 
-												that.location.collection = 
-												collection
-											// cleanup...
-											if(collection == null){
-												delete this.location.collection
-											}
-										}
-									}, 
-									collection)
-						})
-				}
-			}
+								} else {
+									that.data.collection = 
+										that.location.collection = 
+										collection
+									// cleanup...
+									if(collection == null){
+										delete this.location.collection
+									}
+								}
+							}, 
+							collection)
+				})
 		}],
 
 	// events...
@@ -332,14 +350,22 @@ var CollectionActions = actions.Actions({
 	saveCollection: ['- Collections/',
 		core.doc`Save current state to collection
 
-			Save Current state to current collection
+			Save current state to current collection
 			.saveCollection()
 			.saveCollection('current')
 				-> this
 				NOTE: this will do nothing if no collection is loaded.
 
-			Save Current state as collection
+			Save state as collection...
 			.saveCollection(collection)
+				-> this
+				NOTE: if saving to self the default mode is 'crop' else
+					it is 'current' (see below for info on respective 
+					modes)...
+
+			Save current state as collection ignoring crop stack
+			.saveCollection(collection, 0)
+			.saveCollection(collection, 'current')
 				-> this
 
 			Save new empty collection
@@ -358,6 +384,13 @@ var CollectionActions = actions.Actions({
 			.saveCollection(collection, 'base')
 				-> this
 
+		NOTE: this will overwrite collection .data and .crop_stack only, 
+			the rest of the data is untouched...
+		NOTE: if it is needed to overwrite an existing collection then 
+			first remove it then save anew:
+				this
+					.removeCollection(x)
+					.saveCollection(x, 'crop')
 		`,
 		function(collection, mode, force){
 			var that = this
@@ -365,48 +398,64 @@ var CollectionActions = actions.Actions({
 			collection = collection == 'current' ? this.collection : collection
 
 			if(!force 
-					&& (collection == null 
-						|| collection == MAIN_COLLECTION_TITLE)){
+					&& (collection == null || collection == MAIN_COLLECTION_TITLE)){
 				return
 			}
 
+			var collections = this.collections = this.collections || {}
 			var depth = typeof(mode) == typeof(123) ? mode : null
-			mode = depth == 0 ? null 
+			mode = depth == 0 ? 'current' 
 				: depth ? 'crop' 
 				: mode
-
-			var collections = this.collections = this.collections || {}
-
-			var state = collections[collection] = {
-				title: collection,
-
-				// NOTE: we do not need to care about tags here as they 
-				// 		will get overwritten on load...
-				data: (mode == 'empty' ? 
-							(new this.data.constructor())
-						: mode == 'base' && this.crop_stack ? 
-							(this.crop_stack[0] || this.data.clone())
-						: mode == 'crop' ? 
-							this.data.clone()
-						: this.data.clone()
-							.run(function(){
-								var d = this
-								this.collection = collection
-							})
-							.clear('unloaded')),
+			// default mode -- if saving to self then 'crop' else 'current'
+			if(!mode){
+				mode = ((collection in collections 
+							&& collection == this.collection) 
+						|| collection == MAIN_COLLECTION_TITLE) ? 
+					'crop' 
+					: 'current'
 			}
 
+
+			// save the data...
+			var state = collections[collection] = collections[collection] || {}
+			state.title = state.title || collection
+			// NOTE: we do not need to care about tags here as they 
+			// 		will get overwritten on load...
+			state.data = (mode == 'empty' ? 
+					(new this.data.constructor())
+				: mode == 'base' && this.crop_stack ? 
+					(this.crop_stack[0] || this.data.clone())
+				: mode == 'crop' ? 
+					this.data.clone()
+				// current...
+				: this.data.clone()
+					.run(function(){
+						var d = this
+						this.collection = collection
+					})
+					.clear('unloaded'))
+
+			// crop mode -> handle crop stack...
 			if(mode == 'crop' && this.crop_stack && depth != 0){
 				depth = depth || this.crop_stack.length
 				depth = this.crop_stack.length - Math.min(depth, this.crop_stack.length)
 
 				state.crop_stack = this.crop_stack.slice(depth)
+
+			// other modes...
+			} else {
+				delete state.crop_stack
 			}
 		}],
 	newCollection: ['- Collections/',
 		function(collection){ return this.saveCollection(collection, 'empty') }],
 	// XXX should we do anything special if collection is loaded???
 	removeCollection: ['- Collections/',
+		core.doc`
+		
+		NOTE: when removing the currently loaded collection this will 
+			just remove it from .collections and do nothing...`,
 		function(collection){
 			if(collection == MAIN_COLLECTION_TITLE){
 				return
@@ -714,6 +763,8 @@ module.Collection = core.ImageGridFeatures.Feature({
 	],
 	suggested: [
 		'collection-tags',
+		'auto-collection-tags',
+
 		'ui-collections',
 		'fs-collections',
 	],
@@ -721,6 +772,9 @@ module.Collection = core.ImageGridFeatures.Feature({
 	actions: CollectionActions, 
 
 	handlers: [
+		// XXX do we need this???
+		['json.pre',
+			function(){ this.saveCollection() }],
 		// XXX maintain changes...
 		// 		- collection-level: mark collections as changed...
 		// 		- in-collection:
@@ -848,6 +902,8 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 							tags[tag] = local_tags[tag] || [] 
 						})
 
+					;(this.crop_stack || [])
+						.forEach(function(d){ d.tags = tags })
 					this.data.tags = tags
 					this.data.sortTags()
 				}
@@ -864,6 +920,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 		['saveCollection.pre',
 			function(title, mode, force){
 				var that = this
+				title = title || this.collection || MAIN_COLLECTION_TITLE
 				var local_tag_names = this.config['collection-local-tags'] || []
 
 				// do not do anything for main collection unless force is true...
@@ -911,11 +968,32 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 		// NOTE: we do not need to explicitly load anything as .load() 
 		// 		will load everything we need and .collectionLoading(..)
 		// 		will .sortTags() for us...
+		//
+		// XXX handle 'base' mode...
 		['json',
 			function(res, mode){
 				var c = this.collections
 				var rc = res.collections
 
+				// in 'base' mode set .data.tags and .local_tags to 
+				// the base collection data...
+				if(mode == 'base' 
+						&& this.collection != null
+						&& this.collection != MAIN_COLLECTION_TITLE){
+					// NOTE: at this point .crop_stack is handled, so we 
+					// 		do not need to care about it...
+					var tags = c[MAIN_COLLECTION_TITLE].local_tags || {}
+					var rtags = 
+						res.data.tags = 
+						res.collections[this.collection].data.tags || {}
+
+					// compact and overwrite the local tags for the base...
+					Object.keys(tags)
+						.forEach(function(tag){
+							rtags[tag] = tags[tag].compact() })
+				}
+
+				// clear and compact tags for all collections...
 				rc
 					&& Object.keys(rc || {})
 						.forEach(function(title){
@@ -923,7 +1001,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 							var rtags = rc[title].local_tags = {}
 
 							// compact the local tags...
-							Object.keys(c[title].local_tags)
+							Object.keys(tags)
 								.forEach(function(tag){
 									rtags[tag] = tags[tag].compact() })
 
@@ -933,6 +1011,61 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 						})
 			}],
 	],
+})
+
+
+
+//---------------------------------------------------------------------
+
+var AutoTagCollectionsActions = actions.Actions({
+	// initial load...
+	// XXX should this be a real tag query???
+	collectionAutoTagsLoader: ['- Collections/',
+		core.doc`
+
+		NOTE: this will ignore local tags.
+		NOTE: this will prepend new matching items to the saved state.
+		`,
+		{collectionFormat: 'tag_query'},
+		function(title, state){ 
+			return new Promise((function(resolve){
+				var local_tag_names = this.config['collection-local-tags'] || []
+
+				var tags = (state.tag_query || [])
+					// filter out local tags...
+					.filter(function(tag){ return local_tag_names.indexOf(tag) < 0 })
+
+				// XXX should this be a real tag query???
+				var gids = this.data.getTaggedByAll(tags)
+
+				// get unmatching...
+				var remove = state.data ?
+					state.data.order
+						.filter(function(gid){ return gids.indexOf(gid) < 0 })
+					: []
+
+				// build data...
+				state.data = data.Data.fromArray(gids)
+					// join with saved state...
+					.join(state.data || data.Data())
+					// remove unmatching...
+					.clear(remove)
+
+				resolve(state.data)
+			}).bind(this)) }],
+})
+
+var AutoTagCollections =
+module.AutoTagCollections = core.ImageGridFeatures.Feature({
+	title: 'Collection tag handling',
+	doc: core.doc``,
+
+	tag: 'auto-collection-tags',
+	depends: [
+		'collections',
+	],
+
+	actions: AutoTagCollectionsActions,
 })
 
 
