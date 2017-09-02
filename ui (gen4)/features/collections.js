@@ -598,15 +598,16 @@ var CollectionActions = actions.Actions({
 		}
 			
 		Object.keys(c).forEach(function(title){
+			var state = collections[title] = { title: title }
+
 			// load data...
-			var d = c[title].data instanceof data.Data ?
-				c[title].data
+			var d = c[title].data == null ?
+					null
+				: c[title].data instanceof data.Data ?
+					c[title].data
 				: data.Data.fromJSON(c[title].data)
-
-			var state = collections[title] = {
-				title: title,
-
-				data: d,
+			if(d){
+				state.data = d
 			}
 
 			// NOTE: this can be done lazily when loading each collection
@@ -691,11 +692,10 @@ var CollectionActions = actions.Actions({
 				var data = ((mode == 'base' && state.crop_stack) ? 
 						(state.crop_stack[0] || state.data)
 						: state.data)
-					.dumpJSON()
 
-				var s = res.collections[title] = {
-					title: title,
-					data: data, 
+				var s = res.collections[title] = { title: title }
+				if(data){
+					s.data = data.dumpJSON()
 				}
 
 				// handle .crop_stack of collection...
@@ -997,7 +997,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 				rc
 					&& Object.keys(rc || {})
 						.forEach(function(title){
-							var tags = c[title].local_tags
+							var tags = c[title].local_tags || {}
 							var rtags = rc[title].local_tags = {}
 
 							// compact the local tags...
@@ -1007,7 +1007,9 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 
 							// no need to save the tags in more than the
 							// root .data...
-							delete rc[title].data.tags
+							if(rc[title].data){
+								delete rc[title].data.tags
+							}
 						})
 			}],
 	],
@@ -1066,6 +1068,22 @@ module.AutoTagCollections = core.ImageGridFeatures.Feature({
 	],
 
 	actions: AutoTagCollectionsActions,
+
+	handlers: [
+		['json',
+			function(res){
+				var c = this.collections || {}
+				var rc = res.collections || {}
+
+				Object.keys(rc)
+					.forEach(function(title){
+						var q = c[title].tag_query
+						if(q){
+							rc[title].tag_query = q
+						}
+					})
+			}],
+	],
 })
 
 
