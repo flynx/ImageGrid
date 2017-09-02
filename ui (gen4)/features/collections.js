@@ -138,7 +138,6 @@ var CollectionActions = actions.Actions({
 	// 		...
 	// 	}
 	//
-	// XXX should these get auto-sorted???
 	get collection_handlers(){
 		var handlers = this.__collection_handlers = this.__collection_handlers || {}
 
@@ -161,28 +160,6 @@ var CollectionActions = actions.Actions({
 		return handlers
 	},
 
-	/*/ XXX do we actually need this????
-	collectionDataLoader: ['- Collections/',
-		core.doc`Collection data loader
-		
-			.collectionDataLoader(title, data)
-				-> promise
-		
-		The resulting promise will resolve to a Data object that will get
-		loaded as the collection.
-
-		data is of the .collections item format.
-
-		This will not clone .data, this all changes made to it are 
-		persistent.
-		`,
-		{collectionFormat: 'data'},
-		function(title, data){ 
-			return new Promise(function(resolve){ resolve(data.data) }) }],
-	//*/
-
-	// XXX revise loader protocol...
-	// 		...should it be cooperative???
 	loadCollection: ['- Collections/',
 		core.doc`Load collection...
 
@@ -203,8 +180,18 @@ var CollectionActions = actions.Actions({
 		- only the first matching handler is called
 		- the data handler is always first to get checked
 
-		For an example handler see:
-			.collectionDataLoader(..)
+		Example loader action:
+			collectionXLoader: [
+				// handle .x
+				{collectionFormat: 'x'}
+				function(title, state){
+					return new Promise(function(resolve){ 
+						var x = state.x
+		
+						// do stuff with .x
+		
+						resolve() 
+					}) }],
 
 
 		The .data handler is always first to enable caching, i.e. once some
@@ -689,11 +676,10 @@ var CollectionActions = actions.Actions({
 
 				var state = collections[title]
 
+				var s = res.collections[title] = { title: title }
 				var data = ((mode == 'base' && state.crop_stack) ? 
 						(state.crop_stack[0] || state.data)
 						: state.data)
-
-				var s = res.collections[title] = { title: title }
 				if(data){
 					s.data = data.dumpJSON()
 				}
@@ -1053,7 +1039,7 @@ var AutoTagCollectionsActions = actions.Actions({
 					// remove unmatching...
 					.clear(remove)
 
-				resolve(state.data)
+				resolve()
 			}).bind(this)) }],
 })
 
