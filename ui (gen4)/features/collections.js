@@ -838,9 +838,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 var CollectionTags = 
 module.CollectionTags = core.ImageGridFeatures.Feature({
 	title: 'Collection tag handling',
-	doc: core.doc`Collection tag handling
-	=======================
-
+	doc: core.doc`
 	What this does:
 	- Makes tags global through all collections
 	- Handles local tags per collection
@@ -1090,8 +1088,7 @@ var AutoTagCollectionsActions = actions.Actions({
 var AutoTagCollections =
 module.AutoTagCollections = core.ImageGridFeatures.Feature({
 	title: 'Auto tag collection',
-	doc: core.doc`Auto tag collection
-	
+	doc: core.doc`
 	A collection is different from a crop in that it:
 		- preserves ribbon state
 		- preserves order
