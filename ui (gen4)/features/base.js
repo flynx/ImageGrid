@@ -262,15 +262,41 @@ actions.Actions({
 		{journal: true},
 		function(lst, base){ this.load(this.dataFromURLs(lst, base)) }],
 
-	// XXX is this the correct way to go???
-	// 		...can we save simple attribute values???
 	json: ['- File/Dump state as JSON object',
 		core.doc`Dump state as JSON object
 
+			Dump current state...
+			.json()
+			.json('current')
+				-> json
+
+			Dump base state...
+			.json('base')
+				-> json
+
+			Dump full state...
+			.json('full')
+				-> json
+
+		The modes are defined here very broadly by design:
+			current		- the current view only
+			base		- the base state, all data needed to restore after
+							a reload. This does not have to preserve 
+							volatile/temporary context.
+			full		- full state, all the data to reload the full 
+							current view without losing any context
+
+		The base action ignores the modes but extending actions may/should
+		interpret them as needed.. 
+		(see: .getHandlerDocStr('json') for details)
+
+		Extending features may define additional modes.
+
+
 		This will collect JSON data from every available attribute supporting
 		the .dumpJSON() method.
+		Attributes starting with '__' will be ignored.
 
-		NOTE: this will ignore attributes starting with '__'.
 		`,
 		function(mode){
 			return function(res){
