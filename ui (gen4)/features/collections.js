@@ -1089,8 +1089,18 @@ var AutoTagCollectionsActions = actions.Actions({
 
 var AutoTagCollections =
 module.AutoTagCollections = core.ImageGridFeatures.Feature({
-	title: 'Collection tag handling',
-	doc: core.doc``,
+	title: 'Auto tag collection',
+	doc: core.doc`Auto tag collection
+	
+	A collection is different from a crop in that it:
+		- preserves ribbon state
+		- preserves order
+		- preserves local tags
+
+	Tag changes are handled by removing images that were untagged (no 
+	longer matching) from the collection and adding newly tagged/matching 
+	images to collection.
+	`,
 
 	tag: 'auto-collection-tags',
 	depends: [
