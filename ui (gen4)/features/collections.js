@@ -974,8 +974,6 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 		// NOTE: we do not need to explicitly load anything as .load() 
 		// 		will load everything we need and .collectionLoading(..)
 		// 		will .sortTags() for us...
-		//
-		// XXX handle 'base' mode...
 		['json',
 			function(res, mode){
 				var c = this.collections
@@ -1065,6 +1063,16 @@ var AutoTagCollectionsActions = actions.Actions({
 
 	// XXX add UI...
 	makeAutoTagCollection: ['- Collections/',
+		core.doc`Make tag auto-collection...
+
+			Make a tag auto-collection...
+			.makeAutoTagCollection(title, tag)
+			.makeAutoTagCollection(title, tag, tag, ..)
+			.makeAutoTagCollection(title, [tag, tag, ..])
+				-> this
+
+		NOTE: at least one tag must be supplied...
+		`,
 		function(title, tags){
 			tags = arguments.length > 2 ? [].slice.call(arguments) : tags
 			tags = tags instanceof Array ? tags : [tags]
