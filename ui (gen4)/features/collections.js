@@ -410,7 +410,9 @@ var CollectionActions = actions.Actions({
 			// NOTE: we do not need to care about tags here as they 
 			// 		will get overwritten on load...
 			state.data = (mode == 'empty' ? 
-					(new this.data.constructor())
+					// XXX should this be null???
+					//(new this.data.constructor())
+					null
 				: mode == 'base' && this.crop_stack ? 
 					(this.crop_stack[0] || this.data.clone())
 				: mode == 'crop' ? 
@@ -730,9 +732,27 @@ var CollectionActions = actions.Actions({
 		delete this.location.collection
 	}],
 
-	// Config...
+	// Config and interface stuff...
 	toggleCollectionCropRetention: ['Interface/Collection crop save mode',
-		core.makeConfigToggler('collection-save-crop-state', ['all', 'main', 'none'])],
+		core.makeConfigToggler(
+			'collection-save-crop-state', 
+			[
+				'all',
+				'main', 
+				'none',
+			])],
+	toggleCollections: ['- Collections/Collections',
+		toggler.Toggler(null,
+			function(_, state){
+				return state == null ?
+					// cur state...
+					(this.collection 
+						|| MAIN_COLLECTION_TITLE)
+					// new state...
+					: (this.loadCollection(state) 
+						&& state) },
+			function(){ 
+				return [MAIN_COLLECTION_TITLE].concat(this.collection_order || []) })],
 })
 
 
@@ -927,7 +947,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 								: []
 						})
 
-					delete this.collections[title].data.tags
+					delete (this.collections[title].data || {}).tags
 				}
 			}],
 		// prevent .uncollect(..) from removing global tags...
@@ -1005,9 +1025,10 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// XXX should we ignore .local_tags here or get them from main collection
+// 		only???
+// XXX do we need real tag queries???
 var AutoTagCollectionsActions = actions.Actions({
-	// initial load...
-	// XXX should this be a real tag query???
 	collectionAutoTagsLoader: ['- Collections/',
 		core.doc`
 
@@ -1041,6 +1062,21 @@ var AutoTagCollectionsActions = actions.Actions({
 
 				resolve()
 			}).bind(this)) }],
+
+	// XXX add UI...
+	makeAutoTagCollection: ['- Collections/',
+		function(title, tags){
+			tags = arguments.length > 2 ? [].slice.call(arguments) : tags
+			tags = tags instanceof Array ? tags : [tags]
+
+			if(tags.length == 0){
+				return
+			}
+
+			this.saveCollection(title, 'empty')
+
+			this.collections[title].tag_query = tags
+		}],
 })
 
 var AutoTagCollections =
@@ -1261,7 +1297,6 @@ var UICollectionActions = actions.Actions({
 		}],
 	//*/
 })
-
 
 var UICollection = 
 module.UICollection = core.ImageGridFeatures.Feature({
