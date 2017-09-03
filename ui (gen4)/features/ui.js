@@ -203,6 +203,16 @@ module.ViewerActions = actions.Actions({
 		'ribbon-align-mode': null,
 
 		'ribbon-align-delay': 50,
+
+
+		// Change image rendering modes...
+		//
+		// See: 
+		// 	.toggleImageRendering(..)
+		// 	css/layout.css
+		//
+		// XXX EXPERIMENTAL: this does not seem to have an effect on chrome...
+		'image-rendering': 'crisp-resize',
 	},
 
 	// Viewer dom... 
@@ -669,6 +679,12 @@ module.ViewerActions = actions.Actions({
 		function(target){ }],
 	ribbonRotation: ['- Interface|Ribbon/', 
 		function(angle){ }],
+
+	toggleImageRendering: ['Interface/Image rendering',
+		toggler.CSSClassToggler(
+			function(){ return this.dom }, 
+			['crisp-resize', 'default-resize'],
+			function(state){ this.config['image-rendering'] = state }) ],
 })
 
 var Viewer =
@@ -706,6 +722,8 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					&& this.toggleRibbonTheme(this.config['ribbon-theme'])
 				this.config['ribbon-image-separators'] 
 					&& this.toggleRibbonImageSepators(this.config['ribbon-image-separators'])
+				this.config['ribbon-theme'] 
+					&& this.toggleImageRendering(this.config['image-rendering'])
 
 				// center viewer on resize events...
 				if(!this.__viewer_resize){
