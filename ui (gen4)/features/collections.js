@@ -644,6 +644,7 @@ var CollectionActions = actions.Actions({
 	// NOTE: currently this only stores title and data, it is the 
 	// 		responsibility of extending features to store their specific 
 	// 		data in collections...
+	// 		XXX is this the right way to go???
 	json: [function(mode){ return function(res){
 		mode = mode || 'current'
 
@@ -769,7 +770,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 	],
 	suggested: [
 		'collection-tags',
-		'auto-collection-tags',
+		'auto-collections',
 
 		'ui-collections',
 		'fs-collections',
@@ -1021,19 +1022,78 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-// XXX should we ignore .local_tags here or get them from main collection
-// 		only???
-// XXX do we need real tag queries???
-var AutoTagCollectionsActions = actions.Actions({
-	config: {
-		// Can be:
-		// 	'ignore-local' (default)
-		// 	'main-collection-local'
-		//'auto-collection-tags-mode': 'ignore-local',
-		'auto-collection-tags-mode': 'main-collection-local',
-	},
+// XXX add UI...
+var AutoCollectionsActions = actions.Actions({
+	collectionAutoLevelLoader: ['- Collections/',
+		core.doc`
 
+		`,
+		{collectionFormat: 'level_query'},
+		function(title, state){ 
+			return new Promise((function(resolve){
+				var source = state.source || MAIN_COLLECTION_TITLE
+				source = source == MAIN_COLLECTION_TITLE ? 
+					((this.crop_stack || [])[0] 
+						|| this.data)
+					// XXX need a way to preload collection data...
+					: ((this.collection[source].crop_stack || [])[0] 
+						|| this.collections[source].data)
 
+				var query = state.level_query
+				query = query == 'top' ? 
+						[0, 1]
+					: query == 'bottom' ?
+						[-1]
+					: query instanceof Array ? 
+						query
+					: typeof(query) == typeof('str') ? 
+						query.split('+').map(function(e){ return e.trim() })
+					: query > 0 ? 
+						[0, query]
+					: [query]
+				query = query[0] == 'top' ?
+						[0, parseInt(query[1])+1]
+					: query[0] == 'bottom' ?
+						[-parseInt(query[1])-1]
+					: query
+
+				var levels = source.ribbon_order.slice.apply(source.ribbon_order, query)
+
+				var gids = []
+				levels.forEach(function(gid){
+					source.makeSparseImages(source.ribbons[gid], gids) })
+				gids = gids.compact()
+
+				// get items that topped matching the query...
+				var remove = state.data ?
+					state.data.order
+						.filter(function(gid){ return gids.indexOf(gid) < 0 })
+					: []
+
+				// build data...
+				state.data = data.Data.fromArray(gids)
+					// join with saved state...
+					.join(state.data || data.Data())
+					// remove unmatching...
+					.clear(remove)
+
+				resolve()
+			}).bind(this)) }],
+	makeAutoLevelCollection: ['- Collections/',
+		core.doc`Make level auto-collection...
+
+		`,
+		function(title, source, a, b){
+			// XXX query 
+			var query = b != null ? [a, b] : a
+
+			this.saveCollection(title, 'empty')
+
+			this.collections[title].level_query = query
+			this.collections[title].source = source
+		}],
+
+	// XXX do we need real tag queries???
 	collectionAutoTagsLoader: ['- Collections/',
 		core.doc`
 
@@ -1043,7 +1103,6 @@ var AutoTagCollectionsActions = actions.Actions({
 		{collectionFormat: 'tag_query'},
 		function(title, state){ 
 			return new Promise((function(resolve){
-				var local_tags_mode = this.config['auto-collection-tags-mode'] || 'ignore-local'
 				var local_tag_names = this.config['collection-local-tags'] || []
 
 				var tags = (state.tag_query || [])
@@ -1068,8 +1127,6 @@ var AutoTagCollectionsActions = actions.Actions({
 
 				resolve()
 			}).bind(this)) }],
-
-	// XXX add UI...
 	makeAutoTagCollection: ['- Collections/',
 		core.doc`Make tag auto-collection...
 
@@ -1082,7 +1139,7 @@ var AutoTagCollectionsActions = actions.Actions({
 		NOTE: at least one tag must be supplied...
 		`,
 		function(title, tags){
-			tags = arguments.length > 2 ? [].slice.call(arguments) : tags
+			tags = arguments.length > 2 ? [].slice.call(arguments, 1) : tags
 			tags = tags instanceof Array ? tags : [tags]
 
 			if(tags.length == 0){
@@ -1095,9 +1152,9 @@ var AutoTagCollectionsActions = actions.Actions({
 		}],
 })
 
-var AutoTagCollections =
-module.AutoTagCollections = core.ImageGridFeatures.Feature({
-	title: 'Auto tag collection',
+var AutoCollections =
+module.AutoCollections = core.ImageGridFeatures.Feature({
+	title: 'Auto collections',
 	doc: core.doc`
 	A collection is different from a crop in that it:
 		- preserves ribbon state
@@ -1109,12 +1166,12 @@ module.AutoTagCollections = core.ImageGridFeatures.Feature({
 	images to collection.
 	`,
 
-	tag: 'auto-collection-tags',
+	tag: 'auto-collections',
 	depends: [
 		'collections',
 	],
 
-	actions: AutoTagCollectionsActions,
+	actions: AutoCollectionsActions,
 
 	handlers: [
 		['json',
@@ -1124,9 +1181,18 @@ module.AutoTagCollections = core.ImageGridFeatures.Feature({
 
 				Object.keys(rc)
 					.forEach(function(title){
-						var q = c[title].tag_query
-						if(q){
-							rc[title].tag_query = q
+						var cur = c[title]
+						var r = rc[title]
+
+						// XXX is this the right way to go???
+						if('tag_query' in cur){
+							r.tag_query = cur.tag_query
+
+						} else if('level_query' in cur){
+							r.level_query = cur.level_query
+							if(cur.source){
+								r.source = cur.source
+							}
 						}
 					})
 			}],

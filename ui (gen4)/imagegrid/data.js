@@ -597,11 +597,15 @@ var DataPrototype = {
 			// do the actual removal...
 			// NOTE: splicing fixed image indexes is faster than 
 			// 		.updateImagePositions('remove')
-			gids.forEach(function(gid){
-				var i = that.order.indexOf(gid)
-				that.eachImageList(function(lst){ 
-					lst.splice(i, 1) })
-			})
+			this.makeSparseImages(gids)
+				// NOTE: we move from the tail to account for shifting 
+				// 		indexes on removal...
+				.reverse()
+				.forEach(function(gid){
+					var i = that.order.indexOf(gid)
+					that.eachImageList(function(lst){ 
+						lst.splice(i, 1) })
+				})
 			this.order = order
 
 
