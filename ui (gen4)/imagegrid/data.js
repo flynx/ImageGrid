@@ -811,7 +811,7 @@ var DataPrototype = {
 		}
 
 		// normalize target...
-		if(target in this.ribbons || target.constructor === Array){
+		if(target in this.ribbons || target instanceof Array){
 			list = target
 			target = this.current
 		} else if(['before', 'after', 'next', 'prev'].indexOf(target) >= 0){
@@ -829,7 +829,7 @@ var DataPrototype = {
 
 		// normalize mode...
 		if(mode != null 
-				&& mode.constructor === Array
+				&& mode instanceof Array
 				|| mode in this.ribbons){
 			list = mode
 			mode = null
@@ -864,7 +864,7 @@ var DataPrototype = {
 						|| this.getRibbon(this.getImage(target, 'after', this.getImages()))]
 			: list == 'global' ?
 				this.order
-			: list.constructor === Array ? 
+			: list instanceof Array ? 
 				this.makeSparseImages(list)
 			: this.ribbons[this.getRibbon(list)]
 
@@ -1056,7 +1056,7 @@ var DataPrototype = {
 			target = null 
 
 		// filter out the unloaded gids from given list...
-		} else if(target != null && target.constructor === Array){
+		} else if(target != null && target instanceof Array){
 			var loaded = count == 'current' ? this.getImages('current')
 				: count in this.ribbons ? this.ribbons[count].compact()
 				: typeof(count) == typeof(123) ? 
@@ -1455,7 +1455,7 @@ var DataPrototype = {
 			mode = from
 			from = null
 		}
-		from = from != null && from.constructor !== Array ? [from] : from
+		from = from == null || from instanceof Array ? from : [from]
 
 		var r = this.getRibbon('current')
 
@@ -1786,7 +1786,7 @@ var DataPrototype = {
 		if(from == null){
 			return
 		}
-		from = from.constructor !== Array ? [from] : from
+		from = from instanceof Array ? from : [from]
 
 		var place
 
@@ -1832,7 +1832,7 @@ var DataPrototype = {
 	// 		ribbon above or the top ribbon...
 	shiftImageUp: function(gid){ 
 		gid = gid || this.current
-		var g = gid && gid.constructor === Array ? gid[0] : gid
+		var g = gid && gid instanceof Array ? gid[0] : gid
 		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
 		if(r == 0){
@@ -1852,7 +1852,7 @@ var DataPrototype = {
 	},
 	shiftImageDown: function(gid){ 
 		gid = gid || this.current
-		var g = gid && gid.constructor === Array ? gid[0] : gid
+		var g = gid && gid instanceof Array ? gid[0] : gid
 		var r = this.getRibbonOrder(g)
 		// check if we need to create a ribbon here...
 		if(r == this.ribbon_order.length-1){
@@ -2022,7 +2022,7 @@ var DataPrototype = {
 	// XXX test if generated gid is unique...
 	group: function(gids, group){
 		gids = gids == null ? this.getImage() : gids
-		gids = gids.constructor !== Array ? [gids] : gids
+		gids = gids instanceof Array ? gids : [gids]
 		// XXX not safe -- fast enough and one can generate two identical
 		// 		gids...
 		group = group == null ? this.newGid('G' + Date.now()) : group
@@ -2107,7 +2107,7 @@ var DataPrototype = {
 		groups = groups == null ? this.getGroup()
 			: groups == 'all' || groups == '*' ? Object.keys(this.groups)
 			: groups
-		groups = groups.constructor !== Array ? [groups] : groups
+		groups = groups instanceof Array ? groups : [groups]
 
 		var that = this
 		groups.forEach(function(group){
@@ -2152,7 +2152,7 @@ var DataPrototype = {
 		groups = groups == null ? this.getGroup() 
 			: groups == 'all' || groups == '*' ? Object.keys(this.groups)
 			: groups
-		groups = groups.constructor !== Array ? [groups] : groups
+		groups = groups instanceof Array ? groups : [groups]
 		safe = safe || false
 
 		var that = this
@@ -2284,12 +2284,10 @@ var DataPrototype = {
 	// 		.getImage(..)
 	// NOTE: if no target is given this will assume the current image.
 	split: function(target){
-		if(arguments.length > 1){
-			target = Array.apply(null, arguments)
-		} else if(target == null 
-				|| target.constructor !== Array){
-			target = [ target ]
-		}
+		target = argument.length > 1 ? [].slice.call(arguments)
+			: target == null || target instanceof Array ? target
+			: [target]
+
 		var res = []
 		var tail = this.clone()
 		var that = this
@@ -2348,7 +2346,7 @@ var DataPrototype = {
 			args.shift() 
 			: 'base'
 		align = align || 'base'
-		args = args[0].constructor === Array ? args[0] : args
+		args = args[0] instanceof Array ? args[0] : args
 
 		var base = this
 
@@ -2991,10 +2989,10 @@ var DataWithTagsPrototype = {
 	},
 
 	tag: function(tags, gids){
-		tags = tags.constructor !== Array ? [tags] : tags
+		tags = tags instanceof Array ? tags : [tags]
 
 		gids = gids == null || gids == 'current' ? this.getImage() : gids
-		gids = gids.constructor !== Array ? [gids] : gids
+		gids = gids instanceof Array ? gids : [gids]
 
 		if(this.tags == null){
 			this.tags = {}
@@ -3019,10 +3017,10 @@ var DataWithTagsPrototype = {
 		if(this.tags == null){
 			return this
 		}
-		tags = tags.constructor !== Array ? [tags] : tags
+		tags = tags instanceof Array ? tags : [tags]
 
 		gids = gids == null || gids == 'current' ? this.getImage() : gids
-		gids = gids.constructor !== Array ? [gids] : gids
+		gids = gids instanceof Array ? gids : [gids]
 
 		var that = this
 		var tagset = this.tags
@@ -3046,7 +3044,7 @@ var DataWithTagsPrototype = {
 	// NOTE: this does not support multiple tags at this point...
 	toggleTag: function(tag, gids, action){
 		gids = gids == null || gids == 'current' ? this.getImage() : gids
-		gids = gids.constructor !== Array ? [gids] : gids
+		gids = gids instanceof Array ? gids : [gids]
 
 		// tag all...
 		if(action == 'on'){
@@ -3099,10 +3097,11 @@ var DataWithTagsPrototype = {
 	},
 
 	getTags: function(gids){
-		gids = arguments.length > 1 ? [].slice.call(arguments) : gids
-		gids = gids == null || gids == 'current' ? this.getImage() : gids
+		gids = arguments.length > 1 ? [].slice.call(arguments) 
+			: gids == null || gids == 'current' ? this.getImage() 
+			: gids
 		gids = gids == null ? [] : gids
-		gids = gids.constructor !== Array ? [gids] : gids
+		gids = gids instanceof Array ? gids : [gids]
 
 		if(this.tags == null){
 			return []
@@ -3125,7 +3124,7 @@ var DataWithTagsPrototype = {
 	// selectors...
 	getTaggedByAny: function(tags){
 		tags = arguments.length > 1 ? [].slice.call(arguments) : tags
-		tags = tags.constructor !== Array ? [tags] : tags
+		gids = gids instanceof Array ? gids : [gids]
 
 		var res = []
 
@@ -3145,7 +3144,7 @@ var DataWithTagsPrototype = {
 	},
 	getTaggedByAll: function(tags){
 		tags = arguments.length > 1 ? [].slice.call(arguments) : tags
-		tags = tags.constructor !== Array ? [tags] : tags
+		tags = tags instanceof Array ? tags : [tags]
 
 		if(this.tags == null){
 			return []

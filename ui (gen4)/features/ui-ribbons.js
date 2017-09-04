@@ -506,7 +506,7 @@ actions.Actions({
 	// tags...
 	tag: [ 
 		function(tags, gids){ 
-			gids = gids != null && gids.constructor !== Array ? [gids] : gids
+			gids = (gids instanceof Array || gids == null) ? gids : [gids]
 			return function(){
 				//this.ribbons.updateImage(gids) 
 				this.refresh(gids)
@@ -514,7 +514,7 @@ actions.Actions({
 		}],
 	untag: [
 		function(tags, gids){ 
-			gids = gids != null && gids.constructor !== Array ? [gids] : gids
+			gids = (gids instanceof Array || gids == null) ? gids : [gids]
 			return function(){
 				//this.ribbons.updateImage(gids) 
 				this.refresh(gids)
@@ -780,7 +780,7 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 		['shiftImageUp.pre shiftImageDown.pre',
 			function(target){
 				// XXX do not do target lists...
-				if(target != null && target.constructor === Array 
+				if(target != null && target instanceof Array 
 						// do not animate in single image mode...
 						&& this.toggleSingleImage('?') == 'on'){
 					return
@@ -796,7 +796,7 @@ module.ShiftAnimation = core.ImageGridFeatures.Feature({
 		['shiftImageLeft.pre shiftImageRight.pre', 
 			function(target){
 				// XXX do not do target lists...
-				if(target != null && target.constructor === Array
+				if(target != null && target instanceof Array
 						// do not animate in single image mode...
 						&& this.toggleSingleImage('?') == 'on'){
 					return

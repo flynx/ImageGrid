@@ -694,7 +694,7 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 		],
 			function(res, tags, gids){
 				// trigger only when current image is affected...
-				if(gids.constructor === Array 
+				if(gids instanceof Array 
 						&& (gids.indexOf('current') >= 0 
 							|| gids.indexOf(this.current) >= 0)
 						|| this.data.getImage(gids) == this.current){

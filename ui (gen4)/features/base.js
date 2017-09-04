@@ -1135,8 +1135,8 @@ module.TagsEditActions = actions.Actions({
 		{journal: true},
 		function(tags, gids){
 			gids = gids || this.current
-			gids = gids.constructor !== Array ? [gids] : gids
-			tags = tags.constructor !== Array ? [tags] : tags
+			gids = gids instanceof Array ? gids : [gids]
+			tags = tags instanceof Array ? tags : [tags]
 
 			var that = this
 			gids = gids.map(function(gid){ return that.data.getImage(gid) })
@@ -1165,8 +1165,8 @@ module.TagsEditActions = actions.Actions({
 		{journal: true},
 		function(tags, gids){
 			gids = gids || this.current
-			gids = gids.constructor !== Array ? [gids] : gids
-			tags = tags.constructor !== Array ? [tags] : tags
+			gids = gids instanceof Array ? gids : [gids]
+			tags = tags instanceof Array ? tags : [tags]
 
 			// data...
 			this.data.untag(tags, gids)
@@ -1258,13 +1258,13 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 				var changes = []
 
 				gids = gids || [this.data.getImage()]
-				gids = gids.constructor !== Array ? 
-					[this.data.getImage(gids)] 
-					: gids
+				gids = gids instanceof Array ? 
+					gids
 						.map(function(e){ return that.data.getImage(e) })
+					: [this.data.getImage(gids)] 
 
 				tags = tags || []
-				tags = tags.constructor !== Array ? [tags] : tags
+				tags = tags instanceof Array ? tags : [tags]
 
 				// tags...
 				if(tags.length > 0){

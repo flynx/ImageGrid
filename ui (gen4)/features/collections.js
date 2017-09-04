@@ -1025,6 +1025,15 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 // 		only???
 // XXX do we need real tag queries???
 var AutoTagCollectionsActions = actions.Actions({
+	config: {
+		// Can be:
+		// 	'ignore-local' (default)
+		// 	'main-collection-local'
+		//'auto-collection-tags-mode': 'ignore-local',
+		'auto-collection-tags-mode': 'main-collection-local',
+	},
+
+
 	collectionAutoTagsLoader: ['- Collections/',
 		core.doc`
 
@@ -1034,16 +1043,17 @@ var AutoTagCollectionsActions = actions.Actions({
 		{collectionFormat: 'tag_query'},
 		function(title, state){ 
 			return new Promise((function(resolve){
+				var local_tags_mode = this.config['auto-collection-tags-mode'] || 'ignore-local'
 				var local_tag_names = this.config['collection-local-tags'] || []
 
 				var tags = (state.tag_query || [])
-					// filter out local tags...
-					.filter(function(tag){ return local_tag_names.indexOf(tag) < 0 })
+					.filter(function(tag){ 
+						return local_tag_names.indexOf(tag) < 0 })
 
 				// XXX should this be a real tag query???
 				var gids = this.data.getTaggedByAll(tags)
 
-				// get unmatching...
+				// get items that topped matching the query...
 				var remove = state.data ?
 					state.data.order
 						.filter(function(gid){ return gids.indexOf(gid) < 0 })

@@ -44,7 +44,7 @@ function makeTagTogglerAction(tag){
 					? this.data.getImages(target)
 			: target == 'ribbon' ? this.data.getImages('current')
 			: target
-		return target.constructor !== Array ? [target] : target
+		return target instanceof Array ? target : [target]
 	}
 
 	// the toggler...

@@ -84,7 +84,7 @@ function(attr, states, a, b){
 
 	return toggler.Toggler(null,
 		function(_, action){
-			var lst = states.constructor === Array ? states 
+			var lst = states instanceof Array ? states 
 				: states instanceof Function ? states.call(this)
 				: states
 
