@@ -163,8 +163,20 @@ var CollectionActions = actions.Actions({
 	loadCollection: ['- Collections/',
 		core.doc`Load collection...
 
-		This will get collection data and crop into it.
+			Load collection...
+			.loadCollection(collection)
+				-> this
 			
+			Force reload current collection...
+			.loadCollection('!')
+				-> this
+				NOTE: this will not call .saveCollection(..) before 
+					reloading, thus potentially losing some state that 
+					was not explicitly saved.
+
+
+		When loading a collection, previous state is saved.
+
 		If .data for a collection is not available this will do nothing, 
 		this enables extending actions to handle the collection in 
 		different ways.
@@ -199,12 +211,17 @@ var CollectionActions = actions.Actions({
 		directly the next time.
 		To invalidate such a cache .data should simply be deleted.
 
+
 		NOTE: cached collection state is persistent.
 		NOTE: when current collection is removed from .collections this 
 			will not save state when loading another collection...
 		`,
 		function(collection){
 			var that = this
+			var force = collection == '!'
+			collection = collection == '!' ? 
+				this.collection 
+				: collection
 			if(collection == null 
 					|| this.collections == null 
 					|| !(collection in this.collections)){
@@ -233,7 +250,9 @@ var CollectionActions = actions.Actions({
 			// collection...
 			// NOTE: we only save if the current collection exists, it 
 			// 		may not exist if it was just removed...
-			} else if(this.collection in this.collections){
+			} else if(this.collection in this.collections
+					// prevent saving over changed current state...
+					&& !force){
 				this.saveCollection(
 					this.collection, 
 					crop_mode == 'all' ? 'crop': null)
@@ -329,11 +348,9 @@ var CollectionActions = actions.Actions({
 			// Not for direct use.
 		})],
 
-	// XXX saving into current collection will leave the viewer in an 
-	// 		inconsistent state:
-	// 			- collection X is indicated as loaded
-	// 			- collection X has different state than what is loaded
-	// 		...not sure how to deal with this yet...
+	// XXX should this call .loadCollection('!') when saving to current
+	// 		collection???
+	// 		...see comments inside...
 	saveCollection: ['- Collections/',
 		core.doc`Save current state to collection
 
@@ -373,11 +390,8 @@ var CollectionActions = actions.Actions({
 
 		NOTE: this will overwrite collection .data and .crop_stack only, 
 			the rest of the data is untouched...
-		NOTE: if it is needed to overwrite an existing collection then 
-			first remove it then save anew:
-				this
-					.removeCollection(x)
-					.saveCollection(x, 'crop')
+		NOTE: when saving to current collection and maintain consistent 
+			state it may be necessary to .loadCollection('!')
 		`,
 		function(collection, mode, force){
 			var that = this
@@ -436,6 +450,15 @@ var CollectionActions = actions.Actions({
 			} else {
 				delete state.crop_stack
 			}
+
+
+			// XXX this leads to recursion????
+			// 		.loadCollection('X')
+			// 			-> .saveCollection('current')
+			// 				-> .loadCollection('!')
+			// XXX should we be doing this here or on case by case basis externally...
+			//collection == this.collection
+			//	&& this.loadCollection('!')
 		}],
 	newCollection: ['- Collections/',
 		function(collection){ return this.saveCollection(collection, 'empty') }],
@@ -1370,7 +1393,11 @@ var UICollectionActions = actions.Actions({
 	saveAsCollection: ['Collections|Crop/$Save as collection...',
 		widgets.uiDialog(function(){
 			return this.browseCollections(function(title){
-				this.saveCollection(title) }) })],
+				this.saveCollection(title, 'current') 
+				// XXX should we be doing this manually here or in .saveCollection(..)
+				title == this.collection
+					&& this.loadCollection('!')
+			}) })],
 	addToCollection: ['Collections|Crop|Image/Add $image to collection...',
 		widgets.uiDialog(function(gids){
 			return this.browseCollections(function(title){
