@@ -429,9 +429,7 @@ var CollectionActions = actions.Actions({
 			// NOTE: we do not need to care about tags here as they 
 			// 		will get overwritten on load...
 			state.data = (mode == 'empty' ? 
-					// XXX should this be null???
-					//(new this.data.constructor())
-					null
+					(new this.data.constructor())
 				: mode == 'base' && this.crop_stack ? 
 					(this.crop_stack[0] || this.data.clone())
 				: mode == 'crop' ? 
