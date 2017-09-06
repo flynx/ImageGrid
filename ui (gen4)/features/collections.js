@@ -883,6 +883,8 @@ var CollectionTagsActions = actions.Actions({
 		function(collection){
 			return this.collectTagged('selected', collection) }],
 	uncollectMarked: ['Collections|Mark/Remove marked from collection',
+		{browseMode: function(){ 
+			return (!this.collection || this.marked.length == 0) && 'disabled' }},
 		function(collection){
 			return this.uncollectTagged('selected', collection) }],
 
@@ -891,6 +893,8 @@ var CollectionTagsActions = actions.Actions({
 		function(collection){
 			return this.collectTagged('bookmark', collection) }],
 	uncollectBookmarked: ['Collections|Bookmark/Remove bookmarked from collection',
+		{browseMode: function(){ 
+			return (!this.collection || this.bookmarked.length == 0) && 'disabled' }},
 		function(collection){
 			return this.uncollectTagged('bookmark', collection) }],
 })
@@ -1442,6 +1446,8 @@ var UICollectionActions = actions.Actions({
 
 	// XXX should this be here???
 	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
+		{browseMode: function(){ 
+			return this.marked.length == 0 && 'disabled' }},
 		widgets.uiDialog(function(gids){
 			return this.browseCollections(function(title){
 				this.collectMarked(gids || this.current, title) }) })],
