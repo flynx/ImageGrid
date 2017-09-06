@@ -873,6 +873,7 @@ var UIIntrospectionActions = actions.Actions({
 				.addClass('help-dialog')
 
 			actions.forEach(function(action){
+				var toggler = that.isToggler(action)
 				res.append($('<div class="action doc">')
 					.prop('tabindex', true)
 					.append($('<h2>')
@@ -880,10 +881,15 @@ var UIIntrospectionActions = actions.Actions({
 					.append($('<i>')
 						.text(doc[action][0]))
 					.append($('<div>')
-						.html('Features: ' 
-							+ that.getHandlerSourceTags(action)
+						.html(
+							// features...
+							'Features: ' + that.getHandlerSourceTags(action)
 								.map(feature2lnk)
-								.join(', ')))
+								.join(', ')
+							// toggler states...
+							+ (toggler ? 
+								('<br>Toggler states: '+ that[action]('??').join(', '))
+								: '')))
 					.append($('<hr>'))
 					// parse the action doc...
 					.append($('<pre>')
