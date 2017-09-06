@@ -350,7 +350,12 @@ var CollectionActions = actions.Actions({
 
 	// XXX should this call .loadCollection('!') when saving to current
 	// 		collection???
+	// 		This would reaload the view to a consistent (just saved) 
+	// 		state...
 	// 		...see comments inside...
+	// XXX it feels like we need two levels of actions, low-level that 
+	// 		just do their job and user actions that take care of 
+	// 		consistent state and the like...
 	saveCollection: ['- Collections/',
 		core.doc`Save current state to collection
 

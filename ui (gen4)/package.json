@@ -26,7 +26,7 @@
     "ig-features": "^3.2.7",
     "ig-object": "^1.0.2",
     "openseadragon": "^2.3.0",
-    "preact": "^8.2.4",
+    "preact": "^8.2.5",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "requirejs": "^2.3.5",
