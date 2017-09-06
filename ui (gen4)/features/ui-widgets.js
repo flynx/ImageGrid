@@ -37,6 +37,17 @@ var browseWalk = require('lib/widget/browse-walk')
 // 			<info>, // optional
 // 			<code>,
 // 		],
+//
+// 		<button-text>: [
+// 			<class>, // optional
+// 			<info>, // optional
+// 			[
+// 				// primary action (click / tap)...
+// 				<primary>,
+// 				// secondary action (contextmenu -- right-clock / long-tap)...
+// 				<secondary>,
+// 			]
+// 		],
 // 		...
 // 	}
 var makeButtonControls =
@@ -71,23 +82,47 @@ function(context, cls, data){
 			k = '&nbsp;'
 			var cls = 'spacer'
 			var doc = ''
-			var func = function(){}
+			var click = function(){}
+			var menu = function(){}
 
 		// normal element...
 		} else {
 			var e = data[k].slice()
-			var code = e.pop()
-			code = typeof(code) == typeof('str') ?
-				keyboard.parseActionCall(code) 
-				: code
+			var primary = e.pop()
+			var secondary = (primary instanceof Array && primary.length > 1) ? 
+				primary.pop() 
+				: null
+			secondary = typeof(secondary) == typeof('str') ?
+				keyboard.parseActionCall(secondary) 
+				: secondary
+			primary = primary instanceof Array ? primary.shift() : primary
+			primary = typeof(primary) == typeof('str') ?
+				keyboard.parseActionCall(primary) 
+				: primary
 
-			var func = code instanceof Function ? 
-				code 
-				: function(){ 
-					context[code.action].apply(context, code.arguments) }
+			var click = primary instanceof Function ? 
+				primary 
+				: function(evt){ 
+					evt.stopPropagation()
+					evt.preventDefault()
+					context[primary.action].apply(context, primary.arguments) }
+			var menu = secondary instanceof Function ?
+					secondary
+				: secondary ? 
+					function(evt){ 
+						evt.stopPropagation()
+						evt.preventDefault()
+						context[secondary.action].apply(context, secondary.arguments) }
+				: click
 
-			var cls = e[0] || code.action || '' 
-			var doc = e[1] || code.doc || e[0] || ''
+			var cls = e[0] 
+				|| primary.action 
+				|| '' 
+			var doc = e[1] 
+				|| (primary.doc 
+					+ (secondary ? ' / '+ secondary.doc : ''))
+				|| e[0] 
+				|| ''
 		}
 
 		controls
@@ -99,7 +134,8 @@ function(context, cls, data){
 					context.showStatusBarInfo
 						&& context.showStatusBarInfo()
 				})
-				.click(func))
+				.click(click)
+				.on('contextmenu', menu))
 	})
 
 	controls
@@ -1750,6 +1786,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 	
+// XXX add context menu action to buttons...
 var ButtonsActions = actions.Actions({
 	config: {
 		'main-buttons-state': 'on',
@@ -1761,11 +1798,25 @@ var ButtonsActions = actions.Actions({
 		// 			<info>,
 		// 			<code>,
 		// 		],
+		//
+		// 		<html>: [
+		// 			<css-class>,
+		// 			// Button info (optional)
+		// 			<info>,
+		// 			[
+		// 				<primary>,
+		// 				<secondary>,
+		// 			]
+		// 		],
 		// 		...
 		// 	}
+		//
 		'main-buttons': {
 			'&#x2630;': ['menu', 'browseActions -- Action menu...'],
-			'&#9714;<sub/><sup/>': ['collections', 'browseCollections -- Collections...'],
+			'&#9714;<sub/><sup/>': ['collections', [
+				'browseCollections -- Collections...',
+				'browseActions: "/Collections/" -- Collection menu...',
+			]],
 			'C<sub/>': ['crop', 'browseActions: "Crop/" -- Crop menu...'],
 			//'&#9636;<sub/>': ['collections', 'browseCollections -- Collections...'],
 			//'&#9974;': ['view', 'toggleSingleImage -- Single image / ribbon toggle'],
