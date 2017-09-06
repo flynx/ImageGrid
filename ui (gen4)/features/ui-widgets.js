@@ -1091,11 +1091,11 @@ var BrowseActionsActions = actions.Actions({
 				'File/-90:Close viewer',
 				// Non existing elements will not get drawn...
 				//'File/-99:moo',
-			'80:$Edit',
-			'70:$Navigate',
-			'60:$Image',
-			'50:$Ribbon',
-			'40:$Crop',
+			'99:$Edit',
+			'$Navigate',
+			'$Image',
+			'$Ribbon',
+			'$Crop',
 				'Crop/80:Crop $marked images',
 				'Crop/80:Crop $bookmarked images',
 				'Crop/70:$Crop',
@@ -1119,7 +1119,7 @@ var BrowseActionsActions = actions.Actions({
 				// between the positive and negative prioritized items...
 				// ...
 			
-				// We can also add separators here...
+				/*/ We can also add separators here...
 				// NOTE: the separator is the only element in a level 
 				// 		that can be used multiple times.
 				// 		...any other elements with identical text will 
@@ -1129,12 +1129,16 @@ var BrowseActionsActions = actions.Actions({
 				'Crop/-60:.*collection.*',
 
 				'Crop/-70:---',
+				//*/
 
 				'Crop/-80:Uncrop and keep crop image order',
 				'Crop/-81:Uncrop all',
 				'Crop/-82:$Uncrop',
+			'Collec$tions',
 			'$Mark',
+				//'Mark/-99:.*remove.*',
 			'$Bookmark',
+				//'Bookmark/-99:.*remove.*',
 
 			// ...
 

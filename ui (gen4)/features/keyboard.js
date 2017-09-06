@@ -373,7 +373,8 @@ module.GLOBAL_KEYBOARD = {
 		//alt_C: 'browseCollections',
 		alt_C: 'browseActions: "/Collections/" -- Collections menu...',
 		shift_O: 'browseCollections',
-		F8: 'addToCollection',
+		F8: 'addToCollection!',
+		shift_F8: 'addMarkedToCollection!',
 
 
 		// metadata...

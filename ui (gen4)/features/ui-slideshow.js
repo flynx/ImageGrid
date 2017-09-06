@@ -45,104 +45,6 @@ var SlideshowActions = actions.Actions({
 		],
 	},
 
-	resetSlideshowWorkspace: ['Slideshow/Reset workspace',
-		function(){ delete this.workspaces['slideshow'] }],
-
-	slideshowIntervalDialog: ['Slideshow/Slideshow interval...',
-		widgets.makeUIDialog(function(parent){
-			var that = this
-			var dialog = widgets.makeConfigListEditor(
-				that, 
-				'slideshow-intervals',
-				'slideshow-interval', 
-				{
-					length_limit: that.config['slideshow-interval-max-count'],
-					check: Date.str2ms,
-					unique: Date.str2ms,
-					sort: function(a, b){
-						return Date.str2ms(a) - Date.str2ms(b) },
-				})
-				.on('start', function(){
-					// suspend the timer if it's not suspended outside...
-					this.__slideshouw_timer == 'suspended'
-						|| this.suspendSlideshowTimer()
-				})
-				.on('close', function(){
-					// reset the timer if it was not suspended outside...
-					this.__slideshouw_timer == 'suspended'
-						|| that.resetSlideshowTimer()
-
-					if(parent){
-						var txt = parent.select('!').find('.text').first().text()
-
-						parent.update()
-							.then(function(){ 
-								txt != ''
-									&& parent.select(txt)
-							})
-					}
-				})
-			return dialog
-		})],
-	slideshowDialog: ['Slideshow/Slideshow...',
-		widgets.makeUIDialog(function(){
-			var that = this
-
-			// suspend the timer if it's not suspended outside...
-			var suspended_timer = this.__slideshouw_timer == 'suspended'
-			suspended_timer || this.suspendSlideshowTimer()
-
-			// XXX might be a good idea to make this generic...
-			var _makeToggleHandler = function(toggler){
-				return function(){
-					var txt = $(this).find('.text').first().text()
-					that[toggler]()
-					o.update()
-						.then(function(){ o.select(txt) })
-					that.toggleSlideshow('?') == 'on' 
-						&& o.close()
-				}
-			}
-
-			var o = browse.makeLister(null, function(path, make){
-					make(['$Interval: ', 
-							function(){ return that.config['slideshow-interval'] }])
-						.on('open', function(){
-							that.slideshowIntervalDialog(make.dialog) })
-
-					make(['$Direction: ', 
-							function(){ return that.config['slideshow-direction'] }])
-						.on('open', _makeToggleHandler('toggleSlideshowDirection'))
-					make(['$Looping: ', 
-							function(){ return that.config['slideshow-looping'] }])
-						.on('open', _makeToggleHandler('toggleSlideshowLooping'))
-
-					// Start/stop...
-					make([function(){ 
-							return that.toggleSlideshow('?') == 'on' ? '$Stop' : '$Start' }])
-						.on('open', function(){
-							that.toggleSlideshow()
-							o.close()
-						})
-				},
-				{
-					path: that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start',
-					cls: 'table-view tail-action',
-				})
-				.on('close', function(){
-					// reset the timer if it was not suspended outside...
-					suspended_timer 
-						|| that.resetSlideshowTimer()
-				})
-
-			return o
-		})],
-	
-	toggleSlideshowDirection: ['- Slideshow/Slideshow direction',
-		core.makeConfigToggler('slideshow-direction', ['forward', 'reverse'])],
-	toggleSlideshowLooping: ['- Slideshow/Slideshow looping',
-		core.makeConfigToggler('slideshow-looping', ['on', 'off'])],
-
 	toggleSlideshow: ['Slideshow/Slideshow quick toggle',
 		toggler.CSSClassToggler(
 			function(){ return this.dom }, 
@@ -223,6 +125,102 @@ var SlideshowActions = actions.Actions({
 				}
 			})],
 
+	slideshowDialog: ['Slideshow/Slideshow...',
+		widgets.makeUIDialog(function(){
+			var that = this
+
+			// suspend the timer if it's not suspended outside...
+			var suspended_timer = this.__slideshouw_timer == 'suspended'
+			suspended_timer || this.suspendSlideshowTimer()
+
+			// XXX might be a good idea to make this generic...
+			var _makeToggleHandler = function(toggler){
+				return function(){
+					var txt = $(this).find('.text').first().text()
+					that[toggler]()
+					o.update()
+						.then(function(){ o.select(txt) })
+					that.toggleSlideshow('?') == 'on' 
+						&& o.close()
+				}
+			}
+
+			var o = browse.makeLister(null, function(path, make){
+					make(['$Interval: ', 
+							function(){ return that.config['slideshow-interval'] }])
+						.on('open', function(){
+							that.slideshowIntervalDialog(make.dialog) })
+
+					make(['$Direction: ', 
+							function(){ return that.config['slideshow-direction'] }])
+						.on('open', _makeToggleHandler('toggleSlideshowDirection'))
+					make(['$Looping: ', 
+							function(){ return that.config['slideshow-looping'] }])
+						.on('open', _makeToggleHandler('toggleSlideshowLooping'))
+
+					// Start/stop...
+					make([function(){ 
+							return that.toggleSlideshow('?') == 'on' ? '$Stop' : '$Start' }])
+						.on('open', function(){
+							that.toggleSlideshow()
+							o.close()
+						})
+				},
+				{
+					path: that.toggleSlideshow('?') == 'on' ? 'Stop' : 'Start',
+					cls: 'table-view tail-action',
+				})
+				.on('close', function(){
+					// reset the timer if it was not suspended outside...
+					suspended_timer 
+						|| that.resetSlideshowTimer()
+				})
+
+			return o
+		})],
+	
+	// settings...
+	slideshowIntervalDialog: ['Slideshow/Slideshow interval...',
+		widgets.makeUIDialog(function(parent){
+			var that = this
+			var dialog = widgets.makeConfigListEditor(
+				that, 
+				'slideshow-intervals',
+				'slideshow-interval', 
+				{
+					length_limit: that.config['slideshow-interval-max-count'],
+					check: Date.str2ms,
+					unique: Date.str2ms,
+					sort: function(a, b){
+						return Date.str2ms(a) - Date.str2ms(b) },
+				})
+				.on('start', function(){
+					// suspend the timer if it's not suspended outside...
+					this.__slideshouw_timer == 'suspended'
+						|| this.suspendSlideshowTimer()
+				})
+				.on('close', function(){
+					// reset the timer if it was not suspended outside...
+					this.__slideshouw_timer == 'suspended'
+						|| that.resetSlideshowTimer()
+
+					if(parent){
+						var txt = parent.select('!').find('.text').first().text()
+
+						parent.update()
+							.then(function(){ 
+								txt != ''
+									&& parent.select(txt)
+							})
+					}
+				})
+			return dialog
+		})],
+	toggleSlideshowDirection: ['- Slideshow/Slideshow direction',
+		core.makeConfigToggler('slideshow-direction', ['forward', 'reverse'])],
+	toggleSlideshowLooping: ['- Slideshow/Slideshow looping',
+		core.makeConfigToggler('slideshow-looping', ['on', 'off'])],
+
 	// NOTE: these can be used as pause and resume...
 	resetSlideshowTimer: ['- Slideshow/Reset slideshow timer',
 		function(){
@@ -235,6 +233,9 @@ var SlideshowActions = actions.Actions({
 				this.__slideshouw_timer = 'suspended'
 			}
 		}],
+
+	resetSlideshowWorkspace: ['Slideshow/Reset workspace',
+		function(){ delete this.workspaces['slideshow'] }],
 })
 
 

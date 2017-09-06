@@ -21,10 +21,6 @@ var widgets = require('features/ui-widgets')
 
 
 /*********************************************************************/
-// XXX should collections be in the Crop menu????
-// 		...essentially a collection is a saved crop, so this would be 
-// 		logical, would simplify control, etc.
-// 		
 
 var MAIN_COLLECTION_TITLE = 'ALL'
 
@@ -862,6 +858,43 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+var CollectionTagsActions = actions.Actions({
+	config: {
+		// List of tags to be stored in a collection, unique to it...
+		//
+		// NOTE: the rest of the tags are shared between all collections
+		// NOTE: to disable local tags either delete this, set it to null
+		// 		or to an empty list.
+		'collection-local-tags': [
+			'bookmark',
+			'selected',
+		],
+	},
+
+	collectTagged: ['- Collections|Tag/',
+		function(tags, collection){
+			return this.collect(this.data.getTaggedByAll(tags), collection) }],
+	uncollectTagged: ['- Collections|Tag/',
+		function(tags, collection){
+			return this.uncollect(this.data.getTaggedByAll(tags), collection) }],
+
+	// marked...
+	collectMarked: ['- Collections|Mark/',
+		function(collection){
+			return this.collectTagged('selected', collection) }],
+	uncollectMarked: ['Collections|Mark/Remove marked from collection',
+		function(collection){
+			return this.uncollectTagged('selected', collection) }],
+
+	// bookmarked...
+	collectBookmarked: ['- Collections|Bookmark/',
+		function(collection){
+			return this.collectTagged('bookmark', collection) }],
+	uncollectBookmarked: ['Collections|Bookmark/Remove bookmarked from collection',
+		function(collection){
+			return this.uncollectTagged('bookmark', collection) }],
+})
+
 var CollectionTags = 
 module.CollectionTags = core.ImageGridFeatures.Feature({
 	title: 'Collection tag handling',
@@ -899,19 +932,14 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 
 	depends: [
 		'collections',
+		'tags',
+
+		// XXX
+		'image-marks',
+		'image-bookmarks',
 	],
 
-	config: {
-		// List of tags to be stored in a collection, unique to it...
-		//
-		// NOTE: the rest of the tags are shared between all collections
-		// NOTE: to disable local tags either delete this, set it to null
-		// 		or to an empty list.
-		'collection-local-tags': [
-			'bookmark',
-			'selected',
-		],
-	},
+	actions: CollectionTagsActions,
 
 	handlers: [
 		// move tags between collections...
@@ -1231,7 +1259,7 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 
 // XXX show collections in image metadata...
 var UICollectionActions = actions.Actions({
-	browseCollections: ['Collections|Crop/$Collec$tions...',
+	browseCollections: ['Collections/$Collec$tions...',
 		core.doc`Collection list...
 
 		NOTE: collections are added live and not on dialog close...
@@ -1393,7 +1421,7 @@ var UICollectionActions = actions.Actions({
 
 	// Collections actions with collection selection...
 	// XXX should we warn the user when overwriting???
-	saveAsCollection: ['Collections|Crop/$Save as collection...',
+	saveAsCollection: ['Collections/$Save as collection...',
 		widgets.uiDialog(function(){
 			return this.browseCollections(function(title){
 				this.saveCollection(title, 'current') 
@@ -1401,16 +1429,22 @@ var UICollectionActions = actions.Actions({
 				title == this.collection
 					&& this.loadCollection('!')
 			}) })],
-	addToCollection: ['Collections|Crop|Image/Add $image to collection...',
+	addToCollection: ['Collections|Image/Add $image to collection...',
 		widgets.uiDialog(function(gids){
 			return this.browseCollections(function(title){
 				this.collect(gids || this.current, title) }) })],
-	addLoadedToCollection: ['Collections|Crop/$Add loaded images to collection...',
+	addLoadedToCollection: ['Collections/$Add loaded images to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
-	joinToCollection: ['Collections|Crop/$Merge view to collection...',
+	joinToCollection: ['Collections/$Merge view to collection...',
 		widgets.uiDialog(function(){
 			return this.browseCollections(function(title){
 				this.joinCollect(title) }) })],
+
+	// XXX should this be here???
+	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
+		widgets.uiDialog(function(gids){
+			return this.browseCollections(function(title){
+				this.collectMarked(gids || this.current, title) }) })],
 
 	/*/ XXX this is not used by metadata yet...
 	metadataSection: ['- Image/',
@@ -1428,6 +1462,9 @@ module.UICollection = core.ImageGridFeatures.Feature({
 	depends: [
 		'ui',
 		'collections',
+
+		// XXX needed only for .addMarkedToCollection(..)
+		'collection-tags',
 	],
 
 	actions: UICollectionActions, 
