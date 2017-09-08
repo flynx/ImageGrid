@@ -1629,7 +1629,7 @@ module.CropActions = actions.Actions({
 			// XXX
 		}],
 
-	// XXX save a crop (catalog)...
+	// XXX save a crop (catalog)..
 	// XXX
 	
 	// XXX not sure if we actually need this...
@@ -1637,7 +1637,7 @@ module.CropActions = actions.Actions({
 		{browseMode: function(){ 
 			return this.data.ribbon_order.length <= 1 && 'disabled' }},
 		function(list){ this.data.length > 0 && this.crop(list, true) }],
-	cropRibbon: ['Crop/Crop $ribbon',
+	cropRibbon: ['Crop|Ribbon/Crop $ribbon',
 		function(ribbon, flatten){
 			if(this.data.length == 0){
 				return
@@ -1649,7 +1649,7 @@ module.CropActions = actions.Actions({
 			ribbon = ribbon || 'current'
 			this.crop(this.data.getImages(ribbon), flatten)
 		}],
-	cropOutRibbon: ['Crop/Crop ribbon out',
+	cropOutRibbon: ['Crop|Ribbon/Crop ribbon out',
 		function(ribbon, flatten){
 			ribbon = ribbon || this.current_ribbon
 			ribbon = ribbon instanceof Array ? ribbon : [ribbon]
@@ -1743,6 +1743,7 @@ module.CropActions = actions.Actions({
 					if(gid in data.ribbons){
 						delete data.ribbons[gid]
 						data.ribbon_order.splice(data.ribbon_order.indexOf(gid), 1)
+						focus = true
 
 						return false
 					}
@@ -1767,7 +1768,22 @@ module.CropActions = actions.Actions({
 				&& this.focusImage(
 					data.getImage(this.direction == 'left' ? 'before' : 'after')
 					|| data.getImage(this.direction == 'left' ? 'after' : 'before'))
-		}]
+		}],
+	removeRibbonFromCrop:['Crop|Ribbon/Remove ribbon from crop',
+		core.doc`
+		
+		NOTE: this is a shorthand for .removeFromCrop(..) but only supports
+			ribbon removal.`,
+		{browseMode: 'uncrop'},
+		function(gids){ 
+			var that = this
+			gids = gids || this.current_ribbon
+			gids = gids == 'current' ? this.current_ribbon : gids
+			gids = gids instanceof Array ? 
+				gids.filter(function(gid){ return that.data.ribbons[gid] }) 
+				: [gids]
+			return this.removeFromCrop(gids) 
+		}],
 })
 
 

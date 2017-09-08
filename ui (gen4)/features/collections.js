@@ -1275,13 +1275,14 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 var UICollectionActions = actions.Actions({
 	config: {
 
-		// XXX should we add reasonable defaults here???
-		'default-collections': null,
+		// Global default collections...
+		//
+		// NOTE: delete or set to null for none...
+		//'default-collections': null,
 	},
 
 	editDefaultCollections: ['Interface/Edit default collections...',
 		widgets.makeUIDialog(function(action){
-
 			var defaults = 
 				this.config['default-collections'] = 
 				(this.config['default-collections'] || []).slice()
@@ -1304,7 +1305,6 @@ var UICollectionActions = actions.Actions({
 				})
 		})],
 
-	// XXX handle default collections...
 	browseCollections: ['Collections/$Collec$tions...',
 		core.doc`Collection list...
 
