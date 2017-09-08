@@ -56,10 +56,6 @@ var CollectionActions = actions.Actions({
 		// 	'main'		- save crop state for main state only
 		// 	'none'		- do not save crop state
 		'collection-save-crop-state': 'all',
-
-		// XXX add default collection list to config...
-		'default-collections': [
-		],
 	},
 
 	// Format:
@@ -468,7 +464,7 @@ var CollectionActions = actions.Actions({
 		NOTE: when removing the currently loaded collection this will 
 			just remove it from .collections and do nothing...`,
 		function(collection){
-			if(collection == MAIN_COLLECTION_TITLE){
+			if(!this.collections || collection == MAIN_COLLECTION_TITLE){
 				return
 			}
 			delete this.collections[collection]
@@ -497,6 +493,10 @@ var CollectionActions = actions.Actions({
 				return
 			}
 			var that = this
+
+			if(!this.collections || !(collection in this.collections)){
+				this.newCollection(collection)
+			}
 
 			gids = gids == 'loaded' ? this.data.getImages('loaded')
 				: gids instanceof Array ? gids 
@@ -542,6 +542,11 @@ var CollectionActions = actions.Actions({
 			if(collection == null || collection == MAIN_COLLECTION_TITLE){
 				return
 			}
+
+			if(!this.collections || !(collection in this.collections)){
+				this.newCollection(collection)
+			}
+
 			// if only collection is given, reset align to null...
 			align = align === collection ? null : align
 
@@ -559,7 +564,10 @@ var CollectionActions = actions.Actions({
 		{browseMode: function(){ return !this.collection && 'disabled' }},
 		function(gids, collection){
 			collection = collection || this.collection
-			if(collection == null || collection == MAIN_COLLECTION_TITLE){
+			if(collection == null 
+					|| collection == MAIN_COLLECTION_TITLE
+					|| !this.collections 
+					|| !(collection in this.collections)){
 				return
 			}
 
@@ -1081,6 +1089,8 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 // XXX add UI...
+// XXX removing items from auto-collection has no effect as it will be 
+// 		reconstructed on next load -- is this the right way to go???
 var AutoCollectionsActions = actions.Actions({
 	collectionAutoLevelLoader: ['- Collections/',
 		core.doc`
@@ -1261,8 +1271,40 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
-// XXX show collections in image metadata...
+// XXX show collections in image metadata... (???)
 var UICollectionActions = actions.Actions({
+	config: {
+
+		// XXX should we add reasonable defaults here???
+		'default-collections': null,
+	},
+
+	editDefaultCollections: ['Interface/Edit default collections...',
+		widgets.makeUIDialog(function(action){
+
+			var defaults = 
+				this.config['default-collections'] = 
+				(this.config['default-collections'] || []).slice()
+
+			return browse.makeLister(null, 
+				function(path, make){
+					make.EditableList(defaults, 
+						{
+							unique: true,
+							sortable: 'y',
+
+							normalize: function(title){ 
+								return title.trim() },
+							check: function(title){ 
+								return title.length > 0 
+									&& title != MAIN_COLLECTION_TITLE },
+						})
+				}, {
+					cls: 'collection-list',
+				})
+		})],
+
+	// XXX handle default collections...
 	browseCollections: ['Collections/$Collec$tions...',
 		core.doc`Collection list...
 
@@ -1271,6 +1313,8 @@ var UICollectionActions = actions.Actions({
 		widgets.makeUIDialog(function(action){
 			var that = this
 			var to_remove = []
+
+			var defaults = this.config['default-collections']
 
 			return browse.makeLister(null, 
 				function(path, make){
@@ -1282,6 +1326,12 @@ var UICollectionActions = actions.Actions({
 						})
 
 					var openHandler = function(_, title){
+						// create collection if it does not exist...
+						if(!that.collections 
+								|| !(title in that.collections)){
+							that.newCollection(title)
+						}
+
 						var gid = that.current
 						action ?
 							action.call(that, title)
@@ -1305,8 +1355,13 @@ var UICollectionActions = actions.Actions({
 					//var collections = Object.keys(that.collections || {})
 					var collections = that.collection_order = that.collection_order || []
 
+					if(defaults){
+						collections = collections.concat(defaults).unique()
+					}
+
 					// main collection...
-					!action && collections.indexOf(MAIN_COLLECTION_TITLE) < 0
+					!action 
+						&& collections.indexOf(MAIN_COLLECTION_TITLE) < 0
 						&& make([
 								MAIN_COLLECTION_TITLE,
 							], 
@@ -1360,14 +1415,14 @@ var UICollectionActions = actions.Actions({
 				})
 		})],
 	browseImageCollections: ['Collections|Image/Image $collections...',
-		{dialogTitle: 'Image Collections...'},
 		widgets.makeUIDialog(function(gid){
 			var that = this
 			gid = this.data.getImage(gid)
 
+			var defaults = this.config['default-collections']
+
 			var all
 			var collections
-
 			var to_remove
 
 			return browse.makeLister(null, 
@@ -1381,6 +1436,10 @@ var UICollectionActions = actions.Actions({
 
 					//all = Object.keys(that.collections || {})
 					all = that.collection_order = that.collection_order || []
+
+					if(defaults){
+						all = all.concat(defaults).unique()
+					}
 
 					collections = collections 
 						|| that.inCollections(gid || null)

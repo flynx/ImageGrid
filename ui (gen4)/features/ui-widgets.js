@@ -1182,6 +1182,8 @@ var BrowseActionsActions = actions.Actions({
 				'Crop/-81:Uncrop all',
 				'Crop/-82:$Uncrop',
 			'Collec$tions',
+				'Collections/-70:---',
+				'Collections/-90:.*remove.*',
 			'$Mark',
 				//'Mark/-99:.*remove.*',
 			'$Bookmark',

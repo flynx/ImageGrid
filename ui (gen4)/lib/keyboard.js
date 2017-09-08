@@ -608,6 +608,7 @@ var KeyboardPrototype = {
 	// NOTE: to match several compatible handlers, pass a list of handlers,
 	// 		the result for each will be merged into one common list.
 	//
+	// XXX drop/DROP/NEXT handling need more testing...
 	// XXX this and .handler(..) in part repeat handling dropped keys, 
 	// 		can we unify this???
 	keys: function(handler){
