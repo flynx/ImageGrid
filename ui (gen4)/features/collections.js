@@ -555,7 +555,7 @@ var CollectionActions = actions.Actions({
 				this.saveCollection(collection)
 			}
 		}],
-	uncollect: ['Collections|Image/$Uncollect image',
+	uncollect: ['Collections|Image/Remove from collection',
 		{browseMode: function(){ return !this.collection && 'disabled' }},
 		function(gids, collection){
 			collection = collection || this.collection

@@ -1720,7 +1720,8 @@ module.CropActions = actions.Actions({
 
 	// crop edit actions...
 	// XXX do we need this???
-	removeFromCrop: ['Crop/Remove from crop',
+	// XXX undo...
+	removeFromCrop: ['Crop|Image/Remove from crop',
 		{browseMode: 'uncrop'},
 		function(gids){
 			var that = this
@@ -1763,7 +1764,9 @@ module.CropActions = actions.Actions({
 
 			// restore correct focus...
 			focus
-				&& this.focusImage(this.direction == 'left' ? 'prev' : 'next')
+				&& this.focusImage(
+					data.getImage(this.direction == 'left' ? 'before' : 'after')
+					|| data.getImage(this.direction == 'left' ? 'after' : 'before'))
 		}]
 })
 

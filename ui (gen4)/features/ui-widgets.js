@@ -1136,6 +1136,8 @@ var BrowseActionsActions = actions.Actions({
 			'99:$Edit',
 			'$Navigate',
 			'$Image',
+				'Image/-90:---',
+				'Image/-90:.*remove.*',
 			'$Ribbon',
 			'$Crop',
 				'Crop/80:Crop $marked images',
@@ -1172,6 +1174,9 @@ var BrowseActionsActions = actions.Actions({
 
 				'Crop/-70:---',
 				//*/
+
+				'Crop/-70:---',
+				'Crop/-70:.*remove.*',
 
 				'Crop/-80:Uncrop and keep crop image order',
 				'Crop/-81:Uncrop all',

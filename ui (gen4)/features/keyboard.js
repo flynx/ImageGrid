@@ -124,6 +124,7 @@ module.GLOBAL_KEYBOARD = {
 
 		drop: [
 			'Esc',
+			'Del',
 		],
 
 		Esc: 'uncrop',
@@ -141,6 +142,10 @@ module.GLOBAL_KEYBOARD = {
 
 	'Collection': {
 		pattern: '.collection-mode',
+		drop: [
+			'Esc',
+			'Del',
+		],
 
 		Esc: 'loadCollection: "ALL" -- Load all images',
 
