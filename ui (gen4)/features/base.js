@@ -1446,6 +1446,11 @@ module.CropActions = actions.Actions({
 
 	crop_stack: null,
 
+	// true if current viewer is cropped...
+	get cropped(){
+		return this.crop_stack 
+			&& this.crop_stack.length > 0 },
+
 	clear: [function(){ 
 		delete this.crop_stack }],
 
@@ -1462,20 +1467,18 @@ module.CropActions = actions.Actions({
 		mode = mode || 'current'
 
 		return function(res){
-			if(mode == 'base' 
-					&& this.crop_stack 
-					&& this.crop_stack.length > 0){
-				res.data = this.crop_stack[0].dumpJSON()
-			}
-			if(mode == 'full' 
-					&& this.crop_stack 
-					&& this.crop_stack.length > 0){
-				res.crop_stack = this.crop_stack.map(function(c){
-					return c
-						.dumpJSON()
-						.run(function(){
-							delete this.tags })
-				})
+			if(this.cropped){
+				if(mode == 'base'){
+					res.data = this.crop_stack[0].dumpJSON()
+
+				} else if(mode == 'full'){
+					res.crop_stack = this.crop_stack.map(function(c){
+						return c
+							.dumpJSON()
+							.run(function(){
+								delete this.tags })
+					})
+				}
 			}
 		}
 	}],
@@ -1505,10 +1508,6 @@ module.CropActions = actions.Actions({
 			}
 		}
 	}],
-
-	// true if current viewer is cropped...
-	get cropped(){
-		return this.crop_stack != null },
 
 	// crop...
 	//
@@ -1573,8 +1572,7 @@ module.CropActions = actions.Actions({
 			}
 		}],
 	uncrop: ['Crop/Uncrop',
-		{browseMode: function(){ 
-			return (this.crop_stack && this.crop_stack.length > 0) || 'disabled' }},
+		{browseMode: function(){ return this.cropped || 'disabled' }},
 		function(level, restore_current, keep_crop_order){
 			level = level || 1
 
@@ -1721,6 +1719,22 @@ module.CropActions = actions.Actions({
 		}],
 
 
+	// crop edit actions...
+	// XXX
+	removeFromCrop: ['- Crop/',
+		function(gids){
+			if(!this.cropped){
+				return
+			}
+
+			gids = arguments.length > 1 ? [].slice.call(arguments) : gids
+			gids = gids || 'current'
+			gids = gids instanceof Array ? gids : [gids] 
+
+			gids = this.data.normalizeGIDs(gids)
+
+			// XXX
+		}]
 })
 
 

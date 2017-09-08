@@ -198,6 +198,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 					})
 
 					.option('repl, --repl', 'start an ImageGrid REPL', function(){
+						// XXX this is broken in node for some reason...
 						var repl = requirejs('repl')
 
 						// setup the global ns...

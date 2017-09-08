@@ -1359,7 +1359,7 @@ var UICollectionActions = actions.Actions({
 					}) 
 				})
 		})],
-	browseImageCollections: ['Collections|Image/$Collections...',
+	browseImageCollections: ['Collections|Image/Image $collections...',
 		{dialogTitle: 'Image Collections...'},
 		widgets.makeUIDialog(function(gid){
 			var that = this

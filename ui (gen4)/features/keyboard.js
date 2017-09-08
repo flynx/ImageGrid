@@ -133,12 +133,16 @@ module.GLOBAL_KEYBOARD = {
 		//ctrl_S: 'saveAsCollection',
 
 		W: 'testAction2 -- XXX DEBUG: remove when done...',
+
+		// XXX should we add image level manipulation here, like "remove image"???
 	},
 
 	'Collection': {
 		pattern: '.collection-mode',
 
 		Esc: 'loadCollection: "ALL" -- Load all images',
+
+		Del: 'uncollect',
 	},
 
 	'Range': {

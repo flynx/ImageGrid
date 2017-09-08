@@ -2504,6 +2504,12 @@ var WidgetTestActions = actions.Actions({
 					.attr(attrs))
 		}],
 
+	// a normal method...
+	testMethod: function(){
+		console.log('test method:', [].slice.call(arguments))
+		return 'test result'
+	},
+
 	// XXX does not work -- see actions.Actions(..) for details...
 	testAlias: ['Test/Action alias',
 		'focusImage: "prev"'],

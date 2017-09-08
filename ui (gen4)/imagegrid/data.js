@@ -221,6 +221,42 @@ var DataPrototype = {
 
 	/******************************************************* Utils ***/
 
+	// Normalize gids...
+	//
+	// 	Get all gids...
+	// 	.normalizeGIDs('all')
+	// 		-> gids
+	// 		NOTE: this is a shorthand for .getImages('all')
+	//
+	// 	Get all loaded gids...
+	// 	.normalizeGIDs('loaded')
+	// 		-> gids
+	// 		NOTE: this is a shorthand for .getImages('loaded')
+	//
+	// 	Normalize list of gids/keywords
+	// 	.normalizeGIDs(gid|keyword, ..)
+	// 	.normalizeGIDs([gid|keyword, ..])
+	// 		-> gids
+	//
+	//
+	// Supported keywords are the same as for .getImage(..)
+	//
+	// XXX is this needed here???
+	normalizeGIDs: function(gids){
+		var that = this
+		// direct keywords...
+		if(gids == 'all' || gids == 'loaded'){
+			return this.getImages(gids)
+		}
+
+		gids = arguments.length > 1 ? [].slice.call(arguments) : gids
+		gids = gids instanceof Array ? gids : [gids]
+
+		return gids
+			.map(function(gid){ return that.getImage(gid) })
+	},
+
+
 	// Make a sparse list of image gids...
 	//
 	// 	Make sparse list out of gids...
@@ -492,6 +528,8 @@ var DataPrototype = {
 	// 		cleared...
 	// 		thus setting appropriate .base and .current values is the 
 	// 		responsibility of the caller.
+	//
+	// XXX should this support gid keywords like 'current'???
 	clear: function(gids, deep, clear_empty){
 		var that = this
 		gids = gids || 'all'
@@ -1389,13 +1427,15 @@ var DataPrototype = {
 
 	// Merge ribbons
 	//
+	//	Merge all the ribbons...
 	//	.mergeRibbons('all')
+	//
+	//	Merge ribbons...
 	//	.mergeRibbons(ribbon, ribbon, ...)
 	//		-> data
 	//
-	// If 'all' is the first argument, this will merge all the ribbons.
-	//
 	// This will merge the ribbons into the first.
+	//
 	mergeRibbons: function(target){
 		var targets = target == 'all' ? this.ribbon_order.slice() : arguments
 		var base = targets[0]
@@ -1571,116 +1611,46 @@ var DataPrototype = {
 	// 		-> data
 	//
 	// NOTE: if mode is 'vertical' then place is ignored...
-	//
-	// XXX this is very similar to .placeImage(..) should keep one...
-	gatherImages: function(gids, reference, place, mode){
-		gids = this.makeSparseImages(gids)
-
+	// NOTE: this is a different interface to .placeImage(..)
+	gatherImages: function(images, reference, place, mode){
 		var that = this
+		var args = [].slice.call(arguments)
 
 		var modes = /vertical|horizontal|both/
 		var placements = /before|after|auto/
 
-		// parse arguments...
-		var  _mode = mode
-		mode = modes.test(reference) ? reference
-			: modes.test(place) ? place
-			: mode
-		mode = mode || 'both'
+		// get trailing args first, if given...
+		mode = modes.test(args.slice(-1)[0]) ? args.pop() : mode
+		place = placements.test(args.slice(-1)[0]) ? args.pop() : place
+		place = place || 'after'
 
-		place = placements.test(reference) ? reference
-			: placements.test(_mode) ? _mode
-			: place
-		place = place == 'auto' ? null : place
+		reference = args[1] || 'current'
+		reference = (reference == 'first' || reference == 'last') ? 
+			this.makeSparseImages(images).compact()[reference == 'first' ? 0 : images.length-1] 
+			: this.getImage(reference)
 
-		reference = modes.test(reference) || placements.test(reference) ? null : reference
-		reference = reference == 'first' ? gids[0]
-			: reference == 'last' ? gids.slice(-1)[0]
-			: reference
-
-		//console.log('reference:', reference, '\nplace:', place, '\nmode:', mode)
-
-		// shift all gids to a reference ribbon...
-		if(mode == 'both' || mode == 'vertical'){
-			var ref = this.getRibbon(reference)
-
-			var ribbons = this.ribbons
-			gids.forEach(function(gid, i){
-				var r = that.getRibbon(gid)
-
-				// do the move...
-				if(r != ref){
-					ribbons[ref][i] = gid
-					delete ribbons[r][i]
-				}
-			})
-		}
-
-		// shift all gids to a reference image...
-		if(mode == 'both' || mode == 'horizontal'){
-			var order = this.order
-			var ref = this.getImage(reference)
-
-			place = gids.indexOf(ref) < 0 && place == null ? 'after' : place
-
-			// NOTE: the reference index will not move as nothing will 
-			// 		ever change it's position relative to it...
-			var ri = this.order.indexOf(ref)
-			var l = ri
-
-			gids.forEach(function(gid){
-				if(gid == ref){
-					return
-				}
-
-				// we need to get this live as we are moving images around...
-				var f = this.order.indexOf(gid)
-
-				// target is left of the reference -- place at reference...
-				// NOTE: we are moving left to right, thus the final order
-				// 		of images will stay the same.
-				if(f < ri){
-					if(place == 'after'){
-						order.splice(l, 0, order.splice(f, 1)[0])
-
-					} else {
-						order.splice(ri-1, 0, order.splice(f, 1)[0])
-					}
-
-				// target is right of the reference -- place each new image
-				// at an offset from reference, the offset is equal to 
-				// the number of the target image the right of the reference
-				} else {
-					if(place == 'before'){
-						order.splice(l, 0, order.splice(f, 1)[0])
-						l += 1
-
-					} else {
-						l += 1
-						order.splice(l, 0, order.splice(f, 1)[0])
-					}
-				}
-			})
-
-			// NOTE: this is cheating, but if it's fast and simple I do
-			// 		not care ;)
-			this.updateImagePositions()
-		}
-
-		return this
+		return this.placeImage(
+			images, 
+			mode == 'horizontal' ? 
+				'keep' : 
+				this.getRibbon(reference), 
+			mode == 'vertical' ? 
+				'keep' 
+				: reference, 
+			place)
 	},
-	
+
 	// Place image at position... 
 	//
-	//	Place imagess at order into ribbon...
+	//	Place images at order into ribbon...
 	//	.placeImage(images, ribbon, order)
 	//		-> data
 	//
-	//	Place images at order but do not touch ribbon position...
+	//	Place images at order but do not touch ribbon position... (horizontal)
 	//	.placeImage(images, 'keep', order)
 	//		-> data
 	//
-	//	Place images to ribbon but do not touch order...
+	//	Place images to ribbon but do not touch order... (vertical)
 	//	.placeImage(images, ribbon, 'keep')
 	//		-> data
 	//
@@ -1688,14 +1658,16 @@ var DataPrototype = {
 	// ribbon is .getRibbon(..) compatible or 'keep'.
 	// order is .getImageOrder(..) compatible or 'keep'.
 	//
+	// This will not change the order of images unless (special case) 
+	// the target image is in the images.
+	//
+	//
 	// NOTE: if images is a list, all images will be placed in the order
 	// 		they are given.
 	// NOTE: this can affect element indexes, thus for example element 
 	// 		at input order may be at a different position after this is 
 	// 		run.
-	//
-	// XXX this is very similar to .gatherImages(..) should keep one...
-	placeImage: function(images, ribbon, order, mode){
+	placeImage: function(images, ribbon, reference, mode){
 		var that = this
 		mode = mode || 'before'
 
@@ -1705,11 +1677,9 @@ var DataPrototype = {
 			return this
 		}
 
-		images = images instanceof Array ? images : [images]
-		images = images.map(function(img){ return that.getImage(img) })
+		images = this.normalizeGIDs(images)
 
-		// vertical shift...
-		// NOTE: this will gather all the images to the target ribbon...
+		// vertical shift -- gather images to the target ribbon...
 		if(ribbon != 'keep'){
 			var to = this.getRibbon(ribbon)
 			this.makeSparseImages(images)
@@ -1722,35 +1692,49 @@ var DataPrototype = {
 				})
 		}
 		
-		// horizontal shift...
-		// NOTE: this will gather the images horizontally...
-		if(order != 'keep'){
-			var reorder = false
-			order = this.getImage(this.getImageOrder(order) 
-				+ (mode == 'after' ? 1 : 0))
-			images.forEach(function(img){
-				var f = that.order.indexOf(img)
-				var t = order == null ? 
-					// special case: add after last element...
-					that.order.length 
-					: that.order.indexOf(order)
+		// horizontal shift -- gather the images horizontally...
+		if(reference != 'keep'){
+			var ref = this.getImage(reference)
 
-				if(f > t){
-					that.order.splice(t, 0, that.order.splice(f, 1)[0])
-					reorder = true
+			// NOTE: the reference index will not move as nothing will 
+			// 		ever change it's position relative to it...
+			var ri = order.indexOf(ref)
+			var l = ri
 
-				} else if(f < t){
-					// NOTE: need to compensate for when we are remoing 
-					// 		an image before where we want to place it...
-					that.order.splice(t-1, 0, that.order.splice(f, 1)[0])
-					reorder = true
-				}
-			})
+			images
+				.forEach(function(gid){
+					if(gid == ref){
+						return
+					}
 
-			// update the rest of sparse data...
-			if(reorder){
-				this.updateImagePositions()
-			}
+					// we need to get this live as we are moving images around...
+					var f = order.indexOf(gid)
+
+					// target is left of the reference -- place at reference...
+					// NOTE: we are moving left to right, thus the final order
+					// 		of images will stay the same.
+					if(f < ri){
+						order.splice(mode == 'after' ? l : ri-1, 0, order.splice(f, 1)[0])
+
+					// target is right of the reference -- place each new image
+					// at an offset from reference, the offset is equal to 
+					// the number of the target image the right of the reference
+					} else {
+						if(mode == 'before'){
+							order.splice(l, 0, order.splice(f, 1)[0])
+							l += 1
+
+						} else {
+							l += 1
+							order.splice(l, 0, order.splice(f, 1)[0])
+						}
+					}
+				})
+
+			// update the order data...
+			this.order.splice.apply(this.order, [0, this.order.length].concat(order))
+
+			this.updateImagePositions()
 		}
 
 		return this
@@ -3128,7 +3112,7 @@ var DataWithTagsPrototype = {
 	// selectors...
 	getTaggedByAny: function(tags){
 		tags = arguments.length > 1 ? [].slice.call(arguments) : tags
-		gids = gids instanceof Array ? gids : [gids]
+		tags = tags instanceof Array ? tags : [tags]
 
 		var res = []
 
