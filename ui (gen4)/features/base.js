@@ -826,13 +826,13 @@ actions.Actions({
 	// 		corresponding normal shift operations...
 	// XXX .undoLast(..) on these for some reason skips...
 	// 		...e.g. two shifts are undone with three calls to .undoLast()...
-	shiftImageUpNewRibbon: ['Edit|Ribbon/Shift image up to a new empty ribbon',
+	shiftImageUpNewRibbon: ['Edit|Image/Shift image up to a new empty ribbon',
 		{journal: true},
 		function(target){
 			this.data.newRibbon(target)
 			this.shiftImageUp(target)
 		}],
-	shiftImageDownNewRibbon: ['Edit|Ribbon/Shift image down to a new empty ribbon',
+	shiftImageDownNewRibbon: ['Edit|Image/Shift image down to a new empty ribbon',
 		{journal: true},
 		function(target){
 			this.data.newRibbon(target, 'below')
@@ -877,14 +877,14 @@ actions.Actions({
 		}],
 
 	// these operate on the current image...
-	travelImageUp: ['Edit/Travel with the current image up (Shift up and keep focus)',
+	travelImageUp: ['Edit|Image/Travel with the current image up (Shift up and keep focus)',
 		{undo: undoShift('travelImageDown')},
 		function(target){
 			target = target || this.current
 			this.shiftImageUp(target)
 			this.focusImage(target)
 		}],
-	travelImageDown: ['Edit/Travel with the current image down (Shift down and keep focus)',
+	travelImageDown: ['Edit|Image/Travel with the current image down (Shift down and keep focus)',
 		{undo: undoShift('travelImageUp')},
 		function(target){
 			target = target || this.current

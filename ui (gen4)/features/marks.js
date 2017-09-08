@@ -338,22 +338,22 @@ var ImageMarkEditActions = actions.Actions({
 			})
 		}],
 
-	shiftMarkedUp: ['Mark|Ribbon/Shift marked $up',
+	shiftMarkedUp: ['Mark/Shift marked $up',
 		{undo: undoShift('shiftMarkedDown'),
 			browseMode: 'cropMarked'},
 		shiftMarked('up')],
-	shiftMarkedDown: ['Mark|Ribbon/Shift marked $down',
+	shiftMarkedDown: ['Mark/Shift marked $down',
 		{undo: undoShift('shiftMarkedUp'),
 			browseMode: 'cropMarked'},
 		shiftMarked('down')],
 
 	// XXX undo...
-	shiftMarkedAfter: ['Mark|Ribbon|Image/Shift marked after',
+	shiftMarkedAfter: ['Mark|Image/Shift marked after',
 		{browseMode: 'cropMarked'},
 		function(target){
 			this.shiftImageTo(this.marked, target || 'current', 'after') }],
 	// XXX undo...
-	shiftMarkedBefore: ['Mark|Ribbon|Image/Shift marked before',
+	shiftMarkedBefore: ['Mark|Image/Shift marked before',
 		{browseMode: 'cropMarked'},
 		function(target){
 			this.shiftImageTo(this.marked, target || 'current', 'before') }],

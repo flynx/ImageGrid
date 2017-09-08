@@ -1576,70 +1576,6 @@ var DataPrototype = {
 		this.ribbon_order.reverse() },
 
 
-	// Gather gids into a connected section...
-	//
-	// The section is positioned relative to a reference gid, which also
-	// determines the ribbon.
-	//
-	// 	Gather images relative to current image 
-	// 	.gatherImages(images)
-	// 	.gatherImages(images, 'current')
-	// 		-> data
-	//
-	// 	Gather images relative to image/ribbon
-	// 	.gatherImages(images, image|ribbon)
-	// 		-> data
-	//
-	// 	Gather images relative to first/last image in given images
-	// 	.gatherImages(images, 'first')
-	// 	.gatherImages(images, 'last')
-	// 		-> data
-	//
-	// 	Gather images relative to image/ribbon and place them strictly 
-	// 	after (default) or before it...
-	// 	.gatherImages(images, 'auto')
-	// 	.gatherImages(images, 'after')
-	// 	.gatherImages(images, 'before')
-	// 	.gatherImages(images, image|ribbon, 'auto')
-	// 	.gatherImages(images, image|ribbon, 'after')
-	// 	.gatherImages(images, image|ribbon, 'before')
-	// 		-> data
-	//
-	// 	Gather images only in one explicit dimension...
-	// 	.gatherImages(.., 'horizontal')
-	// 	.gatherImages(.., 'vertical')
-	// 		-> data
-	//
-	// NOTE: if mode is 'vertical' then place is ignored...
-	// NOTE: this is a different interface to .placeImage(..)
-	gatherImages: function(images, reference, place, mode){
-		var that = this
-		var args = [].slice.call(arguments)
-
-		var modes = /vertical|horizontal|both/
-		var placements = /before|after|auto/
-
-		// get trailing args first, if given...
-		mode = modes.test(args.slice(-1)[0]) ? args.pop() : mode
-		place = placements.test(args.slice(-1)[0]) ? args.pop() : place
-		place = place || 'after'
-
-		reference = args[1] || 'current'
-		reference = (reference == 'first' || reference == 'last') ? 
-			this.makeSparseImages(images).compact()[reference == 'first' ? 0 : images.length-1] 
-			: this.getImage(reference)
-
-		return this.placeImage(
-			images, 
-			mode == 'horizontal' ? 
-				'keep' : 
-				this.getRibbon(reference), 
-			mode == 'vertical' ? 
-				'keep' 
-				: reference, 
-			place)
-	},
-
 	// Place image at position... 
 	//
 	//	Place images at order into ribbon...
@@ -1742,15 +1678,24 @@ var DataPrototype = {
 
 	// Shift image...
 	//
-	//	Shift image to target position:
+	//	Shift image(s) to after target position:
 	//	.shiftImage(from, gid|order|ribbon)
-	//	.shiftImage(from, gid|order|ribbon, 'before')
 	//	.shiftImage(from, gid|order|ribbon, 'after')
-	//		-> data
 	//
-	//	Shift image by offset:
+	//	Shift image(s) to before target position:
+	//	.shiftImage(from, gid|order|ribbon, 'before')
+	//		-> this
+	//
+	//	Shift vertically only -- keep image order...
+	//	.shiftImage(from, gid|order|ribbon, 'vertical')
+	//
+	//	Shift horizontally only -- keep image(s) in same ribbons...
+	//	.shiftImage(from, gid|order|ribbon, 'horizontal')
+	//
+	//
+	//	Shift image(s) by offset:
 	//	.shiftImage(from, offset, 'offset')
-	//		-> data
+	//		-> this
 	//
 	//
 	// order is expected to be ribbon order.
@@ -1765,29 +1710,27 @@ var DataPrototype = {
 	//
 	//
 	// NOTE: this will not create new ribbons.
-	// NOTE: .getImage(..) defaults to 'before' thus this to defaults
-	// 		to 'after'
+	// NOTE: this is a different interface to .placeImage(..)
 	//
-	// XXX needs better docs...
-	shiftImage: function(from, target, mode, direction){
+	// XXX should we use .placeImage(..) instead???
+	shiftImage: function(from, target, mode){
 		from = from == null || from == 'current' ? this.current : from
 		if(from == null){
 			return
 		}
 		from = from instanceof Array ? from : [from]
 
-		var place
-
 		// target is an offset...
 		if(mode == 'offset'){
 			if(target > 0){
 				var t = this.getImage(from.slice(-1)[0], target)
 					|| this.getImage('last', from.slice(-1)[0])
-				place = from.indexOf(t) >= 0 ? null : 'after'
+				var direction = from.indexOf(t) >= 0 ? null : 'after'
+
 			} else {
 				var t = this.getImage(from[0], target) 
 					|| this.getImage('first', from[0])
-				place = from.indexOf(t) >= 0 ? null : 'before'
+				var direction = from.indexOf(t) >= 0 ? null : 'before'
 			}
 
 		// target is ribbon index...
@@ -1795,15 +1738,19 @@ var DataPrototype = {
 			var t = this.getImage(this.getRibbon(target))
 				// in case of an empty ribbon...
 				|| this.getRibbon(target)
-			place = mode || 'after'
+			var direction = mode == 'before' || mode == 'after' ? mode : 'after'
 
 		// target is an image...
 		} else {
 			var t = this.getImage(target)
-			place = mode || 'after'
+			var direction = mode == 'before' || mode == 'after' ? mode : 'after'
 		}
 
-		return this.gatherImages(from, t, place, direction)
+		return this.placeImage(
+			from, 
+			mode == 'horizontal' ? 'keep' : t, 
+			mode == 'vertical' ? 'keep' : t, 
+			direction)
 	},
 
 	// Shorthand actions...
