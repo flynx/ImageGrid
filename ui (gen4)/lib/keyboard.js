@@ -576,6 +576,10 @@ var KeyboardPrototype = {
 	// 	.keys('*')
 	//		-> keys
 	//
+	// 	List only applicable handlers...
+	// 	.keys('?')
+	//		-> keys
+	//
 	//	List keys for handler...
 	//	.keys(handler)
 	//		-> keys
@@ -603,6 +607,9 @@ var KeyboardPrototype = {
 	// NOTE: this will also return non-key aliases...
 	// NOTE: to match several compatible handlers, pass a list of handlers,
 	// 		the result for each will be merged into one common list.
+	//
+	// XXX this and .handler(..) in part repeat handling dropped keys, 
+	// 		can we unify this???
 	keys: function(handler){
 		var that = this
 		var res = {}
@@ -613,7 +620,7 @@ var KeyboardPrototype = {
 
 		handler = arguments.length > 1 ? [].slice.call(arguments)
 			: handler == null ? '*'
-			: handler == '*' || handler instanceof Function ? handler
+			: handler == '*' || handler == '?' || handler instanceof Function ? handler
 			: handler instanceof Array ? handler 
 			: [handler]
 
@@ -632,8 +639,21 @@ var KeyboardPrototype = {
 			}
 		}
 
+		var modes = handler == '?' ? this.modes() : '*'
+		var drop = []
+		var next = []
+
 		Object.keys(keyboard).forEach(function(mode){
+			// skip non-applicable modes...
+			if(modes != '*' && modes.indexOf(mode) < 0){
+				return
+			}
+
 			var bindings = keyboard[mode]
+
+			if(handler == '?'){
+				next = next.concat(bindings.NEXT || [])
+			}
 
 			// build a reverse index...
 			var rev = {}
@@ -652,7 +672,8 @@ var KeyboardPrototype = {
 				})
 
 			var seen = []
-			var handlers = handler == '*' ?  Object.keys(rev) 
+			var handlers = handler == '*' || handler == '?' ?  
+					Object.keys(rev) 
 				: handler instanceof Function ? 
 					Object.keys(rev)
 						.filter(handler)
@@ -660,6 +681,19 @@ var KeyboardPrototype = {
 
 			handlers
 				.forEach(function(h){
+					if(handler == '?'&& h == 'NEXT'){
+						return
+					}
+
+					var keys = (rev[h] || []).map(that.normalizeKey.bind(that))
+
+					if(handler == '?' &&  h == 'DROP'){
+						drop = drop == '*' ?  '*' : drop.concat(keys)
+						next = next
+							.filter(function(k){ return keys.indexOf(k) >= 0 })
+						return
+					}
+
 					var keys = (rev[h] || []).map(that.normalizeKey.bind(that))
 
 					// find all reachable keys from the ones we just found in reverse...
@@ -679,11 +713,29 @@ var KeyboardPrototype = {
 							seen.push(seen)
 						})
 
+					if(handler == '?'){
+						keys = keys
+							.filter(function(key){ 
+								var k = that.splitKey(key)
+								return next.indexOf(key) >= 0
+									|| next.indexOf(k) >= 0
+									|| (drop != '*' 
+										&& drop.indexOf(key) < 0
+										&& drop.indexOf(k) < 0) 
+							})
+					}
+
 					if(keys.length > 0){
 						var m = res[mode] = res[mode] || {}
 						m[h] = keys
 					}
 				})
+
+			if(handler == '?'){
+				drop = drop == '*' || bindings.drop == '*' ? 
+					'*' 
+					: drop.concat(bindings.drop || [])
+			}
 		})
 
 		return res
@@ -771,6 +823,9 @@ var KeyboardPrototype = {
 	// 	- search for key code without modifiers
 	// 		- if an alias is found it is first checked with and then 
 	// 			without modifiers
+	//
+	// XXX this and .keys('?') in part repeat handling dropped keys, 
+	// 		can we unify this???
 	handler: function(mode, key, handler){
 		var that = this
 		var keyboard = this.keyboard

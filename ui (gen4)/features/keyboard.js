@@ -629,6 +629,8 @@ var KeyboardActions = actions.Actions({
 				return res
 			}
 		}],
+	// XXX NEXT/DROP handling needs more testing...
+	// XXX should dropped key handling be done here or in .keyboard.keys()??? 
 	getKeysForAction: ['- Interface/',
 		core.doc`Get normalized, flat set of actions and keys that trigger them...
 		
@@ -650,6 +652,8 @@ var KeyboardActions = actions.Actions({
 		function(actions, modes){
 			var that = this
 			var res = {}
+			var kb = this.keyboard
+			var keybindings = this.keybindings
 
 			// Normalize handler to one of the following forms:
 			// 	- "<action>"
@@ -679,17 +683,17 @@ var KeyboardActions = actions.Actions({
 				actions.map(normalizeHandler) 
 				: actions
 
-			modes = modes || this.keyboard.modes()
-			modes = modes == '*' ? Object.keys(this.keybindings)
+			modes = modes || kb.modes()
+			modes = modes == '*' ? Object.keys(keybindings)
 				: modes instanceof Array ? modes 
 				: [modes]
 
-			var keys = this.keyboard.keys()
+			var keys = kb.keys('?')
 
 			// build the result -- flatten the key list...
 			modes.forEach(function(mode){
-				mode in keys 
-					&& Object.keys(keys[mode])
+				if(mode in keys){
+					Object.keys(keys[mode])
 						// parse the actions...
 						.forEach(function(action){ 
 							var t = normalizeHandler(action)
@@ -697,6 +701,7 @@ var KeyboardActions = actions.Actions({
 								res[t] = (res[t] || []).concat(keys[mode][action])
 							}
 						})
+				}
 			})
 
 			return res
