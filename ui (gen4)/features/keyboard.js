@@ -134,7 +134,9 @@ module.GLOBAL_KEYBOARD = {
 
 		W: 'testAction2 -- XXX DEBUG: remove when done...',
 
-		// XXX should we add image level manipulation here, like "remove image"???
+		// XXX not sure about this...
+		Del: 'removeFromCrop',
+		shift_Del: 'removeMarkedFromCrop',
 	},
 
 	'Collection': {
@@ -143,6 +145,7 @@ module.GLOBAL_KEYBOARD = {
 		Esc: 'loadCollection: "ALL" -- Load all images',
 
 		Del: 'uncollect',
+		shift_Del: 'uncollectMarked',
 	},
 
 	'Range': {

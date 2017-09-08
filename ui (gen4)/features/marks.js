@@ -240,6 +240,11 @@ var ImageMarkActions = actions.Actions({
 		{browseMode: function(target){ 
 			return this.marked.length == 0 && 'disabled' }},
 		function(flatten){ this.cropTagged('selected', 'any', flatten) }],
+
+	removeMarkedFromCrop: ['Mark|Crop/Remove marked from crop',
+		{browseMode: function(target){ 
+			return (this.marked.length == 0 || !this.cropped) && 'disabled' }},
+		function(){ this.removeFromCrop(this.marked) }],
 })
 
 

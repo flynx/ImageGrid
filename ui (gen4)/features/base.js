@@ -1718,22 +1718,52 @@ module.CropActions = actions.Actions({
 			this.crop(this.data[selector](tags), flatten)
 		}],
 
-
 	// crop edit actions...
-	// XXX
-	removeFromCrop: ['- Crop/',
+	// XXX do we need this???
+	removeFromCrop: ['Crop/Remove from crop',
+		{browseMode: 'uncrop'},
 		function(gids){
+			var that = this
 			if(!this.cropped){
 				return
 			}
+
+			var data = this.data
+			var current = this.current
+			var focus = false
 
 			gids = arguments.length > 1 ? [].slice.call(arguments) : gids
 			gids = gids || 'current'
 			gids = gids instanceof Array ? gids : [gids] 
 
-			gids = this.data.normalizeGIDs(gids)
+			gids
+				// clear ribbons...
+				.filter(function(gid){ 
+					if(gid in data.ribbons){
+						delete data.ribbons[gid]
+						data.ribbon_order.splice(data.ribbon_order.indexOf(gid), 1)
 
-			// XXX
+						return false
+					}
+					return true
+				})
+				// clear images...
+				.forEach(function(gid){
+					gid = data.getImage(gid)
+
+					delete data.ribbons[data.getRibbon(gid)][data.order.indexOf(gid)]
+
+					if(gid == current){
+						focus = true
+					}
+				})
+
+			// the above may result in empty ribbons -> cleanup...
+			this.data.clear('empty')
+
+			// restore correct focus...
+			focus
+				&& this.focusImage(this.direction == 'left' ? 'prev' : 'next')
 		}]
 })
 

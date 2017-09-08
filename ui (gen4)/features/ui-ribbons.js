@@ -561,6 +561,7 @@ core.ImageGridFeatures.Feature({
 			'collapseGroup',
 			'crop',
 			'uncrop',
+			'removeFromCrop',
 		], 
 			function(target){ return this.reload(true) }],
 		[[
