@@ -1781,12 +1781,14 @@ var BrowseActionsActions = actions.Actions({
 					&& this.dom.addClass('show-keys')
 
 				// handle '?' button to browse path...
-				this.showDoc = function(){
+				var showDoc = this.showDoc = function(){
 					var action = this.select('!').attr('action')
 					action 
 						&& actions.showDoc(action)
 				}
 				this.keyboard.handler('General', '?', 'showDoc')
+
+				this.menu(showDoc.bind(this))
 			})
 
 			return dialog

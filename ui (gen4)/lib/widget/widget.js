@@ -19,7 +19,16 @@ var proxyToDom =
 module.proxyToDom = 
 function(name){
 	return function(){ 
-		this.dom[name].apply(this.dom, arguments)
+		// easy handler...
+		if(name in this.dom){
+			this.dom[name].apply(this.dom, arguments)
+
+		// trigger...
+		} else {
+			arguments[0] instanceof Function ?
+				this.dom.on(name, arguments[0])
+				: this.dom.trigger(name, [].slice.call(arguments)) 
+		}
 		return this 
 	}
 }

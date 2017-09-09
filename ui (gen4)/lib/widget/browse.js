@@ -1717,7 +1717,7 @@ var BrowserPrototype = {
 		return this
 	},
 	blur: widget.proxyToDom('blur'),
-
+	menu: widget.proxyToDom('menu'),
 
 	// base api...
 
@@ -2032,6 +2032,8 @@ var BrowserPrototype = {
 	//			// NOTE: this is not propagated up, thus it will not trigger
 	//			//		the list update.
 	//			update: <handler>,
+	//
+	//			menu: <handler>,
 	//
 	//			<event>: <handler>,
 	//			...
@@ -2394,6 +2396,10 @@ var BrowserPrototype = {
 				.click(function(){
 					!$(this).hasClass('disabled')
 						&& that.push($(this)) })
+				.on('contextmenu', function(){ 
+					that.select($(this))
+					res.trigger('menu', txt) 
+				})
 				// append text elements... 
 				.append(p)
 
