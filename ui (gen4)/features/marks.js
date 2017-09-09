@@ -385,7 +385,7 @@ module.ImageEditMarks = core.ImageGridFeatures.Feature({
 
 var ImageMarkGroupActions = actions.Actions({
 	// NOTE: this will only group loaded images...
-	groupMarked: ['Group|Mark/-90:Group loaded marked images', 
+	groupMarked: ['Group|Mark/-70:Group loaded marked images', 
 		{journal: true,
 			browseMode: 'cropMarked'}, 
 		function(){ 
@@ -511,7 +511,7 @@ var ImageBookmarkEditActions = actions.Actions({
 	// 	'on'	- toggle all on
 	// 	'off'	- toggle all off
 	// 	'next'	- toggle each image to next state
-	toggleBookmarkOnMarked: ['Bookmark|Mark/-90:Toggle bookmark on maked images',
+	toggleBookmarkOnMarked: ['Bookmark|Mark/-70:Toggle bookmark on maked images',
 		{browseMode: 'cropMarked'},
 		function(action){ 
 			return this.toggleBookmark(this.data.getTaggedByAny('selected'), action) 

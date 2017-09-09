@@ -486,20 +486,39 @@ var CollectionActions = actions.Actions({
 	collect: ['- Collections/',
 		core.doc`Add items to collection
 
+			.collect('current', collection)
+				-> this
+
+			.collect('ribbon', collection)
+				-> this
+
+			.collect('loaded', collection)
+				-> this
+
+			.collect(gid, collection)
+			.collect([gid, ,. ], collection)
+				-> this
+
+
 		NOTE: this will not account for item topology.`,
 		function(gids, collection){
+			var that = this
 			collection = collection || this.collection
 			if(collection == null || collection == MAIN_COLLECTION_TITLE){
 				return
 			}
-			var that = this
 
-			if(!this.collections || !(collection in this.collections)){
-				this.newCollection(collection)
-			}
+			// create collection if needed...
+			(!this.collections 
+					|| !(collection in this.collections))
+				&& this.newCollection(collection)
 
-			gids = gids == 'loaded' ? this.data.getImages('loaded')
-				: gids instanceof Array ? gids 
+			gids = gids == 'loaded' ? 
+					this.data.getImages('loaded')
+				: gids == 'ribbon' ?
+					[this.current_ribbon]
+				: gids instanceof Array ? 
+					gids 
 				: [gids]
 			gids = gids
 				.map(function(gid){ 
@@ -543,9 +562,9 @@ var CollectionActions = actions.Actions({
 				return
 			}
 
-			if(!this.collections || !(collection in this.collections)){
-				this.newCollection(collection)
-			}
+			(!this.collections 
+					|| !(collection in this.collections))
+				&& this.newCollection(collection)
 
 			// if only collection is given, reset align to null...
 			align = align === collection ? null : align
@@ -1486,7 +1505,9 @@ var UICollectionActions = actions.Actions({
 	addToCollection: ['Collections|Image/Add $image to collection...',
 		widgets.uiDialog(function(gids){
 			return this.browseCollections(function(title){
-				this.collect(gids || this.current, title) }) })],
+				this.collect(gids || 'current', title) }) })],
+	addRibbonToCollection: ['Collections|Ribbon/Add $ribbon to collection...',
+		widgets.uiDialog(function(){ return this.addToCollection('ribbon') })],
 	addLoadedToCollection: ['Collections/$Add loaded images to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
 	joinToCollection: ['Collections/$Merge view to collection...',

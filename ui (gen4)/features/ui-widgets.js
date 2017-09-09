@@ -1213,6 +1213,8 @@ var BrowseActionsActions = actions.Actions({
 				// Non existing elements will not get drawn...
 				//'File/-99:moo',
 			'99:$Edit',
+				'Edit/Undo',
+				'Edit/Redo',
 			'$Navigate',
 			'$Image',
 				'Image/-70:---',
@@ -1266,9 +1268,12 @@ var BrowseActionsActions = actions.Actions({
 				'Collections/-70:---',
 				'Collections/-70:.*remove.*',
 			'$Mark',
-				//'Mark/-99:.*remove.*',
+				'Mark/-80:---',
+				'Mark/-80:.*remove.*',
+				'Mark/-90:.*unmark.*',
 			'$Bookmark',
-				//'Bookmark/-99:.*remove.*',
+				'Bookmark/-80:---',
+				'Bookmark/-80:.*remove.*',
 
 			// ...
 
