@@ -324,8 +324,6 @@ function(actions, list, list_key, value_key, options){
 
 
 
-
-
 /*********************************************************************/
 // Dialogs and containers...
 
@@ -458,7 +456,6 @@ module.makeUIDialog = function(a, b){
 	})
 }
 
-
 var makeDrawer = function(direction){
 	return makeUIContainer(function(dialog, options){
 		var that = this
@@ -483,6 +480,88 @@ var makeDrawer = function(direction){
 
 		return d
 	})
+}
+
+//---------------------------------------------------------------------
+// Higher level dialog action constructors...
+
+// Make list editor dialog...
+// 
+// 	makeListEditorDialog(list[, options])
+// 		-> action
+// 
+// 	makeListEditorDialog(function[, options])
+// 		-> action
+// 
+// 
+// Example:
+// 	someAction: [
+// 		makeListEditorDialog(
+// 			// list of items to edit or list getter function...
+// 			// NOTE: this is edited in place...
+// 			[ 'item', .. ] | function(){ .. }, 
+// 			// options compatible with browse's Items.EditableList(..)
+// 			{ .. })],
+// 			
+// XXX should these replace the makeConfigListEditor/makeNestedConfigListEditor???
+var makeListEditorDialog =
+module.makeListEditorDialog =
+function makeConfigListEditorDialog(list, options){
+	options = options || {}
+
+	return makeUIDialog(function(){
+		var lst = list instanceof Function ?
+			list.call(this)
+			: list
+
+		// NOTE: this will edit the list in place...
+		return browse.makeLister(null, 
+			function(_, make){
+				make.EditableList(lst, options)
+			}, {
+				cls: options.cls,
+			})
+	})
+}
+
+// Make .config list editor dialog...
+// 
+// 	makeConfigListEditorDialog(path[, options])
+// 		-> action
+// 		
+// 
+// Example:
+// 	someAction: [
+// 		makeConfigListEditorDialog(
+// 			// path to list in .config
+// 			'path.to.list',
+// 			// options compatible with browse's Items.EditableList(..)
+// 			{ .. })],
+// 			
+// NOTE: see collections.editDefaultCollections(..) for a live example.
+var makeConfigListEditorDialog =
+module.makeConfigListEditorDialog =
+function makeConfigListEditorDialog(path, options){
+	path = path.split('.')
+	var key = path.pop()
+
+	return makeListEditorDialog(function(){
+		var p = path.slice()
+
+		// get the path...
+		var cur = this.config
+		while(p.length > 0){
+			var k = p.shift()
+			cur = cur[k] = cur[k] || {}
+		}
+
+		// the actual list we'll be editing...
+		var list = 
+			cur[key] = 
+			(cur[key] || []).slice()
+
+		return list
+	}, options)
 }
 
 

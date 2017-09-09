@@ -1274,7 +1274,6 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 // XXX show collections in image metadata... (???)
 var UICollectionActions = actions.Actions({
 	config: {
-
 		// Global default collections...
 		//
 		// NOTE: delete or set to null for none...
@@ -1282,28 +1281,20 @@ var UICollectionActions = actions.Actions({
 	},
 
 	editDefaultCollections: ['Interface/Edit default collections...',
-		widgets.makeUIDialog(function(action){
-			var defaults = 
-				this.config['default-collections'] = 
-				(this.config['default-collections'] || []).slice()
+		widgets.makeConfigListEditorDialog(
+			'default-collections', 
+			{
+				cls: 'collection-list',
 
-			return browse.makeLister(null, 
-				function(path, make){
-					make.EditableList(defaults, 
-						{
-							unique: true,
-							sortable: 'y',
+				unique: true,
+				sortable: 'y',
 
-							normalize: function(title){ 
-								return title.trim() },
-							check: function(title){ 
-								return title.length > 0 
-									&& title != MAIN_COLLECTION_TITLE },
-						})
-				}, {
-					cls: 'collection-list',
-				})
-		})],
+				normalize: function(title){ 
+					return title.trim() },
+				check: function(title){ 
+					return title.length > 0 
+						&& title != MAIN_COLLECTION_TITLE },
+			})],
 
 	browseCollections: ['Collections/$Collec$tions...',
 		core.doc`Collection list...
