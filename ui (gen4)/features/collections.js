@@ -21,13 +21,7 @@ var widgets = require('features/ui-widgets')
 
 
 /*********************************************************************/
-
-var MAIN_COLLECTION_TITLE = 'ALL'
-
-// XXX things we need to do to collections:
-// 		- auto-collections
-// 			- tags -- adding/removing images adds/removes tags
-// 			- ribbons -- top / bottom / n-m / top+2 / ..
+// 
 // XXX might be a good idea to make collection loading part of the 
 // 		.load(..) protocol...
 // 		...this could be done via a url suffix, as a shorthand.
@@ -44,10 +38,16 @@ var MAIN_COLLECTION_TITLE = 'ALL'
 // 		- save		- done
 // 		- load		- done
 // 		- save/merge use...
-// XXX tag actions:
-// 		- .collectmarked(..)
-// 		- ...
-// XXX selection/tag based .collect()/.uncollect() actions...
+// XXX merge data -- collection/crop/all
+// 		- vertical only
+// 		- horizontal only
+// 		- both
+// XXX external / linked collections (.location)...
+//
+//
+
+var MAIN_COLLECTION_TITLE = 'ALL'
+
 // XXX undo...
 var CollectionActions = actions.Actions({
 	config: {
@@ -152,6 +152,34 @@ var CollectionActions = actions.Actions({
 		return handlers
 	},
 
+
+	// Collection events...
+	//
+	collectionLoading: ['- Collections/',
+		core.doc`This is called by .loadCollection(..) or one of the 
+		overloading actions when collection load is done...
+
+		The .pre phase is called just before the load and the .post phase 
+		just after.
+		
+		`,
+		core.notUserCallable(function(collection){
+			// This is the window resize event...
+			//
+			// Not for direct use.
+		})],
+	collectionUnloaded: ['- Collections/',
+		core.doc`This is called when unloading a collection.
+		`,
+		core.notUserCallable(function(collection){
+			// This is the window resize event...
+			//
+			// Not for direct use.
+		})],
+
+
+	// Collection life-cycle...
+	//
 	loadCollection: ['- Collections/',
 		core.doc`Load collection...
 
@@ -316,30 +344,6 @@ var CollectionActions = actions.Actions({
 							collection)
 				})
 		}],
-
-	// events...
-	collectionLoading: ['- Collections/',
-		core.doc`This is called by .loadCollection(..) or one of the 
-		overloading actions when collection load is done...
-
-		The .pre phase is called just before the load and the .post phase 
-		just after.
-		
-		`,
-		core.notUserCallable(function(collection){
-			// This is the window resize event...
-			//
-			// Not for direct use.
-		})],
-	collectionUnloaded: ['- Collections/',
-		core.doc`This is called when unloading a collection.
-		`,
-		core.notUserCallable(function(collection){
-			// This is the window resize event...
-			//
-			// Not for direct use.
-		})],
-
 	// XXX should this call .loadCollection('!') when saving to current
 	// 		collection???
 	// 		This would reaload the view to a consistent (just saved) 
@@ -457,7 +461,6 @@ var CollectionActions = actions.Actions({
 		}],
 	newCollection: ['- Collections/',
 		function(collection){ return this.saveCollection(collection, 'empty') }],
-	// XXX should we do anything special if collection is loaded???
 	removeCollection: ['- Collections/',
 		core.doc`
 		
@@ -470,6 +473,9 @@ var CollectionActions = actions.Actions({
 			delete this.collections[collection]
 		}],
 
+
+	// Introspection...
+	//
 	inCollections: ['- Image/',
 		core.doc`Get list of collections containing item`,
 		function(gid){
@@ -483,6 +489,9 @@ var CollectionActions = actions.Actions({
 							|| that.collections[c].data.getImage(gid)) })
 		}],
 
+
+	// Collection editing....
+	//
 	collect: ['- Collections/',
 		core.doc`Add items to collection
 
@@ -782,7 +791,9 @@ var CollectionActions = actions.Actions({
 		delete this.location.collection
 	}],
 
+
 	// Config and interface stuff...
+	//
 	toggleCollectionCropRetention: ['Interface/Collection crop save mode',
 		core.makeConfigToggler(
 			'collection-save-crop-state', 
@@ -1492,7 +1503,8 @@ var UICollectionActions = actions.Actions({
 				})
 		})],
 
-	// Collections actions with collection selection...
+	// Collection actions with collection selection...
+	//
 	// XXX should we warn the user when overwriting???
 	saveAsCollection: ['Collections/$Save as collection...',
 		widgets.uiDialog(function(){
@@ -1581,6 +1593,7 @@ module.UICollection = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// XXX collection id...
 // XXX Things to try/do:
 // 		- save collection on exit/write (?)
 // 		- lazy load collections (load list, lazy-load data)
