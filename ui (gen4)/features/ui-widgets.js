@@ -1787,7 +1787,6 @@ var BrowseActionsActions = actions.Actions({
 						&& actions.showDoc(action)
 				}
 				this.keyboard.handler('General', '?', 'showDoc')
-
 				this.menu(showDoc.bind(this))
 			})
 

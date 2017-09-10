@@ -2226,6 +2226,11 @@ var BrowserPrototype = {
 		var interactive = false
 		var size_freed = false
 
+		// NOTE: this is only used for the contextmenu event...
+		var debounced = false
+		setTimeout(function(){ debounced = true }, 100)
+
+
 		//---------------------- prepare for new keyboard shortcuts ---
 		// clear previous shortcuts...
 		var item_shortcuts = this.options.setItemShortcuts ? 
@@ -2396,9 +2401,13 @@ var BrowserPrototype = {
 				.click(function(){
 					!$(this).hasClass('disabled')
 						&& that.push($(this)) })
-				.on('contextmenu', function(){ 
-					that.select($(this))
-					res.trigger('menu', txt) 
+				.on('contextmenu', function(evt){ 
+					evt.preventDefault()
+					evt.stopPropagation()
+
+					debounced
+						&& that.select($(this))
+						&& res.trigger('menu', txt) 
 				})
 				// append text elements... 
 				.append(p)
