@@ -1836,6 +1836,14 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 		'ui-browse-actions',
 	],
 
+	actions: actions.Actions({
+		showContextMenu: ['Interface/Show context menu...',
+			uiDialog(function(){
+				return this.current ?
+					this.browseActions('/Image/')
+					: this.browseActions() })],
+	}),
+
 	handlers: [
 		['imageMenu.pre',
 			function(gid){

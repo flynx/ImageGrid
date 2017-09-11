@@ -337,7 +337,7 @@ module.GLOBAL_KEYBOARD = {
 
 
 		// ribbon image stuff...
-		Menu: 'browseActions!: "/Image/" -- Image menu...',
+		Menu: 'showContextMenu',
 		alt_I: 'Menu',
 		alt_R: 'browseActions: "/Ribbon/" -- Ribbon menu...',
 

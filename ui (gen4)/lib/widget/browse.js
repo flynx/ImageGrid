@@ -2405,9 +2405,10 @@ var BrowserPrototype = {
 					evt.preventDefault()
 					evt.stopPropagation()
 
-					debounced
-						&& that.select($(this))
-						&& res.trigger('menu', txt) 
+					if(debounced){
+						that.select($(this))
+						res.trigger('menu', txt) 
+					}
 				})
 				// append text elements... 
 				.append(p)
