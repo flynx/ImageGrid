@@ -1383,6 +1383,9 @@ var BrowseActionsActions = actions.Actions({
 	// 		base order/priorities...
 	//
 	// XXX can we do a deep search on '/' -- find any nested action???
+	// XXX can this also do a flat mode???
+	// 		...this would help with the (global) search -- switch to 
+	// 		flat if searching in root mode...
 	browseActions: ['Interface/Dialog/Actions...',
 		makeUIDialog(function(path, options){
 			var actions = this
