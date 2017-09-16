@@ -737,7 +737,11 @@ var CollectionActions = actions.Actions({
 
 				var state = collections[title]
 
+				// build the JSON...
 				var s = res.collections[title] = { title: title }
+				if(state.gid){
+					s.gid = state.gid
+				}
 				var data = ((mode == 'base' && state.crop_stack) ? 
 						(state.crop_stack[0] || state.data)
 						: state.data)
