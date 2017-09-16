@@ -732,8 +732,19 @@ var DialogsActions = actions.Actions({
 				-> dialog
 
 		See browse.Items.EditableList(..) for more info.
+
+		NOTE: this passes the same options to the list item and the 
+			dielog.
+			XXX this may change in the future...
 		`,
 		makeUIDialog(function(list, options){
+			options = Object.create(options || {})
+
+			// defaults...
+			options.sortable = options.sortable === undefined ? 
+				true 
+				: options.sortable
+
 			return browse.makeLister(null, 
 				function(path, make){
 					make.EditableList(list, options)
