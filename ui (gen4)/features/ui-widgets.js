@@ -506,7 +506,7 @@ var makeDrawer = function(direction){
 // XXX should these replace the makeConfigListEditor/makeNestedConfigListEditor???
 var makeListEditorDialog =
 module.makeListEditorDialog =
-function makeConfigListEditorDialog(list, options){
+function makeListEditorDialog(list, options){
 	options = options || {}
 
 	return makeUIDialog(function(){
@@ -724,6 +724,21 @@ var DialogsActions = actions.Actions({
 		`,
 		makeUIDialog(function(list, options){
 			return browse.makeList(null, list, options) })],
+	// XXX do we need to split the options???
+	showEditableList: ['- Interface/', 
+		core.doc`Show editable list dialog...
+
+			.showEditableList(<list>, <options>)
+				-> dialog
+
+		See browse.Items.EditableList(..) for more info.
+		`,
+		makeUIDialog(function(list, options){
+			return browse.makeLister(null, 
+				function(path, make){
+					make.EditableList(list, options)
+				}, 
+				options) })],
 	showActionList: ['- Interface/', 
 		core.doc`Show list of actions dialog...
 

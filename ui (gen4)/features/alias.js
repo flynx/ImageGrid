@@ -136,10 +136,11 @@ var UIAliasActions = actions.Actions({
 								new_item: false,
 								to_remove: to_remove,
 
-								itemopen: function(name){
+								update_merge: 'drop_changes',
+
+								itemopen: function(_, name){
 									that.editAlias(name) 
 										.on('close', function(){ dialog.update() })
-									dialog.close()
 								},
 
 								each: function(name, elem){
@@ -148,17 +149,18 @@ var UIAliasActions = actions.Actions({
 											keys: getKeys(name),
 											action: name,
 										})
-								}
+								},
 							})
 						: make.Empty()
 
 					make('---')
 
-					make('New...')
-						.on('open', function(){ 
+					make('New...', { events: {
+						open: function(){ 
 							that.editAlias() 
 								.on('close', function(){ dialog.update() })
-						})
+						},
+					} })
 				}, {
 					cls: 'table-view show-keys',
 				})

@@ -611,6 +611,15 @@ function(data, options){
 // 		// internally
 // 		to_remove: null | <list>,
 //
+// 		// Merge list state and external list mode on update...
+// 		//
+// 		// This can be:
+// 		//	null			- keep dialog state, ignore external state (default)
+// 		//	'drop_changes'	- load external state
+// 		//	<function>		- merge the changes
+//		//
+// 		update_merge: null | 'drop_changes' | <function>,
+//
 //		// Special buttons...
 //		//
 //		// NOTE: these can be used only if .sort if not set.
@@ -680,6 +689,8 @@ function(data, options){
 // 		overwrite the .__list[id] cache, with the input list, this may
 // 		result in losing the edited state if the lists were not synced
 // 		properly...
+// XXX the problem with this is that it adds elements live while removing
+// 		elements on close, either both should be live or both on close...
 Items.EditableList =
 function(list, options){
 	var make = this
@@ -722,8 +733,16 @@ function(list, options){
 	}
 	options = opts
 
-	var lst = list instanceof Function ? 
-		list() 
+	var lst = 
+		// load dialog state...
+		(options.update_merge != 'drop_changes' && dialog.__list[id]) ? 
+			dialog.__list[id]
+		// merge states...
+		: (options.update_merge instanceof Function && dialog.__list[id]) ? 
+			options.update_merge(dialog.__list[id])
+		// initial state...
+		: list instanceof Function ? 
+			list() 
 		: list
 	var editable = dialog.__editable[id] = lst instanceof Array
 	// NOTE: we .slice() here to make the changes a bit better packaged
@@ -982,9 +1001,9 @@ function(list, options){
 							: undefined)
 				}
 
-				lst = dialog.__list[id] = write(list, lst)
-
-
+				// XXX should this be done here???
+				//lst = dialog.__list[id] = write(list, lst)
+				
 				// update list and select new value...
 				dialog.update()
 					.done(function(){
