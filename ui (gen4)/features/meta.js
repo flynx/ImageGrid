@@ -53,7 +53,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'collections',
 
 	// XXX remove when done testing...
-	'-fs-collections',
+	//'-fs-collections',
 
 
 	'alias',

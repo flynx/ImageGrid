@@ -125,6 +125,7 @@ var CollectionActions = actions.Actions({
 	// 	{
 	// 		// NOTE: this is always the first handler...
 	// 		'data': <action-name>,
+	// 		'gid': <gid>,
 	//
 	// 		<format>: <action-name>,
 	// 		...
@@ -352,6 +353,7 @@ var CollectionActions = actions.Actions({
 	// XXX it feels like we need two levels of actions, low-level that 
 	// 		just do their job and user actions that take care of 
 	// 		consistent state and the like...
+	// XXX do we need to handle collection gids here???
 	saveCollection: ['- Collections/',
 		core.doc`Save current state to collection
 
@@ -389,6 +391,7 @@ var CollectionActions = actions.Actions({
 			.saveCollection(collection, 'base')
 				-> this
 
+
 		NOTE: this will overwrite collection .data and .crop_stack only, 
 			the rest of the data is untouched...
 		NOTE: when saving to current collection and maintain consistent 
@@ -422,6 +425,7 @@ var CollectionActions = actions.Actions({
 			// save the data...
 			var state = collections[collection] = collections[collection] || {}
 			state.title = state.title || collection
+			state.gid = state.gid || this.data.newGid()
 			// NOTE: we do not need to care about tags here as they 
 			// 		will get overwritten on load...
 			state.data = (mode == 'empty' ? 
@@ -495,21 +499,28 @@ var CollectionActions = actions.Actions({
 	collect: ['- Collections/',
 		core.doc`Add items to collection
 
+			Add current image to collection...
 			.collect('current', collection)
 				-> this
 
+			Add current ribbon to collection...
 			.collect('ribbon', collection)
 				-> this
 
+			Add loaded images to collection...
 			.collect('loaded', collection)
 				-> this
 
+			
+			Add gid(s) to collection...
 			.collect(gid, collection)
 			.collect([gid, ,. ], collection)
 				-> this
 
 
-		NOTE: this will not account for item topology.`,
+		NOTE: this will not account for item topology. To merge accounting
+			for topology use .joinCollect(..)
+		`,
 		function(gids, collection){
 			var that = this
 			collection = collection || this.collection
@@ -589,6 +600,26 @@ var CollectionActions = actions.Actions({
 			}
 		}],
 	uncollect: ['Collections|Image/Remove from collection',
+		core.doc`Remove gid(s) from collection...
+
+			Remove current image from current collection...
+			.uncollect()
+			.uncollect('current')
+				-> this
+
+			Remove gid(s) from current collection...
+			.uncollect(gid)
+			.uncollect([gid, ..])
+				-> this
+
+			Remove gid(s) from collection...
+			.uncollect(gid, collection)
+			.uncollect([gid, ..], collection)
+				-> this
+
+
+		NOTE: this will remove any gid, be it image or ribbon.
+		`,
 		{browseMode: function(){ return !this.collection && 'disabled' }},
 		function(gids, collection){
 			collection = collection || this.collection
@@ -624,6 +655,37 @@ var CollectionActions = actions.Actions({
 				this.collections[collection].data
 					.clear(gids)
 			}
+		}],
+	uncollectRibbon: ['Collections|Ribbon/Remove ribbon from collection',
+		core.doc`Remove ribbons from collection...
+
+			Remove current ribbon from current collection...
+			.uncollectRibbon()
+			.uncollectRibbon('current')
+				-> this
+
+			Remove gid(s) from current collection...
+			.uncollectRibbon(gid)
+			.uncollectRibbon([gid, .. ])
+				-> this
+
+			Remove gid(s) from collection...
+			.uncollectRibbon(gid, collection)
+			.uncollectRibbon([gid, .. ], collection)
+				-> this
+
+
+		NOTE: this is the same as .uncollect(..) but removes whole ribbons, 
+			i.e. each gid given will be resolved to a ribbon which will be
+			removed.
+		`,
+		{browseMode: function(){ return !this.collection && 'disabled' }},
+		function(gids, collection){
+			var that = this
+			gids = gids || 'current'
+			gids = gids instanceof Array ? gids : [gids]
+			gids = gids.map(function(gid){ return that.data.getRibbon(gid) })
+			return this.uncollect(gids, collection) 
 		}],
 
 
@@ -866,11 +928,13 @@ module.Collection = core.ImageGridFeatures.Feature({
 			}],
 
 
+		// XXX should this handle the input (_)???
 		['prepareIndexForWrite', 
 			function(res, _, full){
 				var changed = full == true 
 					|| res.changes === true
 					|| res.changes.collections
+				var collections = this.collections
 
 				if(changed && res.raw.collections){
 					// select the actual changed collection list...
@@ -879,17 +943,37 @@ module.Collection = core.ImageGridFeatures.Feature({
 						: changed
 
 					// collection index...
-					res.index['collection-index'] = Object.keys(this.collections)
+					// XXX should this be at root or in collections/???
+					// 		...root seems better as it will let us lazy-load
+					// 		collection list without any extra effort...
+					//var index = res.index['collections/index'] = {}
+					var index = res.index['collection-index'] = {}
+					Object.keys(collections)
+						.forEach(function(title){ 
+							index[collections[title].gid || title] = title  })
 
-					Object.keys(changed)
+					changed
 						// skip the raw field...
 						.filter(function(k){ return changed.indexOf(k) >= 0 })
 						.forEach(function(k){
-							// XXX use collection gid...
-							res.index['collections/' + k] = res.raw.collections[k]
+							var gid = res.raw.collections[k].gid || k
+							var path = 'collections/'+ gid
+							var raw = res.raw.collections[k]
+
+							// collections/<gid>/metadata
+							var metadata = res.index[path +'/metadata'] = {}
+							Object.keys(raw)
+								.forEach(function(key){ metadata[key] = raw[key] })
+
+							// collections/<gid>/data
+							if(metadata.data){
+								res.index[path +'/data'] = metadata.data
+								delete metadata.data
+							}
 						})
 				}
 			}],
+		// XXX
 		['prepareJSONForLoad',
 			function(res, json, base_path){
 				// XXX
@@ -1114,6 +1198,36 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 								delete rc[title].data.tags
 							}
 						})
+			}],
+
+
+		// XXX should this handle the input (_)???
+		// XXX should we be a bit more atomic and save tags iff
+		// 		they were changed only???
+		['prepareIndexForWrite', 
+			function(res, _, full){
+				var raw = res.raw.collections
+
+				// NOTE: we are cheating here, we do not need to check 
+				// 		for changes as this is already taken care off by
+				// 		the main collections feature, here we just update 
+				// 		the stuff it created...
+				// XXX should we be a bit more atomic and save tags iff
+				// 		they were changed only???
+				Object.keys(this.collections).forEach(function(title){
+					var path = 'collections/'+ raw[title].gid
+					var metadata = res.index[path + '/metadata']
+
+					if(metadata && 'local_tags' in metadata){
+						res.index[path +'/tags'] = metadata.local_tags
+						delete metadata.local_tags
+					}
+				})
+			}],
+		// XXX
+		['prepareJSONForLoad',
+			function(res, json, base_path){
+				// XXX
 			}],
 	],
 })
