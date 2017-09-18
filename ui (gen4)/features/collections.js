@@ -313,6 +313,8 @@ var CollectionActions = actions.Actions({
 										that.collectionUnloaded(
 											prev || MAIN_COLLECTION_TITLE)
 									}, {
+										location: that.location,
+
 										data: data,
 
 										crop_stack: collection_data.crop_stack
@@ -1201,7 +1203,6 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 			}],
 
 
-		// XXX should this handle the input (_)???
 		// XXX should we be a bit more atomic and save tags iff
 		// 		they were changed only???
 		['prepareIndexForWrite', 
