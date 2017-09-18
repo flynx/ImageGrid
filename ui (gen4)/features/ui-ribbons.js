@@ -210,10 +210,10 @@ actions.Actions({
 	}],
 
 
-	replaceGid: [
+	replaceGID: [
 		function(from, to){
 			return function(res){
-				res && this.ribbons.replaceGid(from, to)
+				res && this.ribbons.replaceGID(from, to)
 			}
 		}],
 

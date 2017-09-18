@@ -62,7 +62,7 @@ var Ribbons = {
 	noTransitions: null,
 	noTransitionsDeep: null,
 	elemGID: null,
-	replaceGid: null,
+	replaceGID: null,
 
 	makeShadow: null,
 

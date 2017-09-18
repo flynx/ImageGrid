@@ -1176,7 +1176,7 @@ var TaskActions = actions.Actions({
 
 	getJob: ['- Jobs/',
 		function(name){
-			name = name || this.data.newGid()
+			name = name || this.data.newGID()
 
 			// get/init task dict...
 			var t = this.__jobs = this.__jobs || {}

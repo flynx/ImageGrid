@@ -265,6 +265,18 @@ body {
 	opacity: 0.5;
 	font-style: italic;
 }
+.browse-widget.collection-list .list .item .text[unsaved]:after {
+	content: "*";
+	margin-left: 0px;
+	opacity: 0.5;
+	font-style: italic;
+}
+.browse-widget.collection-list .list .item .text[unsaved][cropped]:after {
+	content: "* (cropped)";
+	margin-left: 0px;
+	opacity: 0.5;
+	font-style: italic;
+}
 
 
 /* External Editor List */

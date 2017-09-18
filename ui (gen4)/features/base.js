@@ -320,20 +320,20 @@ actions.Actions({
 				null
 				: this.images.getImagePath(gid, this.location.path)
 		}],
-	replaceGid: ['- System/Replace image gid',
+	replaceGID: ['- System/Replace image gid',
 		{journal: true},
 		function(from, to){
 			from = this.data.getImage(from)
 
 			// data...
-			var res = this.data.replaceGid(from, to)
+			var res = this.data.replaceGID(from, to)
 
 			if(res == null){
 				return
 			}
 
 			// images...
-			this.images && this.images.replaceGid(from, to)
+			this.images && this.images.replaceGID(from, to)
 		}],
 
 

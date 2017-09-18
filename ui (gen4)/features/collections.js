@@ -75,10 +75,24 @@ var CollectionActions = actions.Actions({
 	// 	}
 	collections: null,
 
+	get collectionGIDs(){
+		var res = {}
+		var c = this.collections || {}
+		Object.keys(c)
+			.forEach(function(title){
+				res[c[title].gid || title] = title
+			})
+		return res
+	},
+
 	get collection(){
 		return this.location.collection },
 	set collection(value){
 		this.loadCollection(value) },
+	get collectionGID(){
+		return ((this.collections || {})[this.collection] || {}).gid },
+	set collectionGID(value){
+		this.collection = value },
 
 	// XXX should this check consistency???
 	get collection_order(){
@@ -243,6 +257,8 @@ var CollectionActions = actions.Actions({
 			collection = collection == '!' ? 
 				this.collection 
 				: collection
+			// if collection is a gid, get the title...
+			collection = this.collectionGIDs[collection] || collection 
 			if(collection == null 
 					|| this.collections == null 
 					|| !(collection in this.collections)){
@@ -427,7 +443,7 @@ var CollectionActions = actions.Actions({
 			// save the data...
 			var state = collections[collection] = collections[collection] || {}
 			state.title = state.title || collection
-			state.gid = state.gid || this.data.newGid()
+			state.gid = state.gid || this.data.newGID()
 			// NOTE: we do not need to care about tags here as they 
 			// 		will get overwritten on load...
 			state.data = (mode == 'empty' ? 
@@ -476,7 +492,7 @@ var CollectionActions = actions.Actions({
 			if(!this.collections || collection == MAIN_COLLECTION_TITLE){
 				return
 			}
-			delete this.collections[collection]
+			delete this.collections[this.collectionGIDs[collection] || collection]
 		}],
 
 
@@ -526,6 +542,7 @@ var CollectionActions = actions.Actions({
 		function(gids, collection){
 			var that = this
 			collection = collection || this.collection
+			collection = this.collectionGIDs[collection] || collection 
 			if(collection == null || collection == MAIN_COLLECTION_TITLE){
 				return
 			}
@@ -580,6 +597,7 @@ var CollectionActions = actions.Actions({
 		`,
 		function(align, collection, data){
 			collection = arguments.length == 1 ? align : collection
+			collection = this.collectionGIDs[collection] || collection 
 			if(collection == null || collection == MAIN_COLLECTION_TITLE){
 				return
 			}
@@ -625,6 +643,7 @@ var CollectionActions = actions.Actions({
 		{browseMode: function(){ return !this.collection && 'disabled' }},
 		function(gids, collection){
 			collection = collection || this.collection
+			collection = this.collectionGIDs[collection] || collection 
 			if(collection == null 
 					|| collection == MAIN_COLLECTION_TITLE
 					|| !this.collections 
@@ -910,11 +929,25 @@ module.Collection = core.ImageGridFeatures.Feature({
 		// XXX do we need this???
 		['json.pre',
 			function(){ this.saveCollection() }],
+
+		// changes...
+		//
+		// format:
+		// 	XXX we need:
+		// 		- mark collection list changes
+		// 			collection-list: true
+		// 		- mark whole collection change
+		// 			'collection: <gid>': true
+		// 		- mark changes local to collection
+		// 			'collection: <gid>': [<change>, ..]
+		//
 		// XXX maintain changes...
 		// 		- collection-level: mark collections as changed...
 		// 		- in-collection:
 		// 			- save/restore parent changes when loading/exiting collections
 		// 			- move collection chnages to collections
+		// XXX on sriwthicng collections, need to transfer changes + maintain
+		// 		global changes...
 		[[
 			'collect',
 			'joinCollect',
@@ -1421,6 +1454,7 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 // XXX show collections in image metadata... (???)
+// XXX mark unsaved (*) collections...
 var UICollectionActions = actions.Actions({
 	config: {
 		// Global default collections...
@@ -1445,6 +1479,7 @@ var UICollectionActions = actions.Actions({
 						&& title != MAIN_COLLECTION_TITLE },
 			})],
 
+	// XXX need .changes format...
 	browseCollections: ['Collections/$Collec$tions...',
 		core.doc`Collection list...
 
@@ -1479,7 +1514,16 @@ var UICollectionActions = actions.Actions({
 						that.focusImage(gid)
 						dialog.close()
 					}
-					var setCroppedState = function(title){
+					var setItemState = function(title){
+						var text = this.find('.text').last()
+
+						// saved state...
+						// XXX need changes format...
+						var unsaved = this.changes === true 
+							|| (this.changes || {})['collections: '+ JSON.stringify(title)]
+						unsaved
+							&& text.attr('unsaved', true)
+
 						// indicate collection crop...
 						var cs = 
 							title == (that.collection || MAIN_COLLECTION_TITLE) ? 
@@ -1488,8 +1532,7 @@ var UICollectionActions = actions.Actions({
 								that.collections[title].crop_stack
 							: null
 						cs
-							&& this.find('.text').last()
-								.attr('cropped', cs.length)
+							&& text.attr('cropped', cs.length)
 					}
 
 					//var collections = Object.keys(that.collections || {})
@@ -1514,7 +1557,7 @@ var UICollectionActions = actions.Actions({
 											.css('color', 'transparent')
 											.addClass('sort-handle')
 											.html('&#x2630;'))
-									setCroppedState
+									setItemState
 										.call($(this), title)
 								},
 								open: openHandler,
@@ -1534,7 +1577,7 @@ var UICollectionActions = actions.Actions({
 							check: function(title){ 
 								return title.length > 0 },
 
-							each: setCroppedState, 
+							each: setItemState, 
 
 							itemadded: function(title){
 								action ?
@@ -1554,6 +1597,7 @@ var UICollectionActions = actions.Actions({
 					}) 
 				})
 		})],
+	// XXX mark unsaved (*) collections...
 	browseImageCollections: ['Collections|Image/Image $collections...',
 		widgets.makeUIDialog(function(gid){
 			var that = this

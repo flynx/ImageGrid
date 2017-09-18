@@ -116,7 +116,7 @@ var DataClassPrototype = {
 	fromArray: function(list){
 		var res = new Data()
 		// XXX make a real ribbon gid...
-		var gid = res.newGid()
+		var gid = res.newGID()
 		res.order = list
 		res.ribbon_order.push(gid)
 		res.ribbons[gid] = list.slice()
@@ -447,7 +447,7 @@ var DataPrototype = {
 	// If no arguments are given then a unique gid will be generated.
 	//
 	// XXX revise...
-	newGid: function(str, nohash){
+	newGID: function(str, nohash){
 		// prevent same gids from ever being created...
 		// NOTE: this is here in case we are generating new gids fast 
 		// 		enough that Date.now() produces identical results for 2+
@@ -658,7 +658,7 @@ var DataPrototype = {
 	// Replace image gid...
 	//
 	// NOTE: if to exists then it will get overwritten.
-	replaceGid: function(from, to){
+	replaceGID: function(from, to){
 		if(from in this.ribbons){
 			// ribbons...
 			var ribbon = this.ribbons[from]
@@ -1414,7 +1414,7 @@ var DataPrototype = {
 	// If mode is 'below' this will create a new ribbon below the target,
 	// otherwise the new ribbon will be created above.
 	newRibbon: function(target, mode){
-		var gid = this.newGid()
+		var gid = this.newGID()
 		var i = this.getRibbonOrder(target)
 
 		i = mode == 'below' ? i+1 : i
@@ -1960,7 +1960,7 @@ var DataPrototype = {
 		gids = gids instanceof Array ? gids : [gids]
 		// XXX not safe -- fast enough and one can generate two identical
 		// 		gids...
-		group = group == null ? this.newGid('G' + Date.now()) : group
+		group = group == null ? this.newGID('G' + Date.now()) : group
 
 		if(this.groups == null){
 			this.groups = {}
@@ -2314,7 +2314,7 @@ var DataPrototype = {
 				if(d < 0){
 					// see if g is unique...
 					if(g in base.ribbons || base.order.indexOf(g) >= 0){
-						g = base.newGid()
+						g = base.newGID()
 					}
 					base.ribbon_order.splice(t, 0, g)
 					base.ribbons[g] = r
@@ -2330,7 +2330,7 @@ var DataPrototype = {
 				} else {
 					// see if g is unique...
 					if(g in base.ribbons || base.order.indexOf(g) >= 0){
-						g = base.newGid()
+						g = base.newGID()
 					}
 					base.ribbon_order.push(g)
 					base.ribbons[g] = r
