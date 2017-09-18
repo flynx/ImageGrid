@@ -940,6 +940,9 @@ var ChangesActions = actions.Actions({
 
 			// section items...
 			} else if(items instanceof Array) {
+				if(changes[section] === true){
+					return
+				}
 				changes[section] = (changes[section] || []).concat(items).unique()
 				this.changes = changes
 

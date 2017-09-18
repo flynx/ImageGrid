@@ -191,6 +191,26 @@ var CollectionActions = actions.Actions({
 			//
 			// Not for direct use.
 		})],
+	collectionCreated: ['- Collections/',
+		core.doc`This is called when a collection is created.
+
+		NOTE: this is not triggered for the "${MAIN_COLLECTION_TITLE}" collection...
+		`,
+		core.notUserCallable(function(collection){
+			// This is the window resize event...
+			//
+			// Not for direct use.
+		})],
+	collectionRemoved: ['- Collections/',
+		core.doc`This is called when a collection is removed.
+
+		NOTE: this is not triggered for the "${MAIN_COLLECTION_TITLE}" collection...
+		`,
+		core.notUserCallable(function(collection){
+			// This is the window resize event...
+			//
+			// Not for direct use.
+		})],
 
 
 	// Collection life-cycle...
@@ -200,6 +220,7 @@ var CollectionActions = actions.Actions({
 
 			Load collection...
 			.loadCollection(collection)
+			.loadCollection(gid)
 				-> this
 			
 			Force reload current collection...
@@ -438,12 +459,17 @@ var CollectionActions = actions.Actions({
 					'crop' 
 					: 'current'
 			}
+			var new_collection = 
+				!collections[collection] 
+				&& collection != MAIN_COLLECTION_TITLE
 
 
 			// save the data...
 			var state = collections[collection] = collections[collection] || {}
 			state.title = state.title || collection
-			state.gid = state.gid || this.data.newGID()
+			state.gid = state.gid 
+				// maintain the GID of MAIN_COLLECTION_TITLE as '0'...
+				|| (collection == MAIN_COLLECTION_TITLE ? '0' : this.data.newGID())
 			// NOTE: we do not need to care about tags here as they 
 			// 		will get overwritten on load...
 			state.data = (mode == 'empty' ? 
@@ -480,11 +506,19 @@ var CollectionActions = actions.Actions({
 			// XXX should we be doing this here or on case by case basis externally...
 			//collection == this.collection
 			//	&& this.loadCollection('!')
+
+			new_collection
+				&& this.collectionCreated(collection)
 		}],
 	newCollection: ['- Collections/',
+		core.doc` Shorthand to .saveCollection(collection, 'empty')`,
 		function(collection){ return this.saveCollection(collection, 'empty') }],
 	removeCollection: ['- Collections/',
 		core.doc`
+
+			.removeCollection(collection)
+			.removeCollection(gid)
+				-> this
 		
 		NOTE: when removing the currently loaded collection this will 
 			just remove it from .collections and do nothing...`,
@@ -492,7 +526,11 @@ var CollectionActions = actions.Actions({
 			if(!this.collections || collection == MAIN_COLLECTION_TITLE){
 				return
 			}
-			delete this.collections[this.collectionGIDs[collection] || collection]
+			collection = this.collectionGIDs[collection] || collection
+			if(collection in this.collections){
+				delete this.collections[collection]
+				this.collectionRemoved(collection)
+			}
 		}],
 
 
@@ -538,6 +576,8 @@ var CollectionActions = actions.Actions({
 
 		NOTE: this will not account for item topology. To merge accounting
 			for topology use .joinCollect(..)
+		NOTE: if an image gid is not found locally it will be searched in
+			base data...
 		`,
 		function(gids, collection){
 			var that = this
@@ -564,7 +604,9 @@ var CollectionActions = actions.Actions({
 					return gid in that.data.ribbons ? 
 						// when adding a ribbon gid expand to images...
 						that.data.ribbons[gid].compact()
-						: [that.data.getImage(gid)] })
+						: [ that.data.getImage(gid) 
+							// check base data for image gid...
+							|| that.collections[MAIN_COLLECTION_TITLE].data.getImage(gid) ] })
 				.reduce(function(a, b){ return a.concat(b) }, [])
 
 			// add to collection...
@@ -611,9 +653,16 @@ var CollectionActions = actions.Actions({
 
 			if(this.collections && this.collections[collection]){
 				//this.collections[collection].data.join(align, data || this.data.clone())
-				this.collections[collection].data = (data || this.data)
+				var res = this.collections[collection].data = (data || this.data)
 					.clone()
 					.join(align, this.collections[collection].data)
+
+				// joining into the current collection...
+				if(collection == this.collection){
+					var cur = this.current
+					this.data = res 
+					this.data.current = cur
+				}
 
 			} else {
 				this.saveCollection(collection)
@@ -933,33 +982,84 @@ module.Collection = core.ImageGridFeatures.Feature({
 		// changes...
 		//
 		// format:
-		// 	XXX we need:
-		// 		- mark collection list changes
-		// 			collection-list: true
-		// 		- mark whole collection change
-		// 			'collection: <gid>': true
-		// 		- mark changes local to collection
-		// 			'collection: <gid>': [<change>, ..]
+		// 	'collections'		- collection list changes
+		// 	'collection: <gid>'	- holds collection-specific changes
 		//
-		// XXX maintain changes...
-		// 		- collection-level: mark collections as changed...
-		// 		- in-collection:
-		// 			- save/restore parent changes when loading/exiting collections
-		// 			- move collection chnages to collections
-		// XXX on sriwthicng collections, need to transfer changes + maintain
-		// 		global changes...
+		// XXX need to maintain changes when loading / unloading collections...
+		// 		changes['data'] <-> changes['collection: <gid>': ['data']]
+		// collection-list...
+		[[
+			'collectionCreated',
+			'collectionRemoved',
+		],
+			function(_, collection){
+				// collection list changed...
+				this.markChanged('collections')
+				// collection changed...
+				collection in this.collections
+					&& this.markChanged(
+						'collection: '
+							+JSON.stringify(this.collections[collection].gid || collection))
+			}],
+		// basic collection edits...
 		[[
 			'collect',
 			'joinCollect',
 			'uncollect',
-
-			'saveCollection',
-
-			'removeCollection',
 		], 
-			function(){
-				// XXX mark changed collections...
-				// XXX added/removed collection -> mark collection index as changed...
+			function(_, collection){
+				this.markChanged(
+					'collection: '
+						+JSON.stringify(
+							this.collections[collection || this.collection].gid || collection),
+					['data'])
+			}],
+		// transfer changes on load/unload collection...
+		// XXX also need to account for changes when doing .prepareIndexForWrite(..) 
+		// 		in 'base' mode...
+		//['collectionLoading.pre',
+		['loadCollection.pre',
+			function(collection){
+				var from = this.collection || MAIN_COLLECTION_TITLE
+				var to = collection
+				if(from == to || this.changes === undefined || this.changes === true){
+					return
+				}
+
+				var data = this.changes === true || (this.changes || {}).data
+
+				return function(){
+					if(to == from){
+						return
+					}
+					var gid = this.collections[to].gid || to
+					var changes = this.changes !== false ? 
+						this.changes['collection: '+JSON.stringify(gid)] 
+						: []
+
+					// XXX
+					if(changes === true){
+						return
+					}
+
+					// save data to 'from'...
+					if(data){
+						this.markChanged(
+							'collection: '
+								+JSON.stringify(from == MAIN_COLLECTION_TITLE ?
+									'0'	
+									: this.collections[from].gid || from),
+							['data'])
+					}
+
+					// load data from 'to'..
+					if(changes && changes.indexOf('data') >= 0){
+						this.markChanged('data')
+
+					} else if(this.changes && this.changes.data){
+						delete this.changes.data
+					}
+				}
 			}],
 
 
@@ -1729,8 +1829,11 @@ module.UICollection = core.ImageGridFeatures.Feature({
 				this.reload() 
 			}],
 
-		// update view when removing from current collection...
-		['uncollect',
+		// update view when editing current collection...
+		[[
+			'uncollect', 
+			'joinCollect',
+		],
 			function(_, gids, collection){
 				(collection == null || this.collection == collection)
 					&& this.reload(true)
