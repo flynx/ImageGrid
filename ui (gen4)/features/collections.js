@@ -1214,7 +1214,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 				// 		the stuff it created...
 				// XXX should we be a bit more atomic and save tags iff
 				// 		they were changed only???
-				Object.keys(this.collections).forEach(function(title){
+				Object.keys(this.collections || {}).forEach(function(title){
 					var path = 'collections/'+ raw[title].gid
 					var metadata = res.index[path + '/metadata']
 
