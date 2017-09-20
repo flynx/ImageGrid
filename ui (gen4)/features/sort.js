@@ -63,12 +63,18 @@ module.SortActions = actions.Actions({
 			// 		also takes into account file sequence number...
 			// NOTE: this is descending by default...
 			//'Date': 'metadata.createDate birthtime name-sequence keep-position reverse',
-			'Date': 'metadata.createDate birthtime keep-position reverse',
-			'File date': 'birthtime keep-position reverse',
-			'File sequence number (with overflow)': 'name-sequence-overflow name path keep-position',
-			'File sequence number': 'name-sequence name path keep-position',
-			'Name': 'name path keep-position',
-			'Name (XP-style)': 'name-leading-sequence name path keep-position',
+			'Date': 
+				'metadata.createDate birthtime keep-position reverse',
+			'File date': 
+				'birthtime keep-position reverse',
+			'File sequence number (with overflow)': 
+				'name-sequence-overflow name path keep-position',
+			'File sequence number': 
+				'name-sequence name path keep-position',
+			'Name': 
+				'name path keep-position',
+			'Name (natural number order)': 
+				'name-leading-sequence name path keep-position',
 		},
 	},
 

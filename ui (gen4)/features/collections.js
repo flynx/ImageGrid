@@ -56,6 +56,12 @@ var CollectionActions = actions.Actions({
 		// 	'main'		- save crop state for main state only
 		// 	'none'		- do not save crop state
 		'collection-save-crop-state': 'all',
+
+
+		// XXX should this be in config???
+		// 		...technically no, but we need shit to resolve correctly 
+		// 		to a relevant feature...
+		'collection-transfer-changes': ['data'],
 	},
 
 	// Format:
@@ -319,8 +325,10 @@ var CollectionActions = actions.Actions({
 			// load collection...
 			Promise
 				.all(Object.keys(handlers)
+					// filter relevant handlers...
 					.filter(function(format){ 
 						return format == '*' || collection_data[format] })
+					// run handlers...
 					.map(function(format){
 						return that[handlers[format]](collection, collection_data) }))
 				.then(function(){
@@ -985,8 +993,6 @@ module.Collection = core.ImageGridFeatures.Feature({
 		// 	'collections'		- collection list changes
 		// 	'collection: <gid>'	- holds collection-specific changes
 		//
-		// XXX need to maintain changes when loading / unloading collections...
-		// 		changes['data'] <-> changes['collection: <gid>': ['data']]
 		// collection-list...
 		[[
 			'collectionCreated',
@@ -1015,56 +1021,59 @@ module.Collection = core.ImageGridFeatures.Feature({
 					['data'])
 			}],
 		// transfer changes on load/unload collection...
-		// XXX also need to account for changes when doing .prepareIndexForWrite(..) 
-		// 		in 'base' mode...
-		// XXX use the event .collectionLoading(..) instead of .loadCollection(..) action???
-		//['collectionLoading.pre',
-		['loadCollection.pre',
-			function(collection){
+		['collectionLoading.pre',
+			function(to){
+				var that = this
 				var from = this.collection || MAIN_COLLECTION_TITLE
-				var to = collection
 				if(from == to || this.changes === undefined || this.changes === true){
 					return
 				}
 
-				var data = this.changes === true || (this.changes || {}).data
+				// XXX this should not be in config...
+				var change_tags = this.config['collection-transfer-changes'] || ['data']
+
+				var from_changes = change_tags
+					.filter(function(item){
+						return that.changes === true || (that.changes || {})[item] })
 
 				return function(){
 					if(to == from){
 						return
 					}
-					var gid = this.collections[to].gid || to
+					var gid = (this.collections[to] || {}).gid || to
 					var changes = this.changes !== false ? 
 						this.changes['collection: '+JSON.stringify(gid)] 
 						: []
+					var from_id = 'collection: '
+						+JSON.stringify(from == MAIN_COLLECTION_TITLE ?
+							'0'	
+							: this.collections[from].gid || from)
 
-					// XXX
+					// everything has changed, no need to bother with details...
 					if(changes === true){
 						return
 					}
 
-					// save data to 'from'...
-					if(data){
-						this.markChanged(
-							'collection: '
-								+JSON.stringify(from == MAIN_COLLECTION_TITLE ?
-									'0'	
-									: this.collections[from].gid || from),
-							['data'])
-					}
+					// save changes to 'from'...
+					from_changes.length > 0
+						&& this.markChanged(from_id, from_changes)
 
-					// load data from 'to'..
-					if(changes && changes.indexOf('data') >= 0){
-						this.markChanged('data')
+					// load changes from 'to'..
+					change_tags.forEach(function(item){
+						if(changes && changes.indexOf(item) >= 0){
+							that.markChanged(item)
 
-					} else if(this.changes && this.changes.data){
-						delete this.changes.data
-					}
+						} else if(that.changes && that.changes[item]){
+							delete that.changes[item]
+						}
+					})
 				}
 			}],
 
 
-		// XXX should this handle the input (_)???
+		// XXX handle changes correctly... 
+		// XXX account for 'base' mode changes...
+		// 		use : .config['collection-transfer-changes']
 		['prepareIndexForWrite', 
 			function(res, _, full){
 				var changed = full == true 
@@ -1131,6 +1140,13 @@ var CollectionTagsActions = actions.Actions({
 			'bookmark',
 			'selected',
 		],
+		
+		// XXX this should not be in config -- see CollectionActions.config for details...
+		'collection-transfer-changes': CollectionActions.config['collection-transfer-changes']
+			.concat([
+				'bookmarked', 
+				'selected',
+			]),
 	},
 
 	collectTagged: ['- Collections|Tag/',
