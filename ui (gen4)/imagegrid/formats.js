@@ -22,7 +22,7 @@ function(data){
 	var ribbons = data.ribbons = data.ribbons || {}
 
 	if(Object.keys(ribbons).length == 0){
-		ribbons[that.newGid()] = data.order.slice()
+		ribbons[that.newGID()] = data.order.slice()
 	}
 
 	data.ribbon_order = data.ribbon_order || Object.keys(ribbons)
@@ -90,7 +90,7 @@ function(data, cmp){
 //
 // NOTE: this will just convert the JSON format and will not construct 
 // 		the Data object...
-// NOTE: this uses require('imagegrid/data').Data().newGid(..) for ribbon gid 
+// NOTE: this uses require('imagegrid/data').Data().newGID(..) for ribbon gid 
 // 		generation...
 //
 module.VERSIONS['3.0'] =
@@ -116,7 +116,7 @@ function(data){
 		? data.ribbon_order 
 		: Object.keys(data.ribbons)
 	keys.forEach(function(k){
-		var gid = k*1 == null ? k : that.newGid()
+		var gid = k*1 == null ? k : that.newGID()
 		res.ribbon_order.push(gid)
 		res.ribbons[gid] = data.ribbons[k].slice()
 	})

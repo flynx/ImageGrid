@@ -1017,6 +1017,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 		// transfer changes on load/unload collection...
 		// XXX also need to account for changes when doing .prepareIndexForWrite(..) 
 		// 		in 'base' mode...
+		// XXX use the event .collectionLoading(..) instead of .loadCollection(..) action???
 		//['collectionLoading.pre',
 		['loadCollection.pre',
 			function(collection){
