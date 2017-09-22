@@ -1071,7 +1071,6 @@ module.Collection = core.ImageGridFeatures.Feature({
 			}],
 
 
-		// XXX handle changes correctly... 
 		// XXX account for 'base' mode changes...
 		// 		use : .config['collection-transfer-changes']
 		['prepareIndexForWrite', 
