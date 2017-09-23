@@ -353,12 +353,12 @@ var ImageMarkEditActions = actions.Actions({
 		shiftMarked('down')],
 
 	// XXX undo...
-	shiftMarkedAfter: ['Mark|Image/Shift marked after',
+	shiftMarkedAfter: ['Mark|Image/Shift marked $after',
 		{browseMode: 'cropMarked'},
 		function(target){
 			this.shiftImageTo(this.marked, target || 'current', 'after') }],
 	// XXX undo...
-	shiftMarkedBefore: ['Mark|Image/Shift marked before',
+	shiftMarkedBefore: ['Mark|Image/Shift marked $b$efore',
 		{browseMode: 'cropMarked'},
 		function(target){
 			this.shiftImageTo(this.marked, target || 'current', 'before') }],

@@ -1626,6 +1626,7 @@ var DataPrototype = {
 						delete that.ribbons[from][f]
 					}
 				})
+			this.clear('empty')
 		}
 		
 		// horizontal shift -- gather the images horizontally...
