@@ -913,7 +913,10 @@ function(list, options){
 			update: function(evt, ui){
 				var order = ui.item.parent()
 					.find('.item')
-						.map(function(){ return $(this).find('.text').text() })
+						.map(function(){ 
+							//return $(this).find('.text').text() })
+							return $(this).find('.text').attr('text')
+								|| $(this).find('.text').text() })
 						.toArray()
 				var l = dialog.__list[id]
 				l.splice.apply(l, [0, l.length].concat(order))
@@ -929,14 +932,15 @@ function(list, options){
 	})
 
 	options.itemopen
-		&& res.on('open', function(evt){ options.itemopen(evt, dialog.selected) })
+		&& res.on('open', function(evt){ 
+			options.itemopen.call(this, evt, dialog.selected) })
 
 	res = res.toArray()
 
 	// new button...
 	if(options.new_item !== false){
 		var new_item = options.new_item || true
-		new_item = new_item === true ? 'New...' : new_item
+		new_item = new_item === true ? '$New...' : new_item
 		res.push(make.Editable(
 			new_item, 
 			{
@@ -1007,7 +1011,8 @@ function(list, options){
 				// update list and select new value...
 				dialog.update()
 					.done(function(){
-						dialog.select('"'+txt+'"')
+						//dialog.select('"'+txt+'"')
+						dialog.select('"'+txt.replace(/\$/g, '')+'"')
 					})
 			}))
 	}
@@ -1207,6 +1212,8 @@ Buttons.markForRemoval = function(list, html){
 			if(list == null){
 				return
 			}
+
+			p = e.find('.text').attr('text') || p
 
 			if(e.hasClass('strike-out')){
 				list.indexOf(p) < 0 
@@ -2333,6 +2340,7 @@ var BrowserPrototype = {
 							t[0]
 						: $('<span>')
 							.addClass('text')
+							.attr('text', t || '')
 							// here we also replace empty strings with &nbsp;...
 							[t ? 'text' : 'html'](t || '&nbsp;')[0]
 				}))
@@ -2354,6 +2362,7 @@ var BrowserPrototype = {
 				traversable = traversable == null ? false : traversable
 				p = $('<span>')
 						.addClass('text')
+						.attr('text', p.replace(dir, ''))
 						.text(p.replace(dir, ''))
 			}
 
@@ -2391,9 +2400,10 @@ var BrowserPrototype = {
 							e.html(e.html().replace(item_shortcut_marker, 
 								function(){ 
 									var k = _replace.apply(this, arguments) 
+									var nk = keyboard.normalizeKey(k)
 									// only mark the first occurrence...
-									var mark = !!(registered_shortcuts.indexOf(k) < 0 
-										&& registered_shortcuts.push(k))
+									var mark = !!(registered_shortcuts.indexOf(nk) < 0 
+										&& registered_shortcuts.push(nk))
 									return mark ?
 										`<span class="keyboard-shortcut">${k}</span>`
 										: k
@@ -2786,6 +2796,9 @@ var BrowserPrototype = {
 		} else if(typeof(pattern) == typeof('str')){
 			//var pl = pattern.trim().split(/\s+/)
 			var pl = pattern.trim()
+				// allow pattern matching regardless of special chars...
+				// XXX not sure about this...
+				.replace(/\$/g, '')
 				// split on whitespace but keep quoted chars...
 				.split(/\s*((?:\\\s|[^\s])*)\s*/g)
 				// remove empty strings...

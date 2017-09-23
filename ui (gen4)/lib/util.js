@@ -451,6 +451,8 @@ if(typeof(jQuery) != typeof(undefined)){
 	// 							anything is changed, gets passed the 
 	// 							original text value (same as 'edit-abort')
 	//
+	// This will try and preserve element content DOM when resetting.
+	//
 	//
 	// NOTE: removing tabindex will reset focus, so this will attempt to 
 	// 		focus the first [tabindex] element up the tree...
@@ -484,7 +486,16 @@ if(typeof(jQuery) != typeof(undefined)){
 
 		options = options || {}
 
-		var original = this.text()
+		var original_text = this.text()
+		var original_dom = document.createDocumentFragment()
+		this[0].childNodes
+			.forEach(function(node){ 
+				original_dom.appendChild(node.cloneNode(true)) })
+		var resetOriginal = function(){
+			//that.text(original_text)
+			that[0].innerHTML = ''
+			that[0].appendChild(original_dom.cloneNode(true))
+		}
 
 		this.prop('contenteditable', true)
 
@@ -515,7 +526,7 @@ if(typeof(jQuery) != typeof(undefined)){
 
 					// abort...
 					if((options.abort_keys || ['Esc']).indexOf(n) >= 0){
-						that.trigger('edit-abort', original)
+						that.trigger('edit-abort', original_text)
 
 					// done -- single line...
 					} else if(n == 'Enter' 
@@ -556,7 +567,7 @@ if(typeof(jQuery) != typeof(undefined)){
 
 					// reset original value...
 					options.reset_on_abort !== false
-						&& that.text(original)
+						&& resetOriginal() 
 					options.blur_on_abort !== false 
 						&& this.blur() 
 
@@ -575,7 +586,7 @@ if(typeof(jQuery) != typeof(undefined)){
 
 					// reset original value...
 					options.reset_on_commit !== false
-						&& that.text(original)
+						&& resetOriginal() 
 					options.blur_on_commit !== false 
 						&& this.blur() 
 

@@ -46,7 +46,7 @@ var widgets = require('features/ui-widgets')
 //
 //
 
-var MAIN_COLLECTION_TITLE = 'ALL'
+var MAIN_COLLECTION_TITLE = '$ALL'
 
 // XXX undo...
 var CollectionActions = actions.Actions({
@@ -1596,6 +1596,7 @@ var UICollectionActions = actions.Actions({
 			})],
 
 	// XXX need .changes format...
+	// XXX BUG: adding a new collections kills sort... 
 	browseCollections: ['Collections/$Collec$tions...',
 		core.doc`Collection list...
 
@@ -1605,7 +1606,13 @@ var UICollectionActions = actions.Actions({
 			var that = this
 			var to_remove = []
 
+			var collections = that.collection_order = 
+				(that.collection_order || []).slice()
+
 			var defaults = this.config['default-collections']
+			if(defaults){
+				collections = collections.concat(defaults).unique()
+			}
 
 			return browse.makeLister(null, 
 				function(path, make){
@@ -1617,6 +1624,7 @@ var UICollectionActions = actions.Actions({
 						})
 
 					var openHandler = function(_, title){
+						var title = $(this).find('.text').attr('text') || title
 						// create collection if it does not exist...
 						if(!that.collections 
 								|| !(title in that.collections)){
@@ -1651,12 +1659,8 @@ var UICollectionActions = actions.Actions({
 							&& text.attr('cropped', cs.length)
 					}
 
-					//var collections = Object.keys(that.collections || {})
-					var collections = that.collection_order = that.collection_order || []
-
-					if(defaults){
-						collections = collections.concat(defaults).unique()
-					}
+					// XXX should we update collections if they changed outside???
+					// XXX
 
 					// main collection...
 					!action 
@@ -1708,9 +1712,14 @@ var UICollectionActions = actions.Actions({
 					selected: that.collection || MAIN_COLLECTION_TITLE,
 				})
 				.close(function(){
-					to_remove.forEach(function(title){ 
-						that.removeCollection(title) 
-					}) 
+					// XXX for some reason when an item is added collections 
+					// 		reverts to the pre-sorted state and all 
+					// 		consecutive sorts are ignored...
+					console.log('>>>', collections)
+					that.collection_order = collections
+
+					to_remove
+						.forEach(function(title){ that.removeCollection(title) }) 
 				})
 		})],
 	// XXX mark unsaved (*) collections...

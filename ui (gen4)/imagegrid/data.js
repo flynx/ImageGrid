@@ -1594,8 +1594,8 @@ var DataPrototype = {
 	// ribbon is .getRibbon(..) compatible or 'keep'.
 	// order is .getImageOrder(..) compatible or 'keep'.
 	//
-	// This will not change the order of images unless (special case) 
-	// the target image is in the images.
+	// This will not change the relative order of input images unless 
+	// (special case) the target image is in the images.
 	//
 	//
 	// NOTE: if images is a list, all images will be placed in the order
@@ -1603,6 +1603,8 @@ var DataPrototype = {
 	// NOTE: this can affect element indexes, thus for example element 
 	// 		at input order may be at a different position after this is 
 	// 		run.
+	// NOTE: this will clear empty ribbons. This can happen when the input
+	// 		images contain all of the images of one or more ribbons...
 	placeImage: function(images, ribbon, reference, mode){
 		var that = this
 		mode = mode || 'before'
