@@ -47,6 +47,7 @@ var widgets = require('features/ui-widgets')
 //
 
 var MAIN_COLLECTION_TITLE = '$ALL'
+var MAIN_COLLECTION_GID = '0'
 
 // XXX undo...
 var CollectionActions = actions.Actions({
@@ -96,7 +97,8 @@ var CollectionActions = actions.Actions({
 	set collection(value){
 		this.loadCollection(value) },
 	get collectionGID(){
-		return ((this.collections || {})[this.collection] || {}).gid },
+		return ((this.collections || {})[this.collection] || {}).gid 
+			|| MAIN_COLLECTION_GID },
 	set collectionGID(value){
 		this.collection = value },
 
@@ -476,8 +478,10 @@ var CollectionActions = actions.Actions({
 			var state = collections[collection] = collections[collection] || {}
 			state.title = state.title || collection
 			state.gid = state.gid 
-				// maintain the GID of MAIN_COLLECTION_TITLE as '0'...
-				|| (collection == MAIN_COLLECTION_TITLE ? '0' : this.data.newGID())
+				// maintain the GID of MAIN_COLLECTION_TITLE as MAIN_COLLECTION_GID...
+				|| (collection == MAIN_COLLECTION_TITLE ? 
+					MAIN_COLLECTION_GID 
+					: this.data.newGID())
 			// NOTE: we do not need to care about tags here as they 
 			// 		will get overwritten on load...
 			state.data = (mode == 'empty' ? 
@@ -1046,7 +1050,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 						: []
 					var from_id = 'collection: '
 						+JSON.stringify(from == MAIN_COLLECTION_TITLE ?
-							'0'	
+							MAIN_COLLECTION_GID
 							: this.collections[from].gid || from)
 
 					// everything has changed, no need to bother with details...
@@ -1570,7 +1574,6 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 // XXX show collections in image metadata... (???)
-// XXX mark unsaved (*) collections...
 var UICollectionActions = actions.Actions({
 	config: {
 		// Global default collections...
@@ -1595,8 +1598,7 @@ var UICollectionActions = actions.Actions({
 						&& title != MAIN_COLLECTION_TITLE },
 			})],
 
-	// XXX need .changes format...
-	// XXX BUG: adding a new collections kills sort... 
+	// XXX edit collection title here???
 	browseCollections: ['Collections/$Collec$tions...',
 		core.doc`Collection list...
 
@@ -1639,12 +1641,21 @@ var UICollectionActions = actions.Actions({
 						dialog.close()
 					}
 					var setItemState = function(title){
+						var gid = ((that.collections || {})[title] || {}).gid || title
+						// handle main collection changes...
+						gid = title == MAIN_COLLECTION_TITLE ? 
+							MAIN_COLLECTION_GID 
+							: gid
+
 						var text = this.find('.text').last()
 
 						// saved state...
-						// XXX need changes format...
-						var unsaved = this.changes === true 
-							|| (this.changes || {})['collections: '+ JSON.stringify(title)]
+						var unsaved = that.changes === true 
+							|| (that.changes || {})['collection: '+ JSON.stringify(gid)]
+							|| (that.collectionGID == gid 
+								&& (that.config['collection-transfer-changes'] || [])
+									.filter(function(a){ 
+										return !!(that.changes || {})[a] }).length > 0)
 						unsaved
 							&& text.attr('unsaved', true)
 
@@ -1659,8 +1670,12 @@ var UICollectionActions = actions.Actions({
 							&& text.attr('cropped', cs.length)
 					}
 
-					// XXX should we update collections if they changed outside???
-					// XXX
+					// update collection list if changed externally...
+					// XXX do we need this???
+					collections.splice.apply(collections, [0, collections.length].concat(
+						collections
+							.concat(this.collection_order || [])
+							.unique()))
 
 					// main collection...
 					!action 
@@ -1678,7 +1693,8 @@ var UICollectionActions = actions.Actions({
 											.addClass('sort-handle')
 											.html('&#x2630;'))
 									setItemState
-										.call($(this), title)
+										//.call($(this), title)
+										.call($(this), $(this).find('.text').attr('text'))
 								},
 								open: openHandler,
 							}})
@@ -1709,20 +1725,18 @@ var UICollectionActions = actions.Actions({
 				}, {
 					cls: 'collection-list',
 					// focus current collection...
-					selected: that.collection || MAIN_COLLECTION_TITLE,
+					selected: JSON.stringify(
+						(that.collection || MAIN_COLLECTION_TITLE)
+							// XXX not sure it is good that we have to do this...
+							.replace(/\$/g, '')),
 				})
 				.close(function(){
-					// XXX for some reason when an item is added collections 
-					// 		reverts to the pre-sorted state and all 
-					// 		consecutive sorts are ignored...
-					console.log('>>>', collections)
 					that.collection_order = collections
 
 					to_remove
 						.forEach(function(title){ that.removeCollection(title) }) 
 				})
 		})],
-	// XXX mark unsaved (*) collections...
 	browseImageCollections: ['Collections|Image/Image $collections...',
 		widgets.makeUIDialog(function(gid){
 			var that = this

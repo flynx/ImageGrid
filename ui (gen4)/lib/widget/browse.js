@@ -683,6 +683,7 @@ function(data, options){
 // NOTE: this uses .List(..) internally, see it's doc for additional 
 // 		info.
 // NOTE: the list must contain strings.
+// NOTE: this accounts for '$' as a key binding marker in item text...
 //
 // XXX should id be the first argument??
 // XXX TEST: potential problem: when reloading the list this will 
@@ -952,6 +953,8 @@ function(list, options){
 				txt = options.normalize ? 
 					options.normalize(txt) 
 					: txt
+				// account for '$' as key binding marker...
+				var ntxt = txt.replace(/\$/g, '')
 
 				// invalid format...
 				if(options.check && !options.check(txt)){
@@ -960,6 +963,8 @@ function(list, options){
 				}
 
 				lst = dialog.__list[id]
+				var normalized = lst.map(function(e){ 
+					return e.replace(/\$/g, '') })
 
 				// list length limit
 				if(options.length_limit 
@@ -977,25 +982,32 @@ function(list, options){
 				}
 
 				// check if item pre-existed...
-				var preexisted = lst.indexOf(options.unique instanceof Function ? 
-					options.unique(txt) 
-					: txt) >= 0
+				var preexisted = options.unique instanceof Function ? 
+						//lst.indexOf(options.unique(txt)) >= 0
+						(lst.indexOf(options.unique(txt)) >= 0
+							// account for '$' as key binding marker... (XXX ???)
+							|| normalized.indexOf(options.unique(txt).replace(/\$/g, '')))
+						: (lst.indexOf(txt) >= 0 
+							|| normalized.indexOf(ntxt) >= 0)
 
 				// add new value and sort list...
 				lst.push(txt)
 
 				// unique...
 				if(options.unique == null || options.unique === true){
-					lst = lst.unique()
+					// account for '$' as key binding marker...
+					lst = lst.unique(function(e){ return e.replace(/\$/g, '') })
 
 				// unique normalized...
 				} else if(options.unique instanceof Function){
 					lst = lst.unique(options.unique) 
 				}
 
+				// itemadded handler...
 				options.itemadded
 					&& !(options.unique && preexisted)
-					&& options.itemadded.call(dialog, txt)
+					&& options
+						.itemadded.call(dialog, txt)
 
 				// sort...
 				if(options.sort){
@@ -1005,8 +1017,7 @@ function(list, options){
 							: undefined)
 				}
 
-				// XXX should this be done here???
-				//lst = dialog.__list[id] = write(list, lst)
+				lst = write(dialog.__list[id], lst)
 				
 				// update list and select new value...
 				dialog.update()
