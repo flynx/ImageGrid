@@ -955,6 +955,10 @@ function(list, options){
 					: txt
 				// account for '$' as key binding marker...
 				var ntxt = txt.replace(/\$/g, '')
+				// unique-test text...
+				var utxt = options.unique instanceof Function ? 
+					options.unique(txt)+'' 
+					: null
 
 				// invalid format...
 				if(options.check && !options.check(txt)){
@@ -982,13 +986,13 @@ function(list, options){
 				}
 
 				// check if item pre-existed...
-				var preexisted = options.unique instanceof Function ? 
-						//lst.indexOf(options.unique(txt)) >= 0
-						(lst.indexOf(options.unique(txt)) >= 0
-							// account for '$' as key binding marker... (XXX ???)
-							|| normalized.indexOf(options.unique(txt).replace(/\$/g, '')))
-						: (lst.indexOf(txt) >= 0 
-							|| normalized.indexOf(ntxt) >= 0)
+				var preexisted = utxt ? 
+					//lst.indexOf(options.unique(txt)) >= 0
+					(lst.indexOf(utxt) >= 0
+						// account for '$' as key binding marker... (XXX ???)
+						|| normalized.indexOf(utxt.replace(/\$/g, '')) >= 0)
+					: (lst.indexOf(txt) >= 0 
+						|| normalized.indexOf(ntxt) >= 0)
 
 				// add new value and sort list...
 				lst.push(txt)
