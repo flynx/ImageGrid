@@ -544,6 +544,23 @@ var CollectionActions = actions.Actions({
 				this.collectionRemoved(collection)
 			}
 		}],
+	// XXX do we need this???
+	renameCollection: ['- Collections/',
+		function(from, to){
+			if(from == MAIN_COLLECTION_TITLE 
+					|| to == MAIN_COLLECTION_TITLE 
+					|| (this.collections || {})[from] == null){
+				return
+			}
+
+			var order = this.collection_order
+			order.splice(order.indexOf(from), 1, to)
+
+			var data = this.collections[to] = this.collections[from]
+			delete this.collections[from]
+
+			data.title = to
+		}],
 
 
 	// Introspection...
@@ -1360,7 +1377,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 		// 		they were changed only???
 		['prepareIndexForWrite', 
 			function(res, _, full){
-				var raw = res.raw.collections
+				var raw = res.raw.collections || {}
 
 				// NOTE: we are cheating here, we do not need to check 
 				// 		for changes as this is already taken care off by
@@ -1368,7 +1385,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 				// 		the stuff it created...
 				// XXX should we be a bit more atomic and save tags iff
 				// 		they were changed only???
-				Object.keys(this.collections || {}).forEach(function(title){
+				Object.keys(raw).forEach(function(title){
 					var path = 'collections/'+ raw[title].gid
 					var metadata = res.index[path + '/metadata']
 
@@ -1599,6 +1616,8 @@ var UICollectionActions = actions.Actions({
 			})],
 
 	// XXX edit collection title here???
+	// 		...also might need a collection editor dialog...
+	// XXX would be nice to make this nested (i.e. path list)...
 	browseCollections: ['Collections/$Collec$tions...',
 		core.doc`Collection list...
 
