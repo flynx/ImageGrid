@@ -1373,8 +1373,6 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 			}],
 
 
-		// XXX should we be a bit more atomic and save tags iff
-		// 		they were changed only???
 		['prepareIndexForWrite', 
 			function(res, _, full){
 				var raw = res.raw.collections || {}
@@ -1383,8 +1381,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 				// 		for changes as this is already taken care off by
 				// 		the main collections feature, here we just update 
 				// 		the stuff it created...
-				// XXX should we be a bit more atomic and save tags iff
-				// 		they were changed only???
+				// XXX should we iterate over index or raw here???
 				Object.keys(raw).forEach(function(title){
 					var path = 'collections/'+ raw[title].gid
 					var metadata = res.index[path + '/metadata']
