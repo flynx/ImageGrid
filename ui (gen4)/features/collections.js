@@ -60,9 +60,11 @@ var CollectionActions = actions.Actions({
 
 
 		// XXX should this be in config???
-		// 		...technically no, but we need shit to resolve correctly 
+		// 		...technically no, but we need this to resolve correctly 
 		// 		to a relevant feature...
-		'collection-transfer-changes': ['data'],
+		'collection-transfer-changes': [
+			'data',
+		],
 	},
 
 	// Format:
@@ -1094,6 +1096,13 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 		// XXX account for 'base' mode changes...
 		// 		use : .config['collection-transfer-changes']
+		// XXX use .prepareIndexForWrite(...) for collection data stuff...
+		// 		i.e.
+		// 			this.prepareIndexForWrite({
+		// 				data: raw.data,
+		// 				...
+		// 			}, mode)
+		// 		...use this as a base for collection serialization...
 		['prepareIndexForWrite', 
 			function(res, _, full){
 				var changed = full == true 
@@ -1130,6 +1139,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 							Object.keys(raw)
 								.forEach(function(key){ metadata[key] = raw[key] })
 
+							// XXX use .prepareIndexForWrite(.., mode) for this...
 							// collections/<gid>/data
 							if(metadata.data){
 								res.index[path +'/data'] = metadata.data
@@ -1162,11 +1172,12 @@ var CollectionTagsActions = actions.Actions({
 		],
 		
 		// XXX this should not be in config -- see CollectionActions.config for details...
-		'collection-transfer-changes': CollectionActions.config['collection-transfer-changes']
-			.concat([
-				'bookmarked', 
-				'selected',
-			]),
+		'collection-transfer-changes': 
+			CollectionActions.config['collection-transfer-changes']
+				.concat([
+					'bookmarked', 
+					'selected',
+				]),
 	},
 
 	collectTagged: ['- Collections|Tag/',
@@ -1373,6 +1384,9 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 			}],
 
 
+		// XXX handle .config['collection-transfer-changes']...
+		// XXX would be nice to be able to reuse the base functionality 
+		// 		here...
 		['prepareIndexForWrite', 
 			function(res, _, full){
 				var raw = res.raw.collections || {}
