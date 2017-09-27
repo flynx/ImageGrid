@@ -1139,7 +1139,8 @@ module.Collection = core.ImageGridFeatures.Feature({
 							Object.keys(raw)
 								.forEach(function(key){ metadata[key] = raw[key] })
 
-							// XXX use .prepareIndexForWrite(.., mode) for this...
+							// XXX use .prepareIndexForWrite(.., full) for this...
+							// XXX pass the date...
 							// collections/<gid>/data
 							if(metadata.data){
 								res.index[path +'/data'] = metadata.data
