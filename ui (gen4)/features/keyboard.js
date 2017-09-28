@@ -17,6 +17,8 @@ var widgets = require('features/ui-widgets')
 
 var browse = require('lib/widget/browse')
 
+var collections = require('features/collections')
+
 
 
 /*********************************************************************/
@@ -147,7 +149,7 @@ module.GLOBAL_KEYBOARD = {
 			'Del',
 		],
 
-		Esc: 'loadCollection: "ALL" -- Load all images',
+		Esc: 'loadCollection: "'+ collections.MAIN_COLLECTION_TITLE +'" -- Load all images',
 
 		Del: 'uncollect',
 		shift_Del: 'uncollectMarked',

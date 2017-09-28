@@ -46,8 +46,11 @@ var widgets = require('features/ui-widgets')
 //
 //
 
-var MAIN_COLLECTION_TITLE = '$ALL'
-var MAIN_COLLECTION_GID = '0'
+// XXX should these be in .config???
+var MAIN_COLLECTION_TITLE =
+module.MAIN_COLLECTION_TITLE = '$ALL'
+var MAIN_COLLECTION_GID =
+module.MAIN_COLLECTION_GID = '0'
 
 // XXX undo...
 var CollectionActions = actions.Actions({
@@ -1032,11 +1035,13 @@ module.Collection = core.ImageGridFeatures.Feature({
 			}],
 		// basic collection edits...
 		[[
-			'collect',
+			// NOTE: no need to handle .collect(..) here as it calls .joinCollect(..)
 			'joinCollect',
 			'uncollect',
 		], 
-			function(_, collection){
+			function(){
+				var args = [].slice.call(arguments, 1)
+				var collection = args.length == 1 ? args[0] : args[1]
 				this.markChanged(
 					'collection: '
 						+JSON.stringify(
