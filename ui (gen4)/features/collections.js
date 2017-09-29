@@ -1110,6 +1110,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 		// 		...use this as a base for collection serialization...
 		['prepareIndexForWrite', 
 			function(res, _, full){
+				var that = this
 				var changed = full == true 
 					|| res.changes === true
 					|| res.changes.collections
@@ -1144,13 +1145,16 @@ module.Collection = core.ImageGridFeatures.Feature({
 							Object.keys(raw)
 								.forEach(function(key){ metadata[key] = raw[key] })
 
-							// XXX use .prepareIndexForWrite(.., full) for this...
-							// XXX pass the date...
-							// collections/<gid>/data
-							if(metadata.data){
-								res.index[path +'/data'] = metadata.data
-								delete metadata.data
-							}
+							raw.date = res.date
+							// XXX set changes???
+							// XXX would be nice to have collections' .tags here... (???)
+							var prepared = that.prepareIndexForWrite(raw, full).index
+
+							Object.keys(prepared)
+								.forEach(function(key){
+									res.index[path +'/'+ key] = prepared[key]
+									delete metadata[key]
+								})
 						})
 				}
 			}],

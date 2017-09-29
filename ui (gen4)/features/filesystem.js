@@ -154,7 +154,7 @@ var IndexFormatActions = actions.Actions({
 				: null
 			changes = changes === null ? true : changes
 			return {
-				date: Date.timeStamp(),
+				date: json.date || Date.timeStamp(),
 				changes: changes,
 				raw: json,
 				index: {},

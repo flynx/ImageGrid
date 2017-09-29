@@ -662,7 +662,8 @@ core.ImageGridFeatures.Feature({
 				}
 
 				// images (full)...
-				if(changes === true || changes.images === true){
+				if(res.raw.images 
+						&& (changes === true || changes.images === true)){
 					res.index.images = res.raw.images
 
 				// images-diff...
