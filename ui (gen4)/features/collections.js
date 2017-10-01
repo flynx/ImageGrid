@@ -1100,23 +1100,73 @@ module.Collection = core.ImageGridFeatures.Feature({
 				}
 			}],
 
+		// update current collection changes...
+		//
+		// This will:
+		// 	1) update .changes['collection: <gid>'] with the current
+		// 		loaded .changes state...
+		// 	2) in 'base' mode, update the res.changes with base data 
+		// 		changes...
+		//
+		// NOTE: we do not need to do anything on the .load(..) side...
+		['json.pre', 
+			function(mode){
+				var cur = this.collection || MAIN_COLLECTION_TITLE
+				if(cur == null || cur == MAIN_COLLECTION_TITLE){
+					return
+				}
 
-		// XXX account for 'base' mode changes... (???)
-		// 		use : .config['collection-transfer-changes']
-		// XXX might be a good idea to replace 'full' with changes to 
-		// 		override .changes...
-		// XXX need to account for collection local .changes...
-		// XXX might be a good idea to build local changes in 'prepareIndexForWrite.pre'...
-		// 		...or build and include .changes in .json(..)
+				var changes = this.changes
+
+				// everything/nothing changed -- nothing to do...
+				if(!changes || changes === true || changes[cur] === true){
+					return
+				}
+
+				var gid = this.collectionGID
+				var id = 'collection: '+ JSON.stringify(gid)
+				var change_tags = this.config['collection-transfer-changes'] || ['data']
+
+				var changed = change_tags 
+					.filter(function(tag){
+						return changes[tag] === true })
+
+				if(changed.length){
+					this.changes[id] = (this.changes[id] || [])
+						.concat(changed)
+						.unique() }
+
+				// reset the base change tags to the base data (from collection data)...
+				if(mode == 'base'){
+					return function(res){
+						var base_id = 'collection: '+ JSON.stringify(MAIN_COLLECTION_GID)
+						var base = this.changes[base_id] || []
+
+						// no need to save the base collection changes...
+						delete res.changes[base_id]
+
+						// clear...
+						change_tags.forEach(function(tag){
+							delete res.changes[tag] })
+						// set...
+						base.forEach(function(tag){
+							res.changes[tag] = true })
+					}
+				}
+			}],
+
 		['prepareIndexForWrite', 
 			function(res){
+				if(!res.changes){
+					return
+				}
 				var that = this
 				var changed = res.changes === true
 					|| res.changes.collections
 				var collections = this.collections
 
 				// collections partially changed...
-				var partial = Object.keys(this.collections)
+				var partial = Object.keys(collections || {})
 					.filter(function(t){ 
 						return res.changes['collection: '
 							+ JSON.stringify(collections[t].gid)] })
@@ -1142,6 +1192,8 @@ module.Collection = core.ImageGridFeatures.Feature({
 					Object.keys(res.raw.collections)
 						.forEach(function(title){ 
 							index[collections[title].gid || title] = title  })
+
+					var change_tags = this.config['collection-transfer-changes'] || ['data']
 
 					changed
 						// skip the raw field...
@@ -1176,12 +1228,16 @@ module.Collection = core.ImageGridFeatures.Feature({
 							var prepared = that.prepareIndexForWrite(raw, local_changes).index
 
 							// move the collection data to collection path...
-							// XXX do we need to cleanup metadata???
 							Object.keys(prepared)
 								.forEach(function(key){
 									res.index[path +'/'+ key] = prepared[key]
 									delete metadata[key]
 								})
+							// cleanup metadata...
+							// XXX do we need this???
+							change_tags.forEach(function(key){
+								delete metadata[key]
+							})
 						})
 				}
 			}],

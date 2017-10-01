@@ -657,6 +657,10 @@ core.ImageGridFeatures.Feature({
 
 				var changes = res.changes
 
+				if(!changes){
+					return
+				}
+
 				// data...
 				if(changes === true || changes.data){
 					res.index.data = res.raw.data
@@ -1288,6 +1292,10 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 		['prepareIndexForWrite', 
 			function(res){
 				var changes = res.changes
+
+				if(!changes){
+					return
+				}
 
 				if((changes === true || changes.tags) && res.raw.data.tags){
 					res.index.tags = res.raw.data.tags

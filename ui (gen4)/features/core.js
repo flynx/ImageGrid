@@ -968,6 +968,22 @@ module.Changes = ImageGridFeatures.Feature({
 	],
 
 	actions: ChangesActions,
+
+	handlers: [
+		// handle changes...
+		['json',
+			function(res, mode){
+				if(this.changes != null){
+					res.changes = JSON.parse(JSON.stringify(this.changes))
+				}
+			}],
+		['load',
+			function(_, data){
+				if(data.changes){
+					this.changes = JSON.parse(JSON.stringify(data.changes))
+				}
+			}],
+	],
 })
 
 

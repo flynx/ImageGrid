@@ -152,8 +152,9 @@ var IndexFormatActions = actions.Actions({
 		function(json, changes){
 			json = json || this.json('base')
 			changes = changes !== undefined ? changes
-				: this.hasOwnProperty('changes') ? this.changes
-				: null
+				: json.changes
+				//: this.hasOwnProperty('changes') ? this.changes
+				//: null
 			changes = changes === null ? true : changes
 			return {
 				date: json.date || Date.timeStamp(),
