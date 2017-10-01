@@ -50,6 +50,12 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'viewer-commandline',
 	'viewer-minimal',
 
+	// NOTE: this is not strictly needed unless we need to save stuff,
+	// 		added here mostly for testing purposes...
+	// 		...this is best included by direct feature dependency.
+	'index-format',
+
+
 	'collections',
 
 	// XXX remove when done testing...

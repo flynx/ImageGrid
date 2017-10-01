@@ -88,9 +88,9 @@ var IndexFormatActions = actions.Actions({
 			.prepareIndexForWrite(json)
 				-> data
 
-			Prepare a full state (current/specific)...
-			.prepareIndexForWrite(null, true)
-			.prepareIndexForWrite(json, true)
+			Prepare a state overwriting changes...
+			.prepareIndexForWrite(null, changes)
+			.prepareIndexForWrite(json, changes)
 				-> data
 				NOTE: this will disregard .changes
 
@@ -149,9 +149,9 @@ var IndexFormatActions = actions.Actions({
 			<timestamp>		- as returned by Date.timeStamp() (see: jli)
 
 		`,
-		function(json, full){
+		function(json, changes){
 			json = json || this.json('base')
-			var changes = full ? null 
+			changes = changes !== undefined ? changes
 				: this.hasOwnProperty('changes') ? this.changes
 				: null
 			changes = changes === null ? true : changes
@@ -1060,7 +1060,7 @@ module.Comments = core.ImageGridFeatures.Feature({
 		// 		need to do anything special to restore, i.e. no need for
 		// 		doing anything on .prepareJSONForLoad(..)
 		['prepareIndexForWrite',
-			function(res, _, full){
+			function(res){
 				var changed = res.changes === true
 					|| res.changes.comments
 

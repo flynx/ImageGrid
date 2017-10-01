@@ -1106,25 +1106,36 @@ module.Collection = core.ImageGridFeatures.Feature({
 		// XXX might be a good idea to replace 'full' with changes to 
 		// 		override .changes...
 		// XXX need to account for collection local .changes...
+		// XXX might be a good idea to build local changes in 'prepareIndexForWrite.pre'...
+		// 		...or build and include .changes in .json(..)
 		['prepareIndexForWrite', 
-			function(res, _, full){
+			function(res){
 				var that = this
-				var changed = full == true 
-					|| res.changes === true
+				var changed = res.changes === true
 					|| res.changes.collections
 				var collections = this.collections
 
-				if(changed && res.raw.collections){
+				// collections partially changed...
+				var partial = Object.keys(this.collections)
+					.filter(function(t){ 
+						return res.changes['collection: '
+							+ JSON.stringify(collections[t].gid)] })
+
+				if((partial.length > 0 || changed) 
+						&& res.raw.collections){
 					// select the actual changed collection list...
 					changed = changed === true ? 
 						Object.keys(res.raw.collections)
 						: changed
+					changed = (changed || []).concat(partial)
 
 					// collection index...
 					//
 					// NOTE: we are placing this in the index root to 
 					// 		simplify lazy-loading of the collection 
 					// 		index...
+					// XXX save this only if index has changed...
+					// 		...need 'collection-index' in changes...
 					// XXX need lazy-load handler in fs-loader for this...
 					// XXX don't like the name...
 					var index = res.index['collection-index'] = {}
@@ -1134,11 +1145,23 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 					changed
 						// skip the raw field...
-						.filter(function(k){ return changed.indexOf(k) >= 0 })
+						.filter(function(k){ 
+							return res.raw.collections[k] 
+								&& changed.indexOf(k) >= 0 })
 						.forEach(function(k){
 							var gid = res.raw.collections[k].gid || k
 							var path = 'collections/'+ gid
 							var raw = res.raw.collections[k]
+
+							// local collection changes...
+							// XXX local changes are not processed correctly 
+							// 		when the target collection is loaded...
+							// XXX revise the local changes format...
+							var local_changes = partial.indexOf(k) < 0 || {}
+							if(local_changes !== true){
+								(res.changes['collection: '+ JSON.stringify(gid)] || [])
+									.forEach(function(c){ local_changes[c] = true })
+							}
 
 							// collections/<gid>/metadata
 							var metadata = res.index[path +'/metadata'] = {}
@@ -1149,8 +1172,11 @@ module.Collection = core.ImageGridFeatures.Feature({
 							// XXX use collection changes!!!
 							// 		...this will need .prepareIndexForWrite(..) 
 							// 		refactoring to replace 'full' with 'changed'...
-							var prepared = that.prepareIndexForWrite(raw, true).index
+							//var prepared = that.prepareIndexForWrite(raw, true).index
+							var prepared = that.prepareIndexForWrite(raw, local_changes).index
 
+							// move the collection data to collection path...
+							// XXX do we need to cleanup metadata???
 							Object.keys(prepared)
 								.forEach(function(key){
 									res.index[path +'/'+ key] = prepared[key]
@@ -1418,7 +1444,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 		// XXX would be nice to be able to reuse the base functionality 
 		// 		here...
 		['prepareIndexForWrite', 
-			function(res, _, full){
+			function(res){
 				var raw = res.raw.collections || {}
 
 				// NOTE: we are cheating here, we do not need to check 
