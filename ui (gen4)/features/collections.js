@@ -869,6 +869,8 @@ var CollectionActions = actions.Actions({
 	// 		responsibility of extending features to store their specific 
 	// 		data in collections...
 	// 		XXX is this the right way to go???
+	// XXX account for 'base' mode changes... (???)
+	// 		use : .config['collection-transfer-changes']
 	json: [function(mode){ return function(res){
 		mode = mode || 'current'
 
