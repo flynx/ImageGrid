@@ -1099,15 +1099,11 @@ module.Collection = core.ImageGridFeatures.Feature({
 			}],
 
 
-		// XXX account for 'base' mode changes...
+		// XXX account for 'base' mode changes... (???)
 		// 		use : .config['collection-transfer-changes']
-		// XXX use .prepareIndexForWrite(...) for collection data stuff...
-		// 		i.e.
-		// 			this.prepareIndexForWrite({
-		// 				data: raw.data,
-		// 				...
-		// 			}, mode)
-		// 		...use this as a base for collection serialization...
+		// XXX might be a good idea to replace 'full' with changes to 
+		// 		override .changes...
+		// XXX need to account for collection local .changes...
 		['prepareIndexForWrite', 
 			function(res, _, full){
 				var that = this
@@ -1123,12 +1119,14 @@ module.Collection = core.ImageGridFeatures.Feature({
 						: changed
 
 					// collection index...
-					// XXX should this be at root or in collections/???
-					// 		...root seems better as it will let us lazy-load
-					// 		collection list without any extra effort...
-					//var index = res.index['collections/index'] = {}
+					//
+					// NOTE: we are placing this in the index root to 
+					// 		simplify lazy-loading of the collection 
+					// 		index...
+					// XXX need lazy-load handler in fs-loader for this...
+					// XXX don't like the name...
 					var index = res.index['collection-index'] = {}
-					Object.keys(collections)
+					Object.keys(res.raw.collections)
 						.forEach(function(title){ 
 							index[collections[title].gid || title] = title  })
 
@@ -1146,9 +1144,10 @@ module.Collection = core.ImageGridFeatures.Feature({
 								.forEach(function(key){ metadata[key] = raw[key] })
 
 							raw.date = res.date
-							// XXX set changes???
-							// XXX would be nice to have collections' .tags here... (???)
-							var prepared = that.prepareIndexForWrite(raw, full).index
+							// XXX use collection changes!!!
+							// 		...this will need .prepareIndexForWrite(..) 
+							// 		refactoring to replace 'full' with 'changed'...
+							var prepared = that.prepareIndexForWrite(raw, true).index
 
 							Object.keys(prepared)
 								.forEach(function(key){
@@ -1355,22 +1354,25 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 				var c = this.collections
 				var rc = res.collections
 
+				// NOTE: at this point .crop_stack is handled, so we 
+				// 		do not need to care about it...
+
 				// in 'base' mode set .data.tags and .local_tags to 
 				// the base collection data...
 				if(mode == 'base' 
 						&& this.collection != null
 						&& this.collection != MAIN_COLLECTION_TITLE){
-					// NOTE: at this point .crop_stack is handled, so we 
-					// 		do not need to care about it...
-					var tags = c[MAIN_COLLECTION_TITLE].local_tags || {}
-					var rtags = 
-						res.data.tags = 
-						res.collections[this.collection].data.tags || {}
+					var tags = this.data.tags || {}
+					var ltags = c[MAIN_COLLECTION_TITLE].local_tags || {}
+					var rtags = res.data.tags = {}
 
-					// compact and overwrite the local tags for the base...
+					// move all the tags...
 					Object.keys(tags)
-						.forEach(function(tag){
-							rtags[tag] = tags[tag].compact() })
+						.filter(function(tag){ return ltags[tag] == null })
+						.forEach(function(tag){ rtags[tag] = tags[tag].compact() })
+					// overwrite the local tags for the base...
+					Object.keys(ltags)
+						.forEach(function(tag){ rtags[tag] = ltags[tag].compact() })
 				}
 
 				// clear and compact tags for all collections...
@@ -1378,19 +1380,35 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					&& Object.keys(rc || {})
 						.forEach(function(title){
 							var tags = c[title].local_tags || {}
-							var rtags = rc[title].local_tags = {}
+							var rtags = {}
 
 							// compact the local tags...
 							Object.keys(tags)
 								.forEach(function(tag){
 									rtags[tag] = tags[tag].compact() })
 
-							// no need to save the tags in more than the
-							// root .data...
-							if(rc[title].data){
-								delete rc[title].data.tags
-							}
+							// move .local_tags to .data.tags
+							rc[title].data.tags = rtags
 						})
+			}],
+		// load collection local tags from .data.tags to .local_tags...
+		['load',
+			function(_, json){
+				var that = this
+				Object.keys(json.collections || {})
+					// skip loaded collections that are already Data objects...
+					// XXX not sure about this...
+					.filter(function(title){
+						return !(json.collections[title] instanceof data.Data) })
+					// do the loading...
+					.forEach(function(title){
+						var c = that.collections[title]
+
+						c.local_tags = c.local_tags || {}
+						;(that.config['collection-local-tags'] || [])
+							.forEach(function(tag){
+								c.local_tags[tag] = c.local_tags[tag] || c.data.tags[tag] })
+					})
 			}],
 
 
@@ -1873,9 +1891,8 @@ var UICollectionActions = actions.Actions({
 	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
 		{browseMode: function(){ 
 			return this.marked.length == 0 && 'disabled' }},
-		widgets.uiDialog(function(gids){
-			return this.browseCollections(function(title){
-				this.collectMarked(gids || this.current, title) }) })],
+		widgets.uiDialog(function(){
+			return this.browseCollections(function(title){ this.collectMarked(title) }) })],
 
 	/*/ XXX this is not used by metadata yet...
 	metadataSection: ['- Image/',

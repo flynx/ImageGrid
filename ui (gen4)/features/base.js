@@ -649,6 +649,7 @@ core.ImageGridFeatures.Feature({
 	actions: BaseActions,
 
 	handlers: [
+		// XXX handle 'full'???
 		['prepareIndexForWrite', 
 			function(res){
 				// we save .current unconditionally...

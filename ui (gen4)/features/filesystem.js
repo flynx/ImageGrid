@@ -73,6 +73,8 @@ var IndexFormatActions = actions.Actions({
 		'preview-path-template': '${INDEX}/${RESOLUTION}px/${GID} - ${NAME}.jpg',
 	},
 
+	// XXX might be a good idea to replace 'full' with changes to 
+	// 		override .changes...
 	prepareIndexForWrite: ['- File/Prepare index for writing',
 		core.doc`Convert json index to a format compatible with file.writeIndex(..)
 
