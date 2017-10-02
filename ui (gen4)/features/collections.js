@@ -49,8 +49,16 @@ var widgets = require('features/ui-widgets')
 // XXX should these be in .config???
 var MAIN_COLLECTION_TITLE =
 module.MAIN_COLLECTION_TITLE = '$ALL'
+
 var MAIN_COLLECTION_GID =
 module.MAIN_COLLECTION_GID = '0'
+
+var COLLECTION_TRANSFER_CHANGES =
+module.COLLECTION_TRANSFER_CHANGES = [
+	'metadata',
+	'data',
+]
+
 
 // XXX undo...
 var CollectionActions = actions.Actions({
@@ -65,9 +73,7 @@ var CollectionActions = actions.Actions({
 		// XXX should this be in config???
 		// 		...technically no, but we need this to resolve correctly 
 		// 		to a relevant feature...
-		'collection-transfer-changes': [
-			'data',
-		],
+		'collection-transfer-changes': COLLECTION_TRANSFER_CHANGES.slice(),
 	},
 
 	// Format:
@@ -869,8 +875,7 @@ var CollectionActions = actions.Actions({
 	// 		responsibility of extending features to store their specific 
 	// 		data in collections...
 	// 		XXX is this the right way to go???
-	// XXX account for 'base' mode changes... (???)
-	// 		use : .config['collection-transfer-changes']
+	// NOTE: .chnages are handled separately in feature .handlers...
 	json: [function(mode){ return function(res){
 		mode = mode || 'current'
 
@@ -1011,17 +1016,41 @@ module.Collection = core.ImageGridFeatures.Feature({
 	actions: CollectionActions, 
 
 	handlers: [
-		// XXX do we need this???
+		// save before we serialize...
 		['json.pre',
 			function(){ this.saveCollection() }],
 
-		// changes...
+
+		// Handle changes...
 		//
-		// format:
-		// 	'collections'		- collection list changes
-		// 	'collection: <gid>'	- holds collection-specific changes
+		// 	Global tags:
+		// 		'collections'	- mark collection list as changed
+		// 		'collection: <gid>'	
+		// 						- collection-specific changes
 		//
-		// collection-list...
+		// 	Collection-specific tags:
+		// 		'metadata'		- marks metadata as changed
+		// 							NOTE: this is ignored for the base 
+		// 								collection...
+		//
+		// 	Collection-local tags (see: .config['collection-transfer-changes']):
+		// 		'metadata'
+		// 		'data'
+		//
+		//
+		//	Mark collection list as changed...
+		// 	.markChanged('collections')
+		// 		NOTE: this will not affect collections...
+		//
+		// 	Mark tag as changed when collection is loaded...
+		// 	.markChanged(<tag>)
+		// 		NOTE: this only applies to collection-local or specific tags...
+		//
+		// 	Mark tag as changed when collection is not loaded...
+		// 	.markChanged('collection: '+JSON.stringify(<gid>), [<tag>, ..])
+		//
+		//
+		// collection list...
 		[[
 			'collectionCreated',
 			'collectionRemoved',
@@ -1035,6 +1064,13 @@ module.Collection = core.ImageGridFeatures.Feature({
 						'collection: '
 							+JSON.stringify(this.collections[collection].gid || collection))
 			}],
+		// collection title/list...
+		['renameCollection',
+			function(_, from, to){
+				this
+					.markChanged('collections')
+					.markChanged('collection: '
+						+ JSON.stringify(this.collections[to].gid), ['metadata']) }],
 		// basic collection edits...
 		[[
 			// NOTE: no need to handle .collect(..) here as it calls .joinCollect(..)
@@ -1059,8 +1095,8 @@ module.Collection = core.ImageGridFeatures.Feature({
 					return
 				}
 
-				// XXX this should not be in config...
-				var change_tags = this.config['collection-transfer-changes'] || ['data']
+				var change_tags = this.config['collection-transfer-changes'] 
+					|| COLLECTION_TRANSFER_CHANGES
 
 				var from_changes = change_tags
 					.filter(function(item){
@@ -1099,7 +1135,6 @@ module.Collection = core.ImageGridFeatures.Feature({
 					})
 				}
 			}],
-
 		// update current collection changes...
 		//
 		// This will:
@@ -1125,7 +1160,8 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 				var gid = this.collectionGID
 				var id = 'collection: '+ JSON.stringify(gid)
-				var change_tags = this.config['collection-transfer-changes'] || ['data']
+				var change_tags = this.config['collection-transfer-changes']
+					|| COLLECTION_TRANSFER_CHANGES
 
 				var changed = change_tags 
 					.filter(function(tag){
@@ -1156,19 +1192,56 @@ module.Collection = core.ImageGridFeatures.Feature({
 				}
 			}],
 
+
 		// Handle collection serialization format...
 		//
-		// Format:
-		// 	Collection gid-title index...
-		// 	.ImageGrid/<data>-collections-index.json
+		// Index format:
+		// 	{
+		// 		...
 		//
-		// 	Collection metadata...
-		// 	.ImageGrid/collections/<gid>/<data>-metadata.json
+		// 		// Collection gid-title index...
+		//		//
+		// 		// NOTE: this is sorted via .collection_order...
+		// 		collection-index: {
+		// 			<gid>: <title>,
+		// 			...
+		// 		}
 		//
-		// 	Collection index data (same format as .ImageGrid/*)...
-		// 	.ImageGrid/collections/<gid>/*
+		// 		// Collection metadata...
+		// 		'collections/<gid>/metadata': {
+		// 			gid: <gid>,
+		// 			title: <title>,
+		// 			...
+		// 		},
 		//
-		// XXX save metadata only if changed... (???)
+		// 		// Collection index data...
+		//		//
+		// 		// NOTE: this can contain the same tags as the root index
+		// 		//		this the collection format is the same as the 
+		// 		//		containing index format...
+		// 		// 		This is built by: 
+		// 		//			.prepareIndexForWrite(
+		// 		//				<collection-data>, 
+		// 		//				<collection-changes>)
+		// 		//		Where:
+		// 		//			<collection-data>
+		// 		//				taken as-is from .collections[gid] as 
+		// 		//				returned by .json(..)
+		// 		//			<collection-changes>
+		// 		//				built from .changes['collection: <gid>']
+		// 		//		And placed under path:
+		// 		//			collections/<gid>
+		// 		// NOTE: as the collection index is recursive, care must
+		// 		//		be taken when/if nested collections are needed
+		// 		//		to avoid self referencing...
+		// 		'collections/<gid>/<tag>': <tag-data>,
+		//
+		// 		...
+		// 	}
+		//
+		//
+		// NOTE: the base collection (MAIN_COLLECTION_TITLE) is not saved 
+		// 		in collections, it is stored in the root index...
 		['prepareIndexForWrite', 
 			function(res){
 				if(!res.changes){
@@ -1191,6 +1264,21 @@ module.Collection = core.ImageGridFeatures.Feature({
 								&& res.changes['collection: '
 									+ JSON.stringify(collections[t].gid)] })
 
+				// collection index...
+				// NOTE: we are placing this in the index root to 
+				// 		simplify lazy-loading of the collection 
+				// 		index...
+				if(changes && changes.collections){
+					var index = res.index['collection-index'] = {}
+					// NOTE: we do not need to use .collection_order here
+					// 		as .json(..) returns the collections in the 
+					// 		correct order...
+					Object.keys(res.raw.collections)
+						.forEach(function(title){ 
+							index[collections[title].gid || title] = title  })
+				}
+
+				// collections...
 				if((full.length > 0 || partial.length > 0)
 						&& res.raw.collections){
 					// select the actual changed collection list...
@@ -1198,18 +1286,8 @@ module.Collection = core.ImageGridFeatures.Feature({
 						Object.keys(res.raw.collections)
 						: (full).concat(partial)
 
-					// collection index...
-					// NOTE: we are placing this in the index root to 
-					// 		simplify lazy-loading of the collection 
-					// 		index...
-					if(changes && changes.collections){
-						var index = res.index['collection-index'] = {}
-						Object.keys(res.raw.collections)
-							.forEach(function(title){ 
-								index[collections[title].gid || title] = title  })
-					}
-
-					var change_tags = this.config['collection-transfer-changes'] || ['data']
+					var change_tags = this.config['collection-transfer-changes']
+						|| COLLECTION_TRANSFER_CHANGES
 
 					changed
 						// skip the raw field...
@@ -1278,7 +1356,6 @@ var CollectionTagsActions = actions.Actions({
 			'selected',
 		],
 		
-		// XXX this should not be in config -- see CollectionActions.config for details...
 		'collection-transfer-changes': 
 			CollectionActions.config['collection-transfer-changes']
 				.concat([
@@ -1507,35 +1584,6 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 							.forEach(function(tag){
 								c.local_tags[tag] = c.local_tags[tag] || c.data.tags[tag] })
 					})
-			}],
-
-
-		// XXX handle .config['collection-transfer-changes']...
-		// XXX would be nice to be able to reuse the base functionality 
-		// 		here...
-		['prepareIndexForWrite', 
-			function(res){
-				var raw = res.raw.collections || {}
-
-				// NOTE: we are cheating here, we do not need to check 
-				// 		for changes as this is already taken care off by
-				// 		the main collections feature, here we just update 
-				// 		the stuff it created...
-				// XXX should we iterate over index or raw here???
-				Object.keys(raw).forEach(function(title){
-					var path = 'collections/'+ raw[title].gid
-					var metadata = res.index[path + '/metadata']
-
-					if(metadata && 'local_tags' in metadata){
-						res.index[path +'/tags'] = metadata.local_tags
-						delete metadata.local_tags
-					}
-				})
-			}],
-		// XXX
-		['prepareJSONForLoad',
-			function(res, json, base_path){
-				// XXX
 			}],
 	],
 })
@@ -1809,7 +1857,8 @@ var UICollectionActions = actions.Actions({
 						var unsaved = that.changes === true 
 							|| (that.changes || {})['collection: '+ JSON.stringify(gid)]
 							|| (that.collectionGID == gid 
-								&& (that.config['collection-transfer-changes'] || [])
+								&& (that.config['collection-transfer-changes']
+										|| COLLECTION_TRANSFER_CHANGES)
 									.filter(function(a){ 
 										return !!(that.changes || {})[a] }).length > 0)
 						unsaved
