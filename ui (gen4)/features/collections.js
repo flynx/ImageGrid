@@ -1131,10 +1131,11 @@ module.Collection = core.ImageGridFeatures.Feature({
 					.filter(function(tag){
 						return changes[tag] === true })
 
-				if(changed.length){
+				if(changed.length > 0 && this.changes[id] !== true){
 					this.changes[id] = (this.changes[id] || [])
 						.concat(changed)
-						.unique() }
+						.unique() 
+				}
 
 				// reset the base change tags to the base data (from collection data)...
 				if(mode == 'base'){
@@ -1155,6 +1156,18 @@ module.Collection = core.ImageGridFeatures.Feature({
 				}
 			}],
 
+		// Handle collection serialization format...
+		//
+		// Format:
+		// 	Collection gid-title index...
+		// 	.ImageGrid/<data>-collections-index.json
+		//
+		// 	Collection metadata...
+		// 	.ImageGrid/collections/<gid>/<data>-metadata.json
+		//
+		// 	Collection index data (same format as .ImageGrid/*)...
+		// 	.ImageGrid/collections/<gid>/*
+		//
 		// XXX save metadata only if changed... (???)
 		['prepareIndexForWrite', 
 			function(res){
@@ -1217,8 +1230,11 @@ module.Collection = core.ImageGridFeatures.Feature({
 							}
 
 							// collections/<gid>/metadata
-							// XXX save this only if changed... (???)
-							var metadata = res.index[path +'/metadata'] = {}
+							var metadata = {}
+							if(full.indexOf(k) >= 0 
+									|| res.changes[id].indexOf('metadata') >= 0){
+								res.index[path +'/metadata'] = metadata
+							}
 							Object.keys(raw)
 								.forEach(function(key){ metadata[key] = raw[key] })
 
