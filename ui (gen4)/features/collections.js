@@ -413,7 +413,6 @@ var CollectionActions = actions.Actions({
 	// XXX it feels like we need two levels of actions, low-level that 
 	// 		just do their job and user actions that take care of 
 	// 		consistent state and the like...
-	// XXX do we need to handle collection gids here???
 	saveCollection: ['- Collections/',
 		core.doc`Save current state to collection
 
@@ -484,7 +483,6 @@ var CollectionActions = actions.Actions({
 				!collections[collection] 
 				&& collection != MAIN_COLLECTION_TITLE
 
-
 			// save the data...
 			var state = collections[collection] = collections[collection] || {}
 			state.title = state.title || collection
@@ -492,7 +490,14 @@ var CollectionActions = actions.Actions({
 				// maintain the GID of MAIN_COLLECTION_TITLE as MAIN_COLLECTION_GID...
 				|| (collection == MAIN_COLLECTION_TITLE ? 
 					MAIN_COLLECTION_GID 
-					: this.data.newGID())
+					// generate unique gid...
+					: (function(){
+						var gids = that.collectionGIDs
+						do{
+							var gid = that.data.newGID()
+						} while(gids[gid] != null)
+						return gid
+					})())
 			// NOTE: we do not need to care about tags here as they 
 			// 		will get overwritten on load...
 			state.data = (mode == 'empty' ? 
@@ -1041,6 +1046,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 		//	Mark collection list as changed...
 		// 	.markChanged('collections')
 		// 		NOTE: this will not affect collections...
+		// 		NOTE: this is useful alone when removing collections...
 		//
 		// 	Mark tag as changed when collection is loaded...
 		// 	.markChanged(<tag>)
@@ -1195,7 +1201,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 		// Handle collection serialization format...
 		//
-		// Index format:
+		// Return format:
 		// 	{
 		// 		...
 		//
