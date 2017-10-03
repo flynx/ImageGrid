@@ -770,12 +770,17 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 		['loadIndex',
 			function(res, path){
 				if(path){
-					//this.markChanged('none')
 					var that = this
-					res.then(function(){
-						that.markChanged('none')
-					})
+					res.then(function(){ 
+						that.markChanged('none') })
 				}
+			}],
+		// mark everything changed when loading images...
+		['loadImages',
+			function(res){
+				var that = this
+				res.then(function(){ 
+					that.markChanged('all') })
 			}],
 		// add new images to changes...
 		['loadNewImages',
@@ -786,8 +791,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 						&& imgs.length > 0 
 						&& that
 							.markChanged('data')
-							.markChanged(imgs.keys())
-				})
+							.markChanged(imgs.keys()) })
 			}],
 	],
 })

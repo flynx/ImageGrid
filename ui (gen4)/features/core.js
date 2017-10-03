@@ -921,11 +921,7 @@ var ChangesActions = actions.Actions({
 
 			// all...
 			if(args.length == 1 && args[0] == 'all'){
-				// NOTE: this is better than delete as it will shadow 
-				// 		the parent's changes in case we got cloned from
-				// 		a live instance...
-				//delete this.changes
-				this.changes = null
+				this.changes = true
 
 			// none...
 			} else if(args.length == 1 && args[0] == 'none'){
