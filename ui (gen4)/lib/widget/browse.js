@@ -1637,9 +1637,9 @@ var BrowserPrototype = {
 			Down: 'down!',
 			Left: 'left!',
 			ctrl_Left: 'update!: "/"',
-			Backspace: 'Left',
 			Right: 'right',
-			//P: 'push',
+			Backspace: 'Left',
+			Space: 'Right',
 
 			// XXX should these also select buttons???
 			Tab: 'down!',
@@ -1656,8 +1656,6 @@ var BrowserPrototype = {
 			End: 'navigate!: "last"',
 
 			Enter: 'action',
-			Space: 'Enter',
-			//O: 'action',
 
 			Esc: 'close: "reject"',
 
