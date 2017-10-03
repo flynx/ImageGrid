@@ -2222,7 +2222,7 @@ var DataPrototype = {
 	// 		.getImage(..)
 	// NOTE: if no target is given this will assume the current image.
 	split: function(target){
-		target = argument.length > 1 ? [].slice.call(arguments)
+		target = arguments.length > 1 ? [].slice.call(arguments)
 			: target == null || target instanceof Array ? target
 			: [target]
 
