@@ -1258,12 +1258,13 @@ module.Collection = core.ImageGridFeatures.Feature({
 				var collections = this.collections
 
 				// collections fully/partially changed...
-				var full = changes === true ? true 
+				var full = changes === true ? 
+					Object.keys(collections || {})
 					: Object.keys(collections || {})
 						.filter(function(t){ 
 							return res.changes['collection: '
 								+ JSON.stringify(collections[t].gid)] === true })
-				var partial = changes === true ? [] 
+				var partial = changes === true ? []
 					: Object.keys(collections || {})
 						.filter(function(t){ 
 							return full.indexOf(t) < 0
@@ -1274,12 +1275,12 @@ module.Collection = core.ImageGridFeatures.Feature({
 				// NOTE: we are placing this in the index root to 
 				// 		simplify lazy-loading of the collection 
 				// 		index...
-				if(changes && changes.collections){
+				if(changes && (changes === true || changes.collections)){
 					var index = res.index['collection-index'] = {}
 					// NOTE: we do not need to use .collection_order here
 					// 		as .json(..) returns the collections in the 
 					// 		correct order...
-					Object.keys(res.raw.collections)
+					Object.keys(res.raw.collections || {})
 						.forEach(function(title){ 
 							index[collections[title].gid || title] = title  })
 				}
@@ -1339,10 +1340,65 @@ module.Collection = core.ImageGridFeatures.Feature({
 						})
 				}
 			}],
-		// XXX
 		['prepareJSONForLoad',
 			function(res, json, base_path){
-				// XXX
+				// collection index...
+				var collections = {}
+				var collections_index = {}
+				var index = json['collection-index']
+				index
+					&& index.forEach(function(gid){
+						var title = index[gid]
+						var path = 'collections/'+ gid
+
+						collections_index[gid] = collections[title] = {
+							gid: gid,
+							title: title,
+
+							// XXX
+							path: path,
+						}
+					})
+
+				// group collection data...
+				// XXX would be nice to have a mechanism to pass info to 
+				// 		the loader on what paths to load without actually 
+				// 		loading them manually...
+				// 		...without this mechanism the data used here would
+				// 		not exist...
+				var collection_data = {}
+				Object.keys(json)
+					.filter(function(k){ return k.startsWith('collections/') })
+					.forEach(function(k){
+						var s = k.split(/[\\\/]+/g).slice(1)
+						var gid = s.shift()
+						var key = s.shift()
+						var title = collections_index[gid].title
+
+						// load only collections in index...
+						if(title){
+							var data = collection_data[gid] = collection_data[gid] || {}
+
+							// overwrite metadata...
+							if(key == 'metadata'){
+								collections_index[gid] = collections[title] = json[k]
+
+							// other stuff -> collection data...
+							} else {
+								data[key] = json[k]
+							}
+						}
+					})
+
+				// XXX prepare collection data for loading...
+				Object.keys(collection_data)
+					.forEach(function(gid){
+						// XXX would be nice to be able to use .prepareJSONForLoad(..) 
+						// 		to handle collection internals produced by
+						// 		.prepareJSONForLoad(..)...
+						// 		...would need to pass it the local data...
+						// XXX
+					})
 			}],
 	],
 })
