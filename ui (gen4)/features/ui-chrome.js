@@ -619,9 +619,9 @@ module.UIScale = core.ImageGridFeatures.Feature({
 
 	// XXX test if in:
 	// 	- chrome app
-	// 	- nw
+	// 	- desktop
 	// 	- mobile
-	isApplicable: function(){ return this.runtime == 'nw' },
+	isApplicable: function(){ return this.runtime.desktop },
 
 	// XXX show main window...
 	handlers: [

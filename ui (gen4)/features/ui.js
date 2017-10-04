@@ -708,7 +708,7 @@ module.Viewer = core.ImageGridFeatures.Feature({
 	// check if we are running in a UI context...
 	// NOTE: this will prevent loading of any features dependant on the 
 	// 		UI in a non UI context...
-	isApplicable: function(){ return typeof(window) == typeof({}) },
+	isApplicable: function(){ return this.runtime.browser },
 
 	handlers: [
 		['start',
@@ -976,7 +976,7 @@ module.URLHash = core.ImageGridFeatures.Feature({
 
 	//isApplicable: function(){ 
 	//	return typeof(location) != 'undefined' && location.hash != null },
-	isApplicable: function(){ return this.runtime == 'browser' },
+	isApplicable: function(){ return this.runtime.browser },
 
 	handlers: [
 		// hanlde window.onhashchange event...

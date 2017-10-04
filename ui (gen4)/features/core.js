@@ -162,17 +162,27 @@ ImageGridFeatures.__actions__ =
 
 //---------------------------------------------------------------------
 // Setup runtime info...
+// XXX add test if chrome-app...
+// XXX add test if cordova...
+// XXX add test if mobile...
+
+// XXX should this contain feature versions???
+var runtime = ImageGridFeatures.runtime = {}
 
 // nw or node...
 if(typeof(process) != 'undefined'){
+	// node...
+	runtime.node = true
 
 	// Electron...
 	if(process.versions['electron'] != null){
-		ImageGridFeatures.runtime = 'electron'
+		runtime.electron = true
+		runtime.desktop = true
 
 	// nw.js 0.13+
 	} else if(typeof(nw) != 'undefined'){
-		ImageGridFeatures.runtime = 'nw'
+		runtime.nw = true
+		runtime.desktop = true
 
 		// NOTE: jli is patching the Date object and with two separate 
 		// 		instances we'll need to sync things up...
@@ -187,25 +197,19 @@ if(typeof(process) != 'undefined'){
 
 	// node...
 	} else {
-		ImageGridFeatures.runtime = 'node'
-
 		// XXX patch Date...
 		// XXX this will not work directly as we will need to explicitly
 		// 		require jli...
 		//patchDate(global.Date)
 	}
+}
 
 // browser...
 // NOTE: we're avoiding detecting browser specifics for as long as possible,
 // 		this will minimize the headaches of supporting several non-standard
 // 		versions of code...
-} else if(typeof(window) != 'undefined'){
-	ImageGridFeatures.runtime = 'browser'
-
-// unknown...
-// XXX do we need to detect chrome app???
-} else {
-	ImageGridFeatures.runtime = 'unknown'
+if(typeof(window) != 'undefined'){
+	runtime.browser = true
 }
 
 
@@ -353,7 +357,7 @@ var LifeCycleActions = actions.Actions({
 			var runtime = this.runtime = ImageGridFeatures.runtime
 
 			// nw.js...
-			if(runtime == 'nw'){
+			if(runtime.nw){
 				// this handles both reload and close...
 				$(window).on('beforeunload', stop)
 
@@ -386,12 +390,12 @@ var LifeCycleActions = actions.Actions({
 				nw.Window.get().on('close', this.__nw_stop_handler)
 
 
-			// node.js...
-			} else if(runtime == 'node'){
+			// node...
+			} else if(runtime.node){
 				process.on('exit', stop)
 
 			// browser...
-			} else if(runtime == 'browser'){
+			} else if(runtime.browser){
 				$(window).on('beforeunload', stop)
 
 			// other...
@@ -400,17 +404,11 @@ var LifeCycleActions = actions.Actions({
 				console.warn('Unknown runtime:', runtime)
 			}
 
-			// handler ready event...
+			// handle ready event...
 			// ...if no one requested to do it.
 			if(this.__ready_announce_requested == null
 					|| this.__ready_announce_requested <= 0){
-				if(runtime == 'nw'){
-					$(function(){ that.declareReady() })
-
-				} else if(runtime == 'node'){
-					this.declareReady()
-
-				} else if(runtime == 'browser'){
+				if(runtime.browser){
 					$(function(){ that.declareReady() })
 
 				} else {
@@ -503,20 +501,19 @@ var LifeCycleActions = actions.Actions({
 			handlers can run cleanly.
 		`,
 		function(){
-			// browser & nw...
-			if(this.__stop_handler 
-					&& (this.runtime == 'browser' || this.runtime == 'nw')){
+			// browser...
+			if(this.__stop_handler && this.runtime.browser){
 				$(window).off('beforeunload', this.__stop_handler)
 			}
 
 			// nw...
-			if(this.__nw_stop_handler && this.runtime == 'nw'){
+			if(this.__nw_stop_handler && this.runtime.nw){
 				nw.Window.get().removeAllListeners('close')
 				delete this.__nw_stop_handler
 			}
 
 			// node...
-			if(this.__stop_handler && this.runtime == 'node'){
+			if(this.__stop_handler && this.runtime.node){
 				process.removeAllListeners('exit')
 			}
 

@@ -197,7 +197,7 @@ module.AppControl = core.ImageGridFeatures.Feature({
 	// 	- chrome app
 	// 	- nw
 	// 	- mobile
-	isApplicable: function(){ return this.runtime == 'nw' },
+	isApplicable: function(){ return this.runtime.nw },
 
 	// XXX show main window...
 	handlers: [

@@ -212,8 +212,7 @@ module.MetadataReader = core.ImageGridFeatures.Feature({
 		'metadata',
 	],
 
-	isApplicable: function(){ 
-		return this.runtime == 'nw' || this.runtime == 'node' },
+	isApplicable: function(){ return this.runtime.node },
 
 	actions: MetadataReaderActions,
 

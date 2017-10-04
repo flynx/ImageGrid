@@ -91,8 +91,9 @@ module.CLI = core.ImageGridFeatures.Feature({
 		'lifecycle'
 	],
 
+	// XXX should this be ONLY node???
 	isApplicable: function(){ 
-		return this.runtime == 'node' /*|| this.runtime == 'nw'*/ },
+		return this.runtime.node && !this.runtime.browser },
 
 	actions: CLIActions,
 
@@ -101,7 +102,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 			function(){
 				var that = this
 				// get the arguments...
-				if(this.runtime == 'nw'){
+				if(this.runtime.nw){
 					var argv = nw.App.argv
 
 					// XXX appears to have a stray '--help' lodged in 
@@ -109,7 +110,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 					// 		...need to test this with a packed exec...
 					console.log('>>>>', argv)
 
-				} else if(this.runtime == 'node'){
+				} else if(this.runtime.node){
 					var argv = process.argv
 				}
 

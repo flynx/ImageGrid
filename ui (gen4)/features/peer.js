@@ -372,8 +372,7 @@ module.ChildProcessPeer = core.ImageGridFeatures.Feature({
 		'peer',
 	],
 
-	isApplicable: function(){ 
-		return this.runtime == 'nw' || this.runtime == 'node' },
+	isApplicable: function(){ return this.runtime.node },
 
 	actions: ChildProcessPeerActions, 
 

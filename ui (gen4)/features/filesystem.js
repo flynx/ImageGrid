@@ -215,8 +215,7 @@ module.FileSystemInfo = core.ImageGridFeatures.Feature({
 
 	actions: FileSystemInfoActions,
 
-	isApplicable: function(){ 
-		return this.runtime == 'node' || this.runtime == 'nw' },
+	isApplicable: function(){ return this.runtime.node },
 })
 
 
@@ -762,8 +761,7 @@ module.FileSystemLoader = core.ImageGridFeatures.Feature({
 
 	actions: FileSystemLoaderActions,
 
-	isApplicable: function(){ 
-		return this.runtime == 'node' || this.runtime == 'nw' },
+	isApplicable: function(){ return this.runtime.node },
 
 	handlers: [
 		// clear changes when loading an index...
@@ -2085,8 +2083,7 @@ module.FileSystemWriter = core.ImageGridFeatures.Feature({
 
 	actions: FileSystemWriterActions,
 
-	isApplicable: function(){ 
-		return this.runtime == 'node' || this.runtime == 'nw' },
+	isApplicable: function(){ return this.runtime.node },
 
 	// monitor changes...
 	// XXX should we use .load(..) to trigger changes instead of .loadURLs(..)???
