@@ -11,6 +11,12 @@ if(typeof(process) != 'undefined'){
 	var pathlib = requirejs('path')
 }
 
+var electron
+try{
+	electron = requirejs('electron')
+} catch(e){ }
+
+
 var actions = require('lib/actions')
 var features = require('lib/features')
 var toggler = require('lib/toggler')
@@ -109,28 +115,39 @@ module.NWHost = core.ImageGridFeatures.Feature({
 
 var ElectronHostActions = actions.Actions({
 	get title(){
-	},
+		return electron.remote.getCurrentWindow().getTitle() },
 	set title(value){
-	},
+		electron.remote.getCurrentWindow().setTitle(value) },
 
 	minimize: ['Window/Minimize',
 		function(){
-			// XXX
-		}],
+			electron.remote.getCurrentWindow().minimize() }],
 
 	showDevTools: ['Interface|Development/Show Dev Tools',
 		function(){
-			// XXX
-		}],
+			electron.remote.getCurrentWindow().openDevTools() }],
 
+	// XXX make this portable (osx, linux)...
 	showInFolder: ['File|Image/Show in $folder',
 		function(image){
-			// XXX
+			image = this.images[this.data.getImage(image)]
+
+			var base = image.base_path || this.location.path
+			var filename = image.path
+			var path = pathlib.normalize(base + '/' + filename)
+
+			requirejs('child_process')
+				// XXX make this portable (osx, linux)...
+				.exec('explorer.exe /select,'+JSON.stringify(path.replace(/\//g, '\\')))
+				//.exec('open -R '+JSON.stringify(path))
 		}],
 
 	// XXX this is almost generic, but it is not usable unless within 
 	// 		a user event handler...
 	// 		...can we use this on electron???
+	// 		if this fails use:
+	// 			electron.remote.getCurrentWindow().isFullScreen(..)
+	// 			electron.remote.getCurrentWindow().setFullScreen(..)
 	toggleFullScreen: ['Window/Full screen mode',
 		toggler.CSSClassToggler(
 			function(){ return document.body }, 
