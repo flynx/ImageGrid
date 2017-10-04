@@ -22,6 +22,188 @@ var base = require('features/base')
 
 /*********************************************************************/
 
+var NWHostActions = actions.Actions({
+	get title(){
+		return nw.Window.get().title },
+	set title(value){
+		nw.Window.get().title = value },
+
+	minimize: ['Window/Minimize',
+		function(){
+			nw.Window.get().minimize() }],
+	toggleFullScreen: ['Window/Full screen mode',
+		toggler.CSSClassToggler(
+			function(){ return document.body }, 
+			'.full-screen-mode',
+			function(action){
+				var that = this
+				var w = nw.Window.get()
+
+				// change the state only if the target state is not the same
+				// as the current state...
+				if((w.isFullscreen ? 'on' : 'off') != action){
+					this.ribbons.preventTransitions()
+
+					// hide the viewer to hide any animation crimes...
+					this.dom[0].style.visibility = 'hidden'
+
+					// XXX async...
+					// 		...this complicates things as we need to do the next
+					// 		bit AFTER the resize is done...
+					w.toggleFullscreen()
+
+					setTimeout(function(){ 
+						that
+							.centerViewer()
+							.focusImage()
+							.ribbons
+								.restoreTransitions()
+
+						that.dom[0].style.visibility = ''
+					}, 100)
+				}
+
+				// NOTE: we delay this to account for window animation...
+				setTimeout(function(){ 
+					that.storeWindowGeometry() 
+				}, 500)
+			})],
+
+	// XXX add ability to use devtools on background page (node context)...
+	showDevTools: ['Interface|Development/Show Dev Tools',
+		function(){
+			nw.Window.get().showDevTools &&
+				nw.Window.get().showDevTools()
+		}],
+
+	// XXX should this be here???
+	showInFolder: ['File|Image/Show in $folder',
+		function(image){
+			image = this.images[this.data.getImage(image)]
+
+			var base = image.base_path || this.location.path
+			var filename = image.path
+			var path = pathlib.normalize(base + '/' + filename)
+
+			nw.Shell.showItemInFolder(path)
+		}],
+})
+
+var NWHost = 
+module.NWHost = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-nw-host',
+	exclusive: 'ui-host',
+	depends: [],
+
+	actions: NWHostActions,
+
+	isApplicable: function(){ return this.runtime.nw },
+})
+
+
+
+//---------------------------------------------------------------------
+
+var ElectronHostActions = actions.Actions({
+	get title(){
+	},
+	set title(value){
+	},
+
+	minimize: ['Window/Minimize',
+		function(){
+			// XXX
+		}],
+
+	showDevTools: ['Interface|Development/Show Dev Tools',
+		function(){
+			// XXX
+		}],
+
+	showInFolder: ['File|Image/Show in $folder',
+		function(image){
+			// XXX
+		}],
+
+	// XXX this is almost generic, but it is not usable unless within 
+	// 		a user event handler...
+	// 		...can we use this on electron???
+	toggleFullScreen: ['Window/Full screen mode',
+		toggler.CSSClassToggler(
+			function(){ return document.body }, 
+			'.full-screen-mode',
+			function(action){
+				var that = this
+
+				var state = (document.fullScreenElement 
+						&& document.fullScreenElement !== null) ? 
+					'on' 
+					: 'off'
+
+				// change the state only if the target state is not the same
+				// as the current state...
+				if(state != action){
+					this.ribbons.preventTransitions()
+
+					// hide the viewer to hide any animation crimes...
+					this.dom[0].style.visibility = 'hidden'
+
+					// XXX async...
+					// 		...this complicates things as we need to do the next
+					// 		bit AFTER the resize is done...
+					if(action == 'on'){
+						var d = document.documentElement
+						;(d.requestFullscreen 
+							|| d.webkitRequestFullscreen
+							|| d.msRequestFullscreen
+							|| d.mozRequestFullscreen)()
+
+					} else {
+						;(document.exitFullscreen 
+							|| document.webkitExitFullscreen
+							|| document.msExitFullscreen
+							|| document.mozExitFullscreen)()
+					}
+
+					setTimeout(function(){ 
+						that
+							.centerViewer()
+							.focusImage()
+							.ribbons
+								.restoreTransitions()
+
+						that.dom[0].style.visibility = ''
+					}, 100)
+				}
+
+				// NOTE: we delay this to account for window animation...
+				setTimeout(function(){ 
+					that.storeWindowGeometry() 
+				}, 500)
+			})],
+})
+
+var ElectronHost = 
+module.ElectronHost = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-electron-host',
+	exclusive: 'ui-host',
+	depends: [],
+
+	actions: ElectronHostActions,
+
+	isApplicable: function(){ return this.runtime.electron },
+})
+
+
+
+//---------------------------------------------------------------------
+
 var AppControlActions = actions.Actions({
 	config: {
 		//'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
@@ -33,6 +215,7 @@ var AppControlActions = actions.Actions({
 	// XXX revise these...
 	close: ['File|Window/Close viewer',
 		function(){ window.close() }],
+	// XXX make these generic -- use host API...
 	storeWindowGeometry: ['- Window/Store window state',
 		function(){
 			// store window parameters (size, state)...
@@ -114,66 +297,6 @@ var AppControlActions = actions.Actions({
 			}, this.config['window-delay-initial-display'] || 0)
 		}],
 	
-	minimize: ['Window/Minimize',
-		function(){
-			nw.Window.get().minimize()
-		}],
-	toggleFullScreen: ['Window/Full screen mode',
-		toggler.CSSClassToggler(
-			function(){ return document.body }, 
-			'.full-screen-mode',
-			function(action){
-				var that = this
-				var w = nw.Window.get()
-
-				// change the state only if the target state is not the same
-				// as the current state...
-				if((w.isFullscreen ? 'on' : 'off') != action){
-					this.ribbons.preventTransitions()
-
-					// hide the viewer to hide any animation crimes...
-					this.dom[0].style.visibility = 'hidden'
-
-					// XXX async...
-					// 		...this complicates things as we need to do the next
-					// 		bit AFTER the resize is done...
-					w.toggleFullscreen()
-
-					setTimeout(function(){ 
-						that
-							.centerViewer()
-							.focusImage()
-							.ribbons
-								.restoreTransitions()
-
-						that.dom[0].style.visibility = ''
-					}, 100)
-				}
-
-				// NOTE: we delay this to account for window animation...
-				setTimeout(function(){ 
-					that.storeWindowGeometry() 
-				}, 500)
-			})],
-
-	// XXX add ability to use devtools on background page (node context)...
-	showDevTools: ['Interface|Development/Show Dev Tools',
-		function(){
-			nw.Window.get().showDevTools &&
-				nw.Window.get().showDevTools()
-		}],
-
-	// XXX should this be here???
-	showInFolder: ['File|Image/Show in $folder',
-		function(image){
-			image = this.images[this.data.getImage(image)]
-
-			var base = image.base_path || this.location.path
-			var filename = image.path
-			var path = pathlib.normalize(base + '/' + filename)
-
-			nw.Shell.showItemInFolder(path)
-		}],
 })
 
 
@@ -181,6 +304,7 @@ var AppControlActions = actions.Actions({
 // XXX store/load window state...
 // 		- size
 // 		- state (fullscreen/normal)
+// XXX for some magical reason this gets disabled on electron....
 var AppControl = 
 module.AppControl = core.ImageGridFeatures.Feature({
 	title: '',
@@ -189,15 +313,13 @@ module.AppControl = core.ImageGridFeatures.Feature({
 	tag: 'ui-app-control',
 	depends: [
 		'ui',
+		'ui-host',
 	],
 
 	actions: AppControlActions,
 
-	// XXX test if in:
-	// 	- chrome app
-	// 	- nw
-	// 	- mobile
-	isApplicable: function(){ return this.runtime.nw },
+	//isApplicable: function(){ return this.runtime.desktop },
+	isApplicable: function(){ return this.runtime.desktop && !this.runtime.electron },
 
 	// XXX show main window...
 	handlers: [
@@ -215,13 +337,14 @@ module.AppControl = core.ImageGridFeatures.Feature({
 			'toggleFullScreen',
 		],
 			function(){ this.storeWindowGeometry() }],
+
+		// update window title...
+		// XXX make this generic...
 		['focusImage',
 			function(){
-				var win = nw.Window.get()
-
 				if(this.images){
 					var img = this.images[this.current]
-					win.title = (this.config['window-title'] 
+					this.title = (this.config['window-title'] 
 							|| 'ImageGrid.Viewer (${VERSION}): ${FILENAME}')
 						// XXX get this from the viewer...
 						.replace('${VERSION}', this.version || 'gen4')
@@ -240,7 +363,6 @@ module.AppControl = core.ImageGridFeatures.Feature({
 								+'/'+ img.path.replace(/\.[\\\/]/, '')))
 						*/
 						// XXX add ...
-						
 				}
 			}],
 	],
