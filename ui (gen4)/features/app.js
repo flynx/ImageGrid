@@ -29,10 +29,12 @@ var base = require('features/base')
 /*********************************************************************/
 
 var NWHostActions = actions.Actions({
+	// window stuff...
 	get title(){
 		return nw.Window.get().title },
 	set title(value){
 		nw.Window.get().title = value },
+	// XXX
 
 	minimize: ['Window/Minimize',
 		function(){
@@ -81,8 +83,6 @@ var NWHostActions = actions.Actions({
 			nw.Window.get().showDevTools &&
 				nw.Window.get().showDevTools()
 		}],
-
-	// XXX should this be here???
 	showInFolder: ['File|Image/Show in $folder',
 		function(image){
 			image = this.images[this.data.getImage(image)]
@@ -114,34 +114,16 @@ module.NWHost = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var ElectronHostActions = actions.Actions({
+	// window stuff...
 	get title(){
 		return electron.remote.getCurrentWindow().getTitle() },
 	set title(value){
 		electron.remote.getCurrentWindow().setTitle(value) },
+	// XXX
 
 	minimize: ['Window/Minimize',
 		function(){
 			electron.remote.getCurrentWindow().minimize() }],
-
-	showDevTools: ['Interface|Development/Show Dev Tools',
-		function(){
-			electron.remote.getCurrentWindow().openDevTools() }],
-
-	// XXX make this portable (osx, linux)...
-	showInFolder: ['File|Image/Show in $folder',
-		function(image){
-			image = this.images[this.data.getImage(image)]
-
-			var base = image.base_path || this.location.path
-			var filename = image.path
-			var path = pathlib.normalize(base + '/' + filename)
-
-			requirejs('child_process')
-				// XXX make this portable (osx, linux)...
-				.exec('explorer.exe /select,'+JSON.stringify(path.replace(/\//g, '\\')))
-				//.exec('open -R '+JSON.stringify(path))
-		}],
-
 	// XXX this is almost generic, but it is not usable unless within 
 	// 		a user event handler...
 	// 		...can we use this on electron???
@@ -201,6 +183,24 @@ var ElectronHostActions = actions.Actions({
 					that.storeWindowGeometry() 
 				}, 500)
 			})],
+
+	showDevTools: ['Interface|Development/Show Dev Tools',
+		function(){
+			electron.remote.getCurrentWindow().openDevTools() }],
+	// XXX make this portable (osx, linux)...
+	showInFolder: ['File|Image/Show in $folder',
+		function(image){
+			image = this.images[this.data.getImage(image)]
+
+			var base = image.base_path || this.location.path
+			var filename = image.path
+			var path = pathlib.normalize(base + '/' + filename)
+
+			requirejs('child_process')
+				// XXX make this portable (osx, linux)...
+				.exec('explorer.exe /select,'+JSON.stringify(path.replace(/\//g, '\\')))
+				//.exec('open -R '+JSON.stringify(path))
+		}],
 })
 
 var ElectronHost = 
@@ -316,12 +316,9 @@ var AppControlActions = actions.Actions({
 	
 })
 
-
-// XXX this needs a better .isApplicable(..)
 // XXX store/load window state...
 // 		- size
 // 		- state (fullscreen/normal)
-// XXX for some magical reason this gets disabled on electron....
 var AppControl = 
 module.AppControl = core.ImageGridFeatures.Feature({
 	title: '',
