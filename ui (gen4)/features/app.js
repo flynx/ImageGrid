@@ -30,12 +30,39 @@ var base = require('features/base')
 
 var NWHostActions = actions.Actions({
 	// window stuff...
+	// XXX should this be nested in a .window object???
 	get title(){
 		return nw.Window.get().title },
 	set title(value){
 		nw.Window.get().title = value },
-	// XXX
+	get size(){
+		var win = nw.Window.get()
+		return [
+			win.width,
+			win.height,
+		]
+	},
+	set size(value){
+		var win = nw.Window.get()
+		win.width = value[0]
+		win.height = value[1]
+	},
+	get position(){
+		var win = nw.Window.get()
+		return [
+			win.x,
+			win.y,
+		]
+	},
+	set position(value){
+		var win = nw.Window.get()
+		win.x = value[0]
+		win.y = value[1]
+	},
 
+	show: ['- Window/',
+		function(){
+			nw.Window.get().show() }],
 	minimize: ['Window/Minimize',
 		function(){
 			nw.Window.get().minimize() }],
@@ -115,12 +142,24 @@ module.NWHost = core.ImageGridFeatures.Feature({
 
 var ElectronHostActions = actions.Actions({
 	// window stuff...
+	// XXX should this be nested in a .window object???
+	// XXX should these be props or methods???
 	get title(){
 		return electron.remote.getCurrentWindow().getTitle() },
 	set title(value){
 		electron.remote.getCurrentWindow().setTitle(value) },
-	// XXX
+	get size(){
+		return electron.remote.getCurrentWindow().getSize() },
+	set size(value){
+		electron.remote.getCurrentWindow().setSize(value) },
+	get position(){
+		return electron.remote.getCurrentWindow().getPosition() },
+	set position(value){
+		electron.remote.getCurrentWindow().setPosition(value) },
 
+	show: ['- Window/',
+		function(){
+			electron.remote.getCurrentWindow().show() }],
 	minimize: ['Window/Minimize',
 		function(){
 			electron.remote.getCurrentWindow().minimize() }],
@@ -136,11 +175,9 @@ var ElectronHostActions = actions.Actions({
 			'.full-screen-mode',
 			function(action){
 				var that = this
+				var win = electron.remote.getCurrentWindow()
 
-				var state = (document.fullScreenElement 
-						&& document.fullScreenElement !== null) ? 
-					'on' 
-					: 'off'
+				var state = win.isFullScreen() ? 'on' : 'off'
 
 				// change the state only if the target state is not the same
 				// as the current state...
@@ -153,19 +190,7 @@ var ElectronHostActions = actions.Actions({
 					// XXX async...
 					// 		...this complicates things as we need to do the next
 					// 		bit AFTER the resize is done...
-					if(action == 'on'){
-						var d = document.documentElement
-						;(d.requestFullscreen 
-							|| d.webkitRequestFullscreen
-							|| d.msRequestFullscreen
-							|| d.mozRequestFullscreen)()
-
-					} else {
-						;(document.exitFullscreen 
-							|| document.webkitExitFullscreen
-							|| document.msExitFullscreen
-							|| document.mozExitFullscreen)()
-					}
+					win.setFullScreen(action == 'on' ? true : false)
 
 					setTimeout(function(){ 
 						that
@@ -232,27 +257,29 @@ var AppControlActions = actions.Actions({
 	// XXX revise these...
 	close: ['File|Window/Close viewer',
 		function(){ window.close() }],
-	// XXX make these generic -- use host API...
 	storeWindowGeometry: ['- Window/Store window state',
 		function(){
 			// store window parameters (size, state)...
-			var win = nw.Window.get()
+			//var win = nw.Window.get()
+			var size = this.size
+			var position = this.position
 
 			// fullscreen...
 			// ...avoid overwriting size...
 			if(this.toggleFullScreen('?') == 'on'){
 				this.config.window = this.config.window || {}
 				this.config.window.fullscreen = true
-				this.config.window.zoom = win.zoomLevel 
+				//this.config.window.zoom = win.zoomLevel 
 
 			} else {
 				this.config.window = {
 					size: {
-						width: win.width,
-						height: win.height,
+						width: size[0],
+						height: size[1],
 					},
+					// XXX position...
 					fullscreen: false,
-					zoom: win.zoomLevel ,
+					//zoom: win.zoomLevel,
 				}
 			}
 		}],
@@ -261,7 +288,7 @@ var AppControlActions = actions.Actions({
 			var that = this
 			// or global.window.nwDispatcher.requireNwGui()
 			// (see: https://github.com/rogerwang/node-webkit/issues/707)
-			var win = nw.Window.get()
+			//var win = nw.Window.get()
 
 			// XXX move this into .restoreWindowGeometry(..)
 			// get window state from config and load it...
@@ -271,20 +298,26 @@ var AppControlActions = actions.Actions({
 				var H = screen.height
 				var w = 800
 				var h = 600
-				var s = cfg.scale
+				//var s = cfg.scale
 
 				if(cfg.size){
-					w = win.width = Math.min(cfg.size.width, screen.width)
-					h = win.height = Math.min(cfg.size.height, screen.height)
+					//w = win.width = Math.min(cfg.size.width, screen.width)
+					//h = win.height = Math.min(cfg.size.height, screen.height)
+					w = Math.min(cfg.size.width, screen.width)
+					h = Math.min(cfg.size.height, screen.height)
+					this.size = [w, h]
 				}
 
 				// place on center of the screen...
-				var x = win.x = Math.round((W - w)/2)
-				var y = win.y = Math.round((H - h)/2)
+				//var x = win.x = Math.round((W - w)/2)
+				//var y = win.y = Math.round((H - h)/2)
+				var x = Math.round((W - w)/2)
+				var y = Math.round((H - h)/2)
+				this.position = [x, y]
 
-				if(s){
-					win.zoomLevel = s
-				}
+				//if(s){
+				//	win.zoomLevel = s
+				//}
 
 				//console.log('GEOMETRY:', w, h, x, y)
 
@@ -301,7 +334,7 @@ var AppControlActions = actions.Actions({
 			// NOTE: we delay this to enable the browser time to render
 			// 		things before we show them to the user...
 			setTimeout(function(){
-				win.show()
+				that.show()
 
 				// XXX check if we are full screen...
 				if(cfg != null && cfg.fullscreen){
@@ -313,7 +346,6 @@ var AppControlActions = actions.Actions({
 
 			}, this.config['window-delay-initial-display'] || 0)
 		}],
-	
 })
 
 // XXX store/load window state...
@@ -340,12 +372,10 @@ module.AppControl = core.ImageGridFeatures.Feature({
 		['start.pre',
 			function(){ 
 				// we are going to declare ready ourselves...
-				this.requestReadyAnnounce()
-			}],
+				this.requestReadyAnnounce() }],
 		['start',
 			function(){ 
-				this.restoreWindowGeometry()
-			}],
+				this.restoreWindowGeometry() }],
 		[[
 			'close.pre',
 			'toggleFullScreen',
