@@ -364,6 +364,14 @@ module.AppControl = core.ImageGridFeatures.Feature({
 
 	actions: AppControlActions,
 
+	// XXX BUG: when running in electron:
+	// 			- loading this breaks the other buttons (menu, collections, ...)
+	// 			- .toggleFullScreen(..) works in an odd manner -- ok when 
+	// 				explicitly called or button pushed but in opposite manner 
+	// 				when F11 (FIXED?)
+	// 			- ready protocol breaks -- need to call .ready() to unstall 
+	// 				the viewer
+	// 		...does this all have anything to do with double init???
 	//isApplicable: function(){ return this.runtime.desktop },
 	isApplicable: function(){ return this.runtime.desktop && !this.runtime.electron },
 

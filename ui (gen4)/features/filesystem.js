@@ -227,7 +227,7 @@ module.FileSystemInfo = core.ImageGridFeatures.Feature({
 // NOTE: this will also manage .location.from
 var FileSystemLoaderActions = actions.Actions({
 	config: {
-		'image-file-pattern': '*+(jpg|jpeg|png|JPG|JPEG|PNG)',
+		'image-file-pattern': '*+(jpg|jpeg|png|svg|JPG|JPEG|PNG|svg)',
 
 		'image-file-read-stat': true,
 		'image-file-skip-previews': false,

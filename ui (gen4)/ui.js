@@ -102,23 +102,6 @@ var viewer = require('imagegrid/viewer')
 
 $(function(){
 
-	/*/ list all loaded modules...
-	var m = requirejs.s.contexts._.defined
-	m = Object.keys(m).filter(function(e){ return m[e] != null })
-	console.log('Modules:', m)
-	//*/
-
-	/*/ self-test...
-	var test = viewer.ImageGridFeatures.buildFeatureList()
-	if(test.error){
-		// report loops...
-		var err = test.error
-		err.loops.forEach(function(loop){
-			console.warn('Self-test: Feature dependency loops detected:\n\t'
-				+ loop.join('\n\t\t-> ')) })
-	}
-	//*/
-
 	try {
 		// setup actions...
 		window.ig = 

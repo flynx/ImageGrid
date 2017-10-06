@@ -6,34 +6,43 @@
 <meta name="msapplication-tap-highlight" content="no" />
 <meta name="viewport" content="width=device-width, user-scalable=no" />
 
-<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Bold.ttf">
-<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-BoldItalic.ttf">
-<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-ExtraBold.ttf">
-<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-ExtraBoldItalic.ttf">
-<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Italic.ttf">
-<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Light.ttf">
-<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-LightItalic.ttf">
-<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Regular.ttf">
-<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Semibold.ttf">
-<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-SemiboldItalic.ttf">
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Bold.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-BoldItalic.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-ExtraBold.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-ExtraBoldItalic.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Italic.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Light.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-LightItalic.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Regular.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Semibold.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-SemiboldItalic.ttf" />
 
 
-<link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/editor.css">
-<link rel="stylesheet" href="css/widget/browse.css">
-<link rel="stylesheet" href="css/widget/overlay.css">
-<link rel="stylesheet" href="css/widget/drawer.css">
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/layout.css" />
+<link rel="stylesheet" href="css/editor.css" />
+<link rel="stylesheet" href="css/widget/browse.css" />
+<link rel="stylesheet" href="css/widget/overlay.css" />
+<link rel="stylesheet" href="css/widget/drawer.css" />
 
-<link rel="stylesheet" href="css/loader.css">
+<link rel="stylesheet" href="css/loader.css" />
 
-<link rel="stylesheet" href="css/experimenting.css">
+<link rel="stylesheet" href="css/experimenting.css" />
 
 
 <script>
 if(window.require && window.nw){
 	window.__devtools_failsafe = setTimeout(function(){
-		nw.Window.get().showDevTools()
+		// nw...
+		if(window.nw){
+				nw.Window.get().showDevTools()
+
+		// electron...
+		} else {
+			try{
+				require('electron').remote.getCurrentWindow().openDevTools()
+			} catch(err){ }
+		}
 	}, 5000)
 }
 </script>

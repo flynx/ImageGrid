@@ -244,7 +244,7 @@ module.GLOBAL_KEYBOARD = {
 
 		// NOTE: this is handled by the wrapper at this point, so we do 
 		// 		not have to do anything here...
-		F11: 'toggleFullScreen', 
+		F11: 'toggleFullScreen!', 
 		ctrl_F: 'F11',
 		meta_F: 'F11',
 
