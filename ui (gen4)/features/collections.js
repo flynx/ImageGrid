@@ -984,6 +984,7 @@ var CollectionActions = actions.Actions({
 				'main', 
 				'none',
 			])],
+	// XXX can we combine a toggler with list editor???
 	toggleCollections: ['- Collections/Collections',
 		toggler.Toggler(null,
 			function(_, state){
