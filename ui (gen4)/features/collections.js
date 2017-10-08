@@ -264,7 +264,7 @@ var CollectionActions = actions.Actions({
 				return running[collection]
 			}
 
-			return new Promise(function(resolve, reject){
+			p = running[collection] = new Promise(function(resolve, reject){
 				Promise
 					.all(Object.keys(handlers)
 						// filter relevant handlers...
@@ -280,6 +280,8 @@ var CollectionActions = actions.Actions({
 						delete running[collection]
 						reject(err) })
 			})
+
+			return p
 		}],
 
 	// Collection life-cycle...
