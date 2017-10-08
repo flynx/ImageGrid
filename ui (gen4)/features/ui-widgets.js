@@ -2649,6 +2649,22 @@ var WidgetTestActions = actions.Actions({
 	makeAction: ['- Test/',
 		function(name){
 			this[name] = actions.Action.apply(actions.Action, arguments) }],
+
+	// promise handling...
+	//
+	// also see corresponding WidgetTest.handlers
+	syncAction: ['- Test/',
+		//{await: true},
+		function(t){
+			return new Promise(function(resolve){
+				setTimeout(function(){ resolve() }, t || 1000) })
+		}],
+	asyncAction: ['- Test/',
+		{await: false},
+		function(t){
+			return new Promise(function(resolve){
+				setTimeout(function(){ resolve() }, t || 1000) })
+		}],
 })
 
 var WidgetTest = 
@@ -2661,6 +2677,15 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 		'ui-browse-actions',
 	],
 	actions: WidgetTestActions,
+
+	handlers: [
+		['asyncAction.pre syncAction.pre',
+			function(){
+				console.log('PRE')
+				return function(){
+					console.log('POST') } 
+			}],
+	],
 })
 
 

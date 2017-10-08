@@ -232,8 +232,61 @@ var CollectionActions = actions.Actions({
 		})],
 
 
+	// XXX should this queue already running calls or a specific collection????
+	// 		...I think yes!!
+	ensureCollection: ['- Collections/',
+		core.doc`Ensure a collection exists and is consistent...
+
+			.ensureCollection(title)
+				-> promise(collection)
+		
+		This will:
+			- create a collection if it does not exist
+			- initialize if needed
+		`,
+		function(collection){
+			var that = this
+
+			var running = this.__running_collection_ensure = 
+				this.__running_collection_ensure || {}
+
+			// create collection if needed...
+			;(!this.collections 
+					|| !(collection in this.collections))
+				&& this.newCollection(collection)
+
+			var collection_data = this.collections[collection]
+			var handlers = this.collection_handlers
+
+			// sync collection calls...
+			// XXX do we need timeuts here????
+			if(running[collection]){
+				return running[collection]
+			}
+
+			return new Promise(function(resolve, reject){
+				Promise
+					.all(Object.keys(handlers)
+						// filter relevant handlers...
+						.filter(function(format){ 
+							return format == '*' || collection_data[format] })
+						// run handlers...
+						.map(function(format){
+							return that[handlers[format]](collection, collection_data) }))
+					.then(function(){
+						delete running[collection]
+						resolve(collection_data) })
+					.catch(function(err){
+						delete running[collection]
+						reject(err) })
+			})
+		}],
+
 	// Collection life-cycle...
 	//
+	// NOTE: if collection does not exist this will do nothing...
+	// NOTE: this is not sync, if it is needed to trigger post collection
+	// 		loading then bind to collectionLoading.post...
 	loadCollection: ['- Collections/',
 		core.doc`Load collection...
 
@@ -336,14 +389,9 @@ var CollectionActions = actions.Actions({
 			}
 
 			// load collection...
-			Promise
-				.all(Object.keys(handlers)
-					// filter relevant handlers...
-					.filter(function(format){ 
-						return format == '*' || collection_data[format] })
-					// run handlers...
-					.map(function(format){
-						return that[handlers[format]](collection, collection_data) }))
+			// XXX should this be sync???
+			//return this.ensureCollection(collection)
+			this.ensureCollection(collection)
 				.then(function(){
 					var data = collection_data.data
 
@@ -632,11 +680,6 @@ var CollectionActions = actions.Actions({
 				return
 			}
 
-			// create collection if needed...
-			(!this.collections 
-					|| !(collection in this.collections))
-				&& this.newCollection(collection)
-
 			gids = gids == 'loaded' ? 
 					this.data.getImages('loaded')
 				: gids == 'ribbon' ?
@@ -689,29 +732,26 @@ var CollectionActions = actions.Actions({
 				return
 			}
 
-			(!this.collections 
-					|| !(collection in this.collections))
-				&& this.newCollection(collection)
-
 			// if only collection is given, reset align to null...
 			align = align === collection ? null : align
 
-			if(this.collections && this.collections[collection]){
-				//this.collections[collection].data.join(align, data || this.data.clone())
-				var res = this.collections[collection].data = (data || this.data)
-					.clone()
-					.join(align, this.collections[collection].data)
+			// create collection if it does not exist...
+			// XXX should this be async???
+			//return this.ensureCollection(collection)
+			this.ensureCollection(collection)
+				.then((function(){
+					//this.collections[collection].data.join(align, data || this.data.clone())
+					var res = this.collections[collection].data = (data || this.data)
+						.clone()
+						.join(align, this.collections[collection].data)
 
-				// joining into the current collection...
-				if(collection == this.collection){
-					var cur = this.current
-					this.data = res 
-					this.data.current = cur
-				}
-
-			} else {
-				this.saveCollection(collection)
-			}
+					// joining into the current collection...
+					if(collection == this.collection){
+						var cur = this.current
+						this.data = res 
+						this.data.current = cur
+					}
+				}).bind(this))
 		}],
 	uncollect: ['Collections|Image/Remove from collection',
 		core.doc`Remove gid(s) from collection...
