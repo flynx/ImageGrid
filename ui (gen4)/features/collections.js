@@ -234,7 +234,7 @@ var CollectionActions = actions.Actions({
 
 	// XXX should this queue already running calls or a specific collection????
 	// 		...I think yes!!
-	// XXX do we need timeuts here????
+	// XXX do we need timeouts here????
 	ensureCollection: ['- Collections/',
 		core.doc`Ensure a collection exists and is consistent...
 
@@ -270,12 +270,14 @@ var CollectionActions = actions.Actions({
 			var collection_data = this.collections[collection]
 			var handlers = this.collection_handlers
 
-			// sync collection calls...
-			// XXX do we need timeuts here????
+			// if a promise has not yet resolved/rejected, return it 
+			// and do not start a new one...
+			// XXX do we need timeouts here????
 			if(!force && running[collection]){
 				return running[collection]
 			}
 
+			// handle collection...
 			p = running[collection] = new Promise(function(resolve, reject){
 				Promise
 					.all(Object.keys(handlers)
