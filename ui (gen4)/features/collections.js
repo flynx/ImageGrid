@@ -234,6 +234,8 @@ var CollectionActions = actions.Actions({
 
 	// XXX should this queue already running calls or a specific collection????
 	// 		...I think yes!!
+	// XXX should there be a force arg when we can't actually stop the 
+	// 		running promise and recover???
 	// XXX do we need timeouts here????
 	ensureCollection: ['- Collections/',
 		core.doc`Ensure a collection exists and is consistent...
@@ -244,19 +246,16 @@ var CollectionActions = actions.Actions({
 				NOTE: this will not start a new check until the previous
 					is done (i.e. the previous promise is resolved/rejected)
 
-			Ensure collection exists and is initialized, forcing call...
-			.ensureCollection(title, true)
-				-> promise(collection)
-
 		
 		This will:
 			- create a collection if it does not exist
 			- initialize if needed
 
-		While the promise is not resolved this will return it and not 
-		start a new promise.
+		While the promise for a specific action is not resolved this 
+		will return it and not start a new promise.
 		`,
-		function(collection, force){
+		//function(collection, force){
+		function(collection){
 			var that = this
 
 			var running = this.__running_collection_ensure = 
@@ -273,7 +272,8 @@ var CollectionActions = actions.Actions({
 			// if a promise has not yet resolved/rejected, return it 
 			// and do not start a new one...
 			// XXX do we need timeouts here????
-			if(!force && running[collection]){
+			//if(!force && running[collection]){
+			if(running[collection]){
 				return running[collection]
 			}
 
