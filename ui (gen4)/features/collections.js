@@ -234,17 +234,29 @@ var CollectionActions = actions.Actions({
 
 	// XXX should this queue already running calls or a specific collection????
 	// 		...I think yes!!
+	// XXX do we need timeuts here????
 	ensureCollection: ['- Collections/',
 		core.doc`Ensure a collection exists and is consistent...
 
+			Ensure collection exists and is initialized...
 			.ensureCollection(title)
 				-> promise(collection)
+				NOTE: this will not start a new check until the previous
+					is done (i.e. the previous promise is resolved/rejected)
+
+			Ensure collection exists and is initialized, forcing call...
+			.ensureCollection(title, true)
+				-> promise(collection)
+
 		
 		This will:
 			- create a collection if it does not exist
 			- initialize if needed
+
+		While the promise is not resolved this will return it and not 
+		start a new promise.
 		`,
-		function(collection){
+		function(collection, force){
 			var that = this
 
 			var running = this.__running_collection_ensure = 
@@ -260,7 +272,7 @@ var CollectionActions = actions.Actions({
 
 			// sync collection calls...
 			// XXX do we need timeuts here????
-			if(running[collection]){
+			if(!force && running[collection]){
 				return running[collection]
 			}
 
