@@ -254,7 +254,6 @@ var CollectionActions = actions.Actions({
 		While the promise for a specific action is not resolved this 
 		will return it and not start a new promise.
 		`,
-		//function(collection, force){
 		function(collection){
 			var that = this
 
@@ -271,8 +270,6 @@ var CollectionActions = actions.Actions({
 
 			// if a promise has not yet resolved/rejected, return it 
 			// and do not start a new one...
-			// XXX do we need timeouts here????
-			//if(!force && running[collection]){
 			if(running[collection]){
 				return running[collection]
 			}
@@ -297,6 +294,7 @@ var CollectionActions = actions.Actions({
 
 			return p
 		}],
+
 
 	// Collection life-cycle...
 	//
