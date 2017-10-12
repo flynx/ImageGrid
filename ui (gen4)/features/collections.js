@@ -2151,7 +2151,7 @@ var UICollectionActions = actions.Actions({
 			return this.browseCollections(function(title){
 				this.joinCollect(title) }) })],
 
-	// XXX should this be here???
+	// XXX should this be here or in marks???
 	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
 		{browseMode: function(){ 
 			return this.marked.length == 0 && 'disabled' }},
