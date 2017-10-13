@@ -2159,8 +2159,11 @@ var UICollectionActions = actions.Actions({
 			return this.browseCollections(function(title){ this.collectMarked(title) }) })],
 
 	/*/ XXX this is not used by metadata yet...
+	// XXX might be a nice idea to define a default make(..) function 
+	// 		to return JSON...
 	metadataSection: ['- Image/',
 		function(gid, make){
+			// XXX
 		}],
 	//*/
 })
