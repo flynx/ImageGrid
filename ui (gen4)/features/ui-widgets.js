@@ -1043,6 +1043,12 @@ var UIIntrospectionActions = actions.Actions({
 					return
 				}
 
+				var exclusive = feature.exclusive
+				exclusive = exclusive 
+					&& (exclusive instanceof Array ? 
+						exclusive 
+						: [exclusive])
+
 				res.append($('<div class="feature">')
 					.prop('tabindex', true)
 					.append($('<h2>')
@@ -1061,7 +1067,7 @@ var UIIntrospectionActions = actions.Actions({
 					// list exclusive features...
 					.append($('<div>')
 						.html('Exclusive tag: ' 
-							+ (feature.exclusive || ['-'])
+							+ (exclusive || ['-'])
 								.map(function(tag){
 									if(tag == '-'){
 										return tag
