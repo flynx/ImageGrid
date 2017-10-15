@@ -38,6 +38,12 @@ var overlay = require('lib/widget/overlay')
 // 		lib???
 
 var MetadataActions = actions.Actions({
+	// XXX 
+	metadata: ['- Image/',
+		function(target, data){
+			// XXX
+		}],
+
 	getMetadata: ['- Image/Get metadata data',
 		function(image){
 			var gid = this.data.getImage(image)

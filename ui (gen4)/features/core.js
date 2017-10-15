@@ -1183,8 +1183,7 @@ var TaskActions = actions.Actions({
 	},
 
 	get jobs(){
-		return this.__jobs
-	},
+		return this.__jobs },
 
 	getJob: ['- Jobs/',
 		function(name){
