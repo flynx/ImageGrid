@@ -54,17 +54,73 @@ var toggler = require('lib/toggler')
 
 /*********************************************************************/
 
-// Make a protocol implementation action...
+// Make a chained action...
+// 
+// 	// basic chained action...
+// 	basicAction: ['Group/Basic action',
+// 		core.chain('working',
+// 			// action...
+// 			function(){
+// 				...
+// 			})],
+// 			
+// 	// conditional chained action...
+// 	conditionalAction: ['Group/Conditional action',
+// 		core.chain('working',
+// 			// action predicate...
+// 			function(){
+// 				return ...
+// 			},
+// 			// action...
+// 			function(){
+// 				...
+// 			})],
+// 			
 //
 // For more docs see: docs for actions.js and .chainApply(..)
 //
 // XXX might be good to move this to actions.js
 // XXX might also be a good idea to mark the actual protocol definition
 // 		and not just the implementation...
-var protocol =
-module.protocol = function(protocol, func){
+// XXX is this actually simpler?
+// 			conditionalActionNew: ['Group/Conditional action',
+// 				core.chain('working',
+// 					function(){
+// 						return this.condition == true
+// 					},
+// 					function(){
+// 						...
+// 					})],
+//
+// 			conditionalActionOld: ['Group/Conditional action',
+// 				function(){
+// 					if(this.condition != true){
+// 						return
+// 					}
+// 					this.working.chainApply(this, function(){
+// 						...
+// 					})
+// 				}],
+//
+// 		Advantages:
+// 			- documentable/groupable automatically...
+// 			
+// 		Disadvantages:
+// 			- extra entity/abstraction to remember...
+// 			- covers only one simple case..
+var chain =
+module.chain = function(action, a, b){
+	if(arguments.length == 3){
+		var func = b
+		var cond = a
+	} else {
+		var func = a
+		var cond = true
+	}
 	return function(){
-		return this[protocol].chainApply(this, func, arguments)
+		if(cond === true || cond.apply(this, arguments)){
+			return this[action].chainApply(this, func, arguments)
+		}
 	}
 }
 
