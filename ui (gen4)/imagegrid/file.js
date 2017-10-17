@@ -399,16 +399,25 @@ function(path, index_dir, logger){
 
 // Load index(s)...
 //
+//	Load path (use default INDEX_DIR)...
 //	loadIndex(path)
-//		-> data
-//
 //	loadIndex(path, logger)
 //		-> data
 //
+//	Load path with custom index_dir...
 //	loadIndex(path, index_dir, logger)
 //		-> data
 //
+//	Load from date...
 //	loadIndex(path, index_dir, from_date, logger)
+//		-> data
+//
+//	Load path as-is (do not search for index dir)...
+//	loadIndex(path, false)
+//	loadIndex(path, false, logger)
+//		-> data
+//
+//	loadIndex(path, false, from_date, logger)
 //		-> data
 //
 //
@@ -490,7 +499,10 @@ function(path, index_dir, from_date, logger){
 		logger = from_date
 		from_date = null
 	}
-	index_dir = index_dir || INDEX_DIR
+	//index_dir = index_dir || INDEX_DIR
+	index_dir = index_dir === false ? 
+		index_dir 
+		: (index_dir || INDEX_DIR)
 
 	// XXX should this be interactive (a-la EventEmitter) or as it is now 
 	// 		return the whole thing as a block (Promise)...
@@ -499,13 +511,15 @@ function(path, index_dir, from_date, logger){
 	return new Promise(function(resolve, reject){
 		// prepare the index_dir and path....
 		// NOTE: index_dir can be more than a single directory...
-		var i = util.normalizePath(index_dir).split(/[\\\/]/g)
+		var i = index_dir 
+			&& util.normalizePath(index_dir).split(/[\\\/]/g)
 		var p = util.normalizePath(path).split(/[\\\/]/g).slice(-i.length)
 
-		var explicit_index_dir = (i.filter(function(e, j){ return e == p[j] }).length == i.length)
+		var explicit_index_dir = !index_dir 
+			|| (i.filter(function(e, j){ return e == p[j] }).length == i.length)
 
 		// we've got an index...
-		// XXX do we need to check if if it's a dir???
+		// XXX do we need to check if it's a dir???
 		if(explicit_index_dir){
 
 			logger && logger.emit('path', path)

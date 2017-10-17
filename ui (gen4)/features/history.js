@@ -30,6 +30,8 @@ var URLHistoryActions = actions.Actions({
 		// 	-1		- no limit.
 		// 	0		- disabled
 		// 	1+		- length of history
+		//
+		// NOTE: this does not account for pinned items.
 		'url-history-length': 100,
 	},
 
@@ -112,6 +114,8 @@ var URLHistoryActions = actions.Actions({
 		}],
 	// NOTE: if clear is not true then this will update a history item 
 	// 		rather than fully rewriting it...
+	// NOTE: this will not auto-remove pinned items if the length of 
+	// 		history is more than allowed...
 	pushURLToHistory: ['- History/',
 		function(url, open, check, clear){
 			url = url || this.location.path
@@ -142,6 +146,9 @@ var URLHistoryActions = actions.Actions({
 			// update history length...
 			if(l > 0){
 				var k = Object.keys(this.url_history)
+					// we will not remove pinned items...
+					.filter((function(e){
+						return !this.url_history[e].pinned }).bind(this))
 				while(k.length > l){
 					// drop first url in order -- last added...
 					this.dropURLFromHistory(k[0])
@@ -191,15 +198,15 @@ var URLHistoryActions = actions.Actions({
 		core.doc`Get/set history pin order
 
 			Get pin order...
-			.pinURLOrder(<url>)
+			.pinnnedURLOrder(<url>)
 				-> order
 
 			Set pin order...
-			.pinURLOrder(<url>, <order>)
+			.pinnnedURLOrder(<url>, <order>)
 				-> this
 
 			Set pin order to 'auto'...
-			.pinURLOrder(<url>, 'auto')
+			.pinnnedURLOrder(<url>, 'auto')
 				-> this
 
 		Auto-ordered pins are sorted in the same order as .url_history
