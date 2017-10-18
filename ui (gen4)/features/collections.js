@@ -60,6 +60,9 @@ module.COLLECTION_TRANSFER_CHANGES = [
 ]
 
 
+
+//---------------------------------------------------------------------
+
 // XXX undo...
 var CollectionActions = actions.Actions({
 	config: {
@@ -1331,7 +1334,8 @@ module.Collection = core.ImageGridFeatures.Feature({
 				// 		simplify lazy-loading of the collection 
 				// 		index...
 				if(changes && (changes === true || changes.collections)){
-					var index = res.index['collection-index'] = {}
+					//var index = res.index['collection-index'] = {}
+					var index = res.index['collections'] = {}
 					// NOTE: we do not need to use .collection_order here
 					// 		as .json(..) returns the collections in the 
 					// 		correct order...
@@ -1400,9 +1404,10 @@ module.Collection = core.ImageGridFeatures.Feature({
 				// collection index...
 				var collections = {}
 				var collections_index = {}
-				var index = json['collection-index']
+				//var index = json['collection-index']
+				var index = json['collections']
 				index
-					&& index.forEach(function(gid){
+					&& Object.keys(index).forEach(function(gid){
 						var title = index[gid]
 						var path = 'collections/'+ gid
 
@@ -1414,6 +1419,12 @@ module.Collection = core.ImageGridFeatures.Feature({
 							path: path,
 						}
 					})
+
+				if(Object.keys(collections).length > 0){
+					//console.log('!!!!!', collections)
+					// XXX this breaks loading...
+					//res.collections = collections
+				}
 
 				// group collection data...
 				// XXX would be nice to have a mechanism to pass info to 
@@ -1691,7 +1702,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					// skip loaded collections that are already Data objects...
 					// XXX not sure about this...
 					.filter(function(title){
-						return !(json.collections[title] instanceof data.Data) })
+						return !(json.collections[title].data instanceof data.Data) })
 					// do the loading...
 					.forEach(function(title){
 						var c = that.collections[title]

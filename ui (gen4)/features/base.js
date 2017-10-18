@@ -691,6 +691,7 @@ core.ImageGridFeatures.Feature({
 
 				var img = images.Images(json.images)
 
+				// this is needed for loading multiple indexes...
 				if(base_path){
 					d.base_path = base_path
 					// XXX STUB remove ASAP... 
@@ -704,6 +705,7 @@ core.ImageGridFeatures.Feature({
 					// 			2) add/remove on load/save (approach below)
 					// 				+ less to do in real time
 					// 				- more processing on load/save
+					//console.warn('STUB: setting image .base_path in .prepareJSONForLoad(..)')
 					img.forEach(function(_, img){ img.base_path = base_path })
 				}
 

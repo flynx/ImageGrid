@@ -340,10 +340,23 @@ var LocationActions = actions.Actions({
 		}}],
 	load: [function(){
 		return function(_, data){
+			var that = this
+
 			// NOTE: we are setting this after the load because the 
 			// 		loader may .clear() the viewer, thus clearing the
 			// 		.location too...
-			this.__location = data.location
+			var l = this.__location = data.location
+
+			// set default image .base_path
+			// XXX not sure we need this...
+			data.location
+				&& Object.keys(this.images || {}).forEach(function(gid){
+					var img = that.images[gid]
+
+					if(img.base_path == null){
+						img.base_path = l.path
+					}
+				})
 		}}],
 	clone: [function(){
 		return function(res){

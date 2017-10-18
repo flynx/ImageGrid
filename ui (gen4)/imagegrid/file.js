@@ -278,6 +278,8 @@ function(list, from_date, logger){
 					var k = s[1]
 					var d = s[2] == 'diff'
 
+					k = d ? k : s.slice(1).join('-')
+
 					// new keyword...
 					if(index[k] == null){
 						index[k] = [[d, n]]
