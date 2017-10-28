@@ -27,7 +27,7 @@
     "ig-object": "^1.0.2",
     "openseadragon": "^2.3.1",
     "pica": "^3.0.6",
-    "preact": "^8.2.5",
+    "preact": "^8.2.6",
     "react": "^15.6.2",
     "react-dom": "^15.6.2",
     "requirejs": "^2.3.5",
