@@ -10,8 +10,14 @@
 
 require('./cfg/requirejs')
 
-var _require = require
-require = requirejs
+nodeRequire =
+global.nodeRequire = 
+	require
+
+require = 
+requirejs = 
+global.requirejs = 
+	require('requirejs')
 
 
 
