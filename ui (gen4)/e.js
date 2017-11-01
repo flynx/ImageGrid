@@ -14,6 +14,13 @@ var path = require('path')
 var url = require('url')
 
 
+//---------------------------------------------------------------------
+
+//require('./cfg/requirejs')
+
+//var _require = require
+//require = requirejs
+
 
 /*********************************************************************/
 
@@ -37,7 +44,7 @@ function createWindow() {
 	// and load the index.html of the app.
 	win.loadURL(url.format({
 		// XXX for some reason the system is loaded twice...
-		pathname: path.join(__dirname, 'index.html'),
+		pathname: path.join(__dirname, 'electron.html'),
 		protocol: 'file:',
 		slashes: true
 	}))

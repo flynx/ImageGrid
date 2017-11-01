@@ -151,11 +151,11 @@ var ElectronHostActions = actions.Actions({
 	get size(){
 		return electron.remote.getCurrentWindow().getSize() },
 	set size(value){
-		electron.remote.getCurrentWindow().setSize(value) },
+		value && electron.remote.getCurrentWindow().setSize(value[0], value[1]) },
 	get position(){
 		return electron.remote.getCurrentWindow().getPosition() },
 	set position(value){
-		electron.remote.getCurrentWindow().setPosition(value) },
+		value && electron.remote.getCurrentWindow().setPosition(value[0], value[1]) },
 
 	show: ['- Window/',
 		function(){
@@ -372,8 +372,8 @@ module.AppControl = core.ImageGridFeatures.Feature({
 	// 			- ready protocol breaks -- need to call .ready() to unstall 
 	// 				the viewer
 	// 		...does this all have anything to do with double init???
-	//isApplicable: function(){ return this.runtime.desktop },
-	isApplicable: function(){ return this.runtime.desktop && !this.runtime.electron },
+	isApplicable: function(){ return this.runtime.desktop },
+	//isApplicable: function(){ return this.runtime.desktop && !this.runtime.electron },
 
 	// XXX show main window...
 	handlers: [

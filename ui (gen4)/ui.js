@@ -15,6 +15,9 @@ if((typeof(process) != 'undefined' ? process : {}).__nwjs){
 		.addPath(path.dirname(process.execPath) + '/node_modules/')
 }
 
+//require('./cfg/requirejs')
+
+
 //*
 // Setup modules loaded from npm...
 //
@@ -34,9 +37,6 @@ var requirejs_cfg = {
 		'lib/actions': './node_modules/ig-actions/actions',
 		'lib/features': './node_modules/ig-features/features',
 
-		//'lib/keyboard': './node_modules/ig-keyboard/keyboard',
-		
-		//'ext-lib/preact': './node_modules/preact/dist/preact.dev',
 	},	
 	map: {
 		'*': {
@@ -46,8 +46,6 @@ var requirejs_cfg = {
 			'ig-object': 'lib/object',
 			'ig-actions': 'lib/actions',
 			'ig-features': 'lib/features',
-
-			//'ig-keyboard': 'lib/keyboard',
 		},
 	},
 }

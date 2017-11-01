@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8" />
+<meta name="msapplication-tap-highlight" content="no" />
+<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Bold.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-BoldItalic.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-ExtraBold.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-ExtraBoldItalic.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Italic.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Light.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-LightItalic.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Regular.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-Semibold.ttf" />
+<link rel="prefetch" href="css/fonts/Open_Sans/OpenSans-SemiboldItalic.ttf" />
+
+
+<link rel="stylesheet" href="css/fonts.css" />
+<link rel="stylesheet" href="css/layout.css" />
+<link rel="stylesheet" href="css/editor.css" />
+<link rel="stylesheet" href="css/widget/browse.css" />
+<link rel="stylesheet" href="css/widget/overlay.css" />
+<link rel="stylesheet" href="css/widget/drawer.css" />
+
+<link rel="stylesheet" href="css/loader.css" />
+
+<link rel="stylesheet" href="css/experimenting.css" />
+
+
+<script>
+if(window.require && window.nw){
+	window.__devtools_failsafe = setTimeout(function(){
+		// nw...
+		if(window.nw){
+				nw.Window.get().showDevTools()
+
+		// electron...
+		} else {
+			try{
+				require('electron').remote.getCurrentWindow().openDevTools()
+			} catch(err){ }
+		}
+	}, 5000)
+}
+</script>
+
+<!-- Electron related fix -->
+<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
+
+
+<!-- jQuery -->
+<script src="ext-lib/jquery.js"></script>
+<!--script src="ext-lib\jquery-1.9.1.js"></script-->
+<!-- migrating to jQuery 1.9.x -->
+<!--script src="ext-lib/jquery-migrate-1.4.1.js"></script-->
+<!-- migrating to jQuery 3.x -->
+<!--script src="ext-lib/jquery-migrate-3.0.0.js"></script-->
+
+
+<script src="ext-lib/jquery-ui.js"></script>
+<script src="ext-lib/jquery.ui.touch-punch.min.js"></script>
+
+<!-- preact.js -->
+<script src="node_modules/preact/dist/preact.min.js"></script>
+
+<!-- velocity.js -->
+<script src="ext-lib/velocity.min.js"></script>
+
+<script src="ext-lib/virtual-dom.js"></script>
+
+<!-- hammer.js -->
+<script src="ext-lib/hammer.min.js"></script>
+<script src="ext-lib/jquery.hammer.js"></script>
+
+<script src="lib/jli.js"></script>
+
+
+
+<!-- Electron related unfix -->
+<script>if (window.module) module = window.module;</script>
+<script>
+
+require('./cfg/requirejs')
+requirejs('./ui')
+
+</script>
+
+</head>
+<body>
+
+<!-- for viewer structure doc see: ribbons.js... -->
+
+<!--div class="viewer gray marks-visible" empty-help="Press 'O' to load, 'F1' for help or '?' for keyboard mappings."-->
+
+	<!--div class="ribbon-set"-->
+		<!-- DEBUG: remove when not needed... -->
+		<!--div class="point" title="current origin point"> </div-->
+		<!-- DEBUG: end -->
+	<!--/div-->
+
+
+	<!-- XXX should these be here???
+	<div class="overlay-block">
+		<div class="background"></div>
+		<div class="content"></div>
+	</div>
+	-->
+
+	<!-- DEBUG: remove when not needed... -->
+	<!--div class="container-center"> </div-->
+	<!-- DEBUG: end -->
+
+<!--/div-->
+
+<div class="viewer gray marks-visible" tabindex="0"></div>
+
+
+<!-- vim:set ts=4 sw=4 spell : -->
+</body>
+</html>
