@@ -4,11 +4,7 @@
 *
 **********************************************************************/
 
-global.requirejs = global.requirejs || require('requirejs')
-requirejs.config({
-	nodeRequire: require,
-	//baseUrl: __dirname,
-
+var cfg = {
 	// XXX this does not work on direct filesystem access...
 	//urlArgs: 'bust='+Date.now(),
 	
@@ -37,7 +33,21 @@ requirejs.config({
 			//'ig-keyboard': 'lib/keyboard',
 		},
 	},
-})
+}
+
+
+if(typeof(require) != 'undefined'){
+	cfg.nodeRequire = require
+	//cfg.baseUrl = __dirname
+}
+
+
+if(typeof(require) != 'undefined' && typeof(global) != 'undefined'){
+	global.requirejs = global.requirejs || require('requirejs')
+}
+
+
+requirejs.config(cfg)
 
 
 

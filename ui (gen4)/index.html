@@ -84,7 +84,10 @@ if(window.require && window.nw){
 <script>if (window.module) module = window.module;</script>
 
 
-<script data-main="ui" src="ext-lib/require.js"></script>
+<!--script data-main="ui" src="ext-lib/require.js"></script-->
+<script src="ext-lib/require.js"></script>
+<script src="cfg/requirejs.js"></script>
+<script> requirejs(['ui']) </script>
 
 </head>
 <body>
