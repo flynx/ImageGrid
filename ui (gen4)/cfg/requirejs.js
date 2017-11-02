@@ -4,7 +4,7 @@
 *
 **********************************************************************/
 
-var cfg = {
+var requirejs_cfg = {
 	// XXX this does not work on direct filesystem access...
 	//urlArgs: 'bust='+Date.now(),
 	
@@ -37,17 +37,18 @@ var cfg = {
 
 
 if(typeof(require) != 'undefined'){
-	cfg.nodeRequire = require
-	//cfg.baseUrl = __dirname
+	requirejs_cfg.nodeRequire = require
+	//requirejs_cfg.baseUrl = __dirname
 }
 
 
+// XXX revise...
 if(typeof(require) != 'undefined' && typeof(global) != 'undefined'){
 	global.requirejs = global.requirejs || require('requirejs')
 }
 
 
-requirejs.config(cfg)
+requirejs.config(requirejs_cfg)
 
 
 

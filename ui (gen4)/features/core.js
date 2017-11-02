@@ -375,6 +375,10 @@ var LifeCycleActions = actions.Actions({
 				nw.Window.get().on('close', this.__nw_stop_handler)
 
 
+			// electron...
+			} else if(runtime.electron){
+				$(window).on('beforeunload', stop)
+
 			// node...
 			} else if(runtime.node){
 				process.on('exit', stop)
