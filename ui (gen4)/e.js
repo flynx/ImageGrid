@@ -30,16 +30,21 @@ var win
 function createWindow() {
 	// Create the browser window.
 	win = new BrowserWindow({
-		// XXX get from config...
+		// let the window to get ready before we show it to the user...
+		show: false,
+
+		// XXX get from config... (???)
+		//backgroundColor: XXX,
 		width: 800, 
 		height: 600,
 
 		fullscreenable: true,
-		//backgroundColor: XXX,
 
-		// XXX remove...
-		autoHideMenuBar: true,
+		//autoHideMenuBar: true,
 	})
+
+	// disable default menu...
+	win.setMenu(null)
 
 	// and load the index.html of the app.
 	win.loadURL(url.format({
