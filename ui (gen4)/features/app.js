@@ -120,6 +120,10 @@ var NWHostActions = actions.Actions({
 
 			nw.Shell.showItemInFolder(path)
 		}],
+
+	toggleSplashScreen: ['Interface/',
+		function(){
+		}],
 })
 
 var NWHost = 
@@ -226,6 +230,41 @@ var ElectronHostActions = actions.Actions({
 				.exec('explorer.exe /select,'+JSON.stringify(path.replace(/\//g, '\\')))
 				//.exec('open -R '+JSON.stringify(path))
 		}],
+
+	// XXX make this a real toggler...
+	toggleSplashScreen: ['Interface/',
+		function(){
+			var splash = this.splash = new electron.BrowserWindow({
+				// let the window to get ready before we show it to the user...
+				//show: false,
+
+				frame: false,
+				center: true,
+				//backgroundColor: XXX,
+				width: 500, 
+				height: 500,
+
+				alwaysOnTop: true,
+
+				resizable: false,
+				movable: false,
+				minimizable: false,
+				maximizable: false,
+				fullscreenable: false,
+
+				autoHideMenuBar: true,
+			})
+
+			splash.setMenu(null)
+
+			// and load the index.html of the app.
+			splash.loadURL(url.format({
+				// XXX unify this with index.html
+				pathname: path.join(__dirname, 'splash.html'),
+				protocol: 'file:',
+				slashes: true
+			}))
+		}],
 })
 
 var ElectronHost = 
@@ -252,6 +291,8 @@ var AppControlActions = actions.Actions({
 		'window-title': '${FILENAME} - ImageGrid.Viewer (${VERSION})',
 
 		'window-delay-initial-display': 200,
+
+		'show-splash-screen': 'on',
 	},
 
 	// XXX revise these...
@@ -346,6 +387,9 @@ var AppControlActions = actions.Actions({
 
 			}, this.config['window-delay-initial-display'] || 0)
 		}],
+
+	toggleSplashScreenShowing: ['Interface/Splash screen on start',
+		core.makeConfigToggler('show-splash-screen', ['on', 'off'])],
 })
 
 // XXX store/load window state...

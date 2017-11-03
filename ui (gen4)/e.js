@@ -27,7 +27,7 @@ var url = require('url')
 var win
 
 
-function createWindow() {
+function createWindow(){
 	// Create the browser window.
 	win = new BrowserWindow({
 		// let the window to get ready before we show it to the user...
@@ -65,6 +65,10 @@ function createWindow() {
 		win = null
 	})
 }
+
+
+
+//---------------------------------------------------------------------
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
