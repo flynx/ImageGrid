@@ -55,6 +55,8 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	// 		...this is best included by direct feature dependency.
 	'index-format',
 
+	// XXX
+	'action-examples',
 
 	'collections',
 

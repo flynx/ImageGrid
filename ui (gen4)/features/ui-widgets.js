@@ -2641,36 +2641,6 @@ var WidgetTestActions = actions.Actions({
 					.attr(attrs))
 		}],
 
-	// a normal method...
-	testMethod: function(){
-		console.log('test method:', [].slice.call(arguments))
-		return 'test result'
-	},
-
-	// XXX does not work -- see actions.Actions(..) for details...
-	testAlias: ['Test/Action alias',
-		'focusImage: "prev"'],
-
-	// action constructor for testing...
-	makeAction: ['- Test/',
-		function(name){
-			this[name] = actions.Action.apply(actions.Action, arguments) }],
-
-	// promise handling...
-	//
-	// also see corresponding WidgetTest.handlers
-	syncAction: ['- Test/',
-		//{await: true},
-		function(t){
-			return new Promise(function(resolve){
-				setTimeout(function(){ resolve() }, t || 1000) })
-		}],
-	asyncAction: ['- Test/',
-		{await: false},
-		function(t){
-			return new Promise(function(resolve){
-				setTimeout(function(){ resolve() }, t || 1000) })
-		}],
 })
 
 var WidgetTest = 

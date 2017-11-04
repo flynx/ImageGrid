@@ -48,6 +48,7 @@ require('features/meta')
 require('features/experimental')
 require('features/tests')
 require('features/demo')
+require('features/examples')
 
 // node features...
 if(typeof(window) == 'undefined' || window.nodejs != null){
