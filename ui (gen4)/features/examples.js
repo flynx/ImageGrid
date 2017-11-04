@@ -21,7 +21,20 @@ var ExampleActions = actions.Actions({
 		// XXX stuff for togglers...
 	},
 
+	// NOTE: the path / short doc is optional but it is not recommended 
+	// 		to to omit it unless defining a non-root action...
+	// XXX should an action be able to overload the doc???
+	// 		...the intuitive thing to do here is make the doc "write-once"
+	// 		i.e. once defined it can't be overwritten...
 	exampleAction: ['- Test/',
+		function(){
+			// XXX
+		}],
+	exampleActionFull: ['- Test/',
+		core.doc`Example full action long documentation string
+		`,
+		// action attributes...
+		{},
 		function(){
 			// XXX
 		}],
@@ -43,7 +56,7 @@ var ExampleActions = actions.Actions({
 
 	// promise handling...
 	//
-	// also see corresponding WidgetTest.handlers
+	// also see corresponding Example.handlers
 	exampleSyncAction: ['- Test/',
 		//{await: true},
 		function(t){
@@ -59,6 +72,7 @@ var ExampleActions = actions.Actions({
 
 	// Togglers...
 	//
+	// XXX ...
 	exampleToggler: ['- Test/',
 		function(){
 		}],
@@ -129,15 +143,22 @@ module.Example = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	// XXX
 	tag: 'action-examples',
 	depends: [
-		// XXX
 	],
 
 	actions: ExampleActions, 
 
-	handlers: [],
+	// XXX make this not applicable in production...
+
+	handlers: [
+		['exampleAsyncAction.pre exampleSyncAction.pre',
+			function(){
+				console.log('PRE')
+				return function(){
+					console.log('POST') } 
+			}],
+	],
 })
 
 

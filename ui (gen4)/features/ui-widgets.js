@@ -2655,12 +2655,6 @@ module.WidgetTest = core.ImageGridFeatures.Feature({
 	actions: WidgetTestActions,
 
 	handlers: [
-		['asyncAction.pre syncAction.pre',
-			function(){
-				console.log('PRE')
-				return function(){
-					console.log('POST') } 
-			}],
 	],
 })
 
