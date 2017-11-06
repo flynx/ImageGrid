@@ -34,7 +34,9 @@ function createWindow(){
 		show: false,
 
 		// XXX get from config... (???)
-		//backgroundColor: XXX,
+		backgroundColor: '#333333',
+
+
 		width: 800, 
 		height: 600,
 
