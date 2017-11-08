@@ -226,8 +226,9 @@ var ElectronHostActions = actions.Actions({
 			var path = pathlib.normalize(base + '/' + filename)
 
 			requirejs('child_process')
-				// XXX make this portable (osx, linux)...
-				.exec('explorer.exe /select,'+JSON.stringify(path.replace(/\//g, '\\')))
+				// XXX this is windows-specific...
+				.exec(`explorer.exe /select,"${ pathlib.normalize(path) }"`)
+				// XXX osx...
 				//.exec('open -R '+JSON.stringify(path))
 		}],
 
