@@ -1670,6 +1670,13 @@ var FileSystemWriterActions = actions.Actions({
 			'1920',
 		],
 		'export-preview-size-limit': 'no limit',
+
+		// NOTE: this is applied ONLY if there is a naming conflict...
+		// XXX adding a %c is more human-readable but is unstable as
+		// 		depends on gid order, %g resolves this problem but is 
+		// 		not very intuitive...
+		//'export-conflicting-image-name': '%n%(-%g)c%e',
+		'export-conflicting-image-name': '%n%(-%c)c%e',
 	},
 
 	// Save index...
@@ -1751,6 +1758,8 @@ var FileSystemWriterActions = actions.Actions({
 				})
 		}],
 
+	// XXX add name conflict resolution strategies (pattern)...
+	// 		...use the same strategy as for .exportDirs(..)
 	// XXX ways to treat a collection:
 	// 		- crop data
 	// 		- independent index
@@ -1766,8 +1775,6 @@ var FileSystemWriterActions = actions.Actions({
 
 	// Export current state as a full loadable index
 	//
-	// XXX add name conflict resolution strategies (pattern)...
-	// 		...use the same strategy as for .exportDirs(..)
 	// XXX resolve env variables in path...
 	// XXX what should happen if no path is given???
 	// XXX add preview selection...
@@ -1775,6 +1782,7 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX local collections???
 	exportIndex: ['- File/Export/Export index',
 		function(path, max_size, include_orig, logger){
+			var that = this
 			logger = logger || this.logger
 			logger = logger && logger.push('Export index')
 
@@ -1828,11 +1836,10 @@ var FileSystemWriterActions = actions.Actions({
 
 
 			// check if we have naming conflicts...
-			// XXX use this to update names...
 			var conflicts = this.imageNameConflicts()
-			// XXX
-			conflicts 
-				&& console.log('ERR: images with conflicting names present.')
+
+			var pattern = this.config['export-conflicting-image-name'] || '%n%(-%g)c%e'
+			var total_len = this.data.length
 
 
 			var queue = []
@@ -1841,6 +1848,49 @@ var FileSystemWriterActions = actions.Actions({
 				var img = json.images[gid]
 				var img_base = img.base_path
 				var previews = img.preview
+
+				var from_path = img.path
+				var to_path = img.path
+
+				// resolve name conflicts...
+				if(conflicts){
+					var base = pathlib.dirname(img.path || '')
+					var name = pathlib.basename(img.path || (img.name + img.ext))
+
+					// update name via pattern...
+					name = that.formatImageName(pattern, 
+						gid, 
+						{
+							total_len: total_len,
+							conflicts: conflicts.conflicts,
+						})
+
+					// update name...
+					if(img.name){
+						img.name = img.name == img.path ? 
+								pathlib.join(base, name)
+							// name without extension...
+							: img.path == (img.name + img.ext) ? 
+								pathlib.join(base, name)
+									.split(/\./g)
+									.slice(0, -1)
+									.join('.')
+							// other name...
+							: img.name
+					}
+
+					// update path...
+					to_path = img.path = pathlib.join(base, name)
+
+					// update previews...
+					// NOTE: this is needed if some of the previews are the 
+					// 		same as .path
+					Object.keys(img.preview)
+						.forEach(function(s){ 
+							var p = img.preview[s]
+							img.preview[s] = p == from_path ? to_path : p
+						})
+				}
 
 				// NOTE: we are copying everything to one place so no 
 				// 		need for a base path...
@@ -1864,16 +1914,27 @@ var FileSystemWriterActions = actions.Actions({
 						})
 						// get paths...
 						.map(function(res){ return decodeURI(previews[res]) })
-						// XXX might be a good idea to include include 
-						// 		the max preview if hires is too large...
-						.concat(include_orig ? [img.path || null] : [])
+						// XXX might be a good idea to include the max 
+						// 		preview if hires is too large...
+						.concat(include_orig && img.path ? [[from_path, img.path]] : [])
 						.forEach(function(preview_path){
+							var to
 							if(preview_path == null){
 								return
 							}
+							if(preview_path instanceof Array){
+								to = preview_path[1]
+								preview_path = preview_path[0]
+							}
+
+							// we got a preview that is the same image as .path
+							if(preview_path == to_path){
+								to = to_path
+								preview_path = from_path	
+							}
 
 							var from = (img_base || base_dir) +'/'+ preview_path
-							var to = path +'/'+ preview_path
+							to = path +'/'+ (to || preview_path)
 
 							// XXX use queue for progress reporting...
 							logger && logger.emit('queued', to)
@@ -1891,8 +1952,7 @@ var FileSystemWriterActions = actions.Actions({
 									.then(function(){
 										logger && logger.emit('done', to) })
 									.catch(function(err){
-										logger && logger.emit('error', err)
-									}))
+										logger && logger.emit('error', err) }))
 							}
 						})
 				}
@@ -1922,11 +1982,14 @@ var FileSystemWriterActions = actions.Actions({
 			return Promise.all(queue)
 		}],
 
+	// XXX should %T / %I be global or current crop???
+	// XXX set length of %g in options...
 	formatImageName: ['- File/',
 		core.doc`
 
 		Filename patterns:
 		 	%f		- full file name (same as: %n%e)
+
 		 	%n		- name without extension
 		 	%e		- extension with leading dot
 		
@@ -1942,12 +2005,14 @@ var FileSystemWriterActions = actions.Actions({
 		 	%(...)m	- add text in braces if image marked
 		 	%(...)b	- add text in braces if image is bookmark
 		
-		 	%(...)c	- add text in braces if there are name conflicts.
+		 	%(...)C	- add text in braces if there are name conflicts.
 						NOTE: this will be added to all images.
-		 	%(...)C	- add text in braces if there are name conflicts 
+		 	%(...)c	- add text in braces if there are name conflicts 
 						present, but only if the current image has a 
 						conflicting name.
 		 	%c		- number in set of conflicting names (default: 0).
+						NOTE: this is not stable and can change depending
+							on image order.
 
 		NOTE: all group patterns (i.e. '%(..)x') can include other patterns.
 		`,
@@ -1992,7 +2057,7 @@ var FileSystemWriterActions = actions.Actions({
 				// gid...
 				.replace(/%gid/, gid)
 				// XXX get the correct short gid length...
-				.replace(/%g/, gid.slice(-7, -1))
+				.replace(/%g/, gid.slice(-6))
 
 				// order...
 				.replace(/%i/, i)
@@ -2022,15 +2087,11 @@ var FileSystemWriterActions = actions.Actions({
 
 				// conflicts...
 				.replace(
-					/%\(([^)]*)\)c/, conflicts ? '$1' : '')
+					/%\(([^)]*)\)C/, conflicts ? '$1' : '')
 				.replace(
-					/%\(([^)]*)\)C/, (conflicts || {})[gid] ? '$1' : '')
+					/%\(([^)]*)\)c/, (conflicts || {})[gid] ? '$1' : '')
 		}],
 	
-	// XXX add name conflict resolution strategies (pattern)...
-	// 		...use the same strategy as for .exportIndex(..)
-	// XXX should %T / %I be global or current crop???
-	// XXX set length of %g in options...
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX resolve env variables in path... (???)
 	// XXX make custom previews (option)...
@@ -2042,6 +2103,7 @@ var FileSystemWriterActions = actions.Actions({
 	exportDirs: ['- File/Export/Export ribbons as directories',
 		core.doc`Export ribbons as directories
 
+		NOTE: see .formatImageName(..) for pattern syntax details.
 		`,
 		function(path, pattern, level_dir, size, logger){
 			logger = logger || this.logger
@@ -2070,14 +2132,8 @@ var FileSystemWriterActions = actions.Actions({
 			size = size || this.config['export-preview-size'] || 1000
 			pattern = pattern || this.config['export-preview-name-pattern'] || '%f'
 
-
 			// check if we have naming conflicts...
-			// XXX use this to update names...
 			var conflicts = this.imageNameConflicts()
-			// XXX
-			conflicts 
-				&& console.log('ERR: images with conflicting names present.')
-
 
 			// XXX need to abort on fatal errors...
 			return Promise.all(this.data.ribbon_order
@@ -2099,15 +2155,16 @@ var FileSystemWriterActions = actions.Actions({
 
 							that.data.ribbons[ribbon].forEach(function(gid){
 								var img = that.images[gid]
+								// NOTE: we are intentionally losing image dir 
+								// 		name here -- we do not need to preserve 
+								// 		topology when exporting...
 								var img_name = pathlib.basename(img.path || (img.name + img.ext))
-
 
 								// get best preview...
 								var from = decodeURI(
 									(img.base_path || base_dir) 
 										+'/'
 										+ that.images.getBestPreview(gid, size).url)
-
 
 								// XXX see if we need to make a preview (sharp)
 								// XXX
