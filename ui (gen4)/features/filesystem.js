@@ -1672,7 +1672,6 @@ var FileSystemWriterActions = actions.Actions({
 		'export-preview-size-limit': 'no limit',
 	},
 
-
 	// Save index...
 	//
 	// Returns:
@@ -1726,6 +1725,7 @@ var FileSystemWriterActions = actions.Actions({
 
 			var full_path = path +'/'+ this.config['index-dir']
 
+
 			return file.writeIndex(
 					index.index, 
 					// XXX should we check if index dir is present in path???
@@ -1766,6 +1766,8 @@ var FileSystemWriterActions = actions.Actions({
 
 	// Export current state as a full loadable index
 	//
+	// XXX add name conflict resolution strategies (pattern)...
+	// 		...use the same strategy as for .exportDirs(..)
 	// XXX resolve env variables in path...
 	// XXX what should happen if no path is given???
 	// XXX add preview selection...
@@ -1823,6 +1825,15 @@ var FileSystemWriterActions = actions.Actions({
 			// copy previews for the loaded images...
 			// XXX should also optionally populate the base dir and nested favs...
 			var base_dir = this.location.path
+
+
+			// check if we have naming conflicts...
+			// XXX use this to update names...
+			var conflicts = this.imageNameConflicts()
+			// XXX
+			conflicts 
+				&& console.log('ERR: images with conflicting names present.')
+
 
 			var queue = []
 
@@ -1910,26 +1921,116 @@ var FileSystemWriterActions = actions.Actions({
 
 			return Promise.all(queue)
 		}],
+
+	formatImageName: ['- File/',
+		core.doc`
+
+		Filename patterns:
+		 	%f		- full file name (same as: %n%e)
+		 	%n		- name without extension
+		 	%e		- extension with leading dot
+		
+		 	%gid	- full image gid
+		 	%g		- short gid
+		
+		 	%i		- image index in ribbon
+		 	%I		- global image index
+		
+		 	%t 		- total number of images in ribbon
+		 	%T		- total number of images
+		
+		 	%(...)m	- add text in braces if image marked
+		 	%(...)b	- add text in braces if image is bookmark
+		
+		 	%(...)c	- add text in braces if there are name conflicts.
+						NOTE: this will be added to all images.
+		 	%(...)C	- add text in braces if there are name conflicts 
+						present, but only if the current image has a 
+						conflicting name.
+		 	%c		- number in set of conflicting names (default: 0).
+
+		NOTE: all group patterns (i.e. '%(..)x') can include other patterns.
+		`,
+		function(pattern, name, data){
+			pattern = pattern || '%f'
+			data = data || {}
+			var gid = data.gid
+			if(!gid && name in this.images){
+				gid = name
+				name = this.images[gid].name || gid
+			}
+			gid = gid || this.current
+			var ribbon = this.data.getRibbon(gid)
+
+			var img = this.image
+			name = name || pathlib.basename(img.path || (img.name + img.ext))
+			var ext = pathlib.extname(name)
+
+			var tags = data.tags || this.data.getTags(gid)
+
+			// XXX revise defaults...
+			var len = data.len || this.data.ribbons[ribbon].len
+			var total_len = data.total_len || this.data.length
+
+			var i = data.i || this.data.getImageOrder('ribbon', gid)
+			var I = data.I || this.data.getImageOrder('loaded', gid)
+
+			// pad with zeros...
+			i = (i+'').padStart((len + '').length, '0')
+			I = (I+'').padStart((total_len + '').length, '0')
+			//i = ((('1e'+(len+'').length)*1 + i) + '').slice(1)
+			//I = ((('1e'+(total_len+'').length)*1 + I) + '').slice(1)
+
+			var conflicts = data.conflicts
+
+			return pattern
+				// file name...
+				.replace(/%f/, name)
+				.replace(/%n/, name.replace(ext, ''))
+				.replace(/%e/, ext)
+
+				// gid...
+				.replace(/%gid/, gid)
+				// XXX get the correct short gid length...
+				.replace(/%g/, gid.slice(-7, -1))
+
+				// order...
+				.replace(/%i/, i)
+				.replace(/%I/, I)
+
+				// totals...
+				.replace(/%t/, len)
+				.replace(/%T/, total_len)
+
+				// conflict count...
+				.replace(/%c/, (conflicts && conflicts[gid]) ? 
+					conflicts[gid].indexOf(gid) 
+					: 0)
+
+				// metadata...
+				// XXX
+
+
+				// Group patterns...
+
+				// tags...
+				// XXX test: %n%(b)b%(m)m%e
+				.replace(
+					/%\(([^)]*)\)m/, tags.indexOf('selected') >= 0 ? '$1' : '')
+				.replace(
+					/%\(([^)]*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
+
+				// conflicts...
+				.replace(
+					/%\(([^)]*)\)c/, conflicts ? '$1' : '')
+				.replace(
+					/%\(([^)]*)\)C/, (conflicts || {})[gid] ? '$1' : '')
+		}],
 	
-	// 
-	// Filename patterns:
-	// 	%f		- full file name (same as: %n%e)
-	// 	%n		- name without extension
-	// 	%e		- extension with leading dot
-	//
-	// 	%gid	- full image gid
-	// 	%g		- short gid (XXX set length in options)
-	//
-	// 	%i		- image index in ribbon
-	// 	%I		- global image index (XXX global or crop???)
-	//
-	// 	%t 		- total number of images in ribbon
-	// 	%T		- total number of images (XXX global or crop???)
-	//
-	// 	%(...)m	- add text in braces if image marked
-	// 	%(...)b	- add text in braces if image is bookmark
-	//
-	//
+	// XXX add name conflict resolution strategies (pattern)...
+	// 		...use the same strategy as for .exportIndex(..)
+	// XXX should %T / %I be global or current crop???
+	// XXX set length of %g in options...
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
 	// XXX resolve env variables in path... (???)
 	// XXX make custom previews (option)...
@@ -1939,6 +2040,9 @@ var FileSystemWriterActions = actions.Actions({
 	// XXX use tasks...
 	// XXX check global index ('%I') in crop...
 	exportDirs: ['- File/Export/Export ribbons as directories',
+		core.doc`Export ribbons as directories
+
+		`,
 		function(path, pattern, level_dir, size, logger){
 			logger = logger || this.logger
 			logger = logger && logger.push('Export dirs')
@@ -1965,6 +2069,15 @@ var FileSystemWriterActions = actions.Actions({
 			level_dir = level_dir || this.config['export-level-directory-name'] || 'fav'
 			size = size || this.config['export-preview-size'] || 1000
 			pattern = pattern || this.config['export-preview-name-pattern'] || '%f'
+
+
+			// check if we have naming conflicts...
+			// XXX use this to update names...
+			var conflicts = this.imageNameConflicts()
+			// XXX
+			conflicts 
+				&& console.log('ERR: images with conflicting names present.')
+
 
 			// XXX need to abort on fatal errors...
 			return Promise.all(this.data.ribbon_order
@@ -1995,50 +2108,19 @@ var FileSystemWriterActions = actions.Actions({
 										+'/'
 										+ that.images.getBestPreview(gid, size).url)
 
+
 								// XXX see if we need to make a preview (sharp)
 								// XXX
 
 								// XXX get/form image name... 
 								// XXX might be a good idea to connect this to the info framework...
-								var ext = pathlib.extname(img_name)
-								var tags = that.data.getTags(gid)
-
-								var i = that.data.getImageOrder('ribbon', gid)
-								var I = that.data.getImageOrder('global', gid)
-
-								// pad indexes...
-								// XXX should these be optional???
-								i = ((('1e'+(len+'').length)*1 + i) + '').slice(1)
-								I = ((('1e'+(total_len+'').length)*1 + I) + '').slice(1)
-
-								var name = pattern
-									// file name...
-									.replace(/%f/, img_name)
-									.replace(/%n/, img_name.replace(ext, ''))
-									.replace(/%e/, ext)
-
-									// gid...
-									.replace(/%gid/, gid)
-									// XXX get the correct short gid length...
-									.replace(/%g/, gid.slice(-7, -1))
-
-									// order...
-									.replace(/%i/, i)
-									.replace(/%I/, I)
-
-									// totals...
-									.replace(/%t/, len)
-									.replace(/%T/, total_len)
-
-									// tags...
-									// XXX test: %n%(b)b%(m)m%e
-									.replace(
-										/%\(([^)]*)\)m/, tags.indexOf('selected') >= 0 ? '$1' : '')
-									.replace(
-										/%\(([^)]*)\)b/, tags.indexOf('bookmark') >= 0 ? '$1' : '')
-
-									// metadata...
-									// XXX
+								var name = that.formatImageName(pattern, 
+									gid, 
+									{
+										len: len,
+										total_len: total_len,
+										conflicts: conflicts.conflicts,
+									})
 
 								var to = img_dir +'/'+ name
 

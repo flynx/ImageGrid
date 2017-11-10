@@ -190,6 +190,69 @@ actions.Actions({
 		}
 	},
 
+
+	// Consistency checking...
+	//
+	imageNameConflicts: ['- File/',
+		core.doc`Get images with conflicting names...
+
+			Check current index for name conflicts...
+			.imageNameConflicts()
+				-> conflicts
+				-> false
+
+		Format:
+			{
+				// gid name matches...
+				conflicts: {
+					// NOTE: each list contains all the matches including 
+					// 		the conflicts key it was accessed via.
+					gid: [gid, gid, ...],
+					...
+				},
+
+				// maximum number of name repetitions...
+				max_repetitions: number,
+			}
+
+		If there are no conflicts this will return false.
+		`,
+		function(){
+			// build name index...
+			var conflicts = {}
+			var max = 0
+			var names = {}
+			//var gids = []
+			this.images
+				.forEach(function(gid, data){
+					var name = data.name || gid
+					var gids
+
+					var n = names[name] = names[name] || []
+					n.push(gid)
+
+					// build the conflict set...
+					if(n.length > 1){
+						conflicts[gid] = n
+						n.forEach(function(g){ conflicts[g] = n })
+						max = Math.max(max, n.length)
+					}
+				})
+
+
+			// list only the conflicting gids...
+			//return gids.length > 0 ? 
+			return Object.keys(conflicts).length > 0 ? 
+				{
+					conflicts: conflicts,
+					max_repetitions: max,
+				}
+				: false
+		}],
+
+
+	// Settings...
+	//
 	toggleRibbonFocusMode : ['Interface/Ribbon focus mode',
 		core.makeConfigToggler('ribbon-focus-mode', 
 			function(){ return this.config['ribbon-focus-modes'] })],

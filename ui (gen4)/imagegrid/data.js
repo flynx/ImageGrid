@@ -993,7 +993,7 @@ var DataPrototype = {
 	// 		appropriate before/after image in that ribbon and get it's 
 	// 		order.
 	getImageOrder: function(context, target, mode, list){
-		if(context == 'loaded'){
+		if(context == 'loaded' || context == 'global'){
 			return this.getImages('loaded').indexOf(this.getImage(target, mode, list))
 
 		} else if(context == 'ribbon'){
