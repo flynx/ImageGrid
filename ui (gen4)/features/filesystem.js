@@ -2022,12 +2022,12 @@ var FileSystemWriterActions = actions.Actions({
 			var gid = data.gid
 			if(!gid && name in this.images){
 				gid = name
-				name = this.images[gid].name || gid
+				name = null
 			}
 			gid = gid || this.current
 			var ribbon = this.data.getRibbon(gid)
 
-			var img = this.image
+			var img = this.images[gid]
 			name = name || pathlib.basename(img.path || (img.name + img.ext))
 			var ext = pathlib.extname(name)
 
