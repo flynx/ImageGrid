@@ -212,7 +212,7 @@ function(list, elem, callback, options){
 // 
 var makeConfigListEditor = 
 module.makeConfigListEditor =
-function(actions, path, value_path, options){
+function(actions, path, value_path, options, setup){
 	path = path.split('.')
 	var key = path.pop()
 
@@ -275,6 +275,9 @@ function(actions, path, value_path, options){
 			save(dialog.selected)
 		})
 
+	setup
+		&& setup.call(dialog, dialog)
+
 	return dialog
 }
 
@@ -289,7 +292,7 @@ function(actions, path, value_path, options){
 // 		.text element...
 var makeNestedConfigListEditor = 
 module.makeNestedConfigListEditor =
-function(actions, list, list_key, value_key, options){
+function(actions, list, list_key, value_key, options, setup){
 	options = options || {}
 
 	return function(){
@@ -305,7 +308,7 @@ function(actions, list, list_key, value_key, options){
 		}
 		options.__proto__ = dfl_options
 
-		var o = makeConfigListEditor(actions, list_key, value_key, options)
+		var o = makeConfigListEditor(actions, list_key, value_key, options, setup)
 			// update parent menu...
 			.open(function(){
 				list 

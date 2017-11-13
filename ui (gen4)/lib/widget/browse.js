@@ -1532,7 +1532,11 @@ var BrowserPrototype = {
 			//'close',
 		],
 
-		optionsEventShorthands: [
+		// List of event handlers that can be set directly from item 
+		// options...
+		//
+		// This is a shorthand to using options.events object.
+		itemOptionsEventShorthands: [
 			'open',
 			'menu',
 			'update',
@@ -1762,19 +1766,29 @@ var BrowserPrototype = {
 		return this
 	},
 	blur: widget.proxyToDom('blur'),
-	//menu: widget.proxyToDom('menu'),
-	//* XXX
+
+	// Trigger/bind to menu event...
+	//
+	//	Bind handler to menu event...
+	//	.menu(handler)
+	//		-> this
+	//
+	//	Trigger menu event on current item...
+	//	.menu()
+	//		-> this
+	//
+	//	Trigger menu event on pattern item...
+	//	.menu(pattern)
+	//		-> this
+	//
+	// NOTE: pattern is .select(..) compatible pattern.
 	menu: function(){
 		arguments[0] instanceof Function ? 
 			this.dom.on('menu', arguments[0])
-			: this.select('!').trigger('menu',
-			//: this.dom.trigger('menu', 
-				arguments.length > 0 ? 
-					[].slice.call(arguments)
-					: [this.selected])
+			: this.select(arguments[0] || '!')
+				.trigger('menu', [this.selected])
 		return this
 	},
-	//*/
 
 
 	// base api...
@@ -2086,7 +2100,7 @@ var BrowserPrototype = {
 	//		// 
 	//		// These are the sugar for commonly used events in the events
 	//		// section below...
-	//		// NOTE: these are defined in .options.optionsEventShorthands
+	//		// NOTE: these are defined in .options.itmeOptionsEventShorthands
 	//		open: <handler>,
 	//		menu: <handler>,
 	//		update: <handler>,
@@ -2575,7 +2589,7 @@ var BrowserPrototype = {
 			//--------------------------------- user event handlers ---
 			res.on('update', function(evt){ evt.stopPropagation() })
 			// shorthands...
-			;(that.options.optionsEventShorthands || [])
+			;(that.options.itemOptionsEventShorthands || [])
 				.forEach(function(p){ res.on(p, opts[p]) })
 			// events...
 			Object.keys(opts.events || {})

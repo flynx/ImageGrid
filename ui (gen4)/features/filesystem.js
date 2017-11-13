@@ -2393,7 +2393,7 @@ var FileSystemWriterUIActions = actions.Actions({
 			}
 
 			// make this a dialog...
-			var res = make(['Filename pattern: ', pattern], {
+			var res = make(['Filename $pattern: ', pattern], {
 				open: widgets.makeNestedConfigListEditor(actions, parent,
 					'export-preview-name-patterns',
 					'export-preview-name-pattern', {
@@ -2404,19 +2404,32 @@ var FileSystemWriterUIActions = actions.Actions({
 						buttons: [
 							['i', function(p){ showExaples(p) }],
 						],
+					}, function(){
+						this.showExaples = function(){ showExaples(this.selected) }
+						this.keyboard.handler('General', 'i', 'showExaples')
+
+						this.showDoc = function(){ actions.showDoc('formatImageName') }
+						this.keyboard.handler('General', '?', 'showDoc')
 					}),
+				buttons: [
+					['?', function(){
+						actions.showDoc('formatImageName')
+					}],
+				],
 			})
 
 			// show example generated names...
 			make(['Filename:', 
-					function(){ return actions.formatImageName(pattern, img) }])
-				.on('open', function(){ 
-					showExaples(actions.config['export-preview-name-pattern'] || '%f') })
+				function(){ return actions.formatImageName(pattern, img) }],
+				{
+					open: function(){ 
+						showExaples(actions.config['export-preview-name-pattern'] || '%f') },
+				})
 
 			return res
 		},
 		'level_dir': function(actions, make, parent){
-			return make(['Level directory: ', 
+			return make(['$Level directory: ', 
 					function(){ 
 						return actions.config['export-level-directory-name'] || 'fav' }])
 				.on('open', 
@@ -2427,7 +2440,7 @@ var FileSystemWriterUIActions = actions.Actions({
 						}))
 		},
 		'size': function(actions, make, parent){
-			return make(['Image size: ', 
+			return make(['Image $size: ', 
 					function(){ 
 						return actions.config['export-preview-size'] || 1000 }])
 				// XXX add validation???
@@ -2442,7 +2455,7 @@ var FileSystemWriterUIActions = actions.Actions({
 
 		},
 		'size_limit': function(actions, make, parent){
-			return make(['Limit image size: ', 
+			return make(['Limit image $size: ', 
 					function(){ 
 						return actions.config['export-preview-size-limit'] || 'no limit' }],
 					{ buttons: [
@@ -2463,7 +2476,7 @@ var FileSystemWriterUIActions = actions.Actions({
 		},
 		// XXX BUG: history closing errors -- non-critical...
 		'target_dir': function(actions, make, parent){
-			var elem = make(['To: ', 
+			var elem = make(['$To: ', 
 				function(){ return actions.config['export-path'] || './' }], 
 				{ buttons: [
 					['browse', function(p){
@@ -2517,7 +2530,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				})
 		},
 		'comment': function(actions, make, parent){
-			var elem = make(['Comment: ', 
+			var elem = make(['$Comment: ', 
 				// XXX get staged comment???
 				function(){ return actions.getSaveComment() }])
 				.on('open', function(){
