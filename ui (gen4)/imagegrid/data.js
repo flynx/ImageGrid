@@ -1781,11 +1781,6 @@ var DataPrototype = {
 		if(res == null){
 			return
 		}
-		// clear empty ribbon...
-		r = r == 0 ? 1 : r
-		if(this.ribbons[this.ribbon_order[r]].len == 0){
-			this.clear(this.ribbon_order[r])
-		}
 		return res
 	},
 	shiftImageDown: function(gid){ 
@@ -1799,10 +1794,6 @@ var DataPrototype = {
 		var res = this.shiftImage(gid, r+1, 'vertical') 
 		if(res == null){
 			return
-		}
-		// clear empty ribbon...
-		if(this.ribbons[this.ribbon_order[r]].len == 0){
-			this.clear(this.ribbon_order[r])
 		}
 		return res
 	},

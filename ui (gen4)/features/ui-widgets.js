@@ -1651,28 +1651,35 @@ var BrowseActionsActions = actions.Actions({
 					// build toggler states...
 					states.forEach(function(state){
 						make(state, { 
-								// NOTE: if something is hidden 
-								// 		it is also disabled...
-								// 		...this is by design.
-								disabled: options.no_disabled ? 
-									false 
-									: (mode == 'hidden' || mode == 'disabled'),
-								hidden: options.no_hidden ? 
-									false
-									: mode == 'hidden',
-							})
-							// XXX need to normalize state -- comments, whitespace, etc...
-							.attr('keys', getKeys(action +': "'+ state +'"'))
-							.addClass([
-									state == cur_state ? 'selected highlighted' : '',
-									mode == 'hidden' ? mode : ''
-								].join(' '))
-							.on('open', function(){
-								options.callback ?
-									options.callback.call(actions, action)
-									: actions[action](state)
-								that.pop()
-							})
+							// NOTE: if something is hidden 
+							// 		it is also disabled...
+							// 		...this is by design.
+							disabled: options.no_disabled ? 
+								false 
+								: (mode == 'hidden' || mode == 'disabled'),
+							hidden: options.no_hidden ? 
+								false
+								: mode == 'hidden',
+
+							cls: [
+								state == cur_state ? 'selected highlighted' : '',
+								mode == 'hidden' ? mode : ''
+							].join(' '),
+
+							attrs: {
+								// XXX need to normalize state -- comments, whitespace, etc...
+								keys: getKeys(action +': "'+ state +'"'),
+							},
+
+							events: {
+								open: function(){
+									options.callback ?
+										options.callback.call(actions, action)
+										: actions[action](state)
+									that.pop()
+								},
+							},
+						})
 					})
 
 				// Level: lister -- hand control to lister...
@@ -1726,6 +1733,7 @@ var BrowseActionsActions = actions.Actions({
 								// Action: toggler -> add toggle button...
 								if(actions.isToggler && actions.isToggler(action)){
 									make(text + '/', { 
+										cls: mode == 'hidden' ? mode : '',
 										// NOTE: if something is hidden 
 										// 		it is also disabled...
 										// 		...this is by design.
@@ -1735,6 +1743,10 @@ var BrowseActionsActions = actions.Actions({
 										hidden: options.no_hidden ? 
 											false
 											: mode == 'hidden',
+										attrs: {
+											keys: getKeys(action),
+											action: action,
+										},
 										buttons: [
 											[actions[action]('?'), 
 												function(){
@@ -1743,20 +1755,16 @@ var BrowseActionsActions = actions.Actions({
 													that.select('"'+ text +'"')
 												}],
 											//[getKeys(action)],
-										]})
-										.attr({
-											keys: getKeys(action),
-											action: action,
-										})
-										.addClass(mode == 'hidden' ? mode : '')
-										.on('open', function(){
+										],
+										open: function(){
 											options.callback ?
 												options.callback.call(actions, action)
 												: actions[action]()
 
 											that.update()
 											that.select('"'+ text +'"')
-										})
+										},
+									})
 
 								// Action: normal...
 								} else {
@@ -1770,15 +1778,15 @@ var BrowseActionsActions = actions.Actions({
 									   		hidden: options.no_hidden ? 
 												false
 												: mode == 'hidden',
-										})
-										.attr({
-											keys: getKeys(action),
-											action: action,
-										})
-										.on('open', function(){
-											options.callback ?
-												options.callback.call(actions, action)
-												: waitFor(actions[action]())
+											attrs: {
+												keys: getKeys(action),
+												action: action,
+											},
+											open: function(){
+												options.callback ?
+													options.callback.call(actions, action)
+													: waitFor(actions[action]())
+											},
 										})
 								}
 
@@ -1788,13 +1796,15 @@ var BrowseActionsActions = actions.Actions({
 										&& Object.keys(cur[key]).length > 0)){
 								var p = '/'+ path.concat([text]).join('/') +'/'
 								p = MARKER ? p.replace(MARKER, '$1') : p
-								make(text + '/', { push_on_open: true })
-									.attr({
+								make(text + '/', { 
+									push_on_open: true,
+									attrs: {
 										keys: [
 											getKeys('browseActions: "'+ p +'"'), 
 											getKeys('browseActions!: "'+ p +'"'), 
 										].filter(function(e){ return e.trim() != '' }).join(' / '),
-									})
+									},
+								})
 
 							// item: line...
 							} else if(/---+/.test(text)){

@@ -19,15 +19,36 @@ var proxyToDom =
 module.proxyToDom = 
 function(name){
 	return function(){ 
-		// easy handler...
+		// proxy handler...
 		if(name in this.dom){
 			this.dom[name].apply(this.dom, arguments)
 
-		// trigger...
+		// on/trigger handlers...
 		} else {
 			arguments[0] instanceof Function ?
 				this.dom.on(name, arguments[0])
 				: this.dom.trigger(name, [].slice.call(arguments)) 
+		}
+		return this 
+	}
+}
+
+var eventToDom =
+module.eventToDom = 
+function(name, defaults){
+	return function(){ 
+		// register...
+		if(arguments[0] instanceof Function){
+			this.dom.trigger(name, [].slice.call(arguments)) 
+
+		// trigger...
+		} else {
+			var args = (arguments.length == 0 && defaults) ? 
+				defaults.call(this) 
+				: [].slice.call(arguments)
+			args = args instanceof Array ? args : [args]
+
+			this.dom.trigger(name, args) 
 		}
 		return this 
 	}

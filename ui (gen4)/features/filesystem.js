@@ -1636,10 +1636,11 @@ var FileSystemWriterActions = actions.Actions({
 
 		'export-preview-name-pattern': '%f',
 		'export-preview-name-patterns': [
-			'%f',
 			'%i-%f',
-			'%n%(-bookmarked)b%e',
-			'%n%(-marked)m%e',
+			'%g-%f',
+			'%n%(-bookmarked)b%(-m)m%(-%c)c%e',
+			'%n%(-bookmarked)b%(-%c)c%e',
+			'%f',
 		],
 
 		'export-level-directory-name': 'fav',
@@ -2353,15 +2354,66 @@ var FileSystemWriterUIActions = actions.Actions({
 	// 		except for the export path...
 	__export_dialog_fields__: {
 		'pattern': function(actions, make, parent){
-			return make(['Filename pattern: ', 
-					function(){
-						return actions.config['export-preview-name-pattern'] || '%f' }])
-				.on('open', 
-					widgets.makeNestedConfigListEditor(actions, parent,
-						'export-preview-name-patterns',
-						'export-preview-name-pattern', {
-							length_limit: 10,
-						}))
+			var img = actions.current
+			var pattern = actions.config['export-preview-name-pattern'] || '%f'
+
+			var showExaples = function(pattern, img){
+				img = img || actions.current
+				return actions.showList([
+					// current...
+					['Current:', 
+						actions.formatImageName(pattern, img)],
+					['Marked:', 
+						actions.formatImageName(pattern, 
+							img, 
+							{tags: ['selected']})],
+					['Bookmarked:', 
+						actions.formatImageName(pattern, 
+							img, 
+							{tags: ['bookmark']})],
+					['Repeating:', 
+						actions.formatImageName(pattern, 
+							img, 
+							{conflicts: {[actions.current]: ['', actions.current], }} )],
+					['All:', 
+						actions.formatImageName(pattern, 
+							img, 
+							{
+								tags: [
+									'selected',
+									'bookmark',
+								],
+								conflicts: {
+									[img]: ['', img],
+								}
+							} )],
+				], {
+					cls: 'table-view',
+				})
+			}
+
+			// make this a dialog...
+			var res = make(['Filename pattern: ', pattern], {
+				open: widgets.makeNestedConfigListEditor(actions, parent,
+					'export-preview-name-patterns',
+					'export-preview-name-pattern', {
+						length_limit: 10,
+						events: {
+							menu: function(_, p){ showExaples(p) },
+						},
+						buttons: [
+							['i', function(p){ showExaples(p) }],
+						],
+					}),
+			})
+
+			// show example generated names...
+			make(['Filename:', 
+					function(){ return actions.formatImageName(pattern, img) }])
+				.on('open', function(){ 
+					showExaples(actions.config['export-preview-name-pattern'] || '%f') })
+
+			return res
 		},
 		'level_dir': function(actions, make, parent){
 			return make(['Level directory: ', 

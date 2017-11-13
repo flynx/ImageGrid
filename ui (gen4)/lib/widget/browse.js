@@ -1532,6 +1532,12 @@ var BrowserPrototype = {
 			//'close',
 		],
 
+		optionsEventShorthands: [
+			'open',
+			'menu',
+			'update',
+		],
+
 		// Shorthand elements...
 		//
 		// Format:
@@ -1683,9 +1689,9 @@ var BrowserPrototype = {
 			'#0': 'push!: "9!"',
 
 			// handlers for standard shortcuts...
+			Menu: 'menu!',
+
 			ctrl_C: function(){ console.log('!!!!!') },
-
-
 		},
 
 		ItemShortcuts: {
@@ -1756,7 +1762,20 @@ var BrowserPrototype = {
 		return this
 	},
 	blur: widget.proxyToDom('blur'),
-	menu: widget.proxyToDom('menu'),
+	//menu: widget.proxyToDom('menu'),
+	//* XXX
+	menu: function(){
+		arguments[0] instanceof Function ? 
+			this.dom.on('menu', arguments[0])
+			: this.select('!').trigger('menu',
+			//: this.dom.trigger('menu', 
+				arguments.length > 0 ? 
+					[].slice.call(arguments)
+					: [this.selected])
+		return this
+	},
+	//*/
+
 
 	// base api...
 
@@ -2062,6 +2081,15 @@ var BrowserPrototype = {
 	//
 	//		// shortcut key to open the item...
 	//		shortcut_key: <key>,
+	//
+	//		// event handler shorthands...
+	//		// 
+	//		// These are the sugar for commonly used events in the events
+	//		// section below...
+	//		// NOTE: these are defined in .options.optionsEventShorthands
+	//		open: <handler>,
+	//		menu: <handler>,
+	//		update: <handler>,
 	//
 	//		// event handlers...
 	//		events: {
@@ -2449,7 +2477,7 @@ var BrowserPrototype = {
 
 					if(debounced){
 						that.select($(this))
-						res.trigger('menu', txt) 
+						res.trigger('menu', [txt]) 
 					}
 				})
 				// append text elements... 
@@ -2475,6 +2503,9 @@ var BrowserPrototype = {
 
 			opts.push_on_open 
 				&& res.attr('push-on-open', 'on')
+
+			opts.attrs
+				&& res.attr(opts.attrs)
 
 			//--------------------------------------------- buttons ---
 			// button container...
@@ -2543,6 +2574,10 @@ var BrowserPrototype = {
 
 			//--------------------------------- user event handlers ---
 			res.on('update', function(evt){ evt.stopPropagation() })
+			// shorthands...
+			;(that.options.optionsEventShorthands || [])
+				.forEach(function(p){ res.on(p, opts[p]) })
+			// events...
 			Object.keys(opts.events || {})
 				.forEach(function(evt){
 					res.on(evt, opts.events[evt]) })
