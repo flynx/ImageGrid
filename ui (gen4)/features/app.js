@@ -215,7 +215,13 @@ var ElectronHostActions = actions.Actions({
 
 	showDevTools: ['Interface|Development/Show Dev Tools',
 		function(){
-			electron.remote.getCurrentWindow().openDevTools() }],
+			var w = electron.remote.getCurrentWindow()
+				
+			w.openDevTools() 
+			// focus the devtools if its window is available...
+			w.devToolsWebContents
+				&& w.devToolsWebContents.focus()
+		}],
 	// XXX make this portable (osx, linux)...
 	showInFolder: ['File|Image/Show in $folder',
 		function(image){

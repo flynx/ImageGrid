@@ -1634,14 +1634,24 @@ var FileSystemWriterActions = actions.Actions({
 		'export-path': null,
 		'export-paths': [],
 
-		'export-preview-name-pattern': '%f',
+		// NOTE: file extension is added automatically...
+		// NOTE: see .formatImageName(..) for format docs...
+		'export-preview-name-pattern': '%n%(-%c)c',
 		'export-preview-name-patterns': [
-			'%i-%f',
-			'%g-%f',
-			'%n%(-bookmarked)b%(-m)m%(-%c)c%e',
-			'%n%(-bookmarked)b%(-%c)c%e',
-			'%f',
+			'%n%(-bookmarked)b%(-%c)c',
+			'%n%(-bookmarked)b%(-m)m%(-%c)c',
+			'%n%(-%c)c',
+			'%i-%n',
+			'%g-%n',
 		],
+
+		// NOTE: this is applied ONLY if there is a naming conflict...
+		// NOTE: see .formatImageName(..) for format docs...
+		// XXX adding a %c is more human-readable but is unstable as
+		// 		depends on gid order, %g resolves this problem but is 
+		// 		not very intuitive...
+		//'export-conflicting-image-name': '%n%(-%g)c',
+		'export-conflicting-image-name': '%n%(-%c)c',
 
 		'export-level-directory-name': 'fav',
 		'export-level-directory-names': [
@@ -1671,13 +1681,6 @@ var FileSystemWriterActions = actions.Actions({
 			'1920',
 		],
 		'export-preview-size-limit': 'no limit',
-
-		// NOTE: this is applied ONLY if there is a naming conflict...
-		// XXX adding a %c is more human-readable but is unstable as
-		// 		depends on gid order, %g resolves this problem but is 
-		// 		not very intuitive...
-		//'export-conflicting-image-name': '%n%(-%g)c%e',
-		'export-conflicting-image-name': '%n%(-%c)c%e',
 	},
 
 	// Save index...
@@ -1983,16 +1986,14 @@ var FileSystemWriterActions = actions.Actions({
 			return Promise.all(queue)
 		}],
 
+	// XXX document data format...
 	// XXX should %T / %I be global or current crop???
 	// XXX set length of %g in options...
 	formatImageName: ['- File/',
 		core.doc`
 
 		Filename patterns:
-		 	%f		- full file name (same as: %n%e)
-
 		 	%n		- name without extension
-		 	%e		- extension with leading dot
 		
 		 	%gid	- full image gid
 		 	%g		- short gid
@@ -2015,6 +2016,7 @@ var FileSystemWriterActions = actions.Actions({
 						NOTE: this is not stable and can change depending
 							on image order.
 
+		NOTE: file extension is added automatically.
 		NOTE: all group patterns (i.e. '%(..)x') can include other patterns.
 		`,
 		function(pattern, name, data){
@@ -2031,6 +2033,7 @@ var FileSystemWriterActions = actions.Actions({
 			var img = this.images[gid]
 			name = name || pathlib.basename(img.path || (img.name + img.ext))
 			var ext = pathlib.extname(name)
+			var to_ext = data.ext || ext
 
 			var tags = data.tags || this.data.getTags(gid)
 
@@ -2051,9 +2054,7 @@ var FileSystemWriterActions = actions.Actions({
 
 			return pattern
 				// file name...
-				.replace(/%f/, name)
 				.replace(/%n/, name.replace(ext, ''))
-				.replace(/%e/, ext)
 
 				// gid...
 				.replace(/%gid/, gid)
@@ -2091,6 +2092,8 @@ var FileSystemWriterActions = actions.Actions({
 					/%\(([^)]*)\)C/, conflicts ? '$1' : '')
 				.replace(
 					/%\(([^)]*)\)c/, (conflicts || {})[gid] ? '$1' : '')
+
+				+ to_ext
 		}],
 	
 	// XXX might also be good to save/load the export options to .ImageGrid-export.json
@@ -2392,7 +2395,7 @@ var FileSystemWriterUIActions = actions.Actions({
 				})
 			}
 
-			// make this a dialog...
+			// XXX make this a dialog...
 			var res = make(['Filename $pattern: ', pattern], {
 				open: widgets.makeNestedConfigListEditor(actions, parent,
 					'export-preview-name-patterns',
@@ -2407,7 +2410,6 @@ var FileSystemWriterUIActions = actions.Actions({
 					}, function(){
 						this.showExaples = function(){ showExaples(this.selected) }
 						this.keyboard.handler('General', 'i', 'showExaples')
-
 						this.showDoc = function(){ actions.showDoc('formatImageName') }
 						this.keyboard.handler('General', '?', 'showDoc')
 					}),
