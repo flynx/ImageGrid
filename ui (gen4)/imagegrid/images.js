@@ -465,6 +465,9 @@ module.ImagesPrototype = {
 			[img.base_path || path, img.path].join('/')
 			: util.path2url(img.path)
 	},
+	// NOTE: actual URL decoding and encoding is not done here to keep
+	// 		things consistent, rather it is done the the latest possible 
+	// 		stage, in images._loadImagePreviewURL(..)
 	// XXX see: ribbons.js for details...
 	// XXX this is the same (in part) as .getImagePath(..) 
 	getBestPreview: function(gid, size, img_data, full_path){
@@ -484,8 +487,7 @@ module.ImagesPrototype = {
 		}
 
 		var s
-		// XXX not sure about encodeURI(..) here...
-		var url = encodeURI(util.path2url(img_data.path))
+		var url = img_data.path
 		var preview_size = 'Original'
 		var p = Infinity
 		var previews = img_data.preview || {}
@@ -499,9 +501,8 @@ module.ImagesPrototype = {
 			}
 		}
 		return {
-			//url: normalizePath(url),
 			url: (full_path && img_data.base_path ?
-				  	util.path2url(img_data.base_path) + '/' 
+				  	img_data.base_path + '/' 
 					: '') 
 				+ url,
 			size: preview_size

@@ -201,7 +201,7 @@ function(path){
 		//.map(encodeURIComponent)
 		.join('/')
 		// NOTE: keep '%' the first...
-		//.replace(/%/g, '%25')
+		.replace(/%/g, '%25')
 		.replace(/#/g, '%23')
 		.replace(/&/g, '%26'))
 }

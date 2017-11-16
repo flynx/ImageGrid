@@ -1777,11 +1777,10 @@ var BrowserPrototype = {
 	//	.menu()
 	//		-> this
 	//
-	//	Trigger menu event on pattern item...
+	//	Select and trigger menu event on selected item...
 	//	.menu(pattern)
 	//		-> this
 	//
-	// NOTE: pattern is .select(..) compatible pattern.
 	menu: function(){
 		arguments[0] instanceof Function ? 
 			this.dom.on('menu', arguments[0])

@@ -227,7 +227,8 @@ module.FileSystemInfo = core.ImageGridFeatures.Feature({
 // NOTE: this will also manage .location.from
 var FileSystemLoaderActions = actions.Actions({
 	config: {
-		'image-file-pattern': '*+(jpg|jpeg|png|svg|JPG|JPEG|PNG|svg)',
+		// XXX BUG: for some reason this does not match/see '.jpg' filename...
+		'image-file-pattern': '*.@(jpg|jpeg|png|svg|JPG|JPEG|PNG|svg)',
 
 		'image-file-read-stat': true,
 		'image-file-skip-previews': false,
@@ -2165,10 +2166,10 @@ var FileSystemWriterActions = actions.Actions({
 								var img_name = pathlib.basename(img.path || (img.name + img.ext))
 
 								// get best preview...
-								var from = decodeURI(
-									(img.base_path || base_dir) 
+								var from = (img.base_path || base_dir) 
 										+'/'
-										+ that.images.getBestPreview(gid, size).url)
+										+ that.images.getBestPreview(gid, size).url
+
 
 								// XXX see if we need to make a preview (sharp)
 								// XXX
