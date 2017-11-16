@@ -227,7 +227,9 @@ module.FileSystemInfo = core.ImageGridFeatures.Feature({
 // NOTE: this will also manage .location.from
 var FileSystemLoaderActions = actions.Actions({
 	config: {
-		// XXX BUG: for some reason this does not match/see '.jpg' filename...
+		// NOTE: this will not match "dot filenames", this is done 
+		// 		intentionally to avoid the previews MAC computers 
+		// 		generate all over the place...
 		'image-file-pattern': '*.@(jpg|jpeg|png|svg|JPG|JPEG|PNG|svg)',
 
 		'image-file-read-stat': true,
