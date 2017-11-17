@@ -142,6 +142,26 @@ function(data){
 }
 */
 
+/* XXX we do not have a ref to images...
+module.VERSIONS['3.1'] =
+function(data){
+	res = module.VERSIONS['3.0'](data)
+
+	res.version = '3.1'
+
+	// XXX we do not have a ref to images here...
+	Object.values(res.images || {})
+		.forEach(function(img){
+			Object.keys(img.preview)
+				.forEach(function(res){
+					var p = img.preview[res]
+					img.preview[res] = p.indexOf('%20') >= 0 ? decodeURI(p) : p
+				})
+		})
+
+	return res
+}
+//*/
 
 
 // Get latest updater version...

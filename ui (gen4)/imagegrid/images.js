@@ -351,6 +351,9 @@ module.ImagesClassPrototype = {
 
 var ImagesPrototype =
 module.ImagesPrototype = {
+	//version: '3.1',
+
+
 	get length(){
 		return Object.keys(this).length },
 
@@ -500,6 +503,10 @@ module.ImagesPrototype = {
 				url = previews[k]
 			}
 		}
+
+		// XXX LEGACY...
+		//url = url.indexOf('%20') >= 0 ? decodeURI(url) : url
+
 		return {
 			url: (full_path && img_data.base_path ?
 				  	img_data.base_path + '/' 
@@ -698,15 +705,31 @@ module.ImagesPrototype = {
 		data = typeof(data) == typeof('str') 
 			? JSON.parse(data) 
 			: JSON.parse(JSON.stringify(data))
+		var version = data.versio
 		for(var k in data){
-			this[k] = data[k]
+			var img = this[k] = data[k]
+
+			// keep the preview paths decoded...
+			//
+			// NOTE: updating from legacy format...
+			// XXX move this to version conversion... (???)
+			if(version == null){
+				Object.keys(img && img.preview || {})
+					.forEach(function(res){
+						var p = img.preview[res]
+						img.preview[res] = p.indexOf(k+'%20-%20') >= 0 ? decodeURI(p) : p
+					})
+			}
 		}
 		return this
 	},
-	// XXX this is really odd: renaming this to 'toJSON' breaks JavasCript
+	// XXX this is really odd: renaming this to 'toJSON' breaks JavaScript
 	// 		making chrome/node just say: "<error>" and a filename...
 	dumpJSON: function(data){
-		return JSON.parse(JSON.stringify(this))
+		var res = JSON.parse(JSON.stringify(this))
+		// XXX
+		res.version = '3.0'
+		return res
 	},
 
 	_reset: function(){
