@@ -154,6 +154,9 @@ function doc(text, func){
 // 	- numbers
 // 	- strings
 // 	- non-nested arrays or objects
+// 	
+// XXX EXPERIMENTAL...
+// 	This will resolve names to context attributes 
 //
 // XXX should this be here???
 // XXX add support for suffix to return false / stop_propagation...
@@ -162,7 +165,8 @@ function doc(text, func){
 // XXX this is the same as actions.parseStringAction(..), reuse in a logical manner...
 var parseActionCall =
 module.parseActionCall =
-function parseActionCall(txt){
+function parseActionCall(txt, context){
+	context = context || this
 	// split off the doc...
 	var c = txt.split('--')
 	var doc = (c[1] || '').trim()
@@ -175,11 +179,35 @@ function parseActionCall(txt){
 	action = no_default ? action.slice(0, -1) : action
 
 	// parse arguments...
+	/*
 	var args = JSON.parse('['+(
 		((c[1] || '')
 			.match(/"[^"]*"|'[^']*'|\{[^\}]*\}|\[[^\]]*\]|\d+|\d+\.\d*|null/gm) 
 		|| [])
 		.join(','))+']')
+	//*/
+	// XXX EXPERIMENTAL -- is this safe???
+	var args = ((c[1] || '')
+			.match(RegExp([
+				'"[^"]*"',
+				"'[^']*",
+				'`[^`]*`',
+
+				'\\{[^\\}]*\\}',
+				'\\[[^\\]]*\\]',
+
+				'\\d+|\\d+\\.\\d*',
+
+				'[a-zA-Z$@#_][0-9a-zA-Z$@#_]*',
+
+				'null',
+			].join('|'), 'gm'))
+		|| [])
+		.map(function(e){
+			// resolve vars to context attrs...
+			return /^[a-zA-Z$@#_][0-9a-zA-Z$@#_]*$/.test(e) ?
+				(context || {})[e]
+				: JSON.parse(e) })
 
 	return {
 		action: action,
@@ -1159,7 +1187,7 @@ function makeKeyboardHandler(keyboard, unhandled, actions){
 			// XXX should this be a Keyboard thing or a context thing???
 			} else if(actions.parseStringHandler || kb.parseStringHandler){
 			//} else if(kb.parseStringHandler){
-				var h = (actions.parseStringHandler || kb.parseStringHandler)(handler)
+				var h = (actions.parseStringHandler || kb.parseStringHandler)(handler, actions)
 				//var h = kb.parseStringHandler(handler)
 
 				if(h && h.action in actions){

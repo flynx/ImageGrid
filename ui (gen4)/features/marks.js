@@ -244,7 +244,20 @@ var ImageMarkActions = actions.Actions({
 	removeMarkedFromCrop: ['Mark|Crop/Remove marked from crop',
 		{browseMode: function(target){ 
 			return (this.marked.length == 0 || !this.cropped) && 'disabled' }},
-		function(){ this.removeFromCrop(this.marked) }],
+		'removeFromCrop: marked'],
+
+	rotateMarkedCW: ['Mark/Rotate marked clockwise',
+		{browseMode: 'cropMarked'},
+		'rotateCW: marked'],
+	rotateMarkedCCW: ['Mark/Rotate marked counterclockwise',
+		{browseMode: 'cropMarked'},
+		'rotateCCW: marked'],
+	flipMarkedVertical: ['Mark/Flip marked vertically',
+		{browseMode: 'cropMarked'},
+		'flipVertical: marked'],
+	flipMarkedHorizontal: ['Mark/Flip marked horizontally',
+		{browseMode: 'cropMarked'},
+		'flipHorizontal: marked'],
 })
 
 

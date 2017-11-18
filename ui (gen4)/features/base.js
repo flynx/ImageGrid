@@ -1030,20 +1030,24 @@ actions.Actions({
 			}
 			if(target == 'cw' || target == 'ccw'){
 				direction = target
-				target = null
+				target = this.data.getImage()
+			} else {
+				target = this.data.getImages(target instanceof Array ? target : [target])
 			}
 			this.images 
-				&& this.images.rotateImage(this.data.getImage(target), direction || 'cw')
+				&& this.images.rotateImage(target, direction || 'cw')
 		}],
 	flip: ['- Image|Edit/Flip image',
 		{journal: true},
 		function(target, direction){
 			if(target == 'vertical' || target == 'horizontal'){
 				direction = target
-				target = null
+				target = this.data.getImage()
+			} else {
+				target = this.data.getImages(target instanceof Array ? target : [target])
 			}
 			this.images 
-				&& this.images.flipImage(this.data.getImage(target), direction || 'horizontal')
+				&& this.images.flipImage(target, direction || 'horizontal')
 		}],
 
 	// shorthands...

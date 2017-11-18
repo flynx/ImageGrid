@@ -1073,6 +1073,7 @@ var DataPrototype = {
 	// NOTE: this is a partial rewrite avoiding .compact() as much as 
 	// 		possible and restricting it to as small a subset as possible
 	getImages: function(target, count, mode){
+		var that = this
 		target = (target == null && count == null) ? 'loaded' : target
 		mode = mode == null ? 'around' : mode
 		var list
@@ -1106,9 +1107,11 @@ var DataPrototype = {
 				: this.getImages('loaded')
 			count = null 
 
-			list = target.filter(function(e){
-				return loaded.indexOf(e) >= 0
-			})
+			list = target
+				.map(function(e){
+					return that.getImage(e) })
+				.filter(function(e){
+					return loaded.indexOf(e) >= 0 })
 
 			target = null 
 

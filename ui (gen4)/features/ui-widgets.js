@@ -93,11 +93,11 @@ function(context, cls, data){
 				primary.pop() 
 				: null
 			secondary = typeof(secondary) == typeof('str') ?
-				keyboard.parseActionCall(secondary) 
+				keyboard.parseActionCall(secondary, context) 
 				: secondary
 			primary = primary instanceof Array ? primary.shift() : primary
 			primary = typeof(primary) == typeof('str') ?
-				keyboard.parseActionCall(primary) 
+				keyboard.parseActionCall(primary, context) 
 				: primary
 
 			var click = primary instanceof Function ? 
@@ -785,7 +785,7 @@ var DialogsActions = actions.Actions({
 			var loaders = {}
 
 			list.forEach(function(m){
-				var a = keyboard.parseActionCall(m)
+				var a = keyboard.parseActionCall(m, that)
 
 				if(a.action in that){
 					var args = a.arguments

@@ -513,7 +513,7 @@ var KeyboardActions = actions.Actions({
 						return
 					}
 
-					var a = keyboard.parseActionCall(code)
+					var a = keyboard.parseActionCall(code, that)
 					var doc = a.doc || that.getDocTitle(a.action) || null
 
 					// check if we have no doc...
@@ -667,7 +667,7 @@ var KeyboardActions = actions.Actions({
 			// 	- .no_default
 			// 	- .stop_propagation
 			var normalizeHandler = function(action){
-				var a = keyboard.parseActionCall(action.doc || action)
+				var a = keyboard.parseActionCall(action.doc || action, that)
 				return a.action in that ?
 					a.action 
 						+(a.arguments.length > 0 ? 
@@ -991,7 +991,7 @@ var KeyboardUIActions = actions.Actions({
 							var c = 0
 							Object.keys(keys[mode] || {}).forEach(function(action){
 
-								var o = keyboard.parseActionCall(action)
+								var o = keyboard.parseActionCall(action, that)
 
 								if(getKeyText){
 									var doc = ''
@@ -1325,7 +1325,7 @@ var KeyboardUIActions = actions.Actions({
 								['&ctdot;', function(evt, elem){
 									code = code || ''
 									// highlight the current action...
-									var a = keyboard.parseActionCall(code)
+									var a = keyboard.parseActionCall(code, that)
 									var p = a.action in that ? 
 										that.getDocPath(a.action)
 										: ''
