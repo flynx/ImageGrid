@@ -7,6 +7,7 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+var toggler = require('lib/toggler')
 var actions = require('lib/actions')
 var features = require('lib/features')
 
@@ -72,10 +73,52 @@ var ExampleActions = actions.Actions({
 
 	// Togglers...
 	//
-	// XXX ...
+	// XXX add example argument handling...
 	exampleToggler: ['- Test/',
-		function(){
-		}],
+		toggler.Toggler(null, 
+			// state accessor...
+			function(_, state){ 
+				// get the state...
+				if(state == null){
+					return this.__example_toggler_state || 'none'
+
+				// handle state changing...
+				} else if(state == 'none'){
+					delete this.__example_toggler_state
+
+				} else {
+					this.__example_toggler_state = state
+				}
+			},
+			// List of states...
+			// NOTE: this can be a string for bool states and a list for
+			// 		togglers with multiple states...
+			'A')],
+	exampleTogglerFull: ['- Test/',
+		toggler.Toggler(null, 
+			// state accessor...
+			function(_, state){ 
+				// get the state...
+				if(state == null){
+					return this.__example_toggler_state || 'A'
+
+				} else if(state == 'A'){
+					delete this.__example_toggler_state
+
+				} else {
+					this.__example_toggler_state = state
+				}
+			},
+			// List of states...
+			['A', 'B', 'C'],
+			// pre-callback (optional)
+			function(){
+				console.log('Changing state from:', this.exampleTogglerFull('?'))
+			},
+			// post-callback...
+			function(){
+				console.log('Changing state to:', this.exampleTogglerFull('?'))
+			})],
 
 	// XXX docs...
 	// XXX BUG? false is not shown in the dialog button...

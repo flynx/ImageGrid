@@ -562,10 +562,10 @@ core.ImageGridFeatures.Feature({
 			'crop',
 			'uncrop',
 			'removeFromCrop',
+			'reverseImages',
 		], 
 			function(target){ return this.reload(true) }],
 		[[
-			'reverseImages',
 			'reverseRibbons',
 			'cropGroup',
 			'syncTags',
