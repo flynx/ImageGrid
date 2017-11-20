@@ -73,12 +73,82 @@ var ExampleActions = actions.Actions({
 
 	// Togglers...
 	//
+	// There are two state change strategies generally used:
+	// 	1) state accessor changes state (this example)
+	// 	2) callbacks change state
+	//
 	// XXX add example argument handling...
-	exampleToggler: ['- Test/',
+	// XXX .showDoc(..): get the actual handler code and not the toggler
+	// 		code...
+	exampleToggler: ['Test/Example toggler',
+		core.doc`Example toggler...
+
+		A toggler is any function that adheres to the toggler protocol 
+		and (optionally) inherits from toggler.Toggler
+
+		toggler.Toggler(..) is also a convenient toggler constructor, 
+		see: .exampleToggler(..) and .exampleTogglerFull(..) as examples
+		of its use.
+		
+
+		General toggler protocol:
+		
+			Change to the next state...
+			.exampleToggler()
+			.exampleToggler('next')
+				-> state
+
+			Change to the previous state...
+			.exampleToggler('prev')
+				-> state
+
+			Change to specific state...
+			.exampleToggler(state)
+				-> state
+
+			For bool togglers, set state on/off...
+			.exampleToggler('on')
+			.exampleToggler('off')
+				-> state
+
+			Get current state...
+			.exampleToggler('?')
+				-> state
+
+			Get possible states...
+			.exampleToggler('??')
+				-> state
+
+
+		It is also possible to pass an argument to a toggler, the recommended
+		semantics for this is to change state of the entity passed as argument
+		a good example would be .toggleMark(..)
+
+			Handle state of arg (recommended semantics)...
+			.exampleToggler(arg, ...)
+				-> state
+
+
+		Utilities:
+			Check if an action is a toggler...
+			.isToggler('exampleToggler')
+				-> bool
+
+		
+		NOTE: it is not required to use toggler.Toggler(..) as constructor
+			to build a toggler, a simple function that adheres to the above
+			protocol is enough, though it is recommended to inherit from
+			toggler.Toggler so as to enable support functionality that 
+			utilizes the protocol...
+		NOTE: see lib/toggler.js and toggler.Toggler(..) for more details.
+		`,
 		toggler.Toggler(null, 
 			// state accessor...
+			// NOTE: this may get called multiple times per state change.
 			function(_, state){ 
 				// get the state...
+				// NOTE: this section should have no side-effects nor 
+				// 		should it affect the state in any way...
 				if(state == null){
 					return this.__example_toggler_state || 'none'
 
@@ -94,19 +164,23 @@ var ExampleActions = actions.Actions({
 			// NOTE: this can be a string for bool states and a list for
 			// 		togglers with multiple states...
 			'A')],
-	exampleTogglerFull: ['- Test/',
-		toggler.Toggler(null, 
+	exampleTogglerFull: ['Test/Example toggler (full)',
+		core.doc``,
+		toggler.Toggler(
+			// target...
+			// XXX more docs!
+			null, 
 			// state accessor...
 			function(_, state){ 
 				// get the state...
 				if(state == null){
-					return this.__example_toggler_state || 'A'
+					return this.__example_full_toggler_state || 'A'
 
 				} else if(state == 'A'){
-					delete this.__example_toggler_state
+					delete this.__example_full_toggler_state
 
 				} else {
-					this.__example_toggler_state = state
+					this.__example_full_toggler_state = state
 				}
 			},
 			// List of states...

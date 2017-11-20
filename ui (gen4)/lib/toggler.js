@@ -339,9 +339,37 @@ function(elem, state_accessor, states, callback_a, callback_b){
 	func.__proto__ = Toggler.prototype
 	func.constructor = Toggler
 
+	// XXX should this be a real method???
+	// 		...if this is a generic method we'll need to expose the data
+	// 		to the user which in turn make it necessary to make the data 
+	// 		live...
+	func.toString = function(){
+		return 'Toggler(\n\t' 
+			+([
+				elem,
+				state_accessor,
+				state_set,
+				callback_pre || null,
+				callback_post || null,
+			]
+				.map(function(e){
+					return e instanceof Function ? e
+						: JSON.stringify(e)
+				})
+				.join(',\n    '))
+			+')'
+	}
+
 	return func
 }
 Toggler.prototype.__proto__ = Function.prototype
+
+/* XXX
+Toggler.prototype.toString = function(){
+	return 'TOggler('
+		+')'
+}
+//*/
 
 
 // XXX this should be drop-in compatible with createCSSClassToggler(..)
