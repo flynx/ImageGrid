@@ -219,6 +219,8 @@ if(typeof(window) != 'undefined'){
 // 			
 // NOTE: this will ignore the first line's indent so it can be started 
 // 		right at the string start.
+// 		
+// XXX might be a good idea to move this to a more generic spot like lib/util.js...
 var doc = 
 module.doc =
 function(strings, ...values){

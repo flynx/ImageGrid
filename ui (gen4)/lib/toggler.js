@@ -339,37 +339,46 @@ function(elem, state_accessor, states, callback_a, callback_b){
 	func.__proto__ = Toggler.prototype
 	func.constructor = Toggler
 
-	// XXX should this be a real method???
+	// NOTE: this is not a real (inheritable) methods by design...
 	// 		...if this is a generic method we'll need to expose the data
 	// 		to the user which in turn make it necessary to make the data 
-	// 		live...
+	// 		live, so adding a custom per-toggler method seems a better 
+	// 		idea than overcomplicating lots of code...
+	// XXX need to align the functions correctly (core.doc???)
 	func.toString = function(){
 		return 'Toggler(\n\t' 
 			+([
+				elem instanceof Function ?
+					'// elem getter...'
+					: '// elem...',
 				elem,
+				'// state accessor...',
 				state_accessor,
-				state_set,
+				states_getter instanceof Function ?
+					'// states getter...'
+					: '// states...',
+				states_getter instanceof Function ? states_getter : state_set,
+				'// pre-callback...',
 				callback_pre || null,
+				'// post-callback...',
 				callback_post || null,
 			]
 				.map(function(e){
-					return e instanceof Function ? e
-						: JSON.stringify(e)
+					// function...
+					return e instanceof Function ? (e + ',')
+						// comment...
+						: typeof(e) == typeof('str') && e.trim().startsWith('//') ? e
+						// other...
+						: (JSON.stringify(e) + ',')
 				})
-				.join(',\n    '))
+				.join('\n    '))
+				.slice(0, -1)
 			+')'
 	}
 
 	return func
 }
 Toggler.prototype.__proto__ = Function.prototype
-
-/* XXX
-Toggler.prototype.toString = function(){
-	return 'TOggler('
-		+')'
-}
-//*/
 
 
 // XXX this should be drop-in compatible with createCSSClassToggler(..)
@@ -390,6 +399,8 @@ function CSSClassToggler(elem, classes, callback_a, callback_b){
 		// NOTE: this is here because I've made the error of including a 
 		// 		leading "." almost every time I use this after I forget 
 		// 		the UI...
+		// 		...and after I've added this fix I've never repeated the 
+		// 		error ;)
 		return classes
 			.map(function(e){
 				return e.split(' ')
@@ -439,12 +450,53 @@ function CSSClassToggler(elem, classes, callback_a, callback_b){
 				}
 			}
 		}, 
-		typeof(classes_getter) == typeof(function(){}) ? getClasses : classes_set,
+		classes_getter instanceof Function ? getClasses : classes_set,
 		callback_a, 
 		callback_b)
 
 	toggler.__proto__ = CSSClassToggler.prototype
 	toggler.constructor = CSSClassToggler
+
+	// NOTE: for general see Toggler.toString(..)
+	// XXX this is very similar to Toggler.toString(..)
+	toggler.toString = function(){
+		// XXX can we avoid this???
+		if(callback_b === undefined){
+			var callback_pre = null
+			var callback_post = callback_a
+		} else {
+			var callback_pre = callback_a
+			var callback_post = callback_b
+		}
+
+		return 'CSSClassToggler(\n\t' 
+			+([
+				elem instanceof Function ?
+					'// elem getter...'
+					: '// elem...',
+				elem,
+				classes_getter instanceof Function ? 
+					'// classes getter...' 
+					: '// classes...',
+				classes_getter instanceof Function ? classes_getter : classes_set,
+				'// pre-callback...',
+				callback_pre || null,
+				'// post-callback...',
+				callback_post || null,
+			]
+				.map(function(e){
+					// function...
+					return e instanceof Function ? (e + ',')
+						// comment...
+						: typeof(e) == typeof('str') && e.trim().startsWith('//') ? e
+						// other...
+						: (JSON.stringify(e) + ',')
+				})
+				.join('\n    '))
+				.slice(0, -1)
+			+')'
+	}
+
 
 	return toggler
 }

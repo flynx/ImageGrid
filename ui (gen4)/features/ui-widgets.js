@@ -1009,14 +1009,6 @@ var UIIntrospectionActions = actions.Actions({
 
 			return res
 		})],
-	// XXX show toggler handler code instead of actual toggler code...
-	// 		i.e.:
-	// 			- item accessor
-	// 			- state accessor
-	// 			- states
-	// 			- callbacks
-	// 		or if the above are not present:
-	// 			- usual action stuff...
 	// XXX make hypertext...
 	showCode: ['- Help/Show action code...',
 		makeUIDialog(function(action){
