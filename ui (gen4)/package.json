@@ -49,6 +49,6 @@
   },
   "scripts": {
     "build-css": "lessc css/layout.less css/layout.css",
-    "start": "nw ."
+    "start": "electron e.js"
   }
 }

@@ -56,7 +56,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'index-format',
 
 	// XXX
-	'action-examples',
+	'examples',
 
 	'collections',
 
@@ -139,7 +139,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 
 	'ui-browse-actions',
 		'ui-context-action-menu',
-		'ui-widget-test',
 
 	// slideshow...
 	'ui-slideshow',
