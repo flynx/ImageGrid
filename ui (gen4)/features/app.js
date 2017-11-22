@@ -453,10 +453,12 @@ module.AppControl = core.ImageGridFeatures.Feature({
 						.replace('${VERSION}', this.version || 'gen4')
 						.replace('${FILENAME}', 
 							img ? 
-									(img.name || img.path.replace(/\.[\\\/]/, ''))
+									(img.name 
+										|| (img.path && img.path.replace(/\.[\\\/]/, ''))
+										|| '')
 								: '')
 						.replace('${PATH}', 
-							img ?
+							(img && img.path) ?
 									(img.base_path || '.') 
 										+'/'+ img.path.replace(/\.[\\\/]/, '')
 								: '')

@@ -466,7 +466,7 @@ module.ImagesPrototype = {
 
 		return (img.base_path || path) ? 
 			[img.base_path || path, img.path].join('/')
-			: util.path2url(img.path)
+			: util.path2url(img.path || IMAGE_DATA.path)
 	},
 	// NOTE: actual URL decoding and encoding is not done here to keep
 	// 		things consistent, rather it is done the the latest possible 
@@ -483,7 +483,8 @@ module.ImagesPrototype = {
 		img_data = img_data == null ? this[gid] : img_data
 
 		// if no usable images are available use STUB data...
-		if((img_data.preview == null 
+		if(!img_data 
+				|| (img_data.preview == null 
 					|| Object.keys(img_data.preview).length == 0)
 				&& img_data.path == null){
 			img_data = IMAGE_DATA
