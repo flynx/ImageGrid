@@ -29,6 +29,8 @@ var overlay = require('lib/widget/overlay')
 // XXX would be a good idea to add provision for a timer to indicate 
 // 		slideshow progress/status... 
 // 			- make this a separate feature with a toggler
+// XXX might be a good idea to add "slideshow hold", for example while 
+// 		mouse down...
 var SlideshowActions = actions.Actions({
 	config: {
 		'slideshow-looping': 'on',
@@ -125,6 +127,7 @@ var SlideshowActions = actions.Actions({
 				}
 			})],
 
+	// XXX should this reflect slideshow state???? (ready, running, paused???)
 	slideshowDialog: ['Slideshow/Slideshow...',
 		widgets.makeUIDialog(function(){
 			var that = this
@@ -298,6 +301,9 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 					this.workspaces['slideshow'] = null
 				} 
 			}],
+
+		['load',
+			function(){ this.toggleSlideshow('off') }],
 
 		// - build the slideshow workspace for the first time if it's not
 		// 		present yet (is null)...

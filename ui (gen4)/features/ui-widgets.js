@@ -1976,6 +1976,10 @@ var ButtonsActions = actions.Actions({
 			'C<sub/>': ['crop', 'browseActions: "Crop/" -- Crop menu...'],
 			//'&#9636;<sub/>': ['collections', 'browseCollections -- Collections...'],
 			//'&#9974;': ['view', 'toggleSingleImage -- Single image / ribbon toggle'],
+			'&#9655;': ['slideshow', [
+				'toggleSlideshow -- Toggle slideshow',
+				'slideshowDialog -- Slideshow menu...',
+			]],
 		},
 
 		// XXX not sure about these yet...
@@ -2129,6 +2133,15 @@ module.Buttons = core.ImageGridFeatures.Feature({
 					.html(this.collection ? '&#9679;' : '')
 				//*/
 		   	}],
+		// update slideshow status...
+		['toggleSlideshow',
+			function(){
+				$('.main-buttons.buttons .slideshow.button')
+					.html(this.toggleSlideshow('?') == 'on' ? 
+						'&#9724;' 
+						//'&#9723;'
+						: '&#9655;')
+			}],
 		// update zoom button status...
 		['viewScale', 
 			function(){
