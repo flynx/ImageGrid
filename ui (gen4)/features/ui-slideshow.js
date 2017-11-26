@@ -57,10 +57,10 @@ var SlideshowActions = actions.Actions({
 					// reset the timer...
 					// NOTE: this means we were in a slideshow mode so we do not
 					// 		need to prepare...
-					if(this.__slideshouw_timer){
-						this.__slideshouw_timer != 'suspended'
-							&& clearInterval(this.__slideshouw_timer)
-						delete this.__slideshouw_timer
+					if(this.__slideshow_timer){
+						this.__slideshow_timer != 'suspended'
+							&& clearInterval(this.__slideshow_timer)
+						delete this.__slideshow_timer
 
 					// prepare for the slideshow...
 					} else {
@@ -90,7 +90,7 @@ var SlideshowActions = actions.Actions({
 					}
 
 					// start the timer... 
-					this.__slideshouw_timer = setInterval(function(){
+					this.__slideshow_timer = setInterval(function(){
 						var cur = that.current
 
 						// next step...
@@ -116,9 +116,9 @@ var SlideshowActions = actions.Actions({
 				// stop...
 				} else {
 					// stop timer...
-					this.__slideshouw_timer
-						&& clearInterval(this.__slideshouw_timer)
-					delete this.__slideshouw_timer
+					this.__slideshow_timer
+						&& clearInterval(this.__slideshow_timer)
+					delete this.__slideshow_timer
 
 					// restore the original workspace...
 					this.popWorkspace()
@@ -130,7 +130,7 @@ var SlideshowActions = actions.Actions({
 			var that = this
 
 			// suspend the timer if it's not suspended outside...
-			var suspended_timer = this.__slideshouw_timer == 'suspended'
+			var suspended_timer = this.__slideshow_timer == 'suspended'
 			suspended_timer || this.suspendSlideshowTimer()
 
 			// XXX might be a good idea to make this generic...
@@ -196,12 +196,12 @@ var SlideshowActions = actions.Actions({
 				})
 				.on('start', function(){
 					// suspend the timer if it's not suspended outside...
-					this.__slideshouw_timer == 'suspended'
+					this.__slideshow_timer == 'suspended'
 						|| this.suspendSlideshowTimer()
 				})
 				.on('close', function(){
 					// reset the timer if it was not suspended outside...
-					this.__slideshouw_timer == 'suspended'
+					this.__slideshow_timer == 'suspended'
 						|| that.resetSlideshowTimer()
 
 					if(parent){
@@ -224,15 +224,48 @@ var SlideshowActions = actions.Actions({
 	// NOTE: these can be used as pause and resume...
 	resetSlideshowTimer: ['- Slideshow/Reset slideshow timer',
 		function(){
-			this.__slideshouw_timer && this.toggleSlideshow('on')
+			this.__slideshow_timer && this.toggleSlideshow('on')
 		}],
 	suspendSlideshowTimer: ['- Slideshow/Suspend slideshow timer',
 		function(){
-			if(this.__slideshouw_timer){
-				clearInterval(this.__slideshouw_timer)
-				this.__slideshouw_timer = 'suspended'
+			if(this.__slideshow_timer){
+				clearInterval(this.__slideshow_timer)
+				this.__slideshow_timer = 'suspended'
 			}
 		}],
+	toggleSlideshowTimer:['Slideshow/Pause or resume running slideshow',
+		core.doc`
+
+		NOTE: this will have no effect if the slideshow is not running...
+		`,
+		{browseMode: function(){ return this.toggleSlideshow('?') == 'off' && 'disabled' }},
+		toggler.Toggler(null, 
+			function(_, state){ 
+				if(state == null){
+					return this.__slideshow_timer == 'suspended' ? 'paused' 
+						: !!this.__slideshow_timer ? 'running'
+						: 'off'
+				}
+
+				if(this.toggleSlideshow('?') != 'on'){
+					return
+				}
+
+				// handle state changing...
+				if(state == 'paused' || state == 'off'){
+					this.suspendSlideshowTimer()
+					return 'paused'
+
+				} else {
+					this.resetSlideshowTimer() 
+					return 'running'
+				}
+			}, 
+			// XXX should we return different sets of states when 
+			// 		slideshow is running and when not?
+			// 		...the problem is what to return when slideshow is 
+			// 		not running???
+			['paused', 'running', 'off'])],
 
 	resetSlideshowWorkspace: ['Slideshow/Reset workspace',
 		function(){ delete this.workspaces['slideshow'] }],

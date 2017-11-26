@@ -71,6 +71,7 @@ APP_DATE=$(BUILD_DIR)/DATE
 APP_NODE=$(BUILD_DIR)/NODE
 
 APP_ZIP=$(BUILD_DIR)/package.nw
+APP_ASAR=$(BUILD_DIR)/app.asar
 
 
 
@@ -128,6 +129,16 @@ $(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) $(NW_PROJECT_FILE) \
 		$(NODE_DIR)/ig-*
 
 zip: $(APP_ZIP)
+
+
+# XXX add a asar build rool -- see electron docs...
+# 	asar pack ...
+# 	...this will also need an appropriate loader or config as I see 
+# 	no way to make this transparent...
+$(APP_ASAR): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) $(NW_PROJECT_FILE) \
+	$(JS_FILES) $(CSS_FILES) $(HTML_FILES) $(APP_DATE) $(APP_NODE)
+
+asar: $(APP_ASAR)
 
 
 

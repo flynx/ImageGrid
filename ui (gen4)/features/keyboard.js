@@ -34,13 +34,14 @@ module.GLOBAL_KEYBOARD = {
 	'Slideshow': {
 		pattern: '.slideshow-running',
 		drop: [
+			'Space', 'Backspace',
 			'Esc',
 			'Up', 'Down', 'Enter',
 			'R', 'L', 'G', 'T',
 		],
 
 		Esc: 'toggleSlideshow: "off" -- Exit slideshow',
-		Space: 'Esc',
+		Space: 'toggleSlideshowTimer',
 		Enter: 'slideshowDialog',
 
 		Left: 'resetSlideshowTimer',
