@@ -37,6 +37,7 @@ var SlideshowActions = actions.Actions({
 		'slideshow-direction': 'forward',
 		'slideshow-interval': '3s',
 		'slideshow-interval-max-count': 7,
+		'slideshow-hold': 'on',
 
 		'slideshow-intervals': [
 			'0.2s',
@@ -47,7 +48,7 @@ var SlideshowActions = actions.Actions({
 		],
 	},
 
-	toggleSlideshow: ['Slideshow/Slideshow quick toggle',
+	toggleSlideshow: ['Slideshow/$Slideshow quick toggle',
 		toggler.CSSClassToggler(
 			function(){ return this.dom }, 
 			'slideshow-running',
@@ -183,7 +184,9 @@ var SlideshowActions = actions.Actions({
 		})],
 	
 	// settings...
-	slideshowIntervalDialog: ['Slideshow/Slideshow interval...',
+	// NOTE: these are disabled as they are repeated in the slideshow dialog...
+	// XXX do we need both these and the dialog???
+	slideshowIntervalDialog: ['- Slideshow/Slideshow $interval...',
 		widgets.makeUIDialog(function(parent){
 			var that = this
 			var dialog = widgets.makeConfigListEditor(
@@ -219,12 +222,14 @@ var SlideshowActions = actions.Actions({
 				})
 			return dialog
 		})],
-	toggleSlideshowDirection: ['- Slideshow/Slideshow direction',
+	toggleSlideshowDirection: ['- Slideshow/Slideshow $direction',
 		core.makeConfigToggler('slideshow-direction', ['forward', 'reverse'])],
-	toggleSlideshowLooping: ['- Slideshow/Slideshow looping',
+	toggleSlideshowLooping: ['- Slideshow/Slideshow $looping',
 		core.makeConfigToggler('slideshow-looping', ['on', 'off'])],
 
-	// NOTE: these can be used as pause and resume...
+	toggleSlideshowLooping: ['Interface|Slideshow/Slideshow $hold',
+		core.makeConfigToggler('slideshow-hold', ['on', 'off'])],
+
 	resetSlideshowTimer: ['- Slideshow/Reset slideshow timer',
 		function(){
 			this.__slideshow_timer && this.toggleSlideshow('on')
@@ -333,7 +338,59 @@ module.Slideshow = core.ImageGridFeatures.Feature({
 
 		// do not leave the viewer in slideshow mode...
 		['stop',
-			function(){ this.toggleSlideshow('off') }]
+			function(){ this.toggleSlideshow('off') }],
+
+		// slideshow hold...
+		//
+		// Holding down a key or mouse button will suspend the slideshow 
+		// and resume it when the key/button is released...
+		//
+		// XXX experimental, needs more testing...
+		['toggleSlideshow',
+			function(){
+				var that = this
+
+				if(!this.dom){
+					return
+				}
+
+				var hold = this.__slideshow_hold_handler 
+					= this.__slideshow_hold_handler 
+						|| function(){
+							var h = that.__slideshow_holding
+
+							if(h == null && that.toggleSlideshowTimer('?') == 'running'){
+								that.__slideshow_holding = 1
+								that.suspendSlideshowTimer()
+
+							// handle multiple events stacked...
+							} else {
+								that.__slideshow_holding += 1
+							}
+						}
+				var release = this.__slideshow_release_handler 
+					= this.__slideshow_release_handler 
+						|| function(){
+							var h = that.__slideshow_holding = 
+								// unstack multiple events...
+								(that.__slideshow_holding || -1) - 1
+
+							if(h == 0){
+								that.resetSlideshowTimer()
+								delete that.__slideshow_holding
+							}
+						}
+
+				if(this.toggleSlideshow('?') == 'on'){
+					this.dom.on('keydown mousedown', hold)
+					this.dom.on('keydown mouseup', release)
+
+				} else {
+					this.dom.off('keyup mousedown', hold)
+					this.dom.off('keyup mouseup', release)
+				}
+			}]
+		//*/
 	],
 })
 

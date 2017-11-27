@@ -1977,7 +1977,7 @@ var ButtonsActions = actions.Actions({
 			//'&#9636;<sub/>': ['collections', 'browseCollections -- Collections...'],
 			//'&#9974;': ['view', 'toggleSingleImage -- Single image / ribbon toggle'],
 			'&#9655;': ['slideshow', [
-				'toggleSlideshow -- Toggle slideshow',
+				'toggleSlideshow -- Slideshow',
 				'slideshowDialog -- Slideshow menu...',
 			]],
 		},
