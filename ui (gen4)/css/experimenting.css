@@ -153,6 +153,9 @@ body {
 .image-show-shadows {
 	filter: contrast(0.8) brightness(3) contrast(1.5);
 }
+.image-show-highlights {
+	filter: contrast(0.8) brightness(0.6) contrast(1.2);
+}
 
 
 

@@ -2256,6 +2256,7 @@ module.PreviewFilters = core.ImageGridFeatures.Feature({
 		'preview-filters': {
 			'Black and white': 'image-bw',
 			'Show shadows': 'image-show-shadows',
+			'Show highlights': 'image-show-highlights',
 			'No filters': 'none',
 		},
 	},

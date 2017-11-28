@@ -435,6 +435,7 @@ module.GLOBAL_KEYBOARD = {
 
 		// filters...
 		';': 'togglePreviewFilter: "Show shadows" -- Preview shadows',
+		'ctrl-;': 'togglePreviewFilter: "Show highlights" -- Preview highlights',
 		"'": 'togglePreviewFilter: "Black and white" -- Preview black and white',
 
 		// doc...
