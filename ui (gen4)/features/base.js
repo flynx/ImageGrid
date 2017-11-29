@@ -1799,6 +1799,12 @@ module.CropActions = actions.Actions({
 
 	// crop edit actions...
 	// XXX do we need this???
+	// XXX add gids to crop (current by default)...
+	// XXX use this as undo for .removeFromCrop(..)
+	addToCrop: ['- Crop/',
+		function(list, index){
+			// XXX
+		}],
 	// XXX undo...
 	removeFromCrop: ['Crop|Image/Remove from crop',
 		{browseMode: 'uncrop'},

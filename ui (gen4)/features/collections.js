@@ -44,7 +44,6 @@ var widgets = require('features/ui-widgets')
 // 		- both
 // XXX external / linked collections (.location)...
 //
-//
 
 // XXX should these be in .config???
 var MAIN_COLLECTION_TITLE =
