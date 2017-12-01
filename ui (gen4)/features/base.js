@@ -1801,11 +1801,69 @@ module.CropActions = actions.Actions({
 	// XXX do we need this???
 	// XXX add gids to crop (current by default)...
 	// XXX use this as undo for .removeFromCrop(..)
+	// 		...after we remove images from a crop we lose their containing 
+	// 		ribbon information and the order might get messed up by 
+	// 		horizontal shifting if not undone correctly...
 	addToCrop: ['- Crop/',
-		function(list, index){
-			// XXX
+		core.doc`Add gids to current crop...
+
+			Place images to their positions in order in current ribbon
+			.addToCrop(images)
+			.addToCrop(images, 'keep', 'keep')
+				-> this
+
+			Place images at order into ribbon...
+			.addToCrop(images, ribbon, order)
+				-> this
+
+			As above but place images before/after order...
+			.addToCrop(images, ribbon, order, 'before')
+			.addToCrop(images, ribbon, order, 'after')
+				-> this
+			
+			Place images at order but do not touch ribbon position... (horizontal)
+			.addToCrop(images, 'keep', order)
+				-> this
+
+			As above but place images before/after order...
+			.addToCrop(images, 'keep', order, 'before')
+			.addToCrop(images, 'keep', order, 'after')
+				-> this
+
+
+			Place images to ribbon but do not touch order... (vertical)
+			.addToCrop(images, ribbon, 'keep')
+				-> this
+
+
+		NOTE: this is signature-compatible with .data.placeImage(..) but
+			different in that it does not require the images to be loaded
+			in the current crop...
+		NOTE: this can only add gids to current crop...
+		`,
+		function(gids, ribbon, reference, mode){
+			if(!this.cropped){
+				return
+			}
+
+			gids = gids instanceof Array ? gids : [gids]
+
+			var r = this.data.ribbons[this.current_ribbon]
+			var o = this.data.order
+
+			// add gids to current ribbon...
+			gids.forEach(function(gid){
+				var i = o.indexOf(gid)
+				if(i >= 0){
+					r[i] = gid
+				}
+			})
+
+			// place...
+			;(ribbon || reference || mode)
+				&& this.data.placeImage(gids, ribbon, reference, mode)
 		}],
-	// XXX undo...
+	// XXX undo -- need containing ribbon info per gid to undo correctly...
 	removeFromCrop: ['Crop|Image/Remove from crop',
 		{browseMode: 'uncrop'},
 		function(gids){

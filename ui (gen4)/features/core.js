@@ -638,6 +638,7 @@ var JournalActions = actions.Actions({
 
 	journalable: null,
 
+	// XXX should the action have control over what gets journaled and how???
 	updateJournalableActions: ['System/Update list of journalable actions',
 		function(){
 			var that = this
@@ -726,6 +727,7 @@ var JournalActions = actions.Actions({
 	// 		- should the undo action have side-effects on the 
 	// 			journal/rjournal or should we clean them out??? 
 	// 			(currently cleaned)
+	// XXX should we control what gets pushed to the journal???
 	undo: ['Edit/Undo',
 		doc`Undo last action from .journal that can be undone
 

@@ -1585,8 +1585,18 @@ var DataPrototype = {
 	//	.placeImage(images, ribbon, order)
 	//		-> data
 	//
+	//	As above but add before/after order...
+	//	.placeImage(images, ribbon, order, 'before')
+	//	.placeImage(images, ribbon, order, 'after')
+	//		-> data
+	//
 	//	Place images at order but do not touch ribbon position... (horizontal)
 	//	.placeImage(images, 'keep', order)
+	//		-> data
+	//
+	//	As above but add before/after order...
+	//	.placeImage(images, 'keep', order, 'before')
+	//	.placeImage(images, 'keep', order, 'after')
 	//		-> data
 	//
 	//	Place images to ribbon but do not touch order... (vertical)

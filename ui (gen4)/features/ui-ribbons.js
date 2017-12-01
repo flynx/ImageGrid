@@ -561,6 +561,7 @@ core.ImageGridFeatures.Feature({
 			'collapseGroup',
 			'crop',
 			'uncrop',
+			'addToCrop',
 			'removeFromCrop',
 			'reverseImages',
 		], 
