@@ -1802,6 +1802,7 @@ module.CropActions = actions.Actions({
 	// 		...after we remove images from a crop we lose their containing 
 	// 		ribbon information and the order might get messed up by 
 	// 		horizontal shifting if not undone correctly...
+	// 		...add a way to store additional info in the journal...
 	// XXX undo -- .removeFromCrop(..) but only the gids that were 
 	// 		actually added... (???)
 	addToCrop: ['- Crop/',
@@ -1865,7 +1866,14 @@ module.CropActions = actions.Actions({
 		}],
 	// XXX undo -- need containing ribbon info per gid to undo correctly...
 	removeFromCrop: ['Crop|Image/Remove from crop',
-		{browseMode: 'uncrop'},
+		core.doc`
+		`,
+		{
+			browseMode: 'uncrop',
+			// XXX group gid - ribbon
+			//getUndoState: function(data){ },
+			//undo: function(data){},
+		},
 		function(gids){
 			var that = this
 			if(!this.cropped){

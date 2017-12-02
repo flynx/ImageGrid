@@ -620,6 +620,11 @@ module.Util = ImageGridFeatures.Feature({
 // XXX need to define a clear journaling strategy in the lines of:
 // 		- save state clears journal and adds a state load action
 // 		- .load(..) clears journal
+// XXX need a way to store additional info in the journal...
+// 		can either be done as: 
+// 			- a hook (action handler and/or attr)
+// 			- inline code inside the action...
+//		can't say I like #2 as it will mess the code up...
 // XXX needs careful testing...
 var JournalActions = actions.Actions({
 
@@ -638,6 +643,10 @@ var JournalActions = actions.Actions({
 
 	journalable: null,
 
+	// XXX doc supported attrs:
+	// 		undo
+	// 		undoable
+	//		getUndoState
 	// XXX should the action have control over what gets journaled and how???
 	updateJournalableActions: ['System/Update list of journalable actions',
 		function(){
@@ -664,6 +673,12 @@ var JournalActions = actions.Actions({
 					if(test && !test.call(that, data)){
 						return
 					}
+
+					// get additional undo state...
+					var update = that.getActionAttr(action, 'getUndoState')
+					update 
+						&& update instanceof Function
+						&& update.call(that, data)
 
 					// journal after the action is done...
 					return function(){ this.journalPush(data) }
