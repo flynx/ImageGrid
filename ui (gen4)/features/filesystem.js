@@ -570,7 +570,7 @@ var FileSystemLoaderActions = actions.Actions({
 					logger)
 				// load the data...
 				.then(function(imgs){
-					that.loadOrRecover({
+					return that.loadOrRecover({
 							images: imgs,
 							data: data.Data.fromArray(imgs.keys()),
 
