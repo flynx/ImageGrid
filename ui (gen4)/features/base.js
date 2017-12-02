@@ -1798,12 +1798,12 @@ module.CropActions = actions.Actions({
 		}],
 
 	// crop edit actions...
-	// XXX do we need this???
-	// XXX add gids to crop (current by default)...
 	// XXX use this as undo for .removeFromCrop(..)
 	// 		...after we remove images from a crop we lose their containing 
 	// 		ribbon information and the order might get messed up by 
 	// 		horizontal shifting if not undone correctly...
+	// XXX undo -- .removeFromCrop(..) but only the gids that were 
+	// 		actually added... (???)
 	addToCrop: ['- Crop/',
 		core.doc`Add gids to current crop...
 
