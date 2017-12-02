@@ -7,6 +7,14 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+if(typeof(process) != 'undefined'){
+	var fse = requirejs('fs-extra')
+	var pathlib = requirejs('path')
+	var file = require('imagegrid/file')
+}
+
+var util = require('lib/util')
+
 var data = require('imagegrid/data')
 
 var toggler = require('lib/toggler')
@@ -380,7 +388,7 @@ var CollectionActions = actions.Actions({
 
 			var prev = this.collection
 			var collection_data = this.collections[collection]
-			var handlers = this.collection_handlers
+			//var handlers = this.collection_handlers
 
 			// save current collection state...
 			//
@@ -1420,12 +1428,13 @@ module.Collection = core.ImageGridFeatures.Feature({
 					})
 
 				if(Object.keys(collections).length > 0){
-					//console.log('!!!!!', collections)
-					// XXX this breaks loading...
-					//res.collections = collections
+					res.collections = collections
 				}
 
 				// group collection data...
+				//
+				// NOTE: this will load collections/* stuff if present...
+				//
 				// XXX would be nice to have a mechanism to pass info to 
 				// 		the loader on what paths to load without actually 
 				// 		loading them manually...
@@ -1705,11 +1714,12 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					// do the loading...
 					.forEach(function(title){
 						var c = that.collections[title]
+						var t = (c.data || {}).tags || {}
 
 						c.local_tags = c.local_tags || {}
 						;(that.config['collection-local-tags'] || [])
 							.forEach(function(tag){
-								c.local_tags[tag] = c.local_tags[tag] || c.data.tags[tag] })
+								c.local_tags[tag] = c.local_tags[tag] || t[tag] || [] })
 					})
 			}],
 	],
@@ -2253,10 +2263,73 @@ var FileSystemCollectionActions = actions.Actions({
 	// 	}
 	collections: null,
 
+	// XXX need to unload unchanged collections...
 	collectionPathLoader: ['- Collections/',
 		{collectionFormat: 'path'},
-		function(data, loader){ 
-			// XXX
+		function(title, state, logger){ 
+			var that = this
+
+			// if data is present, do not reload...
+			if(state.data){
+				return
+			}
+
+			// XXX get a logger...
+			logger = logger || this.logger
+			logger = logger && logger.push('Load')
+
+			return Promise.all((this.location.loaded || [this.location.path])
+				.map(function(path){
+					path = util.normalizePath([
+						path,
+						that.config['index-dir'], 
+						state.path,
+					].join('/'))
+
+					return file.loadIndex(path, false, logger)
+						.then(function(res){
+							// load the collection data...
+							that.collections[title].data = 
+								that.prepareJSONForLoad(res[path]).data
+						})
+				}))
+		}],
+
+	// XXX revise...
+	// XXX this should be generic... (???)
+	// 		...I think the action itself should be generic, but what this
+	// 		specific action does is very specific to file collections...
+	// 		...think of a protocol))))
+	unloadUnchangedCollections: ['- Collections|File/',
+		function(logger){
+			var that = this
+
+			if(this.changes === true || this.changes === undefined){
+				return
+			}
+
+			// XXX get a logger...
+			logger = logger || this.logger
+			logger = logger && logger.push('Unload')
+
+			Object.keys(this.collections)
+				.forEach(function(title){
+					var c = that.collections[title] 
+
+					var key = 'collection: '+JSON.stringify(c.gid || title)
+
+					if(title != MAIN_COLLECTION_TITLE
+							&& title != that.collection
+							&& c.path 
+							&& c.data
+							&& (that.changes === false 
+								|| !(key in that.changes))){
+
+						logger && logger.emit('title', title)
+
+						delete c.data
+					}
+				})
 		}],
 
 	importCollectionsFromPath: ['- Collections|File/Import collections from path',
