@@ -30,6 +30,11 @@ var widgets = require('features/ui-widgets')
 
 /*********************************************************************/
 // 
+// XXX need a way to load a collection directly...
+// 		- reload from .location.collection
+// 		- path syntax 
+// 			<path>:<title-selector>	-- needs to be normalized
+// 			<path>:<gid>
 // XXX might be a good idea to make collection loading part of the 
 // 		.load(..) protocol...
 // 		...this could be done via a url suffix, as a shorthand.
@@ -2304,7 +2309,7 @@ var FileSystemCollectionActions = actions.Actions({
 	// 		...I think the action itself should be generic, but what this
 	// 		specific action does is very specific to file collections...
 	// 		...think of a protocol))))
-	unloadUnchangedCollections: ['- Collections|File/',
+	unloadUnchangedCollections: ['Collections|File/Unload saved collections',
 		function(logger){
 			var that = this
 
