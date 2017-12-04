@@ -734,17 +734,60 @@ function(list, options){
 	}
 	options = opts
 
+	/* XXX
+	var merge_strategies = {
+		custom: function(stored, input){
+		},
+	}
+	//*/
+
 	var lst = 
-		// load dialog state...
-		(options.update_merge != 'drop_changes' && dialog.__list[id]) ? 
-			dialog.__list[id]
-		// merge states...
-		: (options.update_merge instanceof Function && dialog.__list[id]) ? 
-			options.update_merge(dialog.__list[id])
 		// initial state...
+		!dialog.__list[id] ?
+			(list instanceof Function ? list() : list)
+
+		/*/ custom...
+		: (options.update_merge in merge_strategies && dialog.__list[id]) ?
+			merge_strategies[options.update_merge].call(this, 
+				dialog.__list[id], 
+				list instanceof Function ? list() : list)
+		//*/
+
+		// load dialog state...
+		: (options.update_merge == null || options.update_merge == 'keep_changes') ? 
+			dialog.__list[id]
+
+		// load input/external state...
+		: (options.update_merge == 'drop_changes') ? 
+			(list instanceof Function ? list() : list)
+
+		// merge local and external states...
+		: (options.update_merge == 'merge') ? 
+			(function(local, input){
+				return input
+					.sort(function(a, b){ 
+						// get base order from input...
+						var i = local.indexOf(a)
+						var j = local.indexOf(b)
+						// order items not in input (added/renamed) 
+						// via their position in local...
+						i = i == -1 ? input.indexOf(a) : i
+						j = j == -1 ? input.indexOf(b) : j
+						return i - j
+					})
+			})(dialog.__list[id] || [], list instanceof Function ? list() : list)
+
+		// user merge...
+		: options.update_merge instanceof Function ? 
+			//options.update_merge(dialog.__list[id])
+			options.update_merge(
+				dialog.__list[id], 
+				list instanceof Function ? list() : list)
+
 		: list instanceof Function ? 
 			list() 
 		: list
+
 	var editable = dialog.__editable[id] = lst instanceof Array
 	// NOTE: we .slice() here to make the changes a bit better packaged
 	// 		or discrete and not done as they come in...

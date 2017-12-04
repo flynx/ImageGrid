@@ -1924,6 +1924,8 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 // XXX show collections in image metadata... (???)
 // XXX might be nice to indicate if a collection is loaded -- has .data...
 // XXX rename collection ui...
+// XXX might be nice to add collection previews to the collection list...
+// 		...show the base ribbon from collection as background
 var UICollectionActions = actions.Actions({
 	config: {
 		// Global default collections...
@@ -1948,7 +1950,7 @@ var UICollectionActions = actions.Actions({
 						&& title != MAIN_COLLECTION_TITLE },
 			})],
 
-	// XXX edit collection title here???
+	// XXX edit collection title here??? (on menu)
 	// 		...also might need a collection editor dialog...
 	// XXX would be nice to make this nested (i.e. path list)...
 	browseCollections: ['Collections/$Collec$tions...',
@@ -1963,7 +1965,7 @@ var UICollectionActions = actions.Actions({
 			var collections = that.collection_order = 
 				(that.collection_order || []).slice()
 
-			var defaults = this.config['default-collections']
+			var defaults = that.config['default-collections']
 			if(defaults){
 				collections = collections.concat(defaults).unique()
 			}
@@ -2024,10 +2026,9 @@ var UICollectionActions = actions.Actions({
 					}
 
 					// update collection list if changed externally...
-					// XXX do we need this???
 					collections.splice.apply(collections, [0, collections.length].concat(
 						collections
-							.concat(this.collection_order || [])
+							.concat(that.collection_order || [])
 							.unique()))
 
 					// main collection...
@@ -2074,6 +2075,43 @@ var UICollectionActions = actions.Actions({
 									: that.saveCollection(title) },
 
 							disabled: action ? [MAIN_COLLECTION_TITLE] : false,
+
+							update_merge: 'merge',
+
+							// element edit...
+							// XXX should this be generic???
+							menu: function(_, from){ 
+								var f = $(this).find('.text').last().attr('text') || from
+
+								$(this).find('.text').last()
+									.html(f)
+									.makeEditable({
+										activate: true,
+										clear_on_edit: false,
+										abort_keys: [
+											'Esc',
+										],
+									})
+									.on('edit-commit', function(_, to){
+										// check if name unique... (???)
+										if(to in that.collections){
+											// XXX ???
+											return
+										}
+
+										// XXX need to get the real from...
+										that.renameCollection(f, to)
+
+										if(to in that.collections){
+											collections[collections.indexOf(f)] = to
+										}
+									})
+									.on('edit-abort edit-commit', function(_, title){
+										make.dialog.update()
+											.then(function(){
+												make.dialog.select(title) })
+									})
+							},
 						})
 				}, {
 					cls: 'collection-list',
@@ -2083,6 +2121,10 @@ var UICollectionActions = actions.Actions({
 							// XXX not sure it is good that we have to do this...
 							.replace(/\$/g, '')),
 				})
+				// keyboard...
+				.run(function(){
+					this.keyboard
+						.handler('General', 'F2', 'Menu') })
 				.close(function(){
 					that.collection_order = collections
 
