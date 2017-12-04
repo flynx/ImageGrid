@@ -2081,29 +2081,36 @@ var UICollectionActions = actions.Actions({
 							// element edit...
 							// XXX should this be generic???
 							menu: function(_, from){ 
-								var f = $(this).find('.text').last().attr('text') || from
+								var elem = $(this).find('.text').last()
+								from = elem.attr('text') || from
 
-								$(this).find('.text').last()
-									.html(f)
+								elem
+									// NOTE: we need to do this to account for 
+									// 		'$' in names...
+									.html(from)
 									.makeEditable({
 										activate: true,
 										clear_on_edit: false,
 										abort_keys: [
 											'Esc',
+											'Up',
+											'Down',
 										],
 									})
 									.on('edit-commit', function(_, to){
-										// check if name unique... (???)
-										if(to in that.collections){
+										to = to.trim()
+										// check if name is unique or empty... 
+										if(to in that.collections || to == ''){
 											// XXX ???
 											return
 										}
 
 										// XXX need to get the real from...
-										that.renameCollection(f, to)
+										that.renameCollection(from, to)
 
+										// rename was successful...
 										if(to in that.collections){
-											collections[collections.indexOf(f)] = to
+											collections[collections.indexOf(from)] = to
 										}
 									})
 									.on('edit-abort edit-commit', function(_, title){
