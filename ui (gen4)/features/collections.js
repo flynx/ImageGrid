@@ -1963,7 +1963,7 @@ var UICollectionActions = actions.Actions({
 
 		NOTE: collections are added live and not on dialog close...
 		`,
-		widgets.makeUIDialog(function(action){
+		widgets.makeUIDialog(function(action, new_message){
 			var that = this
 			var to_remove = []
 
@@ -2069,6 +2069,12 @@ var UICollectionActions = actions.Actions({
 					// collection list...
 					make.EditableList(collections, 
 						{
+							new_item: new_message ? 
+									new_message 
+								: action ? 
+									'$New..' 
+								: '$New from current state...',
+
 							unique: true,
 							sortable: 'y',
 							to_remove: to_remove,
