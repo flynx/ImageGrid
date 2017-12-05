@@ -1044,7 +1044,6 @@ var CollectionActions = actions.Actions({
 		delete this.location.collection
 	}],
 
-
 	// Config and interface stuff...
 	//
 	toggleCollectionCropRetention: ['Interface/Collection crop save mode',
@@ -1413,6 +1412,9 @@ module.Collection = core.ImageGridFeatures.Feature({
 						})
 				}
 			}],
+		// XXX merge multiple collections...
+		// 		...this can be called multiple times pre single load, once
+		// 		per merged index...
 		['prepareJSONForLoad',
 			function(res, json, base_path){
 				// collection index...
@@ -2029,10 +2031,18 @@ var UICollectionActions = actions.Actions({
 					}
 
 					// update collection list if changed externally...
-					collections.splice.apply(collections, [0, collections.length].concat(
-						collections
-							.concat(that.collection_order || [])
-							.unique()))
+					collections.splice.apply(collections, 
+						// NOTE: if the length calculation here looks a "bit"
+						// 		convoluted, that's because it is, this fixes
+						// 		a really odd bug in old Chrome versions where
+						// 			L.splice(0, L.length, ...) 
+						// 		in some odd conditions leaves an element 
+						// 		in the original array...
+						// 		(is a jit error???)
+						[0, (that.collection_order || []).length + collections.length]
+							.concat(collections
+								.concat(that.collection_order || [])
+								.unique()))
 
 					// main collection...
 					!action 
@@ -2349,6 +2359,12 @@ var FileSystemCollectionActions = actions.Actions({
 	// 	}
 	collections: null,
 
+	// XXX this does not work for merged indexes as each index has 
+	// 		different gids and paths for same collection title...
+	// 		...need to merge these correctly...
+	// 			- merge collections by title
+	// 			- multiple gids
+	// 			- multiple paths
 	collectionPathLoader: ['- Collections/',
 		{collectionFormat: 'path'},
 		function(title, state, logger){ 
@@ -2368,6 +2384,7 @@ var FileSystemCollectionActions = actions.Actions({
 					path = util.normalizePath([
 						path,
 						that.config['index-dir'], 
+						// XXX use index-specific path...
 						state.path,
 					].join('/'))
 
