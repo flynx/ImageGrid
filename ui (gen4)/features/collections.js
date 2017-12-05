@@ -1923,7 +1923,6 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 
 // XXX show collections in image metadata... (???)
 // XXX might be nice to indicate if a collection is loaded -- has .data...
-// XXX rename collection ui...
 // XXX might be nice to add collection previews to the collection list...
 // 		...show the base ribbon from collection as background
 var UICollectionActions = actions.Actions({
@@ -1932,6 +1931,8 @@ var UICollectionActions = actions.Actions({
 		//
 		// NOTE: delete or set to null for none...
 		//'default-collections': null,
+
+		'collection-last-used': null,
 	},
 
 	editDefaultCollections: ['Interface/Edit default collections...',
@@ -1950,8 +1951,6 @@ var UICollectionActions = actions.Actions({
 						&& title != MAIN_COLLECTION_TITLE },
 			})],
 
-	// XXX edit collection title here??? (on menu)
-	// 		...also might need a collection editor dialog...
 	// XXX would be nice to make this nested (i.e. path list)...
 	browseCollections: ['Collections/$Collec$tions...',
 		core.doc`Collection list...
@@ -2093,6 +2092,8 @@ var UICollectionActions = actions.Actions({
 										clear_on_edit: false,
 										abort_keys: [
 											'Esc',
+
+											// XXX
 											'Up',
 											'Down',
 										],
@@ -2220,23 +2221,46 @@ var UICollectionActions = actions.Actions({
 			}) })],
 	addToCollection: ['Collections|Image/Add $image to collection...',
 		widgets.uiDialog(function(gids){
+			var that = this
 			return this.browseCollections(function(title){
-				this.collect(gids || 'current', title) }) })],
+					this.collect(gids || 'current', title) })
+				.run(function(){
+					var title = that.config['collection-last-used']
+					title
+						&& this.select(`"${title}"`) })
+				.open(function(_, title){
+					that.config['collection-last-used'] = title })
+	   	})],
 	addRibbonToCollection: ['Collections|Ribbon/Add $ribbon to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('ribbon') })],
 	addLoadedToCollection: ['Collections/$Add loaded images to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
 	joinToCollection: ['Collections/$Merge view to collection...',
 		widgets.uiDialog(function(){
-			return this.browseCollections(function(title){
-				this.joinCollect(title) }) })],
+			var that = this
+			return this.browseCollections(function(title){ this.joinCollect(title) })
+				.run(function(){
+					var title = that.config['collection-last-used']
+					title
+						&& this.select(`"${title}"`) })
+				.open(function(_, title){
+					that.config['collection-last-used'] = title })
+		})],
 
 	// XXX should this be here or in marks???
 	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
 		{browseMode: function(){ 
 			return this.marked.length == 0 && 'disabled' }},
 		widgets.uiDialog(function(){
-			return this.browseCollections(function(title){ this.collectMarked(title) }) })],
+			var that = this
+			return this.browseCollections(function(title){ this.collectMarked(title) })
+				.run(function(){
+					var title = that.config['collection-last-used']
+					title
+						&& this.select(`"${title}"`) })
+				.open(function(_, title){
+					that.config['collection-last-used'] = title })
+		})],
 
 	/*/ XXX this is not used by metadata yet...
 	// XXX might be a nice idea to define a default make(..) function 
@@ -2321,7 +2345,6 @@ var FileSystemCollectionActions = actions.Actions({
 	// 	}
 	collections: null,
 
-	// XXX need to unload unchanged collections...
 	collectionPathLoader: ['- Collections/',
 		{collectionFormat: 'path'},
 		function(title, state, logger){ 

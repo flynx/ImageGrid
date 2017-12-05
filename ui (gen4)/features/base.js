@@ -715,8 +715,10 @@ core.ImageGridFeatures.Feature({
 		// XXX handle 'full'???
 		['prepareIndexForWrite', 
 			function(res){
-				// we save .current unconditionally...
-				res.index.current = res.raw.data.current
+				// we save .current unconditionally (if it exists)...
+				if(res.raw.data){
+					res.index.current = res.raw.data.current
+				}
 
 				var changes = res.changes
 

@@ -615,10 +615,12 @@ function(data, options){
 // 		//
 // 		// This can be:
 // 		//	null			- keep dialog state, ignore external state (default)
-// 		//	'drop_changes'	- load external state
+// 		//	'drop_changes'	- replace dialog state with input state
+// 		//	'keep_changes'	- keep dialog state (ignoring input)
+// 		//	'merge'			- merge dialog state and input state
 // 		//	<function>		- merge the changes
 //		//
-// 		update_merge: null | 'drop_changes' | <function>,
+// 		update_merge: null | 'drop_changes' | 'keep_changes' | 'merge' | <function>,
 //
 //		// Special buttons...
 //		//
@@ -712,6 +714,90 @@ function(list, options){
 			|| lst
 	}
 
+	/* XXX make a universal add/replace handler...
+	var editItem = function(txt, replace){
+		txt = options.normalize ? 
+			options.normalize(txt) 
+			: txt
+		// account for '$' as key binding marker...
+		var ntxt = txt.replace(/\$/g, '')
+		// unique-test text...
+		var utxt = options.unique instanceof Function ? 
+			options.unique(txt)+'' 
+			: null
+
+		// invalid format...
+		if(options.check && !options.check(txt)){
+			dialog.update()
+			return
+		}
+
+		lst = dialog.__list[id]
+		var normalized = lst.map(function(e){ 
+			return e.replace(/\$/g, '') })
+
+		// list length limit
+		if(options.length_limit 
+			&& (lst.length >= options.length_limit)){
+
+			options.overflow 
+				&& options.overflow.call(dialog, txt)
+
+			return
+		}
+
+		// prevent editing non-arrays...
+		if(!editable || !lst){
+			return
+		}
+
+		// check if item pre-existed...
+		var preexisted = utxt ? 
+			//lst.indexOf(options.unique(txt)) >= 0
+			(lst.indexOf(utxt) >= 0
+				// account for '$' as key binding marker... (XXX ???)
+				|| normalized.indexOf(utxt.replace(/\$/g, '')) >= 0)
+			: (lst.indexOf(txt) >= 0 
+				|| normalized.indexOf(ntxt) >= 0)
+
+		// add new value and sort list...
+		lst.push(txt)
+
+		// unique...
+		if(options.unique == null || options.unique === true){
+			// account for '$' as key binding marker...
+			lst = lst.unique(function(e){ return e.replace(/\$/g, '') })
+
+		// unique normalized...
+		} else if(options.unique instanceof Function){
+			lst = lst.unique(options.unique) 
+		}
+
+		// itemadded handler...
+		options.itemadded
+			&& !(options.unique && preexisted)
+			&& options
+				.itemadded.call(dialog, txt)
+
+		// sort...
+		if(options.sort){
+			lst = lst
+				.sort(options.sort instanceof Function ? 
+					options.sort 
+					: undefined)
+		}
+
+		lst = write(dialog.__list[id], lst)
+		
+		// update list and select new value...
+		dialog.update()
+			.done(function(){
+				//dialog.select('"'+txt+'"')
+				dialog.select('"'+txt.replace(/\$/g, '')+'"')
+			})
+	}
+	//*/
+
 	dialog.__list = dialog.__list || {}
 	dialog.__editable = dialog.__editable || {}
 	dialog.__to_remove = dialog.__to_remove || {}
@@ -734,30 +820,16 @@ function(list, options){
 	}
 	options = opts
 
-	/* XXX
-	var merge_strategies = {
-		custom: function(stored, input){
-		},
-	}
-	//*/
-
 	var lst = 
-		// initial state...
+		// no local data -> load initial state...
 		!dialog.__list[id] ?
 			(list instanceof Function ? list() : list)
 
-		/*/ custom...
-		: (options.update_merge in merge_strategies && dialog.__list[id]) ?
-			merge_strategies[options.update_merge].call(this, 
-				dialog.__list[id], 
-				list instanceof Function ? list() : list)
-		//*/
-
-		// load dialog state...
+		// load dialog state (ignore input)...
 		: (options.update_merge == null || options.update_merge == 'keep_changes') ? 
 			dialog.__list[id]
 
-		// load input/external state...
+		// load input/external state (ignore dialog state)...
 		: (options.update_merge == 'drop_changes') ? 
 			(list instanceof Function ? list() : list)
 
