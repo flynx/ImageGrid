@@ -1973,9 +1973,9 @@ var UICollectionActions = actions.Actions({
 				function(path, make){
 					var dialog = this
 						.on('update', function(){
-							that.collection
-								&& dialog.filter(JSON.stringify(that.collection))
-									.addClass('highlighted')
+							dialog.filter(JSON.stringify((that.collection || MAIN_COLLECTION_TITLE)
+									.replace(/\$/g, '')))
+								.addClass('highlighted')
 						})
 
 					var openHandler = function(_, title){
@@ -2155,9 +2155,9 @@ var UICollectionActions = actions.Actions({
 				function(path, make){
 					var dialog = this
 						.on('update', function(){
-							that.collection
-								&& dialog.filter(JSON.stringify(that.collection))
-									.addClass('highlighted')
+							dialog.filter(JSON.stringify((that.collection || MAIN_COLLECTION_TITLE)
+									.replace(/\$/g, '')))
+								.addClass('highlighted')
 						})
 
 					//all = Object.keys(that.collections || {})
