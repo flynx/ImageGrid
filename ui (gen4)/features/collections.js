@@ -1932,7 +1932,11 @@ var UICollectionActions = actions.Actions({
 		// NOTE: delete or set to null for none...
 		//'default-collections': null,
 
-		'collection-last-used': null,
+		// Last used collection (for adding merging)...
+		//
+		// This will be auto-selected in .browseCollections(..) on next 
+		// add/edit operation...
+		//'collection-last-used': null,
 	},
 
 	editDefaultCollections: ['Interface/Edit default collections...',
