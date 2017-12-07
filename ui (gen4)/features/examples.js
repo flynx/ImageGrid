@@ -725,6 +725,7 @@ var ExampleUIActions = actions.Actions({
 			// XXX setup keyboard...
 			var keyboard = require('lib/keyboard')
 
+			/*/ XXX update this to use .keyboard
 			// XXX move this to the .config...
 			var kb = {
 				'Basic Control': {
@@ -766,6 +767,7 @@ var ExampleUIActions = actions.Actions({
 						function(){ 
 							return that.config['max-key-repeat-rate']
 						}))
+			//*/
 
 			// XXX STUB
 			window.b = b
