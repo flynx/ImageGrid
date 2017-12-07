@@ -14,6 +14,12 @@ var features = require('lib/features')
 var core = require('features/core')
 var widgets = require('features/ui-widgets')
 
+var widget = require('lib/widget/widget')
+var browse = require('lib/widget/browse')
+var overlay = require('lib/widget/overlay')
+var drawer = require('lib/widget/drawer')
+
+var browseWalk = require('lib/widget/browse-walk')
 
 
 /*********************************************************************/
