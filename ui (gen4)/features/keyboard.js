@@ -516,12 +516,16 @@ var KeyboardActions = actions.Actions({
 					}
 
 					var a = keyboard.parseActionCall(code, that)
-					var doc = a.doc || that.getDocTitle(a.action) || null
+					var doc = a.doc 
+						|| (that.getDocTitle && that.getDocTitle(a.action)) 
+						|| null
 
 					// check if we have no doc...
 					if(doc == null || doc == ''){
 						console.warn('Action has no doc: "'
 							+ a.action +'" at: "'+ code +'"') 
+						// XXX ???
+						return
 					}
 
 					// see if two actions have the same doc...
@@ -845,6 +849,10 @@ module.Keyboard = core.ImageGridFeatures.Feature({
 
 				this.toggleKeyboardHandling('on')
 			}],
+	
+		['stop',
+			function(){
+				this.toggleKeyboardHandling('off') }],
 
 		// pause keyboard repeat...
 		['shiftImageUp.pre shiftImageDown.pre',

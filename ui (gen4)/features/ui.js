@@ -993,7 +993,7 @@ module.URLHash = core.ImageGridFeatures.Feature({
 		['stop',
 			function(){
 				this.__hashchange_handler 
-					&& $(window).on('hashchange', this.__hashchange_handler)
+					&& $(window).off('hashchange', this.__hashchange_handler)
 			}],
 		// store/restore hash when we focus images...
 		['focusImage',

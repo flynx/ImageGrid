@@ -671,6 +671,7 @@ module.StatusBar = core.ImageGridFeatures.Feature({
 	tag: 'ui-status-bar',
 	depends: [
 		'ui',
+		'ui-chrome',
 
 		// XXX this is here to enable context menu 
 		// 		see: StatusBarActions.__statusbar_elements__.mark(..)

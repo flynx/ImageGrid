@@ -1272,7 +1272,8 @@ var SelfTestActions = actions.Actions({
 			tests.forEach(function(action){
 				that[action]()
 
-				logger.emit('done', action)
+				logger 
+					&& logger.emit('done', action)
 			})
 		})],
 })

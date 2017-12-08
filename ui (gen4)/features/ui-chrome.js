@@ -354,7 +354,7 @@ module.CurrentImageIndicator = core.ImageGridFeatures.Feature({
 // XXX is it a good idea to used the same timers for all instances???
 var makeIndicatorHiderOnFastAction = function(hide_timeout){
 	return function(){ 
-		if(this.toggleSingleImage('?') == 'on'){
+		if(this.toggleSingleImage && this.toggleSingleImage('?') == 'on'){
 			return
 		}
 

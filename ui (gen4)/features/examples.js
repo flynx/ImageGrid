@@ -657,10 +657,10 @@ var ExampleUIActions = actions.Actions({
 		}],
 
 
+	// XXX BUG: right limit indicator can get covered by the scrollbar...
 	// XXX migrate to the dialog framework...
 	// XXX use this.dom as base...
-	// XXX BUG: when using this.dom as base some actions leak
-	// 		between the two viewers...
+	// XXX BUG: this breaks keyboard handling when closed...
 	showTaggedInDrawer: ['- Test/Show tagged in drawer',
 		function(tag){
 			tag = tag || 'bookmark'
@@ -672,10 +672,12 @@ var ExampleUIActions = actions.Actions({
 					height: H,
 					background: 'black',
 				})
+				.attr('tabindex', '0')
 			// XXX use this.dom as base...
 			// XXX when using viewer zoom and other stuff get leaked...
 			var widget = drawer.Drawer($('body'), 
 				$('<div>')
+					.addClass('image-list-widget')
 					.css({
 						position: 'relative',
 						height: H,
@@ -684,95 +686,75 @@ var ExampleUIActions = actions.Actions({
 				{
 					focusable: true,
 				})
+				.on('close', function(){
+					that.nested.stop()
+
+					//delete that.nested
+				})
+
 
 			var data = this.data.crop(this.data.getTaggedByAll(tag), true)
 
-			var b = new core.ImageGrid()
-
-			// used switch experimental actions on (set to true) or off (unset or false)...
-			//a.experimental = true
-
-			// setup actions...
-			core.ImageGridFeatures.setup(b, [
-				'viewer-testing',
-			])
-
 			// setup the viewer...
-			// XXX for some reason if we load this with data and images
-			// 		the images will not show up...
-			b.load({
-					viewer: viewer,
-				})
+			this.nested = core.ImageGridFeatures
+				// setup actions...
+				// XXX prune the features a bit better...
+				.setup([
+					'viewer-testing',
 
-			// load some testing data...
-			// NOTE: we can (and do) load this in parts...
-			b
+					// NOTE: this if not disabled will create a feedback loop...
+					'-ui-url-hash',
+
+					'-ui-single-image',
+					'-ui-chrome',
+				])
+				.run(function(){
+					this.close = function(){ widget.close() }
+
+					this.config['keyboard-event-source'] = viewer 
+
+					// XXX hack -- need a better way to set this (a setter?)...
+					this.__keyboard_config = {
+						'Basic Control': {
+							pattern: '*',
+
+							Home: 'firstImage!',
+							End: 'lastImage!',
+							Left: 'prevImage!',
+							ctrl_Left: 'prevScreen!',
+							meta_Left: 'prevScreen!',
+							PgUp: 'prevScreen!',
+							PgDown: 'nextScreen!',
+							Right: 'nextImage!',
+							ctrl_Right: 'nextScreen!',
+							meta_Right: 'nextScreen!',
+
+							Esc: 'close!',
+						},
+					}
+				})
+				// load some testing data...
 				.load({
+					viewer: viewer,
 					data: data,
 					images: this.images, 
 				})
-				// this is needed when loading legacy sources that do not have tags
-				// synced...
-				// do not do for actual data...
-				//.syncTags()
 				.fitImage(1)
-
+					// XXX for some reason this is not called...
+					.refresh()
 				// link navigation...
 				.on('focusImage', function(){
-					that.focusImage(this.current)
-				})
+					that.focusImage(this.current) })
+				// start things up...
+				.start()
+				.focusImage()
 
-			// XXX setup keyboard...
-			var keyboard = require('lib/keyboard')
+			// XXX need to focus widget -- use a real trigger event instead of timer...
+			setTimeout(function(){
+				that.nested.dom.focus()
+			}, 200)
 
-			/*/ XXX update this to use .keyboard
-			// XXX move this to the .config...
-			var kb = {
-				'Basic Control': {
-					pattern: '*',
-
-					Home: {
-						default: 'firstImage!',
-					},
-					End: {
-						default: 'lastImage!',
-					},
-					Left: {
-						default: 'prevImage!',
-						ctrl: 'prevScreen!',
-						// XXX need to prevent default on mac + browser...
-						meta: 'prevScreen!',
-					},
-					PgUp: 'prevScreen!',
-					PgDown: 'nextScreen!',
-					Right: {
-						default: 'nextImage!',
-						ctrl: 'nextScreen!',
-						// XXX need to prevent default on mac + browser...
-						meta: 'nextScreen!',
-					},
-				}
-			}
-
-			widget.dom
-				// XXX
-				.keydown(
-					keyboard.dropRepeatingkeys(
-						keyboard.makeKeyboardHandler(
-							kb,
-							function(k){
-								window.DEBUG && console.log(k)
-							},
-							b), 
-						function(){ 
-							return that.config['max-key-repeat-rate']
-						}))
-			//*/
-
-			// XXX STUB
-			window.b = b
-
-			return b
+			return this.nested
 		}],
 	showBookmarkedInDrawer: ['Test/Show bookmarked in drawer',
 		function(){ this.showTaggedInDrawer('bookmark') }],

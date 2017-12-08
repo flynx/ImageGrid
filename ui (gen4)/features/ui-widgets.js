@@ -485,6 +485,8 @@ var makeDrawer = function(direction){
 	})
 }
 
+
+
 //---------------------------------------------------------------------
 // Higher level dialog action constructors...
 
@@ -566,6 +568,21 @@ function makeConfigListEditorDialog(path, options){
 		return list
 	}, options)
 }
+
+
+
+//---------------------------------------------------------------------
+	
+var Chrome = 
+module.Chrome = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-chrome',
+	depends: [
+		'ui',
+	],
+})
 
 
 
@@ -852,6 +869,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 	tag: 'ui-dialogs',
 	depends: [
 		'ui',
+		'ui-chrome',
 	],
 
 	actions: DialogsActions,
@@ -2052,6 +2070,7 @@ module.Buttons = core.ImageGridFeatures.Feature({
 	tag: 'ui-buttons',
 	depends: [
 		'ui',
+		'ui-chrome'
 	],
 	suggested: [
 		// needed for reporting info in .makeButtonControls(..)
