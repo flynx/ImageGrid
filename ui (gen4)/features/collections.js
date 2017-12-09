@@ -1019,6 +1019,9 @@ var CollectionActions = actions.Actions({
 				if(data){
 					s.data = data.dumpJSON()
 					s.count = data.length
+
+				} else if(state.count) {
+					s.count = state.count
 				}
 
 				// handle .crop_stack of collection...
