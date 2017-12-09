@@ -2141,7 +2141,7 @@ var UICollectionActions = actions.Actions({
 							new_item: new_message ? 
 									new_message 
 								: action ? 
-									'$New..' 
+									'$New...' 
 								: '$New from current state...',
 
 							unique: true,
@@ -2168,7 +2168,7 @@ var UICollectionActions = actions.Actions({
 
 							// element edit...
 							// XXX should this be generic???
-							menu: function(_, from){ 
+							menu: function(_, from){
 								var elem = $(this).find('.text').last()
 								from = elem.attr('text') || from
 
@@ -2213,15 +2213,20 @@ var UICollectionActions = actions.Actions({
 				}, {
 					cls: 'collection-list',
 					// focus current collection...
-					selected: JSON.stringify(
-						(that.collection || MAIN_COLLECTION_TITLE)
-							// XXX not sure it is good that we have to do this...
-							.replace(/\$/g, '')),
+					selected: (action && that.config['collection-last-used']) ?
+						that.config['collection-last-used']
+						: JSON.stringify(
+							(that.collection || MAIN_COLLECTION_TITLE)
+								// XXX not sure it is good that we have to do this...
+								.replace(/\$/g, '')),
 				})
 				// keyboard...
 				.run(function(){
 					this.keyboard
 						.handler('General', 'F2', 'Menu') })
+				.open(function(_, title){
+					action 
+						&& (that.config['collection-last-used'] = title) })
 				.close(function(){
 					that.collection_order = collections
 
@@ -2310,31 +2315,15 @@ var UICollectionActions = actions.Actions({
 			}) })],
 	addToCollection: ['Collections|Image/Add $image to collection...',
 		widgets.uiDialog(function(gids){
-			var that = this
 			return this.browseCollections(function(title){
-					this.collect(gids || 'current', title) })
-				.run(function(){
-					var title = that.config['collection-last-used']
-					title
-						&& this.select(`"${title}"`) })
-				.open(function(_, title){
-					that.config['collection-last-used'] = title })
-	   	})],
+					this.collect(gids || 'current', title) }) })],
 	addRibbonToCollection: ['Collections|Ribbon/Add $ribbon to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('ribbon') })],
 	addLoadedToCollection: ['Collections/$Add loaded images to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
 	joinToCollection: ['Collections/$Merge view to collection...',
 		widgets.uiDialog(function(){
-			var that = this
-			return this.browseCollections(function(title){ this.joinCollect(title) })
-				.run(function(){
-					var title = that.config['collection-last-used']
-					title
-						&& this.select(`"${title}"`) })
-				.open(function(_, title){
-					that.config['collection-last-used'] = title })
-		})],
+			return this.browseCollections(function(title){ this.joinCollect(title) }) })],
 
 	// XXX should this be here or in marks???
 	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
