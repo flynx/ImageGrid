@@ -658,6 +658,12 @@ var CollectionActions = actions.Actions({
 		}],
 
 
+	// aliases...
+	LoadMainCollection: ['Collections/Exit collection view',
+		{browseMode: function(){ return !this.collection && 'disabled' }},
+		`loadCollection: "${MAIN_COLLECTION_TITLE}"`],
+
+
 	// Collections...
 	//
 	sortCollections: ['- Collections/',
