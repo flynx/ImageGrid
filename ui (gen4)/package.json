@@ -25,6 +25,7 @@
     "ig-actions": "^3.10.0",
     "ig-features": "^3.3.2",
     "ig-object": "^1.0.2",
+    "npm": "^5.6.0",
     "openseadragon": "^2.3.1",
     "pica": "^3.0.6",
     "preact": "^8.2.6",

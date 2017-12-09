@@ -159,10 +159,10 @@ var CollectionActions = actions.Actions({
 
 		this.__collection_order.splice(0, this.__collection_order.length, ...res)
 
-		return this.__collection_order
+		return this.__collection_order.slice()
 	},
 	set collection_order(value){
-		this.__collection_order = value },
+		value && this.sortCollections(value) },
 
 	get collections_length(){
 		var c = (this.collections || {})
@@ -658,6 +658,23 @@ var CollectionActions = actions.Actions({
 		}],
 
 
+	// Collections...
+	//
+	sortCollections: ['- Collections/',
+		function(cmp){
+			if(cmp instanceof Array){
+				this.__collection_order = cmp.slice()
+
+			} else if(cmp instanceof Function){
+				this.__collection_order.sort(cmp)
+
+			} else {
+				this.__collection_order.sort()
+			}
+			this.collection_order
+		}],
+	
+
 	// Introspection...
 	//
 	inCollections: ['- Image/',
@@ -905,6 +922,11 @@ var CollectionActions = actions.Actions({
 				state.data = d
 			}
 
+			// image count...
+			if(c[title].count){
+				state.count = c[title].count
+			}
+
 			// NOTE: this can be done lazily when loading each collection
 			// 		but doing so will make the system more complex and 
 			// 		confuse (or complicate) some code that expects 
@@ -996,6 +1018,7 @@ var CollectionActions = actions.Actions({
 						: state.data)
 				if(data){
 					s.data = data.dumpJSON()
+					s.count = data.length
 				}
 
 				// handle .crop_stack of collection...
@@ -1127,7 +1150,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 		// 	.markChanged('collection: '+JSON.stringify(<gid>), [<tag>, ..])
 		//
 		//
-		// collection list...
+		// collection add/remove...
 		[[
 			'collectionCreated',
 			'collectionRemoved',
@@ -1140,6 +1163,17 @@ module.Collection = core.ImageGridFeatures.Feature({
 					&& this.markChanged(
 						'collection: '
 							+JSON.stringify(this.collections[collection].gid || collection))
+			}],
+		// collection sort...
+		['sortCollections.pre',
+			function(){
+				var o = (this.collection_order || []).slice()
+
+				return function(){
+					;(this.collection_order || [])
+							.filter(function(e, i){ return e != o[i] }).length > 0
+						&& this.markChanged('collections')
+				}
 			}],
 		// collection title/list...
 		['renameCollection',
@@ -1279,8 +1313,12 @@ module.Collection = core.ImageGridFeatures.Feature({
 		// 		// Collection gid-title index...
 		//		//
 		// 		// NOTE: this is sorted via .collection_order...
-		// 		collection-index: {
-		// 			<gid>: <title>,
+		// 		collections: {
+		// 			<gid>: {
+		// 				title: <title>,
+		// 				count: <count>,
+		// 				...
+		// 			},
 		// 			...
 		// 		}
 		//
@@ -1354,7 +1392,12 @@ module.Collection = core.ImageGridFeatures.Feature({
 					// 		correct order...
 					Object.keys(res.raw.collections || {})
 						.forEach(function(title){ 
-							index[collections[title].gid || title] = title  })
+							var m = index[collections[title].gid || title] = { title: title }
+
+							if(res.raw.collections[title].count){
+								m['count'] = res.raw.collections[title].count
+							}
+					  	})
 				}
 
 				// collections...
@@ -1420,19 +1463,24 @@ module.Collection = core.ImageGridFeatures.Feature({
 				// collection index...
 				var collections = {}
 				var collections_index = {}
-				//var index = json['collection-index']
+
 				var index = json['collections']
 				index
 					&& Object.keys(index).forEach(function(gid){
-						var title = index[gid]
+						//var title = index[gid]
+						var title = index[gid].title || index[gid]
 						var path = 'collections/'+ gid
 
-						collections_index[gid] = collections[title] = {
+						var m = collections_index[gid] = collections[title] = {
 							gid: gid,
 							title: title,
 
 							// XXX
 							path: path,
+						}
+
+						if(index[gid].count){
+							m.count = index[gid].count
 						}
 					})
 
@@ -1958,6 +2006,7 @@ var UICollectionActions = actions.Actions({
 			})],
 
 	// XXX would be nice to make this nested (i.e. path list)...
+	// XXX do .markChanged('collections') after sorting...
 	browseCollections: ['Collections/$Collec$tions...',
 		core.doc`Collection list...
 
@@ -2019,7 +2068,7 @@ var UICollectionActions = actions.Actions({
 						unsaved
 							&& text.attr('unsaved', true)
 
-						// indicate collection crop...
+						// collection crop...
 						var cs = 
 							title == (that.collection || MAIN_COLLECTION_TITLE) ? 
 								that.crop_stack
@@ -2028,6 +2077,17 @@ var UICollectionActions = actions.Actions({
 							: null
 						cs
 							&& text.attr('cropped', cs.length)
+
+						// collection size...
+						var c = (that.collections || {})[title] || {}
+						var i = (c.data && c.data.length)
+								|| c.count
+								|| false 
+						// main collection loaded...
+						i = (!i && title == MAIN_COLLECTION_TITLE && !that.collection) ?
+							that.data.length 
+							: i
+						i && $(this).attr('count', i)
 					}
 
 					// update collection list if changed externally...
@@ -2050,21 +2110,27 @@ var UICollectionActions = actions.Actions({
 						&& make([
 								MAIN_COLLECTION_TITLE,
 							], 
-							{ events: {
-								update: function(_, title){
-									// make this look almost like a list element...
-									// XXX hack???
-									$(this).find('.text:first-child')
-										.before($('<span>')
-											.css('color', 'transparent')
-											.addClass('sort-handle')
-											.html('&#x2630;'))
-									setItemState
-										//.call($(this), title)
-										.call($(this), $(this).find('.text').attr('text'))
+							{ 
+								events: {
+									update: function(_, title){
+										// make this look almost like a list element...
+										// XXX hack???
+										$(this).find('.text:first-child')
+											.before($('<span>')
+												.css('color', 'transparent')
+												.addClass('sort-handle')
+												.html('&#x2630;'))
+										setItemState
+											//.call($(this), title)
+											.call($(this), $(this).find('.text').attr('text'))
+									},
+									open: openHandler,
 								},
-								open: openHandler,
-							}})
+								// NOTE: we are adding a blank button here 
+								// 		to align item counts...
+								// XXX HACK: can we automate this -- html5 grid layout???
+								buttons: [['&times;']],
+							})
 
 					// collection list...
 					make.EditableList(collections, 
@@ -2435,6 +2501,7 @@ var FileSystemCollectionActions = actions.Actions({
 
 						logger && logger.emit('title', title)
 
+						c.count = c.data.length
 						delete c.data
 					}
 				})

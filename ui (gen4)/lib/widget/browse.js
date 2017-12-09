@@ -2682,22 +2682,30 @@ var BrowserPrototype = {
 					var html = e[0]
 					var func = e[1]
 
-					btn.append($('<div>')
-						.addClass('button')
-						.html(html)
-						.click(function(evt){
-							// prevent clicks from triggering the item action...
-							evt.stopPropagation()
+					// blank button...
+					if(func == null){
+						btn.append($('<div>')
+							.addClass('button blank')
+							.html(html))
 
-							// action name...
-							if(typeof(func) == typeof('str')){
-								that[func](txt, res)
+					} else {
+						btn.append($('<div>')
+							.addClass('button')
+							.html(html)
+							.click(function(evt){
+								// prevent clicks from triggering the item action...
+								evt.stopPropagation()
 
-							// handler...
-							} else {
-								func.call(that, txt, res)
-							}
-						}))
+								// action name...
+								if(typeof(func) == typeof('str')){
+									that[func](txt, res)
+
+								// handler...
+								} else {
+									func.call(that, txt, res)
+								}
+							}))
+					}
 				})
 
 			//--------------------------------- user event handlers ---

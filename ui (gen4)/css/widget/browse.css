@@ -219,6 +219,9 @@
 	opacity: 0.9;
 	background-color: rgba(0, 0, 0, 0.2);
 }
+.browse-widget .list .button.blank {
+	opacity: 0;
+}
 .browse-widget .list .item {
 	padding: 5px;
 	padding-left: 15px;
