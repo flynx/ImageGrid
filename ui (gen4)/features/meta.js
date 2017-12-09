@@ -16,13 +16,6 @@ var core = require('features/core')
 
 /*********************************************************************/
 // Meta features...
-//
-// XXX need to make a set of basic configurations:
-// 		- commandline		- everything but no UI
-// 		- imagegrid-minimal	- basic browser compatible viewer
-// 		- viewer			- full viewer
-// 		- editor			- editing capability
-//
 
 core.ImageGridFeatures.Feature('imagegrid-commandline', [
 	'lifecycle',
@@ -76,7 +69,7 @@ core.ImageGridFeatures.Feature('imagegrid-ui-minimal', [
 ])
 
 
-core.ImageGridFeatures.Feature('imagegrid-ui-chrome', [
+core.ImageGridFeatures.Feature('imagegrid-ui', [
 	'imagegrid-ui-minimal',
 
 	'ui-app-control',
@@ -94,9 +87,23 @@ core.ImageGridFeatures.Feature('imagegrid-ui-chrome', [
 ])
 
 
+// simple feature set to do read-only previews...
+// XXX experimental...
+core.ImageGridFeatures.Feature('imagegrid-ui-preview', [
+	'imagegrid-ui-minimal',
+
+	// stuff we do not need...
+	'-ui-drag-n-drop',
+	'-edit',
+	'-collections',
+	'-metadata',
+	'-peer',
+])
+
+
 core.ImageGridFeatures.Feature('imagegrid-testing', [
 	'imagegrid-commandline',
-	'imagegrid-ui-chrome',
+	'imagegrid-ui',
 
 
 	// read-only mode...
@@ -160,7 +167,7 @@ core.ImageGridFeatures.Feature('imagegrid-testing', [
 	'-tests',
 	'-experiments',
 
-	// missing suggested feature test...
+	// missing suggested feature test -- should show up in .features.missing...
 	'missing-feature',
 ])
 

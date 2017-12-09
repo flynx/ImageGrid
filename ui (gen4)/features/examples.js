@@ -700,14 +700,7 @@ var ExampleUIActions = actions.Actions({
 			this.nested = core.ImageGridFeatures
 				// setup actions...
 				.setup([
-					'imagegrid-ui-minimal',
-
-					// stuff we do not need...
-					'-ui-drag-n-drop',
-					'-edit',
-					'-collections',
-					'-metadata',
-					'-peer',
+					'imagegrid-ui-preview',
 				])
 				.run(function(){
 					this.close = function(){ widget.close() }
