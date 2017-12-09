@@ -687,9 +687,10 @@ var ExampleUIActions = actions.Actions({
 					focusable: true,
 				})
 				.on('close', function(){
-					that.nested.stop()
-
-					//delete that.nested
+					if(that.nested){
+						that.nested.stop()
+						delete that.nested
+					}
 				})
 
 
@@ -698,15 +699,15 @@ var ExampleUIActions = actions.Actions({
 			// setup the viewer...
 			this.nested = core.ImageGridFeatures
 				// setup actions...
-				// XXX prune the features a bit better...
 				.setup([
-					'viewer-testing',
+					'imagegrid-ui-minimal',
 
-					// NOTE: this if not disabled will create a feedback loop...
-					'-ui-url-hash',
-
-					'-ui-single-image',
-					'-ui-chrome',
+					// stuff we do not need...
+					'-ui-drag-n-drop',
+					'-edit',
+					'-collections',
+					'-metadata',
+					'-peer',
 				])
 				.run(function(){
 					this.close = function(){ widget.close() }

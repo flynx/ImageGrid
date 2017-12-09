@@ -195,7 +195,7 @@ module.CLI = core.ImageGridFeatures.Feature({
 						// extend the current instance to a minimal non-ui
 						// state...
 						core.ImageGridFeatures
-							.setup(that, ['viewer-minimal'])
+							.setup(that, ['imagegrid-minimal'])
 					})
 
 					.option('repl, --repl', 'start an ImageGrid REPL', function(){

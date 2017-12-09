@@ -573,21 +573,6 @@ function makeConfigListEditorDialog(path, options){
 
 //---------------------------------------------------------------------
 	
-var Chrome = 
-module.Chrome = core.ImageGridFeatures.Feature({
-	title: '',
-	doc: '',
-
-	tag: 'ui-chrome',
-	depends: [
-		'ui',
-	],
-})
-
-
-
-//---------------------------------------------------------------------
-
 var DialogsActions = actions.Actions({
 	config: {
 		'ui-default-container': 'Overlay',
@@ -869,7 +854,6 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 	tag: 'ui-dialogs',
 	depends: [
 		'ui',
-		'ui-chrome',
 	],
 
 	actions: DialogsActions,
@@ -2070,7 +2054,6 @@ module.Buttons = core.ImageGridFeatures.Feature({
 	tag: 'ui-buttons',
 	depends: [
 		'ui',
-		'ui-chrome'
 	],
 	suggested: [
 		// needed for reporting info in .makeButtonControls(..)

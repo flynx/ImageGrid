@@ -19,69 +19,38 @@ var core = require('features/core')
 //
 // XXX need to make a set of basic configurations:
 // 		- commandline		- everything but no UI
-// 		- viewer-minimal	- basic browser compatible viewer
+// 		- imagegrid-minimal	- basic browser compatible viewer
 // 		- viewer			- full viewer
 // 		- editor			- editing capability
 //
 
-core.ImageGridFeatures.Feature('viewer-commandline', [
+core.ImageGridFeatures.Feature('imagegrid-commandline', [
 	'lifecycle',
 	'commandline',
 ])
 
 
-core.ImageGridFeatures.Feature('viewer-minimal', [
+core.ImageGridFeatures.Feature('imagegrid-minimal', [
 	'lifecycle',
-	'base-full',
-
+	'alias',
 	'peer',
-
-	'image-marks',
-	'image-bookmarks',
-
 	'fs',
 	'sharp',
 
+	'base-full',
+	'marks',
+	'collections',
 	'metadata',
 ])
 
 
-core.ImageGridFeatures.Feature('viewer-testing', [
-	'viewer-commandline',
-	'viewer-minimal',
+core.ImageGridFeatures.Feature('imagegrid-ui-minimal', [
+	'imagegrid-minimal',
 
-	// NOTE: this is not strictly needed unless we need to save stuff,
-	// 		added here mostly for testing purposes...
-	// 		...this is best included by direct feature dependency.
-	'index-format',
-
-	// XXX
-	'examples',
-
-	'collections',
-
-	// XXX remove when done testing...
-	//'-fs-collections',
-
-
-	'alias',
-
-	// read-only mode...
-	// XXX at this point this needs some more tuneup, the following 
-	// 		features are completely disabled when 'edit' is not present
-	// 			- sort
-	// 			- ...
-	// 		...should be split into view/edit sub-features...
-	// XXX might also be a good idea to make basic marking and bookmarking
-	// 		editable (save to localStorage???)
-	//'-edit',
-
-	'peer',
-
-	'workspace',
-	'ui',
-	'ui-introspection',
 	'keyboard',
+	'ui-cursor',
+	'ui-control',
+	'ui-drag-n-drop',
 
 	// XXX use one...
 	//'ui-blank-render',
@@ -89,12 +58,7 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'ui-preact-render',
 	//'ui-vdom-render',
 	//'ui-react-render',
-
-	// features...
-	'ui-cursor',
-
-	'ui-single-image',
-
+	
 	/*/ XXX has bugs -- non-current ribbons are not always aligned...
 	'ui-partial-ribbons-2',
 		'-ui-partial-ribbons',
@@ -106,66 +70,93 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 		'-ui-partial-ribbons',
 		'-ui-partial-ribbons-2',
 	//*/
-	
-	'marks',
-	'ui-range',
 
-	// local storage + url...
-	'config-local-storage',
-	'ui-url-hash',
-	'url-history',
-
-	'external-editor',
-	'ui-drag-n-drop',
-
-	'ui-preview-filters',
-
-	// chrome...
-	'ui-app-buttons',
-	'ui-buttons',
-	'ui-progress',
-	'ui-status-log',
-	'ui-scale',
 	'ui-bounds-indicators',
 	'ui-current-image-indicator',
-		// NOTE: only one of these can be set...
-		'ui-current-image-indicator-hide-on-fast-screen-nav',
-		//'ui-current-image-indicator-hide-on-screen-nav',
-	//*/
-	//'ui-base-ribbon-indicator',
-	'ui-passive-base-ribbon-indicator',
-	'ui-status-bar',
-	'ui-url-history',
+])
 
-	'ui-browse-actions',
-		'ui-context-action-menu',
 
-	// slideshow...
-	'ui-slideshow',
+core.ImageGridFeatures.Feature('imagegrid-ui-chrome', [
+	'imagegrid-ui-minimal',
 
-	// ui control...
-	//'ui-clickable',
-	//'ui-direct-control-jquery',
-	// XXX BUG: on touch down and first move this gets offset by a distance
-	// 		not sure why...
-	// 		...seems to be related to scaling
-	//'ui-direct-control-gsap',
-	//'ui-direct-control-hammer',
-	//'ui-indirect-control',
-	'ui-control',
-
-	// experimental and optional features...
-	//'auto-single-image',
-	//'auto-ribbon',
-	
 	'ui-app-control',
 
+	'ui-progress',
+
+	'ui-app-buttons',
+	'ui-buttons',
+
+	'ui-status-bar',
+
+	'ui-url-history',
+	'ui-browse-actions',
+	'ui-context-action-menu',
+])
+
+
+core.ImageGridFeatures.Feature('imagegrid-testing', [
+	'imagegrid-commandline',
+	'imagegrid-ui-chrome',
+
+
+	// read-only mode...
+	// XXX at this point this needs some more tuneup, the following 
+	// 		...should be split into view/edit sub-features...
+	// XXX features are completely disabled when '-edit' is not present:
+	// 			- sort
+	// 			- ...
+	// XXX the following features are broken:
+	// 		- crop
+	// 		- ...
+	// XXX might also be a good idea to make basic marking and bookmarking
+	// 		editable (save to localStorage???)
+	//'-edit',
+
+
+	//------------------------------------------------------ system ---
 	// XXX not yet fully tested...
 	'journal',
 
+	// NOTE: this is not strictly needed unless we need to save stuff,
+	// 		added here mostly for testing purposes...
+	// 		...this is best included by direct feature dependency.
+	'index-format',
+
+	'config-local-storage',
+	'ui-url-hash',
 
 	'fail-safe-devtools',
 
+
+	//------------------------------------------------------ chrome ---
+	'ui-status-log',
+	//'ui-scale',
+	// NOTE: only one of these can be set...
+	'ui-current-image-indicator-hide-on-fast-screen-nav',
+	//'ui-current-image-indicator-hide-on-screen-nav',
+	//'ui-base-ribbon-indicator',
+	'ui-passive-base-ribbon-indicator',
+
+
+	//---------------------------------------------------- features ---
+	'ui-introspection',
+	'ui-single-image',
+	'ui-slideshow',
+	'ui-preview-filters',
+	'url-history',
+	'external-editor',
+
+	// experimental features...
+	//'ui-range',
+	//'auto-single-image',
+	//'auto-ribbon',
+	
+
+	//------------------------------------------------------- other ---
+	'examples',
+
+
+	//----------------------------------------------------- testing ---
 	'-tests',
 	'-experiments',
 
@@ -173,19 +164,6 @@ core.ImageGridFeatures.Feature('viewer-testing', [
 	'missing-feature',
 ])
 
-/*
-core.ImageGridFeatures.Feature('viewer-minimal', [
-	'base',
-	'ui',
-	'ui-ribbon-align-to-order',
-	'ui-animation',
-	'ui-bounds-indicators',
-	'ui-current-image-indicator',
-		'ui-current-image-indicator-hide-on-fast-screen-nav',
-		//'ui-current-image-indicator-hide-on-screen-nav',
-	'ui-action-tree',
-])
-*/
 
 
 

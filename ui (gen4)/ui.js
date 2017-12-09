@@ -57,7 +57,7 @@ $(function(){
 		window.ImageGrid = 
 			viewer.ImageGridFeatures
 				.setup([
-					'viewer-testing',
+					'imagegrid-testing',
 
 					'demo',
 
