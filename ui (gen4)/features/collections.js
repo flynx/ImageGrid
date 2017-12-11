@@ -644,7 +644,8 @@ var CollectionActions = actions.Actions({
 		}],
 	renameCollection: ['- Collections/',
 		function(from, to){
-			if(from == MAIN_COLLECTION_TITLE 
+			if(to == from 
+					|| from == MAIN_COLLECTION_TITLE 
 					|| to == MAIN_COLLECTION_TITLE 
 					|| (this.collections || {})[from] == null){
 				return
@@ -2228,48 +2229,14 @@ var UICollectionActions = actions.Actions({
 
 							update_merge: 'merge',
 
-							// element edit...
-							// XXX move to browse???
-							menu: function(_, from){
-								var elem = $(this).find('.text').last()
-								from = elem.attr('text') || from
+							// XXX REVISE...
+							itemedit: function(_, from, to){
+								that.renameCollection(from, to)
 
-								elem
-									// NOTE: we need to do this to account for 
-									// 		'$' in names...
-									.html(from)
-									.makeEditable({
-										activate: true,
-										clear_on_edit: false,
-										abort_keys: [
-											'Esc',
-
-											// XXX
-											'Up',
-											'Down',
-										],
-									})
-									.on('edit-commit', function(_, to){
-										to = to.trim()
-										// check if name is unique or empty... 
-										if(to in that.collections || to == ''){
-											// XXX ???
-											return
-										}
-
-										// XXX need to get the real from...
-										that.renameCollection(from, to)
-
-										// rename was successful...
-										if(to in that.collections){
-											collections[collections.indexOf(from)] = to
-										}
-									})
-									.on('edit-abort edit-commit', function(_, title){
-										make.dialog.update()
-											.then(function(){
-												make.dialog.select(title) })
-									})
+								// rename was successful...
+								if(to in that.collections){
+									collections[collections.indexOf(from)] = to
+								}
 							},
 						})
 				}, {
@@ -2282,10 +2249,6 @@ var UICollectionActions = actions.Actions({
 								// XXX not sure it is good that we have to do this...
 								.replace(/\$/g, '')),
 				})
-				// keyboard...
-				.run(function(){
-					this.keyboard
-						.handler('General', 'F2', 'Menu') })
 				.open(function(_, title){
 					action 
 						&& (that.config['collection-last-used'] = title) })
@@ -2339,6 +2302,7 @@ var UICollectionActions = actions.Actions({
 						make.EditableList(all, 
 							{
 								new_item: false,
+								sortable: 'y',
 								to_remove: to_remove,
 								itemopen: function(_, title){
 									var i = to_remove.indexOf(title)
@@ -2349,10 +2313,21 @@ var UICollectionActions = actions.Actions({
 
 									dialog.update()
 								},
+								// XXX for some reason after this ordering
+								// 		does not get saved...
+								itemedit: function(_, from, to){
+									that.renameCollection(from, to)
+
+									all[all.indexOf(from)] = to
+
+									that.collection_order = all
+								},
 							})
 						: make.Empty('No collections...')
 				})
 				.close(function(){
+					that.collection_order = all
+
 					all.forEach(function(title){
 						collections.indexOf(title) < 0
 							&& to_remove.indexOf(title) < 0

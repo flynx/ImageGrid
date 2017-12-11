@@ -557,7 +557,24 @@ function(data, options){
 // 		// it as item text...
 // 		new_item: <text>|<bool>,
 //
+// 		// If true (default), enable direct editing of items...
+// 		//
+// 		editable_items: <bool>,
+//
+// 		// Keys to trigger item edit...
+//		//
+// 		// default: [ 'F2' ]
+// 		//
+// 		// NOTE: the keyboard settings are global to dialog, if multiple 
+// 		//		editable lists are defined they mess things up.
+// 		item_edit_keys: [ <key>, ... ],
+// 		item_edit_events: 'menu',
+//
 // 		length_limit: <number>,
+//
+// 		// Item edit event handler...
+// 		//
+// 		itemedit: function(from, to){ ... },
 //
 //		// Item open event handler...
 //		//
@@ -694,10 +711,6 @@ function(data, options){
 // 		properly...
 // XXX the problem with this is that it adds elements live while removing
 // 		elements on close, either both should be live or both on close...
-// XXX add option to make items editable (on by default)...
-// 		...reuse the code used for new_item...
-// 		for implementation source see: 
-// 			collections.UICollectionActions.browseCollections(..) 
 Items.EditableList =
 function(list, options){
 	var make = this
@@ -717,9 +730,11 @@ function(list, options){
 			// in case the list(..) returns nothing...
 			|| lst
 	}
-
-	/* XXX make a universal add/replace handler...
-	var editItem = function(txt, replace){
+	// save item to lst...
+	var saveItem = function(txt, replace){
+		if(txt == replace || txt.trim() == ''){
+			return txt
+		}
 		txt = options.normalize ? 
 			options.normalize(txt) 
 			: txt
@@ -765,7 +780,9 @@ function(list, options){
 				|| normalized.indexOf(ntxt) >= 0)
 
 		// add new value and sort list...
-		lst.push(txt)
+		;(replace && lst.indexOf(replace) >= 0) ?
+			lst[lst.indexOf(replace)] = txt
+			: lst.push(txt)
 
 		// unique...
 		if(options.unique == null || options.unique === true){
@@ -793,14 +810,43 @@ function(list, options){
 
 		lst = write(dialog.__list[id], lst)
 		
-		// update list and select new value...
-		dialog.update()
-			.done(function(){
-				//dialog.select('"'+txt+'"')
-				dialog.select('"'+txt.replace(/\$/g, '')+'"')
+		return txt
+	}
+	// edit item inline...
+	var editItem = function(elem){
+		var elem = $(elem).find('.text').last()
+		from = elem.attr('text') || from
+
+		elem
+			// NOTE: we need to do this to account for 
+			// 		'$' in names...
+			.html(from)
+			.makeEditable({
+				activate: true,
+				clear_on_edit: false,
+				abort_keys: [
+					'Esc',
+
+					// XXX
+					'Up',
+					'Down',
+				],
+			})
+			.on('edit-commit', function(evt, to){
+				if(to.trim() != ''){
+					to = saveItem(to, from)
+
+					options.itemedit 
+						&& options.itemedit.call(elem, evt, from, to)
+				}
+			})
+			.on('edit-abort edit-commit', function(_, title){
+				title = title.trim() == '' ? from : title
+				dialog.update()
+					.then(function(){
+						dialog.select(title) })
 			})
 	}
-	//*/
 
 	dialog.__list = dialog.__list || {}
 	dialog.__editable = dialog.__editable || {}
@@ -1057,6 +1103,24 @@ function(list, options){
 
 	res = res.toArray()
 
+	// editable...
+	if(options.editable_items !== false){
+		var trigger_edit = function(){ 
+			dialog.select('!')
+				.trigger('itemedit')
+		}
+		$(res)
+			.on('itemedit', function(){ editItem($(this)) })
+		;(options.item_edit_keys || ['F2'])
+			.forEach(function(key){
+				dialog.keyboard
+					.handler('General', key, trigger_edit) })
+		options.item_edit_events != false 
+			&& options.item_edit_events != ''
+		 	&& $(res).on(options.item_edit_events || 'menu', 
+				function(){ $(this).trigger('itemedit') })
+	}
+
 	// new button...
 	if(options.new_item !== false){
 		var new_item = options.new_item || true
@@ -1068,86 +1132,16 @@ function(list, options){
 				clear_on_edit: true,
 			})
 			// update list on edit done...
-			.on('edit-commit', function(evt, txt){
-				txt = options.normalize ? 
-					options.normalize(txt) 
-					: txt
-				// account for '$' as key binding marker...
-				var ntxt = txt.replace(/\$/g, '')
-				// unique-test text...
-				var utxt = options.unique instanceof Function ? 
-					options.unique(txt)+'' 
-					: null
+			.on('edit-commit', function(evt, txt){ 
+				if(txt.trim() != ''){
+					txt = saveItem(txt) 
 
-				// invalid format...
-				if(options.check && !options.check(txt)){
 					dialog.update()
-					return
+						.done(function(){
+							//dialog.select('"'+txt+'"')
+							dialog.select('"'+txt.replace(/\$/g, '')+'"')
+						})
 				}
-
-				lst = dialog.__list[id]
-				var normalized = lst.map(function(e){ 
-					return e.replace(/\$/g, '') })
-
-				// list length limit
-				if(options.length_limit 
-					&& (lst.length >= options.length_limit)){
-
-					options.overflow 
-						&& options.overflow.call(dialog, txt)
-
-					return
-				}
-
-				// prevent editing non-arrays...
-				if(!editable || !lst){
-					return
-				}
-
-				// check if item pre-existed...
-				var preexisted = utxt ? 
-					//lst.indexOf(options.unique(txt)) >= 0
-					(lst.indexOf(utxt) >= 0
-						// account for '$' as key binding marker... (XXX ???)
-						|| normalized.indexOf(utxt.replace(/\$/g, '')) >= 0)
-					: (lst.indexOf(txt) >= 0 
-						|| normalized.indexOf(ntxt) >= 0)
-
-				// add new value and sort list...
-				lst.push(txt)
-
-				// unique...
-				if(options.unique == null || options.unique === true){
-					// account for '$' as key binding marker...
-					lst = lst.unique(function(e){ return e.replace(/\$/g, '') })
-
-				// unique normalized...
-				} else if(options.unique instanceof Function){
-					lst = lst.unique(options.unique) 
-				}
-
-				// itemadded handler...
-				options.itemadded
-					&& !(options.unique && preexisted)
-					&& options
-						.itemadded.call(dialog, txt)
-
-				// sort...
-				if(options.sort){
-					lst = lst
-						.sort(options.sort instanceof Function ? 
-							options.sort 
-							: undefined)
-				}
-
-				lst = write(dialog.__list[id], lst)
-				
-				// update list and select new value...
-				dialog.update()
-					.done(function(){
-						//dialog.select('"'+txt+'"')
-						dialog.select('"'+txt.replace(/\$/g, '')+'"')
-					})
 			}))
 	}
 
