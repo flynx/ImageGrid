@@ -2053,7 +2053,8 @@ var UICollectionActions = actions.Actions({
 		//'collection-last-used': null,
 	},
 
-	editDefaultCollections: ['Interface/Edit default collections...',
+	// XXX should this be in Collections/ ???
+	editDefaultCollections: ['Interface|Collections/Edit default collections...',
 		widgets.makeConfigListEditorDialog(
 			'default-collections', 
 			{
@@ -2228,7 +2229,7 @@ var UICollectionActions = actions.Actions({
 							update_merge: 'merge',
 
 							// element edit...
-							// XXX should this be generic???
+							// XXX move to browse???
 							menu: function(_, from){
 								var elem = $(this).find('.text').last()
 								from = elem.attr('text') || from
