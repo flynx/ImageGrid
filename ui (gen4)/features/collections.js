@@ -75,8 +75,6 @@ module.COLLECTION_TRANSFER_CHANGES = [
 
 //---------------------------------------------------------------------
 
-// XXX BUG: saving a list of collections when one collection is not 
-// 		loaded breaks...
 // XXX undo...
 var CollectionActions = actions.Actions({
 	config: {
@@ -164,6 +162,11 @@ var CollectionActions = actions.Actions({
 	set collection_order(value){
 		value && this.sortCollections(value) },
 
+	// NOTE: this accounts only for actual collections and does not counts
+	// 		MAIN_COLLECTION_TITLE that can be contained in .collections,
+	// 		thus this is NOT the same as:
+	// 			Object.keys(this.collections).length
+	// XXX do we need this???
 	get collections_length(){
 		var c = (this.collections || {})
 		return MAIN_COLLECTION_TITLE in c ? 
@@ -639,7 +642,6 @@ var CollectionActions = actions.Actions({
 				this.collectionRemoved(collection)
 			}
 		}],
-	// XXX do we need this???
 	renameCollection: ['- Collections/',
 		function(from, to){
 			if(from == MAIN_COLLECTION_TITLE 
@@ -658,26 +660,72 @@ var CollectionActions = actions.Actions({
 		}],
 
 
-	// aliases...
-	LoadMainCollection: ['Collections/Exit collection view',
-		{browseMode: function(){ return !this.collection && 'disabled' }},
-		`loadCollection: "${MAIN_COLLECTION_TITLE}"`],
-
-
-	// Collections...
+	// Collection list manipulation...
 	//
 	sortCollections: ['- Collections/',
+		core.doc`Sort collection list...
+
+			Sort collections...
+			.sortCollections()	
+				NOTE: this is equivalent to [].sort()
+				-> this
+
+			Sort collections via cmp function...
+			.sortCollections(cmp)	
+				NOTE: this is equivalent to [].sort(cmp)
+				-> this
+
+			Sort collections via list...
+			.sortCollections([item, ...])	
+				-> this
+
+		`,
 		function(cmp){
+			// XXX handle the case when there's no .__collection_order
+			if(!this.__collection_order && !this.collection_order){
+				return
+			}
+
+			// sort via list...
 			if(cmp instanceof Array){
 				this.__collection_order = cmp.slice()
 
+			// cmp...
 			} else if(cmp instanceof Function){
 				this.__collection_order.sort(cmp)
 
+			// basic sort...
 			} else {
 				this.__collection_order.sort()
 			}
 			this.collection_order
+		}],
+	collectionToTop: ['Collections/Bring collection to $top',
+		core.doc`Bring collection to top...
+
+			Bring current collection to top of collection list
+			.collectionToTop()
+				-> this
+
+			Bring collection title to top of collection list
+			.collectionToTop(title)
+				-> this
+
+			Bring collection gid to top of collection list
+			.collectionToTop(gid)
+				-> this
+		`,
+		{browseMode: function(){ return !this.collection && 'disabled' }},
+		function(collection){
+			collection = collection || this.collection
+			collection = this.collectionGIDs[collection] || collection
+			var o = this.collection_order || []
+
+			if(!collection || o.indexOf(collection) < 0){
+				return
+			}
+
+			this.collection_order = [collection].concat(o).unique()
 		}],
 	
 
@@ -695,6 +743,13 @@ var CollectionActions = actions.Actions({
 						&& (!gid 
 							|| that.collections[c].data.getImage(gid)) })
 		}],
+
+
+	// aliases...
+	//
+	loadMainCollection: ['Collections/Exit collection view',
+		{browseMode: function(){ return !this.collection && 'disabled' }},
+		`loadCollection: "${MAIN_COLLECTION_TITLE}"`],
 
 
 	// Collection editing....
@@ -2016,7 +2071,7 @@ var UICollectionActions = actions.Actions({
 
 	// XXX would be nice to make this nested (i.e. path list)...
 	// XXX do .markChanged('collections') after sorting...
-	browseCollections: ['Collections/$Collec$tions...',
+	browseCollections: ['Collections/$Collections...',
 		core.doc`Collection list...
 
 		NOTE: collections are added live and not on dialog close...
