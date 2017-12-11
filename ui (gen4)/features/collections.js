@@ -732,6 +732,7 @@ var CollectionActions = actions.Actions({
 
 	// Introspection...
 	//
+	// XXX make this check offline collections -- use .ensureCollection(..)
 	inCollections: ['- Image/',
 		core.doc`Get list of collections containing item`,
 		function(gid){
@@ -741,6 +742,7 @@ var CollectionActions = actions.Actions({
 			return (this.collection_order || [])
 				.filter(function(c){
 					return c != MAIN_COLLECTION_TITLE
+						&& that.collections[c].data
 						&& (!gid 
 							|| that.collections[c].data.getImage(gid)) })
 		}],
@@ -916,7 +918,8 @@ var CollectionActions = actions.Actions({
 			// NOTE: if tags are saved to the collection it means that 
 			// 		those tags are local to the collection and we do not 
 			// 		need to protect them...
-			if(this.data !== this.collections[collection].data){
+			if(this.collections[collection].data 
+					&& this.data !== this.collections[collection].data){
 				this.collections[collection].data
 					.clear(gids)
 			}
@@ -1248,6 +1251,8 @@ module.Collection = core.ImageGridFeatures.Feature({
 					.markChanged('collection: '
 						+ JSON.stringify(this.collections[to].gid), ['metadata']) }],
 		// basic collection edits...
+		//
+		// XXX mark changed ONLY if actual changes made...
 		[[
 			// NOTE: no need to handle .collect(..) here as it calls .joinCollect(..)
 			'joinCollect',
@@ -2072,7 +2077,6 @@ var UICollectionActions = actions.Actions({
 			})],
 
 	// XXX would be nice to make this nested (i.e. path list)...
-	// XXX do .markChanged('collections') after sorting...
 	browseCollections: ['Collections/$Collections...',
 		core.doc`Collection list...
 
@@ -2279,22 +2283,46 @@ var UICollectionActions = actions.Actions({
 								.addClass('highlighted')
 						})
 
-					//all = Object.keys(that.collections || {})
-					all = that.collection_order = that.collection_order || []
-
+					all = all || that.collection_order || []
 					if(defaults){
-						all = all.concat(defaults).unique()
+						all.splice.apply(all, 
+							[0, all.length]
+								.concat(all.concat(defaults).unique()))
 					}
 
-					collections = collections 
+					// load collections...
+					var loading = all.filter(function(c){
+						return !that.collections[c].data })
+					if(loading.length > 0){
+						Promise
+							.all(loading.map(function(c){ 
+								return that.ensureCollection(c) }))
+							.then(function(){ 
+								// update state...
+								var c = that.inCollections(gid || null)
+								loading.forEach(function(t){
+									c.indexOf(t) >= 0 ?
+										collections.push(t)
+										: to_remove.push(t.replace(/\$/g, ''))
+								})
+
+								dialog.update() 
+							})
+					}
+					
+					// containing collections...
+					collections = collections
 						|| that.inCollections(gid || null)
+							.filter(function(){ return loading.indexOf(title) >= 0 })
+
 
 					// build the disabled list...
 					if(!to_remove){
 						to_remove = []
 						all.forEach(function(title){
 							collections.indexOf(title) < 0
-								&& to_remove.push(title)
+								&& loading.indexOf(title) < 0
+								&& to_remove.push(title.replace(/\$/g, ''))
 						})
 					}
 
@@ -2303,6 +2331,7 @@ var UICollectionActions = actions.Actions({
 							{
 								new_item: false,
 								sortable: 'y',
+								disabled: loading,
 								to_remove: to_remove,
 								itemopen: function(_, title){
 									var i = to_remove.indexOf(title)
@@ -2313,8 +2342,6 @@ var UICollectionActions = actions.Actions({
 
 									dialog.update()
 								},
-								// XXX for some reason after this ordering
-								// 		does not get saved...
 								itemedit: function(_, from, to){
 									that.renameCollection(from, to)
 
