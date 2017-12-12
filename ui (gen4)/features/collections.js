@@ -89,6 +89,11 @@ var CollectionActions = actions.Actions({
 		// 		...technically no, but we need this to resolve correctly 
 		// 		to a relevant feature...
 		'collection-transfer-changes': COLLECTION_TRANSFER_CHANGES.slice(),
+
+		// Global default collections...
+		//
+		// NOTE: delete or set to null for none...
+		//'default-collections': null,
 	},
 
 	// Format:
@@ -129,12 +134,16 @@ var CollectionActions = actions.Actions({
 		this.collection = value },
 
 	// XXX should this check consistency???
+	// XXX would be nice for these to also include default collections...
 	get collection_order(){
+		var collections = this.collections
+		var defaults = this.config['default-collections'] || []
+
+		// no collections -> return defaults | []
 		if(this.collections == null){
-			return null
+			return defaults.slice()
 		}
 
-		var collections = this.collections
 		var keys = Object.keys(collections)
 		var order = this.__collection_order = this.__collection_order || []
 
@@ -145,6 +154,9 @@ var CollectionActions = actions.Actions({
 			.unique()
 			.reverse()
 
+		// XXX defaults...
+		res = res.concat(defaults).unique()
+
 		// keep MAIN_COLLECTION_TITLE out of the collection order...
 		var m = res.indexOf(MAIN_COLLECTION_TITLE)
 		m >= 0
@@ -152,7 +164,9 @@ var CollectionActions = actions.Actions({
 
 		// remove stuff not present...
 		if(res.length > keys.length){
-			res = res.filter(function(e){ return e in collections })
+			res = res.filter(function(e){ 
+				return e in collections 
+					|| defaults.indexOf(e) >= 0 })
 		}
 
 		this.__collection_order.splice(0, this.__collection_order.length, ...res)
@@ -683,7 +697,7 @@ var CollectionActions = actions.Actions({
 		`,
 		function(cmp){
 			// XXX handle the case when there's no .__collection_order
-			if(!this.__collection_order && !this.collection_order){
+			if(!this.__collection_order){
 				return
 			}
 
@@ -720,7 +734,7 @@ var CollectionActions = actions.Actions({
 		function(collection){
 			collection = collection || this.collection
 			collection = this.collectionGIDs[collection] || collection
-			var o = this.collection_order || []
+			var o = this.collection_order 
 
 			if(!collection || o.indexOf(collection) < 0){
 				return
@@ -735,13 +749,15 @@ var CollectionActions = actions.Actions({
 	// XXX make this check offline collections -- use .ensureCollection(..)
 	inCollections: ['- Image/',
 		core.doc`Get list of collections containing item`,
-		function(gid){
+		function(gid, collections){
 			var that = this
 			gid = this.data.getImage(gid)
-			//return Object.keys(this.collections || {})
-			return (this.collection_order || [])
+			collections = collections || this.collection_order
+			collections = collections instanceof Array ? collections : [collections]
+			return collections
 				.filter(function(c){
 					return c != MAIN_COLLECTION_TITLE
+						&& that.collections[c]
 						&& that.collections[c].data
 						&& (!gid 
 							|| that.collections[c].data.getImage(gid)) })
@@ -757,6 +773,7 @@ var CollectionActions = actions.Actions({
 
 	// Collection editing....
 	//
+	// XXX should this add images that already exist???
 	collect: ['- Collections/',
 		core.doc`Add items to collection
 
@@ -975,6 +992,10 @@ var CollectionActions = actions.Actions({
 		}
 			
 		Object.keys(c).forEach(function(title){
+			if(c[title] === false){
+				return
+			}
+
 			var state = collections[title] = { title: title }
 
 			// load data...
@@ -1017,8 +1038,8 @@ var CollectionActions = actions.Actions({
 
 		return function(){
 			if(Object.keys(collections).length > 0){
-				this.collection_order = order
 				this.collections = collections
+				this.collection_order = order
 			}
 		}
 	}],
@@ -1042,11 +1063,11 @@ var CollectionActions = actions.Actions({
 	json: [function(mode){ return function(res){
 		mode = mode || 'current'
 
-		var collections = this.collections
+		var collections = this.collections || {}
+		var order = this.collection_order
 
 		// NOTE: if mode is 'current' ignore collections...
-		if(mode != 'current' && collections){
-			var order = this.collection_order
+		if(mode != 'current' && order.length > 0){
 			// NOTE: .collection_order does not return MAIN_COLLECTION_TITLE 
 			// 		so we have to add it in manually...
 			order = MAIN_COLLECTION_TITLE in collections ?
@@ -1072,6 +1093,13 @@ var CollectionActions = actions.Actions({
 				}
 
 				var state = collections[title]
+
+				// collection does not exist (default collection)...
+				// XXX
+				if(state == null){
+					res.collections[title] = false
+					return
+				}
 
 				// build the JSON...
 				var s = res.collections[title] = { title: title }
@@ -1836,21 +1864,25 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 		['load',
 			function(_, json){
 				var that = this
-				Object.keys(json.collections || {})
-					// skip loaded collections that are already Data objects...
-					// XXX not sure about this...
-					.filter(function(title){
-						return !(json.collections[title].data instanceof data.Data) })
-					// do the loading...
-					.forEach(function(title){
-						var c = that.collections[title]
-						var t = (c.data || {}).tags || {}
+				this.collections
+					&& Object.keys(json.collections || {})
+						// skip loaded collections that are already Data objects...
+						// XXX not sure about this...
+						.filter(function(title){
+							return !(json.collections[title].data instanceof data.Data) })
+						// do the loading...
+						.forEach(function(title){
+							var c = that.collections[title]
+							if(!c){
+								return
+							}
+							var t = (c.data || {}).tags || {}
 
-						c.local_tags = c.local_tags || {}
-						;(that.config['collection-local-tags'] || [])
-							.forEach(function(tag){
-								c.local_tags[tag] = c.local_tags[tag] || t[tag] || [] })
-					})
+							c.local_tags = c.local_tags || {}
+							;(that.config['collection-local-tags'] || [])
+								.forEach(function(tag){
+									c.local_tags[tag] = c.local_tags[tag] || t[tag] || [] })
+						})
 			}],
 	],
 })
@@ -2023,6 +2055,10 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 						var cur = c[title]
 						var r = rc[title]
 
+						if(!cur){
+							return
+						}
+
 						// XXX is this the right way to go???
 						if('tag_query' in cur){
 							r.tag_query = cur.tag_query
@@ -2048,34 +2084,12 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 // 		...show the base ribbon from collection as background
 var UICollectionActions = actions.Actions({
 	config: {
-		// Global default collections...
-		//
-		// NOTE: delete or set to null for none...
-		//'default-collections': null,
-
 		// Last used collection (for adding merging)...
 		//
 		// This will be auto-selected in .browseCollections(..) on next 
 		// add/edit operation...
 		//'collection-last-used': null,
 	},
-
-	// XXX should this be in Collections/ ???
-	editDefaultCollections: ['Interface|Collections/Edit default collections...',
-		widgets.makeConfigListEditorDialog(
-			'default-collections', 
-			{
-				cls: 'collection-list',
-
-				unique: true,
-				sortable: 'y',
-
-				normalize: function(title){ 
-					return title.trim() },
-				check: function(title){ 
-					return title.length > 0 
-						&& title != MAIN_COLLECTION_TITLE },
-			})],
 
 	// XXX would be nice to make this nested (i.e. path list) -- collection grouping...
 	browseCollections: ['Collections/$Collections...',
@@ -2088,12 +2102,11 @@ var UICollectionActions = actions.Actions({
 			var to_remove = []
 
 			var collections = that.collection_order = 
-				(that.collection_order || []).slice()
+				//(that.collection_order || []).slice()
+				that.collection_order.slice()
 
-			var defaults = that.config['default-collections']
-			if(defaults){
-				collections = collections.concat(defaults).unique()
-			}
+			//var defaults = that.config['default-collections'] || []
+			//collections = collections.concat(defaults).unique()
 
 			return browse.makeLister(null, 
 				function(path, make){
@@ -2264,6 +2277,7 @@ var UICollectionActions = actions.Actions({
 						.forEach(function(title){ that.removeCollection(title) }) 
 				})
 		})],
+	// XXX should this be able to add new collections???
 	browseImageCollections: ['Collections|Image/Image $collections...',
 		widgets.makeUIDialog(function(gid){
 			var that = this
@@ -2406,6 +2420,23 @@ var UICollectionActions = actions.Actions({
 				.open(function(_, title){
 					that.config['collection-last-used'] = title })
 		})],
+
+	// XXX should this be in Collections/ ???
+	editDefaultCollections: ['Interface|Collections/Edit default collections...',
+		widgets.makeConfigListEditorDialog(
+			'default-collections', 
+			{
+				cls: 'collection-list',
+
+				unique: true,
+				sortable: 'y',
+
+				normalize: function(title){ 
+					return title.trim() },
+				check: function(title){ 
+					return title.length > 0 
+						&& title != MAIN_COLLECTION_TITLE },
+			})],
 
 	/*/ XXX this is not used by metadata yet...
 	// XXX might be a nice idea to define a default make(..) function 
