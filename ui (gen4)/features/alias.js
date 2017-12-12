@@ -135,6 +135,7 @@ var UIAliasActions = actions.Actions({
 							{
 								new_item: false,
 								to_remove: to_remove,
+								editable_items: false,
 
 								update_merge: 'drop_changes',
 
