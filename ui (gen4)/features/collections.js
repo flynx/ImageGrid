@@ -1261,10 +1261,11 @@ module.Collection = core.ImageGridFeatures.Feature({
 			function(){
 				var args = [].slice.call(arguments, 1)
 				var collection = args.length == 1 ? args[0] : args[1]
+				var collections = this.collections || {}
 				this.markChanged(
 					'collection: '
 						+JSON.stringify(
-							this.collections[collection || this.collection].gid || collection),
+							(collections[collection || this.collection] || {}).gid || collection),
 					['data'])
 			}],
 		// transfer changes on load/unload collection...
@@ -2273,6 +2274,7 @@ var UICollectionActions = actions.Actions({
 			var all
 			var collections
 			var to_remove
+			var t
 
 			return browse.makeLister(null, 
 				function(path, make){
@@ -2291,30 +2293,33 @@ var UICollectionActions = actions.Actions({
 					}
 
 					// load collections...
-					var loading = all.filter(function(c){
-						return !that.collections[c].data })
-					if(loading.length > 0){
-						Promise
-							.all(loading.map(function(c){ 
-								return that.ensureCollection(c) }))
-							.then(function(){ 
-								// update state...
-								var c = that.inCollections(gid || null)
-								loading.forEach(function(t){
-									c.indexOf(t) >= 0 ?
-										collections.push(t)
-										: to_remove.push(t.replace(/\$/g, ''))
-								})
+					var loading = all
+						.filter(function(c){
+							return (that.collections || {})[c] 
+								&& !that.collections[c].data })
+						.map(function(c){ 
+							that
+								.ensureCollection(c) 
+								.then(function(collection){
+									collection.data.getImage(gid || that.current) ?
+										collections.push(c)
+										: to_remove.push(c.replace(/\$/g, ''))
 
-								dialog.update() 
-							})
-					}
+									// NOTE: we'll avoid calling update 
+									// 		too often...
+									clearTimeout(t)
+									t = setTimeout(function(){
+										dialog.update() 
+									}, 100)
+								}) 
+							return c
+						})
 					
 					// containing collections...
 					collections = collections
 						|| that.inCollections(gid || null)
-							.filter(function(){ return loading.indexOf(title) >= 0 })
-
+							.filter(function(title){ 
+								return loading.indexOf(title) < 0 })
 
 					// build the disabled list...
 					if(!to_remove){
@@ -2357,12 +2362,10 @@ var UICollectionActions = actions.Actions({
 
 					all.forEach(function(title){
 						collections.indexOf(title) < 0
-							&& to_remove.indexOf(title) < 0
-							&& that.collect(gid, title)
-					})
+							&& to_remove.indexOf(title.replace(/\$/g, '')) < 0
+							&& that.collect(gid, title) })
 					to_remove.forEach(function(title){ 
-						that.uncollect(gid, title)
-					}) 
+						that.uncollect(gid, title) }) 
 				})
 		})],
 
