@@ -1483,7 +1483,12 @@ module.Collection = core.ImageGridFeatures.Feature({
 				// NOTE: we are placing this in the index root to 
 				// 		simplify lazy-loading of the collection 
 				// 		index...
-				if(changes && (changes === true || changes.collections)){
+				// NOTE: if there are no collections defined this section
+				// 		is skipped...
+				if(collections 
+						&& changes 
+						&& (changes === true 
+							|| changes.collections)){
 					//var index = res.index['collection-index'] = {}
 					var index = res.index['collections'] = {}
 					// NOTE: we do not need to use .collection_order here
@@ -1491,10 +1496,17 @@ module.Collection = core.ImageGridFeatures.Feature({
 					// 		correct order...
 					Object.keys(res.raw.collections || {})
 						.forEach(function(title){ 
-							var m = index[collections[title].gid || title] = { title: title }
+							if(title in collections){
+								var gid = (collections[title] || {}).gid || title
+								var m = index[gid] = { title: title }
 
-							if(res.raw.collections[title].count){
-								m['count'] = res.raw.collections[title].count
+								if(res.raw.collections[title].count){
+									m['count'] = res.raw.collections[title].count
+								}
+
+							// empty / default collections (placeholders)...
+							} else {
+								index[title] = false
 							}
 					  	})
 				}
@@ -1542,6 +1554,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 							// move the collection data to collection path...
 							Object.keys(prepared)
+								.filter(function(key){ return key != 'collections' })
 								.forEach(function(key){
 									res.index[path +'/'+ key] = prepared[key]
 									delete metadata[key]
@@ -1564,8 +1577,22 @@ module.Collection = core.ImageGridFeatures.Feature({
 				var collections_index = {}
 
 				var index = json['collections']
-				index
-					&& Object.keys(index).forEach(function(gid){
+
+				if(index){
+					// get collection order...
+					var order = Object.keys(index)
+						.map(function(k){ 
+							return index[k] ? index[k].gid || index[k].title || k : k })
+					if(order.length > 0){
+						res.collection_order = order
+					}
+
+					// collection data...
+					Object.keys(index).forEach(function(gid){
+						if(index[gid] === false){
+							return
+						}
+
 						//var title = index[gid]
 						var title = index[gid].title || index[gid]
 						var path = 'collections/'+ gid
@@ -1582,6 +1609,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 							m.count = index[gid].count
 						}
 					})
+				}
 
 				if(Object.keys(collections).length > 0){
 					res.collections = collections

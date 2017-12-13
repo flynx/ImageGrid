@@ -545,6 +545,9 @@ module.Sort = core.ImageGridFeatures.Feature({
 
 				;['sort_order', 'sort_cache']
 					.forEach(function(attr){
+						if(!res.raw.data){
+							return
+						}
 						if((c === true || c[attr]) && res.raw.data[attr]){
 							// full save...
 							if(c === true){

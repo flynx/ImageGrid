@@ -727,7 +727,7 @@ core.ImageGridFeatures.Feature({
 				}
 
 				// data...
-				if(changes === true || changes.data){
+				if((changes === true || changes.data) && res.raw.data){
 					res.index.data = res.raw.data
 				}
 
@@ -1364,7 +1364,7 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 			function(res){
 				var changes = res.changes
 
-				if(!changes){
+				if(!changes || !res.raw.data){
 					return
 				}
 
