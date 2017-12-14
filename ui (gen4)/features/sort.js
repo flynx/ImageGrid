@@ -162,8 +162,6 @@ module.SortActions = actions.Actions({
 					return e
 				})
 
-			console.log('>>>>', lst, l, gap)
-
 			// rotate index blocks...
 			if(l > 1){
 				var tail = lst.splice(gap+1, lst.length)

@@ -773,7 +773,17 @@ var CollectionActions = actions.Actions({
 
 	// Collection editing....
 	//
-	// XXX should this add images that already exist???
+	// NOTE: Currently these are sync, and sequencing happens automatically as
+	//		everything uses .ensureCollection(..)
+	//		to explecitly sequence a call do:
+	//			.collect(..)
+	//			.ensureCollection(..)
+	//				.then(function(){
+	//					// this is run after .collect(..) 
+	//					...
+	//				})
+	//
+	// XXX need to figure out error handling for this scheme...
 	collect: ['- Collections/',
 		core.doc`Add items to collection
 
@@ -826,10 +836,22 @@ var CollectionActions = actions.Actions({
 							|| that.collections[MAIN_COLLECTION_TITLE].data.getImage(gid) ] })
 				.reduce(function(a, b){ return a.concat(b) }, [])
 
-			// add to collection...
-			var data = this.data.constructor.fromArray(gids)
+			this.ensureCollection(collection)
+				.then((function(c){
+					var remove = c.data.getImages(gids, 'all')
+					// only add gids that do not exist in collection...
+					gids = gids
+						.filter(function(g){ return remove.indexOf(g) < 0 })
 
-			return this.joinCollect(null, collection, data)
+					if(gids.length == 0){
+						return
+					}
+
+					// add to collection...
+					var data = this.data.constructor.fromArray(gids)
+
+					return this.joinCollect(null, collection, data)
+				}).bind(this))
 		}],
 	joinCollect: ['- Collections/Merge to collection',
 		core.doc`Merge/Join current state to collection
@@ -865,20 +887,58 @@ var CollectionActions = actions.Actions({
 			align = align === collection ? null : align
 
 			// create collection if it does not exist...
-			// XXX should this be async???
-			//return this.ensureCollection(collection)
 			this.ensureCollection(collection)
-				.then((function(){
+				.then((function(c){
+					var target = c.crop_stack ? 
+						c.crop_stack[0] 
+						: c.data
 					//this.collections[collection].data.join(align, data || this.data.clone())
-					var res = this.collections[collection].data = (data || this.data)
+					var res = (data || this.data)
 						.clone()
-						.join(align, this.collections[collection].data)
+						.join(align, target)
+
+					var rorder = res.order.slice().reverse()
+
+					// write to base data...
+					if(c.crop_stack){
+						c.crop_stack[0] = res
+
+						c.crop_stack
+							.concat([c.data])
+							.forEach(function(data){
+								data.order = data.order
+									.reverse()
+									.concat(rorder)
+									.unique()
+									.reverse() 
+								data.updateImagePositions()
+							})
+
+					} else {
+						c.data = res
+					}
 
 					// joining into the current collection...
 					if(collection == this.collection){
-						var cur = this.current
-						this.data = res 
-						this.data.current = cur
+						if(this.crop_stack){
+							this.crop_stack[0] = res
+
+							this.crop_stack
+								.concat([this.data])
+								.forEach(function(data){
+									data.order = data.order
+										.reverse()
+										.concat(rorder)
+										.unique()
+										.reverse() 
+									data.updateImagePositions()
+								})
+
+						} else {
+							var cur = this.current
+							this.data = res 
+							this.data.current = cur
+						}
 					}
 				}).bind(this))
 		}],
@@ -1260,7 +1320,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 						'collection: '
 							+JSON.stringify(this.collections[collection].gid || collection))
 			}],
-		// collection sort...
+		// collection list sort...
 		['sortCollections.pre',
 			function(){
 				var o = (this.collection_order || []).slice()
@@ -1280,21 +1340,40 @@ module.Collection = core.ImageGridFeatures.Feature({
 						+ JSON.stringify(this.collections[to].gid), ['metadata']) }],
 		// basic collection edits...
 		//
-		// XXX mark changed ONLY if actual changes made...
+		// XXX .joinCollect(..) should set change for a collection if 
+		// 		it changes the topology...
+		// 		...this can happen when multiple ribbons are joined...
+		// 		Q: can this happen through .collect(..)???
 		[[
 			// NOTE: no need to handle .collect(..) here as it calls .joinCollect(..)
-			'joinCollect',
-			'uncollect',
+			'joinCollect.pre',
+			'uncollect.pre',
 		], 
 			function(){
-				var args = [].slice.call(arguments, 1)
-				var collection = args.length == 1 ? args[0] : args[1]
-				var collections = this.collections || {}
-				this.markChanged(
-					'collection: '
-						+JSON.stringify(
-							(collections[collection || this.collection] || {}).gid || collection),
-					['data'])
+				var that = this
+				var args = [].slice.call(arguments)
+				var title = args.length == 1 ? args[0] : args[1]
+				var collection = (this.collections || {})[title] || {}
+
+				var count = collection.data ? 
+					collection.data.length 
+					: collection.count
+
+				return function(){
+					this.ensureCollection(title)
+						.then(function(){
+							var new_count = collection.data ? 
+								collection.data.length 
+								: collection.count
+
+							new_count != count
+								&& that.markChanged('collections')
+								&& that.markChanged(
+									'collection: '
+										+JSON.stringify(collection.gid || title),
+									['data'])
+						})
+				}
 			}],
 		// transfer changes on load/unload collection...
 		['collectionLoading.pre',
@@ -1411,13 +1490,32 @@ module.Collection = core.ImageGridFeatures.Feature({
 		//
 		// 		// Collection gid-title index...
 		//		//
-		// 		// NOTE: this is sorted via .collection_order...
+		// 		// NOTE: this is sorted via .collection_order in .json(..)...
+		// 		// 
+		// 		// NOTE: if .collections is undefined this is not returned...
+		// 		// XXX this may cause issues if after removing the 
+		// 		//		last collection and .collections is deleted,
+		// 		//		then the last saved collection state will 
+		// 		//		get loaded instead of an empty collection list
+		// 		//		...currently this is not a problem as .collections
+		// 		//		is never explicitly set to undefined, but is a 
+		// 		//		potential pitfall...
+		// 		//		Q: should this return {} when .collections is undefined?
 		// 		collections: {
+		// 			// normal collection...
 		// 			<gid>: {
 		// 				title: <title>,
 		// 				count: <count>,
 		// 				...
 		// 			},
+		//
+		// 			// un-initialise default collection...
+		// 			//
+		// 			// i.e. a collection that is included in 
+		// 			// .config['default-collections'] and thus present in
+		// 			// .collection_order but not present in .collections
+		// 			<gid>: false,
+		//
 		// 			...
 		// 		}
 		//
@@ -1781,6 +1879,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					;(this.crop_stack || [])
 						.forEach(function(d){ d.tags = tags })
 					this.data.tags = tags
+
 					this.data.sortTags()
 				}
 			}],

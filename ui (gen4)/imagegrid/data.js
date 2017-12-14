@@ -269,13 +269,13 @@ var DataPrototype = {
 	// 		-> list
 	// 		NOTE: this sets drop_non_order_gids...
 	//
-	// 	Plase gids into their .order positions into target...
+	// 	Place gids into their .order positions into target...
 	// 	.makeSparseImages(gids, target)
 	// 		-> list
 	// 		NOTE: items in target on given gid .order positions will 
 	// 			get overwritten...
 	//
-	// 	Plase gids into their .order positions into target and reposition 
+	// 	Place gids into their .order positions into target and reposition 
 	// 	overwritten target items...
 	// 	.makeSparseImages(gids, target, true)
 	// 		-> list
@@ -1027,7 +1027,16 @@ var DataPrototype = {
 	//	.getImages(list, 'loaded')
 	//		-> list
 	//
+	//	Filter the list and return images present in data...
+	//	.getImages(list, 'all')
+	//	.getImages(list, 'global')
+	//		-> list
+	//
+	//	Filter the list and return images in current ribbon only...
 	//	.getImages(list, 'current')
+	//		-> list
+	//
+	//	Filter the list and return images in specific ribbon only...
 	//	.getImages(list, order|ribbon)
 	//		-> list
 	//
@@ -1100,19 +1109,25 @@ var DataPrototype = {
 
 		// filter out the unloaded gids from given list...
 		} else if(target != null && target instanceof Array){
-			var loaded = count == 'current' ? this.getImages('current')
-				: count in this.ribbons ? this.ribbons[count].compact()
+			var loaded = count == 'current' ? 
+					this.getImages('current')
+				: count == 'all' || count == 'global' ? 
+					this.getImages('all')
+				: count in this.ribbons ? 
+					this.ribbons[count].compact()
 				: typeof(count) == typeof(123) ? 
 					this.ribbons[this.getRibbon(count)].compact()
 				: this.getImages('loaded')
-			count = null 
 
 			list = target
 				.map(function(e){
-					return that.getImage(e) })
+					return count == 'all' || count == 'global' ?
+						that.getImage(e, 'global')
+						: that.getImage(e) })
 				.filter(function(e){
 					return loaded.indexOf(e) >= 0 })
 
+			count = null 
 			target = null 
 
 		// target is ribbon gid...
