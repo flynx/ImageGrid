@@ -288,6 +288,7 @@ actions.Actions({
 			}
 		}],
 	// XXX should this clear or load empty???
+	// XXX should this accept args and clear specific stuff (a-la data.clear(..))???
 	clear: ['File/Clear',
 		{journal: true},
 		function(){

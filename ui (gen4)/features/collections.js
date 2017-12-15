@@ -75,7 +75,7 @@ module.COLLECTION_TRANSFER_CHANGES = [
 
 //---------------------------------------------------------------------
 
-// XXX undo...
+// XXX add undo...
 var CollectionActions = actions.Actions({
 	config: {
 		// can be:
@@ -101,6 +101,7 @@ var CollectionActions = actions.Actions({
 	// 		<title>: {
 	// 			title: <title>,
 	// 			gid: <gid>,
+	// 			count: <number>,
 	//
 	// 			crop_stack: [ .. ],
 	//
@@ -134,7 +135,6 @@ var CollectionActions = actions.Actions({
 		this.collection = value },
 
 	// XXX should this check consistency???
-	// XXX would be nice for these to also include default collections...
 	get collection_order(){
 		var collections = this.collections
 		var defaults = this.config['default-collections'] || []
@@ -198,6 +198,7 @@ var CollectionActions = actions.Actions({
 	// 		...
 	// 	}
 	//
+	// XXX revise doc...
 	get collection_handlers(){
 		var handlers = this.__collection_handlers = this.__collection_handlers || {}
 
@@ -266,10 +267,9 @@ var CollectionActions = actions.Actions({
 		})],
 
 
-	// XXX should this queue already running calls or a specific collection????
-	// 		...I think yes!!
 	// XXX should there be a force arg when we can't actually stop the 
 	// 		running promise and recover???
+	// XXX need to figure out error handling for this scheme...
 	// XXX do we need timeouts here????
 	ensureCollection: ['- Collections/',
 		core.doc`Ensure a collection exists and is consistent...
@@ -286,7 +286,8 @@ var CollectionActions = actions.Actions({
 			- initialize if needed
 
 		While the promise for a specific action is not resolved this 
-		will return it and not start a new promise.
+		will return it and not start a new promise thus queuing all 
+		subsequent calls.
 		`,
 		function(collection){
 			var that = this
@@ -746,9 +747,12 @@ var CollectionActions = actions.Actions({
 
 	// Introspection...
 	//
-	// XXX make this check offline collections -- use .ensureCollection(..)
+	// XXX make this check offline collections -- use .ensureCollection(..)???
 	inCollections: ['- Image/',
-		core.doc`Get list of collections containing item`,
+		core.doc`Get list of collections containing item
+		
+		NOTE: this currently does not load or check offline collections.
+		`,
 		function(gid, collections){
 			var that = this
 			gid = this.data.getImage(gid)
@@ -773,16 +777,17 @@ var CollectionActions = actions.Actions({
 
 	// Collection editing....
 	//
-	// NOTE: Currently these are sync, and sequencing happens automatically as
-	//		everything uses .ensureCollection(..)
-	//		to explecitly sequence a call do:
+	// NOTE: Currently these are sync, and sequencing collections 
+	// 		operations happens automatically as everything uses 
+	// 		.ensureCollection(..)...
+	// 		to explecitly sequence code do:
 	//			.collect(..)
 	//			.ensureCollection(..)
 	//				.then(function(){
 	//					// this is run after .collect(..) 
 	//					...
 	//				})
-	// 		XXX need to figure out error handling for this scheme...
+	// NOTE: see .ensureCollection(..) for more details...
 	collect: ['- Collections/',
 		core.doc`Add items to collection
 
@@ -1222,6 +1227,7 @@ var CollectionActions = actions.Actions({
 		delete this.location.collection
 	}],
 
+
 	// Config and interface stuff...
 	//
 	toggleCollectionCropRetention: ['Interface/Collection crop save mode',
@@ -1246,7 +1252,6 @@ var CollectionActions = actions.Actions({
 			function(){ 
 				return [MAIN_COLLECTION_TITLE].concat(this.collection_order || []) })],
 })
-
 
 var Collection = 
 module.Collection = core.ImageGridFeatures.Feature({
@@ -1775,6 +1780,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 })
 
 
+
 //---------------------------------------------------------------------
 
 var CollectionTagsActions = actions.Actions({
@@ -2221,7 +2227,7 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 // XXX show collections in image metadata... (???)
-// XXX might be nice to indicate if a collection is loaded -- has .data...
+// XXX might be nice to indicate if a collection is loaded -- has .data???
 // XXX might be nice to add collection previews to the collection list...
 // 		...show the base ribbon from collection as background
 var UICollectionActions = actions.Actions({
@@ -2644,7 +2650,6 @@ module.UICollection = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
-// XXX collection id...
 // XXX Things to try/do:
 // 		- load directories as collections (auto?)...
 // 		- export collections to directories...
@@ -2743,9 +2748,6 @@ var FileSystemCollectionActions = actions.Actions({
 		}],
 })
 
-
-// XXX manage format...
-// XXX manage changes...
 var FileSystemCollection = 
 module.FileSystemCollection = core.ImageGridFeatures.Feature({
 	title: '',
