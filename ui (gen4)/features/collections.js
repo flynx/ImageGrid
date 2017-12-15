@@ -782,8 +782,7 @@ var CollectionActions = actions.Actions({
 	//					// this is run after .collect(..) 
 	//					...
 	//				})
-	//
-	// XXX need to figure out error handling for this scheme...
+	// 		XXX need to figure out error handling for this scheme...
 	collect: ['- Collections/',
 		core.doc`Add items to collection
 
@@ -1339,11 +1338,6 @@ module.Collection = core.ImageGridFeatures.Feature({
 					.markChanged('collection: '
 						+ JSON.stringify(this.collections[to].gid), ['metadata']) }],
 		// basic collection edits...
-		//
-		// XXX .joinCollect(..) should set change for a collection if 
-		// 		it changes the topology...
-		// 		...this can happen when multiple ribbons are joined...
-		// 		Q: can this happen through .collect(..)???
 		[[
 			// NOTE: no need to handle .collect(..) here as it calls .joinCollect(..)
 			'joinCollect.pre',
@@ -1352,7 +1346,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 			function(){
 				var that = this
 				var args = [].slice.call(arguments)
-				var title = args.length == 1 ? args[0] : args[1]
+				var title = (args.length == 1 ? args[0] : args[1]) || this.collection
 				var collection = (this.collections || {})[title] || {}
 
 				var count = collection.data ? 
@@ -1360,20 +1354,38 @@ module.Collection = core.ImageGridFeatures.Feature({
 					: collection.count
 
 				return function(){
-					this.ensureCollection(title)
-						.then(function(){
-							var new_count = collection.data ? 
-								collection.data.length 
-								: collection.count
+					// NOTE: if a collection does not exist by this point 
+					// 		it will be handled by collection .collectionCreated(..)
+					// 		...this means we are either creating a new collection
+					// 		or removing from a non-existing collection.
+					title in this.collections
+						&& this.ensureCollection(title)
+							.then(function(){
+								var new_count = collection.data ? 
+									collection.data.length 
+									: collection.count
 
-							new_count != count
-								&& that.markChanged('collections')
-								&& that.markChanged(
-									'collection: '
-										+JSON.stringify(collection.gid || title),
-									['data'])
-						})
-				}
+								new_count != count
+									&& that.markChanged('collections')
+									&& that.markChanged(
+										'collection: '
+											+JSON.stringify(collection.gid || title),
+										['data'])
+							}) }
+			}],
+		['joinCollect',
+			function(_, align, collection, data){
+				var args = [].slice.call(arguments)
+				var title = (args.length == 1 ? args[0] : args[1]) || this.collection
+				var collection = (this.collections || {})[title] || {}
+
+				data = data || this.data
+
+				(!data || data.ribbon_order.length > 1)
+					&& that.markChanged(
+						'collection: '
+							+JSON.stringify(collection.gid || title),
+						['data'])
 			}],
 		// transfer changes on load/unload collection...
 		['collectionLoading.pre',
@@ -1554,6 +1566,9 @@ module.Collection = core.ImageGridFeatures.Feature({
 		//
 		// NOTE: the base collection (MAIN_COLLECTION_TITLE) is not saved 
 		// 		in collections, it is stored in the root index...
+		//
+		// XXX we do not need .count in collection metadata as it is 
+		// 		stored in collections...
 		['prepareIndexForWrite', 
 			function(res){
 				if(!res.changes){
@@ -1912,7 +1927,7 @@ module.CollectionTags = core.ImageGridFeatures.Feature({
 					local_tag_names
 						.forEach(function(tag){ 
 							local_tags[tag] = (!new_set || title == MAIN_COLLECTION_TITLE) ? 
-								(that.data.tags[tag] || []) 
+								((that.data.tags || {})[tag] || []) 
 								: []
 						})
 
