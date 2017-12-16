@@ -2594,6 +2594,15 @@ var UICollectionActions = actions.Actions({
 			// XXX
 		}],
 	//*/
+	
+
+	// XXX experementing...
+	collectionsList: ['Collections/Collections list/*',
+		function(path, make){
+			console.log('>>>', path)
+
+			make.EditableList(this.collection_order)
+		}],
 })
 
 var UICollection = 
