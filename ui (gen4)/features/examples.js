@@ -774,7 +774,7 @@ var ExampleUIActions = actions.Actions({
 	// Combined dialog/lister...
 	//
 	// XXX should this be made into a constructor???
-	exampleDialogMenu: ['Test/Combined dialog & lister (dialog mode)',
+	exampleDialogLister: ['Test/Combined dialog & lister (dialog mode)',
 		widgets.makeUIDialog(function(path, make){
 			var makeList = function(_, make){
 				make('A')
@@ -786,8 +786,8 @@ var ExampleUIActions = actions.Actions({
 				makeList(path, make)
 				: browse.makeLister(null, makeList)
 		})],
-	exampleDialogMenuL: ['Test/Combined dialog & lister (lister mode)/*',
-		'exampleDialogMenu: ...'],
+	exampleDialogListerL: ['Test/Combined dialog & lister (lister mode)/*',
+		'exampleDialogLister: ...'],
 })
 
 var ExampleUI = 
