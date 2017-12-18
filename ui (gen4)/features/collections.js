@@ -2596,13 +2596,21 @@ var UICollectionActions = actions.Actions({
 	//*/
 	
 
-	// XXX experementing...
+	/*/ XXX experementing...
+	//		would be nice to:
+	//			- have an action accessible withing the action menu and standalone
+	//			- topology:
+	//				<collection>/
+	//					<collection-option>: <value>
+	//					...
+	//				...
+	//			- creating a collection should open its options...
+	//
 	collectionsList: ['Collections/Collections list/*',
 		function(path, make){
-			console.log('>>>', path)
-
 			make.EditableList(this.collection_order)
 		}],
+	//*/
 })
 
 var UICollection = 

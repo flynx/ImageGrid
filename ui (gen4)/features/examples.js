@@ -816,5 +816,6 @@ core.ImageGridFeatures.Feature('examples', [
 
 
 
+
 /**********************************************************************
 * vim:set ts=4 sw=4 :                               */ return module })
