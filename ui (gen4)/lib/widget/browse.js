@@ -110,7 +110,7 @@ function(options){
 	return this('---', options) }
 
 // NOTE: this is the same as make('...'[, options])
-Items.Sepinner = 
+Items.Spinner = 
 function(options){
 	return this('...', options) }
 
