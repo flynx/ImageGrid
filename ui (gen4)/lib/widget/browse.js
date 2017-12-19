@@ -98,9 +98,9 @@ function(msg, options){
 	options.hide_on_search = options.hide_on_search !== undefined ?
 		options.hide_on_search
 		: true
+	options.cls = (options.cls || '') + ' empty-msg'
 	msg = msg || options.message || 'Empty...'
 	return this(msg, options)
-		.addClass('empty-msg')
 }
 
 
@@ -125,18 +125,23 @@ function(options){
 //
 Items.Heading = 
 function(text, options){
-	var attrs = (options && options.doc) ? {doc: options.doc} : {}
+	options = Object.create(options || {})
+	options.cls = (options.cls || '') + ' heading'
+	var attrs = options.doc ? {doc: options.doc} : {}
+	attrs.__proto__ = options.attrs || {}
+	options.attrs = attrs
 	return this(text, options)
-		.attr(attrs)
-		.addClass('heading') }
+}
 
 // Action...
 //
 // XXX should this have a callback???
 Items.Action = 
 function(text, options){
+	options = Object.create(options || {})
+	options.cls = (options.cls || '') + ' action'
 	return this(text, options)
-		.addClass('action') }
+}
 
 // Action requiring confirmation...
 //
@@ -162,6 +167,7 @@ function(text, options){
 // 	}
 //
 // XXX doc...
+// XXX refactor to use options instead of elem modification...
 Items.ConfirmAction = 
 function(text, options){
 	options = options || {}
@@ -2228,6 +2234,11 @@ var BrowserPrototype = {
 	//			menu: <handler>,
 	//
 	//			<event>: <handler>,
+	//			...
+	//		},
+	//
+	//		attrs: {
+	//			<attr>: <value>,
 	//			...
 	//		},
 	//	}
