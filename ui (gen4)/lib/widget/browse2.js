@@ -57,6 +57,13 @@ var Items.Heading = function(value){}
 var Items.Group = function(items){}
 
 // lists...
+// 
+// 	.List(values[, make][, options])
+// 		-> ???
+// 		
+// XXX how do we indicate the selected item???
+// 		- options.path / options.selected?
+// 		- path argument?
 var Items.List = function(values){}
 var Items.EditableList = function(values){}
 var Items.EditablePinnedList = function(values){}
