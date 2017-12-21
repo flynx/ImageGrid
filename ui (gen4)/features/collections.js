@@ -673,6 +673,10 @@ var CollectionActions = actions.Actions({
 			delete this.collections[from]
 
 			data.title = to
+
+			if(this.collection == from){
+				this.location.collection = to
+			}
 		}],
 
 
@@ -2239,6 +2243,7 @@ var UICollectionActions = actions.Actions({
 		//'collection-last-used': null,
 	},
 
+	// XXX BUG: renaming a collection with a '$' loses selection...
 	// XXX would be nice to make this nested (i.e. path list) -- collection grouping...
 	browseCollections: ['Collections/$Collections...',
 		core.doc`Collection list...
