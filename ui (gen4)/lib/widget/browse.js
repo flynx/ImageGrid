@@ -848,6 +848,7 @@ function(list, options){
 			})
 			.on('edit-abort edit-commit', function(_, title){
 				title = title.trim() == '' ? from : title
+				title = title.replace(/\$/g, '')
 				dialog.update()
 					.then(function(){ dialog.select(`"${title}"`) })
 			})

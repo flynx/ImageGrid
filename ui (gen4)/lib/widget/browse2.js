@@ -42,16 +42,32 @@ var Items = module.items = function(){}
 // 		-> ???
 // 	
 var Items.Item = function(value, make, options){
+	// XXX check if we are in a container -> create if needed and update context...
+	// XXX ???
+
+	// create item...
+	return make(value, make, options)
 }
 
-var Items.Editable = function(value){}
-var Items.Selected = function(value){}
-var Items.Action = function(value){}
-var Items.ConfirmAction = function(value){}
+var Items.Action = function(value, make, options){
+	options = Object.create(options || {})
+	options.cls = (options.cls || '') + ' action'
+	return this.Item(value, make, options)
+}
+var Items.Heading = function(value, make, options){
+	options = Object.create(options || {})
+	options.cls = (options.cls || '') + ' heading'
+	var attrs = options.doc ? {doc: options.doc} : {}
+	attrs.__proto__ = options.attrs || {}
+	options.attrs = attrs
+	return this.Item(value, make, options)
+}
 var Items.Empty = function(value){}
 var Items.Separator = function(value){}
 var Items.Spinner = function(value){}
-var Items.Heading = function(value){}
+var Items.Selected = function(value){}
+var Items.Editable = function(value){}
+var Items.ConfirmAction = function(value){}
 
 // groups...
 var Items.Group = function(items){}

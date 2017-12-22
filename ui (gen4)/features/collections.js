@@ -2243,7 +2243,6 @@ var UICollectionActions = actions.Actions({
 		//'collection-last-used': null,
 	},
 
-	// XXX BUG: renaming a collection with a '$' loses selection...
 	// XXX would be nice to make this nested (i.e. path list) -- collection grouping...
 	browseCollections: ['Collections/$Collections...',
 		core.doc`Collection list...
@@ -2601,7 +2600,7 @@ var UICollectionActions = actions.Actions({
 
 	/*/ XXX experementing...
 	//		would be nice to:
-	//			- have an action accessible withing the action menu and standalone
+	//			- have an action accessible within the action menu and standalone
 	//			- topology:
 	//				<collection>/
 	//					<collection-option>: <value>
