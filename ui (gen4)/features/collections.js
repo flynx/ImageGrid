@@ -783,12 +783,12 @@ var CollectionActions = actions.Actions({
 	//
 	// NOTE: Currently these are sync, and sequencing collections 
 	// 		operations happens automatically as everything uses 
-	// 		.ensureCollection(..)...
+	// 		.ensureCollection(..) internally...
 	// 		to explecitly sequence code do:
 	//			.collect(..)
 	//			.ensureCollection(..)
 	//				.then(function(){
-	//					// this is run after .collect(..) 
+	//					// this is run strictly after .collect(..) 
 	//					...
 	//				})
 	// NOTE: see .ensureCollection(..) for more details...
@@ -1126,7 +1126,7 @@ var CollectionActions = actions.Actions({
 	// 		in to maintain the correct order when merging... (XXX)
 	// NOTE: currently this only stores title and data, it is the 
 	// 		responsibility of extending features to store their specific 
-	// 		data in collections...
+	// 		stuff in collections...
 	// 		XXX is this the right way to go???
 	// NOTE: .chnages are handled separately in feature .handlers...
 	json: [function(mode){ return function(res){
