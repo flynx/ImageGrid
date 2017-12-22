@@ -402,7 +402,7 @@ module.GLOBAL_KEYBOARD = {
 		ctrl_A: 'toggleMark!: "ribbon" "on" -- Mark all images in ribbon',
 		ctrl_shift_A: 'toggleMarkBlock!',
 		ctrl_D: 'toggleMark!: "ribbon" "off" -- Unmark all images in ribbon',
-		ctrl_I: 'toggleMark!: "ribbon" -- Invert marks in ribbon',
+		ctrl_I: 'invertRibbonMarks',
 		',': 'prevMarked',
 		'.': 'nextMarked',
 		alt_M: 'browseActions: "/Mark/" -- Mark menu...',

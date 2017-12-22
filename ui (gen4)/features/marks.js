@@ -342,6 +342,14 @@ var ImageMarkEditActions = actions.Actions({
 			return this.toggleMark(block, state ? 'off' : 'on')
 		}],
 
+	// shorthands...
+	invertRibbonMarks: ['Mark/$Invert marks in ribbon',
+		{browseMode: 'cropMarked'},
+		'toggleMark: "ribbon"'],
+	invertLoadedMarks: ['Mark/$Invert marks',
+		{browseMode: 'cropMarked'},
+		'toggleMark: "loaded"'],
+
 	unmarkAll: ['Mark/$Unmark all',
 		{browseMode: 'cropMarked'},
 		function(){ this.toggleMark(this.marked) }],

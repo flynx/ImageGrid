@@ -2230,6 +2230,19 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// NOTE: if n > 1 and <n args are given then the given args will get 
+// 		passed to func with an appended title...
+var mixedModeCollectionAction = function(func, n){
+	return widgets.uiDialog(function(){
+		var args = [].slice.call(arguments)
+		// check if minimum number of arguments is reached...
+		return args.length < (n || 1) ? 
+			//this.browseCollections(func) 
+			this.browseCollections(function(title){ 
+				return func.call(this, ...args.concat([title])) }) 
+			: func.apply(this, args) }) }
+
+
 // XXX show collections in image metadata... (???)
 // XXX might be nice to indicate if a collection is loaded -- has .data???
 // XXX might be nice to add collection previews to the collection list...
@@ -2539,39 +2552,57 @@ var UICollectionActions = actions.Actions({
 	//
 	// XXX should we warn the user when overwriting???
 	saveAsCollection: ['Collections/$Save as collection...',
-		widgets.uiDialog(function(){
-			return this.browseCollections(function(title){
-				this.saveCollection(title, 'current') 
-				// XXX should we be doing this manually here or in .saveCollection(..)
-				title == this.collection
-					&& this.loadCollection('!')
-			}) })],
+		mixedModeCollectionAction(function(title){
+			this.saveCollection(title, 'current') 
+			// XXX should we be doing this manually here or in .saveCollection(..)
+			title == this.collection
+				&& this.loadCollection('!')
+		})],
 	addToCollection: ['Collections|Image/Add $image to collection...',
-		widgets.uiDialog(function(gids){
-			return this.browseCollections(function(title){
-					this.collect(gids || 'current', title) }) })],
+		mixedModeCollectionAction(function(gids, title){
+			if(title == null){
+				title = gids
+				gids = null
+			}
+			this.collect(gids || 'current', title) }, 2)],
 	addRibbonToCollection: ['Collections|Ribbon/Add $ribbon to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('ribbon') })],
 	addLoadedToCollection: ['Collections/$Add loaded images to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
 	joinToCollection: ['Collections/$Merge view to collection...',
-		widgets.uiDialog(function(){
-			return this.browseCollections(function(title){ this.joinCollect(title) }) })],
+		mixedModeCollectionAction(function(title){ this.joinCollect(title) })],
 
-	// XXX should this be here or in marks???
+	cropOutImagesInCollection: ['Collections/Crop $out images in collection...',
+		mixedModeCollectionAction(function(title){
+			var that = this
+			this.ensureCollection(title)
+				.then(function(collection){
+					var to_remove = collection.data.getImages('all')
+					var images = that.data.getImages('loaded')
+						.filter(function(gid){ return to_remove.indexOf(gid) < 0 })
+					that.crop(images, false)
+				})
+		})],
+
+	// XXX should these be here or in marks-specific feature???
+	markImagesInCollection: ['Collections|Mark/$Mark images in collection...',
+		{browseMode: function(){ 
+			return (!this.collections 
+					|| Object.keys(this.collections).length == 0) 
+				&& 'disabled' }},
+		mixedModeCollectionAction(function(title){
+			var that = this
+			this.ensureCollection(title)
+				.then(function(collection){
+					var images = collection.data.getImages('all')
+
+					that.toggleMark(images, 'on')
+				})
+		})],
 	addMarkedToCollection: ['Collections|Mark/Add marked to $collection...',
 		{browseMode: function(){ 
 			return this.marked.length == 0 && 'disabled' }},
-		widgets.uiDialog(function(){
-			var that = this
-			return this.browseCollections(function(title){ this.collectMarked(title) })
-				.run(function(){
-					var title = that.config['collection-last-used']
-					title
-						&& this.select(`"${title}"`) })
-				.open(function(_, title){
-					that.config['collection-last-used'] = title })
-		})],
+		mixedModeCollectionAction(function(title){ this.collectMarked(title) })],
 
 	// XXX should this be in Collections/ ???
 	editDefaultCollections: ['Interface|Collections/Edit default collections...',

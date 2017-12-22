@@ -1306,6 +1306,7 @@ var BrowseActionsActions = actions.Actions({
 				'Collections/-70:---',
 				'Collections/-70:.*remove.*',
 			'$Mark',
+				'Mark/-75:.*collection...',
 				'Mark/-80:---',
 				'Mark/-80:.*remove.*',
 				'Mark/-90:.*unmark.*',
