@@ -792,7 +792,7 @@ var CollectionActions = actions.Actions({
 	//					...
 	//				})
 	// NOTE: see .ensureCollection(..) for more details...
-	collect: ['- Collections/',
+	collect: ['Collections|Image/Add $image to collection...',
 		core.doc`Add items to collection
 
 			Add current image to collection...
@@ -861,7 +861,7 @@ var CollectionActions = actions.Actions({
 					return this.joinCollect(null, collection, data)
 				}).bind(this))
 		}],
-	joinCollect: ['- Collections/Merge to collection',
+	joinCollect: ['Collections/$Merge view to collection...',
 		core.doc`Merge/Join current state to collection
 
 			Join current state into collection
@@ -2231,18 +2231,36 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// Make an action that when called without enough arguments show a 
+// collection selector dialog and just call the given function when 
+// enough arguments are given.
+//
 // NOTE: if n > 1 and <n args are given then the given args will get 
 // 		passed to func with an appended title...
+//
+// XXX can we extend actions in this manner???
+// 		...if the action does nothing without args yes...
+// 		test with .loadCollection(..)
 var mixedModeCollectionAction = function(func, n){
 	return widgets.uiDialog(function(){
 		var args = [].slice.call(arguments)
 		// check if minimum number of arguments is reached...
 		return args.length < (n || 1) ? 
+			// show the dialog...
 			//this.browseCollections(func) 
 			this.browseCollections(function(title){ 
 				return func.call(this, ...args.concat([title])) }) 
 			: func.apply(this, args) }) }
 
+var collectionGetterWrapper = function(func, n){
+	return widgets.uiDialog(function(){
+		var args = [].slice.call(arguments)
+		// check if minimum number of arguments is reached...
+		return args.length < (n || 1)
+			// show the dialog...
+			&& this.browseCollections(function(title){ 
+				return func.call(this, ...args.concat([title])) }) }) 
+}
 
 // XXX show collections in image metadata... (???)
 // XXX might be nice to indicate if a collection is loaded -- has .data???
@@ -2549,6 +2567,17 @@ var UICollectionActions = actions.Actions({
 				})
 		})],
 
+	// XXX extend the original actions instead of making new actions
+	// 		that are essentially copies...
+	// XXX need to add "ALL" -- might need to rework .browseCollections(..) for this...
+	// XXX this falls into infinite recursion -- need a way to break it...
+	// 		...need to call the func ONLY if title is not given...
+	// XXX also do:
+	// 		.saveCollection(..)
+	// XXX EXPERIMENTAL...
+	loadCollection: [
+		collectionGetterWrapper(function(title){ this.loadCollection(title) })],
+
 	// Collection actions with collection selection...
 	//
 	// XXX should we warn the user when overwriting???
@@ -2559,8 +2588,8 @@ var UICollectionActions = actions.Actions({
 			title == this.collection
 				&& this.loadCollection('!')
 		})],
-	addToCollection: ['Collections|Image/Add $image to collection...',
-		mixedModeCollectionAction(function(gids, title){
+	collect: [
+		collectionGetterWrapper(function(gids, title){ 
 			if(title == null){
 				title = gids
 				gids = null
@@ -2570,8 +2599,8 @@ var UICollectionActions = actions.Actions({
 		widgets.uiDialog(function(){ return this.addToCollection('ribbon') })],
 	addLoadedToCollection: ['Collections/$Add loaded images to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
-	joinToCollection: ['Collections/$Merge view to collection...',
-		mixedModeCollectionAction(function(title){ this.joinCollect(title) })],
+	joinCollect: [
+		collectionGetterWrapper(function(title){ this.joinCollect(title) })],
 
 	cropOutImagesInCollection: ['Collections/Crop $out images in collection...',
 		mixedModeCollectionAction(function(title){
