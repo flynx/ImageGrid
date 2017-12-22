@@ -903,6 +903,7 @@ var CollectionActions = actions.Actions({
 					//this.collections[collection].data.join(align, data || this.data.clone())
 					var res = (data || this.data)
 						.clone()
+						.clear('unloaded')
 						.join(align, target)
 
 					var rorder = res.order.slice().reverse()
@@ -1390,8 +1391,8 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 				data = data || this.data
 
-				(!data || data.ribbon_order.length > 1)
-					&& that.markChanged(
+				;(!data || data.ribbon_order.length > 1)
+					&& this.markChanged(
 						'collection: '
 							+JSON.stringify(collection.gid || title),
 						['data'])
