@@ -2594,9 +2594,9 @@ var UICollectionActions = actions.Actions({
 				gids = null
 			}
 			this.collect(gids || 'current', title) }, 2)],
-	addRibbonToCollection: ['Collections|Ribbon/Add $ribbon to collection...',
+	collectRibbon: ['Collections|Ribbon/Add $ribbon to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('ribbon') })],
-	addLoadedToCollection: ['Collections/$Add loaded images to collection...',
+	collectLoaded: ['Collections/$Add loaded images to collection...',
 		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
 	joinCollect: [
 		collectionGetterWrapper(function(title){ this.joinCollect(title) })],
