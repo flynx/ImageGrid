@@ -2595,9 +2595,11 @@ var UICollectionActions = actions.Actions({
 			}
 			this.collect(gids || 'current', title) }, 2)],
 	collectRibbon: ['Collections|Ribbon/Add $ribbon to collection...',
-		widgets.uiDialog(function(){ return this.addToCollection('ribbon') })],
+		// NOTE: this is not an alias as we need it to be marked as a dialog...
+		widgets.uiDialog(function(){ return this.collect('ribbon') })],
 	collectLoaded: ['Collections/$Add loaded images to collection...',
-		widgets.uiDialog(function(){ return this.addToCollection('loaded') })],
+		// NOTE: this is not an alias as we need it to be marked as a dialog...
+		widgets.uiDialog(function(){ return this.collect('loaded') })],
 	joinCollect: [
 		collectionGetterWrapper(function(title){ this.joinCollect(title) })],
 
