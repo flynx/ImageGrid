@@ -2237,10 +2237,6 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 //
 // NOTE: if n > 1 and <n args are given then the given args will get 
 // 		passed to func with an appended title...
-//
-// XXX can we extend actions in this manner???
-// 		...if the action does nothing without args yes...
-// 		test with .loadCollection(..)
 var mixedModeCollectionAction = function(func, n){
 	return widgets.uiDialog(function(){
 		var args = [].slice.call(arguments)
@@ -2252,6 +2248,8 @@ var mixedModeCollectionAction = function(func, n){
 				return func.call(this, ...args.concat([title])) }) 
 			: func.apply(this, args) }) }
 
+// Like mixedModeCollectionAction(..) but will do nothing if enough args 
+// are given...
 var collectionGetterWrapper = function(func, n){
 	return widgets.uiDialog(function(){
 		var args = [].slice.call(arguments)
@@ -2261,6 +2259,9 @@ var collectionGetterWrapper = function(func, n){
 			&& this.browseCollections(function(title){ 
 				return func.call(this, ...args.concat([title])) }) }) 
 }
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 // XXX show collections in image metadata... (???)
 // XXX might be nice to indicate if a collection is loaded -- has .data???
@@ -2567,11 +2568,7 @@ var UICollectionActions = actions.Actions({
 				})
 		})],
 
-	// XXX extend the original actions instead of making new actions
-	// 		that are essentially copies...
 	// XXX need to add "ALL" -- might need to rework .browseCollections(..) for this...
-	// XXX this falls into infinite recursion -- need a way to break it...
-	// 		...need to call the func ONLY if title is not given...
 	// XXX also do:
 	// 		.saveCollection(..)
 	// XXX EXPERIMENTAL...
@@ -2580,6 +2577,8 @@ var UICollectionActions = actions.Actions({
 
 	// Collection actions with collection selection...
 	//
+	// XXX extend .saveCollection(..) and remove this...
+	// 		...see .loadCollection(..) notes above...
 	// XXX should we warn the user when overwriting???
 	saveAsCollection: ['Collections/$Save as collection...',
 		mixedModeCollectionAction(function(title){
