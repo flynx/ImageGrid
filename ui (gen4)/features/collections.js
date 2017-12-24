@@ -735,7 +735,7 @@ var CollectionActions = actions.Actions({
 			.collectionToTop(gid)
 				-> this
 		`,
-		{browseMode: function(){ return !this.collection && 'disabled' }},
+		{browseMode: 'uncollect'},
 		function(collection){
 			collection = collection || this.collection
 			collection = this.collectionGIDs[collection] || collection
@@ -775,7 +775,7 @@ var CollectionActions = actions.Actions({
 	// aliases...
 	//
 	loadMainCollection: ['Collections/Exit collection view',
-		{browseMode: function(){ return !this.collection && 'disabled' }},
+		{browseMode: 'uncollect'},
 		`loadCollection: "${MAIN_COLLECTION_TITLE}"`],
 
 
@@ -1033,7 +1033,7 @@ var CollectionActions = actions.Actions({
 			i.e. each gid given will be resolved to a ribbon which will be
 			removed.
 		`,
-		{browseMode: function(){ return !this.collection && 'disabled' }},
+		{browseMode: 'uncollect'},
 		function(gids, collection){
 			var that = this
 			gids = gids || 'current'
@@ -2595,12 +2595,8 @@ var UICollectionActions = actions.Actions({
 			}
 			this.collect(gids || 'current', title) }, 2)],
 	collectRibbon: ['Collections|Ribbon/Add $ribbon to collection...',
-		// NOTE: this is not an alias as we need it to be marked as a dialog...
-		//widgets.uiDialog(function(){ return this.collect('ribbon') })],
 		'collect: "ribbon"'],
 	collectLoaded: ['Collections/$Add loaded images to collection...',
-		// NOTE: this is not an alias as we need it to be marked as a dialog...
-		//widgets.uiDialog(function(){ return this.collect('loaded') })],
 		'collect: "loaded"'],
 	joinCollect: [
 		collectionGetterWrapper(function(title){ this.joinCollect(title) })],
