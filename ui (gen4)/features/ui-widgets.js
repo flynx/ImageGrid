@@ -644,18 +644,26 @@ var DialogsActions = actions.Actions({
 	},
 
 	// testers...
+	//
+	// XXX should these test only the root action or the whole tree???
 	isUIContainer: ['- Interface/',
-		actions.doWithRootAction(function(action){
-			return action != null
-				&& action.__container__ == true })],
+		function(action){
+			return !!this.getActionAttr(action, '__container__') }],
+		//actions.doWithRootAction(function(action){
+		//	return action != null
+		//		&& action.__container__ == true })],
 	isUIDialog: ['- Interface/',
-		actions.doWithRootAction(function(action){
-			return action != null 
-				&& action.__dialog__ == true })],
+		function(action){
+			return !!this.getActionAttr(action, '__dialog__') }],
+		//actions.doWithRootAction(function(action){
+		//	return action != null 
+		//		&& action.__dialog__ == true })],
 	isUIElement: ['- Interface/',
-		actions.doWithRootAction(function(action){
-			return action != null 
-				&& (action.__dialog__ == true || action.__container__ == true) })],
+		function(action){ 
+			return this.isUIDialog(action) || this.isUIContainer(action) }],
+		//actions.doWithRootAction(function(action){
+		//	return action != null 
+		//		&& (action.__dialog__ == true || action.__container__ == true) })],
 
 
 	// container constructors...
