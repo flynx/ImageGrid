@@ -837,7 +837,7 @@ var DialogsActions = actions.Actions({
 								+ (/^- .*$/.test(doc) ? ' (disabled)' : ''))
 						.replace(/^-?[0-9]+\s*:\s*/, '')
 						.trim()
-					make(txt)
+					make(txt == '*' ? `${dialog} (${txt})` : txt)
 						.on('open', function(){
 							actions[dialog]()
 						})
