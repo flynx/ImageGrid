@@ -788,6 +788,13 @@ var ExampleUIActions = actions.Actions({
 		})],
 	exampleDialogListerL: ['Test/Combined dialog & lister (lister mode)/*',
 		'exampleDialogLister: ...'],
+
+	testList: ['Test/List/*',
+		function(path, make){ return function(){
+			make('A')
+			make('B')
+			make('C')
+		} }],
 })
 
 var ExampleUI = 
@@ -799,12 +806,43 @@ module.ExampleUI = core.ImageGridFeatures.Feature({
 	depends: [
 		'ui-browse-actions',
 	],
+	suggested: [
+		'ui-action-examples-2',
+	],
 	actions: ExampleUIActions,
 
 	handlers: [
 	],
 })
 
+
+
+//---------------------------------------------------------------------
+
+var ExampleUI2Actions = actions.Actions({
+	testList: ['Test/List/*',
+		function(path, make){ return function(){
+			make('---')
+			make('X')
+			make('Y')
+			make('Z')
+		} }],
+})
+
+var ExampleUI = 
+module.ExampleUI = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-action-examples-2',
+	depends: [
+		'ui-action-examples',
+	],
+	actions: ExampleUI2Actions,
+
+	handlers: [
+	],
+})
 
 
 //---------------------------------------------------------------------
