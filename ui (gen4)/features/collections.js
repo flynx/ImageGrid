@@ -772,18 +772,6 @@ var CollectionActions = actions.Actions({
 		}],
 
 
-	// aliases...
-	//
-	// XXX this may show up as a dialog, to disable this just add 
-	// 		__dialog__: false to attrs...
-	loadMainCollection: ['Collections/Exit collection view',
-		{
-			browseMode: 'uncollect', 
-			__dialog__: false,
-		},
-		`loadCollection: "${MAIN_COLLECTION_TITLE}"`],
-
-
 	// Collection editing....
 	//
 	// NOTE: Currently these are sync, and sequencing collections 
@@ -2579,6 +2567,14 @@ var UICollectionActions = actions.Actions({
 	// XXX EXPERIMENTAL...
 	loadCollection: [
 		collectionGetterWrapper(function(title){ this.loadCollection(title) })],
+	loadMainCollection: ['Collections/Exit collection view',
+		{
+			browseMode: 'uncollect', 
+			// prevent this from showing up in .uiDialogs list...
+			__dialog__: false,
+		},
+		`loadCollection: "${MAIN_COLLECTION_TITLE}"`],
+
 
 	// Collection actions with collection selection...
 	//

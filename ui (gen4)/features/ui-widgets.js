@@ -1310,6 +1310,7 @@ var BrowseActionsActions = actions.Actions({
 				'Crop/-81:Uncrop all',
 				'Crop/-82:$Uncrop',
 			'Collec$tions',
+				'Collections/-50:.*exit.*',
 				'Collections/-60:.*edit.*',
 				'Collections/-70:---',
 				'Collections/-70:.*remove.*',
