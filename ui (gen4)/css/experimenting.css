@@ -13,8 +13,6 @@ body {
 	/* this will prevent odd blur effects when blurring out specific 
 		elements... */
 	background: black;
-
-	/*font: OpenSans, sans-serif;*/
 }
 
 /* show image gid... */
