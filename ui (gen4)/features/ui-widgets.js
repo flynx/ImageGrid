@@ -425,6 +425,9 @@ module.uiDialog = function(func){
 // NOTE: arguments after the constructor will be passed to the container.
 //
 // XXX do we need a means to reuse containers, e.g. ??? 
+// XXX need to revise this API as passing a container title ONLY works
+// 		for actions explicitly created with makeUIDialog(..) and not 
+// 		extended/overloaded...
 var makeUIDialog =
 module.makeUIDialog = function(a, b){
 	var args = [].slice.call(arguments)
@@ -440,7 +443,6 @@ module.makeUIDialog = function(a, b){
 
 	return uiDialog(function(){
 		var args = [].slice.call(arguments)
-
 
 		// see if the first arg is a container spec...
 		var container = !(args[0] instanceof Array) && this.isUIContainer(args[0]) ?
@@ -645,25 +647,34 @@ var DialogsActions = actions.Actions({
 
 	// testers...
 	//
-	// XXX should these test only the root action or the whole tree???
+	// ui elements...
 	isUIContainer: ['- Interface/',
 		function(action){
 			return !!this.getActionAttr(action, '__container__') }],
-		//actions.doWithRootAction(function(action){
-		//	return action != null
-		//		&& action.__container__ == true })],
 	isUIDialog: ['- Interface/',
 		function(action){
 			return !!this.getActionAttr(action, '__dialog__') }],
-		//actions.doWithRootAction(function(action){
-		//	return action != null 
-		//		&& action.__dialog__ == true })],
 	isUIElement: ['- Interface/',
 		function(action){ 
 			return this.isUIDialog(action) || this.isUIContainer(action) }],
-		//actions.doWithRootAction(function(action){
-		//	return action != null 
-		//		&& (action.__dialog__ == true || action.__container__ == true) })],
+	// extended ui elements
+	// ...first defined as a non-ui action and extended to a ui element.
+	isUIExtendedContainer: ['- Interface/',
+		actions.doWithRootAction(function(action, name){
+			return action != null
+				&& !action.__container__
+				&& this.isUIContainer(name) })],
+	isUIExtendedDialog: ['- Interface/',
+		actions.doWithRootAction(function(action, name){
+			return action != null 
+				&& !action.__dialog__
+	   			&& this.isUIDialog(name) })],
+	isUIExtendedElement: ['- Interface/',
+		actions.doWithRootAction(function(action, name){
+			return action != null 
+				&& !action.__dialog__ 
+				&& !action.__container__
+				&& this.isUIElement(name) })],
 
 
 	// container constructors...
@@ -708,13 +719,15 @@ var DialogsActions = actions.Actions({
 					.appendTo(this.dom)
 					.draggable(),
 				close: function(func){
-					if(func){
+					if(func instanceof Function){
 						this.dom.on('close', func)
 					} else {
 						this.dom.trigger('close', 'reject')
 						this.dom.remove()
 					}
 					return this
+				},
+				focus: function(){
 				},
 			}
 
