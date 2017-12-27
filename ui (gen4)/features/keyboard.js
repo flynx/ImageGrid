@@ -68,12 +68,14 @@ module.GLOBAL_KEYBOARD = {
 			'#0', '#1', '#2', '#3', '#4', '#5', '#6', '#7', '#8', '#9',
 		],
 
-
 		// handle in next section...
 		'(': 'NEXT',
 		')': 'NEXT',
 		'^': 'NEXT',
 		'$': 'NEXT',
+		// NOTE: we need to handle these explicitly...
+		alt_C: 'NEXT',
+		ctrl_C: 'NEXT',
 
 		// zooming...
 		'#1': 'fitScreen',
