@@ -2230,7 +2230,7 @@ module.AutoCollections = core.ImageGridFeatures.Feature({
 //
 // NOTE: if n > 1 and <n args are given then the given args will get 
 // 		passed to func with an appended title...
-var mixedModeCollectionAction = function(func, n){
+var mixedModeCollectionAction = function(func, n, last_used_collection){
 	return widgets.uiDialog(function(){
 		var args = [].slice.call(arguments)
 		// check if minimum number of arguments is reached...
@@ -2238,20 +2238,23 @@ var mixedModeCollectionAction = function(func, n){
 			// show the dialog...
 			//this.browseCollections(func) 
 			this.browseCollections(function(title){ 
-				return func.call(this, ...args.concat([title])) }) 
+					return func.call(this, ...args.concat([title])) },
+				null,
+				last_used_collection) 
 			: func.apply(this, args) }) }
 
 // Like mixedModeCollectionAction(..) but will do nothing if enough args 
 // are given...
-var collectionGetterWrapper = function(func, n){
+var collectionGetterWrapper = function(func, n, last_used_collection){
 	return widgets.uiDialog(function(){
 		var args = [].slice.call(arguments)
 		// check if minimum number of arguments is reached...
 		return args.length < (n || 1)
 			// show the dialog...
 			&& this.browseCollections(function(title){ 
-				return func.call(this, ...args.concat([title])) }) }) 
-}
+					return func.call(this, ...args.concat([title])) },
+				null,
+				last_used_collection) }) }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -2269,14 +2272,33 @@ var UICollectionActions = actions.Actions({
 		//'collection-last-used': null,
 	},
 
-	// XXX would be nice to make this nested (i.e. path list) -- collection grouping...
+	// XXX would be nice to make this nested (i.e. path list) -- collection grouping... (???)
+	// XXX should we use options object???
 	browseCollections: ['Collections/$Collections...',
 		core.doc`Collection list...
 
+			.browseCollections(action, new_message, last_used_collection)
+				-> dialog
+
+		All arguments are optional.
+
+		If action is given last_used_collection defaults to true.
+
+		If last_used_collection is true then .config['collection-last-used']
+		is used to select the last used collection and set when selecting
+		an item.
+		It last_used_collection is a string, then .config[last_used_collection]
+		will be used to store the last used collection title.
+
 		NOTE: collections are added live and not on dialog close...
 		`,
-		widgets.makeUIDialog(function(action, new_message){
+		widgets.makeUIDialog(function(action, new_message, last_used_collection){
 			var that = this
+			last_used_collection = last_used_collection == null ? 
+					(action && 'collection-last-used')
+				: last_used_collection === true ? 
+					'collection-last-used' 
+				: last_used_collection
 			var to_remove = []
 
 			var collections = that.collection_order = 
@@ -2438,16 +2460,17 @@ var UICollectionActions = actions.Actions({
 				}, {
 					cls: 'collection-list',
 					// focus current collection...
-					selected: (action && that.config['collection-last-used']) ?
-						that.config['collection-last-used']
+					selected: (last_used_collection 
+							&& that.config[last_used_collection]) ?
+						that.config[last_used_collection]
 						: JSON.stringify(
 							(that.collection || MAIN_COLLECTION_TITLE)
 								// XXX not sure it is good that we have to do this...
 								.replace(/\$/g, '')),
 				})
 				.open(function(_, title){
-					action 
-						&& (that.config['collection-last-used'] = title) })
+					last_used_collection
+						&& (that.config[last_used_collection] = title) })
 				.close(function(){
 					that.collection_order = collections
 
@@ -2602,7 +2625,7 @@ var UICollectionActions = actions.Actions({
 	joinCollect: [
 		collectionGetterWrapper(function(title){ this.joinCollect(title) })],
 
-	cropOutImagesInCollection: ['Collections/Crop $out images in collection...',
+	cropOutImagesInCollection: ['Collections|Crop/Crop $out images in collection...',
 		mixedModeCollectionAction(function(title){
 			var that = this
 			this.ensureCollection(title)
@@ -2612,7 +2635,7 @@ var UICollectionActions = actions.Actions({
 						.filter(function(gid){ return to_remove.indexOf(gid) < 0 })
 					that.crop(images, false)
 				})
-		})],
+		}, null, false)],
 
 	// XXX should these be here or in marks-specific feature???
 	markImagesInCollection: ['Collections|Mark/$Mark images in collection...',
