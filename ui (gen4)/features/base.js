@@ -1875,7 +1875,12 @@ module.CropActions = actions.Actions({
 			browseMode: 'uncrop',
 			// XXX group gid - ribbon
 			//getUndoState: function(data){ },
-			//undo: function(data){},
+			// XXX this does not account for:
+			// 		- location (order, ribbon, ribbon order) of removed images
+			// 			...ribbon order is important when a ribbon got cleared...
+			// 		- keyword and ribbon gids
+			//undo: function(d){ 
+			//	this.addToCrop(d.args.length > 0 ? d.args : d.current) },
 		},
 		function(gids){
 			var that = this
