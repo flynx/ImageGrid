@@ -243,7 +243,7 @@ var ImageMarkActions = actions.Actions({
 
 	removeMarkedFromCrop: ['Mark|Crop/Remove marked from crop',
 		{browseMode: function(target){ 
-			return (this.marked.length == 0 || !this.cropped) && 'disabled' }},
+				return (this.marked.length == 0 || !this.cropped) && 'disabled' }},
 		'removeFromCrop: marked'],
 
 	rotateMarkedCW: ['Mark/Rotate marked clockwise',

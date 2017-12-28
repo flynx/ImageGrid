@@ -648,7 +648,12 @@ var JournalActions = actions.Actions({
 	// 		undoable
 	//		getUndoState
 	// XXX should the action have control over what gets journaled and how???
+	// XXX should aliases support explicit undo???
 	updateJournalableActions: ['System/Update list of journalable actions',
+		doc`
+		
+		NOTE: action aliases can not handle undo.
+		`,
 		function(){
 			var that = this
 
@@ -687,8 +692,10 @@ var JournalActions = actions.Actions({
 
 			this.journalable = this.actions
 				.filter(function(action){
-					return !!that.getActionAttr(action, 'undo') 
-						|| !!that.getActionAttr(action, 'journal') 
+					// skip aliases...
+					return !(that[action] instanceof actions.Alias)
+						&& (!!that.getActionAttr(action, 'undo') 
+							|| !!that.getActionAttr(action, 'journal'))
 				})
 				// reset the handler
 				.map(function(action){
@@ -743,6 +750,9 @@ var JournalActions = actions.Actions({
 	// 			journal/rjournal or should we clean them out??? 
 	// 			(currently cleaned)
 	// XXX should we control what gets pushed to the journal???
+	// XXX should we run undo of every action that supports it in the chain???
+	// 		...i.e. multiple extending actions can support undo
+	// 		XXX will also need to handle aliases in chain...
 	undo: ['Edit/Undo',
 		doc`Undo last action from .journal that can be undone
 

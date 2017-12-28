@@ -1808,7 +1808,7 @@ module.CropActions = actions.Actions({
 	// 		...add a way to store additional info in the journal...
 	// XXX undo -- .removeFromCrop(..) but only the gids that were 
 	// 		actually added... (???)
-	// XXX BUG order does odd things...
+	// XXX BUG? order does odd things...
 	addToCrop: ['- Crop/',
 		core.doc`Add gids to current crop...
 
@@ -1868,20 +1868,25 @@ module.CropActions = actions.Actions({
 			;(ribbon || reference || mode)
 				&& this.data.placeImage(gids, ribbon, reference, mode)
 		}],
-	// XXX undo -- need containing ribbon info per gid to undo correctly...
 	removeFromCrop: ['Crop|Image/Remove from crop',
 		core.doc`
 		`,
 		{
 			browseMode: 'uncrop',
-			// XXX these does not account for:
-			// 		- ribbon_order
-			// 			...ribbon order is important when a ribbon got cleared...
-			// 		- keyword and ribbon gids
-			// XXX group gid - ribbon
 			getUndoState: function(d){
-				d.placements = (d.args[0] || [d.current])
-					.map(function(g){ return [ g, this.data.getRibbon(g) ] }.bind(this)) },
+				d.placements = (d.args[0] instanceof Array ? d.args[0] : [d.args[0]] 
+						|| [d.current])
+					.map(function(g){ return [ 
+						g == null ? 
+							d.current
+							// get the images...
+							// NOTE: we store the list if gids and not the 
+							// 		ribbon as when undoing we have no info 
+							// 		on ribbon content...
+							: this.data.ribbons[g] ? this.data.getImages(g) : g, 
+						// get ribbon and ribbon order...
+						[this.data.getRibbon(g), this.data.getRibbonOrder(g)],
+					] }.bind(this)) },
 			undo: function(d){ 
 				(d.placements || [])
 					.forEach(function(e){ 
@@ -1943,9 +1948,8 @@ module.CropActions = actions.Actions({
 			var that = this
 			gids = gids || this.current_ribbon
 			gids = gids == 'current' ? this.current_ribbon : gids
-			gids = gids instanceof Array ? 
-				gids.filter(function(gid){ return that.data.ribbons[gid] }) 
-				: [gids]
+			gids = (gids instanceof Array ?  gids : [gids])
+				.filter(function(gid){ return that.data.ribbons[that.data.getRibbon(gid)] }) 
 			return this.removeFromCrop(gids) 
 		}],
 })

@@ -785,6 +785,8 @@ var CollectionActions = actions.Actions({
 	//					...
 	//				})
 	// NOTE: see .ensureCollection(..) for more details...
+	//
+	// XXX undo: need to be able to place collected stuff...
 	collect: ['Collections|Image/Add $image to collection...',
 		core.doc`Add items to collection
 
@@ -944,6 +946,11 @@ var CollectionActions = actions.Actions({
 					}
 				}).bind(this))
 		}],
+	// XXX undo: see .removeFromCrop(..) for a reference implementation...
+	// 		this will need:
+	// 			- .collect(..) to be able to place images...
+	//			- also store image order as .data.order is cleared of 
+	//				removed images...
 	uncollect: ['Collections|Image/Remove from collection',
 		core.doc`Remove gid(s) from collection...
 
@@ -965,7 +972,13 @@ var CollectionActions = actions.Actions({
 
 		NOTE: this will remove any gid, be it image or ribbon.
 		`,
-		{browseMode: function(){ return !this.collection && 'disabled' }},
+		{
+			browseMode: function(){ return !this.collection && 'disabled' }
+			/* XXX 
+			getUndoState: function(d){},
+			undo: function(d){},
+			//*/
+		},
 		function(gids, collection){
 			collection = collection || this.collection
 			collection = this.collectionGIDs[collection] || collection 
