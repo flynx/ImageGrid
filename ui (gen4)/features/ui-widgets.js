@@ -1171,10 +1171,18 @@ var UIIntrospectionActions = actions.Actions({
 						make.Heading(heading)
 						;(list || [])
 							.forEach(function(tag){
-								make(tag)
-									.attr('feature', tag)
-									.on('open', function(){ that.showFeatureDoc(tag) })
+								make(tag, {
+									attrs: { 
+										feature: tag, 
+										root: no_deps.indexOf(tag) >= 0 ? 'true' : '',
+									},
+									open: function(){ that.showFeatureDoc(tag) },
+								})
 							}) }
+
+					// features that have no direct dependencies...
+					var no_deps = that.features.features.filter(function(f){ 
+						return (that.features.depends[f] || []).length == 0 })
 
 					draw('Loaded (in order)', that.features.features)
 					draw('Excluded', that.features.excluded)
@@ -1190,6 +1198,8 @@ var UIIntrospectionActions = actions.Actions({
 						// XXX loops...
 						// XXX conflicts...
 					}
+				}, {
+					cls: 'feature-list',
 				})
 				.run(function(){
 					// handle '?' button to browse path...

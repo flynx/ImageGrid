@@ -353,15 +353,14 @@ module.ViewerActions = actions.Actions({
 				now = true
 				target = null
 			}
-			var mode = this.config['ribbon-align-mode'] 
-				|| this.config['ribbon-focus-mode']
+			var mode = this.config['ribbon-align-mode'] || 'none'
+			mode = mode == 'none' ? this.config['ribbon-focus-mode'] : mode
 			var modes = this.config['ribbon-align-modes']
 
-			if(mode in modes && mode != 'manual'){
+			if(mode in modes && mode != 'manual' && mode != 'none'){
 				this[modes[mode]](target, scale, now)
 
 			// manual...
-			// XXX is this correct???
 			} else {
 				this
 					.centerRibbon(target)

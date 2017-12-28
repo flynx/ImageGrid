@@ -279,6 +279,13 @@ body {
 	font-style: italic;
 }
 
+/* Feature list */
+.browse-widget.feature-list .list .item[root="true"] .text:after {
+	content: "*";
+	margin-left: 0px;
+	opacity: 0.5;
+	font-style: italic;
+}
 
 /* External Editor List */
 .browse-widget.editor-list .list .item:first-child .text:after {

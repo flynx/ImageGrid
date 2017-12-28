@@ -226,7 +226,7 @@ var CollectionActions = actions.Actions({
 	//
 	collectionLoading: ['- Collections/',
 		core.doc`This is called by .loadCollection(..) or one of the 
-		overloading actions when collection load is done...
+		overloading actions around the collection load...
 
 		The .pre phase is called just before the load and the .post phase 
 		just after.
@@ -1276,6 +1276,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 		'crop',
 	],
 	suggested: [
+		'collections-local-config',
 		'collection-tags',
 		'auto-collections',
 
@@ -1794,6 +1795,56 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+var CollectionLocalConfig = actions.Actions({
+	config: {
+		// XXX should this be user editable???
+		// XXX should/can this be local to collection???
+		'collection-local-config': [
+		],
+	},
+
+	// handle collection .config
+	collectionConfigLoader: ['- Collections/',
+		{collectionFormat: 'config'},
+		function(title, state, logger){ 
+			// XXX save old config...
+
+			// XXX load new config... 
+		}],
+})
+
+var CollectionLocalConfig = 
+module.CollectionLocalConfig = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'collections-local-config',
+	depends: [
+		'collections',
+	],
+
+	handlers: [
+		/* XXX
+		['collectionLoading.pre',
+			function(){
+				var that = this
+				var state = {}
+				var opts = this.config['collection-local-config'] || []
+
+				// save outgoing collection state...
+				var cfg = {}
+				opts.forEach(function(n){
+					cfg[n] = JSON.parse(JSON.stringify(that.config[n])) 
+				})
+			}],
+		//*/
+	],
+})
+
+
+
+//---------------------------------------------------------------------
+
 var CollectionTagsActions = actions.Actions({
 	config: {
 		// List of tags to be stored in a collection, unique to it...
@@ -2285,6 +2336,8 @@ var UICollectionActions = actions.Actions({
 		//'collection-last-used': null,
 	},
 
+	// UI...
+	//
 	// XXX would be nice to make this nested (i.e. path list) -- collection grouping... (???)
 	// XXX should we use options object???
 	browseCollections: ['Collections/$Collections...',
@@ -2638,7 +2691,23 @@ var UICollectionActions = actions.Actions({
 	joinCollect: [
 		collectionGetterWrapper(function(title){ this.joinCollect(title) })],
 
-	cropOutImagesInCollection: ['Collections|Crop/Crop $out images in collection...',
+	// XXX do we need this???
+	cropImagesInCollection: ['Collections|Crop/Crop images in collection...',
+		{browseMode: function(){ 
+			return (!this.collections 
+					|| Object.keys(this.collections).length == 0) 
+				&& 'disabled' }},
+		mixedModeCollectionAction(function(title){
+			var that = this
+			this.ensureCollection(title)
+				.then(function(collection){
+					var images = collection.data.getImages('all')
+
+					that.crop(images, false)
+				})
+		}, null, false)],
+	cropOutImagesInCollection: ['Collections|Crop/Crop $out images in collec$tion...',
+		{browseMode: 'cropImagesInCollection'},
 		mixedModeCollectionAction(function(title){
 			var that = this
 			this.ensureCollection(title)
@@ -2652,10 +2721,7 @@ var UICollectionActions = actions.Actions({
 
 	// XXX should these be here or in marks-specific feature???
 	markImagesInCollection: ['Collections|Mark/$Mark images in collection...',
-		{browseMode: function(){ 
-			return (!this.collections 
-					|| Object.keys(this.collections).length == 0) 
-				&& 'disabled' }},
+		{browseMode: 'cropImagesInCollection'},
 		mixedModeCollectionAction(function(title){
 			var that = this
 			this.ensureCollection(title)
