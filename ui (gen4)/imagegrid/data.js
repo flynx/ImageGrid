@@ -1619,7 +1619,10 @@ var DataPrototype = {
 	//		-> data
 	//
 	// images is .getImage(..) compatible or a list of compatibles.
-	// ribbon is .getRibbon(..) compatible or 'keep'.
+	// ribbon is:
+	// 		- .getRibbon(..) compatible or 'keep'
+	// 		- a new ribbon gid (appended to .ribbon_order)
+	// 		- [gid, order] where gid will be placed at order in .ribbon_order
 	// order is .getImageOrder(..) compatible or 'keep'.
 	//
 	// This will not change the relative order of input images unless 
@@ -1648,6 +1651,15 @@ var DataPrototype = {
 		// vertical shift -- gather images to the target ribbon...
 		if(ribbon != 'keep'){
 			var to = this.getRibbon(ribbon)
+			// create ribbon...
+			if(to == null){
+				var i = ribbon instanceof Array ? ribbon[1] : null
+				to = ribbon instanceof Array ? ribbon[0] : ribbon
+				this.ribbons[to] = []
+				i == null ? 
+					this.ribbon_order.push(to)
+					: this.ribbon_order.splice(i, 0, to)
+			}
 			this.makeSparseImages(images)
 				.forEach(function(img, f){
 					var from = that.getRibbon(img)

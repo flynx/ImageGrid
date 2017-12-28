@@ -1808,6 +1808,7 @@ module.CropActions = actions.Actions({
 	// 		...add a way to store additional info in the journal...
 	// XXX undo -- .removeFromCrop(..) but only the gids that were 
 	// 		actually added... (???)
+	// XXX BUG order does odd things...
 	addToCrop: ['- Crop/',
 		core.doc`Add gids to current crop...
 
@@ -1873,14 +1874,18 @@ module.CropActions = actions.Actions({
 		`,
 		{
 			browseMode: 'uncrop',
-			// XXX group gid - ribbon
-			//getUndoState: function(data){ },
-			// XXX this does not account for:
-			// 		- location (order, ribbon, ribbon order) of removed images
+			// XXX these does not account for:
+			// 		- ribbon_order
 			// 			...ribbon order is important when a ribbon got cleared...
 			// 		- keyword and ribbon gids
-			//undo: function(d){ 
-			//	this.addToCrop(d.args.length > 0 ? d.args : d.current) },
+			// XXX group gid - ribbon
+			getUndoState: function(d){
+				d.placements = (d.args[0] || [d.current])
+					.map(function(g){ return [ g, this.data.getRibbon(g) ] }.bind(this)) },
+			undo: function(d){ 
+				(d.placements || [])
+					.forEach(function(e){ 
+						this.addToCrop(e[0], e[1], 'keep') }.bind(this)) },
 		},
 		function(gids){
 			var that = this
@@ -1933,7 +1938,7 @@ module.CropActions = actions.Actions({
 		
 		NOTE: this is a shorthand for .removeFromCrop(..) but only supports
 			ribbon removal.`,
-		{browseMode: 'uncrop'},
+		{browseMode: 'uncrop',},
 		function(gids){ 
 			var that = this
 			gids = gids || this.current_ribbon
