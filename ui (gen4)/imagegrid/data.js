@@ -892,7 +892,12 @@ var DataPrototype = {
 			offset = -1
 		} else {
 			var offset = 0 
-			mode = mode == null ? 'before' : mode
+			// NOTE: this will set the default mode to 'before' but only
+			// 		when we are looking withing a specific set of images
+			// 		...otherwise it will be left as is, i.e. strict mode.
+			mode = (mode == null && list != null) ?
+				'before' 
+				: mode
 		}
 
 		// normalize the list to a sparse list of gids...
@@ -1105,7 +1110,7 @@ var DataPrototype = {
 				this.makeSparseImages(ribbons[k], res)
 			}
 			list = res.compact()
-			target = null 
+			target = null
 
 		// filter out the unloaded gids from given list...
 		} else if(target != null && target instanceof Array){

@@ -610,8 +610,9 @@ actions.Actions({
 				? this.ribbons.elemGID(target)
 				// NOTE: data.getImage(..) can return null at start or end
 				// 		of ribbon, thus we need to account for this...
-				: (this.data.getImage(target)
+				: (this.data.getImage(target, 'before')
 					|| this.data.getImage(target, 'after'))
+
 
 			w = w || this.screenwidth
 
@@ -712,7 +713,7 @@ core.ImageGridFeatures.Feature({
 				// NOTE: we have to do this as we are called BEFORE the 
 				// 		actual focus change happens...
 				// XXX is there a better way to do this???
-				target = list != null ? target = this.data.getImage(target, list) : target
+				target = list != null ? this.data.getImage(target, list) : target
 
 				this.updateRibbon(target)
 			}],

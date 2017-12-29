@@ -105,6 +105,8 @@ core.ImageGridFeatures.Feature('imagegrid-testing', [
 	'imagegrid-commandline',
 	'imagegrid-ui',
 
+	//'-ui-partial-ribbons',
+
 
 	// read-only mode...
 	// XXX at this point this needs some more tuneup, the following 
