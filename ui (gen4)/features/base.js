@@ -1843,6 +1843,8 @@ module.CropActions = actions.Actions({
 		`,
 		// NOTE: we do not need undo here as we'll not use this directly
 		{
+			// NOTE: this modifies the journaled arguments (.args) and 
+			// 		excludes gids that are not loaded...
 			getUndoState: function(d){
 				var a = d.args[0] || []
 				a = a instanceof Array ? a : [a]
