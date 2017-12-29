@@ -1801,8 +1801,6 @@ module.CropActions = actions.Actions({
 		}],
 
 	// crop edit actions...
-	// XXX undo -- .removeFromCrop(..) but only the gids that were 
-	// 		actually added... (???)
 	// XXX BUG? order does odd things...
 	addToCrop: ['- Crop/',
 		core.doc`Add gids to current crop...
@@ -1840,13 +1838,27 @@ module.CropActions = actions.Actions({
 			different in that it does not require the images to be loaded
 			in the current crop...
 		NOTE: this can only add gids to current crop...
+		NOTE; passing this a gid of an unloaded ribbon is pointless, so 
+			it is not supported.
 		`,
+		// NOTE: we do not need undo here as we'll not use this directly
+		{
+			getUndoState: function(d){
+				var a = d.args[0] || []
+				a = a instanceof Array ? a : [a]
+				d.args[0] = a.filter(function(g){
+					return !this.data.getImage(g, 'loaded') }.bind(this)) },
+			undo: 'removeFromCrop',
+		},
 		function(gids, ribbon, reference, mode){
 			if(!this.cropped){
 				return
 			}
 
-			gids = gids instanceof Array ? gids : [gids]
+			gids = (gids instanceof Array ? gids : [gids])
+				// filter out gids that are already loaded...
+				.filter(function(g){
+					return !this.data.getImage(g, 'loaded') }.bind(this))
 
 			var r = this.data.ribbons[this.current_ribbon]
 			var o = this.data.order
@@ -1933,6 +1945,7 @@ module.CropActions = actions.Actions({
 					data.getImage(this.direction == 'left' ? 'before' : 'after')
 					|| data.getImage(this.direction == 'left' ? 'after' : 'before'))
 		}],
+	// NOTE: this is undone by .removeFromCrop(..)
 	removeRibbonFromCrop:['Crop|Ribbon/Remove ribbon from crop',
 		core.doc`
 		

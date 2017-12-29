@@ -311,6 +311,8 @@ var CollectionActions = actions.Actions({
 
 			// handle collection...
 			p = running[collection] = new Promise(function(resolve, reject){
+				// NOTE: we do not need to return this as we'll resolve/reject
+				// 		manually in .then(..) / .catch(..)
 				Promise
 					.all(Object.keys(handlers)
 						// filter relevant handlers...
@@ -853,6 +855,7 @@ var CollectionActions = actions.Actions({
 					// add to collection...
 					var data = this.data.constructor.fromArray(gids)
 
+					// XXX should we use collection.data.placeImage(..)???
 					return this.joinCollect(null, collection, data)
 				}).bind(this))
 		}],
@@ -1804,12 +1807,20 @@ var CollectionLocalConfig = actions.Actions({
 	},
 
 	// handle collection .config
+	// XXX problems:
+	// 		- config leaks -- when moving crom collection to collection 
+	// 			with individual option sets some options may not get 
+	// 			restored if handled incorrectly...
+	// 			...one way to deal with this is to restore the base config
+	// 			on every load before loading the new config...
 	collectionConfigLoader: ['- Collections/',
 		{collectionFormat: 'config'},
 		function(title, state, logger){ 
-			// XXX save old config...
+			// XXX save old config -- in their respective collection...
 
-			// XXX load new config... 
+			// XXX load MAIN_COLLECTION_TITLE config...
+
+			// XXX load new config -- from target collection... 
 		}],
 })
 
@@ -2650,6 +2661,9 @@ var UICollectionActions = actions.Actions({
 				})
 		})],
 
+
+	// Collection actions with collection selection...
+	//
 	// XXX need to add "ALL" -- might need to rework .browseCollections(..) for this...
 	// XXX also do:
 	// 		.saveCollection(..)
@@ -2664,9 +2678,6 @@ var UICollectionActions = actions.Actions({
 		},
 		`loadCollection: "${MAIN_COLLECTION_TITLE}"`],
 
-
-	// Collection actions with collection selection...
-	//
 	// XXX extend .saveCollection(..) and remove this...
 	// 		...see .loadCollection(..) notes above...
 	// XXX should we warn the user when overwriting???

@@ -796,7 +796,7 @@ var JournalActions = actions.Actions({
 							undo.call(this, a)
 						: typeof(undo) == typeof('str') ? 
 							// pass journal structure as-is...
-							this[undo].apply(this, a)
+							this[undo].apply(this, a.args)
 						: null
 
 					// push the undone command to the reverse journal...

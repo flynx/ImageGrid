@@ -135,14 +135,11 @@ module.GLOBAL_KEYBOARD = {
 		Esc: 'uncrop',
 		shift_Esc: 'uncropAll',
 
-		// XXX
-		//ctrl_S: 'saveAsCollection',
-
 		W: 'testAction2 -- XXX DEBUG: remove when done...',
 
-		// XXX not sure about this...
 		Del: 'removeFromCrop',
 		shift_Del: 'removeMarkedFromCrop',
+		ctrl_Del: 'removeRibbonFromCrop',
 	},
 
 	'Collection': {

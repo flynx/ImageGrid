@@ -788,6 +788,9 @@ module.writeIndex =
 function(json, path, date, filename_tpl, logger){
 	logger = logger && logger.push('Index')
 
+	// XXX get this from args/config...
+	var spaces = null
+
 	path = util.normalizePath(path)
 	filename_tpl = filename_tpl || FILENAME
 	// XXX for some reason this gets the unpatched node.js Date, so we 
@@ -810,7 +813,8 @@ function(json, path, date, filename_tpl, logger){
 			// 		be too many files...
 			return Promise
 				.all(Object.keys(json).map(function(keyword){
-					var data = JSON.stringify(json[keyword])
+					//var data = JSON.stringify(json[keyword])
+					var data = JSON.stringify(json[keyword], null, spaces)
 
 					// get the sub-path and keyword...
 					var sub_path = keyword.split(/[\\\/]/g)

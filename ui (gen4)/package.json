@@ -34,6 +34,7 @@
     "requirejs": "^2.3.5",
     "requirejs-plugins": "^1.0.2",
     "sharp": "^0.17.3",
+    "strip-json-comments": "^2.0.1",
     "wildglob": "^0.1.1"
   },
   "optionalDependencies": {
