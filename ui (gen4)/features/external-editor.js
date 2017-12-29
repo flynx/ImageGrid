@@ -133,6 +133,7 @@ module.ExternalEditor = core.ImageGridFeatures.Feature({
 
 var ExternalEditorUIActions = actions.Actions({
 	// XXX empty title -- use app name without ext...
+	// XXX update to new dialog API...
 	externalEditorDialog: ['- Edit/',
 		widgets.makeUIDialog(function(editor){
 			var that = this
@@ -213,7 +214,8 @@ var ExternalEditorUIActions = actions.Actions({
 							return editor.target 
 								|| that.config['external-editor-targets'][0] }])
 					.on('open', 
-						widgets.makeNestedConfigListEditor(that, dialog.parent,
+						//widgets.makeNestedConfigListEditor(that, dialog.parent,
+						widgets.makeNestedConfigListEditor(that, make.dialog.parent,
 							'external-editor-targets',
 							function(val){ 
 								if(val == null){
@@ -302,7 +304,7 @@ var ExternalEditorUIActions = actions.Actions({
 										editors.push({
 											path: path,
 										})
-										that.config['external-editors'] = editors
+										that.config['external-editors'] = editors.slice()
 
 										// is this the correct way to do this???
 										b.close()
@@ -338,7 +340,7 @@ var ExternalEditorUIActions = actions.Actions({
 									target.before(cur)
 									editors.splice(0, 0, editors.splice(i, 1)[0])
 
-									that.config['external-editors'] = editors
+									that.config['external-editors'] = editors.slice()
 								}
 							}],
 						// set secondary editor...
@@ -358,7 +360,7 @@ var ExternalEditorUIActions = actions.Actions({
 									}
 									editors.splice(1, 0, editors.splice(i, 1)[0])
 
-									that.config['external-editors'] = editors
+									that.config['external-editors'] = editors.slice()
 								}
 							}],
 						// mark for removal...
@@ -398,7 +400,7 @@ var ExternalEditorUIActions = actions.Actions({
 						}
 
 						editors.splice(_getEditor(e), 1)
-						that.config['external-editors'] = editors
+						that.config['external-editors'] = editors.slice()
 					})
 				})
 
