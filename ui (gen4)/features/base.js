@@ -1895,6 +1895,8 @@ module.CropActions = actions.Actions({
 							: this.data.ribbons[g] ? this.data.getImages(g) : g, 
 						// get ribbon and ribbon order...
 						[this.data.getRibbon(g), this.data.getRibbonOrder(g)],
+						// XXX this is not needed here but is used by .uncollect.undo(..)
+						this.data.order.indexOf(g),
 					] }.bind(this)) },
 			undo: function(d){ 
 				(d.placements || [])

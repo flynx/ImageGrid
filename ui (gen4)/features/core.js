@@ -681,6 +681,9 @@ var JournalActions = actions.Actions({
 
 					// get additional undo state...
 					var update = that.getActionAttr(action, 'getUndoState')
+					while(typeof(update) == typeof('str')){
+						update = that.getActionAttr(update, 'getUndoState')
+					}
 					update 
 						&& update instanceof Function
 						&& update.call(that, data)
@@ -795,7 +798,7 @@ var JournalActions = actions.Actions({
 							// pass the action name...
 							undo.call(this, a)
 						: typeof(undo) == typeof('str') ? 
-							// pass journal structure as-is...
+							// XXX pass journal structure as-is... (???)
 							this[undo].apply(this, a.args)
 						: null
 

@@ -976,10 +976,33 @@ var CollectionActions = actions.Actions({
 		NOTE: this will remove any gid, be it image or ribbon.
 		`,
 		{
-			browseMode: function(){ return !this.collection && 'disabled' }
-			/* XXX 
-			getUndoState: function(d){},
-			undo: function(d){},
+			browseMode: function(){ return !this.collection && 'disabled' },
+			/*/ XXX two ways to go:
+			//		- .collect(..) + .data.placeImage(..)
+			//		- rewrite .collect(..) to use .data.placeImage(..) (like: .addToCrop(..))
+			//getUndoState: 'removeFromCrop',
+			getUndoState: function(d){
+				var base = this.getActionAttr('removeFromCrop', 'getUndoState')
+				base && base.call(this, d)
+				d.collection = d.args[1] || this.collection
+			},
+			// XXX this does not work yet...
+			// XXX this use 
+			undo: function(d){
+				var that = this
+				var gids = d.args[0] || [d.current]
+				gids = gids instanceof Array ? gids : [gids]
+				var collection = d.collection
+				this
+					.collect(gids, collection)
+					.ensureCollection(collection)
+						.then(function(){
+							d.placements.forEach(function(e){
+								// XXX does not place correctly...
+								that.data.placeImage(e[0], e[1], that.data.order[e[2]]) 
+							that.reload(true)
+						}) })
+			},
 			//*/
 		},
 		function(gids, collection){
