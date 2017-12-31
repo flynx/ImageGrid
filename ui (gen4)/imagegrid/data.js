@@ -1213,6 +1213,58 @@ var DataPrototype = {
 		return res
 	},
 
+	// Get image positions...
+	//
+	// 	Get current image position...
+	// 	.getImagePositions()
+	// 		-> positions
+	//
+	// 	Get positions of gid(s)...
+	// 	.getImagePositions(gid)
+	// 	.getImagePositions(gid, ...)
+	// 	.getImagePositions([gid, ...])
+	// 		-> positions
+	//
+	// The resulting positions will be sorted to .order, ribbon gids 
+	// are pushed to the end of the list and also sorted to .ribbon_order
+	//
+	// Returns:
+	// 	[
+	// 		[<image-gid>, 
+	// 			[<ribbon-gid>, <ribbon-order>]], 
+	// 			<image-order>],
+	// 		...
+	// 	]
+	//
+	// NOTE: if a ribbon gid is encountered it will be expanded to a 
+	// 		list of image gids...
+	getImagePositions: function(gids){
+		gids = arguments.length > 1 ? 
+			[].slice.call(arguments) 
+			: (gids || this.current)
+		gids = (gids instanceof Array ? gids : [gids])
+			// sort ribbon gids to .ribbon_order
+			.concat(this.ribbon_order
+				.filter(function(g){ 
+					var i = gids.indexOf(g)
+					return i >= 0 ? !!gids.splice(i, 1) : false }))
+		return this
+			// sort list...
+			// NOTE: ribbon gids will get pushed to the end...
+			.makeSparseImages(gids)
+			.map(function(g){ return [ 
+				// get the images...
+				this.ribbons[g] ? this.getImages(g) : g, 
+				// get ribbon and ribbon order...
+				[this.getRibbon(g), this.getRibbonOrder(g)],
+				// global order...
+				this.order.indexOf(g),
+			] }.bind(this))
+			// XXX do we need this???
+			// 		...removing this would also encode order...
+			.compact()
+	},
+
 	// Get ribbon...
 	// 
 	//	Get current ribbon:

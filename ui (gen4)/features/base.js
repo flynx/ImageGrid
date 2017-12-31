@@ -1800,6 +1800,7 @@ module.CropActions = actions.Actions({
 			this.crop(this.data[selector](tags), flatten)
 		}],
 
+
 	// crop edit actions...
 	// XXX BUG? order does odd things...
 	addToCrop: ['- Crop/',
@@ -1883,21 +1884,7 @@ module.CropActions = actions.Actions({
 		{
 			browseMode: 'uncrop',
 			getUndoState: function(d){
-				d.placements = (d.args[0] instanceof Array ? d.args[0] : [d.args[0]] 
-						|| [d.current])
-					.map(function(g){ return [ 
-						g == null ? 
-							d.current
-							// get the images...
-							// NOTE: we store the list if gids and not the 
-							// 		ribbon as when undoing we have no info 
-							// 		on ribbon content...
-							: this.data.ribbons[g] ? this.data.getImages(g) : g, 
-						// get ribbon and ribbon order...
-						[this.data.getRibbon(g), this.data.getRibbonOrder(g)],
-						// XXX this is not needed here but is used by .uncollect.undo(..)
-						this.data.order.indexOf(g),
-					] }.bind(this)) },
+				d.placements = this.data.getImagePositions(d.args[0]) },
 			undo: function(d){ 
 				(d.placements || [])
 					.forEach(function(e){ 

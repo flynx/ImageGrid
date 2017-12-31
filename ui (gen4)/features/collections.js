@@ -977,17 +977,14 @@ var CollectionActions = actions.Actions({
 		`,
 		{
 			browseMode: function(){ return !this.collection && 'disabled' },
-			/*/ XXX two ways to go:
+			// XXX two ways to go:
 			//		- .collect(..) + .data.placeImage(..)
 			//		- rewrite .collect(..) to use .data.placeImage(..) (like: .addToCrop(..))
-			//getUndoState: 'removeFromCrop',
 			getUndoState: function(d){
-				var base = this.getActionAttr('removeFromCrop', 'getUndoState')
-				base && base.call(this, d)
+				d.placements = this.data.getImagePositions(d.args[0]) },
 				d.collection = d.args[1] || this.collection
 			},
-			// XXX this does not work yet...
-			// XXX this use 
+			/*/ XXX this does not work yet...
 			undo: function(d){
 				var that = this
 				var gids = d.args[0] || [d.current]
