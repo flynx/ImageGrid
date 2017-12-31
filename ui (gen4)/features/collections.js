@@ -981,10 +981,10 @@ var CollectionActions = actions.Actions({
 			//		- .collect(..) + .data.placeImage(..)
 			//		- rewrite .collect(..) to use .data.placeImage(..) (like: .addToCrop(..))
 			getUndoState: function(d){
-				d.placements = this.data.getImagePositions(d.args[0]) },
+				d.placements = this.data.getImagePositions(d.args[0])
 				d.collection = d.args[1] || this.collection
 			},
-			/*/ XXX this does not work yet...
+			// XXX this does not work yet...
 			undo: function(d){
 				var that = this
 				var gids = d.args[0] || [d.current]
