@@ -985,6 +985,7 @@ var CollectionActions = actions.Actions({
 				d.collection = d.args[1] || this.collection
 			},
 			// XXX this does not work yet...
+			// 		...use .shiftImageTo(..)???
 			undo: function(d){
 				var that = this
 				var gids = d.args[0] || [d.current]
