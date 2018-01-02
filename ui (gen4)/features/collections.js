@@ -985,13 +985,21 @@ var CollectionActions = actions.Actions({
 				d.collection = d.args[1] || this.collection
 			},
 			// XXX this does not work yet...
-			// 		...use .shiftImageTo(..)???
+			// 		...need to trigger .reload(..), and considering that
+			// 		this is a UI action, doing so explicitly is logical...
+			// XXX can we unify .collect(..) and .addToCrop(..)???
+			// 		...they essentially do the same thing with one exception
+			// 		a crop retains the full order while a collection has a 
+			// 		cleared order...
+			// 		..might also be a good idea to unify much of the 
+			// 		collection and crop mechanics...
 			undo: function(d){
 				var that = this
 				var gids = d.args[0] || [d.current]
 				gids = gids instanceof Array ? gids : [gids]
 				var collection = d.collection
 				this
+					// XXX is this the right approach???
 					.collect(gids, collection)
 					.ensureCollection(collection)
 						.then(function(){
