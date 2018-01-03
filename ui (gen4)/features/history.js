@@ -636,7 +636,6 @@ var URLHistoryUIActions = actions.Actions({
 				selected: cur,
 			})
 			.open(function(evt, path){ 
-				save()
 				dialog.close() 
 				that.openURLFromHistory(path)
 			})
