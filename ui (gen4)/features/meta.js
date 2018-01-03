@@ -106,6 +106,10 @@ core.ImageGridFeatures.Feature('imagegrid-testing', [
 	'imagegrid-ui',
 
 	//'-ui-partial-ribbons',
+	
+	// Add this to enable widget mode...
+	// XXX needs testing...
+	//'widget',
 
 
 	// read-only mode...

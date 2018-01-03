@@ -28,6 +28,20 @@ var base = require('features/base')
 
 /*********************************************************************/
 
+var Widget = 
+module.Widget = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'widget',
+	depends: [
+		'-ui-app-control',
+	],
+})
+
+
+//---------------------------------------------------------------------
+
 var NWHostActions = actions.Actions({
 	// window stuff...
 	// XXX should this be nested in a .window object???
