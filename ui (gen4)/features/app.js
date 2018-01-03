@@ -558,7 +558,7 @@ module.AppButtons = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-app-buttons',
 	depends: [
-		'ui-app-control',
+		'ui-windowed-app-control',
 		'ui-buttons',
 	],
 	suggested: [
