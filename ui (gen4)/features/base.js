@@ -1217,7 +1217,13 @@ module.TagsEditActions = actions.Actions({
 			tags = tags instanceof Array ? tags : [tags]
 
 			var that = this
-			gids = gids.map(function(gid){ return that.data.getImage(gid) })
+			gids = gids
+				.map(function(gid){ return that.data.getImage(gid) })
+				.filter(function(gid){ return gid != null })
+
+			if(gids.length == 0){
+				return
+			}
 
 			// data...
 			this.data.tag(tags, gids)

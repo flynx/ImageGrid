@@ -37,14 +37,20 @@ var ui = require('features/ui')
 function makeTagTogglerAction(tag){
 	// get actual target gids...
 	var _getTarget = function(target){
-		target = target || 'current'
+		target = target || this.current
 		target = target == 'all' 
-				|| target == 'loaded' 
-				|| target in this.data.ribbons 
-					? this.data.getImages(target)
-			: target == 'ribbon' ? this.data.getImages('current')
+					|| target == 'loaded' 
+					|| target in this.data.ribbons 
+						? 
+				this.data.getImages(target)
+			: target == 'ribbon' ? 
+				this.data.getImages('current')
 			: target
-		return target instanceof Array ? target : [target]
+		return target == null ?
+				[]	
+			: target instanceof Array ? 
+				target 
+			: [target]
 	}
 
 	// the toggler...
