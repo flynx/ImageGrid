@@ -291,12 +291,92 @@ module.ElectronHost = core.ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// XXX this needs to trigger only when fullwindow browser mode and not 
+// 		get loaded when in widget mode...
 
-var AppControlActions = actions.Actions({
+var BrowserHostActions = actions.Actions({
+	// window stuff...
+	get title(){
+		return $('title').text() },
+	set title(value){
+		$('title').text(value) },
+})
+
+// NOTE: keep this defined last as a fallback...
+var BrowserHost = 
+module.BrowserHost = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-browser-host',
+	exclusive: 'ui-host',
+	depends: [],
+
+	actions: BrowserHostActions,
+
+	isApplicable: function(){ return !this.runtime.widget },
+})
+
+
+//---------------------------------------------------------------------
+
+var PortableAppControl = 
+module.PortableAppControl = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'ui-portable-app-control',
+	depends: [
+		'ui',
+		'ui-host',
+	],
+
+	isApplicable: function(){ return this.runtime.browser },
+
 	config: {
 		//'window-title': 'ImageGrid.Viewer (${VERSION}): ${FILENAME}',
 		'window-title': '${FILENAME} - ImageGrid.Viewer (${VERSION})',
+	},
 
+	handlers: [
+		// update window title...
+		// XXX make this generic...
+		['focusImage',
+			function(){
+				if(this.images){
+					var img = this.images[this.current]
+					this.title = (this.config['window-title'] 
+							|| 'ImageGrid.Viewer (${VERSION}): ${FILENAME}')
+						// XXX get this from the viewer...
+						.replace('${VERSION}', this.version || 'gen4')
+						.replace('${FILENAME}', 
+							img ? 
+									(img.name 
+										|| (img.path && img.path.replace(/\.[\\\/]/, ''))
+										|| this.current
+										|| '')
+								: (this.current || ''))
+						.replace('${PATH}', 
+							(img && img.path) ?
+									(img.base_path || '.') 
+										+'/'+ img.path.replace(/\.[\\\/]/, '')
+								: '')
+						/*
+						.replace('${DIR}', 
+							pathlib.dirname((img.base_path || '.') 
+								+'/'+ img.path.replace(/\.[\\\/]/, '')))
+						*/
+						// XXX add ...
+				}
+			}],
+	],
+})
+
+
+//---------------------------------------------------------------------
+
+var WindowedAppControlActions = actions.Actions({
+	config: {
 		'window-delay-initial-display': 200,
 
 		'show-splash-screen': 'on',
@@ -402,18 +482,18 @@ var AppControlActions = actions.Actions({
 // XXX store/load window state...
 // 		- size
 // 		- state (fullscreen/normal)
-var AppControl = 
-module.AppControl = core.ImageGridFeatures.Feature({
+var WindowedAppControl = 
+module.WindowedAppControl = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
-	tag: 'ui-app-control',
+	tag: 'ui-windowed-app-control',
 	depends: [
 		'ui',
 		'ui-host',
 	],
 
-	actions: AppControlActions,
+	actions: WindowedAppControlActions,
 
 	// XXX BUG: when running in electron:
 	// 			- loading this breaks the other buttons (menu, collections, ...)
@@ -440,39 +520,17 @@ module.AppControl = core.ImageGridFeatures.Feature({
 			'toggleFullScreen',
 		],
 			function(){ this.storeWindowGeometry() }],
-
-		// update window title...
-		// XXX make this generic...
-		['focusImage',
-			function(){
-				if(this.images){
-					var img = this.images[this.current]
-					this.title = (this.config['window-title'] 
-							|| 'ImageGrid.Viewer (${VERSION}): ${FILENAME}')
-						// XXX get this from the viewer...
-						.replace('${VERSION}', this.version || 'gen4')
-						.replace('${FILENAME}', 
-							img ? 
-									(img.name 
-										|| (img.path && img.path.replace(/\.[\\\/]/, ''))
-										|| '')
-								: '')
-						.replace('${PATH}', 
-							(img && img.path) ?
-									(img.base_path || '.') 
-										+'/'+ img.path.replace(/\.[\\\/]/, '')
-								: '')
-						/*
-						.replace('${DIR}', 
-							pathlib.dirname((img.base_path || '.') 
-								+'/'+ img.path.replace(/\.[\\\/]/, '')))
-						*/
-						// XXX add ...
-				}
-			}],
 	],
 })
 
+
+//---------------------------------------------------------------------
+
+var AppControl = 
+module.AppControl = core.ImageGridFeatures.Feature('ui-app-control', [
+	'ui-windowed-app-control',
+	'ui-portable-app-control',
+])
 
 
 //---------------------------------------------------------------------
