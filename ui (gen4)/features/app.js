@@ -355,7 +355,7 @@ module.PortableAppControl = core.ImageGridFeatures.Feature({
 	handlers: [
 		// update window title...
 		// XXX make this generic...
-		['focusImage',
+		['focusImage clear',
 			function(){
 				if(this.images){
 					var img = this.images[this.current]

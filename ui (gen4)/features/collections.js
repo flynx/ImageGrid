@@ -2380,6 +2380,7 @@ var UICollectionActions = actions.Actions({
 	//
 	// XXX would be nice to make this nested (i.e. path list) -- collection grouping... (???)
 	// XXX should we use options object???
+	// XXX might need to check (in a standard way) that nothing is loaded...
 	browseCollections: ['Collections/$Collections...',
 		core.doc`Collection list...
 
@@ -2422,6 +2423,12 @@ var UICollectionActions = actions.Actions({
 									.replace(/\$/g, '')))
 								.addClass('highlighted')
 						})
+
+					// nothing loaded...
+					if(that.data.length == 0 && that.collection == null){
+						make.Empty('No collections...')
+						return
+					}
 
 					var openHandler = function(_, title){
 						var title = $(this).find('.text').attr('text') || title
