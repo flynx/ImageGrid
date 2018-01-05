@@ -2379,7 +2379,7 @@ var UICollectionActions = actions.Actions({
 	// UI...
 	//
 	// XXX would be nice to make this nested (i.e. path list) -- collection grouping... (???)
-	// XXX should we use options object???
+	// XXX should we use options object instead of arguments???
 	// XXX might need to check (in a standard way) that nothing is loaded...
 	browseCollections: ['Collections/$Collections...',
 		core.doc`Collection list...
@@ -2425,6 +2425,9 @@ var UICollectionActions = actions.Actions({
 						})
 
 					// nothing loaded...
+					// NOTE: we have to check both .data and .collection as
+					// 		we can have an empty collection loaded -- empty
+					// 		.data but a set .collection...
 					if(that.data.length == 0 && that.collection == null){
 						make.Empty('No collections...')
 						return
@@ -2704,6 +2707,10 @@ var UICollectionActions = actions.Actions({
 	// XXX also do:
 	// 		.saveCollection(..)
 	// XXX EXPERIMENTAL...
+	// 		...we might not actually need this as this essentially will
+	// 		do the same thing as .browseCollections(..)
+	// 		...combining this with .browseCollections(..) might complicate
+	// 		things as we still need to reuse the later for other things...
 	loadCollection: [
 		collectionGetterWrapper(function(title){ this.loadCollection(title) })],
 	loadMainCollection: ['Collections/Exit collection view',
