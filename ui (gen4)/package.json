@@ -1,6 +1,6 @@
 {
   "name": "ImageGrid.Viewer.g4",
-  "main": "index.html",
+  "main": "e.js",
   "version": "4.0.0a",
   "preferGlobal": true,
   "window": {
@@ -41,10 +41,7 @@
     "flickrapi": "^0.3.28"
   },
   "devDependencies": {
-    "less": "*",
-    "nwjs": "*",
-    "webdriverio": "^4.9.11",
-    "webpack": "^2.7.0"
+    "less": "*"
   },
   "bin": {
     "ig": "ig.js"
