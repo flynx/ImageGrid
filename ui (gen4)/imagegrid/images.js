@@ -353,9 +353,10 @@ var ImagesPrototype =
 module.ImagesPrototype = {
 	//version: '3.1',
 
-
 	get length(){
-		return Object.keys(this).length },
+		return Object.keys(this).length 
+			// XXX is this the correct way to deal with service props???
+			+ (this.hasOwnProperty('version') ? -1 : 0) },
 
 	// Generic iterators...
 	//
