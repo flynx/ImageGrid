@@ -18,10 +18,7 @@ ELECTRON_DOWNOAD_URL=https://github.com/electron/electron/releases/download
 # XXX get these automatically...
 # 	...also might be good to make this flexible and use these as parameters...
 TARGET_OS=win32
-# XXX for some reson these break the rules below...
-#ELECTRON_VERSION=`electron -v`
-#ELECTRON_VERSION=$(shell electron -v)
-ELECTRON_VERSION=v1.8.1
+ELECTRON_VERSION=$(strip $(shell electron -v))
 NODE_VERSION=`node --version`
 
 
