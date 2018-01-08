@@ -29,7 +29,7 @@
 #**********************************************************************
 # variables...
 
-APP_NAME=ImageGrid.Viewer
+APP_NAME = ImageGrid.Viewer
 
 
 # Electron stuff...
@@ -37,7 +37,7 @@ APP_NAME=ImageGrid.Viewer
 # 	against are missing, this can happen if we try to run electron
 # 	on a non-GUI box...
 # 	...love the "statically" linked "dynamic" libs...
-ELECTRON_VERSION = $(strip $(shell electron -v))
+ELECTRON_VERSION := $(strip $(shell electron -v))
 ELECTRON_VERSION ?= v1.8.1
 ELECTRON_DOWNOAD_URL = https://github.com/electron/electron/releases/download
 
@@ -81,10 +81,10 @@ FEATURES_DIR=features
 WORKERS_DIR=workers
 IMAGES_DIR=images
 
+PROJECT_FILES = package.json
 # get all the .less files to process...
 #LESS_FILES := $(shell find . -type f -name '*.less')
 CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
-PROJECT_FILES=package.json
 JS_FILES := $(wildcard *.js)
 HTML_FILES := $(wildcard *.html)
 
