@@ -11,7 +11,13 @@
 
 APP_NAME=ImageGrid.Viewer
 
+
 ELECTRON_DOWNOAD_URL=https://github.com/electron/electron/releases/download
+
+
+# XXX autodetect this....
+TARGET_OS=win32
+
 
 # XXX get this automatically...
 # 	...also might be good to make this flexible and use these as parameters...
@@ -52,29 +58,38 @@ APP_DATE=$(BUILD_DIR)/DATE
 APP_NODE=$(BUILD_DIR)/NODE
 
 
+
 #**********************************************************************
 
-.PHONY: all css dev clean cleanall win64e win32e
-
 all: dev
+
+.PHONY: all css dev clean cleanall dist \
+	electron-dist-x64 electron-dist-ia32
+
+
 
 css: $(CSS_FILES)
 
 dev: $(NODE_DIR) css
 
-#clean:
-#	rm -rf $(BUILD_DIR)
+clean:
+	rm -rf $(BUILD_DIR)
 
 # XXX for some reason this is called on make win64e...
-#cleanall: clean
-#	rm -rf $(DIST_DIR) $(TARGET_DIR)
+cleanall: clean
+	rm -rf $(DIST_DIR) $(TARGET_DIR)
 
 
 
-# XXX these still depend on the current arch, need to pass architecture to npm...
-win64e: $(DIST_DIR)/$(APP_NAME)-win32-x64.zip
+# XXX autodetect arch/os...
+# XXX add support for nw...
+electron-dist-x64: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-x64.zip
 
-win32e: $(DIST_DIR)/$(APP_NAME)-win32-ia32.zip
+electron-dist-ia32: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-ia32.zip
+
+
+
+dist: electron-dist-x64
 
 
 
@@ -90,6 +105,7 @@ $(APP_NODE):
 	echo "$(NODE_VERSION)" > $(APP_NODE)
 
 
+# XXX need to make this arch/os specific for cross compiling...
 $(NODE_DIR):
 	npm install
 
@@ -102,6 +118,7 @@ $(NODE_DIR):
 # build app dir...
 # XXX need to make this arch/os specific...
 # XXX make junction to $(NODE_DIR) -- does not work with asar
+# XXX this is electron-specific...
 $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	@mkdir -p $@
@@ -114,6 +131,7 @@ $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	#ln -s $(NODE_DIR) "$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)"
 	#cmd /c mklink /j "$(BUILD_DIR)\$(APP_NAME)\$(NODE_DIR)" \
 	#	$(NODE_DIR) 
+	touch "$@"
 
 
 # pack app.asar
@@ -125,6 +143,7 @@ $(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
 
 # get the electron binary...
 # XXX for some odd reason this is deleted adter extraction...
+.PRECIOUS: $(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip
 $(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip:
 	@mkdir -p $(@D)
 	wget \
@@ -132,13 +151,19 @@ $(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip:
 		-O "$@"
 
 
+# XXX nwjs...
+
+
 # build the app dir...
+# XXX this is electron-specific...
+.PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip $(BUILD_DIR)/app.asar
 	unzip -u "$<" -d "$@" 
 	chmod +x "$@/"*dll "$@/"*exe
 	cp "$(BUILD_DIR)/app.asar" "$@/resources/"
 	rm -f "$@/resources/default_app.asar"
 	mv "$@/electron.exe" "$@/$(APP_NAME).exe"
+	touch "$@"
 
 
 # package the app dir...
