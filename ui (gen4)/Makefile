@@ -22,40 +22,46 @@
 # 	- installers:
 # 		- msi
 # 		- deb
+# 	- cross-compiling support...
 #
 #
 #
 #**********************************************************************
+# variables...
 
 APP_NAME=ImageGrid.Viewer
 
 
-ELECTRON_DOWNOAD_URL=https://github.com/electron/electron/releases/download
-
-
+# Electron stuff...
 # XXX Linux does not let an app run if some of the libs it is linked 
 # 	against are missing, this can happen if we try to run electron
 # 	on a non-GUI box...
-# 	...love the "staticly" linked "dynamic" libs...
-#ELECTRON_VERSION=v1.8.1
-ELECTRON_VERSION=$(strip $(shell electron -v))
-NODE_VERSION=`node --version`
+# 	...love the "statically" linked "dynamic" libs...
+ELECTRON_VERSION = $(strip $(shell electron -v))
+ELECTRON_VERSION ?= v1.8.1
+ELECTRON_DOWNOAD_URL = https://github.com/electron/electron/releases/download
 
 
 # OS-specific stuff...
 ifeq ($(OS),Windows_NT)
-	EXT=.exe
-	DLLs="$@/"*dll
-	TARGET_OS=win32
+	EXT = .exe
+	DLLs = "$@/"*dll
+	TARGET_OS = win32
 
 else
 	ifeq ($(shell uname -s),Linux)
-		TARGET_OS=linux
+		TARGET_OS = linux
 	endif
 	ifeq ($(shell uname -s),Darwin)
-		TARGET_OS=darwin
+		TARGET_OS = darwin
 	endif
 endif
+
+
+#----------------------------------------------------------------------
+# Built-in make stuff...
+
+RM += -f
 
 
 
@@ -87,6 +93,7 @@ APP_DATE=$(BUILD_DIR)/DATE
 
 
 #**********************************************************************
+# User targets...
 
 all: dev
 
@@ -99,11 +106,11 @@ css: $(CSS_FILES)
 dev: $(NODE_DIR) css
 
 clean:
-	rm -rf $(BUILD_DIR)
+	$(RM) $(BUILD_DIR)
 
 # XXX for some reason this is called on make win64e...
 cleanall: clean
-	rm -rf $(DIST_DIR) $(TARGET_DIR)
+	$(RM) $(DIST_DIR) $(TARGET_DIR)
 
 
 electron-dist-x64: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-x64.zip
@@ -118,10 +125,10 @@ dist: electron-dist-x64
 
 
 #**********************************************************************
-# build targets...
+# build rules...
 
 
-# build info...
+# build date...
 # XXX add build version...
 $(APP_DATE): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
@@ -176,9 +183,6 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 		-O "$@"
 
 
-# XXX nwjs... (???)
-
-
 # build the app dir...
 # XXX this is electron-specific...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
@@ -187,7 +191,7 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 	unzip -u "$<" -d "$@" 
 	cp "$(BUILD_DIR)/app.asar" "$@/resources/"
 	cp -f "$(APP_DATE)" "$@/"
-	rm -f "$@/resources/default_app.asar"
+	$(RM) "$@/resources/default_app.asar"
 	mv "$@/electron$(EXT)" "$@/$(APP_NAME)$(EXT)"
 	chmod +x "$@/$(APP_NAME)$(EXT)" $(DLLs)
 	touch "$@"
@@ -199,6 +203,8 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
 	cd "$(BUILD_DIR)" ; \
 		zip -r "../$@" "$(APP_NAME)-$*"
 
+
+# XXX nwjs... (???)
 
 
 # installer (WiX)...

@@ -48,6 +48,7 @@
   },
   "scripts": {
     "build-css": "lessc css/layout.less css/layout.css",
+    "build-dist": "make dist",
     "start": "electron e.js"
   }
 }
