@@ -21,6 +21,10 @@ ELECTRON_VERSION=1.7.10
 NODE_VERSION=`node --version`
 
 
+UNAME := $(shell uname)
+
+
+
 #**********************************************************************
 
 TARGET_DIR=targets
@@ -58,11 +62,12 @@ css: $(CSS_FILES)
 
 dev: $(NODE_DIR) css
 
-clean:
-	rm -rf $(BUILD_DIR)
+#clean:
+#	rm -rf $(BUILD_DIR)
 
-cleanall: clean
-	rm -rf $(DIST_DIR) $(TARGET_DIR)
+# XXX for some reason this is called on make win64e...
+#cleanall: clean
+#	rm -rf $(DIST_DIR) $(TARGET_DIR)
 
 
 
@@ -84,6 +89,7 @@ $(APP_DATE):
 $(APP_NODE):
 	echo "$(NODE_VERSION)" > $(APP_NODE)
 
+
 $(NODE_DIR):
 	npm install
 
@@ -94,14 +100,20 @@ $(NODE_DIR):
 
 
 # build app dir...
+# XXX need to make this arch/os specific...
+# XXX make junction to $(NODE_DIR) -- does not work with asar
 $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	@mkdir -p $@
-	cp -r $(PROJECT_FILES) $(JS_FILES) $(CFG_DIR) \
-		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
+	cp -rlu $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
+		$(CFG_DIR) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
-		$(NODE_DIR) \
-		$(BUILD_DIR)/$(APP_NAME)
+		"$(BUILD_DIR)/$(APP_NAME)"
+	cp -rlu $(NODE_DIR) \
+		"$(BUILD_DIR)/$(APP_NAME)"
+	#ln -s $(NODE_DIR) "$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)"
+	#cmd /c mklink /j "$(BUILD_DIR)\$(APP_NAME)\$(NODE_DIR)" \
+	#	$(NODE_DIR) 
 
 
 # pack app.asar
@@ -111,25 +123,29 @@ $(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
 		asar p "$(APP_NAME)" app.asar
 
 
+# get the electron binary...
+# XXX for some odd reason this is deleted adter extraction...
 $(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip:
 	@mkdir -p $(@D)
 	wget \
 		-nc "$(ELECTRON_DOWNOAD_URL)/v$(ELECTRON_VERSION)/$(@F)" \
-		-O $@
+		-O "$@"
 
 
+# build the app dir...
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip $(BUILD_DIR)/app.asar
-	unzip -u "$<" -d $@ 
-	chmod +x $@/*dll $@/*exe
-	cp $(BUILD_DIR)/app.asar $@/resources/
-	rm -f $@/resources/default_app.asar
-	mv $@/electron.exe $@/$(APP_NAME).exe
+	unzip -u "$<" -d "$@" 
+	chmod +x "$@/"*dll "$@/"*exe
+	cp "$(BUILD_DIR)/app.asar" "$@/resources/"
+	rm -f "$@/resources/default_app.asar"
+	mv "$@/electron.exe" "$@/$(APP_NAME).exe"
 
 
+# package the app dir...
 $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
-	@mkdir -p $(@D)
-	cd $(BUILD_DIR) ; \
-		zip -r ../$@ $(APP_NAME)-$*
+	@mkdir -p "$(@D)"
+	cd "$(BUILD_DIR)" ; \
+		zip -r "../$@" "$(APP_NAME)-$*"
 
 
 
