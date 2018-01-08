@@ -1,13 +1,31 @@
 #**********************************************************************
-# TODO: build to a BUILD_DIR...
-# TODO: build all target platforms...
-#	- Windows (AppJS)
-#	- MacOSX (AppJS)
-#	- Windows8 (native?) XXX
-#	- PhoneGap-remote
-#	  push and api call to fetch and rebuild
-#	- PhoneGap-local XXX
 #
+# ImageGrid.Viewer Makefile...
+#
+#
+# Make dependencies that need to be installed:
+# 	- nodejs / npm
+# 	- wget
+# 	- zip / unzip
+# 	- Windows
+# 		- MSVS -- to build node modules (sharp)
+# 		- WiX
+#	- Linux
+#	- macOS
+#	- iOS
+# 	- Android
+# 	- web
+#
+#
+# ToDo:
+# 	- add a cli-only build
+# 	- installers:
+# 		- msi
+# 		- deb
+#
+#
+#
+#**********************************************************************
 
 APP_NAME=ImageGrid.Viewer
 
@@ -15,11 +33,29 @@ APP_NAME=ImageGrid.Viewer
 ELECTRON_DOWNOAD_URL=https://github.com/electron/electron/releases/download
 
 
-# XXX get these automatically...
-# 	...also might be good to make this flexible and use these as parameters...
-TARGET_OS=win32
+# XXX Linux does not let an app run if some of the libs it is linked 
+# 	against are missing, this can happen if we try to run electron
+# 	on a non-GUI box...
+# 	...love the "staticly" linked "dynamic" libs...
+#ELECTRON_VERSION=v1.8.1
 ELECTRON_VERSION=$(strip $(shell electron -v))
 NODE_VERSION=`node --version`
+
+
+# OS-specific stuff...
+ifeq ($(OS),Windows_NT)
+	EXT=.exe
+	DLLs="$@/"*dll
+	TARGET_OS=win32
+
+else
+	ifeq ($(shell uname -s),Linux)
+		TARGET_OS=linux
+	endif
+	ifeq ($(shell uname -s),Darwin)
+		TARGET_OS=darwin
+	endif
+endif
 
 
 
@@ -58,7 +94,6 @@ all: dev
 	electron-dist-x64 electron-dist-ia32
 
 
-
 css: $(CSS_FILES)
 
 dev: $(NODE_DIR) css
@@ -71,13 +106,11 @@ cleanall: clean
 	rm -rf $(DIST_DIR) $(TARGET_DIR)
 
 
-
-# XXX autodetect arch/os...
-# XXX add support for nw...
 electron-dist-x64: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-x64.zip
+electron-inst-x64: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-x64.msi
 
 electron-dist-ia32: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-ia32.zip
-
+electron-inst-ia32: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-ia32.msi
 
 
 dist: electron-dist-x64
@@ -92,6 +125,7 @@ dist: electron-dist-x64
 # XXX add build version...
 $(APP_DATE): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
+	@mkdir -p "$(@D)"
 	date "+%Y%m%d %H%M" > $(APP_DATE)
 
 
@@ -106,9 +140,8 @@ $(NODE_DIR):
 
 
 # build app dir...
-# XXX need to make this arch/os specific...
+# XXX need to make this arch/os specific (see: $(NODE_DIR) rule)...
 # XXX make junction to $(NODE_DIR) -- does not work with asar
-# XXX this is electron-specific...
 $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
 		$(APP_DATE)
@@ -126,7 +159,7 @@ $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	touch "$@"
 
 
-# pack app.asar
+# pack app.asar (electron-specific)...
 # XXX need to do $(BUILD_DIR)/$(APP_NAME) iff app.asar does not exist...
 $(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
 	cd $(BUILD_DIR) ; \
@@ -143,7 +176,7 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 		-O "$@"
 
 
-# XXX nwjs...
+# XXX nwjs... (???)
 
 
 # build the app dir...
@@ -152,11 +185,11 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(APP_DATE)
 	unzip -u "$<" -d "$@" 
-	chmod +x "$@/"*dll "$@/"*exe
 	cp "$(BUILD_DIR)/app.asar" "$@/resources/"
 	cp -f "$(APP_DATE)" "$@/"
 	rm -f "$@/resources/default_app.asar"
-	mv "$@/electron.exe" "$@/$(APP_NAME).exe"
+	mv "$@/electron$(EXT)" "$@/$(APP_NAME)$(EXT)"
+	chmod +x "$@/$(APP_NAME)$(EXT)" $(DLLs)
 	touch "$@"
 
 
@@ -168,8 +201,26 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
 
 
 
+# installer (WiX)...
+# XXX add to path...
+
+# harvest directory tree...
+%.wxs:
+	heat dir $* -gg -o $<
+	
+# XXX provide -arch x64/ia32...
+%.wixobj: %.wsx
+	candle -o $@ $<
+
+%.msi: %.wixobj
+	light -o $@ $<
+
+# installer (WiX)...
+$(DIST_DIR)/$(APP_NAME)-%.msi: $(BUILD_DIR)/$(APP_NAME)-% $(BUILD_DIR)/$(APP_NAME).wxs
+	@mkdir -p "$(@D)"
+
+
 # XXX OSX
-# XXX Linux
 # XXX android...
 # XXX iOS...
 
