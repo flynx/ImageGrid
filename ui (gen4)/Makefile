@@ -11,106 +11,71 @@
 
 APP_NAME=ImageGrid.Viewer
 
+ELECTRON_DOWNOAD_URL=https://github.com/electron/electron/releases/download
+
+# XXX get this automatically...
+# 	...also might be good to make this flexible and use these as parameters...
+ELECTRON_VERSION=1.7.10
+
+
 NODE_VERSION=`node --version`
-
-
-# process LESS files to CSS...
-%.css: %.less
-	lessc $< > $@
-
-# minify js...
-%.min.js: %.js
-	uglifyjs $< -c -o $@
-
 
 
 #**********************************************************************
 
-# get all the .less files to process...
-#LESS_FILES := $(shell find . -type f -name '*.less')
-#CSS_FILES := $(patsubst %.less,%.css,$(LESS_FILES))
-CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
+TARGET_DIR=targets
+NODE_DIR=node_modules
+BUILD_DIR=build
+DIST_DIR=dist
 
 LIB_DIR=lib
 EXT_LIB_DIR=ext-lib
 CSS_DIR=css
+CFG_DIR=cfg
 DOMAIN_DIR=imagegrid
 FEATURES_DIR=features
 WORKERS_DIR=workers
 IMAGES_DIR=images
-NW_PROJECT_FILE=package.json
+
+# get all the .less files to process...
+#LESS_FILES := $(shell find . -type f -name '*.less')
+CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
+PROJECT_FILES=package.json
 JS_FILES := $(wildcard *.js)
 HTML_FILES := $(wildcard *.html)
-CHROME_APP_KEY=chrome-app.pem
-
-
-# get files to minify...
-JS_MIN_FILES := $(patsubst %.js,%.min.js,$(wildcard *.js))
-
-LOGS := *.log
-
-NODE_DIR=node_modules
-BUILD_DIR=build
-CHROME_APP_BUILD_DIR=build/Chrome-App/ImageGrid.Viewer
-WIN_BUILD_DIR=build/Win64
-MAC_BUILD_DIR=build/MacOSX
-MAC_10_6_BUILD_DIR=build/MacOSX-10.6
-LINUX_IA32_BUILD_DIR=build/Linux-ia32
-LINUX_X64_BUILD_DIR=build/Linux-x64
-ANDROID_BUILD_DIR=build/Android
-IOS_BUILD_DIR=build/iOS
-
-DIST_DIR=./dist
-
-# XXX add version
-WIN_DIST_ZIP=$(DIST_DIR)/$(APP_NAME)-win64.zip
-MAC_DIST_ZIP=$(DIST_DIR)/$(APP_NAME)-osx.zip
-MAC_10_6_DIST_ZIP=$(DIST_DIR)/$(APP_NAME)-osx10.6.zip
 
 APP_DATE=$(BUILD_DIR)/DATE
 APP_NODE=$(BUILD_DIR)/NODE
 
-APP_ZIP=$(BUILD_DIR)/package.nw
-APP_ASAR=$(BUILD_DIR)/app.asar
-
-
 
 #**********************************************************************
+
+.PHONY: all css dev clean cleanall win64e win32e
 
 all: dev
 
+css: $(CSS_FILES)
 
-minify: $(JS_MIN_FILES)
+dev: $(NODE_DIR) css
+
+clean:
+	rm -rf $(BUILD_DIR)
+
+cleanall: clean
+	rm -rf $(DIST_DIR) $(TARGET_DIR)
+
+
+
+# XXX these still depend on the current arch, need to pass architecture to npm...
+win64e: $(DIST_DIR)/$(APP_NAME)-win32-x64.zip
+
+win32e: $(DIST_DIR)/$(APP_NAME)-win32-ia32.zip
 
 
 
 #**********************************************************************
-# build dependencies...
-# XXX can make auto-create directories???
+# build targets...
 
-$(NODE_DIR): node-deps
-
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-$(CHROME_APP_BUILD_DIR):
-	mkdir -p $(CHROME_APP_BUILD_DIR)
-$(WIN_BUILD_DIR):
-	mkdir -p $(WIN_BUILD_DIR)
-$(MAC_BUILD_DIR):
-	mkdir -p $(MAC_BUILD_DIR)
-$(MAC_10_6_BUILD_DIR):
-	mkdir -p $(MAC_10_6_BUILD_DIR)
-$(LINUX_IA32_BUILD_DIR):
-	mkdir -p $(LINUX_IA32_BUILD_DIR)
-$(LINUX_X64_BUILD_DIR):
-	mkdir -p $(LINUX_X64_BUILD_DIR)
-$(ANDROID_BUILD_DIR):
-	mkdir -p $(ANDROID_BUILD_DIR)
-$(IOS_BUILD_DIR):
-	mkdir -p $(IOS_BUILD_DIR)
-
-$(DIST_DIR):
-	mkdir -p $(DIST_DIR)
 
 # build info...
 # XXX add build version...
@@ -119,116 +84,59 @@ $(APP_DATE):
 $(APP_NODE):
 	echo "$(NODE_VERSION)" > $(APP_NODE)
 
-$(APP_ZIP): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) $(NW_PROJECT_FILE) \
-	$(JS_FILES) $(CSS_FILES) $(HTML_FILES) $(APP_DATE) $(APP_NODE)
-	zip -r $(APP_ZIP) $(NW_PROJECT_FILE) $(JS_FILES) $(CSS_FILES) \
-		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
-		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
-		$(APP_DATE) $(APP_NODE) \
-		$(NODE_DIR)/app-module-path \
-		$(NODE_DIR)/ig-*
-
-zip: $(APP_ZIP)
-
-
-# XXX add a asar build rool -- see electron docs...
-# 	asar pack ...
-# 	...this will also need an appropriate loader or config as I see 
-# 	no way to make this transparent...
-$(APP_ASAR): $(CSS_FILES) $(BUILD_DIR) $(NODE_DIR) $(NW_PROJECT_FILE) \
-	$(JS_FILES) $(CSS_FILES) $(HTML_FILES) $(APP_DATE) $(APP_NODE)
-
-asar: $(APP_ASAR)
-
-
-
-#**********************************************************************
-# dev env...
-
-# see: package.json for a list...
-node-deps:
+$(NODE_DIR):
 	npm install
 
-sharp: node-deps
-	cd node_modules/sharp/
-	node-gyp --target=$(NODE_VERSION) rebuild
 
-css: $(CSS_FILES)
-
-dev: css
-	#unzip -uj $(wildcard targets/nwjs/nwjs-*-win-ia32.zip) -d .
-	#rm -f nwsnapshot.exe credits.html
-	#chmod +x *.{exe,dll}
-
-#dev-targets:
-#	mkdir -p targets/nwjs
-#	wget 
+# process LESS files to CSS...
+%.css: %.less
+	lessc $< > $@
 
 
-
-#**********************************************************************
-# build targets...
-# XXX most of the code here is duplicated, find a way to reuse sections...
-
-chrome-app: $(APP_ZIP) $(CHROME_APP_BUILD_DIR)
-	unzip -u $(APP_ZIP) -d $(CHROME_APP_BUILD_DIR)
-	cp manifest.json $(CHROME_APP_BUILD_DIR)
-	cp -R images $(CHROME_APP_BUILD_DIR)
-	rm -rf $(CHROME_APP_BUILD_DIR)/node_modules/
-	# this needs to be OS independent...
-	chrome --pack-extension=$(CHROME_APP_BUILD_DIR) --pack-extension-key=$(CHROME_APP_KEY)
+# build app dir...
+$(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
+		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
+	@mkdir -p $@
+	cp -r $(PROJECT_FILES) $(JS_FILES) $(CFG_DIR) \
+		$(HTML_FILES) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
+		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
+		$(NODE_DIR) \
+		$(BUILD_DIR)/$(APP_NAME)
 
 
-# nwjs win64
-# XXX include exiftool???
-# XXX include scripts/utils???
-win64: $(APP_ZIP) $(WIN_BUILD_DIR)
-	rm -rf $(WIN_BUILD_DIR)
-	unzip -u targets/nwjs/nwjs-*-win-x64.zip \
-		-d $(WIN_BUILD_DIR)
-	mv -uf $(WIN_BUILD_DIR)/nwjs*win-x64/* $(WIN_BUILD_DIR)/
-	rm -rf $(WIN_BUILD_DIR)/nwjs*/
-	cat $(APP_ZIP) >> $(WIN_BUILD_DIR)/nw.exe
-	mv $(WIN_BUILD_DIR)/nw.exe $(WIN_BUILD_DIR)/$(APP_NAME).exe
-	chmod +x $(WIN_BUILD_DIR)/*.{exe,dll}
-	cp -vR \
-		$(NODE_DIR) $(WIN_BUILD_DIR)
-	cp -vR "`which exiftool`" $(WIN_BUILD_DIR)
-	# cleanup nwjs-sdk...
-	rm -f $(WIN_BUILD_DIR)/nwsnapshot.exe \
-		$(WIN_BUILD_DIR)/payload.exe \
-		$(WIN_BUILD_DIR)/chromedriver.exe \
-		$(WIN_BUILD_DIR)/nwjc.exe \
-		$(WIN_BUILD_DIR)/credits.html
+# pack app.asar
+# XXX need to do $(BUILD_DIR)/$(APP_NAME) iff app.asar does not exist...
+$(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
+	cd $(BUILD_DIR) ; \
+		asar p "$(APP_NAME)" app.asar
 
-win64-dist: win64 $(DIST_DIR)
-	zip -r $(WIN_DIST_ZIP) $(WIN_BUILD_DIR)
+
+$(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip:
+	@mkdir -p $(@D)
+	wget \
+		-nc "$(ELECTRON_DOWNOAD_URL)/v$(ELECTRON_VERSION)/$(@F)" \
+		-O $@
+
+
+$(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip $(BUILD_DIR)/app.asar
+	unzip -u "$<" -d $@ 
+	chmod +x $@/*dll $@/*exe
+	cp $(BUILD_DIR)/app.asar $@/resources/
+	rm -f $@/resources/default_app.asar
+	mv $@/electron.exe $@/$(APP_NAME).exe
+
+
+$(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
+	@mkdir -p $(@D)
+	cd $(BUILD_DIR) ; \
+		zip -r ../$@ $(APP_NAME)-$*
+
 
 
 # XXX OSX
 # XXX Linux
 # XXX android...
 # XXX iOS...
-
-
-all: win64
-
-dist: win64-dist
-
-
-#**********************************************************************
-# cleanup...
-
-clean-dev:
-	rm -rf *.exe *.dll *.pak
-
-clean-build:
-	rm -rf $(BUILD_DIR)
-
-clean: clean-build
-	rm -f $(CSS_FILES) $(JS_MIN_FILES) $(LOGS)
-
-clean-all: clean clean-dev
 
 
 
