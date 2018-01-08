@@ -15,19 +15,14 @@ APP_NAME=ImageGrid.Viewer
 ELECTRON_DOWNOAD_URL=https://github.com/electron/electron/releases/download
 
 
-# XXX autodetect this....
-TARGET_OS=win32
-
-
-# XXX get this automatically...
+# XXX get these automatically...
 # 	...also might be good to make this flexible and use these as parameters...
-ELECTRON_VERSION=1.7.10
-
-
+TARGET_OS=win32
+# XXX for some reson these break the rules below...
+#ELECTRON_VERSION=`electron -v`
+#ELECTRON_VERSION=$(shell electron -v)
+ELECTRON_VERSION=v1.8.1
 NODE_VERSION=`node --version`
-
-
-UNAME := $(shell uname)
 
 
 
@@ -143,11 +138,11 @@ $(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
 
 # get the electron binary...
 # XXX for some odd reason this is deleted adter extraction...
-.PRECIOUS: $(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip
-$(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip:
+.PRECIOUS: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
+$(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 	@mkdir -p $(@D)
 	wget \
-		-nc "$(ELECTRON_DOWNOAD_URL)/v$(ELECTRON_VERSION)/$(@F)" \
+		-nc "$(ELECTRON_DOWNOAD_URL)/$(ELECTRON_VERSION)/$(@F)" \
 		-O "$@"
 
 
@@ -157,7 +152,7 @@ $(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip:
 # build the app dir...
 # XXX this is electron-specific...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
-$(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-v$(ELECTRON_VERSION)-%.zip $(BUILD_DIR)/app.asar
+$(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip $(BUILD_DIR)/app.asar
 	unzip -u "$<" -d "$@" 
 	chmod +x "$@/"*dll "$@/"*exe
 	cp "$(BUILD_DIR)/app.asar" "$@/resources/"
