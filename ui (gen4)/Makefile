@@ -47,7 +47,6 @@ JS_FILES := $(wildcard *.js)
 HTML_FILES := $(wildcard *.html)
 
 APP_DATE=$(BUILD_DIR)/DATE
-APP_NODE=$(BUILD_DIR)/NODE
 
 
 
@@ -91,10 +90,9 @@ dist: electron-dist-x64
 
 # build info...
 # XXX add build version...
-$(APP_DATE):
+$(APP_DATE): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
+		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	date "+%Y%m%d %H%M" > $(APP_DATE)
-$(APP_NODE):
-	echo "$(NODE_VERSION)" > $(APP_NODE)
 
 
 # XXX need to make this arch/os specific for cross compiling...
@@ -112,11 +110,13 @@ $(NODE_DIR):
 # XXX make junction to $(NODE_DIR) -- does not work with asar
 # XXX this is electron-specific...
 $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
-		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
+		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
+		$(APP_DATE)
 	@mkdir -p $@
 	cp -rlu $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
 		$(CFG_DIR) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
+		$(APP_DATE) \
 		"$(BUILD_DIR)/$(APP_NAME)"
 	cp -rlu $(NODE_DIR) \
 		"$(BUILD_DIR)/$(APP_NAME)"
@@ -149,10 +149,12 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 # build the app dir...
 # XXX this is electron-specific...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
-$(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip $(BUILD_DIR)/app.asar
+$(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
+		$(BUILD_DIR)/app.asar $(APP_DATE)
 	unzip -u "$<" -d "$@" 
 	chmod +x "$@/"*dll "$@/"*exe
 	cp "$(BUILD_DIR)/app.asar" "$@/resources/"
+	cp -f "$(APP_DATE)" "$@/"
 	rm -f "$@/resources/default_app.asar"
 	mv "$@/electron.exe" "$@/$(APP_NAME).exe"
 	touch "$@"
