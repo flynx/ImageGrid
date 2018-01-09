@@ -77,13 +77,15 @@ else
 		TARGET_OS = darwin
 	endif
 
+	# XXX do we need this on a mac???
 	# set arch...
-	ifeq ($(shell uname -p),x86_64)
-		ARCH ?= x64
-	endif
-	ifneq ($(filter %86,$(shell uname -p)),)
-		ARCH ?= ia32
-	endif
+	#ifeq ($(shell uname -p),x86_64)
+	#	ARCH ?= x64
+	#endif
+	#ifneq ($(filter %86,$(shell uname -p)),)
+	#	ARCH ?= ia32
+	#endif
+	ARCH ?= x64
 endif
 
 
