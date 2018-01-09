@@ -22,7 +22,9 @@
 # 	- installers:
 # 		- msi
 # 		- deb
+# 		- ...
 # 	- cross-compiling support...
+# 	- upstream clean build: git clone -> make dist
 #
 #
 #
@@ -47,14 +49,36 @@ ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
 ifeq ($(OS),Windows_NT)
 	EXT = .exe
 	DLLs = "$@/"*dll
+	# NOTE: this is electron naming convention...
 	TARGET_OS = win32
+
+	# set arch...
+	ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
+		ARCH ?= x64
+	else
+		ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+			ARCH ?= x64
+		endif
+		ifeq ($(PROCESSOR_ARCHITECTURE),x86)
+			ARCH ?= ia32
+		endif
+	endif
 
 else
 	ifeq ($(shell uname -s),Linux)
 		TARGET_OS = linux
+		ARCH ?= x64
 	endif
 	ifeq ($(shell uname -s),Darwin)
 		TARGET_OS = darwin
+	endif
+
+	# set arch...
+	ifeq ($(shell uname -p),x86_64)
+		ARCH ?= x64
+	endif
+	ifneq ($(filter %86,$(shell uname -p)),)
+		ARCH ?= ia32
 	endif
 endif
 
@@ -70,6 +94,7 @@ RM += -f
 
 
 #**********************************************************************
+# Paths and lists...
 
 TARGET_DIR = targets
 BUILD_DIR = build
@@ -85,14 +110,13 @@ FEATURES_DIR = features
 WORKERS_DIR = workers
 IMAGES_DIR = images
 
+APP_DATE = $(BUILD_DIR)/DATE
 PROJECT_FILES = package.json
 # get all .css build targets, in addition, get all the .less files and 
 # replace .less with .css making them build targets...
 CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
-JS_FILES := $(wildcard *.js)
 HTML_FILES := $(wildcard *.html)
-
-APP_DATE = $(BUILD_DIR)/DATE
+JS_FILES := $(wildcard *.js)
 
 
 
@@ -120,15 +144,11 @@ cleanall: clean
 	$(RM) $(DIST_DIR) $(TARGET_DIR)
 
 
-electron-dist-x64: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-x64.zip
-electron-inst-x64: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-x64.msi
+electron-dist: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip
+electron-inst: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).msi
 
 
-electron-dist-ia32: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-ia32.zip
-electron-inst-ia32: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-ia32.msi
-
-
-dist: electron-dist-x64
+dist: electron-dist
 
 
 
@@ -180,8 +200,7 @@ $(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
 		asar p "$(APP_NAME)" app.asar
 
 
-# get the electron binary...
-# XXX for some odd reason this is deleted adter extraction...
+# get the electron binary (keep this cached)...
 .PRECIOUS: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 	@mkdir -p $(@D)
@@ -190,8 +209,7 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 		-O "$@"
 
 
-# build the app dir...
-# XXX this is electron-specific...
+# build the app dir (electron-specific)...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(APP_DATE)
