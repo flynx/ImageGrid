@@ -6,6 +6,7 @@
 # Make dependencies that need to be installed:
 # 	- nodejs / npm 
 # 		also nodejs-legacy seems to be required by some code...
+# 	- npm i -g electron asar less
 # 	- wget
 # 	- zip / unzip
 # 	- Windows
@@ -183,12 +184,12 @@ $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
 		$(BUILD_DATE)
 	@mkdir -p $@
-	cp -rlu $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
+	cp -r $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
 		$(CFG_DIR) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
 		$(BUILD_DATE) \
 		"$(BUILD_DIR)/$(APP_NAME)"
-	cp -rlu $(NODE_DIR) \
+	cp -r $(NODE_DIR) \
 		"$(BUILD_DIR)/$(APP_NAME)"
 	touch "$@"
 
