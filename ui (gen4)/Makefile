@@ -224,7 +224,7 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 	cp "$(BUILD_DIR)/app.asar" "$@/$(ASAR_PATH)/"
 	cp -f "$(BUILD_DATE)" "$@/"
 	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
-	mv "$@/electron$(EXT)" "$@/$(APP_BIN)$(EXT)"
+	mv "$@/[Ee]lectron$(EXT)" "$@/$(APP_BIN)$(EXT)"
 	chmod +x "$@/$(APP_BIN)$(EXT)" $(DLLs)
 	touch "$@"
 
