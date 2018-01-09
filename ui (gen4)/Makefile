@@ -29,17 +29,18 @@
 #**********************************************************************
 # variables...
 
-APP_NAME = ImageGrid.Viewer
+APP_NAME ?= ImageGrid.Viewer
 
 
 # Electron stuff...
-# XXX Linux does not let an app run if some of the libs it is linked 
-# 	against are missing, this can happen if we try to run electron
-# 	on a non-GUI box...
+#
+# NOTE: Linux does not let an app run if some of the libs it is dynamically 
+# 	linked against are missing, this can happen if we try to run electron
+# 	on a non-GUI box (i.e. no gtk)...
 # 	...love the "statically" linked "dynamic" libs...
-ELECTRON_VERSION := $(strip $(shell electron -v))
-ELECTRON_VERSION ?= v1.8.1
-ELECTRON_DOWNOAD_URL = https://github.com/electron/electron/releases/download
+ELECTRON_VERSION_FALLBACK = v1.8.1
+ELECTRON_VERSION := $(strip $(shell electron -v || echo $(ELECTRON_VERSION_FALLBACK)))
+ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
 
 
 # OS-specific stuff...
@@ -61,34 +62,37 @@ endif
 #----------------------------------------------------------------------
 # Built-in make stuff...
 
+# NOTE: some of the targets are directories so this will enable GNUMake's
+# 	automatic cleanup to work.
+# 	...not sure if this is the right way to go...
 RM += -f
 
 
 
 #**********************************************************************
 
-TARGET_DIR=targets
-NODE_DIR=node_modules
-BUILD_DIR=build
-DIST_DIR=dist
+TARGET_DIR = targets
+BUILD_DIR = build
+DIST_DIR = dist
 
-LIB_DIR=lib
-EXT_LIB_DIR=ext-lib
-CSS_DIR=css
-CFG_DIR=cfg
-DOMAIN_DIR=imagegrid
-FEATURES_DIR=features
-WORKERS_DIR=workers
-IMAGES_DIR=images
+NODE_DIR = node_modules
+LIB_DIR = lib
+EXT_LIB_DIR = ext-lib
+CSS_DIR = css
+CFG_DIR = cfg
+DOMAIN_DIR = imagegrid
+FEATURES_DIR = features
+WORKERS_DIR = workers
+IMAGES_DIR = images
 
 PROJECT_FILES = package.json
-# get all the .less files to process...
-#LESS_FILES := $(shell find . -type f -name '*.less')
+# get all .css build targets, in addition, get all the .less files and 
+# replace .less with .css making them build targets...
 CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 JS_FILES := $(wildcard *.js)
 HTML_FILES := $(wildcard *.html)
 
-APP_DATE=$(BUILD_DIR)/DATE
+APP_DATE = $(BUILD_DIR)/DATE
 
 
 
@@ -97,24 +101,28 @@ APP_DATE=$(BUILD_DIR)/DATE
 
 all: dev
 
+
 .PHONY: all css dev clean cleanall dist \
 	electron-dist-x64 electron-dist-ia32
 
 
 css: $(CSS_FILES)
 
+
 dev: $(NODE_DIR) css
+
 
 clean:
 	$(RM) $(BUILD_DIR)
 
-# XXX for some reason this is called on make win64e...
+
 cleanall: clean
 	$(RM) $(DIST_DIR) $(TARGET_DIR)
 
 
 electron-dist-x64: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-x64.zip
 electron-inst-x64: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-x64.msi
+
 
 electron-dist-ia32: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-ia32.zip
 electron-inst-ia32: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-ia32.msi
@@ -136,14 +144,13 @@ $(APP_DATE): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	date "+%Y%m%d %H%M" > $(APP_DATE)
 
 
+%.css: %.less
+	lessc $< > $@
+
+
 # XXX need to make this arch/os specific for cross compiling...
 $(NODE_DIR):
 	npm install
-
-
-# process LESS files to CSS...
-%.css: %.less
-	lessc $< > $@
 
 
 # build app dir...
@@ -208,7 +215,7 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
 
 
 # installer (WiX)...
-# XXX add to path...
+# XXX add tools to path...
 
 # harvest directory tree...
 %.wxs:
@@ -225,10 +232,6 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
 $(DIST_DIR)/$(APP_NAME)-%.msi: $(BUILD_DIR)/$(APP_NAME)-% $(BUILD_DIR)/$(APP_NAME).wxs
 	@mkdir -p "$(@D)"
 
-
-# XXX OSX
-# XXX android...
-# XXX iOS...
 
 
 
