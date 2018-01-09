@@ -93,7 +93,7 @@ endif
 # NOTE: some of the targets are directories so this will enable GNUMake's
 # 	automatic cleanup to work.
 # 	...not sure if this is the right way to go...
-RM += -f
+RM += -r
 
 
 
