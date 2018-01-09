@@ -50,6 +50,7 @@ ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
 # OS-specific stuff...
 ifeq ($(OS),Windows_NT)
 	APP_BIN ?= ig
+	ELECTRON_BIN = electron
 	ASAR_PATH = resources
 	EXT = .exe
 
@@ -70,16 +71,21 @@ ifeq ($(OS),Windows_NT)
 	endif
 
 else
-	APP_BIN ?= $(APP_NAME)
-	ASAR_PATH = Electron.app/Contents/Resources
-	EXT = .app
-
 	ifeq ($(shell uname -s),Linux)
 		TARGET_OS = linux
 		ARCH ?= x64
+
+		APP_BIN ?= ig
+		ELECTRON_BIN = electron
+		ASAR_PATH = resources
 	endif
 	ifeq ($(shell uname -s),Darwin)
 		TARGET_OS = darwin
+
+		APP_BIN ?= $(APP_NAME)
+		ELECTRON_BIN = Electron
+		ASAR_PATH = Electron.app/Contents/Resources
+		EXT = .app
 	endif
 
 	# set arch...
@@ -224,7 +230,7 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 	cp "$(BUILD_DIR)/app.asar" "$@/$(ASAR_PATH)/"
 	cp -f "$(BUILD_DATE)" "$@/"
 	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
-	mv "$@/[Ee]lectron$(EXT)" "$@/$(APP_BIN)$(EXT)"
+	mv "$@/$(ELECTRON_BIN)$(EXT)" "$@/$(APP_BIN)$(EXT)"
 	chmod +x "$@/$(APP_BIN)$(EXT)" $(DLLs)
 	touch "$@"
 
