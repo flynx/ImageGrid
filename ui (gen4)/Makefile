@@ -4,7 +4,8 @@
 #
 #
 # Make dependencies that need to be installed:
-# 	- nodejs / npm
+# 	- nodejs / npm 
+# 		also nodejs-legacy seems to be required by some code...
 # 	- wget
 # 	- zip / unzip
 # 	- Windows
@@ -32,6 +33,8 @@
 # variables...
 
 APP_NAME ?= ImageGrid.Viewer
+#APP_BIN ?= $(APP_NAME)
+APP_BIN ?= ig
 
 
 # Electron stuff...
@@ -110,7 +113,7 @@ FEATURES_DIR = features
 WORKERS_DIR = workers
 IMAGES_DIR = images
 
-APP_DATE = $(BUILD_DIR)/DATE
+BUILD_DATE = $(BUILD_DIR)/DATE
 PROJECT_FILES = package.json
 # get all .css build targets, in addition, get all the .less files and 
 # replace .less with .css making them build targets...
@@ -123,7 +126,7 @@ JS_FILES := $(wildcard *.js)
 #**********************************************************************
 # User targets...
 
-all: dev
+all: dev dist
 
 
 .PHONY: all css dev clean cleanall dist \
@@ -158,10 +161,10 @@ dist: electron-dist
 
 # build date...
 # XXX add build version...
-$(APP_DATE): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
+$(BUILD_DATE): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	@mkdir -p "$(@D)"
-	date "+%Y%m%d %H%M" > $(APP_DATE)
+	date "+%Y%m%d %H%M" > $(BUILD_DATE)
 
 
 %.css: %.less
@@ -174,22 +177,19 @@ $(NODE_DIR):
 
 
 # build app dir...
-# XXX need to make this arch/os specific (see: $(NODE_DIR) rule)...
-# XXX make junction to $(NODE_DIR) -- does not work with asar
+# NOTE: making $(NODE_DIR) a link/junction would be quite a bit faster 
+# 	but it will also choke asar...
 $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
-		$(APP_DATE)
+		$(BUILD_DATE)
 	@mkdir -p $@
 	cp -rlu $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
 		$(CFG_DIR) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
-		$(APP_DATE) \
+		$(BUILD_DATE) \
 		"$(BUILD_DIR)/$(APP_NAME)"
 	cp -rlu $(NODE_DIR) \
 		"$(BUILD_DIR)/$(APP_NAME)"
-	#ln -s $(NODE_DIR) "$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)"
-	#cmd /c mklink /j "$(BUILD_DIR)\$(APP_NAME)\$(NODE_DIR)" \
-	#	$(NODE_DIR) 
 	touch "$@"
 
 
@@ -212,13 +212,13 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 # build the app dir (electron-specific)...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
-		$(BUILD_DIR)/app.asar $(APP_DATE)
+		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	unzip -u "$<" -d "$@" 
 	cp "$(BUILD_DIR)/app.asar" "$@/resources/"
-	cp -f "$(APP_DATE)" "$@/"
+	cp -f "$(BUILD_DATE)" "$@/"
 	$(RM) "$@/resources/default_app.asar"
-	mv "$@/electron$(EXT)" "$@/$(APP_NAME)$(EXT)"
-	chmod +x "$@/$(APP_NAME)$(EXT)" $(DLLs)
+	mv "$@/electron$(EXT)" "$@/$(APP_BIN)$(EXT)"
+	chmod +x "$@/$(APP_BIN)$(EXT)" $(DLLs)
 	touch "$@"
 
 
