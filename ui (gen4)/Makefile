@@ -157,7 +157,7 @@ clean:
 
 
 cleanall: clean
-	$(RM) $(DIST_DIR) $(TARGET_DIR)
+	$(RM) $(DIST_DIR) $(TARGET_DIR) $(NODE_DIR)
 
 
 electron-dist: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip
@@ -187,6 +187,7 @@ $(BUILD_DATE): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 # XXX need to make this arch/os specific for cross compiling...
 $(NODE_DIR):
 	npm install
+	electron-rebuild
 
 
 # build app dir...
