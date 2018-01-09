@@ -34,8 +34,6 @@
 # variables...
 
 APP_NAME ?= ImageGrid.Viewer
-#APP_BIN ?= $(APP_NAME)
-APP_BIN ?= ig
 
 
 # Electron stuff...
@@ -51,7 +49,10 @@ ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
 
 # OS-specific stuff...
 ifeq ($(OS),Windows_NT)
+	APP_BIN ?= ig
+	ASAR_PATH = resources
 	EXT = .exe
+
 	DLLs = "$@/"*dll
 	# NOTE: this is electron naming convention...
 	TARGET_OS = win32
@@ -69,6 +70,10 @@ ifeq ($(OS),Windows_NT)
 	endif
 
 else
+	APP_BIN ?= $(APP_NAME)
+	ASAR_PATH = Electron.app/Contents/Resources
+	EXT = .app
+
 	ifeq ($(shell uname -s),Linux)
 		TARGET_OS = linux
 		ARCH ?= x64
@@ -216,9 +221,9 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	unzip -u "$<" -d "$@" 
-	cp "$(BUILD_DIR)/app.asar" "$@/resources/"
+	cp "$(BUILD_DIR)/app.asar" "$@/$(ASAR_PATH)/"
 	cp -f "$(BUILD_DATE)" "$@/"
-	$(RM) "$@/resources/default_app.asar"
+	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
 	mv "$@/electron$(EXT)" "$@/$(APP_BIN)$(EXT)"
 	chmod +x "$@/$(APP_BIN)$(EXT)" $(DLLs)
 	touch "$@"
