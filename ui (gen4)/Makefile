@@ -9,6 +9,11 @@
 # 	- npm i -g electron electron-rebuild asar less
 # 	- wget
 # 	- zip / unzip
+# 		if zipnote fails this is likely due to a bug in v3.0, to
+# 		fix this by either upgrading to a 3.1 or a patched version
+# 		of the code...
+# 		for more info and patch see: 
+# 			https://goo.gl/csQmQo
 # 	- Windows
 # 		- MSVS -- to build node modules (sharp)
 # 		- WiX
@@ -84,17 +89,12 @@ ifeq ($(OS),Windows_NT)
 else
 	ifeq ($(shell uname -s),Linux)
 		TARGET_OS ?= linux
-		# XXX
-		ARCH ?= x64
-
 	endif
 	ifeq ($(shell uname -s),Darwin)
 		TARGET_OS ?= darwin
-
 	endif
 
 	# set arch...
-	# XXX do we need this on a mac???
 	ifeq ($(shell uname -m),x86_64)
 		ARCH ?= x64
 	endif
@@ -104,6 +104,7 @@ else
 endif
 
 
+# setup path and file naming stuff...
 ifeq ($(TARGET_OS),win32)
 	APP_BIN ?= ig
 	ELECTRON_BIN = electron
@@ -133,7 +134,7 @@ endif
 # 	...not sure if this is the right way to go...
 RM += -r
 
-MD = mkdir -p
+MD = @mkdir -p
 
 
 #**********************************************************************
@@ -223,7 +224,7 @@ $(NODE_DIR):
 $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
 		$(BUILD_DATE)
-	$(MD) $@
+	$(MD) "$@"
 	cp -r $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
 		$(CFG_DIR) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
@@ -244,7 +245,7 @@ $(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
 # get the electron binary (keep this cached)...
 .PRECIOUS: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
-	$(MD) $(@D)
+	$(MD) "$(@D)"
 	wget \
 		-nc "$(ELECTRON_DOWNOAD_URL)/$(ELECTRON_VERSION)/$(@F)" \
 		-O "$@"
@@ -257,20 +258,24 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 	unzip -u "$<" -d "$@" 
 	cp "$(BUILD_DIR)/app.asar" "$@/$(ASAR_PATH)/"
 	cp -f "$(BUILD_DATE)" "$@/"
+	# remove default_app.asar...
 	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
+	# rename app dir in zip...
 	mv "$@/$(ELECTRON_BIN)$(EXT)" "$@/$(APP_BIN)$(EXT)"
+	# fix permissions...
 	chmod +x "$@/$(APP_BIN)$(EXT)" $(DLLs)
 	touch "$@"
 
 
 # modify the archive in place...
-# XXX not working correctly under cygwin...
 # XXX this (zip) depends on that DIST_DIR has only one level...
 $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	cp "$<" "$@.tmp"
+	# remove default_app.asar...
 	cd "$(BUILD_DIR)" ; \
 		zip -d "../$@.tmp" "$(ASAR_PATH)/default_app.asar"
+	# add app.asar...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
 	cp "$(BUILD_DIR)/app.asar" "$(BUILD_DIR)/$(ASAR_PATH)/"
 	cd "$(BUILD_DIR)" ; \
@@ -278,10 +283,11 @@ $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 			"$(ASAR_PATH)/app.asar" \
 			"$(notdir $(BUILD_DATE))"
 	# rename app dir in zip...
-	# XXX having problems with cygwin zipnote...
 	zipnote "$@.tmp" \
 		| sed 's/\(^@ $(ELECTRON_BIN)\$(EXT)\)\(.*$$\)/\1\2\n@=$(APP_BIN)$(EXT)\2/' \
 		| zipnote -w "$@.tmp"
+	# cleanup...
+	$(RM) $(BUILD_DIR)/$(firstword $(subst /, ,$(ASAR_PATH)))
 	mv "$@.tmp" "$@"
 
 
@@ -290,14 +296,15 @@ $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 # XXX this (zip) depends on that DIST_DIR and APP_NAME have only one level each...
 $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
 	$(MD) "$(@D)"
-	#cd "$(BUILD_DIR)" ; \
-	#	zip -r "../$@" "$(APP_NAME)-$*"
+#	cd "$(BUILD_DIR)" ; \
+#		zip -r "../$@" "$(APP_NAME)-$*"
 	cd "$<" ; \
 		zip -r "../../$@" *
 
 
 $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.zip
-	mv "$@" "$<"
+	$(MD) "$(@D)"
+	mv "$<" "$@"
 
 
 
@@ -327,3 +334,4 @@ $(DIST_DIR)/$(APP_NAME)-%.msi: $(BUILD_DIR)/$(APP_NAME)-% $(BUILD_DIR)/$(APP_NAM
 
 
 #**********************************************************************
+#						       vim:set nowrap :
