@@ -6,7 +6,7 @@
 # Make dependencies that need to be installed:
 # 	- nodejs / npm 
 # 		also nodejs-legacy seems to be required by some code...
-# 	- npm i -g electron asar less
+# 	- npm i -g electron electron-rebuild asar less
 # 	- wget
 # 	- zip / unzip
 # 	- Windows
