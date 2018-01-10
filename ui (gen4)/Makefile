@@ -38,8 +38,9 @@
 # 	TARGET_OS	- target OS (win32, linux, darwin)
 # 	ELECTRON_DOWNOAD_URL
 # 			- URL to download electron pinary
+#
 # NOTE: cross compilation is at this time not supported, if you try it 
-# 	and it works then 1) you are very lucky and 2) tell me about it =)
+# 	and it works then 1) you got very lucky and 2) tell me about it =)
 # 	...at least the node native packages (sharp) will likely either 
 # 	fail or	win get compiled to the wrong arch and not be used and
 # 	for the most part ImageGrid is cleaver about and will simply not
@@ -65,12 +66,6 @@ ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
 
 # OS-specific stuff...
 ifeq ($(OS),Windows_NT)
-	APP_BIN ?= ig
-	ELECTRON_BIN = electron
-	ASAR_PATH = resources
-	EXT = .exe
-
-	DLLs = "$@/"*dll
 	# NOTE: this is electron naming convention...
 	TARGET_OS ?= win32
 
@@ -89,19 +84,13 @@ ifeq ($(OS),Windows_NT)
 else
 	ifeq ($(shell uname -s),Linux)
 		TARGET_OS ?= linux
+		# XXX
 		ARCH ?= x64
 
-		APP_BIN ?= ig
-		ELECTRON_BIN = electron
-		ASAR_PATH = resources
 	endif
 	ifeq ($(shell uname -s),Darwin)
 		TARGET_OS ?= darwin
 
-		APP_BIN ?= $(APP_NAME)
-		ELECTRON_BIN = Electron
-		ASAR_PATH = Electron.app/Contents/Resources
-		EXT = .app
 	endif
 
 	# set arch...
@@ -115,6 +104,27 @@ else
 endif
 
 
+ifeq ($(TARGET_OS),win32)
+	APP_BIN ?= ig
+	ELECTRON_BIN = electron
+	ASAR_PATH = resources
+	EXT = .exe
+	DLLs = "$@/"*dll
+endif
+ifeq ($(TARGET_OS),linux)
+	APP_BIN ?= ig
+	ELECTRON_BIN = electron
+	ASAR_PATH = resources
+endif
+ifeq ($(TARGET_OS),darwin)
+	APP_BIN ?= $(APP_NAME)
+	ELECTRON_BIN = Electron
+	ASAR_PATH = Electron.app/Contents/Resources
+	EXT = .app
+endif
+
+
+
 #----------------------------------------------------------------------
 # Built-in make stuff...
 
@@ -123,6 +133,7 @@ endif
 # 	...not sure if this is the right way to go...
 RM += -r
 
+MD = mkdir -p
 
 
 #**********************************************************************
@@ -192,7 +203,7 @@ dist: electron-dist
 # XXX add build version...
 $(BUILD_DATE): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
-	@mkdir -p "$(@D)"
+	$(MD) "$(@D)"
 	date "+%Y%m%d %H%M" > $(BUILD_DATE)
 
 
@@ -212,7 +223,7 @@ $(NODE_DIR):
 $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
 		$(BUILD_DATE)
-	@mkdir -p $@
+	$(MD) $@
 	cp -r $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
 		$(CFG_DIR) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
@@ -233,7 +244,7 @@ $(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
 # get the electron binary (keep this cached)...
 .PRECIOUS: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
-	@mkdir -p $(@D)
+	$(MD) $(@D)
 	wget \
 		-nc "$(ELECTRON_DOWNOAD_URL)/$(ELECTRON_VERSION)/$(@F)" \
 		-O "$@"
@@ -252,11 +263,43 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 	touch "$@"
 
 
-# package the app dir...
-$(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
-	@mkdir -p "$(@D)"
+# modify the archive in place...
+# XXX not working correctly under cygwin...
+# XXX this (zip) depends on that DIST_DIR has only one level...
+$(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
+		$(BUILD_DIR)/app.asar $(BUILD_DATE)
+	cp "$<" "$@.tmp"
 	cd "$(BUILD_DIR)" ; \
-		zip -r "../$@" "$(APP_NAME)-$*"
+		zip -d "../$@.tmp" "$(ASAR_PATH)/default_app.asar"
+	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
+	cp "$(BUILD_DIR)/app.asar" "$(BUILD_DIR)/$(ASAR_PATH)/"
+	cd "$(BUILD_DIR)" ; \
+		zip -r "../$@.tmp" \
+			"$(ASAR_PATH)/app.asar" \
+			"$(notdir $(BUILD_DATE))"
+	# rename app dir in zip...
+	# XXX having problems with cygwin zipnote...
+	zipnote "$@.tmp" \
+		| sed 's/\(^@ $(ELECTRON_BIN)\$(EXT)\)\(.*$$\)/\1\2\n@=$(APP_BIN)$(EXT)\2/' \
+		| zipnote -w "$@.tmp"
+	mv "$@.tmp" "$@"
+
+
+# package the app dir...
+# XXX should we zip the dir or its content???
+# XXX this (zip) depends on that DIST_DIR and APP_NAME have only one level each...
+$(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
+	$(MD) "$(@D)"
+	#cd "$(BUILD_DIR)" ; \
+	#	zip -r "../$@" "$(APP_NAME)-$*"
+	cd "$<" ; \
+		zip -r "../../$@" *
+
+
+$(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.zip
+	mv "$@" "$<"
+
+
 
 
 # XXX nwjs... (???)
