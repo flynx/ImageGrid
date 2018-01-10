@@ -20,6 +20,7 @@
 #
 #
 # ToDo:
+# 	- might be a good idea to do a no-bin target -- exclude native...
 # 	- add a cli-only build
 # 	- installers:
 # 		- msi
@@ -28,6 +29,21 @@
 # 	- cross-compiling support...
 # 	- upstream clean build: git clone -> make dist
 #
+#
+# Variables to control the build:
+# 	APP_NAME	- Application name
+# 	APP_BIN		- App binary name (ignored for MacOS)
+#
+# 	ARCH		- target achitecture (ia32, x86)
+# 	TARGET_OS	- target OS (win32, linux, darwin)
+# 	ELECTRON_DOWNOAD_URL
+# 			- URL to download electron pinary
+# NOTE: cross compilation is at this time not supported, if you try it 
+# 	and it works then 1) you are very lucky and 2) tell me about it =)
+# 	...at least the node native packages (sharp) will likely either 
+# 	fail or	win get compiled to the wrong arch and not be used and
+# 	for the most part ImageGrid is cleaver about and will simply not
+# 	load the depending features...
 #
 #
 #**********************************************************************
@@ -56,7 +72,7 @@ ifeq ($(OS),Windows_NT)
 
 	DLLs = "$@/"*dll
 	# NOTE: this is electron naming convention...
-	TARGET_OS = win32
+	TARGET_OS ?= win32
 
 	# set arch...
 	ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
@@ -72,7 +88,7 @@ ifeq ($(OS),Windows_NT)
 
 else
 	ifeq ($(shell uname -s),Linux)
-		TARGET_OS = linux
+		TARGET_OS ?= linux
 		ARCH ?= x64
 
 		APP_BIN ?= ig
@@ -80,7 +96,7 @@ else
 		ASAR_PATH = resources
 	endif
 	ifeq ($(shell uname -s),Darwin)
-		TARGET_OS = darwin
+		TARGET_OS ?= darwin
 
 		APP_BIN ?= $(APP_NAME)
 		ELECTRON_BIN = Electron
