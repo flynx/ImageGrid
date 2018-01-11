@@ -285,11 +285,12 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 
 
 # build the app dir (electron-specific)...
+# XXX BUILD_DIR is unguarded here...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	unzip -u "$<" -d "$@" 
-	cp $(wildcard $(BUILD_DIR)/app.asar*) "$@/$(ASAR_PATH)/"
+	cp -r $(wildcard $(BUILD_DIR)/app.asar*) "$@/$(ASAR_PATH)/"
 	cp -f "$(BUILD_DATE)" "$@/"
 	# remove default_app.asar...
 	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
@@ -302,6 +303,7 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 
 # modify the archive in place (electron-specific)...
 # XXX this (zip) depends on that DIST_DIR has only one level...
+# XXX BUILD_DIR is unguarded here...
 $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	cp "$<" "$@.tmp"
@@ -317,7 +319,7 @@ $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 			"$(notdir $(BUILD_DATE))"
 	# rename app dir in zip...
 	zipnote "$@.tmp" \
-		| sed 's/\(^@ $(ELECTRON_BIN)\$(EXT)\)\(.*$$\)/\1\2\n@=$(APP_BIN)$(EXT)\2/' \
+		| sed 's/\(^@ $(ELECTRON_BIN)$(EXT)\)\(.*$$\)/\1\2\n@=$(APP_BIN)$(EXT)\2/' \
 		| zipnote -w "$@.tmp"
 	# cleanup...
 	$(RM) $(BUILD_DIR)/$(firstword $(subst /, ,$(ASAR_PATH)))
