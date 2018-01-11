@@ -163,6 +163,14 @@ CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 HTML_FILES := $(wildcard *.html)
 JS_FILES := $(wildcard *.js)
 
+# dependencies to check...
+# XXX also add: heat, candle, light...
+# XXX might be a good idea to split these to sections and check only what
+# 	is needed...
+# 	...like: base, electron, wix, ...
+DEPENDENCIES := npm wget zip unzip zipnote \
+	lessc electron electron-rebuild asar
+
 
 
 #**********************************************************************
@@ -185,10 +193,12 @@ cleanall: clean
 	$(RM) $(DIST_DIR) $(TARGET_DIR) $(NODE_DIR)
 
 
+# XXX for some reason this is not the default...
 electron-dist: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip
+electron-dist-in-place: $(BUILD_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip electron-dist
+
 electron-inst: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).msi
 
-electron-dist-in-place: $(BUILD_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip dist
 
 
 dist: check electron-dist
@@ -210,17 +220,10 @@ require(%):
 	@which $* > /dev/null
 
 
-# XXX also add: heat, candle, light...
-# XXX might be a good idea to split these to sections and check only what
-# 	is needed...
-# 	...like: base, electron, wix, ...
-check: require(npm) require(wget) require(zip) require(unzip) \
-	require(zipnote) \
-	require(lessc) require(electron) require(electron-rebuild) \
-	require(asar)
+check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
 
 
-.PHONY: check require(%)
+.PHONY: check
 
 
 
@@ -267,6 +270,13 @@ $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 #----------------------------------------------------------------------
 # Electron desktop build...
 
+# helpers...
+up = $(subst $(eval) ,/,$(foreach x,$(subst /, ,$1),..))
+zipfrom = cd $1 ; zip -r "$(call up,$1)/$2" $3
+zipdelfrom = cd $1 ; zip -d "$(call up,$1)/$2" $3
+
+
+
 # pack app.asar (electron-specific)...
 # XXX need to do $(BUILD_DIR)/$(APP_NAME) iff app.asar does not exist...
 $(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
@@ -285,7 +295,7 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 
 
 # build the app dir (electron-specific)...
-# XXX BUILD_DIR is unguarded here...
+# XXX BUILD_DIR is unguarded here -- see cp -r ...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
@@ -302,21 +312,16 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 
 
 # modify the archive in place (electron-specific)...
-# XXX this (zip) depends on that DIST_DIR has only one level...
-# XXX BUILD_DIR is unguarded here...
+# XXX BUILD_DIR is unguarded here -- see cp -r ...
 $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	cp "$<" "$@.tmp"
 	# remove default_app.asar...
-	cd "$(BUILD_DIR)" ; \
-		zip -d "../$@.tmp" "$(ASAR_PATH)/default_app.asar"
+	$(call zipdelfrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)/default_app.asar")
 	# add app.asar...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
 	cp -r $(wildcard $(BUILD_DIR)/app.asar*) "$(BUILD_DIR)/$(ASAR_PATH)/"
-	cd "$(BUILD_DIR)" ; \
-		zip -r "../$@.tmp" \
-			"$(ASAR_PATH)" \
-			"$(notdir $(BUILD_DATE))"
+	$(call zipfrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_DATE))")
 	# rename app dir in zip...
 	zipnote "$@.tmp" \
 		| sed 's/\(^@ $(ELECTRON_BIN)$(EXT)\)\(.*$$\)/\1\2\n@=$(APP_BIN)$(EXT)\2/' \
@@ -327,13 +332,9 @@ $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 
 
 # package the app dir (unpack - update - repack)...
-# XXX this (zip) depends on that DIST_DIR and APP_NAME have only one level each...
 $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
 	$(MD) "$(@D)"
-#	cd "$(BUILD_DIR)" ; \
-#		zip -r "../$@" "$(APP_NAME)-$*"
-	cd "$<" ; \
-		zip -r "../../$@" *
+	$(call zipfrom,$<,$@,*)
 
 
 # package the app dir (copy zip - update in-place)...
