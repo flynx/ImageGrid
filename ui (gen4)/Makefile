@@ -44,6 +44,7 @@
 #----------------------------------------------------------------------
 
 # ToDo:
+# 	- app icons...
 # 	- might be a good idea to do a no-bin target -- exclude native...
 # 	- add a cli-only build
 # 	- installers:
@@ -166,15 +167,17 @@ CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 HTML_FILES := $(wildcard *.html)
 JS_FILES := $(wildcard *.js)
 
-IG_MODULES = ig-object ig-actions ig-features
+# XXX do we actually use preact???
+INCLUDE_NODE_MODULES = ig-object ig-actions ig-features preact
 
 # dependencies to check...
-# XXX also add: heat, candle, light...
 # XXX might be a good idea to split these to sections and check only what
 # 	is needed...
 # 	...like: base, electron, wix, ...
-DEPENDENCIES := npm wget zip unzip zipnote \
+DEPENDENCIES = npm wget zip unzip zipnote \
 	lessc electron electron-rebuild asar
+# WiX dependencies...
+#DEPENDENCIES += heat candle light
 
 
 
@@ -205,7 +208,6 @@ electron-dist-in-place: $(BUILD_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip electr
 electron-inst: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).msi
 
 
-
 dist: check electron-dist
 
 dist-in-place: check electron-dist-in-place
@@ -232,7 +234,7 @@ check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
 #**********************************************************************
 # build rules...
 
-NODE_MODULES_MINIMAL = $(foreach m,$(IG_MODULES),$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/$(m))
+NODE_MODULES_MINIMAL = $(foreach m,$(INCLUDE_NODE_MODULES),$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/$(m))
 PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME) $(NODE_MODULES_MINIMAL)
 PACK_FULL = $(BUILD_DIR)/$(APP_NAME) $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 
@@ -277,11 +279,18 @@ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR): $(NODE_DIR)
 	@touch "$@"
 
 
-# ig-* $(NODE_DIR) modules...
-$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/ig-%: $(NODE_DIR)
+# add ig-* $(NODE_DIR) modules...
+$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/%: $(NODE_DIR)
 	$(MD) "$(@D)"
-	cp -r "$(NODE_DIR)/ig-$*" "$(@D)"
+	cp -r "$(NODE_DIR)/$*" "$(@D)"
 	@touch "$@"
+
+
+# targets for testing...
+# NOTE: do not use these phony targets as dependencies...
+.PHONY: app-dir-full app-dir-minimal
+app-dir-full: $(PACK_FULL)
+app-dir-minimal: $(PACK_MINIMAL)
 
 
 
@@ -334,17 +343,20 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 
 
 # modify the archive in place (electron-specific)...
+# XXX need to setup app icons...
 # XXX BUILD_DIR is unguarded here -- see cp -r ...
 $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	cp "$<" "$@.tmp"
+#	# setup app icon...
+#	# XXX
 	# remove default_app.asar...
 	$(call zipdelfrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)/default_app.asar")
 	# add app.asar...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
 	cp -r $(BUILD_DIR)/app.asar* "$(BUILD_DIR)/$(ASAR_PATH)/"
 	$(call zipfrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_DATE))")
-	# rename app dir in zip...
+	# rename app in zip...
 	zipnote "$@.tmp" \
 		| sed 's/\(^@ $(ELECTRON_BIN)$(EXT)\)\(.*$$\)/\1\2\n@=$(APP_BIN)$(EXT)\2/' \
 		| zipnote -w "$@.tmp"
@@ -376,16 +388,19 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.zip
 %.wxs:
 	heat dir $* -gg -o $<
 	
+
 # XXX provide -arch x64/ia32...
 %.wixobj: %.wsx
 	candle -o $@ $<
 
+
 %.msi: %.wixobj
 	light -o $@ $<
 
+
 # installer (WiX)...
 $(DIST_DIR)/$(APP_NAME)-%.msi: $(BUILD_DIR)/$(APP_NAME)-% $(BUILD_DIR)/$(APP_NAME).wxs
-	@mkdir -p "$(@D)"
+	$(MD) "$(@D)"
 
 
 
