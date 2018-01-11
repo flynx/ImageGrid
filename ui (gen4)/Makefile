@@ -10,8 +10,8 @@
 # 	- wget
 # 	- zip / unzip / zipnote
 # 		if zipnote fails this is likely due to a bug in v3.0, to
-# 		fix this by either upgrading to a 3.1 or a patched version
-# 		of the code...
+# 		fix this by either upgrading to 3.1 or a patched version
+# 		of 3.0...
 # 		for more info and patch see: 
 # 			https://goo.gl/csQmQo
 # 	- Windows
@@ -22,18 +22,6 @@
 #	- iOS
 # 	- Android
 # 	- web
-#
-#
-# ToDo:
-# 	- might be a good idea to do a no-bin target -- exclude native...
-# 	- add a cli-only build
-# 	- installers:
-# 		- msi
-# 		- deb
-# 		- ...
-# 	- cross-compiling support...
-# 	- upstream clean build: git clone -> make dist
-# 	- nwjs???
 #
 #
 # Variables to control the build:
@@ -51,6 +39,21 @@
 # 	fail or	win get compiled to the wrong arch and not be used and
 # 	for the most part ImageGrid is cleaver about and will simply not
 # 	load the depending features...
+#
+#
+#----------------------------------------------------------------------
+
+# ToDo:
+# 	- might be a good idea to do a no-bin target -- exclude native...
+# 	- add a cli-only build
+# 	- installers:
+# 		- msi
+# 		- deb
+# 		- ...
+# 	- cross-compiling support...
+# 	- upstream clean build: git clone -> make dist
+# 	- nwjs???
+#
 #
 #
 #**********************************************************************
@@ -163,6 +166,8 @@ CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 HTML_FILES := $(wildcard *.html)
 JS_FILES := $(wildcard *.js)
 
+IG_MODULES = ig-object ig-actions ig-features
+
 # dependencies to check...
 # XXX also add: heat, candle, light...
 # XXX might be a good idea to split these to sections and check only what
@@ -211,7 +216,6 @@ dist-in-place: check electron-dist-in-place
 
 
 
-
 #**********************************************************************
 # Dependency checking...
 
@@ -220,15 +224,17 @@ require(%):
 	@which $* > /dev/null
 
 
-check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
-
-
 .PHONY: check
+check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
 
 
 
 #**********************************************************************
 # build rules...
+
+NODE_MODULES_MINIMAL = $(foreach m,$(IG_MODULES),$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/$(m))
+PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME) $(NODE_MODULES_MINIMAL)
+PACK_FULL = $(BUILD_DIR)/$(APP_NAME) $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 
 
 # build date...
@@ -250,9 +256,7 @@ $(NODE_DIR):
 
 
 # build app dir...
-# NOTE: making $(NODE_DIR) a link/junction would be quite a bit faster 
-# 	but it will also choke asar...
-$(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
+$(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
 		$(BUILD_DATE)
 	$(MD) "$@"
@@ -261,9 +265,23 @@ $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
 		$(BUILD_DATE) \
 		"$(BUILD_DIR)/$(APP_NAME)"
-	cp -r $(NODE_DIR) \
-		"$(BUILD_DIR)/$(APP_NAME)"
-	touch "$@"
+	@touch "$@"
+
+
+# add $(NODE_DIR) to app dir...
+# NOTE: making $(NODE_DIR) a link/junction would be quite a bit faster 
+# 	but it will also choke asar...
+$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR): $(NODE_DIR)
+	$(MD) "$@"
+	cp -r "$(NODE_DIR)" "$(@D)"
+	@touch "$@"
+
+
+# ig-* $(NODE_DIR) modules...
+$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/ig-%: $(NODE_DIR)
+	$(MD) "$(@D)"
+	cp -r "$(NODE_DIR)/ig-$*" "$(@D)"
+	@touch "$@"
 
 
 
@@ -278,8 +296,12 @@ zipdelfrom = cd $1 ; zip -d "$(call up,$1)/$2" $3
 
 
 # pack app.asar (electron-specific)...
-# XXX need to do $(BUILD_DIR)/$(APP_NAME) iff app.asar does not exist...
-$(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
+.PRECIOUS: $(BUILD_DIR)/app.asar
+# XXX do we need to track changes to pack-full or to build it only if 
+# 	app.asar is deleted?
+#$(BUILD_DIR)/app.asar:
+#	make check $(PACK_FULL)
+$(BUILD_DIR)/app.asar: $(PACK_FULL)
 	cd $(BUILD_DIR) ; \
 		asar p "$(APP_NAME)" app.asar \
 			--unpack-dir node_modules/sharp
@@ -300,7 +322,7 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	unzip -u "$<" -d "$@" 
-	cp -r $(wildcard $(BUILD_DIR)/app.asar*) "$@/$(ASAR_PATH)/"
+	cp -r $(BUILD_DIR)/app.asar* "$@/$(ASAR_PATH)/"
 	cp -f "$(BUILD_DATE)" "$@/"
 	# remove default_app.asar...
 	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
@@ -308,7 +330,7 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 	mv "$@/$(ELECTRON_BIN)$(EXT)" "$@/$(APP_BIN)$(EXT)"
 	# fix permissions...
 	chmod +x "$@/$(APP_BIN)$(EXT)" $(DLLs)
-	touch "$@"
+	@touch "$@"
 
 
 # modify the archive in place (electron-specific)...
@@ -320,7 +342,7 @@ $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 	$(call zipdelfrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)/default_app.asar")
 	# add app.asar...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
-	cp -r $(wildcard $(BUILD_DIR)/app.asar*) "$(BUILD_DIR)/$(ASAR_PATH)/"
+	cp -r $(BUILD_DIR)/app.asar* "$(BUILD_DIR)/$(ASAR_PATH)/"
 	$(call zipfrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_DATE))")
 	# rename app dir in zip...
 	zipnote "$@.tmp" \
