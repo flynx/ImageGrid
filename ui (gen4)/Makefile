@@ -271,7 +271,8 @@ $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 # XXX need to do $(BUILD_DIR)/$(APP_NAME) iff app.asar does not exist...
 $(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
 	cd $(BUILD_DIR) ; \
-		asar p "$(APP_NAME)" app.asar
+		asar p "$(APP_NAME)" app.asar \
+			--unpack-dir node_modules/sharp
 
 
 # get the electron binary (keep this cached)...
@@ -288,7 +289,7 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	unzip -u "$<" -d "$@" 
-	cp "$(BUILD_DIR)/app.asar" "$@/$(ASAR_PATH)/"
+	cp $(wildcard $(BUILD_DIR)/app.asar*) "$@/$(ASAR_PATH)/"
 	cp -f "$(BUILD_DATE)" "$@/"
 	# remove default_app.asar...
 	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
@@ -309,10 +310,10 @@ $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 		zip -d "../$@.tmp" "$(ASAR_PATH)/default_app.asar"
 	# add app.asar...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
-	cp "$(BUILD_DIR)/app.asar" "$(BUILD_DIR)/$(ASAR_PATH)/"
+	cp -r $(wildcard $(BUILD_DIR)/app.asar*) "$(BUILD_DIR)/$(ASAR_PATH)/"
 	cd "$(BUILD_DIR)" ; \
 		zip -r "../$@.tmp" \
-			"$(ASAR_PATH)/app.asar" \
+			"$(ASAR_PATH)" \
 			"$(notdir $(BUILD_DATE))"
 	# rename app dir in zip...
 	zipnote "$@.tmp" \
