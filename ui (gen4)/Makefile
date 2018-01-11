@@ -8,7 +8,7 @@
 # 		also nodejs-legacy seems to be required by some code...
 # 	- npm i -g electron electron-rebuild asar less
 # 	- wget
-# 	- zip / unzip
+# 	- zip / unzip / zipnote
 # 		if zipnote fails this is likely due to a bug in v3.0, to
 # 		fix this by either upgrading to a 3.1 or a patched version
 # 		of the code...
@@ -33,6 +33,7 @@
 # 		- ...
 # 	- cross-compiling support...
 # 	- upstream clean build: git clone -> make dist
+# 	- nwjs???
 #
 #
 # Variables to control the build:
@@ -167,17 +168,13 @@ JS_FILES := $(wildcard *.js)
 #**********************************************************************
 # User targets...
 
-all: dev dist
-
-
-.PHONY: all css dev clean cleanall dist \
-	electron-dist-x64 electron-dist-ia32
+all: check dev dist
 
 
 css: $(CSS_FILES)
 
 
-dev: $(NODE_DIR) css
+dev: check $(NODE_DIR) css
 
 
 clean:
@@ -191,8 +188,39 @@ cleanall: clean
 electron-dist: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip
 electron-inst: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).msi
 
+electron-dist-in-place: $(BUILD_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip dist
 
-dist: electron-dist
+
+dist: check electron-dist
+
+dist-in-place: check electron-dist-in-place
+
+
+.PHONY: all css dev clean cleanall dist dist-in-place \
+	electron-dist-x64 electron-dist-ia32 electron-dist-in-place
+
+
+
+
+#**********************************************************************
+# Dependency checking...
+
+require(%):
+	@echo Checking for: $*
+	@which $* > /dev/null
+
+
+# XXX also add: heat, candle, light...
+# XXX might be a good idea to split these to sections and check only what
+# 	is needed...
+# 	...like: base, electron, wix, ...
+check: require(npm) require(wget) require(zip) require(unzip) \
+	require(zipnote) \
+	require(lessc) require(electron) require(electron-rebuild) \
+	require(asar)
+
+
+.PHONY: check require(%)
 
 
 
@@ -235,6 +263,10 @@ $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	touch "$@"
 
 
+
+#----------------------------------------------------------------------
+# Electron desktop build...
+
 # pack app.asar (electron-specific)...
 # XXX need to do $(BUILD_DIR)/$(APP_NAME) iff app.asar does not exist...
 $(BUILD_DIR)/app.asar: $(BUILD_DIR)/$(APP_NAME)
@@ -267,7 +299,7 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 	touch "$@"
 
 
-# modify the archive in place...
+# modify the archive in place (electron-specific)...
 # XXX this (zip) depends on that DIST_DIR has only one level...
 $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
@@ -291,8 +323,7 @@ $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 	mv "$@.tmp" "$@"
 
 
-# package the app dir...
-# XXX should we zip the dir or its content???
+# package the app dir (unpack - update - repack)...
 # XXX this (zip) depends on that DIST_DIR and APP_NAME have only one level each...
 $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
 	$(MD) "$(@D)"
@@ -302,15 +333,15 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
 		zip -r "../../$@" *
 
 
+# package the app dir (copy zip - update in-place)...
 $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.zip
 	$(MD) "$(@D)"
 	mv "$<" "$@"
 
 
 
-
-# XXX nwjs... (???)
-
+#----------------------------------------------------------------------
+# Desktop installer...
 
 # installer (WiX)...
 # XXX add tools to path...
@@ -329,6 +360,11 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.zip
 # installer (WiX)...
 $(DIST_DIR)/$(APP_NAME)-%.msi: $(BUILD_DIR)/$(APP_NAME)-% $(BUILD_DIR)/$(APP_NAME).wxs
 	@mkdir -p "$(@D)"
+
+
+
+#----------------------------------------------------------------------
+# Mobile XXX
 
 
 
