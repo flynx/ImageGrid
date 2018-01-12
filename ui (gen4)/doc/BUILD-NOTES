@@ -1,3 +1,21 @@
+Basic build
+-----------
+
+Default desktop app build:
+
+	make
+
+
+Build desktop app with full repack: 
+
+	(export BUILD_MODE=repack && make)
+
+
+Build list of files for web:
+
+	make web
+
+
 
 Chromium flicker issue
 ----------------------
@@ -24,12 +42,18 @@ Then open http://localhost:9222 in chrome.
 	
 
 
-Sharp
------
+Sharp and other native modules for nw/electron
+----------------------------------------------
 
-To build sharp for a specific version of node:
+To build sharp for a specific version of node and nwjs:
+
 	cd ./node_modules/sharp/
 	nw-gyp rebuild --target=0.17.4 --arch=x64
+
+And for electron:
+
+	electron-rebuild
+
 
 
 Speedup loading of app

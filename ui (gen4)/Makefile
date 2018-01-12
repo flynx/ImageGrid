@@ -69,6 +69,7 @@ APP_NAME ?= ImageGrid.Viewer
 
 
 # XXX get version...
+VERSION ?= 4.0.0a
 
 
 # Electron stuff...
@@ -213,15 +214,18 @@ cleanall: clean
 	$(RM) $(DIST_DIR) $(TARGET_DIR) $(NODE_DIR)
 
 
-electron-dist: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip
+electron-dist: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 
-#electron-inst: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).msi
+#electron-inst: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).msi
 
 
 dist: electron-dist
 
 
-.PHONY: all css dev clean cleanall dist dist-in-place \
+web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
+
+
+.PHONY: all css dev clean cleanall dist web dist-in-place \
 	electron-dist electron-inst electron-dist-in-place
 
 
@@ -303,6 +307,15 @@ app-dir-minimal: $(PACK_MINIMAL)
 
 
 #----------------------------------------------------------------------
+# Web...
+
+$(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip: $(PACK_MINIMAL)
+	$(MD) "$(@D)"
+	$(call zipfrom,$<,$@,*)
+
+
+
+#----------------------------------------------------------------------
 # Electron desktop build...
 
 # helpers...
@@ -336,7 +349,7 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 # build the app dir (electron-specific)...
 # XXX need to setup app icons...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
-$(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
+$(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	unzip -u "$<" -d "$@" 
 	cp -r $(BUILD_DIR)/app.asar* "$@/$(ASAR_PATH)/"
@@ -354,7 +367,7 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 
 # modify the archive in place (electron-specific)...
 # XXX need to setup app icons...
-$(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
+$(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%.in-place.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	cp "$<" "$@.tmp"
 #	# setup app icon...
@@ -375,7 +388,7 @@ $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSI
 
 
 # package the app dir (unpack - update - repack)...
-$(BUILD_DIR)/$(APP_NAME)-%.repack.zip: $(BUILD_DIR)/$(APP_NAME)-%
+$(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%.repack.zip: $(BUILD_DIR)/$(APP_NAME)-%
 	$(MD) "$(@D)"
 	$(call zipfrom,$<,$@,*)
 
@@ -384,7 +397,6 @@ $(BUILD_DIR)/$(APP_NAME)-%.repack.zip: $(BUILD_DIR)/$(APP_NAME)-%
 $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 	$(MD) "$(@D)"
 	cp "$<" "$@"
-
 
 
 
