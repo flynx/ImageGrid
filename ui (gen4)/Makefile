@@ -32,7 +32,12 @@
 # 	TARGET_OS	- target OS (win32, linux, darwin)
 # 	ELECTRON_DOWNOAD_URL
 # 			- URL to download electron pinary
+# 	BUILD_MODE	- can be "repack" or "in-place" (default)
 #
+# NOTE: when setting variables avoid using spaces and other characters 
+# 	make can get fussy about...
+# NOTE: to do a repack build call:
+# 		(export BUILD_MODE=repack && make)
 # NOTE: cross compilation is at this time not supported, if you try it 
 # 	and it works then 1) you got very lucky and 2) tell me about it =)
 # 	...at least the node native packages (sharp) will likely either 
@@ -63,6 +68,9 @@
 APP_NAME ?= ImageGrid.Viewer
 
 
+# XXX get version...
+
+
 # Electron stuff...
 #
 # NOTE: Linux does not let an app run if some of the libs it is dynamically 
@@ -72,6 +80,9 @@ APP_NAME ?= ImageGrid.Viewer
 ELECTRON_VERSION_FALLBACK = v1.8.1
 ELECTRON_VERSION := $(strip $(shell electron -v || echo $(ELECTRON_VERSION_FALLBACK)))
 ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
+
+
+BUILD_MODE ?= in-place
 
 
 # OS-specific stuff...
@@ -146,8 +157,9 @@ MD = @mkdir -p
 # Paths and lists...
 
 TARGET_DIR = targets
-BUILD_DIR = build
 DIST_DIR = dist
+# NOTE: this can not contain spaces...
+BUILD_DIR = build
 
 NODE_DIR = node_modules
 LIB_DIR = lib
@@ -190,7 +202,7 @@ all: check dev dist
 css: $(CSS_FILES)
 
 
-dev: check $(NODE_DIR) css
+dev: $(NODE_DIR) css
 
 
 clean:
@@ -201,20 +213,16 @@ cleanall: clean
 	$(RM) $(DIST_DIR) $(TARGET_DIR) $(NODE_DIR)
 
 
-# XXX for some reason this is not the default...
 electron-dist: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip
-electron-dist-in-place: $(BUILD_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).zip electron-dist
 
-electron-inst: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).msi
+#electron-inst: $(DIST_DIR)/$(APP_NAME)-$(TARGET_OS)-$(ARCH).msi
 
 
-dist: check electron-dist
-
-dist-in-place: check electron-dist-in-place
+dist: electron-dist
 
 
 .PHONY: all css dev clean cleanall dist dist-in-place \
-	electron-dist-x64 electron-dist-ia32 electron-dist-in-place
+	electron-dist electron-inst electron-dist-in-place
 
 
 
@@ -326,7 +334,7 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 
 
 # build the app dir (electron-specific)...
-# XXX BUILD_DIR is unguarded here -- see cp -r ...
+# XXX need to setup app icons...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
 $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
@@ -335,6 +343,8 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 	cp -f "$(BUILD_DATE)" "$@/"
 	# remove default_app.asar...
 	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
+#	# setup app icon...
+#	# XXX
 	# rename app dir in zip...
 	mv "$@/$(ELECTRON_BIN)$(EXT)" "$@/$(APP_BIN)$(EXT)"
 	# fix permissions...
@@ -344,8 +354,7 @@ $(BUILD_DIR)/$(APP_NAME)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 
 # modify the archive in place (electron-specific)...
 # XXX need to setup app icons...
-# XXX BUILD_DIR is unguarded here -- see cp -r ...
-$(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
+$(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
 		$(BUILD_DIR)/app.asar $(BUILD_DATE)
 	cp "$<" "$@.tmp"
 #	# setup app icon...
@@ -366,15 +375,16 @@ $(BUILD_DIR)/$(APP_NAME)-%.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
 
 
 # package the app dir (unpack - update - repack)...
-$(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%
+$(BUILD_DIR)/$(APP_NAME)-%.repack.zip: $(BUILD_DIR)/$(APP_NAME)-%
 	$(MD) "$(@D)"
 	$(call zipfrom,$<,$@,*)
 
 
-# package the app dir (copy zip - update in-place)...
-$(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.zip
+# collect the built package to $(DIST_DIR)
+$(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 	$(MD) "$(@D)"
-	mv "$<" "$@"
+	cp "$<" "$@"
+
 
 
 
