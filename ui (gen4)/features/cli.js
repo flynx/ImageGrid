@@ -120,7 +120,8 @@ module.CLI = core.ImageGridFeatures.Feature({
 				var cli = requirejs('commander')
 				cli
 					// XXX get the version from package.json...
-					//.version(package.version)
+					.version(that.version)
+
 					//.usage('[command] [options] ..')
 
 					.option('-v, --verbose', 'verbose mode', function(){

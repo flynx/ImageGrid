@@ -68,8 +68,10 @@
 APP_NAME ?= ImageGrid.Viewer
 
 
-# XXX get version...
-VERSION ?= 4.0.0a
+# XXX get actual version...
+VERSION := $(strip $(shell node ./ig --version))
+DATE := $(strip $(shell date "+%Y%m%d %H%M"))
+COMMIT := $(strip $(shell git rev-parse HEAD))
 
 
 # Electron stuff...
@@ -81,6 +83,7 @@ VERSION ?= 4.0.0a
 ELECTRON_VERSION_FALLBACK = v1.8.1
 ELECTRON_VERSION := $(strip $(shell electron -v || echo $(ELECTRON_VERSION_FALLBACK)))
 ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
+ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
 
 
 BUILD_MODE ?= in-place
@@ -172,7 +175,7 @@ FEATURES_DIR = features
 WORKERS_DIR = workers
 IMAGES_DIR = images
 
-BUILD_DATE = $(BUILD_DIR)/DATE
+BUILD_INFO = $(BUILD_DIR)/INFO
 PROJECT_FILES = package.json
 # get all .css build targets, in addition, get all the .less files and 
 # replace .less with .css making them build targets...
@@ -253,10 +256,13 @@ PACK_FULL = $(BUILD_DIR)/$(APP_NAME) $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 
 # build date...
 # XXX add build version...
-$(BUILD_DATE): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
+$(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	$(MD) "$(@D)"
-	date "+%Y%m%d %H%M" > $(BUILD_DATE)
+	echo "$(APP_NAME)" > $(BUILD_INFO)
+	echo "$(VERSION)" >> $(BUILD_INFO)
+	echo "$(DATE)" >> $(BUILD_INFO)
+	echo "$(COMMIT)" >> $(BUILD_INFO)
 
 
 %.css: %.less
@@ -272,12 +278,12 @@ $(NODE_DIR):
 # build app dir...
 $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
-		$(BUILD_DATE)
+		$(BUILD_INFO)
 	$(MD) "$@"
 	cp -r $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
 		$(CFG_DIR) $(LIB_DIR) $(EXT_LIB_DIR) $(FEATURES_DIR) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
-		$(BUILD_DATE) \
+		$(BUILD_INFO) \
 		"$(BUILD_DIR)/$(APP_NAME)"
 	@touch "$@"
 
@@ -338,8 +344,8 @@ $(BUILD_DIR)/app.asar: $(PACK_FULL)
 
 
 # get the electron binary (keep this cached)...
-.PRECIOUS: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip
-$(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
+.PRECIOUS: $(TARGET_DIR)/$(ELECTRON_DIST)
+$(TARGET_DIR)/$(ELECTRON_DIST):
 	$(MD) "$(@D)"
 	wget \
 		-nc "$(ELECTRON_DOWNOAD_URL)/$(ELECTRON_VERSION)/$(@F)" \
@@ -348,12 +354,12 @@ $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip:
 
 # build the app dir (electron-specific)...
 # XXX need to setup app icons...
-.PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%
-$(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
-		$(BUILD_DIR)/app.asar $(BUILD_DATE)
+.PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%/
+$(BUILD_DIR)/$(APP_NAME)-%/: $(TARGET_DIR)/$(ELECTRON_DIST) \
+		$(BUILD_DIR)/app.asar $(BUILD_INFO)
 	unzip -u "$<" -d "$@" 
 	cp -r $(BUILD_DIR)/app.asar* "$@/$(ASAR_PATH)/"
-	cp -f "$(BUILD_DATE)" "$@/"
+	cp -f "$(BUILD_INFO)" "$@/"
 	# remove default_app.asar...
 	$(RM) "$@/$(ASAR_PATH)/default_app.asar"
 #	# setup app icon...
@@ -367,8 +373,8 @@ $(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%: $(TARGET_DIR)/electron-$(ELECTRON_VERSION
 
 # modify the archive in place (electron-specific)...
 # XXX need to setup app icons...
-$(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%.in-place.zip: $(TARGET_DIR)/electron-$(ELECTRON_VERSION)-%.zip \
-		$(BUILD_DIR)/app.asar $(BUILD_DATE)
+$(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
+		$(BUILD_DIR)/app.asar $(BUILD_INFO)
 	cp "$<" "$@.tmp"
 #	# setup app icon...
 #	# XXX
@@ -377,7 +383,7 @@ $(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%.in-place.zip: $(TARGET_DIR)/electron-$(ELE
 	# add app.asar...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
 	cp -r $(BUILD_DIR)/app.asar* "$(BUILD_DIR)/$(ASAR_PATH)/"
-	$(call zipfrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_DATE))")
+	$(call zipfrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_INFO))")
 	# rename app in zip...
 	zipnote "$@.tmp" \
 		| sed 's/\(^@ $(ELECTRON_BIN)$(EXT)\)\(.*$$\)/\1\2\n@=$(APP_BIN)$(EXT)\2/' \
@@ -388,7 +394,7 @@ $(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%.in-place.zip: $(TARGET_DIR)/electron-$(ELE
 
 
 # package the app dir (unpack - update - repack)...
-$(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%.repack.zip: $(BUILD_DIR)/$(APP_NAME)-%
+$(BUILD_DIR)/$(APP_NAME)-%.repack.zip: $(BUILD_DIR)/$(APP_NAME)-%/
 	$(MD) "$(@D)"
 	$(call zipfrom,$<,$@,*)
 

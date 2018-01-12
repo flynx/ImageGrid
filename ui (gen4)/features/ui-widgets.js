@@ -1222,8 +1222,7 @@ var UIIntrospectionActions = actions.Actions({
 				[
 					// XXX add  basic description (About)...
 
-					// XXX get this from package.json...
-					['Version:', '4.0.0a'],
+					['Version:', this.version],
 					// XXX
 					['Build:', '-'],
 

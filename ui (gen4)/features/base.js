@@ -59,7 +59,8 @@ module.BaseActions =
 actions.Actions({
 	config: {
 		// XXX should this be here???
-		version: 'gen4',
+		// 		...where should this be stored???
+		version: '4.0.0a',
 
 		// Number of steps to change default direction...
 		//
