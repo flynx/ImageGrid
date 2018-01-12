@@ -46,34 +46,34 @@ ImageGrid.Viewer can be run in a number of runtimes on multiple platforms.
 Browser
 -------
 
-npm install
-index.html
+	npm install
+	index.html
 
 
 
 Node.js
 -------
 
-npm install
-node ig.js --help
-
-
-
-NW.js
------
-
-npm install
-npm start
+	npm install
+	node ig.js --help
 
 
 
 Electron
 --------
 
-XXX EXPERIMENTAL -- mostly runs in restricted (browser-like) mode...
+	npm install
+	npm start
 
-npm install
-electron e.js
+
+
+NW.js
+-----
+
+change "main" to "index.html" in package.json
+
+	npm install
+	nw .
 
 
 

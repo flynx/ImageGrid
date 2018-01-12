@@ -69,7 +69,8 @@ APP_NAME ?= ImageGrid.Viewer
 
 
 # XXX get actual version...
-VERSION := $(strip $(shell node ./ig --version))
+# XXX need to make getting the version usable from a bare checkout...
+VERSION := $(strip $(shell node ./ig --version || echo 4.0.0a))
 DATE := $(strip $(shell date "+%Y%m%d %H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
@@ -269,6 +270,9 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 	lessc $< > $@
 
 
+# XXX might be a good idea to install directly to $(BUILD_DIR) so as not 
+# 	to messup the current dir...
+# 		npm install --prefix ./build
 # XXX need to make this arch/os specific for cross compiling...
 $(NODE_DIR):
 	npm install
@@ -373,7 +377,7 @@ $(BUILD_DIR)/$(APP_NAME)-%/: $(TARGET_DIR)/$(ELECTRON_DIST) \
 
 # modify the archive in place (electron-specific)...
 # XXX need to setup app icons...
-$(BUILD_DIR)/$(APP_NAME)-$(VERSION)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
+$(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 		$(BUILD_DIR)/app.asar $(BUILD_INFO)
 	cp "$<" "$@.tmp"
 #	# setup app icon...

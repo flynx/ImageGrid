@@ -1,24 +1,39 @@
 Basic build
 -----------
 
-Default desktop app build:
+Default desktop electron app build (modifying the electron dist in-place):
 
 	make
 
 
-Build desktop app with full repack: 
+Build desktop electron app with full repack: 
 
 	(export BUILD_MODE=repack && make)
 
 
-Build list of files for web:
+Build package files for web:
 
 	make web
 
 
 
-Chromium flicker issue
-----------------------
+Sharp and other native modules for nw/electron
+----------------------------------------------
+
+To build sharp for a specific version of node and nwjs:
+
+	cd ./node_modules/sharp/
+	nw-gyp rebuild --target=0.17.4 --arch=x64
+
+
+And for electron (done by make):
+
+	electron-rebuild
+
+
+
+Chromium flicker issue (nw)
+---------------------------
 
 The UI sometimes flickers -- at first blanks out to black then re-draws,
 this is most noticeable on white or gray backgrounds. 
@@ -32,8 +47,8 @@ This will fix the issue temporarily, but we still need a better solution.
 
 
 
-Remote debugging via DevTools
------------------------------
+Remote debugging via DevTools (nw)
+----------------------------------
 
 Set this in package.json:
   "chromium-args": "--remote-debugging-port=9222",
@@ -42,22 +57,8 @@ Then open http://localhost:9222 in chrome.
 	
 
 
-Sharp and other native modules for nw/electron
-----------------------------------------------
-
-To build sharp for a specific version of node and nwjs:
-
-	cd ./node_modules/sharp/
-	nw-gyp rebuild --target=0.17.4 --arch=x64
-
-And for electron:
-
-	electron-rebuild
-
-
-
-Speedup loading of app
-----------------------
+Speedup loading of app (nw)
+---------------------------
 
 One of the ways to speed up the load times when packed is to store Node's
 modules ./node_modules in a separate location, outside of the app.zip
