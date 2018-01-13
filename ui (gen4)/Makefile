@@ -4,6 +4,7 @@
 #
 #
 # Make dependencies that need to be installed:
+# 	- git
 # 	- nodejs / npm 
 # 		also nodejs-legacy seems to be required by some code...
 # 	- npm i -g electron electron-rebuild asar less
@@ -70,7 +71,7 @@ APP_NAME ?= ImageGrid.Viewer
 
 # XXX get actual version...
 # XXX need to make getting the version usable from a bare checkout...
-VERSION := $(strip $(shell node ./ig --version || echo 4.0.0a))
+VERSION := $(strip $(shell node ./ig --version 2> /dev/null || echo 4.0.0a))
 DATE := $(strip $(shell date "+%Y%m%d %H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
@@ -82,7 +83,7 @@ COMMIT := $(strip $(shell git rev-parse HEAD))
 # 	on a non-GUI box (i.e. no gtk)...
 # 	...love the "statically" linked "dynamic" libs...
 ELECTRON_VERSION_FALLBACK = v1.8.1
-ELECTRON_VERSION := $(strip $(shell electron -v || echo $(ELECTRON_VERSION_FALLBACK)))
+ELECTRON_VERSION := $(strip $(shell electron -v 2> /dev/null || echo $(ELECTRON_VERSION_FALLBACK)))
 ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
 ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
 
@@ -191,7 +192,7 @@ INCLUDE_NODE_MODULES = ig-object ig-actions ig-features preact
 # XXX might be a good idea to split these to sections and check only what
 # 	is needed...
 # 	...like: base, electron, wix, ...
-DEPENDENCIES = npm wget zip unzip zipnote \
+DEPENDENCIES = node npm wget zip unzip zipnote git \
 	lessc electron electron-rebuild asar
 # WiX dependencies...
 #DEPENDENCIES += heat candle light
@@ -256,14 +257,16 @@ PACK_FULL = $(BUILD_DIR)/$(APP_NAME) $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 
 
 # build date...
-# XXX add build version...
+# NOTE: this depends on lots of stuff so as to be updated in case any of
+# 	the dependencies are touched...
 $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES)
 	$(MD) "$(@D)"
-	echo "$(APP_NAME)" > $(BUILD_INFO)
-	echo "$(VERSION)" >> $(BUILD_INFO)
-	echo "$(DATE)" >> $(BUILD_INFO)
-	echo "$(COMMIT)" >> $(BUILD_INFO)
+	@echo "Build info:"
+	@echo "$(APP_NAME)" | tee $(BUILD_INFO)
+	@echo "$(VERSION)" | tee -a $(BUILD_INFO)
+	@echo "$(DATE)" | tee -a $(BUILD_INFO)
+	@echo "$(COMMIT)" | tee -a $(BUILD_INFO)
 
 
 %.css: %.less
@@ -272,12 +275,16 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 
 # XXX might be a good idea to install directly to $(BUILD_DIR) so as not 
 # 	to messup the current dir...
-# 		npm install --prefix ./build
 # XXX need to make this arch/os specific for cross compiling...
+#%/$(NODE_DIR):
+#	cd "$*" ; \
+#		npm install ; \
+#		electron-rebuild
+#$(NODE_DIR): ./$(NODE_DIR)
+
 $(NODE_DIR):
 	npm install
 	electron-rebuild
-
 
 # build app dir...
 $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(PROJECT_FILES) \

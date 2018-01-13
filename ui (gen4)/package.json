@@ -25,12 +25,8 @@
     "ig-actions": "^3.12.0",
     "ig-features": "^3.3.2",
     "ig-object": "^1.0.2",
-    "npm": "^5.6.0",
     "openseadragon": "^2.3.1",
     "pica": "^3.0.6",
-    "preact": "^8.2.7",
-    "react": "^15.6.2",
-    "react-dom": "^15.6.2",
     "requirejs": "^2.3.5",
     "requirejs-plugins": "^1.0.2",
     "sharp": "^0.17.3",
@@ -38,7 +34,10 @@
     "wildglob": "^0.1.1"
   },
   "optionalDependencies": {
-    "flickrapi": "^0.3.28"
+    "flickrapi": "^0.3.28",
+    "preact": "^8.2.7",
+    "react": "^15.6.2",
+    "react-dom": "^15.6.2"
   },
   "devDependencies": {
     "less": "*"
