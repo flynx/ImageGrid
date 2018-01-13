@@ -33,6 +33,7 @@
 # 	TARGET_OS	- target OS (win32, linux, darwin)
 # 	ELECTRON_DOWNOAD_URL
 # 			- URL to download electron pinary
+# 	ELECTRON_DIST	- electron distribution file name pattern
 # 	BUILD_MODE	- can be "repack" or "in-place" (default)
 #
 # NOTE: when setting variables avoid using spaces and other characters 
@@ -48,8 +49,14 @@
 #
 #
 #----------------------------------------------------------------------
-
+#
 # ToDo:
+# 	- sync version numbers between:
+# 		- git tags
+# 		- package.json
+# 			can't use only this because it can't be imported 
+# 			in browser directly...
+# 		- version.js
 # 	- app icons...
 # 	- might be a good idea to do a no-bin target -- exclude native...
 # 	- add a cli-only build
@@ -69,9 +76,12 @@
 APP_NAME ?= ImageGrid.Viewer
 
 
-# XXX get actual version...
-# XXX need to make getting the version usable from a bare checkout...
-VERSION := $(strip $(shell node ./ig --version 2> /dev/null || echo 4.0.0a))
+VERSION_FALLBACK ?= 4.0.0a
+# NOTE: we are not using './ig --version 2> /dev/null' because it will 
+# 	not work before we do 'npm install'...
+VERSION := $(strip $(shell \
+	node version.js \
+	|| echo $(VERSION_FALLBACK)))
 DATE := $(strip $(shell date "+%Y%m%d %H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
@@ -82,8 +92,10 @@ COMMIT := $(strip $(shell git rev-parse HEAD))
 # 	linked against are missing, this can happen if we try to run electron
 # 	on a non-GUI box (i.e. no gtk)...
 # 	...love the "statically" linked "dynamic" libs...
-ELECTRON_VERSION_FALLBACK = v1.8.1
-ELECTRON_VERSION := $(strip $(shell electron -v 2> /dev/null || echo $(ELECTRON_VERSION_FALLBACK)))
+ELECTRON_VERSION_FALLBACK ?= v1.8.1
+ELECTRON_VERSION := $(strip $(shell \
+	electron -v 2> /dev/null \
+	|| echo $(ELECTRON_VERSION_FALLBACK)))
 ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
 ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
 
@@ -194,7 +206,7 @@ INCLUDE_NODE_MODULES = ig-object ig-actions ig-features preact
 # 	...like: base, electron, wix, ...
 DEPENDENCIES = node npm wget zip unzip zipnote git \
 	lessc electron electron-rebuild asar
-# WiX dependencies...
+# WiX dependencies, windows only...
 #DEPENDENCIES += heat candle light
 
 

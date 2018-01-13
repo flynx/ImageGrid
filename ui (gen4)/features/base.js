@@ -21,6 +21,8 @@
 (function(require){ var module={} // make module AMD/node compatible...
 /*********************************************************************/
 
+var version = require('version')
+
 var actions = require('lib/actions')
 var features = require('lib/features')
 var toggler = require('lib/toggler')
@@ -60,7 +62,7 @@ actions.Actions({
 	config: {
 		// XXX should this be here???
 		// 		...where should this be stored???
-		version: '4.0.0a',
+		version: version.version || '4.0.0a',
 
 		// Number of steps to change default direction...
 		//
