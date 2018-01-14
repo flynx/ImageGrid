@@ -2027,6 +2027,8 @@ var ButtonsActions = actions.Actions({
 		},
 
 		'app-buttons': {
+			//'<div style="transform: scaleX(-1)">&#9649;</div>': 
+			//	['touch-controls', 'toggleSideButtons -- Toggle touch controls'],
 			'&#9965;': ['ui-settings', 'browseActions: "Interface/" -- Interface settings...'],
 		},
 

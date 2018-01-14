@@ -1313,6 +1313,14 @@ var ControlActions = actions.Actions({
 		'window-focus-timeout': 200,
 	},
 
+	// XXX do we need this???
+	get touchSupported(){
+		var t = this.__touchSupported = this.__touchSupported 
+			|| (typeof(window) != 'undefined' 
+				&& ('ontouchstart' in window || navigator.msMaxTouchPoints))
+		return t
+	},
+
 	// Lock unfocused viewer...
 	toggleUnfocusedLock: ['Interface/Lock unfocused viewer',
 		core.doc`Toggle unfocused viewer locking...

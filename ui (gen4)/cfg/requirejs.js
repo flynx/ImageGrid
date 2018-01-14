@@ -9,8 +9,8 @@ var requirejs_cfg = {
 	//urlArgs: 'bust='+Date.now(),
 	
 	paths: {
-		//text: 'node_modules/requirejs-plugins/lib/text',
-		//json: 'node_modules/requirejs-plugins/src/json',
+		text: 'node_modules/requirejs-plugins/lib/text',
+		json: 'node_modules/requirejs-plugins/src/json',
 		
 		//react: 'node_modules/react/dist/react-with-addons.min.js',
 		//'react-dom': 'node_modules/react-dom/dist/react-dom.min.js',

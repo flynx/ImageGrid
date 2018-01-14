@@ -250,11 +250,6 @@ var ExampleActions = actions.Actions({
 				console.log('exampleConfigToggler: post-callback: shifting state to:', state)
 			})],
 
-	// XXX move this to a ui-dependant feature...
-	exampleCSSClassToggler: ['- Test/',
-		function(){
-		}],
-
 	// XXX event and event use...
 	
 	// XXX inner/outer action...
@@ -289,6 +284,11 @@ module.Example = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 var ExampleUIActions = actions.Actions({
+	// XXX move this to a ui-dependant feature...
+	exampleCSSClassToggler: ['- Test/',
+		function(){
+		}],
+
 	exampleActionDisabled: ['Test/$Disabled example action',
 		{browseMode: function(){ return 'disabled' }},
 		function(){ 

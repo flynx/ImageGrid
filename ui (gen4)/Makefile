@@ -40,6 +40,11 @@
 # 	make can get fussy about...
 # NOTE: to do a repack build call:
 # 		(export BUILD_MODE=repack && make)
+# NOTE: in most cases we do not add a "/" to target dirs to destinguish 
+# 	them from target files except for one case:
+#		$(BUILD_DIR)/$(APP_NAME)-%/
+#	this will help make destinguish it from things like:
+#		$(DIST_DIR)/$(APP_NAME)-%.zip
 # NOTE: cross compilation is at this time not supported, if you try it 
 # 	and it works then 1) you got very lucky and 2) tell me about it =)
 # 	...at least the node native packages (sharp) will likely either 
@@ -81,7 +86,7 @@ VERSION_FALLBACK ?= 4.0.0a
 # 	not work before we do 'npm install'...
 VERSION := $(strip $(shell \
 	node version.js \
-	|| echo $(VERSION_FALLBACK)))
+		|| echo $(VERSION_FALLBACK)))
 DATE := $(strip $(shell date "+%Y%m%d %H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
@@ -95,7 +100,7 @@ COMMIT := $(strip $(shell git rev-parse HEAD))
 ELECTRON_VERSION_FALLBACK ?= v1.8.1
 ELECTRON_VERSION := $(strip $(shell \
 	electron -v 2> /dev/null \
-	|| echo $(ELECTRON_VERSION_FALLBACK)))
+		|| echo $(ELECTRON_VERSION_FALLBACK)))
 ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
 ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
 
@@ -214,36 +219,45 @@ DEPENDENCIES = node npm wget zip unzip zipnote git \
 #**********************************************************************
 # User targets...
 
+.PHONY: all
 all: check dev dist
 
 
+.PHONY: css
 css: $(CSS_FILES)
 
 
+.PHONY: dev
 dev: $(NODE_DIR) css
 
 
+.PHONY: clean
 clean:
 	$(RM) $(BUILD_DIR)
 
 
+.PHONY: cleanall
 cleanall: clean
 	$(RM) $(DIST_DIR) $(TARGET_DIR) $(NODE_DIR)
 
 
+.PHONY: electron-dist
 electron-dist: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 
 #electron-inst: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).msi
 
 
+.PHONY: dist
 dist: electron-dist
 
 
+.PHONY: web
 web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
 
 
-.PHONY: all css dev clean cleanall dist web dist-in-place \
-	electron-dist electron-inst electron-dist-in-place
+# NOTE: the "/" at the end here is significant...
+.PHONY: repack-dir
+repack-dir: $(BUILD_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH)/
 
 
 
@@ -288,18 +302,25 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 # XXX might be a good idea to install directly to $(BUILD_DIR) so as not 
 # 	to messup the current dir...
 # XXX need to make this arch/os specific for cross compiling...
-#%/$(NODE_DIR):
+# XXX requirejs breaks here for some reason, breaking npm install and 
+# 	the build...
+#%/$(NODE_DIR): package.json
+#	$(MD) "$@"
+#	cp package*.json "$(@D)"
 #	cd "$*" ; \
 #		npm install ; \
 #		electron-rebuild
-#$(NODE_DIR): ./$(NODE_DIR)
+#	@touch "$@"
 
-$(NODE_DIR):
+
+#$(NODE_DIR):
+$(NODE_DIR): package.json
 	npm install
 	electron-rebuild
 
+
 # build app dir...
-$(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(PROJECT_FILES) \
+$(BUILD_DIR)/$(APP_NAME)/: $(CSS_FILES) $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
 		$(BUILD_INFO)
 	$(MD) "$@"
@@ -314,6 +335,7 @@ $(BUILD_DIR)/$(APP_NAME): $(CSS_FILES) $(PROJECT_FILES) \
 # add $(NODE_DIR) to app dir...
 # NOTE: making $(NODE_DIR) a link/junction would be quite a bit faster 
 # 	but it will also choke asar...
+# XXX %/$(NODE_DIR): $(NODE_DIR) ???
 $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR): $(NODE_DIR)
 	$(MD) "$@"
 	cp -r "$(NODE_DIR)" "$(@D)"
@@ -329,6 +351,8 @@ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/%: $(NODE_DIR)
 
 # targets for testing...
 # NOTE: do not use these phony targets as dependencies...
+# NOTE: these intersect, so one should remove the previos before making 
+# 	a new app dir...
 .PHONY: app-dir-full app-dir-minimal
 app-dir-full: $(PACK_FULL)
 app-dir-minimal: $(PACK_MINIMAL)
@@ -376,6 +400,8 @@ $(TARGET_DIR)/$(ELECTRON_DIST):
 
 
 # build the app dir (electron-specific)...
+# NOTE: the "/" here is significant -- it prevents conflicts with other 
+# 	rules...
 # XXX need to setup app icons...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%/
 $(BUILD_DIR)/$(APP_NAME)-%/: $(TARGET_DIR)/$(ELECTRON_DIST) \
@@ -430,10 +456,7 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 
 
 #----------------------------------------------------------------------
-# Desktop installer...
-
-# installer (WiX)...
-# XXX add tools to path...
+# Desktop installer (WiX)...
 
 # harvest directory tree...
 %.wxs:
@@ -456,7 +479,13 @@ $(DIST_DIR)/$(APP_NAME)-%.msi: $(BUILD_DIR)/$(APP_NAME)-% $(BUILD_DIR)/$(APP_NAM
 
 
 #----------------------------------------------------------------------
-# Mobile XXX
+# Debian package...
+# XXX
+
+
+
+#----------------------------------------------------------------------
+# Mobile (cordova/PhoneGap) XXX
 
 
 

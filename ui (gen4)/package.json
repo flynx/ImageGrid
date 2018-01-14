@@ -2,6 +2,9 @@
   "name": "ImageGrid.Viewer.g4",
   "main": "e.js",
   "version": "4.0.0a",
+  "author": "Alex A. Naanou <alex.nanou@gmail.com> (https://github.com/flynx)",
+  "contributors": [],
+  "repository": "github:flynx/ImageGrid",
   "preferGlobal": true,
   "window": {
     "title": "ImageGrid.Viewer (gen4)",
@@ -26,7 +29,6 @@
     "ig-features": "^3.3.2",
     "ig-object": "^1.0.2",
     "openseadragon": "^2.3.1",
-    "pica": "^3.0.6",
     "requirejs": "^2.3.5",
     "requirejs-plugins": "^1.0.2",
     "sharp": "^0.17.3",
@@ -34,6 +36,7 @@
     "wildglob": "^0.1.1"
   },
   "optionalDependencies": {
+    "pica": "^3.0.6",
     "flickrapi": "^0.3.28",
     "preact": "^8.2.7",
     "react": "^15.6.2",
@@ -49,5 +52,6 @@
     "build-css": "lessc css/layout.less css/layout.css",
     "build-dist": "make dist",
     "start": "electron e.js"
-  }
+  },
+  "vim-cfg": " vim:set ts=2 sw=2 expandtab : "
 }
