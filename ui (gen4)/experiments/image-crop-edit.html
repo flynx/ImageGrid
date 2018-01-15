@@ -1,7 +1,74 @@
 <!DOCTYPE html>
 <html>
 <style>
+
+button {
+	border: none;
+	background: transparent;
+}
+
+button .material-icons {
+	font-size: 2em;
+}
+
+
+.crop {
+	position: absolute;
+	width: 500px;
+	height: 500px;
+
+	border: solid 1px black;
+}
+
+
+.center {
+	position: relative;
+	top: 50%;
+	left: 50%;
+	width: 15px;
+	height: 15px;
+	margin-left: -8.5px;
+	margin-top: -8.5px;
+
+	border: solid 1px black;
+	border-radius: 50%;
+}
+
+.center:before {
+	display: block;
+	position: absolute;
+	content: "";
+
+	bottom: 50%;
+	right: 50%;
+	width: 15px;
+	height: 15px;
+	margin-right: -0.5px;
+	margin-bottom: -0.5px;
+
+	border-bottom: solid 1px black;
+	border-right: solid 1px black;
+}
+.center:after {
+	display: block;
+	position: absolute;
+	content: "";
+
+	top: 50%;
+	left: 50%;
+	width: 15px;
+	height: 15px;
+	margin-top: -0.5px;
+	margin-left: -0.5px;
+
+	border-top: solid 1px black;
+	border-left: solid 1px black;
+}
+
 </style>
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+<link rel="stylesheet" href="../css/fonts.css">
 
 <script src="../ext-lib/jquery.js"></script>
 <script src="../ext-lib/jquery-ui.js"></script>
@@ -9,24 +76,80 @@
 <script src="../lib/jli.js"></script>
 
 <script>
+/**********************************************************************
+
+TODO:
+	- rotation & toration handle
+	- touch
+	- multitouch
+	- center point
+
+
+**********************************************************************/
+
+var ORIGINAL = 1
+
+
+$(function(){
+	$('.crop')
+		.resizable({
+			handles: 'all',
+			aspectRatio: true,
+		})
+		.draggable()
+	$('.crop .center')
+		.draggable()
+})
+
+
+function setRatio(ratio){
+	var crop = $('.crop')
+		.resizable("option", "aspectRatio", ratio)
+
+	if(ratio === false){
+		return
+	}
+
+	var w = crop.width()
+	var h = crop.height()
+
+	// resize...
+	var t = w + h
+	h = t / (ratio + 1)
+	w = t - h
+	crop
+		.height(h)
+		.width(w)
+}
+
+function flip(){
+	var crop = $('.crop')
+	var r = crop.resizable("option", "aspectRatio")
+	r > 0 
+		&& setRatio(1/r)
+}
+
 </script>
 
 <body>
 
+<button><span title="toggle crop on/off" class="material-icons">crop</span></button>
+<button onclick="setRatio(ORIGINAL)"><span title="original ratio" class="material-icons">crop_original</span></button>
+<button onclick="setRatio(false)"><span class="material-icons">crop_free</span></button>
+<button onclick="setRatio(1)"><span class="material-icons">crop_square</span>1:1</button>
+<button onclick="setRatio(3/2)"><span class="material-icons">crop_3_2</span>3:2</button>
+<button onclick="setRatio(16/9)"><span class="material-icons">crop_16_9</span>16:9</button>
+<button onclick="flip()"><span class="material-icons">crop_rotate</span></button>
 
-<!-- TODO: 
-- setup standard single image mode 
-- add elements:
-	- crop rectangle
-	- crop preset selector
-		- free form
-		- 2:3
-		- 3:2
-		- 1:1
-		- 16:9
-		- add...
--->
+
+<div class="container">
+	<div class="crop">
+		<div class="center">
+		</div>
+	</div>
+</div>
 
 
 </body>
 </html>
+<!-- vim:set sw=4 ts=4 : -->

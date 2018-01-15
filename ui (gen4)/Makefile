@@ -3,18 +3,19 @@
 # ImageGrid.Viewer Makefile...
 #
 #
-# Make dependencies that need to be installed:
-# 	- git
-# 	- nodejs / npm 
-# 		also nodejs-legacy seems to be required by some code...
-# 	- npm i -g electron electron-rebuild asar less
-# 	- wget
-# 	- zip / unzip / zipnote
-# 		if zipnote fails this is likely due to a bug in v3.0, to
-# 		fix this by either upgrading to 3.1 or a patched version
-# 		of 3.0...
-# 		for more info and patch see: 
-# 			https://goo.gl/csQmQo
+# Make dependencies that need to be installed (make check):
+# 	- General
+#	 	- git
+# 		- nodejs / npm 
+# 			also nodejs-legacy seems to be required by some code...
+# 		- npm i -g electron electron-rebuild asar less
+# 		- wget
+# 		- zip / unzip / zipnote
+# 			if zipnote fails this is likely due to a bug in 
+# 			v3.0, to fix this by either upgrading to 3.1 or 
+# 			a patched version of 3.0...
+# 			for more info and patch see: 
+# 				https://goo.gl/csQmQo
 # 	- Windows
 # 		- MSVS -- to build node modules (sharp)
 # 		- WiX
@@ -25,12 +26,34 @@
 # 	- web
 #
 #
+# Build targets:
+# 	check		- check dependencies
+# 	dev		- build the development environment
+#
+# 	app-dir-full	- build full app dir
+# 	app-dir-minimal - build minimal app dir (used for web)
+# 			  NOTE: these are runtime neutral
+#
+# 	web		- build a version runnable in browser
+#
+# 	electron-dist	- electron distribution (default)
+# 	electron-unpacked
+# 			- build an unpacked electron app dir
+# 			  NOTE: this builds to a different directory than
+# 			  	app-dir-*
+# 	electron-insr	- build electron app installer (XXX not implemented)
+#
+# 	cleanall	- clean up fully.
+# 			  removes: ./targets/, ./build/, ./dist/
+#
+#
 # Variables to control the build:
 # 	APP_NAME	- Application name
 # 	APP_BIN		- App binary name (ignored for MacOS)
 #
 # 	ARCH		- target achitecture (ia32, x86)
 # 	TARGET_OS	- target OS (win32, linux, darwin)
+#
 # 	ELECTRON_DOWNOAD_URL
 # 			- URL to download electron pinary
 # 	ELECTRON_DIST	- electron distribution file name pattern
@@ -53,23 +76,24 @@
 # 	load the depending features...
 #
 #
+#
 #----------------------------------------------------------------------
 #
 # ToDo:
 # 	- sync version numbers between:
-# 		- git tags
+# 		- git tags (currently not used)
 # 		- package.json
 # 			can't use only this because it can't be imported 
 # 			in browser directly...
+# 			...do we actually need the file:// version working?
 # 		- version.js
 # 	- app icons...
-# 	- might be a good idea to do a no-bin target -- exclude native...
 # 	- add a cli-only build
 # 	- installers:
 # 		- msi (wix)
 # 		- deb
-# 		- ...
-# 	- cross-compiling support...
+# 		- rpm
+# 	- cross-compiling support (???)
 # 	- upstream clean build: git clone -> make dist
 # 	- nwjs???
 #
@@ -252,6 +276,11 @@ cleanall: clean
 .PHONY: electron-dist
 electron-dist: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 
+# NOTE: the "/" at the end here is significant...
+.PHONY: electron-unpacked
+electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH)/
+
+
 #electron-inst: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).msi
 
 
@@ -261,11 +290,6 @@ dist: electron-dist
 
 .PHONY: web
 web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
-
-
-# NOTE: the "/" at the end here is significant...
-.PHONY: repack-dir
-repack-dir: $(BUILD_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH)/
 
 
 
