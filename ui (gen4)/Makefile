@@ -286,8 +286,8 @@ check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
 # build rules...
 
 NODE_MODULES_MINIMAL = $(foreach m,$(INCLUDE_NODE_MODULES),$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/$(m))
-PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME) $(NODE_MODULES_MINIMAL)
-PACK_FULL = $(BUILD_DIR)/$(APP_NAME) $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
+PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ $(NODE_MODULES_MINIMAL)
+PACK_FULL = $(BUILD_DIR)/$(APP_NAME)/ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 
 
 # build date...
@@ -381,8 +381,10 @@ $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip: $(PACK_MINIMAL)
 
 # helpers...
 up = $(subst $(eval) ,/,$(foreach x,$(subst /, ,$1),..))
-zipfrom = cd $1 ; zip -r "$(call up,$1)/$2" $3
-zipdelfrom = cd $1 ; zip -d "$(call up,$1)/$2" $3
+zipfrom = cd $1 ; \
+	  zip -r "$(call up,$1)/$2" $3
+zipdelfrom = cd $1 ; \
+	     zip -d "$(call up,$1)/$2" $3
 
 
 
