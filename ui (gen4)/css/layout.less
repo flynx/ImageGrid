@@ -346,12 +346,36 @@ button:hover {
 }
 
 
+/* Custom buttons... */
 .buttons .button.ui-settings {
 	opacity: 0.5;
 }
 .buttons .button.ui-settings:hover {
 	opacity: 1;
 }
+
+.buttons .button.touch-controls:after {
+	display: inline-block;
+	content: "";
+
+	width: 0.7em;
+	height: 0.6em;
+	border: solid 0.05em silver;
+	border-left: solid 0.2em silver;
+	border-right: solid 0.2em silver;
+
+	border-radius: 1px;
+
+	opacity: 0.5;
+}
+.buttons .button.touch-controls:hover:after {
+	border: solid 0.05em white;
+	border-left: solid 0.2em white;
+	border-right: solid 0.2em white;
+
+	opacity: 1;
+}
+
 
 
 /* main buttons... */

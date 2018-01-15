@@ -552,12 +552,15 @@ module.AppControl = core.ImageGridFeatures.Feature('ui-app-control', [
 var AppButtonsActions = actions.Actions({
 	config: {
 		'app-buttons': {
+			//'<span/>': ['touch-controls', 'toggleSideButtons -- Toggle touch controls'],
 			// XXX not sure about this...
-			'&#9965;': ['ui-settings allways-shown', 
-				'browseActions: "Interface/" -- Interface settings...'],
+			'&#9965;': ['ui-settings', [
+				'browseActions: "Interface/" -- Interface settings...',
+				'toggleSideButtons -- Toggle touch controls',
+			]],
 			'_': ['minimize', 
 				'minimize -- Minimize'],
-			'&#8601;': ['fullscreen allways-shown', 
+			'&#8601;': ['fullscreen', 
 				'toggleFullScreen -- Toggle fullscreen'],
 			'&times;': ['close', 
 				'close -- Quit'],

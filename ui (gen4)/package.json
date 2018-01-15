@@ -28,6 +28,7 @@
     "ig-actions": "^3.12.0",
     "ig-features": "^3.3.2",
     "ig-object": "^1.0.2",
+    "moment": "^2.20.1",
     "openseadragon": "^2.3.1",
     "requirejs": "^2.3.5",
     "requirejs-plugins": "^1.0.2",
@@ -43,6 +44,7 @@
     "react-dom": "^15.6.2"
   },
   "devDependencies": {
+    "electron-wix-msi": "^1.2.3",
     "less": "*"
   },
   "bin": {

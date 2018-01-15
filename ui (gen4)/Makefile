@@ -66,12 +66,20 @@
 # 	- might be a good idea to do a no-bin target -- exclude native...
 # 	- add a cli-only build
 # 	- installers:
-# 		- msi
+# 		- msi (wix)
 # 		- deb
 # 		- ...
 # 	- cross-compiling support...
 # 	- upstream clean build: git clone -> make dist
 # 	- nwjs???
+#
+#
+# Links:
+# 	WiX example...
+# 		https://helgeklein.com/blog/2014/09/real-world-example-wix-msi-application-installer/
+# 	npm modules to abstract WiX...
+# 		https://www.npmjs.com/package/electron-wix-msi
+# 		https://www.npmjs.com/package/electron-builder
 #
 #
 #

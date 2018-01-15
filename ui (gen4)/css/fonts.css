@@ -231,6 +231,44 @@
 }
 */
 
+@font-face {
+	font-family: 'Material Icons';
+	font-style: normal;
+	font-weight: 400;
+	src: url(https://example.com/MaterialIcons-Regular.eot); /* For IE6-8 */
+	src: local('Material Icons'), 
+		local('MaterialIcons-Regular'), 
+		url(fonts/MaterialIcons/MaterialIcons-Regular.woff2) format('woff2'), 
+		url(fonts/MaterialIcons/MaterialIcons-Regular.woff) format('woff'), 
+		url(fonts/MaterialIcons/MaterialIcons-Regular.ttf) format('truetype');
+}
+.material-icons {
+	font-family: 'Material Icons';
+	/*
+	font-weight: normal;
+	font-style: normal;
+	font-size: 24px;
+	display: inline-block;
+	line-height: 1;
+	text-transform: none;
+	letter-spacing: normal;
+	word-wrap: normal;
+	white-space: nowrap;
+	direction: ltr;
+	*/
+
+	vertical-align: middle;
+
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility; /* Safari and Chrome */
+	font-feature-settings: 'liga'; /* IE */
+}
+.material-icons.md-16 { font-size: 16px; }
+.material-icons.md-18 { font-size: 18px; }
+.material-icons.md-24 { font-size: 24px; }
+.material-icons.md-36 { font-size: 36px; }
+.material-icons.md-48 { font-size: 48px; }
 
 
 /*********************************************************************/

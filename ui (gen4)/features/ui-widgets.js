@@ -89,6 +89,7 @@ function(context, cls, data){
 		} else {
 			var e = data[k].slice()
 			var primary = e.pop()
+			primary = primary instanceof Array ? primary.slice() : primary
 			var secondary = (primary instanceof Array && primary.length > 1) ? 
 				primary.pop() 
 				: null
@@ -2027,9 +2028,12 @@ var ButtonsActions = actions.Actions({
 		},
 
 		'app-buttons': {
-			//'<div style="transform: scaleX(-1)">&#9649;</div>': 
-			//	['touch-controls', 'toggleSideButtons -- Toggle touch controls'],
-			'&#9965;': ['ui-settings', 'browseActions: "Interface/" -- Interface settings...'],
+			//'<span/>': ['touch-controls', 'toggleSideButtons -- Toggle touch controls'],
+			//'&#9965;': ['ui-settings', 'browseActions: "Interface/" -- Interface settings...'],
+			'&#9965;': ['ui-settings', [
+				'browseActions: "Interface/" -- Interface settings...',
+				'toggleSideButtons -- Toggle touch controls',
+			]],
 		},
 
 		'side-buttons-state': 'off',
