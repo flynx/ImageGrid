@@ -7,7 +7,14 @@ button {
 	background: transparent;
 }
 
-button .material-icons {
+input[type=radio] {
+	display: none;
+}
+input:not(:checked) ~ * {
+	color: silver;
+}
+
+.material-icons {
 	font-size: 2em;
 }
 
@@ -76,16 +83,6 @@ button .material-icons {
 <script src="../lib/jli.js"></script>
 
 <script>
-/**********************************************************************
-
-TODO:
-	- rotation & toration handle
-	- touch
-	- multitouch
-	- center point
-
-
-**********************************************************************/
 
 var ORIGINAL = 1
 
@@ -134,12 +131,39 @@ function flip(){
 <body>
 
 <button><span title="toggle crop on/off" class="material-icons">crop</span></button>
-<button onclick="setRatio(ORIGINAL)"><span title="original ratio" class="material-icons">crop_original</span></button>
-<button onclick="setRatio(false)"><span class="material-icons">crop_free</span></button>
-<button onclick="setRatio(1)"><span class="material-icons">crop_square</span>1:1</button>
-<button onclick="setRatio(3/2)"><span class="material-icons">crop_3_2</span>3:2</button>
-<button onclick="setRatio(16/9)"><span class="material-icons">crop_16_9</span>16:9</button>
+<label>
+	<input type="radio" name="ratio" onclick="setRatio(false)">
+	<span class="material-icons">crop_free</span>
+</label>
+<label>
+	<input type="radio" name="ratio" checked onclick="setRatio(ORIGINAL)">
+	<span title="original ratio" class="material-icons">crop_original</span>
+</label>
+<label>
+	<input type="radio" name="ratio" onclick="setRatio(1)">
+	<span class="material-icons">crop_square</span>
+	<span>1:1</span>
+</label>
+<label>
+	<input type="radio" name="ratio" onclick="setRatio(3/2)">
+	<span class="material-icons">crop_3_2</span>
+	<span>3:2</span>
+</label>
+<label>
+	<input type="radio" name="ratio" onclick="setRatio(16/9)">
+	<span class="material-icons">crop_16_9</span>
+	<span>16:9</span>
+</label>
 <button onclick="flip()"><span class="material-icons">crop_rotate</span></button>
+
+<br>
+<pre>
+TODO:
+	- rotation and toration handle
+	- touch
+	- multitouch
+	- center point
+</pre>
 
 
 <div class="container">
