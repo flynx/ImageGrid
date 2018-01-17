@@ -2,11 +2,19 @@
 <html>
 <style>
 
+label {
+	margin: 0.2em;
+}
+label label {
+	margin: auto;
+}
+
 button {
 	border: none;
 	background: transparent;
 }
 
+input[type=checkbox],
 input[type=radio] {
 	display: none;
 }
@@ -18,6 +26,9 @@ input:not(:checked) ~ * {
 	font-size: 2em;
 }
 
+sub .material-icons {
+	font-size: 1.5em;
+}
 
 .crop {
 	position: absolute;
@@ -79,6 +90,7 @@ input:not(:checked) ~ * {
 
 <script src="../ext-lib/jquery.js"></script>
 <script src="../ext-lib/jquery-ui.js"></script>
+<script src="../ext-lib/jquery.ui.touch-punch.min.js"></script>
 
 <script src="../lib/jli.js"></script>
 
@@ -91,7 +103,6 @@ $(function(){
 	$('.crop')
 		.resizable({
 			handles: 'all',
-			aspectRatio: true,
 		})
 		.draggable()
 	$('.crop .center')
@@ -108,6 +119,7 @@ function setRatio(ratio){
 		.data('uiResizable')._aspectRatio = ratio
 
 	if(ratio === false){
+		$('#lock-ratio')[0].checked = false
 		return
 	}
 
@@ -141,17 +153,38 @@ function flip(){
 	}
 }
 
+function toggleLock(){
+	var crop = $('.crop')
+	var r = crop.resizable("option", "aspectRatio")
+
+	if(r === false){
+		var w = crop.width()
+		var h = crop.height()
+
+		setRatio(w/h)
+
+	} else {
+		setRatio(false)
+	}
+}
+
 </script>
 
 <body>
 
 <button><span title="toggle crop on/off" class="material-icons">crop</span></button>
 <label>
-	<input type="radio" name="ratio" onclick="setRatio(false)">
+	<input type="radio" name="ratio" checked onclick="setRatio(false)">
 	<span class="material-icons">crop_free</span>
+	<sub>
+		<label>
+			<input id="lock-ratio" type="checkbox" onclick="toggleLock()">
+			<span class="material-icons">lock</span>
+		</label>
+	</sub>
 </label>
 <label>
-	<input type="radio" name="ratio" checked onclick="setRatio(ORIGINAL)">
+	<input type="radio" name="ratio" onclick="setRatio(ORIGINAL)">
 	<span title="original ratio" class="material-icons">crop_original</span>
 </label>
 <label>
