@@ -402,7 +402,7 @@ module.ViewerActions = actions.Actions({
 
 			var that = this
 			var _align = function(){
-				this.__align_timeout = null
+				that.__align_timeout = null
 				// align other ribbons...
 				var ribbon = data.getRibbon(gid)
 				for(var r in data.ribbons){
