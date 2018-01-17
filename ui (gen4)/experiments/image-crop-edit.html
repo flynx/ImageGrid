@@ -126,6 +126,7 @@ function setRatio(ratio){
 		.data('uiResizable')._aspectRatio = ratio
 
 	if(ratio === false){
+		$('#lock-ratio')[0].checked = false
 		return
 	}
 
@@ -161,9 +162,9 @@ function flip(){
 
 function toggleLock(m){
 	var crop = $('.crop')
-	var r = crop.resizable("option", "aspectRatio")
+	var r = m || crop.resizable("option", "aspectRatio")
 
-	if(m === true || r === false){
+	if(r === false){
 		var w = crop.width()
 		var h = crop.height()
 
@@ -216,7 +217,7 @@ function toggleLock(m){
 <br>
 <pre>
 TODO:
-	- rotation and toration handle
+	- rotation and rotation handle
 	- touch
 	- multitouch
 	- center point
