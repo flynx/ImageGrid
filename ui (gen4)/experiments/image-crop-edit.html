@@ -101,7 +101,11 @@ $(function(){
 
 function setRatio(ratio){
 	var crop = $('.crop')
+
+	crop
 		.resizable("option", "aspectRatio", ratio)
+		// XXX this feels like a hack but it works...
+		.data('uiResizable')._aspectRatio = ratio
 
 	if(ratio === false){
 		return
@@ -122,8 +126,19 @@ function setRatio(ratio){
 function flip(){
 	var crop = $('.crop')
 	var r = crop.resizable("option", "aspectRatio")
-	r > 0 
-		&& setRatio(1/r)
+
+	if(r > 0){
+		setRatio(1/r)
+
+	// no aspect ratio defined, just switch...
+	} else {
+		var w = crop.width()
+		var h = crop.height()
+
+		crop
+			.height(w)
+			.width(h)
+	}
 }
 
 </script>

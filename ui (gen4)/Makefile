@@ -513,13 +513,14 @@ $(DIST_DIR)/$(APP_NAME)-%.msi: $(BUILD_DIR)/$(APP_NAME)-% $(BUILD_DIR)/$(APP_NAM
 
 
 #----------------------------------------------------------------------
-# Debian package...
+# deb/rpm package...
 # XXX
 
 
 
 #----------------------------------------------------------------------
-# Mobile (cordova/PhoneGap) XXX
+# Mobile (cordova/PhoneGap)... 
+# XXX
 
 
 
