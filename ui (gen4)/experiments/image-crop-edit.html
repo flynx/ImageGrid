@@ -19,7 +19,14 @@ input[type=radio] {
 	display: none;
 }
 input:not(:checked) ~ * {
-	color: silver;
+	opacity: 0.3;
+}
+input:hover:not(:checked) ~ * {
+	opacity: 0.8;
+}
+input:not(:checked) ~ sub:hover,
+input:not(:checked) ~ sub {
+	opacity: 0.3;
 }
 
 .material-icons {
@@ -119,7 +126,6 @@ function setRatio(ratio){
 		.data('uiResizable')._aspectRatio = ratio
 
 	if(ratio === false){
-		$('#lock-ratio')[0].checked = false
 		return
 	}
 
@@ -153,17 +159,19 @@ function flip(){
 	}
 }
 
-function toggleLock(){
+function toggleLock(m){
 	var crop = $('.crop')
 	var r = crop.resizable("option", "aspectRatio")
 
-	if(r === false){
+	if(m === true || r === false){
 		var w = crop.width()
 		var h = crop.height()
 
+		$('#lock-ratio')[0].checked = true
 		setRatio(w/h)
 
 	} else {
+		$('#lock-ratio')[0].checked = false
 		setRatio(false)
 	}
 }
@@ -203,6 +211,7 @@ function toggleLock(){
 	<span>16:9</span>
 </label>
 <button onclick="flip()"><span class="material-icons">crop_rotate</span></button>
+<button><span class="material-icons">clear</span></button>
 
 <br>
 <pre>
