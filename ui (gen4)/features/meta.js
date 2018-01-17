@@ -135,7 +135,7 @@ core.ImageGridFeatures.Feature('imagegrid-testing', [
 	// 		...this is best included by direct feature dependency.
 	'index-format',
 
-	'config-local-storage',
+	'config',
 	'ui-url-hash',
 
 	'fail-safe-devtools',
