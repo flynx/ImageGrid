@@ -19,6 +19,7 @@
 * 		base life-cycle events (start/stop/..)
 *	- serialization
 *		base methods to handle loading, serialization and cloning...
+*	- cache
 * 	- util
 * 	- journal
 * 		action journaling and undo/redo functionality
@@ -560,6 +561,8 @@ module.Serialization = ImageGridFeatures.Feature({
 	
 // XXX should this be in actions.js???
 // XXX should we invalidate the cache automatically???
+// XXX the cache can also be saved to localStorage and loaded until either
+// 		the version changes or the feature list...
 var CacheActions = actions.Actions({
 	config: {
 		// Enable/disable caching...
@@ -573,6 +576,12 @@ var CacheActions = actions.Actions({
 		// 		number	- delay pre-caching by number milliseconds
 		// 		false	- pre-caching disabled
 		'pre-cache': 0,
+
+		// Cache chunk length in ms...
+		//
+		// Caching is done in a series of chunks set by this separated by 
+		// timeouts set by .config['pre-cache'] to let other stuff run...
+		'pre-cache-chunk': 8,
 	},
 
 	// XXX should these be actions??? 
@@ -584,6 +593,7 @@ var CacheActions = actions.Actions({
 		var l = cache[title] = cache[title] || lister.call(this)
 		return l
 	},
+	// XXX revise naming...
 	// XXX is this too broad??
 	preCache: function(){
 		if(this.config.cache){
@@ -592,7 +602,8 @@ var CacheActions = actions.Actions({
 	},
 	_preCache: function(t){
 		if(this.config.cache){
-			var t = t || this.config['pre-cache']
+			var t = t || this.config['pre-cache'] || 0
+			var c = this.config['pre-cache-chunk'] || 8
 			var done = 0
 			var attrs = []
 			for(var k in this){
@@ -601,15 +612,21 @@ var CacheActions = actions.Actions({
 			var l = attrs.length
 
 			var tick = function(){
-				// XXX is this the right way to go???
-				this.showProgress
-					&& this.showProgress('Caching', done++, l)
-
+				var a = Date.now()
+				var b = a
 				if(attrs.length == 0){
 					return
 				}
 
-				this[attrs.pop()]
+				while(b - a < c){
+					this[attrs.pop()]
+					b = Date.now()
+
+					// XXX is this the right way to go???
+					this.showProgress
+						&& this.showProgress('Caching', done++, l)
+				}
+
 				setTimeout(tick, t)
 			}.bind(this)
 
