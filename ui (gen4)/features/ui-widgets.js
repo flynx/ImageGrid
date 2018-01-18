@@ -1978,6 +1978,12 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 	
+// XXX mac seems not to have the utf gear icon...
+var SETTINGS_ICON = 
+	typeof(navigator) == 'undefined' ? 'settings'
+	: navigator.platform == 'Win32' ?  '&#9965;'
+	: '<span class="material-icons">settings</span>'
+
 // XXX add context menu action to buttons...
 var ButtonsActions = actions.Actions({
 	config: {
@@ -2010,8 +2016,6 @@ var ButtonsActions = actions.Actions({
 				'browseActions: "/Collections/" -- Collection menu...',
 			]],
 			'C<sub/>': ['crop', 'browseActions: "Crop/" -- Crop menu...'],
-			//'&#9636;<sub/>': ['collections', 'browseCollections -- Collections...'],
-			//'&#9974;': ['view', 'toggleSingleImage -- Single image / ribbon toggle'],
 			'&#9655;': ['slideshow', [
 				'toggleSlideshow -- Slideshow',
 				'slideshowDialog -- Slideshow menu...',
@@ -2021,6 +2025,7 @@ var ButtonsActions = actions.Actions({
 		// XXX not sure about these yet...
 		'secondary-buttons-state': 'off',
 		'secondary-buttons': {
+			//'<span/>': ['touch-controls', 'toggleSideButtons -- Toggle touch controls'],
 			//'Z<sub/>': ['zoom', 'browseActions: "Zoom/" -- Zoom menu...'],
 			//'+': ['zoom-in', 'zoomIn -- Zoom in'],
 			//'-': ['zoom-out', 'zoomOut -- Zoom out'],
@@ -2028,10 +2033,7 @@ var ButtonsActions = actions.Actions({
 		},
 
 		'app-buttons': {
-			//'<span/>': ['touch-controls', 'toggleSideButtons -- Toggle touch controls'],
-			//'&#9965;': ['ui-settings', 'browseActions: "Interface/" -- Interface settings...'],
-			//'&#9965;': ['ui-settings', [
-			'<span class="material-icons">settings</span>': ['ui-settings', [
+			[SETTINGS_ICON]: ['ui-settings', [
 				'browseActions: "Interface/" -- Interface settings...',
 				'toggleSideButtons -- Toggle touch controls',
 			]],

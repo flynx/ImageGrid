@@ -23,6 +23,7 @@ var toggler = require('lib/toggler')
 
 var core = require('features/core')
 var base = require('features/base')
+var widgets = require('features/ui-widgets')
 
 
 
@@ -549,23 +550,20 @@ module.AppControl = core.ImageGridFeatures.Feature('ui-app-control', [
 
 //---------------------------------------------------------------------
 // Fullscreen app control buttons...
+
 var AppButtonsActions = actions.Actions({
 	config: {
-		'app-buttons': {
-			//'<span/>': ['touch-controls', 'toggleSideButtons -- Toggle touch controls'],
-			// XXX not sure about this...
-			//'&#9965;': ['ui-settings', [
-			'<span class="material-icons">settings</span>': ['ui-settings', [
-				'browseActions: "Interface/" -- Interface settings...',
-				'toggleSideButtons -- Toggle touch controls',
-			]],
-			'_': ['minimize', 
-				'minimize -- Minimize'],
-			'&#8601;': ['fullscreen', 
-				'toggleFullScreen -- Toggle fullscreen'],
-			'&times;': ['close', 
-				'close -- Quit'],
-		},
+		// append app-specific buttons...
+		'app-buttons': Object.assign({},
+			widgets.Buttons.actions.config['app-buttons'],
+			{
+				'_': ['minimize', 
+					'minimize -- Minimize'],
+				'&#8601;': ['fullscreen', 
+					'toggleFullScreen -- Toggle fullscreen'],
+				'&times;': ['close', 
+					'close -- Quit'],
+			}),
 	},
 })
 
