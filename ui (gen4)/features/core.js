@@ -270,7 +270,9 @@ function(func){
 var IntrospectionActions = actions.Actions({
 	// user-callable actions...
 	get useractions(){
-		return this.actions.filter(this.isUserCallable.bind(this)) },
+		return this.cache('useractions', function(){
+			return this.actions.filter(this.isUserCallable.bind(this)) }) },
+		//return this.actions.filter(this.isUserCallable.bind(this)) },
 
 	// check if action is callable by user...
 	isUserCallable: ['- System/',
@@ -294,6 +296,9 @@ module.Introspection = ImageGridFeatures.Feature({
 	title: '',
 
 	tag: 'introspection',
+	depends: [
+		'cache'
+	],
 
 	actions: IntrospectionActions,
 })
@@ -548,6 +553,71 @@ module.Serialization = ImageGridFeatures.Feature({
 	tag: 'serialization',
 
 	actions: SerializationActions,
+})
+
+
+//---------------------------------------------------------------------
+	
+// XXX should this be in actions.js???
+// XXX should we invalidate the cache automatically???
+var CacheActions = actions.Actions({
+	config: {
+		// Enable/disable caching...
+		'cache': true,
+
+		// Control pre-caching...
+		//
+		// This can be:
+		// 		true	- pre-caching enabled
+		// 		0		- same as true
+		// 		number	- delay pre-caching by number milliseconds
+		// 		false	- pre-caching disabled
+		'pre-cache': 200,
+	},
+
+	// XXX should these be actions??? 
+	cache: function(title, lister){
+		if(!this.config.cache){
+			return lister.call(this)
+		}
+		var cache = this.__cache = this.__cache || {}
+		var l = cache[title] = cache[title] || lister.call(this)
+		return l
+	},
+	// XXX is this too broad??
+	preCache: function(){
+		if(this.config.cache){
+			for(k in this){ this[k] } } },
+	clearCache: function(title){
+		if(title){
+			delete (this.__cache|| {})[title]
+
+		} else {
+			delete this.__cache
+		}
+	},
+})
+
+var Cache = 
+module.Cache = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'cache',
+
+	actions: CacheActions,
+
+	handlers: [
+		['start', 
+			function(){ 
+				var t = this.config['pre-cache']
+				t == 0 || t === true ?
+					this.preCache() 
+				: t > 0 ?
+					setTimeout((function(){ this.preCache() }).bind(this), t)
+				: false
+			}],
+	],
 })
 
 

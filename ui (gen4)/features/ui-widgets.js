@@ -588,11 +588,17 @@ var DialogsActions = actions.Actions({
 
 	// introspection...
 	get uiContainers(){ 
-		return this.actions.filter(this.isUIContainer.bind(this)) },
+		return this.cache('uiContainers', function(){
+			return this.actions.filter(this.isUIContainer.bind(this)) }) },
+		//return this.actions.filter(this.isUIContainer.bind(this)) },
 	get uiDialogs(){
-		return this.actions.filter(this.isUIDialog.bind(this)) },
+		return this.cache('uiDialogs', function(){
+			return this.actions.filter(this.isUIDialog.bind(this)) }) },
+		//return this.actions.filter(this.isUIDialog.bind(this)) },
 	get uiElements(){ 
-		return this.actions.filter(this.isUIElement.bind(this)) },
+		return this.cache('uiElements', function(){
+			return this.actions.filter(this.isUIElement.bind(this)) }) },
+		//return this.actions.filter(this.isUIElement.bind(this)) },
 
 	// XXX this knows about action priority and shortcut marker...
 	// XXX should these be more like .getDoc(..) and support lists of actions???
@@ -875,6 +881,7 @@ module.Dialogs = core.ImageGridFeatures.Feature({
 
 	tag: 'ui-dialogs',
 	depends: [
+		'cache',
 		'ui',
 	],
 
@@ -1978,7 +1985,7 @@ module.ContextActionMenu = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 	
-// XXX mac seems not to have the utf gear icon...
+// mac seems not to have the utf gear icon...
 var SETTINGS_ICON = 
 	typeof(navigator) == 'undefined' ? 'settings'
 	: navigator.platform == 'Win32' ?  '&#9965;'
