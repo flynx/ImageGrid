@@ -250,6 +250,7 @@ module.ConfigLocalStorage = core.ImageGridFeatures.Feature({
 // 		- app
 // 		- home
 // XXX config override location/filename to support portable apps...
+// XXX comment support in json (preferably both reading and writing...)
 
 var ConfigFS = actions.Actions({
 	config: {

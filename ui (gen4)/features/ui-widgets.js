@@ -2030,7 +2030,8 @@ var ButtonsActions = actions.Actions({
 		'app-buttons': {
 			//'<span/>': ['touch-controls', 'toggleSideButtons -- Toggle touch controls'],
 			//'&#9965;': ['ui-settings', 'browseActions: "Interface/" -- Interface settings...'],
-			'&#9965;': ['ui-settings', [
+			//'&#9965;': ['ui-settings', [
+			'<span class="material-icons">settings</span>': ['ui-settings', [
 				'browseActions: "Interface/" -- Interface settings...',
 				'toggleSideButtons -- Toggle touch controls',
 			]],
