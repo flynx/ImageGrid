@@ -568,11 +568,11 @@ var CacheActions = actions.Actions({
 		// Control pre-caching...
 		//
 		// This can be:
-		// 		true	- pre-caching enabled
-		// 		0		- same as true
+		// 		true	- sync pre-cache
+		// 		0		- semi-sync pre-cache
 		// 		number	- delay pre-caching by number milliseconds
 		// 		false	- pre-caching disabled
-		'pre-cache': 200,
+		'pre-cache': 0,
 	},
 
 	// XXX should these be actions??? 
@@ -587,7 +587,36 @@ var CacheActions = actions.Actions({
 	// XXX is this too broad??
 	preCache: function(){
 		if(this.config.cache){
-			for(k in this){ this[k] } } },
+			for(k in this){ this[k] } } 
+		return this
+	},
+	_preCache: function(t){
+		if(this.config.cache){
+			var t = t || this.config['pre-cache']
+			var done = 0
+			var attrs = []
+			for(var k in this){
+				attrs.push(k)
+			}
+			var l = attrs.length
+
+			var tick = function(){
+				// XXX is this the right way to go???
+				this.showProgress
+					&& this.showProgress('Caching', done++, l)
+
+				if(attrs.length == 0){
+					return
+				}
+
+				this[attrs.pop()]
+				setTimeout(tick, t)
+			}.bind(this)
+
+			tick()
+		}
+		return this
+	},
 	clearCache: function(title){
 		if(title){
 			delete (this.__cache|| {})[title]
@@ -608,13 +637,13 @@ module.Cache = ImageGridFeatures.Feature({
 	actions: CacheActions,
 
 	handlers: [
-		['start', 
+		['start.pre', 
 			function(){ 
 				var t = this.config['pre-cache']
-				t == 0 || t === true ?
+				t === true ?
 					this.preCache() 
-				: t > 0 ?
-					setTimeout((function(){ this.preCache() }).bind(this), t)
+				: t >= 0 ?
+					this._preCache() 
 				: false
 			}],
 	],
