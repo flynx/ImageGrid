@@ -271,9 +271,10 @@ function(func){
 var IntrospectionActions = actions.Actions({
 	// user-callable actions...
 	get useractions(){
-		return this.cache('useractions', function(){
-			return this.actions.filter(this.isUserCallable.bind(this)) }) },
-		//return this.actions.filter(this.isUserCallable.bind(this)) },
+		return this.cache('useractions', function(d){
+			return d instanceof Array ? 
+				d.slice() 
+				: this.actions.filter(this.isUserCallable.bind(this)) }) },
 
 	// check if action is callable by user...
 	isUserCallable: ['- System/',
@@ -571,9 +572,9 @@ var CacheActions = actions.Actions({
 		// Control pre-caching...
 		//
 		// This can be:
-		// 		true	- sync pre-cache
+		// 		true	- sync pre-cache (recursion)
 		// 		0		- semi-sync pre-cache
-		// 		number	- delay pre-caching by number milliseconds
+		// 		number	- delay in milliseconds between pre-cache chunks
 		// 		false	- pre-caching disabled
 		'pre-cache': 0,
 
@@ -582,66 +583,114 @@ var CacheActions = actions.Actions({
 		// Caching is done in a series of chunks set by this separated by 
 		// timeouts set by .config['pre-cache'] to let other stuff run...
 		'pre-cache-chunk': 8,
+
+		// Control pre-cache progress display...
+		//
+		// This can be:
+		// 	false		- never show progress
+		// 	true		- always show progress
+		// 	number		- show progress if number of milliseconds has 
+		// 					passed and we are not done yet...
+		//
+		// NOTE: progress will only be displayed if .showProgress(..) 
+		// 		action is available...
+		'pre-cache-progress': 3000,
 	},
 
-	// XXX should these be actions??? 
+	// Cache utility method...
+	//
+	// Example use:
+	// 	someAction: [
+	// 		function(){
+	// 			return this.cache('someAction', 
+	// 				function(data){
+	// 					if(data){
+	// 						// clone/update the data...
+	// 						// NOTE: this should be faster than the construction
+	// 						//		branch below or this will defeat the purpose 
+	// 						//		of caching...
+	// 						...
+	//
+	// 					} else {
+	// 						// get the data...
+	// 						...
+	// 					}
+	// 					return data
+	// 				}) }],
+	//
 	cache: function(title, lister){
 		if(!this.config.cache){
 			return lister.call(this)
 		}
 		var cache = this.__cache = this.__cache || {}
-		var l = cache[title] = cache[title] || lister.call(this)
-		return l
+		return (cache[title] = 
+			title in cache ? 
+				// pass the cached data for cloning/update to the lister...
+				lister.call(this, cache[title])
+				: lister.call(this))
 	},
-	// XXX revise naming...
-	// XXX is this too broad??
-	preCache: function(){
-		if(this.config.cache){
-			for(k in this){ this[k] } } 
-		return this
-	},
-	_preCache: function(t){
-		if(this.config.cache){
-			var t = t || this.config['pre-cache'] || 0
-			var c = this.config['pre-cache-chunk'] || 8
-			var done = 0
-			var attrs = []
-			for(var k in this){
-				attrs.push(k)
+
+	preCache: ['System/Run pre-cache',
+		doc`Run pre-cache...
+
+			Do an async pre-cache...
+			.preCache()
+
+			Do a sync pre-cache...
+			.preCache(true)
+
+		NOTE: both "modes" of doing a pre-cache run in the main thread,
+			the difference is that the "async" version lets JS run frames
+			between processing sync chunks...
+		`,
+		function(t){
+			if(this.config.cache){
+				var t = t || this.config['pre-cache'] || 0
+				var c = this.config['pre-cache-chunk'] || 8
+				var done = 0
+				var attrs = []
+				for(var k in this){
+					attrs.push(k)
+				}
+				var l = attrs.length
+
+				var started = Date.now()
+				var show = this.config['pre-cache-progress']
+
+				var tick = function(){
+					var a = Date.now()
+					var b = a
+					if(attrs.length == 0){
+						return
+					}
+
+					while(b - a < c){
+						this[attrs.pop()]
+						b = Date.now()
+						done += 1
+
+						this.showProgress
+							&& (show === true || (show && b - started > show))
+							&& this.showProgress('Caching', done, l)
+					}
+
+					t === true ?
+						tick()
+						: setTimeout(tick, t)
+				}.bind(this)
+
+				tick()
 			}
-			var l = attrs.length
+		}],
+	clearCache: ['System/Clear cache',
+		function(title){
+			if(title){
+				delete (this.__cache|| {})[title]
 
-			var tick = function(){
-				var a = Date.now()
-				var b = a
-				if(attrs.length == 0){
-					return
-				}
-
-				while(b - a < c){
-					this[attrs.pop()]
-					b = Date.now()
-
-					// XXX is this the right way to go???
-					this.showProgress
-						&& this.showProgress('Caching', done++, l)
-				}
-
-				setTimeout(tick, t)
-			}.bind(this)
-
-			tick()
-		}
-		return this
-	},
-	clearCache: function(title){
-		if(title){
-			delete (this.__cache|| {})[title]
-
-		} else {
-			delete this.__cache
-		}
-	},
+			} else {
+				delete this.__cache
+			}
+		}],
 })
 
 var Cache = 
@@ -650,6 +699,9 @@ module.Cache = ImageGridFeatures.Feature({
 	doc: '',
 
 	tag: 'cache',
+	// NOTE: we use .showProgress(..) of 'ui-progress' but we do not 
+	// 		need it to work, thus we do not declare it as a dependency...
+	//depends: [],
 
 	actions: CacheActions,
 
@@ -658,9 +710,9 @@ module.Cache = ImageGridFeatures.Feature({
 			function(){ 
 				var t = this.config['pre-cache']
 				t === true ?
-					this.preCache() 
+					this.preCache('now') 
 				: t >= 0 ?
-					this._preCache() 
+					this.preCache() 
 				: false
 			}],
 	],
