@@ -108,7 +108,9 @@
 #
 #
 #**********************************************************************
+.SECONDEXPANSION:
 # variables...
+
 
 APP_NAME ?= ImageGrid.Viewer
 
@@ -119,7 +121,7 @@ VERSION_FALLBACK ?= 4.0.0a
 VERSION := $(strip $(shell \
 	node version.js \
 		|| echo $(VERSION_FALLBACK)))
-DATE := $(strip $(shell date "+%Y%m%d %H%M"))
+DATE := $(strip $(shell date "+%Y%m%d%H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
 
@@ -276,6 +278,12 @@ cleanall: clean
 .PHONY: electron-dist
 electron-dist: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 
+# add a time stamp to version...
+.PHONY: test-electron-dist
+test-electron-dist: VERSION := $(VERSION)-$(DATE)
+test-electron-dist: $(DIST_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH).zip
+
+
 # NOTE: the "/" at the end here is significant...
 .PHONY: electron-unpacked
 electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH)/
@@ -285,7 +293,8 @@ electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH)/
 
 
 .PHONY: dist
-dist: electron-dist
+dist: test-electron-dist
+#dist: electron-dist
 
 
 .PHONY: web
@@ -352,8 +361,11 @@ $(NODE_DIR): package.json
 
 
 # build app dir...
-$(BUILD_DIR)/$(APP_NAME)/: $(CSS_FILES) $(PROJECT_FILES) \
+$(BUILD_DIR)/$(APP_NAME)/: $(PROJECT_FILES) \
 		$(JS_FILES) $(CSS_FILES) $(HTML_FILES) \
+		$(wildcard $(FEATURES_DIR)/*.js) \
+		$(wildcard $(LIB_DIR)/*.js) $(wildcard $(LIB_DIR)/widget/*.js) \
+		$(wildcard $(DOMAIN_DIR)/*.js) \
 		$(BUILD_INFO)
 	$(MD) "$@"
 	cp -r $(PROJECT_FILES) $(JS_FILES) $(HTML_FILES) \
@@ -361,6 +373,9 @@ $(BUILD_DIR)/$(APP_NAME)/: $(CSS_FILES) $(PROJECT_FILES) \
 		$(DOMAIN_DIR) $(WORKERS_DIR) $(CSS_DIR) $(IMAGES_DIR) \
 		$(BUILD_INFO) \
 		"$(BUILD_DIR)/$(APP_NAME)"
+	# cleanup vim swap files...
+	cd "$@" ; \
+		find . -name *.sw[po] -delete
 	@touch "$@"
 
 
@@ -421,6 +436,7 @@ zipdelfrom = cd $1 ; \
 $(BUILD_DIR)/app.asar: $(PACK_FULL)
 	cd $(BUILD_DIR) ; \
 		asar p "$(APP_NAME)" app.asar \
+			--exclude-hidden \
 			--unpack-dir node_modules/sharp
 
 

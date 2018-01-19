@@ -181,9 +181,8 @@ var PeerActions = actions.Actions({
 	// XXX need more control...
 	// 		- get proxies to specific peer...
 	get peeractions(){
-		this.cache('peeractions', function(){
-			return this.getPeerActions() }) },
-		//return this.getPeerActions() },
+		this.cache('peeractions', function(d){
+			return d instanceof Array ? d.clone() : this.getPeerActions() }) },
 
 	getPeerActions: ['- System/Peer/',
 		function(id){

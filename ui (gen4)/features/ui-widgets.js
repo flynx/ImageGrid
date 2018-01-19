@@ -588,17 +588,20 @@ var DialogsActions = actions.Actions({
 
 	// introspection...
 	get uiContainers(){ 
-		return this.cache('uiContainers', function(){
-			return this.actions.filter(this.isUIContainer.bind(this)) }) },
-		//return this.actions.filter(this.isUIContainer.bind(this)) },
+		return this.cache('uiContainers', function(d){
+			return d instanceof Array ? 
+				d.slice() 
+				: this.actions.filter(this.isUIContainer.bind(this)) }) },
 	get uiDialogs(){
-		return this.cache('uiDialogs', function(){
-			return this.actions.filter(this.isUIDialog.bind(this)) }) },
-		//return this.actions.filter(this.isUIDialog.bind(this)) },
+		return this.cache('uiDialogs', function(d){
+			return d instanceof Array ? 
+				d.slice() 
+				: this.actions.filter(this.isUIDialog.bind(this)) }) },
 	get uiElements(){ 
-		return this.cache('uiElements', function(){
-			return this.actions.filter(this.isUIElement.bind(this)) }) },
-		//return this.actions.filter(this.isUIElement.bind(this)) },
+		return this.cache('uiElements', function(d){
+			return d instanceof Array ? 
+				d.slice() 
+				: this.actions.filter(this.isUIElement.bind(this)) }) },
 
 	// XXX this knows about action priority and shortcut marker...
 	// XXX should these be more like .getDoc(..) and support lists of actions???
