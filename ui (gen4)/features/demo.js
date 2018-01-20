@@ -99,6 +99,12 @@ module.Demo = core.ImageGridFeatures.Feature({
 					data: data.Data(demo_data),
 					//images: images.Images(),
 					images: images.Images(demo_images),
+
+					location: {
+						path: 'Demo data',
+						method: 'loadDemoIndex',
+						check: true,
+					}
 				})
 			}],
 	})

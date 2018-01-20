@@ -129,7 +129,7 @@ var URLHistoryActions = actions.Actions({
 			var item = !clear ? (this.url_history[url] || {}) : {}
 
 			open = item.open = open || this.location.method
-			check = item.check = check || 'checkPath'
+			check = item.check = check || this.location.check || 'checkPath'
 
 			// remove the old value...
 			if(url in this.url_history && this.config['url-history-push-up-on-open']){
@@ -182,7 +182,10 @@ var URLHistoryActions = actions.Actions({
 			if(url && this.url_history[url] && this.url_history[url].check){
 				var check = this.url_history[url].check
 
-				if(typeof(check) == typeof('str')){
+				if(check === true || check === false){
+					return check
+
+				} else if(typeof(check) == typeof('str')){
 					return this[check](url)
 
 				} else {

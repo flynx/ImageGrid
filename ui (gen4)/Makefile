@@ -254,7 +254,7 @@ DEPENDENCIES = node npm wget zip unzip zipnote git \
 # User targets...
 
 .PHONY: all
-all: check dev dist
+all: check dev dist deploy
 
 
 .PHONY: css
@@ -276,20 +276,30 @@ cleanall: clean
 
 
 .PHONY: electron-dist
-electron-dist: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
+electron-dist: VERSION := $(VERSION)-el
+electron-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
+electron-dist: $(DIST)
 
 # add a time stamp to version...
 .PHONY: test-electron-dist
-test-electron-dist: VERSION := $(VERSION)-$(DATE)
-test-electron-dist: $(DIST_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH).zip
+test-electron-dist: VERSION := $(VERSION)-$(DATE)-el
+test-electron-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
+test-electron-dist: $$(DIST)
+#test-electron-dist: $(DIST_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 
 
 # NOTE: the "/" at the end here is significant...
 .PHONY: electron-unpacked
-electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH)/
+electron-unpacked: VERSION := $(VERSION)-el
+electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
 
 
+#.PHONY: electron-inst
 #electron-inst: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).msi
+
+
+.PHONY: web
+web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
 
 
 .PHONY: dist
@@ -297,8 +307,18 @@ dist: test-electron-dist
 #dist: electron-dist
 
 
-.PHONY: web
-web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
+# NOTE: with the default sort order this gets the "latest" file, not sure
+# 	how portable this is...
+# XXX when ./dist is empty or non existent this will deploy the second arg...
+# XXX HACK-ish...
+# 	- deploy only when scrip both the script AND target are available
+.PHONY: deploy
+deploy: $(wildcard $(DIST_DIR)/$(APP_NAME)-*.zip) $(wildcard scripts/deploy.sh)
+	@[ -e $(DIST_DIR)/$(APP_NAME)-*.zip ] \
+		|| echo "Deploy error: Nothing to deploy, skipping."
+	@[ -e ./scripts/deploy.sh ] \
+		&& bash ./scripts/deploy.sh "$(DIST_DIR)/$(APP_NAME)-*.zip" \
+		|| echo "Deploy error: No deploy.sh script found in ./scripts/, skipping."
 
 
 
@@ -358,6 +378,7 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 $(NODE_DIR): package.json
 	npm install
 	electron-rebuild
+	@touch "$@"
 
 
 # build app dir...
@@ -374,6 +395,7 @@ $(BUILD_DIR)/$(APP_NAME)/: $(PROJECT_FILES) \
 		$(BUILD_INFO) \
 		"$(BUILD_DIR)/$(APP_NAME)"
 	# cleanup vim swap files...
+	# NOTE: we need to do this as we copy whole directories...
 	cd "$@" ; \
 		find . -name *.sw[po] -delete
 	@touch "$@"

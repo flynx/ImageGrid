@@ -166,6 +166,7 @@ $(function(){
 	// setup the viewer...
 	ig
 		.load({ viewer: $('.viewer') })
+		/* XXX load the intro index...
 		.on('ready', function(){
 			// load some testing data if nothing else loaded...
 			if(!this.url_history || Object.keys(this.url_history).length == 0){
@@ -178,6 +179,7 @@ $(function(){
 					.syncTags('both')
 			}
 		})
+		//*/
 		.start()
 })
 

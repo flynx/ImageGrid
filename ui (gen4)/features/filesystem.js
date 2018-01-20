@@ -1573,8 +1573,7 @@ var pushToHistory = function(action, to_top, checker){
 			if(to_top){
 				this.setTopURLHistory(path)
 			}
-		}]
-}
+		}] }
 
 var FileSystemURLHistory = 
 module.FileSystemLoaderURLHistory = core.ImageGridFeatures.Feature({
