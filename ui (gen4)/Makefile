@@ -314,11 +314,10 @@ dist: test-electron-dist
 # 	- deploy only when scrip both the script AND target are available
 .PHONY: deploy
 deploy: $(wildcard $(DIST_DIR)/$(APP_NAME)-*.zip) $(wildcard scripts/deploy.sh)
-	@[ -e $(DIST_DIR)/$(APP_NAME)-*.zip ] \
-		|| echo "Deploy error: Nothing to deploy, skipping."
 	@[ -e ./scripts/deploy.sh ] \
+		&& [ -e $(DIST_DIR)/$(APP_NAME)-*.zip ] \
 		&& bash ./scripts/deploy.sh "$(DIST_DIR)/$(APP_NAME)-*.zip" \
-		|| echo "Deploy error: No deploy.sh script found in ./scripts/, skipping."
+		|| echo "Deploy error: `[ -e ./scripts/deploy.sh ] && echo Distribution || echo Deploy script` not found."
 
 
 
