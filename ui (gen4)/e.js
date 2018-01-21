@@ -34,6 +34,7 @@ function createWindow(){
 		show: false,
 
 		// XXX get from config... (???)
+		// XXX for some reason this shows as black...
 		backgroundColor: '#333333',
 
 

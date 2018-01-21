@@ -182,7 +182,7 @@ var PeerActions = actions.Actions({
 	// 		- get proxies to specific peer...
 	get peeractions(){
 		this.cache('peeractions', function(d){
-			return d instanceof Array ? d.clone() : this.getPeerActions() }) },
+			return d instanceof Array ? d.slice() : this.getPeerActions() }) },
 
 	getPeerActions: ['- System/Peer/',
 		function(id){
