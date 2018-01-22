@@ -5,6 +5,7 @@
 #
 # Make dependencies that need to be installed (make check):
 # 	- General
+# 		- bash or similar shell
 #	 	- git
 # 		- nodejs / npm 
 # 			also nodejs-legacy seems to be required by some code...
@@ -17,8 +18,8 @@
 # 			for more info and patch see: 
 # 				https://goo.gl/csQmQo
 # 	- Windows
-# 		- MSVS -- to build node modules (sharp)
-# 		- WiX
+# 		- MSVS -- to build native node modules (sharp)
+# 		- WiX -- to build the .msi installer
 #	- Linux
 #	- macOS
 #	- iOS
@@ -26,25 +27,41 @@
 # 	- web
 #
 #
+#
 # Build targets:
+#    Generic targets:
+# 	all		- run the full build chain...
 # 	check		- check dependencies
 # 	dev		- build the development environment
+# 	dist		- build the distribution
+# 	deploy		- run ./scripts/deploy.sh on contents of ./dist/,
+# 			  this will do nothing if neither exists.
+# 	run		- run the app
+# 	clean		- cleanup the ./build
+# 	clean-all	- clean up fully.
+# 			  removes: ./targets/, ./build/, ./dist/
 #
+#    Generic app targets:
 # 	app-dir-full	- build full app dir
 # 	app-dir-minimal - build minimal app dir (used for web)
 # 			  NOTE: these are runtime neutral
 #
+#    Web/Browser distribution:
 # 	web		- build a version runnable in browser
 #
+#    Electron:
 # 	electron-dist	- electron distribution (default)
+# 	electron-test-dist
+# 			- electron distribution with timestamp added to 
+# 			  version number (used for test build that do not
+# 			  change version)
 # 	electron-unpacked
 # 			- build an unpacked electron app dir
 # 			  NOTE: this builds to a different directory than
 # 			  	app-dir-*
 # 	electron-insr	- build electron app installer (XXX not implemented)
+# 	electron-run	- run the electron distribution in-place
 #
-# 	cleanall	- clean up fully.
-# 			  removes: ./targets/, ./build/, ./dist/
 #
 #
 # Variables to control the build:
@@ -276,11 +293,14 @@ dist: electron-test-dist
 #dist: electron-dist
 
 
+.PHONY: test-dist
+test-dist: electron-test-dist
+
+
 # NOTE: with the default sort order this gets the "latest" file, not sure
 # 	how portable this is...
-# XXX HACK-ish...
-# 	- deploy only when scrip both the script AND target are available
 # XXX should we build what we need to deploy???
+# XXX can this be done purely in make???
 .PHONY: deploy
 deploy: $(wildcard $(DIST_DIR)/$(APP_NAME)-*.zip) $(wildcard scripts/deploy.sh)
 	@[ -e ./scripts/deploy.sh ] \
@@ -290,7 +310,6 @@ deploy: $(wildcard $(DIST_DIR)/$(APP_NAME)-*.zip) $(wildcard scripts/deploy.sh)
 				|| echo "Nothing to deploy." ; \
 		done \
 		|| echo Deploy script not found: scripts/deploy.sh
-
 
 
 .PHONY: clean
@@ -304,12 +323,20 @@ clean-all: clean
 
 
 
+#---------------------------------------------- Web/browser targets ---
+
+.PHONY: web
+web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
+
+
+
 #------------------------------------------------- Electron targets ---
 
 .PHONY: electron-dist
 electron-dist: VERSION := $(VERSION)-el
 electron-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 electron-dist: $(DIST)
+
 
 # add a time stamp to version...
 .PHONY: electron-test-dist
@@ -318,24 +345,33 @@ electron-test-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(AR
 electron-test-dist: $$(DIST)
 #electron-test-dist: $(DIST_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 
+
 # NOTE: the "/" at the end here is significant...
 .PHONY: electron-unpacked
 electron-unpacked: VERSION := $(VERSION)-el
 electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
 
+
 #.PHONY: electron-inst
 #electron-inst: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).msi
 
+
+# XXX should we have an unpacked run (-clean-run)???
 .PHONY: electron-run
 electron-run: dev
 	electron .
 
 
 
-#---------------------------------------------- Web/browser targets ---
+#------------------------------------------------------- NW targets ---
 
-.PHONY: web
-web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
+# XXX
+
+
+
+#------------------------------------------------------ deb targets ---
+
+# XXX
 
 
 
