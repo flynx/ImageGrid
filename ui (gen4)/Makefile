@@ -265,15 +265,46 @@ css: $(CSS_FILES)
 dev: $(NODE_DIR) css
 
 
+# General targets...
+#
+.PHONY: run
+run: electron-run
+
+
+.PHONY: dist
+dist: electron-test-dist
+#dist: electron-dist
+
+
+# NOTE: with the default sort order this gets the "latest" file, not sure
+# 	how portable this is...
+# XXX HACK-ish...
+# 	- deploy only when scrip both the script AND target are available
+# XXX should we build what we need to deploy???
+.PHONY: deploy
+deploy: $(wildcard $(DIST_DIR)/$(APP_NAME)-*.zip) $(wildcard scripts/deploy.sh)
+	@[ -e ./scripts/deploy.sh ] \
+		&& for f in $(DIST_DIR)/$(APP_NAME)-*.zip ; do \
+			[ -e "$${f}" ] \
+				&& bash ./scripts/deploy.sh "$${f}" \
+				|| echo "Nothing to deploy." ; \
+		done \
+		|| echo Deploy script not found: scripts/deploy.sh
+
+
+
 .PHONY: clean
 clean:
 	$(RM) $(BUILD_DIR)
 
 
-.PHONY: cleanall
-cleanall: clean
+.PHONY: clean-all
+clean-all: clean
 	$(RM) $(DIST_DIR) $(TARGET_DIR) $(NODE_DIR)
 
+
+
+#------------------------------------------------- Electron targets ---
 
 .PHONY: electron-dist
 electron-dist: VERSION := $(VERSION)-el
@@ -281,52 +312,31 @@ electron-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).z
 electron-dist: $(DIST)
 
 # add a time stamp to version...
-.PHONY: test-electron-dist
-test-electron-dist: VERSION := $(VERSION)-$(DATE)-el
-test-electron-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
-test-electron-dist: $$(DIST)
-#test-electron-dist: $(DIST_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH).zip
-
+.PHONY: electron-test-dist
+electron-test-dist: VERSION := $(VERSION)-$(DATE)-el
+electron-test-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
+electron-test-dist: $$(DIST)
+#electron-test-dist: $(DIST_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH).zip
 
 # NOTE: the "/" at the end here is significant...
 .PHONY: electron-unpacked
 electron-unpacked: VERSION := $(VERSION)-el
 electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
 
-
 #.PHONY: electron-inst
 #electron-inst: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).msi
-
 
 .PHONY: electron-run
 electron-run: dev
 	electron .
 
 
+
+#---------------------------------------------- Web/browser targets ---
+
 .PHONY: web
 web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
 
-
-.PHONY: run
-run: electron-run
-
-
-.PHONY: dist
-dist: test-electron-dist
-#dist: electron-dist
-
-
-# NOTE: with the default sort order this gets the "latest" file, not sure
-# 	how portable this is...
-# XXX when ./dist is empty or non existent this will deploy the second arg...
-# XXX HACK-ish...
-# 	- deploy only when scrip both the script AND target are available
-.PHONY: deploy
-deploy: $(wildcard $(DIST_DIR)/$(APP_NAME)-*.zip) $(wildcard scripts/deploy.sh)
-	@[ -e ./scripts/deploy.sh ] \
-		&& [ -e $(DIST_DIR)/$(APP_NAME)-*.zip ] \
-		&& bash ./scripts/deploy.sh "$(DIST_DIR)/$(APP_NAME)-*.zip" \
-		|| echo "Deploy error: `[ -e ./scripts/deploy.sh ] && echo Distribution || echo Deploy script` not found."
 
 
 
