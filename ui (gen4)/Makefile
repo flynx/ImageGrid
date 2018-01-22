@@ -298,8 +298,17 @@ electron-unpacked: $(BUILD_DIR)/$(APP_NAME)-$$(VERSION)-$(TARGET_OS)-$(ARCH)/
 #electron-inst: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).msi
 
 
+.PHONY: electron-run
+electron-run: dev
+	electron .
+
+
 .PHONY: web
 web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
+
+
+.PHONY: run
+run: electron-run
 
 
 .PHONY: dist
