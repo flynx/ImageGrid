@@ -59,7 +59,7 @@
 # 			- build an unpacked electron app dir
 # 			  NOTE: this builds to a different directory than
 # 			  	app-dir-*
-# 	electron-insr	- build electron app installer (XXX not implemented)
+# 	electron-inst	- build electron app installer (XXX not implemented)
 # 	electron-run	- run the electron distribution in-place
 #
 #
@@ -72,7 +72,7 @@
 # 	TARGET_OS	- target OS (win32, linux, darwin)
 #
 # 	ELECTRON_DOWNOAD_URL
-# 			- URL to download electron pinary
+# 			- URL to download electron binary
 # 	ELECTRON_DIST	- electron distribution file name pattern
 # 	BUILD_MODE	- can be "repack" or "in-place" (default)
 #
@@ -335,7 +335,7 @@ web: $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip
 .PHONY: electron-dist
 electron-dist: VERSION := $(VERSION)-el
 electron-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
-electron-dist: $(DIST)
+electron-dist: $$(DIST)
 
 
 # add a time stamp to version...
@@ -428,7 +428,6 @@ $(BUILD_INFO): $(CSS_FILES) $(NODE_DIR) $(PROJECT_FILES) \
 #	@touch "$@"
 
 
-#$(NODE_DIR):
 $(NODE_DIR): package.json
 	npm install
 	electron-rebuild

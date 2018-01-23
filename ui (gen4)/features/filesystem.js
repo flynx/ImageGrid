@@ -940,8 +940,8 @@ var FileSystemLoaderUIActions = actions.Actions({
 	// 		the given path (no UI) while .browsePath(..) will load the 
 	// 		UI in all cases but will treat the given path as a base path 
 	// 		to start from.
-	browseIndex: ['File/Load index...', makeBrowseProxy('loadIndex')],
-	browseImages: ['File/Load images...', makeBrowseProxy('loadImages')],
+	browseIndex: ['- File/Load index...', makeBrowseProxy('loadIndex')],
+	browseImages: ['- File/Load images...', makeBrowseProxy('loadImages')],
 
 	browseSubIndexes: ['File/List sub-indexes...',
 		widgets.makeUIDialog(function(){
