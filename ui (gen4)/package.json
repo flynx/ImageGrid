@@ -20,7 +20,7 @@
   "dependencies": {
     "app-module-path": "^1.0.6",
     "async-json": "0.0.2",
-    "commander": "^2.12.2",
+    "commander": "^2.13.0",
     "exiftool": "^0.0.3",
     "fs-extra": "^4.0.3",
     "fs-walk": "^0.0.1",
