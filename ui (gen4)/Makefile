@@ -591,13 +591,13 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 # NW.js... 
 
 # NOTE: this needs a clean app dir...
-# XXX this needs either a correct package.json or a universal way to start
-# 	compatible with electron...
-# XXX stuff to remove: 
-# 	???
 $(BUILD_DIR)/package.nw: INCLUDE_NODE_MODULES += $(INCLUDE_NW_NODE_MODULES)
-$(BUILD_DIR)/package.nw: PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ $(call includeNodeModules,$(INCLUDE_NODE_MODULES))
+$(BUILD_DIR)/package.nw: PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ \
+		$(call includeNodeModules,$(INCLUDE_NODE_MODULES))
 $(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
+	# update package.json...
+	cd "$<" ; \
+		cat package.json | sed 's/"e.js"/"index.html"/g' > package.json
 	$(call zipFrom,$<,$@,*)
 
 
@@ -605,6 +605,13 @@ $(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
 # 	- get nw bin...
 # 	- copy rest of node_modules...
 # 	- pack...
+
+
+
+#----------------------------------------------------------------------
+# cli... 
+
+# XXX
 
 
 
