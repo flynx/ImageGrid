@@ -62,6 +62,9 @@
 # 	electron-inst	- build electron app installer (XXX not implemented)
 # 	electron-run	- run the electron distribution in-place
 #
+#    NW.js 
+#	(XXX not implemented yet)
+#
 #
 #
 # Variables to control the build:
@@ -253,8 +256,12 @@ CSS_FILES := $(patsubst %.less,%.css,$(wildcard css/*.less))
 HTML_FILES := $(wildcard *.html)
 JS_FILES := $(wildcard *.js)
 
+INCLUDE_NODE_MODULES = ig-object ig-actions ig-features
 # XXX do we actually use preact???
-INCLUDE_NODE_MODULES = ig-object ig-actions ig-features preact
+INCLUDE_NODE_MODULES += preact
+
+INCLUDE_NW_NODE_MODULES = app-module-path
+
 
 # dependencies to check...
 # XXX might be a good idea to split these to sections and check only what
@@ -392,8 +399,8 @@ check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
 #**********************************************************************
 # build rules...
 
-NODE_MODULES_MINIMAL = $(foreach m,$(INCLUDE_NODE_MODULES),$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/$(m))
-PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ $(NODE_MODULES_MINIMAL)
+includeNodeModules = $(foreach m,$1,$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/$(m))
+PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ $(call includeNodeModules,$(INCLUDE_NODE_MODULES))
 PACK_FULL = $(BUILD_DIR)/$(APP_NAME)/ $(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)
 
 
@@ -486,7 +493,7 @@ app-dir-minimal: $(PACK_MINIMAL)
 
 $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip: $(PACK_MINIMAL)
 	$(MD) "$(@D)"
-	$(call zipfrom,$<,$@,*)
+	$(call zipFrom,$<,$@,*)
 
 
 
@@ -495,9 +502,9 @@ $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip: $(PACK_MINIMAL)
 
 # helpers...
 up = $(subst $(eval) ,/,$(foreach x,$(subst /, ,$1),..))
-zipfrom = cd $1 ; \
+zipFrom = cd $1 ; \
 	  zip -r "$(call up,$1)/$2" $3
-zipdelfrom = cd $1 ; \
+zipDelFrom = cd $1 ; \
 	     zip -d "$(call up,$1)/$2" $3
 
 
@@ -553,11 +560,11 @@ $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 #	# setup app icon...
 #	# XXX
 	# remove default_app.asar...
-	$(call zipdelfrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)/default_app.asar")
+	$(call zipDelFrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)/default_app.asar")
 	# add app.asar...
 	$(MD) "$(BUILD_DIR)/$(ASAR_PATH)"
 	cp -r $(BUILD_DIR)/app.asar* "$(BUILD_DIR)/$(ASAR_PATH)/"
-	$(call zipfrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_INFO))")
+	$(call zipFrom,"$(BUILD_DIR)",$@.tmp,"$(ASAR_PATH)" "$(notdir $(BUILD_INFO))")
 	# rename app in zip...
 	zipnote "$@.tmp" \
 		| sed 's/\(^@ $(ELECTRON_BIN)$(EXT)\)\(.*$$\)/\1\2\n@=$(APP_BIN)$(EXT)\2/' \
@@ -570,13 +577,34 @@ $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 # package the app dir (unpack - update - repack)...
 $(BUILD_DIR)/$(APP_NAME)-%.repack.zip: $(BUILD_DIR)/$(APP_NAME)-%/
 	$(MD) "$(@D)"
-	$(call zipfrom,$<,$@,*)
+	$(call zipFrom,$<,$@,*)
 
 
 # collect the built package to $(DIST_DIR)
 $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 	$(MD) "$(@D)"
 	cp "$<" "$@"
+
+
+
+#----------------------------------------------------------------------
+# NW.js... 
+
+# NOTE: this needs a clean app dir...
+# XXX this needs either a correct package.json or a universal way to start
+# 	compatible with electron...
+# XXX stuff to remove: 
+# 	???
+$(BUILD_DIR)/package.nw: INCLUDE_NODE_MODULES += $(INCLUDE_NW_NODE_MODULES)
+$(BUILD_DIR)/package.nw: PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ $(call includeNodeModules,$(INCLUDE_NODE_MODULES))
+$(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
+	$(call zipFrom,$<,$@,*)
+
+
+# XXX things to do next:
+# 	- get nw bin...
+# 	- copy rest of node_modules...
+# 	- pack...
 
 
 
