@@ -145,7 +145,7 @@ DATE := $(strip $(shell date "+%Y%m%d%H%M"))
 COMMIT := $(strip $(shell git rev-parse HEAD))
 
 
-# Electron stuff...
+# Electron...
 #
 # NOTE: Linux does not let an app run if some of the libs it is dynamically 
 # 	linked against are missing, this can happen if we try to run electron
@@ -155,8 +155,16 @@ ELECTRON_VERSION_FALLBACK ?= v1.8.1
 ELECTRON_VERSION := $(strip $(shell \
 	electron -v 2> /dev/null \
 		|| echo $(ELECTRON_VERSION_FALLBACK)))
-ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download
+ELECTRON_DOWNOAD_URL ?= https://github.com/electron/electron/releases/download/$(ELECTRON_VERSION)
 ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
+
+
+# NW...
+#
+# XXX get the version dynamically... (???)
+NW_VERSION ?= v0.27.5
+NW_DIST ?= nwjs-sdk-$(NW_VERSION)-$(NW_OS)-$(ARCH).zip
+NW_DOWNOAD_URL ?= https://dl.nwjs.io/$(NW_VERSION)
 
 
 BUILD_MODE ?= in-place
@@ -166,6 +174,7 @@ BUILD_MODE ?= in-place
 ifeq ($(OS),Windows_NT)
 	# NOTE: this is electron naming convention...
 	TARGET_OS ?= win32
+	NW_OS ?= win
 
 	# set arch...
 	ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
@@ -182,9 +191,11 @@ ifeq ($(OS),Windows_NT)
 else
 	ifeq ($(shell uname -s),Linux)
 		TARGET_OS ?= linux
+		NW_OS ?= $(TARGET_OS)
 	endif
 	ifeq ($(shell uname -s),Darwin)
 		TARGET_OS ?= darwin
+		NW_OS ?= osx
 	endif
 
 	# set arch...
@@ -397,6 +408,17 @@ check: $(foreach dep,$(DEPENDENCIES),require($(dep)))
 
 
 #**********************************************************************
+# helpers...
+
+up = $(subst $(eval) ,/,$(foreach x,$(subst /, ,$1),..))
+zipFrom = cd $1 ; \
+	  zip -r "$(call up,$1)/$2" $3
+zipDelFrom = cd $1 ; \
+	     zip -d "$(call up,$1)/$2" $3
+
+
+
+#**********************************************************************
 # build rules...
 
 includeNodeModules = $(foreach m,$1,$(BUILD_DIR)/$(APP_NAME)/$(NODE_DIR)/$(m))
@@ -500,13 +522,17 @@ $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip: $(PACK_MINIMAL)
 #----------------------------------------------------------------------
 # Electron desktop build...
 
-# helpers...
-up = $(subst $(eval) ,/,$(foreach x,$(subst /, ,$1),..))
-zipFrom = cd $1 ; \
-	  zip -r "$(call up,$1)/$2" $3
-zipDelFrom = cd $1 ; \
-	     zip -d "$(call up,$1)/$2" $3
+# get the electron binary (keep this cached)...
+.PRECIOUS: $(TARGET_DIR)/$(ELECTRON_DIST)
+$(TARGET_DIR)/$(ELECTRON_DIST):
+	$(MD) "$(@D)"
+	wget \
+		-nc "$(ELECTRON_DOWNOAD_URL)/$(@F)" \
+		-O "$@"
 
+
+.PHONY: electron-target
+electron-target: $(TARGET_DIR)/$(ELECTRON_DIST)
 
 
 # pack app.asar (electron-specific)...
@@ -520,15 +546,6 @@ $(BUILD_DIR)/app.asar: $(PACK_FULL)
 		asar p "$(APP_NAME)" app.asar \
 			--exclude-hidden \
 			--unpack-dir node_modules/sharp
-
-
-# get the electron binary (keep this cached)...
-.PRECIOUS: $(TARGET_DIR)/$(ELECTRON_DIST)
-$(TARGET_DIR)/$(ELECTRON_DIST):
-	$(MD) "$(@D)"
-	wget \
-		-nc "$(ELECTRON_DOWNOAD_URL)/$(ELECTRON_VERSION)/$(@F)" \
-		-O "$@"
 
 
 # build the app dir (electron-specific)...
@@ -590,7 +607,20 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 #----------------------------------------------------------------------
 # NW.js... 
 
+.PRECIOUS: $(TARGET_DIR)/$(NW_DIST)
+$(TARGET_DIR)/$(NW_DIST):
+	$(MD) "$(@D)"
+	wget \
+		-nc "$(NW_DOWNOAD_URL)/$(@F)" \
+		-O "$@"
+
+
+.PHONY: nw-target
+nw-target: $(TARGET_DIR)/$(NW_DIST)
+
+
 # NOTE: this needs a clean app dir...
+.PRECIOUS: $(BUILD_DIR)/package.nw
 $(BUILD_DIR)/package.nw: INCLUDE_NODE_MODULES += $(INCLUDE_NW_NODE_MODULES)
 $(BUILD_DIR)/package.nw: PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ \
 		$(call includeNodeModules,$(INCLUDE_NODE_MODULES))
@@ -602,7 +632,6 @@ $(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
 
 
 # XXX things to do next:
-# 	- get nw bin...
 # 	- copy rest of node_modules...
 # 	- pack...
 
