@@ -523,16 +523,15 @@ $(DIST_DIR)/$(APP_NAME)-$(VERSION)-web.zip: $(PACK_MINIMAL)
 # Electron desktop build...
 
 # get the electron binary (keep this cached)...
+.PHONY: electron-target
+electron-target: $(TARGET_DIR)/$(ELECTRON_DIST)
+
 .PRECIOUS: $(TARGET_DIR)/$(ELECTRON_DIST)
 $(TARGET_DIR)/$(ELECTRON_DIST):
 	$(MD) "$(@D)"
 	wget \
 		-nc "$(ELECTRON_DOWNOAD_URL)/$(@F)" \
 		-O "$@"
-
-
-.PHONY: electron-target
-electron-target: $(TARGET_DIR)/$(ELECTRON_DIST)
 
 
 # pack app.asar (electron-specific)...
@@ -607,16 +606,15 @@ $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 #----------------------------------------------------------------------
 # NW.js... 
 
+.PHONY: nw-target
+nw-target: $(TARGET_DIR)/$(NW_DIST)
+
 .PRECIOUS: $(TARGET_DIR)/$(NW_DIST)
 $(TARGET_DIR)/$(NW_DIST):
 	$(MD) "$(@D)"
 	wget \
 		-nc "$(NW_DOWNOAD_URL)/$(@F)" \
 		-O "$@"
-
-
-.PHONY: nw-target
-nw-target: $(TARGET_DIR)/$(NW_DIST)
 
 
 # NOTE: this needs a clean app dir...
@@ -631,6 +629,7 @@ $(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
 	$(call zipFrom,$<,$@,*)
 
 
+# XXX how do we resolve name collisions between this and electron builds???
 # XXX things to do next:
 # 	- copy rest of node_modules...
 # 	- pack...
