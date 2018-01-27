@@ -631,7 +631,7 @@ $(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
 
 # XXX how do we resolve name collisions between this and electron builds???
 # XXX things to do next:
-# 	- copy rest of node_modules...
+# 	- copy rest of node_modules... (???)
 # 	- pack...
 
 
