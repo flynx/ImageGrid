@@ -485,7 +485,7 @@ module.SingleImageViewLocalStorage = core.ImageGridFeatures.Feature({
 	tag: 'ui-single-image-local-storage',
 	depends: [
 		'ui-single-image',
-		'config-local-storage',
+		'localstorage-config',
 	],
 
 	handlers:[

@@ -252,25 +252,25 @@ module.ConfigLocalStorage = core.ImageGridFeatures.Feature({
 // XXX config override location/filename to support portable apps...
 // XXX comment support in json (preferably both reading and writing...)
 
-var ConfigFS = actions.Actions({
+var ConfigFSActions = actions.Actions({
 	config: {
 	},
 
 })
 
 
-var ConfigLocalStorage = 
-module.ConfigLocalStorage = core.ImageGridFeatures.Feature({
+var ConfigFS = 
+module.ConfigFS = core.ImageGridFeatures.Feature({
 	title: '',
 	doc: '',
 
 	tag: 'fs-config',
 	depends: [
-		'config-local-storage',
+		'localstorage-config',
 		'fs',
 	],
 
-	actions: ConfigFS,
+	actions: ConfigFSActions,
 
 	handlers: [
 		// NOTE: considering that allot depends on this it must be 
