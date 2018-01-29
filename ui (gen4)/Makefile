@@ -632,6 +632,8 @@ $(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
 # XXX how do we resolve name collisions between this and electron builds???
 # 	a) naming convention: specific build directory suffixes...
 # 	b) generic components mixed and matched (node_modules, ImageGrid.Viewer, ...)
+# 		Q: will this actually save us any time/space, considering
+# 		   we'll need to copy the files anyway???
 # 	c) both...
 # XXX things to do next:
 # 	- copy rest of node_modules... (???)

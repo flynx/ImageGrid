@@ -1382,16 +1382,14 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 					res.index.tags = res.raw.data.tags
 				}
 
-				if((changes === true || changes.selected) 
-						&& res.raw.data.tags
-						&& res.raw.data.tags.selected){
-					res.index.marked = res.raw.data.tags.selected
+				// XXX should we save an empty list *iff* changes.selected is true???
+				if(changes === true || changes.selected){
+					res.index.marked = (res.raw.data.tags || {}).selected || []
 				}
-				if((changes === true || changes.bookmarked) 
-						&& res.raw.data.tags
-						&& res.raw.data.tags.bookmark){
+				// XXX should we save an empty list *iff* changes.bookmarked is true???
+				if(changes === true || changes.bookmarked){
 					res.index.bookmarked = [
-						res.raw.data.tags.bookmark || [],
+						(res.raw.data.tags || {}).bookmark || [],
 						{},
 					]
 				}
