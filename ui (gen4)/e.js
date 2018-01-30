@@ -52,8 +52,8 @@ function createWindow(){
 	// and load the index.html of the app.
 	win.loadURL(url.format({
 		// XXX unify this with index.html
-		//pathname: path.join(__dirname, 'electron.html'),
-		pathname: path.join(__dirname, 'index.html'),
+		//pathname: path.join(__dirname, 'index.html'),
+		pathname: path.join(__dirname, 'electron.html'),
 		protocol: 'file:',
 		slashes: true
 	}))
