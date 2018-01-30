@@ -162,7 +162,7 @@ ELECTRON_DIST ?= electron-$(ELECTRON_VERSION)-$(TARGET_OS)-$(ARCH).zip
 # NW...
 #
 # XXX get the version dynamically... (???)
-NW_VERSION ?= v0.27.5
+NW_VERSION ?= v0.28.0
 NW_DIST ?= nwjs-sdk-$(NW_VERSION)-$(NW_OS)-$(ARCH).zip
 NW_DOWNOAD_URL ?= https://dl.nwjs.io/$(NW_VERSION)
 
@@ -554,13 +554,18 @@ $(TARGET_DIR)/$(ELECTRON_DIST):
 
 
 # pack app.asar (electron-specific)...
+# XXX should this update package.json -> set "main" to "e.js"...
 .PRECIOUS: $(BUILD_DIR)/app.asar
 # XXX do we need to track changes to pack-full or to build it only if 
 # 	app.asar is deleted?
+# 	...should we bakup the original package.json???
 #$(BUILD_DIR)/app.asar:
 #	make check $(PACK_FULL)
 $(BUILD_DIR)/app.asar: $(PACK_FULL)
-	cd $(BUILD_DIR) ; \
+	# update package.json to start electron...
+	cd "$(BUILD_DIR)/$(APP_NAME)/" ; \
+		cat package.json | sed 's/"index.html"/"e.js"/g' > package.json
+	cd "$(BUILD_DIR)" ; \
 		asar p "$(APP_NAME)" app.asar \
 			--exclude-hidden \
 			--unpack-dir node_modules/sharp
@@ -641,12 +646,13 @@ $(TARGET_DIR)/$(NW_DIST):
 
 
 # NOTE: this needs a clean app dir...
+# XXX this is not runnable yet...
 .PRECIOUS: $(BUILD_DIR)/package.nw
 $(BUILD_DIR)/package.nw: INCLUDE_NODE_MODULES += $(INCLUDE_NW_NODE_MODULES)
 $(BUILD_DIR)/package.nw: PACK_MINIMAL = $(BUILD_DIR)/$(APP_NAME)/ \
 		$(call includeNodeModules,$(INCLUDE_NODE_MODULES))
 $(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
-	# update package.json...
+	# update package.json to start nw...
 	cd "$<" ; \
 		cat package.json | sed 's/"e.js"/"index.html"/g' > package.json
 	$(call zipFrom,$<,$@,*)

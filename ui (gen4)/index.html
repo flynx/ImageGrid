@@ -33,7 +33,7 @@
 
 
 <script>
-if(window.require && window.nw){
+if(window.require){
 	window.__devtools_failsafe = setTimeout(function(){
 		// nw...
 		if(window.nw){
@@ -50,7 +50,7 @@ if(window.require && window.nw){
 </script>
 
 <!-- Electron related fix -->
-<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+<script>if(typeof module === 'object'){ window.module = module; module = undefined }</script>
 
 
 
@@ -83,14 +83,18 @@ if(window.require && window.nw){
 
 
 <!-- Electron related unfix -->
-<script>if (window.module) module = window.module;</script>
+<script>if(window.module){ module = window.module }</script>
 
 
-<!--script data-main="ui" src="ext-lib/require.js"></script-->
 <script src="ext-lib/require.js"></script>
 <script src="cfg/requirejs.js"></script>
 <script> 
-requirejs(['cfg/requirejs.js', 'ui']) 
+
+typeof(process) != 'undefined' ?
+	require('./cfg/requirejs')
+	: requirejs(['cfg/requirejs'])
+requirejs(['ui'])
+
 </script>
 
 </head>

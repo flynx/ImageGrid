@@ -1,6 +1,6 @@
 {
   "name": "ImageGrid.Viewer.g4",
-  "main": "e.js",
+  "main": "index.html",
   "version": "4.0.0a",
   "author": "Alex A. Naanou <alex.nanou@gmail.com> (https://github.com/flynx)",
   "contributors": [],
@@ -54,7 +54,9 @@
   "scripts": {
     "build-css": "lessc css/layout.less css/layout.css",
     "build-dist": "make dist",
-    "start": "electron e.js"
+    "start": "electron e.js",
+    "start-nw": "nw .",
+    "start-electron": "electron e.js ."
   },
   "vim-cfg": " vim:set ts=2 sw=2 expandtab : "
 }
