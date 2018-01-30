@@ -335,9 +335,14 @@ clean:
 	$(RM) $(BUILD_DIR)
 
 
+.PHONY: clean-dist
+clean-dist:
+	$(RM) $(DIST_DIR)
+
+
 .PHONY: clean-all
-clean-all: clean
-	$(RM) $(DIST_DIR) $(TARGET_DIR) $(NODE_DIR)
+clean-all: clean clean-dist
+	$(RM) $(TARGET_DIR) $(NODE_DIR)
 
 
 
@@ -383,7 +388,21 @@ electron-run: dev
 
 #------------------------------------------------------- NW targets ---
 
+# XXX this clashes with the electron build as the recepies do not take the
+# 	host framework into account...
+#.PHONY: nw-dist
+#nw-dist: VERSION := $(VERSION)-nw
+#nw-dist: DIST := $(DIST_DIR)/$(APP_NAME)-$(VERSION)-$(TARGET_OS)-$(ARCH).zip
+#nw-dist: $$(DIST)
+
+
 # XXX
+
+
+# XXX needs a different package.json or a way to share it with electron...
+.PHONY: nw-run
+nw-run: dev
+	nw .
 
 
 
@@ -550,6 +569,7 @@ $(BUILD_DIR)/app.asar: $(PACK_FULL)
 # build the app dir (electron-specific)...
 # NOTE: the "/" here is significant -- it prevents conflicts with other 
 # 	rules...
+# XXX need to take nw/el version part into account...
 # XXX need to setup app icons...
 .PRECIOUS: $(BUILD_DIR)/$(APP_NAME)-%/
 $(BUILD_DIR)/$(APP_NAME)-%/: $(TARGET_DIR)/$(ELECTRON_DIST) \
@@ -569,6 +589,7 @@ $(BUILD_DIR)/$(APP_NAME)-%/: $(TARGET_DIR)/$(ELECTRON_DIST) \
 
 
 # modify the archive in place (electron-specific)...
+# XXX need to take nw/el version part into account...
 # XXX need to setup app icons...
 $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 		$(BUILD_DIR)/app.asar $(BUILD_INFO)
@@ -591,12 +612,14 @@ $(BUILD_DIR)/$(APP_NAME)-%.in-place.zip: $(TARGET_DIR)/$(ELECTRON_DIST) \
 
 
 # package the app dir (unpack - update - repack)...
+# XXX need to take nw/el version part into account (???)
 $(BUILD_DIR)/$(APP_NAME)-%.repack.zip: $(BUILD_DIR)/$(APP_NAME)-%/
 	$(MD) "$(@D)"
 	$(call zipFrom,$<,$@,*)
 
 
 # collect the built package to $(DIST_DIR)
+# XXX need to take nw/el version part into account (???)
 $(DIST_DIR)/$(APP_NAME)-%.zip: $(BUILD_DIR)/$(APP_NAME)-%.$(BUILD_MODE).zip
 	$(MD) "$(@D)"
 	cp "$<" "$@"
