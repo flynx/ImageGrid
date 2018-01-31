@@ -663,6 +663,10 @@ $(BUILD_DIR)/package.nw: $$(PACK_MINIMAL)
 # 	b) generic components mixed and matched (node_modules, ImageGrid.Viewer, ...)
 # 		Q: will this actually save us any time/space, considering
 # 		   we'll need to copy the files anyway???
+# 		   	- it would be nice to have reusable components that
+# 		   	  would be used as-is to build different builds
+# 		   	- this will lead to added complexity for instance 
+# 		   	  in zipping...
 # 	c) both...
 # XXX things to do next:
 # 	- copy rest of node_modules... (???)
