@@ -88,6 +88,8 @@ var StatusBarActions = actions.Actions({
 		'status-bar-ribbon-count': true,
 
 		'status-bar-changes-text': '*',
+
+		'status-bar-edit-mode-indicator-update-interval': 1000,
 	},
 
 	__statusbar_elements__: {
@@ -385,7 +387,19 @@ var StatusBarActions = actions.Actions({
 						[caps ? 'addClass' : 'removeClass']('on')
 				}).bind(this)
 
+			// cleanup interval handling...
+			this.__edit_mode_indicator_update_interval
+				&& clearInterval(this.__edit_mode_indicator_update_interval)
 
+
+			// cleanup...
+			if(item == null){
+				this.off('keyPress', update)
+				this.dom.off('focus', update)
+				return
+			}
+
+			// setup...
 			if(typeof(item) == typeof('str')){
 				var type = item
 				item = $('<span>')
@@ -396,10 +410,18 @@ var StatusBarActions = actions.Actions({
 						.text('Edit mode'))
 					.click(update)
 
-				// XXX need a way to cleanly unhandle this...
 				this.on('keyPress', update)
+				this.dom.focus(update)
 			}
 
+			// update timer...
+			// NOTE: this is needed so as to reflect changes to settings...
+			var t = this.config['status-bar-edit-mode-indicator-update-interval']
+			t = t == null ? 5000 : t
+			if(t){
+				this.__edit_mode_indicator_update_interval = setInterval(update, t) }
+
+			// update state...
 			update()
 
 			return item
