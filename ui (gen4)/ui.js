@@ -13,6 +13,7 @@ if((typeof(process) != 'undefined' ? process : {}).__nwjs){
 	var path = require('path')
 	require('app-module-path')
 		.addPath(path.dirname(process.execPath) + '/node_modules/')
+	console.log('!!!!!!!')
 }
 
 
