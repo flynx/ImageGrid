@@ -564,7 +564,7 @@ module.Sort = core.ImageGridFeatures.Feature({
 						}
 					})
 			}],
-		['prepareJSONForLoad',
+		['prepareIndexForLoad',
 			function(res){
 				['sort_order', 'sort_cache']
 					.forEach(function(attr){

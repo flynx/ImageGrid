@@ -199,27 +199,29 @@ var CollectionActions = actions.Actions({
 	// 	}
 	//
 	// XXX revise doc...
+	// XXX this is almost the same as .store_handlers...
 	get collection_handlers(){
-		var handlers = this.__collection_handlers = this.__collection_handlers || {}
-
-		if(Object.keys(handlers).length == 0){
+		return this.cache('collection_handlers', function(){
 			var that = this
+			var handlers = {}
+
 			handlers['data'] = null
 			this.actions.forEach(function(action){
 				var fmt = that.getActionAttr(action, 'collectionFormat')
+				handlers[fmt]
+					&& console.warn('Multiple handlers for collection format:', store)
 				if(fmt){
 					handlers[fmt] = action
 				}
 			})
-		}
 
-		// cleanup...
-		if(handlers['data'] == null){
-			delete handlers['data']
-		}
+			// cleanup...
+			if(handlers['data'] == null){
+				delete handlers['data']
+			}
 
-		return handlers
-	},
+			return handlers
+		}) },
 
 
 	// Collection events...
@@ -1303,6 +1305,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 
 	tag: 'collections',
 	depends: [
+		'cache',
 		'base',
 		'location',
 		'crop',
@@ -1732,7 +1735,7 @@ module.Collection = core.ImageGridFeatures.Feature({
 		// XXX merge multiple collections...
 		// 		...this can be called multiple times pre single load, once
 		// 		per merged index...
-		['prepareJSONForLoad',
+		['prepareIndexForLoad',
 			function(res, json, base_path){
 				// collection index...
 				var collections = {}
@@ -1813,9 +1816,9 @@ module.Collection = core.ImageGridFeatures.Feature({
 				// XXX prepare collection data for loading...
 				Object.keys(collection_data)
 					.forEach(function(gid){
-						// XXX would be nice to be able to use .prepareJSONForLoad(..) 
+						// XXX would be nice to be able to use .prepareIndexForLoad(..) 
 						// 		to handle collection internals produced by
-						// 		.prepareJSONForLoad(..)...
+						// 		.prepareIndexForLoad(..)...
 						// 		...would need to pass it the local data...
 						// XXX
 					})
@@ -2935,7 +2938,7 @@ var FileSystemCollectionActions = actions.Actions({
 						.then(function(res){
 							// load the collection data...
 							that.collections[title].data = 
-								that.prepareJSONForLoad(res[path]).data
+								that.prepareIndexForLoad(res[path]).data
 						})
 				}))
 		}],

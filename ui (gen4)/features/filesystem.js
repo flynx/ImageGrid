@@ -105,7 +105,7 @@ var IndexFormatActions = actions.Actions({
 			2) .prepareIndexForWrite(..) action
 				- takes the output of .json(..) and converts to a format 
 					ready for writing/serialization...
-				- compatible with .prepareJSONForLoad(..)
+				- compatible with .prepareIndexForLoad(..)
 				- this directly affects the index structure 
 					(see: file.writeIndex(..))
 
@@ -164,11 +164,11 @@ var IndexFormatActions = actions.Actions({
 			}
 		}],
 	// XXX should this return {} or json???
-	prepareJSONForLoad: ['- File/Prepare JSON for loading',
+	prepareIndexForLoad: ['- File/Prepare JSON for loading',
 		core.doc`Prepare JSON for loading...
 
-			.prepareJSONForLoad(json)
-			.prepareJSONForLoad(json, base_path)
+			.prepareIndexForLoad(json)
+			.prepareIndexForLoad(json, base_path)
 				-> data
 
 		Prepare the loaded JSON data to be loaded via the .load(..) action.
@@ -333,7 +333,7 @@ var FileSystemLoaderActions = actions.Actions({
 							}
 						}
 
-						var part = that.prepareJSONForLoad(res[k], k)
+						var part = that.prepareIndexForLoad(res[k], k)
 
 						// load the first index...
 						if(index == null){
@@ -1064,7 +1064,7 @@ module.Comments = core.ImageGridFeatures.Feature({
 		// NOTE: this will skip the 'raw' comment field...
 		// NOTE: we do not change the .json() format here, so we do not 
 		// 		need to do anything special to restore, i.e. no need for
-		// 		doing anything on .prepareJSONForLoad(..)
+		// 		doing anything on .prepareIndexForLoad(..)
 		['prepareIndexForWrite',
 			function(res){
 				var changed = res.changes === true

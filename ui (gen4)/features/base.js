@@ -748,7 +748,7 @@ core.ImageGridFeatures.Feature({
 					})
 				}
 			}],
-		['prepareJSONForLoad',
+		['prepareIndexForLoad',
 			function(res, json, base_path){
 				// build data and images...
 				// XXX do we actually need to build stuff here, shouldn't
@@ -774,7 +774,7 @@ core.ImageGridFeatures.Feature({
 					// 			2) add/remove on load/save (approach below)
 					// 				+ less to do in real time
 					// 				- more processing on load/save
-					//console.warn('STUB: setting image .base_path in .prepareJSONForLoad(..)')
+					//console.warn('STUB: setting image .base_path in .prepareIndexForLoad(..)')
 					img.forEach(function(_, img){ img.base_path = base_path })
 				}
 
@@ -1402,7 +1402,7 @@ module.TagsEdit = core.ImageGridFeatures.Feature({
 					delete res.index.data.tags
 				}
 			}],
-		['prepareJSONForLoad',
+		['prepareIndexForLoad',
 			function(res, json){
 				res.data.tags = json.tags || {}
 
