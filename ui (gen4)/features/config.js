@@ -25,10 +25,21 @@ var core = require('features/core')
 
 
 /*********************************************************************/
+// XXX move store to a separate module...
 
 // XXX should we unify this with the save/load API
 var StoreActions = actions.Actions({
 	config: {
+		// Storage mode...
+		//
+		// This can be:
+		// 	'read-only'
+		// 	'read-write'
+		// 	null			- ignore store
+		//
+		// NOTE: this only affects start/stop/timer event handling, manual
+		// 		call to .loadData(..) / .saveData(..) are not affected...
+		'store-mode': 'read-write',
 	},
 
 	// Store handler dict...
@@ -178,21 +189,26 @@ module.Store = core.ImageGridFeatures.Feature({
 	handlers: [
 		['start.pre', 
 			function(){ 
-				this.requestReadyAnnounce()
-				this
-					.loadData() 
-					.then(function(){
-						this.declareReady() }.bind(this)) }],
+				if(this.config['store-mode'] != null){
+					this.requestReadyAnnounce()
+					this
+						.loadData() 
+						.then(function(){
+							this.declareReady() }.bind(this)) 
+				} }],
+		['stop', 
+			function(){ 
+				this.config['store-mode'] == 'read-write' && this.saveData() }],
 		// XXX timer???
 		// XXX
-		['stop', 
-			function(){ this.saveData() }],
 	],
 })
 
 
 //---------------------------------------------------------------------
 
+// XXX we should have a separate store config with settings of how to 
+// 		load the store... (???)
 var StoreLocalStorageActions = actions.Actions({
 	// XXX get root key from config...
 	// 		...this would require us to store the store config separately...
@@ -266,7 +282,7 @@ module.StoreLocalStorage = core.ImageGridFeatures.Feature({
 
 
 
-//---------------------------------------------------------------------
+/*********************************************************************/
 
 var ConfigStoreActions = actions.Actions({
 	config: {
@@ -385,6 +401,7 @@ module.ConfigStore = core.ImageGridFeatures.Feature({
 
 				// XXX sync fs store...
 				// XXX get better tag...
+				// XXX where do we write???
 				if((store.fsJSONSync || {}).config){
 					// XXX
 				}
