@@ -210,13 +210,18 @@ module.Store = core.ImageGridFeatures.Feature({
 // XXX we should have a separate store config with settings of how to 
 // 		load the store... (???)
 var StoreLocalStorageActions = actions.Actions({
+	config: {
+		// XXX
+		'store-root-key': 'test-store-root-key',
+	},
+
 	// XXX get root key from config...
 	// 		...this would require us to store the store config separately...
 	localStorageDataHandler: ['- Store/',
 		{handle_data_store: 'localStorage',},
 		function(data){
 			// XXX get this from config...
-			var root = 'test-store-root-key'
+			var root = this.config['store-root-key'] 
 
 			// clear...
 			if(data === null){
@@ -236,7 +241,7 @@ var StoreLocalStorageActions = actions.Actions({
 		{handle_data_store: 'sessionStorage',},
 		function(data){
 			// XXX get this from config...
-			var root = 'test-store-root-key'
+			var root = this.config['store-root-key'] 
 
 			// clear...
 			if(data === null){
