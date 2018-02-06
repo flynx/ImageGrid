@@ -283,12 +283,17 @@ module.StoreLocalStorage = core.ImageGridFeatures.Feature({
 // 			- app dir
 // 			- $HOME
 
+
+//---------------------------------------------------------------------
+
 // XXX StoreFSJSON
 
 
 
 /*********************************************************************/
 
+// XXX might be a good idea to add a .configLoaded(..) and .configChanged(..) 
+// 		events thought it's not clear how are we going to track changes...
 var ConfigStoreActions = actions.Actions({
 	config: {
 		// XXX should this include path???
