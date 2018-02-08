@@ -25,6 +25,80 @@ var core = require('features/core')
 
 
 /*********************************************************************/
+// XXX move store to core...
+
+var TimersActions = actions.Actions({
+	config: {
+	},
+
+	__timeouts: null,
+	__intervals: null,
+
+
+	// XXX should these be  actions???
+	isInterval: function(id){
+		return id in (this.__intervals || {}) },
+	isTimeout: function(id){
+		return id in (this.__timeouts || {}) },
+	isTimer: function(id){
+		return this.isInterval(id) || this.isTimeout(id) },
+
+	// NOTE: we are not trying to re-implement the native scheduler...
+	// XXX clear the id on completion...
+	// XXX call the function in this context???
+	// XXX should we rename these???
+	setTimeout: ['- System/', 
+		function(id, func, ms){
+			var timeouts = this.__timeouts = this.__timeouts || {}
+
+			this.clearTimeout(id)
+
+			// XXX clear the id on completion...
+			// XXX call the function in this context???
+			// XXX make func action-string compatible...
+			timeouts[id] = setTimeout(func, ms || 0)
+		}],
+	clearTimeout: ['- System/',
+		function(id){
+			var timeouts = this.__timeouts = this.__timeouts || {}
+			clearTimeout(timeouts[id])
+			delete timeouts[id]	
+		}],
+
+	// XXX call the function in this context???
+	setInterval: ['- System/',
+		function(id, func, ms){
+			var intervals = this.__intervals = this.__intervals || {}
+
+			id in  intervals
+				&& clearInterval(intervals[id])
+
+			// XXX call the function in this context???
+			// XXX make func action-string compatible...
+			timeouts[id] = setInterval(func, ms || 0)
+		}],
+	clearInterval: ['- System/',
+		function(id){
+			var intervals = this.__intervals = this.__intervals || {}
+			clearInterval(intervals[id])
+			delete intervals[id]	
+		}],
+})
+
+var Timers = 
+module.Timers = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'timers',
+	depends: [
+	],
+
+	actions: Timers,
+})
+
+
+/*********************************************************************/
 // XXX move store to a separate module...
 
 // XXX should we unify this with the save/load API
