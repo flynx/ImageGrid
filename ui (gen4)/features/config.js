@@ -29,6 +29,9 @@ var core = require('features/core')
 
 var TimersActions = actions.Actions({
 	config: {
+		// Format:
+		// 	XXX
+		'persistent-intervals': null,
 	},
 
 	__timeouts: null,
@@ -80,6 +83,19 @@ var TimersActions = actions.Actions({
 	clearInterval: ['- System/',
 		function(id){
 			var intervals = this.__intervals = this.__intervals || {}
+			clearInterval(intervals[id])
+			delete intervals[id]	
+		}],
+
+	// XXX start all on .start(..) and stop on .stop(..)...
+	setPersistentInterval: ['- System/',
+		function(id, func, ms){
+			// XXX
+		}],
+	// XXX
+	clearPersistentInterval: ['- System/',
+		function(id){
+			var intervals = this.config['persistent-intervals'] = this.config['persistent-intervals'] || {}
 			clearInterval(intervals[id])
 			delete intervals[id]	
 		}],
