@@ -36,6 +36,7 @@ var TimersActions = actions.Actions({
 
 	__timeouts: null,
 	__intervals: null,
+	__persistent_intervals: null,
 
 
 	// XXX should these be  actions???
@@ -87,18 +88,68 @@ var TimersActions = actions.Actions({
 			delete intervals[id]	
 		}],
 
-	// XXX start all on .start(..) and stop on .stop(..)...
+	// XXX assert that func is a string...
+	// 		...wrap func...
 	setPersistentInterval: ['- System/',
-		function(id, func, ms){
-			// XXX
+		core.doc`
+
+			Restart interval id...
+			.setPersistentInterval(id)
+
+			Save/start interval id...
+			.setPersistentInterval(id, action, ms)
+
+		`,
+		function(id, action, ms){
+			var cfg = 
+				this.config['persistent-intervals'] = 
+					this.config['persistent-intervals'] || {}
+			var intervals = 
+				this.__persistent_intervals = 
+					this.__persistent_intervals || {}
+
+			// get defaults...
+			action = action ? action : cfg[id].action
+			ms = ms ? ms : cfg[id].ms
+
+			// checks...
+			if(!ms || !action){
+				console.error('Persistent interval: both action and ms must be set.')
+				return
+			}
+			if(typeof(action) != typeof('str')){
+				console.error('Persistent interval: handler must be a string.')
+				return
+			}
+
+			id in  intervals
+				&& clearInterval(intervals[id])
+
+			cfg[id] = {
+				action: action, 
+				ms: ms,
+			}
+
+			timeouts[id] = setInterval(
+				function(){ this.call(action) }.bind(this), 
+				ms || 0)
 		}],
-	// XXX
 	clearPersistentInterval: ['- System/',
 		function(id){
-			var intervals = this.config['persistent-intervals'] = this.config['persistent-intervals'] || {}
+			var intervals = 
+				this.__persistent_intervals = 
+					this.__persistent_intervals || {}
 			clearInterval(intervals[id])
 			delete intervals[id]	
+			delete this.config['persistent-intervals'][id]
 		}],
+	// XXX add start/restart/stop persistent actions...
+	// 		to start all:
+	// 			Object.keys(this.config['persistent-intervals'] || {})
+	// 				.forEach(function(id){
+	// 					this.setPersistentInterval(id) }.bind(this))
+	// 		to stop all:
+	// XXX
 })
 
 var Timers = 
@@ -111,7 +162,21 @@ module.Timers = core.ImageGridFeatures.Feature({
 	],
 
 	actions: Timers,
+
+	// XXX start all on .start(..) and stop on .stop(..)...
+	handlers: [
+		// XXX should this be start or start???
+		['start', 
+			function(){
+				// XXX
+			}],
+		['stop', 
+			function(){
+				// XXX
+			}],
+	],
 })
+
 
 
 /*********************************************************************/
