@@ -20,6 +20,10 @@
 *	- serialization
 *		base methods to handle loading, serialization and cloning...
 *	- cache
+*		basic action/prop caching api...
+*	- timers
+*		wrapper around setInterval(..), setTimeout(..) and friends, 
+*		provides persistent timer triggers and introspection...
 * 	- util
 * 	- journal
 * 		action journaling and undo/redo functionality
@@ -715,6 +719,208 @@ module.Cache = ImageGridFeatures.Feature({
 					this.preCache() 
 				: false
 			}],
+	],
+})
+
+
+//---------------------------------------------------------------------
+
+var TimersActions = actions.Actions({
+	config: {
+		//
+		// Format:
+		// 	{
+		// 		<id>: {
+		// 			// action code (string)...
+		// 			action: <action>,
+		// 			// interval in milliseconds...
+		// 			ms: <ms>,
+		// 		},
+		// 		...
+		// 	}
+		'persistent-intervals': null,
+	},
+
+	// XXX should we store more metadata (ms?) and provide introspection 
+	// 		for these???
+	__timeouts: null,
+	__intervals: null,
+	__persistent_intervals: null,
+
+
+	// Introspection...
+	//
+	// NOTE: these are not editable...
+	get timeouts(){
+		return Object.assign({}, this.__timeouts || {}) },
+	get intervals(){
+		return {
+			volatile: Object.assign({}, this.__intervals || {}),
+			persistent: JSON.parse(JSON.stringify(
+				this.config['persistent-intervals'] || {})),
+		} },
+
+	// XXX should these be  actions???
+	isInterval: function(id){
+		return id in (this.__intervals || {}) },
+	isTimeout: function(id){
+		return id in (this.__timeouts || {}) },
+	isTimer: function(id){
+		return this.isInterval(id) || this.isTimeout(id) },
+
+
+	// General API...
+	// 
+	// NOTE: we are not trying to re-implement the native scheduler here
+	// 		just extend it and unify it's uses...
+	setTimeout: ['- System/', 
+		function(id, func, ms){
+			var timeouts = this.__timeouts = this.__timeouts || {}
+
+			this.clearTimeout(id)
+
+			timeouts[id] = setTimeout(
+				function(){
+					// cleanup...
+					// NOTE: we are doing this before we run to avoid 
+					// 		leakage due to errors...
+					delete timeouts[id]
+
+					// run...
+					func instanceof Function ? 
+						func.call(this) 
+						: this.call(func)
+				}.bind(this),
+				ms || 0)
+		}],
+	clearTimeout: ['- System/',
+		function(id){
+			var timeouts = this.__timeouts = this.__timeouts || {}
+			clearTimeout(timeouts[id])
+			delete timeouts[id]	
+		}],
+
+	setInterval: ['- System/',
+		function(id, func, ms){
+			var intervals = this.__intervals = this.__intervals || {}
+
+			id in  intervals
+				&& clearInterval(intervals[id])
+
+			timeouts[id] = setInterval(
+				(func instanceof Function ? func : function(){ this.call(func) })
+					.bind(this),
+				ms || 0)
+		}],
+	clearInterval: ['- System/',
+		function(id){
+			var intervals = this.__intervals = this.__intervals || {}
+			clearInterval(intervals[id])
+			delete intervals[id]	
+		}],
+
+	setPersistentInterval: ['- System/',
+		doc`
+
+			Restart interval id...
+			.setPersistentInterval(id)
+
+			Save/start interval id...
+			.setPersistentInterval(id, action, ms)
+
+		`,
+		function(id, action, ms){
+			var intervals = 
+				this.__persistent_intervals = 
+					this.__persistent_intervals || {}
+			// NOTE: we set this later iff we make a change...
+			var cfg = this.config['persistent-intervals'] || {}
+
+			// get defaults...
+			action = action ? action : cfg[id].action
+			ms = ms ? ms : cfg[id].ms
+
+			// checks...
+			if(!ms || !action){
+				console.error('Persistent interval: both action and ms must be set.')
+				return
+			}
+			if(typeof(action) != typeof('str')){
+				console.error('Persistent interval: handler must be a string.')
+				return
+			}
+
+			id in  intervals
+				&& clearInterval(intervals[id])
+
+			this.config['persistent-intervals'] = cfg
+			cfg[id] = {
+				action: action, 
+				ms: ms,
+			}
+
+			timeouts[id] = setInterval(
+				function(){ this.call(action) }.bind(this), 
+				ms || 0)
+		}],
+	clearPersistentInterval: ['- System/',
+		function(id, stop_only){
+			var intervals = 
+				this.__persistent_intervals = 
+					this.__persistent_intervals || {}
+			clearInterval(intervals[id])
+			delete intervals[id]	
+			if(!stop_only){
+				delete this.config['persistent-intervals'][id]
+			}
+		}],
+	// XXX revise name (???)
+	// XXX do we need actions other than start/stop ???
+	persistentIntervals: ['- System/',
+		doc`
+
+			Start/restart all persistent interval timers...
+			.persistentIntervals('start')
+			.persistentIntervals('restart')
+
+			Stop all persistent interval timers...
+			.persistentIntervals('stop')
+		
+		NOTE: 'start' and 'restart' are the same, both exist for mnemonics.
+		`,
+		function(action){
+			var ids = Object.keys(this.config['persistent-intervals'] || {})
+
+			// start/restart...
+			;(action == 'start' || action == 'restart') ?
+				ids.forEach(function(id){
+					this.setPersistentInterval(id) }.bind(this))
+			// stop...
+			: action == 'stop' ?
+				ids.forEach(function(id){
+					this.clearPersistentInterval(id, true) }.bind(this))
+			// unknown action...
+			: console.error('persistentIntervals: unknown action:', action)
+		}]
+})
+
+var Timers = 
+module.Timers = ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
+
+	tag: 'timers',
+	depends: [
+	],
+
+	actions: TimersActions,
+
+	handlers: [
+		// XXX should this be start or ready???
+		['start', 
+			function(){ this.persistentIntervals('start') }],
+		['stop', 
+			function(){ this.persistentIntervals('stop') }],
 	],
 })
 
