@@ -124,7 +124,7 @@ var RenderActions = actions.Actions({
 		}],
 
 	resizing: [
-		core.notUserCallable(function(unit, size, overflow){
+		core.Event(function(unit, size, overflow){
 			// This is a resizing protocol root function.
 			//
 			// This will never be used directly, but will wrap protocol user

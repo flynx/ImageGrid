@@ -234,7 +234,7 @@ var CollectionActions = actions.Actions({
 		just after.
 		
 		`,
-		core.notUserCallable(function(collection){
+		core.Event(function(collection){
 			// This is the window resize event...
 			//
 			// Not for direct use.
@@ -242,7 +242,7 @@ var CollectionActions = actions.Actions({
 	collectionUnloaded: ['- Collections/',
 		core.doc`This is called when unloading a collection.
 		`,
-		core.notUserCallable(function(collection){
+		core.Event(function(collection){
 			// This is the window resize event...
 			//
 			// Not for direct use.
@@ -252,7 +252,7 @@ var CollectionActions = actions.Actions({
 
 		NOTE: this is not triggered for the "${MAIN_COLLECTION_TITLE}" collection...
 		`,
-		core.notUserCallable(function(collection){
+		core.Event(function(collection){
 			// This is the window resize event...
 			//
 			// Not for direct use.
@@ -262,7 +262,7 @@ var CollectionActions = actions.Actions({
 
 		NOTE: this is not triggered for the "${MAIN_COLLECTION_TITLE}" collection...
 		`,
-		core.notUserCallable(function(collection){
+		core.Event(function(collection){
 			// This is the window resize event...
 			//
 			// Not for direct use.

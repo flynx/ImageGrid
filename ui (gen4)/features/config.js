@@ -75,7 +75,7 @@ var StoreActions = actions.Actions({
 		this is sync for sync stores.
 
 		NOTE: only one store data set is included per call.`,
-		core.notUserCallable(function(data){
+		core.Event(function(data){
 			// Store data loaded event...
 			//
 			// Not intended for direct use, use .declareReady() to initiate.
@@ -125,6 +125,8 @@ var StoreActions = actions.Actions({
 		NOTE: only one store data set is included per call.`,
 		function(data){ return data || {} }],
 	// XXX async???
+	// XXX we need to be able to save/load specific part of the data...
+	// 		...i.e. query by store and/or key...
 	saveData: ['- Store/',
 		function(mode, date){
 			var handlers = this.store_handlers
@@ -302,11 +304,21 @@ var ConfigStoreActions = actions.Actions({
 		// 			- 'portable'	-- use APP dir
 		// 			- 'normal'		-- use $HOME
 		'config-fs-filename': '.ImageGrid.json',
+
+		'config-auto-save-interval': null,
 	},
 
 	__base_config: null,
 
 	/* XXX
+	storeConfig: ['File/Store configuration',
+		function(key){
+			// XXX
+		}],
+	loadConfig: ['File/Load stored configuration',
+		function(key){
+			// XXX
+		}],
 	// XXX should this also reload???
 	resetConfig: ['- Config/',
 		function(){
@@ -318,8 +330,10 @@ var ConfigStoreActions = actions.Actions({
 	toggleAutoStoreConfig: ['File/Store configuration',
 		toggler.Toggler(null, 
 			function(_, state){ 
+				var timer = 'config-auto-save-timer'
+
 				if(state == null){
-					return this.__auto_save_config_timer || 'none'
+					return this.isPersistentInterval(timer) || 'none'
 
 				} else {
 					var that = this
@@ -330,33 +344,13 @@ var ConfigStoreActions = actions.Actions({
 						return false
 					}
 
-					// this cleans up before 'on' and fully handles 'off' action...
-					if(this.__auto_save_config_timer != null){
-						clearTimeout(this.__auto_save_config_timer)
-						delete this.__auto_save_config_timer
-					}
+					// start/restart...
+					if(state == 'running' && interval){
+						this.setPersistentInterval(timer, 'storeConfig', interval*1000)
 
-					if(state == 'running' 
-							&& interval 
-							&& this.__auto_save_config_timer == null){
-
-						var runner = function(){
-							clearTimeout(that.__auto_save_config_timer)
-
-							//that.logger && that.logger.emit('config', 'saving to local storage...')
-							that.storeConfig()
-
-							var interval = that.config['config-auto-save-interval']
-							if(!interval){
-								delete that.__auto_save_config_timer
-								return
-							}
-							interval *= 1000
-
-							that.__auto_save_config_timer = setTimeout(runner, interval)
-						}
-
-						runner()
+					// stop...
+					} else {
+						this.clearPersistentInterval(timer)
 					}
 				}
 			},

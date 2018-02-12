@@ -232,7 +232,7 @@ actions.Actions({
 	updateImage: ['- Interface/Update image (do not use directly)',
 		'This is called by .refresh(..) and intended for use as an '
 			+'trigger for handlers, and not as a user-callable acation.',
-		core.notUserCallable(function(gid, image){
+		core.Event(function(gid, image){
 			// This is the image update protocol root function
 			//
 			// Not for direct use.
@@ -329,7 +329,7 @@ actions.Actions({
 
 	// Zoom/scale protocol...
 	resizing: [
-		core.notUserCallable(function(unit, size, overflow){
+		core.Event(function(unit, size, overflow){
 			// This is a resizing protocol root function.
 			//
 			// This will never be used directly, but will wrap protocol user

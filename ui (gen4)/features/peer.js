@@ -216,11 +216,11 @@ var PeerActions = actions.Actions({
 	// XXX do proper docs...
 	// XXX do we need these???
 	peerConnected: ['- System/Peer/',
-		core.notUserCallable(function(id){
+		core.Event(function(id){
 			// XXX
 		})],
 	peerDisconnected: ['- System/Peer/',
-		core.notUserCallable(function(id){
+		core.Event(function(id){
 			// XXX
 		})],
 

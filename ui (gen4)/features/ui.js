@@ -493,7 +493,7 @@ module.ViewerActions = actions.Actions({
 			To see the list of handlers call:
 				.getHandlerDocStr('resizingWindow')
 		`,
-		core.notUserCallable(function(){
+		core.Event(function(){
 			// This is the window resize event...
 			//
 			// Not for direct use.
@@ -542,7 +542,7 @@ module.ViewerActions = actions.Actions({
 		NOTE: to account for CSS transitions use .resizingDone()
 		NOTE: not intended for direct use...
 		`,
-		core.notUserCallable(function(unit, size, overflow){
+		core.Event(function(unit, size, overflow){
 			// This is a resizing protocol root function.
 			//
 			// This will never be used directly, but will wrap protocol user
@@ -560,7 +560,7 @@ module.ViewerActions = actions.Actions({
 			this will be called only once, after the last action.
 		NOTE: not intended for direct use...
 		`,
-		core.notUserCallable(function(){
+		core.Event(function(){
 			// This is resizing protocol post resize action.
 			//
 			// This will be called either when a resize CSS transition 
@@ -1207,7 +1207,7 @@ var ControlActions = actions.Actions({
 
 		NOTE: this does not account for animation.
 		`,
-		core.notUserCallable(function(gid, x, y){
+		core.Event(function(gid, x, y){
 			// This is image clicked event...
 			//
 			// Not for direct use.
@@ -1226,7 +1226,7 @@ var ControlActions = actions.Actions({
 
 		NOTE: this does not account for animation.
 		`,
-		core.notUserCallable(function(gid, x, y){
+		core.Event(function(gid, x, y){
 			// This is image clicked event...
 			//
 			// Not for direct use.
@@ -1243,7 +1243,7 @@ var ControlActions = actions.Actions({
 
 		NOTE: this does not account for animation.
 		`,
-		core.notUserCallable(function(gid, x, y){
+		core.Event(function(gid, x, y){
 			// This is image clicked event...
 			//
 			// Not for direct use.
@@ -1265,7 +1265,7 @@ var ControlActions = actions.Actions({
 
 		NOTE: this does not account for animation.
 		`,
-		core.notUserCallable(function(gid, x, y){
+		core.Event(function(gid, x, y){
 			// This is image clicked event...
 			//
 			// Not for direct use.
@@ -1280,7 +1280,7 @@ var ControlActions = actions.Actions({
 
 		NOTE: this does not account for animation.
 		`,
-		core.notUserCallable(function(gid, x, y){
+		core.Event(function(gid, x, y){
 			// This is image clicked event...
 			//
 			// Not for direct use.
@@ -1293,7 +1293,7 @@ var ControlActions = actions.Actions({
 
 		NOTE: this does not account for animation.
 		`,
-		core.notUserCallable(function(gid, x, y){
+		core.Event(function(gid, x, y){
 			// This is image clicked event...
 			//
 			// Not for direct use.
@@ -1526,7 +1526,7 @@ var ControlActions = actions.Actions({
 	//
 	// NOTE: more than one ribbon can be panned at once.
 	ribbonPanning: ['- Interface/',
-		core.notUserCallable(function(gid){
+		core.Event(function(gid){
 			// This is ribbon pan event...
 			//
 			// Not for direct use.

@@ -823,13 +823,13 @@ actions.Actions({
 	// 		below...
 	// XXX do we need a vertical shift event??
 	shiftImage: ['- Interface/Image shift (do not use directly)',
-		core.notUserCallable(function(gid){
+		core.Event(function(gid){
 			// This is the image shift protocol root function
 			//
 			// Not for direct use.
 		})],
 	shiftImageOrder: ['- Interface/Image horizontal shift (do not use directly)',
-		core.notUserCallable(function(gid){
+		core.Event(function(gid){
 			// This is the image shift protocol root function
 			//
 			// Not for direct use.

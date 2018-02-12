@@ -269,18 +269,37 @@ function(func){
 	return func
 }
 
+// NOTE: this is the same as event but user-callable...
+var UserEvent =
+module.UserEvent = 
+function(func){
+	func.__event__ = true
+	return func
+}
+
+// XXX rename???
+var Event =
+module.Event = 
+function(func){
+	func.__event__ = true
+	return notUserCallable(func)
+}
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 var IntrospectionActions = actions.Actions({
-	// user-callable actions...
 	get useractions(){
 		return this.cache('useractions', function(d){
 			return d instanceof Array ? 
 				d.slice() 
 				: this.actions.filter(this.isUserCallable.bind(this)) }) },
+	get events(){
+		return this.cache('events', function(d){
+			return d instanceof Array ? 
+				d.slice() 
+				: this.actions.filter(this.isEvent.bind(this)) }) },
 
-	// check if action is callable by user...
 	isUserCallable: ['- System/',
 		doc`Test if an action is callable by user.
 
@@ -294,6 +313,9 @@ var IntrospectionActions = actions.Actions({
 		//	return this.getActionAttr(action, '__not_user_callable__') != true }],
 		actions.doWithRootAction(function(action){
 			return action.__not_user_callable__ != true })],
+	isEvent: ['- System/',
+		actions.doWithRootAction(function(action){
+			return !!action.__event__ })],
 })
 
 
@@ -436,7 +458,7 @@ var LifeCycleActions = actions.Actions({
 			"honesty", so it is the caller's responsibility to follow
 			the protocol.
 		`,
-	   	notUserCallable(function(){
+	   	Event(function(){
 			// System ready event...
 			//
 			// Not intended for direct use, use .declareReady() to initiate.
@@ -540,6 +562,7 @@ module.LifeCycle = ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// Serialization...
 
 var SerializationActions = actions.Actions({
 	clone: ['- System/',
@@ -563,6 +586,7 @@ module.Serialization = ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// Cache...
 	
 // XXX should this be in actions.js???
 // XXX should we invalidate the cache automatically???
@@ -724,6 +748,7 @@ module.Cache = ImageGridFeatures.Feature({
 
 
 //---------------------------------------------------------------------
+// Timers...
 
 var TimersActions = actions.Actions({
 	config: {
@@ -761,12 +786,19 @@ var TimersActions = actions.Actions({
 		} },
 
 	// XXX should these be  actions???
-	isInterval: function(id){
-		return id in (this.__intervals || {}) },
 	isTimeout: function(id){
 		return id in (this.__timeouts || {}) },
+	isInterval: function(id){
+		return id in (this.__intervals || {}) },
+	isPersistentInterval: function(id){
+		return id in (this.config['persistent-intervals'] || {}) },
+	isPersistentIntervalActive: function(id){
+		return this.isPersistentInterval(id) 
+			&& (id in (this.__persistent_intervals || {})) },
 	isTimer: function(id){
-		return this.isInterval(id) || this.isTimeout(id) },
+		return this.isInterval(id) 
+			|| this.isPersistentInterval(id)
+			|| this.isTimeout(id) },
 
 
 	// General API...
@@ -807,7 +839,7 @@ var TimersActions = actions.Actions({
 			id in  intervals
 				&& clearInterval(intervals[id])
 
-			timeouts[id] = setInterval(
+			intervals[id] = setInterval(
 				(func instanceof Function ? func : function(){ this.call(func) })
 					.bind(this),
 				ms || 0)
@@ -901,7 +933,25 @@ var TimersActions = actions.Actions({
 					this.clearPersistentInterval(id, true) }.bind(this))
 			// unknown action...
 			: console.error('persistentIntervals: unknown action:', action)
-		}]
+		}],
+
+	// Events...
+	//
+	/*/ XXX would be nice to trigger these ONLY if there are handlers...
+	onSecond: ['- System/',
+		Event(function(){
+		})],
+	onMinute: ['- System/',
+		Event(function(){
+		})],
+	// XXX ???
+	on5Minutes: ['- System/',
+		Event(function(){
+		})],
+	onHour: ['- System/',
+		Event(function(){
+		})],
+	//*/
 })
 
 var Timers = 
@@ -916,16 +966,37 @@ module.Timers = ImageGridFeatures.Feature({
 	actions: TimersActions,
 
 	handlers: [
+		// start persistent timers...
 		// XXX should this be start or ready???
 		['start', 
 			function(){ this.persistentIntervals('start') }],
+		// stop all timers...
 		['stop', 
-			function(){ this.persistentIntervals('stop') }],
+			function(){ 
+				Object.keys(this.__intervals || {})
+					.forEach(function(id){ this.clearInterval(id) }.bind(this))
+				Object.keys(this.__timeouts || {})
+					.forEach(function(id){ this.clearTimeout(id) }.bind(this))
+
+				this.persistentIntervals('stop') 
+			}],
+
+		/* XXX not sure about these...
+		['start',
+			function(){
+				this
+					.setInterval('onSecond', 'onSecond', 1000)
+					.setInterval('onMinute', 'onMinute', 1000*60)
+					.setInterval('on5Minutes', 'onMinute', 1000*60*5)
+					.setInterval('onHour', 'onHour', 1000*60*60)
+			}],
+		//*/
 	],
 })
 
 
 //---------------------------------------------------------------------
+// Util...
 
 var UtilActions = actions.Actions({
 	mergeConfig: ['- System/', 
