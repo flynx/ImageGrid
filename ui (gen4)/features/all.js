@@ -11,6 +11,7 @@
 var core = require('features/core')
 
 require('features/base')
+require('features/store')
 require('features/collections')
 require('features/sort')
 require('features/tags')

@@ -137,8 +137,8 @@ core.ImageGridFeatures.Feature('imagegrid-testing', [
 
 	// XXX testing...
 	'store-config',
+	//'config',
 
-	'config',
 	'ui-url-hash',
 
 	'fail-safe-devtools',

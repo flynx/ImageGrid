@@ -891,7 +891,7 @@ var TimersActions = actions.Actions({
 				ms: ms,
 			}
 
-			timeouts[id] = setInterval(
+			intervals[id] = setInterval(
 				function(){ this.call(action) }.bind(this), 
 				ms || 0)
 		}],
