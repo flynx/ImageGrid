@@ -27,7 +27,7 @@
     "glob": "^4.0.6",
     "guarantee-events": "^1.0.0",
     "ig-actions": "^3.15.0",
-    "ig-features": "^3.3.3",
+    "ig-features": "^3.3.4",
     "ig-object": "^1.0.2",
     "moment": "^2.20.1",
     "openseadragon": "^2.3.1",
