@@ -937,21 +937,40 @@ var TimersActions = actions.Actions({
 
 	// Events...
 	//
+	// XXX should these be "aligned" to real time???
+	// 		...i.e. everyHour is triggered on the XX:00:00 and not relative
+	// 		to start time?
+	// XXX should we macro these???
 	/*/ XXX would be nice to trigger these ONLY if there are handlers...
-	onSecond: ['- System/',
+	everySecond: ['- System/',
 		Event(function(){
-		})],
-	onMinute: ['- System/',
-		Event(function(){
-		})],
-	// XXX ???
-	on5Minutes: ['- System/',
-		Event(function(){
-		})],
-	onHour: ['- System/',
-		Event(function(){
+			// XXX
 		})],
 	//*/
+	everyMinute: ['- System/',
+		Event(function(){
+			// XXX
+		})],
+	every2Minutes: ['- System/',
+		Event(function(){
+			// XXX
+		})],
+	every5Minutes: ['- System/',
+		Event(function(){
+			// XXX
+		})],
+	every10Minutes: ['- System/',
+		Event(function(){
+			// XXX
+		})],
+	every30Minutes: ['- System/',
+		Event(function(){
+			// XXX
+		})],
+	everyHour: ['- System/',
+		Event(function(){
+			// XXX
+		})],
 })
 
 var Timers = 
@@ -981,16 +1000,19 @@ module.Timers = ImageGridFeatures.Feature({
 				this.persistentIntervals('stop') 
 			}],
 
-		/* XXX not sure about these...
+		// fixed timer actions...
+		// XXX not sure about these...
 		['start',
 			function(){
+				var m = 1000*60
 				this
-					.setInterval('onSecond', 'onSecond', 1000)
-					.setInterval('onMinute', 'onMinute', 1000*60)
-					.setInterval('on5Minutes', 'onMinute', 1000*60*5)
-					.setInterval('onHour', 'onHour', 1000*60*60)
+					.setInterval('everyMinute', 'everyMinute', m)
+					.setInterval('every2Minutes', 'every2Minutes', m*2)
+					.setInterval('every5Minutes', 'every5Minutes', m*5)
+					.setInterval('every10Minutes', 'every10Minutes', m*10)
+					.setInterval('every30Minutes', 'every30Minutes', m*30)
+					.setInterval('everyHour', 'everyHour', m*60)
 			}],
-		//*/
 	],
 })
 
