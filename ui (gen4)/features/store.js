@@ -15,6 +15,15 @@ var core = require('features/core')
 
 
 /*********************************************************************/
+// XXX TODO:
+// 		- key syntax (path)
+// 			<store>:<path>
+// 		- path variables
+// 			$VAR or ${VAR}
+// 		- ability to store/load only a specific key from a specific store
+// 			Q: path patterns??
+// 				localstorage:*		- save/load everything on localstorage
+// 				*:config			- save load config from all stores...
 
 // XXX should we unify this with the save/load API
 var StoreActions = actions.Actions({
@@ -196,7 +205,120 @@ module.Store = core.ImageGridFeatures.Feature({
 })
 
 
+
 //---------------------------------------------------------------------
+
+function makeStorageHandler(storage){
+	var func = function(data){
+		storage = typeof(storage) == typeof('str') ? window[storage] : storage
+
+		var root_pattern = /^(\.\.)?[\\\/]/
+		var root = this.config['store-root-key'] 
+
+		var resolvePath = function(p){
+			return p
+				.replace('${ROOT_PATH}', root)
+				.replace(root_pattern, '') }
+
+		// clear...
+		if(data === null){
+			var d = storage[root]
+			d = d != undefined ? JSON.parse(d) : {}
+			;(d.__root_paths__ || [])
+				.forEach(function(p){
+					var key = resolvePath(p)
+					delete storage[key] })
+			delete storage[root]
+
+		// set...
+		} else if(data){
+			var root_data = {}
+			var root_paths = []
+
+			// handle root paths...
+			Object.keys(data)
+				.forEach(function(p){
+					if(root_pattern.test(p)){
+						var key = resolvePath(p)
+						root_paths.push(p)
+						root_data[key] = JSON.stringify(data[p])
+						delete data[p]
+					}
+				})
+			data.__root_paths__ = root_paths
+
+
+			storage[root] = JSON.stringify(data)
+
+			// store root stuff...
+			Object.assign(storage, root_data)
+
+		// get...
+		} else {
+			var d = storage[root]
+			d = d != undefined ? JSON.parse(d) : {}
+
+			// load root paths...
+			;(d.__root_paths__ || [])
+				.forEach(function(p){
+					var key = resolvePath(p)
+					var o = storage[key]
+					o = o != undefined ? JSON.parse(o) : o
+
+					d[p] = o 
+				})
+			delete d.__root_paths__
+
+			return d
+		}
+	}
+
+	if(typeof(storage) == typeof('str')){
+		func.long_doc = core.doc`Handle ${storage} store data...
+
+			Get ${storage} data...
+			.${storage}DataHandler()
+				-> data
+
+			Save data to ${storage}...
+			.${storage}DataHandler(data)
+				-> this
+
+			Delete all data from ${storage}...
+			.${storage}DataHandler(null)
+				-> this
+
+
+		NOTE: load resolves to the same keys as were passed to load, while
+			${storage} stores the expanded keys...
+				'/$\{ROOT_PATH}/path' 
+					--(store)--> this.config['store-root-key'] +'/path'
+					--(load)--> '/$\{ROOT_PATH}/path' 
+
+
+		Root keys of data partially support path syntax:
+			'/key' or '../key'		
+				stored in ${storage}[key]
+			'./key' or 'key'
+				stored as-is in ${storage}[this.config['store-root-key']]
+
+
+		Path variables:
+			$\{ROOT_PATH}	- resolves to .config['store-root-key']
+								NOTE: './key' and $\{ROOT_PATH}/key are 
+									not the same, the former will be stored in:
+										${storage}[this.config['store-root-key']][key]
+									while the later is stored in:
+										${storage}[this.config['store-root-key/' + key]
+									XXX not yet sure this is the right way to go...
+		`
+	}
+
+	return func
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 // XXX we should have a separate store config with settings of how to 
 // 		load the store... (???)
@@ -205,48 +327,13 @@ var StoreLocalStorageActions = actions.Actions({
 		'store-root-key': 'ImageGrid.Viewer.main',
 	},
 
-	// XXX get root key from config...
-	// 		...this would require us to store the store config separately...
+	// NOTE: for docs see makeStorageHandler(..)
 	localStorageDataHandler: ['- Store/',
 		{handle_data_store: 'localStorage',},
-		function(data){
-			// XXX get this from config...
-			var root = this.config['store-root-key'] 
-
-			// clear...
-			if(data === null){
-				delete localStorage[root]
-
-			// set...
-			} else if(data){
-				localStorage[root] = JSON.stringify(data)
-
-			// get...
-			} else {
-				var d = localStorage[root]
-				return d != undefined ? JSON.parse(d) : {}
-			}
-		}],
+		makeStorageHandler('localStorage')],
 	sessionStorageDataHandler: ['- Store/',
 		{handle_data_store: 'sessionStorage',},
-		function(data){
-			// XXX get this from config...
-			var root = this.config['store-root-key'] 
-
-			// clear...
-			if(data === null){
-				delete sessionStorage[root]
-
-			// set...
-			} else if(data){
-				sessionStorage[root] = JSON.stringify(data)
-
-			// get...
-			} else {
-				var d = localStorage[root]
-				return d != undefined ? JSON.parse(d) : {}
-			}
-		}],
+		makeStorageHandler('sessionStorage')],
 })
 
 var StoreLocalStorage = 
@@ -266,12 +353,14 @@ module.StoreLocalStorage = core.ImageGridFeatures.Feature({
 })
 
 
+
 //---------------------------------------------------------------------
 
 // XXX StoreFSJSONSync
 // 		Lookup order:
 // 			- app dir
 // 			- $HOME
+
 
 
 //---------------------------------------------------------------------
