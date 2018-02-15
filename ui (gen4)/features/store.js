@@ -311,6 +311,8 @@ function makeStorageHandler(storage){
 									while the later is stored in:
 										${storage}[this.config['store-root-key/' + key]
 									XXX not yet sure this is the right way to go...
+
+		HOTE: other path syntax is ignored and the key will be saved as-is.
 		`
 	}
 
