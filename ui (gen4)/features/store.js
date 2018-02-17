@@ -116,14 +116,14 @@ var StoreActions = actions.Actions({
 				},
 			}
 		`,
-		function(mode, data){ 
+		function(mode, date){ 
 			var store = {}
 			// populate the store...
 			Object.keys(this.store_handlers)
 				.forEach(function(key){ store[key] = {} })
 			return {
 				mode: mode || 'full',
-				data: data || Date.timeStamp(),
+				date: date || Date.timeStamp(),
 
 				store: store,
 			} 
@@ -154,9 +154,9 @@ var StoreActions = actions.Actions({
 	// 		.storeData(selector, data)	- store data to selector...
 	// XXX do we need mode here???
 	saveData: ['- Store/',
-		function(mode, data){
+		function(mode, date){
 			var handlers = this.store_handlers
-			var data = this.prepareStoreToSave(mode, data)
+			var data = this.prepareStoreToSave(mode, date)
 			
 			Object.keys(data.store).forEach(function(store){
 				var handler = handlers[store]

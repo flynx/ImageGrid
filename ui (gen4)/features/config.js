@@ -128,7 +128,6 @@ module.ConfigStore = core.ImageGridFeatures.Feature({
 		['storeDataLoaded',
 			function(store){
 				if((store.localStorage || {}).config){
-					console.log('--- PRE LOAD CONFIG (test)')
 					var base = this.__base_config = this.__base_config || this.config
 					var config = store.localStorage.config || {}
 					config.__proto__ = base
