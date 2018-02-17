@@ -81,6 +81,18 @@ var StoreActions = actions.Actions({
 		})],
 
 	// base API...
+	// XXX we need to be able to save/load specific part of the data...
+	// 		...i.e. query by store and/or key...
+	// 		the syntax could be:
+	// 			<store>:<path>
+	//
+	// 		Example:
+	// 			'localstorage:config'	- save config to localStorage
+	// 			'localstorage:*'		- save all to localstorage
+	// 			'*:config'				- save config to all supported stores
+	// 			'*:*'					- save everything
+	//
+	// 		...this must be supported by .prepareStoreToSave(..)
 	prepareStoreToSave: ['- Store/',
 		core.doc`
 
@@ -104,14 +116,14 @@ var StoreActions = actions.Actions({
 				},
 			}
 		`,
-		function(mode, date){ 
+		function(mode, data){ 
 			var store = {}
 			// populate the store...
 			Object.keys(this.store_handlers)
 				.forEach(function(key){ store[key] = {} })
 			return {
 				mode: mode || 'full',
-				date: date || Date.timeStamp(),
+				data: data || Date.timeStamp(),
 
 				store: store,
 			} 
@@ -125,10 +137,26 @@ var StoreActions = actions.Actions({
 	// XXX async???
 	// XXX we need to be able to save/load specific part of the data...
 	// 		...i.e. query by store and/or key...
+	// 		the syntax could be:
+	// 			<store>:<path>
+	//
+	// 		Example:
+	// 			'localstorage:config'	- save config to localStorage
+	// 			'localstorage:*'		- save all to localstorage
+	// 			'*:config'				- save config to all supported stores
+	// 			'*:*'					- save everything
+	//
+	// 		...this must be supported by .prepareStoreToSave(..)
+	// XXX API
+	// 		.storeData(mode)			- store all with mode...
+	// 		.storeData(mode, data)		- store data with mode...
+	// 		.storeData(selector)		- store only matching
+	// 		.storeData(selector, data)	- store data to selector...
+	// XXX do we need mode here???
 	saveData: ['- Store/',
-		function(mode, date){
+		function(mode, data){
 			var handlers = this.store_handlers
-			var data = this.prepareStoreToSave(mode, date)
+			var data = this.prepareStoreToSave(mode, data)
 			
 			Object.keys(data.store).forEach(function(store){
 				var handler = handlers[store]
@@ -209,7 +237,7 @@ module.Store = core.ImageGridFeatures.Feature({
 //---------------------------------------------------------------------
 
 function makeStorageHandler(storage){
-	var func = function(data){
+	var func = function(data, key){
 		storage = typeof(storage) == typeof('str') ? window[storage] : storage
 
 		var root_pattern = /^(\.\.)?[\\\/]/
@@ -232,6 +260,10 @@ function makeStorageHandler(storage){
 
 		// set...
 		} else if(data){
+			if(key){
+				data = { key: data }
+			}
+
 			var root_data = {}
 			var root_paths = []
 
@@ -280,8 +312,12 @@ function makeStorageHandler(storage){
 			.${storage}DataHandler()
 				-> data
 
-			Save data to ${storage}...
+			Save data set to ${storage}...
 			.${storage}DataHandler(data)
+				-> this
+
+			Save data to key in ${storage}...
+			.${storage}DataHandler(data, key)
 				-> this
 
 			Delete all data from ${storage}...
