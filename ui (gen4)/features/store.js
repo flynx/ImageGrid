@@ -49,8 +49,8 @@ var StoreActions = actions.Actions({
 	// 	}
 	//
 	// XXX this is almost the same as .collection_handlers...
-	get store_handlers(){
-		return this.cache('store_handlers', function(d){
+	get stores(){
+		return this.cache('stores', function(d){
 			var res = {}
 
 			this.actions.forEach(function(action){ 
@@ -64,6 +64,8 @@ var StoreActions = actions.Actions({
 
 			return res
 		}) },
+	// XXX need store client list (???)
+	//get store_clients(){ return [] },
 
 	// events...
 	storeDataLoaded: ['- Store/',
@@ -80,11 +82,74 @@ var StoreActions = actions.Actions({
 			return data
 		})],
 
+
+	// XXX do we need to parse date here???
+	parseStoreQuery: ['- Store/',
+		core.doc`
+
+		Query syntax:
+			<event>:<store>:<key>
+			<store>:<key>
+			<store>
+			<key>
+
+		Format:
+			{
+				query: <input-query>,
+				date: <timestamp>,
+				event: 'manual' | <event>,
+				store: '*' | <store> | [<store>, ...]
+				key: '*' | <key> | [<key>, ...]
+			}
+
+		`,
+		function(query, date){
+			var defaults = {
+				date: date || Date.timeStamp(),
+				event: 'manual',
+				store: '*',
+				key: '*',
+			}
+
+			// parse string...
+			if(typeof(query) == typeof('str')){
+				var res = {}
+				res.query = query
+
+				query = query.split(/:/g)
+
+				res.event = query.length > 2 ? 
+					query.shift()
+					: defaults.event
+				res.store = (this.stores[query[0]] || query.length > 1) ? 
+					query.shift().split(/\|/g) 
+					: defaults.store
+				res.key = query.length > 0 ? 
+					query.pop().split(/\|/g)
+					: defaults.key
+				res.date = date || defaults.date
+
+				return res
+
+			// get the defaults...
+			} else if(query == null){
+				return defaults
+
+			// pass on the input...
+			} else {
+				if(date){
+					query.date = date
+				}
+				return query
+			}
+		}],
+
 	// base API...
 	// XXX we need to be able to save/load specific part of the data...
 	// 		...i.e. query by store and/or key...
 	// 		the syntax could be:
 	// 			<store>:<path>
+	// 			<store>:<event>:<path>
 	//
 	// 		Example:
 	// 			'localstorage:config'	- save config to localStorage
@@ -96,10 +161,6 @@ var StoreActions = actions.Actions({
 	prepareStoreToSave: ['- Store/',
 		core.doc`
 
-		Modes:
-			'fast'		- fast timer
-			'full'		- full store
-
 		Format:
 			{
 				// metadata...
@@ -107,8 +168,8 @@ var StoreActions = actions.Actions({
 				data: <timestamp>,
 
 				// the actual data...
-				store: {
-					<store-type>: {
+				data: {
+					<data-type>: {
 						<data-key>: <data>,
 						...
 					},
@@ -116,60 +177,100 @@ var StoreActions = actions.Actions({
 				},
 			}
 		`,
-		function(mode, date){ 
-			var store = {}
-			// populate the store...
-			Object.keys(this.store_handlers)
-				.forEach(function(key){ store[key] = {} })
-			return {
-				mode: mode || 'full',
-				date: date || Date.timeStamp(),
+		function(query, data){ 
+			var defaults = this.parseStoreQuery()
+			query = this.parseStoreQuery(query)
+			var stores = query.store || defaults.store
 
-				store: store,
+			// populate the store...
+			data = data || {}
+			Object.keys(this.stores)
+				// only populate the requested handlers...
+				.filter(function(store){ 
+					return (stores == '*' 
+							|| stores == 'all')
+						|| stores == store
+						|| stores.indexOf(store) >= 0  })
+				.forEach(function(key){ data[key] = {} })
+
+			return {
+				date: query.date || Date.timeStamp(),
+
+				event: query.event || defaults.event,
+				key: query.key || defaults.key,
+
+				data: data,
 			} 
 		}],
+	// XXX use query???
 	prepareStoreToLoad: ['- Store/',
 		core.doc`
 		
 		NOTE: this can be called multiple times, once per each store.
 		NOTE: only one store data set is included per call.`,
 		function(data){ return data || {} }],
+	// XXX this is different from .prepareIndexForWrite(..) in that there
+	// 		is no default data set...
 	// XXX async???
-	// XXX we need to be able to save/load specific part of the data...
-	// 		...i.e. query by store and/or key...
-	// 		the syntax could be:
-	// 			<store>:<path>
-	//
-	// 		Example:
-	// 			'localstorage:config'	- save config to localStorage
-	// 			'localstorage:*'		- save all to localstorage
-	// 			'*:config'				- save config to all supported stores
-	// 			'*:*'					- save everything
-	//
-	// 		...this must be supported by .prepareStoreToSave(..)
-	// XXX API
-	// 		.storeData(mode)			- store all with mode...
-	// 		.storeData(mode, data)		- store data with mode...
-	// 		.storeData(selector)		- store only matching
-	// 		.storeData(selector, data)	- store data to selector...
-	// XXX do we need mode here???
 	saveData: ['- Store/',
-		function(mode, date){
-			var handlers = this.store_handlers
-			var data = this.prepareStoreToSave(mode, date)
-			
-			Object.keys(data.store).forEach(function(store){
+		// XXX signature not final...
+		function(query, data){
+			var handlers = this.stores
+
+			// save the given data...
+			// NOTE: we are not calling .prepareStoreToSave(..) here, thus
+			// 		we need not care about .key, .date, and other stuff...
+			if(data){
+				var defaults = this.parseStoreQuery()
+				query = this.parseStoreQuery(query)
+
+				if(query.store == defaults.store || query.key == defaults.key){
+					console.error('saveData: at least "store" and "key" '
+						+'must be explicitly set in query...')
+					return
+				}
+
+				var d = {
+					data: {}
+				}
+				var stores = query.store == '*' ? handlers : query.store
+				stores = stores instanceof Array ? stores : [stores]
+				stores.forEach(function(s){ 
+					d.data[s] = {
+						[query.key]: data,
+					} })
+
+				data = d
+
+			// build the data...
+			} else {
+				data = this.prepareStoreToSave(query)
+			}
+
+			// iterate and handle stores...
+			Object.keys(data.data).forEach(function(store){
 				var handler = handlers[store]
 				handler 
-					&& this[handler].call(this, data.store[store])
+					&& this[handler].call(this, data.data[store])
 			}.bind(this))
 		}],
+	// XXX add query support... (???)
+	// 		...we can't support keys other than '*' until we register 
+	// 		store keys...
 	loadData: ['- Store/',
-		function(){
-			var handlers = this.store_handlers
+		function(query){
+			var handlers = this.stores
+
+			var defaults = this.parseStoreQuery()
+			query = this.parseStoreQuery(query)
+
+			query.store = query.store == defaults.store ? Object.keys(handlers) : query.store
+			query.store = query.store instanceof Array ? query.store : [query.store]
+
+			// XXX need to filter loading by query.key...
 			var data = {}
 			return Promise
-				.all(Object.keys(handlers)
+				.all(query.store
 					.map(function(s){
 						var res = this[handlers[s]]()
 						return res instanceof Promise ?
@@ -188,7 +289,7 @@ var StoreActions = actions.Actions({
 	// XXX do we need to do a partial clear???
 	clearData: ['- Store/',
 		function(target){
-			var handlers = this.store_handlers
+			var handlers = this.stores
 
 			Object.keys(handlers).forEach(function(store){
 				var handler = handlers[store]
@@ -236,6 +337,53 @@ module.Store = core.ImageGridFeatures.Feature({
 
 //---------------------------------------------------------------------
 
+// NOTE: the doc is reused for both localStorage and sessionStorage with 
+// 		appropriate automated changes...
+var __storageHandler_doc = 
+	core.doc`Handle localStorage store data...
+
+		Get localStorage data...
+		.localStorageDataHandler()
+			-> data
+
+		Save data set to localStorage...
+		.localStorageDataHandler(data)
+			-> this
+
+		Save data to key in localStorage...
+		.localStorageDataHandler(data, key)
+			-> this
+
+		Delete all data from localStorage...
+		.localStorageDataHandler(null)
+			-> this
+
+
+	NOTE: load resolves to the same keys as were passed to load, while
+		localStorage stores the expanded keys...
+			'/$\{ROOT_PATH}/path' 
+				--(store)--> this.config['store-root-key'] +'/path'
+				--(load)--> '/$\{ROOT_PATH}/path' 
+
+
+	Root keys of data partially support path syntax:
+		'/key' or '../key'		
+			stored in localStorage[key]
+		'./key' or 'key'
+			stored as-is in localStorage[this.config['store-root-key']]
+
+
+	Path variables:
+		$\{ROOT_PATH}	- resolves to .config['store-root-key']
+							NOTE: './key' and $\{ROOT_PATH}/key are 
+								not the same, the former will be stored in:
+									localStorage[this.config['store-root-key']][key]
+								while the later is stored in:
+									localStorage[this.config['store-root-key/' + key]
+								XXX not yet sure this is the right way to go...
+
+	HOTE: other path syntax is ignored and the key will be saved as-is.
+	`
 function makeStorageHandler(storage){
 	var func = function(data, key){
 		storage = typeof(storage) == typeof('str') ? window[storage] : storage
@@ -279,7 +427,6 @@ function makeStorageHandler(storage){
 				})
 			data.__root_paths__ = root_paths
 
-
 			storage[root] = JSON.stringify(data)
 
 			// store root stuff...
@@ -306,50 +453,7 @@ function makeStorageHandler(storage){
 	}
 
 	if(typeof(storage) == typeof('str')){
-		func.long_doc = core.doc`Handle ${storage} store data...
-
-			Get ${storage} data...
-			.${storage}DataHandler()
-				-> data
-
-			Save data set to ${storage}...
-			.${storage}DataHandler(data)
-				-> this
-
-			Save data to key in ${storage}...
-			.${storage}DataHandler(data, key)
-				-> this
-
-			Delete all data from ${storage}...
-			.${storage}DataHandler(null)
-				-> this
-
-
-		NOTE: load resolves to the same keys as were passed to load, while
-			${storage} stores the expanded keys...
-				'/$\{ROOT_PATH}/path' 
-					--(store)--> this.config['store-root-key'] +'/path'
-					--(load)--> '/$\{ROOT_PATH}/path' 
-
-
-		Root keys of data partially support path syntax:
-			'/key' or '../key'		
-				stored in ${storage}[key]
-			'./key' or 'key'
-				stored as-is in ${storage}[this.config['store-root-key']]
-
-
-		Path variables:
-			$\{ROOT_PATH}	- resolves to .config['store-root-key']
-								NOTE: './key' and $\{ROOT_PATH}/key are 
-									not the same, the former will be stored in:
-										${storage}[this.config['store-root-key']][key]
-									while the later is stored in:
-										${storage}[this.config['store-root-key/' + key]
-									XXX not yet sure this is the right way to go...
-
-		HOTE: other path syntax is ignored and the key will be saved as-is.
-		`
+		func.long_doc = __storageHandler_doc.replace(/localStorage/g, storage)
 	}
 
 	return func
@@ -365,7 +469,7 @@ var StoreLocalStorageActions = actions.Actions({
 		'store-root-key': 'ImageGrid.Viewer.main',
 	},
 
-	// NOTE: for docs see makeStorageHandler(..)
+	// NOTE: for docs see __storageHandler_doc...
 	localStorageDataHandler: ['- Store/',
 		{handle_data_store: 'localStorage',},
 		makeStorageHandler('localStorage')],

@@ -115,30 +115,37 @@ module.ConfigStore = core.ImageGridFeatures.Feature({
 				// localStorage...
 				// NOTE: we do not need to clone anything here as this 
 				// 		will be done by the localStorage handler...
-				res.store.localStorage.config = this.config
-
-				// XXX sync fs store...
-				// XXX get better tag...
-				if(res.store.fsJSONSync){
-					// XXX should this include path???
-					res.store.fsJSONSync[this.config['config-fs-filename'] || '.ImageGrid.json'] = this.config
+				if(res.data.localStorage){
+					res.data.localStorage.config = this.config
 				}
+
+				if(res.data.fsJSONSync){
+					// XXX should this include path???
+					res.data.fsJSONSync[this.config['config-fs-filename'] || '.ImageGrid.json'] = this.config
+				}
+			}],
+		['prepareIndexForLoad',
+			function(){
 			}],
 		// NOTE: this is sync for sync stores...
 		['storeDataLoaded',
-			function(store){
-				if((store.localStorage || {}).config){
-					var base = this.__base_config = this.__base_config || this.config
-					var config = store.localStorage.config || {}
+			function(data){
+				var base = this.__base_config = this.__base_config || this.config
+
+				// XXX sort out load priority/logic...
+				// 		- one or the other or both?
+				// 		- what order?
+
+				if((data.localStorage || {}).config){
+					var config = data.localStorage.config || {}
 					config.__proto__ = base
 					this.config = config
 				}
 
-				// XXX sync fs store...
-				// XXX get better tag...
-				// XXX where do we write???
-				if((store.fsJSONSync || {}).config){
-					// XXX
+				if((data.fsJSONSync || {}).config){
+					var config = data.fsJSONSync.config || {}
+					config.__proto__ = base
+					this.config = config
 				}
 
 				// auto-start auto-save...
