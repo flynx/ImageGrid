@@ -113,8 +113,8 @@ module.ConfigStore = core.ImageGridFeatures.Feature({
 		// XXX need to update rather than rewrite things...
 		['prepareStoreToSave', 
 			function(res){
-				//var ls_path = '/${ROOT_PATH}/config'
-				var ls_path = 'config'
+				var ls_path = '${INSTANCE}/config'
+				//var ls_path = 'config'
 
 				// localStorage...
 				// NOTE: we do not need to clone anything here as this 
@@ -135,8 +135,7 @@ module.ConfigStore = core.ImageGridFeatures.Feature({
 		['storeDataLoaded',
 			function(data){
 				var base = this.__base_config = this.__base_config || this.config
-				//var ls_path = '/${ROOT_PATH}/config'
-				var ls_path = 'config'
+				var ls_path = '${INSTANCE}/config'
 
 				// XXX sort out load priority/logic...
 				// 		- one or the other or both?

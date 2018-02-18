@@ -84,7 +84,7 @@ var StoreActions = actions.Actions({
 		})],
 
 
-	// XXX do we need to parse date here???
+	// base API...
 	parseStoreQuery: ['- Store/',
 		core.doc`
 
@@ -145,7 +145,6 @@ var StoreActions = actions.Actions({
 			}
 		}],
 
-	// base API...
 	prepareStoreToSave: ['- Store/',
 		core.doc`
 
@@ -328,140 +327,116 @@ module.Store = core.ImageGridFeatures.Feature({
 
 // NOTE: the doc is reused for both localStorage and sessionStorage with 
 // 		appropriate automated changes...
-// XXX Q: do we save to ROOT_PATH by default???
 var __storageHandler_doc = 
 	core.doc`Handle localStorage store data...
+		
+		Write data to key...
+		.localStorageDataHandler(key, data)
+		
+		Get data from key...
+		.localStorageDataHandler(key)
+			-> value
+		
+		Remove key...
+		.localStorageDataHandler(key, null)
+		.localStorageDataHandler([key, ..], null)
+		
 
-		Get localStorage data...
+
+		Get stored keys...
+		.localStorageDataHandler('?')
+			-> keys
+		
 		.localStorageDataHandler()
+		.localStorageDataHandler('??')
+			-> data
+		
+		.localStorageDataHandler([key, ..], '??')
 			-> data
 
-		Save data set to localStorage...
+		Expand data to store...
 		.localStorageDataHandler(data)
-			-> this
-
-		Save data to key in localStorage...
-		.localStorageDataHandler(data, key)
-			-> this
-
-		Delete all data from localStorage...
+		
+		Remove all data...
 		.localStorageDataHandler(null)
-			-> this
-
-
-	NOTE: load resolves to the same keys as were passed to load, while
-		localStorage stores the expanded keys...
-			'/$\{ROOT_PATH}/path' 
-				--(store)--> this.config['store-root-key'] +'/path'
-				--(load)--> '/$\{ROOT_PATH}/path' 
-
-
-	Root keys of data partially support path syntax:
-		'/key' or '../key'		
-			stored in localStorage[key]
-		'./key' or 'key'
-			stored as-is in localStorage[this.config['store-root-key']]
-
-
-	Path variables:
-		$\{ROOT_PATH}	- resolves to .config['store-root-key']
-							NOTE: './key' and $\{ROOT_PATH}/key are 
-								not the same, the former will be stored in:
-									localStorage[this.config['store-root-key']][key]
-								while the later is stored in:
-									localStorage[this.config['store-root-key/' + key]
-								XXX not yet sure this is the right way to go...
-
-	HOTE: other path syntax is ignored and the key will be saved as-is.
+		
+		
+	NOTE: when handling key expansion the unexpanded key should be used 
+		to access data, e.g. if writing '\${INSTANCE}/xyz' the same string
+		is returned via .localStorageDataHandler('??') and should be used 
+		to get the value, i.e. 
+			.localStorageDataHandler('\${INSTANCE}/xyz')
 	`
-function makeStorageHandler(storage, alias){
-	var func = function(data, key){
-		alias = alias || storage
+function makeStorageHandler(storage){
+	var func = function(a, b){
 		storage = typeof(storage) == typeof('str') ? window[storage] : storage
 
-		var root_pattern = /^(\.\.)?[\\\/]/
-		var root = this.config['store-root-key'] 
-
+		var instance = this.config['store-instance-key'] 
 		var resolvePath = function(p){
 			return p
-				.replace('${ROOT_PATH}', root)
-				.replace(root_pattern, '') }
-
-		// clear...
-		if(data === null){
-			// remove specific key...
-			if(key){
-				var data = func.call(this)
-				data[key] = undefined
-				func.call(this, data)
-
-			// clear all...
-			} else {
-				var d = storage[root]
-				d = d != undefined ? JSON.parse(d) : {}
-				;(d.__root_paths__ || [])
-					.forEach(function(p){
-						var key = resolvePath(p)
-						delete storage[key] })
-				delete storage[root]
-			}
-
-		// set...
-		// NOTE: this will update existing data set...
-		// NOTE: attrs explicitly set to undefined are removed...
-		} else if(data){
-			if(key){
-				data = { [key]: data }
-			}
-
-			// update existing data...
-			var old = func.call(this)
-			Object.keys(data).forEach(function(k){
-				if(data[k] === undefined){
-					delete old[k]
-					delete data[k]
-				}
-			})
-			data = Object.assign(old, data)
-
-			var root_data = {}
-			var root_paths = []
-
-			// handle root paths...
-			Object.keys(data)
-				.forEach(function(p){
-					if(root_pattern.test(p)){
-						var key = resolvePath(p)
-						root_paths.push(p)
-						root_data[key] = JSON.stringify(data[p])
-						delete data[p]
-					}
-				})
-			data.__root_paths__ = root_paths
-
-			storage[root] = JSON.stringify(data)
-
-			// store root stuff...
-			Object.assign(storage, root_data)
-
-		// get...
-		} else {
-			var d = storage[root]
-			d = d != undefined ? JSON.parse(d) : {}
-
-			// load root paths...
-			;(d.__root_paths__ || [])
-				.forEach(function(p){
-					var key = resolvePath(p)
-					var o = storage[key]
-					o = o != undefined ? JSON.parse(o) : o
-
-					d[p] = o 
-				})
-			delete d.__root_paths__
-
-			return d
+				.replace('${INSTANCE}', instance) 
 		}
+
+		// XXX should this be all keys by default???
+		var keys = Object.keys(storage)
+
+		var dict_key = '${INSTANCE}/__dict__'
+		var k = resolvePath(dict_key)
+		var dict = JSON.parse(storage[k] || '{}')
+		dict[k] = dict_key
+
+		// get list of keys...
+		if(a == '?'){
+			return keys
+				.map(function(key){ return dict[key] || key })
+
+		// get store contents...
+		} else if(a == '??' 
+				|| arguments.length == 0 
+				|| (a instanceof Array && (b == '??' || arguments.length == 1))){
+			var res = {}
+			var keys = a instanceof Array ? a : keys
+			keys.forEach(function(key){
+				res[dict[key] || key] = JSON.parse(storage[key]) })
+			return res
+
+		// remove all keys...
+		} else if(a === null || (a instanceof Array && b === null)){
+			;(a || keys)
+				.forEach(function(key){
+					delete storage[key] })
+			dict = {}
+
+		// expand data to store...
+		} else if(typeof(a) != typeof('str')){
+			Object.keys(a).forEach(function(key){
+				var k = resolvePath(key)
+				k != key
+					&& (dict[k] = key)
+				storage[k] = JSON.stringify(a[key]) })
+
+		// remove key...
+		} else if(b === null){
+			var k = resolvePath(a)
+			delete dict[k]
+			delete storage[k]
+
+		// get key...
+		} else if(b === undefined){
+			var k = resolvePath(a)
+			return k in storage ? 
+				JSON.parse(storage[k]) 
+				: actions.UNDEFINED
+
+		// write key...
+		} else {
+			var k = resolvePath(a)
+			k != a
+				&& (dict[k] = a)
+			storage[k] = JSON.stringify(b)
+		}
+
+		storage[resolvePath('${INSTANCE}/__dict__')] = JSON.stringify(dict)
 	}
 
 	if(typeof(storage) == typeof('str')){
@@ -478,16 +453,16 @@ function makeStorageHandler(storage, alias){
 // 		load the store... (???)
 var StoreLocalStorageActions = actions.Actions({
 	config: {
-		'store-root-key': 'ImageGrid.Viewer.main',
+		'store-instance-key': 'ImageGrid.Viewer.main',
 	},
 
 	// NOTE: for docs see __storageHandler_doc...
 	localStorageDataHandler: ['- Store/',
 		{handle_data_store: 'storage',},
-		makeStorageHandler('localStorage', 'storage')],
+		makeStorageHandler('localStorage')],
 	sessionStorageDataHandler: ['- Store/',
 		{handle_data_store: 'session',},
-		makeStorageHandler('sessionStorage', 'session')],
+		makeStorageHandler('sessionStorage')],
 })
 
 var StoreLocalStorage = 

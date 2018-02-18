@@ -670,6 +670,8 @@ var CacheActions = actions.Actions({
 		NOTE: both "modes" of doing a pre-cache run in the main thread,
 			the difference is that the "async" version lets JS run frames
 			between processing sync chunks...
+		NOTE: this will not drop the existing cache, to do this run 
+			.clearCache() first or run .reCache(..).
 		`,
 		function(t){
 			if(this.config.cache){
@@ -719,6 +721,13 @@ var CacheActions = actions.Actions({
 				delete this.__cache
 			}
 		}],
+
+	// XXX do we need this...
+	reCache: ['System/Re-cache',
+		function(t){
+			this
+				.clearCache()
+				.preCache(t) }],
 })
 
 var Cache = 
