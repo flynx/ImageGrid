@@ -49,6 +49,7 @@ var StoreActions = actions.Actions({
 	// 	}
 	//
 	// XXX this is almost the same as .collection_handlers...
+	// XXX add support for aliases...
 	get stores(){
 		return this.cache('stores', function(d){
 			var res = {}
@@ -145,19 +146,6 @@ var StoreActions = actions.Actions({
 		}],
 
 	// base API...
-	// XXX we need to be able to save/load specific part of the data...
-	// 		...i.e. query by store and/or key...
-	// 		the syntax could be:
-	// 			<store>:<path>
-	// 			<store>:<event>:<path>
-	//
-	// 		Example:
-	// 			'localstorage:config'	- save config to localStorage
-	// 			'localstorage:*'		- save all to localstorage
-	// 			'*:config'				- save config to all supported stores
-	// 			'*:*'					- save everything
-	//
-	// 		...this must be supported by .prepareStoreToSave(..)
 	prepareStoreToSave: ['- Store/',
 		core.doc`
 
@@ -209,6 +197,7 @@ var StoreActions = actions.Actions({
 		NOTE: this can be called multiple times, once per each store.
 		NOTE: only one store data set is included per call.`,
 		function(data){ return data || {} }],
+
 	// XXX this is different from .prepareIndexForWrite(..) in that there
 	// 		is no default data set...
 	// XXX async???
@@ -339,6 +328,7 @@ module.Store = core.ImageGridFeatures.Feature({
 
 // NOTE: the doc is reused for both localStorage and sessionStorage with 
 // 		appropriate automated changes...
+// XXX Q: do we save to ROOT_PATH by default???
 var __storageHandler_doc = 
 	core.doc`Handle localStorage store data...
 
@@ -384,8 +374,9 @@ var __storageHandler_doc =
 
 	HOTE: other path syntax is ignored and the key will be saved as-is.
 	`
-function makeStorageHandler(storage){
+function makeStorageHandler(storage, alias){
 	var func = function(data, key){
+		alias = alias || storage
 		storage = typeof(storage) == typeof('str') ? window[storage] : storage
 
 		var root_pattern = /^(\.\.)?[\\\/]/
@@ -398,19 +389,40 @@ function makeStorageHandler(storage){
 
 		// clear...
 		if(data === null){
-			var d = storage[root]
-			d = d != undefined ? JSON.parse(d) : {}
-			;(d.__root_paths__ || [])
-				.forEach(function(p){
-					var key = resolvePath(p)
-					delete storage[key] })
-			delete storage[root]
+			// remove specific key...
+			if(key){
+				var data = func.call(this)
+				data[key] = undefined
+				func.call(this, data)
+
+			// clear all...
+			} else {
+				var d = storage[root]
+				d = d != undefined ? JSON.parse(d) : {}
+				;(d.__root_paths__ || [])
+					.forEach(function(p){
+						var key = resolvePath(p)
+						delete storage[key] })
+				delete storage[root]
+			}
 
 		// set...
+		// NOTE: this will update existing data set...
+		// NOTE: attrs explicitly set to undefined are removed...
 		} else if(data){
 			if(key){
-				data = { key: data }
+				data = { [key]: data }
 			}
+
+			// update existing data...
+			var old = func.call(this)
+			Object.keys(data).forEach(function(k){
+				if(data[k] === undefined){
+					delete old[k]
+					delete data[k]
+				}
+			})
+			data = Object.assign(old, data)
 
 			var root_data = {}
 			var root_paths = []
@@ -471,11 +483,11 @@ var StoreLocalStorageActions = actions.Actions({
 
 	// NOTE: for docs see __storageHandler_doc...
 	localStorageDataHandler: ['- Store/',
-		{handle_data_store: 'localStorage',},
-		makeStorageHandler('localStorage')],
+		{handle_data_store: 'storage',},
+		makeStorageHandler('localStorage', 'storage')],
 	sessionStorageDataHandler: ['- Store/',
-		{handle_data_store: 'sessionStorage',},
-		makeStorageHandler('sessionStorage')],
+		{handle_data_store: 'session',},
+		makeStorageHandler('sessionStorage', 'session')],
 })
 
 var StoreLocalStorage = 

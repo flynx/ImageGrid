@@ -110,13 +110,17 @@ module.ConfigStore = core.ImageGridFeatures.Feature({
 	actions: ConfigStoreActions,
 
 	handlers: [
+		// XXX need to update rather than rewrite things...
 		['prepareStoreToSave', 
 			function(res){
+				//var ls_path = '/${ROOT_PATH}/config'
+				var ls_path = 'config'
+
 				// localStorage...
 				// NOTE: we do not need to clone anything here as this 
 				// 		will be done by the localStorage handler...
-				if(res.data.localStorage){
-					res.data.localStorage.config = this.config
+				if(res.data.storage){
+					res.data.storage[ls_path] = this.config
 				}
 
 				if(res.data.fsJSONSync){
@@ -131,13 +135,15 @@ module.ConfigStore = core.ImageGridFeatures.Feature({
 		['storeDataLoaded',
 			function(data){
 				var base = this.__base_config = this.__base_config || this.config
+				//var ls_path = '/${ROOT_PATH}/config'
+				var ls_path = 'config'
 
 				// XXX sort out load priority/logic...
 				// 		- one or the other or both?
 				// 		- what order?
 
-				if((data.localStorage || {}).config){
-					var config = data.localStorage.config || {}
+				if((data.storage || {})[ls_path]){
+					var config = data.storage[ls_path] || {}
 					config.__proto__ = base
 					this.config = config
 				}
