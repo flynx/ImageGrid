@@ -125,6 +125,7 @@ var StoreActions = actions.Actions({
 				res.store = (this.stores[query[0]] || query.length > 1) ? 
 					query.shift().split(/\|/g) 
 					: defaults.store
+					//: Object.keys(this.stores)
 				res.key = query.length > 0 ? 
 					query.pop().split(/\|/g)
 					: defaults.key
@@ -197,6 +198,66 @@ var StoreActions = actions.Actions({
 		NOTE: only one store data set is included per call.`,
 		function(data){ return data || {} }],
 
+	// XXX this avoids the .prepareStoreTo*(..) API... 
+	store: ['- Store/',
+		core.doc`
+
+			Get stored key(s)...
+			.store(query)
+				-> value{s}
+
+			Write value to key(s)...
+			.store(query, value)
+
+			Remove key(s)...
+			.store(query, null)
+
+
+		NOTE: for query syntax see .parseStoreQuery(..)
+
+		`,
+		function(query, value){
+			query = this.parseStoreQuery(query)
+			var defaults = this.parseStoreQuery()
+
+			var handlers = this.stores
+
+			// get...
+			if(arguments.length == 1){
+				var res = {}
+				// expand store '*'...
+				query.store = (query.store.length == 1 && query.store[0] == '*') ? 
+					Object.keys(handlers) 
+					: query.store
+				// expand key '*'...
+				query.key = query.key.length == 1 && query.key[0] == '*' ? 
+					'*' 
+					: query.key
+				query.store
+					.forEach(function(s){
+						// ask the handler...
+						var r = this[handlers[s]](query.key)
+						// only keep non-empty sections...
+						Object.keys(r).length > 0
+							&& (res[s] = r)
+					}.bind(this))
+				// hoist if we requested only one store...
+				res = query.store.length == 1 ? 
+					res[query.store[0]] 
+					: res
+				return res
+
+			// delete...
+			} else if(value === undefined && arguments.length == 2){
+				// XXX
+
+			// set...
+			} else {
+				// XXX
+			}
+		}],
+
+	// XXX REVISE API
 	// XXX this is different from .prepareIndexForWrite(..) in that there
 	// 		is no default data set...
 	// XXX async???
@@ -298,6 +359,7 @@ module.Store = core.ImageGridFeatures.Feature({
 	],
 	suggested: [
 		'store-localstorage',
+		'store-fs',
 	],
 	isApplicable: function(){ return typeof(localStorage) != 'undefined' },
 
@@ -348,6 +410,7 @@ var __storageHandler_doc =
 			-> keys
 		
 		.localStorageDataHandler()
+		.localStorageDataHandler('*')
 		.localStorageDataHandler('??')
 			-> data
 		
@@ -369,15 +432,16 @@ var __storageHandler_doc =
 	`
 function makeStorageHandler(storage){
 	var func = function(a, b){
+		// normalize a...
+		a = a == '??' ? '*' : a 
+
 		storage = typeof(storage) == typeof('str') ? window[storage] : storage
 
 		var instance = this.config['store-instance-key'] 
 		var resolvePath = function(p){
 			return p
-				.replace('${INSTANCE}', instance) 
-		}
+				.replace('${INSTANCE}', instance) }
 
-		// XXX should this be all keys by default???
 		var keys = Object.keys(storage)
 
 		var dict_key = '${INSTANCE}/__dict__'
@@ -391,13 +455,17 @@ function makeStorageHandler(storage){
 				.map(function(key){ return dict[key] || key })
 
 		// get store contents...
-		} else if(a == '??' 
+		} else if(a == '*' 
 				|| arguments.length == 0 
 				|| (a instanceof Array && (b == '??' || arguments.length == 1))){
 			var res = {}
 			var keys = a instanceof Array ? a : keys
-			keys.forEach(function(key){
-				res[dict[key] || key] = JSON.parse(storage[key]) })
+			keys
+				// clear keys not in store...
+				.filter(function(k){ 
+					return dict[k] in storage || k in storage })
+				.forEach(function(k){
+					res[dict[k] || k] = JSON.parse(storage[k]) })
 			return res
 
 		// remove all keys...
@@ -416,12 +484,14 @@ function makeStorageHandler(storage){
 				storage[k] = JSON.stringify(a[key]) })
 
 		// remove key...
+		// XXX revise, should this be null or undefined???
 		} else if(b === null){
 			var k = resolvePath(a)
 			delete dict[k]
 			delete storage[k]
 
-		// get key...
+		// get keys...
+		// XXX revise, should this be null or undefined???
 		} else if(b === undefined){
 			var k = resolvePath(a)
 			return k in storage ? 
@@ -489,12 +559,41 @@ module.StoreLocalStorage = core.ImageGridFeatures.Feature({
 // 		Lookup order:
 // 			- app dir
 // 			- $HOME
+var StoreFSJSONActions = actions.Actions({
+	config: {
+	},
 
+	// XXX
+	localStorageFSJSONSyncHandler: ['- Store/',
+		{handle_data_store: 'fileSync',},
+		function(a, b){
+			// XXX
+		}],
+	// XXX
+	localStorageFSJSONHandler: ['- Store/',
+		{handle_data_store: 'file',},
+		function(a, b){
+			// XXX
+			return new Promise(function(resolve, reject){
+				// XXX
+				resolve()
+			})
+		}],
+})
 
+var StoreFSJSON = 
+module.StoreFSJSONSync = core.ImageGridFeatures.Feature({
+	title: '',
+	doc: '',
 
-//---------------------------------------------------------------------
+	tag: 'store-fs',
+	depends: [
+		'fs',
+		'store',
+	],
 
-// XXX StoreFSJSON
+	actions: StoreFSJSONActions,
+})
 
 
 
