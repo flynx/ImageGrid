@@ -146,6 +146,7 @@ var StoreActions = actions.Actions({
 			}
 		}],
 
+
 	prepareStoreToSave: ['- Store/',
 		core.doc`
 
@@ -165,13 +166,13 @@ var StoreActions = actions.Actions({
 				},
 			}
 		`,
-		function(query, data){ 
+		function(query){ 
 			var defaults = this.parseStoreQuery()
 			query = this.parseStoreQuery(query)
 			var stores = query.store || defaults.store
 
 			// populate the store...
-			data = data || {}
+			data = {}
 			Object.keys(this.stores)
 				// only populate the requested handlers...
 				.filter(function(store){ 
@@ -191,12 +192,19 @@ var StoreActions = actions.Actions({
 			} 
 		}],
 	// XXX use query???
+	// XXX should this be the same as .prepareStoreToSave(..)???
 	prepareStoreToLoad: ['- Store/',
 		core.doc`
 		
 		NOTE: this can be called multiple times, once per each store.
 		NOTE: only one store data set is included per call.`,
-		function(data){ return data || {} }],
+		function(query){ return {} }],
+
+
+
+
+	// XXX EXPERIMENTAL STUFF...
+
 
 	// XXX this avoids the .prepareStoreTo*(..) API... 
 	store: ['- Store/',
