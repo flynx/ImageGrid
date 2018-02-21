@@ -69,6 +69,7 @@ var StoreActions = actions.Actions({
 	//get store_clients(){ return [] },
 
 	// events...
+	// XXX update signature -- see doc for: .loadStore(..)
 	storeDataLoaded: ['- Store/',
 		core.doc`Store data loaded event...
 
@@ -76,7 +77,7 @@ var StoreActions = actions.Actions({
 		this is sync for sync stores.
 
 		NOTE: only one store data set is included per call.`,
-		core.Event(function(data){
+		core.Event(function(store, data){
 			// Store data loaded event...
 			//
 			// Not intended for direct use, use .declareReady() to initiate.
@@ -85,8 +86,28 @@ var StoreActions = actions.Actions({
 
 
 	// base API...
+	// XXX need an alternative way to get .stores
+	// 		...once we remove store-specific actions there will be no way
+	// 		to get/set the store-list...
 	parseStoreQuery: ['- Store/',
 		core.doc`
+
+			Get default query...
+			.parseStoreQuery()
+				-> defaults
+
+			Get unexpanded default query...
+			.parseStoreQuery(true)
+				-> defaults
+
+			Parse query...
+			.parseStoreQuery(query)
+				-> query
+
+			Parse query without expanding...
+			.parseStoreQuery(query, true)
+				-> query
+
 
 		Query syntax:
 			<event>:<store>:<key>
@@ -104,12 +125,16 @@ var StoreActions = actions.Actions({
 			}
 
 		`,
-		function(query, date){
+		function(query, no_expand){
 			var defaults = {
-				date: date || Date.timeStamp(),
+				date: Date.timeStamp(),
 				event: 'manual',
 				store: '*',
 				key: '*',
+			}
+			if(query === true || query === false){
+				no_expand = query
+				query = null
 			}
 
 			// parse string...
@@ -129,84 +154,49 @@ var StoreActions = actions.Actions({
 				res.key = query.length > 0 ? 
 					query.pop().split(/\|/g)
 					: defaults.key
-				res.date = date || defaults.date
+				res.date = defaults.date
 
-				return res
+				query = res
 
 			// get the defaults...
 			} else if(query == null){
-				return defaults
+				query = defaults
 
 			// pass on the input...
 			} else {
-				if(date){
-					query.date = date
-				}
-				return query
 			}
+
+			if(!no_expand){
+				// XXX 
+				var handlers = this.stores
+
+				// expand store '*'...
+				query.store = (query.store.length == 1 && query.store[0] == '*') ? 
+					Object.keys(handlers) 
+					: query.store
+				// expand key '*'...
+				query.key = query.key.length == 1 && query.key[0] == '*' ? 
+					'*' 
+					: query.key
+			}
+
+			return query
 		}],
 
-
-	prepareStoreToSave: ['- Store/',
-		core.doc`
-
-		Format:
-			{
-				// metadata...
-				mode: <mode>,
-				data: <timestamp>,
-
-				// the actual data...
-				data: {
-					<data-type>: {
-						<data-key>: <data>,
-						...
-					},
-					...
-				},
-			}
-		`,
-		function(query){ 
-			var defaults = this.parseStoreQuery()
-			query = this.parseStoreQuery(query)
-			var stores = query.store || defaults.store
-
-			// populate the store...
-			data = {}
-			Object.keys(this.stores)
-				// only populate the requested handlers...
-				.filter(function(store){ 
-					return (stores == '*' 
-							|| stores == 'all')
-						|| stores == store
-						|| stores.indexOf(store) >= 0  })
-				.forEach(function(key){ data[key] = {} })
-
-			return {
-				date: query.date || Date.timeStamp(),
-
-				event: query.event || defaults.event,
-				key: query.key || defaults.key,
-
-				data: data,
-			} 
-		}],
-	// XXX use query???
-	// XXX should this be the same as .prepareStoreToSave(..)???
-	prepareStoreToLoad: ['- Store/',
-		core.doc`
-		
-		NOTE: this can be called multiple times, once per each store.
-		NOTE: only one store data set is included per call.`,
-		function(query){ return {} }],
-
-
-
-
-	// XXX EXPERIMENTAL STUFF...
-
-
-	// XXX this avoids the .prepareStoreTo*(..) API... 
+	// XXX this should:
+	// 		- parse query
+	// 		- call: .prepareStoreToSave(..) / .prepareStoreToLoad(..)
+	// 		- call: .saveStore(..) / .loadStore(..)
+	// XXX need to be able to either just get data or load/init it too...
+	// 		i.e. we need two stages/APIs:
+	// 			- get/set/del key -- via .store(..)
+	// 			- load/save key -- via system events and specific actions...
+	// 		e.g. just get the config from store or get it and set it to .config...
+	// 			- load/save/clear 
+	// 				-> .loadConfig() / .saveConfig() / .resetConfig()
+	// 			- get/set/del 
+	// 				-> .store('*:config') / .store('*:config', value) / .store('*:config', null)
+	// XXX sync or async???
 	store: ['- Store/',
 		core.doc`
 
@@ -228,19 +218,12 @@ var StoreActions = actions.Actions({
 			query = this.parseStoreQuery(query)
 			var defaults = this.parseStoreQuery()
 
-			var handlers = this.stores
-
 			// get...
 			if(arguments.length == 1){
+				return this.loadStore(query)
+
+				/*/ XXX legacy...
 				var res = {}
-				// expand store '*'...
-				query.store = (query.store.length == 1 && query.store[0] == '*') ? 
-					Object.keys(handlers) 
-					: query.store
-				// expand key '*'...
-				query.key = query.key.length == 1 && query.key[0] == '*' ? 
-					'*' 
-					: query.key
 				query.store
 					.forEach(function(s){
 						// ask the handler...
@@ -250,20 +233,125 @@ var StoreActions = actions.Actions({
 							&& (res[s] = r)
 					}.bind(this))
 				// hoist if we requested only one store...
-				res = query.store.length == 1 ? 
+				return query.store.length == 1 ? 
 					res[query.store[0]] 
 					: res
-				return res
+				//*/
 
 			// delete...
 			} else if(value === undefined && arguments.length == 2){
-				// XXX
+				return this.clearStore(query)
 
 			// set...
 			} else {
-				// XXX
+				return this.saveStore(query, 
+					value || this.prepareStoreToSave(query))
 			}
 		}],
+
+	// XXX these should:
+	// 		- do the save
+	// XXX these expect the parsed query...
+	// XXX extend these per store...
+	// XXX should clients trigger a stored event???
+	saveStore: ['- Store/',
+		core.doc`
+
+			.saveStore(query, data)
+
+		`,
+		core.notUserCallable(function(query, data){
+			// Extending action must:
+			// 	- save query/data to it's store...
+		})],
+	// XXX should this be sync or async???
+	// 		...if it's async, how do extending actions cooperate and update res???
+	loadStore: ['- Store/',
+		core.doc`
+		`,
+		core.notUserCallable(function(query){
+			// Extending action must:
+			// 	- populate query from it's store...
+			// 	- trigger .storeDataLoaded(store) event when done...
+			//
+			// NOTE: if query.store is a single value then the root object
+			// 		must be populated, otherwise the appropriate section 
+			// 		should be used...
+			// 		e.g.
+			// 			if(query.store.length == 1){
+			//				res = data
+			// 			} else {
+			// 				res['store-key'] = data
+			// 			}
+			var res = {}
+			query.store.length >= 1
+				&& query.store.forEach(function(s){ res[s] = {} })
+			return res
+		})],
+	// XXX should clients trigger a stored event???
+	clearStore: ['- Store/',
+		core.doc`
+		`,
+		core.notUserCallable(function(query){
+			// Extending action:
+			// 	- must clear query from it's store...
+		})],
+
+	// XXX these should:
+	// 		- transform data to/from saved state
+	// XXX these expect the parsed query...
+	// XXX define these per data set...
+	prepareStoreToSave: ['- Store/',
+		core.doc`
+
+		Format:
+			{
+				// metadata...
+				mode: <mode>,
+				data: <timestamp>,
+
+				// the actual data...
+				data: {
+					<data-type>: {
+						<data-key>: <data>,
+						...
+					},
+					...
+				},
+			}
+		`,
+		function(query, data){ 
+			var defaults = this.parseStoreQuery()
+			query = this.parseStoreQuery(query)
+			var stores = query.store || defaults.store
+
+			// XXX is this needed here???
+			data = data || {}
+			query.store.forEach(function(s){ data[s] = {} })
+
+			return {
+				date: query.date || Date.timeStamp(),
+
+				event: query.event || defaults.event,
+				key: query.key || defaults.key,
+
+				data: data || {},
+			} 
+		}],
+	// XXX use query???
+	// XXX should this be the same as .prepareStoreToSave(..)???
+	prepareStoreToLoad: ['- Store/',
+		core.doc`
+		
+		NOTE: this can be called multiple times, once per each store.
+		NOTE: only one store data set is included per call.`,
+		function(query, data){ 
+			return data || {} }],
+
+
+
+	// XXX EXPERIMENTAL / LEGACY STUFF...
+
 
 	// XXX REVISE API
 	// XXX this is different from .prepareIndexForWrite(..) in that there
@@ -272,15 +360,15 @@ var StoreActions = actions.Actions({
 	saveData: ['- Store/',
 		// XXX signature not final...
 		function(query, data){
+			var defaults = this.parseStoreQuery()
+			query = this.parseStoreQuery(query)
+
 			var handlers = this.stores
 
 			// save the given data...
 			// NOTE: we are not calling .prepareStoreToSave(..) here, thus
 			// 		we need not care about .key, .date, and other stuff...
 			if(data){
-				var defaults = this.parseStoreQuery()
-				query = this.parseStoreQuery(query)
-
 				if(query.store == defaults.store || query.key == defaults.key){
 					console.error('saveData: at least "store" and "key" '
 						+'must be explicitly set in query...')
@@ -321,9 +409,6 @@ var StoreActions = actions.Actions({
 			var defaults = this.parseStoreQuery()
 			query = this.parseStoreQuery(query)
 
-			query.store = query.store == defaults.store ? Object.keys(handlers) : query.store
-			query.store = query.store instanceof Array ? query.store : [query.store]
-
 			// XXX need to filter loading by query.key...
 			var data = {}
 			return Promise
@@ -334,13 +419,13 @@ var StoreActions = actions.Actions({
 							// async store...
 							res.then(function(d){ d 
 								&& (data[s] = d)
-								&& this.storeDataLoaded(
-									this.prepareStoreToLoad({[s]: d})) }.bind(this))
+								&& this.storeDataLoaded(s,
+									this.prepareStoreToLoad(query, {[s]: d})) }.bind(this))
 							// sync store...
 							: (res 
 								&& (data[s] = res)
-								&& this.storeDataLoaded(
-									this.prepareStoreToLoad({[s]: res})))
+								&& this.storeDataLoaded(s,
+									this.prepareStoreToLoad(query, {[s]: res})))
 					}.bind(this))) 
 				.then(function(){ return data })}],
 	// XXX do we need to do a partial clear???

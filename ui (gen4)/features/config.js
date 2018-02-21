@@ -112,28 +112,35 @@ module.ConfigStore = core.ImageGridFeatures.Feature({
 	handlers: [
 		// XXX need to update rather than rewrite things...
 		['prepareStoreToSave', 
-			function(res){
+			function(res, query){
 				var ls_path = '${INSTANCE}/config'
 				//var ls_path = 'config'
+				
+				// config not requested...
+				if(query.key != '*' 
+						&& query.key.indexOf('config')
+						&& query.key.indexOf(ls_path)){
+					return
+				}
 
 				// localStorage...
 				// NOTE: we do not need to clone anything here as this 
 				// 		will be done by the localStorage handler...
-				if(res.data.storage){
+				if(query.store.indexOf('storage') >= 0){
 					res.data.storage[ls_path] = this.config
 				}
 
-				if(res.data.fsJSONSync){
+				if(query.store.indexOf('fileSync') >= 0){
 					// XXX should this include path???
-					res.data.fsJSONSync[this.config['config-fs-filename'] || '.ImageGrid.json'] = this.config
+					res.data.fileSync[this.config['config-fs-filename'] || '.ImageGrid.json'] = this.config
 				}
 			}],
-		['prepareIndexForLoad',
-			function(){
-			}],
+		//['prepareIndexForLoad',
+		//	function(){
+		//	}],
 		// NOTE: this is sync for sync stores...
 		['storeDataLoaded',
-			function(data){
+			function(_, store, data){
 				var base = this.__base_config = this.__base_config || this.config
 				var ls_path = '${INSTANCE}/config'
 
