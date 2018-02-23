@@ -196,7 +196,7 @@ var StoreActions = actions.Actions({
 	// 				-> .loadConfig() / .saveConfig() / .resetConfig()
 	// 			- get/set/del 
 	// 				-> .store('*:config') / .store('*:config', value) / .store('*:config', null)
-	// XXX sync or async???
+	// XXX sync or async or both???
 	store: ['- Store/',
 		core.doc`
 
