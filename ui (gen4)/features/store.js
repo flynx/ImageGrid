@@ -196,6 +196,7 @@ var StoreActions = actions.Actions({
 	// 				-> .loadConfig() / .saveConfig() / .resetConfig()
 	// 			- get/set/del 
 	// 				-> .store('*:config') / .store('*:config', value) / .store('*:config', null)
+	// 		...think initializing should be done by the owner plugin...
 	// XXX sync or async or both???
 	store: ['- Store/',
 		core.doc`
