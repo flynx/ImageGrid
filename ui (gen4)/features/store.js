@@ -50,6 +50,17 @@ var StoreActions = actions.Actions({
 	//
 	// XXX this is almost the same as .collection_handlers...
 	// XXX add support for aliases...
+	// XXX might be a good idea to shift this from meaning "store handlers" 
+	// 		to "store APIs", i.e. mark all specific store actions with 
+	// 		store tag and collect/group them for reference...
+	// 			new format:
+	// 				{
+	// 					<store-tag>: [
+	// 						<action-name>,
+	// 						...
+	// 					],
+	// 					...
+	// 				}
 	get stores(){
 		return this.cache('stores', function(d){
 			var res = {}
@@ -86,9 +97,7 @@ var StoreActions = actions.Actions({
 
 
 	// base API...
-	// XXX need an alternative way to get .stores
-	// 		...once we remove store-specific actions there will be no way
-	// 		to get/set the store-list...
+	// XXX .stores: see .stores notes above for new semantics...
 	parseStoreQuery: ['- Store/',
 		core.doc`
 
