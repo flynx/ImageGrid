@@ -61,6 +61,9 @@ var StoreActions = actions.Actions({
 	// 					],
 	// 					...
 	// 				}
+	// 		...might also be a good idea to split this to:
+	// 			.stores				- list of store tags (i.e. Object.keys(this.stores_actions))
+	// 			.stores_actions		- dict of store-specific actions
 	get stores(){
 		return this.cache('stores', function(d){
 			var res = {}
@@ -76,8 +79,6 @@ var StoreActions = actions.Actions({
 
 			return res
 		}) },
-	// XXX need store client list (???)
-	//get store_clients(){ return [] },
 
 	// events...
 	// XXX update signature -- see doc for: .loadStore(..)
