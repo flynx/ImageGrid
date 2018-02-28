@@ -194,7 +194,7 @@ var StoreActions = actions.Actions({
 
 	// XXX this should:
 	// 		- parse query
-	// 		- call: .prepareStoreToSave(..) / .prepareStoreToLoad(..)
+	// 		- call: .prepareStoreToSave(..) / .prepareStoreToLoad(..) ???
 	// 		- call: .saveStore(..) / .loadStore(..)
 	// XXX need to be able to either just get data or load/init it too...
 	// 		i.e. we need two stages/APIs:
@@ -260,6 +260,7 @@ var StoreActions = actions.Actions({
 		}],
 
 	// XXX these should:
+	// 		- call: .prepareStoreToSave(..) / .prepareStoreToLoad(..) ???
 	// 		- do the save
 	// XXX these expect the parsed query...
 	// XXX extend these per store...
