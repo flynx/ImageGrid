@@ -224,45 +224,43 @@ var StoreActions = actions.Actions({
 
 		NOTE: for query syntax see .parseStoreQuery(..)
 
+
+		Store API:
+			- High-level API...
+				.store(..)
+
+			- Application-level API...
+				.prepareStoreToLoad(..)
+				.prepareStoreToSave(..)
+
+			- Storage-level general API...
+				.loadStore(..)
+				.saveStore(..)
+				.clearStore(..)
 		`,
 		function(query, value){
 			query = this.parseStoreQuery(query)
-			var defaults = this.parseStoreQuery()
 
-			// get...
-			if(arguments.length == 1){
-				return this.loadStore(query)
+			return (
+				// get...
+				// XXX should this call the .prepareStoreToLoad(..) or 
+				// 		should it be handled in .loadStore(..)???
+				arguments.length == 1 ?
+					//this.loadStore(query)
+					this.prepareStoreToLoad(
+						query, 
+						this.loadStore(query))
+				// delete...
+				: (value === undefined && arguments.length == 2) ?
+					this.clearStore(query)
+				// set...
+				// XXX should this call the .prepareStoreToSave(..) or 
+				// 		should it be handled in .saveStore(..)???
+				//: this.saveStore(query, value) ) }],
+				: this.saveStore(
+					query, 
+					value || this.prepareStoreToSave(query)) ) }],
 
-				/*/ XXX legacy...
-				var res = {}
-				query.store
-					.forEach(function(s){
-						// ask the handler...
-						var r = this[handlers[s]](query.key)
-						// only keep non-empty sections...
-						Object.keys(r).length > 0
-							&& (res[s] = r)
-					}.bind(this))
-				// hoist if we requested only one store...
-				return query.store.length == 1 ? 
-					res[query.store[0]] 
-					: res
-				//*/
-
-			// delete...
-			} else if(value === undefined && arguments.length == 2){
-				return this.clearStore(query)
-
-			// set...
-			} else {
-				return this.saveStore(query, 
-					value || this.prepareStoreToSave(query))
-			}
-		}],
-
-	// XXX these should:
-	// 		- call: .prepareStoreToSave(..) / .prepareStoreToLoad(..) ???
-	// 		- do the save
 	// XXX these expect the parsed query...
 	// XXX extend these per store...
 	// XXX should clients trigger a stored event???
@@ -275,9 +273,13 @@ var StoreActions = actions.Actions({
 		core.notUserCallable(function(query, data){
 			// Extending action must:
 			// 	- save query/data to it's store...
+			// XXX should this be called outer???
+			// XXX how do we handle the case where no data was given???
+			// XXX how do we pass the results to handlers???
+			//this.prepareStoreToSave(query, data)
 		})],
 	// XXX should this be sync or async???
-	// 		...if it's async, how do extending actions cooperate and update res???
+	// 		one way to do this is to place promises into res where async...
 	loadStore: ['- Store/',
 		core.doc`
 		`,
@@ -296,8 +298,11 @@ var StoreActions = actions.Actions({
 			// 				res['store-key'] = data
 			// 			}
 			var res = {}
-			query.store.length >= 1
+			query 
+				&& query.store.length >= 1
 				&& query.store.forEach(function(s){ res[s] = {} })
+			// XXX should this be called outer???
+			//return this.prepareStoreToLoad(query, res)
 			return res
 		})],
 	// XXX should clients trigger a stored event???
@@ -654,6 +659,46 @@ module.StoreLocalStorage = core.ImageGridFeatures.Feature({
 			&& typeof(sessionStorage) != 'undefined' },
 
 	actions: StoreLocalStorageActions,
+
+	handlers: [
+		// localStorage...
+		// XXX should we use .localStorageDataHandler(..) here???
+		// XXX the following two sections are almost identical...
+		['saveStore', 
+			function(_, query, value){
+				query 
+					&& query.key instanceof Array
+					&& query.store.indexOf('storage') >= 0
+					&& query.key.forEach(function(k){
+						this.localStorageDataHandler(k, value) }.bind(this)) }],
+		['loadStore', 
+			function(res, query){
+				res.storage
+					&& Object.assign(res.storage, this.localStorageDataHandler(query.key)) }],
+		['clearStore', 
+			function(_, query){
+				query 
+					&& query.store.indexOf('storage') >= 0
+					&& this.localStorageDataHandler(query.key, null) }],
+
+		// sessionStorage...
+		['saveStore', 
+			function(_, query, value){
+				query 
+					&& query.key instanceof Array
+					&& query.store.indexOf('session') >= 0
+					&& query.key.forEach(function(k){
+						this.sessionStorageDataHandler(k, value) }.bind(this)) }],
+		['loadStore', 
+			function(res, query){
+				res.session
+					&& Object.assign(res.storage, this.sessionStorageDataHandler(query.key)) }],
+		['clearStore', 
+			function(_, query){
+				query 
+					&& query.store.indexOf('session') >= 0
+					&& this.sessionStorageDataHandler(query.key, null) }],
+	],
 })
 
 
