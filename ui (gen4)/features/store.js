@@ -302,7 +302,6 @@ var StoreActions = actions.Actions({
 			return data || {} }],
 
 	// Store API...
-	// XXX BUG: .saveStore('storage:moo', 123) saves this.data
 	saveStore: ['- Store/',
 		core.doc`
 
