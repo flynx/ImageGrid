@@ -26,6 +26,8 @@ var core = require('features/core')
 
 /*********************************************************************/
 
+// XXX might be a good idea to add "sandbox" mode -- i.e. all settings 
+// 		are saved to sessionStorage and a re-open will load the old settings...
 // XXX might be a good idea to add a .configLoaded(..) and .configChanged(..) 
 // 		events thought it's not clear how are we going to track changes...
 var ConfigStoreActions = actions.Actions({
@@ -38,25 +40,76 @@ var ConfigStoreActions = actions.Actions({
 		'config-fs-filename': '.ImageGrid.json',
 
 		'config-auto-save-interval': 1000*5,
+
+		'config-load-sequence': [
+			// localStorage...
+			'storage:${INSTANCE}/config',
+
+			// FS...
+			// XXX should we load both or just one???
+			'fs:${APP}/.ImageGrid.json',
+			'fs:${HOME}/.ImageGrid.json',
+
+			// temporary config...
+			// NOTE: this is active until we re-open the app...
+			'session:${INSTANCE}/config',
+		],
 	},
 
-	__base_config: null,
+	__config_base: null,
+	__config_loaded_from: null,
 
-	
-	// XXX
+	// XXX handle save order -- need to save to one location only...
+	// 		...use: .__config_loaded_from in reverse order (stop on session:..)
 	storeConfig: ['File/Store configuration',
-		function(key){
-			// XXX this.saveData('*:config')
-		}],
-	// XXX
-	loadConfig: ['File/Load stored configuration',
-		function(key){
+		function(query){
 			// XXX
+			this.saveStore(query || 'storage:${INSTANCE}/config') 
 		}],
-	// XXX should this also reload???
+	// XXX keep record of what we loaded...
+	loadConfig: ['File/Load stored configuration',
+		core.doc`
+
+		NOTE: might need to reload after this.
+		`,
+		function(query){
+			// store loaded...
+			var loaded = this.__config_loaded_from = []
+
+			this.resetConfig()
+
+			// do the load...
+			;(query ? 
+					[query] 
+					: (this.config['config-load-sequence'] || ['storage:config']))
+				.forEach(function(query){
+					query = this.parseStoreQuery(query)
+					var cfg = this.loadStore(query)
+
+					// select store...
+					cfg = query.store
+						.map(function(store){ return cfg[store] })
+						.filter(function(cfg){ return Object.keys(cfg).length > 0 })
+						.shift() || {}
+					// select key...
+					cfg = query.key
+						.map(function(key){ return cfg[key] })
+						.filter(function(cfg){ return !!cfg })
+						.shift()
+
+					// merge the config...
+					cfg 
+						&& Object.assign(this.config, cfg)
+						&& loaded.push(query.query)
+				}.bind(this))
+		}],
 	resetConfig: ['- Config/',
+		core.doc`
+
+		NOTE: might need to reload after this.
+		`,
 		function(){
-			var base = this.__base_config = this.__base_config || this.config
+			var base = this.__config_base = this.__config_base || this.config
 			this.config = Object.create(base)
 		}],
 
@@ -144,7 +197,7 @@ module.ConfigStore = core.ImageGridFeatures.Feature({
 		// NOTE: this is sync for sync stores...
 		['storeDataLoaded',
 			function(_, store, data){
-				var base = this.__base_config = this.__base_config || this.config
+				var base = this.__config_base = this.__config_base || this.config
 				var ls_path = '${INSTANCE}/config'
 
 				// XXX sort out load priority/logic...

@@ -570,8 +570,12 @@ function makeStorageHandler(storage){
 				|| arguments.length == 0 
 				|| (a instanceof Array && (b == '??' || arguments.length == 1))){
 			var res = {}
-			var keys = a instanceof Array ? a : keys
+			keys = a instanceof Array ? a : keys
 			keys
+				// add parsed candidates...
+				.concat(keys
+					.map(function(k){ return resolvePath(k) }))
+				.unique()
 				// clear keys not in store...
 				.filter(function(k){ 
 					return dict[k] in storage || k in storage })
@@ -702,7 +706,7 @@ module.StoreLocalStorage = core.ImageGridFeatures.Feature({
 			function(res, query){
 				query = this.parseStoreQuery(query)
 				res.session
-					&& Object.assign(res.storage, this.sessionStorageDataHandler(query.key)) }],
+					&& Object.assign(res.session, this.sessionStorageDataHandler(query.key)) }],
 		['clearStore', 
 			function(_, query){
 				var q = this.parseStoreQuery(query)
