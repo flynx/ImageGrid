@@ -47,8 +47,8 @@ var ConfigStoreActions = actions.Actions({
 
 			// FS...
 			// XXX should we load both or just one???
-			'fs:${APP}/.ImageGrid.json',
-			'fs:${HOME}/.ImageGrid.json',
+			'fileSync:${APP}/.ImageGrid.json',
+			'fileSync:${HOME}/.ImageGrid.json',
 
 			// temporary config...
 			// NOTE: this is active until we re-open the app...
@@ -61,13 +61,9 @@ var ConfigStoreActions = actions.Actions({
 
 	// XXX handle save order -- need to save to one location only...
 	// 		...use: .__config_loaded_from in reverse order (stop on session:..)
-	storeConfig: ['File/Store configuration',
-		function(query){
-			// XXX
-			this.saveStore(query || 'storage:${INSTANCE}/config') 
-		}],
 	// XXX keep record of what we loaded...
-	loadConfig: ['File/Load stored configuration',
+	// XXX should we only support sync stores??? (current state)
+	loadConfig: ['File/Load configuration',
 		core.doc`
 
 		NOTE: might need to reload after this.
@@ -80,7 +76,7 @@ var ConfigStoreActions = actions.Actions({
 
 			// do the load...
 			;(query ? 
-					[query] 
+					(query instanceof Array ? query : [query])
 					: (this.config['config-load-sequence'] || ['storage:config']))
 				.forEach(function(query){
 					query = this.parseStoreQuery(query)
@@ -103,7 +99,13 @@ var ConfigStoreActions = actions.Actions({
 						&& loaded.push(query.query)
 				}.bind(this))
 		}],
-	resetConfig: ['- Config/',
+	storeConfig: ['File/Save configuration',
+		function(query){
+			// XXX
+			this.saveStore(query || 'storage:${INSTANCE}/config') 
+		}],
+	// XXX this needs to be confirmed...
+	resetConfig: ['File/Reset configuration',
 		core.doc`
 
 		NOTE: might need to reload after this.
@@ -114,8 +116,7 @@ var ConfigStoreActions = actions.Actions({
 		}],
 
 	// XXX use timer events... (???)
-	// XXX this needs a working .storeConfig(..)
-	toggleAutoStoreConfig: ['File/Store configuration',
+	toggleConfigAutoStore: ['File/Auto-save configuration',
 		toggler.Toggler(null, 
 			function(_, state){ 
 				var timer = 'config-auto-save-timer'
@@ -143,6 +144,24 @@ var ConfigStoreActions = actions.Actions({
 				}
 			},
 			'running')],
+	
+
+	// XXX does not work yet... 
+	toggleConfigSandbox: ['- File/',
+		toggler.Toggler(null, 
+			function(_, state){ 
+
+				if(state == null){
+					return Object.keys(this.store('session:${INSTANCE}/config').session).length > 0 || 'none'
+
+				} else if(state == 'sandboxed'){
+					this.store('session:${INSTANCE}/config', undefined)
+
+				} else {
+					this.storeConfig('session:${INSTANCE}/config')
+				}
+			},
+			'sandboxed')],
 })
 
 var ConfigStore = 
@@ -218,8 +237,8 @@ module.ConfigStore = core.ImageGridFeatures.Feature({
 
 				// auto-start auto-save...
 				this.config['config-auto-save-interval'] > 0 
-					&& this.toggleAutoStoreConfig('?') == 'off'
-					&& this.toggleAutoStoreConfig()
+					&& this.toggleConfigAutoStore('?') == 'off'
+					&& this.toggleConfigAutoStore()
 			}],
 	],
 })
