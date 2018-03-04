@@ -573,9 +573,7 @@ function makeStorageHandler(storage){
 			keys = a instanceof Array ? a : keys
 			keys
 				// add parsed candidates...
-				.concat(keys
-					.map(function(k){ return resolvePath(k) }))
-				.unique()
+				.map(function(k){ return resolvePath(k) })
 				// clear keys not in store...
 				.filter(function(k){ 
 					return dict[k] in storage || k in storage })

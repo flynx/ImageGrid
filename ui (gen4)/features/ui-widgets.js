@@ -658,33 +658,30 @@ var DialogsActions = actions.Actions({
 	// testers...
 	//
 	// ui elements...
-	isUIContainer: ['- Interface/',
-		function(action){
-			return !!this.getActionAttr(action, '__container__') }],
-	isUIDialog: ['- Interface/',
-		function(action){
-			return !!this.getActionAttr(action, '__dialog__') }],
-	isUIElement: ['- Interface/',
-		function(action){ 
-			return this.isUIDialog(action) || this.isUIContainer(action) }],
+	isUIContainer: function(action){
+		return !!this.getActionAttr(action, '__container__') },
+	isUIDialog: function(action){
+		return !!this.getActionAttr(action, '__dialog__') },
+	isUIElement: function(action){ 
+		return this.isUIDialog(action) || this.isUIContainer(action) },
 	// extended ui elements
 	// ...first defined as a non-ui action and extended to a ui element.
-	isUIExtendedContainer: ['- Interface/',
+	isUIExtendedContainer: 
 		actions.doWithRootAction(function(action, name){
 			return action != null
 				&& !action.__container__
-				&& this.isUIContainer(name) })],
-	isUIExtendedDialog: ['- Interface/',
+				&& this.isUIContainer(name) }),
+	isUIExtendedDialog:
 		actions.doWithRootAction(function(action, name){
 			return action != null 
 				&& !action.__dialog__
-	   			&& this.isUIDialog(name) })],
-	isUIExtendedElement: ['- Interface/',
+	   			&& this.isUIDialog(name) }),
+	isUIExtendedElement:
 		actions.doWithRootAction(function(action, name){
 			return action != null 
 				&& !action.__dialog__ 
 				&& !action.__container__
-				&& this.isUIElement(name) })],
+				&& this.isUIElement(name) }),
 
 
 	// container constructors...

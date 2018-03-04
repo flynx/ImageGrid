@@ -104,8 +104,9 @@ var ImageGridMetaActions =
 module.ImageGridMetaActions = {
 	// Test if the action is a Toggler...
 	//
-	isToggler: actions.doWithRootAction(function(action){
-		return action instanceof toggler.Toggler }),
+	isToggler: 
+		actions.doWithRootAction(function(action){
+			return action instanceof toggler.Toggler }),
 
 	// Handle special cases where we need to get the action result early,
 	// without calling handlers...
@@ -300,11 +301,7 @@ var IntrospectionActions = actions.Actions({
 				d.slice() 
 				: this.actions.filter(this.isEvent.bind(this)) }) },
 
-	isUserCallable: ['- System/',
-		doc`Test if an action is callable by user.
-
-			.isUserCallable(<action-name>)
-		`,
+	isUserCallable:
 		// XXX should this check only the root action or the whole set???
 		// 		...in other words: can we make an action non-user-callable
 		// 		anywhere other than the root action?
@@ -312,10 +309,10 @@ var IntrospectionActions = actions.Actions({
 		//function(action){ 
 		//	return this.getActionAttr(action, '__not_user_callable__') != true }],
 		actions.doWithRootAction(function(action){
-			return action.__not_user_callable__ != true })],
-	isEvent: ['- System/',
+			return action.__not_user_callable__ != true }),
+	isEvent: 
 		actions.doWithRootAction(function(action){
-			return !!action.__event__ })],
+			return !!action.__event__ }),
 })
 
 
@@ -339,6 +336,19 @@ module.Introspection = ImageGridFeatures.Feature({
 // XXX should his have state???
 // 		...if so, should this be a toggler???
 var LifeCycleActions = actions.Actions({
+	__stop_handler: null,
+	__ready: null,
+	__ready_announce_requested: null,
+
+	// introspection...
+	isStarted: function(){ 
+		return !!this.__stop_handler },
+	isStopped: function(){ 
+		return !this.__stop_handler },
+	isReady: function(){ 
+		return !!this.__ready },
+	
+
 	start: ['- System/', 
 		doc`Start core action/event
 
@@ -355,11 +365,17 @@ var LifeCycleActions = actions.Actions({
 		This will trigger .declareReady() if no action called 
 		.requestReadyAnnounce()
 
+		This will trigger .started() event when done.
+
 		NOTE: .runtime attribute will not be available on the .pre handler
 			phase.
 		NOTE: .requestReadyAnnounce() should be called exclusively on the
 			.pre handler phase as this will check and trigger the .ready()
 			event before the .post phase starts.
+		NOTE: handlers bound to this action/event will get called on the 
+			start *event* thus handlers bound when the system is already 
+			started will not get called until next start, to bind a handler 
+			to the started *state* bind to 'started' / .started()
 		`,
 		function(){
 			var that = this
@@ -440,7 +456,18 @@ var LifeCycleActions = actions.Actions({
 					this.declareReady()
 				}
 			}
+
+			// trigger the started event...
+			this.started()
 		}],
+	started: ['- System/System started event',
+		doc`
+		`,
+	   	Event(function(){
+			// System started event...
+			//
+			// Not intended for direct use.
+		})],
 
 	ready: ['- System/System ready event',
 		doc`Ready core event
@@ -546,6 +573,58 @@ var LifeCycleActions = actions.Actions({
 			delete this.__stop_handler
 
 			this.logger && this.logger.emit('stop')
+
+			// trigger the stopped event...
+			this.stopped()
+		}],
+	stopped: ['- System/System stopped event',
+		doc`
+		`,
+	   	Event(function(){
+			// System stopped event...
+			//
+			// Not intended for direct use.
+		})],
+
+
+	// trigger core events...
+	//
+	// NOTE: we do not need to do .one(..) as it is implemented via .on(..)
+	//
+	// XXX EXPERIMENTAL...
+	// 		...should this be an action???
+	on: ['- System/',
+		function(evt, ...rest){
+			var func = rest.slice().pop()
+			evt = typeof(evt) == typeof('') ? evt.split(/\s/g) : evt
+
+			// we trigger the handler AFTER it is registered...
+			return function(){
+				// started...
+				Math.max(
+						evt.indexOf('started'), 
+						evt.indexOf('started.pre'), 
+						evt.indexOf('started.post')) >= 0 
+					&& this.isStarted()
+					&& func.call(this)
+
+				// ready...
+				// NOTE: we are ignoring the '.pre' events here as we are already
+				// 		in the specific state... 
+				Math.max(
+						evt.indexOf('ready'), 
+						evt.indexOf('ready.post')) >= 0 
+					&& this.isReady()
+					&& func.call(this)
+
+				// started...
+				Math.max(
+						evt.indexOf('stopped'), 
+						evt.indexOf('stopped.pre'), 
+						evt.indexOf('stopped.post')) >= 0 
+					&& this.isStopped()
+					&& func.call(this)
+			}
 		}],
 })
 
