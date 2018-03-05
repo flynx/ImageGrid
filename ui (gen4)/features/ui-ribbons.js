@@ -127,6 +127,8 @@ actions.Actions({
 					// XXX is this correct???
 					this.ribbons.__image_updaters = [this.updateImage.bind(this)]
 
+					this.dom.trigger('ig.attached')
+
 				} else {
 					this.ribbons.clear()
 					this.ribbons.images = this.images

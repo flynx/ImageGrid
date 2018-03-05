@@ -711,9 +711,16 @@ module.Viewer = core.ImageGridFeatures.Feature({
 	handlers: [
 		// bind system events to dom...
 		//
-		// XXX add:
-		// 		ig.created
-		// 		ig.ready
+		// Events:
+		// 	ig.attached
+		// 		triggered when ImageGrid instance is attached to dom...
+		// 	ig.start / ig.start.pre / ig.start.post
+		// 	ig.ready
+		// 	ig.stop / ig.stop.pre / ig.stop.post
+		//
+		// NOTE: ig.attached is triggered by the 'ui-render' implementation... 
+		// NOTE: there is intentionally not pre/post ready events. (???
+		//
 		// XXX should these be imagegrid.event or ig.event??
 		['start.pre',
 			function(){ 
@@ -736,6 +743,7 @@ module.Viewer = core.ImageGridFeatures.Feature({
 				}
 			}],
 
+		// workspaces and resizing... 
 		['start',
 			function(){
 				var that = this
@@ -802,7 +810,6 @@ module.Viewer = core.ImageGridFeatures.Feature({
 					'addClass' 
 					: 'removeClass']('crop-mode')
 			}],
-
 	],
 })
 
