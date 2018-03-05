@@ -127,6 +127,7 @@ var base = require('features/base')
 // 		- fit N images/ribbons is neutral but might mean different things 
 // 			depending on image and viewer proportions
 // 		- .scale is a bad way to go...
+// XXX need to trigger an event on the container on start/stop...
 var ViewerActions = 
 module.ViewerActions = actions.Actions({
 	config: {
@@ -708,6 +709,33 @@ module.Viewer = core.ImageGridFeatures.Feature({
 	isApplicable: function(){ return this.runtime.browser },
 
 	handlers: [
+		// bind system events to dom...
+		//
+		// XXX add:
+		// 		ig.created
+		// 		ig.ready
+		// XXX should these be imagegrid.event or ig.event??
+		['start.pre',
+			function(){ 
+				this.dom.trigger('ig.start.pre') 
+				return function(){
+					this.dom.trigger('ig.start') 
+					this.dom.trigger('ig.start.post') 
+				}
+			}],
+		// XXX should we also do .pre/.post???
+		['ready',
+			function(){ 
+				this.dom.trigger('ig.ready') }],
+		['stop.pre',
+			function(){ 
+				this.dom.trigger('ig.stop') 
+				return function(){
+					this.dom.trigger('ig.stop') 
+					this.dom.trigger('ig.stop.post') 
+				}
+			}],
+
 		['start',
 			function(){
 				var that = this
