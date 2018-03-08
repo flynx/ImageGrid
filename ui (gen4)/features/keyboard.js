@@ -1635,7 +1635,6 @@ var KeyboardUIActions = actions.Actions({
 	//*/
 })
 
-
 var KeyboardUI = 
 module.KeyboardUI = core.ImageGridFeatures.Feature({
 	title: '',

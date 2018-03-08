@@ -1038,7 +1038,7 @@ var KeyboardPrototype = {
 
 				// set handler if given...
 				if(handler && handler != ''){
-					keyboard[mode][key] = handler
+					keyboard[mode][that.joinKey(key)] = handler
 				}
 			})
 		}
