@@ -372,7 +372,6 @@ var StoreActions = actions.Actions({
 	// 		...this is currently used to store config...
 
 
-	// XXX REVISE API
 	// XXX this is different from .prepareIndexForWrite(..) in that there
 	// 		is no default data set...
 	// XXX async???
