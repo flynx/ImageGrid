@@ -975,7 +975,7 @@ var KeyboardUIActions = actions.Actions({
 				}
 				: options.get_key_text
 
-			var dialog = browse.makeLister(null, 
+			return browse.makeLister(null, 
 				function(path, make){
 					var keys = kb.keys('*')
 					var keybindings = kb.keyboard
@@ -1132,19 +1132,29 @@ var KeyboardUIActions = actions.Actions({
 						options.cls,
 					].join(' '),
 				})
+				// setup extra kb actions...
+				.run(function(){
+					// clone the bindings so as not to mess up the global browser...
+					this.keybindings = JSON.parse(JSON.stringify(this.keybindings))
 
-			// handle '?' button to browse path...
-			dialog.showDoc = function(){
-				var action = dialog.select('!').attr('action')
-				action 
-					&& action in that 
-					&& that.showDoc(action)
-			}
-			// clone the bindings so as not to mess up the global browser...
-			dialog.keybindings = JSON.parse(JSON.stringify(dialog.keybindings))
-			dialog.keyboard.handler('General', '?', 'showDoc')
+					// handle '?' button to browse path...
+					this.showDoc = function(){
+						var action = this.select('!').attr('action')
+						action 
+							&& action in that 
+							&& that.showDoc(action)
+					}
+					this.keyboard.handler('General', '?', 'showDoc')
 
-			return dialog
+					// edit keys on 'E' press...
+					if(that.editKeyboardBindings){
+						this.editKeys = function(){ 
+							that.editKeyboardBindings() 
+							this.close()
+						}
+						this.keyboard.handler('General', 'e', 'editKeys')
+					}
+				})
 		})],
 	// XXX this does not handle the passed container protocol...
 	// 		.editKeyboardBindings('Drawer') is broken...
