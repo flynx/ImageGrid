@@ -129,8 +129,17 @@
 #
 #**********************************************************************
 .SECONDEXPANSION:
-# variables...
+# basic configuration...
 
+# This prevents pipe and redirection sequensing difference errors between
+# Windows and *NIX systmes for commands like:
+# 	cat package.json | sed 's/"index.html"/"e.js"/g' > package.json
+# ...which would produce zero-length results under cmp/powershell.
+SHELL := $(shell which sh)
+
+
+
+# variables...
 
 APP_NAME ?= ImageGrid.Viewer
 

@@ -369,6 +369,7 @@ var StoreActions = actions.Actions({
 
 
 	// XXX LEGACY STUFF... (???)
+	// 		...this is currently used to store config...
 
 
 	// XXX REVISE API
