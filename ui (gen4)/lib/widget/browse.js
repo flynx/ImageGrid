@@ -1875,7 +1875,8 @@ var BrowserPrototype = {
 	// specific events...
 	focus: function(handler){
 		if(handler != null){
-			this.on('focus', handler)
+			//this.on('focus', handler)
+			this.on('focus', handler.bind(this))
 
 		// focus only if we do not have focus...
 		} else if(!this.dom.is(':focus') 
@@ -3883,9 +3884,8 @@ var BrowserPrototype = {
 	// 		instance or in .options
 	open: function(path){ 
 		// special case: register the open handler...
-		if(typeof(path) == typeof(function(){})){
-			return this.on('open', path)
-		}
+		if(path instanceof Function){
+			return this.on('open', path.bind(this)) }
 
 		var elem = this.select('!')
 

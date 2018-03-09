@@ -227,13 +227,12 @@ var SlideshowActions = actions.Actions({
 	toggleSlideshowLooping: ['- Slideshow/Slideshow $looping',
 		core.makeConfigToggler('slideshow-looping', ['on', 'off'])],
 
-	toggleSlideshowLooping: ['Interface|Slideshow/Slideshow $hold',
+	toggleSlideshowHold: ['Interface|Slideshow/Slideshow $hold',
 		core.makeConfigToggler('slideshow-hold', ['on', 'off'])],
 
 	resetSlideshowTimer: ['- Slideshow/Reset slideshow timer',
 		function(){
-			this.__slideshow_timer && this.toggleSlideshow('on')
-		}],
+			this.__slideshow_timer && this.toggleSlideshow('on') }],
 	suspendSlideshowTimer: ['- Slideshow/Suspend slideshow timer',
 		function(){
 			if(this.__slideshow_timer){

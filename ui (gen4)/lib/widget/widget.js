@@ -18,17 +18,22 @@ var object = require('../object')
 var proxyToDom =
 module.proxyToDom = 
 function(name){
-	return function(){ 
-		// proxy handler...
-		if(name in this.dom){
-			this.dom[name].apply(this.dom, arguments)
+	return function(...args){ 
+		// bind functions to this...
+		// XXX is this the right way to go???
+		args = args
+			.map(function(a){ 
+				return a instanceof Function ? 
+					a.bind(this) 
+					: a 
+			}.bind(this))
 
-		// on/trigger handlers...
-		} else {
-			arguments[0] instanceof Function ?
-				this.dom.on(name, arguments[0])
-				: this.dom.trigger(name, [].slice.call(arguments)) 
-		}
+		name in this.dom ?
+			// proxy handler...
+			this.dom[name].apply(this.dom, args)
+			// on/trigger handlers...
+			: this.dom.trigger(name, args) 
+
 		return this 
 	}
 }

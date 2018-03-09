@@ -841,7 +841,7 @@ var DialogsActions = actions.Actions({
 		})],
 
 
-	listDialogs: ['Interface/Dialog/Dialog list...',
+	listDialogs: ['Interface|System/Dialog/Dialog list...',
 		makeUIDialog(function(){
 			var actions = this
 
@@ -1465,17 +1465,14 @@ var BrowseActionsActions = actions.Actions({
 	// XXX can this also do a flat mode???
 	// 		...this would help with the (global) search -- switch to 
 	// 		flat if searching in root mode...
-	browseActions: ['Interface/Dialog/Actions...',
+	browseActions: ['Interface|System/Dialog/Actions...',
 		makeUIDialog(function(path, options){
 			var actions = this
+			options = options || {}
 
 			var PRIORITY = /^(-?[0-9]+)\s*:\s*/
-
 			var MARKER = RegExp(this.config['browse-actions-shortcut-marker'], 'g')
 			MARKER = MARKER || RegExp(MARKER, 'g')
-
-			var dialog
-			options = options || {}
 
 			// prepare the config...
 			var cfg = {
@@ -1558,7 +1555,7 @@ var BrowseActionsActions = actions.Actions({
 			}
 
 			// Wait for dialog...
-			var waitFor = (function(child){
+			var waitFor = function(dialog, child){
 				// we got a widget, wait for it to close...
 				if(child instanceof widget.Widget){
 					child
@@ -1572,7 +1569,7 @@ var BrowseActionsActions = actions.Actions({
 				}
 
 				return child
-			}).bind(this)
+			}.bind(this)
 
 			// Tree builder...
 			// XXX normalize actions -- whitespace, '!', args...
@@ -1658,7 +1655,7 @@ var BrowseActionsActions = actions.Actions({
 			//console.log('!!!!', tree)
 
 			// now for the dialog...
-			dialog = browse.makeLister(null, function(path, make){
+			return browse.makeLister(null, function(path, make){
 				var that = this
 				var cur = tree
 
@@ -1832,7 +1829,7 @@ var BrowseActionsActions = actions.Actions({
 											open: function(){
 												options.callback ?
 													options.callback.call(actions, action)
-													: waitFor(actions[action]())
+													: waitFor(make.dialog, actions[action]())
 											},
 										})
 								}
@@ -1865,8 +1862,8 @@ var BrowseActionsActions = actions.Actions({
 			.on('close', function(){
 				var config = actions.config['browse-actions-settings'] 
 
-				config.showDisabled = dialog.options.showDisabled
-				config.showHidden = dialog.options.showHidden
+				config.showDisabled = this.options.showDisabled
+				config.showHidden = this.options.showHidden
 			})
 			.run(function(){
 				actions.config['browse-actions-keys'] 
@@ -1880,10 +1877,7 @@ var BrowseActionsActions = actions.Actions({
 				}
 				this.keyboard.handler('General', '?', 'showDoc')
 				this.menu(showDoc.bind(this))
-			})
-
-			return dialog
-		})],
+			}) })],
 
 	toggleBrowseActionKeys: ['Interface/Show keys in menu',
 		core.makeConfigToggler(

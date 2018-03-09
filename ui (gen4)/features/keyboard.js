@@ -1154,8 +1154,7 @@ var KeyboardUIActions = actions.Actions({
 						}
 						this.keyboard.handler('General', 'e', 'editKeys')
 					}
-				})
-		})],
+				}) })],
 	// XXX this does not handle the passed container protocol...
 	// 		.editKeyboardBindings('Drawer') is broken...
 	editKeyboardBindings: ['Interface/Keyboard bindings editor...',
@@ -1183,7 +1182,7 @@ var KeyboardUIActions = actions.Actions({
 						.unique())
 			}
 
-			var dialog = this.browseKeyboardBindings(
+			return this.browseKeyboardBindings(
 				path, 
 				{
 					cls: 'edit',
@@ -1204,7 +1203,7 @@ var KeyboardUIActions = actions.Actions({
 									cur.parent().find('[mode="'+prev+'"]')
 										.first()
 										.before(elems)
-									dialog.select(elems.first())
+									this.select(elems.first())
 
 									// do the actual section ordering...
 									sortModes(cur.parent())
@@ -1221,7 +1220,7 @@ var KeyboardUIActions = actions.Actions({
 									cur.parent().find('[mode="'+next+'"]')
 										.last()
 										.after(elems)
-									dialog.select(elems.first())
+									this.select(elems.first())
 
 									// do the actual section ordering...
 									sortModes(cur.parent())
@@ -1231,6 +1230,7 @@ var KeyboardUIActions = actions.Actions({
 					mode_actions: [
 						// XXX focus resulting key...
 						['key', function(_, cur){
+							var dialog = this
 							that.editKeyBinding(
 									cur.attr('mode'), 
 									null, 
@@ -1239,6 +1239,7 @@ var KeyboardUIActions = actions.Actions({
 						// XXX place element...
 						// XXX focus resulting mode...
 						['mode', function(_, cur){
+							var dialog = this
 							// XXX need to pass order info...
 							that.editKeyboardMode(
 									null, 
@@ -1249,7 +1250,8 @@ var KeyboardUIActions = actions.Actions({
 				// XXX should this be only a button thing (done in .browseKeyboardBindings(..))
 				// 		or also the main action???
 	   			.open(function(){
-					var cur = dialog.select('!')
+					var dialog = this
+					var cur = this.select('!')
 					var sub_dialog
 
 					// key...
@@ -1277,29 +1279,33 @@ var KeyboardUIActions = actions.Actions({
 					sub_dialog 
 						&& sub_dialog
 							.close(function(evt, mode){ 
-								mode != 'cancel' && dialog.update() })
+								dialog.update() })
 				}) 
 				// select updated/new items...
 				.on('update', function(){
 					to_select 
 						// XXX this does not work for modes...
-						&& dialog.select(to_select)
+						&& this.select(to_select)
 					to_select = null
 				})
+				// setup keyboard...
+				.run(function(){
+					this.newKey = function(){
+						that.editKeyBinding(
+								this.select('!').attr('mode')
+									|| Object.keys(kb.keyboard)[0]) 
+							.close(function(evt, mode){ 
+								this.update() }.bind(this)) }
+					this.newMode = function(){ 
+						that.editKeyboardMode() 
+							.close(function(evt, mode){ 
+								this.update() }.bind(this)) }
 
-			dialog.newKey = function(){
-				that.editKeyBinding(this.select('!').attr('mode')
-					|| Object.keys(kb.keyboard)[0]) }
-			dialog.newMode = function(){ 
-				that.editKeyboardMode() }
-
-			dialog.keyboard
-				.handler('General', 'N', 'newKey')
-				.handler('General', 'K', 'newKey')
-				.handler('General', 'M', 'newMode')
-
-			return dialog
-		})],
+					this.keyboard
+						.handler('General', 'N', 'newKey')
+						.handler('General', 'K', 'newKey')
+						.handler('General', 'M', 'newMode')
+				}) })],
 	// XXX add action completion... (???)
 	editKeyBinding: ['- Interface/Key mapping...',
 		core.doc`Key mapping editor...
@@ -1322,7 +1328,7 @@ var KeyboardUIActions = actions.Actions({
 				: [] 
 			var orig_keys = keys.slice()
 
-			var dialog = browse.makeLister(null, 
+			return browse.makeLister(null, 
 				function(path, make){
 					var cfg = {
 						start_on: 'open',
@@ -1384,7 +1390,7 @@ var KeyboardUIActions = actions.Actions({
 					make.ConfirmAction('Delete', {
 						callback: function(){
 							keys = []
-							dialog.close() 
+							make.dialog.close() 
 						}, 
 						timeout: that.config['ui-confirm-timeout'] || 2000,
 						buttons: [
@@ -1423,15 +1429,11 @@ var KeyboardUIActions = actions.Actions({
 					callback 
 						&& callback.call(that, code)
 				})
-
-			dialog.abort = function(){
-				this.close('cancel')
-			}
-			dialog.keyboard
-				.handler('General', 'Q', 'abort')
-
-			return dialog
-		})],
+				.run(function(){
+					this.abort = function(){
+						this.close('cancel') }
+					this.keyboard.handler('General', 'Q', 'abort')
+				}) })],
 	editKeyboardMode: ['- Interface/Mode...',
 		core.doc`Mode editor...
 
@@ -1461,7 +1463,7 @@ var KeyboardUIActions = actions.Actions({
 
 			var orig_mode = mode in that.keybindings ? mode : null
 
-			var dialog = browse.makeLister(null, 
+			return browse.makeLister(null, 
 				function(path, make){
 					var cfg = {
 						start_on: 'open',
@@ -1487,7 +1489,7 @@ var KeyboardUIActions = actions.Actions({
 							if(mode in that.keybindings){
 								delete that.keybindings[mode]
 							}
-							dialog.close()
+							make.dialog.close()
 						}, 
 						timeout: that.config['ui-confirm-timeout'] || 2000,
 						buttons: [
@@ -1527,15 +1529,11 @@ var KeyboardUIActions = actions.Actions({
 					callback 
 						&& callback.call(that, mode)
 				})
-
-			dialog.abort = function(){
-				this.close('cancel')
-			}
-			dialog.keyboard
-				.handler('General', 'Q', 'abort')
-
-			return dialog
-		})],
+				.run(function(){
+					this.abort = function(){
+						this.close('cancel') }
+					this.keyboard.handler('General', 'Q', 'abort')
+				}) })],
 	editKeyboardModeDroppedKeys: ['- Interface/Dropped keys...',
 		core.doc`Edit keys dropped after a mode...
 
@@ -1568,7 +1566,7 @@ var KeyboardUIActions = actions.Actions({
 
 			var drop = (that.keybindings[mode].drop || []).slice()
 
-			var dialog = browse.makeLister(null, 
+			return browse.makeLister(null, 
 				function(path, make){
 					var drop_all 
 
@@ -1613,15 +1611,11 @@ var KeyboardUIActions = actions.Actions({
 						that.keybindings[mode].drop = drop
 					}
 				})
-
-			dialog.abort = function(){
-				this.close('cancel')
-			}
-			dialog.keyboard
-				.handler('General', 'Q', 'abort')
-
-			return dialog
-		})],
+				.run(function(){
+					this.abort = function(){
+						this.close('cancel') }
+					this.keyboard.handler('General', 'Q', 'abort')
+				}) })],
 
 
 	/*/ XXX move to gen2
