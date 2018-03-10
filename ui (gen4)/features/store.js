@@ -369,7 +369,7 @@ var StoreActions = actions.Actions({
 
 
 	// XXX LEGACY STUFF... (???)
-	// 		...this is currently used to store config...
+	// 		...this is currently used to store config -- migrate to new API...
 
 
 	// XXX this is different from .prepareIndexForWrite(..) in that there
