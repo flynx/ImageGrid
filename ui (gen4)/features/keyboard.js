@@ -41,11 +41,13 @@ module.GLOBAL_KEYBOARD = {
 		],
 
 		Esc: 'toggleSlideshow: "off" -- Exit slideshow',
-		Space: 'toggleSlideshowTimer',
 		Enter: 'slideshowDialog',
 
-		Left: 'resetSlideshowTimer',
-		Right: 'resetSlideshowTimer',
+		// XXX do we need a spearate slideshow paused mode???
+		Space: 'toggleSlideshowTimer',
+		// XXX not sure about these yet...
+		//Left: 'resetSlideshowTimer',
+		//Right: 'resetSlideshowTimer',
 		Home: 'resetSlideshowTimer',
 		End: 'resetSlideshowTimer',
 
@@ -371,7 +373,7 @@ module.GLOBAL_KEYBOARD = {
 		'shift+#5': 'fitRibbon: 5.5 -- Fit 5.5 ribbons',
 		'#6': 'fitImage: 6 -- Fit 6 images',
 		'#7': 'fitImage: 7 -- Fit 7 images',
-		'#8':'fitImage: 8 -- Fit 8 images',
+		'#8': 'fitImage: 8 -- Fit 8 images',
 		'#9': 'fitImage: 9 -- Fit 9 images',
 		
 
@@ -435,7 +437,8 @@ module.GLOBAL_KEYBOARD = {
 
 		// filters...
 		';': 'togglePreviewFilter: "Show shadows" -- Preview shadows',
-		'ctrl-;': 'togglePreviewFilter: "Show highlights" -- Preview highlights',
+		':': 'togglePreviewFilter: "Show highlights" -- Preview highlights',
+		//'ctrl-;': 'togglePreviewFilter: "Show highlights" -- Preview highlights',
 		"'": 'togglePreviewFilter: "Black and white" -- Preview black and white',
 
 		// doc...
