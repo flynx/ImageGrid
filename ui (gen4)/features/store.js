@@ -16,11 +16,11 @@ var core = require('features/core')
 
 /*********************************************************************/
 // XXX TODO:
-// 		- key syntax (path)
+// 		- key syntax (path) (DONE)
 // 			<store>:<path>
 // 		- path variables
 // 			$VAR or ${VAR}
-// 		- ability to store/load only a specific key from a specific store
+// 		- ability to store/load only a specific key from a specific store (DONE)
 // 			Q: path patterns??
 // 				localstorage:*		- save/load everything on localstorage
 // 				*:config			- save load config from all stores...
